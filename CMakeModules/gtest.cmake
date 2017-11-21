@@ -1,0 +1,20 @@
+if(BUILD_TESTS)
+    enable_testing()
+endif()
+
+function(gtest target test_source_files test_libraries)
+    if(BUILD_TESTS)
+        find_package (Threads)
+
+        include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+        add_executable(test-${target} ${test_source_files})
+        target_link_libraries(test-${target} gtest gtest_main ${CMAKE_THREAD_LIBS_INIT})
+        target_link_libraries(test-${target} ${test_libraries})
+        add_test(NAME test-${target} COMMAND test-${target})
+        astyle(test-${target} ${test_source_files})
+
+        message("Added test 'test-${target}'")
+    else()
+        message("Skip test 'test-${target}'")
+    endif()
+endfunction()
