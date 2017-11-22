@@ -1,0 +1,10 @@
+Testing
+.cproject
+.project
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+.settings
+CTestTestfile.cmake
+test-HIDRA2
+Makefile
