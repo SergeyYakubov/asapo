@@ -5,7 +5,7 @@ namespace
 {
     TEST(VERSION, VersionAboveZero)
     {
-        EXPECT_GE(HIDRA2::Producer::VERSION, 0);
+        EXPECT_GE(HIDRA2::Producer::kVersion, 0);
     }
 
     TEST(CreateProducer, PointerIsNotNullptr)

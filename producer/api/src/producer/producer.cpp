@@ -1,11 +1,11 @@
 #include <producer/producer.h>
 
-unsigned long HIDRA2::Producer::kinit_count_ = 0;
-const uint32_t HIDRA2::Producer::VERSION = 1;
+unsigned long HIDRA2::Producer::kInitCount = 0;
+const uint32_t HIDRA2::Producer::kVersion = 1;
 
 HIDRA2::Producer::Producer()
 {
-    kinit_count_++;
+    kInitCount++;
 }
 
 HIDRA2::Producer *HIDRA2::Producer::CreateProducer(std::string receiver_address)

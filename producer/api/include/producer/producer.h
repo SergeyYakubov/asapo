@@ -8,10 +8,10 @@ namespace HIDRA2
     class Producer
     {
     private:
-        static unsigned long kinit_count_;
+        static unsigned long kInitCount;
         Producer();
     public:
-        static const uint32_t VERSION;
+        static const uint32_t kVersion;
 
         Producer(const Producer&) = delete;
         Producer& operator=(const Producer&) = delete;
