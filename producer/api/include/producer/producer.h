@@ -8,7 +8,7 @@ namespace HIDRA2
     class Producer
     {
     private:
-        static unsigned long kInitCount;
+        static uint64_t kInitCount;
         Producer();
     public:
         static const uint32_t kVersion;

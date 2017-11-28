@@ -26,7 +26,6 @@ namespace HIDRA2
          * RPC always return a response to a corresponding request
          * @{
          */
-#pragma region RPC
         struct GenericNetworkRequest {
             OP_CODE  op_code;
             uint64_t request_id;
@@ -80,7 +79,6 @@ namespace HIDRA2
          */
         struct SendDataChunkResponse {
         };
-#pragma endregion
         /** @} */
 
         /**
@@ -88,7 +86,6 @@ namespace HIDRA2
          * Events cannot be requests, they will be send by the server spontaneously
          * @{
          */
-#pragma region EVENT
         struct GenericNetworkEvent {
             OP_CODE     op_code;
             ERROR_CODE  error_code;
@@ -102,7 +99,6 @@ namespace HIDRA2
         struct FileStatusEvent {
             uint64_t    file_reference_id;
         };
-#pragma endregion
         /** @} */
     }
 }
