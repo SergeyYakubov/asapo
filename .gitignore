@@ -115,3 +115,8 @@ build
 ### Doxygen ###
 doxygen
 
+### eclipse ###
+.cproject
+.project
+.settings
+

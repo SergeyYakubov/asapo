@@ -18,4 +18,8 @@ astyle(${TARGET_NAME} ${SOURCE_FILES})
 ################################
 set(TEST_SOURCE_FILES unittests/test_producer.cpp)
 set(TEST_LIBRARIES producer-api)
+
+
 gtest(${TARGET_NAME} ${TEST_SOURCE_FILES} ${TEST_LIBRARIES})
+
+
