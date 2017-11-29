@@ -10,9 +10,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
 
 include(astyle)
 
-if(BUILD_TESTS)
-	include(testing_cpp)
-endif()
+include(testing_cpp)
 
 add_subdirectory(producer/api)
 add_subdirectory(common/cpp)
