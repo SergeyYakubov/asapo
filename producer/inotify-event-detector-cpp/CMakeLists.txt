@@ -21,4 +21,6 @@ astyle(${TARGET_NAME} "${SOURCE_FILES}")
 # Testing
 ################################
 set(TEST_SOURCE_FILES unittests/test_inotify_client.cpp)
-gtest(${TARGET_NAME} ${TEST_SOURCE_FILES} "")
+
+
+#gtest(${TARGET_NAME} ${TEST_SOURCE_FILES} "")
