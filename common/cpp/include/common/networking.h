@@ -6,7 +6,8 @@
 
 namespace HIDRA2
 {
-    namespace Networking {
+    namespace Networking
+    {
         enum OP_CODE : uint8_t {
             OP_CODE__HELLO,
             OP_CODE__PREPARE_SEND_DATA,

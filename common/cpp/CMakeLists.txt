@@ -9,7 +9,7 @@ add_library(${TARGET_NAME} SHARED ${SOURCE_FILES})
 target_include_directories(${TARGET_NAME} PUBLIC include)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-astyle(${TARGET_NAME} ${SOURCE_FILES})
+astyle(${TARGET_NAME} "${SOURCE_FILES}")
 
 
 ################################

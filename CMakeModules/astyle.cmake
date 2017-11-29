@@ -6,7 +6,7 @@ function(astyle target source_files)
                 TARGET ${target} PRE_BUILD
                 COMMAND
                 ${ASTYLE_EXECUTABLE} -n --style=1tbs --indent-namespaces --indent-preproc-block ${source_files}
-                WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} VERBATIM
+                WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
         )
     else()
         message("Unable to find astyle. Skipping code formatting for ${target}")

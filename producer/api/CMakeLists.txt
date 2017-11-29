@@ -10,7 +10,7 @@ target_include_directories(${TARGET_NAME} PUBLIC include)
 target_link_libraries(${TARGET_NAME} common)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-astyle(${TARGET_NAME} ${SOURCE_FILES})
+astyle(${TARGET_NAME} "${SOURCE_FILES}")
 
 
 ################################
