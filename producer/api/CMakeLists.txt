@@ -1,5 +1,5 @@
 set(TARGET_NAME producer-api)
-set(SOURCE_FILES src/producer/producer.cpp include/producer/producer.h)
+set(SOURCE_FILES src/producer_impl.cpp src/producer_impl.h include/producer/producer.h src/producer.cpp)
 
 
 ################################

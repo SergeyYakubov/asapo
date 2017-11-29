@@ -1,6 +1,6 @@
-#include <producer/producer.h>
-#include <inotify-event-detector-cpp/inotify_helper.h>
-#include <inotify-event-detector-cpp/Inotify_event_detector.h>
+#include "../../api/src/producer_impl.h"
+#include "inotify_helper.h"
+#include "Inotify_event_detector.h"
 #include <iostream>
 
 int main (int argc, char* argv[])

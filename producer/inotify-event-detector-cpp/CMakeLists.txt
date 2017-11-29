@@ -1,8 +1,8 @@
 set(TARGET_NAME inotify-event-detector-cpp)
 set(SOURCE_FILES
         src/main.cpp
-        src/inotify_helper.cpp include/inotify-event-detector-cpp/inotify_helper.h
-        src/Inotify_event_detector.cpp include/inotify-event-detector-cpp/Inotify_event_detector.h
+        src/inotify_helper.cpp src/inotify_helper.h
+        src/Inotify_event_detector.cpp src/Inotify_event_detector.h
         )
 
 

@@ -2,6 +2,7 @@
 #define HIDRA2__INOTIFYEVENTDETECTOR_INOTIFYEVENTDETECTOR_H
 
 #include <sys/inotify.h>
+#include "inotify_helper.h"
 
 namespace HIDRA2
 {
@@ -16,7 +17,7 @@ namespace HIDRA2
 
             int main(int argc, char* argv[]);
         private:
-            void event_handler_(inotify_event* event);
+            void event_handler_(InotifyEvent* event);
         };
     }
 }

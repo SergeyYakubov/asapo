@@ -8,7 +8,7 @@
  
  - /producer/producer-api
  
- **Library:** Producer library which can send data to the receiver
+ **Library:** ProducerImpl library which can send data to the receiver
  
  - /receiver
  

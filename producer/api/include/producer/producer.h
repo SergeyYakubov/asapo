@@ -5,18 +5,18 @@
 
 namespace HIDRA2
 {
+    enum ProducerError {
+        PRODUCER_ERROR__OK,
+    };
+
     class Producer
     {
-    private:
-        static uint64_t kInitCount;
-        Producer();
     public:
-        static const uint32_t kVersion;
+        static Producer* create();
 
-        Producer(const Producer&) = delete;
-        Producer& operator=(const Producer&) = delete;
-
-        static Producer* CreateProducer(std::string receiver_address);
+        virtual uint64_t get_version() = 0;
+        //virtual ProducerError connect(std::string receiver_address) = 0;
+        //virtual ProducerError sendfile(std::string receiver_address) = 0;
     };
 }
 
