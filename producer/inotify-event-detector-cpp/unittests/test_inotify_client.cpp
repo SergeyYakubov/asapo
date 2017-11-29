@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include "../src/inotify_helper.h"
 
 TEST(EMPTY, REMOVEME)
 {
