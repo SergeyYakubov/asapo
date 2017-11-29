@@ -12,8 +12,6 @@ function(gtest target test_source_files test_libraries)
 	target_link_libraries(test-${target} ${test_libraries})
 	add_test(NAME test-${target} COMMAND test-${target})
 	
-	astyle(test-${target} ${test_source_files})
-
 	message(STATUS "Added test 'test-${target}'")
         
 	if(CMAKE_COMPILER_IS_GNUCXX)
