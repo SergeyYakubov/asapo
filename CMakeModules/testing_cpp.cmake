@@ -17,8 +17,9 @@ function(gtest target test_source_files test_libraries)
 	if(CMAKE_COMPILER_IS_GNUCXX)
 		include(CodeCoverage)
 		APPEND_COVERAGE_COMPILER_FLAGS()
+		set (COVERAGE_EXCLUDES 'unittests/*')
 		SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
-		add_test(NAME coveragetest-${target} 
+		add_test(NAME coveragetest-${target}
         		COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
         		 coverage-${target} ${CMAKE_BINARY_DIR} ${HIDRA2_MINIMUM_COVERAGE} 
         		)

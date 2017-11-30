@@ -9,7 +9,9 @@ HIDRA2_MINIMUM_COVERAGE=$3
 make ${TARGET}
 
 coverage=`cat ${BINARY_DIR}/${TARGET}.txt`
-
+if [ -z "$coverage" ]; then
+ coverage=0
+fi
 if (( coverage < HIDRA2_MINIMUM_COVERAGE )); then
 	exec >&2
 	echo
