@@ -16,6 +16,7 @@ include(testing_cpp)
 add_subdirectory(producer/api)
 add_subdirectory(common/cpp)
 add_subdirectory(producer/inotify-event-detector-cpp)
+add_subdirectory(worker/api/cpp)
 
 
 if(BUILD_DOCS)
