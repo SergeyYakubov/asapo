@@ -6,6 +6,8 @@
 
 namespace HIDRA2
 {
+    typedef uint64_t FileReferenceId;
+
     enum OpCode : uint8_t {
         OP_CODE__HELLO,
         OP_CODE__PREPARE_SEND_DATA,
@@ -26,23 +28,24 @@ namespace HIDRA2
      * @{
      */
     struct GenericNetworkRequest {
-        OpCode  op_code;
-        uint64_t request_id;
-        char     data[];
+        OpCode      op_code;
+        uint64_t    request_id;
+        char        data[];
     };
 
     struct GenericNetworkResponse {
-        OpCode    op_code;
-        uint64_t   request_id;
-        NetworkErrorCode error_code;
-        char       data[];
+        OpCode              op_code;
+        uint64_t            request_id;
+        NetworkErrorCode    error_code;
+        char                data[];
     };
 
     struct HelloRequest {
-        uint32_t client_version;
+        uint32_t    client_version;
+        OS_TYPE     os;
 
-        OS_TYPE os : 4;
-        bool    is_x64 : 1;
+        //Flags
+        bool        is_x64 : 1;
     };
 
     /**
@@ -63,13 +66,13 @@ namespace HIDRA2
      * - ::NET_ERR__FILENAME_ALREADY_IN_USE
      */
     struct PrepareSendDataResponse {
-        uint64_t file_reference_id;
+        FileReferenceId file_reference_id;
     };
 
     struct SendDataChunkRequest {
-        uint64_t file_reference_id;
-        uint64_t start_byte;
-        uint64_t chunk_size;
+        FileReferenceId file_reference_id;
+        uint64_t        start_byte;
+        uint64_t        chunk_size;
     };
 
     /**
@@ -86,9 +89,9 @@ namespace HIDRA2
      * @{
      */
     struct GenericNetworkEvent {
-        OpCode     op_code;
-        NetworkErrorCode  error_code;
-        char        data[];
+        OpCode              op_code;
+        NetworkErrorCode    error_code;
+        char                data[];
     };
 
     /**

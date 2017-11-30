@@ -1,8 +1,8 @@
-set(TARGET_NAME inotify-event-detector-cpp)
+set(TARGET_NAME dummy-event-detector-cpp)
 set(SOURCE_FILES
         src/main.cpp
-        src/inotify_helper.cpp src/inotify_helper.h
-        src/Inotify_event_detector.cpp src/Inotify_event_detector.h
+        src/dummy_yieldable.h src/dummy_yieldable.cpp
+        src/dummy_detector.h src/dummy_detector.cpp
         )
 
 
@@ -20,6 +20,6 @@ astyle(${TARGET_NAME} "${SOURCE_FILES}")
 ################################
 # Testing
 ################################
-set(TEST_SOURCE_FILES unittests/test_inotify_client.cpp)
+set(TEST_SOURCE_FILES unittests/test_dummy_detector.cpp)
 
 gtest(${TARGET_NAME} ${TEST_SOURCE_FILES} "")

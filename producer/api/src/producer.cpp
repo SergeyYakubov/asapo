@@ -2,7 +2,7 @@
 #include "producer_impl.h"
 
 
-HIDRA2::Producer* HIDRA2::Producer::create()
+std::unique_ptr<HIDRA2::Producer> HIDRA2::Producer::create()
 {
-    return new ProducerImpl();
+    return std::unique_ptr<HIDRA2::Producer>(new ProducerImpl());
 }

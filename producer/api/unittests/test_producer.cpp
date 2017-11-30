@@ -3,15 +3,22 @@
 
 namespace
 {
-    TEST(VERSION, VersionAboveZero)
+
+    TEST(create, PointerIsNotNullptr)
     {
-        HIDRA2::Producer* p = HIDRA2::Producer::create();
+        std::unique_ptr<HIDRA2::Producer> p = HIDRA2::Producer::create();
+        EXPECT_NE(p, nullptr);
+    }
+
+    TEST(get_version, VersionAboveZero)
+    {
+        std::unique_ptr<HIDRA2::Producer> p = HIDRA2::Producer::create();
         EXPECT_GE(p->get_version(), 0);
     }
 
-    TEST(CreateProducer, PointerIsNotNullptr)
+    TEST(get_status, StatusDisconnectedBeforeConnect)
     {
-        //HIDRA2::ProducerImpl* prod = HIDRA2::ProducerImpl::CreateProducer("127.0.0.1");
-        //EXPECT_NE(1, nullptr);
+        std::unique_ptr<HIDRA2::Producer> p = HIDRA2::Producer::create();
+        EXPECT_GE(p->get_status(), HIDRA2::ProducerStatus::PRODUCER_STATUS__DISCONNECTED);
     }
 }

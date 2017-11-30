@@ -1,9 +1,7 @@
-set(TARGET_NAME producer-api)
+set(TARGET_NAME receiver)
 set(SOURCE_FILES
-        include/producer/producer.h src/producer.cpp
-        src/producer_impl.h src/producer_impl.cpp
-        src/pointer_queue.h src/pointer_queue.cpp
-        include/producer/yieldable.h)
+        src/main.cpp
+        src/receiver.h src/receiver.cpp)
 
 
 ################################
@@ -20,7 +18,7 @@ astyle(${TARGET_NAME} "${SOURCE_FILES}")
 ################################
 # Testing
 ################################
-set(TEST_SOURCE_FILES unittests/test_producer.cpp)
+set(TEST_SOURCE_FILES unittests/test_receiver.cpp)
 set(TEST_LIBRARIES producer-api)
 
 
