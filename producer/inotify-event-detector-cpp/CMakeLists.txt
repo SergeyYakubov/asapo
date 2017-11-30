@@ -10,9 +10,6 @@ target_include_directories(${TARGET_NAME} PRIVATE include)
 target_link_libraries(${TARGET_NAME} common producer-api)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-astyle(${TARGET_NAME} ${SOURCE_FILES})
-
-
 ################################
 # Testing
 ################################

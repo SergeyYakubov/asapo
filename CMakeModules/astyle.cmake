@@ -1,14 +1,19 @@
-function(astyle target source_files)
-    find_program(ASTYLE_EXECUTABLE astyle)
-    if(ASTYLE_EXECUTABLE)
-        message(STATUS "Found astyle, using astyle to format code of target ${target}.")
-        add_custom_command(
-                TARGET ${target} PRE_BUILD
-                COMMAND
-                ${ASTYLE_EXECUTABLE} -n --style=1tbs --indent-namespaces --indent-preproc-block ${source_files}
-                WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} VERBATIM
+find_program(ASTYLE_EXECUTABLE astyle)
+
+add_custom_target(ASTYLE)
+
+if(ASTYLE_EXECUTABLE)
+	message(STATUS "Found astyle, using astyle to format code of target ${target}.")
+	add_custom_target(astyle ALL
+		COMMAND
+		${ASTYLE_EXECUTABLE} -i
+			--exclude=${PROJECT_BINARY_DIR}
+			--recursive -n --style=google 
+			"${PROJECT_SOURCE_DIR}/*.cpp" "${PROJECT_SOURCE_DIR}/*.h"
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+		VERBATIM	
         )
-    else()
-        message(WARNING "Unable to find astyle. Skipping code formatting for ${target}")
-    endif()
-endfunction()
+else()
+	message(WARNING "Unable to find astyle. Code formatting willbe skipped")
+endif()
+
