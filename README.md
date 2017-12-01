@@ -1,4 +1,4 @@
-# HIDRA2
+# hidra2
 
 # C++ Projects
  

@@ -2,8 +2,7 @@ set(TARGET_NAME producer-api)
 set(SOURCE_FILES
         include/producer/producer.h src/producer.cpp
         src/producer_impl.h src/producer_impl.cpp
-        src/pointer_queue.h src/pointer_queue.cpp
-        include/producer/yieldable.h)
+        )
 
 
 ################################

@@ -5,21 +5,21 @@
 int DummyDetector::main(int argc, char** argv)
 {
 
-    std::unique_ptr<HIDRA2::Producer> producer = HIDRA2::Producer::create();
-    producer->connect("127.0.0.1");
+    std::unique_ptr<hidra2::Producer> producer = hidra2::Producer::create();
+    producer->connectToReceiver("127.0.0.1");
 
     const size_t size = 1024*20;
     void* buffer = malloc(size);
     auto dummy_yieldable = new DummyYieldable(buffer, size);
 
-    HIDRA2::ProducerError error;
+    hidra2::ProducerError error;
     producer->send("test", size, dummy_yieldable,
-    [&dummy_yieldable, &buffer](HIDRA2::FileChunk fileChunk) {
+    [&dummy_yieldable, &buffer](hidra2::FileChunk fileChunk) {
         if(dummy_yieldable->is_done()) {
             free(buffer);
             delete dummy_yieldable;
         }
-    }, [this](HIDRA2::FileReferenceId reference_id, HIDRA2::ProducerError error) {
+    }, [this](hidra2::FileReferenceId reference_id, hidra2::ProducerError error) {
         handle_file_done(reference_id, error);
     },
     error);
@@ -27,7 +27,7 @@ int DummyDetector::main(int argc, char** argv)
     return 0;
 }
 
-void DummyDetector::handle_file_done(HIDRA2::FileReferenceId reference_id, HIDRA2::ProducerError error)
+void DummyDetector::handle_file_done(hidra2::FileReferenceId reference_id, hidra2::ProducerError error)
 {
     if(!error) {
         std::cout << "File " << reference_id << " was successfully send." << std::endl;

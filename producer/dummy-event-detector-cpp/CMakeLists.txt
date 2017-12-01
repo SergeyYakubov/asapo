@@ -1,7 +1,6 @@
 set(TARGET_NAME dummy-event-detector-cpp)
 set(SOURCE_FILES
         src/main.cpp
-        src/dummy_yieldable.h src/dummy_yieldable.cpp
         src/dummy_detector.h src/dummy_detector.cpp
         )
 

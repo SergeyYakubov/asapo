@@ -4,9 +4,9 @@
 #include <string>
 #include <memory>
 #include <common/networking.h>
-#include "yieldable.h"
+#include <system_wrappers/io.h>
 
-namespace HIDRA2
+namespace hidra2
 {
     enum ProducerError {
         PRODUCER_ERROR__OK,
@@ -31,20 +31,19 @@ namespace HIDRA2
 
     class Producer
     {
+     private:
+      IO io
     public:
         static std::unique_ptr<Producer> create();
 
-        //virtual ~Producer() = 0;
+        //virtual ~Producer() = 0;W
+
+        virtual void            __set_io(IO* io);
 
         virtual uint64_t        get_version() const = 0;
         virtual ProducerStatus  get_status() const = 0;
-        virtual ProducerError   connect(std::string receiver_address) = 0;
-        virtual FileReferenceId send(std::string filename,
-                                     uint64_t file_size,
-                                     Yieldable<FileChunk>* chunk_provider,
-                                     std::function<void(FileChunk)> after_processing,
-                                     std::function<void(FileReferenceId, ProducerError)> file_done,
-                                     ProducerError& out_error) = 0;
+        virtual ProducerError   connectToReceiver(std::string receiver_address) = 0;
+        virtual FileReferenceId send(std::string filename, uint64_t file_size, void* data) = 0;
     };
 }
 

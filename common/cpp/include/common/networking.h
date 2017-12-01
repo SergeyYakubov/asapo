@@ -4,7 +4,7 @@
 #include <cstdint>
 #include "os.h"
 
-namespace HIDRA2
+namespace hidra2
 {
     typedef uint64_t FileReferenceId;
 
