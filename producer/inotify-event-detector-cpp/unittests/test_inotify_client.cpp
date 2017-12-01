@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-TEST(EMPTY, REMOVEME)
-{
+TEST(EMPTY, REMOVEME) {
     EXPECT_EQ(1, 1);
 }
