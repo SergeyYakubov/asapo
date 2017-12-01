@@ -1,6 +1,6 @@
 set(TARGET_NAME worker-api)
 
-set(SOURCE_FILES include/worker/data_source.h src/data_broker_factory.cpp src/folder_data_broker.cpp src/folder_data_broker.h)
+set(SOURCE_FILES include/worker/data_broker.h src/data_broker.cpp src/folder_data_broker.cpp src/folder_data_broker.h)
 
 
 ################################

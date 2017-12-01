@@ -3,18 +3,21 @@
 
 #include <memory>
 #include <string>
+#include <iostream>
 
 namespace hidra2 {
 
 class DataBroker {
   public:
-    virtual int Connect()=0;
+  inline virtual int connect()=0;
 };
 
-class DataBrokerFactory {
-  public:
-    static std::unique_ptr<DataBroker> Create(std::string);
+class DataBrokerFactory{
+ public:
+  static std::unique_ptr<DataBroker> create(std::string source_name) noexcept;
 };
+
+
 
 
 }
