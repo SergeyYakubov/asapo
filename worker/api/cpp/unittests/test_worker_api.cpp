@@ -3,7 +3,7 @@
 namespace {
 
 TEST(WorkerAPI, TestName) {
-  SUCCEED();
+    SUCCEED();
 }
 
 }
