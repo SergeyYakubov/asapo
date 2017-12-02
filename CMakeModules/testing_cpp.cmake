@@ -16,10 +16,9 @@ function(gtest target test_source_files test_libraries)
 
         message(STATUS "Added test 'test-${target}'")
 
-        if ((CMAKE_COMPILER_IS_GNUCXX) OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang"))
+        if (CMAKE_COMPILER_IS_GNUCXX)
             include(CodeCoverage)
             APPEND_COVERAGE_COMPILER_FLAGS()
-            set (COVERAGE_EXCLUDES '*/unittests/*')
             SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
             add_test(NAME coveragetest-${target}
                     COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
