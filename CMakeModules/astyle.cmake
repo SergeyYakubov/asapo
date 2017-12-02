@@ -1,7 +1,5 @@
 find_program(ASTYLE_EXECUTABLE astyle)
 
-add_custom_target(ASTYLE)
-
 if(ASTYLE_EXECUTABLE)
 	message(STATUS "Found astyle, using astyle to format code of target ${target}.")
 	add_custom_target(astyle ALL
