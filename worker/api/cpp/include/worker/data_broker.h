@@ -7,18 +7,21 @@
 
 namespace hidra2 {
 
+enum class WorkerErrorCode {
+    ERR__NO_ERROR,
+    ERR__MEMORY_ERROR,
+    ERR__EMPTY_DATASOURCE
+};
+
 class DataBroker {
-  public:
-  inline virtual int connect()=0;
-};
-
-class DataBrokerFactory{
  public:
-  static std::unique_ptr<DataBroker> create(std::string source_name) noexcept;
+    virtual WorkerErrorCode Connect()=0;
 };
 
-
-
+class DataBrokerFactory {
+ public:
+    static std::unique_ptr<DataBroker> Create(const std::string &source_name, WorkerErrorCode* return_code) noexcept;
+};
 
 }
 #endif //HIDRA2_DATASOURCE_H

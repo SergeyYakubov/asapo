@@ -3,19 +3,24 @@
 
 namespace hidra2 {
 
+std::unique_ptr<DataBroker> DataBrokerFactory::Create(const std::string &source_name,
+                                                      WorkerErrorCode* return_code) noexcept {
 
-std::unique_ptr<DataBroker> DataBrokerFactory::create(std::string source_name) noexcept {
-    std::unique_ptr<DataBroker> p;
-    try {
-        p = (std::unique_ptr<DataBroker>)new FolderDataBroker(source_name);
-    }
-    catch (...){
+    if (source_name.empty()) {
+        *return_code = WorkerErrorCode::ERR__EMPTY_DATASOURCE;
         return nullptr;
+    }
+
+    std::unique_ptr<DataBroker> p = nullptr;
+    try {
+        p = (std::unique_ptr<DataBroker>) new FolderDataBroker(source_name);
+        *return_code = WorkerErrorCode::ERR__NO_ERROR;
+    } catch (...) {         // we do not test this part
+        *return_code = WorkerErrorCode::ERR__MEMORY_ERROR;
     }
 
     return p;
 };
-
 
 }
 

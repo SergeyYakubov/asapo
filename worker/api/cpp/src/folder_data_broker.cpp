@@ -1,14 +1,17 @@
 #include "folder_data_broker.h"
 
-#include <iostream>
 namespace hidra2 {
 
-FolderDataBroker::FolderDataBroker(std::string source_name)
-    : source_name_{source_name} {
+FolderDataBroker::FolderDataBroker(const std::string &source_name) : source_name_{source_name},
+                                                                     io_{nullptr} {
 }
 
-int FolderDataBroker::connect() {
-    return 0;
+WorkerErrorCode FolderDataBroker::Connect() {
+    return WorkerErrorCode::ERR__NO_ERROR;
+}
+
+void FolderDataBroker::set_io_(void* io) {
+    io_ = io;
 }
 
 }

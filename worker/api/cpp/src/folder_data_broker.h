@@ -9,12 +9,16 @@ namespace hidra2 {
 
 class FolderDataBroker final: public hidra2::DataBroker {
   public:
-    FolderDataBroker(std::string source_name);
-    int connect() override;
- private:
+    explicit FolderDataBroker(const std::string& source_name);
+    WorkerErrorCode Connect() override;
+
+    void set_io_(void* io);
+  private:
     std::string source_name_;
+    void* io_;
 };
 
 }
 
 #endif //HIDRA2_FOLDERDATABROKER_H
+
