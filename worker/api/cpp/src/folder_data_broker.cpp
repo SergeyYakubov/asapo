@@ -7,16 +7,17 @@
 namespace hidra2 {
 
 WorkerErrorCode MapIOError(IOErrors io_err) {
-    std::map<IOErrors,WorkerErrorCode> error_mapping= {
-        {IOErrors::NO_ERROR,WorkerErrorCode::ERR__NO_ERROR},
-        {IOErrors::FOLDER_NOT_FOUND,WorkerErrorCode::SOURCE_NOT_FOUND}
-    };
-
-    auto search=error_mapping.find(io_err);
-
-    WorkerErrorCode err = WorkerErrorCode::UNKNOWN_IO_ERROR;
-    if(search != error_mapping.end()) {
-        err=search->second;
+    WorkerErrorCode err;
+    switch (io_err) { // we do not use map due to performance reasons
+        case IOErrors::NO_ERROR:
+            err = WorkerErrorCode::ERR__NO_ERROR;
+            break;
+        case IOErrors::FOLDER_NOT_FOUND:
+            err = WorkerErrorCode::SOURCE_NOT_FOUND;
+            break;
+        default:
+            err = WorkerErrorCode::UNKNOWN_IO_ERROR;
+            break;
     }
 
     return err;

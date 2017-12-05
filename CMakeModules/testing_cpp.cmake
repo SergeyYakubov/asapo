@@ -13,6 +13,7 @@ function(gtest target test_source_files test_libraries)
             target_link_libraries(test-${target} ${test_libraries})
         endif ()
         add_test(NAME test-${target} COMMAND test-${target})
+        set_tests_properties(test-${target} PROPERTIES LABELS "unit;all")
 
         message(STATUS "Added test 'test-${target}'")
 
@@ -23,8 +24,8 @@ function(gtest target test_source_files test_libraries)
             SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
             add_test(NAME coveragetest-${target}
                     COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
-                    coverage-${target} ${CMAKE_BINARY_DIR} ${HIDRA2_MINIMUM_COVERAGE}
-                    )
+                    coverage-${target} ${CMAKE_BINARY_DIR} ${HIDRA2_MINIMUM_COVERAGE})
+            set_tests_properties(coveragetest-${target} PROPERTIES LABELS "coverage;all")
             SET_TESTS_PROPERTIES(coveragetest-${target} PROPERTIES DEPENDS test-${target})
             set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} PARENT_SCOPE)
             set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} PARENT_SCOPE)

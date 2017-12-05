@@ -3,8 +3,9 @@ set(SOURCE_FILES
         include/common/os.h
         include/common/networking.h
         include/system_wrappers/io.h
-        include/system_wrappers/system_io.h src/system_io.cpp
-        include/system_wrappers/system_io_linux.cpp)
+        include/system_wrappers/system_io.h
+        src/system_io.cpp
+        src/system_io_linux.cpp)
 
 
 ################################
