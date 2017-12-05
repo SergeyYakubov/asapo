@@ -4,7 +4,7 @@
 #include <cstdint>
 #include "os.h"
 
-namespace HIDRA2 {
+namespace hidra2 {
 enum OP_CODE : uint8_t {
     OP_CODE__HELLO,
 };

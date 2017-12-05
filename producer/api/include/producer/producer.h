@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace HIDRA2 {
+namespace hidra2 {
 class Producer {
   private:
     static unsigned long kinit_count_;

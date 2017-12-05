@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace HIDRA2 {
+namespace hidra2 {
 enum OS_TYPE : uint8_t {
     OS_UNKOWN,
     OS_LINUX,
