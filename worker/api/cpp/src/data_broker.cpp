@@ -3,7 +3,7 @@
 
 namespace hidra2 {
 
-std::unique_ptr<DataBroker> DataBrokerFactory::Create(const std::string &source_name,
+std::unique_ptr<DataBroker> DataBrokerFactory::Create(const std::string& source_name,
                                                       WorkerErrorCode* return_code) noexcept {
 
     if (source_name.empty()) {

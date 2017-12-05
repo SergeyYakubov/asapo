@@ -5,17 +5,19 @@
 
 #include <string>
 
+#include "system_wrappers/io.h"
+
+
 namespace hidra2 {
 
-class FolderDataBroker final: public hidra2::DataBroker {
+class FolderDataBroker final : public hidra2::DataBroker {
   public:
     explicit FolderDataBroker(const std::string& source_name);
     WorkerErrorCode Connect() override;
-
-    void set_io_(void* io);
+    std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
   private:
-    std::string source_name_;
-    void* io_;
+    std::string base_path_;
+    std::vector<std::string>  filelist_;
 };
 
 }

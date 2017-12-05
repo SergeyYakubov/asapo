@@ -10,16 +10,18 @@ namespace hidra2 {
 enum class WorkerErrorCode {
     ERR__NO_ERROR,
     ERR__MEMORY_ERROR,
-    ERR__EMPTY_DATASOURCE
+    ERR__EMPTY_DATASOURCE,
+    SOURCE_NOT_FOUND,
+    UNKNOWN_IO_ERROR
 };
 
 class DataBroker {
- public:
+  public:
     virtual WorkerErrorCode Connect()=0;
 };
 
 class DataBrokerFactory {
- public:
+  public:
     static std::unique_ptr<DataBroker> Create(const std::string &source_name, WorkerErrorCode* return_code) noexcept;
 };
 
