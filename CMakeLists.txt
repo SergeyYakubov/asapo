@@ -8,6 +8,7 @@ option(BUILD_DOCS "Uses doxygen to build the documentaion" OFF)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
 
+# format sources
 include(astyle)
 
 include(testing_cpp)

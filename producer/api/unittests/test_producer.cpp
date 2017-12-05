@@ -1,24 +1,13 @@
 #include <gtest/gtest.h>
-#include "producer/producer.h"
+#include <producer/producer.h>
 
-namespace
-{
+namespace {
+TEST(VERSION, VersionAboveZero) {
+    EXPECT_GE(hidra2::Producer::VERSION, 0);
+}
 
-    TEST(create, PointerIsNotNullptr)
-    {
-        std::unique_ptr<hidra2::Producer> p = hidra2::Producer::create();
-        EXPECT_NE(p, nullptr);
-    }
-
-    TEST(get_version, VersionAboveZero)
-    {
-        std::unique_ptr<hidra2::Producer> p = hidra2::Producer::create();
-        EXPECT_GE(p->get_version(), 0);
-    }
-
-    TEST(get_status, StatusDisconnectedBeforeConnect)
-    {
-        std::unique_ptr<hidra2::Producer> p = hidra2::Producer::create();
-        EXPECT_GE(p->get_status(), hidra2::ProducerStatus::PRODUCER_STATUS__DISCONNECTED);
-    }
+TEST(CreateProducer, PointerIsNotNullptr) {
+    hidra2::Producer* prod = hidra2::Producer::CreateProducer("127.0.0.1");
+    EXPECT_NE(prod, nullptr);
+}
 }

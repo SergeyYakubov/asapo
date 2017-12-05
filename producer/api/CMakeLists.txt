@@ -1,8 +1,5 @@
 set(TARGET_NAME producer-api)
-set(SOURCE_FILES
-        include/producer/producer.h src/producer.cpp
-        src/producer_impl.h src/producer_impl.cpp
-        )
+set(SOURCE_FILES src/producer/producer.cpp include/producer/producer.h)
 
 
 ################################
@@ -12,9 +9,6 @@ add_library(${TARGET_NAME} SHARED ${SOURCE_FILES})
 target_include_directories(${TARGET_NAME} PUBLIC include)
 target_link_libraries(${TARGET_NAME} common)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-
-astyle(${TARGET_NAME} "${SOURCE_FILES}")
-
 
 ################################
 # Testing
