@@ -4,10 +4,9 @@
 #include <common/networking.h>
 #include <producer/producer.h>
 
-class DummyDetector
-{
+class DummyDetector {
 
-public:
+  public:
     int main(int argc, char* argv[]);
 };
 
