@@ -6,13 +6,13 @@
 namespace hidra2 {
 
 class HasIO {
- protected:
-  static IO* const kDefaultIO;
-  IO* io;
+  protected:
+    static IO* const kDefaultIO;
+    IO* io;
 
-  HasIO();
- public:
-  void __set_io(IO* io);
+    HasIO();
+  public:
+    void __set_io(IO* io);
 };
 
 }

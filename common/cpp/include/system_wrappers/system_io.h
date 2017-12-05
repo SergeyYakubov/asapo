@@ -4,6 +4,7 @@
 #include "io.h"
 
 namespace hidra2 {
+
 class SystemIO final : public IO {
   public:
     int open(const char *__file, int __oflag);
@@ -12,8 +13,10 @@ class SystemIO final : public IO {
     ssize_t recv(int __fd, void *__buf, size_t __n, int __flags);
     ssize_t write(int __fd, const void *__buf, size_t __n);
     ssize_t send(int __fd, const void *__buf, size_t __n, int __flags);
+    ssize_t connect(int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len);
 
 };
+
 }
 
 #endif //HIDRA2_SYSTEM_WRAPPERS__SYSTEM_IO_H

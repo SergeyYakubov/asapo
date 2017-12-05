@@ -4,10 +4,10 @@
 hidra2::IO* const hidra2::HasIO::kDefaultIO = new hidra2::SystemIO();
 
 hidra2::HasIO::HasIO() {
-  io = kDefaultIO;
+    io = kDefaultIO;
 }
 
 void hidra2::HasIO::__set_io(hidra2::IO* io) {
-  this->io = io;
+    this->io = io;
 }
 
