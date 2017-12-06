@@ -7,6 +7,6 @@ hidra2::Producer::Producer() {
     kinit_count_++;
 }
 
-hidra2::Producer *hidra2::Producer::CreateProducer(std::string receiver_address) {
+hidra2::Producer* hidra2::Producer::CreateProducer(std::string receiver_address) {
     return new Producer();
 }

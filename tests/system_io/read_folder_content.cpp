@@ -1,43 +1,49 @@
 #include <iostream>
-#include <string>
+#include <memory>
 
 #include <system_wrappers/system_io.h>
 
 using hidra2::SystemIO;
 using hidra2::IOErrors;
 
-#
 
-
-void M_Assert(bool expr, std::string expected, std::string got, std::string msg) {
-    if (!expr) {
-        std::cerr << "Assert failed:\t" << msg << "\n"
+void M_AssertEq(const std::string& expected, const std::string& got) {
+    if (expected.compare(got) != 0) {
+        std::cerr << "Assert failed:\n"
                   << "Expected:\t'" << expected << "'\n"
                   << "Obtained:\t'" << got << "'\n";
         abort();
     }
 }
 
-
 int main(int argc, char* argv[]) {
-    auto io = new SystemIO;
-
     if (argc != 3) {
         std::cout << "Wrong number of arguments" << std::endl;
         return 1;
     }
-
     std::string expect{argv[2]};
 
     IOErrors err;
-
+    auto io = std::unique_ptr<SystemIO> {new SystemIO};
     auto files = io->FilesInFolder(argv[1], &err);
+
+    std::string result;
 
     switch (err) {
     case IOErrors::FOLDER_NOT_FOUND:
-        M_Assert(expect.compare("notfound")==0,expect,"notfound","Folder not found");
-        return 0;
+        result = "notfound";
+        break;
+    case IOErrors::NO_ERROR:
+        for(auto file_info : files)
+            result += file_info.relative_path + file_info.base_name;
+        break;
+    case IOErrors::PERMISSIONS_DENIED:
+        result = "noaccess";
+        break;
     }
 
-    return 1;
+    M_AssertEq(expect, result);
+
+
+    return 0;
 }

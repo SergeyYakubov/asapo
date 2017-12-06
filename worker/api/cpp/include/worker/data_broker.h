@@ -17,12 +17,12 @@ enum class WorkerErrorCode {
 
 class DataBroker {
   public:
-    virtual WorkerErrorCode Connect()=0;
+    virtual WorkerErrorCode Connect() = 0;
 };
 
 class DataBrokerFactory {
   public:
-    static std::unique_ptr<DataBroker> Create(const std::string &source_name, WorkerErrorCode* return_code) noexcept;
+    static std::unique_ptr<DataBroker> Create(const std::string& source_name, WorkerErrorCode* return_code) noexcept;
 };
 
 }

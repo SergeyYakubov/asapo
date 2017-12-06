@@ -9,15 +9,15 @@ namespace hidra2 {
 WorkerErrorCode MapIOError(IOErrors io_err) {
     WorkerErrorCode err;
     switch (io_err) { // we do not use map due to performance reasons
-        case IOErrors::NO_ERROR:
-            err = WorkerErrorCode::ERR__NO_ERROR;
-            break;
-        case IOErrors::FOLDER_NOT_FOUND:
-            err = WorkerErrorCode::SOURCE_NOT_FOUND;
-            break;
-        default:
-            err = WorkerErrorCode::UNKNOWN_IO_ERROR;
-            break;
+    case IOErrors::NO_ERROR:
+        err = WorkerErrorCode::ERR__NO_ERROR;
+        break;
+    case IOErrors::FOLDER_NOT_FOUND:
+        err = WorkerErrorCode::SOURCE_NOT_FOUND;
+        break;
+    default:
+        err = WorkerErrorCode::UNKNOWN_IO_ERROR;
+        break;
     }
 
     return err;

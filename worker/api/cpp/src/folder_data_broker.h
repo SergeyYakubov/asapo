@@ -17,7 +17,7 @@ class FolderDataBroker final : public hidra2::DataBroker {
     std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
   private:
     std::string base_path_;
-    std::vector<std::string>  filelist_;
+    std::vector<FileInfo>  filelist_;
 };
 
 }

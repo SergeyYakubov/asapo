@@ -4,8 +4,12 @@ set(SOURCE_FILES
         include/common/networking.h
         include/system_wrappers/io.h
         include/system_wrappers/system_io.h
-        src/system_io.cpp
-        src/system_io_linux.cpp)
+        src/system_io.cpp)
+IF(WIN32)
+    # Do windows specific includes
+ELSEIF(UNIX)
+    set(SOURCE_FILES ${SOURCE_FILES} src/system_io_linux.cpp)
+ENDIF(WIN32)
 
 
 ################################

@@ -4,7 +4,7 @@
 namespace hidra2 {
 
 std::unique_ptr<DataBroker> DataBrokerFactory::Create(const std::string& source_name,
-                                                      WorkerErrorCode* return_code) noexcept {
+        WorkerErrorCode* return_code) noexcept {
 
     if (source_name.empty()) {
         *return_code = WorkerErrorCode::ERR__EMPTY_DATASOURCE;
