@@ -11,3 +11,6 @@ void hidra2::HasIO::__set_io(hidra2::IO* io) {
     this->io = io;
 }
 
+hidra2::IO* hidra2::HasIO::__get_io() {
+    return io;
+}

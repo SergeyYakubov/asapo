@@ -13,6 +13,7 @@ class HasIO {
     HasIO();
   public:
     void __set_io(IO* io);
+    IO* __get_io();
 };
 
 }
