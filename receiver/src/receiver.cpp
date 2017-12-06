@@ -5,6 +5,7 @@
 #include <iostream>
 #include <common/networking.h>
 #include "receiver.h"
+#include "network_producer_peer.h"
 
 const int hidra2::Receiver::kMaxUnacceptedConnectionsBacklog = 5;
 
@@ -45,10 +46,9 @@ void hidra2::Receiver::stop_listener() {
 }
 
 void hidra2::Receiver::on_new_peer(int peer_socket_fd, std::string address) {
-    std::cout << "New connection from " << address << std::endl;
-    auto* request = new hidra2::GenericNetworkRequest();
+    NetworkProducerPeer peer(peer_socket_fd, address);
 
-    while(true) {
-        recv(peer_socket_fd, request, sizeof(GenericNetworkRequest), 0);
-    }
+    std::cout << "[" << peer.connection_id() << "] New connection from " << address << std::endl;
+
+    peer.start_peer_receiver();
 }

@@ -10,6 +10,7 @@
 namespace hidra2 {
 enum ProducerError {
     PRODUCER_ERROR__OK,
+    PRODUCER_ERROR__ALREADY_CONNECTED,
     PRODUCER_ERROR__CONNECTION_NOT_READY,
     PRODUCER_ERROR__CHUNK_PROVIDER_NOT_READY_AT_START,
 };
@@ -38,7 +39,7 @@ class Producer : public HasIO {
     virtual ProducerStatus get_status() const = 0;
 
     virtual ProducerError connect_to_receiver(std::string receiver_address) = 0;
-    virtual ProducerError send(std::string filename, uint64_t file_size, void *data) = 0;
+    virtual ProducerError send(std::string filename, void* data, uint64_t file_size) = 0;
 };
 }
 

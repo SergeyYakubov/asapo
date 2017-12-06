@@ -4,6 +4,7 @@ set(SOURCE_FILES
         include/common/networking.h
         include/system_wrappers/io.h
         include/system_wrappers/has_io.h src/has_io.cpp
+        include/system_wrappers/io_utils.h src/io_utils.cpp
         include/system_wrappers/system_io.h src/system_io.cpp
         )
 

@@ -46,3 +46,10 @@ ssize_t hidra2::SystemIO::send(int __fd, const void* __buf, size_t __n, int __fl
 ssize_t hidra2::SystemIO::connect(int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len) {
     return ::connect(__fd, __addr, __len);
 }
+int hidra2::SystemIO::select(int __nfds,
+                             fd_set* __readfds,
+                             fd_set* __writefds,
+                             fd_set* __exceptfds,
+                             struct timeval* __timeout) {
+    return ::select(__nfds, __readfds, __writefds, __exceptfds, __timeout);
+}

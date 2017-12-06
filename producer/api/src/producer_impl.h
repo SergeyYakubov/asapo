@@ -11,6 +11,9 @@ class ProducerImpl : public Producer {
   private:
     static const uint32_t kVersion;
     static FileReferenceId kGlobalReferenceId;
+
+    int         client_fd_ = -1;
+    uint64_t    request_id = 0;
   public:
     ProducerImpl();
     ProducerImpl(const ProducerImpl &) = delete;
@@ -20,7 +23,7 @@ class ProducerImpl : public Producer {
     uint64_t get_version() const override;
     ProducerStatus get_status() const override;
     ProducerError connect_to_receiver(std::string receiver_address) override;
-    ProducerError send(std::string filename, uint64_t file_size, void* data) override;
+    ProducerError send(std::string filename, void* data, uint64_t file_size) override;
 
 };
 }

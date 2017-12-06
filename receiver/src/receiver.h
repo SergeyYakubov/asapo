@@ -25,7 +25,6 @@ class Receiver {
     int listener_fd_;
 
     void on_new_peer(int peer_socket_fd, std::string address);
-
   public:
     Receiver(const Receiver &) = delete;
     Receiver &operator=(const Receiver &) = delete;

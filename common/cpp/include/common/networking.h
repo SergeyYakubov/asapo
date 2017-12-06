@@ -11,6 +11,8 @@ enum OpCode : uint8_t {
     OP_CODE__HELLO,
     OP_CODE__PREPARE_SEND_DATA,
     OP_CODE__SEND_DATA_CHUNK,
+
+    OP_CODE_COUNT,
 };
 
 enum NetworkErrorCode : uint16_t {
@@ -39,9 +41,9 @@ struct GenericNetworkResponse {
     char                data[];
 };
 
-struct HelloRequest {
+struct HelloRequest : GenericNetworkRequest {
     uint32_t    client_version;
-    OS_TYPE     os;
+    OSType      os;
 
     //Flags
     bool        is_x64 : 1;
@@ -51,11 +53,11 @@ struct HelloRequest {
  * Possible error codes:
  * - ::NET_ERR__UNSUPPORTED_VERSION
  */
-struct HelloResponse {
+struct HelloResponse : GenericNetworkResponse {
     uint32_t server_version;
 };
 
-struct PrepareSendDataRequest {
+struct PrepareSendDataRequest : GenericNetworkRequest {
     char     filename[255];
     uint64_t file_size;
 };
@@ -64,11 +66,11 @@ struct PrepareSendDataRequest {
  * Possible error codes:
  * - ::NET_ERR__FILENAME_ALREADY_IN_USE
  */
-struct PrepareSendDataResponse {
+struct PrepareSendDataResponse : GenericNetworkResponse {
     FileReferenceId file_reference_id;
 };
 
-struct SendDataChunkRequest {
+struct SendDataChunkRequest : GenericNetworkRequest {
     FileReferenceId file_reference_id;
     uint64_t        start_byte;
     uint64_t        chunk_size;
@@ -78,7 +80,7 @@ struct SendDataChunkRequest {
  * Possible error codes:
  * - ::NET_ERR__UNKNOWN_REFERENCE_ID
  */
-struct SendDataChunkResponse {
+struct SendDataChunkResponse : GenericNetworkResponse {
 };
 /** @} */
 

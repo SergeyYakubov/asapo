@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace hidra2 {
-enum OS_TYPE : uint8_t {
+enum OSType : uint8_t {
     OS_UNKOWN,
     OS_LINUX,
     OS_WINDOWS,

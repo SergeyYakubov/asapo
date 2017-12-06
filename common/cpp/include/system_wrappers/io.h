@@ -3,6 +3,7 @@
 
 #include <unistd.h>
 #include <sys/socket.h>
+#include "io_utils.h"
 
 namespace hidra2 {
 
@@ -11,10 +12,11 @@ class IO {
     /**
      * Generic
      **/
-    virtual int     open  (const char *__file, int __oflag) = 0;
-    virtual int     close (int __fd) = 0;
-    virtual ssize_t read  (int __fd, void *buf, size_t count) = 0;
-    virtual ssize_t write (int __fd, const void *__buf, size_t __n) = 0;
+    virtual int     open    (const char *__file, int __oflag) = 0;
+    virtual int     close   (int __fd) = 0;
+    virtual ssize_t read    (int __fd, void *buf, size_t count) = 0;
+    virtual ssize_t write   (int __fd, const void *__buf, size_t __n) = 0;
+    virtual int     select  (int __nfds, fd_set *__restrict __readfds, fd_set *__restrict __writefds, fd_set *__restrict __exceptfds, struct timeval *__restrict __timeout) = 0;
 
     /**
      * Network
