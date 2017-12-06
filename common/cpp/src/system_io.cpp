@@ -15,12 +15,28 @@ ssize_t hidra2::SystemIO::read(int __fd, void *buf, size_t count) {
     return ::read(__fd, buf, count);
 }
 
-ssize_t hidra2::SystemIO::recv(int __fd, void *__buf, size_t __n, int __flags) {
-    return ::recv(__fd, __buf, __n, __flags);
-}
-
 ssize_t hidra2::SystemIO::write(int __fd, const void *__buf, size_t __n) {
     return ::write(__fd, __buf, __n);
+}
+
+int hidra2::SystemIO::socket(int __domain, int __type, int __protocol) {
+    return ::socket(__domain, __type, __protocol);
+}
+
+int hidra2::SystemIO::bind(int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len) {
+    return ::bind(__fd, __addr, __len);
+}
+
+int hidra2::SystemIO::listen (int __fd, int __n) {
+    return ::listen(__fd, __n);
+}
+
+int hidra2::SystemIO::accept(int __fd, __SOCKADDR_ARG __addr, socklen_t *__restrict __addr_len) {
+    return ::accept(__fd, __addr, __addr_len);
+}
+
+ssize_t hidra2::SystemIO::recv(int __fd, void *__buf, size_t __n, int __flags) {
+    return ::recv(__fd, __buf, __n, __flags);
 }
 
 ssize_t hidra2::SystemIO::send(int __fd, const void* __buf, size_t __n, int __flags) {
