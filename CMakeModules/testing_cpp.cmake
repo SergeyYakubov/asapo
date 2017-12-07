@@ -20,7 +20,7 @@ function(gtest target test_source_files test_libraries)
         if (CMAKE_COMPILER_IS_GNUCXX)
             include(CodeCoverage)
             APPEND_COVERAGE_COMPILER_FLAGS()
-            set (COVERAGE_EXCLUDES '*/unittests/*')
+            set(COVERAGE_EXCLUDES '*/unittests/*')
             SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
             add_test(NAME coveragetest-${target}
                     COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
@@ -30,5 +30,28 @@ function(gtest target test_source_files test_libraries)
             set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} PARENT_SCOPE)
             set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} PARENT_SCOPE)
         endif ()
+    endif ()
+endfunction()
+
+
+function(add_test_setup_cleanup exename)
+    if (BUILD_TESTS)
+        add_test(NAME test-${exename}-setup COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/setup.sh)
+        add_test(NAME test-${exename}-cleanup COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/cleanup.sh)
+        set_tests_properties(test-${exename}-setup PROPERTIES FIXTURES_SETUP test-${exename}-fixture)
+        set_tests_properties(test-${exename}-cleanup PROPERTIES FIXTURES_CLEANUP test-${exename}-fixture)
+    endif ()
+endfunction()
+
+function(add_integration_test exename testname commandargs)
+    if (BUILD_TESTS)
+        set( args ${commandargs} )
+        separate_arguments(args)
+        add_test(NAME test-${exename}-${testname} COMMAND ${exename} ${args})
+        set_tests_properties(test-${exename}-${testname} PROPERTIES
+                LABELS "integration;all"
+                FIXTURES_REQUIRED test-${exename}-fixture
+                )
+
     endif ()
 endfunction()

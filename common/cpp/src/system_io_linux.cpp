@@ -83,17 +83,13 @@ void CollectFileInformationRecursivly(const std::string& path,
         if (IsDirectory(current_entity)) {
             CollectFileInformationRecursivly(path + "/" + current_entity->d_name,
                                              files, err);
-            if (*err != IOErrors::NO_ERROR) {
-                closedir(dir);
-                return;
-            }
+        } else {
+            ProcessFileEntity(current_entity, path, files, err);
         }
-        ProcessFileEntity(current_entity, path, files, err);
         if (*err != IOErrors::NO_ERROR) {
             closedir(dir);
             return;
         }
-
     }
     *err = IOErrorFromErrno();
     closedir(dir);
