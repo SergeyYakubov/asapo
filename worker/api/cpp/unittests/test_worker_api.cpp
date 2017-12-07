@@ -14,10 +14,6 @@ using ::testing::Test;
 
 namespace {
 
-
-
-
-
 TEST(DataBrokerFactoryTests, CreateFolderDataSource) {
     WorkerErrorCode return_code;
 
@@ -35,6 +31,5 @@ TEST(DataBrokerFactoryTests, FailCreateDataSourceWithEmptySource) {
     ASSERT_THAT(return_code, Eq(WorkerErrorCode::ERR__EMPTY_DATASOURCE));
     ASSERT_THAT(data_broker.release(), Eq(nullptr));
 }
-
 
 }

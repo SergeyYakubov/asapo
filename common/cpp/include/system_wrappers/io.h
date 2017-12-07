@@ -5,13 +5,9 @@
 #include <vector>
 #include <chrono>
 
-namespace hidra2 {
+#include "common/file_info.h"
 
-struct FileInfo {
-    std::string base_name;
-    std::string relative_path;
-    std::chrono::system_clock::time_point modify_date;
-};
+namespace hidra2 {
 
 
 enum class IOErrors {

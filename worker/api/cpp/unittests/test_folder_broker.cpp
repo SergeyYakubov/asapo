@@ -5,8 +5,6 @@
 #include "system_wrappers/system_io.h"
 #include "../src/folder_data_broker.h"
 
-
-
 using hidra2::DataBrokerFactory;
 using hidra2::DataBroker;
 using hidra2::FolderDataBroker;
@@ -64,7 +62,6 @@ class IOFodlerUnknownError: public FakeIO {
     }
 };
 
-
 class FolderDataBrokerTests : public Test {
   public:
     std::unique_ptr<FolderDataBroker> data_broker;
@@ -98,6 +95,13 @@ TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
     ASSERT_THAT(return_code, Eq(WorkerErrorCode::UNKNOWN_IO_ERROR));
 }
 
+/*TEST_F(FolderDataBrokerTests, GetNextWithouConnectReturnsError) {
+    WorkerErrorCode err;
 
+    auto err=data_broker->GetNext(nullptr,nullptr);
 
+    ASSERT_THAT(err, Eq(WorkerErrorCode::SOURCE_NOT_CONNECTED));
+}
+
+*/
 }
