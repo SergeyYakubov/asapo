@@ -10,7 +10,6 @@ class ProducerImpl : public Producer {
     friend Producer;
   private:
     static const uint32_t kVersion;
-    static FileReferenceId kGlobalReferenceId;
 
     int         client_fd_ = -1;
     uint64_t    request_id = 0;

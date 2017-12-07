@@ -1,58 +1,10 @@
 #include "network_producer_peer.h"
+#include <sys/sendfile.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <cmath>
 
 namespace hidra2 {
-
-void hexDump (char *desc, void *addr, int len) {
-    int i;
-    unsigned char buff[17];
-    unsigned char *pc = (unsigned char*)addr;
-
-    // Output description if given.
-    if (desc != NULL)
-        printf ("%s:\n", desc);
-
-    if (len == 0) {
-        printf("  ZERO LENGTH\n");
-        return;
-    }
-    if (len < 0) {
-        printf("  NEGATIVE LENGTH: %i\n",len);
-        return;
-    }
-
-    // Process every byte in the data.
-    for (i = 0; i < len; i++) {
-        // Multiple of 16 means new line (with line offset).
-
-        if ((i % 16) == 0) {
-            // Just don't print ASCII for the zeroth line.
-            if (i != 0)
-                printf ("  %s\n", buff);
-
-            // Output the offset.
-            printf ("  %04x ", i);
-        }
-
-        // Now the hex code for the specific character.
-        printf (" %02x", pc[i]);
-
-        // And store a printable ASCII character for later.
-        if ((pc[i] < 0x20) || (pc[i] > 0x7e))
-            buff[i % 16] = '.';
-        else
-            buff[i % 16] = pc[i];
-        buff[(i % 16) + 1] = '\0';
-    }
-
-    // Pad out last line if not exactly 16 characters.
-    while ((i % 16) != 0) {
-        printf ("   ");
-        i++;
-    }
-
-    // And print the final ASCII bit.
-    printf ("  %s\n", buff);
-}
 
 const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProducerPeer::init_request_handlers() {
     std::vector<NetworkProducerPeer::RequestHandlerInformation> vec(OP_CODE_COUNT);
@@ -72,7 +24,7 @@ const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProduce
     vec[OP_CODE__SEND_DATA_CHUNK] = {
         sizeof(SendDataChunkRequest),
         sizeof(SendDataChunkResponse),
-        (NetworkProducerPeer::RequestHandler) &NetworkProducerPeer::handle_prepare_send_data_request_
+        (NetworkProducerPeer::RequestHandler) &NetworkProducerPeer::handle_send_data_chunk_request_
     };
 
     return vec;
@@ -94,33 +46,76 @@ void NetworkProducerPeer::handle_hello_request_(NetworkProducerPeer* self, const
 
 void NetworkProducerPeer::handle_prepare_send_data_request_(NetworkProducerPeer* self, const PrepareSendDataRequest* request,
                                                             PrepareSendDataResponse* response) {
-    std::cout << "op_code " << request->op_code << std::endl;
-    std::cout << "request_id " << request->request_id << std::endl;
+    std::cout << "[PRE]op_code " << request->op_code << std::endl;
+    std::cout << "[PRE]request_id " << request->request_id << std::endl;
 
-    std::cout << "filename " << request->filename << std::endl;
-    std::cout << "file_size " << request->file_size << std::endl;
+    std::cout << "[PRE]filename " << request->filename << std::endl;
+    std::cout << "[PRE]file_size " << request->file_size << std::endl;
+
+    FileReferenceHandlerError error;
+    FileReferenceId reference_id = self->file_reference_handler.add_file(request->filename,
+                                                                         request->file_size,
+                                                                         self->connection_id(),
+                                                                         error);
+
+    if(reference_id == 0 || error) {
+        response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
+        response->file_reference_id = 0;
+        return;
+    }
 
     response->error_code = NET_ERR__NO_ERROR;
-    response->file_reference_id = 2;
+    response->file_reference_id = reference_id;
 }
 
 void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* self,
                                                           const SendDataChunkRequest* request,
                                                           SendDataChunkResponse* response) {
-    std::cout << "op_code " << request->op_code << std::endl;
-    std::cout << "request_id " << request->request_id << std::endl;
+    std::cout << "[CHUNK]op_code " << request->op_code << std::endl;
+    std::cout << "[CHUNK]request_id " << request->request_id << std::endl;
 
-    std::cout << "file_reference_id " << request->file_reference_id << std::endl;
-    std::cout << "start_byte " << request->start_byte << std::endl;
-    std::cout << "chunk_size " << request->chunk_size << std::endl;
+    std::cout << "[CHUNK]file_reference_id " << request->file_reference_id << std::endl;
+    std::cout << "[CHUNK]start_byte " << request->start_byte << std::endl;
+    std::cout << "[CHUNK]chunk_size " << request->chunk_size << std::endl;
 
-    void* chunk_buffer = malloc(request->chunk_size);
+    auto file_info = self->file_reference_handler.get_file(request->file_reference_id);
 
-    self->io->recv(self->socket_fd_, chunk_buffer, request->chunk_size, 0);
+    if(file_info == nullptr || file_info->owner != self->connection_id()) {
+        response->error_code = NET_ERR__UNKNOWN_REFERENCE_ID;
+        return;
+    }
 
-    hexDump("response", chunk_buffer, request->chunk_size);
+    size_t map_size = static_cast<size_t>(ceil(float(request->chunk_size)/float(getpagesize()))*getpagesize());
 
-    free(chunk_buffer);
+    void* mapped_file = mmap(nullptr,
+                             map_size,
+                             PROT_READ | PROT_WRITE, MAP_SHARED,
+                             file_info->fd,
+                             request->start_byte);
+
+    if(!mapped_file || mapped_file == MAP_FAILED) {
+        std::cerr << "Mapping a file faild" << std::endl;//TODO need to read to rest of the file into void
+        self->io->recv(self->socket_fd_, nullptr, request->chunk_size, 0);
+        response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
+        return;
+    }
+
+    if(self->io->recv(self->socket_fd_, mapped_file, request->chunk_size, 0) != request->chunk_size) {
+        std::cerr << "Fail to recv all the chunk data" << std::endl;
+        response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
+    }
+
+    if (msync(mapped_file, map_size, MS_SYNC) == -1) {
+        std::cerr << "Fail to sync map file" << std::endl;
+        response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
+    }
+
+    if(munmap(mapped_file, map_size) == -1) {
+        std::cerr << "munmap file faild" << std::endl;
+        response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
+        return;
+    }
+
     response->error_code = NET_ERR__NO_ERROR;
 }
 

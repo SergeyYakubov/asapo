@@ -3,9 +3,10 @@
 
 namespace hidra2 {
 
+FileReferenceHandler NetworkProducerPeer::file_reference_handler;
 std::atomic<uint32_t> NetworkProducerPeer::kNetworkProducerPeerCount;
 
-const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProducerPeer::request_handlers = NetworkProducerPeer::init_request_handlers();
+const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProducerPeer::kRequestHandlers = NetworkProducerPeer::init_request_handlers();
 
 NetworkProducerPeer::NetworkProducerPeer(int socket_fd, std::string address)  {
     address_ = std::move(address);
@@ -96,7 +97,7 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
     response->request_id = request->request_id;
     response->op_code = request->op_code;
 
-    auto handler_information = request_handlers[request->op_code];
+    auto handler_information = kRequestHandlers[request->op_code];
 
     //receive the rest of the message
     recv(socket_fd_, request->data, handler_information.request_size - sizeof(GenericNetworkRequest), 0);

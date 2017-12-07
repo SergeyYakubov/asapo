@@ -3,6 +3,7 @@ set(SOURCE_FILES
         src/main.cpp
         src/receiver.h src/receiver.cpp
         src/network_producer_peer.h src/network_producer_peer.cpp src/network_producer_peer_handlers.cpp
+        src/file_refernce_handler.h src/file_refernce_handler.cpp
         )
 
 

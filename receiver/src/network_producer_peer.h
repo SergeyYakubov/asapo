@@ -2,6 +2,7 @@
 #define HIDRA2_NETWORKPRODUCERPEER_H
 
 #include <string>
+#include <map>
 #include <utility>
 #include <thread>
 #include <common/networking.h>
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <atomic>
 #include <vector>
+#include "file_refernce_handler.h"
 
 namespace hidra2 {
 
@@ -21,8 +23,8 @@ class NetworkProducerPeer : HasIO {
         RequestHandler handler;
     };
   private:
-
-    static const std::vector<RequestHandlerInformation> request_handlers;
+    static FileReferenceHandler file_reference_handler;
+    static const std::vector<RequestHandlerInformation> kRequestHandlers;
     static std::atomic<uint32_t> kNetworkProducerPeerCount;
 
     uint32_t        connection_id_;
@@ -39,7 +41,7 @@ class NetworkProducerPeer : HasIO {
     static void handle_send_data_chunk_request_(NetworkProducerPeer* self, const SendDataChunkRequest* request, SendDataChunkResponse* response);
 
  public:
-    NetworkProducerPeer(int socket_fd, std::string aHelloRequestddress);
+    NetworkProducerPeer(int socket_fd, std::string address);
 
     static const std::vector<RequestHandlerInformation> init_request_handlers();
 

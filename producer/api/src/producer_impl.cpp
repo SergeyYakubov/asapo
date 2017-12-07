@@ -8,9 +8,6 @@
 
 const uint32_t hidra2::ProducerImpl::kVersion = 1;
 
-
-hidra2::FileReferenceId hidra2::ProducerImpl::kGlobalReferenceId = 0;
-
 hidra2::ProducerImpl::ProducerImpl() {
     __set_io(ProducerImpl::kDefaultIO);
 }
@@ -65,6 +62,7 @@ hidra2::ProducerError hidra2::ProducerImpl::connect_to_receiver(std::string rece
     return PRODUCER_ERROR__OK;
 }
 
+//TODO not our code. need to be removed. Copy&Pasted from stackoverflow
 void hexDump (char *desc, void *addr, int len) {
     int i;
     unsigned char buff[17];
@@ -121,7 +119,12 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void *dat
     hidra2::PrepareSendDataRequest prepareSendDataRequest;
     prepareSendDataRequest.op_code = OP_CODE__PREPARE_SEND_DATA;
     prepareSendDataRequest.request_id = request_id++;
+    prepareSendDataRequest.file_size = file_size;
     filename.copy((char*)&prepareSendDataRequest.filename, sizeof(prepareSendDataRequest.filename));
+
+    //TODO Loop
+
+    std::cout << "Send file: " << filename << std::endl;
 
     io->send(client_fd_, &prepareSendDataRequest, sizeof(prepareSendDataRequest), 0);
 
@@ -138,8 +141,8 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void *dat
     hidra2::SendDataChunkRequest sendDataChunkRequest;
     sendDataChunkRequest.op_code = OP_CODE__SEND_DATA_CHUNK;
     sendDataChunkRequest.request_id = request_id++;
-    sendDataChunkRequest.chunk_size = 0;
     sendDataChunkRequest.start_byte = 0;
+    sendDataChunkRequest.chunk_size = file_size;
     sendDataChunkRequest.file_reference_id = prepareSendDataResponse.file_reference_id;
 
     io->send(client_fd_, &sendDataChunkRequest, sizeof(sendDataChunkRequest), 0);
