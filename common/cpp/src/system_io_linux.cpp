@@ -40,7 +40,7 @@ bool IsDirectory(const struct dirent* entity) {
 
 system_clock::time_point GetTimePointFromFile(const string& fname, IOErrors* err) {
 
-    struct stat t_stat;
+    struct stat t_stat{};
     int res = stat(fname.c_str(), &t_stat);
     if (res < 0) {
         *err = IOErrorFromErrno();

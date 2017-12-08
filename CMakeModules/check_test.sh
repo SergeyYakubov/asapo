@@ -17,7 +17,7 @@ if (( coverage < HIDRA2_MINIMUM_COVERAGE )); then
 	echo
 	echo "*****"
 	echo
-	echo $TARGET coverage is ${coverage}% - less than required ${HIDRA2_MINIMUM_COVERAGE}%
+	echo ${TARGET} coverage is ${coverage}% - less than required ${HIDRA2_MINIMUM_COVERAGE}%
 	echo	
 	echo "*****"
 	echo

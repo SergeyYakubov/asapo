@@ -20,7 +20,7 @@ TEST(DataBrokerFactoryTests, CreateFolderDataSource) {
     auto data_broker = DataBrokerFactory::Create("path/to/file", &return_code);
 
     ASSERT_THAT(return_code, Eq(WorkerErrorCode::ERR__NO_ERROR));
-    ASSERT_THAT(dynamic_cast<FolderDataBroker*>(data_broker.release()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<FolderDataBroker*>(data_broker.get()), Ne(nullptr));
 }
 
 TEST(DataBrokerFactoryTests, FailCreateDataSourceWithEmptySource) {

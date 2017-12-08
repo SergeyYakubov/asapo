@@ -13,7 +13,7 @@ std::unique_ptr<DataBroker> DataBrokerFactory::Create(const std::string& source_
 
     std::unique_ptr<DataBroker> p = nullptr;
     try {
-        p = (std::unique_ptr<DataBroker>) new FolderDataBroker(source_name);
+        p.reset(new FolderDataBroker(source_name));
         *return_code = WorkerErrorCode::ERR__NO_ERROR;
     } catch (...) {         // we do not test this part
         *return_code = WorkerErrorCode::ERR__MEMORY_ERROR;

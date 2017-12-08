@@ -18,6 +18,7 @@ enum class WorkerErrorCode {
 class DataBroker {
   public:
     virtual WorkerErrorCode Connect() = 0;
+    virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
 };
 
 class DataBrokerFactory {

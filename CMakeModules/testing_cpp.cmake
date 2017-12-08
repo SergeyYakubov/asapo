@@ -33,16 +33,31 @@ function(gtest target test_source_files test_libraries)
             set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} PARENT_SCOPE)
         endif ()
 
-        if (MEMORYCHECK_COMMAND)
-            set(memcheck_args ${MEMORYCHECK_COMMAND_OPTIONS})
-            separate_arguments(memcheck_args)
-            add_test(NAME memcheck-${target} COMMAND ${MEMORYCHECK_COMMAND} ${memcheck_args}
-                    ${CMAKE_CURRENT_BINARY_DIR}/test-${target})
-            set_tests_properties(memcheck-${target} PROPERTIES LABELS "memcheck;all")
-        endif()
+        add_memory_test(${target} test-${target} "" "" "unit")
+
     endif ()
  endfunction()
 
+function(add_memory_test target executable commandargs fixture label)
+    if (MEMORYCHECK_COMMAND)
+        set(memcheck_args ${MEMORYCHECK_COMMAND_OPTIONS})
+        separate_arguments(memcheck_args)
+        set( args ${commandargs} )
+        separate_arguments(args)
+        add_test(NAME memcheck-${target} COMMAND ${MEMORYCHECK_COMMAND} ${memcheck_args}
+                ${CMAKE_CURRENT_BINARY_DIR}/${executable} ${args})
+        set_tests_properties(memcheck-${target} PROPERTIES
+                LABELS "memcheck_${label};all"
+                DEPENDS test-${target}
+                )
+        if (NOT ${fixture} STREQUAL "")
+            set_tests_properties(memcheck-${target} PROPERTIES
+                FIXTURES_REQUIRED ${fixture}
+                )
+        endif()
+
+    endif()
+endfunction()
 
 function(add_test_setup_cleanup exename)
     if (BUILD_TESTS)
@@ -62,5 +77,8 @@ function(add_integration_test exename testname commandargs)
                 LABELS "integration;all"
                 FIXTURES_REQUIRED test-${exename}-fixture
                 )
+        add_memory_test(${exename}-${testname} ${exename}
+                "${commandargs}" test-${exename}-fixture
+                "integration")
     endif ()
 endfunction()

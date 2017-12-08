@@ -15,6 +15,7 @@ class FolderDataBroker final : public hidra2::DataBroker {
     explicit FolderDataBroker(const std::string& source_name);
     WorkerErrorCode Connect() override;
     std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
+
   private:
     std::string base_path_;
     std::vector<FileInfo>  filelist_;

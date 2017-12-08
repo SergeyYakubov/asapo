@@ -8,7 +8,7 @@ using hidra2::IOErrors;
 
 
 void M_AssertEq(const std::string& expected, const std::string& got) {
-    if (expected.compare(got) != 0) {
+    if (expected != got) {
         std::cerr << "Assert failed:\n"
                   << "Expected:\t'" << expected << "'\n"
                   << "Obtained:\t'" << got << "'\n";
@@ -39,6 +39,9 @@ int main(int argc, char* argv[]) {
         break;
     case IOErrors::PERMISSIONS_DENIED:
         result = "noaccess";
+        break;
+    default:
+        result = "";
         break;
     }
 

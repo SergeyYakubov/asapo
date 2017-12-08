@@ -21,7 +21,8 @@ namespace {
 
 TEST(FolderDataBroker, SetCorrectIO) {
     auto data_broker = new FolderDataBroker("test");
-    ASSERT_THAT(dynamic_cast<hidra2::SystemIO*>(data_broker->io__.release()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<hidra2::SystemIO*>(data_broker->io__.get()), Ne(nullptr));
+    delete data_broker;
 }
 
 
