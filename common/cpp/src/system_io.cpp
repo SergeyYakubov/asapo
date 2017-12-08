@@ -2,6 +2,13 @@
 #include <unistd.h>
 #include <system_wrappers/system_io.h>
 
+int hidra2::SystemIO::OpenFileToRead(const std::string& fname, IOErrors* err) {
+    int fd = ::open(fname.c_str(), O_RDONLY);
+    *err = IOErrorFromErrno();
+    return fd;
+}
+
+
 int hidra2::SystemIO::open(const char* __file, int __oflag) {
     return ::open(__file, __oflag);
 }

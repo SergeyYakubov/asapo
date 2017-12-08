@@ -12,6 +12,8 @@ using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Test;
 
+
+
 namespace {
 
 TEST(DataBrokerFactoryTests, CreateFolderDataSource) {
@@ -19,7 +21,7 @@ TEST(DataBrokerFactoryTests, CreateFolderDataSource) {
 
     auto data_broker = DataBrokerFactory::Create("path/to/file", &return_code);
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::ERR__NO_ERROR));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::OK));
     ASSERT_THAT(dynamic_cast<FolderDataBroker*>(data_broker.get()), Ne(nullptr));
 }
 
@@ -28,7 +30,7 @@ TEST(DataBrokerFactoryTests, FailCreateDataSourceWithEmptySource) {
 
     auto data_broker = DataBrokerFactory::Create("", &return_code);
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::ERR__EMPTY_DATASOURCE));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::EMPTY_DATASOURCE));
     ASSERT_THAT(data_broker.release(), Eq(nullptr));
 }
 

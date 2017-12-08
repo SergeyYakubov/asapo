@@ -1,6 +1,8 @@
 #ifndef HIDRA2_FILE_INFO_H
 #define HIDRA2_FILE_INFO_H
 
+#include <chrono>
+
 namespace hidra2 {
 
 struct FileInfo {

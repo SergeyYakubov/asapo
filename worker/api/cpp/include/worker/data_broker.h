@@ -4,20 +4,30 @@
 #include <memory>
 #include <string>
 #include <iostream>
+#include <common/file_info.h>
+#include <vector>
 
 namespace hidra2 {
 
 enum class WorkerErrorCode {
-    ERR__NO_ERROR,
-    ERR__MEMORY_ERROR,
-    ERR__EMPTY_DATASOURCE,
+    OK,
+    MEMORY_ERROR,
+    EMPTY_DATASOURCE,
     SOURCE_NOT_FOUND,
+    SOURCE_NOT_CONNECTED,
+    SOURCE_ALREADY_CONNECTED,
+    PERMISSIONS_DENIED,
+    NO_DATA,
+    WRONG_INPUT,
     UNKNOWN_IO_ERROR
 };
+
+typedef std::vector<char> FileData;
 
 class DataBroker {
   public:
     virtual WorkerErrorCode Connect() = 0;
+    virtual WorkerErrorCode GetNext(FileInfo* info, FileData* data) = 0;
     virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
 };
 

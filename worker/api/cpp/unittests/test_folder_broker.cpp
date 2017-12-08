@@ -1,4 +1,6 @@
 #include <gmock/gmock.h>
+#include "gtest/gtest.h"
+using ::testing::AtLeast;
 
 #include "worker/data_broker.h"
 #include "system_wrappers/io.h"
@@ -12,10 +14,15 @@ using hidra2::WorkerErrorCode;
 using hidra2::IO;
 using hidra2::IOErrors;
 using hidra2::FileInfo;
+using hidra2::FileData;
+
 
 using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Test;
+using ::testing::_;
+using ::testing::Mock;
+
 
 namespace {
 
@@ -29,9 +36,15 @@ TEST(FolderDataBroker, SetCorrectIO) {
 
 class FakeIO: public IO {
   public:
+    int OpenFileToRead(const std::string& fname, IOErrors* err)  {
+        *err = IOErrors::NO_ERROR;
+        return 1;
+    };
+
     int open(const char* __file, int __oflag) {
         return 0;
     };
+
     int close(int __fd) {
         return 0;
     };
@@ -43,14 +56,23 @@ class FakeIO: public IO {
     };
     std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) {
         *err = IOErrors::NO_ERROR;
-        return {};
+        std::vector<FileInfo> file_infos;
+        FileInfo fi;
+        fi.base_name = "1";
+        file_infos.push_back(fi);
+        fi.base_name = "2";
+        file_infos.push_back(fi);
+        fi.base_name = "3";
+        file_infos.push_back(fi);
+
+        return file_infos;
     }
 };
 
 class IOFolderNotFound: public FakeIO {
   public:
     std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) {
-        *err = IOErrors::FOLDER_NOT_FOUND;
+        *err = IOErrors::FILE_NOT_FOUND;
         return {};
     }
 };
@@ -62,6 +84,24 @@ class IOFodlerUnknownError: public FakeIO {
         return {};
     }
 };
+
+class IOEmptyFodler: public FakeIO {
+  public:
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) {
+        *err = IOErrors::NO_ERROR;
+        return {};
+    }
+};
+
+class IOCannotOpenFile: public FakeIO {
+  public:
+    int OpenFileToRead(const std::string& fname, IOErrors* err)  {
+        *err = IOErrors::PERMISSIONS_DENIED;
+        return 1;
+    };
+};
+
+
 
 class FolderDataBrokerTests : public Test {
   public:
@@ -77,8 +117,17 @@ class FolderDataBrokerTests : public Test {
 TEST_F(FolderDataBrokerTests, CanConnect) {
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::ERR__NO_ERROR));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::OK));
 }
+
+TEST_F(FolderDataBrokerTests, CannotConnectTwice) {
+    data_broker->Connect();
+
+    auto return_code = data_broker->Connect();
+
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::SOURCE_ALREADY_CONNECTED));
+}
+
 
 TEST_F(FolderDataBrokerTests, CannotConnectWhenNoFolder) {
     data_broker->io__ = std::unique_ptr<IO> {new IOFolderNotFound()};
@@ -96,13 +145,80 @@ TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
     ASSERT_THAT(return_code, Eq(WorkerErrorCode::UNKNOWN_IO_ERROR));
 }
 
-/*TEST_F(FolderDataBrokerTests, GetNextWithouConnectReturnsError) {
-    WorkerErrorCode err;
-
-    auto err=data_broker->GetNext(nullptr,nullptr);
+TEST_F(FolderDataBrokerTests, GetNextWithoutConnectReturnsError) {
+    auto err = data_broker->GetNext(nullptr, nullptr);
 
     ASSERT_THAT(err, Eq(WorkerErrorCode::SOURCE_NOT_CONNECTED));
 }
 
-*/
+TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
+    data_broker->Connect();
+
+    auto err = data_broker->GetNext(nullptr, nullptr);
+
+    ASSERT_THAT(err, Eq(WorkerErrorCode::WRONG_INPUT));
+}
+
+
+TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
+    data_broker->Connect();
+    FileInfo fi;
+
+    auto err = data_broker->GetNext(&fi, nullptr);
+
+    ASSERT_THAT(err, Eq(WorkerErrorCode::OK));
+    ASSERT_THAT(fi.base_name, Eq("1"));
+}
+
+TEST_F(FolderDataBrokerTests, SecondNextReturnsAnotherFileInfo) {
+    data_broker->Connect();
+    FileInfo fi;
+    data_broker->GetNext(&fi, nullptr);
+
+    auto err = data_broker->GetNext(&fi, nullptr);
+
+    ASSERT_THAT(err, Eq(WorkerErrorCode::OK));
+    ASSERT_THAT(fi.base_name, Eq("2"));
+}
+
+TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
+    data_broker->io__ = std::unique_ptr<IO> {new IOEmptyFodler()};
+    data_broker->Connect();
+    FileInfo fi;
+
+    auto err = data_broker->GetNext(&fi, nullptr);
+    ASSERT_THAT(err, Eq(WorkerErrorCode::NO_DATA));
+}
+
+
+TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
+    data_broker->io__ = std::unique_ptr<IO> {new IOCannotOpenFile()};
+    data_broker->Connect();
+    FileInfo fi;
+    FileData data;
+
+    auto err = data_broker->GetNext(&fi, &data);
+    ASSERT_THAT(err, Eq(WorkerErrorCode::PERMISSIONS_DENIED));
+}
+
+class OpenFileMock : public FakeIO {
+  public:
+    MOCK_METHOD2(OpenFileToRead, int(const std::string&, IOErrors*));
+};
+
+TEST_F(FolderDataBrokerTests, GetNextCallsOpenFileWithFileName) {
+    OpenFileMock* mock=new OpenFileMock;
+    data_broker->io__.reset(mock);
+    data_broker->Connect();
+    FileInfo fi;
+    FileData data;
+
+    EXPECT_CALL(*mock, OpenFileToRead("/path/to/file/1",_));
+    data_broker->GetNext(&fi, &data);
+
+    Mock::AllowLeak(mock);
+
+}
+
+
 }

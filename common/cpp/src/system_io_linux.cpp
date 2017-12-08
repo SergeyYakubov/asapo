@@ -20,7 +20,7 @@ IOErrors IOErrorFromErrno() {
         break;
     case ENOENT:
     case ENOTDIR:
-        err = IOErrors::FOLDER_NOT_FOUND;
+        err = IOErrors::FILE_NOT_FOUND;
         break;
     case EACCES:
         err = IOErrors::PERMISSIONS_DENIED;
@@ -32,6 +32,7 @@ IOErrors IOErrorFromErrno() {
     return err;
 }
 
+
 bool IsDirectory(const struct dirent* entity) {
     return entity->d_type == DT_DIR &&
            strstr(entity->d_name, "..") == nullptr &&
@@ -40,7 +41,7 @@ bool IsDirectory(const struct dirent* entity) {
 
 system_clock::time_point GetTimePointFromFile(const string& fname, IOErrors* err) {
 
-    struct stat t_stat{};
+    struct stat t_stat {};
     int res = stat(fname.c_str(), &t_stat);
     if (res < 0) {
         *err = IOErrorFromErrno();

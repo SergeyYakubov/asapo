@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     std::string result;
 
     switch (err) {
-    case IOErrors::FOLDER_NOT_FOUND:
+    case IOErrors::FILE_NOT_FOUND:
         result = "notfound";
         break;
     case IOErrors::NO_ERROR:
