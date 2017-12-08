@@ -6,9 +6,9 @@
 namespace hidra2 {
 
 class IOUtils {
- private:
+  private:
     IO** io_;
- public:
+  public:
     explicit IOUtils(IO** io);
 
     bool is_valid_fd(int fd);

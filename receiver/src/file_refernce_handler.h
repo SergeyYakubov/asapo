@@ -16,7 +16,7 @@ enum FileReferenceHandlerError {
 };
 
 class FileReferenceHandler : HasIO {
- public:
+  public:
     struct FileInformation {
         std::string filename;
         uint64_t    file_size;
@@ -24,10 +24,10 @@ class FileReferenceHandler : HasIO {
 
         int         fd;
     };
- private:
+  private:
     static FileReferenceId kGlobalFileRefernceId;
     static std::map<FileReferenceId, std::shared_ptr<FileReferenceHandler::FileInformation>> kFileRefernceMap;
- public:
+  public:
     FileReferenceId                     add_file    (std::string filename, uint64_t file_size, uint32_t owner_connection_id, FileReferenceHandlerError& err);
     std::shared_ptr<FileInformation>    get_file    (FileReferenceId file_reference_id);
     void                                remove_file (FileReferenceId file_reference_id);

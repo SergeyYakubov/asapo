@@ -8,9 +8,9 @@ std::map<FileReferenceId, std::shared_ptr<FileReferenceHandler::FileInformation>
 FileReferenceId FileReferenceHandler::kGlobalFileRefernceId = 0;
 
 hidra2::FileReferenceId FileReferenceHandler::add_file(std::string filename,
-                                                               uint64_t file_size,
-                                                               uint32_t owner_connection_id,
-                                                               FileReferenceHandlerError& err) {
+                                                       uint64_t file_size,
+                                                       uint32_t owner_connection_id,
+                                                       FileReferenceHandlerError& err) {
 
     FileReferenceId file_ref_id = ++kGlobalFileRefernceId;
 

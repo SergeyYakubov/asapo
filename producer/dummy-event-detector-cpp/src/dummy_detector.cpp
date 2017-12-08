@@ -18,7 +18,7 @@ int DummyDetector::main(int argc, char **argv) {
      */
 
     int fd = open("/mnt/ramdisk/bigfile", O_RDONLY);
-    struct stat astat{};
+    struct stat astat {};
     fstat(fd, &astat);
 
 

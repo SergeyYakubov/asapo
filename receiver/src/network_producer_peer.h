@@ -42,7 +42,7 @@ class NetworkProducerPeer : HasIO {
     static void handle_prepare_send_data_request_(NetworkProducerPeer* self, const PrepareSendDataRequest* request, PrepareSendDataResponse* response);
     static void handle_send_data_chunk_request_(NetworkProducerPeer* self, const SendDataChunkRequest* request, SendDataChunkResponse* response);
 
- public:
+  public:
     NetworkProducerPeer(int socket_fd, std::string address);
 
     static const std::vector<RequestHandlerInformation> init_request_handlers();
