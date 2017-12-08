@@ -2,6 +2,8 @@ if (BUILD_TESTS)
     enable_testing()
     set(HIDRA2_MINIMUM_COVERAGE 70)
     find_package(Threads)
+    find_program(MEMORYCHECK_COMMAND valgrind)
+    set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1" )
 endif ()
 
 function(gtest target test_source_files test_libraries)
@@ -20,7 +22,7 @@ function(gtest target test_source_files test_libraries)
         if (CMAKE_COMPILER_IS_GNUCXX)
             include(CodeCoverage)
             APPEND_COVERAGE_COMPILER_FLAGS()
-            set(COVERAGE_EXCLUDES '*/unittests/*')
+            set (COVERAGE_EXCLUDES '*/unittests/*')
             SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
             add_test(NAME coveragetest-${target}
                     COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
@@ -30,8 +32,16 @@ function(gtest target test_source_files test_libraries)
             set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} PARENT_SCOPE)
             set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} PARENT_SCOPE)
         endif ()
+
+        if (MEMORYCHECK_COMMAND)
+            set(memcheck_args ${MEMORYCHECK_COMMAND_OPTIONS})
+            separate_arguments(memcheck_args)
+            add_test(NAME memcheck-${target} COMMAND ${MEMORYCHECK_COMMAND} ${memcheck_args}
+                    ${CMAKE_CURRENT_BINARY_DIR}/test-${target})
+            set_tests_properties(memcheck-${target} PROPERTIES LABELS "memcheck;all")
+        endif()
     endif ()
-endfunction()
+ endfunction()
 
 
 function(add_test_setup_cleanup exename)
@@ -52,6 +62,5 @@ function(add_integration_test exename testname commandargs)
                 LABELS "integration;all"
                 FIXTURES_REQUIRED test-${exename}-fixture
                 )
-
     endif ()
 endfunction()

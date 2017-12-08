@@ -9,5 +9,6 @@ TEST(VERSION, VersionAboveZero) {
 TEST(CreateProducer, PointerIsNotNullptr) {
     hidra2::Producer* prod = hidra2::Producer::CreateProducer("127.0.0.1");
     EXPECT_NE(prod, nullptr);
+    delete prod;
 }
 }
