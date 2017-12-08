@@ -1,5 +1,5 @@
-#ifndef HIDRA2_PRODUCER__PRODUCERIMPL_H
-#define HIDRA2_PRODUCER__PRODUCERIMPL_H
+#ifndef HIDRA2_PRODUCER__PRODUCER_IMPL_H
+#define HIDRA2_PRODUCER__PRODUCER_IMPL_H
 
 #include <string>
 #include <system_wrappers/has_io.h>
@@ -27,4 +27,4 @@ class ProducerImpl : public Producer {
 };
 }
 
-#endif //HIDRA2_PRODUCER__PRODUCERIMPL_H
+#endif //HIDRA2_PRODUCER__PRODUCER_IMPL_H

@@ -53,9 +53,9 @@ void NetworkProducerPeer::internal_receiver_thread_() {
             break;
         }
 
-        if(io->recv(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 0) <= 0) {
+        if(io_utils->recv_in_steps(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 0) <= 0) {
             //Disconnect
-            close(socket_fd_);
+            io->close(socket_fd_);
             std::cout << "[" << connection_id() << "] Disconnected." << std::endl;
             break;
         }
@@ -65,7 +65,7 @@ void NetworkProducerPeer::internal_receiver_thread_() {
         if(bytes_to_send == 0) {
             continue;
         }
-        send(socket_fd_, generic_response, bytes_to_send, 0);
+        io_utils->send_in_steps(socket_fd_, generic_response, bytes_to_send, 0);
     }
 
     free(generic_request);
@@ -91,6 +91,7 @@ void NetworkProducerPeer::disconnect() {
 size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response) {
     if(request->op_code >= OP_CODE_COUNT || request->op_code < 0) {
         std::cerr << "[" << connection_id() << "] Error invalid op_code: " << request->op_code << std::endl;
+        close(socket_fd_);
         return 0;
     }
 
@@ -100,7 +101,7 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
     auto handler_information = kRequestHandlers[request->op_code];
 
     //receive the rest of the message
-    recv(socket_fd_, request->data, handler_information.request_size - sizeof(GenericNetworkRequest), 0);
+    io_utils->recv_in_steps(socket_fd_, request->data, handler_information.request_size - sizeof(GenericNetworkRequest), 0);
 
     handler_information.handler(this, request, response);
 

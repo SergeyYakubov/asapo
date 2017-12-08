@@ -41,11 +41,11 @@ hidra2::ProducerError hidra2::ProducerImpl::connect_to_receiver(std::string rece
     helloRequest.os = (OSType)4;
     helloRequest.is_x64 = true;
 
-    io->send(client_fd_, &helloRequest, sizeof(helloRequest), 0);
+    io_utils->send_in_steps(client_fd_, &helloRequest, sizeof(helloRequest), 0);
 
     HelloResponse helloResponse;
 
-    io->recv(client_fd_, &helloResponse, sizeof(helloResponse), 0);
+    io_utils->recv_in_steps(client_fd_, &helloResponse, sizeof(helloResponse), 0);
 
     std::cout << "op_code: " << helloResponse.op_code << std::endl;
     std::cout << "request_id: " << helloResponse.request_id << std::endl;
@@ -57,62 +57,9 @@ hidra2::ProducerError hidra2::ProducerImpl::connect_to_receiver(std::string rece
         return PRODUCER_ERROR__OK;
     }
 
-    std::cerr << "Fail to connect to server. Server response error code: " << helloResponse.error_code << std::endl;
+    std::cerr << "Fail to connect to server. NetErrorCode: " << helloResponse.error_code << std::endl;
 
     return PRODUCER_ERROR__OK;
-}
-
-//TODO not our code. need to be removed. Copy&Pasted from stackoverflow
-void hexDump (char *desc, void *addr, int len) {
-    int i;
-    unsigned char buff[17];
-    unsigned char *pc = (unsigned char*)addr;
-
-    // Output description if given.
-    if (desc != NULL)
-        printf ("%s:\n", desc);
-
-    if (len == 0) {
-        printf("  ZERO LENGTH\n");
-        return;
-    }
-    if (len < 0) {
-        printf("  NEGATIVE LENGTH: %i\n",len);
-        return;
-    }
-
-    // Process every byte in the data.
-    for (i = 0; i < len; i++) {
-        // Multiple of 16 means new line (with line offset).
-
-        if ((i % 16) == 0) {
-            // Just don't print ASCII for the zeroth line.
-            if (i != 0)
-                printf ("  %s\n", buff);
-
-            // Output the offset.
-            printf ("  %04x ", i);
-        }
-
-        // Now the hex code for the specific character.
-        printf (" %02x", pc[i]);
-
-        // And store a printable ASCII character for later.
-        if ((pc[i] < 0x20) || (pc[i] > 0x7e))
-            buff[i % 16] = '.';
-        else
-            buff[i % 16] = pc[i];
-        buff[(i % 16) + 1] = '\0';
-    }
-
-    // Pad out last line if not exactly 16 characters.
-    while ((i % 16) != 0) {
-        printf ("   ");
-        i++;
-    }
-
-    // And print the final ASCII bit.
-    printf ("  %s\n", buff);
 }
 
 hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void *data, uint64_t file_size) {
@@ -122,42 +69,67 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void *dat
     prepareSendDataRequest.file_size = file_size;
     filename.copy((char*)&prepareSendDataRequest.filename, sizeof(prepareSendDataRequest.filename));
 
-    //TODO Loop
 
     std::cout << "Send file: " << filename << std::endl;
 
-    io->send(client_fd_, &prepareSendDataRequest, sizeof(prepareSendDataRequest), 0);
+    io_utils->send_in_steps(client_fd_, &prepareSendDataRequest, sizeof(prepareSendDataRequest), 0);
 
     hidra2::PrepareSendDataResponse prepareSendDataResponse;
 
-    io->recv(client_fd_, &prepareSendDataResponse, sizeof(prepareSendDataResponse), 0);
+    io_utils->recv_in_steps(client_fd_, &prepareSendDataResponse, sizeof(prepareSendDataResponse), 0);
 
+    if(prepareSendDataResponse.error_code) {
+        std::cerr << "Server rejected metadata. NetErrorCode: " << prepareSendDataResponse.error_code << std::endl;
+        return PRODUCER_ERROR__SERVER_REPORTED_AN_ERROR;
+    }
     std::cout << "op_code: " << prepareSendDataResponse.op_code << std::endl;
     std::cout << "request_id: " << prepareSendDataResponse.request_id << std::endl;
     std::cout << "error_code: " << prepareSendDataResponse.error_code << std::endl;
     std::cout << "file_reference_id: " << prepareSendDataResponse.file_reference_id << std::endl;
 
 
-    hidra2::SendDataChunkRequest sendDataChunkRequest;
-    sendDataChunkRequest.op_code = OP_CODE__SEND_DATA_CHUNK;
-    sendDataChunkRequest.request_id = request_id++;
-    sendDataChunkRequest.start_byte = 0;
-    sendDataChunkRequest.chunk_size = file_size;
-    sendDataChunkRequest.file_reference_id = prepareSendDataResponse.file_reference_id;
+    NetworkErrorCode network_error = NET_ERR__NO_ERROR;
+    size_t already_send = 0;
+    uint64_t max_chunk_size = static_cast<uint64_t>(1024*1024*1024*2);
 
-    io->send(client_fd_, &sendDataChunkRequest, sizeof(sendDataChunkRequest), 0);
+    while(!network_error && already_send < file_size) {
+        size_t need_to_send = max_chunk_size;
 
+        if(double(file_size) - already_send - max_chunk_size < 0) {
+            need_to_send = file_size - already_send;
+        }
 
-    hexDump("send", data, file_size);
+        hidra2::SendDataChunkRequest sendDataChunkRequest;
+        sendDataChunkRequest.op_code = OP_CODE__SEND_DATA_CHUNK;
+        sendDataChunkRequest.request_id = request_id++;
+        sendDataChunkRequest.start_byte = already_send;
+        sendDataChunkRequest.chunk_size = need_to_send;
+        sendDataChunkRequest.file_reference_id = prepareSendDataResponse.file_reference_id;
 
-    io->send(client_fd_, data, file_size, 0);
+        if(io_utils->send_in_steps(client_fd_, &sendDataChunkRequest, sizeof(sendDataChunkRequest), 0) == -1) {
+            std::cerr << "Fail to send chunk metadata. errno: " << errno << std::endl;
+            return PRODUCER_ERROR__SENDING_CHUNK_FAILED;
+        }
 
+        if(io_utils->send_in_steps(client_fd_, data + already_send, need_to_send, 0) == -1) {
+            std::cerr << "Fail to send chunk data. errno: " << errno << std::endl;
+            return PRODUCER_ERROR__SENDING_CHUNK_FAILED;
+        }
 
-    hidra2::SendDataChunkResponse sendDataChunkResponse;
+        already_send += need_to_send;
 
-    io->recv(client_fd_, &sendDataChunkResponse, sizeof(sendDataChunkResponse), 0);
+        hidra2::SendDataChunkResponse sendDataChunkResponse;
 
-    std::cout << "op_code: " << sendDataChunkResponse.op_code << std::endl;
-    std::cout << "request_id: " << sendDataChunkResponse.request_id << std::endl;
-    std::cout << "error_code: " << sendDataChunkResponse.error_code << std::endl;
+        if(io_utils->recv_in_steps(client_fd_, &sendDataChunkResponse, sizeof(sendDataChunkResponse), 0) == -1) {
+            std::cout << "Failed to receive servers response. errno: " << errno << std::endl;
+            return PRODUCER_ERROR__RECEIVING_SERVER_RESPONSE_FAILED;
+        }
+
+        if(sendDataChunkResponse.error_code) {
+            std::cout << "Server reported an error. NetErrorCode: " << sendDataChunkResponse.error_code;
+            return PRODUCER_ERROR__SERVER_REPORTED_AN_ERROR;
+        }
+    }
+
+    return PRODUCER_ERROR__OK;
 }

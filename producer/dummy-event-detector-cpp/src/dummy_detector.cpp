@@ -17,7 +17,7 @@ int DummyDetector::main(int argc, char **argv) {
     }
      */
 
-    int fd = open("/tmp/Test.png", O_RDONLY);
+    int fd = open("/mnt/ramdisk/bigfile", O_RDONLY);
     struct stat astat{};
     fstat(fd, &astat);
 
@@ -25,8 +25,10 @@ int DummyDetector::main(int argc, char **argv) {
     size_t map_size = static_cast<size_t>(ceil(float(astat.st_size)/float(getpagesize()))*getpagesize());
     void *buffer = mmap(nullptr, map_size, PROT_READ, MAP_SHARED, fd, 0);
 
+
+
     hidra2::ProducerError error;
-    error = producer->send("testfile", buffer, astat.st_size);
+    error = producer->send("testfile4", buffer, astat.st_size);
 
     if(error) {
         std::cerr << "File was not successfully send, ErrorCode: " << error << std::endl;
@@ -34,8 +36,7 @@ int DummyDetector::main(int argc, char **argv) {
         std::cout << "File was successfully send." << std::endl;
     }
 
-    free(buffer);
-    /*
-    */
+    munmap(buffer, map_size);
+
     return 0;
 }

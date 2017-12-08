@@ -3,7 +3,6 @@
 
 #include <unistd.h>
 #include <sys/socket.h>
-#include "io_utils.h"
 
 namespace hidra2 {
 

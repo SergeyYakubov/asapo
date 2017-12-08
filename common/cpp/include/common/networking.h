@@ -6,6 +6,7 @@
 
 namespace hidra2 {
 typedef uint64_t FileReferenceId;
+typedef uint64_t NetworkRequestId;
 
 enum OpCode : uint8_t {
     OP_CODE__HELLO,
@@ -20,6 +21,7 @@ enum NetworkErrorCode : uint16_t {
     NET_ERR__UNSUPPORTED_VERSION,
     NET_ERR__FILENAME_ALREADY_IN_USE,
     NET_ERR__UNKNOWN_REFERENCE_ID,
+    NET_ERR__ALLOCATE_STORAGE_FAILED,
     NET_ERR__INTERNAL_SERVER_ERROR = 65535,
 };
 
@@ -29,14 +31,14 @@ enum NetworkErrorCode : uint16_t {
  * @{
  */
 struct GenericNetworkRequest {
-    OpCode      op_code;
-    uint64_t    request_id;
-    char        data[];
+    OpCode              op_code;
+    NetworkRequestId    request_id;
+    char                data[];
 };
 
 struct GenericNetworkResponse {
     OpCode              op_code;
-    uint64_t            request_id;
+    NetworkRequestId    request_id;
     NetworkErrorCode    error_code;
     char                data[];
 };

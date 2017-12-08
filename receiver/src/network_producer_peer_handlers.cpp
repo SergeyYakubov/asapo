@@ -33,6 +33,14 @@ const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProduce
 
 void NetworkProducerPeer::handle_hello_request_(NetworkProducerPeer* self, const HelloRequest* request,
                                                 HelloResponse* response) {
+
+    if(self->got_hello_) {
+        std::cerr << "Client send hello twice." << std::endl;
+        self->io->close(self->socket_fd_);
+        return;
+    }
+    self->got_hello_ = true;
+
     std::cout << "op_code " << request->op_code << std::endl;
     std::cout << "request_id " << request->request_id << std::endl;
 
@@ -46,23 +54,20 @@ void NetworkProducerPeer::handle_hello_request_(NetworkProducerPeer* self, const
 
 void NetworkProducerPeer::handle_prepare_send_data_request_(NetworkProducerPeer* self, const PrepareSendDataRequest* request,
                                                             PrepareSendDataResponse* response) {
-    std::cout << "[PRE]op_code " << request->op_code << std::endl;
-    std::cout << "[PRE]request_id " << request->request_id << std::endl;
-
-    std::cout << "[PRE]filename " << request->filename << std::endl;
-    std::cout << "[PRE]file_size " << request->file_size << std::endl;
-
-    FileReferenceHandlerError error;
+    FileReferenceHandlerError error = FILE_REFERENCE_HANDLER_ERR__OK;
     FileReferenceId reference_id = self->file_reference_handler.add_file(request->filename,
                                                                          request->file_size,
                                                                          self->connection_id(),
                                                                          error);
 
     if(reference_id == 0 || error) {
-        response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
+        std::cerr << "Failed to add_file. FileReferenceHandlerError: " << error << std::endl;
+        response->error_code = NET_ERR__ALLOCATE_STORAGE_FAILED;
         response->file_reference_id = 0;
         return;
     }
+
+    std::cout << "Created new file '" << request->filename << "' of size " << request->file_size << std::endl;
 
     response->error_code = NET_ERR__NO_ERROR;
     response->file_reference_id = reference_id;
@@ -71,13 +76,14 @@ void NetworkProducerPeer::handle_prepare_send_data_request_(NetworkProducerPeer*
 void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* self,
                                                           const SendDataChunkRequest* request,
                                                           SendDataChunkResponse* response) {
+    /*
     std::cout << "[CHUNK]op_code " << request->op_code << std::endl;
     std::cout << "[CHUNK]request_id " << request->request_id << std::endl;
 
     std::cout << "[CHUNK]file_reference_id " << request->file_reference_id << std::endl;
     std::cout << "[CHUNK]start_byte " << request->start_byte << std::endl;
     std::cout << "[CHUNK]chunk_size " << request->chunk_size << std::endl;
-
+    */
     auto file_info = self->file_reference_handler.get_file(request->file_reference_id);
 
     if(file_info == nullptr || file_info->owner != self->connection_id()) {
@@ -85,23 +91,32 @@ void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* s
         return;
     }
 
-    size_t map_size = static_cast<size_t>(ceil(float(request->chunk_size)/float(getpagesize()))*getpagesize());
+    // Round to the next full pagesize
+    size_t map_start = size_t(request->start_byte/getpagesize())*getpagesize();
+    size_t map_offset = request->start_byte%getpagesize();
+    size_t map_size = static_cast<size_t>(ceil(float(request->chunk_size+map_offset)/float(getpagesize()))*getpagesize());
+
+    if(request->start_byte+request->chunk_size > file_info->file_size) {
+        std::cerr << "Producer is sending a lager file then excepted" << std::endl;
+        self->io_utils->recv_in_steps(self->socket_fd_, nullptr, request->chunk_size, 0);
+        return;
+    }
 
     void* mapped_file = mmap(nullptr,
                              map_size,
                              PROT_READ | PROT_WRITE, MAP_SHARED,
                              file_info->fd,
-                             request->start_byte);
+                             map_start);
 
     if(!mapped_file || mapped_file == MAP_FAILED) {
-        std::cerr << "Mapping a file faild" << std::endl;//TODO need to read to rest of the file into void
-        self->io->recv(self->socket_fd_, nullptr, request->chunk_size, 0);
+        std::cerr << "Mapping a file failed. errno: " << errno << std::endl;
+        self->io_utils->recv_in_steps(self->socket_fd_, nullptr, request->chunk_size, 0);
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
         return;
     }
 
-    if(self->io->recv(self->socket_fd_, mapped_file, request->chunk_size, 0) != request->chunk_size) {
-        std::cerr << "Fail to recv all the chunk data" << std::endl;
+    if(self->io_utils->recv_in_steps(self->socket_fd_, mapped_file + map_offset, request->chunk_size, 0) != request->chunk_size) {
+        std::cerr << "Fail to recv all the chunk data. errno: " << errno << std::endl;
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
     }
 

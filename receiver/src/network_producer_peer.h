@@ -31,6 +31,8 @@ class NetworkProducerPeer : HasIO {
     int             socket_fd_;
     std::string     address_;
 
+    bool got_hello_ = false;
+
     std::thread*    receiver_thread_ = nullptr;
 
     void internal_receiver_thread_();

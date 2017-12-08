@@ -14,23 +14,17 @@ hidra2::FileReferenceId FileReferenceHandler::add_file(std::string filename,
 
     FileReferenceId file_ref_id = ++kGlobalFileRefernceId;
 
-    int fd = open(filename.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+    std::string full_path = filename;//TODO
+    int fd = open(full_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
     if(fd == -1) {
         err = FILE_REFERENCE_HANDLER_ERR__OPEN_FAILED;
         return 0;
     }
-/*
-    sync();
 
-    __off_t offset = lseek(fd, file_size, SEEK_SET);
-    if(offset != file_size) {
-        err = FILE_REFERENCE_HANDLER_ERR__LSEEK_FAILED;
+    if(fallocate(fd, 0, 0, file_size) == -1) {
+        err = FILE_REFERENCE_HANDLER_ERR__ALLOCATE_STORAGE_FAILED;
         return 0;
     }
-
-    sync();
-*/
-    fallocate(fd, 0, 0, file_size);
 
     auto file_info = new FileInformation();
     file_info->filename = filename;
