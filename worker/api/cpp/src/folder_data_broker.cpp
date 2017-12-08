@@ -74,9 +74,9 @@ WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
     }
 
     IOErrors ioerr;
-    auto fd = io__->OpenFileToRead(base_path_+"/"+info->relative_path +
-        (info->relative_path.empty()?"":"/")+
-        info->base_name, &ioerr);
+    auto fd = io__->OpenFileToRead(base_path_ + "/" + info->relative_path +
+                                   (info->relative_path.empty() ? "" : "/") +
+                                   info->base_name, &ioerr);
 
     return MapIOError(ioerr);
 }

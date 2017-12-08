@@ -207,16 +207,19 @@ class OpenFileMock : public FakeIO {
 };
 
 TEST_F(FolderDataBrokerTests, GetNextCallsOpenFileWithFileName) {
-    OpenFileMock* mock=new OpenFileMock;
-    data_broker->io__.reset(mock);
+    OpenFileMock mock;
+    data_broker->io__.reset(&mock);
     data_broker->Connect();
     FileInfo fi;
     FileData data;
 
-    EXPECT_CALL(*mock, OpenFileToRead("/path/to/file/1",_));
+    auto err=IOErrors::NO_ERROR;
+    EXPECT_CALL(mock, OpenFileToRead("/path/to/file/1", _)).
+        WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::NO_ERROR),testing::Return(1)));
     data_broker->GetNext(&fi, &data);
+    data_broker->io__.release();
 
-    Mock::AllowLeak(mock);
+//    Mock::AllowLeak(mock);
 
 }
 
