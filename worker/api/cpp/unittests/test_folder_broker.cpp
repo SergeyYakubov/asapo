@@ -213,9 +213,9 @@ TEST_F(FolderDataBrokerTests, GetNextCallsOpenFileWithFileName) {
     FileInfo fi;
     FileData data;
 
-    auto err=IOErrors::NO_ERROR;
+    auto err = IOErrors::NO_ERROR;
     EXPECT_CALL(mock, OpenFileToRead("/path/to/file/1", _)).
-        WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::NO_ERROR),testing::Return(1)));
+    WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::NO_ERROR), testing::Return(1)));
     data_broker->GetNext(&fi, &data);
     data_broker->io__.release();
 

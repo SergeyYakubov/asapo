@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <algorithm>
 
+#include <errno.h>
+
 using std::string;
 using std::vector;
 using std::chrono::system_clock;
@@ -48,8 +50,15 @@ system_clock::time_point GetTimePointFromFile(const string& fname, IOErrors* err
         return system_clock::time_point{};
     }
 
-    std::chrono::nanoseconds d = std::chrono::nanoseconds{t_stat.st_mtim.tv_nsec} +
+#ifdef __APPLE__
+#define st_mtim st_mtimespec
+#endif
+    std::chrono::nanoseconds d = std::chrono::nanoseconds {t_stat.st_mtim.tv_nsec} +
                                  std::chrono::seconds{t_stat.st_mtim.tv_sec};
+#ifdef __APPLE__
+#undef st_mtim
+#endif
+
     return system_clock::time_point {std::chrono::duration_cast<system_clock::duration>(d)};
 }
 
