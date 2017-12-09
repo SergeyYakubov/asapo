@@ -13,6 +13,7 @@ namespace hidra2 {
 enum class IOErrors {
     NO_ERROR,
     FILE_NOT_FOUND,
+    READ_ERROR,
     PERMISSIONS_DENIED,
     UNKWOWN_ERROR
 };
@@ -22,7 +23,7 @@ IOErrors IOErrorFromErrno();
 class IO {
   public:
 
-    virtual int OpenFileToRead(const std::string& fname, IOErrors* err) = 0;
+    virtual FileData GetDataFromFile(const std::string &fname, IOErrors* err) = 0;
 
     virtual int open(const char* __file, int __oflag) = 0;
     virtual int close(int __fd) = 0;

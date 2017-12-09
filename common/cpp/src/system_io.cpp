@@ -2,10 +2,13 @@
 #include <unistd.h>
 #include <system_wrappers/system_io.h>
 
-int hidra2::SystemIO::OpenFileToRead(const std::string& fname, IOErrors* err) {
-    int fd = ::open(fname.c_str(), O_RDONLY);
+hidra2::FileData hidra2::SystemIO::GetDataFromFile(const std::string &fname, IOErrors* err) {
+    int fd = open(fname.c_str(), O_RDONLY);
     *err = IOErrorFromErrno();
-    return fd;
+    if (*err != IOErrors::NO_ERROR) {
+        return {};
+    }
+
 }
 
 

@@ -7,7 +7,7 @@ namespace hidra2 {
 
 class SystemIO final : public IO {
   public:
-    int OpenFileToRead(const std::string& fname, IOErrors* err);
+    FileData GetDataFromFile(const std::string &fname, IOErrors* err);
     int open(const char* __file, int __oflag);
     int close(int __fd);
     ssize_t read(int __fd, void* buf, size_t count);

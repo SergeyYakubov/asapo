@@ -16,13 +16,12 @@ enum class WorkerErrorCode {
     SOURCE_NOT_FOUND,
     SOURCE_NOT_CONNECTED,
     SOURCE_ALREADY_CONNECTED,
+    ERROR_READING_FROM_SOURCE,
     PERMISSIONS_DENIED,
     NO_DATA,
     WRONG_INPUT,
     UNKNOWN_IO_ERROR
 };
-
-typedef std::vector<char> FileData;
 
 class DataBroker {
   public:

@@ -36,9 +36,9 @@ TEST(FolderDataBroker, SetCorrectIO) {
 
 class FakeIO: public IO {
   public:
-    int OpenFileToRead(const std::string& fname, IOErrors* err)  {
+    FileData GetDataFromFile(const std::string &fname, IOErrors* err) {
         *err = IOErrors::NO_ERROR;
-        return 1;
+        return {};
     };
 
     int open(const char* __file, int __oflag) {
@@ -95,9 +95,9 @@ class IOEmptyFodler: public FakeIO {
 
 class IOCannotOpenFile: public FakeIO {
   public:
-    int OpenFileToRead(const std::string& fname, IOErrors* err)  {
+    FileData GetDataFromFile(const std::string &fname, IOErrors* err)  {
         *err = IOErrors::PERMISSIONS_DENIED;
-        return 1;
+        return {};
     };
 };
 
@@ -203,10 +203,10 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
 
 class OpenFileMock : public FakeIO {
   public:
-    MOCK_METHOD2(OpenFileToRead, int(const std::string&, IOErrors*));
+    MOCK_METHOD2(GetDataFromFile, FileData(const std::string&, IOErrors*));
 };
 
-TEST_F(FolderDataBrokerTests, GetNextCallsOpenFileWithFileName) {
+TEST_F(FolderDataBrokerTests, GetNextCallsGetDataFileWithFileName) {
     OpenFileMock mock;
     data_broker->io__.reset(&mock);
     data_broker->Connect();
@@ -214,13 +214,43 @@ TEST_F(FolderDataBrokerTests, GetNextCallsOpenFileWithFileName) {
     FileData data;
 
     auto err = IOErrors::NO_ERROR;
-    EXPECT_CALL(mock, OpenFileToRead("/path/to/file/1", _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::NO_ERROR), testing::Return(1)));
+    EXPECT_CALL(mock, GetDataFromFile("/path/to/file/1", _)).
+    WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::NO_ERROR), testing::Return(FileData{})));
+    data_broker->GetNext(&fi, &data);
+    data_broker->io__.release();
+}
+
+
+TEST_F(FolderDataBrokerTests, GetNextReturnsData) {
+    OpenFileMock mock;
+    data_broker->io__.reset(&mock);
+    data_broker->Connect();
+    FileInfo fi;
+    FileData data;
+
+    EXPECT_CALL(mock, GetDataFromFile(_, _)).
+        WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::NO_ERROR), testing::Return(FileData{'1'})));
     data_broker->GetNext(&fi, &data);
     data_broker->io__.release();
 
-//    Mock::AllowLeak(mock);
+    ASSERT_THAT(data[0],Eq('1'));
+}
 
+
+TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenCannotReadData) {
+    OpenFileMock mock;
+    data_broker->io__.reset(&mock);
+    data_broker->Connect();
+    FileInfo fi;
+    FileData data;
+
+    EXPECT_CALL(mock, GetDataFromFile(_, _)).
+        WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::READ_ERROR), testing::Return(FileData{})));
+    auto err = data_broker->GetNext(&fi, &data);
+    data_broker->io__.release();
+
+    ASSERT_THAT(err,Eq(WorkerErrorCode::ERROR_READING_FROM_SOURCE));
+    ASSERT_TRUE(data.empty());
 }
 
 
