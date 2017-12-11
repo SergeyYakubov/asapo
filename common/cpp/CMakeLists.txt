@@ -1,9 +1,13 @@
 set(TARGET_NAME common)
 set(SOURCE_FILES
-        src/has_io.cpp
         src/io_utils.cpp
-        src/system_io.cpp
-        )
+        src/has_io.cpp
+        src/system_io.cpp)
+IF(WIN32)
+    # Do windows specific includes
+ELSEIF(UNIX)
+    set(SOURCE_FILES ${SOURCE_FILES} src/system_io_linux.cpp)
+ENDIF(WIN32)
 
 
 ################################

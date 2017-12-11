@@ -10,7 +10,7 @@ function(gtest target test_source_files test_libraries)
     if (BUILD_TESTS)
         include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
         add_executable(test-${target} ${test_source_files})
-        target_link_libraries(test-${target} gtest gtest_main ${CMAKE_THREAD_LIBS_INIT})
+        target_link_libraries(test-${target} gtest gmock gtest_main ${CMAKE_THREAD_LIBS_INIT})
         if (NOT ${test_libraries} STREQUAL "")
             target_link_libraries(test-${target} ${test_libraries})
         endif ()
@@ -33,12 +33,52 @@ function(gtest target test_source_files test_libraries)
             set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} PARENT_SCOPE)
         endif ()
 
-        if (MEMORYCHECK_COMMAND)
-            set(memcheck_args ${MEMORYCHECK_COMMAND_OPTIONS})
-            separate_arguments(memcheck_args)
-            add_test(NAME memcheck-${target} COMMAND ${MEMORYCHECK_COMMAND} ${memcheck_args}
-                    ${CMAKE_CURRENT_BINARY_DIR}/test-${target})
-            set_tests_properties(memcheck-${target} PROPERTIES LABELS "memcheck;all")
+        add_memory_test(${target} test-${target} "" "" "unit")
+
+    endif ()
+ endfunction()
+
+function(add_memory_test target executable commandargs fixture label)
+    if (MEMORYCHECK_COMMAND)
+        set(memcheck_args ${MEMORYCHECK_COMMAND_OPTIONS})
+        separate_arguments(memcheck_args)
+        set( args ${commandargs} )
+        separate_arguments(args)
+        add_test(NAME memcheck-${target} COMMAND ${MEMORYCHECK_COMMAND} ${memcheck_args}
+                ${CMAKE_CURRENT_BINARY_DIR}/${executable} ${args})
+        set_tests_properties(memcheck-${target} PROPERTIES
+                LABELS "memcheck_${label};all"
+                DEPENDS test-${target}
+                )
+        if (NOT ${fixture} STREQUAL "")
+            set_tests_properties(memcheck-${target} PROPERTIES
+                FIXTURES_REQUIRED ${fixture}
+                )
         endif()
+
+    endif()
+endfunction()
+
+function(add_test_setup_cleanup exename)
+    if (BUILD_TESTS)
+        add_test(NAME test-${exename}-setup COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/setup.sh)
+        add_test(NAME test-${exename}-cleanup COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/cleanup.sh)
+        set_tests_properties(test-${exename}-setup PROPERTIES FIXTURES_SETUP test-${exename}-fixture)
+        set_tests_properties(test-${exename}-cleanup PROPERTIES FIXTURES_CLEANUP test-${exename}-fixture)
+    endif ()
+endfunction()
+
+function(add_integration_test exename testname commandargs)
+    if (BUILD_TESTS)
+        set( args ${commandargs} )
+        separate_arguments(args)
+        add_test(NAME test-${exename}-${testname} COMMAND ${exename} ${args})
+        set_tests_properties(test-${exename}-${testname} PROPERTIES
+                LABELS "integration;all"
+                FIXTURES_REQUIRED test-${exename}-fixture
+                )
+        add_memory_test(${exename}-${testname} ${exename}
+                "${commandargs}" test-${exename}-fixture
+                "integration")
     endif ()
 endfunction()
