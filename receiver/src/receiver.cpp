@@ -15,21 +15,40 @@ void hidra2::Receiver::start_listener(std::string listener_address, uint16_t por
     }
     listener_running_ = true;
 
-    sockaddr_in socket_address {};
-    socket_address.sin_addr.s_addr = inet_addr(listener_address.c_str());
-    socket_address.sin_port = htons(port);
-    socket_address.sin_family = AF_INET;
+    IOErrors err;
 
-    listener_fd_ = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-    bind(listener_fd_, reinterpret_cast<const sockaddr*>(&socket_address), sizeof(socket_address));
-    listen(listener_fd_, kMaxUnacceptedConnectionsBacklog);
+    FileDescriptor listener_fd = io->create_socket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, &err);
+    if(err != IOErrors::NO_ERROR) {
+        std::cerr << "Fail to create socket" << std::endl;
+    }
+
+    io->inet_bind(listener_fd, listener_address, port, &err);
+    if(err != IOErrors::NO_ERROR) {
+        io->deprecated_close(listener_fd);
+        std::cerr << "Fail to bind socket" << std::endl;
+    }
+
+    io->listen(listener_fd, kMaxUnacceptedConnectionsBacklog, &err);
+    if(err != IOErrors::NO_ERROR) {
+        io->deprecated_close(listener_fd);
+        std::cerr << "Fail to start listen" << std::endl;
+    }
+
+    listener_fd_ = listener_fd;
 
     listener_thread_ = new std::thread([this] {
         socklen_t sockaddr_in_size  = sizeof(sockaddr_in);
         while(listener_running_) {
-            sockaddr_in client_address;
-            int peer_fd = accept(listener_fd_, reinterpret_cast<sockaddr*>(&client_address), &sockaddr_in_size);
-            char* address = inet_ntoa(client_address.sin_addr);
+            std::string address;
+            FileDescriptor peer_fd;
+
+            IOErrors err;
+            auto client_info_tuple = io->inet_accept(listener_fd_, &err);
+            if(err != IOErrors::NO_ERROR) {
+                std::cerr << "An error occurred while accepting an incoming connection" << std::endl;
+                return;
+            }
+            std::tie(address, peer_fd) = *client_info_tuple;
 
             on_new_peer(peer_fd, address);
         }

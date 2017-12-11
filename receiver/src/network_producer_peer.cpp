@@ -35,37 +35,38 @@ void NetworkProducerPeer::internal_receiver_thread_() {
     auto* const generic_request = (GenericNetworkRequest*) malloc(1024*50);
     auto* const generic_response = (GenericNetworkResponse*) malloc(1024*50);
 
-    fd_set read_fds;
-    FD_SET(socket_fd_, &read_fds);
-    timeval timeout;
+    IOErrors err;
+    while(true) {
+        err = IOErrors::NO_ERROR;
 
-    while (true) {
-        timeout.tv_sec = 1;
-        timeout.tv_usec = 0;
+        io->receive_timeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 1, &err);
 
-        int res = select(socket_fd_+1, &read_fds, nullptr, nullptr, &timeout);
-        if(res == 0) {
-            //timeout occurred
-            continue;
-        }
-        if(res == -1) {
-            std::cout << "[" << connection_id() << "] Error on select(): " << strerror(errno) << std::endl;
-            break;
-        }
+        if(err != IOErrors::NO_ERROR) {
+            if(err == IOErrors::TIMEOUT) {
+                continue;
+            }
 
-        if(io_utils->recv_in_steps(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 0) <= 0) {
-            //Disconnect
-            io->close(socket_fd_);
-            std::cout << "[" << connection_id() << "] Disconnected." << std::endl;
+            if(err == IOErrors::STREAM_EOF) {
+                io->deprecated_close(socket_fd_);
+                std::cout << "[" << connection_id() << "] Disconnected." << std::endl;
+                break;
+            }
+            std::cerr << "[" << connection_id() << "] Fail to receive data" << std::endl;
             break;
         }
 
         std::cout << "[" << connection_id() << "] Got request: " << generic_request->op_code << std::endl;
         size_t bytes_to_send = handle_generic_request_(generic_request, generic_response);
+
         if(bytes_to_send == 0) {
-            continue;
+            continue;//No data to send
         }
-        io_utils->send_in_steps(socket_fd_, generic_response, bytes_to_send, 0);
+
+        io->send(socket_fd_, generic_response, bytes_to_send, &err);
+
+        if(err != IOErrors::NO_ERROR) {
+            std::cerr << "[" << connection_id() << "] Fail to send response" << std::endl;
+        }
     }
 
     free(generic_request);
@@ -83,7 +84,7 @@ void NetworkProducerPeer::stop_peer_receiver() {
 void NetworkProducerPeer::disconnect() {
     stop_peer_receiver();
 
-    close(socket_fd_);
+    io->deprecated_close(socket_fd_);
 
     std::cout << "[" << connection_id() << "] Disconnected." << std::endl;
 }
@@ -91,7 +92,7 @@ void NetworkProducerPeer::disconnect() {
 size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response) {
     if(request->op_code >= OP_CODE_COUNT || request->op_code < 0) {
         std::cerr << "[" << connection_id() << "] Error invalid op_code: " << request->op_code << std::endl;
-        close(socket_fd_);
+        io->deprecated_close(socket_fd_);
         return 0;
     }
 
@@ -100,8 +101,13 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
 
     auto handler_information = kRequestHandlers[request->op_code];
 
+    IOErrors err;
     //receive the rest of the message
-    io_utils->recv_in_steps(socket_fd_, request->data, handler_information.request_size - sizeof(GenericNetworkRequest), 0);
+    io->receive_timeout(socket_fd_, request->data, handler_information.request_size - sizeof(GenericNetworkRequest), 30, &err);
+    if(err != IOErrors::NO_ERROR) {
+        std::cerr << "[" << connection_id() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " << request->op_code << std::endl;
+        return 0;
+    }
 
     handler_information.handler(this, request, response);
 

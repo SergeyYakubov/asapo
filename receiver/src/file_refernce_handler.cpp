@@ -49,7 +49,7 @@ void FileReferenceHandler::remove_file(FileReferenceId file_reference_id) {
     }
 
     auto file_info = kFileRefernceMap[file_reference_id];
-    close(file_info->fd);
+    io->deprecated_close(file_info->fd);
 
     kFileRefernceMap.erase(file_reference_id);
 }

@@ -4,11 +4,16 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <cmath>
+#include <unistd.h>
 
 int DummyDetector::main(int argc, char **argv) {
 
     std::unique_ptr<hidra2::Producer> producer = hidra2::Producer::create();
-    producer->connect_to_receiver("127.0.0.1");
+    hidra2::ProducerError err = producer->connect_to_receiver("127.0.0.1:8099");
+    if(err) {
+        std::cerr << "Fail to connect to receiver. ProducerError: " << err << std::endl;
+        return -1;
+    }
     /*const size_t size = 255;
     void *buffer = malloc(size);
 
@@ -31,9 +36,9 @@ int DummyDetector::main(int argc, char **argv) {
     error = producer->send("testfile4", buffer, astat.st_size);
 
     if(error) {
-        std::cerr << "File was not successfully send, ErrorCode: " << error << std::endl;
+        std::cerr << "File was not successfully deprecated_send, ErrorCode: " << error << std::endl;
     } else {
-        std::cout << "File was successfully send." << std::endl;
+        std::cout << "File was successfully deprecated_send." << std::endl;
     }
 
     munmap(buffer, map_size);

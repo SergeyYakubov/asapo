@@ -8,6 +8,10 @@ hidra2::HasIO::HasIO() {
     io_utils = new hidra2::IOUtils(&io);
 }
 
+hidra2::HasIO::~HasIO() {
+    delete io_utils;
+}
+
 void hidra2::HasIO::__set_io(hidra2::IO* io) {
     this->io = io;
 }

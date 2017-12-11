@@ -15,6 +15,7 @@ class HasIO {
 
     HasIO();
   public:
+    ~HasIO();
 
     void __set_io(IO* io);
     IO* __get_io();

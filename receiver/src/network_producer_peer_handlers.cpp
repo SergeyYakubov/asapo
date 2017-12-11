@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <cmath>
+#include <zconf.h>
 
 namespace hidra2 {
 
@@ -35,8 +36,8 @@ void NetworkProducerPeer::handle_hello_request_(NetworkProducerPeer* self, const
                                                 HelloResponse* response) {
 
     if(self->got_hello_) {
-        std::cerr << "Client send hello twice." << std::endl;
-        self->io->close(self->socket_fd_);
+        std::cerr << "Client deprecated_send hello twice." << std::endl;
+        self->io->deprecated_close(self->socket_fd_);
         return;
     }
     self->got_hello_ = true;
@@ -76,6 +77,7 @@ void NetworkProducerPeer::handle_prepare_send_data_request_(NetworkProducerPeer*
 void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* self,
                                                           const SendDataChunkRequest* request,
                                                           SendDataChunkResponse* response) {
+    IOErrors io_error;
     /*
     std::cout << "[CHUNK]op_code " << request->op_code << std::endl;
     std::cout << "[CHUNK]request_id " << request->request_id << std::endl;
@@ -98,7 +100,7 @@ void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* s
 
     if(request->start_byte+request->chunk_size > file_info->file_size) {
         std::cerr << "Producer is sending a lager file then excepted" << std::endl;
-        self->io_utils->recv_in_steps(self->socket_fd_, nullptr, request->chunk_size, 0);
+        self->io->receive_timeout(self->socket_fd_, nullptr, request->chunk_size, 30, &io_error);//TODO nullptr not a valid target for receive
         return;
     }
 
@@ -110,13 +112,14 @@ void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* s
 
     if(!mapped_file || mapped_file == MAP_FAILED) {
         std::cerr << "Mapping a file failed. errno: " << errno << std::endl;
-        self->io_utils->recv_in_steps(self->socket_fd_, nullptr, request->chunk_size, 0);
+        self->io->receive_timeout(self->socket_fd_, nullptr, request->chunk_size, 30, &io_error);//TODO nullptr not a valid target for receive
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
         return;
     }
 
-    if(self->io_utils->recv_in_steps(self->socket_fd_, mapped_file + map_offset, request->chunk_size, 0) != request->chunk_size) {
-        std::cerr << "Fail to recv all the chunk data. errno: " << errno << std::endl;
+    self->io->receive_timeout(self->socket_fd_, mapped_file + map_offset, request->chunk_size, 30, &io_error);
+    if(io_error != IOErrors::NO_ERROR) {
+        std::cerr << "Fail to receive all the chunk data." << std::endl;
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
     }
 

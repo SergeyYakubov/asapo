@@ -80,7 +80,7 @@ class IOFolderNotFound: public FakeIO {
 class IOFodlerUnknownError: public FakeIO {
   public:
     std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) {
-        *err = IOErrors::UNKWOWN_ERROR;
+        *err = IOErrors::UNKNOWN_ERROR;
         return {};
     }
 };

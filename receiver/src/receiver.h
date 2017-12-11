@@ -4,6 +4,7 @@
 #include <string>
 #include <netinet/in.h>
 #include <thread>
+#include <system_wrappers/has_io.h>
 
 namespace hidra2 {
 
@@ -16,13 +17,13 @@ enum {
 
 };
 
-class Receiver {
+class Receiver : HasIO {
   private:
     static const int kMaxUnacceptedConnectionsBacklog;
 
     bool listener_running_ = false;
     std::thread* listener_thread_ = nullptr;
-    int listener_fd_;
+    FileDescriptor listener_fd_;
 
     void on_new_peer(int peer_socket_fd, std::string address);
   public:
