@@ -20,11 +20,7 @@ hidra2::ProducerStatus hidra2::ProducerImpl::get_status() const {
     return PRODUCER_STATUS__CONNECTED;
 }
 
-hidra2::ProducerError hidra2::ProducerImpl::connect_to_receiver(std::string receiver_address) {
-    if(client_fd_ != -1) {
-        return PRODUCER_ERROR__ALREADY_CONNECTED;
-    }
-
+hidra2::ProducerError hidra2::ProducerImpl::initialize_socket_to_receiver_(const std::string &receiver_address) {
     client_fd_ = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 
     sockaddr_in socket_address {};
@@ -32,13 +28,30 @@ hidra2::ProducerError hidra2::ProducerImpl::connect_to_receiver(std::string rece
     socket_address.sin_port = htons(8099);
     socket_address.sin_family = AF_INET;
 
-    io->connect(client_fd_, (struct sockaddr *)&socket_address, sizeof(socket_address));
+    if(io->connect(client_fd_, (struct sockaddr *)&socket_address, sizeof(socket_address)) == -1) {
+        perror("Connecting to server");
+        return PRODUCER_ERROR__FAILED_TO_CONNECT_TO_SERVER;
+    }
+
+    return PRODUCER_ERROR__OK;
+}
+
+hidra2::ProducerError hidra2::ProducerImpl::connect_to_receiver(const std::string& receiver_address) {
+    if(client_fd_ != -1) {
+        return PRODUCER_ERROR__ALREADY_CONNECTED;
+    }
+
+    ProducerError error;
+    error = initialize_socket_to_receiver_(receiver_address);
+    if(error) {
+        return error;
+    }
 
     hidra2::HelloRequest helloRequest;
     helloRequest.op_code = OP_CODE__HELLO;
     helloRequest.request_id = request_id++;
-    helloRequest.client_version = 3;
-    helloRequest.os = (OSType)4;
+    helloRequest.client_version = 1;
+    helloRequest.os = OS_LINUX;
     helloRequest.is_x64 = true;
 
     io_utils->send_in_steps(client_fd_, &helloRequest, sizeof(helloRequest), 0);
@@ -133,3 +146,4 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void *dat
 
     return PRODUCER_ERROR__OK;
 }
+

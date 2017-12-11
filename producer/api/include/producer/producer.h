@@ -15,6 +15,7 @@ enum ProducerError {
     PRODUCER_ERROR__SENDING_CHUNK_FAILED,
     PRODUCER_ERROR__RECEIVING_SERVER_RESPONSE_FAILED,
     PRODUCER_ERROR__SERVER_REPORTED_AN_ERROR,
+    PRODUCER_ERROR__FAILED_TO_CONNECT_TO_SERVER,
 };
 
 enum ProducerStatus {
@@ -23,12 +24,6 @@ enum ProducerStatus {
     PRODUCER_STATUS__CONNECTED,
     PRODUCER_STATUS__SENDING,
     PRODUCER_STATUS__ERROR,
-};
-
-struct FileChunk {
-    void *ptr;
-    uint64_t start_byte;
-    uint64_t chunk_size;
 };
 
 class Producer : public HasIO {
@@ -40,7 +35,7 @@ class Producer : public HasIO {
     virtual uint64_t get_version() const = 0;
     virtual ProducerStatus get_status() const = 0;
 
-    virtual ProducerError connect_to_receiver(std::string receiver_address) = 0;
+    virtual ProducerError connect_to_receiver(const std::string& receiver_address) = 0;
     virtual ProducerError send(std::string filename, void* data, uint64_t file_size) = 0;
 };
 }

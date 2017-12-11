@@ -16,10 +16,13 @@ set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 ################################
 # Testing
 ################################
-set(TEST_SOURCE_FILES unittests/test_producer.cpp)
+set(TEST_SOURCE_FILES
+        unittests/test_producer_impl.cpp
+        unittests/test_producer.cpp
+        )
 set(TEST_LIBRARIES producer-api)
 
 
-gtest(${TARGET_NAME} ${TEST_SOURCE_FILES} ${TEST_LIBRARIES})
+gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")
 
 

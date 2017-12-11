@@ -24,7 +24,7 @@ class IO {
     virtual int     bind    (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len) = 0;
     virtual int     listen  (int __fd, int __n) = 0;
     virtual int     accept  (int __fd, __SOCKADDR_ARG __addr, socklen_t *__restrict __addr_len) = 0;
-    virtual ssize_t connect (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len) = 0;
+    virtual int     connect (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len) = 0;
     virtual ssize_t recv    (int __fd, void *__buf, size_t __n, int __flags) = 0;
     virtual ssize_t send    (int __fd, const void *__buf, size_t __n, int __flags) = 0;
 

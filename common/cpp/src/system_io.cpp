@@ -43,7 +43,7 @@ ssize_t hidra2::SystemIO::send(int __fd, const void* __buf, size_t __n, int __fl
     return ::send(__fd, __buf, __n, __flags);
 }
 
-ssize_t hidra2::SystemIO::connect(int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len) {
+int hidra2::SystemIO::connect(int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len) {
     return ::connect(__fd, __addr, __len);
 }
 int hidra2::SystemIO::select(int __nfds,

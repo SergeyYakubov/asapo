@@ -24,7 +24,7 @@ class SystemIO final : public IO {
     int     bind    (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len);
     int     listen  (int __fd, int __n);
     int     accept  (int __fd, __SOCKADDR_ARG __addr, socklen_t *__restrict __addr_len);
-    ssize_t connect (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len);
+    int     connect (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len);
     ssize_t recv    (int __fd, void *__buf, size_t __n, int __flags);
     ssize_t send    (int __fd, const void *__buf, size_t __n, int __flags);
 
