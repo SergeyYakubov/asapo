@@ -329,7 +329,7 @@ size_t hidra2::SystemIO::receive(hidra2::FileDescriptor socket_fd, void* buf, si
     return already_received;
 }
 
-void hidra2::SystemIO::receive_timeout(hidra2::FileDescriptor socket_fd,
+size_t hidra2::SystemIO::receive_timeout(hidra2::FileDescriptor socket_fd,
                                        void* buf,
                                        size_t length,
                                        uint16_t timeout_in_sec,
@@ -345,14 +345,14 @@ void hidra2::SystemIO::receive_timeout(hidra2::FileDescriptor socket_fd,
     int res = select(socket_fd+1, &read_fds, nullptr, nullptr, &timeout);
     if(res == 0) {
         *err = IOErrors::TIMEOUT;
-        return;
+        return 0;
     }
     if(res == -1) {
         *err = IOErrorFromErrno();
-        return;
+        return 0;
     }
 
-    receive(socket_fd, buf, length, err);
+    return receive(socket_fd, buf, length, err);
 }
 
 size_t hidra2::SystemIO::send(hidra2::FileDescriptor socket_fd,

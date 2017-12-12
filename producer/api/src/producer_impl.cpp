@@ -79,7 +79,7 @@ hidra2::ProducerError hidra2::ProducerImpl::connect_to_receiver(const std::strin
         return PRODUCER_ERROR__OK;
     }
 
-    std::cerr << "Fail to deprecated_connect to server. NetErrorCode: " << helloResponse.error_code << std::endl;
+    std::cerr << "Fail to connect to server. NetErrorCode: " << helloResponse.error_code << std::endl;
 
     return PRODUCER_ERROR__OK;
 }
@@ -118,13 +118,9 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void *dat
     std::cout << "error_code: " << prepareSendDataResponse.error_code << std::endl;
     std::cout << "file_reference_id: " << prepareSendDataResponse.file_reference_id << std::endl;
 
-
     NetworkErrorCode network_error = NET_ERR__NO_ERROR;
     size_t already_send = 0;
     uint64_t max_chunk_size = (uint64_t)1024*(uint64_t)1024*(uint64_t)1024*(uint64_t)2;
-
-
-    int fd = ::open("/home/cpatzke/Desktop/bigfile", O_RDONLY);
 
     while(!network_error && already_send < file_size) {
         size_t need_to_send = max_chunk_size;
