@@ -24,6 +24,9 @@ IOErrors IOErrorFromErrno() {
     case 0:
         err = IOErrors::NO_ERROR;
         break;
+    case EBADF:
+        err = IOErrors::BAD_FILE_NUMBER;
+        break;
     case ENOENT:
     case ENOTDIR:
         err = IOErrors::FILE_NOT_FOUND;
@@ -34,11 +37,14 @@ IOErrors IOErrorFromErrno() {
     case ECONNREFUSED:
         err = IOErrors::CONNECTION_REFUSED;
         break;
+    case EADDRINUSE:
+        err = IOErrors::ADDRESS_ALREADY_IN_USE;
+        break;
     case ECONNRESET:
         err = IOErrors::CONNECTION_RESET_BY_PEER;
-            break;
+        break;
     default:
-        std::cout << "[TMP/IOErrorFromErrno] Unknown error code: " << errno << std::endl;
+        std::cout << "[TMP/IOErrorFromErrNo] Unknown error code: " << errno << std::endl;
         err = IOErrors::UNKNOWN_ERROR;
         break;
     }
@@ -308,7 +314,7 @@ size_t hidra2::SystemIO::receive(hidra2::FileDescriptor socket_fd, void* buf, si
     size_t already_received = 0;
 
     while(already_received < length) {
-        ssize_t received_amount = ::recv(socket_fd, buf + already_received, length - already_received, 0);
+        ssize_t received_amount = ::recv(socket_fd, (uint8_t*)buf + already_received, length - already_received, 0);
         if(received_amount == 0) {
             *err = IOErrors::STREAM_EOF;
             return already_received;
@@ -358,7 +364,7 @@ size_t hidra2::SystemIO::send(hidra2::FileDescriptor socket_fd,
     size_t already_sent = 0;
 
     while(already_sent < length) {
-        ssize_t send_amount = ::send(socket_fd, buf + already_sent, length - already_sent, 0);
+        ssize_t send_amount = ::send(socket_fd, (uint8_t*)buf + already_sent, length - already_sent, 0);
         if(send_amount == 0) {
             *err = IOErrors::STREAM_EOF;
             return already_sent;

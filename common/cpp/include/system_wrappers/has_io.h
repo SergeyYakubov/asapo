@@ -11,17 +11,12 @@ class HasIO {
     static IO* const kDefaultIO;
 
     IO* io;
-    IOUtils* io_utils;
 
-    HasIO();
+    explicit HasIO();
   public:
-    ~HasIO();
 
     void __set_io(IO* io);
     IO* __get_io();
-
-    void __set_io_utils(IOUtils* io_utils);
-    IOUtils* __get_io_utils();
 };
 
 }

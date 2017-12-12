@@ -78,14 +78,6 @@ void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* s
                                                           const SendDataChunkRequest* request,
                                                           SendDataChunkResponse* response) {
     IOErrors io_error;
-    /*
-    std::cout << "[CHUNK]op_code " << request->op_code << std::endl;
-    std::cout << "[CHUNK]request_id " << request->request_id << std::endl;
-
-    std::cout << "[CHUNK]file_reference_id " << request->file_reference_id << std::endl;
-    std::cout << "[CHUNK]start_byte " << request->start_byte << std::endl;
-    std::cout << "[CHUNK]chunk_size " << request->chunk_size << std::endl;
-    */
     auto file_info = self->file_reference_handler.get_file(request->file_reference_id);
 
     if(file_info == nullptr || file_info->owner != self->connection_id()) {
@@ -117,7 +109,7 @@ void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* s
         return;
     }
 
-    self->io->receive_timeout(self->socket_fd_, mapped_file + map_offset, request->chunk_size, 30, &io_error);
+    self->io->receive_timeout(self->socket_fd_, (uint8_t*)mapped_file + map_offset, request->chunk_size, 30, &io_error);
     if(io_error != IOErrors::NO_ERROR) {
         std::cerr << "Fail to receive all the chunk data." << std::endl;
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;

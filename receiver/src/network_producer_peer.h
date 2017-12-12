@@ -23,6 +23,9 @@ class NetworkProducerPeer : HasIO {
         RequestHandler handler;
     };
   private:
+    /** Must be as large as the largest request type (not including the data) */
+    static const size_t kGenericBufferSize;
+
     static FileReferenceHandler file_reference_handler;
     static const std::vector<RequestHandlerInformation> kRequestHandlers;
     static std::atomic<uint32_t> kNetworkProducerPeerCount;
@@ -31,9 +34,10 @@ class NetworkProducerPeer : HasIO {
     int             socket_fd_;
     std::string     address_;
 
-    bool got_hello_ = false;
+    bool            got_hello_ = false;
 
-    std::thread*    receiver_thread_ = nullptr;
+    bool            is_listening_ = false;
+    std::thread*    listener_thread_ = nullptr;
 
     void internal_receiver_thread_();
     size_t handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response);
@@ -43,17 +47,21 @@ class NetworkProducerPeer : HasIO {
     static void handle_send_data_chunk_request_(NetworkProducerPeer* self, const SendDataChunkRequest* request, SendDataChunkResponse* response);
 
   public:
+    NetworkProducerPeer &operator=(const NetworkProducerPeer &) = delete;
+    NetworkProducerPeer() = default;
+
     NetworkProducerPeer(int socket_fd, std::string address);
+    ~NetworkProducerPeer();
 
     static const std::vector<RequestHandlerInformation> init_request_handlers();
 
+
+    void start_peer_listener();
+    void stop_peer_listener();
+
     uint32_t connection_id() const;
-
-    void start_peer_receiver();
-    void stop_peer_receiver();
-
     const std::string& address() const;
-    void disconnect();
+    bool is_listening() const;
 };
 
 }

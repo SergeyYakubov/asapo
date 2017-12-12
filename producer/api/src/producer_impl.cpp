@@ -4,6 +4,8 @@
 #include <arpa/inet.h>
 #include <iostream>
 #include <cstring>
+#include <sys/sendfile.h>
+#include <fcntl.h>
 #include "producer_impl.h"
 
 const uint32_t hidra2::ProducerImpl::kVersion = 1;
@@ -121,6 +123,9 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void *dat
     size_t already_send = 0;
     uint64_t max_chunk_size = (uint64_t)1024*(uint64_t)1024*(uint64_t)1024*(uint64_t)2;
 
+
+    int fd = ::open("/home/cpatzke/Desktop/bigfile", O_RDONLY);
+
     while(!network_error && already_send < file_size) {
         size_t need_to_send = max_chunk_size;
 
@@ -140,6 +145,7 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void *dat
             std::cerr << "hidra2::ProducerImpl::send/send2 error" << std::endl;
             return PRODUCER_ERROR__SENDING_CHUNK_FAILED;
         }
+
         io->send(client_fd_, (uint8_t*)data + already_send, need_to_send, &io_error);
         if(io_error != IOErrors::NO_ERROR) {
             std::cerr << "hidra2::ProducerImpl::send/send3 error" << std::endl;

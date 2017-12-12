@@ -5,16 +5,15 @@
 #include <netinet/in.h>
 #include <thread>
 #include <system_wrappers/has_io.h>
+#include "network_producer_peer.h"
+#include <list>
 
 namespace hidra2 {
 
-enum {
-    RECEIVER__ERR_OK,
-    RECEIVER__ERR_UNK,
-    RECEIVER__ERR_ADDRESS_IS_PROTECTED,
-    RECEIVER__ERR_BAD_FILE_DESCRIPTOR,
-    RECEIVER__ERR_ADDRESS_ALREADY_IN_USE,
-
+enum class ReceiverError {
+    NO_ERROR,
+    ALREADY_LISTEING,
+    FAILD_CREATING_SOCKET,
 };
 
 class Receiver : HasIO {
@@ -22,16 +21,19 @@ class Receiver : HasIO {
     static const int kMaxUnacceptedConnectionsBacklog;
 
     bool listener_running_ = false;
-    std::thread* listener_thread_ = nullptr;
     FileDescriptor listener_fd_;
+    std::thread* accept_thread_ = nullptr;
 
-    void on_new_peer(int peer_socket_fd, std::string address);
+    void accept_thread_logic_();
+    std::list<std::unique_ptr<NetworkProducerPeer>> peer_list_;
+    std::unique_ptr<NetworkProducerPeer> on_new_peer_(int peer_socket_fd, std::string address);
   public:
     Receiver(const Receiver &) = delete;
     Receiver &operator=(const Receiver &) = delete;
     Receiver() = default;
-    void start_listener(std::string listener_address, uint16_t port);
-    void stop_listener();
+
+    void start_listener(std::string listener_address, uint16_t port, ReceiverError* err);
+    void stop_listener(ReceiverError* err);
 };
 
 }

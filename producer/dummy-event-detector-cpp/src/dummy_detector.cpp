@@ -7,8 +7,8 @@
 #include <unistd.h>
 
 int DummyDetector::main(int argc, char **argv) {
+    auto producer = hidra2::Producer::create();
 
-    std::unique_ptr<hidra2::Producer> producer = hidra2::Producer::create();
     hidra2::ProducerError err = producer->connect_to_receiver("127.0.0.1:8099");
     if(err) {
         std::cerr << "Fail to connect to receiver. ProducerError: " << err << std::endl;
@@ -22,15 +22,14 @@ int DummyDetector::main(int argc, char **argv) {
     }
      */
 
-    int fd = open("/mnt/ramdisk/bigfile", O_RDONLY);
+    int fd = open("/tmp/bigfile", O_RDONLY);
     struct stat astat {};
     fstat(fd, &astat);
-
 
     size_t map_size = static_cast<size_t>(ceil(float(astat.st_size)/float(getpagesize()))*getpagesize());
     void *buffer = mmap(nullptr, map_size, PROT_READ, MAP_SHARED, fd, 0);
 
-
+    madvise(buffer, map_size, MADV_SEQUENTIAL | MADV_WILLNEED);
 
     hidra2::ProducerError error;
     error = producer->send("testfile4", buffer, astat.st_size);
@@ -38,7 +37,7 @@ int DummyDetector::main(int argc, char **argv) {
     if(error) {
         std::cerr << "File was not successfully deprecated_send, ErrorCode: " << error << std::endl;
     } else {
-        std::cout << "File was successfully deprecated_send." << std::endl;
+        std::cout << "File was successfully send." << std::endl;
     }
 
     munmap(buffer, map_size);

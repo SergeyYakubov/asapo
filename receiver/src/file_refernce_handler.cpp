@@ -14,7 +14,7 @@ hidra2::FileReferenceId FileReferenceHandler::add_file(std::string filename,
 
     FileReferenceId file_ref_id = ++kGlobalFileRefernceId;
 
-    std::string full_path = filename;//TODO
+    std::string full_path = filename;//TODO add path prefix, and check for exploit with '/' or '..'
     int fd = open(full_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
     if(fd == -1) {
         err = FILE_REFERENCE_HANDLER_ERR__OPEN_FAILED;

@@ -26,7 +26,7 @@ class SystemIO final : public IO {
 
 
     size_t          receive         (FileDescriptor socket_fd, void* buf, size_t length, hidra2::IOErrors* err);
-    void            receive_timeout (FileDescriptor socket_fd,
+    void receive_timeout            (FileDescriptor socket_fd,
                                      void* buf,
                                      size_t length,
                                      uint16_t timeout_in_sec,
