@@ -7,18 +7,21 @@
 
 namespace hidra2 {
 class ProducerImpl : public Producer {
-    friend Producer;
   private:
     static const uint32_t kVersion;
 
     int         client_fd_ = -1;
     uint64_t    request_id = 0;
 
-    ProducerError initialize_socket_to_receiver_(const std::string &receiver_address);
+    ProducerStatus status_;
+
+    ProducerError initialize_socket_to_receiver_(const std::string& receiver_address);
   public:
+    static const size_t kMaxChunkSize;
+
     ProducerImpl();
-    ProducerImpl(const ProducerImpl &) = delete;
-    ProducerImpl &operator=(const ProducerImpl &) = delete;
+    ProducerImpl(const ProducerImpl&) = delete;
+    ProducerImpl& operator=(const ProducerImpl&) = delete;
     //~ProducerImpl() override;
 
     uint64_t get_version() const override;

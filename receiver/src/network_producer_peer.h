@@ -16,7 +16,8 @@ namespace hidra2 {
 
 class NetworkProducerPeer : HasIO {
   public:
-    typedef void (*RequestHandler) (NetworkProducerPeer* self, GenericNetworkRequest* request, GenericNetworkResponse* response);
+    typedef void (*RequestHandler) (NetworkProducerPeer* self, GenericNetworkRequest* request,
+                                    GenericNetworkResponse* response);
     struct RequestHandlerInformation {
         size_t request_size;
         size_t response_size;
@@ -43,11 +44,13 @@ class NetworkProducerPeer : HasIO {
     size_t handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response);
 
     static void handle_hello_request_(NetworkProducerPeer* self, const HelloRequest* request, HelloResponse* response);
-    static void handle_prepare_send_data_request_(NetworkProducerPeer* self, const PrepareSendDataRequest* request, PrepareSendDataResponse* response);
-    static void handle_send_data_chunk_request_(NetworkProducerPeer* self, const SendDataChunkRequest* request, SendDataChunkResponse* response);
+    static void handle_prepare_send_data_request_(NetworkProducerPeer* self, const PrepareSendDataRequest* request,
+                                                  PrepareSendDataResponse* response);
+    static void handle_send_data_chunk_request_(NetworkProducerPeer* self, const SendDataChunkRequest* request,
+                                                SendDataChunkResponse* response);
 
   public:
-    NetworkProducerPeer &operator=(const NetworkProducerPeer &) = delete;
+    NetworkProducerPeer& operator=(const NetworkProducerPeer&) = delete;
     NetworkProducerPeer() = default;
 
     NetworkProducerPeer(int socket_fd, std::string address);

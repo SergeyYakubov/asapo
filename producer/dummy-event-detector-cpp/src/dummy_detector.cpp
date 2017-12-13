@@ -6,7 +6,7 @@
 #include <cmath>
 #include <unistd.h>
 
-int DummyDetector::main(int argc, char **argv) {
+int DummyDetector::main(int argc, char** argv) {
     auto producer = hidra2::Producer::create();
 
     hidra2::ProducerError err = producer->connect_to_receiver("127.0.0.1:8099");
@@ -26,8 +26,8 @@ int DummyDetector::main(int argc, char **argv) {
     struct stat astat {};
     fstat(fd, &astat);
 
-    size_t map_size = static_cast<size_t>(ceil(float(astat.st_size)/float(getpagesize()))*getpagesize());
-    void *buffer = mmap(nullptr, map_size, PROT_READ, MAP_SHARED, fd, 0);
+    size_t map_size = static_cast<size_t>(ceil(float(astat.st_size) / float(getpagesize())) * getpagesize());
+    void* buffer = mmap(nullptr, map_size, PROT_READ, MAP_SHARED, fd, 0);
 
     madvise(buffer, map_size, MADV_SEQUENTIAL | MADV_WILLNEED);
 

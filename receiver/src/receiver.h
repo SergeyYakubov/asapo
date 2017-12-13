@@ -28,8 +28,8 @@ class Receiver : HasIO {
     std::list<std::unique_ptr<NetworkProducerPeer>> peer_list_;
     std::unique_ptr<NetworkProducerPeer> on_new_peer_(int peer_socket_fd, std::string address);
   public:
-    Receiver(const Receiver &) = delete;
-    Receiver &operator=(const Receiver &) = delete;
+    Receiver(const Receiver&) = delete;
+    Receiver& operator=(const Receiver&) = delete;
     Receiver() = default;
 
     void start_listener(std::string listener_address, uint16_t port, ReceiverError* err);

@@ -18,7 +18,8 @@ void hidra2::Receiver::start_listener(std::string listener_address, uint16_t por
 
     IOErrors io_error;
 
-    FileDescriptor listener_fd = io->create_socket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, &io_error);
+    FileDescriptor listener_fd = io->create_socket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP,
+                                                   &io_error);
     if(io_error != IOErrors::NO_ERROR) {
         std::cerr << "Fail to create socket" << std::endl;
         return;

@@ -5,10 +5,11 @@
 namespace hidra2 {
 
 FileReferenceHandler NetworkProducerPeer::file_reference_handler;
-const size_t NetworkProducerPeer::kGenericBufferSize = 1024*50;//50KiByte
+const size_t NetworkProducerPeer::kGenericBufferSize = 1024 * 50; //50KiByte
 std::atomic<uint32_t> NetworkProducerPeer::kNetworkProducerPeerCount;
 
-const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProducerPeer::kRequestHandlers = NetworkProducerPeer::init_request_handlers();
+const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProducerPeer::kRequestHandlers =
+    NetworkProducerPeer::init_request_handlers();
 
 NetworkProducerPeer::NetworkProducerPeer(int socket_fd, std::string address) : HasIO() {
     address_ = std::move(address);
@@ -111,9 +112,11 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
 
     IOErrors err;
     //receive the rest of the message
-    io->receive_timeout(socket_fd_, request->data, handler_information.request_size - sizeof(GenericNetworkRequest), 30, &err);
+    io->receive_timeout(socket_fd_, request->data, handler_information.request_size - sizeof(GenericNetworkRequest), 30,
+                        &err);
     if(err != IOErrors::NO_ERROR) {
-        std::cerr << "[" << connection_id() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " << request->op_code << std::endl;
+        std::cerr << "[" << connection_id() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " <<
+                  request->op_code << std::endl;
         return 0;
     }
 

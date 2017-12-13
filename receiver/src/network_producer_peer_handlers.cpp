@@ -13,19 +13,19 @@ const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProduce
     vec[OP_CODE__HELLO] = {
         sizeof(HelloRequest),
         sizeof(HelloResponse),
-        (NetworkProducerPeer::RequestHandler) &NetworkProducerPeer::handle_hello_request_
+        (NetworkProducerPeer::RequestHandler)& NetworkProducerPeer::handle_hello_request_
     };
 
     vec[OP_CODE__PREPARE_SEND_DATA] = {
         sizeof(PrepareSendDataRequest),
         sizeof(PrepareSendDataResponse),
-        (NetworkProducerPeer::RequestHandler) &NetworkProducerPeer::handle_prepare_send_data_request_
+        (NetworkProducerPeer::RequestHandler)& NetworkProducerPeer::handle_prepare_send_data_request_
     };
 
     vec[OP_CODE__SEND_DATA_CHUNK] = {
         sizeof(SendDataChunkRequest),
         sizeof(SendDataChunkResponse),
-        (NetworkProducerPeer::RequestHandler) &NetworkProducerPeer::handle_send_data_chunk_request_
+        (NetworkProducerPeer::RequestHandler)& NetworkProducerPeer::handle_send_data_chunk_request_
     };
 
     return vec;
@@ -53,13 +53,14 @@ void NetworkProducerPeer::handle_hello_request_(NetworkProducerPeer* self, const
     response->server_version = 1;
 }
 
-void NetworkProducerPeer::handle_prepare_send_data_request_(NetworkProducerPeer* self, const PrepareSendDataRequest* request,
-                                                            PrepareSendDataResponse* response) {
+void NetworkProducerPeer::handle_prepare_send_data_request_(NetworkProducerPeer* self,
+        const PrepareSendDataRequest* request,
+        PrepareSendDataResponse* response) {
     FileReferenceHandlerError error = FILE_REFERENCE_HANDLER_ERR__OK;
     FileReferenceId reference_id = self->file_reference_handler.add_file(request->filename,
-                                                                         request->file_size,
-                                                                         self->connection_id(),
-                                                                         error);
+                                   request->file_size,
+                                   self->connection_id(),
+                                   error);
 
     if(reference_id == 0 || error) {
         std::cerr << "Failed to add_file. FileReferenceHandlerError: " << error << std::endl;
@@ -75,8 +76,8 @@ void NetworkProducerPeer::handle_prepare_send_data_request_(NetworkProducerPeer*
 }
 
 void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* self,
-                                                          const SendDataChunkRequest* request,
-                                                          SendDataChunkResponse* response) {
+        const SendDataChunkRequest* request,
+        SendDataChunkResponse* response) {
     IOErrors io_error;
     auto file_info = self->file_reference_handler.get_file(request->file_reference_id);
 
@@ -86,13 +87,15 @@ void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* s
     }
 
     // Round to the next full pagesize
-    size_t map_start = size_t(request->start_byte/getpagesize())*getpagesize();
-    size_t map_offset = request->start_byte%getpagesize();
-    size_t map_size = static_cast<size_t>(ceil(float(request->chunk_size+map_offset)/float(getpagesize()))*getpagesize());
+    size_t map_start = size_t(request->start_byte / getpagesize()) * getpagesize();
+    size_t map_offset = request->start_byte % getpagesize();
+    size_t map_size = static_cast<size_t>(ceil(float(request->chunk_size + map_offset) / float(
+                                                   getpagesize())) * getpagesize());
 
-    if(request->start_byte+request->chunk_size > file_info->file_size) {
+    if(request->start_byte + request->chunk_size > file_info->file_size) {
         std::cerr << "Producer is sending a lager file then excepted" << std::endl;
-        self->io->receive_timeout(self->socket_fd_, nullptr, request->chunk_size, 30, &io_error);//TODO nullptr not a valid target for receive
+        self->io->receive_timeout(self->socket_fd_, nullptr, request->chunk_size, 30,
+                                  &io_error);//TODO nullptr not a valid target for receive
         return;
     }
 
@@ -104,7 +107,8 @@ void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* s
 
     if(!mapped_file || mapped_file == MAP_FAILED) {
         std::cerr << "Mapping a file failed. errno: " << errno << std::endl;
-        self->io->receive_timeout(self->socket_fd_, nullptr, request->chunk_size, 30, &io_error);//TODO nullptr not a valid target for receive
+        self->io->receive_timeout(self->socket_fd_, nullptr, request->chunk_size, 30,
+                                  &io_error);//TODO nullptr not a valid target for receive
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
         return;
     }

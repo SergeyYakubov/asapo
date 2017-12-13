@@ -11,7 +11,8 @@ class SystemIO final : public IO {
     /*
      * Network
      */
-    FileDescriptor  create_socket   (AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol, IOErrors* err);
+    FileDescriptor  create_socket   (AddressFamilies address_family, SocketTypes socket_type,
+                                     SocketProtocols socket_protocol, IOErrors* err);
     void            listen          (FileDescriptor socket_fd, int backlog, IOErrors* err);
     void            inet_bind       (FileDescriptor socket_fd, const std::string& address, uint16_t port, IOErrors* err);
     std::unique_ptr<std::tuple<std::string, FileDescriptor>> inet_accept(FileDescriptor socket_fd, IOErrors* err);
@@ -35,7 +36,7 @@ class SystemIO final : public IO {
     ssize_t deprecated_write        (int __fd, const void* __buf, size_t __n);
 
     // this is not standard function - to be implemented differently in windows and linux
-    FileData GetDataFromFile        (const std::string &fname, IOErrors* err);
+    FileData GetDataFromFile        (const std::string& fname, IOErrors* err);
     std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err);
 };
 }
