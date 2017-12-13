@@ -21,6 +21,8 @@ void hidra2::Receiver::start_listener(std::string listener_address, uint16_t por
     FileDescriptor listener_fd = io->create_socket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP,
                                                    &io_error);
     if(io_error != IOErrors::NO_ERROR) {
+        *err = ReceiverError::FAILED_CREATING_SOCKET;
+        listener_running_ = false;
         std::cerr << "Fail to create socket" << std::endl;
         return;
     }
@@ -28,6 +30,8 @@ void hidra2::Receiver::start_listener(std::string listener_address, uint16_t por
     io->inet_bind(listener_fd, listener_address, port, &io_error);
     if(io_error != IOErrors::NO_ERROR) {
         io->deprecated_close(listener_fd);
+        *err = ReceiverError::FAILED_CREATING_SOCKET;
+        listener_running_ = false;
         std::cerr << "Fail to bind socket" << std::endl;
         return;
     }
@@ -35,6 +39,8 @@ void hidra2::Receiver::start_listener(std::string listener_address, uint16_t por
     io->listen(listener_fd, kMaxUnacceptedConnectionsBacklog, &io_error);
     if(io_error != IOErrors::NO_ERROR) {
         io->deprecated_close(listener_fd);
+        *err = ReceiverError::FAILED_CREATING_SOCKET;
+        listener_running_ = false;
         std::cerr << "Fail to start listen" << std::endl;
         return;
     }

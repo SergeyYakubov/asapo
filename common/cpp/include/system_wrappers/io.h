@@ -6,6 +6,7 @@
 #include <chrono>
 #include <sys/socket.h>
 #include <memory>
+#include <thread>
 
 #include "common/file_info.h"
 
@@ -45,6 +46,12 @@ typedef int FileDescriptor;
 
 class IO {
   public:
+    /*
+     * System
+     */
+    template<typename Function, typename... Args>
+    std::thread* new_thread(Function&& f, Args&&... args) {return nullptr;};
+
     /*
      * Network
      */
