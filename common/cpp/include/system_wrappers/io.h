@@ -47,12 +47,6 @@ typedef int FileDescriptor;
 class IO {
   public:
     /*
-     * System
-     */
-    template<typename Function, typename... Args>
-    std::thread* new_thread(Function&& f, Args&&... args) {return nullptr;};
-
-    /*
      * Network
      */
     virtual FileDescriptor  create_socket   (AddressFamilies address_family, SocketTypes socket_type,

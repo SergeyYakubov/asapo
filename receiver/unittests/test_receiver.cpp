@@ -22,9 +22,14 @@ class MockIO : public hidra2::IO {
     void(hidra2::FileDescriptor socket_fd, int backlog, hidra2::IOErrors* err));
     MOCK_METHOD4(inet_bind,
     void(hidra2::FileDescriptor socket_fd, const std::string& address, uint16_t port, hidra2::IOErrors* err));
-    MOCK_METHOD2(inet_accept,
-        std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>>(hidra2::FileDescriptor socket_fd,
-                                                                         hidra2::IOErrors* err));
+
+    virtual std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>> inet_accept(hidra2::FileDescriptor socket_fd, hidra2::IOErrors* err) {
+        return std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>>(inet_accept_proxy(socket_fd, err));
+    };
+
+    MOCK_METHOD2(inet_accept_proxy,
+                 std::tuple<std::string, hidra2::FileDescriptor>*(hidra2::FileDescriptor socket_fd,
+                     hidra2::IOErrors* err));
     MOCK_METHOD3(inet_connect,
     void(hidra2::FileDescriptor socket_fd, const std::string& address, hidra2::IOErrors* err));
     MOCK_METHOD2(create_and_connect_ip_tcp_socket,
@@ -97,6 +102,8 @@ TEST(Receiver, start_listener__inet_bind_fail) {
         .Times(1)
         .WillOnce(testing::SetArgPointee<3>(hidra2::IOErrors::ADDRESS_ALREADY_IN_USE));
 
+    EXPECT_CALL(mockIO, deprecated_close(expected_socket_fd))
+        .Times(1);
 
     hidra2::ReceiverError receiver_error;
     receiver.start_listener(expected_address, expected_port, &receiver_error);
@@ -130,6 +137,8 @@ TEST(Receiver, start_listener__listen_fail) {
         .Times(1)
         .WillOnce(testing::SetArgPointee<2>(hidra2::IOErrors::BAD_FILE_NUMBER));
 
+    EXPECT_CALL(mockIO, deprecated_close(expected_socket_fd))
+        .Times(1);
 
     hidra2::ReceiverError receiver_error;
     receiver.start_listener(expected_address, expected_port, &receiver_error);
@@ -163,18 +172,29 @@ TEST(Receiver, start_listener) {
         .Times(1)
         .WillOnce(testing::SetArgPointee<2>(hidra2::IOErrors::NO_ERROR));
 
+    /**
+     * TODO: Since start_listener will start a new thread
+     * we need to mock std::thread
+     */
+    EXPECT_CALL(mockIO, inet_accept_proxy(expected_socket_fd, _))
+        .Times(1)
+        .WillOnce(
+            DoAll(
+                testing::SetArgPointee<1>(hidra2::IOErrors::BAD_FILE_NUMBER),
+                Return(nullptr)
+            ));
+
 
     hidra2::ReceiverError receiver_error;
     receiver.start_listener(expected_address, expected_port, &receiver_error);
     EXPECT_EQ(receiver_error, hidra2::ReceiverError::NO_ERROR);
 
+    sleep(1); //Make sure that the thread is running so inet_accept_proxy would work
+
     Mock::VerifyAndClearExpectations(&mockIO);
 }
 
 TEST(Receiver, start_listener_already_listening) {
-    MockIO mockIO;
-    receiver.__set_io(&mockIO);
-
     InSequence sequence;
 
     std::string expected_address    = "127.0.0.1";
@@ -183,6 +203,24 @@ TEST(Receiver, start_listener_already_listening) {
     hidra2::ReceiverError receiver_error;
     receiver.start_listener(expected_address, expected_port, &receiver_error);
     EXPECT_EQ(receiver_error, hidra2::ReceiverError::ALREADY_LISTEING);
+}
+
+TEST(Receiver, stop_listener) {
+    MockIO mockIO;
+    receiver.__set_io(&mockIO);
+
+
+    EXPECT_CALL(mockIO, deprecated_close(expected_socket_fd))
+                .Times(1)
+                .WillOnce(
+                    Return(0)
+                );
+
+
+    hidra2::ReceiverError receiver_error;
+
+    receiver.stop_listener(&receiver_error);
+    EXPECT_EQ(receiver_error, hidra2::ReceiverError::NO_ERROR);
 
     Mock::VerifyAndClearExpectations(&mockIO);
 }

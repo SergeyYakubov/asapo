@@ -163,11 +163,6 @@ std::vector<FileInfo> SystemIO::FilesInFolder(const string& folder, IOErrors* er
     return files;
 }
 
-template<typename Function, typename... Args>
-std::thread* hidra2::SystemIO::new_thread(Function &&f, Args &&... args) {
-    return new std::thread(std::forward(f), std::forward(args)...);
-}
-
 hidra2::FileDescriptor hidra2::SystemIO::create_socket(hidra2::AddressFamilies address_family,
         hidra2::SocketTypes socket_type,
         hidra2::SocketProtocols socket_protocol,

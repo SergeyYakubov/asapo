@@ -9,12 +9,6 @@ namespace hidra2 {
 class SystemIO final : public IO {
   public:
     /*
-     * System
-     */
-    template<typename Function, typename... Args>
-    std::thread* new_thread(Function&& f, Args&&... args);
-
-    /*
      * Network
      */
     FileDescriptor  create_socket   (AddressFamilies address_family, SocketTypes socket_type,

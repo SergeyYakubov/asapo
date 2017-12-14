@@ -71,7 +71,7 @@ void hidra2::Receiver::accept_thread_logic_() {
 }
 
 void hidra2::Receiver::stop_listener(ReceiverError* err) {
-    close(listener_fd_);
+    io->deprecated_close(listener_fd_);
     listener_running_ = false;
     if(accept_thread_)
         accept_thread_->join();
