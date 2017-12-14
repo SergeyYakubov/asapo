@@ -23,7 +23,7 @@ IOErrors IOErrorFromErrno();
 class IO {
   public:
 
-    virtual FileData GetDataFromFile(const std::string &fname, IOErrors* err) = 0;
+    virtual FileData GetDataFromFile(const std::string& fname, IOErrors* err) = 0;
 
     virtual int open(const char* __file, int __oflag) = 0;
     virtual int close(int __fd) = 0;

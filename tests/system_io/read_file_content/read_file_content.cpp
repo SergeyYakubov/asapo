@@ -1,20 +1,11 @@
 #include <iostream>
-#include <memory>
-
 #include <system_wrappers/system_io.h>
+
+#include "testing.h"
 
 using hidra2::SystemIO;
 using hidra2::IOErrors;
-
-
-void M_AssertEq(const std::string& expected, const std::string& got) {
-    if (expected != got) {
-        std::cerr << "Assert failed:\n"
-                  << "Expected:\t'" << expected << "'\n"
-                  << "Obtained:\t'" << got << "'\n";
-        abort();
-    }
-}
+using hidra2::M_AssertEq;
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -25,7 +16,7 @@ int main(int argc, char* argv[]) {
 
     IOErrors err;
     auto io = std::unique_ptr<SystemIO> {new SystemIO};
-    auto files = io->FilesInFolder(argv[1], &err);
+    auto data = io->GetDataFromFile(argv[1], &err);
 
     std::string result;
 
@@ -34,12 +25,16 @@ int main(int argc, char* argv[]) {
         result = "notfound";
         break;
     case IOErrors::NO_ERROR:
-        for(auto file_info : files)
-            result += file_info.relative_path + file_info.base_name;
+        for(auto symbol : data)
+            result += symbol;
         break;
     case IOErrors::PERMISSIONS_DENIED:
         result = "noaccess";
         break;
+    case IOErrors::READ_ERROR:
+        result = "readerror";
+        break;
+
     default:
         result = "";
         break;
