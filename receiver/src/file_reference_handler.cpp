@@ -17,7 +17,7 @@ hidra2::FileReferenceId FileReferenceHandler::add_file(std::string filename,
 
     std::string full_path = filename;//TODO add path prefix, and check for exploit with '/' or '..'
     hidra2::IOError
-    int fd = io->open(full_path.c_str(), OPEN_MODE_RW | OPEN_MODE_CREATE | OPEN_MODE_SET_LENGTH_0, 0666);
+    int fd = io->Open(full_path.c_str(), OPEN_MODE_RW | OPEN_MODE_CREATE | OPEN_MODE_SET_LENGTH_0, 0666);
     if(fd == -1) {
         err = FILE_REFERENCE_HANDLER_ERR__OPEN_FAILED;
         return 0;
@@ -53,7 +53,7 @@ void FileReferenceHandler::remove_file(FileReferenceId file_reference_id) {
     }
 
     auto file_info = kFileRefernceMap[file_reference_id];
-    io->close(file_info->fd);
+    io->Close(file_info->fd);
 
     kFileRefernceMap.erase(file_reference_id);
 }

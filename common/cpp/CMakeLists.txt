@@ -1,6 +1,5 @@
 set(TARGET_NAME common)
 set(SOURCE_FILES
-        src/io_utils.cpp
         src/has_io.cpp
         src/system_io.cpp)
 IF(WIN32)

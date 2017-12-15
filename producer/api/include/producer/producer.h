@@ -34,11 +34,11 @@ class Producer : public HasIO {
 
     //virtual ~Producer() = 0;
 
-    virtual uint64_t get_version() const = 0;
-    virtual ProducerStatus get_status() const = 0;
+    virtual uint64_t GetVersion() const = 0;
+    virtual ProducerStatus GetStatus() const = 0;
 
-    virtual ProducerError connect_to_receiver(const std::string& receiver_address) = 0;
-    virtual ProducerError send(std::string filename, void* data, uint64_t file_size) = 0;
+    virtual ProducerError ConnectToReceiver(const std::string& receiver_address) = 0;
+    virtual ProducerError Send(std::string filename, void* data, uint64_t file_size) = 0;
 };
 }
 

@@ -37,7 +37,7 @@ void NetworkProducerPeer::handle_hello_request_(NetworkProducerPeer* self, const
 
     if(self->got_hello_) {
         std::cerr << "Client deprecated_send hello twice." << std::endl;
-        self->io->close(self->socket_fd_);
+        self->io->Close(self->socket_fd_);
         return;
     }
     self->got_hello_ = true;
@@ -94,8 +94,8 @@ void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* s
 
     if(request->start_byte + request->chunk_size > file_info->file_size) {
         std::cerr << "Producer is sending a lager file then excepted" << std::endl;
-        self->io->receive_timeout(self->socket_fd_, nullptr, request->chunk_size, 30,
-                                  &io_error);//TODO nullptr not a valid target for receive
+        self->io->ReceiveTimeout(self->socket_fd_, nullptr, request->chunk_size, 30,
+                                 &io_error);//TODO nullptr not a valid target for receive
         return;
     }
 
@@ -107,13 +107,13 @@ void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* s
 
     if(!mapped_file || mapped_file == MAP_FAILED) {
         std::cerr << "Mapping a file failed. errno: " << errno << std::endl;
-        self->io->receive_timeout(self->socket_fd_, nullptr, request->chunk_size, 30,
-                                  &io_error);//TODO nullptr not a valid target for receive
+        self->io->ReceiveTimeout(self->socket_fd_, nullptr, request->chunk_size, 30,
+                                 &io_error);//TODO nullptr not a valid target for receive
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
         return;
     }
 
-    self->io->receive_timeout(self->socket_fd_, (uint8_t*)mapped_file + map_offset, request->chunk_size, 30, &io_error);
+    self->io->ReceiveTimeout(self->socket_fd_, (uint8_t*) mapped_file + map_offset, request->chunk_size, 30, &io_error);
     if(io_error != IOError::NO_ERROR) {
         std::cerr << "Fail to receive all the chunk data." << std::endl;
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;

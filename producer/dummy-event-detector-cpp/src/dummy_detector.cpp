@@ -9,7 +9,7 @@
 int DummyDetector::main(int argc, char** argv) {
     auto producer = hidra2::Producer::create();
 
-    hidra2::ProducerError err = producer->connect_to_receiver("127.0.0.1:8099");
+    hidra2::ProducerError err = producer->ConnectToReceiver("127.0.0.1:8099");
     if(err) {
         std::cerr << "Fail to connect to receiver. ProducerError: " << err << std::endl;
         return 1;
@@ -26,7 +26,7 @@ int DummyDetector::main(int argc, char** argv) {
 
     hidra2::FileOpenMode open_flags = hidra2::OPEN_MODE_RW;
     hidra2::IOError io_err;
-    int fd = io->open("/tmp/bigfile", open_flags, &io_err);
+    int fd = io->Open("/tmp/bigfile", open_flags, &io_err);
     if(io_err != hidra2::IOError::NO_ERROR) {
         std::cerr << "Fail to open file" << std::endl;
         return 1;
@@ -42,7 +42,7 @@ int DummyDetector::main(int argc, char** argv) {
     const size_t size = astat.st_size;
 
     hidra2::ProducerError error;
-    error = producer->send("testfile4", buffer, size);
+    error = producer->Send("testfile4", buffer, size);
 
     if(error) {
         std::cerr << "File was not successfully deprecated_send, ErrorCode: " << error << std::endl;

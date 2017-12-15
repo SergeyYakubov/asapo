@@ -18,8 +18,8 @@ void hidra2::Receiver::start_listener(std::string listener_address, uint16_t por
 
     IOError io_error;
 
-    FileDescriptor listener_fd = io->create_socket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP,
-                                                   &io_error);
+    FileDescriptor listener_fd = io->CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP,
+                                                  &io_error);
     if(io_error != IOError::NO_ERROR) {
         *err = ReceiverError::FAILED_CREATING_SOCKET;
         listener_running_ = false;
@@ -27,18 +27,18 @@ void hidra2::Receiver::start_listener(std::string listener_address, uint16_t por
         return;
     }
 
-    io->inet_bind(listener_fd, listener_address, port, &io_error);
+    io->InetBind(listener_fd, listener_address, port, &io_error);
     if(io_error != IOError::NO_ERROR) {
-        io->close(listener_fd);
+        io->Close(listener_fd);
         *err = ReceiverError::FAILED_CREATING_SOCKET;
         listener_running_ = false;
         std::cerr << "Fail to bind socket" << std::endl;
         return;
     }
 
-    io->listen(listener_fd, kMaxUnacceptedConnectionsBacklog, &io_error);
+    io->Listen(listener_fd, kMaxUnacceptedConnectionsBacklog, &io_error);
     if(io_error != IOError::NO_ERROR) {
-        io->close(listener_fd);
+        io->Close(listener_fd);
         *err = ReceiverError::FAILED_CREATING_SOCKET;
         listener_running_ = false;
         std::cerr << "Fail to start listen" << std::endl;
@@ -47,7 +47,7 @@ void hidra2::Receiver::start_listener(std::string listener_address, uint16_t por
 
     listener_fd_ = listener_fd;
 
-    accept_thread_ = io->new_thread([this] {
+    accept_thread_ = io->NewThread([this] {
         accept_thread_logic_();//TODO add peer to some list
     });
 
@@ -59,7 +59,7 @@ void hidra2::Receiver::accept_thread_logic_() {
         FileDescriptor peer_fd;
 
         IOError io_error;
-        auto client_info_tuple = io->inet_accept(listener_fd_, &io_error);
+        auto client_info_tuple = io->InetAccept(listener_fd_, &io_error);
         if(io_error != IOError::NO_ERROR) {
             std::cerr << "An error occurred while accepting an incoming connection" << std::endl;
             return;
@@ -71,7 +71,7 @@ void hidra2::Receiver::accept_thread_logic_() {
 }
 
 void hidra2::Receiver::stop_listener(ReceiverError* err) {
-    io->close(listener_fd_);
+    io->Close(listener_fd_);
     listener_running_ = false;
     if(accept_thread_)
         accept_thread_->join();

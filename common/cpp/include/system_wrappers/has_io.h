@@ -2,7 +2,6 @@
 #define HIDRA2_SYSTEM_WRAPPERS__HAS_IO_H
 
 #include "io.h"
-#include "io_utils.h"
 
 namespace hidra2 {
 

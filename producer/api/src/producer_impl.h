@@ -24,10 +24,10 @@ class ProducerImpl : public Producer {
     ProducerImpl& operator=(const ProducerImpl&) = delete;
     //~ProducerImpl() override;
 
-    uint64_t get_version() const override;
-    ProducerStatus get_status() const override;
-    ProducerError connect_to_receiver(const std::string& receiver_address) override;
-    ProducerError send(std::string filename, void* data, uint64_t file_size) override;
+    uint64_t GetVersion() const override;
+    ProducerStatus GetStatus() const override;
+    ProducerError ConnectToReceiver(const std::string& receiver_address) override;
+    ProducerError Send(std::string filename, void* data, uint64_t file_size) override;
 
 };
 }

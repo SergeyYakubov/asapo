@@ -61,7 +61,7 @@ class IO {
     /*
      * Special
      */
-    virtual std::thread*    new_thread(std::function<void()> function) = 0;
+    virtual std::thread*    NewThread       (std::function<void()> function) = 0;
 
     // this is not standard function - to be implemented differently in windows and linux
     virtual FileData GetDataFromFile        (const std::string& fname, IOError* err) = 0;
@@ -70,32 +70,32 @@ class IO {
     /*
      * Network
      */
-    virtual FileDescriptor  create_socket   (AddressFamilies address_family, SocketTypes socket_type,
+    virtual FileDescriptor  CreateSocket    (AddressFamilies address_family, SocketTypes socket_type,
                                              SocketProtocols socket_protocol, IOError* err) = 0;
-    virtual void            listen          (FileDescriptor socket_fd, int backlog, IOError* err) = 0;
-    virtual void            inet_bind       (FileDescriptor socket_fd, const std::string& address, uint16_t port,
+    virtual void            Listen          (FileDescriptor socket_fd, int backlog, IOError* err) = 0;
+    virtual void            InetBind        (FileDescriptor socket_fd, const std::string& address, uint16_t port,
                                              IOError* err) = 0;
-    virtual std::unique_ptr<std::tuple<std::string, FileDescriptor>> inet_accept(FileDescriptor socket_fd,
+    virtual std::unique_ptr<std::tuple<std::string, FileDescriptor>> InetAccept(FileDescriptor socket_fd,
             IOError* err) = 0;
-    virtual void            inet_connect    (FileDescriptor socket_fd, const std::string& address, IOError* err) = 0;
-    virtual FileDescriptor  create_and_connect_ip_tcp_socket(const std::string& address, IOError* err) = 0;
+    virtual void            InetConnect     (FileDescriptor socket_fd, const std::string& address, IOError* err) = 0;
+    virtual FileDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOError* err) = 0;
 
-    virtual size_t          receive         (FileDescriptor socket_fd, void* buf, size_t length, IOError* err) = 0;
-    virtual size_t          receive_timeout (FileDescriptor socket_fd,
+    virtual size_t          Receive         (FileDescriptor socket_fd, void* buf, size_t length, IOError* err) = 0;
+    virtual size_t          ReceiveTimeout  (FileDescriptor socket_fd,
                                              void* buf,
                                              size_t length,
                                              uint16_t timeout_in_sec,
                                              IOError* err) = 0;
-    virtual size_t          send            (FileDescriptor socket_fd, const void* buf, size_t length, IOError* err) = 0;
+    virtual size_t          Send            (FileDescriptor socket_fd, const void* buf, size_t length, IOError* err) = 0;
 
     /*
      * Filesystem
      */
-    virtual FileDescriptor  open            (const std::string& filename, FileOpenMode open_flags, IOError* err) = 0;
+    virtual FileDescriptor  Open            (const std::string& filename, FileOpenMode open_flags, IOError* err) = 0;
     /**
      * @param err Is able to accept nullptr
      */
-    virtual void            close           (FileDescriptor fd, IOError* err = nullptr) = 0;
+    virtual void            Close           (FileDescriptor fd, IOError* err = nullptr) = 0;
 
     //TODO need to remove
     virtual ssize_t deprecated_read         (int __fd, void* buf, size_t count) = 0;
