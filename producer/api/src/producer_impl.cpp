@@ -24,11 +24,11 @@ hidra2::ProducerStatus hidra2::ProducerImpl::get_status() const {
 }
 
 hidra2::ProducerError hidra2::ProducerImpl::initialize_socket_to_receiver_(const std::string& receiver_address) {
-    IOErrors err;
+    IOError err;
     FileDescriptor fd = io->create_and_connect_ip_tcp_socket(receiver_address, &err);
 
-    if(err != IOErrors::NO_ERROR) {
-        if(err == IOErrors::INVALID_ADDRESS_FORMAT) {
+    if(err != IOError::NO_ERROR) {
+        if(err == IOError::INVALID_ADDRESS_FORMAT) {
             return PRODUCER_ERROR__INVALID_ADDRESS_FORMAT;
         }
         return PRODUCER_ERROR__FAILED_TO_CONNECT_TO_SERVER;
@@ -59,9 +59,9 @@ hidra2::ProducerError hidra2::ProducerImpl::connect_to_receiver(const std::strin
     helloRequest.os = OS_LINUX;
     helloRequest.is_x64 = true;
 
-    IOErrors io_error;
+    IOError io_error;
     io->send(client_fd_, &helloRequest, sizeof(helloRequest), &io_error);
-    if(io_error != IOErrors::NO_ERROR) {
+    if(io_error != IOError::NO_ERROR) {
         std::cerr << "hidra2::ProducerImpl::connect_to_receiver/send error" << std::endl;
         status_ = PRODUCER_STATUS__DISCONNECTED;
         return PRODUCER_ERROR__FAILED_TO_CONNECT_TO_SERVER;
@@ -69,7 +69,7 @@ hidra2::ProducerError hidra2::ProducerImpl::connect_to_receiver(const std::strin
 
     HelloResponse helloResponse;
     io->receive_timeout(client_fd_, &helloResponse, sizeof(helloResponse), 30, &io_error);
-    if(io_error != IOErrors::NO_ERROR) {
+    if(io_error != IOError::NO_ERROR) {
         std::cerr << "hidra2::ProducerImpl::connect_to_receiver/receive_timeout error" << std::endl;
         status_ = PRODUCER_STATUS__DISCONNECTED;
         return PRODUCER_ERROR__FAILED_TO_CONNECT_TO_SERVER;
@@ -107,9 +107,9 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void* dat
 
     std::cout << "Send file: " << filename << std::endl;
 
-    IOErrors io_error;
+    IOError io_error;
     io->send(client_fd_, &prepareSendDataRequest, sizeof(prepareSendDataRequest), &io_error);
-    if(io_error != IOErrors::NO_ERROR) {
+    if(io_error != IOError::NO_ERROR) {
         std::cerr << "hidra2::ProducerImpl::send/send error" << std::endl;
         status_ = PRODUCER_STATUS__CONNECTED;
         return PRODUCER_ERROR__SENDING_SERVER_REQUEST_FAILED;
@@ -118,7 +118,7 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void* dat
     hidra2::PrepareSendDataResponse prepareSendDataResponse;
 
     io->receive_timeout(client_fd_, &prepareSendDataResponse, sizeof(prepareSendDataResponse), 30, &io_error);
-    if(io_error != IOErrors::NO_ERROR) {
+    if(io_error != IOError::NO_ERROR) {
         std::cerr << "hidra2::ProducerImpl::send/receive_timeout error" << std::endl;
         status_ = PRODUCER_STATUS__CONNECTED;
         return PRODUCER_ERROR__RECEIVING_SERVER_RESPONSE_FAILED;
@@ -151,14 +151,14 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void* dat
         sendDataChunkRequest.file_reference_id = prepareSendDataResponse.file_reference_id;
 
         io->send(client_fd_, &sendDataChunkRequest, sizeof(sendDataChunkRequest), &io_error);
-        if(io_error != IOErrors::NO_ERROR) {
+        if(io_error != IOError::NO_ERROR) {
             std::cerr << "hidra2::ProducerImpl::send/send2 error" << std::endl;
             status_ = PRODUCER_STATUS__CONNECTED;
             return PRODUCER_ERROR__SENDING_CHUNK_FAILED;
         }
 
         io->send(client_fd_, (uint8_t*)data + already_send, need_to_send, &io_error);
-        if(io_error != IOErrors::NO_ERROR) {
+        if(io_error != IOError::NO_ERROR) {
             std::cerr << "hidra2::ProducerImpl::send/send3 error" << std::endl;
             status_ = PRODUCER_STATUS__CONNECTED;
             return PRODUCER_ERROR__SENDING_CHUNK_FAILED;
@@ -168,7 +168,7 @@ hidra2::ProducerError hidra2::ProducerImpl::send(std::string filename, void* dat
 
         hidra2::SendDataChunkResponse sendDataChunkResponse;
         io->receive_timeout(client_fd_, &sendDataChunkResponse, sizeof(sendDataChunkResponse), 30, &io_error);
-        if(io_error != IOErrors::NO_ERROR) {
+        if(io_error != IOError::NO_ERROR) {
             std::cerr << "hidra2::ProducerImpl::send/receive_timeout2 error" << std::endl;
             status_ = PRODUCER_STATUS__CONNECTED;
             return PRODUCER_ERROR__RECEIVING_SERVER_RESPONSE_FAILED;

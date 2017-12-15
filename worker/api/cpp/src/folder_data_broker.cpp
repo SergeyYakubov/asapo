@@ -4,19 +4,19 @@
 
 namespace hidra2 {
 
-WorkerErrorCode MapIOError(IOErrors io_err) {
+WorkerErrorCode MapIOError(IOError io_err) {
     WorkerErrorCode err;
     switch (io_err) { // we do not use map due to performance reasons
-    case IOErrors::NO_ERROR:
+    case IOError::NO_ERROR:
         err = WorkerErrorCode::OK;
         break;
-    case IOErrors::FILE_NOT_FOUND:
+    case IOError::FILE_NOT_FOUND:
         err = WorkerErrorCode::SOURCE_NOT_FOUND;
         break;
-    case IOErrors::PERMISSIONS_DENIED:
+    case IOError::PERMISSIONS_DENIED:
         err = WorkerErrorCode::PERMISSIONS_DENIED;
         break;
-    case IOErrors::READ_ERROR:
+    case IOError::READ_ERROR:
         err = WorkerErrorCode::ERROR_READING_FROM_SOURCE;
         break;
     default:
@@ -34,14 +34,14 @@ current_file_{0} {
 }
 
 WorkerErrorCode FolderDataBroker::Connect() {
-    IOErrors io_err;
+    IOError io_err;
     if (is_connected_) {
         return WorkerErrorCode::SOURCE_ALREADY_CONNECTED;
     }
 
     filelist_ = io__->FilesInFolder(base_path_, &io_err);
 
-    if (io_err == IOErrors::NO_ERROR) {
+    if (io_err == IOError::NO_ERROR) {
         is_connected_ = true;
     }
     return MapIOError(io_err);
@@ -76,7 +76,7 @@ WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
         return WorkerErrorCode::OK;
     }
 
-    IOErrors ioerr;
+    IOError ioerr;
     *data = io__->GetDataFromFile(base_path_ + "/" + info->relative_path +
                                   (info->relative_path.empty() ? "" : "/") +
                                   info->base_name, &ioerr);

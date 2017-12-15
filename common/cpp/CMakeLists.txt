@@ -14,5 +14,6 @@ ENDIF(WIN32)
 # Library
 ################################
 add_library(${TARGET_NAME} SHARED ${SOURCE_FILES})
+target_link_libraries(${TARGET_NAME} pthread)
 target_include_directories(${TARGET_NAME} PUBLIC include)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)

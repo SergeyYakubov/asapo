@@ -12,9 +12,11 @@ int DummyDetector::main(int argc, char** argv) {
     hidra2::ProducerError err = producer->connect_to_receiver("127.0.0.1:8099");
     if(err) {
         std::cerr << "Fail to connect to receiver. ProducerError: " << err << std::endl;
-        return -1;
+        return 1;
     }
-    /*const size_t size = 255;
+
+    /*
+    const size_t size = 255;
     void *buffer = malloc(size);
 
     for(unsigned char i = 0; i < 255; i++) {
@@ -22,7 +24,13 @@ int DummyDetector::main(int argc, char** argv) {
     }
      */
 
-    int fd = open("/tmp/bigfile", O_RDONLY);
+    hidra2::FileOpenMode open_flags = hidra2::OPEN_MODE_RW;
+    hidra2::IOError io_err;
+    int fd = io->open("/tmp/bigfile", open_flags, &io_err);
+    if(io_err != hidra2::IOError::NO_ERROR) {
+        std::cerr << "Fail to open file" << std::endl;
+        return 1;
+    }
     struct stat astat {};
     fstat(fd, &astat);
 
@@ -31,8 +39,10 @@ int DummyDetector::main(int argc, char** argv) {
 
     madvise(buffer, map_size, MADV_SEQUENTIAL | MADV_WILLNEED);
 
+    const size_t size = astat.st_size;
+
     hidra2::ProducerError error;
-    error = producer->send("testfile4", buffer, astat.st_size);
+    error = producer->send("testfile4", buffer, size);
 
     if(error) {
         std::cerr << "File was not successfully deprecated_send, ErrorCode: " << error << std::endl;
@@ -40,7 +50,7 @@ int DummyDetector::main(int argc, char** argv) {
         std::cout << "File was successfully send." << std::endl;
     }
 
-    munmap(buffer, map_size);
+    //munmap(buffer, map_size);
 
     return 0;
 }

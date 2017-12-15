@@ -13,7 +13,7 @@ class ProducerImpl : public Producer {
     int         client_fd_ = -1;
     uint64_t    request_id = 0;
 
-    ProducerStatus status_;
+    ProducerStatus status_ = PRODUCER_STATUS__DISCONNECTED;
 
     ProducerError initialize_socket_to_receiver_(const std::string& receiver_address);
   public:

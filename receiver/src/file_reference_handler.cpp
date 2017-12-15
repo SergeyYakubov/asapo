@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fcntl.h>
-#include "file_refernce_handler.h"
+#include "file_reference_handler.h"
 
 namespace hidra2 {
 
@@ -16,13 +16,15 @@ hidra2::FileReferenceId FileReferenceHandler::add_file(std::string filename,
     FileReferenceId file_ref_id = ++kGlobalFileRefernceId;
 
     std::string full_path = filename;//TODO add path prefix, and check for exploit with '/' or '..'
-    int fd = open(full_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+    hidra2::IOError
+    int fd = io->open(full_path.c_str(), OPEN_MODE_RW | OPEN_MODE_CREATE | OPEN_MODE_SET_LENGTH_0, 0666);
     if(fd == -1) {
         err = FILE_REFERENCE_HANDLER_ERR__OPEN_FAILED;
         return 0;
     }
 
     if(fallocate(fd, 0, 0, file_size) == -1) {
+        std::cout << "errno: " << errno << std::endl;
         err = FILE_REFERENCE_HANDLER_ERR__ALLOCATE_STORAGE_FAILED;
         return 0;
     }
@@ -51,7 +53,7 @@ void FileReferenceHandler::remove_file(FileReferenceId file_reference_id) {
     }
 
     auto file_info = kFileRefernceMap[file_reference_id];
-    io->deprecated_close(file_info->fd);
+    io->close(file_info->fd);
 
     kFileRefernceMap.erase(file_reference_id);
 }

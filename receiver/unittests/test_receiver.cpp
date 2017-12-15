@@ -23,7 +23,7 @@ class MockIO : public hidra2::IO {
     MOCK_METHOD4(inet_bind,
     void(hidra2::FileDescriptor socket_fd, const std::string& address, uint16_t port, hidra2::IOErrors* err));
 
-    virtual std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>> inet_accept(hidra2::FileDescriptor socket_fd, hidra2::IOErrors* err) {
+    virtual std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>> inet_accept(hidra2::FileDescriptor socket_fd, hidra2::IOError* err) {
         return std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>>(inet_accept_proxy(socket_fd, err));
     };
 
@@ -70,7 +70,7 @@ TEST(Receiver, start_listener__create_socket_fail) {
         .Times(1)
         .WillOnce(
             DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::UNKNOWN_ERROR),
+                testing::SetArgPointee<3>(hidra2::IOError::UNKNOWN_ERROR),
                 Return(-1)
             ));
 
@@ -94,13 +94,13 @@ TEST(Receiver, start_listener__inet_bind_fail) {
         .Times(1)
         .WillOnce(
             DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::NO_ERROR),
+                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
                 Return(expected_socket_fd)
             ));
 
     EXPECT_CALL(mockIO, inet_bind(expected_socket_fd, expected_address, expected_port, _))
         .Times(1)
-        .WillOnce(testing::SetArgPointee<3>(hidra2::IOErrors::ADDRESS_ALREADY_IN_USE));
+        .WillOnce(testing::SetArgPointee<3>(hidra2::IOError::ADDRESS_ALREADY_IN_USE));
 
     EXPECT_CALL(mockIO, deprecated_close(expected_socket_fd))
         .Times(1);
@@ -125,17 +125,17 @@ TEST(Receiver, start_listener__listen_fail) {
         .Times(1)
         .WillOnce(
             DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::NO_ERROR),
+                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
                 Return(expected_socket_fd)
             ));
 
     EXPECT_CALL(mockIO, inet_bind(expected_socket_fd, expected_address, expected_port, _))
         .Times(1)
-        .WillOnce(testing::SetArgPointee<3>(hidra2::IOErrors::NO_ERROR));
+        .WillOnce(testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR));
 
     EXPECT_CALL(mockIO, listen(expected_socket_fd, receiver.kMaxUnacceptedConnectionsBacklog, _))
         .Times(1)
-        .WillOnce(testing::SetArgPointee<2>(hidra2::IOErrors::BAD_FILE_NUMBER));
+        .WillOnce(testing::SetArgPointee<2>(hidra2::IOError::BAD_FILE_NUMBER));
 
     EXPECT_CALL(mockIO, deprecated_close(expected_socket_fd))
         .Times(1);
@@ -160,17 +160,17 @@ TEST(Receiver, start_listener) {
         .Times(1)
         .WillOnce(
             DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::NO_ERROR),
+                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
                 Return(expected_socket_fd)
             ));
 
     EXPECT_CALL(mockIO, inet_bind(expected_socket_fd, expected_address, expected_port, _))
         .Times(1)
-        .WillOnce(testing::SetArgPointee<3>(hidra2::IOErrors::NO_ERROR));
+        .WillOnce(testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR));
 
     EXPECT_CALL(mockIO, listen(expected_socket_fd, receiver.kMaxUnacceptedConnectionsBacklog, _))
         .Times(1)
-        .WillOnce(testing::SetArgPointee<2>(hidra2::IOErrors::NO_ERROR));
+        .WillOnce(testing::SetArgPointee<2>(hidra2::IOError::NO_ERROR));
 
     /**
      * TODO: Since start_listener will start a new thread
@@ -180,7 +180,7 @@ TEST(Receiver, start_listener) {
         .Times(1)
         .WillOnce(
             DoAll(
-                testing::SetArgPointee<1>(hidra2::IOErrors::BAD_FILE_NUMBER),
+                testing::SetArgPointee<1>(hidra2::IOError::BAD_FILE_NUMBER),
                 Return(nullptr)
             ));
 

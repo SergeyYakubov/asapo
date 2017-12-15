@@ -33,7 +33,7 @@ void NetworkProducerPeer::start_peer_listener() {
     if(listener_thread_ || is_listening_)
         return;
     is_listening_ = true;
-    listener_thread_ = new std::thread([this] {
+    listener_thread_ = io->new_thread([this] {
         internal_receiver_thread_();
     });
 }
@@ -43,18 +43,18 @@ void NetworkProducerPeer::internal_receiver_thread_() {
     auto* const generic_response = (GenericNetworkResponse*) malloc(kGenericBufferSize);
 
 
-    IOErrors err;
+    IOError err;
     while(is_listening_) {
-        err = IOErrors::NO_ERROR;
+        err = IOError::NO_ERROR;
 
         io->receive_timeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 1, &err);
 
-        if(err != IOErrors::NO_ERROR) {
-            if(err == IOErrors::TIMEOUT) {
+        if(err != IOError::NO_ERROR) {
+            if(err == IOError::TIMEOUT) {
                 continue;
             }
 
-            if(err == IOErrors::STREAM_EOF) {
+            if(err == IOError::STREAM_EOF) {
                 is_listening_ = false;
                 break;
             }
@@ -73,12 +73,12 @@ void NetworkProducerPeer::internal_receiver_thread_() {
 
         io->send(socket_fd_, generic_response, bytes_to_send, &err);
 
-        if(err != IOErrors::NO_ERROR) {
+        if(err != IOError::NO_ERROR) {
             std::cerr << "[" << connection_id() << "] Fail to send response" << std::endl;
         }
     }
 
-    io->deprecated_close(socket_fd_);
+    io->close(socket_fd_);
     std::cout << "[" << connection_id() << "] Disconnected." << std::endl;
 
     free(generic_request);
@@ -98,7 +98,7 @@ void NetworkProducerPeer::stop_peer_listener() {
 size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response) {
     if(request->op_code >= OP_CODE_COUNT || request->op_code < 0) {
         std::cerr << "[" << connection_id() << "] Error invalid op_code: " << request->op_code << std::endl;
-        io->deprecated_close(socket_fd_);
+        io->close(socket_fd_);
         return 0;
     }
 
@@ -110,11 +110,11 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
     assert(handler_information.request_size <= kGenericBufferSize);//Would overwrite memory
     assert(handler_information.response_size <= kGenericBufferSize);//Would overwrite memory
 
-    IOErrors err;
+    IOError err;
     //receive the rest of the message
     io->receive_timeout(socket_fd_, request->data, handler_information.request_size - sizeof(GenericNetworkRequest), 30,
                         &err);
-    if(err != IOErrors::NO_ERROR) {
+    if(err != IOError::NO_ERROR) {
         std::cerr << "[" << connection_id() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " <<
                   request->op_code << std::endl;
         return 0;

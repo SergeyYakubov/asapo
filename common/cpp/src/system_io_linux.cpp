@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <iostream>
+#include <zconf.h>
 
 using std::string;
 using std::vector;
@@ -18,37 +19,27 @@ using std::chrono::system_clock;
 
 namespace hidra2 {
 
-IOErrors IOErrorFromErrno() {
-    IOErrors err;
+IOError IOErrorFromErrno() {
     switch (errno) {
     case 0:
-        err = IOErrors::NO_ERROR;
-        break;
+        return IOError::NO_ERROR;
     case EBADF:
-        err = IOErrors::BAD_FILE_NUMBER;
-        break;
+        return IOError::BAD_FILE_NUMBER;
     case ENOENT:
     case ENOTDIR:
-        err = IOErrors::FILE_NOT_FOUND;
-        break;
+        return IOError::FILE_NOT_FOUND;
     case EACCES:
-        err = IOErrors::PERMISSIONS_DENIED;
-        break;
+        return IOError::PERMISSIONS_DENIED;
     case ECONNREFUSED:
-        err = IOErrors::CONNECTION_REFUSED;
-        break;
+        return IOError::CONNECTION_REFUSED;
     case EADDRINUSE:
-        err = IOErrors::ADDRESS_ALREADY_IN_USE;
-        break;
+        return IOError::ADDRESS_ALREADY_IN_USE;
     case ECONNRESET:
-        err = IOErrors::CONNECTION_RESET_BY_PEER;
-        break;
+        return IOError::CONNECTION_RESET_BY_PEER;
     default:
-        std::cout << "[TMP/IOErrorFromErrNo] Unknown error code: " << errno << std::endl;
-        err = IOErrors::UNKNOWN_ERROR;
-        break;
+        std::cout << "[IOErrorFromErrno] Unknown error code: " << errno << std::endl;
+        return IOError::UNKNOWN_ERROR;
     }
-    return err;
 }
 
 sa_family_t AddressFamilyToPosixFamily(AddressFamilies address_family) {
@@ -59,12 +50,39 @@ sa_family_t AddressFamilyToPosixFamily(AddressFamilies address_family) {
     return -1;
 };
 
-hidra2::FileData hidra2::SystemIO::GetDataFromFile(const std::string& fname, IOErrors* err) {
-    int fd = deprecated_open(fname.c_str(), O_RDONLY);
+int FileOpenModeToPosixFileOpenMode(FileOpenMode open_flags) {
+    int flags = 0;
+    if((open_flags & OPEN_MODE_READ && open_flags & OPEN_MODE_WRITE) || open_flags & OPEN_MODE_RW) {
+        flags |= O_RDWR;
+    }
+    else {
+        if (open_flags & OPEN_MODE_READ) {
+            flags |= O_RDONLY;
+        }
+        if (open_flags & OPEN_MODE_WRITE) {
+            flags |= O_WRONLY;
+        }
+    }
+    if(open_flags & OPEN_MODE_CREATE) {
+        flags |= O_CREAT;
+    }
+    if(open_flags & OPEN_MODE_SET_LENGTH_0) {
+        flags |= O_TRUNC;
+    }
+    return flags;
+}
+
+hidra2::FileData hidra2::SystemIO::GetDataFromFile(const std::string& fname, IOError* err) {
+    /*
+     * TODO ?
+     */
+    /*
+    FileDescriptor fd = open(fname, FileOpenMode::READ, err);
     *err = IOErrorFromErrno();
-    if (*err != IOErrors::NO_ERROR) {
+    if (*err != IOError::NO_ERROR) {
         return {};
     }
+     */
 
 }
 
@@ -74,7 +92,7 @@ bool IsDirectory(const struct dirent* entity) {
            strstr(entity->d_name, ".") == nullptr;
 }
 
-system_clock::time_point GetTimePointFromFile(const string& fname, IOErrors* err) {
+system_clock::time_point GetTimePointFromFile(const string& fname, IOError* err) {
 
     struct stat t_stat {};
     int res = stat(fname.c_str(), &t_stat);
@@ -96,9 +114,9 @@ system_clock::time_point GetTimePointFromFile(const string& fname, IOErrors* err
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
-                       std::vector<FileInfo>& files, IOErrors* err) {
+                       std::vector<FileInfo>& files, IOError* err) {
 
-    *err = IOErrors::NO_ERROR;
+    *err = IOError::NO_ERROR;
     if (entity->d_type != DT_REG) {
         return;
     }
@@ -107,7 +125,7 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
     file_info.base_name = entity->d_name;
 
     file_info.modify_date = GetTimePointFromFile(path + "/" + entity->d_name, err);
-    if (*err != IOErrors::NO_ERROR) {
+    if (*err != IOError::NO_ERROR) {
         return;
     }
 
@@ -115,7 +133,7 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
 }
 
 void CollectFileInformationRecursivly(const std::string& path,
-                                      std::vector<FileInfo>& files, IOErrors* err) {
+                                      std::vector<FileInfo>& files, IOError* err) {
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = IOErrorFromErrno();
@@ -129,7 +147,7 @@ void CollectFileInformationRecursivly(const std::string& path,
         } else {
             ProcessFileEntity(current_entity, path, files, err);
         }
-        if (*err != IOErrors::NO_ERROR) {
+        if (*err != IOError::NO_ERROR) {
             closedir(dir);
             return;
         }
@@ -152,10 +170,10 @@ void StripBasePath(const string& folder, std::vector<FileInfo>& file_list) {
     }
 }
 
-std::vector<FileInfo> SystemIO::FilesInFolder(const string& folder, IOErrors* err) {
+std::vector<FileInfo> SystemIO::FilesInFolder(const string& folder, IOError* err) {
     std::vector<FileInfo> files{};
     CollectFileInformationRecursivly(folder, files, err);
-    if (*err != IOErrors::NO_ERROR) {
+    if (*err != IOError::NO_ERROR) {
         return {};
     }
     StripBasePath(folder, files);
@@ -166,12 +184,12 @@ std::vector<FileInfo> SystemIO::FilesInFolder(const string& folder, IOErrors* er
 hidra2::FileDescriptor hidra2::SystemIO::create_socket(hidra2::AddressFamilies address_family,
         hidra2::SocketTypes socket_type,
         hidra2::SocketProtocols socket_protocol,
-        hidra2::IOErrors* err) {
-    *err = IOErrors::NO_ERROR;
+        hidra2::IOError* err) {
+    *err = IOError::NO_ERROR;
 
     int domain = AddressFamilyToPosixFamily(address_family);
     if(domain == -1) {
-        *err = IOErrors::UNSUPPORTED_ADDRESS_FAMILY;
+        *err = IOError::UNSUPPORTED_ADDRESS_FAMILY;
         return -1;
     }
 
@@ -181,7 +199,7 @@ hidra2::FileDescriptor hidra2::SystemIO::create_socket(hidra2::AddressFamilies a
         type = SOCK_STREAM;
         break;
     default:
-        *err = IOErrors::UNKNOWN_ERROR;//TODO
+        *err = IOError::UNKNOWN_ERROR;//TODO
         return -1;
     }
 
@@ -191,7 +209,7 @@ hidra2::FileDescriptor hidra2::SystemIO::create_socket(hidra2::AddressFamilies a
         protocol = IPPROTO_IP;
         break;
     default:
-        *err = IOErrors::UNKNOWN_ERROR;//TODO
+        *err = IOError::UNKNOWN_ERROR;//TODO
         return -1;
     }
 
@@ -207,15 +225,20 @@ hidra2::FileDescriptor hidra2::SystemIO::create_socket(hidra2::AddressFamilies a
 
 }
 
+std::thread* hidra2::SystemIO::new_thread(std::function<void()> function) {
+    return new std::thread(function);
+}
+
+
 void hidra2::SystemIO::inet_bind(hidra2::FileDescriptor socket_fd,
                                  const std::string& address,
                                  uint16_t port,
-                                 hidra2::IOErrors* err) {
-    *err = IOErrors::NO_ERROR;
+                                 hidra2::IOError* err) {
+    *err = IOError::NO_ERROR;
 
     sa_family_t family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if(family == -1) {
-        *err = IOErrors::UNSUPPORTED_ADDRESS_FAMILY;
+        *err = IOError::UNSUPPORTED_ADDRESS_FAMILY;
         return;
     }
 
@@ -230,8 +253,8 @@ void hidra2::SystemIO::inet_bind(hidra2::FileDescriptor socket_fd,
 
 }
 
-void hidra2::SystemIO::listen(hidra2::FileDescriptor socket_fd, int backlog, hidra2::IOErrors* err) {
-    *err = IOErrors::NO_ERROR;
+void hidra2::SystemIO::listen(hidra2::FileDescriptor socket_fd, int backlog, hidra2::IOError* err) {
+    *err = IOError::NO_ERROR;
 
     if(::listen(socket_fd, backlog) == -1) {
         *err = IOErrorFromErrno();
@@ -239,14 +262,14 @@ void hidra2::SystemIO::listen(hidra2::FileDescriptor socket_fd, int backlog, hid
 }
 std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>> hidra2::SystemIO::inet_accept(
             hidra2::FileDescriptor socket_fd,
-IOErrors* err) {
+IOError* err) {
     sa_family_t family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if(family == -1) {
-        *err = IOErrors::UNSUPPORTED_ADDRESS_FAMILY;
+        *err = IOError::UNSUPPORTED_ADDRESS_FAMILY;
         return nullptr;
     }
 
-    sockaddr_in client_address;
+    sockaddr_in client_address {};
     socklen_t client_address_size = sizeof(sockaddr_in);
 
     int peer_fd = ::accept(socket_fd, reinterpret_cast<sockaddr*>(&client_address), &client_address_size);
@@ -261,8 +284,8 @@ IOErrors* err) {
             std::tuple<std::string, hidra2::FileDescriptor>(address, peer_fd));
 }
 
-void hidra2::SystemIO::inet_connect(FileDescriptor socket_fd, const std::string& address, hidra2::IOErrors* err) {
-    *err = IOErrors::NO_ERROR;
+void hidra2::SystemIO::inet_connect(FileDescriptor socket_fd, const std::string& address, hidra2::IOError* err) {
+    *err = IOError::NO_ERROR;
     std::string host;
     uint16_t port = 0;
 
@@ -272,13 +295,13 @@ void hidra2::SystemIO::inet_connect(FileDescriptor socket_fd, const std::string&
         std::string port_str = address.substr(address.find(':') + 1, address.length());
         port = static_cast<uint16_t>(std::stoi(port_str));
     } catch(std::exception& e) {
-        *err = IOErrors::INVALID_ADDRESS_FORMAT;
+        *err = IOError::INVALID_ADDRESS_FORMAT;
         return;
     }
 
     sa_family_t family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if(family == -1) {
-        *err = IOErrors::UNSUPPORTED_ADDRESS_FAMILY;
+        *err = IOError::UNSUPPORTED_ADDRESS_FAMILY;
         return;
     }
 
@@ -292,32 +315,31 @@ void hidra2::SystemIO::inet_connect(FileDescriptor socket_fd, const std::string&
         return;
     }
 }
-hidra2::FileDescriptor hidra2::SystemIO::create_and_connect_ip_tcp_socket(const std::string& address,
-        hidra2::IOErrors* err) {
-    *err = hidra2::IOErrors::NO_ERROR;
+hidra2::FileDescriptor hidra2::SystemIO::create_and_connect_ip_tcp_socket(const std::string& address, hidra2::IOError* err) {
+    *err = hidra2::IOError::NO_ERROR;
 
     FileDescriptor fd = create_socket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, err);
-    if(*err != IOErrors::NO_ERROR) {
+    if(*err != IOError::NO_ERROR) {
         return -1;
     }
     inet_connect(fd, address, err);
-    if(*err != IOErrors::NO_ERROR) {
-        deprecated_close(fd);//TODO
+    if(*err != IOError::NO_ERROR) {
+        close(fd);
         return -1;
     }
 
     return fd;
 }
 
-size_t hidra2::SystemIO::receive(hidra2::FileDescriptor socket_fd, void* buf, size_t length, hidra2::IOErrors* err) {
-    *err = hidra2::IOErrors::NO_ERROR;
+size_t hidra2::SystemIO::receive(hidra2::FileDescriptor socket_fd, void* buf, size_t length, hidra2::IOError* err) {
+    *err = hidra2::IOError::NO_ERROR;
 
     size_t already_received = 0;
 
     while(already_received < length) {
         ssize_t received_amount = ::recv(socket_fd, (uint8_t*)buf + already_received, length - already_received, 0);
         if(received_amount == 0) {
-            *err = IOErrors::STREAM_EOF;
+            *err = IOError::STREAM_EOF;
             return already_received;
         }
         if(received_amount == -1) {
@@ -334,8 +356,8 @@ size_t hidra2::SystemIO::receive_timeout(hidra2::FileDescriptor socket_fd,
                                          void* buf,
                                          size_t length,
                                          uint16_t timeout_in_sec,
-                                         hidra2::IOErrors* err) {
-    *err = hidra2::IOErrors::NO_ERROR;
+                                         hidra2::IOError* err) {
+    *err = hidra2::IOError::NO_ERROR;
 
     fd_set read_fds;
     FD_SET(socket_fd, &read_fds);
@@ -345,7 +367,7 @@ size_t hidra2::SystemIO::receive_timeout(hidra2::FileDescriptor socket_fd,
 
     int res = select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
     if(res == 0) {
-        *err = IOErrors::TIMEOUT;
+        *err = IOError::TIMEOUT;
         return 0;
     }
     if(res == -1) {
@@ -359,15 +381,15 @@ size_t hidra2::SystemIO::receive_timeout(hidra2::FileDescriptor socket_fd,
 size_t hidra2::SystemIO::send(hidra2::FileDescriptor socket_fd,
                               const void* buf,
                               size_t length,
-                              hidra2::IOErrors* err) {
-    *err = hidra2::IOErrors::NO_ERROR;
+                              hidra2::IOError* err) {
+    *err = hidra2::IOError::NO_ERROR;
 
     size_t already_sent = 0;
 
     while(already_sent < length) {
         ssize_t send_amount = ::send(socket_fd, (uint8_t*)buf + already_sent, length - already_sent, 0);
         if(send_amount == 0) {
-            *err = IOErrors::STREAM_EOF;
+            *err = IOError::STREAM_EOF;
             return already_sent;
         }
         if(send_amount == -1) {
@@ -378,4 +400,30 @@ size_t hidra2::SystemIO::send(hidra2::FileDescriptor socket_fd,
     }
 
     return already_sent;
+}
+
+
+hidra2::FileDescriptor hidra2::SystemIO::open(const std::string &filename,
+                                              FileOpenMode open_flags,
+                                              IOError* err) {
+    *err = IOError::NO_ERROR;
+    int flags = FileOpenModeToPosixFileOpenMode(open_flags);
+
+    FileDescriptor fd = ::open(filename.c_str(), flags);
+    if(fd == -1) {
+        *err = IOErrorFromErrno();
+    }
+
+    return fd;
+}
+
+void hidra2::SystemIO::close(hidra2::FileDescriptor fd, hidra2::IOError* err) {
+    int status = ::close(fd);
+    if(!err) {
+        return;
+    }
+    *err = IOError::NO_ERROR;
+    if(status == -1) {
+        *err = IOErrorFromErrno();
+    }
 }

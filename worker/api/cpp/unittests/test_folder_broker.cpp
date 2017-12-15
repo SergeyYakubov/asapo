@@ -12,7 +12,7 @@ using hidra2::DataBroker;
 using hidra2::FolderDataBroker;
 using hidra2::WorkerErrorCode;
 using hidra2::IO;
-using hidra2::IOErrors;
+using hidra2::IOError;
 using hidra2::FileInfo;
 using hidra2::FileData;
 
@@ -36,8 +36,8 @@ TEST(FolderDataBroker, SetCorrectIO) {
 
 class FakeIO: public IO {
   public:
-    FileData GetDataFromFile(const std::string& fname, IOErrors* err) {
-        *err = IOErrors::NO_ERROR;
+    FileData GetDataFromFile(const std::string& fname, IOError* err) {
+        *err = IOError::NO_ERROR;
         return {};
     };
 
@@ -54,8 +54,8 @@ class FakeIO: public IO {
     ssize_t write(int __fd, const void* __buf, size_t __n) {
         return 0;
     };
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) {
-        *err = IOErrors::NO_ERROR;
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) {
+        *err = IOError::NO_ERROR;
         std::vector<FileInfo> file_infos;
         FileInfo fi;
         fi.base_name = "1";
@@ -71,32 +71,32 @@ class FakeIO: public IO {
 
 class IOFolderNotFound: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) {
-        *err = IOErrors::FILE_NOT_FOUND;
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) {
+        *err = IOError::FILE_NOT_FOUND;
         return {};
     }
 };
 
 class IOFodlerUnknownError: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) {
-        *err = IOErrors::UNKNOWN_ERROR;
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) {
+        *err = IOError::UNKNOWN_ERROR;
         return {};
     }
 };
 
 class IOEmptyFodler: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) {
-        *err = IOErrors::NO_ERROR;
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) {
+        *err = IOError::NO_ERROR;
         return {};
     }
 };
 
 class IOCannotOpenFile: public FakeIO {
   public:
-    FileData GetDataFromFile(const std::string& fname, IOErrors* err)  {
-        *err = IOErrors::PERMISSIONS_DENIED;
+    FileData GetDataFromFile(const std::string& fname, IOError* err)  {
+        *err = IOError::PERMISSIONS_DENIED;
         return {};
     };
 };
@@ -213,9 +213,9 @@ TEST_F(FolderDataBrokerTests, GetNextCallsGetDataFileWithFileName) {
     FileInfo fi;
     FileData data;
 
-    auto err = IOErrors::NO_ERROR;
+    auto err = IOError::NO_ERROR;
     EXPECT_CALL(mock, GetDataFromFile("/path/to/file/1", _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::NO_ERROR), testing::Return(FileData{})));
+    WillOnce(DoAll(testing::SetArgPointee<1>(IOError::NO_ERROR), testing::Return(FileData{})));
     data_broker->GetNext(&fi, &data);
     data_broker->io__.release();
 }
@@ -229,7 +229,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsData) {
     FileData data;
 
     EXPECT_CALL(mock, GetDataFromFile(_, _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::NO_ERROR), testing::Return(FileData{'1'})));
+    WillOnce(DoAll(testing::SetArgPointee<1>(IOError::NO_ERROR), testing::Return(FileData{'1'})));
     data_broker->GetNext(&fi, &data);
     data_broker->io__.release();
 
@@ -245,7 +245,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenCannotReadData) {
     FileData data;
 
     EXPECT_CALL(mock, GetDataFromFile(_, _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::READ_ERROR), testing::Return(FileData{})));
+    WillOnce(DoAll(testing::SetArgPointee<1>(IOError::READ_ERROR), testing::Return(FileData{})));
     auto err = data_broker->GetNext(&fi, &data);
     data_broker->io__.release();
 

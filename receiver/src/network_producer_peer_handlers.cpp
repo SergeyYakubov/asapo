@@ -37,7 +37,7 @@ void NetworkProducerPeer::handle_hello_request_(NetworkProducerPeer* self, const
 
     if(self->got_hello_) {
         std::cerr << "Client deprecated_send hello twice." << std::endl;
-        self->io->deprecated_close(self->socket_fd_);
+        self->io->close(self->socket_fd_);
         return;
     }
     self->got_hello_ = true;
@@ -78,7 +78,7 @@ void NetworkProducerPeer::handle_prepare_send_data_request_(NetworkProducerPeer*
 void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* self,
         const SendDataChunkRequest* request,
         SendDataChunkResponse* response) {
-    IOErrors io_error;
+    IOError io_error;
     auto file_info = self->file_reference_handler.get_file(request->file_reference_id);
 
     if(file_info == nullptr || file_info->owner != self->connection_id()) {
@@ -114,7 +114,7 @@ void NetworkProducerPeer::handle_send_data_chunk_request_(NetworkProducerPeer* s
     }
 
     self->io->receive_timeout(self->socket_fd_, (uint8_t*)mapped_file + map_offset, request->chunk_size, 30, &io_error);
-    if(io_error != IOErrors::NO_ERROR) {
+    if(io_error != IOError::NO_ERROR) {
         std::cerr << "Fail to receive all the chunk data." << std::endl;
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
     }

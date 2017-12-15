@@ -1,5 +1,5 @@
-#ifndef HIDRA2_FILE_INFO_H
-#define HIDRA2_FILE_INFO_H
+#ifndef HIDRA2_COMMON__FILE_INFO_H
+#define HIDRA2_COMMON__FILE_INFO_H
 
 #include <cinttypes>
 #include <vector>
@@ -17,4 +17,4 @@ typedef std::vector<uint8_t> FileData;
 
 
 }
-#endif //HIDRA2_FILE_INFO_H
+#endif //HIDRA2_COMMON__FILE_INFO_H

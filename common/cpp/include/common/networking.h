@@ -1,5 +1,5 @@
-#ifndef HIDRA2__COMMON_NETWORKING_H
-#define HIDRA2__COMMON_NETWORKING_H
+#ifndef HIDRA2_COMMON__NETWORKING_H
+#define HIDRA2_COMMON__NETWORKING_H
 
 #include <cstdint>
 #include "os.h"
@@ -107,4 +107,4 @@ struct FileStatusEvent {
 /** @} */
 }
 
-#endif //HIDRA2__COMMON_NETWORKING_H
+#endif //HIDRA2_COMMON__NETWORKING_H

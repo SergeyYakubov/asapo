@@ -1,5 +1,5 @@
-#ifndef HIDRA2__COMMON_OS_H
-#define HIDRA2__COMMON_OS_H
+#ifndef HIDRA2_COMMON__OS_H
+#define HIDRA2_COMMON__OS_H
 
 #include <cstdint>
 
@@ -13,4 +13,4 @@ enum OSType : uint8_t {
 };
 }
 
-#endif //HIDRA2__COMMON_OS_H
+#endif //HIDRA2_COMMON__OS_H

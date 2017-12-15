@@ -10,7 +10,7 @@
 #include <iostream>
 #include <atomic>
 #include <vector>
-#include "file_refernce_handler.h"
+#include "file_reference_handler.h"
 
 namespace hidra2 {
 
