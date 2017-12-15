@@ -36,7 +36,7 @@ TEST(FolderDataBroker, SetCorrectIO) {
 
 class FakeIO: public IO {
   public:
-    FileData GetDataFromFile(const std::string& fname, IOErrors* err) {
+    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err)override {
         *err = IOErrors::NO_ERROR;
         return {};
     };
@@ -58,6 +58,7 @@ class FakeIO: public IO {
         *err = IOErrors::NO_ERROR;
         std::vector<FileInfo> file_infos;
         FileInfo fi;
+        fi.size = 100;
         fi.base_name = "1";
         file_infos.push_back(fi);
         fi.base_name = "2";
@@ -95,7 +96,7 @@ class IOEmptyFodler: public FakeIO {
 
 class IOCannotOpenFile: public FakeIO {
   public:
-    FileData GetDataFromFile(const std::string& fname, IOErrors* err)  {
+    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err)  {
         *err = IOErrors::PERMISSIONS_DENIED;
         return {};
     };
@@ -168,6 +169,8 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
 
     ASSERT_THAT(err, Eq(WorkerErrorCode::OK));
     ASSERT_THAT(fi.base_name, Eq("1"));
+    ASSERT_THAT(fi.size, Eq(100));
+
 }
 
 TEST_F(FolderDataBrokerTests, SecondNextReturnsAnotherFileInfo) {
@@ -201,53 +204,52 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
     ASSERT_THAT(err, Eq(WorkerErrorCode::PERMISSIONS_DENIED));
 }
 
+
 class OpenFileMock : public FakeIO {
   public:
-    MOCK_METHOD2(GetDataFromFile, FileData(const std::string&, IOErrors*));
+    MOCK_METHOD3(GetDataFromFile, FileData(const std::string&, uint64_t, IOErrors*));
 };
 
-TEST_F(FolderDataBrokerTests, GetNextCallsGetDataFileWithFileName) {
+
+class GetDataFromFileTests : public Test {
+  public:
+    std::unique_ptr<FolderDataBroker> data_broker;
     OpenFileMock mock;
-    data_broker->io__.reset(&mock);
-    data_broker->Connect();
     FileInfo fi;
     FileData data;
+    void SetUp() override {
+        data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker("/path/to/file")};
+        data_broker->io__ = std::unique_ptr<IO> {&mock};
+        data_broker->Connect();
+    }
+    void TearDown() override {
+        data_broker->io__.release();
+    }
+};
 
-    auto err = IOErrors::NO_ERROR;
-    EXPECT_CALL(mock, GetDataFromFile("/path/to/file/1", _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::NO_ERROR), testing::Return(FileData{})));
+TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
+    EXPECT_CALL(mock, GetDataFromFile("/path/to/file/1", _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(FileData{})));
+
     data_broker->GetNext(&fi, &data);
-    data_broker->io__.release();
 }
 
 
-TEST_F(FolderDataBrokerTests, GetNextReturnsData) {
-    OpenFileMock mock;
-    data_broker->io__.reset(&mock);
-    data_broker->Connect();
-    FileInfo fi;
-    FileData data;
+TEST_F(GetDataFromFileTests, GetNextReturnsData) {
+    EXPECT_CALL(mock, GetDataFromFile(_, _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(FileData{'1'})));
 
-    EXPECT_CALL(mock, GetDataFromFile(_, _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::NO_ERROR), testing::Return(FileData{'1'})));
     data_broker->GetNext(&fi, &data);
-    data_broker->io__.release();
 
     ASSERT_THAT(data[0], Eq('1'));
 }
 
 
-TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenCannotReadData) {
-    OpenFileMock mock;
-    data_broker->io__.reset(&mock);
-    data_broker->Connect();
-    FileInfo fi;
-    FileData data;
+TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
+    EXPECT_CALL(mock, GetDataFromFile(_, _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::READ_ERROR), testing::Return(FileData{})));
 
-    EXPECT_CALL(mock, GetDataFromFile(_, _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::READ_ERROR), testing::Return(FileData{})));
     auto err = data_broker->GetNext(&fi, &data);
-    data_broker->io__.release();
 
     ASSERT_THAT(err, Eq(WorkerErrorCode::ERROR_READING_FROM_SOURCE));
     ASSERT_TRUE(data.empty());

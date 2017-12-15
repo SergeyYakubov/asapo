@@ -1,6 +1,8 @@
 #ifndef HIDRA2_SYSTEM_WRAPPERS__IO_H
 #define HIDRA2_SYSTEM_WRAPPERS__IO_H
 
+#include <cinttypes>
+
 #include <string>
 #include <vector>
 #include <chrono>
@@ -20,10 +22,11 @@ enum class IOErrors {
 
 IOErrors IOErrorFromErrno();
 
+
 class IO {
   public:
 
-    virtual FileData GetDataFromFile(const std::string& fname, IOErrors* err) = 0;
+    virtual FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) = 0;
 
     virtual int open(const char* __file, int __oflag) = 0;
     virtual int close(int __fd) = 0;

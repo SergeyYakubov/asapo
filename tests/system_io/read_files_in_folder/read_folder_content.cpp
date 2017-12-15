@@ -40,6 +40,5 @@ int main(int argc, char* argv[]) {
 
     M_AssertEq(expect, result);
 
-
     return 0;
 }

@@ -79,7 +79,7 @@ WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
     IOErrors ioerr;
     *data = io__->GetDataFromFile(base_path_ + "/" + info->relative_path +
                                   (info->relative_path.empty() ? "" : "/") +
-                                  info->base_name, &ioerr);
+                                  info->base_name, info->size, &ioerr);
 
     return MapIOError(ioerr);
 }

@@ -11,6 +11,7 @@ struct FileInfo {
     std::string base_name;
     std::string relative_path;
     std::chrono::system_clock::time_point modify_date;
+    uint64_t size;
 };
 
 typedef std::vector<uint8_t> FileData;

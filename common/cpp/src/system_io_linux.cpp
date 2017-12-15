@@ -41,15 +41,7 @@ bool IsDirectory(const struct dirent* entity) {
            strstr(entity->d_name, ".") == nullptr;
 }
 
-system_clock::time_point GetTimePointFromFile(const string& fname, IOErrors* err) {
-
-    struct stat t_stat {};
-    int res = stat(fname.c_str(), &t_stat);
-    if (res < 0) {
-        *err = IOErrorFromErrno();
-        return system_clock::time_point{};
-    }
-
+void SetModifyDate(const struct stat& t_stat, FileInfo* file_info) {
 #ifdef __APPLE__
 #define st_mtim st_mtimespec
 #endif
@@ -59,7 +51,43 @@ system_clock::time_point GetTimePointFromFile(const string& fname, IOErrors* err
 #undef st_mtim
 #endif
 
-    return system_clock::time_point {std::chrono::duration_cast<system_clock::duration>(d)};
+    file_info->modify_date = system_clock::time_point
+    {std::chrono::duration_cast<system_clock::duration>(d)};
+}
+
+void SetFileSize(const struct stat& t_stat, FileInfo* file_info) {
+    file_info->size = t_stat.st_size;
+}
+
+void SetFileName(const string& path, const string& name, FileInfo* file_info) {
+    file_info->relative_path = path;
+    file_info->base_name = name;
+}
+
+struct stat FileStat(const string& fname, IOErrors* err) {
+    struct stat t_stat {};
+    int res = stat(fname.c_str(), &t_stat);
+    if (res < 0) {
+        *err = IOErrorFromErrno();
+    }
+    return t_stat;
+}
+
+FileInfo GetFileInfo(const string& path, const string& name, IOErrors* err) {
+    FileInfo file_info;
+
+    SetFileName(path, name, &file_info);
+
+    auto t_stat = FileStat(path + "/" + name, err);
+    if (*err != IOErrors::NO_ERROR) {
+        return FileInfo{};
+    }
+
+    SetFileSize(t_stat, &file_info);
+
+    SetModifyDate(t_stat, &file_info);
+
+    return file_info;
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
@@ -69,11 +97,8 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
     if (entity->d_type != DT_REG) {
         return;
     }
-    FileInfo file_info;
-    file_info.relative_path = path;
-    file_info.base_name = entity->d_name;
 
-    file_info.modify_date = GetTimePointFromFile(path + "/" + entity->d_name, err);
+    FileInfo file_info = GetFileInfo(path, entity->d_name, err);
     if (*err != IOErrors::NO_ERROR) {
         return;
     }
