@@ -64,8 +64,8 @@ class IO {
     virtual std::thread*    NewThread       (std::function<void()> function) = 0;
 
     // this is not standard function - to be implemented differently in windows and linux
-    virtual FileData GetDataFromFile        (const std::string& fname, IOError* err) = 0;
-    virtual std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) = 0;
+    virtual FileData                GetDataFromFile (const std::string& fname, uint64_t fsize, IOError* err) = 0;
+    virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, IOError* err) = 0;
 
     /*
      * Network

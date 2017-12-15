@@ -1,20 +1,5 @@
-set(TARGET_NAME read_folder_content)
-set(SOURCE_FILES read_folder_content.cpp)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.7) # needed for fixtures
 
-
-################################
-# Executable and link
-################################
-add_executable(${TARGET_NAME} ${SOURCE_FILES})
-target_link_libraries(${TARGET_NAME} common)
-set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-
-################################
-# Testing
-################################
-
-add_test_setup_cleanup(${TARGET_NAME})
-add_integration_test(${TARGET_NAME} create_list "test 23subtest/subtest241")
-add_integration_test(${TARGET_NAME} foldernotfound "test_notexist notfound")
-add_integration_test(${TARGET_NAME} foldernoaccess "test_noaccess noaccess")
+add_subdirectory(read_files_in_folder)
+add_subdirectory(read_file_content)
 

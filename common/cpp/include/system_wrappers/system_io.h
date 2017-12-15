@@ -14,7 +14,7 @@ class SystemIO final : public IO {
     std::thread*            NewThread(std::function<void()> function);
 
     // this is not standard function - to be implemented differently in windows and linux
-    FileData                GetDataFromFile (const std::string& fname, IOError* err);
+    FileData                GetDataFromFile (const std::string& fname, uint64_t fsize, IOError* err);
     std::vector<FileInfo>   FilesInFolder   (const std::string& folder, IOError* err);
 
     /*

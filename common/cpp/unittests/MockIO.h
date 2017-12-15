@@ -11,10 +11,8 @@ class MockIO : public IO {
     MOCK_METHOD1(NewThread,
                  std::thread* (std::function<void()>
                      function));
-    MOCK_METHOD2(GetDataFromFile,
-                 FileData(
-                     const std::string& fname, IOError
-                     *err));
+    MOCK_METHOD3(GetDataFromFile,
+                 FileData(const std::string& fname, uint64_t fsize, IOError* err));
     MOCK_METHOD2(FilesInFolder,
                  std::vector<FileInfo>(
                      const std::string& folder, IOError

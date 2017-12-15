@@ -1,20 +1,13 @@
 #include <iostream>
 #include <memory>
 
-#include <system_wrappers/system_io.h>
+#include "system_wrappers/system_io.h"
+#include "testing.h"
 
 using hidra2::SystemIO;
 using hidra2::IOErrors;
 
-
-void M_AssertEq(const std::string& expected, const std::string& got) {
-    if (expected != got) {
-        std::cerr << "Assert failed:\n"
-                  << "Expected:\t'" << expected << "'\n"
-                  << "Obtained:\t'" << got << "'\n";
-        abort();
-    }
-}
+using hidra2::M_AssertEq;
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -46,7 +39,6 @@ int main(int argc, char* argv[]) {
     }
 
     M_AssertEq(expect, result);
-
 
     return 0;
 }

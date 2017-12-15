@@ -42,6 +42,44 @@ IOError IOErrorFromErrno() {
     }
 }
 
+
+void ReadWholeFile(int fd, uint8_t* array, uint64_t fsize, IOError* err) {
+    ssize_t totalbytes = 0;
+    ssize_t readbytes = 0;
+    do {
+        readbytes = read(fd, array + totalbytes, fsize);
+        totalbytes += readbytes;
+    } while (readbytes > 0 && totalbytes < fsize);
+
+    if (totalbytes != fsize) {
+        *err = IOError::READ_ERROR;
+    }
+}
+
+hidra2::FileData hidra2::SystemIO::GetDataFromFile(const std::string &fname, uint64_t fsize, hidra2::IOError* err) {
+    int fd = open(fname.c_str(), O_RDONLY);
+    *err = IOErrorFromErrno();
+    if (*err != IOError::NO_ERROR) {
+        return {};
+    }
+
+    FileData data(fsize);
+
+    ReadWholeFile(fd, &data[0], fsize, err);
+    if (*err != IOError::NO_ERROR) {
+        close(fd);
+        return {};
+    }
+
+    close(fd);
+    *err = IOErrorFromErrno();
+    if (*err != IOError::NO_ERROR) {
+        return {};
+    }
+
+    return data;
+}
+
 sa_family_t AddressFamilyToPosixFamily(AddressFamilies address_family) {
     switch(address_family) {
     case AddressFamilies::INET:
@@ -71,35 +109,13 @@ int FileOpenModeToPosixFileOpenMode(int open_flags) {
     return flags;
 }
 
-hidra2::FileData hidra2::SystemIO::GetDataFromFile(const std::string& fname, IOError* err) {
-    /*
-     * TODO ?
-     */
-    /*
-    FileDescriptor fd = open(fname, FileOpenMode::READ, err);
-    *err = IOErrorFromErrno();
-    if (*err != IOError::NO_ERROR) {
-        return {};
-    }
-     */
-
-}
-
 bool IsDirectory(const struct dirent* entity) {
     return entity->d_type == DT_DIR &&
            strstr(entity->d_name, "..") == nullptr &&
            strstr(entity->d_name, ".") == nullptr;
 }
 
-system_clock::time_point GetTimePointFromFile(const string& fname, IOError* err) {
-
-    struct stat t_stat {};
-    int res = stat(fname.c_str(), &t_stat);
-    if (res < 0) {
-        *err = IOErrorFromErrno();
-        return system_clock::time_point{};
-    }
-
+void SetModifyDate(const struct stat& t_stat, FileInfo* file_info) {
 #ifdef __APPLE__
 #define st_mtim st_mtimespec
 #endif
@@ -109,7 +125,43 @@ system_clock::time_point GetTimePointFromFile(const string& fname, IOError* err)
 #undef st_mtim
 #endif
 
-    return system_clock::time_point {std::chrono::duration_cast<system_clock::duration>(d)};
+    file_info->modify_date = system_clock::time_point
+    {std::chrono::duration_cast<system_clock::duration>(d)};
+}
+
+void SetFileSize(const struct stat& t_stat, FileInfo* file_info) {
+    file_info->size = t_stat.st_size;
+}
+
+void SetFileName(const string& path, const string& name, FileInfo* file_info) {
+    file_info->relative_path = path;
+    file_info->base_name = name;
+}
+
+struct stat FileStat(const string& fname, IOError* err) {
+    struct stat t_stat {};
+    int res = stat(fname.c_str(), &t_stat);
+    if (res < 0) {
+        *err = IOErrorFromErrno();
+    }
+    return t_stat;
+}
+
+FileInfo GetFileInfo(const string& path, const string& name, IOError* err) {
+    FileInfo file_info;
+
+    SetFileName(path, name, &file_info);
+
+    auto t_stat = FileStat(path + "/" + name, err);
+    if (*err != IOError::NO_ERROR) {
+        return FileInfo{};
+    }
+
+    SetFileSize(t_stat, &file_info);
+
+    SetModifyDate(t_stat, &file_info);
+
+    return file_info;
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
@@ -119,11 +171,8 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
     if (entity->d_type != DT_REG) {
         return;
     }
-    FileInfo file_info;
-    file_info.relative_path = path;
-    file_info.base_name = entity->d_name;
 
-    file_info.modify_date = GetTimePointFromFile(path + "/" + entity->d_name, err);
+    FileInfo file_info = GetFileInfo(path, entity->d_name, err);
     if (*err != IOError::NO_ERROR) {
         return;
     }
@@ -427,3 +476,4 @@ void hidra2::SystemIO::Close(hidra2::FileDescriptor fd, hidra2::IOError* err) {
         *err = IOErrorFromErrno();
     }
 }
+

@@ -41,23 +41,11 @@ class FakeIO: public IO {
         return {};
     };
 
-    int open(const char* __file, int __oflag) {
-        return 0;
-    };
-
-    int close(int __fd) {
-        return 0;
-    };
-    ssize_t read(int __fd, void* buf, size_t count) {
-        return 0;
-    };
-    ssize_t write(int __fd, const void* __buf, size_t __n) {
-        return 0;
-    };
     std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) {
         *err = IOError::NO_ERROR;
         std::vector<FileInfo> file_infos;
         FileInfo fi;
+        fi.size = 100;
         fi.base_name = "1";
         file_infos.push_back(fi);
         fi.base_name = "2";
@@ -66,6 +54,75 @@ class FakeIO: public IO {
         file_infos.push_back(fi);
 
         return file_infos;
+    }
+
+    std::thread*    NewThread       (std::function<void()> function) {
+        return nullptr;
+    }
+
+    // this is not standard function - to be implemented differently in windows and linux
+    FileData  GetDataFromFile (const std::string& fname, uint64_t fsize, IOError* err) {
+        return hidra2::FileData();
+    }
+
+    /*
+     * Network
+     */
+    hidra2::FileDescriptor  CreateSocket    (hidra2::AddressFamilies address_family, hidra2::SocketTypes socket_type,
+                                             hidra2::SocketProtocols socket_protocol, IOError* err) {
+        return 0;
+    }
+    void            Listen          (hidra2::FileDescriptor socket_fd, int backlog, IOError* err) {
+
+    }
+    void            InetBind        (hidra2::FileDescriptor socket_fd, const std::string& address, uint16_t port,
+                                     IOError* err) {
+
+    }
+    std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>> InetAccept(hidra2::FileDescriptor socket_fd,
+                                                                        IOError* err) {
+        return std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>>();
+    }
+    void            InetConnect     (hidra2::FileDescriptor socket_fd, const std::string& address, IOError* err) {
+
+    }
+    hidra2::FileDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOError* err) {
+        return 0;
+    }
+
+    size_t          Receive         (hidra2::FileDescriptor socket_fd, void* buf, size_t length, IOError* err) {
+        return 0;
+    }
+    size_t          ReceiveTimeout  (hidra2::FileDescriptor socket_fd,
+                                     void* buf,
+                                     size_t length,
+                                     uint16_t timeout_in_sec,
+                                     IOError* err) {
+        return 0;
+    }
+    size_t          Send            (hidra2::FileDescriptor socket_fd, const void* buf, size_t length, IOError* err) {
+        return 0;
+    }
+
+    /*
+     * Filesystem
+     */
+    hidra2::FileDescriptor  Open            (const std::string& filename, int open_flags, IOError* err) {
+        return 0;
+    }
+    /**
+     * @param err Is able to accept nullptr
+     */
+    void            Close           (hidra2::FileDescriptor fd, IOError* err = nullptr) {
+
+    }
+
+    //TODO need to remove
+    ssize_t deprecated_read         (int __fd, void* buf, size_t count) {
+        return 0;
+    }
+    ssize_t deprecated_write        (int __fd, const void* __buf, size_t __n) {
+        return 0;
     }
 };
 
@@ -95,7 +152,7 @@ class IOEmptyFodler: public FakeIO {
 
 class IOCannotOpenFile: public FakeIO {
   public:
-    FileData GetDataFromFile(const std::string& fname, IOError* err)  {
+    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOError* err)  {
         *err = IOError::PERMISSIONS_DENIED;
         return {};
     };
@@ -168,6 +225,8 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
 
     ASSERT_THAT(err, Eq(WorkerErrorCode::OK));
     ASSERT_THAT(fi.base_name, Eq("1"));
+    ASSERT_THAT(fi.size, Eq(100));
+
 }
 
 TEST_F(FolderDataBrokerTests, SecondNextReturnsAnotherFileInfo) {
@@ -203,49 +262,48 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
 
 class OpenFileMock : public FakeIO {
   public:
-    MOCK_METHOD2(GetDataFromFile, FileData(const std::string&, IOErrors*));
+    MOCK_METHOD3(GetDataFromFile, FileData(const std::string& fname, uint64_t fsize, IOError* err));
 };
 
-TEST_F(FolderDataBrokerTests, GetNextCallsGetDataFileWithFileName) {
+
+class GetDataFromFileTests : public Test {
+  public:
+    std::unique_ptr<FolderDataBroker> data_broker;
     OpenFileMock mock;
-    data_broker->io__.reset(&mock);
-    data_broker->Connect();
     FileInfo fi;
     FileData data;
+    void SetUp() override {
+        data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker("/path/to/file")};
+        data_broker->io__ = std::unique_ptr<IO> {&mock};
+        data_broker->Connect();
+    }
+    void TearDown() override {
+        data_broker->io__.release();
+    }
+};
 
-    auto err = IOError::NO_ERROR;
-    EXPECT_CALL(mock, GetDataFromFile("/path/to/file/1", _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOError::NO_ERROR), testing::Return(FileData{})));
+TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
+    EXPECT_CALL(mock, GetDataFromFile("/path/to/file/1", _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOError::NO_ERROR), testing::Return(FileData{})));
+
     data_broker->GetNext(&fi, &data);
-    data_broker->io__.release();
 }
 
 
-TEST_F(FolderDataBrokerTests, GetNextReturnsData) {
-    OpenFileMock mock;
-    data_broker->io__.reset(&mock);
-    data_broker->Connect();
-    FileInfo fi;
-    FileData data;
+TEST_F(GetDataFromFileTests, GetNextReturnsData) {
+    EXPECT_CALL(mock, GetDataFromFile(_, _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOError::NO_ERROR), testing::Return(FileData{'1'})));
 
-    EXPECT_CALL(mock, GetDataFromFile(_, _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOError::NO_ERROR), testing::Return(FileData{'1'})));
     data_broker->GetNext(&fi, &data);
-    data_broker->io__.release();
 
     ASSERT_THAT(data[0], Eq('1'));
 }
 
 
-TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenCannotReadData) {
-    OpenFileMock mock;
-    data_broker->io__.reset(&mock);
-    data_broker->Connect();
-    FileInfo fi;
-    FileData data;
+TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
+    EXPECT_CALL(mock, GetDataFromFile(_, _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOError::READ_ERROR), testing::Return(FileData{})));
 
-    EXPECT_CALL(mock, GetDataFromFile(_, _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOError::READ_ERROR), testing::Return(FileData{})));
     auto err = data_broker->GetNext(&fi, &data);
     data_broker->io__.release();
 
