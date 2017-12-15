@@ -39,7 +39,7 @@ enum FileOpenMode {
      * Will set the length of a file to 0
      * Only works if file is open with READ and WRITE mode
      */
-     OPEN_MODE_SET_LENGTH_0,
+    OPEN_MODE_SET_LENGTH_0,
 };
 
 enum class AddressFamilies {
@@ -95,7 +95,7 @@ class IO {
     /**
      * @param err Is able to accept nullptr
      */
-    virtual void            close           (FileDescriptor fd, IOError *err = nullptr) = 0;
+    virtual void            close           (FileDescriptor fd, IOError* err = nullptr) = 0;
 
     //TODO need to remove
     virtual ssize_t deprecated_read         (int __fd, void* buf, size_t count) = 0;

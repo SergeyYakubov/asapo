@@ -53,12 +53,12 @@ TEST(ProducerImpl, connect_to_receiver__create_and_connect_ip_tcp_socket_invalid
     std::string expected_address = "127.0.0.1:9090";
 
     EXPECT_CALL(mockIO, create_and_connect_ip_tcp_socket(expected_address, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<1>(hidra2::IOError::INVALID_ADDRESS_FORMAT),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<1>(hidra2::IOError::INVALID_ADDRESS_FORMAT),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.connect_to_receiver(expected_address);
     hidra2::ProducerStatus status = producer.get_status();
@@ -76,12 +76,12 @@ TEST(ProducerImpl, connect_to_receiver__create_and_connect_ip_tcp_socket_failed_
     std::string expected_address = "127.0.0.1:9090";
 
     EXPECT_CALL(mockIO, create_and_connect_ip_tcp_socket(expected_address, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<1>(hidra2::IOError::UNKNOWN_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<1>(hidra2::IOError::UNKNOWN_ERROR),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.connect_to_receiver(expected_address);
     hidra2::ProducerStatus status = producer.get_status();
@@ -102,20 +102,20 @@ TEST(ProducerImpl, connect_to_receiver__send1_data_check) {
     InSequence sequence;
 
     EXPECT_CALL(mockIO, create_and_connect_ip_tcp_socket(_, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
-                Return(expected_fd)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
+            Return(expected_fd)
+        ));
 
     EXPECT_CALL(mockIO, send(expected_fd, M_CheckHelloRequest(expected_request_id), sizeof(hidra2::HelloRequest), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     producer.connect_to_receiver("");
 }
@@ -130,20 +130,20 @@ TEST(ProducerImpl, connect_to_receiver__send1_io_error) {
     InSequence sequence;
 
     EXPECT_CALL(mockIO, create_and_connect_ip_tcp_socket(_, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
-                Return(1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
+            Return(1)
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.connect_to_receiver("");
     hidra2::ProducerStatus status = producer.get_status();
@@ -164,28 +164,28 @@ TEST(ProducerImpl, connect_to_receiver__receive1_data_check) {
     InSequence sequence;
 
     EXPECT_CALL(mockIO, create_and_connect_ip_tcp_socket(_, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
-                Return(expected_fd)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
+            Return(expected_fd)
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::HelloRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::HelloRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(expected_fd, _/*addr*/, sizeof(hidra2::HelloResponse), Gt(0), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.connect_to_receiver("");
 }
@@ -202,28 +202,28 @@ TEST(ProducerImpl, connect_to_receiver__receive1_io_error) {
     InSequence sequence;
 
     EXPECT_CALL(mockIO, create_and_connect_ip_tcp_socket(_, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
-                Return(expected_fd)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
+            Return(expected_fd)
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::HelloRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::HelloRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.connect_to_receiver("");
     hidra2::ProducerStatus status = producer.get_status();
@@ -244,29 +244,29 @@ TEST(ProducerImpl, connect_to_receiver__receive1_server_error) {
     InSequence sequence;
 
     EXPECT_CALL(mockIO, create_and_connect_ip_tcp_socket(_, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
-                Return(expected_fd)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
+            Return(expected_fd)
+        ));
 
     EXPECT_CALL(mockIO, send(expected_fd, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::HelloRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::HelloRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WriteHelloResponse(hidra2::NET_ERR__UNSUPPORTED_VERSION, expected_request_id, 1),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::HelloResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WriteHelloResponse(hidra2::NET_ERR__UNSUPPORTED_VERSION, expected_request_id, 1),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::HelloResponse))
+        ));
 
     hidra2::ProducerError error = producer.connect_to_receiver("");
     hidra2::ProducerStatus status = producer.get_status();
@@ -322,29 +322,29 @@ void connect_to_receiver_DONE(hidra2::Producer& producer, hidra2::FileDescriptor
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, create_and_connect_ip_tcp_socket(_, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
-                Return(expected_fd)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<1>(hidra2::IOError::NO_ERROR),
+            Return(expected_fd)
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::HelloRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::HelloRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WriteHelloResponse(hidra2::NET_ERR__NO_ERROR, 0, 1),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::HelloResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WriteHelloResponse(hidra2::NET_ERR__NO_ERROR, 0, 1),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::HelloResponse))
+        ));
 
     producer.connect_to_receiver("");
 }
@@ -391,10 +391,10 @@ ACTION_P3(A_WritePrepareSendDataResponse, error_code, request_id, file_reference
 MATCHER_P4(M_CheckSendDataChunkRequest, request_id, file_reference_id, chunk_size, start_byte,
            "Checks if a valid SendDataChunkRequest was send") {
     bool ret = ((hidra2::SendDataChunkRequest*)arg)->op_code == hidra2::OP_CODE__SEND_DATA_CHUNK
-           && ((hidra2::SendDataChunkRequest*)arg)->request_id == request_id
-           && ((hidra2::SendDataChunkRequest*)arg)->file_reference_id == file_reference_id
-           && ((hidra2::SendDataChunkRequest*)arg)->chunk_size == chunk_size
-           && ((hidra2::SendDataChunkRequest*)arg)->start_byte == start_byte;
+               && ((hidra2::SendDataChunkRequest*)arg)->request_id == request_id
+               && ((hidra2::SendDataChunkRequest*)arg)->file_reference_id == file_reference_id
+               && ((hidra2::SendDataChunkRequest*)arg)->chunk_size == chunk_size
+               && ((hidra2::SendDataChunkRequest*)arg)->start_byte == start_byte;
     return ret;
 }
 
@@ -450,12 +450,12 @@ TEST(ProducerImpl, send__send_pre_io_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.send("", nullptr, 1);
     hidra2::ProducerStatus status = producer.get_status();
@@ -478,12 +478,12 @@ TEST(ProducerImpl, send__receive_pre_io_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
     .Times(1)
@@ -514,21 +514,21 @@ TEST(ProducerImpl, send__receive_pre_server_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__ALLOCATE_STORAGE_FAILED, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__ALLOCATE_STORAGE_FAILED, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.send("", nullptr, 1);
     hidra2::ProducerStatus status = producer.get_status();
@@ -554,32 +554,32 @@ TEST(ProducerImpl, send__send_chunk1_meta_data_check) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, expected_file_ref_id),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, expected_file_ref_id),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataResponse))
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(expected_fd, M_CheckSendDataChunkRequest(expected_request_id, expected_file_ref_id,
-                                 producer.kMaxChunkSize, 0), sizeof(hidra2::SendDataChunkRequest), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+                             producer.kMaxChunkSize, 0), sizeof(hidra2::SendDataChunkRequest), _))
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     producer.send("", nullptr, expected_file_size);
 }
@@ -600,31 +600,31 @@ TEST(ProducerImpl, send__send_chunk1_meta_io_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
 
     hidra2::ProducerError error = producer.send("", nullptr, expected_file_size);
@@ -651,39 +651,39 @@ TEST(ProducerImpl, send__send_chunk1_data_data_check) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(expected_fd, expected_file_buffer, producer.kMaxChunkSize, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     producer.send("", expected_file_buffer, expected_file_size);
 }
@@ -704,39 +704,39 @@ TEST(ProducerImpl, send__send_chunk1_data_io_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.send("", nullptr, expected_file_size);
     hidra2::ProducerStatus status = producer.get_status();
@@ -761,48 +761,48 @@ TEST(ProducerImpl, send__receive_chunk1_meta_data_check) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(expected_fd, _/*addr*/, sizeof(hidra2::SendDataChunkResponse), Gt(0), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     producer.send("", nullptr, expected_file_size);
 }
@@ -823,47 +823,47 @@ TEST(ProducerImpl, send__receive_chunk1_meta_io_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(expected_fd, _/*addr*/, sizeof(hidra2::SendDataChunkResponse), Gt(0), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.send("", nullptr, expected_file_size);
     hidra2::ProducerStatus status = producer.get_status();
@@ -888,48 +888,48 @@ TEST(ProducerImpl, send__receive_chunk1_meta_server_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(expected_fd, _/*addr*/, sizeof(hidra2::SendDataChunkResponse), Gt(0), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__INTERNAL_SERVER_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__INTERNAL_SERVER_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     hidra2::ProducerError error = producer.send("", nullptr, expected_file_size);
     hidra2::ProducerStatus status = producer.get_status();
@@ -956,59 +956,59 @@ TEST(ProducerImpl, send__send_chunk2_meta_data_check) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, expected_file_ref_id),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, expected_file_ref_id),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataResponse))
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(expected_fd, M_CheckSendDataChunkRequest(expected_request_id, expected_file_ref_id,
-                                                                      expected_file_size_overhead, producer.kMaxChunkSize), sizeof(hidra2::SendDataChunkRequest), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+                             expected_file_size_overhead, producer.kMaxChunkSize), sizeof(hidra2::SendDataChunkRequest), _))
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     producer.send("", nullptr, expected_file_size);
 }
@@ -1030,57 +1030,57 @@ TEST(ProducerImpl, send__send_chunk2_meta_io_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
 
     hidra2::ProducerError error = producer.send("", nullptr, expected_file_size);
@@ -1108,65 +1108,66 @@ TEST(ProducerImpl, send__send_chunk2_data_data_check) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
-    EXPECT_CALL(mockIO, send(expected_fd, (uint8_t*)expected_file_buffer + producer.kMaxChunkSize, expected_file_size_overhead, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    EXPECT_CALL(mockIO, send(expected_fd, (uint8_t*)expected_file_buffer + producer.kMaxChunkSize,
+                             expected_file_size_overhead, _))
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     producer.send("", expected_file_buffer, expected_file_size);
 }
@@ -1188,65 +1189,65 @@ TEST(ProducerImpl, send__send_chunk2_data_io_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.send("", nullptr, expected_file_size);
     hidra2::ProducerStatus status = producer.get_status();
@@ -1272,74 +1273,74 @@ TEST(ProducerImpl, send__receive_chunk2_meta_data_check) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(expected_fd, _/*addr*/, sizeof(hidra2::SendDataChunkResponse), Gt(0), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     producer.send("", nullptr, expected_file_size);
 }
@@ -1361,74 +1362,74 @@ TEST(ProducerImpl, send__receive_chunk2_meta_io_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(expected_fd, _/*addr*/, sizeof(hidra2::SendDataChunkResponse), Gt(0), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<4>(hidra2::IOError::BAD_FILE_NUMBER),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.send("", nullptr, expected_file_size);
     hidra2::ProducerStatus status = producer.get_status();
@@ -1454,75 +1455,75 @@ TEST(ProducerImpl, send__receive_chunk2_meta_server_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(expected_fd, _/*addr*/, sizeof(hidra2::SendDataChunkResponse), Gt(0), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__INTERNAL_SERVER_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__INTERNAL_SERVER_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     hidra2::ProducerError error = producer.send("", nullptr, expected_file_size);
     hidra2::ProducerStatus status = producer.get_status();
@@ -1549,75 +1550,75 @@ TEST(ProducerImpl, send) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::PrepareSendDataRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::PrepareSendDataRequest))
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(-1)
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     expected_request_id++;
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkRequest))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkRequest))
+        ));
 
     EXPECT_CALL(mockIO, send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
-                Return(producer.kMaxChunkSize)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOError::NO_ERROR),
+            Return(producer.kMaxChunkSize)
+        ));
 
     EXPECT_CALL(mockIO, receive_timeout(_, _/*addr*/, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
-                testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
-                Return(sizeof(hidra2::SendDataChunkResponse))
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            A_WritePrepareSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id, 0),
+            testing::SetArgPointee<4>(hidra2::IOError::NO_ERROR),
+            Return(sizeof(hidra2::SendDataChunkResponse))
+        ));
 
     hidra2::ProducerError error = producer.send("", nullptr, expected_file_size);
     hidra2::ProducerStatus status = producer.get_status();

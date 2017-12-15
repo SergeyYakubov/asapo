@@ -21,28 +21,28 @@ class SystemIO final : public IO {
      * Network
      */
     FileDescriptor  create_socket   (AddressFamilies address_family, SocketTypes socket_type,
-                                             SocketProtocols socket_protocol, IOError* err);
+                                     SocketProtocols socket_protocol, IOError* err);
     void            listen          (FileDescriptor socket_fd, int backlog, IOError* err);
     void            inet_bind       (FileDescriptor socket_fd, const std::string& address, uint16_t port,
-                                             IOError* err);
+                                     IOError* err);
     std::unique_ptr<std::tuple<std::string, FileDescriptor>> inet_accept(FileDescriptor socket_fd,
-                                                                                 IOError* err);
+            IOError* err);
     void            inet_connect    (FileDescriptor socket_fd, const std::string& address, IOError* err);
     FileDescriptor  create_and_connect_ip_tcp_socket(const std::string& address, IOError* err);
 
     size_t          receive         (FileDescriptor socket_fd, void* buf, size_t length, IOError* err);
     size_t          receive_timeout (FileDescriptor socket_fd,
-                                             void* buf,
-                                             size_t length,
-                                             uint16_t timeout_in_sec,
-                                             IOError* err);
+                                     void* buf,
+                                     size_t length,
+                                     uint16_t timeout_in_sec,
+                                     IOError* err);
     size_t          send            (FileDescriptor socket_fd, const void* buf, size_t length, IOError* err);
 
     /*
      * Filesystem
      */
     FileDescriptor  open            (const std::string& filename, FileOpenMode open_flags, IOError* err);
-    void            close           (FileDescriptor fd, IOError *err = nullptr);
+    void            close           (FileDescriptor fd, IOError* err = nullptr);
 
     //TODO need to remove
     ssize_t deprecated_read         (int __fd, void* buf, size_t count);

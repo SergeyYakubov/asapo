@@ -54,8 +54,7 @@ int FileOpenModeToPosixFileOpenMode(FileOpenMode open_flags) {
     int flags = 0;
     if((open_flags & OPEN_MODE_READ && open_flags & OPEN_MODE_WRITE) || open_flags & OPEN_MODE_RW) {
         flags |= O_RDWR;
-    }
-    else {
+    } else {
         if (open_flags & OPEN_MODE_READ) {
             flags |= O_RDONLY;
         }
@@ -315,7 +314,8 @@ void hidra2::SystemIO::inet_connect(FileDescriptor socket_fd, const std::string&
         return;
     }
 }
-hidra2::FileDescriptor hidra2::SystemIO::create_and_connect_ip_tcp_socket(const std::string& address, hidra2::IOError* err) {
+hidra2::FileDescriptor hidra2::SystemIO::create_and_connect_ip_tcp_socket(const std::string& address,
+        hidra2::IOError* err) {
     *err = hidra2::IOError::NO_ERROR;
 
     FileDescriptor fd = create_socket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, err);
@@ -403,7 +403,7 @@ size_t hidra2::SystemIO::send(hidra2::FileDescriptor socket_fd,
 }
 
 
-hidra2::FileDescriptor hidra2::SystemIO::open(const std::string &filename,
+hidra2::FileDescriptor hidra2::SystemIO::open(const std::string& filename,
                                               FileOpenMode open_flags,
                                               IOError* err) {
     *err = IOError::NO_ERROR;
