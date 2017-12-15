@@ -41,7 +41,7 @@ class SystemIO final : public IO {
     /*
      * Filesystem
      */
-    FileDescriptor  Open(const std::string& filename, FileOpenMode open_flags, IOError* err);
+    FileDescriptor  Open(const std::string& filename, int open_flags, IOError* err);
     void            Close(FileDescriptor fd, IOError* err = nullptr);
 
     //TODO need to remove

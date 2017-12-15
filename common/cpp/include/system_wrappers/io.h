@@ -30,16 +30,16 @@ enum class IOError {
 };
 
 enum FileOpenMode {
-    OPEN_MODE_READ,
-    OPEN_MODE_WRITE,
+    OPEN_MODE_READ = 1 << 0,
+    OPEN_MODE_WRITE = 1 << 1,
     OPEN_MODE_RW = OPEN_MODE_READ | OPEN_MODE_WRITE,
 
-    OPEN_MODE_CREATE,
+    OPEN_MODE_CREATE = 1 << 2,
     /**
      * Will set the length of a file to 0
      * Only works if file is open with READ and WRITE mode
      */
-    OPEN_MODE_SET_LENGTH_0,
+    OPEN_MODE_SET_LENGTH_0 = 1 << 3,
 };
 
 enum class AddressFamilies {
@@ -91,7 +91,7 @@ class IO {
     /*
      * Filesystem
      */
-    virtual FileDescriptor  Open            (const std::string& filename, FileOpenMode open_flags, IOError* err) = 0;
+    virtual FileDescriptor  Open            (const std::string& filename, int open_flags, IOError* err) = 0;
     /**
      * @param err Is able to accept nullptr
      */

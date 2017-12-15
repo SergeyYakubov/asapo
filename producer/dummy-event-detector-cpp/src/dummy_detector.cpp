@@ -24,9 +24,9 @@ int DummyDetector::main(int argc, char** argv) {
     }
      */
 
-    hidra2::FileOpenMode open_flags = hidra2::OPEN_MODE_RW;
+    int open_flags = hidra2::OPEN_MODE_RW;
     hidra2::IOError io_err;
-    int fd = io->Open("/tmp/bigfile", open_flags, &io_err);
+    int fd = io->Open("/tmp/bigfile4", open_flags, &io_err);
     if(io_err != hidra2::IOError::NO_ERROR) {
         std::cerr << "Fail to open file" << std::endl;
         return 1;

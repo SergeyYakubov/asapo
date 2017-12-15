@@ -65,7 +65,7 @@ class MockIO : public IO {
                         length, IOError* err));
     MOCK_METHOD3(Open,
                  FileDescriptor(
-                     const std::string& filename, FileOpenMode
+                     const std::string& filename, int
                      open_flags, IOError* err));
     MOCK_METHOD2(Close,
                  void(FileDescriptor, IOError* err));

@@ -7,7 +7,7 @@
 
 const int hidra2::Receiver::kMaxUnacceptedConnectionsBacklog = 5;
 
-void hidra2::Receiver::start_listener(std::string listener_address, uint16_t port, ReceiverError* err) {
+void hidra2::Receiver::StartListener(std::string listener_address, uint16_t port, ReceiverError* err) {
     *err = ReceiverError::NO_ERROR;
 
     if(listener_running_) {
@@ -48,12 +48,12 @@ void hidra2::Receiver::start_listener(std::string listener_address, uint16_t por
     listener_fd_ = listener_fd;
 
     accept_thread_ = io->NewThread([this] {
-        accept_thread_logic_();//TODO add peer to some list
+        AcceptThreadLogic();//TODO add peer to some list
     });
 
 }
 
-void hidra2::Receiver::accept_thread_logic_() {
+void hidra2::Receiver::AcceptThreadLogic() {
     while(listener_running_) {
         std::string address;
         FileDescriptor peer_fd;
@@ -70,7 +70,7 @@ void hidra2::Receiver::accept_thread_logic_() {
     }
 }
 
-void hidra2::Receiver::stop_listener(ReceiverError* err) {
+void hidra2::Receiver::StopListener(ReceiverError* err) {
     io->Close(listener_fd_);
     listener_running_ = false;
     if(accept_thread_)

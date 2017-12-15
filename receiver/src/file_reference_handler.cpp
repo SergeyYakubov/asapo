@@ -16,9 +16,10 @@ hidra2::FileReferenceId FileReferenceHandler::add_file(std::string filename,
     FileReferenceId file_ref_id = ++kGlobalFileRefernceId;
 
     std::string full_path = filename;//TODO add path prefix, and check for exploit with '/' or '..'
-    hidra2::IOError
-    int fd = io->Open(full_path.c_str(), OPEN_MODE_RW | OPEN_MODE_CREATE | OPEN_MODE_SET_LENGTH_0, 0666);
-    if(fd == -1) {
+
+    IOError io_err;
+    int fd = io->Open(full_path.c_str(), static_cast<FileOpenMode>(OPEN_MODE_RW | OPEN_MODE_CREATE | OPEN_MODE_SET_LENGTH_0), &io_err);
+    if(io_err != IOError::NO_ERROR) {
         err = FILE_REFERENCE_HANDLER_ERR__OPEN_FAILED;
         return 0;
     }

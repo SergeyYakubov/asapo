@@ -50,7 +50,7 @@ sa_family_t AddressFamilyToPosixFamily(AddressFamilies address_family) {
     return -1;
 };
 
-int FileOpenModeToPosixFileOpenMode(FileOpenMode open_flags) {
+int FileOpenModeToPosixFileOpenMode(int open_flags) {
     int flags = 0;
     if((open_flags & OPEN_MODE_READ && open_flags & OPEN_MODE_WRITE) || open_flags & OPEN_MODE_RW) {
         flags |= O_RDWR;
@@ -404,7 +404,7 @@ size_t hidra2::SystemIO::Send(hidra2::FileDescriptor socket_fd,
 
 
 hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
-                                              FileOpenMode open_flags,
+                                              int open_flags,
                                               IOError* err) {
     *err = IOError::NO_ERROR;
     int flags = FileOpenModeToPosixFileOpenMode(open_flags);
