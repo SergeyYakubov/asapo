@@ -7,6 +7,7 @@ namespace hidra2 {
 
 void M_AssertEq(const std::string& expected, const std::string& got);
 void M_AssertEq(int expected, int got);
+void M_AssertTrue(bool value);
 
 
 }

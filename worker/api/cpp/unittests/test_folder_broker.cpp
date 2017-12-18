@@ -235,11 +235,22 @@ TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
 }
 
 
-TEST_F(GetDataFromFileTests, GetNextReturnsData) {
+TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
     EXPECT_CALL(mock, GetDataFromFile(_, _, _)).
     WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(FileData{'1'})));
 
     data_broker->GetNext(&fi, &data);
+
+    ASSERT_THAT(data[0], Eq('1'));
+    ASSERT_THAT(fi.base_name, Eq("1"));
+
+}
+
+TEST_F(GetDataFromFileTests, GetNextReturnsOnlyData) {
+    EXPECT_CALL(mock, GetDataFromFile(_, _, _)).
+        WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(FileData{'1'})));
+
+    data_broker->GetNext(nullptr, &data);
 
     ASSERT_THAT(data[0], Eq('1'));
 }

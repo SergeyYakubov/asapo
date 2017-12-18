@@ -30,15 +30,17 @@ WorkerErrorCode MapIOError(IOErrors io_err) {
 
 FolderDataBroker::FolderDataBroker(const std::string& source_name) :
     base_path_{source_name}, io__{new hidra2::SystemIO}, is_connected_{false},
-current_file_{0} {
+current_file_{ -1} {
 }
 
 WorkerErrorCode FolderDataBroker::Connect() {
-    IOErrors io_err;
+    std::lock_guard<std::mutex> lock{mutex_};
+
     if (is_connected_) {
         return WorkerErrorCode::SOURCE_ALREADY_CONNECTED;
     }
 
+    IOErrors io_err;
     filelist_ = io__->FilesInFolder(base_path_, &io_err);
 
     if (io_err == IOErrors::NO_ERROR) {
@@ -47,7 +49,7 @@ WorkerErrorCode FolderDataBroker::Connect() {
     return MapIOError(io_err);
 }
 
-WorkerErrorCode FolderDataBroker::CheckCanGetData(FileInfo* info, FileData* data) {
+WorkerErrorCode FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int nfile) const {
     if (!is_connected_) {
         return WorkerErrorCode::SOURCE_NOT_CONNECTED;
     }
@@ -56,7 +58,7 @@ WorkerErrorCode FolderDataBroker::CheckCanGetData(FileInfo* info, FileData* data
         return WorkerErrorCode::WRONG_INPUT;
     }
 
-    if (current_file_ >= filelist_.size()) {
+    if (nfile >= filelist_.size()) {
         return WorkerErrorCode::NO_DATA;
     }
     return WorkerErrorCode::OK;
@@ -64,22 +66,29 @@ WorkerErrorCode FolderDataBroker::CheckCanGetData(FileInfo* info, FileData* data
 
 
 WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
-    auto err = CheckCanGetData(info, data);
+// could probably use atomic here, but just to make sure (tests showed no performance difference)
+    mutex_.lock();
+    int nfile_to_get = ++current_file_;
+    mutex_.unlock();
+
+    auto err = CanGetData(info, data, nfile_to_get);
     if (err != WorkerErrorCode::OK) {
         return err;
     }
 
-    *info = filelist_[current_file_];
-    current_file_++;
+    FileInfo file_info = filelist_[nfile_to_get];
+    if (info != nullptr){
+        *info = file_info;
+    }
 
     if (data == nullptr) {
         return WorkerErrorCode::OK;
     }
 
     IOErrors ioerr;
-    *data = io__->GetDataFromFile(base_path_ + "/" + info->relative_path +
-                                  (info->relative_path.empty() ? "" : "/") +
-                                  info->base_name, info->size, &ioerr);
+    *data = io__->GetDataFromFile(base_path_ + "/" + file_info.relative_path +
+                                  (file_info.relative_path.empty() ? "" : "/") +
+        file_info.base_name, file_info.size, &ioerr);
 
     return MapIOError(ioerr);
 }

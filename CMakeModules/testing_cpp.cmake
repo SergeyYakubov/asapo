@@ -77,6 +77,9 @@ function(add_integration_test exename testname commandargs)
                 LABELS "integration;all"
                 FIXTURES_REQUIRED test-${exename}-fixture
                 )
+    if (ARGN)
+        set(commandargs ${ARGN})
+    endif()
         add_memory_test(${exename}-${testname} ${exename}
                 "${commandargs}" test-${exename}-fixture
                 "integration")

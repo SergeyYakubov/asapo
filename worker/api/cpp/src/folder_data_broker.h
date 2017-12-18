@@ -4,6 +4,9 @@
 #include "worker/data_broker.h"
 
 #include <string>
+#include <mutex>
+#include <atomic>
+
 
 #include "system_wrappers/io.h"
 
@@ -20,10 +23,11 @@ class FolderDataBroker final : public hidra2::DataBroker {
 
   private:
     bool is_connected_;
-    int current_file_;
+    int64_t current_file_;
     std::string base_path_;
     std::vector<FileInfo>  filelist_;
-    WorkerErrorCode CheckCanGetData(FileInfo* info, FileData* data);
+    WorkerErrorCode CanGetData(FileInfo* info, FileData* data, int nfile) const;
+    std::mutex mutex_;
 
 };
 

@@ -14,6 +14,15 @@ void T_AssertEq(const T& expected, const T& got) {
     }
 }
 
+void M_AssertTrue(bool value) {
+    if (!value) {
+        std::cerr << "Assert failed:\n"
+                  << "Expected:\t'" << "1" << "'\n"
+                  << "Obtained:\t'" << value << "'\n";
+        abort();
+    }
+
+}
 
 void M_AssertEq(const std::string& expected, const std::string& got) {
     T_AssertEq(expected, got);
