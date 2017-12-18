@@ -248,7 +248,7 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
 
 TEST_F(GetDataFromFileTests, GetNextReturnsOnlyData) {
     EXPECT_CALL(mock, GetDataFromFile(_, _, _)).
-        WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(FileData{'1'})));
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(FileData{'1'})));
 
     data_broker->GetNext(nullptr, &data);
 

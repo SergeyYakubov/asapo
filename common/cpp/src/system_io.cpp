@@ -1,17 +1,28 @@
 #include <fcntl.h>
 #include <unistd.h>
+#include <chrono>
+#include <iostream>
 
 #include <system_wrappers/system_io.h>
 
 namespace hidra2 {
 
 void ReadWholeFile(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) {
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     ssize_t totalbytes = 0;
     ssize_t readbytes = 0;
     do {
         readbytes = read(fd, array + totalbytes, fsize);
         totalbytes += readbytes;
     } while (readbytes > 0 && totalbytes < fsize);
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+    std::cout << "Elapsed ReadWholeFile : " << duration << "ms" << std::endl;
+
 
     if (totalbytes != fsize) {
         *err = IOErrors::READ_ERROR;
@@ -24,8 +35,15 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOE
     if (*err != IOErrors::NO_ERROR) {
         return {};
     }
-
+    auto t1 = std::chrono::high_resolution_clock::now();
     FileData data(fsize);
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+    std::cout << "Elapsed CreateVector : " << duration << "ms" << std::endl;
+
+
 
     ReadWholeFile(fd, &data[0], fsize, err);
     if (*err != IOErrors::NO_ERROR) {

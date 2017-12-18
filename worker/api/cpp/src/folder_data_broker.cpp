@@ -77,7 +77,7 @@ WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
     }
 
     FileInfo file_info = filelist_[nfile_to_get];
-    if (info != nullptr){
+    if (info != nullptr) {
         *info = file_info;
     }
 
@@ -88,7 +88,7 @@ WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
     IOErrors ioerr;
     *data = io__->GetDataFromFile(base_path_ + "/" + file_info.relative_path +
                                   (file_info.relative_path.empty() ? "" : "/") +
-        file_info.base_name, file_info.size, &ioerr);
+                                  file_info.base_name, file_info.size, &ioerr);
 
     return MapIOError(ioerr);
 }
