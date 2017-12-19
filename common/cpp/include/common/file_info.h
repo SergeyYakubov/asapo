@@ -2,7 +2,7 @@
 #define HIDRA2_FILE_INFO_H
 
 #include <cinttypes>
-#include <vector>
+#include <memory>
 #include <chrono>
 
 namespace hidra2 {
@@ -11,10 +11,10 @@ struct FileInfo {
     std::string base_name;
     std::string relative_path;
     std::chrono::system_clock::time_point modify_date;
-    uint64_t size;
+    uint64_t size{0};
 };
 
-typedef std::vector<uint8_t> FileData;
+typedef std::unique_ptr<uint8_t[]> FileData;
 
 
 }

@@ -1,8 +1,6 @@
 #include <iostream>
 #include <system_wrappers/system_io.h>
 
-#include <memory>
-#include <string>
 #include "testing.h"
 
 using hidra2::SystemIO;
@@ -27,9 +25,8 @@ int main(int argc, char* argv[]) {
         result = "notfound";
         break;
     case IOErrors::NO_ERROR:
-        for(auto symbol : data)
-            result += symbol;
-        M_AssertEq(expect.size(), result.size());
+        for(int i = 0; i< expect.size();i++)
+            result += data[i];
         break;
     case IOErrors::PERMISSIONS_DENIED:
         result = "noaccess";

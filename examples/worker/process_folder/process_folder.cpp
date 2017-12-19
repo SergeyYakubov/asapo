@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <thread>
 #include <chrono>
+#include <iomanip>
+
 
 
 #include "worker/data_broker.h"
@@ -50,10 +52,13 @@ int main(int argc, char* argv[]) {
     high_resolution_clock::time_point t3 = high_resolution_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>( t3 - t2 ).count();
 
+    double size_gb = double(size) / 1024 / 1024 / 1024;
+    double bandwidth = size_gb/duration_read*1000;
     std::cout << "Processed " << nfiles << " files" << std::endl;
-    std::cout << "Total size: " << size / 1024 / 1024 / 1024 << "GB" << std::endl;
+    std::cout << "Total size: " << std::setprecision(2) << size_gb << "GB" << std::endl;
     std::cout << "Elapsed scan : " << duration_scan << "ms" << std::endl;
     std::cout << "Elapsed read : " << duration_read << "ms" << std::endl;
+    std::cout << "Bandwidth: " << std::setprecision(2) << bandwidth << "GB/sec" << std::endl;
 
     return 0;
 }

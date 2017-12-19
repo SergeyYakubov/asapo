@@ -1,10 +1,7 @@
 #include <iostream>
-#include <memory>
 #include <vector>
-#include <algorithm>
 #include <thread>
-#include <string>
-
+#include <algorithm>
 #include "worker/data_broker.h"
 #include "testing.h"
 
@@ -55,7 +52,7 @@ void ReadFiles(const Args& args) {
 
     std::vector<std::thread> threads;
     for (int i = 0; i < args.nthreads; i++) {
-        threads.push_back(std::thread(exec_next, i));
+        threads.emplace_back(std::thread(exec_next, i));
     }
 
     for (auto& thread : threads) {

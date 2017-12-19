@@ -3,9 +3,7 @@
 
 #include <memory>
 #include <string>
-#include <iostream>
 #include <common/file_info.h>
-#include <vector>
 
 namespace hidra2 {
 

@@ -1,9 +1,7 @@
 #include <iostream>
-#include <memory>
 #include <vector>
-#include <algorithm>
 #include <thread>
-
+#include <algorithm>
 #include "worker/data_broker.h"
 #include "testing.h"
 
@@ -49,7 +47,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<std::thread> threads;
     for (int i = 0; i < args.nthreads; i++) {
-        threads.push_back(std::thread([&, i] {
+        threads.emplace_back(std::thread([&, i] {
             errors[i] = broker->Connect();
         }));
     }

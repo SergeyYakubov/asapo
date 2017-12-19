@@ -5,11 +5,8 @@
 
 #include <string>
 #include <mutex>
-#include <atomic>
-
 
 #include "system_wrappers/io.h"
-
 
 namespace hidra2 {
 

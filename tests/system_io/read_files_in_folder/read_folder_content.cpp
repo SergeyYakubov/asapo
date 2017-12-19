@@ -1,5 +1,4 @@
 #include <iostream>
-#include <memory>
 
 #include "system_wrappers/system_io.h"
 #include "testing.h"
