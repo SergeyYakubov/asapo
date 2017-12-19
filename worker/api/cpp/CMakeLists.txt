@@ -7,6 +7,8 @@ set(SOURCE_FILES include/worker/data_broker.h src/data_broker.cpp src/folder_dat
 # Library
 ################################
 add_library(${TARGET_NAME} SHARED ${SOURCE_FILES})
+#add_library(${TARGET_NAME} SHARED STATIC ${SOURCE_FILES})
+
 target_include_directories(${TARGET_NAME} PUBLIC include)
 target_link_libraries(${TARGET_NAME} common)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
