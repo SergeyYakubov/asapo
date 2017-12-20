@@ -1,6 +1,14 @@
 #include <fcntl.h>
-#include <unistd.h>
 #include <iostream>
+
+#ifdef __linux__
+#include <unistd.h>
+#elif defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
+#include <io.h>
 
 #include <system_wrappers/system_io.h>
 

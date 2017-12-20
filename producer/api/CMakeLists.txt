@@ -5,7 +5,7 @@ set(SOURCE_FILES src/producer/producer.cpp include/producer/producer.h)
 ################################
 # Library
 ################################
-add_library(${TARGET_NAME} SHARED ${SOURCE_FILES})
+add_library(${TARGET_NAME} STATIC ${SOURCE_FILES})
 target_include_directories(${TARGET_NAME} PUBLIC include)
 target_link_libraries(${TARGET_NAME} common)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)

@@ -58,7 +58,7 @@ WorkerErrorCode FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int
         return WorkerErrorCode::WRONG_INPUT;
     }
 
-    if (nfile >= filelist_.size()) {
+    if (nfile >= (int) filelist_.size()) {
         return WorkerErrorCode::NO_DATA;
     }
     return WorkerErrorCode::OK;

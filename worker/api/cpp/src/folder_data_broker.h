@@ -20,7 +20,7 @@ class FolderDataBroker final : public hidra2::DataBroker {
 
   private:
     bool is_connected_;
-    int64_t current_file_;
+    int current_file_;
     std::string base_path_;
     std::vector<FileInfo>  filelist_;
     WorkerErrorCode CanGetData(FileInfo* info, FileData* data, int nfile) const;
