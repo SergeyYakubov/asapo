@@ -43,7 +43,7 @@ class FakeIO: public IO {
     };
 
     FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err)override {
-        return FileData(GetDataFromFileProxy(fname,fsize,err));
+        return FileData(GetDataFromFileProxy(fname, fsize, err));
     };
 
     int open(const char* __file, int __oflag)override {
@@ -56,10 +56,10 @@ class FakeIO: public IO {
     ssize_t read(int __fd, void* buf, size_t count)override {
         return 0;
     };
-    ssize_t write(int __fd, const void* __buf, size_t __n) override{
+    ssize_t write(int __fd, const void* __buf, size_t __n) override {
         return 0;
     };
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override{
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
         *err = IOErrors::NO_ERROR;
         std::vector<FileInfo> file_infos;
         FileInfo fi;
@@ -77,7 +77,7 @@ class FakeIO: public IO {
 
 class IOFolderNotFound: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override{
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
         *err = IOErrors::FILE_NOT_FOUND;
         return {};
     }
@@ -85,7 +85,7 @@ class IOFolderNotFound: public FakeIO {
 
 class IOFodlerUnknownError: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override{
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
         *err = IOErrors::UNKWOWN_ERROR;
         return {};
     }
@@ -93,7 +93,7 @@ class IOFodlerUnknownError: public FakeIO {
 
 class IOEmptyFodler: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override{
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
         *err = IOErrors::NO_ERROR;
         return {};
     }
@@ -243,7 +243,7 @@ TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
 
 TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
     EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(new uint8_t[1]{'1'})));
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(new uint8_t[1] {'1'})));
 
     data_broker->GetNext(&fi, &data);
 
@@ -254,7 +254,7 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
 
 TEST_F(GetDataFromFileTests, GetNextReturnsOnlyData) {
     EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(new uint8_t[1]{'1'})));
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(new uint8_t[1] {'1'})));
 
     data_broker->GetNext(nullptr, &data);
 

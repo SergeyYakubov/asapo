@@ -3,7 +3,7 @@ if (BUILD_TESTS)
     set(HIDRA2_MINIMUM_COVERAGE 70)
     find_package(Threads)
     find_program(MEMORYCHECK_COMMAND valgrind)
-    set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1" )
+    set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1")
 endif ()
 
 function(gtest target test_source_files test_libraries)
@@ -22,7 +22,7 @@ function(gtest target test_source_files test_libraries)
         if (CMAKE_COMPILER_IS_GNUCXX)
             include(CodeCoverage)
             APPEND_COVERAGE_COMPILER_FLAGS()
-            set (COVERAGE_EXCLUDES '*/unittests/*')
+            set(COVERAGE_EXCLUDES '*/unittests/*')
             SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
             add_test(NAME coveragetest-${target}
                     COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
@@ -36,13 +36,13 @@ function(gtest target test_source_files test_libraries)
         add_memory_test(${target} test-${target} "" "" "unit")
 
     endif ()
- endfunction()
+endfunction()
 
 function(add_memory_test target executable commandargs fixture label)
     if (MEMORYCHECK_COMMAND)
         set(memcheck_args ${MEMORYCHECK_COMMAND_OPTIONS})
         separate_arguments(memcheck_args)
-        set( args ${commandargs} )
+        set(args ${commandargs})
         separate_arguments(args)
         add_test(NAME memcheck-${target} COMMAND ${MEMORYCHECK_COMMAND} ${memcheck_args}
                 ${CMAKE_CURRENT_BINARY_DIR}/${executable} ${args})
@@ -52,11 +52,11 @@ function(add_memory_test target executable commandargs fixture label)
                 )
         if (NOT ${fixture} STREQUAL "")
             set_tests_properties(memcheck-${target} PROPERTIES
-                FIXTURES_REQUIRED ${fixture}
-                )
-        endif()
+                    FIXTURES_REQUIRED ${fixture}
+                    )
+        endif ()
 
-    endif()
+    endif ()
 endfunction()
 
 function(add_test_setup_cleanup exename)
@@ -70,18 +70,31 @@ endfunction()
 
 function(add_integration_test exename testname commandargs)
     if (BUILD_TESTS)
-        set( args ${commandargs} )
+        set(args ${commandargs})
         separate_arguments(args)
         add_test(NAME test-${exename}-${testname} COMMAND ${exename} ${args})
         set_tests_properties(test-${exename}-${testname} PROPERTIES
                 LABELS "integration;all"
                 FIXTURES_REQUIRED test-${exename}-fixture
                 )
-    if (ARGN)
-        set(commandargs ${ARGN})
-    endif()
-        add_memory_test(${exename}-${testname} ${exename}
-                "${commandargs}" test-${exename}-fixture
-                "integration")
+        if (ARGN)
+            set(commandargs ${ARGN})
+        endif ()
+        if (NOT ${ARGN} STREQUAL nomem)
+            message(${ARGN})
+            add_memory_test(${exename}-${testname} ${exename}
+                    "${commandargs}" test-${exename}-fixture
+                    "integration")
+        endif ()
+    endif ()
+endfunction()
+
+function(add_example_test scriptname testname)
+    if (BUILD_TESTS)
+        separate_arguments(args)
+        add_test(NAME test-${testname} COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/${scriptname})
+        set_tests_properties(test-${testname} PROPERTIES
+                LABELS "example;all"
+                )
     endif ()
 endfunction()
