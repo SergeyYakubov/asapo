@@ -10,12 +10,12 @@ using hidra2::WorkerErrorCode;
 
 void Assert(std::vector<WorkerErrorCode>& errors, int nthreads) {
     int count_ok = (int) std::count(std::begin(errors),
-                              std::end(errors),
-                              WorkerErrorCode::kOK);
+                                    std::end(errors),
+                                    WorkerErrorCode::kOK);
 
     int count_already_connected = (int) std::count(std::begin(errors),
-                                             std::end(errors),
-                                             WorkerErrorCode::kSourceAlreadyConnected);
+                                                   std::end(errors),
+                                                   WorkerErrorCode::kSourceAlreadyConnected);
     M_AssertEq(1, count_ok);
     M_AssertEq(nthreads - 1, count_already_connected);
 }

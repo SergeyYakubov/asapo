@@ -273,7 +273,7 @@ TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
 
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotAllocateData) {
     EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
-        WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kMemoryAllocationError), testing::Return(nullptr)));
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kMemoryAllocationError), testing::Return(nullptr)));
 
     auto err = data_broker->GetNext(&fi, &data);
 

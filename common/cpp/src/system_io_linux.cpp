@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <algorithm>
 
+#include <fcntl.h>
+
 #include <cerrno>
 #include <unistd.h>
 
@@ -15,37 +17,37 @@ using std::chrono::system_clock;
 
 namespace hidra2 {
 
-bool IsDirectory(const struct dirent *entity) {
+bool IsDirectory(const struct dirent* entity) {
     return entity->d_type == DT_DIR &&
-        strstr(entity->d_name, "..") == nullptr &&
-        strstr(entity->d_name, ".") == nullptr;
+           strstr(entity->d_name, "..") == nullptr &&
+           strstr(entity->d_name, ".") == nullptr;
 }
 
-void SetModifyDate(const struct stat &t_stat, FileInfo *file_info) {
+void SetModifyDate(const struct stat& t_stat, FileInfo* file_info) {
 #ifdef __APPLE__
 #define st_mtim st_mtimespec
 #endif
     std::chrono::nanoseconds d = std::chrono::nanoseconds {t_stat.st_mtim.tv_nsec} +
-        std::chrono::seconds{t_stat.st_mtim.tv_sec};
+                                 std::chrono::seconds{t_stat.st_mtim.tv_sec};
 #ifdef __APPLE__
 #undef st_mtim
 #endif
 
     file_info->modify_date = system_clock::time_point
-        {std::chrono::duration_cast<system_clock::duration>(d)};
+    {std::chrono::duration_cast<system_clock::duration>(d)};
 }
 
-void SetFileSize(const struct stat &t_stat, FileInfo *file_info) {
+void SetFileSize(const struct stat& t_stat, FileInfo* file_info) {
     file_info->size = t_stat.st_size;
 }
 
-void SetFileName(const string &path, const string &name, FileInfo *file_info) {
+void SetFileName(const string& path, const string& name, FileInfo* file_info) {
     file_info->relative_path = path;
     file_info->base_name = name;
 }
 
-struct stat FileStat(const string &fname, IOErrors *err) {
-    struct stat t_stat{};
+struct stat FileStat(const string& fname, IOErrors* err) {
+    struct stat t_stat {};
     int res = stat(fname.c_str(), &t_stat);
     if (res < 0) {
         *err = IOErrorFromErrno();
@@ -53,7 +55,7 @@ struct stat FileStat(const string &fname, IOErrors *err) {
     return t_stat;
 }
 
-FileInfo GetFileInfo(const string &path, const string &name, IOErrors *err) {
+FileInfo GetFileInfo(const string& path, const string& name, IOErrors* err) {
     FileInfo file_info;
 
     SetFileName(path, name, &file_info);
@@ -70,8 +72,8 @@ FileInfo GetFileInfo(const string &path, const string &name, IOErrors *err) {
     return file_info;
 }
 
-void ProcessFileEntity(const struct dirent *entity, const std::string &path,
-                       std::vector<FileInfo> &files, IOErrors *err) {
+void ProcessFileEntity(const struct dirent* entity, const std::string& path,
+                       std::vector<FileInfo>& files, IOErrors* err) {
 
     *err = IOErrors::kNoError;
     if (entity->d_type != DT_REG) {
@@ -86,15 +88,15 @@ void ProcessFileEntity(const struct dirent *entity, const std::string &path,
     files.push_back(file_info);
 }
 
-void SystemIO::CollectFileInformationRecursivly(const std::string &path,
-                                      std::vector<FileInfo> &files, IOErrors *err) {
+void SystemIO::CollectFileInformationRecursivly(const std::string& path,
+                                                std::vector<FileInfo>& files, IOErrors* err) {
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = IOErrorFromErrno();
         return;
     }
 
-    while (struct dirent *current_entity = readdir(dir)) {
+    while (struct dirent* current_entity = readdir(dir)) {
         if (IsDirectory(current_entity)) {
             CollectFileInformationRecursivly(path + "/" + current_entity->d_name,
                                              files, err);
@@ -111,11 +113,11 @@ void SystemIO::CollectFileInformationRecursivly(const std::string &path,
 }
 
 
-int64_t SystemIO::read(int __fd, void *buf, size_t count) {
+int64_t SystemIO::read(int __fd, void* buf, size_t count) {
     return (int64_t) ::read(__fd, buf, count);
 }
 
-int64_t SystemIO::write(int __fd, const void *__buf, size_t __n) {
+int64_t SystemIO::write(int __fd, const void* __buf, size_t __n) {
     return (int64_t) ::write(__fd, __buf, __n);
 }
 

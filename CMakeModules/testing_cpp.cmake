@@ -115,7 +115,7 @@ function(add_example_test testname)
         IF (WIN32)
             add_test(NAME test-${testname} COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/check_windows.bat)
         ELSE()
-            add_test(NAME test-${testname} COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh)
+            add_test(NAME test-${testname} COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh)
         ENDIF()
         set_tests_properties(test-${testname} PROPERTIES
                 LABELS "example;all"
