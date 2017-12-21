@@ -9,23 +9,15 @@
 
 #include "common/file_info.h"
 
-#ifdef __linux__
-#include <unistd.h>
-#elif defined(_MSC_VER)
-#include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
-#endif
-
-
 namespace hidra2 {
 
-
 enum class IOErrors {
-    NO_ERROR,
-    FILE_NOT_FOUND,
-    READ_ERROR,
-    PERMISSIONS_DENIED,
-    UNKWOWN_ERROR
+    kNoError,
+    kFileNotFound,
+    kReadError,
+    kPermissionDenied,
+    kUnknownError,
+    kMemoryAllocationError
 };
 
 IOErrors IOErrorFromErrno();
@@ -38,8 +30,8 @@ class IO {
 
     virtual int open(const char* __file, int __oflag) = 0;
     virtual int close(int __fd) = 0;
-    virtual ssize_t read(int __fd, void* buf, size_t count) = 0;
-    virtual ssize_t write(int __fd, const void* __buf, size_t __n) = 0;
+    virtual int64_t read(int __fd, void *buf, size_t count) = 0;
+    virtual int64_t write(int __fd, const void *__buf, size_t __n) = 0;
 
 // this is not standard function - to be implemented differently in windows and linux
     virtual std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) = 0;

@@ -21,7 +21,7 @@ struct Statistics {
 std::string ProcessCommandArguments(int argc, char* argv[]) {
     if (argc != 2) {
         std::cout << "Usage: " + std::string{argv[0]} +" <path to folder>" << std::endl;
-        abort();
+        exit(EXIT_FAILURE);
     }
     return argv[1];
 }
@@ -29,9 +29,9 @@ std::string ProcessCommandArguments(int argc, char* argv[]) {
 std::unique_ptr<hidra2::DataBroker> CreateBroker(const std::string& folder) {
     hidra2::WorkerErrorCode err;
     auto broker = hidra2::DataBrokerFactory::Create(folder, &err);
-    if (err != WorkerErrorCode::OK) {
+    if (err != WorkerErrorCode::kOK) {
         std::cout << "Cannot create broker" << std::endl;
-        abort();
+        exit(EXIT_FAILURE);
     }
 
     return broker;
@@ -41,9 +41,9 @@ void ConnectToBrocker(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* s
     hidra2::WorkerErrorCode err;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     err = (*broker)->Connect();
-    if (err != WorkerErrorCode::OK) {
+    if (err != WorkerErrorCode::kOK) {
         std::cout << "Cannot connect to broker" << std::endl;
-        abort();
+        exit(EXIT_FAILURE);
     }
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     statistics->duration_scan = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 );
@@ -57,13 +57,13 @@ void ReadAllData(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* statis
 
     int nfiles = 0;
     uint64_t size = 0;
-    while ((err = (*broker)->GetNext(&file_info, &file_data)) == WorkerErrorCode::OK) {
+    while ((err = (*broker)->GetNext(&file_info, &file_data)) == WorkerErrorCode::kOK) {
         nfiles++;
         size += file_info.size;
     }
-    if (err != WorkerErrorCode::NO_DATA) {
+    if (err != WorkerErrorCode::kNoData) {
         std::cout << "Read error" << std::endl;
-        abort();
+        exit(EXIT_FAILURE);
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();

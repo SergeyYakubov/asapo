@@ -38,7 +38,7 @@ class FakeIO: public IO {
   public:
 
     virtual uint8_t* GetDataFromFileProxy(const std::string& fname, uint64_t fsize, IOErrors* err) {
-        *err = IOErrors::NO_ERROR;
+        *err = IOErrors::kNoError;
         return nullptr;
     };
 
@@ -53,14 +53,14 @@ class FakeIO: public IO {
     int close(int __fd)override {
         return 0;
     };
-    ssize_t read(int __fd, void* buf, size_t count)override {
+    int64_t read(int __fd, void* buf, size_t count)override {
         return 0;
     };
-    ssize_t write(int __fd, const void* __buf, size_t __n) override {
+    int64_t write(int __fd, const void* __buf, size_t __n) override {
         return 0;
     };
     std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
-        *err = IOErrors::NO_ERROR;
+        *err = IOErrors::kNoError;
         std::vector<FileInfo> file_infos;
         FileInfo fi;
         fi.size = 100;
@@ -78,7 +78,7 @@ class FakeIO: public IO {
 class IOFolderNotFound: public FakeIO {
   public:
     std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
-        *err = IOErrors::FILE_NOT_FOUND;
+        *err = IOErrors::kFileNotFound;
         return {};
     }
 };
@@ -86,7 +86,7 @@ class IOFolderNotFound: public FakeIO {
 class IOFodlerUnknownError: public FakeIO {
   public:
     std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
-        *err = IOErrors::UNKWOWN_ERROR;
+        *err = IOErrors::kUnknownError;
         return {};
     }
 };
@@ -94,7 +94,7 @@ class IOFodlerUnknownError: public FakeIO {
 class IOEmptyFodler: public FakeIO {
   public:
     std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
-        *err = IOErrors::NO_ERROR;
+        *err = IOErrors::kNoError;
         return {};
     }
 };
@@ -102,7 +102,7 @@ class IOEmptyFodler: public FakeIO {
 class IOCannotOpenFile: public FakeIO {
   public:
     FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) override {
-        *err = IOErrors::PERMISSIONS_DENIED;
+        *err = IOErrors::kPermissionDenied;
         return {};
     };
 };
@@ -123,7 +123,7 @@ class FolderDataBrokerTests : public Test {
 TEST_F(FolderDataBrokerTests, CanConnect) {
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::OK));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kOK));
 }
 
 TEST_F(FolderDataBrokerTests, CannotConnectTwice) {
@@ -131,7 +131,7 @@ TEST_F(FolderDataBrokerTests, CannotConnectTwice) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::SOURCE_ALREADY_CONNECTED));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kSourceAlreadyConnected));
 }
 
 
@@ -140,7 +140,7 @@ TEST_F(FolderDataBrokerTests, CannotConnectWhenNoFolder) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::SOURCE_NOT_FOUND));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kSourceNotFound));
 }
 
 TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
@@ -148,13 +148,13 @@ TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::UNKNOWN_IO_ERROR));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kUnknownIOError));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithoutConnectReturnsError) {
     auto err = data_broker->GetNext(nullptr, nullptr);
 
-    ASSERT_THAT(err, Eq(WorkerErrorCode::SOURCE_NOT_CONNECTED));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kSourceNotConnected));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
@@ -162,7 +162,7 @@ TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
 
     auto err = data_broker->GetNext(nullptr, nullptr);
 
-    ASSERT_THAT(err, Eq(WorkerErrorCode::WRONG_INPUT));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kWrongInput));
 }
 
 
@@ -172,7 +172,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
 
     auto err = data_broker->GetNext(&fi, nullptr);
 
-    ASSERT_THAT(err, Eq(WorkerErrorCode::OK));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kOK));
     ASSERT_THAT(fi.base_name, Eq("1"));
     ASSERT_THAT(fi.size, Eq(100));
 
@@ -185,7 +185,7 @@ TEST_F(FolderDataBrokerTests, SecondNextReturnsAnotherFileInfo) {
 
     auto err = data_broker->GetNext(&fi, nullptr);
 
-    ASSERT_THAT(err, Eq(WorkerErrorCode::OK));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kOK));
     ASSERT_THAT(fi.base_name, Eq("2"));
 }
 
@@ -195,7 +195,7 @@ TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
     FileInfo fi;
 
     auto err = data_broker->GetNext(&fi, nullptr);
-    ASSERT_THAT(err, Eq(WorkerErrorCode::NO_DATA));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kNoData));
 }
 
 
@@ -206,7 +206,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
     FileData data;
 
     auto err = data_broker->GetNext(&fi, &data);
-    ASSERT_THAT(err, Eq(WorkerErrorCode::PERMISSIONS_DENIED));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kPermissionDenied));
 }
 
 
@@ -234,7 +234,7 @@ class GetDataFromFileTests : public Test {
 
 TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
     EXPECT_CALL(mock, GetDataFromFileProxy("/path/to/file/1", _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(nullptr)));
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kNoError), testing::Return(nullptr)));
 
     data_broker->GetNext(&fi, &data);
 }
@@ -243,7 +243,7 @@ TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
 
 TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
     EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(new uint8_t[1] {'1'})));
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kNoError), testing::Return(new uint8_t[1] {'1'})));
 
     data_broker->GetNext(&fi, &data);
 
@@ -254,7 +254,7 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
 
 TEST_F(GetDataFromFileTests, GetNextReturnsOnlyData) {
     EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::NO_ERROR), testing::Return(new uint8_t[1] {'1'})));
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kNoError), testing::Return(new uint8_t[1] {'1'})));
 
     data_broker->GetNext(nullptr, &data);
 
@@ -264,11 +264,20 @@ TEST_F(GetDataFromFileTests, GetNextReturnsOnlyData) {
 
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
     EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::READ_ERROR), testing::Return(nullptr)));
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kReadError), testing::Return(nullptr)));
 
     auto err = data_broker->GetNext(&fi, &data);
 
-    ASSERT_THAT(err, Eq(WorkerErrorCode::ERROR_READING_FROM_SOURCE));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kErrorReadingSource));
+}
+
+TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotAllocateData) {
+    EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
+        WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kMemoryAllocationError), testing::Return(nullptr)));
+
+    auto err = data_broker->GetNext(&fi, &data);
+
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kMemoryError));
 }
 
 

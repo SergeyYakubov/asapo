@@ -8,17 +8,17 @@
 namespace hidra2 {
 
 enum class WorkerErrorCode {
-    OK,
-    MEMORY_ERROR,
-    EMPTY_DATASOURCE,
-    SOURCE_NOT_FOUND,
-    SOURCE_NOT_CONNECTED,
-    SOURCE_ALREADY_CONNECTED,
-    ERROR_READING_FROM_SOURCE,
-    PERMISSIONS_DENIED,
-    NO_DATA,
-    WRONG_INPUT,
-    UNKNOWN_IO_ERROR
+    kOK,
+    kMemoryError,
+    kEmptyDatasource,
+    kSourceNotFound,
+    kSourceNotConnected,
+    kSourceAlreadyConnected,
+    kErrorReadingSource,
+    kPermissionDenied,
+    kNoData,
+    kWrongInput,
+    kUnknownIOError
 };
 
 class DataBroker {

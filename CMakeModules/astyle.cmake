@@ -13,6 +13,6 @@ if(ASTYLE_EXECUTABLE)
 		VERBATIM	
         )
 else()
-	message(WARNING "Unable to find astyle. Code formatting willbe skipped")
+	message(WARNING "Unable to find astyle. Code formatting will be skipped")
 endif()
 

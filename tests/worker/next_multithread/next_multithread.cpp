@@ -11,7 +11,7 @@ using hidra2::M_AssertTrue;
 using hidra2::WorkerErrorCode;
 
 void Assert(std::vector<hidra2::FileInfo> file_infos, int nthreads) {
-    int nfiles = file_infos.size();
+    int nfiles = (int) file_infos.size();
     M_AssertEq(nthreads, nfiles);
 
     std::vector<std::string> expect, result;
@@ -32,7 +32,7 @@ struct Args {
 Args GetArgs(int argc, char* argv[]) {
     if (argc != 4) {
         std::cout << "Wrong number of arguments" << std::endl;
-        abort();
+        exit(EXIT_FAILURE);
     }
     std::string folder{argv[1]};
     int nthreads = std::stoi(argv[2]);

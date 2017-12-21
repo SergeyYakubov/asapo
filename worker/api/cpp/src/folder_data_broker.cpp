@@ -7,20 +7,23 @@ namespace hidra2 {
 WorkerErrorCode MapIOError(IOErrors io_err) {
     WorkerErrorCode err;
     switch (io_err) { // we do not use map due to performance reasons
-    case IOErrors::NO_ERROR:
-        err = WorkerErrorCode::OK;
+    case IOErrors::kNoError:
+        err = WorkerErrorCode::kOK;
         break;
-    case IOErrors::FILE_NOT_FOUND:
-        err = WorkerErrorCode::SOURCE_NOT_FOUND;
+    case IOErrors::kFileNotFound:
+        err = WorkerErrorCode::kSourceNotFound;
         break;
-    case IOErrors::PERMISSIONS_DENIED:
-        err = WorkerErrorCode::PERMISSIONS_DENIED;
+    case IOErrors::kPermissionDenied:
+        err = WorkerErrorCode::kPermissionDenied;
         break;
-    case IOErrors::READ_ERROR:
-        err = WorkerErrorCode::ERROR_READING_FROM_SOURCE;
+    case IOErrors::kReadError:
+        err = WorkerErrorCode::kErrorReadingSource;
+        break;
+    case IOErrors::kMemoryAllocationError:
+        err = WorkerErrorCode::kMemoryError;
         break;
     default:
-        err = WorkerErrorCode::UNKNOWN_IO_ERROR;
+        err = WorkerErrorCode::kUnknownIOError;
         break;
     }
 
@@ -37,13 +40,13 @@ WorkerErrorCode FolderDataBroker::Connect() {
     std::lock_guard<std::mutex> lock{mutex_};
 
     if (is_connected_) {
-        return WorkerErrorCode::SOURCE_ALREADY_CONNECTED;
+        return WorkerErrorCode::kSourceAlreadyConnected;
     }
 
     IOErrors io_err;
     filelist_ = io__->FilesInFolder(base_path_, &io_err);
 
-    if (io_err == IOErrors::NO_ERROR) {
+    if (io_err == IOErrors::kNoError) {
         is_connected_ = true;
     }
     return MapIOError(io_err);
@@ -51,17 +54,17 @@ WorkerErrorCode FolderDataBroker::Connect() {
 
 WorkerErrorCode FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int nfile) const {
     if (!is_connected_) {
-        return WorkerErrorCode::SOURCE_NOT_CONNECTED;
+        return WorkerErrorCode::kSourceNotConnected;
     }
 
     if (info == nullptr && data == nullptr) {
-        return WorkerErrorCode::WRONG_INPUT;
+        return WorkerErrorCode::kWrongInput;
     }
 
     if (nfile >= (int) filelist_.size()) {
-        return WorkerErrorCode::NO_DATA;
+        return WorkerErrorCode::kNoData;
     }
-    return WorkerErrorCode::OK;
+    return WorkerErrorCode::kOK;
 }
 
 
@@ -72,7 +75,7 @@ WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
     mutex_.unlock();
 
     auto err = CanGetData(info, data, nfile_to_get);
-    if (err != WorkerErrorCode::OK) {
+    if (err != WorkerErrorCode::kOK) {
         return err;
     }
 
@@ -82,7 +85,7 @@ WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
     }
 
     if (data == nullptr) {
-        return WorkerErrorCode::OK;
+        return WorkerErrorCode::kOK;
     }
 
     IOErrors ioerr;

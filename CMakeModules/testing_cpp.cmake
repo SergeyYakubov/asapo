@@ -1,10 +1,16 @@
-if (BUILD_TESTS)
+if (BUILD_TESTS OR BUILD_INTEGRATION_TESTS OR BUILD_EXAMPLES)
     enable_testing()
+endif ()
+
+if (BUILD_TESTS)
     set(HIDRA2_MINIMUM_COVERAGE 70)
     find_package(Threads)
     find_program(MEMORYCHECK_COMMAND valgrind)
     set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1")
-    set (gtest_SOURCE_DIR "C:/googletest")
+    if (NOT "$ENV{gtest_SOURCE_DIR}" STREQUAL "")
+        set(gtest_SOURCE_DIR $ENV{gtest_SOURCE_DIR})
+    endif ()
+    message(STATUS "Will look for google test at ${gtest_SOURCE_DIR}")
 endif ()
 
 function(gtest target test_source_files test_libraries)
@@ -13,13 +19,12 @@ function(gtest target test_source_files test_libraries)
         link_directories(${gtest_SOURCE_DIR}/lib)
         add_executable(test-${target} ${test_source_files})
 
-        IF(WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+        IF (WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
             set(GTEST_LIBS gtestd gtest_maind gmockd)
-        ELSE()
+        ELSE ()
             set(GTEST_LIBS gtest gmock gtest_main)
-        ENDIF(WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+        ENDIF (WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         target_link_libraries(test-${target} ${GTEST_LIBS} ${CMAKE_THREAD_LIBS_INIT})
-#        set_target_properties(test-${target} PROPERTIES COMPILE_FLAGS "-DGTEST_LINKED_AS_SHARED_LIBRARY=1")
 
         if (NOT ${test_libraries} STREQUAL "")
             target_link_libraries(test-${target} ${test_libraries})
@@ -49,37 +54,43 @@ function(gtest target test_source_files test_libraries)
 endfunction()
 
 function(add_memory_test target executable commandargs fixture label)
-    if (MEMORYCHECK_COMMAND)
-        set(memcheck_args ${MEMORYCHECK_COMMAND_OPTIONS})
-        separate_arguments(memcheck_args)
-        set(args ${commandargs})
-        separate_arguments(args)
-        add_test(NAME memcheck-${target} COMMAND ${MEMORYCHECK_COMMAND} ${memcheck_args}
-                ${CMAKE_CURRENT_BINARY_DIR}/${executable} ${args})
-        set_tests_properties(memcheck-${target} PROPERTIES
-                LABELS "memcheck_${label};all"
-                DEPENDS test-${target}
-                )
-        if (NOT ${fixture} STREQUAL "")
+    if (BUILD_TESTS OR BUILD_INTEGRATION_TESTS)
+        if (MEMORYCHECK_COMMAND)
+            set(memcheck_args ${MEMORYCHECK_COMMAND_OPTIONS})
+            separate_arguments(memcheck_args)
+            set(args ${commandargs})
+            separate_arguments(args)
+            add_test(NAME memcheck-${target} COMMAND ${MEMORYCHECK_COMMAND} ${memcheck_args}
+                    ${CMAKE_CURRENT_BINARY_DIR}/${executable} ${args})
             set_tests_properties(memcheck-${target} PROPERTIES
-                    FIXTURES_REQUIRED ${fixture}
+                    LABELS "memcheck_${label};all"
+                    DEPENDS test-${target}
                     )
+            if (NOT ${fixture} STREQUAL "")
+                set_tests_properties(memcheck-${target} PROPERTIES
+                        FIXTURES_REQUIRED ${fixture}
+                        )
+            endif ()
         endif ()
-
     endif ()
 endfunction()
 
 function(add_test_setup_cleanup exename)
-    if (BUILD_TESTS)
-        add_test(NAME test-${exename}-setup COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/setup.sh)
-        add_test(NAME test-${exename}-cleanup COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/cleanup.sh)
+    if (BUILD_INTEGRATION_TESTS)
+        IF (WIN32)
+            add_test(NAME test-${exename}-setup COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/setup_windows.bat)
+            add_test(NAME test-${exename}-cleanup COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cleanup_windows.bat)
+        ELSE()
+            add_test(NAME test-${exename}-setup COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/setup_linux.sh)
+            add_test(NAME test-${exename}-cleanup COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/cleanup_linux.sh)
+        ENDIF()
         set_tests_properties(test-${exename}-setup PROPERTIES FIXTURES_SETUP test-${exename}-fixture)
         set_tests_properties(test-${exename}-cleanup PROPERTIES FIXTURES_CLEANUP test-${exename}-fixture)
     endif ()
 endfunction()
 
 function(add_integration_test exename testname commandargs)
-    if (BUILD_TESTS)
+    if (BUILD_INTEGRATION_TESTS)
         set(args ${commandargs})
         separate_arguments(args)
         add_test(NAME test-${exename}-${testname} COMMAND ${exename} ${args})
@@ -91,7 +102,6 @@ function(add_integration_test exename testname commandargs)
             set(commandargs ${ARGN})
         endif ()
         if (NOT ${ARGN} STREQUAL nomem)
-            message(${ARGN})
             add_memory_test(${exename}-${testname} ${exename}
                     "${commandargs}" test-${exename}-fixture
                     "integration")
@@ -99,10 +109,14 @@ function(add_integration_test exename testname commandargs)
     endif ()
 endfunction()
 
-function(add_example_test scriptname testname)
-    if (BUILD_TESTS)
+function(add_example_test testname)
+    if (BUILD_EXAMPLES)
         separate_arguments(args)
-        add_test(NAME test-${testname} COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/${scriptname})
+        IF (WIN32)
+            add_test(NAME test-${testname} COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/check_windows.bat)
+        ELSE()
+            add_test(NAME test-${testname} COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh)
+        ENDIF()
         set_tests_properties(test-${testname} PROPERTIES
                 LABELS "example;all"
                 )

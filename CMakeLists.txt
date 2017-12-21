@@ -17,13 +17,14 @@ include(testing_cpp)
 
 add_subdirectory(producer/api)
 add_subdirectory(common/cpp)
-add_subdirectory(producer/inotify-event-detector-cpp)
 add_subdirectory(worker/api/cpp)
+IF(UNIX)
+    add_subdirectory(receiver)
+ENDIF(UNIX)
 
 if(BUILD_INTEGRATION_TESTS)
     add_subdirectory(tests)
 endif()
-
 
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)

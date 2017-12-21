@@ -21,17 +21,17 @@ int main(int argc, char* argv[]) {
     std::string result;
 
     switch (err) {
-    case IOErrors::FILE_NOT_FOUND:
+    case IOErrors::kFileNotFound:
         result = "notfound";
         break;
-    case IOErrors::NO_ERROR:
+    case IOErrors::kNoError:
         for(int i = 0; i < expect.size(); i++)
             result += data[i];
         break;
-    case IOErrors::PERMISSIONS_DENIED:
+    case IOErrors::kPermissionDenied:
         result = "noaccess";
         break;
-    case IOErrors::READ_ERROR:
+    case IOErrors::kReadError:
         result = "readerror";
         break;
 
