@@ -29,7 +29,7 @@ IOErrors IOErrorFromErrno() {
     return err;
 }
 
-void SystemIO::ReadWholeFile(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) {
+void SystemIO::ReadWholeFile(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const noexcept {
     uint64_t totalbytes = 0;
     int64_t readbytes = 0;
     do {
@@ -42,7 +42,7 @@ void SystemIO::ReadWholeFile(int fd, uint8_t* array, uint64_t fsize, IOErrors* e
     }
 }
 
-FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) {
+FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const noexcept {
     int fd = open(fname.c_str(), O_RDONLY);
     *err = IOErrorFromErrno();
     if (*err != IOErrors::kNoError) {
@@ -72,28 +72,28 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOE
     return data;
 }
 
-void SortFileList(std::vector<FileInfo>& file_list) {
-    std::sort(file_list.begin(), file_list.end(),
+void SortFileList(std::vector<FileInfo>* file_list) {
+    std::sort(file_list->begin(), file_list->end(),
     [](FileInfo const & a, FileInfo const & b) {
         return a.modify_date < b.modify_date;
     });
 }
 
-void StripBasePath(const std::string& folder, std::vector<FileInfo>& file_list) {
+void StripBasePath(const std::string& folder, std::vector<FileInfo>* file_list) {
     auto n_erase = folder.size() + 1;
-    for (auto& file : file_list) {
+    for (auto& file : *file_list) {
         file.relative_path.erase(0, n_erase);
     }
 }
 
-std::vector<FileInfo> SystemIO::FilesInFolder(const std::string& folder, IOErrors* err) {
+std::vector<FileInfo> SystemIO::FilesInFolder(const std::string& folder, IOErrors* err) const {
     std::vector<FileInfo> files{};
-    CollectFileInformationRecursivly(folder, files, err);
+    CollectFileInformationRecursivly(folder, &files, err);
     if (*err != IOErrors::kNoError) {
         return {};
     }
-    StripBasePath(folder, files);
-    SortFileList(files);
+    StripBasePath(folder, &files);
+    SortFileList(&files);
     return files;
 }
 

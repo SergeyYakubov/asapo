@@ -14,7 +14,7 @@ struct FileInfo {
     uint64_t size{0};
 };
 
-typedef std::unique_ptr<uint8_t[]> FileData;
+using FileData = std::unique_ptr<uint8_t[]>;
 
 
 }

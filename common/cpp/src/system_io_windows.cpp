@@ -59,7 +59,7 @@ bool IsDirectory(const WIN32_FIND_DATA f) {
 }
 
 void ProcessFileEntity(const WIN32_FIND_DATA f, const std::string& path,
-                       std::vector<FileInfo>& files, IOErrors* err) {
+                       std::vector<FileInfo>* files, IOErrors* err) {
 
     *err = IOErrors::kNoError;
     if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -74,12 +74,12 @@ void ProcessFileEntity(const WIN32_FIND_DATA f, const std::string& path,
 
     file_info.base_name = f.cFileName;
     file_info.relative_path = path;
-    files.push_back(file_info);
+    files->push_back(file_info);
 }
 
 
 void SystemIO::CollectFileInformationRecursivly(const std::string& path,
-                                                std::vector<FileInfo>& files, IOErrors* err) {
+                                                std::vector<FileInfo>* files, IOErrors* err) const {
     WIN32_FIND_DATA find_data;
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {
@@ -107,21 +107,21 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
 
 }
 
-int64_t SystemIO::read(int __fd, void* buf, size_t count) {
+int64_t SystemIO::read(int __fd, void* buf, size_t count) const noexcept {
     return (int64_t) _read(__fd, buf, (unsigned int) count);
 }
 
-int64_t SystemIO::write(int __fd, const void* __buf, size_t __n) {
+int64_t SystemIO::write(int __fd, const void* __buf, size_t __n) const noexcept {
     return (int64_t) _write(__fd, __buf, (unsigned int) __n);
 }
 
-int SystemIO::open(const char* __file, int __oflag) {
+int SystemIO::open(const char* __file, int __oflag) const noexcept {
     int fd;
     errno = _sopen_s(&fd, __file, __oflag, _SH_DENYNO, _S_IREAD | _S_IWRITE);
     return fd;
 }
 
-int SystemIO::close(int __fd) {
+int SystemIO::close(int __fd) const noexcept {
     return ::_close(__fd);
 }
 

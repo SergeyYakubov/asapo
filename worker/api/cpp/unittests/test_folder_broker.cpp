@@ -1,6 +1,5 @@
 #include <gmock/gmock.h>
 #include "gtest/gtest.h"
-using ::testing::AtLeast;
 
 #include "worker/data_broker.h"
 #include "system_wrappers/io.h"
@@ -16,7 +15,7 @@ using hidra2::IOErrors;
 using hidra2::FileInfo;
 using hidra2::FileData;
 
-
+using ::testing::AtLeast;
 using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Test;
@@ -37,29 +36,29 @@ TEST(FolderDataBroker, SetCorrectIO) {
 class FakeIO: public IO {
   public:
 
-    virtual uint8_t* GetDataFromFileProxy(const std::string& fname, uint64_t fsize, IOErrors* err) {
+    virtual uint8_t* GetDataFromFileProxy(const std::string& fname, uint64_t fsize, IOErrors* err) const {
         *err = IOErrors::kNoError;
         return nullptr;
     };
 
-    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err)override {
+    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const noexcept override {
         return FileData(GetDataFromFileProxy(fname, fsize, err));
     };
 
-    int open(const char* __file, int __oflag)override {
+    int open(const char* __file, int __oflag) const noexcept override {
         return 0;
     };
 
-    int close(int __fd)override {
+    int close(int __fd)const noexcept override {
         return 0;
     };
-    int64_t read(int __fd, void* buf, size_t count)override {
+    int64_t read(int __fd, void* buf, size_t count) const noexcept override {
         return 0;
     };
-    int64_t write(int __fd, const void* __buf, size_t __n) override {
+    int64_t write(int __fd, const void* __buf, size_t __n) const noexcept override {
         return 0;
     };
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kNoError;
         std::vector<FileInfo> file_infos;
         FileInfo fi;
@@ -77,7 +76,7 @@ class FakeIO: public IO {
 
 class IOFolderNotFound: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kFileNotFound;
         return {};
     }
@@ -85,7 +84,7 @@ class IOFolderNotFound: public FakeIO {
 
 class IOFodlerUnknownError: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kUnknownError;
         return {};
     }
@@ -93,7 +92,7 @@ class IOFodlerUnknownError: public FakeIO {
 
 class IOEmptyFodler: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) override {
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kNoError;
         return {};
     }
@@ -101,7 +100,7 @@ class IOEmptyFodler: public FakeIO {
 
 class IOCannotOpenFile: public FakeIO {
   public:
-    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) override {
+    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const noexcept override {
         *err = IOErrors::kPermissionDenied;
         return {};
     };
@@ -212,7 +211,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
 
 class OpenFileMock : public FakeIO {
   public:
-    MOCK_METHOD3(GetDataFromFileProxy, uint8_t* (const std::string&, uint64_t, IOErrors*));
+    MOCK_CONST_METHOD3(GetDataFromFileProxy, uint8_t* (const std::string&, uint64_t, IOErrors*));
 };
 
 

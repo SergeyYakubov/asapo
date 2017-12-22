@@ -73,7 +73,7 @@ FileInfo GetFileInfo(const string& path, const string& name, IOErrors* err) {
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
-                       std::vector<FileInfo>& files, IOErrors* err) {
+                       std::vector<FileInfo>* files, IOErrors* err) {
 
     *err = IOErrors::kNoError;
     if (entity->d_type != DT_REG) {
@@ -85,11 +85,11 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
         return;
     }
 
-    files.push_back(file_info);
+    files->push_back(file_info);
 }
 
 void SystemIO::CollectFileInformationRecursivly(const std::string& path,
-                                                std::vector<FileInfo>& files, IOErrors* err) {
+                                                std::vector<FileInfo>* files, IOErrors* err)  const {
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = IOErrorFromErrno();
@@ -113,19 +113,19 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
 }
 
 
-int64_t SystemIO::read(int __fd, void* buf, size_t count) {
+int64_t SystemIO::read(int __fd, void* buf, size_t count) const noexcept {
     return (int64_t) ::read(__fd, buf, count);
 }
 
-int64_t SystemIO::write(int __fd, const void* __buf, size_t __n) {
+int64_t SystemIO::write(int __fd, const void* __buf, size_t __n) const noexcept {
     return (int64_t) ::write(__fd, __buf, __n);
 }
 
-int SystemIO::open(const char* __file, int __oflag) {
+int SystemIO::open(const char* __file, int __oflag) const noexcept {
     return ::open(__file, __oflag);
 }
 
-int SystemIO::close(int __fd) {
+int SystemIO::close(int __fd) const noexcept {
     return ::close(__fd);
 }
 

@@ -52,7 +52,7 @@ WorkerErrorCode FolderDataBroker::Connect() {
     return MapIOError(io_err);
 }
 
-WorkerErrorCode FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int nfile) const {
+WorkerErrorCode FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int nfile) const noexcept {
     if (!is_connected_) {
         return WorkerErrorCode::kSourceNotConnected;
     }
