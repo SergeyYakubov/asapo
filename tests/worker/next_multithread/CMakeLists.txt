@@ -6,7 +6,7 @@ set(SOURCE_FILES next_multithread.cpp)
 # Executable and link
 ################################
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
-target_link_libraries(${TARGET_NAME} test_common common worker-api  ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${TARGET_NAME} test_common hidra2-worker  ${CMAKE_THREAD_LIBS_INIT})
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 if (CMAKE_COMPILER_IS_GNUCXX)
     set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS_DEBUG "--coverage")

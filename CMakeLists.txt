@@ -7,8 +7,6 @@ ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 ENDIF(WIN32)
 
-message(STATUS ${CMAKE_CXX_COMPILER_ID})
-
 option(BUILD_TESTS "Uses googletest to build tests" OFF)
 option(BUILD_INTEGRATION_TESTS "Include integration tests (CMAKE >3.7 is needed)" OFF)
 option(BUILD_DOCS "Uses doxygen to build the documentaion" OFF)

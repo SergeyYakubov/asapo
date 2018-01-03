@@ -6,7 +6,7 @@
 #include <chrono>
 #include <iomanip>
 
-#include "worker/data_broker.h"
+#include "hidra2_worker.h"
 
 using hidra2::WorkerErrorCode;
 using std::chrono::high_resolution_clock;
