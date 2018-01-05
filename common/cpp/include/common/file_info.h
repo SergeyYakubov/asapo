@@ -2,8 +2,8 @@
 #define HIDRA2_FILE_INFO_H
 
 #include <cinttypes>
-#include <memory>
 #include <chrono>
+#include <memory>
 
 namespace hidra2 {
 

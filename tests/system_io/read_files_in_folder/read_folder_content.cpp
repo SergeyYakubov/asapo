@@ -4,7 +4,7 @@
 #include "testing.h"
 
 using hidra2::SystemIO;
-using hidra2::IOErrors;
+using hidra2::IOError;
 
 using hidra2::M_AssertEq;
 
@@ -15,20 +15,20 @@ int main(int argc, char* argv[]) {
     }
     std::string expect{argv[2]};
 
-    IOErrors err;
+    IOError err;
     auto io = std::unique_ptr<SystemIO> {new SystemIO};
     auto files = io->FilesInFolder(argv[1], &err);
 
     std::string result;
     switch (err) {
-    case IOErrors::kFileNotFound:
+    case IOError::kFileNotFound:
         result = "notfound";
         break;
-    case IOErrors::kNoError:
+    case IOError::kNoError:
         for(auto file_info : files)
             result += file_info.relative_path + file_info.base_name;
         break;
-    case IOErrors::kPermissionDenied:
+    case IOError::kPermissionDenied:
         result = "noaccess";
         break;
     default:

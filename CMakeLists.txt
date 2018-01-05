@@ -21,6 +21,11 @@ include(testing_cpp)
 add_subdirectory(producer/api)
 add_subdirectory(common/cpp)
 add_subdirectory(worker/api/cpp)
+
+if(BUILD_WORKER_TOOLS)
+    add_subdirectory(worker/tools)
+endif()
+
 IF(UNIX)
     add_subdirectory(receiver)
 ENDIF(UNIX)

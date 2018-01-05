@@ -46,7 +46,7 @@ void SetFileName(const string& path, const string& name, FileInfo* file_info) {
     file_info->base_name = name;
 }
 
-struct stat FileStat(const string& fname, IOErrors* err) {
+struct stat FileStat(const string& fname, IOError* err) {
     struct stat t_stat {};
     int res = stat(fname.c_str(), &t_stat);
     if (res < 0) {
@@ -55,13 +55,13 @@ struct stat FileStat(const string& fname, IOErrors* err) {
     return t_stat;
 }
 
-FileInfo GetFileInfo(const string& path, const string& name, IOErrors* err) {
+FileInfo GetFileInfo(const string& path, const string& name, IOError* err) {
     FileInfo file_info;
 
     SetFileName(path, name, &file_info);
 
     auto t_stat = FileStat(path + "/" + name, err);
-    if (*err != IOErrors::kNoError) {
+    if (*err != IOError::kNoError) {
         return FileInfo{};
     }
 
@@ -73,15 +73,15 @@ FileInfo GetFileInfo(const string& path, const string& name, IOErrors* err) {
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
-                       std::vector<FileInfo>* files, IOErrors* err) {
+                       std::vector<FileInfo>* files, IOError* err) {
 
-    *err = IOErrors::kNoError;
+    *err = IOError::kNoError;
     if (entity->d_type != DT_REG) {
         return;
     }
 
     FileInfo file_info = GetFileInfo(path, entity->d_name, err);
-    if (*err != IOErrors::kNoError) {
+    if (*err != IOError::kNoError) {
         return;
     }
 
@@ -89,7 +89,7 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
 }
 
 void SystemIO::CollectFileInformationRecursivly(const std::string& path,
-                                                std::vector<FileInfo>* files, IOErrors* err)  const {
+                                                std::vector<FileInfo>* files, IOError* err)  const {
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = IOErrorFromErrno();
@@ -103,7 +103,7 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
         } else {
             ProcessFileEntity(current_entity, path, files, err);
         }
-        if (*err != IOErrors::kNoError) {
+        if (*err != IOError::kNoError) {
             closedir(dir);
             return;
         }
