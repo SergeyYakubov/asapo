@@ -73,7 +73,7 @@ FileInfo GetFileInfo(const string& path, const string& name, IOError* err) {
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
-                       std::vector<FileInfo>* files, IOError* err) {
+                       FileInfos* files, IOError* err) {
 
     *err = IOError::kNoError;
     if (entity->d_type != DT_REG) {
@@ -89,7 +89,7 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
 }
 
 void SystemIO::CollectFileInformationRecursivly(const std::string& path,
-                                                std::vector<FileInfo>* files, IOError* err)  const {
+                                                FileInfos* files, IOError* err)  const {
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = IOErrorFromErrno();

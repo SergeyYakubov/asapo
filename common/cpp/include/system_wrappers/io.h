@@ -34,7 +34,7 @@ class IO {
     virtual int64_t write(int __fd, const void* __buf, size_t __n) const noexcept = 0;
 
 // this is not standard function - to be implemented differently in windows and linux
-    virtual std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) const = 0;
+    virtual FileInfos FilesInFolder(const std::string& folder, IOError* err) const = 0;
 };
 
 }

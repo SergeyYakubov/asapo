@@ -13,16 +13,24 @@ option(BUILD_DOCS "Uses doxygen to build the documentaion" OFF)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
 
+set (HIDRA2_CXX_COMMON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/common/cpp/include)
+
+
 # format sources
 include(astyle)
 
 include(testing_cpp)
 
-add_subdirectory(producer/api)
+if(BUILD_WORKER_TOOLS)
+    set (BUILD_MONGODB_CLIENTLIB ON)
+endif()
 add_subdirectory(common/cpp)
+
+add_subdirectory(producer/api)
 add_subdirectory(worker/api/cpp)
 
 if(BUILD_WORKER_TOOLS)
+    set (BUILD_MONGODB ON)
     add_subdirectory(worker/tools)
 endif()
 

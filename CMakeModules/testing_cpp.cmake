@@ -109,13 +109,16 @@ function(add_integration_test exename testname commandargs)
     endif ()
 endfunction()
 
-function(add_example_test testname)
+function(add_script_test testname exename)
     if (BUILD_EXAMPLES)
+        set(args ${exename})
         separate_arguments(args)
         IF (WIN32)
-            add_test(NAME test-${testname} COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/check_windows.bat)
+            add_test(NAME test-${testname} COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/check_windows.bat
+                      ${args})
         ELSE()
-            add_test(NAME test-${testname} COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh)
+            add_test(NAME test-${testname} COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh
+                      ${args})
         ENDIF()
         set_tests_properties(test-${testname} PROPERTIES
                 LABELS "example;all"

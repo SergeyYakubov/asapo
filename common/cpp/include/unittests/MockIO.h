@@ -28,7 +28,7 @@ class MockIO : public IO {
     MOCK_CONST_METHOD3(GetDataFromFile_t,
                        FileData(const std::string& fname, uint64_t fsize, IOError* err));
     MOCK_CONST_METHOD2(FilesInFolder,
-                       std::vector<FileInfo>(
+                       FileInfos(
                            const std::string& folder, IOError
                            *err));
 

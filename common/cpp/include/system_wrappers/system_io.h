@@ -12,11 +12,11 @@ class SystemIO final : public IO {
     int close(int __fd) const noexcept override;
     int64_t read(int __fd, void* buf, size_t count) const noexcept override;
     int64_t write(int __fd, const void* __buf, size_t __n) const noexcept override;
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) const override;
+    FileInfos FilesInFolder(const std::string& folder, IOError* err) const override;
   private:
     void ReadWholeFile(int fd, uint8_t* array, uint64_t fsize, IOError* err) const noexcept;
     void CollectFileInformationRecursivly(const std::string& path,
-                                          std::vector<FileInfo>* files, IOError* err) const;
+                                          FileInfos* files, IOError* err) const;
 
 };
 }

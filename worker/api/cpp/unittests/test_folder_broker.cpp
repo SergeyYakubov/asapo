@@ -12,6 +12,7 @@ using hidra2::FolderDataBroker;
 using hidra2::WorkerErrorCode;
 using hidra2::IO;
 using hidra2::IOError;
+using hidra2::FileInfos;
 using hidra2::FileInfo;
 using hidra2::FileData;
 
@@ -58,9 +59,9 @@ class FakeIO: public IO {
     int64_t write(int __fd, const void* __buf, size_t __n) const noexcept override {
         return 0;
     };
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) const override {
+    FileInfos FilesInFolder(const std::string& folder, IOError* err) const override {
         *err = IOError::kNoError;
-        std::vector<FileInfo> file_infos;
+        FileInfos file_infos;
         FileInfo fi;
         fi.size = 100;
         fi.base_name = "1";
@@ -76,7 +77,7 @@ class FakeIO: public IO {
 
 class IOFolderNotFound: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) const override {
+    FileInfos FilesInFolder(const std::string& folder, IOError* err) const override {
         *err = IOError::kFileNotFound;
         return {};
     }
@@ -84,7 +85,7 @@ class IOFolderNotFound: public FakeIO {
 
 class IOFodlerUnknownError: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) const override {
+    FileInfos FilesInFolder(const std::string& folder, IOError* err) const override {
         *err = IOError::kUnknownError;
         return {};
     }
@@ -92,7 +93,7 @@ class IOFodlerUnknownError: public FakeIO {
 
 class IOEmptyFodler: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) const override {
+    FileInfos FilesInFolder(const std::string& folder, IOError* err) const override {
         *err = IOError::kNoError;
         return {};
     }

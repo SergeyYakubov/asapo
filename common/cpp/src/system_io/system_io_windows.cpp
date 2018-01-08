@@ -59,7 +59,7 @@ bool IsDirectory(const WIN32_FIND_DATA f) {
 }
 
 void ProcessFileEntity(const WIN32_FIND_DATA f, const std::string& path,
-                       std::vector<FileInfo>* files, IOError* err) {
+                       FileInfos* files, IOError* err) {
 
     *err = IOError::kNoError;
     if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -79,7 +79,7 @@ void ProcessFileEntity(const WIN32_FIND_DATA f, const std::string& path,
 
 
 void SystemIO::CollectFileInformationRecursivly(const std::string& path,
-                                                std::vector<FileInfo>* files, IOError* err) const {
+                                                FileInfos* files, IOError* err) const {
     WIN32_FIND_DATA find_data;
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {

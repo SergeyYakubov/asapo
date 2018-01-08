@@ -6,20 +6,25 @@
 
 namespace hidra2 {
 
-enum class FolderDBConverterError {
+enum class FolderToDbImportError {
     kOK,
     kDBConnectionError,
+    kImportError,
     kIOError
 };
 
-class FolderDBConverter {
+class FolderToDbImporter {
   public:
-    explicit FolderDBConverter();
+    explicit FolderToDbImporter();
 
-    FolderDBConverterError Convert(const std::string& uri, const std::string& folder);
+    FolderToDbImportError Convert(const std::string& folder, const std::string& uri) const;
 
     std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<hidra2::Database> db__; // modified in testings to mock system calls,otherwise do not touch
+  private:
+    FolderToDbImportError ConnectToDb(const std::string& uri, const std::string& folder) const;
+    FileInfos GetFilesInFolder(const std::string& folder, FolderToDbImportError* err) const;
+    FolderToDbImportError ImportFilelist(FileInfos file_list) const;
 
 };
 

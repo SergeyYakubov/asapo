@@ -10,13 +10,12 @@ set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
         )
 
 get_target_property(VAR ${TARGET_NAME} RUNTIME_OUTPUT_DIRECTORY)
-message (STATUS  ${VAR})
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS_DEBUG "--coverage")
 endif()
 
-add_example_test("${TARGET_NAME}")
+add_script_test("${TARGET_NAME}" "")
 
 
 set (dir examples/worker/process_folder)

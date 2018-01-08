@@ -22,7 +22,7 @@ class FolderDataBroker final : public hidra2::DataBroker {
     bool is_connected_;
     int current_file_;
     std::string base_path_;
-    std::vector<FileInfo>  filelist_;
+    FileInfos  filelist_;
     WorkerErrorCode CanGetData(FileInfo* info, FileData* data, int nfile) const noexcept;
     std::mutex mutex_;
 

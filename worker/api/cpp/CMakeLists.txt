@@ -6,9 +6,9 @@ set(SOURCE_FILES include/worker/data_broker.h src/data_broker.cpp src/folder_dat
 ################################
 # Library
 ################################
-add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:common>)
+add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>)
 
-target_include_directories(${TARGET_NAME} PUBLIC include ${CMAKE_SOURCE_DIR}/common/cpp/include)
+target_include_directories(${TARGET_NAME} PUBLIC include ${HIDRA2_CXX_COMMON_INCLUDE_DIR})
 #target_link_libraries(${TARGET_NAME} $<TARGET_OBJECTS:common>)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 

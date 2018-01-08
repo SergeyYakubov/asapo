@@ -72,22 +72,22 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOE
     return data;
 }
 
-void SortFileList(std::vector<FileInfo>* file_list) {
+void SortFileList(FileInfos* file_list) {
     std::sort(file_list->begin(), file_list->end(),
     [](FileInfo const & a, FileInfo const & b) {
         return a.modify_date < b.modify_date;
     });
 }
 
-void StripBasePath(const std::string& folder, std::vector<FileInfo>* file_list) {
+void StripBasePath(const std::string& folder, FileInfos* file_list) {
     auto n_erase = folder.size() + 1;
     for (auto& file : *file_list) {
         file.relative_path.erase(0, n_erase);
     }
 }
 
-std::vector<FileInfo> SystemIO::FilesInFolder(const std::string& folder, IOError* err) const {
-    std::vector<FileInfo> files{};
+FileInfos SystemIO::FilesInFolder(const std::string& folder, IOError* err) const {
+    FileInfos files{};
     CollectFileInformationRecursivly(folder, &files, err);
     if (*err != IOError::kNoError) {
         return {};

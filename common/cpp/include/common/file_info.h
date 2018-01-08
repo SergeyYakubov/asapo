@@ -4,6 +4,7 @@
 #include <cinttypes>
 #include <chrono>
 #include <memory>
+#include <vector>
 
 namespace hidra2 {
 
@@ -15,7 +16,7 @@ struct FileInfo {
 };
 
 using FileData = std::unique_ptr<uint8_t[]>;
-
+using FileInfos = std::vector<FileInfo>;
 
 }
 #endif //HIDRA2_FILE_INFO_H
