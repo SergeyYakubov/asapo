@@ -17,7 +17,7 @@ touch test/file2
 sleep 0.1
 touch test/file1
 
-$1 test mongodb://127.0.0.1
+$1 test 127.0.0.1
 
 echo "show collections" | mongo ${database_name} | grep test
 echo "db.test.find({"_id":1})" | mongo ${database_name} | grep file2
