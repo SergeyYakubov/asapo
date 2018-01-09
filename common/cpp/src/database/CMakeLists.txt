@@ -13,6 +13,6 @@ message ("--   mongoc libraries \"${MONGOC_STATIC_LIBRARIES}\"")
 
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES})
 target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR}
-        PRIVATE "${MONGOC_STATIC_INCLUDE_DIRS}")
+        PUBLIC "${MONGOC_STATIC_INCLUDE_DIRS}")
 target_link_libraries (${TARGET_NAME} PRIVATE "${MONGOC_STATIC_LIBRARIES}")
 target_compile_definitions (${TARGET_NAME} PRIVATE "${MONGOC_STATIC_DEFINITIONS}")

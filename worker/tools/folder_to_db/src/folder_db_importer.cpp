@@ -36,7 +36,7 @@ FolderToDbImportError MapDBError(DBError db_err) {
 
 
 FolderToDbImporter::FolderToDbImporter() :
-    io__{new hidra2::SystemIO}, db__{new hidra2::MongoDB} {
+    io__{new hidra2::SystemIO}, db__{new hidra2::MongoDBClient} {
 }
 
 FolderToDbImportError FolderToDbImporter::ConnectToDb(const std::string& uri, const std::string& folder) const {

@@ -45,7 +45,7 @@ TEST(FolderDBConverter, SetCorrectIO) {
 
 TEST(FolderDBConverter, SetCorrectDB) {
     FolderToDbImporter converter{};
-    ASSERT_THAT(dynamic_cast<hidra2::MongoDB*>(converter.db__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<hidra2::MongoDBClient*>(converter.db__.get()), Ne(nullptr));
 }
 
 class MockDatabase : public Database {

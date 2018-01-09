@@ -10,7 +10,10 @@ namespace hidra2 {
 enum class DBError {
     kNoError,
     kConnectionError,
-    kImportError
+    kImportError,
+    kAlreadyConnected,
+    kNotConnected,
+    kBadAddress
 };
 
 constexpr char kDBName[] = "data";
