@@ -24,6 +24,7 @@ include(testing_cpp)
 if(BUILD_WORKER_TOOLS)
     set (BUILD_MONGODB_CLIENTLIB ON)
 endif()
+
 add_subdirectory(common/cpp)
 
 add_subdirectory(producer/api)

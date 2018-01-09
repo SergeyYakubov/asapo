@@ -133,6 +133,7 @@ MATCHER_P(CompareFileInfos, file_infos, "") {
         if (arg[i].size != file_infos[i].size) return false;
         if (arg[i].base_name != file_infos[i].base_name) return false;
     }
+    return true;
 }
 
 FileInfos CreateTestFileInfos() {

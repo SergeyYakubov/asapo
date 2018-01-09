@@ -6,10 +6,8 @@ set(SOURCE_FILES src/folder_db_importer.cpp)
 ################################
 # Library
 ################################
-add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>
-                                                  $<TARGET_OBJECTS:mongo_db>)
-
-target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR})
+add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>)
+target_link_libraries(${TARGET_NAME} mongo_db)
 
 add_executable(${TARGET_NAME}-bin src/main.cpp)
 set_target_properties(${TARGET_NAME}-bin
@@ -25,3 +23,5 @@ set(TEST_LIBRARIES "${TARGET_NAME}")
 
 
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")
+
+install(TARGETS ${TARGET_NAME}-bin DESTINATION bin)
