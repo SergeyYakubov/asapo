@@ -24,7 +24,8 @@ class FolderToDbImporter {
   private:
     FolderToDbImportError ConnectToDb(const std::string& uri, const std::string& folder) const;
     FileInfos GetFilesInFolder(const std::string& folder, FolderToDbImportError* err) const;
-    FolderToDbImportError ImportFilelist(FileInfos file_list) const;
+    FolderToDbImportError ImportSingleFile(const FileInfo& file) const;
+    FolderToDbImportError ImportFilelist(const FileInfos& file_list) const;
 
 };
 

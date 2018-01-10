@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <chrono>
 
 #include "database/mongodb_client.h"
 #include "testing.h"
@@ -12,12 +12,16 @@ using hidra2::DBError;
 void Assert(DBError error, const std::string& expect) {
     std::string result;
     switch (error) {
-    case DBError::kImportError:
-        result = "ImportError";
+    case DBError::kInsertError:
+        result = "InsertError";
         break;
     case DBError::kNotConnected:
         result = "NotConnected";
         break;
+    case DBError::kDuplicateID:
+        result = "DuplicateID";
+        break;
+
     default:
         result = "OK";
         break;
@@ -27,9 +31,8 @@ void Assert(DBError error, const std::string& expect) {
 }
 
 struct Args {
-    std::string instruction;
-    std::string expect;
-
+    std::string keyword;
+    int file_id;
 };
 
 Args GetArgs(int argc, char* argv[]) {
@@ -37,7 +40,7 @@ Args GetArgs(int argc, char* argv[]) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
     }
-    return Args{argv[1], argv[2]};
+    return Args{argv[1], atoi(argv[2])};
 }
 
 
@@ -45,24 +48,27 @@ int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
     hidra2::MongoDBClient db;
 
-
-    hidra2::FileInfos files;
     hidra2::FileInfo fi;
     fi.size = 100;
     fi.base_name = "1";
-    files.emplace_back(fi);
-    fi.base_name = "2";
-    files.emplace_back(fi);
+    fi.id = args.file_id;
+    fi.relative_path = "relpath";
+    fi.modify_date = std::chrono::system_clock::now();
 
-    if (args.instruction != "notconnected") {
+    if (args.keyword != "NotConnected") {
         db.Connect("127.0.0.1", "data", "test");
     }
 
-    auto err = db.Import(files);
+    auto err = db.Insert(fi);
 
-    Assert(err, args.expect);
+    if (args.keyword == "DuplicateID") {
+        Assert(err, "OK");
+        err = db.Insert(fi);
+    }
+
+    Assert(err, args.keyword);
+
+
 
     return 0;
 }
-
-

@@ -33,7 +33,7 @@ struct Args {
     std::string address;
     std::string database_name;
     std::string collection_name;
-    std::string expect;
+    std::string keyword;
 
 };
 
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     hidra2::MongoDBClient db;
 
     auto err = db.Connect(args.address, args.database_name, args.collection_name);
-    Assert(err, args.expect);
+    Assert(err, args.keyword);
 
     if (err == DBError::kNoError) {
         err = db.Connect(args.address, args.database_name, args.collection_name);

@@ -48,6 +48,7 @@ void SetFileName(const string& path, const string& name, FileInfo* file_info) {
 
 struct stat FileStat(const string& fname, IOError* err) {
     struct stat t_stat {};
+    errno = 0;
     int res = stat(fname.c_str(), &t_stat);
     if (res < 0) {
         *err = IOErrorFromErrno();
@@ -84,19 +85,23 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
     if (*err != IOError::kNoError) {
         return;
     }
-
     files->push_back(file_info);
 }
 
 void SystemIO::CollectFileInformationRecursivly(const std::string& path,
                                                 FileInfos* files, IOError* err)  const {
+    errno = 0;
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = IOErrorFromErrno();
         return;
     }
-
-    while (struct dirent* current_entity = readdir(dir)) {
+    while (true) {
+        errno = 0;
+        struct dirent* current_entity = readdir(dir);
+        if (!current_entity) {
+            break;
+        }
         if (IsDirectory(current_entity)) {
             CollectFileInformationRecursivly(path + "/" + current_entity->d_name,
                                              files, err);
@@ -104,6 +109,7 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
             ProcessFileEntity(current_entity, path, files, err);
         }
         if (*err != IOError::kNoError) {
+            errno = 0;
             closedir(dir);
             return;
         }

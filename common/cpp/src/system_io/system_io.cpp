@@ -43,6 +43,7 @@ void SystemIO::ReadWholeFile(int fd, uint8_t* array, uint64_t fsize, IOError* er
 }
 
 FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOError* err) const noexcept {
+    errno = 0;
     int fd = open(fname.c_str(), O_RDONLY);
     *err = IOErrorFromErrno();
     if (*err != IOError::kNoError) {
@@ -62,7 +63,7 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOE
         close(fd);
         return nullptr;
     }
-
+    errno = 0;
     close(fd);
     *err = IOErrorFromErrno();
     if (*err != IOError::kNoError) {
@@ -86,6 +87,14 @@ void StripBasePath(const std::string& folder, FileInfos* file_list) {
     }
 }
 
+void AssignIDs(FileInfos* file_list) {
+    int64_t id = 0;
+    for (auto& file : *file_list) {
+        file.id = ++id;
+    }
+}
+
+
 FileInfos SystemIO::FilesInFolder(const std::string& folder, IOError* err) const {
     FileInfos files{};
     CollectFileInformationRecursivly(folder, &files, err);
@@ -94,6 +103,7 @@ FileInfos SystemIO::FilesInFolder(const std::string& folder, IOError* err) const
     }
     StripBasePath(folder, &files);
     SortFileList(&files);
+    AssignIDs(&files);
     return files;
 }
 

@@ -15,7 +15,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS_DEBUG "--coverage")
 endif()
 
-add_script_test("${TARGET_NAME}" "")
+add_script_test("${TARGET_NAME}" ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME})
 
 
 set (dir examples/worker/process_folder)

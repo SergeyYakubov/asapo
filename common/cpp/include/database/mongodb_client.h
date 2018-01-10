@@ -28,7 +28,7 @@ class MongoDBClient final: public Database {
     MongoDBClient();
     DBError Connect(const std::string& address, const std::string& database,
                     const std::string& collection ) override;
-    DBError Import(const FileInfos& files) const override;
+    DBError Insert(const FileInfo& file) const override;
     ~MongoDBClient() override;
   private:
     mongoc_client_t* client_{nullptr};
@@ -39,7 +39,7 @@ class MongoDBClient final: public Database {
     DBError InitializeClient(const std::string& address);
     void InitializeCollection(const std::string& database_name,
                               const std::string& collection_name);
-
+    DBError ImportMany(const FileInfos& files) const;
     DBError Ping();
     DBError TryConnectDatabase();
 };

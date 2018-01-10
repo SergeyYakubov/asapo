@@ -8,12 +8,13 @@
 namespace hidra2 {
 
 enum class DBError {
-    kNoError,
     kConnectionError,
-    kImportError,
+    kInsertError,
+    kDuplicateID,
     kAlreadyConnected,
     kNotConnected,
-    kBadAddress
+    kBadAddress,
+    kNoError
 };
 
 constexpr char kDBName[] = "data";
@@ -22,7 +23,7 @@ class Database {
   public:
     virtual DBError Connect(const std::string& address, const std::string& database,
                             const std::string& collection ) = 0;
-    virtual DBError Import(const FileInfos& files) const = 0;
+    virtual DBError Insert(const FileInfo& file) const = 0;
     virtual ~Database() = default;
 };
 

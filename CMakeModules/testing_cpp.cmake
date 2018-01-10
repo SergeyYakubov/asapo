@@ -119,8 +119,12 @@ function(add_script_test testname exename)
             add_test(NAME test-${testname} COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/check_windows.bat
                       ${args})
         ELSE()
+            set(memargs ${MEMORYCHECK_COMMAND} ${MEMORYCHECK_COMMAND_OPTIONS} ${exename})
+            separate_arguments(memargs)
             add_test(NAME test-${testname} COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh
                       ${args})
+            add_test(NAME memtest-${testname} COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh
+                    ${memargs})
         ENDIF()
         set_tests_properties(test-${testname} PROPERTIES
                 LABELS "example;all"

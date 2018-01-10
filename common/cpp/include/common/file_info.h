@@ -13,6 +13,7 @@ struct FileInfo {
     std::string relative_path;
     std::chrono::system_clock::time_point modify_date;
     uint64_t size{0};
+    uint64_t id{0};
 };
 
 using FileData = std::unique_ptr<uint8_t[]>;

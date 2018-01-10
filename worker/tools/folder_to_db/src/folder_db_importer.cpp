@@ -27,7 +27,7 @@ FolderToDbImportError MapDBError(DBError db_err) {
     case DBError::kConnectionError:
         err = FolderToDbImportError::kDBConnectionError;
         break;
-    case DBError::kImportError:
+    case DBError::kInsertError:
         err = FolderToDbImportError::kImportError;
         break;
     }
@@ -44,9 +44,20 @@ FolderToDbImportError FolderToDbImporter::ConnectToDb(const std::string& uri, co
     return MapDBError(err);
 }
 
-FolderToDbImportError FolderToDbImporter::ImportFilelist(FileInfos file_list) const {
-    auto err = db__->Import(file_list);
+FolderToDbImportError FolderToDbImporter::ImportSingleFile(const FileInfo& file) const {
+    auto err = db__->Insert(file);
     return MapDBError(err);
+}
+
+
+FolderToDbImportError FolderToDbImporter::ImportFilelist(const FileInfos& file_list) const {
+    for (auto& file : file_list) {
+        auto err = ImportSingleFile(file);
+        if (err != FolderToDbImportError::kOK) {
+            return err;
+        }
+    }
+    return FolderToDbImportError::kOK;
 }
 
 
