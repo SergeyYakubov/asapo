@@ -23,12 +23,22 @@ class MongoDbInstance {
     ~MongoDbInstance();
 };
 
-class MongoDBClient final: public Database {
+class BsonDestroyFunctor {
+  public:
+    void operator()(bson_t* bson) const {
+        bson_destroy(bson);
+    }
+};
+
+// using _bson_t here to avoid GNU compiler warnings
+using bson_p = std::unique_ptr<_bson_t, BsonDestroyFunctor>;
+
+class MongoDBClient final : public Database {
   public:
     MongoDBClient();
     DBError Connect(const std::string& address, const std::string& database,
-                    const std::string& collection ) override;
-    DBError Insert(const FileInfo& file) const override;
+                    const std::string& collection) override;
+    DBError Insert(const FileInfo& file, bool ignore_duplicates) const override;
     ~MongoDBClient() override;
   private:
     mongoc_client_t* client_{nullptr};
@@ -39,11 +49,10 @@ class MongoDBClient final: public Database {
     DBError InitializeClient(const std::string& address);
     void InitializeCollection(const std::string& database_name,
                               const std::string& collection_name);
-    DBError ImportMany(const FileInfos& files) const;
     DBError Ping();
     DBError TryConnectDatabase();
+    DBError InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const;
 };
-
 }
 
 #endif //HIDRA2_MONGO_DATABASE_H

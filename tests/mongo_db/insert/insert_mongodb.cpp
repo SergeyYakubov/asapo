@@ -59,16 +59,14 @@ int main(int argc, char* argv[]) {
         db.Connect("127.0.0.1", "data", "test");
     }
 
-    auto err = db.Insert(fi);
+    auto err = db.Insert(fi, false);
 
     if (args.keyword == "DuplicateID") {
         Assert(err, "OK");
-        err = db.Insert(fi);
+        err = db.Insert(fi, false);
     }
 
     Assert(err, args.keyword);
-
-
 
     return 0;
 }

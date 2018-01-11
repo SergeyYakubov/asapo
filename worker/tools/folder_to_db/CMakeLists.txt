@@ -22,6 +22,6 @@ set(TEST_SOURCE_FILES unittests/test_folder_to_db.cpp)
 set(TEST_LIBRARIES "${TARGET_NAME}")
 
 
-gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")
+gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}" ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 
 install(TARGETS ${TARGET_NAME}-bin DESTINATION bin)

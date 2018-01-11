@@ -17,6 +17,7 @@
 
 using ::testing::AtLeast;
 using ::testing::Eq;
+using ::testing::Gt;
 using ::testing::Ne;
 using ::testing::Test;
 using ::testing::_;
@@ -52,7 +53,7 @@ TEST(FolderDBConverter, SetCorrectDB) {
 class MockDatabase : public Database {
   public:
     MOCK_METHOD3(Connect, DBError (const std::string&, const std::string&, const std::string&));
-    MOCK_CONST_METHOD1(Insert, DBError (const FileInfo&));
+    MOCK_CONST_METHOD2(Insert, DBError (const FileInfo&, bool));
 
     // stuff to test db destructor is called and avoid "uninteresting call" messages
     MOCK_METHOD0(Die, void());
@@ -82,11 +83,17 @@ class FolderDBConverterTests : public Test {
     NiceMock<MockDatabase> mock_db;
     NiceMock<MockIO> mock_io;
     FileInfos file_infos;
+    hidra2::ConvertParameters params{};
 
     void SetUp() override {
         converter.db__ = std::unique_ptr<Database> {&mock_db};
         converter.io__ = std::unique_ptr<IO> {&mock_io};
         file_infos = CreateTestFileInfos();
+        params.folder = {"folder"};
+        params.uri = "db_address";
+        params.ignore_duplicates = true;
+
+
         ON_CALL(mock_db, Connect(_, _, _))
         .WillByDefault(Return(DBError::kNoError));
         ON_CALL(mock_io, FilesInFolder(_, _)).
@@ -103,12 +110,11 @@ class FolderDBConverterTests : public Test {
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
 
-    std::string uri{"db_address"};
 
-    EXPECT_CALL(mock_db, Connect(uri, kDBName, "")).
+    EXPECT_CALL(mock_db, Connect(params.uri, kDBName, _)).
     WillOnce(testing::Return(DBError::kConnectionError));
 
-    auto error = converter.Convert("", uri);
+    auto error = converter.Convert(params);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kDBConnectionError));
 }
 
@@ -119,13 +125,12 @@ TEST_F(FolderDBConverterTests, DBDestructorCalled) {
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotGetFileList) {
 
-    std::string folder{"folder"};
 
-    EXPECT_CALL(mock_io, FilesInFolder(folder, _)).
+    EXPECT_CALL(mock_io, FilesInFolder(params.folder, _)).
     WillOnce(DoAll(testing::SetArgPointee<1>(IOError::kReadError),
                    testing::Return(FileInfos {})));
 
-    auto error = converter.Convert(folder, "");
+    auto error = converter.Convert(params);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kIOError));
 
 }
@@ -133,10 +138,10 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotGetFileList) {
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotImportFileListToDb) {
 
-    EXPECT_CALL(mock_db, Insert(_)).
+    EXPECT_CALL(mock_db, Insert(_, _)).
     WillOnce(testing::Return(DBError::kInsertError));
 
-    auto error = converter.Convert("", "");
+    auto error = converter.Convert(params);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kImportError));
 
 }
@@ -152,14 +157,30 @@ MATCHER_P(CompareFileInfo, file, "") {
 TEST_F(FolderDBConverterTests, PassesFileListToInsert) {
 
     for (auto& file : file_infos) {
-        EXPECT_CALL(mock_db, Insert(CompareFileInfo(file))).
+        EXPECT_CALL(mock_db, Insert(CompareFileInfo(file), _)).
         WillOnce(testing::Return(DBError::kNoError));
     }
 
-    auto error = converter.Convert("", "");
+    auto error = converter.Convert(params);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kOK));
 
 }
 
+TEST_F(FolderDBConverterTests, ComputesStatistics) {
+
+    for (auto& file : file_infos) {
+        EXPECT_CALL(mock_db, Insert(CompareFileInfo(file), true)).
+        WillOnce(testing::Return(DBError::kNoError));
+    }
+
+    hidra2::FolderImportStatistics statistics;
+    auto error = converter.Convert(params, &statistics);
+
+    ASSERT_THAT(error, Eq(FolderToDbImportError::kOK));
+    ASSERT_THAT(statistics.n_files_converted, Eq(file_infos.size()));
+// tests may fail is function call is smaller than 1 ns
+    ASSERT_THAT(statistics.time_read_folder.count(), Gt(0));
+    ASSERT_THAT(statistics.time_import_files.count(), Gt(0));
+}
 
 }

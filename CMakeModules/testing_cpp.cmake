@@ -39,6 +39,9 @@ function(gtest target test_source_files test_libraries)
             include(CodeCoverage)
             APPEND_COVERAGE_COMPILER_FLAGS()
             set(COVERAGE_EXCLUDES '*/unittests/*')
+            if (ARGN)
+                set(COVERAGE_EXCLUDES ${COVERAGE_EXCLUDES} ${ARGN})
+            endif()
             SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
             add_test(NAME coveragetest-${target}
                     COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
