@@ -53,6 +53,13 @@ class MongoDBClient final : public Database {
     DBError TryConnectDatabase();
     DBError InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const;
 };
+
+class MongoDatabaseFactory final : public DatabaseFactory {
+  public:
+    std::unique_ptr<hidra2::Database> Create(DBError* err) const noexcept override;
+};
+
+
 }
 
 #endif //HIDRA2_MONGO_DATABASE_H

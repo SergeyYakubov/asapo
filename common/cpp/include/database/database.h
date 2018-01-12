@@ -14,7 +14,8 @@ enum class DBError {
     kAlreadyConnected,
     kNotConnected,
     kBadAddress,
-    kNoError
+    kNoError,
+    kMemoryError
 };
 
 constexpr char kDBName[] = "data";
@@ -26,6 +27,12 @@ class Database {
     virtual DBError Insert(const FileInfo& file, bool ignore_duplicates) const = 0;
     virtual ~Database() = default;
 };
+
+class DatabaseFactory {
+  public:
+    virtual std::unique_ptr<Database> Create(DBError* err) const noexcept = 0;
+};
+
 
 }
 

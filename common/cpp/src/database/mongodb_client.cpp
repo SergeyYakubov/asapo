@@ -1,8 +1,21 @@
 #include "database/mongodb_client.h"
 
-using std::string;
-
 namespace hidra2 {
+
+using std::string;
+using hidra2::Database;
+
+std::unique_ptr<Database> MongoDatabaseFactory::Create(DBError* err) const noexcept {
+    std::unique_ptr<Database> p = nullptr;
+    try {
+        p.reset(new MongoDBClient());
+        *err = DBError::kNoError;
+    } catch (...) {         // we do not test this part
+        *err = DBError::kMemoryError;
+    }
+    return p;
+};
+
 
 MongoDbInstance::MongoDbInstance() {
     mongoc_init ();

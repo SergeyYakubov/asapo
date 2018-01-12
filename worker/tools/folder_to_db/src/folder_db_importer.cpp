@@ -1,7 +1,11 @@
 #include "folder_db_importer.h"
 
+#include <future>
+#include <algorithm>
+
 #include "system_wrappers/system_io.h"
 #include "database/mongodb_client.h"
+
 
 namespace hidra2 {
 
@@ -16,6 +20,7 @@ FolderToDbImportError MapIOError(IOError io_err) {
         break;
     default:
         err = FolderToDbImportError::kIOError;
+        break;
         break;
     }
     return err;
@@ -34,6 +39,10 @@ FolderToDbImportError MapDBError(DBError db_err) {
     case DBError::kDuplicateID:
         err = FolderToDbImportError::kImportError;
         break;
+    case DBError::kMemoryError:
+        err = FolderToDbImportError::kMemoryError;
+        break;
+
     default:
         err = FolderToDbImportError::kUnknownDbError;
         break;
@@ -43,28 +52,60 @@ FolderToDbImportError MapDBError(DBError db_err) {
 
 
 FolderToDbImporter::FolderToDbImporter() :
-    io__{new hidra2::SystemIO}, db__{new hidra2::MongoDBClient} {
+    io__{new hidra2::SystemIO}, db_factory__{new hidra2::MongoDatabaseFactory} {
 }
 
-FolderToDbImportError FolderToDbImporter::ConnectToDb(const std::string& uri, const std::string& folder) const {
-    DBError err = db__->Connect(uri, kDBName, folder);
+FolderToDbImportError FolderToDbImporter::ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const {
+    DBError err = db->Connect(db_uri_, kDBName, db_collection_name);
     return MapDBError(err);
 }
 
-FolderToDbImportError FolderToDbImporter::ImportSingleFile(const FileInfo& file, bool ignore_duplicates) const {
-    auto err = db__->Insert(file, ignore_duplicates);
+FolderToDbImportError FolderToDbImporter::ImportSingleFile(const std::unique_ptr<hidra2::Database>& db,
+        const FileInfo& file) const {
+
+    auto err = db->Insert(file, ignore_duplicates_);
     return MapDBError(err);
 }
 
+FolderToDbImportError FolderToDbImporter::ImportPartOfFilelist(const FileInfos& file_list, uint64_t begin,
+        uint64_t end) const {
+    DBError db_err;
+    std::unique_ptr<hidra2::Database> db = db_factory__->Create(&db_err);
 
-FolderToDbImportError FolderToDbImporter::ImportFilelist(const FileInfos& file_list, bool ignore_duplicates) const {
-    for (auto& file : file_list) {
-        auto err = ImportSingleFile(file, ignore_duplicates);
+    auto err = ConnectToDb(db);
+    if (err != FolderToDbImportError::kOK) {
+        return err;
+    }
+
+    for (auto i = begin; i < end; i++) {
+        auto err = ImportSingleFile(db, file_list[i]);
         if (err != FolderToDbImportError::kOK) {
             return err;
         }
     }
     return FolderToDbImportError::kOK;
+}
+
+FolderToDbImportError FolderToDbImporter::ImportFilelist(const FileInfos& file_list) const {
+    auto grain = file_list.size() / n_tasks_;
+    if (grain == 0) {
+        grain = file_list.size();
+    }
+
+    std::vector<std::future<FolderToDbImportError>>res;
+    for (auto i = 0; i < file_list.size(); i += grain) {
+        auto end = std::min(i + grain, file_list.size());
+        res.push_back(std::async(std::launch::async, &FolderToDbImporter::ImportPartOfFilelist, this,
+                                 file_list, i, end));
+    }
+    FolderToDbImportError err{FolderToDbImportError::kOK};
+    for (auto& fut : res) {
+        auto task_result = fut.get();
+        if (task_result != FolderToDbImportError::kOK) {
+            err = task_result;
+        }
+    }
+    return err;
 }
 
 
@@ -76,23 +117,22 @@ FileInfos FolderToDbImporter::GetFilesInFolder(const std::string& folder, Folder
 }
 
 
-FolderToDbImportError FolderToDbImporter::Convert(const ConvertParameters& parameters,
+FolderToDbImportError FolderToDbImporter::Convert(const std::string& uri, const std::string& folder,
                                                   FolderImportStatistics* statistics) const {
-    auto err = ConnectToDb(parameters.uri, parameters.folder);
-    if (err != FolderToDbImportError::kOK) {
-        return err;
-    }
+    db_uri_ = uri;
+    db_collection_name = folder;
 
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-    auto file_list = GetFilesInFolder(parameters.folder, &err);
+    FolderToDbImportError err;
+    auto file_list = GetFilesInFolder(folder, &err);
     if (err != FolderToDbImportError::kOK) {
         return err;
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
-    err = ImportFilelist(file_list, parameters.ignore_duplicates);
+    err = ImportFilelist(file_list);
 
     high_resolution_clock::time_point t3 = high_resolution_clock::now();
 
@@ -105,6 +145,15 @@ FolderToDbImportError FolderToDbImporter::Convert(const ConvertParameters& param
     return err;
 
 
+}
+
+void FolderToDbImporter::IgnoreDuplicates(bool ignore_duplicates) {
+    ignore_duplicates_ = ignore_duplicates;
+}
+
+void FolderToDbImporter::RunInParallel(unsigned int ntasks) {
+    unsigned int nthreads = std::thread::hardware_concurrency();
+    n_tasks_ = std::max((unsigned int)1, std::min(ntasks, nthreads));
 }
 
 std::ostream& operator<<(std::ostream& os, const FolderImportStatistics& stat) {

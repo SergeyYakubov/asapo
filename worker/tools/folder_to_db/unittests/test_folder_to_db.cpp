@@ -29,6 +29,7 @@ using ::testing::Return;
 using hidra2::FolderToDbImporter;
 using hidra2::FolderToDbImportError;
 using hidra2::Database;
+using hidra2::DatabaseFactory;
 using hidra2::IO;
 using hidra2::DBError;
 using hidra2::IOError;
@@ -45,10 +46,19 @@ TEST(FolderDBConverter, SetCorrectIO) {
     ASSERT_THAT(dynamic_cast<hidra2::SystemIO*>(converter.io__.get()), Ne(nullptr));
 }
 
-TEST(FolderDBConverter, SetCorrectDB) {
+TEST(FolderDBConverter, SetCorrectDBFactory) {
     FolderToDbImporter converter{};
-    ASSERT_THAT(dynamic_cast<hidra2::MongoDBClient*>(converter.db__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<hidra2::MongoDatabaseFactory*>(converter.db_factory__.get()), Ne(nullptr));
 }
+
+class MockDatabaseFactory : public DatabaseFactory {
+  public:
+    Database* db_;
+    std::unique_ptr<Database> Create(DBError* err) const noexcept {
+        return std::unique_ptr<Database> {db_};
+    }
+};
+
 
 class MockDatabase : public Database {
   public:
@@ -80,68 +90,74 @@ FileInfos CreateTestFileInfos() {
 class FolderDBConverterTests : public Test {
   public:
     FolderToDbImporter converter{};
-    NiceMock<MockDatabase> mock_db;
     NiceMock<MockIO> mock_io;
+    NiceMock<MockDatabase>* mock_db = new NiceMock<MockDatabase>;
+    MockDatabaseFactory* mock_dbf = new MockDatabaseFactory;
     FileInfos file_infos;
-    hidra2::ConvertParameters params{};
-
+    std::string folder, uri;
     void SetUp() override {
-        converter.db__ = std::unique_ptr<Database> {&mock_db};
+        mock_dbf->db_ = mock_db;
         converter.io__ = std::unique_ptr<IO> {&mock_io};
+        converter.db_factory__ = std::unique_ptr<DatabaseFactory> {mock_dbf};
         file_infos = CreateTestFileInfos();
-        params.folder = {"folder"};
-        params.uri = "db_address";
-        params.ignore_duplicates = true;
+        folder = "folder";
+        uri = "db_address";
 
-
-        ON_CALL(mock_db, Connect(_, _, _))
+        ON_CALL(*mock_db, Connect(_, _, _))
         .WillByDefault(Return(DBError::kNoError));
         ON_CALL(mock_io, FilesInFolder(_, _)).
         WillByDefault(DoAll(testing::SetArgPointee<1>(IOError::kNoError),
                             testing::Return(file_infos)));
     }
     void TearDown() override {
-        converter.db__.release();
         converter.io__.release();
-
     }
 };
 
-
 TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
-
-
-    EXPECT_CALL(mock_db, Connect(params.uri, kDBName, _)).
+    EXPECT_CALL(*mock_db, Connect(uri, kDBName, _)).
     WillOnce(testing::Return(DBError::kConnectionError));
 
-    auto error = converter.Convert(params);
+    auto error = converter.Convert(uri, folder);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kDBConnectionError));
 }
 
+
 TEST_F(FolderDBConverterTests, DBDestructorCalled) {
-    mock_db.check_destructor = true;
-    EXPECT_CALL(mock_db, Die());
+    mock_db->check_destructor = true;
+    EXPECT_CALL(*mock_db, Die());
+    delete mock_db;
 }
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotGetFileList) {
 
 
-    EXPECT_CALL(mock_io, FilesInFolder(params.folder, _)).
+    EXPECT_CALL(mock_io, FilesInFolder(folder, _)).
     WillOnce(DoAll(testing::SetArgPointee<1>(IOError::kReadError),
                    testing::Return(FileInfos {})));
 
-    auto error = converter.Convert(params);
+    auto error = converter.Convert(uri, folder);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kIOError));
+    delete mock_db;
 
 }
 
+TEST_F(FolderDBConverterTests, PassesIgnoreDuplicates) {
+
+    EXPECT_CALL(*mock_db, Insert(_, true));
+
+    converter.IgnoreDuplicates(true);
+    converter.Convert(uri, folder);
+    converter.IgnoreDuplicates(false);
+
+}
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotImportFileListToDb) {
 
-    EXPECT_CALL(mock_db, Insert(_, _)).
+    EXPECT_CALL(*mock_db, Insert(_, _)).
     WillOnce(testing::Return(DBError::kInsertError));
 
-    auto error = converter.Convert(params);
+    auto error = converter.Convert(uri, folder);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kImportError));
 
 }
@@ -157,24 +173,23 @@ MATCHER_P(CompareFileInfo, file, "") {
 TEST_F(FolderDBConverterTests, PassesFileListToInsert) {
 
     for (auto& file : file_infos) {
-        EXPECT_CALL(mock_db, Insert(CompareFileInfo(file), _)).
+        EXPECT_CALL(*mock_db, Insert(CompareFileInfo(file), _)).
         WillOnce(testing::Return(DBError::kNoError));
     }
 
-    auto error = converter.Convert(params);
+    auto error = converter.Convert(uri, folder);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kOK));
 
 }
 
 TEST_F(FolderDBConverterTests, ComputesStatistics) {
 
-    for (auto& file : file_infos) {
-        EXPECT_CALL(mock_db, Insert(CompareFileInfo(file), true)).
-        WillOnce(testing::Return(DBError::kNoError));
-    }
+    EXPECT_CALL(*mock_db, Insert(_, false)).
+    Times(file_infos.size()).
+    WillRepeatedly(testing::Return(DBError::kNoError));
 
     hidra2::FolderImportStatistics statistics;
-    auto error = converter.Convert(params, &statistics);
+    auto error = converter.Convert(uri, folder, &statistics);
 
     ASSERT_THAT(error, Eq(FolderToDbImportError::kOK));
     ASSERT_THAT(statistics.n_files_converted, Eq(file_infos.size()));

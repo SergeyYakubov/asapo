@@ -1,7 +1,7 @@
-:: download and untar mongoc driver to dir
+:: download and untar mongoc driver sources to dir
 :: https://github.com/mongodb/mongo-c-driver/releases/download/1.9.0/mongo-c-driver-1.9.0.tar.gz
 
-:: set directory where mongoc driver is
+:: set directory with mongoc driver sources
 SET dir=c:\tmp\mongo-c-driver-1.9.0
 
 set mypath=%cd%
@@ -25,8 +25,6 @@ cmake "-DCMAKE_INSTALL_PREFIX=C:\mongo-c-driver" ^
       "-DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF" ^
       "-DMONGOC_ENABLE_STATIC=ON" ^
       "-DCMAKE_C_FLAGS_RELEASE=/MT"
-
-
 cmake --build . --config Release
 cmake --build . --target install --config Release
 

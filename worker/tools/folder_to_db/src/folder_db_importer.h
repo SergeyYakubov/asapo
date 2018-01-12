@@ -15,15 +15,9 @@ enum class FolderToDbImportError {
     kDBConnectionError,
     kImportError,
     kIOError,
-    kUnknownDbError
+    kUnknownDbError,
+    kMemoryError
 };
-
-struct ConvertParameters {
-    bool ignore_duplicates{false};
-    std::string folder;
-    std::string uri;
-};
-
 
 struct FolderImportStatistics {
     uint64_t n_files_converted{0};
@@ -34,21 +28,31 @@ struct FolderImportStatistics {
 
 class FolderToDbImporter {
   public:
-    explicit FolderToDbImporter();
+    FolderToDbImporter();
 //! Read folder content and write file to the database. We do not optimize
-//! the procedure (bulk read, multithreading) to be able to see performance of a single thread
-//! for single operation (and it is already fast enough)
-    FolderToDbImportError Convert(const ConvertParameters& parameters,
+//! the procedure via bulk write to see the performance of a
+//! single operation (and it is already fast enough)
+    FolderToDbImportError Convert(const std::string& uri, const std::string& folder,
                                   FolderImportStatistics* statistics = nullptr) const;
 
+    std::unique_ptr<hidra2::DatabaseFactory>
+    db_factory__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
-    std::unique_ptr<hidra2::Database> db__; // modified in testings to mock system calls,otherwise do not touch
+  public:
+    void RunInParallel(unsigned int ntasks);
+    void IgnoreDuplicates(bool ignore_duplicates);
   private:
-    FolderToDbImportError ConnectToDb(const std::string& uri, const std::string& folder) const;
+    bool ignore_duplicates_{false};
+    unsigned int n_tasks_{1};
+    mutable std::string db_uri_ ;
+    mutable std::string db_collection_name;
+    FolderToDbImportError ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const;
     FileInfos GetFilesInFolder(const std::string& folder, FolderToDbImportError* err) const;
-    FolderToDbImportError ImportSingleFile(const FileInfo& file, bool ignore_duplicates) const;
-    FolderToDbImportError ImportFilelist(const FileInfos& file_list, bool ignore_duplicates) const;
-
+    FolderToDbImportError ImportFilelist(const FileInfos& file_list) const;
+    FolderToDbImportError ImportPartOfFilelist(const FileInfos& file_list, uint64_t begin,
+                                               uint64_t end) const;
+    FolderToDbImportError ImportSingleFile(const std::unique_ptr<hidra2::Database>& db,
+                                           const FileInfo& file) const;
 };
 
 }
