@@ -140,8 +140,10 @@ function(add_script_test testname exename)
             separate_arguments(memargs)
             add_test(NAME test-${testname} COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh
                       ${args})
+        if (MEMORYCHECK_COMMAND)
             add_test(NAME memtest-${testname} COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh
                     ${memargs})
+                    endif()
         ENDIF()
         set_tests_properties(test-${testname} PROPERTIES
                 LABELS "example;all"
