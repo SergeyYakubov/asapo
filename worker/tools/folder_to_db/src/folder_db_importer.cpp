@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include "system_wrappers/system_io.h"
-#include "database/mongodb_client.h"
+#include "database/database.h"
 
 
 namespace hidra2 {
@@ -52,7 +52,7 @@ FolderToDbImportError MapDBError(DBError db_err) {
 
 
 FolderToDbImporter::FolderToDbImporter() :
-    io__{new hidra2::SystemIO}, db_factory__{new hidra2::MongoDatabaseFactory} {
+    io__{new hidra2::SystemIO}, db_factory__{new hidra2::DatabaseFactory} {
 }
 
 FolderToDbImportError FolderToDbImporter::ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const {
@@ -67,16 +67,8 @@ FolderToDbImportError FolderToDbImporter::ImportSingleFile(const std::unique_ptr
     return MapDBError(err);
 }
 
-FolderToDbImportError FolderToDbImporter::ImportPartOfFilelist(const FileInfos& file_list, uint64_t begin,
-        uint64_t end) const {
-    DBError db_err;
-    std::unique_ptr<hidra2::Database> db = db_factory__->Create(&db_err);
-
-    auto err = ConnectToDb(db);
-    if (err != FolderToDbImportError::kOK) {
-        return err;
-    }
-
+FolderToDbImportError FolderToDbImporter::ImportFilelistChunk(const std::unique_ptr<hidra2::Database>& db,
+        const FileInfos& file_list, uint64_t begin, uint64_t end) const {
     for (auto i = begin; i < end; i++) {
         auto err = ImportSingleFile(db, file_list[i]);
         if (err != FolderToDbImportError::kOK) {
@@ -86,26 +78,68 @@ FolderToDbImportError FolderToDbImporter::ImportPartOfFilelist(const FileInfos& 
     return FolderToDbImportError::kOK;
 }
 
-FolderToDbImportError FolderToDbImporter::ImportFilelist(const FileInfos& file_list) const {
-    auto grain = file_list.size() / n_tasks_;
-    if (grain == 0) {
-        grain = file_list.size();
+FolderToDbImportError FolderToDbImporter::PerformParallelTask(const FileInfos& file_list, uint64_t begin,
+        uint64_t end) const {
+    FolderToDbImportError err;
+    auto db = CreateDbClient(&err);
+    if (err != FolderToDbImportError::kOK) {
+        return err;
     }
 
-    std::vector<std::future<FolderToDbImportError>>res;
-    for (auto i = 0; i < file_list.size(); i += grain) {
-        auto end = std::min(i + grain, file_list.size());
-        res.push_back(std::async(std::launch::async, &FolderToDbImporter::ImportPartOfFilelist, this,
-                                 file_list, i, end));
+    err = ConnectToDb(db);
+    if (err != FolderToDbImportError::kOK) {
+        return err;
     }
+
+    return ImportFilelistChunk(db, file_list, begin, end);
+}
+std::unique_ptr<hidra2::Database> FolderToDbImporter::CreateDbClient(FolderToDbImportError* err) const {
+    DBError db_err;
+    auto db = db_factory__->Create(&db_err);
+    *err = MapDBError(db_err);
+    return db;
+}
+
+FolderToDbImportError WaitParallelTasks(std::vector<std::future<FolderToDbImportError>>* res){
     FolderToDbImportError err{FolderToDbImportError::kOK};
-    for (auto& fut : res) {
+    for (auto& fut : *res) {
         auto task_result = fut.get();
         if (task_result != FolderToDbImportError::kOK) {
             err = task_result;
         }
     }
     return err;
+}
+
+
+TaskSplitParameters ComputeSplitParameters(const FileInfos& file_list,int ntasks) {
+    TaskSplitParameters parameters;
+    parameters.chunk = file_list.size() / ntasks;
+    parameters.remainder = file_list.size() % ntasks;
+    return parameters;
+}
+
+void FolderToDbImporter::ProcessNextChunk(const FileInfos& file_list,std::vector<std::future<FolderToDbImportError>> *res,
+                                          TaskSplitParameters* p) const{
+    p->next_chunk_size = p->chunk + (p->remainder ? 1 : 0);
+    if (p->next_chunk_size == 0) return;
+
+    res->push_back(std::async(std::launch::async, &FolderToDbImporter::PerformParallelTask, this,
+                             file_list, p->begin, p->begin + p->next_chunk_size));
+
+    p->begin = p->begin + p->next_chunk_size;
+    if (p->remainder) p->remainder -= 1;
+}
+
+FolderToDbImportError FolderToDbImporter::ImportFilelist(const FileInfos& file_list) const {
+    auto split_parameters = ComputeSplitParameters(file_list,n_tasks_);
+
+    std::vector<std::future<FolderToDbImportError>>res;
+    for (auto i = 0; i < n_tasks_; i++) {
+        ProcessNextChunk(file_list,&res,&split_parameters);
+    }
+
+    return WaitParallelTasks(&res);
 }
 
 
@@ -122,7 +156,7 @@ FolderToDbImportError FolderToDbImporter::Convert(const std::string& uri, const 
     db_uri_ = uri;
     db_collection_name = folder;
 
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    auto time_begin = high_resolution_clock::now();
 
     FolderToDbImportError err;
     auto file_list = GetFilesInFolder(folder, &err);
@@ -130,30 +164,29 @@ FolderToDbImportError FolderToDbImporter::Convert(const std::string& uri, const 
         return err;
     }
 
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    auto time_end_read_folder = high_resolution_clock::now();
 
     err = ImportFilelist(file_list);
 
-    high_resolution_clock::time_point t3 = high_resolution_clock::now();
+    auto time_end_import = high_resolution_clock::now();
 
     if (err == FolderToDbImportError::kOK && statistics) {
         statistics->n_files_converted = file_list.size();
-        statistics->time_read_folder = std::chrono::duration_cast<std::chrono::nanoseconds>( t2 - t1);
-        statistics->time_import_files = std::chrono::duration_cast<std::chrono::nanoseconds>( t3 - t2);
+        statistics->time_read_folder = std::chrono::duration_cast<std::chrono::nanoseconds>( time_end_read_folder - time_begin);
+        statistics->time_import_files = std::chrono::duration_cast<std::chrono::nanoseconds>( time_end_import - time_end_read_folder);
     }
 
     return err;
-
-
 }
 
 void FolderToDbImporter::IgnoreDuplicates(bool ignore_duplicates) {
     ignore_duplicates_ = ignore_duplicates;
 }
 
-void FolderToDbImporter::RunInParallel(unsigned int ntasks) {
+unsigned int FolderToDbImporter::SetNParallelTasks(unsigned int ntasks) {
     unsigned int nthreads = std::thread::hardware_concurrency();
     n_tasks_ = std::max((unsigned int)1, std::min(ntasks, nthreads));
+    return n_tasks_;
 }
 
 std::ostream& operator<<(std::ostream& os, const FolderImportStatistics& stat) {

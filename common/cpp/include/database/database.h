@@ -8,6 +8,7 @@
 namespace hidra2 {
 
 enum class DBError {
+    KUnknownError,
     kConnectionError,
     kInsertError,
     kDuplicateID,
@@ -30,7 +31,8 @@ class Database {
 
 class DatabaseFactory {
   public:
-    virtual std::unique_ptr<Database> Create(DBError* err) const noexcept = 0;
+    virtual std::unique_ptr<Database> Create(DBError* err) const noexcept;
+    virtual ~DatabaseFactory() = default;
 };
 
 

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <future>
 
 
 #include "system_wrappers/io.h"
@@ -26,6 +27,13 @@ struct FolderImportStatistics {
     friend std::ostream& operator<<(std::ostream& os, const FolderImportStatistics& stat);
 };
 
+struct TaskSplitParameters{
+  uint64_t chunk;
+  uint64_t remainder;
+  uint64_t begin{0};
+  uint64_t next_chunk_size;
+};
+
 class FolderToDbImporter {
   public:
     FolderToDbImporter();
@@ -35,12 +43,11 @@ class FolderToDbImporter {
     FolderToDbImportError Convert(const std::string& uri, const std::string& folder,
                                   FolderImportStatistics* statistics = nullptr) const;
 
+    unsigned int SetNParallelTasks(unsigned int ntasks);
+    void IgnoreDuplicates(bool ignore_duplicates = true);
     std::unique_ptr<hidra2::DatabaseFactory>
     db_factory__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
-  public:
-    void RunInParallel(unsigned int ntasks);
-    void IgnoreDuplicates(bool ignore_duplicates);
   private:
     bool ignore_duplicates_{false};
     unsigned int n_tasks_{1};
@@ -49,11 +56,18 @@ class FolderToDbImporter {
     FolderToDbImportError ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const;
     FileInfos GetFilesInFolder(const std::string& folder, FolderToDbImportError* err) const;
     FolderToDbImportError ImportFilelist(const FileInfos& file_list) const;
-    FolderToDbImportError ImportPartOfFilelist(const FileInfos& file_list, uint64_t begin,
-                                               uint64_t end) const;
+    FolderToDbImportError PerformParallelTask(const FileInfos& file_list, uint64_t begin,
+                                              uint64_t end) const;
     FolderToDbImportError ImportSingleFile(const std::unique_ptr<hidra2::Database>& db,
                                            const FileInfo& file) const;
-};
+    FolderToDbImportError ImportFilelistChunk(const std::unique_ptr<hidra2::Database>& db,
+                                              const FileInfos& file_list, uint64_t begin, uint64_t end) const;
+
+    std::unique_ptr<Database> CreateDbClient(FolderToDbImportError* err) const;
+    void ProcessNextChunk(const FileInfos& file_list,std::vector<std::future<FolderToDbImportError>> *res,
+                                            TaskSplitParameters* p) const;
+
+  };
 
 }
 

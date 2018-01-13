@@ -1,7 +1,7 @@
 #include <iostream>
 
 
-#include "database/mongodb_client.h"
+#include "../../../common/cpp/src/database/mongodb_client.h"
 #include "testing.h"
 
 

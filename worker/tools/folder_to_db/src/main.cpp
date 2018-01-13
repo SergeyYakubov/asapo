@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     auto import_params = ProcessCommandArguments(argc, argv);
 
     hidra2::FolderToDbImporter importer;
-    importer.RunInParallel(import_params.ntasks);
+    importer.SetNParallelTasks(import_params.ntasks);
     importer.IgnoreDuplicates(import_params.ignore_duplicates);
 
     hidra2::FolderImportStatistics statistics;
