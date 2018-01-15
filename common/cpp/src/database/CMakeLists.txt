@@ -1,6 +1,7 @@
-set(TARGET_NAME mongo_db)
+set(TARGET_NAME database)
 set(SOURCE_FILES
-        mongodb_client.cpp)
+        mongodb_client.cpp
+        database.cpp)
 
 ################################
 # Library

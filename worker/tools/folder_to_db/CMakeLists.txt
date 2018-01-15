@@ -7,7 +7,7 @@ set(SOURCE_FILES src/folder_db_importer.cpp)
 # Library
 ################################
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>)
-target_link_libraries(${TARGET_NAME} mongo_db)
+target_link_libraries(${TARGET_NAME} database)
 
 add_executable(${TARGET_NAME}-bin src/main.cpp)
 set_target_properties(${TARGET_NAME}-bin

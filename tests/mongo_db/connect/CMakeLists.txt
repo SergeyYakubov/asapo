@@ -6,7 +6,7 @@ set(SOURCE_FILES connect_mongodb.cpp)
 # Executable and link
 ################################
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
-target_link_libraries(${TARGET_NAME} test_common mongo_db)
+target_link_libraries(${TARGET_NAME} test_common database)
 target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR})
 
 ################################
