@@ -3,6 +3,8 @@
 OUT_DIR=$1
 HIDRA2_MINIMUM_COVERAGE=$2
 
+export GOPATH=$GOPATH:$3
+
 echo $OUT_DIR
 
 mapfile -t PACKAGES < <( find ./src -type d -not -path '*/\.*' )

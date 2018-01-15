@@ -21,7 +21,7 @@ function(gotest target test_source_files)
         message(STATUS "Added test 'test-${target}'")
         add_test(NAME coveragetest-${target}
                         COMMAND ${CMAKE_MODULE_PATH}/coverage_go.sh
-                        ${CMAKE_CURRENT_BINARY_DIR} ${HIDRA2_MINIMUM_COVERAGE}
+                        ${CMAKE_CURRENT_BINARY_DIR} ${HIDRA2_MINIMUM_COVERAGE} ${gopath}
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     endif ()
