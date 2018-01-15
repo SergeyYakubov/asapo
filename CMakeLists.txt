@@ -49,3 +49,8 @@ endif()
 if(BUILD_DOCS)
     include(doxygen)
 endif()
+
+
+if (BUILD_BROKER)
+    add_subdirectory(broker)
+endif()
