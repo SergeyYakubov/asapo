@@ -13,7 +13,7 @@ echo "mode: count" > $OUT_DIR/coverage-all.out
 for pkg in ${PACKAGES[@]}
 do
 #	echo $pkg
-	go test -coverprofile=$OUT_DIR/coverage.out  $pkg #>/dev/null 2>&1
+	go test -coverprofile=$OUT_DIR/coverage.out -tags test $pkg #>/dev/null 2>&1
 	tail -n +2 $OUT_DIR/coverage.out >> $OUT_DIR/coverage-all.out #2>/dev/null
 done
 
