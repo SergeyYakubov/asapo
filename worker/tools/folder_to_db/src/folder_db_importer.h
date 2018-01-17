@@ -27,11 +27,11 @@ struct FolderImportStatistics {
     friend std::ostream& operator<<(std::ostream& os, const FolderImportStatistics& stat);
 };
 
-struct TaskSplitParameters{
-  uint64_t chunk;
-  uint64_t remainder;
-  uint64_t begin{0};
-  uint64_t next_chunk_size;
+struct TaskSplitParameters {
+    uint64_t chunk;
+    uint64_t remainder;
+    uint64_t begin{0};
+    uint64_t next_chunk_size;
 };
 
 class FolderToDbImporter {
@@ -64,10 +64,10 @@ class FolderToDbImporter {
                                               const FileInfos& file_list, uint64_t begin, uint64_t end) const;
 
     std::unique_ptr<Database> CreateDbClient(FolderToDbImportError* err) const;
-    void ProcessNextChunk(const FileInfos& file_list,std::vector<std::future<FolderToDbImportError>> *res,
-                                            TaskSplitParameters* p) const;
+    void ProcessNextChunk(const FileInfos& file_list, std::vector<std::future<FolderToDbImportError>>* res,
+                          TaskSplitParameters* p) const;
 
-  };
+};
 
 }
 

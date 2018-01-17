@@ -12,3 +12,4 @@ add_custom_target(hidra2-broker ALL
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} DESTINATION bin)
 
 gotest(${TARGET_NAME} "./...")
+go_integration_test(${TARGET_NAME}-connectdb "./..." "MongoDBConnect")

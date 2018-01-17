@@ -5,17 +5,15 @@ package main
 import (
 	"hidra2_broker/database"
 	"hidra2_broker/server"
+	"log"
 )
 
 func NewDefaultDatabase() database.Agent {
 	return new(database.Mongodb)
 }
 
-// global variable since we only have one instance
-var srv server.Server
-
 func main() {
-	srv.InitDB(NewDefaultDatabase())
-	defer srv.CleanupDB()
-	srv.Start()
+	log.Fatal(server.InitDB(NewDefaultDatabase()))
+	defer server.CleanupDB()
+	server.Start()
 }

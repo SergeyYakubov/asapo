@@ -4,17 +4,15 @@ import (
 	"hidra2_broker/database"
 )
 
-type Server struct {
-	db database.Agent
+var db database.Agent
+
+func InitDB(dbAgent database.Agent) error {
+	db = dbAgent
+	return db.Connect("127.0.0.1:27017")
 }
 
-func (srv *Server) InitDB(db database.Agent) error {
-	srv.db = db
-	return srv.db.Connect("127.0.0.1:27017")
-}
-
-func (srv *Server) CleanupDB() {
-	if srv.db != nil {
-		srv.db.Close()
+func CleanupDB() {
+	if db != nil {
+		db.Close()
 	}
 }

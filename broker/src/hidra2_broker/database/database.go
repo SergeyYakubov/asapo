@@ -1,12 +1,7 @@
 package database
 
-import "fmt"
-
 type Agent interface {
+	GetNextRecord(db_name string, collection_name string) (answer []byte, ok bool)
 	Connect(string) error
 	Close()
-}
-
-func Test_Hidra2() {
-	fmt.Println("aaa")
 }

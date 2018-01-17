@@ -8,17 +8,16 @@ import (
 	"testing"
 )
 
-func setup() (*database.MockedDatabase, *Server) {
-	db := new(database.MockedDatabase)
-	srv := new(Server)
-	db.On("Connect", mock.AnythingOfType("string")).Return(nil)
-	return db, srv
+func setup() *database.MockedDatabase {
+	mock_db := new(database.MockedDatabase)
+	mock_db.On("Connect", mock.AnythingOfType("string")).Return(nil)
+	return mock_db
 
 }
 
-func assertExpectations(t *testing.T, db *database.MockedDatabase) {
-	db.AssertExpectations(t)
-	db.ExpectedCalls = nil
+func assertExpectations(t *testing.T, mock_db *database.MockedDatabase) {
+	mock_db.AssertExpectations(t)
+	mock_db.ExpectedCalls = nil
 }
 
 var initDBTests = []struct {
@@ -31,34 +30,36 @@ var initDBTests = []struct {
 }
 
 func TestInitDBWithWrongAddress(t *testing.T) {
-	db, srv := setup()
-	db.ExpectedCalls = nil
+	mock_db := setup()
+
+	mock_db.ExpectedCalls = nil
 
 	for _, test := range initDBTests {
-		db.On("Connect", mock.AnythingOfType("string")).Return(test.answer)
+		mock_db.On("Connect", mock.AnythingOfType("string")).Return(test.answer)
 
-		err := srv.InitDB(db)
+		err := InitDB(mock_db)
 
 		assert.Equal(t, test.answer, err, test.message)
-		assertExpectations(t, db)
+		assertExpectations(t, mock_db)
 	}
+	db = nil
 }
 
 func TestCleanupDBWithoutInit(t *testing.T) {
-	db, srv := setup()
+	mock_db := setup()
 
-	db.AssertNotCalled(t, "Close")
+	mock_db.AssertNotCalled(t, "Close")
 
-	srv.CleanupDB()
+	CleanupDB()
 }
 
 func TestCleanupDBInit(t *testing.T) {
-	db, srv := setup()
+	mock_db := setup()
 
-	db.On("Close").Return()
+	mock_db.On("Close").Return()
 
-	srv.InitDB(db)
-	srv.CleanupDB()
+	InitDB(mock_db)
+	CleanupDB()
 
-	assertExpectations(t, db)
+	assertExpectations(t, mock_db)
 }

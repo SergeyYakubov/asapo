@@ -13,8 +13,9 @@ type Mongodb struct {
 	timeout      time.Duration
 }
 
-func (db *Mongodb) Connect(string) error {
+func (db *Mongodb) Connect(address string) error {
 	var err error
+	db.main_session, err = mgo.DialWithTimeout(address, time.Second)
 	return err
 }
 
@@ -23,4 +24,8 @@ func (db *Mongodb) Close() {
 		db.main_session.Close()
 	}
 
+}
+
+func (db *Mongodb) GetNextRecord(db_name string, collection_name string) (answer []byte, ok bool) {
+	return nil, true
 }

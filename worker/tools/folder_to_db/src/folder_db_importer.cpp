@@ -100,7 +100,7 @@ std::unique_ptr<hidra2::Database> FolderToDbImporter::CreateDbClient(FolderToDbI
     return db;
 }
 
-FolderToDbImportError WaitParallelTasks(std::vector<std::future<FolderToDbImportError>>* res){
+FolderToDbImportError WaitParallelTasks(std::vector<std::future<FolderToDbImportError>>* res) {
     FolderToDbImportError err{FolderToDbImportError::kOK};
     for (auto& fut : *res) {
         auto task_result = fut.get();
@@ -112,31 +112,32 @@ FolderToDbImportError WaitParallelTasks(std::vector<std::future<FolderToDbImport
 }
 
 
-TaskSplitParameters ComputeSplitParameters(const FileInfos& file_list,int ntasks) {
+TaskSplitParameters ComputeSplitParameters(const FileInfos& file_list, int ntasks) {
     TaskSplitParameters parameters;
     parameters.chunk = file_list.size() / ntasks;
     parameters.remainder = file_list.size() % ntasks;
     return parameters;
 }
 
-void FolderToDbImporter::ProcessNextChunk(const FileInfos& file_list,std::vector<std::future<FolderToDbImportError>> *res,
-                                          TaskSplitParameters* p) const{
+void FolderToDbImporter::ProcessNextChunk(const FileInfos& file_list,
+                                          std::vector<std::future<FolderToDbImportError>>* res,
+                                          TaskSplitParameters* p) const {
     p->next_chunk_size = p->chunk + (p->remainder ? 1 : 0);
     if (p->next_chunk_size == 0) return;
 
     res->push_back(std::async(std::launch::async, &FolderToDbImporter::PerformParallelTask, this,
-                             file_list, p->begin, p->begin + p->next_chunk_size));
+                              file_list, p->begin, p->begin + p->next_chunk_size));
 
     p->begin = p->begin + p->next_chunk_size;
     if (p->remainder) p->remainder -= 1;
 }
 
 FolderToDbImportError FolderToDbImporter::ImportFilelist(const FileInfos& file_list) const {
-    auto split_parameters = ComputeSplitParameters(file_list,n_tasks_);
+    auto split_parameters = ComputeSplitParameters(file_list, n_tasks_);
 
     std::vector<std::future<FolderToDbImportError>>res;
     for (auto i = 0; i < n_tasks_; i++) {
-        ProcessNextChunk(file_list,&res,&split_parameters);
+        ProcessNextChunk(file_list, &res, &split_parameters);
     }
 
     return WaitParallelTasks(&res);
@@ -173,7 +174,8 @@ FolderToDbImportError FolderToDbImporter::Convert(const std::string& uri, const 
     if (err == FolderToDbImportError::kOK && statistics) {
         statistics->n_files_converted = file_list.size();
         statistics->time_read_folder = std::chrono::duration_cast<std::chrono::nanoseconds>( time_end_read_folder - time_begin);
-        statistics->time_import_files = std::chrono::duration_cast<std::chrono::nanoseconds>( time_end_import - time_end_read_folder);
+        statistics->time_import_files = std::chrono::duration_cast<std::chrono::nanoseconds>
+                                        ( time_end_import - time_end_read_folder);
     }
 
     return err;

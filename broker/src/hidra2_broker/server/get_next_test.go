@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/stretchr/testify/assert"
+	"hidra2_broker/database"
 	"hidra2_broker/utils"
 	"net/http"
 	"net/http/httptest"
@@ -15,21 +16,39 @@ type request struct {
 	message string
 }
 
-var getNextTests = []request{
-	{"next", "GET", http.StatusOK, "get next job"},
+func doRequest(path string) *httptest.ResponseRecorder {
+	mux := utils.NewRouter(listRoutes)
+	req, _ := http.NewRequest("GET", path, nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+	return w
 }
 
-func TestGetNext(t *testing.T) {
-	mux := utils.NewRouter(listRoutes)
+func TestGetNextWithoutDatabaseName(t *testing.T) {
+	w := doRequest("/next")
+	assert.Equal(t, http.StatusBadRequest, w.Code, "no database name")
+}
 
-	for _, test := range getNextTests {
+func TestGetNextWithWrongDatabaseName(t *testing.T) {
+	mock_db := new(database.MockedDatabase)
+	db = mock_db
+	defer func() { db = nil }()
+	mock_db.On("GetNextRecord", "foo", "data").Return([]byte(""), false)
 
-		req, err := http.NewRequest(test.cmd, "/"+test.path+"/", nil)
+	w := doRequest("/next?database=foo")
+	assert.Equal(t, http.StatusBadRequest, w.Code, "no database name")
+	assertExpectations(t, mock_db)
+}
 
-		assert.Nil(t, err, "Should not be error")
+func TestGetNextWithGoodDatabaseName(t *testing.T) {
+	mock_db := new(database.MockedDatabase)
+	db = mock_db
+	defer func() { db = nil }()
+	mock_db.On("GetNextRecord", "database", "data").Return([]byte("Hello"), true)
 
-		w := httptest.NewRecorder()
-		mux.ServeHTTP(w, req)
-		assert.Equal(t, test.answer, w.Code, test.message)
-	}
+	w := doRequest("/next?database=database")
+	assert.Equal(t, http.StatusOK, w.Code, "GetNext OK")
+	assert.Equal(t, "Hello", string(w.Body.Bytes()), "GetNext sends data")
+	assertExpectations(t, mock_db)
+
 }
