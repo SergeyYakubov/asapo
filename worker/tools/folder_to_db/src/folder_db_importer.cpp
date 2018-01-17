@@ -125,7 +125,9 @@ void FolderToDbImporter::ProcessNextChunk(const FileInfos& file_list,
     p->next_chunk_size = p->chunk + (p->remainder ? 1 : 0);
     if (p->next_chunk_size == 0) return;
 
-    res->push_back(std::async(std::launch::async, &FolderToDbImporter::PerformParallelTask, this,
+    auto method =async_?std::launch::async:std::launch::deferred;
+
+    res->push_back(std::async(method, &FolderToDbImporter::PerformParallelTask, this,
                               file_list, p->begin, p->begin + p->next_chunk_size));
 
     p->begin = p->begin + p->next_chunk_size;
@@ -185,9 +187,10 @@ void FolderToDbImporter::IgnoreDuplicates(bool ignore_duplicates) {
     ignore_duplicates_ = ignore_duplicates;
 }
 
-unsigned int FolderToDbImporter::SetNParallelTasks(unsigned int ntasks) {
+unsigned int FolderToDbImporter::SetNParallelTasks(unsigned int ntasks,bool async) {
     unsigned int nthreads = std::thread::hardware_concurrency();
     n_tasks_ = std::max((unsigned int)1, std::min(ntasks, nthreads));
+    async_ = async;
     return n_tasks_;
 }
 
