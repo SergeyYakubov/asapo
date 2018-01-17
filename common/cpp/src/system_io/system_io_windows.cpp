@@ -32,22 +32,47 @@ IOErrors IOErrorFromGetLastError() {
     return err;
 }
 
-std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, IOErrors* err) {
+IOErrors CheckFileTime(const FILETIME& ft) {
     SYSTEMTIME st = {0};
     if (!FileTimeToSystemTime(&ft, &st)) {
-        *err = IOErrorFromGetLastError();
-        return {};
+        return IOErrorFromGetLastError();
     }
+    return IOErrors::kNoError;
+}
+
+constexpr auto kShift = 11644473600ULL;
+constexpr auto k100nsInSec = 10000000ULL;
+
+uint64_t GetLinuxEpochSecFromWindowsEpoch(ULARGE_INTEGER ull) {
+//    ull.QuadPart is amount of 100ns intervals since Windows Epoch
+    return (uint64_t) ull.QuadPart / k100nsInSec - kShift;
+}
+
+uint64_t GetLinuxNanosecFromWindowsEpoch(ULARGE_INTEGER ull) {
+    return (uint64_t)(ull.QuadPart % k100nsInSec) * 100;
+}
+
+std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, IOErrors* err) {
+
+    *err = CheckFileTime(ft);
+    if (*err != IOErrors::kNoError) {
+        return std::chrono::system_clock::time_point{};
+    }
+
     // number of seconds
     ULARGE_INTEGER ull;
     ull.LowPart = ft.dwLowDateTime;
     ull.HighPart = ft.dwHighDateTime;
 
-    time_t secs = ull.QuadPart / 10000000ULL - 11644473600ULL;
-    std::chrono::milliseconds ms((ull.QuadPart / 10000ULL) % 1000);
+    auto sec = GetLinuxEpochSecFromWindowsEpoch(ull);
+    auto nsec = GetLinuxNanosecFromWindowsEpoch(ull);
 
-    auto tp = std::chrono::system_clock::from_time_t(secs);
-    tp += ms;
+    std::chrono::nanoseconds d = std::chrono::nanoseconds {nsec} +
+                                 std::chrono::seconds{sec};
+
+    auto tp = system_clock::time_point
+    {std::chrono::duration_cast<std::chrono::system_clock::duration>(d)};
+
     *err = IOErrors::kNoError;
     return tp;
 }

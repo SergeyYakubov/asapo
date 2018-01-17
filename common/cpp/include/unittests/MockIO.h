@@ -14,17 +14,15 @@ class MockIO : public IO {
         return GetDataFromFile_t(fname, fsize, err);
     }
     int open(const char* __file, int __oflag) const noexcept override {
-        return open_t(__file, __oflag);
+        return 0;
     }
     int close(int __fd) const noexcept override {
-        return close_t(__fd);
+        return 0;
     }
-    int64_t read(int __fd, void* buf, size_t count) const noexcept override {
-        return read_t(__fd, buf, count);
+    uint64_t Read(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const noexcept override {
+        return 0;
     }
-    int64_t write(int __fd, const void* __buf, size_t __n) const noexcept override {
-        return write_t(__fd, __buf, __n);
-    }
+
     MOCK_CONST_METHOD3(GetDataFromFile_t,
                        FileData(const std::string& fname, uint64_t fsize, IOErrors* err));
     MOCK_CONST_METHOD2(FilesInFolder,

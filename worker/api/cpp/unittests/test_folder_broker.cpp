@@ -53,10 +53,8 @@ class FakeIO: public IO {
     int close(int __fd)const noexcept override {
         return 0;
     };
-    int64_t read(int __fd, void* buf, size_t count) const noexcept override {
-        return 0;
-    };
-    int64_t write(int __fd, const void* __buf, size_t __n) const noexcept override {
+
+    uint64_t Read(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const noexcept override {
         return 0;
     };
     FileInfos FilesInFolder(const std::string& folder, IOErrors* err) const override {
@@ -70,7 +68,6 @@ class FakeIO: public IO {
         file_infos.push_back(fi);
         fi.base_name = "3";
         file_infos.push_back(fi);
-
         return file_infos;
     }
 };
@@ -164,7 +161,6 @@ TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
 
     ASSERT_THAT(err, Eq(WorkerErrorCode::kWrongInput));
 }
-
 
 TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
     data_broker->Connect();

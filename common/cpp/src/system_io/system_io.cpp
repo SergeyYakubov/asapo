@@ -29,7 +29,7 @@ IOErrors IOErrorFromErrno() {
     return err;
 }
 
-void SystemIO::ReadWholeFile(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const noexcept {
+uint64_t SystemIO::Read(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const noexcept {
     uint64_t totalbytes = 0;
     int64_t readbytes = 0;
     do {
@@ -40,6 +40,7 @@ void SystemIO::ReadWholeFile(int fd, uint8_t* array, uint64_t fsize, IOErrors* e
     if (totalbytes != fsize) {
         *err = IOErrors::kReadError;
     }
+    return totalbytes;
 }
 
 FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const noexcept {
@@ -57,7 +58,7 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOE
         return nullptr;
     }
 
-    ReadWholeFile(fd, data_array, fsize, err);
+    Read(fd, data_array, fsize, err);
     FileData data{data_array};
     if (*err != IOErrors::kNoError) {
         close(fd);
