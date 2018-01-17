@@ -6,13 +6,13 @@ if(ASTYLE_EXECUTABLE)
 		COMMAND
 		${ASTYLE_EXECUTABLE} -i
 			--exclude=${PROJECT_BINARY_DIR}
-			--recursive -n --style=google  --indent=spaces=4
-			--max-instatement-indent=120
+			--recursive -n --style=google  --indent=spaces=4 --max-code-length=120
+			--max-instatement-indent=50 --pad-oper --align-pointer=type
 			"${PROJECT_SOURCE_DIR}/*.cpp" "${PROJECT_SOURCE_DIR}/*.h"
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		VERBATIM	
         )
 else()
-	message(WARNING "Unable to find astyle. Code formatting willbe skipped")
+	message(WARNING "Unable to find astyle. Code formatting will be skipped")
 endif()
 
