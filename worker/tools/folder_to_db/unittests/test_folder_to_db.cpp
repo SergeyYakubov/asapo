@@ -32,7 +32,7 @@ using hidra2::Database;
 using hidra2::DatabaseFactory;
 using hidra2::IO;
 using hidra2::DBError;
-using hidra2::IOError;
+using hidra2::IOErrors;
 using hidra2::kDBName;
 using hidra2::FileInfos;
 using hidra2::FileInfo;
@@ -141,7 +141,7 @@ class FolderDBConverterTests : public Test {
         folder = "folder";
         uri = "db_address";
         ON_CALL(mock_io, FilesInFolder(_, _)).
-        WillByDefault(DoAll(testing::SetArgPointee<1>(IOError::kNoError),
+        WillByDefault(DoAll(testing::SetArgPointee<1>(IOErrors::kNoError),
                             testing::Return(file_infos)));
     }
     void TearDown() override {
@@ -182,7 +182,7 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotGetFileList) {
 
 
     EXPECT_CALL(mock_io, FilesInFolder(folder, _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(IOError::kReadError),
+    WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::kReadError),
                    testing::Return(FileInfos {})));
 
     auto error = converter.Convert(uri, folder);

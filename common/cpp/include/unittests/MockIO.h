@@ -10,7 +10,7 @@ namespace hidra2 {
 
 class MockIO : public IO {
   public:
-    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOError* err) const noexcept override {
+    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const noexcept override {
         return GetDataFromFile_t(fname, fsize, err);
     }
     int open(const char* __file, int __oflag) const noexcept override {
@@ -26,10 +26,10 @@ class MockIO : public IO {
         return write_t(__fd, __buf, __n);
     }
     MOCK_CONST_METHOD3(GetDataFromFile_t,
-                       FileData(const std::string& fname, uint64_t fsize, IOError* err));
+                       FileData(const std::string& fname, uint64_t fsize, IOErrors* err));
     MOCK_CONST_METHOD2(FilesInFolder,
                        FileInfos(
-                           const std::string& folder, IOError
+                           const std::string& folder, IOErrors
                            *err));
 
     MOCK_CONST_METHOD3(read_t,

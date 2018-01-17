@@ -46,7 +46,7 @@ void SetFileName(const string& path, const string& name, FileInfo* file_info) {
     file_info->base_name = name;
 }
 
-struct stat FileStat(const string& fname, IOError* err) {
+struct stat FileStat(const string& fname, IOErrors* err) {
     struct stat t_stat {};
     errno = 0;
     int res = stat(fname.c_str(), &t_stat);
@@ -56,13 +56,13 @@ struct stat FileStat(const string& fname, IOError* err) {
     return t_stat;
 }
 
-FileInfo GetFileInfo(const string& path, const string& name, IOError* err) {
+FileInfo GetFileInfo(const string& path, const string& name, IOErrors* err) {
     FileInfo file_info;
 
     SetFileName(path, name, &file_info);
 
     auto t_stat = FileStat(path + "/" + name, err);
-    if (*err != IOError::kNoError) {
+    if (*err != IOErrors::kNoError) {
         return FileInfo{};
     }
 
@@ -74,22 +74,22 @@ FileInfo GetFileInfo(const string& path, const string& name, IOError* err) {
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
-                       FileInfos* files, IOError* err) {
+                       FileInfos* files, IOErrors* err) {
 
-    *err = IOError::kNoError;
+    *err = IOErrors::kNoError;
     if (entity->d_type != DT_REG) {
         return;
     }
 
     FileInfo file_info = GetFileInfo(path, entity->d_name, err);
-    if (*err != IOError::kNoError) {
+    if (*err != IOErrors::kNoError) {
         return;
     }
     files->push_back(file_info);
 }
 
 void SystemIO::CollectFileInformationRecursivly(const std::string& path,
-                                                FileInfos* files, IOError* err)  const {
+                                                FileInfos* files, IOErrors* err)  const {
     errno = 0;
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
@@ -108,7 +108,7 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
         } else {
             ProcessFileEntity(current_entity, path, files, err);
         }
-        if (*err != IOError::kNoError) {
+        if (*err != IOErrors::kNoError) {
             errno = 0;
             closedir(dir);
             return;

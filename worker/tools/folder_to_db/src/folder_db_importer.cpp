@@ -12,10 +12,10 @@ namespace hidra2 {
 using std::chrono::high_resolution_clock;
 
 
-FolderToDbImportError MapIOError(IOError io_err) {
+FolderToDbImportError MapIOError(IOErrors io_err) {
     FolderToDbImportError err;
     switch (io_err) {
-    case IOError::kNoError:
+    case IOErrors::kNoError:
         err = FolderToDbImportError::kOK;
         break;
     default:
@@ -145,7 +145,7 @@ FolderToDbImportError FolderToDbImporter::ImportFilelist(const FileInfos& file_l
 
 
 FileInfos FolderToDbImporter::GetFilesInFolder(const std::string& folder, FolderToDbImportError* err) const {
-    IOError err_io;
+    IOErrors err_io;
     auto file_list = io__->FilesInFolder(folder, &err_io);
     *err = MapIOError(err_io);
     return file_list;

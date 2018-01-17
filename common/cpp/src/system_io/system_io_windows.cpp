@@ -12,27 +12,27 @@ using std::chrono::system_clock;
 
 namespace hidra2 {
 
-IOError IOErrorFromGetLastError() {
-    IOError err;
+IOErrors IOErrorFromGetLastError() {
+    IOErrors err;
     switch (GetLastError()) {
     case ERROR_SUCCESS :
-        err = IOError::kNoError;
+        err = IOErrors::kNoError;
         break;
     case ERROR_PATH_NOT_FOUND:
     case ERROR_FILE_NOT_FOUND:
-        err = IOError::kFileNotFound;
+        err = IOErrors::kFileNotFound;
         break;
     case ERROR_ACCESS_DENIED:
-        err = IOError::kPermissionDenied;
+        err = IOErrors::kPermissionDenied;
         break;
     default:
-        err = IOError::kUnknownError;
+        err = IOErrors::kUnknownError;
         break;
     }
     return err;
 }
 
-std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, IOError* err) {
+std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, IOErrors* err) {
     SYSTEMTIME st = {0};
     if (!FileTimeToSystemTime(&ft, &st)) {
         *err = IOErrorFromGetLastError();
@@ -48,7 +48,7 @@ std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, IOE
 
     auto tp = std::chrono::system_clock::from_time_t(secs);
     tp += ms;
-    *err = IOError::kNoError;
+    *err = IOErrors::kNoError;
     return tp;
 }
 
@@ -59,16 +59,16 @@ bool IsDirectory(const WIN32_FIND_DATA f) {
 }
 
 void ProcessFileEntity(const WIN32_FIND_DATA f, const std::string& path,
-                       FileInfos* files, IOError* err) {
+                       FileInfos* files, IOErrors* err) {
 
-    *err = IOError::kNoError;
+    *err = IOErrors::kNoError;
     if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
         return;
     }
 
     FileInfo file_info;
     file_info.modify_date = FileTime2TimePoint(f.ftLastWriteTime, err);
-    if (*err != IOError::kNoError) {
+    if (*err != IOErrors::kNoError) {
         return;
     }
 
@@ -79,7 +79,7 @@ void ProcessFileEntity(const WIN32_FIND_DATA f, const std::string& path,
 
 
 void SystemIO::CollectFileInformationRecursivly(const std::string& path,
-                                                FileInfos* files, IOError* err) const {
+                                                FileInfos* files, IOErrors* err) const {
     WIN32_FIND_DATA find_data;
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {
@@ -93,14 +93,14 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
         } else {
             ProcessFileEntity(find_data, path, files, err);
         }
-        if (*err != IOError::kNoError) {
+        if (*err != IOErrors::kNoError) {
             FindClose(handle);
             return;
         }
     } while (FindNextFile(handle, &find_data));
 
     if (FindClose(handle)) {
-        *err = IOError ::kNoError;
+        *err = IOErrors ::kNoError;
     } else {
         *err = IOErrorFromGetLastError();
     }

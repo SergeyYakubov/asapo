@@ -17,7 +17,7 @@ struct FileInfo {
     uint64_t id{0};
     std::string Json() const {
         auto nanoseconds_from_epoch = std::chrono::time_point_cast<std::chrono::nanoseconds>(modify_date).
-                       time_since_epoch().count();
+                                      time_since_epoch().count();
         std::string s = "{\"_id\":" + std::to_string(id) + ","
                         "\"size\":" + std::to_string(size) + ","
                         "\"base_name\":\"" + base_name + "\","
