@@ -32,7 +32,7 @@ IOErrors IOErrorFromGetLastError() {
     return err;
 }
 
-IOErrors CheckFileTime(const FILETIME& ft){
+IOErrors CheckFileTime(const FILETIME& ft) {
     SYSTEMTIME st = {0};
     if (!FileTimeToSystemTime(&ft, &st)) {
         return IOErrorFromGetLastError();
@@ -43,20 +43,20 @@ IOErrors CheckFileTime(const FILETIME& ft){
 constexpr auto kShift = 11644473600ULL;
 constexpr auto k100nsInSec = 10000000ULL;
 
-unit64_t GetLinuxEpochSecFromWindowsEpoch(ULARGE_INTEGER ull){
+uint64_t GetLinuxEpochSecFromWindowsEpoch(ULARGE_INTEGER ull) {
 //    ull.QuadPart is amount of 100ns intervals since Windows Epoch
-    return ull.QuadPart / k100nsInSec - kShift;
+    return (uint64_t) ull.QuadPart / k100nsInSec - kShift;
 }
 
-unit64_t GetLinuxNanosecFromWindowsEpoch(ULARGE_INTEGER ull){
-    return (ull.QuadPart % k100nsInSec)*100;
+uint64_t GetLinuxNanosecFromWindowsEpoch(ULARGE_INTEGER ull) {
+    return (uint64_t)(ull.QuadPart % k100nsInSec) * 100;
 }
 
 std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, IOErrors* err) {
 
-    auto err = CheckFileTime(ft);
-    if (err != IOErrors::kNoError){
-        return err;
+    *err = CheckFileTime(ft);
+    if (*err != IOErrors::kNoError) {
+        return std::chrono::system_clock::time_point{};
     }
 
     // number of seconds
@@ -65,13 +65,13 @@ std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, IOE
     ull.HighPart = ft.dwHighDateTime;
 
     auto sec = GetLinuxEpochSecFromWindowsEpoch(ull);
-    auto nsec = GetLinuxEpochNanosecFromWindowsEpoch(ull);
+    auto nsec = GetLinuxNanosecFromWindowsEpoch(ull);
 
     std::chrono::nanoseconds d = std::chrono::nanoseconds {nsec} +
-        std::chrono::seconds{sec};
+                                 std::chrono::seconds{sec};
 
     auto tp = system_clock::time_point
-        {std::chrono::duration_cast<std::chrono::system_clock::duration>(d)};
+    {std::chrono::duration_cast<std::chrono::system_clock::duration>(d)};
 
     *err = IOErrors::kNoError;
     return tp;
