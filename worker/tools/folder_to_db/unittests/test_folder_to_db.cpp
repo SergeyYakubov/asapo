@@ -238,7 +238,7 @@ TEST_F(FolderDBConverterTests, PassesFileListToInsertInParallel3by3) {
     EXPECT_CALL(*(mock_dbf->db[2]), Insert(CompareFileInfo(file_infos[2]), _)).
     WillOnce(testing::Return(DBError::kNoError));
 
-    converter.SetNParallelTasks(3,false);
+    converter.SetNParallelTasks(3, false);
     auto error = converter.Convert(uri, folder);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kOK));
 }
@@ -252,7 +252,7 @@ TEST_F(FolderDBConverterTests, PassesFileListToInsertInParallel3by2) {
     EXPECT_CALL(*(mock_dbf->db[1]), Insert(CompareFileInfo(file_infos[2]), _)).
     WillOnce(testing::Return(DBError::kNoError));
 
-    converter.SetNParallelTasks(2,false);
+    converter.SetNParallelTasks(2, false);
     auto error = converter.Convert(uri, folder);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kOK));
 }

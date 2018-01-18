@@ -43,7 +43,7 @@ class FolderToDbImporter {
     FolderToDbImportError Convert(const std::string& uri, const std::string& folder,
                                   FolderImportStatistics* statistics = nullptr) const;
 
-    unsigned int SetNParallelTasks(unsigned int ntasks,bool async = true);
+    unsigned int SetNParallelTasks(unsigned int ntasks, bool async = true);
     void IgnoreDuplicates(bool ignore_duplicates = true);
     std::unique_ptr<hidra2::DatabaseFactory>
     db_factory__; // modified in testings to mock system calls,otherwise do not touch

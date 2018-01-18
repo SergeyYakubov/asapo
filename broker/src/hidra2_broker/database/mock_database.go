@@ -19,7 +19,7 @@ func (db *MockedDatabase) Close() {
 	db.Called()
 }
 
-func (db *MockedDatabase) GetNextRecord(db_name string, collection_name string) (answer []byte, ok bool) {
-	args := db.Called(db_name, collection_name)
-	return args.Get(0).([]byte), args.Bool(1)
+func (db *MockedDatabase) GetNextRecord(db_name string) (answer []byte, code int) {
+	args := db.Called(db_name)
+	return args.Get(0).([]byte), args.Int(1)
 }

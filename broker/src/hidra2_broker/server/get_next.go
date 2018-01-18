@@ -18,15 +18,11 @@ func routeGetNext(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	answer, ok := getNextRecord(db_name)
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-	} else {
-		w.WriteHeader(http.StatusOK)
-	}
+	answer, code := getNextRecord(db_name)
+	w.WriteHeader(code)
 	w.Write(answer)
 }
 
-func getNextRecord(db_name string) (answer []byte, ok bool) {
-	return db.GetNextRecord(db_name, "data")
+func getNextRecord(db_name string) (answer []byte, code int) {
+	return db.GetNextRecord(db_name)
 }

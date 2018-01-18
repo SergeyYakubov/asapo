@@ -33,7 +33,7 @@ func TestGetNextWithWrongDatabaseName(t *testing.T) {
 	mock_db := new(database.MockedDatabase)
 	db = mock_db
 	defer func() { db = nil }()
-	mock_db.On("GetNextRecord", "foo", "data").Return([]byte(""), false)
+	mock_db.On("GetNextRecord", "foo").Return([]byte(""), utils.StatusWrongInput)
 
 	w := doRequest("/next?database=foo")
 	assert.Equal(t, http.StatusBadRequest, w.Code, "no database name")
@@ -44,11 +44,10 @@ func TestGetNextWithGoodDatabaseName(t *testing.T) {
 	mock_db := new(database.MockedDatabase)
 	db = mock_db
 	defer func() { db = nil }()
-	mock_db.On("GetNextRecord", "database", "data").Return([]byte("Hello"), true)
+	mock_db.On("GetNextRecord", "database").Return([]byte("Hello"), utils.StatusOK)
 
 	w := doRequest("/next?database=database")
 	assert.Equal(t, http.StatusOK, w.Code, "GetNext OK")
 	assert.Equal(t, "Hello", string(w.Body.Bytes()), "GetNext sends data")
 	assertExpectations(t, mock_db)
-
 }

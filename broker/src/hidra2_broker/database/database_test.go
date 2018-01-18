@@ -2,6 +2,7 @@ package database
 
 import (
 	"github.com/stretchr/testify/mock"
+	"hidra2_broker/utils"
 	"testing"
 )
 
@@ -10,9 +11,9 @@ func TestMockDataBase(t *testing.T) {
 	var db MockedDatabase
 	db.On("Connect", mock.AnythingOfType("string")).Return(nil)
 	db.On("Close").Return()
-	db.On("GetNextRecord", "", "").Return([]byte(""), false)
+	db.On("GetNextRecord", "").Return([]byte(""), utils.StatusOK)
 
 	db.Connect("")
-	db.GetNextRecord("", "")
+	db.GetNextRecord("")
 	db.Close()
 }
