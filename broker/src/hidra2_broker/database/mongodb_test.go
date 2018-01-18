@@ -46,33 +46,33 @@ func TestMongoDBConnectOK(t *testing.T) {
 }
 
 func TestMongoDBGetNextErrorWhenNotConnected(t *testing.T) {
-	_, code := db.GetNextRecord("")
-	assert.Equal(t, utils.StatusError, code)
+	_, err := db.GetNextRecord("")
+	assert.Equal(t, utils.StatusError, err.(*DBError).Code)
 }
 
 func TestMongoDBGetNextErrorWhenWrongDatabasename(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
-	_, code := db.GetNextRecord("")
-	assert.Equal(t, utils.StatusWrongInput, code)
+	_, err := db.GetNextRecord("")
+	assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code)
 }
 
 func TestMongoDBGetNextErrorWhenEmptyCollection(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	var curPointer Pointer
-	db.IncrementField(dbname, &curPointer)
+	db.incrementField(dbname, &curPointer)
 
-	_, code := db.GetNextRecord(dbname)
-	assert.Equal(t, utils.StatusNoData, code)
+	_, err := db.GetNextRecord(dbname)
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 }
 
 func TestMongoDBGetNextOK(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
-	res, code := db.GetNextRecord(dbname)
-	assert.Equal(t, utils.StatusOK, code)
+	res, err := db.GetNextRecord(dbname)
+	assert.Nil(t, err)
 	assert.Equal(t, string(rec1_expect), string(res))
 }
 
@@ -81,8 +81,8 @@ func TestMongoDBGetNextErrorOnNoMoreData(t *testing.T) {
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
 	db.GetNextRecord(dbname)
-	_, code := db.GetNextRecord(dbname)
-	assert.Equal(t, utils.StatusNoData, code)
+	_, err := db.GetNextRecord(dbname)
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 }
 
 func TestMongoDBGetNextCorrectOrder(t *testing.T) {

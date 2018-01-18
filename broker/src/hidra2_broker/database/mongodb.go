@@ -3,9 +3,7 @@
 package database
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"hidra2_broker/utils"
@@ -17,41 +15,50 @@ type Pointer struct {
 	Value int `bson:"current_pointer"`
 }
 
+const data_collection_name = "data"
+const pointer_collection_name = "current_location"
+const pointer_field_name = "current_pointer"
+const no_session_msg = "database session not created"
+const already_connected_msg = "already connected"
+
 type Mongodb struct {
 	main_session *mgo.Session
 	timeout      time.Duration
 	databases    []string
 }
 
-func (db *Mongodb) dataBaseExist(dbname string) (err error) {
-	if db.main_session == nil {
-		return errors.New("database session not created")
-	}
+func (db *Mongodb) databaseInList(dbname string) bool {
+	return utils.StringInSlice(dbname, db.databases)
+}
 
-	if utils.StringInSlice(dbname, db.databases) {
+func (db *Mongodb) updateDatabaseList() (err error) {
+	db.databases, err = db.main_session.DatabaseNames()
+	return err
+}
+
+func (db *Mongodb) dataBaseExist(dbname string) (err error) {
+	if db.databaseInList(dbname) {
 		return nil
 	}
 
-	db.databases, err = db.main_session.DatabaseNames()
-	if err != nil {
+	if err := db.updateDatabaseList(); err != nil {
 		return err
 	}
 
-	if !utils.StringInSlice(dbname, db.databases) {
+	if !db.databaseInList(dbname) {
 		return errors.New(dbname + " not found")
 	}
 
 	return nil
 }
 
-func (db *Mongodb) Connect(address string) error {
-	var err error
+func (db *Mongodb) Connect(address string) (err error) {
 	if db.main_session != nil {
-		return errors.New("already connected")
+		return errors.New(already_connected_msg)
 	}
 
 	db.main_session, err = mgo.DialWithTimeout(address, time.Second)
-	return err
+	return
 }
 
 func (db *Mongodb) Close() {
@@ -64,89 +71,80 @@ func (db *Mongodb) Close() {
 
 func (db *Mongodb) DeleteAllRecords(dbname string) (err error) {
 	if db.main_session == nil {
-		return errors.New("database session not created")
+		return errors.New(no_session_msg)
 	}
-
-	err1 := db.main_session.DB(dbname).C("data").DropCollection()
-	err2 := db.main_session.DB(dbname).C("group_ids").DropCollection()
-	if err1 == nil && err2 == nil {
-		return nil
-	}
-	return fmt.Errorf("Combined error: %v %v", err1, err2)
+	return db.main_session.DB(dbname).DropDatabase()
 }
 
 func (db *Mongodb) InsertRecord(dbname string, s interface{}) error {
 	if db.main_session == nil {
-		return errors.New("database session not created")
+		return errors.New(no_session_msg)
 	}
 
-	c := db.main_session.DB(dbname).C("data")
+	c := db.main_session.DB(dbname).C(data_collection_name)
 
 	return c.Insert(s)
 }
 
-func (db *Mongodb) IncrementField(dbname string, res interface{}) (err error) {
-	if db.main_session == nil {
-		return errors.New("database session not created")
-	}
-
+func (db *Mongodb) incrementField(dbname string, res interface{}) (err error) {
 	change := mgo.Change{
-		Update:    bson.M{"$inc": bson.M{"current_pointer": 1}},
+		Update:    bson.M{"$inc": bson.M{pointer_field_name: 1}},
 		Upsert:    true,
 		ReturnNew: true,
 	}
 	q := bson.M{"_id": 0}
-	c := db.main_session.DB(dbname).C("group_ids")
+	c := db.main_session.DB(dbname).C(pointer_collection_name)
 	_, err = c.Find(q).Apply(change, res)
 
 	return err
 }
 
-func (db *Mongodb) getRecordByID(dbname string, id int, res interface{}) error {
-	if db.main_session == nil {
-		return errors.New("database session not created")
-	}
-
+func (db *Mongodb) getRecordByID(dbname string, id int) (interface{}, error) {
+	var res map[string]interface{}
 	q := bson.M{"_id": id}
-
-	c := db.main_session.DB(dbname).C("data")
-
-	return c.Find(q).One(res)
-
+	c := db.main_session.DB(dbname).C(data_collection_name)
+	err := c.Find(q).One(&res)
+	if err == mgo.ErrNotFound {
+		return nil, &DBError{utils.StatusNoData, err.Error()}
+	}
+	return &res, err
 }
 
-func (db *Mongodb) GetNextRecord(db_name string) (answer []byte, code int) {
+func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string) error {
 	if db.main_session == nil {
-		return []byte("database session not created"), utils.StatusError
+		return &DBError{utils.StatusError, no_session_msg}
 	}
 
 	if err := db.dataBaseExist(db_name); err != nil {
-		return []byte(err.Error()), utils.StatusWrongInput
+		return &DBError{utils.StatusWrongInput, err.Error()}
 	}
+	return nil
+}
 
+func (db *Mongodb) getCurrentPointer(db_name string) (Pointer, error) {
 	var curPointer Pointer
-	err := db.IncrementField(db_name, &curPointer)
+	err := db.incrementField(db_name, &curPointer)
 	if err != nil {
-		return []byte(err.Error()), utils.StatusError
+		return Pointer{}, err
 	}
 
-	var res map[string]interface{}
+	return curPointer, nil
+}
 
-	err = db.getRecordByID(db_name, curPointer.Value, &res)
-	if err == mgo.ErrNotFound {
-		return []byte(err.Error()), utils.StatusNoData
-
+func (db *Mongodb) GetNextRecord(db_name string) ([]byte, error) {
+	if err := db.checkDatabaseOperationPrerequisites(db_name); err != nil {
+		return nil, err
 	}
 
-	if err == nil {
-		answer, errm := json.Marshal(res)
-		if errm == nil {
-			return answer, utils.StatusOK
-		} else {
-			return []byte(err.Error()), utils.StatusError
-		}
+	curPointer, err := db.getCurrentPointer(db_name)
+	if err != nil {
+		return nil, err
 	}
 
-	return []byte(err.Error()), utils.StatusError
+	res, err := db.getRecordByID(db_name, curPointer.Value)
+	if err != nil {
+		return nil, err
+	}
 
+	return utils.MapToJson(&res)
 }

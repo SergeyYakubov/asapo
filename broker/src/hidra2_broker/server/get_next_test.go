@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"hidra2_broker/database"
 	"hidra2_broker/utils"
@@ -33,10 +34,22 @@ func TestGetNextWithWrongDatabaseName(t *testing.T) {
 	mock_db := new(database.MockedDatabase)
 	db = mock_db
 	defer func() { db = nil }()
-	mock_db.On("GetNextRecord", "foo").Return([]byte(""), utils.StatusWrongInput)
+	mock_db.On("GetNextRecord", "foo").Return([]byte(""),
+		&database.DBError{utils.StatusWrongInput, ""})
 
 	w := doRequest("/next?database=foo")
 	assert.Equal(t, http.StatusBadRequest, w.Code, "no database name")
+	assertExpectations(t, mock_db)
+}
+
+func TestGetNextWithInternalDBError(t *testing.T) {
+	mock_db := new(database.MockedDatabase)
+	db = mock_db
+	defer func() { db = nil }()
+	mock_db.On("GetNextRecord", "foo").Return([]byte(""), errors.New(""))
+
+	w := doRequest("/next?database=foo")
+	assert.Equal(t, http.StatusInternalServerError, w.Code, "internal error")
 	assertExpectations(t, mock_db)
 }
 
@@ -44,7 +57,7 @@ func TestGetNextWithGoodDatabaseName(t *testing.T) {
 	mock_db := new(database.MockedDatabase)
 	db = mock_db
 	defer func() { db = nil }()
-	mock_db.On("GetNextRecord", "database").Return([]byte("Hello"), utils.StatusOK)
+	mock_db.On("GetNextRecord", "database").Return([]byte("Hello"), nil)
 
 	w := doRequest("/next?database=database")
 	assert.Equal(t, http.StatusOK, w.Code, "GetNext OK")

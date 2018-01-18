@@ -17,13 +17,14 @@ function(gotest target test_source_files)
                 TEST
                 test-${target}
                 PROPERTY
-                ENVIRONMENT GOPATH=${gopath})
+                ENVIRONMENT "GOPATH=${gopath}")
         message(STATUS "Added test 'test-${target}'")
+        if (CMAKE_COMPILER_IS_GNUCXX)
         add_test(NAME coveragetest-${target}
                         COMMAND ${CMAKE_MODULE_PATH}/coverage_go.sh
                         ${CMAKE_CURRENT_BINARY_DIR} ${HIDRA2_MINIMUM_COVERAGE} ${gopath}
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
+        endif()
     endif ()
 endfunction()
 
@@ -36,7 +37,7 @@ function(go_integration_test target test_source_files label)
                 TEST
                 test-${target}
                 PROPERTY
-                ENVIRONMENT GOPATH=${gopath})
+                ENVIRONMENT "GOPATH=${gopath}")
         message(STATUS "Added test 'test-${target}'")
     endif ()
 endfunction()

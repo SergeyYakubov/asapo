@@ -1,13 +1,27 @@
 set (TARGET_NAME hidra2-broker)
 
-set (gopath $ENV{GOPATH}:${CMAKE_CURRENT_SOURCE_DIR})
+if (NOT "$ENV{GOPATH}" STREQUAL "")
+	set(GOPATH $ENV{GOPATH})
+endif()
+
+if (NOT GOPATH)
+    message (FATAL_ERROR "GOPATH not set")
+endif()
+
+message(STATUS "global gopath ${GOPATH}")
+
+IF(WIN32)
+    set (gopath "${GOPATH}\;${CMAKE_CURRENT_SOURCE_DIR}")
+ELSE()
+    set (gopath ${GOPATH}:${CMAKE_CURRENT_SOURCE_DIR})
+ENDIF()
 
 include(testing_go)
 
-message(STATUS ${gopath})
 add_custom_target(hidra2-broker ALL
-				  COMMAND  GOPATH=${gopath} go build ${GO_OPTS} -o ${TARGET_NAME} hidra2_broker/main
-				  VERBATIM)
+    COMMAND  ${CMAKE_COMMAND} -E env GOPATH=${gopath}
+    go build ${GO_OPTS} -o ${TARGET_NAME} hidra2_broker/main
+    VERBATIM)
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} DESTINATION bin)
 
