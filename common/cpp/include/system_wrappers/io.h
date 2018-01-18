@@ -26,20 +26,23 @@ enum class IOError {
     CONNECTION_REFUSED,
     CONNECTION_RESET_BY_PEER,
     TIMEOUT,
+    FILE_ALREADY_EXISTS,
+    NO_SPACE_LEFT,
     UNKNOWN_ERROR,
 };
 
 enum FileOpenMode {
-    OPEN_MODE_READ = 1 << 0,
-    OPEN_MODE_WRITE = 1 << 1,
-    OPEN_MODE_RW = OPEN_MODE_READ | OPEN_MODE_WRITE,
+    IO_OPEN_MODE_READ = 1 << 0,
+    IO_OPEN_MODE_WRITE = 1 << 1,
+    IO_OPEN_MODE_RW = IO_OPEN_MODE_READ | IO_OPEN_MODE_WRITE,
 
-    OPEN_MODE_CREATE = 1 << 2,
+    IO_OPEN_MODE_CREATE = 1 << 2,
+    IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS = 1 << 3,
     /**
      * Will set the length of a file to 0
      * Only works if file is open with READ and WRITE mode
      */
-    OPEN_MODE_SET_LENGTH_0 = 1 << 3,
+    IO_OPEN_MODE_SET_LENGTH_0 = 1 << 4,
 };
 
 enum class AddressFamilies {
@@ -87,6 +90,7 @@ class IO {
                                              uint16_t timeout_in_sec,
                                              IOError* err) = 0;
     virtual size_t          Send            (FileDescriptor socket_fd, const void* buf, size_t length, IOError* err) = 0;
+    virtual void            Skip            (FileDescriptor socket_fd, size_t length, IOError* err) = 0;
 
     /*
      * Filesystem
@@ -97,9 +101,9 @@ class IO {
      */
     virtual void            Close           (FileDescriptor fd, IOError* err = nullptr) = 0;
 
-    //TODO need to remove
-    virtual ssize_t deprecated_read         (int __fd, void* buf, size_t count) = 0;
-    virtual ssize_t deprecated_write        (int __fd, const void* __buf, size_t __n) = 0;
+    virtual size_t          Write           (FileDescriptor fd, const void* buf, size_t length, IOError* err) = 0;
+
+    virtual void            CreateDirectory(const std::string &directory_name, hidra2::IOError* err) = 0;
 };
 
 }

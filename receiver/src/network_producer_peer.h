@@ -10,7 +10,6 @@
 #include <iostream>
 #include <atomic>
 #include <vector>
-#include "file_reference_handler.h"
 
 namespace hidra2 {
 
@@ -27,7 +26,6 @@ class NetworkProducerPeer : HasIO {
     /** Must be as large as the largest request type (not including the data) */
     static const size_t kGenericBufferSize;
 
-    static FileReferenceHandler file_reference_handler;
     static const std::vector<RequestHandlerInformation> kRequestHandlers;
     static std::atomic<uint32_t> kNetworkProducerPeerCount;
 
@@ -35,19 +33,16 @@ class NetworkProducerPeer : HasIO {
     int             socket_fd_;
     std::string     address_;
 
-    bool            got_hello_ = false;
-
     bool            is_listening_ = false;
     std::thread*    listener_thread_ = nullptr;
 
     void internal_receiver_thread_();
     size_t handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response);
 
-    static void handle_hello_request_(NetworkProducerPeer* self, const HelloRequest* request, HelloResponse* response);
-    static void handle_prepare_send_data_request_(NetworkProducerPeer* self, const PrepareSendDataRequest* request,
-                                                  PrepareSendDataResponse* response);
-    static void handle_send_data_chunk_request_(NetworkProducerPeer* self, const SendDataChunkRequest* request,
-                                                SendDataChunkResponse* response);
+    static void handle_send_data_request_(NetworkProducerPeer* self, const SendDataRequest* request,
+                                                  SendDataResponse* response);
+
+    FileDescriptor CreateAndOpenFileByFileId(uint64_t file_id, IOError* err);
 
   public:
     NetworkProducerPeer& operator=(const NetworkProducerPeer&) = delete;

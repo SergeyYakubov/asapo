@@ -4,7 +4,6 @@
 
 namespace hidra2 {
 
-FileReferenceHandler NetworkProducerPeer::file_reference_handler;
 const size_t NetworkProducerPeer::kGenericBufferSize = 1024 * 50; //50KiByte
 std::atomic<uint32_t> NetworkProducerPeer::kNetworkProducerPeerCount;
 
@@ -42,7 +41,6 @@ void NetworkProducerPeer::internal_receiver_thread_() {
     auto* const generic_request = (GenericNetworkRequest*) malloc(kGenericBufferSize);
     auto* const generic_response = (GenericNetworkResponse*) malloc(kGenericBufferSize);
 
-
     IOError err;
     while(is_listening_) {
         err = IOError::NO_ERROR;
@@ -51,6 +49,7 @@ void NetworkProducerPeer::internal_receiver_thread_() {
 
         if(err != IOError::NO_ERROR) {
             if(err == IOError::TIMEOUT) {
+                pthread_yield();
                 continue;
             }
 
@@ -97,7 +96,7 @@ void NetworkProducerPeer::stop_peer_listener() {
 
 size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response) {
     if(request->op_code >= OP_CODE_COUNT || request->op_code < 0) {
-        std::cerr << "[" << connection_id() << "] Error invalid op_code: " << request->op_code << std::endl;
+        std::cerr << "[" << connection_id() << "] Error invalid op_code: " << request->op_code << " force disconnect." << std::endl;
         io->Close(socket_fd_);
         return 0;
     }
@@ -112,8 +111,7 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
 
     IOError err;
     //receive the rest of the message
-    io->ReceiveTimeout(socket_fd_, request->data, handler_information.request_size - sizeof(GenericNetworkRequest), 30,
-                       &err);
+    io->Receive(socket_fd_, request->data, handler_information.request_size - sizeof(GenericNetworkRequest), &err);
     if(err != IOError::NO_ERROR) {
         std::cerr << "[" << connection_id() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " <<
                   request->op_code << std::endl;
@@ -128,6 +126,15 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
 NetworkProducerPeer::~NetworkProducerPeer() {
     stop_peer_listener();
 }
+
+FileDescriptor NetworkProducerPeer::CreateAndOpenFileByFileId(uint64_t file_id, IOError* err) {
+    io->CreateDirectory("files", err);
+    if(*err != IOError::NO_ERROR && *err != IOError::FILE_ALREADY_EXISTS) {
+        return -1;
+    }
+    return io->Open("files/" + std::to_string(file_id) + ".bin", IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS | IO_OPEN_MODE_RW, err);
+}
+
 
 }
 

@@ -37,16 +37,16 @@ class SystemIO final : public IO {
                                    uint16_t timeout_in_sec,
                                    IOError* err);
     size_t          Send(FileDescriptor socket_fd, const void* buf, size_t length, IOError* err);
+    void            Skip(FileDescriptor socket_fd, size_t length, IOError* err);
 
     /*
      * Filesystem
      */
     FileDescriptor  Open(const std::string& filename, int open_flags, IOError* err);
     void            Close(FileDescriptor fd, IOError* err = nullptr);
+    size_t          Write(FileDescriptor fd, const void* buf, size_t length, IOError* err);
+    void            CreateDirectory(const std::string &directory_name, hidra2::IOError* err);
 
-    //TODO need to remove
-    ssize_t deprecated_read         (int __fd, void* buf, size_t count);
-    ssize_t deprecated_write        (int __fd, const void* __buf, size_t __n);
 };
 }
 

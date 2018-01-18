@@ -27,7 +27,7 @@ class ProducerImpl : public Producer {
     uint64_t GetVersion() const override;
     ProducerStatus GetStatus() const override;
     ProducerError ConnectToReceiver(const std::string& receiver_address) override;
-    ProducerError Send(std::string filename, void* data, uint64_t file_size) override;
+    ProducerError Send(uint64_t file_id, void* data, uint64_t file_size) override;
 
 };
 }

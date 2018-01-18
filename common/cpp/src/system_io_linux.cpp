@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <zconf.h>
+#include <assert.h>
 
 using std::string;
 using std::vector;
@@ -30,6 +31,10 @@ IOError IOErrorFromErrno() {
         return IOError::FILE_NOT_FOUND;
     case EACCES:
         return IOError::PERMISSIONS_DENIED;
+    case EEXIST:
+        return IOError::FILE_ALREADY_EXISTS;
+    case ENOSPC:
+        return IOError::NO_SPACE_LEFT;
     case ECONNREFUSED:
         return IOError::CONNECTION_REFUSED;
     case EADDRINUSE:
@@ -90,20 +95,23 @@ sa_family_t AddressFamilyToPosixFamily(AddressFamilies address_family) {
 
 int FileOpenModeToPosixFileOpenMode(int open_flags) {
     int flags = 0;
-    if((open_flags & OPEN_MODE_READ && open_flags & OPEN_MODE_WRITE) || open_flags & OPEN_MODE_RW) {
+    if((open_flags & IO_OPEN_MODE_READ && open_flags & IO_OPEN_MODE_WRITE) || open_flags & IO_OPEN_MODE_RW) {
         flags |= O_RDWR;
     } else {
-        if (open_flags & OPEN_MODE_READ) {
+        if (open_flags & IO_OPEN_MODE_READ) {
             flags |= O_RDONLY;
         }
-        if (open_flags & OPEN_MODE_WRITE) {
+        if (open_flags & IO_OPEN_MODE_WRITE) {
             flags |= O_WRONLY;
         }
     }
-    if(open_flags & OPEN_MODE_CREATE) {
+    if(open_flags & IO_OPEN_MODE_CREATE) {
         flags |= O_CREAT;
     }
-    if(open_flags & OPEN_MODE_SET_LENGTH_0) {
+    if(open_flags & IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS) {
+        flags |= O_CREAT | O_EXCL;
+    }
+    if(open_flags & IO_OPEN_MODE_SET_LENGTH_0) {
         flags |= O_TRUNC;
     }
     return flags;
@@ -414,7 +422,7 @@ size_t hidra2::SystemIO::ReceiveTimeout(hidra2::FileDescriptor socket_fd,
     timeout.tv_sec = timeout_in_sec;
     timeout.tv_usec = 0;
 
-    int res = select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
+    int res = ::select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
     if(res == 0) {
         *err = IOError::TIMEOUT;
         return 0;
@@ -451,6 +459,32 @@ size_t hidra2::SystemIO::Send(hidra2::FileDescriptor socket_fd,
     return already_sent;
 }
 
+void hidra2::SystemIO::Skip(hidra2::FileDescriptor socket_fd, size_t length, hidra2::IOError* err) {
+    static const size_t kSkipBufferSize = 1024;
+
+    //TODO need to find a better way to skip bytes
+    *err = IOError::NO_ERROR;
+    std::unique_ptr<uint8_t[]> buffer;
+    try {
+        buffer.reset(new uint8_t[kSkipBufferSize]);
+    }
+    catch(std::exception& e) {
+        assert(false);
+        *err = IOError::UNKNOWN_ERROR;
+        return;
+    }
+    size_t already_skipped = 0;
+    while(already_skipped < length) {
+        size_t need_to_skip = length - already_skipped;
+        if(need_to_skip > kSkipBufferSize)
+            need_to_skip = kSkipBufferSize;
+        size_t skipped_amount = Receive(socket_fd, buffer.get(), need_to_skip, err);
+        if(*err != IOError::NO_ERROR) {
+            return;
+        }
+        already_skipped += skipped_amount;
+    }
+}
 
 hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
                                               int open_flags,
@@ -458,7 +492,7 @@ hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
     *err = IOError::NO_ERROR;
     int flags = FileOpenModeToPosixFileOpenMode(open_flags);
 
-    FileDescriptor fd = ::open(filename.c_str(), flags);
+    FileDescriptor fd = ::open(filename.c_str(), flags, S_IWUSR | S_IRWXU);
     if(fd == -1) {
         *err = IOErrorFromErrno();
     }
@@ -476,4 +510,38 @@ void hidra2::SystemIO::Close(hidra2::FileDescriptor fd, hidra2::IOError* err) {
         *err = IOErrorFromErrno();
     }
 }
+size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length, IOError* err)  {
+    *err = hidra2::IOError::NO_ERROR;
 
+    size_t already_sent = 0;
+
+    while(already_sent < length) {
+        ssize_t send_amount = ::write(fd, (uint8_t*)buf + already_sent, length - already_sent);
+        if(send_amount == 0) {
+            *err = IOError::STREAM_EOF;
+            return already_sent;
+        }
+        if(send_amount == -1) {
+            *err = IOErrorFromErrno();
+            return already_sent;
+        }
+        already_sent += send_amount;
+    }
+
+    return already_sent;
+}
+void hidra2::SystemIO::CreateDirectory(const std::string &directory_name, hidra2::IOError* err) {
+    *err = IOError::NO_ERROR;
+    struct stat st = {0};
+    int result = ::stat(directory_name.c_str(), &st);
+    if (result != -1) {
+        *err = IOError::FILE_ALREADY_EXISTS;
+        return;
+    }
+    if(result == -1) {
+        mkdir(directory_name.c_str(), S_IRWXU);
+        *err = IOErrorFromErrno();
+        return;
+    }
+
+}

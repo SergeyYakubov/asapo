@@ -13,11 +13,11 @@ int main (int argc, char* argv[]) {
     }
     std::cout << "StartListener" << std::endl;
 
+    std::cout << "Press Enter to exit" << std::endl;
     getchar();
 
+    std::cout << "Stop listener..." << std::endl;
     receiver->StopListener(&err);
-    std::cout << "stop_listener" << std::endl;
-    getchar();
 
     return 0;
 }

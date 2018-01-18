@@ -52,133 +52,49 @@ hidra2::ProducerError hidra2::ProducerImpl::ConnectToReceiver(const std::string&
         return error;
     }
 
-    hidra2::HelloRequest helloRequest;
-    helloRequest.op_code = OP_CODE__HELLO;
-    helloRequest.request_id = request_id++;
-    helloRequest.client_version = 1;
-    helloRequest.os = OS_LINUX;
-    helloRequest.is_x64 = true;
-
-    IOError io_error;
-    io->Send(client_fd_, &helloRequest, sizeof(helloRequest), &io_error);
-    if(io_error != IOError::NO_ERROR) {
-        std::cerr << "hidra2::ProducerImpl::ConnectToReceiver/send error" << std::endl;
-        status_ = PRODUCER_STATUS__DISCONNECTED;
-        return PRODUCER_ERROR__FAILED_TO_CONNECT_TO_SERVER;
-    }
-
-    HelloResponse helloResponse;
-    io->ReceiveTimeout(client_fd_, &helloResponse, sizeof(helloResponse), 30, &io_error);
-    if(io_error != IOError::NO_ERROR) {
-        std::cerr << "hidra2::ProducerImpl::ConnectToReceiver/receive_timeout error" << std::endl;
-        status_ = PRODUCER_STATUS__DISCONNECTED;
-        return PRODUCER_ERROR__FAILED_TO_CONNECT_TO_SERVER;
-    }
-
-    std::cout << "op_code: " << helloResponse.op_code << std::endl;
-    std::cout << "request_id: " << helloResponse.request_id << std::endl;
-    std::cout << "error_code: " << helloResponse.error_code << std::endl;
-    std::cout << "server_version: " << helloResponse.server_version << std::endl;
-
-
-    if(helloResponse.error_code != NET_ERR__NO_ERROR) {
-        std::cerr << "Fail to connect to server. NetErrorCode: " << helloResponse.error_code << std::endl;
-
-        status_ = PRODUCER_STATUS__DISCONNECTED;
-        return PRODUCER_ERROR__FAILED_TO_CONNECT_TO_SERVER;
-    }
-
     status_ = PRODUCER_STATUS__CONNECTED;
     return PRODUCER_ERROR__NO_ERROR;
 }
 
-hidra2::ProducerError hidra2::ProducerImpl::Send(std::string filename, void* data, uint64_t file_size) {
+hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, void* data, uint64_t file_size) {
     if(status_ != PRODUCER_STATUS__CONNECTED) {
         return PRODUCER_ERROR__CONNECTION_NOT_READY;
     }
     status_ = PRODUCER_STATUS__SENDING;
 
-    hidra2::PrepareSendDataRequest prepareSendDataRequest;
-    prepareSendDataRequest.op_code = OP_CODE__PREPARE_SEND_DATA;
-    prepareSendDataRequest.request_id = request_id++;
-    prepareSendDataRequest.file_size = file_size;
-    filename.copy((char*)&prepareSendDataRequest.filename, sizeof(prepareSendDataRequest.filename));
-    prepareSendDataRequest.filename[filename.length()] = '\0';
-
-    std::cout << "Send file: " << filename << std::endl;
+    SendDataRequest sendDataRequest;
+    sendDataRequest.op_code = OP_CODE__SEND_DATA;
+    sendDataRequest.request_id = request_id++;
+    sendDataRequest.file_id = file_id;
+    sendDataRequest.file_size = file_size;
 
     IOError io_error;
-    io->Send(client_fd_, &prepareSendDataRequest, sizeof(prepareSendDataRequest), &io_error);
+    io->Send(client_fd_, &sendDataRequest, sizeof(sendDataRequest), &io_error);
     if(io_error != IOError::NO_ERROR) {
         std::cerr << "hidra2::ProducerImpl::send/send error" << std::endl;
         status_ = PRODUCER_STATUS__CONNECTED;
-        return PRODUCER_ERROR__SENDING_SERVER_REQUEST_FAILED;
+        return PRODUCER_ERROR__UNEXPECTED_IO_ERROR;
     }
 
-    hidra2::PrepareSendDataResponse prepareSendDataResponse;
 
-    io->ReceiveTimeout(client_fd_, &prepareSendDataResponse, sizeof(prepareSendDataResponse), 30, &io_error);
+    io->Send(client_fd_, data, file_size, &io_error);
+    if(io_error != IOError::NO_ERROR) {
+        status_ = PRODUCER_STATUS__CONNECTED;
+        return PRODUCER_ERROR__UNEXPECTED_IO_ERROR;
+    }
+
+    SendDataResponse sendDataResponse;
+    io->Receive(client_fd_, &sendDataResponse, sizeof(sendDataResponse), &io_error);
     if(io_error != IOError::NO_ERROR) {
         std::cerr << "hidra2::ProducerImpl::send/receive_timeout error" << std::endl;
         status_ = PRODUCER_STATUS__CONNECTED;
-        return PRODUCER_ERROR__RECEIVING_SERVER_RESPONSE_FAILED;
+        return PRODUCER_ERROR__UNEXPECTED_IO_ERROR;
     }
 
-    if(prepareSendDataResponse.error_code) {
-        std::cerr << "Server rejected metadata. NetErrorCode: " << prepareSendDataResponse.error_code << std::endl;
+    if(sendDataResponse.error_code) {
+        std::cerr << "Server reported an error. NetErrorCode: " << sendDataResponse.error_code << std::endl;
         status_ = PRODUCER_STATUS__CONNECTED;
-        return PRODUCER_ERROR__SERVER_REPORTED_AN_ERROR;
-    }
-    std::cout << "op_code: " << prepareSendDataResponse.op_code << std::endl;
-    std::cout << "request_id: " << prepareSendDataResponse.request_id << std::endl;
-    std::cout << "error_code: " << prepareSendDataResponse.error_code << std::endl;
-    std::cout << "file_reference_id: " << prepareSendDataResponse.file_reference_id << std::endl;
-
-    size_t already_send = 0;
-
-    while(already_send < file_size) {
-        size_t need_to_send = kMaxChunkSize;
-
-        if(double(file_size) - already_send - kMaxChunkSize < 0) {
-            need_to_send = file_size - already_send;
-        }
-
-        hidra2::SendDataChunkRequest sendDataChunkRequest;
-        sendDataChunkRequest.op_code = OP_CODE__SEND_DATA_CHUNK;
-        sendDataChunkRequest.request_id = request_id++;
-        sendDataChunkRequest.start_byte = already_send;
-        sendDataChunkRequest.chunk_size = need_to_send;
-        sendDataChunkRequest.file_reference_id = prepareSendDataResponse.file_reference_id;
-
-        io->Send(client_fd_, &sendDataChunkRequest, sizeof(sendDataChunkRequest), &io_error);
-        if(io_error != IOError::NO_ERROR) {
-            std::cerr << "hidra2::ProducerImpl::send/send2 error" << std::endl;
-            status_ = PRODUCER_STATUS__CONNECTED;
-            return PRODUCER_ERROR__SENDING_CHUNK_FAILED;
-        }
-
-        io->Send(client_fd_, (uint8_t*) data + already_send, need_to_send, &io_error);
-        if(io_error != IOError::NO_ERROR) {
-            std::cerr << "hidra2::ProducerImpl::send/send3 error" << std::endl;
-            status_ = PRODUCER_STATUS__CONNECTED;
-            return PRODUCER_ERROR__SENDING_CHUNK_FAILED;
-        }
-
-        already_send += need_to_send;
-
-        hidra2::SendDataChunkResponse sendDataChunkResponse;
-        io->ReceiveTimeout(client_fd_, &sendDataChunkResponse, sizeof(sendDataChunkResponse), 30, &io_error);
-        if(io_error != IOError::NO_ERROR) {
-            std::cerr << "hidra2::ProducerImpl::send/receive_timeout2 error" << std::endl;
-            status_ = PRODUCER_STATUS__CONNECTED;
-            return PRODUCER_ERROR__RECEIVING_SERVER_RESPONSE_FAILED;
-        }
-
-        if(sendDataChunkResponse.error_code) {
-            std::cout << "Server reported an error. NetErrorCode: " << sendDataChunkResponse.error_code;
-            status_ = PRODUCER_STATUS__CONNECTED;
-            return PRODUCER_ERROR__SERVER_REPORTED_AN_ERROR;
-        }
+        return PRODUCER_ERROR__UNEXPECTED_IO_ERROR;
     }
 
     status_ = PRODUCER_STATUS__CONNECTED;

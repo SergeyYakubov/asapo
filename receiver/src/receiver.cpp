@@ -71,8 +71,8 @@ void hidra2::Receiver::AcceptThreadLogic() {
 }
 
 void hidra2::Receiver::StopListener(ReceiverError* err) {
-    io->Close(listener_fd_);
     listener_running_ = false;
+    io->Close(listener_fd_);
     if(accept_thread_)
         accept_thread_->join();
     accept_thread_ = nullptr;

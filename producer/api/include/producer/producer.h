@@ -12,12 +12,9 @@ enum ProducerError {
     PRODUCER_ERROR__NO_ERROR,
     PRODUCER_ERROR__ALREADY_CONNECTED,
     PRODUCER_ERROR__CONNECTION_NOT_READY,
-    PRODUCER_ERROR__SENDING_CHUNK_FAILED,
-    PRODUCER_ERROR__SENDING_SERVER_REQUEST_FAILED,
-    PRODUCER_ERROR__RECEIVING_SERVER_RESPONSE_FAILED,
-    PRODUCER_ERROR__SERVER_REPORTED_AN_ERROR,
     PRODUCER_ERROR__FAILED_TO_CONNECT_TO_SERVER,
     PRODUCER_ERROR__INVALID_ADDRESS_FORMAT,
+    PRODUCER_ERROR__UNEXPECTED_IO_ERROR,
 };
 
 enum ProducerStatus {
@@ -38,7 +35,7 @@ class Producer : public HasIO {
     virtual ProducerStatus GetStatus() const = 0;
 
     virtual ProducerError ConnectToReceiver(const std::string& receiver_address) = 0;
-    virtual ProducerError Send(std::string filename, void* data, uint64_t file_size) = 0;
+    virtual ProducerError Send(uint64_t file_id, void* data, uint64_t file_size) = 0;
 };
 }
 

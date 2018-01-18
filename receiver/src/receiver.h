@@ -17,6 +17,7 @@ enum class ReceiverError {
 };
 
 class Receiver : public HasIO {
+    friend NetworkProducerPeer;
   private:
     bool listener_running_ = false;
     FileDescriptor listener_fd_;
@@ -25,6 +26,7 @@ class Receiver : public HasIO {
     void AcceptThreadLogic();
     std::list<std::unique_ptr<NetworkProducerPeer>> peer_list_;
     std::unique_ptr<NetworkProducerPeer> on_new_peer_(int peer_socket_fd, std::string address);
+
   public:
     static const int kMaxUnacceptedConnectionsBacklog;
 
