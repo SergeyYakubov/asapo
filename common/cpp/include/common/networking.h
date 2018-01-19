@@ -39,8 +39,8 @@ struct GenericNetworkResponse {
 };
 
 struct SendDataRequest : GenericNetworkRequest {
-    uint64_t file_id;
-    uint64_t file_size;
+    uint64_t    file_id;
+    uint64_t    file_size;
 };
 
 /**

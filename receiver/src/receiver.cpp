@@ -16,11 +16,11 @@ void hidra2::Receiver::StartListener(std::string listener_address, uint16_t port
     }
     listener_running_ = true;
 
-    IOError io_error;
+    IOErrors io_error;
 
     FileDescriptor listener_fd = io->CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP,
                                                   &io_error);
-    if(io_error != IOError::NO_ERROR) {
+    if(io_error != IOErrors::kNoError) {
         *err = ReceiverError::FAILED_CREATING_SOCKET;
         listener_running_ = false;
         std::cerr << "Fail to create socket" << std::endl;
@@ -28,7 +28,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, uint16_t port
     }
 
     io->InetBind(listener_fd, listener_address, port, &io_error);
-    if(io_error != IOError::NO_ERROR) {
+    if(io_error != IOErrors::kNoError) {
         io->Close(listener_fd);
         *err = ReceiverError::FAILED_CREATING_SOCKET;
         listener_running_ = false;
@@ -37,7 +37,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, uint16_t port
     }
 
     io->Listen(listener_fd, kMaxUnacceptedConnectionsBacklog, &io_error);
-    if(io_error != IOError::NO_ERROR) {
+    if(io_error != IOErrors::kNoError) {
         io->Close(listener_fd);
         *err = ReceiverError::FAILED_CREATING_SOCKET;
         listener_running_ = false;
@@ -58,9 +58,9 @@ void hidra2::Receiver::AcceptThreadLogic() {
         std::string address;
         FileDescriptor peer_fd;
 
-        IOError io_error;
+        IOErrors io_error;
         auto client_info_tuple = io->InetAccept(listener_fd_, &io_error);
-        if(io_error != IOError::NO_ERROR) {
+        if(io_error != IOErrors::kNoError) {
             std::cerr << "An error occurred while accepting an incoming connection" << std::endl;
             return;
         }
@@ -72,7 +72,7 @@ void hidra2::Receiver::AcceptThreadLogic() {
 
 void hidra2::Receiver::StopListener(ReceiverError* err) {
     listener_running_ = false;
-    io->Close(listener_fd_);
+    io->Close(listener_fd_, nullptr);
     if(accept_thread_)
         accept_thread_->join();
     accept_thread_ = nullptr;

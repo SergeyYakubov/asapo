@@ -5,6 +5,6 @@ set(SOURCE_FILES
 ################################
 # Library
 ################################
-add_library(${TARGET_NAME} SHARED ${SOURCE_FILES})
+add_library(${TARGET_NAME} STATIC ${SOURCE_FILES})
 target_include_directories(${TARGET_NAME} PUBLIC include)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)

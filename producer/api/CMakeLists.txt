@@ -8,9 +8,8 @@ set(SOURCE_FILES
 ################################
 # Library
 ################################
-add_library(${TARGET_NAME} SHARED ${SOURCE_FILES})
-target_include_directories(${TARGET_NAME} PUBLIC include)
-target_link_libraries(${TARGET_NAME} common)
+add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:common>)
+target_include_directories(${TARGET_NAME} PUBLIC include ${CMAKE_SOURCE_DIR}/common/cpp/include)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 ################################
@@ -20,9 +19,6 @@ set(TEST_SOURCE_FILES
         unittests/test_producer_impl.cpp
         unittests/test_producer.cpp
         )
-set(TEST_LIBRARIES producer-api)
-
+set(TEST_LIBRARIES "${TARGET_NAME}")
 
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")
-
-

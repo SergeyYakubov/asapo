@@ -22,20 +22,20 @@ const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProduce
 
 
 void NetworkProducerPeer::handle_send_data_request_(NetworkProducerPeer* self, const SendDataRequest* request,
-                                                    SendDataResponse* response) {
-    IOError ioErr;
+        SendDataResponse* response) {
+    IOErrors ioErr;
 
-    if(request->file_size > 2*1024*1024*1024/*2GiByte*/) {
+    if(request->file_size > size_t(2)*size_t(1024)*size_t(1024)*size_t(1024)/*2GiByte*/) {
         response->error_code = NET_ERR__ALLOCATE_STORAGE_FAILED;
         return;
     }
 
     FileDescriptor fd = self->CreateAndOpenFileByFileId(request->file_id, &ioErr);
-    if(ioErr != IOError::NO_ERROR) {
+    if(ioErr != IOErrors::kNoError) {
         response->error_code = NET_ERR__FILENAME_ALREADY_IN_USE;
         std::cerr << "[" << self->connection_id() << "] file_id: " << request->file_id << " does already exists" << std::endl;
         self->io->Skip(self->socket_fd_, request->file_size, &ioErr);
-        if(ioErr != IOError::NO_ERROR) {
+        if(ioErr != IOErrors::kNoError) {
             std::cout << "[NetworkProducerPeer] Out of sync force disconnect" << std::endl;
             self->io->Close(self->socket_fd_);
         }
@@ -45,21 +45,21 @@ void NetworkProducerPeer::handle_send_data_request_(NetworkProducerPeer* self, c
     std::unique_ptr<uint8_t[]> buffer;
     try {
         buffer.reset(new uint8_t[request->file_size]);
-    }
-    catch(std::exception& e) {
-        std::cerr << "[" << self->connection_id() << "] Failed to allocate enough memory. file_id: " << request->file_id << " file_size:" << request->file_size << std::endl;
+    } catch(std::exception& e) {
+        std::cerr << "[" << self->connection_id() << "] Failed to allocate enough memory. file_id: " << request->file_id <<
+                  " file_size:" << request->file_size << std::endl;
         std::cerr << e.what() << std::endl;
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
         return;
     }
 
     self->io->Receive(self->socket_fd_, buffer.get(), request->file_size, &ioErr);
-    if(ioErr != IOError::NO_ERROR) {
+    if(ioErr != IOErrors::kNoError) {
         std::cerr << "[" << self->connection_id() << "] An IO error occurred while receiving the file" << std::endl;
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
     }
 
-    //self->io->Write(fd, buffer.get(), request->file_size, &ioErr);
+    self->io->Write(fd, buffer.get(), request->file_size, &ioErr);
 
     response->error_code = NET_ERR__NO_ERROR;
 }

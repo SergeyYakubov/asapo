@@ -1,5 +1,4 @@
 #include <iostream>
-#include <memory>
 
 #include "system_wrappers/system_io.h"
 #include "testing.h"
@@ -21,16 +20,15 @@ int main(int argc, char* argv[]) {
     auto files = io->FilesInFolder(argv[1], &err);
 
     std::string result;
-
     switch (err) {
-    case IOErrors::FILE_NOT_FOUND:
+    case IOErrors::kFileNotFound:
         result = "notfound";
         break;
-    case IOErrors::NO_ERROR:
+    case IOErrors::kNoError:
         for(auto file_info : files)
             result += file_info.relative_path + file_info.base_name;
         break;
-    case IOErrors::PERMISSIONS_DENIED:
+    case IOErrors::kPermissionDenied:
         result = "noaccess";
         break;
     default:

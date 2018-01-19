@@ -4,9 +4,9 @@
 #include "worker/data_broker.h"
 
 #include <string>
+#include <mutex>
 
 #include "system_wrappers/io.h"
-
 
 namespace hidra2 {
 
@@ -23,7 +23,8 @@ class FolderDataBroker final : public hidra2::DataBroker {
     int current_file_;
     std::string base_path_;
     std::vector<FileInfo>  filelist_;
-    WorkerErrorCode CheckCanGetData(FileInfo* info, FileData* data);
+    WorkerErrorCode CanGetData(FileInfo* info, FileData* data, int nfile) const noexcept;
+    std::mutex mutex_;
 
 };
 

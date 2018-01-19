@@ -1,8 +1,6 @@
 #include <iostream>
 #include <system_wrappers/system_io.h>
 
-#include <memory>
-#include <string>
 #include "testing.h"
 
 using hidra2::SystemIO;
@@ -23,18 +21,17 @@ int main(int argc, char* argv[]) {
     std::string result;
 
     switch (err) {
-    case IOErrors::FILE_NOT_FOUND:
+    case IOErrors::kFileNotFound:
         result = "notfound";
         break;
-    case IOErrors::NO_ERROR:
-        for(auto symbol : data)
-            result += symbol;
-        M_AssertEq(expect.size(), result.size());
+    case IOErrors::kNoError:
+        for(int i = 0; i < expect.size(); i++)
+            result += data[i];
         break;
-    case IOErrors::PERMISSIONS_DENIED:
+    case IOErrors::kPermissionDenied:
         result = "noaccess";
         break;
-    case IOErrors::READ_ERROR:
+    case IOErrors::kReadError:
         result = "readerror";
         break;
 

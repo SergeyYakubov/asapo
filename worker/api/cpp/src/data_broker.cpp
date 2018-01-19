@@ -7,16 +7,16 @@ std::unique_ptr<DataBroker> DataBrokerFactory::Create(const std::string& source_
         WorkerErrorCode* return_code) noexcept {
 
     if (source_name.empty()) {
-        *return_code = WorkerErrorCode::EMPTY_DATASOURCE;
+        *return_code = WorkerErrorCode::kEmptyDatasource;
         return nullptr;
     }
 
     std::unique_ptr<DataBroker> p = nullptr;
     try {
         p.reset(new FolderDataBroker(source_name));
-        *return_code = WorkerErrorCode::OK;
+        *return_code = WorkerErrorCode::kOK;
     } catch (...) {         // we do not test this part
-        *return_code = WorkerErrorCode::MEMORY_ERROR;
+        *return_code = WorkerErrorCode::kMemoryError;
     }
 
     return p;

@@ -1,6 +1,5 @@
 #include <gmock/gmock.h>
 #include "gtest/gtest.h"
-using ::testing::AtLeast;
 
 #include "worker/data_broker.h"
 #include "system_wrappers/io.h"
@@ -12,11 +11,11 @@ using hidra2::DataBroker;
 using hidra2::FolderDataBroker;
 using hidra2::WorkerErrorCode;
 using hidra2::IO;
-using hidra2::IOError;
+using hidra2::IOErrors;
 using hidra2::FileInfo;
 using hidra2::FileData;
 
-
+using ::testing::AtLeast;
 using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Test;
@@ -36,13 +35,30 @@ TEST(FolderDataBroker, SetCorrectIO) {
 
 class FakeIO: public IO {
   public:
-    FileData GetDataFromFile(const std::string& fname, IOError* err) {
-        *err = IOError::NO_ERROR;
-        return {};
+
+    virtual uint8_t* GetDataFromFileProxy(const std::string& fname, uint64_t fsize, IOErrors* err) const {
+        *err = IOErrors::kNoError;
+        return nullptr;
     };
 
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) {
-        *err = IOError::NO_ERROR;
+    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const noexcept override {
+        return FileData(GetDataFromFileProxy(fname, fsize, err));
+    };
+
+    int open(const char* __file, int __oflag) const noexcept override {
+        return 0;
+    };
+
+    int close(int __fd)const noexcept override {
+        return 0;
+    };
+
+    uint64_t Read(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const noexcept override {
+        return 0;
+    }
+
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
+        *err = IOErrors::kNoError;
         std::vector<FileInfo> file_infos;
         FileInfo fi;
         fi.size = 100;
@@ -55,105 +71,36 @@ class FakeIO: public IO {
 
         return file_infos;
     }
-
-    std::thread*    NewThread       (std::function<void()> function) {
-        return nullptr;
-    }
-
-    // this is not standard function - to be implemented differently in windows and linux
-    FileData  GetDataFromFile (const std::string& fname, uint64_t fsize, IOError* err) {
-        return hidra2::FileData();
-    }
-
-    /*
-     * Network
-     */
-    hidra2::FileDescriptor  CreateSocket    (hidra2::AddressFamilies address_family, hidra2::SocketTypes socket_type,
-                                             hidra2::SocketProtocols socket_protocol, IOError* err) {
-        return 0;
-    }
-    void            Listen          (hidra2::FileDescriptor socket_fd, int backlog, IOError* err) {
-
-    }
-    void            InetBind        (hidra2::FileDescriptor socket_fd, const std::string& address, uint16_t port,
-                                     IOError* err) {
-
-    }
-    std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>> InetAccept(hidra2::FileDescriptor socket_fd,
-                                                                        IOError* err) {
-        return std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>>();
-    }
-    void            InetConnect     (hidra2::FileDescriptor socket_fd, const std::string& address, IOError* err) {
-
-    }
-    hidra2::FileDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOError* err) {
-        return 0;
-    }
-
-    size_t          Receive         (hidra2::FileDescriptor socket_fd, void* buf, size_t length, IOError* err) {
-        return 0;
-    }
-    size_t          ReceiveTimeout  (hidra2::FileDescriptor socket_fd,
-                                     void* buf,
-                                     size_t length,
-                                     uint16_t timeout_in_sec,
-                                     IOError* err) {
-        return 0;
-    }
-    size_t          Send            (hidra2::FileDescriptor socket_fd, const void* buf, size_t length, IOError* err) {
-        return 0;
-    }
-
-    /*
-     * Filesystem
-     */
-    hidra2::FileDescriptor  Open            (const std::string& filename, int open_flags, IOError* err) {
-        return 0;
-    }
-    /**
-     * @param err Is able to accept nullptr
-     */
-    void            Close           (hidra2::FileDescriptor fd, IOError* err = nullptr) {
-
-    }
-
-    //TODO need to remove
-    ssize_t deprecated_read         (int __fd, void* buf, size_t count) {
-        return 0;
-    }
-    ssize_t deprecated_write        (int __fd, const void* __buf, size_t __n) {
-        return 0;
-    }
 };
 
 class IOFolderNotFound: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) {
-        *err = IOError::FILE_NOT_FOUND;
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
+        *err = IOErrors::kFileNotFound;
         return {};
     }
 };
 
 class IOFodlerUnknownError: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) {
-        *err = IOError::UNKNOWN_ERROR;
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
+        *err = IOErrors::kUnknownError;
         return {};
     }
 };
 
 class IOEmptyFodler: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOError* err) {
-        *err = IOError::NO_ERROR;
+    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
+        *err = IOErrors::kNoError;
         return {};
     }
 };
 
 class IOCannotOpenFile: public FakeIO {
   public:
-    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOError* err)  {
-        *err = IOError::PERMISSIONS_DENIED;
+    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const noexcept override {
+        *err = IOErrors::kPermissionDenied;
         return {};
     };
 };
@@ -174,7 +121,7 @@ class FolderDataBrokerTests : public Test {
 TEST_F(FolderDataBrokerTests, CanConnect) {
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::OK));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kOK));
 }
 
 TEST_F(FolderDataBrokerTests, CannotConnectTwice) {
@@ -182,7 +129,7 @@ TEST_F(FolderDataBrokerTests, CannotConnectTwice) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::SOURCE_ALREADY_CONNECTED));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kSourceAlreadyConnected));
 }
 
 
@@ -191,7 +138,7 @@ TEST_F(FolderDataBrokerTests, CannotConnectWhenNoFolder) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::SOURCE_NOT_FOUND));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kSourceNotFound));
 }
 
 TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
@@ -199,13 +146,13 @@ TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::UNKNOWN_IO_ERROR));
+    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kUnknownIOError));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithoutConnectReturnsError) {
     auto err = data_broker->GetNext(nullptr, nullptr);
 
-    ASSERT_THAT(err, Eq(WorkerErrorCode::SOURCE_NOT_CONNECTED));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kSourceNotConnected));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
@@ -213,9 +160,8 @@ TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
 
     auto err = data_broker->GetNext(nullptr, nullptr);
 
-    ASSERT_THAT(err, Eq(WorkerErrorCode::WRONG_INPUT));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kWrongInput));
 }
-
 
 TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
     data_broker->Connect();
@@ -223,7 +169,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
 
     auto err = data_broker->GetNext(&fi, nullptr);
 
-    ASSERT_THAT(err, Eq(WorkerErrorCode::OK));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kOK));
     ASSERT_THAT(fi.base_name, Eq("1"));
     ASSERT_THAT(fi.size, Eq(100));
 
@@ -236,7 +182,7 @@ TEST_F(FolderDataBrokerTests, SecondNextReturnsAnotherFileInfo) {
 
     auto err = data_broker->GetNext(&fi, nullptr);
 
-    ASSERT_THAT(err, Eq(WorkerErrorCode::OK));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kOK));
     ASSERT_THAT(fi.base_name, Eq("2"));
 }
 
@@ -246,7 +192,7 @@ TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
     FileInfo fi;
 
     auto err = data_broker->GetNext(&fi, nullptr);
-    ASSERT_THAT(err, Eq(WorkerErrorCode::NO_DATA));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kNoData));
 }
 
 
@@ -257,12 +203,13 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
     FileData data;
 
     auto err = data_broker->GetNext(&fi, &data);
-    ASSERT_THAT(err, Eq(WorkerErrorCode::PERMISSIONS_DENIED));
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kPermissionDenied));
 }
+
 
 class OpenFileMock : public FakeIO {
   public:
-    MOCK_METHOD3(GetDataFromFile, FileData(const std::string& fname, uint64_t fsize, IOError* err));
+    MOCK_CONST_METHOD3(GetDataFromFileProxy, uint8_t* (const std::string&, uint64_t, IOErrors*));
 };
 
 
@@ -283,32 +230,51 @@ class GetDataFromFileTests : public Test {
 };
 
 TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
-    EXPECT_CALL(mock, GetDataFromFile("/path/to/file/1", _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOError::NO_ERROR), testing::Return(FileData{})));
+    EXPECT_CALL(mock, GetDataFromFileProxy("/path/to/file/1", _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kNoError), testing::Return(nullptr)));
 
     data_broker->GetNext(&fi, &data);
 }
 
 
-TEST_F(GetDataFromFileTests, GetNextReturnsData) {
-    EXPECT_CALL(mock, GetDataFromFile(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOError::NO_ERROR), testing::Return(FileData{'1'})));
+
+TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
+    EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kNoError), testing::Return(new uint8_t[1] {'1'})));
 
     data_broker->GetNext(&fi, &data);
+
+    ASSERT_THAT(data[0], Eq('1'));
+    ASSERT_THAT(fi.base_name, Eq("1"));
+
+}
+
+TEST_F(GetDataFromFileTests, GetNextReturnsOnlyData) {
+    EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kNoError), testing::Return(new uint8_t[1] {'1'})));
+
+    data_broker->GetNext(nullptr, &data);
 
     ASSERT_THAT(data[0], Eq('1'));
 }
 
 
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
-    EXPECT_CALL(mock, GetDataFromFile(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOError::READ_ERROR), testing::Return(FileData{})));
+    EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kReadError), testing::Return(nullptr)));
 
     auto err = data_broker->GetNext(&fi, &data);
-    data_broker->io__.release();
 
-    ASSERT_THAT(err, Eq(WorkerErrorCode::ERROR_READING_FROM_SOURCE));
-    ASSERT_TRUE(data.empty());
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kErrorReadingSource));
+}
+
+TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotAllocateData) {
+    EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kMemoryAllocationError), testing::Return(nullptr)));
+
+    auto err = data_broker->GetNext(&fi, &data);
+
+    ASSERT_THAT(err, Eq(WorkerErrorCode::kMemoryError));
 }
 
 
