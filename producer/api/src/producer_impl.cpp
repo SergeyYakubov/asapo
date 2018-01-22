@@ -111,4 +111,3 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, void* data, s
     status_ = PRODUCER_STATUS__CONNECTED;
     return ProducerError::kNoError;
 }
-

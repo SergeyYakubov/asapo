@@ -33,7 +33,7 @@ int SendDummyData(const std::string& receiver_address, size_t number_of_byte, ui
     auto buffer = std::unique_ptr<uint8_t>(new uint8_t[number_of_byte]);
 
     for(uint64_t i = 0; i < iterations; i++) {
-        std::cout << "Send file " << i+1 << "/" << iterations << std::endl;
+        std::cout << "Send file " << i + 1 << "/" << iterations << std::endl;
         hidra2::ProducerError error;
         error = producer->Send(i, buffer.get(), number_of_byte);
 

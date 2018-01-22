@@ -87,12 +87,12 @@ TEST(ProducerImpl, ConnectToReceiver) {
     hidra2::FileDescriptor expected_fd = 199;
 
     EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket(expected_address, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<1>(hidra2::IOErrors::kNoError),
-                Return(expected_fd)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<1>(hidra2::IOErrors::kNoError),
+            Return(expected_fd)
+        ));
 
     hidra2::ProducerError error = producer.ConnectToReceiver(expected_address);
     hidra2::ProducerStatus status = producer.GetStatus();
@@ -109,9 +109,9 @@ void ConnectToReceiver_DONE(hidra2::ProducerImpl& producer, hidra2::FileDescript
     .Times(1)
     .WillOnce(
         DoAll(
-        testing::SetArgPointee<1>(hidra2::IOErrors::kNoError),
-        Return(expected_fd)
-    ));
+            testing::SetArgPointee<1>(hidra2::IOErrors::kNoError),
+            Return(expected_fd)
+        ));
 
     producer.ConnectToReceiver("");
 }
@@ -169,7 +169,8 @@ TEST(ProducerImpl, Send__file_too_large) {
 
     ConnectToReceiver_DONE(producer, expected_fd);
 
-    hidra2::ProducerError error = producer.Send(expected_file_id, nullptr, size_t(1024) * size_t(1024) * size_t(1024) * size_t(3));
+    hidra2::ProducerError error = producer.Send(expected_file_id, nullptr,
+                                                size_t(1024) * size_t(1024) * size_t(1024) * size_t(3));
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kFileTooLarge));
@@ -191,13 +192,14 @@ TEST(ProducerImpl, Send__sendDataRequest_error) {
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
 
-    EXPECT_CALL(mockIO, Send(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id, expected_file_size), sizeof(hidra2::SendDataRequest), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::kBadFileNumber),
-                Return(-1)
-            ));
+    EXPECT_CALL(mockIO, Send(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id, expected_file_size),
+                             sizeof(hidra2::SendDataRequest), _))
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kBadFileNumber),
+            Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.Send(expected_file_id, nullptr, expected_file_size);
     hidra2::ProducerStatus status = producer.GetStatus();
@@ -223,20 +225,20 @@ TEST(ProducerImpl, Send__sendData_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, Send(_, _, _, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
-                testing::ReturnArg<2>()
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::ReturnArg<2>()
+        ));
 
     EXPECT_CALL(mockIO, Send(expected_fd, expected_file_pointer, expected_file_size, _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::kBadFileNumber),
-                Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kBadFileNumber),
+            Return(-1)
+        ));
 
 
     hidra2::ProducerError error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
@@ -264,20 +266,20 @@ TEST(ProducerImpl, Send__Receive_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, Send(_, _, _, _))
-        .Times(2)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
-                testing::ReturnArg<2>()
-            ));
+    .Times(2)
+    .WillRepeatedly(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::ReturnArg<2>()
+        ));
 
     EXPECT_CALL(mockIO, Receive(expected_fd, _, sizeof(hidra2::SendDataResponse), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::kBadFileNumber),
-                testing::Return(-1)
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kBadFileNumber),
+            testing::Return(-1)
+        ));
 
     hidra2::ProducerError error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
     hidra2::ProducerStatus status = producer.GetStatus();
@@ -303,21 +305,21 @@ TEST(ProducerImpl, Send__Receive_server_error) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, Send(_, _, _, _))
-        .Times(2)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
-                testing::ReturnArg<2>()
-            ));
+    .Times(2)
+    .WillRepeatedly(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::ReturnArg<2>()
+        ));
 
     EXPECT_CALL(mockIO, Receive(_, _, sizeof(hidra2::SendDataResponse), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
-                A_WriteSendDataResponse(hidra2::NET_ERR__ALLOCATE_STORAGE_FAILED, expected_request_id),
-                testing::ReturnArg<2>()
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            A_WriteSendDataResponse(hidra2::NET_ERR__ALLOCATE_STORAGE_FAILED, expected_request_id),
+            testing::ReturnArg<2>()
+        ));
 
     hidra2::ProducerError error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
     hidra2::ProducerStatus status = producer.GetStatus();
@@ -344,21 +346,21 @@ TEST(ProducerImpl, Send) {
     producer.__set_io(&mockIO);
 
     EXPECT_CALL(mockIO, Send(_, _, _, _))
-        .Times(2)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
-                testing::ReturnArg<2>()
-            ));
+    .Times(2)
+    .WillRepeatedly(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::ReturnArg<2>()
+        ));
 
     EXPECT_CALL(mockIO, Receive(_, _, sizeof(hidra2::SendDataResponse), _))
-        .Times(1)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
-                A_WriteSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id),
-                testing::ReturnArg<2>()
-            ));
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            A_WriteSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id),
+            testing::ReturnArg<2>()
+        ));
 
     hidra2::ProducerError error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
     hidra2::ProducerStatus status = producer.GetStatus();

@@ -29,7 +29,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, uint16_t port
 
     io->InetBind(listener_fd, listener_address, port, &io_error);
     if(io_error != IOErrors::kNoError) {
-        io->Close(listener_fd);
+        io->Close(listener_fd, nullptr);
         *err = ReceiverError::FAILED_CREATING_SOCKET;
         listener_running_ = false;
         std::cerr << "Fail to bind socket" << std::endl;
@@ -38,7 +38,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, uint16_t port
 
     io->Listen(listener_fd, kMaxUnacceptedConnectionsBacklog, &io_error);
     if(io_error != IOErrors::kNoError) {
-        io->Close(listener_fd);
+        io->Close(listener_fd, nullptr);
         *err = ReceiverError::FAILED_CREATING_SOCKET;
         listener_running_ = false;
         std::cerr << "Fail to start listen" << std::endl;

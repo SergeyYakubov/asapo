@@ -5,6 +5,7 @@
 #include "system_wrappers/io.h"
 #include "system_wrappers/system_io.h"
 #include "../src/folder_data_broker.h"
+#include "../../../../common/cpp/unittests/MockIO.h"
 
 using hidra2::DataBrokerFactory;
 using hidra2::DataBroker;
@@ -33,7 +34,7 @@ TEST(FolderDataBroker, SetCorrectIO) {
 
 
 
-class FakeIO: public IO {
+class FakeIO: public hidra2::MockIO {
   public:
 
     virtual uint8_t* GetDataFromFileProxy(const std::string& fname, uint64_t fsize, IOErrors* err) const {
@@ -41,21 +42,9 @@ class FakeIO: public IO {
         return nullptr;
     };
 
-    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const noexcept override {
+    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const override {
         return FileData(GetDataFromFileProxy(fname, fsize, err));
     };
-
-    int open(const char* __file, int __oflag) const noexcept override {
-        return 0;
-    };
-
-    int close(int __fd)const noexcept override {
-        return 0;
-    };
-
-    uint64_t Read(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const noexcept override {
-        return 0;
-    }
 
     std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kNoError;

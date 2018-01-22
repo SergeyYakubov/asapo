@@ -37,7 +37,7 @@ void NetworkProducerPeer::handle_send_data_request_(NetworkProducerPeer* self, c
         self->io->Skip(self->socket_fd_, request->file_size, &ioErr);
         if(ioErr != IOErrors::kNoError) {
             std::cout << "[NetworkProducerPeer] Out of sync force disconnect" << std::endl;
-            self->io->Close(self->socket_fd_);
+            self->io->Close(self->socket_fd_, nullptr);
         }
         return;
     }

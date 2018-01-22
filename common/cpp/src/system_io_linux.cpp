@@ -177,7 +177,7 @@ void CollectFileInformationRecursivly(const std::string& path,
 hidra2::FileDescriptor hidra2::SystemIO::CreateSocket(hidra2::AddressFamilies address_family,
         hidra2::SocketTypes socket_type,
         hidra2::SocketProtocols socket_protocol,
-        hidra2::IOErrors* err) {
+        hidra2::IOErrors* err) const {
     *err = IOErrors::kNoError;
 
     int domain = AddressFamilyToPosixFamily(address_family);
@@ -221,7 +221,7 @@ hidra2::FileDescriptor hidra2::SystemIO::CreateSocket(hidra2::AddressFamilies ad
 void hidra2::SystemIO::InetBind(hidra2::FileDescriptor socket_fd,
                                 const std::string& address,
                                 uint16_t port,
-                                hidra2::IOErrors* err) {
+                                hidra2::IOErrors* err) const {
     *err = IOErrors::kNoError;
 
     sa_family_t family = AddressFamilyToPosixFamily(AddressFamilies::INET);
@@ -241,7 +241,7 @@ void hidra2::SystemIO::InetBind(hidra2::FileDescriptor socket_fd,
 
 }
 
-void hidra2::SystemIO::Listen(hidra2::FileDescriptor socket_fd, int backlog, hidra2::IOErrors* err) {
+void hidra2::SystemIO::Listen(hidra2::FileDescriptor socket_fd, int backlog, hidra2::IOErrors* err) const {
     *err = IOErrors::kNoError;
 
     if(::listen(socket_fd, backlog) == -1) {
@@ -250,7 +250,7 @@ void hidra2::SystemIO::Listen(hidra2::FileDescriptor socket_fd, int backlog, hid
 }
 
 std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>> hidra2::SystemIO::InetAccept(
-            hidra2::FileDescriptor socket_fd, IOErrors* err) {
+hidra2::FileDescriptor socket_fd, IOErrors* err) const {
     *err = IOErrors::kNoError;
     sa_family_t family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if(family == -1) {
@@ -273,7 +273,7 @@ std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>> hidra2::SystemI
             std::tuple<std::string, hidra2::FileDescriptor>(address, peer_fd));
 }
 
-void hidra2::SystemIO::InetConnect(FileDescriptor socket_fd, const std::string& address, hidra2::IOErrors* err) {
+void hidra2::SystemIO::InetConnect(FileDescriptor socket_fd, const std::string& address, hidra2::IOErrors* err) const {
     *err = IOErrors::kNoError;
     std::string host;
     uint16_t port = 0;
@@ -305,7 +305,8 @@ void hidra2::SystemIO::InetConnect(FileDescriptor socket_fd, const std::string& 
     }
 }
 
-size_t hidra2::SystemIO::Receive(hidra2::FileDescriptor socket_fd, void* buf, size_t length, hidra2::IOErrors* err) {
+size_t hidra2::SystemIO::Receive(hidra2::FileDescriptor socket_fd, void* buf, size_t length,
+                                 hidra2::IOErrors* err) const {
     *err = hidra2::IOErrors::kNoError;
 
     size_t already_received = 0;
@@ -330,7 +331,7 @@ size_t hidra2::SystemIO::ReceiveTimeout(hidra2::FileDescriptor socket_fd,
                                         void* buf,
                                         size_t length,
                                         uint16_t timeout_in_sec,
-                                        hidra2::IOErrors* err) {
+                                        hidra2::IOErrors* err) const {
     *err = hidra2::IOErrors::kNoError;
 
     fd_set read_fds;
@@ -355,7 +356,7 @@ size_t hidra2::SystemIO::ReceiveTimeout(hidra2::FileDescriptor socket_fd,
 size_t hidra2::SystemIO::Send(hidra2::FileDescriptor socket_fd,
                               const void* buf,
                               size_t length,
-                              hidra2::IOErrors* err) {
+                              hidra2::IOErrors* err) const {
     *err = hidra2::IOErrors::kNoError;
 
     size_t already_sent = 0;
@@ -378,7 +379,7 @@ size_t hidra2::SystemIO::Send(hidra2::FileDescriptor socket_fd,
 
 hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
                                               int open_flags,
-                                              IOErrors* err) {
+                                              IOErrors* err) const {
     *err = IOErrors::kNoError;
     int flags = FileOpenModeToPosixFileOpenMode(open_flags);
 
@@ -390,7 +391,7 @@ hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
     return fd;
 }
 
-void hidra2::SystemIO::Close(hidra2::FileDescriptor fd, hidra2::IOErrors* err) {
+void hidra2::SystemIO::Close(hidra2::FileDescriptor fd, hidra2::IOErrors* err) const {
     int status = ::close(fd);
     if(!err) {
         return;
@@ -400,7 +401,7 @@ void hidra2::SystemIO::Close(hidra2::FileDescriptor fd, hidra2::IOErrors* err) {
         *err = IOErrorsFromErrno();
     }
 }
-size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length, IOErrors* err)  {
+size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length, IOErrors* err) const {
     *err = hidra2::IOErrors::kNoError;
 
     size_t already_sent = 0;
@@ -420,7 +421,7 @@ size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length
 
     return already_sent;
 }
-void hidra2::SystemIO::CreateDirectory(const std::string& directory_name, hidra2::IOErrors* err) {
+void hidra2::SystemIO::CreateDirectory(const std::string& directory_name, hidra2::IOErrors* err) const {
     *err = IOErrors::kNoError;
     struct stat st = {0};
     int result = ::stat(directory_name.c_str(), &st);
@@ -437,10 +438,10 @@ void hidra2::SystemIO::CreateDirectory(const std::string& directory_name, hidra2
 }
 hidra2::FileData hidra2::SystemIO::GetDataFromFile(const std::string& fname,
         uint64_t fsize,
-        hidra2::IOErrors* err) {
+        hidra2::IOErrors* err) const {
     return hidra2::FileData();
 }
 
-vector<hidra2::FileInfo> hidra2::SystemIO::FilesInFolder(const std::string& folder, hidra2::IOErrors* err) {
+vector<hidra2::FileInfo> hidra2::SystemIO::FilesInFolder(const std::string& folder, hidra2::IOErrors* err) const {
     return vector<hidra2::FileInfo>();
 }

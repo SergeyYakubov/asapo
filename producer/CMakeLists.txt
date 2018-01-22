@@ -1,1 +1,1 @@
-add_subdirectory(inotify-event-detector-cpp)
+#add_subdirectory(inotify-event-detector-cpp)

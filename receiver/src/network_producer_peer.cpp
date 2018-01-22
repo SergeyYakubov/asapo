@@ -77,7 +77,7 @@ void NetworkProducerPeer::internal_receiver_thread_() {
         }
     }
 
-    io->Close(socket_fd_);
+    io->Close(socket_fd_, nullptr);
     std::cout << "[" << connection_id() << "] Disconnected." << std::endl;
 
     free(generic_request);
@@ -98,7 +98,7 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
     if(request->op_code >= OP_CODE_COUNT || request->op_code < 0) {
         std::cerr << "[" << connection_id() << "] Error invalid op_code: " << request->op_code << " force disconnect." <<
                   std::endl;
-        io->Close(socket_fd_);
+        io->Close(socket_fd_, nullptr);
         return 0;
     }
 

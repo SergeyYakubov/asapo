@@ -9,11 +9,11 @@ namespace hidra2 {
  * THIS FILE HOLDS GENERAL FUNCTIONS THAT CAN BE USED ON WINDOWS AND ON LINUX  *
  *******************************************************************************/
 
-std::thread* hidra2::SystemIO::NewThread(std::function<void()> function) {
+std::thread* hidra2::SystemIO::NewThread(std::function<void()> function) const {
     return new std::thread(function);
 }
 
-void hidra2::SystemIO::Skip(hidra2::FileDescriptor socket_fd, size_t length, hidra2::IOErrors* err) {
+void hidra2::SystemIO::Skip(hidra2::FileDescriptor socket_fd, size_t length, hidra2::IOErrors* err) const {
     static const size_t kSkipBufferSize = 1024;
 
     //TODO need to find a better way to skip bytes
@@ -40,7 +40,7 @@ void hidra2::SystemIO::Skip(hidra2::FileDescriptor socket_fd, size_t length, hid
 }
 
 hidra2::FileDescriptor hidra2::SystemIO::CreateAndConnectIPTCPSocket(const std::string& address,
-        hidra2::IOErrors* err) {
+        hidra2::IOErrors* err) const {
     *err = hidra2::IOErrors::kNoError;
 
     FileDescriptor fd = CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, err);
