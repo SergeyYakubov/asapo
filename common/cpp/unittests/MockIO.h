@@ -8,8 +8,6 @@ namespace hidra2 {
 
 class MockIO : public IO {
   public:
-    MOCK_CONST_METHOD3(GetDataFromFile, FileData(const std::string& fname, uint64_t fsize, IOErrors* err));
-    MOCK_CONST_METHOD2(FilesInFolder, std::vector<FileInfo>(const std::string& folder, IOErrors* err));
     MOCK_CONST_METHOD1(NewThread, std::thread * (std::function<void()> function));
     MOCK_CONST_METHOD4(CreateSocket, FileDescriptor(AddressFamilies address_family, SocketTypes socket_type,
                                                     SocketProtocols socket_protocol, IOErrors* err));
@@ -33,6 +31,9 @@ class MockIO : public IO {
     MOCK_CONST_METHOD4(Read, size_t(FileDescriptor fd, void* buf, size_t length, IOErrors* err));
     MOCK_CONST_METHOD4(Write, size_t(FileDescriptor fd, const void* buf, size_t length, IOErrors* err));
     MOCK_CONST_METHOD2(CreateDirectory, void(const std::string& directory_name, hidra2::IOErrors* err));
+    MOCK_CONST_METHOD3(GetDataFromFile, FileData(const std::string& fname, uint64_t fsize, IOErrors* err));
+    MOCK_CONST_METHOD2(FilesInFolder, std::vector<FileInfo>(const std::string& folder, IOErrors* err));
+    MOCK_CONST_METHOD3(CollectFileInformationRecursivly, void(const std::string& path, std::vector<FileInfo>* files, IOErrors* err));
 };
 
 }

@@ -158,8 +158,9 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
     files->push_back(file_info);
 }
 
-void CollectFileInformationRecursivly(const std::string& path,
-                                      std::vector<FileInfo>* files, IOErrors* err) {
+void SystemIO::CollectFileInformationRecursivly(const std::string &path,
+                                                std::vector<FileInfo>* files,
+                                                IOErrors* err) const {
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = IOErrorsFromErrno();

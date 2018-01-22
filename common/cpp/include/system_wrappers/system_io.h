@@ -13,10 +13,10 @@ class SystemIO final : public IO {
      * Special
      */
     std::thread*            NewThread(std::function<void()> function) const;
-    FileData                GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const;
+
 
     // this is not standard function - to be implemented differently in windows and linux
-    std::vector<FileInfo>   FilesInFolder   (const std::string& folder, IOErrors* err) const;
+    std::vector<FileInfo>   FilesInFolder(const std::string& folder, IOErrors* err) const;
 
     /*
      * Network
@@ -47,6 +47,8 @@ class SystemIO final : public IO {
     size_t          Read(FileDescriptor fd, void* buf, size_t length, IOErrors* err) const;
     size_t          Write(FileDescriptor fd, const void* buf, size_t length, IOErrors* err) const;
     void            CreateDirectory(const std::string& directory_name, hidra2::IOErrors* err) const;
+    FileData        GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const;
+    void CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
 
 };
 }
