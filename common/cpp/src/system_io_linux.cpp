@@ -435,7 +435,7 @@ size_t hidra2::SystemIO::Read(FileDescriptor fd, void* buf, size_t length, IOErr
     size_t already_read = 0;
 
     while(already_read < length) {
-        ssize_t received_amount = ::recv(fd, (uint8_t*)buf + already_read, length - already_read, 0);
+        ssize_t received_amount = ::read(fd, (uint8_t*)buf + already_read, length - already_read);
         if(received_amount == 0) {
             *err = IOErrors::kEndOfFile;
             return already_read;
@@ -488,6 +488,7 @@ void hidra2::SystemIO::CreateDirectory(const std::string& directory_name, hidra2
 }
 
 hidra2::FileData hidra2::SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const {
+    *err = IOErrors::kNoError;
     FileDescriptor fd = Open(fname, IO_OPEN_MODE_READ, err);
     if (*err != IOErrors::kNoError) {
         return nullptr;
@@ -499,9 +500,8 @@ hidra2::FileData hidra2::SystemIO::GetDataFromFile(const std::string& fname, uin
         *err = IOErrors::kMemoryAllocationError;
         return nullptr;
     }
-
-    Read(fd, data_array, fsize, err);
     FileData data{data_array};
+    Read(fd, data_array, fsize, err);
     if (*err != IOErrors::kNoError) {
         Close(fd, nullptr);
         return nullptr;
