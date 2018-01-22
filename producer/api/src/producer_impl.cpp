@@ -46,32 +46,33 @@ hidra2::ProducerError hidra2::ProducerImpl::initialize_socket_to_receiver_(const
 }
 
 hidra2::ProducerError hidra2::ProducerImpl::ConnectToReceiver(const std::string& receiver_address) {
-    if(client_fd_ != -1 && status_ != PRODUCER_STATUS__DISCONNECTED && status_ != PRODUCER_STATUS__CONNECTING) {
+    if(client_fd_ != -1 && status_ != ProducerStatus::kDisconnected
+            && status_ != ProducerStatus::kConnecting) {
         return ProducerError::kAlreadyConnected;
     }
 
-    status_ = PRODUCER_STATUS__CONNECTING;
+    status_ = ProducerStatus::kConnecting;
 
     ProducerError error;
     error = initialize_socket_to_receiver_(receiver_address);
     if(error != ProducerError::kNoError) {
-        status_ = PRODUCER_STATUS__DISCONNECTED;
+        status_ = ProducerStatus::kDisconnected;
         return error;
     }
 
-    status_ = PRODUCER_STATUS__CONNECTED;
+    status_ = ProducerStatus::kConnected;
     return ProducerError::kNoError;
 }
 
 hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, void* data, size_t file_size) {
-    if(status_ != PRODUCER_STATUS__CONNECTED) {
+    if(status_ != ProducerStatus::kConnected) {
         return ProducerError::kConnectionNotReady;
     }
     if(file_size > kMaxChunkSize) {
         return ProducerError::kFileTooLarge;
     }
 
-    status_ = PRODUCER_STATUS__SENDING;
+    status_ = ProducerStatus::kSending;
 
     SendDataRequest sendDataRequest;
     sendDataRequest.op_code = OP_CODE__SEND_DATA;
@@ -83,14 +84,14 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, void* data, s
     io->Send(client_fd_, &sendDataRequest, sizeof(sendDataRequest), &io_error);
     if(io_error != IOErrors::kNoError) {
         std::cerr << "hidra2::ProducerImpl::Send/sendDataRequest" << std::endl;
-        status_ = PRODUCER_STATUS__CONNECTED;
+        status_ = ProducerStatus::kConnected;
         return ProducerError::kUnexpectedIOError;
     }
 
     io->Send(client_fd_, data, file_size, &io_error);
     if(io_error != IOErrors::kNoError) {
         std::cerr << "hidra2::ProducerImpl::Send/sendData" << std::endl;
-        status_ = PRODUCER_STATUS__CONNECTED;
+        status_ = ProducerStatus::kConnected;
         return ProducerError::kUnexpectedIOError;
     }
 
@@ -98,16 +99,16 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, void* data, s
     io->Receive(client_fd_, &sendDataResponse, sizeof(sendDataResponse), &io_error);
     if(io_error != IOErrors::kNoError) {
         std::cerr << "hidra2::ProducerImpl::send/receive_timeout error" << std::endl;
-        status_ = PRODUCER_STATUS__CONNECTED;
+        status_ = ProducerStatus::kConnected;
         return ProducerError::kUnexpectedIOError;
     }
 
     if(sendDataResponse.error_code) {
         std::cerr << "Server reported an error. NetErrorCode: " << sendDataResponse.error_code << std::endl;
-        status_ = PRODUCER_STATUS__CONNECTED;
+        status_ = ProducerStatus::kConnected;
         return ProducerError::kUnknownServerError;
     }
 
-    status_ = PRODUCER_STATUS__CONNECTED;
+    status_ = ProducerStatus::kConnected;
     return ProducerError::kNoError;
 }

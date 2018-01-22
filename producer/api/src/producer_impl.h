@@ -14,7 +14,7 @@ class ProducerImpl : public Producer, public HasIO {
     int         client_fd_ = -1;
     uint64_t    request_id = 0;
 
-    ProducerStatus status_ = PRODUCER_STATUS__DISCONNECTED;
+    ProducerStatus status_ = ProducerStatus::kDisconnected;
 
     ProducerError initialize_socket_to_receiver_(const std::string& receiver_address);
     ProducerError NetworkErrorToProducerError(NetworkErrorCode networkError);

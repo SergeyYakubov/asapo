@@ -16,12 +16,11 @@ enum class ProducerError {
     kUnknownError,
 };
 
-enum ProducerStatus {
-    PRODUCER_STATUS__DISCONNECTED,
-    PRODUCER_STATUS__CONNECTING,
-    PRODUCER_STATUS__CONNECTED,
-    PRODUCER_STATUS__SENDING,
-    PRODUCER_STATUS__ERROR,
+enum class ProducerStatus {
+    kDisconnected,
+    kConnecting,
+    kConnected,
+    kSending,
 };
 
 class Producer {

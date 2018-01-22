@@ -166,12 +166,12 @@ void CollectFileInformationRecursivly(const std::string& path,
             ProcessFileEntity(current_entity, path, files, err);
         }
         if (*err != IOErrors::kNoError) {
-            closedir(dir);
+            ::closedir(dir);
             return;
         }
     }
     *err = IOErrorsFromErrno();
-    closedir(dir);
+    ::closedir(dir);
 }
 
 hidra2::FileDescriptor hidra2::SystemIO::CreateSocket(hidra2::AddressFamilies address_family,

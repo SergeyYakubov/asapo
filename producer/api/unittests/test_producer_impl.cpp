@@ -24,7 +24,7 @@ TEST(ProducerImpl, get_status__disconnected) {
 
     hidra2::ProducerStatus status = producer.GetStatus();
 
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__DISCONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
 }
 
 /**
@@ -51,7 +51,7 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_invalid_addres
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kInvalidAddressFormat));
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__DISCONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
 }
 
 TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_unk) {
@@ -74,7 +74,7 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_unk) {
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kUnknownError));
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__DISCONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
 }
 
 TEST(ProducerImpl, ConnectToReceiver) {
@@ -98,7 +98,7 @@ TEST(ProducerImpl, ConnectToReceiver) {
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kNoError));
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__CONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
 void ConnectToReceiver_DONE(hidra2::ProducerImpl& producer, hidra2::FileDescriptor expected_fd = 1) {
@@ -132,7 +132,7 @@ TEST(ProducerImpl, ConnectToReceiver__already_connected) {
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kAlreadyConnected));
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__CONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
 /**
@@ -174,7 +174,7 @@ TEST(ProducerImpl, Send__file_too_large) {
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kFileTooLarge));
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__CONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
 TEST(ProducerImpl, Send__sendDataRequest_error) {
@@ -205,7 +205,7 @@ TEST(ProducerImpl, Send__sendDataRequest_error) {
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kUnexpectedIOError));
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__CONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
 TEST(ProducerImpl, Send__sendData_error) {
@@ -245,7 +245,7 @@ TEST(ProducerImpl, Send__sendData_error) {
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kUnexpectedIOError));
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__CONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
 
@@ -285,7 +285,7 @@ TEST(ProducerImpl, Send__Receive_error) {
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kUnexpectedIOError));
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__CONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
 TEST(ProducerImpl, Send__Receive_server_error) {
@@ -325,7 +325,7 @@ TEST(ProducerImpl, Send__Receive_server_error) {
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kUnknownServerError));
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__CONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
 
@@ -366,7 +366,7 @@ TEST(ProducerImpl, Send) {
     hidra2::ProducerStatus status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerError::kNoError));
-    ASSERT_THAT(status, Eq(hidra2::PRODUCER_STATUS__CONNECTED));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
 }
