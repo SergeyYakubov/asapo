@@ -414,7 +414,9 @@ hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
 }
 
 void hidra2::SystemIO::Close(hidra2::FileDescriptor fd, hidra2::IOErrors* err) const {
-    *err = IOErrors::kNoError;
+    if(err) {
+        *err = IOErrors::kNoError;
+    }
     int status = ::close(fd);
     if(!err) {
         return;
