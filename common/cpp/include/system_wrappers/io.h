@@ -31,6 +31,7 @@ enum class IOErrors {
     kTimeout,
     kFileAlreadyExists,
     kNoSpaceLeft,
+    kSocketOperationOnNonSocket,
     kMemoryAllocationError
 };
 

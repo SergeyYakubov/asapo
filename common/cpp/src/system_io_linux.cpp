@@ -47,6 +47,8 @@ IOErrors IOErrorsFromErrno() {
         return IOErrors::kAddressAlreadyInUse;
     case ECONNRESET:
         return IOErrors::kConnectionResetByPeer;
+    case ENOTSOCK:
+        return IOErrors::kSocketOperationOnNonSocket;
     default:
         std::cout << "[IOErrorsFromErrno] Unknown error code: " << errno << std::endl;
         return IOErrors::kUnknownError;
