@@ -20,6 +20,12 @@ using std::chrono::system_clock;
 
 namespace hidra2 {
 
+/**
+ * \defgroup SYSTEM_IO_LINUX_PRIVATE
+ * Local and private function that are being used by system_io_linux.cpp
+ * @{
+ */
+
 IOErrors IOErrorsFromErrno() {
     switch (errno) {
     case 0:
@@ -135,7 +141,7 @@ FileInfo GetFileInfo(const string& path, const string& name, IOErrors* err) {
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
-                       std::vector<FileInfo>& files, IOErrors* err) {
+                       std::vector<FileInfo>* files, IOErrors* err) {
 
     *err = IOErrors::kNoError;
     if (entity->d_type != DT_REG) {
@@ -147,11 +153,11 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
         return;
     }
 
-    files.push_back(file_info);
+    files->push_back(file_info);
 }
 
 void CollectFileInformationRecursivly(const std::string& path,
-                                      std::vector<FileInfo>& files, IOErrors* err) {
+                                      std::vector<FileInfo>* files, IOErrors* err) {
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = IOErrorsFromErrno();
@@ -166,13 +172,29 @@ void CollectFileInformationRecursivly(const std::string& path,
             ProcessFileEntity(current_entity, path, files, err);
         }
         if (*err != IOErrors::kNoError) {
-            ::closedir(dir);
+            closedir(dir);
             return;
         }
     }
     *err = IOErrorsFromErrno();
-    ::closedir(dir);
+    closedir(dir);
 }
+
+void SortFileList(std::vector<FileInfo>* file_list) {
+    std::sort(file_list->begin(), file_list->end(),
+    [](FileInfo const & a, FileInfo const & b) {
+        return a.modify_date < b.modify_date;
+    });
+}
+
+void StripBasePath(const std::string& folder, std::vector<FileInfo>* file_list) {
+    auto n_erase = folder.size() + 1;
+    for (auto& file : *file_list) {
+        file.relative_path.erase(0, n_erase);
+    }
+}
+
+/** @} */
 
 hidra2::FileDescriptor hidra2::SystemIO::CreateSocket(hidra2::AddressFamilies address_family,
         hidra2::SocketTypes socket_type,
@@ -444,6 +466,7 @@ size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length
 
     return already_wrote;
 }
+
 void hidra2::SystemIO::CreateDirectory(const std::string& directory_name, hidra2::IOErrors* err) const {
     *err = IOErrors::kNoError;
     struct stat st = {0};
@@ -459,12 +482,43 @@ void hidra2::SystemIO::CreateDirectory(const std::string& directory_name, hidra2
     }
 
 }
-hidra2::FileData hidra2::SystemIO::GetDataFromFile(const std::string& fname,
-        uint64_t fsize,
-        hidra2::IOErrors* err) const {
-    return hidra2::FileData();
+
+hidra2::FileData hidra2::SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const {
+    FileDescriptor fd = Open(fname, IO_OPEN_MODE_READ, err);
+    if (*err != IOErrors::kNoError) {
+        return nullptr;
+    }
+    uint8_t* data_array = nullptr;
+    try {
+        data_array = new uint8_t[fsize];
+    } catch (...) {
+        *err = IOErrors::kMemoryAllocationError;
+        return nullptr;
+    }
+
+    Read(fd, data_array, fsize, err);
+    FileData data{data_array};
+    if (*err != IOErrors::kNoError) {
+        Close(fd, nullptr);
+        return nullptr;
+    }
+
+    Close(fd, nullptr);
+    *err = IOErrorsFromErrno();
+    if (*err != IOErrors::kNoError) {
+        return nullptr;
+    }
+
+    return data;
 }
 
 vector<hidra2::FileInfo> hidra2::SystemIO::FilesInFolder(const std::string& folder, hidra2::IOErrors* err) const {
-    return vector<hidra2::FileInfo>();
+    std::vector<FileInfo> files{};
+    CollectFileInformationRecursivly(folder, &files, err);
+    if (*err != IOErrors::kNoError) {
+        return {};
+    }
+    StripBasePath(folder, &files);
+    SortFileList(&files);
+    return files;
 }
