@@ -392,6 +392,7 @@ hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
 }
 
 void hidra2::SystemIO::Close(hidra2::FileDescriptor fd, hidra2::IOErrors* err) const {
+    *err = IOErrors::kNoError;
     int status = ::close(fd);
     if(!err) {
         return;
@@ -401,25 +402,47 @@ void hidra2::SystemIO::Close(hidra2::FileDescriptor fd, hidra2::IOErrors* err) c
         *err = IOErrorsFromErrno();
     }
 }
+
+size_t hidra2::SystemIO::Read(FileDescriptor fd, void* buf, size_t length, IOErrors* err) const {
+    *err = hidra2::IOErrors::kNoError;
+
+    size_t already_read = 0;
+
+    while(already_read < length) {
+        ssize_t received_amount = ::recv(fd, (uint8_t*)buf + already_read, length - already_read, 0);
+        if(received_amount == 0) {
+            *err = IOErrors::kEndOfFile;
+            return already_read;
+        }
+        if(received_amount == -1) {
+            *err = IOErrorsFromErrno();
+            return already_read;
+        }
+        already_read += received_amount;
+    }
+
+    return already_read;
+}
+
 size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length, IOErrors* err) const {
     *err = hidra2::IOErrors::kNoError;
 
-    size_t already_sent = 0;
+    size_t already_wrote = 0;
 
-    while(already_sent < length) {
-        ssize_t send_amount = ::write(fd, (uint8_t*)buf + already_sent, length - already_sent);
+    while(already_wrote < length) {
+        ssize_t send_amount = ::write(fd, (uint8_t*)buf + already_wrote, length - already_wrote);
         if(send_amount == 0) {
             *err = IOErrors::kEndOfFile;
-            return already_sent;
+            return already_wrote;
         }
         if(send_amount == -1) {
             *err = IOErrorsFromErrno();
-            return already_sent;
+            return already_wrote;
         }
-        already_sent += send_amount;
+        already_wrote += send_amount;
     }
 
-    return already_sent;
+    return already_wrote;
 }
 void hidra2::SystemIO::CreateDirectory(const std::string& directory_name, hidra2::IOErrors* err) const {
     *err = IOErrors::kNoError;

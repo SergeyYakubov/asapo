@@ -105,6 +105,7 @@ class IO {
      */
     virtual void            Close           (FileDescriptor fd, IOErrors* err) const = 0;
 
+    virtual size_t          Read            (FileDescriptor fd, void* buf, size_t length, IOErrors* err) const = 0;
     virtual size_t          Write           (FileDescriptor fd, const void* buf, size_t length, IOErrors* err) const = 0;
 
     virtual void            CreateDirectory(const std::string& directory_name, hidra2::IOErrors* err) const = 0;

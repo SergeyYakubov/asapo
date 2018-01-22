@@ -44,8 +44,8 @@ class SystemIO final : public IO {
      */
     FileDescriptor  Open(const std::string& filename, int open_flags, IOErrors* err) const;
     void            Close(FileDescriptor fd, IOErrors* err) const;
+    size_t          Read(FileDescriptor fd, void* buf, size_t length, IOErrors* err) const;
     size_t          Write(FileDescriptor fd, const void* buf, size_t length, IOErrors* err) const;
-    uint64_t        Read(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const;
     void            CreateDirectory(const std::string& directory_name, hidra2::IOErrors* err) const;
 
 };
