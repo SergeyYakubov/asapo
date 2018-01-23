@@ -134,8 +134,42 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     } else {
         *err = IOErrorFromGetLastError();
     }
-
 }
+
+
+void SystemIO::_close(hidra2::FileDescriptor fd) const {
+    ::close(fd);
+}
+
+ssize_t SystemIO::_read(hidra2::FileDescriptor fd, void* buffer, size_t length) const {
+    return ::read(fd, buffer, length);
+}
+
+ssize_t SystemIO::_write(hidra2::FileDescriptor fd, const void* buffer, size_t length) const {
+    return ::write(fd, buffer, length);
+}
+
+FileDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
+    return ::socket(address_family, socket_type, socket_protocol);
+}
+
+ssize_t SystemIO::_send(FileDescriptor socket_fd, const void* buffer, size_t length) const {
+    return ::send(socket_fd, buffer, length, 0);
+}
+
+ssize_t SystemIO::_recv(FileDescriptor socket_fd, void* buffer, size_t length) const {
+    return ::recv(socket_fd, buffer, length, 0);
+}
+
+int SystemIO::_mkdir(const char* dirname) const {
+    return ::_mkdir(dirname);
+}
+
+int SystemIO::_listen(FileDescriptor fd, int backlog) const {
+    return ::listen(fd, backlog);
+}
+
+
 
 }
 

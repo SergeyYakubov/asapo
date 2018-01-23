@@ -112,7 +112,8 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
 
     IOErrors err;
     //receive the rest of the message
-    io->Receive(socket_fd_, request + sizeof(GenericNetworkRequest), handler_information.request_size - sizeof(GenericNetworkRequest), &err);
+    io->Receive(socket_fd_, request + sizeof(GenericNetworkRequest),
+                handler_information.request_size - sizeof(GenericNetworkRequest), &err);
     if(err != IOErrors::kNoError) {
         std::cerr << "[" << connection_id() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " <<
                   request->op_code << std::endl;
