@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <io.h>
 #include <windows.h>
+#include <direct.h>
 
 using std::string;
 using std::vector;
@@ -138,15 +139,15 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
 
 
 void SystemIO::_close(hidra2::FileDescriptor fd) const {
-    ::close(fd);
+    ::_close(fd);
 }
 
 ssize_t SystemIO::_read(hidra2::FileDescriptor fd, void* buffer, size_t length) const {
-    return ::read(fd, buffer, length);
+    return ::_read(fd, buffer, length);
 }
 
 ssize_t SystemIO::_write(hidra2::FileDescriptor fd, const void* buffer, size_t length) const {
-    return ::write(fd, buffer, length);
+    return ::_write(fd, buffer, length);
 }
 
 FileDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
@@ -154,11 +155,11 @@ FileDescriptor SystemIO::_socket(int address_family, int socket_type, int socket
 }
 
 ssize_t SystemIO::_send(FileDescriptor socket_fd, const void* buffer, size_t length) const {
-    return ::send(socket_fd, buffer, length, 0);
+    return ::send(socket_fd, (char*)buffer, length, 0);
 }
 
 ssize_t SystemIO::_recv(FileDescriptor socket_fd, void* buffer, size_t length) const {
-    return ::recv(socket_fd, buffer, length, 0);
+    return ::recv(socket_fd, (char*)buffer, length, 0);
 }
 
 int SystemIO::_mkdir(const char* dirname) const {
