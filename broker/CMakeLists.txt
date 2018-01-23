@@ -22,6 +22,12 @@ add_custom_target(hidra2-broker ALL
     COMMAND  ${CMAKE_COMMAND} -E env GOPATH=${gopath}
     go build ${GO_OPTS} -o ${TARGET_NAME} hidra2_broker/main
     VERBATIM)
+define_property(TARGET PROPERTY EXENAME
+        BRIEF_DOCS <executable name>
+        FULL_DOCS <full-doc>)
+
+set_target_properties(hidra2-broker PROPERTIES EXENAME ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME})
+
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} DESTINATION bin)
 

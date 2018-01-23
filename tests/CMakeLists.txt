@@ -8,6 +8,12 @@ if(BUILD_MONGODB_CLIENTLIB)
     add_subdirectory(mongo_db)
 endif()
 
+
+if(BUILD_BROKER)
+    add_subdirectory(broker)
+endif()
+
+
 add_subdirectory(worker)
 
 

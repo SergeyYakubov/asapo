@@ -13,7 +13,10 @@ func NewDefaultDatabase() database.Agent {
 }
 
 func main() {
-	log.Fatal(server.InitDB(NewDefaultDatabase()))
+	err:=server.InitDB(NewDefaultDatabase())
+	if err!= nil {
+	    log.Fatal(err.Error())
+	}
 	defer server.CleanupDB()
 	server.Start()
 }
