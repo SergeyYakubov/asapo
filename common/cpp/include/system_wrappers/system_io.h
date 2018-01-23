@@ -8,6 +8,24 @@ namespace hidra2 {
 class SystemIO final : public IO {
   private:
     //void CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
+    int FileOpenModeToPosixFileOpenMode(int open_flags) const;
+    IOErrors GetLastError() const;
+
+    int AddressFamilyToPosixFamily      (AddressFamilies address_family) const;
+    int SocketTypeToPosixType           (SocketTypes socket_type) const;
+    int SocketProtocolToPosixProtocol   (SocketProtocols socket_protocol) const;
+
+    // Function maps. Should never be called apart from in wrapper function
+    FileDescriptor  _open(const char* filename, int posix_open_flags) const;
+    void            _close(FileDescriptor fd) const;
+    ssize_t         _read(FileDescriptor fd, void* buffer, size_t length) const;
+    ssize_t         _write(FileDescriptor fd, const void* buffer, size_t count) const;
+    FileDescriptor  _socket(int address_family, int socket_type, int socket_protocol) const;
+    int             _listen(FileDescriptor fd, int backlog) const;
+    ssize_t         _send(FileDescriptor socket_fd, const void* buffer, size_t length) const;
+    ssize_t         _recv(FileDescriptor socket_fd, void* buffer, size_t length) const;
+    int             _mkdir(const char* dirname) const;
+
   public:
     /*
      * Special
@@ -48,8 +66,9 @@ class SystemIO final : public IO {
     size_t          Write(FileDescriptor fd, const void* buf, size_t length, IOErrors* err) const;
     void            CreateDirectory(const std::string& directory_name, hidra2::IOErrors* err) const;
     FileData        GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const;
-    void CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
-
+    void            CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files,
+                                                     IOErrors* err) const;
+    FileInfo        GetFileInfo(const std::string& path, const std::string& name, IOErrors* err) const;
 };
 }
 

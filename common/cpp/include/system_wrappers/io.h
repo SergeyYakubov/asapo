@@ -107,9 +107,11 @@ class IO {
 
     virtual void            CreateDirectory         (const std::string& directory_name, hidra2::IOErrors* err) const = 0;
     virtual FileData        GetDataFromFile         (const std::string& fname, uint64_t fsize, IOErrors* err) const = 0;
-    virtual void CollectFileInformationRecursivly   (const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const = 0;
+    virtual void CollectFileInformationRecursivly   (const std::string& path, std::vector<FileInfo>* files,
+                                                     IOErrors* err) const = 0;
     virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, IOErrors* err) const = 0;
-
+    virtual FileInfo                GetFileInfo     (const std::string& path, const std::string& name,
+                                                     IOErrors* err)  const = 0;
 
 
 };
