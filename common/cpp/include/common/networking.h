@@ -28,14 +28,12 @@ enum NetworkErrorCode : uint16_t {
 struct GenericNetworkRequest {
     OpCode              op_code;
     NetworkRequestId    request_id;
-    char                data[];
 };
 
 struct GenericNetworkResponse {
     OpCode              op_code;
     NetworkRequestId    request_id;
     NetworkErrorCode    error_code;
-    char                data[];
 };
 
 struct SendDataRequest : GenericNetworkRequest {
@@ -48,7 +46,7 @@ struct SendDataRequest : GenericNetworkRequest {
  * - ::NET_ERR__FILENAME_ALREADY_IN_USE
  * - ::NET_ERR__ALLOCATE_STORAGE_FAILED
  */
-struct SendDataResponse : GenericNetworkResponse {
+struct SendDataResponse :  GenericNetworkResponse {
 };
 /** @} */
 

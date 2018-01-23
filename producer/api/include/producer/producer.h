@@ -2,6 +2,7 @@
 #define HIDRA2_PRODUCER__PRODUCER_H
 
 #include <memory>
+#include <string>
 
 namespace hidra2 {
 enum class ProducerError {

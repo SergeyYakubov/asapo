@@ -1,10 +1,7 @@
 #include "network_producer_peer.h"
 #include "receiver.h"
-#include <sys/sendfile.h>
 #include <fcntl.h>
-#include <sys/mman.h>
 #include <cmath>
-#include <zconf.h>
 
 namespace hidra2 {
 

@@ -2,7 +2,6 @@
 #define HIDRA2_RECEIVER_H
 
 #include <string>
-#include <netinet/in.h>
 #include <thread>
 #include <system_wrappers/has_io.h>
 #include "network_producer_peer.h"

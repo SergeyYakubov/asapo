@@ -1,6 +1,4 @@
 #include <cstring>
-#include <unistd.h>
-#include <arpa/inet.h>
 #include <iostream>
 #include "receiver.h"
 #include "network_producer_peer.h"

@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <netinet/in.h>
 #include "../src/producer_impl.h"
 #include "../../../common/cpp/unittests/MockIO.h"
 

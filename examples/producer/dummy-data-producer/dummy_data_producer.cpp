@@ -1,6 +1,7 @@
 
 #include <producer/producer.h>
 #include <iostream>
+#include <tuple>
 
 typedef std::tuple<std::string, size_t, uint64_t> ArgumentTuple;
 
