@@ -12,24 +12,26 @@ message(STATUS "global gopath ${GOPATH}")
 
 IF(WIN32)
     set (gopath "${GOPATH}\;${CMAKE_CURRENT_SOURCE_DIR}")
+    set (exe_name "${TARGET_NAME}.exe")
 ELSE()
     set (gopath ${GOPATH}:${CMAKE_CURRENT_SOURCE_DIR})
+    set (exe_name "${TARGET_NAME}")
 ENDIF()
 
 include(testing_go)
 
 add_custom_target(hidra2-broker ALL
     COMMAND  ${CMAKE_COMMAND} -E env GOPATH=${gopath}
-    go build ${GO_OPTS} -o ${TARGET_NAME} hidra2_broker/main
+    go build ${GO_OPTS} -o ${exe_name} hidra2_broker/main
     VERBATIM)
 define_property(TARGET PROPERTY EXENAME
         BRIEF_DOCS <executable name>
         FULL_DOCS <full-doc>)
 
-set_target_properties(hidra2-broker PROPERTIES EXENAME ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME})
+set_target_properties(hidra2-broker PROPERTIES EXENAME ${CMAKE_CURRENT_BINARY_DIR}/${exe_name})
 
 
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} DESTINATION bin)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${exe_name} DESTINATION bin)
 
 gotest(${TARGET_NAME} "./...")
 go_integration_test(${TARGET_NAME}-connectdb "./..." "MongoDBConnect")
