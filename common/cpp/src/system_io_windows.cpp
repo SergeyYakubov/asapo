@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <io.h>
 #include <windows.h>
+#include <direct.h>
 
 using std::string;
 using std::vector;
@@ -82,6 +83,11 @@ std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, IOE
     return tp;
 }
 
+FileInfo hidra2::SystemIO::GetFileInfo(const std::string & path, const std::string & name, IOErrors * err) const
+{
+    return FileInfo();
+}
+
 bool IsDirectory(const WIN32_FIND_DATA f) {
     return (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
            strstr(f.cFileName, "..") == nullptr &&
@@ -136,29 +142,73 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     }
 }
 
+int hidra2::SystemIO::AddressFamilyToPosixFamily(AddressFamilies address_family) const
+{
+    return 0;
+}
+
+int hidra2::SystemIO::SocketTypeToPosixType(SocketTypes socket_type) const
+{
+    return 0;
+}
+
+int hidra2::SystemIO::SocketProtocolToPosixProtocol(SocketProtocols socket_protocol) const
+{
+    return 0;
+}
+
+void hidra2::SystemIO::InetBind(FileDescriptor socket_fd, const std::string & address, uint16_t port, IOErrors * err) const
+{
+
+}
+
+std::unique_ptr<std::tuple<std::string, FileDescriptor>> SystemIO::InetAccept(FileDescriptor socket_fd, IOErrors * err) const
+{
+    return std::unique_ptr<std::tuple<std::string, FileDescriptor>>();
+}
+
+void hidra2::SystemIO::InetConnect(FileDescriptor socket_fd, const std::string & address, IOErrors * err) const
+{
+
+}
+
+size_t hidra2::SystemIO::ReceiveTimeout(FileDescriptor socket_fd, void * buf, size_t length, uint16_t timeout_in_sec, IOErrors * err) const
+{
+    return size_t();
+}
+
+FileDescriptor hidra2::SystemIO::_open(const char * filename, int posix_open_flags) const
+{
+    int fd;
+    errno = _sopen_s(&fd, filename, posix_open_flags, _SH_DENYNO, _S_IREAD | _S_IWRITE);
+    return fd;
+}
 
 void SystemIO::_close(hidra2::FileDescriptor fd) const {
-    ::close(fd);
+    ::_close(fd);
 }
 
 ssize_t SystemIO::_read(hidra2::FileDescriptor fd, void* buffer, size_t length) const {
-    return ::read(fd, buffer, length);
+    return ::_read(fd, buffer, length);
 }
 
 ssize_t SystemIO::_write(hidra2::FileDescriptor fd, const void* buffer, size_t length) const {
-    return ::write(fd, buffer, length);
+    return ::_write(fd, buffer, length);
 }
 
 FileDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
-    return ::socket(address_family, socket_type, socket_protocol);
+    //return ::socket(address_family, socket_type, socket_protocol);
+    return 0;
 }
 
 ssize_t SystemIO::_send(FileDescriptor socket_fd, const void* buffer, size_t length) const {
-    return ::send(socket_fd, buffer, length, 0);
+    //return ::send(socket_fd, (char*)buffer, length, 0);
+    return 0;
 }
 
 ssize_t SystemIO::_recv(FileDescriptor socket_fd, void* buffer, size_t length) const {
-    return ::recv(socket_fd, buffer, length, 0);
+    //return ::recv(socket_fd, (char*)buffer, length, 0);
+    return 0;
 }
 
 int SystemIO::_mkdir(const char* dirname) const {
@@ -166,7 +216,8 @@ int SystemIO::_mkdir(const char* dirname) const {
 }
 
 int SystemIO::_listen(FileDescriptor fd, int backlog) const {
-    return ::listen(fd, backlog);
+    //return ::listen(fd, backlog);
+    return 0;
 }
 
 
