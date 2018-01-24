@@ -2,13 +2,11 @@
 #define HIDRA2_SYSTEM_WRAPPERS__IO_H
 
 #include <cinttypes>
-
 #include <string>
 #include <vector>
 #include <chrono>
 #include <memory>
 #include <thread>
-
 #include "common/file_info.h"
 
 namespace hidra2 {

@@ -13,9 +13,8 @@ target_include_directories(${TARGET_NAME} PUBLIC include ${CMAKE_SOURCE_DIR}/com
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 if(WIN32)
-    target_link_libraries(${TARGET_NAME} wsock32 ws2_32)
+    target_link_libraries(${TARGET_NAME} Threads::Threads wsock32 ws2_32)
 endif()
-
 ################################
 # Testing
 ################################
