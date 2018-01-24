@@ -15,6 +15,11 @@ ENDIF(WIN32)
 ################################
 # Library
 ################################
+IF(WIN32)
+    SET_PROPERTY(GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES "Threads::Threads wsock32 ws2_32")
+ELSEIF(UNIX)
+    SET_PROPERTY(GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES "Threads::Threads")
+ENDIF(WIN32)
 add_library(${TARGET_NAME} OBJECT ${SOURCE_FILES})
 #add_library(${TARGET_NAME} SHARED ${SOURCE_FILES})
 target_include_directories(${TARGET_NAME} PUBLIC include)

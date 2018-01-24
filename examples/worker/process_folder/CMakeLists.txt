@@ -2,7 +2,12 @@ set(TARGET_NAME worker_processfolder)
 set(SOURCE_FILES process_folder.cpp)
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
-target_link_libraries(${TARGET_NAME} hidra2-worker Threads::Threads)
+
+#Add all necessary common libraries
+GET_PROPERTY(HIDRA2_COMMON_IO_LIBRARIES GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES)
+target_link_libraries(${TARGET_NAME} ${HIDRA2_COMMON_IO_LIBRARIES})
+
+target_link_libraries(${TARGET_NAME} hidra2-worker)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 #use expression generator to get rid of VS adding Debug/Release folders
 set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY

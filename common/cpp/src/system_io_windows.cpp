@@ -85,8 +85,7 @@ std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, IOE
     return tp;
 }
 
-FileInfo hidra2::SystemIO::GetFileInfo(const std::string & path, const std::string & name, IOErrors * err) const
-{
+FileInfo hidra2::SystemIO::GetFileInfo(const std::string& path, const std::string& name, IOErrors* err) const {
     return FileInfo();
 }
 
@@ -144,43 +143,38 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     }
 }
 
-int hidra2::SystemIO::AddressFamilyToPosixFamily(AddressFamilies address_family) const
-{
+int hidra2::SystemIO::AddressFamilyToPosixFamily(AddressFamilies address_family) const {
     return 0;
 }
 
-int hidra2::SystemIO::SocketTypeToPosixType(SocketTypes socket_type) const
-{
+int hidra2::SystemIO::SocketTypeToPosixType(SocketTypes socket_type) const {
     return 0;
 }
 
-int hidra2::SystemIO::SocketProtocolToPosixProtocol(SocketProtocols socket_protocol) const
-{
+int hidra2::SystemIO::SocketProtocolToPosixProtocol(SocketProtocols socket_protocol) const {
     return 0;
 }
 
-void hidra2::SystemIO::InetBind(FileDescriptor socket_fd, const std::string & address, uint16_t port, IOErrors * err) const
-{
+void hidra2::SystemIO::InetBind(FileDescriptor socket_fd, const std::string& address, uint16_t port,
+                                IOErrors* err) const {
 
 }
 
-std::unique_ptr<std::tuple<std::string, FileDescriptor>> SystemIO::InetAccept(FileDescriptor socket_fd, IOErrors * err) const
-{
+std::unique_ptr<std::tuple<std::string, FileDescriptor>> SystemIO::InetAccept(FileDescriptor socket_fd,
+IOErrors* err) const {
     return std::unique_ptr<std::tuple<std::string, FileDescriptor>>();
 }
 
-void hidra2::SystemIO::InetConnect(FileDescriptor socket_fd, const std::string & address, IOErrors * err) const
-{
+void hidra2::SystemIO::InetConnect(FileDescriptor socket_fd, const std::string& address, IOErrors* err) const {
 
 }
 
-size_t hidra2::SystemIO::ReceiveTimeout(FileDescriptor socket_fd, void * buf, size_t length, uint16_t timeout_in_sec, IOErrors * err) const
-{
+size_t hidra2::SystemIO::ReceiveTimeout(FileDescriptor socket_fd, void* buf, size_t length, uint16_t timeout_in_sec,
+                                        IOErrors* err) const {
     return size_t();
 }
 
-FileDescriptor hidra2::SystemIO::_open(const char * filename, int posix_open_flags) const
-{
+FileDescriptor hidra2::SystemIO::_open(const char* filename, int posix_open_flags) const {
     int fd;
     errno = _sopen_s(&fd, filename, posix_open_flags, _SH_DENYNO, _S_IREAD | _S_IWRITE);
     return fd;
