@@ -189,11 +189,11 @@ void SystemIO::_close(hidra2::FileDescriptor fd) const {
 }
 
 ssize_t SystemIO::_read(hidra2::FileDescriptor fd, void* buffer, size_t length) const {
-    return ::_read(fd, buffer, length);
+    return ::_read(fd, (char*)buffer, length);
 }
 
 ssize_t SystemIO::_write(hidra2::FileDescriptor fd, const void* buffer, size_t length) const {
-    return ::_write(fd, buffer, length);
+    return ::_write(fd, (const char*)buffer, length);
 }
 
 FileDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
