@@ -8,10 +8,6 @@ target_include_directories(${TARGET_NAME} PUBLIC include ${CMAKE_SOURCE_DIR}/com
 target_link_libraries(${TARGET_NAME} Threads::Threads producer-api)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-if(WIN32)
-    target_link_libraries(${TARGET_NAME} Threads::Threads wsock32 ws2_32)
-endif()
-
 if (CMAKE_COMPILER_IS_GNUCXX)
     set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS_DEBUG "--coverage")
 endif()

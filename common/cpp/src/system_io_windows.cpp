@@ -7,6 +7,8 @@
 #include <windows.h>
 #include <direct.h>
 
+#pragma comment(lib, "Ws2_32.lib")
+
 using std::string;
 using std::vector;
 using std::chrono::system_clock;
@@ -197,18 +199,15 @@ ssize_t SystemIO::_write(hidra2::FileDescriptor fd, const void* buffer, size_t l
 }
 
 FileDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
-    //return ::socket(address_family, socket_type, socket_protocol);
-    return 0;
+    return ::socket(address_family, socket_type, socket_protocol);
 }
 
 ssize_t SystemIO::_send(FileDescriptor socket_fd, const void* buffer, size_t length) const {
-    //return ::send(socket_fd, (char*)buffer, length, 0);
-    return 0;
+    return ::send(socket_fd, (char*)buffer, length, 0);
 }
 
 ssize_t SystemIO::_recv(FileDescriptor socket_fd, void* buffer, size_t length) const {
-    //return ::recv(socket_fd, (char*)buffer, length, 0);
-    return 0;
+    return ::recv(socket_fd, (char*)buffer, length, 0);
 }
 
 int SystemIO::_mkdir(const char* dirname) const {
@@ -216,8 +215,7 @@ int SystemIO::_mkdir(const char* dirname) const {
 }
 
 int SystemIO::_listen(FileDescriptor fd, int backlog) const {
-    //return ::listen(fd, backlog);
-    return 0;
+    return ::listen(fd, backlog);
 }
 
 
