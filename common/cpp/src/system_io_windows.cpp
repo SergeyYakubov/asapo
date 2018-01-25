@@ -151,7 +151,7 @@ int hidra2::SystemIO::SocketProtocolToPosixProtocol(SocketProtocols socket_proto
     return 0;
 }
 
-void hidra2::SystemIO::InetBind(FileDescriptor socket_fd, const std::string& address, uint16_t port,
+void hidra2::SystemIO::InetBind(FileDescriptor socket_fd, const std::string& address,
                                 IOErrors* err) const {
 
 }
