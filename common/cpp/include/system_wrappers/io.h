@@ -108,8 +108,6 @@ class IO {
     virtual void CollectFileInformationRecursivly   (const std::string& path, std::vector<FileInfo>* files,
                                                      IOErrors* err) const = 0;
     virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, IOErrors* err) const = 0;
-    virtual FileInfo                GetFileInfo     (const std::string& path, const std::string& name,
-                                                     IOErrors* err)  const = 0;
 
 
 };

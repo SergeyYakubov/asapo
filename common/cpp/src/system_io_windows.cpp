@@ -85,10 +85,6 @@ std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, IOE
     return tp;
 }
 
-FileInfo hidra2::SystemIO::GetFileInfo(const std::string& path, const std::string& name, IOErrors* err) const {
-    return FileInfo();
-}
-
 bool IsDirectory(const WIN32_FIND_DATA f) {
     return (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
            strstr(f.cFileName, "..") == nullptr &&

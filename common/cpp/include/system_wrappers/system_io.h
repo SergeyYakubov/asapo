@@ -73,7 +73,6 @@ class SystemIO final : public IO {
     FileData        GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const;
     void            CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files,
                                                      IOErrors* err) const;
-    FileInfo        GetFileInfo(const std::string& path, const std::string& name, IOErrors* err) const;
 };
 }
 

@@ -97,7 +97,7 @@ struct stat FileStat(const string& fname, IOErrors* err) {
     return t_stat;
 }
 
-FileInfo _getFileInfo(const string& path, const string& name, IOErrors* err) {
+FileInfo GetFileInfo(const string& path, const string& name, IOErrors* err) {
     FileInfo file_info;
 
     SetFileName(path, name, &file_info);
@@ -122,7 +122,7 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
         return;
     }
 
-    FileInfo file_info = _getFileInfo(path, entity->d_name, err);
+    FileInfo file_info = GetFileInfo(path, entity->d_name, err);
     if (*err != IOErrors::kNoError) {
         return;
     }
@@ -132,11 +132,6 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
 
 
 /** @} */
-
-
-FileInfo SystemIO::GetFileInfo(const string& path, const string& name, IOErrors* err) const {
-    return _getFileInfo(path, name, err);
-}
 
 void SystemIO::CollectFileInformationRecursivly(const std::string& path,
                                                 std::vector<FileInfo>* files,
