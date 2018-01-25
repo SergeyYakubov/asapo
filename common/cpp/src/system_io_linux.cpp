@@ -37,6 +37,8 @@ IOErrors GetLastErrorFromErrno() {
         return IOErrors::kFileNotFound;
     case EACCES:
         return IOErrors::kPermissionDenied;
+    case EFAULT:
+        return IOErrors::kInvalidMemoryAddress;
     case EEXIST:
         return IOErrors::kFileAlreadyExists;
     case ENOSPC:
@@ -222,7 +224,6 @@ int SystemIO::_listen(FileDescriptor fd, int backlog) const {
 
 void hidra2::SystemIO::InetBind(hidra2::FileDescriptor socket_fd,
                                 const std::string& address,
-                                uint16_t port,
                                 hidra2::IOErrors* err) const {
     *err = IOErrors::kNoError;
 
@@ -232,8 +233,17 @@ void hidra2::SystemIO::InetBind(hidra2::FileDescriptor socket_fd,
         return;
     }
 
+    auto host_port_tuple = SplitAddressToHostAndPort(address);
+    if(!host_port_tuple) {
+        *err = IOErrors::kInvalidAddressFormat;
+        return;
+    }
+    std::string host;
+    uint16_t port = 0;
+    std::tie(host, port) = *host_port_tuple;
+
     sockaddr_in socket_address{};
-    socket_address.sin_addr.s_addr = inet_addr(address.c_str());
+    socket_address.sin_addr.s_addr = inet_addr(host.c_str());
     socket_address.sin_port = htons(port);
     socket_address.sin_family = static_cast<sa_family_t>(family);
 
@@ -245,18 +255,15 @@ void hidra2::SystemIO::InetBind(hidra2::FileDescriptor socket_fd,
 
 void hidra2::SystemIO::InetConnect(FileDescriptor socket_fd, const std::string& address, hidra2::IOErrors* err) const {
     *err = IOErrors::kNoError;
-    std::string host;
-    uint16_t port = 0;
 
-    try {
-        host = address.substr(0, address.find(':'));
-
-        std::string port_str = address.substr(address.find(':') + 1, address.length());
-        port = static_cast<uint16_t>(std::stoi(port_str));
-    } catch (std::exception& e) {
+    auto host_port_tuple = SplitAddressToHostAndPort(address);
+    if(!host_port_tuple) {
         *err = IOErrors::kInvalidAddressFormat;
         return;
     }
+    std::string host;
+    uint16_t port = 0;
+    std::tie(host, port) = *host_port_tuple;
 
     sa_family_t family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {

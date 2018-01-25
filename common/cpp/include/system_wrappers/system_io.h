@@ -31,6 +31,8 @@ class SystemIO final : public IO {
     ssize_t         _recv(FileDescriptor socket_fd, void* buffer, size_t length) const;
     int             _mkdir(const char* dirname) const;
 
+    std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostAndPort(std::string address) const;
+
   public:
     /*
      * Special
@@ -47,8 +49,7 @@ class SystemIO final : public IO {
     FileDescriptor  CreateSocket(AddressFamilies address_family, SocketTypes socket_type,
                                  SocketProtocols socket_protocol, IOErrors* err) const;
     void            Listen(FileDescriptor socket_fd, int backlog, IOErrors* err) const;
-    void            InetBind(FileDescriptor socket_fd, const std::string& address, uint16_t port,
-                             IOErrors* err) const;
+    void            InetBind(FileDescriptor socket_fd, const std::string& address, IOErrors* err) const;
     std::unique_ptr<std::tuple<std::string, FileDescriptor>> InetAccept(FileDescriptor socket_fd, IOErrors* err) const;
     void            InetConnect(FileDescriptor socket_fd, const std::string& address, IOErrors* err) const;
     FileDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOErrors* err) const;

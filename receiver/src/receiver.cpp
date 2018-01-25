@@ -5,7 +5,7 @@
 
 const int hidra2::Receiver::kMaxUnacceptedConnectionsBacklog = 5;
 
-void hidra2::Receiver::StartListener(std::string listener_address, uint16_t port, ReceiverError* err) {
+void hidra2::Receiver::StartListener(std::string listener_address, ReceiverError* err) {
     *err = ReceiverError::NO_ERROR;
 
     if(listener_running_) {
@@ -25,7 +25,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, uint16_t port
         return;
     }
 
-    io->InetBind(listener_fd, listener_address, port, &io_error);
+    io->InetBind(listener_fd, listener_address, &io_error);
     if(io_error != IOErrors::kNoError) {
         io->Close(listener_fd, nullptr);
         *err = ReceiverError::FAILED_CREATING_SOCKET;

@@ -286,6 +286,18 @@ void hidra2::SystemIO::CreateDirectory(const std::string& directory_name, hidra2
     _mkdir(directory_name.c_str());
     *err = GetLastError();
 }
+std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostAndPort(std::string address) const {
+    try {
+        std::string host = address.substr(0, address.find(':'));
+
+        std::string port_str = address.substr(address.find(':') + 1, address.length());
+        uint16_t port = static_cast<uint16_t>(std::stoi(port_str));
+
+        return std::unique_ptr<std::tuple<std::string, uint16_t>>(new std::tuple<std::string, uint16_t>(host, port));
+    } catch (...) {
+        return nullptr;
+    }
+}
 
 }
 

@@ -12,7 +12,7 @@ class MockIO : public IO {
     MOCK_CONST_METHOD4(CreateSocket, FileDescriptor(AddressFamilies address_family, SocketTypes socket_type,
                                                     SocketProtocols socket_protocol, IOErrors* err));
     MOCK_CONST_METHOD3(Listen, void(FileDescriptor socket_fd, int backlog, IOErrors* err));
-    MOCK_CONST_METHOD4(InetBind, void(FileDescriptor socket_fd, const std::string& address, uint16_t port, IOErrors* err));
+    MOCK_CONST_METHOD3(InetBind, void(FileDescriptor socket_fd, const std::string& address, IOErrors* err));
     virtual std::unique_ptr<std::tuple<std::string, FileDescriptor>> InetAccept(FileDescriptor socket_fd,
     IOErrors* err) const {
         return std::unique_ptr<std::tuple<std::string, FileDescriptor>>(InetAccept_proxy(socket_fd, err));

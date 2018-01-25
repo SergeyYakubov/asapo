@@ -29,7 +29,8 @@ enum class IOErrors {
     kFileAlreadyExists,
     kNoSpaceLeft,
     kSocketOperationOnNonSocket,
-    kMemoryAllocationError
+    kMemoryAllocationError,
+    kInvalidMemoryAddress,
 };
 
 enum FileOpenMode {
@@ -74,8 +75,7 @@ class IO {
     virtual FileDescriptor  CreateSocket    (AddressFamilies address_family, SocketTypes socket_type,
                                              SocketProtocols socket_protocol, IOErrors* err) const = 0;
     virtual void            Listen          (FileDescriptor socket_fd, int backlog, IOErrors* err) const = 0;
-    virtual void            InetBind        (FileDescriptor socket_fd, const std::string& address, uint16_t port,
-                                             IOErrors* err) const = 0;
+    virtual void            InetBind        (FileDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
     virtual std::unique_ptr<std::tuple<std::string, FileDescriptor>> InetAccept(FileDescriptor socket_fd,
             IOErrors* err) const = 0;
     virtual void            InetConnect     (FileDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;

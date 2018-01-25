@@ -33,7 +33,7 @@ class Receiver : public HasIO {
     Receiver& operator=(const Receiver&) = delete;
     Receiver() = default;
 
-    void StartListener(std::string listener_address, uint16_t port, ReceiverError* err);
+    void StartListener(std::string listener_address, ReceiverError* err);
     void StopListener(ReceiverError* err);
 };
 
