@@ -45,12 +45,12 @@ void NetworkProducerPeer::internal_receiver_thread_() {
     while(is_listening_) {
         err = IOErrors::kNoError;
 
-		size_t size = io->ReceiveTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 5, &err);
-		if (size == 0) {
-			std::cout << "size: " << size << std::endl;
-		}
+        size_t size = io->ReceiveTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 5, &err);
+        if (size == 0) {
+            std::cout << "size: " << size << std::endl;
+        }
 
-		
+
 
         if(err != IOErrors::kNoError) {
             if(err == IOErrors::kTimeout) {

@@ -7,7 +7,11 @@
 #include <windows.h>
 #undef CreateDirectory
 #endif
-
+#ifdef __linux__
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#endif
 
 
 namespace hidra2 {
@@ -116,17 +120,17 @@ hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
 }
 
 void hidra2::SystemIO::CloseSocket(SocketDescriptor fd, hidra2::IOErrors* err) const {
-	_close_socket(fd);
-	if (err) {
-		*err = GetLastError();
-	}
+    _close_socket(fd);
+    if (err) {
+        *err = GetLastError();
+    }
 }
 
 void hidra2::SystemIO::Close(FileDescriptor fd, hidra2::IOErrors* err) const {
-	_close(fd);
-	if (err) {
-		*err = GetLastError();
-	}
+    _close(fd);
+    if (err) {
+        *err = GetLastError();
+    }
 }
 
 size_t hidra2::SystemIO::Read(FileDescriptor fd, void* buf, size_t length, IOErrors* err) const {
@@ -173,33 +177,33 @@ size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length
 
 
 short hidra2::SystemIO::AddressFamilyToPosixFamily(AddressFamilies address_family) const {
-	switch (address_family) {
-	case AddressFamilies::INET:
-		return AF_INET;
-	}
-	return -1;
+    switch (address_family) {
+    case AddressFamilies::INET:
+        return AF_INET;
+    }
+    return -1;
 }
 
 int hidra2::SystemIO::SocketTypeToPosixType(SocketTypes socket_type) const {
-	switch (socket_type) {
-	case SocketTypes::STREAM:
-		return SOCK_STREAM;
-	}
-	return -1;
+    switch (socket_type) {
+    case SocketTypes::STREAM:
+        return SOCK_STREAM;
+    }
+    return -1;
 }
 
 int hidra2::SystemIO::SocketProtocolToPosixProtocol(SocketProtocols socket_protocol) const {
-	switch (socket_protocol) {
-	case SocketProtocols::IP:
-		return IPPROTO_IP;
-	}
-	return -1;
+    switch (socket_protocol) {
+    case SocketProtocols::IP:
+        return IPPROTO_IP;
+    }
+    return -1;
 }
 
 SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
-                                      SocketTypes socket_type,
-                                      SocketProtocols socket_protocol,
-                                      IOErrors* err) const {
+                                        SocketTypes socket_type,
+                                        SocketProtocols socket_protocol,
+                                        IOErrors* err) const {
     *err = IOErrors::kNoError;
 
     int domain = AddressFamilyToPosixFamily(address_family);
@@ -226,32 +230,32 @@ SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
 }
 
 void hidra2::SystemIO::InetBind(SocketDescriptor socket_fd, const std::string& address,
-	IOErrors* err) const {
-	*err = IOErrors::kNoError;
+                                IOErrors* err) const {
+    *err = IOErrors::kNoError;
 
-	int family = AddressFamilyToPosixFamily(AddressFamilies::INET);
-	if (family == -1) {
-		*err = IOErrors::kUnsupportedAddressFamily;
-		return;
-	}
+    int family = AddressFamilyToPosixFamily(AddressFamilies::INET);
+    if (family == -1) {
+        *err = IOErrors::kUnsupportedAddressFamily;
+        return;
+    }
 
-	auto host_port_tuple = SplitAddressToHostAndPort(address);
-	if (!host_port_tuple) {
-		*err = IOErrors::kInvalidAddressFormat;
-		return;
-	}
-	std::string host;
-	uint16_t port = 0;
-	std::tie(host, port) = *host_port_tuple;
+    auto host_port_tuple = SplitAddressToHostAndPort(address);
+    if (!host_port_tuple) {
+        *err = IOErrors::kInvalidAddressFormat;
+        return;
+    }
+    std::string host;
+    uint16_t port = 0;
+    std::tie(host, port) = *host_port_tuple;
 
-	sockaddr_in socket_address{};
-	socket_address.sin_addr.s_addr = inet_addr(host.c_str());
-	socket_address.sin_port = htons(port);
-	socket_address.sin_family = family;
+    sockaddr_in socket_address{};
+    socket_address.sin_addr.s_addr = inet_addr(host.c_str());
+    socket_address.sin_port = htons(port);
+    socket_address.sin_family = family;
 
-	if (::bind(socket_fd, reinterpret_cast<const sockaddr*>(&socket_address), sizeof(socket_address)) == -1) {
-		*err = GetLastError();
-	}
+    if (::bind(socket_fd, reinterpret_cast<const sockaddr*>(&socket_address), sizeof(socket_address)) == -1) {
+        *err = GetLastError();
+    }
 }
 
 void hidra2::SystemIO::Listen(SocketDescriptor socket_fd, int backlog, hidra2::IOErrors* err) const {
@@ -283,27 +287,28 @@ size_t hidra2::SystemIO::Receive(SocketDescriptor socket_fd, void* buf, size_t l
 }
 
 
-size_t hidra2::SystemIO::ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec, IOErrors* err) const {
-	*err = hidra2::IOErrors::kNoError;
+size_t hidra2::SystemIO::ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
+                                        IOErrors* err) const {
+    *err = hidra2::IOErrors::kNoError;
 
-	fd_set read_fds;
-	FD_ZERO(&read_fds);
-	FD_SET(socket_fd, &read_fds);
-	timeval timeout;
-	timeout.tv_sec = 0;
-	timeout.tv_usec = timeout_in_usec;
+    fd_set read_fds;
+    FD_ZERO(&read_fds);
+    FD_SET(socket_fd, &read_fds);
+    timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = timeout_in_usec;
 
-	int res = ::select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
-	if (res == 0) {
-		*err = IOErrors::kTimeout;
-		return 0;
-	}
-	if (res == -1) {
-		*err = GetLastError();
-		return 0;
-	}
+    int res = ::select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
+    if (res == 0) {
+        *err = IOErrors::kTimeout;
+        return 0;
+    }
+    if (res == -1) {
+        *err = GetLastError();
+        return 0;
+    }
 
-	return Receive(socket_fd, buf, length, err);
+    return Receive(socket_fd, buf, length, err);
 }
 
 

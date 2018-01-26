@@ -17,26 +17,26 @@ using std::chrono::system_clock;
 namespace hidra2 {
 
 IOErrors IOErrorFromGetLastError() {
-	DWORD last_error = GetLastError();
+    DWORD last_error = GetLastError();
     switch (last_error) {
     case ERROR_SUCCESS :
-		return IOErrors::kNoError;
+        return IOErrors::kNoError;
     case ERROR_PATH_NOT_FOUND:
     case ERROR_FILE_NOT_FOUND:
-		return IOErrors::kFileNotFound;
+        return IOErrors::kFileNotFound;
     case ERROR_ACCESS_DENIED:
-		return IOErrors::kPermissionDenied;
-	case ERROR_CONNECTION_REFUSED:
-		return IOErrors::kConnectionRefused;
-	case WSAEFAULT:
-		return IOErrors::kInvalidMemoryAddress;
-	case WSAECONNRESET:
-		return IOErrors::kConnectionResetByPeer;
-	case WSAENOTSOCK:
-		return IOErrors::kSocketOperationOnNonSocket;
+        return IOErrors::kPermissionDenied;
+    case ERROR_CONNECTION_REFUSED:
+        return IOErrors::kConnectionRefused;
+    case WSAEFAULT:
+        return IOErrors::kInvalidMemoryAddress;
+    case WSAECONNRESET:
+        return IOErrors::kConnectionResetByPeer;
+    case WSAENOTSOCK:
+        return IOErrors::kSocketOperationOnNonSocket;
     default:
-		std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
-		return IOErrors::kUnknownError;
+        std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
+        return IOErrors::kUnknownError;
     }
 }
 
@@ -144,60 +144,61 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     }
 }
 
-std::unique_ptr<std::tuple<std::string, SocketDescriptor>> SystemIO::InetAccept(SocketDescriptor socket_fd, IOErrors* err) const {
-	*err = IOErrors::kNoError;
-	static short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
-	if (family == -1) {
-		*err = IOErrors::kUnsupportedAddressFamily;
-		return nullptr;
-	}
+std::unique_ptr<std::tuple<std::string, SocketDescriptor>> SystemIO::InetAccept(SocketDescriptor socket_fd,
+IOErrors* err) const {
+    *err = IOErrors::kNoError;
+    static short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
+    if (family == -1) {
+        *err = IOErrors::kUnsupportedAddressFamily;
+        return nullptr;
+    }
 
-	sockaddr_in client_address{};
-	static int client_address_size = sizeof(sockaddr_in);
+    sockaddr_in client_address{};
+    static int client_address_size = sizeof(sockaddr_in);
 
-	int peer_fd = ::accept(socket_fd, reinterpret_cast<sockaddr*>(&client_address), &client_address_size);
+    int peer_fd = ::accept(socket_fd, reinterpret_cast<sockaddr*>(&client_address), &client_address_size);
 
-	if (peer_fd == -1) {
-		*err = GetLastError();
-		return nullptr;
-	}
+    if (peer_fd == -1) {
+        *err = GetLastError();
+        return nullptr;
+    }
 
-	std::string
-		address = std::string(inet_ntoa(client_address.sin_addr)) + ':' + std::to_string(client_address.sin_port);
-	return std::unique_ptr<std::tuple<std::string, SocketDescriptor>>(new
-		std::tuple<std::string,
-		SocketDescriptor>(
-			address,
-			peer_fd));
+    std::string
+    address = std::string(inet_ntoa(client_address.sin_addr)) + ':' + std::to_string(client_address.sin_port);
+    return std::unique_ptr<std::tuple<std::string, SocketDescriptor>>(new
+            std::tuple<std::string,
+            SocketDescriptor>(
+                address,
+                peer_fd));
 }
 
 void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const {
-	*err = IOErrors::kNoError;
+    *err = IOErrors::kNoError;
 
-	auto host_port_tuple = SplitAddressToHostAndPort(address);
-	if (!host_port_tuple) {
-		*err = IOErrors::kInvalidAddressFormat;
-		return;
-	}
-	std::string host;
-	uint16_t port = 0;
-	std::tie(host, port) = *host_port_tuple;
+    auto host_port_tuple = SplitAddressToHostAndPort(address);
+    if (!host_port_tuple) {
+        *err = IOErrors::kInvalidAddressFormat;
+        return;
+    }
+    std::string host;
+    uint16_t port = 0;
+    std::tie(host, port) = *host_port_tuple;
 
-	short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
-	if (family == -1) {
-		*err = IOErrors::kUnsupportedAddressFamily;
-		return;
-	}
+    short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
+    if (family == -1) {
+        *err = IOErrors::kUnsupportedAddressFamily;
+        return;
+    }
 
-	sockaddr_in socket_address{};
-	socket_address.sin_addr.s_addr = inet_addr(host.c_str());
-	socket_address.sin_port = htons(port);
-	socket_address.sin_family = family;
+    sockaddr_in socket_address{};
+    socket_address.sin_addr.s_addr = inet_addr(host.c_str());
+    socket_address.sin_port = htons(port);
+    socket_address.sin_family = family;
 
-	if (::connect(socket_fd, (struct sockaddr*) &socket_address, sizeof(socket_address)) == -1) {
-		*err = GetLastError();
-		return;
-	}
+    if (::connect(socket_fd, (struct sockaddr*) &socket_address, sizeof(socket_address)) == -1) {
+        *err = GetLastError();
+        return;
+    }
 }
 
 FileDescriptor SystemIO::_open(const char* filename, int posix_open_flags) const {
@@ -207,11 +208,11 @@ FileDescriptor SystemIO::_open(const char* filename, int posix_open_flags) const
 }
 
 void SystemIO::_close(FileDescriptor fd) const {
-	::_close(fd);
+    ::_close(fd);
 }
 
 void SystemIO::_close_socket(SocketDescriptor fd) const {
-	::closesocket(fd);
+    ::closesocket(fd);
 }
 
 ssize_t SystemIO::_read(FileDescriptor fd, void* buffer, size_t length) const {
@@ -223,23 +224,22 @@ ssize_t SystemIO::_write(FileDescriptor fd, const void* buffer, size_t length) c
 }
 
 SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
-	static bool WSAStartupDone = false;
-	if (!WSAStartupDone) {
-		WSAStartupDone = true;
-		WORD wVersionRequested = MAKEWORD(2, 2);
-		WSADATA wsaData;
-		int err = WSAStartup(wVersionRequested, &wsaData);
-		if (err != 0) {
-			std::cout << "[_socket/WSAStartup] Faild to WSAStartup with version 2.2" << std::endl;
-			WSACleanup();
-			// Do not return, since ::socket has to set an errno
-		}
-		else {
-			std::atexit([] {
-				WSACleanup();
-			});
-		}
-	}
+    static bool WSAStartupDone = false;
+    if (!WSAStartupDone) {
+        WSAStartupDone = true;
+        WORD wVersionRequested = MAKEWORD(2, 2);
+        WSADATA wsaData;
+        int err = WSAStartup(wVersionRequested, &wsaData);
+        if (err != 0) {
+            std::cout << "[_socket/WSAStartup] Faild to WSAStartup with version 2.2" << std::endl;
+            WSACleanup();
+            // Do not return, since ::socket has to set an errno
+        } else {
+            std::atexit([] {
+                WSACleanup();
+            });
+        }
+    }
 
     return ::socket(address_family, socket_type, socket_protocol);
 }

@@ -8,7 +8,7 @@ namespace hidra2 {
 typedef uint64_t NetworkRequestId;
 
 enum OpCode : uint8_t {
-	OP_CODE_A,
+    OP_CODE_A,
     OP_CODE__SEND_DATA,
 
     OP_CODE_COUNT,

@@ -73,20 +73,23 @@ class IO {
     /*
      * Network
      */
-	virtual SocketDescriptor  CreateSocket(AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol, IOErrors* err) const = 0;
-	virtual void            Listen(SocketDescriptor socket_fd, int backlog, IOErrors* err) const = 0;
-	virtual void            InetBind(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
-	virtual std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd, IOErrors* err) const = 0;
-	virtual void            InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
-	virtual SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOErrors* err) const = 0;
-	virtual size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, IOErrors* err) const = 0;
-	virtual size_t          ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec, IOErrors* err) const = 0;
-	virtual size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, IOErrors* err) const = 0;
-	virtual void            Skip(SocketDescriptor socket_fd, size_t length, IOErrors* err) const = 0;
-	/**
-	* @param err Since CloseSocket if often used in an error case, it's able to accept nullptr.
-	*/
-	virtual void            CloseSocket(SocketDescriptor socket_fd, IOErrors* err) const = 0;
+    virtual SocketDescriptor  CreateSocket(AddressFamilies address_family, SocketTypes socket_type,
+                                           SocketProtocols socket_protocol, IOErrors* err) const = 0;
+    virtual void            Listen(SocketDescriptor socket_fd, int backlog, IOErrors* err) const = 0;
+    virtual void            InetBind(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
+    virtual std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd,
+            IOErrors* err) const = 0;
+    virtual void            InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
+    virtual SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOErrors* err) const = 0;
+    virtual size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, IOErrors* err) const = 0;
+    virtual size_t          ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
+                                           IOErrors* err) const = 0;
+    virtual size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, IOErrors* err) const = 0;
+    virtual void            Skip(SocketDescriptor socket_fd, size_t length, IOErrors* err) const = 0;
+    /**
+    * @param err Since CloseSocket if often used in an error case, it's able to accept nullptr.
+    */
+    virtual void            CloseSocket(SocketDescriptor socket_fd, IOErrors* err) const = 0;
 
     /*
      * Filesystem

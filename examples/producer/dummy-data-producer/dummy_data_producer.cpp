@@ -61,7 +61,7 @@ int main (int argc, char* argv[]) {
               << std::endl;
 
     SendDummyData(receiver_address, number_of_byte, iterations);
-	getchar();
+    getchar();
 
 }
 

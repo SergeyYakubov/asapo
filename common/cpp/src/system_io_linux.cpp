@@ -2,17 +2,15 @@
 
 #include <cstring>
 
+
 #include <dirent.h>
 #include <sys/stat.h>
 #include <algorithm>
-
-#include <errno.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <iostream>
 #include <zconf.h>
-#include <assert.h>
 
 using std::string;
 using std::vector;
@@ -160,31 +158,6 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     closedir(dir);
 }
 
-
-int SystemIO::AddressFamilyToPosixFamily(AddressFamilies address_family) const {
-    switch (address_family) {
-    case AddressFamilies::INET:
-        return AF_INET;
-    }
-    return -1;
-};
-
-int SystemIO::SocketTypeToPosixType(SocketTypes socket_type) const {
-    switch (socket_type) {
-    case SocketTypes::STREAM:
-        return SOCK_STREAM;
-    }
-    return -1;
-}
-
-int SystemIO::SocketProtocolToPosixProtocol(SocketProtocols socket_protocol) const {
-    switch (socket_protocol) {
-    case SocketProtocols::IP:
-        return IPPROTO_IP;
-    }
-    return -1;
-}
-
 hidra2::FileDescriptor hidra2::SystemIO::_open(const char* filename, int posix_open_flags) const {
     return ::open(filename, posix_open_flags, S_IWUSR | S_IRWXU);
 }
@@ -201,15 +174,15 @@ ssize_t SystemIO::_write(hidra2::FileDescriptor fd, const void* buffer, size_t l
     return ::write(fd, buffer, length);
 }
 
-FileDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
+SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
     return ::socket(address_family, socket_type, socket_protocol);
 }
 
-ssize_t SystemIO::_send(FileDescriptor socket_fd, const void* buffer, size_t length) const {
+ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) const {
     return ::send(socket_fd, buffer, length, 0);
 }
 
-ssize_t SystemIO::_recv(FileDescriptor socket_fd, void* buffer, size_t length) const {
+ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const {
     return ::recv(socket_fd, buffer, length, 0);
 }
 
@@ -217,40 +190,13 @@ int SystemIO::_mkdir(const char* dirname) const {
     return ::mkdir(dirname, S_IRWXU);
 }
 
-int SystemIO::_listen(FileDescriptor fd, int backlog) const {
-    return ::listen(fd, backlog);
+int SystemIO::_listen(SocketDescriptor socket_fd, int backlog) const {
+    return ::listen(socket_fd, backlog);
 }
 
 
-void hidra2::SystemIO::InetBind(hidra2::FileDescriptor socket_fd,
-                                const std::string& address,
-                                hidra2::IOErrors* err) const {
-    *err = IOErrors::kNoError;
-
-    int family = AddressFamilyToPosixFamily(AddressFamilies::INET);
-    if (family == -1) {
-        *err = IOErrors::kUnsupportedAddressFamily;
-        return;
-    }
-
-    auto host_port_tuple = SplitAddressToHostAndPort(address);
-    if(!host_port_tuple) {
-        *err = IOErrors::kInvalidAddressFormat;
-        return;
-    }
-    std::string host;
-    uint16_t port = 0;
-    std::tie(host, port) = *host_port_tuple;
-
-    sockaddr_in socket_address{};
-    socket_address.sin_addr.s_addr = inet_addr(host.c_str());
-    socket_address.sin_port = htons(port);
-    socket_address.sin_family = static_cast<sa_family_t>(family);
-
-    if (::bind(socket_fd, reinterpret_cast<const sockaddr*>(&socket_address), sizeof(socket_address)) == -1) {
-        *err = GetLastError();
-    }
-
+void SystemIO::_close_socket(SocketDescriptor socket_fd) const {
+    ::close(socket_fd);
 }
 
 void hidra2::SystemIO::InetConnect(FileDescriptor socket_fd, const std::string& address, hidra2::IOErrors* err) const {
@@ -283,8 +229,8 @@ void hidra2::SystemIO::InetConnect(FileDescriptor socket_fd, const std::string& 
 }
 
 
-std::unique_ptr<std::tuple<std::string, hidra2::FileDescriptor>> hidra2::SystemIO::InetAccept(
-hidra2::FileDescriptor socket_fd, IOErrors* err) const {
+std::unique_ptr<std::tuple<std::string, hidra2::SocketDescriptor>> hidra2::SystemIO::InetAccept(
+hidra2::SocketDescriptor socket_fd, IOErrors* err) const {
     *err = IOErrors::kNoError;
     sa_family_t family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {
@@ -309,32 +255,6 @@ hidra2::FileDescriptor socket_fd, IOErrors* err) const {
             hidra2::FileDescriptor>(
                 address,
                 peer_fd));
-}
-
-size_t hidra2::SystemIO::ReceiveTimeout(hidra2::FileDescriptor socket_fd,
-                                        void* buf,
-                                        size_t length,
-                                        uint16_t timeout_in_sec,
-                                        hidra2::IOErrors* err) const {
-    *err = hidra2::IOErrors::kNoError;
-
-    fd_set read_fds;
-    FD_SET(socket_fd, &read_fds);
-    timeval timeout;
-    timeout.tv_sec = timeout_in_sec;
-    timeout.tv_usec = 0;
-
-    int res = ::select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
-    if (res == 0) {
-        *err = IOErrors::kTimeout;
-        return 0;
-    }
-    if (res == -1) {
-        *err = GetLastError();
-        return 0;
-    }
-
-    return Receive(socket_fd, buf, length, err);
 }
 
 }
