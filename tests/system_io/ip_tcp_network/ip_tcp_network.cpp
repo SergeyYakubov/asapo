@@ -1,6 +1,7 @@
 #include <iostream>
 #include <system_wrappers/system_io.h>
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 
 #include "testing.h"
 
@@ -11,6 +12,8 @@ using hidra2::SocketTypes;
 using hidra2::SocketProtocols;
 using hidra2::FileDescriptor;
 using hidra2::M_AssertEq;
+
+using namespace std::chrono_literals;
 
 static const std::unique_ptr<SystemIO> io(new SystemIO());
 static const std::string kListenAddress = "127.0.0.1:60123";
@@ -62,7 +65,7 @@ int main(int argc, char* argv[]) {
     std::thread* server_thread = CreateEchoServerThread();
     server_thread->detach();
 
-    sleep(1); // Just to make sure that the server thread starts running
+	std::this_thread::sleep_for(2s); // Just to make sure that the server thread starts running
 
     IOErrors err;
     std::cout << "[CLIENT] CreateAndConnectIPTCPSocket" << std::endl;
