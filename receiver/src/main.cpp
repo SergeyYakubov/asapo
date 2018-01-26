@@ -2,7 +2,7 @@
 #include "receiver.h"
 
 int main (int argc, char* argv[]) {
-    static const std::string address = "0.0.0.0:4420";
+    static const std::string address = "0.0.0.0:4200";
 
     auto* receiver = new hidra2::Receiver();
 

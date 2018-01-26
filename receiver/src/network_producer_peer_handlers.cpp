@@ -22,6 +22,12 @@ void NetworkProducerPeer::handle_send_data_request_(NetworkProducerPeer* self, c
         SendDataResponse* response) {
     IOErrors ioErr;
 
+	if (request->file_size == 0) {
+		std::cerr << "[" << self->connection_id() << "] file_id: " << request->file_id << " has size of 0!" << std::endl;
+		response->error_code = NET_ERR__ALLOCATE_STORAGE_FAILED;
+		return;
+	}
+
     if(request->file_size > size_t(2)*size_t(1024)*size_t(1024)*size_t(1024)/*2GiByte*/) {
         response->error_code = NET_ERR__ALLOCATE_STORAGE_FAILED;
         return;
@@ -34,7 +40,7 @@ void NetworkProducerPeer::handle_send_data_request_(NetworkProducerPeer* self, c
         self->io->Skip(self->socket_fd_, request->file_size, &ioErr);
         if(ioErr != IOErrors::kNoError) {
             std::cout << "[NetworkProducerPeer] Out of sync force disconnect" << std::endl;
-            self->io->Close(self->socket_fd_, nullptr);
+            self->io->CloseSocket(self->socket_fd_, nullptr);
         }
         return;
     }

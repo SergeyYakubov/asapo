@@ -6,6 +6,7 @@
 #include <io.h>
 #include <windows.h>
 #include <direct.h>
+#include <iostream>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -16,23 +17,27 @@ using std::chrono::system_clock;
 namespace hidra2 {
 
 IOErrors IOErrorFromGetLastError() {
-    IOErrors err;
-    switch (GetLastError()) {
+	DWORD last_error = GetLastError();
+    switch (last_error) {
     case ERROR_SUCCESS :
-        err = IOErrors::kNoError;
-        break;
+		return IOErrors::kNoError;
     case ERROR_PATH_NOT_FOUND:
     case ERROR_FILE_NOT_FOUND:
-        err = IOErrors::kFileNotFound;
-        break;
+		return IOErrors::kFileNotFound;
     case ERROR_ACCESS_DENIED:
-        err = IOErrors::kPermissionDenied;
-        break;
+		return IOErrors::kPermissionDenied;
+	case ERROR_CONNECTION_REFUSED:
+		return IOErrors::kConnectionRefused;
+	case WSAEFAULT:
+		return IOErrors::kInvalidMemoryAddress;
+	case WSAECONNRESET:
+		return IOErrors::kConnectionResetByPeer;
+	case WSAENOTSOCK:
+		return IOErrors::kSocketOperationOnNonSocket;
     default:
-        err = IOErrors::kUnknownError;
-        break;
+		std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
+		return IOErrors::kUnknownError;
     }
-    return err;
 }
 
 
@@ -139,64 +144,111 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     }
 }
 
-int hidra2::SystemIO::AddressFamilyToPosixFamily(AddressFamilies address_family) const {
-    return 0;
+std::unique_ptr<std::tuple<std::string, SocketDescriptor>> SystemIO::InetAccept(SocketDescriptor socket_fd, IOErrors* err) const {
+	*err = IOErrors::kNoError;
+	static short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
+	if (family == -1) {
+		*err = IOErrors::kUnsupportedAddressFamily;
+		return nullptr;
+	}
+
+	sockaddr_in client_address{};
+	static int client_address_size = sizeof(sockaddr_in);
+
+	int peer_fd = ::accept(socket_fd, reinterpret_cast<sockaddr*>(&client_address), &client_address_size);
+
+	if (peer_fd == -1) {
+		*err = GetLastError();
+		return nullptr;
+	}
+
+	std::string
+		address = std::string(inet_ntoa(client_address.sin_addr)) + ':' + std::to_string(client_address.sin_port);
+	return std::unique_ptr<std::tuple<std::string, SocketDescriptor>>(new
+		std::tuple<std::string,
+		SocketDescriptor>(
+			address,
+			peer_fd));
 }
 
-int hidra2::SystemIO::SocketTypeToPosixType(SocketTypes socket_type) const {
-    return 0;
+void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const {
+	*err = IOErrors::kNoError;
+
+	auto host_port_tuple = SplitAddressToHostAndPort(address);
+	if (!host_port_tuple) {
+		*err = IOErrors::kInvalidAddressFormat;
+		return;
+	}
+	std::string host;
+	uint16_t port = 0;
+	std::tie(host, port) = *host_port_tuple;
+
+	short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
+	if (family == -1) {
+		*err = IOErrors::kUnsupportedAddressFamily;
+		return;
+	}
+
+	sockaddr_in socket_address{};
+	socket_address.sin_addr.s_addr = inet_addr(host.c_str());
+	socket_address.sin_port = htons(port);
+	socket_address.sin_family = family;
+
+	if (::connect(socket_fd, (struct sockaddr*) &socket_address, sizeof(socket_address)) == -1) {
+		*err = GetLastError();
+		return;
+	}
 }
 
-int hidra2::SystemIO::SocketProtocolToPosixProtocol(SocketProtocols socket_protocol) const {
-    return 0;
-}
-
-void hidra2::SystemIO::InetBind(FileDescriptor socket_fd, const std::string& address,
-                                IOErrors* err) const {
-
-}
-
-std::unique_ptr<std::tuple<std::string, FileDescriptor>> SystemIO::InetAccept(FileDescriptor socket_fd,
-IOErrors* err) const {
-    return std::unique_ptr<std::tuple<std::string, FileDescriptor>>();
-}
-
-void hidra2::SystemIO::InetConnect(FileDescriptor socket_fd, const std::string& address, IOErrors* err) const {
-
-}
-
-size_t hidra2::SystemIO::ReceiveTimeout(FileDescriptor socket_fd, void* buf, size_t length, uint16_t timeout_in_sec,
-                                        IOErrors* err) const {
-    return size_t();
-}
-
-FileDescriptor hidra2::SystemIO::_open(const char* filename, int posix_open_flags) const {
+FileDescriptor SystemIO::_open(const char* filename, int posix_open_flags) const {
     int fd;
     errno = _sopen_s(&fd, filename, posix_open_flags, _SH_DENYNO, _S_IREAD | _S_IWRITE);
     return fd;
 }
 
-void SystemIO::_close(hidra2::FileDescriptor fd) const {
-    ::_close(fd);
+void SystemIO::_close(FileDescriptor fd) const {
+	::_close(fd);
 }
 
-ssize_t SystemIO::_read(hidra2::FileDescriptor fd, void* buffer, size_t length) const {
+void SystemIO::_close_socket(SocketDescriptor fd) const {
+	::closesocket(fd);
+}
+
+ssize_t SystemIO::_read(FileDescriptor fd, void* buffer, size_t length) const {
     return ::_read(fd, (char*)buffer, length);
 }
 
-ssize_t SystemIO::_write(hidra2::FileDescriptor fd, const void* buffer, size_t length) const {
+ssize_t SystemIO::_write(FileDescriptor fd, const void* buffer, size_t length) const {
     return ::_write(fd, (const char*)buffer, length);
 }
 
-FileDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
+SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
+	static bool WSAStartupDone = false;
+	if (!WSAStartupDone) {
+		WSAStartupDone = true;
+		WORD wVersionRequested = MAKEWORD(2, 2);
+		WSADATA wsaData;
+		int err = WSAStartup(wVersionRequested, &wsaData);
+		if (err != 0) {
+			std::cout << "[_socket/WSAStartup] Faild to WSAStartup with version 2.2" << std::endl;
+			WSACleanup();
+			// Do not return, since ::socket has to set an errno
+		}
+		else {
+			std::atexit([] {
+				WSACleanup();
+			});
+		}
+	}
+
     return ::socket(address_family, socket_type, socket_protocol);
 }
 
-ssize_t SystemIO::_send(FileDescriptor socket_fd, const void* buffer, size_t length) const {
+ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) const {
     return ::send(socket_fd, (char*)buffer, length, 0);
 }
 
-ssize_t SystemIO::_recv(FileDescriptor socket_fd, void* buffer, size_t length) const {
+ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const {
     return ::recv(socket_fd, (char*)buffer, length, 0);
 }
 
@@ -204,7 +256,7 @@ int SystemIO::_mkdir(const char* dirname) const {
     return ::_mkdir(dirname);
 }
 
-int SystemIO::_listen(FileDescriptor fd, int backlog) const {
+int SystemIO::_listen(SocketDescriptor fd, int backlog) const {
     return ::listen(fd, backlog);
 }
 

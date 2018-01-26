@@ -45,7 +45,12 @@ void NetworkProducerPeer::internal_receiver_thread_() {
     while(is_listening_) {
         err = IOErrors::kNoError;
 
-        io->ReceiveTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 1, &err);
+		size_t size = io->ReceiveTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 5, &err);
+		if (size == 0) {
+			std::cout << "size: " << size << std::endl;
+		}
+
+		
 
         if(err != IOErrors::kNoError) {
             if(err == IOErrors::kTimeout) {
@@ -77,7 +82,7 @@ void NetworkProducerPeer::internal_receiver_thread_() {
         }
     }
 
-    io->Close(socket_fd_, nullptr);
+    io->CloseSocket(socket_fd_, nullptr);
     std::cout << "[" << connection_id() << "] Disconnected." << std::endl;
 
     free(generic_request);
@@ -98,7 +103,7 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
     if(request->op_code >= OP_CODE_COUNT || request->op_code < 0) {
         std::cerr << "[" << connection_id() << "] Error invalid op_code: " << request->op_code << " force disconnect." <<
                   std::endl;
-        io->Close(socket_fd_, nullptr);
+        io->CloseSocket(socket_fd_, nullptr);
         return 0;
     }
 
@@ -107,8 +112,8 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
 
     auto handler_information = kRequestHandlers[request->op_code];
 
-    assert(handler_information.request_size <= kGenericBufferSize);//Would overwrite memory
-    assert(handler_information.response_size <= kGenericBufferSize);//Would overwrite memory
+    assert(handler_information.request_size <= kGenericBufferSize);//Would overwrite arbitrary memory
+    assert(handler_information.response_size <= kGenericBufferSize);//Would overwrite arbitrary memory
 
     IOErrors err;
     //receive the rest of the message

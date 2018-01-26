@@ -60,6 +60,7 @@ enum class SocketProtocols {
 };
 
 typedef int FileDescriptor;
+typedef int SocketDescriptor;
 
 class IO {
   public:
@@ -72,31 +73,27 @@ class IO {
     /*
      * Network
      */
-    virtual FileDescriptor  CreateSocket    (AddressFamilies address_family, SocketTypes socket_type,
-                                             SocketProtocols socket_protocol, IOErrors* err) const = 0;
-    virtual void            Listen          (FileDescriptor socket_fd, int backlog, IOErrors* err) const = 0;
-    virtual void            InetBind        (FileDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
-    virtual std::unique_ptr<std::tuple<std::string, FileDescriptor>> InetAccept(FileDescriptor socket_fd,
-            IOErrors* err) const = 0;
-    virtual void            InetConnect     (FileDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
-    virtual FileDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOErrors* err) const = 0;
-
-    virtual size_t          Receive         (FileDescriptor socket_fd, void* buf, size_t length, IOErrors* err) const = 0;
-    virtual size_t          ReceiveTimeout  (FileDescriptor socket_fd,
-                                             void* buf,
-                                             size_t length,
-                                             uint16_t timeout_in_sec,
-                                             IOErrors* err) const = 0;
-    virtual size_t          Send            (FileDescriptor socket_fd, const void* buf, size_t length,
-                                             IOErrors* err) const = 0;
-    virtual void            Skip            (FileDescriptor socket_fd, size_t length, IOErrors* err) const = 0;
+	virtual SocketDescriptor  CreateSocket(AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol, IOErrors* err) const = 0;
+	virtual void            Listen(SocketDescriptor socket_fd, int backlog, IOErrors* err) const = 0;
+	virtual void            InetBind(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
+	virtual std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd, IOErrors* err) const = 0;
+	virtual void            InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
+	virtual SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOErrors* err) const = 0;
+	virtual size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, IOErrors* err) const = 0;
+	virtual size_t          ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec, IOErrors* err) const = 0;
+	virtual size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, IOErrors* err) const = 0;
+	virtual void            Skip(SocketDescriptor socket_fd, size_t length, IOErrors* err) const = 0;
+	/**
+	* @param err Since CloseSocket if often used in an error case, it's able to accept nullptr.
+	*/
+	virtual void            CloseSocket(SocketDescriptor socket_fd, IOErrors* err) const = 0;
 
     /*
      * Filesystem
      */
     virtual FileDescriptor  Open            (const std::string& filename, int open_flags, IOErrors* err) const = 0;
     /**
-     * @param err Since close if often used in an error case, it's able to accept nullptr.
+     * @param err Since Close if often used in an error case, it's able to accept nullptr.
      */
     virtual void            Close           (FileDescriptor fd, IOErrors* err) const = 0;
 
