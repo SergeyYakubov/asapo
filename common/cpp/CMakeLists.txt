@@ -1,3 +1,5 @@
+find_package(Threads REQUIRED)
+
 set(TARGET_NAME common)
 set(SOURCE_FILES
         src/has_io.cpp
