@@ -42,7 +42,7 @@ Args GetArgs(int argc, char* argv[]) {
 
 void ReadFiles(const Args& args) {
     hidra2::WorkerErrorCode err;
-    auto broker = hidra2::DataBrokerFactory::Create(args.folder, &err);
+    auto broker = hidra2::DataBrokerFactory::CreateFolderBroker(args.folder, &err);
     broker->Connect();
 
     std::vector<hidra2::FileInfo>file_infos(args.nthreads);

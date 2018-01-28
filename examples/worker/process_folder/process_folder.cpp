@@ -28,7 +28,7 @@ std::string ProcessCommandArguments(int argc, char* argv[]) {
 
 std::unique_ptr<hidra2::DataBroker> CreateBroker(const std::string& folder) {
     hidra2::WorkerErrorCode err;
-    auto broker = hidra2::DataBrokerFactory::Create(folder, &err);
+    auto broker = hidra2::DataBrokerFactory::CreateFolderBroker(folder, &err);
     if (err != WorkerErrorCode::kOK) {
         std::cout << "Cannot create broker" << std::endl;
         exit(EXIT_FAILURE);

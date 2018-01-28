@@ -1,6 +1,6 @@
 set(TARGET_NAME hidra2-worker)
 
-set(SOURCE_FILES include/worker/data_broker.h src/data_broker.cpp src/folder_data_broker.cpp src/folder_data_broker.h include/hidra2_worker.h)
+set(SOURCE_FILES include/worker/data_broker.h src/data_broker.cpp src/folder_data_broker.cpp src/folder_data_broker.h include/hidra2_worker.h src/server_data_broker.cpp src/server_data_broker.h)
 
 
 ################################

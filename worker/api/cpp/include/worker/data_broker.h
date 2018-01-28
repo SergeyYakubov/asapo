@@ -39,7 +39,11 @@ class DataBroker {
 /*! A class to create a data broker instance. The class's only function Create is used for this*/
 class DataBrokerFactory {
   public:
-    static std::unique_ptr<DataBroker> Create(const std::string& source_name, WorkerErrorCode* return_code) noexcept;
+    static std::unique_ptr<DataBroker> CreateFolderBroker(const std::string& source_name,
+            WorkerErrorCode* return_code) noexcept;
+    static std::unique_ptr<DataBroker> CreateServerBroker(const std::string& source_name,
+            WorkerErrorCode* return_code) noexcept;
+
 };
 
 }
