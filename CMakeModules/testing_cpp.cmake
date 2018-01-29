@@ -36,8 +36,6 @@ function(gtest target test_source_files linktarget)
         ENDIF (WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         target_link_libraries(test-${target} ${GTEST_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-
-
         add_test(NAME test-${target} COMMAND test-${target})
         set_tests_properties(test-${target} PROPERTIES LABELS "unit;all")
 
@@ -46,7 +44,7 @@ function(gtest target test_source_files linktarget)
         if (CMAKE_COMPILER_IS_GNUCXX)
             include(CodeCoverage)
             APPEND_COVERAGE_COMPILER_FLAGS()
-            set(COVERAGE_EXCLUDES '*/unittests/*')
+            set(COVERAGE_EXCLUDES "*/unittests/*" "*/3d_party/*" )
             if (ARGN)
                 set(COVERAGE_EXCLUDES ${COVERAGE_EXCLUDES} ${ARGN})
             endif()

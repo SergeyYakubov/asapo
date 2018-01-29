@@ -36,8 +36,10 @@ bool TimeFromJson(const Document& d, const std::string name, std::chrono::system
         return false;
     }
 
-    *val = std::chrono::time_point<std::chrono::system_clock>
-           (std::chrono::nanoseconds(nanoseconds_from_epoch));
+    std::chrono::nanoseconds ns = std::chrono::nanoseconds {nanoseconds_from_epoch};
+    *val = std::chrono::system_clock::time_point
+    {std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)};
+
     return true;
 }
 

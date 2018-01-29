@@ -32,18 +32,18 @@ WorkerErrorCode ServerDataBroker::GetNext(FileInfo* info, FileData* data) {
         return WorkerErrorCode::kErrorReadingSource;
     }
 
-    if (info!= nullptr){
+    if (info != nullptr) {
         *info = file_info;
     }
 
-    if (data == nullptr){
+    if (data == nullptr) {
         return WorkerErrorCode::kOK;
     }
 
     IOErrors ioerr;
     *data = io__->GetDataFromFile(file_info.relative_path +
                                   (file_info.relative_path.empty() ? "" : "/") +
-        file_info.base_name, file_info.size, &ioerr);
+                                  file_info.base_name, file_info.size, &ioerr);
 
     return hidra2::MapIOError(ioerr);
 }

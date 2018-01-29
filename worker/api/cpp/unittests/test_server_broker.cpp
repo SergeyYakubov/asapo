@@ -72,15 +72,16 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsErrorOnWrongInput) {
 }
 
 TEST_F(ServerDataBrokerTests, GetNextUsesCorrectUri) {
-    EXPECT_CALL(mock_http_client, Get("test/next?database=database", _));
+    EXPECT_CALL(mock_http_client, Get("test/next?database=database", _)).WillOnce(DoAll(
+        SetArgPointee<1>(WorkerErrorCode::kOK),
+        Return("")));
     data_broker->GetNext(&info, nullptr);
 }
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsErrorFromHttpClient) {
     EXPECT_CALL(mock_http_client, Get(_, _)).WillOnce(DoAll(
             SetArgPointee<1>(WorkerErrorCode::kSourceNotFound),
-            Return("")
-                                                      ));
+            Return("")));
 
     auto err = data_broker->GetNext(&info, nullptr);
 
@@ -88,7 +89,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsErrorFromHttpClient) {
 
 }
 
-FileInfo CreateFI(){
+FileInfo CreateFI() {
     FileInfo fi;
     fi.size = 100;
     fi.id = 1;
@@ -99,7 +100,7 @@ FileInfo CreateFI(){
 }
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsFileInfo) {
-    auto to_send =CreateFI();
+    auto to_send = CreateFI();
     auto json = to_send.Json();
     EXPECT_CALL(mock_http_client, Get(_, _)).WillOnce(DoAll(
             SetArgPointee<1>(WorkerErrorCode::kOK),
@@ -142,15 +143,16 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsIfNoDtataNeeded) {
 
 
 TEST_F(ServerDataBrokerTests, GetNextCallsReadFromFile) {
-    auto to_send =CreateFI();
+    auto to_send = CreateFI();
     auto json = to_send.Json();
 
     EXPECT_CALL(mock_http_client, Get(_, _)).WillOnce(DoAll(
-        SetArgPointee<1>(WorkerErrorCode::kOK),
-        Return(json)));
+            SetArgPointee<1>(WorkerErrorCode::kOK),
+            Return(json)));
 
 
-    EXPECT_CALL(mock_io, GetDataFromFile_t("relative_path/base_name",100, _));
+    EXPECT_CALL(mock_io, GetDataFromFile_t("relative_path/base_name", 100, _)).
+        WillOnce(DoAll(SetArgPointee<2>(IOErrors::kReadError), testing::Return(nullptr)));
 
     FileData data;
     data_broker->GetNext(&info, &data);
