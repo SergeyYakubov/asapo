@@ -1,35 +1,9 @@
 #include "folder_data_broker.h"
 
 #include "system_wrappers/system_io.h"
+#include "io_map.h"
 
 namespace hidra2 {
-
-WorkerErrorCode MapIOError(IOErrors io_err) {
-    WorkerErrorCode err;
-    switch (io_err) { // we do not use map due to performance reasons
-    case IOErrors::kNoError:
-        err = WorkerErrorCode::kOK;
-        break;
-    case IOErrors::kFileNotFound:
-        err = WorkerErrorCode::kSourceNotFound;
-        break;
-    case IOErrors::kPermissionDenied:
-        err = WorkerErrorCode::kPermissionDenied;
-        break;
-    case IOErrors::kReadError:
-        err = WorkerErrorCode::kErrorReadingSource;
-        break;
-    case IOErrors::kMemoryAllocationError:
-        err = WorkerErrorCode::kMemoryError;
-        break;
-    default:
-        err = WorkerErrorCode::kUnknownIOError;
-        break;
-    }
-
-    return err;
-}
-
 
 FolderDataBroker::FolderDataBroker(const std::string& source_name) :
     base_path_{source_name}, io__{new hidra2::SystemIO}, is_connected_{false},

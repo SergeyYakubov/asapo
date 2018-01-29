@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "common/file_info.h"
+#include "common/data_structs.h"
 
 namespace hidra2 {
 
@@ -25,6 +25,7 @@ enum class WorkerErrorCode {
 class DataBroker {
   public:
     //! Connect to the data source - will scan file folders or connect to the database.
+// TODO: do we need this?
     virtual WorkerErrorCode Connect() = 0;
     //! Receive next image.
     /*!
@@ -41,7 +42,8 @@ class DataBrokerFactory {
   public:
     static std::unique_ptr<DataBroker> CreateFolderBroker(const std::string& source_name,
             WorkerErrorCode* return_code) noexcept;
-    static std::unique_ptr<DataBroker> CreateServerBroker(const std::string& source_name,
+    static std::unique_ptr<DataBroker> CreateServerBroker(const std::string& server_name,
+            const std::string& source_name,
             WorkerErrorCode* return_code) noexcept;
 
 };

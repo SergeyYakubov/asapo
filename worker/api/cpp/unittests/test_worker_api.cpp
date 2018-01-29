@@ -41,7 +41,7 @@ TEST(DataBrokerFactoryTests, FailCreateDataSourceWithEmptySource) {
 TEST(DataBrokerFactoryTests, CreateServerDataSource) {
     WorkerErrorCode return_code;
 
-    auto data_broker = DataBrokerFactory::CreateServerBroker("server", &return_code);
+    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "database", &return_code);
 
     ASSERT_THAT(return_code, Eq(WorkerErrorCode::kOK));
     ASSERT_THAT(dynamic_cast<ServerDataBroker*>(data_broker.get()), Ne(nullptr));

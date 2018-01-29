@@ -8,7 +8,7 @@
 
 #include "database/database.h"
 
-#include "common/file_info.h"
+#include "common/data_structs.h"
 
 #include "../src/folder_db_importer.h"
 

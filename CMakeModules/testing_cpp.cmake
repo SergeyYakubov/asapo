@@ -14,11 +14,20 @@ if (BUILD_TESTS)
     message(STATUS "Will look for google test at ${gtest_SOURCE_DIR}")
 endif ()
 
-function(gtest target test_source_files test_libraries)
+function(gtest target test_source_files linktarget)
     if (BUILD_TESTS)
         include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
         link_directories(${gtest_SOURCE_DIR}/lib)
-        add_executable(test-${target} ${test_source_files})
+
+        if (NOT ${linktarget} STREQUAL "")
+            get_target_property(target_type ${linktarget} TYPE)
+            if (target_type STREQUAL "OBJECT_LIBRARY")
+                add_executable(test-${target} ${test_source_files} $<TARGET_OBJECTS:${linktarget}>)
+            else()
+                add_executable(test-${target} ${test_source_files})
+                target_link_libraries(test-${target} ${linktarget})
+            endif ()
+        endif ()
 
         IF (WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
             set(GTEST_LIBS gtestd gtest_maind gmockd)
@@ -27,9 +36,8 @@ function(gtest target test_source_files test_libraries)
         ENDIF (WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         target_link_libraries(test-${target} ${GTEST_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-        if (NOT ${test_libraries} STREQUAL "")
-            target_link_libraries(test-${target} ${test_libraries})
-        endif ()
+
+
         add_test(NAME test-${target} COMMAND test-${target})
         set_tests_properties(test-${target} PROPERTIES LABELS "unit;all")
 

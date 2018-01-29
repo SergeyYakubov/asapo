@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "common/file_info.h"
+#include "common/data_structs.h"
 
 namespace hidra2 {
 
