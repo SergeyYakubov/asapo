@@ -73,8 +73,8 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsErrorOnWrongInput) {
 
 TEST_F(ServerDataBrokerTests, GetNextUsesCorrectUri) {
     EXPECT_CALL(mock_http_client, Get("test/next?database=database", _)).WillOnce(DoAll(
-        SetArgPointee<1>(WorkerErrorCode::kOK),
-        Return("")));
+                SetArgPointee<1>(WorkerErrorCode::kOK),
+                Return("")));
     data_broker->GetNext(&info, nullptr);
 }
 
@@ -152,7 +152,7 @@ TEST_F(ServerDataBrokerTests, GetNextCallsReadFromFile) {
 
 
     EXPECT_CALL(mock_io, GetDataFromFile_t("relative_path/base_name", 100, _)).
-        WillOnce(DoAll(SetArgPointee<2>(IOErrors::kReadError), testing::Return(nullptr)));
+    WillOnce(DoAll(SetArgPointee<2>(IOErrors::kReadError), testing::Return(nullptr)));
 
     FileData data;
     data_broker->GetNext(&info, &data);
