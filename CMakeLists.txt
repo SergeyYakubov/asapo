@@ -3,9 +3,9 @@ project(HIDRA2)
 set(CMAKE_CXX_STANDARD 11)
 IF(WIN32)
     set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
-    add_definitions(-DCURL_STATICLIB)
 ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
 ENDIF(WIN32)
 
 option(BUILD_TESTS "Uses googletest to build tests" OFF)
@@ -28,12 +28,9 @@ endif()
 add_subdirectory(common/cpp)
 
 add_subdirectory(producer/api)
-add_subdirectory(worker/api/cpp)
 
-if(BUILD_WORKER_TOOLS)
-    set (BUILD_MONGODB ON)
-    add_subdirectory(worker/tools)
-endif()
+add_subdirectory(worker)
+
 
 IF(UNIX)
     add_subdirectory(receiver)

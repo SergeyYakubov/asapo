@@ -98,7 +98,7 @@ class MockDatabaseFactory : public DatabaseFactory {
         return std::unique_ptr<Database> {db[n++]};
     }
     ~MockDatabaseFactory() {
-        for (int i = n; i < db.size(); i++) {
+        for (unsigned int i = n; i < db.size(); i++) {
             delete db[i];
         }
     }

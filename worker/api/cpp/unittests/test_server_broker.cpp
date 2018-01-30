@@ -19,6 +19,7 @@ using hidra2::FileInfo;
 using hidra2::FileData;
 using hidra2::MockIO;
 using hidra2::MockHttpClient;
+using hidra2::HttpCode;
 
 using ::testing::AtLeast;
 using ::testing::Eq;
@@ -60,6 +61,14 @@ class ServerDataBrokerTests : public Test {
         data_broker->io__.release();
         data_broker->httpclient__.release();
     }
+    void MockGet(const std::string& responce) {
+        EXPECT_CALL(mock_http_client, Get_t(_, _, _)).WillOnce(DoAll(
+            SetArgPointee<1>(HttpCode::OK),
+            SetArgPointee<2>(WorkerErrorCode::kOK),
+            Return(responce)
+        ));
+    }
+
 };
 
 TEST_F(ServerDataBrokerTests, CanConnect) {
@@ -72,16 +81,19 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsErrorOnWrongInput) {
     ASSERT_THAT(return_code, Eq(WorkerErrorCode::kWrongInput));
 }
 
+
 TEST_F(ServerDataBrokerTests, GetNextUsesCorrectUri) {
-    EXPECT_CALL(mock_http_client, Get("test/database/dbname/next", _, _)).WillOnce(DoAll(
+    EXPECT_CALL(mock_http_client, Get_t("test/database/dbname/next", _, _)).WillOnce(DoAll(
+                SetArgPointee<1>(HttpCode::OK),
                 SetArgPointee<2>(WorkerErrorCode::kOK),
                 Return("")));
     data_broker->GetNext(&info, nullptr);
 }
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsErrorFromHttpClient) {
-    EXPECT_CALL(mock_http_client, Get(_, _, _)).WillOnce(DoAll(
-                SetArgPointee<2>(WorkerErrorCode::kSourceNotFound),
+    EXPECT_CALL(mock_http_client, Get_t(_, _, _)).WillOnce(DoAll(
+                SetArgPointee<1>(HttpCode::NotFound),
+                SetArgPointee<2>(WorkerErrorCode::kOK),
                 Return("")));
 
     auto err = data_broker->GetNext(&info, nullptr);
@@ -103,9 +115,8 @@ FileInfo CreateFI() {
 TEST_F(ServerDataBrokerTests, GetNextReturnsFileInfo) {
     auto to_send = CreateFI();
     auto json = to_send.Json();
-    EXPECT_CALL(mock_http_client, Get(_, _, _)).WillOnce(DoAll(
-                SetArgPointee<2>(WorkerErrorCode::kOK),
-                Return(json)));
+
+    MockGet(json);
 
     auto err = data_broker->GetNext(&info, nullptr);
 
@@ -120,11 +131,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsFileInfo) {
 
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsParseError) {
-    EXPECT_CALL(mock_http_client, Get(_, _, _)).WillOnce(DoAll(
-                SetArgPointee<2>(WorkerErrorCode::kOK),
-                Return("blabla")
-            ));
-
+    MockGet("error_responce");
     auto err = data_broker->GetNext(&info, nullptr);
 
     ASSERT_THAT(err, Eq(WorkerErrorCode::kErrorReadingSource));
@@ -132,11 +139,9 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsParseError) {
 
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsIfNoDtataNeeded) {
-    EXPECT_CALL(mock_http_client, Get(_, _, _)).WillOnce(DoAll(
-                SetArgPointee<2>(WorkerErrorCode::kOK),
-                Return("blabla")));
-
+    MockGet("error_responce");
     EXPECT_CALL( mock_io, GetDataFromFile_t(_, _, _)).Times(0);
+
     data_broker->GetNext(&info, nullptr);
 }
 
@@ -145,10 +150,7 @@ TEST_F(ServerDataBrokerTests, GetNextCallsReadFromFile) {
     auto to_send = CreateFI();
     auto json = to_send.Json();
 
-    EXPECT_CALL(mock_http_client, Get(_, _, _)).WillOnce(DoAll(
-                SetArgPointee<2>(WorkerErrorCode::kOK),
-                Return(json)));
-
+    MockGet(json);
 
     EXPECT_CALL(mock_io, GetDataFromFile_t("relative_path/base_name", 100, _)).
     WillOnce(DoAll(SetArgPointee<2>(IOErrors::kReadError), testing::Return(nullptr)));

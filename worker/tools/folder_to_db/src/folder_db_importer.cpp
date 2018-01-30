@@ -138,7 +138,7 @@ FolderToDbImportError FolderToDbImporter::ImportFilelist(const FileInfos& file_l
     auto split_parameters = ComputeSplitParameters(file_list, n_tasks_);
 
     std::vector<std::future<FolderToDbImportError>>res;
-    for (auto i = 0; i < n_tasks_; i++) {
+    for (unsigned int i = 0; i < n_tasks_; i++) {
         ProcessNextChunk(file_list, &res, &split_parameters);
     }
 

@@ -18,10 +18,17 @@ WorkerErrorCode ServerDataBroker::Connect() {
 WorkerErrorCode ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
     std::string full_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
     WorkerErrorCode err;
-    auto responce = httpclient__->Get(full_uri, nullptr, &err);
+    HttpCode code;
+    auto responce = httpclient__->Get(full_uri, &code, &err);
     if (err != WorkerErrorCode::kOK) {
         return err;
     }
+
+    err = HttpCodeToWorkerError(code);
+    if (err != WorkerErrorCode::kOK) {
+        return err;
+    }
+
     if (!info->SetFromJson(responce)) {
         return WorkerErrorCode::kErrorReadingSource;
     }

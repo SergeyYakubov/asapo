@@ -9,8 +9,7 @@ namespace hidra2 {
 
 class CurlHttpClient final : public HttpClient {
   public:
-    CurlHttpClient();
-    std::string Get(const std::string& uri, int* responce_code, WorkerErrorCode* err) const override;
+    std::string Get(const std::string& uri, HttpCode* responce_code, WorkerErrorCode* err) const noexcept override;
 };
 
 

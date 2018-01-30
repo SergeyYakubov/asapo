@@ -19,6 +19,7 @@ enum class WorkerErrorCode {
     kPermissionDenied,
     kNoData,
     kWrongInput,
+    kInternalError,
     kUnknownIOError
 };
 

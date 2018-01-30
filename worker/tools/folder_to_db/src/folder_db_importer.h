@@ -45,9 +45,10 @@ class FolderToDbImporter {
 
     unsigned int SetNParallelTasks(unsigned int ntasks, bool async = true);
     void IgnoreDuplicates(bool ignore_duplicates = true);
+    std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<hidra2::DatabaseFactory>
     db_factory__; // modified in testings to mock system calls,otherwise do not touch
-    std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
+
   private:
     bool ignore_duplicates_{false};
     unsigned int n_tasks_{1};

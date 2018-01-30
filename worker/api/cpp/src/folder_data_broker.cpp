@@ -6,7 +6,7 @@
 namespace hidra2 {
 
 FolderDataBroker::FolderDataBroker(const std::string& source_name) :
-    base_path_{source_name}, io__{new hidra2::SystemIO}, is_connected_{false},
+    io__{new hidra2::SystemIO}, base_path_{source_name}, is_connected_{false},
 current_file_{ -1} {
 }
 

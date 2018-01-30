@@ -35,12 +35,17 @@ int main(int argc, char* argv[]) {
     auto broker = hidra2::DataBrokerFactory::CreateServerBroker(args.uri, "", &err);
     auto server_broker = static_cast<hidra2::ServerDataBroker*>(broker.get());
 
-    int code;
-    auto responce = server_broker->httpclient__->Get(args.uri,&code, &err);
+    hidra2::HttpCode code;
+    auto responce = server_broker->httpclient__->Get(args.uri, &code, &err);
 
-    std::cout << "Server responce code:\n" << code << std::endl;
-    std::cout << "Server responce:\n" << responce << std::endl;
+    if (err != WorkerErrorCode::kOK) {
+        M_AssertEq("clienterror", args.answer);
+        M_AssertContains(responce, "Could");
+        return 0;
+    }
 
     M_AssertContains(responce, args.answer);
+    M_AssertEq(static_cast<int>(code), args.code);
+
     return 0;
 }

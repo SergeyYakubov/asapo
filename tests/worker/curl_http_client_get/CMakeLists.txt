@@ -21,4 +21,5 @@ target_link_libraries(${TARGET_NAME} test_common hidra2-worker)
 #add_test_setup_cleanup(${TARGET_NAME})
 add_integration_test(${TARGET_NAME} get_google "google.com moved 302")
 add_integration_test(${TARGET_NAME} get_badaddress "google.com/badaddress found 404")
+add_integration_test(${TARGET_NAME} get_badaddress2 "111 clienterror 404")
 
