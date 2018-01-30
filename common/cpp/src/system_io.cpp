@@ -394,62 +394,61 @@ std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostA
 }
 
 void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const {
-	*err = IOErrors::kNoError;
+    *err = IOErrors::kNoError;
 
-	auto host_port_tuple = SplitAddressToHostAndPort(address);
-	if (!host_port_tuple) {
-		*err = IOErrors::kInvalidAddressFormat;
-		return;
-	}
-	std::string host;
-	uint16_t port = 0;
-	std::tie(host, port) = *host_port_tuple;
+    auto host_port_tuple = SplitAddressToHostAndPort(address);
+    if (!host_port_tuple) {
+        *err = IOErrors::kInvalidAddressFormat;
+        return;
+    }
+    std::string host;
+    uint16_t port = 0;
+    std::tie(host, port) = *host_port_tuple;
 
-	short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
-	if (family == -1) {
-		*err = IOErrors::kUnsupportedAddressFamily;
-		return;
-	}
+    short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
+    if (family == -1) {
+        *err = IOErrors::kUnsupportedAddressFamily;
+        return;
+    }
 
-	sockaddr_in socket_address{};
-	socket_address.sin_addr.s_addr = inet_addr(host.c_str());
-	socket_address.sin_port = htons(port);
-	socket_address.sin_family = family;
+    sockaddr_in socket_address{};
+    socket_address.sin_addr.s_addr = inet_addr(host.c_str());
+    socket_address.sin_port = htons(port);
+    socket_address.sin_family = family;
 
-	if (_connect(socket_fd, (struct sockaddr*) &socket_address, sizeof(socket_address)) == -1) {
-		*err = GetLastError();
-		return;
-	}
+    if (_connect(socket_fd, (struct sockaddr*) &socket_address, sizeof(socket_address)) == -1) {
+        *err = GetLastError();
+        return;
+    }
 }
 
 std::unique_ptr<std::tuple<std::string, SocketDescriptor>> SystemIO::InetAccept(SocketDescriptor socket_fd,
-	IOErrors* err) const {
-	*err = IOErrors::kNoError;
-	static short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
-	if (family == -1) {
-		*err = IOErrors::kUnsupportedAddressFamily;
-		return nullptr;
-	}
+IOErrors* err) const {
+    *err = IOErrors::kNoError;
+    static short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
+    if (family == -1) {
+        *err = IOErrors::kUnsupportedAddressFamily;
+        return nullptr;
+    }
 
-	sockaddr_in client_address{};
-	static size_t client_address_size = sizeof(sockaddr_in);
+    sockaddr_in client_address{};
+    static size_t client_address_size = sizeof(sockaddr_in);
 
-	int peer_fd = _accept(socket_fd, reinterpret_cast<sockaddr*>(&client_address), &client_address_size);
+    int peer_fd = _accept(socket_fd, reinterpret_cast<sockaddr*>(&client_address), &client_address_size);
 
-	if (peer_fd == -1) {
-		*err = GetLastError();
-		return nullptr;
-	}
+    if (peer_fd == -1) {
+        *err = GetLastError();
+        return nullptr;
+    }
 
-	std::string
-		address = std::string(inet_ntoa(client_address.sin_addr)) + ':' + std::to_string(client_address.sin_port);
-	return std::unique_ptr<std::tuple<std::string, SocketDescriptor>>(new
-		std::tuple<std::string,
-		SocketDescriptor>(
-			address,
-			peer_fd));
+    std::string
+    address = std::string(inet_ntoa(client_address.sin_addr)) + ':' + std::to_string(client_address.sin_port);
+    return std::unique_ptr<std::tuple<std::string, SocketDescriptor>>(new
+            std::tuple<std::string,
+            SocketDescriptor>(
+                address,
+                peer_fd));
 }
-
 
 }
 

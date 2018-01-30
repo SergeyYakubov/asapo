@@ -135,7 +135,7 @@ NetworkProducerPeer::~NetworkProducerPeer() {
 }
 
 FileDescriptor NetworkProducerPeer::CreateAndOpenFileByFileId(uint64_t file_id, IOErrors* err) {
-    io->CreateDirectory("files", err);
+    io->CreateNewDirectory("files", err);
     if(*err != IOErrors::kNoError && *err != IOErrors::kFileAlreadyExists) {
         return -1;
     }

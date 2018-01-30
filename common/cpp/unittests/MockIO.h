@@ -44,7 +44,7 @@ class MockIO : public IO {
                        size_t(FileDescriptor fd, void* buf, size_t length, IOErrors* err));
     MOCK_CONST_METHOD4(Write,
                        size_t(FileDescriptor fd, const void* buf, size_t length, IOErrors* err));
-    MOCK_CONST_METHOD2(CreateDirectory,
+    MOCK_CONST_METHOD2(CreateNewDirectory,
                        void(const std::string& directory_name, hidra2::IOErrors* err));
     MOCK_CONST_METHOD3(GetDataFromFile,
                        FileData(const std::string& fname, uint64_t fsize, IOErrors* err));

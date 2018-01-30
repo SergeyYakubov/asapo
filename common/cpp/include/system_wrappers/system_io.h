@@ -29,9 +29,9 @@ class SystemIO final : public IO {
     int             _mkdir(const char* dirname) const;
 
     SocketDescriptor	_socket(int address_family, int socket_type, int socket_protocol) const;
-	SocketDescriptor	_connect(SocketDescriptor socket_fd, sockaddr* address, size_t address_length) const;
+    SocketDescriptor	_connect(SocketDescriptor socket_fd, const void* address, size_t address_length) const;
     int					_listen(SocketDescriptor socket_fd, int backlog) const;
-	SocketDescriptor	_accept(SocketDescriptor socket_fd, sockaddr* address, size_t* address_length) const;
+    SocketDescriptor	_accept(SocketDescriptor socket_fd, void* address, size_t* address_length) const;
     ssize_t				_send(SocketDescriptor socket_fd, const void* buffer, size_t length) const;
     ssize_t				_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const;
     void				_close_socket(SocketDescriptor socket_fd) const;

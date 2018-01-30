@@ -194,6 +194,13 @@ int SystemIO::_listen(SocketDescriptor socket_fd, int backlog) const {
     return ::listen(socket_fd, backlog);
 }
 
+SocketDescriptor SystemIO::_connect(SocketDescriptor socket_fd, const void* address, size_t address_length) const {
+    return ::connect(socket_fd, static_cast<const sockaddr*>(address), static_cast<socklen_t>(address_length));
+}
+
+SocketDescriptor SystemIO::_accept(SocketDescriptor socket_fd, void* address, size_t* address_length) const {
+    return ::accept(socket_fd, static_cast<sockaddr*>(address), reinterpret_cast<socklen_t*>(address_length));
+}
 
 void SystemIO::_close_socket(SocketDescriptor socket_fd) const {
     ::close(socket_fd);

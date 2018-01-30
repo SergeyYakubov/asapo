@@ -23,7 +23,7 @@ static const int kNumberOfChecks = 3;
 
 void Exit(int exit_number) {
     std::cerr << "ERROR: Exit on " << exit_number << std::endl;
-	getchar();
+    getchar();
     exit(exit_number);
 }
 
@@ -72,7 +72,7 @@ std::thread* CreateEchoServerThread() {
             std::cout << "[SERVER][" << i << "] Close client_fd" << std::endl;
             io->CloseSocket(client_fd, &err);
             ExitIfErrIsNotOk(&err, 107);
-		}
+        }
         std::cout << "[SERVER] Close server socket" << std::endl;
         io->CloseSocket(socket, &err);
         ExitIfErrIsNotOk(&err, 108);
@@ -92,7 +92,7 @@ void CheckNormal(int times, size_t size) {
     }
 
     for (int i = 0; i < times; i++) {
-		std::cout << "[CLIENT] Allocate and create random numbers" << std::endl;
+        std::cout << "[CLIENT] Allocate and create random numbers" << std::endl;
         std::unique_ptr<uint8_t[]> buffer(new uint8_t[size]);
         for (size_t i = 0; i < size; i++) {
             buffer[i] = rand();
@@ -137,11 +137,11 @@ int main(int argc, char* argv[]) {
     CheckNormal(10, 1024 * 1024 * 3);
     std::cout << "Check 2" << std::endl;
     CheckNormal(30, 1024);
-	std::cout << "Check 3" << std::endl;
-	CheckNormal(2, 1024 * 1024 * 256/*256 MiByte */);
+    std::cout << "Check 3" << std::endl;
+    CheckNormal(2, 1024 * 1024 * 256/*256 MiByte */);
 
-	std::cout << "server_thread->join()" << std::endl;
-	server_thread->join();
+    std::cout << "server_thread->join()" << std::endl;
+    server_thread->join();
 
     return 0;
 }
