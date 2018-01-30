@@ -18,10 +18,12 @@ using namespace std::chrono;
 
 static const std::unique_ptr<SystemIO> io(new SystemIO());
 static const std::string kListenAddress = "127.0.0.1:60123";
-static std::promise<void> thread_started;
+static std::promise<void> kThreadStarted;
+static const int kNumberOfChecks = 3;
 
 void Exit(int exit_number) {
     std::cerr << "ERROR: Exit on " << exit_number << std::endl;
+	getchar();
     exit(exit_number);
 }
 
@@ -41,11 +43,10 @@ std::thread* CreateEchoServerThread() {
         ExitIfErrIsNotOk(&err, 101);
         io->Listen(socket, 5, &err);
         ExitIfErrIsNotOk(&err, 102);
-        thread_started.set_value();
+        kThreadStarted.set_value();
 
-        int i = 0;
-        while (true) {
-            std::cout << "[SERVER][" << ++i << "] InetAccept" << std::endl;
+        for(int i = 0; i < kNumberOfChecks; i++) {
+            std::cout << "[SERVER][" << i << "] InetAccept" << std::endl;
             auto client_info_tuple = io->InetAccept(socket, &err);
             ExitIfErrIsNotOk(&err, 103);
             std::string client_address;
@@ -71,10 +72,10 @@ std::thread* CreateEchoServerThread() {
             std::cout << "[SERVER][" << i << "] Close client_fd" << std::endl;
             io->CloseSocket(client_fd, &err);
             ExitIfErrIsNotOk(&err, 107);
-        }
-        std::cout << "[SERVER][" << i << "] Close socket" << std::endl;
+		}
+        std::cout << "[SERVER] Close server socket" << std::endl;
         io->CloseSocket(socket, &err);
-        ExitIfErrIsNotOk(&err, 109);
+        ExitIfErrIsNotOk(&err, 108);
     });
 }
 
@@ -91,6 +92,7 @@ void CheckNormal(int times, size_t size) {
     }
 
     for (int i = 0; i < times; i++) {
+		std::cout << "[CLIENT] Allocate and create random numbers" << std::endl;
         std::unique_ptr<uint8_t[]> buffer(new uint8_t[size]);
         for (size_t i = 0; i < size; i++) {
             buffer[i] = rand();
@@ -129,15 +131,17 @@ void CheckNormal(int times, size_t size) {
 
 int main(int argc, char* argv[]) {
     std::thread* server_thread = CreateEchoServerThread();
-    server_thread->detach();
-    thread_started.get_future().get();//Make sure that the server is started
+    kThreadStarted.get_future().get();//Make sure that the server is started
 
     std::cout << "Check 1" << std::endl;
     CheckNormal(10, 1024 * 1024 * 3);
     std::cout << "Check 2" << std::endl;
     CheckNormal(30, 1024);
-    std::cout << "Check 3" << std::endl;
-    CheckNormal(2, 1024 * 1024 * 256/*256 MiByte */);
+	std::cout << "Check 3" << std::endl;
+	CheckNormal(2, 1024 * 1024 * 256/*256 MiByte */);
+
+	std::cout << "server_thread->join()" << std::endl;
+	server_thread->join();
 
     return 0;
 }
