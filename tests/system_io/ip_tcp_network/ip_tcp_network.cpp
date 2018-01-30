@@ -20,10 +20,14 @@ static const std::unique_ptr<SystemIO> io(new SystemIO());
 static const std::string kListenAddress = "127.0.0.1:60123";
 static std::promise<void> thread_started;
 
+void Exit(int exit_number) {
+    std::cerr << "ERROR: Exit on " << exit_number << std::endl;
+    exit(exit_number);
+}
+
 void ExitIfErrIsNotOk(IOErrors* err, int exit_number) {
     if(*err != IOErrors::kNoError) {
-        std::cerr << "ERROR: Exit on " << exit_number << std::endl;
-        exit(exit_number);
+        Exit(exit_number);
     }
 }
 
@@ -41,38 +45,36 @@ std::thread* CreateEchoServerThread() {
 
         int i = 0;
         while (true) {
-            std::cout << "[SERVER][" << i << "] InetAccept" << std::endl;
+            std::cout << "[SERVER][" << ++i << "] InetAccept" << std::endl;
             auto client_info_tuple = io->InetAccept(socket, &err);
             ExitIfErrIsNotOk(&err, 103);
             std::string client_address;
             FileDescriptor client_fd;
             std::tie(client_address, client_fd) = *client_info_tuple;
 
-            size_t max_buffer_size = 1024 * 1024;//1MiByte
-            std::unique_ptr<uint8_t[]> buffer(new uint8_t[max_buffer_size]);
+            ExitIfErrIsNotOk(&err, 104);
             while (true) {
-                size_t received = io->ReceiveTimeout(client_fd, buffer.get(), max_buffer_size, 100, &err);
+                uint64_t need_to_receive_size;
+                io->ReceiveTimeout(client_fd, &need_to_receive_size, sizeof(uint64_t), 100, &err);
                 if (err == IOErrors::kTimeout) {
                     continue;
                 }
                 if (err == IOErrors::kEndOfFile) {
-                    io->Send(client_fd, buffer.get(), received, &err);
-                    ExitIfErrIsNotOk(&err, 104);
                     break;
                 }
-                ExitIfErrIsNotOk(&err, 104);
+                std::unique_ptr<uint8_t[]> buffer(new uint8_t[need_to_receive_size]);
+                size_t received = io->Receive(client_fd, buffer.get(), need_to_receive_size, &err);
                 io->Send(client_fd, buffer.get(), received, &err);
-                ExitIfErrIsNotOk(&err, 105);
+                ExitIfErrIsNotOk(&err, 106);
             }
 
             std::cout << "[SERVER][" << i << "] Close client_fd" << std::endl;
             io->CloseSocket(client_fd, &err);
-            ExitIfErrIsNotOk(&err, 106);
-            break;
+            ExitIfErrIsNotOk(&err, 107);
         }
         std::cout << "[SERVER][" << i << "] Close socket" << std::endl;
         io->CloseSocket(socket, &err);
-        ExitIfErrIsNotOk(&err, 107);
+        ExitIfErrIsNotOk(&err, 109);
     });
 }
 
@@ -82,6 +84,7 @@ void CheckNormal(int times, size_t size) {
     FileDescriptor socket = io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
     ExitIfErrIsNotOk(&err, 201);
 
+    std::cout << "[CLIENT] ReceiveTimeout" << std::endl;
     io->ReceiveTimeout(socket, nullptr, 1, 1000 * 100/*100ms*/, &err);
     if (err != IOErrors::kTimeout) {
         ExitIfErrIsNotOk(&err, 202);
@@ -93,26 +96,35 @@ void CheckNormal(int times, size_t size) {
             buffer[i] = rand();
         }
 
+        uint64_t send_size = size;
+
+        std::cout << "[CLIENT] Send Size" << std::endl;
+        io->Send(socket, &send_size, sizeof(uint64_t), &err);
+        ExitIfErrIsNotOk(&err, 203);
+
         std::cout << "[CLIENT] Send" << std::endl;
         io->Send(socket, buffer.get(), size, &err);
         ExitIfErrIsNotOk(&err, 203);
 
         std::unique_ptr<uint8_t[]> buffer2(new uint8_t[size]);
         std::cout << "[CLIENT] Receive" << std::endl;
-        io->Receive(socket, buffer2.get(), size, &err);
+        size_t receive_count = io->Receive(socket, buffer2.get(), size, &err);
         ExitIfErrIsNotOk(&err, 204);
+        if(receive_count != size) {
+            Exit(205);
+        }
 
         std::cout << "[CLIENT] buffer check" << std::endl;
         for (size_t i = 0; i < size; i++) {
             if (buffer[i] != buffer2[i]) {
-                exit(205);
+                Exit(206);
             }
         }
     }
 
     std::cout << "[CLIENT] Close" << std::endl;
     io->CloseSocket(socket, &err);
-    ExitIfErrIsNotOk(&err, 106);
+    ExitIfErrIsNotOk(&err, 107);
 }
 
 int main(int argc, char* argv[]) {
@@ -123,9 +135,9 @@ int main(int argc, char* argv[]) {
     std::cout << "Check 1" << std::endl;
     CheckNormal(10, 1024 * 1024 * 3);
     std::cout << "Check 2" << std::endl;
-    CheckNormal(30, 1024 * 1024 * 30);
+    CheckNormal(30, 1024);
     std::cout << "Check 3" << std::endl;
-    CheckNormal(2, 1024 * 1024 * 1/*100 MiByte */);
+    CheckNormal(2, 1024 * 1024 * 256/*256 MiByte */);
 
     return 0;
 }
