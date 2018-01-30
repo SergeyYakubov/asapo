@@ -29,6 +29,11 @@ function(gtest target test_source_files test_libraries)
         if (NOT ${test_libraries} STREQUAL "")
             target_link_libraries(test-${target} ${test_libraries})
         endif ()
+
+        GET_PROPERTY(HIDRA2_COMMON_IO_LIBRARIES GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES)
+        message(STATUS "SEARCHPATTERME HIDRA2_COMMON_IO_LIBRARIES: '${HIDRA2_COMMON_IO_LIBRARIES}'")
+        target_link_libraries(test-${target} ${HIDRA2_COMMON_IO_LIBRARIES})
+
         add_test(NAME test-${target} COMMAND test-${target})
         set_tests_properties(test-${target} PROPERTIES LABELS "unit;all")
 
