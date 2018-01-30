@@ -376,7 +376,7 @@ std::vector<hidra2::FileInfo> hidra2::SystemIO::FilesInFolder(const std::string&
     return files;
 }
 
-void hidra2::SystemIO::CreateDirectory(const std::string& directory_name, hidra2::IOErrors* err) const {
+void hidra2::SystemIO::CreateNewDirectory(const std::string& directory_name, hidra2::IOErrors* err) const {
     _mkdir(directory_name.c_str());
     *err = GetLastError();
 }
@@ -416,7 +416,7 @@ void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string
 	socket_address.sin_port = htons(port);
 	socket_address.sin_family = family;
 
-	if (::connect(socket_fd, (struct sockaddr*) &socket_address, sizeof(socket_address)) == -1) {
+	if (_connect(socket_fd, (struct sockaddr*) &socket_address, sizeof(socket_address)) == -1) {
 		*err = GetLastError();
 		return;
 	}
@@ -432,9 +432,9 @@ std::unique_ptr<std::tuple<std::string, SocketDescriptor>> SystemIO::InetAccept(
 	}
 
 	sockaddr_in client_address{};
-	static int client_address_size = sizeof(sockaddr_in);
+	static size_t client_address_size = sizeof(sockaddr_in);
 
-	int peer_fd = ::accept(socket_fd, reinterpret_cast<sockaddr*>(&client_address), &client_address_size);
+	int peer_fd = _accept(socket_fd, reinterpret_cast<sockaddr*>(&client_address), &client_address_size);
 
 	if (peer_fd == -1) {
 		*err = GetLastError();

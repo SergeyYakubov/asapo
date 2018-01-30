@@ -4,6 +4,7 @@
 #include "io.h"
 
 #if defined(_MSC_VER)
+#include <windows.h>
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif
@@ -27,11 +28,13 @@ class SystemIO final : public IO {
     ssize_t         _write(FileDescriptor fd, const void* buffer, size_t count) const;
     int             _mkdir(const char* dirname) const;
 
-    SocketDescriptor  _socket(int address_family, int socket_type, int socket_protocol) const;
-    int             _listen(SocketDescriptor fd, int backlog) const;
-    ssize_t         _send(SocketDescriptor socket_fd, const void* buffer, size_t length) const;
-    ssize_t         _recv(SocketDescriptor socket_fd, void* buffer, size_t length) const;
-    void            _close_socket(SocketDescriptor fd) const;
+    SocketDescriptor	_socket(int address_family, int socket_type, int socket_protocol) const;
+	SocketDescriptor	_connect(SocketDescriptor socket_fd, sockaddr* address, size_t address_length) const;
+    int					_listen(SocketDescriptor socket_fd, int backlog) const;
+	SocketDescriptor	_accept(SocketDescriptor socket_fd, sockaddr* address, size_t* address_length) const;
+    ssize_t				_send(SocketDescriptor socket_fd, const void* buffer, size_t length) const;
+    ssize_t				_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const;
+    void				_close_socket(SocketDescriptor socket_fd) const;
 
     std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostAndPort(std::string address) const;
 
@@ -69,7 +72,7 @@ class SystemIO final : public IO {
     void            Close(FileDescriptor fd, IOErrors* err) const;
     size_t          Read(FileDescriptor fd, void* buf, size_t length, IOErrors* err) const;
     size_t          Write(FileDescriptor fd, const void* buf, size_t length, IOErrors* err) const;
-    void            CreateDirectory(const std::string& directory_name, hidra2::IOErrors* err) const;
+    void            CreateNewDirectory(const std::string& directory_name, hidra2::IOErrors* err) const;
     FileData        GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const;
     void            CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files,
                                                      IOErrors* err) const;

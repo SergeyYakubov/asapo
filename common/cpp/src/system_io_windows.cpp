@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 #include <algorithm>
 #include <io.h>
-#include <windows.h>
 #include <direct.h>
 #include <iostream>
 
@@ -185,6 +184,11 @@ SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int sock
     return ::socket(address_family, socket_type, socket_protocol);
 }
 
+SocketDescriptor SystemIO::_connect(SocketDescriptor socket_fd, sockaddr * address, size_t address_length) const
+{
+	return ::connect(socket_fd, address, address_length);
+}
+
 ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) const {
     return ::send(socket_fd, (char*)buffer, length, 0);
 }
@@ -199,6 +203,11 @@ int SystemIO::_mkdir(const char* dirname) const {
 
 int SystemIO::_listen(SocketDescriptor fd, int backlog) const {
     return ::listen(fd, backlog);
+}
+
+SocketDescriptor SystemIO::_accept(SocketDescriptor socket_fd, sockaddr * address, size_t * address_length) const
+{
+	return ::accept(socket_fd, address, (int*)address_length);
 }
 
 
