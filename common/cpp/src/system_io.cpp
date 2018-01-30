@@ -46,9 +46,8 @@ void SystemIO::Skip(SocketDescriptor socket_fd, size_t length, hidra2::IOErrors*
     std::unique_ptr<uint8_t[]> buffer;
     try {
         buffer.reset(new uint8_t[kSkipBufferSize]);
-    } catch(std::exception& e) {
-        assert(false);
-        *err = IOErrors::kUnknownError;
+    } catch(...) {
+        *err = IOErrors::kMemoryAllocationError;
         return;
     }
     size_t already_skipped = 0;
