@@ -11,8 +11,8 @@ namespace hidra2 {
 
 class MockHttpClient : public HttpClient {
   public:
-    MOCK_CONST_METHOD2(Get,
-                       std::string(const std::string& uri, WorkerErrorCode* err));
+    MOCK_CONST_METHOD3(Get,
+                       std::string(const std::string& uri, int* code, WorkerErrorCode* err));
 };
 
 

@@ -7,7 +7,7 @@ namespace hidra2 {
 
 class HttpClient {
   public:
-    virtual std::string Get(const std::string& uri, WorkerErrorCode* err) const = 0;
+    virtual std::string Get(const std::string& uri, int* responce_code, WorkerErrorCode* err) const = 0;
 };
 
 }

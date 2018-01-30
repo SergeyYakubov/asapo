@@ -18,7 +18,7 @@ WorkerErrorCode ServerDataBroker::Connect() {
 WorkerErrorCode ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
     std::string full_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
     WorkerErrorCode err;
-    auto responce = httpclient__->Get(full_uri, &err);
+    auto responce = httpclient__->Get(full_uri, nullptr, &err);
     if (err != WorkerErrorCode::kOK) {
         return err;
     }
