@@ -3,9 +3,8 @@
 
 #include "io.h"
 
-#if defined(_MSC_VER)
+#ifdef _WIN32
 #include <windows.h>
-#include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif
 

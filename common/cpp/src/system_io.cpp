@@ -3,10 +3,6 @@
 #include <cassert>
 #include <algorithm>
 
-#ifdef _WIN32
-#include <windows.h>
-#undef CreateDirectory
-#endif
 #ifdef __linux__
 #include <sys/socket.h>
 #include <netinet/in.h>
