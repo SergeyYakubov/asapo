@@ -15,6 +15,7 @@ class ServerDataBroker final : public hidra2::DataBroker {
     std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<hidra2::HttpClient> httpclient__;
   private:
+    WorkerErrorCode GetFileInfoFromServer(FileInfo* info, const std::string& operation);
     std::string server_uri_;
     std::string source_name_;
 };

@@ -248,16 +248,6 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
 
 }
 
-TEST_F(GetDataFromFileTests, GetNextReturnsOnlyData) {
-    EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kNoError), testing::Return(new uint8_t[1] {'1'})));
-
-    data_broker->GetNext(nullptr, &data);
-
-    ASSERT_THAT(data[0], Eq('1'));
-}
-
-
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
     EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
     WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kReadError), testing::Return(nullptr)));

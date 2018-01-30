@@ -22,7 +22,7 @@ $@ &
 sleep 0.3
 brokerid=`echo $!`
 
-curl -v  --silent 127.0.0.1:5005/next?database=data --stderr - | grep '"_id":1'
-curl -v  --silent 127.0.0.1:5005/next?database=data --stderr - | grep '"_id":2'
+curl -v  --silent 127.0.0.1:5005/database/data/next --stderr - | grep '"_id":1'
+curl -v  --silent 127.0.0.1:5005/database/data/next --stderr - | grep '"_id":2'
 
-curl -v  --silent 127.0.0.1:5005/next?database=data --stderr - | grep "No Content"
+curl -v  --silent 127.0.0.1:5005/database/data/next --stderr - | grep "No Content"

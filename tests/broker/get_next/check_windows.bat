@@ -11,9 +11,9 @@ start /B "" "%full_name%"
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/next?database=data --stderr - | findstr \"_id\":1  || goto :error
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/next?database=data --stderr - | findstr \"_id\":2  || goto :error
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/next?database=data --stderr - | findstr  "No Content"  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next --stderr - | findstr \"_id\":1  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next --stderr - | findstr \"_id\":2  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next --stderr - | findstr  "No Content"  || goto :error
 
 goto :clean
 

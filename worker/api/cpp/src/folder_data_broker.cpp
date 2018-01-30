@@ -1,7 +1,7 @@
 #include "folder_data_broker.h"
 
 #include "system_wrappers/system_io.h"
-#include "io_map.h"
+#include "broker_helpers.h"
 
 namespace hidra2 {
 
@@ -31,7 +31,7 @@ WorkerErrorCode FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int
         return WorkerErrorCode::kSourceNotConnected;
     }
 
-    if (info == nullptr && data == nullptr) {
+    if (info == nullptr) {
         return WorkerErrorCode::kWrongInput;
     }
 
@@ -53,19 +53,14 @@ WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
         return err;
     }
 
-    FileInfo file_info = filelist_[nfile_to_get];
-    if (info != nullptr) {
-        *info = file_info;
-    }
+    *info = filelist_[nfile_to_get];
 
     if (data == nullptr) {
         return WorkerErrorCode::kOK;
     }
 
     IOErrors ioerr;
-    *data = io__->GetDataFromFile(base_path_ + "/" + file_info.relative_path +
-                                  (file_info.relative_path.empty() ? "" : "/") +
-                                  file_info.base_name, file_info.size, &ioerr);
+    *data = io__->GetDataFromFile(info->FullName(base_path_), info->size, &ioerr);
 
     return MapIOError(ioerr);
 }

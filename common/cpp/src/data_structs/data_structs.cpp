@@ -75,4 +75,11 @@ bool FileInfo::SetFromJson(const std::string& json_string) {
     return true;
 }
 
+std::string FileInfo::FullName(const std::string& base_path) {
+    std::string full_name;
+    full_name = base_path.empty() ? "" : base_path + "/";
+    full_name += relative_path.empty() ? "" : relative_path + "/";
+    return full_name + base_name;
+}
+
 }

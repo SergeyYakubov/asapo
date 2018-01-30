@@ -1,14 +1,16 @@
 package server
 
 import (
+	"github.com/gorilla/mux"
 	"hidra2_broker/database"
 	"hidra2_broker/utils"
 	"net/http"
 )
 
 func extractRequestParameters(r *http.Request) (string, bool) {
-	db_name := r.URL.Query().Get("database")
-	return db_name, db_name != ""
+	vars := mux.Vars(r)
+	db_name, ok := vars["dbname"]
+	return db_name, ok
 }
 
 func routeGetNext(w http.ResponseWriter, r *http.Request) {

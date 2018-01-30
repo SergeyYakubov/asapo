@@ -3,7 +3,7 @@ if (BUILD_TESTS)
 endif ()
 
 if (BUILD_TESTS)
-    set(HIDRA2_MINIMUM_COVERAGE 90)
+    set(HIDRA2_MINIMUM_COVERAGE 80)
     find_program(MEMORYCHECK_COMMAND valgrind)
     set(MEMORYCHECK_COMMAND_OPTIONS
             "--trace-children=yes --leak-check=full --error-exitcode=1 --suppressions=${CMAKE_SOURCE_DIR}/tests/valgrind.suppressions")

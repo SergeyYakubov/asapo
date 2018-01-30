@@ -8,7 +8,7 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"GetNext",
 		"Get",
-		"/next",
+		"/database/{dbname}/next",
 		routeGetNext,
 	},
 }

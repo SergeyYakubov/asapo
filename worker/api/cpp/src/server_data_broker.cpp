@@ -1,7 +1,7 @@
 #include "server_data_broker.h"
 #include "system_wrappers/system_io.h"
 #include "curl_http_client.h"
-#include "io_map.h"
+#include "broker_helpers.h"
 
 namespace hidra2 {
 
@@ -15,25 +15,27 @@ WorkerErrorCode ServerDataBroker::Connect() {
     return WorkerErrorCode::kOK;
 }
 
-WorkerErrorCode ServerDataBroker::GetNext(FileInfo* info, FileData* data) {
-    if (info == nullptr && data == nullptr) {
-        return WorkerErrorCode::kWrongInput;
-    }
-
-    std::string full_uri = server_uri_ + "/next?database=" + source_name_;
+WorkerErrorCode ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
+    std::string full_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
     WorkerErrorCode err;
     auto responce = httpclient__->Get(full_uri, &err);
     if (err != WorkerErrorCode::kOK) {
         return err;
     }
-
-    FileInfo file_info;
-    if (!file_info.SetFromJson(responce)) {
+    if (!info->SetFromJson(responce)) {
         return WorkerErrorCode::kErrorReadingSource;
     }
+    return WorkerErrorCode::kOK;
+}
 
-    if (info != nullptr) {
-        *info = file_info;
+WorkerErrorCode ServerDataBroker::GetNext(FileInfo* info, FileData* data) {
+    if (info == nullptr) {
+        return WorkerErrorCode::kWrongInput;
+    }
+
+    auto  err = GetFileInfoFromServer(info, "next");
+    if (err != WorkerErrorCode::kOK) {
+        return err;
     }
 
     if (data == nullptr) {
@@ -41,10 +43,7 @@ WorkerErrorCode ServerDataBroker::GetNext(FileInfo* info, FileData* data) {
     }
 
     IOErrors ioerr;
-    *data = io__->GetDataFromFile(file_info.relative_path +
-                                  (file_info.relative_path.empty() ? "" : "/") +
-                                  file_info.base_name, file_info.size, &ioerr);
-
+    *data = io__->GetDataFromFile(info->FullName(""), info->size, &ioerr);
     return hidra2::MapIOError(ioerr);
 }
 

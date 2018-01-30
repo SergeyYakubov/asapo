@@ -26,8 +26,8 @@ func doRequest(path string) *httptest.ResponseRecorder {
 }
 
 func TestGetNextWithoutDatabaseName(t *testing.T) {
-	w := doRequest("/next")
-	assert.Equal(t, http.StatusBadRequest, w.Code, "no database name")
+	w := doRequest("/database/next")
+	assert.Equal(t, http.StatusNotFound, w.Code, "no database name")
 }
 
 func TestGetNextWithWrongDatabaseName(t *testing.T) {
@@ -37,8 +37,8 @@ func TestGetNextWithWrongDatabaseName(t *testing.T) {
 	mock_db.On("GetNextRecord", "foo").Return([]byte(""),
 		&database.DBError{utils.StatusWrongInput, ""})
 
-	w := doRequest("/next?database=foo")
-	assert.Equal(t, http.StatusBadRequest, w.Code, "no database name")
+	w := doRequest("/database/foo/next")
+	assert.Equal(t, http.StatusBadRequest, w.Code, "wrong database name")
 	assertExpectations(t, mock_db)
 }
 
@@ -48,7 +48,7 @@ func TestGetNextWithInternalDBError(t *testing.T) {
 	defer func() { db = nil }()
 	mock_db.On("GetNextRecord", "foo").Return([]byte(""), errors.New(""))
 
-	w := doRequest("/next?database=foo")
+	w := doRequest("/database/foo/next")
 	assert.Equal(t, http.StatusInternalServerError, w.Code, "internal error")
 	assertExpectations(t, mock_db)
 }
@@ -57,9 +57,9 @@ func TestGetNextWithGoodDatabaseName(t *testing.T) {
 	mock_db := new(database.MockedDatabase)
 	db = mock_db
 	defer func() { db = nil }()
-	mock_db.On("GetNextRecord", "database").Return([]byte("Hello"), nil)
+	mock_db.On("GetNextRecord", "dbname").Return([]byte("Hello"), nil)
 
-	w := doRequest("/next?database=database")
+	w := doRequest("/database/dbname/next")
 	assert.Equal(t, http.StatusOK, w.Code, "GetNext OK")
 	assert.Equal(t, "Hello", string(w.Body.Bytes()), "GetNext sends data")
 	assertExpectations(t, mock_db)

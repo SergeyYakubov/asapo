@@ -4,7 +4,7 @@ set(SOURCE_FILES
         src/data_broker.cpp
         src/folder_data_broker.cpp
         src/server_data_broker.cpp
-        src/io_map.cpp
+        src/broker_helpers.cpp
         src/curl_http_client.cpp)
 
 

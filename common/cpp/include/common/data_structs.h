@@ -18,6 +18,7 @@ class FileInfo {
     uint64_t id{0};
     std::string Json() const;
     bool SetFromJson(const std::string& json_string);
+    std::string FullName(const std::string& base_path);
 };
 
 inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
