@@ -45,13 +45,7 @@ void NetworkProducerPeer::internal_receiver_thread_() {
     while(is_listening_) {
         err = IOErrors::kNoError;
 
-        size_t size = io->ReceiveTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 5, &err);
-        if (size == 0) {
-            std::cout << "size: " << size << std::endl;
-        }
-
-
-
+        size_t size = io->ReceiveTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 50, &err);		
         if(err != IOErrors::kNoError) {
             if(err == IOErrors::kTimeout) {
                 std::this_thread::yield();
@@ -67,6 +61,8 @@ void NetworkProducerPeer::internal_receiver_thread_() {
             is_listening_ = false;
             break;
         }
+
+		assert(size);
 
         std::cout << "[" << connection_id() << "] Got request: " << generic_request->op_code << std::endl;
         size_t bytes_to_send = handle_generic_request_(generic_request, generic_response);
