@@ -22,7 +22,7 @@ class SystemIO final : public IO {
 
     // Function maps. Should never be called apart from in wrapper function
     FileDescriptor  _open(const char* filename, int posix_open_flags) const;
-    void            _close(FileDescriptor fd) const;
+    bool            _close(FileDescriptor fd) const;
     ssize_t         _read(FileDescriptor fd, void* buffer, size_t length) const;
     ssize_t         _write(FileDescriptor fd, const void* buffer, size_t count) const;
     int             _mkdir(const char* dirname) const;
@@ -33,7 +33,7 @@ class SystemIO final : public IO {
     SocketDescriptor	_accept(SocketDescriptor socket_fd, void* address, size_t* address_length) const;
     ssize_t				_send(SocketDescriptor socket_fd, const void* buffer, size_t length) const;
     ssize_t				_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const;
-    void				_close_socket(SocketDescriptor socket_fd) const;
+    bool			    _close_socket(SocketDescriptor socket_fd) const;
 
     std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostAndPort(std::string address) const;
 

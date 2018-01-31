@@ -116,9 +116,12 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
     assert(handler_information.response_size <= kGenericBufferSize);//Would overwrite arbitrary memory
 
     IOErrors err;
+
+    static const size_t sizeof_generic_request = sizeof(GenericNetworkRequest);
     //receive the rest of the message
-    io->Receive(socket_fd_, request + sizeof(GenericNetworkRequest),
-                handler_information.request_size - sizeof(GenericNetworkRequest), &err);
+    size_t rec = io->Receive(socket_fd_, (uint8_t*)request + sizeof_generic_request,
+                             handler_information.request_size - sizeof_generic_request, &err);
+    std::cout << "rec:" << rec << std::endl;
     if(err != IOErrors::kNoError) {
         std::cerr << "[" << connection_id() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " <<
                   request->op_code << std::endl;
