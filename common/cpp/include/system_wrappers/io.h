@@ -16,6 +16,7 @@ enum class IOErrors {
     kUnknownError,
     kNoError,
     kBadFileNumber,
+    kResourceTemporarilyUnavailable,
     kFileNotFound,
     kReadError,
     kPermissionDenied,

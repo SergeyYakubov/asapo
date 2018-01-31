@@ -148,11 +148,11 @@ FileDescriptor SystemIO::_open(const char* filename, int posix_open_flags) const
 }
 
 bool SystemIO::_close(FileDescriptor fd) const {
-	return ::_close(fd) == 0;
+    return ::_close(fd) == 0;
 }
 
 bool SystemIO::_close_socket(SocketDescriptor fd) const {
-	return ::closesocket(fd) == 0;
+    return ::closesocket(fd) == 0;
 }
 
 ssize_t SystemIO::_read(FileDescriptor fd, void* buffer, size_t length) const {

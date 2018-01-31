@@ -12,6 +12,8 @@ namespace hidra2 {
 
 class SystemIO final : public IO {
   private:
+    static const int kNetBufferSize;//TODO: need to set by config
+
     //void CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
     int FileOpenModeToPosixFileOpenMode(int open_flags) const;
     IOErrors GetLastError() const;

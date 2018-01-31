@@ -12,6 +12,8 @@
 
 namespace hidra2 {
 
+const int SystemIO::kNetBufferSize = 1024 * 1024 * 50; //MiByte
+
 /*******************************************************************************
  *                              system_io.cpp                                  *
  * THIS FILE HOLDS GENERAL FUNCTIONS THAT CAN BE USED ON WINDOWS AND ON LINUX  *
@@ -68,6 +70,10 @@ hidra2::FileDescriptor hidra2::SystemIO::CreateAndConnectIPTCPSocket(const std::
     *err = hidra2::IOErrors::kNoError;
 
     FileDescriptor fd = CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, err);
+
+    setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &kNetBufferSize, sizeof(kNetBufferSize));
+    setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &kNetBufferSize, sizeof(kNetBufferSize));
+
     if(*err != IOErrors::kNoError) {
         return -1;
     }
@@ -112,6 +118,8 @@ hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
     FileDescriptor fd = _open(filename.c_str(), flags);
     if(fd == -1) {
         *err = GetLastError();
+    } else {
+        *err = IOErrors::kNoError;
     }
     return fd;
 }
@@ -209,8 +217,6 @@ SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
                                         SocketTypes socket_type,
                                         SocketProtocols socket_protocol,
                                         IOErrors* err) const {
-    *err = IOErrors::kNoError;
-
     int domain = AddressFamilyToPosixFamily(address_family);
     if(domain == -1) {
         *err = IOErrors::kUnsupportedAddressFamily;
@@ -229,9 +235,17 @@ SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
         return -1;
     }
 
-    int fd = _socket(domain, type, protocol);
-    *err = GetLastError();
-    return fd;
+    int socket_fd = _socket(domain, type, protocol);
+    if(socket_fd == -1) {
+        *err = GetLastError();
+        return socket_fd;
+    }
+
+    setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, &kNetBufferSize, sizeof(kNetBufferSize));
+    setsockopt(socket_fd, SOL_SOCKET, SO_RCVBUF, &kNetBufferSize, sizeof(kNetBufferSize));
+
+    *err = IOErrors::kNoError;
+    return socket_fd;
 }
 
 void hidra2::SystemIO::InetBind(SocketDescriptor socket_fd, const std::string& address,
@@ -272,7 +286,6 @@ void hidra2::SystemIO::Listen(SocketDescriptor socket_fd, int backlog, hidra2::I
 }
 
 size_t hidra2::SystemIO::Receive(SocketDescriptor socket_fd, void* buf, size_t length, IOErrors* err) const {
-    *err = hidra2::IOErrors::kNoError;
 
     size_t already_received = 0;
 
@@ -284,12 +297,16 @@ size_t hidra2::SystemIO::Receive(SocketDescriptor socket_fd, void* buf, size_t l
         }
         if (received_amount == -1) {
             *err = GetLastError();
+            if(*err == IOErrors::kResourceTemporarilyUnavailable) {
+                continue;
+            }
             if (*err != IOErrors::kNoError) {
                 return already_received;
             }
         }
         already_received += received_amount;
     }
+    *err = hidra2::IOErrors::kNoError;
     return already_received;
 }
 
@@ -323,7 +340,6 @@ size_t hidra2::SystemIO::Send(SocketDescriptor socket_fd,
                               const void* buf,
                               size_t length,
                               IOErrors* err) const {
-    *err = hidra2::IOErrors::kNoError;
 
     size_t already_sent = 0;
 
@@ -335,6 +351,9 @@ size_t hidra2::SystemIO::Send(SocketDescriptor socket_fd,
         }
         if (send_amount == -1) {
             *err = GetLastError();
+            if(*err == IOErrors::kResourceTemporarilyUnavailable) {
+                continue;
+            }
             if (*err != IOErrors::kNoError) {
                 return already_sent;
             }
@@ -342,6 +361,7 @@ size_t hidra2::SystemIO::Send(SocketDescriptor socket_fd,
         already_sent += send_amount;
     }
 
+    *err = hidra2::IOErrors::kNoError;
     return already_sent;
 }
 
@@ -386,8 +406,11 @@ std::vector<hidra2::FileInfo> hidra2::SystemIO::FilesInFolder(const std::string&
 }
 
 void hidra2::SystemIO::CreateNewDirectory(const std::string& directory_name, hidra2::IOErrors* err) const {
-    _mkdir(directory_name.c_str());
-    *err = GetLastError();
+    if(_mkdir(directory_name.c_str()) == -1) {
+        *err = GetLastError();
+    } else {
+        *err = IOErrors::kNoError;
+    }
 }
 std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostAndPort(std::string address) const {
     try {
@@ -449,6 +472,9 @@ IOErrors* err) const {
         *err = GetLastError();
         return nullptr;
     }
+
+    setsockopt(peer_fd, SOL_SOCKET, SO_RCVBUF, &kNetBufferSize, sizeof(kNetBufferSize));
+    setsockopt(peer_fd, SOL_SOCKET, SO_SNDBUF, &kNetBufferSize, sizeof(kNetBufferSize));
 
     std::string
     address = std::string(inet_ntoa(client_address.sin_addr)) + ':' + std::to_string(client_address.sin_port);

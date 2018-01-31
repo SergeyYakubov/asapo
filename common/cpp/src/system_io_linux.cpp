@@ -30,6 +30,8 @@ IOErrors GetLastErrorFromErrno() {
         return IOErrors::kNoError;
     case EBADF:
         return IOErrors::kBadFileNumber;
+    case EAGAIN:
+        return IOErrors::kResourceTemporarilyUnavailable;
     case ENOENT:
     case ENOTDIR:
         return IOErrors::kFileNotFound;
@@ -179,11 +181,11 @@ SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int sock
 }
 
 ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) const {
-    return ::send(socket_fd, buffer, length, 0);
+    return ::send(socket_fd, buffer, length, MSG_DONTWAIT);
 }
 
 ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const {
-    return ::recv(socket_fd, buffer, length, 0);
+    return ::recv(socket_fd, buffer, length, MSG_DONTWAIT);
 }
 
 int SystemIO::_mkdir(const char* dirname) const {
