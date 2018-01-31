@@ -37,7 +37,6 @@ IOErrors IOErrorFromGetLastError() {
     }
 }
 
-
 IOErrors SystemIO::GetLastError() const {
     return IOErrorFromGetLastError();
 }

@@ -14,6 +14,8 @@ class SystemIO final : public IO {
   private:
     static const int kNetBufferSize;//TODO: need to set by config
 
+	void ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors * err) const;
+
     //void CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
     int FileOpenModeToPosixFileOpenMode(int open_flags) const;
     IOErrors GetLastError() const;
@@ -58,7 +60,7 @@ class SystemIO final : public IO {
     void            InetBind(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const;
     std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd, IOErrors* err) const;
     void            InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const;
-    SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOErrors* err) const;
+	SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOErrors* err) const;
     size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, IOErrors* err) const;
     size_t          ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
                                    IOErrors* err) const;

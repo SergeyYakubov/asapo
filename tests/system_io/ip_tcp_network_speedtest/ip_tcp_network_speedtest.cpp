@@ -20,7 +20,7 @@ static const std::unique_ptr<SystemIO> io(new SystemIO());
 static const std::string kListenAddress = "127.0.0.1:4206";
 static std::promise<void> kThreadStarted;
 
-static size_t kTestSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(1); //1GiByte
+static size_t kTestSize = size_t(1024) * size_t(1024) * size_t(512); //512MiByte
 static int kTestCount = 50;
 
 void Exit(int exit_number) {

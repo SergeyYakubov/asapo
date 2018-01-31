@@ -36,6 +36,19 @@ void StripBasePath(const std::string& folder, std::vector<FileInfo>* file_list) 
 
 // PRIVATE FUNCTIONS - END
 
+
+void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors* err) const
+{
+	if (
+		setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
+		||
+		setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
+		) {
+		*err = GetLastError();
+	}
+}
+
+
 std::thread* SystemIO::NewThread(std::function<void()> function) const {
     return new std::thread(function);
 }
@@ -71,8 +84,6 @@ hidra2::FileDescriptor hidra2::SystemIO::CreateAndConnectIPTCPSocket(const std::
 
     FileDescriptor fd = CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, err);
 
-    setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &kNetBufferSize, sizeof(kNetBufferSize));
-    setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &kNetBufferSize, sizeof(kNetBufferSize));
 
     if(*err != IOErrors::kNoError) {
         return -1;
@@ -235,16 +246,16 @@ SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
         return -1;
     }
 
-    int socket_fd = _socket(domain, type, protocol);
+    SocketDescriptor socket_fd = _socket(domain, type, protocol);
     if(socket_fd == -1) {
         *err = GetLastError();
         return socket_fd;
     }
 
-    setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, &kNetBufferSize, sizeof(kNetBufferSize));
-    setsockopt(socket_fd, SOL_SOCKET, SO_RCVBUF, &kNetBufferSize, sizeof(kNetBufferSize));
+	*err = IOErrors::kNoError;
 
-    *err = IOErrors::kNoError;
+	ApplyNetworkOptions(socket_fd, err);
+
     return socket_fd;
 }
 
@@ -473,8 +484,7 @@ IOErrors* err) const {
         return nullptr;
     }
 
-    setsockopt(peer_fd, SOL_SOCKET, SO_RCVBUF, &kNetBufferSize, sizeof(kNetBufferSize));
-    setsockopt(peer_fd, SOL_SOCKET, SO_SNDBUF, &kNetBufferSize, sizeof(kNetBufferSize));
+	ApplyNetworkOptions(peer_fd, err);
 
     std::string
     address = std::string(inet_ntoa(client_address.sin_addr)) + ':' + std::to_string(client_address.sin_port);
