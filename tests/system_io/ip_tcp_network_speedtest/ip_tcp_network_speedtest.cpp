@@ -87,7 +87,7 @@ void Speedtest() {
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
         double tookMs = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
-        std::cout << std::setprecision(2) << std::fixed << (kTestSize / (tookMs / 1000)) / 1024 / 1024 / 1024 << " GiByte/s" <<
+        std::cout << i << ":\t" << std::setprecision(2) << std::fixed << (kTestSize / (tookMs / 1000)) / 1024 / 1024 / 1024 << " GiByte/s" <<
                   std::endl;
         /*
         << "\t"<< std::fixed << kTestSize/(tookMs/1000) << " Byte/s" << std::endl

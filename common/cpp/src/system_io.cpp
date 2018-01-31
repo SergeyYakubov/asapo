@@ -37,15 +37,14 @@ void StripBasePath(const std::string& folder, std::vector<FileInfo>* file_list) 
 // PRIVATE FUNCTIONS - END
 
 
-void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors* err) const
-{
-	if (
-		setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
-		||
-		setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
-		) {
-		*err = GetLastError();
-	}
+void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors* err) const {
+    if (
+        setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
+        ||
+        setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
+    ) {
+        *err = GetLastError();
+    }
 }
 
 
@@ -252,9 +251,9 @@ SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
         return socket_fd;
     }
 
-	*err = IOErrors::kNoError;
+    *err = IOErrors::kNoError;
 
-	ApplyNetworkOptions(socket_fd, err);
+    ApplyNetworkOptions(socket_fd, err);
 
     return socket_fd;
 }
@@ -484,7 +483,7 @@ IOErrors* err) const {
         return nullptr;
     }
 
-	ApplyNetworkOptions(peer_fd, err);
+    ApplyNetworkOptions(peer_fd, err);
 
     std::string
     address = std::string(inet_ntoa(client_address.sin_addr)) + ':' + std::to_string(client_address.sin_port);
