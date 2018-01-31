@@ -110,20 +110,26 @@ hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
                                               IOErrors* err) const {
     int flags = FileOpenModeToPosixFileOpenMode(open_flags);
     FileDescriptor fd = _open(filename.c_str(), flags);
-    *err = GetLastError();
+    if(fd == -1) {
+        *err = GetLastError();
+    }
     return fd;
 }
 
 void hidra2::SystemIO::CloseSocket(SocketDescriptor fd, hidra2::IOErrors* err) const {
-    _close_socket(fd);
-    if (err) {
+    if(err) {
+        *err = IOErrors::kNoError;
+    }
+    if(!_close_socket(fd) && err) {
         *err = GetLastError();
     }
 }
 
 void hidra2::SystemIO::Close(FileDescriptor fd, hidra2::IOErrors* err) const {
-    _close(fd);
-    if (err) {
+    if(err) {
+        *err = IOErrors::kNoError;
+    }
+    if(!_close(fd) && err) {
         *err = GetLastError();
     }
 }
@@ -134,16 +140,18 @@ size_t hidra2::SystemIO::Read(FileDescriptor fd, void* buf, size_t length, IOErr
     size_t already_read = 0;
 
     while(already_read < length) {
-        ssize_t received_amount = _read(fd, (uint8_t*)buf + already_read, length - already_read);
-        if(received_amount == 0) {
+        ssize_t read_amount = _read(fd, (uint8_t*)buf + already_read, length - already_read);
+        if(read_amount == 0) {
             *err = IOErrors::kEndOfFile;
             return already_read;
         }
-        *err = GetLastError();
-        if (*err != IOErrors::kNoError) {
-            return already_read;
+        if (read_amount == -1) {
+            *err = GetLastError();
+            if (*err != IOErrors::kNoError) {
+                return already_read;
+            }
         }
-        already_read += received_amount;
+        already_read += read_amount;
     }
 
     return already_read;
@@ -155,16 +163,18 @@ size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length
     size_t already_wrote = 0;
 
     while(already_wrote < length) {
-        ssize_t send_amount = _write(fd, (uint8_t*)buf + already_wrote, length - already_wrote);
-        if(send_amount == 0) {
+        ssize_t write_amount = _write(fd, (uint8_t*)buf + already_wrote, length - already_wrote);
+        if(write_amount == 0) {
             *err = IOErrors::kEndOfFile;
             return already_wrote;
         }
-        *err = GetLastError();
-        if (*err != IOErrors::kNoError) {
-            return already_wrote;
+        if (write_amount == -1) {
+            *err = GetLastError();
+            if (*err != IOErrors::kNoError) {
+                return already_wrote;
+            }
         }
-        already_wrote += send_amount;
+        already_wrote += write_amount;
     }
 
     return already_wrote;
@@ -272,9 +282,11 @@ size_t hidra2::SystemIO::Receive(SocketDescriptor socket_fd, void* buf, size_t l
             *err = IOErrors::kEndOfFile;
             return already_received;
         }
-        *err = GetLastError();
-        if (*err != IOErrors::kNoError) {
-            return already_received;
+        if (received_amount == -1) {
+            *err = GetLastError();
+            if (*err != IOErrors::kNoError) {
+                return already_received;
+            }
         }
         already_received += received_amount;
     }
@@ -321,9 +333,11 @@ size_t hidra2::SystemIO::Send(SocketDescriptor socket_fd,
             *err = IOErrors::kEndOfFile;
             return already_sent;
         }
-        *err = GetLastError();
-        if (*err != IOErrors::kNoError) {
-            return already_sent;
+        if (send_amount == -1) {
+            *err = GetLastError();
+            if (*err != IOErrors::kNoError) {
+                return already_sent;
+            }
         }
         already_sent += send_amount;
     }

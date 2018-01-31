@@ -162,8 +162,8 @@ hidra2::FileDescriptor hidra2::SystemIO::_open(const char* filename, int posix_o
     return ::open(filename, posix_open_flags, S_IWUSR | S_IRWXU);
 }
 
-void SystemIO::_close(hidra2::FileDescriptor fd) const {
-    ::close(fd);
+bool SystemIO::_close(hidra2::FileDescriptor fd) const {
+    return ::close(fd) == 0;
 }
 
 ssize_t SystemIO::_read(hidra2::FileDescriptor fd, void* buffer, size_t length) const {
@@ -202,8 +202,8 @@ SocketDescriptor SystemIO::_accept(SocketDescriptor socket_fd, void* address, si
     return ::accept(socket_fd, static_cast<sockaddr*>(address), reinterpret_cast<socklen_t*>(address_length));
 }
 
-void SystemIO::_close_socket(SocketDescriptor socket_fd) const {
-    ::close(socket_fd);
+bool SystemIO::_close_socket(SocketDescriptor socket_fd) const {
+    return ::close(socket_fd) == 0;
 }
 
 }
