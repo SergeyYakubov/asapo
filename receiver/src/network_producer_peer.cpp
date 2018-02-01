@@ -20,14 +20,6 @@ uint32_t NetworkProducerPeer::connection_id() const {
     return connection_id_;
 }
 
-const std::string& NetworkProducerPeer::address() const {
-    return address_;
-}
-
-bool NetworkProducerPeer::is_listening() const {
-    return is_listening_;
-}
-
 void NetworkProducerPeer::start_peer_listener() {
     if(listener_thread_ || is_listening_)
         return;

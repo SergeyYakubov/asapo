@@ -6,15 +6,16 @@
 
 namespace hidra2 {
 enum class ProducerError {
+    kUnknownError,
     kNoError,
+    kUnknownServerError,
     kAlreadyConnected,
     kConnectionNotReady,
     kInvalidAddressFormat,
     kUnexpectedIOError,
     kFileIdAlreadyInUse,
     kFileTooLarge,
-    kUnknownServerError,
-    kUnknownError,
+    kConnectionRefused,
 };
 
 enum class ProducerStatus {

@@ -1,10 +1,12 @@
 
 #include <producer/producer.h>
 #include <iostream>
-#include <tuple>
+#include <chrono>
+#include <vector>
+
+using std::chrono::high_resolution_clock;
 
 typedef std::tuple<std::string, size_t, uint64_t> ArgumentTuple;
-
 ArgumentTuple ProcessCommandArguments(int argc, char* argv[]) {
     if (argc != 4) {
         std::cout <<
@@ -21,32 +23,27 @@ ArgumentTuple ProcessCommandArguments(int argc, char* argv[]) {
     }
 }
 
-int SendDummyData(const std::string& receiver_address, size_t number_of_byte, uint64_t iterations) {
-    auto producer = hidra2::Producer::create();
-
-    hidra2::ProducerError err = producer->ConnectToReceiver(receiver_address);
-    if(err != hidra2::ProducerError::kNoError) {
-        std::cerr << "Fail to connect to receiver. ProducerError: " /*<< err*/ << std::endl;//TODO
-        return 1;
-    }
-    std::cout << "Successfully connected" << std::endl;
-
+bool SendDummyData(hidra2::Producer* producer, size_t number_of_byte, uint64_t iterations) {
     auto buffer = std::unique_ptr<uint8_t>(new uint8_t[number_of_byte]);
 
     for(uint64_t i = 0; i < iterations; i++) {
         std::cout << "Send file " << i + 1 << "/" << iterations << std::endl;
-        hidra2::ProducerError error;
-        error = producer->Send(i, buffer.get(), number_of_byte);
 
-        if (error != hidra2::ProducerError::kNoError) {
-            std::cerr << "File was not successfully send, ErrorCode: " /*<< error*/ << std::endl;
-            break;
+        hidra2::ProducerError err = producer->Send(i, buffer.get(), number_of_byte);
+
+        if (err != hidra2::ProducerError::kNoError) {
+            if(err == hidra2::ProducerError::kFileIdAlreadyInUse) {
+                std::cerr << "File id is already in use." << std::endl;
+            } else {
+                std::cerr << "File was not successfully send, ErrorCode: " /*<< error*/ << std::endl;
+            }
+            return false;
         } else {
             std::cout << "File was successfully send." << std::endl;
         }
     }
 
-    return 0;
+    return true;
 }
 
 int main (int argc, char* argv[]) {
@@ -60,7 +57,22 @@ int main (int argc, char* argv[]) {
               << "iterations: " << iterations << std::endl
               << std::endl;
 
-    SendDummyData(receiver_address, number_of_byte, iterations);
+    auto producer = hidra2::Producer::create();
+    hidra2::ProducerError err = producer->ConnectToReceiver(receiver_address);
+    if(err != hidra2::ProducerError::kNoError) {
+        if (err == hidra2::ProducerError::kConnectionRefused) {
+            std::cerr << "Failed to connect to receiver - connection refused. Is the receiver running?" << std::endl;
+        } else {
+            std::cerr << "Failed to connect to receiver. ProducerError: " /*<< err*/ << std::endl;//TODO
+        }
+        return EXIT_FAILURE;
+    }
+    std::cout << "Successfully connected" << std::endl;
 
+    if(!SendDummyData(producer.get(), number_of_byte, iterations)) {
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
 

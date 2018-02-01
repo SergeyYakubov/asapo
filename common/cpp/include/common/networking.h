@@ -16,7 +16,7 @@ enum OpCode : uint8_t {
 
 enum NetworkErrorCode : uint16_t {
     NET_ERR__NO_ERROR,
-    NET_ERR__FILENAME_ALREADY_IN_USE,
+    NET_ERR__FILEID_ALREADY_IN_USE,
     NET_ERR__ALLOCATE_STORAGE_FAILED,
     NET_ERR__INTERNAL_SERVER_ERROR = 65535,
 };

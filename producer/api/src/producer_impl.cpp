@@ -9,7 +9,7 @@ hidra2::ProducerError hidra2::ProducerImpl::NetworkErrorToProducerError(hidra2::
     switch(networkError) {
     case NET_ERR__NO_ERROR:
         return ProducerError::kNoError;
-    case NET_ERR__FILENAME_ALREADY_IN_USE:
+    case NET_ERR__FILEID_ALREADY_IN_USE:
         return ProducerError::kFileIdAlreadyInUse;
     default:
         return ProducerError::kUnknownServerError;
@@ -35,6 +35,9 @@ hidra2::ProducerError hidra2::ProducerImpl::initialize_socket_to_receiver_(const
     if(err != IOErrors::kNoError) {
         if(err == IOErrors::kInvalidAddressFormat) {
             return ProducerError::kInvalidAddressFormat;
+        }
+        if(err == IOErrors::kConnectionRefused) {
+            return ProducerError::kConnectionRefused;
         }
         return ProducerError::kUnknownError;
     }
@@ -102,8 +105,11 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, void* data, s
     }
 
     if(sendDataResponse.error_code) {
-        std::cerr << "Server reported an error. NetErrorCode: " << sendDataResponse.error_code << std::endl;
         status_ = ProducerStatus::kConnected;
+        if(sendDataResponse.error_code == NET_ERR__FILEID_ALREADY_IN_USE) {
+            return hidra2::ProducerError::kFileIdAlreadyInUse;
+        }
+        std::cerr << "Server reported an error. NetErrorCode: " << sendDataResponse.error_code << std::endl;
         return ProducerError::kUnknownServerError;
     }
 

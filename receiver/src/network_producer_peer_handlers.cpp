@@ -35,7 +35,7 @@ void NetworkProducerPeer::handle_send_data_request_(NetworkProducerPeer* self, c
 
     FileDescriptor fd = self->CreateAndOpenFileByFileId(request->file_id, &io_err);
     if(io_err != IOErrors::kNoError) {
-        response->error_code = NET_ERR__FILENAME_ALREADY_IN_USE;
+        response->error_code = NET_ERR__FILEID_ALREADY_IN_USE;
         std::cerr << "[" << self->connection_id() << "] file_id: " << request->file_id << " does already exists" << std::endl;
         self->io->Skip(self->socket_fd_, request->file_size, &io_err);
         if(io_err != IOErrors::kNoError) {

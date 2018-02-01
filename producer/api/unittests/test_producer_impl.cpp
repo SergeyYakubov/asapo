@@ -327,6 +327,45 @@ TEST(ProducerImpl, Send__Receive_server_error) {
     ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
+TEST(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
+    InSequence sequence;
+
+    hidra2::ProducerImpl producer;
+    hidra2::FileDescriptor expected_fd = 83942;
+    uint64_t expected_request_id = 0;
+    uint64_t expected_file_id = 1;
+    uint64_t expected_file_size = 1337;
+    void*    expected_file_pointer = (void*)0xC00FE;
+
+    ConnectToReceiver_DONE(producer, expected_fd);
+    expected_request_id++;
+
+    hidra2::MockIO mockIO;
+    producer.__set_io(&mockIO);
+
+    EXPECT_CALL(mockIO, Send(_, _, _, _))
+    .Times(2)
+    .WillRepeatedly(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::ReturnArg<2>()
+        ));
+
+    EXPECT_CALL(mockIO, Receive(_, _, sizeof(hidra2::SendDataResponse), _))
+    .Times(1)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            A_WriteSendDataResponse(hidra2::NET_ERR__FILEID_ALREADY_IN_USE, expected_request_id),
+            testing::ReturnArg<2>()
+        ));
+
+    hidra2::ProducerError error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
+    hidra2::ProducerStatus status = producer.GetStatus();
+
+    ASSERT_THAT(error, Eq(hidra2::ProducerError::kFileIdAlreadyInUse));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
+}
 
 TEST(ProducerImpl, Send) {
     InSequence sequence;
