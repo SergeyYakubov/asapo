@@ -63,10 +63,10 @@ class ServerDataBrokerTests : public Test {
     }
     void MockGet(const std::string& responce) {
         EXPECT_CALL(mock_http_client, Get_t(_, _, _)).WillOnce(DoAll(
-            SetArgPointee<1>(HttpCode::OK),
-            SetArgPointee<2>(WorkerErrorCode::kOK),
-            Return(responce)
-        ));
+                    SetArgPointee<1>(HttpCode::OK),
+                    SetArgPointee<2>(WorkerErrorCode::kOK),
+                    Return(responce)
+                ));
     }
 
 };

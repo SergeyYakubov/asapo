@@ -40,7 +40,7 @@ Args GetArgs(int argc, char* argv[]) {
     return Args{folder, nthreads, nattempts};
 }
 
-void ReadFiles(const Args& args) {
+void GetAllFromBroker(const Args& args) {
     hidra2::WorkerErrorCode err;
     auto broker = hidra2::DataBrokerFactory::CreateFolderBroker(args.folder, &err);
     broker->Connect();
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
 
     for (int nattempt = 0; nattempt < args.nattempts; nattempt++) {
-        ReadFiles(args);
+        GetAllFromBroker(args);
     }
     return 0;
 }
