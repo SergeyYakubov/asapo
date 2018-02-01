@@ -11,9 +11,8 @@ start /B "" "%full_name%"
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
-for /l %%x in (1, 1, 10) do (
-	echo db.data.insert({"_id":%%x,"size":100,"base_name":"%%x","lastchange":1,"relative_path":""}) | %mongo_exe% %database_name%  || goto :error
-)
+for /l %%x in (1, 1, 10) do echo db.data.insert({"_id":%%x,"size":100,"base_name":"%%x","lastchange":1,"relative_path":""}) | %mongo_exe% %database_name%  || goto :error
+
 
 %1 127.0.0.1:5005 %database_name% 4 10 || goto :error
 
