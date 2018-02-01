@@ -6,10 +6,10 @@
 const int hidra2::Receiver::kMaxUnacceptedConnectionsBacklog = 5;
 
 void hidra2::Receiver::StartListener(std::string listener_address, ReceiverError* err) {
-    *err = ReceiverError::NO_ERROR;
+    *err = ReceiverError::kNoError;
 
     if(listener_running_) {
-        *err = ReceiverError::ALREADY_LISTEING;
+        *err = ReceiverError::kAlreadyListeing;
         return;
     }
     listener_running_ = true;
@@ -19,7 +19,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, ReceiverError
     FileDescriptor listener_fd = io->CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP,
                                                   &io_error);
     if(io_error != IOErrors::kNoError) {
-        *err = ReceiverError::FAILED_CREATING_SOCKET;
+        *err = ReceiverError::FailToCreateSocket;
         listener_running_ = false;
         std::cerr << "Fail to create socket" << std::endl;
         return;
@@ -28,7 +28,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, ReceiverError
     io->InetBind(listener_fd, listener_address, &io_error);
     if(io_error != IOErrors::kNoError) {
         io->CloseSocket(listener_fd, nullptr);
-        *err = ReceiverError::FAILED_CREATING_SOCKET;
+        *err = ReceiverError::FailToCreateSocket;
         listener_running_ = false;
         std::cerr << "Fail to bind socket" << std::endl;
         return;
@@ -37,7 +37,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, ReceiverError
     io->Listen(listener_fd, kMaxUnacceptedConnectionsBacklog, &io_error);
     if(io_error != IOErrors::kNoError) {
         io->CloseSocket(listener_fd, nullptr);
-        *err = ReceiverError::FAILED_CREATING_SOCKET;
+        *err = ReceiverError::FailToCreateSocket;
         listener_running_ = false;
         std::cerr << "Fail to start listen" << std::endl;
         return;

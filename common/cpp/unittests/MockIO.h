@@ -22,6 +22,7 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD2(InetAccept_proxy, std::tuple<std::string, SocketDescriptor>* (SocketDescriptor socket_fd,
                        IOErrors* err));
+    MOCK_CONST_METHOD2(ResolveHostnameToIp, std::string(const std::string& hostname, IOErrors* err));
     MOCK_CONST_METHOD3(InetConnect,
                        void(SocketDescriptor socket_fd, const std::string& address, IOErrors* err));
     MOCK_CONST_METHOD2(CreateAndConnectIPTCPSocket,

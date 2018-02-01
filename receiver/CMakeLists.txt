@@ -18,10 +18,17 @@ target_link_libraries(${TARGET_NAME} ${HIDRA2_COMMON_IO_LIBRARIES})
 
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
+
 ################################
 # Testing
 ################################
-#set(TEST_SOURCE_FILES unittests/test_receiver.cpp unittests/test_file_reference_handler.cpp src/receiver.h src/receiver.cpp src/network_producer_peer.h src/network_producer_peer.cpp src/network_producer_peer_handlers.cpp)
-#set(TEST_LIBRARIES common pthread)
+
+#set_property(TARGET ${TARGET_NAME} PROPERTY ENABLE_EXPORTS true)
 #
+#set(TEST_SOURCE_FILES
+#        unittests/test_receiver.cpp
+#        )
+#
+#set(TEST_LIBRARIES "${TARGET_NAME} common")
 #gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")
+

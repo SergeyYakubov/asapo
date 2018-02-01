@@ -11,7 +11,6 @@ const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProduce
     NetworkProducerPeer::init_request_handlers();
 
 NetworkProducerPeer::NetworkProducerPeer(int socket_fd, std::string address) : HasIO() {
-    address_ = std::move(address);
     socket_fd_ = socket_fd;
     connection_id_ = kNetworkProducerPeerCount++;
 }

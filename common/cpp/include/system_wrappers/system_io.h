@@ -39,7 +39,7 @@ class SystemIO final : public IO {
     ssize_t				_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const;
     bool			    _close_socket(SocketDescriptor socket_fd) const;
 
-    std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostAndPort(std::string address) const;
+    std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostnameAndPort(std::string address) const;
 
   public:
     /*
@@ -59,6 +59,7 @@ class SystemIO final : public IO {
     void            Listen(SocketDescriptor socket_fd, int backlog, IOErrors* err) const;
     void            InetBind(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const;
     std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd, IOErrors* err) const;
+    std::string     ResolveHostnameToIp(const std::string& hostname, IOErrors* err) const;
     void            InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const;
     SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOErrors* err) const;
     size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, IOErrors* err) const;

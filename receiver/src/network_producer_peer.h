@@ -31,7 +31,6 @@ class NetworkProducerPeer : HasIO {
 
     uint32_t        connection_id_;
     int             socket_fd_;
-    std::string     address_;
 
     bool            is_listening_ = false;
     std::thread*    listener_thread_ = nullptr;
@@ -58,8 +57,6 @@ class NetworkProducerPeer : HasIO {
     void stop_peer_listener();
 
     uint32_t connection_id() const;
-    const std::string& address() const;
-    bool is_listening() const;
 };
 
 }

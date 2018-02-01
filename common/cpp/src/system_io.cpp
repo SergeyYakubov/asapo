@@ -256,7 +256,7 @@ void hidra2::SystemIO::InetBind(SocketDescriptor socket_fd, const std::string& a
         return;
     }
 
-    auto host_port_tuple = SplitAddressToHostAndPort(address);
+    auto host_port_tuple = SplitAddressToHostnameAndPort(address);
     if (!host_port_tuple) {
         *err = IOErrors::kInvalidAddressFormat;
         return;
@@ -413,7 +413,7 @@ void hidra2::SystemIO::CreateNewDirectory(const std::string& directory_name, hid
         *err = IOErrors::kNoError;
     }
 }
-std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostAndPort(std::string address) const {
+std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostnameAndPort(std::string address) const {
     try {
         std::string host = address.substr(0, address.find(':'));
 
@@ -427,14 +427,18 @@ std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostA
 }
 
 void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const {
-    auto host_port_tuple = SplitAddressToHostAndPort(address);
-    if (!host_port_tuple) {
+    auto hostname_port_tuple = SplitAddressToHostnameAndPort(address);
+    if (!hostname_port_tuple) {
         *err = IOErrors::kInvalidAddressFormat;
         return;
     }
     std::string host;
     uint16_t port = 0;
-    std::tie(host, port) = *host_port_tuple;
+    std::tie(host, port) = *hostname_port_tuple;
+    host = ResolveHostnameToIp(host, err);
+    if(*err != IOErrors::kNoError) {
+        return;
+    }
 
     short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {

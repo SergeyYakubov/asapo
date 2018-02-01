@@ -10,16 +10,16 @@
 namespace hidra2 {
 
 enum class ReceiverError {
-    NO_ERROR,
-    ALREADY_LISTEING,
-    FAILED_CREATING_SOCKET,
+    kNoError,
+    kAlreadyListeing,
+    FailToCreateSocket,
 };
 
 class Receiver : public HasIO {
     friend NetworkProducerPeer;
   private:
     bool listener_running_ = false;
-    FileDescriptor listener_fd_;
+    FileDescriptor listener_fd_ = -1;
     std::thread* accept_thread_ = nullptr;
 
     void AcceptThreadLogic();
@@ -31,6 +31,7 @@ class Receiver : public HasIO {
 
     Receiver(const Receiver&) = delete;
     Receiver& operator=(const Receiver&) = delete;
+
     Receiver() = default;
 
     void StartListener(std::string listener_address, ReceiverError* err);

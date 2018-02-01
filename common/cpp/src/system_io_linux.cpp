@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <zconf.h>
+#include <netdb.h>
 
 using std::string;
 using std::vector;
@@ -174,6 +175,20 @@ void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors*
     ) {
         *err = GetLastError();
     }
+}
+
+
+std::string SystemIO::ResolveHostnameToIp(const std::string& hostname, IOErrors* err) const {
+    hostent* record = gethostbyname(hostname.c_str());
+    if (record == nullptr) {
+        *err = IOErrors::kUnableToResolveHostname;
+        return "";
+    }
+    in_addr* address = (in_addr*)(record->h_addr);
+    string ip_address = inet_ntoa(*address);
+
+    *err = IOErrors::kNoError;
+    return ip_address;
 }
 
 hidra2::FileDescriptor hidra2::SystemIO::_open(const char* filename, int posix_open_flags) const {

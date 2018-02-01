@@ -32,6 +32,7 @@ enum class IOErrors {
     kSocketOperationOnNonSocket,
     kMemoryAllocationError,
     kInvalidMemoryAddress,
+    kUnableToResolveHostname,
 };
 
 enum FileOpenMode {
@@ -80,6 +81,7 @@ class IO {
     virtual void            InetBind(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
     virtual std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd,
             IOErrors* err) const = 0;
+    virtual std::string     ResolveHostnameToIp(const std::string& hostname, IOErrors* err) const = 0;
     virtual void            InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const = 0;
     virtual SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOErrors* err) const = 0;
     virtual size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, IOErrors* err) const = 0;

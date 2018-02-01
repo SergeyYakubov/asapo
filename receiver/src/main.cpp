@@ -9,7 +9,7 @@ int main (int argc, char* argv[]) {
     hidra2::ReceiverError err;
 
     receiver->StartListener(address, &err);
-    if(err != hidra2::ReceiverError::NO_ERROR) {
+    if(err != hidra2::ReceiverError::kNoError) {
         std::cerr << "Fail to start receiver" << std::endl;
         return 1;
     }
