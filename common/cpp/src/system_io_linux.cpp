@@ -160,6 +160,22 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     closedir(dir);
 }
 
+void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors* err) const {
+    //TODO: Need to change network layer code, so everything can be NonBlocking
+    //int flags;
+    if (
+        /*(flags = fcntl(socket_fd, F_GETFL, 0)) == -1
+        ||
+        fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) == -1
+        ||*/
+        setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
+        ||
+        setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
+    ) {
+        *err = GetLastError();
+    }
+}
+
 hidra2::FileDescriptor hidra2::SystemIO::_open(const char* filename, int posix_open_flags) const {
     return ::open(filename, posix_open_flags, S_IWUSR | S_IRWXU);
 }

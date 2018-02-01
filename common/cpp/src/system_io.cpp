@@ -75,11 +75,11 @@ hidra2::FileDescriptor hidra2::SystemIO::CreateAndConnectIPTCPSocket(const std::
     if(*err != IOErrors::kNoError) {
         return -1;
     }
-	InetConnect(fd, address, err);
-	if (*err != IOErrors::kNoError) {
-		CloseSocket(fd, nullptr);
-		return -1;
-	}
+    InetConnect(fd, address, err);
+    if (*err != IOErrors::kNoError) {
+        CloseSocket(fd, nullptr);
+        return -1;
+    }
 
     return fd;
 }
@@ -285,27 +285,27 @@ void hidra2::SystemIO::Listen(SocketDescriptor socket_fd, int backlog, hidra2::I
 
 
 size_t hidra2::SystemIO::ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
-	IOErrors* err) const {
-	*err = hidra2::IOErrors::kNoError;
+                                        IOErrors* err) const {
+    *err = hidra2::IOErrors::kNoError;
 
-	fd_set read_fds;
-	FD_ZERO(&read_fds);
-	FD_SET(socket_fd, &read_fds);
-	timeval timeout;
-	timeout.tv_sec = 0;
-	timeout.tv_usec = timeout_in_usec;
+    fd_set read_fds;
+    FD_ZERO(&read_fds);
+    FD_SET(socket_fd, &read_fds);
+    timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = timeout_in_usec;
 
-	int res = ::select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
-	if (res == 0) {
-		*err = IOErrors::kTimeout;
-		return 0;
-	}
-	if (res == -1) {
-		*err = GetLastError();
-		return 0;
-	}
+    int res = ::select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
+    if (res == 0) {
+        *err = IOErrors::kTimeout;
+        return 0;
+    }
+    if (res == -1) {
+        *err = GetLastError();
+        return 0;
+    }
 
-	return Receive(socket_fd, buf, length, err);
+    return Receive(socket_fd, buf, length, err);
 }
 
 
@@ -447,14 +447,14 @@ void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string
     socket_address.sin_port = htons(port);
     socket_address.sin_family = family;
 
-	if (_connect(socket_fd, (struct sockaddr*) &socket_address, sizeof(socket_address)) == -1) {
-		*err = GetLastError();
-		// On windows its normal that connect might throw a "WSAEWOULDBLOCK" since the socket need time to be created
-		if (*err != IOErrors::kNoError && *err != IOErrors::kResourceTemporarilyUnavailable) {
-			return;
-		}
-	}
-	*err = IOErrors::kNoError;
+    if (_connect(socket_fd, (struct sockaddr*) &socket_address, sizeof(socket_address)) == -1) {
+        *err = GetLastError();
+        // On windows its normal that connect might throw a "WSAEWOULDBLOCK" since the socket need time to be created
+        if (*err != IOErrors::kNoError && *err != IOErrors::kResourceTemporarilyUnavailable) {
+            return;
+        }
+    }
+    *err = IOErrors::kNoError;
 }
 
 std::unique_ptr<std::tuple<std::string, SocketDescriptor>> SystemIO::InetAccept(SocketDescriptor socket_fd,
@@ -468,21 +468,21 @@ IOErrors* err) const {
     sockaddr_in client_address{};
     static size_t client_address_size = sizeof(sockaddr_in);
 
-	int peer_fd;
-	while (true) {
-		peer_fd = _accept(socket_fd, reinterpret_cast<sockaddr*>(&client_address), &client_address_size);
-	
-		if (peer_fd == -1) {
-			*err = GetLastError();
-			if (*err == IOErrors::kResourceTemporarilyUnavailable) {
-				continue;
-			}
-			return nullptr;
-		}
-		break;
-	}
+    int peer_fd;
+    while (true) {
+        peer_fd = _accept(socket_fd, reinterpret_cast<sockaddr*>(&client_address), &client_address_size);
 
-	*err = IOErrors::kNoError;
+        if (peer_fd == -1) {
+            *err = GetLastError();
+            if (*err == IOErrors::kResourceTemporarilyUnavailable) {
+                continue;
+            }
+            return nullptr;
+        }
+        break;
+    }
+
+    *err = IOErrors::kNoError;
     ApplyNetworkOptions(peer_fd, err);
 
     std::string

@@ -21,7 +21,7 @@ static const std::string kListenAddress = "127.0.0.1:4206";
 static std::promise<void> kThreadStarted;
 
 static size_t kTestSize = size_t(1024) * size_t(1024) * size_t(512); //512MiByte
-static int kTestCount = 50;
+static int kTestCount = 20;
 
 void Exit(int exit_number) {
     std::cerr << "ERROR: Exit on " << exit_number << std::endl;
@@ -87,7 +87,8 @@ void Speedtest() {
         high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
         double tookMs = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
-        std::cout << i << ":\t" << std::setprecision(2) << std::fixed << (kTestSize / (tookMs / 1000)) / 1024 / 1024 / 1024 << " GiByte/s" <<
+        std::cout << i << ":\t" << std::setprecision(2) << std::fixed << (kTestSize / (tookMs / 1000)) / 1024 / 1024 / 1024 <<
+                  " GiByte/s" <<
                   std::endl;
         /*
         << "\t"<< std::fixed << kTestSize/(tookMs/1000) << " Byte/s" << std::endl
