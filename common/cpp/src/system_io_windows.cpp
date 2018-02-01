@@ -31,6 +31,8 @@ IOErrors IOErrorFromGetLastError() {
         return IOErrors::kConnectionResetByPeer;
     case WSAENOTSOCK:
         return IOErrors::kSocketOperationOnNonSocket;
+	case WSAEWOULDBLOCK:
+		return IOErrors::kResourceTemporarilyUnavailable;
     default:
         std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
         return IOErrors::kUnknownError;
@@ -138,6 +140,27 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     } else {
         *err = IOErrorFromGetLastError();
     }
+}
+
+
+
+
+void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors* err) const {
+	//TODO: Seeing issues when using these settings - need further investigation
+	//Event if NonBlockingIO is set, it seems that _recv is a blocking call :/
+	/*
+	static u_long iMode = 1;
+
+	if (
+		ioctlsocket(socket_fd, FIONBIO, &iMode) != 0
+		||
+		setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
+		||
+		setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
+		) {
+		*err = GetLastError();
+	}
+	*/
 }
 
 FileDescriptor SystemIO::_open(const char* filename, int posix_open_flags) const {
