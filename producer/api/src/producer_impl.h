@@ -29,7 +29,7 @@ class ProducerImpl : public Producer, public HasIO {
     uint64_t GetVersion() const override;
     ProducerStatus GetStatus() const override;
     ProducerError ConnectToReceiver(const std::string& receiver_address) override;
-    ProducerError Send(uint64_t file_id, void* data, size_t file_size) override;
+    ProducerError Send(uint64_t file_id, const void* data, size_t file_size) override;
 
 };
 }

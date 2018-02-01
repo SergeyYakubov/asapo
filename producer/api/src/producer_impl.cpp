@@ -65,7 +65,7 @@ hidra2::ProducerError hidra2::ProducerImpl::ConnectToReceiver(const std::string&
     return ProducerError::kNoError;
 }
 
-hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, void* data, size_t file_size) {
+hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size) {
     if(status_ != ProducerStatus::kConnected) {
         return ProducerError::kConnectionNotReady;
     }

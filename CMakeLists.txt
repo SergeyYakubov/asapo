@@ -20,7 +20,7 @@ include(astyle)
 include(testing_cpp)
 
 add_subdirectory(common/cpp)
-add_subdirectory(producer/api)
+add_subdirectory(producer)
 add_subdirectory(worker/api/cpp)
 add_subdirectory(receiver)
 
