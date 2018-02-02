@@ -17,6 +17,7 @@ TEST(a, b) {
     hidra2::MockIO mockIO;
 
     hidra2::Receiver receiver;
+
 }
 
 /*

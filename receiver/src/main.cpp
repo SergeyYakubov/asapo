@@ -19,7 +19,7 @@ int main (int argc, char* argv[]) {
     getchar();
 
     std::cout << "Stop listener..." << std::endl;
-    receiver->StopListener(&err);
+    receiver->StopListener(&err);//TODO might not work since Accept is a blocking call :/
 
     return 0;
 }

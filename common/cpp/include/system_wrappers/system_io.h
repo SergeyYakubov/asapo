@@ -24,7 +24,7 @@ class SystemIO final : public IO {
     int SocketTypeToPosixType           (SocketTypes socket_type) const;
     int SocketProtocolToPosixProtocol   (SocketProtocols socket_protocol) const;
 
-    // Function maps. Should never be called apart from in wrapper function
+    // System function mapping. Should only be called by the wrapper function
     FileDescriptor  _open(const char* filename, int posix_open_flags) const;
     bool            _close(FileDescriptor fd) const;
     ssize_t         _read(FileDescriptor fd, void* buffer, size_t length) const;

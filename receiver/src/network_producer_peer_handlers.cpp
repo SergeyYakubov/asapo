@@ -1,6 +1,5 @@
 #include "network_producer_peer.h"
 #include "receiver.h"
-#include <fcntl.h>
 #include <cmath>
 
 namespace hidra2 {
@@ -39,7 +38,7 @@ void NetworkProducerPeer::handle_send_data_request_(NetworkProducerPeer* self, c
         std::cerr << "[" << self->connection_id() << "] file_id: " << request->file_id << " does already exists" << std::endl;
         self->io->Skip(self->socket_fd_, request->file_size, &io_err);
         if(io_err != IOErrors::kNoError) {
-            std::cout << "[NetworkProducerPeer] Out of sync force disconnect" << std::endl;
+            std::cout << "[" << self->connection_id() << "] Out of sync force disconnect" << std::endl;
             self->io->CloseSocket(self->socket_fd_, nullptr);
         }
         return;
@@ -60,9 +59,15 @@ void NetworkProducerPeer::handle_send_data_request_(NetworkProducerPeer* self, c
     if(io_err != IOErrors::kNoError) {
         std::cerr << "[" << self->connection_id() << "] An IO error occurred while receiving the file" << std::endl;
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
+        return;
     }
 
     self->io->Write(fd, buffer.get(), request->file_size, &io_err);
+    if(io_err != IOErrors::kNoError) {
+        std::cerr << "[" << self->connection_id() << "] An IO error occurred while writing the file" << std::endl;
+        response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
+        return;
+    }
 
     response->error_code = NET_ERR__NO_ERROR;
 }
