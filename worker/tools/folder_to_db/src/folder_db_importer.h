@@ -41,6 +41,7 @@ class FolderToDbImporter {
 //! the procedure via bulk write to see the performance of a
 //! single operation (and it is already fast enough)
     FolderToDbImportError Convert(const std::string& uri, const std::string& folder,
+                                  const std::string& db_name,
                                   FolderImportStatistics* statistics = nullptr) const;
 
     unsigned int SetNParallelTasks(unsigned int ntasks, bool async = true);

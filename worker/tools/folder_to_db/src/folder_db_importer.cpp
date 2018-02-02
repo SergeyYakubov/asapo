@@ -155,9 +155,10 @@ FileInfos FolderToDbImporter::GetFilesInFolder(const std::string& folder, Folder
 
 
 FolderToDbImportError FolderToDbImporter::Convert(const std::string& uri, const std::string& folder,
+                                                  const std::string& db_name,
                                                   FolderImportStatistics* statistics) const {
     db_uri_ = uri;
-    db_name_ = folder;
+    db_name_ = db_name;
     auto time_begin = high_resolution_clock::now();
 
     FolderToDbImportError err;

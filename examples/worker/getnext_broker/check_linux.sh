@@ -24,6 +24,5 @@ do
 	echo 'db.data.insert({"_id":'$i',"size":100,"base_name":"'$i'","lastchange":1,"relative_path":""})' | mongo ${database_name}
 done
 
-$args 127.0.0.1:5005 $database_name | grep "Processed 3 file(s)"
-
+$args 127.0.0.1:5005 $database_name 2 | grep "Processed 3 file(s)"
 

@@ -5,13 +5,15 @@
 
 
 void Usage(char* cmd) {
-    std::cout << "Usage: " + std::string{cmd} + " [-i] [-n <number of tasks>] <path to folder> <database uri>" << std::endl;
+    std::cout << "Usage: " + std::string{cmd} +
+              " [-i] [-n <number of tasks>] <path to folder> <database name> <database uri>" << std::endl;
     exit(EXIT_FAILURE);
 }
 
 struct ConvertParameters {
     bool ignore_duplicates{false};
     std::string folder;
+    std::string db_name;
     std::string uri;
     int ntasks{1};
 };
@@ -40,7 +42,7 @@ void ProcessFlags(ConvertParameters* params, int argc, int* narg, char* argv[]) 
 
 
 ConvertParameters ProcessCommandArguments(int argc, char* argv[]) {
-    if (argc < 3) {
+    if (argc < 4) {
         Usage(argv[0]);
     }
     ConvertParameters params;
@@ -49,12 +51,22 @@ ConvertParameters ProcessCommandArguments(int argc, char* argv[]) {
         if (argv[i][0] == '-') {
             ProcessFlags(&params, argc, &i, argv);
         } else {
-            narg == 0 ? params.folder = argv[i] : params.uri = argv[i];
+            switch (narg) {
+            case 0:
+                params.folder = argv[i];
+                break;
+            case 1:
+                params.db_name = argv[i];
+                break;
+            case 2:
+                params.uri = argv[i];
+                break;
+            }
             narg++;
         }
     }
 
-    if (narg != 2) {
+    if (narg != 3) {
         Usage(argv[0]);
     }
     return params;
@@ -69,7 +81,8 @@ int main(int argc, char* argv[]) {
 
     hidra2::FolderImportStatistics statistics;
 
-    auto err = importer.Convert(import_params.uri, import_params.folder, &statistics);
+    auto err = importer.Convert(import_params.uri, import_params.folder, import_params.db_name,
+                                &statistics);
     if (err != hidra2::FolderToDbImportError::kOK) {
         std::cout << "Error import to database" << std::endl;
         return 1;

@@ -80,7 +80,7 @@ class IOFolderNotFound: public FakeIO {
     }
 };
 
-class IOFodlerUnknownError: public FakeIO {
+class IOFolderUnknownError: public FakeIO {
   public:
     FileInfos FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kUnknownError;
@@ -88,7 +88,7 @@ class IOFodlerUnknownError: public FakeIO {
     }
 };
 
-class IOEmptyFodler: public FakeIO {
+class IOEmptyFolder: public FakeIO {
   public:
     FileInfos FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kNoError;
@@ -141,7 +141,7 @@ TEST_F(FolderDataBrokerTests, CannotConnectWhenNoFolder) {
 }
 
 TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
-    data_broker->io__ = std::unique_ptr<IO> {new IOFodlerUnknownError()};
+    data_broker->io__ = std::unique_ptr<IO> {new IOFolderUnknownError()};
 
     auto return_code = data_broker->Connect();
 
@@ -186,7 +186,7 @@ TEST_F(FolderDataBrokerTests, SecondNextReturnsAnotherFileInfo) {
 }
 
 TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
-    data_broker->io__ = std::unique_ptr<IO> {new IOEmptyFodler()};
+    data_broker->io__ = std::unique_ptr<IO> {new IOEmptyFolder()};
     data_broker->Connect();
     FileInfo fi;
 

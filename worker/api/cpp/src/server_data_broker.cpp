@@ -20,6 +20,7 @@ WorkerErrorCode ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const st
     WorkerErrorCode err;
     HttpCode code;
     auto responce = httpclient__->Get(full_uri, &code, &err);
+
     if (err != WorkerErrorCode::kOK) {
         return err;
     }

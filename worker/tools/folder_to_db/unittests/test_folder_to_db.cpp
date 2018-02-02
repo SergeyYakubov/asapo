@@ -131,7 +131,7 @@ class FolderDBConverterTests : public Test {
 
     MockDatabaseFactory* mock_dbf;
     FileInfos file_infos;
-    std::string folder, uri;
+    std::string folder, uri, db_name;
     void SetUp() override {
         converter.io__ = std::unique_ptr<IO> {&mock_io};
         mock_dbf = new MockDatabaseFactory;
@@ -139,6 +139,7 @@ class FolderDBConverterTests : public Test {
         converter.db_factory__ = std::unique_ptr<DatabaseFactory> {mock_dbf};
         file_infos = CreateTestFileInfos();
         folder = "folder";
+        db_name = "db_name";
         uri = "db_address";
         ON_CALL(mock_io, FilesInFolder(_, _)).
         WillByDefault(DoAll(testing::SetArgPointee<1>(IOErrors::kNoError),
@@ -151,10 +152,10 @@ class FolderDBConverterTests : public Test {
 
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
-    EXPECT_CALL(*(mock_dbf->db[0]), Connect(uri, folder, kDBCollectionName)).
+    EXPECT_CALL(*(mock_dbf->db[0]), Connect(uri, db_name, kDBCollectionName)).
     WillOnce(testing::Return(DBError::kConnectionError));
 
-    auto error = converter.Convert(uri, folder);
+    auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kDBConnectionError));
 }
 
@@ -168,7 +169,7 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotCreateDbParallel) {
     WillOnce(testing::Return(DBError::kConnectionError));
 
     converter.SetNParallelTasks(nparallel);
-    auto error = converter.Convert(uri, folder);
+    auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kDBConnectionError));
 }
 
@@ -185,7 +186,7 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotGetFileList) {
     WillOnce(DoAll(testing::SetArgPointee<1>(IOErrors::kReadError),
                    testing::Return(FileInfos {})));
 
-    auto error = converter.Convert(uri, folder);
+    auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kIOError));
 }
 
@@ -194,7 +195,7 @@ TEST_F(FolderDBConverterTests, PassesIgnoreDuplicates) {
     EXPECT_CALL(*(mock_dbf->db[0]), Insert(_, true));
 
     converter.IgnoreDuplicates(true);
-    converter.Convert(uri, folder);
+    converter.Convert(uri, folder, db_name);
 }
 
 
@@ -204,7 +205,7 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotImportFileListToDb) {
     EXPECT_CALL(*(mock_dbf->db[0]), Insert(_, _)).
     WillOnce(testing::Return(DBError::kInsertError));
 
-    auto error = converter.Convert(uri, folder);
+    auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kImportError));
 
 }
@@ -224,7 +225,7 @@ TEST_F(FolderDBConverterTests, PassesFileListToInsert) {
         WillOnce(testing::Return(DBError::kNoError));
     }
 
-    auto error = converter.Convert(uri, folder);
+    auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kOK));
 
 }
@@ -239,7 +240,7 @@ TEST_F(FolderDBConverterTests, PassesFileListToInsertInParallel3by3) {
     WillOnce(testing::Return(DBError::kNoError));
 
     converter.SetNParallelTasks(3, false);
-    auto error = converter.Convert(uri, folder);
+    auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kOK));
 }
 
@@ -253,7 +254,7 @@ TEST_F(FolderDBConverterTests, PassesFileListToInsertInParallel3by2) {
     WillOnce(testing::Return(DBError::kNoError));
 
     converter.SetNParallelTasks(2, false);
-    auto error = converter.Convert(uri, folder);
+    auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Eq(FolderToDbImportError::kOK));
 }
 
@@ -264,7 +265,7 @@ TEST_F(FolderDBConverterTests, ComputesStatistics) {
     WillRepeatedly(testing::Return(DBError::kNoError));
 
     hidra2::FolderImportStatistics statistics;
-    auto error = converter.Convert(uri, folder, &statistics);
+    auto error = converter.Convert(uri, folder, db_name, &statistics);
 
     ASSERT_THAT(error, Eq(FolderToDbImportError::kOK));
     ASSERT_THAT(statistics.n_files_converted, Eq(file_infos.size()));
@@ -277,7 +278,7 @@ TEST_F(FolderDBConverterTests, ComputesStatistics) {
 TEST_F(FolderDBConverterTests, ErrorWhenCannotCreateDB) {
     converter.db_factory__ = std::unique_ptr<DatabaseFactory> {new FakeDatabaseFactory};
 
-    auto err = converter.Convert("", "");
+    auto err = converter.Convert("", "", "");
 
     ASSERT_THAT(err, Eq(FolderToDbImportError::kMemoryError));
 

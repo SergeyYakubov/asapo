@@ -1,6 +1,5 @@
 #include "curl_http_client.h"
 
-#include "curl/curl.h"
 #include <cstring>
 
 namespace hidra2 {
@@ -62,22 +61,33 @@ WorkerErrorCode ProcessCurlResponce(CURL* curl, CURLcode res, const char* errbuf
 }
 
 std::string CurlHttpClient::Get(const std::string& uri, HttpCode* responce_code, WorkerErrorCode* err) const noexcept {
-    auto curl = curl_easy_init();
-    if (!curl) {
-        *err = WorkerErrorCode::kInternalError;
-        return "";
-    }
+    std::lock_guard<std::mutex> lock{mutex_};
 
     std::string buffer;
     char errbuf[CURL_ERROR_SIZE];
-    SetCurlOptions(curl, uri, errbuf, &buffer);
+    SetCurlOptions(curl_, uri, errbuf, &buffer);
 
-    auto res = curl_easy_perform(curl);
+    auto res = curl_easy_perform(curl_);
 
-    *err = ProcessCurlResponce(curl, res, errbuf, &buffer, responce_code);
-    curl_easy_cleanup(curl);
+    *err = ProcessCurlResponce(curl_, res, errbuf, &buffer, responce_code);
 
     return buffer;
+}
+
+CurlHttpClient::CurlHttpClient() {
+    curl_ = curl_easy_init();
+    if (!curl_) {
+        throw "Cannot initialize curl";
+    }
+
+}
+
+
+CurlHttpClient::~CurlHttpClient() {
+    if (curl_) {
+        curl_easy_cleanup(curl_);
+    }
+
 }
 
 

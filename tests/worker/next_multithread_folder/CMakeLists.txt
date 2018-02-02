@@ -1,4 +1,4 @@
-set(TARGET_NAME next_multithread_fodler)
+set(TARGET_NAME next_multithread_folder)
 set(SOURCE_FILES next_multithread_folder.cpp)
 
 
