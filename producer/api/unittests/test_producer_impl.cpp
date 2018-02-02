@@ -53,6 +53,30 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_invalid_addres
     ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
 }
 
+
+TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_connection_refused) {
+    hidra2::ProducerImpl producer;
+
+    hidra2::MockIO mockIO;
+    producer.__set_io(&mockIO);
+
+    std::string expected_address = "127.0.0.1:9090";
+
+    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket(expected_address, _))
+        .Times(1)
+        .WillOnce(
+            DoAll(
+                testing::SetArgPointee<1>(hidra2::IOErrors::kConnectionRefused),
+                Return(-1)
+            ));
+
+    hidra2::ProducerError error = producer.ConnectToReceiver(expected_address);
+    hidra2::ProducerStatus status = producer.GetStatus();
+
+    ASSERT_THAT(error, Eq(hidra2::ProducerError::kConnectionRefused));
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
+}
+
 TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_unk) {
     hidra2::ProducerImpl producer;
 
