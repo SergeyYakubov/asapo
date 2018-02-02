@@ -22,6 +22,5 @@ call :clean
 exit /b 1
 
 :clean
-echo "%short_name%"
 Taskkill /IM "%short_name%" /F
 echo db.dropDatabase() | %mongo_exe% %database_name%
