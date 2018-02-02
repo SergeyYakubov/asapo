@@ -33,6 +33,8 @@ IOErrors IOErrorFromGetLastError() {
         return IOErrors::kSocketOperationOnNonSocket;
     case WSAEWOULDBLOCK:
         return IOErrors::kResourceTemporarilyUnavailable;
+    case WSAECONNREFUSED:
+        return IOErrors::kConnectionRefused;
     default:
         std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
         return IOErrors::kUnknownError;

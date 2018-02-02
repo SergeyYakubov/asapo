@@ -24,7 +24,6 @@ static const size_t kSkipAmount = 500;
 
 void Exit(int exit_number) {
     std::cerr << "ERROR: Exit on " << exit_number << std::endl;
-    getchar();
     exit(exit_number);
 }
 
