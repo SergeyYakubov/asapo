@@ -177,20 +177,6 @@ void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors*
     }
 }
 
-
-std::string SystemIO::ResolveHostnameToIp(const std::string& hostname, IOErrors* err) const {
-    hostent* record = gethostbyname(hostname.c_str());
-    if (record == nullptr) {
-        *err = IOErrors::kUnableToResolveHostname;
-        return "";
-    }
-    in_addr* address = (in_addr*)(record->h_addr);
-    string ip_address = inet_ntoa(*address);
-
-    *err = IOErrors::kNoError;
-    return ip_address;
-}
-
 hidra2::FileDescriptor hidra2::SystemIO::_open(const char* filename, int posix_open_flags) const {
     return ::open(filename, posix_open_flags, S_IWUSR | S_IRWXU);
 }
@@ -237,6 +223,10 @@ SocketDescriptor SystemIO::_accept(SocketDescriptor socket_fd, void* address, si
 
 bool SystemIO::_close_socket(SocketDescriptor socket_fd) const {
     return ::close(socket_fd) == 0;
+}
+
+void SystemIO::InitializeSocketIfNecessary() const {
+
 }
 
 }

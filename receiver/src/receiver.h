@@ -11,8 +11,8 @@ namespace hidra2 {
 
 enum class ReceiverError {
     kNoError,
-    kAlreadyListeing,
-    FailToCreateSocket,
+    kAlreadyListening,
+    kFailToCreateSocket,
 };
 
 class Receiver : public HasIO {

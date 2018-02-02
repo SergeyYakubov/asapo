@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #endif
 
 
@@ -424,6 +425,20 @@ std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostn
     } catch (...) {
         return nullptr;
     }
+}
+
+std::string SystemIO::ResolveHostnameToIp(const std::string& hostname, IOErrors* err) const {
+    InitializeSocketIfNecessary();
+    hostent* record = gethostbyname(hostname.c_str());
+    if (record == nullptr) {
+        *err = IOErrors::kUnableToResolveHostname;
+        return "";
+    }
+    in_addr* address = (in_addr*)(record->h_addr);
+    std::string ip_address = inet_ntoa(*address);
+
+    *err = IOErrors::kNoError;
+    return ip_address;
 }
 
 void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const {

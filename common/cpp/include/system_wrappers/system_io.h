@@ -39,7 +39,8 @@ class SystemIO final : public IO {
     ssize_t				_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const;
     bool			    _close_socket(SocketDescriptor socket_fd) const;
 
-    std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostnameAndPort(std::string address) const;
+    void                                                InitializeSocketIfNecessary() const;
+    std::unique_ptr<std::tuple<std::string, uint16_t>>  SplitAddressToHostnameAndPort(std::string address) const;
 
   public:
     /*

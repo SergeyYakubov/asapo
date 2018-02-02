@@ -183,23 +183,7 @@ ssize_t SystemIO::_write(FileDescriptor fd, const void* buffer, size_t length) c
 }
 
 SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
-    static bool WSAStartupDone = false;
-    if (!WSAStartupDone) {
-        WSAStartupDone = true;
-        WORD wVersionRequested = MAKEWORD(2, 2);
-        WSADATA wsaData;
-        int err = WSAStartup(wVersionRequested, &wsaData);
-        if (err != 0) {
-            std::cout << "[_socket/WSAStartup] Faild to WSAStartup with version 2.2" << std::endl;
-            WSACleanup();
-            // Do not return, since ::socket has to set an errno
-        } else {
-            std::atexit([] {
-                WSACleanup();
-            });
-        }
-    }
-
+    InitializeSocketIfNecessary();
     return ::socket(address_family, socket_type, socket_protocol);
 }
 
@@ -225,6 +209,25 @@ int SystemIO::_listen(SocketDescriptor fd, int backlog) const {
 
 SocketDescriptor SystemIO::_accept(SocketDescriptor socket_fd, void* address, size_t* address_length) const {
     return ::accept(socket_fd, static_cast<sockaddr*>(address), (int*)address_length);
+}
+
+void SystemIO::InitializeSocketIfNecessary() const {
+    static bool WSAStartupDone = false;
+    if (!WSAStartupDone) {
+        WSAStartupDone = true;
+        WORD wVersionRequested = MAKEWORD(2, 2);
+        WSADATA wsaData;
+        int err = WSAStartup(wVersionRequested, &wsaData);
+        if (err != 0) {
+            std::cout << "[_socket/WSAStartup] Faild to WSAStartup with version 2.2" << std::endl;
+            WSACleanup();
+            // Do not return, since ::socket has to set an errno
+        } else {
+            std::atexit([] {
+                WSACleanup();
+            });
+        }
+    }
 }
 
 }
