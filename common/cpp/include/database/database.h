@@ -19,7 +19,7 @@ enum class DBError {
     kMemoryError
 };
 
-constexpr char kDBName[] = "data";
+constexpr char kDBCollectionName[] = "data";
 
 class Database {
   public:

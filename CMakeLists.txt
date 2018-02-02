@@ -16,6 +16,9 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
 
 set (HIDRA2_CXX_COMMON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/common/cpp/include)
 
+find_package (Threads)
+
+
 # format sources
 include(astyle)
 
@@ -26,6 +29,10 @@ if(BUILD_WORKER_TOOLS)
 endif()
 
 add_subdirectory(common/cpp)
+
+if (BUILD_BROKER)
+    add_subdirectory(broker)
+endif()
 
 add_subdirectory(producer/api)
 
@@ -48,7 +55,3 @@ if(BUILD_DOCS)
     include(doxygen)
 endif()
 
-
-if (BUILD_BROKER)
-    add_subdirectory(broker)
-endif()

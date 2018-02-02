@@ -8,8 +8,7 @@ trap Cleanup EXIT
 
 Cleanup() {
 	echo cleanup
-	echo "db.data.deleteMany({})" | mongo ${database_name}
-	echo "db.current_location.deleteMany({})" | mongo ${database_name}
+	echo "db.dropDatabase()" | mongo ${database_name}
 	kill -9 $brokerid
 }
 

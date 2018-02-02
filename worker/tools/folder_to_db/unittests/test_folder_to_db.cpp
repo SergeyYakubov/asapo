@@ -33,7 +33,7 @@ using hidra2::DatabaseFactory;
 using hidra2::IO;
 using hidra2::DBError;
 using hidra2::IOErrors;
-using hidra2::kDBName;
+using hidra2::kDBCollectionName;
 using hidra2::FileInfos;
 using hidra2::FileInfo;
 using hidra2::MockIO;
@@ -151,7 +151,7 @@ class FolderDBConverterTests : public Test {
 
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
-    EXPECT_CALL(*(mock_dbf->db[0]), Connect(uri, kDBName, _)).
+    EXPECT_CALL(*(mock_dbf->db[0]), Connect(uri, folder, kDBCollectionName)).
     WillOnce(testing::Return(DBError::kConnectionError));
 
     auto error = converter.Convert(uri, folder);
@@ -160,11 +160,11 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotCreateDbParallel) {
     int nparallel = 3;
-    EXPECT_CALL(*(mock_dbf->db[0]), Connect(uri, kDBName, _)).
+    EXPECT_CALL(*(mock_dbf->db[0]), Connect(uri, _, _)).
     WillOnce(testing::Return(DBError::kConnectionError));
-    EXPECT_CALL(*(mock_dbf->db[1]), Connect(uri, kDBName, _)).
+    EXPECT_CALL(*(mock_dbf->db[1]), Connect(uri, _, _)).
     WillOnce(testing::Return(DBError::kConnectionError));
-    EXPECT_CALL(*(mock_dbf->db[2]), Connect(uri, kDBName, _)).
+    EXPECT_CALL(*(mock_dbf->db[2]), Connect(uri, _, _)).
     WillOnce(testing::Return(DBError::kConnectionError));
 
     converter.SetNParallelTasks(nparallel);

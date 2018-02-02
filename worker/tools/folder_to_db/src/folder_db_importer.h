@@ -54,7 +54,7 @@ class FolderToDbImporter {
     unsigned int n_tasks_{1};
     bool async_{true};
     mutable std::string db_uri_ ;
-    mutable std::string db_collection_name;
+    mutable std::string db_name_;
     FolderToDbImportError ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const;
     FileInfos GetFilesInFolder(const std::string& folder, FolderToDbImportError* err) const;
     FolderToDbImportError ImportFilelist(const FileInfos& file_list) const;

@@ -1,4 +1,4 @@
-SET database_name=data
+SET database_name=test
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 
 mkdir test
@@ -8,9 +8,9 @@ echo "" > test/file1
 
 %* test 127.0.0.1 || goto :error
 
-echo show collections | %mongo_exe% %database_name% | findstr test  || goto :error
-echo db.test.find({"_id":1}) | %mongo_exe% %database_name% | findstr file2  || goto :error
-echo db.test.find({"_id":2}) | %mongo_exe% %database_name% | findstr file1  || goto :error
+echo show collections | %mongo_exe% %database_name% | findstr data  || goto :error
+echo db.data.find({"_id":1}) | %mongo_exe% %database_name% | findstr file2  || goto :error
+echo db.data.find({"_id":2}) | %mongo_exe% %database_name% | findstr file1  || goto :error
 
 # check if gives error on duplicates
 %* test 127.0.0.1  && goto :error
@@ -25,5 +25,5 @@ call :clean
 exit /b 1
 
 :clean
-echo db.test.deleteMany({}) | %mongo_exe% %database_name%
+echo db.dropDatabase() | %mongo_exe% %database_name%
 rmdir /S /Q test

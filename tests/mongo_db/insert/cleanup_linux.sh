@@ -2,4 +2,4 @@
 
 database_name=data
 
-echo "db.test.deleteMany({})" | mongo ${database_name}
+echo "db.dropDatabase()" | mongo ${database_name}

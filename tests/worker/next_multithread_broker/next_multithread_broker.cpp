@@ -49,6 +49,7 @@ Args GetArgs(int argc, char* argv[]) {
 void GetAllFromBroker(const Args& args) {
     hidra2::WorkerErrorCode err;
     auto broker = hidra2::DataBrokerFactory::CreateServerBroker(args.server, args.run_name, &err);
+
     std::vector<hidra2::FileInfos>file_infos(args.nthreads);
     auto exec_next = [&](int i) {
         hidra2::FileInfo fi;

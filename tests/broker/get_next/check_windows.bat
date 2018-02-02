@@ -23,5 +23,4 @@ exit /b 1
 
 :clean
 Taskkill /IM "%short_name%" /F
-echo db.data.deleteMany({}) | %mongo_exe% %database_name%
-echo db.current_location.deleteMany({}) | %mongo_exe% %database_name%
+echo db.dropDatabase() | %mongo_exe% %database_name%

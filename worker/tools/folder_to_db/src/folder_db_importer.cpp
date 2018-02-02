@@ -56,7 +56,7 @@ FolderToDbImporter::FolderToDbImporter() :
 }
 
 FolderToDbImportError FolderToDbImporter::ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const {
-    DBError err = db->Connect(db_uri_, kDBName, db_collection_name);
+    DBError err = db->Connect(db_uri_, db_name_, kDBCollectionName);
     return MapDBError(err);
 }
 
@@ -157,8 +157,7 @@ FileInfos FolderToDbImporter::GetFilesInFolder(const std::string& folder, Folder
 FolderToDbImportError FolderToDbImporter::Convert(const std::string& uri, const std::string& folder,
                                                   FolderImportStatistics* statistics) const {
     db_uri_ = uri;
-    db_collection_name = folder;
-
+    db_name_ = folder;
     auto time_begin = high_resolution_clock::now();
 
     FolderToDbImportError err;
