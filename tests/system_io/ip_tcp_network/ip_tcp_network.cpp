@@ -141,6 +141,25 @@ void CheckNormal(int times, size_t size) {
 }
 
 int main(int argc, char* argv[]) {
+    IOErrors err;
+    std::cout << "[META] Check if connection is refused if server is not running" << std::endl;
+    io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
+    if(err != IOErrors::kConnectionRefused) {
+        ExitIfErrIsNotOk(&err, 301);
+    }
+
+    std::cout << "[META] Check invalid address format - Missing port" << std::endl;
+    io->CreateAndConnectIPTCPSocket("localhost", &err);
+    if(err != IOErrors::kInvalidAddressFormat) {
+        ExitIfErrIsNotOk(&err, 302);
+    }
+
+    std::cout << "[META] Check unknown host" << std::endl;
+    io->CreateAndConnectIPTCPSocket("some-host-that-might-not-exists.aa:1234", &err);
+    if(err != IOErrors::kUnableToResolveHostname) {
+        ExitIfErrIsNotOk(&err, 303);
+    }
+
     std::thread* server_thread = CreateEchoServerThread();
     kThreadStarted.get_future().get();//Make sure that the server is started
 
@@ -153,6 +172,12 @@ int main(int argc, char* argv[]) {
 
     std::cout << "server_thread->join()" << std::endl;
     server_thread->join();
+
+    std::cout << "[META] Check if connection is refused after server is closed" << std::endl;
+    io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
+    if(err != IOErrors::kConnectionRefused) {
+        ExitIfErrIsNotOk(&err, 304);
+    }
 
     return 0;
 }
