@@ -4,6 +4,7 @@ type Agent interface {
 	GetNextRecord(db_name string) ([]byte, error)
 	Connect(string) error
 	Close()
+	Copy() Agent
 }
 
 type DBError struct {

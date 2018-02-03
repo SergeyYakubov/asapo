@@ -26,7 +26,7 @@ target_include_directories(${TARGET_NAME} PUBLIC include ${HIDRA2_CXX_COMMON_INC
 
 IF(WIN32)
     target_compile_definitions(${TARGET_NAME} PUBLIC -DCURL_STATICLIB)
-ELSE()
+ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 ENDIF(WIN32)
 

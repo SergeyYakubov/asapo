@@ -30,10 +30,16 @@ func TestGetNextWithoutDatabaseName(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, w.Code, "no database name")
 }
 
+func ExpectCopyClose(mock_db *database.MockedDatabase){
+	mock_db.On("Copy").Return(mock_db)
+	mock_db.On("Close").Return()
+}
+
 func TestGetNextWithWrongDatabaseName(t *testing.T) {
 	mock_db := new(database.MockedDatabase)
 	db = mock_db
 	defer func() { db = nil }()
+	ExpectCopyClose(mock_db)
 	mock_db.On("GetNextRecord", "foo").Return([]byte(""),
 		&database.DBError{utils.StatusWrongInput, ""})
 
@@ -46,6 +52,7 @@ func TestGetNextWithInternalDBError(t *testing.T) {
 	mock_db := new(database.MockedDatabase)
 	db = mock_db
 	defer func() { db = nil }()
+	ExpectCopyClose(mock_db)
 	mock_db.On("GetNextRecord", "foo").Return([]byte(""), errors.New(""))
 
 	w := doRequest("/database/foo/next")
@@ -57,6 +64,7 @@ func TestGetNextWithGoodDatabaseName(t *testing.T) {
 	mock_db := new(database.MockedDatabase)
 	db = mock_db
 	defer func() { db = nil }()
+	ExpectCopyClose(mock_db)
 	mock_db.On("GetNextRecord", "dbname").Return([]byte("Hello"), nil)
 
 	w := doRequest("/database/dbname/next")

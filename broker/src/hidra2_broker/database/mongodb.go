@@ -27,6 +27,14 @@ type Mongodb struct {
 	databases    []string
 }
 
+func (db *Mongodb) Copy() Agent {
+	new_db:= new(Mongodb)
+	new_db.main_session = db.main_session.Copy()
+	new_db.databases = make([]string,len(db.databases))
+	copy(new_db.databases,db.databases)
+	return new_db
+}
+
 func (db *Mongodb) databaseInList(dbname string) bool {
 	return utils.StringInSlice(dbname, db.databases)
 }
@@ -46,7 +54,7 @@ func (db *Mongodb) dataBaseExist(dbname string) (err error) {
 	}
 
 	if !db.databaseInList(dbname) {
-		return errors.New(dbname + " not found")
+		return errors.New("database not found: " + dbname)
 	}
 
 	return nil
@@ -58,6 +66,14 @@ func (db *Mongodb) Connect(address string) (err error) {
 	}
 
 	db.main_session, err = mgo.DialWithTimeout(address, time.Second)
+	if err != nil {
+		return err
+	}
+
+	if err := db.updateDatabaseList(); err != nil {
+		return err
+	}
+
 	return
 }
 

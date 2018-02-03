@@ -15,7 +15,8 @@ func extractRequestParameters(r *http.Request) (string, bool) {
 
 func routeGetNext(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Content-type", "application/json")
-
+   // w.Write([]byte("Hello"))
+   // return
 	db_name, ok := extractRequestParameters(r)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
@@ -28,7 +29,9 @@ func routeGetNext(w http.ResponseWriter, r *http.Request) {
 }
 
 func getNextRecord(db_name string) (answer []byte, code int) {
-	answer, err := db.GetNextRecord(db_name)
+	db_new := db.Copy()
+	defer db_new.Close()
+	answer, err := db_new.GetNextRecord(db_name)
 	if err != nil {
 		err_db, ok := err.(*database.DBError)
 		code = utils.StatusError
