@@ -1223,8 +1223,7 @@ class GenericReader {
                     }
                     i = i * 10 + static_cast<unsigned>(s.TakePush() - '0');
                     significandDigit++;
-                }
-            else
+                } else
                 while (RAPIDJSON_LIKELY(s.Peek() >= '0' && s.Peek() <= '9')) {
                     if (RAPIDJSON_UNLIKELY(i >= 429496729)) { // 2^32 - 1 = 4294967295
                         if (RAPIDJSON_LIKELY(i != 429496729 || s.Peek() > '5')) {
@@ -1265,8 +1264,7 @@ class GenericReader {
                         }
                     i64 = i64 * 10 + static_cast<unsigned>(s.TakePush() - '0');
                     significandDigit++;
-                }
-            else
+                } else
                 while (RAPIDJSON_LIKELY(s.Peek() >= '0' && s.Peek() <= '9')) {
                     if (RAPIDJSON_UNLIKELY(i64 >= RAPIDJSON_UINT64_C2(0x19999999, 0x99999999))) // 2^64 - 1 = 18446744073709551615
                         if (RAPIDJSON_LIKELY(i64 != RAPIDJSON_UINT64_C2(0x19999999, 0x99999999) || s.Peek() > '5')) {
