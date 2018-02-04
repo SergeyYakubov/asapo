@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
 
     hidra2::WorkerErrorCode err;
-    auto broker = hidra2::DataBrokerFactory::Create(args.folder, &err);
+    auto broker = hidra2::DataBrokerFactory::CreateFolderBroker(args.folder, &err);
 
     std::vector<WorkerErrorCode>errors(args.nthreads, WorkerErrorCode::kUnknownIOError);
 

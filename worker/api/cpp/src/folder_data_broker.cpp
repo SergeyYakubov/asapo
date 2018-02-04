@@ -1,38 +1,12 @@
 #include "folder_data_broker.h"
 
 #include "system_wrappers/system_io.h"
+#include "broker_helpers.h"
 
 namespace hidra2 {
 
-WorkerErrorCode MapIOError(IOErrors io_err) {
-    WorkerErrorCode err;
-    switch (io_err) { // we do not use map due to performance reasons
-    case IOErrors::kNoError:
-        err = WorkerErrorCode::kOK;
-        break;
-    case IOErrors::kFileNotFound:
-        err = WorkerErrorCode::kSourceNotFound;
-        break;
-    case IOErrors::kPermissionDenied:
-        err = WorkerErrorCode::kPermissionDenied;
-        break;
-    case IOErrors::kReadError:
-        err = WorkerErrorCode::kErrorReadingSource;
-        break;
-    case IOErrors::kMemoryAllocationError:
-        err = WorkerErrorCode::kMemoryError;
-        break;
-    default:
-        err = WorkerErrorCode::kUnknownIOError;
-        break;
-    }
-
-    return err;
-}
-
-
 FolderDataBroker::FolderDataBroker(const std::string& source_name) :
-    base_path_{source_name}, io__{new hidra2::SystemIO}, is_connected_{false},
+    io__{new hidra2::SystemIO}, base_path_{source_name}, is_connected_{false},
 current_file_{ -1} {
 }
 
@@ -57,7 +31,7 @@ WorkerErrorCode FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int
         return WorkerErrorCode::kSourceNotConnected;
     }
 
-    if (info == nullptr && data == nullptr) {
+    if (info == nullptr) {
         return WorkerErrorCode::kWrongInput;
     }
 
@@ -79,19 +53,14 @@ WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
         return err;
     }
 
-    FileInfo file_info = filelist_[nfile_to_get];
-    if (info != nullptr) {
-        *info = file_info;
-    }
+    *info = filelist_[nfile_to_get];
 
     if (data == nullptr) {
         return WorkerErrorCode::kOK;
     }
 
     IOErrors ioerr;
-    *data = io__->GetDataFromFile(base_path_ + "/" + file_info.relative_path +
-                                  (file_info.relative_path.empty() ? "" : "/") +
-                                  file_info.base_name, file_info.size, &ioerr);
+    *data = io__->GetDataFromFile(info->FullName(base_path_), info->size, &ioerr);
 
     return MapIOError(ioerr);
 }

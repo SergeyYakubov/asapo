@@ -7,7 +7,7 @@
 #include <vector>
 #include <chrono>
 
-#include "common/file_info.h"
+#include "common/data_structs.h"
 
 namespace hidra2 {
 
@@ -32,7 +32,7 @@ class IO {
     virtual int close(int __fd) const noexcept = 0;
 
 // this is not standard function - to be implemented differently in windows and linux
-    virtual std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const = 0;
+    virtual FileInfos FilesInFolder(const std::string& folder, IOErrors* err) const = 0;
 };
 
 }

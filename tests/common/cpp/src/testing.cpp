@@ -32,6 +32,12 @@ void M_AssertEq(int expected, int got) {
     T_AssertEq(expected, got);
 }
 
+void M_AssertContains( const std::string& whole, const std::string& sub) {
+    if (whole.find(sub) == std::string::npos) {
+        exit(EXIT_FAILURE);
+    }
+}
+
 
 }
 

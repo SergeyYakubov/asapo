@@ -12,6 +12,7 @@ using hidra2::FolderDataBroker;
 using hidra2::WorkerErrorCode;
 using hidra2::IO;
 using hidra2::IOErrors;
+using hidra2::FileInfos;
 using hidra2::FileInfo;
 using hidra2::FileData;
 
@@ -55,11 +56,10 @@ class FakeIO: public IO {
 
     uint64_t Read(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const noexcept override {
         return 0;
-    }
-
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
+    };
+    FileInfos FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kNoError;
-        std::vector<FileInfo> file_infos;
+        FileInfos file_infos;
         FileInfo fi;
         fi.size = 100;
         fi.base_name = "1";
@@ -68,30 +68,29 @@ class FakeIO: public IO {
         file_infos.push_back(fi);
         fi.base_name = "3";
         file_infos.push_back(fi);
-
         return file_infos;
     }
 };
 
 class IOFolderNotFound: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
+    FileInfos FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kFileNotFound;
         return {};
     }
 };
 
-class IOFodlerUnknownError: public FakeIO {
+class IOFolderUnknownError: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
+    FileInfos FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kUnknownError;
         return {};
     }
 };
 
-class IOEmptyFodler: public FakeIO {
+class IOEmptyFolder: public FakeIO {
   public:
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, IOErrors* err) const override {
+    FileInfos FilesInFolder(const std::string& folder, IOErrors* err) const override {
         *err = IOErrors::kNoError;
         return {};
     }
@@ -142,7 +141,7 @@ TEST_F(FolderDataBrokerTests, CannotConnectWhenNoFolder) {
 }
 
 TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
-    data_broker->io__ = std::unique_ptr<IO> {new IOFodlerUnknownError()};
+    data_broker->io__ = std::unique_ptr<IO> {new IOFolderUnknownError()};
 
     auto return_code = data_broker->Connect();
 
@@ -187,7 +186,7 @@ TEST_F(FolderDataBrokerTests, SecondNextReturnsAnotherFileInfo) {
 }
 
 TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
-    data_broker->io__ = std::unique_ptr<IO> {new IOEmptyFodler()};
+    data_broker->io__ = std::unique_ptr<IO> {new IOEmptyFolder()};
     data_broker->Connect();
     FileInfo fi;
 
@@ -248,16 +247,6 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
     ASSERT_THAT(fi.base_name, Eq("1"));
 
 }
-
-TEST_F(GetDataFromFileTests, GetNextReturnsOnlyData) {
-    EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(IOErrors::kNoError), testing::Return(new uint8_t[1] {'1'})));
-
-    data_broker->GetNext(nullptr, &data);
-
-    ASSERT_THAT(data[0], Eq('1'));
-}
-
 
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
     EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).

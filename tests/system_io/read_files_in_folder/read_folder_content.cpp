@@ -20,13 +20,16 @@ int main(int argc, char* argv[]) {
     auto files = io->FilesInFolder(argv[1], &err);
 
     std::string result;
+    int64_t id = 0;
     switch (err) {
     case IOErrors::kFileNotFound:
         result = "notfound";
         break;
     case IOErrors::kNoError:
-        for(auto file_info : files)
+        for(auto file_info : files) {
+            M_AssertEq(file_info.id, ++id);
             result += file_info.relative_path + file_info.base_name;
+        }
         break;
     case IOErrors::kPermissionDenied:
         result = "noaccess";

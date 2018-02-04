@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
         result = "notfound";
         break;
     case IOErrors::kNoError:
-        for(int i = 0; i < expect.size(); i++)
+        for(unsigned int i = 0; i < expect.size(); i++)
             result += data[i];
         break;
     case IOErrors::kPermissionDenied:
