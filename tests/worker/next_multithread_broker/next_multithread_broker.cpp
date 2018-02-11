@@ -8,8 +8,6 @@
 using hidra2::M_AssertEq;
 using hidra2::M_AssertTrue;
 
-using hidra2::WorkerErrorCode;
-
 void Assert(std::vector<hidra2::FileInfos> file_infos, int nthreads, int nfiles) {
     std::vector<std::string> expect, result;
     for (int i = 1; i <= nfiles; i++) {
@@ -47,13 +45,13 @@ Args GetArgs(int argc, char* argv[]) {
 }
 
 void GetAllFromBroker(const Args& args) {
-    hidra2::WorkerErrorCode err;
+    hidra2::Error err;
     auto broker = hidra2::DataBrokerFactory::CreateServerBroker(args.server, args.run_name, &err);
 
     std::vector<hidra2::FileInfos>file_infos(args.nthreads);
     auto exec_next = [&](int i) {
         hidra2::FileInfo fi;
-        while ((err = broker->GetNext(&fi, nullptr)) == WorkerErrorCode::kOK) {
+        while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             file_infos[i].emplace_back(fi);
         }
     };

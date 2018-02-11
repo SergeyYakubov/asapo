@@ -49,18 +49,18 @@ std::string GetCurlError(CURL* curl, CURLcode res, const char* errbuf) {
     }
 }
 
-WorkerErrorCode ProcessCurlResponce(CURL* curl, CURLcode res, const char* errbuf,
-                                    std::string* buffer, HttpCode* responce_code) {
+Error ProcessCurlResponce(CURL* curl, CURLcode res, const char* errbuf,
+                          std::string* buffer, HttpCode* responce_code) {
     if(res == CURLE_OK) {
         *responce_code = GetResponceCode(curl);
-        return WorkerErrorCode::kOK;
+        return nullptr;
     } else {
         *buffer = GetCurlError(curl, res, errbuf);
-        return WorkerErrorCode::kErrorReadingSource;
+        return TextError(WorkerErrorMessage::kErrorReadingSource);
     }
 }
 
-std::string CurlHttpClient::Get(const std::string& uri, HttpCode* responce_code, WorkerErrorCode* err) const noexcept {
+std::string CurlHttpClient::Get(const std::string& uri, HttpCode* responce_code, Error* err) const noexcept {
     std::lock_guard<std::mutex> lock{mutex_};
 
     std::string buffer;

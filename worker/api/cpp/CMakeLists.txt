@@ -5,8 +5,8 @@ set(SOURCE_FILES
         src/http_client.cpp
         src/folder_data_broker.cpp
         src/server_data_broker.cpp
-        src/broker_helpers.cpp
-        src/curl_http_client.cpp)
+        src/curl_http_client.cpp
+        src/http_error.cpp)
 
 
 ################################

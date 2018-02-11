@@ -10,8 +10,11 @@ namespace hidra2 {
 
 class MockIO : public IO {
   public:
-    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const noexcept override {
-        return FileData{GetDataFromFile_t(fname, fsize, err)};
+    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const noexcept override {
+        SimpleError* error;
+        auto data = GetDataFromFile_t(fname, fsize, &error);
+        err->reset(error);
+        return FileData(data);
     }
     int open(const char* __file, int __oflag) const noexcept override {
         return 0;
@@ -19,16 +22,22 @@ class MockIO : public IO {
     int close(int __fd) const noexcept override {
         return 0;
     }
-    uint64_t Read(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const noexcept override {
+    uint64_t Read(int fd, uint8_t* array, uint64_t fsize, Error* err) const noexcept override {
         return 0;
     }
 
+    FileInfos FilesInFolder(const std::string& folder, Error* err) const override {
+        SimpleError* error;
+        auto data = FilesInFolder_t(folder, &error);
+        err->reset(error);
+        return data;
+    }
     MOCK_CONST_METHOD3(GetDataFromFile_t,
-                       uint8_t* (const std::string& fname, uint64_t fsize, IOErrors* err));
-    MOCK_CONST_METHOD2(FilesInFolder,
+                       uint8_t* (const std::string& fname, uint64_t fsize, SimpleError** err));
+    MOCK_CONST_METHOD2(FilesInFolder_t,
                        FileInfos(
-                           const std::string& folder, IOErrors
-                           *err));
+                           const std::string& folder, hidra2::SimpleError
+                           ** err));
 
     MOCK_CONST_METHOD3(read_t,
                        int64_t(int

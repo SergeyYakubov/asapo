@@ -1,7 +1,6 @@
 #include "server_data_broker.h"
 #include "system_wrappers/system_io.h"
 #include "curl_http_client.h"
-#include "broker_helpers.h"
 
 namespace hidra2 {
 
@@ -11,48 +10,48 @@ ServerDataBroker::ServerDataBroker(const std::string& server_uri,
 server_uri_{server_uri}, source_name_{source_name} {
 }
 
-WorkerErrorCode ServerDataBroker::Connect() {
-    return WorkerErrorCode::kOK;
+Error ServerDataBroker::Connect() {
+    return nullptr;
 }
 
-WorkerErrorCode ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
+Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
     std::string full_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
-    WorkerErrorCode err;
+    Error err;
     HttpCode code;
     auto responce = httpclient__->Get(full_uri, &code, &err);
 
-    if (err != WorkerErrorCode::kOK) {
+    if (err != nullptr) {
         return err;
     }
 
     err = HttpCodeToWorkerError(code);
-    if (err != WorkerErrorCode::kOK) {
+    if (err != nullptr) {
         return err;
     }
 
     if (!info->SetFromJson(responce)) {
-        return WorkerErrorCode::kErrorReadingSource;
+        return TextError(WorkerErrorMessage::kErrorReadingSource);
     }
-    return WorkerErrorCode::kOK;
+    return nullptr;
 }
 
-WorkerErrorCode ServerDataBroker::GetNext(FileInfo* info, FileData* data) {
+Error ServerDataBroker::GetNext(FileInfo* info, FileData* data) {
     if (info == nullptr) {
-        return WorkerErrorCode::kWrongInput;
+        return TextError(WorkerErrorMessage::kWrongInput);
     }
 
     auto  err = GetFileInfoFromServer(info, "next");
-    if (err != WorkerErrorCode::kOK) {
+    if (err != nullptr) {
         return err;
     }
 
     if (data == nullptr) {
-        return WorkerErrorCode::kOK;
+        return nullptr;
     }
 
-    IOErrors ioerr;
-    *data = io__->GetDataFromFile(info->FullName(""), info->size, &ioerr);
-    return hidra2::MapIOError(ioerr);
+    Error error;
+    *data = io__->GetDataFromFile(info->FullName(""), info->size, &error);
+    return error;
 }
 
 }

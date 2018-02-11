@@ -1,23 +1,29 @@
 #include "http_client.h"
-
+#include "http_error.h"
 namespace hidra2 {
 
-WorkerErrorCode HttpCodeToWorkerError(const HttpCode& code) {
+Error HttpCodeToWorkerError(const HttpCode& code) {
+    const char* message;
     switch (code) {
     case HttpCode::OK:
-        return WorkerErrorCode::kOK;
+        return nullptr;
     case HttpCode::BadRequest:
-        return WorkerErrorCode::kWrongInput;
+        message = WorkerErrorMessage::kWrongInput;
+        break;
     case HttpCode::InternalServerError:
-        return WorkerErrorCode::kErrorReadingSource;
+        message = WorkerErrorMessage::kErrorReadingSource;
+        break;
     case HttpCode::NoContent:
-        return WorkerErrorCode::kNoData;
+        message = WorkerErrorMessage::kNoData;
+        break;
     case HttpCode::NotFound:
-        return WorkerErrorCode::kSourceNotFound;
+        message = WorkerErrorMessage::kSourceNotFound;
+        break;
     default:
-        return WorkerErrorCode::kErrorReadingSource;
+        message = WorkerErrorMessage::kErrorReadingSource;
+        break;
     }
-
+    return Error{new HttpError(message, code)};
 }
 
 }

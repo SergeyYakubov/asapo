@@ -3,47 +3,52 @@
 #include "worker/data_broker.h"
 #include "../src/folder_data_broker.h"
 #include "../src/server_data_broker.h"
-
+#include "common/error.h"
 
 using hidra2::DataBrokerFactory;
 using hidra2::DataBroker;
 using hidra2::FolderDataBroker;
 using hidra2::ServerDataBroker;
 
-using hidra2::WorkerErrorCode;
-
+using hidra2::Error;
 using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Test;
 
 
-
 namespace {
 
-TEST(DataBrokerFactoryTests, CreateFolderDataSource) {
-    WorkerErrorCode return_code;
+class DataBrokerFactoryTests : public Test {
+  public:
+    Error error;
+    void SetUp() override {
+        error.reset(new hidra2::SimpleError("SomeErrorToBeOverwritten"));
+    }
+};
 
-    auto data_broker = DataBrokerFactory::CreateFolderBroker("path/to/file", &return_code);
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kOK));
+TEST_F(DataBrokerFactoryTests, CreateFolderDataSource) {
+
+    auto data_broker = DataBrokerFactory::CreateFolderBroker("path/to/file", &error);
+
+    ASSERT_THAT(error, Eq(nullptr));
     ASSERT_THAT(dynamic_cast<FolderDataBroker*>(data_broker.get()), Ne(nullptr));
 }
 
-TEST(DataBrokerFactoryTests, FailCreateDataSourceWithEmptySource) {
-    WorkerErrorCode return_code;
+TEST_F(DataBrokerFactoryTests, FailCreateDataSourceWithEmptySource) {
 
-    auto data_broker = DataBrokerFactory::CreateFolderBroker("", &return_code);
+    auto data_broker = DataBrokerFactory::CreateFolderBroker("", &error);
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kEmptyDatasource));
-    ASSERT_THAT(data_broker.release(), Eq(nullptr));
+//    ASSERT_THAT(error->Explain(), Eq(WorkerErrorMessage::kEmptyDatasource));
+    ASSERT_THAT(error->Explain(), Eq("Empty Data Source"));
+    ASSERT_THAT(data_broker.get(), Eq(nullptr));
 }
 
-TEST(DataBrokerFactoryTests, CreateServerDataSource) {
-    WorkerErrorCode return_code;
+TEST_F(DataBrokerFactoryTests, CreateServerDataSource) {
 
-    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "database", &return_code);
+    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "database", &error);
 
-    ASSERT_THAT(return_code, Eq(WorkerErrorCode::kOK));
+    ASSERT_THAT(error, Eq(nullptr));
     ASSERT_THAT(dynamic_cast<ServerDataBroker*>(data_broker.get()), Ne(nullptr));
 }
 

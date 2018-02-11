@@ -4,34 +4,35 @@
 #include <string>
 
 #include "common/data_structs.h"
+#include "common/error.h"
 
 namespace hidra2 {
 
-enum class DBError {
-    KUnknownError,
-    kConnectionError,
-    kInsertError,
-    kDuplicateID,
-    kAlreadyConnected,
-    kNotConnected,
-    kBadAddress,
-    kNoError,
-    kMemoryError
-};
+namespace DBError {
+auto const KUnknownError = "Inknown error";
+auto const kConnectionError = "Connection error";
+auto const kInsertError = "Insert error";
+auto const kDuplicateID = "Duplicate ID";
+auto const kAlreadyConnected = "Already connected";
+auto const kNotConnected = "Not connected";
+auto const kBadAddress = "Bad address";
+auto const kMemoryError = "Memory error";
+
+}
 
 constexpr char kDBCollectionName[] = "data";
 
 class Database {
   public:
-    virtual DBError Connect(const std::string& address, const std::string& database,
-                            const std::string& collection ) = 0;
-    virtual DBError Insert(const FileInfo& file, bool ignore_duplicates) const = 0;
+    virtual Error Connect(const std::string& address, const std::string& database,
+                          const std::string& collection ) = 0;
+    virtual Error Insert(const FileInfo& file, bool ignore_duplicates) const = 0;
     virtual ~Database() = default;
 };
 
 class DatabaseFactory {
   public:
-    virtual std::unique_ptr<Database> Create(DBError* err) const noexcept;
+    virtual std::unique_ptr<Database> Create(Error* err) const noexcept;
     virtual ~DatabaseFactory() = default;
 };
 

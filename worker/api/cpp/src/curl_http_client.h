@@ -12,7 +12,7 @@ namespace hidra2 {
 class CurlHttpClient final : public HttpClient {
   public:
     CurlHttpClient();
-    std::string Get(const std::string& uri, HttpCode* responce_code, WorkerErrorCode* err) const noexcept override;
+    std::string Get(const std::string& uri, HttpCode* responce_code, Error* err) const noexcept override;
     virtual ~CurlHttpClient();
   private:
     mutable std::mutex mutex_;

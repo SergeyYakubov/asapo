@@ -3,13 +3,13 @@
 
 namespace hidra2 {
 
-std::unique_ptr<Database> DatabaseFactory::Create(DBError* err) const noexcept {
+std::unique_ptr<Database> DatabaseFactory::Create(Error* err) const noexcept {
     std::unique_ptr<Database> p = nullptr;
     try {
         p.reset(new MongoDBClient());
-        *err = DBError::kNoError;
+        *err = nullptr;
     } catch (...) {
-        *err = DBError::kMemoryError;
+        *err = TextError(DBError::kMemoryError);
     }
     return p;
 };

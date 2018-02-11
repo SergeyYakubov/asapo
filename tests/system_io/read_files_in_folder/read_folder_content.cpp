@@ -4,9 +4,11 @@
 #include "testing.h"
 
 using hidra2::SystemIO;
-using hidra2::IOErrors;
+using hidra2::Error;
+
 
 using hidra2::M_AssertEq;
+using hidra2::M_AssertContains;
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -15,31 +17,22 @@ int main(int argc, char* argv[]) {
     }
     std::string expect{argv[2]};
 
-    IOErrors err;
+    Error err;
     auto io = std::unique_ptr<SystemIO> {new SystemIO};
     auto files = io->FilesInFolder(argv[1], &err);
 
-    std::string result;
-    int64_t id = 0;
-    switch (err) {
-    case IOErrors::kFileNotFound:
-        result = "notfound";
-        break;
-    case IOErrors::kNoError:
+    std::string result{};
+    if (err == nullptr) {
+        int64_t id = 0;
         for(auto file_info : files) {
             M_AssertEq(file_info.id, ++id);
             result += file_info.relative_path + file_info.base_name;
         }
-        break;
-    case IOErrors::kPermissionDenied:
-        result = "noaccess";
-        break;
-    default:
-        result = "";
-        break;
+    } else {
+        result = err->Explain();
     }
 
-    M_AssertEq(expect, result);
+    M_AssertContains(result, expect);
 
     return 0;
 }

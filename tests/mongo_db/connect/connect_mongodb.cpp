@@ -5,28 +5,17 @@
 #include "testing.h"
 
 
-using hidra2::M_AssertEq;
-using hidra2::DBError;
+using hidra2::M_AssertContains;
+using hidra2::Error;
 
-
-void Assert(DBError error, const std::string& expect) {
+void Assert(const Error& error, const std::string& expect) {
     std::string result;
-    switch (error) {
-    case DBError::kConnectionError:
-        result = "ConnectionError";
-        break;
-    case DBError::kAlreadyConnected:
-        result = "AlreadyConnected";
-        break;
-    case DBError::kBadAddress:
-        result = "BadAddress";
-        break;
-    default:
+    if (error == nullptr) {
         result = "OK";
-        break;
+    } else {
+        result = error->Explain();
     }
-
-    M_AssertEq(expect, result);
+    M_AssertContains(result, expect);
 }
 
 struct Args {
@@ -53,9 +42,9 @@ int main(int argc, char* argv[]) {
     auto err = db.Connect(args.address, args.database_name, args.collection_name);
     Assert(err, args.keyword);
 
-    if (err == DBError::kNoError) {
+    if (err == nullptr) {
         err = db.Connect(args.address, args.database_name, args.collection_name);
-        Assert(err, "AlreadyConnected");
+        Assert(err, hidra2::DBError::kAlreadyConnected);
     }
     return 0;
 }

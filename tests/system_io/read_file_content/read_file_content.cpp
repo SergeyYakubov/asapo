@@ -4,8 +4,6 @@
 #include "testing.h"
 
 using hidra2::SystemIO;
-using hidra2::IOErrors;
-using hidra2::M_AssertEq;
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -14,32 +12,19 @@ int main(int argc, char* argv[]) {
     }
     std::string expect{argv[2]};
 
-    IOErrors err;
+    hidra2::Error err;
     auto io = std::unique_ptr<SystemIO> {new SystemIO};
     auto data = io->GetDataFromFile(argv[1], expect.size(), &err);
 
     std::string result;
 
-    switch (err) {
-    case IOErrors::kFileNotFound:
-        result = "notfound";
-        break;
-    case IOErrors::kNoError:
+    if (err == nullptr) {
         for(unsigned int i = 0; i < expect.size(); i++)
             result += data[i];
-        break;
-    case IOErrors::kPermissionDenied:
-        result = "noaccess";
-        break;
-    case IOErrors::kReadError:
-        result = "readerror";
-        break;
-
-    default:
-        result = "";
-        break;
+    } else {
+        result = err->Explain();
     }
 
-    M_AssertEq(expect, result);
+    hidra2::M_AssertContains(result, expect);
     return 0;
 }

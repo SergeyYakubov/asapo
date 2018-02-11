@@ -13,8 +13,8 @@ namespace hidra2 {
 class FolderDataBroker final : public hidra2::DataBroker {
   public:
     explicit FolderDataBroker(const std::string& source_name);
-    WorkerErrorCode Connect() override;
-    WorkerErrorCode GetNext(FileInfo* info, FileData* data) override;
+    Error Connect() override;
+    Error GetNext(FileInfo* info, FileData* data) override;
 
     std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
 
@@ -23,7 +23,7 @@ class FolderDataBroker final : public hidra2::DataBroker {
     bool is_connected_;
     int current_file_;
     FileInfos  filelist_;
-    WorkerErrorCode CanGetData(FileInfo* info, FileData* data, int nfile) const noexcept;
+    Error CanGetData(FileInfo* info, FileData* data, int nfile) const noexcept;
     std::mutex mutex_;
 };
 
