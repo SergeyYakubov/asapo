@@ -16,8 +16,7 @@ Error IOErrorFromGetLastError() {
     const char* message;
     switch (GetLastError()) {
     case ERROR_SUCCESS :
-        message = IOErrors::kNoError;
-        break;
+        return nullptr;
     case ERROR_PATH_NOT_FOUND:
     case ERROR_FILE_NOT_FOUND:
         message = IOErrors::kFileNotFound;
@@ -84,7 +83,7 @@ bool IsDirectory(const WIN32_FIND_DATA f) {
 }
 
 void ProcessFileEntity(const WIN32_FIND_DATA f, const std::string& path,
-                       FileInfos* files, Errors* err) {
+                       FileInfos* files, Error* err) {
 
     *err = nullptr;
     if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {

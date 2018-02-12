@@ -2,6 +2,7 @@
 #define HIDRA2_ERROR_H
 
 #include <string>
+#include <memory>
 
 namespace hidra2 {
 
