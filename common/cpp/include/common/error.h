@@ -10,6 +10,8 @@ class ErrorInterface {
   public:
     virtual std::string Explain() const noexcept = 0;
     virtual void Set(const std::string& error) noexcept = 0;
+    virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
+
 };
 
 using Error = std::unique_ptr<ErrorInterface>;
