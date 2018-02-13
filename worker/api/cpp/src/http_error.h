@@ -8,7 +8,7 @@ namespace hidra2 {
 
 class HttpError: public SimpleError {
   public:
-    HttpError(const std::string& error, HttpCode http_code): SimpleError{error}, http_code_{http_code} {
+    HttpError(const std::string& error, HttpCode http_code): SimpleError{error, ErrorType::kHttpError}, http_code_{http_code} {
     }
     HttpCode GetCode() const {
         return http_code_;

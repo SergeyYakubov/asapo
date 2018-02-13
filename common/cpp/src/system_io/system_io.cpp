@@ -47,6 +47,7 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, Err
     int fd = open(fname.c_str(), O_RDONLY);
     *err = IOErrorFromErrno();
     if (*err != nullptr) {
+        (*err)->Append(fname);
         return nullptr;
     }
     uint8_t* data_array = nullptr;
@@ -61,6 +62,7 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, Err
     FileData data{data_array};
     if (*err != nullptr) {
         close(fd);
+        (*err)->Append(fname);
         return nullptr;
     }
     errno = 0;

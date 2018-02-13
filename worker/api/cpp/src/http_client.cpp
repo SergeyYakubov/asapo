@@ -15,7 +15,7 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
         break;
     case HttpCode::NoContent:
         message = WorkerErrorMessage::kNoData;
-        break;
+        return TextErrorWithType(message, ErrorType::kEOF);
     case HttpCode::NotFound:
         message = WorkerErrorMessage::kSourceNotFound;
         break;

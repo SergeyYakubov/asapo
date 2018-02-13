@@ -13,7 +13,7 @@
 namespace hidra2 {
 
 namespace IOErrors {
-auto const kFileNotFound = "File not found";
+auto const kFileNotFound = "No such file or directory";
 auto const kReadError = "Read error";
 auto const kPermissionDenied = "Permission denied";
 auto const kUnknownError = "Unknown error";

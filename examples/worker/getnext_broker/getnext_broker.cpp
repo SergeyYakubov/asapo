@@ -18,15 +18,24 @@ void WaitThreads(std::vector<std::thread>* threads) {
     }
 }
 
+void ProcessError(const Error& err) {
+    if (err == nullptr) return;
+    if (err->GetErrorType() != hidra2::ErrorType::kEOF) {
+        std::cout << err->Explain() << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
 std::vector<std::thread> StartThreads(const std::string& server, const std::string& run_name, int nthreads,
                                       std::vector<int>* nfiles) {
     auto exec_next = [server, run_name, nfiles](int i) {
         hidra2::FileInfo fi;
         Error err;
         auto broker = hidra2::DataBrokerFactory::CreateServerBroker(server, run_name, &err);
-        while (broker->GetNext(&fi, nullptr) == nullptr) {
+        while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             (*nfiles)[i] ++;
         }
+        ProcessError(err);
     };
 
     std::vector<std::thread> threads;

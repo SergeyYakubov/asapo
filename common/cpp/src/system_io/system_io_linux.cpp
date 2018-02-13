@@ -94,6 +94,7 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = IOErrorFromErrno();
+        (*err)->Append(path);
         return;
     }
     while (true) {

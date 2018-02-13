@@ -24,6 +24,7 @@ using hidra2::SimpleError;
 
 using ::testing::AtLeast;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::Ne;
 using ::testing::Test;
 using ::testing::_;
@@ -99,9 +100,23 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsErrorFromHttpClient) {
 
     auto err = data_broker->GetNext(&info, nullptr);
 
-    ASSERT_THAT(err->Explain(), Eq(hidra2::WorkerErrorMessage::kSourceNotFound));
+    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::WorkerErrorMessage::kSourceNotFound));
+    ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kHttpError);
     ASSERT_THAT(dynamic_cast<HttpError*>(err.get())->GetCode(), Eq(HttpCode::NotFound));
 }
+
+TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClient) {
+    EXPECT_CALL(mock_http_client, Get_t(_, _, _)).WillOnce(DoAll(
+                SetArgPointee<1>(HttpCode::NoContent),
+                SetArgPointee<2>(nullptr),
+                Return("")));
+
+    auto err = data_broker->GetNext(&info, nullptr);
+
+    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::WorkerErrorMessage::kNoData));
+    ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kEOF);
+}
+
 
 FileInfo CreateFI() {
     FileInfo fi;

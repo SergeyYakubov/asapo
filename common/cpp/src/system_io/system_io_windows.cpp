@@ -108,6 +108,7 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {
         *err = IOErrorFromGetLastError();
+        (*err)->Append(path);
         return;
     }
 

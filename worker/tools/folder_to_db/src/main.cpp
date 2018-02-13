@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
     auto err = importer.Convert(import_params.uri, import_params.folder, import_params.db_name,
                                 &statistics);
     if (err != nullptr) {
-        std::cout << "Error import to database" << std::endl;
+        std::cout << "Error import to database: " << err->Explain() << std::endl;
         return 1;
     }
 

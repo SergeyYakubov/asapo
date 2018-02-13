@@ -26,6 +26,7 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string&
 
     err = HttpCodeToWorkerError(code);
     if (err != nullptr) {
+        err->Append(responce);
         return err;
     }
 

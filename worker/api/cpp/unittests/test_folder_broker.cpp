@@ -195,6 +195,8 @@ TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
     FileInfo fi;
 
     auto err = data_broker->GetNext(&fi, nullptr);
+    ASSERT_THAT(err->GetErrorType(), Eq(hidra2::ErrorType::kEOF));
+
     ASSERT_THAT(err->Explain(), Eq(hidra2::WorkerErrorMessage::kNoData));
 }
 

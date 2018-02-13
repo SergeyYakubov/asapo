@@ -41,7 +41,7 @@ void ConnectToBrocker(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* s
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     Error err = (*broker)->Connect();
     if (err != nullptr) {
-        std::cout << "Cannot connect to broker" << std::endl;
+        std::cout << err->Explain() << std::endl;
         exit(EXIT_FAILURE);
     }
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -60,8 +60,8 @@ void ReadAllData(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* statis
         nfiles++;
         size += file_info.size;
     }
-    if (err->Explain() != hidra2::WorkerErrorMessage::kNoData) {
-        std::cout << "Read error" << std::endl;
+    if (err->GetErrorType() != hidra2::ErrorType::kEOF) {
+        std::cout << err->Explain() << std::endl;
         exit(EXIT_FAILURE);
     }
 

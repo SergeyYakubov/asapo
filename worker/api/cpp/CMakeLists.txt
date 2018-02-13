@@ -13,7 +13,7 @@ set(SOURCE_FILES
 # Library
 ################################
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>
-        $<TARGET_OBJECTS:data_structs>)
+            $<TARGET_OBJECTS:data_structs>)
 
 set (CMAKE_PREFIX_PATH "${LIBCURL_DIR}")
 find_package (CURL REQUIRED)
