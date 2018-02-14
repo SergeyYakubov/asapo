@@ -1,8 +1,6 @@
 #include "common/data_structs.h"
 
-#include "rapidjson/document.h"
-
-using namespace rapidjson;
+#include "json_parser/json_parser.h"
 
 namespace hidra2 {
 
@@ -18,21 +16,10 @@ std::string FileInfo::Json() const {
     return s;
 }
 
-bool IntFromJson(const Document& d, const std::string name, uint64_t* val) {
-    auto iterator = d.FindMember(name.c_str());
-    if (iterator == d.MemberEnd()) {
-        return false;
-    }
-    if (iterator->value.IsInt64()) {
-        *val = iterator->value.GetInt64();
-        return true;
-    }
-    return false;
-}
 
-bool TimeFromJson(const Document& d, const std::string name, std::chrono::system_clock::time_point* val) {
+bool TimeFromJson(const JsonStringParser& parser, const std::string name, std::chrono::system_clock::time_point* val) {
     uint64_t nanoseconds_from_epoch;
-    if (!IntFromJson(d, name, &nanoseconds_from_epoch)) {
+    if (parser.GetUInt64(name, &nanoseconds_from_epoch)) {
         return false;
     }
 
@@ -43,31 +30,18 @@ bool TimeFromJson(const Document& d, const std::string name, std::chrono::system
     return true;
 }
 
-bool StringFromJson(const Document& d, const std::string name, std::string* val) {
-    auto iterator = d.FindMember(name.c_str());
-    if (iterator == d.MemberEnd()) {
-        return false;
-    }
-    if (iterator->value.IsString()) {
-        *val = iterator->value.GetString();
-        return true;
-    }
-    return false;
-}
+
 
 bool FileInfo::SetFromJson(const std::string& json_string) {
     auto old = *this;
 
-    Document d;
-    if ( d.Parse(json_string.c_str()).HasParseError()) {
-        return false;
-    }
+    JsonStringParser parser(json_string);
 
-    if (!IntFromJson(d, "_id", &id) ||
-            !IntFromJson(d, "size", &size) ||
-            !StringFromJson(d, "base_name", &base_name) ||
-            !StringFromJson(d, "relative_path", &relative_path) ||
-            !TimeFromJson(d, "lastchange", &modify_date)) {
+    if (parser.GetUInt64("_id", &id) ||
+            parser.GetUInt64("size", &size) ||
+            parser.GetString("base_name", &base_name) ||
+            parser.GetString("relative_path", &relative_path) ||
+            !TimeFromJson(parser, "lastchange", &modify_date)) {
         *this = old;
         return false;
     }
