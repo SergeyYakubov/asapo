@@ -2,21 +2,32 @@
 
 using namespace rapidjson;
 
+#include "system_wrappers/system_io.h"
+
 namespace hidra2 {
 
-RapidJson::RapidJson(const std::string& json): json_{json} {
+RapidJson::RapidJson(const std::string& json, bool read_from_file): io__{new SystemIO}, json_{json}, read_from_file_{read_from_file} {
 
 }
 
-bool RapidJson::LazyInitialize()const noexcept {
+Error RapidJson::LazyInitialize()const noexcept {
     if (initialized_)
-        return true;
+        return nullptr;
 
-    if ( doc_.Parse(json_.c_str()).HasParseError()) {
-        return false;
+    auto str = json_;
+    if (read_from_file_) {
+        Error err;
+        str = io__->ReadFileToString(json_, &err);
+        if (err != nullptr) {
+            return err;
+        }
     }
 
-    return true;
+    if ( doc_.Parse(str.c_str()).HasParseError()) {
+        return TextError("Cannot parse document");
+    }
+
+    return nullptr;
 
 }
 
@@ -39,8 +50,8 @@ hidra2::Error CheckValueType(const std::string& name, ValueType type, const Valu
 
 
 hidra2::Error RapidJson::GetValue(const std::string& name, ValueType type, Value* val)const noexcept {
-    if (!LazyInitialize()) {
-        return TextError("cannot parse document");
+    if (Error err = LazyInitialize()) {
+        return err;
     }
 
     auto iterator = doc_.FindMember(name.c_str());

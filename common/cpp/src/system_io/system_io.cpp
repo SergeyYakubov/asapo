@@ -1,5 +1,7 @@
 #include <fcntl.h>
 #include <iostream>
+#include <fstream>      // std::ifstream
+#include <sstream>
 #include <cerrno>
 #include <cstring>
 #include <algorithm>
@@ -42,14 +44,18 @@ uint64_t SystemIO::Read(int fd, uint8_t* array, uint64_t fsize, Error* err) cons
     return totalbytes;
 }
 
-FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const noexcept {
+int SystemIO::OpenFile(const std::string& fname, Error* err) const noexcept {
     errno = 0;
     int fd = open(fname.c_str(), O_RDONLY);
     *err = IOErrorFromErrno();
     if (*err != nullptr) {
         (*err)->Append(fname);
-        return nullptr;
+        return 0;
     }
+    return fd;
+}
+
+uint8_t* AllocateArray(uint64_t fsize, Error* err) {
     uint8_t* data_array = nullptr;
     try {
         data_array = new uint8_t[fsize];
@@ -57,22 +63,29 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, Err
         *err = TextError(IOErrors::kMemoryAllocationError);
         return nullptr;
     }
+    return data_array;
+}
+
+FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const noexcept {
+    auto fd = OpenFile(fname, err);
+    if (*err != nullptr) {
+        return nullptr;
+    }
+
+    auto data_array = AllocateArray(fsize, err);
+    if (*err != nullptr) {
+        return nullptr;
+    }
 
     Read(fd, data_array, fsize, err);
-    FileData data{data_array};
     if (*err != nullptr) {
         close(fd);
         (*err)->Append(fname);
         return nullptr;
     }
-    errno = 0;
-    close(fd);
-    *err = IOErrorFromErrno();
-    if (*err != nullptr) {
-        return nullptr;
-    }
 
-    return data;
+    close(fd);
+    return FileData{data_array};
 }
 
 void SortFileList(FileInfos* file_list) {
@@ -85,7 +98,7 @@ void SortFileList(FileInfos* file_list) {
 void StripBasePath(const std::string& folder, FileInfos* file_list) {
     auto n_erase = folder.size() + 1;
     for (auto& file : *file_list) {
-        file.relative_path.erase(0, n_erase);
+        file.name.erase(0, n_erase);
     }
 }
 
@@ -108,6 +121,21 @@ FileInfos SystemIO::FilesInFolder(const std::string& folder, Error* err) const {
     AssignIDs(&files);
     return files;
 }
+
+std::string SystemIO::ReadFileToString(const std::string& fname, Error* err)const noexcept {
+    auto info =  GetFileInfo(fname, err);
+    if (*err != nullptr) {
+        return "";
+    }
+
+    auto data = GetDataFromFile(fname, info.size, err);
+    if (*err != nullptr) {
+        return "";
+    }
+
+    return std::string(reinterpret_cast<const char*>(data.get()), info.size);
+}
+
 
 
 }

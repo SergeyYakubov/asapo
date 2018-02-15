@@ -10,14 +10,13 @@ std::string FileInfo::Json() const {
                                   time_since_epoch().count();
     std::string s = "{\"_id\":" + std::to_string(id) + ","
                     "\"size\":" + std::to_string(size) + ","
-                    "\"base_name\":\"" + base_name + "\","
-                    "\"lastchange\":" + std::to_string(nanoseconds_from_epoch) + ","
-                    "\"relative_path\":\"" + relative_path + "\"}";
+                    "\"name\":\"" + name + "\","
+                    "\"lastchange\":" + std::to_string(nanoseconds_from_epoch) + "}";
     return s;
 }
 
 
-bool TimeFromJson(const JsonStringParser& parser, const std::string name, std::chrono::system_clock::time_point* val) {
+bool TimeFromJson(const JsonParser& parser, const std::string name, std::chrono::system_clock::time_point* val) {
     uint64_t nanoseconds_from_epoch;
     if (parser.GetUInt64(name, &nanoseconds_from_epoch)) {
         return false;
@@ -35,12 +34,11 @@ bool TimeFromJson(const JsonStringParser& parser, const std::string name, std::c
 bool FileInfo::SetFromJson(const std::string& json_string) {
     auto old = *this;
 
-    JsonStringParser parser(json_string);
+    JsonParser parser(json_string, false);
 
     if (parser.GetUInt64("_id", &id) ||
             parser.GetUInt64("size", &size) ||
-            parser.GetString("base_name", &base_name) ||
-            parser.GetString("relative_path", &relative_path) ||
+            parser.GetString("name", &name) ||
             !TimeFromJson(parser, "lastchange", &modify_date)) {
         *this = old;
         return false;
@@ -52,8 +50,7 @@ bool FileInfo::SetFromJson(const std::string& json_string) {
 std::string FileInfo::FullName(const std::string& base_path) {
     std::string full_name;
     full_name = base_path.empty() ? "" : base_path + "/";
-    full_name += relative_path.empty() ? "" : relative_path + "/";
-    return full_name + base_name;
+    return full_name + name;
 }
 
 }

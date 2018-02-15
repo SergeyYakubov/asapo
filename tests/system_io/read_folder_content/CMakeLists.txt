@@ -16,9 +16,9 @@ set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 add_test_setup_cleanup(${TARGET_NAME})
 IF(WIN32)
-    add_integration_test(${TARGET_NAME} create_list "test 23subtest\\subtest241")
+    add_integration_test(${TARGET_NAME} create_list "test 23subtest\\subtest2\\41")
 ELSE()
-    add_integration_test(${TARGET_NAME} create_list "test 23subtest/subtest241")
+    add_integration_test(${TARGET_NAME} create_list "test 23subtest/subtest2/41")
 ENDIF(WIN32)
 
 

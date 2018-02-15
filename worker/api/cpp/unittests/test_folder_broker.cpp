@@ -38,6 +38,11 @@ TEST(FolderDataBroker, SetCorrectIO) {
 class FakeIO: public IO {
   public:
 
+    virtual std::string ReadFileToString(const std::string& fname, Error* err)const noexcept  override {
+        return "OK";
+    }
+
+
     virtual uint8_t* GetDataFromFileProxy(const std::string& fname, uint64_t fsize, SimpleError** err) const {
         *err = nullptr;
         return nullptr;
@@ -66,11 +71,11 @@ class FakeIO: public IO {
         FileInfos file_infos;
         FileInfo fi;
         fi.size = 100;
-        fi.base_name = "1";
+        fi.name = "1";
         file_infos.push_back(fi);
-        fi.base_name = "2";
+        fi.name = "2";
         file_infos.push_back(fi);
-        fi.base_name = "3";
+        fi.name = "3";
         file_infos.push_back(fi);
         return file_infos;
     }
@@ -173,7 +178,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
     auto err = data_broker->GetNext(&fi, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(fi.base_name, Eq("1"));
+    ASSERT_THAT(fi.name, Eq("1"));
     ASSERT_THAT(fi.size, Eq(100));
 
 }
@@ -186,7 +191,7 @@ TEST_F(FolderDataBrokerTests, SecondNextReturnsAnotherFileInfo) {
     auto err = data_broker->GetNext(&fi, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(fi.base_name, Eq("2"));
+    ASSERT_THAT(fi.name, Eq("2"));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
@@ -250,7 +255,7 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
     data_broker->GetNext(&fi, &data);
 
     ASSERT_THAT(data[0], Eq('1'));
-    ASSERT_THAT(fi.base_name, Eq("1"));
+    ASSERT_THAT(fi.name, Eq("1"));
 
 }
 

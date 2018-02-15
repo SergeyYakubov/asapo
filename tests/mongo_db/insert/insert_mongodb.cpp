@@ -39,9 +39,8 @@ int main(int argc, char* argv[]) {
 
     hidra2::FileInfo fi;
     fi.size = 100;
-    fi.base_name = "1";
+    fi.name = "relpath/1";
     fi.id = args.file_id;
-    fi.relative_path = "relpath";
     fi.modify_date = std::chrono::system_clock::now();
 
     if (args.keyword != "Notconnected") {

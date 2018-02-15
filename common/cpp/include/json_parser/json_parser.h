@@ -10,10 +10,10 @@ namespace hidra2 {
 
 class RapidJson;
 
-class JsonStringParser {
+class JsonParser {
   public:
-    JsonStringParser(const std::string& json);
-    ~JsonStringParser();
+    JsonParser(const std::string& json, bool read_from_file);
+    ~JsonParser();
     Error GetUInt64(const std::string& name, uint64_t* val) const noexcept;
     Error GetString(const std::string& name, std::string* val) const noexcept;
   private:
