@@ -5,15 +5,15 @@ set(SOURCE_FILES
         src/http_client.cpp
         src/folder_data_broker.cpp
         src/server_data_broker.cpp
-        src/broker_helpers.cpp
-        src/curl_http_client.cpp)
+        src/curl_http_client.cpp
+        src/http_error.cpp)
 
 
 ################################
 # Library
 ################################
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>
-        $<TARGET_OBJECTS:data_structs>)
+            $<TARGET_OBJECTS:data_structs>)
 
 set (CMAKE_PREFIX_PATH "${LIBCURL_DIR}")
 find_package (CURL REQUIRED)

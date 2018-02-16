@@ -8,8 +8,6 @@
 using hidra2::M_AssertEq;
 using hidra2::M_AssertTrue;
 
-using hidra2::WorkerErrorCode;
-
 void Assert(std::vector<hidra2::FileInfo> file_infos, int nthreads) {
     int nfiles = (int) file_infos.size();
     M_AssertEq(nthreads, nfiles);
@@ -41,7 +39,7 @@ Args GetArgs(int argc, char* argv[]) {
 }
 
 void GetAllFromBroker(const Args& args) {
-    hidra2::WorkerErrorCode err;
+    hidra2::Error err;
     auto broker = hidra2::DataBrokerFactory::CreateFolderBroker(args.folder, &err);
     broker->Connect();
 

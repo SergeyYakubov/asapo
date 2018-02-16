@@ -8,8 +8,8 @@
 
 #include "hidra2_worker.h"
 
-using hidra2::WorkerErrorCode;
 using std::chrono::high_resolution_clock;
+using hidra2::Error;
 
 struct Statistics {
     std::chrono::milliseconds duration_scan;
@@ -27,9 +27,9 @@ std::string ProcessCommandArguments(int argc, char* argv[]) {
 }
 
 std::unique_ptr<hidra2::DataBroker> CreateBroker(const std::string& folder) {
-    hidra2::WorkerErrorCode err;
+    Error err;
     auto broker = hidra2::DataBrokerFactory::CreateFolderBroker(folder, &err);
-    if (err != WorkerErrorCode::kOK) {
+    if (err != nullptr) {
         std::cout << "Cannot create broker" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -38,11 +38,10 @@ std::unique_ptr<hidra2::DataBroker> CreateBroker(const std::string& folder) {
 }
 
 void ConnectToBrocker(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* statistics) {
-    hidra2::WorkerErrorCode err;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    err = (*broker)->Connect();
-    if (err != WorkerErrorCode::kOK) {
-        std::cout << "Cannot connect to broker" << std::endl;
+    Error err = (*broker)->Connect();
+    if (err != nullptr) {
+        std::cout << err->Explain() << std::endl;
         exit(EXIT_FAILURE);
     }
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -50,19 +49,19 @@ void ConnectToBrocker(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* s
 }
 
 void ReadAllData(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* statistics) {
-    hidra2::WorkerErrorCode err;
+    Error err;
     hidra2::FileInfo file_info;
     hidra2::FileData file_data;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     int nfiles = 0;
     uint64_t size = 0;
-    while ((err = (*broker)->GetNext(&file_info, &file_data)) == WorkerErrorCode::kOK) {
+    while ((err = (*broker)->GetNext(&file_info, &file_data)) == nullptr) {
         nfiles++;
         size += file_info.size;
     }
-    if (err != WorkerErrorCode::kNoData) {
-        std::cout << "Read error" << std::endl;
+    if (err->GetErrorType() != hidra2::ErrorType::kEOF) {
+        std::cout << err->Explain() << std::endl;
         exit(EXIT_FAILURE);
     }
 

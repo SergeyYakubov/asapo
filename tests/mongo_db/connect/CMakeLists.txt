@@ -14,7 +14,7 @@ target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR
 ################################
 
 add_integration_test(${TARGET_NAME} connectOK "127.0.0.1 data test OK")
-add_integration_test(${TARGET_NAME} connectFAILS "127.0.0.0 data test ConnectionError")
-add_integration_test(${TARGET_NAME} connectBadAddress "#?ß// data test BadAddress")
+add_integration_test(${TARGET_NAME} connectFAILS "127.0.0.0 data test Connectionerror")
+add_integration_test(${TARGET_NAME} connectBadAddress "#?ß// data test Badaddress")
 
 

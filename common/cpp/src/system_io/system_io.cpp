@@ -9,27 +9,26 @@
 
 namespace hidra2 {
 
-IOErrors IOErrorFromErrno() {
-    IOErrors err;
+Error IOErrorFromErrno() {
+    const char* message;
     switch (errno) {
     case 0:
-        err = IOErrors::kNoError;
-        break;
+        return nullptr;
     case ENOENT:
     case ENOTDIR:
-        err = IOErrors::kFileNotFound;
+        message = IOErrors::kFileNotFound;
         break;
     case EACCES:
-        err = IOErrors::kPermissionDenied;
+        message = IOErrors::kPermissionDenied;
         break;
     default:
-        err = IOErrors::kUnknownError;
+        message = IOErrors::kUnknownError;
         break;
     }
-    return err;
+    return TextError(message);
 }
 
-uint64_t SystemIO::Read(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) const noexcept {
+uint64_t SystemIO::Read(int fd, uint8_t* array, uint64_t fsize, Error* err) const noexcept {
     uint64_t totalbytes = 0;
     int64_t readbytes = 0;
     do {
@@ -38,36 +37,38 @@ uint64_t SystemIO::Read(int fd, uint8_t* array, uint64_t fsize, IOErrors* err) c
     } while (readbytes > 0 && totalbytes < fsize);
 
     if (totalbytes != fsize) {
-        *err = IOErrors::kReadError;
+        *err = TextError(IOErrors::kReadError);
     }
     return totalbytes;
 }
 
-FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const noexcept {
+FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const noexcept {
     errno = 0;
     int fd = open(fname.c_str(), O_RDONLY);
     *err = IOErrorFromErrno();
-    if (*err != IOErrors::kNoError) {
+    if (*err != nullptr) {
+        (*err)->Append(fname);
         return nullptr;
     }
     uint8_t* data_array = nullptr;
     try {
         data_array = new uint8_t[fsize];
     } catch (...) {
-        *err = IOErrors::kMemoryAllocationError;
+        *err = TextError(IOErrors::kMemoryAllocationError);
         return nullptr;
     }
 
     Read(fd, data_array, fsize, err);
     FileData data{data_array};
-    if (*err != IOErrors::kNoError) {
+    if (*err != nullptr) {
         close(fd);
+        (*err)->Append(fname);
         return nullptr;
     }
     errno = 0;
     close(fd);
     *err = IOErrorFromErrno();
-    if (*err != IOErrors::kNoError) {
+    if (*err != nullptr) {
         return nullptr;
     }
 
@@ -96,10 +97,10 @@ void AssignIDs(FileInfos* file_list) {
 }
 
 
-FileInfos SystemIO::FilesInFolder(const std::string& folder, IOErrors* err) const {
+FileInfos SystemIO::FilesInFolder(const std::string& folder, Error* err) const {
     FileInfos files{};
     CollectFileInformationRecursivly(folder, &files, err);
-    if (*err != IOErrors::kNoError) {
+    if (*err != nullptr) {
         return {};
     }
     StripBasePath(folder, &files);

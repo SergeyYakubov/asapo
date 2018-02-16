@@ -6,16 +6,19 @@
 #include "testing.h"
 
 using hidra2::M_AssertEq;
-using hidra2::WorkerErrorCode;
 
-void Assert(std::vector<WorkerErrorCode>& errors, int nthreads) {
+void Assert(std::vector<hidra2::Error>& errors, int nthreads) {
     int count_ok = (int) std::count(std::begin(errors),
                                     std::end(errors),
-                                    WorkerErrorCode::kOK);
+                                    nullptr);
 
-    int count_already_connected = (int) std::count(std::begin(errors),
-                                                   std::end(errors),
-                                                   WorkerErrorCode::kSourceAlreadyConnected);
+    int count_already_connected = 0;
+    for (auto& error : errors) {
+        if (!error) continue;
+        if (error->Explain().find(hidra2::WorkerErrorMessage::kSourceAlreadyConnected) != std::string::npos)
+            count_already_connected++;
+    }
+
     M_AssertEq(1, count_ok);
     M_AssertEq(nthreads - 1, count_already_connected);
 }
@@ -39,10 +42,10 @@ int main(int argc, char* argv[]) {
 
     auto args = GetArgs(argc, argv);
 
-    hidra2::WorkerErrorCode err;
+    hidra2::Error err;
     auto broker = hidra2::DataBrokerFactory::CreateFolderBroker(args.folder, &err);
 
-    std::vector<WorkerErrorCode>errors(args.nthreads, WorkerErrorCode::kUnknownIOError);
+    std::vector<hidra2::Error>errors(args.nthreads);
 
     std::vector<std::thread> threads;
     for (int i = 0; i < args.nthreads; i++) {

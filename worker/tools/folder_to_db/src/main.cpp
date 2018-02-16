@@ -83,8 +83,8 @@ int main(int argc, char* argv[]) {
 
     auto err = importer.Convert(import_params.uri, import_params.folder, import_params.db_name,
                                 &statistics);
-    if (err != hidra2::FolderToDbImportError::kOK) {
-        std::cout << "Error import to database" << std::endl;
+    if (err != nullptr) {
+        std::cout << "Error import to database: " << err->Explain() << std::endl;
         return 1;
     }
 

@@ -1,7 +1,6 @@
 #include "folder_data_broker.h"
 
 #include "system_wrappers/system_io.h"
-#include "broker_helpers.h"
 
 namespace hidra2 {
 
@@ -10,59 +9,61 @@ FolderDataBroker::FolderDataBroker(const std::string& source_name) :
 current_file_{ -1} {
 }
 
-WorkerErrorCode FolderDataBroker::Connect() {
+Error FolderDataBroker::Connect() {
     std::lock_guard<std::mutex> lock{mutex_};
 
     if (is_connected_) {
-        return WorkerErrorCode::kSourceAlreadyConnected;
+        return TextError(WorkerErrorMessage::kSourceAlreadyConnected);
     }
 
-    IOErrors io_err;
-    filelist_ = io__->FilesInFolder(base_path_, &io_err);
+    Error error;
+    filelist_ = io__->FilesInFolder(base_path_, &error);
 
-    if (io_err == IOErrors::kNoError) {
+    if (error == nullptr) {
         is_connected_ = true;
+        return nullptr;
     }
-    return MapIOError(io_err);
+
+    return error;
 }
 
-WorkerErrorCode FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int nfile) const noexcept {
+Error FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int nfile) const noexcept {
     if (!is_connected_) {
-        return WorkerErrorCode::kSourceNotConnected;
+        return TextError(WorkerErrorMessage::kSourceNotConnected);
     }
 
     if (info == nullptr) {
-        return WorkerErrorCode::kWrongInput;
+        return TextError(WorkerErrorMessage::kWrongInput);
     }
 
     if (nfile >= (int) filelist_.size()) {
-        return WorkerErrorCode::kNoData;
+        return Error{TextErrorWithType(WorkerErrorMessage::kNoData, ErrorType::kEOF)};
     }
-    return WorkerErrorCode::kOK;
+    return nullptr;
 }
 
 
-WorkerErrorCode FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
+Error FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
 // could probably use atomic here, but just to make sure (tests showed no performance difference)
     mutex_.lock();
     int nfile_to_get = ++current_file_;
     mutex_.unlock();
 
     auto err = CanGetData(info, data, nfile_to_get);
-    if (err != WorkerErrorCode::kOK) {
+    if (err != nullptr) {
         return err;
     }
 
     *info = filelist_[nfile_to_get];
 
     if (data == nullptr) {
-        return WorkerErrorCode::kOK;
+        return nullptr;
     }
 
-    IOErrors ioerr;
-    *data = io__->GetDataFromFile(info->FullName(base_path_), info->size, &ioerr);
+    Error error;
+    *data = io__->GetDataFromFile(info->FullName(base_path_), info->size, &error);
 
-    return MapIOError(ioerr);
+    return error;
 }
 
 

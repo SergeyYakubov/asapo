@@ -54,7 +54,7 @@ func (db *Mongodb) dataBaseExist(dbname string) (err error) {
 	}
 
 	if !db.databaseInList(dbname) {
-		return errors.New("database not found: " + dbname)
+		return errors.New("dataset not found: " + dbname)
 	}
 
 	return nil

@@ -8,17 +8,17 @@
 
 #include "system_wrappers/io.h"
 #include "database/database.h"
-
+#include "common/error.h"
 namespace hidra2 {
 
-enum class FolderToDbImportError {
-    kOK,
-    kDBConnectionError,
-    kImportError,
-    kIOError,
-    kUnknownDbError,
-    kMemoryError
-};
+namespace FolderToDbImportError {
+
+auto const kDBConnectionError = "DB Connection Error";
+auto const kImportError = "Import Error";
+auto const kUnknownDbError = "Unknown DB Error";
+auto const kMemoryError = "Memory error";
+
+}
 
 struct FolderImportStatistics {
     uint64_t n_files_converted{0};
@@ -40,9 +40,9 @@ class FolderToDbImporter {
 //! Read folder content and write file to the database. We do not optimize
 //! the procedure via bulk write to see the performance of a
 //! single operation (and it is already fast enough)
-    FolderToDbImportError Convert(const std::string& uri, const std::string& folder,
-                                  const std::string& db_name,
-                                  FolderImportStatistics* statistics = nullptr) const;
+    Error Convert(const std::string& uri, const std::string& folder,
+                  const std::string& db_name,
+                  FolderImportStatistics* statistics = nullptr) const;
 
     unsigned int SetNParallelTasks(unsigned int ntasks, bool async = true);
     void IgnoreDuplicates(bool ignore_duplicates = true);
@@ -56,18 +56,18 @@ class FolderToDbImporter {
     bool async_{true};
     mutable std::string db_uri_ ;
     mutable std::string db_name_;
-    FolderToDbImportError ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const;
-    FileInfos GetFilesInFolder(const std::string& folder, FolderToDbImportError* err) const;
-    FolderToDbImportError ImportFilelist(const FileInfos& file_list) const;
-    FolderToDbImportError PerformParallelTask(const FileInfos& file_list, uint64_t begin,
-                                              uint64_t end) const;
-    FolderToDbImportError ImportSingleFile(const std::unique_ptr<hidra2::Database>& db,
-                                           const FileInfo& file) const;
-    FolderToDbImportError ImportFilelistChunk(const std::unique_ptr<hidra2::Database>& db,
-                                              const FileInfos& file_list, uint64_t begin, uint64_t end) const;
+    Error ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const;
+    FileInfos GetFilesInFolder(const std::string& folder, Error* err) const;
+    Error ImportFilelist(const FileInfos& file_list) const;
+    Error PerformParallelTask(const FileInfos& file_list, uint64_t begin,
+                              uint64_t end) const;
+    Error ImportSingleFile(const std::unique_ptr<hidra2::Database>& db,
+                           const FileInfo& file) const;
+    Error ImportFilelistChunk(const std::unique_ptr<hidra2::Database>& db,
+                              const FileInfos& file_list, uint64_t begin, uint64_t end) const;
 
-    std::unique_ptr<Database> CreateDbClient(FolderToDbImportError* err) const;
-    void ProcessNextChunk(const FileInfos& file_list, std::vector<std::future<FolderToDbImportError>>* res,
+    std::unique_ptr<Database> CreateDbClient(Error* err) const;
+    void ProcessNextChunk(const FileInfos& file_list, std::vector<std::future<Error>>* res,
                           TaskSplitParameters* p) const;
 
 };

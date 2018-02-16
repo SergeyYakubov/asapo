@@ -7,8 +7,6 @@
 using hidra2::M_AssertEq;
 using hidra2::M_AssertContains;
 
-using hidra2::WorkerErrorCode;
-
 struct Args {
     std::string uri;
     int code;
@@ -31,14 +29,14 @@ int main(int argc, char* argv[]) {
 
     auto args = GetArgs(argc, argv);
 
-    WorkerErrorCode err;
+    hidra2::Error err;
     auto broker = hidra2::DataBrokerFactory::CreateServerBroker(args.uri, "", &err);
     auto server_broker = static_cast<hidra2::ServerDataBroker*>(broker.get());
 
     hidra2::HttpCode code;
     auto responce = server_broker->httpclient__->Get(args.uri, &code, &err);
 
-    if (err != WorkerErrorCode::kOK) {
+    if (err != nullptr) {
         M_AssertEq("clienterror", args.answer);
         M_AssertContains(responce, "Could");
         return 0;

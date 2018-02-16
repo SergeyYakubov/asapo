@@ -5,29 +5,18 @@
 #include "testing.h"
 
 
-using hidra2::M_AssertEq;
-using hidra2::DBError;
+using hidra2::M_AssertContains;
+using hidra2::Error;
 
 
-void Assert(DBError error, const std::string& expect) {
+void Assert(const Error& error, const std::string& expect) {
     std::string result;
-    switch (error) {
-    case DBError::kInsertError:
-        result = "InsertError";
-        break;
-    case DBError::kNotConnected:
-        result = "NotConnected";
-        break;
-    case DBError::kDuplicateID:
-        result = "DuplicateID";
-        break;
-
-    default:
+    if (error == nullptr) {
         result = "OK";
-        break;
+    } else {
+        result = error->Explain();
     }
-
-    M_AssertEq(expect, result);
+    M_AssertContains(result, expect);
 }
 
 struct Args {
@@ -55,7 +44,7 @@ int main(int argc, char* argv[]) {
     fi.relative_path = "relpath";
     fi.modify_date = std::chrono::system_clock::now();
 
-    if (args.keyword != "NotConnected") {
+    if (args.keyword != "Notconnected") {
         db.Connect("127.0.0.1", "data", "test");
     }
 

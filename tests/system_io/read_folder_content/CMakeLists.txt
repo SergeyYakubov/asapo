@@ -22,6 +22,6 @@ ELSE()
 ENDIF(WIN32)
 
 
-add_integration_test(${TARGET_NAME} foldernotfound "test_notexist notfound")
-add_integration_test(${TARGET_NAME} foldernoaccess "test_noaccess1 noaccess")
+add_integration_test(${TARGET_NAME} foldernotfound "test_notexist Nosuchfileordirectory:test_notexist")
+add_integration_test(${TARGET_NAME} foldernoaccess "test_noaccess1 Permissiondenied:test_noaccess1")
 
