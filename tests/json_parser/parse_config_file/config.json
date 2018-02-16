@@ -1,0 +1,14 @@
+{
+  "server":"some_string",
+
+  "port": 10,
+  "//": "This is a way to make comments",
+  "some_array":[1,2,3],
+  "//": "Another comment",
+  "some_string_array":["s1","s2","s3"],
+  "embedded_stuff":
+  {
+    "some_string":"embedded_string",
+    "some_int": 20
+  }
+}

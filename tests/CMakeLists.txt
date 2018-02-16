@@ -4,6 +4,8 @@ find_package(Threads)
 add_subdirectory(common/cpp)
 add_subdirectory(system_io)
 
+add_subdirectory(json_parser)
+
 if(BUILD_MONGODB_CLIENTLIB)
     add_subdirectory(mongo_db)
 endif()

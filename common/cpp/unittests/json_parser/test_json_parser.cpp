@@ -18,6 +18,7 @@ using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::HasSubstr;
+using ::testing::ElementsAre;
 
 using hidra2::JsonParser;
 using hidra2::RapidJson;
@@ -27,7 +28,7 @@ using hidra2::IO;
 
 namespace {
 
-TEST(ParseString, CorrectConvertToJson) {
+TEST(ParseString, SimpleConvertToJson) {
     std::string json = R"({"_id":2,"foo":"foo","bar":1})";
 
     JsonParser parser{json, false};
@@ -48,6 +49,67 @@ TEST(ParseString, CorrectConvertToJson) {
 
 }
 
+TEST(ParseString, EmbeddedConvertToJson) {
+    std::string json = R"({"id":{"test":2}})";
+
+    JsonParser parser{json, false};
+
+    uint64_t id;
+    auto err1 = parser.Embedded("id").GetUInt64("test", &id);
+
+    ASSERT_THAT(err1, Eq(nullptr));
+    ASSERT_THAT(id, Eq(2));
+}
+
+TEST(ParseString, DoubleEmbeddedConvertToJson) {
+    std::string json = R"({"id":{"test":{"test2":2}}})";
+
+    JsonParser parser{json, false};
+
+    uint64_t id;
+    auto err1 = parser.Embedded("id").Embedded("test").GetUInt64("test2", &id);
+
+    ASSERT_THAT(err1, Eq(nullptr));
+    ASSERT_THAT(id, Eq(2));
+}
+
+
+TEST(ParseString, ErrorOnWrongEmbeddedKey) {
+    std::string json = R"({"id1":{"test":2}})";
+
+    JsonParser parser{json, false};
+
+    uint64_t id;
+    auto err = parser.Embedded("id").GetUInt64("test", &id);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err->Explain(), ::testing::HasSubstr("cannot find"));
+}
+
+TEST(ParseString, ErrorOnWrongEmbeddedSubKey) {
+    std::string json = R"({"id1":{"test1":2}})";
+
+    JsonParser parser{json, false};
+
+    uint64_t id;
+    auto err = parser.Embedded("id").GetUInt64("test", &id);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err->Explain(), ::testing::HasSubstr("cannot find"));
+}
+
+
+TEST(ParseString, ErrorOnWrongKey) {
+    std::string json = R"({"_id":"2"})";
+
+    JsonParser parser{json, false};
+
+    uint64_t id;
+    auto err = parser.GetUInt64("_id1", &id);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err->Explain(), ::testing::HasSubstr("cannot find"));
+}
 
 TEST(ParseString, ErrorOnWrongType) {
     std::string json = R"({"_id":"2"})";
@@ -74,6 +136,46 @@ TEST(ParseString, ErrorOnWrongDocument) {
     ASSERT_THAT(err->Explain(), ::testing::HasSubstr("parse"));
 
 }
+
+
+TEST(ParseString, IntArrayConvertToJson) {
+    std::string json = R"({"array":[1,2,3]})";
+
+    JsonParser parser{json, false};
+
+    std::vector<uint64_t> vec;
+    auto err = parser.GetArrayUInt64("array", &vec);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(vec, ElementsAre(1, 2, 3));
+}
+
+
+TEST(ParseString, IntArrayErrorConvertToJson) {
+    std::string json = R"({"array":[1,2,"3"]})";
+
+    JsonParser parser{json, false};
+
+    std::vector<uint64_t> vec;
+    auto err = parser.GetArrayUInt64("array", &vec);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err->Explain(), HasSubstr("type"));
+}
+
+
+TEST(ParseString, StringArrayConvertToJson) {
+    std::string json = R"({"array":["s1","s2","s3"]})";
+
+    JsonParser parser{json, false};
+
+    std::vector<std::string> vec;
+    auto err = parser.GetArrayString("array", &vec);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(vec, ElementsAre("s1", "s2", "s3"));
+}
+
 
 class ParseFileTests : public Test {
   public:
