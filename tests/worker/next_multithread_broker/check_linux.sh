@@ -15,13 +15,13 @@ Cleanup() {
 args=${@:1:$(($# - 1))}
 broker=${@:$#}
 
-$broker &
+$broker settings.json &
 brokerid=`echo $!`
 sleep 0.3
 
 for i in `seq 1 10`;
 do
-	echo 'db.data.insert({"_id":'$i',"size":100,"base_name":"'$i'","lastchange":1,"relative_path":""})' | mongo ${database_name}
+	echo 'db.data.insert({"_id":'$i',"size":100,"name":"'$i'","lastchange":1})' | mongo ${database_name}
 done
 
 $args 127.0.0.1:5005 $database_name 4 10

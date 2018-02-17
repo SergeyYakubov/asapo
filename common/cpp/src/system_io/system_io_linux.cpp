@@ -41,9 +41,8 @@ void SetFileSize(const struct stat& t_stat, FileInfo* file_info) {
     file_info->size = t_stat.st_size;
 }
 
-void SetFileName(const string& path, const string& name, FileInfo* file_info) {
-    file_info->relative_path = path;
-    file_info->base_name = name;
+void SetFileName(const string& name, FileInfo* file_info) {
+    file_info->name = name;
 }
 
 struct stat FileStat(const string& fname, Error* err) {
@@ -56,13 +55,14 @@ struct stat FileStat(const string& fname, Error* err) {
     return t_stat;
 }
 
-FileInfo GetFileInfo(const string& path, const string& name, Error* err) {
+FileInfo GetFileInfo(const string& name, Error* err)  {
     FileInfo file_info;
 
-    SetFileName(path, name, &file_info);
+    SetFileName(name, &file_info);
 
-    auto t_stat = FileStat(path + "/" + name, err);
+    auto t_stat = FileStat(name, err);
     if (*err != nullptr) {
+        (*err)->Append(name);
         return FileInfo{};
     }
 
@@ -74,14 +74,14 @@ FileInfo GetFileInfo(const string& path, const string& name, Error* err) {
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
-                       FileInfos* files, Error* err) {
+                       FileInfos* files, Error* err)  {
 
     *err = nullptr;
     if (entity->d_type != DT_REG) {
         return;
     }
 
-    FileInfo file_info = GetFileInfo(path, entity->d_name, err);
+    FileInfo file_info = GetFileInfo(path + "/" + entity->d_name, err);
     if (*err != nullptr) {
         return;
     }

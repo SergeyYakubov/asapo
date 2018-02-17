@@ -17,7 +17,7 @@ void Assert(std::vector<hidra2::FileInfos> file_infos, int nthreads, int nfiles)
     for (int i = 0; i < nthreads; i++) {
         nfiles_read += file_infos[i].size();
         for (const auto& fi : file_infos[i]) {
-            result.push_back(fi.base_name);
+            result.push_back(fi.name);
         }
     }
     // file names created by setup.sh should be '1','2',... Each thread should access different files.

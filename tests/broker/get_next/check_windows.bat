@@ -7,7 +7,7 @@ echo db.data.insert({"_id":2}) | %mongo_exe% %database_name%  || goto :error
 set full_name="%1"
 set short_name="%~nx1"
 
-start /B "" "%full_name%"
+start /B "" "%full_name%" settings.json
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 

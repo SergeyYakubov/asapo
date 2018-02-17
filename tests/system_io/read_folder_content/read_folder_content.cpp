@@ -26,7 +26,10 @@ int main(int argc, char* argv[]) {
         int64_t id = 0;
         for(auto file_info : files) {
             M_AssertEq(file_info.id, ++id);
-            result += file_info.relative_path + file_info.base_name;
+            if (file_info.name == "1") {
+                M_AssertEq(4, file_info.size);
+            }
+            result += file_info.name;
         }
     } else {
         result = err->Explain();

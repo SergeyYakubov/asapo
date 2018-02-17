@@ -56,7 +56,7 @@ Error ProcessCurlResponce(CURL* curl, CURLcode res, const char* errbuf,
         return nullptr;
     } else {
         *buffer = GetCurlError(curl, res, errbuf);
-        return TextError(WorkerErrorMessage::kErrorReadingSource);
+        return TextError(std::string(WorkerErrorMessage::kErrorReadingSource) + ": " + *buffer);
     }
 }
 

@@ -24,8 +24,7 @@ FileInfo PrepareFileInfo() {
     FileInfo finfo;
     finfo.size = 100;
     finfo.id = 1;
-    finfo.relative_path = "relative_path";
-    finfo.base_name = "base_name";
+    finfo.name = "name";
     finfo.modify_date = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
     return finfo;
 }
@@ -34,7 +33,7 @@ TEST(FileInFo, CorrectConvertToJson) {
     auto finfo = PrepareFileInfo();
     std::string json = finfo.Json();
     ASSERT_THAT(json, Eq(
-                    R"({"_id":1,"size":100,"base_name":"base_name","lastchange":1000000,"relative_path":"relative_path"})"));
+                    R"({"_id":1,"size":100,"name":"name","lastchange":1000000})"));
 }
 
 TEST(FileInFo, CorrectConvertFromJsonReturnsError) {
@@ -59,10 +58,9 @@ TEST(FileInFo, CorrectConvertFromJson) {
     FileInfo result;
     auto ok = result.SetFromJson(json);
     ASSERT_THAT(result.id, Eq(finfo.id));
-    ASSERT_THAT(result.base_name, Eq(finfo.base_name));
+    ASSERT_THAT(result.name, Eq(finfo.name));
     ASSERT_THAT(result.size, Eq(finfo.size));
     ASSERT_THAT(result.modify_date, Eq(finfo.modify_date));
-    ASSERT_THAT(result.relative_path, Eq(finfo.relative_path));
     ASSERT_THAT(ok, Eq(true));
 
 }

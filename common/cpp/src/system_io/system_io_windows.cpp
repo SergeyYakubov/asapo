@@ -6,6 +6,9 @@
 #include <io.h>
 #include <windows.h>
 
+#include <fcntl.h>
+
+
 using std::string;
 using std::vector;
 using std::chrono::system_clock;
@@ -82,7 +85,41 @@ bool IsDirectory(const WIN32_FIND_DATA f) {
            strstr(f.cFileName, ".") == nullptr;
 }
 
-void ProcessFileEntity(const WIN32_FIND_DATA f, const std::string& path,
+FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* err)  {
+    FileInfo file_info;
+
+    file_info.modify_date = FileTime2TimePoint(f.ftLastWriteTime, err);
+    if (*err) {
+        return {};
+    }
+
+    ULARGE_INTEGER fsize;
+    fsize.LowPart = f.nFileSizeLow;
+    fsize.HighPart = f.nFileSizeHigh;
+
+    file_info.size = fsize.QuadPart;
+
+    file_info.name = name + "\\" + f.cFileName;
+
+    return file_info;
+}
+
+
+FileInfo GetFileInfo(const string& name, Error* err) {
+    WIN32_FIND_DATA f;
+
+    auto hFind = FindFirstFile(name.c_str() , &f);
+    if (hFind == INVALID_HANDLE_VALUE) {
+        *err = IOErrorFromGetLastError();
+        (*err)->Append(name);
+        return {};
+    }
+    FindClose(hFind);
+    return GetFileInfo_win(f, name, err);
+}
+
+
+void ProcessFileEntity(const WIN32_FIND_DATA& f, const std::string& path,
                        FileInfos* files, Error* err) {
 
     *err = nullptr;
@@ -90,14 +127,11 @@ void ProcessFileEntity(const WIN32_FIND_DATA f, const std::string& path,
         return;
     }
 
-    FileInfo file_info;
-    file_info.modify_date = FileTime2TimePoint(f.ftLastWriteTime, err);
+    auto file_info = GetFileInfo_win(f, path, err);
     if (*err) {
         return;
     }
 
-    file_info.base_name = f.cFileName;
-    file_info.relative_path = path;
     files->push_back(file_info);
 }
 
@@ -129,7 +163,6 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     } else {
         *err = IOErrorFromGetLastError();
     }
-
 }
 
 int64_t SystemIO::read(int __fd, void* buf, size_t count) const noexcept {
@@ -142,7 +175,7 @@ int64_t SystemIO::write(int __fd, const void* __buf, size_t __n) const noexcept 
 
 int SystemIO::open(const char* __file, int __oflag) const noexcept {
     int fd;
-    errno = _sopen_s(&fd, __file, __oflag, _SH_DENYNO, _S_IREAD | _S_IWRITE);
+    errno = _sopen_s(&fd, __file, __oflag | _O_BINARY, _SH_DENYNO, _S_IREAD | _S_IWRITE);
     return fd;
 }
 

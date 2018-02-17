@@ -6,9 +6,16 @@ import (
 
 var db database.Agent
 
+type serverSettings struct {
+	DbAddress string
+	Port      int
+}
+
+var settings serverSettings
+
 func InitDB(dbAgent database.Agent) error {
 	db = dbAgent
-	return db.Connect("127.0.0.1:27017")
+	return db.Connect(settings.DbAddress)
 }
 
 func CleanupDB() {

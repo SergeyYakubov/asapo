@@ -1,0 +1,21 @@
+set(TARGET_NAME read_string_from_file)
+set(SOURCE_FILES read_string_from_file.cpp)
+
+
+################################
+# Executable and link
+################################
+add_executable(${TARGET_NAME} ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> )
+target_link_libraries(${TARGET_NAME} test_common)
+target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR})
+set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+
+################################
+# Testing
+################################
+
+add_test_setup_cleanup(${TARGET_NAME})
+add_integration_test(${TARGET_NAME} readfile "test/1 123")
+add_integration_test(${TARGET_NAME} filenotfound "test_notexist Nosuchfileordirectory:test_notexist")
+add_integration_test(${TARGET_NAME} filenoaccess "file_noaccess Permissiondenied:file_noaccess")
+

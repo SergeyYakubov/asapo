@@ -11,8 +11,7 @@ namespace hidra2 {
 
 class FileInfo {
   public:
-    std::string base_name;
-    std::string relative_path;
+    std::string name;
     std::chrono::system_clock::time_point modify_date;
     uint64_t size{0};
     uint64_t id{0};
@@ -22,9 +21,8 @@ class FileInfo {
 };
 
 inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
-    return  (lhs.base_name == rhs.base_name &&
+    return  (lhs.name == rhs.name &&
              lhs.id == rhs.id &&
-             lhs.relative_path == rhs.relative_path &&
              lhs.modify_date == rhs.modify_date &&
              lhs.size == rhs.size);
 

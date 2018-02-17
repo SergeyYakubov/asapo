@@ -15,7 +15,7 @@ void Assert(std::vector<hidra2::FileInfo> file_infos, int nthreads) {
     std::vector<std::string> expect, result;
     for (int i = 0; i < nthreads; i++) {
         expect.push_back(std::to_string(i));
-        result.push_back(file_infos[i].base_name);
+        result.push_back(file_infos[i].name);
     }
     // file names created by setup.sh should be '0','1',... Each thread should access different file.
     M_AssertTrue(std::is_permutation(expect.begin(), expect.end(), result.begin()));

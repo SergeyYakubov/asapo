@@ -127,11 +127,11 @@ FileInfos CreateTestFileInfos() {
     FileInfos file_infos;
     FileInfo fi;
     fi.size = 100;
-    fi.base_name = "1";
+    fi.name = "1";
     file_infos.push_back(fi);
-    fi.base_name = "2";
+    fi.name = "2";
     file_infos.push_back(fi);
-    fi.base_name = "3";
+    fi.name = "3";
     file_infos.push_back(fi);
     return file_infos;
 }
@@ -227,7 +227,7 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotImportFileListToDb) {
 // (we do not want to create an == operator for FileInfo)
 MATCHER_P(CompareFileInfo, file, "") {
     if (arg.size != file.size) return false;
-    if (arg.base_name != file.base_name) return false;
+    if (arg.name != file.name) return false;
     return true;
 }
 

@@ -1,6 +1,9 @@
 package utils
 
-import "encoding/json"
+import (
+	json "encoding/json"
+	"io/ioutil"
+)
 
 func StringInSlice(a string, list []string) bool {
 	for _, b := range list {
@@ -18,4 +21,17 @@ func MapToJson(res interface{}) ([]byte, error) {
 	} else {
 		return nil, err
 	}
+}
+
+func ReadJsonFromFile(fname string, config interface{}) error {
+	content, err := ioutil.ReadFile(fname)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(content, config)
+	if err != nil {
+		return err
+	}
+	return nil
 }

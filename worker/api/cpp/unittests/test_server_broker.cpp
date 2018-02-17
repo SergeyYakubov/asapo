@@ -122,8 +122,7 @@ FileInfo CreateFI() {
     FileInfo fi;
     fi.size = 100;
     fi.id = 1;
-    fi.relative_path = "relative_path";
-    fi.base_name = "base_name";
+    fi.name = "name";
     fi.modify_date = std::chrono::system_clock::now();
     return fi;
 }
@@ -138,11 +137,10 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsFileInfo) {
 
     ASSERT_THAT(err, Eq(nullptr));
 
-    ASSERT_THAT(info.base_name, Eq(to_send.base_name));
+    ASSERT_THAT(info.name, Eq(to_send.name));
     ASSERT_THAT(info.size, Eq(to_send.size));
     ASSERT_THAT(info.id, Eq(to_send.id));
     ASSERT_THAT(info.modify_date, Eq(to_send.modify_date));
-    ASSERT_THAT(info.relative_path, Eq(to_send.relative_path));
 }
 
 
@@ -168,7 +166,7 @@ TEST_F(ServerDataBrokerTests, GetNextCallsReadFromFile) {
 
     MockGet(json);
 
-    EXPECT_CALL(mock_io, GetDataFromFile_t("relative_path/base_name", 100, _)).
+    EXPECT_CALL(mock_io, GetDataFromFile_t("name", 100, _)).
     WillOnce(DoAll(SetArgPointee<2>(new SimpleError{hidra2::IOErrors::kReadError}), testing::Return(nullptr)));
 
     FileData data;
