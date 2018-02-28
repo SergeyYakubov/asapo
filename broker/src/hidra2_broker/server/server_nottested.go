@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"errors"
 )
 
 func StartStatistics() {
@@ -22,5 +23,25 @@ func Start() {
 }
 
 func ReadConfig(fname string) error {
-	return utils.ReadJsonFromFile(fname, &settings)
+	if err := utils.ReadJsonFromFile(fname, &settings); err != nil {
+		return err
+	}
+
+	if settings.BrokerDbAddress == "" {
+		return errors.New("BrokerDbAddress not set")
+	}
+
+	if settings.MonitorDbAddress == "" {
+		return errors.New("MonitorDbAddress not set")
+	}
+
+	if settings.Port == 0 {
+		return errors.New("Server port not set")
+	}
+
+	if settings.MonitorDbName == "" {
+		return errors.New("MonitorDbName not set")
+	}
+
+	return nil
 }

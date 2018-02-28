@@ -21,7 +21,7 @@ type StatisticInfluxDbWriter struct {
 
 func (writer *StatisticInfluxDbWriter) Write(statistics *serverStatistics) error {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr: "http://localhost:8086",
+		Addr: "http://"+ settings.MonitorDbAddress,
 	})
 	if err != nil {
 		return err
@@ -29,15 +29,14 @@ func (writer *StatisticInfluxDbWriter) Write(statistics *serverStatistics) error
 	defer c.Close()
 
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  "db",
-		Precision: "s",
+		Database:  settings.MonitorDbName,
 	})
 
-	//	tags := map[string]string{"rate": "rate-total"}
+	tags := map[string]string{"Group ID": "0"}
 	fields := map[string]interface{}{
 		"rate": statistics.GetCounter(),
 	}
-	pt, err := client.NewPoint("RequestsRate", nil, fields, time.Now())
+	pt, err := client.NewPoint("RequestsRate", tags, fields, time.Now())
 	if err != nil {
 		return err
 	}

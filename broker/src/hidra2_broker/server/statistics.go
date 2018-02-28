@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"sync"
 )
 
 type statisticsWriter interface {
@@ -12,18 +13,25 @@ type statisticsWriter interface {
 
 type serverStatistics struct {
 	counter int
+	mux sync.Mutex
 	Writer  statisticsWriter
 }
 
 func (st *serverStatistics) IncreaseCounter() {
+	st.mux.Lock()
+	defer st.mux.Unlock()
 	st.counter++
 }
 
 func (st *serverStatistics) GetCounter() int {
+	st.mux.Lock()
+	defer st.mux.Unlock()
 	return st.counter
 }
 
 func (st *serverStatistics) Reset() {
+	st.mux.Lock()
+	defer st.mux.Unlock()
 	st.counter = 0
 }
 
