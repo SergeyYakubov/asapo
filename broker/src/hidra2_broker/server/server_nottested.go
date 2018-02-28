@@ -9,7 +9,14 @@ import (
 	"strconv"
 )
 
+func StartStatistics() {
+	statistics.Writer = new(StatisticInfluxDbWriter)
+	statistics.Reset()
+	go statistics.Monitor()
+}
+
 func Start() {
+	StartStatistics()
 	mux := utils.NewRouter(listRoutes)
 	log.Fatal(http.ListenAndServe("localhost:"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }

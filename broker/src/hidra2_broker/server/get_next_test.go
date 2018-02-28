@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"hidra2_broker/database"
 	"hidra2_broker/utils"
 	"net/http"
@@ -30,45 +31,57 @@ func TestGetNextWithoutDatabaseName(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, w.Code, "no database name")
 }
 
-func ExpectCopyClose(mock_db *database.MockedDatabase){
+func ExpectCopyClose(mock_db *database.MockedDatabase) {
 	mock_db.On("Copy").Return(mock_db)
 	mock_db.On("Close").Return()
 }
 
-func TestGetNextWithWrongDatabaseName(t *testing.T) {
-	mock_db := new(database.MockedDatabase)
-	db = mock_db
-	defer func() { db = nil }()
-	ExpectCopyClose(mock_db)
-	mock_db.On("GetNextRecord", "foo").Return([]byte(""),
+type GetNextTestSuite struct {
+	suite.Suite
+	mock_db *database.MockedDatabase
+}
+
+func (suite *GetNextTestSuite) SetupTest() {
+	statistics.Reset()
+	suite.mock_db = new(database.MockedDatabase)
+	db = suite.mock_db
+	ExpectCopyClose(suite.mock_db)
+}
+
+func (suite *GetNextTestSuite) TearDownTest() {
+	assertExpectations(suite.T(), suite.mock_db)
+	db = nil
+}
+
+func TestGetNextTestSuite(t *testing.T) {
+	suite.Run(t, new(GetNextTestSuite))
+}
+
+func (suite *GetNextTestSuite) TestGetNextWithWrongDatabaseName() {
+	suite.mock_db.On("GetNextRecord", "foo").Return([]byte(""),
 		&database.DBError{utils.StatusWrongInput, ""})
 
 	w := doRequest("/database/foo/next")
-	assert.Equal(t, http.StatusBadRequest, w.Code, "wrong database name")
-	assertExpectations(t, mock_db)
+	suite.Equal(http.StatusBadRequest, w.Code, "wrong database name")
 }
 
-func TestGetNextWithInternalDBError(t *testing.T) {
-	mock_db := new(database.MockedDatabase)
-	db = mock_db
-	defer func() { db = nil }()
-	ExpectCopyClose(mock_db)
-	mock_db.On("GetNextRecord", "foo").Return([]byte(""), errors.New(""))
-
+func (suite *GetNextTestSuite) TestGetNextWithInternalDBError() {
+	suite.mock_db.On("GetNextRecord", "foo").Return([]byte(""), errors.New(""))
 	w := doRequest("/database/foo/next")
-	assert.Equal(t, http.StatusInternalServerError, w.Code, "internal error")
-	assertExpectations(t, mock_db)
+	suite.Equal(http.StatusInternalServerError, w.Code, "internal error")
 }
 
-func TestGetNextWithGoodDatabaseName(t *testing.T) {
-	mock_db := new(database.MockedDatabase)
-	db = mock_db
-	defer func() { db = nil }()
-	ExpectCopyClose(mock_db)
-	mock_db.On("GetNextRecord", "dbname").Return([]byte("Hello"), nil)
+func (suite *GetNextTestSuite) TestGetNextWithGoodDatabaseName() {
+	suite.mock_db.On("GetNextRecord", "dbname").Return([]byte("Hello"), nil)
 
 	w := doRequest("/database/dbname/next")
-	assert.Equal(t, http.StatusOK, w.Code, "GetNext OK")
-	assert.Equal(t, "Hello", string(w.Body.Bytes()), "GetNext sends data")
-	assertExpectations(t, mock_db)
+	suite.Equal(http.StatusOK, w.Code, "GetNext OK")
+	suite.Equal("Hello", string(w.Body.Bytes()), "GetNext sends data")
+}
+
+func (suite *GetNextTestSuite) TestGetNextAddsCounter() {
+	suite.mock_db.On("GetNextRecord", "dbname").Return([]byte("Hello"), nil)
+
+	doRequest("/database/dbname/next")
+	suite.Equal(1, statistics.GetCounter(), "GetNext increases counter")
 }

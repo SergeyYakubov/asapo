@@ -12,6 +12,7 @@ type serverSettings struct {
 }
 
 var settings serverSettings
+var statistics serverStatistics
 
 func InitDB(dbAgent database.Agent) error {
 	db = dbAgent
