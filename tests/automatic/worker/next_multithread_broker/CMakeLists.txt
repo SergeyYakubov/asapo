@@ -11,7 +11,7 @@ target_link_libraries(${TARGET_NAME} test_common hidra2-worker  ${CMAKE_THREAD_L
 ################################
 # Testing
 ################################
-configure_file(${CMAKE_SOURCE_DIR}/tests/settings/broker_settings.json settings.json COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/broker_settings.json settings.json COPYONLY)
 add_script_test("${TARGET_NAME}" "$<TARGET_FILE:${TARGET_NAME}> $<TARGET_PROPERTY:hidra2-broker,EXENAME>"
         )
 
