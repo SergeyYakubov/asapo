@@ -1,6 +1,7 @@
 #include "testing.h"
 
 #include <iostream>
+#include <algorithm>
 
 namespace hidra2 {
 
@@ -30,6 +31,26 @@ void M_AssertEq(const std::string& expected, const std::string& got) {
 
 void M_AssertEq(int expected, int got) {
     T_AssertEq(expected, got);
+}
+
+
+std::string EraseSpaces(const std::string& str) {
+    auto tmp = str;
+    auto end_pos = std::remove(tmp.begin(), tmp.end(), ' ');
+    tmp.erase(end_pos, tmp.end());
+    return tmp;
+}
+void M_AssertContains( const std::string& whole, const std::string& sub) {
+    auto whole_t = EraseSpaces(whole);
+    auto sub_t = EraseSpaces(sub);
+
+    if (whole_t.find(sub_t) == std::string::npos) {
+        std::cerr << "Assert failed:\n"
+                  << "Got (spaces erased):\t'" << whole_t << "'\n"
+                  << "Expected containes (spaces erased):\t'" << sub_t << "'\n";
+
+        exit(EXIT_FAILURE);
+    }
 }
 
 

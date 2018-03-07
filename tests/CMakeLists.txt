@@ -3,6 +3,19 @@ find_package(Threads REQUIRED)
 
 add_subdirectory(common/cpp)
 add_subdirectory(system_io)
+
+add_subdirectory(json_parser)
+
+if(BUILD_MONGODB_CLIENTLIB)
+    add_subdirectory(mongo_db)
+endif()
+
+
+if(BUILD_BROKER)
+    add_subdirectory(broker)
+endif()
+
+
 add_subdirectory(worker)
 
 
