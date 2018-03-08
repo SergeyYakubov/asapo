@@ -32,18 +32,18 @@ void NetworkProducerPeer::internal_receiver_thread_() {
     auto* const generic_request = (GenericNetworkRequest*) malloc(kGenericBufferSize);
     auto* const generic_response = (GenericNetworkResponse*) malloc(kGenericBufferSize);
 
-    IOErrors err;
+    Error io_err;
     while(is_listening_) {
-        err = IOErrors::kNoError;
+        io_err = nullptr;
 
-        size_t size = io->ReceiveTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 50, &err);
-        if(err != IOErrors::kNoError) {
-            if(err == IOErrors::kTimeout) {
+        size_t size = io->ReceiveTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 50, &io_err);
+        if(io_err != nullptr) {
+            if((*io_err).GetErrorType() == ErrorType::kTimeout) {
                 std::this_thread::yield();
                 continue;
             }
 
-            if(err == IOErrors::kEndOfFile) {
+            if((*io_err).GetErrorType() == ErrorType::kEndOfFile) {
                 is_listening_ = false;
                 break;
             }
@@ -53,7 +53,7 @@ void NetworkProducerPeer::internal_receiver_thread_() {
             break;
         }
 
-        assert(size);
+        assert(size);//Something in ReceiveTimeout went wrong.
 
         std::cout << "[" << connection_id() << "] Got request: " << generic_request->op_code << std::endl;
         size_t bytes_to_send = handle_generic_request_(generic_request, generic_response);
@@ -62,9 +62,9 @@ void NetworkProducerPeer::internal_receiver_thread_() {
             continue;//No data to send
         }
 
-        io->Send(socket_fd_, generic_response, bytes_to_send, &err);
+        io->Send(socket_fd_, generic_response, bytes_to_send, &io_err);
 
-        if(err != IOErrors::kNoError) {
+        if(io_err != nullptr) {
             std::cerr << "[" << connection_id() << "] Fail to send response" << std::endl;
         }
     }
@@ -102,14 +102,14 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
     assert(handler_information.request_size <= kGenericBufferSize);//Would overwrite arbitrary memory
     assert(handler_information.response_size <= kGenericBufferSize);//Would overwrite arbitrary memory
 
-    IOErrors err;
+    Error io_err;
 
     static const size_t sizeof_generic_request = sizeof(GenericNetworkRequest);
     //receive the rest of the message
     size_t rec = io->Receive(socket_fd_, (uint8_t*)request + sizeof_generic_request,
-                             handler_information.request_size - sizeof_generic_request, &err);
-    std::cout << "rec:" << rec << std::endl;
-    if(err != IOErrors::kNoError) {
+                             handler_information.request_size - sizeof_generic_request, &io_err);
+
+    if(io_err != nullptr) {
         std::cerr << "[" << connection_id() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " <<
                   request->op_code << std::endl;
         return 0;
@@ -124,9 +124,9 @@ NetworkProducerPeer::~NetworkProducerPeer() {
     stop_peer_listener();
 }
 
-FileDescriptor NetworkProducerPeer::CreateAndOpenFileByFileId(uint64_t file_id, IOErrors* err) {
+FileDescriptor NetworkProducerPeer::CreateAndOpenFileByFileId(uint64_t file_id, Error* err) {
     io->CreateNewDirectory("files", err);
-    if(*err != IOErrors::kNoError && *err != IOErrors::kFileAlreadyExists) {
+    if(*err != nullptr && (*err)->GetErrorType() != ErrorType::kFileAlreadyExists) {
         return -1;
     }
     return io->Open("files/" + std::to_string(file_id) + ".bin", IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS | IO_OPEN_MODE_RW,

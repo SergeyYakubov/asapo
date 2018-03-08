@@ -31,7 +31,7 @@ endif()
 
 add_subdirectory(common/cpp)
 
-if (BUILD_BROKER)
+if (BUILD_BROKER)#TODO: Somehow make it clear that this is needed by examples/worker/getnext_broker
     add_subdirectory(broker)
 endif()
 
@@ -39,10 +39,7 @@ add_subdirectory(producer/api)
 
 add_subdirectory(worker)
 
-
-IF(UNIX)
-    add_subdirectory(receiver)
-ENDIF(UNIX)
+add_subdirectory(receiver)
 
 if(BUILD_INTEGRATION_TESTS)
     add_subdirectory(tests)

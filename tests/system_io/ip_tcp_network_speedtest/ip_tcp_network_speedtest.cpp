@@ -5,8 +5,9 @@
 
 #include "testing.h"
 
+using hidra2::Error;
+using hidra2::ErrorType;
 using hidra2::SystemIO;
-using hidra2::IOErrors;
 using hidra2::AddressFamilies;
 using hidra2::SocketTypes;
 using hidra2::SocketProtocols;
@@ -25,12 +26,12 @@ static int kTestCount = 20;
 
 void Exit(int exit_number) {
     std::cerr << "ERROR: Exit on " << exit_number << std::endl;
-    getchar();
     exit(exit_number);
 }
 
-void ExitIfErrIsNotOk(IOErrors* err, int exit_number) {
-    if(*err != IOErrors::kNoError) {
+void ExitIfErrIsNotOk(Error* err, int exit_number) {
+    if(*err != nullptr) {
+        std::cerr << "Explain(): " << (*err)->Explain() << std::endl;
         Exit(exit_number);
     }
 }
@@ -39,7 +40,7 @@ std::thread* CreateEchoServerThread() {
     return io->NewThread([] {
         std::unique_ptr<uint8_t[]> kBufferServer(new uint8_t[kTestSize]);
 
-        IOErrors err;
+        Error err;
         FileDescriptor socket = io->CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, &err);
         ExitIfErrIsNotOk(&err, 100);
         io->InetBind(socket, kListenAddress, &err);
@@ -75,7 +76,7 @@ std::thread* CreateEchoServerThread() {
 void Speedtest() {
     std::unique_ptr<uint8_t[]> kBufferClient(new uint8_t[kTestSize]);
 
-    IOErrors err;
+    Error err;
     std::cout << "[CLIENT] CreateAndConnectIPTCPSocket" << std::endl;
     FileDescriptor socket = io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
     ExitIfErrIsNotOk(&err, 201);

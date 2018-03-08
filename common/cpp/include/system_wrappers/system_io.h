@@ -14,11 +14,11 @@ class SystemIO final : public IO {
   private:
     static const int kNetBufferSize;//TODO: need to set by config
 
-    void ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors* err) const;
+    void ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const;
 
     //void CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
     int FileOpenModeToPosixFileOpenMode(int open_flags) const;
-    IOErrors GetLastError() const;
+    Error GetLastError() const;
 
     short AddressFamilyToPosixFamily      (AddressFamilies address_family) const;
     int SocketTypeToPosixType           (SocketTypes socket_type) const;
@@ -42,6 +42,8 @@ class SystemIO final : public IO {
     void                                                InitializeSocketIfNecessary() const;
     std::unique_ptr<std::tuple<std::string, uint16_t>>  SplitAddressToHostnameAndPort(std::string address) const;
 
+    FileInfo GetFileInfo(const std::string& name, Error* err) const;
+
   public:
     /*
      * Special
@@ -50,37 +52,38 @@ class SystemIO final : public IO {
 
 
     // this is not standard function - to be implemented differently in windows and linux
-    std::vector<FileInfo>   FilesInFolder(const std::string& folder, IOErrors* err) const;
+    std::vector<FileInfo>   FilesInFolder(const std::string& folder, Error* err) const;
 
     /*
      * Network
      */
     SocketDescriptor  CreateSocket(AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol,
-                                   IOErrors* err) const;
-    void            Listen(SocketDescriptor socket_fd, int backlog, IOErrors* err) const;
-    void            InetBind(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const;
-    std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd, IOErrors* err) const;
-    std::string     ResolveHostnameToIp(const std::string& hostname, IOErrors* err) const;
-    void            InetConnect(SocketDescriptor socket_fd, const std::string& address, IOErrors* err) const;
-    SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, IOErrors* err) const;
-    size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, IOErrors* err) const;
+                                   Error* err) const;
+    void            Listen(SocketDescriptor socket_fd, int backlog, Error* err) const;
+    void            InetBind(SocketDescriptor socket_fd, const std::string& address, Error* err) const;
+    std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd, Error* err) const;
+    std::string     ResolveHostnameToIp(const std::string& hostname, Error* err) const;
+    void            InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const;
+    SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, Error* err) const;
+    size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, Error* err) const;
     size_t          ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
-                                   IOErrors* err) const;
-    size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, IOErrors* err) const;
-    void            Skip(SocketDescriptor socket_fd, size_t length, IOErrors* err) const;
-    void            CloseSocket(SocketDescriptor socket_fd, IOErrors* err) const;
+                                   Error* err) const;
+    size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const;
+    void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const;
+    void            CloseSocket(SocketDescriptor socket_fd, Error* err) const;
 
     /*
      * Filesystem
      */
-    FileDescriptor  Open(const std::string& filename, int open_flags, IOErrors* err) const;
-    void            Close(FileDescriptor fd, IOErrors* err) const;
-    size_t          Read(FileDescriptor fd, void* buf, size_t length, IOErrors* err) const;
-    size_t          Write(FileDescriptor fd, const void* buf, size_t length, IOErrors* err) const;
-    void            CreateNewDirectory(const std::string& directory_name, hidra2::IOErrors* err) const;
-    FileData        GetDataFromFile(const std::string& fname, uint64_t fsize, IOErrors* err) const;
+    FileDescriptor  Open(const std::string& filename, int open_flags, Error* err) const;
+    void            Close(FileDescriptor fd, Error* err) const;
+    size_t          Read(FileDescriptor fd, void* buf, size_t length, Error* err) const;
+    size_t          Write(FileDescriptor fd, const void* buf, size_t length, Error* err) const;
+    void            CreateNewDirectory(const std::string& directory_name, Error* err) const;
+    FileData        GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const;
     void            CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files,
-                                                     IOErrors* err) const;
+                                                     Error* err) const;
+    std::string     ReadFileToString(const std::string& fname, Error* err) const;
 };
 }
 

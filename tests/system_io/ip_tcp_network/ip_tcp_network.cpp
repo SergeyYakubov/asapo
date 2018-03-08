@@ -7,7 +7,8 @@
 #include "testing.h"
 
 using hidra2::SystemIO;
-using hidra2::IOErrors;
+using hidra2::Error;
+using hidra2::ErrorType;
 using hidra2::AddressFamilies;
 using hidra2::SocketTypes;
 using hidra2::SocketProtocols;
@@ -27,15 +28,16 @@ void Exit(int exit_number) {
     exit(exit_number);
 }
 
-void ExitIfErrIsNotOk(IOErrors* err, int exit_number) {
-    if(*err != IOErrors::kNoError) {
+void ExitIfErrIsNotOk(Error* err, int exit_number) {
+    if(*err != nullptr) {
+        std::cerr << "Explain(): " << (*err)->Explain() << std::endl;
         Exit(exit_number);
     }
 }
 
 std::thread* CreateEchoServerThread() {
     return io->NewThread([&] {
-        IOErrors err;
+        Error err;
         FileDescriptor socket = io->CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, &err);
         ExitIfErrIsNotOk(&err, 100);
         io->InetBind(socket, kListenAddress, &err);
@@ -57,11 +59,13 @@ std::thread* CreateEchoServerThread() {
             while (true) {
                 uint64_t need_to_receive_size;
                 io->ReceiveTimeout(client_fd, &need_to_receive_size, sizeof(uint64_t), 100, &err);
-                if (err == IOErrors::kTimeout) {
-                    continue;
-                }
-                if (err == IOErrors::kEndOfFile) {
-                    break;
+                if(err != nullptr) {
+                    if (err->GetErrorType() == ErrorType::kTimeout) {
+                        continue;
+                    }
+                    if (err->GetErrorType() == ErrorType::kEndOfFile) {
+                        break;
+                    }
                 }
                 ExitIfErrIsNotOk(&err, 105);//ReceiveTimeout
 
@@ -86,14 +90,14 @@ std::thread* CreateEchoServerThread() {
 }
 
 void CheckNormal(int times, size_t size) {
-    IOErrors err;
+    Error err;
     std::cout << "[CLIENT] CreateAndConnectIPTCPSocket" << std::endl;
     FileDescriptor socket = io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
     ExitIfErrIsNotOk(&err, 201);
 
     std::cout << "[CLIENT] ReceiveTimeout" << std::endl;
     io->ReceiveTimeout(socket, nullptr, 1, 1000 * 100/*100ms*/, &err);
-    if (err != IOErrors::kTimeout) {
+    if (err->GetErrorType() != ErrorType::kTimeout) {
         ExitIfErrIsNotOk(&err, 202);
     }
 
@@ -140,22 +144,22 @@ void CheckNormal(int times, size_t size) {
 }
 
 int main(int argc, char* argv[]) {
-    IOErrors err;
+    Error err;
     std::cout << "[META] Check if connection is refused if server is not running" << std::endl;
     io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
-    if(err != IOErrors::kConnectionRefused) {
+    if(err->GetErrorType() != ErrorType::kConnectionRefused) {
         ExitIfErrIsNotOk(&err, 301);
     }
 
     std::cout << "[META] Check invalid address format - Missing port" << std::endl;
     io->CreateAndConnectIPTCPSocket("localhost", &err);
-    if(err != IOErrors::kInvalidAddressFormat) {
+    if(err->GetErrorType() != ErrorType::kInvalidAddressFormat) {
         ExitIfErrIsNotOk(&err, 302);
     }
 
     std::cout << "[META] Check unknown host" << std::endl;
     io->CreateAndConnectIPTCPSocket("some-host-that-might-not-exists.aa:1234", &err);
-    if(err != IOErrors::kUnableToResolveHostname) {
+    if(err->GetErrorType() != ErrorType::kUnableToResolveHostname) {
         ExitIfErrIsNotOk(&err, 303);
     }
 
@@ -167,14 +171,14 @@ int main(int argc, char* argv[]) {
     std::cout << "Check 2" << std::endl;
     CheckNormal(30, 1024);
     std::cout << "Check 3" << std::endl;
-    CheckNormal(2, 1024 * 1024 * 256/*256 MiByte */);
+    CheckNormal(1, 1024 * 1024 * 100/*100 MiByte */);
 
     std::cout << "server_thread->join()" << std::endl;
     server_thread->join();
 
     std::cout << "[META] Check if connection is refused after server is closed" << std::endl;
     io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
-    if(err != IOErrors::kConnectionRefused) {
+    if(err->GetErrorType() != ErrorType::kConnectionRefused) {
         ExitIfErrIsNotOk(&err, 304);
     }
 

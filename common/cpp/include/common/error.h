@@ -8,20 +8,41 @@ namespace hidra2 {
 
 enum class ErrorType {
     kHidraError,
-    kEOF,
-    kHttpError
+    kHttpError,
+    kUnknownError,
+
+    kBadFileNumber,
+    kResourceTemporarilyUnavailable,
+    kFileNotFound,
+    kReadError,
+    kPermissionDenied,
+    kUnsupportedAddressFamily,
+    kInvalidAddressFormat,
+    kEndOfFile,
+    kAddressAlreadyInUse,
+    kConnectionRefused,
+    kConnectionResetByPeer,
+    kTimeout,
+    kFileAlreadyExists,
+    kNoSpaceLeft,
+    kSocketOperationOnNonSocket,
+    kMemoryAllocationError,
+    kInvalidMemoryAddress,
+    kUnableToResolveHostname,
 };
+
+class ErrorInterface;
+
+// Is nullptr if no error is set
+using Error = std::unique_ptr<ErrorInterface>;
 
 class ErrorInterface {
   public:
     virtual std::string Explain() const noexcept = 0;
     virtual void Append(const std::string& value) noexcept = 0;
-    virtual ErrorType GetErrorType() noexcept = 0;
+    virtual ErrorType GetErrorType() const noexcept = 0;
     virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
-
 };
-
-using Error = std::unique_ptr<ErrorInterface>;
 
 class SimpleError: public ErrorInterface {
   private:
@@ -41,10 +62,26 @@ class SimpleError: public ErrorInterface {
     std::string Explain() const noexcept override  {
         return error_;
     }
-    ErrorType GetErrorType()noexcept override  {
+
+    ErrorType GetErrorType() const noexcept override  {
         return error_type_;
     }
+};
 
+class ErrorTemplate {
+  private:
+    std::string error_;
+    ErrorType error_type_ = ErrorType::kHidraError;
+  public:
+    explicit ErrorTemplate(const std::string& error): error_{error} {
+
+    }
+    ErrorTemplate(const std::string& error, ErrorType error_type ): error_{error}, error_type_{error_type} {
+    }
+
+    inline Error Copy() const {
+        return Error(new SimpleError{error_, error_type_});
+    }
 };
 
 inline Error TextError(const std::string& error) {

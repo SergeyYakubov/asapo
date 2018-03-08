@@ -37,7 +37,7 @@ Error FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int nfile) co
     }
 
     if (nfile >= (int) filelist_.size()) {
-        return Error{TextErrorWithType(WorkerErrorMessage::kNoData, ErrorType::kEOF)};
+        return Error{TextErrorWithType(WorkerErrorMessage::kNoData, ErrorType::kEndOfFile)};
     }
     return nullptr;
 }

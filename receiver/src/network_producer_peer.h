@@ -41,7 +41,7 @@ class NetworkProducerPeer : HasIO {
     static void handle_send_data_request_(NetworkProducerPeer* self, const SendDataRequest* request,
                                           SendDataResponse* response);
 
-    FileDescriptor CreateAndOpenFileByFileId(uint64_t file_id, IOErrors* err);
+    FileDescriptor CreateAndOpenFileByFileId(uint64_t file_id, Error* err);
 
   public:
     NetworkProducerPeer& operator=(const NetworkProducerPeer&) = delete;

@@ -6,21 +6,35 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <thread>
 
 #include "common/data_structs.h"
 #include "common/error.h"
 
 namespace hidra2 {
 
-namespace IOErrors {
-auto const kFileNotFound = "No such file or directory";
-auto const kReadError = "Read error";
-auto const kPermissionDenied = "Permission denied";
-auto const kUnknownError = "Unknown error";
-auto const kMemoryAllocationError = "Memory Allocation Error";
-}
+namespace IOErrorTemplate {
+ErrorTemplate* const kUnknownError = new ErrorTemplate{"Unknown Error", ErrorType::kUnknownError};
 
-Error IOErrorFromErrno();
+ErrorTemplate* const kFileNotFound = new ErrorTemplate{"No such file or directory", ErrorType::kFileNotFound};
+ErrorTemplate* const kReadError = new ErrorTemplate{"Read error", ErrorType::kFileNotFound};
+ErrorTemplate* const kBadFileNumber = new ErrorTemplate{"Bad file number", ErrorType::kBadFileNumber};
+ErrorTemplate* const kResourceTemporarilyUnavailable = new ErrorTemplate{"Resource temporarily unavailable", ErrorType::kResourceTemporarilyUnavailable};
+ErrorTemplate* const kPermissionDenied = new ErrorTemplate{"Permission denied", ErrorType::kPermissionDenied};
+ErrorTemplate* const kUnsupportedAddressFamily = new ErrorTemplate{"Unsupported address family", ErrorType::kUnsupportedAddressFamily};
+ErrorTemplate* const kInvalidAddressFormat = new ErrorTemplate{"Invalid address format", ErrorType::kInvalidAddressFormat};
+ErrorTemplate* const kEndOfFile = new ErrorTemplate{"End of file", ErrorType::kEndOfFile};
+ErrorTemplate* const kAddressAlreadyInUse = new ErrorTemplate{"Address already in use", ErrorType::kAddressAlreadyInUse};
+ErrorTemplate* const kConnectionRefused = new ErrorTemplate{"Connection refused", ErrorType::kConnectionRefused};
+ErrorTemplate* const kConnectionResetByPeer = new ErrorTemplate{"kConnectionResetByPeer", ErrorType::kConnectionResetByPeer};
+ErrorTemplate* const kTimeout = new ErrorTemplate{"kTimeout", ErrorType::kTimeout};
+ErrorTemplate* const kFileAlreadyExists = new ErrorTemplate{"kFileAlreadyExists", ErrorType::kFileAlreadyExists};
+ErrorTemplate* const kNoSpaceLeft = new ErrorTemplate{"kNoSpaceLeft", ErrorType::kNoSpaceLeft};
+ErrorTemplate* const kSocketOperationOnNonSocket = new ErrorTemplate{"kSocketOperationOnNonSocket", ErrorType::kSocketOperationOnNonSocket};
+ErrorTemplate* const kMemoryAllocationError = new ErrorTemplate{"kMemoryAllocationError", ErrorType::kMemoryAllocationError};
+ErrorTemplate* const kInvalidMemoryAddress = new ErrorTemplate{"kInvalidMemoryAddress", ErrorType::kInvalidMemoryAddress};
+ErrorTemplate* const kUnableToResolveHostname = new ErrorTemplate{"kUnableToResolveHostname", ErrorType::kUnableToResolveHostname};
+}
 
 enum FileOpenMode {
     IO_OPEN_MODE_READ = 1 << 0,
@@ -76,7 +90,7 @@ class IO {
     virtual size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const = 0;
     virtual void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const = 0;
     /**
-    * @param err Since CloseSocket if often used in an error case, it's able to accept err as nullptr.
+    * @param err Since CloseSocket if often used in an Error* case, it's able to accept err as nullptr.
     */
     virtual void            CloseSocket(SocketDescriptor socket_fd, Error* err) const = 0;
 
@@ -85,7 +99,7 @@ class IO {
      */
     virtual FileDescriptor  Open            (const std::string& filename, int open_flags, Error* err) const = 0;
     /**
-     * @param err Since Close if often used in an error case, it's able to accept err as nullptr.
+     * @param err Since Close if often used in an Error* case, it's able to accept err as nullptr.
      */
     virtual void            Close           (FileDescriptor fd, Error* err) const = 0;
 
@@ -97,7 +111,7 @@ class IO {
     virtual void CollectFileInformationRecursivly   (const std::string& path, std::vector<FileInfo>* files,
                                                      Error* err) const = 0;
     virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, Error* err) const = 0;
-
+    virtual std::string     ReadFileToString        (const std::string& fname, Error* err) const = 0;
 
 };
 

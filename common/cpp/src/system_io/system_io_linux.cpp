@@ -24,40 +24,42 @@ namespace hidra2 {
  * @{
  */
 
-IOErrors GetLastErrorFromErrno() {
+Error GetLastErrorFromErrno() {
     switch (errno) {
     case 0:
-        return IOErrors::kNoError;
+        return nullptr;
     case EBADF:
-        return IOErrors::kBadFileNumber;
+        return IOErrorTemplate::kBadFileNumber->Copy();
     case EAGAIN:
-        return IOErrors::kResourceTemporarilyUnavailable;
+        return IOErrorTemplate::kResourceTemporarilyUnavailable->Copy();
     case ENOENT:
     case ENOTDIR:
-        return IOErrors::kFileNotFound;
+        return IOErrorTemplate::kFileNotFound->Copy();
     case EACCES:
-        return IOErrors::kPermissionDenied;
+        return IOErrorTemplate::kPermissionDenied->Copy();
     case EFAULT:
-        return IOErrors::kInvalidMemoryAddress;
+        return IOErrorTemplate::kInvalidMemoryAddress->Copy();
     case EEXIST:
-        return IOErrors::kFileAlreadyExists;
+        return IOErrorTemplate::kFileAlreadyExists->Copy();
     case ENOSPC:
-        return IOErrors::kNoSpaceLeft;
+        return IOErrorTemplate::kNoSpaceLeft->Copy();
     case ECONNREFUSED:
-        return IOErrors::kConnectionRefused;
+        return IOErrorTemplate::kConnectionRefused->Copy();
     case EADDRINUSE:
-        return IOErrors::kAddressAlreadyInUse;
+        return IOErrorTemplate::kAddressAlreadyInUse->Copy();
     case ECONNRESET:
-        return IOErrors::kConnectionResetByPeer;
+        return IOErrorTemplate::kConnectionResetByPeer->Copy();
     case ENOTSOCK:
-        return IOErrors::kSocketOperationOnNonSocket;
+        return IOErrorTemplate::kSocketOperationOnNonSocket->Copy();
     default:
         std::cout << "[IOErrorsFromErrno] Unknown error code: " << errno << std::endl;
-        return IOErrors::kUnknownError;
+        Error err = IOErrorTemplate::kUnknownError->Copy();
+        (*err).Append("Unknown error code: " + std::to_string(errno));
+        return err;
     }
 };
 
-IOErrors SystemIO::GetLastError() const {
+Error SystemIO::GetLastError() const {
     return GetLastErrorFromErrno();
 }
 
@@ -99,7 +101,7 @@ struct stat FileStat(const string& fname, Error* err) {
     return t_stat;
 }
 
-FileInfo GetFileInfo(const string& name, Error* err)  {
+FileInfo GetFileInfo(const string& name, Error* err) {
     FileInfo file_info;
 
     SetFileName(name, &file_info);
@@ -117,22 +119,24 @@ FileInfo GetFileInfo(const string& name, Error* err)  {
     return file_info;
 }
 
-void ProcessFileEntity(const struct dirent* entity, const std::string& path,
-                       std::vector<FileInfo>* files, IOErrors* err) {
+FileInfo SystemIO::GetFileInfo(const string& name, Error* err) const {
+    return ::hidra2::GetFileInfo(name, err);
+}
 
-    *err = IOErrors::kNoError;
+void ProcessFileEntity(const struct dirent* entity, const std::string& path,
+                       FileInfos* files, Error* err)  {
+
+    *err = nullptr;
     if (entity->d_type != DT_REG) {
         return;
     }
 
-    FileInfo file_info = GetFileInfo(path, entity->d_name, err);
-    if (*err != IOErrors::kNoError) {
+    FileInfo file_info = GetFileInfo(path + "/" + entity->d_name, err);
+    if (*err != nullptr) {
         return;
     }
-
     files->push_back(file_info);
 }
-
 
 /** @} */
 
@@ -141,7 +145,8 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
     errno = 0;
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
-        *err = IOErrorFromErrno();
+        *err = GetLastError();
+        (*err)->Append(path);
         return;
     }
 
@@ -158,11 +163,11 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
             return;
         }
     }
-    *err = IOErrorFromErrno();
+    *err = GetLastError();
     closedir(dir);
 }
 
-void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors* err) const {
+void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const {
     //TODO: Need to change network layer code, so everything can be NonBlocking
     //int flags;
     if (

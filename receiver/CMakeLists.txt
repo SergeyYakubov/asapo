@@ -9,13 +9,14 @@ set(SOURCE_FILES
 ################################
 # Library
 ################################
-add_executable(${TARGET_NAME} ${SOURCE_FILES} $<TARGET_OBJECTS:common>)
-target_include_directories(${TARGET_NAME} PUBLIC include ${CMAKE_SOURCE_DIR}/common/cpp/include)
+add_executable(${TARGET_NAME} ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>)
+target_include_directories(${TARGET_NAME} PUBLIC include)
+set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR})
 
 #Add all necessary common libraries
 GET_PROPERTY(HIDRA2_COMMON_IO_LIBRARIES GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES)
 target_link_libraries(${TARGET_NAME} ${HIDRA2_COMMON_IO_LIBRARIES})
-
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 
@@ -31,4 +32,3 @@ set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 #
 #set(TEST_LIBRARIES "${TARGET_NAME} common")
 #gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")
-

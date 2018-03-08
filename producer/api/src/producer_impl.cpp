@@ -29,14 +29,14 @@ hidra2::ProducerStatus hidra2::ProducerImpl::GetStatus() const {
 }
 
 hidra2::ProducerError hidra2::ProducerImpl::initialize_socket_to_receiver_(const std::string& receiver_address) {
-    IOErrors err;
+    Error err;
     FileDescriptor fd = io->CreateAndConnectIPTCPSocket(receiver_address, &err);
 
-    if(err != IOErrors::kNoError) {
-        if(err == IOErrors::kInvalidAddressFormat) {
+    if(err != nullptr) {
+        if((*err).GetErrorType() == ErrorType::kInvalidAddressFormat) {
             return ProducerError::kInvalidAddressFormat;
         }
-        if(err == IOErrors::kConnectionRefused) {
+        if((*err).GetErrorType() == ErrorType::kConnectionRefused) {
             return ProducerError::kConnectionRefused;
         }
         return ProducerError::kUnknownError;
@@ -81,16 +81,16 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* d
     sendDataRequest.file_id = file_id;
     sendDataRequest.file_size = file_size;
 
-    IOErrors io_error;
+    Error io_error;
     io->Send(client_fd_, &sendDataRequest, sizeof(sendDataRequest), &io_error);
-    if(io_error != IOErrors::kNoError) {
+    if(io_error != nullptr) {
         std::cerr << "hidra2::ProducerImpl::Send/sendDataRequest" << std::endl;
         status_ = ProducerStatus::kConnected;
         return ProducerError::kUnexpectedIOError;
     }
 
     io->Send(client_fd_, data, file_size, &io_error);
-    if(io_error != IOErrors::kNoError) {
+    if(io_error != nullptr) {
         std::cerr << "hidra2::ProducerImpl::Send/sendData" << std::endl;
         status_ = ProducerStatus::kConnected;
         return ProducerError::kUnexpectedIOError;
@@ -98,7 +98,7 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* d
 
     SendDataResponse sendDataResponse;
     io->Receive(client_fd_, &sendDataResponse, sizeof(sendDataResponse), &io_error);
-    if(io_error != IOErrors::kNoError) {
+    if(io_error != nullptr) {
         std::cerr << "hidra2::ProducerImpl::send/receive_timeout error" << std::endl;
         status_ = ProducerStatus::kConnected;
         return ProducerError::kUnexpectedIOError;

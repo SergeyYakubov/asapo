@@ -4,7 +4,8 @@
 #include "testing.h"
 
 using hidra2::SystemIO;
-using hidra2::IOErrors;
+using hidra2::Error;
+using hidra2::ErrorType;
 
 using hidra2::M_AssertEq;
 using hidra2::M_AssertTrue;
@@ -13,14 +14,14 @@ SystemIO systemIO;
 
 void Check(const std::string& expected_ip_address, const std::string& hostname) {
     std::cout << "Checking: " << hostname << std::endl;
-    IOErrors err;
+    Error err;
     std::string ip_address = systemIO.ResolveHostnameToIp(hostname, &err);
     M_AssertEq(expected_ip_address, ip_address);
     if(expected_ip_address.empty()) {
-        M_AssertTrue(IOErrors::kUnableToResolveHostname ==  err);
+        M_AssertTrue(err != nullptr && (*err).GetErrorType() == ErrorType::kUnableToResolveHostname);
         return;
     }
-    M_AssertTrue(IOErrors::kNoError ==  err);
+    M_AssertTrue(err == nullptr);
 }
 
 int main(int argc, char* argv[]) {

@@ -14,11 +14,11 @@ void hidra2::Receiver::StartListener(std::string listener_address, ReceiverError
     }
     listener_running_ = true;
 
-    IOErrors io_error;
+    Error io_error;
 
     FileDescriptor listener_fd = io->CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP,
                                                   &io_error);
-    if(io_error != IOErrors::kNoError) {
+    if(io_error != nullptr) {
         *err = ReceiverError::kFailToCreateSocket;
         listener_running_ = false;
         std::cerr << "Fail to create socket" << std::endl;
@@ -26,7 +26,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, ReceiverError
     }
 
     io->InetBind(listener_fd, listener_address, &io_error);
-    if(io_error != IOErrors::kNoError) {
+    if(io_error != nullptr) {
         io->CloseSocket(listener_fd, nullptr);
         *err = ReceiverError::kFailToCreateSocket;
         listener_running_ = false;
@@ -35,7 +35,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, ReceiverError
     }
 
     io->Listen(listener_fd, kMaxUnacceptedConnectionsBacklog, &io_error);
-    if(io_error != IOErrors::kNoError) {
+    if(io_error != nullptr) {
         io->CloseSocket(listener_fd, nullptr);
         *err = ReceiverError::kFailToCreateSocket;
         listener_running_ = false;
@@ -56,9 +56,9 @@ void hidra2::Receiver::AcceptThreadLogic() {
         std::string address;
         FileDescriptor peer_fd;
 
-        IOErrors io_error;
+        Error io_error;
         auto client_info_tuple = io->InetAccept(listener_fd_, &io_error);
-        if(io_error != IOErrors::kNoError) {
+        if(io_error != nullptr) {
             std::cerr << "An error occurred while accepting an incoming connection" << std::endl;
             return;
         }

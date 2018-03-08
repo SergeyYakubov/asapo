@@ -32,7 +32,7 @@ using ::testing::Mock;
 using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
-
+using ::testing::SetArgReferee;
 
 namespace {
 
@@ -114,7 +114,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClient) {
     auto err = data_broker->GetNext(&info, nullptr);
 
     ASSERT_THAT(err->Explain(), HasSubstr(hidra2::WorkerErrorMessage::kNoData));
-    ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kEOF);
+    ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kEndOfFile);
 }
 
 
@@ -159,7 +159,6 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsIfNoDtataNeeded) {
     data_broker->GetNext(&info, nullptr);
 }
 
-
 TEST_F(ServerDataBrokerTests, GetNextCallsReadFromFile) {
     auto to_send = CreateFI();
     auto json = to_send.Json();
@@ -167,7 +166,7 @@ TEST_F(ServerDataBrokerTests, GetNextCallsReadFromFile) {
     MockGet(json);
 
     EXPECT_CALL(mock_io, GetDataFromFile_t("name", 100, _)).
-    WillOnce(DoAll(SetArgPointee<2>(new SimpleError{hidra2::IOErrors::kReadError}), testing::Return(nullptr)));
+    WillOnce(DoAll(SetArgPointee<2>(new hidra2::SimpleError{"s"}), testing::Return(nullptr)));
 
     FileData data;
     data_broker->GetNext(&info, &data);
