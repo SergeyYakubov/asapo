@@ -5,6 +5,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#undef GetObject
 typedef SSIZE_T ssize_t;
 #endif
 
