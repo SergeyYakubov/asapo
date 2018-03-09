@@ -204,7 +204,6 @@ TEST_F(ParseFileTests, CannotReadFile) {
 
     uint64_t id;
     auto err = parser.GetUInt64("_id", &id);
-    //TODO: @Sergey why not just checking error code?
     ASSERT_THAT(err->Explain(), HasSubstr(hidra2::IOErrorTemplate::kFileNotFound.Copy()->Explain()));
 
 

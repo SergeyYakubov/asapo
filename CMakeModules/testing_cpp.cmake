@@ -49,7 +49,7 @@ function(gtest target test_source_files linktarget)
         target_link_libraries(test-${target} ${GTEST_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
         GET_PROPERTY(HIDRA2_COMMON_IO_LIBRARIES GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES)
-        message(STATUS "SEARCHPATTERME HIDRA2_COMMON_IO_LIBRARIES: '${HIDRA2_COMMON_IO_LIBRARIES}'")
+        message(STATUS "HIDRA2_COMMON_IO_LIBRARIES: '${HIDRA2_COMMON_IO_LIBRARIES}'")
         target_link_libraries(test-${target} ${HIDRA2_COMMON_IO_LIBRARIES})
 
         if (NOT ${test_libraries} STREQUAL "")
