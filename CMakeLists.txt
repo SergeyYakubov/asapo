@@ -11,6 +11,8 @@ ENDIF(WIN32)
 option(BUILD_TESTS "Uses googletest to build tests" OFF)
 option(BUILD_INTEGRATION_TESTS "Include integration tests (CMAKE >3.7 is needed)" OFF)
 option(BUILD_DOCS "Uses doxygen to build the documentaion" OFF)
+option(BUILD_BROKER "Build broker" OFF)
+option(BUILD_WORKER_TOOLS "Build worker tools" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
