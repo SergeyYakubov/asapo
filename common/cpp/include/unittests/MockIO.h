@@ -8,7 +8,10 @@
 namespace hidra2 {
 class MockIO : public IO {
   public:
-    MOCK_CONST_METHOD1(NewThread, std::thread * (std::function<void()> function));
+    std::unique_ptr<std::thread> NewThread(std::function<void()> function) const override {
+        return std::unique_ptr<std::thread>(NewThread_t(function));
+    }
+    MOCK_CONST_METHOD1(NewThread_t, std::thread * (std::function<void()> function));
 
     SocketDescriptor CreateSocket(AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol,
                                   Error* err) const override {

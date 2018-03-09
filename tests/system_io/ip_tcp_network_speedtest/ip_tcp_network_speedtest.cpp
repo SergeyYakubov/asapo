@@ -36,7 +36,7 @@ void ExitIfErrIsNotOk(Error* err, int exit_number) {
     }
 }
 
-std::thread* CreateEchoServerThread() {
+std::unique_ptr<std::thread> CreateEchoServerThread() {
     return io->NewThread([] {
         std::unique_ptr<uint8_t[]> kBufferServer(new uint8_t[kTestSize]);
 
@@ -104,7 +104,7 @@ void Speedtest() {
 }
 
 int main(int argc, char* argv[]) {
-    std::thread* server_thread = CreateEchoServerThread();
+    std::unique_ptr<std::thread> server_thread = CreateEchoServerThread();
     kThreadStarted.get_future().get();//Make sure that the server is started
 
     Speedtest();

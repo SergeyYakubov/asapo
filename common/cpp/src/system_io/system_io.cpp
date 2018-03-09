@@ -131,8 +131,8 @@ std::string SystemIO::ReadFileToString(const std::string& fname, Error* err) con
 }
 
 
-std::thread* SystemIO::NewThread(std::function<void()> function) const {
-    return new std::thread(function);
+std::unique_ptr<std::thread> SystemIO::NewThread(std::function<void()> function) const {
+    return std::unique_ptr<std::thread>(new std::thread(function));
 }
 
 void SystemIO::Skip(SocketDescriptor socket_fd, size_t length, Error* err) const {

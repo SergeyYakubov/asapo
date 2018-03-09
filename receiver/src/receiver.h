@@ -20,7 +20,7 @@ class Receiver : public HasIO {
   private:
     bool listener_running_ = false;
     FileDescriptor listener_fd_ = -1;
-    std::thread* accept_thread_ = nullptr;
+    std::unique_ptr<std::thread> accept_thread_ = nullptr;
 
     void AcceptThreadLogic();
     std::list<std::unique_ptr<NetworkProducerPeer>> peer_list_;

@@ -135,7 +135,7 @@ FileInfo SystemIO::GetFileInfo(const std::string& name, Error* err) const {
 }
 
 void ProcessFileEntity(const WIN32_FIND_DATA& f, const std::string& path,
-    FileInfos* files, Error* err) {
+                       FileInfos* files, Error* err) {
 
     *err = nullptr;
     if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {

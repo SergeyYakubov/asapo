@@ -29,11 +29,11 @@ class NetworkProducerPeer : HasIO {
     static const std::vector<RequestHandlerInformation> kRequestHandlers;
     static std::atomic<uint32_t> kNetworkProducerPeerCount;
 
-    uint32_t        connection_id_;
-    int             socket_fd_;
+    uint32_t                        connection_id_;
+    int                             socket_fd_;
 
-    bool            is_listening_ = false;
-    std::thread*    listener_thread_ = nullptr;
+    bool                            is_listening_ = false;
+    std::unique_ptr<std::thread>    listener_thread_ = nullptr;
 
     void internal_receiver_thread_();
     size_t handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response);

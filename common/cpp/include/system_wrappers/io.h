@@ -70,7 +70,7 @@ class IO {
     /*
      * Special
      */
-    virtual std::thread*    NewThread       (std::function<void()> function) const = 0;
+    virtual std::unique_ptr<std::thread> NewThread       (std::function<void()> function) const = 0;
 
     /*
      * Network

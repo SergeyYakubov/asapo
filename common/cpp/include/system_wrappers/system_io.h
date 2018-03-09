@@ -51,7 +51,7 @@ class SystemIO final : public IO {
     /*
      * Special
      */
-    std::thread*            NewThread(std::function<void()> function) const;
+    std::unique_ptr<std::thread>    NewThread(std::function<void()> function) const;
 
 
     // this is not standard function - to be implemented differently in windows and linux

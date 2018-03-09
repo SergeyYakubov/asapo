@@ -82,7 +82,6 @@ void NetworkProducerPeer::stop_peer_listener() {
     if(!listener_thread_)
         return;
     listener_thread_->join();
-    delete listener_thread_;
     listener_thread_ = nullptr;
 }
 

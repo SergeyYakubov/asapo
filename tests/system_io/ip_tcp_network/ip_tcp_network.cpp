@@ -35,7 +35,7 @@ void ExitIfErrIsNotOk(Error* err, int exit_number) {
     }
 }
 
-std::thread* CreateEchoServerThread() {
+std::unique_ptr<std::thread> CreateEchoServerThread() {
     return io->NewThread([&] {
         Error err;
         FileDescriptor socket = io->CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, &err);
@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
         ExitIfErrIsNotOk(&err, 303);
     }
 
-    std::thread* server_thread = CreateEchoServerThread();
+    std::unique_ptr<std::thread> server_thread = CreateEchoServerThread();
     kThreadStarted.get_future().get();//Make sure that the server is started
 
     std::cout << "Check 1" << std::endl;
