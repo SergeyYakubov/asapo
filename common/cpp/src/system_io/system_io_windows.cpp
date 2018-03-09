@@ -5,8 +5,9 @@
 #include <algorithm>
 #include <io.h>
 #include <windows.h>
-
 #include <fcntl.h>
+#include <iostream>
+#include <direct.h>
 
 
 using std::string;
@@ -19,29 +20,30 @@ Error IOErrorFromGetLastError() {
     DWORD last_error = GetLastError();
     switch (last_error) {
     case ERROR_SUCCESS:
-        return IOErrors::kNoError;
+        return nullptr;
     case ERROR_PATH_NOT_FOUND:
     case ERROR_FILE_NOT_FOUND:
-        return IOErrors::kFileNotFound;
+        return IOErrorTemplate::kFileNotFound.Copy();
     case ERROR_ACCESS_DENIED:
-        return IOErrors::kPermissionDenied;
+        return IOErrorTemplate::kPermissionDenied.Copy();
     case ERROR_CONNECTION_REFUSED:
-        return IOErrors::kConnectionRefused;
+        return IOErrorTemplate::kConnectionRefused.Copy();
     case WSAEFAULT:
-        return IOErrors::kInvalidMemoryAddress;
+        return IOErrorTemplate::kInvalidMemoryAddress.Copy();
     case WSAECONNRESET:
-        return IOErrors::kConnectionResetByPeer;
+        return IOErrorTemplate::kConnectionResetByPeer.Copy();
     case WSAENOTSOCK:
-        return IOErrors::kSocketOperationOnNonSocket;
+        return IOErrorTemplate::kSocketOperationOnNonSocket.Copy();
     case WSAEWOULDBLOCK:
-        return IOErrors::kResourceTemporarilyUnavailable;
+        return IOErrorTemplate::kResourceTemporarilyUnavailable.Copy();
     case WSAECONNREFUSED:
-        return IOErrors::kConnectionRefused;
+        return IOErrorTemplate::kConnectionRefused.Copy();
     default:
         std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
-        return IOErrors::kUnknownError;
+        Error err = IOErrorTemplate::kUnknownError.Copy();
+        (*err).Append("Unknown error code: " + std::to_string(errno));
+        return err;
     }
-    return err;
 }
 
 Error SystemIO::GetLastError() const {
@@ -99,7 +101,7 @@ bool IsDirectory(const WIN32_FIND_DATA f) {
            strstr(f.cFileName, ".") == nullptr;
 }
 
-FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* err)  {
+FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* err) {
     FileInfo file_info;
 
     file_info.modify_date = FileTime2TimePoint(f.ftLastWriteTime, err);
@@ -119,7 +121,7 @@ FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* er
 }
 
 
-FileInfo GetFileInfo(const string& name, Error* err) {
+FileInfo SystemIO::GetFileInfo(const std::string& name, Error* err) const {
     WIN32_FIND_DATA f;
 
     auto hFind = FindFirstFile(name.c_str() , &f);
@@ -132,9 +134,8 @@ FileInfo GetFileInfo(const string& name, Error* err) {
     return GetFileInfo_win(f, name, err);
 }
 
-
 void ProcessFileEntity(const WIN32_FIND_DATA& f, const std::string& path,
-                       FileInfos* files, Error* err) {
+    FileInfos* files, Error* err) {
 
     *err = nullptr;
     if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -146,11 +147,8 @@ void ProcessFileEntity(const WIN32_FIND_DATA& f, const std::string& path,
         return;
     }
 
-    file_info.base_name = f.cFileName;
-    file_info.relative_path = path;
     files->push_back(file_info);
 }
-
 
 void SystemIO::CollectFileInformationRecursivly(const std::string& path,
                                                 FileInfos* files, Error* err) const {
@@ -182,7 +180,7 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
 
 }
 
-void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, IOErrors* err) const {
+void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const {
     //TODO: Seeing issues when using these settings - need further investigation
     //Event if NonBlockingIO is set, it seems that _recv is a blocking call :/
     /*
