@@ -20,7 +20,7 @@ using namespace std::chrono;
 static const std::unique_ptr<SystemIO> io(new SystemIO());
 static const std::string kListenAddress = "127.0.0.1:60123";
 static std::promise<void> kThreadStarted;
-static const int kNumberOfChecks = 3;
+static const int kNumberOfChecks = 2;
 static const size_t kSkipAmount = 500;
 
 void Exit(int exit_number) {
