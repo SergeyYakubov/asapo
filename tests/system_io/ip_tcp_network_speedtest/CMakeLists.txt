@@ -13,4 +13,4 @@ set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 # Testing
 ################################
 
-add_integration_test(${TARGET_NAME} ip_tcp_network_speedtest "")
+add_integration_test(${TARGET_NAME} ip_tcp_network_speedtest "" nomem)
