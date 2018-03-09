@@ -18,7 +18,7 @@ using namespace std::chrono;
 using std::chrono::high_resolution_clock;
 
 static const std::unique_ptr<SystemIO> io(new SystemIO());
-static const std::string kListenAddress = "127.0.0.1:4206";
+static const std::string kListenAddress = "127.0.0.1:4207";
 static std::promise<void> kThreadStarted;
 
 static size_t kTestSize = size_t(1024) * size_t(1024) * size_t(512); //512MiByte
