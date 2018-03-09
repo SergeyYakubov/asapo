@@ -200,7 +200,7 @@ void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* er
 
 FileDescriptor SystemIO::_open(const char* filename, int posix_open_flags) const {
     int fd;
-    errno = _sopen_s(&fd, filename, posix_open_flags, _SH_DENYNO, _S_IREAD | _S_IWRITE);
+    errno = _sopen_s(&fd, filename, posix_open_flags | _O_BINARY, _SH_DENYNO, _S_IREAD | _S_IWRITE);
     return fd;
 }
 

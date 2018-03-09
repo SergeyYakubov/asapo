@@ -122,6 +122,7 @@ std::string SystemIO::ReadFileToString(const std::string& fname, Error* err) con
         return "";
     }
 
+    //TODO: What if the file size changed during calls? (I ran into that issue: EOF)
     auto data = GetDataFromFile(fname, info.size, err);
     if (*err != nullptr) {
         return "";
