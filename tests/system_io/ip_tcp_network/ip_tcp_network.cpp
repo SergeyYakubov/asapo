@@ -167,11 +167,9 @@ int main(int argc, char* argv[]) {
     kThreadStarted.get_future().get();//Make sure that the server is started
 
     std::cout << "Check 1" << std::endl;
-    CheckNormal(10, 1024 * 1024 * 3);
+    CheckNormal(10, 1024 * 1024 * 3);//3 MiByte
     std::cout << "Check 2" << std::endl;
-    CheckNormal(30, 1024);
-    std::cout << "Check 3" << std::endl;
-    CheckNormal(1, 1024 * 1024 * 100/*100 MiByte */);
+    CheckNormal(30, 1024);//1 KiByte
 
     std::cout << "server_thread->join()" << std::endl;
     server_thread->join();
