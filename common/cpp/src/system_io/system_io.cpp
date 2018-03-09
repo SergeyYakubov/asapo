@@ -65,7 +65,7 @@ uint8_t* AllocateArray(uint64_t fsize, Error* err) {
     try {
         data_array = new uint8_t[fsize];
     } catch (...) {
-        *err = IOErrorTemplate::kMemoryAllocationError->Copy();
+        *err = IOErrorTemplate::kMemoryAllocationError.Copy();
         return nullptr;
     }
     return data_array;
@@ -144,7 +144,7 @@ void SystemIO::Skip(SocketDescriptor socket_fd, size_t length, Error* err) const
     try {
         buffer.reset(new uint8_t[kSkipBufferSize]);
     } catch(...) {
-        *err = IOErrorTemplate::kMemoryAllocationError->Copy();
+        *err = IOErrorTemplate::kMemoryAllocationError.Copy();
         return;
     }
     size_t already_skipped = 0;
@@ -206,7 +206,7 @@ std::string SystemIO::ResolveHostnameToIp(const std::string& hostname, Error* er
     InitializeSocketIfNecessary();
     hostent* record = gethostbyname(hostname.c_str());
     if (record == nullptr) {
-        *err = IOErrorTemplate::kUnableToResolveHostname->Copy();
+        *err = IOErrorTemplate::kUnableToResolveHostname.Copy();
         return "";
     }
     in_addr* address = (in_addr*)(record->h_addr);
@@ -219,7 +219,7 @@ std::string SystemIO::ResolveHostnameToIp(const std::string& hostname, Error* er
 void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const {
     auto hostname_port_tuple = SplitAddressToHostnameAndPort(address);
     if (!hostname_port_tuple) {
-        *err = IOErrorTemplate::kInvalidAddressFormat->Copy();
+        *err = IOErrorTemplate::kInvalidAddressFormat.Copy();
         return;
     }
     std::string host;
@@ -232,7 +232,7 @@ void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string
 
     short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {
-        *err = IOErrorTemplate::kUnsupportedAddressFamily->Copy();
+        *err = IOErrorTemplate::kUnsupportedAddressFamily.Copy();
         return;
     }
 
@@ -255,7 +255,7 @@ std::unique_ptr<std::tuple<std::string, SocketDescriptor>> SystemIO::InetAccept(
 Error* err) const {
     static short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {
-        *err = IOErrorTemplate::kUnsupportedAddressFamily->Copy();
+        *err = IOErrorTemplate::kUnsupportedAddressFamily.Copy();
         return nullptr;
     }
 
@@ -328,7 +328,7 @@ size_t hidra2::SystemIO::Read(FileDescriptor fd, void* buf, size_t length, Error
     while(already_read < length) {
         ssize_t read_amount = _read(fd, (uint8_t*)buf + already_read, length - already_read);
         if(read_amount == 0) {
-            *err = IOErrorTemplate::kEndOfFile->Copy();
+            *err = IOErrorTemplate::kEndOfFile.Copy();
             return already_read;
         }
         if (read_amount == -1) {
@@ -351,7 +351,7 @@ size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length
     while(already_wrote < length) {
         ssize_t write_amount = _write(fd, (uint8_t*)buf + already_wrote, length - already_wrote);
         if(write_amount == 0) {
-            *err = IOErrorTemplate::kEndOfFile->Copy();
+            *err = IOErrorTemplate::kEndOfFile.Copy();
             return already_wrote;
         }
         if (write_amount == -1) {
@@ -397,19 +397,19 @@ SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
                                         Error* err) const {
     int domain = AddressFamilyToPosixFamily(address_family);
     if(domain == -1) {
-        *err = IOErrorTemplate::kUnsupportedAddressFamily->Copy();
+        *err = IOErrorTemplate::kUnsupportedAddressFamily.Copy();
         return -1;
     }
 
     int type = SocketTypeToPosixType(socket_type);
     if(type == -1) {
-        *err = IOErrorTemplate::kUnknownError->Copy();
+        *err = IOErrorTemplate::kUnknownError.Copy();
         return -1;
     }
 
     int protocol = SocketProtocolToPosixProtocol(socket_protocol);
     if(protocol == -1) {
-        *err = IOErrorTemplate::kUnknownError->Copy();
+        *err = IOErrorTemplate::kUnknownError.Copy();
         return -1;
     }
 
@@ -432,13 +432,13 @@ void hidra2::SystemIO::InetBind(SocketDescriptor socket_fd, const std::string& a
 
     int family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {
-        *err = IOErrorTemplate::kUnsupportedAddressFamily->Copy();
+        *err = IOErrorTemplate::kUnsupportedAddressFamily.Copy();
         return;
     }
 
     auto host_port_tuple = SplitAddressToHostnameAndPort(address);
     if (!host_port_tuple) {
-        *err = IOErrorTemplate::kInvalidAddressFormat->Copy();
+        *err = IOErrorTemplate::kInvalidAddressFormat.Copy();
         return;
     }
     std::string host;
@@ -477,7 +477,7 @@ size_t hidra2::SystemIO::ReceiveTimeout(SocketDescriptor socket_fd, void* buf, s
 
     int res = ::select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
     if (res == 0) {
-        *err = IOErrorTemplate::kTimeout->Copy();
+        *err = IOErrorTemplate::kTimeout.Copy();
         return 0;
     }
     if (res == -1) {
@@ -496,7 +496,7 @@ size_t hidra2::SystemIO::Receive(SocketDescriptor socket_fd, void* buf, size_t l
     while (already_received < length) {
         ssize_t received_amount = _recv(socket_fd, (uint8_t*) buf + already_received, length - already_received);
         if (received_amount == 0) {
-            *err = IOErrorTemplate::kEndOfFile->Copy();
+            *err = IOErrorTemplate::kEndOfFile.Copy();
             return already_received;
         }
         if (received_amount == -1) {
@@ -526,7 +526,7 @@ size_t hidra2::SystemIO::Send(SocketDescriptor socket_fd,
     while (already_sent < length) {
         ssize_t send_amount = _send(socket_fd, (uint8_t*) buf + already_sent, length - already_sent);
         if (send_amount == 0) {
-            *err = IOErrorTemplate::kEndOfFile->Copy();
+            *err = IOErrorTemplate::kEndOfFile.Copy();
             return already_sent;
         }
         if (send_amount == -1) {

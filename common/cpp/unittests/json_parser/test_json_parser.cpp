@@ -199,13 +199,13 @@ TEST_F(ParseFileTests, CannotReadFile) {
     std::string json = R"({"_id":2})";
 
     EXPECT_CALL(mock_io, ReadFileToString_t("filename", _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(hidra2::IOErrorTemplate::kFileNotFound->Copy().release()),
+    WillOnce(DoAll(testing::SetArgPointee<1>(hidra2::IOErrorTemplate::kFileNotFound.Copy().release()),
                    testing::Return("")));
 
     uint64_t id;
     auto err = parser.GetUInt64("_id", &id);
     //TODO: @Sergey why not just checking error code?
-    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::IOErrorTemplate::kFileNotFound->Copy()->Explain()));
+    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::IOErrorTemplate::kFileNotFound.Copy()->Explain()));
 
 
 }

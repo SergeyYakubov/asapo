@@ -29,31 +29,31 @@ Error GetLastErrorFromErrno() {
     case 0:
         return nullptr;
     case EBADF:
-        return IOErrorTemplate::kBadFileNumber->Copy();
+        return IOErrorTemplate::kBadFileNumber.Copy();
     case EAGAIN:
-        return IOErrorTemplate::kResourceTemporarilyUnavailable->Copy();
+        return IOErrorTemplate::kResourceTemporarilyUnavailable.Copy();
     case ENOENT:
     case ENOTDIR:
-        return IOErrorTemplate::kFileNotFound->Copy();
+        return IOErrorTemplate::kFileNotFound.Copy();
     case EACCES:
-        return IOErrorTemplate::kPermissionDenied->Copy();
+        return IOErrorTemplate::kPermissionDenied.Copy();
     case EFAULT:
-        return IOErrorTemplate::kInvalidMemoryAddress->Copy();
+        return IOErrorTemplate::kInvalidMemoryAddress.Copy();
     case EEXIST:
-        return IOErrorTemplate::kFileAlreadyExists->Copy();
+        return IOErrorTemplate::kFileAlreadyExists.Copy();
     case ENOSPC:
-        return IOErrorTemplate::kNoSpaceLeft->Copy();
+        return IOErrorTemplate::kNoSpaceLeft.Copy();
     case ECONNREFUSED:
-        return IOErrorTemplate::kConnectionRefused->Copy();
+        return IOErrorTemplate::kConnectionRefused.Copy();
     case EADDRINUSE:
-        return IOErrorTemplate::kAddressAlreadyInUse->Copy();
+        return IOErrorTemplate::kAddressAlreadyInUse.Copy();
     case ECONNRESET:
-        return IOErrorTemplate::kConnectionResetByPeer->Copy();
+        return IOErrorTemplate::kConnectionResetByPeer.Copy();
     case ENOTSOCK:
-        return IOErrorTemplate::kSocketOperationOnNonSocket->Copy();
+        return IOErrorTemplate::kSocketOperationOnNonSocket.Copy();
     default:
         std::cout << "[IOErrorsFromErrno] Unknown error code: " << errno << std::endl;
-        Error err = IOErrorTemplate::kUnknownError->Copy();
+        Error err = IOErrorTemplate::kUnknownError.Copy();
         (*err).Append("Unknown error code: " + std::to_string(errno));
         return err;
     }

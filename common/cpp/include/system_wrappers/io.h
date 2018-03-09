@@ -14,26 +14,26 @@
 namespace hidra2 {
 
 namespace IOErrorTemplate {
-ErrorTemplate* const kUnknownError = new ErrorTemplate{"Unknown Error", ErrorType::kUnknownError};
+auto const kUnknownError = ErrorTemplate{"Unknown Error", ErrorType::kUnknownError};
 
-ErrorTemplate* const kFileNotFound = new ErrorTemplate{"No such file or directory", ErrorType::kFileNotFound};
-ErrorTemplate* const kReadError = new ErrorTemplate{"Read error", ErrorType::kFileNotFound};
-ErrorTemplate* const kBadFileNumber = new ErrorTemplate{"Bad file number", ErrorType::kBadFileNumber};
-ErrorTemplate* const kResourceTemporarilyUnavailable = new ErrorTemplate{"Resource temporarily unavailable", ErrorType::kResourceTemporarilyUnavailable};
-ErrorTemplate* const kPermissionDenied = new ErrorTemplate{"Permission denied", ErrorType::kPermissionDenied};
-ErrorTemplate* const kUnsupportedAddressFamily = new ErrorTemplate{"Unsupported address family", ErrorType::kUnsupportedAddressFamily};
-ErrorTemplate* const kInvalidAddressFormat = new ErrorTemplate{"Invalid address format", ErrorType::kInvalidAddressFormat};
-ErrorTemplate* const kEndOfFile = new ErrorTemplate{"End of file", ErrorType::kEndOfFile};
-ErrorTemplate* const kAddressAlreadyInUse = new ErrorTemplate{"Address already in use", ErrorType::kAddressAlreadyInUse};
-ErrorTemplate* const kConnectionRefused = new ErrorTemplate{"Connection refused", ErrorType::kConnectionRefused};
-ErrorTemplate* const kConnectionResetByPeer = new ErrorTemplate{"kConnectionResetByPeer", ErrorType::kConnectionResetByPeer};
-ErrorTemplate* const kTimeout = new ErrorTemplate{"kTimeout", ErrorType::kTimeout};
-ErrorTemplate* const kFileAlreadyExists = new ErrorTemplate{"kFileAlreadyExists", ErrorType::kFileAlreadyExists};
-ErrorTemplate* const kNoSpaceLeft = new ErrorTemplate{"kNoSpaceLeft", ErrorType::kNoSpaceLeft};
-ErrorTemplate* const kSocketOperationOnNonSocket = new ErrorTemplate{"kSocketOperationOnNonSocket", ErrorType::kSocketOperationOnNonSocket};
-ErrorTemplate* const kMemoryAllocationError = new ErrorTemplate{"kMemoryAllocationError", ErrorType::kMemoryAllocationError};
-ErrorTemplate* const kInvalidMemoryAddress = new ErrorTemplate{"kInvalidMemoryAddress", ErrorType::kInvalidMemoryAddress};
-ErrorTemplate* const kUnableToResolveHostname = new ErrorTemplate{"kUnableToResolveHostname", ErrorType::kUnableToResolveHostname};
+auto const kFileNotFound = ErrorTemplate{"No such file or directory", ErrorType::kFileNotFound};
+auto const kReadError = ErrorTemplate{"Read error", ErrorType::kFileNotFound};
+auto const kBadFileNumber = ErrorTemplate{"Bad file number", ErrorType::kBadFileNumber};
+auto const kResourceTemporarilyUnavailable = ErrorTemplate{"Resource temporarily unavailable", ErrorType::kResourceTemporarilyUnavailable};
+auto const kPermissionDenied = ErrorTemplate{"Permission denied", ErrorType::kPermissionDenied};
+auto const kUnsupportedAddressFamily = ErrorTemplate{"Unsupported address family", ErrorType::kUnsupportedAddressFamily};
+auto const kInvalidAddressFormat = ErrorTemplate{"Invalid address format", ErrorType::kInvalidAddressFormat};
+auto const kEndOfFile = ErrorTemplate{"End of file", ErrorType::kEndOfFile};
+auto const kAddressAlreadyInUse = ErrorTemplate{"Address already in use", ErrorType::kAddressAlreadyInUse};
+auto const kConnectionRefused = ErrorTemplate{"Connection refused", ErrorType::kConnectionRefused};
+auto const kConnectionResetByPeer = ErrorTemplate{"kConnectionResetByPeer", ErrorType::kConnectionResetByPeer};
+auto const kTimeout = ErrorTemplate{"kTimeout", ErrorType::kTimeout};
+auto const kFileAlreadyExists = ErrorTemplate{"kFileAlreadyExists", ErrorType::kFileAlreadyExists};
+auto const kNoSpaceLeft = ErrorTemplate{"kNoSpaceLeft", ErrorType::kNoSpaceLeft};
+auto const kSocketOperationOnNonSocket = ErrorTemplate{"kSocketOperationOnNonSocket", ErrorType::kSocketOperationOnNonSocket};
+auto const kMemoryAllocationError = ErrorTemplate{"kMemoryAllocationError", ErrorType::kMemoryAllocationError};
+auto const kInvalidMemoryAddress = ErrorTemplate{"kInvalidMemoryAddress", ErrorType::kInvalidMemoryAddress};
+auto const kUnableToResolveHostname = ErrorTemplate{"kUnableToResolveHostname", ErrorType::kUnableToResolveHostname};
 }
 
 enum FileOpenMode {
