@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <unittests/MockIO.h>
+#include <common/error.h>
+#include <producer/producer.h>
 #include "../src/producer_impl.h"
-#include "../../../common/cpp/unittests/MockIO.h"
 
 namespace {
 using ::testing::Return;
@@ -38,11 +40,11 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_invalid_addres
 
     std::string expected_address = "127.0.0.1:9090";
 
-    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket(expected_address, _))
+    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(expected_address, _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrors::kInvalidAddressFormat),
+            testing::SetArgPointee<1>(hidra2::IOErrorTemplate::kInvalidAddressFormat.Copy().release()),
             Return(-1)
         ));
 
@@ -62,11 +64,11 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_connection_ref
 
     std::string expected_address = "127.0.0.1:9090";
 
-    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket(expected_address, _))
+    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(expected_address, _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrors::kConnectionRefused),
+            testing::SetArgPointee<1>(hidra2::IOErrorTemplate::kConnectionRefused.Copy().release()),
             Return(-1)
         ));
 
@@ -85,11 +87,11 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_unk) {
 
     std::string expected_address = "127.0.0.1:9090";
 
-    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket(expected_address, _))
+    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(expected_address, _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrors::kUnknownError),
+            testing::SetArgPointee<1>(hidra2::IOErrorTemplate::kUnknownError.Copy().release()),
             Return(-1)
         ));
 
@@ -109,11 +111,11 @@ TEST(ProducerImpl, ConnectToReceiver) {
     std::string expected_address = "127.0.0.1:9090";
     hidra2::FileDescriptor expected_fd = 199;
 
-    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket(expected_address, _))
+    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(expected_address, _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrors::kNoError),
+            testing::SetArgPointee<1>(nullptr),
             Return(expected_fd)
         ));
 
@@ -128,11 +130,11 @@ void ConnectToReceiver_DONE(hidra2::ProducerImpl& producer, hidra2::FileDescript
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
 
-    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket(_, _))
+    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(_, _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrors::kNoError),
+            testing::SetArgPointee<1>(nullptr),
             Return(expected_fd)
         ));
 
@@ -215,12 +217,12 @@ TEST(ProducerImpl, Send__sendDataRequest_error) {
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
 
-    EXPECT_CALL(mockIO, Send(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id, expected_file_size),
+    EXPECT_CALL(mockIO, Send_t(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id, expected_file_size),
                              sizeof(hidra2::SendDataRequest), _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kBadFileNumber),
+            testing::SetArgPointee<3>(hidra2::IOErrorTemplate::kBadFileNumber.Copy().release()),
             Return(-1)
         ));
 
@@ -247,19 +249,19 @@ TEST(ProducerImpl, Send__sendData_error) {
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
 
-    EXPECT_CALL(mockIO, Send(_, _, _, _))
+    EXPECT_CALL(mockIO, Send_t(_, _, _, _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::SetArgPointee<3>(nullptr),
             testing::ReturnArg<2>()
         ));
 
-    EXPECT_CALL(mockIO, Send(expected_fd, expected_file_pointer, expected_file_size, _))
+    EXPECT_CALL(mockIO, Send_t(expected_fd, expected_file_pointer, expected_file_size, _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kBadFileNumber),
+            testing::SetArgPointee<3>(hidra2::IOErrorTemplate::kBadFileNumber.Copy().release()),
             Return(-1)
         ));
 
@@ -288,19 +290,19 @@ TEST(ProducerImpl, Send__Receive_error) {
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
 
-    EXPECT_CALL(mockIO, Send(_, _, _, _))
+    EXPECT_CALL(mockIO, Send_t(_, _, _, _))
     .Times(2)
     .WillRepeatedly(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::SetArgPointee<3>(nullptr),
             testing::ReturnArg<2>()
         ));
 
-    EXPECT_CALL(mockIO, Receive(expected_fd, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mockIO, Receive_t(expected_fd, _, sizeof(hidra2::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kBadFileNumber),
+            testing::SetArgPointee<3>(hidra2::IOErrorTemplate::kBadFileNumber.Copy().release()),
             testing::Return(-1)
         ));
 
@@ -327,19 +329,19 @@ TEST(ProducerImpl, Send__Receive_server_error) {
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
 
-    EXPECT_CALL(mockIO, Send(_, _, _, _))
+    EXPECT_CALL(mockIO, Send_t(_, _, _, _))
     .Times(2)
     .WillRepeatedly(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::SetArgPointee<3>(nullptr),
             testing::ReturnArg<2>()
         ));
 
-    EXPECT_CALL(mockIO, Receive(_, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mockIO, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::SetArgPointee<3>(nullptr),
             A_WriteSendDataResponse(hidra2::NET_ERR__ALLOCATE_STORAGE_FAILED, expected_request_id),
             testing::ReturnArg<2>()
         ));
@@ -367,19 +369,19 @@ TEST(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
 
-    EXPECT_CALL(mockIO, Send(_, _, _, _))
+    EXPECT_CALL(mockIO, Send_t(_, _, _, _))
     .Times(2)
     .WillRepeatedly(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::SetArgPointee<3>(nullptr),
             testing::ReturnArg<2>()
         ));
 
-    EXPECT_CALL(mockIO, Receive(_, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mockIO, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::SetArgPointee<3>(nullptr),
             A_WriteSendDataResponse(hidra2::NET_ERR__FILEID_ALREADY_IN_USE, expected_request_id),
             testing::ReturnArg<2>()
         ));
@@ -407,19 +409,19 @@ TEST(ProducerImpl, Send) {
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
 
-    EXPECT_CALL(mockIO, Send(_, _, _, _))
+    EXPECT_CALL(mockIO, Send_t(_, _, _, _))
     .Times(2)
     .WillRepeatedly(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::SetArgPointee<3>(nullptr),
             testing::ReturnArg<2>()
         ));
 
-    EXPECT_CALL(mockIO, Receive(_, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mockIO, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrors::kNoError),
+            testing::SetArgPointee<3>(nullptr),
             A_WriteSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id),
             testing::ReturnArg<2>()
         ));

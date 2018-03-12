@@ -140,8 +140,8 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
 
 /** @} */
 
-void SystemIO::CollectFileInformationRecursivly(const std::string& path,
-                                                FileInfos* files, Error* err)  const {
+void SystemIO::CollectFileInformationRecursively(const std::string &path,
+                                                 FileInfos* files, Error* err)  const {
     errno = 0;
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
@@ -152,8 +152,8 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
 
     while (struct dirent* current_entity = readdir(dir)) {
         if (IsDirectory(current_entity)) {
-            CollectFileInformationRecursivly(path + "/" + current_entity->d_name,
-                                             files, err);
+            CollectFileInformationRecursively(path + "/" + current_entity->d_name,
+                                              files, err);
         } else {
             ProcessFileEntity(current_entity, path, files, err);
         }

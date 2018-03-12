@@ -157,8 +157,8 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t fsize, ErrorInterface** err));
 
-    void CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files,
-                                          Error* err) const override {
+    void CollectFileInformationRecursively(const std::string &path, std::vector<FileInfo>* files,
+                                           Error* err) const override {
         ErrorInterface* error;
         CollectFileInformationRecursivly_t(path, files, &error);
         err->reset(error);

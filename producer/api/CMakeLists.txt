@@ -16,11 +16,11 @@ target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR
 ################################
 # Testing
 ################################
-#set(TEST_SOURCE_FILES
-#        unittests/test_producer_impl.cpp
-#        unittests/test_producer.cpp
-#        )
-#set(TEST_LIBRARIES "${TARGET_NAME}")
-#
-#
-#gtest(${TARGET_NAME} ${TEST_SOURCE_FILES} ${TEST_LIBRARIES})
+set(TEST_SOURCE_FILES
+        unittests/test_producer_impl.cpp
+        unittests/test_producer.cpp
+        )
+set(TEST_LIBRARIES "${TARGET_NAME}")
+
+
+gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")

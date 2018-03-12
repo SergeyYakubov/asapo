@@ -257,7 +257,7 @@ void SystemIO::InitializeSocketIfNecessary() const {
         WSADATA wsaData;
         int err = WSAStartup(wVersionRequested, &wsaData);
         if (err != 0) {
-            std::cout << "[_socket/WSAStartup] Faild to WSAStartup with version 2.2" << std::endl;
+            std::cout << "[_socket/WSAStartup] Failed to WSAStartup with version 2.2" << std::endl;
             WSACleanup();
             // Do not return, since ::socket has to set an errno
         } else {

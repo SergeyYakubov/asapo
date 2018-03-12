@@ -98,7 +98,7 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, Err
 
 FileInfos SystemIO::FilesInFolder(const std::string& folder, Error* err) const {
     FileInfos files{};
-    CollectFileInformationRecursivly(folder, &files, err);
+    CollectFileInformationRecursively(folder, &files, err);
     if (*err != nullptr) {
         return {};
     }

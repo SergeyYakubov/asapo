@@ -19,7 +19,7 @@ class SystemIO final : public IO {
 
     void ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const;
 
-    //void CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
+    //void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
     int FileOpenModeToPosixFileOpenMode(int open_flags) const;
     Error GetLastError() const;
 
@@ -84,8 +84,8 @@ class SystemIO final : public IO {
     size_t          Write(FileDescriptor fd, const void* buf, size_t length, Error* err) const;
     void            CreateNewDirectory(const std::string& directory_name, Error* err) const;
     FileData        GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const;
-    void            CollectFileInformationRecursivly(const std::string& path, std::vector<FileInfo>* files,
-                                                     Error* err) const;
+    void            CollectFileInformationRecursively(const std::string &path, std::vector<FileInfo>* files,
+                                                      Error* err) const;
     std::string     ReadFileToString(const std::string& fname, Error* err) const;
 };
 }
