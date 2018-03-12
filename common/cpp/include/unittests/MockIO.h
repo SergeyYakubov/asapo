@@ -79,15 +79,16 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD4(Receive_t, size_t(SocketDescriptor socket_fd, void* buf, size_t length, ErrorInterface** err));
 
-    size_t ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
-                          Error* err) const override {
+    size_t ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
+                              Error* err) const override {
         ErrorInterface* error = nullptr;
-        auto data = ReceiveTimeout_t(socket_fd, buf, length, timeout_in_usec, &error);
+        auto data = ReceiveWithTimeout_t(socket_fd, buf, length, timeout_in_usec, &error);
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD5(ReceiveTimeout_t, size_t(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
-                                                ErrorInterface** err));
+    MOCK_CONST_METHOD5(ReceiveWithTimeout_t, size_t(SocketDescriptor socket_fd, void* buf, size_t length,
+                                                    long timeout_in_usec,
+                                                    ErrorInterface** err));
 
     size_t Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const override {
         ErrorInterface* error = nullptr;

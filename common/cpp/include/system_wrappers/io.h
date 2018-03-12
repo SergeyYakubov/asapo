@@ -15,7 +15,7 @@ namespace hidra2 {
 
 
 enum class IOErrorType {
-    kUnknownError,//TODO Rename to kUnknownIOError
+    kUnknownIOError,
     kBadFileNumber,
     kResourceTemporarilyUnavailable,
     kFileNotFound,
@@ -70,7 +70,7 @@ class IOErrorTemplate : public SimpleErrorTemplate {
 };
 
 namespace IOErrorTemplates {
-auto const kUnknownError = IOErrorTemplate{"Unknown Error", IOErrorType::kUnknownError};
+auto const kUnknownError = IOErrorTemplate{"Unknown Error", IOErrorType::kUnknownIOError};
 
 auto const kFileNotFound = IOErrorTemplate{"No such file or directory", IOErrorType::kFileNotFound};
 auto const kReadError = IOErrorTemplate{"Read error", IOErrorType::kFileNotFound};
@@ -90,6 +90,7 @@ auto const kInvalidMemoryAddress = IOErrorTemplate{"kInvalidMemoryAddress", IOEr
 auto const kUnableToResolveHostname = IOErrorTemplate{"kUnableToResolveHostname", IOErrorType::kUnableToResolveHostname};
 }
 
+//Need to be "enum" since multiple flags are allowed
 enum FileOpenMode {
     IO_OPEN_MODE_READ = 1 << 0,
     IO_OPEN_MODE_WRITE = 1 << 1,
@@ -139,8 +140,11 @@ class IO {
     virtual void            InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const = 0;
     virtual SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, Error* err) const = 0;
     virtual size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, Error* err) const = 0;
-    virtual size_t          ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
-                                           Error* err) const = 0;
+    virtual size_t          ReceiveWithTimeout(SocketDescriptor socket_fd,
+                                               void* buf,
+                                               size_t length,
+                                               long timeout_in_usec,
+                                               Error* err) const = 0;
     virtual size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const = 0;
     virtual void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const = 0;
     /**

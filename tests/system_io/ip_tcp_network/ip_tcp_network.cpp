@@ -58,7 +58,7 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
             ExitIfErrIsNotOk(&err, 104);
             while (true) {
                 uint64_t need_to_receive_size;
-                io->ReceiveTimeout(client_fd, &need_to_receive_size, sizeof(uint64_t), 100, &err);
+                io->ReceiveWithTimeout(client_fd, &need_to_receive_size, sizeof(uint64_t), 100, &err);
                 if(err != nullptr) {
                     if (hidra2::IOErrorTemplates::kTimeout == err) {
                         continue;
@@ -67,7 +67,7 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
                         break;
                     }
                 }
-                ExitIfErrIsNotOk(&err, 105);//ReceiveTimeout
+                ExitIfErrIsNotOk(&err, 105);//ReceiveWithTimeout
 
                 std::unique_ptr<uint8_t[]> buffer(new uint8_t[need_to_receive_size]);
 
@@ -95,8 +95,8 @@ void CheckNormal(int times, size_t size) {
     FileDescriptor socket = io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
     ExitIfErrIsNotOk(&err, 201);
 
-    std::cout << "[CLIENT] ReceiveTimeout" << std::endl;
-    io->ReceiveTimeout(socket, nullptr, 1, 1000 * 100/*100ms*/, &err);
+    std::cout << "[CLIENT] ReceiveWithTimeout" << std::endl;
+    io->ReceiveWithTimeout(socket, nullptr, 1, 1000 * 100/*100ms*/, &err);
     if (hidra2::IOErrorTemplates::kTimeout != err) {
         ExitIfErrIsNotOk(&err, 202);
     }

@@ -5,9 +5,9 @@
 namespace hidra2 {
 
 const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProducerPeer::init_request_handlers() {
-    std::vector<NetworkProducerPeer::RequestHandlerInformation> vec(OP_CODE_COUNT);
+    std::vector<NetworkProducerPeer::RequestHandlerInformation> vec(kNetOpcodeCount);
 
-    vec[OP_CODE__SEND_DATA] = {
+    vec[kNetOpcodeSendData] = {
         sizeof(SendDataRequest),
         sizeof(SendDataResponse),
         (NetworkProducerPeer::RequestHandler)& NetworkProducerPeer::handle_send_data_request_

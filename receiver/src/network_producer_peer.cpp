@@ -36,7 +36,7 @@ void NetworkProducerPeer::internal_receiver_thread_() {
     while(is_listening_) {
         io_err = nullptr;
 
-        size_t size = io->ReceiveTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 50, &io_err);
+        size_t size = io->ReceiveWithTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 50, &io_err);
         if(io_err != nullptr) {
             if(IOErrorTemplates::kTimeout == io_err) {
                 std::this_thread::yield();
@@ -53,7 +53,7 @@ void NetworkProducerPeer::internal_receiver_thread_() {
             break;
         }
 
-        assert(size);//Something in ReceiveTimeout went wrong.
+        assert(size);//Something in ReceiveWithTimeout went wrong.
 
         std::cout << "[" << connection_id() << "] Got request: " << generic_request->op_code << std::endl;
         size_t bytes_to_send = handle_generic_request_(generic_request, generic_response);
@@ -86,7 +86,7 @@ void NetworkProducerPeer::stop_peer_listener() {
 }
 
 size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response) {
-    if(request->op_code >= OP_CODE_COUNT || request->op_code < 0) {
+    if(request->op_code >= kNetOpcodeCount || request->op_code < 0) {
         std::cerr << "[" << connection_id() << "] Error invalid op_code: " << request->op_code << " force disconnect." <<
                   std::endl;
         io->CloseSocket(socket_fd_, nullptr);

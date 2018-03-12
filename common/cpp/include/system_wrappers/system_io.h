@@ -11,6 +11,10 @@
 typedef SSIZE_T ssize_t;
 #endif
 
+#ifdef __linux__
+#include <netinet/in.h>
+#endif
+
 namespace hidra2 {
 
 class SystemIO final : public IO {
@@ -30,22 +34,33 @@ class SystemIO final : public IO {
     // System function mapping. Should only be called by the wrapper function
     FileDescriptor  _open(const char* filename, int posix_open_flags) const;
     bool            _close(FileDescriptor fd) const;
-    ssize_t         _read(FileDescriptor fd, void* buffer, size_t length) const;
-    ssize_t         _write(FileDescriptor fd, const void* buffer, size_t count) const;
     int             _mkdir(const char* dirname) const;
 
     SocketDescriptor	_socket(int address_family, int socket_type, int socket_protocol) const;
     SocketDescriptor	_connect(SocketDescriptor socket_fd, const void* address, size_t address_length) const;
     int					_listen(SocketDescriptor socket_fd, int backlog) const;
     SocketDescriptor	_accept(SocketDescriptor socket_fd, void* address, size_t* address_length) const;
-    ssize_t				_send(SocketDescriptor socket_fd, const void* buffer, size_t length) const;
-    ssize_t				_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const;
     bool			    _close_socket(SocketDescriptor socket_fd) const;
 
     void                                                InitializeSocketIfNecessary() const;
     std::unique_ptr<std::tuple<std::string, uint16_t>>  SplitAddressToHostnameAndPort(std::string address) const;
 
     FileInfo GetFileInfo(const std::string& name, Error* err) const;
+
+    std::unique_ptr<sockaddr_in> BuildSockaddrIn(const std::string& address, Error* err) const;
+
+    /*
+     * Transfer functions
+     */
+    size_t Transfer(ssize_t (*method)(FileDescriptor, const void*, size_t), FileDescriptor fd, const void* buf,
+                    size_t length,
+                    Error* err) const;
+    size_t Transfer(ssize_t (*method)(FileDescriptor, void*, size_t), FileDescriptor fd, void* buf, size_t length,
+                    Error* err) const;
+    static ssize_t	    _send(SocketDescriptor socket_fd, const void* buffer, size_t length);
+    static ssize_t		_recv(SocketDescriptor socket_fd, void* buffer, size_t length);
+    static ssize_t      _read(FileDescriptor fd, void* buffer, size_t length);
+    static ssize_t      _write(FileDescriptor fd, const void* buffer, size_t count);
 
   public:
     /*
@@ -69,8 +84,8 @@ class SystemIO final : public IO {
     void            InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const;
     SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, Error* err) const;
     size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, Error* err) const;
-    size_t          ReceiveTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
-                                   Error* err) const;
+    size_t          ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
+                                       Error* err) const;
     size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const;
     void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const;
     void            CloseSocket(SocketDescriptor socket_fd, Error* err) const;

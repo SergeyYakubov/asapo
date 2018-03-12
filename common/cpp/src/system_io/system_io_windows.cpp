@@ -151,7 +151,7 @@ void ProcessFileEntity(const WIN32_FIND_DATA& f, const std::string& path,
 }
 
 void SystemIO::CollectFileInformationRecursively(const std::string& path,
-                                                FileInfos* files, Error* err) const {
+                                                 FileInfos* files, Error* err) const {
     WIN32_FIND_DATA find_data;
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {

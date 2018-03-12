@@ -7,11 +7,10 @@ namespace hidra2 {
 
 typedef uint64_t NetworkRequestId;
 
-enum OpCode : uint8_t {
-    OP_CODE_A,
-    OP_CODE__SEND_DATA,
+enum Opcode : uint8_t {
+    kNetOpcodeSendData,
 
-    OP_CODE_COUNT,
+    kNetOpcodeCount,
 };
 
 enum NetworkErrorCode : uint16_t {
@@ -27,12 +26,12 @@ enum NetworkErrorCode : uint16_t {
  * @{
  */
 struct GenericNetworkRequest {
-    OpCode              op_code;
+    Opcode              op_code;
     NetworkRequestId    request_id;
 };
 
 struct GenericNetworkResponse {
-    OpCode              op_code;
+    Opcode              op_code;
     NetworkRequestId    request_id;
     NetworkErrorCode    error_code;
 };

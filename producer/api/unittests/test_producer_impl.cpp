@@ -166,14 +166,14 @@ TEST(ProducerImpl, ConnectToReceiver__already_connected) {
 
 MATCHER_P3(M_CheckSendDataRequest, request_id, file_id, file_size,
            "Checks if a valid SendDataRequest was Send") {
-    return ((hidra2::SendDataRequest*)arg)->op_code == hidra2::OP_CODE__SEND_DATA
+    return ((hidra2::SendDataRequest*)arg)->op_code == hidra2::kNetOpcodeSendData
            && ((hidra2::SendDataRequest*)arg)->request_id == request_id
            && ((hidra2::SendDataRequest*)arg)->file_id == file_id
            && ((hidra2::SendDataRequest*)arg)->file_size == file_size;
 }
 
 ACTION_P2(A_WriteSendDataResponse, error_code, request_id) {
-    ((hidra2::SendDataResponse*)arg1)->op_code = hidra2::OP_CODE__SEND_DATA;
+    ((hidra2::SendDataResponse*)arg1)->op_code = hidra2::kNetOpcodeSendData;
     ((hidra2::SendDataResponse*)arg1)->error_code = error_code;
     ((hidra2::SendDataResponse*)arg1)->request_id = request_id;
 }

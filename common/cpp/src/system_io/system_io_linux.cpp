@@ -191,11 +191,11 @@ bool SystemIO::_close(hidra2::FileDescriptor fd) const {
     return ::close(fd) == 0;
 }
 
-ssize_t SystemIO::_read(hidra2::FileDescriptor fd, void* buffer, size_t length) const {
+ssize_t SystemIO::_read(hidra2::FileDescriptor fd, void* buffer, size_t length) {
     return ::read(fd, buffer, length);
 }
 
-ssize_t SystemIO::_write(hidra2::FileDescriptor fd, const void* buffer, size_t length) const {
+ssize_t SystemIO::_write(hidra2::FileDescriptor fd, const void* buffer, size_t length) {
     return ::write(fd, buffer, length);
 }
 
@@ -203,11 +203,11 @@ SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int sock
     return ::socket(address_family, socket_type, socket_protocol);
 }
 
-ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) const {
+ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) {
     return ::send(socket_fd, buffer, length, MSG_DONTWAIT);
 }
 
-ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const {
+ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length) {
     return ::recv(socket_fd, buffer, length, MSG_DONTWAIT);
 }
 
