@@ -33,10 +33,10 @@ hidra2::ProducerError hidra2::ProducerImpl::initialize_socket_to_receiver_(const
     FileDescriptor fd = io->CreateAndConnectIPTCPSocket(receiver_address, &err);
 
     if(err != nullptr) {
-        if((*err).GetErrorType() == ErrorType::kInvalidAddressFormat) {
+        if(IOErrorTemplates::kInvalidAddressFormat == err) {
             return ProducerError::kInvalidAddressFormat;
         }
-        if((*err).GetErrorType() == ErrorType::kConnectionRefused) {
+        if(IOErrorTemplates::kConnectionRefused == err) {
             return ProducerError::kConnectionRefused;
         }
         return ProducerError::kUnknownError;

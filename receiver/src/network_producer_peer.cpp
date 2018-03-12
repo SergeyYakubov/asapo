@@ -38,12 +38,12 @@ void NetworkProducerPeer::internal_receiver_thread_() {
 
         size_t size = io->ReceiveTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 50, &io_err);
         if(io_err != nullptr) {
-            if((*io_err).GetErrorType() == ErrorType::kTimeout) {
+            if(IOErrorTemplates::kTimeout == io_err) {
                 std::this_thread::yield();
                 continue;
             }
 
-            if((*io_err).GetErrorType() == ErrorType::kEndOfFile) {
+            if(ErrorTemplates::kEndOfFile == io_err) {
                 is_listening_ = false;
                 break;
             }
@@ -125,7 +125,7 @@ NetworkProducerPeer::~NetworkProducerPeer() {
 
 FileDescriptor NetworkProducerPeer::CreateAndOpenFileByFileId(uint64_t file_id, Error* err) {
     io->CreateNewDirectory("files", err);
-    if(*err != nullptr && (*err)->GetErrorType() != ErrorType::kFileAlreadyExists) {
+    if(*err != nullptr && IOErrorTemplates::kFileAlreadyExists == *err) {
         return -1;
     }
     return io->Open("files/" + std::to_string(file_id) + ".bin", IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS | IO_OPEN_MODE_RW,

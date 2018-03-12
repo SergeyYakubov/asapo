@@ -29,31 +29,31 @@ Error GetLastErrorFromErrno() {
     case 0:
         return nullptr;
     case EBADF:
-        return IOErrorTemplate::kBadFileNumber.Copy();
+        return IOErrorTemplates::kBadFileNumber.Generate();
     case EAGAIN:
-        return IOErrorTemplate::kResourceTemporarilyUnavailable.Copy();
+        return IOErrorTemplates::kResourceTemporarilyUnavailable.Generate();
     case ENOENT:
     case ENOTDIR:
-        return IOErrorTemplate::kFileNotFound.Copy();
+        return IOErrorTemplates::kFileNotFound.Generate();
     case EACCES:
-        return IOErrorTemplate::kPermissionDenied.Copy();
+        return IOErrorTemplates::kPermissionDenied.Generate();
     case EFAULT:
-        return IOErrorTemplate::kInvalidMemoryAddress.Copy();
+        return IOErrorTemplates::kInvalidMemoryAddress.Generate();
     case EEXIST:
-        return IOErrorTemplate::kFileAlreadyExists.Copy();
+        return IOErrorTemplates::kFileAlreadyExists.Generate();
     case ENOSPC:
-        return IOErrorTemplate::kNoSpaceLeft.Copy();
+        return IOErrorTemplates::kNoSpaceLeft.Generate();
     case ECONNREFUSED:
-        return IOErrorTemplate::kConnectionRefused.Copy();
+        return IOErrorTemplates::kConnectionRefused.Generate();
     case EADDRINUSE:
-        return IOErrorTemplate::kAddressAlreadyInUse.Copy();
+        return IOErrorTemplates::kAddressAlreadyInUse.Generate();
     case ECONNRESET:
-        return IOErrorTemplate::kConnectionResetByPeer.Copy();
+        return IOErrorTemplates::kConnectionResetByPeer.Generate();
     case ENOTSOCK:
-        return IOErrorTemplate::kSocketOperationOnNonSocket.Copy();
+        return IOErrorTemplates::kSocketOperationOnNonSocket.Generate();
     default:
         std::cout << "[IOErrorsFromErrno] Unknown error code: " << errno << std::endl;
-        Error err = IOErrorTemplate::kUnknownError.Copy();
+        Error err = IOErrorTemplates::kUnknownError.Generate();
         (*err).Append("Unknown error code: " + std::to_string(errno));
         return err;
     }
@@ -140,7 +140,7 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
 
 /** @} */
 
-void SystemIO::CollectFileInformationRecursively(const std::string &path,
+void SystemIO::CollectFileInformationRecursively(const std::string& path,
                                                  FileInfos* files, Error* err)  const {
     errno = 0;
     auto dir = opendir((path).c_str());

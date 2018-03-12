@@ -59,7 +59,7 @@ class FakeIO: public hidra2::MockIO {
 class IOFolderNotFound: public FakeIO {
   public:
     FileInfos FilesInFolder(const std::string& folder, Error* err) const override {
-        *err = hidra2::IOErrorTemplate::kFileNotFound.Copy();
+        *err = hidra2::IOErrorTemplates::kFileNotFound.Generate();
         return {};
     }
 };
@@ -67,7 +67,7 @@ class IOFolderNotFound: public FakeIO {
 class IOFolderUnknownError: public FakeIO {
   public:
     FileInfos FilesInFolder(const std::string& folder, Error* err) const override {
-        *err  = hidra2::IOErrorTemplate::kUnknownError.Copy();
+        *err  = hidra2::IOErrorTemplates::kUnknownError.Generate();
         return {};
     }
 };
@@ -83,7 +83,7 @@ class IOEmptyFolder: public FakeIO {
 class IOCannotOpenFile: public FakeIO {
   public:
     FileData GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const noexcept override {
-        *err = hidra2::IOErrorTemplate::kPermissionDenied.Copy();
+        *err = hidra2::IOErrorTemplates::kPermissionDenied.Generate();
         return {};
     };
 };
@@ -121,7 +121,7 @@ TEST_F(FolderDataBrokerTests, CannotConnectWhenNoFolder) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrorTemplate::kFileNotFound.Copy()->Explain()));
+    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrorTemplates::kFileNotFound.Generate()->Explain()));
 }
 
 TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
@@ -129,7 +129,7 @@ TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrorTemplate::kUnknownError.Copy()->Explain()));
+    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrorTemplates::kUnknownError.Generate()->Explain()));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithoutConnectReturnsError) {
@@ -175,7 +175,7 @@ TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
     FileInfo fi;
 
     auto err = data_broker->GetNext(&fi, nullptr);
-    ASSERT_THAT(err->GetErrorType(), Eq(hidra2::IOErrorTemplate::kEndOfFile.Copy()->GetErrorType()));
+    ASSERT_TRUE(hidra2::ErrorTemplates::kEndOfFile == err);
 
     ASSERT_THAT(err->Explain(), Eq(hidra2::WorkerErrorMessage::kNoData));
 }
@@ -187,7 +187,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
     FileData data;
 
     auto err = data_broker->GetNext(&fi, &data);
-    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrorTemplate::kPermissionDenied.Copy()->Explain()));
+    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrorTemplates::kPermissionDenied.Generate()->Explain()));
 }
 
 
@@ -230,22 +230,22 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
 
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
     EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(hidra2::IOErrorTemplate::kReadError.Copy().release()),
+    WillOnce(DoAll(testing::SetArgPointee<2>(hidra2::IOErrorTemplates::kReadError.Generate().release()),
                    testing::Return(nullptr)));
 
     auto err = data_broker->GetNext(&fi, &data);
 
-    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrorTemplate::kReadError.Copy()->Explain()));
+    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrorTemplates::kReadError.Generate()->Explain()));
 }
 
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotAllocateData) {
     EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(hidra2::IOErrorTemplate::kMemoryAllocationError.Copy().release()),
+    WillOnce(DoAll(testing::SetArgPointee<2>(hidra2::ErrorTemplates::kMemoryAllocationError.Generate().release()),
                    testing::Return(nullptr)));
 
     auto err = data_broker->GetNext(&fi, &data);
 
-    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrorTemplate::kMemoryAllocationError.Copy()->Explain()));
+    ASSERT_THAT(err->Explain(), Eq(hidra2::ErrorTemplates::kMemoryAllocationError.Generate()->Explain()));
 }
 
 

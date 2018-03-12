@@ -60,10 +60,10 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
                 uint64_t need_to_receive_size;
                 io->ReceiveTimeout(client_fd, &need_to_receive_size, sizeof(uint64_t), 100, &err);
                 if(err != nullptr) {
-                    if (err->GetErrorType() == ErrorType::kTimeout) {
+                    if (hidra2::IOErrorTemplates::kTimeout == err) {
                         continue;
                     }
-                    if (err->GetErrorType() == ErrorType::kEndOfFile) {
+                    if (hidra2::ErrorTemplates::kEndOfFile == err) {
                         break;
                     }
                 }
@@ -97,7 +97,7 @@ void CheckNormal(int times, size_t size) {
 
     std::cout << "[CLIENT] ReceiveTimeout" << std::endl;
     io->ReceiveTimeout(socket, nullptr, 1, 1000 * 100/*100ms*/, &err);
-    if (err->GetErrorType() != ErrorType::kTimeout) {
+    if (hidra2::IOErrorTemplates::kTimeout != err) {
         ExitIfErrIsNotOk(&err, 202);
     }
 
@@ -147,19 +147,19 @@ int main(int argc, char* argv[]) {
     Error err;
     std::cout << "[META] Check if connection is refused if server is not running" << std::endl;
     io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
-    if(err->GetErrorType() != ErrorType::kConnectionRefused) {
+    if(hidra2::IOErrorTemplates::kConnectionRefused != err) {
         ExitIfErrIsNotOk(&err, 301);
     }
 
     std::cout << "[META] Check invalid address format - Missing port" << std::endl;
     io->CreateAndConnectIPTCPSocket("localhost", &err);
-    if(err->GetErrorType() != ErrorType::kInvalidAddressFormat) {
+    if(hidra2::IOErrorTemplates::kInvalidAddressFormat != err) {
         ExitIfErrIsNotOk(&err, 302);
     }
 
     std::cout << "[META] Check unknown host" << std::endl;
     io->CreateAndConnectIPTCPSocket("some-host-that-might-not-exists.aa:1234", &err);
-    if(err->GetErrorType() != ErrorType::kUnableToResolveHostname) {
+    if(hidra2::IOErrorTemplates::kUnableToResolveHostname != err) {
         ExitIfErrIsNotOk(&err, 303);
     }
 
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "[META] Check if connection is refused after server is closed" << std::endl;
     io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
-    if(err->GetErrorType() != ErrorType::kConnectionRefused) {
+    if(hidra2::IOErrorTemplates::kConnectionRefused != err) {
         ExitIfErrIsNotOk(&err, 304);
     }
 

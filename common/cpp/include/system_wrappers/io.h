@@ -13,27 +13,81 @@
 
 namespace hidra2 {
 
-namespace IOErrorTemplate {
-auto const kUnknownError = ErrorTemplate{"Unknown Error", ErrorType::kUnknownError};
 
-auto const kFileNotFound = ErrorTemplate{"No such file or directory", ErrorType::kFileNotFound};
-auto const kReadError = ErrorTemplate{"Read error", ErrorType::kFileNotFound};
-auto const kBadFileNumber = ErrorTemplate{"Bad file number", ErrorType::kBadFileNumber};
-auto const kResourceTemporarilyUnavailable = ErrorTemplate{"Resource temporarily unavailable", ErrorType::kResourceTemporarilyUnavailable};
-auto const kPermissionDenied = ErrorTemplate{"Permission denied", ErrorType::kPermissionDenied};
-auto const kUnsupportedAddressFamily = ErrorTemplate{"Unsupported address family", ErrorType::kUnsupportedAddressFamily};
-auto const kInvalidAddressFormat = ErrorTemplate{"Invalid address format", ErrorType::kInvalidAddressFormat};
-auto const kEndOfFile = ErrorTemplate{"End of file", ErrorType::kEndOfFile};
-auto const kAddressAlreadyInUse = ErrorTemplate{"Address already in use", ErrorType::kAddressAlreadyInUse};
-auto const kConnectionRefused = ErrorTemplate{"Connection refused", ErrorType::kConnectionRefused};
-auto const kConnectionResetByPeer = ErrorTemplate{"kConnectionResetByPeer", ErrorType::kConnectionResetByPeer};
-auto const kTimeout = ErrorTemplate{"kTimeout", ErrorType::kTimeout};
-auto const kFileAlreadyExists = ErrorTemplate{"kFileAlreadyExists", ErrorType::kFileAlreadyExists};
-auto const kNoSpaceLeft = ErrorTemplate{"kNoSpaceLeft", ErrorType::kNoSpaceLeft};
-auto const kSocketOperationOnNonSocket = ErrorTemplate{"kSocketOperationOnNonSocket", ErrorType::kSocketOperationOnNonSocket};
-auto const kMemoryAllocationError = ErrorTemplate{"kMemoryAllocationError", ErrorType::kMemoryAllocationError};
-auto const kInvalidMemoryAddress = ErrorTemplate{"kInvalidMemoryAddress", ErrorType::kInvalidMemoryAddress};
-auto const kUnableToResolveHostname = ErrorTemplate{"kUnableToResolveHostname", ErrorType::kUnableToResolveHostname};
+enum class IOErrorType {
+    kUnknownError,
+    kBadFileNumber,
+    kResourceTemporarilyUnavailable,
+    kFileNotFound,
+    kReadError,
+    kPermissionDenied,
+    kUnsupportedAddressFamily,
+    kInvalidAddressFormat,
+    kAddressAlreadyInUse,
+    kConnectionRefused,
+    kConnectionResetByPeer,
+    kTimeout,
+    kFileAlreadyExists,
+    kNoSpaceLeft,
+    kSocketOperationOnNonSocket,
+    kInvalidMemoryAddress,
+    kUnableToResolveHostname,
+};
+
+class IOError : public SimpleError {
+  private:
+    IOErrorType io_error_type_;
+  public:
+    IOError(const std::string& error, IOErrorType io_error_type) : SimpleError(error, ErrorType::kIOError) {
+        io_error_type_ = io_error_type;
+    }
+
+    IOErrorType GetIOErrorType() const noexcept {
+        return io_error_type_;
+    }
+};
+
+class IOErrorTemplate : public SimpleErrorTemplate {
+  protected:
+    IOErrorType io_error_type_;
+  public:
+    IOErrorTemplate(const std::string& error, IOErrorType io_error_type) : SimpleErrorTemplate(error, ErrorType::kIOError) {
+        io_error_type_ = io_error_type;
+    }
+
+    inline IOErrorType GetIOErrorType() const noexcept {
+        return io_error_type_;
+    }
+
+    inline Error Generate() const noexcept override {
+        return Error(new IOError(error_, io_error_type_));
+    }
+
+    inline bool operator == (const Error& rhs) const override {
+        return SimpleErrorTemplate::operator==(rhs)
+               && GetIOErrorType() == ((IOError*)rhs.get())->GetIOErrorType();
+    }
+};
+
+namespace IOErrorTemplates {
+auto const kUnknownError = IOErrorTemplate{"Unknown Error", IOErrorType::kUnknownError};
+
+auto const kFileNotFound = IOErrorTemplate{"No such file or directory", IOErrorType::kFileNotFound};
+auto const kReadError = IOErrorTemplate{"Read error", IOErrorType::kFileNotFound};
+auto const kBadFileNumber = IOErrorTemplate{"Bad file number", IOErrorType::kBadFileNumber};
+auto const kResourceTemporarilyUnavailable = IOErrorTemplate{"Resource temporarily unavailable", IOErrorType::kResourceTemporarilyUnavailable};
+auto const kPermissionDenied = IOErrorTemplate{"Permission denied", IOErrorType::kPermissionDenied};
+auto const kUnsupportedAddressFamily = IOErrorTemplate{"Unsupported address family", IOErrorType::kUnsupportedAddressFamily};
+auto const kInvalidAddressFormat = IOErrorTemplate{"Invalid address format", IOErrorType::kInvalidAddressFormat};
+auto const kAddressAlreadyInUse = IOErrorTemplate{"Address already in use", IOErrorType::kAddressAlreadyInUse};
+auto const kConnectionRefused = IOErrorTemplate{"Connection refused", IOErrorType::kConnectionRefused};
+auto const kConnectionResetByPeer = IOErrorTemplate{"kConnectionResetByPeer", IOErrorType::kConnectionResetByPeer};
+auto const kTimeout = IOErrorTemplate{"kTimeout", IOErrorType::kTimeout};
+auto const kFileAlreadyExists = IOErrorTemplate{"kFileAlreadyExists", IOErrorType::kFileAlreadyExists};
+auto const kNoSpaceLeft = IOErrorTemplate{"kNoSpaceLeft", IOErrorType::kNoSpaceLeft};
+auto const kSocketOperationOnNonSocket = IOErrorTemplate{"kSocketOperationOnNonSocket", IOErrorType::kSocketOperationOnNonSocket};
+auto const kInvalidMemoryAddress = IOErrorTemplate{"kInvalidMemoryAddress", IOErrorType::kInvalidMemoryAddress};
+auto const kUnableToResolveHostname = IOErrorTemplate{"kUnableToResolveHostname", IOErrorType::kUnableToResolveHostname};
 }
 
 enum FileOpenMode {
@@ -108,7 +162,7 @@ class IO {
 
     virtual void            CreateNewDirectory      (const std::string& directory_name, Error* err) const = 0;
     virtual FileData        GetDataFromFile         (const std::string& fname, uint64_t fsize, Error* err) const = 0;
-    virtual void CollectFileInformationRecursively(const std::string &path, std::vector<FileInfo>* files,
+    virtual void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
                                                    Error* err) const = 0;
     virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, Error* err) const = 0;
     virtual std::string     ReadFileToString        (const std::string& fname, Error* err) const = 0;

@@ -18,7 +18,7 @@ void Check(const std::string& expected_ip_address, const std::string& hostname) 
     std::string ip_address = systemIO.ResolveHostnameToIp(hostname, &err);
     M_AssertEq(expected_ip_address, ip_address);
     if(expected_ip_address.empty()) {
-        M_AssertTrue(err != nullptr && (*err).GetErrorType() == ErrorType::kUnableToResolveHostname);
+        M_AssertTrue(err != nullptr && hidra2::IOErrorTemplates::kUnableToResolveHostname == err);
         return;
     }
     M_AssertTrue(err == nullptr);

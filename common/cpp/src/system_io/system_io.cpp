@@ -65,7 +65,7 @@ uint8_t* AllocateArray(uint64_t fsize, Error* err) {
     try {
         data_array = new uint8_t[fsize];
     } catch (...) {
-        *err = IOErrorTemplate::kMemoryAllocationError.Copy();
+        *err = ErrorTemplates::kMemoryAllocationError.Generate();
         return nullptr;
     }
     return data_array;
@@ -145,7 +145,7 @@ void SystemIO::Skip(SocketDescriptor socket_fd, size_t length, Error* err) const
     try {
         buffer.reset(new uint8_t[kSkipBufferSize]);
     } catch(...) {
-        *err = IOErrorTemplate::kMemoryAllocationError.Copy();
+        *err = ErrorTemplates::kMemoryAllocationError.Generate();
         return;
     }
     size_t already_skipped = 0;
@@ -207,7 +207,7 @@ std::string SystemIO::ResolveHostnameToIp(const std::string& hostname, Error* er
     InitializeSocketIfNecessary();
     hostent* record = gethostbyname(hostname.c_str());
     if (record == nullptr) {
-        *err = IOErrorTemplate::kUnableToResolveHostname.Copy();
+        *err = IOErrorTemplates::kUnableToResolveHostname.Generate();
         return "";
     }
     in_addr* address = (in_addr*)(record->h_addr);
@@ -220,7 +220,7 @@ std::string SystemIO::ResolveHostnameToIp(const std::string& hostname, Error* er
 void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const {
     auto hostname_port_tuple = SplitAddressToHostnameAndPort(address);
     if (!hostname_port_tuple) {
-        *err = IOErrorTemplate::kInvalidAddressFormat.Copy();
+        *err = IOErrorTemplates::kInvalidAddressFormat.Generate();
         return;
     }
     std::string host;
@@ -233,7 +233,7 @@ void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string
 
     short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {
-        *err = IOErrorTemplate::kUnsupportedAddressFamily.Copy();
+        *err = IOErrorTemplates::kUnsupportedAddressFamily.Generate();
         return;
     }
 
@@ -245,7 +245,7 @@ void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string
     if (_connect(socket_fd, (struct sockaddr*) &socket_address, sizeof(socket_address)) == -1) {
         *err = GetLastError();
         // On windows its normal that connect might throw a "WSAEWOULDBLOCK" since the socket need time to be created
-        if (*err != nullptr && (*err)->GetErrorType() != ErrorType::kResourceTemporarilyUnavailable) {
+        if (*err != nullptr && IOErrorTemplates::kResourceTemporarilyUnavailable != *err) {
             return;
         }
     }
@@ -256,7 +256,7 @@ std::unique_ptr<std::tuple<std::string, SocketDescriptor>> SystemIO::InetAccept(
 Error* err) const {
     static short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {
-        *err = IOErrorTemplate::kUnsupportedAddressFamily.Copy();
+        *err = IOErrorTemplates::kUnsupportedAddressFamily.Generate();
         return nullptr;
     }
 
@@ -269,7 +269,7 @@ Error* err) const {
 
         if (peer_fd == -1) {
             *err = GetLastError();
-            if (*err != nullptr && (*err)->GetErrorType() == ErrorType::kResourceTemporarilyUnavailable) {
+            if (*err != nullptr && IOErrorTemplates::kResourceTemporarilyUnavailable != *err) {
                 continue;
             }
             return nullptr;
@@ -329,7 +329,7 @@ size_t hidra2::SystemIO::Read(FileDescriptor fd, void* buf, size_t length, Error
     while(already_read < length) {
         ssize_t read_amount = _read(fd, (uint8_t*)buf + already_read, length - already_read);
         if(read_amount == 0) {
-            *err = IOErrorTemplate::kEndOfFile.Copy();
+            *err = ErrorTemplates::kEndOfFile.Generate();
             return already_read;
         }
         if (read_amount == -1) {
@@ -352,7 +352,7 @@ size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length
     while(already_wrote < length) {
         ssize_t write_amount = _write(fd, (uint8_t*)buf + already_wrote, length - already_wrote);
         if(write_amount == 0) {
-            *err = IOErrorTemplate::kEndOfFile.Copy();
+            *err = ErrorTemplates::kEndOfFile.Generate();
             return already_wrote;
         }
         if (write_amount == -1) {
@@ -398,19 +398,19 @@ SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
                                         Error* err) const {
     int domain = AddressFamilyToPosixFamily(address_family);
     if(domain == -1) {
-        *err = IOErrorTemplate::kUnsupportedAddressFamily.Copy();
+        *err = IOErrorTemplates::kUnsupportedAddressFamily.Generate();
         return -1;
     }
 
     int type = SocketTypeToPosixType(socket_type);
     if(type == -1) {
-        *err = IOErrorTemplate::kUnknownError.Copy();
+        *err = IOErrorTemplates::kUnknownError.Generate();
         return -1;
     }
 
     int protocol = SocketProtocolToPosixProtocol(socket_protocol);
     if(protocol == -1) {
-        *err = IOErrorTemplate::kUnknownError.Copy();
+        *err = IOErrorTemplates::kUnknownError.Generate();
         return -1;
     }
 
@@ -433,13 +433,13 @@ void hidra2::SystemIO::InetBind(SocketDescriptor socket_fd, const std::string& a
 
     int family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {
-        *err = IOErrorTemplate::kUnsupportedAddressFamily.Copy();
+        *err = IOErrorTemplates::kUnsupportedAddressFamily.Generate();
         return;
     }
 
     auto host_port_tuple = SplitAddressToHostnameAndPort(address);
     if (!host_port_tuple) {
-        *err = IOErrorTemplate::kInvalidAddressFormat.Copy();
+        *err = IOErrorTemplates::kInvalidAddressFormat.Generate();
         return;
     }
     std::string host;
@@ -478,7 +478,7 @@ size_t hidra2::SystemIO::ReceiveTimeout(SocketDescriptor socket_fd, void* buf, s
 
     int res = ::select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
     if (res == 0) {
-        *err = IOErrorTemplate::kTimeout.Copy();
+        *err = IOErrorTemplates::kTimeout.Generate();
         return 0;
     }
     if (res == -1) {
@@ -497,13 +497,13 @@ size_t hidra2::SystemIO::Receive(SocketDescriptor socket_fd, void* buf, size_t l
     while (already_received < length) {
         ssize_t received_amount = _recv(socket_fd, (uint8_t*) buf + already_received, length - already_received);
         if (received_amount == 0) {
-            *err = IOErrorTemplate::kEndOfFile.Copy();
+            *err = ErrorTemplates::kEndOfFile.Generate();
             return already_received;
         }
         if (received_amount == -1) {
             *err = GetLastError();
             if (*err != nullptr) {
-                if((*err)->GetErrorType() == ErrorType::kResourceTemporarilyUnavailable) {
+                if(IOErrorTemplates::kResourceTemporarilyUnavailable == *err) {
                     continue;
                 }
                 return already_received;
@@ -527,13 +527,13 @@ size_t hidra2::SystemIO::Send(SocketDescriptor socket_fd,
     while (already_sent < length) {
         ssize_t send_amount = _send(socket_fd, (uint8_t*) buf + already_sent, length - already_sent);
         if (send_amount == 0) {
-            *err = IOErrorTemplate::kEndOfFile.Copy();
+            *err = ErrorTemplates::kEndOfFile.Generate();
             return already_sent;
         }
         if (send_amount == -1) {
             *err = GetLastError();
             if (*err != nullptr) {
-                if((*err)->GetErrorType() == ErrorType::kResourceTemporarilyUnavailable) {
+                if(IOErrorTemplates::kResourceTemporarilyUnavailable == *err) {
                     continue;
                 }
                 return already_sent;

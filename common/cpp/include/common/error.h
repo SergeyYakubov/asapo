@@ -3,35 +3,23 @@
 
 #include <string>
 #include <memory>
+#include <utility>
 
 namespace hidra2 {
 
 enum class ErrorType {
-    kHidraError,
-    kHttpError,
     kUnknownError,
 
-    kBadFileNumber,
-    kResourceTemporarilyUnavailable,
-    kFileNotFound,
-    kReadError,
-    kPermissionDenied,
-    kUnsupportedAddressFamily,
-    kInvalidAddressFormat,
-    kEndOfFile,
-    kAddressAlreadyInUse,
-    kConnectionRefused,
-    kConnectionResetByPeer,
-    kTimeout,
-    kFileAlreadyExists,
-    kNoSpaceLeft,
-    kSocketOperationOnNonSocket,
+    kHidraError,
+    kHttpError,
+    kIOError,
+
     kMemoryAllocationError,
-    kInvalidMemoryAddress,
-    kUnableToResolveHostname,
+    kEndOfFile
 };
 
 class ErrorInterface;
+class ErrorTemplateInterface;
 
 // Is nullptr if no error is set
 using Error = std::unique_ptr<ErrorInterface>;
@@ -44,15 +32,40 @@ class ErrorInterface {
     virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
 };
 
+class ErrorTemplateInterface {
+  public:
+    virtual ErrorType GetErrorType() const noexcept = 0;
+    virtual Error Generate() const noexcept = 0;
+
+    virtual inline bool operator == (const Error* rhs) const {
+        return rhs != nullptr &&
+               operator==(*rhs);
+    }
+
+    virtual inline bool operator != (const Error* rhs) const {
+        return rhs != nullptr &&
+               operator!=(*rhs);
+    }
+
+    virtual inline bool operator == (const Error& rhs) const {
+        return rhs != nullptr &&
+               GetErrorType() == rhs->GetErrorType();
+    }
+
+    virtual inline bool operator != (const Error& rhs) const {
+        return !(operator==(rhs));
+    }
+};
+
 class SimpleError: public ErrorInterface {
   private:
     std::string error_;
     ErrorType error_type_ = ErrorType::kHidraError;
   public:
-    explicit SimpleError(const std::string& error): error_{error} {
+    explicit SimpleError(std::string error): error_{std::move(error)} {
 
     }
-    SimpleError(const std::string& error, ErrorType error_type ): error_{error}, error_type_{error_type} {
+    SimpleError(std::string error, ErrorType error_type ): error_{std::move(error)}, error_type_{error_type} {
     }
 
     void Append(const std::string& value) noexcept override {
@@ -68,18 +81,22 @@ class SimpleError: public ErrorInterface {
     }
 };
 
-class ErrorTemplate {
-  private:
+class SimpleErrorTemplate : public ErrorTemplateInterface {
+  protected:
     std::string error_;
     ErrorType error_type_ = ErrorType::kHidraError;
   public:
-    explicit ErrorTemplate(const std::string& error): error_{error} {
+    explicit SimpleErrorTemplate(std::string error): error_{std::move(error)} {
 
     }
-    ErrorTemplate(const std::string& error, ErrorType error_type ): error_{error}, error_type_{error_type} {
+    SimpleErrorTemplate(std::string error, ErrorType error_type ): error_{std::move(error)}, error_type_{error_type} {
     }
 
-    inline Error Copy() const {
+    inline ErrorType GetErrorType() const noexcept override {
+        return error_type_;
+    }
+
+    inline Error Generate() const noexcept override {
         return Error(new SimpleError{error_, error_type_});
     }
 };
@@ -92,6 +109,11 @@ inline Error TextErrorWithType(const std::string& error, ErrorType error_type) {
     return Error{new SimpleError{error, error_type}};
 }
 
+namespace ErrorTemplates {
+auto const kMemoryAllocationError = SimpleErrorTemplate{"kMemoryAllocationError", ErrorType::kMemoryAllocationError};
+auto const kEndOfFile = SimpleErrorTemplate{"End of file", ErrorType::kEndOfFile};
+
+}
 
 }
 #endif //HIDRA2_ERROR_H

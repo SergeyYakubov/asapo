@@ -44,7 +44,7 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_invalid_addres
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrorTemplate::kInvalidAddressFormat.Copy().release()),
+            testing::SetArgPointee<1>(hidra2::IOErrorTemplates::kInvalidAddressFormat.Generate().release()),
             Return(-1)
         ));
 
@@ -68,7 +68,7 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_connection_ref
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrorTemplate::kConnectionRefused.Copy().release()),
+            testing::SetArgPointee<1>(hidra2::IOErrorTemplates::kConnectionRefused.Generate().release()),
             Return(-1)
         ));
 
@@ -91,7 +91,7 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_unk) {
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrorTemplate::kUnknownError.Copy().release()),
+            testing::SetArgPointee<1>(hidra2::IOErrorTemplates::kUnknownError.Generate().release()),
             Return(-1)
         ));
 
@@ -168,7 +168,7 @@ MATCHER_P3(M_CheckSendDataRequest, request_id, file_id, file_size,
            "Checks if a valid SendDataRequest was Send") {
     return ((hidra2::SendDataRequest*)arg)->op_code == hidra2::OP_CODE__SEND_DATA
            && ((hidra2::SendDataRequest*)arg)->request_id == request_id
-           && ((hidra2::SendDataRequest*)arg)->file_id, file_id
+           && ((hidra2::SendDataRequest*)arg)->file_id == file_id
            && ((hidra2::SendDataRequest*)arg)->file_size == file_size;
 }
 
@@ -212,17 +212,17 @@ TEST(ProducerImpl, Send__sendDataRequest_error) {
     uint64_t expected_file_size = 1337;
 
     ConnectToReceiver_DONE(producer, expected_fd);
-    expected_request_id++;
 
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
 
-    EXPECT_CALL(mockIO, Send_t(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id, expected_file_size),
-                             sizeof(hidra2::SendDataRequest), _))
+    EXPECT_CALL(mockIO, Send_t(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id,
+                               expected_file_size),
+                               sizeof(hidra2::SendDataRequest), _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrorTemplate::kBadFileNumber.Copy().release()),
+            testing::SetArgPointee<3>(hidra2::IOErrorTemplates::kBadFileNumber.Generate().release()),
             Return(-1)
         ));
 
@@ -244,7 +244,6 @@ TEST(ProducerImpl, Send__sendData_error) {
     void*    expected_file_pointer = (void*)0xC00FE;
 
     ConnectToReceiver_DONE(producer, expected_fd);
-    expected_request_id++;
 
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
@@ -261,7 +260,7 @@ TEST(ProducerImpl, Send__sendData_error) {
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrorTemplate::kBadFileNumber.Copy().release()),
+            testing::SetArgPointee<3>(hidra2::IOErrorTemplates::kBadFileNumber.Generate().release()),
             Return(-1)
         ));
 
@@ -285,7 +284,6 @@ TEST(ProducerImpl, Send__Receive_error) {
     void*    expected_file_pointer = (void*)0xC00FE;
 
     ConnectToReceiver_DONE(producer, expected_fd);
-    expected_request_id++;
 
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
@@ -302,7 +300,7 @@ TEST(ProducerImpl, Send__Receive_error) {
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrorTemplate::kBadFileNumber.Copy().release()),
+            testing::SetArgPointee<3>(hidra2::IOErrorTemplates::kBadFileNumber.Generate().release()),
             testing::Return(-1)
         ));
 
@@ -324,7 +322,6 @@ TEST(ProducerImpl, Send__Receive_server_error) {
     void*    expected_file_pointer = (void*)0xC00FE;
 
     ConnectToReceiver_DONE(producer, expected_fd);
-    expected_request_id++;
 
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
@@ -364,7 +361,6 @@ TEST(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
     void*    expected_file_pointer = (void*)0xC00FE;
 
     ConnectToReceiver_DONE(producer, expected_fd);
-    expected_request_id++;
 
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
@@ -404,7 +400,6 @@ TEST(ProducerImpl, Send) {
     void*    expected_file_pointer = (void*)0xC00FE;
 
     ConnectToReceiver_DONE(producer, expected_fd);
-    expected_request_id++;
 
     hidra2::MockIO mockIO;
     producer.__set_io(&mockIO);
