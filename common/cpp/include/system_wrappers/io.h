@@ -15,7 +15,7 @@ namespace hidra2 {
 
 
 enum class IOErrorType {
-    kUnknownError,
+    kUnknownError,//TODO Rename to kUnknownIOError
     kBadFileNumber,
     kResourceTemporarilyUnavailable,
     kFileNotFound,

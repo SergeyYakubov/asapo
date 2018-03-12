@@ -23,24 +23,24 @@ Error IOErrorFromGetLastError() {
         return nullptr;
     case ERROR_PATH_NOT_FOUND:
     case ERROR_FILE_NOT_FOUND:
-        return IOErrorTemplate::kFileNotFound.Copy();
+        return IOErrorTemplates::kFileNotFound.Generate();
     case ERROR_ACCESS_DENIED:
-        return IOErrorTemplate::kPermissionDenied.Copy();
+        return IOErrorTemplates::kPermissionDenied.Generate();
     case ERROR_CONNECTION_REFUSED:
-        return IOErrorTemplate::kConnectionRefused.Copy();
+        return IOErrorTemplates::kConnectionRefused.Generate();
     case WSAEFAULT:
-        return IOErrorTemplate::kInvalidMemoryAddress.Copy();
+        return IOErrorTemplates::kInvalidMemoryAddress.Generate();
     case WSAECONNRESET:
-        return IOErrorTemplate::kConnectionResetByPeer.Copy();
+        return IOErrorTemplates::kConnectionResetByPeer.Generate();
     case WSAENOTSOCK:
-        return IOErrorTemplate::kSocketOperationOnNonSocket.Copy();
+        return IOErrorTemplates::kSocketOperationOnNonSocket.Generate();
     case WSAEWOULDBLOCK:
-        return IOErrorTemplate::kResourceTemporarilyUnavailable.Copy();
+        return IOErrorTemplates::kResourceTemporarilyUnavailable.Generate();
     case WSAECONNREFUSED:
-        return IOErrorTemplate::kConnectionRefused.Copy();
+        return IOErrorTemplates::kConnectionRefused.Generate();
     default:
         std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
-        Error err = IOErrorTemplate::kUnknownError.Copy();
+        Error err = IOErrorTemplates::kUnknownError.Generate();
         (*err).Append("Unknown error code: " + std::to_string(errno));
         return err;
     }
@@ -150,7 +150,7 @@ void ProcessFileEntity(const WIN32_FIND_DATA& f, const std::string& path,
     files->push_back(file_info);
 }
 
-void SystemIO::CollectFileInformationRecursivly(const std::string& path,
+void SystemIO::CollectFileInformationRecursively(const std::string& path,
                                                 FileInfos* files, Error* err) const {
     WIN32_FIND_DATA find_data;
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
@@ -162,7 +162,7 @@ void SystemIO::CollectFileInformationRecursivly(const std::string& path,
 
     do {
         if (IsDirectory(find_data)) {
-            CollectFileInformationRecursivly(path + "\\" + find_data.cFileName, files, err);
+            CollectFileInformationRecursively(path + "\\" + find_data.cFileName, files, err);
         } else {
             ProcessFileEntity(find_data, path, files, err);
         }
