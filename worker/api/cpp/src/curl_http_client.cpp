@@ -35,7 +35,7 @@ void SetCurlOptions(CURL* curl, const std::string& uri, char* errbuf, std::strin
 
 }
 
-HttpCode GetResponceCode(CURL* curl) {
+HttpCode GetResponseCode(CURL* curl) {
     long http_code = 0;
     curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
     return static_cast<HttpCode>(http_code);
@@ -49,10 +49,10 @@ std::string GetCurlError(CURL* curl, CURLcode res, const char* errbuf) {
     }
 }
 
-Error ProcessCurlResponce(CURL* curl, CURLcode res, const char* errbuf,
-                          std::string* buffer, HttpCode* responce_code) {
+Error ProcessCurlResponse(CURL* curl, CURLcode res, const char* errbuf,
+                          std::string* buffer, HttpCode* response_code) {
     if(res == CURLE_OK) {
-        *responce_code = GetResponceCode(curl);
+        *response_code = GetResponseCode(curl);
         return nullptr;
     } else {
         *buffer = GetCurlError(curl, res, errbuf);
@@ -60,7 +60,7 @@ Error ProcessCurlResponce(CURL* curl, CURLcode res, const char* errbuf,
     }
 }
 
-std::string CurlHttpClient::Get(const std::string& uri, HttpCode* responce_code, Error* err) const noexcept {
+std::string CurlHttpClient::Get(const std::string& uri, HttpCode* response_code, Error* err) const noexcept {
     std::lock_guard<std::mutex> lock{mutex_};
 
     std::string buffer;
@@ -69,7 +69,7 @@ std::string CurlHttpClient::Get(const std::string& uri, HttpCode* responce_code,
 
     auto res = curl_easy_perform(curl_);
 
-    *err = ProcessCurlResponce(curl_, res, errbuf, &buffer, responce_code);
+    *err = ProcessCurlResponse(curl_, res, errbuf, &buffer, response_code);
 
     return buffer;
 }

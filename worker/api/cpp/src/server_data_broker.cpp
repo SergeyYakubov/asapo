@@ -18,7 +18,7 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string&
     std::string full_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
     Error err;
     HttpCode code;
-    auto responce = httpclient__->Get(full_uri, &code, &err);
+    auto response = httpclient__->Get(full_uri, &code, &err);
 
     if (err != nullptr) {
         return err;
@@ -26,11 +26,11 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string&
 
     err = HttpCodeToWorkerError(code);
     if (err != nullptr) {
-        err->Append(responce);
+        err->Append(response);
         return err;
     }
 
-    if (!info->SetFromJson(responce)) {
+    if (!info->SetFromJson(response)) {
         return TextError(WorkerErrorMessage::kErrorReadingSource);
     }
     return nullptr;

@@ -63,11 +63,11 @@ class ServerDataBrokerTests : public Test {
         data_broker->io__.release();
         data_broker->httpclient__.release();
     }
-    void MockGet(const std::string& responce) {
+    void MockGet(const std::string& response) {
         EXPECT_CALL(mock_http_client, Get_t(_, _, _)).WillOnce(DoAll(
                     SetArgPointee<1>(HttpCode::OK),
                     SetArgPointee<2>(nullptr),
-                    Return(responce)
+                    Return(response)
                 ));
     }
 
@@ -145,7 +145,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsFileInfo) {
 
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsParseError) {
-    MockGet("error_responce");
+    MockGet("error_response");
     auto err = data_broker->GetNext(&info, nullptr);
 
     ASSERT_THAT(err->Explain(), Eq(hidra2::WorkerErrorMessage::kErrorReadingSource));
@@ -153,7 +153,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsParseError) {
 
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsIfNoDtataNeeded) {
-    MockGet("error_responce");
+    MockGet("error_response");
     EXPECT_CALL( mock_io, GetDataFromFile_t(_, _, _)).Times(0);
 
     data_broker->GetNext(&info, nullptr);
