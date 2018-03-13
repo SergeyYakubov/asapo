@@ -67,7 +67,7 @@ class IOFolderNotFound: public FakeIO {
 class IOFolderUnknownError: public FakeIO {
   public:
     FileInfos FilesInFolder(const std::string& folder, Error* err) const override {
-        *err  = hidra2::IOErrorTemplates::kUnknownError.Generate();
+        *err  = hidra2::IOErrorTemplates::kUnknownIOError.Generate();
         return {};
     }
 };
@@ -129,7 +129,7 @@ TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrorTemplates::kUnknownError.Generate()->Explain()));
+    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrorTemplates::kUnknownIOError.Generate()->Explain()));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithoutConnectReturnsError) {

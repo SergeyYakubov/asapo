@@ -366,13 +366,13 @@ SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
 
     int type = SocketTypeToPosixType(socket_type);
     if(type == -1) {
-        *err = IOErrorTemplates::kUnknownError.Generate();
+        *err = IOErrorTemplates::kUnknownIOError.Generate();
         return -1;
     }
 
     int protocol = SocketProtocolToPosixProtocol(socket_protocol);
     if(protocol == -1) {
-        *err = IOErrorTemplates::kUnknownError.Generate();
+        *err = IOErrorTemplates::kUnknownIOError.Generate();
         return -1;
     }
 
@@ -485,7 +485,7 @@ size_t SystemIO::Transfer(ssize_t (* method)(FileDescriptor, void*, size_t), Fil
                 continue;
             }
             if(*err == nullptr) {
-                *err = IOErrorTemplates::kUnknownError.Generate();
+                *err = IOErrorTemplates::kUnknownIOError.Generate();
             }
             return already_transferred;//Return the amount of _ensured_ transferred bytes
         }

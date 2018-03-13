@@ -72,7 +72,7 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* d
 
     SendDataRequest sendDataRequest;
     sendDataRequest.op_code = kNetOpcodeSendData;
-    sendDataRequest.request_id = request_id++;
+    sendDataRequest.request_id = request_id_++;
     sendDataRequest.file_id = file_id;
     sendDataRequest.file_size = file_size;
 

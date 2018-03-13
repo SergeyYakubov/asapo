@@ -70,7 +70,7 @@ class IOErrorTemplate : public SimpleErrorTemplate {
 };
 
 namespace IOErrorTemplates {
-auto const kUnknownError = IOErrorTemplate{"Unknown Error", IOErrorType::kUnknownIOError};
+auto const kUnknownIOError = IOErrorTemplate{"Unknown Error", IOErrorType::kUnknownIOError};
 
 auto const kFileNotFound = IOErrorTemplate{"No such file or directory", IOErrorType::kFileNotFound};
 auto const kReadError = IOErrorTemplate{"Read error", IOErrorType::kFileNotFound};

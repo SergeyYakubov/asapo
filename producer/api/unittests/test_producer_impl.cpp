@@ -91,7 +91,7 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_unk) {
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrorTemplates::kUnknownError.Generate().release()),
+            testing::SetArgPointee<1>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release()),
             Return(-1)
         ));
 

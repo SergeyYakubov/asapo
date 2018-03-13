@@ -53,7 +53,7 @@ Error GetLastErrorFromErrno() {
         return IOErrorTemplates::kSocketOperationOnNonSocket.Generate();
     default:
         std::cout << "[IOErrorsFromErrno] Unknown error code: " << errno << std::endl;
-        Error err = IOErrorTemplates::kUnknownError.Generate();
+        Error err = IOErrorTemplates::kUnknownIOError.Generate();
         (*err).Append("Unknown error code: " + std::to_string(errno));
         return err;
     }

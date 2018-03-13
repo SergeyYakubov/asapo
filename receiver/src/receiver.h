@@ -27,7 +27,7 @@ class Receiver : public HasIO {
     std::unique_ptr<NetworkProducerPeer> on_new_peer_(int peer_socket_fd, std::string address);
 
   public:
-    static const int kMaxUnacceptedConnectionsBacklog;
+    static const int kMaxUnacceptedConnectionsBacklog;//TODO: Read from config
 
     Receiver(const Receiver&) = delete;
     Receiver& operator=(const Receiver&) = delete;

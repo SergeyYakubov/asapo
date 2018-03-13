@@ -46,7 +46,7 @@ void hidra2::Receiver::StartListener(std::string listener_address, ReceiverError
     listener_fd_ = listener_fd;
 
     accept_thread_ = io->NewThread([this] {
-        AcceptThreadLogic();//TODO add peer to some list
+        AcceptThreadLogic();
     });
 
 }
@@ -79,7 +79,7 @@ void hidra2::Receiver::StopListener(ReceiverError* err) {
 std::unique_ptr<hidra2::NetworkProducerPeer> hidra2::Receiver::on_new_peer_(int peer_socket_fd, std::string address) {
     NetworkProducerPeer* peer = new NetworkProducerPeer(peer_socket_fd, address);
 
-    std::cout << "[" << peer->connection_id() << "] New connection from " << address << std::endl;
+    std::cout << "[" << peer->GetConnectionId() << "] New connection from " << address << std::endl;
 
     peer->start_peer_listener();
 

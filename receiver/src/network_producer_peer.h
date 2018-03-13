@@ -13,7 +13,7 @@
 
 namespace hidra2 {
 
-class NetworkProducerPeer : HasIO {
+class NetworkProducerPeer : public HasIO {
   public:
     typedef void (*RequestHandler) (NetworkProducerPeer* self, GenericNetworkRequest* request,
                                     GenericNetworkResponse* response);
@@ -23,11 +23,14 @@ class NetworkProducerPeer : HasIO {
         RequestHandler handler;
     };
   private:
-    /** Must be as large as the largest request type (not including the data) */
-    static const size_t kGenericBufferSize;
-
     static const std::vector<RequestHandlerInformation> kRequestHandlers;
+    static size_t kRequestHandlerMaxBufferSize;
+
     static std::atomic<uint32_t> kNetworkProducerPeerCount;
+
+
+    GenericNetworkRequest* const generic_request = reinterpret_cast<GenericNetworkRequest* const>(new uint8_t[kRequestHandlerMaxBufferSize]);
+    GenericNetworkResponse* const generic_response = reinterpret_cast<GenericNetworkResponse* const>(new uint8_t[kRequestHandlerMaxBufferSize]);
 
     uint32_t                        connection_id_;
     int                             socket_fd_;
@@ -40,9 +43,6 @@ class NetworkProducerPeer : HasIO {
 
     static void handle_send_data_request_(NetworkProducerPeer* self, const SendDataRequest* request,
                                           SendDataResponse* response);
-
-    FileDescriptor CreateAndOpenFileByFileId(uint64_t file_id, Error* err);
-
   public:
     NetworkProducerPeer& operator=(const NetworkProducerPeer&) = delete;
     NetworkProducerPeer() = default;
@@ -52,11 +52,15 @@ class NetworkProducerPeer : HasIO {
 
     static const std::vector<RequestHandlerInformation> init_request_handlers();
 
-
     void start_peer_listener();
     void stop_peer_listener();
 
-    uint32_t connection_id() const;
+    uint32_t GetConnectionId() const;
+
+    //TODO make the following functions private or hide them behind an interface
+    FileDescriptor CreateAndOpenFileByFileId(uint64_t file_id, Error* err);
+    static bool CheckIfValidFileSize(size_t file_size);
+
 };
 
 }

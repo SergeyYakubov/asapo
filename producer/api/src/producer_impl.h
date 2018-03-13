@@ -12,7 +12,7 @@ class ProducerImpl : public Producer, public HasIO {
     static const uint32_t kVersion;
 
     int         client_fd_ = -1;
-    uint64_t    request_id = 0;
+    uint64_t    request_id_ = 0;
 
     ProducerStatus status_ = ProducerStatus::kDisconnected;
 

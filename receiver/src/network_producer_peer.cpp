@@ -4,7 +4,7 @@
 
 namespace hidra2 {
 
-const size_t NetworkProducerPeer::kGenericBufferSize = 1024 * 50; //50KiByte
+size_t NetworkProducerPeer::kRequestHandlerMaxBufferSize;
 std::atomic<uint32_t> NetworkProducerPeer::kNetworkProducerPeerCount;
 
 const std::vector<NetworkProducerPeer::RequestHandlerInformation> NetworkProducerPeer::kRequestHandlers =
@@ -15,7 +15,7 @@ NetworkProducerPeer::NetworkProducerPeer(int socket_fd, std::string address) : H
     connection_id_ = kNetworkProducerPeerCount++;
 }
 
-uint32_t NetworkProducerPeer::connection_id() const {
+uint32_t NetworkProducerPeer::GetConnectionId() const {
     return connection_id_;
 }
 
@@ -29,14 +29,11 @@ void NetworkProducerPeer::start_peer_listener() {
 }
 
 void NetworkProducerPeer::internal_receiver_thread_() {
-    auto* const generic_request = (GenericNetworkRequest*) malloc(kGenericBufferSize);
-    auto* const generic_response = (GenericNetworkResponse*) malloc(kGenericBufferSize);
-
     Error io_err;
     while(is_listening_) {
         io_err = nullptr;
 
-        size_t size = io->ReceiveWithTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 50, &io_err);
+        io->ReceiveWithTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 50, &io_err);
         if(io_err != nullptr) {
             if(IOErrorTemplates::kTimeout == io_err) {
                 std::this_thread::yield();
@@ -48,14 +45,12 @@ void NetworkProducerPeer::internal_receiver_thread_() {
                 break;
             }
 
-            std::cerr << "[" << connection_id() << "] Fail to receive data" << std::endl;
+            std::cerr << "[" << GetConnectionId() << "] Fail to receive data" << std::endl;
             is_listening_ = false;
             break;
         }
 
-        assert(size);//Something in ReceiveWithTimeout went wrong.
-
-        std::cout << "[" << connection_id() << "] Got request: " << generic_request->op_code << std::endl;
+        std::cout << "[" << GetConnectionId() << "] Got request: " << generic_request->op_code << std::endl;
         size_t bytes_to_send = handle_generic_request_(generic_request, generic_response);
 
         if(bytes_to_send == 0) {
@@ -65,12 +60,12 @@ void NetworkProducerPeer::internal_receiver_thread_() {
         io->Send(socket_fd_, generic_response, bytes_to_send, &io_err);
 
         if(io_err != nullptr) {
-            std::cerr << "[" << connection_id() << "] Fail to send response" << std::endl;
+            std::cerr << "[" << GetConnectionId() << "] Fail to send response" << std::endl;
         }
     }
 
     io->CloseSocket(socket_fd_, nullptr);
-    std::cout << "[" << connection_id() << "] Disconnected." << std::endl;
+    std::cout << "[" << GetConnectionId() << "] Disconnected." << std::endl;
 
     free(generic_request);
     free(generic_response);
@@ -87,7 +82,7 @@ void NetworkProducerPeer::stop_peer_listener() {
 
 size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response) {
     if(request->op_code >= kNetOpcodeCount || request->op_code < 0) {
-        std::cerr << "[" << connection_id() << "] Error invalid op_code: " << request->op_code << " force disconnect." <<
+        std::cerr << "[" << GetConnectionId() << "] Error invalid op_code: " << request->op_code << " force disconnect." <<
                   std::endl;
         io->CloseSocket(socket_fd_, nullptr);
         return 0;
@@ -98,18 +93,15 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
 
     auto handler_information = kRequestHandlers[request->op_code];
 
-    assert(handler_information.request_size <= kGenericBufferSize);//Would overwrite arbitrary memory
-    assert(handler_information.response_size <= kGenericBufferSize);//Would overwrite arbitrary memory
-
     Error io_err;
 
     static const size_t sizeof_generic_request = sizeof(GenericNetworkRequest);
     //receive the rest of the message
-    size_t rec = io->Receive(socket_fd_, (uint8_t*)request + sizeof_generic_request,
+    io->Receive(socket_fd_, (uint8_t*)request + sizeof_generic_request,
                              handler_information.request_size - sizeof_generic_request, &io_err);
 
     if(io_err != nullptr) {
-        std::cerr << "[" << connection_id() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " <<
+        std::cerr << "[" << GetConnectionId() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " <<
                   request->op_code << std::endl;
         return 0;
     }
@@ -125,13 +117,17 @@ NetworkProducerPeer::~NetworkProducerPeer() {
 
 FileDescriptor NetworkProducerPeer::CreateAndOpenFileByFileId(uint64_t file_id, Error* err) {
     io->CreateNewDirectory("files", err);
-    if(*err != nullptr && IOErrorTemplates::kFileAlreadyExists == *err) {
+    if(*err != nullptr && *err != IOErrorTemplates::kFileAlreadyExists) {
         return -1;
     }
     return io->Open("files/" + std::to_string(file_id) + ".bin", IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS | IO_OPEN_MODE_RW,
                     err);
 }
 
+bool NetworkProducerPeer::CheckIfValidFileSize(size_t file_size) {
+    return file_size != 0 && file_size <= size_t(1024)*1024*1024*2;
+
+}
 
 }
 

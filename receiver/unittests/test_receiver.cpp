@@ -37,7 +37,7 @@ TEST(a, b) {
     .Times(1)
     .WillOnce(
     DoAll(
-    testing::SetArgPointee<3>(hidra2::IOErrors::kUnknownError),
+    testing::SetArgPointee<3>(hidra2::IOErrors::kUnknownIOError),
     Return(-1)
     ));
 
