@@ -47,12 +47,9 @@ hidra2::ProducerError hidra2::ProducerImpl::initialize_socket_to_receiver_(const
 }
 
 hidra2::ProducerError hidra2::ProducerImpl::ConnectToReceiver(const std::string& receiver_address) {
-    if(client_fd_ != -1 && status_ != ProducerStatus::kDisconnected
-            && status_ != ProducerStatus::kConnecting) {
+    if(client_fd_ != -1 && status_ != ProducerStatus::kDisconnected) {
         return ProducerError::kAlreadyConnected;
     }
-
-    status_ = ProducerStatus::kConnecting;
 
     ProducerError error;
     error = initialize_socket_to_receiver_(receiver_address);
@@ -72,8 +69,6 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* d
     if(file_size > kMaxChunkSize) {
         return ProducerError::kFileTooLarge;
     }
-
-    status_ = ProducerStatus::kSending;
 
     SendDataRequest sendDataRequest;
     sendDataRequest.op_code = kNetOpcodeSendData;

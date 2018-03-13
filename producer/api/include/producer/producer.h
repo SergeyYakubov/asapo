@@ -20,9 +20,7 @@ enum class ProducerError {
 
 enum class ProducerStatus {
     kDisconnected,
-    kConnecting,
     kConnected,
-    kSending,
 };
 
 class Producer {

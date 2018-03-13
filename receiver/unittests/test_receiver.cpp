@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <unittests/MockIO.h>
 #include "../src/receiver.h"
-#include "../../common/cpp/unittests/MockIO.h"
 
 using ::testing::Return;
 using ::testing::_;
