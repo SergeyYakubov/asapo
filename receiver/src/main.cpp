@@ -10,7 +10,7 @@ int main (int argc, char* argv[]) {
 
     receiver->StartListener(address, &err);
     if(err) {
-        std::cerr << "Fail to start receiver: " << err->Explain() << std::endl;
+        std::cerr << "Fail to start receiver: " << err << std::endl;
         return 1;
     }
     std::cout << "StartListener on " << address << std::endl;
@@ -21,7 +21,7 @@ int main (int argc, char* argv[]) {
     std::cout << "Stop listener..." << std::endl;
     receiver->StopListener(&err);//TODO might not work since Accept is a blocking call :/
     if(err) {
-        std::cerr << "Fail to stop receiver: " << err->Explain() << std::endl;
+        std::cerr << "Fail to stop receiver: " << err << std::endl;
         return 1;
     }
 

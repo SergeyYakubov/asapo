@@ -1,7 +1,7 @@
 #include <cstring>
 #include <iostream>
 #include "receiver.h"
-#include "network_producer_peer.h"
+#include "receiver_error.h"
 
 const int hidra2::Receiver::kMaxUnacceptedConnectionsBacklog = 5;
 
@@ -48,10 +48,10 @@ void hidra2::Receiver::AcceptThreadLogic() {
         std::string address;
         FileDescriptor peer_fd;
 
-        Error io_error;
-        auto client_info_tuple = io->InetAccept(listener_fd_, &io_error);
-        if(io_error) {
-            std::cerr << "An error occurred while accepting an incoming connection" << std::endl;
+        Error err;
+        auto client_info_tuple = io->InetAccept(listener_fd_, &err);
+        if(err) {
+            std::cerr << "An error occurred while accepting an incoming connection: " << err << std::endl;
             return;
         }
         std::tie(address, peer_fd) = *client_info_tuple;

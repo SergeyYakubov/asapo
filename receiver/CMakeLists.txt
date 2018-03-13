@@ -2,6 +2,7 @@ set(TARGET_NAME receiver)
 set(SOURCE_FILES
         src/receiver.h src/receiver.cpp
         src/network_producer_peer.h src/network_producer_peer.cpp src/network_producer_peer_handlers.cpp
+        src/receiver_error.h
         )
 
 

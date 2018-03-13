@@ -1,0 +1,55 @@
+#ifndef HIDRA2_RECEIVER_ERROR_H
+#define HIDRA2_RECEIVER_ERROR_H
+
+#include "common/error.h"
+
+namespace hidra2 {
+
+enum class ReceiverErrorType {
+    kAlreadyListening,
+};
+
+class ReceiverError : public SimpleError {
+  private:
+    ReceiverErrorType receiver_error_type_;
+  public:
+    ReceiverError(const std::string& error, ReceiverErrorType receiver_error_type) : SimpleError(error,
+                ErrorType::kReceiverError) {
+        receiver_error_type_ = receiver_error_type;
+    }
+
+    ReceiverErrorType GetReceiverErrorType() const noexcept {
+        return receiver_error_type_;
+    }
+};
+
+class ReceiverErrorTemplate : public SimpleErrorTemplate {
+  protected:
+    ReceiverErrorType receiver_error_type_;
+  public:
+    ReceiverErrorTemplate(const std::string& error, ReceiverErrorType receiver_error_type) : SimpleErrorTemplate(error,
+                ErrorType::kIOError) {
+        receiver_error_type_ = receiver_error_type;
+    }
+
+    inline ReceiverErrorType GetReceiverErrorType() const noexcept {
+        return receiver_error_type_;
+    }
+
+    inline Error Generate() const noexcept override {
+        return Error(new ReceiverError(error_, receiver_error_type_));
+    }
+
+    inline bool operator==(const Error& rhs) const override {
+        return SimpleErrorTemplate::operator==(rhs)
+               && GetReceiverErrorType() == ((ReceiverError*) rhs.get())->GetReceiverErrorType();
+    }
+};
+
+namespace ReceiverErrorTemplates {
+auto const
+kAlreadyListening = ReceiverErrorTemplate{"Receiver is already listening", ReceiverErrorType::kAlreadyListening};
+};
+}
+
+#endif //HIDRA2_RECEIVER_ERROR_H

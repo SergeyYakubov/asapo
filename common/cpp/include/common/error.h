@@ -31,6 +31,7 @@ class ErrorInterface {
     virtual void Append(const std::string& value) noexcept = 0;
     virtual ErrorType GetErrorType() const noexcept = 0;
     virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
+
     /*TODO: Add these functions, so it will be really easy and convenient to use the error class
      * virtual inline bool operator == (const Error& rhs) const
      * virtual inline bool operator != (const Error& rhs) const
@@ -41,6 +42,7 @@ class ErrorInterface {
      */
 };
 
+
 class ErrorTemplateInterface {
   public:
     virtual ErrorType GetErrorType() const noexcept = 0;
@@ -49,6 +51,7 @@ class ErrorTemplateInterface {
      * virtual inline bool operator ErrorTemplateInterface() const
      */
 
+    /*
     virtual inline bool operator == (const Error* rhs) const {
         return rhs != nullptr &&
                operator==(*rhs);
@@ -58,6 +61,7 @@ class ErrorTemplateInterface {
         return rhs != nullptr &&
                operator!=(*rhs);
     }
+     */
 
     virtual inline bool operator == (const Error& rhs) const {
         return rhs != nullptr &&
@@ -76,6 +80,12 @@ static inline bool operator == (const Error& lhs, const ErrorTemplateInterface& 
 static inline bool operator != (const Error& lhs, const ErrorTemplateInterface& rhs) {
     return rhs.operator != (lhs);
 }
+
+static inline std::ostream& operator<<(std::ostream& os, const Error& err) {
+    os << err->Explain();
+    return os;
+}
+
 
 class SimpleError: public ErrorInterface {
   private:
