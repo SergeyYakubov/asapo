@@ -212,14 +212,6 @@ bool SystemIO::_close_socket(SocketDescriptor fd) const {
     return ::closesocket(fd) == 0;
 }
 
-ssize_t SystemIO::_read(FileDescriptor fd, void* buffer, size_t length) const {
-    return ::_read(fd, (char*)buffer, length);
-}
-
-ssize_t SystemIO::_write(FileDescriptor fd, const void* buffer, size_t length) const {
-    return ::_write(fd, (const char*)buffer, length);
-}
-
 SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
     InitializeSocketIfNecessary();
     return ::socket(address_family, socket_type, socket_protocol);
@@ -229,11 +221,19 @@ SocketDescriptor SystemIO::_connect(SocketDescriptor socket_fd, const void* addr
     return ::connect(socket_fd, static_cast<const sockaddr*>(address), address_length);
 }
 
-ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) const {
+ssize_t SystemIO::_read(FileDescriptor fd, void* buffer, size_t length) {
+    return ::_read(fd, (char*)buffer, length);
+}
+
+ssize_t SystemIO::_write(FileDescriptor fd, const void* buffer, size_t length) {
+    return ::_write(fd, (const char*)buffer, length);
+}
+
+ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) {
     return ::send(socket_fd, (char*)buffer, length, 0);
 }
 
-ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length) const {
+ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length) {
     return ::recv(socket_fd, (char*)buffer, length, 0);
 }
 
