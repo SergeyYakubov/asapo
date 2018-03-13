@@ -20,6 +20,8 @@ enum NetworkErrorCode : uint16_t {
     NET_ERR__INTERNAL_SERVER_ERROR = 65535,
 };
 
+//TODO need to use an serialization framework to ensure struct consistency on different computers
+
 /**
  * @defgroup RPC
  * RPC always return a response to a corresponding request

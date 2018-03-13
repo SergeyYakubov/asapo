@@ -18,6 +18,39 @@ if (BUILD_TESTS)
     endif ()
 endif ()
 
+#TODO: Call add_plain_unit_test in gtest
+function(add_plain_unit_test target test_source_files linktarget)
+    if (BUILD_TESTS)
+        include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+        link_directories(${gtest_SOURCE_DIR}/lib)
+
+        add_executable(test-${target} ${test_source_files})
+
+        if (NOT ${libs} STREQUAL "")
+            target_link_libraries(test-${target} ${libs})
+        endif ()
+
+        IF (WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+            set(GTEST_LIBS gtestd gtest_maind gmockd)
+        ELSE ()
+            set(GTEST_LIBS gtest gmock gtest_main)
+        ENDIF (WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+        target_link_libraries(test-${target} ${GTEST_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+
+        GET_PROPERTY(HIDRA2_COMMON_IO_LIBRARIES GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES)
+        message(STATUS "HIDRA2_COMMON_IO_LIBRARIES: '${HIDRA2_COMMON_IO_LIBRARIES}'")
+        target_link_libraries(test-${target} ${HIDRA2_COMMON_IO_LIBRARIES})
+
+        if (NOT ${test_libraries} STREQUAL "")
+            target_link_libraries(test-${target} ${test_libraries})
+        endif ()
+        add_test(NAME test-${target} COMMAND test-${target})
+        set_tests_properties(test-${target} PROPERTIES LABELS "unit;all")
+
+        message(STATUS "Added test 'test-${target}'")
+    endif()
+endfunction()
+
 function(gtest target test_source_files linktarget)
     if (BUILD_TESTS)
         include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})

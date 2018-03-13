@@ -28,11 +28,21 @@ enum class ProducerStatus {
 class Producer {
   public:
     //! Creates a new producer
+    /*!
+     * @return A unique_ptr to a new producer instance
+     */
     static std::unique_ptr<Producer> create();
 
     virtual ~Producer() = default;
 
+    /*!
+     * @return The version of the producer
+     */
     virtual uint64_t GetVersion() const = 0;
+
+    /*!
+     * @return The current status of the producer
+     */
     virtual ProducerStatus GetStatus() const = 0;
 
     //! Connects to a receiver
