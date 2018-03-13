@@ -6,11 +6,11 @@ int main (int argc, char* argv[]) {
 
     auto* receiver = new hidra2::Receiver();
 
-    hidra2::ReceiverError err;
+    hidra2::Error err;
 
     receiver->StartListener(address, &err);
-    if(err != hidra2::ReceiverError::kNoError) {
-        std::cerr << "Fail to start receiver" << std::endl;
+    if(err) {
+        std::cerr << "Fail to start receiver: " << err->Explain() << std::endl;
         return 1;
     }
     std::cout << "StartListener on " << address << std::endl;
@@ -20,6 +20,10 @@ int main (int argc, char* argv[]) {
 
     std::cout << "Stop listener..." << std::endl;
     receiver->StopListener(&err);//TODO might not work since Accept is a blocking call :/
+    if(err) {
+        std::cerr << "Fail to stop receiver: " << err->Explain() << std::endl;
+        return 1;
+    }
 
     return 0;
 }

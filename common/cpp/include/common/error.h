@@ -13,6 +13,7 @@ enum class ErrorType {
     kHidraError,
     kHttpError,
     kIOError,
+    kReceiverError,
 
     kMemoryAllocationError,
     kEndOfFile
@@ -30,7 +31,7 @@ class ErrorInterface {
     virtual void Append(const std::string& value) noexcept = 0;
     virtual ErrorType GetErrorType() const noexcept = 0;
     virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
-    /*TODO: Add these function, so it will be really easy and convenient to use the error class
+    /*TODO: Add these functions, so it will be really easy and convenient to use the error class
      * virtual inline bool operator == (const Error& rhs) const
      * virtual inline bool operator != (const Error& rhs) const
      * virtual inline bool operator == (const ErrorTemplateInterface& rhs) const
@@ -44,7 +45,7 @@ class ErrorTemplateInterface {
   public:
     virtual ErrorType GetErrorType() const noexcept = 0;
     virtual Error Generate() const noexcept = 0;
-    /*TODO: Add these function, so it will be really easy and convenient to use the error class
+    /*TODO: Add these functions, so it will be really easy and convenient to use the error class
      * virtual inline bool operator ErrorTemplateInterface() const
      */
 

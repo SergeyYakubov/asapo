@@ -51,6 +51,8 @@ void NetworkProducerPeer::internal_receiver_thread_() {
         }
 
         std::cout << "[" << GetConnectionId() << "] Got request: " << generic_request->op_code << std::endl;
+
+        //generic_response will be set here and the amount to send is returned
         size_t bytes_to_send = handle_generic_request_(generic_request.get(), generic_response.get());
 
         if(bytes_to_send == 0) {
@@ -92,7 +94,8 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
     Error io_err;
 
     static const size_t sizeof_generic_request = sizeof(GenericNetworkRequest);
-    //receive the rest of the message
+    //after receiving all GenericNetworkResponse fields from caller,
+    //we need now need to receive the rest of the request
     io->Receive(socket_fd_, (uint8_t*)request + sizeof_generic_request,
                 handler_information.request_size - sizeof_generic_request, &io_err);
 

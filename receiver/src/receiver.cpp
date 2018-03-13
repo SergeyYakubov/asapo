@@ -5,41 +5,33 @@
 
 const int hidra2::Receiver::kMaxUnacceptedConnectionsBacklog = 5;
 
-void hidra2::Receiver::StartListener(std::string listener_address, ReceiverError* err) {
-    *err = ReceiverError::kNoError;
+void hidra2::Receiver::StartListener(std::string listener_address, Error* err) {
+    *err = nullptr;
 
     if(listener_running_) {
-        *err = ReceiverError::kAlreadyListening;
+        *err = ReceiverErrorTemplates::kAlreadyListening.Generate();
         return;
     }
     listener_running_ = true;
 
-    Error io_error;
-
     FileDescriptor listener_fd = io->CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP,
-                                                  &io_error);
-    if(io_error != nullptr) {
-        *err = ReceiverError::kFailToCreateSocket;
+                                                  err);
+    if(*err) {
         listener_running_ = false;
-        std::cerr << "Fail to create socket" << std::endl;
         return;
     }
 
-    io->InetBind(listener_fd, listener_address, &io_error);
-    if(io_error != nullptr) {
+    io->InetBind(listener_fd, listener_address, err);
+    if(*err) {
         io->CloseSocket(listener_fd, nullptr);
-        *err = ReceiverError::kFailToCreateSocket;
         listener_running_ = false;
-        std::cerr << "Fail to bind socket" << std::endl;
         return;
     }
 
-    io->Listen(listener_fd, kMaxUnacceptedConnectionsBacklog, &io_error);
-    if(io_error != nullptr) {
+    io->Listen(listener_fd, kMaxUnacceptedConnectionsBacklog, err);
+    if(*err) {
         io->CloseSocket(listener_fd, nullptr);
-        *err = ReceiverError::kFailToCreateSocket;
         listener_running_ = false;
-        std::cerr << "Fail to start listen" << std::endl;
         return;
     }
 
@@ -58,7 +50,7 @@ void hidra2::Receiver::AcceptThreadLogic() {
 
         Error io_error;
         auto client_info_tuple = io->InetAccept(listener_fd_, &io_error);
-        if(io_error != nullptr) {
+        if(io_error) {
             std::cerr << "An error occurred while accepting an incoming connection" << std::endl;
             return;
         }
@@ -68,7 +60,7 @@ void hidra2::Receiver::AcceptThreadLogic() {
     }
 }
 
-void hidra2::Receiver::StopListener(ReceiverError* err) {
+void hidra2::Receiver::StopListener(Error* err) {
     listener_running_ = false;
     io->CloseSocket(listener_fd_, nullptr);
     if(accept_thread_)
