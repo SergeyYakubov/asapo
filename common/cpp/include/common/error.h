@@ -69,11 +69,11 @@ class ErrorTemplateInterface {
 };
 
 static inline bool operator == (const Error& lhs, const ErrorTemplateInterface& rhs) {
-    return rhs.operator==(lhs);
+    return rhs.operator == (lhs);
 }
 
 static inline bool operator != (const Error& lhs, const ErrorTemplateInterface& rhs) {
-    return rhs.operator!=(lhs);
+    return rhs.operator != (lhs);
 }
 
 class SimpleError: public ErrorInterface {

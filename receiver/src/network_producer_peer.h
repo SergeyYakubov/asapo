@@ -29,8 +29,12 @@ class NetworkProducerPeer : public HasIO {
     static std::atomic<uint32_t> kNetworkProducerPeerCount;
 
 
-    GenericNetworkRequest* const generic_request = reinterpret_cast<GenericNetworkRequest* const>(new uint8_t[kRequestHandlerMaxBufferSize]);
-    GenericNetworkResponse* const generic_response = reinterpret_cast<GenericNetworkResponse* const>(new uint8_t[kRequestHandlerMaxBufferSize]);
+    std::unique_ptr<GenericNetworkRequest> const generic_request = std::unique_ptr<GenericNetworkRequest>
+            (reinterpret_cast<GenericNetworkRequest* const>
+             (new uint8_t[kRequestHandlerMaxBufferSize]));
+    std::unique_ptr<GenericNetworkResponse> const generic_response = std::unique_ptr<GenericNetworkResponse>
+            (reinterpret_cast<GenericNetworkResponse* const>
+             (new uint8_t[kRequestHandlerMaxBufferSize]));
 
     uint32_t                        connection_id_;
     int                             socket_fd_;

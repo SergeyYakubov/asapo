@@ -33,7 +33,7 @@ void NetworkProducerPeer::internal_receiver_thread_() {
     while(is_listening_) {
         io_err = nullptr;
 
-        io->ReceiveWithTimeout(socket_fd_, generic_request, sizeof(GenericNetworkRequest), 50, &io_err);
+        io->ReceiveWithTimeout(socket_fd_, generic_request.get(), sizeof(GenericNetworkRequest), 50, &io_err);
         if(io_err != nullptr) {
             if(IOErrorTemplates::kTimeout == io_err) {
                 std::this_thread::yield();
@@ -51,13 +51,13 @@ void NetworkProducerPeer::internal_receiver_thread_() {
         }
 
         std::cout << "[" << GetConnectionId() << "] Got request: " << generic_request->op_code << std::endl;
-        size_t bytes_to_send = handle_generic_request_(generic_request, generic_response);
+        size_t bytes_to_send = handle_generic_request_(generic_request.get(), generic_response.get());
 
         if(bytes_to_send == 0) {
             continue;//No data to send
         }
 
-        io->Send(socket_fd_, generic_response, bytes_to_send, &io_err);
+        io->Send(socket_fd_, generic_response.get(), bytes_to_send, &io_err);
 
         if(io_err != nullptr) {
             std::cerr << "[" << GetConnectionId() << "] Fail to send response" << std::endl;
@@ -66,10 +66,6 @@ void NetworkProducerPeer::internal_receiver_thread_() {
 
     io->CloseSocket(socket_fd_, nullptr);
     std::cout << "[" << GetConnectionId() << "] Disconnected." << std::endl;
-
-    free(generic_request);
-    free(generic_response);
-
 }
 
 void NetworkProducerPeer::stop_peer_listener() {
@@ -98,7 +94,7 @@ size_t NetworkProducerPeer::handle_generic_request_(GenericNetworkRequest* reque
     static const size_t sizeof_generic_request = sizeof(GenericNetworkRequest);
     //receive the rest of the message
     io->Receive(socket_fd_, (uint8_t*)request + sizeof_generic_request,
-                             handler_information.request_size - sizeof_generic_request, &io_err);
+                handler_information.request_size - sizeof_generic_request, &io_err);
 
     if(io_err != nullptr) {
         std::cerr << "[" << GetConnectionId() << "] NetworkProducerPeer::handle_generic_request_/receive_timeout: " <<
@@ -125,7 +121,7 @@ FileDescriptor NetworkProducerPeer::CreateAndOpenFileByFileId(uint64_t file_id, 
 }
 
 bool NetworkProducerPeer::CheckIfValidFileSize(size_t file_size) {
-    return file_size != 0 && file_size <= size_t(1024)*1024*1024*2;
+    return file_size != 0 && file_size <= size_t(1024) * 1024 * 1024 * 2;
 
 }
 
