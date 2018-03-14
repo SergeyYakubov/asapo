@@ -11,6 +11,11 @@ using ::testing::Gt;
 using ::testing::Eq;
 using ::testing::Mock;
 using ::testing::InSequence;
+using ::testing::SetArgPointee;
+using ::hidra2::Error;
+using ::hidra2::ErrorInterface;
+using ::hidra2::FileDescriptor;
+using ::hidra2::SocketDescriptor;
 
 namespace {
 
@@ -21,29 +26,34 @@ TEST(Constructor, CheckGetAddress) {
 }
 
 TEST(CheckIfValidFileSize, ZeroFileSize) {
-    EXPECT_FALSE(hidra2::NetworkProducerPeerImpl::CheckIfValidFileSize(0));
+    hidra2::NetworkProducerPeerImpl networkProducerPeer(0, "");
+    EXPECT_FALSE(networkProducerPeer.CheckIfValidFileSize(0));
 }
 
 TEST(CheckIfValidFileSize, SmallFileSize) {
-    EXPECT_TRUE(hidra2::NetworkProducerPeerImpl::CheckIfValidFileSize(1));
+    hidra2::NetworkProducerPeerImpl networkProducerPeer(0, "");
+    EXPECT_TRUE(networkProducerPeer.CheckIfValidFileSize(1));
 }
 
 TEST(CheckIfValidFileSize, OneGiByteSize) {
-    EXPECT_TRUE(hidra2::NetworkProducerPeerImpl::CheckIfValidFileSize(1024 * 1024 * 1024 * 1));
+    hidra2::NetworkProducerPeerImpl networkProducerPeer(0, "");
+    EXPECT_TRUE(networkProducerPeer.CheckIfValidFileSize(1024 * 1024 * 1024 * 1));
 }
 
 TEST(CheckIfValidFileSize, TwoGiByteSize) {
-    EXPECT_TRUE(hidra2::NetworkProducerPeerImpl::CheckIfValidFileSize(size_t(1024) * 1024 * 1024 * 2));
+    hidra2::NetworkProducerPeerImpl networkProducerPeer(0, "");
+    EXPECT_TRUE(networkProducerPeer.CheckIfValidFileSize(size_t(1024) * 1024 * 1024 * 2));
 }
 
 TEST(CheckIfValidFileSize, MoreThenTwoGiByteSize) {
-    EXPECT_FALSE(hidra2::NetworkProducerPeerImpl::CheckIfValidFileSize(size_t(1024) * 1024 * 1024 * 2 + 1));
+    hidra2::NetworkProducerPeerImpl networkProducerPeer(0, "");
+    EXPECT_FALSE(networkProducerPeer.CheckIfValidFileSize(size_t(1024) * 1024 * 1024 * 2 + 1));
 }
 
 TEST(CreateAndOpenFileByFileId, FolderUnknownIOError) {
     hidra2::NetworkProducerPeerImpl NetworkProducerPeerImpl(0, "");
     hidra2::MockIO mockIO;
-    NetworkProducerPeerImpl.__set_io(&mockIO);
+    NetworkProducerPeerImpl.SetIO__(&mockIO);
 
     uint64_t expected_file_id = 5435452453867;
 
@@ -60,7 +70,7 @@ TEST(CreateAndOpenFileByFileId, FolderUnknownIOError) {
 TEST(CreateAndOpenFileByFileId, FolderAlreadyExsistsButFileAlreadyExists) {
     hidra2::NetworkProducerPeerImpl NetworkProducerPeerImpl(0, "");
     hidra2::MockIO mockIO;
-    NetworkProducerPeerImpl.__set_io(&mockIO);
+    NetworkProducerPeerImpl.SetIO__(&mockIO);
 
     uint64_t expected_file_id = 543545;
     uint64_t expected_fd = 23432;
@@ -92,7 +102,7 @@ TEST(CreateAndOpenFileByFileId, FolderAlreadyExsistsButFileAlreadyExists) {
 TEST(CreateAndOpenFileByFileId, FolderCreatedButFileAlreadyExists) {
     hidra2::NetworkProducerPeerImpl NetworkProducerPeerImpl(0, "");
     hidra2::MockIO mockIO;
-    NetworkProducerPeerImpl.__set_io(&mockIO);
+    NetworkProducerPeerImpl.SetIO__(&mockIO);
 
     uint64_t expected_file_id = 543545;
 
@@ -123,7 +133,7 @@ TEST(CreateAndOpenFileByFileId, FolderCreatedButFileAlreadyExists) {
 TEST(CreateAndOpenFileByFileId, Ok) {
     hidra2::NetworkProducerPeerImpl NetworkProducerPeerImpl(0, "");
     hidra2::MockIO mockIO;
-    NetworkProducerPeerImpl.__set_io(&mockIO);
+    NetworkProducerPeerImpl.SetIO__(&mockIO);
 
     uint64_t expected_file_id = 543545;
     uint64_t expected_fd = 23432;
@@ -153,35 +163,256 @@ TEST(CreateAndOpenFileByFileId, Ok) {
 }
 
 TEST(CheckIfValidNetworkOpCode, NormalOpcodeSendData) {
-    EXPECT_TRUE(hidra2::NetworkProducerPeerImpl::CheckIfValidNetworkOpCode(hidra2::Opcode::kNetOpcodeSendData));
+    hidra2::NetworkProducerPeerImpl NetworkProducerPeerImpl(0, "");
+    EXPECT_TRUE(NetworkProducerPeerImpl.CheckIfValidNetworkOpCode(hidra2::Opcode::kNetOpcodeSendData));
 }
 
 TEST(CheckIfValidNetworkOpCode, FalseOpcode) {
-    EXPECT_FALSE(hidra2::NetworkProducerPeerImpl::CheckIfValidNetworkOpCode(hidra2::Opcode::kNetOpcodeCount));
+    hidra2::NetworkProducerPeerImpl NetworkProducerPeerImpl(0, "");
+    EXPECT_FALSE(NetworkProducerPeerImpl.CheckIfValidNetworkOpCode(hidra2::Opcode::kNetOpcodeCount));
 }
 
 TEST(CheckIfValidNetworkOpCode, FalseOpcodeByNumber) {
-    EXPECT_FALSE(hidra2::NetworkProducerPeerImpl::CheckIfValidNetworkOpCode((hidra2::Opcode)90));
+    hidra2::NetworkProducerPeerImpl NetworkProducerPeerImpl(0, "");
+    EXPECT_FALSE(NetworkProducerPeerImpl.CheckIfValidNetworkOpCode((hidra2::Opcode)90));
 }
 
 TEST(CheckIfValidNetworkOpCode, FalseOpcodeByNegativNumber) {
-    //Technically -1 is some bit positive number since Opcode is an unsigned 8 bit number
-    EXPECT_FALSE(hidra2::NetworkProducerPeerImpl::CheckIfValidNetworkOpCode((hidra2::Opcode) - 1));
+    hidra2::NetworkProducerPeerImpl NetworkProducerPeerImpl(0, "");
+    //Technically -1 is some big positive number since Opcode is an unsigned 8 bit number
+    EXPECT_FALSE(NetworkProducerPeerImpl.CheckIfValidNetworkOpCode((hidra2::Opcode) - 1));
 }
 
-/*
- *
-class ConstructorAndGetterFixture : public testing::Test {
+class ReceiveAndSaveFileMock : public hidra2::NetworkProducerPeerImpl {
  public:
+    ReceiveAndSaveFileMock(hidra2::SocketDescriptor socket_fd, const std::string &address) : NetworkProducerPeerImpl(
+        socket_fd,
+        address) {}
 
-    const std::unique_ptr<hidra2::NetworkProducerPeerImpl> networkProducerPeer;
-    virtual void SetUp() {
-        networkProducerPeer.reset(new hidra2::NetworkProducerPeerImpl(expected_socket_descriptor, expected_address));
+    FileDescriptor CreateAndOpenFileByFileId(uint64_t file_id, Error* err) const noexcept override {
+        ErrorInterface* error = nullptr;
+        auto data = CreateAndOpenFileByFileId_t(file_id, &error);
+        err->reset(error);
+        return data;
+    }
+    MOCK_CONST_METHOD2(CreateAndOpenFileByFileId_t, FileDescriptor(uint64_t file_id, ErrorInterface** err));
+
+
+    bool CheckIfValidFileSize(size_t file_size) const noexcept override {
+        return CheckIfValidFileSize_t(file_size);
+    }
+    MOCK_CONST_METHOD1(CheckIfValidFileSize_t, bool(size_t file_size));
+
+};
+
+class ReceiveAndSaveFileFixture : public testing::Test {
+  public:
+    const hidra2::SocketDescriptor  expected_socket_descriptor = 20;
+    const std::string               expected_address = "somehost:13579";
+    const uint64_t                  expected_file_id = 314322;
+    const uint64_t                  expected_file_size = 784387;
+    const FileDescriptor            expected_fd = 12643;
+
+    Error err;
+
+    hidra2::MockIO mockIO;
+    std::unique_ptr<ReceiveAndSaveFileMock> networkProducerPeer;
+
+    void SetUp() override {
+        networkProducerPeer.reset(new ReceiveAndSaveFileMock(expected_socket_descriptor, expected_address));
+        networkProducerPeer->SetIO__(&mockIO);
     }
 };
 
- */
+TEST_F(ReceiveAndSaveFileFixture, CheckFileSizeError) {
+    EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
+        .WillOnce(
+            Return(false)
+        );
+
+    networkProducerPeer->ReceiveAndSaveFile(expected_file_id, expected_file_size, &err);
+
+    ASSERT_THAT(err, Eq(hidra2::ErrorTemplates::kMemoryAllocationError));
+}
+
+TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenFileAlreadyExists) {
+    EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
+        .WillOnce(
+            Return(true)
+        );
+
+    EXPECT_CALL(*networkProducerPeer, CreateAndOpenFileByFileId_t(expected_file_id, _))
+        .WillOnce(DoAll(
+            SetArgPointee<1>(hidra2::IOErrorTemplates::kFileAlreadyExists.Generate().release()),
+            Return(expected_fd))
+        );
+
+    EXPECT_CALL(mockIO, Skip_t(_, _, _));
+
+    networkProducerPeer->ReceiveAndSaveFile(expected_file_id, expected_file_size, &err);
+
+    ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kFileAlreadyExists));
+}
+
+TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenUnknownErrorWhileOpenFile) {
+    EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
+        .WillOnce(
+            Return(true)
+        );
+
+    EXPECT_CALL(*networkProducerPeer, CreateAndOpenFileByFileId_t(expected_file_id, _))
+        .WillOnce(DoAll(
+            SetArgPointee<1>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release()),
+            Return(expected_fd))
+        );
+
+    networkProducerPeer->ReceiveAndSaveFile(expected_file_id, expected_file_size, &err);
+
+    ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
+}
+
+TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenUnknownErrorWhileReceivingData) {
+    EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
+        .WillOnce(
+            Return(true)
+        );
+
+    EXPECT_CALL(*networkProducerPeer, CreateAndOpenFileByFileId_t(expected_file_id, _))
+        .WillOnce(DoAll(
+            SetArgPointee<1>(nullptr),
+            Return(expected_fd)
+        ));
+
+    EXPECT_CALL(mockIO, Receive_t(expected_socket_descriptor, _, expected_file_size, _))
+        .WillOnce(DoAll(
+            SetArgPointee<3>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release()),
+            Return(-1)
+        ));
+
+    networkProducerPeer->ReceiveAndSaveFile(expected_file_id, expected_file_size, &err);
+
+    ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
+}
+
+TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenUnknownErrorWhileSavingData) {
+    EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
+        .WillOnce(
+            Return(true)
+        );
+
+    EXPECT_CALL(*networkProducerPeer, CreateAndOpenFileByFileId_t(expected_file_id, _))
+        .WillOnce(DoAll(
+            SetArgPointee<1>(nullptr),
+            Return(expected_fd)
+        ));
+
+    EXPECT_CALL(mockIO, Receive_t(expected_socket_descriptor, _, expected_file_size, _))
+        .WillOnce(DoAll(
+            SetArgPointee<3>(nullptr),
+            Return(expected_file_size)
+        ));
+
+    EXPECT_CALL(mockIO, Write_t(expected_fd, _, expected_file_size, _))
+        .WillOnce(DoAll(
+            SetArgPointee<3>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release()),
+            Return(expected_file_size)
+        ));
+
+    networkProducerPeer->ReceiveAndSaveFile(expected_file_id, expected_file_size, &err);
+
+    ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
+}
+
+TEST_F(ReceiveAndSaveFileFixture, Ok) {
+    EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
+        .WillOnce(
+            Return(true)
+        );
+
+    EXPECT_CALL(*networkProducerPeer, CreateAndOpenFileByFileId_t(expected_file_id, _))
+        .WillOnce(DoAll(
+            SetArgPointee<1>(nullptr),
+            Return(expected_fd)
+        ));
+
+    EXPECT_CALL(mockIO, Receive_t(expected_socket_descriptor, _, expected_file_size, _))
+        .WillOnce(DoAll(
+            SetArgPointee<3>(nullptr),
+            Return(expected_file_size)
+        ));
+
+    EXPECT_CALL(mockIO, Write_t(expected_fd, _, expected_file_size, _))
+        .WillOnce(DoAll(
+            SetArgPointee<3>(nullptr),
+            Return(expected_file_size)
+        ));
+
+    networkProducerPeer->ReceiveAndSaveFile(expected_file_id, expected_file_size, &err);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+class HandleSendDataRequestMock : public ReceiveAndSaveFileMock {
+ public:
+    HandleSendDataRequestMock(SocketDescriptor socket_fd, const std::string &address)
+        : ReceiveAndSaveFileMock(socket_fd, address) {}
+
+    void ReceiveAndSaveFile(uint64_t file_id, size_t file_size, Error* err) const noexcept override {
+        ErrorInterface* error = nullptr;
+        ReceiveAndSaveFile_t(file_id, file_size, &error);
+        err->reset(error);
+    }
+    MOCK_CONST_METHOD3(ReceiveAndSaveFile_t, void(uint64_t file_id, size_t file_size, ErrorInterface** err));
+};
+
+class HandleSendDataRequestFixture : public ReceiveAndSaveFileFixture {
+ public:
+    std::unique_ptr<HandleSendDataRequestMock> networkProducerPeer;
+
+    hidra2::SendDataRequest request{};
+    hidra2::SendDataResponse response{};
+
+    void SetUp() override {
+        request.file_id = expected_file_id;
+        request.file_size = expected_file_size;
 
 
+        networkProducerPeer.reset(new HandleSendDataRequestMock(expected_socket_descriptor, expected_address));
+        networkProducerPeer->SetIO__(&mockIO);
+    }
+};
+
+TEST_F(HandleSendDataRequestFixture, Ok) {
+    EXPECT_CALL(*networkProducerPeer, ReceiveAndSaveFile_t(expected_file_id, expected_file_size, _))
+        .WillOnce(
+            SetArgPointee<2>(nullptr)
+        );
+
+    networkProducerPeer->HandleSendDataRequest(networkProducerPeer.get(), &request, &response);
+
+    ASSERT_THAT(response.error_code, Eq(hidra2::NET_ERR__NO_ERROR));
+}
+
+TEST_F(HandleSendDataRequestFixture, CheckErrorCodeWhenFileIdIsAlreadyUsed) {
+    EXPECT_CALL(*networkProducerPeer, ReceiveAndSaveFile_t(expected_file_id, expected_file_size, _))
+        .WillOnce(
+            SetArgPointee<2>(hidra2::IOErrorTemplates::kFileAlreadyExists.Generate().release())
+        );
+
+    networkProducerPeer->HandleSendDataRequest(networkProducerPeer.get(), &request, &response);
+
+    ASSERT_THAT(response.error_code, Eq(hidra2::NET_ERR__FILEID_ALREADY_IN_USE));
+}
+
+TEST_F(HandleSendDataRequestFixture, CheckErrorCodeWhenUnexpectedError) {
+    EXPECT_CALL(*networkProducerPeer, ReceiveAndSaveFile_t(expected_file_id, expected_file_size, _))
+        .WillOnce(
+            SetArgPointee<2>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release())
+        );
+
+    networkProducerPeer->HandleSendDataRequest(networkProducerPeer.get(), &request, &response);
+
+    ASSERT_THAT(response.error_code, Eq(hidra2::NET_ERR__INTERNAL_SERVER_ERROR));
+}
 
 }

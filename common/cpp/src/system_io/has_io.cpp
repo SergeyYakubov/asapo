@@ -7,10 +7,10 @@ hidra2::HasIO::HasIO() {
     io = kDefaultIO;
 }
 
-void hidra2::HasIO::__set_io(hidra2::IO* io) {
+void hidra2::HasIO::SetIO__(hidra2::IO* io) {
     this->io = io;
 }
 
-hidra2::IO* hidra2::HasIO::__get_io() {
+hidra2::IO* hidra2::HasIO::GetIO__() {
     return io;
 }

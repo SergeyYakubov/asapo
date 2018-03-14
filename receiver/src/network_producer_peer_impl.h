@@ -35,8 +35,6 @@ class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
     void InternalPeerReceiverThreadEntryPoint();
     void InternalPeerReceiverDoWork(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err);
     void HandleRawRequestBuffer(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err);
-  protected:
-    void ReceiveAndSaveFile(uint64_t file_id, size_t file_size, Error* err) override;
   public:
     static const std::vector<RequestHandlerInformation> kRequestHandlers;
     static size_t kRequestHandlerMaxBufferSize;
@@ -53,9 +51,11 @@ class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
     uint32_t GetConnectionId() const override;
     std::string GetAddress() const override;
 
-    FileDescriptor CreateAndOpenFileByFileId(uint64_t file_id, Error* err);
-    static bool CheckIfValidFileSize(size_t file_size);
-    static bool CheckIfValidNetworkOpCode(Opcode opcode);
+    void ReceiveAndSaveFile(uint64_t file_id, size_t file_size, Error* err) const noexcept override;
+
+    virtual FileDescriptor CreateAndOpenFileByFileId(uint64_t file_id, Error* err) const noexcept;
+    virtual bool CheckIfValidFileSize(size_t file_size) const noexcept;
+    virtual bool CheckIfValidNetworkOpCode(Opcode opcode) const noexcept;
 
   public:
     /*

@@ -26,7 +26,7 @@ TEST(a, b) {
 
     hidra2::Receiver receiver;
 
-    receiver.__set_io(&mockIO);
+    receiver.SetIO__(&mockIO);
 
     InSequence sequence;
 

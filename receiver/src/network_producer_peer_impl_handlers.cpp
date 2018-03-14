@@ -32,10 +32,12 @@ NetworkProducerPeerImpl::StaticInitRequestHandlerList() {
 void NetworkProducerPeerImpl::HandleSendDataRequest(NetworkProducerPeerImpl* self, const SendDataRequest* request,
         SendDataResponse* response) {
     Error err;
+
     self->ReceiveAndSaveFile(request->file_id, request->file_size, &err);
 
     if(!err) {
         response->error_code = NET_ERR__NO_ERROR;
+        return;
     }
 
     if(err == IOErrorTemplates::kFileAlreadyExists) {

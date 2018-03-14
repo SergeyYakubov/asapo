@@ -14,8 +14,8 @@ class HasIO {
     explicit HasIO();
   public:
 
-    void __set_io(IO* io);
-    IO* __get_io();
+    void SetIO__(IO* io);
+    IO* GetIO__();
 };
 
 }

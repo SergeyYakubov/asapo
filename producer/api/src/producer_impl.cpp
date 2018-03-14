@@ -17,7 +17,7 @@ hidra2::ProducerError hidra2::ProducerImpl::NetworkErrorToProducerError(hidra2::
 }
 
 hidra2::ProducerImpl::ProducerImpl() {
-    __set_io(ProducerImpl::kDefaultIO);
+    SetIO__(ProducerImpl::kDefaultIO);
 }
 
 uint64_t hidra2::ProducerImpl::GetVersion() const {

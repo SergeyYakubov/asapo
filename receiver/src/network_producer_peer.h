@@ -14,8 +14,6 @@
 namespace hidra2 {
 
 class NetworkProducerPeer {
-  protected:
-    virtual void ReceiveAndSaveFile(uint64_t file_id, size_t file_size, Error* err) = 0;
   public:
     virtual ~NetworkProducerPeer() = default;
 
@@ -24,6 +22,8 @@ class NetworkProducerPeer {
 
     virtual uint32_t GetConnectionId() const = 0;
     virtual std::string GetAddress() const = 0;
+
+    virtual void ReceiveAndSaveFile(uint64_t file_id, size_t file_size, Error* err) const noexcept = 0;
 
     static std::unique_ptr<NetworkProducerPeer> CreateNetworkProducerPeer(SocketDescriptor socket_fd,
             const std::string& address);

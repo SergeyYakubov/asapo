@@ -36,7 +36,7 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_invalid_addres
     hidra2::ProducerImpl producer;
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     std::string expected_address = "127.0.0.1:9090";
 
@@ -60,7 +60,7 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_connection_ref
     hidra2::ProducerImpl producer;
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     std::string expected_address = "127.0.0.1:9090";
 
@@ -83,7 +83,7 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_unk) {
     hidra2::ProducerImpl producer;
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     std::string expected_address = "127.0.0.1:9090";
 
@@ -106,7 +106,7 @@ TEST(ProducerImpl, ConnectToReceiver) {
     hidra2::ProducerImpl producer;
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     std::string expected_address = "127.0.0.1:9090";
     hidra2::FileDescriptor expected_fd = 199;
@@ -128,7 +128,7 @@ TEST(ProducerImpl, ConnectToReceiver) {
 
 void ConnectToReceiver_DONE(hidra2::ProducerImpl& producer, hidra2::FileDescriptor expected_fd = 1) {
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(_, _))
     .Times(1)
@@ -147,7 +147,7 @@ TEST(ProducerImpl, ConnectToReceiver__already_connected) {
 
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     InSequence sequence;
 
@@ -214,7 +214,7 @@ TEST(ProducerImpl, Send__sendDataRequest_error) {
     ConnectToReceiver_DONE(producer, expected_fd);
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     EXPECT_CALL(mockIO, Send_t(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id,
                                expected_file_size),
@@ -246,7 +246,7 @@ TEST(ProducerImpl, Send__sendData_error) {
     ConnectToReceiver_DONE(producer, expected_fd);
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     EXPECT_CALL(mockIO, Send_t(_, _, _, _))
     .Times(1)
@@ -286,7 +286,7 @@ TEST(ProducerImpl, Send__Receive_error) {
     ConnectToReceiver_DONE(producer, expected_fd);
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     EXPECT_CALL(mockIO, Send_t(_, _, _, _))
     .Times(2)
@@ -324,7 +324,7 @@ TEST(ProducerImpl, Send__Receive_server_error) {
     ConnectToReceiver_DONE(producer, expected_fd);
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     EXPECT_CALL(mockIO, Send_t(_, _, _, _))
     .Times(2)
@@ -363,7 +363,7 @@ TEST(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
     ConnectToReceiver_DONE(producer, expected_fd);
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     EXPECT_CALL(mockIO, Send_t(_, _, _, _))
     .Times(2)
@@ -402,7 +402,7 @@ TEST(ProducerImpl, Send) {
     ConnectToReceiver_DONE(producer, expected_fd);
 
     hidra2::MockIO mockIO;
-    producer.__set_io(&mockIO);
+    producer.SetIO__(&mockIO);
 
     EXPECT_CALL(mockIO, Send_t(_, _, _, _))
     .Times(2)

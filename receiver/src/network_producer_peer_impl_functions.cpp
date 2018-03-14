@@ -1,7 +1,7 @@
 #include "network_producer_peer_impl.h"
 
 namespace hidra2 {
-void NetworkProducerPeerImpl::ReceiveAndSaveFile(uint64_t file_id, size_t file_size, Error* err) {
+void NetworkProducerPeerImpl::ReceiveAndSaveFile(uint64_t file_id, size_t file_size, Error* err) const noexcept {
     if(!CheckIfValidFileSize(file_size)) {
         *err = ErrorTemplates::kMemoryAllocationError.Generate();
         return;

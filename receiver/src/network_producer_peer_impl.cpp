@@ -134,7 +134,7 @@ NetworkProducerPeerImpl::~NetworkProducerPeerImpl() {
     StopPeerListener();
 }
 
-FileDescriptor NetworkProducerPeerImpl::CreateAndOpenFileByFileId(uint64_t file_id, Error* err) {
+FileDescriptor NetworkProducerPeerImpl::CreateAndOpenFileByFileId(uint64_t file_id, Error* err) const noexcept {
     io->CreateNewDirectory("files", err);
     if(*err && *err != IOErrorTemplates::kFileAlreadyExists) {
         return -1;
@@ -143,11 +143,11 @@ FileDescriptor NetworkProducerPeerImpl::CreateAndOpenFileByFileId(uint64_t file_
                     err);
 }
 
-bool NetworkProducerPeerImpl::CheckIfValidFileSize(size_t file_size) {
+bool NetworkProducerPeerImpl::CheckIfValidFileSize(size_t file_size) const noexcept {
     return file_size != 0 && file_size <= size_t(1024) * 1024 * 1024 * 2;
 }
 
-bool NetworkProducerPeerImpl::CheckIfValidNetworkOpCode(Opcode opcode) {
+bool NetworkProducerPeerImpl::CheckIfValidNetworkOpCode(Opcode opcode) const noexcept {
     return opcode < kNetOpcodeCount && opcode >= 0;
 }
 
