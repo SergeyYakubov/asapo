@@ -146,10 +146,11 @@ class IO {
                                                long timeout_in_usec,
                                                Error* err) const = 0;
     virtual size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const = 0;
+
     virtual void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const = 0;
     /**
-    * @param err Since CloseSocket if often used in an Error* case, it's able to accept err as nullptr.
-    */
+     * @param err Since CloseSocket if often used in an error case, it's able to accept err as nullptr.
+     */
     virtual void            CloseSocket(SocketDescriptor socket_fd, Error* err) const = 0;
 
     /*
@@ -157,7 +158,7 @@ class IO {
      */
     virtual FileDescriptor  Open            (const std::string& filename, int open_flags, Error* err) const = 0;
     /**
-     * @param err Since Close if often used in an Error* case, it's able to accept err as nullptr.
+     * @param err Since Close if often used in an error case, it's able to accept err as nullptr.
      */
     virtual void            Close           (FileDescriptor fd, Error* err) const = 0;
 

@@ -58,7 +58,7 @@ int main (int argc, char* argv[]) {
               << "iterations: " << iterations << std::endl
               << std::endl;
 
-    auto producer = hidra2::Producer::create();
+    auto producer = hidra2::Producer::Create();
     hidra2::ProducerError err = producer->ConnectToReceiver(receiver_address);
     if(err != hidra2::ProducerError::kNoError) {
         if (err == hidra2::ProducerError::kConnectionRefused) {

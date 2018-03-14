@@ -7,8 +7,10 @@ namespace hidra2 {
 
 enum class ReceiverErrorType {
     kAlreadyListening,
+    kInvalidOpCode,
 };
 
+//TODO Make a marco to create error class and error template class
 class ReceiverError : public SimpleError {
   private:
     ReceiverErrorType receiver_error_type_;
@@ -47,8 +49,8 @@ class ReceiverErrorTemplate : public SimpleErrorTemplate {
 };
 
 namespace ReceiverErrorTemplates {
-auto const
-kAlreadyListening = ReceiverErrorTemplate{"Receiver is already listening", ReceiverErrorType::kAlreadyListening};
+auto const kAlreadyListening = ReceiverErrorTemplate{"Receiver is already listening", ReceiverErrorType::kAlreadyListening};
+auto const kInvalidOpCode = ReceiverErrorTemplate{"Invalid Opcode", ReceiverErrorType::kInvalidOpCode};
 };
 }
 

@@ -29,7 +29,7 @@ class Producer {
     /*!
      * @return A unique_ptr to a new producer instance
      */
-    static std::unique_ptr<Producer> create();
+    static std::unique_ptr<Producer> Create();
 
     virtual ~Producer() = default;
 

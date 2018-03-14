@@ -13,58 +13,20 @@
 
 namespace hidra2 {
 
-class NetworkProducerPeer : public HasIO {
+class NetworkProducerPeer {
+  protected:
+    virtual void ReceiveAndSaveFile(uint64_t file_id, size_t file_size, Error* err) = 0;
   public:
-    typedef void (*RequestHandler) (NetworkProducerPeer* self, GenericNetworkRequest* request,
-                                    GenericNetworkResponse* response);
-    struct RequestHandlerInformation {
-        size_t request_size;
-        size_t response_size;
-        RequestHandler handler;
-    };
-  private:
-    static const std::vector<RequestHandlerInformation> kRequestHandlers;
-    static size_t kRequestHandlerMaxBufferSize;
+    virtual ~NetworkProducerPeer() = default;
 
-    static std::atomic<uint32_t> kNetworkProducerPeerCount;
+    virtual void StartPeerListener() = 0;
+    virtual void StopPeerListener() = 0;
 
+    virtual uint32_t GetConnectionId() const = 0;
+    virtual std::string GetAddress() const = 0;
 
-    std::unique_ptr<GenericNetworkRequest> const generic_request = std::unique_ptr<GenericNetworkRequest>
-            (reinterpret_cast<GenericNetworkRequest* const>
-             (new uint8_t[kRequestHandlerMaxBufferSize]));
-    std::unique_ptr<GenericNetworkResponse> const generic_response = std::unique_ptr<GenericNetworkResponse>
-            (reinterpret_cast<GenericNetworkResponse* const>
-             (new uint8_t[kRequestHandlerMaxBufferSize]));
-
-    uint32_t                        connection_id_;
-    int                             socket_fd_;
-
-    bool                            is_listening_ = false;
-    std::unique_ptr<std::thread>    listener_thread_ = nullptr;
-
-    void internal_receiver_thread_();
-    size_t handle_generic_request_(GenericNetworkRequest* request, GenericNetworkResponse* response);
-
-    static void handle_send_data_request_(NetworkProducerPeer* self, const SendDataRequest* request,
-                                          SendDataResponse* response);
-  public:
-    NetworkProducerPeer& operator=(const NetworkProducerPeer&) = delete;
-    NetworkProducerPeer() = default;
-
-    NetworkProducerPeer(int socket_fd, std::string address);
-    ~NetworkProducerPeer();
-
-    static const std::vector<RequestHandlerInformation> init_request_handlers();
-
-    void start_peer_listener();
-    void stop_peer_listener();
-
-    uint32_t GetConnectionId() const;
-
-    //TODO make the following functions private or hide them behind an interface
-    FileDescriptor CreateAndOpenFileByFileId(uint64_t file_id, Error* err);
-    static bool CheckIfValidFileSize(size_t file_size);
-
+    static std::unique_ptr<NetworkProducerPeer> CreateNetworkProducerPeer(SocketDescriptor socket_fd,
+            const std::string& address);
 };
 
 }

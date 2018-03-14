@@ -69,11 +69,11 @@ void hidra2::Receiver::StopListener(Error* err) {
 }
 
 std::unique_ptr<hidra2::NetworkProducerPeer> hidra2::Receiver::on_new_peer_(int peer_socket_fd, std::string address) {
-    NetworkProducerPeer* peer = new NetworkProducerPeer(peer_socket_fd, address);
+    auto peer = NetworkProducerPeer::CreateNetworkProducerPeer(peer_socket_fd, address);
 
     std::cout << "[" << peer->GetConnectionId() << "] New connection from " << address << std::endl;
 
-    peer->start_peer_listener();
+    peer->StartPeerListener();
 
-    return std::unique_ptr<hidra2::NetworkProducerPeer>(peer);
+    return peer;
 }
