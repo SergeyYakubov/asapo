@@ -82,7 +82,13 @@ static inline bool operator != (const Error& lhs, const ErrorTemplateInterface& 
 }
 
 static inline std::ostream& operator<<(std::ostream& os, const Error& err) {
-    os << err->Explain();
+    if(err) {
+        os << err->Explain();
+    }
+    else {
+        static std::string no_error = "No error";
+        os << no_error;
+    }
     return os;
 }
 
