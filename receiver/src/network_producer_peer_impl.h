@@ -15,15 +15,15 @@
 namespace hidra2 {
 
 class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
-  public:
+ public:
     typedef void (* RequestHandler)(NetworkProducerPeerImpl* self, GenericNetworkRequest* request,
-                                    GenericNetworkResponse* response);
+                                    GenericNetworkResponse* response, Error* err);
     struct RequestHandlerInformation {
         size_t request_size;
         size_t response_size;
         RequestHandler handler;
     };
-  private:
+ private:
     uint32_t connection_id_;
     std::string address_;
     int socket_fd_;
@@ -35,7 +35,7 @@ class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
     void InternalPeerReceiverThreadEntryPoint();
     void InternalPeerReceiverDoWork(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err);
     void HandleRawRequestBuffer(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err);
-  public:
+ public:
     static const std::vector<RequestHandlerInformation> kRequestHandlers;
     static size_t kRequestHandlerMaxBufferSize;
 
@@ -57,15 +57,16 @@ class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
     virtual bool CheckIfValidFileSize(size_t file_size) const noexcept;
     virtual bool CheckIfValidNetworkOpCode(Opcode opcode) const noexcept;
 
-  public:
+ public:
     /*
      * Private functions but opened for unittest
      */
-    size_t HandleGenericRequest(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err);
-    static void HandleSendDataRequest(NetworkProducerPeerImpl* self,
-                                      const SendDataRequest* request,
-                                      SendDataResponse* response);
-
+    virtual size_t HandleGenericRequest(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err) noexcept;
+    virtual void HandleSendDataRequest(const SendDataRequest* request, SendDataResponse* response, Error* err) noexcept;
+ private:
+    static void HandleSendDataRequestInternalCaller(NetworkProducerPeerImpl* self,
+                                                    const SendDataRequest* request,
+                                                    SendDataResponse* response, Error* err) noexcept;
 };
 
 }

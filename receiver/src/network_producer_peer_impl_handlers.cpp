@@ -12,7 +12,7 @@ NetworkProducerPeerImpl::StaticInitRequestHandlerList() {
     vec[kNetOpcodeSendData] = {
         sizeof(SendDataRequest),
         sizeof(SendDataResponse),
-        (NetworkProducerPeerImpl::RequestHandler)& NetworkProducerPeerImpl::HandleSendDataRequest
+        (NetworkProducerPeerImpl::RequestHandler) &NetworkProducerPeerImpl::HandleSendDataRequestInternalCaller
     };
 
     for(RequestHandlerInformation& handler_information : vec) {
@@ -29,21 +29,26 @@ NetworkProducerPeerImpl::StaticInitRequestHandlerList() {
     return vec;
 }
 
-void NetworkProducerPeerImpl::HandleSendDataRequest(NetworkProducerPeerImpl* self, const SendDataRequest* request,
-        SendDataResponse* response) {
-    Error err;
 
-    self->ReceiveAndSaveFile(request->file_id, request->file_size, &err);
+void NetworkProducerPeerImpl::HandleSendDataRequestInternalCaller(NetworkProducerPeerImpl* self,
+                                                                  const SendDataRequest* request,
+                                                                  SendDataResponse* response,
+                                                                  Error* err) noexcept {
+    self->HandleSendDataRequest(request, response, err);
+}
 
-    if(!err) {
+void NetworkProducerPeerImpl::HandleSendDataRequest(const SendDataRequest* request, SendDataResponse* response, Error* err) noexcept {
+    ReceiveAndSaveFile(request->file_id, request->file_size, err);
+
+    if(!*err) {
         response->error_code = NET_ERR__NO_ERROR;
         return;
     }
 
-    if(err == IOErrorTemplates::kFileAlreadyExists) {
+    if(*err == IOErrorTemplates::kFileAlreadyExists) {
         response->error_code = NET_ERR__FILEID_ALREADY_IN_USE;
     } else {
-        std::cout << "[" << self->GetConnectionId() << "] Unexpected ReceiveAndSaveFile error " << err << std::endl;
+        std::cout << "[" << GetConnectionId() << "] Unexpected ReceiveAndSaveFile error " << *err << std::endl;
         response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
         //self->io->CloseSocket(self->socket_fd_, nullptr); TODO: Might want to close the connection?
     }

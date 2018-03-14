@@ -103,7 +103,7 @@ void NetworkProducerPeerImpl::StopPeerListener() {
 }
 
 size_t NetworkProducerPeerImpl::HandleGenericRequest(GenericNetworkRequest* request,
-        GenericNetworkResponse* response, Error* err) {
+        GenericNetworkResponse* response, Error* err) noexcept {
     if(!CheckIfValidNetworkOpCode(request->op_code)) {
         *err = hidra2::ReceiverErrorTemplates::kInvalidOpCode.Generate();
         return 0;
@@ -120,12 +120,12 @@ size_t NetworkProducerPeerImpl::HandleGenericRequest(GenericNetworkRequest* requ
     io->Receive(socket_fd_, (uint8_t*)request + sizeof_generic_request,
                 handler_information.request_size - sizeof_generic_request, err);
 
-    if(err) {
+    if(*err) {
         return 0;
     }
 
     //Invoke the request handler which sets the response
-    handler_information.handler(this, request, response);
+    handler_information.handler(this, request, response, err);
 
     return handler_information.response_size;
 }

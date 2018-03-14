@@ -16,6 +16,11 @@ using ::hidra2::Error;
 using ::hidra2::ErrorInterface;
 using ::hidra2::FileDescriptor;
 using ::hidra2::SocketDescriptor;
+using ::hidra2::SendDataRequest;
+using ::hidra2::SendDataResponse;
+using ::hidra2::GenericNetworkRequest;
+using ::hidra2::GenericNetworkResponse;
+using ::hidra2::Opcode;
 
 namespace {
 
@@ -225,6 +230,8 @@ class ReceiveAndSaveFileFixture : public testing::Test {
 };
 
 TEST_F(ReceiveAndSaveFileFixture, CheckFileSizeError) {
+    err = nullptr;
+
     EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
         .WillOnce(
             Return(false)
@@ -236,6 +243,8 @@ TEST_F(ReceiveAndSaveFileFixture, CheckFileSizeError) {
 }
 
 TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenFileAlreadyExists) {
+    err = nullptr;
+
     EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
         .WillOnce(
             Return(true)
@@ -255,6 +264,8 @@ TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenFileAlreadyExists) {
 }
 
 TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenUnknownErrorWhileOpenFile) {
+    err = nullptr;
+
     EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
         .WillOnce(
             Return(true)
@@ -272,6 +283,8 @@ TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenUnknownErrorWhileOpenFile) {
 }
 
 TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenUnknownErrorWhileReceivingData) {
+    err = nullptr;
+
     EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
         .WillOnce(
             Return(true)
@@ -295,6 +308,8 @@ TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenUnknownErrorWhileReceivingData) 
 }
 
 TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenUnknownErrorWhileSavingData) {
+    err = nullptr;
+
     EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
         .WillOnce(
             Return(true)
@@ -324,6 +339,8 @@ TEST_F(ReceiveAndSaveFileFixture, CheckErrorWhenUnknownErrorWhileSavingData) {
 }
 
 TEST_F(ReceiveAndSaveFileFixture, Ok) {
+    err = nullptr;
+
     EXPECT_CALL(*networkProducerPeer, CheckIfValidFileSize_t(expected_file_size))
         .WillOnce(
             Return(true)
@@ -369,13 +386,12 @@ class HandleSendDataRequestFixture : public ReceiveAndSaveFileFixture {
  public:
     std::unique_ptr<HandleSendDataRequestMock> networkProducerPeer;
 
-    hidra2::SendDataRequest request{};
-    hidra2::SendDataResponse response{};
+    SendDataRequest send_data_request{};
+    SendDataResponse send_data_response{};
 
     void SetUp() override {
-        request.file_id = expected_file_id;
-        request.file_size = expected_file_size;
-
+        send_data_request.file_id = expected_file_id;
+        send_data_request.file_size = expected_file_size;
 
         networkProducerPeer.reset(new HandleSendDataRequestMock(expected_socket_descriptor, expected_address));
         networkProducerPeer->SetIO__(&mockIO);
@@ -383,36 +399,85 @@ class HandleSendDataRequestFixture : public ReceiveAndSaveFileFixture {
 };
 
 TEST_F(HandleSendDataRequestFixture, Ok) {
+    err = nullptr;
+
     EXPECT_CALL(*networkProducerPeer, ReceiveAndSaveFile_t(expected_file_id, expected_file_size, _))
         .WillOnce(
             SetArgPointee<2>(nullptr)
         );
 
-    networkProducerPeer->HandleSendDataRequest(networkProducerPeer.get(), &request, &response);
+    networkProducerPeer->HandleSendDataRequest(&send_data_request, &send_data_response, &err);
 
-    ASSERT_THAT(response.error_code, Eq(hidra2::NET_ERR__NO_ERROR));
+    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::NET_ERR__NO_ERROR));
+    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::NET_ERR__NO_ERROR));
 }
 
 TEST_F(HandleSendDataRequestFixture, CheckErrorCodeWhenFileIdIsAlreadyUsed) {
+    err = nullptr;
+
     EXPECT_CALL(*networkProducerPeer, ReceiveAndSaveFile_t(expected_file_id, expected_file_size, _))
         .WillOnce(
             SetArgPointee<2>(hidra2::IOErrorTemplates::kFileAlreadyExists.Generate().release())
         );
 
-    networkProducerPeer->HandleSendDataRequest(networkProducerPeer.get(), &request, &response);
+    networkProducerPeer->HandleSendDataRequest(&send_data_request, &send_data_response, &err);
 
-    ASSERT_THAT(response.error_code, Eq(hidra2::NET_ERR__FILEID_ALREADY_IN_USE));
+    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::NET_ERR__FILEID_ALREADY_IN_USE));
 }
 
 TEST_F(HandleSendDataRequestFixture, CheckErrorCodeWhenUnexpectedError) {
+    err = nullptr;
+
     EXPECT_CALL(*networkProducerPeer, ReceiveAndSaveFile_t(expected_file_id, expected_file_size, _))
         .WillOnce(
             SetArgPointee<2>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release())
         );
 
-    networkProducerPeer->HandleSendDataRequest(networkProducerPeer.get(), &request, &response);
+    networkProducerPeer->HandleSendDataRequest(&send_data_request, &send_data_response, &err);
 
-    ASSERT_THAT(response.error_code, Eq(hidra2::NET_ERR__INTERNAL_SERVER_ERROR));
+    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::NET_ERR__INTERNAL_SERVER_ERROR));
 }
+
+class HandleGenericRequestMock : public HandleSendDataRequestMock {
+ public:
+    HandleGenericRequestMock(SocketDescriptor socket_fd, const std::string &address)
+        : HandleSendDataRequestMock(socket_fd, address) {}
+
+    size_t HandleGenericRequest(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err) noexcept override {
+        ErrorInterface* error = nullptr;
+        auto data = HandleGenericRequest_t(request, response, &error);
+        err->reset(error);
+        return data;
+    }
+    MOCK_METHOD3(HandleGenericRequest_t, size_t(GenericNetworkRequest* request, GenericNetworkResponse* response, ErrorInterface** err));
+
+
+    bool CheckIfValidNetworkOpCode(Opcode opcode) const noexcept override {
+        return HandleGenericRequest_t(opcode);
+    }
+    MOCK_CONST_METHOD1(HandleGenericRequest_t, bool(Opcode opcode));
+
+
+};
+
+class HandleGenericRequestFixture : public HandleSendDataRequestFixture {
+ public:
+    std::unique_ptr<HandleGenericRequestMock> networkProducerPeer;
+
+    SendDataRequest generic_request{};
+    SendDataResponse generic_response{};
+
+    void SetUp() override {
+        networkProducerPeer.reset(new HandleGenericRequestMock(expected_socket_descriptor, expected_address));
+        networkProducerPeer->SetIO__(&mockIO);
+    }
+};
+
+TEST_F(HandleGenericRequestFixture, DebugTest) {
+    err = nullptr;
+
+    ASSERT_TRUE(true);
+}
+
 
 }
