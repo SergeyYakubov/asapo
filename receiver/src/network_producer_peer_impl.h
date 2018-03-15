@@ -31,10 +31,6 @@ class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
     bool is_listening_ = false;
     std::unique_ptr<std::thread> listener_thread_ = nullptr;
 
-    //Preparation for up coming thread pool implementation
-    void InternalPeerReceiverThreadEntryPoint();
-    void InternalPeerReceiverDoWork(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err);
-    void HandleRawRequestBuffer(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err);
  public:
     static const std::vector<RequestHandlerInformation> kRequestHandlers;
     static size_t kRequestHandlerMaxBufferSize;
@@ -63,6 +59,12 @@ class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
      */
     virtual size_t HandleGenericRequest(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err) noexcept;
     virtual void HandleSendDataRequest(const SendDataRequest* request, SendDataResponse* response, Error* err) noexcept;
+
+    //Preparation for up coming thread pool implementation
+    virtual void InternalPeerReceiverThreadEntryPoint() noexcept;
+    virtual void InternalPeerReceiverDoWork(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err) noexcept;
+    virtual void HandleRawRequestBuffer(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err) noexcept;
+
  private:
     static void HandleSendDataRequestInternalCaller(NetworkProducerPeerImpl* self,
                                                     const SendDataRequest* request,

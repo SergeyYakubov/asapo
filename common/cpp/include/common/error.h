@@ -91,7 +91,6 @@ static inline std::ostream& operator<<(std::ostream& os, const Error& err) {
     return os;
 }
 
-
 class SimpleError: public ErrorInterface {
   private:
     std::string error_;

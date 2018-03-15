@@ -30,7 +30,7 @@ class ReceiverErrorTemplate : public SimpleErrorTemplate {
     ReceiverErrorType receiver_error_type_;
   public:
     ReceiverErrorTemplate(const std::string& error, ReceiverErrorType receiver_error_type) : SimpleErrorTemplate(error,
-                ErrorType::kIOError) {
+                ErrorType::kReceiverError) {
         receiver_error_type_ = receiver_error_type;
     }
 

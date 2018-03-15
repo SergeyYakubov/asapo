@@ -73,7 +73,7 @@ namespace IOErrorTemplates {
 auto const kUnknownIOError = IOErrorTemplate{"Unknown Error", IOErrorType::kUnknownIOError};
 
 auto const kFileNotFound = IOErrorTemplate{"No such file or directory", IOErrorType::kFileNotFound};
-auto const kReadError = IOErrorTemplate{"Read error", IOErrorType::kFileNotFound};
+auto const kReadError = IOErrorTemplate{"Read error", IOErrorType::kReadError};
 auto const kBadFileNumber = IOErrorTemplate{"Bad file number", IOErrorType::kBadFileNumber};
 auto const kResourceTemporarilyUnavailable = IOErrorTemplate{"Resource temporarily unavailable", IOErrorType::kResourceTemporarilyUnavailable};
 auto const kPermissionDenied = IOErrorTemplate{"Permission denied", IOErrorType::kPermissionDenied};

@@ -34,7 +34,7 @@ void NetworkProducerPeerImpl::StartPeerListener() {
     });
 }
 
-void NetworkProducerPeerImpl::InternalPeerReceiverThreadEntryPoint() {
+void NetworkProducerPeerImpl::InternalPeerReceiverThreadEntryPoint() noexcept {
 
     std::unique_ptr<GenericNetworkRequest> generic_request_buffer;
     std::unique_ptr<GenericNetworkResponse> generic_response_buffer;
@@ -63,11 +63,11 @@ void NetworkProducerPeerImpl::InternalPeerReceiverThreadEntryPoint() {
 
 void NetworkProducerPeerImpl::InternalPeerReceiverDoWork(GenericNetworkRequest* request,
         GenericNetworkResponse* response,
-        Error* err) {
+        Error* err) noexcept {
     io->ReceiveWithTimeout(socket_fd_, request, sizeof(GenericNetworkRequest), 50, err);
     if(*err) {
         if(*err == IOErrorTemplates::kTimeout) {
-            *err = nullptr;//Not an error
+            *err = nullptr;//Not an error in this case
         }
         return;
     }
@@ -77,7 +77,7 @@ void NetworkProducerPeerImpl::InternalPeerReceiverDoWork(GenericNetworkRequest* 
 
 void NetworkProducerPeerImpl::HandleRawRequestBuffer(GenericNetworkRequest* request,
         GenericNetworkResponse* response,
-        Error* err) {
+        Error* err) noexcept {
     std::cout << "[" << GetConnectionId() << "] Got request op_code: " << request->op_code << std::endl;
 
     //response will be set here and the amount to send is returned
@@ -115,6 +115,7 @@ size_t NetworkProducerPeerImpl::HandleGenericRequest(GenericNetworkRequest* requ
     auto handler_information = kRequestHandlers[request->op_code];
 
     static const size_t sizeof_generic_request = sizeof(GenericNetworkRequest);
+
     //after receiving all GenericNetworkResponse fields (did the caller already),
     //we need now need to receive the rest of the request
     io->Receive(socket_fd_, (uint8_t*)request + sizeof_generic_request,
@@ -126,6 +127,10 @@ size_t NetworkProducerPeerImpl::HandleGenericRequest(GenericNetworkRequest* requ
 
     //Invoke the request handler which sets the response
     handler_information.handler(this, request, response, err);
+
+    if(*err) {
+        return 0;
+    }
 
     return handler_information.response_size;
 }
