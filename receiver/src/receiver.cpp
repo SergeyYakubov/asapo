@@ -12,25 +12,13 @@ void hidra2::Receiver::StartListener(std::string listener_address, Error* err) {
         *err = ReceiverErrorTemplates::kAlreadyListening.Generate();
         return;
     }
+    //TODO maybe use atomic exchange...
     listener_running_ = true;
 
-    FileDescriptor listener_fd = io->CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP,
-                                                  err);
-    if(*err) {
-        listener_running_ = false;
-        return;
-    }
+    FileDescriptor listener_fd = io->CreateAndBindIPTCPSocketListener(listener_address, kMaxUnacceptedConnectionsBacklog,
+                                 err);
 
-    io->InetBind(listener_fd, listener_address, err);
     if(*err) {
-        io->CloseSocket(listener_fd, nullptr);
-        listener_running_ = false;
-        return;
-    }
-
-    io->Listen(listener_fd, kMaxUnacceptedConnectionsBacklog, err);
-    if(*err) {
-        io->CloseSocket(listener_fd, nullptr);
         listener_running_ = false;
         return;
     }
@@ -44,20 +32,26 @@ void hidra2::Receiver::StartListener(std::string listener_address, Error* err) {
 }
 
 void hidra2::Receiver::AcceptThreadLogic() {
+    Error err;
     while(listener_running_) {
-        std::string address;
-        FileDescriptor peer_fd;
-
-        Error err;
-        auto client_info_tuple = io->InetAccept(listener_fd_, &err);
-        if(err) {
-            std::cerr << "An error occurred while accepting an incoming connection: " << err << std::endl;
-            return;
-        }
-        std::tie(address, peer_fd) = *client_info_tuple;
-
-        peer_list_.push_back(on_new_peer_(peer_fd, address));//TODO remove client when disconnect
+        err = nullptr;
+        AcceptThreadLogicWork(&err);
     }
+}
+
+void hidra2::Receiver::AcceptThreadLogicWork(hidra2::Error* err) {
+    std::string address;
+    FileDescriptor peer_fd;
+
+    //TODO: Use InetAcceptConnectionWithTimeout
+    auto client_info_tuple = io->InetAcceptConnection(listener_fd_, err);
+    if(*err) {
+        std::cerr << "An error occurred while accepting an incoming connection: " << err << std::endl;
+        return;
+    }
+    std::tie(address, peer_fd) = *client_info_tuple;
+
+    peer_list_.push_back(CreateNewPeer(peer_fd, address));//TODO remove client when disconnect
 }
 
 void hidra2::Receiver::StopListener(Error* err) {
@@ -68,7 +62,8 @@ void hidra2::Receiver::StopListener(Error* err) {
     accept_thread_ = nullptr;
 }
 
-std::unique_ptr<hidra2::NetworkProducerPeer> hidra2::Receiver::on_new_peer_(int peer_socket_fd, std::string address) {
+std::unique_ptr<hidra2::NetworkProducerPeer> hidra2::Receiver::CreateNewPeer(int peer_socket_fd,
+        const std::string& address) {
     auto peer = NetworkProducerPeer::CreateNetworkProducerPeer(peer_socket_fd, address);
 
     std::cout << "[" << peer->GetConnectionId() << "] New connection from " << address << std::endl;
@@ -76,4 +71,8 @@ std::unique_ptr<hidra2::NetworkProducerPeer> hidra2::Receiver::on_new_peer_(int 
     peer->StartPeerListener();
 
     return peer;
+}
+
+const std::list<std::unique_ptr<hidra2::NetworkProducerPeer>>& hidra2::Receiver::GetConnectedPeers() {
+    return peer_list_;
 }

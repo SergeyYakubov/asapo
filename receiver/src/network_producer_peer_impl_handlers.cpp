@@ -12,7 +12,7 @@ NetworkProducerPeerImpl::StaticInitRequestHandlerList() {
     vec[kNetOpcodeSendData] = {
         sizeof(SendDataRequest),
         sizeof(SendDataResponse),
-        (NetworkProducerPeerImpl::RequestHandler) &NetworkProducerPeerImpl::HandleSendDataRequestInternalCaller
+        (NetworkProducerPeerImpl::RequestHandler)& NetworkProducerPeerImpl::HandleSendDataRequestInternalCaller
     };
 
     for(RequestHandlerInformation& handler_information : vec) {
@@ -31,13 +31,14 @@ NetworkProducerPeerImpl::StaticInitRequestHandlerList() {
 
 
 void NetworkProducerPeerImpl::HandleSendDataRequestInternalCaller(NetworkProducerPeerImpl* self,
-                                                                  const SendDataRequest* request,
-                                                                  SendDataResponse* response,
-                                                                  Error* err) noexcept {
+        const SendDataRequest* request,
+        SendDataResponse* response,
+        Error* err) noexcept {
     self->HandleSendDataRequest(request, response, err);
 }
 
-void NetworkProducerPeerImpl::HandleSendDataRequest(const SendDataRequest* request, SendDataResponse* response, Error* err) noexcept {
+void NetworkProducerPeerImpl::HandleSendDataRequest(const SendDataRequest* request, SendDataResponse* response,
+        Error* err) noexcept {
     ReceiveAndSaveFile(request->file_id, request->file_size, err);
 
     if(!*err) {

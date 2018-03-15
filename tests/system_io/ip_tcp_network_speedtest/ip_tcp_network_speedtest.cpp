@@ -51,8 +51,8 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
         ExitIfErrIsNotOk(&err, 102);
         kThreadStarted.set_value();
 
-        std::cout << "[SERVER] InetAccept" << std::endl;
-        auto client_info_tuple = io->InetAccept(socket, &err);
+        std::cout << "[SERVER] InetAcceptConnection" << std::endl;
+        auto client_info_tuple = io->InetAcceptConnection(socket, &err);
         ExitIfErrIsNotOk(&err, 103);
         std::string client_address;
         FileDescriptor client_fd;

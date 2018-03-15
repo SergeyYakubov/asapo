@@ -16,10 +16,7 @@ class Receiver : public HasIO {
     FileDescriptor listener_fd_ = -1;
     std::unique_ptr<std::thread> accept_thread_ = nullptr;
 
-    void AcceptThreadLogic();
     std::list<std::unique_ptr<NetworkProducerPeer>> peer_list_;
-    std::unique_ptr<NetworkProducerPeer> on_new_peer_(int peer_socket_fd, std::string address);
-
   public:
     static const int kMaxUnacceptedConnectionsBacklog;//TODO: Read from config
 
@@ -30,6 +27,13 @@ class Receiver : public HasIO {
 
     void StartListener(std::string listener_address, Error* err);
     void StopListener(Error* err);
+
+    std::unique_ptr<NetworkProducerPeer> CreateNewPeer(int peer_socket_fd, const std::string& address);
+    const std::list<std::unique_ptr<NetworkProducerPeer>>& GetConnectedPeers();
+
+    //Preparation for up coming thread pool implementation
+    void AcceptThreadLogic();
+    void AcceptThreadLogicWork(Error* err);
 };
 
 }

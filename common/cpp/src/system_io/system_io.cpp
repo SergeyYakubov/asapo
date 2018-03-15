@@ -261,7 +261,7 @@ void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string
     *err = nullptr;
 }
 
-std::unique_ptr<std::tuple<std::string, SocketDescriptor>> SystemIO::InetAccept(SocketDescriptor socket_fd,
+std::unique_ptr<std::tuple<std::string, SocketDescriptor>> SystemIO::InetAcceptConnection(SocketDescriptor socket_fd,
 Error* err) const {
     static short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {
@@ -417,6 +417,27 @@ void hidra2::SystemIO::Listen(SocketDescriptor socket_fd, int backlog, Error* er
     }
 }
 
+SocketDescriptor SystemIO::CreateAndBindIPTCPSocketListener(const std::string& address, int backlog, Error* err) const {
+    FileDescriptor listener_fd = CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, err);
+
+    if(*err) {
+        return -1;
+    }
+
+    InetBind(listener_fd, address, err);
+    if(*err) {
+        CloseSocket(listener_fd, nullptr);
+        return -1;
+    }
+
+    Listen(listener_fd, backlog, err);
+    if(*err) {
+        CloseSocket(listener_fd, nullptr);
+        return -1;
+    }
+
+    return listener_fd;
+}
 
 size_t hidra2::SystemIO::ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
                                             Error* err) const {

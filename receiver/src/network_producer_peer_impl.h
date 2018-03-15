@@ -15,7 +15,7 @@
 namespace hidra2 {
 
 class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
- public:
+  public:
     typedef void (* RequestHandler)(NetworkProducerPeerImpl* self, GenericNetworkRequest* request,
                                     GenericNetworkResponse* response, Error* err);
     struct RequestHandlerInformation {
@@ -23,7 +23,7 @@ class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
         size_t response_size;
         RequestHandler handler;
     };
- private:
+  private:
     uint32_t connection_id_;
     std::string address_;
     int socket_fd_;
@@ -31,7 +31,7 @@ class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
     bool is_listening_ = false;
     std::unique_ptr<std::thread> listener_thread_ = nullptr;
 
- public:
+  public:
     static const std::vector<RequestHandlerInformation> kRequestHandlers;
     static size_t kRequestHandlerMaxBufferSize;
 
@@ -53,19 +53,22 @@ class NetworkProducerPeerImpl : public NetworkProducerPeer, public HasIO {
     virtual bool CheckIfValidFileSize(size_t file_size) const noexcept;
     virtual bool CheckIfValidNetworkOpCode(Opcode opcode) const noexcept;
 
- public:
+  public:
     /*
      * Private functions but opened for unittest
      */
-    virtual size_t HandleGenericRequest(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err) noexcept;
+    virtual size_t HandleGenericRequest(GenericNetworkRequest* request, GenericNetworkResponse* response,
+                                        Error* err) noexcept;
     virtual void HandleSendDataRequest(const SendDataRequest* request, SendDataResponse* response, Error* err) noexcept;
 
     //Preparation for up coming thread pool implementation
     virtual void InternalPeerReceiverThreadEntryPoint() noexcept;
-    virtual void InternalPeerReceiverDoWork(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err) noexcept;
-    virtual void HandleRawRequestBuffer(GenericNetworkRequest* request, GenericNetworkResponse* response, Error* err) noexcept;
+    virtual void InternalPeerReceiverDoWork(GenericNetworkRequest* request, GenericNetworkResponse* response,
+                                            Error* err) noexcept;
+    virtual void HandleRawRequestBuffer(GenericNetworkRequest* request, GenericNetworkResponse* response,
+                                        Error* err) noexcept;
 
- private:
+  private:
     static void HandleSendDataRequestInternalCaller(NetworkProducerPeerImpl* self,
                                                     const SendDataRequest* request,
                                                     SendDataResponse* response, Error* err) noexcept;

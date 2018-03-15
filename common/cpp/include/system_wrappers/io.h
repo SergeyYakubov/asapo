@@ -134,7 +134,9 @@ class IO {
                                            SocketProtocols socket_protocol, Error* err) const = 0;
     virtual void            Listen(SocketDescriptor socket_fd, int backlog, Error* err) const = 0;
     virtual void            InetBind(SocketDescriptor socket_fd, const std::string& address, Error* err) const = 0;
-    virtual std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd,
+    virtual SocketDescriptor  CreateAndBindIPTCPSocketListener(const std::string& address, int backlog,
+            Error* err) const = 0;
+    virtual std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAcceptConnection(SocketDescriptor socket_fd,
             Error* err) const = 0;
     virtual std::string     ResolveHostnameToIp(const std::string& hostname, Error* err) const = 0;
     virtual void            InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const = 0;

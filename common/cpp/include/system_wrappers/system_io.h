@@ -79,7 +79,9 @@ class SystemIO final : public IO {
                                    Error* err) const;
     void            Listen(SocketDescriptor socket_fd, int backlog, Error* err) const;
     void            InetBind(SocketDescriptor socket_fd, const std::string& address, Error* err) const;
-    std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd, Error* err) const;
+    SocketDescriptor  CreateAndBindIPTCPSocketListener(const std::string& address, int backlog, Error* err) const;
+    std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAcceptConnection(SocketDescriptor socket_fd,
+            Error* err) const;
     std::string     ResolveHostnameToIp(const std::string& hostname, Error* err) const;
     void            InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const;
     SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, Error* err) const;

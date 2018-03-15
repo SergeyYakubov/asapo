@@ -7,44 +7,72 @@ using ::testing::Return;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::SetArgReferee;
+using ::testing::SetArgPointee;
 using ::testing::Gt;
+using ::testing::Eq;
 using ::testing::Mock;
 using ::testing::InSequence;
+using ::hidra2::Error;
+using ::hidra2::FileDescriptor;
 
 namespace {
 
-TEST(a, b) {
+class StartListenerMock : public hidra2::Receiver {
+  public:
+
+};
+
+class StartListenerFixture : public testing::Test {
+  public:
+    const hidra2::SocketDescriptor expected_socket_descriptor = 20;
+    const std::string expected_address = "somehost:13579";
+    const uint64_t expected_file_id = 314322;
+    const uint64_t expected_file_size = 784387;
+    const FileDescriptor expected_fd = 12643;
+
+    Error err;
+
     hidra2::MockIO mockIO;
+    StartListenerMock receiver;
 
-    hidra2::Receiver receiver;
+    void SetUp() override {
+        receiver.SetIO__(&mockIO);
+    }
+};
 
+
+TEST_F(StartListenerFixture, CreateAndBindIPTCPSocketListenerError) {
+    err = nullptr;
+
+    EXPECT_CALL(mockIO, CreateAndBindIPTCPSocketListener_t(expected_address, receiver.kMaxUnacceptedConnectionsBacklog, _))
+    .WillOnce(DoAll(
+                  SetArgPointee<2>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release()),
+                  Return(0)
+              ));
+
+    receiver.StartListener(expected_address, &err);
+
+    ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
 }
 
-/*
-    TEST(Receiver, start_Listener__InetBind_fail) {
-    hidra2::MockIO mockIO;
 
-    hidra2::Receiver receiver;
+TEST_F(StartListenerFixture, Ok) {
+    err = nullptr;
 
-    receiver.SetIO__(&mockIO);
+    EXPECT_CALL(mockIO, CreateAndBindIPTCPSocketListener_t(expected_address, receiver.kMaxUnacceptedConnectionsBacklog, _))
+    .WillOnce(DoAll(
+                  SetArgPointee<2>(nullptr),
+                  Return(0)
+              ));
 
-    InSequence sequence;
-
-    std::string expected_address = "127.0.0.1:9876";
-
-    EXPECT_CALL(mockIO, CreateSocket(hidra2::AddressFamilies::INET, hidra2::SocketTypes::STREAM,
-                 hidra2::SocketProtocols::IP, _))
-    .Times(1)
+    EXPECT_CALL(mockIO, NewThread_t(_))
     .WillOnce(
-    DoAll(
-    testing::SetArgPointee<3>(hidra2::IOErrors::kUnknownIOError),
-    Return(-1)
-    ));
+        Return(nullptr)
+    );
 
-    hidra2::ReceiverError receiver_error;
-    receiver.StartListener(expected_address, &receiver_error);
-    EXPECT_EQ(receiver_error, hidra2::ReceiverError::FailToCreateSocket);
+    receiver.StartListener(expected_address, &err);
+
+    ASSERT_THAT(err, Eq(nullptr));
 }
-*/
 
 }

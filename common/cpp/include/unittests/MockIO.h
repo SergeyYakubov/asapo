@@ -38,8 +38,18 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD3(InetBind_t, void(SocketDescriptor socket_fd, const std::string& address, ErrorInterface** err));
 
+    SocketDescriptor CreateAndBindIPTCPSocketListener(const std::string& address, int backlog, Error* err) const override {
+        ErrorInterface* error = nullptr;
+        auto data = CreateAndBindIPTCPSocketListener_t(address, backlog, &error);
+        err->reset(error);
+        return data;
+    }
+    MOCK_CONST_METHOD3(CreateAndBindIPTCPSocketListener_t, SocketDescriptor(const std::string& address, int backlog,
+                       ErrorInterface** err));
 
-    std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAccept(SocketDescriptor socket_fd, Error* err) const {
+
+    std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAcceptConnection(SocketDescriptor socket_fd,
+    Error* err) const {
         ErrorInterface* error = nullptr;
         auto data = InetAccept_t(socket_fd, &error);
         err->reset(error);
