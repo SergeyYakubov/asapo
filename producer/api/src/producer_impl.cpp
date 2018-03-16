@@ -7,9 +7,9 @@ const size_t hidra2::ProducerImpl::kMaxChunkSize = size_t(1024) * size_t(1024) *
 
 hidra2::ProducerError hidra2::ProducerImpl::NetworkErrorToProducerError(hidra2::NetworkErrorCode networkError) {
     switch(networkError) {
-    case NET_ERR__NO_ERROR:
+    case kNetErrorNoError:
         return ProducerError::kNoError;
-    case NET_ERR__FILEID_ALREADY_IN_USE:
+    case kNetErrorFileIdAlreadyInUse:
         return ProducerError::kFileIdAlreadyInUse;
     default:
         return ProducerError::kUnknownServerError;
@@ -101,7 +101,7 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* d
 
     if(sendDataResponse.error_code) {
         status_ = ProducerStatus::kConnected;
-        if(sendDataResponse.error_code == NET_ERR__FILEID_ALREADY_IN_USE) {
+        if(sendDataResponse.error_code == kNetErrorFileIdAlreadyInUse) {
             return hidra2::ProducerError::kFileIdAlreadyInUse;
         }
         std::cerr << "Server reported an error. NetErrorCode: " << sendDataResponse.error_code << std::endl;

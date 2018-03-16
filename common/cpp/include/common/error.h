@@ -22,7 +22,13 @@ enum class ErrorType {
 class ErrorInterface;
 class ErrorTemplateInterface;
 
-// Is nullptr if no error is set
+// nullptr == noError
+// Example check:
+//  void TestError(Error* err) {
+//      if(*err) {
+//          [...] //An error occurred
+//      }
+//  }
 using Error = std::unique_ptr<ErrorInterface>;
 
 class ErrorInterface {
@@ -31,15 +37,6 @@ class ErrorInterface {
     virtual void Append(const std::string& value) noexcept = 0;
     virtual ErrorType GetErrorType() const noexcept = 0;
     virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
-
-    /*TODO: Add these functions, so it will be really easy and convenient to use the error class
-     * virtual inline bool operator == (const Error& rhs) const
-     * virtual inline bool operator != (const Error& rhs) const
-     * virtual inline bool operator == (const ErrorTemplateInterface& rhs) const
-     * virtual inline bool operator != (const ErrorTemplateInterface& rhs) const
-     * virtual inline bool bool() const;
-     * virtual inline bool operator = (const ErrorTemplateInterface& rhs) const
-     */
 };
 
 
@@ -47,21 +44,6 @@ class ErrorTemplateInterface {
   public:
     virtual ErrorType GetErrorType() const noexcept = 0;
     virtual Error Generate() const noexcept = 0;
-    /*TODO: Add these functions, so it will be really easy and convenient to use the error class
-     * virtual inline bool operator ErrorTemplateInterface() const
-     */
-
-    /*
-    virtual inline bool operator == (const Error* rhs) const {
-        return rhs != nullptr &&
-               operator==(*rhs);
-    }
-
-    virtual inline bool operator != (const Error* rhs) const {
-        return rhs != nullptr &&
-               operator!=(*rhs);
-    }
-     */
 
     virtual inline bool operator == (const Error& rhs) const {
         return rhs != nullptr &&
@@ -115,6 +97,11 @@ class SimpleError: public ErrorInterface {
     }
 };
 
+/*
+ * IMPORTANT:
+ * Never use the same ErrorType for two different errors,
+ * otherwise the == operator might not work as expected!
+ */
 class SimpleErrorTemplate : public ErrorTemplateInterface {
   protected:
     std::string error_;

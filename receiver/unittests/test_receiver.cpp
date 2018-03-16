@@ -84,17 +84,17 @@ TEST_F(StartListenerFixture, AlreadyListening) {
     err = nullptr;
 
     EXPECT_CALL(mockIO, CreateAndBindIPTCPSocketListener_t(expected_address, receiver.kMaxUnacceptedConnectionsBacklog, _))
-        .Times(1)
-        .WillOnce(DoAll(
-            SetArgPointee<2>(nullptr),
-            Return(0)
-        ));
+    .Times(1)
+    .WillOnce(DoAll(
+                  SetArgPointee<2>(nullptr),
+                  Return(0)
+              ));
 
     EXPECT_CALL(mockIO, NewThread_t(_))
-        .Times(1)
-        .WillOnce(
-            Return(nullptr)
-        );
+    .Times(1)
+    .WillOnce(
+        Return(nullptr)
+    );
 
     receiver.StartListener(expected_address, &err);
 
@@ -163,12 +163,12 @@ TEST_F(AcceptThreadLogicWorkFixture, OkAndCheckListSize) {
 }
 
 class StopListenerMock : public StartListenerMock {
- public:
+  public:
 
 };
 
 class StopListenerFixture : public StartListenerFixture {
- public:
+  public:
     StopListenerMock receiver;
 
     void SetUp() override {
@@ -180,9 +180,9 @@ TEST_F(StopListenerFixture, InetAcceptConnectionError) {
     err = nullptr;
 
     EXPECT_CALL(mockIO, CloseSocket_t(-1, _))
-        .WillOnce(
-            SetArgPointee<1>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release())
-        );
+    .WillOnce(
+        SetArgPointee<1>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release())
+    );
 
     receiver.StopListener(&err);
 

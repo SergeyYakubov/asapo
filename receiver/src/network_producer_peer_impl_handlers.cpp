@@ -42,15 +42,15 @@ void NetworkProducerPeerImpl::HandleSendDataRequest(const SendDataRequest* reque
     ReceiveAndSaveFile(request->file_id, request->file_size, err);
 
     if(!*err) {
-        response->error_code = NET_ERR__NO_ERROR;
+        response->error_code = kNetErrorNoError;
         return;
     }
 
     if(*err == IOErrorTemplates::kFileAlreadyExists) {
-        response->error_code = NET_ERR__FILEID_ALREADY_IN_USE;
+        response->error_code = kNetErrorFileIdAlreadyInUse;
     } else {
         std::cout << "[" << GetConnectionId() << "] Unexpected ReceiveAndSaveFile error " << *err << std::endl;
-        response->error_code = NET_ERR__INTERNAL_SERVER_ERROR;
+        response->error_code = kNetErrorInternalServerError;
         //self->io->CloseSocket(self->socket_fd_, nullptr); TODO: Might want to close the connection?
     }
 }

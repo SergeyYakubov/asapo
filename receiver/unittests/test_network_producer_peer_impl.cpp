@@ -412,8 +412,8 @@ TEST_F(HandleSendDataRequestFixture, Ok) {
 
     networkProducerPeer->HandleSendDataRequest(&send_data_request, &send_data_response, &err);
 
-    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::NET_ERR__NO_ERROR));
-    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::NET_ERR__NO_ERROR));
+    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::kNetErrorNoError));
+    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::kNetErrorNoError));
 }
 
 TEST_F(HandleSendDataRequestFixture, CheckErrorCodeWhenFileIdIsAlreadyUsed) {
@@ -426,7 +426,7 @@ TEST_F(HandleSendDataRequestFixture, CheckErrorCodeWhenFileIdIsAlreadyUsed) {
 
     networkProducerPeer->HandleSendDataRequest(&send_data_request, &send_data_response, &err);
 
-    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::NET_ERR__FILEID_ALREADY_IN_USE));
+    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::kNetErrorFileIdAlreadyInUse));
 }
 
 TEST_F(HandleSendDataRequestFixture, CheckErrorCodeWhenUnexpectedError) {
@@ -439,7 +439,7 @@ TEST_F(HandleSendDataRequestFixture, CheckErrorCodeWhenUnexpectedError) {
 
     networkProducerPeer->HandleSendDataRequest(&send_data_request, &send_data_response, &err);
 
-    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::NET_ERR__INTERNAL_SERVER_ERROR));
+    ASSERT_THAT(send_data_response.error_code, Eq(hidra2::kNetErrorInternalServerError));
 }
 
 class HandleGenericRequestMock : public HandleSendDataRequestMock {
@@ -782,13 +782,13 @@ TEST_F(InternalPeerReceiverDoWorkFixture, Ok) {
 }
 
 class StartPeerListenerMock : public InternalPeerReceiverDoWorkMock {
- public:
+  public:
     StartPeerListenerMock(SocketDescriptor socket_fd, const std::string& address)
         : InternalPeerReceiverDoWorkMock(socket_fd, address) {}
 };
 
 class StartPeerListenerFixture : public InternalPeerReceiverDoWorkFixture {
- public:
+  public:
     std::unique_ptr<StartPeerListenerMock> networkProducerPeer;
 
     void SetUp() override {

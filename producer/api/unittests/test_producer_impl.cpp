@@ -339,7 +339,7 @@ TEST(ProducerImpl, Send__Receive_server_error) {
     .WillOnce(
         DoAll(
             testing::SetArgPointee<3>(nullptr),
-            A_WriteSendDataResponse(hidra2::NET_ERR__ALLOCATE_STORAGE_FAILED, expected_request_id),
+            A_WriteSendDataResponse(hidra2::kNetErrorAllocateStorageFailed, expected_request_id),
             testing::ReturnArg<2>()
         ));
 
@@ -378,7 +378,7 @@ TEST(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
     .WillOnce(
         DoAll(
             testing::SetArgPointee<3>(nullptr),
-            A_WriteSendDataResponse(hidra2::NET_ERR__FILEID_ALREADY_IN_USE, expected_request_id),
+            A_WriteSendDataResponse(hidra2::kNetErrorFileIdAlreadyInUse, expected_request_id),
             testing::ReturnArg<2>()
         ));
 
@@ -417,7 +417,7 @@ TEST(ProducerImpl, Send) {
     .WillOnce(
         DoAll(
             testing::SetArgPointee<3>(nullptr),
-            A_WriteSendDataResponse(hidra2::NET_ERR__NO_ERROR, expected_request_id),
+            A_WriteSendDataResponse(hidra2::kNetErrorNoError, expected_request_id),
             testing::ReturnArg<2>()
         ));
 
