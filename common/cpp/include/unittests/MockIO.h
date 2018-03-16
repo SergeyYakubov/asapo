@@ -51,11 +51,11 @@ class MockIO : public IO {
     std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAcceptConnection(SocketDescriptor socket_fd,
     Error* err) const {
         ErrorInterface* error = nullptr;
-        auto data = InetAccept_t(socket_fd, &error);
+        auto data = InetAcceptConnection_t(socket_fd, &error);
         err->reset(error);
         return std::unique_ptr<std::tuple<std::string, SocketDescriptor>>(data);
     }
-    MOCK_CONST_METHOD2(InetAccept_t, std::tuple<std::string, SocketDescriptor>* (SocketDescriptor socket_fd,
+    MOCK_CONST_METHOD2(InetAcceptConnection_t, std::tuple<std::string, SocketDescriptor>* (SocketDescriptor socket_fd,
                        ErrorInterface** err));
 
     std::string ResolveHostnameToIp(const std::string& hostname, Error* err) const override {
@@ -118,7 +118,9 @@ class MockIO : public IO {
     void CloseSocket(SocketDescriptor socket_fd, Error* err) const override {
         ErrorInterface* error = nullptr;
         CloseSocket_t(socket_fd, &error);
-        err->reset(error);
+        if(err) {
+            err->reset(error);
+        }
     }
     MOCK_CONST_METHOD2(CloseSocket_t, void(SocketDescriptor socket_fd, ErrorInterface** err));
 
@@ -133,7 +135,9 @@ class MockIO : public IO {
     void Close(FileDescriptor fd, Error* err) const override {
         ErrorInterface* error = nullptr;
         Close_t(fd, &error);
-        err->reset(error);
+        if(err) {
+            err->reset(error);
+        };
     }
     MOCK_CONST_METHOD2(Close_t, void(FileDescriptor fd, ErrorInterface** err));
 

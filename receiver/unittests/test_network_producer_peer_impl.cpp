@@ -781,4 +781,36 @@ TEST_F(InternalPeerReceiverDoWorkFixture, Ok) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
+class StartPeerListenerMock : public InternalPeerReceiverDoWorkMock {
+ public:
+    StartPeerListenerMock(SocketDescriptor socket_fd, const std::string& address)
+        : InternalPeerReceiverDoWorkMock(socket_fd, address) {}
+};
+
+class StartPeerListenerFixture : public InternalPeerReceiverDoWorkFixture {
+ public:
+    std::unique_ptr<StartPeerListenerMock> networkProducerPeer;
+
+    void SetUp() override {
+        networkProducerPeer.reset(new StartPeerListenerMock(expected_socket_descriptor, expected_address));
+        networkProducerPeer->SetIO__(&mockIO);
+    }
+};
+
+TEST_F(StartPeerListenerFixture, Ok) {
+
+    EXPECT_CALL(mockIO, NewThread_t(_));
+
+    networkProducerPeer->StartPeerListener();
+}
+
+TEST_F(StartPeerListenerFixture, AlreadyListening) {
+
+    EXPECT_CALL(mockIO, NewThread_t(_)).Times(1);
+
+    networkProducerPeer->StartPeerListener();
+
+    networkProducerPeer->StartPeerListener();
+}
+
 }

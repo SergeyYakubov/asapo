@@ -31,6 +31,14 @@ void hidra2::Receiver::StartListener(std::string listener_address, Error* err) {
 
 }
 
+void hidra2::Receiver::StopListener(Error* err) {
+    listener_running_ = false;
+    io->CloseSocket(listener_fd_, err);
+    if(accept_thread_)
+        accept_thread_->join();
+    accept_thread_ = nullptr;
+}
+
 void hidra2::Receiver::AcceptThreadLogic() {
     Error err;
     while(listener_running_) {
@@ -54,16 +62,8 @@ void hidra2::Receiver::AcceptThreadLogicWork(hidra2::Error* err) {
     peer_list_.push_back(CreateNewPeer(peer_fd, address));//TODO remove client when disconnect
 }
 
-void hidra2::Receiver::StopListener(Error* err) {
-    listener_running_ = false;
-    io->CloseSocket(listener_fd_, nullptr);
-    if(accept_thread_)
-        accept_thread_->join();
-    accept_thread_ = nullptr;
-}
-
 std::unique_ptr<hidra2::NetworkProducerPeer> hidra2::Receiver::CreateNewPeer(int peer_socket_fd,
-        const std::string& address) {
+        const std::string& address) const noexcept {
     auto peer = NetworkProducerPeer::CreateNetworkProducerPeer(peer_socket_fd, address);
 
     std::cout << "[" << peer->GetConnectionId() << "] New connection from " << address << std::endl;

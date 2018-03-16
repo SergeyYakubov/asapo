@@ -28,12 +28,13 @@ class Receiver : public HasIO {
     void StartListener(std::string listener_address, Error* err);
     void StopListener(Error* err);
 
-    std::unique_ptr<NetworkProducerPeer> CreateNewPeer(int peer_socket_fd, const std::string& address);
+    virtual std::unique_ptr<NetworkProducerPeer> CreateNewPeer(int peer_socket_fd,
+            const std::string& address) const noexcept;
     const std::list<std::unique_ptr<NetworkProducerPeer>>& GetConnectedPeers();
 
     //Preparation for up coming thread pool implementation
     void AcceptThreadLogic();
-    void AcceptThreadLogicWork(Error* err);
+    virtual void AcceptThreadLogicWork(Error* err);
 };
 
 }
