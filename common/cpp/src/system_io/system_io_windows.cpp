@@ -40,7 +40,7 @@ Error IOErrorFromGetLastError() {
         return IOErrorTemplates::kConnectionRefused.Generate();
     default:
         std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
-        Error err = IOErrorTemplates::kUnknownError.Generate();
+        Error err = IOErrorTemplates::kUnknownIOError.Generate();
         (*err).Append("Unknown error code: " + std::to_string(errno));
         return err;
     }
