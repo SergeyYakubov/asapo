@@ -6,7 +6,6 @@
 namespace hidra2 {
 
 enum class ReceiverErrorType {
-    kAlreadyListening,
     kInvalidOpCode,
 };
 
@@ -49,7 +48,6 @@ class ReceiverErrorTemplate : public SimpleErrorTemplate {
 };
 
 namespace ReceiverErrorTemplates {
-auto const kAlreadyListening = ReceiverErrorTemplate{"Receiver is already listening", ReceiverErrorType::kAlreadyListening};
 auto const kInvalidOpCode = ReceiverErrorTemplate{"Invalid Opcode", ReceiverErrorType::kInvalidOpCode};
 };
 }

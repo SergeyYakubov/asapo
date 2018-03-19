@@ -7,4 +7,12 @@ std::unique_ptr<NetworkProducerPeer> NetworkProducerPeer::CreateNetworkProducerP
     return std::unique_ptr<NetworkProducerPeer>(new NetworkProducerPeerImpl(socket_fd, address));
 }
 
+void StartNewConnection(int peer_socket_fd, const std::string& address)  {
+    auto peer = NetworkProducerPeer::CreateNetworkProducerPeer(peer_socket_fd, address);
+
+    std::cout << "[" << peer->GetConnectionId() << "] New connection from " << address << std::endl;
+    peer->StartPeerListener();
+}
+
+
 }

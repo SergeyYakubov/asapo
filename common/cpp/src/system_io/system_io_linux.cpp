@@ -169,6 +169,8 @@ void SystemIO::CollectFileInformationRecursively(const std::string& path,
 
 void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const {
     //TODO: Need to change network layer code, so everything can be NonBlocking
+    //TODO: consider using SO_REUSEPORT so that it could work after kill -9. Currently can exit with message port
+    // in use and one have to wait for some time until the system cleans up the stuff
     //int flags;
     if (
         /*(flags = fcntl(socket_fd, F_GETFL, 0)) == -1

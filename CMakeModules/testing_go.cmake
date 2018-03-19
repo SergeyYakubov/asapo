@@ -24,6 +24,7 @@ function(gotest target test_source_files)
                         COMMAND ${CMAKE_MODULE_PATH}/coverage_go.sh
                         ${CMAKE_CURRENT_BINARY_DIR} ${HIDRA2_MINIMUM_COVERAGE} ${gopath}
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        set_tests_properties(coveragetest-${target} PROPERTIES LABELS "coverage;all")
         endif()
     endif ()
 endfunction()

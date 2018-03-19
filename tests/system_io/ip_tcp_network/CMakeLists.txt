@@ -12,5 +12,5 @@ set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 ################################
 # Testing
 ################################
-
-add_integration_test(${TARGET_NAME} ip_tcp_network "")
+# memory test too slow
+add_integration_test(${TARGET_NAME} ip_tcp_network " " nomem)

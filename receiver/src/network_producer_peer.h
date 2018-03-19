@@ -29,6 +29,9 @@ class NetworkProducerPeer {
             const std::string& address);
 };
 
+void StartNewConnection(int peer_socket_fd, const std::string& address);
+
+
 }
 
 #endif //HIDRA2_NETWORKPRODUCERPEER_H

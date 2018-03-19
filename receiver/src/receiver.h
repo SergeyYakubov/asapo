@@ -10,31 +10,18 @@
 namespace hidra2 {
 
 class Receiver : public HasIO {
-    friend NetworkProducerPeer;
   private:
-    bool listener_running_ = false;
     FileDescriptor listener_fd_ = -1;
-    std::unique_ptr<std::thread> accept_thread_ = nullptr;
-
-    std::list<std::unique_ptr<NetworkProducerPeer>> peer_list_;
+    Error PrepareListener(std::string listener_address);
   public:
     static const int kMaxUnacceptedConnectionsBacklog;//TODO: Read from config
 
     Receiver(const Receiver&) = delete;
     Receiver& operator=(const Receiver&) = delete;
-
     Receiver() = default;
 
     void StartListener(std::string listener_address, Error* err);
-    void StopListener(Error* err);
-
-    virtual std::unique_ptr<NetworkProducerPeer> CreateNewPeer(int peer_socket_fd,
-            const std::string& address) const noexcept;
-    const std::list<std::unique_ptr<NetworkProducerPeer>>& GetConnectedPeers();
-
-    //Preparation for up coming thread pool implementation
-    void AcceptThreadLogic();
-    virtual void AcceptThreadLogicWork(Error* err);
+    void AcceptThreadLogicWork(Error* err);
 };
 
 }

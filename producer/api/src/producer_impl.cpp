@@ -79,14 +79,14 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* d
     Error io_error;
     io->Send(client_fd_, &sendDataRequest, sizeof(sendDataRequest), &io_error);
     if(io_error != nullptr) {
-        std::cerr << "hidra2::ProducerImpl::Send/sendDataRequest" << std::endl;
+        std::cerr << "hidra2::ProducerImpl::Send/DataRequest error" << io_error << std::endl;
         status_ = ProducerStatus::kConnected;
         return ProducerError::kUnexpectedIOError;
     }
 
     io->Send(client_fd_, data, file_size, &io_error);
     if(io_error != nullptr) {
-        std::cerr << "hidra2::ProducerImpl::Send/sendData" << std::endl;
+        std::cerr << "hidra2::ProducerImpl::Send/data error" << io_error << std::endl;
         status_ = ProducerStatus::kConnected;
         return ProducerError::kUnexpectedIOError;
     }
@@ -94,7 +94,7 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* d
     SendDataResponse sendDataResponse;
     io->Receive(client_fd_, &sendDataResponse, sizeof(sendDataResponse), &io_error);
     if(io_error != nullptr) {
-        std::cerr << "hidra2::ProducerImpl::send/receive_timeout error" << std::endl;
+        std::cerr << "hidra2::ProducerImpl::Receive error: " << io_error << std::endl;
         status_ = ProducerStatus::kConnected;
         return ProducerError::kUnexpectedIOError;
     }

@@ -95,7 +95,7 @@ void NetworkProducerPeerImpl::HandleRawRequestBuffer(GenericNetworkRequest* requ
 }
 
 void NetworkProducerPeerImpl::StopPeerListener() {
-    is_listening_ = false;
+//    is_listening_ = false;
     if(!listener_thread_)
         return;
     listener_thread_->join();
