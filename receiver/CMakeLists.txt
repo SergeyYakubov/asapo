@@ -1,11 +1,10 @@
 set(TARGET_NAME receiver)
 set(SOURCE_FILES
         src/receiver.h src/receiver.cpp
-        src/network_producer_peer.h src/network_producer_peer.cpp
-        src/network_producer_peer_impl.h src/network_producer_peer_impl.cpp
-        src/network_producer_peer_impl_handlers.cpp
-        src/network_producer_peer_impl_functions.cpp
+        src/connection.h src/connection.cpp
         src/receiver_error.h
+        src/request.cpp
+        src/request_handler.cpp
         )
 
 
@@ -33,8 +32,7 @@ set_property(TARGET ${TARGET_NAME} PROPERTY ENABLE_EXPORTS true)
 #
 set(TEST_SOURCE_FILES
         unittests/test_receiver.cpp
-        unittests/test_network_producer_peer.cpp
-        unittests/test_network_producer_peer_impl.cpp
+        unittests/test_connection.cpp
         )
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")

@@ -3,7 +3,7 @@
 #include <unittests/MockIO.h>
 #include "../src/receiver.h"
 #include "../src/receiver_error.h"
-#include "../src/network_producer_peer_impl.h"
+#include "../src/connection.h"
 
 using ::testing::Return;
 using ::testing::_;
@@ -17,7 +17,7 @@ using ::testing::InSequence;
 using ::hidra2::Error;
 using ::hidra2::FileDescriptor;
 using ::hidra2::ErrorInterface;
-using ::hidra2::NetworkProducerPeer;
+using ::hidra2::Connection;
 using ::hidra2::SocketDescriptor;
 
 namespace {
@@ -33,7 +33,7 @@ class StartListenerFixture : public testing::Test {
 
     Error err;
 
-    hidra2::MockIO mockIO;
+    ::testing::NiceMock<hidra2::MockIO> mockIO;
     hidra2::Receiver receiver;
 
     void SetUp() override {
@@ -49,33 +49,38 @@ TEST_F(StartListenerFixture, CreateAndBindIPTCPSocketListenerError) {
                   Return(0)
               ));
 
-    receiver.StartListener(expected_address, &err);
+    receiver.Listen(expected_address, &err, true);
 
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
 }
 
 
 TEST_F(StartListenerFixture, InetAcceptConnectionError) {
-    EXPECT_CALL(mockIO, InetAcceptConnection_t(-1, _))
+    EXPECT_CALL(mockIO, InetAcceptConnection_t(_, _))
     .WillOnce(DoAll(
                   SetArgPointee<1>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release()),
                   Return(new std::tuple<std::string, SocketDescriptor>(expected_address, expected_socket_descriptor_client))
               ));
 
-    receiver.AcceptThreadLogicWork(&err);
+    receiver.Listen(expected_address, &err, true);
 
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
 }
 
 TEST_F(StartListenerFixture, Ok) {
-    EXPECT_CALL(mockIO, InetAcceptConnection_t(-1, _))
+
+    EXPECT_CALL(mockIO, InetAcceptConnection_t(_, _))
     .WillOnce(DoAll(
                   SetArgPointee<1>(nullptr),
                   Return(new std::tuple<std::string, SocketDescriptor>(expected_address, expected_socket_descriptor_client))
               ));
 
+    EXPECT_CALL(mockIO, NewThread_t(_)).
+    WillOnce(
+        Return(nullptr)
+    );
 
-    receiver.AcceptThreadLogicWork(&err);
+    receiver.Listen(expected_address, &err, true);
 
     ASSERT_THAT(err, Eq(nullptr));
 }

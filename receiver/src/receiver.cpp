@@ -2,10 +2,14 @@
 #include <iostream>
 #include "receiver.h"
 #include "receiver_error.h"
+#include "connection.h"
 
-const int hidra2::Receiver::kMaxUnacceptedConnectionsBacklog = 5;
+namespace hidra2 {
 
-hidra2::Error hidra2::Receiver::PrepareListener(std::string listener_address) {
+
+const int Receiver::kMaxUnacceptedConnectionsBacklog = 5;
+
+Error Receiver::PrepareListener(std::string listener_address) {
     Error err = nullptr;
     listener_fd_  = io->CreateAndBindIPTCPSocketListener(listener_address, kMaxUnacceptedConnectionsBacklog,
                     &err);
@@ -13,19 +17,20 @@ hidra2::Error hidra2::Receiver::PrepareListener(std::string listener_address) {
 }
 
 
-void hidra2::Receiver::StartListener(std::string listener_address, Error* err) {
+void Receiver::Listen(std::string listener_address, Error* err, bool exit_after_first_connection) {
     *err = PrepareListener(listener_address);
     if(*err) {
         return;
     }
 
     while(true) {
-        Error err_work = nullptr;
-        AcceptThreadLogicWork(&err_work);
+        ProcessConnections(err);
+        if (exit_after_first_connection) break;
     }
 }
 
-void hidra2::Receiver::AcceptThreadLogicWork(hidra2::Error* err) {
+//TODO: remove error since it is not used
+void Receiver::ProcessConnections(Error* err) {
     std::string address;
     FileDescriptor peer_fd;
 
@@ -37,6 +42,21 @@ void hidra2::Receiver::AcceptThreadLogicWork(hidra2::Error* err) {
         return;
     }
     std::tie(address, peer_fd) = *client_info_tuple;
-    StartNewConnection(peer_fd, address);
+    StartNewConnectionInSeparateThread(peer_fd, address);
 }
 
+void Receiver::StartNewConnectionInSeparateThread(int connection_socket_fd, const std::string& address)  {
+    auto thread = io->NewThread([connection_socket_fd, address] {
+        auto connection = std::unique_ptr<Connection>(new Connection(connection_socket_fd, address));
+        std::cout << "[" << connection->GetId() << "] New connection from " << address << std::endl;
+        connection->Listen();
+    });
+
+    if (thread) {
+        thread->detach();
+    }
+    return;
+
+}
+
+}

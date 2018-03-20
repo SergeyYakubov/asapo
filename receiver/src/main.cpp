@@ -8,12 +8,11 @@ int main (int argc, char* argv[]) {
 
     hidra2::Error err;
 
-    std::cout << "StartListener on " << address << std::endl;
-    receiver->StartListener(address, &err);
+    std::cout << "Listening on " << address << std::endl;
+    receiver->Listen(address, &err);
     if(err) {
         std::cerr << "Failed to start receiver: " << err << std::endl;
         return 1;
     }
-
     return 0;
 }
