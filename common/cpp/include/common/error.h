@@ -44,6 +44,7 @@ class ErrorTemplateInterface {
   public:
     virtual ErrorType GetErrorType() const noexcept = 0;
     virtual Error Generate() const noexcept = 0;
+    virtual std::string Text() const noexcept = 0;
 
     virtual inline bool operator == (const Error& rhs) const {
         return rhs != nullptr &&
@@ -97,6 +98,7 @@ class SimpleError: public ErrorInterface {
     }
 };
 
+
 /*
  * IMPORTANT:
  * Never use the same ErrorType for two different errors,
@@ -110,6 +112,12 @@ class SimpleErrorTemplate : public ErrorTemplateInterface {
     explicit SimpleErrorTemplate(std::string error): error_{std::move(error)} {
 
     }
+
+    virtual std::string Text() const noexcept {
+        return error_;
+    }
+
+
     SimpleErrorTemplate(std::string error, ErrorType error_type ): error_{std::move(error)}, error_type_{error_type} {
     }
 
@@ -121,6 +129,11 @@ class SimpleErrorTemplate : public ErrorTemplateInterface {
         return Error(new SimpleError{error_, error_type_});
     }
 };
+
+static inline std::ostream& operator<<(std::ostream& os, const SimpleErrorTemplate& err) {
+    return os << err.Text();
+}
+
 
 inline Error TextError(const std::string& error) {
     return Error{new SimpleError{error}};

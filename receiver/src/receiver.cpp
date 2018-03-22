@@ -32,7 +32,7 @@ void Receiver::Listen(std::string listener_address, Error* err, bool exit_after_
 //TODO: remove error since it is not used
 void Receiver::ProcessConnections(Error* err) {
     std::string address;
-    FileDescriptor peer_fd;
+    FileDescriptor connection_socket_fd;
 
     //TODO: Use InetAcceptConnectionWithTimeout
     auto client_info_tuple = io->InetAcceptConnection(listener_fd_, err);
@@ -41,8 +41,8 @@ void Receiver::ProcessConnections(Error* err) {
         std::cerr << "An error occurred while accepting an incoming connection: " << err << std::endl;
         return;
     }
-    std::tie(address, peer_fd) = *client_info_tuple;
-    StartNewConnectionInSeparateThread(peer_fd, address);
+    std::tie(address, connection_socket_fd) = *client_info_tuple;
+    StartNewConnectionInSeparateThread(connection_socket_fd, address);
 }
 
 void Receiver::StartNewConnectionInSeparateThread(int connection_socket_fd, const std::string& address)  {

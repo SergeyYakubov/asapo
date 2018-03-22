@@ -5,6 +5,7 @@ set(SOURCE_FILES
         src/receiver_error.h
         src/request.cpp
         src/request_handler.cpp
+        src/send_data_request.cpp
         )
 
 
@@ -33,6 +34,7 @@ set_property(TARGET ${TARGET_NAME} PROPERTY ENABLE_EXPORTS true)
 set(TEST_SOURCE_FILES
         unittests/test_receiver.cpp
         unittests/test_connection.cpp
+        unittests/test_request.cpp
         )
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")

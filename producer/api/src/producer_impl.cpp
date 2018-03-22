@@ -70,11 +70,11 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* d
         return ProducerError::kFileTooLarge;
     }
 
-    SendDataRequest sendDataRequest;
+    GenericNetworkRequestHeader sendDataRequest;
     sendDataRequest.op_code = kNetOpcodeSendData;
     sendDataRequest.request_id = request_id_++;
-    sendDataRequest.file_id = file_id;
-    sendDataRequest.file_size = file_size;
+    sendDataRequest.data_id = file_id;
+    sendDataRequest.data_size = file_size;
 
     Error io_error;
     io->Send(client_fd_, &sendDataRequest, sizeof(sendDataRequest), &io_error);

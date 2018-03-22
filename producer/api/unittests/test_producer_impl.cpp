@@ -165,11 +165,11 @@ TEST(ProducerImpl, ConnectToReceiver__already_connected) {
  */
 
 MATCHER_P3(M_CheckSendDataRequest, request_id, file_id, file_size,
-           "Checks if a valid SendDataRequest was Send") {
-    return ((hidra2::SendDataRequest*)arg)->op_code == hidra2::kNetOpcodeSendData
-           && ((hidra2::SendDataRequest*)arg)->request_id == request_id
-           && ((hidra2::SendDataRequest*)arg)->file_id == file_id
-           && ((hidra2::SendDataRequest*)arg)->file_size == file_size;
+           "Checks if a valid GenericNetworkRequestHeader was Send") {
+    return ((hidra2::GenericNetworkRequestHeader*)arg)->op_code == hidra2::kNetOpcodeSendData
+           && ((hidra2::GenericNetworkRequestHeader*)arg)->request_id == request_id
+           && ((hidra2::GenericNetworkRequestHeader*)arg)->data_id == file_id
+           && ((hidra2::GenericNetworkRequestHeader*)arg)->data_size == file_size;
 }
 
 ACTION_P2(A_WriteSendDataResponse, error_code, request_id) {
@@ -218,7 +218,7 @@ TEST(ProducerImpl, Send__sendDataRequest_error) {
 
     EXPECT_CALL(mockIO, Send_t(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id,
                                expected_file_size),
-                               sizeof(hidra2::SendDataRequest), _))
+                               sizeof(hidra2::GenericNetworkRequestHeader), _))
     .Times(1)
     .WillOnce(
         DoAll(

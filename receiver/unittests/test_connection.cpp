@@ -3,7 +3,9 @@
 #include <unittests/MockIO.h>
 #include "../src/connection.h"
 #include "../src/receiver_error.h"
+#include "../src/request.h"
 
+using ::testing::Test;
 using ::testing::Return;
 using ::testing::_;
 using ::testing::DoAll;
@@ -11,20 +13,103 @@ using ::testing::SetArgReferee;
 using ::testing::Gt;
 using ::testing::Eq;
 using ::testing::Mock;
+using ::testing::NiceMock;
 using ::testing::InSequence;
 using ::testing::SetArgPointee;
 using ::hidra2::Error;
 using ::hidra2::ErrorInterface;
 using ::hidra2::FileDescriptor;
 using ::hidra2::SocketDescriptor;
-using ::hidra2::SendDataRequest;
+using ::hidra2::GenericNetworkRequestHeader;
 using ::hidra2::SendDataResponse;
-using ::hidra2::GenericNetworkRequest;
+using ::hidra2::GenericNetworkRequestHeader;
 using ::hidra2::GenericNetworkResponse;
 using ::hidra2::Opcode;
 using ::hidra2::Connection;
+using ::hidra2::MockIO;
+using hidra2::Request;
 
 namespace {
+
+class MockRequest: public Request {
+  public:
+    MockRequest(const std::unique_ptr<GenericNetworkRequestHeader>& request_header, SocketDescriptor socket_fd):
+        Request(request_header, socket_fd) {};
+    Error Handle() override {
+        return Error{Handle_t()};
+    };
+    MOCK_CONST_METHOD0(Handle_t, ErrorInterface * ());
+};
+
+class MockRequestFactory: public hidra2::RequestFactory {
+  public:
+    std::unique_ptr<Request> GenerateRequest(const std::unique_ptr<GenericNetworkRequestHeader>& request_header,
+                                             SocketDescriptor socket_fd,
+                                             Error* err) const noexcept override {
+        ErrorInterface* error = nullptr;
+        auto res = GenerateRequest_t(request_header, socket_fd, &error);
+        err->reset(error);
+        return std::unique_ptr<Request> {res};
+    }
+
+    MOCK_CONST_METHOD3(GenerateRequest_t, Request * (const std::unique_ptr<GenericNetworkRequestHeader>&,
+                                                     SocketDescriptor socket_fd,
+                                                     ErrorInterface**));
+
+};
+
+class ConnectionTests : public Test {
+  public:
+    Connection connection{0, "some_address"};
+    MockIO mock_io;
+    MockRequestFactory mock_factory;
+    void SetUp() override {
+        connection.io__ = std::unique_ptr<hidra2::IO> {&mock_io};;
+        connection.request_factory__ = std::unique_ptr<hidra2::RequestFactory> {&mock_factory};
+        ON_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _)).
+        WillByDefault(DoAll(testing::SetArgPointee<4>(nullptr),
+                            testing::Return(0)));
+        EXPECT_CALL(mock_io, CloseSocket_t(_, _));
+
+    }
+    void TearDown() override {
+        connection.io__.release();
+        connection.request_factory__.release();
+    }
+
+};
+
+
+TEST_F(ConnectionTests, ErrorWaitForNewRequest) {
+
+    EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _)).Times(2).
+    WillOnce(
+        DoAll(SetArgPointee<4>(new hidra2::IOError("", hidra2::IOErrorType::kTimeout)),
+              Return(0)))
+    .WillOnce(
+        DoAll(SetArgPointee<4>(new hidra2::IOError("", hidra2::IOErrorType::kUnknownIOError)),
+              Return(0))
+    );
+
+    connection.Listen();
+}
+
+TEST_F(ConnectionTests, CallsHandleRequest) {
+    std::unique_ptr<GenericNetworkRequestHeader> header{new GenericNetworkRequestHeader};
+    auto request = new MockRequest{header, 1};
+
+    EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _));
+
+    EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _)).WillOnce(
+        Return(request)
+    );
+
+    EXPECT_CALL(*request, Handle_t()).WillOnce(
+        Return(new hidra2::SimpleError{""})
+    );
+
+    connection.Listen();
+}
 
 /*
 TEST(Constructor, CheckGetAddress) {
@@ -356,26 +441,26 @@ class HandleSendDataRequestMock : public ReceiveAndSaveFileMock {
     HandleSendDataRequestMock(SocketDescriptor socket_fd, const std::string& address)
         : ReceiveAndSaveFileMock(socket_fd, address) {}
 
-    void ReceiveAndSaveFile(uint64_t file_id, size_t file_size, Error* err) const noexcept override {
+    void ReceiveAndSaveFile(uint64_t data_id, size_t data_size, Error* err) const noexcept override {
         ErrorInterface* error = nullptr;
-        ReceiveAndSaveFile_t(file_id, file_size, &error);
+        ReceiveAndSaveFile_t(data_id, data_size, &error);
         err->reset(error);
     }
     MOCK_CONST_METHOD3(ReceiveAndSaveFile_t, void(uint64_t
-                                                  file_id, size_t
-                                                  file_size, ErrorInterface * *err));
+                                                  data_id, size_t
+                                                  data_size, ErrorInterface * *err));
 };
 
 class HandleSendDataRequestFixture : public ReceiveAndSaveFileFixture {
   public:
     std::unique_ptr<HandleSendDataRequestMock> networkProducerPeer;
 
-    SendDataRequest send_data_request{};
+    GenericNetworkRequestHeader send_data_request{};
     SendDataResponse send_data_response{};
 
     void SetUp() override {
-        send_data_request.file_id = expected_file_id;
-        send_data_request.file_size = expected_file_size;
+        send_data_request.data_id = expected_file_id;
+        send_data_request.data_size = expected_file_size;
 
         networkProducerPeer.reset(new HandleSendDataRequestMock(expected_socket_descriptor, expected_address));
         networkProducerPeer->SetIO__(&mockIO);
@@ -427,12 +512,12 @@ class HandleGenericRequestMock : public HandleSendDataRequestMock {
     HandleGenericRequestMock(SocketDescriptor socket_fd, const std::string& address)
         : HandleSendDataRequestMock(socket_fd, address) {}
 
-    void HandleSendDataRequest(const SendDataRequest* request, SendDataResponse* response, Error* err) noexcept override {
+    void HandleSendDataRequest(const GenericNetworkRequestHeader* request, SendDataResponse* response, Error* err) noexcept override {
         ErrorInterface* error = nullptr;
         HandleSendDataRequest_t(request, response, &error);
         err->reset(error);
     }
-    MOCK_METHOD3(HandleSendDataRequest_t, void(const SendDataRequest* request, SendDataResponse* response,
+    MOCK_METHOD3(HandleSendDataRequest_t, void(const GenericNetworkRequestHeader* request, SendDataResponse* response,
                                                ErrorInterface** err));
 
     bool CheckIfValidNetworkOpCode(Opcode opcode) const noexcept override {
@@ -446,11 +531,11 @@ class HandleGenericRequestFixture : public HandleSendDataRequestFixture {
   public:
     std::unique_ptr<HandleGenericRequestMock> networkProducerPeer;
 
-    SendDataRequest generic_request{};
+    GenericNetworkRequestHeader generic_request{};
     SendDataResponse generic_response{};
 
     uint64_t expected_request_id = 423423;
-    size_t expected_send_data_buffer_size = sizeof(SendDataRequest) - sizeof(GenericNetworkRequest);
+    size_t expected_send_data_buffer_size = sizeof(GenericNetworkRequestHeader) - sizeof(GenericNetworkRequestHeader);
     size_t expected_send_data_response_size = sizeof(SendDataResponse);
 
     void SetUp() override {
@@ -465,8 +550,8 @@ TEST_F(HandleGenericRequestFixture, CheckIfCheckIfValidNetworkOpCodeIsCalled) {
     Opcode expected_opcode = (Opcode) 931;
 
     generic_request.op_code = expected_opcode;
-    generic_request.file_size = expected_file_size;
-    generic_request.file_id = expected_file_id;
+    generic_request.data_size = expected_file_size;
+    generic_request.data_id = expected_file_id;
     generic_request.request_id = expected_request_id;
 
     EXPECT_CALL(*networkProducerPeer, CheckIfValidNetworkOpCode_t(expected_opcode))
@@ -487,8 +572,8 @@ TEST_F(HandleGenericRequestFixture, CheckErrorWhenReceiveFails) {
     Opcode expected_opcode = Opcode::kNetOpcodeSendData;
 
     generic_request.op_code = expected_opcode;
-    generic_request.file_size = expected_file_size;
-    generic_request.file_id = expected_file_id;
+    generic_request.data_size = expected_file_size;
+    generic_request.data_id = expected_file_id;
     generic_request.request_id = expected_request_id;
 
     EXPECT_CALL(*networkProducerPeer, CheckIfValidNetworkOpCode_t(expected_opcode))
@@ -513,8 +598,8 @@ TEST_F(HandleGenericRequestFixture, CheckErrorWhenHandlerFails) {
     Opcode expected_opcode = Opcode::kNetOpcodeSendData;
 
     generic_request.op_code = expected_opcode;
-    generic_request.file_size = expected_file_size;
-    generic_request.file_id = expected_file_id;
+    generic_request.data_size = expected_file_size;
+    generic_request.data_id = expected_file_id;
     generic_request.request_id = expected_request_id;
 
     EXPECT_CALL(*networkProducerPeer, CheckIfValidNetworkOpCode_t(expected_opcode))
@@ -546,8 +631,8 @@ TEST_F(HandleGenericRequestFixture, Ok) {
     Opcode expected_opcode = Opcode::kNetOpcodeSendData;
 
     generic_request.op_code = expected_opcode;
-    generic_request.file_size = expected_file_size;
-    generic_request.file_id = expected_file_id;
+    generic_request.data_size = expected_file_size;
+    generic_request.data_id = expected_file_id;
     generic_request.request_id = expected_request_id;
 
     EXPECT_CALL(*networkProducerPeer, CheckIfValidNetworkOpCode_t(expected_opcode))
@@ -577,14 +662,14 @@ class HandleRawRequestBufferMock : public HandleGenericRequestMock {
     HandleRawRequestBufferMock(SocketDescriptor socket_fd, const std::string& address)
         : HandleGenericRequestMock(socket_fd, address) {}
 
-    size_t HandleGenericRequest(GenericNetworkRequest* request, GenericNetworkResponse* response,
+    size_t HandleGenericRequest(GenericNetworkRequestHeader* request, GenericNetworkResponse* response,
                                 Error* err) noexcept override {
         ErrorInterface* error = nullptr;
         auto data = HandleGenericRequest_t(request, response, &error);
         err->reset(error);
         return data;
     }
-    MOCK_METHOD3(HandleGenericRequest_t, size_t(GenericNetworkRequest* request, GenericNetworkResponse* response,
+    MOCK_METHOD3(HandleGenericRequest_t, size_t(GenericNetworkRequestHeader* request, GenericNetworkResponse* response,
                                                 ErrorInterface** err));
 };
 
@@ -673,13 +758,13 @@ class InternalPeerReceiverDoWorkMock : public HandleRawRequestBufferMock {
     InternalPeerReceiverDoWorkMock(SocketDescriptor socket_fd, const std::string& address)
         : HandleRawRequestBufferMock(socket_fd, address) {}
 
-    void HandleRawRequestBuffer(GenericNetworkRequest* request, GenericNetworkResponse* response,
+    void HandleRawRequestBuffer(GenericNetworkRequestHeader* request, GenericNetworkResponse* response,
                                 Error* err) noexcept override {
         ErrorInterface* error = nullptr;
         HandleRawRequestBuffer_t(request, response, &error);
         err->reset(error);
     }
-    MOCK_METHOD3(HandleRawRequestBuffer_t, void(GenericNetworkRequest* request, GenericNetworkResponse* response,
+    MOCK_METHOD3(HandleRawRequestBuffer_t, void(GenericNetworkRequestHeader* request, GenericNetworkResponse* response,
                                                 ErrorInterface** err));
 };
 
@@ -687,7 +772,7 @@ class InternalPeerReceiverDoWorkFixture : public HandleRawRequestBufferFixture {
   public:
     std::unique_ptr<InternalPeerReceiverDoWorkMock> networkProducerPeer;
 
-    size_t expected_generic_request_size = sizeof(GenericNetworkRequest);
+    size_t expected_generic_request_size = sizeof(GenericNetworkRequestHeader);
 
     void SetUp() override {
         networkProducerPeer.reset(new InternalPeerReceiverDoWorkMock(expected_socket_descriptor, expected_address));
