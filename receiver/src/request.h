@@ -4,24 +4,30 @@
 #include "receiver_error.h"
 #include "common/networking.h"
 #include "system_wrappers/io.h"
-
+#include "request_handler.h"
 namespace hidra2 {
+
+class RequestHandler;
 
 class Request {
   public:
     virtual Error Handle();
-    ~Request() = default;
-    Request(const std::unique_ptr<GenericNetworkRequestHeader>& request_header, SocketDescriptor socket_fd);
+    virtual ~Request() = default;
+    Request(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd);
+    void AddHandler(const RequestHandler*);
     std::unique_ptr<IO> io__;
   private:
+    Error AllocateDataBuffer();
+    Error ReceiveData();
     const GenericNetworkRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     FileData data_buffer_;
+    std::vector<const RequestHandler*> handlers_;
 };
 
 class RequestFactory {
   public:
-    virtual std::unique_ptr<Request> GenerateRequest(const std::unique_ptr<GenericNetworkRequestHeader>& request_header,
+    virtual std::unique_ptr<Request> GenerateRequest(const GenericNetworkRequestHeader& request_header,
                                                      SocketDescriptor socket_fd, Error* err) const noexcept ;
 };
 

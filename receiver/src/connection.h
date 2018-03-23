@@ -38,6 +38,7 @@ class Connection {
 
   private:
     std::unique_ptr<Request> WaitForNewRequest(Error* err) const noexcept;
+    Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;
 };
 
 }

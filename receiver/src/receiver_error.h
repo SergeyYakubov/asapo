@@ -49,7 +49,6 @@ class ReceiverErrorTemplate : public SimpleErrorTemplate {
 
 namespace ReceiverErrorTemplates {
 auto const kInvalidOpCode = ReceiverErrorTemplate{"Invalid Opcode", ReceiverErrorType::kInvalidOpCode};
-auto const kConnectionError = SimpleErrorTemplate{"ConnectionError"};
 };
 }
 

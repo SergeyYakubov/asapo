@@ -14,6 +14,8 @@ using ::testing::Gt;
 using ::testing::Eq;
 using ::testing::Mock;
 using ::testing::NiceMock;
+using ::testing::SaveArg;
+using ::testing::SaveArgPointee;
 using ::testing::InSequence;
 using ::testing::SetArgPointee;
 using ::hidra2::Error;
@@ -33,7 +35,7 @@ namespace {
 
 class MockRequest: public Request {
   public:
-    MockRequest(const std::unique_ptr<GenericNetworkRequestHeader>& request_header, SocketDescriptor socket_fd):
+    MockRequest(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd):
         Request(request_header, socket_fd) {};
     Error Handle() override {
         return Error{Handle_t()};
@@ -43,7 +45,7 @@ class MockRequest: public Request {
 
 class MockRequestFactory: public hidra2::RequestFactory {
   public:
-    std::unique_ptr<Request> GenerateRequest(const std::unique_ptr<GenericNetworkRequestHeader>& request_header,
+    std::unique_ptr<Request> GenerateRequest(const GenericNetworkRequestHeader& request_header,
                                              SocketDescriptor socket_fd,
                                              Error* err) const noexcept override {
         ErrorInterface* error = nullptr;
@@ -52,7 +54,7 @@ class MockRequestFactory: public hidra2::RequestFactory {
         return std::unique_ptr<Request> {res};
     }
 
-    MOCK_CONST_METHOD3(GenerateRequest_t, Request * (const std::unique_ptr<GenericNetworkRequestHeader>&,
+    MOCK_CONST_METHOD3(GenerateRequest_t, Request * (const GenericNetworkRequestHeader&,
                                                      SocketDescriptor socket_fd,
                                                      ErrorInterface**));
 
@@ -94,8 +96,15 @@ TEST_F(ConnectionTests, ErrorWaitForNewRequest) {
     connection.Listen();
 }
 
+ACTION_P(SaveArg1ToGenericNetworkResponse, value) {
+    auto resp =  *static_cast<const GenericNetworkResponse*>(arg1);
+    value->error_code = resp.error_code;
+}
+
+
 TEST_F(ConnectionTests, CallsHandleRequest) {
-    std::unique_ptr<GenericNetworkRequestHeader> header{new GenericNetworkRequestHeader};
+
+    GenericNetworkRequestHeader header;
     auto request = new MockRequest{header, 1};
 
     EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _));
@@ -108,8 +117,69 @@ TEST_F(ConnectionTests, CallsHandleRequest) {
         Return(new hidra2::SimpleError{""})
     );
 
+    EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
+        DoAll(SetArgPointee<3>(new hidra2::IOError("Test Send Error", hidra2::IOErrorType::kUnknownIOError)),
+              Return(0)
+             ));
+
+
     connection.Listen();
 }
+
+TEST_F(ConnectionTests, SendsNoErrorToProducer) {
+
+    GenericNetworkRequestHeader header;
+    auto request = new MockRequest{header, 1};
+
+    EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _));
+
+    EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _)).WillOnce(
+        Return(request)
+    );
+
+    EXPECT_CALL(*request, Handle_t()).WillOnce(
+        Return(nullptr)
+    );
+    GenericNetworkResponse response;
+    EXPECT_CALL(mock_io, Send_t(_, _, sizeof(GenericNetworkResponse), _)).WillOnce(
+        DoAll(SetArgPointee<3>(new hidra2::IOError("Test Send Error", hidra2::IOErrorType::kUnknownIOError)),
+              SaveArg1ToGenericNetworkResponse(&response),
+              Return(0)
+             ));
+
+    connection.Listen();
+
+    ASSERT_THAT(response.error_code, Eq(hidra2::NetworkErrorCode::kNetErrorNoError));
+}
+
+TEST_F(ConnectionTests, SendsErrorToProducer) {
+
+    GenericNetworkRequestHeader header;
+    auto request = new MockRequest{header, 1};
+
+    EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _));
+
+    EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _)).WillOnce(
+        Return(request)
+    );
+
+    EXPECT_CALL(*request, Handle_t()).WillOnce(
+        Return(new hidra2::SimpleError{""})
+    );
+
+    GenericNetworkResponse response;
+    EXPECT_CALL(mock_io, Send_t(_, _, sizeof(GenericNetworkResponse), _)).WillOnce(
+        DoAll(SetArgPointee<3>(new hidra2::IOError("Test Send Error", hidra2::IOErrorType::kUnknownIOError)),
+              SaveArg1ToGenericNetworkResponse(&response),
+              Return(0)
+             ));
+
+    connection.Listen();
+
+    ASSERT_THAT(response.error_code, Eq(hidra2::NetworkErrorCode::kNetErrorInternalServerError));
+
+}
+
 
 /*
 TEST(Constructor, CheckGetAddress) {

@@ -6,9 +6,12 @@
 
 namespace hidra2 {
 
+class Request;
 
 class RequestHandler {
-    virtual Error ProcessRequest(const Request& request) = 0;
+  public:
+    virtual Error ProcessRequest(const Request& request) const = 0;
+  private:
 };
 
 }

@@ -4,8 +4,6 @@ set(SOURCE_FILES
         src/connection.h src/connection.cpp
         src/receiver_error.h
         src/request.cpp
-        src/request_handler.cpp
-        src/send_data_request.cpp
         )
 
 

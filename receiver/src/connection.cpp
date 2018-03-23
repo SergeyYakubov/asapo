@@ -20,16 +20,32 @@ uint64_t Connection::GetId() const noexcept {
     return connection_id_;
 }
 
+NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
+    if(err) {
+        if(err == IOErrorTemplates::kFileAlreadyExists) {
+            return NetworkErrorCode::kNetErrorFileIdAlreadyInUse;
+        } else {
+            return NetworkErrorCode::kNetErrorInternalServerError;
+        }
+    }
+    return NetworkErrorCode::kNetErrorNoError;
+
+}
+
+Error Connection::ProcessRequest(const std::unique_ptr<Request>& request) const noexcept {
+    Error err;
+    err = request->Handle();
+    GenericNetworkResponse generic_response;
+    generic_response.error_code = GetNetworkCodeFromError(err);
+    if(err) {
+        std::cerr << "[" << GetId() << "] Error while handling request: " << err << std::endl;
+    }
+    io__->Send(socket_fd_, &generic_response, sizeof(GenericNetworkResponse), &err);
+    return err;
+}
+
+
 void Connection::Listen() const noexcept {
-
-    /*    std::unique_ptr<GenericNetworkResponse> generic_response_buffer;
-        try {
-            generic_response_buffer.reset(reinterpret_cast<GenericNetworkResponse*> (new uint8_t[kRequestHandlerMaxBufferSize]));
-        } catch(...) {
-            std::cerr << "Failed to allocate buffer space for request and response" << std::endl;
-            return;
-        }*/
-
     while(true) {
         Error err;
         auto request = WaitForNewRequest(&err);
@@ -38,9 +54,9 @@ void Connection::Listen() const noexcept {
             break;
         }
         if (!request) continue; //no error, but timeout
-        err = request->Handle();
+        err = ProcessRequest(request);
         if(err) {
-            std::cerr << "[" << GetId() << "] Error while handling request: " << err << std::endl;
+            std::cerr << "[" << GetId() << "] Error sending response: " << err << std::endl;
             break;
         }
     }
@@ -50,23 +66,16 @@ void Connection::Listen() const noexcept {
 
 
 std::unique_ptr<Request> Connection::WaitForNewRequest(Error* err) const noexcept {
-    std::unique_ptr<GenericNetworkRequestHeader> generic_request_buffer;
-    try {
-        generic_request_buffer.reset(reinterpret_cast<GenericNetworkRequestHeader*> (new
-                                     uint8_t[kRequestHandlerMaxBufferSize]));
-    } catch(...) {
-        *err = ErrorTemplates::kMemoryAllocationError.Generate();
-        return nullptr;
-    }
-
-    io__->ReceiveWithTimeout(socket_fd_, generic_request_buffer.get(), sizeof(GenericNetworkRequestHeader), 50, err);
+    //TODO: to be overwritten with MessagePack (or similar)
+    GenericNetworkRequestHeader generic_request_header;
+    io__->ReceiveWithTimeout(socket_fd_, &generic_request_header, sizeof(GenericNetworkRequestHeader), 50, err);
     if(*err) {
         if(*err == IOErrorTemplates::kTimeout) {
             *err = nullptr;//Not an error in this case
         }
         return nullptr;
     }
-    return request_factory__->GenerateRequest(generic_request_buffer, socket_fd_, err);
+    return request_factory__->GenerateRequest(generic_request_header, socket_fd_, err);
 }
 
 

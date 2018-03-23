@@ -69,6 +69,11 @@ class IOErrorTemplate : public SimpleErrorTemplate {
     }
 };
 
+static inline std::ostream& operator<<(std::ostream& os, const IOErrorTemplate& err) {
+    return os << err.Text();
+}
+
+
 namespace IOErrorTemplates {
 auto const kUnknownIOError = IOErrorTemplate{"Unknown Error", IOErrorType::kUnknownIOError};
 
