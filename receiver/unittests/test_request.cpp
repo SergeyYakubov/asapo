@@ -5,6 +5,7 @@
 #include "../src/receiver_error.h"
 #include "../src/request.h"
 #include "../src/request_handler.h"
+#include "../src/request_handler_file_write.h"
 
 using ::testing::Test;
 using ::testing::Return;
@@ -61,13 +62,16 @@ TEST_F(FactoryTests, ErrorOnWrongCode) {
     ASSERT_THAT(err, Ne(nullptr));
 }
 
-TEST_F(FactoryTests, ReturnsSendDataRequestOnkNetOpcodeSendDataCode) {
+TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCode) {
     generic_request_header.op_code = hidra2::Opcode::kNetOpcodeSendData;
     auto request = factory.GenerateRequest(generic_request_header, 1, &err);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(dynamic_cast<hidra2::Request*>(request.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const hidra2::RequestHandlerFileWrite*>(request->GetListHandlers()[0]), Ne(nullptr));
 }
+
+
 
 
 class RequestTests : public Test {

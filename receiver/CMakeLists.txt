@@ -4,6 +4,7 @@ set(SOURCE_FILES
         src/connection.h src/connection.cpp
         src/receiver_error.h
         src/request.cpp
+        src/request_handler_file_write.cpp
         )
 
 
@@ -33,6 +34,7 @@ set(TEST_SOURCE_FILES
         unittests/test_receiver.cpp
         unittests/test_connection.cpp
         unittests/test_request.cpp
+        unittests/test_request_handler_file_write.cpp
         )
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")

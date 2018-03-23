@@ -45,6 +45,11 @@ Error Request::Handle() {
     return nullptr;
 }
 
+const RequestHandlerList& Request::GetListHandlers() const {
+    return handlers_;
+}
+
+
 void Request::AddHandler(const RequestHandler* handler) {
     handlers_.emplace_back(handler);
 }
@@ -55,8 +60,11 @@ std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericNetworkReq
         Error* err) const noexcept {
     *err = nullptr;
     switch (request_header.op_code) {
-    case Opcode::kNetOpcodeSendData:
-        return std::unique_ptr<Request> {new Request{request_header, socket_fd}};
+    case Opcode::kNetOpcodeSendData: {
+        auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd}};
+        request->AddHandler(&request_handler_filewrite_);
+        return request;
+    }
     default:
         *err = ReceiverErrorTemplates::kInvalidOpCode.Generate();
         return nullptr;
