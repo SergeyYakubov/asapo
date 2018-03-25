@@ -113,7 +113,7 @@ class SimpleErrorTemplate : public ErrorTemplateInterface {
 
     }
 
-    virtual std::string Text() const noexcept {
+    virtual std::string Text() const noexcept override {
         return error_;
     }
 
@@ -144,8 +144,12 @@ inline Error TextErrorWithType(const std::string& error, ErrorType error_type) {
 }
 
 namespace ErrorTemplates {
-auto const kMemoryAllocationError = SimpleErrorTemplate{"kMemoryAllocationError", ErrorType::kMemoryAllocationError};
-auto const kEndOfFile = SimpleErrorTemplate{"End of file", ErrorType::kEndOfFile};
+auto const kMemoryAllocationError = SimpleErrorTemplate {
+                                        "kMemoryAllocationError", ErrorType::kMemoryAllocationError
+                                    };
+auto const kEndOfFile = SimpleErrorTemplate {
+                            "End of file", ErrorType::kEndOfFile
+                        };
 
 }
 

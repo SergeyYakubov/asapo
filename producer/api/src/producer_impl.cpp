@@ -104,7 +104,7 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* d
         if(sendDataResponse.error_code == kNetErrorFileIdAlreadyInUse) {
             return hidra2::ProducerError::kFileIdAlreadyInUse;
         }
-        std::cerr << "Server reported an error. NetErrorCode: " << sendDataResponse.error_code << std::endl;
+        std::cerr << "Server reported an error. NetErrorCode: " << int(sendDataResponse.error_code) << std::endl;
         return ProducerError::kUnknownServerError;
     }
 

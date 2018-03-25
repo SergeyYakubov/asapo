@@ -49,7 +49,7 @@ class MockIO : public IO {
 
 
     std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAcceptConnection(SocketDescriptor socket_fd,
-    Error* err) const {
+    Error* err) const override {
         ErrorInterface* error = nullptr;
         auto data = InetAcceptConnection_t(socket_fd, &error);
         err->reset(error);

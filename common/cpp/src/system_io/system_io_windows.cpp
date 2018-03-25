@@ -124,7 +124,7 @@ FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* er
 FileInfo SystemIO::GetFileInfo(const std::string& name, Error* err) const {
     WIN32_FIND_DATA f;
 
-    auto hFind = FindFirstFile(name.c_str() , &f);
+    auto hFind = FindFirstFile(name.c_str(), &f);
     if (hFind == INVALID_HANDLE_VALUE) {
         *err = IOErrorFromGetLastError();
         (*err)->Append(name);

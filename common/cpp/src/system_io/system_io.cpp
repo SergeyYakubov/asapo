@@ -8,16 +8,21 @@
 
 #include <system_wrappers/system_io.h>
 
-#ifdef __linux__
+#if defined(__linux__) || defined (__APPLE__)
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
 
+#ifdef __APPLE__
+#include <sys/select.h>
+#endif
+
+
 namespace hidra2 {
 
-const int SystemIO::kNetBufferSize = 1024 * 1024 * 50; //MiByte
+const int SystemIO::kNetBufferSize = 1024 * 1024 ; //MiByte
 
 /*******************************************************************************
  *                              system_io.cpp                                  *

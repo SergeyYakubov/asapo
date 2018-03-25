@@ -16,6 +16,7 @@ using std::string;
 using std::vector;
 using std::chrono::system_clock;
 
+
 namespace hidra2 {
 
 /**
@@ -51,6 +52,11 @@ Error GetLastErrorFromErrno() {
         return IOErrorTemplates::kConnectionResetByPeer.Generate();
     case ENOTSOCK:
         return IOErrorTemplates::kSocketOperationOnNonSocket.Generate();
+    case ENOPROTOOPT:
+        return IOErrorTemplates::kSocketOperationUnknownAtLevel.Generate();
+    case EDOM:
+        return IOErrorTemplates::kSocketOperationValueOutOfBound.Generate();
+
     default:
         std::cout << "[IOErrorsFromErrno] Unknown error code: " << errno << std::endl;
         Error err = IOErrorTemplates::kUnknownIOError.Generate();
@@ -170,7 +176,7 @@ void SystemIO::CollectFileInformationRecursively(const std::string& path,
 void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const {
     //TODO: Need to change network layer code, so everything can be NonBlocking
     // in use and one have to wait for some time until the system cleans up the stuff
-    //int flags;
+    int flag;
     if (
         /*(flags = fcntl(socket_fd, F_GETFL, 0)) == -1
         ||
@@ -178,9 +184,7 @@ void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const
         ||*/
         setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
         ||
-        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
-        ||
-        setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
+        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) != 0
     ) {
         *err = GetLastError();
     }
