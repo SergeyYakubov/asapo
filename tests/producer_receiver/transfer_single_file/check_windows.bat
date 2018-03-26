@@ -5,6 +5,8 @@ start /B "" "%full_recv_name%"
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
+mkdir files
+
 %1 localhost:4200 100 1
 
 ping 1.0.0.0 -n 1 -w 100 > nul

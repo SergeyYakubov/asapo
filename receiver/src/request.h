@@ -18,6 +18,10 @@ class Request {
     Request(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd);
     void AddHandler(const RequestHandler*);
     const RequestHandlerList& GetListHandlers() const;
+    virtual uint64_t GetDataSize() const;
+    virtual std::string GetFileName() const;
+
+    virtual const FileData& GetData() const;
     std::unique_ptr<IO> io__;
   private:
     Error AllocateDataBuffer();

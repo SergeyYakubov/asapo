@@ -218,6 +218,8 @@ class IO {
     virtual size_t          Read            (FileDescriptor fd, void* buf, size_t length, Error* err) const = 0;
     virtual size_t          Write           (FileDescriptor fd, const void* buf, size_t length, Error* err) const = 0;
 
+    virtual Error          WriteDataToFile  (const std::string& fname, const FileData& data, size_t length) const = 0;
+
     virtual void            CreateNewDirectory      (const std::string& directory_name, Error* err) const = 0;
     virtual FileData        GetDataFromFile         (const std::string& fname, uint64_t fsize, Error* err) const = 0;
     virtual void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,

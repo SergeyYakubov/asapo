@@ -121,6 +121,23 @@ void hidra2::SystemIO::CreateNewDirectory(const std::string& directory_name, Err
     }
 }
 
+Error SystemIO::WriteDataToFile(const std::string& fname, const FileData& data, size_t length) const {
+    Error err;
+    auto fd = Open(fname, IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS | IO_OPEN_MODE_RW, &err);
+    if (err) {
+        return err;
+    }
+
+    Write(fd, data.get(), length, &err);
+    if (err) {
+        return err;
+    }
+
+    Close(fd, &err);
+    return err;
+}
+
+
 std::string SystemIO::ReadFileToString(const std::string& fname, Error* err) const {
     auto info = GetFileInfo(fname, err);
     if (*err != nullptr) {

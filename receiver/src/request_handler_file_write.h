@@ -7,6 +7,8 @@
 
 namespace hidra2 {
 
+const uint64_t kMaxFileSize = uint64_t(1024) * 1024 * 1024 * 2; //2GB
+
 class RequestHandlerFileWrite final: public RequestHandler {
   public:
     RequestHandlerFileWrite();

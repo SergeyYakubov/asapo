@@ -4,7 +4,7 @@
 namespace hidra2 {
 
 Request::Request(const GenericNetworkRequestHeader& header,
-                 SocketDescriptor socket_fd) : io__{new SystemIO}, request_header_{header}, socket_fd_{socket_fd} {
+                 SocketDescriptor socket_fd) : io__{new SystemIO}, request_header_(header), socket_fd_{socket_fd} {
 }
 
 Error Request::AllocateDataBuffer() {
@@ -52,6 +52,19 @@ const RequestHandlerList& Request::GetListHandlers() const {
 
 void Request::AddHandler(const RequestHandler* handler) {
     handlers_.emplace_back(handler);
+}
+
+
+uint64_t Request::GetDataSize() const {
+    return request_header_.data_size;
+}
+
+const FileData& Request::GetData() const {
+    return data_buffer_;
+}
+
+std::string Request::GetFileName() const {
+    return std::to_string(request_header_.data_id) + ".bin";
 }
 
 

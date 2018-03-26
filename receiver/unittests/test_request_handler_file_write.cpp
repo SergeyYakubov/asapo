@@ -9,6 +9,7 @@
 
 using ::testing::Test;
 using ::testing::Return;
+using ::testing::ReturnRef;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::SetArgReferee;
@@ -44,7 +45,11 @@ class FileWriteHandlerTests : public Test {
   public:
     RequestHandlerFileWrite handler;
     NiceMock<MockIO> mock_io;
+    std::unique_ptr<MockRequest> mock_request;
     void SetUp() override {
+        GenericNetworkRequestHeader request_header;
+        request_header.data_id = 2;
+        mock_request.reset(new MockRequest{request_header, 1});
         handler.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
         /*      ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
                   DoAll(SetArgPointee<3>(nullptr),
@@ -56,5 +61,54 @@ class FileWriteHandlerTests : public Test {
     }
 
 };
+
+TEST_F(FileWriteHandlerTests, ErrorWhenZeroFileSize) {
+    EXPECT_CALL(*mock_request, GetDataSize())
+    .WillOnce(Return(0))
+    ;
+
+    auto err = handler.ProcessRequest(*mock_request);
+
+    ASSERT_THAT(err, Eq(hidra2::ReceiverErrorTemplates::kBadRequest));
+}
+
+TEST_F(FileWriteHandlerTests, ErrorWhenTooBigFileSize) {
+    EXPECT_CALL(*mock_request, GetDataSize())
+    .WillOnce(Return(hidra2::kMaxFileSize + 1))
+    ;
+
+    auto err = handler.ProcessRequest(*mock_request);
+
+    ASSERT_THAT(err, Eq(hidra2::ReceiverErrorTemplates::kBadRequest));
+}
+
+TEST_F(FileWriteHandlerTests, CallsWriteFile) {
+    std::string expected_file_name = "2.bin";
+    uint64_t expected_file_size = 10;
+    EXPECT_CALL(*mock_request, GetDataSize())
+    .WillOnce(Return(expected_file_size))
+    ;
+
+    hidra2::FileData data;
+    EXPECT_CALL(*mock_request, GetData())
+    .WillOnce(ReturnRef(data))
+    ;
+
+    EXPECT_CALL(*mock_request, GetFileName())
+    .WillOnce(Return(expected_file_name))
+    ;
+
+
+    EXPECT_CALL(mock_io, WriteDataToFile_t("files/"+expected_file_name, _, expected_file_size))
+    .WillOnce(
+        //Return(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release())
+        Return(nullptr)
+    );
+
+    auto err = handler.ProcessRequest(*mock_request);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
 
 }

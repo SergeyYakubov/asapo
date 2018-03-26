@@ -170,7 +170,15 @@ class MockIO : public IO {
         err->reset(error);
         return FileData(data);
     }
+
     MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t fsize, ErrorInterface** err));
+
+    Error WriteDataToFile(const std::string& fname, const FileData& data, size_t length) const override {
+        return Error{WriteDataToFile_t(fname, data.get(), length)};
+
+    }
+
+    MOCK_CONST_METHOD3(WriteDataToFile_t, ErrorInterface * (const std::string& fname, uint8_t* data, size_t fsize));
 
     void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
                                            Error* err) const override {

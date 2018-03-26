@@ -14,6 +14,8 @@ nohup $2 &>/dev/null &
 sleep 0.3
 receiverid=`echo $!`
 
+mkdir files
+
 $1 localhost:4200 100 1
 
-du -b files/0.bin | cut -f1 | grep 100
+ls -ln files/0.bin | awk '{ print $5 }'| grep 100

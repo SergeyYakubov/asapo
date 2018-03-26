@@ -7,6 +7,7 @@ namespace hidra2 {
 
 enum class ReceiverErrorType {
     kInvalidOpCode,
+    kBadRequest
 };
 
 //TODO Make a marco to create error class and error template class
@@ -51,6 +52,10 @@ namespace ReceiverErrorTemplates {
 auto const kInvalidOpCode = ReceiverErrorTemplate {
                                 "Invalid Opcode", ReceiverErrorType::kInvalidOpCode
                             };
+auto const kBadRequest = ReceiverErrorTemplate {
+                             "Bad request", ReceiverErrorType::kBadRequest
+                         };
+
 };
 }
 
