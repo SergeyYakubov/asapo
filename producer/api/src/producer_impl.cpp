@@ -2,72 +2,56 @@
 #include <cstring>
 #include "producer_impl.h"
 
-const uint32_t hidra2::ProducerImpl::kVersion = 1;
-const size_t hidra2::ProducerImpl::kMaxChunkSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(2); //2GiByte
+namespace  hidra2 {
 
-hidra2::ProducerError hidra2::ProducerImpl::NetworkErrorToProducerError(hidra2::NetworkErrorCode networkError) {
-    switch(networkError) {
-    case kNetErrorNoError:
-        return ProducerError::kNoError;
-    case kNetErrorFileIdAlreadyInUse:
-        return ProducerError::kFileIdAlreadyInUse;
-    default:
-        return ProducerError::kUnknownServerError;
-    }
-}
+const uint32_t ProducerImpl::kVersion = 1;
+const size_t ProducerImpl::kMaxChunkSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(2); //2GiByte
 
-hidra2::ProducerImpl::ProducerImpl() {
+ProducerImpl::ProducerImpl() {
     SetIO__(ProducerImpl::kDefaultIO);
 }
 
-uint64_t hidra2::ProducerImpl::GetVersion() const {
+uint64_t ProducerImpl::GetVersion() const {
     return kVersion;
 }
 
-hidra2::ProducerStatus hidra2::ProducerImpl::GetStatus() const {
+ProducerStatus ProducerImpl::GetStatus() const {
     return status_;
 }
 
-hidra2::ProducerError hidra2::ProducerImpl::initialize_socket_to_receiver_(const std::string& receiver_address) {
+Error ProducerImpl::initialize_socket_to_receiver_(const std::string& receiver_address) {
     Error err;
     FileDescriptor fd = io->CreateAndConnectIPTCPSocket(receiver_address, &err);
 
     if(err != nullptr) {
-        if(IOErrorTemplates::kInvalidAddressFormat == err) {
-            return ProducerError::kInvalidAddressFormat;
-        }
-        if(IOErrorTemplates::kConnectionRefused == err) {
-            return ProducerError::kConnectionRefused;
-        }
-        return ProducerError::kUnknownError;
+        return err;
     }
 
     client_fd_ = fd;
-    return ProducerError::kNoError;
+    return nullptr;
 }
 
-hidra2::ProducerError hidra2::ProducerImpl::ConnectToReceiver(const std::string& receiver_address) {
+Error ProducerImpl::ConnectToReceiver(const std::string& receiver_address) {
     if(client_fd_ != -1 && status_ != ProducerStatus::kDisconnected) {
-        return ProducerError::kAlreadyConnected;
+        return ProducerErrorTemplates::kAlreadyConnected.Generate();
     }
 
-    ProducerError error;
-    error = initialize_socket_to_receiver_(receiver_address);
-    if(error != ProducerError::kNoError) {
+    auto error = initialize_socket_to_receiver_(receiver_address);
+    if(error) {
         status_ = ProducerStatus::kDisconnected;
         return error;
     }
 
     status_ = ProducerStatus::kConnected;
-    return ProducerError::kNoError;
+    return nullptr;
 }
 
-hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size) {
+Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size) {
     if(status_ != ProducerStatus::kConnected) {
-        return ProducerError::kConnectionNotReady;
+        return ProducerErrorTemplates::kConnectionNotReady.Generate();
     }
     if(file_size > kMaxChunkSize) {
-        return ProducerError::kFileTooLarge;
+        return ProducerErrorTemplates::kFileTooLarge.Generate();
     }
 
     GenericNetworkRequestHeader sendDataRequest;
@@ -78,36 +62,33 @@ hidra2::ProducerError hidra2::ProducerImpl::Send(uint64_t file_id, const void* d
 
     Error io_error;
     io->Send(client_fd_, &sendDataRequest, sizeof(sendDataRequest), &io_error);
-    if(io_error != nullptr) {
-        std::cerr << "hidra2::ProducerImpl::Send/DataRequest error" << io_error << std::endl;
-        status_ = ProducerStatus::kConnected;
-        return ProducerError::kUnexpectedIOError;
+    if(io_error) {
+        std::cerr << "ProducerImpl::Send/DataRequest error" << io_error << std::endl;
+        return io_error;
     }
 
     io->Send(client_fd_, data, file_size, &io_error);
-    if(io_error != nullptr) {
-        std::cerr << "hidra2::ProducerImpl::Send/data error" << io_error << std::endl;
-        status_ = ProducerStatus::kConnected;
-        return ProducerError::kUnexpectedIOError;
+    if(io_error) {
+        std::cerr << "ProducerImpl::Send/data error" << io_error << std::endl;
+        return io_error;
     }
 
     SendDataResponse sendDataResponse;
     io->Receive(client_fd_, &sendDataResponse, sizeof(sendDataResponse), &io_error);
     if(io_error != nullptr) {
-        std::cerr << "hidra2::ProducerImpl::Receive error: " << io_error << std::endl;
-        status_ = ProducerStatus::kConnected;
-        return ProducerError::kUnexpectedIOError;
+        std::cerr << "ProducerImpl::Receive error: " << io_error << std::endl;
+        return io_error;
     }
 
     if(sendDataResponse.error_code) {
-        status_ = ProducerStatus::kConnected;
         if(sendDataResponse.error_code == kNetErrorFileIdAlreadyInUse) {
-            return hidra2::ProducerError::kFileIdAlreadyInUse;
+            return ProducerErrorTemplates::kFileIdAlreadyInUse.Generate();
         }
         std::cerr << "Server reported an error. NetErrorCode: " << int(sendDataResponse.error_code) << std::endl;
-        return ProducerError::kUnknownServerError;
+        return ProducerErrorTemplates::kUnknownServerError.Generate();
     }
 
-    status_ = ProducerStatus::kConnected;
-    return ProducerError::kNoError;
+    return nullptr;
+}
+
 }

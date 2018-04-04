@@ -30,14 +30,10 @@ bool SendDummyData(hidra2::Producer* producer, size_t number_of_byte, uint64_t i
     for(uint64_t i = 0; i < iterations; i++) {
         std::cout << "Send file " << i + 1 << "/" << iterations << std::endl;
 
-        hidra2::ProducerError err = producer->Send(i, buffer.get(), number_of_byte);
+        auto err = producer->Send(i, buffer.get(), number_of_byte);
 
-        if (err != hidra2::ProducerError::kNoError) {
-            if(err == hidra2::ProducerError::kFileIdAlreadyInUse) {
-                std::cerr << "File id is already in use." << std::endl;
-            } else {
-                std::cerr << "File was not successfully send, ErrorCode: " /*<< error*/ << std::endl;
-            }
+        if (err) {
+            std::cerr << "File was not successfully send: " << err << std::endl;
             return false;
         } else {
             std::cout << "File was successfully send." << std::endl;
@@ -59,13 +55,9 @@ int main (int argc, char* argv[]) {
               << std::endl;
 
     auto producer = hidra2::Producer::Create();
-    hidra2::ProducerError err = producer->ConnectToReceiver(receiver_address);
-    if(err != hidra2::ProducerError::kNoError) {
-        if (err == hidra2::ProducerError::kConnectionRefused) {
-            std::cerr << "Failed to connect to receiver - connection refused. Is the receiver running?" << std::endl;
-        } else {
-            std::cerr << "Failed to connect to receiver. ProducerError: " /*<< err*/ << std::endl;//TODO
-        }
+    auto err = producer->ConnectToReceiver(receiver_address);
+    if(err) {
+        std::cerr << "Failed to connect to receiver. ProducerError: " << err << std::endl;
         return EXIT_FAILURE;
     }
     std::cout << "Successfully connected" << std::endl;

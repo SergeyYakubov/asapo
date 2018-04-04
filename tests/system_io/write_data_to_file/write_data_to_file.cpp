@@ -24,7 +24,7 @@ Params GetParams(int argc, char* argv[]) {
     std::string result{argv[2]};
     std::string message{argv[3]};
 
-    return Params{fname, result, message,3};
+    return Params{fname, result, message, 3};
 }
 
 void AssertGoodResult(const std::unique_ptr<SystemIO>& io, const Error& err, const FileData& data,

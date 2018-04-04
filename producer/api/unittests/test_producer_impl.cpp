@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <unittests/MockIO.h>
-#include <common/error.h>
-#include <producer/producer.h>
+
+#include "common/error.h"
+#include "system_wrappers/io.h"
+#include "producer/producer.h"
 #include "../src/producer_impl.h"
 
 namespace {
@@ -32,7 +34,7 @@ TEST(ProducerImpl, get_status__disconnected) {
  * ConnectToReceiver
  */
 
-TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_invalid_address_format) {
+TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_error) {
     hidra2::ProducerImpl producer;
 
     hidra2::MockIO mockIO;
@@ -48,57 +50,10 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_invalid_addres
             Return(-1)
         ));
 
-    hidra2::ProducerError error = producer.ConnectToReceiver(expected_address);
-    hidra2::ProducerStatus status = producer.GetStatus();
+    auto error = producer.ConnectToReceiver(expected_address);
+    auto status = producer.GetStatus();
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kInvalidAddressFormat));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
-}
-
-
-TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_connection_refused) {
-    hidra2::ProducerImpl producer;
-
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
-    std::string expected_address = "127.0.0.1:9090";
-
-    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(expected_address, _))
-    .Times(1)
-    .WillOnce(
-        DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrorTemplates::kConnectionRefused.Generate().release()),
-            Return(-1)
-        ));
-
-    hidra2::ProducerError error = producer.ConnectToReceiver(expected_address);
-    hidra2::ProducerStatus status = producer.GetStatus();
-
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kConnectionRefused));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
-}
-
-TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_unk) {
-    hidra2::ProducerImpl producer;
-
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
-    std::string expected_address = "127.0.0.1:9090";
-
-    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(expected_address, _))
-    .Times(1)
-    .WillOnce(
-        DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release()),
-            Return(-1)
-        ));
-
-    hidra2::ProducerError error = producer.ConnectToReceiver(expected_address);
-    hidra2::ProducerStatus status = producer.GetStatus();
-
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kUnknownError));
+    ASSERT_THAT(error, Eq(hidra2::IOErrorTemplates::kInvalidAddressFormat));
     ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
 }
 
@@ -119,10 +74,10 @@ TEST(ProducerImpl, ConnectToReceiver) {
             Return(expected_fd)
         ));
 
-    hidra2::ProducerError error = producer.ConnectToReceiver(expected_address);
-    hidra2::ProducerStatus status = producer.GetStatus();
+    auto error = producer.ConnectToReceiver(expected_address);
+    auto status = producer.GetStatus();
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kNoError));
+    ASSERT_THAT(error, Eq(nullptr));
     ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
@@ -153,10 +108,10 @@ TEST(ProducerImpl, ConnectToReceiver__already_connected) {
 
     ConnectToReceiver_DONE(producer);
 
-    hidra2::ProducerError error = producer.ConnectToReceiver(expected_address);
-    hidra2::ProducerStatus status = producer.GetStatus();
+    auto error = producer.ConnectToReceiver(expected_address);
+    auto status = producer.GetStatus();
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kAlreadyConnected));
+    ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kAlreadyConnected));
     ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
@@ -182,9 +137,9 @@ TEST(ProducerImpl, Send__connection_not_ready) {
     hidra2::ProducerImpl producer;
     uint64_t expected_file_id = 4224;
 
-    hidra2::ProducerError error = producer.Send(expected_file_id, nullptr, 1);
+    auto error = producer.Send(expected_file_id, nullptr, 1);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kConnectionNotReady));
+    ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kConnectionNotReady));
 }
 
 TEST(ProducerImpl, Send__file_too_large) {
@@ -194,12 +149,10 @@ TEST(ProducerImpl, Send__file_too_large) {
 
     ConnectToReceiver_DONE(producer, expected_fd);
 
-    hidra2::ProducerError error = producer.Send(expected_file_id, nullptr,
-                                                size_t(1024) * size_t(1024) * size_t(1024) * size_t(3));
-    hidra2::ProducerStatus status = producer.GetStatus();
+    auto error = producer.Send(expected_file_id, nullptr,
+                               size_t(1024) * size_t(1024) * size_t(1024) * size_t(3));
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kFileTooLarge));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
+    ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kFileTooLarge));
 }
 
 TEST(ProducerImpl, Send__sendDataRequest_error) {
@@ -226,11 +179,9 @@ TEST(ProducerImpl, Send__sendDataRequest_error) {
             Return(-1)
         ));
 
-    hidra2::ProducerError error = producer.Send(expected_file_id, nullptr, expected_file_size);
-    hidra2::ProducerStatus status = producer.GetStatus();
+    auto error = producer.Send(expected_file_id, nullptr, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kUnexpectedIOError));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
+    ASSERT_THAT(error, Eq(hidra2::IOErrorTemplates::kBadFileNumber));
 }
 
 TEST(ProducerImpl, Send__sendData_error) {
@@ -238,7 +189,6 @@ TEST(ProducerImpl, Send__sendData_error) {
 
     hidra2::ProducerImpl producer;
     hidra2::FileDescriptor expected_fd = 83942;
-    uint64_t expected_request_id = 0;
     uint64_t expected_file_id = 1;
     uint64_t expected_file_size = 1337;
     void*    expected_file_pointer = (void*)0xC00FE;
@@ -265,11 +215,9 @@ TEST(ProducerImpl, Send__sendData_error) {
         ));
 
 
-    hidra2::ProducerError error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
-    hidra2::ProducerStatus status = producer.GetStatus();
+    auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kUnexpectedIOError));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
+    ASSERT_THAT(error, Eq(hidra2::IOErrorTemplates::kBadFileNumber));
 }
 
 
@@ -278,7 +226,6 @@ TEST(ProducerImpl, Send__Receive_error) {
 
     hidra2::ProducerImpl producer;
     hidra2::FileDescriptor expected_fd = 83942;
-    uint64_t expected_request_id = 0;
     uint64_t expected_file_id = 1;
     uint64_t expected_file_size = 1337;
     void*    expected_file_pointer = (void*)0xC00FE;
@@ -304,11 +251,9 @@ TEST(ProducerImpl, Send__Receive_error) {
             testing::Return(-1)
         ));
 
-    hidra2::ProducerError error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
-    hidra2::ProducerStatus status = producer.GetStatus();
+    auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kUnexpectedIOError));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
+    ASSERT_THAT(error, Eq(hidra2::IOErrorTemplates::kBadFileNumber));
 }
 
 TEST(ProducerImpl, Send__Receive_server_error) {
@@ -343,11 +288,9 @@ TEST(ProducerImpl, Send__Receive_server_error) {
             testing::ReturnArg<2>()
         ));
 
-    hidra2::ProducerError error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
-    hidra2::ProducerStatus status = producer.GetStatus();
+    auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kUnknownServerError));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
+    ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kUnknownServerError));
 }
 
 TEST(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
@@ -382,11 +325,9 @@ TEST(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
             testing::ReturnArg<2>()
         ));
 
-    hidra2::ProducerError error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
-    hidra2::ProducerStatus status = producer.GetStatus();
+    auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kFileIdAlreadyInUse));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
+    ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kFileIdAlreadyInUse));
 }
 
 TEST(ProducerImpl, Send) {
@@ -421,11 +362,9 @@ TEST(ProducerImpl, Send) {
             testing::ReturnArg<2>()
         ));
 
-    hidra2::ProducerError error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
-    hidra2::ProducerStatus status = producer.GetStatus();
+    auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerError::kNoError));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
+    ASSERT_THAT(error, Eq(nullptr));
 }
 
 }

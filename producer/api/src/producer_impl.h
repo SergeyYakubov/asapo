@@ -16,8 +16,7 @@ class ProducerImpl : public Producer, public HasIO {
 
     ProducerStatus status_ = ProducerStatus::kDisconnected;
 
-    ProducerError initialize_socket_to_receiver_(const std::string& receiver_address);
-    ProducerError NetworkErrorToProducerError(NetworkErrorCode networkError);
+    Error initialize_socket_to_receiver_(const std::string& receiver_address);
   public:
     static const size_t kMaxChunkSize;
 
@@ -28,8 +27,8 @@ class ProducerImpl : public Producer, public HasIO {
 
     uint64_t GetVersion() const override;
     ProducerStatus GetStatus() const override;
-    ProducerError ConnectToReceiver(const std::string& receiver_address) override;
-    ProducerError Send(uint64_t file_id, const void* data, size_t file_size) override;
+    Error ConnectToReceiver(const std::string& receiver_address) override;
+    Error Send(uint64_t file_id, const void* data, size_t file_size) override;
 
 };
 }

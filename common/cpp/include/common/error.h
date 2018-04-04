@@ -14,6 +14,7 @@ enum class ErrorType {
     kHttpError,
     kIOError,
     kReceiverError,
+    kProducerError,
 
     kMemoryAllocationError,
     kEndOfFile

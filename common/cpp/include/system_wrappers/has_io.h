@@ -7,7 +7,7 @@ namespace hidra2 {
 
 class HasIO {
   protected:
-    static IO* const kDefaultIO;
+    static IO* const  kDefaultIO;
 
     IO* io;
 
