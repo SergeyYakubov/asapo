@@ -36,6 +36,8 @@ Error IOErrorFromGetLastError() {
         return IOErrorTemplates::kSocketOperationOnNonSocket.Generate();
     case WSAEWOULDBLOCK:
         return IOErrorTemplates::kResourceTemporarilyUnavailable.Generate();
+    case WSAEADDRNOTAVAIL:
+        return IOErrorTemplates::kAddressNotValid.Generate();
     case WSAECONNREFUSED:
         return IOErrorTemplates::kConnectionRefused.Generate();
     case ERROR_FILE_EXISTS:

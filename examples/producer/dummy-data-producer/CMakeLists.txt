@@ -27,5 +27,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists_separate.txt DESTINATION "$
 configure_file(Makefile.in Makefile_LINUX @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Makefile_LINUX DESTINATION "${dir}")
 
-
+IF(WIN32)
+add_script_test("${TARGET_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/Debug/${TARGET_NAME}")
+ELSE()
 add_script_test("${TARGET_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}")
+ENDIF()

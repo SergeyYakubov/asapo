@@ -33,7 +33,8 @@ enum class IOErrorType {
     kInvalidMemoryAddress,
     kUnableToResolveHostname,
     kSocketOperationUnknownAtLevel,
-    kSocketOperationValueOutOfBound
+    kSocketOperationValueOutOfBound,
+    kAddressNotValid
 
 };
 
@@ -138,6 +139,9 @@ auto const kSocketOperationValueOutOfBound =  IOErrorTemplate {
     "kSocketOperationValueOutOfBound", IOErrorType::kSocketOperationValueOutOfBound
 };
 
+auto const kAddressNotValid =  IOErrorTemplate {
+    "Address not valid", IOErrorType::kAddressNotValid
+};
 
 }
 
