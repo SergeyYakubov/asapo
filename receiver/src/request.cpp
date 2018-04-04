@@ -1,10 +1,10 @@
 #include "request.h"
-#include "system_wrappers/system_io.h"
+#include "system_wrappers/io_factory.h"
 
 namespace hidra2 {
 
 Request::Request(const GenericNetworkRequestHeader& header,
-                 SocketDescriptor socket_fd) : io__{new SystemIO}, request_header_(header), socket_fd_{socket_fd} {
+                 SocketDescriptor socket_fd) : io__{GenerateDefaultIO()}, request_header_(header), socket_fd_{socket_fd} {
 }
 
 Error Request::AllocateDataBuffer() {

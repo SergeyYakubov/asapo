@@ -3,11 +3,11 @@
 
 #include <string>
 #include <common/networking.h>
-#include <system_wrappers/has_io.h>
+#include <system_wrappers/io.h>
 #include "producer/producer.h"
 
 namespace hidra2 {
-class ProducerImpl : public Producer, public HasIO {
+class ProducerImpl : public Producer {
   private:
     static const uint32_t kVersion;
 
@@ -16,20 +16,23 @@ class ProducerImpl : public Producer, public HasIO {
 
     ProducerStatus status_ = ProducerStatus::kDisconnected;
 
-    Error initialize_socket_to_receiver_(const std::string& receiver_address);
+    Error InitializeSocketToReceiver_(const std::string& receiver_address);
+    GenericNetworkRequestHeader GenerateNextSendRequest(uint64_t file_id, size_t file_size);
+    Error SendHeaderAndData(const GenericNetworkRequestHeader& header, const void* data, size_t file_size);
+    Error ReceiveResponce();
+
   public:
     static const size_t kMaxChunkSize;
 
     ProducerImpl();
     ProducerImpl(const ProducerImpl&) = delete;
     ProducerImpl& operator=(const ProducerImpl&) = delete;
-    //~ProducerImpl() override;
 
     uint64_t GetVersion() const override;
     ProducerStatus GetStatus() const override;
     Error ConnectToReceiver(const std::string& receiver_address) override;
     Error Send(uint64_t file_id, const void* data, size_t file_size) override;
-
+    std::unique_ptr<IO> io__;
 };
 }
 

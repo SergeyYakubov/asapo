@@ -1,5 +1,5 @@
 #include "request_handler_file_write.h"
-#include "system_wrappers/system_io.h"
+#include "system_wrappers/io_factory.h"
 #include "request.h"
 namespace hidra2 {
 
@@ -17,7 +17,7 @@ Error RequestHandlerFileWrite::ProcessRequest(const Request& request) const {
 
 }
 
-RequestHandlerFileWrite::RequestHandlerFileWrite() : io__{new SystemIO} {
+RequestHandlerFileWrite::RequestHandlerFileWrite() : io__{GenerateDefaultIO()} {
 
 }
 

@@ -33,17 +33,22 @@ class StartListenerFixture : public testing::Test {
 
     Error err;
 
-    ::testing::NiceMock<hidra2::MockIO> mockIO;
+    ::testing::NiceMock<hidra2::MockIO> mock_io;
     hidra2::Receiver receiver;
 
     void SetUp() override {
         err = nullptr;
-        receiver.SetIO__(&mockIO);
+        receiver.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
     }
+    void TearDown() override {
+        receiver.io__.release();
+    }
+
+
 };
 
 TEST_F(StartListenerFixture, CreateAndBindIPTCPSocketListenerError) {
-    EXPECT_CALL(mockIO, CreateAndBindIPTCPSocketListener_t(expected_address, receiver.kMaxUnacceptedConnectionsBacklog, _))
+    EXPECT_CALL(mock_io, CreateAndBindIPTCPSocketListener_t(expected_address, receiver.kMaxUnacceptedConnectionsBacklog, _))
     .WillOnce(DoAll(
                   SetArgPointee<2>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release()),
                   Return(0)
@@ -56,7 +61,7 @@ TEST_F(StartListenerFixture, CreateAndBindIPTCPSocketListenerError) {
 
 
 TEST_F(StartListenerFixture, InetAcceptConnectionError) {
-    EXPECT_CALL(mockIO, InetAcceptConnection_t(_, _))
+    EXPECT_CALL(mock_io, InetAcceptConnection_t(_, _))
     .WillOnce(DoAll(
                   SetArgPointee<1>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release()),
                   Return(new std::tuple<std::string, SocketDescriptor>(expected_address, expected_socket_descriptor_client))
@@ -69,13 +74,13 @@ TEST_F(StartListenerFixture, InetAcceptConnectionError) {
 
 TEST_F(StartListenerFixture, Ok) {
 
-    EXPECT_CALL(mockIO, InetAcceptConnection_t(_, _))
+    EXPECT_CALL(mock_io, InetAcceptConnection_t(_, _))
     .WillOnce(DoAll(
                   SetArgPointee<1>(nullptr),
                   Return(new std::tuple<std::string, SocketDescriptor>(expected_address, expected_socket_descriptor_client))
               ));
 
-    EXPECT_CALL(mockIO, NewThread_t(_)).
+    EXPECT_CALL(mock_io, NewThread_t(_)).
     WillOnce(
         Return(nullptr)
     );

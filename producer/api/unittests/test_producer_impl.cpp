@@ -22,27 +22,58 @@ TEST(get_version, VersionAboveZero) {
     EXPECT_GE(producer.GetVersion(), 0);
 }
 
-TEST(ProducerImpl, get_status__disconnected) {
-    hidra2::ProducerImpl producer;
-
-    hidra2::ProducerStatus status = producer.GetStatus();
-
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
-}
 
 /**
  * ConnectToReceiver
  */
 
-TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_error) {
+class ProducerImpl : public testing::Test {
+  public:
     hidra2::ProducerImpl producer;
-
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
+    testing::NiceMock<hidra2::MockIO> mock_io;
+    hidra2::FileDescriptor expected_fd = 83942;
+    uint64_t expected_file_id = 4224;
     std::string expected_address = "127.0.0.1:9090";
+    uint64_t expected_request_id = 0;
+    uint64_t expected_file_size = 1337;
+    void*    expected_file_pointer = (void*)0xC00FE;
 
-    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(expected_address, _))
+    void SetUp() override {
+        producer.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
+    }
+    void TearDown() override {
+        producer.io__.release();
+    }
+
+    void ConnectToReceiver_DONE(hidra2::FileDescriptor expected_fd = 1) {
+        EXPECT_CALL(mock_io, CreateAndConnectIPTCPSocket_t(_, _))
+        .Times(1)
+        .WillOnce(
+            DoAll(
+                testing::SetArgPointee<1>(nullptr),
+                Return(expected_fd)
+            ));
+        producer.ConnectToReceiver("");
+    }
+    void Send_DONE(int times = 1) {
+        EXPECT_CALL(mock_io, Send_t(_, _, _, _))
+        .Times(times)
+        .WillRepeatedly(
+            DoAll(
+                testing::SetArgPointee<3>(nullptr),
+                testing::ReturnArg<2>()
+            ));
+    }
+};
+
+TEST_F(ProducerImpl, get_status__disconnected) {
+    hidra2::ProducerStatus status = producer.GetStatus();
+    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
+}
+
+
+TEST_F(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_error) {
+    EXPECT_CALL(mock_io, CreateAndConnectIPTCPSocket_t(expected_address, _))
     .Times(1)
     .WillOnce(
         DoAll(
@@ -57,16 +88,8 @@ TEST(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_error) {
     ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
 }
 
-TEST(ProducerImpl, ConnectToReceiver) {
-    hidra2::ProducerImpl producer;
-
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
-    std::string expected_address = "127.0.0.1:9090";
-    hidra2::FileDescriptor expected_fd = 199;
-
-    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(expected_address, _))
+TEST_F(ProducerImpl, ConnectToReceiver) {
+    EXPECT_CALL(mock_io, CreateAndConnectIPTCPSocket_t(expected_address, _))
     .Times(1)
     .WillOnce(
         DoAll(
@@ -81,38 +104,14 @@ TEST(ProducerImpl, ConnectToReceiver) {
     ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
-void ConnectToReceiver_DONE(hidra2::ProducerImpl& producer, hidra2::FileDescriptor expected_fd = 1) {
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
-    EXPECT_CALL(mockIO, CreateAndConnectIPTCPSocket_t(_, _))
-    .Times(1)
-    .WillOnce(
-        DoAll(
-            testing::SetArgPointee<1>(nullptr),
-            Return(expected_fd)
-        ));
-
-    producer.ConnectToReceiver("");
-}
-
-TEST(ProducerImpl, ConnectToReceiver__already_connected) {
-    hidra2::ProducerImpl    producer;
-    std::string             expected_address = "127.0.0.1:9090";
-
-
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
+TEST_F(ProducerImpl, ConnectToReceiver__already_connected) {
     InSequence sequence;
 
-    ConnectToReceiver_DONE(producer);
+    ConnectToReceiver_DONE();
 
     auto error = producer.ConnectToReceiver(expected_address);
-    auto status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kAlreadyConnected));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
 }
 
 /**
@@ -133,21 +132,16 @@ ACTION_P2(A_WriteSendDataResponse, error_code, request_id) {
     ((hidra2::SendDataResponse*)arg1)->request_id = request_id;
 }
 
-TEST(ProducerImpl, Send__connection_not_ready) {
-    hidra2::ProducerImpl producer;
-    uint64_t expected_file_id = 4224;
+TEST_F(ProducerImpl, Send__connection_not_ready) {
 
     auto error = producer.Send(expected_file_id, nullptr, 1);
 
     ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kConnectionNotReady));
 }
 
-TEST(ProducerImpl, Send__file_too_large) {
-    hidra2::ProducerImpl producer;
-    hidra2::FileDescriptor expected_fd = 83942;
-    uint64_t expected_file_id = 4224;
+TEST_F(ProducerImpl, Send__file_too_large) {
 
-    ConnectToReceiver_DONE(producer, expected_fd);
+    ConnectToReceiver_DONE(expected_fd);
 
     auto error = producer.Send(expected_file_id, nullptr,
                                size_t(1024) * size_t(1024) * size_t(1024) * size_t(3));
@@ -155,23 +149,14 @@ TEST(ProducerImpl, Send__file_too_large) {
     ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kFileTooLarge));
 }
 
-TEST(ProducerImpl, Send__sendDataRequest_error) {
+TEST_F(ProducerImpl, Send__sendDataRequest_error) {
     InSequence sequence;
 
-    hidra2::ProducerImpl producer;
-    hidra2::FileDescriptor expected_fd = 83942;
-    uint64_t expected_request_id = 0;
-    uint64_t expected_file_id = 1;
-    uint64_t expected_file_size = 1337;
+    ConnectToReceiver_DONE(expected_fd);
 
-    ConnectToReceiver_DONE(producer, expected_fd);
-
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
-    EXPECT_CALL(mockIO, Send_t(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id,
-                               expected_file_size),
-                               sizeof(hidra2::GenericNetworkRequestHeader), _))
+    EXPECT_CALL(mock_io, Send_t(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id,
+                                expected_file_size),
+                                sizeof(hidra2::GenericNetworkRequestHeader), _))
     .Times(1)
     .WillOnce(
         DoAll(
@@ -184,29 +169,13 @@ TEST(ProducerImpl, Send__sendDataRequest_error) {
     ASSERT_THAT(error, Eq(hidra2::IOErrorTemplates::kBadFileNumber));
 }
 
-TEST(ProducerImpl, Send__sendData_error) {
+TEST_F(ProducerImpl, Send__sendData_error) {
     InSequence sequence;
 
-    hidra2::ProducerImpl producer;
-    hidra2::FileDescriptor expected_fd = 83942;
-    uint64_t expected_file_id = 1;
-    uint64_t expected_file_size = 1337;
-    void*    expected_file_pointer = (void*)0xC00FE;
+    ConnectToReceiver_DONE(expected_fd);
+    Send_DONE();
 
-    ConnectToReceiver_DONE(producer, expected_fd);
-
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
-    EXPECT_CALL(mockIO, Send_t(_, _, _, _))
-    .Times(1)
-    .WillOnce(
-        DoAll(
-            testing::SetArgPointee<3>(nullptr),
-            testing::ReturnArg<2>()
-        ));
-
-    EXPECT_CALL(mockIO, Send_t(expected_fd, expected_file_pointer, expected_file_size, _))
+    EXPECT_CALL(mock_io, Send_t(expected_fd, expected_file_pointer, expected_file_size, _))
     .Times(1)
     .WillOnce(
         DoAll(
@@ -221,29 +190,13 @@ TEST(ProducerImpl, Send__sendData_error) {
 }
 
 
-TEST(ProducerImpl, Send__Receive_error) {
+TEST_F(ProducerImpl, Send__Receive_error) {
     InSequence sequence;
 
-    hidra2::ProducerImpl producer;
-    hidra2::FileDescriptor expected_fd = 83942;
-    uint64_t expected_file_id = 1;
-    uint64_t expected_file_size = 1337;
-    void*    expected_file_pointer = (void*)0xC00FE;
+    ConnectToReceiver_DONE(expected_fd);
+    Send_DONE(2);
 
-    ConnectToReceiver_DONE(producer, expected_fd);
-
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
-    EXPECT_CALL(mockIO, Send_t(_, _, _, _))
-    .Times(2)
-    .WillRepeatedly(
-        DoAll(
-            testing::SetArgPointee<3>(nullptr),
-            testing::ReturnArg<2>()
-        ));
-
-    EXPECT_CALL(mockIO, Receive_t(expected_fd, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mock_io, Receive_t(expected_fd, _, sizeof(hidra2::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
@@ -256,30 +209,14 @@ TEST(ProducerImpl, Send__Receive_error) {
     ASSERT_THAT(error, Eq(hidra2::IOErrorTemplates::kBadFileNumber));
 }
 
-TEST(ProducerImpl, Send__Receive_server_error) {
+TEST_F(ProducerImpl, Send__Receive_server_error) {
     InSequence sequence;
 
-    hidra2::ProducerImpl producer;
-    hidra2::FileDescriptor expected_fd = 83942;
-    uint64_t expected_request_id = 0;
-    uint64_t expected_file_id = 1;
-    uint64_t expected_file_size = 1337;
-    void*    expected_file_pointer = (void*)0xC00FE;
+    ConnectToReceiver_DONE(expected_fd);
+    Send_DONE(2);
 
-    ConnectToReceiver_DONE(producer, expected_fd);
 
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
-    EXPECT_CALL(mockIO, Send_t(_, _, _, _))
-    .Times(2)
-    .WillRepeatedly(
-        DoAll(
-            testing::SetArgPointee<3>(nullptr),
-            testing::ReturnArg<2>()
-        ));
-
-    EXPECT_CALL(mockIO, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mock_io, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
@@ -293,30 +230,14 @@ TEST(ProducerImpl, Send__Receive_server_error) {
     ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kUnknownServerError));
 }
 
-TEST(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
+TEST_F(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
     InSequence sequence;
 
-    hidra2::ProducerImpl producer;
-    hidra2::FileDescriptor expected_fd = 83942;
-    uint64_t expected_request_id = 0;
-    uint64_t expected_file_id = 1;
-    uint64_t expected_file_size = 1337;
-    void*    expected_file_pointer = (void*)0xC00FE;
+    ConnectToReceiver_DONE(expected_fd);
+    Send_DONE(2);
 
-    ConnectToReceiver_DONE(producer, expected_fd);
 
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
-    EXPECT_CALL(mockIO, Send_t(_, _, _, _))
-    .Times(2)
-    .WillRepeatedly(
-        DoAll(
-            testing::SetArgPointee<3>(nullptr),
-            testing::ReturnArg<2>()
-        ));
-
-    EXPECT_CALL(mockIO, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mock_io, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
@@ -330,30 +251,14 @@ TEST(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
     ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kFileIdAlreadyInUse));
 }
 
-TEST(ProducerImpl, Send) {
+TEST_F(ProducerImpl, Send) {
     InSequence sequence;
 
-    hidra2::ProducerImpl producer;
-    hidra2::FileDescriptor expected_fd = 83942;
-    uint64_t expected_request_id = 0;
-    uint64_t expected_file_id = 1;
-    uint64_t expected_file_size = 1337;
-    void*    expected_file_pointer = (void*)0xC00FE;
+    ConnectToReceiver_DONE(expected_fd);
+    Send_DONE(2);
 
-    ConnectToReceiver_DONE(producer, expected_fd);
 
-    hidra2::MockIO mockIO;
-    producer.SetIO__(&mockIO);
-
-    EXPECT_CALL(mockIO, Send_t(_, _, _, _))
-    .Times(2)
-    .WillRepeatedly(
-        DoAll(
-            testing::SetArgPointee<3>(nullptr),
-            testing::ReturnArg<2>()
-        ));
-
-    EXPECT_CALL(mockIO, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mock_io, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(

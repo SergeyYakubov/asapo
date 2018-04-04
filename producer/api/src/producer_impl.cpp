@@ -1,14 +1,15 @@
 #include <iostream>
 #include <cstring>
+
 #include "producer_impl.h"
+#include "system_wrappers/io_factory.h"
 
 namespace  hidra2 {
 
 const uint32_t ProducerImpl::kVersion = 1;
 const size_t ProducerImpl::kMaxChunkSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(2); //2GiByte
 
-ProducerImpl::ProducerImpl() {
-    SetIO__(ProducerImpl::kDefaultIO);
+ProducerImpl::ProducerImpl(): io__{GenerateDefaultIO()} {
 }
 
 uint64_t ProducerImpl::GetVersion() const {
@@ -19,10 +20,9 @@ ProducerStatus ProducerImpl::GetStatus() const {
     return status_;
 }
 
-Error ProducerImpl::initialize_socket_to_receiver_(const std::string& receiver_address) {
+Error ProducerImpl::InitializeSocketToReceiver_(const std::string& receiver_address) {
     Error err;
-    FileDescriptor fd = io->CreateAndConnectIPTCPSocket(receiver_address, &err);
-
+    FileDescriptor fd = io__->CreateAndConnectIPTCPSocket(receiver_address, &err);
     if(err != nullptr) {
         return err;
     }
@@ -36,7 +36,7 @@ Error ProducerImpl::ConnectToReceiver(const std::string& receiver_address) {
         return ProducerErrorTemplates::kAlreadyConnected.Generate();
     }
 
-    auto error = initialize_socket_to_receiver_(receiver_address);
+    auto error = InitializeSocketToReceiver_(receiver_address);
     if(error) {
         status_ = ProducerStatus::kDisconnected;
         return error;
@@ -46,38 +46,39 @@ Error ProducerImpl::ConnectToReceiver(const std::string& receiver_address) {
     return nullptr;
 }
 
-Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size) {
-    if(status_ != ProducerStatus::kConnected) {
-        return ProducerErrorTemplates::kConnectionNotReady.Generate();
-    }
-    if(file_size > kMaxChunkSize) {
-        return ProducerErrorTemplates::kFileTooLarge.Generate();
-    }
+GenericNetworkRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, size_t file_size) {
+    GenericNetworkRequestHeader request;
+    request.op_code = kNetOpcodeSendData;
+    request.request_id = request_id_++;
+    request.data_id = file_id;
+    request.data_size = file_size;
+    return request;
+}
 
-    GenericNetworkRequestHeader sendDataRequest;
-    sendDataRequest.op_code = kNetOpcodeSendData;
-    sendDataRequest.request_id = request_id_++;
-    sendDataRequest.data_id = file_id;
-    sendDataRequest.data_size = file_size;
-
+Error ProducerImpl::SendHeaderAndData(const GenericNetworkRequestHeader& header, const void* data, size_t file_size) {
     Error io_error;
-    io->Send(client_fd_, &sendDataRequest, sizeof(sendDataRequest), &io_error);
+    io__->Send(client_fd_, &header, sizeof(header), &io_error);
     if(io_error) {
         std::cerr << "ProducerImpl::Send/DataRequest error" << io_error << std::endl;
         return io_error;
     }
 
-    io->Send(client_fd_, data, file_size, &io_error);
+    io__->Send(client_fd_, data, file_size, &io_error);
     if(io_error) {
         std::cerr << "ProducerImpl::Send/data error" << io_error << std::endl;
         return io_error;
     }
 
+    return nullptr;
+}
+
+Error ProducerImpl::ReceiveResponce() {
+    Error err;
     SendDataResponse sendDataResponse;
-    io->Receive(client_fd_, &sendDataResponse, sizeof(sendDataResponse), &io_error);
-    if(io_error != nullptr) {
-        std::cerr << "ProducerImpl::Receive error: " << io_error << std::endl;
-        return io_error;
+    io__->Receive(client_fd_, &sendDataResponse, sizeof(sendDataResponse), &err);
+    if(err != nullptr) {
+        std::cerr << "ProducerImpl::Receive error: " << err << std::endl;
+        return err;
     }
 
     if(sendDataResponse.error_code) {
@@ -87,8 +88,26 @@ Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size) {
         std::cerr << "Server reported an error. NetErrorCode: " << int(sendDataResponse.error_code) << std::endl;
         return ProducerErrorTemplates::kUnknownServerError.Generate();
     }
-
     return nullptr;
+}
+
+
+Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size) {
+    if(status_ != ProducerStatus::kConnected) {
+        return ProducerErrorTemplates::kConnectionNotReady.Generate();
+    }
+    if(file_size > kMaxChunkSize) {
+        return ProducerErrorTemplates::kFileTooLarge.Generate();
+    }
+
+    auto send_data_request = GenerateNextSendRequest(file_id, file_size);
+
+    auto  error = SendHeaderAndData(send_data_request, data, file_size);
+    if(error) {
+        return error;
+    }
+
+    return ReceiveResponce();
 }
 
 }

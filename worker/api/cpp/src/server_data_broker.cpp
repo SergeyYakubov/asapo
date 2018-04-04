@@ -1,12 +1,12 @@
 #include "server_data_broker.h"
-#include "system_wrappers/system_io.h"
+#include "system_wrappers/io_factory.h"
 #include "curl_http_client.h"
 
 namespace hidra2 {
 
 ServerDataBroker::ServerDataBroker(const std::string& server_uri,
                                    const std::string& source_name):
-    io__{new hidra2::SystemIO}, httpclient__{new hidra2::CurlHttpClient},
+    io__{GenerateDefaultIO()}, httpclient__{new CurlHttpClient},
 server_uri_{server_uri}, source_name_{source_name} {
 }
 
