@@ -38,10 +38,12 @@ Error IOErrorFromGetLastError() {
         return IOErrorTemplates::kResourceTemporarilyUnavailable.Generate();
     case WSAECONNREFUSED:
         return IOErrorTemplates::kConnectionRefused.Generate();
+    case ERROR_FILE_EXISTS:
+        return IOErrorTemplates::kFileAlreadyExists.Generate();
     default:
         std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
         Error err = IOErrorTemplates::kUnknownIOError.Generate();
-        (*err).Append("Unknown error code: " + std::to_string(errno));
+        (*err).Append("Unknown error code: " + std::to_string(last_error));
         return err;
     }
 }

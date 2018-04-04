@@ -145,11 +145,11 @@ inline Error TextErrorWithType(const std::string& error, ErrorType error_type) {
 
 namespace ErrorTemplates {
 auto const kMemoryAllocationError = SimpleErrorTemplate {
-                                        "kMemoryAllocationError", ErrorType::kMemoryAllocationError
-                                    };
+    "kMemoryAllocationError", ErrorType::kMemoryAllocationError
+};
 auto const kEndOfFile = SimpleErrorTemplate {
-                            "End of file", ErrorType::kEndOfFile
-                        };
+    "End of file", ErrorType::kEndOfFile
+};
 
 }
 

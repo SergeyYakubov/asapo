@@ -99,15 +99,14 @@ TEST_F(FileWriteHandlerTests, CallsWriteFile) {
     ;
 
 
-    EXPECT_CALL(mock_io, WriteDataToFile_t("files/"+expected_file_name, _, expected_file_size))
+    EXPECT_CALL(mock_io, WriteDataToFile_t("files/" + expected_file_name, _, expected_file_size))
     .WillOnce(
-        //Return(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release())
-        Return(nullptr)
+        Return(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release())
     );
 
     auto err = handler.ProcessRequest(*mock_request);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
 }
 
 

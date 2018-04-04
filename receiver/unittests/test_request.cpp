@@ -79,10 +79,12 @@ class RequestTests : public Test {
     GenericNetworkRequestHeader generic_request_header;
     hidra2::SocketDescriptor socket_fd_{1};
     uint64_t data_size_ {100};
+    uint64_t data_id_{15};
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     void SetUp() override {
         generic_request_header.data_size = data_size_;
+        generic_request_header.data_id = data_id_;
         request.reset(new Request{generic_request_header, socket_fd_});
         request->io__ = std::unique_ptr<hidra2::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
@@ -136,6 +138,37 @@ TEST_F(RequestTests, HandleProcessesRequests) {
     auto err = request->Handle();
 
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
+}
+
+TEST_F(RequestTests, DataIsNullAtInit) {
+    auto& data = request->GetData();
+
+    ASSERT_THAT(data, Eq(nullptr));
+}
+
+TEST_F(RequestTests, GetDataIsNotNullptr) {
+
+    request->Handle();
+    auto& data = request->GetData();
+
+
+    ASSERT_THAT(data, Ne(nullptr));
+
+
+}
+
+
+TEST_F(RequestTests, GetDataSize) {
+    auto size = request->GetDataSize();
+
+    ASSERT_THAT(size, Eq(data_size_));
+}
+
+TEST_F(RequestTests, GetFileName) {
+    auto fname = request->GetFileName();
+    auto s = std::to_string(data_id_) + ".bin";
+
+    ASSERT_THAT(fname, Eq(s));
 }
 
 

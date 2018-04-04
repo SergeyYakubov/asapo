@@ -12,7 +12,7 @@ Error RequestHandlerFileWrite::ProcessRequest(const Request& request) const {
     const FileData& data = request.GetData();
 
     auto fname = request.GetFileName();
-
+//TODO: folder to write in config file
     return io__->WriteDataToFile("files/" + fname, data, fsize);
 
 }
