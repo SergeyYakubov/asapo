@@ -60,7 +60,7 @@ void ReadAllData(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* statis
         nfiles++;
         size += file_info.size;
     }
-    if (err->GetErrorType() != hidra2::ErrorType::kEOF) {
+    if (err->GetErrorType() != hidra2::ErrorType::kEndOfFile) {
         std::cout << err->Explain() << std::endl;
         exit(EXIT_FAILURE);
     }

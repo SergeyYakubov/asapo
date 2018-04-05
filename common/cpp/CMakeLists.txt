@@ -1,5 +1,6 @@
 add_subdirectory(src/system_io)
 
+add_subdirectory(src/common)
 
 add_subdirectory(src/json_parser)
 
@@ -11,3 +12,4 @@ endif()
 
 install(DIRECTORY ${HIDRA2_CXX_COMMON_INCLUDE_DIR}/common
         DESTINATION ${CMAKE_INSTALL_PREFIX}/include )
+

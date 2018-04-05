@@ -9,7 +9,7 @@ enum class HttpCode;
 
 class HttpClient {
   public:
-    virtual std::string Get(const std::string& uri, HttpCode* responce_code, Error* err) const noexcept = 0;
+    virtual std::string Get(const std::string& uri, HttpCode* response_code, Error* err) const noexcept = 0;
     virtual ~HttpClient() = default;
 
 };

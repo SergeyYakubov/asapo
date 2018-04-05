@@ -7,6 +7,11 @@ set(SOURCE_FILES read_folder_content.cpp)
 ################################
 add_executable(${TARGET_NAME} ${SOURCE_FILES}  $<TARGET_OBJECTS:system_io>)
 target_link_libraries(${TARGET_NAME} test_common)
+
+#Add all necessary common libraries
+GET_PROPERTY(HIDRA2_COMMON_IO_LIBRARIES GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES)
+target_link_libraries(${TARGET_NAME} ${HIDRA2_COMMON_IO_LIBRARIES})
+
 target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR})
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 

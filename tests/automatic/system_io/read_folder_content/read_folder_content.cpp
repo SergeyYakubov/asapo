@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "system_wrappers/system_io.h"
+#include "io/io_factory.h"
 #include "testing.h"
 
-using hidra2::SystemIO;
+using hidra2::IO;
 using hidra2::Error;
 
 
@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     std::string expect{argv[2]};
 
     Error err;
-    auto io = std::unique_ptr<SystemIO> {new SystemIO};
+    auto io = std::unique_ptr<IO> {hidra2::GenerateDefaultIO() };
     auto files = io->FilesInFolder(argv[1], &err);
 
     std::string result{};

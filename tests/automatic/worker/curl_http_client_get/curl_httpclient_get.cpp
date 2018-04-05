@@ -34,15 +34,15 @@ int main(int argc, char* argv[]) {
     auto server_broker = static_cast<hidra2::ServerDataBroker*>(broker.get());
 
     hidra2::HttpCode code;
-    auto responce = server_broker->httpclient__->Get(args.uri, &code, &err);
+    auto response = server_broker->httpclient__->Get(args.uri, &code, &err);
 
     if (err != nullptr) {
         M_AssertEq("clienterror", args.answer);
-        M_AssertContains(responce, "Could");
+        M_AssertContains(response, "Could");
         return 0;
     }
 
-    M_AssertContains(responce, args.answer);
+    M_AssertContains(response, args.answer);
     M_AssertEq(static_cast<int>(code), args.code);
 
     return 0;

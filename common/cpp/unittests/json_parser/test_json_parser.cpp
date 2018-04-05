@@ -73,7 +73,6 @@ TEST(ParseString, DoubleEmbeddedConvertToJson) {
     ASSERT_THAT(id, Eq(2));
 }
 
-
 TEST(ParseString, ErrorOnWrongEmbeddedKey) {
     std::string json = R"({"id1":{"test":2}})";
 
@@ -97,7 +96,6 @@ TEST(ParseString, ErrorOnWrongEmbeddedSubKey) {
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(err->Explain(), ::testing::HasSubstr("cannot find"));
 }
-
 
 TEST(ParseString, ErrorOnWrongKey) {
     std::string json = R"({"_id":"2"})";
@@ -150,7 +148,6 @@ TEST(ParseString, IntArrayConvertToJson) {
     ASSERT_THAT(vec, ElementsAre(1, 2, 3));
 }
 
-
 TEST(ParseString, IntArrayErrorConvertToJson) {
     std::string json = R"({"array":[1,2,"3"]})";
 
@@ -176,7 +173,6 @@ TEST(ParseString, StringArrayConvertToJson) {
     ASSERT_THAT(vec, ElementsAre("s1", "s2", "s3"));
 }
 
-
 class ParseFileTests : public Test {
   public:
     RapidJson parser{"filename", true};
@@ -193,27 +189,24 @@ TEST_F(ParseFileTests, CorrectConvertFileToJson) {
     std::string json = R"({"_id":2})";
 
     EXPECT_CALL(mock_io, ReadFileToString_t("filename", _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(static_cast<hidra2::SimpleError*>(nullptr)), testing::Return(json)));
+    WillOnce(DoAll(testing::SetArgPointee<1>(nullptr), testing::Return(json)));
 
     uint64_t id;
     auto err = parser.GetUInt64("_id", &id);
     ASSERT_THAT(id, Eq(2));
 }
-
-
 TEST_F(ParseFileTests, CannotReadFile) {
     std::string json = R"({"_id":2})";
 
     EXPECT_CALL(mock_io, ReadFileToString_t("filename", _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(new hidra2::SimpleError(hidra2::IOErrors::kFileNotFound)),
+    WillOnce(DoAll(testing::SetArgPointee<1>(hidra2::IOErrorTemplates::kFileNotFound.Generate().release()),
                    testing::Return("")));
 
     uint64_t id;
     auto err = parser.GetUInt64("_id", &id);
-    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::IOErrors::kFileNotFound));
+    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::IOErrorTemplates::kFileNotFound.Generate()->Explain()));
 
 
 }
-
 
 }

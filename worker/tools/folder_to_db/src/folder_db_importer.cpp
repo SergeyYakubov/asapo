@@ -3,7 +3,7 @@
 #include <future>
 #include <algorithm>
 
-#include "system_wrappers/system_io.h"
+#include "io/io_factory.h"
 #include "database/database.h"
 
 
@@ -12,7 +12,7 @@ namespace hidra2 {
 using std::chrono::high_resolution_clock;
 
 FolderToDbImporter::FolderToDbImporter() :
-    io__{new hidra2::SystemIO}, db_factory__{new hidra2::DatabaseFactory} {
+    io__{GenerateDefaultIO()}, db_factory__{new hidra2::DatabaseFactory} {
 }
 
 Error FolderToDbImporter::ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const {
