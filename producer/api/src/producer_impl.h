@@ -3,7 +3,7 @@
 
 #include <string>
 #include <common/networking.h>
-#include <system_wrappers/io.h>
+#include <system/io.h>
 #include "producer/producer.h"
 
 namespace hidra2 {
@@ -16,7 +16,7 @@ class ProducerImpl : public Producer {
 
     ProducerStatus status_ = ProducerStatus::kDisconnected;
 
-    Error InitializeSocketToReceiver_(const std::string& receiver_address);
+    Error InitializeSocketToReceiver(const std::string& receiver_address);
     GenericNetworkRequestHeader GenerateNextSendRequest(uint64_t file_id, size_t file_size);
     Error SendHeaderAndData(const GenericNetworkRequestHeader& header, const void* data, size_t file_size);
     Error ReceiveResponce();

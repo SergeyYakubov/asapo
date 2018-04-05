@@ -3,8 +3,8 @@
 #include "gtest/gtest.h"
 
 #include "worker/data_broker.h"
-#include "system_wrappers/io.h"
-#include "system_wrappers/system_io.h"
+#include "system/io.h"
+#include "system/system_io.h"
 #include "../src/folder_data_broker.h"
 
 using hidra2::DataBrokerFactory;

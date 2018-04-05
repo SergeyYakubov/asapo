@@ -6,7 +6,6 @@
 #include <cstring>
 #include <algorithm>
 
-#include <system_wrappers/system_io.h>
 
 #if defined(__linux__) || defined (__APPLE__)
 #include <sys/socket.h>
@@ -18,6 +17,8 @@
 #ifdef __APPLE__
 #include <sys/select.h>
 #endif
+
+#include "system/system_io.h"
 
 
 namespace hidra2 {

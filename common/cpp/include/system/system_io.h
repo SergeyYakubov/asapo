@@ -1,5 +1,5 @@
-#ifndef HIDRA2_SYSTEM_WRAPPERS__SYSTEM_IO_H
-#define HIDRA2_SYSTEM_WRAPPERS__SYSTEM_IO_H
+#ifndef HIDRA2_SYSTEM__SYSTEM_IO_H
+#define HIDRA2_SYSTEM__SYSTEM_IO_H
 
 #include "io.h"
 
@@ -108,4 +108,4 @@ class SystemIO final : public IO {
 };
 }
 
-#endif //HIDRA2_SYSTEM_WRAPPERS__SYSTEM_IO_H
+#endif //HIDRA2_SYSTEM__SYSTEM_IO_H

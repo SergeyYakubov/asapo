@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "system_wrappers/io.h"
+#include "system/io.h"
 namespace hidra2 {
 class MockIO : public IO {
   public:

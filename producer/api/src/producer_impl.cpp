@@ -2,7 +2,7 @@
 #include <cstring>
 
 #include "producer_impl.h"
-#include "system_wrappers/io_factory.h"
+#include "system/io_factory.h"
 
 namespace  hidra2 {
 
@@ -20,7 +20,7 @@ ProducerStatus ProducerImpl::GetStatus() const {
     return status_;
 }
 
-Error ProducerImpl::InitializeSocketToReceiver_(const std::string& receiver_address) {
+Error ProducerImpl::InitializeSocketToReceiver(const std::string& receiver_address) {
     Error err;
     FileDescriptor fd = io__->CreateAndConnectIPTCPSocket(receiver_address, &err);
     if(err != nullptr) {
@@ -32,11 +32,11 @@ Error ProducerImpl::InitializeSocketToReceiver_(const std::string& receiver_addr
 }
 
 Error ProducerImpl::ConnectToReceiver(const std::string& receiver_address) {
-    if(client_fd_ != -1 && status_ != ProducerStatus::kDisconnected) {
+    if(status_ != ProducerStatus::kDisconnected) {
         return ProducerErrorTemplates::kAlreadyConnected.Generate();
     }
 
-    auto error = InitializeSocketToReceiver_(receiver_address);
+    auto error = InitializeSocketToReceiver(receiver_address);
     if(error) {
         status_ = ProducerStatus::kDisconnected;
         return error;
