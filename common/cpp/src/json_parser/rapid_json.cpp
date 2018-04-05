@@ -3,7 +3,7 @@
 
 using namespace rapidjson;
 
-#include "system/io_factory.h"
+#include "io/io_factory.h"
 
 namespace hidra2 {
 

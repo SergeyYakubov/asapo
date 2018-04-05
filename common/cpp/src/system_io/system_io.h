@@ -1,7 +1,7 @@
 #ifndef HIDRA2_SYSTEM__SYSTEM_IO_H
 #define HIDRA2_SYSTEM__SYSTEM_IO_H
 
-#include "io.h"
+#include "../../include/io/io.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -12,7 +12,7 @@ typedef SSIZE_T ssize_t;
 #endif
 
 #if defined(__linux__) || defined (__APPLE__)
-#include <netinet/in.h>
+#include "../../../../../../../../usr/include/netinet/in.h"
 #endif
 
 namespace hidra2 {

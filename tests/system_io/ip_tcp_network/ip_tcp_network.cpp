@@ -1,12 +1,11 @@
 #include <iostream>
-#include <system/system_io.h>
+#include "io/io_factory.h"
 #include <chrono>
 #include <thread>
 #include <future>
 
 #include "testing.h"
 
-using hidra2::SystemIO;
 using hidra2::Error;
 using hidra2::ErrorType;
 using hidra2::AddressFamilies;
@@ -17,7 +16,7 @@ using hidra2::M_AssertEq;
 
 using namespace std::chrono;
 
-static const std::unique_ptr<SystemIO> io(new SystemIO());
+static const std::unique_ptr<hidra2::IO> io(hidra2::GenerateDefaultIO());
 static const std::string kListenAddress = "127.0.0.1:60123";
 static std::promise<void> kThreadStarted;
 static const int kNumberOfChecks = 2;

@@ -6,7 +6,7 @@
 #include <string>
 #include <mutex>
 
-#include "system/io.h"
+#include "io/io.h"
 
 namespace hidra2 {
 

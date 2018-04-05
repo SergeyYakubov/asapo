@@ -1,9 +1,9 @@
 #include <iostream>
-#include <system/system_io.h>
+#include "io/io_factory.h"
 
 #include "testing.h"
 
-using hidra2::SystemIO;
+using hidra2::IO;
 using hidra2::Error;
 using hidra2::FileData;
 
@@ -27,7 +27,7 @@ Params GetParams(int argc, char* argv[]) {
     return Params{fname, result, message, 3};
 }
 
-void AssertGoodResult(const std::unique_ptr<SystemIO>& io, const Error& err, const FileData& data,
+void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const FileData& data,
                       const Params& params) {
     if (err) {
         std::cerr << err << std::endl;
@@ -50,7 +50,7 @@ void AssertBadResult(const Error& err, const Params& params) {
 int main(int argc, char* argv[]) {
     auto params = GetParams(argc, argv);
 
-    auto io = std::unique_ptr<SystemIO> {new SystemIO};
+    auto io = std::unique_ptr<hidra2::IO> {hidra2::GenerateDefaultIO()};
     FileData data{new uint8_t[params.length]{'1', '2', '3'}};
 
     auto err = io->WriteDataToFile(params.fname, data, params.length);

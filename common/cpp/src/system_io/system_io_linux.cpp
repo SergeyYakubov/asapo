@@ -11,7 +11,7 @@
 #include <zconf.h>
 #include <netdb.h>
 
-#include "system/system_io.h"
+#include "system_io.h"
 
 
 using std::string;

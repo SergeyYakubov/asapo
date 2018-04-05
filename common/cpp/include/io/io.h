@@ -9,7 +9,7 @@
 #include <thread>
 
 #include "common/data_structs.h"
-#include "io_error.h"
+#include "common/io_error.h"
 
 namespace hidra2 {
 

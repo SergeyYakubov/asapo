@@ -1,9 +1,8 @@
 #include <iostream>
-#include <system/system_io.h>
+#include "io/io_factory.h"
 
 #include "testing.h"
 
-using hidra2::SystemIO;
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -13,7 +12,8 @@ int main(int argc, char* argv[]) {
     std::string expect{argv[2]};
 
     hidra2::Error err;
-    auto io = std::unique_ptr<SystemIO> {new SystemIO};
+    auto io = std::unique_ptr<hidra2::IO> {hidra2::GenerateDefaultIO()};
+
     auto data = io->GetDataFromFile(argv[1], expect.size(), &err);
 
     std::string result;

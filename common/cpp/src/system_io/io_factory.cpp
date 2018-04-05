@@ -1,5 +1,6 @@
-#include "system/system_io.h"
-#include "system/io_factory.h"
+#include "io/io_factory.h"
+
+#include "system_io.h"
 
 namespace hidra2 {
 

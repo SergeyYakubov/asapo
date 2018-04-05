@@ -1,21 +1,20 @@
 #include <iostream>
-#include <system/system_io.h>
+#include "io/io_factory.h"
 
 #include "testing.h"
 
-using hidra2::SystemIO;
 using hidra2::Error;
 using hidra2::ErrorType;
 
 using hidra2::M_AssertEq;
 using hidra2::M_AssertTrue;
 
-SystemIO systemIO;
 
 void Check(const std::string& expected_ip_address, const std::string& hostname) {
     std::cout << "Checking: " << hostname << std::endl;
     Error err;
-    std::string ip_address = systemIO.ResolveHostnameToIp(hostname, &err);
+    auto io = std::unique_ptr<hidra2::IO> {hidra2::GenerateDefaultIO()};
+    std::string ip_address = io->ResolveHostnameToIp(hostname, &err);
     M_AssertEq(expected_ip_address, ip_address);
     if(expected_ip_address.empty()) {
         M_AssertTrue(err != nullptr && hidra2::IOErrorTemplates::kUnableToResolveHostname == err);

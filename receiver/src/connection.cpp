@@ -2,7 +2,7 @@
 #include <assert.h>
 #include "connection.h"
 #include "receiver_error.h"
-#include "system/io_factory.h"
+#include "io/io_factory.h"
 
 namespace hidra2 {
 

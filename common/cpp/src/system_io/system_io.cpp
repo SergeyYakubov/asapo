@@ -18,7 +18,7 @@
 #include <sys/select.h>
 #endif
 
-#include "system/system_io.h"
+#include "system_io.h"
 
 
 namespace hidra2 {

@@ -2,8 +2,8 @@
 #include "gtest/gtest.h"
 #include <thread>
 
-#include "system/io.h"
-#include "system/system_io.h"
+#include "io/io.h"
+#include "../../../../common/cpp/src/system_io/system_io.h"
 
 
 #include "database/database.h"
