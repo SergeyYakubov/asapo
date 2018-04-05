@@ -5,6 +5,7 @@ set(SOURCE_FILES
         src/receiver_error.h
         src/request.cpp
         src/request_handler_file_write.cpp
+        src/statistics.cpp
         )
 
 

@@ -28,7 +28,7 @@ Error Request::ReceiveData() {
 }
 
 
-Error Request::Handle() {
+Error Request::Handle(std::unique_ptr<Statistics>* statistics) {
     Error err;
     if (request_header_.data_size != 0) {
         auto err = ReceiveData();

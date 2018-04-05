@@ -106,7 +106,7 @@ TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
 
-    auto err = request->Handle();
+    auto err = request->Handle(nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -117,7 +117,7 @@ TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
               Return(0)
              ));
 
-    auto err = request->Handle();
+    auto err = request->Handle(nullptr);
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kReadError));
 }
 
@@ -135,7 +135,7 @@ TEST_F(RequestTests, HandleProcessesRequests) {
     request->AddHandler(&mock_request_handler);
     request->AddHandler(&mock_request_handler);
 
-    auto err = request->Handle();
+    auto err = request->Handle(nullptr);
 
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
 }
@@ -148,7 +148,7 @@ TEST_F(RequestTests, DataIsNullAtInit) {
 
 TEST_F(RequestTests, GetDataIsNotNullptr) {
 
-    request->Handle();
+    request->Handle(nullptr);
     auto& data = request->GetData();
 
 

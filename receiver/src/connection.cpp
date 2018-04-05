@@ -10,7 +10,7 @@ size_t Connection::kRequestHandlerMaxBufferSize;
 std::atomic<uint32_t> Connection::kNetworkProducerPeerImplGlobalCounter(0);
 
 Connection::Connection(SocketDescriptor socket_fd, const std::string& address): request_factory__{new RequestFactory},
-io__{GenerateDefaultIO()} {
+io__{GenerateDefaultIO()}, statistics__{new Statistics} {
     socket_fd_ = socket_fd;
     connection_id_ = kNetworkProducerPeerImplGlobalCounter++;
     address_ = address;
@@ -34,7 +34,7 @@ NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
 
 Error Connection::ProcessRequest(const std::unique_ptr<Request>& request) const noexcept {
     Error err;
-    err = request->Handle();
+    err = request->Handle(&statistics__);
     GenericNetworkResponse generic_response;
     generic_response.error_code = GetNetworkCodeFromError(err);
     if(err) {
@@ -44,6 +44,12 @@ Error Connection::ProcessRequest(const std::unique_ptr<Request>& request) const 
     return err;
 }
 
+
+void Connection::ProcessStatisticsAfterRequest(const std::unique_ptr<Request>& request) const noexcept {
+    statistics__->IncreaseRequestCounter();
+    statistics__->IncreaseRequestDataVolume(request->GetDataSize() + sizeof(GenericNetworkRequestHeader));
+    statistics__->SendIfNeeded();
+}
 
 void Connection::Listen() const noexcept {
     while(true) {
@@ -59,6 +65,7 @@ void Connection::Listen() const noexcept {
             std::cerr << "[" << GetId() << "] Error sending response: " << err << std::endl;
             break;
         }
+        ProcessStatisticsAfterRequest(request);
     }
     io__->CloseSocket(socket_fd_, nullptr);
     std::cout << "[" << GetId() << "] Disconnected." << std::endl;
@@ -68,6 +75,7 @@ void Connection::Listen() const noexcept {
 std::unique_ptr<Request> Connection::WaitForNewRequest(Error* err) const noexcept {
     //TODO: to be overwritten with MessagePack (or similar)
     GenericNetworkRequestHeader generic_request_header;
+    statistics__->StartTimer(StatisticEntity::kNetwork);
     io__->ReceiveWithTimeout(socket_fd_, &generic_request_header, sizeof(GenericNetworkRequestHeader), 50, err);
     if(*err) {
         if(*err == IOErrorTemplates::kTimeout) {
@@ -75,6 +83,7 @@ std::unique_ptr<Request> Connection::WaitForNewRequest(Error* err) const noexcep
         }
         return nullptr;
     }
+    statistics__->StopTimer();
     return request_factory__->GenerateRequest(generic_request_header, socket_fd_, err);
 }
 
