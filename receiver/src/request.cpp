@@ -37,10 +37,12 @@ Error Request::Handle(std::unique_ptr<Statistics>* statistics) {
         }
     }
     for (auto handler : handlers_) {
+        (*statistics)->StartTimer(handler->GetStatisticEntity());
         auto err = handler->ProcessRequest(*this);
         if (err) {
             return err;
         }
+        (*statistics)->StopTimer();
     }
     return nullptr;
 }

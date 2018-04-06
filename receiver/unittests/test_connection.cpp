@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <unittests/MockIO.h>
+
 #include "../src/connection.h"
 #include "../src/receiver_error.h"
 #include "../src/request.h"
 #include "../src/statistics.h"
+#include "mock_statistics.h"
 
 using ::testing::Test;
 using ::testing::Return;
@@ -33,6 +35,8 @@ using ::hidra2::Connection;
 using ::hidra2::MockIO;
 using hidra2::Request;
 using hidra2::Statistics;
+using hidra2::StatisticEntity;
+using hidra2::MockStatistics;
 
 namespace {
 
@@ -55,10 +59,6 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(Handle_t, ErrorInterface * ());
 };
 
-class MockStatistics: public Statistics {
-  public:
-    MOCK_CONST_METHOD0(SendIfNeeded, void ());
-};
 
 class MockRequestFactory: public hidra2::RequestFactory {
   public:
@@ -82,7 +82,7 @@ class ConnectionTests : public Test {
     Connection connection{0, "some_address"};
     MockIO mock_io;
     MockRequestFactory mock_factory;
-    MockStatistics mock_statictics;
+    NiceMock<MockStatistics> mock_statictics;
     void SetUp() override {
         connection.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
         connection.statistics__ = std::unique_ptr<hidra2::Statistics> {&mock_statictics};
@@ -200,7 +200,9 @@ TEST_F(ConnectionTests, SendsErrorToProducer) {
 
 }
 
-void MockExitCycle(const MockIO& mock_io) {
+void MockExitCycle(const MockIO& mock_io, MockStatistics& mock_statictics) {
+    EXPECT_CALL(mock_statictics, StartTimer_t(StatisticEntity::kNetwork));
+
     EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _))
     .WillOnce(
         DoAll(SetArgPointee<4>(new hidra2::IOError("", hidra2::IOErrorType::kUnknownIOError)),
@@ -221,7 +223,11 @@ MockRequest* MockWaitRequest(const MockRequestFactory& mock_factory) {
 TEST_F(ConnectionTests, FillsStatistics) {
     InSequence sequence;
 
+    EXPECT_CALL(mock_statictics, StartTimer_t(StatisticEntity::kNetwork));
+
     EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _));
+
+    EXPECT_CALL(mock_statictics, StopTimer_t());
 
     auto request = MockWaitRequest(mock_factory);
 
@@ -235,16 +241,20 @@ TEST_F(ConnectionTests, FillsStatistics) {
               Return(0)
              ));
 
-    EXPECT_CALL(mock_statictics, SendIfNeeded());
 
-    MockExitCycle(mock_io);
+    EXPECT_CALL(mock_statictics, IncreaseRequestCounter_t());
+
+    EXPECT_CALL(mock_statictics, IncreaseRequestDataVolume_t(1 + sizeof(hidra2::GenericNetworkRequestHeader) +
+                sizeof(hidra2::GenericNetworkResponse)));
+
+
+    EXPECT_CALL(mock_statictics, SendIfNeeded_t());
+
+    MockExitCycle(mock_io, mock_statictics);
 
     connection.Listen();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-    ASSERT_THAT(connection.statistics__->GetRate(), Gt(0.0));
-    ASSERT_THAT(connection.statistics__->GetBandwidth(), Gt(0.0));
 
 }
 

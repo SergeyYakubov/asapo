@@ -6,6 +6,7 @@
 #include "../src/request.h"
 #include "../src/request_handler.h"
 #include "../src/request_handler_file_write.h"
+#include "mock_statistics.h"
 
 using ::testing::Test;
 using ::testing::Return;
@@ -31,6 +32,9 @@ using ::hidra2::Opcode;
 using ::hidra2::Connection;
 using ::hidra2::MockIO;
 using hidra2::Request;
+using hidra2::MockStatistics;
+
+using hidra2::StatisticEntity;
 
 namespace {
 
@@ -38,6 +42,10 @@ class MockReqestHandler : public hidra2::RequestHandler {
   public:
     Error ProcessRequest(const Request& request) const override {
         return Error{ProcessRequest_t(request)};
+    }
+
+    StatisticEntity GetStatisticEntity() const {
+      return StatisticEntity::kDisk;
     }
 
     MOCK_CONST_METHOD1(ProcessRequest_t, ErrorInterface * (const Request& request));
@@ -125,6 +133,9 @@ TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
 TEST_F(RequestTests, HandleProcessesRequests) {
 
     MockReqestHandler mock_request_handler;
+    MockStatistics mock_statistics;
+
+    auto stat = std::unique_ptr<hidra2::Statistics>{&mock_statistics};
 
     EXPECT_CALL(mock_request_handler, ProcessRequest_t(_)).WillOnce(
         Return(nullptr)
@@ -135,9 +146,15 @@ TEST_F(RequestTests, HandleProcessesRequests) {
     request->AddHandler(&mock_request_handler);
     request->AddHandler(&mock_request_handler);
 
-    auto err = request->Handle(nullptr);
+    EXPECT_CALL(mock_statistics, StartTimer_t(hidra2::StatisticEntity::kDisk)).Times(2);
+
+    EXPECT_CALL(mock_statistics, StopTimer_t());
+
+
+    auto err = request->Handle(&stat);
 
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
+    stat.release();
 }
 
 TEST_F(RequestTests, DataIsNullAtInit) {

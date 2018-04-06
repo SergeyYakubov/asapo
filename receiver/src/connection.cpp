@@ -47,8 +47,8 @@ Error Connection::ProcessRequest(const std::unique_ptr<Request>& request) const 
 
 void Connection::ProcessStatisticsAfterRequest(const std::unique_ptr<Request>& request) const noexcept {
     statistics__->IncreaseRequestCounter();
-    statistics__->IncreaseRequestDataVolume(request->GetDataSize() + sizeof(GenericNetworkRequestHeader)+
-        sizeof(GenericNetworkResponse));
+    statistics__->IncreaseRequestDataVolume(request->GetDataSize() + sizeof(GenericNetworkRequestHeader) +
+                                            sizeof(GenericNetworkResponse));
     statistics__->SendIfNeeded();
 }
 

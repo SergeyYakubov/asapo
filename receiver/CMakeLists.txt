@@ -6,6 +6,7 @@ set(SOURCE_FILES
         src/request.cpp
         src/request_handler_file_write.cpp
         src/statistics.cpp
+        src/statistics_sender_influx_db.cpp
         )
 
 
@@ -34,6 +35,7 @@ set_property(TARGET ${TARGET_NAME} PROPERTY ENABLE_EXPORTS true)
 set(TEST_SOURCE_FILES
         unittests/test_receiver.cpp
         unittests/test_connection.cpp
+        unittests/test_statistics.cpp
         unittests/test_request.cpp
         unittests/test_request_handler_file_write.cpp
         )

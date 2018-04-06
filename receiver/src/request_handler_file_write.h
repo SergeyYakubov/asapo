@@ -12,6 +12,7 @@ const uint64_t kMaxFileSize = uint64_t(1024) * 1024 * 1024 * 2; //2GB
 class RequestHandlerFileWrite final: public RequestHandler {
   public:
     RequestHandlerFileWrite();
+    StatisticEntity GetStatisticEntity() const override;
     Error ProcessRequest(const Request& request) const override;
     std::unique_ptr<IO> io__;
 };

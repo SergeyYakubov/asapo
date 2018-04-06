@@ -1,33 +1,41 @@
 #include "statistics.h"
+#include "statistics_sender_influx_db.h"
 
 using std::chrono::high_resolution_clock;
 
 namespace hidra2 {
 
-void Statistics::SendIfNeeded() const {
-
-}
-
-double Statistics::GetRate() const noexcept {
-    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>
-                      ( high_resolution_clock::now() - last_timepoint_).count();
-    if (elapsed_ms == 0) {
-        return 0.0;
-    } else {
-        return double(nrequests_) / elapsed_ms * 1000.0;
+void Statistics::SendIfNeeded() noexcept {
+    auto elapsed_ms = GetTotalElapsedMs();
+    if (elapsed_ms > write_interval_) {
+        statistics_sender__->SendStatistics(PrepareStatisticsToSend());
+        ResetStatistics();
     }
 }
 
-double Statistics::GetBandwidth() const noexcept {
-    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>
-                      ( high_resolution_clock::now() - last_timepoint_).count();
-    if (elapsed_ms == 0) {
-        return 0.0;
-    } else {
-        return double(volume_counter_) / elapsed_ms * 1000.0 / (1024.0 * 1024.0 * 1024.0);
+StatisticsToSend Statistics::PrepareStatisticsToSend() const noexcept {
+    StatisticsToSend stat;
+    stat.n_requests = nrequests_;
+    stat.data_volume = volume_counter_;
+    stat.elapsed_ms = GetTotalElapsedMs();
+    for (auto i=0;i<kNStatisticEntities;i++){
+        stat.entity_shares[i] =  double(GetElapsedMs(StatisticEntity(i)))/stat.elapsed_ms;
     }
+    return stat;
 }
 
+uint64_t Statistics::GetTotalElapsedMs() const noexcept {
+    return std::chrono::duration_cast<std::chrono::milliseconds>
+        ( high_resolution_clock::now() - last_timepoint_).count();
+}
+
+uint64_t Statistics::GetElapsedMs(StatisticEntity entity) const noexcept {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(time_counters_[current_statistic_entity_]).count();
+}
+
+void Statistics::SetWriteInterval(uint64_t interval_ms) {
+    write_interval_ = interval_ms;
+}
 
 void Statistics::ResetStatistics() noexcept {
     last_timepoint_ = high_resolution_clock::now();
@@ -42,7 +50,7 @@ void Statistics::IncreaseRequestCounter() noexcept {
     nrequests_++;
 }
 
-Statistics::Statistics() {
+Statistics::Statistics(unsigned int write_frequency) : statistics_sender__{new StatisticsSenderInfluxDb},write_interval_{write_frequency}{
     ResetStatistics();
 }
 

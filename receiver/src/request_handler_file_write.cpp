@@ -21,4 +21,9 @@ RequestHandlerFileWrite::RequestHandlerFileWrite() : io__{GenerateDefaultIO()} {
 
 }
 
+StatisticEntity RequestHandlerFileWrite::GetStatisticEntity() const {
+    return StatisticEntity::kDisk;
+}
+
+
 }
