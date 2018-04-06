@@ -12,9 +12,9 @@ double Statistics::GetRate() const noexcept {
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>
                       ( high_resolution_clock::now() - last_timepoint_).count();
     if (elapsed_ms == 0) {
-        return 0.0d;
+        return 0.0;
     } else {
-        return double(nrequests_) / elapsed_ms * 1000;
+        return double(nrequests_) / elapsed_ms * 1000.0;
     }
 }
 
@@ -22,9 +22,9 @@ double Statistics::GetBandwidth() const noexcept {
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>
                       ( high_resolution_clock::now() - last_timepoint_).count();
     if (elapsed_ms == 0) {
-        return 0.0d;
+        return 0.0;
     } else {
-        return double(volume_counter_) / elapsed_ms * 1000.0d / (1024.0d * 1024.0d * 1024.0d);
+        return double(volume_counter_) / elapsed_ms * 1000.0 / (1024.0 * 1024.0 * 1024.0);
     }
 }
 
