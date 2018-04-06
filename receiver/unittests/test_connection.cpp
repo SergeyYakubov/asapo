@@ -57,7 +57,6 @@ class MockRequest: public Request {
 
 class MockStatistics: public Statistics {
   public:
-//    MockStatistics(): Statistics() {};
     MOCK_CONST_METHOD0(SendIfNeeded, void ());
 };
 
@@ -85,7 +84,6 @@ class ConnectionTests : public Test {
     MockRequestFactory mock_factory;
     MockStatistics mock_statictics;
     void SetUp() override {
-        mock_statictics.ResetStatistics();
         connection.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
         connection.statistics__ = std::unique_ptr<hidra2::Statistics> {&mock_statictics};
         connection.request_factory__ = std::unique_ptr<hidra2::RequestFactory> {&mock_factory};
@@ -245,8 +243,8 @@ TEST_F(ConnectionTests, FillsStatistics) {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    ASSERT_THAT(connection.statistics__->GetRate(), Gt(0.0d));
-    ASSERT_THAT(connection.statistics__->GetBandwidth(), Gt(0.0d));
+    ASSERT_THAT(connection.statistics__->GetRate(), Gt(0.0));
+    ASSERT_THAT(connection.statistics__->GetBandwidth(), Gt(0.0));
 
 }
 

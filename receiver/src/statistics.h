@@ -21,8 +21,8 @@ class Statistics {
     void StartTimer(const StatisticEntity& entity) noexcept;
     void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
     void StopTimer() noexcept;
-    void ResetStatistics() noexcept;
   private:
+    void ResetStatistics() noexcept;
     static const auto kNStatisticEntities = 3;
     uint64_t nrequests_;
     std::chrono::high_resolution_clock::time_point last_timepoint_;
@@ -30,6 +30,7 @@ class Statistics {
     StatisticEntity current_statistic_entity_ = StatisticEntity::kDatabase;
     std::chrono::nanoseconds time_counters_[kNStatisticEntities];
     uint64_t volume_counter_;
+
 };
 
 }
