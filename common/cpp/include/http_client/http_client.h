@@ -1,7 +1,7 @@
 #ifndef HIDRA2_HTTP_CLIENT_H
 #define HIDRA2_HTTP_CLIENT_H
 
-#include <hidra2_worker.h>
+#include "common/error.h"
 
 namespace hidra2 {
 
@@ -13,8 +13,6 @@ class HttpClient {
     virtual ~HttpClient() = default;
 
 };
-
-Error HttpCodeToWorkerError(const HttpCode& code);
 
 enum class HttpCode : int {
     Continue           = 100,

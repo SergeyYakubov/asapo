@@ -16,10 +16,10 @@ enum StatisticEntity : int {
 };
 
 struct StatisticsToSend {
-  double entity_shares[kNStatisticEntities];
-  uint64_t elapsed_ms;
-  uint64_t data_volume;
-  uint64_t n_requests;
+    double entity_shares[kNStatisticEntities];
+    uint64_t elapsed_ms;
+    uint64_t data_volume;
+    uint64_t n_requests;
 };
 
 class Statistics {

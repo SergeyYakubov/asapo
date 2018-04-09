@@ -18,15 +18,15 @@ StatisticsToSend Statistics::PrepareStatisticsToSend() const noexcept {
     stat.n_requests = nrequests_;
     stat.data_volume = volume_counter_;
     stat.elapsed_ms = GetTotalElapsedMs();
-    for (auto i=0;i<kNStatisticEntities;i++){
-        stat.entity_shares[i] =  double(GetElapsedMs(StatisticEntity(i)))/stat.elapsed_ms;
+    for (auto i = 0; i < kNStatisticEntities; i++) {
+        stat.entity_shares[i] =  double(GetElapsedMs(StatisticEntity(i))) / stat.elapsed_ms;
     }
     return stat;
 }
 
 uint64_t Statistics::GetTotalElapsedMs() const noexcept {
     return std::chrono::duration_cast<std::chrono::milliseconds>
-        ( high_resolution_clock::now() - last_timepoint_).count();
+           ( high_resolution_clock::now() - last_timepoint_).count();
 }
 
 uint64_t Statistics::GetElapsedMs(StatisticEntity entity) const noexcept {
@@ -50,7 +50,8 @@ void Statistics::IncreaseRequestCounter() noexcept {
     nrequests_++;
 }
 
-Statistics::Statistics(unsigned int write_frequency) : statistics_sender__{new StatisticsSenderInfluxDb},write_interval_{write_frequency}{
+Statistics::Statistics(unsigned int write_frequency) : statistics_sender__{new StatisticsSenderInfluxDb},
+write_interval_{write_frequency} {
     ResetStatistics();
 }
 

@@ -1,4 +1,4 @@
-#include "curl_http_client.h"
+#include "http_client/curl_http_client.h"
 
 #include <cstring>
 
@@ -56,7 +56,7 @@ Error ProcessCurlResponse(CURL* curl, CURLcode res, const char* errbuf,
         return nullptr;
     } else {
         *buffer = GetCurlError(curl, res, errbuf);
-        return TextError(std::string(WorkerErrorMessage::kErrorReadingSource) + ": " + *buffer);
+        return TextError("Curl client error: " + *buffer);
     }
 }
 

@@ -32,25 +32,25 @@ TEST(StatisticTestsConstructor, Constructor) {
 
 
 class MockStatisticsSender: public StatisticsSender {
- public:
-  void SendStatistics(const StatisticsToSend& statistics) const noexcept override {
-      SendStatistics_t(statistics);
-  }
-  MOCK_CONST_METHOD1(SendStatistics_t, void (const StatisticsToSend&));
+  public:
+    void SendStatistics(const StatisticsToSend& statistics) const noexcept override {
+        SendStatistics_t(statistics);
+    }
+    MOCK_CONST_METHOD1(SendStatistics_t, void (const StatisticsToSend&));
 };
 
 class StatisticTests : public Test {
- public:
-  Statistics statistics{0};
-  void TestTimer(const StatisticEntity& entity);
-  MockStatisticsSender mock_statistics_sender;
-  void SetUp() override {
-      statistics.statistics_sender__.reset(&mock_statistics_sender);
-  }
-  void TearDown() override {
-      statistics.statistics_sender__.release();
-  }
-  StatisticsToSend ExtractStat();
+  public:
+    Statistics statistics{0};
+    void TestTimer(const StatisticEntity& entity);
+    MockStatisticsSender mock_statistics_sender;
+    void SetUp() override {
+        statistics.statistics_sender__.reset(&mock_statistics_sender);
+    }
+    void TearDown() override {
+        statistics.statistics_sender__.release();
+    }
+    StatisticsToSend ExtractStat();
 };
 
 
@@ -59,7 +59,7 @@ ACTION_P(SaveArg1ToSendStat, value) {
     value->n_requests = resp.n_requests;
     value->data_volume = resp.data_volume;
     value->elapsed_ms = resp.elapsed_ms;
-    for (int i=0;i<hidra2::kNStatisticEntities;i++){
+    for (int i = 0; i < hidra2::kNStatisticEntities; i++) {
         value->entity_shares[i] = resp.entity_shares[i];
     }
 
@@ -72,12 +72,12 @@ StatisticsToSend StatisticTests::ExtractStat() {
     stat.elapsed_ms = 0;
     stat.n_requests = 0;
     stat.data_volume = 0;
-    for (int i=0;i<hidra2::kNStatisticEntities;i++){
+    for (int i = 0; i < hidra2::kNStatisticEntities; i++) {
         stat.entity_shares[i] = 0.0;
     }
 
-    EXPECT_CALL(mock_statistics_sender,SendStatistics_t(_)).
-        WillOnce(SaveArg1ToSendStat(&stat));
+    EXPECT_CALL(mock_statistics_sender, SendStatistics_t(_)).
+    WillOnce(SaveArg1ToSendStat(&stat));
 
     statistics.SendIfNeeded();
     return stat;
@@ -130,7 +130,7 @@ TEST_F(StatisticTests, DataVolumeZeroAtInit) {
     ASSERT_THAT(stat.data_volume, Eq(0));
 }
 
-void StatisticTests::TestTimer(const StatisticEntity& entity){
+void StatisticTests::TestTimer(const StatisticEntity& entity) {
     statistics.StartTimer(entity);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
@@ -158,7 +158,7 @@ TEST_F(StatisticTests, TimerForDisk) {
 TEST_F(StatisticTests, SendStaticsDoesCallsSender) {
     statistics.SetWriteInterval(1000);
 
-    EXPECT_CALL(mock_statistics_sender,SendStatistics_t(_)).Times(0);
+    EXPECT_CALL(mock_statistics_sender, SendStatistics_t(_)).Times(0);
 
     statistics.SendIfNeeded();
 }

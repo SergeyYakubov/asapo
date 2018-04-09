@@ -12,7 +12,6 @@ GET_PROPERTY(HIDRA2_COMMON_IO_LIBRARIES GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARI
 target_link_libraries(${TARGET_NAME} ${HIDRA2_COMMON_IO_LIBRARIES})
 
 target_link_libraries(${TARGET_NAME} test_common hidra2-worker)
-set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 if (CMAKE_COMPILER_IS_GNUCXX)
     set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS_DEBUG "--coverage")
 endif()

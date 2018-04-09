@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "../src/http_client.h"
+#include "http_client/http_client.h"
 #include "worker/data_broker.h"
 
 

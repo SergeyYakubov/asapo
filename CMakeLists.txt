@@ -29,6 +29,11 @@ set (HIDRA2_CXX_COMMON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/common/cpp/includ
 
 find_package (Threads)
 
+set (CMAKE_PREFIX_PATH "${LIBCURL_DIR}")
+find_package (CURL REQUIRED)
+message (STATUS "Found cURL libraries: ${CURL_LIBRARIES}")
+message (STATUS "cURL include: ${CURL_INCLUDE_DIRS}")
+
 
 # format sources
 include(astyle)

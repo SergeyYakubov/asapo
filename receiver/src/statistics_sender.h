@@ -8,7 +8,7 @@ namespace hidra2 {
 struct StatisticsToSend;
 
 class StatisticsSender {
- public:
+  public:
     virtual void SendStatistics(const StatisticsToSend& statistic) const noexcept = 0;
     virtual ~StatisticsSender() = default;
 };

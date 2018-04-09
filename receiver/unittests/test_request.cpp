@@ -45,7 +45,7 @@ class MockReqestHandler : public hidra2::RequestHandler {
     }
 
     StatisticEntity GetStatisticEntity() const {
-      return StatisticEntity::kDisk;
+        return StatisticEntity::kDisk;
     }
 
     MOCK_CONST_METHOD1(ProcessRequest_t, ErrorInterface * (const Request& request));
@@ -135,7 +135,7 @@ TEST_F(RequestTests, HandleProcessesRequests) {
     MockReqestHandler mock_request_handler;
     MockStatistics mock_statistics;
 
-    auto stat = std::unique_ptr<hidra2::Statistics>{&mock_statistics};
+    auto stat = std::unique_ptr<hidra2::Statistics> {&mock_statistics};
 
     EXPECT_CALL(mock_request_handler, ProcessRequest_t(_)).WillOnce(
         Return(nullptr)

@@ -6,7 +6,7 @@ set(SOURCE_FILES next_multithread_broker.cpp)
 # Executable and link
 ################################
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
-target_link_libraries(${TARGET_NAME} test_common hidra2-worker  ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${TARGET_NAME} test_common hidra2-worker)
 
 ################################
 # Testing

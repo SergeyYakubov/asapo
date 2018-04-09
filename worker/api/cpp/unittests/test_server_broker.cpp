@@ -5,10 +5,10 @@
 #include "io/io.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 #include "../src/server_data_broker.h"
-#include "../src/curl_http_client.h"
+#include "http_client/curl_http_client.h"
 #include "unittests/MockIO.h"
 #include "MockHttpClient.h"
-#include "../src/http_error.h"
+#include "http_client/http_error.h"
 
 using hidra2::DataBrokerFactory;
 using hidra2::DataBroker;
