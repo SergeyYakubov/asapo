@@ -1,0 +1,35 @@
+#ifndef HIDRA2_MOCKHTTPCLIENT_H
+#define HIDRA2_MOCKHTTPCLIENT_H
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+#include "http_client/http_client.h"
+
+namespace hidra2 {
+
+class MockHttpClient : public HttpClient {
+  public:
+    std::string Get(const std::string& uri, HttpCode* code, Error* err) const noexcept override {
+        ErrorInterface* error = nullptr;
+        auto responce = Get_t(uri, code, &error);
+        err->reset(error);
+        return responce;
+    }
+    std::string Post(const std::string& uri, const std::string& data, HttpCode* code, Error* err) const noexcept override {
+        ErrorInterface* error = nullptr;
+        auto responce = Post_t(uri, data, code, &error);
+        err->reset(error);
+        return responce;
+    }
+    MOCK_CONST_METHOD3(Get_t,
+                       std::string(const std::string& uri, HttpCode* code, ErrorInterface** err));
+    MOCK_CONST_METHOD4(Post_t,
+                       std::string(const std::string& uri, const std::string& data, HttpCode* code, ErrorInterface** err));
+
+};
+
+
+}
+
+#endif //HIDRA2_MOCKHTTPCLIENT_H

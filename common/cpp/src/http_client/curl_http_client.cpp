@@ -25,13 +25,17 @@ size_t curl_write( void* ptr, size_t size, size_t nmemb, void* buffer) {
     return size * nmemb;
 }
 
-void SetCurlOptions(CURL* curl, const std::string& uri, char* errbuf, std::string* buffer) {
+void SetCurlOptions(CURL* curl, bool post, const std::string& data, const std::string& uri, char* errbuf,
+                    std::string* buffer) {
     errbuf[0] = 0;
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, buffer);
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 0L);
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+    if (post) {
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+    }
 
 }
 
@@ -60,19 +64,33 @@ Error ProcessCurlResponse(CURL* curl, CURLcode res, const char* errbuf,
     }
 }
 
-std::string CurlHttpClient::Get(const std::string& uri, HttpCode* response_code, Error* err) const noexcept {
+std::string CurlHttpClient::Command(bool post, const std::string& uri, const std::string& data, HttpCode* response_code,
+                                    Error* err) const noexcept {
     std::lock_guard<std::mutex> lock{mutex_};
 
     std::string buffer;
     char errbuf[CURL_ERROR_SIZE];
-    SetCurlOptions(curl_, uri, errbuf, &buffer);
+
+    SetCurlOptions(curl_, post, data, uri, errbuf, &buffer);
 
     auto res = curl_easy_perform(curl_);
 
     *err = ProcessCurlResponse(curl_, res, errbuf, &buffer, response_code);
 
     return buffer;
+
 }
+
+
+std::string CurlHttpClient::Get(const std::string& uri, HttpCode* response_code, Error* err) const noexcept {
+    return Command(false, uri, "", response_code, err);
+}
+
+std::string CurlHttpClient::Post(const std::string& uri, const std::string& data, HttpCode* response_code,
+                                 Error* err) const noexcept {
+    return Command(true, uri, data, response_code, err);
+}
+
 
 CurlHttpClient::CurlHttpClient() {
     curl_ = curl_easy_init();

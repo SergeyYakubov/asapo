@@ -12,6 +12,9 @@ class StatisticsSenderInfluxDb : public StatisticsSender {
     StatisticsSenderInfluxDb();
     virtual void SendStatistics(const StatisticsToSend& statistic) const noexcept override;
     std::unique_ptr<HttpClient> httpclient__;
+  private:
+    std::string StatisticsToString(const StatisticsToSend& statistic) const noexcept;
+
 };
 
 }

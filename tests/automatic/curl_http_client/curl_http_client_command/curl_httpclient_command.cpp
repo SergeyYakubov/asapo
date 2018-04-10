@@ -8,20 +8,22 @@ using hidra2::M_AssertEq;
 using hidra2::M_AssertContains;
 
 struct Args {
+    std::string command;
     std::string uri;
     int code;
     std::string answer;
 };
 
 Args GetArgs(int argc, char* argv[]) {
-    if (argc != 4) {
+    if (argc != 5) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
     }
-    std::string uri{argv[1]};
-    std::string answer {argv[2]};
-    int code = std::stoi(argv[3]);
-    return Args{uri, code, answer};
+    std::string command{argv[1]};
+    std::string uri{argv[2]};
+    std::string answer {argv[3]};
+    int code = std::stoi(argv[4]);
+    return Args{command, uri, code, answer};
 }
 
 
@@ -34,7 +36,12 @@ int main(int argc, char* argv[]) {
     auto server_broker = static_cast<hidra2::ServerDataBroker*>(broker.get());
 
     hidra2::HttpCode code;
-    auto response = server_broker->httpclient__->Get(args.uri, &code, &err);
+    std::string response;
+    if (args.command == "GET") {
+        response = server_broker->httpclient__->Get(args.uri, &code, &err);
+    } else if  (args.command == "POST") {
+        response = server_broker->httpclient__->Post(args.uri, "testdata", &code, &err);
+    }
 
     if (err != nullptr) {
         M_AssertEq("clienterror", args.answer);

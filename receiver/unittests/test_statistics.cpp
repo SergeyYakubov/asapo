@@ -9,6 +9,7 @@
 using ::testing::Test;
 using ::testing::Gt;
 using ::testing::Ge;
+using ::testing::Le;
 using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Ref;
@@ -138,7 +139,7 @@ void StatisticTests::TestTimer(const StatisticEntity& entity) {
 
     auto stat = ExtractStat();
 
-    ASSERT_THAT(stat.entity_shares[entity], Ge(0.25));
+    ASSERT_THAT(stat.entity_shares[entity], Ge(0.4));
 
 }
 
@@ -152,6 +153,30 @@ TEST_F(StatisticTests, TimerForNetwork) {
 
 TEST_F(StatisticTests, TimerForDisk) {
     TestTimer(StatisticEntity::kDisk);
+}
+
+TEST_F(StatisticTests, TimerForAll) {
+    statistics.StartTimer(StatisticEntity::kDatabase);
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    statistics.StopTimer();
+    statistics.StartTimer(StatisticEntity::kNetwork);
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    statistics.StopTimer();
+
+    statistics.StartTimer(StatisticEntity::kDisk);
+    std::this_thread::sleep_for(std::chrono::milliseconds(40));
+    statistics.StopTimer();
+
+    auto stat = ExtractStat();
+
+    ASSERT_THAT(stat.entity_shares[StatisticEntity::kDatabase], Ge(0.15));
+    ASSERT_THAT(stat.entity_shares[StatisticEntity::kDatabase], Le(0.25));
+
+    ASSERT_THAT(stat.entity_shares[StatisticEntity::kNetwork], Ge(0.25));
+    ASSERT_THAT(stat.entity_shares[StatisticEntity::kNetwork], Le(0.35));
+
+    ASSERT_THAT(stat.entity_shares[StatisticEntity::kDisk], Ge(0.35));
+    ASSERT_THAT(stat.entity_shares[StatisticEntity::kDisk], Le(0.45));
 }
 
 

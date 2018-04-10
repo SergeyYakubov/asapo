@@ -1,1 +1,1 @@
-add_subdirectory(curl_http_client_get)
+add_subdirectory(curl_http_client_command)

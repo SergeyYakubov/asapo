@@ -31,10 +31,12 @@ Error Request::ReceiveData() {
 Error Request::Handle(std::unique_ptr<Statistics>* statistics) {
     Error err;
     if (request_header_.data_size != 0) {
+        (*statistics)->StartTimer(StatisticEntity::kNetwork);
         auto err = ReceiveData();
         if (err) {
             return err;
         }
+        (*statistics)->StopTimer();
     }
     for (auto handler : handlers_) {
         (*statistics)->StartTimer(handler->GetStatisticEntity());

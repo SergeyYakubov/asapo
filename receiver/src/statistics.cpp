@@ -30,7 +30,7 @@ uint64_t Statistics::GetTotalElapsedMs() const noexcept {
 }
 
 uint64_t Statistics::GetElapsedMs(StatisticEntity entity) const noexcept {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(time_counters_[current_statistic_entity_]).count();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(time_counters_[entity]).count();
 }
 
 void Statistics::SetWriteInterval(uint64_t interval_ms) {

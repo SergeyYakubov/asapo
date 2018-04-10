@@ -13,8 +13,12 @@ class CurlHttpClient final : public HttpClient {
   public:
     CurlHttpClient();
     std::string Get(const std::string& uri, HttpCode* response_code, Error* err) const noexcept override;
+    std::string Post(const std::string& uri, const std::string& data, HttpCode* response_code,
+                     Error* err) const noexcept override;
     virtual ~CurlHttpClient();
   private:
+    std::string Command(bool post, const std::string& uri, const std::string& data, HttpCode* response_code,
+                        Error* err) const noexcept;
     mutable std::mutex mutex_;
     CURL* curl_ = 0;
 };

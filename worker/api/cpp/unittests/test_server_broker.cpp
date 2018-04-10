@@ -7,7 +7,7 @@
 #include "../src/server_data_broker.h"
 #include "http_client/curl_http_client.h"
 #include "unittests/MockIO.h"
-#include "MockHttpClient.h"
+#include "unittests/MockHttpClient.h"
 #include "http_client/http_error.h"
 
 using hidra2::DataBrokerFactory;

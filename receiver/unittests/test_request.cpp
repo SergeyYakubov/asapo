@@ -90,7 +90,10 @@ class RequestTests : public Test {
     uint64_t data_id_{15};
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
+    MockStatistics mock_statistics;
+    std::unique_ptr<hidra2::Statistics>  stat;
     void SetUp() override {
+        stat = std::unique_ptr<hidra2::Statistics> {&mock_statistics};
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         request.reset(new Request{generic_request_header, socket_fd_});
@@ -102,6 +105,7 @@ class RequestTests : public Test {
     }
     void TearDown() override {
         request->io__.release();
+        stat.release();
     }
 
 };
@@ -114,7 +118,7 @@ TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
 
-    auto err = request->Handle(nullptr);
+    auto err = request->Handle(&stat);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -125,17 +129,34 @@ TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
               Return(0)
              ));
 
-    auto err = request->Handle(nullptr);
+    auto err = request->Handle(&stat);
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kReadError));
 }
+
+
+
+TEST_F(RequestTests, HandleMeasuresTimeOnDataReceive) {
+
+    EXPECT_CALL(mock_statistics, StartTimer_t(hidra2::StatisticEntity::kNetwork));
+
+    EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillOnce(
+        DoAll(SetArgPointee<3>(nullptr),
+              Return(0)
+             ));
+
+    EXPECT_CALL(mock_statistics, StopTimer_t());
+
+    request->Handle(&stat);
+}
+
+
 
 
 TEST_F(RequestTests, HandleProcessesRequests) {
 
     MockReqestHandler mock_request_handler;
-    MockStatistics mock_statistics;
 
-    auto stat = std::unique_ptr<hidra2::Statistics> {&mock_statistics};
+    EXPECT_CALL(mock_statistics, StartTimer_t(hidra2::StatisticEntity::kNetwork));
 
     EXPECT_CALL(mock_request_handler, ProcessRequest_t(_)).WillOnce(
         Return(nullptr)
@@ -148,13 +169,12 @@ TEST_F(RequestTests, HandleProcessesRequests) {
 
     EXPECT_CALL(mock_statistics, StartTimer_t(hidra2::StatisticEntity::kDisk)).Times(2);
 
-    EXPECT_CALL(mock_statistics, StopTimer_t());
+    EXPECT_CALL(mock_statistics, StopTimer_t()).Times(2);
 
 
     auto err = request->Handle(&stat);
 
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
-    stat.release();
 }
 
 TEST_F(RequestTests, DataIsNullAtInit) {
@@ -165,7 +185,7 @@ TEST_F(RequestTests, DataIsNullAtInit) {
 
 TEST_F(RequestTests, GetDataIsNotNullptr) {
 
-    request->Handle(nullptr);
+    request->Handle(&stat);
     auto& data = request->GetData();
 
 
