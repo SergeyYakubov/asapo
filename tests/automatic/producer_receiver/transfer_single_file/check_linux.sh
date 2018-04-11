@@ -10,7 +10,7 @@ Cleanup() {
 	rm -rf files
 }
 
-nohup $2 &>/dev/null &
+nohup $2 receiver.json &>/dev/null &
 sleep 0.3
 receiverid=`echo $!`
 

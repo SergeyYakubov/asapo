@@ -33,6 +33,9 @@ void SetCurlOptions(CURL* curl, bool post, const std::string& data, const std::s
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, buffer);
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 0L);
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+    //todo use a config parameter for this
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 5000L);
+
     if (post) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
     }

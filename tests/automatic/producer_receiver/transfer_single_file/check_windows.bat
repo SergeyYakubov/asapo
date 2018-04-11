@@ -1,7 +1,7 @@
 set full_recv_name="%2"
 set short_recv_name="%~nx2"
 
-start /B "" "%full_recv_name%"
+start /B "" "%full_recv_name%" receiver.json
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 

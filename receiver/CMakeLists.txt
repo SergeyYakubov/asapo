@@ -7,7 +7,7 @@ set(SOURCE_FILES
         src/request_handler_file_write.cpp
         src/statistics.cpp
         src/statistics_sender_influx_db.cpp
-        )
+        src/receiver_config.cpp src/receiver_config.h)
 
 
 ################################
@@ -35,6 +35,7 @@ set(TEST_SOURCE_FILES
         unittests/test_receiver.cpp
         unittests/test_connection.cpp
         unittests/test_statistics.cpp
+        unittests/test_config.cpp
         unittests/test_request.cpp
         unittests/test_request_handler_file_write.cpp
         unittests/test_statistics_sender_influx_db.cpp
