@@ -39,7 +39,8 @@ void AssertSettings(const Settings& settings) {
 }
 
 Settings Parse(const std::string& fname, Error* err) {
-    hidra2::JsonParser parser(fname, true);
+
+    hidra2::JsonParser parser(fname, nullptr);
 
     Settings settings;
 

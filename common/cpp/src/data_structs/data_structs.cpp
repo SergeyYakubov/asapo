@@ -34,7 +34,7 @@ bool TimeFromJson(const JsonParser& parser, const std::string name, std::chrono:
 bool FileInfo::SetFromJson(const std::string& json_string) {
     auto old = *this;
 
-    JsonParser parser(json_string, false);
+    JsonParser parser(json_string);
 
     if (parser.GetUInt64("_id", &id) ||
             parser.GetUInt64("size", &size) ||

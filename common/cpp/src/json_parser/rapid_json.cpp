@@ -3,12 +3,9 @@
 
 using namespace rapidjson;
 
-#include "io/io_factory.h"
-
 namespace hidra2 {
 
-RapidJson::RapidJson(const std::string& json, bool read_from_file): io__{GenerateDefaultIO()}, json_{json},
-    read_from_file_{read_from_file} {
+RapidJson::RapidJson(const std::string& json, const std::unique_ptr<IO>* io): io__{io}, json_{json} {
 
 }
 
@@ -21,9 +18,9 @@ Error RapidJson::LazyInitialize()const noexcept {
         return nullptr;
 
     auto str = json_;
-    if (read_from_file_) {
+    if (io__) {
         Error err;
-        str = io__->ReadFileToString(json_, &err);
+        str = (*io__)->ReadFileToString(json_, &err);
         if (err != nullptr) {
             return err;
         }

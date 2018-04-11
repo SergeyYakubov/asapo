@@ -45,8 +45,10 @@ class ConfigTests : public Test {
 };
 
 
-TEST_F(ConfigTests, ErrorWaitForNewRequest) {
+TEST_F(ConfigTests, ReadSettings) {
+    EXPECT_CALL(mock_io,ReadFileToString_t("fname",_));
 
+    config_factory.SetConfigFromFile("fname");
 }
 
 }

@@ -17,18 +17,17 @@ enum class ValueType {
 
 class RapidJson {
   public:
-    RapidJson(const std::string& json, bool read_from_file);
+    RapidJson(const std::string& json, const std::unique_ptr<IO>* io);
     RapidJson(const RapidJson& parent, const std::string& subname);
     Error GetUInt64(const std::string& name, uint64_t* val) const noexcept;
     Error GetString(const std::string& name, std::string* val) const noexcept;
     Error GetArrayUInt64(const std::string& name, std::vector<uint64_t>* val) const noexcept;
     Error GetArrayString(const std::string& name, std::vector<std::string>* val) const noexcept;
-    std::unique_ptr<IO> io__;
   private:
+    const std::unique_ptr<IO>* io__;
     mutable rapidjson::Document doc_;
     mutable rapidjson::Value object_;
     std::string json_;
-    bool read_from_file_;
     mutable bool initialized_ = false;
     Error LazyInitialize() const noexcept;
     Error embedded_error_ = nullptr;

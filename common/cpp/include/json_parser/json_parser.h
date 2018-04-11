@@ -7,6 +7,7 @@
 #include <string>
 
 #include "common/error.h"
+#include "io/io.h"
 
 namespace hidra2 {
 
@@ -14,7 +15,8 @@ class RapidJson;
 
 class JsonParser {
   public:
-    JsonParser(const std::string& json, bool read_from_file);
+    JsonParser(const std::string& json, const std::unique_ptr<IO>* io);
+    JsonParser(const std::string& json);
     ~JsonParser();
     JsonParser(JsonParser&& other);
     Error GetUInt64(const std::string& name, uint64_t* val) const noexcept;
@@ -23,6 +25,7 @@ class JsonParser {
     Error GetArrayString(const std::string& name, std::vector<std::string>* val) const noexcept;
     JsonParser Embedded(const std::string& name) const noexcept;
   private:
+    std::unique_ptr<IO> default_io_;
     std::unique_ptr<RapidJson>  rapid_json_;
     JsonParser(RapidJson* rapid_json_);
 
