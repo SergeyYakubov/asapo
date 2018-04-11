@@ -26,6 +26,7 @@ class Statistics {
   public:
 // virtual needed for unittests, could be replaced with #define VIRTUAL ... in case of performance issues
     virtual void SendIfNeeded() noexcept;
+    virtual void Send() noexcept;
     explicit Statistics(unsigned int write_interval = kDefaultStatisticWriteIntervalMs);
     virtual void IncreaseRequestCounter() noexcept;
     virtual void StartTimer(const StatisticEntity& entity) noexcept;

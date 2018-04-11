@@ -50,11 +50,11 @@ class ReceiverErrorTemplate : public SimpleErrorTemplate {
 
 namespace ReceiverErrorTemplates {
 auto const kInvalidOpCode = ReceiverErrorTemplate {
-    "Invalid Opcode", ReceiverErrorType::kInvalidOpCode
-};
+                                "Invalid Opcode", ReceiverErrorType::kInvalidOpCode
+                            };
 auto const kBadRequest = ReceiverErrorTemplate {
-    "Bad request", ReceiverErrorType::kBadRequest
-};
+                             "Bad request", ReceiverErrorType::kBadRequest
+                         };
 
 };
 }

@@ -20,7 +20,7 @@ void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic)
     HttpCode code;
     Error err;
     //TODO influxdb uri from config
-    auto responce = httpclient__->Post("http://zitpcx27016.desy.de:8086/write?db=db_test", StatisticsToString(statistic),
+    auto responce = httpclient__->Post("localhost:8086/write?db=db_test", StatisticsToString(statistic),
                                        &code,
                                        &err);
     if (err) {

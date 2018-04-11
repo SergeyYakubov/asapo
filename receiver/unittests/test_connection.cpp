@@ -91,6 +91,7 @@ class ConnectionTests : public Test {
         WillByDefault(DoAll(testing::SetArgPointee<4>(nullptr),
                             testing::Return(0)));
         EXPECT_CALL(mock_io, CloseSocket_t(_, _));
+        EXPECT_CALL(mock_statictics, Send_t());
 
     }
     void TearDown() override {

@@ -13,6 +13,11 @@ class MockStatistics : public hidra2::Statistics {
     void SendIfNeeded() noexcept override {
         SendIfNeeded_t();
     }
+
+    void Send() noexcept override {
+        Send_t();
+    }
+
     void IncreaseRequestCounter() noexcept override {
         IncreaseRequestCounter_t();
     }
@@ -27,6 +32,7 @@ class MockStatistics : public hidra2::Statistics {
     }
 
     MOCK_METHOD0(SendIfNeeded_t, void());
+    MOCK_METHOD0(Send_t, void());
     MOCK_METHOD0(IncreaseRequestCounter_t, void());
     MOCK_METHOD0(StopTimer_t, void());
     MOCK_METHOD1(IncreaseRequestDataVolume_t, void (uint64_t

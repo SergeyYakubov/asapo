@@ -189,4 +189,25 @@ TEST_F(StatisticTests, SendStaticsDoesCallsSender) {
 }
 
 
+TEST_F(StatisticTests, StatisticsSend) {
+    statistics.IncreaseRequestCounter();
+
+    StatisticsToSend stat;
+    stat.elapsed_ms = 0;
+    stat.n_requests = 0;
+    stat.data_volume = 0;
+    for (int i = 0; i < hidra2::kNStatisticEntities; i++) {
+        stat.entity_shares[i] = 0.0;
+    }
+
+    EXPECT_CALL(mock_statistics_sender, SendStatistics_t(_)).
+    WillOnce(SaveArg1ToSendStat(&stat));
+
+    statistics.Send();
+    std::cout << stat.elapsed_ms << std::endl;
+
+    ASSERT_THAT(stat.elapsed_ms, Ge(1));
+}
+
+
 }

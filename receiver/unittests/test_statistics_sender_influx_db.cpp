@@ -59,7 +59,7 @@ TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
     statistics.data_volume = 1000;
     std::string expect_string = "statistics,receiver=1,connection=1 elapsed_ms=100,data_volume=1000,"
                                 "n_requests=4,db_share=0.1000,network_share=0.3000,disk_share=0.6000";
-    EXPECT_CALL(mock_http_client, Post_t("http://zitpcx27016.desy.de:8086/write?db=db_test", expect_string, _, _)).
+    EXPECT_CALL(mock_http_client, Post_t("localhost:8086/write?db=db_test", expect_string, _, _)).
     WillOnce(
         DoAll(SetArgPointee<3>(new hidra2::IOError("Test Read Error", hidra2::IOErrorType::kReadError)),
               Return("")

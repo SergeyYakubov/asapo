@@ -69,7 +69,8 @@ void Connection::Listen() const noexcept {
         ProcessStatisticsAfterRequest(request);
     }
     io__->CloseSocket(socket_fd_, nullptr);
-    std::cout << "[" << GetId() << "] Disconnected." << std::endl;
+    statistics__->Send();
+    std::cerr << "[" << GetId() << "] Disconnected." << std::endl;
 }
 
 

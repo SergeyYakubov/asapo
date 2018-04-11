@@ -1,23 +1,28 @@
 #include "statistics.h"
 #include "statistics_sender_influx_db.h"
+#include <algorithm>
 
 using std::chrono::high_resolution_clock;
 
 namespace hidra2 {
 
 void Statistics::SendIfNeeded() noexcept {
-    auto elapsed_ms = GetTotalElapsedMs();
-    if (elapsed_ms > write_interval_) {
-        statistics_sender__->SendStatistics(PrepareStatisticsToSend());
-        ResetStatistics();
+    if (GetTotalElapsedMs() > write_interval_) {
+        Send();
     }
 }
+
+void Statistics::Send() noexcept {
+    statistics_sender__->SendStatistics(PrepareStatisticsToSend());
+    ResetStatistics();
+}
+
 
 StatisticsToSend Statistics::PrepareStatisticsToSend() const noexcept {
     StatisticsToSend stat;
     stat.n_requests = nrequests_;
     stat.data_volume = volume_counter_;
-    stat.elapsed_ms = GetTotalElapsedMs();
+    stat.elapsed_ms = std::max(uint64_t{1}, GetTotalElapsedMs());
     for (auto i = 0; i < kNStatisticEntities; i++) {
         stat.entity_shares[i] =  double(GetElapsedMs(StatisticEntity(i))) / stat.elapsed_ms;
     }

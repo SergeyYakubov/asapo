@@ -90,7 +90,7 @@ class RequestTests : public Test {
     uint64_t data_id_{15};
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
-    MockStatistics mock_statistics;
+    NiceMock<MockStatistics> mock_statistics;
     std::unique_ptr<hidra2::Statistics>  stat;
     void SetUp() override {
         stat = std::unique_ptr<hidra2::Statistics> {&mock_statistics};

@@ -13,7 +13,7 @@ ping 1.0.0.0 -n 1 -w 100 > nul
 
 FOR /F "usebackq" %%A IN ('files\0.bin') DO set size=%%~zA
 
-if %size% NEQ 100 goto :error
+if %size% NEQ 102400 goto :error
 
 goto :clean
 
