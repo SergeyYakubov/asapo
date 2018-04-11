@@ -44,7 +44,7 @@ class MockReqestHandler : public hidra2::RequestHandler {
         return Error{ProcessRequest_t(request)};
     }
 
-    StatisticEntity GetStatisticEntity() const {
+    StatisticEntity GetStatisticEntity() const override {
         return StatisticEntity::kDisk;
     }
 
