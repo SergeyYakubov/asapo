@@ -15,7 +15,7 @@ class RapidJson;
 
 class JsonParser {
   public:
-    JsonParser(const std::string& json, const std::unique_ptr<IO>* io);
+    JsonParser(const std::string& json, const std::unique_ptr<IO>* io); // nullptr as second parameter will use default IO
     JsonParser(const std::string& json);
     ~JsonParser();
     JsonParser(JsonParser&& other);

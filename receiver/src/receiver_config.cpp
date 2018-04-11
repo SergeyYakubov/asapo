@@ -13,7 +13,7 @@ ReceiverConfigFactory::ReceiverConfigFactory() : io__{GenerateDefaultIO()} {
 
 Error ReceiverConfigFactory::SetConfigFromFile(std::string file_name) {
     JsonParser parser(file_name, &io__);
-    return parser.GetString("uri",&config.influxdb_uri);
+    return parser.GetString("influxdb_uri", &config.influxdb_uri);
 }
 
 const ReceiverConfig*  GetReceiverConfig() {

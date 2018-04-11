@@ -11,7 +11,7 @@ hidra2::Error ReadConfigFile(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     hidra2::ReceiverConfigFactory factory;
-    return factory.SetConfigFromFile("fname");
+    return factory.SetConfigFromFile(argv[1]);
 }
 
 int main (int argc, char* argv[]) {
