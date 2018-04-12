@@ -4,7 +4,6 @@
 
 namespace hidra2 {
 
-
 JsonParser::~JsonParser() {
 
 }

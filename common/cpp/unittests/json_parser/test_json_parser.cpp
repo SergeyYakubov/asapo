@@ -20,7 +20,8 @@ using ::testing::SetArgPointee;
 using ::testing::HasSubstr;
 using ::testing::ElementsAre;
 
-using hidra2::JsonParser;
+using hidra2::JsonFileParser;
+using hidra2::JsonStringParser;
 using hidra2::RapidJson;
 using hidra2::MockIO;
 using hidra2::IO;
@@ -31,7 +32,7 @@ namespace {
 TEST(ParseString, SimpleConvertToJson) {
     std::string json = R"({"_id":2,"foo":"foo","bar":1})";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     uint64_t id, bar;
     std::string foo;
@@ -52,7 +53,7 @@ TEST(ParseString, SimpleConvertToJson) {
 TEST(ParseString, EmbeddedConvertToJson) {
     std::string json = R"({"id":{"test":2}})";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     uint64_t id;
     auto err1 = parser.Embedded("id").GetUInt64("test", &id);
@@ -64,7 +65,7 @@ TEST(ParseString, EmbeddedConvertToJson) {
 TEST(ParseString, DoubleEmbeddedConvertToJson) {
     std::string json = R"({"id":{"test":{"test2":2}}})";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     uint64_t id;
     auto err1 = parser.Embedded("id").Embedded("test").GetUInt64("test2", &id);
@@ -76,7 +77,7 @@ TEST(ParseString, DoubleEmbeddedConvertToJson) {
 TEST(ParseString, ErrorOnWrongEmbeddedKey) {
     std::string json = R"({"id1":{"test":2}})";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     uint64_t id;
     auto err = parser.Embedded("id").GetUInt64("test", &id);
@@ -88,7 +89,7 @@ TEST(ParseString, ErrorOnWrongEmbeddedKey) {
 TEST(ParseString, ErrorOnWrongEmbeddedSubKey) {
     std::string json = R"({"id1":{"test1":2}})";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     uint64_t id;
     auto err = parser.Embedded("id").GetUInt64("test", &id);
@@ -100,7 +101,7 @@ TEST(ParseString, ErrorOnWrongEmbeddedSubKey) {
 TEST(ParseString, ErrorOnWrongKey) {
     std::string json = R"({"_id":"2"})";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     uint64_t id;
     auto err = parser.GetUInt64("_id1", &id);
@@ -112,7 +113,7 @@ TEST(ParseString, ErrorOnWrongKey) {
 TEST(ParseString, ErrorOnWrongType) {
     std::string json = R"({"_id":"2"})";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     uint64_t id;
     auto err = parser.GetUInt64("_id", &id);
@@ -125,7 +126,7 @@ TEST(ParseString, ErrorOnWrongType) {
 TEST(ParseString, ErrorOnWrongDocument) {
     std::string json = R"({"_id":2)";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     uint64_t id;
     auto err = parser.GetUInt64("_id", &id);
@@ -139,7 +140,7 @@ TEST(ParseString, ErrorOnWrongDocument) {
 TEST(ParseString, IntArrayConvertToJson) {
     std::string json = R"({"array":[1,2,3]})";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     std::vector<uint64_t> vec;
     auto err = parser.GetArrayUInt64("array", &vec);
@@ -151,7 +152,7 @@ TEST(ParseString, IntArrayConvertToJson) {
 TEST(ParseString, IntArrayErrorConvertToJson) {
     std::string json = R"({"array":[1,2,"3"]})";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     std::vector<uint64_t> vec;
     auto err = parser.GetArrayUInt64("array", &vec);
@@ -164,7 +165,7 @@ TEST(ParseString, IntArrayErrorConvertToJson) {
 TEST(ParseString, StringArrayConvertToJson) {
     std::string json = R"({"array":["s1","s2","s3"]})";
 
-    JsonParser parser{json};
+    JsonStringParser parser{json};
 
     std::vector<std::string> vec;
     auto err = parser.GetArrayString("array", &vec);
@@ -179,7 +180,7 @@ class ParseFileTests : public Test {
     std::unique_ptr<IO> io_ptr = std::unique_ptr<IO> {
         &mock_io
     };
-    JsonParser parser{"filename", &io_ptr};
+    JsonFileParser parser{"filename", &io_ptr};
 
     void SetUp() override {
     }
