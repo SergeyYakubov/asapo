@@ -6,8 +6,8 @@ trap Cleanup EXIT
 
 Cleanup() {
 	echo cleanup
-    kill $receiverid
 	rm -rf files
+    kill $receiverid
 }
 
 nohup $2 receiver.json &>/dev/null &

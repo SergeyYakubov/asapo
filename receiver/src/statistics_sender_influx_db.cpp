@@ -4,6 +4,7 @@
 
 #include "statistics.h"
 #include "http_client/curl_http_client.h"
+#include "receiver_config.h"
 
 namespace hidra2 {
 
@@ -19,10 +20,9 @@ std::string string_format( const std::string& format, Args ... args ) {
 void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic) const noexcept {
     HttpCode code;
     Error err;
-    //TODO influxdb uri from config
-    auto responce = httpclient__->Post("localhost:8086/write?db=db_test", StatisticsToString(statistic),
-                                       &code,
-                                       &err);
+    auto responce = httpclient__->Post(GetReceiverConfig()->monitor_db_uri + "/write?db=" +
+                                       GetReceiverConfig()->monitor_db_name, StatisticsToString(statistic),
+                                       &code, &err);
     if (err) {
         std::cerr << "Error sending statistics: " << err << std::endl;
         return;

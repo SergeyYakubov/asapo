@@ -30,23 +30,28 @@ using hidra2::IO;
 namespace {
 
 TEST(ParseString, SimpleConvertToJson) {
-    std::string json = R"({"_id":2,"foo":"foo","bar":1})";
+    std::string json = R"({"_id":2,"foo":"foo","bar":1,"flag":true})";
 
     JsonStringParser parser{json};
 
     uint64_t id, bar;
     std::string foo;
+    bool flag;
     auto err1 = parser.GetUInt64("_id", &id);
     auto err2 = parser.GetString("foo", &foo);
     auto err3 = parser.GetUInt64("bar", &bar);
+    auto err4 = parser.GetBool("flag", &flag);
 
     ASSERT_THAT(err1, Eq(nullptr));
     ASSERT_THAT(err2, Eq(nullptr));
     ASSERT_THAT(err3, Eq(nullptr));
+    ASSERT_THAT(err4, Eq(nullptr));
+
 
     ASSERT_THAT(id, Eq(2));
     ASSERT_THAT(foo, Eq("foo"));
     ASSERT_THAT(bar, Eq(1));
+    ASSERT_THAT(flag, true);
 
 }
 
@@ -149,6 +154,21 @@ TEST(ParseString, IntArrayConvertToJson) {
     ASSERT_THAT(vec, ElementsAre(1, 2, 3));
 }
 
+TEST(ParseString, IntArrayConvertToJsonTwice) {
+    std::string json = R"({"array":[1,2,3]})";
+
+    JsonStringParser parser{json};
+
+    std::vector<uint64_t> vec;
+    auto err = parser.GetArrayUInt64("array", &vec);
+    auto err2 = parser.GetArrayUInt64("array", &vec);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(err2, Eq(nullptr));
+    ASSERT_THAT(vec, ElementsAre(1, 2, 3));
+}
+
+
 TEST(ParseString, IntArrayErrorConvertToJson) {
     std::string json = R"({"array":[1,2,"3"]})";
 
@@ -160,6 +180,7 @@ TEST(ParseString, IntArrayErrorConvertToJson) {
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(err->Explain(), HasSubstr("type"));
 }
+
 
 
 TEST(ParseString, StringArrayConvertToJson) {
@@ -199,6 +220,24 @@ TEST_F(ParseFileTests, CorrectConvertFileToJson) {
     auto err = parser.GetUInt64("_id", &id);
     ASSERT_THAT(id, Eq(2));
 }
+
+TEST_F(ParseFileTests, InitializedOnlyOnce) {
+    std::string json = R"({"_id":2})";
+
+    EXPECT_CALL(mock_io, ReadFileToString_t("filename", _)).
+    WillOnce(DoAll(testing::SetArgPointee<1>(nullptr), testing::Return(json)));
+
+    uint64_t id, id2;
+    auto err1 = parser.GetUInt64("_id", &id);
+    auto err2 = parser.GetUInt64("_id", &id2);
+
+    ASSERT_THAT(err1, Eq(nullptr));
+    ASSERT_THAT(err2, Eq(nullptr));
+    ASSERT_THAT(id, Eq(2));
+    ASSERT_THAT(id2, Eq(2));
+}
+
+
 TEST_F(ParseFileTests, CannotReadFile) {
     std::string json = R"({"_id":2})";
 

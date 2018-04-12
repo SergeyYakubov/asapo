@@ -13,7 +13,12 @@ ReceiverConfigFactory::ReceiverConfigFactory() : io__{GenerateDefaultIO()} {
 
 Error ReceiverConfigFactory::SetConfigFromFile(std::string file_name) {
     JsonFileParser parser(file_name, &io__);
-    return parser.GetString("influxdb_uri", &config.influxdb_uri);
+    Error err;
+    (err = parser.GetString("MonitorDbAddress", &config.monitor_db_uri)) ||
+    (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||
+    (err = parser.GetBool("WriteToDisk", &config.write_to_disk)) ||
+    (err = parser.GetString("MonitorDbName", &config.monitor_db_name));
+    return err;
 }
 
 const ReceiverConfig*  GetReceiverConfig() {

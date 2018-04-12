@@ -8,6 +8,10 @@
 #include "unittests/MockHttpClient.h"
 #include "../src/statistics.h"
 
+#include "../src/receiver_config.h"
+#include "mock_receiver_config.h"
+
+
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::_;
@@ -26,7 +30,8 @@ using ::testing::SetArgPointee;
 using hidra2::StatisticsSenderInfluxDb;
 using hidra2::MockHttpClient;
 using hidra2::StatisticsToSend;
-
+using hidra2::ReceiverConfig;
+using hidra2::SetReceiverConfig;
 
 namespace {
 
@@ -57,9 +62,15 @@ TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
     statistics.entity_shares[hidra2::StatisticEntity::kDatabase] = 0.1;
     statistics.elapsed_ms = 100;
     statistics.data_volume = 1000;
+
+    ReceiverConfig config;
+    config.monitor_db_uri = "test_uri";
+    config.monitor_db_name = "test_name";
+    SetReceiverConfig(config);
+
     std::string expect_string = "statistics,receiver=1,connection=1 elapsed_ms=100,data_volume=1000,"
                                 "n_requests=4,db_share=0.1000,network_share=0.3000,disk_share=0.6000";
-    EXPECT_CALL(mock_http_client, Post_t("localhost:8086/write?db=db_test", expect_string, _, _)).
+    EXPECT_CALL(mock_http_client, Post_t("test_uri/write?db=test_name", expect_string, _, _)).
     WillOnce(
         DoAll(SetArgPointee<3>(new hidra2::IOError("Test Read Error", hidra2::IOErrorType::kReadError)),
               Return("")

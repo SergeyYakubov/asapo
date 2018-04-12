@@ -24,7 +24,7 @@ int main (int argc, char* argv[]) {
 
     auto config = hidra2::GetReceiverConfig();
 
-    static const std::string address = "0.0.0.0:4200";
+    static const std::string address = "0.0.0.0:" + std::to_string(config->listen_port);
 
     auto* receiver = new hidra2::Receiver();
 

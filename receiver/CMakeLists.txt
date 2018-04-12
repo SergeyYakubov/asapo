@@ -40,6 +40,7 @@ set(TEST_SOURCE_FILES
         unittests/test_request.cpp
         unittests/test_request_handler_file_write.cpp
         unittests/test_statistics_sender_influx_db.cpp
+        unittests/mock_receiver_config.cpp
         )
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")

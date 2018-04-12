@@ -4,6 +4,7 @@
 
 #include "../src/receiver_config.h"
 #include "../src/receiver_config_factory.h"
+#include "mock_receiver_config.h"
 
 using ::testing::Test;
 using ::testing::Return;
@@ -26,7 +27,7 @@ using ::hidra2::SocketDescriptor;
 using ::hidra2::MockIO;
 
 using ::hidra2::ReceiverConfigFactory;
-
+using hidra2::GetReceiverConfig;
 
 namespace {
 
@@ -46,9 +47,24 @@ class ConfigTests : public Test {
 
 
 TEST_F(ConfigTests, ReadSettings) {
-    EXPECT_CALL(mock_io, ReadFileToString_t("fname", _));
 
-    config_factory.SetConfigFromFile("fname");
+    hidra2::ReceiverConfig test_config;
+    test_config.listen_port = 4200;
+    test_config.monitor_db_name = "db_test";
+    test_config.monitor_db_uri = "localhost:8086";
+    test_config.write_to_disk = true;
+
+
+    auto err = hidra2::SetReceiverConfig(test_config);
+
+    auto config = GetReceiverConfig();
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(config->monitor_db_uri, Eq("localhost:8086"));
+    ASSERT_THAT(config->monitor_db_name, Eq("db_test"));
+    ASSERT_THAT(config->listen_port, Eq(4200));
+    ASSERT_THAT(config->write_to_disk, true);
+
 }
 
 }

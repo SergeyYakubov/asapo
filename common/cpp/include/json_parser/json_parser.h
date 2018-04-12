@@ -16,6 +16,7 @@ class RapidJson;
 class JsonParser {
   public:
     Error GetUInt64(const std::string& name, uint64_t* val) const noexcept;
+    Error GetBool(const std::string& name, bool* val) const noexcept;
     Error GetString(const std::string& name, std::string* val) const noexcept;
     Error GetArrayUInt64(const std::string& name, std::vector<uint64_t>* val) const noexcept;
     Error GetArrayString(const std::string& name, std::vector<std::string>* val) const noexcept;

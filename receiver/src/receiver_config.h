@@ -7,7 +7,10 @@
 namespace hidra2 {
 
 struct ReceiverConfig {
-    std::string influxdb_uri;
+    std::string monitor_db_uri;
+    std::string monitor_db_name;
+    uint64_t listen_port = 0;
+    bool write_to_disk = false;
 };
 
 const ReceiverConfig* GetReceiverConfig();

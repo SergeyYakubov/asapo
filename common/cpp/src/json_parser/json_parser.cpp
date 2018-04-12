@@ -15,7 +15,6 @@ JsonParser::JsonParser(const std::string& json, const std::unique_ptr<IO>* io ) 
 JsonParser::JsonParser(const std::string& json) : rapid_json_{new RapidJson(json, nullptr)} {
 }
 
-
 Error JsonParser::GetArrayUInt64(const std::string& name, std::vector<uint64_t>* val) const noexcept {
     return rapid_json_->GetArrayUInt64(name, val);
 
@@ -23,6 +22,11 @@ Error JsonParser::GetArrayUInt64(const std::string& name, std::vector<uint64_t>*
 
 Error JsonParser::GetArrayString(const std::string& name, std::vector<std::string>* val) const noexcept {
     return rapid_json_->GetArrayString(name, val);
+}
+
+
+Error JsonParser::GetBool(const std::string& name, bool* val) const noexcept {
+    return rapid_json_->GetBool(name, val);
 }
 
 
