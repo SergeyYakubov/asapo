@@ -1,0 +1,6 @@
+{
+  "MonitorDbAddress": "zitpcx27016:8086",
+  "MonitorDbName": "db_test",
+  "ListenPort": 4201,
+  "WriteToDisk": false
+}

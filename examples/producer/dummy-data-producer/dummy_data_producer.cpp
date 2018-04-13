@@ -28,7 +28,7 @@ bool SendDummyData(hidra2::Producer* producer, size_t number_of_byte, uint64_t i
     auto buffer = std::unique_ptr<uint8_t>(new uint8_t[number_of_byte]);
 
     for(uint64_t i = 0; i < iterations; i++) {
-        std::cout << "Send file " << i + 1 << "/" << iterations << std::endl;
+//        std::cerr << "Send file " << i + 1 << "/" << iterations << std::endl;
 
         auto err = producer->Send(i, buffer.get(), number_of_byte);
 
@@ -36,7 +36,7 @@ bool SendDummyData(hidra2::Producer* producer, size_t number_of_byte, uint64_t i
             std::cerr << "File was not successfully send: " << err << std::endl;
             return false;
         } else {
-            std::cout << "File was successfully send." << std::endl;
+//            std::cerr << "File was successfully send." << std::endl;
         }
     }
 
@@ -50,7 +50,7 @@ int main (int argc, char* argv[]) {
     std::tie(receiver_address, number_of_kbytes, iterations) = ProcessCommandArguments(argc, argv);
 
     std::cout << "receiver_address: " << receiver_address << std::endl
-              << "number_of_kbytes: " << number_of_kbytes << std::endl
+              << "Package size: " << number_of_kbytes << "k" << std::endl
               << "iterations: " << iterations << std::endl
               << std::endl;
 
@@ -68,10 +68,10 @@ int main (int argc, char* argv[]) {
     }
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     double duration_sec = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count() / 1000.0;
-    double size_gb = double(number_of_kbytes) * iterations / 1024.0 / 1024.0;
+    double size_gb = double(number_of_kbytes) * iterations / 1024.0 / 1024.0 * 8.0;
     double rate = iterations / duration_sec;
     std::cout << "Rate: " << rate << " Hz" << std::endl;
-    std::cout << "Bandwidth " << size_gb / duration_sec << " GB/s" << std::endl;
+    std::cout << "Bandwidth " << size_gb / duration_sec << " Gbit/s" << std::endl;
 
     return EXIT_SUCCESS;
 }
