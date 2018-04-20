@@ -4,10 +4,13 @@ set -e
 
 trap Cleanup EXIT
 
+database_name=test_run
+
 Cleanup() {
 	echo cleanup
 	rm -rf files
     kill $receiverid
+    echo "db.dropDatabase()" | mongo ${database_name}
 }
 
 nohup $2 receiver.json &>/dev/null &

@@ -53,7 +53,9 @@ TEST_F(ConfigTests, ReadSettings) {
     test_config.monitor_db_name = "db_test";
     test_config.monitor_db_uri = "localhost:8086";
     test_config.write_to_disk = true;
-
+    test_config.write_to_db = true;
+    test_config.broker_db_uri = "localhost:27017";
+    test_config.broker_db_name = "test";
 
     auto err = hidra2::SetReceiverConfig(test_config);
 
@@ -62,8 +64,11 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(config->monitor_db_uri, Eq("localhost:8086"));
     ASSERT_THAT(config->monitor_db_name, Eq("db_test"));
+    ASSERT_THAT(config->broker_db_uri, Eq("localhost:27017"));
+    ASSERT_THAT(config->broker_db_name, Eq("test"));
     ASSERT_THAT(config->listen_port, Eq(4200));
     ASSERT_THAT(config->write_to_disk, true);
+    ASSERT_THAT(config->write_to_db, true);
 
 }
 

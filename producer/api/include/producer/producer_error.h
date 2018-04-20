@@ -53,23 +53,23 @@ class ProducerErrorTemplate : public SimpleErrorTemplate {
 
 namespace ProducerErrorTemplates {
 auto const kAlreadyConnected = ProducerErrorTemplate {
-    "Already connected", ProducerErrorType::kAlreadyConnected
-};
+                                   "Already connected", ProducerErrorType::kAlreadyConnected
+                               };
 auto const kConnectionNotReady = ProducerErrorTemplate {
-    "Connection not ready", ProducerErrorType::kConnectionNotReady
-};
+                                     "Connection not ready", ProducerErrorType::kConnectionNotReady
+                                 };
 
 auto const kFileTooLarge = ProducerErrorTemplate {
-    "File too large", ProducerErrorType::kFileTooLarge
-};
+                               "File too large", ProducerErrorType::kFileTooLarge
+                           };
 
 auto const kFileIdAlreadyInUse = ProducerErrorTemplate {
-    "File already in use", ProducerErrorType::kFileIdAlreadyInUse
-};
+                                     "File already in use", ProducerErrorType::kFileIdAlreadyInUse
+                                 };
 
 auto const kUnknownServerError = ProducerErrorTemplate {
-    "Unknown server error", ProducerErrorType::kUnknownServerError
-};
+                                     "Unknown server error", ProducerErrorType::kUnknownServerError
+                                 };
 
 
 };

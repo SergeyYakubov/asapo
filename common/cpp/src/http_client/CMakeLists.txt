@@ -1,7 +1,7 @@
 set(TARGET_NAME curl_http_client)
 set(SOURCE_FILES
         curl_http_client.cpp
-        )
+        ../../include/unittests/MockDatabase.h)
 
 
 ################################

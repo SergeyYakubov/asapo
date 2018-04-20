@@ -24,5 +24,8 @@ exit /b 1
 :clean
 Taskkill /IM "%short_recv_name%" /F
 rmdir /S /Q files
+SET database_name=test_run
+SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
+echo db.dropDatabase() | %mongo_exe% %database_name%
 
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 database_name=db_test
+mongo_database_name=test_run
 
 set -e
 
@@ -11,7 +12,7 @@ Cleanup() {
 	influx -execute "drop database ${database_name}"
     kill $receiverid
 	rm -rf files
-
+    echo "db.dropDatabase()" | mongo ${mongo_database_name}
 }
 
 influx -execute "create database ${database_name}"

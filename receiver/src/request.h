@@ -6,6 +6,7 @@
 #include "io/io.h"
 #include "request_handler.h"
 #include "request_handler_file_write.h"
+#include "request_handler_db_write.h"
 #include "statistics.h"
 
 namespace hidra2 {
@@ -20,6 +21,7 @@ class Request {
     void AddHandler(const RequestHandler*);
     const RequestHandlerList& GetListHandlers() const;
     virtual uint64_t GetDataSize() const;
+    virtual uint64_t GetDataID() const;
     virtual std::string GetFileName() const;
 
     virtual const FileData& GetData() const;
@@ -39,8 +41,10 @@ class RequestFactory {
                                                      SocketDescriptor socket_fd, Error* err) const noexcept;
   private:
     RequestHandlerFileWrite request_handler_filewrite_;
+    RequestHandlerDbWrite request_handler_dbwrite_;
 };
 
 }
 
 #endif //HIDRA2_REQUEST_H
+

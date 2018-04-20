@@ -9,6 +9,7 @@
 #include "database/database.h"
 
 #include "common/data_structs.h"
+#include "unittests/MockDatabase.h"
 
 #include "../src/folder_db_importer.h"
 
@@ -26,18 +27,7 @@ using ::testing::NiceMock;
 using ::testing::Ref;
 using ::testing::Return;
 
-using hidra2::FolderToDbImporter;
-using hidra2::Database;
-using hidra2::DatabaseFactory;
-using hidra2::IO;
-using hidra2::kDBCollectionName;
-using hidra2::FileInfos;
-using hidra2::FileInfo;
-using hidra2::MockIO;
-using hidra2::Error;
-using hidra2::TextError;
-using hidra2::SimpleError;
-
+using namespace hidra2;
 
 
 namespace {
@@ -45,12 +35,12 @@ namespace {
 
 TEST(FolderDBConverter, SetCorrectIO) {
     FolderToDbImporter converter{};
-    ASSERT_THAT(dynamic_cast<hidra2::SystemIO*>(converter.io__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<SystemIO*>(converter.io__.get()), Ne(nullptr));
 }
 
 TEST(FolderDBConverter, SetCorrectDBFactory) {
     FolderToDbImporter converter{};
-    ASSERT_THAT(dynamic_cast<hidra2::DatabaseFactory*>(converter.db_factory__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<DatabaseFactory*>(converter.db_factory__.get()), Ne(nullptr));
 }
 
 TEST(FolderDBConverter, SetNTasksCorrectly) {
@@ -69,29 +59,6 @@ TEST(FolderDBConverter, SetNTasksCorrectly) {
 
 }
 
-
-class MockDatabase : public Database {
-  public:
-    Error Connect(const std::string& address, const std::string& database,
-                  const std::string& collection ) override {
-        return Error{Connect_t(address, database, collection)};
-
-    }
-    Error Insert(const FileInfo& file, bool ignore_duplicates) const override {
-        return Error{Insert_t(file, ignore_duplicates)};
-    }
-
-    MOCK_METHOD3(Connect_t, SimpleError * (const std::string&, const std::string&, const std::string&));
-    MOCK_CONST_METHOD2(Insert_t, SimpleError * (const FileInfo&, bool));
-
-    // stuff to test db destructor is called and avoid "uninteresting call" messages
-    MOCK_METHOD0(Die, void());
-    virtual ~MockDatabase() override {
-        if (check_destructor)
-            Die();
-    }
-    bool check_destructor{false};
-};
 
 class MockDatabaseFactory : public DatabaseFactory {
   public:

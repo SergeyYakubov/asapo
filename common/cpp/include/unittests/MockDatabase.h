@@ -1,0 +1,37 @@
+#ifndef HIDRA2_MOCKDATABASE_H
+#define HIDRA2_MOCKDATABASE_H
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include "database/database.h"
+#include "common/error.h"
+
+namespace hidra2 {
+
+class MockDatabase : public Database {
+  public:
+    Error Connect(const std::string& address, const std::string& database,
+                  const std::string& collection ) override {
+        return Error{Connect_t(address, database, collection)};
+
+    }
+    Error Insert(const FileInfo& file, bool ignore_duplicates) const override {
+        return Error{Insert_t(file, ignore_duplicates)};
+    }
+
+    MOCK_METHOD3(Connect_t, SimpleError * (const std::string&, const std::string&, const std::string&));
+    MOCK_CONST_METHOD2(Insert_t, SimpleError * (const FileInfo&, bool));
+
+    // stuff to test db destructor is called and avoid "uninteresting call" messages
+    MOCK_METHOD0(Die, void());
+    virtual ~MockDatabase() override {
+        if (check_destructor)
+            Die();
+    }
+    bool check_destructor{false};
+};
+
+}
+
+#endif //HIDRA2_MOCKDATABASE_H

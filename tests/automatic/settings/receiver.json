@@ -1,6 +1,9 @@
 {
   "MonitorDbAddress":"localhost:8086",
   "MonitorDbName": "db_test",
+  "BrokerDbAddress":"localhost:27017",
+  "BrokerDbName": "test_run",
   "ListenPort":4200,
-  "WriteToDisk":true
+  "WriteToDisk":true,
+  "WriteToDb":true
 }
