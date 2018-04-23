@@ -19,19 +19,21 @@ const data_collection_name = "data"
 const pointer_collection_name = "current_location"
 const pointer_field_name = "current_pointer"
 const no_session_msg = "database session not created"
+const wrong_id_type = "wrong id type"
 const already_connected_msg = "already connected"
 
 type Mongodb struct {
-	main_session *mgo.Session
-	timeout      time.Duration
-	databases    []string
+	main_session        *mgo.Session
+	timeout             time.Duration
+	databases           []string
+	db_pointers_created map[string]bool
 }
 
 func (db *Mongodb) Copy() Agent {
-	new_db:= new(Mongodb)
+	new_db := new(Mongodb)
 	new_db.main_session = db.main_session.Copy()
-	new_db.databases = make([]string,len(db.databases))
-	copy(new_db.databases,db.databases)
+	new_db.databases = make([]string, len(db.databases))
+	copy(new_db.databases, db.databases)
 	return new_db
 }
 
@@ -102,16 +104,41 @@ func (db *Mongodb) InsertRecord(dbname string, s interface{}) error {
 	return c.Insert(s)
 }
 
-func (db *Mongodb) incrementField(dbname string, res interface{}) (err error) {
+func (db *Mongodb) getMaxIndex(dbname string) (max_id int, err error) {
+	c := db.main_session.DB(dbname).C(data_collection_name)
+	var id Pointer
+	err = c.Find(nil).Sort("-_id").Select(bson.M{"_id": 1}).One(&id)
+	if err != nil {
+		return 0, nil
+	}
+	return id.ID, nil
+}
+
+func (db *Mongodb) createField(dbname string) (err error) {
 	change := mgo.Change{
-		Update:    bson.M{"$inc": bson.M{pointer_field_name: 1}},
-		Upsert:    true,
-		ReturnNew: true,
+		Update: bson.M{"$inc": bson.M{pointer_field_name: 0}},
+		Upsert: true,
 	}
 	q := bson.M{"_id": 0}
 	c := db.main_session.DB(dbname).C(pointer_collection_name)
-	_, err = c.Find(q).Apply(change, res)
+	var res map[string]interface{}
+	_, err = c.Find(q).Apply(change, &res)
+	return err
+}
 
+func (db *Mongodb) incrementField(dbname string, max_ind int, res interface{}) (err error) {
+	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
+	change := mgo.Change{
+		Update:    update,
+		Upsert:    false,
+		ReturnNew: true,
+	}
+	q := bson.M{"$and": []bson.M{{"_id": 0}, {pointer_field_name: bson.M{"$lt": max_ind}}}}
+	c := db.main_session.DB(dbname).C(pointer_collection_name)
+	_, err = c.Find(q).Apply(change, res)
+	if err == mgo.ErrNotFound {
+		return &DBError{utils.StatusNoData, err.Error()}
+	}
 	return err
 }
 
@@ -121,7 +148,7 @@ func (db *Mongodb) getRecordByID(dbname string, id int) (interface{}, error) {
 	c := db.main_session.DB(dbname).C(data_collection_name)
 	err := c.Find(q).One(&res)
 	if err == mgo.ErrNotFound {
-		return nil, &DBError{utils.StatusNoData, err.Error()}
+		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 	return &res, err
 }
@@ -134,12 +161,25 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string) error {
 	if err := db.dataBaseExist(db_name); err != nil {
 		return &DBError{utils.StatusWrongInput, err.Error()}
 	}
+
+	if !db.db_pointers_created[db_name] {
+		if db.db_pointers_created == nil {
+			db.db_pointers_created = make(map[string]bool)
+		}
+		db.db_pointers_created[db_name] = true
+		db.createField(db_name)
+	}
+
 	return nil
 }
 
 func (db *Mongodb) getCurrentPointer(db_name string) (Pointer, error) {
+	max_ind, err := db.getMaxIndex(db_name)
+	if err != nil {
+		return Pointer{}, err
+	}
 	var curPointer Pointer
-	err := db.incrementField(db_name, &curPointer)
+	err = db.incrementField(db_name, max_ind, &curPointer)
 	if err != nil {
 		return Pointer{}, err
 	}
@@ -148,6 +188,7 @@ func (db *Mongodb) getCurrentPointer(db_name string) (Pointer, error) {
 }
 
 func (db *Mongodb) GetNextRecord(db_name string) ([]byte, error) {
+
 	if err := db.checkDatabaseOperationPrerequisites(db_name); err != nil {
 		return nil, err
 	}

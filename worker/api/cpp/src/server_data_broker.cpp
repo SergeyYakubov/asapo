@@ -1,7 +1,15 @@
 #include "server_data_broker.h"
+
+
+#include <chrono>
+
+
 #include "io/io_factory.h"
 #include "http_client/curl_http_client.h"
 #include "http_client/http_error.h"
+
+
+using std::chrono::high_resolution_clock;
 
 
 namespace hidra2 {
@@ -42,20 +50,36 @@ Error ServerDataBroker::Connect() {
     return nullptr;
 }
 
+void ServerDataBroker::SetTimeout(uint64_t timeout_ms) {
+    timeout_ms_ = timeout_ms;
+}
+
 Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
     std::string full_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
     Error err;
     HttpCode code;
-    auto response = httpclient__->Get(full_uri, &code, &err);
 
-    if (err != nullptr) {
-        return err;
-    }
+    std::string response;
+    uint64_t elapsed_ms = 0;
+    while (true) {
+        response = httpclient__->Get(full_uri, &code, &err);
+        if (err != nullptr) {
+            return err;
+        }
 
-    err = HttpCodeToWorkerError(code);
-    if (err != nullptr) {
-        err->Append(response);
-        return err;
+        err = HttpCodeToWorkerError(code);
+        if (err == nullptr) break;
+        if (err->GetErrorType() != hidra2::ErrorType::kEndOfFile) {
+            err->Append(response);
+//            return err;
+        }
+
+        if (elapsed_ms >= timeout_ms_) {
+            err->Append("exit on timeout");
+            return err;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        elapsed_ms += 100;
     }
 
     if (!info->SetFromJson(response)) {

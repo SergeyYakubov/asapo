@@ -21,4 +21,4 @@ mkdir files
 
 $1 localhost:4200 100 1
 
-ls -ln files/0.bin | awk '{ print $5 }'| grep 102400
+ls -ln files/1.bin | awk '{ print $5 }'| grep 102400

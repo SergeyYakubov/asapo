@@ -32,6 +32,7 @@ std::vector<std::thread> StartThreads(const std::string& server, const std::stri
         hidra2::FileInfo fi;
         Error err;
         auto broker = hidra2::DataBrokerFactory::CreateServerBroker(server, run_name, &err);
+        broker->SetTimeout(1000);
         while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             (*nfiles)[i] ++;
         }

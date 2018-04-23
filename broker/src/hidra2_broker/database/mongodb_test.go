@@ -27,6 +27,7 @@ var rec2_expect, _ = json.Marshal(rec2)
 
 func cleanup() {
 	db.DeleteAllRecords(dbname)
+	db.db_pointers_created = nil
 	db.Close()
 }
 
@@ -59,10 +60,8 @@ func TestMongoDBGetNextErrorWhenWrongDatabasename(t *testing.T) {
 
 func TestMongoDBGetNextErrorWhenEmptyCollection(t *testing.T) {
 	db.Connect(dbaddress)
+	db.databases = append(db.databases, dbname)
 	defer cleanup()
-	var curPointer Pointer
-	db.incrementField(dbname, &curPointer)
-
 	_, err := db.GetNextRecord(dbname)
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 }

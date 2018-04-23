@@ -29,6 +29,8 @@ class DataBroker {
     //! Connect to the data source - will scan file folders or connect to the database.
 // TODO: do we need this?
     virtual Error Connect() = 0;
+    //! Set timeout for broker operations. Default - no timeout
+    virtual void SetTimeout(uint64_t timeout_ms) = 0;
     //! Receive next image.
     /*!
       \param info -  where to store image metadata. Can be set to nullptr only image data is needed.

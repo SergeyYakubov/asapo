@@ -15,9 +15,9 @@ class FolderDataBroker final : public hidra2::DataBroker {
     explicit FolderDataBroker(const std::string& source_name);
     Error Connect() override;
     Error GetNext(FileInfo* info, FileData* data) override;
+    void SetTimeout(uint64_t timeout_ms) override {}; // to timeout in this case
 
     std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
-
   private:
     std::string base_path_;
     bool is_connected_;

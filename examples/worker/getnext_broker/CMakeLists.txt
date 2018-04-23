@@ -3,6 +3,7 @@ set(SOURCE_FILES getnext_broker.cpp)
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
 target_link_libraries(${TARGET_NAME} hidra2-worker)
+
 #use expression generator to get rid of VS adding Debug/Release folders
 set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}$<$<CONFIG:Debug>:>

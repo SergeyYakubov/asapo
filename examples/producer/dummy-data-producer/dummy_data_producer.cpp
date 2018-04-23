@@ -30,7 +30,7 @@ bool SendDummyData(hidra2::Producer* producer, size_t number_of_byte, uint64_t i
     for(uint64_t i = 0; i < iterations; i++) {
 //        std::cerr << "Send file " << i + 1 << "/" << iterations << std::endl;
 
-        auto err = producer->Send(i, buffer.get(), number_of_byte);
+        auto err = producer->Send(i + 1, buffer.get(), number_of_byte);
 
         if (err) {
             std::cerr << "File was not successfully send: " << err << std::endl;
