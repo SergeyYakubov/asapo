@@ -7,6 +7,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"hidra2_broker/utils"
+	"sync"
 	"time"
 )
 
@@ -22,27 +23,34 @@ const no_session_msg = "database session not created"
 const wrong_id_type = "wrong id type"
 const already_connected_msg = "already connected"
 
+var dbListLock sync.RWMutex
+var dbPointersLock sync.RWMutex
+
 type Mongodb struct {
-	main_session        *mgo.Session
+	session             *mgo.Session
 	timeout             time.Duration
 	databases           []string
+	parent_db           *Mongodb
 	db_pointers_created map[string]bool
 }
 
 func (db *Mongodb) Copy() Agent {
 	new_db := new(Mongodb)
-	new_db.main_session = db.main_session.Copy()
-	new_db.databases = make([]string, len(db.databases))
-	copy(new_db.databases, db.databases)
+	new_db.session = db.session.Copy()
+	new_db.parent_db = db
 	return new_db
 }
 
 func (db *Mongodb) databaseInList(dbname string) bool {
+	dbListLock.RLock()
+	defer dbListLock.RUnlock()
 	return utils.StringInSlice(dbname, db.databases)
 }
 
 func (db *Mongodb) updateDatabaseList() (err error) {
-	db.databases, err = db.main_session.DatabaseNames()
+	dbListLock.Lock()
+	db.databases, err = db.session.DatabaseNames()
+	dbListLock.Unlock()
 	return err
 }
 
@@ -63,11 +71,11 @@ func (db *Mongodb) dataBaseExist(dbname string) (err error) {
 }
 
 func (db *Mongodb) Connect(address string) (err error) {
-	if db.main_session != nil {
+	if db.session != nil {
 		return errors.New(already_connected_msg)
 	}
 
-	db.main_session, err = mgo.DialWithTimeout(address, time.Second)
+	db.session, err = mgo.DialWithTimeout(address, time.Second)
 	if err != nil {
 		return err
 	}
@@ -80,32 +88,32 @@ func (db *Mongodb) Connect(address string) (err error) {
 }
 
 func (db *Mongodb) Close() {
-	if db.main_session != nil {
-		db.main_session.Close()
-		db.main_session = nil
+	if db.session != nil {
+		db.session.Close()
+		db.session = nil
 	}
 
 }
 
 func (db *Mongodb) DeleteAllRecords(dbname string) (err error) {
-	if db.main_session == nil {
+	if db.session == nil {
 		return errors.New(no_session_msg)
 	}
-	return db.main_session.DB(dbname).DropDatabase()
+	return db.session.DB(dbname).DropDatabase()
 }
 
 func (db *Mongodb) InsertRecord(dbname string, s interface{}) error {
-	if db.main_session == nil {
+	if db.session == nil {
 		return errors.New(no_session_msg)
 	}
 
-	c := db.main_session.DB(dbname).C(data_collection_name)
+	c := db.session.DB(dbname).C(data_collection_name)
 
 	return c.Insert(s)
 }
 
 func (db *Mongodb) getMaxIndex(dbname string) (max_id int, err error) {
-	c := db.main_session.DB(dbname).C(data_collection_name)
+	c := db.session.DB(dbname).C(data_collection_name)
 	var id Pointer
 	err = c.Find(nil).Sort("-_id").Select(bson.M{"_id": 1}).One(&id)
 	if err != nil {
@@ -114,13 +122,13 @@ func (db *Mongodb) getMaxIndex(dbname string) (max_id int, err error) {
 	return id.ID, nil
 }
 
-func (db *Mongodb) createField(dbname string) (err error) {
+func (db *Mongodb) createLocationPointers(dbname string) (err error) {
 	change := mgo.Change{
 		Update: bson.M{"$inc": bson.M{pointer_field_name: 0}},
 		Upsert: true,
 	}
 	q := bson.M{"_id": 0}
-	c := db.main_session.DB(dbname).C(pointer_collection_name)
+	c := db.session.DB(dbname).C(pointer_collection_name)
 	var res map[string]interface{}
 	_, err = c.Find(q).Apply(change, &res)
 	return err
@@ -133,8 +141,8 @@ func (db *Mongodb) incrementField(dbname string, max_ind int, res interface{}) (
 		Upsert:    false,
 		ReturnNew: true,
 	}
-	q := bson.M{"$and": []bson.M{{"_id": 0}, {pointer_field_name: bson.M{"$lt": max_ind}}}}
-	c := db.main_session.DB(dbname).C(pointer_collection_name)
+	q := bson.M{"_id": 0, pointer_field_name: bson.M{"$lt": max_ind}}
+	c := db.session.DB(dbname).C(pointer_collection_name)
 	_, err = c.Find(q).Apply(change, res)
 	if err == mgo.ErrNotFound {
 		return &DBError{utils.StatusNoData, err.Error()}
@@ -145,30 +153,55 @@ func (db *Mongodb) incrementField(dbname string, max_ind int, res interface{}) (
 func (db *Mongodb) getRecordByID(dbname string, id int) (interface{}, error) {
 	var res map[string]interface{}
 	q := bson.M{"_id": id}
-	c := db.main_session.DB(dbname).C(data_collection_name)
+	c := db.session.DB(dbname).C(data_collection_name)
 	err := c.Find(q).One(&res)
 	if err == mgo.ErrNotFound {
-		return nil, &DBError{utils.StatusWrongInput, err.Error()}
+		return nil, &DBError{utils.StatusNoData, err.Error()}
 	}
 	return &res, err
 }
 
+func (db *Mongodb) needCreateLocationPointersInDb(db_name string) bool {
+	dbPointersLock.RLock()
+	needCreate := !db.db_pointers_created[db_name]
+	dbPointersLock.RUnlock()
+	return needCreate
+}
+
+func (db *Mongodb) SetLocationPointersCreateFlag(db_name string) {
+	dbPointersLock.Lock()
+	if db.db_pointers_created == nil {
+		db.db_pointers_created = make(map[string]bool)
+	}
+	db.db_pointers_created[db_name] = true
+	dbPointersLock.Unlock()
+}
+
+func (db *Mongodb) generateLocationPointersInDbIfNeeded(db_name string) {
+	if db.needCreateLocationPointersInDb(db_name) {
+		db.createLocationPointers(db_name)
+		db.SetLocationPointersCreateFlag(db_name)
+	}
+}
+
+func (db *Mongodb) getParentDB() *Mongodb {
+	if db.parent_db == nil {
+		return db
+	} else {
+		return db.parent_db
+	}
+}
+
 func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string) error {
-	if db.main_session == nil {
+	if db.session == nil {
 		return &DBError{utils.StatusError, no_session_msg}
 	}
 
-	if err := db.dataBaseExist(db_name); err != nil {
+	if err := db.getParentDB().dataBaseExist(db_name); err != nil {
 		return &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	if !db.db_pointers_created[db_name] {
-		if db.db_pointers_created == nil {
-			db.db_pointers_created = make(map[string]bool)
-		}
-		db.db_pointers_created[db_name] = true
-		db.createField(db_name)
-	}
+	db.getParentDB().generateLocationPointersInDbIfNeeded(db_name)
 
 	return nil
 }
