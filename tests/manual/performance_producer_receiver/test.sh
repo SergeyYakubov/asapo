@@ -30,7 +30,6 @@ ssh ${worker_node} mkdir -p ${worker_dir}
 scp ../../../cmake-build-release/receiver/receiver ${service_node}:${service_dir}
 scp ../../../cmake-build-release/examples/producer/dummy-data-producer/dummy-data-producer ${worker_node}:${worker_dir}
 
-
 function do_work {
 cat receiver.json |
   jq "to_entries |
@@ -49,9 +48,11 @@ ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./receiver settings.json 
 sleep 0.3
 for size  in 100 1000 10000
 do
+ssh ${service_node} docker run -d -p 27017:27017 --name mongo mongo
 echo ===================================================================
 ssh ${worker_node} ${worker_dir}/dummy-data-producer ${service_ip}:${service_port} ${size} 1000
 ssh ${service_node} rm -f ${service_dir}/files/*
+ssh ${service_node} docker rm -f -v mongo
 done
 ssh ${service_node} killall receiver
 }
@@ -67,3 +68,4 @@ do_work false
 
 #rm settings_tmp.json
 #ssh ${service_node} docker rm -f influxdb
+
