@@ -244,32 +244,6 @@
             ]
           ],
           "tags": []
-        },
-        {
-          "alias": "Database",
-          "groupBy": [],
-          "measurement": "statistics",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "db_share"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [
-                  " *data_volume/ elapsed_ms/1024/1024/1024*1000*8"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": []
         }
       ],
       "thresholds": [],
@@ -341,7 +315,7 @@
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
-      "stack": true,
+      "stack": false,
       "steppedLine": false,
       "targets": [
         {
@@ -481,5 +455,5 @@
   "timezone": "",
   "title": "ASAP::O",
   "uid": "3JvTwliiz",
-  "version": 3
+  "version": 4
 }
