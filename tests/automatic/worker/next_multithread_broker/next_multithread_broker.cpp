@@ -58,7 +58,6 @@ void GetAllFromBroker(const Args& args) {
 
     std::vector<std::thread> threads;
     for (int i = 0; i < args.nthreads; i++) {
-        exec_next(i);
         threads.emplace_back(std::thread(exec_next, i));
     }
 

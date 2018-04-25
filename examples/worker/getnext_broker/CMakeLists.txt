@@ -10,6 +10,9 @@ set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
         )
 
 get_target_property(VAR ${TARGET_NAME} RUNTIME_OUTPUT_DIRECTORY)
+add_dependencies(${TARGET_NAME} hidra2-broker)
+
+
 
 configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/broker_settings.json settings.json COPYONLY)
 add_script_test("${TARGET_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} $<TARGET_PROPERTY:hidra2-broker,EXENAME>")

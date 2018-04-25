@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include "statistics.h"
-#include "http_client/curl_http_client.h"
 #include "receiver_config.h"
 
 namespace hidra2 {
@@ -45,7 +44,7 @@ std::string StatisticsSenderInfluxDb::StatisticsToString(const StatisticsToSend&
     return str;
 }
 
-StatisticsSenderInfluxDb::StatisticsSenderInfluxDb(): httpclient__{new CurlHttpClient} {
+StatisticsSenderInfluxDb::StatisticsSenderInfluxDb(): httpclient__{DefaultHttpClient()} {
 };
 
 

@@ -16,6 +16,8 @@ class HttpClient {
 
 };
 
+std::unique_ptr<HttpClient> DefaultHttpClient();
+
 enum class HttpCode : int {
     Continue           = 100,
     SwitchingProtocols = 101,

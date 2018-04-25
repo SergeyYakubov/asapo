@@ -4,7 +4,7 @@
 
 #include "../src/statistics_sender_influx_db.h"
 #include "../src/statistics_sender.h"
-#include "http_client/curl_http_client.h"
+#include "../../common/cpp/src/http_client/curl_http_client.h"
 #include "unittests/MockHttpClient.h"
 #include "../src/statistics.h"
 

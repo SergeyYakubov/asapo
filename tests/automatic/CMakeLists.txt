@@ -23,3 +23,5 @@ add_subdirectory(curl_http_client)
 add_subdirectory(producer_receiver)
 
 add_subdirectory(full_chain)
+
+add_subdirectory(spd_logger)

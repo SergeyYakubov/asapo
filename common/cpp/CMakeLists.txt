@@ -8,6 +8,9 @@ add_subdirectory(src/data_structs)
 
 add_subdirectory(src/http_client)
 
+add_subdirectory(src/logger)
+
+
 if(BUILD_MONGODB_CLIENTLIB)
     add_subdirectory(src/database)
 endif()
