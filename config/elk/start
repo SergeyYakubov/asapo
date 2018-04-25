@@ -1,0 +1,3 @@
+docker network create elk
+docker run -d -v "$PWD/esdata":/usr/share/elasticsearch/data -p 9200:9200 -p 9300:9300 --name elastic --net elk elasticsearch
+docker run -e ELASTICSEARCH_URL="http://elastic:9200" -p 5601:5601 -d --name kib --net elk kibana
