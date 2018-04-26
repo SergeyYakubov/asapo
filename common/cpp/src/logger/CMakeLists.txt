@@ -16,8 +16,11 @@ target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR
 ################################
 
 
-set(TEST_SOURCE_FILES ../../unittests/logger/test_logger.cpp)
+set(TEST_SOURCE_FILES ../../unittests/logger/test_logger.cpp
+        ../../unittests/logger/test_fluentd_sink.cpp)
 
-set(TEST_LIBRARIES "${TARGET_NAME};curl_http_client;${CURL_LIBRARIES}")
+link_libraries(${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+
+set(TEST_LIBRARIES "${TARGET_NAME};curl_http_client")
 include_directories(${HIDRA2_CXX_COMMON_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3d_party/spd_log/include)
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")

@@ -12,10 +12,8 @@
 #include <string>
 #include <map>
 
-namespace spdlog
-{
-namespace sinks
-{
+namespace spdlog {
+namespace sinks {
 
 /**
  * This sink prefixes the output with an ANSI escape sequence color code depending on the severity
@@ -23,11 +21,9 @@ namespace sinks
  * If no color terminal detected, omit the escape codes.
  */
 template <class Mutex>
-class ansicolor_sink: public base_sink<Mutex>
-{
-public:
-    ansicolor_sink(FILE* file): target_file_(file)
-    {
+class ansicolor_sink: public base_sink<Mutex> {
+  public:
+    ansicolor_sink(FILE* file): target_file_(file) {
         should_do_colors_ = details::os::in_terminal(file) && details::os::is_color_terminal();
         colors_[level::trace] = cyan;
         colors_[level::debug] = cyan;
@@ -37,13 +33,11 @@ public:
         colors_[level::critical] = bold + on_red;
         colors_[level::off] = reset;
     }
-    virtual ~ansicolor_sink()
-    {
+    virtual ~ansicolor_sink() {
         _flush();
     }
 
-    void set_color(level::level_enum color_level, const std::string& color)
-    {
+    void set_color(level::level_enum color_level, const std::string& color) {
         std::lock_guard<Mutex> lock(base_sink<Mutex>::_mutex);
         colors_[color_level] = color;
     }
@@ -77,27 +71,22 @@ public:
     const std::string on_cyan = "\033[46m";
     const std::string on_white = "\033[47m";
 
-protected:
-    virtual void _sink_it(const details::log_msg& msg) override
-    {
+  protected:
+    virtual void _sink_it(const details::log_msg& msg) override {
         // Wrap the originally formatted message in color codes.
         // If color is not supported in the terminal, log as is instead.
-        if (should_do_colors_)
-        {
+        if (should_do_colors_) {
             const std::string& prefix = colors_[msg.level];
             fwrite(prefix.data(), sizeof(char), prefix.size(), target_file_);
             fwrite(msg.formatted.data(), sizeof(char), msg.formatted.size(), target_file_);
             fwrite(reset.data(), sizeof(char), reset.size(), target_file_);
-        }
-        else
-        {
+        } else {
             fwrite(msg.formatted.data(), sizeof(char), msg.formatted.size(), target_file_);
         }
         _flush();
     }
 
-    void _flush() override
-    {
+    void _flush() override {
         fflush(target_file_);
     }
     FILE* target_file_;
@@ -107,19 +96,17 @@ protected:
 
 
 template<class Mutex>
-class ansicolor_stdout_sink: public ansicolor_sink<Mutex>
-{
-public:
-    ansicolor_stdout_sink(): ansicolor_sink<Mutex>(stdout)
-    {}
+class ansicolor_stdout_sink: public ansicolor_sink<Mutex> {
+  public:
+    ansicolor_stdout_sink(): ansicolor_sink<Mutex>(stdout) {
+    }
 };
 
 template<class Mutex>
-class ansicolor_stderr_sink: public ansicolor_sink<Mutex>
-{
-public:
-    ansicolor_stderr_sink(): ansicolor_sink<Mutex>(stderr)
-    {}
+class ansicolor_stderr_sink: public ansicolor_sink<Mutex> {
+  public:
+    ansicolor_stderr_sink(): ansicolor_sink<Mutex>(stderr) {
+    }
 };
 
 typedef ansicolor_stdout_sink<std::mutex> ansicolor_stdout_sink_mt;

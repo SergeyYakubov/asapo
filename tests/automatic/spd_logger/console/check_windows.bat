@@ -1,19 +1,35 @@
-set full_recv_name="%2"
-set short_recv_name="%~nx2"
+"%1" > output
 
-start /B "" "%full_recv_name%" receiver.json
+findstr /I /L /C:"[info] test_info" output || goto :error
+findstr /I /L /C:"[error] test_error" output || goto :error
+findstr /I /L /C:"[debug] test_debug"  output|| goto :error
+findstr /I /L /C:"[warning] test_warning" output || goto :error
+findstr /I /L /C:"test_info_mt_0" output || goto :error
+findstr /I /L /C:"test_info_mt_1" output || goto :error
+findstr /I /L /C:"test_info_mt_2" output || goto :error
+findstr /I /L /C:"test_info_mt_3" output || goto :error
+findstr /I /L /C:"test_logger" output || goto :error
 
-ping 1.0.0.0 -n 1 -w 100 > nul
+REM error_lev
+findstr /I /L /C:"test_error_errorlev" output || goto :error
+findstr /I /L /C:"test_debug_errorlev" output  && goto :error
+findstr /I /L /C:"test_info_errorlev" output && goto :error
+findstr /I /L /C:"test_warning_errorlev" output && goto :error
 
-mkdir files
+REM warning_lev
+findstr /I /L /C:"test_error_warninglev" output || goto :error
+findstr /I /L /C:"test_debug_warninglev" output && goto :error
+findstr /I /L /C:"test_info_warninglev" output && goto :error
+findstr /I /L /C:"test_warning_warninglev" output  || goto :error
 
-%1 localhost:4200 100 1
+REM info_lev
+findstr /I /L /C:"test_error_infolev" output || goto :error
+findstr /I /L /C:"test_debug_infolev" output && goto :error
+findstr /I /L /C:"test_info_infolev" output || goto :error
+findstr /I /L /C:"test_warning_infolev" output || goto :error
 
-ping 1.0.0.0 -n 1 -w 100 > nul
-
-FOR /F "usebackq" %%A IN ('files\1.bin') DO set size=%%~zA
-
-if %size% NEQ 102400 goto :error
+REM none_lev
+findstr /I /L /C:"nonelev" output && goto :error
 
 goto :clean
 
@@ -22,10 +38,5 @@ call :clean
 exit /b 1
 
 :clean
-Taskkill /IM "%short_recv_name%" /F
-rmdir /S /Q files
-SET database_name=test_run
-SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
-echo db.dropDatabase() | %mongo_exe% %database_name%
-
+del output
 

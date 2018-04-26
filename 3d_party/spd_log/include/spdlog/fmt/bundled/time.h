@@ -19,15 +19,13 @@
 # pragma warning(disable: 4996)  // "deprecated" functions
 #endif
 
-namespace fmt
-{
+namespace fmt {
 template <typename ArgFormatter>
-void format_arg(BasicFormatter<char, ArgFormatter> &f,
-                const char *&format_str, const std::tm &tm)
-{
+void format_arg(BasicFormatter<char, ArgFormatter>& f,
+                const char*& format_str, const std::tm& tm) {
     if (*format_str == ':')
         ++format_str;
-    const char *end = format_str;
+    const char* end = format_str;
     while (*end && *end != '}')
         ++end;
     if (*end != '}')
@@ -35,19 +33,16 @@ void format_arg(BasicFormatter<char, ArgFormatter> &f,
     internal::MemoryBuffer<char, internal::INLINE_BUFFER_SIZE> format;
     format.append(format_str, end + 1);
     format[format.size() - 1] = '\0';
-    Buffer<char> &buffer = f.writer().buffer();
+    Buffer<char>& buffer = f.writer().buffer();
     std::size_t start = buffer.size();
-    for (;;)
-    {
+    for (;;) {
         std::size_t size = buffer.capacity() - start;
         std::size_t count = std::strftime(&buffer[start], size, &format[0], &tm);
-        if (count != 0)
-        {
+        if (count != 0) {
             buffer.resize(start + count);
             break;
         }
-        if (size >= format.size() * 256)
-        {
+        if (size >= format.size() * 256) {
             // If the buffer is 256 times larger than the format string, assume
             // that `strftime` gives an empty result. There doesn't seem to be a
             // better way to distinguish the two cases:
@@ -60,62 +55,50 @@ void format_arg(BasicFormatter<char, ArgFormatter> &f,
     format_str = end + 1;
 }
 
-namespace internal
-{
-inline Null<> localtime_r(...)
-{
+namespace internal {
+inline Null<> localtime_r(...) {
     return Null<>();
 }
-inline Null<> localtime_s(...)
-{
+inline Null<> localtime_s(...) {
     return Null<>();
 }
-inline Null<> gmtime_r(...)
-{
+inline Null<> gmtime_r(...) {
     return Null<>();
 }
-inline Null<> gmtime_s(...)
-{
+inline Null<> gmtime_s(...) {
     return Null<>();
 }
 }
 
 // Thread-safe replacement for std::localtime
-inline std::tm localtime(std::time_t time)
-{
-    struct LocalTime
-    {
+inline std::tm localtime(std::time_t time) {
+    struct LocalTime {
         std::time_t time_;
         std::tm tm_;
 
         LocalTime(std::time_t t): time_(t) {}
 
-        bool run()
-        {
+        bool run() {
             using namespace fmt::internal;
             return handle(localtime_r(&time_, &tm_));
         }
 
-        bool handle(std::tm *tm)
-        {
+        bool handle(std::tm* tm) {
             return tm != FMT_NULL;
         }
 
-        bool handle(internal::Null<>)
-        {
+        bool handle(internal::Null<>) {
             using namespace fmt::internal;
             return fallback(localtime_s(&tm_, &time_));
         }
 
-        bool fallback(int res)
-        {
+        bool fallback(int res) {
             return res == 0;
         }
 
-        bool fallback(internal::Null<>)
-        {
+        bool fallback(internal::Null<>) {
             using namespace fmt::internal;
-            std::tm *tm = std::localtime(&time_);
+            std::tm* tm = std::localtime(&time_);
             if (tm) tm_ = *tm;
             return tm != FMT_NULL;
         }
@@ -129,40 +112,33 @@ inline std::tm localtime(std::time_t time)
 }
 
 // Thread-safe replacement for std::gmtime
-inline std::tm gmtime(std::time_t time)
-{
-    struct GMTime
-    {
+inline std::tm gmtime(std::time_t time) {
+    struct GMTime {
         std::time_t time_;
         std::tm tm_;
 
         GMTime(std::time_t t): time_(t) {}
 
-        bool run()
-        {
+        bool run() {
             using namespace fmt::internal;
             return handle(gmtime_r(&time_, &tm_));
         }
 
-        bool handle(std::tm *tm)
-        {
+        bool handle(std::tm* tm) {
             return tm != FMT_NULL;
         }
 
-        bool handle(internal::Null<>)
-        {
+        bool handle(internal::Null<>) {
             using namespace fmt::internal;
             return fallback(gmtime_s(&tm_, &time_));
         }
 
-        bool fallback(int res)
-        {
+        bool fallback(int res) {
             return res == 0;
         }
 
-        bool fallback(internal::Null<>)
-        {
-            std::tm *tm = std::gmtime(&time_);
+        bool fallback(internal::Null<>) {
+            std::tm* tm = std::gmtime(&time_);
             if (tm != FMT_NULL) tm_ = *tm;
             return tm != FMT_NULL;
         }

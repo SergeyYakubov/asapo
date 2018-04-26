@@ -2,8 +2,8 @@
 
 namespace hidra2 {
 
-Logger CreateLogger(std::string name,bool console,bool centralized_log,const std::string& endpoint_uri) {
-    auto logger = new SpdLogger{name,endpoint_uri};
+Logger CreateLogger(std::string name, bool console, bool centralized_log, const std::string& endpoint_uri) {
+    auto logger = new SpdLogger{name, endpoint_uri};
     logger->SetLogLevel(LogLevel::Error);
     if (console) {
         logger->EnableConsoleLog(true);
@@ -17,11 +17,11 @@ Logger CreateLogger(std::string name,bool console,bool centralized_log,const std
 
 
 Logger CreateDefaultLoggerBin(const std::string& name) {
-    return CreateLogger(name,true,false,"");
+    return CreateLogger(name, true, false, "");
 }
 
-Logger CreateDefaultLoggerApi(const std::string& name,const std::string& endpoint_uri) {
-    return CreateLogger(name,false,true,endpoint_uri);
+Logger CreateDefaultLoggerApi(const std::string& name, const std::string& endpoint_uri) {
+    return CreateLogger(name, false, true, endpoint_uri);
 }
 
 

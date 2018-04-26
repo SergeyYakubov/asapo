@@ -9,10 +9,8 @@
 
 #include "msvc_sink.h"
 
-namespace spdlog
-{
-namespace sinks
-{
+namespace spdlog {
+namespace sinks {
 
 /*
 * Windows debug sink (logging using OutputDebugStringA, synonym for msvc_sink)

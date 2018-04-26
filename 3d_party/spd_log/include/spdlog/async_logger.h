@@ -23,17 +23,14 @@
 #include <string>
 #include <memory>
 
-namespace spdlog
-{
+namespace spdlog {
 
-namespace details
-{
+namespace details {
 class async_log_helper;
 }
 
-class async_logger SPDLOG_FINAL :public logger
-{
-public:
+class async_logger SPDLOG_FINAL : public logger {
+  public:
     template<class It>
     async_logger(const std::string& name,
                  const It& begin,
@@ -68,12 +65,12 @@ public:
     virtual void set_error_handler(log_err_handler) override;
     virtual log_err_handler error_handler() override;
 
-protected:
+  protected:
     void _sink_it(details::log_msg& msg) override;
     void _set_formatter(spdlog::formatter_ptr msg_formatter) override;
     void _set_pattern(const std::string& pattern, pattern_time_type pattern_time) override;
 
-private:
+  private:
     std::unique_ptr<details::async_log_helper> _async_log_helper;
 };
 }

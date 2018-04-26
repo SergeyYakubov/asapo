@@ -2,7 +2,7 @@
 
 set -e
 
-res=`$1`
+res=`$@`
 
 echo $res | grep "\[info\] test_info"
 echo $res | grep "\[error\] test_error"

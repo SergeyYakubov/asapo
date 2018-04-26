@@ -28,23 +28,18 @@
 #include <utility>
 #include <vector>
 
-namespace spdlog
-{
-namespace details
-{
+namespace spdlog {
+namespace details {
 
-class async_log_helper
-{
+class async_log_helper {
     // Async msg to move to/from the queue
     // Movable only. should never be copied
-    enum class async_msg_type
-    {
+    enum class async_msg_type {
         log,
         flush,
         terminate
     };
-    struct async_msg
-    {
+    struct async_msg {
         std::string logger_name;
         level::level_enum level;
         log_clock::time_point time;
@@ -64,18 +59,17 @@ async_msg(async_msg&& other) SPDLOG_NOEXCEPT:
                     thread_id(other.thread_id),
                     txt(std::move(other.txt)),
                     msg_type(std::move(other.msg_type)),
-                    msg_id(other.msg_id)
-        {}
+        msg_id(other.msg_id) {
+        }
 
         async_msg(async_msg_type m_type):
             level(level::info),
             thread_id(0),
             msg_type(m_type),
-            msg_id(0)
-        {}
+            msg_id(0) {
+        }
 
-        async_msg& operator=(async_msg&& other) SPDLOG_NOEXCEPT
-        {
+        async_msg& operator=(async_msg&& other) SPDLOG_NOEXCEPT {
             logger_name = std::move(other.logger_name);
             level = other.level;
             time = std::move(other.time);
@@ -97,8 +91,7 @@ async_msg(async_msg&& other) SPDLOG_NOEXCEPT:
             thread_id(m.thread_id),
             txt(m.raw.data(), m.raw.size()),
             msg_type(async_msg_type::log),
-            msg_id(m.msg_id)
-        {
+            msg_id(m.msg_id) {
 #ifndef SPDLOG_NO_NAME
             logger_name = *m.logger_name;
 #endif
@@ -106,8 +99,7 @@ async_msg(async_msg&& other) SPDLOG_NOEXCEPT:
 
 
         // copy into log_msg
-        void fill_log_msg(log_msg &msg)
-        {
+        void fill_log_msg(log_msg& msg) {
             msg.logger_name = &logger_name;
             msg.level = level;
             msg.time = time;
@@ -117,7 +109,7 @@ async_msg(async_msg&& other) SPDLOG_NOEXCEPT:
         }
     };
 
-public:
+  public:
 
     using item_type = async_msg;
     using q_type = details::mpmc_bounded_queue<item_type>;
@@ -145,7 +137,7 @@ public:
 
     void set_error_handler(spdlog::log_err_handler err_handler);
 
-private:
+  private:
     formatter_ptr _formatter;
     std::vector<std::shared_ptr<sinks::sink>> _sinks;
 
@@ -217,71 +209,54 @@ inline spdlog::details::async_log_helper::async_log_helper(
     _worker_warmup_cb(worker_warmup_cb),
     _flush_interval_ms(flush_interval_ms),
     _worker_teardown_cb(worker_teardown_cb),
-    _worker_thread(&async_log_helper::worker_loop, this)
-{}
+    _worker_thread(&async_log_helper::worker_loop, this) {
+}
 
 // Send to the worker thread termination message(level=off)
 // and wait for it to finish gracefully
-inline spdlog::details::async_log_helper::~async_log_helper()
-{
-    try
-    {
+inline spdlog::details::async_log_helper::~async_log_helper() {
+    try {
         push_msg(async_msg(async_msg_type::terminate));
         _worker_thread.join();
-    }
-    catch (...) // don't crash in destructor
-    {
+    } catch (...) { // don't crash in destructor
     }
 }
 
 
 //Try to push and block until succeeded (if the policy is not to discard when the queue is full)
-inline void spdlog::details::async_log_helper::log(const details::log_msg& msg)
-{
+inline void spdlog::details::async_log_helper::log(const details::log_msg& msg) {
     push_msg(async_msg(msg));
 }
 
-inline void spdlog::details::async_log_helper::push_msg(details::async_log_helper::async_msg&& new_msg)
-{
-    if (!_q.enqueue(std::move(new_msg)) && _overflow_policy != async_overflow_policy::discard_log_msg)
-    {
+inline void spdlog::details::async_log_helper::push_msg(details::async_log_helper::async_msg&& new_msg) {
+    if (!_q.enqueue(std::move(new_msg)) && _overflow_policy != async_overflow_policy::discard_log_msg) {
         auto last_op_time = details::os::now();
         auto now = last_op_time;
-        do
-        {
+        do {
             now = details::os::now();
             sleep_or_yield(now, last_op_time);
-        }
-        while (!_q.enqueue(std::move(new_msg)));
+        } while (!_q.enqueue(std::move(new_msg)));
     }
 }
 
 // optionally wait for the queue be empty and request flush from the sinks
-inline void spdlog::details::async_log_helper::flush(bool wait_for_q)
-{
+inline void spdlog::details::async_log_helper::flush(bool wait_for_q) {
     push_msg(async_msg(async_msg_type::flush));
     if (wait_for_q)
         wait_empty_q(); //return when queue is empty
 }
 
-inline void spdlog::details::async_log_helper::worker_loop()
-{
+inline void spdlog::details::async_log_helper::worker_loop() {
     if (_worker_warmup_cb) _worker_warmup_cb();
     auto last_pop = details::os::now();
     auto last_flush = last_pop;
     auto active = true;
-    while (active)
-    {
-        try
-        {
+    while (active) {
+        try {
             active = process_next_msg(last_pop, last_flush);
-        }
-        catch (const std::exception &ex)
-        {
+        } catch (const std::exception& ex) {
             _err_handler(ex.what());
-        }
-        catch(...)
-        {
+        } catch(...) {
             _err_handler("Unknown exeption in async logger worker loop.");
         }
     }
@@ -292,15 +267,13 @@ inline void spdlog::details::async_log_helper::worker_loop()
 
 // process next message in the queue
 // return true if this thread should still be active (while no terminate msg was received)
-inline bool spdlog::details::async_log_helper::process_next_msg(log_clock::time_point& last_pop, log_clock::time_point& last_flush)
-{
+inline bool spdlog::details::async_log_helper::process_next_msg(log_clock::time_point& last_pop,
+        log_clock::time_point& last_flush) {
     async_msg incoming_async_msg;
 
-    if (_q.dequeue(incoming_async_msg))
-    {
+    if (_q.dequeue(incoming_async_msg)) {
         last_pop = details::os::now();
-        switch (incoming_async_msg.msg_type)
-        {
+        switch (incoming_async_msg.msg_type) {
         case async_msg_type::flush:
             _flush_requested = true;
             break;
@@ -314,10 +287,8 @@ inline bool spdlog::details::async_log_helper::process_next_msg(log_clock::time_
             log_msg incoming_log_msg;
             incoming_async_msg.fill_log_msg(incoming_log_msg);
             _formatter->format(incoming_log_msg);
-            for (auto &s : _sinks)
-            {
-                if (s->should_log(incoming_log_msg.level))
-                {
+            for (auto& s : _sinks) {
+                if (s->should_log(incoming_log_msg.level)) {
                     s->log(incoming_log_msg);
                 }
             }
@@ -327,8 +298,7 @@ inline bool spdlog::details::async_log_helper::process_next_msg(log_clock::time_
 
     // Handle empty queue..
     // This is the only place where the queue can terminate or flush to avoid losing messages already in the queue
-    else
-    {
+    else {
         auto now = details::os::now();
         handle_flush_interval(now, last_flush);
         sleep_or_yield(now, last_pop);
@@ -337,27 +307,26 @@ inline bool spdlog::details::async_log_helper::process_next_msg(log_clock::time_
 }
 
 // flush all sinks if _flush_interval_ms has expired
-inline void spdlog::details::async_log_helper::handle_flush_interval(log_clock::time_point& now, log_clock::time_point& last_flush)
-{
-    auto should_flush = _flush_requested || (_flush_interval_ms != std::chrono::milliseconds::zero() && now - last_flush >= _flush_interval_ms);
-    if (should_flush)
-    {
-        for (auto &s : _sinks)
+inline void spdlog::details::async_log_helper::handle_flush_interval(log_clock::time_point& now,
+        log_clock::time_point& last_flush) {
+    auto should_flush = _flush_requested || (_flush_interval_ms != std::chrono::milliseconds::zero()
+                                             && now - last_flush >= _flush_interval_ms);
+    if (should_flush) {
+        for (auto& s : _sinks)
             s->flush();
         now = last_flush = details::os::now();
         _flush_requested = false;
     }
 }
 
-inline void spdlog::details::async_log_helper::set_formatter(formatter_ptr msg_formatter)
-{
+inline void spdlog::details::async_log_helper::set_formatter(formatter_ptr msg_formatter) {
     _formatter = msg_formatter;
 }
 
 
 // spin, yield or sleep. use the time passed since last message as a hint
-inline void spdlog::details::async_log_helper::sleep_or_yield(const spdlog::log_clock::time_point& now, const spdlog::log_clock::time_point& last_op_time)
-{
+inline void spdlog::details::async_log_helper::sleep_or_yield(const spdlog::log_clock::time_point& now,
+        const spdlog::log_clock::time_point& last_op_time) {
     using std::chrono::milliseconds;
     using std::chrono::microseconds;
 
@@ -380,17 +349,14 @@ inline void spdlog::details::async_log_helper::sleep_or_yield(const spdlog::log_
 }
 
 // wait for the queue to be empty
-inline void spdlog::details::async_log_helper::wait_empty_q()
-{
+inline void spdlog::details::async_log_helper::wait_empty_q() {
     auto last_op = details::os::now();
-    while (!_q.is_empty())
-    {
+    while (!_q.is_empty()) {
         sleep_or_yield(details::os::now(), last_op);
     }
 }
 
-inline void spdlog::details::async_log_helper::set_error_handler(spdlog::log_err_handler err_handler)
-{
+inline void spdlog::details::async_log_helper::set_error_handler(spdlog::log_err_handler err_handler) {
     _err_handler = err_handler;
 }
 

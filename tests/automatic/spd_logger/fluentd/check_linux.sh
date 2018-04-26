@@ -2,16 +2,15 @@
 
 set -e
 
+rm -f /tmp/fluentd/asapo.*.log
 
-rm -f $HOME/fluentd/asapo.*.log
+$@
 
-$1
+sleep 5
 
-sleep 2
+cat /tmp/fluentd/asapo.*.log
 
-cat $HOME/fluentd/asapo.*.log
-
-res=`cat $HOME/fluentd/asapo.*.log`
+res=`cat /tmp/fluentd/asapo.*.log`
 
 echo $res | grep "test_info"
 echo $res | grep "test_error"

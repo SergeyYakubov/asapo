@@ -11,29 +11,25 @@
 #include <string>
 #include <memory>
 
-namespace spdlog
-{
-namespace details
-{
+namespace spdlog {
+namespace details {
 class flag_formatter;
 }
 
-class formatter
-{
-public:
+class formatter {
+  public:
     virtual ~formatter() {}
     virtual void format(details::log_msg& msg) = 0;
 };
 
-class pattern_formatter SPDLOG_FINAL : public formatter
-{
+class pattern_formatter SPDLOG_FINAL : public formatter {
 
-public:
+  public:
     explicit pattern_formatter(const std::string& pattern, pattern_time_type pattern_time = pattern_time_type::local);
     pattern_formatter(const pattern_formatter&) = delete;
     pattern_formatter& operator=(const pattern_formatter&) = delete;
     void format(details::log_msg& msg) override;
-private:
+  private:
     const std::string _pattern;
     const pattern_time_type _pattern_time;
     std::vector<std::unique_ptr<details::flag_formatter>> _formatters;

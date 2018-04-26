@@ -12,18 +12,14 @@
 #include <string>
 #include <utility>
 
-namespace spdlog
-{
-namespace details
-{
-struct log_msg
-{
+namespace spdlog {
+namespace details {
+struct log_msg {
     log_msg() = default;
-    log_msg(const std::string *loggers_name, level::level_enum lvl) :
+    log_msg(const std::string* loggers_name, level::level_enum lvl) :
         logger_name(loggers_name),
         level(lvl),
-        msg_id(0)
-    {
+        msg_id(0) {
 #ifndef SPDLOG_NO_DATETIME
         time = os::now();
 #endif
@@ -38,7 +34,7 @@ struct log_msg
     log_msg(log_msg&& other) = delete;
 
 
-    const std::string *logger_name;
+    const std::string* logger_name;
     level::level_enum level;
     log_clock::time_point time;
     size_t thread_id;

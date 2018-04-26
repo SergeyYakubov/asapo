@@ -7,24 +7,24 @@
 namespace hidra2 {
 
 class SpdLogger : public AbstractLogger {
- public:
-    explicit SpdLogger(const std::string& name,const std::string& endpoint_uri);
+  public:
+    explicit SpdLogger(const std::string& name, const std::string& endpoint_uri);
     void SetLogLevel(LogLevel level) override;
-    void Info(const std::string &text) override;
-    void Error(const std::string &text) override;
-    void Debug(const std::string &text) override;
-    void Warning(const std::string &text) override;
+    void Info(const std::string& text) override;
+    void Error(const std::string& text) override;
+    void Debug(const std::string& text) override;
+    void Warning(const std::string& text) override;
     void EnableConsoleLog(bool enable);
     void EnableCentralizedLog(bool enable);
- private:
+    ~SpdLogger() = default;
+    std::unique_ptr<spdlog::logger> log__;
+  private:
     std::string name_;
     std::string endpoint_uri_;
     std::vector<spdlog::sink_ptr> sinks_;
     bool console_log_ = false;
     bool centralized_log_ = false;
     void UpdateLoggerSinks();
-    std::shared_ptr<spdlog::logger> log_;
-
 };
 }
 

@@ -15,31 +15,26 @@
 #include <mutex>
 #include <string>
 
-namespace spdlog
-{
-namespace sinks
-{
+namespace spdlog {
+namespace sinks {
 /*
 * MSVC sink (logging using OutputDebugStringA)
 */
 template<class Mutex>
-class msvc_sink : public base_sink < Mutex >
-{
-public:
-    explicit msvc_sink()
-    {
+class msvc_sink : public base_sink < Mutex > {
+  public:
+    explicit msvc_sink() {
     }
 
 
 
-protected:
-    void _sink_it(const details::log_msg& msg) override
-    {
+  protected:
+    void _sink_it(const details::log_msg& msg) override {
         OutputDebugStringA(msg.formatted.c_str());
     }
 
-    void _flush() override
-    {}
+    void _flush() override {
+    }
 };
 
 typedef msvc_sink<std::mutex> msvc_sink_mt;

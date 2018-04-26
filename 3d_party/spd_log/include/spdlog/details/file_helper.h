@@ -19,39 +19,33 @@
 #include <tuple>
 #include <cerrno>
 
-namespace spdlog
-{
-namespace details
-{
+namespace spdlog {
+namespace details {
 
-class file_helper
-{
+class file_helper {
 
-public:
+  public:
     const int open_tries = 5;
     const int open_interval = 10;
 
     explicit file_helper() :
-        _fd(nullptr)
-    {}
+        _fd(nullptr) {
+    }
 
     file_helper(const file_helper&) = delete;
     file_helper& operator=(const file_helper&) = delete;
 
-    ~file_helper()
-    {
+    ~file_helper() {
         close();
     }
 
 
-    void open(const filename_t& fname, bool truncate = false)
-    {
+    void open(const filename_t& fname, bool truncate = false) {
 
         close();
-        auto *mode = truncate ? SPDLOG_FILENAME_T("wb") : SPDLOG_FILENAME_T("ab");
+        auto* mode = truncate ? SPDLOG_FILENAME_T("wb") : SPDLOG_FILENAME_T("ab");
         _filename = fname;
-        for (int tries = 0; tries < open_tries; ++tries)
-        {
+        for (int tries = 0; tries < open_tries; ++tries) {
             if (!os::fopen_s(&_fd, fname, mode))
                 return;
 
@@ -61,50 +55,42 @@ public:
         throw spdlog_ex("Failed opening file " + os::filename_to_str(_filename) + " for writing", errno);
     }
 
-    void reopen(bool truncate)
-    {
+    void reopen(bool truncate) {
         if (_filename.empty())
             throw spdlog_ex("Failed re opening file - was not opened before");
         open(_filename, truncate);
 
     }
 
-    void flush()
-    {
+    void flush() {
         std::fflush(_fd);
     }
 
-    void close()
-    {
-        if (_fd)
-        {
+    void close() {
+        if (_fd) {
             std::fclose(_fd);
             _fd = nullptr;
         }
     }
 
-    void write(const log_msg& msg)
-    {
+    void write(const log_msg& msg) {
         size_t msg_size = msg.formatted.size();
         auto data = msg.formatted.data();
         if (std::fwrite(data, 1, msg_size, _fd) != msg_size)
             throw spdlog_ex("Failed writing to file " + os::filename_to_str(_filename), errno);
     }
 
-    size_t size() const
-    {
+    size_t size() const {
         if (!_fd)
             throw spdlog_ex("Cannot use size() on closed file " + os::filename_to_str(_filename));
         return os::filesize(_fd);
     }
 
-    const filename_t& filename() const
-    {
+    const filename_t& filename() const {
         return _filename;
     }
 
-    static bool file_exists(const filename_t& fname)
-    {
+    static bool file_exists(const filename_t& fname) {
         return os::file_exists(fname);
     }
 
@@ -121,8 +107,7 @@ public:
     // ".mylog" => (".mylog". "")
     // "my_folder/.mylog" => ("my_folder/.mylog", "")
     // "my_folder/.mylog.txt" => ("my_folder/.mylog", ".txt")
-    static std::tuple<filename_t, filename_t> split_by_extenstion(const spdlog::filename_t& fname)
-    {
+    static std::tuple<filename_t, filename_t> split_by_extenstion(const spdlog::filename_t& fname) {
         auto ext_index = fname.rfind('.');
 
         // no valid extension found - return whole path and empty string as extension
@@ -137,7 +122,7 @@ public:
         // finally - return a valid base and extension tuple
         return std::make_tuple(fname.substr(0, ext_index), fname.substr(ext_index));
     }
-private:
+  private:
     FILE* _fd;
     filename_t _filename;
 };

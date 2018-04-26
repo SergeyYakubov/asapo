@@ -8,15 +8,14 @@
 
 namespace hidra2 {
 
-class FluentdSink : public spdlog::sinks::base_sink<std::mutex>
-{
- public:
+class FluentdSink : public spdlog::sinks::base_sink<std::mutex> {
+  public:
     FluentdSink(const std::string& endpoint_uri);
     std::unique_ptr<HttpClient> httpclient__;
- protected:
+  protected:
     void _sink_it(const spdlog::details::log_msg& msg) override;
-    void _flush() override{};
- private:
+    void _flush() override {};
+  private:
     std::string endpoint_uri_;
 };
 

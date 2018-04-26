@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 
     logger->SetLogLevel(LogLevel::Debug);
 
-    auto exec = [&](const std::string& i) {
+    auto exec = [&](const std::string & i) {
         logger->Info("test_info_mt_" + i);
     };
 

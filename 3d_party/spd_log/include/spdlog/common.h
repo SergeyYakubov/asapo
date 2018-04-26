@@ -46,13 +46,11 @@
 
 #include "fmt/fmt.h"
 
-namespace spdlog
-{
+namespace spdlog {
 
 class formatter;
 
-namespace sinks
-{
+namespace sinks {
 class sink;
 }
 
@@ -66,13 +64,11 @@ using level_t = details::null_atomic_int;
 using level_t = std::atomic<int>;
 #endif
 
-using log_err_handler = std::function<void(const std::string &err_msg)>;
+using log_err_handler = std::function<void(const std::string& err_msg)>;
 
 //Log level enum
-namespace level
-{
-typedef enum
-{
+namespace level {
+typedef enum {
     trace = 0,
     debug = 1,
     info = 2,
@@ -89,13 +85,11 @@ static const char* level_names[] SPDLOG_LEVEL_NAMES;
 
 static const char* short_level_names[] { "T", "D", "I", "W", "E", "C", "O" };
 
-inline const char* to_str(spdlog::level::level_enum l)
-{
+inline const char* to_str(spdlog::level::level_enum l) {
     return level_names[l];
 }
 
-inline const char* to_short_str(spdlog::level::level_enum l)
-{
+inline const char* to_short_str(spdlog::level::level_enum l) {
     return short_level_names[l];
 }
 } //level
@@ -104,8 +98,7 @@ inline const char* to_short_str(spdlog::level::level_enum l)
 //
 // Async overflow policy - block by default.
 //
-enum class async_overflow_policy
-{
+enum class async_overflow_policy {
     block_retry, // Block / yield / sleep until message can be enqueued
     discard_log_msg // Discard the message it enqueue fails
 };
@@ -114,8 +107,7 @@ enum class async_overflow_policy
 // Pattern time - specific time getting to use for pattern_formatter.
 // local time by default
 //
-enum class pattern_time_type
-{
+enum class pattern_time_type {
     local, // log localtime
     utc    // log utc
 };
@@ -123,27 +115,22 @@ enum class pattern_time_type
 //
 // Log exception
 //
-namespace details
-{
-namespace os
-{
+namespace details {
+namespace os {
 std::string errno_str(int err_num);
 }
 }
-class spdlog_ex: public std::exception
-{
-public:
-    spdlog_ex(const std::string& msg):_msg(msg)
-    {}
-    spdlog_ex(const std::string& msg, int last_errno)
-    {
+class spdlog_ex: public std::exception {
+  public:
+    spdlog_ex(const std::string& msg): _msg(msg) {
+    }
+    spdlog_ex(const std::string& msg, int last_errno) {
         _msg = msg + ": " + details::os::errno_str(last_errno);
     }
-    const char* what() const SPDLOG_NOEXCEPT override
-    {
+    const char* what() const SPDLOG_NOEXCEPT override {
         return _msg.c_str();
     }
-private:
+  private:
     std::string _msg;
 
 };

@@ -7,7 +7,7 @@ using namespace hidra2;
 
 int main(int argc, char* argv[]) {
 
-    auto logger = CreateDefaultLoggerApi("test_central","http://localhost:9880/asapo");
+    auto logger = CreateDefaultLoggerApi("test_central", "http://localhost:9880/asapo");
 
     logger->SetLogLevel(LogLevel::Debug);
 

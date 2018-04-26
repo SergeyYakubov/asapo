@@ -64,38 +64,34 @@
 
 #define FMT_RETRY(result, expression) FMT_RETRY_VAL(result, expression, -1)
 
-namespace fmt
-{
+namespace fmt {
 
 // An error code.
-class ErrorCode
-{
-private:
+class ErrorCode {
+  private:
     int value_;
 
-public:
-explicit ErrorCode(int value = 0) FMT_NOEXCEPT :
+  public:
+  explicit ErrorCode(int value = 0) FMT_NOEXCEPT :
     value_(value) {}
 
-    int get() const FMT_NOEXCEPT
-    {
+    int get() const FMT_NOEXCEPT {
         return value_;
     }
 };
 
 // A buffered file.
-class BufferedFile
-{
-private:
-    FILE *file_;
+class BufferedFile {
+  private:
+    FILE* file_;
 
     friend class File;
 
-    explicit BufferedFile(FILE *f) : file_(f) {}
+    explicit BufferedFile(FILE* f) : file_(f) {}
 
-public:
+  public:
     // Constructs a BufferedFile object which doesn't represent any file.
-BufferedFile() FMT_NOEXCEPT :
+  BufferedFile() FMT_NOEXCEPT :
     file_(FMT_NULL) {}
 
     // Destroys the object closing the file it represents if any.
@@ -105,37 +101,33 @@ BufferedFile() FMT_NOEXCEPT :
     // Emulate a move constructor and a move assignment operator if rvalue
     // references are not supported.
 
-private:
+  private:
     // A proxy object to emulate a move constructor.
     // It is private to make it impossible call operator Proxy directly.
-    struct Proxy
-    {
-        FILE *file;
+    struct Proxy {
+        FILE* file;
     };
 
-public:
+  public:
     // A "move constructor" for moving from a temporary.
-BufferedFile(Proxy p) FMT_NOEXCEPT :
+  BufferedFile(Proxy p) FMT_NOEXCEPT :
     file_(p.file) {}
 
     // A "move constructor" for moving from an lvalue.
-BufferedFile(BufferedFile &f) FMT_NOEXCEPT :
-    file_(f.file_)
-    {
+  BufferedFile(BufferedFile& f) FMT_NOEXCEPT :
+    file_(f.file_) {
         f.file_ = FMT_NULL;
     }
 
     // A "move assignment operator" for moving from a temporary.
-    BufferedFile &operator=(Proxy p)
-    {
+    BufferedFile& operator=(Proxy p) {
         close();
         file_ = p.file;
         return *this;
     }
 
     // A "move assignment operator" for moving from an lvalue.
-    BufferedFile &operator=(BufferedFile &other)
-    {
+    BufferedFile& operator=(BufferedFile& other) {
         close();
         file_ = other.file_;
         other.file_ = FMT_NULL;
@@ -144,26 +136,23 @@ BufferedFile(BufferedFile &f) FMT_NOEXCEPT :
 
     // Returns a proxy object for moving from a temporary:
     //   BufferedFile file = BufferedFile(...);
-    operator Proxy() FMT_NOEXCEPT
-    {
+    operator Proxy() FMT_NOEXCEPT {
         Proxy p = {file_};
         file_ = FMT_NULL;
         return p;
     }
 
 #else
-private:
+  private:
     FMT_DISALLOW_COPY_AND_ASSIGN(BufferedFile);
 
-public:
-BufferedFile(BufferedFile &&other) FMT_NOEXCEPT :
-    file_(other.file_)
-    {
+  public:
+  BufferedFile(BufferedFile&& other) FMT_NOEXCEPT :
+    file_(other.file_) {
         other.file_ = FMT_NULL;
     }
 
-    BufferedFile& operator=(BufferedFile &&other)
-    {
+    BufferedFile& operator=(BufferedFile&& other) {
         close();
         file_ = other.file_;
         other.file_ = FMT_NULL;
@@ -178,8 +167,7 @@ BufferedFile(BufferedFile &&other) FMT_NOEXCEPT :
     FMT_API void close();
 
     // Returns the pointer to a FILE object representing this file.
-    FILE *get() const FMT_NOEXCEPT
-    {
+    FILE* get() const FMT_NOEXCEPT {
         return file_;
     }
 
@@ -187,8 +175,7 @@ BufferedFile(BufferedFile &&other) FMT_NOEXCEPT :
     // of MinGW that define fileno as a macro.
     FMT_API int (fileno)() const;
 
-    void print(CStringRef format_str, const ArgList &args)
-    {
+    void print(CStringRef format_str, const ArgList& args) {
         fmt::print(file_, format_str, args);
     }
     FMT_VARIADIC(void, print, CStringRef)
@@ -200,25 +187,23 @@ BufferedFile(BufferedFile &&other) FMT_NOEXCEPT :
 // closing the file multiple times will cause a crash on Windows rather
 // than an exception. You can get standard behavior by overriding the
 // invalid parameter handler with _set_invalid_parameter_handler.
-class File
-{
-private:
+class File {
+  private:
     int fd_;  // File descriptor.
 
     // Constructs a File object with a given descriptor.
     explicit File(int fd) : fd_(fd) {}
 
-public:
+  public:
     // Possible values for the oflag argument to the constructor.
-    enum
-    {
+    enum {
         RDONLY = FMT_POSIX(O_RDONLY), // Open for reading only.
         WRONLY = FMT_POSIX(O_WRONLY), // Open for writing only.
         RDWR   = FMT_POSIX(O_RDWR)    // Open for reading and writing.
     };
 
     // Constructs a File object which doesn't represent any file.
-File() FMT_NOEXCEPT :
+  File() FMT_NOEXCEPT :
     fd_(-1) {}
 
     // Opens a file and constructs a File object representing this file.
@@ -228,37 +213,33 @@ File() FMT_NOEXCEPT :
     // Emulate a move constructor and a move assignment operator if rvalue
     // references are not supported.
 
-private:
+  private:
     // A proxy object to emulate a move constructor.
     // It is private to make it impossible call operator Proxy directly.
-    struct Proxy
-    {
+    struct Proxy {
         int fd;
     };
 
-public:
+  public:
     // A "move constructor" for moving from a temporary.
-File(Proxy p) FMT_NOEXCEPT :
+  File(Proxy p) FMT_NOEXCEPT :
     fd_(p.fd) {}
 
     // A "move constructor" for moving from an lvalue.
-File(File &other) FMT_NOEXCEPT :
-    fd_(other.fd_)
-    {
+  File(File& other) FMT_NOEXCEPT :
+    fd_(other.fd_) {
         other.fd_ = -1;
     }
 
     // A "move assignment operator" for moving from a temporary.
-    File &operator=(Proxy p)
-    {
+    File& operator=(Proxy p) {
         close();
         fd_ = p.fd;
         return *this;
     }
 
     // A "move assignment operator" for moving from an lvalue.
-    File &operator=(File &other)
-    {
+    File& operator=(File& other) {
         close();
         fd_ = other.fd_;
         other.fd_ = -1;
@@ -267,26 +248,23 @@ File(File &other) FMT_NOEXCEPT :
 
     // Returns a proxy object for moving from a temporary:
     //   File file = File(...);
-    operator Proxy() FMT_NOEXCEPT
-    {
+    operator Proxy() FMT_NOEXCEPT {
         Proxy p = {fd_};
         fd_ = -1;
         return p;
     }
 
 #else
-private:
+  private:
     FMT_DISALLOW_COPY_AND_ASSIGN(File);
 
-public:
-File(File &&other) FMT_NOEXCEPT :
-    fd_(other.fd_)
-    {
+  public:
+  File(File&& other) FMT_NOEXCEPT :
+    fd_(other.fd_) {
         other.fd_ = -1;
     }
 
-    File& operator=(File &&other)
-    {
+    File& operator=(File&& other) {
         close();
         fd_ = other.fd_;
         other.fd_ = -1;
@@ -298,8 +276,7 @@ File(File &&other) FMT_NOEXCEPT :
     FMT_API ~File() FMT_NOEXCEPT;
 
     // Returns the file descriptor.
-    int descriptor() const FMT_NOEXCEPT
-    {
+    int descriptor() const FMT_NOEXCEPT {
         return fd_;
     }
 
@@ -311,10 +288,10 @@ File(File &&other) FMT_NOEXCEPT :
     FMT_API LongLong size() const;
 
     // Attempts to read count bytes from the file into the specified buffer.
-    FMT_API std::size_t read(void *buffer, std::size_t count);
+    FMT_API std::size_t read(void* buffer, std::size_t count);
 
     // Attempts to write count bytes from the specified buffer to the file.
-    FMT_API std::size_t write(const void *buffer, std::size_t count);
+    FMT_API std::size_t write(const void* buffer, std::size_t count);
 
     // Duplicates a file descriptor with the dup function and returns
     // the duplicate as a file object.
@@ -326,15 +303,15 @@ File(File &&other) FMT_NOEXCEPT :
 
     // Makes fd be the copy of this file descriptor, closing fd first if
     // necessary.
-    FMT_API void dup2(int fd, ErrorCode &ec) FMT_NOEXCEPT;
+    FMT_API void dup2(int fd, ErrorCode& ec) FMT_NOEXCEPT;
 
     // Creates a pipe setting up read_end and write_end file objects for reading
     // and writing respectively.
-    FMT_API static void pipe(File &read_end, File &write_end);
+    FMT_API static void pipe(File& read_end, File& write_end);
 
     // Creates a BufferedFile object associated with this file and detaches
     // this File object from the file.
-    FMT_API BufferedFile fdopen(const char *mode);
+    FMT_API BufferedFile fdopen(const char* mode);
 };
 
 // Returns the memory page size.
@@ -347,26 +324,22 @@ long getpagesize();
 
 #ifdef FMT_LOCALE
 // A "C" numeric locale.
-class Locale
-{
-private:
+class Locale {
+  private:
 # ifdef _MSC_VER
     typedef _locale_t locale_t;
 
     enum { LC_NUMERIC_MASK = LC_NUMERIC };
 
-    static locale_t newlocale(int category_mask, const char *locale, locale_t)
-    {
+    static locale_t newlocale(int category_mask, const char* locale, locale_t) {
         return _create_locale(category_mask, locale);
     }
 
-    static void freelocale(locale_t locale)
-    {
+    static void freelocale(locale_t locale) {
         _free_locale(locale);
     }
 
-    static double strtod_l(const char *nptr, char **endptr, _locale_t locale)
-    {
+    static double strtod_l(const char* nptr, char** endptr, _locale_t locale) {
         return _strtod_l(nptr, endptr, locale);
     }
 # endif
@@ -375,29 +348,25 @@ private:
 
     FMT_DISALLOW_COPY_AND_ASSIGN(Locale);
 
-public:
+  public:
     typedef locale_t Type;
 
-    Locale() : locale_(newlocale(LC_NUMERIC_MASK, "C", FMT_NULL))
-    {
+    Locale() : locale_(newlocale(LC_NUMERIC_MASK, "C", FMT_NULL)) {
         if (!locale_)
             FMT_THROW(fmt::SystemError(errno, "cannot create locale"));
     }
-    ~Locale()
-    {
+    ~Locale() {
         freelocale(locale_);
     }
 
-    Type get() const
-    {
+    Type get() const {
         return locale_;
     }
 
     // Converts string to floating-point number and advances str past the end
     // of the parsed input.
-    double strtod(const char *&str) const
-    {
-        char *end = FMT_NULL;
+    double strtod(const char*& str) const {
+        char* end = FMT_NULL;
         double result = strtod_l(str, &end, locale_);
         str = end;
         return result;
@@ -407,15 +376,12 @@ public:
 }  // namespace fmt
 
 #if !FMT_USE_RVALUE_REFERENCES
-namespace std
-{
+namespace std {
 // For compatibility with C++98.
-inline fmt::BufferedFile &move(fmt::BufferedFile &f)
-{
+inline fmt::BufferedFile& move(fmt::BufferedFile& f) {
     return f;
 }
-inline fmt::File &move(fmt::File &f)
-{
+inline fmt::File& move(fmt::File& f) {
     return f;
 }
 }

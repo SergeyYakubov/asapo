@@ -3,7 +3,7 @@
 namespace hidra2 {
 
 std::unique_ptr<HttpClient> DefaultHttpClient() {
-    return std::unique_ptr<HttpClient>{new CurlHttpClient};
+    return std::unique_ptr<HttpClient> {new CurlHttpClient};
 }
 
 

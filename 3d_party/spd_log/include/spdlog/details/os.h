@@ -54,15 +54,11 @@
 #endif
 
 
-namespace spdlog
-{
-namespace details
-{
-namespace os
-{
+namespace spdlog {
+namespace details {
+namespace os {
 
-inline spdlog::log_clock::time_point now()
-{
+inline spdlog::log_clock::time_point now() {
 
 #if defined __linux__ && defined SPDLOG_CLOCK_COARSE
     timespec ts;
@@ -77,8 +73,7 @@ inline spdlog::log_clock::time_point now()
 #endif
 
 }
-inline std::tm localtime(const std::time_t &time_tt)
-{
+inline std::tm localtime(const std::time_t& time_tt) {
 
 #ifdef _WIN32
     std::tm tm;
@@ -90,15 +85,13 @@ inline std::tm localtime(const std::time_t &time_tt)
     return tm;
 }
 
-inline std::tm localtime()
-{
+inline std::tm localtime() {
     std::time_t now_t = time(nullptr);
     return localtime(now_t);
 }
 
 
-inline std::tm gmtime(const std::time_t &time_tt)
-{
+inline std::tm gmtime(const std::time_t& time_tt) {
 
 #ifdef _WIN32
     std::tm tm;
@@ -110,13 +103,11 @@ inline std::tm gmtime(const std::time_t &time_tt)
     return tm;
 }
 
-inline std::tm gmtime()
-{
+inline std::tm gmtime() {
     std::time_t now_t = time(nullptr);
     return gmtime(now_t);
 }
-inline bool operator==(const std::tm& tm1, const std::tm& tm2)
-{
+inline bool operator==(const std::tm& tm1, const std::tm& tm2) {
     return (tm1.tm_sec == tm2.tm_sec &&
             tm1.tm_min == tm2.tm_min &&
             tm1.tm_hour == tm2.tm_hour &&
@@ -126,8 +117,7 @@ inline bool operator==(const std::tm& tm1, const std::tm& tm2)
             tm1.tm_isdst == tm2.tm_isdst);
 }
 
-inline bool operator!=(const std::tm& tm1, const std::tm& tm2)
-{
+inline bool operator!=(const std::tm& tm1, const std::tm& tm2) {
     return !(tm1 == tm2);
 }
 
@@ -153,8 +143,7 @@ SPDLOG_CONSTEXPR static const char folder_sep = '/';
 #endif
 
 
-inline void prevent_child_fd(FILE *f)
-{
+inline void prevent_child_fd(FILE* f) {
 #ifdef _WIN32
     auto file_handle = (HANDLE)_get_osfhandle(_fileno(f));
     if (!::SetHandleInformation(file_handle, HANDLE_FLAG_INHERIT, 0))
@@ -168,8 +157,7 @@ inline void prevent_child_fd(FILE *f)
 
 
 //fopen_s on non windows for writing
-inline int fopen_s(FILE** fp, const filename_t& filename, const filename_t& mode)
-{
+inline int fopen_s(FILE** fp, const filename_t& filename, const filename_t& mode) {
 #ifdef _WIN32
 #ifdef SPDLOG_WCHAR_FILENAMES
     *fp = _wfsopen((filename.c_str()), mode.c_str(), _SH_DENYWR);
@@ -188,8 +176,7 @@ inline int fopen_s(FILE** fp, const filename_t& filename, const filename_t& mode
 }
 
 
-inline int remove(const filename_t &filename)
-{
+inline int remove(const filename_t& filename) {
 #if defined(_WIN32) && defined(SPDLOG_WCHAR_FILENAMES)
     return _wremove(filename.c_str());
 #else
@@ -197,8 +184,7 @@ inline int remove(const filename_t &filename)
 #endif
 }
 
-inline int rename(const filename_t& filename1, const filename_t& filename2)
-{
+inline int rename(const filename_t& filename1, const filename_t& filename2) {
 #if defined(_WIN32) && defined(SPDLOG_WCHAR_FILENAMES)
     return _wrename(filename1.c_str(), filename2.c_str());
 #else
@@ -208,8 +194,7 @@ inline int rename(const filename_t& filename1, const filename_t& filename2)
 
 
 //Return if file exists
-inline bool file_exists(const filename_t& filename)
-{
+inline bool file_exists(const filename_t& filename) {
 #ifdef _WIN32
 #ifdef SPDLOG_WCHAR_FILENAMES
     auto attribs = GetFileAttributesW(filename.c_str());
@@ -227,8 +212,7 @@ inline bool file_exists(const filename_t& filename)
 
 
 //Return file size according to open FILE* object
-inline size_t filesize(FILE *f)
-{
+inline size_t filesize(FILE* f) {
     if (f == nullptr)
         throw spdlog_ex("Failed getting file size. fd is null");
 #if defined ( _WIN32) && !defined(__CYGWIN__)
@@ -264,8 +248,7 @@ inline size_t filesize(FILE *f)
 
 
 //Return utc offset in minutes or throw spdlog_ex on failure
-inline int utc_minutes_offset(const std::tm& tm = details::os::localtime())
-{
+inline int utc_minutes_offset(const std::tm& tm = details::os::localtime()) {
 
 #ifdef _WIN32
 #if _WIN32_WINNT < _WIN32_WINNT_WS08
@@ -288,10 +271,9 @@ inline int utc_minutes_offset(const std::tm& tm = details::os::localtime())
 
 #if defined(sun) || defined(__sun)
     // 'tm_gmtoff' field is BSD extension and it's missing on SunOS/Solaris
-    struct helper
-    {
-        static long int calculate_gmt_offset(const std::tm & localtm = details::os::localtime(), const std::tm & gmtm = details::os::gmtime())
-        {
+    struct helper {
+        static long int calculate_gmt_offset(const std::tm& localtm = details::os::localtime(),
+                                             const std::tm& gmtm = details::os::gmtime()) {
             int local_year = localtm.tm_year + (1900 - 1);
             int gmt_year = gmtm.tm_year + (1900 - 1);
 
@@ -327,8 +309,7 @@ inline int utc_minutes_offset(const std::tm& tm = details::os::localtime())
 
 //Return current thread id as size_t
 //It exists because the std::this_thread::get_id() is much slower(especially under VS 2013)
-inline size_t _thread_id()
-{
+inline size_t _thread_id() {
 #ifdef _WIN32
     return  static_cast<size_t>(::GetCurrentThreadId());
 #elif __linux__
@@ -350,8 +331,7 @@ inline size_t _thread_id()
 }
 
 //Return current thread id as size_t (from thread local storage)
-inline size_t thread_id()
-{
+inline size_t thread_id() {
 #if defined(SPDLOG_DISABLE_TID_CACHING) || (defined(_MSC_VER) && (_MSC_VER < 1900)) || (defined(__clang__) && !__has_feature(cxx_thread_local))
     return _thread_id();
 #else // cache thread id in tls
@@ -365,8 +345,7 @@ inline size_t thread_id()
 
 // This is avoid msvc issue in sleep_for that happens if the clock changes.
 // See https://github.com/gabime/spdlog/issues/609
-inline void sleep_for_millis(int milliseconds)
-{
+inline void sleep_for_millis(int milliseconds) {
 #if defined(_WIN32)
     Sleep(milliseconds);
 #else
@@ -377,39 +356,31 @@ inline void sleep_for_millis(int milliseconds)
 // wchar support for windows file names (SPDLOG_WCHAR_FILENAMES must be defined)
 #if defined(_WIN32) && defined(SPDLOG_WCHAR_FILENAMES)
 #define SPDLOG_FILENAME_T(s) L ## s
-inline std::string filename_to_str(const filename_t& filename)
-{
+inline std::string filename_to_str(const filename_t& filename) {
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> c;
     return c.to_bytes(filename);
 }
 #else
 #define SPDLOG_FILENAME_T(s) s
-inline std::string filename_to_str(const filename_t& filename)
-{
+inline std::string filename_to_str(const filename_t& filename) {
     return filename;
 }
 #endif
 
-inline std::string errno_to_string(char[256], char* res)
-{
+inline std::string errno_to_string(char[256], char* res) {
     return std::string(res);
 }
 
-inline std::string errno_to_string(char buf[256], int res)
-{
-    if (res == 0)
-    {
+inline std::string errno_to_string(char buf[256], int res) {
+    if (res == 0) {
         return std::string(buf);
-    }
-    else
-    {
+    } else {
         return "Unknown error";
     }
 }
 
 // Return errno string (thread safe)
-inline std::string errno_str(int err_num)
-{
+inline std::string errno_str(int err_num) {
     char buf[256];
     SPDLOG_CONSTEXPR auto buf_size = sizeof(buf);
 
@@ -433,8 +404,7 @@ inline std::string errno_str(int err_num)
 #endif
 }
 
-inline int pid()
-{
+inline int pid() {
 
 #ifdef _WIN32
     return ::_getpid();
@@ -447,26 +417,22 @@ inline int pid()
 
 // Determine if the terminal supports colors
 // Source: https://github.com/agauniyal/rang/
-inline bool is_color_terminal()
-{
+inline bool is_color_terminal() {
 #ifdef _WIN32
     return true;
 #else
-    static constexpr const char* Terms[] =
-    {
+    static constexpr const char* Terms[] = {
         "ansi", "color", "console", "cygwin", "gnome", "konsole", "kterm",
         "linux", "msys", "putty", "rxvt", "screen", "vt100", "xterm"
     };
 
-    const char *env_p = std::getenv("TERM");
-    if (env_p == nullptr)
-    {
+    const char* env_p = std::getenv("TERM");
+    if (env_p == nullptr) {
         return false;
     }
 
     static const bool result = std::any_of(
-                                   std::begin(Terms), std::end(Terms), [&](const char* term)
-    {
+    std::begin(Terms), std::end(Terms), [&](const char* term) {
         return std::strstr(env_p, term) != nullptr;
     });
     return result;
@@ -476,8 +442,7 @@ inline bool is_color_terminal()
 
 // Detrmine if the terminal attached
 // Source: https://github.com/agauniyal/rang/
-inline bool in_terminal(FILE* file)
-{
+inline bool in_terminal(FILE* file) {
 
 #ifdef _WIN32
     return _isatty(_fileno(file)) ? true : false;

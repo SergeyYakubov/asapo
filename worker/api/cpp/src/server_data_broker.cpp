@@ -40,7 +40,7 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
 ServerDataBroker::ServerDataBroker(const std::string& server_uri,
                                    const std::string& source_name):
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
-server_uri_{server_uri}, source_name_{source_name} {
+    server_uri_{server_uri}, source_name_{source_name} {
 }
 
 Error ServerDataBroker::Connect() {

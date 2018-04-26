@@ -19,12 +19,10 @@
 #include <memory>
 #include <string>
 
-namespace spdlog
-{
+namespace spdlog {
 
-class logger
-{
-public:
+class logger {
+  public:
     logger(const std::string& logger_name, sink_ptr single_sink);
     logger(const std::string& name, sinks_init_list);
     template<class It>
@@ -35,25 +33,25 @@ public:
     logger& operator=(const logger&) = delete;
 
 
-    template <typename... Args> void log(level::level_enum lvl, const char* fmt, const Args&... args);
+    template <typename... Args> void log(level::level_enum lvl, const char* fmt, const Args& ... args);
     template <typename... Args> void log(level::level_enum lvl, const char* msg);
-    template <typename Arg1, typename... Args> void trace(const char* fmt, const Arg1&, const Args&... args);
-    template <typename Arg1, typename... Args> void debug(const char* fmt, const Arg1&, const Args&... args);
-    template <typename Arg1, typename... Args> void info(const char* fmt, const Arg1&, const Args&... args);
-    template <typename Arg1, typename... Args> void warn(const char* fmt, const Arg1&, const Args&... args);
-    template <typename Arg1, typename... Args> void error(const char* fmt, const Arg1&, const Args&... args);
-    template <typename Arg1, typename... Args> void critical(const char* fmt, const Arg1&, const Args&... args);
+    template <typename Arg1, typename... Args> void trace(const char* fmt, const Arg1&, const Args& ... args);
+    template <typename Arg1, typename... Args> void debug(const char* fmt, const Arg1&, const Args& ... args);
+    template <typename Arg1, typename... Args> void info(const char* fmt, const Arg1&, const Args& ... args);
+    template <typename Arg1, typename... Args> void warn(const char* fmt, const Arg1&, const Args& ... args);
+    template <typename Arg1, typename... Args> void error(const char* fmt, const Arg1&, const Args& ... args);
+    template <typename Arg1, typename... Args> void critical(const char* fmt, const Arg1&, const Args& ... args);
 
 
 #ifdef SPDLOG_WCHAR_TO_UTF8_SUPPORT
     template <typename... Args> void log(level::level_enum lvl, const wchar_t* msg);
-    template <typename... Args> void log(level::level_enum lvl, const wchar_t* fmt, const Args&... args);
-    template <typename... Args> void trace(const wchar_t* fmt, const Args&... args);
-    template <typename... Args> void debug(const wchar_t* fmt, const Args&... args);
-    template <typename... Args> void info(const wchar_t* fmt, const Args&... args);
-    template <typename... Args> void warn(const wchar_t* fmt, const Args&... args);
-    template <typename... Args> void error(const wchar_t* fmt, const Args&... args);
-    template <typename... Args> void critical(const wchar_t* fmt, const Args&... args);
+    template <typename... Args> void log(level::level_enum lvl, const wchar_t* fmt, const Args& ... args);
+    template <typename... Args> void trace(const wchar_t* fmt, const Args& ... args);
+    template <typename... Args> void debug(const wchar_t* fmt, const Args& ... args);
+    template <typename... Args> void info(const wchar_t* fmt, const Args& ... args);
+    template <typename... Args> void warn(const wchar_t* fmt, const Args& ... args);
+    template <typename... Args> void error(const wchar_t* fmt, const Args& ... args);
+    template <typename... Args> void critical(const wchar_t* fmt, const Args& ... args);
 #endif // SPDLOG_WCHAR_TO_UTF8_SUPPORT
 
     template <typename T> void log(level::level_enum lvl, const T&);
@@ -82,19 +80,19 @@ public:
     virtual void set_error_handler(log_err_handler);
     virtual log_err_handler error_handler();
 
-protected:
+  protected:
     virtual void _sink_it(details::log_msg&);
     virtual void _set_pattern(const std::string&, pattern_time_type);
     virtual void _set_formatter(formatter_ptr);
 
     // default error handler: print the error to stderr with the max rate of 1 message/minute
-    virtual void _default_err_handler(const std::string &msg);
+    virtual void _default_err_handler(const std::string& msg);
 
     // return true if the given message level should trigger a flush
     bool _should_flush_on(const details::log_msg&);
 
     // increment the message count (only if defined(SPDLOG_ENABLE_MESSAGE_COUNTER))
-    void _incr_msg_counter(details::log_msg &msg);
+    void _incr_msg_counter(details::log_msg& msg);
 
     const std::string _name;
     std::vector<sink_ptr> _sinks;
