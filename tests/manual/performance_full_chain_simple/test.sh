@@ -86,7 +86,7 @@ ssh ${receiver_node} "bash -c 'cd ${receiver_dir}; nohup ./receiver settings.jso
 sleep 0.3
 
 #broker_start
-ssh ${broker_node} "bash -c 'cd ${broker_dir}; nohup ./hidra2-broker broker.json &> ${broker_dir}/broker.log &'"
+ssh ${broker_node} "bash -c 'cd ${broker_dir}; nohup ./hidra2-broker -config broker.json &> ${broker_dir}/broker.log &'"
 sleep 0.3
 
 #producer_start

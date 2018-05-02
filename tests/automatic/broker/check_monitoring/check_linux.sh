@@ -14,7 +14,7 @@ Cleanup() {
 
 influx -execute "create database ${database_name}"
 
-$@ settings.json &
+$@ -config settings.json &
 
 sleep 0.3
 

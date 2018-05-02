@@ -4,8 +4,8 @@ package server
 
 import (
 	"errors"
+	log "hidra2_broker/logger"
 	"hidra2_broker/utils"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -19,6 +19,7 @@ func StartStatistics() {
 func Start() {
 	StartStatistics()
 	mux := utils.NewRouter(listRoutes)
+	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }
 

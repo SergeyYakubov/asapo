@@ -7,7 +7,7 @@ SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 set full_name="%2"
 set short_name="%~nx2"
 
-start /B "" "%full_name%" settings.json
+start /B "" "%full_name%" -config settings.json
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
