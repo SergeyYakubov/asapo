@@ -1,27 +1,36 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <unittests/MockIO.h>
 
+#include "unittests/MockIO.h"
+#include "unittests/MockLogger.h"
 #include "common/error.h"
 #include "io/io.h"
 #include "producer/producer.h"
 #include "../src/producer_impl.h"
 
 namespace {
+
 using ::testing::Return;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::SetArgReferee;
 using ::testing::Gt;
 using ::testing::Eq;
+using ::testing::Ne;
 using ::testing::Mock;
 using ::testing::InSequence;
+using ::testing::HasSubstr;
 
 TEST(get_version, VersionAboveZero) {
     hidra2::ProducerImpl producer;
     EXPECT_GE(producer.GetVersion(), 0);
 }
 
+
+TEST(Producer, Logger) {
+    hidra2::ProducerImpl producer;
+    ASSERT_THAT(dynamic_cast<hidra2::AbstractLogger*>(producer.log__.get()), Ne(nullptr));
+}
 
 /**
  * ConnectToReceiver
@@ -31,6 +40,8 @@ class ProducerImpl : public testing::Test {
   public:
     hidra2::ProducerImpl producer;
     testing::NiceMock<hidra2::MockIO> mock_io;
+    testing::NiceMock<hidra2::MockLogger> mock_logger;
+
     hidra2::FileDescriptor expected_fd = 83942;
     uint64_t expected_file_id = 4224;
     std::string expected_address = "127.0.0.1:9090";
@@ -40,20 +51,22 @@ class ProducerImpl : public testing::Test {
 
     void SetUp() override {
         producer.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
+        producer.log__ = hidra2::Logger {&mock_logger};
     }
     void TearDown() override {
         producer.io__.release();
+        producer.log__.release();
     }
 
     void ConnectToReceiver_DONE(hidra2::FileDescriptor expected_fd = 1) {
-        EXPECT_CALL(mock_io, CreateAndConnectIPTCPSocket_t(_, _))
+        EXPECT_CALL(mock_io, CreateAndConnectIPTCPSocket_t(expected_address, _))
         .Times(1)
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<1>(nullptr),
                 Return(expected_fd)
             ));
-        producer.ConnectToReceiver("");
+        producer.ConnectToReceiver(expected_address);
     }
     void Send_DONE(int times = 1) {
         EXPECT_CALL(mock_io, Send_t(_, _, _, _))
@@ -81,6 +94,8 @@ TEST_F(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_error) {
             Return(-1)
         ));
 
+    EXPECT_CALL(mock_logger, Debug(HasSubstr("cannot connect")));
+
     auto error = producer.ConnectToReceiver(expected_address);
     auto status = producer.GetStatus();
 
@@ -96,6 +111,9 @@ TEST_F(ProducerImpl, ConnectToReceiver) {
             testing::SetArgPointee<1>(nullptr),
             Return(expected_fd)
         ));
+
+    EXPECT_CALL(mock_logger, Info(HasSubstr("connected")));
+
 
     auto error = producer.ConnectToReceiver(expected_address);
     auto status = producer.GetStatus();
@@ -183,6 +201,7 @@ TEST_F(ProducerImpl, Send__sendData_error) {
             Return(-1)
         ));
 
+    EXPECT_CALL(mock_logger, Debug(HasSubstr("error sending to " + expected_address)));
 
     auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
@@ -203,6 +222,8 @@ TEST_F(ProducerImpl, Send__Receive_error) {
             testing::SetArgPointee<3>(hidra2::IOErrorTemplates::kBadFileNumber.Generate().release()),
             testing::Return(-1)
         ));
+
+    EXPECT_CALL(mock_logger, Debug(HasSubstr("error receiving response from " + expected_address)));
 
     auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
@@ -267,9 +288,36 @@ TEST_F(ProducerImpl, Send) {
             testing::ReturnArg<2>()
         ));
 
+    EXPECT_CALL(mock_logger, Debug(HasSubstr("succesfully sent data to " + expected_address)));
+
     auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
     ASSERT_THAT(error, Eq(nullptr));
+}
+
+TEST_F(ProducerImpl, EnableLocalLog) {
+
+    EXPECT_CALL(mock_logger, EnableLocalLog(true));
+
+    producer.EnableLocalLog(true);
+
+}
+
+TEST_F(ProducerImpl, EnableRemoteLog) {
+
+    EXPECT_CALL(mock_logger, EnableRemoteLog(false));
+
+    producer.EnableRemoteLog(false);
+
+}
+
+
+TEST_F(ProducerImpl, SetLogLevel) {
+
+    EXPECT_CALL(mock_logger, SetLogLevel(hidra2::LogLevel::Warning));
+
+    producer.SetLogLevel(hidra2::LogLevel::Warning);
+
 }
 
 }

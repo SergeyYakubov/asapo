@@ -5,6 +5,7 @@
 #include <common/networking.h>
 #include <io/io.h>
 #include "producer/producer.h"
+#include "logger/logger.h"
 
 namespace hidra2 {
 class ProducerImpl : public Producer {
@@ -12,6 +13,7 @@ class ProducerImpl : public Producer {
     static const uint32_t kVersion;
 
     int         client_fd_ = -1;
+    std::string receiver_uri_;
     uint64_t    request_id_ = 0;
 
     ProducerStatus status_ = ProducerStatus::kDisconnected;
@@ -30,9 +32,13 @@ class ProducerImpl : public Producer {
 
     uint64_t GetVersion() const override;
     ProducerStatus GetStatus() const override;
+    void SetLogLevel(LogLevel level) override;
+    void EnableLocalLog(bool enable) override;
+    void EnableRemoteLog(bool enable) override;
     Error ConnectToReceiver(const std::string& receiver_address) override;
     Error Send(uint64_t file_id, const void* data, size_t file_size) override;
     std::unique_ptr<IO> io__;
+    Logger log__;
 };
 }
 

@@ -4,12 +4,12 @@ namespace hidra2 {
 
 Logger CreateLogger(std::string name, bool console, bool centralized_log, const std::string& endpoint_uri) {
     auto logger = new SpdLogger{name, endpoint_uri};
-    logger->SetLogLevel(LogLevel::Error);
+    logger->SetLogLevel(LogLevel::Info);
     if (console) {
-        logger->EnableConsoleLog(true);
+        logger->EnableLocalLog(true);
     }
     if (centralized_log) {
-        logger->EnableCentralizedLog(true);
+        logger->EnableRemoteLog(true);
     }
 
     return Logger{logger};

@@ -21,8 +21,9 @@ class AbstractLogger {
     virtual void Error(const std::string& text) = 0;
     virtual void Debug(const std::string& text) = 0;
     virtual void Warning(const std::string& text) = 0;
+    virtual void EnableLocalLog(bool enable) = 0;
+    virtual void EnableRemoteLog(bool enable) = 0;
     virtual ~AbstractLogger() = default;
-
 };
 
 using Logger = std::unique_ptr<AbstractLogger>;

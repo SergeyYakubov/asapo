@@ -11,10 +11,10 @@ int main(int argc, char* argv[]) {
 
     logger->SetLogLevel(LogLevel::Debug);
 
-    logger->Info("test_info");
-    logger->Error("test_error");
-    logger->Warning("test_warning");
-    logger->Debug("test_debug");
+    logger->Info("test info");
+    logger->Error("test error");
+    logger->Warning("test warning");
+    logger->Debug("test debug");
 
     return 0;
 }

@@ -32,7 +32,7 @@ void SpdLogger::Info(const std::string& text) {
     }
 }
 
-void SpdLogger::EnableConsoleLog(bool enable) {
+void SpdLogger::EnableLocalLog(bool enable) {
     console_log_ = enable;
     UpdateLoggerSinks();
 }
@@ -72,7 +72,7 @@ void SpdLogger::Warning(const std::string& text) {
     }
 }
 
-void SpdLogger::EnableCentralizedLog(bool enable) {
+void SpdLogger::EnableRemoteLog(bool enable) {
     centralized_log_ = enable;
     UpdateLoggerSinks();
 }

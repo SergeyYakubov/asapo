@@ -14,8 +14,8 @@ class SpdLogger : public AbstractLogger {
     void Error(const std::string& text) override;
     void Debug(const std::string& text) override;
     void Warning(const std::string& text) override;
-    void EnableConsoleLog(bool enable);
-    void EnableCentralizedLog(bool enable);
+    void EnableLocalLog(bool enable) override;
+    void EnableRemoteLog(bool enable) override;
     ~SpdLogger() = default;
     std::unique_ptr<spdlog::logger> log__;
   private:
