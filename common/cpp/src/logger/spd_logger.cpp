@@ -46,8 +46,7 @@ void SpdLogger::UpdateLoggerSinks() {
     if (centralized_log_) {
         sinks_.push_back(std::shared_ptr<FluentdSink> {new FluentdSink(endpoint_uri_)});
     }
-
-    log__ = std::unique_ptr<spdlog::logger> {new spdlog::logger(name_, std::begin(sinks_), std::end(sinks_))};
+    log__ = std::unique_ptr<spdlog::logger> {new spdlog::async_logger(name_, std::begin(sinks_), std::end(sinks_), 1024)};
 }
 
 SpdLogger::SpdLogger(const std::string& name, const std::string& endpoint_uri): name_{name}, endpoint_uri_{endpoint_uri} {

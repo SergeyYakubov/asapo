@@ -18,6 +18,7 @@ std::string string_format( const std::string& format, Args ... args ) {
 
 
 void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic) const noexcept {
+    //todo: send statistics async
     HttpCode code;
     Error err;
     auto responce = httpclient__->Post(GetReceiverConfig()->monitor_db_uri + "/write?db=" +
