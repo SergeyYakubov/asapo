@@ -1,6 +1,7 @@
 #include "request_handler_db_write.h"
 #include "request.h"
 #include "receiver_config.h"
+#include "receiver_logger.h"
 
 namespace hidra2 {
 
@@ -13,11 +14,15 @@ Error RequestHandlerDbWrite::ProcessRequest(const Request& request) const {
     file_info.name = request.GetFileName();
     file_info.size = request.GetDataSize();
     file_info.id = request.GetDataID();
-    return db_client__->Insert(file_info, false);
-
+    auto err =  db_client__->Insert(file_info, false);
+    if (!err) {
+        log__->Debug(std::string{"insert record to "} + kDBCollectionName + " in " + GetReceiverConfig()->broker_db_name +
+                     " at " + GetReceiverConfig()->broker_db_uri);
+    }
+    return err;
 }
 
-RequestHandlerDbWrite::RequestHandlerDbWrite()  {
+RequestHandlerDbWrite::RequestHandlerDbWrite(): log__{GetDefaultReceiverLogger()}  {
     DatabaseFactory factory;
     Error err;
     db_client__ = factory.Create(&err);

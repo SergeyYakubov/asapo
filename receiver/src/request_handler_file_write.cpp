@@ -1,6 +1,8 @@
 #include "request_handler_file_write.h"
 #include "io/io_factory.h"
 #include "request.h"
+#include "receiver_logger.h"
+
 namespace hidra2 {
 
 Error RequestHandlerFileWrite::ProcessRequest(const Request& request) const {
@@ -13,11 +15,15 @@ Error RequestHandlerFileWrite::ProcessRequest(const Request& request) const {
 
     auto fname = request.GetFileName();
 //TODO: folder to write in config file
-    return io__->WriteDataToFile("files/" + fname, data, fsize);
+    auto err =  io__->WriteDataToFile("files/" + fname, data, fsize);
+    if (!err) {
+        log__->Debug("saved file of size " + std::to_string(fsize) + " to files/" + fname);
+    }
+    return err;
 
 }
 
-RequestHandlerFileWrite::RequestHandlerFileWrite() : io__{GenerateDefaultIO()} {
+RequestHandlerFileWrite::RequestHandlerFileWrite() : io__{GenerateDefaultIO()} , log__{GetDefaultReceiverLogger()} {
 
 }
 

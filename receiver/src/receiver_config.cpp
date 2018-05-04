@@ -13,6 +13,7 @@ ReceiverConfigFactory::ReceiverConfigFactory() : io__{GenerateDefaultIO()} {
 
 Error ReceiverConfigFactory::SetConfigFromFile(std::string file_name) {
     JsonFileParser parser(file_name, &io__);
+    std::string log_level;
     Error err;
     (err = parser.GetString("MonitorDbAddress", &config.monitor_db_uri)) ||
     (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||
@@ -20,9 +21,15 @@ Error ReceiverConfigFactory::SetConfigFromFile(std::string file_name) {
     (err = parser.GetBool("WriteToDb", &config.write_to_db)) ||
     (err = parser.GetString("BrokerDbAddress", &config.broker_db_uri)) ||
     (err = parser.GetString("BrokerDbName", &config.broker_db_name)) ||
-
     (err = parser.GetString("MonitorDbName", &config.monitor_db_name));
+    (err = parser.GetString("LogLevel", &log_level));
+    if (err) {
+        return err;
+    }
+
+    config.log_level = StringToLogLevel(log_level, &err);
     return err;
+
 }
 
 const ReceiverConfig*  GetReceiverConfig() {

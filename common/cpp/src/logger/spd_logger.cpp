@@ -26,7 +26,7 @@ void SpdLogger::SetLogLevel(LogLevel level) {
     }
 }
 
-void SpdLogger::Info(const std::string& text) {
+void SpdLogger::Info(const std::string& text)const {
     if (log__) {
         log__->info(text);
     }
@@ -53,20 +53,20 @@ void SpdLogger::UpdateLoggerSinks() {
 SpdLogger::SpdLogger(const std::string& name, const std::string& endpoint_uri): name_{name}, endpoint_uri_{endpoint_uri} {
 
 }
-void SpdLogger::Error(const std::string& text) {
+void SpdLogger::Error(const std::string& text)const {
     if (log__) {
         log__->error(text);
     }
 
 }
-void SpdLogger::Debug(const std::string& text) {
+void SpdLogger::Debug(const std::string& text) const {
     if (log__) {
         log__->debug(text);
     }
 
 }
 
-void SpdLogger::Warning(const std::string& text) {
+void SpdLogger::Warning(const std::string& text)const {
     if (log__) {
         log__->warn(text);
     }

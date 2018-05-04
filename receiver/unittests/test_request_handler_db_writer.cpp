@@ -3,6 +3,7 @@
 
 #include "unittests/MockIO.h"
 #include "unittests/MockDatabase.h"
+#include "unittests/MockLogger.h"
 
 #include "../src/receiver_error.h"
 #include "../src/request.h"
@@ -28,6 +29,10 @@ using ::testing::Mock;
 using ::testing::NiceMock;
 using ::testing::InSequence;
 using ::testing::SetArgPointee;
+using ::testing::AllOf;
+using ::testing::HasSubstr;
+
+
 using ::hidra2::Error;
 using ::hidra2::ErrorInterface;
 using ::hidra2::FileDescriptor;
@@ -62,11 +67,13 @@ class DbWriterHandlerTests : public Test {
     NiceMock<MockIO> mock_io;
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
+    NiceMock<hidra2::MockLogger> mock_logger;
     ReceiverConfig config;
     void SetUp() override {
         GenericNetworkRequestHeader request_header;
         request_header.data_id = 2;
         handler.db_client__ = std::unique_ptr<hidra2::Database> {&mock_db};
+        handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1});
     }
     void TearDown() override {
@@ -74,9 +81,11 @@ class DbWriterHandlerTests : public Test {
     }
 };
 
-TEST(DBWritewr, HandlerHasCorrectDbFactory) {
+TEST(DBWritewr, Constructor) {
     RequestHandlerDbWrite handler;
     ASSERT_THAT(dynamic_cast<hidra2::MongoDBClient*>(handler.db_client__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const hidra2::AbstractLogger*>(handler.log__), Ne(nullptr));
+
 }
 
 
@@ -130,8 +139,11 @@ MATCHER_P(CompareFileInfo, file, "") {
 
 
 TEST_F(DbWriterHandlerTests, CallsInsert) {
+    config.broker_db_name = "test";
+    config.broker_db_uri = "127.0.0.1:27017";
+    SetReceiverConfig(config);
 
-    EXPECT_CALL(mock_db, Connect_t(_, _, hidra2::kDBCollectionName)).
+    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, config.broker_db_name, hidra2::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
 
     std::string expected_file_name = "2.bin";
@@ -158,37 +170,15 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     EXPECT_CALL(mock_db, Insert_t(CompareFileInfo(file_info), _)).
     WillOnce(testing::Return(nullptr));
 
+    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
+                                         HasSubstr(config.broker_db_uri),
+                                         HasSubstr(config.broker_db_name),
+                                         HasSubstr(hidra2::kDBCollectionName)
+                                        )
+                                  )
+               );
+
     handler.ProcessRequest(*mock_request);
 }
 
-
-/*
-TEST_F(DbWriterHandlerTests, CallsWriteFile) {
-    std::string expected_file_name = "2.bin";
-    uint64_t expected_file_size = 10;
-    EXPECT_CALL(*mock_request, GetDataSize())
-    .WillOnce(Return(expected_file_size))
-    ;
-
-    hidra2::FileData data;
-    EXPECT_CALL(*mock_request, GetData())
-    .WillOnce(ReturnRef(data))
-    ;
-
-    EXPECT_CALL(*mock_request, GetFileName())
-    .WillOnce(Return(expected_file_name))
-    ;
-
-
-    EXPECT_CALL(mock_io, WriteDataToFile_t("files/" + expected_file_name, _, expected_file_size))
-    .WillOnce(
-        Return(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release())
-    );
-
-    auto err = handler.ProcessRequest(*mock_request);
-
-    ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
-}
-
-*/
 }

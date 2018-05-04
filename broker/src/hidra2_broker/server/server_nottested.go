@@ -23,26 +23,28 @@ func Start() {
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }
 
-func ReadConfig(fname string) error {
+func ReadConfig(fname string) (log.Level, error) {
 	if err := utils.ReadJsonFromFile(fname, &settings); err != nil {
-		return err
+		return log.FatalLevel, err
 	}
 
 	if settings.BrokerDbAddress == "" {
-		return errors.New("BrokerDbAddress not set")
+		return log.FatalLevel, errors.New("BrokerDbAddress not set")
 	}
 
 	if settings.MonitorDbAddress == "" {
-		return errors.New("MonitorDbAddress not set")
+		return log.FatalLevel, errors.New("MonitorDbAddress not set")
 	}
 
 	if settings.Port == 0 {
-		return errors.New("Server port not set")
+		return log.FatalLevel, errors.New("Server port not set")
 	}
 
 	if settings.MonitorDbName == "" {
-		return errors.New("MonitorDbName not set")
+		return log.FatalLevel, errors.New("MonitorDbName not set")
 	}
 
-	return nil
+	level, err := log.LevelFromString(settings.LogLevel)
+
+	return level, err
 }

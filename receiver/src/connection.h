@@ -15,6 +15,7 @@
 #include "io/io.h"
 #include "request.h"
 #include "statistics.h"
+#include "logger/logger.h"
 
 namespace hidra2 {
 
@@ -37,8 +38,7 @@ class Connection {
     std::unique_ptr<RequestFactory> request_factory__;
     std::unique_ptr<IO> io__;
     mutable std::unique_ptr<Statistics> statistics__;
-
-
+    const AbstractLogger* log__;
   private:
     std::unique_ptr<Request> WaitForNewRequest(Error* err) const noexcept;
     Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;

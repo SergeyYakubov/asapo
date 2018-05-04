@@ -15,23 +15,23 @@ func NewDefaultDatabase() database.Agent {
 }
 
 func PrintUsage() {
-	log.Fatal("Usage: " + os.Args[0] + " -config <config file> [-logging debug|info|warning|error|fatal]")
+	log.Fatal("Usage: " + os.Args[0] + " -config <config file>")
 }
 
 func main() {
 	var fname = flag.String("config", "", "config file path")
-	var log_level = flag.String("logging", "info", "logging level")
 
 	flag.Parse()
 	if *fname == "" {
 		PrintUsage()
 	}
-	log.SetLevel(*log_level)
 
-	err := server.ReadConfig(*fname)
+	logLevel, err := server.ReadConfig(*fname)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	log.SetLevel(logLevel)
 
 	err = server.InitDB(NewDefaultDatabase())
 	if err != nil {

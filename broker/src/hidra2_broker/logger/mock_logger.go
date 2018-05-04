@@ -45,7 +45,7 @@ func (l *MockLogger) Fatal(args ...interface{}) {
 	return
 }
 
-func (l *MockLogger) SetLevel(level string) {
+func (l *MockLogger) SetLevel(level Level) {
 	l.Called(level)
 	return
 }

@@ -4,6 +4,7 @@
 #include "receiver_config_factory.h"
 #include "receiver_config.h"
 
+#include "receiver_logger.h"
 
 hidra2::Error ReadConfigFile(int argc, char* argv[]) {
     if (argc != 2) {
@@ -17,21 +18,25 @@ hidra2::Error ReadConfigFile(int argc, char* argv[]) {
 int main (int argc, char* argv[]) {
 
     auto err = ReadConfigFile(argc, argv);
+    const auto& logger = hidra2::GetDefaultReceiverLogger();
+
     if (err) {
-        std::cerr << "Cannot read config file: " << err << std::endl;
+        logger->Error("cannot read config file: " + err->Explain());
         return 1;
     }
 
     auto config = hidra2::GetReceiverConfig();
 
+    logger->SetLogLevel(config->log_level);
+
     static const std::string address = "0.0.0.0:" + std::to_string(config->listen_port);
 
     auto* receiver = new hidra2::Receiver();
 
-    std::cout << "Listening on " << address << std::endl;
+    logger->Info("listening on " + address);
     receiver->Listen(address, &err);
     if(err) {
-        std::cerr << "Failed to start receiver: " << err << std::endl;
+        logger->Error("failed to start receiver: " + err->Explain());
         return 1;
     }
     return 0;

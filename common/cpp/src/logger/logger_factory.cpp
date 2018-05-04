@@ -24,5 +24,16 @@ Logger CreateDefaultLoggerApi(const std::string& name, const std::string& endpoi
     return CreateLogger(name, false, true, endpoint_uri);
 }
 
+LogLevel StringToLogLevel(const std::string& name, Error* err) {
+    *err = nullptr;
+    if (name == "debug") return LogLevel::Debug;
+    if (name == "info") return LogLevel::Info;
+    if (name == "warning") return LogLevel::Warning;
+    if (name == "none") return LogLevel::None;
+    if (name == "error") return LogLevel::Error;
+
+    *err = TextError("wrong log level: " + name);
+    return LogLevel::None;
+}
 
 };

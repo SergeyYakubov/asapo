@@ -4,6 +4,7 @@
 
 #include "statistics.h"
 #include "receiver_config.h"
+#include "receiver_logger.h"
 
 namespace hidra2 {
 
@@ -22,14 +23,19 @@ void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic)
     auto responce = httpclient__->Post(GetReceiverConfig()->monitor_db_uri + "/write?db=" +
                                        GetReceiverConfig()->monitor_db_name, StatisticsToString(statistic),
                                        &code, &err);
+    std::string msg = "sending statistics to " + GetReceiverConfig()->monitor_db_name + " at " +
+                      GetReceiverConfig()->monitor_db_uri;
     if (err) {
-        std::cerr << "Error sending statistics: " << err << std::endl;
+        log__->Error(msg + " - " + err->Explain());
         return;
     }
 
     if (code != HttpCode::OK && code != HttpCode::NoContent) {
-        std::cerr << "Error sending statistics: " << responce << std::endl;
+        log__->Error(msg + " - " + responce);
+        return;
     }
+
+    log__->Debug(msg);
 }
 
 std::string StatisticsSenderInfluxDb::StatisticsToString(const StatisticsToSend& statistic) const noexcept {
@@ -44,7 +50,7 @@ std::string StatisticsSenderInfluxDb::StatisticsToString(const StatisticsToSend&
     return str;
 }
 
-StatisticsSenderInfluxDb::StatisticsSenderInfluxDb(): httpclient__{DefaultHttpClient()} {
+StatisticsSenderInfluxDb::StatisticsSenderInfluxDb(): httpclient__{DefaultHttpClient()}, log__{GetDefaultReceiverLogger()} {
 };
 
 

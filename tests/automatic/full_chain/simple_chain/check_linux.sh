@@ -36,6 +36,6 @@ brokerid=`echo $!`
 mkdir files
 $1 localhost:4200 100 100 &
 #producerrid=`echo $!`
-sleep 0.1
+sleep 0.3
 
 $4 ${broker_address} ${broker_database_name} 2 | grep "Processed 100 file(s)"

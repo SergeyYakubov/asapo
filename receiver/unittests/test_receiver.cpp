@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <unittests/MockIO.h>
+
+#include "unittests/MockIO.h"
+#include "unittests/MockLogger.h"
 #include "../src/receiver.h"
 #include "../src/receiver_error.h"
 #include "../src/connection.h"
@@ -12,8 +14,10 @@ using ::testing::SetArgReferee;
 using ::testing::SetArgPointee;
 using ::testing::Gt;
 using ::testing::Eq;
+using ::testing::Ne;
 using ::testing::Mock;
 using ::testing::InSequence;
+using ::testing::HasSubstr;
 using ::hidra2::Error;
 using ::hidra2::FileDescriptor;
 using ::hidra2::ErrorInterface;
@@ -21,6 +25,13 @@ using ::hidra2::Connection;
 using ::hidra2::SocketDescriptor;
 
 namespace {
+
+TEST(Receiver, Constructor) {
+    hidra2::Receiver receiver;
+    ASSERT_THAT(dynamic_cast<const hidra2::AbstractLogger*>(receiver.log__), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<hidra2::IO*>(receiver.io__.get()), Ne(nullptr));
+}
+
 
 class StartListenerFixture : public testing::Test {
   public:
@@ -32,13 +43,14 @@ class StartListenerFixture : public testing::Test {
     const FileDescriptor expected_fd = 12643;
 
     Error err;
-
+    ::testing::NiceMock<hidra2::MockLogger> mock_logger;
     ::testing::NiceMock<hidra2::MockIO> mock_io;
     hidra2::Receiver receiver;
 
     void SetUp() override {
         err = nullptr;
         receiver.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
+        receiver.log__ = &mock_logger;
     }
     void TearDown() override {
         receiver.io__.release();
@@ -54,6 +66,9 @@ TEST_F(StartListenerFixture, CreateAndBindIPTCPSocketListenerError) {
                   Return(0)
               ));
 
+    EXPECT_CALL(mock_logger, Error(HasSubstr("prepare listener")));
+
+
     receiver.Listen(expected_address, &err, true);
 
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
@@ -66,6 +81,8 @@ TEST_F(StartListenerFixture, InetAcceptConnectionError) {
                   SetArgPointee<1>(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release()),
                   Return(new std::tuple<std::string, SocketDescriptor>(expected_address, expected_socket_descriptor_client))
               ));
+
+    EXPECT_CALL(mock_logger, Error(HasSubstr("incoming connection")));
 
     receiver.Listen(expected_address, &err, true);
 
@@ -84,6 +101,9 @@ TEST_F(StartListenerFixture, Ok) {
     WillOnce(
         Return(nullptr)
     );
+
+    EXPECT_CALL(mock_logger, Info(HasSubstr("new connection from " + expected_address)));
+
 
     receiver.Listen(expected_address, &err, true);
 

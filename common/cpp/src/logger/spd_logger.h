@@ -10,10 +10,10 @@ class SpdLogger : public AbstractLogger {
   public:
     explicit SpdLogger(const std::string& name, const std::string& endpoint_uri);
     void SetLogLevel(LogLevel level) override;
-    void Info(const std::string& text) override;
-    void Error(const std::string& text) override;
-    void Debug(const std::string& text) override;
-    void Warning(const std::string& text) override;
+    void Info(const std::string& text) const override;
+    void Error(const std::string& text) const override;
+    void Debug(const std::string& text) const override;
+    void Warning(const std::string& text) const override;
     void EnableLocalLog(bool enable) override;
     void EnableRemoteLog(bool enable) override;
     ~SpdLogger() = default;

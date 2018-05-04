@@ -3,8 +3,11 @@
 
 #include <string>
 #include <thread>
-#include "connection.h"
 #include <list>
+
+
+#include "connection.h"
+#include "receiver_logger.h"
 
 namespace hidra2 {
 
@@ -22,6 +25,7 @@ class Receiver {
 
     void Listen(std::string listener_address, Error* err, bool exit_after_first_connection = false);
     std::unique_ptr<IO> io__;
+    const AbstractLogger* log__;
 };
 
 }

@@ -2,7 +2,6 @@ package logger
 
 import (
 	log "github.com/sirupsen/logrus"
-	"strings"
 )
 
 type logRusLogger struct {
@@ -56,21 +55,21 @@ func (l *logRusLogger) Fatal(args ...interface{}) {
 	return
 }
 
-func (l *logRusLogger) SetLevel(level string) {
-	logrus_level := log.InfoLevel
-	switch strings.ToLower(level) {
-	case "debug":
-		logrus_level = log.DebugLevel
-	case "info":
-		logrus_level = log.InfoLevel
-	case "warning":
-		logrus_level = log.WarnLevel
-	case "error":
-		logrus_level = log.ErrorLevel
-	case "fatal":
-		logrus_level = log.FatalLevel
+func (l *logRusLogger) SetLevel(level Level) {
+	logrusLevel := log.InfoLevel
+	switch level {
+	case DebugLevel:
+		logrusLevel = log.DebugLevel
+	case InfoLevel:
+		logrusLevel = log.InfoLevel
+	case WarnLevel:
+		logrusLevel = log.WarnLevel
+	case ErrorLevel:
+		logrusLevel = log.ErrorLevel
+	case FatalLevel:
+		logrusLevel = log.FatalLevel
 	}
 
-	log.SetLevel(logrus_level)
+	log.SetLevel(logrusLevel)
 	return
 }

@@ -8,6 +8,7 @@ set(SOURCE_FILES
         src/statistics.cpp
         src/statistics_sender_influx_db.cpp
         src/receiver_config.cpp
+        src/receiver_logger.cpp
         src/request_handler_db_write.cpp)
 
 
@@ -17,7 +18,7 @@ set(SOURCE_FILES
 
 
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:curl_http_client>
-         $<TARGET_OBJECTS:json_parser>)
+         $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:logger>)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
 target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} database)

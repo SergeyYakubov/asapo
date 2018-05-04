@@ -11,7 +11,7 @@ const size_t ProducerImpl::kMaxChunkSize = size_t(1024) * size_t(1024) * size_t(
 
 ProducerImpl::ProducerImpl(): io__{GenerateDefaultIO()} {
     //todo get fluentd uri from service discovery
-    log__ = CreateDefaultLoggerApi("producer_api", "http://localhost:9880/asapo");
+    log__ = CreateDefaultLoggerApi("producer_api", "http://max-wgs.desy.de:9880/asapo");
 }
 
 uint64_t ProducerImpl::GetVersion() const {

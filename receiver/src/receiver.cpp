@@ -10,7 +10,7 @@ namespace hidra2 {
 
 const int Receiver::kMaxUnacceptedConnectionsBacklog = 5;
 
-Receiver::Receiver(): io__{GenerateDefaultIO()} {
+Receiver::Receiver(): io__{GenerateDefaultIO()}, log__{GetDefaultReceiverLogger()} {
 
 }
 
@@ -18,6 +18,9 @@ Error Receiver::PrepareListener(std::string listener_address) {
     Error err = nullptr;
     listener_fd_  = io__->CreateAndBindIPTCPSocketListener(listener_address, kMaxUnacceptedConnectionsBacklog,
                     &err);
+    if (err) {
+        log__->Error("prepare listener: " + err->Explain());
+    }
     return err;
 }
 
@@ -43,7 +46,7 @@ void Receiver::ProcessConnections(Error* err) {
     auto client_info_tuple = io__->InetAcceptConnection(listener_fd_, err);
     if(*err) {
         //TODO: this can produce a lot of error messages
-        std::cerr << "An error occurred while accepting an incoming connection: " << err << std::endl;
+        log__->Error("accepting an incoming connection: " + (*err)->Explain());
         return;
     }
     std::tie(address, connection_socket_fd) = *client_info_tuple;
@@ -51,9 +54,9 @@ void Receiver::ProcessConnections(Error* err) {
 }
 
 void Receiver::StartNewConnectionInSeparateThread(int connection_socket_fd, const std::string& address)  {
+    log__->Info("new connection from " + address);
     auto thread = io__->NewThread([connection_socket_fd, address] {
         auto connection = std::unique_ptr<Connection>(new Connection(connection_socket_fd, address));
-        std::cout << "[" << connection->GetId() << "] New connection from " << address << std::endl;
         connection->Listen();
     });
 
@@ -61,7 +64,6 @@ void Receiver::StartNewConnectionInSeparateThread(int connection_socket_fd, cons
         thread->detach();
     }
     return;
-
 }
 
 }

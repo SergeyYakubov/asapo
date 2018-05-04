@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <unittests/MockIO.h>
+
+#include "unittests/MockIO.h"
+#include "unittests/MockLogger.h"
 
 #include "../src/statistics_sender_influx_db.h"
 #include "../src/statistics_sender.h"
@@ -23,6 +25,8 @@ using ::testing::Ne;
 using ::testing::Mock;
 using ::testing::NiceMock;
 using ::testing::SaveArg;
+using ::testing::HasSubstr;
+using ::testing::AllOf;
 using ::testing::SaveArgPointee;
 using ::testing::InSequence;
 using ::testing::SetArgPointee;
@@ -38,6 +42,7 @@ namespace {
 TEST(SenderInfluxDb, Constructor) {
     StatisticsSenderInfluxDb sender;
     ASSERT_THAT(dynamic_cast<hidra2::CurlHttpClient*>(sender.httpclient__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const hidra2::AbstractLogger*>(sender.log__), Ne(nullptr));
 }
 
 
@@ -45,8 +50,24 @@ class SenderInfluxDbTests : public Test {
   public:
     StatisticsSenderInfluxDb sender;
     MockHttpClient mock_http_client;
+    NiceMock<hidra2::MockLogger> mock_logger;
+    StatisticsToSend statistics;
+    ReceiverConfig config;
+
     void SetUp() override {
+        statistics.n_requests = 4;
+        statistics.entity_shares[hidra2::StatisticEntity::kDisk] = 0.6;
+        statistics.entity_shares[hidra2::StatisticEntity::kNetwork] = 0.3;
+        statistics.entity_shares[hidra2::StatisticEntity::kDatabase] = 0.1;
+        statistics.elapsed_ms = 100;
+        statistics.data_volume = 1000;
+
+        config.monitor_db_uri = "test_uri";
+        config.monitor_db_name = "test_name";
+        SetReceiverConfig(config);
+
         sender.httpclient__.reset(&mock_http_client);
+        sender.log__ = &mock_logger;
     }
     void TearDown() override {
         sender.httpclient__.release();
@@ -55,19 +76,6 @@ class SenderInfluxDbTests : public Test {
 
 
 TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
-    StatisticsToSend statistics;
-    statistics.n_requests = 4;
-    statistics.entity_shares[hidra2::StatisticEntity::kDisk] = 0.6;
-    statistics.entity_shares[hidra2::StatisticEntity::kNetwork] = 0.3;
-    statistics.entity_shares[hidra2::StatisticEntity::kDatabase] = 0.1;
-    statistics.elapsed_ms = 100;
-    statistics.data_volume = 1000;
-
-    ReceiverConfig config;
-    config.monitor_db_uri = "test_uri";
-    config.monitor_db_name = "test_name";
-    SetReceiverConfig(config);
-
     std::string expect_string = "statistics,receiver=1,connection=1 elapsed_ms=100,data_volume=1000,"
                                 "n_requests=4,db_share=0.1000,network_share=0.3000,disk_share=0.6000";
     EXPECT_CALL(mock_http_client, Post_t("test_uri/write?db=test_name", expect_string, _, _)).
@@ -75,6 +83,38 @@ TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
         DoAll(SetArgPointee<3>(new hidra2::IOError("Test Read Error", hidra2::IOErrorType::kReadError)),
               Return("")
              ));
+
+    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("sending statistics"), HasSubstr(config.monitor_db_uri))));
+
+
+    sender.SendStatistics(statistics);
+}
+
+TEST_F(SenderInfluxDbTests, LogErrorWithWrongResponceSendStatistics) {
+    EXPECT_CALL(mock_http_client, Post_t(_, _, _, _)).
+    WillOnce(
+        DoAll(SetArgPointee<2>(hidra2::HttpCode::BadRequest), SetArgPointee<3>(nullptr), Return("error response")
+             ));
+
+    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("sending statistics"), HasSubstr("error response"))));
+
+
+    sender.SendStatistics(statistics);
+}
+
+TEST_F(SenderInfluxDbTests, LogDebugSendStatistics) {
+    EXPECT_CALL(mock_http_client, Post_t(_, _, _, _)).
+    WillOnce(
+        DoAll(SetArgPointee<3>(nullptr), SetArgPointee<2>(hidra2::HttpCode::OK), Return("error response")
+             ));
+
+    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending statistics"),
+                                         HasSubstr(config.monitor_db_uri),
+                                         HasSubstr(config.monitor_db_name)
+                                        )
+                                  )
+               );
+
 
     sender.SendStatistics(statistics);
 }
