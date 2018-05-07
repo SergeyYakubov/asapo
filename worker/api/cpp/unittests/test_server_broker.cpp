@@ -5,7 +5,7 @@
 #include "io/io.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 #include "../src/server_data_broker.h"
-#include "http_client/curl_http_client.h"
+#include "../../../../common/cpp/src/http_client/curl_http_client.h"
 #include "unittests/MockIO.h"
 #include "unittests/MockHttpClient.h"
 #include "http_client/http_error.h"

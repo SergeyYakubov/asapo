@@ -3,9 +3,10 @@
 package main
 
 import (
+	"flag"
 	"hidra2_broker/database"
+	log "hidra2_broker/logger"
 	"hidra2_broker/server"
-	"log"
 	"os"
 )
 
@@ -14,19 +15,23 @@ func NewDefaultDatabase() database.Agent {
 }
 
 func PrintUsage() {
-	log.Fatal("Usage: " + os.Args[0] + " <config file>")
+	log.Fatal("Usage: " + os.Args[0] + " -config <config file>")
 }
 
 func main() {
-	if len(os.Args) != 2 {
+	var fname = flag.String("config", "", "config file path")
+
+	flag.Parse()
+	if *fname == "" {
 		PrintUsage()
 	}
 
-	fname := os.Args[1]
-	err := server.ReadConfig(fname)
+	logLevel, err := server.ReadConfig(*fname)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	log.SetLevel(logLevel)
 
 	err = server.InitDB(NewDefaultDatabase())
 	if err != nil {

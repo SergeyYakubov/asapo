@@ -15,7 +15,7 @@ Cleanup() {
 args=${@:1:$(($# - 1))}
 broker=${@:$#}
 
-$broker settings.json &
+$broker -config settings.json &
 brokerid=`echo $!`
 sleep 0.3
 

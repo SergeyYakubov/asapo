@@ -7,7 +7,7 @@ ping 1.0.0.0 -n 1 -w 100 > nul
 REM broker
 set full_broker_name="%3"
 set short_broker_name="%~nx3"
-start /B "" "%full_broker_name%" broker.json
+start /B "" "%full_broker_name%" -config broker.json
 ping 1.0.0.0 -n 1 -w 100 > nul
 
 REM producer

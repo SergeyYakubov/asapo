@@ -4,7 +4,7 @@
 #include <string>
 #include <mutex>
 
-#include "http_client.h"
+#include "http_client/http_client.h"
 #include "curl/curl.h"
 
 namespace hidra2 {

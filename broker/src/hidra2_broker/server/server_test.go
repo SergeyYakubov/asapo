@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"hidra2_broker/database"
+	"hidra2_broker/logger"
 	"testing"
 )
 
@@ -18,6 +19,8 @@ func setup() *database.MockedDatabase {
 func assertExpectations(t *testing.T, mock_db *database.MockedDatabase) {
 	mock_db.AssertExpectations(t)
 	mock_db.ExpectedCalls = nil
+	logger.MockLog.AssertExpectations(t)
+	logger.MockLog.ExpectedCalls = nil
 }
 
 var initDBTests = []struct {

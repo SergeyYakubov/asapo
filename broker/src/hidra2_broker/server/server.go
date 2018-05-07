@@ -11,6 +11,7 @@ type serverSettings struct {
 	MonitorDbAddress string
 	MonitorDbName    string
 	Port             int
+	LogLevel         string
 }
 
 var settings serverSettings

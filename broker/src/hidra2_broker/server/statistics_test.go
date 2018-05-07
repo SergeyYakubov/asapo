@@ -20,7 +20,7 @@ func assertMockWriterExpectations(t *testing.T, mock_writer *mockWriter) {
 	mock_writer.ExpectedCalls = nil
 }
 
-func TestMonitorOK(t *testing.T) {
+func TestWriteStatisticsOK(t *testing.T) {
 	mock_writer := new(mockWriter)
 	statistics.Writer = mock_writer
 	statistics.Reset()
@@ -34,8 +34,10 @@ func TestMonitorOK(t *testing.T) {
 	assertMockWriterExpectations(t, mock_writer)
 }
 
-func TestMonitorCatchesError(t *testing.T) {
+func TestWriteStatisticsCatchesError(t *testing.T) {
 	statistics.Writer = nil
+
 	err := statistics.WriteStatistic()
+
 	assert.NotNil(t, err, "Error with nil pointer")
 }

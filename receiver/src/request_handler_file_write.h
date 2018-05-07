@@ -2,6 +2,7 @@
 #define HIDRA2_REQUEST_HANDLER_FILE_WRITE_H
 
 #include "request_handler.h"
+#include "logger/logger.h"
 
 #include "io/io.h"
 
@@ -15,6 +16,7 @@ class RequestHandlerFileWrite final: public RequestHandler {
     StatisticEntity GetStatisticEntity() const override;
     Error ProcessRequest(const Request& request) const override;
     std::unique_ptr<IO> io__;
+    const AbstractLogger* log__;
 };
 
 }

@@ -4,13 +4,15 @@
 #include "receiver_error.h"
 #include "io/io_factory.h"
 
+#include "receiver_logger.h"
+
 namespace hidra2 {
 
 size_t Connection::kRequestHandlerMaxBufferSize;
 std::atomic<uint32_t> Connection::kNetworkProducerPeerImplGlobalCounter(0);
 
 Connection::Connection(SocketDescriptor socket_fd, const std::string& address): request_factory__{new RequestFactory},
-io__{GenerateDefaultIO()}, statistics__{new Statistics} {
+io__{GenerateDefaultIO()}, statistics__{new Statistics}, log__{GetDefaultReceiverLogger()} {
     socket_fd_ = socket_fd;
     connection_id_ = kNetworkProducerPeerImplGlobalCounter++;
     address_ = address;
@@ -29,7 +31,6 @@ NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
         }
     }
     return NetworkErrorCode::kNetErrorNoError;
-
 }
 
 Error Connection::ProcessRequest(const std::unique_ptr<Request>& request) const noexcept {
@@ -38,9 +39,12 @@ Error Connection::ProcessRequest(const std::unique_ptr<Request>& request) const 
     GenericNetworkResponse generic_response;
     generic_response.error_code = GetNetworkCodeFromError(err);
     if(err) {
-        std::cerr << "[" << GetId() << "] Error while handling request: " << err << std::endl;
+        log__->Error("error while processing request from " + address_ + " - " + err->Explain());
     }
     io__->Send(socket_fd_, &generic_response, sizeof(GenericNetworkResponse), &err);
+    if(err) {
+        log__->Error("error sending response to " + address_ + " - " + err->Explain());
+    }
     return err;
 }
 
@@ -57,20 +61,22 @@ void Connection::Listen() const noexcept {
         Error err;
         auto request = WaitForNewRequest(&err);
         if(err) {
-            std::cerr << "[" << GetId() << "] Error while waiting for request: " << err << std::endl;
+            if (err != ErrorTemplates::kEndOfFile) {
+                log__->Error("error while waiting for request from " + address_ + " - " + err->Explain());
+            }
             break;
         }
         if (!request) continue; //no error, but timeout
+        log__->Debug("processing request from " + address_);
         err = ProcessRequest(request);
-        if(err) {
-            std::cerr << "[" << GetId() << "] Error sending response: " << err << std::endl;
+        if (err) {
             break;
         }
         ProcessStatisticsAfterRequest(request);
     }
     io__->CloseSocket(socket_fd_, nullptr);
     statistics__->Send();
-    std::cerr << "[" << GetId() << "] Disconnected." << std::endl;
+    log__->Info("disconnected from " + address_);
 }
 
 

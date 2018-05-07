@@ -15,7 +15,7 @@ Cleanup() {
 echo "db.data.insert({"_id":2})" | mongo ${database_name}
 echo "db.data.insert({"_id":1})" | mongo ${database_name}
 
-$@ settings.json &
+$@ -config settings.json &
 
 sleep 0.3
 brokerid=`echo $!`

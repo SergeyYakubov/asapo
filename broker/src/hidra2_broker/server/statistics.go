@@ -2,9 +2,9 @@ package server
 
 import (
 	"fmt"
-	"log"
-	"time"
+	log "hidra2_broker/logger"
 	"sync"
+	"time"
 )
 
 type statisticsWriter interface {
@@ -13,7 +13,7 @@ type statisticsWriter interface {
 
 type serverStatistics struct {
 	counter int
-	mux sync.Mutex
+	mux     sync.Mutex
 	Writer  statisticsWriter
 }
 
@@ -47,8 +47,11 @@ func (st *serverStatistics) WriteStatistic() (err error) {
 func (st *serverStatistics) Monitor() {
 	for {
 		time.Sleep(1000 * time.Millisecond)
+		logstr := "sending statistics to " + settings.MonitorDbAddress + ", dbname: " + settings.MonitorDbName
 		if err := st.WriteStatistic(); err != nil {
-			log.Println(err.Error())
+			log.Error(logstr + " - " + err.Error())
+		} else {
+			log.Debug(logstr)
 		}
 		st.Reset()
 	}

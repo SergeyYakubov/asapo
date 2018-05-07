@@ -27,7 +27,7 @@ sleep 0.3
 receiverid=`echo $!`
 
 #broker
-$3 broker.json &
+$3 -config broker.json &
 sleep 0.3
 brokerid=`echo $!`
 

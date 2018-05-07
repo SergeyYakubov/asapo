@@ -5,6 +5,7 @@
 #include <string>
 
 #include "producer_error.h"
+#include "logger/logger.h"
 
 namespace hidra2 {
 
@@ -47,6 +48,12 @@ class Producer {
       \return Error - Will be nullptr on success
     */
     virtual Error Send(uint64_t file_id, const void* data, size_t file_size) = 0;
+    //! Set internal log level
+    virtual void SetLogLevel(LogLevel level) = 0;
+    //! Enables/Disables logs output to stdout
+    virtual void EnableLocalLog(bool enable) = 0;
+    //! Enables/Disables sending logs to the central server
+    virtual void EnableRemoteLog(bool enable) = 0;
 };
 }
 

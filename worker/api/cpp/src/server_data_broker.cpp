@@ -1,13 +1,10 @@
 #include "server_data_broker.h"
 
-
 #include <chrono>
 
-
 #include "io/io_factory.h"
-#include "http_client/curl_http_client.h"
-#include "http_client/http_error.h"
 
+#include "http_client/http_error.h"
 
 using std::chrono::high_resolution_clock;
 
@@ -42,8 +39,8 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
 
 ServerDataBroker::ServerDataBroker(const std::string& server_uri,
                                    const std::string& source_name):
-    io__{GenerateDefaultIO()}, httpclient__{new CurlHttpClient},
-server_uri_{server_uri}, source_name_{source_name} {
+    io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
+    server_uri_{server_uri}, source_name_{source_name} {
 }
 
 Error ServerDataBroker::Connect() {

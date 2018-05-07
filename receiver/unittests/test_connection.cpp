@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <unittests/MockIO.h>
 
+#include "unittests/MockIO.h"
+#include "unittests/MockLogger.h"
 #include "../src/connection.h"
 #include "../src/receiver_error.h"
 #include "../src/request.h"
@@ -21,18 +22,22 @@ using ::testing::NiceMock;
 using ::testing::SaveArg;
 using ::testing::SaveArgPointee;
 using ::testing::InSequence;
+using ::testing::HasSubstr;
 using ::testing::SetArgPointee;
-using ::hidra2::Error;
-using ::hidra2::ErrorInterface;
-using ::hidra2::FileDescriptor;
-using ::hidra2::SocketDescriptor;
-using ::hidra2::GenericNetworkRequestHeader;
-using ::hidra2::SendDataResponse;
-using ::hidra2::GenericNetworkRequestHeader;
-using ::hidra2::GenericNetworkResponse;
-using ::hidra2::Opcode;
-using ::hidra2::Connection;
-using ::hidra2::MockIO;
+using ::testing::AllOf;
+
+using hidra2::Error;
+using hidra2::ErrorInterface;
+using hidra2::FileDescriptor;
+using hidra2::SocketDescriptor;
+using hidra2::GenericNetworkRequestHeader;
+using hidra2::SendDataResponse;
+using hidra2::GenericNetworkRequestHeader;
+using hidra2::GenericNetworkResponse;
+using hidra2::Opcode;
+using hidra2::Connection;
+using hidra2::MockIO;
+using hidra2::MockLogger;
 using hidra2::Request;
 using hidra2::Statistics;
 using hidra2::StatisticEntity;
@@ -45,9 +50,9 @@ TEST(Connection, Constructor) {
     ASSERT_THAT(dynamic_cast<hidra2::Statistics*>(connection.statistics__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<hidra2::IO*>(connection.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<hidra2::RequestFactory*>(connection.request_factory__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const hidra2::AbstractLogger*>(connection.log__), Ne(nullptr));
+
 }
-
-
 
 class MockRequest: public Request {
   public:
@@ -79,14 +84,19 @@ class MockRequestFactory: public hidra2::RequestFactory {
 
 class ConnectionTests : public Test {
   public:
-    Connection connection{0, "some_address"};
+    std::string connected_uri{"some_address"};
+    Connection connection{0, connected_uri};
     MockIO mock_io;
     MockRequestFactory mock_factory;
     NiceMock<MockStatistics> mock_statictics;
+    NiceMock<hidra2::MockLogger> mock_logger;
+
     void SetUp() override {
         connection.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
         connection.statistics__ = std::unique_ptr<hidra2::Statistics> {&mock_statictics};
         connection.request_factory__ = std::unique_ptr<hidra2::RequestFactory> {&mock_factory};
+        connection.log__ = &mock_logger;
+
         ON_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _)).
         WillByDefault(DoAll(testing::SetArgPointee<4>(nullptr),
                             testing::Return(0)));
@@ -114,6 +124,9 @@ TEST_F(ConnectionTests, ErrorWaitForNewRequest) {
               Return(0))
     );
 
+    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("waiting for request"), HasSubstr(connected_uri))));
+
+
     connection.Listen();
 }
 
@@ -138,39 +151,22 @@ TEST_F(ConnectionTests, CallsHandleRequest) {
         Return(new hidra2::SimpleError{""})
     );
 
+    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("processing request"), HasSubstr(connected_uri))));
+
+
+    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("processing request"), HasSubstr(connected_uri))));
+
+
     EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
         DoAll(SetArgPointee<3>(new hidra2::IOError("Test Send Error", hidra2::IOErrorType::kUnknownIOError)),
               Return(0)
              ));
 
+    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("sending response"), HasSubstr(connected_uri))));
+
+    EXPECT_CALL(mock_logger, Info(AllOf(HasSubstr("disconnected"), HasSubstr(connected_uri))));
 
     connection.Listen();
-}
-
-TEST_F(ConnectionTests, SendsNoErrorToProducer) {
-
-    GenericNetworkRequestHeader header;
-    auto request = new MockRequest{header, 1};
-
-    EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _));
-
-    EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _)).WillOnce(
-        Return(request)
-    );
-
-    EXPECT_CALL(*request, Handle_t()).WillOnce(
-        Return(nullptr)
-    );
-    GenericNetworkResponse response;
-    EXPECT_CALL(mock_io, Send_t(_, _, sizeof(GenericNetworkResponse), _)).WillOnce(
-        DoAll(SetArgPointee<3>(new hidra2::IOError("Test Send Error", hidra2::IOErrorType::kUnknownIOError)),
-              SaveArg1ToGenericNetworkResponse(&response),
-              Return(0)
-             ));
-
-    connection.Listen();
-
-    ASSERT_THAT(response.error_code, Eq(hidra2::NetworkErrorCode::kNetErrorNoError));
 }
 
 TEST_F(ConnectionTests, SendsErrorToProducer) {
@@ -235,7 +231,6 @@ TEST_F(ConnectionTests, FillsStatistics) {
     EXPECT_CALL(*request, Handle_t()).WillOnce(
         Return(nullptr)
     );
-
 
     EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
         DoAll(SetArgPointee<3>(nullptr),

@@ -41,7 +41,7 @@ ssh ${worker_node} mkdir ${worker_dir}
 scp settings_tmp.json ${service_node}:${service_dir}/settings.json
 rm settings_tmp.json
 scp ../../../cmake-build-release/broker/hidra2-broker ${service_node}:${service_dir}
-ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./hidra2-broker settings.json &> ${service_dir}/broker.log &'"
+ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./hidra2-broker -config settings.json &> ${service_dir}/broker.log &'"
 sleep 0.3
 scp ../../../cmake-build-release/worker/tools/folder_to_db/folder2db ${worker_node}:${worker_dir}
 ssh ${worker_node} ${worker_dir}/folder2db -n ${nthreads} ${dir} ${run_name} ${service_node}
