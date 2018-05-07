@@ -11,7 +11,7 @@ mkdir files
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
-FOR /F "usebackq" %%A IN ('files\0.bin') DO set size=%%~zA
+FOR /F "usebackq" %%A IN ('files\1.bin') DO set size=%%~zA
 
 if %size% NEQ 102400 goto :error
 
@@ -24,5 +24,8 @@ exit /b 1
 :clean
 Taskkill /IM "%short_recv_name%" /F
 rmdir /S /Q files
+SET database_name=test_run
+SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
+echo db.dropDatabase() | %mongo_exe% %database_name%
 
 

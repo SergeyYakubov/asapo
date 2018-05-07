@@ -6,6 +6,8 @@
 #include "../src/request.h"
 #include "../src/request_handler.h"
 #include "../src/request_handler_file_write.h"
+#include "../src/request_handler_db_write.h"
+#include "database/database.h"
 
 #include "mock_statistics.h"
 #include "mock_receiver_config.h"
@@ -40,7 +42,7 @@ using hidra2::StatisticEntity;
 
 using hidra2::ReceiverConfig;
 using hidra2::SetReceiverConfig;
-
+using hidra2::RequestFactory;
 
 namespace {
 
@@ -57,47 +59,6 @@ class MockReqestHandler : public hidra2::RequestHandler {
     MOCK_CONST_METHOD1(ProcessRequest_t, ErrorInterface * (const Request& request));
 
 };
-
-class FactoryTests : public Test {
-  public:
-    hidra2::RequestFactory factory;
-    Error err{nullptr};
-    GenericNetworkRequestHeader generic_request_header;
-    ReceiverConfig config;
-    void SetUp() override {
-        config.write_to_disk = true;
-        SetReceiverConfig(config);
-    }
-    void TearDown() override {
-    }
-};
-
-TEST_F(FactoryTests, ErrorOnWrongCode) {
-    generic_request_header.op_code = hidra2::Opcode::kNetOpcodeUnknownOp;
-    auto request = factory.GenerateRequest(generic_request_header, 1, &err);
-
-    ASSERT_THAT(err, Ne(nullptr));
-}
-
-TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCode) {
-    generic_request_header.op_code = hidra2::Opcode::kNetOpcodeSendData;
-    auto request = factory.GenerateRequest(generic_request_header, 1, &err);
-
-    ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(dynamic_cast<hidra2::Request*>(request.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const hidra2::RequestHandlerFileWrite*>(request->GetListHandlers()[0]), Ne(nullptr));
-}
-
-TEST_F(FactoryTests, DoNotAddWriterIfNotWanted) {
-    generic_request_header.op_code = hidra2::Opcode::kNetOpcodeSendData;
-    config.write_to_disk = false;
-    SetReceiverConfig(config);
-
-    auto request = factory.GenerateRequest(generic_request_header, 1, &err);
-    ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(request->GetListHandlers().size(), Eq(0));
-}
-
 
 
 class RequestTests : public Test {
@@ -211,6 +172,13 @@ TEST_F(RequestTests, GetDataIsNotNullptr) {
 
 
 }
+
+TEST_F(RequestTests, GetDataID) {
+    auto id = request->GetDataID();
+
+    ASSERT_THAT(id, Eq(data_id_));
+}
+
 
 
 TEST_F(RequestTests, GetDataSize) {

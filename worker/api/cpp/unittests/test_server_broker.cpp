@@ -117,6 +117,20 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClient) {
     ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kEndOfFile);
 }
 
+TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClientUntilTimeout) {
+    EXPECT_CALL(mock_http_client, Get_t(_, _, _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
+                SetArgPointee<1>(HttpCode::NoContent),
+                SetArgPointee<2>(nullptr),
+                Return("")));
+
+    data_broker->SetTimeout(100);
+    auto err = data_broker->GetNext(&info, nullptr);
+
+    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::WorkerErrorMessage::kNoData));
+    ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kEndOfFile);
+}
+
+
 
 FileInfo CreateFI() {
     FileInfo fi;

@@ -7,7 +7,8 @@ set(SOURCE_FILES
         src/request_handler_file_write.cpp
         src/statistics.cpp
         src/statistics_sender_influx_db.cpp
-        src/receiver_config.cpp src/receiver_config.h)
+        src/receiver_config.cpp
+        src/request_handler_db_write.cpp)
 
 
 ################################
@@ -19,7 +20,7 @@ add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<
          $<TARGET_OBJECTS:json_parser>)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
-target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} database)
 
 
 add_executable(${TARGET_NAME}-bin src/main.cpp)
@@ -38,7 +39,9 @@ set(TEST_SOURCE_FILES
         unittests/test_statistics.cpp
         unittests/test_config.cpp
         unittests/test_request.cpp
+        unittests/test_request_factory.cpp
         unittests/test_request_handler_file_write.cpp
+        unittests/test_request_handler_db_writer.cpp
         unittests/test_statistics_sender_influx_db.cpp
         unittests/mock_receiver_config.cpp
         )

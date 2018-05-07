@@ -18,24 +18,26 @@ void WaitThreads(std::vector<std::thread>* threads) {
     }
 }
 
-void ProcessError(const Error& err) {
-    if (err == nullptr) return;
+int ProcessError(const Error& err) {
+    if (err == nullptr) return 0;
     if (err->GetErrorType() != hidra2::ErrorType::kEndOfFile) {
         std::cout << err->Explain() << std::endl;
-        exit(EXIT_FAILURE);
+        return 1;
     }
+    return 0;
 }
 
 std::vector<std::thread> StartThreads(const std::string& server, const std::string& run_name, int nthreads,
-                                      std::vector<int>* nfiles) {
-    auto exec_next = [server, run_name, nfiles](int i) {
+                                      std::vector<int>* nfiles, std::vector<int>* errors) {
+    auto exec_next = [server, run_name, nfiles, errors](int i) {
         hidra2::FileInfo fi;
         Error err;
         auto broker = hidra2::DataBrokerFactory::CreateServerBroker(server, run_name, &err);
+        broker->SetTimeout(1000);
         while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             (*nfiles)[i] ++;
         }
-        ProcessError(err);
+        (*errors)[i] = ProcessError(err);
     };
 
     std::vector<std::thread> threads;
@@ -50,11 +52,16 @@ int ReadAllData(const std::string& server, const std::string& run_name, int nthr
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     std::vector<int>nfiles(nthreads, 0);
+    std::vector<int>errors(nthreads, 0);
 
-    auto threads = StartThreads(server, run_name, nthreads, &nfiles);
+    auto threads = StartThreads(server, run_name, nthreads, &nfiles, &errors);
     WaitThreads(&threads);
 
     int n_total = std::accumulate(nfiles.begin(), nfiles.end(), 0);
+    int errors_total = std::accumulate(errors.begin(), errors.end(), 0);
+    if (errors_total) {
+        exit(EXIT_FAILURE);
+    }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 );

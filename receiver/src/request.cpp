@@ -60,6 +60,11 @@ void Request::AddHandler(const RequestHandler* handler) {
 }
 
 
+uint64_t Request::GetDataID() const {
+    return request_header_.data_id;
+}
+
+
 uint64_t Request::GetDataSize() const {
     return request_header_.data_size;
 }
@@ -72,7 +77,6 @@ std::string Request::GetFileName() const {
     return std::to_string(request_header_.data_id) + ".bin";
 }
 
-
 std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericNetworkRequestHeader&
         request_header, SocketDescriptor socket_fd,
         Error* err) const noexcept {
@@ -80,16 +84,22 @@ std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericNetworkReq
     switch (request_header.op_code) {
     case Opcode::kNetOpcodeSendData: {
         auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd}};
+
         if (GetReceiverConfig()->write_to_disk) {
             request->AddHandler(&request_handler_filewrite_);
         }
+
+        if (GetReceiverConfig()->write_to_db) {
+            request->AddHandler(&request_handler_dbwrite_);
+        }
+
         return request;
     }
     default:
         *err = ReceiverErrorTemplates::kInvalidOpCode.Generate();
         return nullptr;
     }
-
 }
+
 
 }
