@@ -2,8 +2,8 @@
 #include "gtest/gtest.h"
 
 #include "worker/data_broker.h"
-#include "system_wrappers/io.h"
-#include "system_wrappers/system_io.h"
+#include "io/io.h"
+#include "../../../../common/cpp/src/system_io/system_io.h"
 #include "../src/server_data_broker.h"
 #include "../src/curl_http_client.h"
 #include "unittests/MockIO.h"
@@ -32,7 +32,7 @@ using ::testing::Mock;
 using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
-
+using ::testing::SetArgReferee;
 
 namespace {
 
@@ -63,11 +63,11 @@ class ServerDataBrokerTests : public Test {
         data_broker->io__.release();
         data_broker->httpclient__.release();
     }
-    void MockGet(const std::string& responce) {
+    void MockGet(const std::string& response) {
         EXPECT_CALL(mock_http_client, Get_t(_, _, _)).WillOnce(DoAll(
                     SetArgPointee<1>(HttpCode::OK),
                     SetArgPointee<2>(nullptr),
-                    Return(responce)
+                    Return(response)
                 ));
     }
 
@@ -114,7 +114,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClient) {
     auto err = data_broker->GetNext(&info, nullptr);
 
     ASSERT_THAT(err->Explain(), HasSubstr(hidra2::WorkerErrorMessage::kNoData));
-    ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kEOF);
+    ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kEndOfFile);
 }
 
 
@@ -145,7 +145,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsFileInfo) {
 
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsParseError) {
-    MockGet("error_responce");
+    MockGet("error_response");
     auto err = data_broker->GetNext(&info, nullptr);
 
     ASSERT_THAT(err->Explain(), Eq(hidra2::WorkerErrorMessage::kErrorReadingSource));
@@ -153,12 +153,11 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsParseError) {
 
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsIfNoDtataNeeded) {
-    MockGet("error_responce");
+    MockGet("error_response");
     EXPECT_CALL( mock_io, GetDataFromFile_t(_, _, _)).Times(0);
 
     data_broker->GetNext(&info, nullptr);
 }
-
 
 TEST_F(ServerDataBrokerTests, GetNextCallsReadFromFile) {
     auto to_send = CreateFI();
@@ -167,7 +166,7 @@ TEST_F(ServerDataBrokerTests, GetNextCallsReadFromFile) {
     MockGet(json);
 
     EXPECT_CALL(mock_io, GetDataFromFile_t("name", 100, _)).
-    WillOnce(DoAll(SetArgPointee<2>(new SimpleError{hidra2::IOErrors::kReadError}), testing::Return(nullptr)));
+    WillOnce(DoAll(SetArgPointee<2>(new hidra2::SimpleError{"s"}), testing::Return(nullptr)));
 
     FileData data;
     data_broker->GetNext(&info, &data);

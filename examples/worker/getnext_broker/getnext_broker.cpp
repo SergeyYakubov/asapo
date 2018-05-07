@@ -20,7 +20,7 @@ void WaitThreads(std::vector<std::thread>* threads) {
 
 void ProcessError(const Error& err) {
     if (err == nullptr) return;
-    if (err->GetErrorType() != hidra2::ErrorType::kEOF) {
+    if (err->GetErrorType() != hidra2::ErrorType::kEndOfFile) {
         std::cout << err->Explain() << std::endl;
         exit(EXIT_FAILURE);
     }

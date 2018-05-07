@@ -1,12 +1,12 @@
 #include "folder_data_broker.h"
 
-#include "system_wrappers/system_io.h"
+#include "io/io_factory.h"
 
 namespace hidra2 {
 
 FolderDataBroker::FolderDataBroker(const std::string& source_name) :
-    io__{new hidra2::SystemIO}, base_path_{source_name}, is_connected_{false},
-current_file_{ -1} {
+    io__{GenerateDefaultIO()}, base_path_{source_name}, is_connected_{false},
+    current_file_{ -1} {
 }
 
 Error FolderDataBroker::Connect() {
@@ -37,7 +37,7 @@ Error FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int nfile) co
     }
 
     if (nfile >= (int) filelist_.size()) {
-        return Error{TextErrorWithType(WorkerErrorMessage::kNoData, ErrorType::kEOF)};
+        return Error{TextErrorWithType(WorkerErrorMessage::kNoData, ErrorType::kEndOfFile)};
     }
     return nullptr;
 }

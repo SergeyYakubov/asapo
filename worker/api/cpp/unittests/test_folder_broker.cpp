@@ -1,9 +1,10 @@
 #include <gmock/gmock.h>
+#include <unittests/MockIO.h>
 #include "gtest/gtest.h"
 
 #include "worker/data_broker.h"
-#include "system_wrappers/io.h"
-#include "system_wrappers/system_io.h"
+#include "io/io.h"
+#include "../../../../common/cpp/src/system_io/system_io.h"
 #include "../src/folder_data_broker.h"
 
 using hidra2::DataBrokerFactory;
@@ -33,39 +34,13 @@ TEST(FolderDataBroker, SetCorrectIO) {
     delete data_broker;
 }
 
-
-
-class FakeIO: public IO {
+class FakeIO: public hidra2::MockIO {
   public:
 
-    virtual std::string ReadFileToString(const std::string& fname, Error* err)const noexcept  override {
+    virtual std::string ReadFileToString(const std::string& fname, Error* err) const noexcept override {
         return "OK";
     }
 
-
-    virtual uint8_t* GetDataFromFileProxy(const std::string& fname, uint64_t fsize, SimpleError** err) const {
-        *err = nullptr;
-        return nullptr;
-    };
-
-    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const noexcept override {
-        SimpleError* error;
-        auto data = GetDataFromFileProxy(fname, fsize, &error);
-        err->reset(error);
-        return FileData(data);
-    };
-
-    int open(const char* __file, int __oflag) const noexcept override {
-        return 0;
-    };
-
-    int close(int __fd)const noexcept override {
-        return 0;
-    };
-
-    uint64_t Read(int fd, uint8_t* array, uint64_t fsize, Error* err) const noexcept override {
-        return 0;
-    };
     FileInfos FilesInFolder(const std::string& folder, Error* err) const override {
         *err = nullptr;
         FileInfos file_infos;
@@ -84,7 +59,7 @@ class FakeIO: public IO {
 class IOFolderNotFound: public FakeIO {
   public:
     FileInfos FilesInFolder(const std::string& folder, Error* err) const override {
-        *err = hidra2::TextError(hidra2::IOErrors::kFileNotFound);
+        *err = hidra2::IOErrorTemplates::kFileNotFound.Generate();
         return {};
     }
 };
@@ -92,7 +67,7 @@ class IOFolderNotFound: public FakeIO {
 class IOFolderUnknownError: public FakeIO {
   public:
     FileInfos FilesInFolder(const std::string& folder, Error* err) const override {
-        *err = hidra2::TextError(hidra2::IOErrors::kUnknownError);
+        *err  = hidra2::IOErrorTemplates::kUnknownIOError.Generate();
         return {};
     }
 };
@@ -108,7 +83,7 @@ class IOEmptyFolder: public FakeIO {
 class IOCannotOpenFile: public FakeIO {
   public:
     FileData GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const noexcept override {
-        *err = hidra2::TextError(hidra2::IOErrors::kPermissionDenied);
+        *err = hidra2::IOErrorTemplates::kPermissionDenied.Generate();
         return {};
     };
 };
@@ -146,7 +121,7 @@ TEST_F(FolderDataBrokerTests, CannotConnectWhenNoFolder) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrors::kFileNotFound));
+    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrorTemplates::kFileNotFound.Generate()->Explain()));
 }
 
 TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
@@ -154,7 +129,7 @@ TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrors::kUnknownError));
+    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrorTemplates::kUnknownIOError.Generate()->Explain()));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithoutConnectReturnsError) {
@@ -200,11 +175,10 @@ TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
     FileInfo fi;
 
     auto err = data_broker->GetNext(&fi, nullptr);
-    ASSERT_THAT(err->GetErrorType(), Eq(hidra2::ErrorType::kEOF));
+    ASSERT_TRUE(hidra2::ErrorTemplates::kEndOfFile == err);
 
     ASSERT_THAT(err->Explain(), Eq(hidra2::WorkerErrorMessage::kNoData));
 }
-
 
 TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
     data_broker->io__ = std::unique_ptr<IO> {new IOCannotOpenFile()};
@@ -213,15 +187,12 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
     FileData data;
 
     auto err = data_broker->GetNext(&fi, &data);
-    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrors::kPermissionDenied));
+    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrorTemplates::kPermissionDenied.Generate()->Explain()));
 }
 
 
 class OpenFileMock : public FakeIO {
-  public:
-    MOCK_CONST_METHOD3(GetDataFromFileProxy, uint8_t* (const std::string&, uint64_t, SimpleError**));
 };
-
 
 class GetDataFromFileTests : public Test {
   public:
@@ -240,16 +211,14 @@ class GetDataFromFileTests : public Test {
 };
 
 TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
-    EXPECT_CALL(mock, GetDataFromFileProxy("/path/to/file/1", _, _)).
+    EXPECT_CALL(mock, GetDataFromFile_t("/path/to/file/1", _, _)).
     WillOnce(DoAll(testing::SetArgPointee<2>(static_cast<SimpleError*>(nullptr)), testing::Return(nullptr)));
 
     data_broker->GetNext(&fi, &data);
 }
 
-
-
 TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
-    EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
+    EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).
     WillOnce(DoAll(testing::SetArgPointee<2>(nullptr), testing::Return(new uint8_t[1] {'1'})));
 
     data_broker->GetNext(&fi, &data);
@@ -259,26 +228,24 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
 
 }
 
-
-
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
-    EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(new SimpleError(hidra2::IOErrors::kReadError)), testing::Return(nullptr)));
-
-    auto err = data_broker->GetNext(&fi, &data);
-
-    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrors::kReadError));
-}
-
-
-TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotAllocateData) {
-    EXPECT_CALL(mock, GetDataFromFileProxy(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(new SimpleError(hidra2::IOErrors::kMemoryAllocationError)),
+    EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(hidra2::IOErrorTemplates::kReadError.Generate().release()),
                    testing::Return(nullptr)));
 
     auto err = data_broker->GetNext(&fi, &data);
 
-    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrors::kMemoryAllocationError));
+    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrorTemplates::kReadError.Generate()->Explain()));
+}
+
+TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotAllocateData) {
+    EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(hidra2::ErrorTemplates::kMemoryAllocationError.Generate().release()),
+                   testing::Return(nullptr)));
+
+    auto err = data_broker->GetNext(&fi, &data);
+
+    ASSERT_THAT(err->Explain(), Eq(hidra2::ErrorTemplates::kMemoryAllocationError.Generate()->Explain()));
 }
 
 

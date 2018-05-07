@@ -1,43 +1,54 @@
-#ifndef HIDRA2__COMMON_NETWORKING_H
-#define HIDRA2__COMMON_NETWORKING_H
+#ifndef HIDRA2_COMMON__NETWORKING_H
+#define HIDRA2_COMMON__NETWORKING_H
 
 #include <cstdint>
-#include "os.h"
 
 namespace hidra2 {
-enum OP_CODE : uint8_t {
-    OP_CODE__HELLO,
+
+typedef uint64_t NetworkRequestId;
+
+enum Opcode : uint8_t {
+    kNetOpcodeUnknownOp,
+    kNetOpcodeSendData,
+    kNetOpcodeCount,
 };
 
-enum ERROR_CODE : uint16_t {
-    ERR__NO_ERROR,
-    ERR__UNSUPPORTED_VERSION,
-    ERR__INTERNAL_SERVER_ERROR = 65535,
+enum NetworkErrorCode : uint16_t {
+    kNetErrorNoError,
+    kNetErrorFileIdAlreadyInUse,
+    kNetErrorAllocateStorageFailed,
+    kNetErrorInternalServerError = 65535,
 };
 
-struct NetworkRequest {
-    OP_CODE     op_code;
-    uint64_t    request_id;
-    char        data[];
+//TODO need to use an serialization framework to ensure struct consistency on different computers
+
+/**
+ * @defgroup RPC
+ * RPC always return a response to a corresponding request
+ * @{
+ */
+struct GenericNetworkRequestHeader {
+    Opcode              op_code;
+    NetworkRequestId    request_id;
+    uint64_t    data_id;
+    uint64_t    data_size;
 };
 
-struct NetworkResponse {
-    OP_CODE     op_code;
-    uint64_t    request_id;
-    ERROR_CODE  error_code;
-    char        data[];
+struct GenericNetworkResponse {
+    Opcode              op_code;
+    NetworkRequestId    request_id;
+    NetworkErrorCode    error_code;
 };
 
-struct OP_HelloRequest {
-    uint32_t client_version;
-
-    OS_TYPE os : 4;
-    bool is_x64 : 1;
+/**
+ * Possible error codes:
+ * - ::NET_ERR__FILENAME_ALREADY_IN_USE
+ * - ::NET_ERR__ALLOCATE_STORAGE_FAILED
+ */
+struct SendDataResponse :  GenericNetworkResponse {
 };
+/** @} */
 
-struct OP_HelloResponse {
-    uint32_t server_version;
-};
 }
 
-#endif //HIDRA2__COMMON_NETWORKING_H
+#endif //HIDRA2_COMMON__NETWORKING_H

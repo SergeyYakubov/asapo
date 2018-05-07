@@ -1,5 +1,6 @@
 set(TARGET_NAME system_io)
 set(SOURCE_FILES
+        io_factory.cpp
         system_io.cpp)
 IF(WIN32)
     set(SOURCE_FILES ${SOURCE_FILES} system_io_windows.cpp)

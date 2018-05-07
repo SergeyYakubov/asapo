@@ -3,11 +3,12 @@
 
 using namespace rapidjson;
 
-#include "system_wrappers/system_io.h"
+#include "io/io_factory.h"
 
 namespace hidra2 {
 
-RapidJson::RapidJson(const std::string& json, bool read_from_file): io__{new SystemIO}, json_{json}, read_from_file_{read_from_file} {
+RapidJson::RapidJson(const std::string& json, bool read_from_file): io__{GenerateDefaultIO()}, json_{json},
+    read_from_file_{read_from_file} {
 
 }
 
