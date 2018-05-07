@@ -1,12 +1,12 @@
-#ifndef HIDRA2_MOCKLOGGER_H
-#define HIDRA2_MOCKLOGGER_H
+#ifndef ASAPO_MOCKLOGGER_H
+#define ASAPO_MOCKLOGGER_H
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "logger/logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class MockLogger : public AbstractLogger {
   public:
@@ -21,4 +21,4 @@ class MockLogger : public AbstractLogger {
 
 }
 
-#endif //HIDRA2_MOCKLOGGER_H
+#endif //ASAPO_MOCKLOGGER_H

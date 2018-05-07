@@ -3,7 +3,7 @@
 #include "server_data_broker.h"
 
 
-namespace hidra2 {
+namespace asapo {
 
 template <typename Broker, typename ...Args>
 std::unique_ptr<DataBroker> Create(const std::string& source_name,

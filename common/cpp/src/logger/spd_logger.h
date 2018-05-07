@@ -1,10 +1,10 @@
-#ifndef HIDRA2_SPDLOGGER_H
-#define HIDRA2_SPDLOGGER_H
+#ifndef ASAPO_SPDLOGGER_H
+#define ASAPO_SPDLOGGER_H
 
 #include "logger/logger.h"
 #include "spdlog/spdlog.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class SpdLogger : public AbstractLogger {
   public:
@@ -28,4 +28,4 @@ class SpdLogger : public AbstractLogger {
 };
 }
 
-#endif //HIDRA2_SPDLOGGER_H
+#endif //ASAPO_SPDLOGGER_H

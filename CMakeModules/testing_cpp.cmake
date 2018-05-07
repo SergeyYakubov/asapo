@@ -3,7 +3,7 @@ if (BUILD_TESTS OR BUILD_INTEGRATION_TESTS OR BUILD_EXAMPLES)
 endif ()
 
 if (BUILD_TESTS)
-    set(HIDRA2_MINIMUM_COVERAGE 70)
+    set(ASAPO_MINIMUM_COVERAGE 70)
     find_package(Threads)
     find_program(MEMORYCHECK_COMMAND valgrind)
     set(MEMORYCHECK_COMMAND_OPTIONS
@@ -37,9 +37,9 @@ function(add_plain_unit_test target test_source_files linktarget)
         ENDIF (WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         target_link_libraries(test-${target} ${GTEST_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-        GET_PROPERTY(HIDRA2_COMMON_IO_LIBRARIES GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES)
-        message(STATUS "HIDRA2_COMMON_IO_LIBRARIES: '${HIDRA2_COMMON_IO_LIBRARIES}'")
-        target_link_libraries(test-${target} ${HIDRA2_COMMON_IO_LIBRARIES})
+        GET_PROPERTY(ASAPO_COMMON_IO_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_IO_LIBRARIES)
+        message(STATUS "ASAPO_COMMON_IO_LIBRARIES: '${ASAPO_COMMON_IO_LIBRARIES}'")
+        target_link_libraries(test-${target} ${ASAPO_COMMON_IO_LIBRARIES})
 
         if (NOT ${test_libraries} STREQUAL "")
             target_link_libraries(test-${target} ${test_libraries})
@@ -81,9 +81,9 @@ function(gtest target test_source_files linktarget)
         ENDIF (WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         target_link_libraries(test-${target} ${GTEST_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-        GET_PROPERTY(HIDRA2_COMMON_IO_LIBRARIES GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES)
-        message(STATUS "HIDRA2_COMMON_IO_LIBRARIES: '${HIDRA2_COMMON_IO_LIBRARIES}'")
-        target_link_libraries(test-${target} ${HIDRA2_COMMON_IO_LIBRARIES})
+        GET_PROPERTY(ASAPO_COMMON_IO_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_IO_LIBRARIES)
+        message(STATUS "ASAPO_COMMON_IO_LIBRARIES: '${ASAPO_COMMON_IO_LIBRARIES}'")
+        target_link_libraries(test-${target} ${ASAPO_COMMON_IO_LIBRARIES})
 
         if (NOT ${test_libraries} STREQUAL "")
             target_link_libraries(test-${target} ${test_libraries})
@@ -101,7 +101,7 @@ function(gtest target test_source_files linktarget)
             SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
             add_test(NAME coveragetest-${target}
                     COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
-                    coverage-${target} ${CMAKE_BINARY_DIR} ${HIDRA2_MINIMUM_COVERAGE})
+                    coverage-${target} ${CMAKE_BINARY_DIR} ${ASAPO_MINIMUM_COVERAGE})
             set_tests_properties(coveragetest-${target} PROPERTIES LABELS "coverage;all")
             SET_TESTS_PROPERTIES(coveragetest-${target} PROPERTIES DEPENDS test-${target})
             set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} PARENT_SCOPE)

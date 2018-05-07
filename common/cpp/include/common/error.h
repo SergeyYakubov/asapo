@@ -1,11 +1,11 @@
-#ifndef HIDRA2_ERROR_H
-#define HIDRA2_ERROR_H
+#ifndef ASAPO_ERROR_H
+#define ASAPO_ERROR_H
 
 #include <string>
 #include <memory>
 #include <utility>
 
-namespace hidra2 {
+namespace asapo {
 
 enum class ErrorType {
     kUnknownError,
@@ -155,4 +155,4 @@ auto const kEndOfFile = SimpleErrorTemplate {
 }
 
 }
-#endif //HIDRA2_ERROR_H
+#endif //ASAPO_ERROR_H

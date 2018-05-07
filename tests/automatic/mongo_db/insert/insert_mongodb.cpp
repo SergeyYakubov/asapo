@@ -5,8 +5,8 @@
 #include "testing.h"
 
 
-using hidra2::M_AssertContains;
-using hidra2::Error;
+using asapo::M_AssertContains;
+using asapo::Error;
 
 
 void Assert(const Error& error, const std::string& expect) {
@@ -35,9 +35,9 @@ Args GetArgs(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
-    hidra2::MongoDBClient db;
+    asapo::MongoDBClient db;
 
-    hidra2::FileInfo fi;
+    asapo::FileInfo fi;
     fi.size = 100;
     fi.name = "relpath/1";
     fi.id = args.file_id;

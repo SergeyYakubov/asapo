@@ -7,24 +7,24 @@
 #include "database/database.h"
 
 
-namespace hidra2 {
+namespace asapo {
 
 using std::chrono::high_resolution_clock;
 
 FolderToDbImporter::FolderToDbImporter() :
-    io__{GenerateDefaultIO()}, db_factory__{new hidra2::DatabaseFactory} {
+    io__{GenerateDefaultIO()}, db_factory__{new asapo::DatabaseFactory} {
 }
 
-Error FolderToDbImporter::ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const {
+Error FolderToDbImporter::ConnectToDb(const std::unique_ptr<asapo::Database>& db) const {
     return db->Connect(db_uri_, db_name_, kDBCollectionName);
 }
 
-Error FolderToDbImporter::ImportSingleFile(const std::unique_ptr<hidra2::Database>& db,
+Error FolderToDbImporter::ImportSingleFile(const std::unique_ptr<asapo::Database>& db,
                                            const FileInfo& file) const {
     return db->Insert(file, ignore_duplicates_);
 }
 
-Error FolderToDbImporter::ImportFilelistChunk(const std::unique_ptr<hidra2::Database>& db,
+Error FolderToDbImporter::ImportFilelistChunk(const std::unique_ptr<asapo::Database>& db,
                                               const FileInfos& file_list, uint64_t begin, uint64_t end) const {
     for (auto i = begin; i < end; i++) {
         auto err = ImportSingleFile(db, file_list[i]);
@@ -50,7 +50,7 @@ Error FolderToDbImporter::PerformParallelTask(const FileInfos& file_list, uint64
 
     return ImportFilelistChunk(db, file_list, begin, end);
 }
-std::unique_ptr<hidra2::Database> FolderToDbImporter::CreateDbClient(Error* err) const {
+std::unique_ptr<asapo::Database> FolderToDbImporter::CreateDbClient(Error* err) const {
     return db_factory__->Create(err);
 }
 

@@ -5,7 +5,7 @@
 #include <chrono>
 
 
-using hidra2::FileInfo;
+using asapo::FileInfo;
 
 using ::testing::AtLeast;
 using ::testing::Eq;

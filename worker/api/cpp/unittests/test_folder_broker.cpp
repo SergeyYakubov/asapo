@@ -7,16 +7,16 @@
 #include "../../../../common/cpp/src/system_io/system_io.h"
 #include "../src/folder_data_broker.h"
 
-using hidra2::DataBrokerFactory;
-using hidra2::DataBroker;
-using hidra2::FolderDataBroker;
-using hidra2::IO;
-using hidra2::FileInfos;
-using hidra2::FileInfo;
-using hidra2::FileData;
-using hidra2::Error;
-using hidra2::TextError;
-using hidra2::SimpleError;
+using asapo::DataBrokerFactory;
+using asapo::DataBroker;
+using asapo::FolderDataBroker;
+using asapo::IO;
+using asapo::FileInfos;
+using asapo::FileInfo;
+using asapo::FileData;
+using asapo::Error;
+using asapo::TextError;
+using asapo::SimpleError;
 
 using ::testing::AtLeast;
 using ::testing::Eq;
@@ -30,11 +30,11 @@ namespace {
 
 TEST(FolderDataBroker, SetCorrectIO) {
     auto data_broker = new FolderDataBroker("test");
-    ASSERT_THAT(dynamic_cast<hidra2::SystemIO*>(data_broker->io__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::SystemIO*>(data_broker->io__.get()), Ne(nullptr));
     delete data_broker;
 }
 
-class FakeIO: public hidra2::MockIO {
+class FakeIO: public asapo::MockIO {
   public:
 
     virtual std::string ReadFileToString(const std::string& fname, Error* err) const noexcept override {
@@ -59,7 +59,7 @@ class FakeIO: public hidra2::MockIO {
 class IOFolderNotFound: public FakeIO {
   public:
     FileInfos FilesInFolder(const std::string& folder, Error* err) const override {
-        *err = hidra2::IOErrorTemplates::kFileNotFound.Generate();
+        *err = asapo::IOErrorTemplates::kFileNotFound.Generate();
         return {};
     }
 };
@@ -67,7 +67,7 @@ class IOFolderNotFound: public FakeIO {
 class IOFolderUnknownError: public FakeIO {
   public:
     FileInfos FilesInFolder(const std::string& folder, Error* err) const override {
-        *err  = hidra2::IOErrorTemplates::kUnknownIOError.Generate();
+        *err  = asapo::IOErrorTemplates::kUnknownIOError.Generate();
         return {};
     }
 };
@@ -83,7 +83,7 @@ class IOEmptyFolder: public FakeIO {
 class IOCannotOpenFile: public FakeIO {
   public:
     FileData GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const noexcept override {
-        *err = hidra2::IOErrorTemplates::kPermissionDenied.Generate();
+        *err = asapo::IOErrorTemplates::kPermissionDenied.Generate();
         return {};
     };
 };
@@ -112,7 +112,7 @@ TEST_F(FolderDataBrokerTests, CannotConnectTwice) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(hidra2::WorkerErrorMessage::kSourceAlreadyConnected));
+    ASSERT_THAT(return_code->Explain(), Eq(asapo::WorkerErrorMessage::kSourceAlreadyConnected));
 }
 
 
@@ -121,7 +121,7 @@ TEST_F(FolderDataBrokerTests, CannotConnectWhenNoFolder) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrorTemplates::kFileNotFound.Generate()->Explain()));
+    ASSERT_THAT(return_code->Explain(), Eq(asapo::IOErrorTemplates::kFileNotFound.Generate()->Explain()));
 }
 
 TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
@@ -129,13 +129,13 @@ TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
 
     auto return_code = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(hidra2::IOErrorTemplates::kUnknownIOError.Generate()->Explain()));
+    ASSERT_THAT(return_code->Explain(), Eq(asapo::IOErrorTemplates::kUnknownIOError.Generate()->Explain()));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithoutConnectReturnsError) {
     auto err = data_broker->GetNext(nullptr, nullptr);
 
-    ASSERT_THAT(err->Explain(), Eq(hidra2::WorkerErrorMessage::kSourceNotConnected));
+    ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kSourceNotConnected));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
@@ -143,7 +143,7 @@ TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
 
     auto err = data_broker->GetNext(nullptr, nullptr);
 
-    ASSERT_THAT(err->Explain(), Eq(hidra2::WorkerErrorMessage::kWrongInput));
+    ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kWrongInput));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
@@ -175,9 +175,9 @@ TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
     FileInfo fi;
 
     auto err = data_broker->GetNext(&fi, nullptr);
-    ASSERT_TRUE(hidra2::ErrorTemplates::kEndOfFile == err);
+    ASSERT_TRUE(asapo::ErrorTemplates::kEndOfFile == err);
 
-    ASSERT_THAT(err->Explain(), Eq(hidra2::WorkerErrorMessage::kNoData));
+    ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kNoData));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
@@ -187,7 +187,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
     FileData data;
 
     auto err = data_broker->GetNext(&fi, &data);
-    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrorTemplates::kPermissionDenied.Generate()->Explain()));
+    ASSERT_THAT(err->Explain(), Eq(asapo::IOErrorTemplates::kPermissionDenied.Generate()->Explain()));
 }
 
 
@@ -230,22 +230,22 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
 
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
     EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(hidra2::IOErrorTemplates::kReadError.Generate().release()),
+    WillOnce(DoAll(testing::SetArgPointee<2>(asapo::IOErrorTemplates::kReadError.Generate().release()),
                    testing::Return(nullptr)));
 
     auto err = data_broker->GetNext(&fi, &data);
 
-    ASSERT_THAT(err->Explain(), Eq(hidra2::IOErrorTemplates::kReadError.Generate()->Explain()));
+    ASSERT_THAT(err->Explain(), Eq(asapo::IOErrorTemplates::kReadError.Generate()->Explain()));
 }
 
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotAllocateData) {
     EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).
-    WillOnce(DoAll(testing::SetArgPointee<2>(hidra2::ErrorTemplates::kMemoryAllocationError.Generate().release()),
+    WillOnce(DoAll(testing::SetArgPointee<2>(asapo::ErrorTemplates::kMemoryAllocationError.Generate().release()),
                    testing::Return(nullptr)));
 
     auto err = data_broker->GetNext(&fi, &data);
 
-    ASSERT_THAT(err->Explain(), Eq(hidra2::ErrorTemplates::kMemoryAllocationError.Generate()->Explain()));
+    ASSERT_THAT(err->Explain(), Eq(asapo::ErrorTemplates::kMemoryAllocationError.Generate()->Explain()));
 }
 
 

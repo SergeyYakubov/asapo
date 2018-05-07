@@ -7,10 +7,10 @@
 #include <iomanip>
 #include <numeric>
 
-#include "hidra2_worker.h"
+#include "asapo_worker.h"
 
 using std::chrono::high_resolution_clock;
-using hidra2::Error;
+using asapo::Error;
 
 void WaitThreads(std::vector<std::thread>* threads) {
     for (auto& thread : *threads) {
@@ -20,7 +20,7 @@ void WaitThreads(std::vector<std::thread>* threads) {
 
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
-    if (err->GetErrorType() != hidra2::ErrorType::kEndOfFile) {
+    if (err->GetErrorType() != asapo::ErrorType::kEndOfFile) {
         std::cout << err->Explain() << std::endl;
         return 1;
     }
@@ -30,9 +30,9 @@ int ProcessError(const Error& err) {
 std::vector<std::thread> StartThreads(const std::string& server, const std::string& run_name, int nthreads,
                                       std::vector<int>* nfiles, std::vector<int>* errors) {
     auto exec_next = [server, run_name, nfiles, errors](int i) {
-        hidra2::FileInfo fi;
+        asapo::FileInfo fi;
         Error err;
-        auto broker = hidra2::DataBrokerFactory::CreateServerBroker(server, run_name, &err);
+        auto broker = asapo::DataBrokerFactory::CreateServerBroker(server, run_name, &err);
         broker->SetTimeout(1000);
         while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             (*nfiles)[i] ++;
@@ -48,7 +48,7 @@ std::vector<std::thread> StartThreads(const std::string& server, const std::stri
 }
 
 int ReadAllData(const std::string& server, const std::string& run_name, int nthreads, uint64_t* duration_ms) {
-    hidra2::FileInfo fi;
+    asapo::FileInfo fi;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     std::vector<int>nfiles(nthreads, 0);

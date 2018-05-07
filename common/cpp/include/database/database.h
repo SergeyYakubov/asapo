@@ -1,12 +1,12 @@
-#ifndef HIDRA2_DATABASE_H
-#define HIDRA2_DATABASE_H
+#ifndef ASAPO_DATABASE_H
+#define ASAPO_DATABASE_H
 
 #include <string>
 
 #include "common/data_structs.h"
 #include "common/error.h"
 
-namespace hidra2 {
+namespace asapo {
 
 namespace DBError {
 auto const KUnknownError = "Inknown error";
@@ -39,4 +39,4 @@ class DatabaseFactory {
 
 }
 
-#endif //HIDRA2_DATABASE_H
+#endif //ASAPO_DATABASE_H

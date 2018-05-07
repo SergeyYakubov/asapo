@@ -1,4 +1,4 @@
-set(TARGET_NAME hidra2-broker)
+set(TARGET_NAME asapo-broker)
 
 ################################
 # Testing

@@ -4,7 +4,7 @@
 #include "producer_impl.h"
 #include "io/io_factory.h"
 
-namespace  hidra2 {
+namespace  asapo {
 
 const uint32_t ProducerImpl::kVersion = 1;
 const size_t ProducerImpl::kMaxChunkSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(2); //2GiByte

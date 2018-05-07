@@ -2,7 +2,7 @@
 #include "rapid_json.h"
 #include "io/io_factory.h"
 
-namespace hidra2 {
+namespace asapo {
 
 JsonParser::~JsonParser() {
 

@@ -15,11 +15,11 @@ using ::testing::Ne;
 using ::testing::Ref;
 using ::testing::_;
 
-using hidra2::Statistics;
-using hidra2::StatisticEntity;
-using hidra2::StatisticsSender;
-using hidra2::StatisticsSenderInfluxDb;
-using hidra2::StatisticsToSend;
+using asapo::Statistics;
+using asapo::StatisticEntity;
+using asapo::StatisticsSender;
+using asapo::StatisticsSenderInfluxDb;
+using asapo::StatisticsToSend;
 
 
 
@@ -28,7 +28,7 @@ namespace {
 
 TEST(StatisticTestsConstructor, Constructor) {
     Statistics statistics;
-    ASSERT_THAT(dynamic_cast<hidra2::StatisticsSenderInfluxDb*>(statistics.statistics_sender__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::StatisticsSenderInfluxDb*>(statistics.statistics_sender__.get()), Ne(nullptr));
 }
 
 
@@ -60,7 +60,7 @@ ACTION_P(SaveArg1ToSendStat, value) {
     value->n_requests = resp.n_requests;
     value->data_volume = resp.data_volume;
     value->elapsed_ms = resp.elapsed_ms;
-    for (int i = 0; i < hidra2::kNStatisticEntities; i++) {
+    for (int i = 0; i < asapo::kNStatisticEntities; i++) {
         value->entity_shares[i] = resp.entity_shares[i];
     }
 
@@ -73,7 +73,7 @@ StatisticsToSend StatisticTests::ExtractStat() {
     stat.elapsed_ms = 0;
     stat.n_requests = 0;
     stat.data_volume = 0;
-    for (int i = 0; i < hidra2::kNStatisticEntities; i++) {
+    for (int i = 0; i < asapo::kNStatisticEntities; i++) {
         stat.entity_shares[i] = 0.0;
     }
 
@@ -196,7 +196,7 @@ TEST_F(StatisticTests, StatisticsSend) {
     stat.elapsed_ms = 0;
     stat.n_requests = 0;
     stat.data_volume = 0;
-    for (int i = 0; i < hidra2::kNStatisticEntities; i++) {
+    for (int i = 0; i < asapo::kNStatisticEntities; i++) {
         stat.entity_shares[i] = 0.0;
     }
 

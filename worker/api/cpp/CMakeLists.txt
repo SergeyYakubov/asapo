@@ -1,4 +1,4 @@
-set(TARGET_NAME hidra2-worker)
+set(TARGET_NAME asapo-worker)
 
 set(SOURCE_FILES
         src/data_broker.cpp
@@ -13,7 +13,7 @@ set(SOURCE_FILES
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>
             $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:curl_http_client> )
 
-target_include_directories(${TARGET_NAME} PUBLIC include ${HIDRA2_CXX_COMMON_INCLUDE_DIR}  ${CURL_INCLUDE_DIRS})
+target_include_directories(${TARGET_NAME} PUBLIC include ${ASAPO_CXX_COMMON_INCLUDE_DIR}  ${CURL_INCLUDE_DIRS})
 
 IF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")

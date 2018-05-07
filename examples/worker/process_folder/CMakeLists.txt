@@ -4,10 +4,10 @@ set(SOURCE_FILES process_folder.cpp)
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
 
 #Add all necessary common libraries
-GET_PROPERTY(HIDRA2_COMMON_IO_LIBRARIES GLOBAL PROPERTY HIDRA2_COMMON_IO_LIBRARIES)
-target_link_libraries(${TARGET_NAME} ${HIDRA2_COMMON_IO_LIBRARIES})
+GET_PROPERTY(ASAPO_COMMON_IO_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_IO_LIBRARIES)
+target_link_libraries(${TARGET_NAME} ${ASAPO_COMMON_IO_LIBRARIES})
 
-target_link_libraries(${TARGET_NAME} hidra2-worker)
+target_link_libraries(${TARGET_NAME} asapo-worker)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 #use expression generator to get rid of VS adding Debug/Release folders
 set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY

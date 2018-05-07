@@ -1,5 +1,5 @@
-#ifndef HIDRA2_FILE_INFO_H
-#define HIDRA2_FILE_INFO_H
+#ifndef ASAPO_FILE_INFO_H
+#define ASAPO_FILE_INFO_H
 
 #include <cinttypes>
 #include <chrono>
@@ -7,7 +7,7 @@
 #include <vector>
 #include <string>
 
-namespace hidra2 {
+namespace asapo {
 
 class FileInfo {
   public:
@@ -33,4 +33,4 @@ using FileData = std::unique_ptr<uint8_t[]>;
 using FileInfos = std::vector<FileInfo>;
 
 }
-#endif //HIDRA2_FILE_INFO_H
+#endif //ASAPO_FILE_INFO_H

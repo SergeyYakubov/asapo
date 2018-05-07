@@ -1,12 +1,12 @@
-#ifndef HIDRA2_LOGGER_H
-#define HIDRA2_LOGGER_H
+#ifndef ASAPO_LOGGER_H
+#define ASAPO_LOGGER_H
 
 #include <memory>
 #include <string>
 
 #include "common/error.h"
 
-namespace hidra2 {
+namespace asapo {
 
 enum class LogLevel {
     None,
@@ -38,4 +38,4 @@ LogLevel StringToLogLevel(const std::string& name, Error* err);
 
 }
 
-#endif //HIDRA2_LOGGER_H
+#endif //ASAPO_LOGGER_H

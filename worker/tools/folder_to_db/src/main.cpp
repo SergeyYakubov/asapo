@@ -75,11 +75,11 @@ ConvertParameters ProcessCommandArguments(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
     auto import_params = ProcessCommandArguments(argc, argv);
 
-    hidra2::FolderToDbImporter importer;
+    asapo::FolderToDbImporter importer;
     importer.SetNParallelTasks(import_params.ntasks);
     importer.IgnoreDuplicates(import_params.ignore_duplicates);
 
-    hidra2::FolderImportStatistics statistics;
+    asapo::FolderImportStatistics statistics;
 
     auto err = importer.Convert(import_params.uri, import_params.folder, import_params.db_name,
                                 &statistics);

@@ -1,5 +1,5 @@
-#ifndef HIDRA2_RECEIVER_H
-#define HIDRA2_RECEIVER_H
+#ifndef ASAPO_RECEIVER_H
+#define ASAPO_RECEIVER_H
 
 #include <string>
 #include <thread>
@@ -9,7 +9,7 @@
 #include "connection.h"
 #include "receiver_logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class Receiver {
   private:
@@ -30,4 +30,4 @@ class Receiver {
 
 }
 
-#endif //HIDRA2_RECEIVER_H
+#endif //ASAPO_RECEIVER_H

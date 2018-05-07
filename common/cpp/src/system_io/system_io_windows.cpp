@@ -14,7 +14,7 @@ using std::string;
 using std::vector;
 using std::chrono::system_clock;
 
-namespace hidra2 {
+namespace asapo {
 
 Error IOErrorFromGetLastError() {
     DWORD last_error = GetLastError();
@@ -184,7 +184,7 @@ void SystemIO::CollectFileInformationRecursively(const std::string& path,
 
 }
 
-void hidra2::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const {
+void asapo::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const {
     //TODO: Seeing issues when using these settings - need further investigation
     //Event if NonBlockingIO is set, it seems that _recv is a blocking call :/
     /*

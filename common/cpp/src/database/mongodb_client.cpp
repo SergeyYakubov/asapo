@@ -1,9 +1,9 @@
 #include "mongodb_client.h"
 
-namespace hidra2 {
+namespace asapo {
 
 using std::string;
-using hidra2::Database;
+using asapo::Database;
 
 MongoDbInstance::MongoDbInstance() {
     mongoc_init ();
@@ -78,7 +78,7 @@ Error MongoDBClient::Connect(const string& address, const string& database_name,
 }
 
 string MongoDBClient::DBAddress(const string& address) const {
-    return "mongodb://" + address + "/?appname=hidra2";
+    return "mongodb://" + address + "/?appname=asapo";
 }
 
 void MongoDBClient::CleanUp() {

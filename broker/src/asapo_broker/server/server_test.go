@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"hidra2_broker/database"
-	"hidra2_broker/logger"
+	"asapo_broker/database"
+	"asapo_broker/logger"
 	"testing"
 )
 

@@ -1,5 +1,5 @@
-#ifndef HIDRA2_CURL_HTTP_CLIENT_H
-#define HIDRA2_CURL_HTTP_CLIENT_H
+#ifndef ASAPO_CURL_HTTP_CLIENT_H
+#define ASAPO_CURL_HTTP_CLIENT_H
 
 #include <string>
 #include <mutex>
@@ -7,7 +7,7 @@
 #include "http_client/http_client.h"
 #include "curl/curl.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class CurlHttpClient final : public HttpClient {
   public:
@@ -26,4 +26,4 @@ class CurlHttpClient final : public HttpClient {
 
 }
 
-#endif //HIDRA2_CURL_HTTP_CLIENT_H
+#endif //ASAPO_CURL_HTTP_CLIENT_H

@@ -4,8 +4,8 @@ package server
 
 import (
 	"errors"
-	log "hidra2_broker/logger"
-	"hidra2_broker/utils"
+	log "asapo_broker/logger"
+	"asapo_broker/utils"
 	"net/http"
 	"strconv"
 )

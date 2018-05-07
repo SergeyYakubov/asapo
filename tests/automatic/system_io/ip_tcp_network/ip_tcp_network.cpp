@@ -6,17 +6,17 @@
 
 #include "testing.h"
 
-using hidra2::Error;
-using hidra2::ErrorType;
-using hidra2::AddressFamilies;
-using hidra2::SocketTypes;
-using hidra2::SocketProtocols;
-using hidra2::FileDescriptor;
-using hidra2::M_AssertEq;
+using asapo::Error;
+using asapo::ErrorType;
+using asapo::AddressFamilies;
+using asapo::SocketTypes;
+using asapo::SocketProtocols;
+using asapo::FileDescriptor;
+using asapo::M_AssertEq;
 
 using namespace std::chrono;
 
-static const std::unique_ptr<hidra2::IO> io(hidra2::GenerateDefaultIO());
+static const std::unique_ptr<asapo::IO> io(asapo::GenerateDefaultIO());
 static const std::string kListenAddress = "127.0.0.1:60123";
 static std::promise<void> kThreadStarted;
 static const int kNumberOfChecks = 2;
@@ -59,10 +59,10 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
                 uint64_t need_to_receive_size;
                 io->ReceiveWithTimeout(client_fd, &need_to_receive_size, sizeof(uint64_t), 100, &err);
                 if(err != nullptr) {
-                    if (hidra2::IOErrorTemplates::kTimeout == err) {
+                    if (asapo::IOErrorTemplates::kTimeout == err) {
                         continue;
                     }
-                    if (hidra2::ErrorTemplates::kEndOfFile == err) {
+                    if (asapo::ErrorTemplates::kEndOfFile == err) {
                         break;
                     }
                 }
@@ -96,7 +96,7 @@ void CheckNormal(int times, size_t size) {
 
     std::cout << "[CLIENT] ReceiveWithTimeout" << std::endl;
     io->ReceiveWithTimeout(socket, nullptr, 1, 1000 * 100/*100ms*/, &err);
-    if (hidra2::IOErrorTemplates::kTimeout != err) {
+    if (asapo::IOErrorTemplates::kTimeout != err) {
         ExitIfErrIsNotOk(&err, 202);
     }
 
@@ -146,19 +146,19 @@ int main(int argc, char* argv[]) {
     Error err;
     std::cout << "[META] Check if connection is refused if server is not running" << std::endl;
     io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
-    if(hidra2::IOErrorTemplates::kConnectionRefused != err) {
+    if(asapo::IOErrorTemplates::kConnectionRefused != err) {
         ExitIfErrIsNotOk(&err, 301);
     }
 
     std::cout << "[META] Check invalid address format - Missing port" << std::endl;
     io->CreateAndConnectIPTCPSocket("localhost", &err);
-    if(hidra2::IOErrorTemplates::kInvalidAddressFormat != err) {
+    if(asapo::IOErrorTemplates::kInvalidAddressFormat != err) {
         ExitIfErrIsNotOk(&err, 302);
     }
 
     std::cout << "[META] Check unknown host" << std::endl;
     io->CreateAndConnectIPTCPSocket("some-host-that-might-not-exists.aa:1234", &err);
-    if(hidra2::IOErrorTemplates::kUnableToResolveHostname != err) {
+    if(asapo::IOErrorTemplates::kUnableToResolveHostname != err) {
         ExitIfErrIsNotOk(&err, 303);
     }
 
@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "[META] Check if connection is refused after server is closed" << std::endl;
     io->CreateAndConnectIPTCPSocket(kListenAddress, &err);
-    if(hidra2::IOErrorTemplates::kConnectionRefused != err) {
+    if(asapo::IOErrorTemplates::kConnectionRefused != err) {
         ExitIfErrIsNotOk(&err, 304);
     }
 

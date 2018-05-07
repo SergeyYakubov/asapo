@@ -21,7 +21,7 @@
 #include "system_io.h"
 
 
-namespace hidra2 {
+namespace asapo {
 
 const int SystemIO::kNetBufferSize = 1024 * 1024; //* 1024 ; //MiByte
 
@@ -114,7 +114,7 @@ FileInfos SystemIO::FilesInFolder(const std::string& folder, Error* err) const {
     return files;
 }
 
-void hidra2::SystemIO::CreateNewDirectory(const std::string& directory_name, Error* err) const {
+void asapo::SystemIO::CreateNewDirectory(const std::string& directory_name, Error* err) const {
     if(_mkdir(directory_name.c_str()) == -1) {
         *err = GetLastError();
     } else {
@@ -183,7 +183,7 @@ void SystemIO::Skip(SocketDescriptor socket_fd, size_t length, Error* err) const
     }
 }
 
-hidra2::FileDescriptor hidra2::SystemIO::CreateAndConnectIPTCPSocket(const std::string& address,
+asapo::FileDescriptor asapo::SystemIO::CreateAndConnectIPTCPSocket(const std::string& address,
         Error* err) const {
     *err = nullptr;
 
@@ -267,7 +267,7 @@ std::unique_ptr<sockaddr_in> SystemIO::BuildSockaddrIn(const std::string& addres
     return socket_address;
 }
 
-void hidra2::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const {
+void asapo::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const {
     auto socket_address = BuildSockaddrIn(address, err);
     if(*err != nullptr) {
         return;
@@ -321,9 +321,9 @@ Error* err) const {
                 peer_fd));
 }
 
-hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
-                                              int open_flags,
-                                              Error* err) const {
+asapo::FileDescriptor asapo::SystemIO::Open(const std::string& filename,
+                                            int open_flags,
+                                            Error* err) const {
     int flags = FileOpenModeToPosixFileOpenMode(open_flags);
     FileDescriptor fd = _open(filename.c_str(), flags);
     if(fd == -1) {
@@ -335,7 +335,7 @@ hidra2::FileDescriptor hidra2::SystemIO::Open(const std::string& filename,
     return fd;
 }
 
-void hidra2::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
+void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
     if(err) {
         *err = nullptr;
     }
@@ -344,7 +344,7 @@ void hidra2::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
     }
 }
 
-void hidra2::SystemIO::Close(FileDescriptor fd, Error* err) const {
+void asapo::SystemIO::Close(FileDescriptor fd, Error* err) const {
     if(err) {
         *err = nullptr;
     }
@@ -353,7 +353,7 @@ void hidra2::SystemIO::Close(FileDescriptor fd, Error* err) const {
     }
 }
 
-short hidra2::SystemIO::AddressFamilyToPosixFamily(AddressFamilies address_family) const {
+short asapo::SystemIO::AddressFamilyToPosixFamily(AddressFamilies address_family) const {
     switch (address_family) {
     case AddressFamilies::INET:
         return AF_INET;
@@ -361,7 +361,7 @@ short hidra2::SystemIO::AddressFamilyToPosixFamily(AddressFamilies address_famil
     return -1;
 }
 
-int hidra2::SystemIO::SocketTypeToPosixType(SocketTypes socket_type) const {
+int asapo::SystemIO::SocketTypeToPosixType(SocketTypes socket_type) const {
     switch (socket_type) {
     case SocketTypes::STREAM:
         return SOCK_STREAM;
@@ -369,7 +369,7 @@ int hidra2::SystemIO::SocketTypeToPosixType(SocketTypes socket_type) const {
     return -1;
 }
 
-int hidra2::SystemIO::SocketProtocolToPosixProtocol(SocketProtocols socket_protocol) const {
+int asapo::SystemIO::SocketProtocolToPosixProtocol(SocketProtocols socket_protocol) const {
     switch (socket_protocol) {
     case SocketProtocols::IP:
         return IPPROTO_IP;
@@ -412,8 +412,8 @@ SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
     return socket_fd;
 }
 
-void hidra2::SystemIO::InetBind(SocketDescriptor socket_fd, const std::string& address,
-                                Error* err) const {
+void asapo::SystemIO::InetBind(SocketDescriptor socket_fd, const std::string& address,
+                               Error* err) const {
     *err = nullptr;
 
     int family = AddressFamilyToPosixFamily(AddressFamilies::INET);
@@ -432,7 +432,7 @@ void hidra2::SystemIO::InetBind(SocketDescriptor socket_fd, const std::string& a
     }
 }
 
-void hidra2::SystemIO::Listen(SocketDescriptor socket_fd, int backlog, Error* err) const {
+void asapo::SystemIO::Listen(SocketDescriptor socket_fd, int backlog, Error* err) const {
     *err = nullptr;
 
     if (_listen(socket_fd, backlog) == -1) {
@@ -462,8 +462,8 @@ SocketDescriptor SystemIO::CreateAndBindIPTCPSocketListener(const std::string& a
     return listener_fd;
 }
 
-size_t hidra2::SystemIO::ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
-                                            Error* err) const {
+size_t asapo::SystemIO::ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
+                                           Error* err) const {
     *err = nullptr;
 
     fd_set read_fds;
@@ -487,19 +487,19 @@ size_t hidra2::SystemIO::ReceiveWithTimeout(SocketDescriptor socket_fd, void* bu
 }
 
 
-size_t hidra2::SystemIO::Read(FileDescriptor fd, void* buf, size_t length, Error* err) const {
+size_t asapo::SystemIO::Read(FileDescriptor fd, void* buf, size_t length, Error* err) const {
     return Transfer(_read, fd, buf, length, err);
 }
 
-size_t hidra2::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length, Error* err) const {
+size_t asapo::SystemIO::Write(FileDescriptor fd, const void* buf, size_t length, Error* err) const {
     return Transfer(_write, fd, buf, length, err);
 }
 
-size_t hidra2::SystemIO::Receive(SocketDescriptor socket_fd, void* buf, size_t length, Error* err) const {
+size_t asapo::SystemIO::Receive(SocketDescriptor socket_fd, void* buf, size_t length, Error* err) const {
     return Transfer(_recv, socket_fd, buf, length, err);
 }
 
-size_t hidra2::SystemIO::Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const {
+size_t asapo::SystemIO::Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const {
     return Transfer(_send, socket_fd, buf, length, err);
 }
 

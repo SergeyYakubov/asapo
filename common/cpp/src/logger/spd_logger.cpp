@@ -2,7 +2,7 @@
 
 #include "fluentd_sink.h"
 
-namespace hidra2 {
+namespace asapo {
 
 void SpdLogger::SetLogLevel(LogLevel level) {
     if (log__) {

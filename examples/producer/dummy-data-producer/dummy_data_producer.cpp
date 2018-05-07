@@ -3,7 +3,7 @@
 #include <vector>
 #include <tuple>
 
-#include "hidra2_producer.h"
+#include "asapo_producer.h"
 
 using std::chrono::high_resolution_clock;
 
@@ -24,7 +24,7 @@ ArgumentTuple ProcessCommandArguments(int argc, char* argv[]) {
     }
 }
 
-bool SendDummyData(hidra2::Producer* producer, size_t number_of_byte, uint64_t iterations) {
+bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations) {
     auto buffer = std::unique_ptr<uint8_t>(new uint8_t[number_of_byte]);
 
     for(uint64_t i = 0; i < iterations; i++) {
@@ -54,7 +54,7 @@ int main (int argc, char* argv[]) {
               << "iterations: " << iterations << std::endl
               << std::endl;
 
-    auto producer = hidra2::Producer::Create();
+    auto producer = asapo::Producer::Create();
     auto err = producer->ConnectToReceiver(receiver_address);
     if(err) {
         std::cerr << "Failed to connect to receiver. ProducerError: " << err << std::endl;

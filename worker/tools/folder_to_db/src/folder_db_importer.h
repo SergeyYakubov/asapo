@@ -1,5 +1,5 @@
-#ifndef HIDRA2_FOLDERDBCONVERTER_H
-#define HIDRA2_FOLDERDBCONVERTER_H
+#ifndef ASAPO_FOLDERDBCONVERTER_H
+#define ASAPO_FOLDERDBCONVERTER_H
 
 #include <iostream>
 #include <chrono>
@@ -9,7 +9,7 @@
 #include "io/io.h"
 #include "database/database.h"
 #include "common/error.h"
-namespace hidra2 {
+namespace asapo {
 
 namespace FolderToDbImportError {
 
@@ -46,8 +46,8 @@ class FolderToDbImporter {
 
     unsigned int SetNParallelTasks(unsigned int ntasks, bool async = true);
     void IgnoreDuplicates(bool ignore_duplicates = true);
-    std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
-    std::unique_ptr<hidra2::DatabaseFactory>
+    std::unique_ptr<asapo::IO> io__; // modified in testings to mock system calls,otherwise do not touch
+    std::unique_ptr<asapo::DatabaseFactory>
     db_factory__; // modified in testings to mock system calls,otherwise do not touch
 
   private:
@@ -56,14 +56,14 @@ class FolderToDbImporter {
     bool async_{true};
     mutable std::string db_uri_ ;
     mutable std::string db_name_;
-    Error ConnectToDb(const std::unique_ptr<hidra2::Database>& db) const;
+    Error ConnectToDb(const std::unique_ptr<asapo::Database>& db) const;
     FileInfos GetFilesInFolder(const std::string& folder, Error* err) const;
     Error ImportFilelist(const FileInfos& file_list) const;
     Error PerformParallelTask(const FileInfos& file_list, uint64_t begin,
                               uint64_t end) const;
-    Error ImportSingleFile(const std::unique_ptr<hidra2::Database>& db,
+    Error ImportSingleFile(const std::unique_ptr<asapo::Database>& db,
                            const FileInfo& file) const;
-    Error ImportFilelistChunk(const std::unique_ptr<hidra2::Database>& db,
+    Error ImportFilelistChunk(const std::unique_ptr<asapo::Database>& db,
                               const FileInfos& file_list, uint64_t begin, uint64_t end) const;
 
     std::unique_ptr<Database> CreateDbClient(Error* err) const;
@@ -74,4 +74,4 @@ class FolderToDbImporter {
 
 }
 
-#endif //HIDRA2_FOLDERDBCONVERTER_H
+#endif //ASAPO_FOLDERDBCONVERTER_H

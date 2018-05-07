@@ -1,12 +1,12 @@
-#ifndef HIDRA2_MOCKHTTPCLIENT_H
-#define HIDRA2_MOCKHTTPCLIENT_H
+#ifndef ASAPO_MOCKHTTPCLIENT_H
+#define ASAPO_MOCKHTTPCLIENT_H
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include "http_client/http_client.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class MockHttpClient : public HttpClient {
   public:
@@ -32,4 +32,4 @@ class MockHttpClient : public HttpClient {
 
 }
 
-#endif //HIDRA2_MOCKHTTPCLIENT_H
+#endif //ASAPO_MOCKHTTPCLIENT_H

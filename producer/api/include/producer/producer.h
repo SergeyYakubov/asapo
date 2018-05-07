@@ -1,5 +1,5 @@
-#ifndef HIDRA2_PRODUCER__PRODUCER_H
-#define HIDRA2_PRODUCER__PRODUCER_H
+#ifndef ASAPO_PRODUCER__PRODUCER_H
+#define ASAPO_PRODUCER__PRODUCER_H
 
 #include <memory>
 #include <string>
@@ -7,7 +7,7 @@
 #include "producer_error.h"
 #include "logger/logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 enum class ProducerStatus {
     kDisconnected,
@@ -57,4 +57,4 @@ class Producer {
 };
 }
 
-#endif //HIDRA2_PRODUCER__PRODUCER_H
+#endif //ASAPO_PRODUCER__PRODUCER_H

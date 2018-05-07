@@ -15,13 +15,13 @@ using ::testing::SetArgPointee;
 using ::testing::HasSubstr;
 using ::testing::ElementsAre;
 
-using hidra2::LogLevel;
+using asapo::LogLevel;
 
 namespace {
 
 void CheckConvert(const std::string& str, LogLevel level) {
-    hidra2::Error err;
-    auto loglev = hidra2::StringToLogLevel(str, &err);
+    asapo::Error err;
+    auto loglev = asapo::StringToLogLevel(str, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(loglev, Eq(level));
 }
@@ -36,21 +36,21 @@ TEST(StringToLogLevel, ConvertOK) {
 
 
 TEST(StringToLogLevel, ConvertError) {
-    hidra2::Error err;
-    auto loglev = hidra2::StringToLogLevel("wrong", &err);
+    asapo::Error err;
+    auto loglev = asapo::StringToLogLevel("wrong", &err);
     ASSERT_THAT(err, Ne(nullptr));
-    ASSERT_THAT(loglev, Eq(hidra2::LogLevel::None));
+    ASSERT_THAT(loglev, Eq(asapo::LogLevel::None));
 }
 
 
 TEST(DefaultLogger, BinLogger) {
-    auto logger = hidra2::CreateDefaultLoggerBin("test");
-    ASSERT_THAT(dynamic_cast<hidra2::SpdLogger*>(logger.get()), Ne(nullptr));
+    auto logger = asapo::CreateDefaultLoggerBin("test");
+    ASSERT_THAT(dynamic_cast<asapo::SpdLogger*>(logger.get()), Ne(nullptr));
 }
 
 TEST(DefaultLogger, ApiLogger) {
-    auto logger = hidra2::CreateDefaultLoggerApi("test", "endpoint");
-    ASSERT_THAT(dynamic_cast<hidra2::SpdLogger*>(logger.get()), Ne(nullptr));
+    auto logger = asapo::CreateDefaultLoggerApi("test", "endpoint");
+    ASSERT_THAT(dynamic_cast<asapo::SpdLogger*>(logger.get()), Ne(nullptr));
 }
 
 class MockSink : public spdlog::sinks::base_sink<std::mutex> {
@@ -66,7 +66,7 @@ class LoggerTests : public Test {
   public:
     std::shared_ptr<MockSink> mock_sink{new MockSink{"test_url"}};
     std::unique_ptr<spdlog::logger> log;
-    hidra2::SpdLogger logger{"test", "test_uri"};
+    asapo::SpdLogger logger{"test", "test_uri"};
     spdlog::details::log_msg msg;
     std::string test_string{"Hello"};
     void SetUp() override {

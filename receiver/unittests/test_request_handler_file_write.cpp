@@ -28,21 +28,21 @@ using ::testing::AllOf;
 using ::testing::HasSubstr;
 
 
-using ::hidra2::Error;
-using ::hidra2::ErrorInterface;
-using ::hidra2::FileDescriptor;
-using ::hidra2::SocketDescriptor;
-using ::hidra2::MockIO;
-using hidra2::Request;
-using hidra2::RequestHandlerFileWrite;
-using ::hidra2::GenericNetworkRequestHeader;
+using ::asapo::Error;
+using ::asapo::ErrorInterface;
+using ::asapo::FileDescriptor;
+using ::asapo::SocketDescriptor;
+using ::asapo::MockIO;
+using asapo::Request;
+using asapo::RequestHandlerFileWrite;
+using ::asapo::GenericNetworkRequestHeader;
 
 namespace {
 
 TEST(FileWrite, Constructor) {
     RequestHandlerFileWrite handler;
-    ASSERT_THAT(dynamic_cast<hidra2::IO*>(handler.io__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const hidra2::AbstractLogger*>(handler.log__), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::IO*>(handler.io__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(handler.log__), Ne(nullptr));
 }
 
 
@@ -53,7 +53,7 @@ class MockRequest: public Request {
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetDataSize, uint64_t());
-    MOCK_CONST_METHOD0(GetData, const hidra2::FileData & ());
+    MOCK_CONST_METHOD0(GetData, const asapo::FileData & ());
 };
 
 class FileWriteHandlerTests : public Test {
@@ -61,7 +61,7 @@ class FileWriteHandlerTests : public Test {
     RequestHandlerFileWrite handler;
     NiceMock<MockIO> mock_io;
     std::unique_ptr<MockRequest> mock_request;
-    NiceMock<hidra2::MockLogger> mock_logger;
+    NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_file_name = "2.bin";
     uint64_t expected_file_size = 10;
     void MockRequestData();
@@ -69,7 +69,7 @@ class FileWriteHandlerTests : public Test {
         GenericNetworkRequestHeader request_header;
         request_header.data_id = 2;
         mock_request.reset(new MockRequest{request_header, 1});
-        handler.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
+        handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }
     void TearDown() override {
@@ -80,7 +80,7 @@ class FileWriteHandlerTests : public Test {
 
 TEST_F(FileWriteHandlerTests, CheckStatisticEntity) {
     auto entity = handler.GetStatisticEntity();
-    ASSERT_THAT(entity, Eq(hidra2::StatisticEntity::kDisk));
+    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kDisk));
 }
 
 
@@ -91,17 +91,17 @@ TEST_F(FileWriteHandlerTests, ErrorWhenZeroFileSize) {
 
     auto err = handler.ProcessRequest(*mock_request);
 
-    ASSERT_THAT(err, Eq(hidra2::ReceiverErrorTemplates::kBadRequest));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
 }
 
 TEST_F(FileWriteHandlerTests, ErrorWhenTooBigFileSize) {
     EXPECT_CALL(*mock_request, GetDataSize())
-    .WillOnce(Return(hidra2::kMaxFileSize + 1))
+    .WillOnce(Return(asapo::kMaxFileSize + 1))
     ;
 
     auto err = handler.ProcessRequest(*mock_request);
 
-    ASSERT_THAT(err, Eq(hidra2::ReceiverErrorTemplates::kBadRequest));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
 }
 
 void FileWriteHandlerTests::MockRequestData() {
@@ -109,7 +109,7 @@ void FileWriteHandlerTests::MockRequestData() {
     .WillOnce(Return(expected_file_size))
     ;
 
-    hidra2::FileData data;
+    asapo::FileData data;
     EXPECT_CALL(*mock_request, GetData())
     .WillOnce(ReturnRef(data))
     ;
@@ -125,12 +125,12 @@ TEST_F(FileWriteHandlerTests, CallsWriteFile) {
 
     EXPECT_CALL(mock_io, WriteDataToFile_t("files/" + expected_file_name, _, expected_file_size))
     .WillOnce(
-        Return(hidra2::IOErrorTemplates::kUnknownIOError.Generate().release())
+        Return(asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
     );
 
     auto err = handler.ProcessRequest(*mock_request);
 
-    ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
 
 

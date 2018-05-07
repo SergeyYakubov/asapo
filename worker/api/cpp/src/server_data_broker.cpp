@@ -9,7 +9,7 @@
 using std::chrono::high_resolution_clock;
 
 
-namespace hidra2 {
+namespace asapo {
 
 Error HttpCodeToWorkerError(const HttpCode& code) {
     const char* message;
@@ -66,7 +66,7 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string&
 
         err = HttpCodeToWorkerError(code);
         if (err == nullptr) break;
-        if (err->GetErrorType() != hidra2::ErrorType::kEndOfFile) {
+        if (err->GetErrorType() != asapo::ErrorType::kEndOfFile) {
             err->Append(response);
 //            return err;
         }

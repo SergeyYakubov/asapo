@@ -24,29 +24,29 @@ using ::testing::Mock;
 using ::testing::NiceMock;
 using ::testing::InSequence;
 using ::testing::SetArgPointee;
-using ::hidra2::Error;
-using ::hidra2::ErrorInterface;
-using ::hidra2::FileDescriptor;
-using ::hidra2::SocketDescriptor;
-using ::hidra2::GenericNetworkRequestHeader;
-using ::hidra2::SendDataResponse;
-using ::hidra2::GenericNetworkRequestHeader;
-using ::hidra2::GenericNetworkResponse;
-using ::hidra2::Opcode;
-using ::hidra2::Connection;
-using ::hidra2::MockIO;
-using hidra2::Request;
-using hidra2::MockStatistics;
+using ::asapo::Error;
+using ::asapo::ErrorInterface;
+using ::asapo::FileDescriptor;
+using ::asapo::SocketDescriptor;
+using ::asapo::GenericNetworkRequestHeader;
+using ::asapo::SendDataResponse;
+using ::asapo::GenericNetworkRequestHeader;
+using ::asapo::GenericNetworkResponse;
+using ::asapo::Opcode;
+using ::asapo::Connection;
+using ::asapo::MockIO;
+using asapo::Request;
+using asapo::MockStatistics;
 
-using hidra2::StatisticEntity;
+using asapo::StatisticEntity;
 
-using hidra2::ReceiverConfig;
-using hidra2::SetReceiverConfig;
-using hidra2::RequestFactory;
+using asapo::ReceiverConfig;
+using asapo::SetReceiverConfig;
+using asapo::RequestFactory;
 
 namespace {
 
-class MockReqestHandler : public hidra2::RequestHandler {
+class MockReqestHandler : public asapo::RequestHandler {
   public:
     Error ProcessRequest(const Request& request) const override {
         return Error{ProcessRequest_t(request)};
@@ -64,19 +64,19 @@ class MockReqestHandler : public hidra2::RequestHandler {
 class RequestTests : public Test {
   public:
     GenericNetworkRequestHeader generic_request_header;
-    hidra2::SocketDescriptor socket_fd_{1};
+    asapo::SocketDescriptor socket_fd_{1};
     uint64_t data_size_ {100};
     uint64_t data_id_{15};
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;
-    std::unique_ptr<hidra2::Statistics>  stat;
+    std::unique_ptr<asapo::Statistics>  stat;
     void SetUp() override {
-        stat = std::unique_ptr<hidra2::Statistics> {&mock_statistics};
+        stat = std::unique_ptr<asapo::Statistics> {&mock_statistics};
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         request.reset(new Request{generic_request_header, socket_fd_});
-        request->io__ = std::unique_ptr<hidra2::IO> {&mock_io};
+        request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
             DoAll(SetArgPointee<3>(nullptr),
                   Return(0)
@@ -93,7 +93,7 @@ TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
     generic_request_header.data_size = 0;
     request->io__.release();
     request.reset(new Request{generic_request_header, socket_fd_});
-    request->io__ = std::unique_ptr<hidra2::IO> {&mock_io};;
+    request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
 
@@ -104,19 +104,19 @@ TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
 
 TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
     EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillOnce(
-        DoAll(SetArgPointee<3>(new hidra2::IOError("Test Read Error", hidra2::IOErrorType::kReadError)),
+        DoAll(SetArgPointee<3>(new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
               Return(0)
              ));
 
     auto err = request->Handle(&stat);
-    ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kReadError));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
 }
 
 
 
 TEST_F(RequestTests, HandleMeasuresTimeOnDataReceive) {
 
-    EXPECT_CALL(mock_statistics, StartTimer_t(hidra2::StatisticEntity::kNetwork));
+    EXPECT_CALL(mock_statistics, StartTimer_t(asapo::StatisticEntity::kNetwork));
 
     EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillOnce(
         DoAll(SetArgPointee<3>(nullptr),
@@ -135,25 +135,25 @@ TEST_F(RequestTests, HandleProcessesRequests) {
 
     MockReqestHandler mock_request_handler;
 
-    EXPECT_CALL(mock_statistics, StartTimer_t(hidra2::StatisticEntity::kNetwork));
+    EXPECT_CALL(mock_statistics, StartTimer_t(asapo::StatisticEntity::kNetwork));
 
     EXPECT_CALL(mock_request_handler, ProcessRequest_t(_)).WillOnce(
         Return(nullptr)
     ).WillOnce(
-        Return(new hidra2::IOError("Test Send Error", hidra2::IOErrorType::kUnknownIOError))
+        Return(new asapo::IOError("Test Send Error", asapo::IOErrorType::kUnknownIOError))
     );;
 
     request->AddHandler(&mock_request_handler);
     request->AddHandler(&mock_request_handler);
 
-    EXPECT_CALL(mock_statistics, StartTimer_t(hidra2::StatisticEntity::kDisk)).Times(2);
+    EXPECT_CALL(mock_statistics, StartTimer_t(asapo::StatisticEntity::kDisk)).Times(2);
 
     EXPECT_CALL(mock_statistics, StopTimer_t()).Times(2);
 
 
     auto err = request->Handle(&stat);
 
-    ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
 
 TEST_F(RequestTests, DataIsNullAtInit) {

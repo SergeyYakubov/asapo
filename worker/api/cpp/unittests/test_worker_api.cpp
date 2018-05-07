@@ -5,12 +5,12 @@
 #include "../src/server_data_broker.h"
 #include "common/error.h"
 
-using hidra2::DataBrokerFactory;
-using hidra2::DataBroker;
-using hidra2::FolderDataBroker;
-using hidra2::ServerDataBroker;
+using asapo::DataBrokerFactory;
+using asapo::DataBroker;
+using asapo::FolderDataBroker;
+using asapo::ServerDataBroker;
 
-using hidra2::Error;
+using asapo::Error;
 using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Test;
@@ -22,7 +22,7 @@ class DataBrokerFactoryTests : public Test {
   public:
     Error error;
     void SetUp() override {
-        error.reset(new hidra2::SimpleError("SomeErrorToBeOverwritten"));
+        error.reset(new asapo::SimpleError("SomeErrorToBeOverwritten"));
     }
 };
 

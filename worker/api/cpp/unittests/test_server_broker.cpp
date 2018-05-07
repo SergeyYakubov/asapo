@@ -10,17 +10,17 @@
 #include "unittests/MockHttpClient.h"
 #include "http_client/http_error.h"
 
-using hidra2::DataBrokerFactory;
-using hidra2::DataBroker;
-using hidra2::ServerDataBroker;
-using hidra2::IO;
-using hidra2::FileInfo;
-using hidra2::FileData;
-using hidra2::MockIO;
-using hidra2::MockHttpClient;
-using hidra2::HttpCode;
-using hidra2::HttpError;
-using hidra2::SimpleError;
+using asapo::DataBrokerFactory;
+using asapo::DataBroker;
+using asapo::ServerDataBroker;
+using asapo::IO;
+using asapo::FileInfo;
+using asapo::FileData;
+using asapo::MockIO;
+using asapo::MockHttpClient;
+using asapo::HttpCode;
+using asapo::HttpError;
+using asapo::SimpleError;
 
 using ::testing::AtLeast;
 using ::testing::Eq;
@@ -38,12 +38,12 @@ namespace {
 
 TEST(FolderDataBroker, SetCorrectIo) {
     auto data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "dbname")};
-    ASSERT_THAT(dynamic_cast<hidra2::SystemIO*>(data_broker->io__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::SystemIO*>(data_broker->io__.get()), Ne(nullptr));
 }
 
 TEST(FolderDataBroker, SetCorrectHttpClient) {
     auto data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "dbname")};
-    ASSERT_THAT(dynamic_cast<hidra2::CurlHttpClient*>(data_broker->httpclient__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::CurlHttpClient*>(data_broker->httpclient__.get()), Ne(nullptr));
 }
 
 
@@ -57,7 +57,7 @@ class ServerDataBrokerTests : public Test {
     void SetUp() override {
         data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "dbname")};
         data_broker->io__ = std::unique_ptr<IO> {&mock_io};
-        data_broker->httpclient__ = std::unique_ptr<hidra2::HttpClient> {&mock_http_client};
+        data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
     }
     void TearDown() override {
         data_broker->io__.release();
@@ -80,7 +80,7 @@ TEST_F(ServerDataBrokerTests, CanConnect) {
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsErrorOnWrongInput) {
     auto return_code = data_broker->GetNext(nullptr, nullptr);
-    ASSERT_THAT(return_code->Explain(), Eq(hidra2::WorkerErrorMessage::kWrongInput));
+    ASSERT_THAT(return_code->Explain(), Eq(asapo::WorkerErrorMessage::kWrongInput));
 }
 
 
@@ -100,8 +100,8 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsErrorFromHttpClient) {
 
     auto err = data_broker->GetNext(&info, nullptr);
 
-    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::WorkerErrorMessage::kSourceNotFound));
-    ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kHttpError);
+    ASSERT_THAT(err->Explain(), HasSubstr(asapo::WorkerErrorMessage::kSourceNotFound));
+    ASSERT_THAT(err->GetErrorType(), asapo::ErrorType::kHttpError);
     ASSERT_THAT(dynamic_cast<HttpError*>(err.get())->GetCode(), Eq(HttpCode::NotFound));
 }
 
@@ -113,8 +113,8 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClient) {
 
     auto err = data_broker->GetNext(&info, nullptr);
 
-    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::WorkerErrorMessage::kNoData));
-    ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kEndOfFile);
+    ASSERT_THAT(err->Explain(), HasSubstr(asapo::WorkerErrorMessage::kNoData));
+    ASSERT_THAT(err->GetErrorType(), asapo::ErrorType::kEndOfFile);
 }
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClientUntilTimeout) {
@@ -126,8 +126,8 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClientUntilTimeout) {
     data_broker->SetTimeout(100);
     auto err = data_broker->GetNext(&info, nullptr);
 
-    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::WorkerErrorMessage::kNoData));
-    ASSERT_THAT(err->GetErrorType(), hidra2::ErrorType::kEndOfFile);
+    ASSERT_THAT(err->Explain(), HasSubstr(asapo::WorkerErrorMessage::kNoData));
+    ASSERT_THAT(err->GetErrorType(), asapo::ErrorType::kEndOfFile);
 }
 
 
@@ -162,7 +162,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsParseError) {
     MockGet("error_response");
     auto err = data_broker->GetNext(&info, nullptr);
 
-    ASSERT_THAT(err->Explain(), Eq(hidra2::WorkerErrorMessage::kErrorReadingSource));
+    ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kErrorReadingSource));
 }
 
 
@@ -180,7 +180,7 @@ TEST_F(ServerDataBrokerTests, GetNextCallsReadFromFile) {
     MockGet(json);
 
     EXPECT_CALL(mock_io, GetDataFromFile_t("name", 100, _)).
-    WillOnce(DoAll(SetArgPointee<2>(new hidra2::SimpleError{"s"}), testing::Return(nullptr)));
+    WillOnce(DoAll(SetArgPointee<2>(new asapo::SimpleError{"s"}), testing::Return(nullptr)));
 
     FileData data;
     data_broker->GetNext(&info, &data);

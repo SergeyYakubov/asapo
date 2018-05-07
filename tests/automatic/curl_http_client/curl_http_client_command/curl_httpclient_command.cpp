@@ -4,8 +4,8 @@
 #include "testing.h"
 #include "../../../worker/api/cpp/src/server_data_broker.h"
 
-using hidra2::M_AssertEq;
-using hidra2::M_AssertContains;
+using asapo::M_AssertEq;
+using asapo::M_AssertContains;
 
 struct Args {
     std::string command;
@@ -31,11 +31,11 @@ int main(int argc, char* argv[]) {
 
     auto args = GetArgs(argc, argv);
 
-    hidra2::Error err;
-    auto broker = hidra2::DataBrokerFactory::CreateServerBroker(args.uri, "", &err);
-    auto server_broker = static_cast<hidra2::ServerDataBroker*>(broker.get());
+    asapo::Error err;
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.uri, "", &err);
+    auto server_broker = static_cast<asapo::ServerDataBroker*>(broker.get());
 
-    hidra2::HttpCode code;
+    asapo::HttpCode code;
     std::string response;
     if (args.command == "GET") {
         response = server_broker->httpclient__->Get(args.uri, &code, &err);

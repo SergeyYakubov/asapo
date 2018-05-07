@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OUT_DIR=$1
-HIDRA2_MINIMUM_COVERAGE=$2
+ASAPO_MINIMUM_COVERAGE=$2
 
 export GOPATH=$GOPATH:$3
 
@@ -22,12 +22,12 @@ coverage=`go tool cover -func=$OUT_DIR/coverage-all.out | grep total | cut -d ")
 #firefox ./coverage.html &
 go tool cover -html=$OUT_DIR/coverage-all.out -o ${OUT_DIR}/coverage.html
 rm -rf ${OUT_DIR}/coverage-all.out ${OUT_DIR}/coverage.out
-if (( coverage < HIDRA2_MINIMUM_COVERAGE )); then
+if (( coverage < ASAPO_MINIMUM_COVERAGE )); then
 	exec >&2
 	echo
 	echo "*****"
 	echo
-	echo coverage is ${coverage}% - less than required ${HIDRA2_MINIMUM_COVERAGE}%
+	echo coverage is ${coverage}% - less than required ${ASAPO_MINIMUM_COVERAGE}%
 	echo	
 	echo "*****"
 	echo

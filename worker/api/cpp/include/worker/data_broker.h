@@ -1,5 +1,5 @@
-#ifndef HIDRA2_DATASOURCE_H
-#define HIDRA2_DATASOURCE_H
+#ifndef ASAPO_DATASOURCE_H
+#define ASAPO_DATASOURCE_H
 
 #include <memory>
 #include <string>
@@ -7,7 +7,7 @@
 #include "common/data_structs.h"
 #include "common/error.h"
 
-namespace hidra2 {
+namespace asapo {
 
 namespace WorkerErrorMessage {
 
@@ -53,4 +53,4 @@ class DataBrokerFactory {
 };
 
 }
-#endif //HIDRA2_DATASOURCE_H
+#endif //ASAPO_DATASOURCE_H

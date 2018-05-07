@@ -3,7 +3,7 @@
 
 using namespace rapidjson;
 
-namespace hidra2 {
+namespace asapo {
 
 RapidJson::RapidJson(const std::string& json, const std::unique_ptr<IO>* io): io__{io}, json_{json} {
 
@@ -36,7 +36,7 @@ Error RapidJson::LazyInitialize()const noexcept {
     return nullptr;
 }
 
-hidra2::Error CheckValueType(const std::string& name, ValueType type, const Value* val) {
+asapo::Error CheckValueType(const std::string& name, ValueType type, const Value* val) {
     bool res = false;
     switch (type) {
     case ValueType::kObject:
@@ -63,7 +63,7 @@ hidra2::Error CheckValueType(const std::string& name, ValueType type, const Valu
 }
 
 
-hidra2::Error RapidJson::GetValuePointer(const std::string& name, ValueType type, Value** val)const noexcept {
+asapo::Error RapidJson::GetValuePointer(const std::string& name, ValueType type, Value** val)const noexcept {
     if (Error err = LazyInitialize()) {
         return err;
     }

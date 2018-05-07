@@ -1,5 +1,5 @@
-#ifndef HIDRA2_FOLDERDATABROKER_H
-#define HIDRA2_FOLDERDATABROKER_H
+#ifndef ASAPO_FOLDERDATABROKER_H
+#define ASAPO_FOLDERDATABROKER_H
 
 #include "worker/data_broker.h"
 
@@ -8,16 +8,16 @@
 
 #include "io/io.h"
 
-namespace hidra2 {
+namespace asapo {
 
-class FolderDataBroker final : public hidra2::DataBroker {
+class FolderDataBroker final : public asapo::DataBroker {
   public:
     explicit FolderDataBroker(const std::string& source_name);
     Error Connect() override;
     Error GetNext(FileInfo* info, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override {}; // to timeout in this case
 
-    std::unique_ptr<hidra2::IO> io__; // modified in testings to mock system calls,otherwise do not touch
+    std::unique_ptr<asapo::IO> io__; // modified in testings to mock system calls,otherwise do not touch
   private:
     std::string base_path_;
     bool is_connected_;
@@ -29,5 +29,5 @@ class FolderDataBroker final : public hidra2::DataBroker {
 
 }
 
-#endif //HIDRA2_FOLDERDATABROKER_H
+#endif //ASAPO_FOLDERDATABROKER_H
 

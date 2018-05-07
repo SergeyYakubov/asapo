@@ -31,18 +31,18 @@ using ::testing::SaveArgPointee;
 using ::testing::InSequence;
 using ::testing::SetArgPointee;
 
-using hidra2::StatisticsSenderInfluxDb;
-using hidra2::MockHttpClient;
-using hidra2::StatisticsToSend;
-using hidra2::ReceiverConfig;
-using hidra2::SetReceiverConfig;
+using asapo::StatisticsSenderInfluxDb;
+using asapo::MockHttpClient;
+using asapo::StatisticsToSend;
+using asapo::ReceiverConfig;
+using asapo::SetReceiverConfig;
 
 namespace {
 
 TEST(SenderInfluxDb, Constructor) {
     StatisticsSenderInfluxDb sender;
-    ASSERT_THAT(dynamic_cast<hidra2::CurlHttpClient*>(sender.httpclient__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const hidra2::AbstractLogger*>(sender.log__), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::CurlHttpClient*>(sender.httpclient__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(sender.log__), Ne(nullptr));
 }
 
 
@@ -50,15 +50,15 @@ class SenderInfluxDbTests : public Test {
   public:
     StatisticsSenderInfluxDb sender;
     MockHttpClient mock_http_client;
-    NiceMock<hidra2::MockLogger> mock_logger;
+    NiceMock<asapo::MockLogger> mock_logger;
     StatisticsToSend statistics;
     ReceiverConfig config;
 
     void SetUp() override {
         statistics.n_requests = 4;
-        statistics.entity_shares[hidra2::StatisticEntity::kDisk] = 0.6;
-        statistics.entity_shares[hidra2::StatisticEntity::kNetwork] = 0.3;
-        statistics.entity_shares[hidra2::StatisticEntity::kDatabase] = 0.1;
+        statistics.entity_shares[asapo::StatisticEntity::kDisk] = 0.6;
+        statistics.entity_shares[asapo::StatisticEntity::kNetwork] = 0.3;
+        statistics.entity_shares[asapo::StatisticEntity::kDatabase] = 0.1;
         statistics.elapsed_ms = 100;
         statistics.data_volume = 1000;
 
@@ -80,7 +80,7 @@ TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
                                 "n_requests=4,db_share=0.1000,network_share=0.3000,disk_share=0.6000";
     EXPECT_CALL(mock_http_client, Post_t("test_uri/write?db=test_name", expect_string, _, _)).
     WillOnce(
-        DoAll(SetArgPointee<3>(new hidra2::IOError("Test Read Error", hidra2::IOErrorType::kReadError)),
+        DoAll(SetArgPointee<3>(new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
               Return("")
              ));
 
@@ -93,7 +93,7 @@ TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
 TEST_F(SenderInfluxDbTests, LogErrorWithWrongResponceSendStatistics) {
     EXPECT_CALL(mock_http_client, Post_t(_, _, _, _)).
     WillOnce(
-        DoAll(SetArgPointee<2>(hidra2::HttpCode::BadRequest), SetArgPointee<3>(nullptr), Return("error response")
+        DoAll(SetArgPointee<2>(asapo::HttpCode::BadRequest), SetArgPointee<3>(nullptr), Return("error response")
              ));
 
     EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("sending statistics"), HasSubstr("error response"))));
@@ -105,7 +105,7 @@ TEST_F(SenderInfluxDbTests, LogErrorWithWrongResponceSendStatistics) {
 TEST_F(SenderInfluxDbTests, LogDebugSendStatistics) {
     EXPECT_CALL(mock_http_client, Post_t(_, _, _, _)).
     WillOnce(
-        DoAll(SetArgPointee<3>(nullptr), SetArgPointee<2>(hidra2::HttpCode::OK), Return("error response")
+        DoAll(SetArgPointee<3>(nullptr), SetArgPointee<2>(asapo::HttpCode::OK), Return("error response")
              ));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending statistics"),

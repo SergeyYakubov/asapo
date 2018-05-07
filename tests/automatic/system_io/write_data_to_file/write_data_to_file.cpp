@@ -3,9 +3,9 @@
 
 #include "testing.h"
 
-using hidra2::IO;
-using hidra2::Error;
-using hidra2::FileData;
+using asapo::IO;
+using asapo::Error;
+using asapo::FileData;
 
 
 struct Params {
@@ -35,7 +35,7 @@ void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const Fil
     }
     Error read_err;
     auto read_data = io->GetDataFromFile(params.fname, params.length, &read_err);
-    hidra2::M_AssertContains(std::string(read_data.get(), read_data.get() + params.length), "123");
+    asapo::M_AssertContains(std::string(read_data.get(), read_data.get() + params.length), "123");
 }
 
 void AssertBadResult(const Error& err, const Params& params) {
@@ -43,14 +43,14 @@ void AssertBadResult(const Error& err, const Params& params) {
         std::cerr << "Should be error" << std::endl;
         exit(EXIT_FAILURE);
     }
-    hidra2::M_AssertContains(err->Explain(), params.message);
+    asapo::M_AssertContains(err->Explain(), params.message);
 }
 
 
 int main(int argc, char* argv[]) {
     auto params = GetParams(argc, argv);
 
-    auto io = std::unique_ptr<hidra2::IO> {hidra2::GenerateDefaultIO()};
+    auto io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
     FileData data{new uint8_t[params.length]{'1', '2', '3'}};
 
     auto err = io->WriteDataToFile(params.fname, data, params.length);

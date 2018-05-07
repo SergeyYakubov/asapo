@@ -5,10 +5,10 @@
 #include "worker/data_broker.h"
 #include "testing.h"
 
-using hidra2::M_AssertEq;
-using hidra2::M_AssertTrue;
+using asapo::M_AssertEq;
+using asapo::M_AssertTrue;
 
-void Assert(std::vector<hidra2::FileInfos> file_infos, int nthreads, int nfiles) {
+void Assert(std::vector<asapo::FileInfos> file_infos, int nthreads, int nfiles) {
     std::vector<std::string> expect, result;
     for (int i = 1; i <= nfiles; i++) {
         expect.push_back(std::to_string(i));
@@ -45,12 +45,12 @@ Args GetArgs(int argc, char* argv[]) {
 }
 
 void GetAllFromBroker(const Args& args) {
-    hidra2::Error err;
-    auto broker = hidra2::DataBrokerFactory::CreateServerBroker(args.server, args.run_name, &err);
+    asapo::Error err;
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.run_name, &err);
 
-    std::vector<hidra2::FileInfos>file_infos(args.nthreads);
+    std::vector<asapo::FileInfos>file_infos(args.nthreads);
     auto exec_next = [&](int i) {
-        hidra2::FileInfo fi;
+        asapo::FileInfo fi;
         while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             file_infos[i].emplace_back(fi);
         }

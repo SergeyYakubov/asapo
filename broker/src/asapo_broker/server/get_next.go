@@ -2,9 +2,9 @@ package server
 
 import (
 	"github.com/gorilla/mux"
-	"hidra2_broker/database"
-	"hidra2_broker/logger"
-	"hidra2_broker/utils"
+	"asapo_broker/database"
+	"asapo_broker/logger"
+	"asapo_broker/utils"
 	"net/http"
 )
 

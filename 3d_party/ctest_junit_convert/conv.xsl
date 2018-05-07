@@ -2,7 +2,7 @@
 <xsl:output method="xml" indent="yes"/>
 
 	<xsl:template match="/Site">
-		<testsuite name="hidrai2 tests">
+		<testsuite name="asapo tests">
 			<xsl:variable name="BuildName"><xsl:value-of select="@BuildName"/></xsl:variable>
 			<xsl:variable name="BuildStamp"><xsl:value-of select="@BuildStamp"/></xsl:variable>
 			<xsl:variable name="Name"><xsl:value-of select="@Name"/></xsl:variable>

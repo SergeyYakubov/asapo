@@ -22,14 +22,14 @@ using ::testing::InSequence;
 using ::testing::HasSubstr;
 
 TEST(get_version, VersionAboveZero) {
-    hidra2::ProducerImpl producer;
+    asapo::ProducerImpl producer;
     EXPECT_GE(producer.GetVersion(), 0);
 }
 
 
 TEST(Producer, Logger) {
-    hidra2::ProducerImpl producer;
-    ASSERT_THAT(dynamic_cast<hidra2::AbstractLogger*>(producer.log__.get()), Ne(nullptr));
+    asapo::ProducerImpl producer;
+    ASSERT_THAT(dynamic_cast<asapo::AbstractLogger*>(producer.log__.get()), Ne(nullptr));
 }
 
 /**
@@ -38,11 +38,11 @@ TEST(Producer, Logger) {
 
 class ProducerImpl : public testing::Test {
   public:
-    hidra2::ProducerImpl producer;
-    testing::NiceMock<hidra2::MockIO> mock_io;
-    testing::NiceMock<hidra2::MockLogger> mock_logger;
+    asapo::ProducerImpl producer;
+    testing::NiceMock<asapo::MockIO> mock_io;
+    testing::NiceMock<asapo::MockLogger> mock_logger;
 
-    hidra2::FileDescriptor expected_fd = 83942;
+    asapo::FileDescriptor expected_fd = 83942;
     uint64_t expected_file_id = 4224;
     std::string expected_address = "127.0.0.1:9090";
     uint64_t expected_request_id = 0;
@@ -50,15 +50,15 @@ class ProducerImpl : public testing::Test {
     void*    expected_file_pointer = (void*)0xC00FE;
 
     void SetUp() override {
-        producer.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
-        producer.log__ = hidra2::Logger {&mock_logger};
+        producer.io__ = std::unique_ptr<asapo::IO> {&mock_io};
+        producer.log__ = asapo::Logger {&mock_logger};
     }
     void TearDown() override {
         producer.io__.release();
         producer.log__.release();
     }
 
-    void ConnectToReceiver_DONE(hidra2::FileDescriptor expected_fd = 1) {
+    void ConnectToReceiver_DONE(asapo::FileDescriptor expected_fd = 1) {
         EXPECT_CALL(mock_io, CreateAndConnectIPTCPSocket_t(expected_address, _))
         .Times(1)
         .WillOnce(
@@ -80,8 +80,8 @@ class ProducerImpl : public testing::Test {
 };
 
 TEST_F(ProducerImpl, get_status__disconnected) {
-    hidra2::ProducerStatus status = producer.GetStatus();
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
+    asapo::ProducerStatus status = producer.GetStatus();
+    ASSERT_THAT(status, Eq(asapo::ProducerStatus::kDisconnected));
 }
 
 
@@ -90,7 +90,7 @@ TEST_F(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_error) {
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<1>(hidra2::IOErrorTemplates::kInvalidAddressFormat.Generate().release()),
+            testing::SetArgPointee<1>(asapo::IOErrorTemplates::kInvalidAddressFormat.Generate().release()),
             Return(-1)
         ));
 
@@ -99,8 +99,8 @@ TEST_F(ProducerImpl, ConnectToReceiver__CreateAndConnectIPTCPSocket_error) {
     auto error = producer.ConnectToReceiver(expected_address);
     auto status = producer.GetStatus();
 
-    ASSERT_THAT(error, Eq(hidra2::IOErrorTemplates::kInvalidAddressFormat));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kDisconnected));
+    ASSERT_THAT(error, Eq(asapo::IOErrorTemplates::kInvalidAddressFormat));
+    ASSERT_THAT(status, Eq(asapo::ProducerStatus::kDisconnected));
 }
 
 TEST_F(ProducerImpl, ConnectToReceiver) {
@@ -119,7 +119,7 @@ TEST_F(ProducerImpl, ConnectToReceiver) {
     auto status = producer.GetStatus();
 
     ASSERT_THAT(error, Eq(nullptr));
-    ASSERT_THAT(status, Eq(hidra2::ProducerStatus::kConnected));
+    ASSERT_THAT(status, Eq(asapo::ProducerStatus::kConnected));
 }
 
 TEST_F(ProducerImpl, ConnectToReceiver__already_connected) {
@@ -129,7 +129,7 @@ TEST_F(ProducerImpl, ConnectToReceiver__already_connected) {
 
     auto error = producer.ConnectToReceiver(expected_address);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kAlreadyConnected));
+    ASSERT_THAT(error, Eq(asapo::ProducerErrorTemplates::kAlreadyConnected));
 }
 
 /**
@@ -138,23 +138,23 @@ TEST_F(ProducerImpl, ConnectToReceiver__already_connected) {
 
 MATCHER_P3(M_CheckSendDataRequest, request_id, file_id, file_size,
            "Checks if a valid GenericNetworkRequestHeader was Send") {
-    return ((hidra2::GenericNetworkRequestHeader*)arg)->op_code == hidra2::kNetOpcodeSendData
-           && ((hidra2::GenericNetworkRequestHeader*)arg)->request_id == request_id
-           && ((hidra2::GenericNetworkRequestHeader*)arg)->data_id == file_id
-           && ((hidra2::GenericNetworkRequestHeader*)arg)->data_size == file_size;
+    return ((asapo::GenericNetworkRequestHeader*)arg)->op_code == asapo::kNetOpcodeSendData
+           && ((asapo::GenericNetworkRequestHeader*)arg)->request_id == request_id
+           && ((asapo::GenericNetworkRequestHeader*)arg)->data_id == file_id
+           && ((asapo::GenericNetworkRequestHeader*)arg)->data_size == file_size;
 }
 
 ACTION_P2(A_WriteSendDataResponse, error_code, request_id) {
-    ((hidra2::SendDataResponse*)arg1)->op_code = hidra2::kNetOpcodeSendData;
-    ((hidra2::SendDataResponse*)arg1)->error_code = error_code;
-    ((hidra2::SendDataResponse*)arg1)->request_id = request_id;
+    ((asapo::SendDataResponse*)arg1)->op_code = asapo::kNetOpcodeSendData;
+    ((asapo::SendDataResponse*)arg1)->error_code = error_code;
+    ((asapo::SendDataResponse*)arg1)->request_id = request_id;
 }
 
 TEST_F(ProducerImpl, Send__connection_not_ready) {
 
     auto error = producer.Send(expected_file_id, nullptr, 1);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kConnectionNotReady));
+    ASSERT_THAT(error, Eq(asapo::ProducerErrorTemplates::kConnectionNotReady));
 }
 
 TEST_F(ProducerImpl, Send__file_too_large) {
@@ -164,7 +164,7 @@ TEST_F(ProducerImpl, Send__file_too_large) {
     auto error = producer.Send(expected_file_id, nullptr,
                                size_t(1024) * size_t(1024) * size_t(1024) * size_t(3));
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kFileTooLarge));
+    ASSERT_THAT(error, Eq(asapo::ProducerErrorTemplates::kFileTooLarge));
 }
 
 TEST_F(ProducerImpl, Send__sendDataRequest_error) {
@@ -174,17 +174,17 @@ TEST_F(ProducerImpl, Send__sendDataRequest_error) {
 
     EXPECT_CALL(mock_io, Send_t(expected_fd, M_CheckSendDataRequest(expected_request_id, expected_file_id,
                                 expected_file_size),
-                                sizeof(hidra2::GenericNetworkRequestHeader), _))
+                                sizeof(asapo::GenericNetworkRequestHeader), _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrorTemplates::kBadFileNumber.Generate().release()),
+            testing::SetArgPointee<3>(asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
             Return(-1)
         ));
 
     auto error = producer.Send(expected_file_id, nullptr, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::IOErrorTemplates::kBadFileNumber));
+    ASSERT_THAT(error, Eq(asapo::IOErrorTemplates::kBadFileNumber));
 }
 
 TEST_F(ProducerImpl, Send__sendData_error) {
@@ -197,7 +197,7 @@ TEST_F(ProducerImpl, Send__sendData_error) {
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrorTemplates::kBadFileNumber.Generate().release()),
+            testing::SetArgPointee<3>(asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
             Return(-1)
         ));
 
@@ -205,7 +205,7 @@ TEST_F(ProducerImpl, Send__sendData_error) {
 
     auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::IOErrorTemplates::kBadFileNumber));
+    ASSERT_THAT(error, Eq(asapo::IOErrorTemplates::kBadFileNumber));
 }
 
 
@@ -215,11 +215,11 @@ TEST_F(ProducerImpl, Send__Receive_error) {
     ConnectToReceiver_DONE(expected_fd);
     Send_DONE(2);
 
-    EXPECT_CALL(mock_io, Receive_t(expected_fd, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mock_io, Receive_t(expected_fd, _, sizeof(asapo::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<3>(hidra2::IOErrorTemplates::kBadFileNumber.Generate().release()),
+            testing::SetArgPointee<3>(asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
             testing::Return(-1)
         ));
 
@@ -227,7 +227,7 @@ TEST_F(ProducerImpl, Send__Receive_error) {
 
     auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::IOErrorTemplates::kBadFileNumber));
+    ASSERT_THAT(error, Eq(asapo::IOErrorTemplates::kBadFileNumber));
 }
 
 TEST_F(ProducerImpl, Send__Receive_server_error) {
@@ -237,18 +237,18 @@ TEST_F(ProducerImpl, Send__Receive_server_error) {
     Send_DONE(2);
 
 
-    EXPECT_CALL(mock_io, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mock_io, Receive_t(_, _, sizeof(asapo::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
             testing::SetArgPointee<3>(nullptr),
-            A_WriteSendDataResponse(hidra2::kNetErrorAllocateStorageFailed, expected_request_id),
+            A_WriteSendDataResponse(asapo::kNetErrorAllocateStorageFailed, expected_request_id),
             testing::ReturnArg<2>()
         ));
 
     auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kUnknownServerError));
+    ASSERT_THAT(error, Eq(asapo::ProducerErrorTemplates::kUnknownServerError));
 }
 
 TEST_F(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
@@ -258,18 +258,18 @@ TEST_F(ProducerImpl, Send__Receive_server_error_id_already_in_use) {
     Send_DONE(2);
 
 
-    EXPECT_CALL(mock_io, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mock_io, Receive_t(_, _, sizeof(asapo::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
             testing::SetArgPointee<3>(nullptr),
-            A_WriteSendDataResponse(hidra2::kNetErrorFileIdAlreadyInUse, expected_request_id),
+            A_WriteSendDataResponse(asapo::kNetErrorFileIdAlreadyInUse, expected_request_id),
             testing::ReturnArg<2>()
         ));
 
     auto error = producer.Send(expected_file_id, expected_file_pointer, expected_file_size);
 
-    ASSERT_THAT(error, Eq(hidra2::ProducerErrorTemplates::kFileIdAlreadyInUse));
+    ASSERT_THAT(error, Eq(asapo::ProducerErrorTemplates::kFileIdAlreadyInUse));
 }
 
 TEST_F(ProducerImpl, Send) {
@@ -279,12 +279,12 @@ TEST_F(ProducerImpl, Send) {
     Send_DONE(2);
 
 
-    EXPECT_CALL(mock_io, Receive_t(_, _, sizeof(hidra2::SendDataResponse), _))
+    EXPECT_CALL(mock_io, Receive_t(_, _, sizeof(asapo::SendDataResponse), _))
     .Times(1)
     .WillOnce(
         DoAll(
             testing::SetArgPointee<3>(nullptr),
-            A_WriteSendDataResponse(hidra2::kNetErrorNoError, expected_request_id),
+            A_WriteSendDataResponse(asapo::kNetErrorNoError, expected_request_id),
             testing::ReturnArg<2>()
         ));
 
@@ -314,9 +314,9 @@ TEST_F(ProducerImpl, EnableRemoteLog) {
 
 TEST_F(ProducerImpl, SetLogLevel) {
 
-    EXPECT_CALL(mock_logger, SetLogLevel(hidra2::LogLevel::Warning));
+    EXPECT_CALL(mock_logger, SetLogLevel(asapo::LogLevel::Warning));
 
-    producer.SetLogLevel(hidra2::LogLevel::Warning);
+    producer.SetLogLevel(asapo::LogLevel::Warning);
 
 }
 

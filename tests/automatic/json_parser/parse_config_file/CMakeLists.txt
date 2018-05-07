@@ -6,8 +6,8 @@ set(SOURCE_FILES parse_config_file.cpp)
 # Executable and link
 ################################
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
-target_link_libraries(${TARGET_NAME} test_common hidra2-worker)
-target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR})
+target_link_libraries(${TARGET_NAME} test_common asapo-worker)
+target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR})
 
 ################################
 # Testing

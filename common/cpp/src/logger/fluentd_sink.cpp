@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace hidra2 {
+namespace asapo {
 
 void FluentdSink::_sink_it(const spdlog::details::log_msg& msg) {
     std::string log_str = msg.formatted.str();

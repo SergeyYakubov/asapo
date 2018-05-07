@@ -1,9 +1,9 @@
-#ifndef HIDRA2_SYSTEM__IO_ERROR_H
-#define HIDRA2_SYSTEM__IO_ERROR_H
+#ifndef ASAPO_SYSTEM__IO_ERROR_H
+#define ASAPO_SYSTEM__IO_ERROR_H
 
 #include "common/error.h"
 
-namespace hidra2 {
+namespace asapo {
 
 
 enum class IOErrorType {
@@ -139,4 +139,4 @@ auto const kAddressNotValid =  IOErrorTemplate {
 
 }
 
-#endif //HIDRA2_SYSTEM__IO_ERROR_H
+#endif //ASAPO_SYSTEM__IO_ERROR_H

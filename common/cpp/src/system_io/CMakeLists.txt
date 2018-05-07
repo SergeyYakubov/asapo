@@ -13,6 +13,6 @@ ENDIF(WIN32)
 # Library
 ################################
 add_library(${TARGET_NAME} OBJECT ${SOURCE_FILES})
-target_include_directories(${TARGET_NAME} PUBLIC ${HIDRA2_CXX_COMMON_INCLUDE_DIR})
+target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR})
 
 

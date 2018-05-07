@@ -1,12 +1,12 @@
-#ifndef HIDRA2_REQUEST_HANDLER_FILE_WRITE_H
-#define HIDRA2_REQUEST_HANDLER_FILE_WRITE_H
+#ifndef ASAPO_REQUEST_HANDLER_FILE_WRITE_H
+#define ASAPO_REQUEST_HANDLER_FILE_WRITE_H
 
 #include "request_handler.h"
 #include "logger/logger.h"
 
 #include "io/io.h"
 
-namespace hidra2 {
+namespace asapo {
 
 const uint64_t kMaxFileSize = uint64_t(1024) * 1024 * 1024 * 2; //2GB
 
@@ -21,4 +21,4 @@ class RequestHandlerFileWrite final: public RequestHandler {
 
 }
 
-#endif //HIDRA2_REQUEST_HANDLER_FILE_WRITE_H
+#endif //ASAPO_REQUEST_HANDLER_FILE_WRITE_H

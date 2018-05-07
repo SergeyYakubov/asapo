@@ -1,10 +1,10 @@
-#ifndef HIDRA2_REQUEST_HANDLER_H
-#define HIDRA2_REQUEST_HANDLER_H
+#ifndef ASAPO_REQUEST_HANDLER_H
+#define ASAPO_REQUEST_HANDLER_H
 
 #include "receiver_error.h"
 #include "statistics.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class Request;
 
@@ -18,4 +18,4 @@ class RequestHandler {
 
 }
 
-#endif //HIDRA2_REQUEST_HANDLER_H
+#endif //ASAPO_REQUEST_HANDLER_H

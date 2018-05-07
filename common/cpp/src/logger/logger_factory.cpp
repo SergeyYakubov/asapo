@@ -1,6 +1,6 @@
 #include "spd_logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 Logger CreateLogger(std::string name, bool console, bool centralized_log, const std::string& endpoint_uri) {
     auto logger = new SpdLogger{name, endpoint_uri};
