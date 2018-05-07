@@ -1,9 +1,9 @@
-#ifndef HIDRA2_HTTP_CLIENT_H
-#define HIDRA2_HTTP_CLIENT_H
+#ifndef ASAPO_HTTP_CLIENT_H
+#define ASAPO_HTTP_CLIENT_H
 
 #include "common/error.h"
 
-namespace hidra2 {
+namespace asapo {
 
 enum class HttpCode;
 
@@ -84,4 +84,4 @@ enum class HttpCode : int {
 
 }
 
-#endif //HIDRA2_HTTP_CLIENT_H
+#endif //ASAPO_HTTP_CLIENT_H

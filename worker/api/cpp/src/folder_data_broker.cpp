@@ -2,7 +2,7 @@
 
 #include "io/io_factory.h"
 
-namespace hidra2 {
+namespace asapo {
 
 FolderDataBroker::FolderDataBroker(const std::string& source_name) :
     io__{GenerateDefaultIO()}, base_path_{source_name}, is_connected_{false},

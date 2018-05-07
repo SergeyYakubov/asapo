@@ -3,12 +3,12 @@
 #include "io/io_factory.h"
 #include "testing.h"
 
-using hidra2::IO;
-using hidra2::Error;
+using asapo::IO;
+using asapo::Error;
 
 
-using hidra2::M_AssertEq;
-using hidra2::M_AssertContains;
+using asapo::M_AssertEq;
+using asapo::M_AssertContains;
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     std::string expect{argv[2]};
 
     Error err;
-    auto io = std::unique_ptr<IO> {hidra2::GenerateDefaultIO() };
+    auto io = std::unique_ptr<IO> {asapo::GenerateDefaultIO() };
     auto files = io->FilesInFolder(argv[1], &err);
 
     std::string result{};

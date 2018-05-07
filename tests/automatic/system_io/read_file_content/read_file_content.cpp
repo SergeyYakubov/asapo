@@ -11,8 +11,8 @@ int main(int argc, char* argv[]) {
     }
     std::string expect{argv[2]};
 
-    hidra2::Error err;
-    auto io = std::unique_ptr<hidra2::IO> {hidra2::GenerateDefaultIO()};
+    asapo::Error err;
+    auto io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
 
     auto data = io->GetDataFromFile(argv[1], expect.size(), &err);
 
@@ -25,6 +25,6 @@ int main(int argc, char* argv[]) {
         result = err->Explain();
     }
 
-    hidra2::M_AssertContains(result, expect);
+    asapo::M_AssertContains(result, expect);
     return 0;
 }

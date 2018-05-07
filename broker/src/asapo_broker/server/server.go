@@ -1,7 +1,7 @@
 package server
 
 import (
-	"hidra2_broker/database"
+	"asapo_broker/database"
 )
 
 var db database.Agent

@@ -1,5 +1,5 @@
-#ifndef HIDRA2_JSON_PARSER_H
-#define HIDRA2_JSON_PARSER_H
+#ifndef ASAPO_JSON_PARSER_H
+#define ASAPO_JSON_PARSER_H
 
 #include <string>
 #include <memory>
@@ -9,7 +9,7 @@
 #include "common/error.h"
 #include "io/io.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class RapidJson;
 
@@ -52,4 +52,4 @@ class JsonFileParser : public JsonParser {
 
 
 
-#endif //HIDRA2_JSON_PARSER_H
+#endif //ASAPO_JSON_PARSER_H

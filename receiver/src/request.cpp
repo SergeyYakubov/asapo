@@ -2,7 +2,7 @@
 #include "io/io_factory.h"
 
 #include "receiver_config.h"
-namespace hidra2 {
+namespace asapo {
 
 Request::Request(const GenericNetworkRequestHeader& header,
                  SocketDescriptor socket_fd) : io__{GenerateDefaultIO()}, request_header_(header), socket_fd_{socket_fd} {

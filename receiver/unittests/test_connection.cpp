@@ -26,31 +26,31 @@ using ::testing::HasSubstr;
 using ::testing::SetArgPointee;
 using ::testing::AllOf;
 
-using hidra2::Error;
-using hidra2::ErrorInterface;
-using hidra2::FileDescriptor;
-using hidra2::SocketDescriptor;
-using hidra2::GenericNetworkRequestHeader;
-using hidra2::SendDataResponse;
-using hidra2::GenericNetworkRequestHeader;
-using hidra2::GenericNetworkResponse;
-using hidra2::Opcode;
-using hidra2::Connection;
-using hidra2::MockIO;
-using hidra2::MockLogger;
-using hidra2::Request;
-using hidra2::Statistics;
-using hidra2::StatisticEntity;
-using hidra2::MockStatistics;
+using asapo::Error;
+using asapo::ErrorInterface;
+using asapo::FileDescriptor;
+using asapo::SocketDescriptor;
+using asapo::GenericNetworkRequestHeader;
+using asapo::SendDataResponse;
+using asapo::GenericNetworkRequestHeader;
+using asapo::GenericNetworkResponse;
+using asapo::Opcode;
+using asapo::Connection;
+using asapo::MockIO;
+using asapo::MockLogger;
+using asapo::Request;
+using asapo::Statistics;
+using asapo::StatisticEntity;
+using asapo::MockStatistics;
 
 namespace {
 
 TEST(Connection, Constructor) {
     Connection connection{0, "some_address"};
-    ASSERT_THAT(dynamic_cast<hidra2::Statistics*>(connection.statistics__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<hidra2::IO*>(connection.io__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<hidra2::RequestFactory*>(connection.request_factory__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const hidra2::AbstractLogger*>(connection.log__), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::Statistics*>(connection.statistics__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::IO*>(connection.io__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(connection.request_factory__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(connection.log__), Ne(nullptr));
 
 }
 
@@ -65,7 +65,7 @@ class MockRequest: public Request {
 };
 
 
-class MockRequestFactory: public hidra2::RequestFactory {
+class MockRequestFactory: public asapo::RequestFactory {
   public:
     std::unique_ptr<Request> GenerateRequest(const GenericNetworkRequestHeader& request_header,
                                              SocketDescriptor socket_fd,
@@ -89,12 +89,12 @@ class ConnectionTests : public Test {
     MockIO mock_io;
     MockRequestFactory mock_factory;
     NiceMock<MockStatistics> mock_statictics;
-    NiceMock<hidra2::MockLogger> mock_logger;
+    NiceMock<asapo::MockLogger> mock_logger;
 
     void SetUp() override {
-        connection.io__ = std::unique_ptr<hidra2::IO> {&mock_io};
-        connection.statistics__ = std::unique_ptr<hidra2::Statistics> {&mock_statictics};
-        connection.request_factory__ = std::unique_ptr<hidra2::RequestFactory> {&mock_factory};
+        connection.io__ = std::unique_ptr<asapo::IO> {&mock_io};
+        connection.statistics__ = std::unique_ptr<asapo::Statistics> {&mock_statictics};
+        connection.request_factory__ = std::unique_ptr<asapo::RequestFactory> {&mock_factory};
         connection.log__ = &mock_logger;
 
         ON_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _)).
@@ -117,10 +117,10 @@ TEST_F(ConnectionTests, ErrorWaitForNewRequest) {
 
     EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _)).Times(2).
     WillOnce(
-        DoAll(SetArgPointee<4>(new hidra2::IOError("", hidra2::IOErrorType::kTimeout)),
+        DoAll(SetArgPointee<4>(new asapo::IOError("", asapo::IOErrorType::kTimeout)),
               Return(0)))
     .WillOnce(
-        DoAll(SetArgPointee<4>(new hidra2::IOError("", hidra2::IOErrorType::kUnknownIOError)),
+        DoAll(SetArgPointee<4>(new asapo::IOError("", asapo::IOErrorType::kUnknownIOError)),
               Return(0))
     );
 
@@ -148,7 +148,7 @@ TEST_F(ConnectionTests, CallsHandleRequest) {
     );
 
     EXPECT_CALL(*request, Handle_t()).WillOnce(
-        Return(new hidra2::SimpleError{""})
+        Return(new asapo::SimpleError{""})
     );
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("processing request"), HasSubstr(connected_uri))));
@@ -158,7 +158,7 @@ TEST_F(ConnectionTests, CallsHandleRequest) {
 
 
     EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
-        DoAll(SetArgPointee<3>(new hidra2::IOError("Test Send Error", hidra2::IOErrorType::kUnknownIOError)),
+        DoAll(SetArgPointee<3>(new asapo::IOError("Test Send Error", asapo::IOErrorType::kUnknownIOError)),
               Return(0)
              ));
 
@@ -181,19 +181,19 @@ TEST_F(ConnectionTests, SendsErrorToProducer) {
     );
 
     EXPECT_CALL(*request, Handle_t()).WillOnce(
-        Return(new hidra2::SimpleError{""})
+        Return(new asapo::SimpleError{""})
     );
 
     GenericNetworkResponse response;
     EXPECT_CALL(mock_io, Send_t(_, _, sizeof(GenericNetworkResponse), _)).WillOnce(
-        DoAll(SetArgPointee<3>(new hidra2::IOError("Test Send Error", hidra2::IOErrorType::kUnknownIOError)),
+        DoAll(SetArgPointee<3>(new asapo::IOError("Test Send Error", asapo::IOErrorType::kUnknownIOError)),
               SaveArg1ToGenericNetworkResponse(&response),
               Return(0)
              ));
 
     connection.Listen();
 
-    ASSERT_THAT(response.error_code, Eq(hidra2::NetworkErrorCode::kNetErrorInternalServerError));
+    ASSERT_THAT(response.error_code, Eq(asapo::NetworkErrorCode::kNetErrorInternalServerError));
 
 }
 
@@ -202,7 +202,7 @@ void MockExitCycle(const MockIO& mock_io, MockStatistics& mock_statictics) {
 
     EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _))
     .WillOnce(
-        DoAll(SetArgPointee<4>(new hidra2::IOError("", hidra2::IOErrorType::kUnknownIOError)),
+        DoAll(SetArgPointee<4>(new asapo::IOError("", asapo::IOErrorType::kUnknownIOError)),
               Return(0))
     );
 }
@@ -240,8 +240,8 @@ TEST_F(ConnectionTests, FillsStatistics) {
 
     EXPECT_CALL(mock_statictics, IncreaseRequestCounter_t());
 
-    EXPECT_CALL(mock_statictics, IncreaseRequestDataVolume_t(1 + sizeof(hidra2::GenericNetworkRequestHeader) +
-                sizeof(hidra2::GenericNetworkResponse)));
+    EXPECT_CALL(mock_statictics, IncreaseRequestDataVolume_t(1 + sizeof(asapo::GenericNetworkRequestHeader) +
+                sizeof(asapo::GenericNetworkResponse)));
 
 
     EXPECT_CALL(mock_statictics, SendIfNeeded_t());

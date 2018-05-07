@@ -3,7 +3,7 @@
 #include <iostream>
 #include <algorithm>
 
-namespace hidra2 {
+namespace asapo {
 
 template<typename T>
 void T_AssertEq(const T& expected, const T& got) {

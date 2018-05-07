@@ -1,10 +1,10 @@
-#ifndef HIDRA2_HTTP_ERROR_H
-#define HIDRA2_HTTP_ERROR_H
+#ifndef ASAPO_HTTP_ERROR_H
+#define ASAPO_HTTP_ERROR_H
 
 #include "common/error.h"
 #include "http_client.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class HttpError: public SimpleError {
   public:
@@ -19,4 +19,4 @@ class HttpError: public SimpleError {
 
 }
 
-#endif //HIDRA2_HTTP_ERROR_H
+#endif //ASAPO_HTTP_ERROR_H

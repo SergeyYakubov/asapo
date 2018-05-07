@@ -2,7 +2,7 @@
 
 #include "json_parser/json_parser.h"
 
-namespace hidra2 {
+namespace asapo {
 
 
 std::string FileInfo::Json() const {

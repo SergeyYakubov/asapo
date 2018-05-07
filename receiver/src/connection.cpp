@@ -6,7 +6,7 @@
 
 #include "receiver_logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 size_t Connection::kRequestHandlerMaxBufferSize;
 std::atomic<uint32_t> Connection::kNetworkProducerPeerImplGlobalCounter(0);

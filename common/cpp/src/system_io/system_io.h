@@ -1,5 +1,5 @@
-#ifndef HIDRA2_SYSTEM__SYSTEM_IO_H
-#define HIDRA2_SYSTEM__SYSTEM_IO_H
+#ifndef ASAPO_SYSTEM__SYSTEM_IO_H
+#define ASAPO_SYSTEM__SYSTEM_IO_H
 
 #include "../../include/io/io.h"
 
@@ -15,7 +15,7 @@ typedef SSIZE_T ssize_t;
 #include "../../../../../../../../usr/include/netinet/in.h"
 #endif
 
-namespace hidra2 {
+namespace asapo {
 
 class SystemIO final : public IO {
   private:
@@ -108,4 +108,4 @@ class SystemIO final : public IO {
 };
 }
 
-#endif //HIDRA2_SYSTEM__SYSTEM_IO_H
+#endif //ASAPO_SYSTEM__SYSTEM_IO_H

@@ -8,7 +8,7 @@
 
 using testing::_;
 
-namespace hidra2 {
+namespace asapo {
 
 Error SetReceiverConfig (const ReceiverConfig& config) {
     MockIO mock_io;

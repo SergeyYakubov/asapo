@@ -1,9 +1,9 @@
-#ifndef HIDRA2_COMMON__NETWORKING_H
-#define HIDRA2_COMMON__NETWORKING_H
+#ifndef ASAPO_COMMON__NETWORKING_H
+#define ASAPO_COMMON__NETWORKING_H
 
 #include <cstdint>
 
-namespace hidra2 {
+namespace asapo {
 
 typedef uint64_t NetworkRequestId;
 
@@ -51,4 +51,4 @@ struct SendDataResponse :  GenericNetworkResponse {
 
 }
 
-#endif //HIDRA2_COMMON__NETWORKING_H
+#endif //ASAPO_COMMON__NETWORKING_H

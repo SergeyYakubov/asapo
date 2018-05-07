@@ -9,7 +9,7 @@ Cleanup() {
 set +e
 ssh ${receiver_node} rm -f ${receiver_dir}/files/*
 ssh ${receiver_node} killall receiver
-ssh ${broker_node} killall hidra2-broker
+ssh ${broker_node} killall asapo-broker
 ssh ${broker_node} docker rm -f -v mongo
 }
 
@@ -68,7 +68,7 @@ cat broker.json |
       from_entries" > settings_tmp.json
 scp settings_tmp.json ${broker_node}:${broker_dir}/broker.json
 rm settings_tmp.json
-scp ../../../cmake-build-release/broker/hidra2-broker ${broker_node}:${broker_dir}
+scp ../../../cmake-build-release/broker/asapo-broker ${broker_node}:${broker_dir}
 
 
 #worker_setup
@@ -89,7 +89,7 @@ ssh ${receiver_node} "bash -c 'cd ${receiver_dir}; nohup ./receiver settings.jso
 sleep 0.3
 
 #broker_start
-ssh ${broker_node} "bash -c 'cd ${broker_dir}; nohup ./hidra2-broker -config broker.json &> ${log_dir}/log.broker &'"
+ssh ${broker_node} "bash -c 'cd ${broker_dir}; nohup ./asapo-broker -config broker.json &> ${log_dir}/log.broker &'"
 sleep 0.3
 
 #producer_start

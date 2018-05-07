@@ -31,4 +31,4 @@ link_directories(@CMAKE_INSTALL_PREFIX@/lib)
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
 target_include_directories(${TARGET_NAME} PUBLIC @CMAKE_INSTALL_PREFIX@/include ${CURL_INCLUDE_DIRS})
-target_link_libraries(${TARGET_NAME} hidra2-worker ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${TARGET_NAME} asapo-worker ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

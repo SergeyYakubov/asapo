@@ -3,7 +3,7 @@ PROGRAM=worker_processfolder
 CXX=g++
 CXXFLAGS=-std=c++11
 LDFLAGS=-pthread  -static-libgcc -static-libstdc++
-LIBS=-L @CMAKE_INSTALL_PREFIX@/lib -lhidra2-worker
+LIBS=-L @CMAKE_INSTALL_PREFIX@/lib -lasapo-worker
 INCLUDE=@CMAKE_INSTALL_PREFIX@/include
 RM=rm -f
 

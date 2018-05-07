@@ -1,7 +1,7 @@
 package server
 
 import (
-	"hidra2_broker/utils"
+	"asapo_broker/utils"
 )
 
 var listRoutes = utils.Routes{

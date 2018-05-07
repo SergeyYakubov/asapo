@@ -1,9 +1,9 @@
-#ifndef HIDRA2_PRODUCER_ERROR_H
-#define HIDRA2_PRODUCER_ERROR_H
+#ifndef ASAPO_PRODUCER_ERROR_H
+#define ASAPO_PRODUCER_ERROR_H
 
 #include "common/error.h"
 
-namespace hidra2 {
+namespace asapo {
 
 enum class ProducerErrorType {
     kAlreadyConnected,
@@ -75,4 +75,4 @@ auto const kUnknownServerError = ProducerErrorTemplate {
 };
 }
 
-#endif //HIDRA2_PRODUCER_ERROR_H
+#endif //ASAPO_PRODUCER_ERROR_H

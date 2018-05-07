@@ -27,7 +27,7 @@ using ::testing::NiceMock;
 using ::testing::Ref;
 using ::testing::Return;
 
-using namespace hidra2;
+using namespace asapo;
 
 
 namespace {
@@ -85,7 +85,7 @@ class MockDatabaseFactory : public DatabaseFactory {
 
 class FakeDatabaseFactory : public DatabaseFactory {
     std::unique_ptr<Database> Create(Error* err) const noexcept override {
-        *err = hidra2::TextError(hidra2::DBError::kMemoryError);
+        *err = asapo::TextError(asapo::DBError::kMemoryError);
         return {};
     }
 };
@@ -133,7 +133,7 @@ class FolderDBConverterTests : public Test {
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
     EXPECT_CALL(*(mock_dbf->db[0]), Connect_t(uri, db_name, kDBCollectionName)).
-    WillOnce(testing::Return(new SimpleError(hidra2::DBError::kConnectionError)));
+    WillOnce(testing::Return(new SimpleError(asapo::DBError::kConnectionError)));
 
     auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Ne(nullptr));
@@ -142,11 +142,11 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
 TEST_F(FolderDBConverterTests, ErrorWhenCannotCreateDbParallel) {
     int nparallel = 3;
     EXPECT_CALL(*(mock_dbf->db[0]), Connect_t(uri, _, _)).
-    WillOnce(testing::Return(new SimpleError(hidra2::DBError::kConnectionError)));
+    WillOnce(testing::Return(new SimpleError(asapo::DBError::kConnectionError)));
     EXPECT_CALL(*(mock_dbf->db[1]), Connect_t(uri, _, _)).
-    WillOnce(testing::Return(new SimpleError(hidra2::DBError::kConnectionError)));
+    WillOnce(testing::Return(new SimpleError(asapo::DBError::kConnectionError)));
     EXPECT_CALL(*(mock_dbf->db[2]), Connect_t(uri, _, _)).
-    WillOnce(testing::Return(new SimpleError(hidra2::DBError::kConnectionError)));
+    WillOnce(testing::Return(new SimpleError(asapo::DBError::kConnectionError)));
 
     converter.SetNParallelTasks(nparallel);
     auto error = converter.Convert(uri, folder, db_name);
@@ -163,7 +163,7 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotGetFileList) {
 
 
     EXPECT_CALL(mock_io, FilesInFolder_t(folder, _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(new hidra2::SimpleError("err")),
+    WillOnce(DoAll(testing::SetArgPointee<1>(new asapo::SimpleError("err")),
                    testing::Return(FileInfos {})));
 
     auto error = converter.Convert(uri, folder, db_name);
@@ -184,7 +184,7 @@ TEST_F(FolderDBConverterTests, PassesIgnoreDuplicates) {
 TEST_F(FolderDBConverterTests, ErrorWhenCannotImportFileListToDb) {
 
     EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(_, _)).
-    WillOnce(testing::Return(new SimpleError(hidra2::DBError::kInsertError)));
+    WillOnce(testing::Return(new SimpleError(asapo::DBError::kInsertError)));
 
     auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Ne(nullptr));
@@ -245,7 +245,7 @@ TEST_F(FolderDBConverterTests, ComputesStatistics) {
     Times(file_infos.size()).
     WillRepeatedly(testing::Return(nullptr));
 
-    hidra2::FolderImportStatistics statistics;
+    asapo::FolderImportStatistics statistics;
     auto error = converter.Convert(uri, folder, db_name, &statistics);
 
     ASSERT_THAT(error, Eq(nullptr));

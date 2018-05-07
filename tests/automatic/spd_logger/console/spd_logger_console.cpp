@@ -3,7 +3,7 @@
 
 #include "logger/logger.h"
 
-using namespace hidra2;
+using namespace asapo;
 
 int main(int argc, char* argv[]) {
 

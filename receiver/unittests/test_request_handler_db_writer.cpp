@@ -15,7 +15,7 @@
 #include "common/data_structs.h"
 
 
-using hidra2::FileInfo;
+using asapo::FileInfo;
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::ReturnRef;
@@ -33,19 +33,19 @@ using ::testing::AllOf;
 using ::testing::HasSubstr;
 
 
-using ::hidra2::Error;
-using ::hidra2::ErrorInterface;
-using ::hidra2::FileDescriptor;
-using ::hidra2::SocketDescriptor;
-using ::hidra2::MockIO;
-using hidra2::Request;
-using hidra2::RequestHandlerDbWrite;
-using ::hidra2::GenericNetworkRequestHeader;
+using ::asapo::Error;
+using ::asapo::ErrorInterface;
+using ::asapo::FileDescriptor;
+using ::asapo::SocketDescriptor;
+using ::asapo::MockIO;
+using asapo::Request;
+using asapo::RequestHandlerDbWrite;
+using ::asapo::GenericNetworkRequestHeader;
 
-using hidra2::MockDatabase;
-using hidra2::RequestFactory;
-using hidra2::SetReceiverConfig;
-using hidra2::ReceiverConfig;
+using asapo::MockDatabase;
+using asapo::RequestFactory;
+using asapo::SetReceiverConfig;
+using asapo::ReceiverConfig;
 
 
 namespace {
@@ -58,7 +58,7 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetDataSize, uint64_t());
     MOCK_CONST_METHOD0(GetDataID, uint64_t());
-    MOCK_CONST_METHOD0(GetData, const hidra2::FileData & ());
+    MOCK_CONST_METHOD0(GetData, const asapo::FileData & ());
 };
 
 class DbWriterHandlerTests : public Test {
@@ -67,12 +67,12 @@ class DbWriterHandlerTests : public Test {
     NiceMock<MockIO> mock_io;
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
-    NiceMock<hidra2::MockLogger> mock_logger;
+    NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     void SetUp() override {
         GenericNetworkRequestHeader request_header;
         request_header.data_id = 2;
-        handler.db_client__ = std::unique_ptr<hidra2::Database> {&mock_db};
+        handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1});
     }
@@ -83,15 +83,15 @@ class DbWriterHandlerTests : public Test {
 
 TEST(DBWritewr, Constructor) {
     RequestHandlerDbWrite handler;
-    ASSERT_THAT(dynamic_cast<hidra2::MongoDBClient*>(handler.db_client__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const hidra2::AbstractLogger*>(handler.log__), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::MongoDBClient*>(handler.db_client__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(handler.log__), Ne(nullptr));
 
 }
 
 
 TEST_F(DbWriterHandlerTests, CheckStatisticEntity) {
     auto entity = handler.GetStatisticEntity();
-    ASSERT_THAT(entity, Eq(hidra2::StatisticEntity::kDatabase));
+    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kDatabase));
 }
 
 
@@ -100,7 +100,7 @@ TEST_F(DbWriterHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
     config.broker_db_uri = "127.0.0.1:27017";
     SetReceiverConfig(config);
 
-    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", "test", hidra2::kDBCollectionName)).
+    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", "test", asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
 
     auto err = handler.ProcessRequest(*mock_request);
@@ -109,8 +109,8 @@ TEST_F(DbWriterHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
 
 TEST_F(DbWriterHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
 
-    EXPECT_CALL(mock_db, Connect_t(_, _, hidra2::kDBCollectionName)).
-    WillOnce(testing::Return(new hidra2::SimpleError("")));
+    EXPECT_CALL(mock_db, Connect_t(_, _, asapo::kDBCollectionName)).
+    WillOnce(testing::Return(new asapo::SimpleError("")));
 
     auto err = handler.ProcessRequest(*mock_request);
 
@@ -121,7 +121,7 @@ TEST_F(DbWriterHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
 
 TEST_F(DbWriterHandlerTests, ProcessRequestDoesNotCallConnectSecondTime) {
 
-    EXPECT_CALL(mock_db, Connect_t(_, _, hidra2::kDBCollectionName)).
+    EXPECT_CALL(mock_db, Connect_t(_, _, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
 
     handler.ProcessRequest(*mock_request);
@@ -143,7 +143,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     config.broker_db_uri = "127.0.0.1:27017";
     SetReceiverConfig(config);
 
-    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, config.broker_db_name, hidra2::kDBCollectionName)).
+    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, config.broker_db_name, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
 
     std::string expected_file_name = "2.bin";
@@ -173,7 +173,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
                                          HasSubstr(config.broker_db_uri),
                                          HasSubstr(config.broker_db_name),
-                                         HasSubstr(hidra2::kDBCollectionName)
+                                         HasSubstr(asapo::kDBCollectionName)
                                         )
                                   )
                );

@@ -3,7 +3,7 @@
 #include "request.h"
 #include "receiver_logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 Error RequestHandlerFileWrite::ProcessRequest(const Request& request) const {
     auto fsize = request.GetDataSize();

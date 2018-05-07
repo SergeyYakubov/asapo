@@ -1,4 +1,4 @@
-set (TARGET_NAME hidra2-broker)
+set (TARGET_NAME asapo-broker)
 
 if (NOT "$ENV{GOPATH}" STREQUAL "")
 	set(GOPATH $ENV{GOPATH})
@@ -20,15 +20,15 @@ ENDIF()
 
 include(testing_go)
 
-add_custom_target(hidra2-broker ALL
+add_custom_target(asapo-broker ALL
     COMMAND  ${CMAKE_COMMAND} -E env GOPATH=${gopath}
-    go build ${GO_OPTS} -o ${exe_name} hidra2_broker/main
+    go build ${GO_OPTS} -o ${exe_name} asapo_broker/main
     VERBATIM)
 define_property(TARGET PROPERTY EXENAME
         BRIEF_DOCS <executable name>
         FULL_DOCS <full-doc>)
 
-set_target_properties(hidra2-broker PROPERTIES EXENAME ${CMAKE_CURRENT_BINARY_DIR}/${exe_name})
+set_target_properties(asapo-broker PROPERTIES EXENAME ${CMAKE_CURRENT_BINARY_DIR}/${exe_name})
 
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${exe_name} DESTINATION bin)

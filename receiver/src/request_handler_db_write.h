@@ -1,5 +1,5 @@
-#ifndef HIDRA2_REQUEST_HANDLER_DB_WRITE_H
-#define HIDRA2_REQUEST_HANDLER_DB_WRITE_H
+#ifndef ASAPO_REQUEST_HANDLER_DB_WRITE_H
+#define ASAPO_REQUEST_HANDLER_DB_WRITE_H
 
 #include "request_handler.h"
 #include "database/database.h"
@@ -7,7 +7,7 @@
 
 #include "io/io.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class RequestHandlerDbWrite final: public RequestHandler {
   public:
@@ -23,4 +23,4 @@ class RequestHandlerDbWrite final: public RequestHandler {
 
 }
 
-#endif //HIDRA2_REQUEST_HANDLER_DB_WRITE_H
+#endif //ASAPO_REQUEST_HANDLER_DB_WRITE_H

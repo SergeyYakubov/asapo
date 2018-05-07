@@ -1,11 +1,11 @@
-#ifndef HIDRA2_RECEIVER_CONFIG_H
-#define HIDRA2_RECEIVER_CONFIG_H
+#ifndef ASAPO_RECEIVER_CONFIG_H
+#define ASAPO_RECEIVER_CONFIG_H
 
 #include "io/io.h"
 #include "common/error.h"
 #include "logger/logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 struct ReceiverConfig {
     std::string monitor_db_uri;
@@ -23,4 +23,4 @@ const ReceiverConfig* GetReceiverConfig();
 }
 
 
-#endif //HIDRA2_RECEIVER_CONFIG_H
+#endif //ASAPO_RECEIVER_CONFIG_H

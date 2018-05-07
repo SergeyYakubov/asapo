@@ -5,7 +5,7 @@
 #include "connection.h"
 #include <io/io_factory.h>
 
-namespace hidra2 {
+namespace asapo {
 
 
 const int Receiver::kMaxUnacceptedConnectionsBacklog = 5;

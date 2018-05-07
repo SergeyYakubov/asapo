@@ -3,7 +3,7 @@
 #include "receiver_config.h"
 #include "receiver_logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 Error RequestHandlerDbWrite::ProcessRequest(const Request& request) const {
     if (Error err = ConnectToDbIfNeeded() ) {

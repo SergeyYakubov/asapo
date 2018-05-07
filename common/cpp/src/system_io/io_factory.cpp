@@ -2,7 +2,7 @@
 
 #include "system_io.h"
 
-namespace hidra2 {
+namespace asapo {
 
 IO* GenerateDefaultIO() {
     return new SystemIO;

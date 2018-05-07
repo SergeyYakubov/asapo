@@ -3,21 +3,21 @@
 
 #include "testing.h"
 
-using hidra2::Error;
-using hidra2::ErrorType;
+using asapo::Error;
+using asapo::ErrorType;
 
-using hidra2::M_AssertEq;
-using hidra2::M_AssertTrue;
+using asapo::M_AssertEq;
+using asapo::M_AssertTrue;
 
 
 void Check(const std::string& expected_ip_address, const std::string& hostname) {
     std::cout << "Checking: " << hostname << std::endl;
     Error err;
-    auto io = std::unique_ptr<hidra2::IO> {hidra2::GenerateDefaultIO()};
+    auto io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
     std::string ip_address = io->ResolveHostnameToIp(hostname, &err);
     M_AssertEq(expected_ip_address, ip_address);
     if(expected_ip_address.empty()) {
-        M_AssertTrue(err != nullptr && hidra2::IOErrorTemplates::kUnableToResolveHostname == err);
+        M_AssertTrue(err != nullptr && asapo::IOErrorTemplates::kUnableToResolveHostname == err);
         return;
     }
     M_AssertTrue(err == nullptr);

@@ -15,8 +15,8 @@ if(BUILD_MONGODB_CLIENTLIB)
     add_subdirectory(src/database)
 endif()
 
-install(DIRECTORY ${HIDRA2_CXX_COMMON_INCLUDE_DIR}/common
+install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/common
         DESTINATION ${CMAKE_INSTALL_PREFIX}/include )
 
-install(DIRECTORY ${HIDRA2_CXX_COMMON_INCLUDE_DIR}/logger
+install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/logger
         DESTINATION ${CMAKE_INSTALL_PREFIX}/include )

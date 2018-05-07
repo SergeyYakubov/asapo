@@ -1,5 +1,5 @@
-#ifndef HIDRA2_REQUEST_H
-#define HIDRA2_REQUEST_H
+#ifndef ASAPO_REQUEST_H
+#define ASAPO_REQUEST_H
 
 #include "receiver_error.h"
 #include "common/networking.h"
@@ -9,7 +9,7 @@
 #include "request_handler_db_write.h"
 #include "statistics.h"
 
-namespace hidra2 {
+namespace asapo {
 
 using RequestHandlerList = std::vector<const RequestHandler*>;
 
@@ -46,5 +46,5 @@ class RequestFactory {
 
 }
 
-#endif //HIDRA2_REQUEST_H
+#endif //ASAPO_REQUEST_H
 

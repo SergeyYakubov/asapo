@@ -18,7 +18,7 @@ using std::string;
 using std::vector;
 using std::chrono::system_clock;
 
-namespace hidra2 {
+namespace asapo {
 
 /**
  * \defgroup SYSTEM_IO_LINUX_PRIVATE
@@ -127,7 +127,7 @@ FileInfo GetFileInfo(const string& name, Error* err) {
 }
 
 FileInfo SystemIO::GetFileInfo(const string& name, Error* err) const {
-    return ::hidra2::GetFileInfo(name, err);
+    return ::asapo::GetFileInfo(name, err);
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
@@ -194,15 +194,15 @@ FileDescriptor SystemIO::_open(const char* filename, int posix_open_flags) const
     return ::open(filename, posix_open_flags, S_IWUSR | S_IRWXU);
 }
 
-bool SystemIO::_close(hidra2::FileDescriptor fd) const {
+bool SystemIO::_close(asapo::FileDescriptor fd) const {
     return ::close(fd) == 0;
 }
 
-ssize_t SystemIO::_read(hidra2::FileDescriptor fd, void* buffer, size_t length) {
+ssize_t SystemIO::_read(asapo::FileDescriptor fd, void* buffer, size_t length) {
     return ::read(fd, buffer, length);
 }
 
-ssize_t SystemIO::_write(hidra2::FileDescriptor fd, const void* buffer, size_t length) {
+ssize_t SystemIO::_write(asapo::FileDescriptor fd, const void* buffer, size_t length) {
     return ::write(fd, buffer, length);
 }
 

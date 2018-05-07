@@ -20,11 +20,11 @@ using ::testing::SetArgPointee;
 using ::testing::HasSubstr;
 using ::testing::ElementsAre;
 
-using hidra2::JsonFileParser;
-using hidra2::JsonStringParser;
-using hidra2::RapidJson;
-using hidra2::MockIO;
-using hidra2::IO;
+using asapo::JsonFileParser;
+using asapo::JsonStringParser;
+using asapo::RapidJson;
+using asapo::MockIO;
+using asapo::IO;
 
 
 namespace {
@@ -242,12 +242,12 @@ TEST_F(ParseFileTests, CannotReadFile) {
     std::string json = R"({"_id":2})";
 
     EXPECT_CALL(mock_io, ReadFileToString_t("filename", _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(hidra2::IOErrorTemplates::kFileNotFound.Generate().release()),
+    WillOnce(DoAll(testing::SetArgPointee<1>(asapo::IOErrorTemplates::kFileNotFound.Generate().release()),
                    testing::Return("")));
 
     uint64_t id;
     auto err = parser.GetUInt64("_id", &id);
-    ASSERT_THAT(err->Explain(), HasSubstr(hidra2::IOErrorTemplates::kFileNotFound.Generate()->Explain()));
+    ASSERT_THAT(err->Explain(), HasSubstr(asapo::IOErrorTemplates::kFileNotFound.Generate()->Explain()));
 
 
 }

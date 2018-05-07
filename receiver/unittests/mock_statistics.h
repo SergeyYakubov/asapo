@@ -1,14 +1,14 @@
-#ifndef HIDRA2_MOCK_STATISTICS_H
-#define HIDRA2_MOCK_STATISTICS_H
+#ifndef ASAPO_MOCK_STATISTICS_H
+#define ASAPO_MOCK_STATISTICS_H
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include "../src/statistics.h"
 
-namespace hidra2 {
+namespace asapo {
 
-class MockStatistics : public hidra2::Statistics {
+class MockStatistics : public asapo::Statistics {
   public:
     void SendIfNeeded() noexcept override {
         SendIfNeeded_t();
@@ -21,7 +21,7 @@ class MockStatistics : public hidra2::Statistics {
     void IncreaseRequestCounter() noexcept override {
         IncreaseRequestCounter_t();
     }
-    void StartTimer(const hidra2::StatisticEntity& entity) noexcept override {
+    void StartTimer(const asapo::StatisticEntity& entity) noexcept override {
         StartTimer_t(entity);
     }
     void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept override {
@@ -38,10 +38,10 @@ class MockStatistics : public hidra2::Statistics {
     MOCK_METHOD1(IncreaseRequestDataVolume_t, void (uint64_t
                                                     transferred_data_volume));
     MOCK_METHOD1(StartTimer_t, void(
-                     const hidra2::StatisticEntity& entity));
+                     const asapo::StatisticEntity& entity));
 
 };
 
 }
 
-#endif //HIDRA2_MOCK_STATISTICS_H
+#endif //ASAPO_MOCK_STATISTICS_H

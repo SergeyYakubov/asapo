@@ -1,5 +1,5 @@
-#ifndef HIDRA2_MOCKDATABASE_H
-#define HIDRA2_MOCKDATABASE_H
+#ifndef ASAPO_MOCKDATABASE_H
+#define ASAPO_MOCKDATABASE_H
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -7,7 +7,7 @@
 #include "database/database.h"
 #include "common/error.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class MockDatabase : public Database {
   public:
@@ -34,4 +34,4 @@ class MockDatabase : public Database {
 
 }
 
-#endif //HIDRA2_MOCKDATABASE_H
+#endif //ASAPO_MOCKDATABASE_H

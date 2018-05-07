@@ -1,10 +1,10 @@
-#ifndef HIDRA2_RECEIVER_CONFIG_FACTORY__H
-#define HIDRA2_RECEIVER_CONFIG_FACTORY__H
+#ifndef ASAPO_RECEIVER_CONFIG_FACTORY__H
+#define ASAPO_RECEIVER_CONFIG_FACTORY__H
 
 #include "io/io.h"
 #include "common/error.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class ReceiverConfigFactory {
   public:
@@ -17,4 +17,4 @@ class ReceiverConfigFactory {
 }
 
 
-#endif //HIDRA2_RECEIVER_CONFIG_FACTORY__H
+#endif //ASAPO_RECEIVER_CONFIG_FACTORY__H

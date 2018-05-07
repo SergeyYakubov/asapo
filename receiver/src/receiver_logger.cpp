@@ -1,10 +1,10 @@
 #include "receiver_logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 
 AbstractLogger* GetDefaultReceiverLogger() {
-    static Logger logger = hidra2::CreateDefaultLoggerBin("receiver");
+    static Logger logger = asapo::CreateDefaultLoggerBin("receiver");
     return logger.get();
 }
 

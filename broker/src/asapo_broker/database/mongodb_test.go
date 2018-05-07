@@ -5,7 +5,7 @@ package database
 import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"hidra2_broker/utils"
+	"asapo_broker/utils"
 	"sync"
 	"testing"
 )

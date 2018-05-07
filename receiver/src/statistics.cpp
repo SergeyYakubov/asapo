@@ -4,7 +4,7 @@
 
 using std::chrono::high_resolution_clock;
 
-namespace hidra2 {
+namespace asapo {
 
 void Statistics::SendIfNeeded() noexcept {
     if (GetTotalElapsedMs() > write_interval_) {

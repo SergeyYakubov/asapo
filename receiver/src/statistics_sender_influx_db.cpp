@@ -6,7 +6,7 @@
 #include "receiver_config.h"
 #include "receiver_logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 template<typename ... Args>
 std::string string_format( const std::string& format, Args ... args ) {

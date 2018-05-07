@@ -1,11 +1,11 @@
-#ifndef HIDRA2_COMMON__MOCKIO_H
-#define HIDRA2_COMMON__MOCKIO_H
+#ifndef ASAPO_COMMON__MOCKIO_H
+#define ASAPO_COMMON__MOCKIO_H
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include "io/io.h"
-namespace hidra2 {
+namespace asapo {
 class MockIO : public IO {
   public:
     std::unique_ptr<std::thread> NewThread(std::function<void()> function) const override {
@@ -157,7 +157,7 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD4(Write_t, size_t(FileDescriptor fd, const void* buf, size_t length, ErrorInterface** err));
 
-    void CreateNewDirectory(const std::string& directory_name, hidra2::Error* err) const override {
+    void CreateNewDirectory(const std::string& directory_name, asapo::Error* err) const override {
         ErrorInterface* error = nullptr;
         CreateNewDirectory_t(directory_name, &error);
         err->reset(error);
@@ -208,4 +208,4 @@ class MockIO : public IO {
 
 }
 
-#endif //HIDRA2_COMMON__MOCKIO_H
+#endif //ASAPO_COMMON__MOCKIO_H

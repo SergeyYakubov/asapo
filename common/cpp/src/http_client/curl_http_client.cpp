@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-namespace hidra2 {
+namespace asapo {
 
 // use CurlHttpClientInstance and static variable to init curl on program start end cleanup on exit
 class CurlHttpClientInstance {

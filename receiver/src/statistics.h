@@ -1,12 +1,12 @@
-#ifndef HIDRA2_STATISTICS_H
-#define HIDRA2_STATISTICS_H
+#ifndef ASAPO_STATISTICS_H
+#define ASAPO_STATISTICS_H
 
 #include <chrono>
 #include <memory>
 
 #include "statistics_sender.h"
 
-namespace hidra2 {
+namespace asapo {
 
 static const auto kNStatisticEntities = 3;
 enum StatisticEntity : int {
@@ -53,4 +53,4 @@ class Statistics {
 
 }
 
-#endif //HIDRA2_STATISTICS_H
+#endif //ASAPO_STATISTICS_H

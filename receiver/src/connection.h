@@ -1,5 +1,5 @@
-#ifndef HIDRA2_NetworkProducerPeerImpl_H
-#define HIDRA2_NetworkProducerPeerImpl_H
+#ifndef ASAPO_NetworkProducerPeerImpl_H
+#define ASAPO_NetworkProducerPeerImpl_H
 
 #include "connection.h"
 
@@ -17,7 +17,7 @@
 #include "statistics.h"
 #include "logger/logger.h"
 
-namespace hidra2 {
+namespace asapo {
 
 class Connection {
   public:
@@ -48,4 +48,4 @@ class Connection {
 }
 
 
-#endif //HIDRA2_NetworkProducerPeerImpl_H
+#endif //ASAPO_NetworkProducerPeerImpl_H

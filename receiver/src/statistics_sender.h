@@ -1,9 +1,9 @@
-#ifndef HIDRA2_STATISTICS_SENDER_H
-#define HIDRA2_STATISTICS_SENDER_H
+#ifndef ASAPO_STATISTICS_SENDER_H
+#define ASAPO_STATISTICS_SENDER_H
 
 #include <cstdint>
 
-namespace hidra2 {
+namespace asapo {
 
 struct StatisticsToSend;
 
@@ -15,4 +15,4 @@ class StatisticsSender {
 
 }
 
-#endif //HIDRA2_STATISTICS_SENDER_H
+#endif //ASAPO_STATISTICS_SENDER_H

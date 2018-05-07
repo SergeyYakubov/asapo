@@ -1,5 +1,5 @@
-#ifndef HIDRA2_SYSTEM__IO_H
-#define HIDRA2_SYSTEM__IO_H
+#ifndef ASAPO_SYSTEM__IO_H
+#define ASAPO_SYSTEM__IO_H
 
 #include <cinttypes>
 
@@ -11,7 +11,7 @@
 #include "common/data_structs.h"
 #include "common/io_error.h"
 
-namespace hidra2 {
+namespace asapo {
 
 //Need to be "enum" since multiple flags are allowed
 enum FileOpenMode {
@@ -103,4 +103,4 @@ class IO {
 
 }
 
-#endif //HIDRA2_SYSTEM__IO_H
+#endif //ASAPO_SYSTEM__IO_H

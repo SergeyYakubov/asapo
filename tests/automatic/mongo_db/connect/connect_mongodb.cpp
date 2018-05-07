@@ -5,8 +5,8 @@
 #include "testing.h"
 
 
-using hidra2::M_AssertContains;
-using hidra2::Error;
+using asapo::M_AssertContains;
+using asapo::Error;
 
 void Assert(const Error& error, const std::string& expect) {
     std::string result;
@@ -37,14 +37,14 @@ Args GetArgs(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
-    hidra2::MongoDBClient db;
+    asapo::MongoDBClient db;
 
     auto err = db.Connect(args.address, args.database_name, args.collection_name);
     Assert(err, args.keyword);
 
     if (err == nullptr) {
         err = db.Connect(args.address, args.database_name, args.collection_name);
-        Assert(err, hidra2::DBError::kAlreadyConnected);
+        Assert(err, asapo::DBError::kAlreadyConnected);
     }
     return 0;
 }

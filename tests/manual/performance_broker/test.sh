@@ -40,8 +40,8 @@ ssh ${worker_node} mkdir ${worker_dir}
 
 scp settings_tmp.json ${service_node}:${service_dir}/settings.json
 rm settings_tmp.json
-scp ../../../cmake-build-release/broker/hidra2-broker ${service_node}:${service_dir}
-ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./hidra2-broker -config settings.json &> ${service_dir}/broker.log &'"
+scp ../../../cmake-build-release/broker/asapo-broker ${service_node}:${service_dir}
+ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./asapo-broker -config settings.json &> ${service_dir}/broker.log &'"
 sleep 0.3
 scp ../../../cmake-build-release/worker/tools/folder_to_db/folder2db ${worker_node}:${worker_dir}
 ssh ${worker_node} ${worker_dir}/folder2db -n ${nthreads} ${dir} ${run_name} ${service_node}
@@ -53,6 +53,6 @@ ssh ${worker_node} ${worker_dir}/getnext_broker ${service_node}:5005 ${run_name}
 
 
 
-ssh ${service_node} killall hidra2-broker
+ssh ${service_node} killall asapo-broker
 ssh ${service_node} docker rm -f mongo
 #ssh ${service_node} docker rm -f influxdb

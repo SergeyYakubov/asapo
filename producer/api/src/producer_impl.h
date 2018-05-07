@@ -1,5 +1,5 @@
-#ifndef HIDRA2_PRODUCER__PRODUCER_IMPL_H
-#define HIDRA2_PRODUCER__PRODUCER_IMPL_H
+#ifndef ASAPO_PRODUCER__PRODUCER_IMPL_H
+#define ASAPO_PRODUCER__PRODUCER_IMPL_H
 
 #include <string>
 #include <common/networking.h>
@@ -7,7 +7,7 @@
 #include "producer/producer.h"
 #include "logger/logger.h"
 
-namespace hidra2 {
+namespace asapo {
 class ProducerImpl : public Producer {
   private:
     static const uint32_t kVersion;
@@ -42,4 +42,4 @@ class ProducerImpl : public Producer {
 };
 }
 
-#endif //HIDRA2_PRODUCER__PRODUCER_IMPL_H
+#endif //ASAPO_PRODUCER__PRODUCER_IMPL_H

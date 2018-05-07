@@ -1,12 +1,12 @@
-#ifndef HIDRA2_RAPID_JSON_H
-#define HIDRA2_RAPID_JSON_H
+#ifndef ASAPO_RAPID_JSON_H
+#define ASAPO_RAPID_JSON_H
 
 #include "rapidjson/document.h"
 #include "common/error.h"
 #include "io/io.h"
 
 
-namespace hidra2 {
+namespace asapo {
 
 enum class ValueType {
     kUint64,
@@ -35,8 +35,8 @@ class RapidJson {
     Error LazyInitialize() const noexcept;
     Error embedded_error_ = nullptr;
 
-    hidra2::Error GetValuePointer(const std::string& name, ValueType type, rapidjson::Value** val)const noexcept;
+    asapo::Error GetValuePointer(const std::string& name, ValueType type, rapidjson::Value** val)const noexcept;
 };
 
 }
-#endif //HIDRA2_RAPID_JSON_H
+#endif //ASAPO_RAPID_JSON_H

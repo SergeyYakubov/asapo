@@ -3,7 +3,7 @@
 #include "io/io_factory.h"
 #include "json_parser/json_parser.h"
 
-namespace hidra2 {
+namespace asapo {
 
 ReceiverConfig config;
 

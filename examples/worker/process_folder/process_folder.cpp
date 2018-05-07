@@ -6,10 +6,10 @@
 #include <chrono>
 #include <iomanip>
 
-#include "hidra2_worker.h"
+#include "asapo_worker.h"
 
 using std::chrono::high_resolution_clock;
-using hidra2::Error;
+using asapo::Error;
 
 struct Statistics {
     std::chrono::milliseconds duration_scan;
@@ -26,9 +26,9 @@ std::string ProcessCommandArguments(int argc, char* argv[]) {
     return argv[1];
 }
 
-std::unique_ptr<hidra2::DataBroker> CreateBroker(const std::string& folder) {
+std::unique_ptr<asapo::DataBroker> CreateBroker(const std::string& folder) {
     Error err;
-    auto broker = hidra2::DataBrokerFactory::CreateFolderBroker(folder, &err);
+    auto broker = asapo::DataBrokerFactory::CreateFolderBroker(folder, &err);
     if (err != nullptr) {
         std::cout << "Cannot create broker" << std::endl;
         exit(EXIT_FAILURE);
@@ -37,7 +37,7 @@ std::unique_ptr<hidra2::DataBroker> CreateBroker(const std::string& folder) {
     return broker;
 }
 
-void ConnectToBrocker(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* statistics) {
+void ConnectToBrocker(std::unique_ptr<asapo::DataBroker>* broker, Statistics* statistics) {
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     Error err = (*broker)->Connect();
     if (err != nullptr) {
@@ -48,10 +48,10 @@ void ConnectToBrocker(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* s
     statistics->duration_scan = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 );
 }
 
-void ReadAllData(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* statistics) {
+void ReadAllData(std::unique_ptr<asapo::DataBroker>* broker, Statistics* statistics) {
     Error err;
-    hidra2::FileInfo file_info;
-    hidra2::FileData file_data;
+    asapo::FileInfo file_info;
+    asapo::FileData file_data;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     int nfiles = 0;
@@ -60,7 +60,7 @@ void ReadAllData(std::unique_ptr<hidra2::DataBroker>* broker, Statistics* statis
         nfiles++;
         size += file_info.size;
     }
-    if (err->GetErrorType() != hidra2::ErrorType::kEndOfFile) {
+    if (err->GetErrorType() != asapo::ErrorType::kEndOfFile) {
         std::cout << err->Explain() << std::endl;
         exit(EXIT_FAILURE);
     }

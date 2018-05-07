@@ -6,10 +6,10 @@
 
 #include "testing.h"
 
-using hidra2::M_AssertEq;
+using asapo::M_AssertEq;
 
 
-using namespace hidra2;
+using namespace asapo;
 
 struct Settings {
     uint64_t port;
@@ -40,7 +40,7 @@ void AssertSettings(const Settings& settings) {
 
 Settings Parse(const std::string& fname, Error* err) {
 
-    hidra2::JsonFileParser parser(fname);
+    asapo::JsonFileParser parser(fname);
 
     Settings settings;
 

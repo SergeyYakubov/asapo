@@ -8,8 +8,8 @@ using ::testing::Ne;
 namespace {
 
 TEST(CreateProducer, PointerIsNotNullptr) {
-    std::unique_ptr<hidra2::Producer> producer = hidra2::Producer::Create();
-    ASSERT_THAT(dynamic_cast<hidra2::ProducerImpl*>(producer.get()), Ne(nullptr));
+    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create();
+    ASSERT_THAT(dynamic_cast<asapo::ProducerImpl*>(producer.get()), Ne(nullptr));
     ASSERT_THAT(producer.get(), Ne(nullptr));
 }
 

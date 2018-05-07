@@ -1,5 +1,5 @@
-#ifndef HIDRA2_MONGO_DATABASE_H
-#define HIDRA2_MONGO_DATABASE_H
+#ifndef ASAPO_MONGO_DATABASE_H
+#define ASAPO_MONGO_DATABASE_H
 
 #include "mongoc.h"
 
@@ -7,7 +7,7 @@
 
 #include "database/database.h"
 
-namespace hidra2 {
+namespace asapo {
 
 // An attempt to automize mongoc_init/mongoc_cleanup.
 // One has to be carefull with cleanup order - since it is called after main exits
@@ -56,4 +56,4 @@ class MongoDBClient final : public Database {
 
 }
 
-#endif //HIDRA2_MONGO_DATABASE_H
+#endif //ASAPO_MONGO_DATABASE_H

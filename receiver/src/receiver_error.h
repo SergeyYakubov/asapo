@@ -1,9 +1,9 @@
-#ifndef HIDRA2_RECEIVER_ERROR_H
-#define HIDRA2_RECEIVER_ERROR_H
+#ifndef ASAPO_RECEIVER_ERROR_H
+#define ASAPO_RECEIVER_ERROR_H
 
 #include "common/error.h"
 
-namespace hidra2 {
+namespace asapo {
 
 enum class ReceiverErrorType {
     kInvalidOpCode,
@@ -59,4 +59,4 @@ auto const kBadRequest = ReceiverErrorTemplate {
 };
 }
 
-#endif //HIDRA2_RECEIVER_ERROR_H
+#endif //ASAPO_RECEIVER_ERROR_H

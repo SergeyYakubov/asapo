@@ -6,7 +6,7 @@ set(SOURCE_FILES curl_httpclient_command.cpp)
 # Executable and link
 ################################
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
-target_link_libraries(${TARGET_NAME} test_common hidra2-worker)
+target_link_libraries(${TARGET_NAME} test_common asapo-worker)
 
 #set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 #if (CMAKE_COMPILER_IS_GNUCXX)
