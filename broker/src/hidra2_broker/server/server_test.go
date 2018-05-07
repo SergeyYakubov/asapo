@@ -34,7 +34,7 @@ func TestInitDBWithWrongAddress(t *testing.T) {
 
 	mock_db.ExpectedCalls = nil
 
-	settings.DbAddress = "0.0.0.0:0000"
+	settings.BrokerDbAddress = "0.0.0.0:0000"
 
 	for _, test := range initDBTests {
 		mock_db.On("Connect", "0.0.0.0:0000").Return(test.answer)

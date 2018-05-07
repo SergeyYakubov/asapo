@@ -6,6 +6,7 @@
 #include "io/io.h"
 #include "request_handler.h"
 #include "request_handler_file_write.h"
+#include "statistics.h"
 
 namespace hidra2 {
 
@@ -13,7 +14,7 @@ using RequestHandlerList = std::vector<const RequestHandler*>;
 
 class Request {
   public:
-    virtual Error Handle();
+    virtual Error Handle(std::unique_ptr<Statistics>*);
     virtual ~Request() = default;
     Request(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd);
     void AddHandler(const RequestHandler*);

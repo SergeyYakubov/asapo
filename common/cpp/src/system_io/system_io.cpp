@@ -23,7 +23,7 @@
 
 namespace hidra2 {
 
-const int SystemIO::kNetBufferSize = 1024 * 1024 ; //MiByte
+const int SystemIO::kNetBufferSize = 1024 * 1024; //* 1024 ; //MiByte
 
 /*******************************************************************************
  *                              system_io.cpp                                  *

@@ -1,0 +1,6 @@
+{
+  "MonitorDbAddress":"localhost:8086",
+  "MonitorDbName": "db_test",
+  "ListenPort":4200,
+  "WriteToDisk":true
+}

@@ -6,6 +6,8 @@ add_subdirectory(src/json_parser)
 
 add_subdirectory(src/data_structs)
 
+add_subdirectory(src/http_client)
+
 if(BUILD_MONGODB_CLIENTLIB)
     add_subdirectory(src/database)
 endif()

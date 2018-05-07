@@ -16,7 +16,7 @@ std::string FileInfo::Json() const {
 }
 
 
-bool TimeFromJson(const JsonParser& parser, const std::string name, std::chrono::system_clock::time_point* val) {
+bool TimeFromJson(const JsonStringParser& parser, const std::string name, std::chrono::system_clock::time_point* val) {
     uint64_t nanoseconds_from_epoch;
     if (parser.GetUInt64(name, &nanoseconds_from_epoch)) {
         return false;
@@ -34,7 +34,7 @@ bool TimeFromJson(const JsonParser& parser, const std::string name, std::chrono:
 bool FileInfo::SetFromJson(const std::string& json_string) {
     auto old = *this;
 
-    JsonParser parser(json_string, false);
+    JsonStringParser parser(json_string);
 
     if (parser.GetUInt64("_id", &id) ||
             parser.GetUInt64("size", &size) ||

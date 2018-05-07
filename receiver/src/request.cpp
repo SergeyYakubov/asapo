@@ -1,6 +1,7 @@
 #include "request.h"
 #include "io/io_factory.h"
 
+#include "receiver_config.h"
 namespace hidra2 {
 
 Request::Request(const GenericNetworkRequestHeader& header,
@@ -28,19 +29,23 @@ Error Request::ReceiveData() {
 }
 
 
-Error Request::Handle() {
+Error Request::Handle(std::unique_ptr<Statistics>* statistics) {
     Error err;
     if (request_header_.data_size != 0) {
+        (*statistics)->StartTimer(StatisticEntity::kNetwork);
         auto err = ReceiveData();
         if (err) {
             return err;
         }
+        (*statistics)->StopTimer();
     }
     for (auto handler : handlers_) {
+        (*statistics)->StartTimer(handler->GetStatisticEntity());
         auto err = handler->ProcessRequest(*this);
         if (err) {
             return err;
         }
+        (*statistics)->StopTimer();
     }
     return nullptr;
 }
@@ -75,7 +80,9 @@ std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericNetworkReq
     switch (request_header.op_code) {
     case Opcode::kNetOpcodeSendData: {
         auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd}};
-        request->AddHandler(&request_handler_filewrite_);
+        if (GetReceiverConfig()->write_to_disk) {
+            request->AddHandler(&request_handler_filewrite_);
+        }
         return request;
     }
     default:

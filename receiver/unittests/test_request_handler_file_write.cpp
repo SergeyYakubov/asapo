@@ -62,6 +62,12 @@ class FileWriteHandlerTests : public Test {
 
 };
 
+TEST_F(FileWriteHandlerTests, CheckStatisticEntity) {
+    auto entity = handler.GetStatisticEntity();
+    ASSERT_THAT(entity, Eq(hidra2::StatisticEntity::kDisk));
+}
+
+
 TEST_F(FileWriteHandlerTests, ErrorWhenZeroFileSize) {
     EXPECT_CALL(*mock_request, GetDataSize())
     .WillOnce(Return(0))

@@ -33,5 +33,6 @@ func ReadJsonFromFile(fname string, config interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

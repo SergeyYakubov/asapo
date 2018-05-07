@@ -19,7 +19,7 @@ func (db *MockedDatabase) Close() {
 	db.Called()
 }
 
-func (db *MockedDatabase) Copy() Agent{
+func (db *MockedDatabase) Copy() Agent {
 	db.Called()
 	return db
 }

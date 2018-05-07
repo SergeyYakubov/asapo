@@ -7,6 +7,9 @@
 #include "../src/request_handler.h"
 #include "../src/request_handler_file_write.h"
 
+#include "mock_statistics.h"
+#include "mock_receiver_config.h"
+
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::_;
@@ -31,6 +34,13 @@ using ::hidra2::Opcode;
 using ::hidra2::Connection;
 using ::hidra2::MockIO;
 using hidra2::Request;
+using hidra2::MockStatistics;
+
+using hidra2::StatisticEntity;
+
+using hidra2::ReceiverConfig;
+using hidra2::SetReceiverConfig;
+
 
 namespace {
 
@@ -38,6 +48,10 @@ class MockReqestHandler : public hidra2::RequestHandler {
   public:
     Error ProcessRequest(const Request& request) const override {
         return Error{ProcessRequest_t(request)};
+    }
+
+    StatisticEntity GetStatisticEntity() const override {
+        return StatisticEntity::kDisk;
     }
 
     MOCK_CONST_METHOD1(ProcessRequest_t, ErrorInterface * (const Request& request));
@@ -49,7 +63,10 @@ class FactoryTests : public Test {
     hidra2::RequestFactory factory;
     Error err{nullptr};
     GenericNetworkRequestHeader generic_request_header;
+    ReceiverConfig config;
     void SetUp() override {
+        config.write_to_disk = true;
+        SetReceiverConfig(config);
     }
     void TearDown() override {
     }
@@ -71,6 +88,15 @@ TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCode) {
     ASSERT_THAT(dynamic_cast<const hidra2::RequestHandlerFileWrite*>(request->GetListHandlers()[0]), Ne(nullptr));
 }
 
+TEST_F(FactoryTests, DoNotAddWriterIfNotWanted) {
+    generic_request_header.op_code = hidra2::Opcode::kNetOpcodeSendData;
+    config.write_to_disk = false;
+    SetReceiverConfig(config);
+
+    auto request = factory.GenerateRequest(generic_request_header, 1, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(0));
+}
 
 
 
@@ -82,7 +108,10 @@ class RequestTests : public Test {
     uint64_t data_id_{15};
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
+    NiceMock<MockStatistics> mock_statistics;
+    std::unique_ptr<hidra2::Statistics>  stat;
     void SetUp() override {
+        stat = std::unique_ptr<hidra2::Statistics> {&mock_statistics};
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         request.reset(new Request{generic_request_header, socket_fd_});
@@ -94,6 +123,7 @@ class RequestTests : public Test {
     }
     void TearDown() override {
         request->io__.release();
+        stat.release();
     }
 
 };
@@ -106,7 +136,7 @@ TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
 
-    auto err = request->Handle();
+    auto err = request->Handle(&stat);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -117,14 +147,34 @@ TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
               Return(0)
              ));
 
-    auto err = request->Handle();
+    auto err = request->Handle(&stat);
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kReadError));
 }
+
+
+
+TEST_F(RequestTests, HandleMeasuresTimeOnDataReceive) {
+
+    EXPECT_CALL(mock_statistics, StartTimer_t(hidra2::StatisticEntity::kNetwork));
+
+    EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillOnce(
+        DoAll(SetArgPointee<3>(nullptr),
+              Return(0)
+             ));
+
+    EXPECT_CALL(mock_statistics, StopTimer_t());
+
+    request->Handle(&stat);
+}
+
+
 
 
 TEST_F(RequestTests, HandleProcessesRequests) {
 
     MockReqestHandler mock_request_handler;
+
+    EXPECT_CALL(mock_statistics, StartTimer_t(hidra2::StatisticEntity::kNetwork));
 
     EXPECT_CALL(mock_request_handler, ProcessRequest_t(_)).WillOnce(
         Return(nullptr)
@@ -135,7 +185,12 @@ TEST_F(RequestTests, HandleProcessesRequests) {
     request->AddHandler(&mock_request_handler);
     request->AddHandler(&mock_request_handler);
 
-    auto err = request->Handle();
+    EXPECT_CALL(mock_statistics, StartTimer_t(hidra2::StatisticEntity::kDisk)).Times(2);
+
+    EXPECT_CALL(mock_statistics, StopTimer_t()).Times(2);
+
+
+    auto err = request->Handle(&stat);
 
     ASSERT_THAT(err, Eq(hidra2::IOErrorTemplates::kUnknownIOError));
 }
@@ -148,7 +203,7 @@ TEST_F(RequestTests, DataIsNullAtInit) {
 
 TEST_F(RequestTests, GetDataIsNotNullptr) {
 
-    request->Handle();
+    request->Handle(&stat);
     auto& data = request->GetData();
 
 

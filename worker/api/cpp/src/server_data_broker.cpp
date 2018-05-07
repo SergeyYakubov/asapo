@@ -1,8 +1,36 @@
 #include "server_data_broker.h"
 #include "io/io_factory.h"
-#include "curl_http_client.h"
+#include "http_client/curl_http_client.h"
+#include "http_client/http_error.h"
+
 
 namespace hidra2 {
+
+Error HttpCodeToWorkerError(const HttpCode& code) {
+    const char* message;
+    switch (code) {
+    case HttpCode::OK:
+        return nullptr;
+    case HttpCode::BadRequest:
+        message = WorkerErrorMessage::kWrongInput;
+        break;
+    case HttpCode::InternalServerError:
+        message = WorkerErrorMessage::kErrorReadingSource;
+        break;
+    case HttpCode::NoContent:
+        message = WorkerErrorMessage::kNoData;
+        return TextErrorWithType(message, ErrorType::kEndOfFile);
+    case HttpCode::NotFound:
+        message = WorkerErrorMessage::kSourceNotFound;
+        break;
+    default:
+        message = WorkerErrorMessage::kErrorReadingSource;
+        break;
+    }
+    return Error{new HttpError(message, code)};
+}
+
+
 
 ServerDataBroker::ServerDataBroker(const std::string& server_uri,
                                    const std::string& source_name):
