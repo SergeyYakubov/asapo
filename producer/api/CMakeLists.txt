@@ -3,7 +3,8 @@ set(SOURCE_FILES
         src/producer.cpp
         src/producer_impl.h
         src/producer_impl.cpp
-        )
+        src/request.cpp
+        src/request_pool.cpp src/receivers_status.cpp src/receivers_status.h)
 
 
 ################################
@@ -20,6 +21,7 @@ target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
 set(TEST_SOURCE_FILES
         unittests/test_producer_impl.cpp
         unittests/test_producer.cpp
+        unittests/test_request.cpp
         )
 set(TEST_LIBRARIES "${TARGET_NAME}")
 

@@ -3,7 +3,9 @@
 
 #include <memory>
 #include <string>
+#include <functional>
 
+#include "common/networking.h"
 #include "producer_error.h"
 #include "logger/logger.h"
 
@@ -13,6 +15,10 @@ enum class ProducerStatus {
     kDisconnected,
     kConnected,
 };
+
+
+using RequestCallback =  std::function<void(GenericNetworkRequestHeader, Error)>;
+
 
 class Producer {
   public:

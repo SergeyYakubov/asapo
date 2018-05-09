@@ -189,13 +189,13 @@ asapo::FileDescriptor asapo::SystemIO::CreateAndConnectIPTCPSocket(const std::st
 
     FileDescriptor fd = CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, err);
     if(*err != nullptr) {
-        return -1;
+        return kDisconnectedSocketDescriptor;
     }
 
     InetConnect(fd, address, err);
     if (*err != nullptr) {
         CloseSocket(fd, nullptr);
-        return -1;
+        return kDisconnectedSocketDescriptor;
     }
 
     return fd;

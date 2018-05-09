@@ -54,29 +54,11 @@ Error ProducerImpl::ConnectToReceiver(const std::string& receiver_address) {
 GenericNetworkRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, size_t file_size) {
     GenericNetworkRequestHeader request;
     request.op_code = kNetOpcodeSendData;
-    request.request_id = request_id_++;
     request.data_id = file_id;
     request.data_size = file_size;
     return request;
 }
 
-Error ProducerImpl::SendHeaderAndData(const GenericNetworkRequestHeader& header, const void* data, size_t file_size) {
-    Error io_error;
-    io__->Send(client_fd_, &header, sizeof(header), &io_error);
-    if(io_error) {
-// todo: add meaningful message to the io_error (here and below)
-//        std::cerr << "ProducerImpl::Send/DataRequest error" << io_error << std::endl;
-        return io_error;
-    }
-
-    io__->Send(client_fd_, data, file_size, &io_error);
-    if(io_error) {
-//        std::cerr << "ProducerImpl::Send/data error" << io_error << std::endl;
-        return io_error;
-    }
-
-    return nullptr;
-}
 
 Error ProducerImpl::ReceiveResponce() {
     Error err;
@@ -108,7 +90,7 @@ Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size) {
 
     auto send_data_request = GenerateNextSendRequest(file_id, file_size);
 
-    auto  error = SendHeaderAndData(send_data_request, data, file_size);
+    /*auto  error = SendHeaderAndData(send_data_request, data, file_size);
     if(error) {
         log__->Debug("error sending to " + receiver_uri_ + " - " + error->Explain());
         return error;
@@ -119,6 +101,8 @@ Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size) {
         log__->Debug("error receiving response from " + receiver_uri_ + " - " + error->Explain());
         return error;
     }
+
+     */
 
     log__->Debug("succesfully sent data to " + receiver_uri_);
 

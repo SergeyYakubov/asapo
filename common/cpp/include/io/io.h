@@ -41,6 +41,7 @@ enum class SocketProtocols {
 
 using FileDescriptor = int;
 using SocketDescriptor = int;
+const SocketDescriptor kDisconnectedSocketDescriptor = -1;
 
 class IO {
   public:

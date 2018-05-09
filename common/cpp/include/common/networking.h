@@ -29,7 +29,6 @@ enum NetworkErrorCode : uint16_t {
  */
 struct GenericNetworkRequestHeader {
     Opcode              op_code;
-    NetworkRequestId    request_id;
     uint64_t    data_id;
     uint64_t    data_size;
 };

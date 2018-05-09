@@ -10,7 +10,8 @@ enum class ProducerErrorType {
     kConnectionNotReady,
     kFileTooLarge,
     kFileIdAlreadyInUse,
-    kUnknownServerError
+    kUnknownServerError,
+    kCannotSendDataToReceivers,
 };
 
 //TODO Make a marco to create error class and error template class
@@ -71,6 +72,9 @@ auto const kUnknownServerError = ProducerErrorTemplate {
     "Unknown server error", ProducerErrorType::kUnknownServerError
 };
 
+auto const kCannotSendDataToReceivers = ProducerErrorTemplate {
+    "Cannot connect/send data to receivers", ProducerErrorType::kCannotSendDataToReceivers
+};
 
 };
 }
