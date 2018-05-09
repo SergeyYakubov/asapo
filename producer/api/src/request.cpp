@@ -5,7 +5,7 @@ namespace asapo {
 
 Request::Request(const asapo::IO* io, const GenericNetworkRequestHeader& header, const void* data,
                  RequestCallback callback):
-    io__{io}, header_{header}, data_{data}, callback_{std::move(callback)} {
+    io__{io}, header_(header), data_{data}, callback_{std::move(callback)} {
 
 }
 
