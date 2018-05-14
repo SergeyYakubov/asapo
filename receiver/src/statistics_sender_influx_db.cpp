@@ -21,7 +21,7 @@ void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic)
     //todo: send statistics async
     HttpCode code;
     Error err;
-    auto responce = httpclient__->Post(GetReceiverConfig()->monitor_db_uri + "/write?db=" +
+    auto response = httpclient__->Post(GetReceiverConfig()->monitor_db_uri + "/write?db=" +
                                        GetReceiverConfig()->monitor_db_name, StatisticsToString(statistic),
                                        &code, &err);
     std::string msg = "sending statistics to " + GetReceiverConfig()->monitor_db_name + " at " +
@@ -32,7 +32,7 @@ void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic)
     }
 
     if (code != HttpCode::OK && code != HttpCode::NoContent) {
-        log__->Error(msg + " - " + responce);
+        log__->Error(msg + " - " + response);
         return;
     }
 

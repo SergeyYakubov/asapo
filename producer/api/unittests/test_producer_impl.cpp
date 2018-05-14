@@ -29,7 +29,7 @@ TEST(get_version, VersionAboveZero) {
 
 TEST(Producer, Logger) {
     asapo::ProducerImpl producer;
-    ASSERT_THAT(dynamic_cast<asapo::AbstractLogger*>(producer.log__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::AbstractLogger*>(producer.log__), Ne(nullptr));
 }
 
 /*

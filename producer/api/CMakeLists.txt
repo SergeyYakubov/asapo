@@ -1,8 +1,8 @@
 set(TARGET_NAME producer-api)
 set(SOURCE_FILES
         src/producer.cpp
-        src/producer_impl.h
         src/producer_impl.cpp
+        src/producer_logger.cpp
         src/request.cpp
         src/request_pool.cpp src/receivers_status.cpp src/receivers_status.h)
 

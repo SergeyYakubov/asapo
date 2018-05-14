@@ -23,6 +23,8 @@ using ::testing::Gt;
 using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Mock;
+using ::testing::AllOf;
+
 
 using ::testing::InSequence;
 using ::testing::HasSubstr;
@@ -34,6 +36,8 @@ TEST(Producer, Constructor) {
     asapo::Request request{io.get(), header, nullptr, [](asapo::GenericNetworkRequestHeader, asapo::Error) {}};
 
     ASSERT_THAT(dynamic_cast<const asapo::IO*>(request.io__), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(request.log__), Ne(nullptr));
+
 }
 
 
@@ -72,7 +76,7 @@ class RequestTests : public testing::Test {
     void ExpectOKReceive(bool only_once = true);
 
     void SetUp() override {
-//        request.log__ = asapo::Logger {&mock_logger};
+        request.log__ = &mock_logger;
     }
     void TearDown() override {
     }
@@ -107,6 +111,7 @@ void RequestTests::ExpectFailConnect(bool only_once) {
 
 
 void RequestTests::ExpectFailSendHeader(bool only_once) {
+    int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(expected_file_id,
                                     expected_file_size),
@@ -116,13 +121,20 @@ void RequestTests::ExpectFailSendHeader(bool only_once) {
                 testing::SetArgPointee<3>(asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
                 Return(-1)
             ));
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+            HasSubstr("cannot send header"),
+            HasSubstr(receivers_list[i])
+                                       )
+        ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
+        i++;
     }
 
 }
 
 void RequestTests::ExpectFailSendData(bool only_once) {
+    int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Send_t(expected_sd, expected_file_pointer, expected_file_size, _))
         .Times(1)
@@ -131,14 +143,21 @@ void RequestTests::ExpectFailSendData(bool only_once) {
                 testing::SetArgPointee<3>(asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
                 Return(-1)
             ));
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+            HasSubstr("cannot send data"),
+            HasSubstr(receivers_list[i])
+                                       )
+        ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
+        i++;
     }
 
 }
 
 
 void RequestTests::ExpectFailReceive(bool only_once) {
+    int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
         .Times(1)
@@ -147,8 +166,14 @@ void RequestTests::ExpectFailReceive(bool only_once) {
                 testing::SetArgPointee<3>(asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
                 testing::Return(-1)
             ));
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+            HasSubstr("cannot receive"),
+            HasSubstr(receivers_list[i])
+                                      )
+        ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
+        i++;
     }
 
 }
@@ -195,6 +220,11 @@ void RequestTests::ExpectOKConnect(bool only_once) {
                 testing::SetArgPointee<1>(nullptr),
                 Return(expected_sds[i])
             ));
+        EXPECT_CALL(mock_logger, Info(AllOf(
+            HasSubstr("connected"),
+            HasSubstr(expected_address)
+          )
+        ));
         if (only_once) break;
         i++;
     }
@@ -202,6 +232,7 @@ void RequestTests::ExpectOKConnect(bool only_once) {
 
 
 void RequestTests::ExpectOKReceive(bool only_once) {
+    int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
         .WillOnce(
@@ -210,7 +241,13 @@ void RequestTests::ExpectOKReceive(bool only_once) {
                 A_WriteSendDataResponse(asapo::kNetErrorNoError),
                 testing::ReturnArg<2>()
             ));
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+            HasSubstr("sent data"),
+            HasSubstr(receivers_list[i])
+                                       )
+        ));
         if (only_once) break;
+        i++;
     }
 }
 
@@ -271,7 +308,7 @@ TEST_F(RequestTests, ErrorWhenCannotReceiveData) {
 
 
 
-TEST_F(RequestTests, ImmediatelyRrrorIfFileAlreadyInUse) {
+TEST_F(RequestTests, ImmediatelyCalBackErrorIfFileAlreadyInUse) {
     ExpectOKConnect(true);
     ExpectOKSendHeader(true);
     ExpectOKSendData(true);

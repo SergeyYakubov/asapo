@@ -2,6 +2,7 @@
 #include <cstring>
 
 #include "producer_impl.h"
+#include "producer_logger.h"
 #include "io/io_factory.h"
 
 namespace  asapo {
@@ -9,9 +10,7 @@ namespace  asapo {
 const uint32_t ProducerImpl::kVersion = 1;
 const size_t ProducerImpl::kMaxChunkSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(2); //2GiByte
 
-ProducerImpl::ProducerImpl(): io__{GenerateDefaultIO()} {
-    //todo get fluentd uri from service discovery
-    log__ = CreateDefaultLoggerApi("producer_api", "http://max-wgs.desy.de:9880/asapo");
+ProducerImpl::ProducerImpl(): io__{GenerateDefaultIO()},log__{GetDefaultProducerLogger()} {
 }
 
 uint64_t ProducerImpl::GetVersion() const {

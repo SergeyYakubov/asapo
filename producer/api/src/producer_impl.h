@@ -38,7 +38,7 @@ class ProducerImpl : public Producer {
     Error ConnectToReceiver(const std::string& receiver_address) override;
     Error Send(uint64_t file_id, const void* data, size_t file_size) override;
     std::unique_ptr<IO> io__;
-    Logger log__;
+    AbstractLogger* log__;
 };
 }
 

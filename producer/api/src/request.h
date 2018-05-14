@@ -15,11 +15,13 @@ class Request {
     explicit Request(const asapo::IO* io, const GenericNetworkRequestHeader& header, const void* data,
                      RequestCallback callback);
     Error Send(SocketDescriptor* sd, const ReceiversList& receivers_list);
-    const asapo::IO* io__;
+    const IO* io__;
+    const AbstractLogger* log__;
   private:
     Error ConnectToReceiver(SocketDescriptor* sd, const std::string& receiver_address);
-    Error SendHeaderAndData(SocketDescriptor sd);
-    Error ReceiveResponce(SocketDescriptor sd);
+    Error SendHeaderAndData(SocketDescriptor sd,const std::string& receiver_address);
+    Error ReceiveResponse(SocketDescriptor sd, const std::string &receiver_address);
+    Error TrySendToReceiver(SocketDescriptor sd, const std::string& receiver_address);
     GenericNetworkRequestHeader header_;
     const void* data_;
     RequestCallback callback_;

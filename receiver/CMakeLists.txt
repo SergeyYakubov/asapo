@@ -8,7 +8,7 @@ set(SOURCE_FILES
         src/statistics.cpp
         src/statistics_sender_influx_db.cpp
         src/receiver_config.cpp
-        src/receiver_logger.cpp
+        src/producer_logger.cpp
         src/request_handler_db_write.cpp)
 
 
