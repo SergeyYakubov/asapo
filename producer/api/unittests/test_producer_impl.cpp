@@ -22,13 +22,13 @@ using ::testing::InSequence;
 using ::testing::HasSubstr;
 
 TEST(get_version, VersionAboveZero) {
-    asapo::ProducerImpl producer;
+    asapo::ProducerImpl producer{4};
     EXPECT_GE(producer.GetVersion(), 0);
 }
 
 
 TEST(Producer, Logger) {
-    asapo::ProducerImpl producer;
+    asapo::ProducerImpl producer{4};
     ASSERT_THAT(dynamic_cast<asapo::AbstractLogger*>(producer.log__), Ne(nullptr));
 }
 

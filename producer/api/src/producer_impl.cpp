@@ -10,7 +10,7 @@ namespace  asapo {
 const uint32_t ProducerImpl::kVersion = 1;
 const size_t ProducerImpl::kMaxChunkSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(2); //2GiByte
 
-ProducerImpl::ProducerImpl(): io__{GenerateDefaultIO()},log__{GetDefaultProducerLogger()} {
+ProducerImpl::ProducerImpl(uint8_t n_processing_threads): io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()} {
 }
 
 uint64_t ProducerImpl::GetVersion() const {

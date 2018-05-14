@@ -22,16 +22,19 @@ struct StatisticsToSend {
     uint64_t n_requests;
 };
 
+#ifdef UNIT_TESTS
+#define VIRTUAL virtual
+#endif
+
 class Statistics {
   public:
-// virtual needed for unittests, could be replaced with #define VIRTUAL ... in case of performance issues
-    virtual void SendIfNeeded() noexcept;
-    virtual void Send() noexcept;
+    VIRTUAL void SendIfNeeded() noexcept;
+    VIRTUAL void Send() noexcept;
     explicit Statistics(unsigned int write_interval = kDefaultStatisticWriteIntervalMs);
-    virtual void IncreaseRequestCounter() noexcept;
-    virtual void StartTimer(const StatisticEntity& entity) noexcept;
-    virtual void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
-    virtual void StopTimer() noexcept;
+    VIRTUAL void IncreaseRequestCounter() noexcept;
+    VIRTUAL void StartTimer(const StatisticEntity& entity) noexcept;
+    VIRTUAL void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
+    VIRTUAL void StopTimer() noexcept;
 
     void SetWriteInterval(uint64_t interval_ms);
     std::unique_ptr<StatisticsSender> statistics_sender__;

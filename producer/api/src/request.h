@@ -8,19 +8,26 @@
 
 #include "producer/producer.h"
 
+#ifdef UNIT_TESTS
+#define VIRTUAL virtual
+#endif
+
+
 namespace asapo {
 
 class Request {
   public:
     explicit Request(const asapo::IO* io, const GenericNetworkRequestHeader& header, const void* data,
                      RequestCallback callback);
-    Error Send(SocketDescriptor* sd, const ReceiversList& receivers_list);
+    VIRTUAL Error Send(SocketDescriptor* sd, const ReceiversList& receivers_list);
+    VIRTUAL ~Request()=default;
     const IO* io__;
     const AbstractLogger* log__;
+    uint64_t GetMemoryRequitements();
   private:
     Error ConnectToReceiver(SocketDescriptor* sd, const std::string& receiver_address);
-    Error SendHeaderAndData(SocketDescriptor sd,const std::string& receiver_address);
-    Error ReceiveResponse(SocketDescriptor sd, const std::string &receiver_address);
+    Error SendHeaderAndData(SocketDescriptor sd, const std::string& receiver_address);
+    Error ReceiveResponse(SocketDescriptor sd, const std::string& receiver_address);
     Error TrySendToReceiver(SocketDescriptor sd, const std::string& receiver_address);
     GenericNetworkRequestHeader header_;
     const void* data_;

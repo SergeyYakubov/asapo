@@ -22,6 +22,7 @@ set(TEST_SOURCE_FILES
         unittests/test_producer_impl.cpp
         unittests/test_producer.cpp
         unittests/test_request.cpp
+        unittests/test_request_pool.cpp
         )
 set(TEST_LIBRARIES "${TARGET_NAME}")
 

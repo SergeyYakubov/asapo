@@ -8,6 +8,7 @@
 #include "logger/logger.h"
 
 namespace asapo {
+
 class ProducerImpl : public Producer {
   private:
     static const uint32_t kVersion;
@@ -26,7 +27,7 @@ class ProducerImpl : public Producer {
   public:
     static const size_t kMaxChunkSize;
 
-    ProducerImpl();
+    explicit ProducerImpl(uint8_t n_processing_threads);
     ProducerImpl(const ProducerImpl&) = delete;
     ProducerImpl& operator=(const ProducerImpl&) = delete;
 

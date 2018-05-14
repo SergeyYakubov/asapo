@@ -6,7 +6,7 @@ namespace asapo {
 
 Request::Request(const asapo::IO* io, const GenericNetworkRequestHeader& header, const void* data,
                  RequestCallback callback):
-    io__{io}, log__{GetDefaultProducerLogger()},header_(header), data_{data}, callback_{std::move(callback)} {
+    io__{io}, log__{GetDefaultProducerLogger()}, header_(header), data_{data}, callback_{std::move(callback)} {
 
 }
 
@@ -21,7 +21,7 @@ Error Request::ConnectToReceiver(SocketDescriptor* sd, const std::string& receiv
     return nullptr;
 }
 
-Error Request::SendHeaderAndData(SocketDescriptor sd,const std::string& receiver_address) {
+Error Request::SendHeaderAndData(SocketDescriptor sd, const std::string& receiver_address) {
     Error io_error;
     io__->Send(sd, &header_, sizeof(header_), &io_error);
     if(io_error) {
@@ -40,7 +40,7 @@ Error Request::SendHeaderAndData(SocketDescriptor sd,const std::string& receiver
 }
 
 
-Error Request::ReceiveResponse(SocketDescriptor sd, const std::string &receiver_address) {
+Error Request::ReceiveResponse(SocketDescriptor sd, const std::string& receiver_address) {
     Error err;
     SendDataResponse sendDataResponse;
     io__->Receive(sd, &sendDataResponse, sizeof(sendDataResponse), &err);
@@ -59,7 +59,7 @@ Error Request::ReceiveResponse(SocketDescriptor sd, const std::string &receiver_
 }
 
 Error Request::TrySendToReceiver(SocketDescriptor sd, const std::string& receiver_address) {
-    auto err = SendHeaderAndData(sd,receiver_address);
+    auto err = SendHeaderAndData(sd, receiver_address);
     if (err)  {
         return err;
     }
@@ -82,7 +82,7 @@ Error Request::Send(SocketDescriptor* sd, const ReceiversList& receivers_list) {
             if (err != nullptr ) continue;
         }
 
-        auto err = TrySendToReceiver(*sd,receiver_uri);
+        auto err = TrySendToReceiver(*sd, receiver_uri);
         if (err != nullptr && err != ProducerErrorTemplates::kFileIdAlreadyInUse)  {
             io__->CloseSocket(*sd, nullptr);
             *sd = kDisconnectedSocketDescriptor;
@@ -95,5 +95,10 @@ Error Request::Send(SocketDescriptor* sd, const ReceiversList& receivers_list) {
     }
     return ProducerErrorTemplates::kCannotSendDataToReceivers.Generate();
 }
+
+uint64_t Request::GetMemoryRequitements() {
+    return header_.data_size + sizeof(Request);
+}
+
 
 }

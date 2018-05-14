@@ -16,6 +16,11 @@ ELSEIF(UNIX)
     SET_PROPERTY(GLOBAL PROPERTY ASAPO_COMMON_IO_LIBRARIES Threads::Threads)
 ENDIF(WIN32)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DUNIT_TESTS)
+endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+
+
 option(BUILD_TESTS "Uses googletest to build tests" OFF)
 option(BUILD_INTEGRATION_TESTS "Include integration tests (CMAKE >3.7 is needed)" OFF)
 option(BUILD_DOCS "Uses doxygen to build the documentaion" OFF)

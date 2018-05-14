@@ -7,16 +7,16 @@
 
 using std::chrono::high_resolution_clock;
 
-typedef std::tuple<std::string, size_t, uint64_t> ArgumentTuple;
+typedef std::tuple<std::string, size_t, uint64_t, uint8_t> ArgumentTuple;
 ArgumentTuple ProcessCommandArguments(int argc, char* argv[]) {
-    if (argc != 4) {
+    if (argc != 5) {
         std::cout <<
-                  "Usage: " << argv[0] << " <receiver_address> <number_of_byte> <iterations>"
+                  "Usage: " << argv[0] << " <receiver_address> <number_of_byte> <iterations> <nthreads>"
                   << std::endl;
         exit(EXIT_FAILURE);
     }
     try {
-        return ArgumentTuple(argv[1], std::stoull(argv[2]), std::stoull(argv[3]));
+        return ArgumentTuple(argv[1], std::stoull(argv[2]), std::stoull(argv[3]), std::stoull(argv[4]));
     } catch(std::exception& e) {
         std::cerr << "Fail to parse arguments" << std::endl;
         std::cerr << e.what() << std::endl;
@@ -47,15 +47,21 @@ int main (int argc, char* argv[]) {
     std::string receiver_address;
     size_t number_of_kbytes;
     uint64_t iterations;
-    std::tie(receiver_address, number_of_kbytes, iterations) = ProcessCommandArguments(argc, argv);
+    uint8_t nthreads;
+    std::tie(receiver_address, number_of_kbytes, iterations, nthreads) = ProcessCommandArguments(argc, argv);
 
     std::cout << "receiver_address: " << receiver_address << std::endl
               << "Package size: " << number_of_kbytes << "k" << std::endl
               << "iterations: " << iterations << std::endl
               << std::endl;
 
-    auto producer = asapo::Producer::Create();
-    auto err = producer->ConnectToReceiver(receiver_address);
+    asapo::Error err;
+    auto producer = asapo::Producer::Create(nthreads, &err);
+    if(err) {
+        std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
+        return EXIT_FAILURE;
+    }
+    err = producer->ConnectToReceiver(receiver_address);
     if(err) {
         std::cerr << "Failed to connect to receiver. ProducerError: " << err << std::endl;
         return EXIT_FAILURE;

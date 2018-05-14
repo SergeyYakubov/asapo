@@ -12,6 +12,7 @@ enum class ProducerErrorType {
     kFileIdAlreadyInUse,
     kUnknownServerError,
     kCannotSendDataToReceivers,
+    kRequestPoolIsFull
 };
 
 //TODO Make a marco to create error class and error template class
@@ -75,6 +76,13 @@ auto const kUnknownServerError = ProducerErrorTemplate {
 auto const kCannotSendDataToReceivers = ProducerErrorTemplate {
     "Cannot connect/send data to receivers", ProducerErrorType::kCannotSendDataToReceivers
 };
+
+auto const kRequestPoolIsFull = ProducerErrorTemplate {
+    "Cannot add request to poll - hit pool size limit", ProducerErrorType::kRequestPoolIsFull
+};
+
+
+
 
 };
 }

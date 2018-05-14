@@ -16,6 +16,7 @@ enum class ProducerStatus {
     kConnected,
 };
 
+const uint8_t kMaxProcessingThreads = 32;
 
 using RequestCallback =  std::function<void(GenericNetworkRequestHeader, Error)>;
 
@@ -26,7 +27,7 @@ class Producer {
     /*!
      * @return A unique_ptr to a new producer instance
      */
-    static std::unique_ptr<Producer> Create();
+    static std::unique_ptr<Producer> Create(uint8_t n_processing_threads, Error* err);
 
     virtual ~Producer() = default;
 

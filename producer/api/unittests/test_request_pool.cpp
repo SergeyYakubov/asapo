@@ -1,16 +1,12 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <chrono>
 
-#include "unittests/MockIO.h"
 #include "unittests/MockLogger.h"
 #include "common/error.h"
-#include "io/io.h"
-
-#include "producer/producer.h"
-#include "producer/producer_error.h"
 
 #include "../src/request.h"
-#include <common/networking.h>
+#include "../src/request_pool.h"
 #include "io/io_factory.h"
 
 namespace {
@@ -29,86 +25,91 @@ using ::testing::AllOf;
 using ::testing::InSequence;
 using ::testing::HasSubstr;
 
+using asapo::Request;
+using asapo::RequestPool;
+using asapo::Error;
 
-TEST(Request, Constructor) {
-    auto  io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
-    asapo::GenericNetworkRequestHeader header;
-    asapo::Request request{io.get(), header, nullptr, [](asapo::GenericNetworkRequestHeader, asapo::Error) {}};
 
-    ASSERT_THAT(dynamic_cast<const asapo::IO*>(request.io__), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(request.log__), Ne(nullptr));
-
+TEST(RequestPool, Constructor) {
+    asapo::RequestPool pool{4, 4};
+    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(pool.log__), Ne(nullptr));
 }
 
 
-class RequestTests : public testing::Test {
+class MockRequest : public Request {
   public:
-    testing::NiceMock<asapo::MockIO> mock_io;
-    uint64_t expected_file_id = 4224;
-    uint64_t expected_file_size = 1337;
-    asapo::Opcode expected_op_code = asapo::kNetOpcodeSendData;
-    void*    expected_file_pointer = (void*)0xC00FE;
-    asapo::Error callback_err;
+    MockRequest() : Request(asapo::GenerateDefaultIO(), asapo::GenericNetworkRequestHeader{}, nullptr, nullptr) {};
+    Error Send(asapo::SocketDescriptor* sd, const asapo::ReceiversList& receivers_list) override {
+        return Error {Send_t(sd, receivers_list)};
+    }
 
-    asapo::GenericNetworkRequestHeader header{expected_op_code, expected_file_id, expected_file_size};
-    bool called = false;
-    asapo::GenericNetworkRequestHeader callback_header;
-    asapo::Request request{&mock_io, header, expected_file_pointer, [this](asapo::GenericNetworkRequestHeader header, asapo::Error err) {
-        called = true;
-        callback_err = std::move(err);
-        callback_header = header;
-    }};
+    MOCK_METHOD2(Send_t, asapo::SimpleError*(asapo::SocketDescriptor*, const asapo::ReceiversList&));
+};
+
+class RequestPoolTests : public testing::Test {
+  public:
     testing::NiceMock<asapo::MockLogger> mock_logger;
-
-    asapo::SocketDescriptor sd = asapo::kDisconnectedSocketDescriptor;
-    std::string expected_address1 = {"127.0.0.1:9090"};
-    std::string expected_address2 = {"127.0.0.1:9091"};
-    asapo::ReceiversList receivers_list{expected_address1, expected_address2};
-    std::vector<asapo::SocketDescriptor> expected_sds{83942, 83943};
-
-    void ExpectFailConnect(bool only_once = false);
-    void ExpectFailSendHeader(bool only_once = false);
-    void ExpectFailSendData(bool only_once = false);
-    void ExpectOKConnect(bool only_once = false);
-    void ExpectOKSendHeader(bool only_once = false);
-    void ExpectOKSendData(bool only_once = false);
-    void ExpectFailReceive(bool only_once = false);
-    void ExpectOKReceive(bool only_once = true);
-
+    const uint8_t nthreads = 4;
+    const uint64_t max_size = 1024 * 1024 * 1024;
+    asapo::RequestPool pool {nthreads, max_size};
+    std::unique_ptr<Request> request;
+    MockRequest* mock_request = new MockRequest;
     void SetUp() override {
-        request.log__ = &mock_logger;
+        pool.log__ = &mock_logger;
+        request.reset(mock_request);
     }
     void TearDown() override {
     }
 };
 
-ACTION_P(A_WriteSendDataResponse, error_code) {
-    ((asapo::SendDataResponse*)arg1)->op_code = asapo::kNetOpcodeSendData;
-    ((asapo::SendDataResponse*)arg1)->error_code = error_code;
-}
 
 
+TEST(RequestPool, AddRequestFailsDueToSize) {
+    RequestPool pool{4, 0};
 
-MATCHER_P2(M_CheckSendDataRequest, file_id, file_size,
-           "Checks if a valid GenericNetworkRequestHeader was Send") {
-    return ((asapo::GenericNetworkRequestHeader*)arg)->op_code == asapo::kNetOpcodeSendData
-           && ((asapo::GenericNetworkRequestHeader*)arg)->data_id == file_id
-           && ((asapo::GenericNetworkRequestHeader*)arg)->data_size == file_size;
-}
-
-void RequestTests::ExpectFailConnect(bool only_once) {
-    for (auto expected_address : receivers_list) {
-        EXPECT_CALL(mock_io, CreateAndConnectIPTCPSocket_t(expected_address, _))
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<1>(asapo::IOErrorTemplates::kInvalidAddressFormat.Generate().release()),
-                Return(asapo::kDisconnectedSocketDescriptor)
-            ));
-        if (only_once) break;
-    }
+    auto  io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
+    asapo::GenericNetworkRequestHeader header;
+    std::unique_ptr<Request> request{new Request{io.get(), header, nullptr, [](asapo::GenericNetworkRequestHeader, asapo::Error) {}}};
+    auto err = pool.AddRequest(std::move(request));
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
 
 }
 
+TEST_F(RequestPoolTests, AddRequestCallsSend) {
+    EXPECT_CALL(*mock_request, Send_t(testing::Pointee(asapo::kDisconnectedSocketDescriptor), testing::ElementsAre("test"))).
+        WillOnce(
+            Return(nullptr)
+        );
+
+
+    auto err = pool.AddRequest(std::move(request));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(RequestPoolTests, AddRequestCallsSendTwice) {
+    asapo::SimpleError* send_error = new asapo::SimpleError("www");
+    EXPECT_CALL(*mock_request, Send_t(testing::Pointee(asapo::kDisconnectedSocketDescriptor), testing::ElementsAre("test")))
+        .Times(2)
+        .WillOnce(Return(send_error))
+        .WillOnce(Return(nullptr));
+
+    auto err = pool.AddRequest(std::move(request));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    ASSERT_THAT(err, Eq(nullptr));
+
+
+}
+
+
+TEST_F(RequestPoolTests, FinishProcessingThreads) {
+    EXPECT_CALL(mock_logger, Debug(HasSubstr("finishing thread"))).Times(nthreads);
+}
+
+
+/*
 
 void RequestTests::ExpectFailSendHeader(bool only_once) {
     int i = 0;
@@ -122,10 +123,10 @@ void RequestTests::ExpectFailSendHeader(bool only_once) {
                 Return(-1)
             ));
         EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("cannot send header"),
-                                           HasSubstr(receivers_list[i])
+            HasSubstr("cannot send header"),
+            HasSubstr(receivers_list[i])
                                        )
-                                      ));
+        ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
         i++;
@@ -144,10 +145,10 @@ void RequestTests::ExpectFailSendData(bool only_once) {
                 Return(-1)
             ));
         EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("cannot send data"),
-                                           HasSubstr(receivers_list[i])
+            HasSubstr("cannot send data"),
+            HasSubstr(receivers_list[i])
                                        )
-                                      ));
+        ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
         i++;
@@ -167,10 +168,10 @@ void RequestTests::ExpectFailReceive(bool only_once) {
                 testing::Return(-1)
             ));
         EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("cannot receive"),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+            HasSubstr("cannot receive"),
+            HasSubstr(receivers_list[i])
+                                      )
+        ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
         i++;
@@ -221,10 +222,10 @@ void RequestTests::ExpectOKConnect(bool only_once) {
                 Return(expected_sds[i])
             ));
         EXPECT_CALL(mock_logger, Info(AllOf(
-                                          HasSubstr("connected"),
-                                          HasSubstr(expected_address)
-                                      )
-                                     ));
+            HasSubstr("connected"),
+            HasSubstr(expected_address)
+          )
+        ));
         if (only_once) break;
         i++;
     }
@@ -242,21 +243,13 @@ void RequestTests::ExpectOKReceive(bool only_once) {
                 testing::ReturnArg<2>()
             ));
         EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("sent data"),
-                                           HasSubstr(receivers_list[i])
+            HasSubstr("sent data"),
+            HasSubstr(receivers_list[i])
                                        )
-                                      ));
+        ));
         if (only_once) break;
         i++;
     }
-}
-
-
-TEST_F(RequestTests, MemoryRequirements) {
-
-    auto size = request.GetMemoryRequitements();
-
-    ASSERT_THAT(size, Eq(sizeof(asapo::Request) + expected_file_size));
 }
 
 
@@ -357,5 +350,5 @@ TEST_F(RequestTests, SendOK) {
 }
 
 
-
+*/
 }
