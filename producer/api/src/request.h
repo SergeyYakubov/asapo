@@ -3,7 +3,7 @@
 
 #include "io/io.h"
 #include "common/error.h"
-#include "receivers_status.h"
+#include "receiver_discovery_service.h"
 #include "common/networking.h"
 
 #include "producer/producer.h"
@@ -19,8 +19,8 @@ class Request {
   public:
     explicit Request(const asapo::IO* io, const GenericNetworkRequestHeader& header, const void* data,
                      RequestCallback callback);
-    VIRTUAL Error Send(SocketDescriptor* sd, const ReceiversList& receivers_list);
-    VIRTUAL ~Request()=default;
+    VIRTUAL Error Send(SocketDescriptor* sd, const ReceiversList& receivers_list, bool rebalance);
+    VIRTUAL ~Request() = default;
     const IO* io__;
     const AbstractLogger* log__;
     uint64_t GetMemoryRequitements();

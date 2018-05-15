@@ -75,7 +75,12 @@ Error Request::TrySendToReceiver(SocketDescriptor sd, const std::string& receive
 
 
 
-Error Request::Send(SocketDescriptor* sd, const ReceiversList& receivers_list) {
+Error Request::Send(SocketDescriptor* sd, const ReceiversList& receivers_list,bool rebalance) {
+    if (rebalance && *sd != kDisconnectedSocketDescriptor) {
+        io__->CloseSocket(*sd, nullptr);
+        log__->Info("rebalancing");
+        *sd = kDisconnectedSocketDescriptor;
+    }
     for (auto receiver_uri : receivers_list) {
         if (*sd == kDisconnectedSocketDescriptor) {
             auto err = ConnectToReceiver(sd, receiver_uri);

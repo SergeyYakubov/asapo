@@ -263,7 +263,7 @@ TEST_F(RequestTests, MemoryRequirements) {
 TEST_F(RequestTests, TriesConnectWhenNotConnected) {
     ExpectFailConnect();
 
-    auto err = request.Send(&sd, receivers_list);
+    auto err = request.Send(&sd, receivers_list,false);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
@@ -275,28 +275,65 @@ TEST_F(RequestTests, DoesNotTryConnectWhenConnected) {
     ExpectFailSendHeader(true);
 
 
-    auto err = request.Send(&sd, asapo::ReceiversList{expected_address1});
+    auto err = request.Send(&sd, asapo::ReceiversList{expected_address1},false);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
 
+TEST_F(RequestTests, DoNotCloseWhenRebalanceAndNotConnected) {
+    EXPECT_CALL(mock_io, CloseSocket_t(sd, _)).Times(0);
+    ExpectOKConnect();
+    ExpectFailSendHeader();
+
+    auto err = request.Send(&sd, receivers_list,true);
+
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+}
+
+TEST_F(RequestTests, DoNotCloseWhenRebalanceIfNotConnected) {
+    EXPECT_CALL(mock_io, CloseSocket_t(sd, _)).Times(0);
+    ExpectOKConnect(true);
+    ExpectFailSendHeader(true);
+
+
+    auto err = request.Send(&sd, asapo::ReceiversList{expected_address1},true);
+
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+}
+
+
+
+TEST_F(RequestTests, ReconnectWhenRebalance) {
+    sd = 1000;
+    EXPECT_CALL(mock_io, CloseSocket_t(1000, _));
+    EXPECT_CALL(mock_logger, Info(HasSubstr("rebalancing")));
+
+    ExpectOKConnect(true);
+    ExpectFailSendHeader(true);
+
+
+    auto err = request.Send(&sd, asapo::ReceiversList{expected_address1},true);
+
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+}
 
 
 TEST_F(RequestTests, ErrorWhenCannotSendHeader) {
     ExpectOKConnect();
     ExpectFailSendHeader();
 
-    auto err = request.Send(&sd, receivers_list);
+    auto err = request.Send(&sd, receivers_list,false);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
+
 
 TEST_F(RequestTests, ErrorWhenCannotSendData) {
     ExpectOKConnect();
     ExpectOKSendHeader();
     ExpectFailSendData();
 
-    auto err = request.Send(&sd, receivers_list);
+    auto err = request.Send(&sd, receivers_list,false);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
@@ -308,7 +345,7 @@ TEST_F(RequestTests, ErrorWhenCannotReceiveData) {
 
     ExpectFailReceive();
 
-    auto err = request.Send(&sd, receivers_list);
+    auto err = request.Send(&sd, receivers_list,false);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
@@ -316,7 +353,7 @@ TEST_F(RequestTests, ErrorWhenCannotReceiveData) {
 
 
 
-TEST_F(RequestTests, ImmediatelyCalBackErrorIfFileAlreadyInUse) {
+TEST_F(RequestTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
     ExpectOKConnect(true);
     ExpectOKSendHeader(true);
     ExpectOKSendData(true);
@@ -330,7 +367,7 @@ TEST_F(RequestTests, ImmediatelyCalBackErrorIfFileAlreadyInUse) {
         ));
 
 
-    auto err = request.Send(&sd, receivers_list);
+    auto err = request.Send(&sd, receivers_list,false);
 
     ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kFileIdAlreadyInUse));
     ASSERT_THAT(called, Eq(true));
@@ -344,7 +381,7 @@ TEST_F(RequestTests, SendOK) {
     ExpectOKSendData(true);
     ExpectOKReceive();
 
-    auto err = request.Send(&sd, receivers_list);
+    auto err = request.Send(&sd, receivers_list,false);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(sd, Eq(expected_sds[0]));
@@ -355,7 +392,6 @@ TEST_F(RequestTests, SendOK) {
     ASSERT_THAT(callback_header.data_id, Eq(header.data_id));
 
 }
-
 
 
 }
