@@ -23,13 +23,15 @@ using ::testing::Ne;
 using ::testing::Mock;
 using ::testing::AllOf;
 using testing::DoAll;
-
+using testing::NiceMock;
 using ::testing::InSequence;
 using ::testing::HasSubstr;
 
+using asapo::ReceiversList;
 using asapo::Request;
 using asapo::RequestPool;
 using asapo::Error;
+using asapo::GenericNetworkRequestHeader;
 
 const std::string expected_endpoint{"endpoint"};
 
@@ -38,74 +40,76 @@ class MockDiscoveryService : public asapo::ReceiverDiscoveryService {
     MockDiscoveryService() : ReceiverDiscoveryService{expected_endpoint, 1} {};
     MOCK_METHOD0(StartCollectingData, void());
     MOCK_METHOD0(MaxConnections, uint64_t());
-    MOCK_METHOD1(RotatedUriList, asapo::ReceiversList(uint64_t));
+    MOCK_METHOD1(RotatedUriList, ReceiversList(uint64_t));
 };
 
+std::unique_ptr<asapo::IO>   io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
 
 class MockRequest : public Request {
   public:
-    std::unique_ptr<asapo::IO>   io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
     MockRequest() : Request(io.get(), asapo::GenericNetworkRequestHeader{}, nullptr, nullptr) {};
-    Error Send(asapo::SocketDescriptor* sd, const asapo::ReceiversList& receivers_list, bool rebalance) override {
-        return Error {Send_t(sd, receivers_list,rebalance)};
+    Error Send(asapo::SocketDescriptor* sd, const ReceiversList& receivers_list, bool rebalance) override {
+        return Error {Send_t(sd, receivers_list, rebalance)};
     }
 
-    MOCK_METHOD3(Send_t, asapo::SimpleError * (asapo::SocketDescriptor*, const asapo::ReceiversList&,bool));
+    MOCK_METHOD3(Send_t, asapo::SimpleError * (asapo::SocketDescriptor*, const ReceiversList&, bool));
 };
 
 class RequestPoolTests : public testing::Test {
   public:
-    testing::NiceMock<asapo::MockLogger> mock_logger;
+    NiceMock<asapo::MockLogger> mock_logger;
     const uint8_t nthreads = 4;
     const uint64_t max_size = 1024 * 1024 * 1024;
-    testing::NiceMock<MockDiscoveryService> mock_discovery;
+    NiceMock<MockDiscoveryService> mock_discovery;
     asapo::RequestPool pool {nthreads, max_size, &mock_discovery};
     std::unique_ptr<Request> request;
-    MockRequest* mock_request = new MockRequest;
-    asapo::ReceiversList expected_receivers_list{"ip1", "ip2", "ip3"};
+    NiceMock<MockRequest>* mock_request = new testing::NiceMock<MockRequest>;
+    ReceiversList expected_receivers_list1{"ip1", "ip2", "ip3"};
+    ReceiversList expected_receivers_list2{"ip4", "ip5", "ip6"};
     void SetUp() override {
         pool.log__ = &mock_logger;
         request.reset(mock_request);
         ON_CALL(mock_discovery, MaxConnections()).WillByDefault(Return(100));
-        ON_CALL(mock_discovery, RotatedUriList(_)).WillByDefault(Return(expected_receivers_list));
+        ON_CALL(mock_discovery, RotatedUriList(_)).WillByDefault(Return(expected_receivers_list1));
 
     }
     void TearDown() override {
     }
 };
 
-TEST(RequestPool, Constructor) {
-    auto  io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
-    testing::NiceMock<MockDiscoveryService> mock_discovery;
+void ExpectSend(MockRequest* request, const ReceiversList& list, bool connected = false, bool rebalance = false) {
+    auto descriptor = connected ? 1 : asapo::kDisconnectedSocketDescriptor;
+    EXPECT_CALL(*request, Send_t(testing::Pointee(descriptor), list, rebalance))
+    .WillOnce(DoAll(
+                  testing::SetArgPointee<0>(1),
+                  Return(nullptr)
+              )
+             );
+}
 
+TEST(RequestPool, Constructor) {
+    NiceMock<MockDiscoveryService> mock_discovery;
     EXPECT_CALL(mock_discovery, StartCollectingData());
 
     asapo::RequestPool pool{4, 4, &mock_discovery};
 
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(pool.log__), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::ReceiverDiscoveryService*>(pool.discovery_service__), Ne(nullptr));
 }
 
 TEST(RequestPool, AddRequestFailsDueToSize) {
-    auto  io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
     asapo::ReceiverDiscoveryService discovery{expected_endpoint, 1000};
     RequestPool pool{4, 0, &discovery};
-    asapo::GenericNetworkRequestHeader header{asapo::Opcode::kNetOpcodeCount, 1, 1};
-    std::unique_ptr<Request> request{new Request{io.get(), header, nullptr, [](asapo::GenericNetworkRequestHeader, asapo::Error) {}}};
+    std::unique_ptr<Request> request{new Request{io.get(), GenericNetworkRequestHeader{}, nullptr, nullptr}};
+
     auto err = pool.AddRequest(std::move(request));
+
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
 
 }
 
 TEST_F(RequestPoolTests, AddRequestCallsSend) {
-
-    EXPECT_CALL(mock_discovery, RotatedUriList(_)).WillOnce(Return(asapo::ReceiversList{"ip3", "ip2", "ip1"}));
-
-    EXPECT_CALL(*mock_request, Send_t(testing::Pointee(asapo::kDisconnectedSocketDescriptor),
-                                      testing::ElementsAre("ip3", "ip2", "ip1"),false)).
-    WillOnce(
-        Return(nullptr)
-    );
+    EXPECT_CALL(mock_discovery, RotatedUriList(_)).WillOnce(Return(expected_receivers_list1));
+    ExpectSend(mock_request, expected_receivers_list1);
 
     auto err = pool.AddRequest(std::move(request));
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -114,10 +118,10 @@ TEST_F(RequestPoolTests, AddRequestCallsSend) {
 }
 
 TEST_F(RequestPoolTests, AddRequestCallsSendTwice) {
-    asapo::SimpleError* send_error = new asapo::SimpleError("www");
+    asapo::SimpleError* send_error = new asapo::SimpleError("");
 
-    EXPECT_CALL(*mock_request, Send_t(testing::Pointee(asapo::kDisconnectedSocketDescriptor), testing::ElementsAre("ip1",
-                                      "ip2", "ip3"),false))
+    EXPECT_CALL(*mock_request, Send_t(testing::Pointee(asapo::kDisconnectedSocketDescriptor), expected_receivers_list1,
+                                      false))
     .Times(2)
     .WillOnce(DoAll(
                   testing::SetArgPointee<0>(asapo::kDisconnectedSocketDescriptor),
@@ -130,8 +134,8 @@ TEST_F(RequestPoolTests, AddRequestCallsSendTwice) {
 
     auto err = pool.AddRequest(std::move(request));
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    ASSERT_THAT(err, Eq(nullptr));
 
+    ASSERT_THAT(err, Eq(nullptr));
 }
 
 TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
@@ -139,19 +143,10 @@ TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 
     MockRequest* mock_request2 = new MockRequest;
 
-    EXPECT_CALL(*mock_request, Send_t(testing::Pointee(asapo::kDisconnectedSocketDescriptor), testing::ElementsAre("ip1",
-                                      "ip2", "ip3"),false))
-    .WillOnce(DoAll(
-                  testing::SetArgPointee<0>(1),
-                  Return(nullptr)
-              )
-             );
-    EXPECT_CALL(*mock_request2, Send_t(testing::Pointee(1), testing::ElementsAre("ip1", "ip2", "ip3"),false))
-    .WillOnce(DoAll(
-                  testing::SetArgPointee<0>(1),
-                  Return(nullptr)
-              )
-             );
+    ExpectSend(mock_request, expected_receivers_list1);
+    ExpectSend(mock_request2, expected_receivers_list1, true);
+
+
     auto err1 = pool.AddRequest(std::move(request));
     request.reset(mock_request2);
     auto err2 = pool.AddRequest(std::move(request));
@@ -164,17 +159,19 @@ TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 
 
 TEST_F(RequestPoolTests, AddRequestDoesNotCallsSendWhenNoConnactionsAllowed) {
-    EXPECT_CALL(*mock_request, Send_t(_, _,_)).Times(0);
-
     EXPECT_CALL(mock_discovery, MaxConnections()).WillRepeatedly(Return(0));
+    EXPECT_CALL(*mock_request, Send_t(_, _, _)).Times(0);
 
-    pool.discovery_service__ = &mock_discovery;
     auto err = pool.AddRequest(std::move(request));
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     ASSERT_THAT(err, Eq(nullptr));
 }
 
+TEST_F(RequestPoolTests, NRequestsInQueue) {
+    auto nreq = pool.NRequestsInQueue();
+    ASSERT_THAT(nreq, Eq(0));
+}
 
 
 TEST_F(RequestPoolTests, FinishProcessingThreads) {
@@ -187,25 +184,15 @@ TEST_F(RequestPoolTests, Rebalance) {
 
     MockRequest* mock_request2 = new MockRequest;
 
+
     EXPECT_CALL(mock_discovery, RotatedUriList(_)).Times(2).
-    WillOnce(Return(asapo::ReceiversList{"ip3", "ip2", "ip1"})).
-    WillOnce(Return(asapo::ReceiversList{"ip4", "ip5", "ip6"}));
+    WillOnce(Return(expected_receivers_list1)).
+    WillOnce(Return(expected_receivers_list2));
 
 
-    EXPECT_CALL(*mock_request, Send_t(testing::Pointee(asapo::kDisconnectedSocketDescriptor), testing::ElementsAre("ip3",
-                                      "ip2", "ip1"),false))
-    .WillOnce(DoAll(
-                  testing::SetArgPointee<0>(1),
-                  Return(nullptr)
-              )
-             );
+    ExpectSend(mock_request, expected_receivers_list1);
+    ExpectSend(mock_request2, expected_receivers_list2, true, true);
 
-    EXPECT_CALL(*mock_request2, Send_t(testing::Pointee(1), testing::ElementsAre("ip4", "ip5", "ip6"),true))
-    .WillOnce(DoAll(
-                  testing::SetArgPointee<0>(1),
-                  Return(nullptr)
-              )
-             );
 
     auto err1 = pool.AddRequest(std::move(request));
     request.reset(mock_request2);
