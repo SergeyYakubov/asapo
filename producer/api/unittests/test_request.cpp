@@ -31,15 +31,13 @@ using ::testing::HasSubstr;
 
 
 TEST(Request, Constructor) {
-    auto  io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
     asapo::GenericNetworkRequestHeader header;
-    asapo::Request request{io.get(), header, nullptr, [](asapo::GenericNetworkRequestHeader, asapo::Error) {}};
+    asapo::Request request{header, nullptr, [](asapo::GenericNetworkRequestHeader, asapo::Error) {}};
 
-    ASSERT_THAT(dynamic_cast<const asapo::IO*>(request.io__), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::IO*>(request.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(request.log__), Ne(nullptr));
 
 }
-
 
 class RequestTests : public testing::Test {
   public:
@@ -53,11 +51,14 @@ class RequestTests : public testing::Test {
     asapo::GenericNetworkRequestHeader header{expected_op_code, expected_file_id, expected_file_size};
     bool called = false;
     asapo::GenericNetworkRequestHeader callback_header;
-    asapo::Request request{&mock_io, header, expected_file_pointer, [this](asapo::GenericNetworkRequestHeader header, asapo::Error err) {
+    asapo::Request request{header, expected_file_pointer, [this](asapo::GenericNetworkRequestHeader header, asapo::Error err) {
         called = true;
         callback_err = std::move(err);
         callback_header = header;
     }};
+
+    asapo::Request request_nocallback{header, expected_file_pointer, nullptr};
+
     testing::NiceMock<asapo::MockLogger> mock_logger;
 
     asapo::SocketDescriptor sd = asapo::kDisconnectedSocketDescriptor;
@@ -77,8 +78,13 @@ class RequestTests : public testing::Test {
 
     void SetUp() override {
         request.log__ = &mock_logger;
+        request.io__.reset(&mock_io);
+        request_nocallback.log__ = &mock_logger;
+        request_nocallback.io__.reset(&mock_io);
     }
     void TearDown() override {
+        request.io__.release();
+        request_nocallback.io__.release();
     }
 };
 
@@ -86,8 +92,6 @@ ACTION_P(A_WriteSendDataResponse, error_code) {
     ((asapo::SendDataResponse*)arg1)->op_code = asapo::kNetOpcodeSendData;
     ((asapo::SendDataResponse*)arg1)->error_code = error_code;
 }
-
-
 
 MATCHER_P2(M_CheckSendDataRequest, file_id, file_size,
            "Checks if a valid GenericNetworkRequestHeader was Send") {
@@ -108,7 +112,6 @@ void RequestTests::ExpectFailConnect(bool only_once) {
     }
 
 }
-
 
 void RequestTests::ExpectFailSendHeader(bool only_once) {
     int i = 0;
@@ -301,8 +304,6 @@ TEST_F(RequestTests, DoNotCloseWhenRebalanceIfNotConnected) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
 
-
-
 TEST_F(RequestTests, ReconnectWhenRebalance) {
     sd = 1000;
     EXPECT_CALL(mock_io, CloseSocket_t(1000, _));
@@ -374,6 +375,18 @@ TEST_F(RequestTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
+
+TEST_F(RequestTests, SendEmptyCallBack) {
+    ExpectOKConnect(true);
+    ExpectOKSendHeader(true);
+    ExpectOKSendData(true);
+    ExpectOKReceive();
+
+    auto err = request_nocallback.Send(&sd, receivers_list, false);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(called, Eq(false));
+}
 
 TEST_F(RequestTests, SendOK) {
     ExpectOKConnect(true);

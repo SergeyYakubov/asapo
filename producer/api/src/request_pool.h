@@ -16,6 +16,12 @@
 
 using std::chrono::high_resolution_clock;
 
+#ifdef UNIT_TESTS
+#define VIRTUAL virtual
+#endif
+
+
+
 namespace asapo {
 
 class RequestPool {
@@ -28,7 +34,7 @@ class RequestPool {
     };
   public:
     explicit RequestPool(uint8_t n_threads, uint64_t max_pool_volume, ReceiverDiscoveryService* discovery_service);
-    Error AddRequest(std::unique_ptr<Request> request);
+    VIRTUAL Error AddRequest(std::unique_ptr<Request> request);
     ~RequestPool();
     AbstractLogger* log__;
     uint64_t NRequestsInQueue();

@@ -48,6 +48,11 @@ class ReceiverErrorTemplate : public SimpleErrorTemplate {
     }
 };
 
+static inline std::ostream& operator<<(std::ostream& os, const ReceiverErrorTemplate& err) {
+    return os << err.Text();
+}
+
+
 namespace ReceiverErrorTemplates {
 auto const kInvalidOpCode = ReceiverErrorTemplate {
     "Invalid Opcode", ReceiverErrorType::kInvalidOpCode

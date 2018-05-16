@@ -26,7 +26,7 @@ class ReceiverDiscoveryService {
     ~ReceiverDiscoveryService();
     VIRTUAL uint64_t MaxConnections();
     VIRTUAL ReceiversList RotatedUriList(uint64_t nthread);
-    uint64_t UpdateFrequency();
+    VIRTUAL uint64_t UpdateFrequency();
   public:
     std::unique_ptr<HttpClient> httpclient__;
     AbstractLogger* log__;

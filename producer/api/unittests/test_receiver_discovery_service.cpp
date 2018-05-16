@@ -36,7 +36,7 @@ using asapo::ReceiverDiscoveryService;
 std::mutex mutex;
 
 TEST(ReceiversStatus, Constructor) {
-    ReceiverDiscoveryService status{"endpoint/receivers", 1000};
+    ReceiverDiscoveryService status{"endpoint", 1000};
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(status.log__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::HttpClient*>(status.httpclient__.get()), Ne(nullptr));
 }
@@ -49,7 +49,7 @@ class ReceiversStatusTests : public Test {
     NiceMock<MockHttpClient>* mock_http_client;
 
     std::string expected_endpoint{"endpoint/receivers"};
-    ReceiverDiscoveryService status{expected_endpoint, 1000};
+    ReceiverDiscoveryService status{"endpoint", 20};
 
     void SetUp() override {
         mock_http_client = new NiceMock<MockHttpClient>;
@@ -62,6 +62,7 @@ class ReceiversStatusTests : public Test {
 
 TEST_F(ReceiversStatusTests, LogWhenHttpError) {
     EXPECT_CALL(*mock_http_client, Get_t(expected_endpoint, _, _))
+    .Times(1)
     .WillOnce(
         DoAll(SetArgPointee<2>(new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
               Return("")
@@ -69,19 +70,23 @@ TEST_F(ReceiversStatusTests, LogWhenHttpError) {
 
     EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("getting receivers"), HasSubstr(expected_endpoint))));
     status.StartCollectingData();
+
 }
 
 TEST_F(ReceiversStatusTests, LogWhenWhenWrongHttpCode) {
     EXPECT_CALL(*mock_http_client, Get_t(expected_endpoint, _, _))
-    .WillOnce(
+    .Times(testing::AnyNumber())
+    .WillRepeatedly(
         DoAll(SetArgPointee<2>(nullptr),
               SetArgPointee<1>(asapo::HttpCode::BadRequest),
               Return("bad request")
              ));
 
     EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("getting receivers"), HasSubstr(expected_endpoint),
-                                         HasSubstr("bad request"))));
+                                         HasSubstr("bad request")))).Times(testing::AtLeast(1));
     status.StartCollectingData();
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+
 }
 
 TEST_F(ReceiversStatusTests, LogWhenWhenCannotReadResponce) {
@@ -102,6 +107,7 @@ TEST_F(ReceiversStatusTests, GetsReqestedInformation) {
     std::string json = R"({"uri_list":["s1","s2","s3"], "max_connections":8})";
 
     EXPECT_CALL(*mock_http_client, Get_t(expected_endpoint, _, _))
+    .Times(testing::AtLeast(1))
     .WillRepeatedly(
         DoAll(SetArgPointee<2>(nullptr),
               SetArgPointee<1>(asapo::HttpCode::OK),
@@ -128,6 +134,15 @@ TEST_F(ReceiversStatusTests, GetsReqestedInformation) {
 }
 
 TEST_F(ReceiversStatusTests, JoinThreadAtTheEnd) {
+    std::string json = R"({"uri_list":["s1","s2","s3"], "max_connections":8})";
+    EXPECT_CALL(*mock_http_client, Get_t(expected_endpoint, _, _))
+        .Times(testing::AtLeast(1))
+        .WillRepeatedly(
+            DoAll(SetArgPointee<2>(nullptr),
+                  SetArgPointee<1>(asapo::HttpCode::OK),
+                  Return(json)
+            ));
+
     EXPECT_CALL(mock_logger, Debug(HasSubstr("starting receiver discovery")));
     EXPECT_CALL(mock_logger, Debug(HasSubstr("finishing")));
     status.StartCollectingData();
@@ -142,7 +157,6 @@ TEST_F(ReceiversStatusTests, InitialUriList) {
     auto list = status.RotatedUriList(0);
     ASSERT_THAT(list.size(), Eq(0));
 }
-
 
 
 }

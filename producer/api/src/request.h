@@ -17,11 +17,11 @@ namespace asapo {
 
 class Request {
   public:
-    explicit Request(const asapo::IO* io, const GenericNetworkRequestHeader& header, const void* data,
+    explicit Request(const GenericNetworkRequestHeader& header, const void* data,
                      RequestCallback callback);
     VIRTUAL Error Send(SocketDescriptor* sd, const ReceiversList& receivers_list, bool rebalance);
     VIRTUAL ~Request() = default;
-    const IO* io__;
+    std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
     uint64_t GetMemoryRequitements();
   private:

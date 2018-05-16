@@ -8,7 +8,6 @@ RequestPool:: RequestPool(uint8_t n_threads, uint64_t max_pool_volume,
                           ReceiverDiscoveryService* discovery_service): log__{GetDefaultProducerLogger()},
     discovery_service__{discovery_service},
     threads_{n_threads}, max_pool_volume_{max_pool_volume} {
-
     discovery_service->StartCollectingData();
     for(size_t i = 0; i < threads_.size(); i++) {
         log__->Debug("starting thread " + std::to_string(i));
@@ -59,6 +58,9 @@ void RequestPool::UpdateIfNewConnection(ThreadInformation* thread_info) {
 }
 
 bool RequestPool::CheckForRebalance(ThreadInformation* thread_info) {
+    if (thread_info->thread_sd == kDisconnectedSocketDescriptor)
+        return false;
+
     auto now =  high_resolution_clock::now();
     uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>( now -
                           thread_info->last_rebalance).count();

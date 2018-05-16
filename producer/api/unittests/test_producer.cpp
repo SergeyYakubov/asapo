@@ -10,7 +10,7 @@ namespace {
 
 TEST(CreateProducer, PointerIsNotNullptr) {
     asapo::Error err;
-    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create(4, &err);
+    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, &err);
     ASSERT_THAT(dynamic_cast<asapo::ProducerImpl*>(producer.get()), Ne(nullptr));
     ASSERT_THAT(err, Eq(nullptr));
 
@@ -18,11 +18,20 @@ TEST(CreateProducer, PointerIsNotNullptr) {
 
 TEST(CreateProducer, TooManyThreads) {
     asapo::Error err;
-    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create(asapo::kMaxProcessingThreads + 1, &err);
+    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("", asapo::kMaxProcessingThreads + 1, &err);
     ASSERT_THAT(producer, Eq(nullptr));
     ASSERT_THAT(err, Ne(nullptr));
 }
 
+TEST(Producer, SimpleWorkflowWihoutConnection) {
+    asapo::Error err;
+    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("hello", 5, &err);
+    auto err_send = producer->Send(1, nullptr, 1, nullptr);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ASSERT_THAT(producer, Ne(nullptr));
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(err_send, Eq(nullptr));
+}
 
 
 

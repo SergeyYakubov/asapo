@@ -2,12 +2,17 @@
 #include <chrono>
 #include <vector>
 #include <tuple>
+#include <mutex>
+#include <thread>
 
 #include "asapo_producer.h"
 
+
 using std::chrono::high_resolution_clock;
 
-typedef std::tuple<std::string, size_t, uint64_t, uint8_t> ArgumentTuple;
+std::mutex mutex;
+
+typedef std::tuple<std::string, size_t, uint64_t, uint64_t> ArgumentTuple;
 ArgumentTuple ProcessCommandArguments(int argc, char* argv[]) {
     if (argc != 5) {
         std::cout <<
@@ -24,19 +29,25 @@ ArgumentTuple ProcessCommandArguments(int argc, char* argv[]) {
     }
 }
 
+void work(asapo::GenericNetworkRequestHeader header, asapo::Error err) {
+    mutex.lock();
+    if (err) {
+        std::cerr << "File was not successfully send: " << err << std::endl;
+        return;
+    }
+    std::cerr << "File was successfully send." << header.data_id << std::endl;
+    mutex.unlock();
+}
+
 bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations) {
     auto buffer = std::unique_ptr<uint8_t>(new uint8_t[number_of_byte]);
 
     for(uint64_t i = 0; i < iterations; i++) {
 //        std::cerr << "Send file " << i + 1 << "/" << iterations << std::endl;
-
-        auto err = producer->Send(i + 1, buffer.get(), number_of_byte);
-
+        auto err = producer->Send(i + 1, buffer.get(), number_of_byte, &work);
         if (err) {
-            std::cerr << "File was not successfully send: " << err << std::endl;
+            std::cerr << "Cannot send file: " << err << std::endl;
             return false;
-        } else {
-//            std::cerr << "File was successfully send." << std::endl;
         }
     }
 
@@ -47,26 +58,25 @@ int main (int argc, char* argv[]) {
     std::string receiver_address;
     size_t number_of_kbytes;
     uint64_t iterations;
-    uint8_t nthreads;
+    uint64_t nthreads;
     std::tie(receiver_address, number_of_kbytes, iterations, nthreads) = ProcessCommandArguments(argc, argv);
 
     std::cout << "receiver_address: " << receiver_address << std::endl
               << "Package size: " << number_of_kbytes << "k" << std::endl
               << "iterations: " << iterations << std::endl
+              << "nthreads: " << nthreads << std::endl
               << std::endl;
 
     asapo::Error err;
-    auto producer = asapo::Producer::Create(nthreads, &err);
+    auto producer = asapo::Producer::Create(receiver_address, nthreads, &err);
+    producer->EnableLocalLog(true);
+    producer->SetLogLevel(asapo::LogLevel::Debug);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         return EXIT_FAILURE;
     }
-    err = producer->ConnectToReceiver(receiver_address);
-    if(err) {
-        std::cerr << "Failed to connect to receiver. ProducerError: " << err << std::endl;
-        return EXIT_FAILURE;
-    }
-    std::cout << "Successfully connected" << std::endl;
 
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     if(!SendDummyData(producer.get(), number_of_kbytes * 1024, iterations)) {

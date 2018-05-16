@@ -1,12 +1,13 @@
 #include "producer/producer_error.h"
 #include "request.h"
 #include "producer_logger.h"
+#include "io/io_factory.h"
 
 namespace asapo {
 
-Request::Request(const asapo::IO* io, const GenericNetworkRequestHeader& header, const void* data,
+Request::Request(const GenericNetworkRequestHeader& header, const void* data,
                  RequestCallback callback):
-    io__{io}, log__{GetDefaultProducerLogger()}, header_(header), data_{data}, callback_{std::move(callback)} {
+    io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()}, header_(header), data_{data}, callback_{std::move(callback)} {
 
 }
 
@@ -94,7 +95,9 @@ Error Request::Send(SocketDescriptor* sd, const ReceiversList& receivers_list, b
             continue;
         }
 
-        callback_(header_, std::move(err));
+        if (callback_) {
+            callback_(header_, std::move(err));
+        }
         return nullptr;
 
     }

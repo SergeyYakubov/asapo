@@ -10,7 +10,7 @@ namespace  asapo {
 
 ReceiverDiscoveryService::ReceiverDiscoveryService(std::string endpoint, uint64_t update_frequency_ms): httpclient__{DefaultHttpClient()},
     log__{GetDefaultProducerLogger()},
-    endpoint_{std::move(endpoint)}, update_frequency_ms_{update_frequency_ms} {
+    endpoint_{std::move(endpoint) + "/receivers"}, update_frequency_ms_{update_frequency_ms} {
 
 }
 
@@ -34,11 +34,11 @@ Error ReceiverDiscoveryService::ParseResponse(const std::string& responce, Recei
 Error ReceiverDiscoveryService::UpdateFromEndpoint(ReceiversList* list, uint64_t* max_connections) {
     Error err;
     HttpCode code;
+
     auto responce = httpclient__->Get(endpoint_, &code, &err);
     if (err != nullptr) {
         return err;
     }
-
     if (code != HttpCode::OK) {
         return TextError(responce);
     }
@@ -56,13 +56,13 @@ void ReceiverDiscoveryService::ThreadHandler() {
         auto err = UpdateFromEndpoint(&uris, &max_connections);
         if (err != nullptr) {
             log__->Error("getting receivers from " + endpoint_ + " - " + err->Explain());
+            lock.lock();
             continue;
         }
         lock.lock();
         max_connections_ = max_connections;
         uri_list_ = uris;
     } while (!condition_.wait_for(lock, std::chrono::milliseconds(update_frequency_ms_), [this] {return (quit_);})) ;
-
 }
 
 ReceiverDiscoveryService::~ReceiverDiscoveryService() {

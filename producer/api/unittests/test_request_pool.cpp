@@ -41,13 +41,15 @@ class MockDiscoveryService : public asapo::ReceiverDiscoveryService {
     MOCK_METHOD0(StartCollectingData, void());
     MOCK_METHOD0(MaxConnections, uint64_t());
     MOCK_METHOD1(RotatedUriList, ReceiversList(uint64_t));
+    uint64_t UpdateFrequency() override {
+        return 0;
+    }
 };
 
-std::unique_ptr<asapo::IO>   io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
 
 class MockRequest : public Request {
   public:
-    MockRequest() : Request(io.get(), asapo::GenericNetworkRequestHeader{}, nullptr, nullptr) {};
+    MockRequest() : Request(asapo::GenericNetworkRequestHeader{}, nullptr, nullptr) {};
     Error Send(asapo::SocketDescriptor* sd, const ReceiversList& receivers_list, bool rebalance) override {
         return Error {Send_t(sd, receivers_list, rebalance)};
     }
@@ -99,7 +101,7 @@ TEST(RequestPool, Constructor) {
 TEST(RequestPool, AddRequestFailsDueToSize) {
     asapo::ReceiverDiscoveryService discovery{expected_endpoint, 1000};
     RequestPool pool{4, 0, &discovery};
-    std::unique_ptr<Request> request{new Request{io.get(), GenericNetworkRequestHeader{}, nullptr, nullptr}};
+    std::unique_ptr<Request> request{new Request{GenericNetworkRequestHeader{}, nullptr, nullptr}};
 
     auto err = pool.AddRequest(std::move(request));
 
@@ -151,7 +153,7 @@ TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
     request.reset(mock_request2);
     auto err2 = pool.AddRequest(std::move(request));
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
     ASSERT_THAT(err1, Eq(nullptr));
     ASSERT_THAT(err2, Eq(nullptr));
 }

@@ -53,6 +53,11 @@ class ProducerErrorTemplate : public SimpleErrorTemplate {
     }
 };
 
+static inline std::ostream& operator<<(std::ostream& os, const ProducerErrorTemplate& err) {
+    return os << err.Text();
+}
+
+
 namespace ProducerErrorTemplates {
 auto const kAlreadyConnected = ProducerErrorTemplate {
     "Already connected", ProducerErrorType::kAlreadyConnected

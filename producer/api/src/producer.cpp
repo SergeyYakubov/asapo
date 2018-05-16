@@ -1,7 +1,8 @@
 #include "producer/producer.h"
 #include "producer_impl.h"
 
-std::unique_ptr<asapo::Producer> asapo::Producer::Create(uint8_t n_processing_threads, Error* err) {
+std::unique_ptr<asapo::Producer> asapo::Producer::Create(const std::string& endpoint, uint8_t n_processing_threads,
+        Error* err) {
     if (n_processing_threads > kMaxProcessingThreads) {
         *err = TextError("Too many processing threads: " + std::to_string(n_processing_threads));
         return nullptr;
@@ -9,7 +10,7 @@ std::unique_ptr<asapo::Producer> asapo::Producer::Create(uint8_t n_processing_th
 
     try {
         *err = nullptr;
-        return std::unique_ptr<asapo::Producer>(new ProducerImpl(n_processing_threads));
+        return std::unique_ptr<asapo::Producer>(new ProducerImpl(endpoint, n_processing_threads));
     } catch (const std::exception& ex) {
         *err = TextError(ex.what());
         return nullptr;
