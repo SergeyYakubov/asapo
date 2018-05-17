@@ -20,7 +20,7 @@ class ProducerImpl : public Producer {
   public:
     static const size_t kMaxChunkSize;
     static const size_t kMaxPoolVolume;
-    static const uint64_t kDiscoveryServiceUpdateFrequencyMs;
+    static const size_t kDiscoveryServiceUpdateFrequencyMs;
 
     explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads);
     ProducerImpl(const ProducerImpl&) = delete;

@@ -142,7 +142,7 @@ bool RequestHandlerTcp::CanCreateNewConnections() {
 }
 
 bool RequestHandlerTcp::ReadyProcessRequest() {
-    IsConnected() || CanCreateNewConnections();
+    return IsConnected() || CanCreateNewConnections();
 }
 
 void RequestHandlerTcp::PrepareProcessingRequestLocked() {

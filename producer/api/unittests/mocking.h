@@ -40,13 +40,20 @@ class MockRequestPull : public RequestPool {
 class MockRequestHandler : public RequestHandler {
  public:
 
-  Error ProcessRequestUnlocked(const Request* request) {
+  Error ProcessRequestUnlocked(const Request* request) override {
       return Error{ProcessRequestUnlocked_t(request)};
   }
-
-  MOCK_METHOD0(PrepareProcessingRequestLocked, void());
+  void TearDownProcessingRequestLocked(const Error& error_from_process) override{
+      if (error_from_process) {
+        TearDownProcessingRequestLocked_t(error_from_process.get());
+      }
+      else {
+          TearDownProcessingRequestLocked_t(nullptr);
+      }
+  }
+    MOCK_METHOD0(PrepareProcessingRequestLocked, void());
   MOCK_METHOD0(ReadyProcessRequest, bool());
-  MOCK_METHOD1(TearDownProcessingRequestLocked, void(const Error& error_from_process));
+  MOCK_METHOD1(TearDownProcessingRequestLocked_t, void(ErrorInterface* error_from_process));
   MOCK_METHOD1(ProcessRequestUnlocked_t, ErrorInterface*(const Request*));
 };
 

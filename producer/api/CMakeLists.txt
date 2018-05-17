@@ -24,7 +24,7 @@ target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
 set(TEST_SOURCE_FILES
         unittests/test_producer_impl.cpp
         unittests/test_producer.cpp
-#        unittests/test_request_handler_tcp.cpp
+        unittests/test_request_handler_tcp.cpp
         unittests/test_request_pool.cpp
         unittests/test_receiver_discovery_service.cpp
         unittests/test_request_handler_factory.cpp
