@@ -136,12 +136,12 @@ TEST_F(ReceiversStatusTests, GetsReqestedInformation) {
 TEST_F(ReceiversStatusTests, JoinThreadAtTheEnd) {
     std::string json = R"({"uri_list":["s1","s2","s3"], "max_connections":8})";
     EXPECT_CALL(*mock_http_client, Get_t(expected_endpoint, _, _))
-        .Times(testing::AtLeast(1))
-        .WillRepeatedly(
-            DoAll(SetArgPointee<2>(nullptr),
-                  SetArgPointee<1>(asapo::HttpCode::OK),
-                  Return(json)
-            ));
+    .Times(testing::AtLeast(1))
+    .WillRepeatedly(
+        DoAll(SetArgPointee<2>(nullptr),
+              SetArgPointee<1>(asapo::HttpCode::OK),
+              Return(json)
+             ));
 
     EXPECT_CALL(mock_logger, Debug(HasSubstr("starting receiver discovery")));
     EXPECT_CALL(mock_logger, Debug(HasSubstr("finishing")));

@@ -8,8 +8,6 @@
 #include "../src/request_handler_tcp.h"
 #include "../src/request_pool.h"
 #include "../src/receiver_discovery_service.h"
-#include "../src/request_handler_factory.h"
-#include "mocking.h"
 
 #include "io/io_factory.h"
 
@@ -29,54 +27,66 @@ using testing::NiceMock;
 using ::testing::InSequence;
 using ::testing::HasSubstr;
 
-using asapo::RequestHandler;
+using asapo::ReceiversList;
+using asapo::RequestHandlerTcp;
 using asapo::RequestPool;
 using asapo::Error;
-using asapo::ErrorInterface;
-using asapo::Request;
 using asapo::GenericNetworkRequestHeader;
 
+const std::string expected_endpoint{"endpoint"};
 
-MockRequestHandler mock_request_handler;
 
 
-class MockRequestHandlerFactory : public asapo::RequestHandlerFactory {
- public:
-  MockRequestHandlerFactory():RequestHandlerFactory(asapo::RequestHandlerType::kTcp, nullptr){};
-  std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id) override {
-      return std::unique_ptr<RequestHandler>{&mock_request_handler};
-  }
+class MockRequest : public RequestHandlerTcp {
+  public:
+    MockRequest() : RequestHandlerTcp(asapo::GenericNetworkRequestHeader{}, nullptr, nullptr) {};
+    Error Handle(asapo::SocketDescriptor* sd, const ReceiversList &receivers_list, bool rebalance) override {
+        return Error {Send_t(sd, receivers_list, rebalance)};
+    }
+
+    MOCK_METHOD3(Send_t, asapo::SimpleError * (asapo::SocketDescriptor*, const ReceiversList&, bool));
 };
-
-
 
 class RequestPoolTests : public testing::Test {
   public:
     NiceMock<asapo::MockLogger> mock_logger;
-    MockRequestHandlerFactory request_handler_factory;
     const uint8_t nthreads = 4;
     const uint64_t max_size = 1024 * 1024 * 1024;
-    asapo::RequestPool pool {nthreads, max_size, &request_handler_factory};
-    std::unique_ptr<Request> request;
-    NiceMock<MockRequestHandler>* mock_request_handler = new testing::NiceMock<MockRequestHandler>;
+    NiceMock<MockDiscoveryService> mock_discovery;
+    asapo::RequestPool pool {nthreads, max_size, &mock_discovery};
+    std::unique_ptr<RequestHandlerTcp> request;
+    NiceMock<MockRequest>* mock_request = new testing::NiceMock<MockRequest>;
+    ReceiversList expected_receivers_list1{"ip1", "ip2", "ip3"};
+    ReceiversList expected_receivers_list2{"ip4", "ip5", "ip6"};
     void SetUp() override {
         pool.log__ = &mock_logger;
+        request.reset(mock_request);
+        ON_CALL(mock_discovery, MaxConnections()).WillByDefault(Return(100));
+        ON_CALL(mock_discovery, RotatedUriList(_)).WillByDefault(Return(expected_receivers_list1));
+
     }
     void TearDown() override {
     }
 };
 
+void ExpectSend(MockRequest* request, const ReceiversList& list, bool connected = false, bool rebalance = false) {
+    auto descriptor = connected ? 1 : asapo::kDisconnectedSocketDescriptor;
+    EXPECT_CALL(*request, Send_t(testing::Pointee(descriptor), list, rebalance))
+    .WillOnce(DoAll(
+                  testing::SetArgPointee<0>(1),
+                  Return(nullptr)
+              )
+             );
+}
 
 TEST(RequestPool, Constructor) {
-    NiceMock<MockDiscoveryService> ds;
-    NiceMock<asapo::RequestHandlerFactory> request_handler_factory{asapo::RequestHandlerType::kTcp,&ds};
+    NiceMock<MockDiscoveryService> mock_discovery;
+    EXPECT_CALL(mock_discovery, StartCollectingData());
 
-    asapo::RequestPool pool{4, 4, &request_handler_factory};
+    asapo::RequestPool pool{4, 4, &mock_discovery};
 
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(pool.log__), Ne(nullptr));
 }
-
-/*
 
 TEST(RequestPool, AddRequestFailsDueToSize) {
     asapo::ReceiverDiscoveryService discovery{expected_endpoint, 1000};
@@ -123,7 +133,7 @@ TEST_F(RequestPoolTests, AddRequestCallsSendTwice) {
 TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
     EXPECT_CALL(mock_discovery, MaxConnections()).WillRepeatedly(Return(1));
 
-    MockRequestHandler* mock_request2 = new MockRequestHandler;
+    MockRequest* mock_request2 = new MockRequest;
 
     ExpectSend(mock_request, expected_receivers_list1);
     ExpectSend(mock_request2, expected_receivers_list1, true);
@@ -164,7 +174,7 @@ TEST_F(RequestPoolTests, FinishProcessingThreads) {
 TEST_F(RequestPoolTests, Rebalance) {
     EXPECT_CALL(mock_discovery, MaxConnections()).WillRepeatedly(Return(1));
 
-    MockRequestHandler* mock_request2 = new MockRequestHandler;
+    MockRequest* mock_request2 = new MockRequest;
 
 
     EXPECT_CALL(mock_discovery, RotatedUriList(_)).Times(2).
@@ -189,6 +199,6 @@ TEST_F(RequestPoolTests, Rebalance) {
 
 }
 
-*/
+
 
 }

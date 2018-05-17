@@ -3,8 +3,11 @@ set(SOURCE_FILES
         src/producer.cpp
         src/producer_impl.cpp
         src/producer_logger.cpp
-        src/request.cpp
-        src/request_pool.cpp src/receiver_discovery_service.cpp src/receiver_discovery_service.h)
+        src/request_handler_tcp.cpp
+        src/request_pool.cpp src/receiver_discovery_service.cpp
+        src/request_handler.cpp
+        src/request_handler_factory.cpp
+        src/request.cpp src/request.h unittests/mocking.h)
 
 
 ################################
@@ -21,9 +24,11 @@ target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
 set(TEST_SOURCE_FILES
         unittests/test_producer_impl.cpp
         unittests/test_producer.cpp
-        unittests/test_request.cpp
+#        unittests/test_request_handler_tcp.cpp
         unittests/test_request_pool.cpp
         unittests/test_receiver_discovery_service.cpp
+        unittests/test_request_handler_factory.cpp
+
         )
 set(TEST_LIBRARIES "${TARGET_NAME}")
 

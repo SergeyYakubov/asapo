@@ -54,9 +54,9 @@ TEST(Connection, Constructor) {
 
 }
 
-class MockRequest: public Request {
+class MockRequestHandler: public Request {
   public:
-    MockRequest(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd):
+    MockRequestHandler(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd):
         Request(request_header, socket_fd) {};
     Error Handle(std::unique_ptr<Statistics>* statistics) override {
         return Error{Handle_t()};
@@ -139,7 +139,7 @@ ACTION_P(SaveArg1ToGenericNetworkResponse, value) {
 TEST_F(ConnectionTests, CallsHandleRequest) {
 
     GenericNetworkRequestHeader header;
-    auto request = new MockRequest{header, 1};
+    auto request = new MockRequestHandler{header, 1};
 
     EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _));
 
@@ -172,7 +172,7 @@ TEST_F(ConnectionTests, CallsHandleRequest) {
 TEST_F(ConnectionTests, SendsErrorToProducer) {
 
     GenericNetworkRequestHeader header;
-    auto request = new MockRequest{header, 1};
+    auto request = new MockRequestHandler{header, 1};
 
     EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _));
 
@@ -207,10 +207,10 @@ void MockExitCycle(const MockIO& mock_io, MockStatistics& mock_statictics) {
     );
 }
 
-MockRequest* MockWaitRequest(const MockRequestFactory& mock_factory) {
+MockRequestHandler* MockWaitRequest(const MockRequestFactory& mock_factory) {
     GenericNetworkRequestHeader header;
     header.data_size = 1;
-    auto request = new MockRequest{header, 1};
+    auto request = new MockRequestHandler{header, 1};
     EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _)).WillOnce(
         Return(request)
     );

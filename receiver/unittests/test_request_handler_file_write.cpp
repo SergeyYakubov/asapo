@@ -46,9 +46,9 @@ TEST(FileWrite, Constructor) {
 }
 
 
-class MockRequest: public Request {
+class MockRequestHandler: public Request {
   public:
-    MockRequest(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd):
+    MockRequestHandler(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd):
         Request(request_header, socket_fd) {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
@@ -60,7 +60,7 @@ class FileWriteHandlerTests : public Test {
   public:
     RequestHandlerFileWrite handler;
     NiceMock<MockIO> mock_io;
-    std::unique_ptr<MockRequest> mock_request;
+    std::unique_ptr<MockRequestHandler> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_file_name = "2.bin";
     uint64_t expected_file_size = 10;
@@ -68,7 +68,7 @@ class FileWriteHandlerTests : public Test {
     void SetUp() override {
         GenericNetworkRequestHeader request_header;
         request_header.data_id = 2;
-        mock_request.reset(new MockRequest{request_header, 1});
+        mock_request.reset(new MockRequestHandler{request_header, 1});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }

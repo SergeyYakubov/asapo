@@ -6,7 +6,9 @@
 #include "producer/producer.h"
 #include "../src/producer_impl.h"
 #include "../src/request_pool.h"
-#include "../src/request.h"
+#include "../src/request_handler_tcp.h"
+
+#include "mocking.h"
 
 namespace {
 
@@ -32,24 +34,12 @@ TEST(ProducerImpl, Constructor) {
     ASSERT_THAT(dynamic_cast<asapo::RequestPool*>(producer.request_pool__.get()), Ne(nullptr));
 }
 
-asapo::ReceiverDiscoveryService discovery{"", 1};
-
-class MockRequestPull : public RequestPool {
-  public:
-    MockRequestPull() : RequestPool{1, 1, &discovery} {};
-    asapo::Error AddRequest(std::unique_ptr<asapo::Request> request) override {
-        if (request == nullptr) {
-            return asapo::Error{AddRequest_t(nullptr)};
-        }
-        return asapo::Error{AddRequest_t(request.get())};
-    }
-    MOCK_METHOD1(AddRequest_t, asapo::ErrorInterface * (Request*));
-};
-
 class ProducerImplTests : public testing::Test {
   public:
+    testing::NiceMock<MockDiscoveryService> service;
+    asapo::RequestHandlerFactory factory{asapo::RequestHandlerType::kTcp,&service};
     testing::NiceMock<asapo::MockLogger> mock_logger;
-    testing::NiceMock<MockRequestPull> mock_pull;
+    testing::NiceMock<MockRequestPull> mock_pull{&factory};
     asapo::ProducerImpl producer{"", 1};
     void SetUp() override {
         producer.log__ = &mock_logger;
@@ -82,7 +72,8 @@ MATCHER_P(M_CheckSendDataRequest, request_size,
 TEST_F(ProducerImplTests, OKSendingRequest) {
     uint64_t expected_size = 100;
     Request request{asapo::GenericNetworkRequestHeader{}, nullptr, nullptr};
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(expected_size + sizeof(Request)))).WillOnce(Return(nullptr));
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(expected_size + sizeof(Request)))).WillOnce(Return(
+                nullptr));
 
     auto err = producer.Send(1, nullptr, expected_size, nullptr);
 

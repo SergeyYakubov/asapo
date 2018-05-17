@@ -5,10 +5,9 @@
 namespace asapo {
 
 RequestPool:: RequestPool(uint8_t n_threads, uint64_t max_pool_volume,
-                          ReceiverDiscoveryService* discovery_service): log__{GetDefaultProducerLogger()},
-    discovery_service__{discovery_service},
+                          RequestHandlerFactory* request_handler_factory): log__{GetDefaultProducerLogger()},
+                                                                        request_handler_factory__{request_handler_factory},
     threads_{n_threads}, max_pool_volume_{max_pool_volume} {
-    discovery_service->StartCollectingData();
     for(size_t i = 0; i < threads_.size(); i++) {
         log__->Debug("starting thread " + std::to_string(i));
         threads_[i] = std::thread(
@@ -35,46 +34,8 @@ Error RequestPool::AddRequest(std::unique_ptr<Request> request) {
     return nullptr;
 }
 
-bool RequestPool::IsConnected(SocketDescriptor thread_sd) {
-    return thread_sd != kDisconnectedSocketDescriptor;
-}
-
-bool RequestPool::CanCreateNewConnections() {
-    return ncurrent_connections_ < discovery_service__->MaxConnections();
-}
-
-bool RequestPool::CanProcessRequest(SocketDescriptor thread_sd) {
-    return (request_queue_.size() && (IsConnected(thread_sd) || CanCreateNewConnections()));
-}
-
-
-void RequestPool::UpdateIfNewConnection(ThreadInformation* thread_info) {
-    if (thread_info->thread_sd != kDisconnectedSocketDescriptor)
-        return;
-
-    thread_info->thread_receivers = discovery_service__->RotatedUriList(thread_info->id);
-    thread_info->last_rebalance = high_resolution_clock::now();
-    ncurrent_connections_++;
-}
-
-bool RequestPool::CheckForRebalance(ThreadInformation* thread_info) {
-    if (thread_info->thread_sd == kDisconnectedSocketDescriptor)
-        return false;
-
-    auto now =  high_resolution_clock::now();
-    uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>( now -
-                          thread_info->last_rebalance).count();
-    bool rebalance = false;
-    if (elapsed_ms > discovery_service__->UpdateFrequency()) {
-        auto thread_receivers_new = discovery_service__->RotatedUriList(thread_info->id);
-        thread_info->last_rebalance = now;
-        if (thread_receivers_new != thread_info->thread_receivers) {
-            thread_info->thread_receivers = thread_receivers_new;
-            rebalance = true;
-        }
-    }
-    return rebalance;
-
+bool RequestPool::CanProcessRequest(const std::unique_ptr<RequestHandler>& request_handler) {
+    return request_queue_.size() && request_handler->ReadyProcessRequest();
 }
 
 std::unique_ptr<Request> RequestPool::GetRequestFromQueue() {
@@ -83,28 +44,19 @@ std::unique_ptr<Request> RequestPool::GetRequestFromQueue() {
     return request;
 }
 
-Error RequestPool::SendDataViaRequest(const std::unique_ptr<Request>& request, ThreadInformation* thread_info) {
-    //unlock now that we're ready to do async operations
-    thread_info->lock.unlock();
-
-    bool rebalance = CheckForRebalance(thread_info);
-    auto err = request->Send(&thread_info->thread_sd, thread_info->thread_receivers, rebalance);
-
-    // we should lock again for the next wait since we did unlock
-    thread_info->lock.lock();
-    return err;
-}
-
 void RequestPool::PutRequestBackToQueue(std::unique_ptr<Request> request) {
     request_queue_.emplace_front(std::move(request));
-    ncurrent_connections_--;
 }
 
-void RequestPool::ProcessRequest(ThreadInformation* thread_info) {
-    UpdateIfNewConnection((thread_info));
+void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler,ThreadInformation* thread_info) {
+
+    request_handler->PrepareProcessingRequestLocked();
 
     auto request = GetRequestFromQueue();
-    auto err = SendDataViaRequest(request, thread_info);
+    thread_info->lock.unlock();
+    auto err = request_handler->ProcessRequestUnlocked(request.get());
+    thread_info->lock.lock();
+    request_handler->TearDownProcessingRequestLocked(err);
     if (err) {
         PutRequestBackToQueue(std::move(request));
     }
@@ -112,17 +64,15 @@ void RequestPool::ProcessRequest(ThreadInformation* thread_info) {
 
 void RequestPool::ThreadHandler(uint64_t id) {
     ThreadInformation thread_info;
-    thread_info.id = id;
     thread_info.lock =  std::unique_lock<std::mutex>(mutex_);
-    thread_info.thread_sd = kDisconnectedSocketDescriptor;
-    high_resolution_clock::time_point last_rebalance;
+    auto request_handler = request_handler_factory__->NewRequestHandler(id);
     do {
-        condition_.wait(thread_info.lock, [this, &thread_info] {
-            return (CanProcessRequest(thread_info.thread_sd) || quit_);
+        condition_.wait(thread_info.lock, [this,&request_handler] {
+            return (CanProcessRequest(request_handler) || quit_);
         });
         //after wait, we own the lock
         if (!quit_) {
-            ProcessRequest(&thread_info);
+            ProcessRequest(request_handler,&thread_info);
         };
     } while (!quit_);
 }

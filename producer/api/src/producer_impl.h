@@ -7,14 +7,16 @@
 #include "producer/producer.h"
 #include "logger/logger.h"
 #include "request_pool.h"
+#include "request_handler_factory.h"
 #include "receiver_discovery_service.h"
 
 namespace asapo {
 
 class ProducerImpl : public Producer {
- private:
-  // important to create it before request_pool__
-  std::unique_ptr<ReceiverDiscoveryService> discovery_service_;
+  private:
+    // important to create it before request_pool__
+    std::unique_ptr<ReceiverDiscoveryService> discovery_service_;
+    std::unique_ptr<RequestHandlerFactory> request_handler_factory_;
   public:
     static const size_t kMaxChunkSize;
     static const size_t kMaxPoolVolume;
