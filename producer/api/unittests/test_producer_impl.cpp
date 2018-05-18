@@ -63,16 +63,10 @@ TEST_F(ProducerImplTests, ErrorIfSizeTooLarge) {
 }
 
 
-MATCHER_P(M_CheckSendDataRequest, request_size,
-          "Checks if a valid request was send (check size only)") {
-    return ((Request*)arg)->GetMemoryRequitements() == request_size;
-}
-
-
 TEST_F(ProducerImplTests, OKSendingRequest) {
     uint64_t expected_size = 100;
     Request request{asapo::GenericNetworkRequestHeader{}, nullptr, nullptr};
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(expected_size + sizeof(Request)))).WillOnce(Return(
+    EXPECT_CALL(mock_pull, AddRequest_t(_)).WillOnce(Return(
                 nullptr));
 
     auto err = producer.Send(1, nullptr, expected_size, nullptr);

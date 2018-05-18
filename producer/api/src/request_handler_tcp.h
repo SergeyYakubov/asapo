@@ -34,10 +34,10 @@ class RequestHandlerTcp: public RequestHandler {
     Error ReceiveResponse(const std::string& receiver_address);
     Error TrySendToReceiver(const Request* request,const std::string& receiver_address);
     SocketDescriptor sd_{kDisconnectedSocketDescriptor};
-    void UpdateIfNewConnection();
+    void UpdateReceiversUriIfNewConnection();
     bool CheckForRebalance();
     ReceiversList receivers_list_;
-    high_resolution_clock::time_point last_rebalance_;
+    high_resolution_clock::time_point last_receivers_uri_update_;
     uint64_t ncurrent_connections_{0};
     bool IsConnected();
     bool CanCreateNewConnections();

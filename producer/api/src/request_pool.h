@@ -26,7 +26,7 @@ class RequestPool {
         std::unique_lock<std::mutex> lock;
     };
   public:
-    explicit RequestPool(uint8_t n_threads, uint64_t max_pool_volume, RequestHandlerFactory* request_handler_factory);
+    explicit RequestPool(uint8_t n_threads, RequestHandlerFactory* request_handler_factory);
     VIRTUAL Error AddRequest(std::unique_ptr<Request> request);
     ~RequestPool();
     AbstractLogger* log__;
@@ -39,9 +39,6 @@ class RequestPool {
     std::condition_variable condition_;
     std::mutex mutex_;
     std::deque<std::unique_ptr<Request>> request_queue_;
-    uint64_t max_pool_volume_;
-    uint64_t current_pool_volume_{0};
-    bool RequestWouldFit(const std::unique_ptr<Request>& request);
     bool CanProcessRequest(const std::unique_ptr<RequestHandler>& request_handler);
     void ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler,ThreadInformation* thread_info);
     std::unique_ptr<Request> GetRequestFromQueue();

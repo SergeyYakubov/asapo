@@ -10,10 +10,6 @@ struct Request {
   GenericNetworkRequestHeader header;
   const void* data;
   RequestCallback callback;
-  uint64_t GetMemoryRequitements() {
-      return header.data_size + sizeof(Request);
-  }
-
 };
 
 }

@@ -5,9 +5,8 @@ set(SOURCE_FILES
         src/producer_logger.cpp
         src/request_handler_tcp.cpp
         src/request_pool.cpp src/receiver_discovery_service.cpp
-        src/request_handler.cpp
         src/request_handler_factory.cpp
-        src/request.cpp src/request.h unittests/mocking.h)
+        src/request.cpp)
 
 
 ################################

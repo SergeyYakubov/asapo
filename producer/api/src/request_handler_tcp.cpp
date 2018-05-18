@@ -75,12 +75,12 @@ Error RequestHandlerTcp::TrySendToReceiver(const Request* request,const std::str
 }
 
 
-void RequestHandlerTcp::UpdateIfNewConnection() {
+void RequestHandlerTcp::UpdateReceiversUriIfNewConnection() {
     if (sd_ != kDisconnectedSocketDescriptor)
         return;
 
     receivers_list_ = discovery_service__->RotatedUriList(thread_id_);
-    last_rebalance_ = high_resolution_clock::now();
+    last_receivers_uri_update_ = high_resolution_clock::now();
     ncurrent_connections_++;
 }
 
@@ -90,11 +90,11 @@ bool RequestHandlerTcp::CheckForRebalance() {
 
     auto now =  high_resolution_clock::now();
     uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>( now -
-        last_rebalance_).count();
+        last_receivers_uri_update_).count();
     bool rebalance = false;
     if (elapsed_ms > discovery_service__->UpdateFrequency()) {
         auto thread_receivers_new = discovery_service__->RotatedUriList(thread_id_);
-        last_rebalance_ = now;
+        last_receivers_uri_update_ = now;
         if (thread_receivers_new != receivers_list_) {
             receivers_list_ = thread_receivers_new;
             rebalance = true;
@@ -146,7 +146,7 @@ bool RequestHandlerTcp::ReadyProcessRequest() {
 }
 
 void RequestHandlerTcp::PrepareProcessingRequestLocked() {
-    UpdateIfNewConnection();
+    UpdateReceiversUriIfNewConnection();
 }
 
 void RequestHandlerTcp::TearDownProcessingRequestLocked(const Error &error_from_process) {

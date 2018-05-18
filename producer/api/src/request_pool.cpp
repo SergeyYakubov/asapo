@@ -4,10 +4,10 @@
 
 namespace asapo {
 
-RequestPool:: RequestPool(uint8_t n_threads, uint64_t max_pool_volume,
+RequestPool:: RequestPool(uint8_t n_threads,
                           RequestHandlerFactory* request_handler_factory): log__{GetDefaultProducerLogger()},
                                                                         request_handler_factory__{request_handler_factory},
-    threads_{n_threads}, max_pool_volume_{max_pool_volume} {
+    threads_{n_threads} {
     for(size_t i = 0; i < threads_.size(); i++) {
         log__->Debug("starting thread " + std::to_string(i));
         threads_[i] = std::thread(
@@ -16,15 +16,7 @@ RequestPool:: RequestPool(uint8_t n_threads, uint64_t max_pool_volume,
 
 }
 
-bool RequestPool::RequestWouldFit(const std::unique_ptr<Request>& request) {
-    return request->GetMemoryRequitements() + current_pool_volume_ < max_pool_volume_;
-}
-
 Error RequestPool::AddRequest(std::unique_ptr<Request> request) {
-    if (!RequestWouldFit(request)) {
-        return ProducerErrorTemplates::kRequestPoolIsFull.Generate();
-    }
-
     std::unique_lock<std::mutex> lock(mutex_);
     request_queue_.emplace_back(std::move(request));
     lock.unlock();

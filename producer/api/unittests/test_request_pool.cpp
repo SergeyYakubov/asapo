@@ -62,8 +62,7 @@ class RequestPoolTests : public testing::Test {
     NiceMock<asapo::MockLogger> mock_logger;
     MockRequestHandlerFactory request_handler_factory{mock_request_handler};
     const uint8_t nthreads = 1;
-    const uint64_t max_size = 1024 * 1024 * 1024;
-    asapo::RequestPool pool {nthreads, max_size, &request_handler_factory};
+    asapo::RequestPool pool {nthreads, &request_handler_factory};
     std::unique_ptr<Request> request{new Request{GenericNetworkRequestHeader{}, nullptr, nullptr}};
     void SetUp() override {
         pool.log__ = &mock_logger;
@@ -77,24 +76,9 @@ TEST(RequestPool, Constructor) {
     NiceMock<MockDiscoveryService> ds;
     NiceMock<asapo::RequestHandlerFactory> request_handler_factory{asapo::RequestHandlerType::kTcp,&ds};
 
-    asapo::RequestPool pool{4, 4, &request_handler_factory};
+    asapo::RequestPool pool{4, &request_handler_factory};
 
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(pool.log__), Ne(nullptr));
-}
-
-
-
-TEST(RequestPool, AddRequestFailsDueToSize) {
-    asapo::ReceiverDiscoveryService discovery{asapo::expected_endpoint, 1000};
-    NiceMock<asapo::RequestHandlerFactory> request_handler_factory{asapo::RequestHandlerType::kTcp,&discovery};
-
-    RequestPool pool{4, 0, &request_handler_factory};
-    std::unique_ptr<Request> request{new Request{GenericNetworkRequestHeader{}, nullptr, nullptr}};
-
-    auto err = pool.AddRequest(std::move(request));
-
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
-
 }
 
 TEST_F(RequestPoolTests, AddRequestDoesGoFurtherWhenNotReady) {
