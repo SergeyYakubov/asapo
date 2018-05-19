@@ -61,7 +61,7 @@ class MockReqestHandler : public asapo::RequestHandler {
 };
 
 
-class RequestHandlerTcpTests : public Test {
+class RequestTests : public Test {
   public:
     GenericNetworkRequestHeader generic_request_header;
     asapo::SocketDescriptor socket_fd_{1};
