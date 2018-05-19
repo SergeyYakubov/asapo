@@ -68,11 +68,12 @@ class RequestHandlerTcpTests : public testing::Test {
     uint64_t n_connections{0};
     asapo::RequestHandlerTcp request_handler{&mock_discovery_service, expected_thread_id, &n_connections};
 
-    asapo::SocketDescriptor sd = asapo::kDisconnectedSocketDescriptor;
     std::string expected_address1 = {"127.0.0.1:9090"};
     std::string expected_address2 = {"127.0.0.1:9091"};
     asapo::ReceiversList receivers_list{expected_address1, expected_address2};
-    asapo::ReceiversList receivers_list_single{expected_address1};
+    asapo::ReceiversList receivers_list2{expected_address2, expected_address1};
+
+  asapo::ReceiversList receivers_list_single{expected_address1};
 
     std::vector<asapo::SocketDescriptor> expected_sds{83942, 83943};
 
@@ -89,6 +90,9 @@ class RequestHandlerTcpTests : public testing::Test {
     void SetUp() override {
         request_handler.log__ = &mock_logger;
         request_handler.io__.reset(&mock_io);
+        ON_CALL(mock_discovery_service, RotatedUriList(_)).
+            WillByDefault(Return(receivers_list));
+
     }
     void TearDown() override {
         request_handler.io__.release();
@@ -330,113 +334,92 @@ TEST_F(RequestHandlerTcpTests, DoNotReduceConnectionNumberAtTearDownIfNoError) {
 }
 
 
-/*
-//Error ProcessRequestUnlocked(const Request* request) override;
-
-//void TearDownProcessingRequestLocked(const Error &error_from_process)  override;
-
-
-
-TEST_F(RequestTests, MemoryRequirements) {
-
-    auto size = request.GetMemoryRequitements();
-
-    ASSERT_THAT(size, Eq(sizeof(asapo::RequestHandlerTcp) + expected_file_size));
-}
-
-
-TEST_F(RequestTests, TriesConnectWhenNotConnected) {
+TEST_F(RequestHandlerTcpTests, TriesConnectWhenNotConnected) {
     ExpectFailConnect();
 
-    auto err = request.ProcessRequestUnlocked(&sd, receivers_list, false);
+    request_handler.PrepareProcessingRequestLocked();
+    auto err = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
 
-TEST_F(RequestTests, DoesNotTryConnectWhenConnected) {
-    sd = expected_sds[0];
+TEST_F(RequestHandlerTcpTests, DoesNotTryConnectWhenConnected) {
+    DoSingleSend();
+
     EXPECT_CALL(mock_io, CreateAndConnectIPTCPSocket_t(_, _))
     .Times(0);
     ExpectFailSendHeader(true);
 
-
-    auto err = request.ProcessRequestUnlocked(&sd, asapo::ReceiversList{expected_address1}, false);
+    auto err = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
 
-TEST_F(RequestTests, DoNotCloseWhenRebalanceAndNotConnected) {
-    EXPECT_CALL(mock_io, CloseSocket_t(sd, _)).Times(0);
+
+
+TEST_F(RequestHandlerTcpTests, DoNotCloseWhenRebalanceAndNotConnected) {
+    EXPECT_CALL(mock_io, CloseSocket_t(_, _)).Times(0);
     ExpectOKConnect();
     ExpectFailSendHeader();
 
-    auto err = request.ProcessRequestUnlocked(&sd, receivers_list, true);
-
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
-}
-
-TEST_F(RequestTests, DoNotCloseWhenRebalanceIfNotConnected) {
-    EXPECT_CALL(mock_io, CloseSocket_t(sd, _)).Times(0);
-    ExpectOKConnect(true);
-    ExpectFailSendHeader(true);
-
-
-    auto err = request.ProcessRequestUnlocked(&sd, asapo::ReceiversList{expected_address1}, true);
-
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
-}
-
-TEST_F(RequestTests, ReconnectWhenRebalance) {
-    sd = 1000;
-    EXPECT_CALL(mock_io, CloseSocket_t(1000, _));
-    EXPECT_CALL(mock_logger, Info(HasSubstr("rebalancing")));
-
-    ExpectOKConnect(true);
-    ExpectFailSendHeader(true);
-
-
-    auto err = request.ProcessRequestUnlocked(&sd, asapo::ReceiversList{expected_address1}, true);
+    request_handler.PrepareProcessingRequestLocked();
+    auto err = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
 
 
-TEST_F(RequestTests, ErrorWhenCannotSendHeader) {
+TEST_F(RequestHandlerTcpTests, CloseConnectionWhenRebalance) {
+    DoSingleSend();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    EXPECT_CALL(mock_discovery_service, RotatedUriList(_)).
+        WillOnce(Return(asapo::ReceiversList{}));
+
+    EXPECT_CALL(mock_io, CloseSocket_t(_, _));
+
+    auto err = request_handler.ProcessRequestUnlocked(&request);
+
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+}
+
+
+
+TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendHeader) {
     ExpectOKConnect();
     ExpectFailSendHeader();
 
-    auto err = request.ProcessRequestUnlocked(&sd, receivers_list, false);
+    request_handler.PrepareProcessingRequestLocked();
+    auto err = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
 
 
-TEST_F(RequestTests, ErrorWhenCannotSendData) {
+TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendData) {
     ExpectOKConnect();
     ExpectOKSendHeader();
     ExpectFailSendData();
 
-    auto err = request.ProcessRequestUnlocked(&sd, receivers_list, false);
+    request_handler.PrepareProcessingRequestLocked();
+    auto err = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
 
-TEST_F(RequestTests, ErrorWhenCannotReceiveData) {
+TEST_F(RequestHandlerTcpTests, ErrorWhenCannotReceiveData) {
     ExpectOKConnect();
     ExpectOKSendHeader();
     ExpectOKSendData();
-
     ExpectFailReceive();
 
-    auto err = request.ProcessRequestUnlocked(&sd, receivers_list, false);
+    request_handler.PrepareProcessingRequestLocked();
+    auto err = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
 
-
-
-
-TEST_F(RequestTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
+TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
     ExpectOKConnect(true);
     ExpectOKSendHeader(true);
     ExpectOKSendData(true);
@@ -450,7 +433,8 @@ TEST_F(RequestTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
         ));
 
 
-    auto err = request.ProcessRequestUnlocked(&sd, receivers_list, false);
+    request_handler.PrepareProcessingRequestLocked();
+    auto err = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kFileIdAlreadyInUse));
     ASSERT_THAT(called, Eq(true));
@@ -458,28 +442,29 @@ TEST_F(RequestTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
 }
 
 
-TEST_F(RequestTests, SendEmptyCallBack) {
+TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {
     ExpectOKConnect(true);
     ExpectOKSendHeader(true);
     ExpectOKSendData(true);
     ExpectOKReceive();
 
-    auto err = request_nocallback.ProcessRequestUnlocked(&sd, receivers_list, false);
+    request_handler.PrepareProcessingRequestLocked();
+    auto err = request_handler.ProcessRequestUnlocked(&request_nocallback);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(called, Eq(false));
 }
 
-TEST_F(RequestTests, SendOK) {
+TEST_F(RequestHandlerTcpTests, SendOK) {
     ExpectOKConnect(true);
     ExpectOKSendHeader(true);
     ExpectOKSendData(true);
     ExpectOKReceive();
 
-    auto err = request.ProcessRequestUnlocked(&sd, receivers_list, false);
+    request_handler.PrepareProcessingRequestLocked();
+    auto err = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(sd, Eq(expected_sds[0]));
     ASSERT_THAT(callback_err, Eq(nullptr));
     ASSERT_THAT(called, Eq(true));
     ASSERT_THAT(callback_header.data_size, Eq(header.data_size));
@@ -488,5 +473,5 @@ TEST_F(RequestTests, SendOK) {
 
 }
 
-*/
+
 }

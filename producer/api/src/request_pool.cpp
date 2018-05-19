@@ -42,9 +42,7 @@ void RequestPool::PutRequestBackToQueue(std::unique_ptr<Request> request) {
 
 void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler,
                                  ThreadInformation* thread_info) {
-
     request_handler->PrepareProcessingRequestLocked();
-
     auto request = GetRequestFromQueue();
     thread_info->lock.unlock();
     auto err = request_handler->ProcessRequestUnlocked(request.get());

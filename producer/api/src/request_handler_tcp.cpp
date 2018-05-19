@@ -80,7 +80,6 @@ Error RequestHandlerTcp::TrySendToReceiver(const Request* request, const std::st
 void RequestHandlerTcp::UpdateReceiversUriIfNewConnection() {
     if (sd_ != kDisconnectedSocketDescriptor)
         return;
-
     receivers_list_ = discovery_service__->RotatedUriList(thread_id_);
     last_receivers_uri_update_ = high_resolution_clock::now();
     (*ncurrent_connections_)++;
@@ -103,7 +102,6 @@ bool RequestHandlerTcp::CheckForRebalance() {
         }
     }
     return rebalance;
-
 }
 
 Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
@@ -130,7 +128,6 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
             request->callback(request->header, std::move(err));
         }
         return nullptr;
-
     }
     return ProducerErrorTemplates::kCannotSendDataToReceivers.Generate();
 }
