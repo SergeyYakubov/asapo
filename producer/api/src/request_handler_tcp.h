@@ -18,11 +18,11 @@ namespace asapo {
 
 class RequestHandlerTcp: public RequestHandler {
   public:
-    explicit RequestHandlerTcp(ReceiverDiscoveryService* discovery_service,uint64_t thread_id);
+    explicit RequestHandlerTcp(ReceiverDiscoveryService* discovery_service, uint64_t thread_id, uint64_t* shared_counter);
     Error ProcessRequestUnlocked(const Request* request) override;
     bool ReadyProcessRequest() override;
     void PrepareProcessingRequestLocked()  override;
-    void TearDownProcessingRequestLocked(const Error &error_from_process)  override;
+    void TearDownProcessingRequestLocked(const Error& error_from_process)  override;
 
     virtual ~RequestHandlerTcp() = default;
     std::unique_ptr<IO> io__;
@@ -30,20 +30,19 @@ class RequestHandlerTcp: public RequestHandler {
     ReceiverDiscoveryService* discovery_service__;
   private:
     Error ConnectToReceiver(const std::string& receiver_address);
-    Error SendHeaderAndData(const Request*,const std::string& receiver_address);
+    Error SendHeaderAndData(const Request*, const std::string& receiver_address);
     Error ReceiveResponse(const std::string& receiver_address);
-    Error TrySendToReceiver(const Request* request,const std::string& receiver_address);
+    Error TrySendToReceiver(const Request* request, const std::string& receiver_address);
     SocketDescriptor sd_{kDisconnectedSocketDescriptor};
     void UpdateReceiversUriIfNewConnection();
     bool CheckForRebalance();
     ReceiversList receivers_list_;
     high_resolution_clock::time_point last_receivers_uri_update_;
-    uint64_t ncurrent_connections_{0};
     bool IsConnected();
     bool CanCreateNewConnections();
     uint64_t thread_id_;
-
-  };
+    uint64_t* ncurrent_connections_;
+};
 }
 
 #endif //ASAPO_REQUEST_H

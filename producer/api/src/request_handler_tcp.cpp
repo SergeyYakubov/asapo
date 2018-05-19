@@ -7,8 +7,10 @@
 namespace asapo {
 
 
-RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service,uint64_t thread_id):
-    io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()},discovery_service__{discovery_service},thread_id_{thread_id} {
+RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service, uint64_t thread_id,
+                                     uint64_t* shared_counter):
+    io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()}, discovery_service__{discovery_service}, thread_id_{thread_id},
+    ncurrent_connections_{shared_counter} {
 
 }
 
@@ -23,7 +25,7 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& receiver_address) 
     return nullptr;
 }
 
-Error RequestHandlerTcp::SendHeaderAndData(const Request* request,const std::string& receiver_address) {
+Error RequestHandlerTcp::SendHeaderAndData(const Request* request, const std::string& receiver_address) {
     Error io_error;
     io__->Send(sd_, &(request->header), sizeof(request->header), &io_error);
     if(io_error) {
@@ -59,8 +61,8 @@ Error RequestHandlerTcp::ReceiveResponse(const std::string& receiver_address) {
     return nullptr;
 }
 
-Error RequestHandlerTcp::TrySendToReceiver(const Request* request,const std::string& receiver_address) {
-    auto err = SendHeaderAndData(request ,receiver_address);
+Error RequestHandlerTcp::TrySendToReceiver(const Request* request, const std::string& receiver_address) {
+    auto err = SendHeaderAndData(request, receiver_address);
     if (err)  {
         return err;
     }
@@ -81,7 +83,7 @@ void RequestHandlerTcp::UpdateReceiversUriIfNewConnection() {
 
     receivers_list_ = discovery_service__->RotatedUriList(thread_id_);
     last_receivers_uri_update_ = high_resolution_clock::now();
-    ncurrent_connections_++;
+    (*ncurrent_connections_)++;
 }
 
 bool RequestHandlerTcp::CheckForRebalance() {
@@ -90,7 +92,7 @@ bool RequestHandlerTcp::CheckForRebalance() {
 
     auto now =  high_resolution_clock::now();
     uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>( now -
-        last_receivers_uri_update_).count();
+                          last_receivers_uri_update_).count();
     bool rebalance = false;
     if (elapsed_ms > discovery_service__->UpdateFrequency()) {
         auto thread_receivers_new = discovery_service__->RotatedUriList(thread_id_);
@@ -104,7 +106,7 @@ bool RequestHandlerTcp::CheckForRebalance() {
 
 }
 
-Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request){
+Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
     bool rebalance = CheckForRebalance();
     if (rebalance && sd_ != kDisconnectedSocketDescriptor) {
         io__->CloseSocket(sd_, nullptr);
@@ -117,7 +119,7 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request){
             if (err != nullptr ) continue;
         }
 
-        auto err = TrySendToReceiver(request,receiver_uri);
+        auto err = TrySendToReceiver(request, receiver_uri);
         if (err != nullptr && err != ProducerErrorTemplates::kFileIdAlreadyInUse)  {
             io__->CloseSocket(sd_, nullptr);
             sd_ = kDisconnectedSocketDescriptor;
@@ -138,7 +140,7 @@ bool RequestHandlerTcp::IsConnected() {
 }
 
 bool RequestHandlerTcp::CanCreateNewConnections() {
-    return ncurrent_connections_ < discovery_service__->MaxConnections();
+    return (*ncurrent_connections_) < discovery_service__->MaxConnections();
 }
 
 bool RequestHandlerTcp::ReadyProcessRequest() {
@@ -149,8 +151,11 @@ void RequestHandlerTcp::PrepareProcessingRequestLocked() {
     UpdateReceiversUriIfNewConnection();
 }
 
-void RequestHandlerTcp::TearDownProcessingRequestLocked(const Error &error_from_process) {
-    ncurrent_connections_--;
+void RequestHandlerTcp::TearDownProcessingRequestLocked(const Error& error_from_process) {
+    if (error_from_process) {
+        (*ncurrent_connections_)--;
+    }
+
 }
 
 }

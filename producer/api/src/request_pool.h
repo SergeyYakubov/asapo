@@ -40,9 +40,10 @@ class RequestPool {
     std::mutex mutex_;
     std::deque<std::unique_ptr<Request>> request_queue_;
     bool CanProcessRequest(const std::unique_ptr<RequestHandler>& request_handler);
-    void ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler,ThreadInformation* thread_info);
+    void ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler, ThreadInformation* thread_info);
     std::unique_ptr<Request> GetRequestFromQueue();
     void PutRequestBackToQueue(std::unique_ptr<Request>request);
+    uint64_t shared_counter_{0};
 
 };
 

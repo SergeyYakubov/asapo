@@ -37,7 +37,7 @@ TEST(ProducerImpl, Constructor) {
 class ProducerImplTests : public testing::Test {
   public:
     testing::NiceMock<MockDiscoveryService> service;
-    asapo::RequestHandlerFactory factory{asapo::RequestHandlerType::kTcp,&service};
+    asapo::RequestHandlerFactory factory{asapo::RequestHandlerType::kTcp, &service};
     testing::NiceMock<asapo::MockLogger> mock_logger;
     testing::NiceMock<MockRequestPull> mock_pull{&factory};
     asapo::ProducerImpl producer{"", 1};
@@ -67,7 +67,7 @@ TEST_F(ProducerImplTests, OKSendingRequest) {
     uint64_t expected_size = 100;
     Request request{asapo::GenericNetworkRequestHeader{}, nullptr, nullptr};
     EXPECT_CALL(mock_pull, AddRequest_t(_)).WillOnce(Return(
-                nullptr));
+            nullptr));
 
     auto err = producer.Send(1, nullptr, expected_size, nullptr);
 

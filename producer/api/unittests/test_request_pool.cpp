@@ -41,16 +41,15 @@ using asapo::GenericNetworkRequestHeader;
 
 
 class MockRequestHandlerFactory : public asapo::RequestHandlerFactory {
- public:
-  MockRequestHandlerFactory(RequestHandler* request_handler):
-      RequestHandlerFactory(asapo::RequestHandlerType::kTcp, nullptr)
-  {
-      request_handler_ = request_handler;
-  }
-  std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id) override {
-      return std::unique_ptr<RequestHandler>{request_handler_};
-  }
- private:
+  public:
+    MockRequestHandlerFactory(RequestHandler* request_handler):
+        RequestHandlerFactory(asapo::RequestHandlerType::kTcp, nullptr) {
+        request_handler_ = request_handler;
+    }
+    std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) override {
+        return std::unique_ptr<RequestHandler> {request_handler_};
+    }
+  private:
     RequestHandler* request_handler_;
 };
 
@@ -74,7 +73,7 @@ class RequestPoolTests : public testing::Test {
 
 TEST(RequestPool, Constructor) {
     NiceMock<MockDiscoveryService> ds;
-    NiceMock<asapo::RequestHandlerFactory> request_handler_factory{asapo::RequestHandlerType::kTcp,&ds};
+    NiceMock<asapo::RequestHandlerFactory> request_handler_factory{asapo::RequestHandlerType::kTcp, &ds};
 
     asapo::RequestPool pool{4, &request_handler_factory};
 
@@ -97,7 +96,7 @@ TEST_F(RequestPoolTests, NRequestsInQueue) {
     ASSERT_THAT(nreq, Eq(0));
 }
 
-void ExpectSend(MockRequestHandler* mock_handler,int ntimes = 1) {
+void ExpectSend(MockRequestHandler* mock_handler, int ntimes = 1) {
     EXPECT_CALL(*mock_handler, ReadyProcessRequest()).Times(ntimes).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock_handler, PrepareProcessingRequestLocked()).Times(ntimes);
     EXPECT_CALL(*mock_handler, ProcessRequestUnlocked_t(_)).Times(ntimes).WillRepeatedly(Return(nullptr));
@@ -121,7 +120,7 @@ TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 
     Request* request2 = new Request{GenericNetworkRequestHeader{}, nullptr, nullptr};
 
-    ExpectSend(mock_request_handler,2);
+    ExpectSend(mock_request_handler, 2);
 
 
 

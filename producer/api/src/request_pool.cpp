@@ -6,7 +6,7 @@ namespace asapo {
 
 RequestPool:: RequestPool(uint8_t n_threads,
                           RequestHandlerFactory* request_handler_factory): log__{GetDefaultProducerLogger()},
-                                                                        request_handler_factory__{request_handler_factory},
+    request_handler_factory__{request_handler_factory},
     threads_{n_threads} {
     for(size_t i = 0; i < threads_.size(); i++) {
         log__->Debug("starting thread " + std::to_string(i));
@@ -40,7 +40,8 @@ void RequestPool::PutRequestBackToQueue(std::unique_ptr<Request> request) {
     request_queue_.emplace_front(std::move(request));
 }
 
-void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler,ThreadInformation* thread_info) {
+void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler,
+                                 ThreadInformation* thread_info) {
 
     request_handler->PrepareProcessingRequestLocked();
 
@@ -57,14 +58,14 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_
 void RequestPool::ThreadHandler(uint64_t id) {
     ThreadInformation thread_info;
     thread_info.lock =  std::unique_lock<std::mutex>(mutex_);
-    auto request_handler = request_handler_factory__->NewRequestHandler(id);
+    auto request_handler = request_handler_factory__->NewRequestHandler(id, &shared_counter_);
     do {
-        condition_.wait(thread_info.lock, [this,&request_handler] {
+        condition_.wait(thread_info.lock, [this, &request_handler] {
             return (CanProcessRequest(request_handler) || quit_);
         });
         //after wait, we own the lock
         if (!quit_) {
-            ProcessRequest(request_handler,&thread_info);
+            ProcessRequest(request_handler, &thread_info);
         };
     } while (!quit_);
 }

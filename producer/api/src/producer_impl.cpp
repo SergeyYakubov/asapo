@@ -13,7 +13,7 @@ const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads): log__{GetDefaultProducerLogger()} {
     discovery_service_.reset(new ReceiverDiscoveryService{endpoint, ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
-    request_handler_factory_.reset(new RequestHandlerFactory{RequestHandlerType::kTcp,discovery_service_.get()});
+    request_handler_factory_.reset(new RequestHandlerFactory{RequestHandlerType::kTcp, discovery_service_.get()});
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get()});
 }
 

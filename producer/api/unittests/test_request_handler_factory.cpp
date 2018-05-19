@@ -18,9 +18,9 @@ TEST(CreateFactory, Tcp) {
     MockDiscoveryService mock_discovery;
     EXPECT_CALL(mock_discovery, StartCollectingData());
 
-    RequestHandlerFactory factory{asapo::RequestHandlerType::kTcp,&mock_discovery};
+    RequestHandlerFactory factory{asapo::RequestHandlerType::kTcp, &mock_discovery};
 
-    auto handler = factory.NewRequestHandler(1);
+    auto handler = factory.NewRequestHandler(1, nullptr);
 
     ASSERT_THAT(dynamic_cast<asapo::RequestHandlerTcp*>(handler.get()), Ne(nullptr));
 
