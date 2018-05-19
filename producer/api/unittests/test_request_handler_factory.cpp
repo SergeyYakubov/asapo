@@ -5,6 +5,7 @@
 #include "../src/receiver_discovery_service.h"
 #include "../src/request_handler_tcp.h"
 #include "mocking.h"
+#include "../src/request_handler_filesystem.h"
 
 using ::testing::Ne;
 using ::testing::Eq;
@@ -18,7 +19,7 @@ TEST(CreateFactory, Tcp) {
     MockDiscoveryService mock_discovery;
     EXPECT_CALL(mock_discovery, StartCollectingData());
 
-    RequestHandlerFactory factory{asapo::RequestHandlerType::kTcp, &mock_discovery};
+    RequestHandlerFactory factory{&mock_discovery};
 
     auto handler = factory.NewRequestHandler(1, nullptr);
 
@@ -26,6 +27,14 @@ TEST(CreateFactory, Tcp) {
 
 }
 
+TEST(CreateFactory, Filesystem) {
+    RequestHandlerFactory factory{""};
+
+    auto handler = factory.NewRequestHandler(1, nullptr);
+
+    ASSERT_THAT(dynamic_cast<asapo::RequestHandlerFilesystem*>(handler.get()), Ne(nullptr));
+
+}
 
 
 }

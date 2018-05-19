@@ -40,7 +40,7 @@ using ::asapo::SocketDescriptor;
 using ::asapo::MockIO;
 using asapo::Request;
 using asapo::RequestHandlerDbWrite;
-using ::asapo::GenericNetworkRequestHeader;
+using ::asapo::GenericRequestHeader;
 
 using asapo::MockDatabase;
 using asapo::RequestFactory;
@@ -52,7 +52,7 @@ namespace {
 
 class MockRequestHandler: public Request {
   public:
-    MockRequestHandler(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd):
+    MockRequestHandler(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
         Request(request_header, socket_fd) {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
@@ -70,7 +70,7 @@ class DbWriterHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     void SetUp() override {
-        GenericNetworkRequestHeader request_header;
+        GenericRequestHeader request_header;
         request_header.data_id = 2;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;

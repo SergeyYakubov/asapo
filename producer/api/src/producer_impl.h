@@ -21,21 +21,21 @@ class ProducerImpl : public Producer {
     static const size_t kMaxChunkSize;
     static const size_t kDiscoveryServiceUpdateFrequencyMs;
 
-    explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads);
+    explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads,asapo::RequestHandlerType type);
     ProducerImpl(const ProducerImpl&) = delete;
     ProducerImpl& operator=(const ProducerImpl&) = delete;
 
     void SetLogLevel(LogLevel level) override;
     void EnableLocalLog(bool enable) override;
     void EnableRemoteLog(bool enable) override;
-    Error Send(uint64_t file_id, const void* data, size_t file_size, RequestCallback callback) override;
+    Error Send(uint64_t file_id, const void* data, size_t file_size,std::string file_name, RequestCallback callback) override;
     AbstractLogger* log__;
     std::unique_ptr<RequestPool> request_pool__;
   private:
-    GenericNetworkRequestHeader GenerateNextSendRequest(uint64_t file_id, size_t file_size);
+    GenericRequestHeader GenerateNextSendRequest(uint64_t file_id, size_t file_size,std::string file_name);
 };
 
-Error CheckProducerRequest(const GenericNetworkRequestHeader header);
+Error CheckProducerRequest(const GenericRequestHeader header);
 }
 
 #endif //ASAPO_PRODUCER__PRODUCER_IMPL_H

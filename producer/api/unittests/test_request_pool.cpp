@@ -36,14 +36,14 @@ using asapo::RequestPool;
 using asapo::Error;
 using asapo::ErrorInterface;
 using asapo::Request;
-using asapo::GenericNetworkRequestHeader;
+using asapo::GenericRequestHeader;
 
 
 
 class MockRequestHandlerFactory : public asapo::RequestHandlerFactory {
   public:
     MockRequestHandlerFactory(RequestHandler* request_handler):
-        RequestHandlerFactory(asapo::RequestHandlerType::kTcp, nullptr) {
+        RequestHandlerFactory(nullptr) {
         request_handler_ = request_handler;
     }
     std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) override {
@@ -62,7 +62,7 @@ class RequestPoolTests : public testing::Test {
     MockRequestHandlerFactory request_handler_factory{mock_request_handler};
     const uint8_t nthreads = 1;
     asapo::RequestPool pool {nthreads, &request_handler_factory};
-    std::unique_ptr<Request> request{new Request{GenericNetworkRequestHeader{}, nullptr, nullptr}};
+    std::unique_ptr<Request> request{new Request{GenericRequestHeader{}, nullptr, nullptr}};
     void SetUp() override {
         pool.log__ = &mock_logger;
     }
@@ -73,7 +73,7 @@ class RequestPoolTests : public testing::Test {
 
 TEST(RequestPool, Constructor) {
     NiceMock<MockDiscoveryService> ds;
-    NiceMock<asapo::RequestHandlerFactory> request_handler_factory{asapo::RequestHandlerType::kTcp, &ds};
+    NiceMock<asapo::RequestHandlerFactory> request_handler_factory{&ds};
 
     asapo::RequestPool pool{4, &request_handler_factory};
 
@@ -118,7 +118,7 @@ TEST_F(RequestPoolTests, AddRequestCallsSend) {
 
 TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 
-    Request* request2 = new Request{GenericNetworkRequestHeader{}, nullptr, nullptr};
+    Request* request2 = new Request{GenericRequestHeader{}, nullptr, nullptr};
 
     ExpectSend(mock_request_handler, 2);
 

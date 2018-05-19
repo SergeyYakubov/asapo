@@ -4,7 +4,7 @@
 #include "receiver_config.h"
 namespace asapo {
 
-Request::Request(const GenericNetworkRequestHeader& header,
+Request::Request(const GenericRequestHeader& header,
                  SocketDescriptor socket_fd) : io__{GenerateDefaultIO()}, request_header_(header), socket_fd_{socket_fd} {
 }
 
@@ -77,12 +77,12 @@ std::string Request::GetFileName() const {
     return std::to_string(request_header_.data_id) + ".bin";
 }
 
-std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericNetworkRequestHeader&
+std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&
         request_header, SocketDescriptor socket_fd,
         Error* err) const noexcept {
     *err = nullptr;
     switch (request_header.op_code) {
-    case Opcode::kNetOpcodeSendData: {
+    case Opcode::kOpcodeTransferData: {
         auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd}};
 
         if (GetReceiverConfig()->write_to_disk) {

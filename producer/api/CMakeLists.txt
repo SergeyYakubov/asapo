@@ -4,9 +4,11 @@ set(SOURCE_FILES
         src/producer_impl.cpp
         src/producer_logger.cpp
         src/request_handler_tcp.cpp
-        src/request_pool.cpp src/receiver_discovery_service.cpp
+        src/request_handler_filesystem.cpp
+        src/request_pool.cpp
+        src/receiver_discovery_service.cpp
         src/request_handler_factory.cpp
-        src/request.cpp)
+        src/request.cpp include/producer/common.h)
 
 
 ################################
@@ -24,6 +26,7 @@ set(TEST_SOURCE_FILES
         unittests/test_producer_impl.cpp
         unittests/test_producer.cpp
         unittests/test_request_handler_tcp.cpp
+        unittests/test_request_handler_filesystem.cpp
         unittests/test_request_pool.cpp
         unittests/test_receiver_discovery_service.cpp
         unittests/test_request_handler_factory.cpp

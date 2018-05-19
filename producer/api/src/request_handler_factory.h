@@ -11,18 +11,16 @@ namespace  asapo {
 #define VIRTUAL virtual
 #endif
 
-enum class RequestHandlerType {
-    kTcp,
-    kFilesystem
-};
 
 class RequestHandlerFactory {
   public:
-    RequestHandlerFactory(RequestHandlerType type, ReceiverDiscoveryService* discovery_service);
-    VIRTUAL std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter);
+    RequestHandlerFactory(ReceiverDiscoveryService* discovery_service);
+    RequestHandlerFactory(std::string destination_folder);
+  VIRTUAL std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter);
   private:
     RequestHandlerType type_;
-    ReceiverDiscoveryService* discovery_service_;
+    ReceiverDiscoveryService* discovery_service_{nullptr};
+    std::string destination_folder_;
 };
 
 

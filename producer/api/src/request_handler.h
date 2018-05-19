@@ -6,11 +6,6 @@
 #include "common/error.h"
 #include "request.h"
 
-#ifdef UNIT_TESTS
-#define VIRTUAL virtual
-#endif
-
-
 namespace  asapo {
 
 class RequestHandler {

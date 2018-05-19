@@ -28,9 +28,9 @@ using ::asapo::Error;
 using ::asapo::ErrorInterface;
 using ::asapo::FileDescriptor;
 using ::asapo::SocketDescriptor;
-using ::asapo::GenericNetworkRequestHeader;
+using ::asapo::GenericRequestHeader;
 using ::asapo::SendDataResponse;
-using ::asapo::GenericNetworkRequestHeader;
+using ::asapo::GenericRequestHeader;
 using ::asapo::GenericNetworkResponse;
 using ::asapo::Opcode;
 using ::asapo::Connection;
@@ -63,7 +63,7 @@ class MockReqestHandler : public asapo::RequestHandler {
 
 class RequestTests : public Test {
   public:
-    GenericNetworkRequestHeader generic_request_header;
+    GenericRequestHeader generic_request_header;
     asapo::SocketDescriptor socket_fd_{1};
     uint64_t data_size_ {100};
     uint64_t data_id_{15};

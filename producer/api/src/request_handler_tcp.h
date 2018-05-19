@@ -8,7 +8,7 @@
 #include "receiver_discovery_service.h"
 #include "common/networking.h"
 
-#include "producer/producer.h"
+#include "producer/common.h"
 #include "request_handler.h"
 
 

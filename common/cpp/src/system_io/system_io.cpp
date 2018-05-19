@@ -122,20 +122,25 @@ void asapo::SystemIO::CreateNewDirectory(const std::string& directory_name, Erro
     }
 }
 
-Error SystemIO::WriteDataToFile(const std::string& fname, const FileData& data, size_t length) const {
+Error SystemIO::WriteDataToFile(const std::string& fname, const uint8_t* data, size_t length) const {
     Error err;
     auto fd = Open(fname, IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS | IO_OPEN_MODE_RW, &err);
     if (err) {
         return err;
     }
 
-    Write(fd, data.get(), length, &err);
+    Write(fd, data, length, &err);
     if (err) {
         return err;
     }
 
     Close(fd, &err);
     return err;
+
+}
+
+Error SystemIO::WriteDataToFile(const std::string& fname, const FileData& data, size_t length) const {
+    return WriteDataToFile(fname,data.get(),length);
 }
 
 

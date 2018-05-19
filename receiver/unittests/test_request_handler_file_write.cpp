@@ -35,7 +35,7 @@ using ::asapo::SocketDescriptor;
 using ::asapo::MockIO;
 using asapo::Request;
 using asapo::RequestHandlerFileWrite;
-using ::asapo::GenericNetworkRequestHeader;
+using ::asapo::GenericRequestHeader;
 
 namespace {
 
@@ -48,7 +48,7 @@ TEST(FileWrite, Constructor) {
 
 class MockRequestHandler: public Request {
   public:
-    MockRequestHandler(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd):
+    MockRequestHandler(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
         Request(request_header, socket_fd) {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
@@ -66,7 +66,7 @@ class FileWriteHandlerTests : public Test {
     uint64_t expected_file_size = 10;
     void MockRequestData();
     void SetUp() override {
-        GenericNetworkRequestHeader request_header;
+        GenericRequestHeader request_header;
         request_header.data_id = 2;
         mock_request.reset(new MockRequestHandler{request_header, 1});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};

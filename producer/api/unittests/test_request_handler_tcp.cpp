@@ -6,7 +6,7 @@
 #include "common/error.h"
 #include "io/io.h"
 
-#include "producer/producer.h"
+#include "producer/common.h"
 #include "producer/producer_error.h"
 
 #include "../src/request_handler_tcp.h"
@@ -49,15 +49,16 @@ class RequestHandlerTcpTests : public testing::Test {
 
     uint64_t expected_file_id = 42;
     uint64_t expected_file_size = 1337;
+    std::string  expected_file_name = "test_name";
     uint64_t expected_thread_id = 2;
 
-    asapo::Opcode expected_op_code = asapo::kNetOpcodeSendData;
+    asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     void*    expected_file_pointer = (void*)0xC00FE;
     asapo::Error callback_err;
-    asapo::GenericNetworkRequestHeader header{expected_op_code, expected_file_id, expected_file_size};
+    asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,expected_file_name};
     bool called = false;
-    asapo::GenericNetworkRequestHeader callback_header;
-    asapo::Request request{header, expected_file_pointer, [this](asapo::GenericNetworkRequestHeader header, asapo::Error err) {
+    asapo::GenericRequestHeader callback_header;
+    asapo::Request request{header, expected_file_pointer, [this](asapo::GenericRequestHeader header, asapo::Error err) {
             called = true;
             callback_err = std::move(err);
             callback_header = header;
@@ -100,15 +101,15 @@ class RequestHandlerTcpTests : public testing::Test {
 };
 
 ACTION_P(A_WriteSendDataResponse, error_code) {
-    ((asapo::SendDataResponse*)arg1)->op_code = asapo::kNetOpcodeSendData;
+    ((asapo::SendDataResponse*)arg1)->op_code = asapo::kOpcodeTransferData;
     ((asapo::SendDataResponse*)arg1)->error_code = error_code;
 }
 
 MATCHER_P2(M_CheckSendDataRequest, file_id, file_size,
-           "Checks if a valid GenericNetworkRequestHeader was Send") {
-    return ((asapo::GenericNetworkRequestHeader*)arg)->op_code == asapo::kNetOpcodeSendData
-           && ((asapo::GenericNetworkRequestHeader*)arg)->data_id == file_id
-           && ((asapo::GenericNetworkRequestHeader*)arg)->data_size == file_size;
+           "Checks if a valid GenericRequestHeader was Send") {
+    return ((asapo::GenericRequestHeader*)arg)->op_code == asapo::kOpcodeTransferData
+           && ((asapo::GenericRequestHeader*)arg)->data_id == file_id
+           && ((asapo::GenericRequestHeader*)arg)->data_size == file_size;
 }
 
 
@@ -130,7 +131,7 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(expected_file_id,
                                     expected_file_size),
-                                    sizeof(asapo::GenericNetworkRequestHeader), _))
+                                    sizeof(asapo::GenericRequestHeader), _))
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
@@ -214,11 +215,11 @@ void RequestHandlerTcpTests::ExpectOKSendHeader(bool only_once) {
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(expected_file_id,
                                     expected_file_size),
-                                    sizeof(asapo::GenericNetworkRequestHeader), _))
+                                    sizeof(asapo::GenericRequestHeader), _))
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(nullptr),
-                Return(sizeof(asapo::GenericNetworkRequestHeader))
+                Return(sizeof(asapo::GenericRequestHeader))
             ));
         if (only_once) break;
     }
@@ -357,7 +358,7 @@ TEST_F(RequestHandlerTcpTests, DoesNotTryConnectWhenConnected) {
 
 
 
-TEST_F(RequestHandlerTcpTests, DoNotCloseWhenRebalanceAndNotConnected) {
+TEST_F(RequestHandlerTcpTests, DoNotCloseWhenNotConnected) {
     EXPECT_CALL(mock_io, CloseSocket_t(_, _)).Times(0);
     ExpectOKConnect();
     ExpectFailSendHeader();
@@ -470,7 +471,7 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
     ASSERT_THAT(callback_header.data_size, Eq(header.data_size));
     ASSERT_THAT(callback_header.op_code, Eq(header.op_code));
     ASSERT_THAT(callback_header.data_id, Eq(header.data_id));
-
+    ASSERT_THAT(std::string{callback_header.file_name}, Eq(std::string{header.file_name}));
 }
 
 
