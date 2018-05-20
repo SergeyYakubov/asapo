@@ -122,3 +122,4 @@ doxygen
 
 #GO
 broker/pkg
+discovery/pkg

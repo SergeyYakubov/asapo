@@ -57,6 +57,9 @@ add_subdirectory(worker)
 
 add_subdirectory(receiver)
 
+add_subdirectory(discovery)
+
+
 if(BUILD_INTEGRATION_TESTS)
     add_subdirectory(tests)
 endif()
