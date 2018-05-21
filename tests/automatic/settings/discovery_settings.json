@@ -1,0 +1,7 @@
+{
+  "MaxConnections": 32,
+  "Endpoints": ["localhost:8086"],
+  "Mode": "static",
+  "Port":5006,
+  "LogLevel":"debug"
+}
