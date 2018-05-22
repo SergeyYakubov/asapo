@@ -9,20 +9,20 @@ namespace asapo {
 
 
 RequestHandlerFilesystem::RequestHandlerFilesystem(std::string destination_folder, uint64_t thread_id):
-    io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()}, destination_folder_{std::move(destination_folder)}, thread_id_{thread_id}
-{
+    io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()}, destination_folder_{std::move(destination_folder)},
+    thread_id_{thread_id} {
 
 }
 
 
 
 Error RequestHandlerFilesystem::ProcessRequestUnlocked(const Request* request) {
-    std::string fullpath = destination_folder_ + "/"+request->header.file_name+".bin";
-    auto err = io__->WriteDataToFile(fullpath,(uint8_t*)request->data,request->header.data_size);
+    std::string fullpath = destination_folder_ + "/" + request->header.file_name + ".bin";
+    auto err = io__->WriteDataToFile(fullpath, (uint8_t*)request->data, request->header.data_size);
     if (request->callback) {
         request->callback(request->header, std::move(err));
     }
-        return nullptr;
+    return nullptr;
 }
 
 

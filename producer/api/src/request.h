@@ -7,9 +7,9 @@
 namespace asapo {
 
 struct Request {
-  GenericRequestHeader header;
-  const void* data;
-  RequestCallback callback;
+    GenericRequestHeader header;
+    const void* data;
+    RequestCallback callback;
 };
 
 }

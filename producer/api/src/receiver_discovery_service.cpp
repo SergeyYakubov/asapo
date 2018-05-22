@@ -26,8 +26,8 @@ Error ReceiverDiscoveryService::ParseResponse(const std::string& responce, Recei
                                               uint64_t* max_connections) {
     auto parser = JsonStringParser(responce);
     Error err;
-    (err = parser.GetArrayString("uri_list", list)) ||
-    (err = parser.GetUInt64("max_connections", max_connections));
+    (err = parser.GetArrayString("Uris", list)) ||
+    (err = parser.GetUInt64("MaxConnections", max_connections));
     return err;
 }
 

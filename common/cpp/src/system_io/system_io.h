@@ -103,7 +103,7 @@ class SystemIO final : public IO {
     FileData        GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const;
     Error           WriteDataToFile  (const std::string& fname, const FileData& data, size_t length) const;
     Error           WriteDataToFile(const std::string& fname, const uint8_t* data, size_t length) const;
-      void            CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
+    void            CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
                                                       Error* err) const;
     std::string     ReadFileToString(const std::string& fname, Error* err) const;
 };

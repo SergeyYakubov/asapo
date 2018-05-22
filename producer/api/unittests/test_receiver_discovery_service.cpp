@@ -104,7 +104,7 @@ TEST_F(ReceiversStatusTests, LogWhenWhenCannotReadResponce) {
 
 
 TEST_F(ReceiversStatusTests, GetsReqestedInformation) {
-    std::string json = R"({"uri_list":["s1","s2","s3"], "max_connections":8})";
+    std::string json = R"({"Uris":["s1","s2","s3"], "MaxConnections":8})";
 
     EXPECT_CALL(*mock_http_client, Get_t(expected_endpoint, _, _))
     .Times(testing::AtLeast(1))

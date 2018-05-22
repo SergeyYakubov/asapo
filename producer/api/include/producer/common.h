@@ -14,8 +14,8 @@ const uint8_t kMaxProcessingThreads = 32;
 using RequestCallback =  std::function<void(GenericRequestHeader, Error)>;
 
 enum class RequestHandlerType {
-  kTcp,
-  kFilesystem
+    kTcp,
+    kFilesystem
 };
 
 

@@ -12,23 +12,23 @@ const size_t ProducerImpl::kMaxChunkSize = size_t(1024) * size_t(1024) * size_t(
 const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
 
 
-ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads,asapo::RequestHandlerType type):
+ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, asapo::RequestHandlerType type):
     log__{GetDefaultProducerLogger()} {
     switch (type) {
-        case RequestHandlerType::kTcp:
-            discovery_service_.reset(new ReceiverDiscoveryService{endpoint, ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
-            request_handler_factory_.reset(new RequestHandlerFactory{discovery_service_.get()});
-            break;
-        case RequestHandlerType::kFilesystem:
-            request_handler_factory_.reset(nullptr);
-            request_handler_factory_.reset(new RequestHandlerFactory{endpoint});
+    case RequestHandlerType::kTcp:
+        discovery_service_.reset(new ReceiverDiscoveryService{endpoint, ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
+        request_handler_factory_.reset(new RequestHandlerFactory{discovery_service_.get()});
+        break;
+    case RequestHandlerType::kFilesystem:
+        request_handler_factory_.reset(nullptr);
+        request_handler_factory_.reset(new RequestHandlerFactory{endpoint});
 
     }
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get()});
 }
 
-GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, size_t file_size,std::string file_name) {
-    GenericRequestHeader request{kOpcodeTransferData,file_id,file_size,std::move(file_name)};
+GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, size_t file_size, std::string file_name) {
+    GenericRequestHeader request{kOpcodeTransferData, file_id, file_size, std::move(file_name)};
     return request;
 }
 
@@ -41,8 +41,9 @@ Error CheckProducerRequest(const GenericRequestHeader header) {
 }
 
 
-Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size,std::string file_name,RequestCallback callback) {
-    auto request_header = GenerateNextSendRequest(file_id, file_size,std::move(file_name));
+Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size, std::string file_name,
+                         RequestCallback callback) {
+    auto request_header = GenerateNextSendRequest(file_id, file_size, std::move(file_name));
 
     auto err = CheckProducerRequest(request_header);
     if (err) {

@@ -16,7 +16,7 @@ class RequestHandlerFactory {
   public:
     RequestHandlerFactory(ReceiverDiscoveryService* discovery_service);
     RequestHandlerFactory(std::string destination_folder);
-  VIRTUAL std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter);
+    VIRTUAL std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter);
   private:
     RequestHandlerType type_;
     ReceiverDiscoveryService* discovery_service_{nullptr};

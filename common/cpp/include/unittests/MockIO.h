@@ -183,7 +183,7 @@ class MockIO : public IO {
     }
 
 
-  MOCK_CONST_METHOD3(WriteDataToFile_t, ErrorInterface * (const std::string& fname, const uint8_t* data, size_t fsize));
+    MOCK_CONST_METHOD3(WriteDataToFile_t, ErrorInterface * (const std::string& fname, const uint8_t* data, size_t fsize));
 
     void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
                                            Error* err) const override {

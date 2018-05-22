@@ -13,7 +13,7 @@ using std::chrono::high_resolution_clock;
 std::mutex mutex;
 int nfiles;
 
-typedef std::tuple<std::string, size_t, uint64_t, uint64_t,uint64_t> ArgumentTuple;
+typedef std::tuple<std::string, size_t, uint64_t, uint64_t, uint64_t> ArgumentTuple;
 ArgumentTuple ProcessCommandArguments(int argc, char* argv[]) {
     if (argc != 6) {
         std::cout <<
@@ -22,7 +22,7 @@ ArgumentTuple ProcessCommandArguments(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     try {
-        return ArgumentTuple(argv[1], std::stoull(argv[2]), std::stoull(argv[3]), std::stoull(argv[4]),std::stoull(argv[5]));
+        return ArgumentTuple(argv[1], std::stoull(argv[2]), std::stoull(argv[3]), std::stoull(argv[4]), std::stoull(argv[5]));
     } catch(std::exception& e) {
         std::cerr << "Fail to parse arguments" << std::endl;
         std::cerr << e.what() << std::endl;
@@ -35,11 +35,11 @@ void work(asapo::GenericRequestHeader header, asapo::Error err) {
     nfiles--;
     if (err) {
         std::cerr << "File was not successfully send: " << err << std::endl;
-        nfiles = 0;
+        //nfiles = 0;
         mutex.unlock();
         return;
     }
-   // std::cerr << "File was successfully send." << header.data_id << std::endl;
+    // std::cerr << "File was successfully send." << header.data_id << std::endl;
     mutex.unlock();
 }
 
@@ -48,7 +48,7 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
 
     for(uint64_t i = 0; i < iterations; i++) {
 //        std::cerr << "Send file " << i + 1 << "/" << iterations << std::endl;
-        auto err = producer->Send(i + 1, buffer.get(), number_of_byte,std::to_string(i), &work);
+        auto err = producer->Send(i + 1, buffer.get(), number_of_byte, std::to_string(i), &work);
         if (err) {
             std::cerr << "Cannot send file: " << err << std::endl;
             return false;
@@ -65,23 +65,23 @@ int main (int argc, char* argv[]) {
     uint64_t nthreads;
     uint64_t mode;
 
-    std::tie(receiver_address, number_of_kbytes, iterations, nthreads,mode) = ProcessCommandArguments(argc, argv);
+    std::tie(receiver_address, number_of_kbytes, iterations, nthreads, mode) = ProcessCommandArguments(argc, argv);
 
     std::cout << "receiver_address: " << receiver_address << std::endl
               << "Package size: " << number_of_kbytes << "k" << std::endl
               << "iterations: " << iterations << std::endl
               << "nthreads: " << nthreads << std::endl
               << "mode: " << mode << std::endl
-        << std::endl;
+              << std::endl;
 
     nfiles = iterations;
 
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer;
     if (mode == 0) {
-        producer = asapo::Producer::Create(receiver_address, nthreads, asapo::RequestHandlerType::kTcp,&err);
+        producer = asapo::Producer::Create(receiver_address, nthreads, asapo::RequestHandlerType::kTcp, &err);
     } else {
-        producer = asapo::Producer::Create(receiver_address, nthreads, asapo::RequestHandlerType::kFilesystem,&err);
+        producer = asapo::Producer::Create(receiver_address, nthreads, asapo::RequestHandlerType::kFilesystem, &err);
     }
     producer->EnableLocalLog(true);
     producer->SetLogLevel(asapo::LogLevel::Debug);

@@ -140,7 +140,7 @@ Error SystemIO::WriteDataToFile(const std::string& fname, const uint8_t* data, s
 }
 
 Error SystemIO::WriteDataToFile(const std::string& fname, const FileData& data, size_t length) const {
-    return WriteDataToFile(fname,data.get(),length);
+    return WriteDataToFile(fname, data.get(), length);
 }
 
 

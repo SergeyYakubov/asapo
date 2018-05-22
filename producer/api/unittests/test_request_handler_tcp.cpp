@@ -55,14 +55,14 @@ class RequestHandlerTcpTests : public testing::Test {
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     void*    expected_file_pointer = (void*)0xC00FE;
     asapo::Error callback_err;
-    asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,expected_file_name};
+    asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_file_name};
     bool called = false;
     asapo::GenericRequestHeader callback_header;
     asapo::Request request{header, expected_file_pointer, [this](asapo::GenericRequestHeader header, asapo::Error err) {
-            called = true;
-            callback_err = std::move(err);
-            callback_header = header;
-        }};
+        called = true;
+        callback_err = std::move(err);
+        callback_header = header;
+    }};
 
     asapo::Request request_nocallback{header, expected_file_pointer, nullptr};
     testing::NiceMock<asapo::MockLogger> mock_logger;
@@ -74,7 +74,7 @@ class RequestHandlerTcpTests : public testing::Test {
     asapo::ReceiversList receivers_list{expected_address1, expected_address2};
     asapo::ReceiversList receivers_list2{expected_address2, expected_address1};
 
-  asapo::ReceiversList receivers_list_single{expected_address1};
+    asapo::ReceiversList receivers_list_single{expected_address1};
 
     std::vector<asapo::SocketDescriptor> expected_sds{83942, 83943};
 
@@ -92,7 +92,7 @@ class RequestHandlerTcpTests : public testing::Test {
         request_handler.log__ = &mock_logger;
         request_handler.io__.reset(&mock_io);
         ON_CALL(mock_discovery_service, RotatedUriList(_)).
-            WillByDefault(Return(receivers_list));
+        WillByDefault(Return(receivers_list));
 
     }
     void TearDown() override {
@@ -288,6 +288,7 @@ void RequestHandlerTcpTests::DoSingleSend(bool connect, bool success) {
     Mock::VerifyAndClearExpectations(&mock_io);
     Mock::VerifyAndClearExpectations(&mock_logger);
     Mock::VerifyAndClearExpectations(&mock_discovery_service);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 TEST_F(RequestHandlerTcpTests, CannotProcessRequestIfNotEnoughConnections) {
@@ -347,8 +348,13 @@ TEST_F(RequestHandlerTcpTests, TriesConnectWhenNotConnected) {
 TEST_F(RequestHandlerTcpTests, DoesNotTryConnectWhenConnected) {
     DoSingleSend();
 
+    EXPECT_CALL(mock_discovery_service, RotatedUriList(_)).
+    WillOnce(Return(receivers_list_single));
+
+
     EXPECT_CALL(mock_io, CreateAndConnectIPTCPSocket_t(_, _))
     .Times(0);
+
     ExpectFailSendHeader(true);
 
     auto err = request_handler.ProcessRequestUnlocked(&request);
@@ -375,7 +381,7 @@ TEST_F(RequestHandlerTcpTests, CloseConnectionWhenRebalance) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     EXPECT_CALL(mock_discovery_service, RotatedUriList(_)).
-        WillOnce(Return(asapo::ReceiversList{}));
+    WillOnce(Return(asapo::ReceiversList{}));
 
     EXPECT_CALL(mock_io, CloseSocket_t(_, _));
 

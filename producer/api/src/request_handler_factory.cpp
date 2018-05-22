@@ -10,8 +10,8 @@ std::unique_ptr<RequestHandler> RequestHandlerFactory::NewRequestHandler(uint64_
     switch (type_) {
     case asapo::RequestHandlerType::kTcp:
         return std::unique_ptr<RequestHandler> {new RequestHandlerTcp(discovery_service_, thread_id, shared_counter)};
-        case asapo::RequestHandlerType::kFilesystem:
-            return std::unique_ptr<RequestHandler> {new RequestHandlerFilesystem(destination_folder_, thread_id)};
+    case asapo::RequestHandlerType::kFilesystem:
+        return std::unique_ptr<RequestHandler> {new RequestHandlerFilesystem(destination_folder_, thread_id)};
 
     }
     return nullptr;
@@ -25,7 +25,7 @@ RequestHandlerFactory::RequestHandlerFactory(ReceiverDiscoveryService* discovery
 }
 
 RequestHandlerFactory::RequestHandlerFactory(std::string destination_folder): type_{RequestHandlerType::kFilesystem},
-                                                                              destination_folder_{std::move(destination_folder)} {
+    destination_folder_{std::move(destination_folder)} {
 }
 
 

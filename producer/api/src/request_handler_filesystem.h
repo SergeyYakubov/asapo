@@ -18,7 +18,9 @@ class RequestHandlerFilesystem: public RequestHandler {
   public:
     explicit RequestHandlerFilesystem(std::string destination_folder, uint64_t thread_id);
     Error ProcessRequestUnlocked(const Request* request) override;
-    bool ReadyProcessRequest() override {return true;};
+    bool ReadyProcessRequest() override {
+        return true;
+    };
     void PrepareProcessingRequestLocked()  override {};
     void TearDownProcessingRequestLocked(const Error& error_from_process)  override {};
 
