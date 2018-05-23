@@ -11,30 +11,26 @@ broker_address=127.0.0.1:5005
 Cleanup() {
 	echo cleanup
 	rm -rf files
-    kill -9 $receiverid
-    kill -9 $brokerid
-    #kill -9 $producerrid
+    nomad stop receiver
+    nomad stop discovery
+    nomad stop broker
     echo "db.dropDatabase()" | mongo ${broker_database_name}
     influx -execute "drop database ${monitor_database_name}"
 }
 
 influx -execute "create database ${monitor_database_name}"
 
+nomad run receiver.nmd
+nomad run discovery.nmd
+nomad run broker.nmd
 
-#receiver
-$2 receiver.json &
-sleep 0.3
-receiverid=`echo $!`
-
-#broker
-$3 -config broker.json &
-sleep 0.3
-brokerid=`echo $!`
+sleep 1
 
 
 #producer
 mkdir files
-$1 localhost:4200 100 100 &
+$1 localhost:5006 100 100 4 0 &
+
 #producerrid=`echo $!`
 sleep 0.1
 
