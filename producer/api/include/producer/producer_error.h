@@ -10,7 +10,7 @@ enum class ProducerErrorType {
     kConnectionNotReady,
     kFileTooLarge,
     kFileIdAlreadyInUse,
-    kUnknownServerError,
+    kInternalServerError,
     kCannotSendDataToReceivers,
     kRequestPoolIsFull
 };
@@ -74,8 +74,8 @@ auto const kFileIdAlreadyInUse = ProducerErrorTemplate {
     "File already in use", ProducerErrorType::kFileIdAlreadyInUse
 };
 
-auto const kUnknownServerError = ProducerErrorTemplate {
-    "Unknown server error", ProducerErrorType::kUnknownServerError
+auto const kInternalServerError = ProducerErrorTemplate {
+    "Internal server error", ProducerErrorType::kInternalServerError
 };
 
 auto const kCannotSendDataToReceivers = ProducerErrorTemplate {

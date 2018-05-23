@@ -10,23 +10,21 @@ trap Cleanup EXIT
 Cleanup() {
 	echo cleanup
 	influx -execute "drop database ${database_name}"
-    kill $receiverid
+#    kill $receiverid
+    nomad stop receiver
     kill $discoveryid
-	rm -rf files
     echo "db.dropDatabase()" | mongo ${mongo_database_name}
 }
 
 influx -execute "create database ${database_name}"
 
+nomad run receiver.nmd
+sleep 0.3
+
 nohup $3 -config discovery.json &>/dev/null &
 discoveryid=`echo $!`
-sleep 0.3
 
-nohup $2 receiver.json &>/dev/null &
-sleep 0.3
-receiverid=`echo $!`
-
-mkdir files
+sleep 1
 
 $1 localhost:5006 100 112 4  0
 

@@ -49,7 +49,9 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_
     thread_info->lock.lock();
     request_handler->TearDownProcessingRequestLocked(err);
     if (err) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         PutRequestBackToQueue(std::move(request));
+        condition_.notify_all();
     }
 }
 
@@ -58,11 +60,11 @@ void RequestPool::ThreadHandler(uint64_t id) {
     thread_info.lock =  std::unique_lock<std::mutex>(mutex_);
     auto request_handler = request_handler_factory__->NewRequestHandler(id, &shared_counter_);
     do {
-        condition_.wait(thread_info.lock, [this, &request_handler] {
+        auto do_work = condition_.wait_for(thread_info.lock, std::chrono::milliseconds(100), [this, &request_handler] {
             return (CanProcessRequest(request_handler) || quit_);
         });
         //after wait, we own the lock
-        if (!quit_) {
+        if (!quit_ && do_work) {
             ProcessRequest(request_handler, &thread_info);
         };
     } while (!quit_);

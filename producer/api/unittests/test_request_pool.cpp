@@ -80,7 +80,7 @@ TEST(RequestPool, Constructor) {
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(pool.log__), Ne(nullptr));
 }
 
-TEST_F(RequestPoolTests, AddRequestDoesGoFurtherWhenNotReady) {
+TEST_F(RequestPoolTests, AddRequestDoesNotGoFurtherWhenNotReady) {
 
     EXPECT_CALL(*mock_request_handler, ReadyProcessRequest()).Times(AtLeast(1)).WillRepeatedly(Return(false));
     EXPECT_CALL(*mock_request_handler, PrepareProcessingRequestLocked()).Times(0);

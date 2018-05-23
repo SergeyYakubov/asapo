@@ -1,7 +1,6 @@
 {
   "MaxConnections": 32,
-  "Endpoints": ["localhost:4200"],
-  "Mode": "static",
+  "Mode": "consul",
   "Port":5006,
   "LogLevel":"debug"
 }

@@ -56,7 +56,7 @@ Error RequestHandlerTcp::ReceiveResponse(const std::string& receiver_address) {
         if(sendDataResponse.error_code == kNetErrorFileIdAlreadyInUse) {
             return ProducerErrorTemplates::kFileIdAlreadyInUse.Generate();
         }
-        return ProducerErrorTemplates::kUnknownServerError.Generate();
+        return ProducerErrorTemplates::kInternalServerError.Generate();
     }
     return nullptr;
 }
@@ -69,6 +69,7 @@ Error RequestHandlerTcp::TrySendToReceiver(const Request* request, const std::st
 
     err = ReceiveResponse(receiver_address);
     if (err)  {
+        log__->Debug("cannot send data to " + receiver_address + ": " + err->Explain());
         return err;
     }
 
@@ -121,6 +122,7 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
         if (err != nullptr && err != ProducerErrorTemplates::kFileIdAlreadyInUse)  {
             io__->CloseSocket(sd_, nullptr);
             sd_ = kDisconnectedSocketDescriptor;
+            log__->Debug("disconnected from  " + receiver_uri);
             continue;
         }
 

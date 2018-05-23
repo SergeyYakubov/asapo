@@ -42,7 +42,6 @@ Error ReceiverDiscoveryService::UpdateFromEndpoint(ReceiversList* list, uint64_t
     if (code != HttpCode::OK) {
         return TextError(responce);
     }
-
     return ParseResponse(responce, list, max_connections);
 
 }
@@ -59,6 +58,7 @@ void ReceiverDiscoveryService::ThreadHandler() {
             lock.lock();
             continue;
         }
+        log__->Debug("got receivers from " + endpoint_ );
         lock.lock();
         max_connections_ = max_connections;
         uri_list_ = uris;

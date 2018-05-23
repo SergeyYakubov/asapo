@@ -36,7 +36,7 @@ Error RapidJson::LazyInitialize()const noexcept {
     return nullptr;
 }
 
-asapo::Error CheckValueType(const std::string& name, ValueType type, const Value* val) {
+asapo::Error RapidJson::CheckValueType(const std::string& name, ValueType type, const Value* val) const {
     bool res = false;
     switch (type) {
     case ValueType::kObject:
@@ -56,7 +56,7 @@ asapo::Error CheckValueType(const std::string& name, ValueType type, const Value
         break;
     }
     if (!res) {
-        return TextError("wrong type: " + name);
+        return TextError("wrong type: " + name + " in: " + json_);
     }
 
     return nullptr;
