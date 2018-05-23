@@ -1,4 +1,4 @@
-job "receiver" {
+job "discovery" {
   datacenters = ["dc1"]
 
   type = "service"
@@ -10,24 +10,27 @@ job "receiver" {
       driver = "raw_exec"
 
       config {
-        command = "/bin/bash",
-        args =  ["-c", "cd  @WORK_DIR@ && exec @RECEIVER_DIR@/@RECEIVER_NAME@ ${NOMAD_TASK_DIR}/receiver.json"]
+        command = "@DISCOVERY_FULLPATH@",
+        args =  ["-config","${NOMAD_TASK_DIR}/discovery.json"]
       }
 
       resources {
         cpu    = 500 # 500 MHz
         memory = 256 # 256MB
         network {
-          port "recv" {}
+          port "discovery" {
+            static = "5006"
+          }
         }
       }
 
       service {
-        name = "receiver"
-        port = "recv"
+        name = "discovery"
+        port = "discovery"
         check {
           name     = "alive"
-          type     = "tcp"
+          type     = "http"
+          path     = "/receivers"
           interval = "10s"
           timeout  = "2s"
           initial_status =   "passing"
@@ -35,8 +38,8 @@ job "receiver" {
       }
 
       template {
-         source        = "@WORK_DIR@/receiver.json.tpl"
-         destination   = "local/receiver.json"
+         source        = "@WORK_DIR@/discovery.json.tpl"
+         destination   = "local/discovery.json"
          change_mode   = "signal"
          change_signal = "SIGHUP"
       }

@@ -46,6 +46,9 @@ include(astyle)
 
 include(testing_cpp)
 
+include(prepare_asapo)
+
+
 if(BUILD_WORKER_TOOLS)
     set (BUILD_MONGODB_CLIENTLIB ON)
 endif()

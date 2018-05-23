@@ -29,14 +29,11 @@ Error RequestHandlerTcp::SendHeaderAndData(const Request* request, const std::st
     Error io_error;
     io__->Send(sd_, &(request->header), sizeof(request->header), &io_error);
     if(io_error) {
-// todo: add meaningful message to the io_error (here and below)
-        log__->Debug("cannot send header to " + receiver_address + " - " + io_error->Explain());
         return io_error;
     }
 
     io__->Send(sd_, request->data, request->header.data_size, &io_error);
     if(io_error) {
-        log__->Debug("cannot send data to " + receiver_address + " - " + io_error->Explain());
         return io_error;
     }
 
@@ -48,7 +45,6 @@ Error RequestHandlerTcp::ReceiveResponse(const std::string& receiver_address) {
     SendDataResponse sendDataResponse;
     io__->Receive(sd_, &sendDataResponse, sizeof(sendDataResponse), &err);
     if(err != nullptr) {
-        log__->Debug("cannot receive response from " + receiver_address + " - " + err->Explain());
         return err;
     }
 
@@ -69,7 +65,6 @@ Error RequestHandlerTcp::TrySendToReceiver(const Request* request, const std::st
 
     err = ReceiveResponse(receiver_address);
     if (err)  {
-        log__->Debug("cannot send data to " + receiver_address + ": " + err->Explain());
         return err;
     }
 
@@ -122,6 +117,7 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
         if (err != nullptr && err != ProducerErrorTemplates::kFileIdAlreadyInUse)  {
             io__->CloseSocket(sd_, nullptr);
             sd_ = kDisconnectedSocketDescriptor;
+            log__->Debug("cannot send data to " + receiver_uri + ": " + err->Explain());
             log__->Debug("disconnected from  " + receiver_uri);
             continue;
         }

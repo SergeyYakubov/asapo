@@ -138,7 +138,13 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
                 Return(-1)
             ));
         EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("cannot send header"),
+                                           HasSubstr("disconnected"),
+                                           HasSubstr(receivers_list[i])
+                                       )
+                                      ));
+
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+                                           HasSubstr("cannot send"),
                                            HasSubstr(receivers_list[i])
                                        )
                                       ));
@@ -160,7 +166,13 @@ void RequestHandlerTcpTests::ExpectFailSendData(bool only_once) {
                 Return(-1)
             ));
         EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("cannot send data"),
+                                           HasSubstr("disconnected"),
+                                           HasSubstr(receivers_list[i])
+                                       )
+                                      ));
+
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+                                           HasSubstr("cannot send"),
                                            HasSubstr(receivers_list[i])
                                        )
                                       ));
@@ -183,7 +195,14 @@ void RequestHandlerTcpTests::ExpectFailReceive(bool only_once) {
                 testing::Return(-1)
             ));
         EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("cannot receive"),
+                                           HasSubstr("disconnected"),
+                                           HasSubstr(receivers_list[i])
+                                       )
+                                      ));
+
+
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+                                           HasSubstr("cannot send"),
                                            HasSubstr(receivers_list[i])
                                        )
                                       ));

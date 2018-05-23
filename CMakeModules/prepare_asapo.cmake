@@ -1,0 +1,11 @@
+function(prepare_asapo)
+    get_target_property(RECEIVER_DIR receiver-bin BINARY_DIR)
+    get_target_property(RECEIVER_NAME receiver-bin OUTPUT_NAME)
+    get_target_property(DISCOVERY_FULLPATH asapo-discovery EXENAME)
+    set(WORK_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    configure_file(${CMAKE_SOURCE_DIR}/config/nomad/receiver.nmd.in  receiver.nmd @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/config/nomad/discovery.nmd.in  discovery.nmd @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver.json.tpl receiver.json.tpl COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/discovery_settings.json.tpl discovery.json.tpl COPYONLY)
+endfunction()
+
