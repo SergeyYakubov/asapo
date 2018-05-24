@@ -4,14 +4,17 @@ set -e
 
 trap Cleanup EXIT
 
-database_name=test_run
+database_name=db_test
+mongo_database_name=test_run
 
 Cleanup() {
 	echo cleanup
 	rm -rf files
     nomad stop receiver
     nomad stop discovery
-    echo "db.dropDatabase()" | mongo ${database_name}
+    echo "db.dropDatabase()" | mongo ${mongo_database_name}
+    influx -execute "drop database ${database_name}"
+
 }
 
 nomad run receiver.nmd

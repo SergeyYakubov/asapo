@@ -4,4 +4,4 @@ set(TARGET_NAME transfer-single-file)
 # Testing
 ################################
 prepare_asapo()
-add_script_test("${TARGET_NAME}" "$<TARGET_FILE:dummy-data-producer> $<TARGET_FILE:receiver-bin>" nomem)
+add_script_test("${TARGET_NAME}" "$<TARGET_FILE:dummy-data-producer>" nomem)

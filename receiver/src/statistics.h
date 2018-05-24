@@ -3,6 +3,8 @@
 
 #include <chrono>
 #include <memory>
+#include <string>
+
 
 #include "statistics_sender.h"
 
@@ -20,6 +22,7 @@ struct StatisticsToSend {
     uint64_t elapsed_ms;
     uint64_t data_volume;
     uint64_t n_requests;
+    std::string tags;
 };
 
 #ifdef UNIT_TESTS
@@ -35,8 +38,10 @@ class Statistics {
     VIRTUAL void StartTimer(const StatisticEntity& entity) noexcept;
     VIRTUAL void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
     VIRTUAL void StopTimer() noexcept;
+    VIRTUAL void AddTag(const std::string& name,const std::string& value) noexcept;
 
-    void SetWriteInterval(uint64_t interval_ms);
+
+  void SetWriteInterval(uint64_t interval_ms);
     std::unique_ptr<StatisticsSender> statistics_sender__;
   private:
     uint64_t GetElapsedMs(StatisticEntity entity) const noexcept;
@@ -51,6 +56,7 @@ class Statistics {
     std::chrono::nanoseconds time_counters_[kNStatisticEntities];
     uint64_t volume_counter_;
     unsigned int write_interval_;
+    std::string tag_;
 
 };
 

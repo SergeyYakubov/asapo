@@ -6,5 +6,5 @@
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "WriteToDisk":true,
   "WriteToDb":true,
-  "LogLevel" : "info"
+  "LogLevel" : "debug"
 }

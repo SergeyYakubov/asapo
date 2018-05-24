@@ -46,12 +46,12 @@ using asapo::MockStatistics;
 namespace {
 
 TEST(Connection, Constructor) {
-    Connection connection{0, "some_address"};
+    Connection connection{0, "some_address","some_tag"};
     ASSERT_THAT(dynamic_cast<asapo::Statistics*>(connection.statistics__.get()), Ne(nullptr));
+
     ASSERT_THAT(dynamic_cast<asapo::IO*>(connection.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(connection.request_factory__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(connection.log__), Ne(nullptr));
-
 }
 
 class MockRequestHandler: public Request {
@@ -85,7 +85,7 @@ class MockRequestFactory: public asapo::RequestFactory {
 class ConnectionTests : public Test {
   public:
     std::string connected_uri{"some_address"};
-    Connection connection{0, connected_uri};
+    Connection connection{0, connected_uri,"some_tag"};
     MockIO mock_io;
     MockRequestFactory mock_factory;
     NiceMock<MockStatistics> mock_statictics;

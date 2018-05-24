@@ -34,4 +34,4 @@ $1 localhost:5006 100 100 4 0 &
 #producerrid=`echo $!`
 sleep 0.1
 
-$4 ${broker_address} ${broker_database_name} 2 | grep "Processed 100 file(s)"
+$2 ${broker_address} ${broker_database_name} 2 | grep "Processed 100 file(s)"

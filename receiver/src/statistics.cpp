@@ -23,6 +23,7 @@ StatisticsToSend Statistics::PrepareStatisticsToSend() const noexcept {
     stat.n_requests = nrequests_;
     stat.data_volume = volume_counter_;
     stat.elapsed_ms = std::max(uint64_t{1}, GetTotalElapsedMs());
+    stat.tags = tag_;
     for (auto i = 0; i < kNStatisticEntities; i++) {
         stat.entity_shares[i] =  double(GetElapsedMs(StatisticEntity(i))) / stat.elapsed_ms;
     }
@@ -76,5 +77,11 @@ void Statistics::StopTimer() noexcept {
     time_counters_[current_statistic_entity_] += elapsed;
 }
 
+void Statistics::AddTag(const std::string &name, const std::string &value) noexcept {
+    if (!tag_.empty()) {
+        tag_ += ",";
+    }
+    tag_ += name + "=" + value;
+}
 
 }

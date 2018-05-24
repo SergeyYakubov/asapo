@@ -60,6 +60,7 @@ ACTION_P(SaveArg1ToSendStat, value) {
     value->n_requests = resp.n_requests;
     value->data_volume = resp.data_volume;
     value->elapsed_ms = resp.elapsed_ms;
+    value->tags = resp.tags;
     for (int i = 0; i < asapo::kNStatisticEntities; i++) {
         value->entity_shares[i] = resp.entity_shares[i];
     }
@@ -91,6 +92,26 @@ TEST_F(StatisticTests, IncreaseRequestCounter) {
 
     ASSERT_THAT(stat.n_requests, Eq(1));
 }
+
+TEST_F(StatisticTests, AddTag) {
+    statistics.AddTag("name","value");
+
+    auto stat = ExtractStat();
+
+    ASSERT_THAT(stat.tags, Eq("name=value"));
+}
+
+TEST_F(StatisticTests, AddTagTwice) {
+    statistics.AddTag("name1","value1");
+    statistics.AddTag("name2","value2");
+
+    auto stat = ExtractStat();
+
+    ASSERT_THAT(stat.tags, Eq("name1=value1,name2=value2"));
+}
+
+
+
 
 TEST_F(StatisticTests, StatisticsResetAfterSend) {
     statistics.IncreaseRequestCounter();

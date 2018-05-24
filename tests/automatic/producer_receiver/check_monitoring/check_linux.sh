@@ -29,4 +29,4 @@ $1 localhost:5006 100 112 4  0
 
 sleep 1
 
-influx -execute "select sum(n_requests) from statistics" -database=${database_name} -format=json | jq .results[0].series[0].values[0][1] | grep 112
+influx -execute "select sum(n_requests) from statistics" -database=${database_name} -format=json  jq .results[0].series[0].values[0][1] | grep 112
