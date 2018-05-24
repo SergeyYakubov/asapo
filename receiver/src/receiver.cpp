@@ -5,6 +5,8 @@
 #include "connection.h"
 #include <io/io_factory.h>
 
+#include "receiver_config.h"
+
 namespace asapo {
 
 
@@ -37,11 +39,9 @@ void Receiver::Listen(std::string listener_address, Error* err, bool exit_after_
     }
 }
 
-//TODO: remove error since it is not used
 void Receiver::ProcessConnections(Error* err) {
     std::string address;
     FileDescriptor connection_socket_fd;
-
     //TODO: Use InetAcceptConnectionWithTimeout
     auto client_info_tuple = io__->InetAcceptConnection(listener_fd_, err);
     if(*err) {
@@ -56,8 +56,7 @@ void Receiver::ProcessConnections(Error* err) {
 void Receiver::StartNewConnectionInSeparateThread(int connection_socket_fd, const std::string& address)  {
     log__->Info("new connection from " + address);
     auto thread = io__->NewThread([connection_socket_fd, address] {
-      // todo: reveicer tag
-        auto connection = std::unique_ptr<Connection>(new Connection(connection_socket_fd, address,"1"));
+        auto connection = std::unique_ptr<Connection>(new Connection(connection_socket_fd, address,GetReceiverConfig()->tag));
         connection->Listen();
     });
 

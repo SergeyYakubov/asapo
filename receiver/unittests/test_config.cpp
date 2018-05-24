@@ -50,6 +50,7 @@ TEST_F(ConfigTests, ReadSettings) {
 
     asapo::ReceiverConfig test_config;
     test_config.listen_port = 4200;
+    test_config.tag = "receiver1";
     test_config.monitor_db_name = "db_test";
     test_config.monitor_db_uri = "localhost:8086";
     test_config.write_to_disk = true;
@@ -71,7 +72,7 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->write_to_disk, Eq(true));
     ASSERT_THAT(config->write_to_db, Eq(true));
     ASSERT_THAT(config->log_level, Eq(asapo::LogLevel::Error));
-
+    ASSERT_THAT(config->tag, Eq("receiver1"));
 }
 
 }

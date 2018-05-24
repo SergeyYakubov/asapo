@@ -16,6 +16,7 @@ struct ReceiverConfig {
     bool write_to_disk = false;
     bool write_to_db = false;
     LogLevel log_level = LogLevel::Info;
+    std::string tag;
 };
 
 const ReceiverConfig* GetReceiverConfig();
