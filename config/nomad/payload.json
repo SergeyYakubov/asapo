@@ -1,0 +1,9 @@
+{
+  "Name": "discovery",
+  "Address": "127.0.0.1",
+  "Port": 5006,
+  "Check": {
+    "HTTP": "http://localhost:5006/receivers",
+    "Interval": "15s"
+  }
+}
