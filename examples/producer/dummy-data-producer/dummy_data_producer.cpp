@@ -43,12 +43,11 @@ void work(asapo::GenericRequestHeader header, asapo::Error err) {
     mutex.unlock();
 }
 
-bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations) {
-    auto buffer = std::unique_ptr<uint8_t>(new uint8_t[number_of_byte]);
+bool SendDummyData(asapo::Producer* producer, uint8_t* data, size_t number_of_byte, uint64_t iterations) {
 
     for(uint64_t i = 0; i < iterations; i++) {
 //        std::cerr << "Send file " << i + 1 << "/" << iterations << std::endl;
-        auto err = producer->Send(i + 1, buffer.get(), number_of_byte, std::to_string(i), &work);
+        auto err = producer->Send(i + 1, data, number_of_byte, std::to_string(i), &work);
         if (err) {
             std::cerr << "Cannot send file: " << err << std::endl;
             return false;
@@ -87,13 +86,18 @@ int main (int argc, char* argv[]) {
     producer->SetLogLevel(asapo::LogLevel::Debug);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
+
+    size_t number_of_byte = number_of_kbytes * 1024;
+    auto buffer = std::unique_ptr<uint8_t>(new uint8_t[number_of_byte]);
+
+
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         return EXIT_FAILURE;
     }
 
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    if(!SendDummyData(producer.get(), number_of_kbytes * 1024, iterations)) {
+    if(!SendDummyData(producer.get(), buffer.get(), number_of_byte, iterations)) {
         return EXIT_FAILURE;
     }
 

@@ -10,5 +10,5 @@ const (
 	//error codes
 	StatusError      = http.StatusInternalServerError
 	StatusWrongInput = http.StatusBadRequest
-	StatusNoData     = http.StatusNoContent
+	StatusNoData     = http.StatusNotFound
 )

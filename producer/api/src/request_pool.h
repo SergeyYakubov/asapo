@@ -13,10 +13,7 @@
 #include "request_handler_tcp.h"
 #include "request_handler_factory.h"
 
-#ifdef UNIT_TESTS
-#define VIRTUAL virtual
-#endif
-
+#include "preprocessor/definitions.h"
 
 
 namespace asapo {

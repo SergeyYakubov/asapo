@@ -3,10 +3,11 @@
 package database
 
 import (
+	"asapo_broker/utils"
+	"encoding/json"
 	"errors"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"asapo_broker/utils"
 	"sync"
 	"time"
 )
@@ -150,15 +151,23 @@ func (db *Mongodb) incrementField(dbname string, max_ind int, res interface{}) (
 	return err
 }
 
-func (db *Mongodb) getRecordByID(dbname string, id int) (interface{}, error) {
+func (db *Mongodb) GetRecordByID(dbname string, id int) ([]byte, error) {
 	var res map[string]interface{}
 	q := bson.M{"_id": id}
 	c := db.session.DB(dbname).C(data_collection_name)
 	err := c.Find(q).One(&res)
 	if err == mgo.ErrNotFound {
-		return nil, &DBError{utils.StatusNoData, err.Error()}
+		var r = struct {
+			Id int `json:"id""`
+		}{id}
+		res, _ := json.Marshal(&r)
+		return nil, &DBError{utils.StatusNoData, string(res)}
 	}
-	return &res, err
+	if err != nil {
+		return nil, err
+	}
+
+	return utils.MapToJson(&res)
 }
 
 func (db *Mongodb) needCreateLocationPointersInDb(db_name string) bool {
@@ -230,11 +239,6 @@ func (db *Mongodb) GetNextRecord(db_name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	return db.GetRecordByID(db_name, curPointer.Value)
 
-	res, err := db.getRecordByID(db_name, curPointer.Value)
-	if err != nil {
-		return nil, err
-	}
-
-	return utils.MapToJson(&res)
 }

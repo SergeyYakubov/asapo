@@ -10,10 +10,7 @@
 
 #include "http_client/http_client.h"
 #include "logger/logger.h"
-
-#ifdef UNIT_TESTS
-#define VIRTUAL virtual
-#endif
+#include "preprocessor/definitions.h"
 
 namespace  asapo {
 

@@ -77,7 +77,7 @@ void Statistics::StopTimer() noexcept {
     time_counters_[current_statistic_entity_] += elapsed;
 }
 
-void Statistics::AddTag(const std::string &name, const std::string &value) noexcept {
+void Statistics::AddTag(const std::string& name, const std::string& value) noexcept {
     if (!tag_.empty()) {
         tag_ += ",";
     }

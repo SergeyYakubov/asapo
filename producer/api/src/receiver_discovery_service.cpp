@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <numeric>
 
 namespace  asapo {
 
@@ -58,7 +59,9 @@ void ReceiverDiscoveryService::ThreadHandler() {
             lock.lock();
             continue;
         }
-        log__->Debug("got receivers from " + endpoint_ );
+        std::string s;
+        s = std::accumulate(std::begin(uris), std::end(uris), s);
+        log__->Debug("got receivers from " + endpoint_ + ":" + s);
         lock.lock();
         max_connections_ = max_connections;
         uri_list_ = uris;

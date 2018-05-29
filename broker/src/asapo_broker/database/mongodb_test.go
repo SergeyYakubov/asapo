@@ -3,9 +3,9 @@
 package database
 
 import (
+	"asapo_broker/utils"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"asapo_broker/utils"
 	"sync"
 	"testing"
 )
@@ -64,6 +64,16 @@ func TestMongoDBGetNextErrorWhenEmptyCollection(t *testing.T) {
 	defer cleanup()
 	_, err := db.GetNextRecord(dbname)
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+}
+
+func TestMongoDBGetNextErrorWhenRecordNotThereYet(t *testing.T) {
+	db.Connect(dbaddress)
+	db.databases = append(db.databases, dbname)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec2)
+	_, err := db.GetNextRecord(dbname)
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"id\":1}", err.Error())
 }
 
 func TestMongoDBGetNextOK(t *testing.T) {
@@ -142,4 +152,22 @@ func TestMongoDBGetNextInParallel(t *testing.T) {
 	results := getRecords(n)
 
 	assert.Equal(t, n, getNOnes(results))
+}
+
+func TestMongoDBGetRecordByID(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec1)
+	res, err := db.GetRecordByID(dbname, 1)
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec1_expect), string(res))
+}
+
+func TestMongoDBGetRecordByIDFails(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec1)
+	_, err := db.GetRecordByID(dbname, 2)
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"id\":2}", err.Error())
 }

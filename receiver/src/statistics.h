@@ -7,6 +7,7 @@
 
 
 #include "statistics_sender.h"
+#include "preprocessor/definitions.h"
 
 namespace asapo {
 
@@ -25,10 +26,6 @@ struct StatisticsToSend {
     std::string tags;
 };
 
-#ifdef UNIT_TESTS
-#define VIRTUAL virtual
-#endif
-
 class Statistics {
   public:
     VIRTUAL void SendIfNeeded() noexcept;
@@ -38,10 +35,10 @@ class Statistics {
     VIRTUAL void StartTimer(const StatisticEntity& entity) noexcept;
     VIRTUAL void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
     VIRTUAL void StopTimer() noexcept;
-    VIRTUAL void AddTag(const std::string& name,const std::string& value) noexcept;
+    VIRTUAL void AddTag(const std::string& name, const std::string& value) noexcept;
 
 
-  void SetWriteInterval(uint64_t interval_ms);
+    void SetWriteInterval(uint64_t interval_ms);
     std::unique_ptr<StatisticsSender> statistics_sender__;
   private:
     uint64_t GetElapsedMs(StatisticEntity entity) const noexcept;

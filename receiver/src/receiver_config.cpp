@@ -21,9 +21,9 @@ Error ReceiverConfigFactory::SetConfigFromFile(std::string file_name) {
     (err = parser.GetBool("WriteToDb", &config.write_to_db)) ||
     (err = parser.GetString("BrokerDbAddress", &config.broker_db_uri)) ||
     (err = parser.GetString("BrokerDbName", &config.broker_db_name)) ||
-        (err = parser.GetString("Tag", &config.tag)) ||
+    (err = parser.GetString("Tag", &config.tag)) ||
 
-        (err = parser.GetString("MonitorDbName", &config.monitor_db_name));
+    (err = parser.GetString("MonitorDbName", &config.monitor_db_name));
     (err = parser.GetString("LogLevel", &log_level));
     if (err) {
         return err;

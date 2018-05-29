@@ -4,13 +4,9 @@
 #include "request_handler.h"
 #include "receiver_discovery_service.h"
 
+#include "preprocessor/definitions.h"
 
 namespace  asapo {
-
-#ifdef UNIT_TESTS
-#define VIRTUAL virtual
-#endif
-
 
 class RequestHandlerFactory {
   public:

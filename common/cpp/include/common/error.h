@@ -17,7 +17,8 @@ enum class ErrorType {
     kProducerError,
 
     kMemoryAllocationError,
-    kEndOfFile
+    kEndOfFile,
+    kTimeOut
 };
 
 class ErrorInterface;

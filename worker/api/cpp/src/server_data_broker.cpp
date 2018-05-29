@@ -2,12 +2,13 @@
 
 #include <chrono>
 
+#include <json_parser/json_parser.h>
+
 #include "io/io_factory.h"
 
 #include "http_client/http_error.h"
 
 using std::chrono::high_resolution_clock;
-
 
 namespace asapo {
 
@@ -22,12 +23,9 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
     case HttpCode::InternalServerError:
         message = WorkerErrorMessage::kErrorReadingSource;
         break;
-    case HttpCode::NoContent:
+    case HttpCode::NotFound:
         message = WorkerErrorMessage::kNoData;
         return TextErrorWithType(message, ErrorType::kEndOfFile);
-    case HttpCode::NotFound:
-        message = WorkerErrorMessage::kSourceNotFound;
-        break;
     default:
         message = WorkerErrorMessage::kErrorReadingSource;
         break;
@@ -35,10 +33,8 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
     return Error{new HttpError(message, code)};
 }
 
-
-
 ServerDataBroker::ServerDataBroker(const std::string& server_uri,
-                                   const std::string& source_name):
+                                   const std::string& source_name) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
     server_uri_{server_uri}, source_name_{source_name} {
 }
@@ -51,11 +47,19 @@ void ServerDataBroker::SetTimeout(uint64_t timeout_ms) {
     timeout_ms_ = timeout_ms;
 }
 
+std::string GetIDFromJson(const std::string& json_string, Error* err) {
+    JsonStringParser parser(json_string);
+    uint64_t id;
+    if ((*err = parser.GetUInt64("id", &id)) != nullptr) {
+        return "";
+    }
+    return std::to_string(id);
+}
+
 Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
-    std::string full_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
     Error err;
     HttpCode code;
-
+    std::string full_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
     std::string response;
     uint64_t elapsed_ms = 0;
     while (true) {
@@ -68,11 +72,19 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string&
         if (err == nullptr) break;
         if (err->GetErrorType() != asapo::ErrorType::kEndOfFile) {
             err->Append(response);
-//            return err;
+            return err;
+        } else {
+            if (response.find("id") != std::string::npos) {
+                auto id = GetIDFromJson(response, &err);
+                if (err) {
+                    return err;
+                }
+                full_uri = server_uri_ + "/database/" + source_name_ + "/" + id;
+            }
         }
 
         if (elapsed_ms >= timeout_ms_) {
-            err->Append("exit on timeout");
+            err = TextErrorWithType("no more data found, exit on timeout", asapo::ErrorType::kTimeOut);
             return err;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -90,7 +102,7 @@ Error ServerDataBroker::GetNext(FileInfo* info, FileData* data) {
         return TextError(WorkerErrorMessage::kWrongInput);
     }
 
-    auto  err = GetFileInfoFromServer(info, "next");
+    auto err = GetFileInfoFromServer(info, "next");
     if (err != nullptr) {
         return err;
     }

@@ -121,6 +121,12 @@ void RequestHandlerTcpTests::ExpectFailConnect(bool only_once) {
                 testing::SetArgPointee<1>(asapo::IOErrorTemplates::kInvalidAddressFormat.Generate().release()),
                 Return(asapo::kDisconnectedSocketDescriptor)
             ));
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+                                           HasSubstr("cannot connect"),
+                                           HasSubstr(expected_address)
+                                       )
+                                      ));
+
         if (only_once) break;
     }
 

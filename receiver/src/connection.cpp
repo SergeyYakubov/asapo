@@ -11,13 +11,14 @@ namespace asapo {
 size_t Connection::kRequestHandlerMaxBufferSize;
 std::atomic<uint32_t> Connection::kNetworkProducerPeerImplGlobalCounter(0);
 
-Connection::Connection(SocketDescriptor socket_fd, const std::string& address,std::string receiver_tag): request_factory__{new RequestFactory},
+Connection::Connection(SocketDescriptor socket_fd, const std::string& address,
+                       std::string receiver_tag): request_factory__{new RequestFactory},
 io__{GenerateDefaultIO()}, statistics__{new Statistics}, log__{GetDefaultReceiverLogger()} {
     socket_fd_ = socket_fd;
     connection_id_ = kNetworkProducerPeerImplGlobalCounter++;
     address_ = address;
-    statistics__->AddTag("connection_from",address);
-    statistics__->AddTag("receiver_tag",std::move(receiver_tag));
+    statistics__->AddTag("connection_from", address);
+    statistics__->AddTag("receiver_tag", std::move(receiver_tag));
 
 }
 

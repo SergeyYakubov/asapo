@@ -18,7 +18,7 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& receiver_address) 
     Error err;
     sd_ = io__->CreateAndConnectIPTCPSocket(receiver_address, &err);
     if(err != nullptr) {
-        //log__->Debug("cannot connect to receiver at " + receiver_address + " - " + err->Explain());
+        log__->Debug("cannot connect to receiver at " + receiver_address + " - " + err->Explain());
         return err;
     }
     log__->Info("connected to receiver at " + receiver_address);
@@ -68,7 +68,8 @@ Error RequestHandlerTcp::TrySendToReceiver(const Request* request, const std::st
         return err;
     }
 
-    log__->Debug("successfully sent data to " + receiver_address);
+    log__->Debug(std::string("successfully sent data ") + " id: " + std::to_string(request->header.data_id) + " to " +
+                 receiver_address);
     return nullptr;
 }
 

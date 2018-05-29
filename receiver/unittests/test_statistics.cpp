@@ -94,7 +94,7 @@ TEST_F(StatisticTests, IncreaseRequestCounter) {
 }
 
 TEST_F(StatisticTests, AddTag) {
-    statistics.AddTag("name","value");
+    statistics.AddTag("name", "value");
 
     auto stat = ExtractStat();
 
@@ -102,8 +102,8 @@ TEST_F(StatisticTests, AddTag) {
 }
 
 TEST_F(StatisticTests, AddTagTwice) {
-    statistics.AddTag("name1","value1");
-    statistics.AddTag("name2","value2");
+    statistics.AddTag("name1", "value1");
+    statistics.AddTag("name2", "value2");
 
     auto stat = ExtractStat();
 

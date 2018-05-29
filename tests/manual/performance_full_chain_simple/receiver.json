@@ -6,5 +6,6 @@
   "ListenPort":4200,
   "WriteToDisk":true,
   "WriteToDb":true,
-  "LogLevel":"debug"
+  "LogLevel":"info",
+  "Tag": "test_receiver"
 }

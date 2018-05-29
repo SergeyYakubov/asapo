@@ -20,10 +20,11 @@ void WaitThreads(std::vector<std::thread>* threads) {
 
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
-    if (err->GetErrorType() != asapo::ErrorType::kEndOfFile) {
+    if (err->GetErrorType() != asapo::ErrorType::kTimeOut) {
         std::cout << err->Explain() << std::endl;
         return 1;
     }
+    std::cout << err->Explain() << std::endl;
     return 0;
 }
 

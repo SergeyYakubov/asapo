@@ -14,8 +14,10 @@ Cleanup() {
     nomad stop discovery
     echo "db.dropDatabase()" | mongo ${mongo_database_name}
     influx -execute "drop database ${database_name}"
-
 }
+
+influx -execute "create database ${database_name}"
+echo "db.${mongo_database_name}.insert({dummy:1})" | mongo ${mongo_database_name}
 
 nomad run receiver.nmd
 nomad run discovery.nmd
