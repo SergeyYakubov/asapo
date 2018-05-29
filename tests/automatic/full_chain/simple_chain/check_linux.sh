@@ -26,7 +26,7 @@ nomad run receiver.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
-sleep 1
+sleep 5
 
 
 #producer
@@ -35,4 +35,4 @@ $1 localhost:5006 100 1000 4 0 &
 #producerid=`echo $!`
 
 
-$2 ${broker_address} ${broker_database_name} 2 #| grep "Processed 1000 file(s)"
+$2 ${broker_address} ${broker_database_name} 2 | grep "Processed 1000 file(s)"

@@ -34,7 +34,7 @@ std::vector<std::thread> StartThreads(const std::string& server, const std::stri
         asapo::FileInfo fi;
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(server, run_name, &err);
-        broker->SetTimeout(1000);
+        broker->SetTimeout(10000);
         while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             (*nfiles)[i] ++;
         }

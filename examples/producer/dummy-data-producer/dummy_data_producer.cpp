@@ -83,7 +83,7 @@ int main (int argc, char* argv[]) {
         producer = asapo::Producer::Create(receiver_address, nthreads, asapo::RequestHandlerType::kFilesystem, &err);
     }
     producer->EnableLocalLog(true);
-    producer->SetLogLevel(asapo::LogLevel::Debug);
+    producer->SetLogLevel(asapo::LogLevel::Info);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 

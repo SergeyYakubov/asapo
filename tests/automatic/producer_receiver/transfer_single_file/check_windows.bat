@@ -1,13 +1,17 @@
-set full_recv_name="%2"
-set short_recv_name="%~nx2"
+SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
+SET database_name=test_run
 
-start /B "" "%full_recv_name%" receiver.json
+echo db.%database_name%.insert({dummy:1})" | %mongo_exe% %database_name%
+
+
+c:\opt\consul\nomad run receiver.nmd
+c:\opt\consul\nomad run discovery.nmd
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
 mkdir files
 
-%1 localhost:4200 100 1
+%1 localhost:5006 100 1 1 0
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
@@ -22,10 +26,9 @@ call :clean
 exit /b 1
 
 :clean
-Taskkill /IM "%short_recv_name%" /F
+c:\opt\consul\nomad stop receiver
+c:\opt\consul\nomad stop discovery
 rmdir /S /Q files
-SET database_name=test_run
-SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 echo db.dropDatabase() | %mongo_exe% %database_name%
 
 
