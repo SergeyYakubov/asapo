@@ -2,7 +2,7 @@
 
 database_name=db_test
 mongo_database_name=test_run
-receiver_folder=/tmp/asapo/recevier/files
+receiver_folder=/tmp/asapo/receiver/files
 set -e
 
 trap Cleanup EXIT

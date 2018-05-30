@@ -30,7 +30,7 @@ using asapo::IO;
 namespace {
 
 TEST(ParseString, SimpleConvertToJson) {
-    std::string json = R"({"_id":2,"foo":"foo","bar":1,"flag":true})";
+    std::string json = R"({"_id":2,"foo":"foo:\\1","bar":1,"flag":true})";
 
     JsonStringParser parser{json};
 
@@ -49,7 +49,7 @@ TEST(ParseString, SimpleConvertToJson) {
 
 
     ASSERT_THAT(id, Eq(2));
-    ASSERT_THAT(foo, Eq("foo"));
+    ASSERT_THAT(foo, Eq("foo:\\1"));
     ASSERT_THAT(bar, Eq(1));
     ASSERT_THAT(flag, true);
 

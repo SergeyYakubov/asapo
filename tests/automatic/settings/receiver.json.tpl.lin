@@ -8,5 +8,5 @@
   "WriteToDisk":true,
   "WriteToDb":true,
   "LogLevel" : "debug",
-  "RootFolder" : "/tmp/asapo/recevier/files"
+  "RootFolder" : "/tmp/asapo/receiver/files"
 }

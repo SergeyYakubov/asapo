@@ -8,7 +8,7 @@ broker_database_name=test_run
 monitor_database_name=db_test
 broker_address=127.0.0.1:5005
 
-receiver_folder=/tmp/asapo/recevier/files
+receiver_folder=/tmp/asapo/receiver/files
 
 Cleanup() {
     echo cleanup

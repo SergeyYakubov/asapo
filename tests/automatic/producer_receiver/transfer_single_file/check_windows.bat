@@ -1,6 +1,6 @@
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 SET database_name=test_run
-SET receiver_folder="c:\tmp\asapo\recevier\files"
+SET receiver_folder="c:\tmp\asapo\receiver\files"
 
 echo db.%database_name%.insert({dummy:1})" | %mongo_exe% %database_name%
 

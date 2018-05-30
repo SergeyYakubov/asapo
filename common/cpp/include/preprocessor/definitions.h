@@ -9,7 +9,7 @@
 
 namespace  asapo {
 const char kPathSeparator =
-#ifdef _WIN32
+#ifdef WIN32
     '\\';
 #else
     '/';

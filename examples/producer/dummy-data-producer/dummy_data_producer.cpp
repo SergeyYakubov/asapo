@@ -83,7 +83,7 @@ int main (int argc, char* argv[]) {
         producer = asapo::Producer::Create(receiver_address, nthreads, asapo::RequestHandlerType::kFilesystem, &err);
     }
     producer->EnableLocalLog(true);
-    producer->SetLogLevel(asapo::LogLevel::Info);
+    producer->SetLogLevel(asapo::LogLevel::Debug);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 
@@ -101,6 +101,9 @@ int main (int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    uint64_t elapsed_ms = 0;
+    uint64_t timeout_sec = 30;
+
     while (true) {
         mutex.lock();
         if (nfiles <= 0) {
@@ -108,6 +111,12 @@ int main (int argc, char* argv[]) {
             break;
         }
         mutex.unlock();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        elapsed_ms += 100;
+        if (elapsed_ms > timeout_sec * 1000) {
+            std::cerr << "Exit on timeout " << std::endl;
+            return EXIT_FAILURE;
+        }
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();

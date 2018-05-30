@@ -1,14 +1,14 @@
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
-set broker_database_name="test_run"
-SET receiver_folder="c:\tmp\asapo\recevier\files"
+set broker_database_name=test_run
+SET receiver_folder="c:\tmp\asapo\receiver\files"
 
-echo db.%broker_database_name%.insert({dummy:1})" | %mongo_exe% %broker_database_name%
+echo db.%broker_database_name%.insert({dummy:1}) | %mongo_exe% %broker_database_name%
 
 c:\opt\consul\nomad run receiver.nmd
 c:\opt\consul\nomad run discovery.nmd
 c:\opt\consul\nomad run broker.nmd
 
-ping 1.0.0.0 -n 1 -w 100 > nul
+ping 1.0.0.0 -n 10 -w 100 > nul
 
 REM producer
 mkdir %receiver_folder%
