@@ -1,4 +1,21 @@
-"%1" 0.0.0.0 1 1 1 1 2>&1 | findstr "not successfully" || goto :error
+SET folder=files
+
+mkdir %folder%
+
+"%1" %folder% 11 4 4 1 2>&1 | findstr "Rate" || goto :error
+
+FOR /F "usebackq" %%A IN ('%folder%\0.bin') DO set size=%%~zA
+if %size% NEQ 11264 goto :error
+
+FOR /F "usebackq" %%A IN ('%folder%\1.bin') DO set size=%%~zA
+if %size% NEQ 11264 goto :error
+
+FOR /F "usebackq" %%A IN ('%folder%\2.bin') DO set size=%%~zA
+if %size% NEQ 11264 goto :error
+
+FOR /F "usebackq" %%A IN ('%folder%\3.bin') DO set size=%%~zA
+if %size% NEQ 11264 goto :error
+
 goto :clean
 
 :error
@@ -6,4 +23,5 @@ call :clean
 exit /b 1
 
 :clean
+rmdir /S /Q %folder%
 

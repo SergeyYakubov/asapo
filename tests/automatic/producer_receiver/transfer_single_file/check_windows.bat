@@ -17,7 +17,6 @@ mkdir %receiver_folder%
 ping 1.0.0.0 -n 1 -w 100 > nul
 
 FOR /F "usebackq" %%A IN ('%receiver_folder%\1.bin') DO set size=%%~zA
-
 if %size% NEQ 102400 goto :error
 
 goto :clean
