@@ -51,7 +51,11 @@ int main(int argc, char* argv[]) {
     auto params = GetParams(argc, argv);
 
     auto io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
-    FileData data{new uint8_t[params.length]{'1', '2', '3'}};
+    auto array = new uint8_t[params.length];
+    array[0] = '1';
+    array[1] = '2';
+    array[2] = '3';
+    FileData data{array};
 
     auto err = io->WriteDataToFile(params.fname, data, params.length);
 

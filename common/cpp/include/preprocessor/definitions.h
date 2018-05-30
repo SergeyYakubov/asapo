@@ -7,5 +7,13 @@
 #define VIRTUAL
 #endif
 
+namespace  asapo {
+const char kPathSeparator =
+#ifdef _WIN32
+    '\\';
+#else
+    '/';
+#endif
+}
 
 #endif //ASAPO_DEFINITIONS_H

@@ -7,5 +7,6 @@
   "Tag": "{{ env "NOMAD_ADDR_recv" }}",
   "WriteToDisk":true,
   "WriteToDb":true,
-  "LogLevel" : "debug"
+  "LogLevel" : "debug",
+  "RootFolder" : "/tmp/asapo/recevier/files"
 }

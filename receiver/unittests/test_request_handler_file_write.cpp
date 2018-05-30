@@ -9,7 +9,8 @@
 #include "../src/request_handler.h"
 #include "../src/request_handler_file_write.h"
 #include "common/networking.h"
-
+#include "mock_receiver_config.h"
+#include "preprocessor/definitions.h"
 
 using ::testing::Test;
 using ::testing::Return;
@@ -120,10 +121,16 @@ void FileWriteHandlerTests::MockRequestData() {
 }
 
 TEST_F(FileWriteHandlerTests, CallsWriteFile) {
+    asapo::ReceiverConfig test_config;
+    test_config.root_folder = "test_folder";
+
+    asapo::SetReceiverConfig(test_config);
 
     MockRequestData();
 
-    EXPECT_CALL(mock_io, WriteDataToFile_t("files/" + expected_file_name, _, expected_file_size))
+    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + expected_file_name;
+
+    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_path.c_str(), _, expected_file_size))
     .WillOnce(
         Return(asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
     );

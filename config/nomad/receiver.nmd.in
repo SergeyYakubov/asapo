@@ -10,8 +10,8 @@ job "receiver" {
       driver = "raw_exec"
 
       config {
-        command = "/bin/bash",
-        args =  ["-c", "cd  @WORK_DIR@ && exec @RECEIVER_DIR@/@RECEIVER_NAME@ ${NOMAD_TASK_DIR}/receiver.json"]
+        command = "@RECEIVER_DIR@/@RECEIVER_NAME@",
+        args =  ["${NOMAD_TASK_DIR}/receiver.json"]
       }
 
       resources {

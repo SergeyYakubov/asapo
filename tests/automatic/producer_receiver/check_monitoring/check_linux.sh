@@ -2,7 +2,7 @@
 
 database_name=db_test
 mongo_database_name=test_run
-
+receiver_folder=/tmp/asapo/recevier/files
 set -e
 
 trap Cleanup EXIT
@@ -13,10 +13,10 @@ Cleanup() {
     nomad stop receiver
     nomad stop discovery
     echo "db.dropDatabase()" | mongo ${mongo_database_name}
-    rm -rf files
+    rm -rf ${receiver_folder}
 }
 
-mkdir files
+mkdir -p ${receiver_folder}
 
 influx -execute "create database ${database_name}"
 
@@ -29,4 +29,4 @@ $1 localhost:5006 100 112 4  0
 
 sleep 1
 
-influx -execute "select sum(n_requests) from statistics" -database=${database_name} -format=json  jq .results[0].series[0].values[0][1] | grep 112
+influx -execute "select sum(n_requests) from statistics" -database=${database_name} -format=json | jq .results[0].series[0].values[0][1] | grep 112

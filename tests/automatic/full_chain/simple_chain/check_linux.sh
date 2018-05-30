@@ -8,9 +8,11 @@ broker_database_name=test_run
 monitor_database_name=db_test
 broker_address=127.0.0.1:5005
 
+receiver_folder=/tmp/asapo/recevier/files
+
 Cleanup() {
     echo cleanup
-    rm -rf files
+    rm -rf ${receiver_folder}
     nomad stop receiver
     nomad stop discovery
     nomad stop broker
@@ -26,11 +28,10 @@ nomad run receiver.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
-sleep 5
-
+sleep 1
 
 #producer
-mkdir files
+mkdir -p ${receiver_folder}
 $1 localhost:5006 100 1000 4 0 &
 #producerid=`echo $!`
 

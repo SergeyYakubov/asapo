@@ -1,5 +1,6 @@
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 set broker_database_name="test_run"
+SET receiver_folder="c:\tmp\asapo\recevier\files"
 
 echo db.%broker_database_name%.insert({dummy:1})" | %mongo_exe% %broker_database_name%
 
@@ -10,7 +11,7 @@ c:\opt\consul\nomad run broker.nmd
 ping 1.0.0.0 -n 1 -w 100 > nul
 
 REM producer
-mkdir files
+mkdir %receiver_folder%
 start /B "" "%1" localhost:5006 100 1000 4 0
 ping 1.0.0.0 -n 1 -w 100 > nul
 
@@ -29,7 +30,7 @@ exit /b 1
 c:\opt\consul\nomad stop receiver
 c:\opt\consul\nomad stop discovery
 c:\opt\consul\nomad stop broker
-rmdir /S /Q files
+rmdir /S /Q %receiver_folder%
 echo db.dropDatabase() | %mongo_exe% %broker_database_name%
 
 

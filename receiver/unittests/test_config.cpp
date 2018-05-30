@@ -58,6 +58,7 @@ TEST_F(ConfigTests, ReadSettings) {
     test_config.broker_db_uri = "localhost:27017";
     test_config.broker_db_name = "test";
     test_config.log_level = asapo::LogLevel::Error;
+    test_config.root_folder = "test_fodler";
 
     auto err = asapo::SetReceiverConfig(test_config);
 
@@ -73,6 +74,8 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->write_to_db, Eq(true));
     ASSERT_THAT(config->log_level, Eq(asapo::LogLevel::Error));
     ASSERT_THAT(config->tag, Eq("receiver1"));
+    ASSERT_THAT(config->root_folder, Eq("test_fodler"));
+
 }
 
 }

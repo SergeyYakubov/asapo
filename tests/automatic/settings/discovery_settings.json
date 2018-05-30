@@ -1,6 +1,0 @@
-{
-  "MaxConnections": 32,
-  "Mode": "consul",
-  "Port":5006,
-  "LogLevel":"debug"
-}
