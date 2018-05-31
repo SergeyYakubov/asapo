@@ -47,6 +47,13 @@ Error ReceiverDiscoveryService::UpdateFromEndpoint(ReceiversList* list, uint64_t
 
 }
 
+void ReceiverDiscoveryService::LogUriList(const ReceiversList& uris) {
+    std::string s;
+    s = std::accumulate(std::begin(uris), std::end(uris), s);
+    log__->Debug("got receivers from " + endpoint_ + ":" + s);
+}
+
+
 void ReceiverDiscoveryService::ThreadHandler() {
     std::unique_lock<std::mutex> lock(mutex_);
     do {
@@ -59,9 +66,7 @@ void ReceiverDiscoveryService::ThreadHandler() {
             lock.lock();
             continue;
         }
-        std::string s;
-        s = std::accumulate(std::begin(uris), std::end(uris), s);
-        log__->Debug("got receivers from " + endpoint_ + ":" + s);
+        LogUriList(uris);
         lock.lock();
         max_connections_ = max_connections;
         uri_list_ = uris;

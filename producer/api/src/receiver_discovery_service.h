@@ -31,6 +31,7 @@ class ReceiverDiscoveryService {
     void ThreadHandler();
     Error UpdateFromEndpoint(ReceiversList* list, uint64_t* max_connections);
     Error ParseResponse(const std::string& responce, ReceiversList* list, uint64_t* max_connections);
+    void LogUriList(const ReceiversList& uris);
     std::string endpoint_;
     std::thread thread_;
     std::condition_variable condition_;
