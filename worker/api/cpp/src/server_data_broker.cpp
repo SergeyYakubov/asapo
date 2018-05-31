@@ -56,31 +56,46 @@ std::string GetIDFromJson(const std::string& json_string, Error* err) {
     return std::to_string(id);
 }
 
-Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
+void ServerDataBroker::ProcessServerError(Error* err,const std::string& response,std::string* redirect_uri) {
+    if ((*err)->GetErrorType() != asapo::ErrorType::kEndOfFile) {
+        (*err)->Append(response);
+        return;
+    } else {
+        if (response.find("id") != std::string::npos) {
+            auto id = GetIDFromJson(response, err);
+            if (*err) {
+                return;
+            }
+            *redirect_uri = server_uri_ + "/database/" + source_name_ + "/" + id;
+        }
+    }
+    *err=nullptr;
+    return;
+}
+
+Error ServerDataBroker::ProcessRequest(std::string* response,std::string request_uri) {
     Error err;
     HttpCode code;
-    std::string full_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
-    std::string response;
+    *response = httpclient__->Get(request_uri, &code, &err);
+    if (err != nullptr) {
+        return err;
+    }
+    return HttpCodeToWorkerError(code);
+}
+
+Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
+    std::string request_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
     uint64_t elapsed_ms = 0;
+    std::string response;
     while (true) {
-        response = httpclient__->Get(full_uri, &code, &err);
-        if (err != nullptr) {
-            return err;
+        auto err = ProcessRequest(&response,request_uri);
+        if (err == nullptr) {
+            break;
         }
 
-        err = HttpCodeToWorkerError(code);
-        if (err == nullptr) break;
-        if (err->GetErrorType() != asapo::ErrorType::kEndOfFile) {
-            err->Append(response);
+        ProcessServerError(&err,response,&request_uri);
+        if (err != nullptr) {
             return err;
-        } else {
-            if (response.find("id") != std::string::npos) {
-                auto id = GetIDFromJson(response, &err);
-                if (err) {
-                    return err;
-                }
-                full_uri = server_uri_ + "/database/" + source_name_ + "/" + id;
-            }
         }
 
         if (elapsed_ms >= timeout_ms_) {
