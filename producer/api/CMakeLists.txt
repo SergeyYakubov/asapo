@@ -1,15 +1,20 @@
 set(TARGET_NAME producer-api)
 set(SOURCE_FILES
         src/producer.cpp
-        src/producer_impl.h
         src/producer_impl.cpp
-        )
+        src/producer_logger.cpp
+        src/request_handler_tcp.cpp
+        src/request_handler_filesystem.cpp
+        src/request_pool.cpp
+        src/receiver_discovery_service.cpp
+        src/request_handler_factory.cpp
+        src/request.cpp include/producer/common.h)
 
 
 ################################
 # Library
 ################################
-add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:logger>
+add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:json_parser>
         $<TARGET_OBJECTS:curl_http_client> )
 target_include_directories(${TARGET_NAME} PUBLIC include ${ASAPO_CXX_COMMON_INCLUDE_DIR})
 target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
@@ -20,6 +25,12 @@ target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
 set(TEST_SOURCE_FILES
         unittests/test_producer_impl.cpp
         unittests/test_producer.cpp
+        unittests/test_request_handler_tcp.cpp
+        unittests/test_request_handler_filesystem.cpp
+        unittests/test_request_pool.cpp
+        unittests/test_receiver_discovery_service.cpp
+        unittests/test_request_handler_factory.cpp
+
         )
 set(TEST_LIBRARIES "${TARGET_NAME}")
 

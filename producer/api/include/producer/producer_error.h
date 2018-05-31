@@ -10,7 +10,9 @@ enum class ProducerErrorType {
     kConnectionNotReady,
     kFileTooLarge,
     kFileIdAlreadyInUse,
-    kUnknownServerError
+    kInternalServerError,
+    kCannotSendDataToReceivers,
+    kRequestPoolIsFull
 };
 
 //TODO Make a marco to create error class and error template class
@@ -51,6 +53,11 @@ class ProducerErrorTemplate : public SimpleErrorTemplate {
     }
 };
 
+static inline std::ostream& operator<<(std::ostream& os, const ProducerErrorTemplate& err) {
+    return os << err.Text();
+}
+
+
 namespace ProducerErrorTemplates {
 auto const kAlreadyConnected = ProducerErrorTemplate {
     "Already connected", ProducerErrorType::kAlreadyConnected
@@ -67,9 +74,19 @@ auto const kFileIdAlreadyInUse = ProducerErrorTemplate {
     "File already in use", ProducerErrorType::kFileIdAlreadyInUse
 };
 
-auto const kUnknownServerError = ProducerErrorTemplate {
-    "Unknown server error", ProducerErrorType::kUnknownServerError
+auto const kInternalServerError = ProducerErrorTemplate {
+    "Internal server error", ProducerErrorType::kInternalServerError
 };
+
+auto const kCannotSendDataToReceivers = ProducerErrorTemplate {
+    "Cannot connect/send data to receivers", ProducerErrorType::kCannotSendDataToReceivers
+};
+
+auto const kRequestPoolIsFull = ProducerErrorTemplate {
+    "Cannot add request to poll - hit pool size limit", ProducerErrorType::kRequestPoolIsFull
+};
+
+
 
 
 };

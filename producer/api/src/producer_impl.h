@@ -6,40 +6,37 @@
 #include <io/io.h>
 #include "producer/producer.h"
 #include "logger/logger.h"
+#include "request_pool.h"
+#include "request_handler_factory.h"
+#include "receiver_discovery_service.h"
 
 namespace asapo {
+
 class ProducerImpl : public Producer {
   private:
-    static const uint32_t kVersion;
-
-    int         client_fd_ = -1;
-    std::string receiver_uri_;
-    uint64_t    request_id_ = 0;
-
-    ProducerStatus status_ = ProducerStatus::kDisconnected;
-
-    Error InitializeSocketToReceiver(const std::string& receiver_address);
-    GenericNetworkRequestHeader GenerateNextSendRequest(uint64_t file_id, size_t file_size);
-    Error SendHeaderAndData(const GenericNetworkRequestHeader& header, const void* data, size_t file_size);
-    Error ReceiveResponce();
-
+    // important to create it before request_pool__
+    std::unique_ptr<ReceiverDiscoveryService> discovery_service_;
+    std::unique_ptr<RequestHandlerFactory> request_handler_factory_;
   public:
     static const size_t kMaxChunkSize;
+    static const size_t kDiscoveryServiceUpdateFrequencyMs;
 
-    ProducerImpl();
+    explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads, asapo::RequestHandlerType type);
     ProducerImpl(const ProducerImpl&) = delete;
     ProducerImpl& operator=(const ProducerImpl&) = delete;
 
-    uint64_t GetVersion() const override;
-    ProducerStatus GetStatus() const override;
     void SetLogLevel(LogLevel level) override;
     void EnableLocalLog(bool enable) override;
     void EnableRemoteLog(bool enable) override;
-    Error ConnectToReceiver(const std::string& receiver_address) override;
-    Error Send(uint64_t file_id, const void* data, size_t file_size) override;
-    std::unique_ptr<IO> io__;
-    Logger log__;
+    Error Send(uint64_t file_id, const void* data, size_t file_size, std::string file_name,
+               RequestCallback callback) override;
+    AbstractLogger* log__;
+    std::unique_ptr<RequestPool> request_pool__;
+  private:
+    GenericRequestHeader GenerateNextSendRequest(uint64_t file_id, size_t file_size, std::string file_name);
 };
+
+Error CheckProducerRequest(const GenericRequestHeader header);
 }
 
 #endif //ASAPO_PRODUCER__PRODUCER_IMPL_H

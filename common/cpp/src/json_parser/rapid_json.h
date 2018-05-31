@@ -33,6 +33,7 @@ class RapidJson {
     std::string json_;
     mutable bool initialized_ = false;
     Error LazyInitialize() const noexcept;
+    Error CheckValueType(const std::string& name, ValueType type, const rapidjson::Value* val) const;
     Error embedded_error_ = nullptr;
 
     asapo::Error GetValuePointer(const std::string& name, ValueType type, rapidjson::Value** val)const noexcept;

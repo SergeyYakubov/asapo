@@ -92,42 +92,46 @@ TEST_F(ServerDataBrokerTests, GetNextUsesCorrectUri) {
     data_broker->GetNext(&info, nullptr);
 }
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsErrorFromHttpClient) {
-    EXPECT_CALL(mock_http_client, Get_t(_, _, _)).WillOnce(DoAll(
-                SetArgPointee<1>(HttpCode::NotFound),
-                SetArgPointee<2>(nullptr),
-                Return("")));
-
-    auto err = data_broker->GetNext(&info, nullptr);
-
-    ASSERT_THAT(err->Explain(), HasSubstr(asapo::WorkerErrorMessage::kSourceNotFound));
-    ASSERT_THAT(err->GetErrorType(), asapo::ErrorType::kHttpError);
-    ASSERT_THAT(dynamic_cast<HttpError*>(err.get())->GetCode(), Eq(HttpCode::NotFound));
-}
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClient) {
-    EXPECT_CALL(mock_http_client, Get_t(_, _, _)).WillOnce(DoAll(
-                SetArgPointee<1>(HttpCode::NoContent),
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
+                SetArgPointee<1>(HttpCode::NotFound),
                 SetArgPointee<2>(nullptr),
-                Return("")));
+                Return("{\"id\":1}")));
 
     auto err = data_broker->GetNext(&info, nullptr);
 
-    ASSERT_THAT(err->Explain(), HasSubstr(asapo::WorkerErrorMessage::kNoData));
-    ASSERT_THAT(err->GetErrorType(), asapo::ErrorType::kEndOfFile);
+    ASSERT_THAT(err->Explain(), HasSubstr("timeout"));
 }
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClientUntilTimeout) {
-    EXPECT_CALL(mock_http_client, Get_t(_, _, _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
-                SetArgPointee<1>(HttpCode::NoContent),
+TEST_F(ServerDataBrokerTests, GetNextReturnsWrongResponseFromHttpClient) {
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
+                SetArgPointee<1>(HttpCode::NotFound),
                 SetArgPointee<2>(nullptr),
-                Return("")));
+                Return("id")));
+
+    auto err = data_broker->GetNext(&info, nullptr);
+
+    ASSERT_THAT(err->Explain(), HasSubstr("Cannot parse"));
+}
+
+
+TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClientUntilTimeout) {
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
+                SetArgPointee<1>(HttpCode::NotFound),
+                SetArgPointee<2>(nullptr),
+                Return("{\"id\":1}")));
+
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr("1"), _, _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
+                SetArgPointee<1>(HttpCode::NotFound),
+                SetArgPointee<2>(nullptr),
+                Return("{\"id\":1}")));
+
 
     data_broker->SetTimeout(100);
     auto err = data_broker->GetNext(&info, nullptr);
 
-    ASSERT_THAT(err->Explain(), HasSubstr(asapo::WorkerErrorMessage::kNoData));
-    ASSERT_THAT(err->GetErrorType(), asapo::ErrorType::kEndOfFile);
+    ASSERT_THAT(err->Explain(), HasSubstr("timeout"));
 }
 
 

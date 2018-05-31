@@ -12,6 +12,7 @@ func TestMockDataBase(t *testing.T) {
 	db.On("Close").Return()
 	db.On("Copy").Return(nil)
 	db.On("GetNextRecord", "").Return([]byte(""), nil)
+	db.On("GetRecordByID", "").Return([]byte(""), nil)
 	db.Connect("")
 	db.GetNextRecord("")
 	db.Close()

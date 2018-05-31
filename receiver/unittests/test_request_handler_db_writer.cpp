@@ -40,7 +40,7 @@ using ::asapo::SocketDescriptor;
 using ::asapo::MockIO;
 using asapo::Request;
 using asapo::RequestHandlerDbWrite;
-using ::asapo::GenericNetworkRequestHeader;
+using ::asapo::GenericRequestHeader;
 
 using asapo::MockDatabase;
 using asapo::RequestFactory;
@@ -50,9 +50,9 @@ using asapo::ReceiverConfig;
 
 namespace {
 
-class MockRequest: public Request {
+class MockRequestHandler: public Request {
   public:
-    MockRequest(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd):
+    MockRequestHandler(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
         Request(request_header, socket_fd) {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
@@ -65,16 +65,16 @@ class DbWriterHandlerTests : public Test {
   public:
     RequestHandlerDbWrite handler;
     NiceMock<MockIO> mock_io;
-    std::unique_ptr<NiceMock<MockRequest>> mock_request;
+    std::unique_ptr<NiceMock<MockRequestHandler>> mock_request;
     NiceMock<MockDatabase> mock_db;
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     void SetUp() override {
-        GenericNetworkRequestHeader request_header;
+        GenericRequestHeader request_header;
         request_header.data_id = 2;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1});
+        mock_request.reset(new NiceMock<MockRequestHandler> {request_header, 1});
     }
     void TearDown() override {
         handler.db_client__.release();

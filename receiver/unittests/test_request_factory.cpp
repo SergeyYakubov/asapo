@@ -29,7 +29,7 @@ using ::testing::InSequence;
 using ::testing::SetArgPointee;
 using ::asapo::Error;
 using ::asapo::ErrorInterface;
-using ::asapo::GenericNetworkRequestHeader;
+using ::asapo::GenericRequestHeader;
 using ::asapo::GenericNetworkResponse;
 using ::asapo::Opcode;
 using ::asapo::Connection;
@@ -50,11 +50,11 @@ class FactoryTests : public Test {
   public:
     RequestFactory factory;
     Error err{nullptr};
-    GenericNetworkRequestHeader generic_request_header;
+    GenericRequestHeader generic_request_header;
     ReceiverConfig config;
 
     void SetUp() override {
-        generic_request_header.op_code = asapo::Opcode::kNetOpcodeSendData;
+        generic_request_header.op_code = asapo::Opcode::kOpcodeTransferData;
         config.write_to_disk = true;
         config.write_to_db = true;
         SetReceiverConfig(config);
@@ -64,14 +64,14 @@ class FactoryTests : public Test {
 };
 
 TEST_F(FactoryTests, ErrorOnWrongCode) {
-    generic_request_header.op_code = asapo::Opcode::kNetOpcodeUnknownOp;
+    generic_request_header.op_code = asapo::Opcode::kOpcodeUnknownOp;
     auto request = factory.GenerateRequest(generic_request_header, 1, &err);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
 
 TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCode) {
-    generic_request_header.op_code = asapo::Opcode::kNetOpcodeSendData;
+    generic_request_header.op_code = asapo::Opcode::kOpcodeTransferData;
     auto request = factory.GenerateRequest(generic_request_header, 1, &err);
 
     ASSERT_THAT(err, Eq(nullptr));

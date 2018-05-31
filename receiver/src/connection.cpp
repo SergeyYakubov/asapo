@@ -11,11 +11,15 @@ namespace asapo {
 size_t Connection::kRequestHandlerMaxBufferSize;
 std::atomic<uint32_t> Connection::kNetworkProducerPeerImplGlobalCounter(0);
 
-Connection::Connection(SocketDescriptor socket_fd, const std::string& address): request_factory__{new RequestFactory},
+Connection::Connection(SocketDescriptor socket_fd, const std::string& address,
+                       std::string receiver_tag): request_factory__{new RequestFactory},
 io__{GenerateDefaultIO()}, statistics__{new Statistics}, log__{GetDefaultReceiverLogger()} {
     socket_fd_ = socket_fd;
     connection_id_ = kNetworkProducerPeerImplGlobalCounter++;
     address_ = address;
+    statistics__->AddTag("connection_from", address);
+    statistics__->AddTag("receiver_tag", std::move(receiver_tag));
+
 }
 
 uint64_t Connection::GetId() const noexcept {
@@ -51,7 +55,7 @@ Error Connection::ProcessRequest(const std::unique_ptr<Request>& request) const 
 
 void Connection::ProcessStatisticsAfterRequest(const std::unique_ptr<Request>& request) const noexcept {
     statistics__->IncreaseRequestCounter();
-    statistics__->IncreaseRequestDataVolume(request->GetDataSize() + sizeof(GenericNetworkRequestHeader) +
+    statistics__->IncreaseRequestDataVolume(request->GetDataSize() + sizeof(GenericRequestHeader) +
                                             sizeof(GenericNetworkResponse));
     statistics__->SendIfNeeded();
 }
@@ -82,9 +86,9 @@ void Connection::Listen() const noexcept {
 
 std::unique_ptr<Request> Connection::WaitForNewRequest(Error* err) const noexcept {
     //TODO: to be overwritten with MessagePack (or similar)
-    GenericNetworkRequestHeader generic_request_header;
+    GenericRequestHeader generic_request_header;
     statistics__->StartTimer(StatisticEntity::kNetwork);
-    io__->ReceiveWithTimeout(socket_fd_, &generic_request_header, sizeof(GenericNetworkRequestHeader), 50, err);
+    io__->ReceiveWithTimeout(socket_fd_, &generic_request_header, sizeof(GenericRequestHeader), 50, err);
     if(*err) {
         if(*err == IOErrorTemplates::kTimeout) {
             *err = nullptr;//Not an error in this case

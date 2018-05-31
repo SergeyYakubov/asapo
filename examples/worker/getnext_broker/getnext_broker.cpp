@@ -20,10 +20,11 @@ void WaitThreads(std::vector<std::thread>* threads) {
 
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
-    if (err->GetErrorType() != asapo::ErrorType::kEndOfFile) {
+    if (err->GetErrorType() != asapo::ErrorType::kTimeOut) {
         std::cout << err->Explain() << std::endl;
         return 1;
     }
+    std::cout << err->Explain() << std::endl;
     return 0;
 }
 
@@ -33,7 +34,7 @@ std::vector<std::thread> StartThreads(const std::string& server, const std::stri
         asapo::FileInfo fi;
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(server, run_name, &err);
-        broker->SetTimeout(1000);
+        broker->SetTimeout(10000);
         while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             (*nfiles)[i] ++;
         }

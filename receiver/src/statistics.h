@@ -3,8 +3,11 @@
 
 #include <chrono>
 #include <memory>
+#include <string>
+
 
 #include "statistics_sender.h"
+#include "preprocessor/definitions.h"
 
 namespace asapo {
 
@@ -20,18 +23,20 @@ struct StatisticsToSend {
     uint64_t elapsed_ms;
     uint64_t data_volume;
     uint64_t n_requests;
+    std::string tags;
 };
 
 class Statistics {
   public:
-// virtual needed for unittests, could be replaced with #define VIRTUAL ... in case of performance issues
-    virtual void SendIfNeeded() noexcept;
-    virtual void Send() noexcept;
+    VIRTUAL void SendIfNeeded() noexcept;
+    VIRTUAL void Send() noexcept;
     explicit Statistics(unsigned int write_interval = kDefaultStatisticWriteIntervalMs);
-    virtual void IncreaseRequestCounter() noexcept;
-    virtual void StartTimer(const StatisticEntity& entity) noexcept;
-    virtual void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
-    virtual void StopTimer() noexcept;
+    VIRTUAL void IncreaseRequestCounter() noexcept;
+    VIRTUAL void StartTimer(const StatisticEntity& entity) noexcept;
+    VIRTUAL void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
+    VIRTUAL void StopTimer() noexcept;
+    VIRTUAL void AddTag(const std::string& name, const std::string& value) noexcept;
+
 
     void SetWriteInterval(uint64_t interval_ms);
     std::unique_ptr<StatisticsSender> statistics_sender__;
@@ -48,6 +53,7 @@ class Statistics {
     std::chrono::nanoseconds time_counters_[kNStatisticEntities];
     uint64_t volume_counter_;
     unsigned int write_interval_;
+    std::string tag_;
 
 };
 

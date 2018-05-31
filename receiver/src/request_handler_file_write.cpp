@@ -2,6 +2,8 @@
 #include "io/io_factory.h"
 #include "request.h"
 #include "receiver_logger.h"
+#include "receiver_config.h"
+#include "preprocessor/definitions.h"
 
 namespace asapo {
 
@@ -14,10 +16,10 @@ Error RequestHandlerFileWrite::ProcessRequest(const Request& request) const {
     const FileData& data = request.GetData();
 
     auto fname = request.GetFileName();
-//TODO: folder to write in config file
-    auto err =  io__->WriteDataToFile("files/" + fname, data, fsize);
+    auto root_folder = GetReceiverConfig()->root_folder + kPathSeparator;
+    auto err =  io__->WriteDataToFile(root_folder + fname, data, fsize);
     if (!err) {
-        log__->Debug("saved file of size " + std::to_string(fsize) + " to files/" + fname);
+        log__->Debug("saved file of size " + std::to_string(fsize) + " to " + root_folder + fname);
     }
     return err;
 

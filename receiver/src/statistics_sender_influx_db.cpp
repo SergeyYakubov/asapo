@@ -21,7 +21,7 @@ void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic)
     //todo: send statistics async
     HttpCode code;
     Error err;
-    auto responce = httpclient__->Post(GetReceiverConfig()->monitor_db_uri + "/write?db=" +
+    auto response = httpclient__->Post(GetReceiverConfig()->monitor_db_uri + "/write?db=" +
                                        GetReceiverConfig()->monitor_db_name, StatisticsToString(statistic),
                                        &code, &err);
     std::string msg = "sending statistics to " + GetReceiverConfig()->monitor_db_name + " at " +
@@ -32,7 +32,7 @@ void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic)
     }
 
     if (code != HttpCode::OK && code != HttpCode::NoContent) {
-        log__->Error(msg + " - " + responce);
+        log__->Error(msg + " - " + response);
         return;
     }
 
@@ -41,8 +41,7 @@ void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic)
 
 std::string StatisticsSenderInfluxDb::StatisticsToString(const StatisticsToSend& statistic) const noexcept {
     std::string str;
-    std::string tags = "receiver=1,connection=1";
-    str = "statistics," + tags + " elapsed_ms=" + string_format("%ld", statistic.elapsed_ms);
+    str = "statistics," + statistic.tags + " elapsed_ms=" + string_format("%ld", statistic.elapsed_ms);
     str += ",data_volume=" + string_format("%ld", statistic.data_volume);
     str += ",n_requests=" + string_format("%ld", statistic.n_requests);
     str += ",db_share=" + string_format("%.4f", statistic.entity_shares[StatisticEntity::kDatabase]);

@@ -8,7 +8,7 @@ set(SOURCE_FILES
         src/statistics.cpp
         src/statistics_sender_influx_db.cpp
         src/receiver_config.cpp
-        src/receiver_logger.cpp
+        src/producer_logger.cpp
         src/request_handler_db_write.cpp)
 
 
@@ -27,6 +27,10 @@ target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
 add_executable(${TARGET_NAME}-bin src/main.cpp)
 set_target_properties(${TARGET_NAME}-bin PROPERTIES OUTPUT_NAME ${TARGET_NAME})
 target_link_libraries(${TARGET_NAME}-bin ${TARGET_NAME})
+
+set_target_properties(${TARGET_NAME}-bin PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+        ${CMAKE_CURRENT_BINARY_DIR}$<$<CONFIG:Debug>:>
+        )
 
 ################################
 # Testing

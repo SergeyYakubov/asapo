@@ -8,34 +8,32 @@ broker_database_name=test_run
 monitor_database_name=db_test
 broker_address=127.0.0.1:5005
 
+receiver_folder=/tmp/asapo/receiver/files
+
 Cleanup() {
-	echo cleanup
-	rm -rf files
-    kill -9 $receiverid
-    kill -9 $brokerid
-    #kill -9 $producerrid
+    echo cleanup
+    rm -rf ${receiver_folder}
+    nomad stop receiver
+    nomad stop discovery
+    nomad stop broker
+#    kill $producerid
     echo "db.dropDatabase()" | mongo ${broker_database_name}
     influx -execute "drop database ${monitor_database_name}"
 }
 
 influx -execute "create database ${monitor_database_name}"
+echo "db.${broker_database_name}.insert({dummy:1})" | mongo ${broker_database_name}
 
+nomad run receiver.nmd
+nomad run discovery.nmd
+nomad run broker.nmd
 
-#receiver
-$2 receiver.json &
-sleep 0.3
-receiverid=`echo $!`
-
-#broker
-$3 -config broker.json &
-sleep 0.3
-brokerid=`echo $!`
-
+sleep 1
 
 #producer
-mkdir files
-$1 localhost:4200 100 100 &
-#producerrid=`echo $!`
-sleep 0.1
+mkdir -p ${receiver_folder}
+$1 localhost:5006 100 1000 4 0 &
+#producerid=`echo $!`
 
-$4 ${broker_address} ${broker_database_name} 2 | grep "Processed 100 file(s)"
+
+$2 ${broker_address} ${broker_database_name} 2 | grep "Processed 1000 file(s)"

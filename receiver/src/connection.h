@@ -29,7 +29,7 @@ class Connection {
     static size_t kRequestHandlerMaxBufferSize;
     static std::atomic<uint32_t> kNetworkProducerPeerImplGlobalCounter;
 
-    Connection(SocketDescriptor socket_fd, const std::string& address);
+    Connection(SocketDescriptor socket_fd, const std::string& address, std::string receiver_tag);
     ~Connection() = default;
 
     void Listen() const noexcept;

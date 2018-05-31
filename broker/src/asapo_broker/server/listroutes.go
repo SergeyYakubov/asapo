@@ -11,4 +11,17 @@ var listRoutes = utils.Routes{
 		"/database/{dbname}/next",
 		routeGetNext,
 	},
+	utils.Route{
+		"GetID",
+		"Get",
+		"/database/{dbname}/{id}",
+		routeGetByID,
+	},
+
+	utils.Route{
+		"Health",
+		"Get",
+		"/health",
+		routeGetHealth,
+	},
 }
