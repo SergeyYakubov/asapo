@@ -2,7 +2,7 @@
 
 database_name=db_test
 mongo_database_name=test_run
-
+receiver_folder=/tmp/asapo/receiver/files
 set -e
 
 trap Cleanup EXIT
@@ -10,20 +10,22 @@ trap Cleanup EXIT
 Cleanup() {
 	echo cleanup
 	influx -execute "drop database ${database_name}"
-    kill $receiverid
-	rm -rf files
+    nomad stop receiver
+    nomad stop discovery
     echo "db.dropDatabase()" | mongo ${mongo_database_name}
+    rm -rf ${receiver_folder}
 }
+
+mkdir -p ${receiver_folder}
 
 influx -execute "create database ${database_name}"
 
-nohup $2 receiver.json &>/dev/null &
-sleep 0.3
-receiverid=`echo $!`
+nomad run receiver.nmd
+nomad run discovery.nmd
 
-mkdir files
+sleep 1
 
-$1 localhost:4200 100 112
+$1 localhost:5006 100 112 4  0
 
 sleep 1
 

@@ -3,6 +3,7 @@ project(ASAPO)
 set(CMAKE_CXX_STANDARD 11)
 IF(WIN32)
     set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
+    add_definitions(-DWIN32)
 ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
@@ -15,6 +16,11 @@ IF(WIN32)
 ELSEIF(UNIX)
     SET_PROPERTY(GLOBAL PROPERTY ASAPO_COMMON_IO_LIBRARIES Threads::Threads)
 ENDIF(WIN32)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DUNIT_TESTS)
+endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+
 
 option(BUILD_TESTS "Uses googletest to build tests" OFF)
 option(BUILD_INTEGRATION_TESTS "Include integration tests (CMAKE >3.7 is needed)" OFF)
@@ -40,6 +46,9 @@ message (STATUS "cURL include: ${CURL_INCLUDE_DIRS}")
 include(astyle)
 
 include(testing_cpp)
+
+include(prepare_asapo)
+
 
 if(BUILD_WORKER_TOOLS)
     set (BUILD_MONGODB_CLIENTLIB ON)

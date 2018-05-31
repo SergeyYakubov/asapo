@@ -1,9 +1,0 @@
-{
-  "MonitorDbAddress": "zitpcx27016:8086",
-  "MonitorDbName": "db_test",
-  "BrokerDbAddress": "localhost:27017",
-  "BrokerDbName": "test_run",
-  "ListenPort": 4201,
-  "WriteToDisk": true,
-  "WriteToDb": true
-}

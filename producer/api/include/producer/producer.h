@@ -4,15 +4,11 @@
 #include <memory>
 #include <string>
 
-#include "producer_error.h"
 #include "logger/logger.h"
+#include "producer/common.h"
 
 namespace asapo {
 
-enum class ProducerStatus {
-    kDisconnected,
-    kConnected,
-};
 
 class Producer {
   public:
@@ -20,26 +16,12 @@ class Producer {
     /*!
      * @return A unique_ptr to a new producer instance
      */
-    static std::unique_ptr<Producer> Create();
+    static std::unique_ptr<Producer> Create(const std::string& endpoint, uint8_t n_processing_threads,
+                                            asapo::RequestHandlerType type,
+                                            Error* err);
 
     virtual ~Producer() = default;
 
-    /*!
-     * @return The version of the producer
-     */
-    virtual uint64_t GetVersion() const = 0;
-
-    /*!
-     * @return The current status of the producer
-     */
-    virtual ProducerStatus GetStatus() const = 0;
-
-    //! Connects to a receiver
-    /*!
-      \param receiver_address - The address of the receiver. E.g. 127.0.0.1:4200
-      \return Error - nullptr on success
-    */
-    virtual Error ConnectToReceiver(const std::string& receiver_address) = 0;
     //! Sends data to the receiver
     /*!
       \param file_id - The id of the file. An error will be returned if this file id already exists on the receiver.
@@ -47,7 +29,8 @@ class Producer {
       \param file_size - The size of the data.
       \return Error - Will be nullptr on success
     */
-    virtual Error Send(uint64_t file_id, const void* data, size_t file_size) = 0;
+    virtual Error Send(uint64_t file_id, const void* data, size_t file_size, std::string file_name,
+                       RequestCallback callback) = 0;
     //! Set internal log level
     virtual void SetLogLevel(LogLevel level) = 0;
     //! Enables/Disables logs output to stdout

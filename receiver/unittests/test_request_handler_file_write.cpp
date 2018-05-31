@@ -9,7 +9,8 @@
 #include "../src/request_handler.h"
 #include "../src/request_handler_file_write.h"
 #include "common/networking.h"
-
+#include "mock_receiver_config.h"
+#include "preprocessor/definitions.h"
 
 using ::testing::Test;
 using ::testing::Return;
@@ -35,7 +36,7 @@ using ::asapo::SocketDescriptor;
 using ::asapo::MockIO;
 using asapo::Request;
 using asapo::RequestHandlerFileWrite;
-using ::asapo::GenericNetworkRequestHeader;
+using ::asapo::GenericRequestHeader;
 
 namespace {
 
@@ -46,9 +47,9 @@ TEST(FileWrite, Constructor) {
 }
 
 
-class MockRequest: public Request {
+class MockRequestHandler: public Request {
   public:
-    MockRequest(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd):
+    MockRequestHandler(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
         Request(request_header, socket_fd) {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
@@ -60,15 +61,15 @@ class FileWriteHandlerTests : public Test {
   public:
     RequestHandlerFileWrite handler;
     NiceMock<MockIO> mock_io;
-    std::unique_ptr<MockRequest> mock_request;
+    std::unique_ptr<MockRequestHandler> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_file_name = "2.bin";
     uint64_t expected_file_size = 10;
     void MockRequestData();
     void SetUp() override {
-        GenericNetworkRequestHeader request_header;
+        GenericRequestHeader request_header;
         request_header.data_id = 2;
-        mock_request.reset(new MockRequest{request_header, 1});
+        mock_request.reset(new MockRequestHandler{request_header, 1});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }
@@ -120,10 +121,16 @@ void FileWriteHandlerTests::MockRequestData() {
 }
 
 TEST_F(FileWriteHandlerTests, CallsWriteFile) {
+    asapo::ReceiverConfig test_config;
+    test_config.root_folder = "test_folder";
+
+    asapo::SetReceiverConfig(test_config);
 
     MockRequestData();
 
-    EXPECT_CALL(mock_io, WriteDataToFile_t("files/" + expected_file_name, _, expected_file_size))
+    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + expected_file_name;
+
+    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_path.c_str(), _, expected_file_size))
     .WillOnce(
         Return(asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
     );

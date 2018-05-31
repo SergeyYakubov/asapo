@@ -28,3 +28,8 @@ func (db *MockedDatabase) GetNextRecord(db_name string) (answer []byte, err erro
 	args := db.Called(db_name)
 	return args.Get(0).([]byte), args.Error(1)
 }
+
+func (db *MockedDatabase) GetRecordByID(db_name string, id int) (answer []byte, err error) {
+	args := db.Called(db_name, id)
+	return args.Get(0).([]byte), args.Error(1)
+}

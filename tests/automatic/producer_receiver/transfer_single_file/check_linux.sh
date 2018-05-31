@@ -4,21 +4,28 @@ set -e
 
 trap Cleanup EXIT
 
-database_name=test_run
+database_name=db_test
+mongo_database_name=test_run
+receiver_folder=/tmp/asapo/receiver/files
 
 Cleanup() {
 	echo cleanup
-	rm -rf files
-    kill $receiverid
-    echo "db.dropDatabase()" | mongo ${database_name}
+	rm -rf ${receiver_folder}
+    nomad stop receiver
+    nomad stop discovery
+    echo "db.dropDatabase()" | mongo ${mongo_database_name}
+    influx -execute "drop database ${database_name}"
 }
 
-nohup $2 receiver.json &>/dev/null &
-sleep 0.3
-receiverid=`echo $!`
+influx -execute "create database ${database_name}"
+echo "db.${mongo_database_name}.insert({dummy:1})" | mongo ${mongo_database_name}
 
-mkdir files
+nomad run receiver.nmd
+nomad run discovery.nmd
 
-$1 localhost:4200 100 1
+mkdir -p ${receiver_folder}
 
-ls -ln files/1.bin | awk '{ print $5 }'| grep 102400
+$1 localhost:5006 100 1 1  0
+
+
+ls -ln ${receiver_folder}/1.bin | awk '{ print $5 }'| grep 102400

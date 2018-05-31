@@ -1,0 +1,49 @@
+job "discovery" {
+  datacenters = ["dc1"]
+
+  type = "service"
+
+  group "group" {
+    count = 1
+
+    task "service" {
+      driver = "raw_exec"
+
+      config {
+        command = "@DISCOVERY_FULLPATH@",
+        args =  ["-config","${NOMAD_TASK_DIR}/discovery.json"]
+      }
+
+      resources {
+        cpu    = 500 # 500 MHz
+        memory = 256 # 256MB
+        network {
+          port "discovery" {
+            static = "5006"
+          }
+        }
+      }
+
+      service {
+        name = "discovery"
+        port = "discovery"
+        check {
+          name     = "alive"
+          type     = "http"
+          path     = "/receivers"
+          interval = "10s"
+          timeout  = "2s"
+          initial_status =   "passing"
+        }
+      }
+
+      template {
+         source        = "@WORK_DIR@/discovery.json.tpl"
+         destination   = "local/discovery.json"
+         change_mode   = "signal"
+         change_signal = "SIGHUP"
+      }
+
+    }
+  }
+}

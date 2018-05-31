@@ -42,6 +42,9 @@ Error SetReceiverConfig (const ReceiverConfig& config) {
     config_string += "," + std::string("\"WriteToDisk\":") + (config.write_to_disk ? "true" : "false");
     config_string += "," + std::string("\"WriteToDb\":") + (config.write_to_db ? "true" : "false");
     config_string += "," + std::string("\"LogLevel\":") + "\"" + log_level + "\"";
+    config_string += "," + std::string("\"Tag\":") + "\"" + config.tag + "\"";
+    config_string += "," + std::string("\"RootFolder\":") + "\"" + config.root_folder + "\"";
+
 
     config_string += "}";
 

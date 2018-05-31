@@ -17,7 +17,7 @@ class Request {
   public:
     virtual Error Handle(std::unique_ptr<Statistics>*);
     virtual ~Request() = default;
-    Request(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd);
+    Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd);
     void AddHandler(const RequestHandler*);
     const RequestHandlerList& GetListHandlers() const;
     virtual uint64_t GetDataSize() const;
@@ -29,7 +29,7 @@ class Request {
   private:
     Error AllocateDataBuffer();
     Error ReceiveData();
-    const GenericNetworkRequestHeader request_header_;
+    const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     FileData data_buffer_;
     RequestHandlerList handlers_;
@@ -37,7 +37,7 @@ class Request {
 
 class RequestFactory {
   public:
-    virtual std::unique_ptr<Request> GenerateRequest(const GenericNetworkRequestHeader& request_header,
+    virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                                      SocketDescriptor socket_fd, Error* err) const noexcept;
   private:
     RequestHandlerFileWrite request_handler_filewrite_;

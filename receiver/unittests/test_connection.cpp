@@ -30,9 +30,9 @@ using asapo::Error;
 using asapo::ErrorInterface;
 using asapo::FileDescriptor;
 using asapo::SocketDescriptor;
-using asapo::GenericNetworkRequestHeader;
+using asapo::GenericRequestHeader;
 using asapo::SendDataResponse;
-using asapo::GenericNetworkRequestHeader;
+using asapo::GenericRequestHeader;
 using asapo::GenericNetworkResponse;
 using asapo::Opcode;
 using asapo::Connection;
@@ -46,17 +46,17 @@ using asapo::MockStatistics;
 namespace {
 
 TEST(Connection, Constructor) {
-    Connection connection{0, "some_address"};
+    Connection connection{0, "some_address", "some_tag"};
     ASSERT_THAT(dynamic_cast<asapo::Statistics*>(connection.statistics__.get()), Ne(nullptr));
+
     ASSERT_THAT(dynamic_cast<asapo::IO*>(connection.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(connection.request_factory__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(connection.log__), Ne(nullptr));
-
 }
 
-class MockRequest: public Request {
+class MockRequestHandler: public Request {
   public:
-    MockRequest(const GenericNetworkRequestHeader& request_header, SocketDescriptor socket_fd):
+    MockRequestHandler(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
         Request(request_header, socket_fd) {};
     Error Handle(std::unique_ptr<Statistics>* statistics) override {
         return Error{Handle_t()};
@@ -67,7 +67,7 @@ class MockRequest: public Request {
 
 class MockRequestFactory: public asapo::RequestFactory {
   public:
-    std::unique_ptr<Request> GenerateRequest(const GenericNetworkRequestHeader& request_header,
+    std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                              SocketDescriptor socket_fd,
                                              Error* err) const noexcept override {
         ErrorInterface* error = nullptr;
@@ -76,7 +76,7 @@ class MockRequestFactory: public asapo::RequestFactory {
         return std::unique_ptr<Request> {res};
     }
 
-    MOCK_CONST_METHOD3(GenerateRequest_t, Request * (const GenericNetworkRequestHeader&,
+    MOCK_CONST_METHOD3(GenerateRequest_t, Request * (const GenericRequestHeader&,
                                                      SocketDescriptor socket_fd,
                                                      ErrorInterface**));
 
@@ -85,7 +85,7 @@ class MockRequestFactory: public asapo::RequestFactory {
 class ConnectionTests : public Test {
   public:
     std::string connected_uri{"some_address"};
-    Connection connection{0, connected_uri};
+    Connection connection{0, connected_uri, "some_tag"};
     MockIO mock_io;
     MockRequestFactory mock_factory;
     NiceMock<MockStatistics> mock_statictics;
@@ -138,8 +138,8 @@ ACTION_P(SaveArg1ToGenericNetworkResponse, value) {
 
 TEST_F(ConnectionTests, CallsHandleRequest) {
 
-    GenericNetworkRequestHeader header;
-    auto request = new MockRequest{header, 1};
+    GenericRequestHeader header;
+    auto request = new MockRequestHandler{header, 1};
 
     EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _));
 
@@ -171,8 +171,8 @@ TEST_F(ConnectionTests, CallsHandleRequest) {
 
 TEST_F(ConnectionTests, SendsErrorToProducer) {
 
-    GenericNetworkRequestHeader header;
-    auto request = new MockRequest{header, 1};
+    GenericRequestHeader header;
+    auto request = new MockRequestHandler{header, 1};
 
     EXPECT_CALL(mock_io, ReceiveWithTimeout_t(_, _, _, _, _));
 
@@ -207,10 +207,10 @@ void MockExitCycle(const MockIO& mock_io, MockStatistics& mock_statictics) {
     );
 }
 
-MockRequest* MockWaitRequest(const MockRequestFactory& mock_factory) {
-    GenericNetworkRequestHeader header;
+MockRequestHandler* MockWaitRequest(const MockRequestFactory& mock_factory) {
+    GenericRequestHeader header;
     header.data_size = 1;
-    auto request = new MockRequest{header, 1};
+    auto request = new MockRequestHandler{header, 1};
     EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _)).WillOnce(
         Return(request)
     );
@@ -240,7 +240,7 @@ TEST_F(ConnectionTests, FillsStatistics) {
 
     EXPECT_CALL(mock_statictics, IncreaseRequestCounter_t());
 
-    EXPECT_CALL(mock_statictics, IncreaseRequestDataVolume_t(1 + sizeof(asapo::GenericNetworkRequestHeader) +
+    EXPECT_CALL(mock_statictics, IncreaseRequestDataVolume_t(1 + sizeof(asapo::GenericRequestHeader) +
                 sizeof(asapo::GenericNetworkResponse)));
 
 
