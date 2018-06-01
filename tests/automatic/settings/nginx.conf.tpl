@@ -23,5 +23,8 @@ http {
             rewrite ^/discovery(/.*) $1 break;
             proxy_pass http://$discovery_endpoint:5006$uri;
         }
+	location /nginx-health {
+  	  return 200 "healthy\n";
+	}
     }
 }

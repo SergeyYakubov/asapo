@@ -42,11 +42,13 @@ job "nginx" {
       service {
         port = "nginx"
         name = "nginx"
+        }
         check {
           name     = "alive"
-          type     = "tcp"
-          interval = "10s"
+          type     = "http"
+	  path     = "/nginx_health"
           timeout  = "2s"
+	  interval = "10s"
         }
       }
 
