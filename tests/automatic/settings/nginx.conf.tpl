@@ -13,6 +13,8 @@ http {
 
 #    keepalive_timeout  0;
 #    keepalive_timeout  65;
+    access_log  off;
+    error_log off;
 
     resolver 127.0.0.1:8600 valid=1s;
     server {
