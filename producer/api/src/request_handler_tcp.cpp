@@ -70,7 +70,7 @@ Error RequestHandlerTcp::TrySendToReceiver(const Request* request) {
     }
 
     log__->Debug(std::string("successfully sent data ") + " id: " + std::to_string(request->header.data_id) + " to " +
-        connected_receiver_uri_);
+                 connected_receiver_uri_);
     return nullptr;
 }
 
@@ -94,7 +94,7 @@ bool RequestHandlerTcp::UpdateReceiversList() {
 
 bool RequestHandlerTcp::TimeToUpdateReceiverList() {
     uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>( high_resolution_clock::now() -
-        last_receivers_uri_update_).count();
+                          last_receivers_uri_update_).count();
     return elapsed_ms > discovery_service__->UpdateFrequency();
 }
 

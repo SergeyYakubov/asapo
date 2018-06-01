@@ -13,10 +13,14 @@ http {
 
 #    keepalive_timeout  0;
 #    keepalive_timeout  65;
+
+    resolver 127.0.0.1:8600 valid=1s;
     server {
-        listen       8080;
-	    location /discovery/ {
-        proxy_pass http://discovery.service.consul:5006/;
+        listen       8400;
+          set $discovery_endpoint discovery.service.asapo;
+          location /discovery/ {
+            rewrite ^/discovery(/.*) $1 break;
+            proxy_pass http://$discovery_endpoint:5006$uri;
         }
     }
 }

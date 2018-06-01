@@ -7,12 +7,13 @@ echo db.%database_name%.insert({dummy:1})" | %mongo_exe% %database_name%
 
 c:\opt\consul\nomad run receiver.nmd
 c:\opt\consul\nomad run discovery.nmd
+c:\opt\consul\nomad run nginx.nmd
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
 mkdir %receiver_folder%
 
-%1 localhost:5006 100 1 1 0
+%1 localhost:8400 100 1 1 0
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
@@ -28,6 +29,7 @@ exit /b 1
 :clean
 c:\opt\consul\nomad stop receiver
 c:\opt\consul\nomad stop discovery
+c:\opt\consul\nomad stop nginx
 rmdir /S /Q %receiver_folder%
 echo db.dropDatabase() | %mongo_exe% %database_name%
 

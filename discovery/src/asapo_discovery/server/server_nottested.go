@@ -23,7 +23,5 @@ func ReadConfig(fname string) (log.Level, error) {
 	if err := settings.Validate(); err != nil {
 		return log.FatalLevel,err
 	}
-
 	return log.LevelFromString(settings.LogLevel)
-
 }

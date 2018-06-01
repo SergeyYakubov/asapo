@@ -56,7 +56,7 @@ std::string GetIDFromJson(const std::string& json_string, Error* err) {
     return std::to_string(id);
 }
 
-void ServerDataBroker::ProcessServerError(Error* err,const std::string& response,std::string* redirect_uri) {
+void ServerDataBroker::ProcessServerError(Error* err, const std::string& response, std::string* redirect_uri) {
     if ((*err)->GetErrorType() != asapo::ErrorType::kEndOfFile) {
         (*err)->Append(response);
         return;
@@ -69,11 +69,11 @@ void ServerDataBroker::ProcessServerError(Error* err,const std::string& response
             *redirect_uri = server_uri_ + "/database/" + source_name_ + "/" + id;
         }
     }
-    *err=nullptr;
+    *err = nullptr;
     return;
 }
 
-Error ServerDataBroker::ProcessRequest(std::string* response,std::string request_uri) {
+Error ServerDataBroker::ProcessRequest(std::string* response, std::string request_uri) {
     Error err;
     HttpCode code;
     *response = httpclient__->Get(request_uri, &code, &err);
@@ -88,12 +88,12 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string&
     uint64_t elapsed_ms = 0;
     std::string response;
     while (true) {
-        auto err = ProcessRequest(&response,request_uri);
+        auto err = ProcessRequest(&response, request_uri);
         if (err == nullptr) {
             break;
         }
 
-        ProcessServerError(&err,response,&request_uri);
+        ProcessServerError(&err, response, &request_uri);
         if (err != nullptr) {
             return err;
         }
