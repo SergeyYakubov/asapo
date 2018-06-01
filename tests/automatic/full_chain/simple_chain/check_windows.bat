@@ -18,7 +18,7 @@ ping 1.0.0.0 -n 1 -w 100 > nul
 
 REM worker
 set broker_address="127.0.0.1:5005"
-"%2" %broker_address% %broker_database_name% 2 | findstr "Processed 1000 file(s)"  || goto :error
+"%2" %broker_address% %broker_database_name% 2 | findstr /c:"Processed 1000 file(s)"  || goto :error
 
 
 goto :clean
