@@ -42,7 +42,6 @@ job "nginx" {
       service {
         port = "nginx"
         name = "nginx"
-        }
         check {
           name     = "alive"
           type     = "http"
