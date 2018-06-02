@@ -14,6 +14,11 @@ class SpdLogger : public AbstractLogger {
     void Error(const std::string& text) const override;
     void Debug(const std::string& text) const override;
     void Warning(const std::string& text) const override;
+    void Info(const LogMessageWithFields& msg) const override;
+    void Error(const LogMessageWithFields& msg) const override;
+    void Debug(const LogMessageWithFields& msg) const override;
+    void Warning(const LogMessageWithFields& msg) const override;
+
     void EnableLocalLog(bool enable) override;
     void EnableRemoteLog(bool enable) override;
     ~SpdLogger() = default;
@@ -26,6 +31,12 @@ class SpdLogger : public AbstractLogger {
     bool centralized_log_ = false;
     void UpdateLoggerSinks();
 };
+
+std::string EncloseMsg(std::string msg);
+
 }
+
+
+
 
 #endif //ASAPO_SPDLOGGER_H

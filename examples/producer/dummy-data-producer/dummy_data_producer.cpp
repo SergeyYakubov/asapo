@@ -91,7 +91,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 
 void WaitThreadsFinished(const Args& args) {
     uint64_t elapsed_ms = 0;
-    uint64_t timeout_sec = 30;
+    uint64_t timeout_sec = 3000;
     while (true) {
         mutex.lock();
         if (iterations_remained <= 0) {

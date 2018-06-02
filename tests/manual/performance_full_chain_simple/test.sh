@@ -25,7 +25,7 @@ log_dir=~/fullchain_tests/logs
 # starts receiver on $receiver_node
 # runs producer with various file sizes from $producer_node and measures performance
 
-file_size=10000
+file_size=100
 file_num=$((100000000 / $file_size))
 echo filesize: ${file_size}K, filenum: $file_num
 
@@ -116,6 +116,8 @@ sleep 0.3
 #broker_start
 ssh ${broker_node} "bash -c 'cd ${broker_dir}; nohup ./asapo-broker -config broker.json &> ${log_dir}/log.broker &'"
 sleep 0.3
+
+sleep 5
 
 #producer_start
 ssh ${producer_node} "bash -c 'cd ${producer_dir}; nohup ./dummy-data-producer ${discovery_ip}:${discovery_port} ${file_size} ${file_num} ${producer_nthreads} 0 &> ${log_dir}/producer.log &'"

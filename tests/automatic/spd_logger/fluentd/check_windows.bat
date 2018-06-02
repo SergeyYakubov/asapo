@@ -5,7 +5,8 @@ del %folder%\asapo.*.log
 
 ping 1.0.0.0 -n 5 > nul
 
-findstr /I /L /C:"test info" %folder%\asapo.*.log || goto :error
+
+findstr /I /L /C:"\"json_test\":\"info\"" %folder%\asapo.*.log || goto :error
 findstr /I /L /C:"test error" %folder%\asapo.*.log || goto :error
 findstr /I /L /C:"test debug" %folder%\asapo.*.log || goto :error
 findstr /I /L /C:"test warning" %folder%\asapo.*.log || goto :error

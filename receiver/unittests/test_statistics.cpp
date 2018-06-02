@@ -5,6 +5,7 @@
 #include "../src/statistics.h"
 #include "../src/statistics_sender.h"
 #include "../src/statistics_sender_influx_db.h"
+#include "../src/statistics_sender_fluentd.h"
 
 using ::testing::Test;
 using ::testing::Gt;
@@ -19,8 +20,9 @@ using asapo::Statistics;
 using asapo::StatisticEntity;
 using asapo::StatisticsSender;
 using asapo::StatisticsSenderInfluxDb;
-using asapo::StatisticsToSend;
+using asapo::StatisticsSenderFluentd;
 
+using asapo::StatisticsToSend;
 
 
 namespace {
@@ -28,7 +30,8 @@ namespace {
 
 TEST(StatisticTestsConstructor, Constructor) {
     Statistics statistics;
-    ASSERT_THAT(dynamic_cast<asapo::StatisticsSenderInfluxDb*>(statistics.statistics_sender__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::StatisticsSenderInfluxDb*>(statistics.statistics_sender_list__[0].get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::StatisticsSenderFluentd*>(statistics.statistics_sender_list__[1].get()), Ne(nullptr));
 }
 
 
@@ -46,10 +49,11 @@ class StatisticTests : public Test {
     void TestTimer(const StatisticEntity& entity);
     MockStatisticsSender mock_statistics_sender;
     void SetUp() override {
-        statistics.statistics_sender__.reset(&mock_statistics_sender);
+        statistics.statistics_sender_list__.clear();
+        statistics.statistics_sender_list__.emplace_back(&mock_statistics_sender);
     }
     void TearDown() override {
-        statistics.statistics_sender__.release();
+        statistics.statistics_sender_list__[0].release();
     }
     StatisticsToSend ExtractStat();
 };
@@ -98,7 +102,9 @@ TEST_F(StatisticTests, AddTag) {
 
     auto stat = ExtractStat();
 
-    ASSERT_THAT(stat.tags, Eq("name=value"));
+    ASSERT_THAT(stat.tags[0].first, Eq("name"));
+    ASSERT_THAT(stat.tags[0].second, Eq("value"));
+
 }
 
 TEST_F(StatisticTests, AddTagTwice) {
@@ -107,7 +113,11 @@ TEST_F(StatisticTests, AddTagTwice) {
 
     auto stat = ExtractStat();
 
-    ASSERT_THAT(stat.tags, Eq("name1=value1,name2=value2"));
+    ASSERT_THAT(stat.tags[0].first, Eq("name1"));
+    ASSERT_THAT(stat.tags[0].second, Eq("value1"));
+    ASSERT_THAT(stat.tags[1].first, Eq("name2"));
+    ASSERT_THAT(stat.tags[1].second, Eq("value2"));
+
 }
 
 

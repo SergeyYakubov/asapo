@@ -16,6 +16,7 @@ using ::testing::HasSubstr;
 using ::testing::ElementsAre;
 
 using asapo::LogLevel;
+using asapo::LogMessageWithFields;
 
 namespace {
 
@@ -68,9 +69,14 @@ class LoggerTests : public Test {
     std::unique_ptr<spdlog::logger> log;
     asapo::SpdLogger logger{"test", "test_uri"};
     spdlog::details::log_msg msg;
+    spdlog::details::log_msg msg_json;
+
     std::string test_string{"Hello"};
+    std::string test_string_json{R"("Hello":"test","int":1,"double":123.234)"};
+
     void SetUp() override {
-        msg.raw << test_string;
+        msg.raw << R"("message":"Hello")";
+        msg_json.raw << R"("Hello":"test","int":1,"double":123.234)";
         log.reset(new spdlog::logger("mylogger", mock_sink));
         logger.log__ = std::move(log);
     }
@@ -79,20 +85,47 @@ class LoggerTests : public Test {
 };
 
 MATCHER_P(CompareMsg, msg, "") {
+    *result_listener << "Comparing " << "|" << arg.raw.str() << "|" << " and " << "|" << (*msg).raw.str() << "|" <<
+                     "Level:" << arg.level << " and " << (*msg).level;
     if (arg.level != (*msg).level) return false;
-    if (arg.raw.str() != (*msg).raw.c_str()) return false;
+
+    if (arg.raw.str() != (*msg).raw.str()) return false;
 
     return true;
 }
 
 TEST_F(LoggerTests, Info) {
     msg.level = spdlog::level::info;
+
     logger.SetLogLevel(LogLevel::Info);
 
     EXPECT_CALL(*mock_sink, _sink_it(CompareMsg(&msg)));
 
     logger.Info(test_string);
 }
+
+TEST_F(LoggerTests, InfoJson) {
+    msg_json.level = spdlog::level::info;
+
+    logger.SetLogLevel(LogLevel::Info);
+
+    EXPECT_CALL(*mock_sink, _sink_it(CompareMsg(&msg_json)));
+
+    logger.Info(test_string_json);
+}
+
+TEST_F(LoggerTests, InfoMessage) {
+    msg_json.level = spdlog::level::info;
+
+    asapo::LogMessageWithFields msg{"Hello", "test"};
+    logger.SetLogLevel(LogLevel::Info);
+
+    EXPECT_CALL(*mock_sink, _sink_it(CompareMsg(&msg_json)));
+
+    logger.Info(msg.Append("int", 1).Append("double", 123.234, 3));
+}
+
+
 
 TEST_F(LoggerTests, Debug) {
     msg.level = spdlog::level::debug;
@@ -145,6 +178,66 @@ TEST_F(LoggerTests, NoDebugOnNoneLevel) {
 
     logger.Info(test_string);
 }
+
+TEST(Message, ConstructorString) {
+    asapo::LogMessageWithFields msg{"Hello", "test"};
+
+    auto message = msg.LogString();
+
+    ASSERT_THAT(message, Eq(R"("Hello":"test")"));
+}
+
+
+TEST(Message, ConstructorInt) {
+    asapo::LogMessageWithFields msg{"Hello", 123};
+
+    auto message = msg.LogString();
+
+    ASSERT_THAT(message, Eq(R"("Hello":123)"));
+}
+
+
+TEST(Message, ConstructorDouble) {
+    asapo::LogMessageWithFields msg{"Hello", 123.0, 1};
+
+    auto message = msg.LogString();
+
+    ASSERT_THAT(message, Eq(R"("Hello":123.0)"));
+
+}
+
+TEST(Message, AddString) {
+    auto message = asapo::LogMessageWithFields{"Hello", "test"} .Append("test", "test").LogString();
+
+    ASSERT_THAT(message, Eq(R"("Hello":"test","test":"test")"));
+}
+
+TEST(Message, AddInt) {
+    asapo::LogMessageWithFields msg{"Hello", "test"};
+    msg = msg.Append("test", 123);
+
+    auto message = msg.LogString();
+
+    ASSERT_THAT(message, Eq(R"("Hello":"test","test":123)"));
+}
+
+TEST(Message, AddDouble) {
+    asapo::LogMessageWithFields msg{"Hello", "test"};
+
+    auto message = msg.Append("test", 123.2, 2).LogString();
+
+    ASSERT_THAT(message, Eq(R"("Hello":"test","test":123.20)"));
+}
+
+TEST(Message, Multi) {
+    asapo::LogMessageWithFields msg{"Hello", "test"};
+    msg.Append("test", 123).Append("test", "test").Append("test", 123.2, 2);
+
+    auto message = msg.LogString();
+
+    ASSERT_THAT(message, Eq(R"("Hello":"test","test":123,"test":"test","test":123.20)"));
+}
+
 
 }
 

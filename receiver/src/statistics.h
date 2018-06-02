@@ -4,6 +4,8 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 
 #include "statistics_sender.h"
@@ -23,7 +25,7 @@ struct StatisticsToSend {
     uint64_t elapsed_ms;
     uint64_t data_volume;
     uint64_t n_requests;
-    std::string tags;
+    std::vector<std::pair<std::string, std::string>> tags;
 };
 
 class Statistics {
@@ -39,7 +41,7 @@ class Statistics {
 
 
     void SetWriteInterval(uint64_t interval_ms);
-    std::unique_ptr<StatisticsSender> statistics_sender__;
+    std::vector<std::unique_ptr<StatisticsSender>> statistics_sender_list__;
   private:
     uint64_t GetElapsedMs(StatisticEntity entity) const noexcept;
     void ResetStatistics() noexcept;
@@ -53,8 +55,7 @@ class Statistics {
     std::chrono::nanoseconds time_counters_[kNStatisticEntities];
     uint64_t volume_counter_;
     unsigned int write_interval_;
-    std::string tag_;
-
+    std::vector<std::pair<std::string, std::string>> tags_;
 };
 
 }
