@@ -25,7 +25,7 @@ log_dir=~/fullchain_tests/logs
 # starts receiver on $receiver_node
 # runs producer with various file sizes from $producer_node and measures performance
 
-file_size=100
+file_size=1000
 file_num=$((100000000 / $file_size))
 echo filesize: ${file_size}K, filenum: $file_num
 

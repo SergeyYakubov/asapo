@@ -62,8 +62,8 @@ void Statistics::IncreaseRequestCounter() noexcept {
 
 Statistics::Statistics(unsigned int write_frequency) :
     write_interval_{write_frequency} {
-//    statistics_sender_list__.emplace_back(new StatisticsSenderInfluxDb);
-    statistics_sender_list__.emplace_back(new StatisticsSenderFluentd);
+    statistics_sender_list__.emplace_back(new StatisticsSenderInfluxDb);
+//    statistics_sender_list__.emplace_back(new StatisticsSenderFluentd);
 
     ResetStatistics();
 }

@@ -4,7 +4,7 @@
 # reads fileset into database
 # calls getnext_broker example from $worker_node
 
-nthreads=16
+nthreads=1
 # a directory with many files in it
 dir=/gpfs/petra3/scratch/yakubov/test
 run_name=test
@@ -34,8 +34,8 @@ ssh ${monitor_node} influx -execute \"create database db_test\"
 ssh ${service_node} docker run -d -p 27017:27017 --name mongo mongo
 #ssh ${service_node} docker run -d -p 8086 -p 8086 --name influxdb influxdb
 
-ssh ${service_node} mkdir ${service_dir}
-ssh ${worker_node} mkdir ${worker_dir}
+ssh ${service_node} mkdir -p ${service_dir}
+ssh ${worker_node} mkdir -p ${worker_dir}
 
 
 scp settings_tmp.json ${service_node}:${service_dir}/settings.json

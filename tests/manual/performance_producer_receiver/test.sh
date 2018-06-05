@@ -4,6 +4,14 @@ set -e
 
 trap Cleanup EXIT
 
+Cleanup() {
+set +e
+ssh ${service_node} rm -f ${service_dir}/files/*
+ssh ${service_node} killall receiver
+ssh ${service_node} killall asapo-discovery
+ssh ${service_node} docker rm -f -v mongo
+}
+
 
 # starts receiver on $service_node
 # runs producer with various file sizes from $worker_node and measures performance
@@ -71,7 +79,10 @@ do
 ssh ${service_node} docker run -d -p 27017:27017 --name mongo mongo
 echo ===================================================================
 ssh ${worker_node} ${worker_dir}/dummy-data-producer ${service_ip}:${discovery_port} ${size} 1000 8 0
-ssh ${service_node} rm -f ${service_dir}/files/*
+if [ "$1" == "true" ]
+then
+    ssh ${service_node} rm -f ${service_dir}/files/*
+fi
 ssh ${service_node} docker rm -f -v mongo
 done
 ssh ${service_node} killall receiver

@@ -5,8 +5,7 @@ namespace asapo {
 
 StatisticsSenderFluentd::StatisticsSenderFluentd() : statistics_log__{asapo::CreateDefaultLoggerApi("receiver_stat", "localhost:8400/logs/")} {
     statistics_log__->SetLogLevel(LogLevel::Info);
-    statistics_log__->EnableLocalLog(true);
-
+//    statistics_log__->EnableLocalLog(true);
 }
 
 void StatisticsSenderFluentd::SendStatistics(const asapo::StatisticsToSend& statistic) const noexcept {

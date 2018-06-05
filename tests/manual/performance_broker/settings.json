@@ -2,5 +2,6 @@
   "BrokerDbAddress":"localhost:27017",
   "MonitorDbAddress": "localhost:8086",
   "MonitorDbName": "db_test",
-  "port":5005
+  "port":5005,
+  "LogLevel":"info"
 }

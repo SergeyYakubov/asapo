@@ -85,6 +85,6 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Processed " << nfiles << " file(s)" << std::endl;
     std::cout << "Elapsed : " << duration_ms << "ms" << std::endl;
-    std::cout << "Rate : " << 1000.0f * nfiles / duration_ms << std::endl;
+    std::cout << "Rate : " << 1000.0f * nfiles / (duration_ms - 10000) << std::endl;
     return 0;
 }
