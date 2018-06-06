@@ -1,16 +1,15 @@
 {
   "Mode": "static",
-  "Recevier": {
-    "Endpoints": [
+  "Receiver": {
+    "StaticEndpoints": [
       "localhost:4200"
     ],
     "MaxConnections": 32
   },
   "Broker": {
-    "Endpoint": [
-      "localhost:5005"
-    ]
+    "StaticEndpoint": "localhost:5005"
   },
   "Port": 5006,
   "LogLevel": "info"
 }
+

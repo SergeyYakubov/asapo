@@ -56,20 +56,24 @@ cat receiver.json |
           end
          ) |
       from_entries" > receiver_tmp.json
+
 cat discovery.json |
   jq "to_entries |
        map(if .key == \"Port\"
           then . + {value:${discovery_port}}
-          elif .key == \"Endpoints\"
-          then . + {value:[\"${service_node}:${receiver_port}\"]}
           else .
           end
          ) |
       from_entries" > discovery_tmp.json
 
-scp discovery_tmp.json ${service_node}:${service_dir}/discovery.json
+cat discovery.json | jq ".Port = ${discovery_port}" > discovery_tmp.json
+
+cat discovery_tmp.json | jq ".Receiver.StaticEndpoints = [\"${service_node}:${receiver_port}\"]" > discovery_tmp1.json
+
+
+scp discovery_tmp1.json ${service_node}:${service_dir}/discovery.json
 scp receiver_tmp.json ${service_node}:${service_dir}/receiver.json
-rm discovery_tmp.json receiver_tmp.json
+rm discovery_tmp*.json receiver_tmp.json
 ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./receiver receiver.json &> ${service_dir}/receiver.log &'"
 ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./asapo-discovery -config discovery.json &> ${service_dir}/discovery.log &'"
 
@@ -78,7 +82,7 @@ for size  in 100 1000 10000
 do
 ssh ${service_node} docker run -d -p 27017:27017 --name mongo mongo
 echo ===================================================================
-ssh ${worker_node} ${worker_dir}/dummy-data-producer ${service_ip}:${discovery_port} ${size} 1000 8 0
+ssh ${worker_node} ${worker_dir}/dummy-data-producer ${service_ip}:8400 ${size} 1000 8 0
 if [ "$1" == "true" ]
 then
     ssh ${service_node} rm -f ${service_dir}/files/*

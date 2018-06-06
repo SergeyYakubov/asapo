@@ -21,7 +21,7 @@ func (rh *StaticRequestHandler) GetBroker() ([]byte, error) {
 
 func (rh *StaticRequestHandler) Init(settings utils.Settings) error {
 	rh.receiverResponce.MaxConnections = settings.Receiver.MaxConnections
-	rh.receiverResponce.Uris = settings.Receiver.ForceEndpoints
-	rh.broker = settings.Broker.ForceEndpoint
+	rh.receiverResponce.Uris = settings.Receiver.StaticEndpoints
+	rh.broker = settings.Broker.StaticEndpoint
 	return nil
 }

@@ -12,8 +12,8 @@ func fillSettings(mode string) utils.Settings {
 	settings.Mode = mode
 	settings.Receiver.MaxConnections = 10
 	settings.LogLevel = "info"
-	settings.Receiver.ForceEndpoints=[]string{"ip1","ip2"}
-	settings.Broker.ForceEndpoint="ip_b"
+	settings.Receiver.StaticEndpoints=[]string{"ip1","ip2"}
+	settings.Broker.StaticEndpoint="ip_b"
 	settings.ConsulEndpoints=[]string{"ipc1","ipc2"}
 	return settings
 }
@@ -32,14 +32,14 @@ func TestSettingsWrongMode(t *testing.T) {
 
 func TestSettingsStaticModeNoReceiverEndpoints(t *testing.T) {
 	settings := fillSettings("static")
-	settings.Receiver.ForceEndpoints=[]string{}
+	settings.Receiver.StaticEndpoints=[]string{}
 	err := settings.Validate()
 	assert.NotNil(t, err)
 }
 
 func TestSettingsStaticModeNoBrokerEndpoints(t *testing.T) {
 	settings := fillSettings("static")
-	settings.Broker.ForceEndpoint=""
+	settings.Broker.StaticEndpoint=""
 	err := settings.Validate()
 	assert.NotNil(t, err)
 }

@@ -7,6 +7,7 @@ set -e
 trap Cleanup EXIT
 
 Cleanup() {
+    set +e
 	echo cleanup
 	influx -execute "drop database ${database_name}"
 	kill -9 $brokerid

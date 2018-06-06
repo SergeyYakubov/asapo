@@ -3,12 +3,12 @@ package utils
 import "errors"
 
 type ReceiverInfo struct {
-	ForceEndpoints	 []string
+	StaticEndpoints	 []string
 	MaxConnections   int
 }
 
 type BrokerInfo struct {
-	ForceEndpoint		 string
+	StaticEndpoint		 string
 }
 
 
@@ -23,8 +23,8 @@ type Settings struct {
 
 func (settings *Settings) Validate() error {
 	if settings.Mode != "consul"{
-		if len(settings.Receiver.ForceEndpoints) == 0 || len(settings.Broker.ForceEndpoint) == 0 {
-		return errors.New("Endpoints not set")
+		if len(settings.Receiver.StaticEndpoints) == 0 || len(settings.Broker.StaticEndpoint) == 0 {
+		return errors.New("receiver or broker endpoints not set")
 		}
 	}
 

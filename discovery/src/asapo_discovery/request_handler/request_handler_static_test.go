@@ -10,8 +10,8 @@ import (
 var uris = []string{"ip1","ip2"}
 const max_conn = 1
 
-var static_settings utils.Settings= utils.Settings{Receiver:utils.ReceiverInfo{MaxConnections:max_conn,ForceEndpoints:uris},Broker:utils.BrokerInfo{
-	ForceEndpoint:"ip_broker"}}
+var static_settings utils.Settings= utils.Settings{Receiver:utils.ReceiverInfo{MaxConnections:max_conn,StaticEndpoints:uris},Broker:utils.BrokerInfo{
+	StaticEndpoint:"ip_broker"}}
 
 
 

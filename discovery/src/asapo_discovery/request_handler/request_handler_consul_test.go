@@ -42,7 +42,7 @@ func (suite *ConsulHandlerTestSuite) registerAgents(name string) {
 
 func (suite *ConsulHandlerTestSuite) SetupTest() {
 	var err error
-	consul_settings = utils.Settings{Receiver: utils.ReceiverInfo{MaxConnections: 10, ForceEndpoints: []string{}}}
+	consul_settings = utils.Settings{Receiver: utils.ReceiverInfo{MaxConnections: 10, StaticEndpoints: []string{}}}
 
 	suite.client, err = api.NewClient(api.DefaultConfig())
 	if err != nil {

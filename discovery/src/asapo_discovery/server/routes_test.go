@@ -30,8 +30,8 @@ type GetReceiversTestSuite struct {
 
 func (suite *GetReceiversTestSuite) SetupTest() {
 	requestHandler = new(request_handler.StaticRequestHandler)
-	var s utils.Settings= utils.Settings{Receiver:utils.ReceiverInfo{MaxConnections:10,ForceEndpoints:[]string{"ip1","ip2"}},
-	Broker:utils.BrokerInfo{ForceEndpoint:"ip_broker"}}
+	var s utils.Settings= utils.Settings{Receiver:utils.ReceiverInfo{MaxConnections:10,StaticEndpoints:[]string{"ip1","ip2"}},
+	Broker:utils.BrokerInfo{StaticEndpoint:"ip_broker"}}
 
 	requestHandler.Init(s)
 	logger.SetMockLog()
