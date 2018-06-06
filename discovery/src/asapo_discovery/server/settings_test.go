@@ -3,15 +3,18 @@ package server
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"asapo_discovery/utils"
 )
 
-func fillSettings(mode string)serverSettings {
-	var settings serverSettings
+func fillSettings(mode string) utils.Settings {
+	var settings utils.Settings
 	settings.Port = 1
 	settings.Mode = mode
-	settings.MaxConnections = 10
+	settings.Receiver.MaxConnections = 10
 	settings.LogLevel = "info"
-	settings.Endpoints=[]string{"ip1","ip2"}
+	settings.Receiver.ForceEndpoints=[]string{"ip1","ip2"}
+	settings.Broker.ForceEndpoint="ip_b"
+	settings.ConsulEndpoints=[]string{"ipc1","ipc2"}
 	return settings
 }
 
@@ -27,16 +30,25 @@ func TestSettingsWrongMode(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestSettingsStaticModeNoEndpoints(t *testing.T) {
+func TestSettingsStaticModeNoReceiverEndpoints(t *testing.T) {
 	settings := fillSettings("static")
-	settings.Endpoints=[]string{}
+	settings.Receiver.ForceEndpoints=[]string{}
 	err := settings.Validate()
 	assert.NotNil(t, err)
 }
 
+func TestSettingsStaticModeNoBrokerEndpoints(t *testing.T) {
+	settings := fillSettings("static")
+	settings.Broker.ForceEndpoint=""
+	err := settings.Validate()
+	assert.NotNil(t, err)
+}
+
+
+
 func TestSettingsConsulModeNoEndpoints(t *testing.T) {
 	settings := fillSettings("consul")
-	settings.Endpoints=[]string{}
+	settings.ConsulEndpoints=[]string{}
 	err := settings.Validate()
 	assert.Nil(t, err)
 }

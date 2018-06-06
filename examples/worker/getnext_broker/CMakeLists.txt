@@ -12,10 +12,10 @@ set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
 get_target_property(VAR ${TARGET_NAME} RUNTIME_OUTPUT_DIRECTORY)
 add_dependencies(${TARGET_NAME} asapo-broker)
 
-
+prepare_asapo()
 
 configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/broker_settings.json settings.json COPYONLY)
-add_script_test("${TARGET_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} $<TARGET_PROPERTY:asapo-broker,EXENAME>")
+add_script_test("${TARGET_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}")
 
 set (dir examples/worker/${TARGET_NAME})
 install(TARGETS ${TARGET_NAME} DESTINATION "${dir}")

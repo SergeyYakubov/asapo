@@ -1,11 +1,5 @@
 {
   "Mode": "static",
-  "Recevier": {
-    "Endpoints": [
-      "localhost:4200"
-    ],
-    "MaxConnections": 32
-  },
   "Broker": {
     "Endpoint": [
       "localhost:5005"

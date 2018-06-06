@@ -6,7 +6,7 @@ trap Cleanup EXIT
 
 broker_database_name=test_run
 monitor_database_name=db_test
-broker_address=127.0.0.1:5005
+proxy_address=127.0.0.1:8400
 
 receiver_folder=/tmp/asapo/receiver/files
 
@@ -38,4 +38,4 @@ $1 localhost:8400 100 1000 4 0 &
 #producerid=`echo $!`
 
 
-$2 ${broker_address} ${broker_database_name} 2 | grep "Processed 1000 file(s)"
+$2 ${proxy_address} ${broker_database_name} 2 | grep "Processed 1000 file(s)"

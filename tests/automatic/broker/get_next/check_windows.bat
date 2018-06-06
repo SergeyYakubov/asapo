@@ -13,7 +13,7 @@ ping 1.0.0.0 -n 1 -w 100 > nul
 
 C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next --stderr - | findstr /c:\"_id\":1  || goto :error
 C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next --stderr - | findstr /c:\"_id\":2  || goto :error
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next --stderr - | findstr  /c:"Not Found"  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next --stderr - | findstr  /c:"not found"  || goto :error
 
 goto :clean
 

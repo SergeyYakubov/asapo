@@ -17,6 +17,7 @@ auto const kSourceNotFound = "Source Not Found";
 auto const kSourceNotConnected = "Source Not Connacted";
 auto const kSourceAlreadyConnected = "Source Already Connected";
 auto const kErrorReadingSource = "Error Reading Source";
+auto const kNotFound = "Uri not found";
 auto const kPermissionDenied = "Permissionn Denied";
 auto const kNoData = "No Data";
 auto const kWrongInput = "Wrong Input";

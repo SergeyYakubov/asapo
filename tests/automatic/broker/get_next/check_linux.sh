@@ -23,4 +23,4 @@ brokerid=`echo $!`
 curl -v  --silent 127.0.0.1:5005/database/data/next --stderr - | grep '"_id":1'
 curl -v  --silent 127.0.0.1:5005/database/data/next --stderr - | grep '"_id":2'
 
-curl -v  --silent 127.0.0.1:5005/database/data/next --stderr - | grep "Not Found"
+curl -v  --silent 127.0.0.1:5005/database/data/next --stderr - | grep "not found"

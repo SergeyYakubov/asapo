@@ -5,15 +5,23 @@ import (
 )
 
 type StaticRequestHandler struct {
-	Responce
-	}
-
-func (rh *StaticRequestHandler) GetReceivers() ([]byte, error) {
-	return utils.MapToJson(&rh)
+	receiverResponce Responce
+	broker string
 }
 
-func (rh *StaticRequestHandler) Init(maxCons int,uris []string) error {
-	rh.MaxConnections = maxCons
-	rh.Uris = uris
+
+func (rh *StaticRequestHandler) GetReceivers() ([]byte, error) {
+	return utils.MapToJson(&rh.receiverResponce)
+}
+
+func (rh *StaticRequestHandler) GetBroker() ([]byte, error) {
+	return []byte(rh.broker),nil
+}
+
+
+func (rh *StaticRequestHandler) Init(settings utils.Settings) error {
+	rh.receiverResponce.MaxConnections = settings.Receiver.MaxConnections
+	rh.receiverResponce.Uris = settings.Receiver.ForceEndpoints
+	rh.broker = settings.Broker.ForceEndpoint
 	return nil
 }

@@ -24,6 +24,9 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
         message = WorkerErrorMessage::kErrorReadingSource;
         break;
     case HttpCode::NotFound:
+        message = WorkerErrorMessage::kErrorReadingSource;
+        break;
+    case HttpCode::Conflict:
         message = WorkerErrorMessage::kNoData;
         return TextErrorWithType(message, ErrorType::kEndOfFile);
     default:
@@ -56,20 +59,19 @@ std::string GetIDFromJson(const std::string& json_string, Error* err) {
     return std::to_string(id);
 }
 
-void ServerDataBroker::ProcessServerError(Error* err, const std::string& response, std::string* redirect_uri) {
-    if ((*err)->GetErrorType() != asapo::ErrorType::kEndOfFile) {
-        (*err)->Append(response);
-        return;
-    } else {
+void ServerDataBroker::ProcessServerError(Error* err, const std::string& response, std::string* op) {
+    (*err)->Append(response);
+    if ((*err)->GetErrorType() == asapo::ErrorType::kEndOfFile) {
         if (response.find("id") != std::string::npos) {
-            auto id = GetIDFromJson(response, err);
-            if (*err) {
+            Error parse_error;
+            auto id = GetIDFromJson(response, &parse_error);
+            if (parse_error) {
+                (*err)->Append(parse_error->Explain());
                 return;
             }
-            *redirect_uri = server_uri_ + "/database/" + source_name_ + "/" + id;
+            *op = id;
         }
     }
-    *err = nullptr;
     return;
 }
 
@@ -83,23 +85,40 @@ Error ServerDataBroker::ProcessRequest(std::string* response, std::string reques
     return HttpCodeToWorkerError(code);
 }
 
+Error ServerDataBroker::GetBrokerUri() {
+    if (!current_broker_uri_.empty()) {
+        return nullptr;
+    }
+
+    std::string request_uri = server_uri_ + "/discovery/broker";
+    Error err;
+    err = ProcessRequest(&current_broker_uri_, request_uri);
+    if (err != nullptr || current_broker_uri_.empty()) {
+        current_broker_uri_ = "";
+        return TextError("cannot get broker uri from " + server_uri_);
+    }
+    return nullptr;
+}
+
+
 Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
-    std::string request_uri = server_uri_ + "/database/" + source_name_ + "/" + operation;
+    std::string request_suffix = operation;
     uint64_t elapsed_ms = 0;
     std::string response;
     while (true) {
-        auto err = ProcessRequest(&response, request_uri);
+        auto err = GetBrokerUri();
         if (err == nullptr) {
-            break;
+            std::string request_api = current_broker_uri_ + "/database/" + source_name_ + "/";
+            err = ProcessRequest(&response, request_api + request_suffix);
+            if (err == nullptr) {
+                break;
+            }
         }
 
-        ProcessServerError(&err, response, &request_uri);
-        if (err != nullptr) {
-            return err;
-        }
+        ProcessServerError(&err, response, &request_suffix);
 
         if (elapsed_ms >= timeout_ms_) {
-            err = TextErrorWithType("no more data found, exit on timeout", asapo::ErrorType::kTimeOut);
+            err = TextErrorWithType("exit on timeout, last error: " + err->Explain(), asapo::ErrorType::kTimeOut);
             return err;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
