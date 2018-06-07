@@ -11,4 +11,11 @@ var listRoutes = utils.Routes{
 		"/receivers",
 		routeGetReceivers,
 	},
+	utils.Route{
+		"GetBroker",
+		"Get",
+		"/broker",
+		routeGetBroker,
+	},
+
 }

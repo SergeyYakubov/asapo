@@ -4,10 +4,11 @@ set -e
 
 res=`$@`
 
-echo $res | grep "\[info\] test info"
-echo $res | grep "\[error\] test error"
-echo $res | grep "\[debug\] test debug"
-echo $res | grep "\[warning\] test warning"
+echo $res | grep '"level":"info","message":"test info"'
+echo $res | grep '"test_int":2,"test_double":1.0}'
+echo $res | grep '"level":"error","message":"test error"'
+echo $res | grep '"level":"debug","message":"test debug"'
+echo $res | grep '"level":"warning","message":"test warning"'
 echo $res | grep "test info_mt_0"
 echo $res | grep "test info_mt_1"
 echo $res | grep "test info_mt_2"

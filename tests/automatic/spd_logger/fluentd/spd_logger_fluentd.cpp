@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 
     logger->SetLogLevel(LogLevel::Debug);
 
-    logger->Info("test info");
+    logger->Info(LogMessageWithFields{"json_test", "info"});
     logger->Error("test error");
     logger->Warning("test warning");
     logger->Debug("test debug");

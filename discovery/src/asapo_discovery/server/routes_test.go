@@ -30,7 +30,10 @@ type GetReceiversTestSuite struct {
 
 func (suite *GetReceiversTestSuite) SetupTest() {
 	requestHandler = new(request_handler.StaticRequestHandler)
-	requestHandler.Init(10,[]string{"ip1","ip2"})
+	var s utils.Settings= utils.Settings{Receiver:utils.ReceiverInfo{MaxConnections:10,StaticEndpoints:[]string{"ip1","ip2"}},
+	Broker:utils.BrokerInfo{StaticEndpoint:"ip_broker"}}
+
+	requestHandler.Init(s)
 	logger.SetMockLog()
 }
 
@@ -60,6 +63,17 @@ func (suite *GetReceiversTestSuite) TestGetReceivers() {
 
 	suite.Equal(http.StatusOK, w.Code, "code ok")
 	suite.Equal(w.Body.String(), "{\"MaxConnections\":10,\"Uris\":[\"ip1\",\"ip2\"]}", "result")
+	assertExpectations(suite.T())
+}
+
+
+func (suite *GetReceiversTestSuite) TestGetBroker() {
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get broker")))
+
+	w := doRequest("/broker")
+
+	suite.Equal(http.StatusOK, w.Code, "code ok")
+	suite.Equal(w.Body.String(), "ip_broker", "result")
 	assertExpectations(suite.T())
 }
 

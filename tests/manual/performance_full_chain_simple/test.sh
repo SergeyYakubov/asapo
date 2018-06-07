@@ -26,7 +26,7 @@ log_dir=~/fullchain_tests/logs
 # runs producer with various file sizes from $producer_node and measures performance
 
 file_size=10000
-file_num=$((100000000 / $file_size))
+file_num=$((10000000 / $file_size))
 echo filesize: ${file_size}K, filenum: $file_num
 
 # receiver_setup
@@ -62,10 +62,15 @@ cat discovery.json |
           end
          ) |
       from_entries" > discovery_tmp.json
+
+cat discovery_tmp.json | jq ".Broker.StaticEndpoint = \"${receiver_node}:5005\"" > discovery_tmp1.json
+
+cat discovery_tmp1.json | jq ".Receiver.StaticEndpoints = [\"${receiver_node}:${receiver_port}\"]" > discovery_tmp2.json
+
 scp ../../../cmake-build-release/discovery/asapo-discovery ${receiver_node}:${receiver_dir}
-scp discovery_tmp.json ${receiver_node}:${receiver_dir}/discovery.json
+scp discovery_tmp2.json ${receiver_node}:${receiver_dir}/discovery.json
 discovery_ip=`resolveip -s ${receiver_node}`
-rm discovery_tmp.json
+rm discovery_tmp*.json
 
 #producer_setup
 producer_node=max-display001
@@ -117,11 +122,13 @@ sleep 0.3
 ssh ${broker_node} "bash -c 'cd ${broker_dir}; nohup ./asapo-broker -config broker.json &> ${log_dir}/log.broker &'"
 sleep 0.3
 
+sleep 5
+
 #producer_start
-ssh ${producer_node} "bash -c 'cd ${producer_dir}; nohup ./dummy-data-producer ${discovery_ip}:${discovery_port} ${file_size} ${file_num} ${producer_nthreads} 0 &> ${log_dir}/producer.log &'"
+ssh ${producer_node} "bash -c 'cd ${producer_dir}; nohup ./dummy-data-producer ${receiver_node}:8400 ${file_size} ${file_num} ${producer_nthreads} 0 &> ${log_dir}/producer.log &'"
 
 sleep 1
 
 #worker_start
-ssh ${worker_node} ${worker_dir}/getnext_broker ${broker_node}:5005 test_run ${nthreads}
+ssh ${worker_node} ${worker_dir}/getnext_broker ${receiver_node}:8400 test_run ${nthreads}
 

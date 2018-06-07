@@ -1,5 +1,7 @@
 #include "statistics.h"
 #include "statistics_sender_influx_db.h"
+#include "statistics_sender_fluentd.h"
+
 #include <algorithm>
 
 using std::chrono::high_resolution_clock;
@@ -13,7 +15,9 @@ void Statistics::SendIfNeeded() noexcept {
 }
 
 void Statistics::Send() noexcept {
-    statistics_sender__->SendStatistics(PrepareStatisticsToSend());
+    for (auto& sender : statistics_sender_list__) {
+        sender->SendStatistics(PrepareStatisticsToSend());
+    }
     ResetStatistics();
 }
 
@@ -23,7 +27,7 @@ StatisticsToSend Statistics::PrepareStatisticsToSend() const noexcept {
     stat.n_requests = nrequests_;
     stat.data_volume = volume_counter_;
     stat.elapsed_ms = std::max(uint64_t{1}, GetTotalElapsedMs());
-    stat.tags = tag_;
+    stat.tags = tags_;
     for (auto i = 0; i < kNStatisticEntities; i++) {
         stat.entity_shares[i] =  double(GetElapsedMs(StatisticEntity(i))) / stat.elapsed_ms;
     }
@@ -56,8 +60,11 @@ void Statistics::IncreaseRequestCounter() noexcept {
     nrequests_++;
 }
 
-Statistics::Statistics(unsigned int write_frequency) : statistics_sender__{new StatisticsSenderInfluxDb},
-write_interval_{write_frequency} {
+Statistics::Statistics(unsigned int write_frequency) :
+    write_interval_{write_frequency} {
+    statistics_sender_list__.emplace_back(new StatisticsSenderInfluxDb);
+//    statistics_sender_list__.emplace_back(new StatisticsSenderFluentd);
+
     ResetStatistics();
 }
 
@@ -78,10 +85,7 @@ void Statistics::StopTimer() noexcept {
 }
 
 void Statistics::AddTag(const std::string& name, const std::string& value) noexcept {
-    if (!tag_.empty()) {
-        tag_ += ",";
-    }
-    tag_ += name + "=" + value;
+    tags_.push_back(std::make_pair(name, value));
 }
 
 }

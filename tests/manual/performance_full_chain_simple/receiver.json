@@ -7,5 +7,6 @@
   "WriteToDisk":true,
   "WriteToDb":true,
   "LogLevel":"info",
-  "Tag": "test_receiver"
+  "Tag": "test_receiver",
+  "RootFolder" : "/gpfs/petra3/scratch/yakubov/receiver_tests/files"
 }

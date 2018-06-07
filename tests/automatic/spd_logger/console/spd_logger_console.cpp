@@ -24,6 +24,9 @@ int main(int argc, char* argv[]) {
         thread.join();
     }
 
+
+    logger->Info(LogMessageWithFields{"test_int", 2} .Append("test_double", 1, 1));
+
     logger->Info("test info");
     logger->Error("test error");
     logger->Warning("test warning");

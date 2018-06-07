@@ -12,6 +12,7 @@ Cleanup() {
 	influx -execute "drop database ${database_name}"
     nomad stop receiver
     nomad stop discovery
+    nomad stop nginx
     echo "db.dropDatabase()" | mongo ${mongo_database_name}
     rm -rf ${receiver_folder}
 }
@@ -22,10 +23,11 @@ influx -execute "create database ${database_name}"
 
 nomad run receiver.nmd
 nomad run discovery.nmd
+nomad run nginx.nmd
 
 sleep 1
 
-$1 localhost:5006 100 112 4  0
+$1 localhost:8400 100 112 4  0
 
 sleep 1
 

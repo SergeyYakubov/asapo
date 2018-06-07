@@ -40,8 +40,11 @@ void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic)
 }
 
 std::string StatisticsSenderInfluxDb::StatisticsToString(const StatisticsToSend& statistic) const noexcept {
-    std::string str;
-    str = "statistics," + statistic.tags + " elapsed_ms=" + string_format("%ld", statistic.elapsed_ms);
+    std::string str, tags;
+    for (auto tag : statistic.tags) {
+        tags += "," + tag.first + "=" + tag.second;
+    }
+    str = "statistics" + tags + " elapsed_ms=" + string_format("%ld", statistic.elapsed_ms);
     str += ",data_volume=" + string_format("%ld", statistic.data_volume);
     str += ",n_requests=" + string_format("%ld", statistic.n_requests);
     str += ",db_share=" + string_format("%.4f", statistic.entity_shares[StatisticEntity::kDatabase]);

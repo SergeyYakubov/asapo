@@ -61,7 +61,8 @@ class SenderInfluxDbTests : public Test {
         statistics.entity_shares[asapo::StatisticEntity::kDatabase] = 0.1;
         statistics.elapsed_ms = 100;
         statistics.data_volume = 1000;
-        statistics.tags = "name1=value1,name2=value2";
+        statistics.tags.push_back(std::make_pair("name1", "value1"));
+        statistics.tags.push_back(std::make_pair("name2", "value2"));
 
         config.monitor_db_uri = "test_uri";
         config.monitor_db_name = "test_name";
@@ -106,7 +107,7 @@ TEST_F(SenderInfluxDbTests, LogErrorWithWrongResponceSendStatistics) {
 TEST_F(SenderInfluxDbTests, LogDebugSendStatistics) {
     EXPECT_CALL(mock_http_client, Post_t(_, _, _, _)).
     WillOnce(
-        DoAll(SetArgPointee<3>(nullptr), SetArgPointee<2>(asapo::HttpCode::OK), Return("error response")
+        DoAll(SetArgPointee<3>(nullptr), SetArgPointee<2>(asapo::HttpCode::OK), Return("ok response")
              ));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending statistics"),

@@ -1,7 +1,10 @@
 package request_handler
 
+import "asapo_discovery/utils"
+
 type Agent interface {
 	GetReceivers() ([]byte, error)
-	Init(int,[]string) error
+	GetBroker() ([]byte, error)
+	Init(settings utils.Settings) error
 }
 

@@ -1,6 +1,6 @@
 set(TARGET_NAME logger)
 set(SOURCE_FILES
-        spd_logger.cpp spd_logger.h logger_factory.cpp fluentd_sink.cpp fluentd_sink.h)
+        spd_logger.cpp spd_logger.h logger.cpp fluentd_sink.cpp fluentd_sink.h)
 
 ################################
 # Library

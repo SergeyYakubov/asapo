@@ -9,9 +9,11 @@
 
 namespace  asapo {
 
+const std::string ReceiverDiscoveryService::kServiceEndpointSuffix = "/discovery/receivers";
+
 ReceiverDiscoveryService::ReceiverDiscoveryService(std::string endpoint, uint64_t update_frequency_ms): httpclient__{DefaultHttpClient()},
     log__{GetDefaultProducerLogger()},
-    endpoint_{std::move(endpoint) + "/receivers"}, update_frequency_ms_{update_frequency_ms} {
+    endpoint_{std::move(endpoint) + kServiceEndpointSuffix}, update_frequency_ms_{update_frequency_ms} {
 
 }
 

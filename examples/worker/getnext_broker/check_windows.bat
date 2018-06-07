@@ -1,20 +1,16 @@
 SET database_name=test_run
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 
-::first argument  path to the executable
-:: second argument path to the broker
+c:\opt\consul\nomad run discovery.nmd
+c:\opt\consul\nomad run broker.nmd
+c:\opt\consul\nomad run nginx.nmd
 
-set full_name="%2"
-set short_name="%~nx2"
-
-start /B "" "%full_name%" -config settings.json
-
-ping 1.0.0.0 -n 1 -w 100 > nul
+ping 1.0.0.0 -n 10 -w 100 > nul
 
 for /l %%x in (1, 1, 3) do echo db.data.insert({"_id":%%x,"size":100,"name":"%%x","lastchange":1}) | %mongo_exe% %database_name%  || goto :error
 
 
-"%1" 127.0.0.1:5005 %database_name% 1 | findstr "Processed 3 file" || goto :error
+"%1" 127.0.0.1:8400 %database_name% 1 | findstr /c:"Processed 3 file" || goto :error
 goto :clean
 
 :error
@@ -22,5 +18,7 @@ call :clean
 exit /b 1
 
 :clean
-Taskkill /IM "%short_name%" /F
+c:\opt\consul\nomad stop discovery
+c:\opt\consul\nomad stop broker
+c:\opt\consul\nomad stop nginx
 echo db.dropDatabase() | %mongo_exe% %database_name%

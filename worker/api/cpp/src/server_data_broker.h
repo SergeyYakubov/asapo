@@ -20,9 +20,11 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::unique_ptr<HttpClient> httpclient__;
   private:
     Error GetFileInfoFromServer(FileInfo* info, const std::string& operation);
-    void ProcessServerError(Error* err,const std::string& response,std::string* redirect_uri);
-    Error ProcessRequest(std::string* response,std::string request_uri);
+    Error GetBrokerUri();
+    void ProcessServerError(Error* err, const std::string& response, std::string* redirect_uri);
+    Error ProcessRequest(std::string* response, std::string request_uri);
     std::string server_uri_;
+    std::string current_broker_uri_;
     std::string source_name_;
     uint64_t timeout_ms_ = 0;
 };

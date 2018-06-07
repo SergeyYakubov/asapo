@@ -28,6 +28,7 @@ class ReceiverDiscoveryService {
     std::unique_ptr<HttpClient> httpclient__;
     AbstractLogger* log__;
   private:
+    static const std::string kServiceEndpointSuffix;
     void ThreadHandler();
     Error UpdateFromEndpoint(ReceiversList* list, uint64_t* max_connections);
     Error ParseResponse(const std::string& responce, ReceiversList* list, uint64_t* max_connections);

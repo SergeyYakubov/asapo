@@ -1,9 +1,11 @@
 "%1" > output
 
-findstr /I /L /C:"[info] test info" output || goto :error
-findstr /I /L /C:"[error] test error" output || goto :error
-findstr /I /L /C:"[debug] test debug"  output|| goto :error
-findstr /I /L /C:"[warning] test warning" output || goto :error
+findstr /I /L /C:"\"level\":\"info\",\"message\":\"test info\"" output || goto :error
+findstr /I /L /C:"\"level\":\"error\",\"message\":\"test error\"" output || goto :error
+findstr /I /L /C:"\"level\":\"debug\",\"message\":\"test debug\"" output || goto :error
+findstr /I /L /C:"\"level\":\"warning\",\"message\":\"test warning\"" output || goto :error
+findstr /I /L /C:"\"test_int\":2,\"test_double\":1.0" output || goto :error
+
 findstr /I /L /C:"test info_mt_0" output || goto :error
 findstr /I /L /C:"test info_mt_1" output || goto :error
 findstr /I /L /C:"test info_mt_2" output || goto :error
