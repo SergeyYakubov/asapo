@@ -18,6 +18,7 @@ enum Opcode : uint8_t {
 
 enum NetworkErrorCode : uint16_t {
     kNetErrorNoError,
+    kNetAuthorizationError,
     kNetErrorFileIdAlreadyInUse,
     kNetErrorAllocateStorageFailed,
     kNetErrorInternalServerError = 65535,
@@ -32,6 +33,8 @@ enum NetworkErrorCode : uint16_t {
  */
 
 const std::size_t kMaxFileNameSize = 1024;
+const std::size_t kMaxFileMessageSize = 1024;
+
 struct GenericRequestHeader {
     GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
                          uint64_t i_data_size = 0, const std::string& i_file_name = ""):
@@ -49,6 +52,7 @@ struct GenericNetworkResponse {
     Opcode              op_code;
     NetworkRequestId    request_id;
     NetworkErrorCode    error_code;
+    char        message[kMaxFileMessageSize];
 };
 
 /**

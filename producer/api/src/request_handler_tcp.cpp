@@ -22,6 +22,16 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& receiver_address) 
         return err;
     }
     log__->Info("connected to receiver at " + receiver_address);
+
+    err = ReceiveResponse();
+    if (err != nullptr) {
+        log__->Error("authorization failed at " + receiver_address + " - " + err->Explain());
+        Disconnect();
+        return err;
+    }
+
+    log__->Debug("authorized at " + receiver_address);
+
     connected_receiver_uri_ = receiver_address;
     return nullptr;
 }
@@ -48,14 +58,19 @@ Error RequestHandlerTcp::ReceiveResponse() {
     if(err != nullptr) {
         return err;
     }
-
-    if(sendDataResponse.error_code) {
-        if(sendDataResponse.error_code == kNetErrorFileIdAlreadyInUse) {
-            return ProducerErrorTemplates::kFileIdAlreadyInUse.Generate();
-        }
+    switch (sendDataResponse.error_code) {
+    case kNetErrorFileIdAlreadyInUse :
+        return ProducerErrorTemplates::kFileIdAlreadyInUse.Generate();
+    case kNetAuthorizationError : {
+        auto res_err = ProducerErrorTemplates::kAuthorizationFailed.Generate();
+        res_err->Append(sendDataResponse.message);
+        return res_err;
+    }
+    case kNetErrorNoError :
+        return nullptr;
+    default:
         return ProducerErrorTemplates::kInternalServerError.Generate();
     }
-    return nullptr;
 }
 
 Error RequestHandlerTcp::TrySendToReceiver(const Request* request) {

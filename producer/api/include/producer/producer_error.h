@@ -10,6 +10,7 @@ enum class ProducerErrorType {
     kConnectionNotReady,
     kFileTooLarge,
     kFileIdAlreadyInUse,
+    kAuthorizationFailed,
     kInternalServerError,
     kCannotSendDataToReceivers,
     kRequestPoolIsFull
@@ -72,6 +73,10 @@ auto const kFileTooLarge = ProducerErrorTemplate {
 
 auto const kFileIdAlreadyInUse = ProducerErrorTemplate {
     "File already in use", ProducerErrorType::kFileIdAlreadyInUse
+};
+
+auto const kAuthorizationFailed = ProducerErrorTemplate {
+    "Authorization failed:", ProducerErrorType::kAuthorizationFailed
 };
 
 auto const kInternalServerError = ProducerErrorTemplate {
