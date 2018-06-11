@@ -62,7 +62,7 @@ class RequestPoolTests : public testing::Test {
     MockRequestHandlerFactory request_handler_factory{mock_request_handler};
     const uint8_t nthreads = 1;
     asapo::RequestPool pool {nthreads, &request_handler_factory};
-    std::unique_ptr<Request> request{new Request{GenericRequestHeader{}, nullptr, nullptr}};
+    std::unique_ptr<Request> request{new Request{"",GenericRequestHeader{}, nullptr, nullptr}};
     void SetUp() override {
         pool.log__ = &mock_logger;
     }
@@ -118,7 +118,7 @@ TEST_F(RequestPoolTests, AddRequestCallsSend) {
 
 TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 
-    Request* request2 = new Request{GenericRequestHeader{}, nullptr, nullptr};
+    Request* request2 = new Request{"",GenericRequestHeader{}, nullptr, nullptr};
 
     ExpectSend(mock_request_handler, 2);
 

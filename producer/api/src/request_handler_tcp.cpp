@@ -14,8 +14,20 @@ RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service
 
 }
 
-Error RequestHandlerTcp::ConnectToReceiver(const std::string& receiver_address) {
+Error RequestHandlerTcp::Authorize(const std::string& beamtime_id) {
+    GenericRequestHeader header{kOpcodeAuthorize,0,0,beamtime_id.c_str()};
     Error err;
+    io__->Send(sd_, &header, sizeof(header), &err);
+    if(err) {
+        return err;
+    }
+    return ReceiveResponse();
+}
+
+
+Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id,const std::string& receiver_address) {
+    Error err;
+
     sd_ = io__->CreateAndConnectIPTCPSocket(receiver_address, &err);
     if(err != nullptr) {
         log__->Debug("cannot connect to receiver at " + receiver_address + " - " + err->Explain());
@@ -23,7 +35,8 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& receiver_address) 
     }
     log__->Info("connected to receiver at " + receiver_address);
 
-    err = ReceiveResponse();
+    connected_receiver_uri_ = receiver_address;
+    err = Authorize(beamtime_id);
     if (err != nullptr) {
         log__->Error("authorization failed at " + receiver_address + " - " + err->Explain());
         Disconnect();
@@ -32,7 +45,6 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& receiver_address) 
 
     log__->Debug("authorized at " + receiver_address);
 
-    connected_receiver_uri_ = receiver_address;
     return nullptr;
 }
 
@@ -152,7 +164,7 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
     }
     for (auto receiver_uri : receivers_list_) {
         if (Disconnected()) {
-            auto err = ConnectToReceiver(receiver_uri);
+            auto err = ConnectToReceiver(request->beamtime_id,receiver_uri);
             if (err != nullptr ) continue;
         }
 
