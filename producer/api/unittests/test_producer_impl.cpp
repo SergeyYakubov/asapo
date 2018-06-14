@@ -30,12 +30,13 @@ using asapo::RequestPool;
 using asapo::Request;
 
 
-MATCHER_P4(M_CheckSendDataRequest, op_code,file_id, file_size,message,
+MATCHER_P5(M_CheckSendDataRequest, op_code, beamtime_id, file_id, file_size, message,
            "Checks if a valid GenericRequestHeader was Send") {
     return ((asapo::GenericRequestHeader)(arg->header)).op_code == op_code
-        && ((asapo::GenericRequestHeader)(arg->header)).data_id == file_id
-        && ((asapo::GenericRequestHeader)(arg->header)).data_size == file_size
-        && strcmp(((asapo::GenericRequestHeader)(arg->header)).message, message) == 0;
+           && ((asapo::GenericRequestHeader)(arg->header)).data_id == file_id
+           && ((asapo::GenericRequestHeader)(arg->header)).data_size == file_size
+           && arg->beamtime_id == beamtime_id
+           && strcmp(((asapo::GenericRequestHeader)(arg->header)).message, message) == 0;
 }
 
 
@@ -78,12 +79,14 @@ TEST_F(ProducerImplTests, OKSendingRequest) {
     uint64_t expected_size = 100;
     uint64_t expected_id = 10;
     char expected_name[asapo::kMaxMessageSize] = "test_name";
+    std::string expected_beamtimeid = "beamtime_id";
 
+    producer.SetBeamtimeId(expected_beamtimeid);
+    Request request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, expected_size, expected_name}, nullptr, nullptr};
 
-    Request request{"",asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, expected_size, expected_name}, nullptr, nullptr};
-
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,expected_id, expected_size, expected_name))).WillOnce(Return(
-                nullptr));
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+                                        expected_beamtimeid, expected_id, expected_size, expected_name))).WillOnce(Return(
+                                                    nullptr));
 
     auto err = producer.Send(expected_id, nullptr, expected_size, expected_name, nullptr);
 

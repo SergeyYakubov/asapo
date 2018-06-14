@@ -50,7 +50,7 @@ Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size, s
         return err;
     }
 
-    return request_pool__->AddRequest(std::unique_ptr<Request> {new Request{"",request_header, data, callback}});
+    return request_pool__->AddRequest(std::unique_ptr<Request> {new Request{beamtime_id_, request_header, data, callback}});
 }
 
 void ProducerImpl::SetLogLevel(LogLevel level) {
@@ -63,6 +63,10 @@ void ProducerImpl::EnableLocalLog(bool enable) {
 
 void ProducerImpl::EnableRemoteLog(bool enable) {
     log__->EnableRemoteLog(enable);
+}
+
+void ProducerImpl::SetBeamtimeId(std::string beamtime_id) {
+    beamtime_id_ = std::move(beamtime_id);
 }
 
 }

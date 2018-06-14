@@ -15,7 +15,7 @@ RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service
 }
 
 Error RequestHandlerTcp::Authorize(const std::string& beamtime_id) {
-    GenericRequestHeader header{kOpcodeAuthorize,0,0,beamtime_id.c_str()};
+    GenericRequestHeader header{kOpcodeAuthorize, 0, 0, beamtime_id.c_str()};
     Error err;
     io__->Send(sd_, &header, sizeof(header), &err);
     if(err) {
@@ -25,7 +25,7 @@ Error RequestHandlerTcp::Authorize(const std::string& beamtime_id) {
 }
 
 
-Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id,const std::string& receiver_address) {
+Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id, const std::string& receiver_address) {
     Error err;
 
     sd_ = io__->CreateAndConnectIPTCPSocket(receiver_address, &err);
@@ -164,7 +164,7 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
     }
     for (auto receiver_uri : receivers_list_) {
         if (Disconnected()) {
-            auto err = ConnectToReceiver(request->beamtime_id,receiver_uri);
+            auto err = ConnectToReceiver(request->beamtime_id, receiver_uri);
             if (err != nullptr ) continue;
         }
 

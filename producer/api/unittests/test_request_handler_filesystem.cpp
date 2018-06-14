@@ -52,13 +52,13 @@ class RequestHandlerFilesystemTests : public testing::Test {
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_file_name};
     bool called = false;
     asapo::GenericRequestHeader callback_header;
-    asapo::Request request{"",header, expected_data_pointer, [this](asapo::GenericRequestHeader header, asapo::Error err) {
+    asapo::Request request{"", header, expected_data_pointer, [this](asapo::GenericRequestHeader header, asapo::Error err) {
         called = true;
         callback_err = std::move(err);
         callback_header = header;
     }};
 
-    asapo::Request request_nocallback{"",header, expected_data_pointer, nullptr};
+    asapo::Request request_nocallback{"", header, expected_data_pointer, nullptr};
     testing::NiceMock<asapo::MockLogger> mock_logger;
 
     asapo::RequestHandlerFilesystem request_handler{expected_destination, expected_thread_id};

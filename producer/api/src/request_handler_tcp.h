@@ -30,7 +30,7 @@ class RequestHandlerTcp: public RequestHandler {
     ReceiverDiscoveryService* discovery_service__;
   private:
     Error Authorize(const std::string& beamtime_id);
-    Error ConnectToReceiver(const std::string& beamtime_id,const std::string& receiver_address);
+    Error ConnectToReceiver(const std::string& beamtime_id, const std::string& receiver_address);
     Error SendHeaderAndData(const Request*);
     Error ReceiveResponse();
     Error TrySendToReceiver(const Request* request);
