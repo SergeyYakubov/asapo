@@ -7,7 +7,8 @@ namespace asapo {
 
 enum class ReceiverErrorType {
     kInvalidOpCode,
-    kBadRequest
+    kBadRequest,
+    kAuthorizationFailure
 };
 
 //TODO Make a marco to create error class and error template class
@@ -60,6 +61,11 @@ auto const kInvalidOpCode = ReceiverErrorTemplate {
 auto const kBadRequest = ReceiverErrorTemplate {
     "Bad request", ReceiverErrorType::kBadRequest
 };
+
+auto const kAuthorizationFailure = ReceiverErrorTemplate {
+    "authorization failure", ReceiverErrorType::kAuthorizationFailure
+};
+
 
 };
 }

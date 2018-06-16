@@ -15,10 +15,12 @@ RequestsDispatcher::RequestsDispatcher(SocketDescriptor socket_fd, std::string a
                                                                  producer_uri_{std::move(address)} {
 }
 
-NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
+NetworkErrorCode GetNetworkCodeFromError(const Error &err) {
     if (err) {
         if (err == IOErrorTemplates::kFileAlreadyExists) {
             return NetworkErrorCode::kNetErrorFileIdAlreadyInUse;
+        } else if (err == ReceiverErrorTemplates::kAuthorizationFailure) {
+            return NetworkErrorCode::kNetAuthorizationError;
         } else {
             return NetworkErrorCode::kNetErrorInternalServerError;
         }
@@ -26,39 +28,51 @@ NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
     return NetworkErrorCode::kNetErrorNoError;
 }
 
-
-Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request>& request) const noexcept {
-    Error err;
-    err = request->Handle(statistics__);
+Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request> &request) const noexcept {
+    log__->Debug("processing request from " + producer_uri_ );
+    Error handle_err;
+    handle_err = request->Handle(statistics__);
     GenericNetworkResponse generic_response;
-    generic_response.error_code = GetNetworkCodeFromError(err);
-    if (err) {
-        log__->Error("error while processing request from " + producer_uri_ + " - " + err->Explain());
+    generic_response.error_code = GetNetworkCodeFromError(handle_err);
+    if (handle_err) {
+        log__->Error("error processing request from " + producer_uri_ + " - " + handle_err->Explain());
+        strncpy(generic_response.message, handle_err->Explain().c_str(), kMaxMessageSize);
     }
-    io__->Send(socket_fd_, &generic_response, sizeof(GenericNetworkResponse), &err);
-    if (err) {
-        log__->Error("error sending response to " + producer_uri_ + " - " + err->Explain());
+    log__->Debug("sending response to " + producer_uri_ );
+    Error io_err;
+    io__->Send(socket_fd_, &generic_response, sizeof(GenericNetworkResponse), &io_err);
+    if (io_err) {
+        log__->Error("error sending response to " + producer_uri_ + " - " + io_err->Explain());
     }
-    return err;
+    return handle_err == nullptr ? std::move(io_err) : std::move(handle_err);
 }
 
-
-std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const noexcept {
+std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error * err)
+const noexcept {
 //TODO: to be overwritten with MessagePack (or similar)
 GenericRequestHeader generic_request_header;
-statistics__->StartTimer(StatisticEntity::kNetwork);
-io__->Receive(socket_fd_, &generic_request_header,sizeof(GenericRequestHeader), err);
+statistics__->
+StartTimer(StatisticEntity::kNetwork);
+io__->
+Receive(socket_fd_, &generic_request_header,
+sizeof(GenericRequestHeader), err);
 if(*err) {
-log__->Error("error getting next request from " + producer_uri_+" - "+(*err)->Explain());
+log__->Error("error getting next request from " + producer_uri_+" - "+(*err)->
+Explain()
+);
 return nullptr;
 }
-statistics__->StopTimer();
+statistics__->
+StopTimer();
 auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, err);
 if (*err) {
-log__->Error("error processing request from " + producer_uri_+" - "+(*err)->Explain());
+log__->Error("error processing request from " + producer_uri_+" - "+(*err)->
+Explain()
+);
 }
 
-return request;
+return
+request;
 }
 
 
