@@ -9,7 +9,7 @@ set(SOURCE_FILES
         src/statistics_sender_influx_db.cpp
         src/receiver_config.cpp
         src/producer_logger.cpp
-        src/request_handler_db_write.cpp src/statistics_sender_fluentd.cpp src/statistics_sender_fluentd.h src/connection_authorizer.cpp src/connection_authorizer.h)
+        src/request_handler_db_write.cpp src/statistics_sender_fluentd.cpp src/statistics_sender_fluentd.h src/connection_authorizer.cpp src/connection_authorizer.h src/requests_dispatcher.cpp src/requests_dispatcher.h)
 
 
 ################################
@@ -51,6 +51,7 @@ set(TEST_SOURCE_FILES
         unittests/test_statistics_sender_influx_db.cpp
         unittests/test_statistics_sender_fluentd.cpp
         unittests/mock_receiver_config.cpp
+        unittests/test_requests_dispatcher.cpp
         )
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")

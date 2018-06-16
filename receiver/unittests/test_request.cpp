@@ -70,9 +70,9 @@ class RequestTests : public Test {
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;
-    std::unique_ptr<asapo::Statistics>  stat;
+    asapo::Statistics*  stat;
     void SetUp() override {
-        stat = std::unique_ptr<asapo::Statistics> {&mock_statistics};
+        stat = &mock_statistics;
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         request.reset(new Request{generic_request_header, socket_fd_});
@@ -84,7 +84,6 @@ class RequestTests : public Test {
     }
     void TearDown() override {
         request->io__.release();
-        stat.release();
     }
 
 };
@@ -97,7 +96,7 @@ TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
 
-    auto err = request->Handle(&stat);
+    auto err = request->Handle(stat);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -108,7 +107,7 @@ TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
               Return(0)
              ));
 
-    auto err = request->Handle(&stat);
+    auto err = request->Handle(stat);
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
 }
 
@@ -125,7 +124,7 @@ TEST_F(RequestTests, HandleMeasuresTimeOnDataReceive) {
 
     EXPECT_CALL(mock_statistics, StopTimer_t());
 
-    request->Handle(&stat);
+    request->Handle(stat);
 }
 
 
@@ -151,7 +150,7 @@ TEST_F(RequestTests, HandleProcessesRequests) {
     EXPECT_CALL(mock_statistics, StopTimer_t()).Times(2);
 
 
-    auto err = request->Handle(&stat);
+    auto err = request->Handle(stat);
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
@@ -164,7 +163,7 @@ TEST_F(RequestTests, DataIsNullAtInit) {
 
 TEST_F(RequestTests, GetDataIsNotNullptr) {
 
-    request->Handle(&stat);
+    request->Handle(stat);
     auto& data = request->GetData();
 
 

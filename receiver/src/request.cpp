@@ -29,23 +29,23 @@ Error Request::ReceiveData() {
 }
 
 
-Error Request::Handle(std::unique_ptr<Statistics>* statistics) {
+Error Request::Handle(Statistics* statistics) {
     Error err;
     if (request_header_.data_size != 0) {
-        (*statistics)->StartTimer(StatisticEntity::kNetwork);
+        statistics->StartTimer(StatisticEntity::kNetwork);
         auto err = ReceiveData();
         if (err) {
             return err;
         }
-        (*statistics)->StopTimer();
+        statistics->StopTimer();
     }
     for (auto handler : handlers_) {
-        (*statistics)->StartTimer(handler->GetStatisticEntity());
+        statistics->StartTimer(handler->GetStatisticEntity());
         auto err = handler->ProcessRequest(*this);
         if (err) {
             return err;
         }
-        (*statistics)->StopTimer();
+        statistics->StopTimer();
     }
     return nullptr;
 }

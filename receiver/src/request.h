@@ -9,22 +9,22 @@
 #include "request_handler_db_write.h"
 #include "statistics.h"
 
+#include "preprocessor/definitions.h"
 namespace asapo {
 
 using RequestHandlerList = std::vector<const RequestHandler*>;
 
 class Request {
   public:
-    virtual Error Handle(std::unique_ptr<Statistics>*);
-    virtual ~Request() = default;
+    VIRTUAL Error Handle(Statistics*);
+     ~Request() = default;
     Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd);
-    void AddHandler(const RequestHandler*);
-    const RequestHandlerList& GetListHandlers() const;
-    virtual uint64_t GetDataSize() const;
-    virtual uint64_t GetDataID() const;
-    virtual std::string GetFileName() const;
-
-    virtual const FileData& GetData() const;
+    VIRTUAL void AddHandler(const RequestHandler*);
+  VIRTUAL const RequestHandlerList& GetListHandlers() const;
+  VIRTUAL uint64_t GetDataSize() const;
+  VIRTUAL uint64_t GetDataID() const;
+  VIRTUAL std::string GetFileName() const;
+  VIRTUAL const FileData& GetData() const;
     std::unique_ptr<IO> io__;
   private:
     Error AllocateDataBuffer();
