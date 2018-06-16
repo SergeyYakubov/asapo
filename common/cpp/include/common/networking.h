@@ -33,8 +33,7 @@ struct GenericRequestHeader {
     GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
                          uint64_t i_data_size = 0, const std::string& i_message = ""):
         op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size} {
-        auto size = std::min(i_message.size() + 1, kMaxMessageSize);
-        memcpy(message, i_message.c_str(), size);
+        strncpy(message, i_message.c_str(), kMaxMessageSize);
     }
     Opcode      op_code;
     uint64_t    data_id;

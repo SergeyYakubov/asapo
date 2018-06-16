@@ -9,6 +9,8 @@ enum class ProducerErrorType {
     kAlreadyConnected,
     kConnectionNotReady,
     kFileTooLarge,
+    kFileNameTooLong,
+    kBeamtimeIdTooLong,
     kFileIdAlreadyInUse,
     kAuthorizationFailed,
     kInternalServerError,
@@ -70,6 +72,17 @@ auto const kConnectionNotReady = ProducerErrorTemplate {
 auto const kFileTooLarge = ProducerErrorTemplate {
     "File too large", ProducerErrorType::kFileTooLarge
 };
+
+auto const kFileNameTooLong = ProducerErrorTemplate {
+    "filename too long", ProducerErrorType::kFileNameTooLong
+};
+
+auto const kBeamtimeIdTooLong = ProducerErrorTemplate {
+    "beamtime id too long", ProducerErrorType::kBeamtimeIdTooLong
+};
+
+
+
 
 auto const kFileIdAlreadyInUse = ProducerErrorTemplate {
     "File already in use", ProducerErrorType::kFileIdAlreadyInUse

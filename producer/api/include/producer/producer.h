@@ -38,7 +38,7 @@ class Producer {
     //! Enables/Disables sending logs to the central server
     virtual void EnableRemoteLog(bool enable) = 0;
     //! Set beamtime id which producer will use to send data
-    virtual void SetBeamtimeId(std::string beamtime_id) = 0;
+    virtual Error SetBeamtimeId(std::string beamtime_id) = 0;
 };
 }
 

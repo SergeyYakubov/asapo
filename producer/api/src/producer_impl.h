@@ -32,7 +32,7 @@ class ProducerImpl : public Producer {
                RequestCallback callback) override;
     AbstractLogger* log__;
     std::unique_ptr<RequestPool> request_pool__;
-    void SetBeamtimeId(std::string beamtime_id) override;
+    Error SetBeamtimeId(std::string beamtime_id) override;
 
   private:
     GenericRequestHeader GenerateNextSendRequest(uint64_t file_id, size_t file_size, std::string file_name);

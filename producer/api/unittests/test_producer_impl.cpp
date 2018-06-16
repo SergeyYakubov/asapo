@@ -69,8 +69,18 @@ TEST_F(ProducerImplTests, SendReturnsError) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
 }
 
+TEST_F(ProducerImplTests, ErrorIfFileNameTooLong) {
+    std::string long_string(asapo::kMaxMessageSize+100, 'a');
+    auto err = producer.Send(1, nullptr, 1, long_string, nullptr);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileNameTooLong));
+}
+
+
 TEST_F(ProducerImplTests, ErrorIfSizeTooLarge) {
+    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("error checking")));
+
     auto err = producer.Send(1, nullptr, asapo::ProducerImpl::kMaxChunkSize + 1, "", nullptr);
+
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileTooLarge));
 }
 
@@ -91,6 +101,16 @@ TEST_F(ProducerImplTests, OKSendingRequest) {
     auto err = producer.Send(expected_id, nullptr, expected_size, expected_name, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
+}
+
+
+TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
+    std::string expected_beamtimeid(asapo::kMaxMessageSize*10,'a');
+    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("too long")));
+
+    auto err = producer.SetBeamtimeId(expected_beamtimeid);
+
+    ASSERT_THAT(err, Ne(nullptr));
 }
 
 

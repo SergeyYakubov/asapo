@@ -32,9 +32,13 @@ GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, siz
     return request;
 }
 
-Error CheckProducerRequest(const GenericRequestHeader header) {
-    if (header.data_size > ProducerImpl::kMaxChunkSize) {
+Error CheckProducerRequest(size_t file_size,size_t filename_size) {
+    if (file_size > ProducerImpl::kMaxChunkSize) {
         return ProducerErrorTemplates::kFileTooLarge.Generate();
+    }
+
+    if (filename_size > kMaxMessageSize) {
+        return ProducerErrorTemplates::kFileNameTooLong.Generate();
     }
 
     return nullptr;
@@ -43,12 +47,16 @@ Error CheckProducerRequest(const GenericRequestHeader header) {
 
 Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size, std::string file_name,
                          RequestCallback callback) {
-    auto request_header = GenerateNextSendRequest(file_id, file_size, std::move(file_name));
 
-    auto err = CheckProducerRequest(request_header);
+    auto err = CheckProducerRequest(file_size, file_name.size());
     if (err) {
+        log__->Error("error checking request - "+err->Explain());
         return err;
     }
+
+
+    auto request_header = GenerateNextSendRequest(file_id, file_size, std::move(file_name));
+
 
     return request_pool__->AddRequest(std::unique_ptr<Request> {new Request{beamtime_id_, request_header, data, callback}});
 }
@@ -65,8 +73,14 @@ void ProducerImpl::EnableRemoteLog(bool enable) {
     log__->EnableRemoteLog(enable);
 }
 
-void ProducerImpl::SetBeamtimeId(std::string beamtime_id) {
+Error ProducerImpl::SetBeamtimeId(std::string beamtime_id) {
+    if (beamtime_id.size() > kMaxMessageSize) {
+        log__->Error("beamtime_id is too long - "+beamtime_id);
+        return ProducerErrorTemplates::kBeamtimeIdTooLong.Generate();
+    }
+
     beamtime_id_ = std::move(beamtime_id);
+    return nullptr;
 }
 
 }
