@@ -5,7 +5,8 @@
 namespace asapo {
 
 Request::Request(const GenericRequestHeader& header,
-                 SocketDescriptor socket_fd) : io__{GenerateDefaultIO()}, request_header_(header), socket_fd_{socket_fd} {
+                 SocketDescriptor socket_fd,std::string origin_uri) : io__{GenerateDefaultIO()}, request_header_(header),
+                                                                      socket_fd_{socket_fd},origin_uri_{std::move(origin_uri)} {
 }
 
 Error Request::AllocateDataBuffer() {
@@ -77,14 +78,24 @@ std::string Request::GetFileName() const {
     return std::to_string(request_header_.data_id) + ".bin";
 }
 
+const std::string &Request::GetOriginUri() const {
+    return origin_uri_;
+}
+const std::string &Request::GetBeamtimeId() const {
+    return beamtime_id_;
+}
+void Request::SetBeamtimeID(std::string beamtime_id) {
+    beamtime_id_ = std::move(beamtime_id);
+}
+
 std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&
-        request_header, SocketDescriptor socket_fd,
+        request_header, SocketDescriptor socket_fd,std::string origin_uri,
         Error* err) const noexcept {
     *err = nullptr;
+    auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd,std::move(origin_uri)}};
     switch (request_header.op_code) {
     case Opcode::kOpcodeTransferData: {
-        auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd}};
-
+        request->AddHandler(&request_handler_authorize_);
         if (GetReceiverConfig()->write_to_disk) {
             request->AddHandler(&request_handler_filewrite_);
         }
@@ -93,6 +104,10 @@ std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHea
             request->AddHandler(&request_handler_dbwrite_);
         }
 
+        return request;
+    }
+    case Opcode::kOpcodeAuthorize: {
+        request->AddHandler(&request_handler_authorize_);
         return request;
     }
     default:

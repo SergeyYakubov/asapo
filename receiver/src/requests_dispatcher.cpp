@@ -64,7 +64,7 @@ return nullptr;
 }
 statistics__->
 StopTimer();
-auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, err);
+auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_,producer_uri_, err);
 if (*err) {
 log__->Error("error processing request from " + producer_uri_+" - "+(*err)->
 Explain()

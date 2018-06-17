@@ -67,6 +67,7 @@ class RequestTests : public Test {
     asapo::SocketDescriptor socket_fd_{1};
     uint64_t data_size_ {100};
     uint64_t data_id_{15};
+    std::string expected_origin_uri="origin_uri";
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;
@@ -75,7 +76,7 @@ class RequestTests : public Test {
         stat = &mock_statistics;
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
-        request.reset(new Request{generic_request_header, socket_fd_});
+        request.reset(new Request{generic_request_header, socket_fd_,expected_origin_uri});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
             DoAll(SetArgPointee<3>(nullptr),
@@ -91,7 +92,7 @@ class RequestTests : public Test {
 TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
     generic_request_header.data_size = 0;
     request->io__.release();
-    request.reset(new Request{generic_request_header, socket_fd_});
+    request.reset(new Request{generic_request_header, socket_fd_,""});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
@@ -178,6 +179,11 @@ TEST_F(RequestTests, GetDataID) {
     ASSERT_THAT(id, Eq(data_id_));
 }
 
+TEST_F(RequestTests, OriginUriEmptyByDefault) {
+    auto uri = request->GetOriginUri();
+
+    ASSERT_THAT(uri, Eq(expected_origin_uri));
+}
 
 
 TEST_F(RequestTests, GetDataSize) {

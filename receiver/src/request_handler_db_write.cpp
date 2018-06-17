@@ -6,6 +6,10 @@
 namespace asapo {
 
 Error RequestHandlerDbWrite::ProcessRequest(const Request& request) const {
+    if (db_name_.empty()) {
+        db_name_=request.GetBeamtimeId();
+    }
+
     if (Error err = ConnectToDbIfNeeded() ) {
         return err;
     }
@@ -16,7 +20,7 @@ Error RequestHandlerDbWrite::ProcessRequest(const Request& request) const {
     file_info.id = request.GetDataID();
     auto err =  db_client__->Insert(file_info, false);
     if (!err) {
-        log__->Debug(std::string{"insert record to "} + kDBCollectionName + " in " + GetReceiverConfig()->broker_db_name +
+        log__->Debug(std::string{"insert record to "} + kDBCollectionName + " in " + db_name_ +
                      " at " + GetReceiverConfig()->broker_db_uri);
     }
     return err;
@@ -34,7 +38,7 @@ StatisticEntity RequestHandlerDbWrite::GetStatisticEntity() const {
 
 Error RequestHandlerDbWrite::ConnectToDbIfNeeded() const {
     if (!connected_to_db) {
-        Error err = db_client__->Connect(GetReceiverConfig()->broker_db_uri, GetReceiverConfig()->broker_db_name,
+        Error err = db_client__->Connect(GetReceiverConfig()->broker_db_uri, db_name_,
                                          kDBCollectionName);
         if (err) {
             return err;

@@ -65,7 +65,7 @@ TEST(RequestDispatcher, Constructor) {
 class MockRequest: public Request {
  public:
   MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-      Request(request_header, socket_fd) {};
+      Request(request_header, socket_fd,"") {};
   Error Handle(Statistics* statistics) override {
       return Error{Handle_t()};
   };
@@ -76,16 +76,16 @@ class MockRequest: public Request {
 class MockRequestFactory: public asapo::RequestFactory {
  public:
   std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
-                                           SocketDescriptor socket_fd,
+                                           SocketDescriptor socket_fd,std::string origin_uri,
                                            Error* err) const noexcept override {
       ErrorInterface* error = nullptr;
-      auto res = GenerateRequest_t(request_header, socket_fd, &error);
+      auto res = GenerateRequest_t(request_header, socket_fd,origin_uri, &error);
       err->reset(error);
       return std::unique_ptr<Request> {res};
   }
 
-  MOCK_CONST_METHOD3(GenerateRequest_t, Request * (const GenericRequestHeader&,
-      SocketDescriptor socket_fd,
+  MOCK_CONST_METHOD4(GenerateRequest_t, Request * (const GenericRequestHeader&,
+      SocketDescriptor ,std::string ,
       ErrorInterface**));
 
 };
@@ -150,9 +150,9 @@ class RequestsDispatcherTests : public Test {
 
   }
   void MockCreateRequest(bool error ){
-      EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _))
+      EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _,_))
           .WillOnce(
-              DoAll(SetArgPointee<2>(error?asapo::ReceiverErrorTemplates::kInvalidOpCode.Generate().release():nullptr),
+              DoAll(SetArgPointee<3>(error?asapo::ReceiverErrorTemplates::kInvalidOpCode.Generate().release():nullptr),
                     Return(nullptr))
           );
       if (error) {

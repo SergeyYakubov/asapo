@@ -1,15 +1,19 @@
 set(TARGET_NAME receiver)
 set(SOURCE_FILES
-        src/receiver.h src/receiver.cpp
-        src/connection.h src/connection.cpp
-        src/receiver_error.h
+        src/receiver.cpp
+        src/connection.cpp
         src/request.cpp
         src/request_handler_file_write.cpp
         src/statistics.cpp
         src/statistics_sender_influx_db.cpp
         src/receiver_config.cpp
         src/producer_logger.cpp
-        src/request_handler_db_write.cpp src/statistics_sender_fluentd.cpp src/statistics_sender_fluentd.h src/connection_authorizer.cpp src/connection_authorizer.h src/requests_dispatcher.cpp src/requests_dispatcher.h)
+        src/request_handler_db_write.cpp
+        src/request_handler_authorize.cpp
+        src/statistics_sender_fluentd.cpp
+        src/connection_authorizer.cpp
+        src/requests_dispatcher.cpp
+)
 
 
 ################################

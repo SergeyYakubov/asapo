@@ -47,29 +47,31 @@ TEST(FileWrite, Constructor) {
 }
 
 
-class MockRequestHandler: public Request {
+class MockRequest: public Request {
   public:
-    MockRequestHandler(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-        Request(request_header, socket_fd) {};
+    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
+        Request(request_header, socket_fd,"") {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetDataSize, uint64_t());
     MOCK_CONST_METHOD0(GetData, const asapo::FileData & ());
+    MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
 };
 
 class FileWriteHandlerTests : public Test {
   public:
     RequestHandlerFileWrite handler;
     NiceMock<MockIO> mock_io;
-    std::unique_ptr<MockRequestHandler> mock_request;
+    std::unique_ptr<MockRequest> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_file_name = "2.bin";
-    uint64_t expected_file_size = 10;
+    std::string expected_beamtime_id = "beamtime_id";
+  uint64_t expected_file_size = 10;
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
-        mock_request.reset(new MockRequestHandler{request_header, 1});
+        mock_request.reset(new MockRequest{request_header, 1});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }
@@ -115,6 +117,10 @@ void FileWriteHandlerTests::MockRequestData() {
     .WillOnce(ReturnRef(data))
     ;
 
+    EXPECT_CALL(*mock_request, GetBeamtimeId())
+        .WillOnce(ReturnRef(expected_beamtime_id))
+        ;
+
     EXPECT_CALL(*mock_request, GetFileName())
     .WillOnce(Return(expected_file_name))
     ;
@@ -128,7 +134,8 @@ TEST_F(FileWriteHandlerTests, CallsWriteFile) {
 
     MockRequestData();
 
-    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + expected_file_name;
+    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + expected_beamtime_id
+        + asapo::kPathSeparator + expected_file_name;
 
     EXPECT_CALL(mock_io, WriteDataToFile_t(expected_path.c_str(), _, expected_file_size))
     .WillOnce(
@@ -150,6 +157,7 @@ TEST_F(FileWriteHandlerTests, WritesToLog) {
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("saved file"),
                                          HasSubstr(expected_file_name),
+                                         HasSubstr(expected_beamtime_id),
                                          HasSubstr(std::to_string(expected_file_size))
                                         )
                                   )

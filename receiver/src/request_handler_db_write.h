@@ -19,6 +19,7 @@ class RequestHandlerDbWrite final: public RequestHandler {
   private:
     Error ConnectToDbIfNeeded() const;
     mutable bool connected_to_db = false;
+    mutable std::string db_name_;
 };
 
 }

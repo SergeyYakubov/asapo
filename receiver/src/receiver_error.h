@@ -66,7 +66,6 @@ auto const kAuthorizationFailure = ReceiverErrorTemplate {
     "authorization failure", ReceiverErrorType::kAuthorizationFailure
 };
 
-
 };
 }
 

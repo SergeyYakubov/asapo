@@ -50,35 +50,40 @@ using asapo::ReceiverConfig;
 
 namespace {
 
-class MockRequestHandler: public Request {
+class MockRequest: public Request {
   public:
-    MockRequestHandler(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-        Request(request_header, socket_fd) {};
+    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
+        Request(request_header, socket_fd,"") {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetDataSize, uint64_t());
     MOCK_CONST_METHOD0(GetDataID, uint64_t());
     MOCK_CONST_METHOD0(GetData, const asapo::FileData & ());
+    MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
 };
 
 class DbWriterHandlerTests : public Test {
   public:
     RequestHandlerDbWrite handler;
     NiceMock<MockIO> mock_io;
-    std::unique_ptr<NiceMock<MockRequestHandler>> mock_request;
+    std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
-    void SetUp() override {
+    std::string expected_beamtime_id = "beamtime_id";
+  void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
-        mock_request.reset(new NiceMock<MockRequestHandler> {request_header, 1});
-    }
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1});
+        ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+  }
     void TearDown() override {
         handler.db_client__.release();
     }
+
+
 };
 
 TEST(DBWritewr, Constructor) {
@@ -96,11 +101,15 @@ TEST_F(DbWriterHandlerTests, CheckStatisticEntity) {
 
 
 TEST_F(DbWriterHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
-    config.broker_db_name = "test";
     config.broker_db_uri = "127.0.0.1:27017";
     SetReceiverConfig(config);
 
-    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", "test", asapo::kDBCollectionName)).
+
+    EXPECT_CALL(*mock_request, GetBeamtimeId())
+        .WillOnce(ReturnRef(expected_beamtime_id))
+        ;
+
+    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
 
     auto err = handler.ProcessRequest(*mock_request);
@@ -137,13 +146,15 @@ MATCHER_P(CompareFileInfo, file, "") {
 }
 
 
-
 TEST_F(DbWriterHandlerTests, CallsInsert) {
-    config.broker_db_name = "test";
     config.broker_db_uri = "127.0.0.1:27017";
     SetReceiverConfig(config);
 
-    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, config.broker_db_name, asapo::kDBCollectionName)).
+    EXPECT_CALL(*mock_request, GetBeamtimeId())
+        .WillOnce(ReturnRef(expected_beamtime_id))
+        ;
+
+    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, expected_beamtime_id, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
 
     std::string expected_file_name = "2.bin";
@@ -172,7 +183,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
                                          HasSubstr(config.broker_db_uri),
-                                         HasSubstr(config.broker_db_name),
+                                         HasSubstr(expected_beamtime_id),
                                          HasSubstr(asapo::kDBCollectionName)
                                         )
                                   )

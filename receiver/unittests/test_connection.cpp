@@ -121,7 +121,7 @@ class ConnectionTests : public Test {
               ));
           return nullptr;
       } else {
-          auto request = new Request(GenericRequestHeader{asapo::kOpcodeUnknownOp,0,1,""},0);
+          auto request = new Request(GenericRequestHeader{asapo::kOpcodeUnknownOp,0,1,""},0,connected_uri);
           EXPECT_CALL(mock_dispatcher, GetNextRequest_t(_))
               .WillOnce(DoAll(
                   SetArgPointee<0>(nullptr),
