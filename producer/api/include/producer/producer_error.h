@@ -11,6 +11,7 @@ enum class ProducerErrorType {
     kFileTooLarge,
     kFileNameTooLong,
     kBeamtimeIdTooLong,
+    kBeamtimeAlreadySet,
     kFileIdAlreadyInUse,
     kAuthorizationFailed,
     kInternalServerError,
@@ -82,6 +83,9 @@ auto const kBeamtimeIdTooLong = ProducerErrorTemplate {
 };
 
 
+auto const kBeamtimeAlreadySet = ProducerErrorTemplate {
+    "beamtime id already set", ProducerErrorType::kBeamtimeAlreadySet
+};
 
 
 auto const kFileIdAlreadyInUse = ProducerErrorTemplate {

@@ -17,7 +17,7 @@ class Producer {
      * @return A unique_ptr to a new producer instance
      */
     static std::unique_ptr<Producer> Create(const std::string& endpoint, uint8_t n_processing_threads,
-                                            asapo::RequestHandlerType type,
+                                            asapo::RequestHandlerType type,std::string beamtime_id,
                                             Error* err);
 
     virtual ~Producer() = default;

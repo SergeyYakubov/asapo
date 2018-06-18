@@ -2,15 +2,15 @@
 #include "producer_impl.h"
 
 std::unique_ptr<asapo::Producer> asapo::Producer::Create(const std::string& endpoint, uint8_t n_processing_threads,
-        asapo::RequestHandlerType type, Error* err) {
+        asapo::RequestHandlerType type, std::string beamtime_id, Error* err) {
     if (n_processing_threads > kMaxProcessingThreads) {
         *err = TextError("Too many processing threads: " + std::to_string(n_processing_threads));
         return nullptr;
     }
 
+    std::unique_ptr<asapo::Producer> producer;
     try {
-        *err = nullptr;
-        return std::unique_ptr<asapo::Producer>(new ProducerImpl(endpoint, n_processing_threads, type));
+        producer.reset(new ProducerImpl(endpoint, n_processing_threads, type));
     } catch (const std::exception& ex) {
         *err = TextError(ex.what());
         return nullptr;
@@ -18,4 +18,10 @@ std::unique_ptr<asapo::Producer> asapo::Producer::Create(const std::string& endp
         *err = TextError("Unknown exception in producer_api ");
         return nullptr;
     }
+
+    *err = producer->SetBeamtimeId(beamtime_id);
+    if (*err) {
+        return nullptr;
+    }
+    return producer;
 }

@@ -110,8 +110,18 @@ TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
 
     auto err = producer.SetBeamtimeId(expected_beamtimeid);
 
-    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kBeamtimeIdTooLong));
 }
+
+TEST_F(ProducerImplTests, ErrorSettingSecondTime) {
+    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("already")));
+
+    producer.SetBeamtimeId("1");
+    auto err = producer.SetBeamtimeId("2");
+
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kBeamtimeAlreadySet));
+}
+
 
 
 }

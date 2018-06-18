@@ -14,6 +14,7 @@ int iterations_remained;
 
 struct Args {
     std::string receiver_address;
+    std::string beamtime_id;
     size_t number_of_bytes;
     uint64_t iterations;
     uint64_t nthreads;
@@ -22,6 +23,7 @@ struct Args {
 
 void PrintCommandArguments(const Args& args) {
     std::cout << "receiver_address: " << args.receiver_address << std::endl
+              << "beamtime_id: " << args.beamtime_id << std::endl
               << "Package size: " << args.number_of_bytes / 1024 << "k" << std::endl
               << "iterations: " << args.iterations << std::endl
               << "nthreads: " << args.nthreads << std::endl
@@ -31,18 +33,19 @@ void PrintCommandArguments(const Args& args) {
 
 
 void ProcessCommandArguments(int argc, char* argv[], Args* args) {
-    if (argc != 6) {
+    if (argc != 7) {
         std::cout <<
-                  "Usage: " << argv[0] << " <destination> <number_of_byte> <iterations> <nthreads> <mode 0 -t tcp, 1 - filesystem>"
+                  "Usage: " << argv[0] << " <destination> <beamtime_id> <number_of_byte> <iterations> <nthreads> <mode 0 -t tcp, 1 - filesystem>"
                   << std::endl;
         exit(EXIT_FAILURE);
     }
     try {
         args->receiver_address = argv[1];
-        args->number_of_bytes = std::stoull(argv[2]) * 1024;
-        args->iterations = std::stoull(argv[3]);
-        args->nthreads = std::stoull(argv[4]);
-        args->mode = std::stoull(argv[5]);
+        args->beamtime_id = argv[2];
+        args->number_of_bytes = std::stoull(argv[3]) * 1024;
+        args->iterations = std::stoull(argv[4]);
+        args->nthreads = std::stoull(argv[5]);
+        args->mode = std::stoull(argv[6]);
         PrintCommandArguments(*args);
         return;
     } catch(std::exception& e) {
@@ -78,7 +81,8 @@ bool SendDummyData(asapo::Producer* producer, uint8_t* data, size_t number_of_by
 std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.receiver_address, args.nthreads,
-                                            args.mode == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem, &err);
+                                            args.mode == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem,
+                                            args.beamtime_id,&err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);

@@ -74,6 +74,12 @@ void ProducerImpl::EnableRemoteLog(bool enable) {
 }
 
 Error ProducerImpl::SetBeamtimeId(std::string beamtime_id) {
+
+    if (!beamtime_id_.empty()) {
+        log__->Error("beamtime_id already set");
+        return ProducerErrorTemplates::kBeamtimeAlreadySet.Generate();
+    }
+
     if (beamtime_id.size() > kMaxMessageSize) {
         log__->Error("beamtime_id is too long - "+beamtime_id);
         return ProducerErrorTemplates::kBeamtimeIdTooLong.Generate();
