@@ -14,7 +14,9 @@
 #include "mock_receiver_config.h"
 #include "common/data_structs.h"
 
+#include "receiver_mocking.h"
 
+using asapo::MockRequest;
 using asapo::FileInfo;
 using ::testing::Test;
 using ::testing::Return;
@@ -50,18 +52,6 @@ using asapo::ReceiverConfig;
 
 namespace {
 
-class MockRequest: public Request {
-  public:
-    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-        Request(request_header, socket_fd,"") {};
-
-    MOCK_CONST_METHOD0(GetFileName, std::string());
-    MOCK_CONST_METHOD0(GetDataSize, uint64_t());
-    MOCK_CONST_METHOD0(GetDataID, uint64_t());
-    MOCK_CONST_METHOD0(GetData, const asapo::FileData & ());
-    MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
-};
-
 class DbWriterHandlerTests : public Test {
   public:
     RequestHandlerDbWrite handler;
@@ -76,7 +66,7 @@ class DbWriterHandlerTests : public Test {
         request_header.data_id = 2;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1});
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1,""});
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
   }
     void TearDown() override {
@@ -112,7 +102,7 @@ TEST_F(DbWriterHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
     EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
 
-    auto err = handler.ProcessRequest(*mock_request);
+    auto err = handler.ProcessRequest(mock_request.get());
     ASSERT_THAT(err, Eq(nullptr));
 }
 
@@ -121,7 +111,7 @@ TEST_F(DbWriterHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
     EXPECT_CALL(mock_db, Connect_t(_, _, asapo::kDBCollectionName)).
     WillOnce(testing::Return(new asapo::SimpleError("")));
 
-    auto err = handler.ProcessRequest(*mock_request);
+    auto err = handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Ne(nullptr));
 
@@ -133,8 +123,8 @@ TEST_F(DbWriterHandlerTests, ProcessRequestDoesNotCallConnectSecondTime) {
     EXPECT_CALL(mock_db, Connect_t(_, _, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
 
-    handler.ProcessRequest(*mock_request);
-    handler.ProcessRequest(*mock_request);
+    handler.ProcessRequest(mock_request.get());
+    handler.ProcessRequest(mock_request.get());
 }
 
 MATCHER_P(CompareFileInfo, file, "") {
@@ -189,7 +179,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
                                   )
                );
 
-    handler.ProcessRequest(*mock_request);
+    handler.ProcessRequest(mock_request.get());
 }
 
 }

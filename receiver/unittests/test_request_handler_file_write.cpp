@@ -12,6 +12,8 @@
 #include "mock_receiver_config.h"
 #include "preprocessor/definitions.h"
 
+#include "receiver_mocking.h"
+
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::ReturnRef;
@@ -37,6 +39,7 @@ using ::asapo::MockIO;
 using asapo::Request;
 using asapo::RequestHandlerFileWrite;
 using ::asapo::GenericRequestHeader;
+using asapo::MockRequest;
 
 namespace {
 
@@ -45,18 +48,6 @@ TEST(FileWrite, Constructor) {
     ASSERT_THAT(dynamic_cast<asapo::IO*>(handler.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(handler.log__), Ne(nullptr));
 }
-
-
-class MockRequest: public Request {
-  public:
-    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-        Request(request_header, socket_fd,"") {};
-
-    MOCK_CONST_METHOD0(GetFileName, std::string());
-    MOCK_CONST_METHOD0(GetDataSize, uint64_t());
-    MOCK_CONST_METHOD0(GetData, const asapo::FileData & ());
-    MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
-};
 
 class FileWriteHandlerTests : public Test {
   public:
@@ -71,7 +62,7 @@ class FileWriteHandlerTests : public Test {
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
-        mock_request.reset(new MockRequest{request_header, 1});
+        mock_request.reset(new MockRequest{request_header, 1,""});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }
@@ -92,7 +83,7 @@ TEST_F(FileWriteHandlerTests, ErrorWhenZeroFileSize) {
     .WillOnce(Return(0))
     ;
 
-    auto err = handler.ProcessRequest(*mock_request);
+    auto err = handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
 }
@@ -102,7 +93,7 @@ TEST_F(FileWriteHandlerTests, ErrorWhenTooBigFileSize) {
     .WillOnce(Return(asapo::kMaxFileSize + 1))
     ;
 
-    auto err = handler.ProcessRequest(*mock_request);
+    auto err = handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
 }
@@ -142,7 +133,7 @@ TEST_F(FileWriteHandlerTests, CallsWriteFile) {
         Return(asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
     );
 
-    auto err = handler.ProcessRequest(*mock_request);
+    auto err = handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
@@ -162,7 +153,7 @@ TEST_F(FileWriteHandlerTests, WritesToLog) {
                                         )
                                   )
                );
-    handler.ProcessRequest(*mock_request);
+    handler.ProcessRequest(mock_request.get());
 }
 
 

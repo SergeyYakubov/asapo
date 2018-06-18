@@ -5,9 +5,9 @@
 
 namespace asapo {
 
-Error RequestHandlerDbWrite::ProcessRequest(const Request& request) const {
+Error RequestHandlerDbWrite::ProcessRequest(Request* request) const {
     if (db_name_.empty()) {
-        db_name_=request.GetBeamtimeId();
+        db_name_=request->GetBeamtimeId();
     }
 
     if (Error err = ConnectToDbIfNeeded() ) {
@@ -15,9 +15,9 @@ Error RequestHandlerDbWrite::ProcessRequest(const Request& request) const {
     }
 
     FileInfo file_info;
-    file_info.name = request.GetFileName();
-    file_info.size = request.GetDataSize();
-    file_info.id = request.GetDataID();
+    file_info.name = request->GetFileName();
+    file_info.size = request->GetDataSize();
+    file_info.id = request->GetDataID();
     auto err =  db_client__->Insert(file_info, false);
     if (!err) {
         log__->Debug(std::string{"insert record to "} + kDBCollectionName + " in " + db_name_ +

@@ -13,7 +13,7 @@ class RequestHandlerDbWrite final: public RequestHandler {
   public:
     RequestHandlerDbWrite();
     StatisticEntity GetStatisticEntity() const override;
-    Error ProcessRequest(const Request& request) const override;
+    Error ProcessRequest(Request* request) const override;
     std::unique_ptr<Database> db_client__;
     const AbstractLogger* log__;
   private:

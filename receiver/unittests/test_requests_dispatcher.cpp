@@ -6,7 +6,7 @@
 #include "../src/receiver_error.h"
 #include "../src/request.h"
 #include "../src/statistics.h"
-#include "mock_statistics.h"
+#include "receiver_mocking.h"
 #include "mock_receiver_config.h"
 
 #include "../src/requests_dispatcher.h"
@@ -59,7 +59,6 @@ TEST(RequestDispatcher, Constructor) {
     ASSERT_THAT(dynamic_cast<asapo::IO*>(dispatcher.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(dispatcher.request_factory__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(dispatcher.log__), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<asapo::ConnectionAuthorizer*>(dispatcher.authorizer__.get()), Ne(nullptr));
 }
 
 class MockRequest: public Request {
@@ -90,15 +89,6 @@ class MockRequestFactory: public asapo::RequestFactory {
 
 };
 
-class MockAuthorizer: public asapo::ConnectionAuthorizer {
- public:
-  Error Authorize(std::string beamtime_id,std::string uri) const noexcept override {
-      return Error{Authorize_t(beamtime_id,uri)};
-  }
-  MOCK_CONST_METHOD2(Authorize_t, ErrorInterface * (std::string beamtime_id,std::string uri));
-
-};
-
 
 ACTION_P(SaveArg1ToGenericNetworkResponse, value) {
     auto resp =  *static_cast<const GenericNetworkResponse*>(arg1);
@@ -114,7 +104,6 @@ class RequestsDispatcherTests : public Test {
   MockRequestFactory mock_factory;
   NiceMock<MockStatistics> mock_statictics;
   NiceMock<asapo::MockLogger> mock_logger;
-  NiceMock<MockAuthorizer> mock_authorizer;
 
   asapo::ReceiverConfig test_config;
   GenericRequestHeader header;
@@ -122,20 +111,18 @@ class RequestsDispatcherTests : public Test {
   std::unique_ptr<Request> request{&mock_request};
 
   void SetUp() override {
-      test_config.authorization_interval = 0;
+      test_config.authorization_interval_ms = 0;
       SetReceiverConfig(test_config);
       dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statictics}};
       dispatcher->io__ = std::unique_ptr<asapo::IO> {&mock_io};
       dispatcher->statistics__ = &mock_statictics;
       dispatcher->request_factory__ = std::unique_ptr<asapo::RequestFactory> {&mock_factory};
       dispatcher->log__ = &mock_logger;
-      dispatcher->authorizer__ = std::unique_ptr<asapo::ConnectionAuthorizer> {&mock_authorizer};
 
   }
   void TearDown() override {
       dispatcher->io__.release();
       dispatcher->request_factory__.release();
-      dispatcher->authorizer__.release();
       request.release();
   }
   void MockReceiveRequest(bool error ){

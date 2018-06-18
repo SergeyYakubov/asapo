@@ -14,7 +14,7 @@ class RequestHandlerFileWrite final: public RequestHandler {
   public:
     RequestHandlerFileWrite();
     StatisticEntity GetStatisticEntity() const override;
-    Error ProcessRequest(const Request& request) const override;
+    Error ProcessRequest(Request* request) const override;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
 };

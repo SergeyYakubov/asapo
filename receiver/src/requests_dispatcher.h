@@ -7,7 +7,6 @@
 #include "io/io.h"
 #include "statistics.h"
 #include "logger/logger.h"
-#include "connection_authorizer.h"
 
 namespace asapo {
 
@@ -20,7 +19,6 @@ class RequestsDispatcher {
   std::unique_ptr<IO> io__;
   const AbstractLogger* log__;
   std::unique_ptr<RequestFactory> request_factory__;
-  std::unique_ptr<ConnectionAuthorizer>authorizer__;
  private:
   SocketDescriptor socket_fd_;
   std::string producer_uri_;

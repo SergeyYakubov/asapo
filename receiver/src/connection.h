@@ -16,7 +16,6 @@
 #include "request.h"
 #include "statistics.h"
 #include "logger/logger.h"
-#include "connection_authorizer.h"
 #include "requests_dispatcher.h"
 
 namespace asapo {

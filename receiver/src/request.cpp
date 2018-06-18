@@ -42,7 +42,7 @@ Error Request::Handle(Statistics* statistics) {
     }
     for (auto handler : handlers_) {
         statistics->StartTimer(handler->GetStatisticEntity());
-        auto err = handler->ProcessRequest(*this);
+        auto err = handler->ProcessRequest(this);
         if (err) {
             return err;
         }
@@ -84,8 +84,15 @@ const std::string &Request::GetOriginUri() const {
 const std::string &Request::GetBeamtimeId() const {
     return beamtime_id_;
 }
-void Request::SetBeamtimeID(std::string beamtime_id) {
+void Request::SetBeamtimeId(std::string beamtime_id) {
     beamtime_id_ = std::move(beamtime_id);
+}
+
+Opcode Request::GetOpCode() const {
+    return request_header_.op_code;
+}
+const char* Request::GetMessage() const {
+    return request_header_.message;
 }
 
 std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&

@@ -13,7 +13,7 @@
 
 #include "database/database.h"
 
-#include "mock_statistics.h"
+#include "receiver_mocking.h"
 #include "mock_receiver_config.h"
 
 

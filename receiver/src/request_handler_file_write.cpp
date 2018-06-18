@@ -7,16 +7,16 @@
 
 namespace asapo {
 
-Error RequestHandlerFileWrite::ProcessRequest(const Request& request) const {
-    auto fsize = request.GetDataSize();
+Error RequestHandlerFileWrite::ProcessRequest(Request* request) const {
+    auto fsize = request->GetDataSize();
     if (fsize <= 0 || fsize > kMaxFileSize) {
         return ReceiverErrorTemplates::kBadRequest.Generate();
     }
 
-    const FileData& data = request.GetData();
+    const FileData& data = request->GetData();
 
-    auto fname = request.GetFileName();
-    auto root_folder = GetReceiverConfig()->root_folder + kPathSeparator + request.GetBeamtimeId()+kPathSeparator;
+    auto fname = request->GetFileName();
+    auto root_folder = GetReceiverConfig()->root_folder + kPathSeparator + request->GetBeamtimeId()+kPathSeparator;
     auto err =  io__->WriteDataToFile(root_folder + fname, data, fsize);
     if (!err) {
         log__->Debug("saved file of size " + std::to_string(fsize) + " to " + root_folder + fname);

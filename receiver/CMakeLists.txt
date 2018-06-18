@@ -11,7 +11,6 @@ set(SOURCE_FILES
         src/request_handler_db_write.cpp
         src/request_handler_authorize.cpp
         src/statistics_sender_fluentd.cpp
-        src/connection_authorizer.cpp
         src/requests_dispatcher.cpp
 )
 
@@ -49,9 +48,9 @@ set(TEST_SOURCE_FILES
         unittests/test_config.cpp
         unittests/test_request.cpp
         unittests/test_request_factory.cpp
-        unittests/test_authorizer.cpp
         unittests/test_request_handler_file_write.cpp
         unittests/test_request_handler_db_writer.cpp
+        unittests/test_request_handler_authorizer.cpp
         unittests/test_statistics_sender_influx_db.cpp
         unittests/test_statistics_sender_fluentd.cpp
         unittests/mock_receiver_config.cpp

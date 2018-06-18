@@ -29,9 +29,12 @@ class Request {
   VIRTUAL uint64_t GetDataID() const;
   VIRTUAL std::string GetFileName() const;
   VIRTUAL const FileData& GetData() const;
+  VIRTUAL Opcode GetOpCode() const;
+  VIRTUAL const char* GetMessage() const;
+
   const std::string& GetOriginUri() const;
   VIRTUAL const std::string& GetBeamtimeId() const;
-  void SetBeamtimeID(std::string beamtime_id);
+  VIRTUAL void SetBeamtimeId(std::string beamtime_id);
   std::unique_ptr<IO> io__;
   private:
     Error AllocateDataBuffer();

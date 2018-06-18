@@ -10,7 +10,6 @@ RequestsDispatcher::RequestsDispatcher(SocketDescriptor socket_fd, std::string a
                                                                  io__{GenerateDefaultIO()},
                                                                  log__{GetDefaultReceiverLogger()},
                                                                  request_factory__{new RequestFactory{}},
-                                                                 authorizer__{new ConnectionAuthorizer},
                                                                  socket_fd_{socket_fd},
                                                                  producer_uri_{std::move(address)} {
 }

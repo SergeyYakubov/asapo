@@ -9,7 +9,7 @@
 #include "../src/request_handler_db_write.h"
 #include "database/database.h"
 
-#include "mock_statistics.h"
+#include "receiver_mocking.h"
 #include "mock_receiver_config.h"
 
 using ::testing::Test;
@@ -48,8 +48,8 @@ namespace {
 
 class MockReqestHandler : public asapo::RequestHandler {
   public:
-    Error ProcessRequest(const Request& request) const override {
-        return Error{ProcessRequest_t(request)};
+    Error ProcessRequest(Request* request) const override {
+        return Error{ProcessRequest_t(*request)};
     }
 
     StatisticEntity GetStatisticEntity() const override {
@@ -68,6 +68,8 @@ class RequestTests : public Test {
     uint64_t data_size_ {100};
     uint64_t data_id_{15};
     std::string expected_origin_uri="origin_uri";
+    asapo::Opcode expected_op_code=asapo::kOpcodeTransferData;
+    char expected_request_message[asapo::kMaxMessageSize]="test message";
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;
@@ -76,6 +78,8 @@ class RequestTests : public Test {
         stat = &mock_statistics;
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
+        generic_request_header.op_code = expected_op_code;
+        strcpy(generic_request_header.message,expected_request_message);
         request.reset(new Request{generic_request_header, socket_fd_,expected_origin_uri});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
@@ -178,6 +182,20 @@ TEST_F(RequestTests, GetDataID) {
 
     ASSERT_THAT(id, Eq(data_id_));
 }
+
+TEST_F(RequestTests, GetOpCode) {
+    auto code = request->GetOpCode();
+
+    ASSERT_THAT(code, Eq(expected_op_code));
+}
+
+
+TEST_F(RequestTests, GetRequestMessage) {
+    auto message = request->GetMessage();
+
+    ASSERT_THAT(message, testing::StrEq(expected_request_message));
+}
+
 
 TEST_F(RequestTests, OriginUriEmptyByDefault) {
     auto uri = request->GetOriginUri();
