@@ -22,6 +22,12 @@ class RequestHandlerAuthorize final: public RequestHandler {
  private:
     mutable std::string beamtime_id_;
     mutable std::chrono::high_resolution_clock::time_point last_updated_;
+    Error ProcessAuthorizationRequest(Request* request) const;
+    Error ProcessOtherRequest(Request* request) const;
+    Error Authorize(Request* request,const char* beamtime_id) const;
+    Error ErrorFromServerResponse(const Error& err,HttpCode code) const;
+
+  std::string GetRequestString(const Request* request, const char* beamtime_id) const;
 };
 
 }
