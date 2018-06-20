@@ -1,7 +1,7 @@
 package server
 
 import (
-	"asapo_broker/utils"
+	"asapo_common/utils"
 )
 
 var listRoutes = utils.Routes{

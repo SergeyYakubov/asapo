@@ -32,7 +32,7 @@ GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, siz
     return request;
 }
 
-Error CheckProducerRequest(size_t file_size,size_t filename_size) {
+Error CheckProducerRequest(size_t file_size, size_t filename_size) {
     if (file_size > ProducerImpl::kMaxChunkSize) {
         return ProducerErrorTemplates::kFileTooLarge.Generate();
     }
@@ -50,7 +50,7 @@ Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size, s
 
     auto err = CheckProducerRequest(file_size, file_name.size());
     if (err) {
-        log__->Error("error checking request - "+err->Explain());
+        log__->Error("error checking request - " + err->Explain());
         return err;
     }
 
@@ -81,7 +81,7 @@ Error ProducerImpl::SetBeamtimeId(std::string beamtime_id) {
     }
 
     if (beamtime_id.size() > kMaxMessageSize) {
-        log__->Error("beamtime_id is too long - "+beamtime_id);
+        log__->Error("beamtime_id is too long - " + beamtime_id);
         return ProducerErrorTemplates::kBeamtimeIdTooLong.Generate();
     }
 

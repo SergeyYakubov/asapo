@@ -70,7 +70,7 @@ TEST_F(ProducerImplTests, SendReturnsError) {
 }
 
 TEST_F(ProducerImplTests, ErrorIfFileNameTooLong) {
-    std::string long_string(asapo::kMaxMessageSize+100, 'a');
+    std::string long_string(asapo::kMaxMessageSize + 100, 'a');
     auto err = producer.Send(1, nullptr, 1, long_string, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileNameTooLong));
 }
@@ -105,7 +105,7 @@ TEST_F(ProducerImplTests, OKSendingRequest) {
 
 
 TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
-    std::string expected_beamtimeid(asapo::kMaxMessageSize*10,'a');
+    std::string expected_beamtimeid(asapo::kMaxMessageSize * 10, 'a');
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("too long")));
 
     auto err = producer.SetBeamtimeId(expected_beamtimeid);

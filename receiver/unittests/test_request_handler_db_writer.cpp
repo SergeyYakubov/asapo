@@ -61,14 +61,14 @@ class DbWriterHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
-  void SetUp() override {
+    void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1,""});
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, ""});
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
-  }
+    }
     void TearDown() override {
         handler.db_client__.release();
     }
@@ -96,8 +96,8 @@ TEST_F(DbWriterHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
 
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
-        .WillOnce(ReturnRef(expected_beamtime_id))
-        ;
+    .WillOnce(ReturnRef(expected_beamtime_id))
+    ;
 
     EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
@@ -141,8 +141,8 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     SetReceiverConfig(config);
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
-        .WillOnce(ReturnRef(expected_beamtime_id))
-        ;
+    .WillOnce(ReturnRef(expected_beamtime_id))
+    ;
 
     EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, expected_beamtime_id, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));

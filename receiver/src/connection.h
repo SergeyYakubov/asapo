@@ -36,7 +36,7 @@ class Connection {
     mutable std::unique_ptr<Statistics> statistics__;
     const AbstractLogger* log__;
     std::unique_ptr<RequestsDispatcher> requests_dispatcher__;
- private:
+  private:
     void ProcessStatisticsAfterRequest(const std::unique_ptr<Request>& request) const noexcept;
 };
 

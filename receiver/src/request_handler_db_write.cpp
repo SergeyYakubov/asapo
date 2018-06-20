@@ -7,7 +7,7 @@ namespace asapo {
 
 Error RequestHandlerDbWrite::ProcessRequest(Request* request) const {
     if (db_name_.empty()) {
-        db_name_=request->GetBeamtimeId();
+        db_name_ = request->GetBeamtimeId();
     }
 
     if (Error err = ConnectToDbIfNeeded() ) {

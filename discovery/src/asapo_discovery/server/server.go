@@ -2,7 +2,7 @@ package server
 
 import (
 	"asapo_discovery/request_handler"
-	"asapo_discovery/utils"
+	"asapo_common/utils"
 )
 
 var requestHandler request_handler.Agent

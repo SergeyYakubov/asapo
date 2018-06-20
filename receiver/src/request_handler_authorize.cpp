@@ -10,32 +10,33 @@ namespace asapo {
 
 std::string RequestHandlerAuthorize::GetRequestString(const Request* request, const char* beamtime_id) const {
     std::string request_string = std::string("{\"BeamtimeId\":\"") +
-        beamtime_id + "\",\"OriginHost\":\""+ request->GetOriginUri()+"\"}";
+                                 beamtime_id + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\"}";
     return request_string;
 }
 
-Error RequestHandlerAuthorize::ErrorFromServerResponse(const Error& err,HttpCode code) const {
+Error RequestHandlerAuthorize::ErrorFromServerResponse(const Error& err, HttpCode code) const {
     Error auth_error = asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate();
     if (err) {
         auth_error->Append(err->Explain());
         return auth_error;
-    }
-    else {
+    } else {
         auth_error->Append("return code " + std::to_string(int(code)));
         return auth_error;
     }
 }
 
-Error RequestHandlerAuthorize::Authorize(Request* request,const char* beamtime_id) const {
+Error RequestHandlerAuthorize::Authorize(Request* request, const char* beamtime_id) const {
     HttpCode code;
     Error err;
     std::string request_string = GetRequestString(request, beamtime_id);
 
-    auto response = http_client__->Post(GetReceiverConfig()->authorization_server+"/authorize",request_string,&code,&err);
+    auto response = http_client__->Post(GetReceiverConfig()->authorization_server + "/authorize", request_string, &code,
+                                        &err);
     if (err || code != HttpCode::OK) {
-        auto auth_error = ErrorFromServerResponse(err,code);
-        log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " request: "+request_string + " - " +
-            auth_error->Explain());
+        auto auth_error = ErrorFromServerResponse(err, code);
+        log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " request: " + request_string +
+                     " - " +
+                     auth_error->Explain());
         return auth_error;
     }
 
@@ -49,11 +50,11 @@ Error RequestHandlerAuthorize::ProcessAuthorizationRequest(Request* request) con
         Error auth_error = asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate();
         auth_error->Append("already authorized");
         log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " - " +
-            "already authorized");
+                     "already authorized");
         return auth_error;
     }
 
-    return Authorize(request,request->GetMessage());
+    return Authorize(request, request->GetMessage());
 }
 
 Error RequestHandlerAuthorize::ProcessOtherRequest(Request* request) const {
@@ -62,7 +63,7 @@ Error RequestHandlerAuthorize::ProcessOtherRequest(Request* request) const {
     }
 
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>
-        (high_resolution_clock::now() - last_updated_).count();
+                      (high_resolution_clock::now() - last_updated_).count();
     if (elapsed_ms >= GetReceiverConfig()->authorization_interval_ms) {
         auto err = Authorize(request, beamtime_id_.c_str());
         if (err) {
@@ -83,7 +84,7 @@ Error RequestHandlerAuthorize::ProcessRequest(Request* request) const {
 }
 
 RequestHandlerAuthorize::RequestHandlerAuthorize(): log__{GetDefaultReceiverLogger()},
-                                                    http_client__{DefaultHttpClient()}{
+    http_client__{DefaultHttpClient()} {
 }
 
 StatisticEntity RequestHandlerAuthorize::GetStatisticEntity() const {

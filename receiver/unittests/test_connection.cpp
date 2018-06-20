@@ -66,21 +66,21 @@ TEST(Connection, Constructor) {
 
 
 class MockDispatcher: public asapo::RequestsDispatcher {
- public:
-  MockDispatcher():asapo::RequestsDispatcher(0,"",nullptr){};
-  Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept override {
-      return Error{ProcessRequest_t(request.get())};
-  }
+  public:
+    MockDispatcher(): asapo::RequestsDispatcher(0, "", nullptr) {};
+    Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept override {
+        return Error{ProcessRequest_t(request.get())};
+    }
 
-  std::unique_ptr<Request> GetNextRequest(Error* err) const noexcept override {
-      ErrorInterface* error = nullptr;
-      auto req = GetNextRequest_t(&error);
-      err->reset(error);
-      return std::unique_ptr<Request>{req};
-  };
+    std::unique_ptr<Request> GetNextRequest(Error* err) const noexcept override {
+        ErrorInterface* error = nullptr;
+        auto req = GetNextRequest_t(&error);
+        err->reset(error);
+        return std::unique_ptr<Request> {req};
+    };
 
-  MOCK_CONST_METHOD1(ProcessRequest_t, ErrorInterface * (Request*));
-  MOCK_CONST_METHOD1(GetNextRequest_t, Request * (asapo::ErrorInterface**));
+    MOCK_CONST_METHOD1(ProcessRequest_t, ErrorInterface * (Request*));
+    MOCK_CONST_METHOD1(GetNextRequest_t, Request * (asapo::ErrorInterface**));
 
 };
 
@@ -94,13 +94,13 @@ class ConnectionTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     std::unique_ptr<Connection> connection;
 
-  void SetUp() override {
+    void SetUp() override {
         connection = std::unique_ptr<Connection> {new Connection{0, connected_uri, "some_tag"}};
         connection->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         connection->statistics__ = std::unique_ptr<asapo::Statistics> {&mock_statictics};
         connection->log__ = &mock_logger;
         connection->requests_dispatcher__ = std::unique_ptr<asapo::RequestsDispatcher> {&mock_dispatcher};
-        EXPECT_CALL(mock_io, CloseSocket_t(_,_));
+        EXPECT_CALL(mock_io, CloseSocket_t(_, _));
         EXPECT_CALL(mock_statictics, Send_t());
         EXPECT_CALL(mock_logger, Info(HasSubstr("disconnected")));
 
@@ -111,38 +111,38 @@ class ConnectionTests : public Test {
         connection->requests_dispatcher__.release();
     }
 
-    Request* MockGetNext(bool error){
-      if (error ){
-          EXPECT_CALL(mock_dispatcher, GetNextRequest_t(_))
-              .WillOnce(DoAll(
-                  SetArgPointee<0>(new asapo::SimpleError{"error"}),
-                  Return(nullptr)
-              ));
-          return nullptr;
-      } else {
-          auto request = new Request(GenericRequestHeader{asapo::kOpcodeUnknownOp,0,1,""},0,connected_uri);
-          EXPECT_CALL(mock_dispatcher, GetNextRequest_t(_))
-              .WillOnce(DoAll(
-                  SetArgPointee<0>(nullptr),
-                  Return(request)
-              ));
-          return request;
-      }
-  }
+    Request* MockGetNext(bool error) {
+        if (error ) {
+            EXPECT_CALL(mock_dispatcher, GetNextRequest_t(_))
+            .WillOnce(DoAll(
+                          SetArgPointee<0>(new asapo::SimpleError{"error"}),
+                          Return(nullptr)
+                      ));
+            return nullptr;
+        } else {
+            auto request = new Request(GenericRequestHeader{asapo::kOpcodeUnknownOp, 0, 1, ""}, 0, connected_uri);
+            EXPECT_CALL(mock_dispatcher, GetNextRequest_t(_))
+            .WillOnce(DoAll(
+                          SetArgPointee<0>(nullptr),
+                          Return(request)
+                      ));
+            return request;
+        }
+    }
 
-  void MockProcessRequest(Request* request,bool error) {
-      if (error ){
-          EXPECT_CALL(mock_dispatcher, ProcessRequest_t(request))
-              .WillOnce(
-                  Return(new asapo::SimpleError{"error"})
-              );
-      } else {
-          EXPECT_CALL(mock_dispatcher, ProcessRequest_t(request))
-              .WillOnce(
-                  Return(nullptr)
-              );
-      }
-  }
+    void MockProcessRequest(Request* request, bool error) {
+        if (error ) {
+            EXPECT_CALL(mock_dispatcher, ProcessRequest_t(request))
+            .WillOnce(
+                Return(new asapo::SimpleError{"error"})
+            );
+        } else {
+            EXPECT_CALL(mock_dispatcher, ProcessRequest_t(request))
+            .WillOnce(
+                Return(nullptr)
+            );
+        }
+    }
 
 };
 
@@ -158,11 +158,11 @@ TEST_F(ConnectionTests, ProcessStatisticsWhenOKProcessRequest) {
     InSequence sequence;
     auto request = MockGetNext(false);
 
-    MockProcessRequest(request,false);
+    MockProcessRequest(request, false);
 
     EXPECT_CALL(mock_statictics, IncreaseRequestCounter_t());
-    EXPECT_CALL(mock_statictics, IncreaseRequestDataVolume_t(1+ sizeof(asapo::GenericRequestHeader) +
-        sizeof(asapo::GenericNetworkResponse)));
+    EXPECT_CALL(mock_statictics, IncreaseRequestDataVolume_t(1 + sizeof(asapo::GenericRequestHeader) +
+                sizeof(asapo::GenericNetworkResponse)));
     EXPECT_CALL(mock_statictics, SendIfNeeded_t());
 
 
@@ -175,7 +175,7 @@ TEST_F(ConnectionTests, ProcessStatisticsWhenOKProcessRequest) {
 TEST_F(ConnectionTests, ExitOnErrorsWithProcessRequest) {
     auto request = MockGetNext(false);
 
-    MockProcessRequest(request,true);
+    MockProcessRequest(request, true);
 
     connection->Listen();
 }

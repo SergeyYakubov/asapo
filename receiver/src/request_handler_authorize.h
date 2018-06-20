@@ -14,20 +14,20 @@ namespace asapo {
 
 class RequestHandlerAuthorize final: public RequestHandler {
   public:
-  RequestHandlerAuthorize();
+    RequestHandlerAuthorize();
     StatisticEntity GetStatisticEntity() const override;
     Error ProcessRequest(Request* request) const override;
     const AbstractLogger* log__;
     std::unique_ptr<HttpClient>http_client__;
- private:
+  private:
     mutable std::string beamtime_id_;
     mutable std::chrono::high_resolution_clock::time_point last_updated_;
     Error ProcessAuthorizationRequest(Request* request) const;
     Error ProcessOtherRequest(Request* request) const;
-    Error Authorize(Request* request,const char* beamtime_id) const;
-    Error ErrorFromServerResponse(const Error& err,HttpCode code) const;
+    Error Authorize(Request* request, const char* beamtime_id) const;
+    Error ErrorFromServerResponse(const Error& err, HttpCode code) const;
 
-  std::string GetRequestString(const Request* request, const char* beamtime_id) const;
+    std::string GetRequestString(const Request* request, const char* beamtime_id) const;
 };
 
 }

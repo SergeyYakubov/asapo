@@ -7,14 +7,14 @@ namespace asapo {
 
 RequestsDispatcher::RequestsDispatcher(SocketDescriptor socket_fd, std::string address,
                                        Statistics* statistics) : statistics__{statistics},
-                                                                 io__{GenerateDefaultIO()},
-                                                                 log__{GetDefaultReceiverLogger()},
-                                                                 request_factory__{new RequestFactory{}},
-                                                                 socket_fd_{socket_fd},
-                                                                 producer_uri_{std::move(address)} {
+    io__{GenerateDefaultIO()},
+    log__{GetDefaultReceiverLogger()},
+    request_factory__{new RequestFactory{}},
+                  socket_fd_{socket_fd},
+producer_uri_{std::move(address)} {
 }
 
-NetworkErrorCode GetNetworkCodeFromError(const Error &err) {
+NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
     if (err) {
         if (err == IOErrorTemplates::kFileAlreadyExists) {
             return NetworkErrorCode::kNetErrorFileIdAlreadyInUse;
@@ -27,7 +27,7 @@ NetworkErrorCode GetNetworkCodeFromError(const Error &err) {
     return NetworkErrorCode::kNetErrorNoError;
 }
 
-Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request> &request) const noexcept {
+Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request>& request) const noexcept {
     log__->Debug("processing request from " + producer_uri_ );
     Error handle_err;
     handle_err = request->Handle(statistics__);
@@ -46,32 +46,32 @@ Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request> &request
     return handle_err == nullptr ? std::move(io_err) : std::move(handle_err);
 }
 
-std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error * err)
+std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err)
 const noexcept {
 //TODO: to be overwritten with MessagePack (or similar)
-GenericRequestHeader generic_request_header;
-statistics__->
-StartTimer(StatisticEntity::kNetwork);
-io__->
-Receive(socket_fd_, &generic_request_header,
-sizeof(GenericRequestHeader), err);
-if(*err) {
-log__->Error("error getting next request from " + producer_uri_+" - "+(*err)->
-Explain()
-);
-return nullptr;
-}
-statistics__->
-StopTimer();
-auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_,producer_uri_, err);
-if (*err) {
-log__->Error("error processing request from " + producer_uri_+" - "+(*err)->
-Explain()
-);
-}
+    GenericRequestHeader generic_request_header;
+    statistics__->
+    StartTimer(StatisticEntity::kNetwork);
+    io__->
+    Receive(socket_fd_, &generic_request_header,
+            sizeof(GenericRequestHeader), err);
+    if(*err) {
+        log__->Error("error getting next request from " + producer_uri_ + " - " + (*err)->
+                     Explain()
+                    );
+        return nullptr;
+    }
+    statistics__->
+    StopTimer();
+    auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, producer_uri_, err);
+    if (*err) {
+        log__->Error("error processing request from " + producer_uri_ + " - " + (*err)->
+                     Explain()
+                    );
+    }
 
-return
-request;
+    return
+        request;
 }
 
 

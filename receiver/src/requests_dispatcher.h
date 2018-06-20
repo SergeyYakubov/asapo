@@ -11,17 +11,17 @@
 namespace asapo {
 
 class RequestsDispatcher {
- public:
-  RequestsDispatcher(SocketDescriptor socket_fd, std::string address, Statistics* statistics);
-  VIRTUAL Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;
-  VIRTUAL std::unique_ptr<Request> GetNextRequest(Error* err) const noexcept;
-  Statistics* statistics__;
-  std::unique_ptr<IO> io__;
-  const AbstractLogger* log__;
-  std::unique_ptr<RequestFactory> request_factory__;
- private:
-  SocketDescriptor socket_fd_;
-  std::string producer_uri_;
+  public:
+    RequestsDispatcher(SocketDescriptor socket_fd, std::string address, Statistics* statistics);
+    VIRTUAL Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;
+    VIRTUAL std::unique_ptr<Request> GetNextRequest(Error* err) const noexcept;
+    Statistics* statistics__;
+    std::unique_ptr<IO> io__;
+    const AbstractLogger* log__;
+    std::unique_ptr<RequestFactory> request_factory__;
+  private:
+    SocketDescriptor socket_fd_;
+    std::string producer_uri_;
 };
 
 }

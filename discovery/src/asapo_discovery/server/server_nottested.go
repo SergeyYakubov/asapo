@@ -3,8 +3,8 @@
 package server
 
 import (
-	log "asapo_discovery/logger"
-	"asapo_discovery/utils"
+	log "asapo_common/logger"
+	"asapo_common/utils"
 	"net/http"
 	"strconv"
 )

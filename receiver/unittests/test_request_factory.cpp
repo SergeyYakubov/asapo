@@ -67,14 +67,14 @@ class FactoryTests : public Test {
 
 TEST_F(FactoryTests, ErrorOnWrongCode) {
     generic_request_header.op_code = asapo::Opcode::kOpcodeUnknownOp;
-    auto request = factory.GenerateRequest(generic_request_header, 1,origin_uri, &err);
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
 
 TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCode) {
     generic_request_header.op_code = asapo::Opcode::kOpcodeTransferData;
-    auto request = factory.GenerateRequest(generic_request_header, 1,origin_uri, &err);
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
@@ -86,7 +86,7 @@ TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCode) {
 
 TEST_F(FactoryTests, ReturnsDataRequestForAuthorizationCode) {
     generic_request_header.op_code = asapo::Opcode::kOpcodeAuthorize;
-    auto request = factory.GenerateRequest(generic_request_header, 1,origin_uri, &err);
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
@@ -99,7 +99,7 @@ TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWanted) {
 
     SetReceiverConfig(config);
 
-    auto request = factory.GenerateRequest(generic_request_header, 1,origin_uri, &err);
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(request->GetListHandlers().size(), Eq(2));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
@@ -111,7 +111,7 @@ TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
 
     SetReceiverConfig(config);
 
-    auto request = factory.GenerateRequest(generic_request_header, 1,origin_uri, &err);
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(request->GetListHandlers().size(), Eq(2));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));

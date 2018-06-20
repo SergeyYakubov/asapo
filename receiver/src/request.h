@@ -21,21 +21,21 @@ using RequestHandlerList = std::vector<const RequestHandler*>;
 class Request {
   public:
     VIRTUAL Error Handle(Statistics*);
-     ~Request() = default;
-    Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd,std::string origin_uri);
+    ~Request() = default;
+    Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri);
     VIRTUAL void AddHandler(const RequestHandler*);
-  VIRTUAL const RequestHandlerList& GetListHandlers() const;
-  VIRTUAL uint64_t GetDataSize() const;
-  VIRTUAL uint64_t GetDataID() const;
-  VIRTUAL std::string GetFileName() const;
-  VIRTUAL const FileData& GetData() const;
-  VIRTUAL Opcode GetOpCode() const;
-  VIRTUAL const char* GetMessage() const;
+    VIRTUAL const RequestHandlerList& GetListHandlers() const;
+    VIRTUAL uint64_t GetDataSize() const;
+    VIRTUAL uint64_t GetDataID() const;
+    VIRTUAL std::string GetFileName() const;
+    VIRTUAL const FileData& GetData() const;
+    VIRTUAL Opcode GetOpCode() const;
+    VIRTUAL const char* GetMessage() const;
 
-  const std::string& GetOriginUri() const;
-  VIRTUAL const std::string& GetBeamtimeId() const;
-  VIRTUAL void SetBeamtimeId(std::string beamtime_id);
-  std::unique_ptr<IO> io__;
+    const std::string& GetOriginUri() const;
+    VIRTUAL const std::string& GetBeamtimeId() const;
+    VIRTUAL void SetBeamtimeId(std::string beamtime_id);
+    std::unique_ptr<IO> io__;
   private:
     Error AllocateDataBuffer();
     Error ReceiveData();
@@ -50,7 +50,7 @@ class Request {
 class RequestFactory {
   public:
     virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
-                                                     SocketDescriptor socket_fd,std::string origin_uri, Error* err) const noexcept;
+                                                     SocketDescriptor socket_fd, std::string origin_uri, Error* err) const noexcept;
   private:
     RequestHandlerFileWrite request_handler_filewrite_;
     RequestHandlerDbWrite request_handler_dbwrite_;

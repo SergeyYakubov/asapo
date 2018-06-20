@@ -54,7 +54,7 @@ namespace {
 
 TEST(RequestDispatcher, Constructor) {
     asapo::Statistics* stat;
-    RequestsDispatcher dispatcher{0,  "some_address",stat};
+    RequestsDispatcher dispatcher{0,  "some_address", stat};
     ASSERT_THAT(dynamic_cast<const asapo::Statistics*>(dispatcher.statistics__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(dispatcher.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(dispatcher.request_factory__.get()), Ne(nullptr));
@@ -62,30 +62,30 @@ TEST(RequestDispatcher, Constructor) {
 }
 
 class MockRequest: public Request {
- public:
-  MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-      Request(request_header, socket_fd,"") {};
-  Error Handle(Statistics* statistics) override {
-      return Error{Handle_t()};
-  };
-  MOCK_CONST_METHOD0(Handle_t, ErrorInterface * ());
+  public:
+    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
+        Request(request_header, socket_fd, "") {};
+    Error Handle(Statistics* statistics) override {
+        return Error{Handle_t()};
+    };
+    MOCK_CONST_METHOD0(Handle_t, ErrorInterface * ());
 };
 
 
 class MockRequestFactory: public asapo::RequestFactory {
- public:
-  std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
-                                           SocketDescriptor socket_fd,std::string origin_uri,
-                                           Error* err) const noexcept override {
-      ErrorInterface* error = nullptr;
-      auto res = GenerateRequest_t(request_header, socket_fd,origin_uri, &error);
-      err->reset(error);
-      return std::unique_ptr<Request> {res};
-  }
+  public:
+    std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
+                                             SocketDescriptor socket_fd, std::string origin_uri,
+                                             Error* err) const noexcept override {
+        ErrorInterface* error = nullptr;
+        auto res = GenerateRequest_t(request_header, socket_fd, origin_uri, &error);
+        err->reset(error);
+        return std::unique_ptr<Request> {res};
+    }
 
-  MOCK_CONST_METHOD4(GenerateRequest_t, Request * (const GenericRequestHeader&,
-      SocketDescriptor ,std::string ,
-      ErrorInterface**));
+    MOCK_CONST_METHOD4(GenerateRequest_t, Request * (const GenericRequestHeader&,
+                                                     SocketDescriptor , std::string ,
+                                                     ErrorInterface**));
 
 };
 
@@ -97,83 +97,83 @@ ACTION_P(SaveArg1ToGenericNetworkResponse, value) {
 }
 
 class RequestsDispatcherTests : public Test {
- public:
-  std::unique_ptr<RequestsDispatcher> dispatcher;
-  std::string connected_uri{"some_address"};
-  NiceMock<MockIO> mock_io;
-  MockRequestFactory mock_factory;
-  NiceMock<MockStatistics> mock_statictics;
-  NiceMock<asapo::MockLogger> mock_logger;
+  public:
+    std::unique_ptr<RequestsDispatcher> dispatcher;
+    std::string connected_uri{"some_address"};
+    NiceMock<MockIO> mock_io;
+    MockRequestFactory mock_factory;
+    NiceMock<MockStatistics> mock_statictics;
+    NiceMock<asapo::MockLogger> mock_logger;
 
-  asapo::ReceiverConfig test_config;
-  GenericRequestHeader header;
-  MockRequest mock_request{GenericRequestHeader{},1};
-  std::unique_ptr<Request> request{&mock_request};
+    asapo::ReceiverConfig test_config;
+    GenericRequestHeader header;
+    MockRequest mock_request{GenericRequestHeader{}, 1};
+    std::unique_ptr<Request> request{&mock_request};
 
-  void SetUp() override {
-      test_config.authorization_interval_ms = 0;
-      SetReceiverConfig(test_config);
-      dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statictics}};
-      dispatcher->io__ = std::unique_ptr<asapo::IO> {&mock_io};
-      dispatcher->statistics__ = &mock_statictics;
-      dispatcher->request_factory__ = std::unique_ptr<asapo::RequestFactory> {&mock_factory};
-      dispatcher->log__ = &mock_logger;
+    void SetUp() override {
+        test_config.authorization_interval_ms = 0;
+        SetReceiverConfig(test_config);
+        dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statictics}};
+        dispatcher->io__ = std::unique_ptr<asapo::IO> {&mock_io};
+        dispatcher->statistics__ = &mock_statictics;
+        dispatcher->request_factory__ = std::unique_ptr<asapo::RequestFactory> {&mock_factory};
+        dispatcher->log__ = &mock_logger;
 
-  }
-  void TearDown() override {
-      dispatcher->io__.release();
-      dispatcher->request_factory__.release();
-      request.release();
-  }
-  void MockReceiveRequest(bool error ){
-      EXPECT_CALL(mock_io, Receive_t(_, _, _, _))
-          .WillOnce(
-              DoAll(SetArgPointee<3>(error?asapo::IOErrorTemplates::kUnknownIOError.Generate().release():nullptr),
-                    Return(0))
-          );
-      if (error) {
-          EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("getting next request"), HasSubstr(connected_uri))));
-      }
+    }
+    void TearDown() override {
+        dispatcher->io__.release();
+        dispatcher->request_factory__.release();
+        request.release();
+    }
+    void MockReceiveRequest(bool error ) {
+        EXPECT_CALL(mock_io, Receive_t(_, _, _, _))
+        .WillOnce(
+            DoAll(SetArgPointee<3>(error ? asapo::IOErrorTemplates::kUnknownIOError.Generate().release() : nullptr),
+                  Return(0))
+        );
+        if (error) {
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("getting next request"), HasSubstr(connected_uri))));
+        }
 
-  }
-  void MockCreateRequest(bool error ){
-      EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _,_))
-          .WillOnce(
-              DoAll(SetArgPointee<3>(error?asapo::ReceiverErrorTemplates::kInvalidOpCode.Generate().release():nullptr),
-                    Return(nullptr))
-          );
-      if (error) {
-          EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request from"), HasSubstr(connected_uri))));
-      }
-
-
-  }
-  void MockHandleRequest(bool error,Error err = asapo::IOErrorTemplates::kUnknownIOError.Generate() ) {
-      EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("processing request from"), HasSubstr(connected_uri))));
-
-      EXPECT_CALL(mock_request, Handle_t()).WillOnce(
-          Return(error?err.release():nullptr)
-      );
-      if (error) {
-        EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request from"), HasSubstr(connected_uri))));
-      }
+    }
+    void MockCreateRequest(bool error ) {
+        EXPECT_CALL(mock_factory, GenerateRequest_t(_, _, _, _))
+        .WillOnce(
+            DoAll(SetArgPointee<3>(error ? asapo::ReceiverErrorTemplates::kInvalidOpCode.Generate().release() : nullptr),
+                  Return(nullptr))
+        );
+        if (error) {
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request from"), HasSubstr(connected_uri))));
+        }
 
 
-  }
-  GenericNetworkResponse MockSendResponse(bool error ) {
-      EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response to"), HasSubstr(connected_uri))));
-      GenericNetworkResponse response;
-      EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
-          DoAll(SetArgPointee<3>(error?asapo::IOErrorTemplates::kConnectionRefused.Generate().release():nullptr),
-                SaveArg1ToGenericNetworkResponse(&response),
-                Return(0)
-      ));
-      if (error) {
-          EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error sending response"), HasSubstr(connected_uri))));
-      }
+    }
+    void MockHandleRequest(bool error, Error err = asapo::IOErrorTemplates::kUnknownIOError.Generate() ) {
+        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("processing request from"), HasSubstr(connected_uri))));
 
-      return response;
-  }
+        EXPECT_CALL(mock_request, Handle_t()).WillOnce(
+            Return(error ? err.release() : nullptr)
+        );
+        if (error) {
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request from"), HasSubstr(connected_uri))));
+        }
+
+
+    }
+    GenericNetworkResponse MockSendResponse(bool error ) {
+        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response to"), HasSubstr(connected_uri))));
+        GenericNetworkResponse response;
+        EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
+            DoAll(SetArgPointee<3>(error ? asapo::IOErrorTemplates::kConnectionRefused.Generate().release() : nullptr),
+                  SaveArg1ToGenericNetworkResponse(&response),
+                  Return(0)
+                 ));
+        if (error) {
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error sending response"), HasSubstr(connected_uri))));
+        }
+
+        return response;
+    }
 };
 
 
@@ -239,7 +239,7 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestSendOK) {
 
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAlreadyExist) {
-    MockHandleRequest(true,asapo::IOErrorTemplates::kFileAlreadyExists.Generate());
+    MockHandleRequest(true, asapo::IOErrorTemplates::kFileAlreadyExists.Generate());
     auto response = MockSendResponse(false);
 
     auto err = dispatcher->ProcessRequest(request);
@@ -250,7 +250,7 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAlreadyExist) {
 }
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAuthorizationFailure) {
-    MockHandleRequest(true,asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate());
+    MockHandleRequest(true, asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate());
     auto response = MockSendResponse(false);
 
     auto err = dispatcher->ProcessRequest(request);

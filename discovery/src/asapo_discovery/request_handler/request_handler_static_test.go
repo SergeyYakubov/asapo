@@ -3,7 +3,7 @@ package request_handler
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
-    "asapo_discovery/utils"
+    "asapo_common/utils"
 )
 
 

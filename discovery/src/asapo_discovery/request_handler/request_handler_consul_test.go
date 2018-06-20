@@ -5,7 +5,7 @@ import (
 	"testing"
 	"github.com/hashicorp/consul/api"
 	"strconv"
-	"asapo_discovery/utils"
+	"asapo_common/utils"
 )
 
 type ConsulHandlerTestSuite struct {

@@ -61,19 +61,19 @@ class AuthorizerHandlerTests : public Test {
     RequestHandlerAuthorize handler;
     MockHttpClient mock_http_client;
     std::unique_ptr<MockRequest> mock_request;
-  ReceiverConfig config;
+    ReceiverConfig config;
 
-  NiceMock<asapo::MockLogger> mock_logger;
+    NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_producer_uri = "producer_uri";
     std::string expected_authorization_server = "authorizer_host";
-    std::string expect_request_string = std::string("{\"BeamtimeId\":\"") + expected_beamtime_id+ "\",\"OriginHost\":\""+
-      expected_producer_uri+"\"}";
+    std::string expect_request_string = std::string("{\"BeamtimeId\":\"") + expected_beamtime_id + "\",\"OriginHost\":\"" +
+                                        expected_producer_uri + "\"}";
 
-  void MockRequestData();
+    void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
-        mock_request.reset(new MockRequest{request_header, 1,expected_producer_uri});
+        mock_request.reset(new MockRequest{request_header, 1, expected_producer_uri});
         handler.http_client__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         handler.log__ = &mock_logger;
         config.authorization_server = expected_authorization_server;
@@ -83,28 +83,26 @@ class AuthorizerHandlerTests : public Test {
     void TearDown() override {
         handler.http_client__.release();
     }
-    void MockAuthRequest(bool error,HttpCode code = HttpCode::OK) {
-        if (error)
-        {
-            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server+"/authorize", expect_request_string, _, _)).
-                WillOnce(
+    void MockAuthRequest(bool error, HttpCode code = HttpCode::OK) {
+        if (error) {
+            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", expect_request_string, _, _)).
+            WillOnce(
                 DoAll(SetArgPointee<3>(new asapo::SimpleError("http error")),
                       Return("")
-                ));
+                     ));
             EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
                                                  HasSubstr("http error"),
                                                  HasSubstr(expected_beamtime_id),
                                                  HasSubstr(expected_producer_uri),
                                                  HasSubstr(expected_authorization_server))));
 
-        } else
-        {
-            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server+"/authorize", expect_request_string, _, _)).
-                WillOnce(
+        } else {
+            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", expect_request_string, _, _)).
+            WillOnce(
                 DoAll(SetArgPointee<3>(nullptr),
                       SetArgPointee<2>(code),
                       Return(expected_beamtime_id)
-                ));
+                     ));
             if (code != HttpCode::OK) {
                 EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
                                                      HasSubstr("return code"),
@@ -120,26 +118,26 @@ class AuthorizerHandlerTests : public Test {
     }
     Error MockFirstAuthorization(bool error, HttpCode code = HttpCode::OK) {
         EXPECT_CALL(*mock_request, GetOpCode())
-            .WillOnce(Return(asapo::kOpcodeAuthorize))
-            ;
+        .WillOnce(Return(asapo::kOpcodeAuthorize))
+        ;
         EXPECT_CALL(*mock_request, GetMessage())
-            .WillOnce(Return(expected_beamtime_id.c_str()))
-            ;
+        .WillOnce(Return(expected_beamtime_id.c_str()))
+        ;
 
-        MockAuthRequest(error,code);
+        MockAuthRequest(error, code);
         return handler.ProcessRequest(mock_request.get());
     }
     Error MockRequestAuthorization(bool error, HttpCode code = HttpCode::OK) {
-      EXPECT_CALL(*mock_request, GetOpCode())
-          .WillOnce(Return(asapo::kOpcodeTransferData))
-          ;
+        EXPECT_CALL(*mock_request, GetOpCode())
+        .WillOnce(Return(asapo::kOpcodeTransferData))
+        ;
         if (!error && code == HttpCode::OK) {
             EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
         }
 
-      MockAuthRequest(error,code);
-      return handler.ProcessRequest(mock_request.get());
-  }
+        MockAuthRequest(error, code);
+        return handler.ProcessRequest(mock_request.get());
+    }
 
 };
 
@@ -150,8 +148,8 @@ TEST_F(AuthorizerHandlerTests, CheckStatisticEntity) {
 
 TEST_F(AuthorizerHandlerTests, ErrorNotAuthorizedYet) {
     EXPECT_CALL(*mock_request, GetOpCode())
-        .WillOnce(Return(asapo::kOpcodeTransferData))
-        ;
+    .WillOnce(Return(asapo::kOpcodeTransferData))
+    ;
 
     auto err = handler.ProcessRequest(mock_request.get());
 
@@ -168,7 +166,7 @@ TEST_F(AuthorizerHandlerTests, ErrorProcessingAuthorizeRequest) {
 
 TEST_F(AuthorizerHandlerTests, AuthorizeRequestreturns401) {
 
-    auto err = MockFirstAuthorization(false,HttpCode::Unauthorized);
+    auto err = MockFirstAuthorization(false, HttpCode::Unauthorized);
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
 }
@@ -183,7 +181,7 @@ TEST_F(AuthorizerHandlerTests, AuthorizeOk) {
 TEST_F(AuthorizerHandlerTests, ErrorOnSecondAuthorize) {
     MockFirstAuthorization(false);
     EXPECT_CALL(*mock_request, GetOpCode())
-        .WillOnce(Return(asapo::kOpcodeAuthorize));
+    .WillOnce(Return(asapo::kOpcodeAuthorize));
 
     EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
                                          HasSubstr("already authorized"),
@@ -206,7 +204,7 @@ TEST_F(AuthorizerHandlerTests, ErrorOnDataTransferRequestAuthorize) {
 TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturns401) {
     MockFirstAuthorization(false);
 
-    auto err = MockRequestAuthorization(false,HttpCode::Unauthorized);
+    auto err = MockRequestAuthorization(false, HttpCode::Unauthorized);
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
 }
@@ -224,7 +222,7 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeUsesCachedValue) {
     SetReceiverConfig(config);
     MockFirstAuthorization(false);
     EXPECT_CALL(*mock_request, GetOpCode())
-        .WillOnce(Return(asapo::kOpcodeTransferData));
+    .WillOnce(Return(asapo::kOpcodeTransferData));
     EXPECT_CALL(mock_http_client, Post_t(_, _, _, _)).Times(0);
     EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
 

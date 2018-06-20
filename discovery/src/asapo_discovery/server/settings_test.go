@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"asapo_discovery/utils"
+	"asapo_common/utils"
 )
 
 func fillSettings(mode string) utils.Settings {

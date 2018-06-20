@@ -10,10 +10,10 @@ namespace asapo {
 
 Connection::Connection(SocketDescriptor socket_fd, const std::string& address,
                        std::string receiver_tag) :
-                       io__{GenerateDefaultIO()},
-                       statistics__{new Statistics},
-                       log__{GetDefaultReceiverLogger()},
-                       requests_dispatcher__{new RequestsDispatcher{socket_fd,address,statistics__.get()}}{
+    io__{GenerateDefaultIO()},
+    statistics__{new Statistics},
+             log__{GetDefaultReceiverLogger()},
+requests_dispatcher__{new RequestsDispatcher{socket_fd, address, statistics__.get()}} {
     socket_fd_ = socket_fd;
     address_ = address;
     statistics__->AddTag("connection_from", address);
@@ -33,7 +33,7 @@ void Connection::Listen() const noexcept {
     while (true) {
         Error err;
         auto request = requests_dispatcher__->GetNextRequest(&err);
-        if (err){
+        if (err) {
             break;
         }
         err = requests_dispatcher__->ProcessRequest(request);

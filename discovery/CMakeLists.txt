@@ -11,10 +11,10 @@ endif()
 message(STATUS "global gopath ${GOPATH}")
 
 IF(WIN32)
-    set (gopath "${GOPATH}\;${CMAKE_CURRENT_SOURCE_DIR}")
+    set (gopath "${GOPATH}\;${CMAKE_CURRENT_SOURCE_DIR}\;${CMAKE_SOURCE_DIR}/common/go")
     set (exe_name "${TARGET_NAME}.exe")
 ELSE()
-    set (gopath ${GOPATH}:${CMAKE_CURRENT_SOURCE_DIR})
+    set (gopath ${GOPATH}:${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/common/go)
     set (exe_name "${TARGET_NAME}")
 ENDIF()
 

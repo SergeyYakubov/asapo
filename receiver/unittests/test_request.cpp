@@ -67,9 +67,9 @@ class RequestTests : public Test {
     asapo::SocketDescriptor socket_fd_{1};
     uint64_t data_size_ {100};
     uint64_t data_id_{15};
-    std::string expected_origin_uri="origin_uri";
-    asapo::Opcode expected_op_code=asapo::kOpcodeTransferData;
-    char expected_request_message[asapo::kMaxMessageSize]="test message";
+    std::string expected_origin_uri = "origin_uri";
+    asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
+    char expected_request_message[asapo::kMaxMessageSize] = "test message";
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;
@@ -79,8 +79,8 @@ class RequestTests : public Test {
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         generic_request_header.op_code = expected_op_code;
-        strcpy(generic_request_header.message,expected_request_message);
-        request.reset(new Request{generic_request_header, socket_fd_,expected_origin_uri});
+        strcpy(generic_request_header.message, expected_request_message);
+        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
             DoAll(SetArgPointee<3>(nullptr),
@@ -96,7 +96,7 @@ class RequestTests : public Test {
 TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
     generic_request_header.data_size = 0;
     request->io__.release();
-    request.reset(new Request{generic_request_header, socket_fd_,""});
+    request.reset(new Request{generic_request_header, socket_fd_, ""});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);

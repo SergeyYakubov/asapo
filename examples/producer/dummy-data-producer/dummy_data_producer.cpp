@@ -35,7 +35,8 @@ void PrintCommandArguments(const Args& args) {
 void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     if (argc != 7) {
         std::cout <<
-                  "Usage: " << argv[0] << " <destination> <beamtime_id> <number_of_byte> <iterations> <nthreads> <mode 0 -t tcp, 1 - filesystem>"
+                  "Usage: " << argv[0] <<
+                  " <destination> <beamtime_id> <number_of_byte> <iterations> <nthreads> <mode 0 -t tcp, 1 - filesystem>"
                   << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -82,7 +83,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.receiver_address, args.nthreads,
                                             args.mode == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem,
-                                            args.beamtime_id,&err);
+                                            args.beamtime_id, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);

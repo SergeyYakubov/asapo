@@ -2,8 +2,8 @@ package server
 
 import (
 	"asapo_broker/database"
-	"asapo_broker/logger"
-	"asapo_broker/utils"
+	"asapo_common/logger"
+	"asapo_common/utils"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
