@@ -29,7 +29,7 @@ nomad run nginx.nmd
 
 sleep 1
 
-$1 localhost:8400 ${beamtime_id} 100 112 4  0
+$1 localhost:8400 ${beamtime_id} 100 112 4  0 100
 
 sleep 1
 

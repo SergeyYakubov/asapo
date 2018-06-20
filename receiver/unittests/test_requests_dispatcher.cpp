@@ -160,7 +160,7 @@ class RequestsDispatcherTests : public Test {
 
 
     }
-     void MockSendResponse(GenericNetworkResponse* response,bool error ) {
+    void MockSendResponse(GenericNetworkResponse* response, bool error ) {
         EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response to"), HasSubstr(connected_uri))));
         ;
         EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
@@ -210,7 +210,7 @@ TEST_F(RequestsDispatcherTests, OkCreatetNextRequest) {
 
 TEST_F(RequestsDispatcherTests, ErrorProcessRequestErrorSend) {
     MockHandleRequest(true);
-    MockSendResponse(&response,true);
+    MockSendResponse(&response, true);
 
     auto err = dispatcher->ProcessRequest(request);
 
@@ -220,7 +220,7 @@ TEST_F(RequestsDispatcherTests, ErrorProcessRequestErrorSend) {
 
 TEST_F(RequestsDispatcherTests, OkProcessRequestErrorSend) {
     MockHandleRequest(false);
-    MockSendResponse(&response,true);
+    MockSendResponse(&response, true);
 
     auto err = dispatcher->ProcessRequest(request);
 
@@ -230,7 +230,7 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestErrorSend) {
 
 TEST_F(RequestsDispatcherTests, OkProcessRequestSendOK) {
     MockHandleRequest(false);
-    MockSendResponse(&response,false);
+    MockSendResponse(&response, false);
 
     auto err = dispatcher->ProcessRequest(request);
 
@@ -240,7 +240,7 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestSendOK) {
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAlreadyExist) {
     MockHandleRequest(true, asapo::IOErrorTemplates::kFileAlreadyExists.Generate());
-    MockSendResponse(&response,false);
+    MockSendResponse(&response, false);
 
     auto err = dispatcher->ProcessRequest(request);
 
@@ -251,7 +251,7 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAlreadyExist) {
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAuthorizationFailure) {
     MockHandleRequest(true, asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate());
-    MockSendResponse(&response,false);
+    MockSendResponse(&response, false);
 
     auto err = dispatcher->ProcessRequest(request);
 

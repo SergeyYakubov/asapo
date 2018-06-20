@@ -36,7 +36,7 @@ sleep 1
 
 #producer
 mkdir -p ${receiver_folder}
-$1 localhost:8400 ${beamtime_id} 100 1000 4 0 &
+$1 localhost:8400 ${beamtime_id} 100 1000 4 0 100 &
 #producerid=`echo $!`
 
 

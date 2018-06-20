@@ -47,23 +47,19 @@ Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request>& request
     return handle_err == nullptr ? std::move(io_err) : std::move(handle_err);
 }
 
-std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err)
-const noexcept {
+std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const noexcept {
 //TODO: to be overwritten with MessagePack (or similar)
     GenericRequestHeader generic_request_header;
-    statistics__->
-    StartTimer(StatisticEntity::kNetwork);
-    io__->
-    Receive(socket_fd_, &generic_request_header,
-            sizeof(GenericRequestHeader), err);
+    statistics__-> StartTimer(StatisticEntity::kNetwork);
+    io__-> Receive(socket_fd_, &generic_request_header,
+                   sizeof(GenericRequestHeader), err);
     if(*err) {
         log__->Error("error getting next request from " + producer_uri_ + " - " + (*err)->
                      Explain()
                     );
         return nullptr;
     }
-    statistics__->
-    StopTimer();
+    statistics__-> StopTimer();
     auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, producer_uri_, err);
     if (*err) {
         log__->Error("error processing request from " + producer_uri_ + " - " + (*err)->
@@ -71,8 +67,7 @@ const noexcept {
                     );
     }
 
-    return
-        request;
+    return request;
 }
 
 

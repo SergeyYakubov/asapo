@@ -19,6 +19,7 @@ struct Args {
     uint64_t iterations;
     uint64_t nthreads;
     uint64_t mode;
+    uint64_t timeout_sec;
 };
 
 void PrintCommandArguments(const Args& args) {
@@ -28,15 +29,17 @@ void PrintCommandArguments(const Args& args) {
               << "iterations: " << args.iterations << std::endl
               << "nthreads: " << args.nthreads << std::endl
               << "mode: " << args.mode << std::endl
+              << "timeout: " << args.timeout_sec << std::endl
               << std::endl;
 }
 
 
 void ProcessCommandArguments(int argc, char* argv[], Args* args) {
-    if (argc != 7) {
+    if (argc != 8) {
         std::cout <<
                   "Usage: " << argv[0] <<
-                  " <destination> <beamtime_id> <number_of_byte> <iterations> <nthreads> <mode 0 -t tcp, 1 - filesystem>"
+                  " <destination> <beamtime_id> <number_of_byte> <iterations> <nthreads>"
+                  " <mode 0 -t tcp, 1 - filesystem> <timeout (sec)>"
                   << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -47,6 +50,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         args->iterations = std::stoull(argv[4]);
         args->nthreads = std::stoull(argv[5]);
         args->mode = std::stoull(argv[6]);
+        args->timeout_sec = std::stoull(argv[7]);
         PrintCommandArguments(*args);
         return;
     } catch(std::exception& e) {
@@ -96,7 +100,6 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 
 void WaitThreadsFinished(const Args& args) {
     uint64_t elapsed_ms = 0;
-    uint64_t timeout_sec = 180;
     while (true) {
         mutex.lock();
         if (iterations_remained <= 0) {
@@ -106,7 +109,7 @@ void WaitThreadsFinished(const Args& args) {
         mutex.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         elapsed_ms += 100;
-        if (elapsed_ms > timeout_sec * 1000) {
+        if (elapsed_ms > args.timeout_sec * 1000) {
             std::cerr << "Exit on timeout " << std::endl;
             exit(EXIT_FAILURE);
         }

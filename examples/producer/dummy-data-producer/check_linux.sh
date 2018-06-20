@@ -12,7 +12,7 @@ rm -rf files
 
 mkdir files
 
-$@ files beamtime_id 11 4 4 1 2>&1 | grep Rate
+$@ files beamtime_id 11 4 4 1 10 2>&1 | grep Rate
 
 
 ls -ln files/0.bin | awk '{ print $5 }'| grep 11264
