@@ -14,14 +14,14 @@ ping 1.0.0.0 -n 1 -w 100 > nul
 
 mkdir %receiver_folder%
 
-%1 localhost:8400 %beamtime_id% 100 1 1 0 30
+"%1" localhost:8400 %beamtime_id% 100 1 1 0 30
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
 FOR /F "usebackq" %%A IN ('%receiver_folder%\1.bin') DO set size=%%~zA
 if %size% NEQ 102400 goto :error
 
-%1 localhost:8400 wrong_id 100 1 1 0 10 | findstr /c:"Processed 1000 file(s)"  || goto :error
+"%1" localhost:8400 wrong_id 100 1 1 0 2 2>1 | findstr /c:"authorization failed"  || goto :error
 
 goto :clean
 

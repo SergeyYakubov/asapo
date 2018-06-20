@@ -6,9 +6,10 @@ trap Cleanup EXIT
 
 Cleanup() {
 set +e
-ssh ${service_node} rm -f ${service_dir}/files/*
+ssh ${service_node} rm -f ${service_dir}/files/${beamtime_id}/*
 ssh ${service_node} killall receiver
 ssh ${service_node} killall asapo-discovery
+ssh ${service_node} killall asapo-authorizer
 ssh ${service_node} docker rm -f -v mongo
 }
 
@@ -21,6 +22,8 @@ service_node=max-wgs
 service_ip=`resolveip -s ${service_node}`
 discovery_port=5006
 receiver_port=4201
+beamtime_id=asapo_test
+
 
 monitor_node=zitpcx27016
 monitor_port=8086
@@ -36,11 +39,15 @@ ssh ${monitor_node} influx -execute \"create database db_test\"
 #ssh ${monitor_node} docker run -d -p 8086 -p 8086 --name influxdb influxdb
 
 ssh ${service_node} mkdir -p ${service_dir}
-ssh ${service_node} mkdir -p ${service_dir}/files
+ssh ${service_node} mkdir -p ${service_dir}/files/${beamtime_id}
 ssh ${worker_node} mkdir -p ${worker_dir}
 
 scp ../../../cmake-build-release/receiver/receiver ${service_node}:${service_dir}
 scp ../../../cmake-build-release/discovery/asapo-discovery ${service_node}:${service_dir}
+
+scp ../../../cmake-build-release/authorizer/asapo-authorizer ${service_node}:${service_dir}
+scp authorizer.json ${service_node}:${service_dir}/authorizer.json
+
 scp ../../../cmake-build-release/examples/producer/dummy-data-producer/dummy-data-producer ${worker_node}:${worker_dir}
 
 function do_work {
@@ -73,7 +80,10 @@ cat discovery_tmp.json | jq ".Receiver.StaticEndpoints = [\"${service_node}:${re
 
 scp discovery_tmp1.json ${service_node}:${service_dir}/discovery.json
 scp receiver_tmp.json ${service_node}:${service_dir}/receiver.json
+
+
 rm discovery_tmp*.json receiver_tmp.json
+ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./asapo-authorizer -config authorizer.json &> ${service_dir}/authorizer.log &'"
 ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./receiver receiver.json &> ${service_dir}/receiver.log &'"
 ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./asapo-discovery -config discovery.json &> ${service_dir}/discovery.log &'"
 
@@ -82,15 +92,16 @@ for size  in 100 1000 10000
 do
 ssh ${service_node} docker run -d -p 27017:27017 --name mongo mongo
 echo ===================================================================
-ssh ${worker_node} ${worker_dir}/dummy-data-producer ${service_ip}:8400 ${size} 1000 8 0
+ssh ${worker_node} ${worker_dir}/dummy-data-producer ${service_ip}:8400 ${beamtime_id} ${size} 1000 8 0 100
 if [ "$1" == "true" ]
 then
-    ssh ${service_node} rm -f ${service_dir}/files/*
+    ssh ${service_node} rm -f ${service_dir}/files/${beamtime_id}/*
 fi
 ssh ${service_node} docker rm -f -v mongo
 done
 ssh ${service_node} killall receiver
 ssh ${service_node} killall asapo-discovery
+ssh ${service_node} killall asapo-authorizer
 }
 
 echo

@@ -1,5 +1,5 @@
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
-set beamtime_id="asapo_test"
+SET beamtime_id=asapo_test
 SET receiver_folder="c:\tmp\asapo\receiver\files\%beamtime_id%"
 set proxy_address="127.0.0.1:8400"
 

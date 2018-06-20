@@ -7,12 +7,16 @@ trap Cleanup EXIT
 #clean-up
 Cleanup() {
 set +e
-ssh ${receiver_node} rm -f ${receiver_dir}/files/*
+ssh ${receiver_node} rm -f ${receiver_dir}/files/${beamtime_id}/*
 ssh ${receiver_node} killall receiver
 ssh ${receiver_node} killall asapo-discovery
+ssh ${receiver_node} killall asapo-authorizer
 ssh ${broker_node} killall asapo-broker
 ssh ${broker_node} docker rm -f -v mongo
 }
+
+beamtime_id=asapo_test
+
 
 #monitoring_setup
 monitor_node=zitpcx27016
@@ -26,14 +30,15 @@ log_dir=~/fullchain_tests/logs
 # runs producer with various file sizes from $producer_node and measures performance
 
 file_size=10000
-file_num=$((10000000 / $file_size))
+#file_num=$((10000000 / $file_size))
+file_num=$((100000 / $file_size))
 echo filesize: ${file_size}K, filenum: $file_num
 
 # receiver_setup
 receiver_node=max-wgs
 receiver_port=4201
 receiver_dir=/gpfs/petra3/scratch/yakubov/receiver_tests
-ssh ${receiver_node} mkdir -p ${receiver_dir}/files
+ssh ${receiver_node} mkdir -p ${receiver_dir}/files/${beamtime_id}
 scp ../../../cmake-build-release/receiver/receiver ${receiver_node}:${receiver_dir}
 cat receiver.json |
   jq "to_entries |
@@ -48,6 +53,10 @@ cat receiver.json |
 
 scp receiver_tmp.json ${receiver_node}:${receiver_dir}/receiver.json
 rm receiver_tmp.json
+
+#authorizer_setup
+scp ../../../cmake-build-release/authorizer/asapo-authorizer ${receiver_node}:${receiver_dir}
+scp authorizer.json ${receiver_node}:${receiver_dir}/authorizer.json
 
 
 # discovery_setup
@@ -114,6 +123,9 @@ ssh ${broker_node} docker run -d -p 27017:27017 --name mongo mongo
 ssh ${receiver_node} "bash -c 'cd ${receiver_dir}; nohup ./asapo-discovery -config discovery.json &> ${log_dir}/discovery.log &'"
 sleep 0.3
 
+#authorizer_start
+ssh ${receiver_node} "bash -c 'cd ${receiver_dir}; nohup ./asapo-authorizer -config authorizer.json &> ${log_dir}/log.authorizer &'"
+
 #receiver_start
 ssh ${receiver_node} "bash -c 'cd ${receiver_dir}; nohup ./receiver receiver.json &> ${log_dir}/log.receiver &'"
 sleep 0.3
@@ -125,10 +137,11 @@ sleep 0.3
 sleep 5
 
 #producer_start
-ssh ${producer_node} "bash -c 'cd ${producer_dir}; nohup ./dummy-data-producer ${receiver_node}:8400 ${file_size} ${file_num} ${producer_nthreads} 0 &> ${log_dir}/producer.log &'"
+ssh ${producer_node} "bash -c 'cd ${producer_dir}; nohup ./dummy-data-producer ${receiver_node}:8400 ${beamtime_id} ${file_size} ${file_num} ${producer_nthreads} 0 100 &> ${log_dir}/producer.log &'"
 
 sleep 1
 
 #worker_start
-ssh ${worker_node} ${worker_dir}/getnext_broker ${receiver_node}:8400 test_run ${nthreads}
+ssh ${worker_node} ${worker_dir}/getnext_broker ${receiver_node}:8400 ${beamtime_id} ${nthreads}
+
 
