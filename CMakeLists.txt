@@ -68,6 +68,8 @@ add_subdirectory(receiver)
 
 add_subdirectory(discovery)
 
+add_subdirectory(authorizer)
+
 
 if(BUILD_INTEGRATION_TESTS)
     add_subdirectory(tests)
