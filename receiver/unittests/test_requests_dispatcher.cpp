@@ -48,13 +48,13 @@ using asapo::MockStatistics;
 
 
 using asapo::RequestsDispatcher;
-
+using asapo::Statistics;
 
 namespace {
 
 TEST(RequestDispatcher, Constructor) {
-    asapo::Statistics* stat;
-    RequestsDispatcher dispatcher{0,  "some_address", stat};
+    auto stat = std::unique_ptr<Statistics> {new Statistics};
+    RequestsDispatcher dispatcher{0,  "some_address", stat.get()};
     ASSERT_THAT(dynamic_cast<const asapo::Statistics*>(dispatcher.statistics__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(dispatcher.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(dispatcher.request_factory__.get()), Ne(nullptr));
@@ -109,7 +109,7 @@ class RequestsDispatcherTests : public Test {
     GenericRequestHeader header;
     MockRequest mock_request{GenericRequestHeader{}, 1};
     std::unique_ptr<Request> request{&mock_request};
-
+    GenericNetworkResponse response;
     void SetUp() override {
         test_config.authorization_interval_ms = 0;
         SetReceiverConfig(test_config);
@@ -160,19 +160,19 @@ class RequestsDispatcherTests : public Test {
 
 
     }
-    GenericNetworkResponse MockSendResponse(bool error ) {
+     void MockSendResponse(GenericNetworkResponse* response,bool error ) {
         EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response to"), HasSubstr(connected_uri))));
-        GenericNetworkResponse response;
+        ;
         EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
             DoAll(SetArgPointee<3>(error ? asapo::IOErrorTemplates::kConnectionRefused.Generate().release() : nullptr),
-                  SaveArg1ToGenericNetworkResponse(&response),
+                  SaveArg1ToGenericNetworkResponse(response),
                   Return(0)
                  ));
         if (error) {
             EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error sending response"), HasSubstr(connected_uri))));
         }
 
-        return response;
+        return;
     }
 };
 
@@ -210,7 +210,7 @@ TEST_F(RequestsDispatcherTests, OkCreatetNextRequest) {
 
 TEST_F(RequestsDispatcherTests, ErrorProcessRequestErrorSend) {
     MockHandleRequest(true);
-    MockSendResponse(true);
+    MockSendResponse(&response,true);
 
     auto err = dispatcher->ProcessRequest(request);
 
@@ -220,7 +220,7 @@ TEST_F(RequestsDispatcherTests, ErrorProcessRequestErrorSend) {
 
 TEST_F(RequestsDispatcherTests, OkProcessRequestErrorSend) {
     MockHandleRequest(false);
-    MockSendResponse(true);
+    MockSendResponse(&response,true);
 
     auto err = dispatcher->ProcessRequest(request);
 
@@ -230,7 +230,7 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestErrorSend) {
 
 TEST_F(RequestsDispatcherTests, OkProcessRequestSendOK) {
     MockHandleRequest(false);
-    MockSendResponse(false);
+    MockSendResponse(&response,false);
 
     auto err = dispatcher->ProcessRequest(request);
 
@@ -240,24 +240,26 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestSendOK) {
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAlreadyExist) {
     MockHandleRequest(true, asapo::IOErrorTemplates::kFileAlreadyExists.Generate());
-    auto response = MockSendResponse(false);
+    MockSendResponse(&response,false);
 
     auto err = dispatcher->ProcessRequest(request);
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kFileAlreadyExists));
     ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorFileIdAlreadyInUse));
-    ASSERT_THAT(response.message, HasSubstr("kFileAlreadyExists"));
+    ASSERT_THAT(std::string(response.message), HasSubstr(std::string("kFileAlreadyExists")));
 }
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAuthorizationFailure) {
     MockHandleRequest(true, asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate());
-    auto response = MockSendResponse(false);
+    MockSendResponse(&response,false);
 
     auto err = dispatcher->ProcessRequest(request);
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
     ASSERT_THAT(response.error_code, Eq(asapo::kNetAuthorizationError));
-    ASSERT_THAT(response.message, HasSubstr("authorization"));
+    ASSERT_THAT(std::string(response.message), HasSubstr("authorization"));
 }
+
+
 
 }
