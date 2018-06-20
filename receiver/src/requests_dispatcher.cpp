@@ -33,6 +33,7 @@ Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request>& request
     handle_err = request->Handle(statistics__);
     GenericNetworkResponse generic_response;
     generic_response.error_code = GetNetworkCodeFromError(handle_err);
+    strcpy(generic_response.message, "");
     if (handle_err) {
         log__->Error("error processing request from " + producer_uri_ + " - " + handle_err->Explain());
         strncpy(generic_response.message, handle_err->Explain().c_str(), kMaxMessageSize);

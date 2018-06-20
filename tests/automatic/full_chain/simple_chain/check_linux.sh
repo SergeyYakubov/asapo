@@ -4,11 +4,11 @@ set -e
 
 trap Cleanup EXIT
 
-broker_database_name=test_run
+beamtime_id=asapo_test
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
 
-receiver_folder=/tmp/asapo/receiver/files
+receiver_folder=/tmp/asapo/receiver/files/${beamtime_id}
 
 Cleanup() {
     echo cleanup
@@ -17,15 +17,17 @@ Cleanup() {
     nomad stop receiver
     nomad stop discovery
     nomad stop broker
+    nomad stop authorizer
 #    kill $producerid
-    echo "db.dropDatabase()" | mongo ${broker_database_name}
+    echo "db.dropDatabase()" | mongo ${beamtime_id}
     influx -execute "drop database ${monitor_database_name}"
 }
 
 influx -execute "create database ${monitor_database_name}"
-echo "db.${broker_database_name}.insert({dummy:1})" | mongo ${broker_database_name}
+echo "db.${beamtime_id}.insert({dummy:1})" | mongo ${beamtime_id}
 
 nomad run nginx.nmd
+nomad run authorizer.nmd
 nomad run receiver.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
@@ -34,8 +36,8 @@ sleep 1
 
 #producer
 mkdir -p ${receiver_folder}
-$1 localhost:8400 100 1000 4 0 &
+$1 localhost:8400 ${beamtime_id} 100 1000 4 0 &
 #producerid=`echo $!`
 
 
-$2 ${proxy_address} ${broker_database_name} 2 | grep "Processed 1000 file(s)"
+$2 ${proxy_address} ${beamtime_id} 2 | grep "Processed 1000 file(s)"
