@@ -1,4 +1,5 @@
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
+SET beamtime_id=asapo_test
 SET beamline=test
 SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\%beamline%\%beamtime_id%"

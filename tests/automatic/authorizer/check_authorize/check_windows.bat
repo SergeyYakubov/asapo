@@ -5,8 +5,8 @@ start /B "" "%full_name%" -config settings.json
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
-C:\Curl\curl.exe -v  --silent --data '{"BeamtimeId":"c20180508-000-COM20181","OriginHost":"127.0.0.1:5555"}' 127.0.0.1:5007/authorize --stderr - | findstr c20180508-000-COM20181  || goto :error
-C:\Curl\curl.exe -v  --silent --data '{"BeamtimeId":"c20180508-000-COM20181","OriginHost":"127.0.0.1:5555"}' 127.0.0.1:5007/authorize --stderr - | findstr p01  || goto :error
+C:\Curl\curl.exe -v  --silent --data "{\"BeamtimeId\":\"c20180508-000-COM20181\",\"OriginHost\":\"127.0.0.1:5555\"}" 127.0.0.1:5007/authorize --stderr - | findstr c20180508-000-COM20181  || goto :error
+C:\Curl\curl.exe -v  --silent --data "{\"BeamtimeId\":\"c20180508-000-COM20181\",\"OriginHost\":\"127.0.0.1:5555\"}" 127.0.0.1:5007/authorize --stderr - | findstr p01  || goto :error
 
 goto :clean
 
