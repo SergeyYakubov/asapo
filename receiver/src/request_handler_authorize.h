@@ -21,6 +21,7 @@ class RequestHandlerAuthorize final: public RequestHandler {
     std::unique_ptr<HttpClient>http_client__;
   private:
     mutable std::string beamtime_id_;
+    mutable std::string beamline_;
     mutable std::chrono::high_resolution_clock::time_point last_updated_;
     Error ProcessAuthorizationRequest(Request* request) const;
     Error ProcessOtherRequest(Request* request) const;

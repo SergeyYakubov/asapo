@@ -6,7 +6,7 @@ trap Cleanup EXIT
 
 Cleanup() {
 set +e
-ssh ${service_node} rm -f ${service_dir}/files/${beamtime_id}/*
+ssh ${service_node} rm -f ${service_dir}/files/${beamline}/${beamtime_id}/*
 ssh ${service_node} killall receiver
 ssh ${service_node} killall asapo-discovery
 ssh ${service_node} killall asapo-authorizer
@@ -23,6 +23,7 @@ service_ip=`resolveip -s ${service_node}`
 discovery_port=5006
 receiver_port=4201
 beamtime_id=asapo_test
+beamline=test
 
 
 monitor_node=zitpcx27016
@@ -95,7 +96,7 @@ echo ===================================================================
 ssh ${worker_node} ${worker_dir}/dummy-data-producer ${service_ip}:8400 ${beamtime_id} ${size} 1000 8 0 100
 if [ "$1" == "true" ]
 then
-    ssh ${service_node} rm -f ${service_dir}/files/${beamtime_id}/*
+    ssh ${service_node} rm -f ${service_dir}/files/${beamline}/${beamtime_id}/*
 fi
 ssh ${service_node} docker rm -f -v mongo
 done

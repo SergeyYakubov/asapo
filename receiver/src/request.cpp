@@ -95,6 +95,14 @@ const char* Request::GetMessage() const {
     return request_header_.message;
 }
 
+void Request::SetBeamline(std::string beamline) {
+    beamline_ = std::move(beamline);
+}
+
+const std::string& Request::GetBeamline() const {
+    return beamline_;
+}
+
 std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&
         request_header, SocketDescriptor socket_fd, std::string origin_uri,
         Error* err) const noexcept {

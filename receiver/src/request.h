@@ -35,6 +35,8 @@ class Request {
     const std::string& GetOriginUri() const;
     VIRTUAL const std::string& GetBeamtimeId() const;
     VIRTUAL void SetBeamtimeId(std::string beamtime_id);
+    VIRTUAL void SetBeamline(std::string beamline);
+    VIRTUAL const std::string& GetBeamline() const;
     std::unique_ptr<IO> io__;
   private:
     Error AllocateDataBuffer();
@@ -45,6 +47,7 @@ class Request {
     RequestHandlerList handlers_;
     std::string origin_uri_;
     std::string beamtime_id_;
+    std::string beamline_;
 };
 
 class RequestFactory {

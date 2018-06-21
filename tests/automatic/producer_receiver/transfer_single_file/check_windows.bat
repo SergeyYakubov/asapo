@@ -1,6 +1,9 @@
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 SET beamtime_id=asapo_test
-SET receiver_folder="c:\tmp\asapo\receiver\files\%beamtime_id%"
+SET beamline=test
+SET receiver_root_folder="c:\tmp\asapo\receiver\files"
+SET receiver_folder="%receiver_root_folder%\%beamline%\%beamtime_id%"
+
 
 echo db.%beamtime_id%.insert({dummy:1})" | %mongo_exe% %beamtime_id%
 
@@ -34,7 +37,7 @@ c:\opt\consul\nomad stop receiver
 c:\opt\consul\nomad stop discovery
 c:\opt\consul\nomad stop nginx
 c:\opt\consul\nomad stop authorizer
-rmdir /S /Q %receiver_folder%
+rmdir /S /Q %receiver_root_folder%
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%
 
 

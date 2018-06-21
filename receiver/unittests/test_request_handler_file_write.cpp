@@ -57,6 +57,7 @@ class FileWriteHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_file_name = "2.bin";
     std::string expected_beamtime_id = "beamtime_id";
+    std::string expected_beamline = "beamline";
     uint64_t expected_file_size = 10;
     void MockRequestData();
     void SetUp() override {
@@ -112,6 +113,11 @@ void FileWriteHandlerTests::MockRequestData() {
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
+    EXPECT_CALL(*mock_request, GetBeamline())
+    .WillOnce(ReturnRef(expected_beamline))
+    ;
+
+
     EXPECT_CALL(*mock_request, GetFileName())
     .WillOnce(Return(expected_file_name))
     ;
@@ -125,7 +131,8 @@ TEST_F(FileWriteHandlerTests, CallsWriteFile) {
 
     MockRequestData();
 
-    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + expected_beamtime_id
+    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + expected_beamline
+                                + asapo::kPathSeparator + expected_beamtime_id
                                 + asapo::kPathSeparator + expected_file_name;
 
     EXPECT_CALL(mock_io, WriteDataToFile_t(expected_path.c_str(), _, expected_file_size))

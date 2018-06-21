@@ -3,6 +3,7 @@
 #include "receiver_logger.h"
 #include "request.h"
 
+#include "json_parser/json_parser.h"
 
 using std::chrono::high_resolution_clock;
 
@@ -41,7 +42,14 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* beamtime_
     }
 
     last_updated_ = high_resolution_clock::now();
-    beamtime_id_ = response;
+
+    JsonStringParser parser{response};
+    (err = parser.GetString("BeamtimeId", &beamtime_id_)) ||
+    (err = parser.GetString("Beamline", &beamline_));
+    if (err) {
+        return ErrorFromServerResponse(err, code);
+    }
+
     return nullptr;
 }
 
@@ -71,6 +79,7 @@ Error RequestHandlerAuthorize::ProcessOtherRequest(Request* request) const {
         }
     }
     request->SetBeamtimeId(beamtime_id_);
+    request->SetBeamline(beamline_);
     return nullptr;
 }
 

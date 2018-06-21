@@ -15,6 +15,7 @@ if(BUILD_BROKER)
     add_subdirectory(broker)
 endif()
 
+add_subdirectory(authorizer)
 
 add_subdirectory(worker)
 

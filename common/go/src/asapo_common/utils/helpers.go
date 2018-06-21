@@ -3,6 +3,7 @@ package utils
 import (
 	json "encoding/json"
 	"io/ioutil"
+	"strings"
 )
 
 func StringInSlice(a string, list []string) bool {
@@ -35,4 +36,15 @@ func ReadJsonFromFile(fname string, config interface{}) error {
 	}
 
 	return nil
+}
+
+
+func ReadStringsFromFile(fname string) ([]string, error) {
+	content, err := ioutil.ReadFile(fname)
+	if err != nil {
+		return []string{},err
+	}
+	lines := strings.Split(string(content), "\n")
+
+	return lines,nil
 }

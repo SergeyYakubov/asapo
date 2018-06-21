@@ -2,7 +2,9 @@
 
 database_name=db_test
 beamtime_id=asapo_test
-receiver_folder=/tmp/asapo/receiver/files/${beamtime_id}
+beamline=test
+receiver_root_folder=/tmp/asapo/receiver/files
+receiver_folder=${receiver_root_folder}/${beamline}/${beamtime_id}
 set -e
 
 trap Cleanup EXIT
@@ -15,7 +17,7 @@ Cleanup() {
     nomad stop authorizer
     nomad stop nginx
     echo "db.dropDatabase()" | mongo ${beamtime_id}
-    rm -rf ${receiver_folder}
+    rm -rf ${receiver_root_folder}
 }
 
 mkdir -p ${receiver_folder}

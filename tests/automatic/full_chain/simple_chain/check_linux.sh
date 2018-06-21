@@ -8,11 +8,13 @@ beamtime_id=asapo_test
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
 
-receiver_folder=/tmp/asapo/receiver/files/${beamtime_id}
+beamline=test
+receiver_root_folder=/tmp/asapo/receiver/files
+receiver_folder=${receiver_root_folder}/${beamline}/${beamtime_id}
 
 Cleanup() {
     echo cleanup
-    rm -rf ${receiver_folder}
+    rm -rf ${receiver_root_folder}
     nomad stop nginx
     nomad stop receiver
     nomad stop discovery

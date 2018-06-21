@@ -217,5 +217,19 @@ TEST_F(RequestTests, GetFileName) {
     ASSERT_THAT(fname, Eq(s));
 }
 
+TEST_F(RequestTests, SetGetBeamtimeId) {
+    request->SetBeamtimeId("beamtime");
+
+    ASSERT_THAT(request->GetBeamtimeId(), "beamtime");
+}
+
+
+TEST_F(RequestTests, SetGetBeamline) {
+    request->SetBeamline("beamline");
+
+    ASSERT_THAT(request->GetBeamline(), "beamline");
+}
+
+
 
 }

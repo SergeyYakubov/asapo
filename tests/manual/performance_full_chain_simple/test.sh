@@ -7,7 +7,7 @@ trap Cleanup EXIT
 #clean-up
 Cleanup() {
 set +e
-ssh ${receiver_node} rm -f ${receiver_dir}/files/${beamtime_id}/*
+ssh ${receiver_node} rm -f ${receiver_dir}/files/${beamline}/${beamtime_id}/*
 ssh ${receiver_node} killall receiver
 ssh ${receiver_node} killall asapo-discovery
 ssh ${receiver_node} killall asapo-authorizer
@@ -16,6 +16,7 @@ ssh ${broker_node} docker rm -f -v mongo
 }
 
 beamtime_id=asapo_test
+beamline=test
 
 
 #monitoring_setup
@@ -38,7 +39,7 @@ echo filesize: ${file_size}K, filenum: $file_num
 receiver_node=max-wgs
 receiver_port=4201
 receiver_dir=/gpfs/petra3/scratch/yakubov/receiver_tests
-ssh ${receiver_node} mkdir -p ${receiver_dir}/files/${beamtime_id}
+ssh ${receiver_node} mkdir -p ${receiver_dir}/files/${beamline}/${beamtime_id}
 scp ../../../cmake-build-release/receiver/receiver ${receiver_node}:${receiver_dir}
 cat receiver.json |
   jq "to_entries |

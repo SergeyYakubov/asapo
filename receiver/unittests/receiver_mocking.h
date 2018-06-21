@@ -53,9 +53,11 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetDataID, uint64_t());
     MOCK_CONST_METHOD0(GetData, const asapo::FileData & ());
     MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
+    MOCK_CONST_METHOD0(GetBeamline, const std::string & ());
     MOCK_CONST_METHOD0(GetOpCode, asapo::Opcode ());
     MOCK_CONST_METHOD0(GetMessage, const char* ());
     MOCK_METHOD1(SetBeamtimeId, void (std::string));
+    MOCK_METHOD1(SetBeamline, void (std::string));
 };
 
 

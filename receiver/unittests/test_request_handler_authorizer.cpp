@@ -15,7 +15,6 @@
 #include "receiver_mocking.h"
 
 #include "../src/receiver_config.h"
-#include "mock_receiver_config.h"
 
 
 using ::testing::Test;
@@ -65,6 +64,7 @@ class AuthorizerHandlerTests : public Test {
 
     NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_beamtime_id = "beamtime_id";
+    std::string expected_beamline = "beamline";
     std::string expected_producer_uri = "producer_uri";
     std::string expected_authorization_server = "authorizer_host";
     std::string expect_request_string = std::string("{\"BeamtimeId\":\"") + expected_beamtime_id + "\",\"OriginHost\":\"" +
@@ -101,7 +101,7 @@ class AuthorizerHandlerTests : public Test {
             WillOnce(
                 DoAll(SetArgPointee<3>(nullptr),
                       SetArgPointee<2>(code),
-                      Return(expected_beamtime_id)
+                      Return("{\"BeamtimeId\":\"" + expected_beamtime_id + "\",\"Beamline\":" + "\"" + expected_beamline + "\"}")
                      ));
             if (code != HttpCode::OK) {
                 EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
@@ -133,6 +133,7 @@ class AuthorizerHandlerTests : public Test {
         ;
         if (!error && code == HttpCode::OK) {
             EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
+            EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
         }
 
         MockAuthRequest(error, code);
@@ -225,6 +226,7 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeUsesCachedValue) {
     .WillOnce(Return(asapo::kOpcodeTransferData));
     EXPECT_CALL(mock_http_client, Post_t(_, _, _, _)).Times(0);
     EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
+    EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
 
     auto err =  handler.ProcessRequest(mock_request.get());
 
