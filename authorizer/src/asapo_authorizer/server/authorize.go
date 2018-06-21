@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	log "asapo_common/logger"
-	"github.com/pkg/errors"
+	"errors"
 )
 
 type authorizationRequest struct {
