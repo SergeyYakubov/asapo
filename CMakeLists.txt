@@ -70,6 +70,8 @@ add_subdirectory(discovery)
 
 add_subdirectory(authorizer)
 
+add_subdirectory(asapo_tools)
+
 
 if(BUILD_INTEGRATION_TESTS)
     add_subdirectory(tests)
