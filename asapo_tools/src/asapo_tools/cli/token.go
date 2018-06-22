@@ -13,13 +13,8 @@ type tokenFlags struct {
 }
 
 func generateToken(id string,secret string) string {
-	jwt := utils.NewJWTAuth(secret)
-	load := utils.JobClaim{id}
-
-	var c utils.CustomClaims
-	c.ExtraClaims = &load
-
-	token,err := jwt.GenerateToken(&c)
+	hmac := utils.NewHMACAuth(secret)
+	token,err := hmac.GenerateToken(&id)
 
 	if (err!=nil) {
 		fmt.Println(err.Error())

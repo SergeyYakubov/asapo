@@ -17,8 +17,7 @@ var tokenTests = []struct {
 	{command{args: []string{"beamtime_id"}},  "secret", "no secret parameter"},
 	{command{args: []string{"-secret","secret.tmp"}},  "beamtime id", "no file"},
 	{command{args: []string{"-secret","not_existing_file","beamtime_id"}},  "not_existing_file", "no file"},
-	{command{args: []string{"-secret","secret.tmp","beamtime_id"}},  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
-		"eyJFeHRyYUNsYWltcyI6eyJCZWFtdGltZUlkIjoiYmVhbXRpbWVfaWQifX0.OEYaJfOL6-0yY7B7zW73l372ZnR9GF2IUYMLuDQtmSo", "no file"},
+	{command{args: []string{"-secret","secret.tmp","beamtime_id"}},  "eodk3s5ZXwACLGyVA63MZYcOTWuWE4bceI9Vxl9zejI=", "no file"},
 }
 
 func TestParseTokenFlags(t *testing.T) {

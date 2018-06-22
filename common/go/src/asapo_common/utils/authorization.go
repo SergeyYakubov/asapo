@@ -7,6 +7,9 @@ import (
 	"strings"
 	"context"
 	"github.com/dgrijalva/jwt-go"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 )
 
 type AuthorizationRequest struct {
@@ -170,3 +173,65 @@ func JobClaimFromContext(r *http.Request, val interface{}) error {
 	return MapToStruct(claim.ExtraClaims.(map[string]interface{}), val)
 }
 
+type HMACAuth struct {
+	Key string
+}
+
+func NewHMACAuth(key string) *HMACAuth {
+	a := HMACAuth{key}
+	return &a
+}
+
+func generateHMACToken(value string, key string) string {
+	mac := hmac.New(sha256.New, []byte(key))
+	mac.Write([]byte(value))
+
+	return base64.URLEncoding.EncodeToString(mac.Sum(nil))
+}
+
+func (h HMACAuth) GenerateToken(val ...interface{}) (string, error) {
+	if len(val) != 1 {
+		return "", errors.New("Wrong claims")
+	}
+	value, ok := val[0].(*string)
+	if !ok {
+		return "", errors.New("Wrong claims")
+	}
+
+	sha := generateHMACToken(*value, h.Key)
+	return sha, nil
+}
+
+func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		authType, token, err := ExtractAuthInfo(r)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+	// todo extract beamline from request
+		value := "beamline"
+		if authType == "HMAC-SHA-256" {
+			if !checkHMACToken(value, token, key) {
+				http.Error(w, "Internal authorization error - tocken does not match", http.StatusUnauthorized)
+				return
+			}
+		} else {
+			http.Error(w, "Internal authorization error - wrong auth type", http.StatusUnauthorized)
+			return
+		}
+		fn(w, r)
+	}
+}
+
+func checkHMACToken(value string, token, key string) bool {
+
+	if token == "" {
+		return false
+	}
+
+	generated_token := generateHMACToken(value, key)
+	return token == generated_token
+}
