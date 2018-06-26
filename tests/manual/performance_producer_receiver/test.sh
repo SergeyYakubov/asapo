@@ -93,7 +93,7 @@ for size  in 100 1000 10000
 do
 ssh ${service_node} docker run -d -p 27017:27017 --name mongo mongo
 echo ===================================================================
-ssh ${worker_node} ${worker_dir}/dummy-data-producer ${service_ip}:8400 ${beamtime_id} ${size} 1000 8 0 100
+ssh ${worker_node} ${worker_dir}/dummy-data-producer ${service_ip}:8400 ${beamtime_id} ${size} 10000 8 0 100
 if [ "$1" == "true" ]
 then
     ssh ${service_node} rm -f ${service_dir}/files/${beamline}/${beamtime_id}/*
