@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 database_name=test_run
+token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
 set -e
 
@@ -23,5 +24,7 @@ do
 	echo 'db.data.insert({"_id":'$i',"size":100,"name":"'$i'","lastchange":1})' | mongo ${database_name}
 done
 
-$@ 127.0.0.1:8400 $database_name 2 | grep "Processed 3 file(s)"
+$@ 127.0.0.1:8400 $database_name 2 $token_test_run | grep "Processed 3 file(s)"
+
+
 

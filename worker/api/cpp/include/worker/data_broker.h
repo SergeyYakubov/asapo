@@ -21,6 +21,7 @@ auto const kNotFound = "Uri not found";
 auto const kPermissionDenied = "Permissionn Denied";
 auto const kNoData = "No Data";
 auto const kWrongInput = "Wrong Input";
+auto const kAuthorizationError = "authorization error";
 auto const kInternalError = "Internal Error";
 auto const kUnknownIOError = "Unknown IO Error";
 }
@@ -47,8 +48,8 @@ class DataBrokerFactory {
   public:
     static std::unique_ptr<DataBroker> CreateFolderBroker(const std::string& source_name,
             Error* error) noexcept;
-    static std::unique_ptr<DataBroker> CreateServerBroker(const std::string& server_name,
-            const std::string& source_name,
+    static std::unique_ptr<DataBroker> CreateServerBroker(std::string server_name,
+            std::string beamtime_id, std::string token,
             Error* error) noexcept;
 
 };

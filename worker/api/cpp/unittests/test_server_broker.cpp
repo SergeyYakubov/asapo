@@ -38,12 +38,12 @@ using testing::AllOf;
 namespace {
 
 TEST(FolderDataBroker, SetCorrectIo) {
-    auto data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "dbname")};
+    auto data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "beamtime_id", "token")};
     ASSERT_THAT(dynamic_cast<asapo::SystemIO*>(data_broker->io__.get()), Ne(nullptr));
 }
 
 TEST(FolderDataBroker, SetCorrectHttpClient) {
-    auto data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "dbname")};
+    auto data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "beamtime_id", "token")};
     ASSERT_THAT(dynamic_cast<asapo::CurlHttpClient*>(data_broker->httpclient__.get()), Ne(nullptr));
 }
 
@@ -56,9 +56,10 @@ class ServerDataBrokerTests : public Test {
     FileInfo info;
     std::string expected_server_uri = "test:8400";
     std::string expected_broker_uri = "broker:5005";
+    std::string expected_token = "token";
 
     void SetUp() override {
-        data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker(expected_server_uri, "dbname")};
+        data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker(expected_server_uri, "beamtime_id", expected_token)};
         data_broker->io__ = std::unique_ptr<IO> {&mock_io};
         data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
     }
@@ -97,17 +98,17 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsErrorOnWrongInput) {
 TEST_F(ServerDataBrokerTests, GetNextUsesCorrectUri) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/dbname/next", _, _)).WillOnce(DoAll(
-                SetArgPointee<1>(HttpCode::OK),
-                SetArgPointee<2>(nullptr),
-                Return("")));
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/next?token=" + expected_token, _,
+                                        _)).WillOnce(DoAll(
+                                                SetArgPointee<1>(HttpCode::OK),
+                                                SetArgPointee<2>(nullptr),
+                                                Return("")));
     data_broker->GetNext(&info, nullptr);
 }
 
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClient) {
     MockGetBrokerUri();
-
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
                 SetArgPointee<1>(HttpCode::Conflict),
@@ -119,6 +120,21 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClient) {
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(err->Explain(), HasSubstr("timeout"));
 }
+
+TEST_F(ServerDataBrokerTests, GetNextReturnsNotAuthorized) {
+    MockGetBrokerUri();
+
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
+                SetArgPointee<1>(HttpCode::Unauthorized),
+                SetArgPointee<2>(nullptr),
+                Return("")));
+
+    auto err = data_broker->GetNext(&info, nullptr);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err->Explain(), HasSubstr("authorization"));
+}
+
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsWrongResponseFromHttpClient) {
 
@@ -186,7 +202,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClientUntilTimeout) {
                 SetArgPointee<2>(nullptr),
                 Return("{\"id\":1}")));
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/dbname/1", _,
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/1?token=" + expected_token, _,
                                         _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::Conflict),
                                                     SetArgPointee<2>(nullptr),

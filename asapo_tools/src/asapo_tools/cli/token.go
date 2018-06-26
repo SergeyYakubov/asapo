@@ -37,14 +37,12 @@ func (cmd *command) CommandToken() error {
 		return err
 	}
 
-	strings, err := utils.ReadStringsFromFile(flags.SecretFile)
+	secret, err := utils.ReadFirstStringFromFile(flags.SecretFile)
 	if err !=nil  {
 		return err
 	}
 
-
-
-	fmt.Fprintf(outBuf, "%s\n", generateToken(flags.BeamtimeID,strings[0]))
+	fmt.Fprintf(outBuf, "%s\n", generateToken(flags.BeamtimeID,secret))
 
 	return nil
 }

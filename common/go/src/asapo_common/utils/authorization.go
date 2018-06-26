@@ -182,6 +182,11 @@ func NewHMACAuth(key string) *HMACAuth {
 	return &a
 }
 
+func (a *HMACAuth) Name() string {
+	return "Bearer"
+}
+
+
 func generateHMACToken(value string, key string) string {
 	mac := hmac.New(sha256.New, []byte(key))
 	mac.Write([]byte(value))

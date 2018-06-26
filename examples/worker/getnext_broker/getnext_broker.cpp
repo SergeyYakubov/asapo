@@ -12,6 +12,13 @@
 using std::chrono::high_resolution_clock;
 using asapo::Error;
 
+struct Params {
+    std::string server;
+    std::string beamtime_id;
+    std::string token;
+    int nthreads;
+};
+
 void WaitThreads(std::vector<std::thread>* threads) {
     for (auto& thread : *threads) {
         thread.join();
@@ -28,12 +35,11 @@ int ProcessError(const Error& err) {
     return 0;
 }
 
-std::vector<std::thread> StartThreads(const std::string& server, const std::string& run_name, int nthreads,
-                                      std::vector<int>* nfiles, std::vector<int>* errors) {
-    auto exec_next = [server, run_name, nfiles, errors](int i) {
+std::vector<std::thread> StartThreads(const Params& params, std::vector<int>* nfiles, std::vector<int>* errors) {
+    auto exec_next = [&params, nfiles, errors](int i) {
         asapo::FileInfo fi;
         Error err;
-        auto broker = asapo::DataBrokerFactory::CreateServerBroker(server, run_name, &err);
+        auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.beamtime_id, params.token, &err);
         broker->SetTimeout(10000);
         while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             (*nfiles)[i] ++;
@@ -42,24 +48,25 @@ std::vector<std::thread> StartThreads(const std::string& server, const std::stri
     };
 
     std::vector<std::thread> threads;
-    for (int i = 0; i < nthreads; i++) {
+    for (int i = 0; i < params.nthreads; i++) {
         threads.emplace_back(std::thread(exec_next, i));
     }
     return threads;
 }
 
-int ReadAllData(const std::string& server, const std::string& run_name, int nthreads, uint64_t* duration_ms) {
+int ReadAllData(const Params& params, uint64_t* duration_ms) {
     asapo::FileInfo fi;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-    std::vector<int>nfiles(nthreads, 0);
-    std::vector<int>errors(nthreads, 0);
+    std::vector<int>nfiles(params.nthreads, 0);
+    std::vector<int>errors(params.nthreads, 0);
 
-    auto threads = StartThreads(server, run_name, nthreads, &nfiles, &errors);
+    auto threads = StartThreads(params, &nfiles, &errors);
     WaitThreads(&threads);
 
     int n_total = std::accumulate(nfiles.begin(), nfiles.end(), 0);
     int errors_total = std::accumulate(errors.begin(), errors.end(), 0);
+
     if (errors_total) {
         exit(EXIT_FAILURE);
     }
@@ -71,17 +78,18 @@ int ReadAllData(const std::string& server, const std::string& run_name, int nthr
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 4) {
-        std::cout << "Usage: " + std::string{argv[0]} +" <server> <run_name> <nthreads>" << std::endl;
+    if (argc != 5) {
+        std::cout << "Usage: " + std::string{argv[0]} +" <server> <run_name> <nthreads> <token>" << std::endl;
         exit(EXIT_FAILURE);
     }
-    std::string server = std::string{argv[1]};
-    std::string run_name = std::string{argv[2]};
-    int nthreads = atoi(argv[3]);
-
+    Params params;
+    params.server = std::string{argv[1]};
+    params.beamtime_id = std::string{argv[2]};
+    params.nthreads = atoi(argv[3]);
+    params.token = std::string{argv[4]};
 
     uint64_t duration_ms;
-    auto nfiles = ReadAllData(server, run_name, nthreads, &duration_ms);
+    auto nfiles = ReadAllData(params, &duration_ms);
 
     std::cout << "Processed " << nfiles << " file(s)" << std::endl;
     std::cout << "Elapsed : " << duration_ms << "ms" << std::endl;

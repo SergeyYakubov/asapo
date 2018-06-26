@@ -31,6 +31,11 @@ func routeGetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := testAuth(r, db_name); err != nil {
+		writeAuthAnswer(w, "get id", db_name, err.Error())
+		return
+	}
+
 	answer, code := getRecordByID(db_name, id)
 	w.WriteHeader(code)
 	w.Write(answer)

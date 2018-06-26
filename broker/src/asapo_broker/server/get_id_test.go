@@ -28,6 +28,7 @@ type GetIDTestSuite struct {
 }
 
 func (suite *GetIDTestSuite) SetupTest() {
+	prepareTestAuth()
 	statistics.Reset()
 	suite.mock_db = new(database.MockedDatabase)
 	db = suite.mock_db
@@ -46,29 +47,29 @@ func TestGetIDTestSuite(t *testing.T) {
 }
 
 func (suite *GetIDTestSuite) TestGetIDWithWrongDatabaseName() {
-	suite.mock_db.On("GetRecordByID", "foo", 1).Return([]byte(""),
+	suite.mock_db.On("GetRecordByID", expectedBeamtimeId, 1).Return([]byte(""),
 		&database.DBError{utils.StatusWrongInput, ""})
 
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("get id request in foo")))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("get id request in")))
 
-	w := doRequest("/database/foo/1")
+	w := doRequest("/database/" + expectedBeamtimeId + "/1" + correctTokenSuffix)
 
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong database name")
 }
 
 func (suite *GetIDTestSuite) TestGetIDWithInternalDBError() {
-	suite.mock_db.On("GetRecordByID", "foo", 1).Return([]byte(""), errors.New(""))
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("get id request in foo")))
+	suite.mock_db.On("GetRecordByID", expectedBeamtimeId, 1).Return([]byte(""), errors.New(""))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("get id request in")))
 
-	w := doRequest("/database/foo/1")
+	w := doRequest("/database/" + expectedBeamtimeId + "/1" + correctTokenSuffix)
 	suite.Equal(http.StatusInternalServerError, w.Code, "internal error")
 }
 
 func (suite *GetIDTestSuite) TestGetIDOK() {
-	suite.mock_db.On("GetRecordByID", "dbname", 1).Return([]byte("Hello"), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("get id request in dbname")))
+	suite.mock_db.On("GetRecordByID", expectedBeamtimeId, 1).Return([]byte("Hello"), nil)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("get id request in")))
 
-	w := doRequest("/database/dbname/1")
+	w := doRequest("/database/" + expectedBeamtimeId + "/1" + correctTokenSuffix)
 	suite.Equal(http.StatusOK, w.Code, "GetID OK")
 	suite.Equal("Hello", string(w.Body.Bytes()), "GetID sends data")
 }

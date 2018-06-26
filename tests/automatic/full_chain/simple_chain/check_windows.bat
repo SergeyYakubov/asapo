@@ -5,6 +5,8 @@ SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\%beamline%\%beamtime_id%"
 
 
+"%3" token -secret broker_secret.key %beamtime_id% > token
+set /P token=< token
 
 set proxy_address="127.0.0.1:8400"
 
@@ -24,7 +26,7 @@ start /B "" "%1" %proxy_address% %beamtime_id% 100 1000 4 0 100
 ping 1.0.0.0 -n 1 -w 100 > nul
 
 REM worker
-"%2" %proxy_address% %beamtime_id% 2 | findstr /c:"Processed 1000 file(s)"  || goto :error
+"%2" %proxy_address% %beamtime_id% 2 %token% | findstr /c:"Processed 1000 file(s)"  || goto :error
 
 
 goto :clean
@@ -40,6 +42,7 @@ c:\opt\consul\nomad stop broker
 c:\opt\consul\nomad stop authorizer
 c:\opt\consul\nomad stop nginx
 rmdir /S /Q %receiver_root_folder%
+del /f token
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%
 
 

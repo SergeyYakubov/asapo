@@ -5,6 +5,8 @@ set -e
 trap Cleanup EXIT
 
 beamtime_id=asapo_test
+token=`$3 token -secret broker_secret.key $beamtime_id`
+
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
 
@@ -42,4 +44,4 @@ $1 localhost:8400 ${beamtime_id} 100 1000 4 0 100 &
 #producerid=`echo $!`
 
 
-$2 ${proxy_address} ${beamtime_id} 2 | grep "Processed 1000 file(s)"
+$2 ${proxy_address} ${beamtime_id} 2 $token | grep "Processed 1000 file(s)"

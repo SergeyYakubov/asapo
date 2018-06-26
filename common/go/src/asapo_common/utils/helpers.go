@@ -4,6 +4,7 @@ import (
 	json "encoding/json"
 	"io/ioutil"
 	"strings"
+	"errors"
 )
 
 func StringInSlice(a string, list []string) bool {
@@ -48,6 +49,21 @@ func ReadStringsFromFile(fname string) ([]string, error) {
 
 	return lines,nil
 }
+
+
+func ReadFirstStringFromFile(fname string) (string, error) {
+	lines,err  := ReadStringsFromFile(fname)
+	if err != nil {
+		return "",err
+	}
+
+	if len(lines)==0 {
+		return "",errors.New("empty file")
+	}
+
+	return lines[0],nil
+}
+
 
 func MapToStruct(m map[string]interface{}, val interface{}) error {
 	tmp, err := json.Marshal(m)

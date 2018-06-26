@@ -15,7 +15,10 @@ Cleanup() {
 
 influx -execute "create database ${database_name}"
 
-$@ -config settings.json &
+token=`$2 token -secret broker_secret.key data`
+
+
+$1 -config settings.json &
 
 sleep 0.3
 
@@ -23,7 +26,7 @@ brokerid=`echo $!`
 
 for i in `seq 1 50`;
 do
-    curl --silent 127.0.0.1:5005/database/data/next >/dev/null 2>&1 &
+    curl --silent 127.0.0.1:5005/database/data/next?token=$token >/dev/null 2>&1 &
 done
 
 

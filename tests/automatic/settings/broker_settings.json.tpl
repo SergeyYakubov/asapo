@@ -3,5 +3,6 @@
   "MonitorDbAddress": "localhost:8086",
   "MonitorDbName": "db_test",
   "port":{{ env "NOMAD_PORT_broker" }},
-  "LogLevel":"info"
+  "LogLevel":"info",
+  "SecretFile":"broker_secret.key"
 }
