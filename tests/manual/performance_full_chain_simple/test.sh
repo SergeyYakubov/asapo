@@ -31,8 +31,8 @@ log_dir=~/fullchain_tests/logs
 # runs producer with various file sizes from $producer_node and measures performance
 
 file_size=10000
-#file_num=$((10000000 / $file_size))
-file_num=$((100000 / $file_size))
+file_num=$((10000000 / $file_size))
+#file_num=$((100000 / $file_size))
 echo filesize: ${file_size}K, filenum: $file_num
 
 # receiver_setup
@@ -112,6 +112,8 @@ worker_node=max-display002
 worker_dir=~/fullchain_tests
 nthreads=16
 scp ../../../cmake-build-release/examples/worker/getnext_broker/getnext_broker ${worker_node}:${worker_dir}
+scp ../../../cmake-build-release/asapo_tools/asapo ${worker_node}:${worker_dir}
+scp ../../../tests/automatic/settings/broker_secret.key ${worker_node}:${worker_dir}/broker_secret.key
 
 #monitoring_start
 ssh ${monitor_node} influx -execute \"create database db_test\"
@@ -142,7 +144,9 @@ ssh ${producer_node} "bash -c 'cd ${producer_dir}; nohup ./dummy-data-producer $
 
 sleep 1
 
+#prepare token
+ssh ${worker_node} "bash -c '${worker_dir}/asapo token -secret ${worker_dir}/broker_secret.key ${beamtime_id} >${worker_dir}/token'"
 #worker_start
-ssh ${worker_node} ${worker_dir}/getnext_broker ${receiver_node}:8400 ${beamtime_id} ${nthreads}
+ssh ${worker_node} "bash -c '${worker_dir}/getnext_broker ${receiver_node}:8400 ${beamtime_id} ${nthreads} \`cat ${worker_dir}/token\`'"
 
 
