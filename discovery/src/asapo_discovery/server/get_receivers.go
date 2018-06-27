@@ -2,7 +2,7 @@ package server
 
 import (
 	"net/http"
-	"asapo_discovery/logger"
+	"asapo_common/logger"
 	"errors"
 )
 

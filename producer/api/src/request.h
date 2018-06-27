@@ -7,6 +7,7 @@
 namespace asapo {
 
 struct Request {
+    std::string beamtime_id;
     GenericRequestHeader header;
     const void* data;
     RequestCallback callback;

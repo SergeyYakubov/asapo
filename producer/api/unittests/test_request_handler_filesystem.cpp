@@ -52,13 +52,13 @@ class RequestHandlerFilesystemTests : public testing::Test {
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_file_name};
     bool called = false;
     asapo::GenericRequestHeader callback_header;
-    asapo::Request request{header, expected_data_pointer, [this](asapo::GenericRequestHeader header, asapo::Error err) {
+    asapo::Request request{"", header, expected_data_pointer, [this](asapo::GenericRequestHeader header, asapo::Error err) {
         called = true;
         callback_err = std::move(err);
         callback_header = header;
     }};
 
-    asapo::Request request_nocallback{header, expected_data_pointer, nullptr};
+    asapo::Request request_nocallback{"", header, expected_data_pointer, nullptr};
     testing::NiceMock<asapo::MockLogger> mock_logger;
 
     asapo::RequestHandlerFilesystem request_handler{expected_destination, expected_thread_id};
@@ -131,7 +131,7 @@ TEST_F(RequestHandlerFilesystemTests, TransferOK) {
     ASSERT_THAT(callback_header.data_size, Eq(header.data_size));
     ASSERT_THAT(callback_header.op_code, Eq(header.op_code));
     ASSERT_THAT(callback_header.data_id, Eq(header.data_id));
-    ASSERT_THAT(std::string{callback_header.file_name}, Eq(std::string{header.file_name}));
+    ASSERT_THAT(std::string{callback_header.message}, Eq(std::string{header.message}));
 }
 
 

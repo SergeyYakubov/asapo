@@ -4,10 +4,12 @@
 # reads fileset into database
 # calls getnext_broker example from $worker_node
 
-nthreads=16
+nthreads=1
 # a directory with many files in it
 dir=/gpfs/petra3/scratch/yakubov/test
-run_name=test
+run_name=test_run
+token=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
+
 service_node=max-wgs
 
 monitor_node=zitpcx27016
@@ -42,6 +44,11 @@ ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./asapo-discovery -config
 
 
 scp settings_tmp.json ${service_node}:${service_dir}/settings.json
+
+scp ../../../tests/automatic/settings/broker_secret.key ${service_node}:${service_dir}/broker_secret.key
+
+
+
 rm settings_tmp.json
 scp ../../../cmake-build-release/broker/asapo-broker ${service_node}:${service_dir}
 ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./asapo-broker -config settings.json &> ${service_dir}/broker.log &'"
@@ -52,7 +59,7 @@ ssh ${worker_node} ${worker_dir}/folder2db -n ${nthreads} ${dir} ${run_name} ${s
 sleep 3
 
 scp ../../../cmake-build-release/examples/worker/getnext_broker/getnext_broker ${worker_node}:${worker_dir}
-ssh ${worker_node} ${worker_dir}/getnext_broker ${service_node}:8400 ${run_name} ${nthreads}
+ssh ${worker_node} ${worker_dir}/getnext_broker ${service_node}:8400 ${run_name} ${nthreads} $token
 
 
 

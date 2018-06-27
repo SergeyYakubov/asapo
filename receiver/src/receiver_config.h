@@ -11,9 +11,10 @@ struct ReceiverConfig {
     std::string monitor_db_uri;
     std::string monitor_db_name;
     std::string broker_db_uri;
-    std::string broker_db_name;
     std::string root_folder;
     uint64_t listen_port = 0;
+    std::string authorization_server;
+    uint64_t authorization_interval_ms = 0;
     bool write_to_disk = false;
     bool write_to_db = false;
     LogLevel log_level = LogLevel::Info;

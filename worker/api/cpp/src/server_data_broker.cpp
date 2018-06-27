@@ -20,6 +20,9 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
     case HttpCode::BadRequest:
         message = WorkerErrorMessage::kWrongInput;
         break;
+    case HttpCode::Unauthorized:
+        message = WorkerErrorMessage::kAuthorizationError;
+        break;
     case HttpCode::InternalServerError:
         message = WorkerErrorMessage::kErrorReadingSource;
         break;
@@ -36,10 +39,11 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
     return Error{new HttpError(message, code)};
 }
 
-ServerDataBroker::ServerDataBroker(const std::string& server_uri,
-                                   const std::string& source_name) :
+ServerDataBroker::ServerDataBroker(std::string server_uri,
+                                   std::string source_name,
+                                   std::string token) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
-    server_uri_{server_uri}, source_name_{source_name} {
+    server_uri_{std::move(server_uri)}, source_name_{std::move(source_name)}, token_{std::move(token)} {
 }
 
 Error ServerDataBroker::Connect() {
@@ -75,10 +79,14 @@ void ServerDataBroker::ProcessServerError(Error* err, const std::string& respons
     return;
 }
 
+std::string ServerDataBroker::RequestWithToken(std::string uri) {
+    return std::move(uri) + "?token=" + token_;
+}
+
 Error ServerDataBroker::ProcessRequest(std::string* response, std::string request_uri) {
     Error err;
     HttpCode code;
-    *response = httpclient__->Get(request_uri, &code, &err);
+    *response = httpclient__->Get(RequestWithToken(request_uri), &code, &err);
     if (err != nullptr) {
         return err;
     }

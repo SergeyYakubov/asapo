@@ -123,3 +123,6 @@ doxygen
 #GO
 broker/pkg
 discovery/pkg
+common/go/pkg
+authorizer/pkg
+asapo_tools/pkg

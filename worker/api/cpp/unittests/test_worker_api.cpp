@@ -39,14 +39,13 @@ TEST_F(DataBrokerFactoryTests, FailCreateDataSourceWithEmptySource) {
 
     auto data_broker = DataBrokerFactory::CreateFolderBroker("", &error);
 
-//    ASSERT_THAT(error->Explain(), Eq(WorkerErrorMessage::kEmptyDatasource));
     ASSERT_THAT(error->Explain(), Eq("Empty Data Source"));
     ASSERT_THAT(data_broker.get(), Eq(nullptr));
 }
 
 TEST_F(DataBrokerFactoryTests, CreateServerDataSource) {
 
-    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "database", &error);
+    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "beamtime_id", "token", &error);
 
     ASSERT_THAT(error, Eq(nullptr));
     ASSERT_THAT(dynamic_cast<ServerDataBroker*>(data_broker.get()), Ne(nullptr));

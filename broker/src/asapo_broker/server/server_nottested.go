@@ -3,9 +3,9 @@
 package server
 
 import (
+	log "asapo_common/logger"
+	"asapo_common/utils"
 	"errors"
-	log "asapo_broker/logger"
-	"asapo_broker/utils"
 	"net/http"
 	"strconv"
 )
@@ -21,6 +21,14 @@ func Start() {
 	mux := utils.NewRouter(listRoutes)
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
+}
+
+func createAuth() (utils.Auth, error) {
+	secret, err := utils.ReadFirstStringFromFile(settings.SecretFile)
+	if err != nil {
+		return nil, err
+	}
+	return utils.NewHMACAuth(secret), nil
 }
 
 func ReadConfig(fname string) (log.Level, error) {
@@ -42,6 +50,16 @@ func ReadConfig(fname string) (log.Level, error) {
 
 	if settings.MonitorDbName == "" {
 		return log.FatalLevel, errors.New("MonitorDbName not set")
+	}
+
+	if settings.SecretFile == "" {
+		return log.FatalLevel, errors.New("Secret file not set")
+	}
+
+	var err error
+	auth, err = createAuth()
+	if err != nil {
+		return log.FatalLevel, err
 	}
 
 	level, err := log.LevelFromString(settings.LogLevel)

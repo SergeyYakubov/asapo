@@ -20,8 +20,9 @@ Error ReceiverConfigFactory::SetConfigFromFile(std::string file_name) {
     (err = parser.GetBool("WriteToDisk", &config.write_to_disk)) ||
     (err = parser.GetBool("WriteToDb", &config.write_to_db)) ||
     (err = parser.GetString("BrokerDbAddress", &config.broker_db_uri)) ||
-    (err = parser.GetString("BrokerDbName", &config.broker_db_name)) ||
     (err = parser.GetString("Tag", &config.tag)) ||
+    (err = parser.GetString("AuthorizationServer", &config.authorization_server)) ||
+    (err = parser.GetUInt64("AuthorizationInterval", &config.authorization_interval_ms)) ||
     (err = parser.GetString("RootFolder", &config.root_folder)) ||
     (err = parser.GetString("MonitorDbName", &config.monitor_db_name));
     (err = parser.GetString("LogLevel", &log_level));

@@ -1,7 +1,7 @@
 package request_handler
 
 import (
-	"asapo_discovery/utils"
+	"asapo_common/utils"
 )
 
 type StaticRequestHandler struct {

@@ -19,6 +19,7 @@ http {
     server {
         listen       {{ env "NOMAD_PORT_nginx" }};
           set $discovery_endpoint discovery.service.asapo;
+          set $authorizer_endpoint authorizer.service.asapo;
        #   set $fluentd_endpoint localhost;
           location /discovery/ {
             rewrite ^/discovery(/.*) $1 break;
@@ -28,6 +29,11 @@ http {
              # rewrite ^/logs(/.*) $1 break;
               proxy_pass http://localhost:9880/asapo;
           }
+           location /authorizer/ {
+            rewrite ^/authorizer(/.*) $1 break;
+            proxy_pass http://$authorizer_endpoint:5007$uri;
+                    }
+
 
 	location /nginx-health {
   	  return 200 "healthy\n";

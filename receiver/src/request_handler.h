@@ -10,7 +10,7 @@ class Request;
 
 class RequestHandler {
   public:
-    virtual Error ProcessRequest(const Request& request) const = 0;
+    virtual Error ProcessRequest(Request* request) const = 0;
     virtual StatisticEntity GetStatisticEntity() const  = 0;
     virtual ~RequestHandler() = default;
   private:

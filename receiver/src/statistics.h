@@ -18,6 +18,7 @@ enum StatisticEntity : int {
     kDatabase = 0,
     kDisk,
     kNetwork,
+    kAuthorizer
 };
 
 struct StatisticsToSend {

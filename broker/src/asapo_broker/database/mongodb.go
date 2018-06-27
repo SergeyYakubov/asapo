@@ -3,7 +3,7 @@
 package database
 
 import (
-	"asapo_broker/utils"
+	"asapo_common/utils"
 	"encoding/json"
 	"errors"
 	"gopkg.in/mgo.v2"

@@ -11,7 +11,6 @@ std::unique_ptr<DataBroker> Create(const std::string& source_name,
                                    Args&& ... args) noexcept {
     if (source_name.empty()) {
         error->reset(new SimpleError("Empty Data Source"));
-        //*return_code = WorkerErrorMessage::kEmptyDatasource;
         return nullptr;
     }
 
@@ -21,7 +20,6 @@ std::unique_ptr<DataBroker> Create(const std::string& source_name,
         error->reset(nullptr);
     } catch (...) {         // we do not test this part
         error->reset(new SimpleError("Memory error"));
-//       *return_code = WorkerErrorMessage::kMemoryError;
     }
 
     return p;
@@ -33,10 +31,10 @@ std::unique_ptr<DataBroker> DataBrokerFactory::CreateFolderBroker(const std::str
     return Create<FolderDataBroker>(source_name, error);
 };
 
-std::unique_ptr<DataBroker> DataBrokerFactory::CreateServerBroker(const std::string& server_name,
-        const std::string& source_name,
+std::unique_ptr<DataBroker> DataBrokerFactory::CreateServerBroker(std::string server_name,
+        std::string beamtime_id, std::string token,
         Error* error) noexcept {
-    return Create<ServerDataBroker>(server_name, error, source_name);
+    return Create<ServerDataBroker>(std::move(server_name), error, std::move(beamtime_id), std::move(token));
 }
 
 

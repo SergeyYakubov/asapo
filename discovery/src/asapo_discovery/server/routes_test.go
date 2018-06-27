@@ -3,8 +3,8 @@ package server
 import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"asapo_discovery/logger"
-	"asapo_discovery/utils"
+	"asapo_common/logger"
+	"asapo_common/utils"
 	"net/http"
 	"net/http/httptest"
 	"strings"

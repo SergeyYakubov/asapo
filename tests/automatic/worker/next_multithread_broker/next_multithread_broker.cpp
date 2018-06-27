@@ -28,12 +28,13 @@ void Assert(std::vector<asapo::FileInfos> file_infos, int nthreads, int nfiles) 
 struct Args {
     std::string server;
     std::string run_name;
+    std::string token;
     int nthreads;
     int nfiles;
 };
 
 Args GetArgs(int argc, char* argv[]) {
-    if (argc != 5) {
+    if (argc != 6) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -41,12 +42,14 @@ Args GetArgs(int argc, char* argv[]) {
     std::string source_name{argv[2]};
     int nthreads = std::stoi(argv[3]);
     int nfiles = std::stoi(argv[4]);
-    return Args{server, source_name, nthreads, nfiles};
+    std::string token{argv[5]};
+
+    return Args{server, source_name, token, nthreads, nfiles};
 }
 
 void GetAllFromBroker(const Args& args) {
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.run_name, &err);
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.run_name, args.token, &err);
 
     std::vector<asapo::FileInfos>file_infos(args.nthreads);
     auto exec_next = [&](int i) {
@@ -54,6 +57,7 @@ void GetAllFromBroker(const Args& args) {
         while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             file_infos[i].emplace_back(fi);
         }
+        printf("%s\n", err->Explain().c_str());
     };
 
     std::vector<std::thread> threads;

@@ -1,30 +1,42 @@
 #ifndef ASAPO_REQUEST_H
 #define ASAPO_REQUEST_H
 
+#include <string>
+
 #include "receiver_error.h"
 #include "common/networking.h"
 #include "io/io.h"
 #include "request_handler.h"
 #include "request_handler_file_write.h"
 #include "request_handler_db_write.h"
+#include "request_handler_authorize.h"
+
 #include "statistics.h"
 
+#include "preprocessor/definitions.h"
 namespace asapo {
 
 using RequestHandlerList = std::vector<const RequestHandler*>;
 
 class Request {
   public:
-    virtual Error Handle(std::unique_ptr<Statistics>*);
-    virtual ~Request() = default;
-    Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd);
-    void AddHandler(const RequestHandler*);
-    const RequestHandlerList& GetListHandlers() const;
-    virtual uint64_t GetDataSize() const;
-    virtual uint64_t GetDataID() const;
-    virtual std::string GetFileName() const;
+    VIRTUAL Error Handle(Statistics*);
+    ~Request() = default;
+    Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri);
+    VIRTUAL void AddHandler(const RequestHandler*);
+    VIRTUAL const RequestHandlerList& GetListHandlers() const;
+    VIRTUAL uint64_t GetDataSize() const;
+    VIRTUAL uint64_t GetDataID() const;
+    VIRTUAL std::string GetFileName() const;
+    VIRTUAL const FileData& GetData() const;
+    VIRTUAL Opcode GetOpCode() const;
+    VIRTUAL const char* GetMessage() const;
 
-    virtual const FileData& GetData() const;
+    const std::string& GetOriginUri() const;
+    VIRTUAL const std::string& GetBeamtimeId() const;
+    VIRTUAL void SetBeamtimeId(std::string beamtime_id);
+    VIRTUAL void SetBeamline(std::string beamline);
+    VIRTUAL const std::string& GetBeamline() const;
     std::unique_ptr<IO> io__;
   private:
     Error AllocateDataBuffer();
@@ -33,15 +45,19 @@ class Request {
     const SocketDescriptor socket_fd_;
     FileData data_buffer_;
     RequestHandlerList handlers_;
+    std::string origin_uri_;
+    std::string beamtime_id_;
+    std::string beamline_;
 };
 
 class RequestFactory {
   public:
     virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
-                                                     SocketDescriptor socket_fd, Error* err) const noexcept;
+                                                     SocketDescriptor socket_fd, std::string origin_uri, Error* err) const noexcept;
   private:
     RequestHandlerFileWrite request_handler_filewrite_;
     RequestHandlerDbWrite request_handler_dbwrite_;
+    RequestHandlerAuthorize request_handler_authorize_;
 };
 
 }

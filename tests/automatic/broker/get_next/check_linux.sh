@@ -15,12 +15,16 @@ Cleanup() {
 echo "db.data.insert({"_id":2})" | mongo ${database_name}
 echo "db.data.insert({"_id":1})" | mongo ${database_name}
 
-$@ -config settings.json &
+token=`$2 token -secret broker_secret.key data`
+
+$1 -config settings.json &
 
 sleep 0.3
 brokerid=`echo $!`
 
-curl -v  --silent 127.0.0.1:5005/database/data/next --stderr - | grep '"_id":1'
-curl -v  --silent 127.0.0.1:5005/database/data/next --stderr - | grep '"_id":2'
 
-curl -v  --silent 127.0.0.1:5005/database/data/next --stderr - | grep "not found"
+
+curl -v  --silent 127.0.0.1:5005/database/data/next?token=$token --stderr - | grep '"_id":1'
+curl -v  --silent 127.0.0.1:5005/database/data/next?token=$token --stderr - | grep '"_id":2'
+
+curl -v  --silent 127.0.0.1:5005/database/data/next?token=$token --stderr - | grep "not found"

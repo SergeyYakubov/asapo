@@ -7,13 +7,18 @@ echo db.data.insert({"_id":2}) | %mongo_exe% %database_name%  || goto :error
 set full_name="%1"
 set short_name="%~nx1"
 
+"%2" token -secret broker_secret.key data > token
+set /P token=< token
+
+
+
 start /B "" "%full_name%" -config settings.json
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next --stderr - | findstr /c:\"_id\":1  || goto :error
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next --stderr - | findstr /c:\"_id\":2  || goto :error
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next --stderr - | findstr  /c:"not found"  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next?token=%token% --stderr - | findstr /c:\"_id\":1  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next?token=%token% --stderr - | findstr /c:\"_id\":2  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/next?token=%token% --stderr - | findstr  /c:"not found"  || goto :error
 
 goto :clean
 
@@ -24,3 +29,4 @@ exit /b 1
 :clean
 Taskkill /IM "%short_name%" /F
 echo db.dropDatabase() | %mongo_exe% %database_name%
+del /f token

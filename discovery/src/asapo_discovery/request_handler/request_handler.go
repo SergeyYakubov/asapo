@@ -1,6 +1,6 @@
 package request_handler
 
-import "asapo_discovery/utils"
+import "asapo_common/utils"
 
 type Agent interface {
 	GetReceivers() ([]byte, error)

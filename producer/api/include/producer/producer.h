@@ -17,7 +17,7 @@ class Producer {
      * @return A unique_ptr to a new producer instance
      */
     static std::unique_ptr<Producer> Create(const std::string& endpoint, uint8_t n_processing_threads,
-                                            asapo::RequestHandlerType type,
+                                            asapo::RequestHandlerType type, std::string beamtime_id,
                                             Error* err);
 
     virtual ~Producer() = default;
@@ -37,6 +37,8 @@ class Producer {
     virtual void EnableLocalLog(bool enable) = 0;
     //! Enables/Disables sending logs to the central server
     virtual void EnableRemoteLog(bool enable) = 0;
+    //! Set beamtime id which producer will use to send data
+    virtual Error SetBeamtimeId(std::string beamtime_id) = 0;
 };
 }
 

@@ -12,13 +12,14 @@ Error HttpCodeToWorkerError(const HttpCode& code);
 
 class ServerDataBroker final : public asapo::DataBroker {
   public:
-    explicit ServerDataBroker(const std::string& server_uri, const std::string& source_name);
+    explicit ServerDataBroker(std::string server_uri, std::string source_name, std::string token);
     Error Connect() override;
     Error GetNext(FileInfo* info, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override;
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
   private:
+    std::string RequestWithToken(std::string uri);
     Error GetFileInfoFromServer(FileInfo* info, const std::string& operation);
     Error GetBrokerUri();
     void ProcessServerError(Error* err, const std::string& response, std::string* redirect_uri);
@@ -26,6 +27,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::string server_uri_;
     std::string current_broker_uri_;
     std::string source_name_;
+    std::string token_;
     uint64_t timeout_ms_ = 0;
 };
 

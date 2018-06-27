@@ -12,6 +12,8 @@
 #include "mock_receiver_config.h"
 #include "preprocessor/definitions.h"
 
+#include "receiver_mocking.h"
+
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::ReturnRef;
@@ -37,6 +39,7 @@ using ::asapo::MockIO;
 using asapo::Request;
 using asapo::RequestHandlerFileWrite;
 using ::asapo::GenericRequestHeader;
+using asapo::MockRequest;
 
 namespace {
 
@@ -46,30 +49,21 @@ TEST(FileWrite, Constructor) {
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(handler.log__), Ne(nullptr));
 }
 
-
-class MockRequestHandler: public Request {
-  public:
-    MockRequestHandler(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-        Request(request_header, socket_fd) {};
-
-    MOCK_CONST_METHOD0(GetFileName, std::string());
-    MOCK_CONST_METHOD0(GetDataSize, uint64_t());
-    MOCK_CONST_METHOD0(GetData, const asapo::FileData & ());
-};
-
 class FileWriteHandlerTests : public Test {
   public:
     RequestHandlerFileWrite handler;
     NiceMock<MockIO> mock_io;
-    std::unique_ptr<MockRequestHandler> mock_request;
+    std::unique_ptr<MockRequest> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_file_name = "2.bin";
+    std::string expected_beamtime_id = "beamtime_id";
+    std::string expected_beamline = "beamline";
     uint64_t expected_file_size = 10;
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
-        mock_request.reset(new MockRequestHandler{request_header, 1});
+        mock_request.reset(new MockRequest{request_header, 1, ""});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }
@@ -90,7 +84,7 @@ TEST_F(FileWriteHandlerTests, ErrorWhenZeroFileSize) {
     .WillOnce(Return(0))
     ;
 
-    auto err = handler.ProcessRequest(*mock_request);
+    auto err = handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
 }
@@ -100,7 +94,7 @@ TEST_F(FileWriteHandlerTests, ErrorWhenTooBigFileSize) {
     .WillOnce(Return(asapo::kMaxFileSize + 1))
     ;
 
-    auto err = handler.ProcessRequest(*mock_request);
+    auto err = handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
 }
@@ -115,6 +109,15 @@ void FileWriteHandlerTests::MockRequestData() {
     .WillOnce(ReturnRef(data))
     ;
 
+    EXPECT_CALL(*mock_request, GetBeamtimeId())
+    .WillOnce(ReturnRef(expected_beamtime_id))
+    ;
+
+    EXPECT_CALL(*mock_request, GetBeamline())
+    .WillOnce(ReturnRef(expected_beamline))
+    ;
+
+
     EXPECT_CALL(*mock_request, GetFileName())
     .WillOnce(Return(expected_file_name))
     ;
@@ -128,14 +131,16 @@ TEST_F(FileWriteHandlerTests, CallsWriteFile) {
 
     MockRequestData();
 
-    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + expected_file_name;
+    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + expected_beamline
+                                + asapo::kPathSeparator + expected_beamtime_id
+                                + asapo::kPathSeparator + expected_file_name;
 
     EXPECT_CALL(mock_io, WriteDataToFile_t(expected_path.c_str(), _, expected_file_size))
     .WillOnce(
         Return(asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
     );
 
-    auto err = handler.ProcessRequest(*mock_request);
+    auto err = handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
@@ -150,11 +155,12 @@ TEST_F(FileWriteHandlerTests, WritesToLog) {
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("saved file"),
                                          HasSubstr(expected_file_name),
+                                         HasSubstr(expected_beamtime_id),
                                          HasSubstr(std::to_string(expected_file_size))
                                         )
                                   )
                );
-    handler.ProcessRequest(*mock_request);
+    handler.ProcessRequest(mock_request.get());
 }
 
 

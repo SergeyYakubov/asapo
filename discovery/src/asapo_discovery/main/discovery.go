@@ -4,7 +4,7 @@ package main
 
 import (
 	"flag"
-	log "asapo_discovery/logger"
+	log "asapo_common/logger"
 	"asapo_discovery/server"
 	"os"
 	"asapo_discovery/request_handler"

@@ -2,8 +2,8 @@ package server
 
 import (
 	"asapo_broker/database"
-	"asapo_broker/logger"
-	"asapo_broker/utils"
+	"asapo_common/logger"
+	"asapo_common/utils"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -21,6 +21,12 @@ func routeGetNext(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	if err := testAuth(r, db_name); err != nil {
+		writeAuthAnswer(w, "get next", db_name, err.Error())
+		return
+	}
+
 	answer, code := getNextRecord(db_name)
 	w.WriteHeader(code)
 	w.Write(answer)

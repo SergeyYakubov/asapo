@@ -11,13 +11,15 @@ namespace asapo {
 typedef uint64_t NetworkRequestId;
 
 enum Opcode : uint8_t {
-    kOpcodeUnknownOp,
+    kOpcodeUnknownOp = 1,
     kOpcodeTransferData,
+    kOpcodeAuthorize,
     kOpcodeCount,
 };
 
 enum NetworkErrorCode : uint16_t {
     kNetErrorNoError,
+    kNetAuthorizationError,
     kNetErrorFileIdAlreadyInUse,
     kNetErrorAllocateStorageFailed,
     kNetErrorInternalServerError = 65535,
@@ -25,40 +27,30 @@ enum NetworkErrorCode : uint16_t {
 
 //TODO need to use an serialization framework to ensure struct consistency on different computers
 
-/**
- * @defgroup RPC
- * RPC always return a response to a corresponding request
- * @{
- */
+const std::size_t kMaxMessageSize = 1024;
 
-const std::size_t kMaxFileNameSize = 1024;
 struct GenericRequestHeader {
     GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
-                         uint64_t i_data_size = 0, const std::string& i_file_name = ""):
+                         uint64_t i_data_size = 0, const std::string& i_message = ""):
         op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size} {
-        auto size = std::min(i_file_name.size() + 1, kMaxFileNameSize);
-        memcpy(file_name, i_file_name.c_str(), size);
+        strncpy(message, i_message.c_str(), kMaxMessageSize);
     }
     Opcode      op_code;
     uint64_t    data_id;
     uint64_t    data_size;
-    char        file_name[kMaxFileNameSize];
+    char        message[kMaxMessageSize];
 };
 
 struct GenericNetworkResponse {
     Opcode              op_code;
     NetworkRequestId    request_id;
     NetworkErrorCode    error_code;
+    char        message[kMaxMessageSize];
 };
 
-/**
- * Possible error codes:
- * - ::NET_ERR__FILENAME_ALREADY_IN_USE
- * - ::NET_ERR__ALLOCATE_STORAGE_FAILED
- */
+
 struct SendDataResponse :  GenericNetworkResponse {
 };
-/** @} */
 
 }
 

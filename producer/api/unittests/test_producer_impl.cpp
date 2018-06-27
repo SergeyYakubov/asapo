@@ -30,12 +30,13 @@ using asapo::RequestPool;
 using asapo::Request;
 
 
-MATCHER_P3(M_CheckSendDataRequest, file_id, file_size, file_name,
+MATCHER_P5(M_CheckSendDataRequest, op_code, beamtime_id, file_id, file_size, message,
            "Checks if a valid GenericRequestHeader was Send") {
-    return ((asapo::GenericRequestHeader*)arg)->op_code == asapo::kOpcodeTransferData
-           && ((asapo::GenericRequestHeader*)arg)->data_id == file_id
-           && std::string(((asapo::GenericRequestHeader*)arg)->file_name) == file_name
-           && ((asapo::GenericRequestHeader*)arg)->data_size == file_size;
+    return ((asapo::GenericRequestHeader)(arg->header)).op_code == op_code
+           && ((asapo::GenericRequestHeader)(arg->header)).data_id == file_id
+           && ((asapo::GenericRequestHeader)(arg->header)).data_size == file_size
+           && arg->beamtime_id == beamtime_id
+           && strcmp(((asapo::GenericRequestHeader)(arg->header)).message, message) == 0;
 }
 
 
@@ -68,8 +69,18 @@ TEST_F(ProducerImplTests, SendReturnsError) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
 }
 
+TEST_F(ProducerImplTests, ErrorIfFileNameTooLong) {
+    std::string long_string(asapo::kMaxMessageSize + 100, 'a');
+    auto err = producer.Send(1, nullptr, 1, long_string, nullptr);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileNameTooLong));
+}
+
+
 TEST_F(ProducerImplTests, ErrorIfSizeTooLarge) {
+    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("error checking")));
+
     auto err = producer.Send(1, nullptr, asapo::ProducerImpl::kMaxChunkSize + 1, "", nullptr);
+
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileTooLarge));
 }
 
@@ -77,18 +88,40 @@ TEST_F(ProducerImplTests, ErrorIfSizeTooLarge) {
 TEST_F(ProducerImplTests, OKSendingRequest) {
     uint64_t expected_size = 100;
     uint64_t expected_id = 10;
-    std::string expected_name = "test_name";
+    char expected_name[asapo::kMaxMessageSize] = "test_name";
+    std::string expected_beamtimeid = "beamtime_id";
 
+    producer.SetBeamtimeId(expected_beamtimeid);
+    Request request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, expected_size, expected_name}, nullptr, nullptr};
 
-    Request request{asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, expected_size, expected_name}, nullptr, nullptr};
-
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(expected_id, expected_size, expected_name))).WillOnce(Return(
-                nullptr));
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+                                        expected_beamtimeid, expected_id, expected_size, expected_name))).WillOnce(Return(
+                                                    nullptr));
 
     auto err = producer.Send(expected_id, nullptr, expected_size, expected_name, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
+
+
+TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
+    std::string expected_beamtimeid(asapo::kMaxMessageSize * 10, 'a');
+    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("too long")));
+
+    auto err = producer.SetBeamtimeId(expected_beamtimeid);
+
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kBeamtimeIdTooLong));
+}
+
+TEST_F(ProducerImplTests, ErrorSettingSecondTime) {
+    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("already")));
+
+    producer.SetBeamtimeId("1");
+    auto err = producer.SetBeamtimeId("2");
+
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kBeamtimeAlreadySet));
+}
+
 
 
 }

@@ -45,7 +45,7 @@ job "nginx" {
         check {
           name     = "alive"
           type     = "http"
-	  path     = "/nginx_health"
+	  path     = "/nginx-health"
           timeout  = "2s"
 	  interval = "10s"
         }

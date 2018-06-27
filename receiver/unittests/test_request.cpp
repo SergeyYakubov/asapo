@@ -9,7 +9,7 @@
 #include "../src/request_handler_db_write.h"
 #include "database/database.h"
 
-#include "mock_statistics.h"
+#include "receiver_mocking.h"
 #include "mock_receiver_config.h"
 
 using ::testing::Test;
@@ -48,8 +48,8 @@ namespace {
 
 class MockReqestHandler : public asapo::RequestHandler {
   public:
-    Error ProcessRequest(const Request& request) const override {
-        return Error{ProcessRequest_t(request)};
+    Error ProcessRequest(Request* request) const override {
+        return Error{ProcessRequest_t(*request)};
     }
 
     StatisticEntity GetStatisticEntity() const override {
@@ -67,15 +67,20 @@ class RequestTests : public Test {
     asapo::SocketDescriptor socket_fd_{1};
     uint64_t data_size_ {100};
     uint64_t data_id_{15};
+    std::string expected_origin_uri = "origin_uri";
+    asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
+    char expected_request_message[asapo::kMaxMessageSize] = "test message";
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;
-    std::unique_ptr<asapo::Statistics>  stat;
+    asapo::Statistics*  stat;
     void SetUp() override {
-        stat = std::unique_ptr<asapo::Statistics> {&mock_statistics};
+        stat = &mock_statistics;
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
-        request.reset(new Request{generic_request_header, socket_fd_});
+        generic_request_header.op_code = expected_op_code;
+        strcpy(generic_request_header.message, expected_request_message);
+        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
             DoAll(SetArgPointee<3>(nullptr),
@@ -84,7 +89,6 @@ class RequestTests : public Test {
     }
     void TearDown() override {
         request->io__.release();
-        stat.release();
     }
 
 };
@@ -92,12 +96,12 @@ class RequestTests : public Test {
 TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
     generic_request_header.data_size = 0;
     request->io__.release();
-    request.reset(new Request{generic_request_header, socket_fd_});
+    request.reset(new Request{generic_request_header, socket_fd_, ""});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
 
-    auto err = request->Handle(&stat);
+    auto err = request->Handle(stat);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -108,7 +112,7 @@ TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
               Return(0)
              ));
 
-    auto err = request->Handle(&stat);
+    auto err = request->Handle(stat);
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
 }
 
@@ -125,7 +129,7 @@ TEST_F(RequestTests, HandleMeasuresTimeOnDataReceive) {
 
     EXPECT_CALL(mock_statistics, StopTimer_t());
 
-    request->Handle(&stat);
+    request->Handle(stat);
 }
 
 
@@ -151,7 +155,7 @@ TEST_F(RequestTests, HandleProcessesRequests) {
     EXPECT_CALL(mock_statistics, StopTimer_t()).Times(2);
 
 
-    auto err = request->Handle(&stat);
+    auto err = request->Handle(stat);
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
@@ -164,7 +168,7 @@ TEST_F(RequestTests, DataIsNullAtInit) {
 
 TEST_F(RequestTests, GetDataIsNotNullptr) {
 
-    request->Handle(&stat);
+    request->Handle(stat);
     auto& data = request->GetData();
 
 
@@ -179,6 +183,25 @@ TEST_F(RequestTests, GetDataID) {
     ASSERT_THAT(id, Eq(data_id_));
 }
 
+TEST_F(RequestTests, GetOpCode) {
+    auto code = request->GetOpCode();
+
+    ASSERT_THAT(code, Eq(expected_op_code));
+}
+
+
+TEST_F(RequestTests, GetRequestMessage) {
+    auto message = request->GetMessage();
+
+    ASSERT_THAT(message, testing::StrEq(expected_request_message));
+}
+
+
+TEST_F(RequestTests, OriginUriEmptyByDefault) {
+    auto uri = request->GetOriginUri();
+
+    ASSERT_THAT(uri, Eq(expected_origin_uri));
+}
 
 
 TEST_F(RequestTests, GetDataSize) {
@@ -193,6 +216,20 @@ TEST_F(RequestTests, GetFileName) {
 
     ASSERT_THAT(fname, Eq(s));
 }
+
+TEST_F(RequestTests, SetGetBeamtimeId) {
+    request->SetBeamtimeId("beamtime");
+
+    ASSERT_THAT(request->GetBeamtimeId(), "beamtime");
+}
+
+
+TEST_F(RequestTests, SetGetBeamline) {
+    request->SetBeamline("beamline");
+
+    ASSERT_THAT(request->GetBeamline(), "beamline");
+}
+
 
 
 }

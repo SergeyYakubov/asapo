@@ -1,7 +1,7 @@
 package request_handler
 
 import (
-	"asapo_discovery/utils"
+	"asapo_common/utils"
 	"github.com/hashicorp/consul/api"
 	"strconv"
 	"errors"
