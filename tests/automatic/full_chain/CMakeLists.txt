@@ -1,1 +1,2 @@
 add_subdirectory(simple_chain)
+add_subdirectory(two_beamlines)
