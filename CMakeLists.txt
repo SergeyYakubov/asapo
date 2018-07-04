@@ -72,6 +72,8 @@ add_subdirectory(authorizer)
 
 add_subdirectory(asapo_tools)
 
+add_subdirectory(deploy)
+
 
 if(BUILD_INTEGRATION_TESTS)
     add_subdirectory(tests)
