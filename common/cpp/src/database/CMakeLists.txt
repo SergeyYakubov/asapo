@@ -9,9 +9,6 @@ set(SOURCE_FILES
 find_package (libmongoc-static-1.0 1.9 REQUIRED)
 message ("--   mongoc found version \"${MONGOC_STATIC_VERSION}\"")
 message ("--   mongoc include path \"${MONGOC_STATIC_INCLUDE_DIRS}\"")
-IF (CMAKE_C_COMPILER_ID STREQUAL "GNU")
- set (MONGOC_STATIC_LIBRARIES -Wl,-Bstatic  ${MONGOC_STATIC_LIBRARIES} -Wl,-Bdynamic)
-ENDIF()
 message ("--   mongoc libraries \"${MONGOC_STATIC_LIBRARIES}\"")
 
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:system_io>)
