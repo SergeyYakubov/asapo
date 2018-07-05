@@ -21,6 +21,7 @@ http {
           set $authorizer_endpoint authorizer.service.asapo;
           set $fluentd_endpoint fluentd.service.asapo;
           set $kibana_endpoint kibana.service.asapo;
+          set $grafana_endpoint grafana.service.asapo;
 
           location /discovery/ {
             rewrite ^/discovery(/.*) $1 break;
@@ -38,6 +39,11 @@ http {
             proxy_set_header  X-Real-IP  $remote_addr;
             proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header  Host $http_host;
+          }
+
+          location /performance/ {
+            rewrite ^/performance(/.*) $1 break;
+            proxy_pass http://$grafana_endpoint:3000$uri$is_args$args;
           }
 
           location /authorizer/ {

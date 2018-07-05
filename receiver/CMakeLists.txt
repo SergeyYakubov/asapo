@@ -18,6 +18,7 @@ set(SOURCE_FILES
 ################################
 # Library
 ################################
+#SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static")
 
 
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:curl_http_client>
@@ -34,6 +35,9 @@ target_link_libraries(${TARGET_NAME}-bin ${TARGET_NAME})
 set_target_properties(${TARGET_NAME}-bin PROPERTIES RUNTIME_OUTPUT_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}$<$<CONFIG:Debug>:>
         )
+
+configure_file(docker/Dockerfile . COPYONLY)
+
 
 ################################
 # Testing
