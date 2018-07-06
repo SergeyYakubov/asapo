@@ -16,13 +16,14 @@ IF(WIN32)
 ELSE()
     set (gopath ${GOPATH}:${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/common/go)
     set (exe_name "${TARGET_NAME}")
+#    set (GO_OPTS "GOOS=linux;CGO_ENABLED=0")
 ENDIF()
 
 include(testing_go)
 
 add_custom_target(asapo ALL
     COMMAND  ${CMAKE_COMMAND} -E env GOPATH=${gopath}
-    go build ${GO_OPTS} -o ${exe_name} asapo_tools/main
+        ${GO_OPTS} go build -o ${exe_name} asapo_tools/main
     VERBATIM)
 define_property(TARGET PROPERTY EXENAME
         BRIEF_DOCS <executable name>

@@ -23,6 +23,7 @@ type Logger interface {
 	Warning(args ...interface{})
 	Error(args ...interface{})
 	SetLevel(level Level)
+	SetSource(source string)
 }
 
 var my_logger Logger = &logRusLogger{}
@@ -49,6 +50,10 @@ func Fatal(args ...interface{}) {
 
 func SetLevel(level Level) {
 	my_logger.SetLevel(level)
+}
+
+func SetSoucre(source string ){
+	my_logger.SetSource(source)
 }
 
 func LevelFromString(str string) (Level, error) {

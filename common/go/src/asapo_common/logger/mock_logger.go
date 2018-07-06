@@ -20,6 +20,11 @@ func UnsetMockLog() {
 	my_logger = &logRusLogger{}
 }
 
+func (l *MockLogger) SetSource(source string) {
+	l.Called(source)
+	return
+}
+
 func (l *MockLogger) Info(args ...interface{}) {
 	l.Called(args...)
 	return

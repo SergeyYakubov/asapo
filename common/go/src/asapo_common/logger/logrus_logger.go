@@ -6,6 +6,11 @@ import (
 
 type logRusLogger struct {
 	logger_entry *log.Entry
+	source string
+}
+
+func (l *logRusLogger) SetSource(source string) {
+	l.source = source
 }
 
 func (l *logRusLogger) entry() *log.Entry {
@@ -23,7 +28,7 @@ func (l *logRusLogger) entry() *log.Entry {
 	log.SetFormatter(formatter)
 
 	l.logger_entry = log.WithFields(log.Fields{
-		"source": "discovery",
+		"source": l.source,
 	})
 
 	return l.logger_entry
