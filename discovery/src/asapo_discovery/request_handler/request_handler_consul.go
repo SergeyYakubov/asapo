@@ -53,7 +53,7 @@ func (rh *ConsulRequestHandler) GetReceivers() ([]byte, error) {
 	}
 	var response Responce
 	var err error
-	response.Uris, err = rh.GetServices("receiver")
+	response.Uris, err = rh.GetServices("asapo-receiver")
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (rh *ConsulRequestHandler) GetBroker() ([]byte, error) {
 	if (rh.client == nil) {
 		return nil, errors.New("consul client not connected")
 	}
-	response, err := rh.GetServices("broker")
+	response, err := rh.GetServices("asapo-broker")
 	if err != nil {
 		return nil, err
 	}

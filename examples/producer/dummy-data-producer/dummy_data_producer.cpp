@@ -25,7 +25,7 @@ struct Args {
 void PrintCommandArguments(const Args& args) {
     std::cout << "receiver_address: " << args.receiver_address << std::endl
               << "beamtime_id: " << args.beamtime_id << std::endl
-              << "Package size: " << args.number_of_bytes / 1024 << "k" << std::endl
+              << "Package size: " << args.number_of_bytes / 1000 << "k" << std::endl
               << "iterations: " << args.iterations << std::endl
               << "nthreads: " << args.nthreads << std::endl
               << "mode: " << args.mode << std::endl
@@ -46,7 +46,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     try {
         args->receiver_address = argv[1];
         args->beamtime_id = argv[2];
-        args->number_of_bytes = std::stoull(argv[3]) * 1024;
+        args->number_of_bytes = std::stoull(argv[3]) * 1000;
         args->iterations = std::stoull(argv[4]);
         args->nthreads = std::stoull(argv[5]);
         args->mode = std::stoull(argv[6]);
@@ -120,7 +120,7 @@ void WaitThreadsFinished(const Args& args) {
 void PrintOutput(const Args& args, const high_resolution_clock::time_point& start) {
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     double duration_sec = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - start ).count() / 1000.0;
-    double size_gb = double(args.number_of_bytes) * args.iterations / 1024.0  / 1024.0 / 1024.0 * 8.0;
+    double size_gb = double(args.number_of_bytes) * args.iterations / 1000.0  / 1000.0 / 1000.0 * 8.0;
     double rate = args.iterations / duration_sec;
     std::cout << "Rate: " << rate << " Hz" << std::endl;
     std::cout << "Bandwidth " << size_gb / duration_sec << " Gbit/s" << std::endl;

@@ -20,6 +20,10 @@ job "asapo-logging" {
     task "fluentd" {
       driver = "docker"
 
+      meta {
+        change_me_to_restart = 1
+      }
+
       config {
         dns_servers = ["127.0.0.1"]
         network_mode = "host"

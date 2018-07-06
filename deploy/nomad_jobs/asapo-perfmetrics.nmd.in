@@ -28,8 +28,8 @@ job "asapo-perfmetrics" {
       }
 
       resources {
-        cpu    = 500
-        memory = 256
+        cpu    = 1500
+        memory = 32000
         network {
           mbits = 10
           port "influxdb" {
@@ -74,8 +74,8 @@ job "asapo-perfmetrics" {
       }
 
       resources {
-        cpu    = 500
-        memory = 256
+        cpu    = 1500
+        memory = 2560
         network {
           mbits = 10
           port "grafana" {

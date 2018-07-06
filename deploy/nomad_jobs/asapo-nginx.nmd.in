@@ -1,4 +1,4 @@
-job "nginx" {
+job "asapo-nginx" {
   datacenters = ["dc1"]
 
   type = "system"

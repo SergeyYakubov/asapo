@@ -1,6 +1,7 @@
 "%1" > output
 
 findstr /I /L /C:"\"level\":\"info\",\"message\":\"test info\"" output || goto :error
+findstr /I /L /C:"\"level\":\"info\",\"message\":\"test : info\"" output || goto :error
 findstr /I /L /C:"\"level\":\"error\",\"message\":\"test error\"" output || goto :error
 findstr /I /L /C:"\"level\":\"debug\",\"message\":\"test debug\"" output || goto :error
 findstr /I /L /C:"\"level\":\"warning\",\"message\":\"test warning\"" output || goto :error

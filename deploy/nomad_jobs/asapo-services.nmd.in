@@ -1,0 +1,121 @@
+job "asapo-services" {
+  datacenters = ["dc1"]
+
+  type = "service"
+
+  group "asapo-authorizer" {
+    count = 1
+
+    task "asapo-authorizer" {
+      driver = "docker"
+
+      config {
+        network_mode = "host"
+        dns_servers = ["127.0.0.1"]
+        image = "yakser/asapo-authorizer:feature_ha"
+	    force_pull = true
+        volumes = ["local/config.json:/var/lib/authorizer/config.json",
+                   "/bldocuments/support/asapo/beamtime_beamline_mapping.txt:/var/lib/authorizer/beamtime_beamline_mapping.txt",
+                   "/bldocuments/support/asapo/ip_beamtime_mapping:/var/lib/authorizer/ip_beamtime_mapping"]
+        logging {
+            type = "fluentd"
+            config {
+                fluentd-address = "localhost:9881"
+                tag = "asapo.docker"
+            }
+        }
+      }
+
+      resources {
+        cpu    = 500 # 500 MHz
+        memory = 256 # 256MB
+        network {
+          port "authorizer" {
+            static = "5007"
+          }
+        }
+      }
+
+      service {
+        name = "asapo-authorizer"
+        port = "authorizer"
+        check {
+          name     = "alive"
+          type     = "http"
+          path     = "/health-check"
+          interval = "10s"
+          timeout  = "2s"
+          initial_status =   "passing"
+        }
+        check_restart {
+          limit = 2
+          grace = "15s"
+          ignore_warnings = false
+        }
+      }
+
+      template {
+         source        = "@NOMAD_INSTALL@/authorizer.json.tpl"
+         destination   = "local/config.json"
+         change_mode   = "restart"
+      }
+   }
+  } #authorizer
+  group "asapo-discovery" {
+    count = 1
+
+    task "asapo-discovery" {
+      driver = "docker"
+
+      config {
+        network_mode = "host"
+        dns_servers = ["127.0.0.1"]
+        image = "yakser/asapo-discovery:feature_ha"
+	    force_pull = true
+        volumes = ["local/config.json:/var/lib/discovery/config.json"]
+        logging {
+            type = "fluentd"
+            config {
+                fluentd-address = "localhost:9881"
+                tag = "asapo.docker"
+            }
+        }
+      }
+
+      resources {
+        cpu    = 500 # 500 MHz
+        memory = 256 # 256MB
+        network {
+          port "discovery" {
+            static = "5006"
+          }
+        }
+      }
+
+      service {
+        name = "asapo-discovery"
+        port = "discovery"
+        check {
+          name     = "alive"
+          type     = "http"
+          path     = "/receivers"
+          interval = "10s"
+          timeout  = "2s"
+          initial_status =   "passing"
+        }
+        check_restart {
+          limit = 2
+          grace = "15s"
+          ignore_warnings = false
+        }
+
+      }
+
+      template {
+         source        = "@NOMAD_INSTALL@/discovery.json.tpl"
+         destination   = "local/config.json"
+         change_mode   = "restart"
+      }
+   }
+  }
+}

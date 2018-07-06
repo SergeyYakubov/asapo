@@ -1,4 +1,4 @@
-job "asapo-receivers" {
+job "asapo-brokers" {
   datacenters = ["dc1"]
 
   update {
@@ -8,7 +8,7 @@ job "asapo-receivers" {
     auto_revert = false
   }
 
-  group "receivers" {
+  group "brokers" {
     count = 1
 
     restart {
@@ -18,16 +18,15 @@ job "asapo-receivers" {
       mode = "fail"
     }
 
-    task "receivers" {
+    task "brokers" {
       driver = "docker"
 
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]
-        image = "yakser/asapo-receiver:feature_ha"
+        image = "yakser/asapo-broker:feature_ha"
 	    force_pull = true
-        volumes = ["local/config.json:/var/lib/receiver/config.json",
-                   "/bldocuments/support/asapo/data:/var/lib/receiver/data"]
+        volumes = ["local/config.json:/var/lib/broker/config.json"]
         logging {
             type = "fluentd"
             config {
@@ -39,16 +38,17 @@ job "asapo-receivers" {
 
       resources {
         network {
-          port "recv" {}
+          port "broker" {}
         }
       }
 
       service {
-        port = "recv"
-        name = "asapo-receiver"
+        port = "broker"
+        name = "asapo-broker"
         check {
-          name     = "asapo-receiver-alive"
-          type     = "tcp"
+          name     = "asapo-broker-alive"
+          type     = "http"
+          path     = "/health"
           interval = "10s"
           timeout  = "2s"
         }
@@ -60,11 +60,16 @@ job "asapo-receivers" {
       }
 
       template {
-         source        = "@NOMAD_INSTALL@/receiver.json.tpl"
+         source        = "@NOMAD_INSTALL@/broker.json.tpl"
          destination   = "local/config.json"
          change_mode   = "restart"
+      }
+
+      template {
+        source        = "@NOMAD_INSTALL@/broker_secret.key"
+        destination   = "secrets/secret.key"
+        change_mode   = "restart"
       }
    }
   }
 }
-
