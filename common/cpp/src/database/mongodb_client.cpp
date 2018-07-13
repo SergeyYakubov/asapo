@@ -105,7 +105,8 @@ Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_dupl
         if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
             return ignore_duplicates ? nullptr : TextError(DBError::kDuplicateID);
         }
-        return TextError(DBError::kInsertError);
+
+        return TextError(std::string(DBError::kInsertError) + " - " + mongo_err.message);
     }
 
     return nullptr;

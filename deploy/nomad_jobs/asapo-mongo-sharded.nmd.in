@@ -12,7 +12,7 @@ job "asapo-mongo-sharded" {
     count = 1
 
     restart {
-      attempts = 0
+      attempts = 2
       interval = "3m"
       delay = "15s"
       mode = "fail"
@@ -46,12 +46,12 @@ job "asapo-mongo-sharded" {
           type     = "script"
           name     = "alive"
           command  = "mongo"
-          args     = ["--port","27010","--eval","db.version()"]
+          args     = ["--host","${attr.unique.network.ip-address}","--port","27010","--eval","db.version()"]
           interval = "10s"
           timeout  = "5s"
         }
         check_restart {
-          limit = 0
+          limit = 2
           grace = "90s"
           ignore_warnings = false
         }
@@ -70,7 +70,7 @@ job "asapo-mongo-sharded" {
     count = 1
 
     restart {
-      attempts = 0
+      attempts = 2
       interval = "3m"
       delay = "15s"
       mode = "fail"
@@ -104,12 +104,12 @@ job "asapo-mongo-sharded" {
           type     = "script"
           name     = "alive"
           command  = "mongo"
-          args     = ["--port","27011","--eval","db.version()"]
+          args     = ["--host","${attr.unique.network.ip-address}","--port","27011","--eval","db.version()"]
           interval = "10s"
           timeout  = "5s"
         }
         check_restart {
-          limit = 0
+          limit = 2
           grace = "90s"
           ignore_warnings = false
         }
@@ -121,59 +121,117 @@ job "asapo-mongo-sharded" {
       }
     }
   } # shard1 group
-  group "mongos" {
-    count = 1
 
-    restart {
-      attempts = 0
-      interval = "3m"
-      delay = "15s"
-      mode = "fail"
-    }
+    group "mongo-shard2" {
+      count = 1
 
-    task "mongos" {
-      driver = "docker"
-
-      config {
-        network_mode = "host"
-        image = "mongo:4.0.0"
-        dns_servers = ["127.0.0.1"]
-        command = "mongos"
-        args = ["--config","local/mongo-mongos.yaml"]
-
+      restart {
+        attempts = 2
+        interval = "3m"
+        delay = "15s"
+        mode = "fail"
       }
 
-      resources {
-        network {
-          port "mongos" {
-          static = 27017
+      task "mongo-shard2" {
+        driver = "docker"
+
+        config {
+          network_mode = "host"
+          image = "mongo:4.0.0"
+          dns_servers = ["127.0.0.1"]
+          volumes = ["/${meta.shared_storage}/mongodb_shard2:/data/db"]
+          command = "mongod"
+          args = ["--config","local/mongo-shardsrv.yaml"]
+
+        }
+
+        resources {
+          network {
+            port "shard" {
+            static = 27012
+            }
           }
         }
+
+        service {
+          port = "shard"
+          name = "mongo-shard2"
+          check {
+            type     = "script"
+            name     = "alive"
+            command  = "mongo"
+            args     = ["--host","${attr.unique.network.ip-address}","--port","27012","--eval","db.version()"]
+            interval = "10s"
+            timeout  = "5s"
+          }
+          check_restart {
+            limit = 2
+            grace = "90s"
+            ignore_warnings = false
+          }
+        }
+        template {
+           source        = "@NOMAD_INSTALL@/mongo-shardsrv.yaml.tpl"
+           destination   = "local/mongo-shardsrv.yaml"
+           change_mode   = "restart"
+        }
+      }
+    } # shard2 group
+
+
+    group "mongo-shard3" {
+      count = 1
+
+      restart {
+        attempts = 2
+        interval = "3m"
+        delay = "15s"
+        mode = "fail"
       }
 
-      service {
-        port = "mongos"
-        name = "mongos"
-        check {
-          type     = "script"
-          name     = "alive"
-          command  = "mongo"
-          args     = ["--eval","db.version()"]
-          interval = "10s"
-          timeout  = "5s"
-        }
-        check_restart {
-          limit = 0
-          grace = "90s"
-          ignore_warnings = false
-        }
-      }
-      template {
-         source        = "@NOMAD_INSTALL@/mongo-mongos.yaml.tpl"
-         destination   = "local/mongo-mongos.yaml"
-         change_mode   = "restart"
-      }
-    }
-  } # mongos group
+      task "mongo-shard3" {
+        driver = "docker"
 
+        config {
+          network_mode = "host"
+          image = "mongo:4.0.0"
+          dns_servers = ["127.0.0.1"]
+          volumes = ["/${meta.shared_storage}/mongodb_shard3:/data/db"]
+          command = "mongod"
+          args = ["--config","local/mongo-shardsrv.yaml"]
+
+        }
+
+        resources {
+          network {
+            port "shard" {
+            static = 27013
+            }
+          }
+        }
+
+        service {
+          port = "shard"
+          name = "mongo-shard3"
+          check {
+            type     = "script"
+            name     = "alive"
+            command  = "mongo"
+            args     = ["--host","${attr.unique.network.ip-address}","--port","27013","--eval","db.version()"]
+            interval = "10s"
+            timeout  = "5s"
+          }
+          check_restart {
+            limit = 2
+            grace = "90s"
+            ignore_warnings = false
+          }
+        }
+        template {
+           source        = "@NOMAD_INSTALL@/mongo-shardsrv.yaml.tpl"
+           destination   = "local/mongo-shardsrv.yaml"
+           change_mode   = "restart"
+        }
+      }
+    } # shard3 group
 }

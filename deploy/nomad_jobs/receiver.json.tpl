@@ -1,7 +1,7 @@
 {
   "MonitorDbAddress":"influxdb.service.asapo:8086",
   "MonitorDbName": "asapo_receivers",
-  "BrokerDbAddress":"mongo.service.asapo:27017",
+  "BrokerDbAddress":"{{ env "attr.unique.network.ip-address" }}:27015",
   "AuthorizationServer": "asapo-authorizer.service.asapo:5007",
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},

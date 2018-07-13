@@ -21,6 +21,7 @@ job "asapo-services" {
             type = "fluentd"
             config {
                 fluentd-address = "localhost:9881"
+                fluentd-async-connect = true
                 tag = "asapo.docker"
             }
         }
@@ -77,6 +78,7 @@ job "asapo-services" {
             type = "fluentd"
             config {
                 fluentd-address = "localhost:9881"
+                fluentd-async-connect = true
                 tag = "asapo.docker"
             }
         }

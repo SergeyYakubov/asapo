@@ -2,7 +2,7 @@
 
 nomad stop asapo-nginx
 nomad stop asapo-logging
-nomad stop asapo-mongo
+nomad stop asapo-mongo-sharded
 nomad stop asapo-services
 nomad stop asapo-perfmetrics
 nomad stop asapo-receivers
