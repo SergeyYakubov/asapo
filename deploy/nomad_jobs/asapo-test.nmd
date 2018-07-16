@@ -43,6 +43,76 @@ job "asapo-test" {
 
   } #windows
 
+  group "worker-linux1" {
+
+    constraint {
+      attribute = "${attr.kernel.name}"
+      value = "linux"
+    }
+
+#    constraint {
+#      attribute = "${meta.location}"
+#      operator = "!="
+#      value = "petra3"
+#    }
+
+    count = 1
+
+    task "worker-linux" {
+      driver = "raw_exec"
+
+      config {
+        command = "local/getnext_broker"
+        args = [
+          "psana002:8400",
+          "asapo_test1",
+          "8",
+          "oTsKsj8i6WcW_gVzeIFvZCtSfMErjDELJEyAI23n7Ik="]
+      }
+
+      artifact {
+        source = "https://stash.desy.de/projects/ASAPO/repos/asapo-bin/raw/getnext_broker?at=refs%2Fheads%2Ffeature_ha"
+      }
+    }
+
+  } # worker-linux1
+
+
+group "worker-linux2" {
+
+    constraint {
+      attribute = "${attr.kernel.name}"
+      value = "linux"
+    }
+
+#    constraint {
+#      attribute = "${meta.location}"
+#      operator = "!="
+#      value = "petra3"
+#    }
+
+    count = 1
+
+    task "worker-linux" {
+      driver = "raw_exec"
+
+      config {
+        command = "local/getnext_broker"
+        args = [
+          "psana002:8400",
+          "asapo_test2",
+          "8",
+          "yzgAcLmijSLWIm8dBiGNCbc0i42u5HSm-zR6FRqo__Y="]
+      }
+
+      artifact {
+        source = "https://stash.desy.de/projects/ASAPO/repos/asapo-bin/raw/getnext_broker?at=refs%2Fheads%2Ffeature_ha"
+      }
+    }
+
+  } # worker-linux2
+
+
   group "linux-test" {
 
     constraint {
