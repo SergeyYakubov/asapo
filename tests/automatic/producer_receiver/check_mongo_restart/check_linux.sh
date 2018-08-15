@@ -23,6 +23,11 @@ function kill_mongo {
 }
 
 
+function start_mongo {
+    mongod --dbpath /tmp/mongo --port 27016 --logpath /tmp/mongolog --fork
+}
+
+
 database_name=db_test
 beamtime_id=asapo_test
 beamline=test
@@ -37,7 +42,7 @@ Cleanup() {
     kill_mongo
 }
 
-mongod --dbpath /tmp/mongo --port 27016 --logpath /tmp/mongolog --fork
+start_mongo
 wait_mongo
 
 
@@ -63,8 +68,7 @@ sleep 0.5
 
 kill_mongo
 sleep 3
-mongod --dbpath /tmp/mongo --port 27016 --logpath /tmp/mongolog --fork
-
+start_mongo
 
 wait
 

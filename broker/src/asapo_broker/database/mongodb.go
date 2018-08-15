@@ -80,6 +80,7 @@ func (db *Mongodb) Connect(address string) (err error) {
 	if err != nil {
 		return err
 	}
+	db.session.SetSafe(&mgo.Safe{J: true})
 
 	if err := db.updateDatabaseList(); err != nil {
 		return err
