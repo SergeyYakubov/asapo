@@ -18,9 +18,11 @@ Error RequestHandlerDbWrite::ProcessRequest(Request* request) const {
     file_info.name = request->GetFileName();
     file_info.size = request->GetDataSize();
     file_info.id = request->GetDataID();
-    auto err =  db_client__->Insert(file_info, false);
+    // todo: create flag ignore dups, allow dups for attempts to resend data
+    auto err =  db_client__->Insert(file_info, true);
     if (!err) {
-        log__->Debug(std::string{"insert record to "} + kDBCollectionName + " in " + db_name_ +
+        log__->Debug(std::string{"insert record id "} + std::to_string(file_info.id) + " to " + kDBCollectionName + " in " +
+                     db_name_ +
                      " at " + GetReceiverConfig()->broker_db_uri);
     }
     return err;

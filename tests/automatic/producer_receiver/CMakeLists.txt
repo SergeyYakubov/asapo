@@ -1,4 +1,5 @@
 add_subdirectory(transfer_single_file)
 if (UNIX)
     add_subdirectory(check_monitoring)
+    add_subdirectory(check_mongo_restart)
 endif()

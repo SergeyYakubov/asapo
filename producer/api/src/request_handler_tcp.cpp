@@ -171,7 +171,8 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
         auto err = TrySendToReceiver(request);
         if (ServerError(err))  {
             Disconnect();
-            log__->Debug("cannot send data to " + receiver_uri + ": " + err->Explain());
+            log__->Debug("cannot send data id " + std::to_string(request->header.data_id) + " to " + receiver_uri + ": " +
+                         err->Explain());
             continue;
         }
 

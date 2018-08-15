@@ -1,12 +1,5 @@
-job "asapo-mongo" {
+job "mongo" {
   datacenters = ["dc1"]
-
-  update {
-    max_parallel = 1
-    min_healthy_time = "10s"
-    healthy_deadline = "3m"
-    auto_revert = false
-  }
 
   group "mongo" {
     count = 1
@@ -24,15 +17,16 @@ job "asapo-mongo" {
       config {
         network_mode = "host"
         image = "mongo:4.0.0"
-        volumes = ["/${meta.shared_storage}/mongodb:/data/db"]
+        volumes = ["/tmp/mongo:/data/db"]
+        args = ["--port","27016"]
       }
 
       resources {
         cpu    = 1500
-        memory = 12560
+        memory = 1256
         network {
           port "mongo" {
-          static = 27017
+          static = 27016
           }
         }
       }

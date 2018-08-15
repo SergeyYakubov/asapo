@@ -28,7 +28,7 @@ NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
 }
 
 Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request>& request) const noexcept {
-    log__->Debug("processing request from " + producer_uri_ );
+    log__->Debug("processing request id " + std::to_string(request->GetDataID()) + " from " + producer_uri_ );
     Error handle_err;
     handle_err = request->Handle(statistics__);
     GenericNetworkResponse generic_response;

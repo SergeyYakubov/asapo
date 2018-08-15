@@ -47,6 +47,11 @@ void MongoDBClient::InitializeCollection(const string& database_name,
                                          const string& collection_name) {
     collection_ = mongoc_client_get_collection (client_, database_name.c_str(),
                                                 collection_name.c_str());
+
+    write_concern_ = mongoc_write_concern_new ();
+    mongoc_write_concern_set_w (write_concern_, MONGOC_WRITE_CONCERN_W_DEFAULT);
+    mongoc_write_concern_set_journal (write_concern_, true);
+    mongoc_collection_set_write_concern (collection_, write_concern_);
 }
 
 Error MongoDBClient::TryConnectDatabase() {
@@ -82,6 +87,7 @@ string MongoDBClient::DBAddress(const string& address) const {
 }
 
 void MongoDBClient::CleanUp() {
+    mongoc_write_concern_destroy(write_concern_);
     mongoc_collection_destroy (collection_);
     mongoc_client_destroy (client_);
 }
@@ -105,7 +111,6 @@ Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_dupl
         if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
             return ignore_duplicates ? nullptr : TextError(DBError::kDuplicateID);
         }
-
         return TextError(std::string(DBError::kInsertError) + " - " + mongo_err.message);
     }
 

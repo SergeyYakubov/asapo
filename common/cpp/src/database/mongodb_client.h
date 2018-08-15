@@ -43,6 +43,7 @@ class MongoDBClient final : public Database {
   private:
     mongoc_client_t* client_{nullptr};
     mongoc_collection_t* collection_{nullptr};
+    mongoc_write_concern_t* write_concern_;
     bool connected_{false};
     void CleanUp();
     std::string DBAddress(const std::string& address) const;
