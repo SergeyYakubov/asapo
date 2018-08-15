@@ -6,7 +6,7 @@ trap Cleanup EXIT
 
 function wait_mongo {
 NEXT_WAIT_TIME=0
-until mongo --port 27016 --eval "db.version()" | tail -1 | grep 4.0.0 || [ $NEXT_WAIT_TIME -eq 30 ]; do
+until mongo --port 27016 --eval "db.version()" | tail -2 | grep version || [ $NEXT_WAIT_TIME -eq 30 ]; do
   echo "Wait for mongo"
   NEXT_WAIT_TIME=$(( NEXT_WAIT_TIME++ ))
   sleep 1
@@ -15,6 +15,11 @@ if (( NEXT_WAIT_TIME == 30 )); then
     echo "Timeout"
     exit -1
 fi
+}
+
+
+function kill_mongo {
+    kill -9 `ps xa | grep mongod | grep 27016 | awk '{print $1;}'`
 }
 
 
@@ -29,11 +34,13 @@ Cleanup() {
     nomad stop authorizer
     nomad stop nginx
     echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}
-    nomad stop mongo
+    kill_mongo
 }
 
-nomad run mongo.nmd
+mongod --dbpath /tmp/mongo --port 27016 --logpath /tmp/mongolog --fork
 wait_mongo
+
+
 # create db before worker starts reading it. todo: git rid of it
 echo "db.${beamtime_id}.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}
 
@@ -52,10 +59,12 @@ nfiles=1000
 
 $1 localhost:8400 ${beamtime_id} 100 $nfiles 1  0 200 &
 
-sleep 0.1
+sleep 0.5
 
-docker rm -f  `docker ps | grep mongo | awk '{print $1;}'`
-sleep 1
+kill_mongo
+sleep 3
+mongod --dbpath /tmp/mongo --port 27016 --logpath /tmp/mongolog --fork
+
 
 wait
 
