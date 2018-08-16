@@ -157,15 +157,12 @@ func (db *Mongodb) GetRecordByID(dbname string, id int) ([]byte, error) {
 	q := bson.M{"_id": id}
 	c := db.session.DB(dbname).C(data_collection_name)
 	err := c.Find(q).One(&res)
-	if err == mgo.ErrNotFound {
+	if err != nil {
 		var r = struct {
 			Id int `json:"id""`
 		}{id}
 		res, _ := json.Marshal(&r)
 		return nil, &DBError{utils.StatusNoData, string(res)}
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	return utils.MapToJson(&res)

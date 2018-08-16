@@ -82,7 +82,7 @@ $1 localhost:8400 ${beamtime_id} 100 1000 4 0 100 &
 
 wait
 
-$2 ${proxy_address} ${beamtime_id} 2 $token  &> output.txt &
+$2 ${proxy_address} ${beamtime_id} 2 $token 10000 &> output.txt &
 
 sleep 2
 
