@@ -93,5 +93,6 @@ start_mongo
 wait
 
 cat output.txt
-cat output.txt | grep "Processed 1000 file(s)"
+nfiles=`cat output.txt | grep "Processed" | awk   '{print $2;}'`
+test  $nfiles -ge 1000
 rm output.txt
