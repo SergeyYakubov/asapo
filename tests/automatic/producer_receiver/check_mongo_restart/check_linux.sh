@@ -32,8 +32,13 @@ database_name=db_test
 beamtime_id=asapo_test
 beamline=test
 
+receiver_root_folder=/tmp/asapo/receiver/files
+receiver_folder=${receiver_root_folder}/${beamline}/${beamtime_id}
+
+
 Cleanup() {
 	echo cleanup
+	rm -rf ${receiver_root_folder}
     nomad stop receiver
     nomad stop discovery
     nomad stop authorizer
@@ -50,13 +55,16 @@ wait_mongo
 echo "db.${beamtime_id}.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}
 
 sed -i 's/27017/27016/g' receiver.json.tpl
-sed -i 's/"WriteToDisk":true/"WriteToDisk":false/g' receiver.json.tpl
+#sed -i 's/"WriteToDisk":true/"WriteToDisk":false/g' receiver.json.tpl
 
 
 nomad run authorizer.nmd
 nomad run nginx.nmd
 nomad run receiver.nmd
 nomad run discovery.nmd
+
+mkdir -p ${receiver_folder}
+
 
 sleep 1
 
