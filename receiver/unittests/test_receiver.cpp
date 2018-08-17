@@ -102,7 +102,7 @@ TEST_F(StartListenerFixture, Ok) {
         Return(nullptr)
     );
 
-    EXPECT_CALL(mock_logger, Info(HasSubstr("new connection from " + expected_address)));
+    EXPECT_CALL(mock_logger, Debug(HasSubstr("new connection from " + expected_address)));
 
 
     receiver.Listen(expected_address, &err, true);

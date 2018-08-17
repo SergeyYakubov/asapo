@@ -102,7 +102,7 @@ class ConnectionTests : public Test {
         connection->requests_dispatcher__ = std::unique_ptr<asapo::RequestsDispatcher> {&mock_dispatcher};
         EXPECT_CALL(mock_io, CloseSocket_t(_, _));
         EXPECT_CALL(mock_statictics, Send_t());
-        EXPECT_CALL(mock_logger, Info(HasSubstr("disconnected")));
+        EXPECT_CALL(mock_logger, Debug(HasSubstr("disconnected")));
 
     }
     void TearDown() override {

@@ -44,7 +44,7 @@ void Connection::Listen() const noexcept {
     }
     io__->CloseSocket(socket_fd_, nullptr);
     statistics__->Send();
-    log__->Info("disconnected from " + address_);
+    log__->Debug("disconnected from " + address_);
 }
 
 
