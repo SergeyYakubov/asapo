@@ -44,11 +44,13 @@ job "asapo-receivers" {
       }
 
       service {
-        port = "recv"
         name = "asapo-receiver"
+        port = "recv"
         check {
           name     = "asapo-receiver-alive"
-          type     = "tcp"
+          type     = "script"
+          command  = "/bin/ps"
+          args     = ["-fC","receiver"]
           interval = "10s"
           timeout  = "2s"
         }
