@@ -1,4 +1,4 @@
-set(TARGET_NAME check-mongo-restart)
+set(TARGET_NAME receiver-mongo-restart)
 
 ################################
 # Testing

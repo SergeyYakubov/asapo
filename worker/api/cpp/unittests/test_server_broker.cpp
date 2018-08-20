@@ -75,6 +75,14 @@ class ServerDataBrokerTests : public Test {
                 ));
     }
 
+    void MockGetError() {
+        EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_broker_uri), _, _)).WillOnce(DoAll(
+                    SetArgPointee<1>(HttpCode::NotFound),
+                    SetArgPointee<2>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+                    Return("")
+                ));
+    }
+
     void MockGetBrokerUri() {
         EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/broker"), _, _)).WillOnce(DoAll(
                     SetArgPointee<1>(HttpCode::OK),
@@ -191,6 +199,19 @@ TEST_F(ServerDataBrokerTests, GetDoNotCallBrokerUriIfAlreadyFound) {
     data_broker->GetNext(&info, nullptr);
 }
 
+
+TEST_F(ServerDataBrokerTests, GetBrokerUriAgainAfterConnectionError) {
+    MockGetBrokerUri();
+    MockGetError();
+
+    data_broker->SetTimeout(0);
+    data_broker->GetNext(&info, nullptr);
+    Mock::VerifyAndClearExpectations(&mock_http_client);
+
+    MockGetBrokerUri();
+    MockGet("error_response");
+    data_broker->GetNext(&info, nullptr);
+}
 
 
 TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClientUntilTimeout) {
