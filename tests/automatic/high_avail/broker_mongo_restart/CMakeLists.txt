@@ -1,4 +1,4 @@
-set(TARGET_NAME check_broker_mongo_restart)
+set(TARGET_NAME broker_mongo_restart)
 
 ################################
 # Testing

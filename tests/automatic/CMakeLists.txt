@@ -26,3 +26,8 @@ add_subdirectory(producer_receiver)
 add_subdirectory(full_chain)
 
 add_subdirectory(spd_logger)
+
+
+if (UNIX)
+    add_subdirectory(high_avail)
+endif()

@@ -19,7 +19,6 @@ job "broker" {
         memory = 256 # 256MB
         network {
           port "broker" {
-            static = "5005"
           }
         }
       }

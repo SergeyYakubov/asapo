@@ -88,6 +88,7 @@ Error ServerDataBroker::ProcessRequest(std::string* response, std::string reques
     HttpCode code;
     *response = httpclient__->Get(RequestWithToken(request_uri), &code, &err);
     if (err != nullptr) {
+        current_broker_uri_ = "";
         return err;
     }
     return HttpCodeToWorkerError(code);
