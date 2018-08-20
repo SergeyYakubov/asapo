@@ -26,7 +26,7 @@ void SpdLogger::SetLogLevel(LogLevel level) {
     }
 }
 std::string EncloseMsg(std::string msg) {
-    if (msg.find(":") == std::string::npos) {
+    if (msg.find("\"") != 0) {
         return std::string(R"("message":")") + msg + "\"";
     } else {
         return msg;

@@ -23,7 +23,7 @@ job "receiver" {
       }
 
       service {
-        name = "receiver"
+        name = "asapo-receiver"
         port = "recv"
         check {
           name     = "alive"

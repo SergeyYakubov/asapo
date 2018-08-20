@@ -7,6 +7,7 @@ IF(WIN32)
 ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
+    SET(BUILD_SHARED_LIBS OFF)
 ENDIF(WIN32)
 
 #TODO: Better way then GLOBAL PROPERTY
@@ -71,6 +72,8 @@ add_subdirectory(discovery)
 add_subdirectory(authorizer)
 
 add_subdirectory(asapo_tools)
+
+add_subdirectory(deploy)
 
 
 if(BUILD_INTEGRATION_TESTS)

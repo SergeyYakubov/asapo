@@ -21,6 +21,7 @@ func PrintUsage() {
 func main() {
 	var fname = flag.String("config", "", "config file path")
 
+	log.SetSoucre("broker")
 	flag.Parse()
 	if *fname == "" {
 		PrintUsage()

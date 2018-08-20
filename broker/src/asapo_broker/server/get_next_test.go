@@ -35,8 +35,15 @@ type request struct {
 	message string
 }
 
-func containsMatcher(substr string) func(str string) bool {
-	return func(str string) bool { return strings.Contains(str, substr) }
+func containsMatcher(substrings ...string) func(str string) bool {
+	return func(str string) bool {
+		for _, substr := range substrings {
+			if !strings.Contains(str, substr) {
+				return false
+			}
+		}
+		return true
+	}
 }
 
 func doRequest(path string) *httptest.ResponseRecorder {

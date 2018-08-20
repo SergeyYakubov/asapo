@@ -16,6 +16,8 @@ func PrintUsage() {
 func main() {
 	var fname = flag.String("config", "", "config file path")
 
+	log.SetSoucre("authorizer")
+
 	flag.Parse()
 	if *fname == "" {
 		PrintUsage()

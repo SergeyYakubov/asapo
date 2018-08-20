@@ -19,9 +19,9 @@ target_link_libraries(${TARGET_NAME} test_common asapo-worker)
 ################################
 
 #add_test_setup_cleanup(${TARGET_NAME})
-add_integration_test(${TARGET_NAME}  get_httpbin "GET httpbin.org body 200")
+#add_integration_test(${TARGET_NAME}  get_httpbin "GET http://httpbin.org body 200")
 add_integration_test(${TARGET_NAME}  get_badaddress "GET google.com/badaddress found 404")
 add_integration_test(${TARGET_NAME}  get_badaddress2 "GET 111 clienterror 404")
-add_integration_test(${TARGET_NAME}  post "POST httpbin.org/post testdata 200")
+#add_integration_test(${TARGET_NAME}  post "POST http://httpbin.org/post data 200")
 add_integration_test(${TARGET_NAME}  post_badaddress "POST google.com/badaddress found 404")
 add_integration_test(${TARGET_NAME}  post_badaddress2 "POST 111 clienterror 404")

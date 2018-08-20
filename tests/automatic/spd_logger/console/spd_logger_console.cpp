@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
     logger->Warning("test warning");
     logger->Debug("test debug");
 
+    logger->Info("test : info");
 
     logger->SetLogLevel(LogLevel::Error);
     logger->Info("test info_errorlev");

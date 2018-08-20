@@ -1,0 +1,6 @@
+elasticsearch:
+  url: "http://elasticsearch.service.asapo:9200"
+server:
+  basePath:   "/logsview"
+  rewriteBasePath: true
+  host: "0.0.0.0"

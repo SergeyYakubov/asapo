@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+useradd -r -s /bin/false asapo || true

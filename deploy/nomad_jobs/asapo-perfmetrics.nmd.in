@@ -1,0 +1,108 @@
+job "asapo-perfmetrics" {
+  datacenters = ["dc1"]
+
+#  update {
+#    max_parallel = 1
+#    min_healthy_time = "10s"
+#    healthy_deadline = "3m"
+#    auto_revert = false
+#  }
+
+  group "perfmetrics" {
+    count = 1
+    restart {
+      attempts = 2
+      interval = "3m"
+      delay = "15s"
+      mode = "delay"
+    }
+
+    task "influxdb" {
+      driver = "docker"
+
+      config {
+        dns_servers = ["127.0.0.1"]
+        network_mode = "host"
+        image = "influxdb"
+        volumes = ["/${meta.shared_storage}/influxdb:/var/lib/influxdb"]
+      }
+
+      resources {
+        cpu    = 1500
+        memory = 32000
+        network {
+          mbits = 10
+          port "influxdb" {
+          static = 8086
+          }
+        }
+      }
+
+     service {
+       port = "influxdb"
+       name = "influxdb"
+       check {
+           name = "alive"
+           type     = "http"
+           path     = "/ping"
+           interval = "10s"
+           timeout  = "1s"
+       }
+       check_restart {
+         limit = 2
+         grace = "90s"
+         ignore_warnings = false
+       }
+     }
+
+   } #influxdb
+
+
+    task "grafana" {
+      driver = "docker"
+
+      env {
+        GF_SERVER_DOMAIN = "${attr.unique.hostname}"
+        GF_SERVER_ROOT_URL = "%(protocol)s://%(domain)s/performance/"
+      }
+
+      config {
+        dns_servers = ["127.0.0.1"]
+        network_mode = "host"
+        image = "grafana/grafana"
+        volumes = ["/${meta.shared_storage}/grafana:/var/lib/grafana"]
+      }
+
+      resources {
+        cpu    = 1500
+        memory = 2560
+        network {
+          mbits = 10
+          port "grafana" {
+          static = 3000
+          }
+        }
+      }
+
+     service {
+       port = "grafana"
+       name = "grafana"
+       check {
+           name = "alive"
+           type     = "http"
+           path     = "/api/health"
+           interval = "10s"
+           timeout  = "1s"
+       }
+       check_restart {
+         limit = 2
+         grace = "90s"
+         ignore_warnings = false
+       }
+     }
+
+   } #grafana
+
+
+  }
+}

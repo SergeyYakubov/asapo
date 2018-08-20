@@ -116,8 +116,8 @@ ACTION_P(A_WriteSendDataResponse, error_code) {
 MATCHER_P4(M_CheckSendDataRequest, op_code, file_id, file_size, message,
            "Checks if a valid GenericRequestHeader was Send") {
     return ((asapo::GenericRequestHeader*)arg)->op_code == op_code
-           && ((asapo::GenericRequestHeader*)arg)->data_id == file_id
-           && ((asapo::GenericRequestHeader*)arg)->data_size == file_size
+           && ((asapo::GenericRequestHeader*)arg)->data_id == uint64_t(file_id)
+           && ((asapo::GenericRequestHeader*)arg)->data_size == uint64_t(file_size)
            && strcmp(((asapo::GenericRequestHeader*)arg)->message, message) == 0;
 }
 
@@ -162,6 +162,12 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
                 testing::ReturnArg<2>()
             ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+                                           HasSubstr("disconnected"),
+                                           HasSubstr(receivers_list[i])
+                                       )
+                                      ));
+
         EXPECT_CALL(mock_logger, Error(AllOf(
                                            HasSubstr("authorization"),
                                            HasSubstr(expected_auth_message),
@@ -193,11 +199,11 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
                 A_WriteSendDataResponse(asapo::kNetErrorNoError),
                 testing::ReturnArg<2>()
             ));
-        EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("authorized"),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+        EXPECT_CALL(mock_logger, Info(AllOf(
+                                          HasSubstr("authorized"),
+                                          HasSubstr(receivers_list[i])
+                                      )
+                                     ));
         if (only_once) break;
         i++;
     }
@@ -335,11 +341,11 @@ void RequestHandlerTcpTests::ExpectOKConnect(bool only_once) {
                 testing::SetArgPointee<1>(nullptr),
                 Return(expected_sds[i])
             ));
-        EXPECT_CALL(mock_logger, Info(AllOf(
-                                          HasSubstr("connected"),
-                                          HasSubstr(expected_address)
-                                      )
-                                     ));
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+                                           HasSubstr("connected to"),
+                                           HasSubstr(expected_address)
+                                       )
+                                      ));
         if (only_once) break;
         i++;
     }

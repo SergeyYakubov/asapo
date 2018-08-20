@@ -16,6 +16,7 @@ struct Params {
     std::string server;
     std::string beamtime_id;
     std::string token;
+    int timeout_ms;
     int nthreads;
 };
 
@@ -40,7 +41,7 @@ std::vector<std::thread> StartThreads(const Params& params, std::vector<int>* nf
         asapo::FileInfo fi;
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.beamtime_id, params.token, &err);
-        broker->SetTimeout(10000);
+        broker->SetTimeout(params.timeout_ms);
         while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
             (*nfiles)[i] ++;
         }
@@ -78,8 +79,8 @@ int ReadAllData(const Params& params, uint64_t* duration_ms) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 5) {
-        std::cout << "Usage: " + std::string{argv[0]} +" <server> <run_name> <nthreads> <token>" << std::endl;
+    if (argc != 6) {
+        std::cout << "Usage: " + std::string{argv[0]} +" <server> <run_name> <nthreads> <token> <timeout ms>" << std::endl;
         exit(EXIT_FAILURE);
     }
     Params params;
@@ -87,6 +88,7 @@ int main(int argc, char* argv[]) {
     params.beamtime_id = std::string{argv[2]};
     params.nthreads = atoi(argv[3]);
     params.token = std::string{argv[4]};
+    params.timeout_ms = atoi(argv[5]);
 
     uint64_t duration_ms;
     auto nfiles = ReadAllData(params, &duration_ms);

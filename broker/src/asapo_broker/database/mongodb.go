@@ -3,11 +3,13 @@
 package database
 
 import (
+	"asapo_common/logger"
 	"asapo_common/utils"
 	"encoding/json"
 	"errors"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -80,6 +82,8 @@ func (db *Mongodb) Connect(address string) (err error) {
 	if err != nil {
 		return err
 	}
+
+	//	db.session.SetSafe(&mgo.Safe{J: true})
 
 	if err := db.updateDatabaseList(); err != nil {
 		return err
@@ -156,17 +160,18 @@ func (db *Mongodb) GetRecordByID(dbname string, id int) ([]byte, error) {
 	q := bson.M{"_id": id}
 	c := db.session.DB(dbname).C(data_collection_name)
 	err := c.Find(q).One(&res)
-	if err == mgo.ErrNotFound {
+	if err != nil {
 		var r = struct {
 			Id int `json:"id""`
 		}{id}
 		res, _ := json.Marshal(&r)
+		log_str := "error getting record id " + strconv.Itoa(id) + " for " + dbname + " : " + err.Error()
+		logger.Debug(log_str)
 		return nil, &DBError{utils.StatusNoData, string(res)}
 	}
-	if err != nil {
-		return nil, err
-	}
 
+	log_str := "got record id " + strconv.Itoa(id) + " for " + dbname
+	logger.Debug(log_str)
 	return utils.MapToJson(&res)
 }
 
@@ -237,8 +242,12 @@ func (db *Mongodb) GetNextRecord(db_name string) ([]byte, error) {
 
 	curPointer, err := db.getCurrentPointer(db_name)
 	if err != nil {
+		log_str := "error getting next pointer for " + db_name + ":" + err.Error()
+		logger.Debug(log_str)
 		return nil, err
 	}
+	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name
+	logger.Debug(log_str)
 	return db.GetRecordByID(db_name, curPointer.Value)
 
 }

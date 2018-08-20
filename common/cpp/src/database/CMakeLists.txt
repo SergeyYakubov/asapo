@@ -11,7 +11,6 @@ message ("--   mongoc found version \"${MONGOC_STATIC_VERSION}\"")
 message ("--   mongoc include path \"${MONGOC_STATIC_INCLUDE_DIRS}\"")
 message ("--   mongoc libraries \"${MONGOC_STATIC_LIBRARIES}\"")
 
-
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:system_io>)
 target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR}
         PUBLIC "${MONGOC_STATIC_INCLUDE_DIRS}")

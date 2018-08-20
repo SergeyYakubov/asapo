@@ -149,7 +149,7 @@ class RequestsDispatcherTests : public Test {
 
     }
     void MockHandleRequest(bool error, Error err = asapo::IOErrorTemplates::kUnknownIOError.Generate() ) {
-        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("processing request from"), HasSubstr(connected_uri))));
+        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("processing request"), HasSubstr(connected_uri))));
 
         EXPECT_CALL(mock_request, Handle_t()).WillOnce(
             Return(error ? err.release() : nullptr)

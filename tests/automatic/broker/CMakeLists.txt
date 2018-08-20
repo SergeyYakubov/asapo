@@ -3,4 +3,5 @@ add_subdirectory(read_config)
 
 if (UNIX)
 add_subdirectory(check_monitoring)
+add_subdirectory(check_mongo_restart)
 endif()

@@ -11,7 +11,7 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 for /l %%x in (1, 1, 3) do echo db.data.insert({"_id":%%x,"size":100,"name":"%%x","lastchange":1}) | %mongo_exe% %database_name%  || goto :error
 
 
-"%1" 127.0.0.1:8400 %database_name% 1 %token_test_run% | findstr /c:"Processed 3 file" || goto :error
+"%1" 127.0.0.1:8400 %database_name% 1 %token_test_run% 1000 | findstr /c:"Processed 3 file" || goto :error
 goto :clean
 
 :error

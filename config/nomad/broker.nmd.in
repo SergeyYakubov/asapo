@@ -25,7 +25,7 @@ job "broker" {
       }
 
       service {
-        name = "broker"
+        name = "asapo-broker"
         port = "broker"
         check {
           name     = "alive"

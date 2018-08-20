@@ -33,7 +33,7 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id, const
         log__->Debug("cannot connect to receiver at " + receiver_address + " - " + err->Explain());
         return err;
     }
-    log__->Info("connected to receiver at " + receiver_address);
+    log__->Debug("connected to receiver at " + receiver_address);
 
     connected_receiver_uri_ = receiver_address;
     err = Authorize(beamtime_id);
@@ -43,7 +43,7 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id, const
         return err;
     }
 
-    log__->Debug("authorized at " + receiver_address);
+    log__->Info("authorized connection to receiver at " + receiver_address);
 
     return nullptr;
 }
@@ -143,7 +143,7 @@ bool RequestHandlerTcp::NeedRebalance() {
 
 void RequestHandlerTcp::CloseConnectionToPeformRebalance() {
     io__->CloseSocket(sd_, nullptr);
-    log__->Info("rebalancing");
+    log__->Debug("rebalancing");
     sd_ = kDisconnectedSocketDescriptor;
 }
 
@@ -171,7 +171,8 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
         auto err = TrySendToReceiver(request);
         if (ServerError(err))  {
             Disconnect();
-            log__->Debug("cannot send data to " + receiver_uri + ": " + err->Explain());
+            log__->Debug("cannot send data id " + std::to_string(request->header.data_id) + " to " + receiver_uri + ": " +
+                         err->Explain());
             continue;
         }
 

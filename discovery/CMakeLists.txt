@@ -20,6 +20,8 @@ ENDIF()
 
 include(testing_go)
 
+configure_file(docker/Dockerfile . COPYONLY)
+
 add_custom_target(${TARGET_NAME} ALL
     COMMAND  ${CMAKE_COMMAND} -E env GOPATH=${gopath}
     go build ${GO_OPTS} -o ${exe_name} asapo_discovery/main

@@ -124,7 +124,7 @@ void asapo::SystemIO::CreateNewDirectory(const std::string& directory_name, Erro
 
 Error SystemIO::WriteDataToFile(const std::string& fname, const uint8_t* data, size_t length) const {
     Error err;
-    auto fd = Open(fname, IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS | IO_OPEN_MODE_RW, &err);
+    auto fd = Open(fname, IO_OPEN_MODE_CREATE | IO_OPEN_MODE_RW, &err);
     if (err) {
         return err;
     }

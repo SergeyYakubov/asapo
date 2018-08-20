@@ -5,6 +5,7 @@ set -e
 res=`$@`
 
 echo $res | grep '"level":"info","message":"test info"'
+echo $res | grep '"level":"info","message":"test : info"'
 echo $res | grep '"test_int":2,"test_double":1.0}'
 echo $res | grep '"level":"error","message":"test error"'
 echo $res | grep '"level":"debug","message":"test debug"'
