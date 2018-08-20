@@ -97,7 +97,7 @@ TEST_F(ServerDataBrokerTests, CanConnect) {
     ASSERT_THAT(return_code, Eq(nullptr));
 }
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsErrorOnWrongInput) {
+TEST_F(ServerDataBrokerTests, GetImageReturnsErrorOnWrongInput) {
     auto return_code = data_broker->GetNext(nullptr, nullptr);
     ASSERT_THAT(return_code->Explain(), Eq(asapo::WorkerErrorMessage::kWrongInput));
 }
@@ -114,8 +114,19 @@ TEST_F(ServerDataBrokerTests, GetNextUsesCorrectUri) {
     data_broker->GetNext(&info, nullptr);
 }
 
+TEST_F(ServerDataBrokerTests, GetLastUsesCorrectUri) {
+    MockGetBrokerUri();
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClient) {
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/last?token=" + expected_token, _,
+                                        _)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return("")));
+    data_broker->GetLast(&info, nullptr);
+}
+
+
+TEST_F(ServerDataBrokerTests, GetImageReturnsEOFFromHttpClient) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
@@ -129,7 +140,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClient) {
     ASSERT_THAT(err->Explain(), HasSubstr("timeout"));
 }
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsNotAuthorized) {
+TEST_F(ServerDataBrokerTests, GetImageReturnsNotAuthorized) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
@@ -144,7 +155,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsNotAuthorized) {
 }
 
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsWrongResponseFromHttpClient) {
+TEST_F(ServerDataBrokerTests, GetImageReturnsWrongResponseFromHttpClient) {
 
     MockGetBrokerUri();
 
@@ -158,7 +169,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsWrongResponseFromHttpClient) {
     ASSERT_THAT(err->Explain(), HasSubstr("Cannot parse"));
 }
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsIfBrokerAddressNotFound) {
+TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerAddressNotFound) {
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::NotFound),
@@ -171,7 +182,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsIfBrokerAddressNotFound) {
     ASSERT_THAT(err->Explain(), AllOf(HasSubstr("broker uri"), HasSubstr("cannot")));
 }
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsIfBrokerUriEmpty) {
+TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerUriEmpty) {
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::OK),
@@ -214,7 +225,7 @@ TEST_F(ServerDataBrokerTests, GetBrokerUriAgainAfterConnectionError) {
 }
 
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsEOFFromHttpClientUntilTimeout) {
+TEST_F(ServerDataBrokerTests, GetImageReturnsEOFFromHttpClientUntilTimeout) {
     MockGetBrokerUri();
 
 
@@ -247,7 +258,7 @@ FileInfo CreateFI() {
     return fi;
 }
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsFileInfo) {
+TEST_F(ServerDataBrokerTests, GetImageReturnsFileInfo) {
     MockGetBrokerUri();
 
     auto to_send = CreateFI();
@@ -266,7 +277,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsFileInfo) {
 }
 
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsParseError) {
+TEST_F(ServerDataBrokerTests, GetImageReturnsParseError) {
     MockGetBrokerUri();
     MockGet("error_response");
     auto err = data_broker->GetNext(&info, nullptr);
@@ -275,7 +286,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsParseError) {
 }
 
 
-TEST_F(ServerDataBrokerTests, GetNextReturnsIfNoDtataNeeded) {
+TEST_F(ServerDataBrokerTests, GetImageReturnsIfNoDtataNeeded) {
     MockGetBrokerUri();
     MockGet("error_response");
     EXPECT_CALL( mock_io, GetDataFromFile_t(_, _, _)).Times(0);
@@ -283,7 +294,7 @@ TEST_F(ServerDataBrokerTests, GetNextReturnsIfNoDtataNeeded) {
     data_broker->GetNext(&info, nullptr);
 }
 
-TEST_F(ServerDataBrokerTests, GetNextCallsReadFromFile) {
+TEST_F(ServerDataBrokerTests, GetImageCallsReadFromFile) {
     MockGetBrokerUri();
     auto to_send = CreateFI();
     auto json = to_send.Json();

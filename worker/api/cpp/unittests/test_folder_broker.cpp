@@ -158,6 +158,35 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
 
 }
 
+
+TEST_F(FolderDataBrokerTests, GetLastReturnsFileInfo) {
+    data_broker->Connect();
+    FileInfo fi;
+
+    auto err = data_broker->GetLast(&fi, nullptr);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(fi.name, Eq("3"));
+    ASSERT_THAT(fi.size, Eq(100));
+
+}
+
+TEST_F(FolderDataBrokerTests, GetLastSecondTimeReturnsSameFileInfo) {
+    data_broker->Connect();
+    FileInfo fi;
+
+    auto err = data_broker->GetLast(&fi, nullptr);
+    ASSERT_THAT(err, Eq(nullptr));
+    err = data_broker->GetLast(&fi, nullptr);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(fi.name, Eq("3"));
+    ASSERT_THAT(fi.size, Eq(100));
+
+}
+
+
+
 TEST_F(FolderDataBrokerTests, SecondNextReturnsAnotherFileInfo) {
     data_broker->Connect();
     FileInfo fi;
@@ -216,6 +245,7 @@ TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
 
     data_broker->GetNext(&fi, &data);
 }
+
 
 TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
     EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).
