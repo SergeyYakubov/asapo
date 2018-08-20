@@ -22,8 +22,10 @@ const dbaddress = "127.0.0.1:27017"
 
 var rec1 = TestRecord{1, "aaa"}
 var rec2 = TestRecord{2, "bbb"}
+var rec3 = TestRecord{3, "ccc"}
 var rec1_expect, _ = json.Marshal(rec1)
 var rec2_expect, _ = json.Marshal(rec2)
+var rec3_expect, _ = json.Marshal(rec3)
 
 func cleanup() {
 	db.DeleteAllRecords(dbname)
@@ -68,7 +70,6 @@ func TestMongoDBGetNextErrorWhenEmptyCollection(t *testing.T) {
 
 func TestMongoDBGetNextErrorWhenRecordNotThereYet(t *testing.T) {
 	db.Connect(dbaddress)
-	db.databases = append(db.databases, dbname)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec2)
 	_, err := db.GetNextRecord(dbname)
@@ -158,7 +159,7 @@ func TestMongoDBGetRecordByID(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
-	res, err := db.GetRecordByID(dbname, 1)
+	res, err := db.GetRecordByID(dbname, 1, true)
 	assert.Nil(t, err)
 	assert.Equal(t, string(rec1_expect), string(res))
 }
@@ -167,7 +168,62 @@ func TestMongoDBGetRecordByIDFails(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
-	_, err := db.GetRecordByID(dbname, 2)
+	_, err := db.GetRecordByID(dbname, 2, true)
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 	assert.Equal(t, "{\"id\":2}", err.Error())
+}
+
+func TestMongoDBGetRecordNext(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec1)
+	res, err := db.GetRecordFromDb(dbname, "next", 0)
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec1_expect), string(res))
+}
+
+func TestMongoDBGetRecordID(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec1)
+	res, err := db.GetRecordFromDb(dbname, "id", 1)
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec1_expect), string(res))
+}
+
+func TestMongoDBWrongOp(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec1)
+	_, err := db.GetRecordFromDb(dbname, "bla", 0)
+	assert.NotNil(t, err)
+}
+
+func TestMongoDBGetRecordLast(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec1)
+	db.InsertRecord(dbname, &rec2)
+
+	res, err := db.GetRecordFromDb(dbname, "last", 0)
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec2_expect), string(res))
+}
+
+func TestMongoDBGetNextAfterGetLastCorrect(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec1)
+	db.InsertRecord(dbname, &rec2)
+
+	res, err := db.GetRecordFromDb(dbname, "last", 0)
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec2_expect), string(res))
+
+	db.InsertRecord(dbname, &rec3)
+
+	res, err = db.GetRecordFromDb(dbname, "next", 0)
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec3_expect), string(res))
+
 }

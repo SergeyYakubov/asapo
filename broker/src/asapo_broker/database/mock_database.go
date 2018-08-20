@@ -24,12 +24,7 @@ func (db *MockedDatabase) Copy() Agent {
 	return db
 }
 
-func (db *MockedDatabase) GetNextRecord(db_name string) (answer []byte, err error) {
-	args := db.Called(db_name)
-	return args.Get(0).([]byte), args.Error(1)
-}
-
-func (db *MockedDatabase) GetRecordByID(db_name string, id int) (answer []byte, err error) {
-	args := db.Called(db_name, id)
+func (db *MockedDatabase) GetRecordFromDb(db_name string, op string, id int) (answer []byte, err error) {
+	args := db.Called(db_name, op, id)
 	return args.Get(0).([]byte), args.Error(1)
 }

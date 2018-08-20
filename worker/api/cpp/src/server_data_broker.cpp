@@ -141,19 +141,19 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, GetImageServerOper
 }
 
 Error ServerDataBroker::GetNext(FileInfo* info, FileData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetNext,info,data);
+    return GetImageFromServer(GetImageServerOperation::GetNext, info, data);
 }
 
 Error ServerDataBroker::GetLast(FileInfo* info, FileData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetLast,info,data);
+    return GetImageFromServer(GetImageServerOperation::GetLast, info, data);
 }
 
 std::string ServerDataBroker::OpToUriCmd(GetImageServerOperation op) {
     switch (op) {
-        case GetImageServerOperation::GetNext:
-            return "next";
-        case GetImageServerOperation::GetLast:
-            return "last";
+    case GetImageServerOperation::GetNext:
+        return "next";
+    case GetImageServerOperation::GetLast:
+        return "last";
     }
     return "";
 }

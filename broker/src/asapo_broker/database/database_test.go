@@ -11,10 +11,9 @@ func TestMockDataBase(t *testing.T) {
 	db.On("Connect", mock.AnythingOfType("string")).Return(nil)
 	db.On("Close").Return()
 	db.On("Copy").Return(nil)
-	db.On("GetNextRecord", "").Return([]byte(""), nil)
-	db.On("GetRecordByID", "").Return([]byte(""), nil)
+	db.On("GetRecordFromDb", "", "", 0).Return([]byte(""), nil)
+
 	db.Connect("")
-	db.GetNextRecord("")
 	db.Close()
 	db.Copy()
 	var err DBError

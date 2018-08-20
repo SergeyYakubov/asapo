@@ -3,8 +3,6 @@ package server
 import (
 	"asapo_broker/database"
 	"asapo_common/logger"
-	"asapo_common/utils"
-	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -46,30 +44,12 @@ func TestGetIDTestSuite(t *testing.T) {
 	suite.Run(t, new(GetIDTestSuite))
 }
 
-func (suite *GetIDTestSuite) TestGetIDWithWrongDatabaseName() {
-	suite.mock_db.On("GetRecordByID", expectedBeamtimeId, 1).Return([]byte(""),
-		&database.DBError{utils.StatusWrongInput, ""})
-
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("get id request in")))
-
-	w := doRequest("/database/" + expectedBeamtimeId + "/1" + correctTokenSuffix)
-
-	suite.Equal(http.StatusBadRequest, w.Code, "wrong database name")
-}
-
-func (suite *GetIDTestSuite) TestGetIDWithInternalDBError() {
-	suite.mock_db.On("GetRecordByID", expectedBeamtimeId, 1).Return([]byte(""), errors.New(""))
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("get id request in")))
+func (suite *GetIDTestSuite) TestGetIdCallsCorrectRoutine() {
+	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, "id", 1).Return([]byte("Hello"), nil)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("get id request")))
+	ExpectCopyClose(suite.mock_db)
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/1" + correctTokenSuffix)
-	suite.Equal(http.StatusInternalServerError, w.Code, "internal error")
-}
-
-func (suite *GetIDTestSuite) TestGetIDOK() {
-	suite.mock_db.On("GetRecordByID", expectedBeamtimeId, 1).Return([]byte("Hello"), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("get id request in")))
-
-	w := doRequest("/database/" + expectedBeamtimeId + "/1" + correctTokenSuffix)
-	suite.Equal(http.StatusOK, w.Code, "GetID OK")
+	suite.Equal(http.StatusOK, w.Code, "GetImage OK")
 	suite.Equal("Hello", string(w.Body.Bytes()), "GetID sends data")
 }

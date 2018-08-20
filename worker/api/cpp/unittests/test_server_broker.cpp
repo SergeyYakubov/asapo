@@ -119,9 +119,9 @@ TEST_F(ServerDataBrokerTests, GetLastUsesCorrectUri) {
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/last?token=" + expected_token, _,
                                         _)).WillOnce(DoAll(
-        SetArgPointee<1>(HttpCode::OK),
-        SetArgPointee<2>(nullptr),
-        Return("")));
+                                                SetArgPointee<1>(HttpCode::OK),
+                                                SetArgPointee<2>(nullptr),
+                                                Return("")));
     data_broker->GetLast(&info, nullptr);
 }
 

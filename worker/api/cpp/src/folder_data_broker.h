@@ -25,7 +25,7 @@ class FolderDataBroker final : public asapo::DataBroker {
     int current_file_;
     FileInfos  filelist_;
     Error CanGetData(FileInfo* info, FileData* data, uint64_t nfile) const noexcept;
-    Error GetFileByIndex(uint64_t nfile_to_get,FileInfo* info, FileData* data);
+    Error GetFileByIndex(uint64_t nfile_to_get, FileInfo* info, FileData* data);
     std::mutex mutex_;
 };
 

@@ -42,7 +42,7 @@ Error FolderDataBroker::CanGetData(FileInfo* info, FileData* data, uint64_t nfil
     return nullptr;
 }
 
-Error FolderDataBroker::GetFileByIndex(uint64_t nfile_to_get,FileInfo* info, FileData* data) {
+Error FolderDataBroker::GetFileByIndex(uint64_t nfile_to_get, FileInfo* info, FileData* data) {
     auto err = CanGetData(info, data, nfile_to_get);
     if (err != nullptr) {
         return err;
@@ -67,12 +67,12 @@ Error FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
     uint64_t nfile_to_get = ++current_file_;
     mutex_.unlock();
 
-    return GetFileByIndex(nfile_to_get,info,data);
+    return GetFileByIndex(nfile_to_get, info, data);
 
 }
 Error FolderDataBroker::GetLast(FileInfo* info, FileData* data) {
-    uint64_t nfile_to_get = filelist_.size()-1;
-    return GetFileByIndex(nfile_to_get,info,data);
+    uint64_t nfile_to_get = filelist_.size() - 1;
+    return GetFileByIndex(nfile_to_get, info, data);
 }
 
 }

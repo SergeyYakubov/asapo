@@ -11,8 +11,8 @@ namespace asapo {
 Error HttpCodeToWorkerError(const HttpCode& code);
 
 enum class GetImageServerOperation {
-  GetNext,
-  GetLast
+    GetNext,
+    GetLast
 };
 
 class ServerDataBroker final : public asapo::DataBroker {
@@ -22,7 +22,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetNext(FileInfo* info, FileData* data) override;
     Error GetLast(FileInfo* info, FileData* data) override;
 
-  void SetTimeout(uint64_t timeout_ms) override;
+    void SetTimeout(uint64_t timeout_ms) override;
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
   private:
