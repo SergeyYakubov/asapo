@@ -27,7 +27,7 @@ Error FolderDataBroker::Connect() {
     return error;
 }
 
-Error FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int nfile) const noexcept {
+Error FolderDataBroker::CanGetData(FileInfo* info, FileData* data, uint64_t nfile) const noexcept {
     if (!is_connected_) {
         return TextError(WorkerErrorMessage::kSourceNotConnected);
     }
@@ -36,19 +36,13 @@ Error FolderDataBroker::CanGetData(FileInfo* info, FileData* data, int nfile) co
         return TextError(WorkerErrorMessage::kWrongInput);
     }
 
-    if (nfile >= (int) filelist_.size()) {
+    if (nfile >= (uint64_t) filelist_.size()) {
         return Error{TextErrorWithType(WorkerErrorMessage::kNoData, ErrorType::kEndOfFile)};
     }
     return nullptr;
 }
 
-
-Error FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
-// could probably use atomic here, but just to make sure (tests showed no performance difference)
-    mutex_.lock();
-    int nfile_to_get = ++current_file_;
-    mutex_.unlock();
-
+Error FolderDataBroker::GetFileByIndex(uint64_t nfile_to_get, FileInfo* info, FileData* data) {
     auto err = CanGetData(info, data, nfile_to_get);
     if (err != nullptr) {
         return err;
@@ -66,5 +60,19 @@ Error FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
     return error;
 }
 
+
+Error FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
+// could probably use atomic here, but just to make sure (tests showed no performance difference)
+    mutex_.lock();
+    uint64_t nfile_to_get = ++current_file_;
+    mutex_.unlock();
+
+    return GetFileByIndex(nfile_to_get, info, data);
+
+}
+Error FolderDataBroker::GetLast(FileInfo* info, FileData* data) {
+    uint64_t nfile_to_get = filelist_.size() - 1;
+    return GetFileByIndex(nfile_to_get, info, data);
+}
 
 }

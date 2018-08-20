@@ -139,6 +139,12 @@ func (db *Mongodb) createLocationPointers(dbname string) (err error) {
 	return err
 }
 
+func (db *Mongodb) setCounter(dbname string, ind int) (err error) {
+	update := bson.M{"$set": bson.M{pointer_field_name: ind}}
+	c := db.session.DB(dbname).C(pointer_collection_name)
+	return c.UpdateId(0, update)
+}
+
 func (db *Mongodb) incrementField(dbname string, max_ind int, res interface{}) (err error) {
 	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
 	change := mgo.Change{
@@ -155,7 +161,7 @@ func (db *Mongodb) incrementField(dbname string, max_ind int, res interface{}) (
 	return err
 }
 
-func (db *Mongodb) GetRecordByID(dbname string, id int) ([]byte, error) {
+func (db *Mongodb) GetRecordByID(dbname string, id int, returnID bool) ([]byte, error) {
 	var res map[string]interface{}
 	q := bson.M{"_id": id}
 	c := db.session.DB(dbname).C(data_collection_name)
@@ -167,7 +173,12 @@ func (db *Mongodb) GetRecordByID(dbname string, id int) ([]byte, error) {
 		res, _ := json.Marshal(&r)
 		log_str := "error getting record id " + strconv.Itoa(id) + " for " + dbname + " : " + err.Error()
 		logger.Debug(log_str)
-		return nil, &DBError{utils.StatusNoData, string(res)}
+		if returnID {
+			return nil, &DBError{utils.StatusNoData, string(res)}
+		} else {
+			return nil, &DBError{utils.StatusNoData, err.Error()}
+		}
+
 	}
 
 	log_str := "got record id " + strconv.Itoa(id) + " for " + dbname
@@ -248,6 +259,37 @@ func (db *Mongodb) GetNextRecord(db_name string) ([]byte, error) {
 	}
 	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name
 	logger.Debug(log_str)
-	return db.GetRecordByID(db_name, curPointer.Value)
+	return db.GetRecordByID(db_name, curPointer.Value, true)
 
+}
+
+func (db *Mongodb) GetLastRecord(db_name string) ([]byte, error) {
+
+	if err := db.checkDatabaseOperationPrerequisites(db_name); err != nil {
+		return nil, err
+	}
+
+	max_ind, err := db.getMaxIndex(db_name)
+	if err != nil {
+		log_str := "error getting last pointer for " + db_name + ":" + err.Error()
+		logger.Debug(log_str)
+		return nil, err
+	}
+	res, err := db.GetRecordByID(db_name, max_ind, false)
+
+	db.setCounter(db_name, max_ind)
+
+	return res, err
+}
+
+func (db *Mongodb) GetRecordFromDb(db_name string, op string, id int) (answer []byte, err error) {
+	switch op {
+	case "next":
+		return db.GetNextRecord(db_name)
+	case "id":
+		return db.GetRecordByID(db_name, id, true)
+	case "last":
+		return db.GetLastRecord(db_name)
+	}
+	return nil, errors.New("Wrong db operation: " + op)
 }

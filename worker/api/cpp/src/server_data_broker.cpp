@@ -110,8 +110,8 @@ Error ServerDataBroker::GetBrokerUri() {
 }
 
 
-Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string& operation) {
-    std::string request_suffix = operation;
+Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, GetImageServerOperation op) {
+    std::string request_suffix = OpToUriCmd(op);
     uint64_t elapsed_ms = 0;
     std::string response;
     while (true) {
@@ -141,11 +141,29 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, const std::string&
 }
 
 Error ServerDataBroker::GetNext(FileInfo* info, FileData* data) {
+    return GetImageFromServer(GetImageServerOperation::GetNext, info, data);
+}
+
+Error ServerDataBroker::GetLast(FileInfo* info, FileData* data) {
+    return GetImageFromServer(GetImageServerOperation::GetLast, info, data);
+}
+
+std::string ServerDataBroker::OpToUriCmd(GetImageServerOperation op) {
+    switch (op) {
+    case GetImageServerOperation::GetNext:
+        return "next";
+    case GetImageServerOperation::GetLast:
+        return "last";
+    }
+    return "";
+}
+
+Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, FileInfo* info, FileData* data) {
     if (info == nullptr) {
         return TextError(WorkerErrorMessage::kWrongInput);
     }
 
-    auto err = GetFileInfoFromServer(info, "next");
+    auto err = GetFileInfoFromServer(info, op);
     if (err != nullptr) {
         return err;
     }

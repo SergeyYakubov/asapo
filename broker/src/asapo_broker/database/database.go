@@ -1,8 +1,7 @@
 package database
 
 type Agent interface {
-	GetNextRecord(db_name string) ([]byte, error)
-	GetRecordByID(dbname string, id int) ([]byte, error)
+	GetRecordFromDb(db_name string, op string, id int) ([]byte, error)
 	Connect(string) error
 	Close()
 	Copy() Agent

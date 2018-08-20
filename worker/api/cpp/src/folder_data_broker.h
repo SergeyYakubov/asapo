@@ -15,6 +15,7 @@ class FolderDataBroker final : public asapo::DataBroker {
     explicit FolderDataBroker(const std::string& source_name);
     Error Connect() override;
     Error GetNext(FileInfo* info, FileData* data) override;
+    Error GetLast(FileInfo* info, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override {}; // to timeout in this case
 
     std::unique_ptr<asapo::IO> io__; // modified in testings to mock system calls,otherwise do not touch
@@ -23,7 +24,8 @@ class FolderDataBroker final : public asapo::DataBroker {
     bool is_connected_;
     int current_file_;
     FileInfos  filelist_;
-    Error CanGetData(FileInfo* info, FileData* data, int nfile) const noexcept;
+    Error CanGetData(FileInfo* info, FileData* data, uint64_t nfile) const noexcept;
+    Error GetFileByIndex(uint64_t nfile_to_get, FileInfo* info, FileData* data);
     std::mutex mutex_;
 };
 
