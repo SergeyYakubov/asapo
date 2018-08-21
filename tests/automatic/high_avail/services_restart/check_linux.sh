@@ -46,7 +46,7 @@ $1 localhost:8400 ${beamtime_id} 100 $5 4 0 100 &
 
 
 #worker
-$2 ${proxy_address} ${beamtime_id} 2 $token 20000 &> output.txt &
+$2 ${proxy_address} ${beamtime_id} 2 $token 30000 &> output.txt &
 
 sleep 1
 
