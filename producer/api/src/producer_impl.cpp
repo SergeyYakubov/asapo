@@ -45,20 +45,20 @@ Error CheckProducerRequest(size_t file_size, size_t filename_size) {
 }
 
 
-Error ProducerImpl::Send(uint64_t file_id, const void* data, size_t file_size, std::string file_name,
+Error ProducerImpl::Send(const EventHeader& event_header, FileData data,
                          RequestCallback callback) {
 
-    auto err = CheckProducerRequest(file_size, file_name.size());
+    auto err = CheckProducerRequest(event_header.file_size, event_header.file_name.size());
     if (err) {
         log__->Error("error checking request - " + err->Explain());
         return err;
     }
 
 
-    auto request_header = GenerateNextSendRequest(file_id, file_size, std::move(file_name));
+    auto request_header = GenerateNextSendRequest(event_header.file_id, event_header.file_size, event_header.file_name);
 
 
-    return request_pool__->AddRequest(std::unique_ptr<Request> {new Request{beamtime_id_, request_header, data, callback}});
+    return request_pool__->AddRequest(std::unique_ptr<Request> {new Request{beamtime_id_, request_header, std::move(data), callback}});
 }
 
 void ProducerImpl::SetLogLevel(LogLevel level) {

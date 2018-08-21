@@ -15,7 +15,7 @@ RequestHandlerFilesystem::RequestHandlerFilesystem(std::string destination_folde
 
 Error RequestHandlerFilesystem::ProcessRequestUnlocked(const Request* request) {
     std::string fullpath = destination_folder_ + "/" + request->header.message + ".bin";
-    auto err = io__->WriteDataToFile(fullpath, (uint8_t*)request->data, request->header.data_size);
+    auto err = io__->WriteDataToFile(fullpath, (uint8_t*)request->data.get(), request->header.data_size);
     if (request->callback) {
         request->callback(request->header, std::move(err));
     }

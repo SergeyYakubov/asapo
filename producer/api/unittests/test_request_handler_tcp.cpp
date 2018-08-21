@@ -57,18 +57,17 @@ class RequestHandlerTcpTests : public testing::Test {
     uint64_t expected_thread_id = 2;
 
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
-    void*    expected_file_pointer = (void*)0xC00FE;
     asapo::Error callback_err;
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_file_name};
     bool called = false;
     asapo::GenericRequestHeader callback_header;
-    asapo::Request request{expected_beamtime_id, header, expected_file_pointer, [this](asapo::GenericRequestHeader header, asapo::Error err) {
+    asapo::Request request{expected_beamtime_id, header, nullptr, [this](asapo::GenericRequestHeader header, asapo::Error err) {
         called = true;
         callback_err = std::move(err);
         callback_header = header;
     }};
 
-    asapo::Request request_nocallback{expected_beamtime_id, header, expected_file_pointer, nullptr};
+    asapo::Request request_nocallback{expected_beamtime_id, header, nullptr, nullptr};
     testing::NiceMock<asapo::MockLogger> mock_logger;
     uint64_t n_connections{0};
     asapo::RequestHandlerTcp request_handler{&mock_discovery_service, expected_thread_id, &n_connections};
@@ -244,7 +243,7 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
 void RequestHandlerTcpTests::ExpectFailSendData(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, expected_file_pointer, expected_file_size, _))
+        EXPECT_CALL(mock_io, Send_t(expected_sd, nullptr, expected_file_size, _))
         .Times(1)
         .WillOnce(
             DoAll(
@@ -302,7 +301,7 @@ void RequestHandlerTcpTests::ExpectFailReceive(bool only_once) {
 
 void RequestHandlerTcpTests::ExpectOKSendData(bool only_once) {
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, expected_file_pointer, expected_file_size, _))
+        EXPECT_CALL(mock_io, Send_t(expected_sd, nullptr, expected_file_size, _))
         .Times(1)
         .WillOnce(
             DoAll(

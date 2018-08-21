@@ -6,6 +6,7 @@
 
 #include "logger/logger.h"
 #include "producer/common.h"
+#include "common/data_structs.h"
 
 namespace asapo {
 
@@ -29,8 +30,8 @@ class Producer {
       \param file_size - The size of the data.
       \return Error - Will be nullptr on success
     */
-    virtual Error Send(uint64_t file_id, const void* data, size_t file_size, std::string file_name,
-                       RequestCallback callback) = 0;
+    virtual Error Send(const EventHeader& event_header, FileData data, RequestCallback callback) = 0;
+
     //! Set internal log level
     virtual void SetLogLevel(LogLevel level) = 0;
     //! Enables/Disables logs output to stdout

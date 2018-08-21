@@ -47,18 +47,17 @@ class RequestHandlerFilesystemTests : public testing::Test {
     std::string  expected_destination = "destination";
     std::string expected_fullpath = expected_destination + "/" + expected_file_name + ".bin";
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
-    uint8_t*    expected_data_pointer = (uint8_t*)0xC00FE;
     asapo::Error callback_err;
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_file_name};
     bool called = false;
     asapo::GenericRequestHeader callback_header;
-    asapo::Request request{"", header, expected_data_pointer, [this](asapo::GenericRequestHeader header, asapo::Error err) {
+    asapo::Request request{"", header, nullptr, [this](asapo::GenericRequestHeader header, asapo::Error err) {
         called = true;
         callback_err = std::move(err);
         callback_header = header;
     }};
 
-    asapo::Request request_nocallback{"", header, expected_data_pointer, nullptr};
+    asapo::Request request_nocallback{"", header, nullptr, nullptr};
     testing::NiceMock<asapo::MockLogger> mock_logger;
 
     asapo::RequestHandlerFilesystem request_handler{expected_destination, expected_thread_id};
@@ -85,7 +84,7 @@ MATCHER_P2(M_CheckSendDataRequest, file_id, file_size,
 }
 
 TEST_F(RequestHandlerFilesystemTests, CallBackErrorIfCannotSaveFile) {
-    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_fullpath, expected_data_pointer, expected_file_size))
+    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_fullpath, nullptr, expected_file_size))
     .WillOnce(
         Return(
             asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
@@ -100,7 +99,7 @@ TEST_F(RequestHandlerFilesystemTests, CallBackErrorIfCannotSaveFile) {
 }
 
 TEST_F(RequestHandlerFilesystemTests, WorksWithemptyCallback) {
-    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_fullpath, expected_data_pointer, expected_file_size))
+    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_fullpath, nullptr, expected_file_size))
     .WillOnce(
         Return(
             asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
@@ -116,7 +115,7 @@ TEST_F(RequestHandlerFilesystemTests, WorksWithemptyCallback) {
 
 
 TEST_F(RequestHandlerFilesystemTests, TransferOK) {
-    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_fullpath, expected_data_pointer, expected_file_size))
+    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_fullpath, nullptr, expected_file_size))
     .WillOnce(
         Return(
             nullptr)

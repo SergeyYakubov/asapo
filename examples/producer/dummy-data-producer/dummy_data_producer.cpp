@@ -71,10 +71,17 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
     mutex.unlock();
 }
 
-bool SendDummyData(asapo::Producer* producer, uint8_t* data, size_t number_of_byte, uint64_t iterations) {
+asapo::FileData CreateMemoryBuffer(size_t size) {
+    return asapo::FileData(new uint8_t[size]);
+}
+
+
+bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations) {
 
     for(uint64_t i = 0; i < iterations; i++) {
-        auto err = producer->Send(i + 1, data, number_of_byte, std::to_string(i), &ProcessAfterSend);
+        auto buffer = CreateMemoryBuffer(number_of_byte);
+        asapo::EventHeader event_header{i + 1, number_of_byte, std::to_string(i)};
+        auto err = producer->Send(event_header, std::move(buffer), &ProcessAfterSend);
         if (err) {
             std::cerr << "Cannot send file: " << err << std::endl;
             return false;
@@ -127,9 +134,6 @@ void PrintOutput(const Args& args, const high_resolution_clock::time_point& star
 }
 
 
-std::unique_ptr<uint8_t> CreateMemoryBuffer(const Args& args) {
-    return std::unique_ptr<uint8_t>(new uint8_t[args.number_of_bytes]);
-}
 
 int main (int argc, char* argv[]) {
     Args args;
@@ -139,11 +143,9 @@ int main (int argc, char* argv[]) {
 
     iterations_remained = args.iterations;
 
-    auto buffer = CreateMemoryBuffer(args);
-
     high_resolution_clock::time_point start_time = high_resolution_clock::now();
 
-    if(!SendDummyData(producer.get(), buffer.get(), args.number_of_bytes, args.iterations)) {
+    if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations)) {
         return EXIT_FAILURE;
     }
 

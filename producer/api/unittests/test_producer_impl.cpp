@@ -65,22 +65,23 @@ class ProducerImplTests : public testing::Test {
 TEST_F(ProducerImplTests, SendReturnsError) {
     EXPECT_CALL(mock_pull, AddRequest_t(_)).WillOnce(Return(
             asapo::ProducerErrorTemplates::kRequestPoolIsFull.Generate().release()));
-    auto err = producer.Send(1, nullptr, 1, "", nullptr);
+    asapo::EventHeader event_header{1, 1, ""};
+    auto err = producer.Send(event_header, nullptr, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
 }
 
 TEST_F(ProducerImplTests, ErrorIfFileNameTooLong) {
     std::string long_string(asapo::kMaxMessageSize + 100, 'a');
-    auto err = producer.Send(1, nullptr, 1, long_string, nullptr);
+    asapo::EventHeader event_header{1, 1, long_string};
+    auto err = producer.Send(event_header, nullptr, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileNameTooLong));
 }
 
 
 TEST_F(ProducerImplTests, ErrorIfSizeTooLarge) {
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("error checking")));
-
-    auto err = producer.Send(1, nullptr, asapo::ProducerImpl::kMaxChunkSize + 1, "", nullptr);
-
+    asapo::EventHeader event_header{1, asapo::ProducerImpl::kMaxChunkSize + 1, ""};
+    auto err = producer.Send(event_header, nullptr, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileTooLarge));
 }
 
@@ -98,7 +99,8 @@ TEST_F(ProducerImplTests, OKSendingRequest) {
                                         expected_beamtimeid, expected_id, expected_size, expected_name))).WillOnce(Return(
                                                     nullptr));
 
-    auto err = producer.Send(expected_id, nullptr, expected_size, expected_name, nullptr);
+    asapo::EventHeader event_header{expected_id, expected_size, expected_name};
+    auto err = producer.Send(event_header, nullptr, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }

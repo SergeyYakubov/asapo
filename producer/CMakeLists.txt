@@ -1,1 +1,2 @@
 add_subdirectory(api)
+add_subdirectory(folder_monitor_producer)

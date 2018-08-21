@@ -3,13 +3,14 @@
 
 #include "common/networking.h"
 #include "producer/common.h"
+#include "common/data_structs.h"
 
 namespace asapo {
 
 struct Request {
     std::string beamtime_id;
     GenericRequestHeader header;
-    const void* data;
+    FileData data;
     RequestCallback callback;
 };
 
