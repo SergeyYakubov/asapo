@@ -3,7 +3,8 @@ set(SOURCE_FILES
         src/event_detector.cpp
         src/foldermon_config.cpp
         src/foldermon_logger.cpp
-        )
+        src/event_detector_factory.cpp
+        src/inotify_event_detector.cpp)
 
 
 ################################
@@ -41,7 +42,7 @@ set_property(TARGET ${TARGET_NAME} PROPERTY ENABLE_EXPORTS true)
 set(TEST_SOURCE_FILES
         unittests/test_foldermon_config.cpp
         unittests/mock_foldermon_config.cpp
-#        unittests/test_event_detector_factory.cpp
+        unittests/test_event_detector_factory.cpp
    )
 
 set(TEST_LIBRARIES "${TARGET_NAME}")
