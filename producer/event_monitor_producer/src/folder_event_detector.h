@@ -3,13 +3,19 @@
 
 #include "event_detector.h"
 #include "eventmon_config.h"
+#include "io/io.h"
+#include "logger/logger.h"
+
+#include "system_folder_watch.h"
 
 namespace asapo {
 
-class InotifyEventDetector : public AbstractEventDetector {
+class FolderEventDetector : public AbstractEventDetector {
   public:
     Error GetNextEvent(EventHeader* event_header) override;
-    InotifyEventDetector(const EventMonConfig* config);
+    FolderEventDetector(const EventMonConfig* config);
+    std::unique_ptr<SystemFolderWatch> system_folder_watch__;
+    const AbstractLogger* log__;
   private:
     const EventMonConfig* config_;
 };

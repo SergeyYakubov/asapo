@@ -4,7 +4,7 @@
 #include "eventmon_mocking.h"
 #include "mock_eventmon_config.h"
 #include "../src/event_detector_factory.h"
-#include "../src/inotify_event_detector.h"
+#include "../src/folder_event_detector.h"
 
 using ::testing::Test;
 using ::testing::_;
@@ -34,7 +34,7 @@ class FactoryTests : public Test {
 
 TEST_F(FactoryTests, CreateDetector) {
     auto event_detector = factory.CreateEventDetector();
-    ASSERT_THAT(dynamic_cast<asapo::InotifyEventDetector*>(event_detector.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::FolderEventDetector*>(event_detector.get()), Ne(nullptr));
 }
 
 }

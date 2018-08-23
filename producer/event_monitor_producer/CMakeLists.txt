@@ -1,10 +1,17 @@
 set(TARGET_NAME event-monitor-producer)
 set(SOURCE_FILES
-        src/event_detector.cpp
         src/eventmon_config.cpp
         src/eventmon_logger.cpp
         src/event_detector_factory.cpp
-        src/inotify_event_detector.cpp)
+        src/folder_event_detector.cpp
+)
+
+IF(WIN32)
+    set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_windows.cpp)
+ELSEIF(UNIX)
+    set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_linux.cpp)
+ENDIF(WIN32)
+
 
 
 ################################
@@ -43,6 +50,7 @@ set(TEST_SOURCE_FILES
         unittests/test_eventmon_config.cpp
         unittests/mock_eventmon_config.cpp
         unittests/test_event_detector_factory.cpp
+        unittests/test_folder_event_detector.cpp
    )
 
 set(TEST_LIBRARIES "${TARGET_NAME}")
