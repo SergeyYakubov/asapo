@@ -2,9 +2,9 @@
 #include <gmock/gmock.h>
 #include <unittests/MockIO.h>
 
-#include "../src/foldermon_config.h"
-#include "../src/foldermon_config_factory.h"
-#include "mock_foldermon_config.h"
+#include "../src/eventmon_config.h"
+#include "../src/eventmon_config_factory.h"
+#include "mock_eventmon_config.h"
 
 using ::testing::Test;
 using ::testing::Return;
@@ -26,8 +26,8 @@ using ::asapo::FileDescriptor;
 using ::asapo::SocketDescriptor;
 using ::asapo::MockIO;
 
-using ::asapo::FolderMonConfigFactory;
-using asapo::FolderMonConfig;
+using ::asapo::EventMonConfigFactory;
+using asapo::EventMonConfig;
 
 namespace {
 
@@ -35,7 +35,7 @@ namespace {
 class ConfigTests : public Test {
   public:
     MockIO mock_io;
-    FolderMonConfigFactory config_factory;
+    EventMonConfigFactory config_factory;
     void SetUp() override {
         config_factory.io__ = std::unique_ptr<asapo::IO> {&mock_io};
     }
@@ -47,7 +47,7 @@ class ConfigTests : public Test {
 
 
 TEST_F(ConfigTests, ReadSettingsOK) {
-    asapo::FolderMonConfig test_config;
+    asapo::EventMonConfig test_config;
     test_config.nthreads = 10;
     test_config.tag = "folderMon1";
     test_config.log_level = asapo::LogLevel::Error;
@@ -57,7 +57,7 @@ TEST_F(ConfigTests, ReadSettingsOK) {
 
     auto err = asapo::SetFolderMonConfig(test_config);
 
-    auto config = asapo::GetFolderMonConfig();
+    auto config = asapo::GetEventMonConfig();
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(config->log_level, Eq(asapo::LogLevel::Error));
@@ -69,7 +69,7 @@ TEST_F(ConfigTests, ReadSettingsOK) {
 }
 
 TEST_F(ConfigTests, ReadSettingsChecksNthreads) {
-    asapo::FolderMonConfig test_config;
+    asapo::EventMonConfig test_config;
     test_config.nthreads = 0;
 
     auto err = asapo::SetFolderMonConfig(test_config);
@@ -84,7 +84,7 @@ TEST_F(ConfigTests, ReadSettingsChecksNthreads) {
 
 
 TEST_F(ConfigTests, ReadSettingsChecksMode) {
-    asapo::FolderMonConfig test_config;
+    asapo::EventMonConfig test_config;
     test_config.nthreads = 1;
     test_config.asapo_endpoint = "wrongmode"; // we use it to set mode string to some wrong value
     auto err = asapo::SetFolderMonConfig(test_config);

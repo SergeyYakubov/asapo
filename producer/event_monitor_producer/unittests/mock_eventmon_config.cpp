@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "mock_foldermon_config.h"
-#include "../src/foldermon_config_factory.h"
-#include "../src/foldermon_config.h"
+#include "mock_eventmon_config.h"
+#include "../src/eventmon_config_factory.h"
+#include "../src/eventmon_config.h"
 
 #include <unittests/MockIO.h>
 
@@ -11,9 +11,9 @@ using testing::_;
 
 namespace asapo {
 
-Error SetFolderMonConfig (const FolderMonConfig& config) {
+Error SetFolderMonConfig (const EventMonConfig& config) {
     MockIO mock_io;
-    FolderMonConfigFactory config_factory;
+    EventMonConfigFactory config_factory;
     config_factory.io__ = std::unique_ptr<IO> {&mock_io};
 
     std::string log_level;

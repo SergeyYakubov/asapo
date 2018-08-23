@@ -1,8 +1,8 @@
-#include "foldermon_logger.h"
+#include "eventmon_logger.h"
 
 namespace asapo {
 
-AbstractLogger* GetDefaultFolderMonLogger() {
+AbstractLogger* GetDefaultEventMonLogger() {
     static Logger logger = asapo::CreateDefaultLoggerBin("producer ");
     return logger.get();
 }

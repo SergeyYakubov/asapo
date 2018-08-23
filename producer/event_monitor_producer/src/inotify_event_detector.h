@@ -2,16 +2,16 @@
 #define ASAPO_INOTOFY_EVENT_DETECTOR_H
 
 #include "event_detector.h"
-#include "foldermon_config.h"
+#include "eventmon_config.h"
 
 namespace asapo {
 
 class InotifyEventDetector : public AbstractEventDetector {
   public:
     Error GetNextEvent(EventHeader* event_header) override;
-    InotifyEventDetector(const FolderMonConfig* config);
+    InotifyEventDetector(const EventMonConfig* config);
   private:
-    const FolderMonConfig* config_;
+    const EventMonConfig* config_;
 };
 
 }

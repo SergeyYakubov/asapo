@@ -5,27 +5,27 @@
 #include <thread>
 
 #include "asapo_producer.h"
-#include "foldermon_config.h"
-#include "foldermon_config_factory.h"
+#include "eventmon_config.h"
+#include "eventmon_config_factory.h"
 #include "event_detector_factory.h"
-#include "foldermon_logger.h"
+#include "eventmon_logger.h"
 
 using asapo::Producer;
-using asapo::FolderMonConfigFactory;
+using asapo::EventMonConfigFactory;
 using asapo::Error;
-using asapo::GetFolderMonConfig;
+using asapo::GetEventMonConfig;
 
 Error ReadConfigFile(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <config file>" << std::endl;
         exit(EXIT_FAILURE);
     }
-    FolderMonConfigFactory factory;
+    EventMonConfigFactory factory;
     return factory.SetConfigFromFile(argv[1]);
 }
 
 std::unique_ptr<Producer> CreateProducer() {
-    auto config = GetFolderMonConfig();
+    auto config = GetEventMonConfig();
 
 
     Error err;
@@ -43,7 +43,7 @@ std::unique_ptr<Producer> CreateProducer() {
 
 void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
     if (err) {
-        const auto& logger = asapo::GetDefaultFolderMonLogger();
+        const auto& logger = asapo::GetDefaultEventMonLogger();
         logger->Error("data was not successfully send: " + err->Explain());
         return;
     }
@@ -57,8 +57,8 @@ int main (int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    const auto& logger = asapo::GetDefaultFolderMonLogger();
-    logger->SetLogLevel(GetFolderMonConfig()->log_level);
+    const auto& logger = asapo::GetDefaultEventMonLogger();
+    logger->SetLogLevel(GetEventMonConfig()->log_level);
 
 
     auto producer = CreateProducer();

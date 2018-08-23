@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "foldermon_mocking.h"
-#include "mock_foldermon_config.h"
+#include "eventmon_mocking.h"
+#include "mock_eventmon_config.h"
 #include "../src/event_detector_factory.h"
 #include "../src/inotify_event_detector.h"
 
@@ -15,7 +15,7 @@ using ::asapo::Error;
 
 
 using asapo::EventDetectorFactory;
-using asapo::FolderMonConfig;
+using asapo::EventMonConfig;
 
 namespace {
 
@@ -24,7 +24,7 @@ class FactoryTests : public Test {
   public:
     EventDetectorFactory factory;
     Error err{nullptr};
-    FolderMonConfig config;
+    EventMonConfig config;
     void SetUp() override {
         asapo::SetFolderMonConfig(config);
     }

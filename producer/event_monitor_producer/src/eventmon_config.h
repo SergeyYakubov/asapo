@@ -1,15 +1,15 @@
-#ifndef ASAPO_FolderMon_CONFIG_H
-#define ASAPO_FolderMon_CONFIG_H
+#ifndef ASAPO_EventMon_CONFIG_H
+#define ASAPO_EventMon_CONFIG_H
 
 #include "io/io.h"
 #include "common/error.h"
 #include "logger/logger.h"
 #include "producer/common.h"
-#include "foldermon_config_factory.h"
+#include "eventmon_config_factory.h"
 
 namespace asapo {
 
-struct FolderMonConfig {
+struct EventMonConfig {
     std::string asapo_endpoint;
     LogLevel log_level = LogLevel::Info;
     std::string tag;
@@ -19,12 +19,12 @@ struct FolderMonConfig {
   private:
     std::string log_level_str;
     std::string mode_str;
-    friend FolderMonConfigFactory;
+    friend EventMonConfigFactory;
 };
 
-const FolderMonConfig* GetFolderMonConfig();
+const EventMonConfig* GetEventMonConfig();
 
 }
 
 
-#endif //ASAPO_FolderMon_CONFIG_H
+#endif //ASAPO_EventMon_CONFIG_H

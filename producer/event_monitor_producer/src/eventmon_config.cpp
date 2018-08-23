@@ -1,17 +1,17 @@
-#include "foldermon_config.h"
-#include "foldermon_config_factory.h"
+#include "eventmon_config.h"
+#include "eventmon_config_factory.h"
 #include "io/io_factory.h"
 #include "json_parser/json_parser.h"
 
 namespace asapo {
 
-FolderMonConfig config;
+EventMonConfig config;
 
-FolderMonConfigFactory::FolderMonConfigFactory() : io__{GenerateDefaultIO()} {
+EventMonConfigFactory::EventMonConfigFactory() : io__{GenerateDefaultIO()} {
 
 }
 
-Error FolderMonConfigFactory::ParseConfigFile(std::string file_name) {
+Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     JsonFileParser parser(file_name, &io__);
     Error err = nullptr;
     (err = parser.GetString("AsapoEndpoint", &config.asapo_endpoint)) ||
@@ -24,7 +24,7 @@ Error FolderMonConfigFactory::ParseConfigFile(std::string file_name) {
 }
 
 
-Error FolderMonConfigFactory::CheckConfig() {
+Error EventMonConfigFactory::CheckConfig() {
     Error err;
     (err = CheckMode()) ||
     (err = CheckLogLevel()) ||
@@ -33,7 +33,7 @@ Error FolderMonConfigFactory::CheckConfig() {
 }
 
 
-Error FolderMonConfigFactory::SetConfigFromFile(std::string file_name) {
+Error EventMonConfigFactory::SetConfigFromFile(std::string file_name) {
     auto  err = ParseConfigFile(file_name);
     if (err) {
         return err;
@@ -42,7 +42,7 @@ Error FolderMonConfigFactory::SetConfigFromFile(std::string file_name) {
     return CheckConfig();
 }
 
-Error FolderMonConfigFactory::CheckMode() {
+Error EventMonConfigFactory::CheckMode() {
     if (config.mode_str == "tcp") {
         config.mode = RequestHandlerType::kTcp;
     } else if (config.mode_str == "filesystem") {
@@ -53,14 +53,14 @@ Error FolderMonConfigFactory::CheckMode() {
     return nullptr;
 }
 
-Error FolderMonConfigFactory::CheckLogLevel() {
+Error EventMonConfigFactory::CheckLogLevel() {
     Error err;
     config.log_level = StringToLogLevel(config.log_level_str, &err);
     return err;
 }
 
 
-Error FolderMonConfigFactory::CheckNThreads() {
+Error EventMonConfigFactory::CheckNThreads() {
     if (config.nthreads == 0 || config.nthreads > kMaxProcessingThreads ) {
         return  TextError("NThreads should between 1 and " + std::to_string(kMaxProcessingThreads));
     }
@@ -69,7 +69,7 @@ Error FolderMonConfigFactory::CheckNThreads() {
 
 
 
-const FolderMonConfig*  GetFolderMonConfig() {
+const EventMonConfig*  GetEventMonConfig() {
     return &config;
 }
 

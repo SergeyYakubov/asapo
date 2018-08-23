@@ -5,7 +5,7 @@ namespace asapo {
 Error InotifyEventDetector::GetNextEvent(EventHeader* event_header) {
     return nullptr;
 }
-InotifyEventDetector::InotifyEventDetector(const FolderMonConfig* config) : config_{config} {
+InotifyEventDetector::InotifyEventDetector(const EventMonConfig* config) : config_{config} {
 }
 
 }
