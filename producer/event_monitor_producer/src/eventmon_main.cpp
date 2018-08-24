@@ -65,6 +65,11 @@ int main (int argc, char* argv[]) {
     asapo::EventDetectorFactory factory;
     auto event_detector = factory.CreateEventDetector();
 
+    err = event_detector->StartMonitoring();
+    if (err) {
+        return EXIT_FAILURE;
+    }
+
     int i = 0;
     while (true && i < 1000) {
         asapo::EventHeader event_header;

@@ -20,6 +20,8 @@ Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     (err = parser.GetString("Mode", &config.mode_str)) ||
     (err = parser.GetUInt64("NThreads", &config.nthreads)) ||
     (err = parser.GetString("LogLevel", &config.log_level_str));
+    (err = parser.GetArrayString("MonitoredFolders", &config.monitored_folders));
+
     return err;
 }
 
@@ -29,6 +31,7 @@ Error EventMonConfigFactory::CheckConfig() {
     (err = CheckMode()) ||
     (err = CheckLogLevel()) ||
     (err = CheckNThreads());
+//todo: check monitored folders exist?
     return err;
 }
 

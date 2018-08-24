@@ -48,6 +48,15 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     config_string += "," + std::string("\"Mode\":") + "\"" + mode + "\"";
     config_string += "," + std::string("\"NThreads\":") + std::to_string(config.nthreads);
     config_string += "," + std::string("\"LogLevel\":") + "\"" + log_level + "\"";
+    std::string mon_folders;
+    for (auto folder:config.monitored_folders) {
+        mon_folders+="\""+folder+"\""+",";
+    }
+    if (mon_folders.size()) {
+        mon_folders.pop_back();
+    }
+
+    config_string += "," + std::string("\"MonitoredFolders\":") + "[" + mon_folders + "]";
     config_string += "," + std::string("\"Tag\":") + "\"" + config.tag + "\"";
     config_string += "," + std::string("\"AsapoEndpoint\":") + "\"" + config.asapo_endpoint + "\"";
 

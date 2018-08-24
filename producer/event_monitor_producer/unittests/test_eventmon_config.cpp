@@ -20,6 +20,8 @@ using ::testing::SaveArg;
 using ::testing::SaveArgPointee;
 using ::testing::InSequence;
 using ::testing::SetArgPointee;
+using testing::ElementsAre;
+
 using ::asapo::Error;
 using ::asapo::ErrorInterface;
 using ::asapo::FileDescriptor;
@@ -54,7 +56,7 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     test_config.beamtime_id = "test";
     test_config.asapo_endpoint = "uri:001";
     test_config.mode = asapo::RequestHandlerType::kTcp;
-
+    test_config.monitored_folders={"test1","test2"};
     auto err = asapo::SetFolderMonConfig(test_config);
 
     auto config = asapo::GetEventMonConfig();
@@ -66,6 +68,8 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     ASSERT_THAT(config->beamtime_id, Eq("test"));
     ASSERT_THAT(config->asapo_endpoint, Eq("uri:001"));
     ASSERT_THAT(config->mode, Eq(asapo::RequestHandlerType::kTcp));
+    ASSERT_THAT(config->monitored_folders, ElementsAre("test1","test2"));
+
 }
 
 TEST_F(ConfigTests, ReadSettingsChecksNthreads) {
