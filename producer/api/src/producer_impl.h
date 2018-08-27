@@ -34,7 +34,7 @@ class ProducerImpl : public Producer {
     Error SetBeamtimeId(std::string beamtime_id) override;
 
   private:
-    GenericRequestHeader GenerateNextSendRequest(uint64_t file_id, size_t file_size, std::string file_name);
+    GenericRequestHeader GenerateNextSendRequest(uint64_t file_id, uint64_t file_size, std::string file_name);
     std::string beamtime_id_;
 };
 

@@ -21,7 +21,7 @@ enum class RequestHandlerType {
 
 struct EventHeader {
     uint64_t file_id;
-    size_t file_size;
+    uint64_t file_size;
     std::string file_name;
 };
 

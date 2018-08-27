@@ -27,7 +27,7 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, a
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get()});
 }
 
-GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, size_t file_size, std::string file_name) {
+GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, uint64_t file_size, std::string file_name) {
     GenericRequestHeader request{kOpcodeTransferData, file_id, file_size, std::move(file_name)};
     return request;
 }
