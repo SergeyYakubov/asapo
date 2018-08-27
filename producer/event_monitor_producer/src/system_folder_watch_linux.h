@@ -12,9 +12,10 @@
 namespace asapo {
 
 class SystemFolderWatch {
- public:
-  VIRTUAL Error StartFolderMonitor(const std::vector<std::string>& monitored_folders);
-  VIRTUAL FileEvents GetFileEventList(Error* err);
+  public:
+    VIRTUAL Error StartFolderMonitor(const std::vector<std::string>& monitored_folders);
+    VIRTUAL FileEvents GetFileEventList(Error* err);
+  private:
 };
 
 }

@@ -49,16 +49,16 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     config_string += "," + std::string("\"NThreads\":") + std::to_string(config.nthreads);
     config_string += "," + std::string("\"LogLevel\":") + "\"" + log_level + "\"";
     std::string mon_folders;
-    for (auto folder:config.monitored_folders) {
-        mon_folders+="\""+folder+"\""+",";
+    for (auto folder : config.monitored_folders) {
+        mon_folders += "\"" + folder + "\"" + ",";
     }
     if (mon_folders.size()) {
         mon_folders.pop_back();
     }
 
     std::string ignored_exts;
-    for (auto ext:config.ignored_extentions) {
-        ignored_exts+="\""+ext+"\""+",";
+    for (auto ext : config.ignored_extentions) {
+        ignored_exts += "\"" + ext + "\"" + ",";
     }
     if (ignored_exts.size()) {
         ignored_exts.pop_back();

@@ -20,12 +20,12 @@ class FolderEventDetector : public AbstractEventDetector {
     std::unique_ptr<SystemFolderWatch> system_folder_watch__;
   private:
     const EventMonConfig* config_;
-    bool monitoring_started_= false;
+    bool monitoring_started_ = false;
     std::deque<EventHeader> events_buffer_;
     Error UpdateEventsBuffer();
     Error GetHeaderFromBuffer(EventHeader* event_header);
     bool IgnoreEvent(const FileEvent& event);
-  bool BufferIsEmpty() const;
+    bool BufferIsEmpty() const;
 };
 
 }

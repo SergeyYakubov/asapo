@@ -6,19 +6,18 @@
 namespace asapo {
 
 FolderEventDetector::FolderEventDetector(const EventMonConfig* config) : system_folder_watch__{new SystemFolderWatch()},
-config_{config}{
+config_{config} {
 }
 
-inline bool ends_with(std::string const & value, std::string const & ending)
-{
+inline bool ends_with(std::string const& value, std::string const& ending) {
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
 
-bool FolderEventDetector::IgnoreEvent(const FileEvent &event) {
-    for (auto& ext: config_->ignored_extentions) {
-        if (ends_with(event.name,ext)) {
+bool FolderEventDetector::IgnoreEvent(const FileEvent& event) {
+    for (auto& ext : config_->ignored_extentions) {
+        if (ends_with(event.name, ext)) {
             return true;
         }
     }
@@ -39,7 +38,7 @@ Error FolderEventDetector::UpdateEventsBuffer() {
 
     for (auto& event : file_events) {
         if (!IgnoreEvent(event)) {
-            events_buffer_.emplace_back(EventHeader{0,event.size,event.name});
+            events_buffer_.emplace_back(EventHeader{0, event.size, event.name});
         }
     }
 
@@ -49,8 +48,8 @@ Error FolderEventDetector::UpdateEventsBuffer() {
 
 Error FolderEventDetector::GetNextEvent(EventHeader* event_header) {
     if (!monitoring_started_) {
-            auto err = TextError("monitoring is not started yet");
-            return err;
+        auto err = TextError("monitoring is not started yet");
+        return err;
     }
 
     if (BufferIsEmpty()) {
@@ -62,8 +61,7 @@ Error FolderEventDetector::GetNextEvent(EventHeader* event_header) {
     return GetHeaderFromBuffer(event_header);
 }
 
-bool FolderEventDetector::BufferIsEmpty() const
-{
+bool FolderEventDetector::BufferIsEmpty() const {
     return events_buffer_.size() == 0;
 }
 

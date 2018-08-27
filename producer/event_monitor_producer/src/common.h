@@ -8,14 +8,14 @@
 namespace asapo {
 
 enum class EventType {
-  closed,
-  renamed_to
+    closed,
+    renamed_to
 };
 
 struct FileEvent {
-  EventType type;
-  uint64_t size;
-  std::string name;
+    EventType type;
+    uint64_t size;
+    std::string name;
 };
 
 using FileEvents = std::vector<FileEvent>;

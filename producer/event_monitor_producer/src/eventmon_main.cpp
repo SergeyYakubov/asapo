@@ -3,12 +3,15 @@
 #include <vector>
 #include <mutex>
 #include <thread>
+#include <csignal>
+#include <atomic>
 
 #include "asapo_producer.h"
 #include "eventmon_config.h"
 #include "eventmon_config_factory.h"
 #include "event_detector_factory.h"
 #include "eventmon_logger.h"
+#include "event_monitor_error.h"
 
 using asapo::Producer;
 using asapo::EventMonConfigFactory;
@@ -49,6 +52,12 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
     }
 }
 
+volatile sig_atomic_t stop_signal;
+
+void SignalHandler(int signal) {
+    stop_signal = signal;
+}
+
 
 int main (int argc, char* argv[]) {
     auto err = ReadConfigFile(argc, argv);
@@ -56,6 +65,11 @@ int main (int argc, char* argv[]) {
         std::cerr << "cannot read config file: " << err->Explain() << std::endl;
         return EXIT_FAILURE;
     }
+
+    stop_signal = 0;
+    std::signal(SIGINT, SignalHandler);
+    std::signal(SIGTERM, SignalHandler);
+
 
     const auto& logger = asapo::GetDefaultEventMonLogger();
     logger->SetLogLevel(GetEventMonConfig()->log_level);
@@ -71,23 +85,20 @@ int main (int argc, char* argv[]) {
     }
 
     int i = 0;
-    while (true && i < 1000) {
+    while (!stop_signal) {
         asapo::EventHeader event_header;
-        event_header.file_id = i++;
-        event_header.file_size = 0;
-        event_header.file_name = std::to_string(i);
         auto err = event_detector->GetNextEvent(&event_header);
         if (err) {
-            logger->Error("cannot retrieve next event: " + err->Explain());
+            if (err != asapo::EventMonitorErrorTemplates::kNoNewEvent) {
+                logger->Error("cannot retrieve next event: " + err->Explain());
+            }
             continue;
         }
+        event_header.file_id = i++;
         producer->Send(event_header, nullptr, ProcessAfterSend);
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-
-
+    logger->Info("Producer exit. Processed " + std::to_string(i) + " files");
     return EXIT_SUCCESS;
 }
 
