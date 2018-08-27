@@ -56,7 +56,17 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
         mon_folders.pop_back();
     }
 
+    std::string ignored_exts;
+    for (auto ext:config.ignored_extentions) {
+        ignored_exts+="\""+ext+"\""+",";
+    }
+    if (ignored_exts.size()) {
+        ignored_exts.pop_back();
+    }
+
+
     config_string += "," + std::string("\"MonitoredFolders\":") + "[" + mon_folders + "]";
+    config_string += "," + std::string("\"IgnoreExtentions\":") + "[" + ignored_exts + "]";
     config_string += "," + std::string("\"Tag\":") + "\"" + config.tag + "\"";
     config_string += "," + std::string("\"AsapoEndpoint\":") + "\"" + config.asapo_endpoint + "\"";
 

@@ -9,7 +9,7 @@ namespace asapo {
 
 enum class EventType {
   closed,
-  renamed_from
+  renamed_to
 };
 
 struct FileEvent {

@@ -19,8 +19,9 @@ Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     (err = parser.GetString("BeamtimeID", &config.beamtime_id)) ||
     (err = parser.GetString("Mode", &config.mode_str)) ||
     (err = parser.GetUInt64("NThreads", &config.nthreads)) ||
-    (err = parser.GetString("LogLevel", &config.log_level_str));
-    (err = parser.GetArrayString("MonitoredFolders", &config.monitored_folders));
+    (err = parser.GetString("LogLevel", &config.log_level_str)) ||
+    (err = parser.GetArrayString("MonitoredFolders", &config.monitored_folders)) ||
+    (err = parser.GetArrayString("IgnoreExtentions", &config.ignored_extentions));
 
     return err;
 }
