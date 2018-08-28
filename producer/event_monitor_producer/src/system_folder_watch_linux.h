@@ -18,7 +18,7 @@ namespace asapo {
 
 class SystemFolderWatch {
   public:
-    VIRTUAL Error StartFolderMonitor(const std::vector<std::string>& monitored_folders);
+    VIRTUAL Error StartFolderMonitor(const std::string& root_folder, const std::vector<std::string>& monitored_folders);
     VIRTUAL FileEvents GetFileEventList(Error* err);
   private:
     Error AddFolderToWatch(std::string folder, bool recursive);
@@ -28,6 +28,7 @@ class SystemFolderWatch {
     static const uint64_t kBufLen  = 2000 * (sizeof(struct inotify_event) + FILENAME_MAX + 1);
     std::map<int, std::string> watched_folders_paths_;
     int watch_fd_ = -1;
+    std::string root_folder_;
 };
 
 }

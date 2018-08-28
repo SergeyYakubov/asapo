@@ -16,7 +16,8 @@ struct EventMonConfig {
     uint64_t nthreads = 1;
     std::string beamtime_id;
     RequestHandlerType mode = RequestHandlerType::kTcp;
-    std::vector<std::string> monitored_folders;
+    std::string root_monitored_folder;
+    std::vector<std::string> monitored_subfolders;
     std::vector<std::string> ignored_extentions;
   private:
     std::string log_level_str;

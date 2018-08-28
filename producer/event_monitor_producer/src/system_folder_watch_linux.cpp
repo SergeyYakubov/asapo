@@ -22,7 +22,9 @@ Error SystemFolderWatch::AddFolderToWatch(std::string folder, bool recursive) {
     } else {
         GetDefaultEventMonLogger()->Debug("added folder to monitor: " + folder);
     }
-    watched_folders_paths_[id] = folder;
+    std::string relative_path = folder;
+    relative_path.erase(0, root_folder_.size() + 1);
+    watched_folders_paths_[id] = relative_path;
     if (recursive) {
         Error err;
         auto subdirs = io_-> GetSubDirectories(folder, &err);
@@ -41,13 +43,15 @@ Error SystemFolderWatch::AddFolderToWatch(std::string folder, bool recursive) {
 }
 
 
-Error SystemFolderWatch::StartFolderMonitor(const std::vector<std::string>& monitored_folders) {
+Error SystemFolderWatch::StartFolderMonitor(const std::string& root_folder,
+                                            const std::vector<std::string>& monitored_folders) {
     watch_fd_ = inotify_init();
     if (watch_fd_ == -1) {
         return EventMonitorErrorTemplates::kSystemError.Generate("cannot initialize inotify");
     }
+    root_folder_ = root_folder;
     for (auto& folder : monitored_folders) {
-        auto err = AddFolderToWatch(folder, true);
+        auto err = AddFolderToWatch(root_folder_ + "/" + folder, true);
         if (err) {
             return EventMonitorErrorTemplates::kSystemError.Generate("cannot initialize inotify: " + err->Explain());
         }
@@ -91,7 +95,7 @@ Error SystemFolderWatch::ProcessInotifyEvent(struct inotify_event* i, FileEvents
                         i->wd));
         }
 
-        std::string newpath = it->second + "/" + i->name;
+        std::string newpath = root_folder_ + "/" + it->second + "/" + i->name;
         auto err = AddFolderToWatch(newpath, true);
         if (err) {
             return err;

@@ -56,7 +56,8 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     test_config.beamtime_id = "test";
     test_config.asapo_endpoint = "uri:001";
     test_config.mode = asapo::RequestHandlerType::kTcp;
-    test_config.monitored_folders = {"test1", "test2"};
+    test_config.root_monitored_folder = "tmp";
+    test_config.monitored_subfolders = {"test1", "test2"};
     test_config.ignored_extentions = {"tmp", "test"};
     auto err = asapo::SetFolderMonConfig(test_config);
 
@@ -69,7 +70,8 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     ASSERT_THAT(config->beamtime_id, Eq("test"));
     ASSERT_THAT(config->asapo_endpoint, Eq("uri:001"));
     ASSERT_THAT(config->mode, Eq(asapo::RequestHandlerType::kTcp));
-    ASSERT_THAT(config->monitored_folders, ElementsAre("test1", "test2"));
+    ASSERT_THAT(config->monitored_subfolders, ElementsAre("test1", "test2"));
+    ASSERT_THAT(config->root_monitored_folder, Eq("tmp"));
     ASSERT_THAT(config->ignored_extentions, ElementsAre("tmp", "test"));
 
 }

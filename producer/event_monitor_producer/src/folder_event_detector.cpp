@@ -70,7 +70,7 @@ Error FolderEventDetector::StartMonitoring() {
         return nullptr;
     }
 
-    auto err = system_folder_watch__->StartFolderMonitor(config_->monitored_folders);
+    auto err = system_folder_watch__->StartFolderMonitor(config_->root_monitored_folder, config_->monitored_subfolders);
     if (err) {
         return err;
     }

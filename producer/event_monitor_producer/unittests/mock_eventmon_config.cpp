@@ -49,7 +49,7 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     config_string += "," + std::string("\"NThreads\":") + std::to_string(config.nthreads);
     config_string += "," + std::string("\"LogLevel\":") + "\"" + log_level + "\"";
     std::string mon_folders;
-    for (auto folder : config.monitored_folders) {
+    for (auto folder : config.monitored_subfolders) {
         mon_folders += "\"" + folder + "\"" + ",";
     }
     if (mon_folders.size()) {
@@ -65,7 +65,8 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     }
 
 
-    config_string += "," + std::string("\"MonitoredFolders\":") + "[" + mon_folders + "]";
+    config_string += "," + std::string("\"MonitoredSubFolders\":") + "[" + mon_folders + "]";
+    config_string += "," + std::string("\"RootMonitoredFolder\":") + "\"" + config.root_monitored_folder + "\"";
     config_string += "," + std::string("\"IgnoreExtentions\":") + "[" + ignored_exts + "]";
     config_string += "," + std::string("\"Tag\":") + "\"" + config.tag + "\"";
     config_string += "," + std::string("\"AsapoEndpoint\":") + "\"" + config.asapo_endpoint + "\"";

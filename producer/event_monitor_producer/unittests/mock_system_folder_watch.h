@@ -11,10 +11,11 @@ namespace asapo {
 
 class MockSystemFolderWatch : public SystemFolderWatch {
   public:
-    MOCK_METHOD1(StartFolderMonitor_t, ErrorInterface * (const std::vector<std::string>& monitored_folders));
+    MOCK_METHOD2(StartFolderMonitor_t, ErrorInterface * (const std::string& root_folder,
+                 const std::vector<std::string>& monitored_folders));
 
-    Error StartFolderMonitor(const std::vector<std::string>& monitored_folders) override {
-        return Error{StartFolderMonitor_t(monitored_folders)};
+    Error StartFolderMonitor(const std::string& root_folder, const std::vector<std::string>& monitored_folders) override {
+        return Error{StartFolderMonitor_t(root_folder, monitored_folders)};
 
     }
 

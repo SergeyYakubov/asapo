@@ -48,6 +48,7 @@ class FolderEventDetectorTests : public testing::Test {
     ::testing::NiceMock<asapo::MockSystemFolderWatch> mock_system_folder_watch;
     asapo::EventMonConfig test_config;
     FolderEventDetector detector{&test_config};
+    std::string expected_root_folder = "/tmp";
     std::vector<std::string> expected_folders{"test1", "test2"};
     FileEvent expected_event1{EventType::closed, 10, "test1.dat"};
     FileEvent expected_event2{EventType::renamed_to, 11, "test2.dat"};
@@ -55,7 +56,8 @@ class FolderEventDetectorTests : public testing::Test {
     FileEvent expected_event4{EventType::closed, 12, "test4.tmp"};
     FileEvents expected_events{expected_event1, expected_event2, expected_event3, expected_event4};
     void SetUp() override {
-        test_config.monitored_folders = expected_folders;
+        test_config.root_monitored_folder = expected_root_folder;
+        test_config.monitored_subfolders = expected_folders;
         err = nullptr;
         detector.system_folder_watch__ = std::unique_ptr<asapo::SystemFolderWatch> {&mock_system_folder_watch};
     }
@@ -68,7 +70,7 @@ class FolderEventDetectorTests : public testing::Test {
 };
 
 void FolderEventDetectorTests::MockStartMonitoring() {
-    EXPECT_CALL(mock_system_folder_watch, StartFolderMonitor_t(expected_folders))
+    EXPECT_CALL(mock_system_folder_watch, StartFolderMonitor_t(expected_root_folder, expected_folders))
     .WillOnce(
         Return(nullptr)
     );
@@ -77,7 +79,7 @@ void FolderEventDetectorTests::MockStartMonitoring() {
 
 
 TEST_F(FolderEventDetectorTests, StartsFolderMonitoringOK) {
-    EXPECT_CALL(mock_system_folder_watch, StartFolderMonitor_t(expected_folders))
+    EXPECT_CALL(mock_system_folder_watch, StartFolderMonitor_t(expected_root_folder, expected_folders))
     .WillOnce(
         Return(nullptr)
     );
@@ -86,7 +88,7 @@ TEST_F(FolderEventDetectorTests, StartsFolderMonitoringOK) {
 }
 
 TEST_F(FolderEventDetectorTests, StartFolderMonitoringInitiatesOnlyOnce) {
-    EXPECT_CALL(mock_system_folder_watch, StartFolderMonitor_t(expected_folders))
+    EXPECT_CALL(mock_system_folder_watch, StartFolderMonitor_t(expected_root_folder, expected_folders))
     .WillOnce(
         Return(nullptr)
     );
@@ -97,7 +99,7 @@ TEST_F(FolderEventDetectorTests, StartFolderMonitoringInitiatesOnlyOnce) {
 }
 
 TEST_F(FolderEventDetectorTests, StartFolderMonitoringReturnsError) {
-    EXPECT_CALL(mock_system_folder_watch, StartFolderMonitor_t(expected_folders))
+    EXPECT_CALL(mock_system_folder_watch, StartFolderMonitor_t(expected_root_folder, expected_folders))
     .Times(2)
     .WillOnce(
         Return(asapo::ErrorTemplates::kMemoryAllocationError.Generate().release())
