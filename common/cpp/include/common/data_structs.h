@@ -31,6 +31,7 @@ inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
 
 using FileData = std::unique_ptr<uint8_t[]>;
 using FileInfos = std::vector<FileInfo>;
+using SubDirList = std::vector<std::string>;
 
 }
 #endif //ASAPO_FILE_INFO_H

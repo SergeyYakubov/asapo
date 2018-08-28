@@ -96,8 +96,7 @@ class IO {
 
     virtual void            CreateNewDirectory      (const std::string& directory_name, Error* err) const = 0;
     virtual FileData        GetDataFromFile         (const std::string& fname, uint64_t fsize, Error* err) const = 0;
-    virtual void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
-                                                   Error* err) const = 0;
+    virtual SubDirList      GetSubDirectories(const std::string& path, Error* err) const = 0;
     virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, Error* err) const = 0;
     virtual std::string     ReadFileToString        (const std::string& fname, Error* err) const = 0;
 

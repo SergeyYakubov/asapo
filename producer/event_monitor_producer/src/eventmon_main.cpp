@@ -69,7 +69,7 @@ int main (int argc, char* argv[]) {
     stop_signal = 0;
     std::signal(SIGINT, SignalHandler);
     std::signal(SIGTERM, SignalHandler);
-
+    siginterrupt(SIGINT, 1);
 
     const auto& logger = asapo::GetDefaultEventMonLogger();
     logger->SetLogLevel(GetEventMonConfig()->log_level);
@@ -81,13 +81,17 @@ int main (int argc, char* argv[]) {
 
     err = event_detector->StartMonitoring();
     if (err) {
+        logger->Error(err->Explain());
         return EXIT_FAILURE;
     }
 
     int i = 0;
-    while (!stop_signal) {
+    while (true) {
         asapo::EventHeader event_header;
         auto err = event_detector->GetNextEvent(&event_header);
+        if (stop_signal) {
+            break; // we check it here because signal can interrupt system call (ready by inotify and result n incomplete event data)
+        }
         if (err) {
             if (err != asapo::EventMonitorErrorTemplates::kNoNewEvent) {
                 logger->Error("cannot retrieve next event: " + err->Explain());

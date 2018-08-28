@@ -7,6 +7,7 @@ trap Cleanup EXIT
 Cleanup() {
 	echo cleanup
 	rm -rf test_in test_out #output
+	kill -9 $producer_id &>/dev/null
 }
 
 mkdir -p test_in test_out

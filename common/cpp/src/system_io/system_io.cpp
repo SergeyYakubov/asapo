@@ -114,6 +114,16 @@ FileInfos SystemIO::FilesInFolder(const std::string& folder, Error* err) const {
     return files;
 }
 
+SubDirList SystemIO::GetSubDirectories(const std::string& path, Error* err) const {
+    SubDirList list;
+    GetSubDirectoriesRecursively(path, &list, err);
+    if (*err != nullptr) {
+        return {};
+    }
+    return list;
+}
+
+
 void asapo::SystemIO::CreateNewDirectory(const std::string& directory_name, Error* err) const {
     if(_mkdir(directory_name.c_str()) == -1) {
         *err = GetLastError();

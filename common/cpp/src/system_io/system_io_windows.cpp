@@ -154,6 +154,35 @@ void ProcessFileEntity(const WIN32_FIND_DATA& f, const std::string& path,
     files->push_back(file_info);
 }
 
+void GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const {
+    WIN32_FIND_DATA find_data;
+    HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
+    if (handle == INVALID_HANDLE_VALUE) {
+        *err = IOErrorFromGetLastError();
+        (*err)->Append(path);
+        return;
+    }
+
+    do {
+        if (IsDirectory(find_data)) {
+            std::string subdir = path + "\\" + find_data.cFileName;
+            subdirs->push_back(subdir);
+            GetSubDirectoriesRecursively(subdir, subdirs, err);
+        }
+        if (*err) {
+            FindClose(handle);
+            return;
+        }
+    } while (FindNextFile(handle, &find_data));
+
+    if (FindClose(handle)) {
+        *err = nullptr;
+    } else {
+        *err = IOErrorFromGetLastError();
+    }
+}
+
+
 void SystemIO::CollectFileInformationRecursively(const std::string& path,
                                                  FileInfos* files, Error* err) const {
     WIN32_FIND_DATA find_data;

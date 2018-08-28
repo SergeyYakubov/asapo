@@ -37,6 +37,11 @@ class EventMonitorErrorTemplate : public SimpleErrorTemplate {
         return error_type_;
     }
 
+    inline Error Generate(std::string sub_error) const noexcept {
+        return Error(new EventMonitorError(error_ + ": " + sub_error, error_type_));
+    }
+
+
     inline Error Generate() const noexcept override {
         return Error(new EventMonitorError(error_, error_type_));
     }

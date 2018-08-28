@@ -185,15 +185,6 @@ class MockIO : public IO {
 
     MOCK_CONST_METHOD3(WriteDataToFile_t, ErrorInterface * (const std::string& fname, const uint8_t* data, size_t fsize));
 
-    void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
-                                           Error* err) const override {
-        ErrorInterface* error = nullptr;
-        CollectFileInformationRecursivly_t(path, files, &error);
-        err->reset(error);
-    }
-    MOCK_CONST_METHOD3(CollectFileInformationRecursivly_t, void(const std::string& path, std::vector<FileInfo>* files,
-                       ErrorInterface** err));
-
     std::vector<FileInfo> FilesInFolder(const std::string& folder, Error* err) const override {
         ErrorInterface* error = nullptr;
         auto data = FilesInFolder_t(folder, &error);
@@ -201,6 +192,17 @@ class MockIO : public IO {
         return data;
     }
     MOCK_CONST_METHOD2(FilesInFolder_t, std::vector<FileInfo>(const std::string& folder, ErrorInterface** err));
+
+
+    SubDirList GetSubDirectories(const std::string& path, Error* err) const override {
+        ErrorInterface* error = nullptr;
+        auto data = GetSubDirectories_t(path, &error);
+        err->reset(error);
+        return data;
+    };
+
+    MOCK_CONST_METHOD2(GetSubDirectories_t, SubDirList(const std::string& path, ErrorInterface** err));
+
 
     std::string ReadFileToString(const std::string& fname, Error* err) const override {
         ErrorInterface* error = nullptr;
