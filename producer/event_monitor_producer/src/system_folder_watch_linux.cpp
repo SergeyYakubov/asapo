@@ -6,39 +6,34 @@
 
 namespace asapo {
 
-Error SystemFolderWatch::AddFolderToWatch(std::string folder, bool recursive) {
-    int id = inotify_add_watch(watch_fd_, folder.c_str(),
-                               IN_CLOSE_WRITE
-                               | IN_MOVED_TO
-                               | IN_MOVED_FROM
-                               | IN_CREATE
-                               | IN_DELETE_SELF
-//                               | IN_MOVE_SELF
-                               | IN_EXCL_UNLINK
-                               | IN_DONT_FOLLOW
-                               | IN_ONLYDIR);
+Error SystemFolderWatch::AddFolderToWatch(std::string folder) {
+    int id = inotify_add_watch(watch_fd_, folder.c_str(), kInotifyWatchFlags);
     if (id == -1) {
         return EventMonitorErrorTemplates::kSystemError.Generate("cannot add watch for " + folder);
-    } else {
-        GetDefaultEventMonLogger()->Debug("added folder to monitor: " + folder);
     }
+    GetDefaultEventMonLogger()->Debug("added folder to monitor: " + folder);
     std::string relative_path = folder;
     relative_path.erase(0, root_folder_.size() + 1);
     watched_folders_paths_[id] = relative_path;
-    if (recursive) {
-        Error err;
-        auto subdirs = io_-> GetSubDirectories(folder, &err);
+    return nullptr;
+}
+
+Error SystemFolderWatch::AddFolderAndSubfoldersToWatch(std::string folder) {
+    auto err = AddFolderToWatch(folder);
+    if (err) {
+        return err;
+    }
+    auto subdirs = io_-> GetSubDirectories(folder, &err);
+    if (err) {
+        return err;
+    }
+    for (auto& subdir : subdirs) {
+        err = AddFolderToWatch(subdir);
         if (err) {
             return err;
         }
-        for (auto& subdir : subdirs) {
-            err = AddFolderToWatch(subdir, false);
-            if (err) {
-                return err;
-            }
-        }
-
     }
+
     return nullptr;
 }
 
@@ -51,7 +46,7 @@ Error SystemFolderWatch::StartFolderMonitor(const std::string& root_folder,
     }
     root_folder_ = root_folder;
     for (auto& folder : monitored_folders) {
-        auto err = AddFolderToWatch(root_folder_ + "/" + folder, true);
+        auto err = AddFolderAndSubfoldersToWatch(root_folder_ + "/" + folder);
         if (err) {
             return EventMonitorErrorTemplates::kSystemError.Generate("cannot initialize inotify: " + err->Explain());
         }
@@ -59,58 +54,43 @@ Error SystemFolderWatch::StartFolderMonitor(const std::string& root_folder,
     return nullptr;
 }
 
-Error SystemFolderWatch::ProcessInotifyEvent(struct inotify_event* i, FileEvents* events) {
 
-    printf("    wd =%2d; ", i->wd);
-    if (i->cookie > 0)
-        printf("cookie =%4d; ", i->cookie);
-
-    printf("mask = ");
-    if (i->mask & IN_ACCESS)        printf("IN_ACCESS ");
-    if (i->mask & IN_ATTRIB)        printf("IN_ATTRIB ");
-    if (i->mask & IN_CLOSE_NOWRITE) printf("IN_CLOSE_NOWRITE ");
-    if (i->mask & IN_CLOSE_WRITE)   printf("IN_CLOSE_WRITE ");
-    if (i->mask & IN_CREATE)        printf("IN_CREATE ");
-    if (i->mask & IN_DELETE)        printf("IN_DELETE ");
-    if (i->mask & IN_DELETE_SELF)   printf("IN_DELETE_SELF ");
-    if (i->mask & IN_IGNORED)       printf("IN_IGNORED ");
-    if (i->mask & IN_ISDIR)         printf("IN_ISDIR ");
-    if (i->mask & IN_MODIFY)        printf("IN_MODIFY ");
-    if (i->mask & IN_MOVE_SELF)     printf("IN_MOVE_SELF ");
-    if (i->mask & IN_MOVED_FROM)    printf("IN_MOVED_FROM ");
-    if (i->mask & IN_MOVED_TO)      printf("IN_MOVED_TO ");
-    if (i->mask & IN_OPEN)          printf("IN_OPEN ");
-    if (i->mask & IN_Q_OVERFLOW)    printf("IN_Q_OVERFLOW ");
-    if (i->mask & IN_UNMOUNT)       printf("IN_UNMOUNT ");
-    printf("\n");
-
-    if (i->len > 0)
-        printf("        name = %s\n", i->name);
+Error SystemFolderWatch::FindEventFolder(const InotifyEvent& event, std::string* folder) {
+    auto it = watched_folders_paths_.find(event.Descriptor());
+    if (it == watched_folders_paths_.end()) {
+        return EventMonitorErrorTemplates::kSystemError.Generate("cannot find monitored folder for wd number " + std::to_string(
+                    event.Descriptor()));
+    }
+    *folder = root_folder_ + "/" + it->second + "/" + event.Name();
+    return nullptr;
+}
 
 
-    if ((i->mask & IN_ISDIR) && ((i->mask & IN_CREATE) || (i->mask & IN_MOVED_TO))) {
-        auto it = watched_folders_paths_.find(i->wd);
-        if (it == watched_folders_paths_.end()) {
-            return EventMonitorErrorTemplates::kSystemError.Generate("cannot find monitored folder to create in " + std::to_string(
-                        i->wd));
+
+Error SystemFolderWatch::ProcessInotifyEvent(const InotifyEvent& event, FileEvents* file_events) {
+    event.Print();
+
+    if (event.IsDirectoryEvent() && ((event.GetMask() & IN_CREATE) || (event.GetMask() & IN_MOVED_TO))) {
+        std::string newpath;
+        auto err = FindEventFolder(event, &newpath);
+        if (err) {
+            return err;
         }
-
-        std::string newpath = root_folder_ + "/" + it->second + "/" + i->name;
-        auto err = AddFolderToWatch(newpath, true);
+        err = AddFolderAndSubfoldersToWatch(newpath);
         if (err) {
             return err;
         }
     }
 
-    if ((i->mask & IN_DELETE_SELF) || ((i->mask & IN_ISDIR) && ((i->mask & IN_MOVED_FROM)))) {
-        auto it = watched_folders_paths_.find(i->wd);
+    if ((event.GetMask() & IN_DELETE_SELF) || ((event.GetMask() & IN_ISDIR) && ((event.GetMask() & IN_MOVED_FROM)))) {
+        auto it = watched_folders_paths_.find(event.Descriptor());
         if (it == watched_folders_paths_.end()) {
             return EventMonitorErrorTemplates::kSystemError.Generate("cannot find monitored folder to delete " + std::to_string(
-                        i->wd));
+                        event.Descriptor()));
         }
         std::string oldpath = it->second;
-        if (i->mask & IN_MOVED_FROM) {
-            oldpath += std::string("/") + i->name;
+        if (event.GetMask() & IN_MOVED_FROM) {
+            oldpath += std::string("/") + event.Name();
             for (auto val = watched_folders_paths_.begin(); val != watched_folders_paths_.end();) {
                 if ((oldpath.size() <= val->second.size()) && std::equal(oldpath.begin(), oldpath.end(), val->second.begin())) {
                     inotify_rm_watch(val->first, watch_fd_);
@@ -128,19 +108,19 @@ Error SystemFolderWatch::ProcessInotifyEvent(struct inotify_event* i, FileEvents
             GetDefaultEventMonLogger()->Debug("removed folder from monitor: " + oldpath);
         }
     }
-    if (!(i->mask & IN_ISDIR)) {
-        if ((i->mask & IN_CLOSE_WRITE) || (i->mask & IN_MOVED_TO)) {
-            auto it = watched_folders_paths_.find(i->wd);
+    if (!(event.GetMask() & IN_ISDIR)) {
+        if ((event.GetMask() & IN_CLOSE_WRITE) || (event.GetMask() & IN_MOVED_TO)) {
+            auto it = watched_folders_paths_.find(event.Descriptor());
             if (it == watched_folders_paths_.end()) {
                 return EventMonitorErrorTemplates::kSystemError.Generate("cannot find monitored folder for file " + std::to_string(
-                            i->wd));
+                            event.Descriptor()));
             }
-            std::string fname = it->second + "/" + i->name;
-            FileEvent event;
-            event.type = (i->mask & IN_CLOSE_WRITE) ? EventType::closed : EventType::renamed_to;
-            event.name = fname;
-            events->emplace_back(std::move(event));
-            GetDefaultEventMonLogger()->Debug((i->mask & IN_CLOSE_WRITE) ? "file closed: " : "file moved: " + fname);
+            std::string fname = it->second + "/" + event.Name();
+            FileEvent file_event;
+            file_event.type = (event.GetMask() & IN_CLOSE_WRITE) ? EventType::closed : EventType::renamed_to;
+            file_event.name = fname;
+            file_events->emplace_back(std::move(file_event));
+            GetDefaultEventMonLogger()->Debug((event.GetMask() & IN_CLOSE_WRITE) ? "file closed: " : "file moved: " + fname);
         }
     }
 
@@ -149,42 +129,48 @@ Error SystemFolderWatch::ProcessInotifyEvent(struct inotify_event* i, FileEvents
     return nullptr;
 }
 
-
-FileEvents SystemFolderWatch::GetFileEventList(Error* err) {
-    FileEvents events;
-
-    char buffer[kBufLen]  __attribute__ ((aligned(8)));
-
-    int numRead = read(watch_fd_, buffer, sizeof(buffer));
-    if (numRead == 0) {
-        *err = TextError("readfrom inotify fd returned 0!");
-        printf("mask = ");
-
-        return events;
+Error SystemFolderWatch::ReadInotifyEvents(int* bytes_read) {
+    *bytes_read = read(watch_fd_, buffer, sizeof(buffer));
+    if (*bytes_read < 0) {
+        return EventMonitorErrorTemplates::kSystemError.Generate("read from inotify fd");
     }
+    return nullptr;
+}
 
-    if (numRead == -1) {
-        *err = TextError("read from inotify fd returned -1!");
-        return events;
-    }
-
+Error SystemFolderWatch::ProcessInotifyEvents(int bytes_in_buffer, FileEvents* events) {
     int nerrors = 0;
-    for (char* p = buffer; p < buffer + numRead; ) {
-        struct inotify_event* event = (struct inotify_event*) p;
-        *err = ProcessInotifyEvent(event, &events);
-        if (*err) {
-            GetDefaultEventMonLogger()->Error("error processing inotify event: " + (*err)->Explain());
+    int nevents = 0;
+    for (char* p = buffer; p < buffer + bytes_in_buffer; ) {
+        InotifyEvent event{(struct inotify_event*) p, watched_folders_paths_};
+        auto err = ProcessInotifyEvent(event, events);
+        if (err) {
+            GetDefaultEventMonLogger()->Error("error processing inotify event: " + err->Explain());
             nerrors++;
         }
-        p += sizeof(struct inotify_event) + event->len;
+        p += event.Length();
+        nevents++;
     }
 
-    if (nerrors == 0) {
-        *err = nullptr;
+    if (nerrors < nevents) {
+        return nullptr;
     } else {
-        *err = TextError("There were " + std::to_string(nerrors) + " error(s) while processing event");
+        return EventMonitorErrorTemplates::kSystemError.Generate("error processing inotify events");
+    }
+}
+
+
+FileEvents SystemFolderWatch::GetFileEventList(Error* err) {
+    int bytes_read;
+    *err = ReadInotifyEvents(&bytes_read);
+    if (*err) {
+        return {};
     }
 
+    FileEvents events;
+    *err = ProcessInotifyEvents(bytes_read, &events);
+    if (*err) {
+        return {};
+    }
     return events;
 }
 

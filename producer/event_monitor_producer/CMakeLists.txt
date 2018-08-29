@@ -9,7 +9,7 @@ set(SOURCE_FILES
 IF(WIN32)
     set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_windows.cpp)
 ELSEIF(UNIX)
-    set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_linux.cpp)
+    set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_linux.cpp src/inotify_event.cpp src/inotify_event.h)
 ENDIF(WIN32)
 
 
