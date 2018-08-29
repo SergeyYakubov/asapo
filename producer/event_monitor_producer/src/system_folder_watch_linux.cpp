@@ -3,11 +3,12 @@
 
 #include "event_monitor_error.h"
 #include "eventmon_logger.h"
+#include "io/io_factory.h"
 
 namespace asapo {
 
 Error SystemFolderWatch::AddFolderToWatch(std::string folder) {
-    int id = inotify_add_watch(watch_fd_, folder.c_str(), kInotifyWatchFlags);
+    int id = inotify__->AddWatch(watch_fd_, folder.c_str(), kInotifyWatchFlags);
     if (id == -1) {
         return EventMonitorErrorTemplates::kSystemError.Generate("cannot add watch for " + folder);
     }
@@ -23,7 +24,7 @@ Error SystemFolderWatch::AddFolderAndSubfoldersToWatch(std::string folder) {
     if (err) {
         return err;
     }
-    auto subdirs = io_-> GetSubDirectories(folder, &err);
+    auto subdirs = io__-> GetSubDirectories(folder, &err);
     if (err) {
         return err;
     }
@@ -40,7 +41,7 @@ Error SystemFolderWatch::AddFolderAndSubfoldersToWatch(std::string folder) {
 
 Error SystemFolderWatch::StartFolderMonitor(const std::string& root_folder,
                                             const std::vector<std::string>& monitored_folders) {
-    watch_fd_ = inotify_init();
+    watch_fd_ = inotify__->Init();
     if (watch_fd_ == -1) {
         return EventMonitorErrorTemplates::kSystemError.Generate("cannot initialize inotify");
     }
@@ -93,7 +94,7 @@ Error SystemFolderWatch::ProcessInotifyEvent(const InotifyEvent& event, FileEven
             oldpath += std::string("/") + event.Name();
             for (auto val = watched_folders_paths_.begin(); val != watched_folders_paths_.end();) {
                 if ((oldpath.size() <= val->second.size()) && std::equal(oldpath.begin(), oldpath.end(), val->second.begin())) {
-                    inotify_rm_watch(val->first, watch_fd_);
+                    inotify__->DeleteWatch(val->first, watch_fd_);
                     GetDefaultEventMonLogger()->Debug("removed folder from monitor: " + val->second);
                     val = watched_folders_paths_.erase(val);
                 } else {
@@ -103,7 +104,7 @@ Error SystemFolderWatch::ProcessInotifyEvent(const InotifyEvent& event, FileEven
             }
 
         } else {
-            inotify_rm_watch(it->first, watch_fd_);
+            inotify__->DeleteWatch(it->first, watch_fd_);
             watched_folders_paths_.erase(it);
             GetDefaultEventMonLogger()->Debug("removed folder from monitor: " + oldpath);
         }
@@ -130,7 +131,7 @@ Error SystemFolderWatch::ProcessInotifyEvent(const InotifyEvent& event, FileEven
 }
 
 Error SystemFolderWatch::ReadInotifyEvents(int* bytes_read) {
-    *bytes_read = read(watch_fd_, buffer, sizeof(buffer));
+    *bytes_read = inotify__->Read(watch_fd_, buffer, sizeof(buffer));
     if (*bytes_read < 0) {
         return EventMonitorErrorTemplates::kSystemError.Generate("read from inotify fd");
     }
@@ -172,6 +173,9 @@ FileEvents SystemFolderWatch::GetFileEventList(Error* err) {
         return {};
     }
     return events;
+}
+SystemFolderWatch::SystemFolderWatch() : io__{GenerateDefaultIO()}, inotify__{new Inotify()} {
+
 }
 
 }

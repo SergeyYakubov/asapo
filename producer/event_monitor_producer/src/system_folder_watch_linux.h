@@ -4,16 +4,16 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <unistd.h>
 
 #include "common/error.h"
 #include "preprocessor/definitions.h"
 #include "asapo_producer.h"
 #include "common.h"
 #include "io/io.h"
-#include "io/io_factory.h"
-#include <sys/inotify.h>
-#include <unistd.h>
 #include "inotify_event.h"
+#include "inotify_linux.h"
+
 
 namespace asapo {
 
@@ -34,10 +34,12 @@ class SystemFolderWatch {
   public:
     VIRTUAL Error StartFolderMonitor(const std::string& root_folder, const std::vector<std::string>& monitored_folders);
     VIRTUAL FileEvents GetFileEventList(Error* err);
+    SystemFolderWatch();
+    std::unique_ptr<IO> io__;
+    std::unique_ptr<Inotify> inotify__;
   private:
     Error AddFolderAndSubfoldersToWatch(std::string folder);
     Error AddFolderToWatch(std::string folder);
-    std::unique_ptr<IO> io_{GenerateDefaultIO()};
     Error ProcessInotifyEvent(const InotifyEvent& event, FileEvents* file_events);
   private:
     char buffer[kBufLen]  __attribute__ ((aligned(8)));

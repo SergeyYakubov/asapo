@@ -9,7 +9,7 @@ set(SOURCE_FILES
 IF(WIN32)
     set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_windows.cpp)
 ELSEIF(UNIX)
-    set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_linux.cpp src/inotify_event.cpp src/inotify_event.h)
+    set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_linux.cpp src/inotify_event.cpp src/inotify_linux.cpp)
 ENDIF(WIN32)
 
 
@@ -52,6 +52,11 @@ set(TEST_SOURCE_FILES
         unittests/test_event_detector_factory.cpp
         unittests/test_folder_event_detector.cpp
    )
+
+IF(UNIX)
+set(TEST_SOURCE_FILES ${TEST_SOURCE_FILES} unittests/test_system_folder_watch_linux.cpp)
+ENDIF(WIN32)
+
 
 set(TEST_LIBRARIES "${TARGET_NAME}")
 
