@@ -12,13 +12,9 @@ enum class EventType {
     renamed_to
 };
 
-struct FileEvent {
-    EventType type;
-    uint64_t size;
-    std::string name;
-};
 
-using FileEvents = std::vector<FileEvent>;
+
+using FilesToSend = std::vector<std::string>;
 
 }
 

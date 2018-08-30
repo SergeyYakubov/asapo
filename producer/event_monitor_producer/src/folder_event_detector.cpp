@@ -15,9 +15,9 @@ inline bool ends_with(std::string const& value, std::string const& ending) {
 }
 
 
-bool FolderEventDetector::IgnoreEvent(const FileEvent& event) {
+bool FolderEventDetector::IgnoreFile(const std::string& file) {
     for (auto& ext : config_->ignored_extentions) {
-        if (ends_with(event.name, ext)) {
+        if (ends_with(file, ext)) {
             return true;
         }
     }
@@ -27,18 +27,18 @@ bool FolderEventDetector::IgnoreEvent(const FileEvent& event) {
 
 Error FolderEventDetector::UpdateEventsBuffer() {
     Error err;
-    auto file_events = system_folder_watch__->GetFileEventList(&err);
+    auto files = system_folder_watch__->GetFileList(&err);
     if (err) {
         return err;
     }
 
-    if (file_events.size() == 0) {
+    if (files.size() == 0) {
         return EventMonitorErrorTemplates::kNoNewEvent.Generate();
     }
 
-    for (auto& event : file_events) {
-        if (!IgnoreEvent(event)) {
-            events_buffer_.emplace_back(EventHeader{0, event.size, event.name});
+    for (auto& file : files) {
+        if (!IgnoreFile(file)) {
+            events_buffer_.emplace_back(EventHeader{0, 0, file});
         }
     }
 

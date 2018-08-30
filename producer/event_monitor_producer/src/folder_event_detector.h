@@ -24,7 +24,7 @@ class FolderEventDetector : public AbstractEventDetector {
     std::deque<EventHeader> events_buffer_;
     Error UpdateEventsBuffer();
     Error GetHeaderFromBuffer(EventHeader* event_header);
-    bool IgnoreEvent(const FileEvent& event);
+    bool IgnoreFile(const std::string& event);
     bool BufferIsEmpty() const;
 };
 

@@ -19,9 +19,9 @@ class MockSystemFolderWatch : public SystemFolderWatch {
 
     }
 
-    MOCK_METHOD1(GetFileEventList_t, FileEvents (ErrorInterface** error));
+    MOCK_METHOD1(GetFileEventList_t, FilesToSend (ErrorInterface** error));
 
-    FileEvents GetFileEventList(Error* err) override {
+    FilesToSend GetFileList(Error* err) override {
         ErrorInterface* error = nullptr;
         auto data = GetFileEventList_t(&error);
         err->reset(error);

@@ -55,93 +55,125 @@ Error SystemFolderWatch::StartFolderMonitor(const std::string& root_folder,
     return nullptr;
 }
 
-
-Error SystemFolderWatch::FindEventFolder(const InotifyEvent& event, std::string* folder) {
+std::map<int, std::string>::iterator SystemFolderWatch::FindEventIterator(const InotifyEvent& event, Error* err) {
     auto it = watched_folders_paths_.find(event.Descriptor());
+    *err = nullptr;
     if (it == watched_folders_paths_.end()) {
-        return EventMonitorErrorTemplates::kSystemError.Generate("cannot find monitored folder for wd number " + std::to_string(
+        *err = EventMonitorErrorTemplates::kSystemError.Generate("cannot find monitored folder for wd number " + std::to_string(
                     event.Descriptor()));
     }
-    *folder = root_folder_ + "/" + it->second + "/" + event.Name();
-    return nullptr;
+    return it;
 }
 
 
 
-Error SystemFolderWatch::ProcessInotifyEvent(const InotifyEvent& event, FileEvents* file_events) {
-    event.Print();
-
-    if (event.IsDirectoryEvent() && ((event.GetMask() & IN_CREATE) || (event.GetMask() & IN_MOVED_TO))) {
-        std::string newpath;
-        auto err = FindEventFolder(event, &newpath);
-        if (err) {
-            return err;
-        }
-        err = AddFolderAndSubfoldersToWatch(newpath);
-        if (err) {
-            return err;
-        }
+Error SystemFolderWatch::FindEventPath(const InotifyEvent& event, std::string* folder, bool add_root) {
+    Error err;
+    auto it = FindEventIterator(event, &err);
+    if (err) {
+        return err;
     }
-
-    if ((event.GetMask() & IN_DELETE_SELF) || ((event.GetMask() & IN_ISDIR) && ((event.GetMask() & IN_MOVED_FROM)))) {
-        auto it = watched_folders_paths_.find(event.Descriptor());
-        if (it == watched_folders_paths_.end()) {
-            return EventMonitorErrorTemplates::kSystemError.Generate("cannot find monitored folder to delete " + std::to_string(
-                        event.Descriptor()));
-        }
-        std::string oldpath = it->second;
-        if (event.GetMask() & IN_MOVED_FROM) {
-            oldpath += std::string("/") + event.Name();
-            for (auto val = watched_folders_paths_.begin(); val != watched_folders_paths_.end();) {
-                if ((oldpath.size() <= val->second.size()) && std::equal(oldpath.begin(), oldpath.end(), val->second.begin())) {
-                    inotify__->DeleteWatch(val->first, watch_fd_);
-                    GetDefaultEventMonLogger()->Debug("removed folder from monitor: " + val->second);
-                    val = watched_folders_paths_.erase(val);
-                } else {
-                    ++val;
-                }
-
-            }
-
-        } else {
-            inotify__->DeleteWatch(it->first, watch_fd_);
-            watched_folders_paths_.erase(it);
-            GetDefaultEventMonLogger()->Debug("removed folder from monitor: " + oldpath);
-        }
+    if (add_root) {
+        *folder = root_folder_ + "/" + it->second + "/" + event.Name();
+    } else {
+        *folder = it->second + "/" + event.Name();
     }
-    if (!(event.GetMask() & IN_ISDIR)) {
-        if ((event.GetMask() & IN_CLOSE_WRITE) || (event.GetMask() & IN_MOVED_TO)) {
-            auto it = watched_folders_paths_.find(event.Descriptor());
-            if (it == watched_folders_paths_.end()) {
-                return EventMonitorErrorTemplates::kSystemError.Generate("cannot find monitored folder for file " + std::to_string(
-                            event.Descriptor()));
-            }
-            std::string fname = it->second + "/" + event.Name();
-            FileEvent file_event;
-            file_event.type = (event.GetMask() & IN_CLOSE_WRITE) ? EventType::closed : EventType::renamed_to;
-            file_event.name = fname;
-            file_events->emplace_back(std::move(file_event));
-            GetDefaultEventMonLogger()->Debug((event.GetMask() & IN_CLOSE_WRITE) ? "file closed: " : "file moved: " + fname);
-        }
-    }
-
-
 
     return nullptr;
+}
+
+Error SystemFolderWatch::ProcessFileEvent(const InotifyEvent& event, FilesToSend* files) {
+    if (!event.IsNewFileInFolderEvent()) {
+        return nullptr;
+    }
+    std::string fname;
+    auto err = FindEventPath(event, &fname, false);
+    if (err) {
+        return err;
+    }
+    files->emplace_back(std::move(fname));
+    GetDefaultEventMonLogger()->Debug((event.GetMask() & IN_CLOSE_WRITE) ? "file closed: " : "file moved: " + fname);
+    return nullptr;
+}
+
+Error SystemFolderWatch::ProcessNewDirectoryInFolderEvent(const InotifyEvent& event) {
+    std::string newpath;
+    auto err = FindEventPath(event, &newpath, true);
+    if (err) {
+        return err;
+    }
+    return  AddFolderAndSubfoldersToWatch(newpath);
+}
+
+std::map<int, std::string>::iterator SystemFolderWatch::RemoveFolderFromWatch(const
+        std::map<int, std::string>::iterator& it) {
+    inotify__->DeleteWatch(it->first, watch_fd_);
+    GetDefaultEventMonLogger()->Debug("removed folder from monitor: " + it->second);
+    return watched_folders_paths_.erase(it);
+}
+
+void SystemFolderWatch::RemoveFolderWithSubfoldersFromWatch(const std::string& path) {
+    for (auto val = watched_folders_paths_.begin(); val != watched_folders_paths_.end();) {
+        if ((path.size() <= val->second.size()) && std::equal(path.begin(), path.end(), val->second.begin())) {
+            val = RemoveFolderFromWatch(val);
+        } else {
+            ++val;
+        }
+    }
+}
+
+Error SystemFolderWatch::ProcessDeleteDirectoryInFolderEvent(const InotifyEvent& event) {
+    Error
+    err;
+    auto it = FindEventIterator(event, &err);
+    if (err) {
+        return err;
+    }
+
+    if (event.IsDeleteDirectoryInFolderEventByMove()) {
+        std::string path = it->second + std::string("/") + event.Name();
+        RemoveFolderWithSubfoldersFromWatch(path);
+    } else {
+        RemoveFolderFromWatch(it);
+    }
+
+    return nullptr;
+}
+
+
+Error SystemFolderWatch::ProcessDirectoryEvent(const InotifyEvent& event) {
+    if (event.IsNewDirectoryInFolderEvent()) {
+        return ProcessNewDirectoryInFolderEvent(event);
+    }
+
+    if (event.IsDeleteDirectoryInFolderEvent()) {
+        return ProcessDeleteDirectoryInFolderEvent(event);
+    }
+
+    return nullptr;
+}
+
+Error SystemFolderWatch::ProcessInotifyEvent(const InotifyEvent& event, FilesToSend* file_events) {
+    if (event.IsDirectoryEvent()) {
+        return ProcessDirectoryEvent(event);
+    } else {
+        return ProcessFileEvent(event, file_events);
+    }
+
 }
 
 Error SystemFolderWatch::ReadInotifyEvents(int* bytes_read) {
-    *bytes_read = inotify__->Read(watch_fd_, buffer, sizeof(buffer));
+    *bytes_read = inotify__->Read(watch_fd_, buffer_.get(), kBufLen);
     if (*bytes_read < 0) {
         return EventMonitorErrorTemplates::kSystemError.Generate("read from inotify fd");
     }
     return nullptr;
 }
 
-Error SystemFolderWatch::ProcessInotifyEvents(int bytes_in_buffer, FileEvents* events) {
+Error SystemFolderWatch::ProcessInotifyEvents(int bytes_in_buffer_, FilesToSend* events) {
     int nerrors = 0;
     int nevents = 0;
-    for (char* p = buffer; p < buffer + bytes_in_buffer; ) {
+    for (char* p = buffer_.get(); p < buffer_.get() + bytes_in_buffer_; ) {
         InotifyEvent event{(struct inotify_event*) p, watched_folders_paths_};
         auto err = ProcessInotifyEvent(event, events);
         if (err) {
@@ -160,22 +192,22 @@ Error SystemFolderWatch::ProcessInotifyEvents(int bytes_in_buffer, FileEvents* e
 }
 
 
-FileEvents SystemFolderWatch::GetFileEventList(Error* err) {
+FilesToSend SystemFolderWatch::GetFileList(Error* err) {
     int bytes_read;
     *err = ReadInotifyEvents(&bytes_read);
     if (*err) {
         return {};
     }
 
-    FileEvents events;
+    FilesToSend events;
     *err = ProcessInotifyEvents(bytes_read, &events);
     if (*err) {
         return {};
     }
     return events;
 }
-SystemFolderWatch::SystemFolderWatch() : io__{GenerateDefaultIO()}, inotify__{new Inotify()} {
 
+SystemFolderWatch::SystemFolderWatch() : io__{GenerateDefaultIO()}, inotify__{new Inotify()}, buffer_{new char[kBufLen]} {
 }
 
 }

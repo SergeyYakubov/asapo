@@ -15,8 +15,12 @@ class InotifyEvent {
   public:
     InotifyEvent(const struct inotify_event* inotify_event, const std::map<int, std::string>& watched_folders_paths);
     uint32_t Length() const ;
-    void Print() const;
+    uint32_t NameLength() const ;
     bool IsDirectoryEvent() const ;
+    bool IsNewFileInFolderEvent() const;
+    bool IsNewDirectoryInFolderEvent() const;
+    bool IsDeleteDirectoryInFolderEvent() const;
+    bool IsDeleteDirectoryInFolderEventByMove() const;
     int Descriptor() const ;
     const char* Name() const ;
     uint32_t GetMask() const;

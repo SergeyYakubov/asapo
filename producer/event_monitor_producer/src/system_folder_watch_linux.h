@@ -18,7 +18,7 @@
 namespace asapo {
 
 
-const uint64_t kBufLen  = 2000 * (sizeof(struct inotify_event) + FILENAME_MAX + 1);
+const uint64_t kBufLen  = 1000 * (sizeof(struct inotify_event) + FILENAME_MAX + 1);
 const uint32_t kInotifyWatchFlags  = IN_CLOSE_WRITE |
                                      IN_MOVED_TO    |
                                      IN_MOVED_FROM  |
@@ -33,21 +33,29 @@ const uint32_t kInotifyWatchFlags  = IN_CLOSE_WRITE |
 class SystemFolderWatch {
   public:
     VIRTUAL Error StartFolderMonitor(const std::string& root_folder, const std::vector<std::string>& monitored_folders);
-    VIRTUAL FileEvents GetFileEventList(Error* err);
+    VIRTUAL FilesToSend GetFileList(Error* err);
     SystemFolderWatch();
     std::unique_ptr<IO> io__;
     std::unique_ptr<Inotify> inotify__;
   private:
     Error AddFolderAndSubfoldersToWatch(std::string folder);
     Error AddFolderToWatch(std::string folder);
-    Error ProcessInotifyEvent(const InotifyEvent& event, FileEvents* file_events);
+    Error ProcessInotifyEvent(const InotifyEvent& event, FilesToSend* file_events);
+    Error ProcessFileEvent(const InotifyEvent& event, FilesToSend* files);
+    Error ProcessDirectoryEvent(const InotifyEvent& event);
+    Error ProcessNewDirectoryInFolderEvent(const InotifyEvent& event);
+    Error ProcessDeleteDirectoryInFolderEvent(const InotifyEvent& event);
+    std::map<int, std::string>::iterator FindEventIterator(const InotifyEvent& event, Error* err);
+    void RemoveFolderWithSubfoldersFromWatch(const std::string& path);
+    std::map<int, std::string>::iterator RemoveFolderFromWatch(const std::map<int, std::string>::iterator& it);
+
   private:
-    char buffer[kBufLen]  __attribute__ ((aligned(8)));
+    std::unique_ptr<char[]> buffer_;
     std::map<int, std::string> watched_folders_paths_;
     int watch_fd_ = -1;
     Error ReadInotifyEvents(int* bytes_read);
-    Error ProcessInotifyEvents(int bytes_in_buffer, FileEvents* events);
-    Error FindEventFolder(const InotifyEvent& event, std::string* folder);
+    Error ProcessInotifyEvents(int bytes_in_buffer, FilesToSend* events);
+    Error FindEventPath(const InotifyEvent& event, std::string* folder, bool add_root);
     std::string root_folder_;
 };
 

@@ -27,8 +27,7 @@ using ::testing::HasSubstr;
 using ::asapo::Error;
 using ::asapo::FileDescriptor;
 using ::asapo::ErrorInterface;
-using asapo::FileEvents;
-using asapo::FileEvent;
+using asapo::FilesToSend;
 using asapo::EventType;
 using asapo::FolderEventDetector;
 
@@ -50,11 +49,11 @@ class FolderEventDetectorTests : public testing::Test {
     FolderEventDetector detector{&test_config};
     std::string expected_root_folder = "/tmp";
     std::vector<std::string> expected_folders{"test1", "test2"};
-    FileEvent expected_event1{EventType::closed, 10, "test1.dat"};
-    FileEvent expected_event2{EventType::renamed_to, 11, "test2.dat"};
-    FileEvent expected_event3{EventType::renamed_to, 11, "test3.tmp"};
-    FileEvent expected_event4{EventType::closed, 12, "test4.tmp"};
-    FileEvents expected_events{expected_event1, expected_event2, expected_event3, expected_event4};
+    std::string expected_event1{"test1.dat"};
+    std::string expected_event2{"test2.dat"};
+    std::string expected_event3{"test3.tmp"};
+    std::string expected_event4{"test4.tmp"};
+    FilesToSend expected_events{expected_event1, expected_event2, expected_event3, expected_event4};
     void SetUp() override {
         test_config.root_monitored_folder = expected_root_folder;
         test_config.monitored_subfolders = expected_folders;
@@ -136,7 +135,7 @@ TEST_F(FolderEventDetectorTests, GetNextEventError) {
     EXPECT_CALL(mock_system_folder_watch, GetFileEventList_t(_)).WillOnce(
         DoAll(
             SetArgPointee<0>(asapo::EventMonitorErrorTemplates::kSystemError.Generate().release()),
-            Return(FileEvents{})
+            Return(FilesToSend{})
         ));
 
     detector.StartMonitoring();
@@ -175,7 +174,6 @@ TEST_F(FolderEventDetectorTests, GetNextEventOK) {
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(event_header.file_name, Eq("test1.dat"));
-    ASSERT_THAT(event_header.file_size, Eq(10));
 }
 
 
@@ -191,7 +189,6 @@ TEST_F(FolderEventDetectorTests, GetNextEventDoesDoSystemCallIfListNotEmpty) {
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(event_header.file_name, Eq("test2.dat"));
-    ASSERT_THAT(event_header.file_size, Eq(11));
 }
 
 
