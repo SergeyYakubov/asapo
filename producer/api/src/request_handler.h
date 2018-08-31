@@ -12,7 +12,7 @@ class RequestHandler {
   public:
     virtual void PrepareProcessingRequestLocked()  = 0;
     virtual void TearDownProcessingRequestLocked(const Error& error_from_process)  = 0;
-    virtual Error ProcessRequestUnlocked(const Request* request)  = 0;
+    virtual Error ProcessRequestUnlocked(Request* request)  = 0;
     virtual bool ReadyProcessRequest() = 0;
     virtual ~RequestHandler() = default;
 };

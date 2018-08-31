@@ -12,6 +12,7 @@
 #include "event_detector_factory.h"
 #include "eventmon_logger.h"
 #include "event_monitor_error.h"
+#include "preprocessor/definitions.h"
 
 using asapo::Producer;
 using asapo::EventMonConfigFactory;
@@ -99,7 +100,8 @@ int main (int argc, char* argv[]) {
             continue;
         }
         event_header.file_id = i++;
-        producer->Send(event_header, nullptr, ProcessAfterSend);
+        producer->SendFile(event_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
+                           event_header.file_name, ProcessAfterSend);
     }
 
     logger->Info("Producer exit. Processed " + std::to_string(i) + " files");

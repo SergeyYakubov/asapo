@@ -83,6 +83,7 @@ Error SystemFolderWatch::FindEventPath(const InotifyEvent& event, std::string* f
 }
 
 Error SystemFolderWatch::ProcessFileEvent(const InotifyEvent& event, FilesToSend* files) {
+    event.Print();
     if (!event.IsNewFileInFolderEvent()) {
         return nullptr;
     }
@@ -91,8 +92,9 @@ Error SystemFolderWatch::ProcessFileEvent(const InotifyEvent& event, FilesToSend
     if (err) {
         return err;
     }
+    GetDefaultEventMonLogger()->Debug(((event.GetMask() & IN_CLOSE_WRITE) ? "file closed: " : "file moved: ") + fname);
+
     files->emplace_back(std::move(fname));
-    GetDefaultEventMonLogger()->Debug((event.GetMask() & IN_CLOSE_WRITE) ? "file closed: " : "file moved: " + fname);
     return nullptr;
 }
 

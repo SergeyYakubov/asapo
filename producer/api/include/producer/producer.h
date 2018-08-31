@@ -11,6 +11,7 @@
 namespace asapo {
 
 
+
 class Producer {
   public:
     //! Creates a new producer
@@ -25,12 +26,18 @@ class Producer {
 
     //! Sends data to the receiver
     /*!
-      \param file_id - The id of the file. An error will be returned if this file id already exists on the receiver.
+      \param event_header - A stucture with the meta information (file name, size).
       \param data - A pointer to the data to send
-      \param file_size - The size of the data.
       \return Error - Will be nullptr on success
     */
-    virtual Error Send(const EventHeader& event_header, FileData data, RequestCallback callback) = 0;
+    virtual Error SendData(const EventHeader& event_header, FileData data, RequestCallback callback) = 0;
+    //! Sends files to the receiver
+    /*!
+      \param event_header - A stucture with the meta information (file name, size is ignored).
+      \param file name - A full path of the file to send
+      \return Error - Will be nullptr on success
+    */
+    virtual Error SendFile(const EventHeader& event_header, std::string full_path, RequestCallback callback) = 0;
 
     //! Set internal log level
     virtual void SetLogLevel(LogLevel level) = 0;

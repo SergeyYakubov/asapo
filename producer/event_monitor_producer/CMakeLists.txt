@@ -32,7 +32,7 @@ target_link_libraries(${TARGET_NAME} producer-api)
 ################################
 # Executable
 ################################
-add_executable(${TARGET_NAME}-bin src/eventmon_main.cpp)
+add_executable(${TARGET_NAME}-bin src/main_eventmon.cpp)
 set_target_properties(${TARGET_NAME}-bin PROPERTIES OUTPUT_NAME asapo-eventmon-producer)
 target_link_libraries(${TARGET_NAME}-bin ${TARGET_NAME})
 
@@ -60,7 +60,7 @@ ENDIF(WIN32)
 
 set(TEST_LIBRARIES "${TARGET_NAME}")
 
-gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}" ${CMAKE_CURRENT_SOURCE_DIR}/src/eventmon_main.cpp)
+gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}" ${CMAKE_CURRENT_SOURCE_DIR}/src/main_eventmon.cpp)
 
 install(TARGETS ${TARGET_NAME}-bin DESTINATION bin)
 

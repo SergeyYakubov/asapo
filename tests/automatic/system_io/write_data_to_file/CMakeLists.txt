@@ -15,6 +15,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 ################################
 add_test_setup_cleanup(${TARGET_NAME})
 add_integration_test(${TARGET_NAME} writeok "test_file ok dummy" nomem)
+add_integration_test(${TARGET_NAME} writewithfolder "folder/a/b/c/d/test_file ok dummy" nomem)
 add_integration_test(${TARGET_NAME} writetwice "test_file ok dummy" nomem)
 add_integration_test(${TARGET_NAME} dirnoaccess "test_noaccess/test_file error Permissiondenied:test_noaccess/test_file" nomem)
 

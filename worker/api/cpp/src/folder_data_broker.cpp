@@ -55,7 +55,7 @@ Error FolderDataBroker::GetFileByIndex(uint64_t nfile_to_get, FileInfo* info, Fi
     }
 
     Error error;
-    *data = io__->GetDataFromFile(info->FullName(base_path_), info->size, &error);
+    *data = io__->GetDataFromFile(info->FullName(base_path_), &info->size, &error);
 
     return error;
 }

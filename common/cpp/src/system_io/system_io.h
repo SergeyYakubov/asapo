@@ -64,6 +64,7 @@ class SystemIO final : public IO {
     void            CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
                                                       Error* err) const;
     void            GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const;
+    Error           CreateDirectoryWithParents(const std::string& root_path, const std::string& path) const;
   public:
     /*
      * Special
@@ -102,9 +103,11 @@ class SystemIO final : public IO {
     size_t          Read(FileDescriptor fd, void* buf, size_t length, Error* err) const override;
     size_t          Write(FileDescriptor fd, const void* buf, size_t length, Error* err) const override;
     void            CreateNewDirectory(const std::string& directory_name, Error* err) const override;
-    FileData        GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const override;
-    Error           WriteDataToFile  (const std::string& fname, const FileData& data, size_t length) const override;
-    Error           WriteDataToFile(const std::string& fname, const uint8_t* data, size_t length) const override;
+    FileData        GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override;
+    Error           WriteDataToFile  (const std::string& root_folder, const std::string& fname, const FileData& data,
+                                      size_t length, bool create_directories) const override;
+    Error           WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
+                                    size_t length, bool create_directories) const override;
     SubDirList      GetSubDirectories(const std::string& path, Error* err) const override;
     std::string     ReadFileToString(const std::string& fname, Error* err) const override;
 };

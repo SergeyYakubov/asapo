@@ -115,7 +115,7 @@ TEST_F(ReceiversStatusTests, GetsReqestedInformation) {
              ));
 
     status.StartCollectingData();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
     auto nc = status.MaxConnections();
     ASSERT_THAT(nc, Eq(8));

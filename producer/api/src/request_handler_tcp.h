@@ -19,7 +19,7 @@ namespace asapo {
 class RequestHandlerTcp: public RequestHandler {
   public:
     explicit RequestHandlerTcp(ReceiverDiscoveryService* discovery_service, uint64_t thread_id, uint64_t* shared_counter);
-    Error ProcessRequestUnlocked(const Request* request) override;
+    Error ProcessRequestUnlocked(Request* request) override;
     bool ReadyProcessRequest() override;
     void PrepareProcessingRequestLocked()  override;
     void TearDownProcessingRequestLocked(const Error& error_from_process)  override;
@@ -31,6 +31,7 @@ class RequestHandlerTcp: public RequestHandler {
   private:
     Error Authorize(const std::string& beamtime_id);
     Error ConnectToReceiver(const std::string& beamtime_id, const std::string& receiver_address);
+    Error SendDataToOneOfTheReceivers(Request* request);
     Error SendHeaderAndData(const Request*);
     Error ReceiveResponse();
     Error TrySendToReceiver(const Request* request);

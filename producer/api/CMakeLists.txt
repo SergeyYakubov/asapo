@@ -8,7 +8,7 @@ set(SOURCE_FILES
         src/request_pool.cpp
         src/receiver_discovery_service.cpp
         src/request_handler_factory.cpp
-        src/request.cpp include/producer/common.h)
+        src/request.cpp)
 
 
 ################################

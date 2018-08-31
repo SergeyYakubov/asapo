@@ -12,7 +12,7 @@ struct Params {
     std::string fname;
     std::string result;
     std::string message;
-    int length;
+    uint64_t length;
 };
 
 Params GetParams(int argc, char* argv[]) {
@@ -34,7 +34,8 @@ void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const Fil
         exit(EXIT_FAILURE);
     }
     Error read_err;
-    auto read_data = io->GetDataFromFile(params.fname, params.length, &read_err);
+    uint64_t size = params.length;
+    auto read_data = io->GetDataFromFile(params.fname, &size, &read_err);
     asapo::M_AssertContains(std::string(read_data.get(), read_data.get() + params.length), "123");
 }
 
@@ -51,13 +52,10 @@ int main(int argc, char* argv[]) {
     auto params = GetParams(argc, argv);
 
     auto io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
-    auto array = new uint8_t[params.length];
-    array[0] = '1';
-    array[1] = '2';
-    array[2] = '3';
+    auto array = new uint8_t[params.length] {'1', '2', '3'};
     FileData data{array};
 
-    auto err = io->WriteDataToFile(params.fname, data, params.length);
+    auto err = io->WriteDataToFile("", params.fname, data, params.length, true);
 
     if (params.result == "ok") {
         AssertGoodResult(io, err, data, params);

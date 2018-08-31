@@ -45,22 +45,35 @@ Error CheckProducerRequest(size_t file_size, size_t filename_size) {
     return nullptr;
 }
 
-
-Error ProducerImpl::Send(const EventHeader& event_header, FileData data,
+Error ProducerImpl::Send(const EventHeader& event_header,
+                         FileData data,
+                         std::string full_path,
                          RequestCallback callback) {
-
     auto err = CheckProducerRequest(event_header.file_size, event_header.file_name.size());
     if (err) {
         log__->Error("error checking request - " + err->Explain());
         return err;
     }
 
-
     auto request_header = GenerateNextSendRequest(event_header.file_id, event_header.file_size, event_header.file_name);
 
+    return request_pool__->AddRequest(std::unique_ptr<Request> {new Request{beamtime_id_, request_header,
+                std::move(data), std::move(full_path), callback}
+    });
 
-    return request_pool__->AddRequest(std::unique_ptr<Request> {new Request{beamtime_id_, request_header, std::move(data), callback}});
 }
+
+
+Error ProducerImpl::SendData(const EventHeader& event_header, FileData data,
+                             RequestCallback callback) {
+    return Send(event_header, std::move(data), "", callback);
+}
+
+
+Error ProducerImpl::SendFile(const EventHeader& event_header, std::string full_path, RequestCallback callback) {
+    return Send(event_header, nullptr, std::move(full_path), callback);
+}
+
 
 void ProducerImpl::SetLogLevel(LogLevel level) {
     log__->SetLogLevel(level);

@@ -40,7 +40,7 @@ class MockRequestPull : public RequestPool {
 class MockRequestHandler : public RequestHandler {
   public:
 
-    Error ProcessRequestUnlocked(const Request* request) override {
+    Error ProcessRequestUnlocked(Request* request) override {
         return Error{ProcessRequestUnlocked_t(request)};
     }
     void TearDownProcessingRequestLocked(const Error& error_from_process) override {

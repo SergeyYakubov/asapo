@@ -19,7 +19,7 @@
 #endif
 
 #include "system_io.h"
-
+#include "preprocessor/definitions.h"
 
 namespace asapo {
 
@@ -79,19 +79,28 @@ uint8_t* AllocateArray(uint64_t fsize, Error* err) {
 
 // PRIVATE FUNCTIONS - END
 
-FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const {
+FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const {
+
+    if (*fsize == 0 && !fname.empty()) {
+        auto info = GetFileInfo(fname, err);
+        if (*err != nullptr) {
+            return nullptr;
+        }
+        *fsize = info.size;
+    }
+
     *err = nullptr;
     auto fd = Open(fname, IO_OPEN_MODE_READ, err);
     if (*err != nullptr) {
         return nullptr;
     }
 
-    auto data_array = AllocateArray(fsize, err);
+    auto data_array = AllocateArray(*fsize, err);
     if (*err != nullptr) {
         return nullptr;
     }
 
-    Read(fd, data_array, fsize, err);
+    Read(fd, data_array, *fsize, err);
     if (*err != nullptr) {
         (*err)->Append(fname);
         Close(fd, nullptr);
@@ -132,9 +141,28 @@ void asapo::SystemIO::CreateNewDirectory(const std::string& directory_name, Erro
     }
 }
 
-Error SystemIO::WriteDataToFile(const std::string& fname, const uint8_t* data, size_t length) const {
+Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
+                                size_t length, bool create_directories) const {
+    std::string full_name;
+    if (!root_folder.empty()) {
+        full_name = root_folder + kPathSeparator + fname;
+    } else {
+        full_name = fname;
+    }
     Error err;
-    auto fd = Open(fname, IO_OPEN_MODE_CREATE | IO_OPEN_MODE_RW, &err);
+    auto fd = Open(full_name, IO_OPEN_MODE_CREATE | IO_OPEN_MODE_RW, &err);
+    if (err == IOErrorTemplates::kFileNotFound && create_directories) {
+        size_t pos = fname.rfind(kPathSeparator);
+        if (pos == std::string::npos) {
+            return IOErrorTemplates::kFileNotFound.Generate();
+        }
+        auto err_create = CreateDirectoryWithParents(root_folder, fname.substr(0, pos));
+        if (err_create) {
+            return err_create;
+        }
+        return WriteDataToFile(root_folder, fname, data, length, false);
+    }
+
     if (err) {
         return err;
     }
@@ -149,23 +177,21 @@ Error SystemIO::WriteDataToFile(const std::string& fname, const uint8_t* data, s
 
 }
 
-Error SystemIO::WriteDataToFile(const std::string& fname, const FileData& data, size_t length) const {
-    return WriteDataToFile(fname, data.get(), length);
+Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
+                                size_t length, bool create_directories) const {
+    return WriteDataToFile(root_folder, fname, data.get(), length, create_directories);
 }
 
 
 std::string SystemIO::ReadFileToString(const std::string& fname, Error* err) const {
-    auto info = GetFileInfo(fname, err);
+
+    uint64_t size = 0;
+    auto data = GetDataFromFile(fname, &size, err);
     if (*err != nullptr) {
         return "";
     }
 
-    auto data = GetDataFromFile(fname, info.size, err);
-    if (*err != nullptr) {
-        return "";
-    }
-
-    return std::string(reinterpret_cast<const char*>(data.get()), info.size);
+    return std::string(reinterpret_cast<const char*>(data.get()), size);
 }
 
 
@@ -218,7 +244,7 @@ asapo::FileDescriptor asapo::SystemIO::CreateAndConnectIPTCPSocket(const std::st
 
 int SystemIO::FileOpenModeToPosixFileOpenMode(int open_flags) const {
     int flags = 0;
-    if((open_flags & IO_OPEN_MODE_READ && open_flags & IO_OPEN_MODE_WRITE) || open_flags & IO_OPEN_MODE_RW) {
+    if(((open_flags & IO_OPEN_MODE_READ) && (open_flags & IO_OPEN_MODE_WRITE)) || (open_flags & IO_OPEN_MODE_RW)) {
         flags |= O_RDWR;
     } else {
         if (open_flags & IO_OPEN_MODE_READ) {
@@ -552,6 +578,27 @@ size_t SystemIO::Transfer(ssize_t (* method)(FileDescriptor, void*, size_t), Fil
     }
     *err = nullptr;
     return already_transferred;
+}
+
+Error SystemIO::CreateDirectoryWithParents(const std::string& root_path, const std::string& path) const {
+    for( std::string::const_iterator iter = path.begin() ; iter != path.end(); ) {
+        iter = std::find( iter, path.end(), kPathSeparator );
+        std::string new_path;
+        if (root_path.empty()) {
+            new_path = std::string( path.begin(), iter);
+        } else {
+            new_path = root_path + kPathSeparator + std::string(path.begin(), iter);
+        }
+        Error err;
+        CreateNewDirectory(new_path, &err);
+        if (err && err != IOErrorTemplates::kFileAlreadyExists) {
+            return err;
+        }
+        if (iter != path.end()) {
+            ++iter;
+        }
+    }
+    return nullptr;
 }
 
 }
