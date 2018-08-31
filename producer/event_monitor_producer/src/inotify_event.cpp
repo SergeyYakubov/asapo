@@ -39,9 +39,6 @@ bool InotifyEvent::IsDeleteDirectoryInFolderEventByMove() const {
 }
 void InotifyEvent::Print() const {
     printf("    wd =%2d; ", inotify_event_->wd);
-    if (inotify_event_->cookie > 0)
-        printf("cookie =%4d; ", inotify_event_->cookie);
-
     printf("mask = ");
     if (inotify_event_->mask & IN_ACCESS)        printf("IN_ACCESS ");
     if (inotify_event_->mask & IN_ATTRIB)        printf("IN_ATTRIB ");

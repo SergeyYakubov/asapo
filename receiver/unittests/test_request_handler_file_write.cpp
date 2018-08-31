@@ -55,7 +55,7 @@ class FileWriteHandlerTests : public Test {
     NiceMock<MockIO> mock_io;
     std::unique_ptr<MockRequest> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
-    std::string expected_file_name = "2.bin";
+    std::string expected_file_name = "2";
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_beamline = "beamline";
     uint64_t expected_file_size = 10;

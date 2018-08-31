@@ -67,7 +67,7 @@ class RequestHandlerTcpTests : public testing::Test {
         callback_header = header;
     }};
 
-    std::string expected_origin_fullpath = std::string("origin/") + expected_file_name + ".bin";
+    std::string expected_origin_fullpath = std::string("origin/") + expected_file_name;
     asapo::Request request_filesend{expected_beamtime_id, header, nullptr, expected_origin_fullpath, nullptr};
 
 

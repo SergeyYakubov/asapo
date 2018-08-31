@@ -108,14 +108,16 @@ ACTION_P(A_CopyBuf, buffer) {
 
 
 ssize_t SystemFolderWatchTests::AddEventToBuffer(std::string filename, uint32_t mask, int fd) {
-    struct inotify_event event;
-    event.mask = mask;
-    event.wd = fd;
-    strcpy(event.name, filename.c_str());
-    event.len = strlen(event.name) + 1;
-    ssize_t size = sizeof(struct inotify_event) + event.len;
-    memcpy(buffer + cur_buffer_pointer, &event, size);
+    ssize_t size = sizeof(struct inotify_event) + filename.size()+1;
+    char* buf = (char*) malloc(size);
+    struct inotify_event* event=(struct inotify_event*) buf;
+    event->mask = mask;
+    event->wd = fd;
+    strcpy(event->name, filename.c_str());
+    event->len = strlen(event->name) + 1;
+    memcpy(buffer + cur_buffer_pointer, event, size);
     cur_buffer_pointer += size;
+    free(buf);
     return size;
 
 }
@@ -225,8 +227,8 @@ TEST_F(SystemFolderWatchTests, ProcessFileEvents) {
     auto events = watch.GetFileList(&err);
 
     ASSERT_THAT(events.size(), Eq(2));
-    ASSERT_THAT(events[0], StrEq("test1/file1"));
-    ASSERT_THAT(events[1], StrEq("test2/file2"));
+    ASSERT_THAT(events[0].c_str(), StrEq("test1/file1"));
+    ASSERT_THAT(events[1].c_str(), StrEq("test2/file2"));
     ASSERT_THAT(err, Eq(nullptr));
 }
 
