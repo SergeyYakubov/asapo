@@ -8,14 +8,16 @@
 #include "preprocessor/definitions.h"
 #include "asapo_producer.h"
 #include "common.h"
+#include "io/io.h"
 
 
 namespace asapo {
 
 class SystemFolderWatch {
   public:
-    VIRTUAL Error StartFolderMonitor(const std::vector<std::string>& monitored_folders);
-    VIRTUAL FileEvents GetFileEventList(Error* err);
+    VIRTUAL Error StartFolderMonitor(const std::string& root_folder,
+                                     const std::vector<std::string>& monitored_folders);
+    VIRTUAL FilesToSend GetFileList(Error* err);
 };
 
 }

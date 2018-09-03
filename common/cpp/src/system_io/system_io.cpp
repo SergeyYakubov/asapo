@@ -601,7 +601,7 @@ Error SystemIO::CreateDirectoryWithParents(const std::string& root_path, const s
     return nullptr;
 }
 
-Error SystemIO::DeleteFile(const std::string& fname) const {
+Error SystemIO::RemoveFile(const std::string& fname) const {
     if(remove(fname.c_str()) == 0) {
         return nullptr;;
     } else {

@@ -7,8 +7,8 @@ Error SystemFolderWatch::StartFolderMonitor(const std::string& root_folder,
     return nullptr;
 }
 
-FileEvents SystemFolderWatch::GetFileEventList(Error* err) {
-    FileEvents events;
+FilesToSend SystemFolderWatch::GetFileList(Error* err) {
+    FilesToSend events;
     *err = nullptr;
     return events;
 }

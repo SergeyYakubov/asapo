@@ -34,7 +34,7 @@ MATCHER_P5(M_CheckSendDataRequest, op_code, beamtime_id, file_id, file_size, mes
            "Checks if a valid GenericRequestHeader was Send") {
     return ((asapo::GenericRequestHeader)(arg->header)).op_code == op_code
            && ((asapo::GenericRequestHeader)(arg->header)).data_id == file_id
-           && ((asapo::GenericRequestHeader)(arg->header)).data_size == uint(file_size)
+           && ((asapo::GenericRequestHeader)(arg->header)).data_size == uint64_t(file_size)
            && arg->beamtime_id == beamtime_id
            && strcmp(((asapo::GenericRequestHeader)(arg->header)).message, message) == 0;
 }

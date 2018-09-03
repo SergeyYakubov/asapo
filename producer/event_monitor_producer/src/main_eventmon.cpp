@@ -57,7 +57,7 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
     }
     auto config = GetEventMonConfig();
     std::string fname = config->root_monitored_folder + asapo::kPathSeparator + header.message;
-    auto error = io->DeleteFile(fname);
+    auto error = io->RemoveFile(fname);
     if (error) {
         const auto logger = asapo::GetDefaultEventMonLogger();
         logger->Error("cannot delete file: " + fname + "" + error->Explain());
@@ -82,7 +82,9 @@ int main (int argc, char* argv[]) {
     stop_signal = 0;
     std::signal(SIGINT, SignalHandler);
     std::signal(SIGTERM, SignalHandler);
-    siginterrupt(SIGINT, 1);
+    #if defined(__linux__) || defined (__APPLE__)
+        siginterrupt(SIGINT, 1);
+    #endif
 
     const auto logger = asapo::GetDefaultEventMonLogger();
     logger->SetLogLevel(GetEventMonConfig()->log_level);
