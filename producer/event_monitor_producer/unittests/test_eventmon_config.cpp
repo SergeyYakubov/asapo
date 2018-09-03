@@ -59,6 +59,7 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     test_config.root_monitored_folder = "tmp";
     test_config.monitored_subfolders = {"test1", "test2"};
     test_config.ignored_extentions = {"tmp", "test"};
+    test_config.remove_after_send = true;
     auto err = asapo::SetFolderMonConfig(test_config);
 
     auto config = asapo::GetEventMonConfig();
@@ -73,6 +74,7 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     ASSERT_THAT(config->monitored_subfolders, ElementsAre("test1", "test2"));
     ASSERT_THAT(config->root_monitored_folder, Eq("tmp"));
     ASSERT_THAT(config->ignored_extentions, ElementsAre("tmp", "test"));
+    ASSERT_THAT(config->remove_after_send, Eq(true));
 
 }
 

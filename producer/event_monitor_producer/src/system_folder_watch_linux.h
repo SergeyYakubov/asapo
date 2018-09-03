@@ -42,15 +42,16 @@ class SystemFolderWatch {
     Error AddFolderToWatch(std::string folder);
     Error ProcessInotifyEvent(const InotifyEvent& event, FilesToSend* file_events);
     Error ProcessFileEvent(const InotifyEvent& event, FilesToSend* files);
-    Error ProcessDirectoryEvent(const InotifyEvent& event);
-    Error ProcessNewDirectoryInFolderEvent(const InotifyEvent& event);
+    Error ProcessDirectoryEvent(const InotifyEvent& event, FilesToSend* file_events);
+    Error ProcessNewDirectoryInFolderEvent(const InotifyEvent& event, FilesToSend* file_events);
+    Error AddExistingFilesToEvents(const std::string& full_path, const std::string& rel_path, FilesToSend* file_events);
     Error ProcessDeleteDirectoryInFolderEvent(const InotifyEvent& event);
     std::map<int, std::string>::iterator FindEventIterator(const InotifyEvent& event, Error* err);
     void RemoveFolderWithSubfoldersFromWatch(const std::string& path);
     std::map<int, std::string>::iterator RemoveFolderFromWatch(const std::map<int, std::string>::iterator& it);
     Error ReadInotifyEvents(int* bytes_read);
     Error ProcessInotifyEvents(int bytes_in_buffer, FilesToSend* events);
-    Error FindEventPath(const InotifyEvent& event, std::string* folder, bool add_root);
+    Error FindEventPaths(const InotifyEvent& event, std::string* full_path, std::string* relative_path);
   private:
     std::unique_ptr<char[]> buffer_;
     std::map<int, std::string> watched_folders_paths_;

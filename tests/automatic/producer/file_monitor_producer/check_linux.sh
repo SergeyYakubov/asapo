@@ -7,7 +7,7 @@ trap Cleanup EXIT
 Cleanup() {
     set +e
 	echo cleanup
-	rm -rf /tmp/test_in /tmp/test_out output
+	rm -rf /tmp/test_in /tmp/test_out #output
 	kill -9 $producer_id &>/dev/null
 }
 
@@ -28,6 +28,10 @@ cat /tmp/test_out/test1/test1.dat | grep test1
 cat /tmp/test_out/test2/subdir/test3.dat | grep test3
 
 test  ! -e /tmp/test_out/test2/test2.tmp
+
+test  ! -e /tmp/test_in/test1/test1.dat
+test  ! -e /tmp/test_in/test2/subdir/test3.dat
+
 
 kill -s INT $producer_id
 sleep 0.5

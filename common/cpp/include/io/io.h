@@ -90,7 +90,7 @@ class IO {
 
     virtual size_t          Read            (FileDescriptor fd, void* buf, size_t length, Error* err) const = 0;
     virtual size_t          Write           (FileDescriptor fd, const void* buf, size_t length, Error* err) const = 0;
-
+    virtual Error           DeleteFile(const std::string& fname) const = 0;
     virtual Error          WriteDataToFile  (const std::string& root_folder, const std::string& fname, const FileData& data,
                                              size_t length, bool create_directories) const = 0;
     virtual Error          WriteDataToFile  (const std::string& root_folder, const std::string& fname, const uint8_t* data,

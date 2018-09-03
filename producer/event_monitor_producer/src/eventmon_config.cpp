@@ -21,6 +21,7 @@ Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     (err = parser.GetUInt64("NThreads", &config.nthreads)) ||
     (err = parser.GetString("RootMonitoredFolder", &config.root_monitored_folder)) ||
     (err = parser.GetString("LogLevel", &config.log_level_str)) ||
+    (err = parser.GetBool("RemoveAfterSend", &config.remove_after_send)) ||
     (err = parser.GetArrayString("MonitoredSubFolders", &config.monitored_subfolders)) ||
     (err = parser.GetArrayString("IgnoreExtentions", &config.ignored_extentions));
 

@@ -110,6 +110,7 @@ class SystemIO final : public IO {
                                     size_t length, bool create_directories) const override;
     SubDirList      GetSubDirectories(const std::string& path, Error* err) const override;
     std::string     ReadFileToString(const std::string& fname, Error* err) const override;
+    Error           DeleteFile(const std::string& fname) const override;
 };
 }
 

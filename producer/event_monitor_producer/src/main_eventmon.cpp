@@ -14,10 +14,14 @@
 #include "event_monitor_error.h"
 #include "preprocessor/definitions.h"
 
+#include "io/io_factory.h"
+
 using asapo::Producer;
 using asapo::EventMonConfigFactory;
 using asapo::Error;
 using asapo::GetEventMonConfig;
+
+auto io = asapo::GenerateDefaultIO();
 
 Error ReadConfigFile(int argc, char* argv[]) {
     if (argc != 2) {
@@ -47,8 +51,16 @@ std::unique_ptr<Producer> CreateProducer() {
 
 void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
     if (err) {
-        const auto& logger = asapo::GetDefaultEventMonLogger();
+        const auto logger = asapo::GetDefaultEventMonLogger();
         logger->Error("data was not successfully send: " + err->Explain());
+        return;
+    }
+    auto config = GetEventMonConfig();
+    std::string fname = config->root_monitored_folder + asapo::kPathSeparator + header.message;
+    auto error = io->DeleteFile(fname);
+    if (error) {
+        const auto logger = asapo::GetDefaultEventMonLogger();
+        logger->Error("cannot delete file: " + fname + "" + error->Explain());
         return;
     }
 }
@@ -72,7 +84,7 @@ int main (int argc, char* argv[]) {
     std::signal(SIGTERM, SignalHandler);
     siginterrupt(SIGINT, 1);
 
-    const auto& logger = asapo::GetDefaultEventMonLogger();
+    const auto logger = asapo::GetDefaultEventMonLogger();
     logger->SetLogLevel(GetEventMonConfig()->log_level);
 
 

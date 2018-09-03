@@ -67,16 +67,17 @@ std::map<int, std::string>::iterator SystemFolderWatch::FindEventIterator(const 
 
 
 
-Error SystemFolderWatch::FindEventPath(const InotifyEvent& event, std::string* folder, bool add_root) {
+Error SystemFolderWatch::FindEventPaths(const InotifyEvent& event, std::string* full_path, std::string* relative_path) {
     Error err;
     auto it = FindEventIterator(event, &err);
     if (err) {
         return err;
     }
-    if (add_root) {
-        *folder = root_folder_ + "/" + it->second + "/" + event.Name();
-    } else {
-        *folder = it->second + "/" + event.Name();
+    if (full_path) {
+        *full_path = root_folder_ + "/" + it->second + "/" + event.Name();
+    }
+    if (relative_path) {
+        *relative_path = it->second + "/" + event.Name();
     }
 
     return nullptr;
@@ -88,7 +89,7 @@ Error SystemFolderWatch::ProcessFileEvent(const InotifyEvent& event, FilesToSend
         return nullptr;
     }
     std::string fname;
-    auto err = FindEventPath(event, &fname, false);
+    auto err = FindEventPaths(event, nullptr, &fname);
     if (err) {
         return err;
     }
@@ -98,14 +99,37 @@ Error SystemFolderWatch::ProcessFileEvent(const InotifyEvent& event, FilesToSend
     return nullptr;
 }
 
-Error SystemFolderWatch::ProcessNewDirectoryInFolderEvent(const InotifyEvent& event) {
-    std::string newpath;
-    auto err = FindEventPath(event, &newpath, true);
+
+Error SystemFolderWatch::AddExistingFilesToEvents(const std::string& full_path, const std::string& rel_path,
+                                                  FilesToSend* file_events) {
+    Error err;
+    auto files = io__->FilesInFolder(full_path, &err);
     if (err) {
         return err;
     }
-    return  AddFolderAndSubfoldersToWatch(newpath);
+    for (auto& file : files) {
+        std::string fname = rel_path + kPathSeparator + std::move(file.name);
+        file_events->emplace_back(fname);
+        GetDefaultEventMonLogger()->Warning("manually added file to events, double send possible : " + fname);
+    }
+
+    return nullptr;
 }
+
+
+Error SystemFolderWatch::ProcessNewDirectoryInFolderEvent(const InotifyEvent& event, FilesToSend* file_events) {
+    std::string new_full_path, new_relative_path;
+    auto err = FindEventPaths(event, &new_full_path, &new_relative_path);
+    if (err) {
+        return err;
+    }
+    err = AddFolderAndSubfoldersToWatch(new_full_path);
+    if (err) {
+        return err;
+    }
+    return AddExistingFilesToEvents(new_full_path, new_relative_path, file_events);
+}
+
 
 std::map<int, std::string>::iterator SystemFolderWatch::RemoveFolderFromWatch(const
         std::map<int, std::string>::iterator& it) {
@@ -143,9 +167,9 @@ Error SystemFolderWatch::ProcessDeleteDirectoryInFolderEvent(const InotifyEvent&
 }
 
 
-Error SystemFolderWatch::ProcessDirectoryEvent(const InotifyEvent& event) {
+Error SystemFolderWatch::ProcessDirectoryEvent(const InotifyEvent& event, FilesToSend* file_events) {
     if (event.IsNewDirectoryInFolderEvent()) {
-        return ProcessNewDirectoryInFolderEvent(event);
+        return ProcessNewDirectoryInFolderEvent(event, file_events);
     }
 
     if (event.IsDeleteDirectoryInFolderEvent()) {
@@ -157,7 +181,7 @@ Error SystemFolderWatch::ProcessDirectoryEvent(const InotifyEvent& event) {
 
 Error SystemFolderWatch::ProcessInotifyEvent(const InotifyEvent& event, FilesToSend* file_events) {
     if (event.IsDirectoryEvent()) {
-        return ProcessDirectoryEvent(event);
+        return ProcessDirectoryEvent(event, file_events);
     } else {
         return ProcessFileEvent(event, file_events);
     }

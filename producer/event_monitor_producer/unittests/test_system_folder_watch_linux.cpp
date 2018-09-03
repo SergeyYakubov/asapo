@@ -27,6 +27,8 @@ using ::asapo::Error;
 using ::asapo::ErrorInterface;
 using asapo::FilesToSend;
 using asapo::SystemFolderWatch;
+using asapo::FileInfos;
+using asapo::FileInfo;
 
 namespace {
 
@@ -37,6 +39,16 @@ TEST(SystemFolderWatch, Constructor) {
     ASSERT_THAT(dynamic_cast<asapo::Inotify*>(watch.inotify__.get()), Ne(nullptr));
 }
 
+FileInfos CreateTestFileInfos() {
+    FileInfos file_infos;
+    FileInfo fi;
+    fi.size = 100;
+    fi.name = "file1";
+    file_infos.push_back(fi);
+    fi.name = "subfolder/file2";
+    file_infos.push_back(fi);
+    return file_infos;
+}
 
 
 class SystemFolderWatchTests : public testing::Test {
@@ -52,7 +64,7 @@ class SystemFolderWatchTests : public testing::Test {
     std::vector<std::string> expected_watches{"/tmp/test1", "/tmp/test2", "/tmp/test1/sub11", "/tmp/test2/sub21", "/tmp/test2/sub22", "/tmp/test2/sub21/sub211"};
     std::string expected_filename1{"file1"};
     std::string expected_filename2{"file2"};
-
+    FileInfos expected_fileinfos = CreateTestFileInfos();
     int expected_wd = 10;
     std::vector<int>expected_fds = {1, 2, 3, 4, 5, 6};
     void MockStartMonitoring();
@@ -69,7 +81,7 @@ class SystemFolderWatchTests : public testing::Test {
     }
     ssize_t  AddEventToBuffer(std::string filename, uint32_t mask, int fd);
     void ExpectRead();
-    void ExpectCreateFolder(std::string folder);
+    void ExpectCreateFolder(std::string folder, bool with_files);
 };
 
 void SystemFolderWatchTests::MockStartMonitoring() {
@@ -108,9 +120,9 @@ ACTION_P(A_CopyBuf, buffer) {
 
 
 ssize_t SystemFolderWatchTests::AddEventToBuffer(std::string filename, uint32_t mask, int fd) {
-    ssize_t size = sizeof(struct inotify_event) + filename.size()+1;
+    ssize_t size = sizeof(struct inotify_event) + filename.size() + 1;
     char* buf = (char*) malloc(size);
-    struct inotify_event* event=(struct inotify_event*) buf;
+    struct inotify_event* event = (struct inotify_event*) buf;
     event->mask = mask;
     event->wd = fd;
     strcpy(event->name, filename.c_str());
@@ -257,7 +269,7 @@ TEST_F(SystemFolderWatchTests, ProcessDeleteFolder) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-void SystemFolderWatchTests::ExpectCreateFolder(std::string folder) {
+void SystemFolderWatchTests::ExpectCreateFolder(std::string folder, bool with_files) {
     std::string newfolder = expected_root_folder + "/" + expected_folders[0] + "/" + folder;
     EXPECT_CALL(mock_io, GetSubDirectories_t(newfolder, _))
     .WillOnce(
@@ -271,34 +283,61 @@ void SystemFolderWatchTests::ExpectCreateFolder(std::string folder) {
     .WillOnce(
         Return(1)
     );
+
+    if (with_files) {
+        ON_CALL(mock_io, FilesInFolder_t(newfolder, _)).
+        WillByDefault(DoAll(testing::SetArgPointee<1>(nullptr),
+                            testing::Return(expected_fileinfos)));
+    } else {
+        ON_CALL(mock_io, FilesInFolder_t(newfolder, _)).
+        WillByDefault(DoAll(testing::SetArgPointee<1>(nullptr),
+                            testing::Return(FileInfos{})));
+    }
 }
 
-TEST_F(SystemFolderWatchTests, ProcessCreateFolder) {
+TEST_F(SystemFolderWatchTests, ProcessCreateFolderWithFilesInIt) {
     MockStartMonitoring();
     AddEventToBuffer("folder", IN_ISDIR | IN_CREATE, expected_fds[0]);
     ExpectRead();
-    ExpectCreateFolder("folder");
+    ExpectCreateFolder("folder", true);
+
+    Error err;
+    auto events = watch.GetFileList(&err);
+
+    ASSERT_THAT(events.size(), Eq(2));
+    ASSERT_THAT(events[0].c_str(), StrEq("test1/folder/file1"));
+    ASSERT_THAT(events[1].c_str(), StrEq("test1/folder/subfolder/file2"));
+
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(SystemFolderWatchTests, ProcessCreateFolderWithoutFilesInIt) {
+    MockStartMonitoring();
+    AddEventToBuffer("folder", IN_ISDIR | IN_CREATE, expected_fds[0]);
+    ExpectRead();
+    ExpectCreateFolder("folder", false);
 
     Error err;
     auto events = watch.GetFileList(&err);
 
     ASSERT_THAT(events.size(), Eq(0));
+
     ASSERT_THAT(err, Eq(nullptr));
 }
+
 
 TEST_F(SystemFolderWatchTests, ProcessMoveFolder) {
     MockStartMonitoring();
     AddEventToBuffer("sub21", IN_ISDIR | IN_MOVED_TO, expected_fds[0]);
     AddEventToBuffer("sub21", IN_ISDIR | IN_MOVED_FROM, expected_fds[1]);
     ExpectRead();
-    ExpectCreateFolder("sub21");
+    ExpectCreateFolder("sub21", false);
     EXPECT_CALL(mock_inotify, DeleteWatch(expected_fds[3], expected_wd));
     EXPECT_CALL(mock_inotify, DeleteWatch(expected_fds[5], expected_wd));
 
     Error err;
     auto events = watch.GetFileList(&err);
-
-    ASSERT_THAT(events.size(), Eq(0));
     ASSERT_THAT(err, Eq(nullptr));
 }
 

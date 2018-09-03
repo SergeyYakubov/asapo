@@ -48,6 +48,8 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     config_string += "," + std::string("\"Mode\":") + "\"" + mode + "\"";
     config_string += "," + std::string("\"NThreads\":") + std::to_string(config.nthreads);
     config_string += "," + std::string("\"LogLevel\":") + "\"" + log_level + "\"";
+    config_string += "," + std::string("\"RemoveAfterSend\":") + (config.remove_after_send ? "true" : "false");
+
     std::string mon_folders;
     for (auto folder : config.monitored_subfolders) {
         mon_folders += "\"" + folder + "\"" + ",";

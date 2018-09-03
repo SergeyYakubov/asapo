@@ -19,6 +19,7 @@ struct EventMonConfig {
     std::string root_monitored_folder;
     std::vector<std::string> monitored_subfolders;
     std::vector<std::string> ignored_extentions;
+    bool remove_after_send = false;
   private:
     std::string log_level_str;
     std::string mode_str;

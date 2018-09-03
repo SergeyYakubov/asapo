@@ -179,10 +179,19 @@ class MockIO : public IO {
 
     }
 
+    MOCK_CONST_METHOD1(DeleteFile_t, ErrorInterface * (const std::string& fname));
+
     Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
                           size_t length, bool create_directories) const override {
         return Error{WriteDataToFile_t(root_folder, fname, data, length, create_directories)};
     }
+
+
+    Error DeleteFile(const std::string& fname) const override {
+        return Error{DeleteFile_t(fname)};
+    }
+
+
 
 
     MOCK_CONST_METHOD5(WriteDataToFile_t, ErrorInterface * (const std::string& root_folder, const std::string& fname,
