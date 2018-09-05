@@ -101,7 +101,7 @@ class IO {
     virtual SubDirList      GetSubDirectories(const std::string& path, Error* err) const = 0;
     virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, Error* err) const = 0;
     virtual std::string     ReadFileToString        (const std::string& fname, Error* err) const = 0;
-
+    virtual Error GetLastError() const = 0;
 };
 
 }

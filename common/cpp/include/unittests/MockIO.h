@@ -173,7 +173,15 @@ class MockIO : public IO {
 
     MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t* fsize, ErrorInterface** err));
 
-    Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
+
+    Error GetLastError() const override {
+        return Error{GetLastError_t()};
+    }
+
+    MOCK_CONST_METHOD0(GetLastError_t, ErrorInterface* ());
+
+
+  Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
                           size_t length, bool create_directories) const override {
         return Error{WriteDataToFile_t(root_folder, fname, data.get(), length, create_directories)};
 
@@ -223,6 +231,9 @@ class MockIO : public IO {
         return data;
     }
     MOCK_CONST_METHOD2(ReadFileToString_t, std::string(const std::string& fname, ErrorInterface** err));
+
+
+
 };
 
 }

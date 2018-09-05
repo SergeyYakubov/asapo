@@ -18,8 +18,8 @@ class SystemFolderWatch {
   SystemFolderWatch();
   VIRTUAL Error StartFolderMonitor(const std::string& root_folder,
                                      const std::vector<std::string>& monitored_folders);
-    VIRTUAL FilesToSend GetFileList(Error* err);
-    std::unique_ptr<IO> io__;
+  VIRTUAL FilesToSend GetFileList(Error* err);
+  std::unique_ptr<IO> io__;
   private:
 
 };

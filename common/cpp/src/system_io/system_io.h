@@ -25,7 +25,6 @@ class SystemIO final : public IO {
 
     //void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
     int FileOpenModeToPosixFileOpenMode(int open_flags) const;
-    Error GetLastError() const;
 
     short AddressFamilyToPosixFamily      (AddressFamilies address_family) const;
     int SocketTypeToPosixType           (SocketTypes socket_type) const;
@@ -111,6 +110,7 @@ class SystemIO final : public IO {
     SubDirList      GetSubDirectories(const std::string& path, Error* err) const override;
     std::string     ReadFileToString(const std::string& fname, Error* err) const override;
     Error           RemoveFile(const std::string& fname) const override;
+    Error           GetLastError() const override;
 
 };
 }

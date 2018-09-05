@@ -7,7 +7,10 @@ set(SOURCE_FILES
 )
 
 IF(WIN32)
-    set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_windows.cpp src/single_folder_monitor.cpp)
+    set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_windows.cpp
+            src/single_folder_watch_windows.cpp
+            src/watch_io.cpp
+            )
 ELSEIF(UNIX)
     set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_linux.cpp src/inotify_event.cpp src/inotify_linux.cpp)
 ENDIF(WIN32)
@@ -56,7 +59,8 @@ set(TEST_SOURCE_FILES
 IF(UNIX)
 set(TEST_SOURCE_FILES ${TEST_SOURCE_FILES} unittests/test_system_folder_watch_linux.cpp)
 ELSE()
-set(TEST_SOURCE_FILES ${TEST_SOURCE_FILES} unittests/test_system_folder_watch_windows.cpp)
+set(TEST_SOURCE_FILES ${TEST_SOURCE_FILES} unittests/test_system_folder_watch_windows.cpp
+        unittests/test_single_folder_watch_windows.cpp)
 ENDIF(UNIX)
 
 
