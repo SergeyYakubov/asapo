@@ -43,7 +43,7 @@ FileInfos CreateTestFileInfos() {
     fi.size = 100;
     fi.name = "file1";
     file_infos.push_back(fi);
-    fi.name = "subfolder/file2";
+    fi.name = "subfolder\\file2";
     file_infos.push_back(fi);
     return file_infos;
 }
@@ -54,9 +54,9 @@ class SystemFolderWatchTests : public testing::Test {
     Error err;
     ::testing::NiceMock<asapo::MockIO> mock_io;
     SystemFolderWatch watch{};
-    std::string expected_root_folder = "/tmp";
+    std::string expected_root_folder = "c:\\tmp";
     std::vector<std::string> expected_folders{"test1", "test2"};
-    void SetUp() override {
+  void SetUp() override {
         watch.io__ = std::unique_ptr<asapo::IO> {&mock_io};
     }
     void TearDown() override {
@@ -64,7 +64,7 @@ class SystemFolderWatchTests : public testing::Test {
     }
 };
 
-TEST_F(SystemFolderWatchTests, ErrorInitInotifyStartMonitoring) {
+TEST_F(SystemFolderWatchTests,StartMonitoring) {
 
 
     EXPECT_CALL(mock_io, NewThread_t(_)).Times(expected_folders.size()).

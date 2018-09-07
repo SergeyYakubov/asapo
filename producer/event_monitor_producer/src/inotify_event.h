@@ -26,7 +26,7 @@ class InotifyEvent {
     void Print() const;
   private:
     const struct inotify_event* inotify_event_;
-    const std::map<int, std::string> watched_folders_paths_;
+    const std::map<int, std::string>& watched_folders_paths_;
 };
 
 }

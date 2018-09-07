@@ -13,6 +13,7 @@ class WatchIO {
  public:
   explicit WatchIO();
   VIRTUAL HANDLE Init(const char* folder, Error* err);
+  VIRTUAL Error ReadDirectoryChanges(HANDLE handle,LPVOID buffer, DWORD buffer_length,LPDWORD bytes_returned);
  private:
   std::unique_ptr<IO>io_;
 };

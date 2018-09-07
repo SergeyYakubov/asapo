@@ -10,6 +10,8 @@ IF(WIN32)
     set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_windows.cpp
             src/single_folder_watch_windows.cpp
             src/watch_io.cpp
+            src/shared_event_list.cpp
+            src/win_event.cpp
             )
 ELSEIF(UNIX)
     set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_linux.cpp src/inotify_event.cpp src/inotify_linux.cpp)

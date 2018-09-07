@@ -9,9 +9,11 @@
 #include "asapo_producer.h"
 #include "common.h"
 #include "io/io.h"
-
+#include "shared_event_list.h"
 
 namespace asapo {
+
+
 
 class SystemFolderWatch {
   public:
@@ -21,7 +23,8 @@ class SystemFolderWatch {
   VIRTUAL FilesToSend GetFileList(Error* err);
   std::unique_ptr<IO> io__;
   private:
-
+    SharedEventList event_list_;
+    std::vector<std::unique_ptr<std::thread>> threads_;
 };
 
 }

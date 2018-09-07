@@ -18,6 +18,13 @@ class MockWatchIO : public WatchIO {
    }
 
   MOCK_METHOD2(Init_t, HANDLE (const char* folder, ErrorInterface** err));
+
+  Error ReadDirectoryChanges(HANDLE handle,LPVOID buffer, DWORD buffer_length,LPDWORD bytes_returned) override {
+      return Error{ReadDirectoryChanges_t(handle,buffer,buffer_length,bytes_returned)};
+  }
+
+  MOCK_METHOD4(ReadDirectoryChanges_t, ErrorInterface* (HANDLE handle,LPVOID buffer, DWORD buffer_length,LPDWORD bytes_returned));
+
 };
 
 }

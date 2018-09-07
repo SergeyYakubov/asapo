@@ -11,14 +11,15 @@ namespace asapo {
 Error SystemFolderWatch::StartFolderMonitor(const std::string& root_folder,
                                             const std::vector<std::string>& monitored_folders) {
     for (auto& folder:monitored_folders ) {
-    auto thread = io__->NewThread([root_folder, folder] {
-      auto folder_watch = std::unique_ptr<SingleFolderWatch>(new SingleFolderWatch(root_folder, folder));
+    auto thread = io__->NewThread([root_folder, folder,this] {
+      auto folder_watch = std::unique_ptr<SingleFolderWatch>(new SingleFolderWatch(root_folder, folder,&event_list_));
       folder_watch->Watch();
     });
 
-    if (thread) {
-        thread->detach();
-    }
+    threads_.emplace_back(std::move(thread));
+//    if (thread) {
+//        thread->detach();
+//    }
     }
 
     return nullptr;
