@@ -3,11 +3,18 @@
 
 #include <string>
 #include <vector>
+#include <list>
 #include <mutex>
-
+#include <windows.h>
+#include <chrono>
 #include "common.h"
 
 namespace asapo {
+
+struct SingleEvent {
+  std::string file_name;
+  std::chrono::high_resolution_clock::time_point time;
+};
 
 class SharedEventList {
  public:
@@ -15,7 +22,7 @@ class SharedEventList {
   void AddEvent(std::string event);
  private:
   std::mutex mutex_;
-  FilesToSend events_;
+  std::list<SingleEvent> events_;
 };
 
 }

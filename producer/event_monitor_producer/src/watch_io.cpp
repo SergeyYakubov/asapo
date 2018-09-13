@@ -23,7 +23,7 @@ WatchIO::WatchIO() :io_{GenerateDefaultIO()}{
 Error WatchIO::ReadDirectoryChanges(HANDLE handle, LPVOID buffer, DWORD buffer_length, LPDWORD bytes_returned) {
     DWORD filter = FILE_NOTIFY_CHANGE_FILE_NAME |
         FILE_NOTIFY_CHANGE_LAST_WRITE;
-    auto res = ReadDirectoryChangesW(handle,buffer,buffer_length,true,filter,bytes_returned,nullptr,nullptr);
+    auto res = ReadDirectoryChangesW(handle,buffer,buffer_length,true,filter,bytes_returned,nullptr,nullptr );
     printf("after read changes\n");
     if (res) {
         printf("after read changes ok\n");

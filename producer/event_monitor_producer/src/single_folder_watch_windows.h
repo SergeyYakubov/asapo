@@ -26,7 +26,7 @@ class SingleFolderWatch {
   std::string root_folder_;
   std::string folder_;
   Error Init();
-  HANDLE handle_;
+  HANDLE handle_{nullptr};
   SharedEventList* event_list_;
   std::unique_ptr<char[]> buffer_;
   Error ProcessEvent(const WinEvent& event);

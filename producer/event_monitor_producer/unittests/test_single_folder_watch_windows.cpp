@@ -148,15 +148,55 @@ TEST_F(SingleFolderWatchTests, InitErrorOnWatch) {
     watch.Watch();
 }
 
-TEST_F(SingleFolderWatchTests, WatchReadsDirectoryEvents) {
+TEST_F(SingleFolderWatchTests, WatchWaitsBeforeEventIsAvailable) {
+    ExpectInit();
+    AddEventToBuffer("test",FILE_ACTION_ADDED);
+
+    ExpectRead();
+    watch.Watch();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    auto files = event_list.GetAndClearEvents();
+
+    ASSERT_THAT(files.size(), Eq(0));
+}
+
+TEST_F(SingleFolderWatchTests, NewEventClearsTimeoutCounter) {
     ExpectInit();
     AddEventToBuffer("test",FILE_ACTION_ADDED);
     AddEventToBuffer("test2",FILE_ACTION_MODIFIED);
 
     ExpectRead();
     watch.Watch();
-
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    Mock::VerifyAndClearExpectations(&mock_watch_io);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+    cur_buffer_pointer = 0;
+    AddEventToBuffer("test2",FILE_ACTION_MODIFIED);
+    ExpectRead();
+    watch.Watch();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+    auto files = event_list.GetAndClearEvents();
+
+    ASSERT_THAT(files.size(), Eq(1));
+    ASSERT_THAT(files[0], StrEq("test"));
+}
+
+
+
+TEST_F(SingleFolderWatchTests, WatchReadsDirectoryEventsAfterTimeout) {
+    ExpectInit();
+    AddEventToBuffer("test",FILE_ACTION_ADDED);
+    AddEventToBuffer("test2",FILE_ACTION_MODIFIED);
+    AddEventToBuffer("test2",FILE_ACTION_MODIFIED);
+
+    ExpectRead();
+    watch.Watch();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1100));
     auto files = event_list.GetAndClearEvents();
 
     ASSERT_THAT(files.size(), Eq(2));

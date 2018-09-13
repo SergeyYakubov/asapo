@@ -19,6 +19,9 @@ SingleFolderWatch::SingleFolderWatch(std::string root_folder, std::string folder
 }
 
 Error SingleFolderWatch::Init()  {
+    if (handle_) {
+        return nullptr;
+    }
     std::string full_path = this->root_folder_ + kPathSeparator + this->folder_;
     Error err;
     handle_ = this->watch_io__->Init(full_path.c_str(), &err);
@@ -33,16 +36,18 @@ void SingleFolderWatch::Watch() {
     if (Init()!=nullptr) {
         return;
     }
-
     DWORD bytes_read = 0;
     auto err =watch_io__->ReadDirectoryChanges(handle_,buffer_.get(),kBufLen,&bytes_read);
     if (err == nullptr) {
         ProcessEvents(bytes_read);
     }
+
 }
+
 Error SingleFolderWatch::ProcessEvent(const WinEvent &event) {
     event.Print();
-    event_list_->AddEvent(event.FileName());
+    std::string fname = event.FileName();
+    event_list_->AddEvent(fname);
     return nullptr;
 }
 void SingleFolderWatch::ProcessEvents(DWORD bytes_to_read) {

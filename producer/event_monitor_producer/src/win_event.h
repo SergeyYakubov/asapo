@@ -15,7 +15,6 @@ class WinEvent {
   std::string FileName() const ;
  private:
   const FILE_NOTIFY_INFORMATION* win_event_;
-
 };
 
 }
