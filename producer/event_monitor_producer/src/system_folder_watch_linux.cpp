@@ -1,5 +1,6 @@
 #include "system_folder_watch_linux.h"
 
+#include <algorithm>
 
 #include "event_monitor_error.h"
 #include "eventmon_logger.h"
@@ -94,7 +95,11 @@ Error SystemFolderWatch::ProcessFileEvent(const InotifyEvent& event, FilesToSend
         return err;
     }
     GetDefaultEventMonLogger()->Debug(((event.GetMask() & IN_CLOSE_WRITE) ? "file closed: " : "file moved: ") + fname);
-
+    processed_filenames_[processed_filenames_counter_] = fname;
+    processed_filenames_counter_++;
+    if (processed_filenames_counter_ == kProcessedFilenamesBufLen) {
+        processed_filenames_counter_ = 0;
+    }
     files->emplace_back(std::move(fname));
     return nullptr;
 }
@@ -109,8 +114,13 @@ Error SystemFolderWatch::AddExistingFilesToEvents(const std::string& full_path, 
     }
     for (auto& file : files) {
         std::string fname = rel_path + kPathSeparator + std::move(file.name);
-        file_events->emplace_back(fname);
-        GetDefaultEventMonLogger()->Warning("manually added file to events, double send possible : " + fname);
+        if ( std::none_of(processed_filenames_.begin(), processed_filenames_.end(),
+        [&fname](const std::string & processed) {
+        return fname == processed;
+    })) {
+            file_events->emplace_back(fname);
+            GetDefaultEventMonLogger()->Debug("manually added file to events: " + fname);
+        }
     }
 
     return nullptr;
@@ -233,7 +243,8 @@ FilesToSend SystemFolderWatch::GetFileList(Error* err) {
     return events;
 }
 
-SystemFolderWatch::SystemFolderWatch() : io__{GenerateDefaultIO()}, inotify__{new Inotify()}, buffer_{new char[kBufLen]} {
+SystemFolderWatch::SystemFolderWatch() : io__{GenerateDefaultIO()}, inotify__{new Inotify()}, buffer_{new char[kBufLen]},
+processed_filenames_(kProcessedFilenamesBufLen, "") {
 }
 
 }

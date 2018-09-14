@@ -57,6 +57,9 @@ class SystemFolderWatch {
     std::map<int, std::string> watched_folders_paths_;
     int watch_fd_ = -1;
     std::string root_folder_;
+    const uint64_t kProcessedFilenamesBufLen  = 1000;
+    std::vector<std::string> processed_filenames_;
+    uint64_t processed_filenames_counter_ = 0;
 };
 
 bool DirectoryEvent(const InotifyEvent& event);

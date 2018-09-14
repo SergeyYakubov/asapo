@@ -341,5 +341,25 @@ TEST_F(SystemFolderWatchTests, ProcessMoveFolder) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
+TEST_F(SystemFolderWatchTests, ProcessCreateFolderWithFilesInItWhenFileWasAlreadyNoticed) {
+    MockStartMonitoring();
+    AddEventToBuffer("folder/file1", IN_CLOSE_WRITE, expected_fds[0]);
+    AddEventToBuffer("folder", IN_ISDIR | IN_CREATE, expected_fds[0]);
+
+    ExpectRead();
+    ExpectCreateFolder("folder", true);
+
+    Error err;
+    auto events = watch.GetFileList(&err);
+
+    ASSERT_THAT(events.size(), Eq(2));
+    ASSERT_THAT(events[0].c_str(), StrEq("test1/folder/file1"));
+    ASSERT_THAT(events[1].c_str(), StrEq("test1/folder/subfolder/file2"));
+
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
 
 }
