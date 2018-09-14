@@ -1,4 +1,1 @@
-#todo: add windows
-if (UNIX)
-    add_subdirectory(file_monitor_producer)
-endif()
+add_subdirectory(file_monitor_producer)

@@ -25,7 +25,10 @@ class MockWatchIO : public WatchIO {
 
   MOCK_METHOD4(ReadDirectoryChanges_t, ErrorInterface* (HANDLE handle,LPVOID buffer, DWORD buffer_length,LPDWORD bytes_returned));
 
-};
+  MOCK_METHOD1(IsDirectory, bool (const std::string&));
+
+
+  };
 
 }
 

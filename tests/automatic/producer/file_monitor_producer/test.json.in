@@ -1,11 +1,11 @@
 {
- "AsapoEndpoint":"/tmp/test_out",
+ "AsapoEndpoint":"@ROOT_PATH@test_out",
  "Tag":"test_tag",
  "BeamtimeID":"asapo_test",
  "Mode":"filesystem",
  "NThreads":1,
  "LogLevel":"debug",
- "RootMonitoredFolder":"/tmp/test_in",
+ "RootMonitoredFolder":"@ROOT_PATH@test_in",
  "MonitoredSubFolders":["test1","test2"],
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true

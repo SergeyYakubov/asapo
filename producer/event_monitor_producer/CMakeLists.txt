@@ -32,8 +32,6 @@ target_link_libraries(${TARGET_NAME} ${ASAPO_COMMON_IO_LIBRARIES})
 
 target_link_libraries(${TARGET_NAME} producer-api)
 
-
-
 ################################
 # Executable
 ################################

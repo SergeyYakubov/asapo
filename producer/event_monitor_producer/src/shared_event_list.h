@@ -11,15 +11,18 @@
 
 namespace asapo {
 
+const uint64_t kFileDelayMs = 500;
+
 struct SingleEvent {
   std::string file_name;
   std::chrono::high_resolution_clock::time_point time;
+  bool apply_delay;
 };
 
 class SharedEventList {
  public:
   FilesToSend GetAndClearEvents();
-  void AddEvent(std::string event);
+  void AddEvent(std::string event,bool apply_delay);
  private:
   std::mutex mutex_;
   std::list<SingleEvent> events_;

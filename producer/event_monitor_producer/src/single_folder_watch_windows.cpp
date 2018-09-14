@@ -32,22 +32,33 @@ Error SingleFolderWatch::Init()  {
     return nullptr;
 }
 
-void SingleFolderWatch::Watch() {
-    if (Init()!=nullptr) {
-        return;
+Error SingleFolderWatch::Watch() {
+    auto err = Init();
+    if (err) {
+        return err;
     }
     DWORD bytes_read = 0;
-    auto err =watch_io__->ReadDirectoryChanges(handle_,buffer_.get(),kBufLen,&bytes_read);
+    err =watch_io__->ReadDirectoryChanges(handle_,buffer_.get(),kBufLen,&bytes_read);
     if (err == nullptr) {
         ProcessEvents(bytes_read);
     }
+    return err;
 
 }
 
 Error SingleFolderWatch::ProcessEvent(const WinEvent &event) {
+
+    if (!event.ShouldInitiateTransfer()) {
+        return nullptr;
+    }
+
+    std::string fname = folder_+kPathSeparator + event.FileName();
+    if (watch_io__->IsDirectory(root_folder_+kPathSeparator+fname)) {
+        return nullptr;
+    }
+
     event.Print();
-    std::string fname = event.FileName();
-    event_list_->AddEvent(fname);
+    event_list_->AddEvent(fname,event.ShouldBeProcessedAfterDelay());
     return nullptr;
 }
 void SingleFolderWatch::ProcessEvents(DWORD bytes_to_read) {

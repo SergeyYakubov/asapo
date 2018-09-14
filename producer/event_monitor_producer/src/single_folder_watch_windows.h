@@ -19,7 +19,7 @@ const uint64_t kBufLen  = 1000 * (sizeof(FILE_NOTIFY_INFORMATION) + FILENAME_MAX
 class SingleFolderWatch {
   public:
     explicit SingleFolderWatch(std::string root_folder,std::string folder,SharedEventList* event_list);
-    void Watch();
+    Error Watch();
     std::unique_ptr<WatchIO> watch_io__;
     const AbstractLogger* log__;
  private:

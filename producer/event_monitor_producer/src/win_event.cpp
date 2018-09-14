@@ -36,4 +36,16 @@ void WinEvent::Print() const{
         printf("Filename: %s\n",FileName().c_str());
 
 }
+bool WinEvent::IsFileModifiedEvent() const {
+    return win_event_->Action == FILE_ACTION_MODIFIED;
+}
+bool WinEvent::IsFileMovedEvent() const {
+    return win_event_->Action == FILE_ACTION_RENAMED_NEW_NAME;
+}
+bool WinEvent::ShouldInitiateTransfer() const {
+    return IsFileModifiedEvent() || IsFileMovedEvent();
+}
+bool WinEvent::ShouldBeProcessedAfterDelay() const {
+    return !IsFileMovedEvent();
+}
 }

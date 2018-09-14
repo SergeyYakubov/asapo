@@ -105,7 +105,7 @@ int main (int argc, char* argv[]) {
         asapo::EventHeader event_header;
         auto err = event_detector->GetNextEvent(&event_header);
         if (stop_signal) {
-            break; // we check it here because signal can interrupt system call (ready by inotify and result n incomplete event data)
+            break; // we check it here because signal can interrupt system call (ready by inotify and result in incomplete event data)
         }
         if (err) {
             if (err != asapo::EventMonitorErrorTemplates::kNoNewEvent) {

@@ -42,18 +42,6 @@ TEST(SingleFolderWatch, Constructor) {
     ASSERT_THAT(dynamic_cast<asapo::WatchIO*>(watch.watch_io__.get()), Ne(nullptr));
 }
 
-FileInfos CreateTestFileInfos() {
-    FileInfos file_infos;
-    FileInfo fi;
-    fi.size = 100;
-    fi.name = "file1";
-    file_infos.push_back(fi);
-    fi.name = "subfolder/file2";
-    file_infos.push_back(fi);
-    return file_infos;
-}
-
-
 class SingleFolderWatchTests : public testing::Test {
   public:
     Error err;
@@ -77,6 +65,7 @@ class SingleFolderWatchTests : public testing::Test {
     }
     void ExpectInit();
     void ExpectRead();
+    void ExpectDirectory(bool yes);
     DWORD AddEventToBuffer(std::string filename, DWORD action);
 
   };
@@ -123,6 +112,12 @@ void SingleFolderWatchTests::ExpectInit() {
 
 
 }
+void SingleFolderWatchTests::ExpectDirectory(bool yes) {
+    EXPECT_CALL(mock_watch_io, IsDirectory(_)).
+        WillRepeatedly(Return(yes)
+    );
+
+}
 
 TEST_F(SingleFolderWatchTests, InitWatchOnWatch) {
     ExpectInit();
@@ -150,8 +145,8 @@ TEST_F(SingleFolderWatchTests, InitErrorOnWatch) {
 
 TEST_F(SingleFolderWatchTests, WatchWaitsBeforeEventIsAvailable) {
     ExpectInit();
-    AddEventToBuffer("test",FILE_ACTION_ADDED);
-
+    AddEventToBuffer("test",FILE_ACTION_MODIFIED);
+    ExpectDirectory(false);
     ExpectRead();
     watch.Watch();
 
@@ -163,9 +158,9 @@ TEST_F(SingleFolderWatchTests, WatchWaitsBeforeEventIsAvailable) {
 
 TEST_F(SingleFolderWatchTests, NewEventClearsTimeoutCounter) {
     ExpectInit();
-    AddEventToBuffer("test",FILE_ACTION_ADDED);
+    AddEventToBuffer("test",FILE_ACTION_MODIFIED);
     AddEventToBuffer("test2",FILE_ACTION_MODIFIED);
-
+    ExpectDirectory(false);
     ExpectRead();
     watch.Watch();
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
@@ -182,28 +177,71 @@ TEST_F(SingleFolderWatchTests, NewEventClearsTimeoutCounter) {
     auto files = event_list.GetAndClearEvents();
 
     ASSERT_THAT(files.size(), Eq(1));
-    ASSERT_THAT(files[0], StrEq("test"));
+    ASSERT_THAT(files[0], StrEq(expected_folder+"\\test"));
 }
 
 
 
 TEST_F(SingleFolderWatchTests, WatchReadsDirectoryEventsAfterTimeout) {
     ExpectInit();
-    AddEventToBuffer("test",FILE_ACTION_ADDED);
+    AddEventToBuffer("test",FILE_ACTION_MODIFIED);
     AddEventToBuffer("test2",FILE_ACTION_MODIFIED);
     AddEventToBuffer("test2",FILE_ACTION_MODIFIED);
-
+    ExpectDirectory(false);
     ExpectRead();
     watch.Watch();
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(asapo::kFileDelayMs+10));
     auto files = event_list.GetAndClearEvents();
 
     ASSERT_THAT(files.size(), Eq(2));
-    ASSERT_THAT(files[0], StrEq("test"));
-    ASSERT_THAT(files[1], StrEq("test2"));
+    ASSERT_THAT(files[0], StrEq(expected_folder+"\\test"));
+    ASSERT_THAT(files[1], StrEq(expected_folder+"\\test2"));
 
 
+}
+
+
+TEST_F(SingleFolderWatchTests, DirectoriesAreIgnored) {
+    ExpectInit();
+    AddEventToBuffer("test",FILE_ACTION_MODIFIED);
+    ExpectDirectory(true);
+    ExpectRead();
+    watch.Watch();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(asapo::kFileDelayMs+10));
+    auto files = event_list.GetAndClearEvents();
+
+    ASSERT_THAT(files.size(), Eq(0));
+}
+
+
+TEST_F(SingleFolderWatchTests, OtherEventTypesAreIgnored) {
+    ExpectInit();
+    AddEventToBuffer("test1",FILE_ACTION_ADDED);
+    AddEventToBuffer("test2",FILE_ACTION_REMOVED);
+    AddEventToBuffer("test3",FILE_ACTION_RENAMED_OLD_NAME);
+    ExpectDirectory(false);
+    ExpectRead();
+    watch.Watch();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(asapo::kFileDelayMs+10));
+    auto files = event_list.GetAndClearEvents();
+
+    ASSERT_THAT(files.size(), Eq(0));
+}
+
+TEST_F(SingleFolderWatchTests, NoWaitOnRenameEvent) {
+    ExpectInit();
+    AddEventToBuffer("test",FILE_ACTION_RENAMED_NEW_NAME);
+    ExpectDirectory(false);
+    ExpectRead();
+    watch.Watch();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    auto files = event_list.GetAndClearEvents();
+
+    ASSERT_THAT(files.size(), Eq(1));
 }
 
 

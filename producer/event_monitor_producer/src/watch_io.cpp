@@ -1,5 +1,6 @@
 #include "watch_io.h"
 #include "io/io_factory.h"
+
 namespace asapo {
 
 HANDLE WatchIO::Init(const char* folder, Error* err) {
@@ -24,14 +25,16 @@ Error WatchIO::ReadDirectoryChanges(HANDLE handle, LPVOID buffer, DWORD buffer_l
     DWORD filter = FILE_NOTIFY_CHANGE_FILE_NAME |
         FILE_NOTIFY_CHANGE_LAST_WRITE;
     auto res = ReadDirectoryChangesW(handle,buffer,buffer_length,true,filter,bytes_returned,nullptr,nullptr );
-    printf("after read changes\n");
     if (res) {
-        printf("after read changes ok\n");
         return nullptr;
     } else {
-        printf("after read problem\n");
         return io_->GetLastError();
     }
+}
+
+bool WatchIO::IsDirectory(const std::string &path) {
+    auto attr = GetFileAttributesA(path.c_str());
+    return (attr & FILE_ATTRIBUTE_DIRECTORY) > 0;
 }
 
 }

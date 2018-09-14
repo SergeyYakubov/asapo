@@ -12,7 +12,11 @@ class WinEvent {
   WinEvent(const FILE_NOTIFY_INFORMATION* win_event);
   size_t Offset() const;
   void Print() const;
-  std::string FileName() const ;
+  std::string FileName() const;
+  bool IsFileModifiedEvent() const;
+  bool IsFileMovedEvent() const ;
+  bool ShouldInitiateTransfer() const ;
+  bool ShouldBeProcessedAfterDelay() const ;
  private:
   const FILE_NOTIFY_INFORMATION* win_event_;
 };

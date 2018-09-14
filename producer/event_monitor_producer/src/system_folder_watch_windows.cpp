@@ -13,23 +13,25 @@ Error SystemFolderWatch::StartFolderMonitor(const std::string& root_folder,
     for (auto& folder:monitored_folders ) {
     auto thread = io__->NewThread([root_folder, folder,this] {
       auto folder_watch = std::unique_ptr<SingleFolderWatch>(new SingleFolderWatch(root_folder, folder,&event_list_));
-      folder_watch->Watch();
+      while (true) {
+        auto err = folder_watch->Watch();
+          if (err) {
+              std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+          }
+      }
     });
 
     threads_.emplace_back(std::move(thread));
-//    if (thread) {
-//        thread->detach();
-//    }
     }
 
     return nullptr;
 }
 
 FilesToSend SystemFolderWatch::GetFileList(Error* err) {
-    FilesToSend events;
     *err = nullptr;
-    return events;
+    return event_list_.GetAndClearEvents();
 }
+
 SystemFolderWatch::SystemFolderWatch() :io__{GenerateDefaultIO()}{
 
 }
