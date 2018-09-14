@@ -7,15 +7,15 @@
 
 namespace asapo {
 
-SingleFolderWatch::SingleFolderWatch(std::string root_folder, std::string folder,SharedEventList* event_list) :
-                                                                                    watch_io__{new WatchIO()},
-                                                                                    log__{GetDefaultEventMonLogger()},
-                                                                                    root_folder_{std::move(root_folder)},
-                                                                                        folder_{std::move(folder)},
-                                                                                         buffer_{new char[kBufLen]},
-                                                                                           event_list_{event_list}
+SingleFolderWatch::SingleFolderWatch(std::string root_folder, std::string folder, SharedEventList* event_list) :
+    watch_io__{new WatchIO()},
+           log__{GetDefaultEventMonLogger()},
+           root_folder_{std::move(root_folder)},
+           folder_{std::move(folder)},
+buffer_{new char[kBufLen]},
+event_list_{event_list}
 
-                                                                                    {
+{
 }
 
 Error SingleFolderWatch::Init()  {
@@ -26,7 +26,7 @@ Error SingleFolderWatch::Init()  {
     Error err;
     handle_ = this->watch_io__->Init(full_path.c_str(), &err);
     if (err) {
-        this->log__->Error("cannot add folder watch for "+full_path+": "+err->Explain());
+        this->log__->Error("cannot add folder watch for " + full_path + ": " + err->Explain());
         return err;
     }
     return nullptr;
@@ -38,7 +38,7 @@ Error SingleFolderWatch::Watch() {
         return err;
     }
     DWORD bytes_read = 0;
-    err =watch_io__->ReadDirectoryChanges(handle_,buffer_.get(),kBufLen,&bytes_read);
+    err = watch_io__->ReadDirectoryChanges(handle_, buffer_.get(), kBufLen, &bytes_read);
     if (err == nullptr) {
         ProcessEvents(bytes_read);
     }
@@ -46,19 +46,19 @@ Error SingleFolderWatch::Watch() {
 
 }
 
-Error SingleFolderWatch::ProcessEvent(const WinEvent &event) {
+Error SingleFolderWatch::ProcessEvent(const WinEvent& event) {
 
     if (!event.ShouldInitiateTransfer()) {
         return nullptr;
     }
 
-    std::string fname = folder_+kPathSeparator + event.FileName();
-    if (watch_io__->IsDirectory(root_folder_+kPathSeparator+fname)) {
+    std::string fname = folder_ + kPathSeparator + event.FileName();
+    if (watch_io__->IsDirectory(root_folder_ + kPathSeparator + fname)) {
         return nullptr;
     }
 
     event.Print();
-    event_list_->AddEvent(fname,event.ShouldBeProcessedAfterDelay());
+    event_list_->AddEvent(fname, event.ShouldBeProcessedAfterDelay());
     return nullptr;
 }
 void SingleFolderWatch::ProcessEvents(DWORD bytes_to_read) {

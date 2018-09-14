@@ -178,10 +178,10 @@ class MockIO : public IO {
         return Error{GetLastError_t()};
     }
 
-    MOCK_CONST_METHOD0(GetLastError_t, ErrorInterface* ());
+    MOCK_CONST_METHOD0(GetLastError_t, ErrorInterface * ());
 
 
-  Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
+    Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
                           size_t length, bool create_directories) const override {
         return Error{WriteDataToFile_t(root_folder, fname, data.get(), length, create_directories)};
 

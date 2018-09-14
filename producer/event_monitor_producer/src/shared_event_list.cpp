@@ -11,7 +11,7 @@ FilesToSend SharedEventList::GetAndClearEvents() {
     FilesToSend events;
     for (auto it = events_.begin(); it != events_.end(); /* NOTHING */) {
         uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>( high_resolution_clock::now() -
-            it->time).count();
+                              it->time).count();
         if (!it->apply_delay || elapsed_ms > kFileDelayMs) {
             events.push_back(it->file_name);
             it = events_.erase(it);
@@ -21,11 +21,13 @@ FilesToSend SharedEventList::GetAndClearEvents() {
     }
     return events;
 }
-void SharedEventList::AddEvent(std::string event,bool apply_delay) {
+void SharedEventList::AddEvent(std::string event, bool apply_delay) {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto findIter = std::find_if(events_.begin(), events_.end(),  [&]( const SingleEvent& e ){ return e.file_name == event;});
+    auto findIter = std::find_if(events_.begin(), events_.end(),  [&]( const SingleEvent & e ) {
+        return e.file_name == event;
+    });
     if ( events_.end() == findIter ) {
-        events_.emplace_back(SingleEvent{std::move(event),high_resolution_clock::now(),apply_delay});
+        events_.emplace_back(SingleEvent{std::move(event), high_resolution_clock::now(), apply_delay});
     } else {
         findIter->time = high_resolution_clock::now();
     }

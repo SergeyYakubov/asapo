@@ -82,9 +82,9 @@ int main (int argc, char* argv[]) {
     stop_signal = 0;
     std::signal(SIGINT, SignalHandler);
     std::signal(SIGTERM, SignalHandler);
-    #if defined(__linux__) || defined (__APPLE__)
-        siginterrupt(SIGINT, 1);
-    #endif
+#if defined(__linux__) || defined (__APPLE__)
+    siginterrupt(SIGINT, 1);
+#endif
 
     const auto logger = asapo::GetDefaultEventMonLogger();
     logger->SetLogLevel(GetEventMonConfig()->log_level);
