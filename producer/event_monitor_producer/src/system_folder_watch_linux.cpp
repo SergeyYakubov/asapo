@@ -85,7 +85,6 @@ Error SystemFolderWatch::FindEventPaths(const InotifyEvent& event, std::string* 
 }
 
 Error SystemFolderWatch::ProcessFileEvent(const InotifyEvent& event, FilesToSend* files) {
-    event.Print();
     if (!event.IsNewFileInFolderEvent()) {
         return nullptr;
     }

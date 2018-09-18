@@ -14,7 +14,6 @@ SingleFolderWatch::SingleFolderWatch(std::string root_folder, std::string folder
            folder_{std::move(folder)},
 buffer_{new char[kBufLen]},
 event_list_{event_list}
-
 {
 }
 
@@ -43,7 +42,6 @@ Error SingleFolderWatch::Watch() {
         ProcessEvents(bytes_read);
     }
     return err;
-
 }
 
 Error SingleFolderWatch::ProcessEvent(const WinEvent& event) {
@@ -56,8 +54,6 @@ Error SingleFolderWatch::ProcessEvent(const WinEvent& event) {
     if (watch_io__->IsDirectory(root_folder_ + kPathSeparator + fname)) {
         return nullptr;
     }
-
-    event.Print();
     event_list_->AddEvent(fname, event.ShouldBeProcessedAfterDelay());
     return nullptr;
 }
