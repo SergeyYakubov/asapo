@@ -164,11 +164,13 @@ Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::strin
     }
 
     if (err) {
+        err->Append(full_name);
         return err;
     }
 
     Write(fd, data, length, &err);
     if (err) {
+        err->Append(full_name);
         return err;
     }
 
@@ -592,6 +594,7 @@ Error SystemIO::CreateDirectoryWithParents(const std::string& root_path, const s
         Error err;
         CreateNewDirectory(new_path, &err);
         if (err && err != IOErrorTemplates::kFileAlreadyExists) {
+            err->Append(new_path);
             return err;
         }
         if (iter != path.end()) {
