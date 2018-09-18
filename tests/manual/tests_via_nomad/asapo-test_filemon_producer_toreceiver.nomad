@@ -1,4 +1,4 @@
-job "asapo-produceronly" {
+job "asapo-filemon-producer" {
   datacenters = [
     "dc1"]
 
@@ -34,7 +34,7 @@ job "asapo-produceronly" {
  "Tag":"test_tag",
  "BeamtimeID":"asapo_test1",
  "Mode":"tcp",
- "NThreads":1,
+ "NThreads":8,
  "LogLevel":"debug",
  "RootMonitoredFolder":"c:\\tmp\\asapo\\test_in",
  "MonitoredSubFolders":["test_folder"],
@@ -90,7 +90,7 @@ job "asapo-produceronly" {
  "Tag":"test_tag",
  "BeamtimeID":"asapo_test2",
  "Mode":"tcp",
- "NThreads":1,
+ "NThreads":8,
  "LogLevel":"debug",
  "RootMonitoredFolder":"/tmp/asapo/test_in",
  "MonitoredSubFolders":["test_folder"],
