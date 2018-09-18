@@ -113,7 +113,7 @@ int main (int argc, char* argv[]) {
             }
             continue;
         }
-        event_header.file_id = i++;
+        event_header.file_id = ++i;
         producer->SendFile(event_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
                            event_header.file_name, ProcessAfterSend);
     }

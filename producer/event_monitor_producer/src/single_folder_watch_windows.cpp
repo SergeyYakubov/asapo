@@ -13,8 +13,7 @@ SingleFolderWatch::SingleFolderWatch(std::string root_folder, std::string folder
            root_folder_{std::move(root_folder)},
            folder_{std::move(folder)},
 buffer_{new char[kBufLen]},
-event_list_{event_list}
-{
+event_list_{event_list} {
 }
 
 Error SingleFolderWatch::Init()  {
