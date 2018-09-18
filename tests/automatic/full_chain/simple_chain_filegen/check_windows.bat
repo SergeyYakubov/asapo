@@ -1,3 +1,5 @@
+
+
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 SET beamtime_id=asapo_test
 SET beamline=test
@@ -23,16 +25,18 @@ c:\opt\consul\nomad run nginx.nmd
 ping 1.0.0.0 -n 10 -w 100 > nul
 
 REM producer
+mkdir %receiver_folder%
 mkdir  c:\tmp\asapo\test_in\test1
 mkdir  c:\tmp\asapo\test_in\test2
 start /B "" "%1" test.json
-ping 1.0.0.0 -n 1 -w 100 > nul
+
+ping 1.0.0.0 -n 3 -w 100 > nul
 
 echo hello > c:\tmp\asapo\test_in\test1\file1
 echo hello > c:\tmp\asapo\test_in\test1\file2
 echo hello > c:\tmp\asapo\test_in\test2\file2
 
-ping 1.0.0.0 -n 1 -w 100 > nul
+ping 1.0.0.0 -n 10 -w 100 > nul
 
 
 REM worker

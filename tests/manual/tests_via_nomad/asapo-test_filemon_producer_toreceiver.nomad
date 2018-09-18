@@ -89,7 +89,7 @@ job "asapo-produceronly" {
  "AsapoEndpoint":"psana002:8400",
  "Tag":"test_tag",
  "BeamtimeID":"asapo_test2",
- "Mode":"filesystem",
+ "Mode":"tcp",
  "NThreads":1,
  "LogLevel":"debug",
  "RootMonitoredFolder":"/tmp/asapo/test_in",
