@@ -27,6 +27,7 @@ Error SingleFolderWatch::Init()  {
         this->log__->Error("cannot add folder watch for " + full_path + ": " + err->Explain());
         return err;
     }
+    GetDefaultEventMonLogger()->Debug("added folder to monitor: " + full_path);
     return nullptr;
 }
 
@@ -53,9 +54,11 @@ Error SingleFolderWatch::ProcessEvent(const WinEvent& event) {
     if (watch_io__->IsDirectory(root_folder_ + kPathSeparator + fname)) {
         return nullptr;
     }
+    GetDefaultEventMonLogger()->Debug("file modified event: " + fname);
     event_list_->AddEvent(fname, event.ShouldBeProcessedAfterDelay());
     return nullptr;
 }
+
 void SingleFolderWatch::ProcessEvents(DWORD bytes_to_read) {
     for (char* p = buffer_.get(); p < buffer_.get() + bytes_to_read; ) {
         WinEvent event{(FILE_NOTIFY_INFORMATION*) p};

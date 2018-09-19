@@ -1,4 +1,5 @@
 #include "shared_event_list.h"
+#include "eventmon_logger.h"
 
 #include <algorithm>
 
@@ -13,6 +14,7 @@ FilesToSend SharedEventList::GetAndClearEvents() {
         uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>( high_resolution_clock::now() -
                               it->time).count();
         if (!it->apply_delay || elapsed_ms > kFileDelayMs) {
+            GetDefaultEventMonLogger()->Debug("file considered closed or file moved: " + it->file_name);
             events.push_back(it->file_name);
             it = events_.erase(it);
         } else {

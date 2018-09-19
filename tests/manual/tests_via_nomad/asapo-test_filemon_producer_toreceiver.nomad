@@ -36,7 +36,7 @@ job "asapo-filemon-producer" {
  "Mode":"tcp",
  "NThreads":8,
  "LogLevel":"debug",
- "RootMonitoredFolder":"c:\\tmp\\asapo\\test_in",
+ "RootMonitoredFolder":"u:\\asapo",
  "MonitoredSubFolders":["test_folder"],
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true

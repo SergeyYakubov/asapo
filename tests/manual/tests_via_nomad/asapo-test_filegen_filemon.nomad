@@ -20,9 +20,10 @@ job "asapo-test" {
         command = "local/filegen_win.exe"
         args = [
           "1",
-          "1M",
-          "10",
-          "c:/tmp/asapo/test_in/test_folder/file_win"]
+          "10M",
+          "10000",
+          "120",
+          "u:/asapo/test_folder/file_win"]
       }
 
       artifact {
@@ -57,9 +58,10 @@ job "asapo-test" {
         command = "local/filegen_linux"
         args = [
           "1",
-          "1M",
-          "10",
-          "/tmp/asapo/test_in/test_folder/file_lin_"]
+          "10M",
+          "10000",
+          "120",
+          "/tmp/asapo/test_in/test_folder/file_lin"]
       }
 
       artifact {
@@ -100,13 +102,13 @@ job "asapo-test" {
           "30000"]
       }
 
-      resources {
-        cpu = 5000
-        memory = 128
-        network {
-          mbits = 10000
-        }
-      }
+#      resources {
+#        cpu = 5000
+#        memory = 128
+#        network {
+#          mbits = 10000
+#        }
+#      }
 
       artifact {
         source = "http://nims.desy.de/extra/asapo/getnext_broker"
@@ -144,13 +146,13 @@ job "asapo-test" {
           "yzgAcLmijSLWIm8dBiGNCbc0i42u5HSm-zR6FRqo__Y=",
           "30000"]
       }
-      resources {
-        cpu = 5000
-        memory = 128
-        network {
-          mbits = 10000
-        }
-      }
+#      resources {
+#        cpu = 5000
+#        memory = 128
+#        network {
+#          mbits = 10000
+#        }
+#      }
 
       artifact {
         source = "http://nims.desy.de/extra/asapo/getnext_broker"
