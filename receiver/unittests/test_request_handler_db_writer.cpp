@@ -147,7 +147,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, expected_beamtime_id, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
 
-    std::string expected_file_name = "2.bin";
+    std::string expected_file_name = "2";
     uint64_t expected_file_size = 10;
     uint64_t expected_id = 15;
     EXPECT_CALL(*mock_request, GetDataSize())

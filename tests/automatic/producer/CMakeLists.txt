@@ -1,0 +1,1 @@
+add_subdirectory(file_monitor_producer)

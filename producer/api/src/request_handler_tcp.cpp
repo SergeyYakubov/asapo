@@ -55,7 +55,7 @@ Error RequestHandlerTcp::SendHeaderAndData(const Request* request) {
         return io_error;
     }
 
-    io__->Send(sd_, request->data, request->header.data_size, &io_error);
+    io__->Send(sd_, (void*) request->data.get(), request->header.data_size, &io_error);
     if(io_error) {
         return io_error;
     }
@@ -158,10 +158,7 @@ bool RequestHandlerTcp::ServerError(const Error& err) {
     return err != nullptr && err != ProducerErrorTemplates::kFileIdAlreadyInUse;
 }
 
-Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
-    if (NeedRebalance()) {
-        CloseConnectionToPeformRebalance();
-    }
+Error RequestHandlerTcp::SendDataToOneOfTheReceivers(Request* request) {
     for (auto receiver_uri : receivers_list_) {
         if (Disconnected()) {
             auto err = ConnectToReceiver(request->beamtime_id, receiver_uri);
@@ -182,6 +179,19 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(const Request* request) {
         return nullptr;
     }
     return ProducerErrorTemplates::kCannotSendDataToReceivers.Generate();
+}
+
+
+Error RequestHandlerTcp::ProcessRequestUnlocked(Request* request) {
+    auto err = request->ReadDataFromFileIfNeeded(io__.get());
+    if (err) {
+        return err;
+    }
+
+    if (NeedRebalance()) {
+        CloseConnectionToPeformRebalance();
+    }
+    return SendDataToOneOfTheReceivers(request);
 }
 
 bool RequestHandlerTcp::Connected() {

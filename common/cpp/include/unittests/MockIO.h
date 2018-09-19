@@ -164,35 +164,46 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD2(CreateNewDirectory_t, void(const std::string& directory_name, ErrorInterface** err));
 
-    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const override {
+    FileData GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override {
         ErrorInterface* error = nullptr;
         auto data = GetDataFromFile_t(fname, fsize, &error);
         err->reset(error);
         return FileData(data);
     }
 
-    MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t fsize, ErrorInterface** err));
+    MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t* fsize, ErrorInterface** err));
 
-    Error WriteDataToFile(const std::string& fname, const FileData& data, size_t length) const override {
-        return Error{WriteDataToFile_t(fname, data.get(), length)};
+
+    Error GetLastError() const override {
+        return Error{GetLastError_t()};
+    }
+
+    MOCK_CONST_METHOD0(GetLastError_t, ErrorInterface * ());
+
+
+    Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
+                          size_t length, bool create_directories) const override {
+        return Error{WriteDataToFile_t(root_folder, fname, data.get(), length, create_directories)};
 
     }
 
-    Error WriteDataToFile(const std::string& fname, const uint8_t* data, size_t length) const override {
-        return Error{WriteDataToFile_t(fname, data, length)};
+    MOCK_CONST_METHOD1(RemoveFile_t, ErrorInterface * (const std::string& fname));
+
+    Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
+                          size_t length, bool create_directories) const override {
+        return Error{WriteDataToFile_t(root_folder, fname, data, length, create_directories)};
     }
 
 
-    MOCK_CONST_METHOD3(WriteDataToFile_t, ErrorInterface * (const std::string& fname, const uint8_t* data, size_t fsize));
-
-    void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
-                                           Error* err) const override {
-        ErrorInterface* error = nullptr;
-        CollectFileInformationRecursivly_t(path, files, &error);
-        err->reset(error);
+    Error RemoveFile(const std::string& fname) const override {
+        return Error{RemoveFile_t(fname)};
     }
-    MOCK_CONST_METHOD3(CollectFileInformationRecursivly_t, void(const std::string& path, std::vector<FileInfo>* files,
-                       ErrorInterface** err));
+
+
+
+
+    MOCK_CONST_METHOD5(WriteDataToFile_t, ErrorInterface * (const std::string& root_folder, const std::string& fname,
+                       const uint8_t* data, size_t fsize, bool create_directories));
 
     std::vector<FileInfo> FilesInFolder(const std::string& folder, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -202,6 +213,17 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD2(FilesInFolder_t, std::vector<FileInfo>(const std::string& folder, ErrorInterface** err));
 
+
+    SubDirList GetSubDirectories(const std::string& path, Error* err) const override {
+        ErrorInterface* error = nullptr;
+        auto data = GetSubDirectories_t(path, &error);
+        err->reset(error);
+        return data;
+    };
+
+    MOCK_CONST_METHOD2(GetSubDirectories_t, SubDirList(const std::string& path, ErrorInterface** err));
+
+
     std::string ReadFileToString(const std::string& fname, Error* err) const override {
         ErrorInterface* error = nullptr;
         auto data = ReadFileToString_t(fname, &error);
@@ -209,6 +231,9 @@ class MockIO : public IO {
         return data;
     }
     MOCK_CONST_METHOD2(ReadFileToString_t, std::string(const std::string& fname, ErrorInterface** err));
+
+
+
 };
 
 }

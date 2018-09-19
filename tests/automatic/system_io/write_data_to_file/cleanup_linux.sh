@@ -2,4 +2,5 @@
 
 rm -f test_file
 rmdir test_noaccess
+rm -rf folder
 

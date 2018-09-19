@@ -212,7 +212,7 @@ TEST_F(RequestTests, GetDataSize) {
 
 TEST_F(RequestTests, GetFileName) {
     auto fname = request->GetFileName();
-    auto s = std::to_string(data_id_) + ".bin";
+    auto s = std::to_string(data_id_);
 
     ASSERT_THAT(fname, Eq(s));
 }

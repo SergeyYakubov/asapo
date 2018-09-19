@@ -145,7 +145,32 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
     files->push_back(file_info);
 }
 
-/** @} */
+
+
+void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const {
+    errno = 0;
+    auto dir = opendir((path).c_str());
+    if (dir == nullptr) {
+        *err = GetLastError();
+        (*err)->Append(path);
+        return;
+    }
+
+    while (struct dirent* current_entity = readdir(dir)) {
+        if (IsDirectory(current_entity)) {
+            std::string subdir = path + "/" + current_entity->d_name;
+            subdirs->push_back(subdir);
+            GetSubDirectoriesRecursively(subdir, subdirs, err);
+        }
+        if (*err != nullptr) {
+            errno = 0;
+            closedir(dir);
+            return;
+        }
+    }
+    *err = GetLastError();
+    closedir(dir);
+}
 
 void SystemIO::CollectFileInformationRecursively(const std::string& path,
                                                  FileInfos* files, Error* err)  const {

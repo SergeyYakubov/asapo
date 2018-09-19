@@ -75,7 +75,7 @@ const FileData& Request::GetData() const {
 }
 
 std::string Request::GetFileName() const {
-    return std::to_string(request_header_.data_id) + ".bin";
+    return std::to_string(request_header_.data_id);
 }
 
 const std::string& Request::GetOriginUri() const {

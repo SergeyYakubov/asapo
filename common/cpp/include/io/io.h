@@ -14,17 +14,17 @@
 namespace asapo {
 
 //Need to be "enum" since multiple flags are allowed
-enum FileOpenMode {
-    IO_OPEN_MODE_READ = 1 << 0,
+enum FileOpenMode : unsigned short {
+    IO_OPEN_MODE_READ = 1,
     IO_OPEN_MODE_WRITE = 1 << 1,
-    IO_OPEN_MODE_RW = IO_OPEN_MODE_READ | IO_OPEN_MODE_WRITE,
-    IO_OPEN_MODE_CREATE = 1 << 2,
-    IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS = 1 << 3,
+    IO_OPEN_MODE_RW = 1 << 2,
+    IO_OPEN_MODE_CREATE = 1 << 3,
+    IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS = 1 << 4,
     /**
      * Will set the length of a file to 0
      * Only works if file is open with READ and WRITE mode
      */
-    IO_OPEN_MODE_SET_LENGTH_0 = 1 << 4,
+    IO_OPEN_MODE_SET_LENGTH_0 = 1 << 5,
 };
 
 enum class AddressFamilies {
@@ -90,17 +90,18 @@ class IO {
 
     virtual size_t          Read            (FileDescriptor fd, void* buf, size_t length, Error* err) const = 0;
     virtual size_t          Write           (FileDescriptor fd, const void* buf, size_t length, Error* err) const = 0;
-
-    virtual Error          WriteDataToFile  (const std::string& fname, const FileData& data, size_t length) const = 0;
-    virtual Error          WriteDataToFile  (const std::string& fname, const uint8_t* data, size_t length) const = 0;
+    virtual Error           RemoveFile(const std::string& fname) const = 0;
+    virtual Error          WriteDataToFile  (const std::string& root_folder, const std::string& fname, const FileData& data,
+                                             size_t length, bool create_directories) const = 0;
+    virtual Error          WriteDataToFile  (const std::string& root_folder, const std::string& fname, const uint8_t* data,
+                                             size_t length, bool create_directories) const = 0;
 
     virtual void            CreateNewDirectory      (const std::string& directory_name, Error* err) const = 0;
-    virtual FileData        GetDataFromFile         (const std::string& fname, uint64_t fsize, Error* err) const = 0;
-    virtual void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
-                                                   Error* err) const = 0;
+    virtual FileData        GetDataFromFile         (const std::string& fname, uint64_t* fsize, Error* err) const = 0;
+    virtual SubDirList      GetSubDirectories(const std::string& path, Error* err) const = 0;
     virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, Error* err) const = 0;
     virtual std::string     ReadFileToString        (const std::string& fname, Error* err) const = 0;
-
+    virtual Error GetLastError() const = 0;
 };
 
 }

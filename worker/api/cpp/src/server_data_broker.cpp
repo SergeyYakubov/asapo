@@ -173,7 +173,7 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, FileInfo*
     }
 
     Error error;
-    *data = io__->GetDataFromFile(info->FullName(""), info->size, &error);
+    *data = io__->GetDataFromFile(info->FullName(""), &info->size, &error);
     return error;
 }
 

@@ -34,7 +34,7 @@ MATCHER_P5(M_CheckSendDataRequest, op_code, beamtime_id, file_id, file_size, mes
            "Checks if a valid GenericRequestHeader was Send") {
     return ((asapo::GenericRequestHeader)(arg->header)).op_code == op_code
            && ((asapo::GenericRequestHeader)(arg->header)).data_id == file_id
-           && ((asapo::GenericRequestHeader)(arg->header)).data_size == file_size
+           && ((asapo::GenericRequestHeader)(arg->header)).data_size == uint64_t(file_size)
            && arg->beamtime_id == beamtime_id
            && strcmp(((asapo::GenericRequestHeader)(arg->header)).message, message) == 0;
 }
@@ -65,40 +65,63 @@ class ProducerImplTests : public testing::Test {
 TEST_F(ProducerImplTests, SendReturnsError) {
     EXPECT_CALL(mock_pull, AddRequest_t(_)).WillOnce(Return(
             asapo::ProducerErrorTemplates::kRequestPoolIsFull.Generate().release()));
-    auto err = producer.Send(1, nullptr, 1, "", nullptr);
+    asapo::EventHeader event_header{1, 1, ""};
+    auto err = producer.SendData(event_header, nullptr, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
 }
 
 TEST_F(ProducerImplTests, ErrorIfFileNameTooLong) {
     std::string long_string(asapo::kMaxMessageSize + 100, 'a');
-    auto err = producer.Send(1, nullptr, 1, long_string, nullptr);
+    asapo::EventHeader event_header{1, 1, long_string};
+    auto err = producer.SendData(event_header, nullptr, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileNameTooLong));
 }
 
 
 TEST_F(ProducerImplTests, ErrorIfSizeTooLarge) {
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("error checking")));
-
-    auto err = producer.Send(1, nullptr, asapo::ProducerImpl::kMaxChunkSize + 1, "", nullptr);
-
+    asapo::EventHeader event_header{1, asapo::ProducerImpl::kMaxChunkSize + 1, ""};
+    auto err = producer.SendData(event_header, nullptr, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileTooLarge));
 }
 
 
-TEST_F(ProducerImplTests, OKSendingRequest) {
+TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
     uint64_t expected_size = 100;
     uint64_t expected_id = 10;
     char expected_name[asapo::kMaxMessageSize] = "test_name";
     std::string expected_beamtimeid = "beamtime_id";
 
     producer.SetBeamtimeId(expected_beamtimeid);
-    Request request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, expected_size, expected_name}, nullptr, nullptr};
+    Request request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, expected_size, expected_name},
+                    nullptr, "", nullptr};
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
                                         expected_beamtimeid, expected_id, expected_size, expected_name))).WillOnce(Return(
                                                     nullptr));
 
-    auto err = producer.Send(expected_id, nullptr, expected_size, expected_name, nullptr);
+    asapo::EventHeader event_header{expected_id, expected_size, expected_name};
+    auto err = producer.SendData(event_header, nullptr, nullptr);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
+    uint64_t expected_id = 10;
+    char expected_name[asapo::kMaxMessageSize] = "test_name";
+    std::string expected_beamtimeid = "beamtime_id";
+    std::string expected_fullpath = "filename";
+
+    producer.SetBeamtimeId(expected_beamtimeid);
+    Request request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, 0, expected_name},
+                    nullptr, "", nullptr};
+
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+                                        expected_beamtimeid, expected_id, 0, expected_name))).WillOnce(Return(
+                                                    nullptr));
+
+    asapo::EventHeader event_header{expected_id, 0, expected_name};
+    auto err = producer.SendFile(event_header, expected_fullpath, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }

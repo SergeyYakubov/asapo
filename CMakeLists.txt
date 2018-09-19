@@ -61,7 +61,7 @@ if (BUILD_BROKER)#TODO: Somehow make it clear that this is needed by examples/wo
     add_subdirectory(broker)
 endif()
 
-add_subdirectory(producer/api)
+add_subdirectory(producer)
 
 add_subdirectory(worker)
 

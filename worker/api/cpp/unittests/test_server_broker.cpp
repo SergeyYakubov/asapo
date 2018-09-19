@@ -300,7 +300,7 @@ TEST_F(ServerDataBrokerTests, GetImageCallsReadFromFile) {
     auto json = to_send.Json();
     MockGet(json);
 
-    EXPECT_CALL(mock_io, GetDataFromFile_t("name", 100, _)).
+    EXPECT_CALL(mock_io, GetDataFromFile_t("name", testing::Pointee(100), _)).
     WillOnce(DoAll(SetArgPointee<2>(new asapo::SimpleError{"s"}), testing::Return(nullptr)));
 
     FileData data;

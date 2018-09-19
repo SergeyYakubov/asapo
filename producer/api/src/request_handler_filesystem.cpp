@@ -13,9 +13,14 @@ RequestHandlerFilesystem::RequestHandlerFilesystem(std::string destination_folde
 
 }
 
-Error RequestHandlerFilesystem::ProcessRequestUnlocked(const Request* request) {
-    std::string fullpath = destination_folder_ + "/" + request->header.message + ".bin";
-    auto err = io__->WriteDataToFile(fullpath, (uint8_t*)request->data, request->header.data_size);
+Error RequestHandlerFilesystem::ProcessRequestUnlocked(Request* request) {
+    auto err = request->ReadDataFromFileIfNeeded(io__.get());
+    if (err) {
+        return err;
+    }
+
+    err = io__->WriteDataToFile(destination_folder_, request->header.message, (uint8_t*)request->data.get(),
+                                request->header.data_size, true);
     if (request->callback) {
         request->callback(request->header, std::move(err));
     }

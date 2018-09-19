@@ -82,7 +82,7 @@ class IOEmptyFolder: public FakeIO {
 
 class IOCannotOpenFile: public FakeIO {
   public:
-    FileData GetDataFromFile(const std::string& fname, uint64_t fsize, Error* err) const noexcept override {
+    FileData GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const noexcept override {
         *err = asapo::IOErrorTemplates::kPermissionDenied.Generate();
         return {};
     };

@@ -27,6 +27,7 @@ add_subdirectory(full_chain)
 
 add_subdirectory(spd_logger)
 
+add_subdirectory(producer)
 
 if (UNIX)
     add_subdirectory(high_avail)

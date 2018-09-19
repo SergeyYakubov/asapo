@@ -49,7 +49,10 @@ TEST(Producer, SimpleWorkflowWihoutConnection) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("hello", 5, asapo::RequestHandlerType::kTcp, "bt",
                                                 &err);
-    auto err_send = producer->Send(1, nullptr, 1, "", nullptr);
+
+    asapo::EventHeader event_header{1, 1, ""};
+    auto err_send = producer->SendData(event_header, nullptr, nullptr);
+
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     ASSERT_THAT(producer, Ne(nullptr));
     ASSERT_THAT(err, Eq(nullptr));
