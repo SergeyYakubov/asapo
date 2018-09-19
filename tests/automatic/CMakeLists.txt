@@ -32,3 +32,5 @@ add_subdirectory(producer)
 if (UNIX)
     add_subdirectory(high_avail)
 endif()
+
+add_subdirectory(bug_fixes)
