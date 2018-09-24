@@ -1,4 +1,5 @@
 
+
 #include <cstring>
 
 #include <dirent.h>
@@ -236,11 +237,11 @@ SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int sock
 }
 
 ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) {
-    return ::send(socket_fd, buffer, length, MSG_DONTWAIT);
+    return ::send(socket_fd, buffer, length, MSG_NOSIGNAL);
 }
 
 ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length) {
-    return ::recv(socket_fd, buffer, length, MSG_DONTWAIT);
+    return ::recv(socket_fd, buffer, length, 0);
 }
 
 int SystemIO::_mkdir(const char* dirname) const {

@@ -17,6 +17,7 @@ class Receiver {
     Error PrepareListener(std::string listener_address);
     void StartNewConnectionInSeparateThread(int connection_socket_fd, const std::string& address);
     void ProcessConnections(Error* err);
+    std::vector<std::unique_ptr<std::thread>> threads_;
   public:
     static const int kMaxUnacceptedConnectionsBacklog;//TODO: Read from config
     Receiver(const Receiver&) = delete;

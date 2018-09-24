@@ -61,7 +61,7 @@ void Receiver::StartNewConnectionInSeparateThread(int connection_socket_fd, cons
     });
 
     if (thread) {
-        thread->detach();
+        threads_.emplace_back(std::move(thread));
     }
     return;
 }
