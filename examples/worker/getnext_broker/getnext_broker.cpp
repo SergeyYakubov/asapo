@@ -79,6 +79,7 @@ int ReadAllData(const Params& params, uint64_t* duration_ms) {
 }
 
 int main(int argc, char* argv[]) {
+    asapo::PrintVersion("GetNext Broker Example");
     if (argc != 6) {
         std::cout << "Usage: " + std::string{argv[0]} +" <server> <run_name> <nthreads> <token> <timeout ms>" << std::endl;
         exit(EXIT_FAILURE);

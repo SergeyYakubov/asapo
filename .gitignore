@@ -132,3 +132,7 @@ asapo_tools/pkg
 #
 *.rpm
 
+#version files
+
+common/cpp/include/common/version.h
+common/go/src/asapo_common/version/version_lib.go

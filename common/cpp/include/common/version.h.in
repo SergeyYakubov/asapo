@@ -1,0 +1,17 @@
+#ifndef ASAPO_VERSION_H
+#define ASAPO_VERSION_H
+
+#include <iostream>
+
+namespace asapo {
+
+const char kVersion[] = "@VERSION@";
+
+inline void PrintVersion(std::string prefix) {
+ std::cout << prefix << ", version " << kVersion << std::endl;
+}
+
+}
+
+
+#endif //ASAPO_VERSION_H

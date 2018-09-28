@@ -15,6 +15,7 @@
 #include "preprocessor/definitions.h"
 
 #include "io/io_factory.h"
+#include "common/version.h"
 
 using asapo::Producer;
 using asapo::EventMonConfigFactory;
@@ -73,6 +74,8 @@ void SignalHandler(int signal) {
 
 
 int main (int argc, char* argv[]) {
+    asapo::PrintVersion("ASAPO Event Monitor");
+
     auto err = ReadConfigFile(argc, argv);
     if (err) {
         std::cerr << "cannot read config file: " << err->Explain() << std::endl;

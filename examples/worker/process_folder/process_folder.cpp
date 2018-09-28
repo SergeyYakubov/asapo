@@ -8,6 +8,7 @@
 
 #include "asapo_worker.h"
 
+
 using std::chrono::high_resolution_clock;
 using asapo::Error;
 
@@ -83,6 +84,8 @@ void PrintStatistics(const Statistics& statistics) {
 
 
 int main(int argc, char* argv[]) {
+    asapo::PrintVersion("Process Folder Broker Example");
+
     std::string folder = ProcessCommandArguments(argc, argv);
     auto broker = CreateBroker(folder);
 
