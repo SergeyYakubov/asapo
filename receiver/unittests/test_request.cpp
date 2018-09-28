@@ -162,8 +162,7 @@ TEST_F(RequestTests, HandleProcessesRequests) {
 
 TEST_F(RequestTests, DataIsNullAtInit) {
     auto& data = request->GetData();
-
-    ASSERT_THAT(data, Eq(nullptr));
+    ASSERT_THAT(data.get(), Eq(nullptr));
 }
 
 TEST_F(RequestTests, GetDataIsNotNullptr) {

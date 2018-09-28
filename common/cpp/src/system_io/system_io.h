@@ -15,6 +15,11 @@ typedef SSIZE_T ssize_t;
 #include "../../../../../../../../usr/include/netinet/in.h"
 #endif
 
+#ifdef __APPLE__
+#	define MSG_NOSIGNAL 0
+#endif
+
+
 namespace asapo {
 
 class SystemIO final : public IO {
