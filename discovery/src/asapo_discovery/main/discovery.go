@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	log "asapo_common/logger"
+    "asapo_common/version"
 	"asapo_discovery/server"
 	"os"
 	"asapo_discovery/request_handler"
@@ -28,6 +29,11 @@ func PrintUsage() {
 
 func main() {
 	var fname = flag.String("config", "", "config file path")
+
+	if ret := version.ShowVersion(os.Stdout, "ASAPO Discovery"); ret {
+		return
+	}
+
 
     log.SetSoucre("discovery")
 	flag.Parse()
