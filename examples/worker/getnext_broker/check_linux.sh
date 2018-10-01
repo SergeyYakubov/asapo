@@ -24,6 +24,8 @@ do
 	echo 'db.data.insert({"_id":'$i',"size":100,"name":"'$i'","lastchange":1})' | mongo ${database_name}
 done
 
+sleep 1
+
 $@ 127.0.0.1:8400 $database_name 2 $token_test_run 1000 | grep "Processed 3 file(s)"
 
 

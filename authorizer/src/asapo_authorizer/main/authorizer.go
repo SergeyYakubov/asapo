@@ -5,6 +5,7 @@ package main
 import (
 	log "asapo_common/logger"
 	"asapo_authorizer/server"
+	"asapo_common/version"
 	"flag"
 	"os"
 )
@@ -15,6 +16,10 @@ func PrintUsage() {
 
 func main() {
 	var fname = flag.String("config", "", "config file path")
+
+	if ret := version.ShowVersion(os.Stdout, "ASAPO Authorizer"); ret {
+		return
+	}
 
 	log.SetSoucre("authorizer")
 

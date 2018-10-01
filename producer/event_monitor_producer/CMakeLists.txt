@@ -5,8 +5,9 @@ set(SOURCE_FILES
         src/event_detector_factory.cpp
         src/folder_event_detector.cpp
 )
-
-IF(WIN32)
+IF (APPLE)
+    #do nothing
+ELSEIF(WIN32)
     set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_windows.cpp
             src/single_folder_watch_windows.cpp
             src/watch_io.cpp
@@ -15,7 +16,7 @@ IF(WIN32)
             )
 ELSEIF(UNIX)
     set(SOURCE_FILES ${SOURCE_FILES} src/system_folder_watch_linux.cpp src/inotify_event.cpp src/inotify_linux.cpp)
-ENDIF(WIN32)
+ENDIF(APPLE)
 
 
 
@@ -55,13 +56,14 @@ set(TEST_SOURCE_FILES
         unittests/test_event_detector_factory.cpp
         unittests/test_folder_event_detector.cpp
    )
-
-IF(UNIX)
+IF (APPLE)
+    #do nothing
+ELSEIF(UNIX)
 set(TEST_SOURCE_FILES ${TEST_SOURCE_FILES} unittests/test_system_folder_watch_linux.cpp)
 ELSE()
 set(TEST_SOURCE_FILES ${TEST_SOURCE_FILES} unittests/test_system_folder_watch_windows.cpp
         unittests/test_single_folder_watch_windows.cpp)
-ENDIF(UNIX)
+ENDIF(APPLE)
 
 
 set(TEST_LIBRARIES "${TARGET_NAME}")

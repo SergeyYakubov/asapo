@@ -10,6 +10,7 @@ ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET(BUILD_SHARED_LIBS OFF)
 ENDIF(WIN32)
 
+
 #TODO: Better way then GLOBAL PROPERTY
 IF(WIN32)
     find_package(Threads REQUIRED)
@@ -88,3 +89,4 @@ if(BUILD_DOCS)
     include(doxygen)
 endif()
 
+include(prepare_version)

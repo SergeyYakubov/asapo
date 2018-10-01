@@ -5,6 +5,7 @@
 #include "receiver_config.h"
 
 #include "receiver_logger.h"
+#include "common/version.h"
 
 asapo::Error ReadConfigFile(int argc, char* argv[]) {
     if (argc != 2) {
@@ -16,6 +17,7 @@ asapo::Error ReadConfigFile(int argc, char* argv[]) {
 }
 
 int main (int argc, char* argv[]) {
+    asapo::ExitAfterPrintVersionIfNeeded("ASAPO Receiver", argc, argv);
 
     auto err = ReadConfigFile(argc, argv);
     const auto& logger = asapo::GetDefaultReceiverLogger();
@@ -33,6 +35,7 @@ int main (int argc, char* argv[]) {
 
     auto* receiver = new asapo::Receiver();
 
+    logger->Info(std::string("starting receiver, version ") + asapo::kVersion);
     logger->Info("listening on " + address);
     receiver->Listen(address, &err);
     if(err) {

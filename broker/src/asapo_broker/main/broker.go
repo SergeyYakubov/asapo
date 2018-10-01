@@ -6,6 +6,7 @@ import (
 	"asapo_broker/database"
 	"asapo_broker/server"
 	log "asapo_common/logger"
+	"asapo_common/version"
 	"flag"
 	"os"
 )
@@ -20,6 +21,10 @@ func PrintUsage() {
 
 func main() {
 	var fname = flag.String("config", "", "config file path")
+
+	if ret := version.ShowVersion(os.Stdout, "ASAPO Broker"); ret {
+		return
+	}
 
 	log.SetSoucre("broker")
 	flag.Parse()

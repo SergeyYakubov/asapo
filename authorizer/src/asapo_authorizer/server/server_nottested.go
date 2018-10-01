@@ -5,6 +5,7 @@ package server
 import (
 	log "asapo_common/logger"
 	"asapo_common/utils"
+	"asapo_common/version"
 	"errors"
 	"net/http"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 
 func Start() {
 	mux := utils.NewRouter(listRoutes)
+	log.Info("Starting ASAPO Authorizer, version " + version.GetVersion())
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }

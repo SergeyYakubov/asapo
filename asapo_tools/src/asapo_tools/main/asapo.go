@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"asapo_tools/version"
+	"asapo_common/version"
 	"asapo_tools/cli"
 )
 
@@ -14,7 +14,7 @@ var (
 
 func main() {
 
-	if ret := version.ShowVersion(os.Stdout, "asapo"); ret {
+	if ret := version.ShowVersion(os.Stdout, "ASAPO"); ret {
 		return
 	}
 
