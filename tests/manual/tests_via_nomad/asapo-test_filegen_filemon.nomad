@@ -61,7 +61,7 @@ job "asapo-test" {
           "10M",
           "10000",
           "120",
-          "/tmp/asapo/test_in/test_folder/file_lin"]
+          "/run/user/data/file_lin"]
       }
 
       artifact {
