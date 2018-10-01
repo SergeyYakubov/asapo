@@ -48,6 +48,9 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* beamtime_
     (err = parser.GetString("Beamline", &beamline_));
     if (err) {
         return ErrorFromServerResponse(err, code);
+    } else {
+        log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() + " beamline: " +
+                     beamline_ + ", beamtime id: " + beamtime_id_);
     }
 
     return nullptr;

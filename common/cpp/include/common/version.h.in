@@ -2,13 +2,17 @@
 #define ASAPO_VERSION_H
 
 #include <iostream>
+#include "string.h"
 
 namespace asapo {
 
 const char kVersion[] = "@VERSION@";
 
-inline void PrintVersion(std::string prefix) {
- std::cout << prefix << ", version " << kVersion << std::endl;
+inline void ExitAfterPrintVersionIfNeeded(std::string prefix,int argc, char* argv[]) {
+    if (argc == 2 && strcmp(argv[1], "-v") == 0) {
+        std::cout << prefix << ", version " << kVersion << std::endl;
+        exit(0);
+    }
 }
 
 }

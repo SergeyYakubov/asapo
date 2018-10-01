@@ -74,7 +74,7 @@ void SignalHandler(int signal) {
 
 
 int main (int argc, char* argv[]) {
-    asapo::PrintVersion("ASAPO Event Monitor");
+    asapo::ExitAfterPrintVersionIfNeeded("ASAPO Event Monitor", argc, argv);
 
     auto err = ReadConfigFile(argc, argv);
     if (err) {
@@ -96,7 +96,7 @@ int main (int argc, char* argv[]) {
     auto producer = CreateProducer();
     asapo::EventDetectorFactory factory;
     auto event_detector = factory.CreateEventDetector();
-
+    logger->Info(std::string("starting ASAPO Event Monitor, version ") + asapo::kVersion);
     err = event_detector->StartMonitoring();
     if (err) {
         logger->Error(err->Explain());

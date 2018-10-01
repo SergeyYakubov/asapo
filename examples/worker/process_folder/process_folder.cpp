@@ -84,7 +84,7 @@ void PrintStatistics(const Statistics& statistics) {
 
 
 int main(int argc, char* argv[]) {
-    asapo::PrintVersion("Process Folder Broker Example");
+    asapo::ExitAfterPrintVersionIfNeeded("Process Folder Broker Example", argc, argv);
 
     std::string folder = ProcessCommandArguments(argc, argv);
     auto broker = CreateBroker(folder);

@@ -110,8 +110,12 @@ class AuthorizerHandlerTests : public Test {
                                                      HasSubstr(expected_beamtime_id),
                                                      HasSubstr(expected_producer_uri),
                                                      HasSubstr(expected_authorization_server))));
+            } else {
+                EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("authorized"),
+                                                     HasSubstr(expected_beamtime_id),
+                                                     HasSubstr(expected_beamline),
+                                                     HasSubstr(expected_producer_uri))));
             }
-
         }
 
 
