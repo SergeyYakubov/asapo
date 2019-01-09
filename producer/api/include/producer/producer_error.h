@@ -19,48 +19,7 @@ enum class ProducerErrorType {
     kRequestPoolIsFull
 };
 
-//TODO Make a marco to create error class and error template class
-class ProducerError : public SimpleError {
-  private:
-    ProducerErrorType receiver_error_type_;
-  public:
-    ProducerError(const std::string& error, ProducerErrorType receiver_error_type) : SimpleError(error,
-                ErrorType::kProducerError) {
-        receiver_error_type_ = receiver_error_type;
-    }
-
-    ProducerErrorType GetProducerErrorType() const noexcept {
-        return receiver_error_type_;
-    }
-};
-
-class ProducerErrorTemplate : public SimpleErrorTemplate {
-  protected:
-    ProducerErrorType receiver_error_type_;
-  public:
-    ProducerErrorTemplate(const std::string& error, ProducerErrorType receiver_error_type) : SimpleErrorTemplate(error,
-                ErrorType::kProducerError) {
-        receiver_error_type_ = receiver_error_type;
-    }
-
-    inline ProducerErrorType GetProducerErrorType() const noexcept {
-        return receiver_error_type_;
-    }
-
-    inline Error Generate() const noexcept override {
-        return Error(new ProducerError(error_, receiver_error_type_));
-    }
-
-    inline bool operator==(const Error& rhs) const override {
-        return SimpleErrorTemplate::operator==(rhs)
-               && GetProducerErrorType() == ((ProducerError*) rhs.get())->GetProducerErrorType();
-    }
-};
-
-static inline std::ostream& operator<<(std::ostream& os, const ProducerErrorTemplate& err) {
-    return os << err.Text();
-}
-
+using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
 
 namespace ProducerErrorTemplates {
 auto const kAlreadyConnected = ProducerErrorTemplate {
