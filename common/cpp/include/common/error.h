@@ -155,5 +155,48 @@ auto const kEndOfFile = SimpleErrorTemplate {
 
 }
 
+template <typename ServiceErrorType, ErrorType MainErrorType>
+class ServiceError : public SimpleError {
+ private:
+  ServiceErrorType error_type_;
+ public:
+  ServiceError(const std::string& error, ServiceErrorType error_type) : SimpleError(error, MainErrorType) {
+      error_type_ = error_type;
+  }
+  ServiceErrorType GetServiceErrorType() const noexcept {
+      return error_type_;
+  }
+};
+
+template <typename ServiceErrorType, ErrorType MainErrorType>
+class ServiceErrorTemplate : public SimpleErrorTemplate {
+ protected:
+  ServiceErrorType error_type_;
+ public:
+  ServiceErrorTemplate(const std::string& error, ServiceErrorType error_type) : SimpleErrorTemplate(error,
+                                                                                                    MainErrorType) {
+      error_type_ = error_type;
+  }
+
+  inline ServiceErrorType GetServiceErrorType() const noexcept {
+      return error_type_;
+  }
+
+  inline Error Generate() const noexcept override {
+      auto err = new ServiceError<ServiceErrorType, MainErrorType>(error_, error_type_);
+      return Error(err);
+  }
+
+  inline Error Generate(const std::string& prefix) const noexcept {
+      auto err = new ServiceError<ServiceErrorType, MainErrorType>(prefix + " :" + error_, error_type_);
+      return Error(err);
+  }
+
+  inline bool operator==(const Error& rhs) const override {
+      return SimpleErrorTemplate::operator==(rhs)
+          && GetServiceErrorType() == ((ServiceError<ServiceErrorType, MainErrorType>*) rhs.get())->GetServiceErrorType();
+  }
+};
+
 }
 #endif //ASAPO_ERROR_H

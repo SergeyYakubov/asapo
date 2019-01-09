@@ -12,7 +12,12 @@ set(SOURCE_FILES
         src/request_handler_authorize.cpp
         src/statistics_sender_fluentd.cpp
         src/requests_dispatcher.cpp
-)
+        src/receiver_data_server/receiver_data_server.cpp
+        src/receiver_data_server/net_server.cpp
+        src/receiver_data_server/tcp_server.cpp
+        src/receiver_data_server/request_pool.cpp
+        src/receiver_data_server/request.cpp
+        src/receiver_data_server/receiver_data_server_logger.cpp)
 
 
 ################################
@@ -63,3 +68,7 @@ set(TEST_SOURCE_FILES
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}" ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
+
+set(TEST_SOURCE_FILES_RDS
+        unittests/receiver_data_server/test_receiver_data_server.cpp)
+gtest(${TARGET_NAME}_RDS "${TEST_SOURCE_FILES_RDS}" "${TEST_LIBRARIES}")
