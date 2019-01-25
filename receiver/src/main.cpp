@@ -7,6 +7,8 @@
 #include "receiver_logger.h"
 #include "common/version.h"
 
+#include "receiver_data_server/receiver_data_server.h"
+
 asapo::Error ReadConfigFile(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <config file>" << std::endl;
@@ -21,7 +23,6 @@ int main (int argc, char* argv[]) {
 
     auto err = ReadConfigFile(argc, argv);
     const auto& logger = asapo::GetDefaultReceiverLogger();
-
     if (err) {
         logger->Error("cannot read config file: " + err->Explain());
         return 1;
@@ -30,6 +31,10 @@ int main (int argc, char* argv[]) {
     auto config = asapo::GetReceiverConfig();
 
     logger->SetLogLevel(config->log_level);
+
+    static const std::string dataserver_address = "0.0.0.0:" + std::to_string(config->dataserver_listen_port);
+    asapo::ReceiverDataServer data_server{dataserver_address};
+    std::thread server_thread (&asapo::ReceiverDataServer::Run, &data_server);
 
     static const std::string address = "0.0.0.0:" + std::to_string(config->listen_port);
 

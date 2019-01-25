@@ -82,6 +82,10 @@ class SystemIO final : public IO {
     /*
      * Network
      */
+
+    ListSocketDescriptors WaitSocketsActivity(const ListSocketDescriptors& sockets_to_listen, Error* err) const override;
+
+
     SocketDescriptor  CreateSocket(AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol,
                                    Error* err) const;
     void            Listen(SocketDescriptor socket_fd, int backlog, Error* err) const;

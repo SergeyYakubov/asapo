@@ -11,12 +11,12 @@ namespace asapo {
 
 class ReceiverDataServer {
   public:
+    explicit ReceiverDataServer(std::string address);
     std::unique_ptr<RequestPool> request_pool__;
     std::unique_ptr<NetServer> net__;
     const AbstractLogger* log__;
-
-    ReceiverDataServer();
     void Run();
+  private:
 };
 
 }

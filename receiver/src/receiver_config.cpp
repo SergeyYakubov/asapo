@@ -17,6 +17,7 @@ Error ReceiverConfigFactory::SetConfigFromFile(std::string file_name) {
     Error err;
     (err = parser.GetString("MonitorDbAddress", &config.monitor_db_uri)) ||
     (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||
+    (err = parser.Embedded("DataServer").GetUInt64("ListenPort", &config.dataserver_listen_port)) ||
     (err = parser.GetBool("WriteToDisk", &config.write_to_disk)) ||
     (err = parser.GetBool("WriteToDb", &config.write_to_db)) ||
     (err = parser.GetString("BrokerDbAddress", &config.broker_db_uri)) ||

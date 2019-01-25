@@ -35,7 +35,7 @@ using asapo::Error;
 namespace {
 
 TEST(ReceiverDataServer, Constructor) {
-    ReceiverDataServer data_server;
+    ReceiverDataServer data_server{""};
     ASSERT_THAT(dynamic_cast<const asapo::TcpServer*>(data_server.net__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestPool*>(data_server.request_pool__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(data_server.log__), Ne(nullptr));
@@ -44,7 +44,8 @@ TEST(ReceiverDataServer, Constructor) {
 
 class ReceiverDataServerTests : public Test {
   public:
-    ReceiverDataServer data_server;
+    std::string expected_address = "somehost:123";
+    ReceiverDataServer data_server{expected_address};
     asapo::MockNetServer mock_net;
     asapo::MockPool mock_pool;
     NiceMock<asapo::MockLogger> mock_logger;
@@ -52,7 +53,6 @@ class ReceiverDataServerTests : public Test {
         data_server.net__ = std::unique_ptr<asapo::NetServer> {&mock_net};
         data_server.request_pool__ = std::unique_ptr<asapo::RequestPool> {&mock_pool};
         data_server.log__ = &mock_logger;
-
     }
     void TearDown() override {
         data_server.net__.release();
@@ -62,14 +62,6 @@ class ReceiverDataServerTests : public Test {
 
 
 TEST_F(ReceiverDataServerTests, ErrorGetNewRequests) {
-
-    /*    EXPECT_CALL(mock_net, ProcessRequest_t(_)).WillOnce(
-            Return(nullptr)
-        ).WillOnce(
-            Return(new asapo::IOError("Test Send Error", asapo::IOErrorType::kUnknownIOError))
-        );
-    */
-
     EXPECT_CALL(mock_net, GetNewRequests_t(_)).WillOnce(
         DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
               Return(asapo::Requests{})
@@ -80,13 +72,10 @@ TEST_F(ReceiverDataServerTests, ErrorGetNewRequests) {
 
     EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("stopped"), HasSubstr(errtext))));
 
-
     data_server.Run();
-
 }
 
 TEST_F(ReceiverDataServerTests, ErrorAddingRequests) {
-
     EXPECT_CALL(mock_net, GetNewRequests_t(_)).WillOnce(
         DoAll(SetArgPointee<0>(nullptr),
               Return(asapo::Requests{})
@@ -104,6 +93,22 @@ TEST_F(ReceiverDataServerTests, ErrorAddingRequests) {
     data_server.Run();
 }
 
+TEST_F(ReceiverDataServerTests, Ok) {
+    EXPECT_CALL(mock_net, GetNewRequests_t(_)).WillOnce(
+        DoAll(SetArgPointee<0>(nullptr),
+              Return(asapo::Requests{})
+             )
+    ).WillOnce(
+        DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+              Return(asapo::Requests{})
+             )
+    );
 
+    EXPECT_CALL(mock_pool, AddRequests_t(_)).WillOnce(
+        Return(nullptr)
+    );
+
+    data_server.Run();
+}
 
 }

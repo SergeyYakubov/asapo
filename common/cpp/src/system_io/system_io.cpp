@@ -612,4 +612,32 @@ Error SystemIO::RemoveFile(const std::string& fname) const {
     }
 }
 
+ListSocketDescriptors SystemIO::WaitSocketsActivity(const ListSocketDescriptors& sockets_to_listen, Error* err) const {
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    SocketDescriptor max_sd = kDisconnectedSocketDescriptor;
+    for (auto sd : sockets_to_listen) {
+        FD_SET(sd, &readfds);
+        if (sd > max_sd) {
+            max_sd = sd;
+        }
+    }
+
+    auto activity = select(max_sd + 1, &readfds , NULL , NULL , NULL);
+
+    if ((activity < 0) && (errno != EINTR)) {
+        *err = GetLastError();
+        return {};
+    }
+
+    ListSocketDescriptors active_sockets;
+    for (auto sd : sockets_to_listen) {
+        if (FD_ISSET(sd, &readfds)) {
+            active_sockets.push_back(sd);
+        }
+    }
+
+    return active_sockets;
+}
+
 }

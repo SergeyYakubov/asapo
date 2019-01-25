@@ -4,7 +4,7 @@
 
 namespace asapo {
 
-ReceiverDataServer::ReceiverDataServer() : request_pool__{new RequestPool}, net__{new TcpServer()},
+ReceiverDataServer::ReceiverDataServer(std::string address) : request_pool__{new RequestPool}, net__{new TcpServer(address)},
 log__{GetDefaultReceiverDataServerLogger()} {
 }
 
@@ -12,11 +12,9 @@ void ReceiverDataServer::Run() {
     while (true) {
         Error err;
         auto requests = net__->GetNewRequests(&err);
-        if (err) {
-            log__->Error(std::string("receiver data server stopped: ") + err->Explain());
-            return;
+        if (!err) {
+            err = request_pool__->AddRequests(requests);
         }
-        err = request_pool__->AddRequests(requests);
         if (err) {
             log__->Error(std::string("receiver data server stopped: ") + err->Explain());
             return;

@@ -13,6 +13,18 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD1(NewThread_t, std::thread * (std::function<void()> function));
 
+
+    ListSocketDescriptors WaitSocketsActivity(const ListSocketDescriptors& sockets_to_listen, Error* err) const override {
+        ErrorInterface* error = nullptr;
+        auto data = WaitSocketsActivity_t(sockets_to_listen, &error);
+        err->reset(error);
+        return data;
+    }
+
+    MOCK_CONST_METHOD2(WaitSocketsActivity_t, ListSocketDescriptors(ListSocketDescriptors sockets_to_listen,
+                       ErrorInterface** err));
+
+
     SocketDescriptor CreateSocket(AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol,
                                   Error* err) const override {
         ErrorInterface* error = nullptr;

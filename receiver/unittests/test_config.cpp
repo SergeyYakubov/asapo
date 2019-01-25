@@ -50,6 +50,7 @@ TEST_F(ConfigTests, ReadSettings) {
 
     asapo::ReceiverConfig test_config;
     test_config.listen_port = 4200;
+    test_config.dataserver_listen_port = 4201;
     test_config.tag = "receiver1";
     test_config.monitor_db_name = "db_test";
     test_config.monitor_db_uri = "localhost:8086";
@@ -70,6 +71,7 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->monitor_db_name, Eq("db_test"));
     ASSERT_THAT(config->broker_db_uri, Eq("localhost:27017"));
     ASSERT_THAT(config->listen_port, Eq(4200));
+    ASSERT_THAT(config->dataserver_listen_port, Eq(4201));
     ASSERT_THAT(config->authorization_interval_ms, Eq(10000));
     ASSERT_THAT(config->authorization_server, Eq("AuthorizationServer"));
     ASSERT_THAT(config->write_to_disk, Eq(true));

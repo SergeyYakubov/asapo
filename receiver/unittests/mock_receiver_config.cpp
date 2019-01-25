@@ -38,6 +38,8 @@ Error SetReceiverConfig (const ReceiverConfig& config) {
     config_string += "," + std::string("\"MonitorDbName\":") + "\"" + config.monitor_db_name + "\"";
     config_string += "," + std::string("\"BrokerDbAddress\":") + "\"" + config.broker_db_uri + "\"";
     config_string += "," + std::string("\"ListenPort\":") + std::to_string(config.listen_port);
+    config_string += "," + std::string("\"DataServer\":{\"ListenPort\":") + std::to_string(
+                         config.dataserver_listen_port) + "}";
     config_string += "," + std::string("\"AuthorizationInterval\":") + std::to_string(config.authorization_interval_ms);
     config_string += "," + std::string("\"AuthorizationServer\":") + "\"" + config.authorization_server + "\"";
     config_string += "," + std::string("\"WriteToDisk\":") + (config.write_to_disk ? "true" : "false");

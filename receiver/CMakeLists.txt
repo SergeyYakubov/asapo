@@ -70,5 +70,7 @@ set(TEST_LIBRARIES "${TARGET_NAME};system_io")
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}" ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 
 set(TEST_SOURCE_FILES_RDS
-        unittests/receiver_data_server/test_receiver_data_server.cpp)
+        unittests/receiver_data_server/test_receiver_data_server.cpp
+        unittests/receiver_data_server/test_tcp_server.cpp
+        )
 gtest(${TARGET_NAME}_RDS "${TEST_SOURCE_FILES_RDS}" "${TEST_LIBRARIES}" ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
