@@ -59,7 +59,9 @@ class IO {
                                            SocketProtocols socket_protocol, Error* err) const = 0;
     virtual void            Listen(SocketDescriptor socket_fd, int backlog, Error* err) const = 0;
 
-    virtual ListSocketDescriptors WaitSocketsActivity(const ListSocketDescriptors& sockets_to_listen, Error* err) const = 0;
+    virtual ListSocketDescriptors WaitSocketsActivity(SocketDescriptor master_socket,
+                                                      ListSocketDescriptors* sockets_to_listen,
+                                                      std::vector<std::string>* new_connections, Error* err) const = 0;
 
 
     virtual void            InetBind(SocketDescriptor socket_fd, const std::string& address, Error* err) const = 0;
@@ -107,6 +109,7 @@ class IO {
     virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, Error* err) const = 0;
     virtual std::string     ReadFileToString        (const std::string& fname, Error* err) const = 0;
     virtual Error GetLastError() const = 0;
+    virtual std::string AddressFromSocket(SocketDescriptor socket) const noexcept = 0;
 };
 
 }

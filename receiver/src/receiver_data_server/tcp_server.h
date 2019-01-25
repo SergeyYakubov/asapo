@@ -16,10 +16,10 @@ class TcpServer : public NetServer {
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
   private:
-
+    ListSocketDescriptors GetActiveSockets(Error* err) const noexcept;
     Error InitializeMasterSocketIfNeeded() const noexcept;
     mutable SocketDescriptor master_socket_{kDisconnectedSocketDescriptor};
-    mutable ListSocketDescriptors client_sockets_;
+    mutable ListSocketDescriptors sockets_to_listen_;
     std::string address_;
 };
 

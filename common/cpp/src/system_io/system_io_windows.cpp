@@ -16,6 +16,27 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
+// use IOInstance and static variable to init window sockets on program start end cleanup on exit
+class IOInstance {
+ public:
+  IOInstance();
+  ~IOInstance();
+};
+static IOInstance instance;
+IOInstance::IOInstance() {
+    WORD wVersionRequested = MAKEWORD(2, 2);
+    WSADATA wsaData;
+    int err = WSAStartup(wVersionRequested, &wsaData);
+    if (err != 0) {
+        std::cout << "[_socket/WSAStartup] Failed to WSAStartup with version 2.2" << std::endl;
+        exit(1);
+    }
+}
+
+IOInstance::~IOInstance() {
+    WSACleanup();
+}
+
 Error IOErrorFromGetLastError() {
     DWORD last_error = GetLastError();
     switch (last_error) {
@@ -246,7 +267,6 @@ bool SystemIO::_close_socket(SocketDescriptor fd) const {
 }
 
 SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
-    InitializeSocketIfNecessary();
     return ::socket(address_family, socket_type, socket_protocol);
 }
 
@@ -282,23 +302,17 @@ SocketDescriptor SystemIO::_accept(SocketDescriptor socket_fd, void* address, si
     return ::accept(socket_fd, static_cast<sockaddr*>(address), (int*)address_length);
 }
 
-void SystemIO::InitializeSocketIfNecessary() const {
-    static bool WSAStartupDone = false;
-    if (!WSAStartupDone) {
-        WSAStartupDone = true;
-        WORD wVersionRequested = MAKEWORD(2, 2);
-        WSADATA wsaData;
-        int err = WSAStartup(wVersionRequested, &wsaData);
-        if (err != 0) {
-            std::cout << "[_socket/WSAStartup] Failed to WSAStartup with version 2.2" << std::endl;
-            WSACleanup();
-            // Do not return, since ::socket has to set an errno
-        } else {
-            std::atexit([] {
-                WSACleanup();
-            });
-        }
+std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept {
+
+    sockaddr_in client_address{};
+    static size_t client_address_size = sizeof(sockaddr_in);
+
+    auto res = getpeername(socket, reinterpret_cast<sockaddr*>(&client_address),(int*) &client_address_size);
+    if (res != 0) {
+        return GetLastError()->Explain();
     }
+
+    return std::string(inet_ntoa(client_address.sin_addr)) + ':' + std::to_string(client_address.sin_port);
 }
 
 }

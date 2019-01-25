@@ -6,7 +6,6 @@
 #include <cstring>
 #include <algorithm>
 
-
 #if defined(__linux__) || defined (__APPLE__)
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -132,9 +131,8 @@ SubDirList SystemIO::GetSubDirectories(const std::string& path, Error* err) cons
     return list;
 }
 
-
 void asapo::SystemIO::CreateNewDirectory(const std::string& directory_name, Error* err) const {
-    if(_mkdir(directory_name.c_str()) == -1) {
+    if (_mkdir(directory_name.c_str()) == -1) {
         *err = GetLastError();
     } else {
         *err = nullptr;
@@ -184,7 +182,6 @@ Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::strin
     return WriteDataToFile(root_folder, fname, data.get(), length, create_directories);
 }
 
-
 std::string SystemIO::ReadFileToString(const std::string& fname, Error* err) const {
 
     uint64_t size = 0;
@@ -195,7 +192,6 @@ std::string SystemIO::ReadFileToString(const std::string& fname, Error* err) con
 
     return std::string(reinterpret_cast<const char*>(data.get()), size);
 }
-
 
 std::unique_ptr<std::thread> SystemIO::NewThread(std::function<void()> function) const {
     return std::unique_ptr<std::thread>(new std::thread(function));
@@ -209,17 +205,17 @@ void SystemIO::Skip(SocketDescriptor socket_fd, size_t length, Error* err) const
     std::unique_ptr<uint8_t[]> buffer;
     try {
         buffer.reset(new uint8_t[kSkipBufferSize]);
-    } catch(...) {
+    } catch (...) {
         *err = ErrorTemplates::kMemoryAllocationError.Generate();
         return;
     }
     size_t already_skipped = 0;
-    while(already_skipped < length) {
+    while (already_skipped < length) {
         size_t need_to_skip = length - already_skipped;
-        if(need_to_skip > kSkipBufferSize)
+        if (need_to_skip > kSkipBufferSize)
             need_to_skip = kSkipBufferSize;
         size_t skipped_amount = Receive(socket_fd, buffer.get(), need_to_skip, err);
-        if(*err != nullptr) {
+        if (*err != nullptr) {
             return;
         }
         already_skipped += skipped_amount;
@@ -231,7 +227,7 @@ asapo::FileDescriptor asapo::SystemIO::CreateAndConnectIPTCPSocket(const std::st
     *err = nullptr;
 
     FileDescriptor fd = CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, err);
-    if(*err != nullptr) {
+    if (*err != nullptr) {
         return kDisconnectedSocketDescriptor;
     }
 
@@ -246,7 +242,7 @@ asapo::FileDescriptor asapo::SystemIO::CreateAndConnectIPTCPSocket(const std::st
 
 int SystemIO::FileOpenModeToPosixFileOpenMode(int open_flags) const {
     int flags = 0;
-    if(((open_flags & IO_OPEN_MODE_READ) && (open_flags & IO_OPEN_MODE_WRITE)) || (open_flags & IO_OPEN_MODE_RW)) {
+    if (((open_flags & IO_OPEN_MODE_READ) && (open_flags & IO_OPEN_MODE_WRITE)) || (open_flags & IO_OPEN_MODE_RW)) {
         flags |= O_RDWR;
     } else {
         if (open_flags & IO_OPEN_MODE_READ) {
@@ -256,26 +252,25 @@ int SystemIO::FileOpenModeToPosixFileOpenMode(int open_flags) const {
             flags |= O_WRONLY;
         }
     }
-    if(open_flags & IO_OPEN_MODE_CREATE) {
+    if (open_flags & IO_OPEN_MODE_CREATE) {
         flags |= O_CREAT;
     }
-    if(open_flags & IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS) {
+    if (open_flags & IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS) {
         flags |= O_CREAT | O_EXCL;
     }
-    if(open_flags & IO_OPEN_MODE_SET_LENGTH_0) {
+    if (open_flags & IO_OPEN_MODE_SET_LENGTH_0) {
         flags |= O_TRUNC;
     }
     return flags;
 }
 
 std::string SystemIO::ResolveHostnameToIp(const std::string& hostname, Error* err) const {
-    InitializeSocketIfNecessary();
     hostent* record = gethostbyname(hostname.c_str());
     if (record == nullptr) {
         *err = IOErrorTemplates::kUnableToResolveHostname.Generate();
         return "";
     }
-    in_addr* address = (in_addr*)(record->h_addr);
+    in_addr* address = (in_addr*) (record->h_addr);
     std::string ip_address = inet_ntoa(*address);
 
     *err = nullptr;
@@ -292,7 +287,7 @@ std::unique_ptr<sockaddr_in> SystemIO::BuildSockaddrIn(const std::string& addres
     uint16_t port = 0;
     std::tie(host, port) = *hostname_port_tuple;
     host = ResolveHostnameToIp(host, err);
-    if(*err != nullptr) {
+    if (*err != nullptr) {
         return nullptr;
     }
 
@@ -312,7 +307,7 @@ std::unique_ptr<sockaddr_in> SystemIO::BuildSockaddrIn(const std::string& addres
 
 void asapo::SystemIO::InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const {
     auto socket_address = BuildSockaddrIn(address, err);
-    if(*err != nullptr) {
+    if (*err != nullptr) {
         return;
     }
 
@@ -369,7 +364,7 @@ asapo::FileDescriptor asapo::SystemIO::Open(const std::string& filename,
                                             Error* err) const {
     int flags = FileOpenModeToPosixFileOpenMode(open_flags);
     FileDescriptor fd = _open(filename.c_str(), flags);
-    if(fd == -1) {
+    if (fd == -1) {
         *err = GetLastError();
         (*err)->Append(filename);
     } else {
@@ -379,19 +374,19 @@ asapo::FileDescriptor asapo::SystemIO::Open(const std::string& filename,
 }
 
 void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
-    if(err) {
+    if (err) {
         *err = nullptr;
     }
-    if(!_close_socket(fd) && err) {
+    if (!_close_socket(fd) && err) {
         *err = GetLastError();
     }
 }
 
 void asapo::SystemIO::Close(FileDescriptor fd, Error* err) const {
-    if(err) {
+    if (err) {
         *err = nullptr;
     }
-    if(!_close(fd) && err) {
+    if (!_close(fd) && err) {
         *err = GetLastError();
     }
 }
@@ -425,25 +420,25 @@ SocketDescriptor SystemIO::CreateSocket(AddressFamilies address_family,
                                         SocketProtocols socket_protocol,
                                         Error* err) const {
     int domain = AddressFamilyToPosixFamily(address_family);
-    if(domain == -1) {
+    if (domain == -1) {
         *err = IOErrorTemplates::kUnsupportedAddressFamily.Generate();
         return -1;
     }
 
     int type = SocketTypeToPosixType(socket_type);
-    if(type == -1) {
+    if (type == -1) {
         *err = IOErrorTemplates::kUnknownIOError.Generate();
         return -1;
     }
 
     int protocol = SocketProtocolToPosixProtocol(socket_protocol);
-    if(protocol == -1) {
+    if (protocol == -1) {
         *err = IOErrorTemplates::kUnknownIOError.Generate();
         return -1;
     }
 
     SocketDescriptor socket_fd = _socket(domain, type, protocol);
-    if(socket_fd == -1) {
+    if (socket_fd == -1) {
         *err = GetLastError();
         return socket_fd;
     }
@@ -466,7 +461,7 @@ void asapo::SystemIO::InetBind(SocketDescriptor socket_fd, const std::string& ad
     }
 
     auto socket_address = BuildSockaddrIn(address, err);
-    if(*err != nullptr) {
+    if (*err != nullptr) {
         return;
     }
 
@@ -486,18 +481,18 @@ void asapo::SystemIO::Listen(SocketDescriptor socket_fd, int backlog, Error* err
 SocketDescriptor SystemIO::CreateAndBindIPTCPSocketListener(const std::string& address, int backlog, Error* err) const {
     FileDescriptor listener_fd = CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, err);
 
-    if(*err) {
+    if (*err) {
         return -1;
     }
 
     InetBind(listener_fd, address, err);
-    if(*err) {
+    if (*err) {
         CloseSocket(listener_fd, nullptr);
         return -1;
     }
 
     Listen(listener_fd, backlog, err);
-    if(*err) {
+    if (*err) {
         CloseSocket(listener_fd, nullptr);
         return -1;
     }
@@ -528,7 +523,6 @@ size_t asapo::SystemIO::ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf
 
     return Receive(socket_fd, buf, length, err);
 }
-
 
 size_t asapo::SystemIO::Read(FileDescriptor fd, void* buf, size_t length, Error* err) const {
     return Transfer(_read, fd, buf, length, err);
@@ -568,10 +562,10 @@ size_t SystemIO::Transfer(ssize_t (* method)(FileDescriptor, void*, size_t), Fil
         }
         if (received_amount == -1) {
             *err = GetLastError();
-            if(IOErrorTemplates::kResourceTemporarilyUnavailable == *err) {
+            if (IOErrorTemplates::kResourceTemporarilyUnavailable == *err) {
                 continue;
             }
-            if(*err == nullptr) {
+            if (*err == nullptr) {
                 *err = IOErrorTemplates::kUnknownIOError.Generate();
             }
             return already_transferred;//Return the amount of _ensured_ transferred bytes
@@ -583,11 +577,11 @@ size_t SystemIO::Transfer(ssize_t (* method)(FileDescriptor, void*, size_t), Fil
 }
 
 Error SystemIO::CreateDirectoryWithParents(const std::string& root_path, const std::string& path) const {
-    for( std::string::const_iterator iter = path.begin() ; iter != path.end(); ) {
-        iter = std::find( iter, path.end(), kPathSeparator );
+    for (std::string::const_iterator iter = path.begin(); iter != path.end();) {
+        iter = std::find(iter, path.end(), kPathSeparator);
         std::string new_path;
         if (root_path.empty()) {
-            new_path = std::string( path.begin(), iter);
+            new_path = std::string(path.begin(), iter);
         } else {
             new_path = root_path + kPathSeparator + std::string(path.begin(), iter);
         }
@@ -605,39 +599,67 @@ Error SystemIO::CreateDirectoryWithParents(const std::string& root_path, const s
 }
 
 Error SystemIO::RemoveFile(const std::string& fname) const {
-    if(remove(fname.c_str()) == 0) {
+    if (remove(fname.c_str()) == 0) {
         return nullptr;;
     } else {
-        return  GetLastError();
+        return GetLastError();
     }
 }
 
-ListSocketDescriptors SystemIO::WaitSocketsActivity(const ListSocketDescriptors& sockets_to_listen, Error* err) const {
+ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_socket,
+        ListSocketDescriptors* sockets_to_listen,
+        std::vector<std::string>* new_connections,
+        Error* err) const {
     fd_set readfds;
-    FD_ZERO(&readfds);
-    SocketDescriptor max_sd = kDisconnectedSocketDescriptor;
-    for (auto sd : sockets_to_listen) {
-        FD_SET(sd, &readfds);
-        if (sd > max_sd) {
-            max_sd = sd;
-        }
-    }
-
-    auto activity = select(max_sd + 1, &readfds , NULL , NULL , NULL);
-
-    if ((activity < 0) && (errno != EINTR)) {
-        *err = GetLastError();
-        return {};
-    }
-
     ListSocketDescriptors active_sockets;
-    for (auto sd : sockets_to_listen) {
-        if (FD_ISSET(sd, &readfds)) {
-            active_sockets.push_back(sd);
+    bool client_activity = false;
+    *err = nullptr;
+    while (!client_activity) {
+
+        FD_ZERO(&readfds);
+        SocketDescriptor max_sd = master_socket;
+        FD_SET(master_socket, &readfds);
+        for (auto sd : *sockets_to_listen) {
+            FD_SET(sd, &readfds);
+            if (sd > max_sd) {
+                max_sd = sd;
+            }
+        }
+
+        timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 1000;
+
+        auto activity = select(max_sd + 1, &readfds, NULL, NULL, &timeout);
+        if (activity == 0) { // timeout
+            return {};
+        }
+        if ((activity < 0) && (errno != EINTR)) {
+            *err = GetLastError();
+            return {};
+        }
+
+        for (auto sd : *sockets_to_listen) {
+            if (FD_ISSET(sd, &readfds)) {
+                active_sockets.push_back(sd);
+                client_activity = true;
+            }
+        }
+
+        if (FD_ISSET(master_socket, &readfds)) {
+            auto client_info_tuple = InetAcceptConnection(master_socket, err);
+            if (*err) {
+                return {};
+            }
+            std::string client_address;
+            SocketDescriptor client_fd;
+            std::tie(client_address, client_fd) = *client_info_tuple;
+            new_connections->emplace_back(std::move(client_address));
+            sockets_to_listen->push_back(client_fd);
         }
     }
-
     return active_sockets;
 }
+
 
 }

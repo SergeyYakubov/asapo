@@ -5,6 +5,9 @@
   "AuthorizationServer": "localhost:5007",
   "AuthorizationInterval": 10000,
   "ListenPort":4200,
+  "DataServer": {
+    "ListenPort": 23123
+  },
   "WriteToDisk":true,
   "WriteToDb":true,
   "LogLevel":"info",

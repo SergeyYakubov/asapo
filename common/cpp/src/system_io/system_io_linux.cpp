@@ -264,8 +264,29 @@ bool SystemIO::_close_socket(SocketDescriptor socket_fd) const {
     return ::close(socket_fd) == 0;
 }
 
-void SystemIO::InitializeSocketIfNecessary() const {
+std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept {
+    socklen_t len;
+    struct sockaddr_storage addr;
+    char ipstr[INET6_ADDRSTRLEN];
+    int port;
 
+    len = sizeof addr;
+    auto res = getpeername(socket, (struct sockaddr*) &addr, &len);
+    if (res != 0) {
+        return GetLastError()->Explain();
+    }
+    if (addr.ss_family == AF_INET) {
+        struct sockaddr_in* s = (struct sockaddr_in*) &addr;
+        port = ntohs(s->sin_port);
+        inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+    } else { // AF_INET6
+        struct sockaddr_in6* s = (struct sockaddr_in6*) &addr;
+        port = ntohs(s->sin6_port);
+        inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
+    }
+
+    return std::string(ipstr) + ':' + std::to_string(port);
 }
+
 
 }

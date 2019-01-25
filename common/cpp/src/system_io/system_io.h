@@ -46,7 +46,6 @@ class SystemIO final : public IO {
     SocketDescriptor	_accept(SocketDescriptor socket_fd, void* address, size_t* address_length) const;
     bool			    _close_socket(SocketDescriptor socket_fd) const;
 
-    void                                                InitializeSocketIfNecessary() const;
     std::unique_ptr<std::tuple<std::string, uint16_t>>  SplitAddressToHostnameAndPort(std::string address) const;
 
     FileInfo GetFileInfo(const std::string& name, Error* err) const;
@@ -83,7 +82,8 @@ class SystemIO final : public IO {
      * Network
      */
 
-    ListSocketDescriptors WaitSocketsActivity(const ListSocketDescriptors& sockets_to_listen, Error* err) const override;
+    ListSocketDescriptors WaitSocketsActivity(SocketDescriptor master_socket, ListSocketDescriptors* sockets_to_listen,
+                                              std::vector<std::string>* new_connections, Error* err) const override;
 
 
     SocketDescriptor  CreateSocket(AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol,
@@ -120,6 +120,8 @@ class SystemIO final : public IO {
     std::string     ReadFileToString(const std::string& fname, Error* err) const override;
     Error           RemoveFile(const std::string& fname) const override;
     Error           GetLastError() const override;
+    std::string     AddressFromSocket(SocketDescriptor socket) const noexcept override;
+
 
 };
 }

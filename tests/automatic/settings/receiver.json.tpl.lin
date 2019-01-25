@@ -2,6 +2,9 @@
   "MonitorDbAddress":"localhost:8086",
   "MonitorDbName": "db_test",
   "BrokerDbAddress":"localhost:27017",
+  "DataServer": {
+    "ListenPort": 23123
+  },
   "AuthorizationServer": "localhost:8400/authorizer",
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},

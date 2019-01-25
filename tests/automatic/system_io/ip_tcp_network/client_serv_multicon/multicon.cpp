@@ -30,7 +30,7 @@ void Exit(int exit_number) {
 
 void ExitIfErrIsNotOk(Error* err, int exit_number) {
     if(*err != nullptr) {
-        std::cerr << "Explain(): " << (*err)->Explain() << std::endl;
+        std::cerr << "Explain(): " << (*err)->Explain() << " exit number: " << exit_number << std::endl;
         Exit(exit_number);
     }
 }
@@ -43,34 +43,25 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
         ExitIfErrIsNotOk(&err, 100);
         kThreadStarted.set_value();
         asapo::ListSocketDescriptors sockets_to_listen;
-        sockets_to_listen.push_back(master_socket);
         while (!exit_thread) {
-            auto sockets = io->WaitSocketsActivity(sockets_to_listen, &err);
+            std::vector<std::string> new_connections;
+            auto sockets = io->WaitSocketsActivity(master_socket, &sockets_to_listen, &new_connections, &err);
             for(auto socket : sockets) {
                 std::cout << "[SERVER] processing socket " << socket << std::endl;
-                if (socket == master_socket) {
-                    auto client_info_tuple = io->InetAcceptConnection(socket, &err);
-                    ExitIfErrIsNotOk(&err, 103);
-                    std::string client_address;
-                    SocketDescriptor client_fd;
-                    std::tie(client_address, client_fd) = *client_info_tuple;
-                    std::cout << "[SERVER] accepted connection from " << client_address << std::endl;
-                    sockets_to_listen.push_back(client_fd);
-                } else {
-                    uint64_t message;
-                    io->Receive(socket, &message, sizeof(uint64_t), &err);
-                    if (err == asapo::ErrorTemplates::kEndOfFile) {
-                        std::cout << "[SERVER] end of file " << socket << std::endl;
-                        io->CloseSocket(socket, &err);
-                        sockets_to_listen.erase(std::remove(sockets_to_listen.begin(), sockets_to_listen.end(), socket),
-                                                sockets_to_listen.end());
-                        continue;
-                    }
-                    ExitIfErrIsNotOk(&err, 104);
-
-                    io->Send(socket, &message, sizeof(uint64_t), &err);
-                    ExitIfErrIsNotOk(&err, 105);
+                uint64_t message;
+                io->Receive(socket, &message, sizeof(uint64_t), &err);
+                if (err == asapo::ErrorTemplates::kEndOfFile) {
+                    std::cout << "[SERVER] end of file " << socket << std::endl;
+                    io->CloseSocket(socket, &err);
+                    ExitIfErrIsNotOk(&err, 106);
+                    std::cout << "[SERVER] socket closed " << socket << std::endl;
+                    sockets_to_listen.erase(std::remove(sockets_to_listen.begin(), sockets_to_listen.end(), socket),
+                    sockets_to_listen.end());
+                    continue;
                 }
+                ExitIfErrIsNotOk(&err, 104);
+                io->Send(socket, &message, sizeof(uint64_t), &err);
+                ExitIfErrIsNotOk(&err, 105);
             }
         }
         for(auto socket : sockets_to_listen) {
@@ -78,6 +69,8 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
             io->CloseSocket(socket, &err);
             ExitIfErrIsNotOk(&err, 108);
         }
+        io->CloseSocket(master_socket, &err);
+      std::cout << "[SERVER] finished" << std::endl;
     });
 }
 
@@ -106,23 +99,25 @@ void CheckNormal(int times) {
     }
     std::cout << "[CLIENT] Close" << std::endl;
     io->CloseSocket(socket, &err);
+    std::cout << "[CLIENT] socket closed" << std::endl;
     ExitIfErrIsNotOk(&err, 108);
 }
 
 int main(int argc, char* argv[]) {
     Error err;
     std::unique_ptr<std::thread> server_thread = CreateEchoServerThread();
+    //server_thread->detach();
     kThreadStarted.get_future().get();//Make sure that the server is started
 
     std::cout << "Check" << std::endl;
     auto thread1 = io->NewThread([&] {
-      CheckNormal(30);
+        CheckNormal(30);
     });
     auto thread2 = io->NewThread([&] {
-      CheckNormal(30);
+        CheckNormal(30);
     });
     auto thread3 = io->NewThread([&] {
-      CheckNormal(30);
+        CheckNormal(30);
     });
 
     thread1->join();
