@@ -70,7 +70,7 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
             ExitIfErrIsNotOk(&err, 108);
         }
         io->CloseSocket(master_socket, &err);
-      std::cout << "[SERVER] finished" << std::endl;
+        std::cout << "[SERVER] finished" << std::endl;
     });
 }
 

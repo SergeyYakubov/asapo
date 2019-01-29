@@ -13,6 +13,7 @@ typedef uint64_t NetworkRequestId;
 enum Opcode : uint8_t {
     kOpcodeUnknownOp = 1,
     kOpcodeTransferData,
+    kOpcodeGetBufferData,
     kOpcodeAuthorize,
     kOpcodeCount,
 };

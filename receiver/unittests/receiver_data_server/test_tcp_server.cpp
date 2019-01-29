@@ -4,7 +4,7 @@
 
 #include "unittests/MockLogger.h"
 #include "unittests/MockIO.h"
-
+#include "io/io_factory.h"
 #include "../../src/receiver_data_server/tcp_server.h"
 
 using ::testing::Test;
@@ -21,11 +21,13 @@ using ::testing::NiceMock;
 using ::testing::HasSubstr;
 using ::testing::Contains;
 using ::testing::IsEmpty;
+using ::testing::Mock;
+
 
 using asapo::TcpServer;
 using asapo::MockIO;
 using asapo::Error;
-
+using asapo::ListSocketDescriptors;
 namespace {
 
 TEST(TCPServer, Constructor) {
@@ -35,25 +37,34 @@ TEST(TCPServer, Constructor) {
 
 }
 
+uint64_t expected_id = 124;
+std::string expected_address = "somehost:123";
+
 class TCPServerTests : public Test {
   public:
-    std::string expected_address = "somehost:123";
-    TcpServer tcp_server{expected_address};
+    TcpServer tcp_server {expected_address};
     NiceMock<MockIO> mock_io;
     NiceMock<asapo::MockLogger> mock_logger;
     asapo::SocketDescriptor expected_master_socket = 1;
-    asapo::ListSocketDescriptors expected_client_sockets{2, 3, 4};
+    ListSocketDescriptors expected_client_sockets{2, 3, 4};
     std::vector<std::string> expected_new_connections = {"test1", "test2"};
-    void SetUp() override {
+  void SetUp() override {
         tcp_server.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         tcp_server.log__ = &mock_logger;
+        for (auto conn : expected_client_sockets) {
+            std::string connected_uri = std::to_string(conn);
+            ON_CALL(mock_io, AddressFromSocket_t(conn)).WillByDefault(Return(connected_uri));
+        }
+
     }
     void TearDown() override {
         tcp_server.io__.release();
     }
     void ExpectListenMaster(bool ok);
-    void WaitSockets(bool ok);
+    void WaitSockets(bool ok, ListSocketDescriptors clients = {});
     void MockReceiveRequest(bool ok );
+    void ExpectReceiveOk();
+    void ExpectReceiveRequestEof();
 };
 
 void TCPServerTests::ExpectListenMaster(bool ok) {
@@ -64,9 +75,10 @@ void TCPServerTests::ExpectListenMaster(bool ok) {
               ));
 }
 
-void TCPServerTests::WaitSockets(bool ok) {
-    EXPECT_CALL(mock_io, WaitSocketsActivity_t(expected_master_socket, _, _, _)).WillOnce(DoAll(
+void TCPServerTests::WaitSockets(bool ok, ListSocketDescriptors clients) {
+    EXPECT_CALL(mock_io, WaitSocketsActivity_t(expected_master_socket, testing::Pointee(clients), _, _)).WillOnce(DoAll(
                 SetArgPointee<2>(expected_new_connections),
+                SetArgPointee<1>(expected_client_sockets),
                 SetArgPointee<3>(ok ? nullptr : asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
                 Return(ok ? expected_client_sockets : asapo::ListSocketDescriptors{})
             ));
@@ -81,7 +93,6 @@ void TCPServerTests::WaitSockets(bool ok) {
         }
     }
 }
-
 
 TEST_F(TCPServerTests, GetNewRequestsInitializesSocket) {
     Error err;
@@ -112,9 +123,41 @@ void TCPServerTests::MockReceiveRequest(bool ok ) {
         );
         if (!ok) {
             std::string connected_uri = std::to_string(conn);
-            EXPECT_CALL(mock_io, AddressFromSocket_t(conn)).WillOnce(Return(connected_uri));
             EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("request"), HasSubstr(connected_uri))));
         }
+    }
+}
+
+void TCPServerTests::ExpectReceiveRequestEof() {
+    for (auto conn : expected_client_sockets) {
+        EXPECT_CALL(mock_io, Receive_t(conn, _, _, _))
+        .WillOnce(
+            DoAll(SetArgPointee<3>(asapo::ErrorTemplates::kEndOfFile.Generate().release()),
+                  Return(0))
+        );
+        EXPECT_CALL(mock_io, CloseSocket_t(conn, _));
+
+        std::string connected_uri = std::to_string(conn);
+        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("connection"), HasSubstr("closed"), HasSubstr(connected_uri))));
+    }
+}
+
+
+ACTION_P(A_ReceiveData, op_code) {
+    ((asapo::GenericRequestHeader*)arg1)->op_code = op_code;
+    ((asapo::GenericRequestHeader*)arg1)->data_id = expected_id;
+}
+
+
+void TCPServerTests::ExpectReceiveOk() {
+    for (auto conn : expected_client_sockets) {
+        EXPECT_CALL(mock_io, Receive_t(conn, _, sizeof(asapo::GenericRequestHeader), _))
+        .WillOnce(
+            DoAll(
+                testing::SetArgPointee<3>(nullptr),
+                A_ReceiveData(asapo::kOpcodeUnknownOp),
+                testing::ReturnArg<2>()
+            ));
     }
 }
 
@@ -138,10 +181,35 @@ TEST_F(TCPServerTests, GetNewRequestsWaitsSocketReceiveFailure) {
 
     auto requests = tcp_server.GetNewRequests(&err);
 
-    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(requests, IsEmpty());
 
-//    ASSERT_THAT(requests, IsEmpty());
+    Mock::VerifyAndClearExpectations(&mock_io);
+
+    WaitSockets(false, expected_client_sockets);
+    tcp_server.GetNewRequests(&err);
+
 }
+
+TEST_F(TCPServerTests, GetNewRequestsReadEof) {
+    Error err;
+    ExpectListenMaster(true);
+    WaitSockets(true);
+    ExpectReceiveRequestEof();
+
+    auto requests = tcp_server.GetNewRequests(&err);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(requests, IsEmpty());
+
+    Mock::VerifyAndClearExpectations(&mock_io);
+
+    WaitSockets(false, {});
+
+    tcp_server.GetNewRequests(&err);
+
+}
+
 
 
 }

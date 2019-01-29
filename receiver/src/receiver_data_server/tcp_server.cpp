@@ -10,19 +10,18 @@ TcpServer::TcpServer(std::string address) : io__{GenerateDefaultIO()}, log__{Get
     address_{std::move(address)} {}
 
 Error TcpServer::InitializeMasterSocketIfNeeded() const noexcept {
-    Error err;
+    Error
+    err;
     if (master_socket_ == kDisconnectedSocketDescriptor) {
         master_socket_ = io__->CreateAndBindIPTCPSocketListener(address_, kMaxPendingConnections, &err);
         if (!err) {
             log__->Info("data server listening on " + address_);
-            sockets_to_listen_.push_back(master_socket_);
         } else {
             log__->Error("dataserver cannot listen on " + address_ + ": " + err->Explain());
         }
     }
     return err;
 }
-
 
 ListSocketDescriptors TcpServer::GetActiveSockets(Error* err) const noexcept {
     std::vector<std::string> new_connections;
@@ -37,6 +36,41 @@ ListSocketDescriptors TcpServer::GetActiveSockets(Error* err) const noexcept {
     return sockets;
 }
 
+void TcpServer::CloseSocket(SocketDescriptor socket) const noexcept {
+    sockets_to_listen_.erase(std::remove(sockets_to_listen_.begin(), sockets_to_listen_.end(), socket),
+                             sockets_to_listen_.end());
+    io__->CloseSocket(socket, nullptr);
+    log__->Debug("connection " + io__->AddressFromSocket(socket) + " closed");
+}
+
+Request TcpServer::ReadRequest(SocketDescriptor socket, Error* err) const noexcept {
+    Request request{(uint64_t) socket, this};
+    io__->Receive(socket, &request.header,
+                  sizeof(GenericRequestHeader), err);
+    if (*err == ErrorTemplates::kEndOfFile) {
+        CloseSocket(socket);
+    } else if (*err) {
+        log__->Error("error getting next request from " + io__->AddressFromSocket(socket) + ": " + (*err)->
+                     Explain()
+                    );
+    }
+    return request;
+}
+
+Requests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noexcept {
+    Requests requests;
+    for (auto client : sockets) {
+        Error
+        err;
+        auto request = ReadRequest(client, &err);
+        if (err) {
+            continue;
+        }
+        requests.emplace_back(std::move(request));
+    }
+    return requests;
+}
+
 Requests TcpServer::GetNewRequests(Error* err) const noexcept {
     if (*err = InitializeMasterSocketIfNeeded()) {
         return {};
@@ -47,20 +81,15 @@ Requests TcpServer::GetNewRequests(Error* err) const noexcept {
         return {};
     }
 
-    for (auto client: sockets) {
-        GenericRequestHeader generic_request_header;
-        io__-> Receive(client, &generic_request_header,
-                       sizeof(GenericRequestHeader), err);
-        if(*err) {
-            log__->Error("error getting next request from " + io__->AddressFromSocket(client) + ": " + (*err)->
-                Explain()
-            );
-            continue;
-        }
+    return ReadRequests(sockets);
+}
+
+TcpServer::~TcpServer() {
+    if (!io__) return; // need for test that override io__ to run
+    for (auto client: sockets_to_listen_) {
+        io__->CloseSocket(client, nullptr);
     }
-
-
-    return {Requests{Request{}}};
+    io__->CloseSocket(master_socket_, nullptr);
 }
 
 

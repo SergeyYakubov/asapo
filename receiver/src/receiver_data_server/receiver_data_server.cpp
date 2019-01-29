@@ -12,6 +12,9 @@ void ReceiverDataServer::Run() {
     while (true) {
         Error err;
         auto requests = net__->GetNewRequests(&err);
+        if (err == IOErrorTemplates::kTimeout) {
+            continue;
+        }
         if (!err) {
             err = request_pool__->AddRequests(requests);
         }

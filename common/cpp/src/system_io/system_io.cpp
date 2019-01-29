@@ -22,7 +22,9 @@
 
 namespace asapo {
 
-const int SystemIO::kNetBufferSize = 1024 * 1024; //* 1024 ; //MiByte
+const int SystemIO::kNetBufferSize = 1024 * 1024;
+const int SystemIO::kWaitTimeoutMs = 1000;
+
 
 /*******************************************************************************
  *                              system_io.cpp                                  *
@@ -628,10 +630,11 @@ ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_sock
 
         timeval timeout;
         timeout.tv_sec = 0;
-        timeout.tv_usec = 1000;
+        timeout.tv_usec = kWaitTimeoutMs;
 
         auto activity = select(max_sd + 1, &readfds, NULL, NULL, &timeout);
         if (activity == 0) { // timeout
+            *err = IOErrorTemplates::kTimeout.Generate();
             return {};
         }
         if ((activity < 0) && (errno != EINTR)) {

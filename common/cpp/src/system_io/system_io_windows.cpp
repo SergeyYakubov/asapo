@@ -18,9 +18,9 @@ namespace asapo {
 
 // use IOInstance and static variable to init window sockets on program start end cleanup on exit
 class IOInstance {
- public:
-  IOInstance();
-  ~IOInstance();
+  public:
+    IOInstance();
+    ~IOInstance();
 };
 static IOInstance instance;
 IOInstance::IOInstance() {
@@ -307,7 +307,7 @@ std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept 
     sockaddr_in client_address{};
     static size_t client_address_size = sizeof(sockaddr_in);
 
-    auto res = getpeername(socket, reinterpret_cast<sockaddr*>(&client_address),(int*) &client_address_size);
+    auto res = getpeername(socket, reinterpret_cast<sockaddr*>(&client_address), (int*) &client_address_size);
     if (res != 0) {
         return GetLastError()->Explain();
     }

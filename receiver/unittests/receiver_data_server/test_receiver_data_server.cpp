@@ -60,6 +60,23 @@ class ReceiverDataServerTests : public Test {
     }
 };
 
+TEST_F(ReceiverDataServerTests, TimeoutGetNewRequests) {
+    EXPECT_CALL(mock_net, GetNewRequests_t(_)).WillOnce(
+        DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kTimeout.Generate().release()),
+              Return(asapo::Requests{})
+             )
+    ).WillOnce(
+        DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+              Return(asapo::Requests{})
+             )
+    );
+
+    EXPECT_CALL(mock_pool, AddRequests_t(_)).Times(0);
+
+    data_server.Run();
+}
+
+
 
 TEST_F(ReceiverDataServerTests, ErrorGetNewRequests) {
     EXPECT_CALL(mock_net, GetNewRequests_t(_)).WillOnce(
