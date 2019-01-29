@@ -86,7 +86,7 @@ Requests TcpServer::GetNewRequests(Error* err) const noexcept {
 
 TcpServer::~TcpServer() {
     if (!io__) return; // need for test that override io__ to run
-    for (auto client: sockets_to_listen_) {
+    for (auto client : sockets_to_listen_) {
         io__->CloseSocket(client, nullptr);
     }
     io__->CloseSocket(master_socket_, nullptr);

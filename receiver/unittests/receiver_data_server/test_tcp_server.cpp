@@ -48,7 +48,7 @@ class TCPServerTests : public Test {
     asapo::SocketDescriptor expected_master_socket = 1;
     ListSocketDescriptors expected_client_sockets{2, 3, 4};
     std::vector<std::string> expected_new_connections = {"test1", "test2"};
-  void SetUp() override {
+    void SetUp() override {
         tcp_server.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         tcp_server.log__ = &mock_logger;
         for (auto conn : expected_client_sockets) {
@@ -143,7 +143,7 @@ void TCPServerTests::ExpectReceiveRequestEof() {
 }
 
 
-ACTION_P(A_ReceiveData, op_code) {
+ACTION_P2(A_ReceiveData, op_code, expected_id) {
     ((asapo::GenericRequestHeader*)arg1)->op_code = op_code;
     ((asapo::GenericRequestHeader*)arg1)->data_id = expected_id;
 }
@@ -155,7 +155,7 @@ void TCPServerTests::ExpectReceiveOk() {
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(nullptr),
-                A_ReceiveData(asapo::kOpcodeUnknownOp),
+                A_ReceiveData(asapo::kOpcodeGetBufferData, conn),
                 testing::ReturnArg<2>()
             ));
     }
@@ -210,6 +210,26 @@ TEST_F(TCPServerTests, GetNewRequestsReadEof) {
 
 }
 
+TEST_F(TCPServerTests, GetNewRequestsReadOk) {
+    Error
+    err;
+    ExpectListenMaster(true);
+    WaitSockets(true);
+    ExpectReceiveOk();
 
+    auto requests = tcp_server.GetNewRequests(&err);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(requests.size(), Eq(3));
+    int i = 0;
+    for (auto conn : expected_client_sockets) {
+        ASSERT_THAT(requests[i].header.data_id, Eq(conn));
+        ASSERT_THAT(requests[i].header.op_code, Eq(asapo::kOpcodeGetBufferData));
+        ASSERT_THAT(requests[i].net_id, Eq(conn));
+        ASSERT_THAT(requests[i].server, Eq(&tcp_server));
+        i++;
+    }
+
+}
 
 }
