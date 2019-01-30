@@ -10,8 +10,7 @@ TcpServer::TcpServer(std::string address) : io__{GenerateDefaultIO()}, log__{Get
     address_{std::move(address)} {}
 
 Error TcpServer::InitializeMasterSocketIfNeeded() const noexcept {
-    Error
-    err;
+    Error err;
     if (master_socket_ == kDisconnectedSocketDescriptor) {
         master_socket_ = io__->CreateAndBindIPTCPSocketListener(address_, kMaxPendingConnections, &err);
         if (!err) {
@@ -26,10 +25,6 @@ Error TcpServer::InitializeMasterSocketIfNeeded() const noexcept {
 ListSocketDescriptors TcpServer::GetActiveSockets(Error* err) const noexcept {
     std::vector<std::string> new_connections;
     auto sockets = io__->WaitSocketsActivity(master_socket_, &sockets_to_listen_, &new_connections, err);
-    if (*err) {
-        return {};
-    }
-
     for (auto& connection : new_connections) {
         log__->Debug("new connection from " + connection);
     }
@@ -39,8 +34,8 @@ ListSocketDescriptors TcpServer::GetActiveSockets(Error* err) const noexcept {
 void TcpServer::CloseSocket(SocketDescriptor socket) const noexcept {
     sockets_to_listen_.erase(std::remove(sockets_to_listen_.begin(), sockets_to_listen_.end(), socket),
                              sockets_to_listen_.end());
-    io__->CloseSocket(socket, nullptr);
     log__->Debug("connection " + io__->AddressFromSocket(socket) + " closed");
+    io__->CloseSocket(socket, nullptr);
 }
 
 Request TcpServer::ReadRequest(SocketDescriptor socket, Error* err) const noexcept {
@@ -66,6 +61,7 @@ Requests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noe
         if (err) {
             continue;
         }
+        log__->Debug("received request opcode: " + std::to_string(request.header.op_code)+" id: "+std::to_string(request.header.data_id));
         requests.emplace_back(std::move(request));
     }
     return requests;

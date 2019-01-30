@@ -33,7 +33,7 @@ int main (int argc, char* argv[]) {
     logger->SetLogLevel(config->log_level);
 
     static const std::string dataserver_address = "0.0.0.0:" + std::to_string(config->dataserver_listen_port);
-    asapo::ReceiverDataServer data_server{dataserver_address};
+    asapo::ReceiverDataServer data_server{dataserver_address, config->log_level};
     std::thread server_thread (&asapo::ReceiverDataServer::Run, &data_server);
 
     static const std::string address = "0.0.0.0:" + std::to_string(config->listen_port);

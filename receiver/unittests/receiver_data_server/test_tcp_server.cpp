@@ -77,7 +77,7 @@ void TCPServerTests::ExpectListenMaster(bool ok) {
 
 void TCPServerTests::WaitSockets(bool ok, ListSocketDescriptors clients) {
     EXPECT_CALL(mock_io, WaitSocketsActivity_t(expected_master_socket, testing::Pointee(clients), _, _)).WillOnce(DoAll(
-                SetArgPointee<2>(expected_new_connections),
+                SetArgPointee<2>(ok ? expected_new_connections:std::vector<std::string>{}),
                 SetArgPointee<1>(expected_client_sockets),
                 SetArgPointee<3>(ok ? nullptr : asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
                 Return(ok ? expected_client_sockets : asapo::ListSocketDescriptors{})
@@ -158,6 +158,8 @@ void TCPServerTests::ExpectReceiveOk() {
                 A_ReceiveData(asapo::kOpcodeGetBufferData, conn),
                 testing::ReturnArg<2>()
             ));
+        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("request"), HasSubstr("id: "+std::to_string(conn)),
+            HasSubstr("opcode: "+std::to_string(asapo::kOpcodeGetBufferData)))));
     }
 }
 

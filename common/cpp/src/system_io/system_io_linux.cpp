@@ -210,7 +210,8 @@ void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const
         ||*/
         setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
         ||
-        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) != 0
+        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) != 0 ||
+        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &flag, sizeof(int)) != 0
     ) {
         *err = GetLastError();
     }

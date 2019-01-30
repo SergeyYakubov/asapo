@@ -11,7 +11,7 @@ namespace asapo {
 
 class ReceiverDataServer {
   public:
-    explicit ReceiverDataServer(std::string address);
+    explicit ReceiverDataServer(std::string address, LogLevel log_level);
     std::unique_ptr<RequestPool> request_pool__;
     std::unique_ptr<NetServer> net__;
     const AbstractLogger* log__;

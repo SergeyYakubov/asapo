@@ -4,8 +4,9 @@
 
 namespace asapo {
 
-ReceiverDataServer::ReceiverDataServer(std::string address) : request_pool__{new RequestPool}, net__{new TcpServer(address)},
+ReceiverDataServer::ReceiverDataServer(std::string address, LogLevel log_level) : request_pool__{new RequestPool}, net__{new TcpServer(address)},
 log__{GetDefaultReceiverDataServerLogger()} {
+    GetDefaultReceiverDataServerLogger()->SetLogLevel(log_level);
 }
 
 void ReceiverDataServer::Run() {
