@@ -17,7 +17,8 @@ set(SOURCE_FILES
         src/receiver_data_server/tcp_server.cpp
         src/receiver_data_server/request_pool.cpp
         src/receiver_data_server/request.cpp
-        src/receiver_data_server/receiver_data_server_logger.cpp)
+        src/receiver_data_server/receiver_data_server_logger.cpp
+        src/data_cache.cpp)
 
 
 ################################
@@ -64,6 +65,7 @@ set(TEST_SOURCE_FILES
         unittests/test_statistics_sender_fluentd.cpp
         unittests/mock_receiver_config.cpp
         unittests/test_requests_dispatcher.cpp
+        unittests/test_datacache.cpp
         )
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")
