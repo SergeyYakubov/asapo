@@ -30,6 +30,9 @@ class DataCache {
   std::deque<CacheMeta> meta_;
   bool SlotTooCloseToCurrentPointer(const CacheMeta& meta);
   bool CleanOldSlots();
+  void* AllocateSlot(uint64_t size);
+  bool CheckAllocationSize(uint64_t size);
+  uint64_t GetNextId();
 };
 
 }

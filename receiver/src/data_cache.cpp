@@ -15,15 +15,7 @@ DataCache::DataCache(uint64_t cache_size, float keepunlocked_ratio) : cache_size
 
 }
 
-void* DataCache::GetFreeSlot(uint64_t size, uint64_t* id) {
-    std::lock_guard<std::mutex> lock{mutex_};
-
-    if (size > cache_size_) {
-        return nullptr;
-    }
-    *id = next_id_;
-    next_id_++;
-
+void* DataCache::AllocateSlot(uint64_t size) {
     auto tmp = cur_pointer_;
 
     if (cur_pointer_ + size > cache_size_) {
@@ -36,9 +28,30 @@ void* DataCache::GetFreeSlot(uint64_t size, uint64_t* id) {
         cur_pointer_ = tmp;
         return nullptr;
     }
+    return addr;
+}
+
+void* DataCache::GetFreeSlot(uint64_t size, uint64_t* id) {
+    std::lock_guard<std::mutex> lock{mutex_};
+
+    if (!CheckAllocationSize(size)) {
+        return nullptr;
+    }
+
+    auto addr = AllocateSlot(size);
+    if (!addr) {
+        return nullptr;
+    }
+
+    *id = GetNextId();
+
     meta_.emplace_back(CacheMeta{*id, addr, size, false});
 
     return addr;
+}
+
+uint64_t DataCache::GetNextId() {
+    return next_id_++;
 }
 
 bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta &meta) {
@@ -66,11 +79,12 @@ void* DataCache::GetSlotToReadAndLock(uint64_t id, uint64_t* size) {
     }
     return nullptr;
 }
+
 bool DataCache::CleanOldSlots() {
     uint64_t last_ok = meta_.size();
     for (int64_t i = last_ok - 1; i >= 0; i--) {
-        uint64_t shift = (uint8_t*) meta_[i].addr - cache_.get();
-        if (shift > cur_pointer_) {
+        uint64_t start_position = (uint8_t*) meta_[i].addr - cache_.get();
+        if (start_position > cur_pointer_) {
             last_ok = i;
         }
     }
@@ -83,6 +97,10 @@ bool DataCache::CleanOldSlots() {
         meta_.erase(meta_.begin(), meta_.begin() + last_ok);
     }
     return true;
+}
+
+bool DataCache::CheckAllocationSize(uint64_t size) {
+    return size <= cache_size_;
 }
 
 }
