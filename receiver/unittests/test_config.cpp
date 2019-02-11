@@ -61,6 +61,9 @@ TEST_F(ConfigTests, ReadSettings) {
     test_config.root_folder = "test_fodler";
     test_config.authorization_interval_ms = 10000;
     test_config.authorization_server = "AuthorizationServer";
+    test_config.use_datacache = false;
+    test_config.datacache_reserved_share = 10;
+    test_config.datacache_size_gb = 2;
 
     auto err = asapo::SetReceiverConfig(test_config);
 
@@ -79,6 +82,9 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->log_level, Eq(asapo::LogLevel::Error));
     ASSERT_THAT(config->tag, Eq("receiver1"));
     ASSERT_THAT(config->root_folder, Eq("test_fodler"));
+    ASSERT_THAT(config->use_datacache, Eq(false));
+    ASSERT_THAT(config->datacache_reserved_share, Eq(10));
+    ASSERT_THAT(config->datacache_size_gb, Eq(2));
 
 }
 

@@ -7,12 +7,13 @@
 #include "io/io.h"
 #include "statistics.h"
 #include "logger/logger.h"
+#include "data_cache.h"
 
 namespace asapo {
 
 class RequestsDispatcher {
   public:
-    RequestsDispatcher(SocketDescriptor socket_fd, std::string address, Statistics* statistics);
+    RequestsDispatcher(SocketDescriptor socket_fd, std::string address, Statistics* statistics, SharedCache cache);
     VIRTUAL Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;
     VIRTUAL std::unique_ptr<Request> GetNextRequest(Error* err) const noexcept;
     Statistics* statistics__;

@@ -8,6 +8,11 @@
   "DataServer": {
     "ListenPort": 23123
   },
+  "DataCache": {
+    "Use": true,
+    "Size": 1,
+    "ReservedShare": 10
+  },
   "Tag": "{{ env "NOMAD_ADDR_recv" }}",
   "WriteToDisk":true,
   "WriteToDb":true,

@@ -6,10 +6,10 @@
 namespace asapo {
 
 RequestsDispatcher::RequestsDispatcher(SocketDescriptor socket_fd, std::string address,
-                                       Statistics* statistics) : statistics__{statistics},
+                                       Statistics* statistics, SharedCache cache) : statistics__{statistics},
     io__{GenerateDefaultIO()},
     log__{GetDefaultReceiverLogger()},
-    request_factory__{new RequestFactory{}},
+    request_factory__{new RequestFactory{cache}},
                   socket_fd_{socket_fd},
 producer_uri_{std::move(address)} {
 }

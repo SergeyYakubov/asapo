@@ -40,6 +40,11 @@ Error SetReceiverConfig (const ReceiverConfig& config) {
     config_string += "," + std::string("\"ListenPort\":") + std::to_string(config.listen_port);
     config_string += "," + std::string("\"DataServer\":{\"ListenPort\":") + std::to_string(
                          config.dataserver_listen_port) + "}";
+    config_string += "," + std::string("\"DataCache\":{");
+    config_string += std::string("\"Use\":") + (config.use_datacache ? "true" : "false") ;
+    config_string += "," + std::string("\"SizeGB\":") + std::to_string(config.datacache_size_gb);
+    config_string += "," + std::string("\"ReservedShare\":") + std::to_string(config.datacache_reserved_share);
+    config_string += "}";
     config_string += "," + std::string("\"AuthorizationInterval\":") + std::to_string(config.authorization_interval_ms);
     config_string += "," + std::string("\"AuthorizationServer\":") + "\"" + config.authorization_server + "\"";
     config_string += "," + std::string("\"WriteToDisk\":") + (config.write_to_disk ? "true" : "false");
@@ -47,8 +52,6 @@ Error SetReceiverConfig (const ReceiverConfig& config) {
     config_string += "," + std::string("\"LogLevel\":") + "\"" + log_level + "\"";
     config_string += "," + std::string("\"Tag\":") + "\"" + config.tag + "\"";
     config_string += "," + std::string("\"RootFolder\":") + "\"" + config.root_folder + "\"";
-
-
     config_string += "}";
 
 

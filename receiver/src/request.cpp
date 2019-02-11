@@ -5,18 +5,26 @@
 namespace asapo {
 
 Request::Request(const GenericRequestHeader& header,
-                 SocketDescriptor socket_fd, std::string origin_uri) : io__{GenerateDefaultIO()}, request_header_(header),
+                 SocketDescriptor socket_fd, std::string origin_uri, DataCache* cache) : io__{GenerateDefaultIO()},
+    cache__{cache}, request_header_(header),
     socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)} {
 }
 
 Error Request::AllocateDataBuffer() {
-    try {
-        data_buffer_.reset(new uint8_t[request_header_.data_size]);
-    } catch(std::exception& e) {
-        auto err = ErrorTemplates::kMemoryAllocationError.Generate();
-        err->Append(e.what());
-        return err;
+    if (cache__ == nullptr) {
+        try {
+            data_buffer_.reset(new uint8_t[request_header_.data_size]);
+        } catch(std::exception& e) {
+            auto err = ErrorTemplates::kMemoryAllocationError.Generate();
+            err->Append(e.what());
+            return err;
+        }
+    } else {
+        uint64_t slot_id;
+        data_ptr = cache__->GetFreeSlot(request_header_.data_size,&slot_id);
     }
+
+
     return nullptr;
 }
 
@@ -25,7 +33,7 @@ Error Request::ReceiveData() {
     if (err) {
         return err;
     }
-    io__->Receive(socket_fd_, data_buffer_.get(), request_header_.data_size, &err);
+    io__->Receive(socket_fd_, GetData(), request_header_.data_size, &err);
     return err;
 }
 
@@ -70,8 +78,13 @@ uint64_t Request::GetDataSize() const {
     return request_header_.data_size;
 }
 
-const FileData& Request::GetData() const {
-    return data_buffer_;
+void* Request::GetData() const {
+    if (cache__) {
+        return data_ptr;
+    } else {
+        return data_buffer_.get();
+    }
+
 }
 
 std::string Request::GetFileName() const {
@@ -107,7 +120,7 @@ std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHea
         request_header, SocketDescriptor socket_fd, std::string origin_uri,
         Error* err) const noexcept {
     *err = nullptr;
-    auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri)}};
+    auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri), cache_.get()}};
     switch (request_header.op_code) {
     case Opcode::kOpcodeTransferData: {
         request->AddHandler(&request_handler_authorize_);
@@ -130,6 +143,8 @@ std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHea
         return nullptr;
     }
 }
+RequestFactory::RequestFactory(SharedCache cache): cache_{cache} {
 
+}
 
 }

@@ -12,6 +12,7 @@
 #include "request_handler_authorize.h"
 
 #include "statistics.h"
+#include "data_cache.h"
 
 #include "preprocessor/definitions.h"
 namespace asapo {
@@ -22,13 +23,14 @@ class Request {
   public:
     VIRTUAL Error Handle(Statistics*);
     ~Request() = default;
-    Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri);
+    Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
+            DataCache* cache);
     VIRTUAL void AddHandler(const RequestHandler*);
     VIRTUAL const RequestHandlerList& GetListHandlers() const;
     VIRTUAL uint64_t GetDataSize() const;
     VIRTUAL uint64_t GetDataID() const;
     VIRTUAL std::string GetFileName() const;
-    VIRTUAL const FileData& GetData() const;
+    VIRTUAL void* GetData() const;
     VIRTUAL Opcode GetOpCode() const;
     VIRTUAL const char* GetMessage() const;
 
@@ -38,12 +40,14 @@ class Request {
     VIRTUAL void SetBeamline(std::string beamline);
     VIRTUAL const std::string& GetBeamline() const;
     std::unique_ptr<IO> io__;
+    DataCache* cache__ = nullptr;
   private:
     Error AllocateDataBuffer();
     Error ReceiveData();
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     FileData data_buffer_;
+    void* data_ptr;
     RequestHandlerList handlers_;
     std::string origin_uri_;
     std::string beamtime_id_;
@@ -52,12 +56,14 @@ class Request {
 
 class RequestFactory {
   public:
+    explicit RequestFactory (SharedCache cache);
     virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                                      SocketDescriptor socket_fd, std::string origin_uri, Error* err) const noexcept;
   private:
     RequestHandlerFileWrite request_handler_filewrite_;
     RequestHandlerDbWrite request_handler_dbwrite_;
     RequestHandlerAuthorize request_handler_authorize_;
+    SharedCache cache_;
 };
 
 }

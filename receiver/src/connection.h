@@ -17,6 +17,7 @@
 #include "statistics.h"
 #include "logger/logger.h"
 #include "requests_dispatcher.h"
+#include "data_cache.h"
 
 namespace asapo {
 
@@ -27,7 +28,7 @@ class Connection {
     int socket_fd_;
   public:
 
-    Connection(SocketDescriptor socket_fd, const std::string& address, std::string receiver_tag);
+    Connection(SocketDescriptor socket_fd, const std::string& address, SharedCache cache, std::string receiver_tag);
     ~Connection() = default;
 
     void Listen() const noexcept;

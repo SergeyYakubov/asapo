@@ -54,7 +54,7 @@ namespace {
 
 TEST(RequestDispatcher, Constructor) {
     auto stat = std::unique_ptr<Statistics> {new Statistics};
-    RequestsDispatcher dispatcher{0,  "some_address", stat.get()};
+    RequestsDispatcher dispatcher{0,  "some_address", stat.get(), nullptr};
     ASSERT_THAT(dynamic_cast<const asapo::Statistics*>(dispatcher.statistics__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(dispatcher.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(dispatcher.request_factory__.get()), Ne(nullptr));
@@ -64,7 +64,7 @@ TEST(RequestDispatcher, Constructor) {
 class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-        Request(request_header, socket_fd, "") {};
+        Request(request_header, socket_fd, "", nullptr) {};
     Error Handle(Statistics* statistics) override {
         return Error{Handle_t()};
     };
@@ -74,6 +74,7 @@ class MockRequest: public Request {
 
 class MockRequestFactory: public asapo::RequestFactory {
   public:
+    MockRequestFactory(): RequestFactory(nullptr) {};
     std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                              SocketDescriptor socket_fd, std::string origin_uri,
                                              Error* err) const noexcept override {
@@ -113,7 +114,7 @@ class RequestsDispatcherTests : public Test {
     void SetUp() override {
         test_config.authorization_interval_ms = 0;
         SetReceiverConfig(test_config);
-        dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statictics}};
+        dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statictics, nullptr}};
         dispatcher->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         dispatcher->statistics__ = &mock_statictics;
         dispatcher->request_factory__ = std::unique_ptr<asapo::RequestFactory> {&mock_factory};

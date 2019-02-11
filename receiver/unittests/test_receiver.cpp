@@ -6,6 +6,7 @@
 #include "../src/receiver.h"
 #include "../src/receiver_error.h"
 #include "../src/connection.h"
+#include "../src/data_cache.h"
 
 using ::testing::Return;
 using ::testing::_;
@@ -23,11 +24,11 @@ using ::asapo::FileDescriptor;
 using ::asapo::ErrorInterface;
 using ::asapo::Connection;
 using ::asapo::SocketDescriptor;
-
+using asapo::DataCache;
 namespace {
 
 TEST(Receiver, Constructor) {
-    asapo::Receiver receiver;
+    asapo::Receiver receiver(nullptr);
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(receiver.log__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(receiver.io__.get()), Ne(nullptr));
 }
@@ -45,7 +46,7 @@ class StartListenerFixture : public testing::Test {
     Error err;
     ::testing::NiceMock<asapo::MockLogger> mock_logger;
     ::testing::NiceMock<asapo::MockIO> mock_io;
-    asapo::Receiver receiver;
+    asapo::Receiver receiver{nullptr};
 
     void SetUp() override {
         err = nullptr;

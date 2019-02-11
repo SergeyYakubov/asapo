@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <memory>
+
 #include "unittests/MockIO.h"
 #include "unittests/MockDatabase.h"
 #include "../src/connection.h"
@@ -50,7 +52,7 @@ namespace {
 
 class FactoryTests : public Test {
   public:
-    RequestFactory factory;
+    RequestFactory factory{nullptr};
     Error err{nullptr};
     GenericRequestHeader generic_request_header;
     ReceiverConfig config;
@@ -116,6 +118,15 @@ TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
     ASSERT_THAT(request->GetListHandlers().size(), Eq(2));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileWrite*>(request->GetListHandlers()[1]), Ne(nullptr));
+}
+
+TEST_F(FactoryTests, CachePassedToRequest) {
+    RequestFactory factory{std::shared_ptr<asapo::DataCache>{new asapo::DataCache{0, 0}}};
+
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(request->cache__, Ne(nullptr));
+
 }
 
 

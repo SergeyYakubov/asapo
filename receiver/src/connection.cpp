@@ -9,11 +9,11 @@
 namespace asapo {
 
 Connection::Connection(SocketDescriptor socket_fd, const std::string& address,
-                       std::string receiver_tag) :
+                       SharedCache cache, std::string receiver_tag) :
     io__{GenerateDefaultIO()},
     statistics__{new Statistics},
              log__{GetDefaultReceiverLogger()},
-requests_dispatcher__{new RequestsDispatcher{socket_fd, address, statistics__.get()}} {
+requests_dispatcher__{new RequestsDispatcher{socket_fd, address, statistics__.get(), cache}}  {
     socket_fd_ = socket_fd;
     address_ = address;
     statistics__->AddTag("connection_from", address);

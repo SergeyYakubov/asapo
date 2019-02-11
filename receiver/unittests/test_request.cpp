@@ -37,7 +37,7 @@ using ::asapo::Connection;
 using ::asapo::MockIO;
 using asapo::Request;
 using asapo::MockStatistics;
-
+using asapo::MockDataCache;
 using asapo::StatisticEntity;
 
 using asapo::ReceiverConfig;
@@ -74,13 +74,14 @@ class RequestTests : public Test {
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;
     asapo::Statistics*  stat;
+    MockDataCache mock_cache;
     void SetUp() override {
         stat = &mock_statistics;
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         generic_request_header.op_code = expected_op_code;
         strcpy(generic_request_header.message, expected_request_message);
-        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri});
+        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
             DoAll(SetArgPointee<3>(nullptr),
@@ -96,7 +97,7 @@ class RequestTests : public Test {
 TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
     generic_request_header.data_size = 0;
     request->io__.release();
-    request.reset(new Request{generic_request_header, socket_fd_, ""});
+    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
@@ -115,6 +116,24 @@ TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
     auto err = request->Handle(stat);
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
 }
+
+
+TEST_F(RequestTests, HandleGetsMemoryFromCache) {
+    request->cache__=&mock_cache;
+
+    EXPECT_CALL(mock_cache, GetFreeSlot(data_size_,_));
+
+    EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillOnce(
+        DoAll(SetArgPointee<3>(new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
+              Return(0)
+        ));
+
+    auto err = request->Handle(stat);
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
+}
+
+
+
 
 
 
@@ -161,14 +180,14 @@ TEST_F(RequestTests, HandleProcessesRequests) {
 }
 
 TEST_F(RequestTests, DataIsNullAtInit) {
-    auto& data = request->GetData();
-    ASSERT_THAT(data.get(), Eq(nullptr));
+    auto data = request->GetData();
+    ASSERT_THAT(data, Eq(nullptr));
 }
 
 TEST_F(RequestTests, GetDataIsNotNullptr) {
 
     request->Handle(stat);
-    auto& data = request->GetData();
+    auto data = request->GetData();
 
 
     ASSERT_THAT(data, Ne(nullptr));

@@ -13,13 +13,13 @@ Error RequestHandlerFileWrite::ProcessRequest(Request* request) const {
         return ReceiverErrorTemplates::kBadRequest.Generate();
     }
 
-    const FileData& data = request->GetData();
+    auto data = request->GetData();
 
     auto fname = request->GetFileName();
     auto root_folder = GetReceiverConfig()->root_folder + kPathSeparator
                        + request->GetBeamline() + kPathSeparator
                        + request->GetBeamtimeId();
-    auto err =  io__->WriteDataToFile(root_folder, fname, data, fsize, true);
+    auto err =  io__->WriteDataToFile(root_folder, fname, (uint8_t*)data, fsize, true);
     if (!err) {
         log__->Debug("saved file of size " + std::to_string(fsize) + " to " + root_folder + fname);
     }

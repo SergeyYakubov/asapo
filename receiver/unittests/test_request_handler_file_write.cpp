@@ -104,9 +104,8 @@ void FileWriteHandlerTests::MockRequestData() {
     .WillOnce(Return(expected_file_size))
     ;
 
-    asapo::FileData data;
     EXPECT_CALL(*mock_request, GetData())
-    .WillOnce(ReturnRef(data))
+    .WillOnce(Return(nullptr))
     ;
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())

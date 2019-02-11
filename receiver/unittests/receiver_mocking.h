@@ -6,6 +6,7 @@
 
 #include "../src/statistics.h"
 #include "../src/request.h"
+#include "../src/data_cache.h"
 
 namespace asapo {
 
@@ -46,18 +47,25 @@ class MockStatistics : public asapo::Statistics {
 class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri):
-        Request(request_header, socket_fd, std::move(origin_uri)) {};
+        Request(request_header, socket_fd, std::move(origin_uri), nullptr) {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetDataSize, uint64_t());
     MOCK_CONST_METHOD0(GetDataID, uint64_t());
-    MOCK_CONST_METHOD0(GetData, const asapo::FileData & ());
+    MOCK_CONST_METHOD0(GetData, void* ());
     MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
     MOCK_CONST_METHOD0(GetBeamline, const std::string & ());
     MOCK_CONST_METHOD0(GetOpCode, asapo::Opcode ());
     MOCK_CONST_METHOD0(GetMessage, const char* ());
     MOCK_METHOD1(SetBeamtimeId, void (std::string));
     MOCK_METHOD1(SetBeamline, void (std::string));
+};
+
+
+class MockDataCache: public DataCache {
+ public:
+  MockDataCache(): DataCache(0,0){};
+  MOCK_METHOD2(GetFreeSlot,void*(uint64_t size, uint64_t* id));
 };
 
 

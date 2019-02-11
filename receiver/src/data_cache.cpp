@@ -5,10 +5,10 @@
 namespace asapo {
 
 DataCache::DataCache(uint64_t cache_size, float keepunlocked_ratio) : cache_size_{cache_size},
-                                                                      keepunlocked_ratio_{keepunlocked_ratio} {
+    keepunlocked_ratio_{keepunlocked_ratio} {
     try {
         cache_.reset(new uint8_t[cache_size]);
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         std::cout << "Cannot allocate data cache: " << e.what() << std::endl;
         exit(1);
     }
@@ -54,7 +54,7 @@ uint64_t DataCache::GetNextId() {
     return next_id_++;
 }
 
-bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta &meta) {
+bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta& meta) {
     uint64_t dist;
     uint64_t shift = (uint8_t*) meta.addr - cache_.get();
     if (shift > cur_pointer_) {
@@ -67,7 +67,7 @@ bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta &meta) {
 
 void* DataCache::GetSlotToReadAndLock(uint64_t id, uint64_t* size) {
     std::lock_guard<std::mutex> lock{mutex_};
-    for (auto& meta: meta_) {
+    for (auto& meta : meta_) {
         if (meta.id == id) {
             if (SlotTooCloseToCurrentPointer(meta)) {
                 return nullptr;

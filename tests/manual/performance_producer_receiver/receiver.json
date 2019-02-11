@@ -8,6 +8,11 @@
   "DataServer": {
     "ListenPort": 23123
   },
+  "DataCache": {
+    "Use": true,
+    "Size": 1,
+    "ReservedShare": 10
+  },
   "WriteToDisk":true,
   "WriteToDb":true,
   "LogLevel":"info",

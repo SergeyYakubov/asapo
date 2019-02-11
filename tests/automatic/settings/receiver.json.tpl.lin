@@ -5,6 +5,11 @@
   "DataServer": {
     "ListenPort": 23123
   },
+  "DataCache": {
+    "Use": true,
+    "Size": 1,
+    "ReservedShare": 10
+  },
   "AuthorizationServer": "localhost:8400/authorizer",
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},

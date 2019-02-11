@@ -61,7 +61,8 @@ Requests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noe
         if (err) {
             continue;
         }
-        log__->Debug("received request opcode: " + std::to_string(request.header.op_code)+" id: "+std::to_string(request.header.data_id));
+        log__->Debug("received request opcode: " + std::to_string(request.header.op_code) + " id: " + std::to_string(
+                         request.header.data_id));
         requests.emplace_back(std::move(request));
     }
     return requests;

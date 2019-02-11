@@ -18,6 +18,9 @@ struct ReceiverConfig {
     uint64_t authorization_interval_ms = 0;
     bool write_to_disk = false;
     bool write_to_db = false;
+    bool use_datacache = true;
+    uint64_t datacache_size_gb = 0;
+    uint64_t datacache_reserved_share = 0;
     LogLevel log_level = LogLevel::Info;
     std::string tag;
 };
