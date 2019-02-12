@@ -50,35 +50,35 @@ TEST_F(DataCacheTests, GetFreeSlotOK) {
     uint8_t* addr = (uint8_t*) cache.GetFreeSlot(1, &id);
     set_array(addr, 1, 2);
     ASSERT_THAT(addr[0], Eq(2));
-    ASSERT_THAT(id, Eq(1));
+    ASSERT_THAT(id, Gt(0));
 }
 
 TEST_F(DataCacheTests, GetFreeSlotStartsFromLastPointer) {
-    uint64_t id;
-    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlot(1, &id);
+    uint64_t id1, id2;
+    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlot(1, &id1);
     set_array(ini_addr, 1, 2);
-    uint8_t* addr = (uint8_t*) cache.GetFreeSlot(1, &id);
+    uint8_t* addr = (uint8_t*) cache.GetFreeSlot(1, &id2);
     set_array(addr, 1, 1);
     ASSERT_THAT(ini_addr[0], Eq(2));
     ASSERT_THAT(ini_addr[1], Eq(1));
-    ASSERT_THAT(id, Eq(2));
+    ASSERT_THAT(id1, Ne(id2));
 }
 
 
 TEST_F(DataCacheTests, GetFreeSlotStartsFromBeginIfNotFit) {
-    uint64_t id;
-    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlot(1, &id);
+    uint64_t id1, id2;
+    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlot(1, &id1);
     set_array(ini_addr, 1, 2);
-    uint8_t* addr = (uint8_t*) cache.GetFreeSlot(expected_cache_size, &id);
+    uint8_t* addr = (uint8_t*) cache.GetFreeSlot(expected_cache_size, &id2);
     set_array(addr, expected_cache_size, 1);
     ASSERT_THAT(ini_addr[0], Eq(1));
-    ASSERT_THAT(id, Eq(2));
+    ASSERT_THAT(id1, Ne(id2));
 }
 
 
 TEST_F(DataCacheTests, PrepareToReadIdNotFound) {
     uint64_t size, id;
-    id = -1;
+    id = 0;
     uint8_t* addr = (uint8_t*) cache.GetSlotToReadAndLock(id, &size);
     ASSERT_THAT(addr, Eq(nullptr));
 }
@@ -139,6 +139,40 @@ TEST_F(DataCacheTests, CannotGetFreeSlotIfNeedCleanOnebeingReaded) {
     ASSERT_THAT(res, Ne(nullptr));
     ASSERT_THAT(ini_addr, Ne(nullptr));
     ASSERT_THAT(addr, Eq(nullptr));
+}
+
+
+TEST_F(DataCacheTests, GetFreeSlotCheckIds) {
+    uint64_t id1, id2, id3, id4;
+    cache.GetFreeSlot(10, &id1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    cache.GetFreeSlot(10, &id2);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    cache.GetFreeSlot(10, &id3);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    cache.GetFreeSlot(10, &id4);
+
+    auto c1 = static_cast<uint32_t>(id1);
+    auto c2 = static_cast<uint32_t>(id2);
+    auto c3 = static_cast<uint32_t>(id3);
+    auto c4 = static_cast<uint32_t>(id4);
+
+    auto t1 = id1 >> 32;
+    auto t2 = id2 >> 32;
+    auto t3 = id3 >> 32;
+    auto t4 = id4 >> 32;
+
+    ASSERT_THAT(c2, Eq(c1 + 1));
+    ASSERT_THAT(c3, Eq(c2 + 1));
+    ASSERT_THAT(c4, Eq(c3 + 1));
+
+    ASSERT_THAT(t2 - t1, Ge(100));
+    ASSERT_THAT(t2 - t1, Le(200));
+
+    ASSERT_THAT(t3 - t2, Ge(10));
+    ASSERT_THAT(t3 - t2, Le(20));
+
+    ASSERT_THAT(t4 - t3, Ge(1));
 }
 
 

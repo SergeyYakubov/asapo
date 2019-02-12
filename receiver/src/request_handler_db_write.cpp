@@ -2,6 +2,8 @@
 #include "request.h"
 #include "receiver_config.h"
 #include "receiver_logger.h"
+#include "io/io_factory.h"
+
 
 namespace asapo {
 
@@ -18,8 +20,12 @@ Error RequestHandlerDbWrite::ProcessRequest(Request* request) const {
     file_info.name = request->GetFileName();
     file_info.size = request->GetDataSize();
     file_info.id = request->GetDataID();
-    // todo: create flag ignore dups, allow dups for attempts to resend data
-    auto err =  db_client__->Insert(file_info, true);
+    Error err;
+    auto hostname = GetHostName(&err);
+    if (err) {
+        return err;
+    }
+    err =  db_client__->Insert(file_info, true);
     if (!err) {
         log__->Debug(std::string{"insert record id "} + std::to_string(file_info.id) + " to " + kDBCollectionName + " in " +
                      db_name_ +
@@ -28,7 +34,7 @@ Error RequestHandlerDbWrite::ProcessRequest(Request* request) const {
     return err;
 }
 
-RequestHandlerDbWrite::RequestHandlerDbWrite(): log__{GetDefaultReceiverLogger()}  {
+RequestHandlerDbWrite::RequestHandlerDbWrite(): log__{GetDefaultReceiverLogger()},io__{GenerateDefaultIO()} {
     DatabaseFactory factory;
     Error err;
     db_client__ = factory.Create(&err);
@@ -50,5 +56,13 @@ Error RequestHandlerDbWrite::ConnectToDbIfNeeded() const {
     return nullptr;
 }
 
+const std::string& RequestHandlerDbWrite::GetHostName(Error* err) const {
+    if (hostname_.empty()) {
+        hostname_ = io__->GetHostName(err);
+    } else {
+        *err = nullptr;
+    }
+    return hostname_;
+}
 
 }

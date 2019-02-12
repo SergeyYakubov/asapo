@@ -26,7 +26,7 @@ class DataCache {
   private:
     uint64_t cache_size_;
     float keepunlocked_ratio_;
-    uint64_t next_id_ = 1;
+    uint32_t counter_;
     uint64_t cur_pointer_ = 0;
     std::unique_ptr<uint8_t[]> cache_;
     std::mutex mutex_;

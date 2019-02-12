@@ -1,6 +1,7 @@
 #include "data_cache.h"
 
 #include <iostream>
+#include <chrono>
 
 namespace asapo {
 
@@ -13,6 +14,8 @@ DataCache::DataCache(uint64_t cache_size, float keepunlocked_ratio) : cache_size
         exit(1);
     }
 
+    srand(time(NULL));
+    counter_ = rand() % 100 + 1;
 }
 
 void* DataCache::AllocateSlot(uint64_t size) {
@@ -51,7 +54,10 @@ void* DataCache::GetFreeSlot(uint64_t size, uint64_t* id) {
 }
 
 uint64_t DataCache::GetNextId() {
-    return next_id_++;
+    counter_++;
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    uint32_t timeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    return (uint64_t)timeMillis << 32 | counter_;
 }
 
 bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta& meta) {

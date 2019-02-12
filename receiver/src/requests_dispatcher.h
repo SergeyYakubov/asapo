@@ -28,16 +28,3 @@ class RequestsDispatcher {
 }
 
 #endif //ASAPO_REQUESTS_DISPATCHER_H
-
-
-/*
-    mutable bool auth_header_was_read_ = false;
-    Error ReadAuthorizationHeaderIfNeeded() const;
-    Error SendAuthorizationResponseIfNeeded(const Error& auth_err) const;
-    Error AuthorizeIfNeeded() const;
-    std::unique_ptr<Request> WaitForNewRequest(Error* err) const noexcept;
-    Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;
-    void ProcessStatisticsAfterRequest(const std::unique_ptr<Request>& request) const noexcept;
-    mutable std::string beamtime_id_;
-
- */

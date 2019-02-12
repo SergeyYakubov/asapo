@@ -61,16 +61,19 @@ class DbWriterHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
+    std::string expected_hostname = "host";
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
+        handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, ""});
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
     }
     void TearDown() override {
         handler.db_client__.release();
+        handler.io__.release();
     }
 
 
@@ -80,7 +83,7 @@ TEST(DBWritewr, Constructor) {
     RequestHandlerDbWrite handler;
     ASSERT_THAT(dynamic_cast<asapo::MongoDBClient*>(handler.db_client__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(handler.log__), Ne(nullptr));
-
+    ASSERT_THAT(dynamic_cast<asapo::IO*>(handler.io__.get()), Ne(nullptr));
 }
 
 
@@ -116,6 +119,36 @@ TEST_F(DbWriterHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
     ASSERT_THAT(err, Ne(nullptr));
 
 }
+
+TEST_F(DbWriterHandlerTests, ProcessRequestDoesCallsGetHostnameOnce) {
+
+    EXPECT_CALL(mock_io, GetHostName_t(_)).
+    WillOnce(
+        DoAll(SetArgPointee<0>(nullptr),
+              Return(expected_hostname)
+        ));
+
+    auto err1 = handler.ProcessRequest(mock_request.get());
+    auto err2 = handler.ProcessRequest(mock_request.get());
+    ASSERT_THAT(err1, Eq(nullptr));
+    ASSERT_THAT(err2, Eq(nullptr));
+
+}
+
+
+TEST_F(DbWriterHandlerTests, ProcessRequestErrorGetHostName) {
+
+    EXPECT_CALL(mock_io, GetHostName_t(_)).
+        WillOnce(
+        DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+              Return("")
+        ));
+
+    auto err = handler.ProcessRequest(mock_request.get());
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
+
+}
+
 
 
 TEST_F(DbWriterHandlerTests, ProcessRequestDoesNotCallConnectSecondTime) {

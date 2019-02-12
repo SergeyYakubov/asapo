@@ -110,6 +110,7 @@ class IO {
     virtual std::string     ReadFileToString        (const std::string& fname, Error* err) const = 0;
     virtual Error GetLastError() const = 0;
     virtual std::string AddressFromSocket(SocketDescriptor socket) const noexcept = 0;
+    virtual std::string     GetHostName(Error* err) const noexcept = 0;
 };
 
 }

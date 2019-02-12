@@ -6,11 +6,13 @@
 #include <cstring>
 #include <algorithm>
 
+
 #if defined(__linux__) || defined (__APPLE__)
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <unistd.h>
 #endif
 
 #ifdef __APPLE__
@@ -664,5 +666,15 @@ ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_sock
     return active_sockets;
 }
 
+std::string SystemIO::GetHostName(Error* err) const noexcept {
+    char host[1024];
+    gethostname(host, sizeof(host));
+    *err = GetLastError();
+    if (*err) {
+        return "";
+    } else {
+        return host;
+    }
+}
 
 }

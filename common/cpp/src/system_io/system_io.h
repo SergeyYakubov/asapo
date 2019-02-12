@@ -103,6 +103,7 @@ class SystemIO final : public IO {
     size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const;
     void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const;
     void            CloseSocket(SocketDescriptor socket_fd, Error* err) const;
+    std::string     GetHostName(Error* err) const noexcept override;
 
     /*
      * Filesystem

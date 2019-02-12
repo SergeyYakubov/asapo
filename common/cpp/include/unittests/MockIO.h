@@ -9,6 +9,16 @@ namespace asapo {
 class MockIO : public IO {
   public:
 
+    std::string GetHostName(Error* err) const noexcept override {
+        ErrorInterface* error = nullptr;
+        auto res = GetHostName_t(&error);
+        err->reset(error);
+        return res;
+
+    }
+    MOCK_CONST_METHOD1(GetHostName_t, std::string(ErrorInterface** err));
+
+
     std::string AddressFromSocket(SocketDescriptor socket) const noexcept override {
         return AddressFromSocket_t(socket);
     }
