@@ -41,8 +41,9 @@ class Request {
     VIRTUAL const std::string& GetBeamline() const;
     std::unique_ptr<IO> io__;
     DataCache* cache__ = nullptr;
+    VIRTUAL uint64_t GetSlotId();
   private:
-    Error AllocateDataBuffer();
+    Error PrepareDataBuffer();
     Error ReceiveData();
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
@@ -52,6 +53,7 @@ class Request {
     std::string origin_uri_;
     std::string beamtime_id_;
     std::string beamline_;
+    uint64_t slot_id_{0};
 };
 
 class RequestFactory {

@@ -92,7 +92,7 @@ TEST_F(DbWriterHandlerTests, CheckStatisticEntity) {
 
 TEST_F(DbWriterHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
     config.broker_db_uri = "127.0.0.1:27017";
-    SetReceiverConfig(config);
+    SetReceiverConfig(config, "none");
 
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
@@ -138,7 +138,7 @@ MATCHER_P(CompareFileInfo, file, "") {
 
 TEST_F(DbWriterHandlerTests, CallsInsert) {
     config.broker_db_uri = "127.0.0.1:27017";
-    SetReceiverConfig(config);
+    SetReceiverConfig(config, "none");
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
     .WillOnce(ReturnRef(expected_beamtime_id))

@@ -7,7 +7,7 @@
   },
   "DataCache": {
     "Use": true,
-    "Size": 1,
+    "SizeGB": 1,
     "ReservedShare": 10
   },
   "AuthorizationServer": "localhost:8400/authorizer",

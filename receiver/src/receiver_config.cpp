@@ -3,6 +3,8 @@
 #include "io/io_factory.h"
 #include "json_parser/json_parser.h"
 
+#include <iostream>
+
 namespace asapo {
 
 ReceiverConfig config;
@@ -28,8 +30,9 @@ Error ReceiverConfigFactory::SetConfigFromFile(std::string file_name) {
     (err = parser.GetString("AuthorizationServer", &config.authorization_server)) ||
     (err = parser.GetUInt64("AuthorizationInterval", &config.authorization_interval_ms)) ||
     (err = parser.GetString("RootFolder", &config.root_folder)) ||
-    (err = parser.GetString("MonitorDbName", &config.monitor_db_name));
+    (err = parser.GetString("MonitorDbName", &config.monitor_db_name)) ||
     (err = parser.GetString("LogLevel", &log_level));
+
     if (err) {
         return err;
     }

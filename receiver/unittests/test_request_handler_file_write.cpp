@@ -126,7 +126,7 @@ TEST_F(FileWriteHandlerTests, CallsWriteFile) {
     asapo::ReceiverConfig test_config;
     test_config.root_folder = "test_folder";
 
-    asapo::SetReceiverConfig(test_config);
+    asapo::SetReceiverConfig(test_config, "none");
 
     MockRequestData();
 

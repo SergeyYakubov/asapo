@@ -63,9 +63,9 @@ class MockRequest: public Request {
 
 
 class MockDataCache: public DataCache {
- public:
-  MockDataCache(): DataCache(0,0){};
-  MOCK_METHOD2(GetFreeSlot,void*(uint64_t size, uint64_t* id));
+  public:
+    MockDataCache(): DataCache(0, 0) {};
+    MOCK_METHOD2(GetFreeSlot, void* (uint64_t size, uint64_t* id));
 };
 
 

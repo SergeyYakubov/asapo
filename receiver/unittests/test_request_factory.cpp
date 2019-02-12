@@ -61,7 +61,7 @@ class FactoryTests : public Test {
         generic_request_header.op_code = asapo::Opcode::kOpcodeTransferData;
         config.write_to_disk = true;
         config.write_to_db = true;
-        SetReceiverConfig(config);
+        SetReceiverConfig(config, "none");
     }
     void TearDown() override {
     }
@@ -99,7 +99,7 @@ TEST_F(FactoryTests, ReturnsDataRequestForAuthorizationCode) {
 TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWanted) {
     config.write_to_disk = false;
 
-    SetReceiverConfig(config);
+    SetReceiverConfig(config, "none");
 
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
@@ -111,7 +111,7 @@ TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWanted) {
 TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
     config.write_to_db = false;
 
-    SetReceiverConfig(config);
+    SetReceiverConfig(config, "none");
 
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));

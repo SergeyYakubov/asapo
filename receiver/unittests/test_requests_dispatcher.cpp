@@ -113,7 +113,7 @@ class RequestsDispatcherTests : public Test {
     GenericNetworkResponse response;
     void SetUp() override {
         test_config.authorization_interval_ms = 0;
-        SetReceiverConfig(test_config);
+        SetReceiverConfig(test_config, "none");
         dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statictics, nullptr}};
         dispatcher->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         dispatcher->statistics__ = &mock_statictics;

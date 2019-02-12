@@ -10,7 +10,7 @@
   },
   "DataCache": {
     "Use": true,
-    "Size": 1,
+    "SizeGB": 1,
     "ReservedShare": 10
   },
   "WriteToDisk":true,

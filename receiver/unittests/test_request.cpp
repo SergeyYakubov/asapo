@@ -60,13 +60,13 @@ class MockReqestHandler : public asapo::RequestHandler {
 
 };
 
-
 class RequestTests : public Test {
   public:
     GenericRequestHeader generic_request_header;
     asapo::SocketDescriptor socket_fd_{1};
     uint64_t data_size_ {100};
     uint64_t data_id_{15};
+    uint64_t expected_slot_id{16};
     std::string expected_origin_uri = "origin_uri";
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     char expected_request_message[asapo::kMaxMessageSize] = "test message";
@@ -119,22 +119,30 @@ TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
 
 
 TEST_F(RequestTests, HandleGetsMemoryFromCache) {
-    request->cache__=&mock_cache;
+    request->cache__ = &mock_cache;
 
-    EXPECT_CALL(mock_cache, GetFreeSlot(data_size_,_));
-
-    EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillOnce(
-        DoAll(SetArgPointee<3>(new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
-              Return(0)
-        ));
-
+    EXPECT_CALL(mock_cache, GetFreeSlot(data_size_, _)).WillOnce(
+        DoAll(SetArgPointee<1>(expected_slot_id),
+              Return(&mock_cache)
+             ));
     auto err = request->Handle(stat);
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
+
+    ASSERT_THAT(request->GetSlotId(), Eq(expected_slot_id));
 }
 
 
+TEST_F(RequestTests, ErrorGetMemoryFromCache) {
+    request->cache__ = &mock_cache;
 
+    EXPECT_CALL(mock_cache, GetFreeSlot(data_size_, _)).WillOnce(
+        Return(nullptr)
+    );
 
+    auto err = request->Handle(stat);
+
+    ASSERT_THAT(request->GetSlotId(), Eq(0));
+    ASSERT_THAT(err, Eq(asapo::ErrorTemplates::kMemoryAllocationError));
+}
 
 
 TEST_F(RequestTests, HandleMeasuresTimeOnDataReceive) {
@@ -150,8 +158,6 @@ TEST_F(RequestTests, HandleMeasuresTimeOnDataReceive) {
 
     request->Handle(stat);
 }
-
-
 
 
 TEST_F(RequestTests, HandleProcessesRequests) {

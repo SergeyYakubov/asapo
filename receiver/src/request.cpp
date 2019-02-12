@@ -10,7 +10,7 @@ Request::Request(const GenericRequestHeader& header,
     socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)} {
 }
 
-Error Request::AllocateDataBuffer() {
+Error Request::PrepareDataBuffer() {
     if (cache__ == nullptr) {
         try {
             data_buffer_.reset(new uint8_t[request_header_.data_size]);
@@ -21,15 +21,18 @@ Error Request::AllocateDataBuffer() {
         }
     } else {
         uint64_t slot_id;
-        data_ptr = cache__->GetFreeSlot(request_header_.data_size,&slot_id);
+        data_ptr = cache__->GetFreeSlot(request_header_.data_size, &slot_id);
+        if (data_ptr) {
+            slot_id_ = slot_id;
+        } else {
+            return ErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
+        }
     }
-
-
     return nullptr;
 }
 
 Error Request::ReceiveData() {
-    auto err = AllocateDataBuffer();
+    auto err = PrepareDataBuffer();
     if (err) {
         return err;
     }
@@ -114,6 +117,9 @@ void Request::SetBeamline(std::string beamline) {
 
 const std::string& Request::GetBeamline() const {
     return beamline_;
+}
+uint64_t Request::GetSlotId() {
+    return slot_id_;
 }
 
 std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&

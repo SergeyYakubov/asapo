@@ -66,7 +66,7 @@ class SenderInfluxDbTests : public Test {
 
         config.monitor_db_uri = "test_uri";
         config.monitor_db_name = "test_name";
-        SetReceiverConfig(config);
+        SetReceiverConfig(config, "none");
 
         sender.httpclient__.reset(&mock_http_client);
         sender.log__ = &mock_logger;

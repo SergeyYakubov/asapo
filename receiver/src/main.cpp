@@ -20,20 +20,21 @@ asapo::Error ReadConfigFile(int argc, char* argv[]) {
     return factory.SetConfigFromFile(argv[1]);
 }
 
-void StartDataServer(const asapo::ReceiverConfig* config, asapo::SharedCache cache) {
+std::thread StartDataServer(const asapo::ReceiverConfig* config, asapo::SharedCache cache) {
     static const std::string dataserver_address = "0.0.0.0:" + std::to_string(config->dataserver_listen_port);
-    asapo::ReceiverDataServer data_server{dataserver_address, config->log_level};
-    std::thread server_thread (&asapo::ReceiverDataServer::Run, &data_server);
-
+    return std::thread([config] {
+        asapo::ReceiverDataServer data_server{dataserver_address, config->log_level};
+        data_server.Run();
+    });
 }
 
 int StartReceiver(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
                   asapo::AbstractLogger* logger) {
     static const std::string address = "0.0.0.0:" + std::to_string(config->listen_port);
 
-    auto* receiver = new asapo::Receiver(cache);
 
     logger->Info(std::string("starting receiver, version ") + asapo::kVersion);
+    auto* receiver = new asapo::Receiver(cache);
     logger->Info("listening on " + address);
 
     asapo::Error err;
@@ -65,7 +66,7 @@ int main (int argc, char* argv[]) {
         cache.reset(new asapo::DataCache{config->datacache_size_gb * 1024 * 1024 * 1024, (float)config->datacache_reserved_share / 100});
     }
 
-    StartDataServer(config, cache);
-    return StartReceiver(config, cache, logger);
-
+    auto data_thread = StartDataServer(config, cache);
+    auto exit_code = StartReceiver(config, cache, logger);
+    return exit_code;
 }

@@ -64,7 +64,7 @@ class SenderFluentdTests : public Test {
 
         config.monitor_db_uri = "test_uri";
         config.monitor_db_name = "test_name";
-        SetReceiverConfig(config);
+        SetReceiverConfig(config, "none");
 
         sender.statistics_log__.reset(&mock_logger);
 

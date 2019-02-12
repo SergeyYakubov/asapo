@@ -6,7 +6,7 @@
 
 namespace asapo {
 
-Error SetReceiverConfig (const ReceiverConfig& config);
+Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field);
 
 }
 
