@@ -43,7 +43,7 @@ nomad run receiver.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
-sleep 1
+sleep 3
 
 #producer
 mkdir -p ${receiver_folder1}
@@ -53,5 +53,5 @@ $1 localhost:8400 ${beamtime_id2} 100 900 4 0 100 &
 #producerid=`echo $!`
 
 
-$2 ${proxy_address} ${beamtime_id1} 2 $token1 1000 | grep "Processed 1000 file(s)"
-$2 ${proxy_address} ${beamtime_id2} 2 $token2 1000 | grep "Processed 900 file(s)"
+$2 ${proxy_address} ${beamtime_id1} 2 $token1 1000 | tee /dev/stderr | grep "Processed 1000 file(s)"
+$2 ${proxy_address} ${beamtime_id2} 2 $token2 1000 | tee /dev/stderr | grep "Processed 900 file(s)"

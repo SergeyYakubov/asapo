@@ -33,7 +33,7 @@ sleep 1
 
 $1 localhost:8400 ${beamtime_id} 100 112 4  0 100
 
-sleep 1
+sleep 2
 
 # should be 116 requests (112 data transfers and 4 authorizations)
-influx -execute "select sum(n_requests) from statistics" -database=${database_name} -format=json  | jq .results[0].series[0].values[0][1] | grep 116
+influx -execute "select sum(n_requests) from statistics" -database=${database_name} -format=json  | jq .results[0].series[0].values[0][1] | tee /dev/stderr | grep 116
