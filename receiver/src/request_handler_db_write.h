@@ -16,7 +16,9 @@ class RequestHandlerDbWrite final: public RequestHandler {
     Error ProcessRequest(Request* request) const override;
     std::unique_ptr<Database> db_client__;
     const AbstractLogger* log__;
- private:
+  private:
+    FileInfo PrepareFileInfo(const Request* request) const;
+    Error InsertRecordToDb(const Request* request) const;
     Error ConnectToDbIfNeeded() const;
     mutable bool connected_to_db = false;
     mutable std::string db_name_;

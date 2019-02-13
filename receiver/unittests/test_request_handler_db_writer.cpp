@@ -61,6 +61,8 @@ class DbWriterHandlerTests : public Test {
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_hostname = "host";
+    uint64_t expected_port = 1234;
+    uint64_t expected_buf_id = 18446744073709551615ull;
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
@@ -127,6 +129,8 @@ TEST_F(DbWriterHandlerTests, ProcessRequestDoesNotCallConnectSecondTime) {
 
 MATCHER_P(CompareFileInfo, file, "") {
     if (arg.size != file.size) return false;
+    if (arg.source != file.source) return false;
+    if (arg.buf_id != file.buf_id) return false;
     if (arg.name != file.name) return false;
     if (arg.id != file.id) return false;
 
@@ -136,11 +140,19 @@ MATCHER_P(CompareFileInfo, file, "") {
 
 TEST_F(DbWriterHandlerTests, CallsInsert) {
     config.broker_db_uri = "127.0.0.1:27017";
+    config.source_host = expected_hostname;
+    config.listen_port = expected_port;
+
     SetReceiverConfig(config, "none");
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
+
+    EXPECT_CALL(*mock_request, GetSlotId())
+    .WillOnce(Return(expected_buf_id))
+    ;
+
 
     EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, expected_beamtime_id, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
@@ -164,6 +176,8 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     file_info.size = expected_file_size;
     file_info.name = expected_file_name;
     file_info.id = expected_id;
+    file_info.buf_id = expected_buf_id;
+    file_info.source = expected_hostname + ":" + std::to_string(expected_port);
 
 
     EXPECT_CALL(mock_db, Insert_t(CompareFileInfo(file_info), _)).

@@ -93,11 +93,12 @@ void MongoDBClient::CleanUp() {
 }
 
 bson_p PrepareBsonDocument(const FileInfo& file, Error* err) {
+    bson_error_t mongo_err;
     auto s = file.Json();
     auto json = reinterpret_cast<const uint8_t*>(s.c_str());
-    auto bson = bson_new_from_json(json, -1, nullptr);
+    auto bson = bson_new_from_json(json, -1, &mongo_err);
     if (!bson) {
-        *err = TextError(DBError::kInsertError);
+        *err = TextError(std::string(DBError::kInsertError) + ": " + mongo_err.message);
         return nullptr;
     }
 

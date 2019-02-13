@@ -118,7 +118,7 @@ void Request::SetBeamline(std::string beamline) {
 const std::string& Request::GetBeamline() const {
     return beamline_;
 }
-uint64_t Request::GetSlotId() {
+uint64_t Request::GetSlotId() const {
     return slot_id_;
 }
 

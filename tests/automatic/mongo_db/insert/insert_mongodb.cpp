@@ -42,6 +42,8 @@ int main(int argc, char* argv[]) {
     fi.name = "relpath/1";
     fi.id = args.file_id;
     fi.modify_date = std::chrono::system_clock::now();
+    fi.buf_id = 18446744073709551615ull;
+    fi.source = "host:1234";
 
     if (args.keyword != "Notconnected") {
         db.Connect("127.0.0.1", "data", "test");

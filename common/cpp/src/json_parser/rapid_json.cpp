@@ -3,13 +3,15 @@
 
 using namespace rapidjson;
 
+#include <iostream>
+
 namespace asapo {
 
-RapidJson::RapidJson(const std::string& json, const std::unique_ptr<IO>* io): io__{io}, json_{json} {
+RapidJson::RapidJson(const std::string& json, const std::unique_ptr<IO>* io) : io__{io}, json_{json} {
 
 }
 
-Error RapidJson::LazyInitialize()const noexcept {
+Error RapidJson::LazyInitialize() const noexcept {
     if (embedded_error_) {
         return TextError(embedded_error_->Explain());
     }
@@ -26,7 +28,7 @@ Error RapidJson::LazyInitialize()const noexcept {
         }
     }
 
-    if ( doc_.Parse(str.c_str()).HasParseError()) {
+    if (doc_.Parse(str.c_str()).HasParseError()) {
         return TextError("Cannot parse document");
     }
 
@@ -46,6 +48,9 @@ asapo::Error RapidJson::CheckValueType(const std::string& name, ValueType type, 
         res = val->IsString();
         break;
     case ValueType::kUint64:
+        res = val->IsUint64();
+        break;
+    case ValueType::kInt64:
         res = val->IsInt64();
         break;
     case ValueType::kBool:
@@ -62,27 +67,46 @@ asapo::Error RapidJson::CheckValueType(const std::string& name, ValueType type, 
     return nullptr;
 }
 
-
-asapo::Error RapidJson::GetValuePointer(const std::string& name, ValueType type, Value** val)const noexcept {
+asapo::Error RapidJson::GetValuePointer(const std::string& name, ValueType type, Value** val) const noexcept {
     if (Error err = LazyInitialize()) {
         return err;
     }
 
     auto iterator = object_p_->FindMember(name.c_str());
     if (iterator == object_p_->MemberEnd()) {
-        return  TextError("cannot find: " + name);
+        return TextError("cannot find: " + name);
     }
 
-    *val =  &iterator->value;
+    *val = &iterator->value;
     return CheckValueType(name, type, *val);
 }
 
+Error RapidJson::GetInt64(const std::string& name, int64_t* val) const noexcept {
+    Value* json_val;
+    if (Error err = GetValuePointer(name, ValueType::kInt64, &json_val)) {
+        return err;
+    }
+    *val = json_val->GetInt64();
+    return nullptr;
+}
+
 Error RapidJson::GetUInt64(const std::string& name, uint64_t* val) const noexcept {
+    int64_t val_int64;
+
+    Error err = GetInt64(name, &val_int64);
+    if (!initialized_) {
+        return err;
+    }
+    if (err == nullptr) {
+        *val = static_cast<uint64_t>(val_int64);
+        return nullptr;
+    }
+
     Value* json_val;
     if (Error err = GetValuePointer(name, ValueType::kUint64, &json_val)) {
         return err;
     }
-    *val = json_val->GetInt64();
+    *val = json_val->GetUint64();
     return nullptr;
 }
 
@@ -104,7 +128,6 @@ Error RapidJson::GetString(const std::string& name, std::string* val) const noex
     return nullptr;
 }
 
-
 Error RapidJson::GetArrayUInt64(const std::string& name, std::vector<uint64_t>* val) const noexcept {
     Value* json_val;
     if (Error err = GetValuePointer(name, ValueType::kArray, &json_val)) {
@@ -113,10 +136,10 @@ Error RapidJson::GetArrayUInt64(const std::string& name, std::vector<uint64_t>* 
 
     val->clear();
     for (auto& v : json_val->GetArray()) {
-        if (!v.IsInt64()) {
+        if (!v.IsUint64()) {
             return TextError("wrong type of array element: " + name);
         }
-        val->push_back(v.GetInt());
+        val->push_back(v.GetUint64());
     }
     return nullptr;
 
@@ -147,6 +170,5 @@ RapidJson::RapidJson(const RapidJson& parent, const std::string& subname) {
     }
     initialized_ = true;
 }
-
 
 }

@@ -41,7 +41,7 @@ class Request {
     VIRTUAL const std::string& GetBeamline() const;
     std::unique_ptr<IO> io__;
     DataCache* cache__ = nullptr;
-    VIRTUAL uint64_t GetSlotId();
+    VIRTUAL uint64_t GetSlotId() const;
   private:
     Error PrepareDataBuffer();
     Error ReceiveData();

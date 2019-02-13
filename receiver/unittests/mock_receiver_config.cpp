@@ -68,16 +68,16 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
 
     if (error_field == "SourceHost") {
         EXPECT_CALL(mock_io, GetHostName_t(_)).
-            WillOnce(
+        WillOnce(
             DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
                   Return("")
-            ));
-    } else if (error_field == "none"){
+                 ));
+    } else if (error_field == "none") {
         EXPECT_CALL(mock_io, GetHostName_t(_)).
-            WillOnce(
+        WillOnce(
             DoAll(SetArgPointee<0>(nullptr),
                   Return(config.source_host)
-            ));
+                 ));
     }
 
     auto err = config_factory.SetConfig("fname");
