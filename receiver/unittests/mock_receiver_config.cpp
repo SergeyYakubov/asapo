@@ -7,6 +7,8 @@
 #include <unittests/MockIO.h>
 
 using testing::_;
+using testing::Return;
+using testing::SetArgPointee;
 
 namespace asapo {
 
@@ -64,7 +66,21 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
         testing::Return(config_string)
     );
 
-    auto err = config_factory.SetConfigFromFile("fname");
+    if (error_field == "SourceHost") {
+        EXPECT_CALL(mock_io, GetHostName_t(_)).
+            WillOnce(
+            DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+                  Return("")
+            ));
+    } else if (error_field == "none"){
+        EXPECT_CALL(mock_io, GetHostName_t(_)).
+            WillOnce(
+            DoAll(SetArgPointee<0>(nullptr),
+                  Return(config.source_host)
+            ));
+    }
+
+    auto err = config_factory.SetConfig("fname");
 
     config_factory.io__.release();
 

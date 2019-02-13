@@ -13,10 +13,11 @@ ReceiverConfigFactory::ReceiverConfigFactory() : io__{GenerateDefaultIO()} {
 
 }
 
-Error ReceiverConfigFactory::SetConfigFromFile(std::string file_name) {
+Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     JsonFileParser parser(file_name, &io__);
     std::string log_level;
     Error err;
+
     (err = parser.GetString("MonitorDbAddress", &config.monitor_db_uri)) ||
     (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||
     (err = parser.Embedded("DataServer").GetUInt64("ListenPort", &config.dataserver_listen_port)) ||
@@ -33,6 +34,11 @@ Error ReceiverConfigFactory::SetConfigFromFile(std::string file_name) {
     (err = parser.GetString("MonitorDbName", &config.monitor_db_name)) ||
     (err = parser.GetString("LogLevel", &log_level));
 
+    if (err) {
+        return err;
+    }
+
+    config.source_host = io__->GetHostName(&err);
     if (err) {
         return err;
     }

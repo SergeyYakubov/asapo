@@ -16,13 +16,10 @@ class RequestHandlerDbWrite final: public RequestHandler {
     Error ProcessRequest(Request* request) const override;
     std::unique_ptr<Database> db_client__;
     const AbstractLogger* log__;
-    std::unique_ptr<IO> io__;
  private:
     Error ConnectToDbIfNeeded() const;
     mutable bool connected_to_db = false;
     mutable std::string db_name_;
-    const std::string& GetHostName(Error* err) const;
-    mutable std::string hostname_;
 };
 
 }

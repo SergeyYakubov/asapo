@@ -21,10 +21,6 @@ Error RequestHandlerDbWrite::ProcessRequest(Request* request) const {
     file_info.size = request->GetDataSize();
     file_info.id = request->GetDataID();
     Error err;
-//    auto hostname = GetHostName(&err);
-//    if (err) {
-//        return err;
-//    }
     err =  db_client__->Insert(file_info, true);
     if (!err) {
         log__->Debug(std::string{"insert record id "} + std::to_string(file_info.id) + " to " + kDBCollectionName + " in " +
@@ -34,7 +30,7 @@ Error RequestHandlerDbWrite::ProcessRequest(Request* request) const {
     return err;
 }
 
-RequestHandlerDbWrite::RequestHandlerDbWrite(): log__{GetDefaultReceiverLogger()},io__{GenerateDefaultIO()} {
+RequestHandlerDbWrite::RequestHandlerDbWrite(): log__{GetDefaultReceiverLogger()} {
     DatabaseFactory factory;
     Error err;
     db_client__ = factory.Create(&err);
@@ -54,15 +50,6 @@ Error RequestHandlerDbWrite::ConnectToDbIfNeeded() const {
         connected_to_db = true;
     }
     return nullptr;
-}
-
-const std::string& RequestHandlerDbWrite::GetHostName(Error* err) const {
-    if (hostname_.empty()) {
-        hostname_ = io__->GetHostName(err);
-    } else {
-        *err = nullptr;
-    }
-    return hostname_;
 }
 
 }

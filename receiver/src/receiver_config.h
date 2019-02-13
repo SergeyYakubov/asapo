@@ -23,6 +23,7 @@ struct ReceiverConfig {
     uint64_t datacache_reserved_share = 0;
     LogLevel log_level = LogLevel::Info;
     std::string tag;
+    std::string source_host;
 };
 
 const ReceiverConfig* GetReceiverConfig();

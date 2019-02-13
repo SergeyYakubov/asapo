@@ -17,7 +17,7 @@ asapo::Error ReadConfigFile(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     asapo::ReceiverConfigFactory factory;
-    return factory.SetConfigFromFile(argv[1]);
+    return factory.SetConfig(argv[1]);
 }
 
 std::thread StartDataServer(const asapo::ReceiverConfig* config, asapo::SharedCache cache) {

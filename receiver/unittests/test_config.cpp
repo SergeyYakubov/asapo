@@ -59,6 +59,8 @@ class ConfigTests : public Test {
         test_config.use_datacache = false;
         test_config.datacache_reserved_share = 10;
         test_config.datacache_size_gb = 2;
+        test_config.source_host = "host";
+
     }
 
 };
@@ -87,6 +89,8 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->use_datacache, Eq(false));
     ASSERT_THAT(config->datacache_reserved_share, Eq(10));
     ASSERT_THAT(config->datacache_size_gb, Eq(2));
+    ASSERT_THAT(config->source_host, Eq("host"));
+
 
 }
 
@@ -96,7 +100,8 @@ TEST_F(ConfigTests, ErrorReadSettings) {
 
     std::vector<std::string>fields {"MonitorDbAddress", "ListenPort", "DataServer", "ListenPort", "WriteToDisk",
                                     "WriteToDb", "DataCache", "Use", "SizeGB", "ReservedShare", "BrokerDbAddress", "Tag",
-                                    "AuthorizationServer", "AuthorizationInterval", "RootFolder", "MonitorDbName", "LogLevel"};
+                                    "AuthorizationServer", "AuthorizationInterval", "RootFolder", "MonitorDbName", "LogLevel",
+                                    "SourceHost"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfig(test_config, field);
         ASSERT_THAT(err, Ne(nullptr));
