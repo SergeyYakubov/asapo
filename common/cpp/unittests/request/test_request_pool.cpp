@@ -5,10 +5,8 @@
 #include "unittests/MockLogger.h"
 #include "common/error.h"
 
-#include "../src/request_handler_tcp.h"
-#include "../src/request_pool.h"
-#include "../src/receiver_discovery_service.h"
-#include "../src/request_handler_factory.h"
+#include "../../include/request/request_pool.h"
+#include "../../include/request/request_handler_factory.h"
 #include "mocking.h"
 
 #include "io/io_factory.h"
@@ -35,7 +33,7 @@ using asapo::RequestHandler;
 using asapo::RequestPool;
 using asapo::Error;
 using asapo::ErrorInterface;
-using asapo::Request;
+using asapo::GenericRequest;
 using asapo::GenericRequestHeader;
 
 
@@ -43,7 +41,7 @@ using asapo::GenericRequestHeader;
 class MockRequestHandlerFactory : public asapo::RequestHandlerFactory {
   public:
     MockRequestHandlerFactory(RequestHandler* request_handler):
-        RequestHandlerFactory(nullptr) {
+        RequestHandlerFactory() {
         request_handler_ = request_handler;
     }
     std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) override {
@@ -53,6 +51,10 @@ class MockRequestHandlerFactory : public asapo::RequestHandlerFactory {
     RequestHandler* request_handler_;
 };
 
+class TestRequest : public GenericRequest {
+ public:
+  TestRequest(GenericRequestHeader header):GenericRequest(header){};
+};
 
 
 class RequestPoolTests : public testing::Test {
@@ -61,10 +63,9 @@ class RequestPoolTests : public testing::Test {
     NiceMock<asapo::MockLogger> mock_logger;
     MockRequestHandlerFactory request_handler_factory{mock_request_handler};
     const uint8_t nthreads = 1;
-    asapo::RequestPool pool {nthreads, &request_handler_factory};
-    std::unique_ptr<Request> request{new Request{"", GenericRequestHeader{}, nullptr, "", nullptr}};
+    asapo::RequestPool pool {nthreads, &request_handler_factory,&mock_logger};
+    std::unique_ptr<GenericRequest> request{new TestRequest{GenericRequestHeader{}}};
     void SetUp() override {
-        pool.log__ = &mock_logger;
     }
     void TearDown() override {
     }
@@ -72,12 +73,13 @@ class RequestPoolTests : public testing::Test {
 
 
 TEST(RequestPool, Constructor) {
-    NiceMock<MockDiscoveryService> ds;
-    NiceMock<asapo::RequestHandlerFactory> request_handler_factory{&ds};
+    NiceMock<asapo::MockLogger> mock_logger;
+    MockRequestHandlerFactory factory(nullptr);
 
-    asapo::RequestPool pool{4, &request_handler_factory};
+    EXPECT_CALL(mock_logger, Debug(HasSubstr("starting"))).Times(4);
+    EXPECT_CALL(mock_logger, Debug(HasSubstr("finishing thread"))).Times(4);
 
-    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(pool.log__), Ne(nullptr));
+    asapo::RequestPool pool{4, &factory,&mock_logger};
 }
 
 TEST_F(RequestPoolTests, AddRequestDoesNotGoFurtherWhenNotReady) {
@@ -118,7 +120,7 @@ TEST_F(RequestPoolTests, AddRequestCallsSend) {
 
 TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 
-    Request* request2 = new Request{"", GenericRequestHeader{}, nullptr, "", nullptr};
+    TestRequest* request2 = new TestRequest{GenericRequestHeader{}};
 
     ExpectSend(mock_request_handler, 2);
 

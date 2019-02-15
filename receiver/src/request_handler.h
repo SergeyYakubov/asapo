@@ -1,5 +1,5 @@
-#ifndef ASAPO_REQUEST_HANDLER_H
-#define ASAPO_REQUEST_HANDLER_H
+#ifndef ASAPO_RECEIVER_REQUEST_HANDLER_H
+#define ASAPO_RECEIVER_REQUEST_HANDLER_H
 
 #include "receiver_error.h"
 #include "statistics.h"
@@ -18,4 +18,4 @@ class RequestHandler {
 
 }
 
-#endif //ASAPO_REQUEST_HANDLER_H
+#endif //ASAPO_RECEIVER_REQUEST_HANDLER_H

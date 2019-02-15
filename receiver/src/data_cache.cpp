@@ -125,7 +125,7 @@ bool DataCache::UnlockSlot(CacheMeta* meta) {
         return false;
     }
     std::lock_guard<std::mutex> lock{mutex_};
-    meta->lock = std::max(0, (int)meta->lock - 1);
+    meta->lock = std::max(0, meta->lock - 1);
     return true;
 }
 

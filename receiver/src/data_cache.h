@@ -15,7 +15,7 @@ struct CacheMeta {
     uint64_t id;
     void* addr;
     uint64_t size;
-    uint lock;
+    int lock;
 };
 
 class DataCache {

@@ -1,14 +1,13 @@
-#include "request_pool.h"
-#include "producer_logger.h"
+#include "request/request_pool.h"
 
 
 namespace asapo {
 
 RequestPool:: RequestPool(uint8_t n_threads,
-                          RequestHandlerFactory* request_handler_factory): log__{GetDefaultProducerLogger()},
+                          RequestHandlerFactory* request_handler_factory,AbstractLogger* log): log__{log},
     request_handler_factory__{request_handler_factory},
     threads_{n_threads} {
-    for(size_t i = 0; i < threads_.size(); i++) {
+    for(size_t i = 0; i < n_threads; i++) {
         log__->Debug("starting thread " + std::to_string(i));
         threads_[i] = std::thread(
                           [this, i] {ThreadHandler(i);});
@@ -16,7 +15,7 @@ RequestPool:: RequestPool(uint8_t n_threads,
 
 }
 
-Error RequestPool::AddRequest(std::unique_ptr<Request> request) {
+Error RequestPool::AddRequest(std::unique_ptr<GenericRequest> request) {
     std::unique_lock<std::mutex> lock(mutex_);
     request_queue_.emplace_back(std::move(request));
     lock.unlock();
@@ -30,13 +29,13 @@ bool RequestPool::CanProcessRequest(const std::unique_ptr<RequestHandler>& reque
     return request_queue_.size() && request_handler->ReadyProcessRequest();
 }
 
-std::unique_ptr<Request> RequestPool::GetRequestFromQueue() {
+std::unique_ptr<GenericRequest> RequestPool::GetRequestFromQueue() {
     auto request = std::move(request_queue_.front());
     request_queue_.pop_front();
     return request;
 }
 
-void RequestPool::PutRequestBackToQueue(std::unique_ptr<Request> request) {
+void RequestPool::PutRequestBackToQueue(std::unique_ptr<GenericRequest> request) {
     request_queue_.emplace_front(std::move(request));
 }
 

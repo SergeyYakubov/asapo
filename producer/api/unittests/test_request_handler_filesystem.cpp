@@ -10,6 +10,8 @@
 #include "producer/producer_error.h"
 
 #include "../src/request_handler_filesystem.h"
+#include "../src/producer_request.h"
+
 #include "io/io_factory.h"
 
 namespace {
@@ -53,14 +55,14 @@ class RequestHandlerFilesystemTests : public testing::Test {
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_file_name};
     bool called = false;
     asapo::GenericRequestHeader callback_header;
-    asapo::Request request{"", header, nullptr, "", [this](asapo::GenericRequestHeader header, asapo::Error err) {
+    asapo::ProducerRequest request{"", header, nullptr, "", [this](asapo::GenericRequestHeader header, asapo::Error err) {
         called = true;
         callback_err = std::move(err);
         callback_header = header;
     }};
 
-    asapo::Request request_nocallback{"", header, nullptr, "", nullptr};
-    asapo::Request request_filesend{"", header, nullptr, expected_origin_fullpath, nullptr};
+    asapo::ProducerRequest request_nocallback{"", header, nullptr, "", nullptr};
+    asapo::ProducerRequest request_filesend{"", header, nullptr, expected_origin_fullpath, nullptr};
 
     testing::NiceMock<asapo::MockLogger> mock_logger;
 

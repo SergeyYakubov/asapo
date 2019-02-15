@@ -7,7 +7,6 @@
 #include "../src/producer_impl.h"
 #include "producer/producer_error.h"
 
-#include "../src/request_pool.h"
 #include "../src/request_handler_tcp.h"
 
 #include "mocking.h"
@@ -27,15 +26,16 @@ using ::testing::HasSubstr;
 
 
 using asapo::RequestPool;
-using asapo::Request;
+using asapo::ProducerRequest;
 
 
 MATCHER_P5(M_CheckSendDataRequest, op_code, beamtime_id, file_id, file_size, message,
            "Checks if a valid GenericRequestHeader was Send") {
+    auto request = dynamic_cast<ProducerRequest*>(arg);
     return ((asapo::GenericRequestHeader)(arg->header)).op_code == op_code
            && ((asapo::GenericRequestHeader)(arg->header)).data_id == file_id
            && ((asapo::GenericRequestHeader)(arg->header)).data_size == uint64_t(file_size)
-           && arg->beamtime_id == beamtime_id
+           && request->beamtime_id == beamtime_id
            && strcmp(((asapo::GenericRequestHeader)(arg->header)).message, message) == 0;
 }
 
@@ -49,9 +49,9 @@ TEST(ProducerImpl, Constructor) {
 class ProducerImplTests : public testing::Test {
   public:
     testing::NiceMock<MockDiscoveryService> service;
-    asapo::RequestHandlerFactory factory{&service};
+    asapo::ProducerRequestHandlerFactory factory{&service};
     testing::NiceMock<asapo::MockLogger> mock_logger;
-    testing::NiceMock<MockRequestPull> mock_pull{&factory};
+    testing::NiceMock<MockRequestPull> mock_pull{&factory,&mock_logger};
     asapo::ProducerImpl producer{"", 1, asapo::RequestHandlerType::kTcp};
     void SetUp() override {
         producer.log__ = &mock_logger;
@@ -93,7 +93,7 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
     std::string expected_beamtimeid = "beamtime_id";
 
     producer.SetBeamtimeId(expected_beamtimeid);
-    Request request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, expected_size, expected_name},
+    ProducerRequest request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, expected_size, expected_name},
                     nullptr, "", nullptr};
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
@@ -113,7 +113,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
     std::string expected_fullpath = "filename";
 
     producer.SetBeamtimeId(expected_beamtimeid);
-    Request request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, 0, expected_name},
+    ProducerRequest request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, 0, expected_name},
                     nullptr, "", nullptr};
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,

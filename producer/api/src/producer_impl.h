@@ -6,8 +6,8 @@
 #include <io/io.h>
 #include "producer/producer.h"
 #include "logger/logger.h"
-#include "request_pool.h"
-#include "request_handler_factory.h"
+#include "request/request_pool.h"
+#include "producer_request_handler_factory.h"
 #include "receiver_discovery_service.h"
 
 namespace asapo {

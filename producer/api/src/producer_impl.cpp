@@ -5,6 +5,8 @@
 #include "producer_logger.h"
 #include "io/io_factory.h"
 #include "producer/producer_error.h"
+#include "producer_request_handler_factory.h"
+#include "producer_request.h"
 
 namespace  asapo {
 
@@ -17,14 +19,14 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, a
     switch (type) {
     case RequestHandlerType::kTcp:
         discovery_service_.reset(new ReceiverDiscoveryService{endpoint, ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
-        request_handler_factory_.reset(new RequestHandlerFactory{discovery_service_.get()});
+        request_handler_factory_.reset(new ProducerRequestHandlerFactory{discovery_service_.get()});
         break;
     case RequestHandlerType::kFilesystem:
         request_handler_factory_.reset(nullptr);
-        request_handler_factory_.reset(new RequestHandlerFactory{endpoint});
+        request_handler_factory_.reset(new ProducerRequestHandlerFactory{endpoint});
 
     }
-    request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get()});
+    request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(),log__});
 }
 
 GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, uint64_t file_size,
@@ -57,7 +59,7 @@ Error ProducerImpl::Send(const EventHeader& event_header,
 
     auto request_header = GenerateNextSendRequest(event_header.file_id, event_header.file_size, event_header.file_name);
 
-    return request_pool__->AddRequest(std::unique_ptr<Request> {new Request{beamtime_id_, request_header,
+    return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{beamtime_id_, std::move(request_header),
                 std::move(data), std::move(full_path), callback}
     });
 
