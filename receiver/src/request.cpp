@@ -20,10 +20,10 @@ Error Request::PrepareDataBuffer() {
             return err;
         }
     } else {
-        uint64_t slot_id;
-        data_ptr = cache__->GetFreeSlot(request_header_.data_size, &slot_id);
+        CacheMeta* slot;
+        data_ptr = cache__->GetFreeSlotAndLock(request_header_.data_size, &slot);
         if (data_ptr) {
-            slot_id_ = slot_id;
+            slot_meta_ = slot;
         } else {
             return ErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
         }
@@ -37,6 +37,9 @@ Error Request::ReceiveData() {
         return err;
     }
     io__->Receive(socket_fd_, GetData(), request_header_.data_size, &err);
+    if (slot_meta_) {
+        cache__->UnlockSlot(slot_meta_);
+    }
     return err;
 }
 
@@ -118,8 +121,13 @@ void Request::SetBeamline(std::string beamline) {
 const std::string& Request::GetBeamline() const {
     return beamline_;
 }
+
 uint64_t Request::GetSlotId() const {
-    return slot_id_;
+    if (slot_meta_) {
+        return slot_meta_->id;
+    } else {
+        return 0;
+    }
 }
 
 std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&

@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <chrono>
+#include <algorithm>
+
 
 namespace asapo {
 
@@ -27,16 +29,16 @@ void* DataCache::AllocateSlot(uint64_t size) {
     auto addr = cache_.get() + cur_pointer_;
     cur_pointer_ += size;
 
-    if (!CleanOldSlots()) {
+    if (!CleanOldSlots(size)) {
         cur_pointer_ = tmp;
         return nullptr;
     }
     return addr;
 }
 
-void* DataCache::GetFreeSlot(uint64_t size, uint64_t* id) {
+void* DataCache::GetFreeSlotAndLock(uint64_t size, CacheMeta** meta) {
     std::lock_guard<std::mutex> lock{mutex_};
-
+    *meta = nullptr;
     if (!CheckAllocationSize(size)) {
         return nullptr;
     }
@@ -46,9 +48,10 @@ void* DataCache::GetFreeSlot(uint64_t size, uint64_t* id) {
         return nullptr;
     }
 
-    *id = GetNextId();
+    auto id = GetNextId();
 
-    meta_.emplace_back(CacheMeta{*id, addr, size, false});
+    *meta = new CacheMeta{id, addr, size, 1};
+    meta_.emplace_back(std::unique_ptr<CacheMeta> {*meta});
 
     return addr;
 }
@@ -57,12 +60,12 @@ uint64_t DataCache::GetNextId() {
     counter_++;
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
     uint32_t timeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-    return (uint64_t)timeMillis << 32 | counter_;
+    return (uint64_t) timeMillis << 32 | counter_;
 }
 
-bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta& meta) {
+bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta* meta) {
     uint64_t dist;
-    uint64_t shift = (uint8_t*) meta.addr - cache_.get();
+    uint64_t shift = (uint8_t*) meta->addr - cache_.get();
     if (shift > cur_pointer_) {
         dist = shift - cur_pointer_;
     } else {
@@ -71,42 +74,59 @@ bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta& meta) {
     return dist < cache_size_ * keepunlocked_ratio_;
 }
 
-void* DataCache::GetSlotToReadAndLock(uint64_t id, uint64_t* size) {
+// we allow to read if it was already locked - if lock come from reading - no problems, from writing -should not happen!
+void* DataCache::GetSlotToReadAndLock(uint64_t id, CacheMeta** meta) {
     std::lock_guard<std::mutex> lock{mutex_};
-    for (auto& meta : meta_) {
-        if (meta.id == id) {
-            if (SlotTooCloseToCurrentPointer(meta)) {
+    for (auto& meta_rec : meta_) {
+        if (meta_rec->id == id) {
+            if (SlotTooCloseToCurrentPointer(meta_rec.get())) {
                 return nullptr;
             }
-            *size = meta.size;
-            meta.locked = true;
-            return meta.addr;
+            meta_rec->lock++;
+            *meta = meta_rec.get();
+            return meta_rec->addr;
         }
     }
+
+    *meta = nullptr;
     return nullptr;
 }
 
-bool DataCache::CleanOldSlots() {
-    uint64_t last_ok = meta_.size();
-    for (int64_t i = last_ok - 1; i >= 0; i--) {
-        uint64_t start_position = (uint8_t*) meta_[i].addr - cache_.get();
-        if (start_position > cur_pointer_) {
-            last_ok = i;
+bool Intersects(uint64_t left1, uint64_t right1, uint64_t left2, uint64_t right2) {
+    return (left1 >= left2 && left1 < right2) || (right1 <= right2 && right1 > left2);
+}
+
+bool DataCache::CleanOldSlots(uint64_t size) {
+    uint64_t n_del = 0;
+    for (uint64_t i = 0; i < meta_.size(); i++) {
+        uint64_t start_position = (uint8_t*) meta_[i]->addr - cache_.get();
+        if (Intersects(start_position, start_position + meta_[i]->size, cur_pointer_ - size, cur_pointer_)) {
+            n_del++;
+        } else {
+            break;
         }
     }
 
-    for (int64_t i = 0; i < last_ok; i++) {
-        if (meta_[i].locked) return false;
+    for (uint64_t i = 0; i < n_del; i++) {
+        if (meta_[i]->lock > 0) return false;
     }
 
-    if (last_ok != 0) {
-        meta_.erase(meta_.begin(), meta_.begin() + last_ok);
-    }
+    meta_.erase(meta_.begin(), meta_.begin() + n_del);
+
     return true;
 }
 
 bool DataCache::CheckAllocationSize(uint64_t size) {
     return size <= cache_size_;
+}
+
+bool DataCache::UnlockSlot(CacheMeta* meta) {
+    if (meta == nullptr) {
+        return false;
+    }
+    std::lock_guard<std::mutex> lock{mutex_};
+    meta->lock = std::max(0, (int)meta->lock - 1);
+    return true;
 }
 
 }

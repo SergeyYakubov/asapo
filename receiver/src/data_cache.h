@@ -15,14 +15,16 @@ struct CacheMeta {
     uint64_t id;
     void* addr;
     uint64_t size;
-    bool locked;
+    uint lock;
 };
 
 class DataCache {
   public:
     explicit DataCache(uint64_t cache_size_gb, float keepunlocked_ratio);
-    VIRTUAL void* GetFreeSlot(uint64_t size, uint64_t* id);
-    void* GetSlotToReadAndLock(uint64_t id, uint64_t* size);
+    VIRTUAL void* GetFreeSlotAndLock(uint64_t size, CacheMeta** meta);
+    void* GetSlotToReadAndLock(uint64_t id, CacheMeta** meta);
+    VIRTUAL bool UnlockSlot(CacheMeta* meta);
+    ~DataCache() = default;
   private:
     uint64_t cache_size_;
     float keepunlocked_ratio_;
@@ -30,9 +32,9 @@ class DataCache {
     uint64_t cur_pointer_ = 0;
     std::unique_ptr<uint8_t[]> cache_;
     std::mutex mutex_;
-    std::deque<CacheMeta> meta_;
-    bool SlotTooCloseToCurrentPointer(const CacheMeta& meta);
-    bool CleanOldSlots();
+    std::deque<std::unique_ptr<CacheMeta>> meta_;
+    bool SlotTooCloseToCurrentPointer(const CacheMeta* meta);
+    bool CleanOldSlots(uint64_t size);
     void* AllocateSlot(uint64_t size);
     bool CheckAllocationSize(uint64_t size);
     uint64_t GetNextId();

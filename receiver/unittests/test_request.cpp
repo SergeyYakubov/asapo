@@ -120,11 +120,15 @@ TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
 
 TEST_F(RequestTests, HandleGetsMemoryFromCache) {
     request->cache__ = &mock_cache;
-
-    EXPECT_CALL(mock_cache, GetFreeSlot(data_size_, _)).WillOnce(
-        DoAll(SetArgPointee<1>(expected_slot_id),
+    asapo::CacheMeta meta;
+    meta.id = expected_slot_id;
+    EXPECT_CALL(mock_cache, GetFreeSlotAndLock(data_size_, _)).WillOnce(
+        DoAll(SetArgPointee<1>(&meta),
               Return(&mock_cache)
              ));
+
+    EXPECT_CALL(mock_cache, UnlockSlot(&meta));
+
     auto err = request->Handle(stat);
 
     ASSERT_THAT(request->GetSlotId(), Eq(expected_slot_id));
@@ -134,9 +138,12 @@ TEST_F(RequestTests, HandleGetsMemoryFromCache) {
 TEST_F(RequestTests, ErrorGetMemoryFromCache) {
     request->cache__ = &mock_cache;
 
-    EXPECT_CALL(mock_cache, GetFreeSlot(data_size_, _)).WillOnce(
+    EXPECT_CALL(mock_cache, GetFreeSlotAndLock(data_size_, _)).WillOnce(
         Return(nullptr)
     );
+
+    EXPECT_CALL(mock_cache, UnlockSlot(_)).Times(0);
+
 
     auto err = request->Handle(stat);
 

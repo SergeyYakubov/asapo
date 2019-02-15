@@ -25,7 +25,7 @@ Error RequestHandlerDbWrite::ProcessRequest(Request* request) const {
         return err;
     }
 
-   return InsertRecordToDb(request);
+    return InsertRecordToDb(request);
 
 }
 
@@ -56,8 +56,8 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
     auto err =  db_client__->Insert(file_info, true);
     if (!err) {
         log__->Debug(std::string{"insert record id "} + std::to_string(file_info.id) + " to " + kDBCollectionName + " in " +
-            db_name_ +
-            " at " + GetReceiverConfig()->broker_db_uri);
+                     db_name_ +
+                     " at " + GetReceiverConfig()->broker_db_uri);
     }
     return err;
 }

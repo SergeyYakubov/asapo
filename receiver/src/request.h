@@ -53,7 +53,7 @@ class Request {
     std::string origin_uri_;
     std::string beamtime_id_;
     std::string beamline_;
-    uint64_t slot_id_{0};
+    CacheMeta* slot_meta_ = nullptr;
 };
 
 class RequestFactory {
