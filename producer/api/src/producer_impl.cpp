@@ -22,9 +22,8 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, a
         request_handler_factory_.reset(new ProducerRequestHandlerFactory{discovery_service_.get()});
         break;
     case RequestHandlerType::kFilesystem:
-        request_handler_factory_.reset(nullptr);
         request_handler_factory_.reset(new ProducerRequestHandlerFactory{endpoint});
-
+        break;
     }
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
 }
