@@ -21,7 +21,7 @@ class RequestPool {
         std::unique_lock<std::mutex> lock;
     };
   public:
-    explicit RequestPool(uint8_t n_threads, RequestHandlerFactory* request_handler_factory,AbstractLogger* log);
+    explicit RequestPool(uint8_t n_threads, RequestHandlerFactory* request_handler_factory, AbstractLogger* log);
     VIRTUAL Error AddRequest(std::unique_ptr<GenericRequest> request);
     ~RequestPool();
     uint64_t NRequestsInQueue();

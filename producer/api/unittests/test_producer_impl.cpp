@@ -51,7 +51,7 @@ class ProducerImplTests : public testing::Test {
     testing::NiceMock<MockDiscoveryService> service;
     asapo::ProducerRequestHandlerFactory factory{&service};
     testing::NiceMock<asapo::MockLogger> mock_logger;
-    testing::NiceMock<MockRequestPull> mock_pull{&factory,&mock_logger};
+    testing::NiceMock<MockRequestPull> mock_pull{&factory, &mock_logger};
     asapo::ProducerImpl producer{"", 1, asapo::RequestHandlerType::kTcp};
     void SetUp() override {
         producer.log__ = &mock_logger;
@@ -94,7 +94,7 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
 
     producer.SetBeamtimeId(expected_beamtimeid);
     ProducerRequest request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, expected_size, expected_name},
-                    nullptr, "", nullptr};
+                            nullptr, "", nullptr};
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
                                         expected_beamtimeid, expected_id, expected_size, expected_name))).WillOnce(Return(
@@ -114,7 +114,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
 
     producer.SetBeamtimeId(expected_beamtimeid);
     ProducerRequest request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, 0, expected_name},
-                    nullptr, "", nullptr};
+                            nullptr, "", nullptr};
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
                                         expected_beamtimeid, expected_id, 0, expected_name))).WillOnce(Return(

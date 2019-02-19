@@ -26,7 +26,7 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, a
         request_handler_factory_.reset(new ProducerRequestHandlerFactory{endpoint});
 
     }
-    request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(),log__});
+    request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
 }
 
 GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, uint64_t file_size,

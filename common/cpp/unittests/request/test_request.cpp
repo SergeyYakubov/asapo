@@ -41,10 +41,10 @@ TEST(Request, Constructor) {
     GenericRequestHeader header{asapo::kOpcodeTransferData, 1, 2, "hello"};
     GenericRequest r{header};
 
-    ASSERT_THAT(r.header.data_id,Eq(1));
-    ASSERT_THAT(r.header.op_code,Eq(asapo::kOpcodeTransferData));
-    ASSERT_THAT(r.header.data_size,Eq(2));
-    ASSERT_THAT(r.header.message,testing::StrEq("hello"));
+    ASSERT_THAT(r.header.data_id, Eq(1));
+    ASSERT_THAT(r.header.op_code, Eq(asapo::kOpcodeTransferData));
+    ASSERT_THAT(r.header.data_size, Eq(2));
+    ASSERT_THAT(r.header.message, testing::StrEq("hello"));
 }
 
 }

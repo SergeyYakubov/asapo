@@ -8,9 +8,9 @@
 namespace asapo {
 
 class GenericRequest {
- public:
+  public:
     GenericRequest() = delete;
-    GenericRequest(GenericRequestHeader h): header{std::move(h)}{};
+    GenericRequest(GenericRequestHeader h): header{std::move(h)} {};
     GenericRequestHeader header;
     virtual ~GenericRequest() = default;
 };

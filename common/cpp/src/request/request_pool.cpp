@@ -4,7 +4,7 @@
 namespace asapo {
 
 RequestPool:: RequestPool(uint8_t n_threads,
-                          RequestHandlerFactory* request_handler_factory,AbstractLogger* log): log__{log},
+                          RequestHandlerFactory* request_handler_factory, AbstractLogger* log): log__{log},
     request_handler_factory__{request_handler_factory},
     threads_{n_threads} {
     for(size_t i = 0; i < n_threads; i++) {

@@ -36,11 +36,12 @@ struct GenericRequestHeader {
         op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size} {
         strncpy(message, i_message.c_str(), kMaxMessageSize);
     }
-  GenericRequestHeader(const GenericRequestHeader &header) {op_code = header.op_code, data_id = header.data_id,data_size = header.data_size,
-          strncpy(message, header.message, kMaxMessageSize);
+    GenericRequestHeader(const GenericRequestHeader& header) {
+        op_code = header.op_code, data_id = header.data_id, data_size = header.data_size,
+        strncpy(message, header.message, kMaxMessageSize);
     }
 
-  Opcode      op_code;
+    Opcode      op_code;
     uint64_t    data_id;
     uint64_t    data_size;
     char        message[kMaxMessageSize];

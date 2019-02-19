@@ -6,7 +6,8 @@
 
 namespace  asapo {
 
-std::unique_ptr<RequestHandler> ProducerRequestHandlerFactory::NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) {
+std::unique_ptr<RequestHandler> ProducerRequestHandlerFactory::NewRequestHandler(uint64_t thread_id,
+        uint64_t* shared_counter) {
     switch (type_) {
     case asapo::RequestHandlerType::kTcp:
         return std::unique_ptr<RequestHandler> {new RequestHandlerTcp(discovery_service_, thread_id, shared_counter)};
