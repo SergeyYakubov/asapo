@@ -17,7 +17,7 @@
 #include "preprocessor/definitions.h"
 namespace asapo {
 
-using RequestHandlerList = std::vector<const RequestHandler*>;
+using RequestHandlerList = std::vector<const ReceiverRequestHandler*>;
 
 class Request {
   public:
@@ -25,7 +25,7 @@ class Request {
     ~Request() = default;
     Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
             DataCache* cache);
-    VIRTUAL void AddHandler(const RequestHandler*);
+    VIRTUAL void AddHandler(const ReceiverRequestHandler*);
     VIRTUAL const RequestHandlerList& GetListHandlers() const;
     VIRTUAL uint64_t GetDataSize() const;
     VIRTUAL uint64_t GetDataID() const;

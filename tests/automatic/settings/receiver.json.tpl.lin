@@ -3,6 +3,7 @@
   "MonitorDbName": "db_test",
   "BrokerDbAddress":"localhost:27017",
   "DataServer": {
+    "NThreads": 2,
     "ListenPort": 23123
   },
   "DataCache": {

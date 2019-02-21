@@ -70,7 +70,7 @@ const RequestHandlerList& Request::GetListHandlers() const {
 }
 
 
-void Request::AddHandler(const RequestHandler* handler) {
+void Request::AddHandler(const ReceiverRequestHandler* handler) {
     handlers_.emplace_back(handler);
 }
 

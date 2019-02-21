@@ -21,23 +21,25 @@ class RequestPool {
         std::unique_lock<std::mutex> lock;
     };
   public:
-    explicit RequestPool(uint8_t n_threads, RequestHandlerFactory* request_handler_factory, AbstractLogger* log);
-    VIRTUAL Error AddRequest(std::unique_ptr<GenericRequest> request);
+    explicit RequestPool(uint8_t n_threads, RequestHandlerFactory* request_handler_factory, const AbstractLogger* log);
+    VIRTUAL Error AddRequest(GenericRequestPtr request);
+    VIRTUAL Error AddRequests(GenericRequests requests);
+
     ~RequestPool();
     uint64_t NRequestsInQueue();
   private:
-    AbstractLogger* log__;
+    const AbstractLogger* log__;
     RequestHandlerFactory* request_handler_factory__;
     std::vector<std::thread> threads_;
     void ThreadHandler(uint64_t id);
     bool quit_{false};
     std::condition_variable condition_;
     std::mutex mutex_;
-    std::deque<std::unique_ptr<GenericRequest>> request_queue_;
+    std::deque<GenericRequestPtr> request_queue_;
     bool CanProcessRequest(const std::unique_ptr<RequestHandler>& request_handler);
     void ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler, ThreadInformation* thread_info);
-    std::unique_ptr<GenericRequest> GetRequestFromQueue();
-    void PutRequestBackToQueue(std::unique_ptr<GenericRequest>request);
+    GenericRequestPtr GetRequestFromQueue();
+    void PutRequestBackToQueue(GenericRequestPtr request);
     uint64_t shared_counter_{0};
 
 };

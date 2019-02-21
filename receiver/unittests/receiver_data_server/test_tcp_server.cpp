@@ -37,7 +37,6 @@ TEST(TCPServer, Constructor) {
 
 }
 
-uint64_t expected_id = 124;
 std::string expected_address = "somehost:123";
 
 class TCPServerTests : public Test {
@@ -225,10 +224,10 @@ TEST_F(TCPServerTests, GetNewRequestsReadOk) {
     ASSERT_THAT(requests.size(), Eq(3));
     int i = 0;
     for (auto conn : expected_client_sockets) {
-        ASSERT_THAT(requests[i].header.data_id, Eq(conn));
-        ASSERT_THAT(requests[i].header.op_code, Eq(asapo::kOpcodeGetBufferData));
-        ASSERT_THAT(requests[i].net_id, Eq(conn));
-        ASSERT_THAT(requests[i].server, Eq(&tcp_server));
+        ASSERT_THAT(requests[i]->header.data_id, Eq(conn));
+        ASSERT_THAT(requests[i]->header.op_code, Eq(asapo::kOpcodeGetBufferData));
+//        ASSERT_THAT(requests[i]->net_id, Eq(conn));
+//        ASSERT_THAT(requests[i]->server, Eq(&tcp_server));
         i++;
     }
 

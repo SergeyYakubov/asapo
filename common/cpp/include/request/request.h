@@ -7,6 +7,7 @@
 
 namespace asapo {
 
+
 class GenericRequest {
   public:
     GenericRequest() = delete;
@@ -14,6 +15,9 @@ class GenericRequest {
     GenericRequestHeader header;
     virtual ~GenericRequest() = default;
 };
+
+using GenericRequestPtr = std::unique_ptr<GenericRequest>;
+using GenericRequests = std::vector<GenericRequestPtr>;
 
 }
 

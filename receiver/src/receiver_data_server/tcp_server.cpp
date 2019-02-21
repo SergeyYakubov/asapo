@@ -38,22 +38,24 @@ void TcpServer::CloseSocket(SocketDescriptor socket) const noexcept {
     io__->CloseSocket(socket, nullptr);
 }
 
-Request TcpServer::ReadRequest(SocketDescriptor socket, Error* err) const noexcept {
-    Request request{(uint64_t) socket, this};
-    io__->Receive(socket, &request.header,
+ReceiverDataServerRequestPtr TcpServer::ReadRequest(SocketDescriptor socket, Error* err) const noexcept {
+    GenericRequestHeader header;
+    io__->Receive(socket, &header,
                   sizeof(GenericRequestHeader), err);
     if (*err == ErrorTemplates::kEndOfFile) {
         CloseSocket(socket);
+        return nullptr;
     } else if (*err) {
         log__->Error("error getting next request from " + io__->AddressFromSocket(socket) + ": " + (*err)->
                      Explain()
                     );
+        return nullptr;
     }
-    return request;
+    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{std::move(header), (uint64_t) socket, this}};
 }
 
-Requests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noexcept {
-    Requests requests;
+GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noexcept {
+    GenericRequests requests;
     for (auto client : sockets) {
         Error
         err;
@@ -61,14 +63,14 @@ Requests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noe
         if (err) {
             continue;
         }
-        log__->Debug("received request opcode: " + std::to_string(request.header.op_code) + " id: " + std::to_string(
-                         request.header.data_id));
+        log__->Debug("received request opcode: " + std::to_string(request->header.op_code) + " id: " + std::to_string(
+                         request->header.data_id));
         requests.emplace_back(std::move(request));
     }
     return requests;
 }
 
-Requests TcpServer::GetNewRequests(Error* err) const noexcept {
+GenericRequests TcpServer::GetNewRequests(Error* err) const noexcept {
     if (*err = InitializeMasterSocketIfNeeded()) {
         return {};
     }

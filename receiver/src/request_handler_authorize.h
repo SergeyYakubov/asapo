@@ -12,7 +12,7 @@
 
 namespace asapo {
 
-class RequestHandlerAuthorize final: public RequestHandler {
+class RequestHandlerAuthorize final: public ReceiverRequestHandler {
   public:
     RequestHandlerAuthorize();
     StatisticEntity GetStatisticEntity() const override;

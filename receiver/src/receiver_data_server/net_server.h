@@ -3,13 +3,13 @@
 
 #include "common/error.h"
 
-#include "common.h"
+#include "request/request.h"
 
 namespace asapo {
 
 class NetServer {
   public:
-    virtual Requests GetNewRequests(Error* err) const noexcept = 0;
+    virtual GenericRequests GetNewRequests(Error* err) const noexcept = 0;
     virtual ~NetServer() = default;
 };
 

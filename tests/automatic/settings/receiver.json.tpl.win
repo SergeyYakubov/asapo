@@ -6,6 +6,7 @@
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "DataServer": {
+    "NThreads": 2,
     "ListenPort": 23123
   },
   "DataCache": {

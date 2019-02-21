@@ -9,7 +9,7 @@
 
 namespace asapo {
 
-class RequestHandlerDbWrite final: public RequestHandler {
+class RequestHandlerDbWrite final: public ReceiverRequestHandler {
   public:
     RequestHandlerDbWrite();
     StatisticEntity GetStatisticEntity() const override;

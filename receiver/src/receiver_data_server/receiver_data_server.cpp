@@ -1,12 +1,15 @@
 #include "receiver_data_server.h"
 #include "tcp_server.h"
 #include "receiver_data_server_logger.h"
+#include "receiver_data_server_request_handler_factory.h"
 
 namespace asapo {
 
-ReceiverDataServer::ReceiverDataServer(std::string address, LogLevel log_level) : request_pool__{new RequestPool}, net__{new TcpServer(address)},
+ReceiverDataServer::ReceiverDataServer(std::string address, LogLevel log_level, uint8_t n_threads) : net__{new TcpServer(address)},
 log__{GetDefaultReceiverDataServerLogger()} {
+    request_handler_factory_.reset(new ReceiverDataServerRequestHandlerFactory());
     GetDefaultReceiverDataServerLogger()->SetLogLevel(log_level);
+    request_pool__.reset(new RequestPool{n_threads, request_handler_factory_.get(), log__});
 }
 
 void ReceiverDataServer::Run() {
@@ -17,7 +20,7 @@ void ReceiverDataServer::Run() {
             continue;
         }
         if (!err) {
-            err = request_pool__->AddRequests(requests);
+            err = request_pool__->AddRequests(std::move(requests));
         }
         if (err) {
             log__->Error(std::string("receiver data server stopped: ") + err->Explain());

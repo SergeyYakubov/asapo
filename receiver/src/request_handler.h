@@ -8,11 +8,11 @@ namespace asapo {
 
 class Request;
 
-class RequestHandler {
+class ReceiverRequestHandler {
   public:
     virtual Error ProcessRequest(Request* request) const = 0;
     virtual StatisticEntity GetStatisticEntity() const  = 0;
-    virtual ~RequestHandler() = default;
+    virtual ~ReceiverRequestHandler() = default;
   private:
 };
 

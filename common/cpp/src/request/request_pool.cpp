@@ -1,10 +1,10 @@
+#include <request/request_pool.h>
 #include "request/request_pool.h"
-
 
 namespace asapo {
 
 RequestPool:: RequestPool(uint8_t n_threads,
-                          RequestHandlerFactory* request_handler_factory, AbstractLogger* log): log__{log},
+                          RequestHandlerFactory* request_handler_factory, const AbstractLogger* log): log__{log},
     request_handler_factory__{request_handler_factory},
     threads_{n_threads} {
     for(size_t i = 0; i < n_threads; i++) {
@@ -15,7 +15,7 @@ RequestPool:: RequestPool(uint8_t n_threads,
 
 }
 
-Error RequestPool::AddRequest(std::unique_ptr<GenericRequest> request) {
+Error RequestPool::AddRequest(GenericRequestPtr request) {
     std::unique_lock<std::mutex> lock(mutex_);
     request_queue_.emplace_back(std::move(request));
     lock.unlock();
@@ -29,13 +29,13 @@ bool RequestPool::CanProcessRequest(const std::unique_ptr<RequestHandler>& reque
     return request_queue_.size() && request_handler->ReadyProcessRequest();
 }
 
-std::unique_ptr<GenericRequest> RequestPool::GetRequestFromQueue() {
+GenericRequestPtr RequestPool::GetRequestFromQueue() {
     auto request = std::move(request_queue_.front());
     request_queue_.pop_front();
     return request;
 }
 
-void RequestPool::PutRequestBackToQueue(std::unique_ptr<GenericRequest> request) {
+void RequestPool::PutRequestBackToQueue(GenericRequestPtr request) {
     request_queue_.emplace_front(std::move(request));
 }
 
@@ -85,6 +85,17 @@ RequestPool::~RequestPool() {
 uint64_t RequestPool::NRequestsInQueue() {
     std::lock_guard<std::mutex> lock{mutex_};
     return request_queue_.size();
+}
+Error RequestPool::AddRequests(GenericRequests requests) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    for (auto& elem : requests) {
+        request_queue_.emplace_front(std::move(elem));
+    }
+    lock.unlock();
+//todo: maybe notify_one is better here
+    condition_.notify_all();
+    return nullptr;
+
 }
 
 }

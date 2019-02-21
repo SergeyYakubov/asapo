@@ -15,10 +15,10 @@ set(SOURCE_FILES
         src/receiver_data_server/receiver_data_server.cpp
         src/receiver_data_server/net_server.cpp
         src/receiver_data_server/tcp_server.cpp
-        src/receiver_data_server/request_pool.cpp
-        src/receiver_data_server/request.cpp
+        src/receiver_data_server/receiver_data_server_request.cpp
         src/receiver_data_server/receiver_data_server_logger.cpp
-        src/data_cache.cpp)
+        src/data_cache.cpp src/receiver_data_server/receiver_data_server_request_handler_factory.cpp
+)
 
 
 ################################
@@ -28,7 +28,7 @@ set(SOURCE_FILES
 
 
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:curl_http_client>
-         $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:logger>)
+         $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:request_pool>)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
 target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} database)

@@ -46,7 +46,7 @@ using asapo::RequestFactory;
 
 namespace {
 
-class MockReqestHandler : public asapo::RequestHandler {
+class MockReqestHandler : public asapo::ReceiverRequestHandler {
   public:
     Error ProcessRequest(Request* request) const override {
         return Error{ProcessRequest_t(*request)};

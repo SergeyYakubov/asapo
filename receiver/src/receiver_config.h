@@ -21,6 +21,7 @@ struct ReceiverConfig {
     bool use_datacache = true;
     uint64_t datacache_size_gb = 0;
     uint64_t datacache_reserved_share = 0;
+    uint64_t dataserver_nthreads = 1;
     LogLevel log_level = LogLevel::Info;
     std::string tag;
     std::string source_host;

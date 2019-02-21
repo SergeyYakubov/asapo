@@ -45,8 +45,10 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
     config_string += "," + Key("MonitorDbName", error_field) + "\"" + config.monitor_db_name + "\"";
     config_string += "," + Key("BrokerDbAddress", error_field) + "\"" + config.broker_db_uri + "\"";
     config_string += "," + Key("ListenPort", error_field) + std::to_string(config.listen_port);
-    config_string += "," + Key("DataServer", error_field) + "{" + Key("ListenPort", error_field) + std::to_string(
-                         config.dataserver_listen_port) + "}";
+    config_string += "," + Key("DataServer", error_field) + "{";
+    config_string += Key("ListenPort", error_field) + std::to_string(config.dataserver_listen_port);
+    config_string += "," + Key("NThreads", error_field) + std::to_string(config.dataserver_nthreads);
+    config_string += "}";
     config_string += "," + Key("DataCache", error_field) + "{";
     config_string += Key("Use", error_field) + (config.use_datacache ? "true" : "false") ;
     config_string += "," + Key("SizeGB", error_field) + std::to_string(config.datacache_size_gb);

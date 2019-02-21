@@ -136,6 +136,23 @@ TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 }
 
 
+TEST_F(RequestPoolTests, AddRequestsOk) {
+
+    TestRequest* request2 = new TestRequest{GenericRequestHeader{}};
+
+    ExpectSend(mock_request_handler, 2);
+
+    std::vector<std::unique_ptr<GenericRequest>> requests;
+    requests.push_back(std::move(request));
+    requests.push_back(std::unique_ptr<GenericRequest> {request2});
+
+    auto err = pool.AddRequests(std::move(requests));
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
 
 TEST_F(RequestPoolTests, FinishProcessingThreads) {
     EXPECT_CALL(mock_logger, Debug(HasSubstr("finishing thread"))).Times(nthreads);
