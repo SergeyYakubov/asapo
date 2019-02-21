@@ -31,7 +31,7 @@ using asapo::ProducerRequest;
 
 MATCHER_P5(M_CheckSendDataRequest, op_code, beamtime_id, file_id, file_size, message,
            "Checks if a valid GenericRequestHeader was Send") {
-    auto request = dynamic_cast<ProducerRequest*>(arg);
+    auto request = static_cast<ProducerRequest*>(arg);
     return ((asapo::GenericRequestHeader)(arg->header)).op_code == op_code
            && ((asapo::GenericRequestHeader)(arg->header)).data_id == file_id
            && ((asapo::GenericRequestHeader)(arg->header)).data_size == uint64_t(file_size)

@@ -183,11 +183,7 @@ Error RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {
 
 
 Error RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request) {
-    auto producer_request = dynamic_cast<ProducerRequest*>(request);
-    if (producer_request == nullptr) {
-        return ProducerErrorTemplates::kInternalServerError.Generate("dynamic cast to ProducerRequest");
-    }
-
+    auto producer_request = static_cast<ProducerRequest*>(request);
     auto err = producer_request->ReadDataFromFileIfNeeded(io__.get());
     if (err) {
         return err;
