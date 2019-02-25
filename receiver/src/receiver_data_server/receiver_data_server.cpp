@@ -5,9 +5,10 @@
 
 namespace asapo {
 
-ReceiverDataServer::ReceiverDataServer(std::string address, LogLevel log_level, uint8_t n_threads) : net__{new TcpServer(address)},
-log__{GetDefaultReceiverDataServerLogger()} {
-    request_handler_factory_.reset(new ReceiverDataServerRequestHandlerFactory());
+ReceiverDataServer::ReceiverDataServer(std::string address, LogLevel log_level, uint8_t n_threads,
+                                       SharedCache data_cache) : net__{new TcpServer(address)},
+log__{GetDefaultReceiverDataServerLogger()}, data_cache_{data_cache} {
+    request_handler_factory_.reset(new ReceiverDataServerRequestHandlerFactory(net__.get(), data_cache_.get()));
     GetDefaultReceiverDataServerLogger()->SetLogLevel(log_level);
     request_pool__.reset(new RequestPool{n_threads, request_handler_factory_.get(), log__});
 }

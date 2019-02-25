@@ -75,11 +75,11 @@ bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta* meta) {
 }
 
 // we allow to read if it was already locked - if lock come from reading - no problems, from writing -should not happen!
-void* DataCache::GetSlotToReadAndLock(uint64_t id, CacheMeta** meta) {
+void* DataCache::GetSlotToReadAndLock(uint64_t id, uint64_t data_size, CacheMeta** meta) {
     std::lock_guard<std::mutex> lock{mutex_};
     for (auto& meta_rec : meta_) {
         if (meta_rec->id == id) {
-            if (SlotTooCloseToCurrentPointer(meta_rec.get())) {
+            if (data_size != meta_rec->size || SlotTooCloseToCurrentPointer(meta_rec.get())) {
                 return nullptr;
             }
             meta_rec->lock++;

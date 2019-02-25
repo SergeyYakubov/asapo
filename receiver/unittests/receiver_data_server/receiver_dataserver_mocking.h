@@ -1,5 +1,5 @@
-#ifndef ASAPO_MOCK_STATISTICS_H
-#define ASAPO_MOCK_STATISTICS_H
+#ifndef ASAPO_RECEIVER_DATASERVER_MOCKING_H
+#define ASAPO_RECEIVER_DATASERVER_MOCKING_H
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -18,7 +18,7 @@ class MockNetServer : public NetServer {
         err->reset(error);
         GenericRequests res;
         for (const auto& preq : reqs) {
-            ReceiverDataServerRequestPtr ptr = ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{preq.header, preq.net_id, preq.server}};
+            ReceiverDataServerRequestPtr ptr = ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{preq.header, preq.source_id}};
             res.push_back(std::move(ptr));
         }
         return  res;
@@ -26,6 +26,14 @@ class MockNetServer : public NetServer {
 
     MOCK_CONST_METHOD1(GetNewRequests_t, std::vector<ReceiverDataServerRequest> (ErrorInterface**
                        error));
+
+    Error SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept override {
+        return  Error{SendData_t(source_id, buf, size)};
+
+    };
+
+    MOCK_CONST_METHOD3(SendData_t, ErrorInterface * (uint64_t source_id, void* buf, uint64_t size));
+
 };
 
 class MockPool : public RequestPool {
@@ -47,4 +55,4 @@ class MockPool : public RequestPool {
 
 }
 
-#endif //ASAPO_MOCK_STATISTICS_H
+#endif //ASAPO_RECEIVER_DATASERVER_MOCKING_H

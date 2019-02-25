@@ -13,12 +13,11 @@ set(SOURCE_FILES
         src/statistics_sender_fluentd.cpp
         src/requests_dispatcher.cpp
         src/receiver_data_server/receiver_data_server.cpp
-        src/receiver_data_server/net_server.cpp
         src/receiver_data_server/tcp_server.cpp
         src/receiver_data_server/receiver_data_server_request.cpp
         src/receiver_data_server/receiver_data_server_logger.cpp
         src/data_cache.cpp src/receiver_data_server/receiver_data_server_request_handler_factory.cpp
-)
+        src/receiver_data_server/receiver_data_server_request_handler.cpp)
 
 
 ################################
@@ -74,5 +73,7 @@ gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}" ${CMAKE_CURRENT_
 set(TEST_SOURCE_FILES_RDS
         unittests/receiver_data_server/test_receiver_data_server.cpp
         unittests/receiver_data_server/test_tcp_server.cpp
+        unittests/receiver_data_server/test_request_handler_factory.cpp
+        unittests/receiver_data_server/test_request_handler.cpp
         )
 gtest(${TARGET_NAME}_RDS "${TEST_SOURCE_FILES_RDS}" "${TEST_LIBRARIES}" ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)

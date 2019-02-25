@@ -13,7 +13,8 @@ class TcpServer : public NetServer {
   public:
     TcpServer(std::string address);
     ~TcpServer();
-    virtual GenericRequests GetNewRequests(Error* err) const noexcept override ;
+    GenericRequests GetNewRequests(Error* err) const noexcept override ;
+    Error SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept override;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
   private:

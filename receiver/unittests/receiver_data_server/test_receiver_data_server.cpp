@@ -37,7 +37,7 @@ using asapo::ReceiverDataServerRequest;
 namespace {
 
 TEST(ReceiverDataServer, Constructor) {
-    ReceiverDataServer data_server{"", asapo::LogLevel::Debug, 4};
+    ReceiverDataServer data_server{"", asapo::LogLevel::Debug, 4, nullptr};
     ASSERT_THAT(dynamic_cast<const asapo::TcpServer*>(data_server.net__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestPool*>(data_server.request_pool__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(data_server.log__), Ne(nullptr));
@@ -46,7 +46,7 @@ TEST(ReceiverDataServer, Constructor) {
 class ReceiverDataServerTests : public Test {
   public:
     std::string expected_address = "somehost:123";
-    ReceiverDataServer data_server{expected_address, asapo::LogLevel::Debug, 0};
+    ReceiverDataServer data_server{expected_address, asapo::LogLevel::Debug, 0, nullptr};
     asapo::MockNetServer mock_net;
     asapo::MockPool mock_pool;
     NiceMock<asapo::MockLogger> mock_logger;
@@ -101,10 +101,10 @@ TEST_F(ReceiverDataServerTests, ErrorAddingRequests) {
     );
 
     EXPECT_CALL(mock_pool, AddRequests_t(_)).WillOnce(
-        Return(asapo::ReceiverErrorTemplates::kMemoryPool.Generate("cannot add request to pool").release())
+        Return(asapo::ReceiverDataServerErrorTemplates::kMemoryPool.Generate("cannot add request to pool").release())
     );
 
-    auto errtext = asapo::ReceiverErrorTemplates::kMemoryPool.Generate("cannot add request to pool")->Explain();
+    auto errtext = asapo::ReceiverDataServerErrorTemplates::kMemoryPool.Generate("cannot add request to pool")->Explain();
 
     EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("stopped"), HasSubstr(errtext))));
 

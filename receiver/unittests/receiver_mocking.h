@@ -1,5 +1,5 @@
-#ifndef ASAPO_MOCK_STATISTICS_H
-#define ASAPO_MOCK_STATISTICS_H
+#ifndef ASAPO_RECEIVER_MOCKING_H
+#define ASAPO_RECEIVER_MOCKING_H
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -69,9 +69,12 @@ class MockDataCache: public DataCache {
     MOCK_METHOD2(GetFreeSlotAndLock, void* (uint64_t
                                             size, CacheMeta** meta));
     MOCK_METHOD1(UnlockSlot, bool(CacheMeta* meta));
+    MOCK_METHOD3(GetSlotToReadAndLock, void* (uint64_t
+                                              id, uint64_t data_size, CacheMeta** meta));
+
 };
 
 
 }
 
-#endif //ASAPO_MOCK_STATISTICS_H
+#endif //ASAPO_RECEIVER_MOCKING_H

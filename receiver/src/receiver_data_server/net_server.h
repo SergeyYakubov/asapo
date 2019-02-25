@@ -10,7 +10,10 @@ namespace asapo {
 class NetServer {
   public:
     virtual GenericRequests GetNewRequests(Error* err) const noexcept = 0;
+    virtual Error SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept = 0;
+
     virtual ~NetServer() = default;
+
 };
 
 }

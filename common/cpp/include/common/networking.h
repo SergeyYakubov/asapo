@@ -20,6 +20,8 @@ enum Opcode : uint8_t {
 
 enum NetworkErrorCode : uint16_t {
     kNetErrorNoError,
+    kNetErrorWrongRequest,
+    kNetErrorNoData,
     kNetAuthorizationError,
     kNetErrorFileIdAlreadyInUse,
     kNetErrorAllocateStorageFailed,
@@ -49,7 +51,6 @@ struct GenericRequestHeader {
 
 struct GenericNetworkResponse {
     Opcode              op_code;
-    NetworkRequestId    request_id;
     NetworkErrorCode    error_code;
     char        message[kMaxMessageSize];
 };

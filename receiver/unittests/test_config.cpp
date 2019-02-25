@@ -101,7 +101,7 @@ TEST_F(ConfigTests, ErrorReadSettings) {
     std::vector<std::string>fields {"MonitorDbAddress", "ListenPort", "DataServer", "ListenPort", "WriteToDisk",
                                     "WriteToDb", "DataCache", "Use", "SizeGB", "ReservedShare", "BrokerDbAddress", "Tag",
                                     "AuthorizationServer", "AuthorizationInterval", "RootFolder", "MonitorDbName", "LogLevel",
-                                    "SourceHost","NThreads"};
+                                    "SourceHost", "NThreads"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfig(test_config, field);
         ASSERT_THAT(err, Ne(nullptr));

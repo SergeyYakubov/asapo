@@ -3,10 +3,9 @@
 
 namespace asapo {
 
-ReceiverDataServerRequest::ReceiverDataServerRequest(GenericRequestHeader header, uint64_t net_id,
-        const NetServer* server) :
+ReceiverDataServerRequest::ReceiverDataServerRequest(GenericRequestHeader header, uint64_t source_id) :
     GenericRequest(std::move(header)),
-    net_id{net_id}, server{server} {
+    source_id{source_id} {
 }
 
 

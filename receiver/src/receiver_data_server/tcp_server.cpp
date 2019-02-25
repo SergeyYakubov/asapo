@@ -51,7 +51,7 @@ ReceiverDataServerRequestPtr TcpServer::ReadRequest(SocketDescriptor socket, Err
                     );
         return nullptr;
     }
-    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{std::move(header), (uint64_t) socket, this}};
+    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{std::move(header), (uint64_t) socket}};
 }
 
 GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noexcept {
@@ -91,5 +91,14 @@ TcpServer::~TcpServer() {
     io__->CloseSocket(master_socket_, nullptr);
 }
 
+
+Error TcpServer::SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept {
+    Error err;
+    io__->Send(source_id, buf, size, &err);
+    if (err) {
+        log__->Error("cannot send to worker" + err->Explain());
+    }
+    return err;
+}
 
 }

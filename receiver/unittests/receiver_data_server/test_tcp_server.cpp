@@ -224,13 +224,31 @@ TEST_F(TCPServerTests, GetNewRequestsReadOk) {
     ASSERT_THAT(requests.size(), Eq(3));
     int i = 0;
     for (auto conn : expected_client_sockets) {
+        ASSERT_THAT(dynamic_cast<asapo::ReceiverDataServerRequest*>(requests[i].get()), Ne(nullptr));
         ASSERT_THAT(requests[i]->header.data_id, Eq(conn));
         ASSERT_THAT(requests[i]->header.op_code, Eq(asapo::kOpcodeGetBufferData));
-//        ASSERT_THAT(requests[i]->net_id, Eq(conn));
+//        ASSERT_THAT(requests[i]->source_id, Eq(conn));
 //        ASSERT_THAT(requests[i]->server, Eq(&tcp_server));
         i++;
     }
 
+}
+
+TEST_F(TCPServerTests, SendData) {
+    uint8_t tmp;
+
+    EXPECT_CALL(mock_io, Send_t(1, &tmp, 10, _))
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+            Return(1)
+        ));
+
+    EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
+
+    auto err = tcp_server.SendData(1, &tmp, 10);
+
+    ASSERT_THAT(err, Ne(nullptr));
 }
 
 }
