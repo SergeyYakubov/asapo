@@ -23,7 +23,7 @@ asapo::Error ReadConfigFile(int argc, char* argv[]) {
 std::thread StartDataServer(const asapo::ReceiverConfig* config, asapo::SharedCache cache) {
     static const std::string dataserver_address = "0.0.0.0:" + std::to_string(config->dataserver_listen_port);
     return std::thread([config] {
-        asapo::ReceiverDataServer data_server{dataserver_address, config->log_level, config->dataserver_nthreads};
+        asapo::ReceiverDataServer data_server{dataserver_address, config->log_level, (uint8_t)config->dataserver_nthreads};
         data_server.Run();
     });
 }
