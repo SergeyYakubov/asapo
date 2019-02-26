@@ -7,6 +7,7 @@
 #include "io/io_factory.h"
 
 #include "http_client/http_error.h"
+#include "tcp_client.h"
 
 using std::chrono::high_resolution_clock;
 
@@ -43,7 +44,8 @@ ServerDataBroker::ServerDataBroker(std::string server_uri,
                                    std::string source_name,
                                    std::string token) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
-    server_uri_{std::move(server_uri)}, source_name_{std::move(source_name)}, token_{std::move(token)} {
+    net_client__{new TcpClient()},
+server_uri_{std::move(server_uri)}, source_name_{std::move(source_name)}, token_{std::move(token)} {
 }
 
 Error ServerDataBroker::Connect() {
@@ -173,7 +175,11 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, FileInfo*
     }
 
     Error error;
-    *data = io__->GetDataFromFile(info->FullName(""), &info->size, &error);
+
+    error = net_client__->GetData(info, data);
+    if (error) {
+        *data = io__->GetDataFromFile(info->FullName(""), &info->size, &error);
+    }
     return error;
 }
 

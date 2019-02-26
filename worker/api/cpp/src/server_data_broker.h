@@ -4,7 +4,7 @@
 #include "worker/data_broker.h"
 #include "io/io.h"
 #include "http_client/http_client.h"
-
+#include "net_client.h"
 
 namespace asapo {
 
@@ -25,6 +25,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     void SetTimeout(uint64_t timeout_ms) override;
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
+    std::unique_ptr<NetClient> net_client__;
   private:
     std::string RequestWithToken(std::string uri);
     Error GetFileInfoFromServer(FileInfo* info, GetImageServerOperation op);

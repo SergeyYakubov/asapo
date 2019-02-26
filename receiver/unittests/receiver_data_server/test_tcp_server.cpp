@@ -251,4 +251,9 @@ TEST_F(TCPServerTests, SendData) {
     ASSERT_THAT(err, Ne(nullptr));
 }
 
+TEST_F(TCPServerTests, HandleAfterError) {
+    EXPECT_CALL(mock_io, CloseSocket_t(expected_client_sockets[0], _));
+    tcp_server.HandleAfterError(expected_client_sockets[0]);
+}
+
 }

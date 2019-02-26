@@ -34,6 +34,11 @@ class MockNetServer : public NetServer {
 
     MOCK_CONST_METHOD3(SendData_t, ErrorInterface * (uint64_t source_id, void* buf, uint64_t size));
 
+    void  HandleAfterError(uint64_t source_id) const noexcept override {
+        HandleAfterError_t(source_id);
+    }
+
+    MOCK_CONST_METHOD1(HandleAfterError_t, void (uint64_t source_id));
 };
 
 class MockPool : public RequestPool {

@@ -57,8 +57,10 @@ ReceiverDataServerRequestPtr TcpServer::ReadRequest(SocketDescriptor socket, Err
 GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noexcept {
     GenericRequests requests;
     for (auto client : sockets) {
-        Error
-        err;
+        log__->Debug("got active sockets: " + std::to_string(client));
+    }
+    for (auto client : sockets) {
+        Error err;
         auto request = ReadRequest(client, &err);
         if (err) {
             continue;
@@ -99,6 +101,9 @@ Error TcpServer::SendData(uint64_t source_id, void* buf, uint64_t size) const no
         log__->Error("cannot send to worker" + err->Explain());
     }
     return err;
+}
+void TcpServer::HandleAfterError(uint64_t source_id) const noexcept {
+    CloseSocket(source_id);
 }
 
 }

@@ -88,6 +88,7 @@ TEST_F(RequestHandlerTests, RequestAlwaysReady) {
 TEST_F(RequestHandlerTests, ProcessRequest_WronOpCode) {
     request.header.op_code = asapo::kOpcodeUnknownOp;
     MockSendResponce(asapo::kNetErrorWrongRequest, false);
+    EXPECT_CALL(mock_net, HandleAfterError_t(expected_source_id));
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("wrong request")));
 

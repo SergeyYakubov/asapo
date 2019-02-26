@@ -15,6 +15,7 @@ class TcpServer : public NetServer {
     ~TcpServer();
     GenericRequests GetNewRequests(Error* err) const noexcept override ;
     Error SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept override;
+    void HandleAfterError(uint64_t source_id) const noexcept override;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
   private:

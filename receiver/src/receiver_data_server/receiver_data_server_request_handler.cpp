@@ -50,6 +50,7 @@ Error ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* r
     auto receiver_request = dynamic_cast<ReceiverDataServerRequest*>(request);
     if (!CheckRequest(receiver_request)) {
         SendResponce(receiver_request, kNetErrorWrongRequest);
+        server_->HandleAfterError(receiver_request->source_id);
         log__->Error("wrong request, code:" + std::to_string(receiver_request->header.op_code));
         return nullptr;
     }
