@@ -41,11 +41,11 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 REM worker
 "%2" %proxy_address% %beamtime_id% 2 %token% 1000 0 > out.txt
-
-findstr /c:"Processed 3 file(s)" out.txt || goto :error
-findstr /c:"Received: hello1" out.txt || goto :error
-findstr /c:"Received: hello2" out.txt || goto :error
-findstr /c:"Received: hello3" out.txt || goto :error
+type out.txt
+findstr /i /l /c:"Processed 3 file(s)" out.txt || goto :error
+findstr /i /l /c:"Received: hello1" out.txt || goto :error
+findstr /i /l /c:"Received: hello2" out.txt || goto :error
+findstr /i /l /c:"Received: hello3" out.txt || goto :error
 
 
 goto :clean
