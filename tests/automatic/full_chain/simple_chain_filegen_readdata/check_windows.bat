@@ -40,7 +40,12 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 
 REM worker
-"%2" %proxy_address% %beamtime_id% 2 %token% 1000  1 | findstr /c:"Processed 3 file(s)"  || goto :error
+"%2" %proxy_address% %beamtime_id% 2 %token% 1000 0 > out.txt
+
+findstr /c:"Processed 3 file(s)" out.txt || goto :error
+findstr /c:"Received: hello1" out.txt || goto :error
+findstr /c:"Received: hello2" out.txt || goto :error
+findstr /c:"Received: hello3" out.txt || goto :error
 
 
 goto :clean
@@ -59,6 +64,7 @@ rmdir /S /Q %receiver_root_folder%
 rmdir /S /Q c:\tmp\asapo\test_in\test1
 rmdir /S /Q c:\tmp\asapo\test_in\test2
 Taskkill /IM "%producer_short_name%" /F
+del /f out.txt
 
 del /f token
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%

@@ -26,7 +26,7 @@ done
 
 sleep 1
 
-$@ 127.0.0.1:8400 $database_name 2 $token_test_run 1000 | grep "Processed 3 file(s)"
+$@ 127.0.0.1:8400 $database_name 2 $token_test_run 1000 1 | grep "Processed 3 file(s)"
 
 
 

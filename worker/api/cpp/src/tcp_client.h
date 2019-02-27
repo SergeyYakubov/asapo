@@ -18,7 +18,7 @@ class TcpClient : public NetClient {
     Error ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const FileInfo* info) const noexcept;
     Error ReceiveResponce(SocketDescriptor sd) const noexcept;
     Error QueryCacheHasData(SocketDescriptor* sd, const FileInfo* info, bool try_reconnect) const noexcept;
-
+    Error ReceiveData(SocketDescriptor sd, const FileInfo* info, FileData* data) const noexcept;
 };
 
 }

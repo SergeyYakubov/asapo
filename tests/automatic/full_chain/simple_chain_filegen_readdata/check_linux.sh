@@ -28,6 +28,7 @@ Cleanup() {
     nomad stop broker
     nomad stop authorizer
     echo "db.dropDatabase()" | mongo ${beamtime_id}
+    rm out.txt
 }
 
 echo "db.${beamtime_id}.insert({dummy:1})" | mongo ${beamtime_id}
@@ -47,8 +48,14 @@ producerid=`echo $!`
 
 sleep 1
 
-echo hello > /tmp/asapo/test_in/test1/file1
-echo hello > /tmp/asapo/test_in/test1/file2
-echo hello > /tmp/asapo/test_in/test2/file2
+echo -n hello1 > /tmp/asapo/test_in/test1/file1
+echo -n hello2 > /tmp/asapo/test_in/test1/file2
+echo -n hello3 > /tmp/asapo/test_in/test2/file2
 
-$2 ${proxy_address} ${beamtime_id} 2 $token 1000 1 | grep "Processed 3 file(s)"
+$2 ${proxy_address} ${beamtime_id} 2 $token 1000 0 > out.txt
+cat out.txt
+grep "Processed 3 file(s)" out.txt
+grep "Received: hello1" out.txt
+grep "Received: hello2" out.txt
+grep "Received: hello3" out.txt
+

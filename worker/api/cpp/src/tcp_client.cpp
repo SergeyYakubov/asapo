@@ -61,6 +61,24 @@ Error TcpClient::QueryCacheHasData(SocketDescriptor* sd, const FileInfo* info, b
     return ReceiveResponce(*sd);
 }
 
+Error TcpClient::ReceiveData(SocketDescriptor sd, const FileInfo* info, FileData* data) const noexcept {
+    Error err;
+    uint8_t* data_array = nullptr;
+    try {
+        data_array = new uint8_t[info->size];
+    } catch (...) {
+        return ErrorTemplates::kMemoryAllocationError.Generate();
+    }
+    io__->Receive(sd, data_array, info->size, &err);
+    if (!err) {
+        *data = FileData{data_array};
+    } else {
+        delete[] data_array;
+    }
+    return err;
+}
+
+
 Error TcpClient::GetData(const FileInfo* info, FileData* data) const noexcept {
     Error err;
     bool reused;
@@ -74,8 +92,7 @@ Error TcpClient::GetData(const FileInfo* info, FileData* data) const noexcept {
         return err;
     }
 
-    io__->Receive(sd, data->get(), info->size, &err);
-    return err;
+    return ReceiveData(sd, info, data);
 }
 
 }

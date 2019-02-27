@@ -141,7 +141,7 @@ MATCHER_P(CompareFileInfo, file, "") {
 TEST_F(DbWriterHandlerTests, CallsInsert) {
     config.broker_db_uri = "127.0.0.1:27017";
     config.source_host = expected_hostname;
-    config.listen_port = expected_port;
+    config.dataserver_listen_port = expected_port;
 
     SetReceiverConfig(config, "none");
 

@@ -9,6 +9,8 @@
 #include "http_client/http_error.h"
 #include "tcp_client.h"
 
+#include <iostream>
+
 using std::chrono::high_resolution_clock;
 
 namespace asapo {
@@ -180,6 +182,7 @@ Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
 
     auto error = net_client__->GetData(info, data);
     if (error) {
+        std::cout << "error from net client: " << error->Explain() << std::endl;
         *data = io__->GetDataFromFile(info->FullName(""), &info->size, &error);
     }
 
