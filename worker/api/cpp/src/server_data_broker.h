@@ -29,6 +29,7 @@ class ServerDataBroker final : public asapo::DataBroker {
   private:
     std::string RequestWithToken(std::string uri);
     Error GetFileInfoFromServer(FileInfo* info, GetImageServerOperation op);
+    Error GetDataIfNeeded(FileInfo* info, FileData* data);
     Error GetBrokerUri();
     void ProcessServerError(Error* err, const std::string& response, std::string* redirect_uri);
     Error ProcessRequest(std::string* response, std::string request_uri);

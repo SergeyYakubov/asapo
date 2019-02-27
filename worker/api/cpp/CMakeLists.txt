@@ -4,7 +4,8 @@ set(SOURCE_FILES
         src/data_broker.cpp
         src/folder_data_broker.cpp
         src/server_data_broker.cpp
-        src/tcp_client.cpp src/tcp_client.h)
+        src/tcp_client.cpp
+        src/tcp_connection_pool.cpp)
 
 
 ################################
@@ -27,7 +28,10 @@ target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
 ################################
 set(TEST_SOURCE_FILES unittests/test_worker_api.cpp
                       unittests/test_folder_broker.cpp
-                      unittests/test_server_broker.cpp)
+                      unittests/test_server_broker.cpp
+                      unittests/test_tcp_client.cpp
+            unittests/test_tcp_connection_pool.cpp
+        )
 set(TEST_LIBRARIES "${TARGET_NAME}")
 
 

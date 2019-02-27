@@ -21,7 +21,6 @@ using ::testing::SetArgPointee;
 namespace {
 
 uint64_t big_uint = 18446744073709551615ull;
-int64_t big_int = -9223372036854775807ll - 1;
 
 FileInfo PrepareFileInfo() {
     FileInfo finfo;

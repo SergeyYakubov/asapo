@@ -99,6 +99,7 @@ Error TcpServer::SendData(uint64_t source_id, void* buf, uint64_t size) const no
     }
     return err;
 }
+
 void TcpServer::HandleAfterError(uint64_t source_id) const noexcept {
     CloseSocket(source_id);
 }

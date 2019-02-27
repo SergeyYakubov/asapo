@@ -170,16 +170,19 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, FileInfo*
         return err;
     }
 
+    return GetDataIfNeeded(info, data);
+}
+
+Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
     if (data == nullptr) {
         return nullptr;
     }
 
-    Error error;
-
-    error = net_client__->GetData(info, data);
+    auto error = net_client__->GetData(info, data);
     if (error) {
         *data = io__->GetDataFromFile(info->FullName(""), &info->size, &error);
     }
+
     return error;
 }
 
