@@ -32,9 +32,9 @@ start /B "" "%1" test.json
 
 ping 1.0.0.0 -n 3 -w 100 > nul
 
-echo hello > c:\tmp\asapo\test_in\test1\file1
-echo hello > c:\tmp\asapo\test_in\test1\file2
-echo hello > c:\tmp\asapo\test_in\test2\file2
+echo hello1 > c:\tmp\asapo\test_in\test1\file1
+echo hello2 > c:\tmp\asapo\test_in\test1\file2
+echo hello3 > c:\tmp\asapo\test_in\test2\file2
 
 ping 1.0.0.0 -n 10 -w 100 > nul
 
