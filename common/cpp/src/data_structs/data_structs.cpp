@@ -2,6 +2,8 @@
 
 #include "json_parser/json_parser.h"
 
+#include "preprocessor/definitions.h"
+
 #include <iostream>
 
 namespace asapo {
@@ -56,7 +58,7 @@ bool FileInfo::SetFromJson(const std::string& json_string) {
 
 std::string FileInfo::FullName(const std::string& base_path) const  {
     std::string full_name;
-    full_name = base_path.empty() ? "" : base_path + "/";
+    full_name = base_path.empty() ? "" : base_path + kPathSeparator;
     return full_name + name;
 }
 
