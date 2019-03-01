@@ -6,6 +6,7 @@
 #include "io/io.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 #include "../src/folder_data_broker.h"
+#include "preprocessor/definitions.h"
 
 using asapo::DataBrokerFactory;
 using asapo::DataBroker;
@@ -240,7 +241,7 @@ class GetDataFromFileTests : public Test {
 };
 
 TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
-    EXPECT_CALL(mock, GetDataFromFile_t("/path/to/file/1", _, _)).
+    EXPECT_CALL(mock, GetDataFromFile_t(std::string("/path/to/file")+asapo::kPathSeparator+"1", _, _)).
     WillOnce(DoAll(testing::SetArgPointee<2>(static_cast<SimpleError*>(nullptr)), testing::Return(nullptr)));
 
     data_broker->GetNext(&fi, &data);
