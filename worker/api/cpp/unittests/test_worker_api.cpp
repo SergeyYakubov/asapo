@@ -45,7 +45,7 @@ TEST_F(DataBrokerFactoryTests, FailCreateDataSourceWithEmptySource) {
 
 TEST_F(DataBrokerFactoryTests, CreateServerDataSource) {
 
-    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "beamtime_id", "token", &error);
+    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "path", "beamtime_id", "token", &error);
 
     ASSERT_THAT(error, Eq(nullptr));
     ASSERT_THAT(dynamic_cast<ServerDataBroker*>(data_broker.get()), Ne(nullptr));

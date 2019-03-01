@@ -43,11 +43,12 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
 }
 
 ServerDataBroker::ServerDataBroker(std::string server_uri,
+                                   std::string source_path,
                                    std::string source_name,
                                    std::string token) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
     net_client__{new TcpClient()},
-server_uri_{std::move(server_uri)}, source_name_{std::move(source_name)}, token_{std::move(token)} {
+server_uri_{std::move(server_uri)}, source_path_{std::move(source_path)}, source_name_{std::move(source_name)}, token_{std::move(token)} {
 }
 
 Error ServerDataBroker::Connect() {
@@ -180,13 +181,28 @@ Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
         return nullptr;
     }
 
+    if (DataCanBeInBuffer(info)) {
+        if (TryGetDataFromBuffer(info, data) == nullptr) {
+            return nullptr;
+        }
+    }
+
+    Error error;
+    *data = io__->GetDataFromFile(info->FullName(source_path_), &info->size, &error);
+    return error;
+}
+
+bool ServerDataBroker::DataCanBeInBuffer(const FileInfo* info) {
+    return info->buf_id > 0;
+}
+
+Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* data) {
     auto error = net_client__->GetData(info, data);
     if (error) {
         std::cout << "error from net client: " << error->Explain() << std::endl;
-        *data = io__->GetDataFromFile(info->FullName(""), &info->size, &error);
-    }
-
+    };
     return error;
+
 }
 
 }

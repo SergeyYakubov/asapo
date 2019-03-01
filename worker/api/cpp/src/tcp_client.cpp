@@ -13,6 +13,7 @@ Error TcpClient::SendGetDataRequest(SocketDescriptor sd, const FileInfo* info) c
     GenericRequestHeader request_header{kOpcodeGetBufferData, info->buf_id, info->size};
     io__->Send(sd, &request_header, sizeof(request_header), &err);
     if (err) {
+        connection_pool__->ReleaseConnection(sd);
         io__->CloseSocket(sd, nullptr);
     }
     return err;
@@ -35,6 +36,7 @@ Error TcpClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
     io__->Receive(sd, &Response, sizeof(Response), &err);
     if(err != nullptr) {
         io__->CloseSocket(sd, nullptr);
+        connection_pool__->ReleaseConnection(sd);
         return err;
     }
     switch (Response.error_code) {
@@ -67,12 +69,15 @@ Error TcpClient::ReceiveData(SocketDescriptor sd, const FileInfo* info, FileData
     try {
         data_array = new uint8_t[info->size];
     } catch (...) {
+        connection_pool__->ReleaseConnection(sd);
         return ErrorTemplates::kMemoryAllocationError.Generate();
     }
     io__->Receive(sd, data_array, info->size, &err);
+    connection_pool__->ReleaseConnection(sd);
     if (!err) {
         *data = FileData{data_array};
     } else {
+        io__->CloseSocket(sd, nullptr);
         delete[] data_array;
     }
     return err;

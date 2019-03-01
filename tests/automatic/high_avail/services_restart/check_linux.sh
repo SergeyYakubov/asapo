@@ -25,7 +25,6 @@ Cleanup() {
 
 influx -execute "create database ${monitor_database_name}"
 
-sed -i 's/"WriteToDisk":true/"WriteToDisk":false/g' receiver.json.tpl
 sed -i 's/info/debug/g' broker.json.tpl
 
 nomad run nginx.nmd
@@ -46,7 +45,7 @@ $1 localhost:8400 ${beamtime_id} 100 $5 4 0 100 &
 
 
 #worker
-$2 ${proxy_address} ${beamtime_id} 2 $token 30000 1 &> output.txt &
+$2 ${proxy_address} dummy_path ${beamtime_id} 2 $token 30000 1 &> output.txt &
 
 sleep 1
 

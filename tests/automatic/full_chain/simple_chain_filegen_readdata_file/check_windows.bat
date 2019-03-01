@@ -1,8 +1,12 @@
+
+
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 SET beamtime_id=asapo_test
 SET beamline=test
 SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\%beamline%\%beamtime_id%"
+
+set producer_short_name="%~nx1"
 
 
 "%3" token -secret broker_secret.key %beamtime_id% > token
@@ -22,11 +26,26 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 REM producer
 mkdir %receiver_folder%
-start /B "" "%1" %proxy_address% %beamtime_id% 100 1000 4 0 100
-ping 1.0.0.0 -n 1 -w 100 > nul
+mkdir  c:\tmp\asapo\test_in\test1
+mkdir  c:\tmp\asapo\test_in\test2
+start /B "" "%1" test.json
+
+ping 1.0.0.0 -n 3 -w 100 > nul
+
+echo hello1 > c:\tmp\asapo\test_in\test1\file1
+echo hello2 > c:\tmp\asapo\test_in\test1\file2
+echo hello3 > c:\tmp\asapo\test_in\test2\file2
+
+ping 1.0.0.0 -n 10 -w 100 > nul
+
 
 REM worker
-"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 1000 1 | findstr /c:"Processed 1000 file(s)"  || goto :error
+"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 1000 0 > out.txt
+type out.txt
+findstr /i /l /c:"Processed 3 file(s)" out.txt || goto :error
+findstr /i /l /c:"Received: hello1" out.txt || goto :error
+findstr /i /l /c:"Received: hello2" out.txt || goto :error
+findstr /i /l /c:"Received: hello3" out.txt || goto :error
 
 
 goto :clean
@@ -42,6 +61,11 @@ c:\opt\consul\nomad stop broker
 c:\opt\consul\nomad stop authorizer
 c:\opt\consul\nomad stop nginx
 rmdir /S /Q %receiver_root_folder%
+rmdir /S /Q c:\tmp\asapo\test_in\test1
+rmdir /S /Q c:\tmp\asapo\test_in\test2
+Taskkill /IM "%producer_short_name%" /F
+del /f out.txt
+
 del /f token
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%
 

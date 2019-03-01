@@ -7,7 +7,7 @@
     "ListenPort": 23123
   },
   "DataCache": {
-    "Use": true,
+    "Use": @RECEIVER_USE_CACHE@,
     "SizeGB": 1,
     "ReservedShare": 10
   },
@@ -15,8 +15,8 @@
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "Tag": "{{ env "NOMAD_ADDR_recv" }}",
-  "WriteToDisk":true,
-  "WriteToDb":true,
+  "WriteToDisk": @RECEIVER_WRITE_TO_DISK@,
+  "WriteToDb": true,
   "LogLevel" : "debug",
   "RootFolder" : "/tmp/asapo/receiver/files"
 }

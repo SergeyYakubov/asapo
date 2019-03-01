@@ -1,8 +1,9 @@
-set(TARGET_NAME full_chain_simple_chain_filegen_producer)
+set(TARGET_NAME full_chain_simple_chain_withdata_fromfile)
 
 ################################
 # Testing
 ################################
+set(RECEIVER_USE_CACHE false)
 prepare_asapo()
 if (UNIX)
     set (ROOT_PATH "/tmp/asapo/")

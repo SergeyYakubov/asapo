@@ -14,6 +14,7 @@ using asapo::Error;
 
 struct Params {
     std::string server;
+    std::string file_path;
     std::string beamtime_id;
     std::string token;
     int timeout_ms;
@@ -41,11 +42,12 @@ std::vector<std::thread> StartThreads(const Params& params, std::vector<int>* nf
     auto exec_next = [&params, nfiles, errors](int i) {
         asapo::FileInfo fi;
         Error err;
-        auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.beamtime_id, params.token, &err);
+        auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, params.beamtime_id,
+                      params.token, &err);
         broker->SetTimeout(params.timeout_ms);
         asapo::FileData data;
         while ((err = broker->GetNext(&fi, params.read_data ? &data : nullptr)) == nullptr) {
-            if (params.read_data && (*nfiles)[i] < 10) {
+            if (params.read_data && (*nfiles)[i] < 10 && fi.size < 100) {
                 std::string s(reinterpret_cast<char const*>(data.get()));
                 std::cout << "Received: " << s << std::endl;
             }
@@ -86,18 +88,20 @@ int ReadAllData(const Params& params, uint64_t* duration_ms) {
 
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
-    if (argc != 7) {
-        std::cout << "Usage: " + std::string{argv[0]} +" <server> <run_name> <nthreads> <token> <timeout ms> <metaonly>" <<
+    if (argc != 8) {
+        std::cout << "Usage: " + std::string{argv[0]} +" <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly>"
+                  <<
                   std::endl;
         exit(EXIT_FAILURE);
     }
     Params params;
     params.server = std::string{argv[1]};
-    params.beamtime_id = std::string{argv[2]};
-    params.nthreads = atoi(argv[3]);
-    params.token = std::string{argv[4]};
-    params.timeout_ms = atoi(argv[5]);
-    params.read_data = atoi(argv[6]) != 1;
+    params.file_path = std::string{argv[2]};
+    params.beamtime_id = std::string{argv[3]};
+    params.nthreads = atoi(argv[4]);
+    params.token = std::string{argv[5]};
+    params.timeout_ms = atoi(argv[6]);
+    params.read_data = atoi(argv[7]) != 1;
 
     uint64_t duration_ms;
     auto nfiles = ReadAllData(params, &duration_ms);

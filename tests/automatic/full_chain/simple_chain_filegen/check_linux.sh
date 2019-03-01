@@ -51,4 +51,4 @@ echo hello > /tmp/asapo/test_in/test1/file1
 echo hello > /tmp/asapo/test_in/test1/file2
 echo hello > /tmp/asapo/test_in/test2/file2
 
-$2 ${proxy_address} ${beamtime_id} 2 $token 1000 1 | grep "Processed 3 file(s)"
+$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | grep "Processed 3 file(s)"

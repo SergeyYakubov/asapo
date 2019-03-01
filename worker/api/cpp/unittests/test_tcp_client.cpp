@@ -104,6 +104,7 @@ class TcpClientTests : public Test {
             ));
         if (!ok) {
             EXPECT_CALL(mock_io, CloseSocket_t(sd, _));
+            EXPECT_CALL(mock_connection_pool, ReleaseConnection(sd));
         }
     }
 
@@ -118,6 +119,11 @@ class TcpClientTests : public Test {
                 A_WriteSendDataResponse(responce_code),
                 testing::ReturnArg<2>()
             ));
+        if (!ok) {
+            EXPECT_CALL(mock_io, CloseSocket_t(sd, _));
+            EXPECT_CALL(mock_connection_pool, ReleaseConnection(sd));
+        }
+
     }
 
     void ExpectGetData(asapo::SocketDescriptor sd, bool ok) {
@@ -128,6 +134,10 @@ class TcpClientTests : public Test {
                 testing::SetArgPointee<3>(ok ? nullptr : asapo::IOErrorTemplates::kTimeout.Generate().release()),
                 testing::Return(ok ? expected_size : -1)
             ));
+        if (!ok) {
+            EXPECT_CALL(mock_io, CloseSocket_t(sd, _));
+        }
+        EXPECT_CALL(mock_connection_pool, ReleaseConnection(sd));
     }
 };
 
@@ -173,7 +183,6 @@ TEST_F(TcpClientTests, GetResponceReturnsError) {
     ExpectNewConnection(false, true);
     ExpectSendDataRequest(expected_sd, true);
     ExpectGetResponce(expected_sd, false, asapo::kNetErrorNoError);
-    EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
 
     auto err = client->GetData(&info, &data);
 
@@ -195,7 +204,6 @@ TEST_F(TcpClientTests, GetResponceReturnsWrongRequest) {
     ExpectSendDataRequest(expected_sd, true);
     ExpectGetResponce(expected_sd, true, asapo::kNetErrorWrongRequest);
     EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
-
 
     auto err = client->GetData(&info, &data);
 

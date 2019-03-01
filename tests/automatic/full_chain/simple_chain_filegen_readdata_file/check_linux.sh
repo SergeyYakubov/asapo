@@ -14,20 +14,23 @@ beamline=test
 receiver_root_folder=/tmp/asapo/receiver/files
 receiver_folder=${receiver_root_folder}/${beamline}/${beamtime_id}
 
+mkdir -p /tmp/asapo/test_in/test1/
+mkdir -p /tmp/asapo/test_in/test2/
+
 Cleanup() {
     echo cleanup
-    rm -rf ${receiver_root_folder}
+    kill $producerid
+    rm -rf /tmp/asapo/test_in/test1
+    rm -rf /tmp/asapo/test_in/test2
     nomad stop nginx
     nomad stop receiver
     nomad stop discovery
     nomad stop broker
     nomad stop authorizer
-#    kill $producerid
     echo "db.dropDatabase()" | mongo ${beamtime_id}
-    influx -execute "drop database ${monitor_database_name}"
+    rm out.txt
 }
 
-influx -execute "create database ${monitor_database_name}"
 echo "db.${beamtime_id}.insert({dummy:1})" | mongo ${beamtime_id}
 
 nomad run nginx.nmd
@@ -40,8 +43,19 @@ sleep 1
 
 #producer
 mkdir -p ${receiver_folder}
-$1 localhost:8400 ${beamtime_id} 100 1000 4 0 100 &
-#producerid=`echo $!`
+$1 test.json &
+producerid=`echo $!`
 
+sleep 1
 
-$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | grep "Processed 1000 file(s)"
+echo -n hello1 > /tmp/asapo/test_in/test1/file1
+echo -n hello2 > /tmp/asapo/test_in/test1/file2
+echo -n hello3 > /tmp/asapo/test_in/test2/file2
+
+$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 0 > out.txt
+cat out.txt
+grep "Processed 3 file(s)" out.txt
+grep "Received: hello1" out.txt
+grep "Received: hello2" out.txt
+grep "Received: hello3" out.txt
+

@@ -14,7 +14,6 @@ namespace asapo {
 RequestHandlerFilesystem::RequestHandlerFilesystem(std::string destination_folder, uint64_t thread_id):
     io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()}, destination_folder_{std::move(destination_folder)},
     thread_id_{thread_id} {
-
 }
 
 Error RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request) {
