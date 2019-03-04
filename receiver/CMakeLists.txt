@@ -17,7 +17,8 @@ set(SOURCE_FILES
         src/receiver_data_server/receiver_data_server_request.cpp
         src/receiver_data_server/receiver_data_server_logger.cpp
         src/data_cache.cpp src/receiver_data_server/receiver_data_server_request_handler_factory.cpp
-        src/receiver_data_server/receiver_data_server_request_handler.cpp)
+        src/receiver_data_server/receiver_data_server_request_handler.cpp
+        src/receiver_statistics.cpp)
 
 
 ################################
@@ -54,6 +55,7 @@ set(TEST_SOURCE_FILES
         unittests/test_receiver.cpp
         unittests/test_connection.cpp
         unittests/test_statistics.cpp
+        unittests/test_receiver_statistics.cpp
         unittests/test_config.cpp
         unittests/test_request.cpp
         unittests/test_request_factory.cpp

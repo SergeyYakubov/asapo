@@ -11,7 +11,7 @@ namespace asapo {
 Connection::Connection(SocketDescriptor socket_fd, const std::string& address,
                        SharedCache cache, std::string receiver_tag) :
     io__{GenerateDefaultIO()},
-    statistics__{new Statistics},
+    statistics__{new ReceiverStatistics},
              log__{GetDefaultReceiverLogger()},
 requests_dispatcher__{new RequestsDispatcher{socket_fd, address, statistics__.get(), cache}}  {
     socket_fd_ = socket_fd;
@@ -43,7 +43,7 @@ void Connection::Listen() const noexcept {
         ProcessStatisticsAfterRequest(request);
     }
     io__->CloseSocket(socket_fd_, nullptr);
-    statistics__->Send();
+    statistics__->SendIfNeeded(true);
     log__->Info("disconnected from " + address_);
 }
 

@@ -5,7 +5,7 @@
 #include "unittests/MockLogger.h"
 #include "../src/receiver_error.h"
 #include "../src/request.h"
-#include "../src/statistics.h"
+#include "../src/receiver_statistics.h"
 #include "receiver_mocking.h"
 #include "mock_receiver_config.h"
 
@@ -48,14 +48,14 @@ using asapo::MockStatistics;
 
 
 using asapo::RequestsDispatcher;
-using asapo::Statistics;
+using asapo::ReceiverStatistics;
 
 namespace {
 
 TEST(RequestDispatcher, Constructor) {
-    auto stat = std::unique_ptr<Statistics> {new Statistics};
+    auto stat = std::unique_ptr<ReceiverStatistics> {new ReceiverStatistics};
     RequestsDispatcher dispatcher{0,  "some_address", stat.get(), nullptr};
-    ASSERT_THAT(dynamic_cast<const asapo::Statistics*>(dispatcher.statistics__), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::ReceiverStatistics*>(dispatcher.statistics__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(dispatcher.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(dispatcher.request_factory__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(dispatcher.log__), Ne(nullptr));
@@ -65,7 +65,7 @@ class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
         Request(request_header, socket_fd, "", nullptr) {};
-    Error Handle(Statistics* statistics) override {
+    Error Handle(ReceiverStatistics* statistics) override {
         return Error{Handle_t()};
     };
     MOCK_CONST_METHOD0(Handle_t, ErrorInterface * ());

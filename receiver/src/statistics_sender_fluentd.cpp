@@ -21,10 +21,9 @@ std::string StatisticsSenderFluentd::StatisticsToString(const asapo::StatisticsT
     msg.Append("elapsed_ms", statistic.elapsed_ms);
     msg.Append("data_volume", statistic.data_volume);
     msg.Append("n_requests", statistic.n_requests);
-    msg.Append("db_share", statistic.entity_shares[StatisticEntity::kDatabase], 4);
-    msg.Append("network_share", statistic.entity_shares[StatisticEntity::kNetwork], 4);
-    msg.Append("disk_share", statistic.entity_shares[StatisticEntity::kDisk], 4);
-
+    for (const auto& entity : statistic.extra_entities) {
+        msg.Append(entity.first, entity.second, 4);
+    }
     return msg.LogString();
 }
 

@@ -44,7 +44,7 @@ Error Request::ReceiveData() {
 }
 
 
-Error Request::Handle(Statistics* statistics) {
+Error Request::Handle(ReceiverStatistics* statistics) {
     Error err;
     if (request_header_.data_size != 0) {
         statistics->StartTimer(StatisticEntity::kNetwork);

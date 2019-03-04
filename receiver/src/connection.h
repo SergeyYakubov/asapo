@@ -14,7 +14,7 @@
 #include "common/networking.h"
 #include "io/io.h"
 #include "request.h"
-#include "statistics.h"
+#include "receiver_statistics.h"
 #include "logger/logger.h"
 #include "requests_dispatcher.h"
 #include "data_cache.h"
@@ -34,7 +34,7 @@ class Connection {
     void Listen() const noexcept;
 
     std::unique_ptr<IO> io__;
-    mutable std::unique_ptr<Statistics> statistics__;
+    mutable std::unique_ptr<ReceiverStatistics> statistics__;
     const AbstractLogger* log__;
     std::unique_ptr<RequestsDispatcher> requests_dispatcher__;
   private:

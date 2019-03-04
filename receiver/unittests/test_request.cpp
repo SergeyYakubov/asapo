@@ -73,7 +73,7 @@ class RequestTests : public Test {
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;
-    asapo::Statistics*  stat;
+    asapo::ReceiverStatistics*  stat;
     MockDataCache mock_cache;
     void SetUp() override {
         stat = &mock_statistics;

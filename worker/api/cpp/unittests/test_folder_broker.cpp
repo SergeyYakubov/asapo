@@ -241,7 +241,7 @@ class GetDataFromFileTests : public Test {
 };
 
 TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
-    EXPECT_CALL(mock, GetDataFromFile_t(std::string("/path/to/file")+asapo::kPathSeparator+"1", _, _)).
+    EXPECT_CALL(mock, GetDataFromFile_t(std::string("/path/to/file") + asapo::kPathSeparator + "1", _, _)).
     WillOnce(DoAll(testing::SetArgPointee<2>(static_cast<SimpleError*>(nullptr)), testing::Return(nullptr)));
 
     data_broker->GetNext(&fi, &data);

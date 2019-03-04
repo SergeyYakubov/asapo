@@ -4,21 +4,18 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "../src/statistics.h"
+#include "../src/receiver_statistics.h"
 #include "../src/request.h"
 #include "../src/data_cache.h"
 
 namespace asapo {
 
-class MockStatistics : public asapo::Statistics {
+class MockStatistics : public asapo::ReceiverStatistics {
   public:
-    void SendIfNeeded() noexcept override {
-        SendIfNeeded_t();
+    void SendIfNeeded(bool send_always) noexcept override {
+        SendIfNeeded_t(send_always);
     }
 
-    void Send() noexcept override {
-        Send_t();
-    }
 
     void IncreaseRequestCounter() noexcept override {
         IncreaseRequestCounter_t();
@@ -33,8 +30,7 @@ class MockStatistics : public asapo::Statistics {
         StopTimer_t();
     }
 
-    MOCK_METHOD0(SendIfNeeded_t, void());
-    MOCK_METHOD0(Send_t, void());
+    MOCK_METHOD1(SendIfNeeded_t, void(bool send_always));
     MOCK_METHOD0(IncreaseRequestCounter_t, void());
     MOCK_METHOD0(StopTimer_t, void());
     MOCK_METHOD1(IncreaseRequestDataVolume_t, void (uint64_t
@@ -72,6 +68,15 @@ class MockDataCache: public DataCache {
     MOCK_METHOD3(GetSlotToReadAndLock, void* (uint64_t
                                               id, uint64_t data_size, CacheMeta** meta));
 
+};
+
+
+class MockStatisticsSender: public StatisticsSender {
+  public:
+    void SendStatistics(const StatisticsToSend& statistics) const noexcept override {
+        SendStatistics_t(statistics);
+    }
+    MOCK_CONST_METHOD1(SendStatistics_t, void (const StatisticsToSend&));
 };
 
 

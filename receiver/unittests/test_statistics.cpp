@@ -6,6 +6,7 @@
 #include "../src/statistics_sender.h"
 #include "../src/statistics_sender_influx_db.h"
 #include "../src/statistics_sender_fluentd.h"
+#include "receiver_mocking.h"
 
 using ::testing::Test;
 using ::testing::Gt;
@@ -17,12 +18,12 @@ using ::testing::Ref;
 using ::testing::_;
 
 using asapo::Statistics;
-using asapo::StatisticEntity;
 using asapo::StatisticsSender;
 using asapo::StatisticsSenderInfluxDb;
 using asapo::StatisticsSenderFluentd;
 
 using asapo::StatisticsToSend;
+using asapo::MockStatisticsSender;
 
 
 namespace {
@@ -35,18 +36,9 @@ TEST(StatisticTestsConstructor, Constructor) {
 }
 
 
-class MockStatisticsSender: public StatisticsSender {
-  public:
-    void SendStatistics(const StatisticsToSend& statistics) const noexcept override {
-        SendStatistics_t(statistics);
-    }
-    MOCK_CONST_METHOD1(SendStatistics_t, void (const StatisticsToSend&));
-};
-
 class StatisticTests : public Test {
   public:
     Statistics statistics{0};
-    void TestTimer(const StatisticEntity& entity);
     MockStatisticsSender mock_statistics_sender;
     void SetUp() override {
         statistics.statistics_sender_list__.clear();
@@ -65,10 +57,6 @@ ACTION_P(SaveArg1ToSendStat, value) {
     value->data_volume = resp.data_volume;
     value->elapsed_ms = resp.elapsed_ms;
     value->tags = resp.tags;
-    for (int i = 0; i < asapo::kNStatisticEntities; i++) {
-        value->entity_shares[i] = resp.entity_shares[i];
-    }
-
 }
 
 
@@ -78,9 +66,6 @@ StatisticsToSend StatisticTests::ExtractStat() {
     stat.elapsed_ms = 0;
     stat.n_requests = 0;
     stat.data_volume = 0;
-    for (int i = 0; i < asapo::kNStatisticEntities; i++) {
-        stat.entity_shares[i] = 0.0;
-    }
 
     EXPECT_CALL(mock_statistics_sender, SendStatistics_t(_)).
     WillOnce(SaveArg1ToSendStat(&stat));
@@ -162,55 +147,6 @@ TEST_F(StatisticTests, DataVolumeZeroAtInit) {
     ASSERT_THAT(stat.data_volume, Eq(0));
 }
 
-void StatisticTests::TestTimer(const StatisticEntity& entity) {
-    statistics.StartTimer(entity);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-    statistics.StopTimer();
-
-    auto stat = ExtractStat();
-
-    ASSERT_THAT(stat.entity_shares[entity], Ge(0.4));
-
-}
-
-TEST_F(StatisticTests, TimerForDatabase) {
-    TestTimer(StatisticEntity::kDatabase);
-}
-
-TEST_F(StatisticTests, TimerForNetwork) {
-    TestTimer(StatisticEntity::kNetwork);
-}
-
-TEST_F(StatisticTests, TimerForDisk) {
-    TestTimer(StatisticEntity::kDisk);
-}
-
-TEST_F(StatisticTests, TimerForAll) {
-    statistics.StartTimer(StatisticEntity::kDatabase);
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    statistics.StopTimer();
-    statistics.StartTimer(StatisticEntity::kNetwork);
-    std::this_thread::sleep_for(std::chrono::milliseconds(30));
-    statistics.StopTimer();
-
-    statistics.StartTimer(StatisticEntity::kDisk);
-    std::this_thread::sleep_for(std::chrono::milliseconds(40));
-    statistics.StopTimer();
-
-    auto stat = ExtractStat();
-
-    ASSERT_THAT(stat.entity_shares[StatisticEntity::kDatabase], Ge(0.15));
-    ASSERT_THAT(stat.entity_shares[StatisticEntity::kDatabase], Le(0.25));
-
-    ASSERT_THAT(stat.entity_shares[StatisticEntity::kNetwork], Ge(0.25));
-    ASSERT_THAT(stat.entity_shares[StatisticEntity::kNetwork], Le(0.35));
-
-    ASSERT_THAT(stat.entity_shares[StatisticEntity::kDisk], Ge(0.35));
-    ASSERT_THAT(stat.entity_shares[StatisticEntity::kDisk], Le(0.45));
-}
-
-
 TEST_F(StatisticTests, SendStaticsDoesCallsSender) {
     statistics.SetWriteInterval(1000);
 
@@ -227,14 +163,11 @@ TEST_F(StatisticTests, StatisticsSend) {
     stat.elapsed_ms = 0;
     stat.n_requests = 0;
     stat.data_volume = 0;
-    for (int i = 0; i < asapo::kNStatisticEntities; i++) {
-        stat.entity_shares[i] = 0.0;
-    }
 
     EXPECT_CALL(mock_statistics_sender, SendStatistics_t(_)).
     WillOnce(SaveArg1ToSendStat(&stat));
 
-    statistics.Send();
+    statistics.SendIfNeeded(true);
     std::cout << stat.elapsed_ms << std::endl;
 
     ASSERT_THAT(stat.elapsed_ms, Ge(1));

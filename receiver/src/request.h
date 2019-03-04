@@ -11,7 +11,7 @@
 #include "request_handler_db_write.h"
 #include "request_handler_authorize.h"
 
-#include "statistics.h"
+#include "receiver_statistics.h"
 #include "data_cache.h"
 
 #include "preprocessor/definitions.h"
@@ -21,7 +21,7 @@ using RequestHandlerList = std::vector<const ReceiverRequestHandler*>;
 
 class Request {
   public:
-    VIRTUAL Error Handle(Statistics*);
+    VIRTUAL Error Handle(ReceiverStatistics*);
     ~Request() = default;
     Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
             DataCache* cache);

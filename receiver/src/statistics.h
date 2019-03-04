@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <mutex>
 
 
 #include "statistics_sender.h"
@@ -13,16 +14,10 @@
 
 namespace asapo {
 
-static const auto kNStatisticEntities = 3;
-enum StatisticEntity : int {
-    kDatabase = 0,
-    kDisk,
-    kNetwork,
-    kAuthorizer
-};
+using ExtraEntity = std::pair<std::string, double>;
 
 struct StatisticsToSend {
-    double entity_shares[kNStatisticEntities];
+    std::vector<ExtraEntity> extra_entities;
     uint64_t elapsed_ms;
     uint64_t data_volume;
     uint64_t n_requests;
@@ -31,32 +26,27 @@ struct StatisticsToSend {
 
 class Statistics {
   public:
-    VIRTUAL void SendIfNeeded() noexcept;
-    VIRTUAL void Send() noexcept;
+    VIRTUAL void SendIfNeeded(bool send_always = false) noexcept;
     explicit Statistics(unsigned int write_interval = kDefaultStatisticWriteIntervalMs);
     VIRTUAL void IncreaseRequestCounter() noexcept;
-    VIRTUAL void StartTimer(const StatisticEntity& entity) noexcept;
     VIRTUAL void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
-    VIRTUAL void StopTimer() noexcept;
     VIRTUAL void AddTag(const std::string& name, const std::string& value) noexcept;
-
-
     void SetWriteInterval(uint64_t interval_ms);
     std::vector<std::unique_ptr<StatisticsSender>> statistics_sender_list__;
-  private:
-    uint64_t GetElapsedMs(StatisticEntity entity) const noexcept;
-    void ResetStatistics() noexcept;
-    uint64_t GetTotalElapsedMs() const noexcept;
-    StatisticsToSend PrepareStatisticsToSend() const noexcept;
+  protected:
     static const unsigned int kDefaultStatisticWriteIntervalMs = 10000;
+    virtual StatisticsToSend PrepareStatisticsToSend() const noexcept;
+    virtual void ResetStatistics() noexcept;
+  private:
+    void Send() noexcept;
+    uint64_t GetTotalElapsedMs() const noexcept;
     uint64_t nrequests_;
     std::chrono::high_resolution_clock::time_point last_timepoint_;
-    std::chrono::high_resolution_clock::time_point current_timer_last_timepoint_;
-    StatisticEntity current_statistic_entity_ = StatisticEntity::kDatabase;
-    std::chrono::nanoseconds time_counters_[kNStatisticEntities];
     uint64_t volume_counter_;
     unsigned int write_interval_;
     std::vector<std::pair<std::string, std::string>> tags_;
+    std::mutex mutex_;
+
 };
 
 }

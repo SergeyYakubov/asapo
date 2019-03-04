@@ -5,7 +5,7 @@
 #include "common/error.h"
 #include "request.h"
 #include "io/io.h"
-#include "statistics.h"
+#include "receiver_statistics.h"
 #include "logger/logger.h"
 #include "data_cache.h"
 
@@ -13,10 +13,10 @@ namespace asapo {
 
 class RequestsDispatcher {
   public:
-    RequestsDispatcher(SocketDescriptor socket_fd, std::string address, Statistics* statistics, SharedCache cache);
+    RequestsDispatcher(SocketDescriptor socket_fd, std::string address, ReceiverStatistics* statistics, SharedCache cache);
     VIRTUAL Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;
     VIRTUAL std::unique_ptr<Request> GetNextRequest(Error* err) const noexcept;
-    Statistics* statistics__;
+    ReceiverStatistics* statistics__;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
     std::unique_ptr<RequestFactory> request_factory__;

@@ -2,7 +2,7 @@
 #define ASAPO_RECEIVER_REQUEST_HANDLER_H
 
 #include "receiver_error.h"
-#include "statistics.h"
+#include "receiver_statistics.h"
 
 namespace asapo {
 

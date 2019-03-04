@@ -8,7 +8,7 @@
 #include "../src/statistics_sender.h"
 #include "../../common/cpp/src/http_client/curl_http_client.h"
 #include "unittests/MockHttpClient.h"
-#include "../src/statistics.h"
+#include "../src/receiver_statistics.h"
 
 #include "../src/receiver_config.h"
 #include "mock_receiver_config.h"
@@ -54,9 +54,12 @@ class SenderFluentdTests : public Test {
 
     void SetUp() override {
         statistics.n_requests = 4;
-        statistics.entity_shares[asapo::StatisticEntity::kDisk] = 0.6;
-        statistics.entity_shares[asapo::StatisticEntity::kNetwork] = 0.3;
-        statistics.entity_shares[asapo::StatisticEntity::kDatabase] = 0.1;
+
+        statistics.extra_entities.push_back(asapo::ExtraEntity{asapo::kStatisticEntityNames[asapo::StatisticEntity::kDatabase], 0.1});
+        statistics.extra_entities.push_back(asapo::ExtraEntity{asapo::kStatisticEntityNames[asapo::StatisticEntity::kNetwork], 0.3});
+        statistics.extra_entities.push_back(asapo::ExtraEntity{asapo::kStatisticEntityNames[asapo::StatisticEntity::kDisk], 0.6});
+
+
         statistics.elapsed_ms = 100;
         statistics.data_volume = 1000;
         statistics.tags.push_back(std::make_pair("name1", "value1"));

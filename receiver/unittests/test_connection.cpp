@@ -6,7 +6,7 @@
 #include "../src/connection.h"
 #include "../src/receiver_error.h"
 #include "../src/request.h"
-#include "../src/statistics.h"
+#include "../src/receiver_statistics.h"
 #include "receiver_mocking.h"
 #include "../src/receiver_config.h"
 #include "../src/receiver_config_factory.h"
@@ -47,7 +47,7 @@ using asapo::Connection;
 using asapo::MockIO;
 using asapo::MockLogger;
 using asapo::Request;
-using asapo::Statistics;
+using asapo::ReceiverStatistics;
 using asapo::StatisticEntity;
 using asapo::MockStatistics;
 
@@ -97,11 +97,11 @@ class ConnectionTests : public Test {
     void SetUp() override {
         connection = std::unique_ptr<Connection> {new Connection{0, connected_uri, nullptr, "some_tag"}};
         connection->io__ = std::unique_ptr<asapo::IO> {&mock_io};
-        connection->statistics__ = std::unique_ptr<asapo::Statistics> {&mock_statictics};
+        connection->statistics__ = std::unique_ptr<asapo::ReceiverStatistics> {&mock_statictics};
         connection->log__ = &mock_logger;
         connection->requests_dispatcher__ = std::unique_ptr<asapo::RequestsDispatcher> {&mock_dispatcher};
         EXPECT_CALL(mock_io, CloseSocket_t(_, _));
-        EXPECT_CALL(mock_statictics, Send_t());
+        EXPECT_CALL(mock_statictics, SendIfNeeded_t(true));
         EXPECT_CALL(mock_logger, Info(HasSubstr("disconnected")));
 
     }
@@ -163,7 +163,7 @@ TEST_F(ConnectionTests, ProcessStatisticsWhenOKProcessRequest) {
     EXPECT_CALL(mock_statictics, IncreaseRequestCounter_t());
     EXPECT_CALL(mock_statictics, IncreaseRequestDataVolume_t(1 + sizeof(asapo::GenericRequestHeader) +
                 sizeof(asapo::GenericNetworkResponse)));
-    EXPECT_CALL(mock_statictics, SendIfNeeded_t());
+    EXPECT_CALL(mock_statictics, SendIfNeeded_t(false));
 
 
     MockGetNext(true);
