@@ -9,8 +9,8 @@ using std::chrono::high_resolution_clock;
 namespace asapo {
 
 void Statistics::SendIfNeeded(bool send_always) noexcept {
-    std::lock_guard<std::mutex> lock{mutex_};
     if (send_always || GetTotalElapsedMs() > write_interval_) {
+        std::lock_guard<std::mutex> lock{mutex_};
         Send();
     }
 }

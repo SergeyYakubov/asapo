@@ -7,6 +7,7 @@
 #include "../../src/receiver_data_server/receiver_data_server_request_handler_factory.h"
 #include "../../src/receiver_data_server/receiver_data_server_request_handler.h"
 
+#include "../../src/statistics.h"
 
 
 using ::testing::Test;
@@ -30,8 +31,11 @@ using asapo::ReceiverDataServerRequestHandlerFactory;
 namespace {
 
 TEST(ReceiverDataServerRequestHandlerFactory, Constructor) {
-    ReceiverDataServer data_server{"", asapo::LogLevel::Debug, 4, nullptr};
-    ReceiverDataServerRequestHandlerFactory factory((asapo::NetServer*)&data_server, nullptr);
+    asapo::ReceiverDataCenterConfig config;
+    config.nthreads = 4;
+    ReceiverDataServer data_server{"", asapo::LogLevel::Debug, nullptr, config};
+    asapo::Statistics stat;
+    ReceiverDataServerRequestHandlerFactory factory((asapo::NetServer*)&data_server, nullptr, &stat);
     auto handler = factory.NewRequestHandler(1, nullptr);
     ASSERT_THAT(dynamic_cast<const asapo::ReceiverDataServerRequestHandler*>(handler.get()), Ne(nullptr));
 }

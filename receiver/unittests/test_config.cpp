@@ -45,7 +45,7 @@ class ConfigTests : public Test {
     }
     void PrepareConfig() {
         test_config.listen_port = 4200;
-        test_config.dataserver_listen_port = 4201;
+        test_config.dataserver.listen_port = 4201;
         test_config.tag = "receiver1";
         test_config.monitor_db_name = "db_test";
         test_config.monitor_db_uri = "localhost:8086";
@@ -60,7 +60,7 @@ class ConfigTests : public Test {
         test_config.datacache_reserved_share = 10;
         test_config.datacache_size_gb = 2;
         test_config.source_host = "host";
-        test_config.dataserver_nthreads = 5;
+        test_config.dataserver.nthreads = 5;
     }
 
 };
@@ -78,7 +78,7 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->monitor_db_name, Eq("db_test"));
     ASSERT_THAT(config->broker_db_uri, Eq("localhost:27017"));
     ASSERT_THAT(config->listen_port, Eq(4200));
-    ASSERT_THAT(config->dataserver_listen_port, Eq(4201));
+    ASSERT_THAT(config->dataserver.listen_port, Eq(4201));
     ASSERT_THAT(config->authorization_interval_ms, Eq(10000));
     ASSERT_THAT(config->authorization_server, Eq("AuthorizationServer/aa"));
     ASSERT_THAT(config->write_to_disk, Eq(true));
@@ -90,7 +90,9 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->datacache_reserved_share, Eq(10));
     ASSERT_THAT(config->datacache_size_gb, Eq(2));
     ASSERT_THAT(config->source_host, Eq("host"));
-    ASSERT_THAT(config->dataserver_nthreads, Eq(5));
+    ASSERT_THAT(config->dataserver.nthreads, Eq(5));
+    ASSERT_THAT(config->dataserver.tag, Eq("receiver1_ds"));
+
 
 }
 

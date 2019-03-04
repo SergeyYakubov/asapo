@@ -20,8 +20,8 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
 
     (err = parser.GetString("MonitorDbAddress", &config.monitor_db_uri)) ||
     (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||
-    (err = parser.Embedded("DataServer").GetUInt64("ListenPort", &config.dataserver_listen_port)) ||
-    (err = parser.Embedded("DataServer").GetUInt64("NThreads", &config.dataserver_nthreads)) ||
+    (err = parser.Embedded("DataServer").GetUInt64("ListenPort", &config.dataserver.listen_port)) ||
+    (err = parser.Embedded("DataServer").GetUInt64("NThreads", &config.dataserver.nthreads)) ||
     (err = parser.GetBool("WriteToDisk", &config.write_to_disk)) ||
     (err = parser.GetBool("WriteToDb", &config.write_to_db)) ||
     (err = parser.Embedded("DataCache").GetBool("Use", &config.use_datacache)) ||
@@ -38,6 +38,8 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     if (err) {
         return err;
     }
+
+    config.dataserver.tag = config.tag + "_ds";
 
     config.source_host = io__->GetHostName(&err);
     if (err) {

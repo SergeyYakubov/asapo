@@ -5,16 +5,20 @@
 
 namespace asapo {
 
-ReceiverDataServer::ReceiverDataServer(std::string address, LogLevel log_level, uint8_t n_threads,
-                                       SharedCache data_cache) : net__{new TcpServer(address)},
-log__{GetDefaultReceiverDataServerLogger()}, data_cache_{data_cache} {
-    request_handler_factory_.reset(new ReceiverDataServerRequestHandlerFactory(net__.get(), data_cache_.get()));
+ReceiverDataServer::ReceiverDataServer(std::string address, LogLevel log_level,
+                                       SharedCache data_cache, const ReceiverDataCenterConfig& config) : net__{new TcpServer(address)},
+                                                   log__{GetDefaultReceiverDataServerLogger()}, data_cache_{data_cache},
+config_{config}, statistics__{new Statistics()} {
+    request_handler_factory_.reset(new ReceiverDataServerRequestHandlerFactory(net__.get(), data_cache_.get(),
+                                   statistics__.get()));
     GetDefaultReceiverDataServerLogger()->SetLogLevel(log_level);
-    request_pool__.reset(new RequestPool{n_threads, request_handler_factory_.get(), log__});
+    request_pool__.reset(new RequestPool{(uint8_t)config.nthreads, request_handler_factory_.get(), log__});
+    statistics__->AddTag("receiver_ds_tag", config.tag);
 }
 
 void ReceiverDataServer::Run() {
     while (true) {
+        statistics__->SendIfNeeded();
         Error err;
         auto requests = net__->GetNewRequests(&err);
         if (err == IOErrorTemplates::kTimeout) {

@@ -69,7 +69,7 @@ FileInfo RequestHandlerDbWrite::PrepareFileInfo(const Request* request) const {
     file_info.id = request->GetDataID();
     file_info.buf_id = request->GetSlotId();
     file_info.source = GetReceiverConfig()->source_host + ":" + string_format("%ld",
-                       GetReceiverConfig()->dataserver_listen_port);
+                       GetReceiverConfig()->dataserver.listen_port);
     return file_info;
 }
 

@@ -6,17 +6,19 @@
 #include "../data_cache.h"
 #include "receiver_data_server_request.h"
 #include "receiver_data_server_logger.h"
+#include "../statistics.h"
 
 namespace asapo {
 
 class ReceiverDataServerRequestHandler: public RequestHandler {
   public:
-    explicit ReceiverDataServerRequestHandler(const NetServer* server, DataCache* data_cache);
+    explicit ReceiverDataServerRequestHandler(const NetServer* server, DataCache* data_cache, Statistics* statistics);
     Error ProcessRequestUnlocked(GenericRequest* request) override;
     bool ReadyProcessRequest() override;
     void PrepareProcessingRequestLocked()  override;
     void TearDownProcessingRequestLocked(const Error& error_from_process)  override;
     const AbstractLogger* log__;
+    Statistics* statistics__;
   private:
     const NetServer* server_;
     DataCache* data_cache_;

@@ -5,8 +5,8 @@
 namespace asapo {
 
 ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(const NetServer* server,
-        DataCache* data_cache): log__{GetDefaultReceiverDataServerLogger()}, server_{server},
-    data_cache_{data_cache} {
+        DataCache* data_cache, Statistics* statistics): log__{GetDefaultReceiverDataServerLogger()}, statistics__{statistics},
+    server_{server}, data_cache_{data_cache} {
 
 }
 
@@ -62,6 +62,8 @@ Error ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* r
     }
 
     SendData(receiver_request, buf, meta);
+    statistics__->IncreaseRequestCounter();
+    statistics__->IncreaseRequestDataVolume(receiver_request->header.data_size);
     return nullptr;
 }
 

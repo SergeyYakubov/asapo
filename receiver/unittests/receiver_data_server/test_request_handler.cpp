@@ -38,8 +38,10 @@ MATCHER_P3(M_CheckResponce, op_code, error_code, message,
 }
 
 TEST(RequestHandlerTest, Constructor) {
-    ReceiverDataServerRequestHandler handler{nullptr, nullptr};
+    asapo::Statistics stat;
+    ReceiverDataServerRequestHandler handler{nullptr, nullptr, &stat};
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(handler.log__), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::Statistics*>(handler.statistics__), Ne(nullptr));
 }
 
 
@@ -47,8 +49,9 @@ class RequestHandlerTests : public Test {
   public:
     asapo::MockNetServer mock_net;
     asapo::MockDataCache mock_cache;
-    ReceiverDataServerRequestHandler handler{&mock_net, &mock_cache};
-    ReceiverDataServerRequestHandler handler_no_cache{&mock_net, nullptr};
+    NiceMock<asapo::MockStatistics> mock_stat;
+    ReceiverDataServerRequestHandler handler{&mock_net, &mock_cache, &mock_stat};
+    ReceiverDataServerRequestHandler handler_no_cache{&mock_net, nullptr, &mock_stat};
     NiceMock<asapo::MockLogger> mock_logger;
     uint64_t expected_data_size = 1001243214;
     uint64_t expected_buf_id = 12345;
@@ -138,7 +141,8 @@ TEST_F(RequestHandlerTests, ProcessRequestOk) {
     );
     EXPECT_CALL(mock_cache, UnlockSlot(_));
     EXPECT_CALL(mock_logger, Debug(HasSubstr("sending")));
-
+    EXPECT_CALL(mock_stat, IncreaseRequestCounter_t());
+    EXPECT_CALL(mock_stat, IncreaseRequestDataVolume_t(expected_data_size));
     auto err  = handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(err, Eq(nullptr));

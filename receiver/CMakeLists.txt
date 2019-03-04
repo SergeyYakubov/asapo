@@ -18,7 +18,7 @@ set(SOURCE_FILES
         src/receiver_data_server/receiver_data_server_logger.cpp
         src/data_cache.cpp src/receiver_data_server/receiver_data_server_request_handler_factory.cpp
         src/receiver_data_server/receiver_data_server_request_handler.cpp
-        src/receiver_statistics.cpp)
+        src/receiver_statistics.cpp src/receiver_data_server/receiver_datacenter_config.h)
 
 
 ################################

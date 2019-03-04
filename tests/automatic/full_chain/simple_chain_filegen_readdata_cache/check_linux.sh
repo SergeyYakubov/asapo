@@ -20,6 +20,7 @@ mkdir -p /tmp/asapo/test_in/test2/
 Cleanup() {
     echo cleanup
     kill $producerid
+    influx -execute "drop database ${monitor_database_name}"
     rm -rf /tmp/asapo/test_in/test1
     rm -rf /tmp/asapo/test_in/test2
     nomad stop nginx
@@ -30,6 +31,9 @@ Cleanup() {
     echo "db.dropDatabase()" | mongo ${beamtime_id}
     rm out.txt
 }
+
+influx -execute "create database ${monitor_database_name}"
+
 
 echo "db.${beamtime_id}.insert({dummy:1})" | mongo ${beamtime_id}
 
@@ -59,3 +63,6 @@ grep "Received: hello1" out.txt
 grep "Received: hello2" out.txt
 grep "Received: hello3" out.txt
 
+sleep 10
+
+influx -execute "select sum(n_requests) from statistics where receiver_ds_tag !=''" -database=${monitor_database_name} -format=json  | jq .results[0].series[0].values[0][1] | tee /dev/stderr | grep 3
