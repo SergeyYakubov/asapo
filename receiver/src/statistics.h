@@ -33,6 +33,7 @@ class Statistics {
     VIRTUAL void AddTag(const std::string& name, const std::string& value) noexcept;
     void SetWriteInterval(uint64_t interval_ms);
     std::vector<std::unique_ptr<StatisticsSender>> statistics_sender_list__;
+    virtual ~Statistics() = default;
   protected:
     static const unsigned int kDefaultStatisticWriteIntervalMs = 10000;
     virtual StatisticsToSend PrepareStatisticsToSend() const noexcept;

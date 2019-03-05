@@ -202,7 +202,7 @@ void SystemIO::CollectFileInformationRecursively(const std::string& path,
 
 void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const {
     //TODO: Need to change network layer code, so everything can be NonBlocking
-    int flag;
+    int flag = 1;
     if (
         /*(flags = fcntl(socket_fd, F_GETFL, 0)) == -1
         ||

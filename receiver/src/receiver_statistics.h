@@ -10,7 +10,6 @@ enum StatisticEntity : int {
     kDatabase = 0,
     kDisk,
     kNetwork,
-    kAuthorizer
 };
 
 static const std::vector<std::string> kStatisticEntityNames = {"db_share", "disk_share", "network_share"};

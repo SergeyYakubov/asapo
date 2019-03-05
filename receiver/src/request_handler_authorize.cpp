@@ -100,7 +100,7 @@ RequestHandlerAuthorize::RequestHandlerAuthorize(): log__{GetDefaultReceiverLogg
 }
 
 StatisticEntity RequestHandlerAuthorize::GetStatisticEntity() const {
-    return StatisticEntity::kAuthorizer;
+    return StatisticEntity::kNetwork;
 }
 
 

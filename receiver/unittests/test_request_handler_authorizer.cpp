@@ -148,7 +148,7 @@ class AuthorizerHandlerTests : public Test {
 
 TEST_F(AuthorizerHandlerTests, CheckStatisticEntity) {
     auto entity = handler.GetStatisticEntity();
-    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kAuthorizer));
+    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetwork));
 }
 
 TEST_F(AuthorizerHandlerTests, ErrorNotAuthorizedYet) {
