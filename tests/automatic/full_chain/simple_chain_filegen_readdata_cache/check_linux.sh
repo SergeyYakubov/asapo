@@ -59,9 +59,9 @@ echo -n hello3 > /tmp/asapo/test_in/test2/file2
 $2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 0 > out.txt
 cat out.txt
 grep "Processed 3 file(s)" out.txt
-grep "Received: hello1" out.txt
-grep "Received: hello2" out.txt
-grep "Received: hello3" out.txt
+grep "hello1" out.txt
+grep "hello2" out.txt
+grep "hello3" out.txt
 
 sleep 10
 

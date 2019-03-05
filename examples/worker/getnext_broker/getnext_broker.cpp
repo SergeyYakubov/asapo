@@ -47,9 +47,9 @@ std::vector<std::thread> StartThreads(const Params& params, std::vector<int>* nf
         broker->SetTimeout(params.timeout_ms);
         asapo::FileData data;
         while ((err = broker->GetNext(&fi, params.read_data ? &data : nullptr)) == nullptr) {
-            if (params.read_data && (*nfiles)[i] < 10 && fi.size < 100) {
-                std::string s(reinterpret_cast<char const*>(data.get()));
-                std::cout << "Received: " << s << std::endl;
+            if (params.read_data && (*nfiles)[i] < 10 && fi.size < 10) {
+                data[9] = 0;
+                std::cout << "Received: " << reinterpret_cast<char const*>(data.get()) << std::endl;
             }
             (*nfiles)[i] ++;
         }
