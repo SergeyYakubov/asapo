@@ -47,10 +47,11 @@ message (STATUS "cURL include: ${CURL_INCLUDE_DIRS}")
 # format sources
 include(astyle)
 
+include(prepare_version)
+
 include(testing_cpp)
 
 include(prepare_asapo)
-
 
 if(BUILD_WORKER_TOOLS)
     set (BUILD_MONGODB_CLIENTLIB ON)
@@ -89,4 +90,3 @@ if(BUILD_DOCS)
     include(doxygen)
 endif()
 
-include(prepare_version)

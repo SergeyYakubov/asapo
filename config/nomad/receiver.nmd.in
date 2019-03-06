@@ -19,6 +19,7 @@ job "receiver" {
         memory = 256 # 256MB
         network {
           port "recv" {}
+          port "recv_ds" {}
         }
       }
 

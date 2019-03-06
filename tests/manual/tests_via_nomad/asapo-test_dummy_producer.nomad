@@ -28,7 +28,7 @@ job "asapo-test" {
       }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/dummy-data-producer.exe"
+        source = "http://nims.desy.de/extra/asapo/dummy-data-producer-@ASAPO_VERSION@.exe"
         mode = "file"
         destination = "local/dummy-data-producer.exe"
 
@@ -75,7 +75,7 @@ job "asapo-test" {
       }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/dummy-data-producer"
+        source = "http://nims.desy.de/extra/asapo/dummy-data-producer-@ASAPO_VERSION@"
       }
 
       #      resources {
@@ -128,7 +128,7 @@ job "asapo-test" {
       }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/getnext_broker"
+        source = "http://nims.desy.de/extra/asapo/getnext_broker-@ASAPO_VERSION@"
       }
     }
 
@@ -172,7 +172,7 @@ job "asapo-test" {
       }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/getnext_broker"
+        source = "http://nims.desy.de/extra/asapo/getnext_broker-@ASAPO_VERSION@"
       }
     }
 

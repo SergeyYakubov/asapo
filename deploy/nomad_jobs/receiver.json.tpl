@@ -7,11 +7,11 @@
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "DataServer": {
     "NThreads": 2,
-    "ListenPort": 23123
+    "ListenPort": {{ env "NOMAD_PORT_recv_ds" }}
   },
   "DataCache": {
     "Use": true,
-    "SizeGB": 1,
+    "SizeGB": 30,
     "ReservedShare": 10
   },
   "Tag": "{{ env "NOMAD_ADDR_recv" }}",

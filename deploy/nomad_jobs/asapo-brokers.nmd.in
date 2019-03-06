@@ -24,7 +24,7 @@ job "asapo-brokers" {
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]
-        image = "yakser/asapo-broker:develop"
+        image = "yakser/asapo-broker:@ASAPO_VERSION@"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/broker/config.json"]
         logging {

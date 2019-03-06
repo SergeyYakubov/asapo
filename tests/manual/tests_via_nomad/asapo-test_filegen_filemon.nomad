@@ -111,7 +111,7 @@ job "asapo-test" {
 #      }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/getnext_broker"
+        source = "http://nims.desy.de/extra/asapo/getnext_broker-@ASAPO_VERSION@"
       }
     }
 
@@ -155,7 +155,7 @@ job "asapo-test" {
 #      }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/getnext_broker"
+        source = "http://nims.desy.de/extra/asapo/getnext_broker-@ASAPO_VERSION@"
       }
     }
 

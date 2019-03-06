@@ -22,7 +22,7 @@ job "asapo-filemon-producer" {
       }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/asapo-eventmon-producer.exe"
+        source = "http://nims.desy.de/extra/asapo/asapo-eventmon-producer-@ASAPO_VERSION@.exe"
         mode = "file"
         destination = "local/asapo-eventmon-producer.exe"
       }
@@ -78,7 +78,7 @@ job "asapo-filemon-producer" {
       }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/asapo-eventmon-producer"
+        source = "http://nims.desy.de/extra/asapo/asapo-eventmon-producer-@ASAPO_VERSION@"
         mode = "file"
         destination = "local/asapo-eventmon-producer"
       }

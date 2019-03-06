@@ -7,7 +7,7 @@
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "DataServer": {
     "NThreads": 2,
-    "ListenPort": 23123
+    "ListenPort": {{ env "NOMAD_PORT_recv_ds" }}
   },
   "DataCache": {
     "Use": @RECEIVER_USE_CACHE@,
