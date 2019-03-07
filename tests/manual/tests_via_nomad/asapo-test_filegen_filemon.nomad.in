@@ -4,7 +4,7 @@ job "asapo-test" {
 
   type = "batch"
 
-  group "producer-windows" {
+  group "filegen-windows" {
 
     constraint {
       attribute = "${attr.kernel.name}"
@@ -12,40 +12,32 @@ job "asapo-test" {
     }
 
     count = 1
-    task "producer" {
+
+    task "filegen" {
       driver = "raw_exec"
 
       config {
-        command = "local/dummy-data-producer.exe"
+        command = "local/filegen_win.exe"
         args = [
-          "psana002:8400",
-          "asapo_test1",
-          "100",
-          "1000000",
-          "8",
-          "0",
-          "1000"]
+          "1",
+          "10M",
+          "10000",
+          "120",
+          "u:/asapo/test_folder/file_win"]
       }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/dummy-data-producer-@ASAPO_VERSION@.exe"
+        source = "http://nims.desy.de/extra/asapo/filegen_win.exe"
         mode = "file"
-        destination = "local/dummy-data-producer.exe"
-
+        destination = "local/filegen_win.exe"
       }
-
-      #      resources {
-      #        cpu = 5000
-      #        memory = 128
-      #        network {
-      #          mbits = 10000
-      #        }
     }
+
 
   }
   #windows
 
-  group "producer-linux" {
+  group "filegen-linux" {
 
     constraint {
       attribute = "${attr.kernel.name}"
@@ -59,37 +51,28 @@ job "asapo-test" {
 
     count = 1
 
-    task "producer" {
+    task "filegen" {
       driver = "raw_exec"
 
       config {
-        command = "local/dummy-data-producer"
+        command = "local/filegen_linux"
         args = [
-          "psana002:8400",
-          "asapo_test2",
-          "100",
-          "1000000",
-          "8",
-          "0",
-          "1000"]
+          "1",
+          "10M",
+          "10000",
+          "120",
+          "/run/user/data/file_lin"]
       }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/dummy-data-producer-@ASAPO_VERSION@"
+        source = "http://nims.desy.de/extra/asapo/filegen_linux"
+        mode = "file"
+        destination = "local/filegen_linux"
       }
-
-      #      resources {
-      #        cpu = 5000
-      #        memory = 128
-      #        network {
-      #          mbits = 10000
-      #        }
-      #      }
-
     }
 
   }
-  #linux
+
 
   group "worker-linux1" {
 
@@ -108,27 +91,38 @@ job "asapo-test" {
 
     task "worker-linux" {
       driver = "raw_exec"
+    template {
+     data = <<EOH
+        WORKER_READ_META_ONLY = "{{ keyOrDefault "worker_read_meta_only" "1" }}"
+        EOH
+     destination = "secrets/file.env"
+     env         = true
+    }
 
       config {
         command = "local/getnext_broker"
         args = [
           "psana002:8400",
+          "/bldocuments/support/asapo/data/test1/asapo_test1",
           "asapo_test1",
           "16",
           "oTsKsj8i6WcW_gVzeIFvZCtSfMErjDELJEyAI23n7Ik=",
-          "30000"]
+          "30000",
+          "${WORKER_READ_META_ONLY}"]
       }
 
-      resources {
-        cpu = 5000
-        memory = 128
-        network {
-          mbits = 10000
-        }
-      }
+#      resources {
+#        cpu = 5000
+#        memory = 128
+#        network {
+#          mbits = 10000
+#        }
+#      }
 
       artifact {
         source = "http://nims.desy.de/extra/asapo/getnext_broker-@ASAPO_VERSION@"
+        mode = "file"
+        destination = "local/getnext_broker"
       }
     }
 
@@ -153,30 +147,41 @@ job "asapo-test" {
 
     task "worker-linux" {
       driver = "raw_exec"
+    template {
+     data = <<EOH
+        WORKER_READ_META_ONLY = "{{ keyOrDefault "worker_read_meta_only" "1" }}"
+        EOH
+     destination = "secrets/file.env"
+     env         = true
+    }
 
       config {
         command = "local/getnext_broker"
         args = [
           "psana002:8400",
+          "/bldocuments/support/asapo/data/test2/asapo_test2",
           "asapo_test2",
           "16",
           "yzgAcLmijSLWIm8dBiGNCbc0i42u5HSm-zR6FRqo__Y=",
-          "30000"]
+          "30000",
+          "${WORKER_READ_META_ONLY}"]
       }
-      resources {
-        cpu = 5000
-        memory = 128
-        network {
-          mbits = 10000
-        }
-      }
+#      resources {
+#        cpu = 5000
+#        memory = 128
+#        network {
+#          mbits = 10000
+#        }
+#      }
 
       artifact {
         source = "http://nims.desy.de/extra/asapo/getnext_broker-@ASAPO_VERSION@"
+        mode = "file"
+        destination = "local/getnext_broker"
       }
     }
 
   }
+  # worker-linux2
 
 }
-# worker-linux2

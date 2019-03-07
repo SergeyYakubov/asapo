@@ -192,7 +192,8 @@ TEST_F(TcpClientTests, GetResponceReturnsError) {
 TEST_F(TcpClientTests, GetResponceReturnsNoData) {
     ExpectNewConnection(false, true);
     ExpectSendDataRequest(expected_sd, true);
-    ExpectGetResponce(expected_sd, false, asapo::kNetErrorNoData);
+    ExpectGetResponce(expected_sd, true, asapo::kNetErrorNoData);
+    EXPECT_CALL(mock_connection_pool, ReleaseConnection(expected_sd));
 
     auto err = client->GetData(&info, &data);
 

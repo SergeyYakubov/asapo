@@ -44,6 +44,7 @@ Error TcpClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
         io__->CloseSocket(sd, nullptr);
         return Error{new SimpleError("internal server error: wrong request")};
     case kNetErrorNoData :
+        connection_pool__->ReleaseConnection(sd);
         return Error{new SimpleError("no data")};
     default:
         return nullptr;

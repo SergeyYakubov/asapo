@@ -218,7 +218,7 @@ void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const
 }
 
 FileDescriptor SystemIO::_open(const char* filename, int posix_open_flags) const {
-    return ::open(filename, posix_open_flags, S_IWUSR | S_IRWXU);
+    return ::open(filename, posix_open_flags, S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH );
 }
 
 bool SystemIO::_close(asapo::FileDescriptor fd) const {
@@ -246,7 +246,7 @@ ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length)
 }
 
 int SystemIO::_mkdir(const char* dirname) const {
-    return ::mkdir(dirname, S_IRWXU);
+    return ::mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 int SystemIO::_listen(SocketDescriptor socket_fd, int backlog) const {

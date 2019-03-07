@@ -24,7 +24,7 @@ job "asapo-receivers" {
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]
-        image = "yakser/asapo-receiver:@ASAPO_VERSION@"
+        image = "yakser/asapo-receiver-dev:@ASAPO_VERSION@"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/receiver/config.json",
                    "/bldocuments/support/asapo/data:/var/lib/receiver/data"]
