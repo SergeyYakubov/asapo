@@ -76,6 +76,11 @@ job "asapo-test" {
 
   group "worker-linux1" {
 
+    restart {
+      attempts = 0
+    }
+
+
     constraint {
       attribute = "${attr.kernel.name}"
       value = "linux"
@@ -131,6 +136,11 @@ job "asapo-test" {
 
 
   group "worker-linux2" {
+
+    restart {
+      attempts = 0
+    }
+
 
     constraint {
       attribute = "${attr.kernel.name}"

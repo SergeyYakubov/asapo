@@ -184,6 +184,8 @@ Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
     if (DataCanBeInBuffer(info)) {
         if (TryGetDataFromBuffer(info, data) == nullptr) {
             return nullptr;
+        } else {
+            info->buf_id = 0;
         }
     }
 
@@ -197,12 +199,7 @@ bool ServerDataBroker::DataCanBeInBuffer(const FileInfo* info) {
 }
 
 Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* data) {
-    auto error = net_client__->GetData(info, data);
-    if (error) {
-        std::cout << "error from net client: " << error->Explain() << std::endl;
-    };
-    return error;
-
+    return net_client__->GetData(info, data);
 }
 
 }

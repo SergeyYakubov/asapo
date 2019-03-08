@@ -61,7 +61,7 @@ class ServerDataBrokerTests : public Test {
     std::string expected_path = "/tmp/beamline/beamtime";
     std::string expected_filename = "filename";
     std::string expected_full_path = std::string("/tmp/beamline/beamtime") + asapo::kPathSeparator + expected_filename;
-
+    static const uint64_t expected_buf_id = 123;
     void SetUp() override {
         data_broker = std::unique_ptr<ServerDataBroker> {
             new ServerDataBroker(expected_server_uri, expected_path, "beamtime_id", expected_token)
@@ -106,7 +106,7 @@ class ServerDataBrokerTests : public Test {
         EXPECT_CALL(mock_io, GetDataFromFile_t(expected_full_path, testing::Pointee(100), _)).Times(times).
         WillRepeatedly(DoAll(SetArgPointee<2>(new asapo::SimpleError{"s"}), testing::Return(nullptr)));
     }
-    FileInfo CreateFI(uint64_t buf_id = 1) {
+    FileInfo CreateFI(uint64_t buf_id = expected_buf_id) {
         FileInfo fi;
         fi.size = 100;
         fi.id = 1;
@@ -311,6 +311,8 @@ TEST_F(ServerDataBrokerTests, GetImageTriesToGetDataFromMemoryCache) {
 
     data_broker->GetNext(&info, &data);
 
+    ASSERT_THAT(info.buf_id, Eq(expected_buf_id));
+
 }
 
 TEST_F(ServerDataBrokerTests, GetImageCallsReadFromFileIfCannotReadFromCache) {
@@ -326,6 +328,7 @@ TEST_F(ServerDataBrokerTests, GetImageCallsReadFromFileIfCannotReadFromCache) {
     MockReadDataFromFile();
 
     data_broker->GetNext(&info, &data);
+    ASSERT_THAT(info.buf_id, Eq(0));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageCallsReadFromFileIfZeroBufId) {
