@@ -69,7 +69,14 @@ class SystemIO final : public IO {
                                                       Error* err) const;
     void            GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const;
     Error           CreateDirectoryWithParents(const std::string& root_path, const std::string& path) const;
+#if defined(__linux__) || defined (__APPLE__)
+    // used to for epoll - assumed single epoll instance per class instance
+    const int kMaxEpollEvents = 10;
+    mutable int epoll_fd_ = -1;
+    Error AddToEpool(SocketDescriptor sd) const;
+#endif
   public:
+    ~SystemIO();
     /*
      * Special
      */

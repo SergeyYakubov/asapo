@@ -377,15 +377,6 @@ asapo::FileDescriptor asapo::SystemIO::Open(const std::string& filename,
     return fd;
 }
 
-void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
-    if (err) {
-        *err = nullptr;
-    }
-    if (!_close_socket(fd) && err) {
-        *err = GetLastError();
-    }
-}
-
 void asapo::SystemIO::Close(FileDescriptor fd, Error* err) const {
     if (err) {
         *err = nullptr;
@@ -610,61 +601,6 @@ Error SystemIO::RemoveFile(const std::string& fname) const {
     }
 }
 
-ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_socket,
-        ListSocketDescriptors* sockets_to_listen,
-        std::vector<std::string>* new_connections,
-        Error* err) const {
-    fd_set readfds;
-    ListSocketDescriptors active_sockets;
-    bool client_activity = false;
-    *err = nullptr;
-    while (!client_activity) {
-
-        FD_ZERO(&readfds);
-        SocketDescriptor max_sd = master_socket;
-        FD_SET(master_socket, &readfds);
-        for (auto sd : *sockets_to_listen) {
-            FD_SET(sd, &readfds);
-            if (sd > max_sd) {
-                max_sd = sd;
-            }
-        }
-
-        timeval timeout;
-        timeout.tv_sec = 0;
-        timeout.tv_usec = kWaitTimeoutMs;
-
-        auto activity = select(max_sd + 1, &readfds, NULL, NULL, &timeout);
-        if (activity == 0) { // timeout
-            *err = IOErrorTemplates::kTimeout.Generate();
-            return {};
-        }
-        if ((activity < 0) && (errno != EINTR)) {
-            *err = GetLastError();
-            return {};
-        }
-
-        for (auto sd : *sockets_to_listen) {
-            if (FD_ISSET(sd, &readfds)) {
-                active_sockets.push_back(sd);
-                client_activity = true;
-            }
-        }
-
-        if (FD_ISSET(master_socket, &readfds)) {
-            auto client_info_tuple = InetAcceptConnection(master_socket, err);
-            if (*err) {
-                return {};
-            }
-            std::string client_address;
-            SocketDescriptor client_fd;
-            std::tie(client_address, client_fd) = *client_info_tuple;
-            new_connections->emplace_back(std::move(client_address));
-            sockets_to_listen->push_back(client_fd);
-        }
-    }
-    return active_sockets;
-}
 
 std::string SystemIO::GetHostName(Error* err) const noexcept {
     char host[1024];

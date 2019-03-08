@@ -11,6 +11,7 @@
 #include <iostream>
 #include <zconf.h>
 #include <netdb.h>
+#include <sys/epoll.h>
 
 #include "system_io.h"
 
@@ -287,6 +288,105 @@ std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept 
     }
 
     return std::string(ipstr) + ':' + std::to_string(port);
+}
+
+Error SystemIO::AddToEpool(SocketDescriptor sd) const {
+    struct epoll_event event;
+    event.events = EPOLLIN;
+    event.data.fd = sd;
+    if((epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, sd, &event) == -1) && (errno != EEXIST)) {
+        auto err =  GetLastError();
+        err->Append("add to epoll");
+        close(epoll_fd_);
+        return err;
+    }
+    return nullptr;
+}
+
+ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_socket,
+        ListSocketDescriptors* sockets_to_listen,
+        std::vector<std::string>* new_connections,
+        Error* err) const {
+    if (epoll_fd_ == kDisconnectedSocketDescriptor) {
+        epoll_fd_ = epoll_create1(0);
+        if(epoll_fd_ == kDisconnectedSocketDescriptor) {
+            *err = GetLastError();
+            (*err)->Append("Create epoll");
+            return {};
+        }
+    }
+
+    struct epoll_event events[kMaxEpollEvents];
+
+    *err = AddToEpool(master_socket);
+    if (*err) {
+        return {};
+    }
+    for (auto sd : *sockets_to_listen) {
+        *err = AddToEpool(sd);
+        if (*err) {
+            return {};
+        }
+    }
+
+    ListSocketDescriptors active_sockets;
+    bool client_activity = false;
+    while (!client_activity) {
+
+        auto event_count = epoll_wait(epoll_fd_, events, kMaxEpollEvents, kWaitTimeoutMs);
+        if (event_count == 0) { // timeout
+            *err = IOErrorTemplates::kTimeout.Generate();
+            return {};
+        }
+        if (event_count < 0) {
+            *err = GetLastError();
+            (*err)->Append("epoll wait");
+            return {};
+        }
+
+        for(int i = 0; i < event_count; i++) {
+            auto sd = events[i].data.fd;
+            if (sd != master_socket) {
+                active_sockets.push_back(sd);
+                client_activity = true;
+            } else {
+                auto client_info_tuple = InetAcceptConnection(master_socket, err);
+                if (*err) {
+                    return {};
+                }
+                std::string client_address;
+                SocketDescriptor client_fd;
+                std::tie(client_address, client_fd) = *client_info_tuple;
+                new_connections->emplace_back(std::move(client_address));
+                *err = AddToEpool(client_fd);
+                if (*err) {
+                    return {};
+                }
+                sockets_to_listen->push_back(client_fd);
+            }
+        }
+    }
+    return active_sockets;
+}
+
+SystemIO::~SystemIO() {
+    if (epoll_fd_ != -kDisconnectedSocketDescriptor) {
+        close(epoll_fd_);
+    }
+}
+
+void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
+    if (err) {
+        *err = nullptr;
+    }
+    if (!_close_socket(fd) && err) {
+        *err = GetLastError();
+    }
+    if (epoll_fd_ != kDisconnectedSocketDescriptor) {
+        struct epoll_event event;
+        epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, fd, &event);
+        errno = 0; // ignore possible errors
+    }
 }
 
 

@@ -46,6 +46,9 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
         while (!exit_thread) {
             std::vector<std::string> new_connections;
             auto sockets = io->WaitSocketsActivity(master_socket, &sockets_to_listen, &new_connections, &err);
+            if (err != asapo::IOErrorTemplates::kTimeout) {
+                ExitIfErrIsNotOk(&err, 102);
+            }
             for(auto socket : sockets) {
                 std::cout << "[SERVER] processing socket " << socket << std::endl;
                 uint64_t message;

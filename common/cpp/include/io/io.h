@@ -111,6 +111,7 @@ class IO {
     virtual Error GetLastError() const = 0;
     virtual std::string AddressFromSocket(SocketDescriptor socket) const noexcept = 0;
     virtual std::string     GetHostName(Error* err) const noexcept = 0;
+    virtual ~IO() = default;
 };
 
 }
