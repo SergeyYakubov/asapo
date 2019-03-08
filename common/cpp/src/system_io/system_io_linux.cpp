@@ -11,6 +11,7 @@
 #include <iostream>
 #include <zconf.h>
 #include <netdb.h>
+#include <sys/epoll.h>
 
 #include "system_io.h"
 
@@ -202,7 +203,7 @@ void SystemIO::CollectFileInformationRecursively(const std::string& path,
 
 void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const {
     //TODO: Need to change network layer code, so everything can be NonBlocking
-    int flag;
+    int flag = 1;
     if (
         /*(flags = fcntl(socket_fd, F_GETFL, 0)) == -1
         ||
@@ -210,14 +211,15 @@ void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const
         ||*/
         setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
         ||
-        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) != 0
+        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) != 0 ||
+        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &flag, sizeof(int)) != 0
     ) {
         *err = GetLastError();
     }
 }
 
 FileDescriptor SystemIO::_open(const char* filename, int posix_open_flags) const {
-    return ::open(filename, posix_open_flags, S_IWUSR | S_IRWXU);
+    return ::open(filename, posix_open_flags, S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH );
 }
 
 bool SystemIO::_close(asapo::FileDescriptor fd) const {
@@ -245,7 +247,7 @@ ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length)
 }
 
 int SystemIO::_mkdir(const char* dirname) const {
-    return ::mkdir(dirname, S_IRWXU);
+    return ::mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 int SystemIO::_listen(SocketDescriptor socket_fd, int backlog) const {
@@ -264,8 +266,131 @@ bool SystemIO::_close_socket(SocketDescriptor socket_fd) const {
     return ::close(socket_fd) == 0;
 }
 
-void SystemIO::InitializeSocketIfNecessary() const {
+std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept {
+    socklen_t len;
+    struct sockaddr_storage addr;
+    char ipstr[INET6_ADDRSTRLEN];
+    int port;
 
+    len = sizeof addr;
+    auto res = getpeername(socket, (struct sockaddr*) &addr, &len);
+    if (res != 0) {
+        return GetLastError()->Explain();
+    }
+    if (addr.ss_family == AF_INET) {
+        struct sockaddr_in* s = (struct sockaddr_in*) &addr;
+        port = ntohs(s->sin_port);
+        inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+    } else { // AF_INET6
+        struct sockaddr_in6* s = (struct sockaddr_in6*) &addr;
+        port = ntohs(s->sin6_port);
+        inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
+    }
+
+    return std::string(ipstr) + ':' + std::to_string(port);
 }
+
+Error SystemIO::AddToEpool(SocketDescriptor sd) const {
+    struct epoll_event event;
+    event.events = EPOLLIN;
+    event.data.fd = sd;
+    if((epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, sd, &event) == -1) && (errno != EEXIST)) {
+        auto err =  GetLastError();
+        err->Append("add to epoll");
+        close(epoll_fd_);
+        return err;
+    }
+    return nullptr;
+}
+
+Error SystemIO::CreateEpoolIfNeeded(SocketDescriptor master_socket) const {
+    if (epoll_fd_ != kDisconnectedSocketDescriptor) {
+        return nullptr;
+    }
+
+    epoll_fd_ = epoll_create1(0);
+    if(epoll_fd_ == kDisconnectedSocketDescriptor) {
+        auto err = GetLastError();
+        err->Append("Create epoll");
+        return err;
+    }
+    return AddToEpool(master_socket);
+}
+
+
+Error SystemIO::ProcessNewConnection(SocketDescriptor master_socket, std::vector<std::string>* new_connections,
+                                     ListSocketDescriptors* sockets_to_listen) const {
+    Error err;
+    auto client_info_tuple = InetAcceptConnection(master_socket, &err);
+    if (err) {
+        return err;
+    }
+    std::string client_address;
+    SocketDescriptor client_fd;
+    std::tie(client_address, client_fd) = *client_info_tuple;
+    new_connections->emplace_back(std::move(client_address));
+    sockets_to_listen->push_back(client_fd);
+    return AddToEpool(client_fd);
+}
+
+ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_socket,
+        ListSocketDescriptors* sockets_to_listen,
+        std::vector<std::string>* new_connections,
+        Error* err) const {
+
+    CreateEpoolIfNeeded(master_socket);
+
+
+    ListSocketDescriptors active_sockets;
+    bool client_activity = false;
+    while (!client_activity) {
+        struct epoll_event events[kMaxEpollEvents];
+        auto event_count = epoll_wait(epoll_fd_, events, kMaxEpollEvents, kWaitTimeoutMs);
+        if (event_count == 0) { // timeout
+            *err = IOErrorTemplates::kTimeout.Generate();
+            return {};
+        }
+        if (event_count < 0) {
+            *err = GetLastError();
+            (*err)->Append("epoll wait");
+            return {};
+        }
+
+        for(int i = 0; i < event_count; i++) {
+            auto sd = events[i].data.fd;
+            if (sd != master_socket) {
+                active_sockets.push_back(sd);
+                client_activity = true;
+            } else {
+                *err = ProcessNewConnection(master_socket, new_connections, sockets_to_listen);
+                if (*err) {
+                    return {};
+                }
+            }
+        }
+    }
+    return active_sockets;
+}
+
+SystemIO::~SystemIO() {
+    if (epoll_fd_ != -kDisconnectedSocketDescriptor) {
+        close(epoll_fd_);
+    }
+}
+
+void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
+    if (err) {
+        *err = nullptr;
+    }
+    if (!_close_socket(fd) && err) {
+        *err = GetLastError();
+    }
+    if (epoll_fd_ != kDisconnectedSocketDescriptor) {
+        struct epoll_event event;
+        epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, fd, &event);
+        errno = 0; // ignore possible errors
+    }
+}
+
 
 }

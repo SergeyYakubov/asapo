@@ -7,6 +7,9 @@
 #include "io/io_factory.h"
 
 #include "http_client/http_error.h"
+#include "tcp_client.h"
+
+#include <iostream>
 
 using std::chrono::high_resolution_clock;
 
@@ -40,10 +43,12 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
 }
 
 ServerDataBroker::ServerDataBroker(std::string server_uri,
+                                   std::string source_path,
                                    std::string source_name,
                                    std::string token) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
-    server_uri_{std::move(server_uri)}, source_name_{std::move(source_name)}, token_{std::move(token)} {
+    net_client__{new TcpClient()},
+server_uri_{std::move(server_uri)}, source_path_{std::move(source_path)}, source_name_{std::move(source_name)}, token_{std::move(token)} {
 }
 
 Error ServerDataBroker::Connect() {
@@ -168,13 +173,33 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, FileInfo*
         return err;
     }
 
+    return GetDataIfNeeded(info, data);
+}
+
+Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
     if (data == nullptr) {
         return nullptr;
     }
 
+    if (DataCanBeInBuffer(info)) {
+        if (TryGetDataFromBuffer(info, data) == nullptr) {
+            return nullptr;
+        } else {
+            info->buf_id = 0;
+        }
+    }
+
     Error error;
-    *data = io__->GetDataFromFile(info->FullName(""), &info->size, &error);
+    *data = io__->GetDataFromFile(info->FullName(source_path_), &info->size, &error);
     return error;
+}
+
+bool ServerDataBroker::DataCanBeInBuffer(const FileInfo* info) {
+    return info->buf_id > 0;
+}
+
+Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* data) {
+    return net_client__->GetData(info, data);
 }
 
 }

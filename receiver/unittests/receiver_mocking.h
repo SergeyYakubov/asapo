@@ -1,23 +1,21 @@
-#ifndef ASAPO_MOCK_STATISTICS_H
-#define ASAPO_MOCK_STATISTICS_H
+#ifndef ASAPO_RECEIVER_MOCKING_H
+#define ASAPO_RECEIVER_MOCKING_H
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "../src/statistics.h"
+#include "../src/receiver_statistics.h"
 #include "../src/request.h"
+#include "../src/data_cache.h"
 
 namespace asapo {
 
-class MockStatistics : public asapo::Statistics {
+class MockStatistics : public asapo::ReceiverStatistics {
   public:
-    void SendIfNeeded() noexcept override {
-        SendIfNeeded_t();
+    void SendIfNeeded(bool send_always) noexcept override {
+        SendIfNeeded_t(send_always);
     }
 
-    void Send() noexcept override {
-        Send_t();
-    }
 
     void IncreaseRequestCounter() noexcept override {
         IncreaseRequestCounter_t();
@@ -32,8 +30,7 @@ class MockStatistics : public asapo::Statistics {
         StopTimer_t();
     }
 
-    MOCK_METHOD0(SendIfNeeded_t, void());
-    MOCK_METHOD0(Send_t, void());
+    MOCK_METHOD1(SendIfNeeded_t, void(bool send_always));
     MOCK_METHOD0(IncreaseRequestCounter_t, void());
     MOCK_METHOD0(StopTimer_t, void());
     MOCK_METHOD1(IncreaseRequestDataVolume_t, void (uint64_t
@@ -46,12 +43,13 @@ class MockStatistics : public asapo::Statistics {
 class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri):
-        Request(request_header, socket_fd, std::move(origin_uri)) {};
+        Request(request_header, socket_fd, std::move(origin_uri), nullptr) {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetDataSize, uint64_t());
     MOCK_CONST_METHOD0(GetDataID, uint64_t());
-    MOCK_CONST_METHOD0(GetData, const asapo::FileData & ());
+    MOCK_CONST_METHOD0(GetSlotId, uint64_t());
+    MOCK_CONST_METHOD0(GetData, void* ());
     MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
     MOCK_CONST_METHOD0(GetBeamline, const std::string & ());
     MOCK_CONST_METHOD0(GetOpCode, asapo::Opcode ());
@@ -61,6 +59,27 @@ class MockRequest: public Request {
 };
 
 
+class MockDataCache: public DataCache {
+  public:
+    MockDataCache(): DataCache(0, 0) {};
+    MOCK_METHOD2(GetFreeSlotAndLock, void* (uint64_t
+                                            size, CacheMeta** meta));
+    MOCK_METHOD1(UnlockSlot, bool(CacheMeta* meta));
+    MOCK_METHOD3(GetSlotToReadAndLock, void* (uint64_t
+                                              id, uint64_t data_size, CacheMeta** meta));
+
+};
+
+
+class MockStatisticsSender: public StatisticsSender {
+  public:
+    void SendStatistics(const StatisticsToSend& statistics) const noexcept override {
+        SendStatistics_t(statistics);
+    }
+    MOCK_CONST_METHOD1(SendStatistics_t, void (const StatisticsToSend&));
+};
+
+
 }
 
-#endif //ASAPO_MOCK_STATISTICS_H
+#endif //ASAPO_RECEIVER_MOCKING_H

@@ -14,9 +14,10 @@
 #include "common/networking.h"
 #include "io/io.h"
 #include "request.h"
-#include "statistics.h"
+#include "receiver_statistics.h"
 #include "logger/logger.h"
 #include "requests_dispatcher.h"
+#include "data_cache.h"
 
 namespace asapo {
 
@@ -27,13 +28,13 @@ class Connection {
     int socket_fd_;
   public:
 
-    Connection(SocketDescriptor socket_fd, const std::string& address, std::string receiver_tag);
+    Connection(SocketDescriptor socket_fd, const std::string& address, SharedCache cache, std::string receiver_tag);
     ~Connection() = default;
 
     void Listen() const noexcept;
 
     std::unique_ptr<IO> io__;
-    mutable std::unique_ptr<Statistics> statistics__;
+    mutable std::unique_ptr<ReceiverStatistics> statistics__;
     const AbstractLogger* log__;
     std::unique_ptr<RequestsDispatcher> requests_dispatcher__;
   private:

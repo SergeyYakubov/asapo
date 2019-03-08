@@ -73,8 +73,8 @@ Error RequestHandlerAuthorize::ProcessOtherRequest(Request* request) const {
         return ReceiverErrorTemplates::kAuthorizationFailure.Generate();
     }
 
-    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>
-                      (high_resolution_clock::now() - last_updated_).count();
+    uint64_t elapsed_ms = (uint64_t) std::chrono::duration_cast<std::chrono::milliseconds>
+                          (high_resolution_clock::now() - last_updated_).count();
     if (elapsed_ms >= GetReceiverConfig()->authorization_interval_ms) {
         auto err = Authorize(request, beamtime_id_.c_str());
         if (err) {
@@ -100,7 +100,7 @@ RequestHandlerAuthorize::RequestHandlerAuthorize(): log__{GetDefaultReceiverLogg
 }
 
 StatisticEntity RequestHandlerAuthorize::GetStatisticEntity() const {
-    return StatisticEntity::kAuthorizer;
+    return StatisticEntity::kNetwork;
 }
 
 

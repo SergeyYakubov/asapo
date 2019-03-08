@@ -55,7 +55,6 @@ Cleanup() {
 influx -execute "create database ${monitor_database_name}"
 
 sed -i 's/27017/27016/g' receiver.json.tpl
-sed -i 's/"WriteToDisk":true/"WriteToDisk":false/g' receiver.json.tpl
 sed -i 's/27017/27016/g' broker.json.tpl
 sed -i 's/info/debug/g' broker.json.tpl
 
@@ -82,7 +81,7 @@ $1 localhost:8400 ${beamtime_id} 100 1000 4 0 100 &
 
 wait
 
-$2 ${proxy_address} ${beamtime_id} 2 $token 10000 &> output.txt &
+$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 10000 0 &> output.txt &
 
 sleep 2
 

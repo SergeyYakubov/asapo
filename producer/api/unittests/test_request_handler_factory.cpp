@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <unittests/MockIO.h>
 
-#include "../src/request_handler_factory.h"
+#include "../src/producer_request_handler_factory.h"
 #include "../src/receiver_discovery_service.h"
 #include "../src/request_handler_tcp.h"
 #include "mocking.h"
@@ -10,7 +10,7 @@
 using ::testing::Ne;
 using ::testing::Eq;
 
-using asapo:: RequestHandlerFactory;
+using asapo::ProducerRequestHandlerFactory;
 
 
 namespace {
@@ -19,7 +19,7 @@ TEST(CreateFactory, Tcp) {
     MockDiscoveryService mock_discovery;
     EXPECT_CALL(mock_discovery, StartCollectingData());
 
-    RequestHandlerFactory factory{&mock_discovery};
+    ProducerRequestHandlerFactory factory{&mock_discovery};
 
     auto handler = factory.NewRequestHandler(1, nullptr);
 
@@ -28,7 +28,7 @@ TEST(CreateFactory, Tcp) {
 }
 
 TEST(CreateFactory, Filesystem) {
-    RequestHandlerFactory factory{""};
+    ProducerRequestHandlerFactory factory{""};
 
     auto handler = factory.NewRequestHandler(1, nullptr);
 

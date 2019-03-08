@@ -108,7 +108,6 @@ CurlHttpClient::~CurlHttpClient() {
     if (curl_) {
         curl_easy_cleanup(curl_);
     }
-
 }
 
 

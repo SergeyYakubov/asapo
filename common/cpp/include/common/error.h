@@ -10,7 +10,7 @@ namespace asapo {
 enum class ErrorType {
     kUnknownError,
 
-    kHidraError,
+    kAsapoError,
     kHttpError,
     kIOError,
     kReceiverError,
@@ -46,8 +46,8 @@ class ErrorTemplateInterface {
   public:
     virtual ErrorType GetErrorType() const noexcept = 0;
     virtual Error Generate() const noexcept = 0;
+    virtual Error Generate(const std::string& suffix) const noexcept = 0;
     virtual std::string Text() const noexcept = 0;
-
     virtual inline bool operator == (const Error& rhs) const {
         return rhs != nullptr &&
                GetErrorType() == rhs->GetErrorType();
@@ -79,7 +79,7 @@ static inline std::ostream& operator<<(std::ostream& os, const Error& err) {
 class SimpleError: public ErrorInterface {
   private:
     std::string error_;
-    ErrorType error_type_ = ErrorType::kHidraError;
+    ErrorType error_type_ = ErrorType::kAsapoError;
   public:
     explicit SimpleError(std::string error): error_{std::move(error)} {
 
@@ -109,7 +109,7 @@ class SimpleError: public ErrorInterface {
 class SimpleErrorTemplate : public ErrorTemplateInterface {
   protected:
     std::string error_;
-    ErrorType error_type_ = ErrorType::kHidraError;
+    ErrorType error_type_ = ErrorType::kAsapoError;
   public:
     explicit SimpleErrorTemplate(std::string error): error_{std::move(error)} {
 
@@ -130,6 +130,11 @@ class SimpleErrorTemplate : public ErrorTemplateInterface {
     inline Error Generate() const noexcept override {
         return Error(new SimpleError{error_, error_type_});
     }
+
+    inline Error Generate(const std::string& suffix) const noexcept override {
+        return Error(new SimpleError{error_ + " :" + suffix, error_type_});
+    }
+
 };
 
 static inline std::ostream& operator<<(std::ostream& os, const SimpleErrorTemplate& err) {
@@ -154,6 +159,48 @@ auto const kEndOfFile = SimpleErrorTemplate {
 };
 
 }
+
+template <typename ServiceErrorType, ErrorType MainErrorType>
+class ServiceError : public SimpleError {
+  private:
+    ServiceErrorType error_type_;
+  public:
+    ServiceError(const std::string& error, ServiceErrorType error_type) : SimpleError(error, MainErrorType) {
+        error_type_ = error_type;
+    }
+    ServiceErrorType GetServiceErrorType() const noexcept {
+        return error_type_;
+    }
+};
+
+template <typename ServiceErrorType, ErrorType MainErrorType>
+class ServiceErrorTemplate : public SimpleErrorTemplate {
+  protected:
+    ServiceErrorType error_type_;
+  public:
+    ServiceErrorTemplate(const std::string& error, ServiceErrorType error_type) : SimpleErrorTemplate(error,
+                MainErrorType) {
+        error_type_ = error_type;
+    }
+
+    inline ServiceErrorType GetServiceErrorType() const noexcept {
+        return error_type_;
+    }
+
+    inline Error Generate() const noexcept override {
+        auto err = new ServiceError<ServiceErrorType, MainErrorType>(error_, error_type_);
+        return Error(err);
+    }
+
+    inline Error Generate(const std::string& suffix) const noexcept override {
+        return Error(new ServiceError<ServiceErrorType, MainErrorType>(error_ + " :" + suffix, error_type_));
+    }
+
+    inline bool operator==(const Error& rhs) const override {
+        return SimpleErrorTemplate::operator==(rhs)
+               && GetServiceErrorType() == ((ServiceError<ServiceErrorType, MainErrorType>*) rhs.get())->GetServiceErrorType();
+    }
+};
 
 }
 #endif //ASAPO_ERROR_H

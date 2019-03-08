@@ -41,6 +41,7 @@ enum class SocketProtocols {
 
 using FileDescriptor = int;
 using SocketDescriptor = int;
+using ListSocketDescriptors =  std::vector<SocketDescriptor>;
 const SocketDescriptor kDisconnectedSocketDescriptor = -1;
 
 class IO {
@@ -57,6 +58,12 @@ class IO {
     virtual SocketDescriptor  CreateSocket(AddressFamilies address_family, SocketTypes socket_type,
                                            SocketProtocols socket_protocol, Error* err) const = 0;
     virtual void            Listen(SocketDescriptor socket_fd, int backlog, Error* err) const = 0;
+
+    virtual ListSocketDescriptors WaitSocketsActivity(SocketDescriptor master_socket,
+                                                      ListSocketDescriptors* sockets_to_listen,
+                                                      std::vector<std::string>* new_connections, Error* err) const = 0;
+
+
     virtual void            InetBind(SocketDescriptor socket_fd, const std::string& address, Error* err) const = 0;
     virtual SocketDescriptor  CreateAndBindIPTCPSocketListener(const std::string& address, int backlog,
             Error* err) const = 0;
@@ -102,6 +109,9 @@ class IO {
     virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, Error* err) const = 0;
     virtual std::string     ReadFileToString        (const std::string& fname, Error* err) const = 0;
     virtual Error GetLastError() const = 0;
+    virtual std::string AddressFromSocket(SocketDescriptor socket) const noexcept = 0;
+    virtual std::string     GetHostName(Error* err) const noexcept = 0;
+    virtual ~IO() = default;
 };
 
 }

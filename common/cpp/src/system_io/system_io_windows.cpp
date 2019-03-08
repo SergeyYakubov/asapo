@@ -16,6 +16,27 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
+// use IOInstance and static variable to init window sockets on program start end cleanup on exit
+class IOInstance {
+  public:
+    IOInstance();
+    ~IOInstance();
+};
+static IOInstance instance;
+IOInstance::IOInstance() {
+    WORD wVersionRequested = MAKEWORD(2, 2);
+    WSADATA wsaData;
+    int err = WSAStartup(wVersionRequested, &wsaData);
+    if (err != 0) {
+        std::cout << "[_socket/WSAStartup] Failed to WSAStartup with version 2.2" << std::endl;
+        exit(1);
+    }
+}
+
+IOInstance::~IOInstance() {
+    WSACleanup();
+}
+
 Error IOErrorFromGetLastError() {
     DWORD last_error = GetLastError();
     switch (last_error) {
@@ -246,7 +267,6 @@ bool SystemIO::_close_socket(SocketDescriptor fd) const {
 }
 
 SocketDescriptor SystemIO::_socket(int address_family, int socket_type, int socket_protocol) const {
-    InitializeSocketIfNecessary();
     return ::socket(address_family, socket_type, socket_protocol);
 }
 
@@ -282,23 +302,87 @@ SocketDescriptor SystemIO::_accept(SocketDescriptor socket_fd, void* address, si
     return ::accept(socket_fd, static_cast<sockaddr*>(address), (int*)address_length);
 }
 
-void SystemIO::InitializeSocketIfNecessary() const {
-    static bool WSAStartupDone = false;
-    if (!WSAStartupDone) {
-        WSAStartupDone = true;
-        WORD wVersionRequested = MAKEWORD(2, 2);
-        WSADATA wsaData;
-        int err = WSAStartup(wVersionRequested, &wsaData);
-        if (err != 0) {
-            std::cout << "[_socket/WSAStartup] Failed to WSAStartup with version 2.2" << std::endl;
-            WSACleanup();
-            // Do not return, since ::socket has to set an errno
-        } else {
-            std::atexit([] {
-                WSACleanup();
-            });
+std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept {
+
+    sockaddr_in client_address{};
+    static size_t client_address_size = sizeof(sockaddr_in);
+
+    auto res = getpeername(socket, reinterpret_cast<sockaddr*>(&client_address), (int*) &client_address_size);
+    if (res != 0) {
+        return GetLastError()->Explain();
+    }
+
+    return std::string(inet_ntoa(client_address.sin_addr)) + ':' + std::to_string(client_address.sin_port);
+}
+
+ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_socket,
+        ListSocketDescriptors* sockets_to_listen,
+        std::vector<std::string>* new_connections,
+        Error* err) const {
+    fd_set readfds;
+    ListSocketDescriptors active_sockets;
+    bool client_activity = false;
+    *err = nullptr;
+    while (!client_activity) {
+
+        FD_ZERO(&readfds);
+        SocketDescriptor max_sd = master_socket;
+        FD_SET(master_socket, &readfds);
+        for (auto sd : *sockets_to_listen) {
+            FD_SET(sd, &readfds);
+            if (sd > max_sd) {
+                max_sd = sd;
+            }
+        }
+
+        timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = kWaitTimeoutMs;
+
+        auto activity = select(max_sd + 1, &readfds, NULL, NULL, &timeout);
+        if (activity == 0) { // timeout
+            *err = IOErrorTemplates::kTimeout.Generate();
+            return {};
+        }
+        if ((activity < 0) && (errno != EINTR)) {
+            *err = GetLastError();
+            return {};
+        }
+
+        for (auto sd : *sockets_to_listen) {
+            if (FD_ISSET(sd, &readfds)) {
+                active_sockets.push_back(sd);
+                client_activity = true;
+            }
+        }
+
+        if (FD_ISSET(master_socket, &readfds)) {
+            auto client_info_tuple = InetAcceptConnection(master_socket, err);
+            if (*err) {
+                return {};
+            }
+            std::string client_address;
+            SocketDescriptor client_fd;
+            std::tie(client_address, client_fd) = *client_info_tuple;
+            new_connections->emplace_back(std::move(client_address));
+            sockets_to_listen->push_back(client_fd);
         }
     }
+    return active_sockets;
+}
+
+void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
+    if (err) {
+        *err = nullptr;
+    }
+    if (!_close_socket(fd) && err) {
+        *err = GetLastError();
+    }
+}
+
+
+SystemIO::~SystemIO() {
+    // do nothing;
 }
 
 }

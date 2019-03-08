@@ -1,4 +1,4 @@
-set(TARGET_NAME full_chain_simple_chain)
+set(TARGET_NAME full_chain_simple_chain_filegen_producer)
 
 ################################
 # Testing

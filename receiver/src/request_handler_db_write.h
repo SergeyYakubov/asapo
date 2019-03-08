@@ -9,7 +9,7 @@
 
 namespace asapo {
 
-class RequestHandlerDbWrite final: public RequestHandler {
+class RequestHandlerDbWrite final: public ReceiverRequestHandler {
   public:
     RequestHandlerDbWrite();
     StatisticEntity GetStatisticEntity() const override;
@@ -17,6 +17,8 @@ class RequestHandlerDbWrite final: public RequestHandler {
     std::unique_ptr<Database> db_client__;
     const AbstractLogger* log__;
   private:
+    FileInfo PrepareFileInfo(const Request* request) const;
+    Error InsertRecordToDb(const Request* request) const;
     Error ConnectToDbIfNeeded() const;
     mutable bool connected_to_db = false;
     mutable std::string db_name_;

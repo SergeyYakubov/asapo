@@ -9,6 +9,8 @@
 #include "unittests/MockIO.h"
 #include "unittests/MockHttpClient.h"
 #include "http_client/http_error.h"
+#include "mocking.h"
+#include "../src/tcp_client.h"
 
 using asapo::DataBrokerFactory;
 using asapo::DataBroker;
@@ -18,6 +20,7 @@ using asapo::FileInfo;
 using asapo::FileData;
 using asapo::MockIO;
 using asapo::MockHttpClient;
+using asapo::MockNetClient;
 using asapo::HttpCode;
 using asapo::HttpError;
 using asapo::SimpleError;
@@ -37,35 +40,40 @@ using testing::AllOf;
 
 namespace {
 
-TEST(FolderDataBroker, SetCorrectIo) {
-    auto data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "beamtime_id", "token")};
+TEST(FolderDataBroker, Constructor) {
+    auto data_broker =
+    std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "path", "beamtime_id", "token")};
     ASSERT_THAT(dynamic_cast<asapo::SystemIO*>(data_broker->io__.get()), Ne(nullptr));
-}
-
-TEST(FolderDataBroker, SetCorrectHttpClient) {
-    auto data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "beamtime_id", "token")};
     ASSERT_THAT(dynamic_cast<asapo::CurlHttpClient*>(data_broker->httpclient__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::TcpClient*>(data_broker->net_client__.get()), Ne(nullptr));
 }
-
 
 class ServerDataBrokerTests : public Test {
   public:
     std::unique_ptr<ServerDataBroker> data_broker;
     NiceMock<MockIO> mock_io;
     NiceMock<MockHttpClient> mock_http_client;
+    NiceMock<MockNetClient> mock_netclient;
     FileInfo info;
     std::string expected_server_uri = "test:8400";
     std::string expected_broker_uri = "broker:5005";
     std::string expected_token = "token";
-
+    std::string expected_path = "/tmp/beamline/beamtime";
+    std::string expected_filename = "filename";
+    std::string expected_full_path = std::string("/tmp/beamline/beamtime") + asapo::kPathSeparator + expected_filename;
+    static const uint64_t expected_buf_id = 123;
     void SetUp() override {
-        data_broker = std::unique_ptr<ServerDataBroker> {new ServerDataBroker(expected_server_uri, "beamtime_id", expected_token)};
+        data_broker = std::unique_ptr<ServerDataBroker> {
+            new ServerDataBroker(expected_server_uri, expected_path, "beamtime_id", expected_token)
+        };
         data_broker->io__ = std::unique_ptr<IO> {&mock_io};
         data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
+        data_broker->net_client__ = std::unique_ptr<asapo::NetClient> {&mock_netclient};
     }
     void TearDown() override {
         data_broker->io__.release();
         data_broker->httpclient__.release();
+        data_broker->net_client__.release();
     }
     void MockGet(const std::string& response) {
         EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_broker_uri), _, _)).WillOnce(DoAll(
@@ -89,7 +97,24 @@ class ServerDataBrokerTests : public Test {
                     SetArgPointee<2>(nullptr),
                     Return(expected_broker_uri)));
     }
+    void MockReadDataFromFile(int times = 1) {
+        if (times == 0) {
+            EXPECT_CALL(mock_io, GetDataFromFile_t(_, _, _)).Times(0);
+            return;
+        }
 
+        EXPECT_CALL(mock_io, GetDataFromFile_t(expected_full_path, testing::Pointee(100), _)).Times(times).
+        WillRepeatedly(DoAll(SetArgPointee<2>(new asapo::SimpleError{"s"}), testing::Return(nullptr)));
+    }
+    FileInfo CreateFI(uint64_t buf_id = expected_buf_id) {
+        FileInfo fi;
+        fi.size = 100;
+        fi.id = 1;
+        fi.buf_id = buf_id;
+        fi.name = expected_filename;
+        fi.modify_date = std::chrono::system_clock::now();
+        return fi;
+    }
 };
 
 TEST_F(ServerDataBrokerTests, CanConnect) {
@@ -101,7 +126,6 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsErrorOnWrongInput) {
     auto return_code = data_broker->GetNext(nullptr, nullptr);
     ASSERT_THAT(return_code->Explain(), Eq(asapo::WorkerErrorMessage::kWrongInput));
 }
-
 
 TEST_F(ServerDataBrokerTests, GetNextUsesCorrectUri) {
     MockGetBrokerUri();
@@ -124,7 +148,6 @@ TEST_F(ServerDataBrokerTests, GetLastUsesCorrectUri) {
                                                 Return("")));
     data_broker->GetLast(&info, nullptr);
 }
-
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsEOFFromHttpClient) {
     MockGetBrokerUri();
@@ -153,7 +176,6 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsNotAuthorized) {
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(err->Explain(), HasSubstr("authorization"));
 }
-
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsWrongResponseFromHttpClient) {
 
@@ -195,8 +217,6 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerUriEmpty) {
     ASSERT_THAT(err->Explain(), AllOf(HasSubstr("broker uri"), HasSubstr("cannot")));
 }
 
-
-
 TEST_F(ServerDataBrokerTests, GetDoNotCallBrokerUriIfAlreadyFound) {
     MockGetBrokerUri();
     MockGet("error_response");
@@ -209,7 +229,6 @@ TEST_F(ServerDataBrokerTests, GetDoNotCallBrokerUriIfAlreadyFound) {
     MockGet("error_response");
     data_broker->GetNext(&info, nullptr);
 }
-
 
 TEST_F(ServerDataBrokerTests, GetBrokerUriAgainAfterConnectionError) {
     MockGetBrokerUri();
@@ -224,10 +243,8 @@ TEST_F(ServerDataBrokerTests, GetBrokerUriAgainAfterConnectionError) {
     data_broker->GetNext(&info, nullptr);
 }
 
-
 TEST_F(ServerDataBrokerTests, GetImageReturnsEOFFromHttpClientUntilTimeout) {
     MockGetBrokerUri();
-
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
                 SetArgPointee<1>(HttpCode::Conflict),
@@ -240,22 +257,10 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsEOFFromHttpClientUntilTimeout) {
                                                     SetArgPointee<2>(nullptr),
                                                     Return("{\"id\":1}")));
 
-
     data_broker->SetTimeout(100);
     auto err = data_broker->GetNext(&info, nullptr);
 
     ASSERT_THAT(err->Explain(), HasSubstr("timeout"));
-}
-
-
-
-FileInfo CreateFI() {
-    FileInfo fi;
-    fi.size = 100;
-    fi.id = 1;
-    fi.name = "name";
-    fi.modify_date = std::chrono::system_clock::now();
-    return fi;
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsFileInfo) {
@@ -276,7 +281,6 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsFileInfo) {
     ASSERT_THAT(info.modify_date, Eq(to_send.modify_date));
 }
 
-
 TEST_F(ServerDataBrokerTests, GetImageReturnsParseError) {
     MockGetBrokerUri();
     MockGet("error_response");
@@ -285,27 +289,63 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsParseError) {
     ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kErrorReadingSource));
 }
 
-
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfNoDtataNeeded) {
     MockGetBrokerUri();
     MockGet("error_response");
-    EXPECT_CALL( mock_io, GetDataFromFile_t(_, _, _)).Times(0);
+
+    EXPECT_CALL(mock_netclient, GetData_t(_, _)).Times(0);
+    EXPECT_CALL(mock_io, GetDataFromFile_t(_, _, _)).Times(0);
 
     data_broker->GetNext(&info, nullptr);
 }
 
-TEST_F(ServerDataBrokerTests, GetImageCallsReadFromFile) {
+TEST_F(ServerDataBrokerTests, GetImageTriesToGetDataFromMemoryCache) {
+    MockGetBrokerUri();
+    auto to_send = CreateFI();
+    auto json = to_send.Json();
+    MockGet(json);
+    FileData data;
+
+    EXPECT_CALL(mock_netclient, GetData_t(&info, &data)).WillOnce(Return(nullptr));
+    MockReadDataFromFile(0);
+
+    data_broker->GetNext(&info, &data);
+
+    ASSERT_THAT(info.buf_id, Eq(expected_buf_id));
+
+}
+
+TEST_F(ServerDataBrokerTests, GetImageCallsReadFromFileIfCannotReadFromCache) {
     MockGetBrokerUri();
     auto to_send = CreateFI();
     auto json = to_send.Json();
     MockGet(json);
 
-    EXPECT_CALL(mock_io, GetDataFromFile_t("name", testing::Pointee(100), _)).
-    WillOnce(DoAll(SetArgPointee<2>(new asapo::SimpleError{"s"}), testing::Return(nullptr)));
+    FileData data;
+
+    EXPECT_CALL(mock_netclient, GetData_t(&info,
+                                          &data)).WillOnce(Return(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()));
+    MockReadDataFromFile();
+
+    data_broker->GetNext(&info, &data);
+    ASSERT_THAT(info.buf_id, Eq(0));
+}
+
+TEST_F(ServerDataBrokerTests, GetImageCallsReadFromFileIfZeroBufId) {
+    MockGetBrokerUri();
+    auto to_send = CreateFI(0);
+    auto json = to_send.Json();
+    MockGet(json);
 
     FileData data;
-    data_broker->GetNext(&info, &data);
 
+
+    EXPECT_CALL(mock_netclient, GetData_t(_, _)).Times(0);
+
+    MockReadDataFromFile();
+
+    data_broker->GetNext(&info, &data);
 }
+
 
 }

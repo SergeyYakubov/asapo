@@ -26,7 +26,7 @@ class ReceiverDiscoveryService {
     VIRTUAL uint64_t UpdateFrequency();
   public:
     std::unique_ptr<HttpClient> httpclient__;
-    AbstractLogger* log__;
+    const AbstractLogger* log__;
   private:
     static const std::string kServiceEndpointSuffix;
     void ThreadHandler();

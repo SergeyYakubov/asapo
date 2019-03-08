@@ -55,7 +55,6 @@ wait_mongo
 echo "db.${beamtime_id}.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}
 
 sed -i 's/27017/27016/g' receiver.json.tpl
-#sed -i 's/"WriteToDisk":true/"WriteToDisk":false/g' receiver.json.tpl
 
 
 nomad run authorizer.nmd

@@ -44,4 +44,4 @@ $1 localhost:8400 ${beamtime_id} 100 1000 4 0 100 &
 #producerid=`echo $!`
 
 
-$2 ${proxy_address} ${beamtime_id} 2 $token 1000 | grep "Processed 1000 file(s)"
+$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | grep "Processed 1000 file(s)"

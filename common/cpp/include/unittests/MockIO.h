@@ -8,10 +8,41 @@
 namespace asapo {
 class MockIO : public IO {
   public:
+
+    std::string GetHostName(Error* err) const noexcept override {
+        ErrorInterface* error = nullptr;
+        auto res = GetHostName_t(&error);
+        err->reset(error);
+        return res;
+
+    }
+    MOCK_CONST_METHOD1(GetHostName_t, std::string(ErrorInterface** err));
+
+
+    std::string AddressFromSocket(SocketDescriptor socket) const noexcept override {
+        return AddressFromSocket_t(socket);
+    }
+    MOCK_CONST_METHOD1(AddressFromSocket_t, std::string (SocketDescriptor socket));
+
+
     std::unique_ptr<std::thread> NewThread(std::function<void()> function) const override {
         return std::unique_ptr<std::thread>(NewThread_t(function));
     }
     MOCK_CONST_METHOD1(NewThread_t, std::thread * (std::function<void()> function));
+
+
+    ListSocketDescriptors WaitSocketsActivity(SocketDescriptor master_socket, ListSocketDescriptors* sockets_to_listen,
+                                              std::vector<std::string>* new_connections, Error* err) const override {
+        ErrorInterface* error = nullptr;
+        auto data = WaitSocketsActivity_t(master_socket, sockets_to_listen, new_connections, &error);
+        err->reset(error);
+        return data;
+    }
+
+    MOCK_CONST_METHOD4(WaitSocketsActivity_t, ListSocketDescriptors(SocketDescriptor master_socket,
+                       ListSocketDescriptors* sockets_to_listen,
+                       std::vector<std::string>* connections, ErrorInterface** err));
+
 
     SocketDescriptor CreateSocket(AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol,
                                   Error* err) const override {

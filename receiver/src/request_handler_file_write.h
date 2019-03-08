@@ -10,7 +10,7 @@ namespace asapo {
 
 const uint64_t kMaxFileSize = uint64_t(1024) * 1024 * 1024 * 2; //2GB
 
-class RequestHandlerFileWrite final: public RequestHandler {
+class RequestHandlerFileWrite final: public ReceiverRequestHandler {
   public:
     RequestHandlerFileWrite();
     StatisticEntity GetStatisticEntity() const override;

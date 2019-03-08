@@ -1,21 +1,21 @@
-#ifndef ASAPO_REQUEST_HANDLER_H
-#define ASAPO_REQUEST_HANDLER_H
+#ifndef ASAPO_RECEIVER_REQUEST_HANDLER_H
+#define ASAPO_RECEIVER_REQUEST_HANDLER_H
 
 #include "receiver_error.h"
-#include "statistics.h"
+#include "receiver_statistics.h"
 
 namespace asapo {
 
 class Request;
 
-class RequestHandler {
+class ReceiverRequestHandler {
   public:
     virtual Error ProcessRequest(Request* request) const = 0;
     virtual StatisticEntity GetStatisticEntity() const  = 0;
-    virtual ~RequestHandler() = default;
+    virtual ~ReceiverRequestHandler() = default;
   private:
 };
 
 }
 
-#endif //ASAPO_REQUEST_HANDLER_H
+#endif //ASAPO_RECEIVER_REQUEST_HANDLER_H

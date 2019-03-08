@@ -30,45 +30,8 @@ enum class IOErrorType {
 
 };
 
-class IOError : public SimpleError {
-  private:
-    IOErrorType io_error_type_;
-  public:
-    IOError(const std::string& error, IOErrorType io_error_type) : SimpleError(error, ErrorType::kIOError) {
-        io_error_type_ = io_error_type;
-    }
-
-    IOErrorType GetIOErrorType() const noexcept {
-        return io_error_type_;
-    }
-};
-
-class IOErrorTemplate : public SimpleErrorTemplate {
-  protected:
-    IOErrorType io_error_type_;
-  public:
-    IOErrorTemplate(const std::string& error, IOErrorType io_error_type) : SimpleErrorTemplate(error, ErrorType::kIOError) {
-        io_error_type_ = io_error_type;
-    }
-
-    inline IOErrorType GetIOErrorType() const noexcept {
-        return io_error_type_;
-    }
-
-    inline Error Generate() const noexcept override {
-        return Error(new IOError(error_, io_error_type_));
-    }
-
-    inline bool operator == (const Error& rhs) const override {
-        return SimpleErrorTemplate::operator==(rhs)
-               && GetIOErrorType() == ((IOError*)rhs.get())->GetIOErrorType();
-    }
-};
-
-static inline std::ostream& operator<<(std::ostream& os, const IOErrorTemplate& err) {
-    return os << err.Text();
-}
-
+using IOError = ServiceError<IOErrorType, ErrorType::kIOError>;
+using IOErrorTemplate = ServiceErrorTemplate<IOErrorType, ErrorType::kIOError>;
 
 namespace IOErrorTemplates {
 auto const kUnknownIOError = IOErrorTemplate {

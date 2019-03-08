@@ -104,9 +104,8 @@ void FileWriteHandlerTests::MockRequestData() {
     .WillOnce(Return(expected_file_size))
     ;
 
-    asapo::FileData data;
     EXPECT_CALL(*mock_request, GetData())
-    .WillOnce(ReturnRef(data))
+    .WillOnce(Return(nullptr))
     ;
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
@@ -127,7 +126,7 @@ TEST_F(FileWriteHandlerTests, CallsWriteFile) {
     asapo::ReceiverConfig test_config;
     test_config.root_folder = "test_folder";
 
-    asapo::SetReceiverConfig(test_config);
+    asapo::SetReceiverConfig(test_config, "none");
 
     MockRequestData();
 

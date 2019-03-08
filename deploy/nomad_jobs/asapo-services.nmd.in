@@ -12,7 +12,7 @@ job "asapo-services" {
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]
-        image = "yakser/asapo-authorizer:develop"
+        image = "yakser/asapo-authorizer-dev:@ASAPO_VERSION@"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/authorizer/config.json",
                    "/bldocuments/support/asapo/beamtime_beamline_mapping.txt:/var/lib/authorizer/beamtime_beamline_mapping.txt",
@@ -71,7 +71,7 @@ job "asapo-services" {
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]
-        image = "yakser/asapo-discovery:develop"
+        image = "yakser/asapo-discovery-dev:@ASAPO_VERSION@"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/discovery/config.json"]
         logging {

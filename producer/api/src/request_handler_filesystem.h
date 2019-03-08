@@ -7,7 +7,7 @@
 #include "common/error.h"
 
 #include "producer/common.h"
-#include "request_handler.h"
+#include "request/request_handler.h"
 #include "logger/logger.h"
 
 using std::chrono::high_resolution_clock;
@@ -17,7 +17,7 @@ namespace asapo {
 class RequestHandlerFilesystem: public RequestHandler {
   public:
     explicit RequestHandlerFilesystem(std::string destination_folder, uint64_t thread_id);
-    Error ProcessRequestUnlocked(Request* request) override;
+    Error ProcessRequestUnlocked(GenericRequest* request) override;
     bool ReadyProcessRequest() override {
         return true;
     };

@@ -10,6 +10,7 @@ add_subdirectory(src/http_client)
 
 add_subdirectory(src/logger)
 
+add_subdirectory(src/request)
 
 if(BUILD_MONGODB_CLIENTLIB)
     add_subdirectory(src/database)

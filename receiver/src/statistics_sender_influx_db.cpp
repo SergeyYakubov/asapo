@@ -47,9 +47,9 @@ std::string StatisticsSenderInfluxDb::StatisticsToString(const StatisticsToSend&
     str = "statistics" + tags + " elapsed_ms=" + string_format("%ld", statistic.elapsed_ms);
     str += ",data_volume=" + string_format("%ld", statistic.data_volume);
     str += ",n_requests=" + string_format("%ld", statistic.n_requests);
-    str += ",db_share=" + string_format("%.4f", statistic.entity_shares[StatisticEntity::kDatabase]);
-    str += ",network_share=" + string_format("%.4f", statistic.entity_shares[StatisticEntity::kNetwork]);
-    str += ",disk_share=" + string_format("%.4f", statistic.entity_shares[StatisticEntity::kDisk]);
+    for (const auto& entity : statistic.extra_entities) {
+        str += "," + entity.first + "=" + string_format("%.4f", entity.second);
+    }
     return str;
 }
 

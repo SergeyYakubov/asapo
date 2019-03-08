@@ -5,6 +5,15 @@
   "AuthorizationServer": "localhost:5007",
   "AuthorizationInterval": 10000,
   "ListenPort":4200,
+  "DataServer": {
+    "NThreads": 2,
+    "ListenPort": 23123
+  },
+  "DataCache": {
+    "Use": true,
+    "SizeGB": 1,
+    "ReservedShare": 10
+  },
   "WriteToDisk":true,
   "WriteToDb":true,
   "LogLevel":"info",

@@ -10,6 +10,7 @@ namespace asapo {
 
 enum class ValueType {
     kUint64,
+    kInt64,
     kString,
     kObject,
     kArray,
@@ -26,6 +27,7 @@ class RapidJson {
     Error GetArrayUInt64(const std::string& name, std::vector<uint64_t>* val) const noexcept;
     Error GetArrayString(const std::string& name, std::vector<std::string>* val) const noexcept;
   private:
+    Error GetInt64(const std::string& name, int64_t* val) const noexcept;
     const std::unique_ptr<IO>* io__;
     mutable rapidjson::Document doc_;
     mutable rapidjson::Value object_;

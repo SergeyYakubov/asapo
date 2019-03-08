@@ -61,17 +61,17 @@ class RequestHandlerTcpTests : public testing::Test {
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_file_name};
     bool called = false;
     asapo::GenericRequestHeader callback_header;
-    asapo::Request request{expected_beamtime_id, header, nullptr, "", [this](asapo::GenericRequestHeader header, asapo::Error err) {
+    asapo::ProducerRequest request{expected_beamtime_id, header, nullptr, "", [this](asapo::GenericRequestHeader header, asapo::Error err) {
         called = true;
         callback_err = std::move(err);
         callback_header = header;
     }};
 
     std::string expected_origin_fullpath = std::string("origin/") + expected_file_name;
-    asapo::Request request_filesend{expected_beamtime_id, header, nullptr, expected_origin_fullpath, nullptr};
+    asapo::ProducerRequest request_filesend{expected_beamtime_id, header, nullptr, expected_origin_fullpath, nullptr};
 
 
-    asapo::Request request_nocallback{expected_beamtime_id, header, nullptr, "", nullptr};
+    asapo::ProducerRequest request_nocallback{expected_beamtime_id, header, nullptr, "", nullptr};
     testing::NiceMock<asapo::MockLogger> mock_logger;
     uint64_t n_connections{0};
     asapo::RequestHandlerTcp request_handler{&mock_discovery_service, expected_thread_id, &n_connections};

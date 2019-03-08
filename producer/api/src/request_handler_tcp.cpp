@@ -2,7 +2,7 @@
 #include "request_handler_tcp.h"
 #include "producer_logger.h"
 #include "io/io_factory.h"
-
+#include "producer_request.h"
 
 namespace asapo {
 
@@ -48,7 +48,7 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id, const
     return nullptr;
 }
 
-Error RequestHandlerTcp::SendHeaderAndData(const Request* request) {
+Error RequestHandlerTcp::SendHeaderAndData(const ProducerRequest* request) {
     Error io_error;
     io__->Send(sd_, &(request->header), sizeof(request->header), &io_error);
     if(io_error) {
@@ -85,7 +85,7 @@ Error RequestHandlerTcp::ReceiveResponse() {
     }
 }
 
-Error RequestHandlerTcp::TrySendToReceiver(const Request* request) {
+Error RequestHandlerTcp::TrySendToReceiver(const ProducerRequest* request) {
     auto err = SendHeaderAndData(request);
     if (err)  {
         return err;
@@ -158,7 +158,7 @@ bool RequestHandlerTcp::ServerError(const Error& err) {
     return err != nullptr && err != ProducerErrorTemplates::kFileIdAlreadyInUse;
 }
 
-Error RequestHandlerTcp::SendDataToOneOfTheReceivers(Request* request) {
+Error RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {
     for (auto receiver_uri : receivers_list_) {
         if (Disconnected()) {
             auto err = ConnectToReceiver(request->beamtime_id, receiver_uri);
@@ -182,8 +182,9 @@ Error RequestHandlerTcp::SendDataToOneOfTheReceivers(Request* request) {
 }
 
 
-Error RequestHandlerTcp::ProcessRequestUnlocked(Request* request) {
-    auto err = request->ReadDataFromFileIfNeeded(io__.get());
+Error RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request) {
+    auto producer_request = static_cast<ProducerRequest*>(request);
+    auto err = producer_request->ReadDataFromFileIfNeeded(io__.get());
     if (err) {
         return err;
     }
@@ -191,7 +192,7 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(Request* request) {
     if (NeedRebalance()) {
         CloseConnectionToPeformRebalance();
     }
-    return SendDataToOneOfTheReceivers(request);
+    return SendDataToOneOfTheReceivers(producer_request);
 }
 
 bool RequestHandlerTcp::Connected() {

@@ -5,7 +5,7 @@
 #include "unittests/MockLogger.h"
 #include "../src/receiver_error.h"
 #include "../src/request.h"
-#include "../src/statistics.h"
+#include "../src/receiver_statistics.h"
 #include "receiver_mocking.h"
 #include "mock_receiver_config.h"
 
@@ -48,14 +48,14 @@ using asapo::MockStatistics;
 
 
 using asapo::RequestsDispatcher;
-using asapo::Statistics;
+using asapo::ReceiverStatistics;
 
 namespace {
 
 TEST(RequestDispatcher, Constructor) {
-    auto stat = std::unique_ptr<Statistics> {new Statistics};
-    RequestsDispatcher dispatcher{0,  "some_address", stat.get()};
-    ASSERT_THAT(dynamic_cast<const asapo::Statistics*>(dispatcher.statistics__), Ne(nullptr));
+    auto stat = std::unique_ptr<ReceiverStatistics> {new ReceiverStatistics};
+    RequestsDispatcher dispatcher{0,  "some_address", stat.get(), nullptr};
+    ASSERT_THAT(dynamic_cast<const asapo::ReceiverStatistics*>(dispatcher.statistics__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(dispatcher.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestFactory*>(dispatcher.request_factory__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(dispatcher.log__), Ne(nullptr));
@@ -64,8 +64,8 @@ TEST(RequestDispatcher, Constructor) {
 class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-        Request(request_header, socket_fd, "") {};
-    Error Handle(Statistics* statistics) override {
+        Request(request_header, socket_fd, "", nullptr) {};
+    Error Handle(ReceiverStatistics* statistics) override {
         return Error{Handle_t()};
     };
     MOCK_CONST_METHOD0(Handle_t, ErrorInterface * ());
@@ -74,6 +74,7 @@ class MockRequest: public Request {
 
 class MockRequestFactory: public asapo::RequestFactory {
   public:
+    MockRequestFactory(): RequestFactory(nullptr) {};
     std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                              SocketDescriptor socket_fd, std::string origin_uri,
                                              Error* err) const noexcept override {
@@ -112,8 +113,8 @@ class RequestsDispatcherTests : public Test {
     GenericNetworkResponse response;
     void SetUp() override {
         test_config.authorization_interval_ms = 0;
-        SetReceiverConfig(test_config);
-        dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statictics}};
+        SetReceiverConfig(test_config, "none");
+        dispatcher = std::unique_ptr<RequestsDispatcher> {new RequestsDispatcher{0, connected_uri, &mock_statictics, nullptr}};
         dispatcher->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         dispatcher->statistics__ = &mock_statictics;
         dispatcher->request_factory__ = std::unique_ptr<asapo::RequestFactory> {&mock_factory};

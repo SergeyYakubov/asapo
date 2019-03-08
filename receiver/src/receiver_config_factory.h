@@ -9,7 +9,7 @@ namespace asapo {
 class ReceiverConfigFactory {
   public:
     ReceiverConfigFactory();
-    Error SetConfigFromFile(std::string file_name);
+    Error SetConfig(std::string file_name);
   public:
     std::unique_ptr<IO> io__;
 };

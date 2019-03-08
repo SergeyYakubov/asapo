@@ -5,32 +5,46 @@
 namespace asapo {
 
 Request::Request(const GenericRequestHeader& header,
-                 SocketDescriptor socket_fd, std::string origin_uri) : io__{GenerateDefaultIO()}, request_header_(header),
+                 SocketDescriptor socket_fd, std::string origin_uri, DataCache* cache) : io__{GenerateDefaultIO()},
+    cache__{cache}, request_header_(header),
     socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)} {
 }
 
-Error Request::AllocateDataBuffer() {
-    try {
-        data_buffer_.reset(new uint8_t[request_header_.data_size]);
-    } catch(std::exception& e) {
-        auto err = ErrorTemplates::kMemoryAllocationError.Generate();
-        err->Append(e.what());
-        return err;
+Error Request::PrepareDataBuffer() {
+    if (cache__ == nullptr) {
+        try {
+            data_buffer_.reset(new uint8_t[request_header_.data_size]);
+        } catch(std::exception& e) {
+            auto err = ErrorTemplates::kMemoryAllocationError.Generate();
+            err->Append(e.what());
+            return err;
+        }
+    } else {
+        CacheMeta* slot;
+        data_ptr = cache__->GetFreeSlotAndLock(request_header_.data_size, &slot);
+        if (data_ptr) {
+            slot_meta_ = slot;
+        } else {
+            return ErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
+        }
     }
     return nullptr;
 }
 
 Error Request::ReceiveData() {
-    auto err = AllocateDataBuffer();
+    auto err = PrepareDataBuffer();
     if (err) {
         return err;
     }
-    io__->Receive(socket_fd_, data_buffer_.get(), request_header_.data_size, &err);
+    io__->Receive(socket_fd_, GetData(), request_header_.data_size, &err);
+    if (slot_meta_) {
+        cache__->UnlockSlot(slot_meta_);
+    }
     return err;
 }
 
 
-Error Request::Handle(Statistics* statistics) {
+Error Request::Handle(ReceiverStatistics* statistics) {
     Error err;
     if (request_header_.data_size != 0) {
         statistics->StartTimer(StatisticEntity::kNetwork);
@@ -56,7 +70,7 @@ const RequestHandlerList& Request::GetListHandlers() const {
 }
 
 
-void Request::AddHandler(const RequestHandler* handler) {
+void Request::AddHandler(const ReceiverRequestHandler* handler) {
     handlers_.emplace_back(handler);
 }
 
@@ -70,8 +84,13 @@ uint64_t Request::GetDataSize() const {
     return request_header_.data_size;
 }
 
-const FileData& Request::GetData() const {
-    return data_buffer_;
+void* Request::GetData() const {
+    if (cache__) {
+        return data_ptr;
+    } else {
+        return data_buffer_.get();
+    }
+
 }
 
 std::string Request::GetFileName() const {
@@ -103,11 +122,19 @@ const std::string& Request::GetBeamline() const {
     return beamline_;
 }
 
+uint64_t Request::GetSlotId() const {
+    if (slot_meta_) {
+        return slot_meta_->id;
+    } else {
+        return 0;
+    }
+}
+
 std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&
         request_header, SocketDescriptor socket_fd, std::string origin_uri,
         Error* err) const noexcept {
     *err = nullptr;
-    auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri)}};
+    auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri), cache_.get()}};
     switch (request_header.op_code) {
     case Opcode::kOpcodeTransferData: {
         request->AddHandler(&request_handler_authorize_);
@@ -130,6 +157,8 @@ std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHea
         return nullptr;
     }
 }
+RequestFactory::RequestFactory(SharedCache cache): cache_{cache} {
 
+}
 
 }

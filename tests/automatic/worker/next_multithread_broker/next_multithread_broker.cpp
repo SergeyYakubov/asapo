@@ -49,7 +49,7 @@ Args GetArgs(int argc, char* argv[]) {
 
 void GetAllFromBroker(const Args& args) {
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.run_name, args.token, &err);
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", args.run_name, args.token, &err);
 
     std::vector<asapo::FileInfos>file_infos(args.nthreads);
     auto exec_next = [&](int i) {

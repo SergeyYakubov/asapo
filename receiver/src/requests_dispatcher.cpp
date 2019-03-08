@@ -6,10 +6,10 @@
 namespace asapo {
 
 RequestsDispatcher::RequestsDispatcher(SocketDescriptor socket_fd, std::string address,
-                                       Statistics* statistics) : statistics__{statistics},
+                                       ReceiverStatistics* statistics, SharedCache cache) : statistics__{statistics},
     io__{GenerateDefaultIO()},
     log__{GetDefaultReceiverLogger()},
-    request_factory__{new RequestFactory{}},
+    request_factory__{new RequestFactory{cache}},
                   socket_fd_{socket_fd},
 producer_uri_{std::move(address)} {
 }
@@ -32,6 +32,7 @@ Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request>& request
     Error handle_err;
     handle_err = request->Handle(statistics__);
     GenericNetworkResponse generic_response;
+    generic_response.op_code = request->GetOpCode();
     generic_response.error_code = GetNetworkCodeFromError(handle_err);
     strcpy(generic_response.message, "");
     if (handle_err) {

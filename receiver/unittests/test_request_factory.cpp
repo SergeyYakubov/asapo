@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <memory>
+
 #include "unittests/MockIO.h"
 #include "unittests/MockDatabase.h"
 #include "../src/connection.h"
@@ -50,7 +52,7 @@ namespace {
 
 class FactoryTests : public Test {
   public:
-    RequestFactory factory;
+    RequestFactory factory{nullptr};
     Error err{nullptr};
     GenericRequestHeader generic_request_header;
     ReceiverConfig config;
@@ -59,7 +61,7 @@ class FactoryTests : public Test {
         generic_request_header.op_code = asapo::Opcode::kOpcodeTransferData;
         config.write_to_disk = true;
         config.write_to_db = true;
-        SetReceiverConfig(config);
+        SetReceiverConfig(config, "none");
     }
     void TearDown() override {
     }
@@ -97,7 +99,7 @@ TEST_F(FactoryTests, ReturnsDataRequestForAuthorizationCode) {
 TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWanted) {
     config.write_to_disk = false;
 
-    SetReceiverConfig(config);
+    SetReceiverConfig(config, "none");
 
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
@@ -109,13 +111,22 @@ TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWanted) {
 TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
     config.write_to_db = false;
 
-    SetReceiverConfig(config);
+    SetReceiverConfig(config, "none");
 
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(request->GetListHandlers().size(), Eq(2));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileWrite*>(request->GetListHandlers()[1]), Ne(nullptr));
+}
+
+TEST_F(FactoryTests, CachePassedToRequest) {
+    RequestFactory factory{std::shared_ptr<asapo::DataCache>{new asapo::DataCache{0, 0}}};
+
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(request->cache__, Ne(nullptr));
+
 }
 
 

@@ -7,10 +7,17 @@
 #include <unittests/MockIO.h>
 
 using testing::_;
+using testing::Return;
+using testing::SetArgPointee;
 
 namespace asapo {
 
-Error SetReceiverConfig (const ReceiverConfig& config) {
+std::string Key(std::string value, std::string error_field) {
+    auto val = (value == error_field ? "error" : value);
+    return "\"" + val + "\":";
+}
+
+Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) {
     MockIO mock_io;
     ReceiverConfigFactory config_factory;
     config_factory.io__ = std::unique_ptr<IO> {&mock_io};
@@ -34,19 +41,26 @@ Error SetReceiverConfig (const ReceiverConfig& config) {
         break;
     }
 
-    auto config_string = std::string("{\"MonitorDbAddress\":") + "\"" + config.monitor_db_uri + "\"";
-    config_string += "," + std::string("\"MonitorDbName\":") + "\"" + config.monitor_db_name + "\"";
-    config_string += "," + std::string("\"BrokerDbAddress\":") + "\"" + config.broker_db_uri + "\"";
-    config_string += "," + std::string("\"ListenPort\":") + std::to_string(config.listen_port);
-    config_string += "," + std::string("\"AuthorizationInterval\":") + std::to_string(config.authorization_interval_ms);
-    config_string += "," + std::string("\"AuthorizationServer\":") + "\"" + config.authorization_server + "\"";
-    config_string += "," + std::string("\"WriteToDisk\":") + (config.write_to_disk ? "true" : "false");
-    config_string += "," + std::string("\"WriteToDb\":") + (config.write_to_db ? "true" : "false");
-    config_string += "," + std::string("\"LogLevel\":") + "\"" + log_level + "\"";
-    config_string += "," + std::string("\"Tag\":") + "\"" + config.tag + "\"";
-    config_string += "," + std::string("\"RootFolder\":") + "\"" + config.root_folder + "\"";
-
-
+    auto config_string = std::string("{") + Key("MonitorDbAddress", error_field) + "\"" + config.monitor_db_uri + "\"";
+    config_string += "," + Key("MonitorDbName", error_field) + "\"" + config.monitor_db_name + "\"";
+    config_string += "," + Key("BrokerDbAddress", error_field) + "\"" + config.broker_db_uri + "\"";
+    config_string += "," + Key("ListenPort", error_field) + std::to_string(config.listen_port);
+    config_string += "," + Key("DataServer", error_field) + "{";
+    config_string += Key("ListenPort", error_field) + std::to_string(config.dataserver.listen_port);
+    config_string += "," + Key("NThreads", error_field) + std::to_string(config.dataserver.nthreads);
+    config_string += "}";
+    config_string += "," + Key("DataCache", error_field) + "{";
+    config_string += Key("Use", error_field) + (config.use_datacache ? "true" : "false") ;
+    config_string += "," + Key("SizeGB", error_field) + std::to_string(config.datacache_size_gb);
+    config_string += "," + Key("ReservedShare", error_field) + std::to_string(config.datacache_reserved_share);
+    config_string += "}";
+    config_string += "," +  Key("AuthorizationInterval", error_field) + std::to_string(config.authorization_interval_ms);
+    config_string += "," +  Key("AuthorizationServer", error_field) + "\"" + config.authorization_server + "\"";
+    config_string += "," +  Key("WriteToDisk", error_field) + (config.write_to_disk ? "true" : "false");
+    config_string += "," +  Key("WriteToDb", error_field) + (config.write_to_db ? "true" : "false");
+    config_string += "," +  Key("LogLevel", error_field) + "\"" + log_level + "\"";
+    config_string += "," +  Key("Tag", error_field) + "\"" + config.tag + "\"";
+    config_string += "," +  Key("RootFolder", error_field) + "\"" + config.root_folder + "\"";
     config_string += "}";
 
 
@@ -54,7 +68,21 @@ Error SetReceiverConfig (const ReceiverConfig& config) {
         testing::Return(config_string)
     );
 
-    auto err = config_factory.SetConfigFromFile("fname");
+    if (error_field == "SourceHost") {
+        EXPECT_CALL(mock_io, GetHostName_t(_)).
+        WillOnce(
+            DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+                  Return("")
+                 ));
+    } else if (error_field == "none") {
+        EXPECT_CALL(mock_io, GetHostName_t(_)).
+        WillOnce(
+            DoAll(SetArgPointee<0>(nullptr),
+                  Return(config.source_host)
+                 ));
+    }
+
+    auto err = config_factory.SetConfig("fname");
 
     config_factory.io__.release();
 

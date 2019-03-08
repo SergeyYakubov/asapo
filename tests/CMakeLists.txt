@@ -1,4 +1,5 @@
 add_subdirectory(automatic)
 
 
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/manual/tests_via_nomad ${CMAKE_CURRENT_BINARY_DIR}/manual/tests_via_nomad @ONLY)
 

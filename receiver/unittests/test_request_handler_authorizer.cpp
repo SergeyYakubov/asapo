@@ -78,7 +78,7 @@ class AuthorizerHandlerTests : public Test {
         handler.log__ = &mock_logger;
         config.authorization_server = expected_authorization_server;
         config.authorization_interval_ms = 0;
-        SetReceiverConfig(config);
+        SetReceiverConfig(config, "none");
     }
     void TearDown() override {
         handler.http_client__.release();
@@ -148,7 +148,7 @@ class AuthorizerHandlerTests : public Test {
 
 TEST_F(AuthorizerHandlerTests, CheckStatisticEntity) {
     auto entity = handler.GetStatisticEntity();
-    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kAuthorizer));
+    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetwork));
 }
 
 TEST_F(AuthorizerHandlerTests, ErrorNotAuthorizedYet) {
@@ -224,7 +224,7 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturnsOK) {
 
 TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeUsesCachedValue) {
     config.authorization_interval_ms = 10000;
-    SetReceiverConfig(config);
+    SetReceiverConfig(config, "none");
     MockFirstAuthorization(false);
     EXPECT_CALL(*mock_request, GetOpCode())
     .WillOnce(Return(asapo::kOpcodeTransferData));

@@ -3,6 +3,7 @@ project(ASAPO)
 set(CMAKE_CXX_STANDARD 11)
 IF(WIN32)
     set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
+    set(CMAKE_CXX_FLAGS_RELEASE "/MT")
     add_definitions(-DWIN32)
 ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
@@ -47,10 +48,11 @@ message (STATUS "cURL include: ${CURL_INCLUDE_DIRS}")
 # format sources
 include(astyle)
 
+include(prepare_version_tag)
+
 include(testing_cpp)
 
 include(prepare_asapo)
-
 
 if(BUILD_WORKER_TOOLS)
     set (BUILD_MONGODB_CLIENTLIB ON)

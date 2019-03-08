@@ -118,7 +118,7 @@ void WaitThreadsFinished(const Args& args) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         elapsed_ms += 100;
         if (elapsed_ms > args.timeout_sec * 1000) {
-            std::cerr << "Exit on timeout " << std::endl;
+            std::cerr << "Producer exit on timeout " << std::endl;
             exit(EXIT_FAILURE);
         }
     }

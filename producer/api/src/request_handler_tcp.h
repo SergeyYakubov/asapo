@@ -9,8 +9,8 @@
 #include "common/networking.h"
 
 #include "producer/common.h"
-#include "request_handler.h"
-
+#include "request/request_handler.h"
+#include "producer_request.h"
 
 using std::chrono::high_resolution_clock;
 
@@ -19,7 +19,7 @@ namespace asapo {
 class RequestHandlerTcp: public RequestHandler {
   public:
     explicit RequestHandlerTcp(ReceiverDiscoveryService* discovery_service, uint64_t thread_id, uint64_t* shared_counter);
-    Error ProcessRequestUnlocked(Request* request) override;
+    Error ProcessRequestUnlocked(GenericRequest* request) override;
     bool ReadyProcessRequest() override;
     void PrepareProcessingRequestLocked()  override;
     void TearDownProcessingRequestLocked(const Error& error_from_process)  override;
@@ -31,10 +31,10 @@ class RequestHandlerTcp: public RequestHandler {
   private:
     Error Authorize(const std::string& beamtime_id);
     Error ConnectToReceiver(const std::string& beamtime_id, const std::string& receiver_address);
-    Error SendDataToOneOfTheReceivers(Request* request);
-    Error SendHeaderAndData(const Request*);
+    Error SendDataToOneOfTheReceivers(ProducerRequest* request);
+    Error SendHeaderAndData(const ProducerRequest*);
     Error ReceiveResponse();
-    Error TrySendToReceiver(const Request* request);
+    Error TrySendToReceiver(const ProducerRequest* request);
     SocketDescriptor sd_{kDisconnectedSocketDescriptor};
     void UpdateIfNewConnection();
     bool UpdateReceiversList();
