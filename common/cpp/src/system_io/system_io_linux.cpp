@@ -303,36 +303,48 @@ Error SystemIO::AddToEpool(SocketDescriptor sd) const {
     return nullptr;
 }
 
+Error SystemIO::CreateEpoolIfNeeded(SocketDescriptor master_socket) const {
+    if (epoll_fd_ != kDisconnectedSocketDescriptor) {
+        return nullptr;
+    }
+
+    epoll_fd_ = epoll_create1(0);
+    if(epoll_fd_ == kDisconnectedSocketDescriptor) {
+        auto err = GetLastError();
+        err->Append("Create epoll");
+        return err;
+    }
+    return AddToEpool(master_socket);
+}
+
+
+Error SystemIO::ProcessNewConnection(SocketDescriptor master_socket, std::vector<std::string>* new_connections,
+                                     ListSocketDescriptors* sockets_to_listen) const {
+    Error err;
+    auto client_info_tuple = InetAcceptConnection(master_socket, &err);
+    if (err) {
+        return err;
+    }
+    std::string client_address;
+    SocketDescriptor client_fd;
+    std::tie(client_address, client_fd) = *client_info_tuple;
+    new_connections->emplace_back(std::move(client_address));
+    sockets_to_listen->push_back(client_fd);
+    return AddToEpool(client_fd);
+}
+
 ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_socket,
         ListSocketDescriptors* sockets_to_listen,
         std::vector<std::string>* new_connections,
         Error* err) const {
-    if (epoll_fd_ == kDisconnectedSocketDescriptor) {
-        epoll_fd_ = epoll_create1(0);
-        if(epoll_fd_ == kDisconnectedSocketDescriptor) {
-            *err = GetLastError();
-            (*err)->Append("Create epoll");
-            return {};
-        }
-    }
 
-    struct epoll_event events[kMaxEpollEvents];
+    CreateEpoolIfNeeded(master_socket);
 
-    *err = AddToEpool(master_socket);
-    if (*err) {
-        return {};
-    }
-    for (auto sd : *sockets_to_listen) {
-        *err = AddToEpool(sd);
-        if (*err) {
-            return {};
-        }
-    }
 
     ListSocketDescriptors active_sockets;
     bool client_activity = false;
     while (!client_activity) {
-
+        struct epoll_event events[kMaxEpollEvents];
         auto event_count = epoll_wait(epoll_fd_, events, kMaxEpollEvents, kWaitTimeoutMs);
         if (event_count == 0) { // timeout
             *err = IOErrorTemplates::kTimeout.Generate();
@@ -350,19 +362,10 @@ ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_sock
                 active_sockets.push_back(sd);
                 client_activity = true;
             } else {
-                auto client_info_tuple = InetAcceptConnection(master_socket, err);
+                *err = ProcessNewConnection(master_socket, new_connections, sockets_to_listen);
                 if (*err) {
                     return {};
                 }
-                std::string client_address;
-                SocketDescriptor client_fd;
-                std::tie(client_address, client_fd) = *client_info_tuple;
-                new_connections->emplace_back(std::move(client_address));
-                *err = AddToEpool(client_fd);
-                if (*err) {
-                    return {};
-                }
-                sockets_to_listen->push_back(client_fd);
             }
         }
     }

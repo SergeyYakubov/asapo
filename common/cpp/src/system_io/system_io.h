@@ -74,6 +74,10 @@ class SystemIO final : public IO {
     const int kMaxEpollEvents = 10;
     mutable int epoll_fd_ = -1;
     Error AddToEpool(SocketDescriptor sd) const;
+    Error CreateEpoolIfNeeded(SocketDescriptor master_socket) const;
+    Error ProcessNewConnection(SocketDescriptor master_socket, std::vector<std::string>* new_connections,
+                               ListSocketDescriptors* sockets_to_listen) const;
+
 #endif
   public:
     ~SystemIO();

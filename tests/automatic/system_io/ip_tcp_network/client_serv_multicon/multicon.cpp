@@ -59,7 +59,7 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
                     ExitIfErrIsNotOk(&err, 106);
                     std::cout << "[SERVER] socket closed " << socket << std::endl;
                     sockets_to_listen.erase(std::remove(sockets_to_listen.begin(), sockets_to_listen.end(), socket),
-                    sockets_to_listen.end());
+                                            sockets_to_listen.end());
                     continue;
                 }
                 ExitIfErrIsNotOk(&err, 104);
