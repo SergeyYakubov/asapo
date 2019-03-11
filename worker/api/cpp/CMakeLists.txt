@@ -5,7 +5,7 @@ set(SOURCE_FILES
         src/folder_data_broker.cpp
         src/server_data_broker.cpp
         src/tcp_client.cpp
-        src/tcp_connection_pool.cpp)
+        src/tcp_connection_pool.cpp ../python/asapo_wrappers.h)
 
 
 ################################
@@ -19,6 +19,7 @@ target_include_directories(${TARGET_NAME} PUBLIC include ${ASAPO_CXX_COMMON_INCL
 IF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 ENDIF()
+
 
 target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
