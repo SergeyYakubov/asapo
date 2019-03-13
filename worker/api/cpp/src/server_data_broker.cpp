@@ -1,7 +1,5 @@
 #include "server_data_broker.h"
 
-
-#include "Python.h"
 #include <chrono>
 
 #include <json_parser/json_parser.h>
@@ -122,9 +120,6 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, GetImageServerOper
     uint64_t elapsed_ms = 0;
     std::string response;
     while (true) {
-        if (PyErr_CheckSignals() != 0) { // we need it when the code is called from Python to be able to process ctrl+C
-            exit(-1);
-        }
         auto err = GetBrokerUri();
         if (err == nullptr) {
             std::string request_api = current_broker_uri_ + "/database/" + source_name_ + "/";
