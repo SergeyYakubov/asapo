@@ -60,6 +60,7 @@ class DbWriterHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
+    std::string expected_beamline = "beamline";
     std::string expected_hostname = "host";
     uint64_t expected_port = 1234;
     uint64_t expected_buf_id = 18446744073709551615ull;
@@ -70,6 +71,7 @@ class DbWriterHandlerTests : public Test {
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, ""});
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        ON_CALL(*mock_request, GetBeamline()).WillByDefault(ReturnRef(expected_beamline));
     }
     void TearDown() override {
         handler.db_client__.release();
@@ -96,9 +98,14 @@ TEST_F(DbWriterHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
     SetReceiverConfig(config, "none");
 
 
-    EXPECT_CALL(*mock_request, GetBeamtimeId())
-    .WillOnce(ReturnRef(expected_beamtime_id))
+    EXPECT_CALL(*mock_request, GetBeamtimeId()).Times(2)
+    .WillRepeatedly(ReturnRef(expected_beamtime_id))
     ;
+
+    EXPECT_CALL(*mock_request, GetBeamline())
+    .WillOnce(ReturnRef(expected_beamline))
+    ;
+
 
     EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id, asapo::kDBCollectionName)).
     WillOnce(testing::Return(nullptr));
@@ -145,8 +152,8 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
 
     SetReceiverConfig(config, "none");
 
-    EXPECT_CALL(*mock_request, GetBeamtimeId())
-    .WillOnce(ReturnRef(expected_beamtime_id))
+    EXPECT_CALL(*mock_request, GetBeamtimeId()).Times(2)
+    .WillRepeatedly(ReturnRef(expected_beamtime_id))
     ;
 
     EXPECT_CALL(*mock_request, GetSlotId())
@@ -174,7 +181,8 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
 
     FileInfo file_info;
     file_info.size = expected_file_size;
-    file_info.name = expected_file_name;
+    file_info.name = expected_beamline + asapo::kPathSeparator + expected_beamtime_id + asapo::kPathSeparator +
+                     expected_file_name;
     file_info.id = expected_id;
     file_info.buf_id = expected_buf_id;
     file_info.source = expected_hostname + ":" + std::to_string(expected_port);

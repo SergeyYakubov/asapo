@@ -21,7 +21,7 @@ Error RequestHandlerFileWrite::ProcessRequest(Request* request) const {
                        + request->GetBeamtimeId();
     auto err =  io__->WriteDataToFile(root_folder, fname, (uint8_t*)data, fsize, true);
     if (!err) {
-        log__->Debug("saved file of size " + std::to_string(fsize) + " to " + root_folder + fname);
+        log__->Debug("saved file of size " + std::to_string(fsize) + " to " + root_folder + kPathSeparator + fname);
     }
     return err;
 

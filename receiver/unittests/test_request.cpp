@@ -69,7 +69,7 @@ class RequestTests : public Test {
     uint64_t expected_slot_id{16};
     std::string expected_origin_uri = "origin_uri";
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
-    char expected_request_message[asapo::kMaxMessageSize] = "test message";
+    char expected_request_message[asapo::kMaxMessageSize] = "test_message";
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;
@@ -91,6 +91,8 @@ class RequestTests : public Test {
     void TearDown() override {
         request->io__.release();
     }
+    void ExpectFileName(std::string sended, std::string received);
+
 
 };
 
@@ -241,11 +243,35 @@ TEST_F(RequestTests, GetDataSize) {
     ASSERT_THAT(size, Eq(data_size_));
 }
 
-TEST_F(RequestTests, GetFileName) {
-    auto fname = request->GetFileName();
-    auto s = std::to_string(data_id_);
 
-    ASSERT_THAT(fname, Eq(s));
+void RequestTests::ExpectFileName(std::string sended, std::string received) {
+    strcpy(generic_request_header.message, sended.c_str());
+
+    request->io__.release();
+    request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
+    request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
+
+    auto fname = request->GetFileName();
+
+    ASSERT_THAT(fname, Eq(received));
+
+}
+
+TEST_F(RequestTests, GetFileName) {
+    ExpectFileName("filename.txt", "filename.txt");
+}
+
+
+TEST_F(RequestTests, GetFileNameWithLinPath) {
+    ExpectFileName("folder1/folder2/filename.txt",
+                   std::string("folder1") + asapo::kPathSeparator + std::string("folder2") + asapo::kPathSeparator
+                   + "filename.txt");
+}
+
+TEST_F(RequestTests, GetFileNameWithWinPath) {
+    ExpectFileName("folder1\\folder2\\filename.txt",
+                   std::string("folder1") + asapo::kPathSeparator + std::string("folder2") + asapo::kPathSeparator
+                   + "filename.txt");
 }
 
 TEST_F(RequestTests, SetGetBeamtimeId) {

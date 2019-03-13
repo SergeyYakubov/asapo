@@ -94,7 +94,14 @@ void* Request::GetData() const {
 }
 
 std::string Request::GetFileName() const {
-    return std::to_string(request_header_.data_id);
+    std::string orig_name = request_header_.message;
+    if (kPathSeparator == '/') {
+        std::replace(orig_name.begin(), orig_name.end(), '\\', kPathSeparator);
+    } else {
+        std::replace(orig_name.begin(), orig_name.end(), '/', kPathSeparator);
+    }
+
+    return orig_name;
 }
 
 const std::string& Request::GetOriginUri() const {

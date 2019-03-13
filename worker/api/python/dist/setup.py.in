@@ -1,0 +1,20 @@
+from distutils.core import setup
+from distutils.core import Extension
+
+ext_modules = [
+    Extension("asapo_worker", ["asapo_worker.cpp"],
+              extra_objects=['lib/libasapo-worker.a',
+                             'lib/libcurl.a'],
+                       include_dirs=["include/common","include"],
+                       extra_compile_args=@EXTRA_COMPILE_ARGS@,
+                       extra_link_args=@EXTRA_LINK_ARGS@,
+                       language="c++")
+]
+
+setup(
+      name ="asapo_worker_py",
+      ext_modules = ext_modules,
+      version = "@ASAPO_VERSION@",
+      setup_requires=["numpy"],
+      install_requires=["numpy"]
+      )

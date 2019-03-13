@@ -64,7 +64,8 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
 
 FileInfo RequestHandlerDbWrite::PrepareFileInfo(const Request* request) const {
     FileInfo file_info;
-    file_info.name = request->GetFileName();
+    file_info.name = request->GetBeamline() + kPathSeparator
+                     + request->GetBeamtimeId() + kPathSeparator + request->GetFileName();
     file_info.size = request->GetDataSize();
     file_info.id = request->GetDataID();
     file_info.buf_id = request->GetSlotId();

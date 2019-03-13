@@ -1,0 +1,17 @@
+from distutils.core import setup
+from distutils.core import Extension
+
+from Cython.Build import cythonize
+
+module = Extension("asapo_worker", ["asapo_worker.pyx"],
+                       extra_objects=['@ASAPO_WORKER_LIB@',
+                                      '@CURL_LIBRARIES@'],
+                       include_dirs=["@ASAPO_CXX_COMMON_INCLUDE_DIR@","@ASAPO_WORKER_INCLUDE_DIR@"],
+                       extra_compile_args=@EXTRA_COMPILE_ARGS@,
+                       extra_link_args=@EXTRA_LINK_ARGS@,
+                       language="c++"
+         )
+
+ext_modules = cythonize([module])
+
+setup(ext_modules = ext_modules)
