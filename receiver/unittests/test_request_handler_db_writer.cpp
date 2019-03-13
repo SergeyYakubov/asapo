@@ -97,8 +97,8 @@ TEST_F(DbWriterHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
 
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
-        .WillOnce(ReturnRef(expected_beamtime_id))
-        ;
+    .WillOnce(ReturnRef(expected_beamtime_id))
+    ;
 
 
     EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id, asapo::kDBCollectionName)).
