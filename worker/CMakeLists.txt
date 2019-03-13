@@ -1,5 +1,7 @@
 add_subdirectory(api/cpp)
-add_subdirectory(api/python)
+IF (UNIX)
+ add_subdirectory(api/python)
+ENDIF()
 
 if(BUILD_WORKER_TOOLS)
     set (BUILD_MONGODB ON)
