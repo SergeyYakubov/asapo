@@ -27,8 +27,7 @@ done
 
 sleep 1
 
-$@ 127.0.0.1:8400 $source_path $database_name 2 $token_test_run 1000 1 # | tee /dev/stderr | grep "Processed 3 file(s)"
-echo $?
+$@ 127.0.0.1:8400 $source_path $database_name 2 $token_test_run 1000 1  | tee /dev/stderr | grep "Processed 3 file(s)"
 
 
 

@@ -95,7 +95,7 @@ int ReadAllData(const Params& params, uint64_t* duration_ms, int* nerrors, int* 
 
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
-    if (argc != 9) {
+    if (argc != 8) {
         std::cout << "Usage: " + std::string{argv[0]}
                   + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly>"
                   <<
