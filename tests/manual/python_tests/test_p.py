@@ -11,16 +11,10 @@ if not broker:
     print("Cannot create broker: " + err)
     sys.exit(1)
 
-first = True
+last_id = 0
 while True:
-    if first:
-        array, meta, err = broker.get_last(meta_only=False)
-        first = False
-    else:
-        array, meta, err = broker.get_next(meta_only=False)
-    if err:
-        print ('err: ', err)
-        break
-    print ('data:', array.tostring().strip())
-    print ('filename: ', meta['name'])
-    print ('meta: ', json.dumps(meta, indent=4, sort_keys=True))
+      array, meta, err = broker.get_last(meta_only=False)
+#      id = meta['_id']
+#      if id != last_id:
+#        print ("file content:",array.tostring().strip().decode("utf-8"))
+#        last_id = id

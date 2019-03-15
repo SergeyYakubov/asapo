@@ -43,16 +43,20 @@ std::vector<std::thread> StartThreads(const Params& params,
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, params.beamtime_id,
                       params.token, &err);
-        broker->SetTimeout((uint64_t) params.timeout_ms);
+        broker->SetTimeout(params.timeout_ms);
         asapo::FileData data;
 
-        while (true) {
-            err = broker->GetNext(&fi, params.read_data ? &data : nullptr);
+        auto start = high_resolution_clock::now();
+        while (std::chrono::duration_cast<std::chrono::milliseconds>(high_resolution_clock::now() - start).count() <
+                params.timeout_ms) {
+            err = broker->GetLast(&fi, params.read_data ? &data : nullptr);
             if (err == nullptr) {
                 (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
                 if (params.read_data && (*nfiles)[i] < 10 && fi.size < 10) {
-                    data[9] = 0;
-                    std::cout << "Received: " << reinterpret_cast<char const*>(data.get()) << std::endl;
+                    if (data != nullptr) {
+                        data[9] = 0;
+                        std::cout << "Received: " << reinterpret_cast<char const*>(data.get()) << std::endl;
+                    }
                 }
             } else {
                 (*errors)[i] += ProcessError(err);
@@ -94,8 +98,8 @@ int ReadAllData(const Params& params, uint64_t* duration_ms, int* nerrors, int* 
 }
 
 int main(int argc, char* argv[]) {
-    asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
-    if (argc != 9) {
+    asapo::ExitAfterPrintVersionIfNeeded("GetLast Broker Example", argc, argv);
+    if (argc != 8) {
         std::cout << "Usage: " + std::string{argv[0]}
                   + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly>"
                   <<
@@ -123,6 +127,6 @@ int main(int argc, char* argv[]) {
     }
     std::cout << "Errors : " << nerrors << std::endl;
     std::cout << "Elapsed : " << duration_ms << "ms" << std::endl;
-    std::cout << "Rate : " << 1000.0f * nfiles / (duration_ms - params.timeout_ms) << std::endl;
+    std::cout << "Rate : " << 1000.0f * nfiles / (duration_ms) << " Hz" << std::endl;
     return nerrors == 0 ? 0 : 1;
 }

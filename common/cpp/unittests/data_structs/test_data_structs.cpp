@@ -44,14 +44,14 @@ TEST(FileInFo, Defaults) {
 TEST(FileInFo, CorrectConvertToJson) {
     auto finfo = PrepareFileInfo();
     std::string json = finfo.Json();
-    printf("%s\n",json.c_str());
+    printf("%s\n", json.c_str());
     if (asapo::kPathSeparator == '/') {
-    ASSERT_THAT(json, Eq(
-                    R"({"_id":1,"size":100,"name":"folder/test","lastchange":1000000,"source":"host:1234","buf_id":-1})"));
+        ASSERT_THAT(json, Eq(
+                        R"({"_id":1,"size":100,"name":"folder/test","lastchange":1000000,"source":"host:1234","buf_id":-1})"));
     } else {
-    ASSERT_THAT(json, Eq(
-                    R"({"_id":1,"size":100,"name":"folder\\test","lastchange":1000000,"source":"host:1234","buf_id":-1})"));
-    } 
+        ASSERT_THAT(json, Eq(
+                        R"({"_id":1,"size":100,"name":"folder\\test","lastchange":1000000,"source":"host:1234","buf_id":-1})"));
+    }
 }
 
 TEST(FileInFo, CorrectConvertFromJsonReturnsError) {
