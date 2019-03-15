@@ -14,7 +14,7 @@ if not broker:
 last_id = 0
 while True:
       array, meta, err = broker.get_last(meta_only=False)
-#      id = meta['_id']
-#      if id != last_id:
-#        print ("file content:",array.tostring().strip().decode("utf-8"))
-#        last_id = id
+      id = meta['_id']
+      if id != last_id:
+        print ("file content:",array.tostring().strip().decode("utf-8"))
+        last_id = id

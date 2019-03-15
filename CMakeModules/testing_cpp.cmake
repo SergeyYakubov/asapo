@@ -98,12 +98,12 @@ function(gtest target test_source_files linktarget)
             if (ARGN)
                 set(COVERAGE_EXCLUDES ${COVERAGE_EXCLUDES} ${ARGN})
             endif ()
-#            SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
-#            add_test(NAME coveragetest-${target}
-#                    COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
-#                    coverage-${target} ${CMAKE_BINARY_DIR} ${ASAPO_MINIMUM_COVERAGE})
-#            set_tests_properties(coveragetest-${target} PROPERTIES LABELS "coverage;all")
-#            SET_TESTS_PROPERTIES(coveragetest-${target} PROPERTIES DEPENDS test-${target})
+            SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
+            add_test(NAME coveragetest-${target}
+                    COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
+                    coverage-${target} ${CMAKE_BINARY_DIR} ${ASAPO_MINIMUM_COVERAGE})
+            set_tests_properties(coveragetest-${target} PROPERTIES LABELS "coverage;all")
+            SET_TESTS_PROPERTIES(coveragetest-${target} PROPERTIES DEPENDS test-${target})
             set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} PARENT_SCOPE)
             set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} PARENT_SCOPE)
         endif ()
