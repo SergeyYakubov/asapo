@@ -4,4 +4,6 @@ add_subdirectory(process_folder)
 
 add_subdirectory(getnext_broker)
 
-add_subdirectory(getnext_broker_python)
+if (UNIX OR CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_subdirectory(getnext_broker_python)
+endif()

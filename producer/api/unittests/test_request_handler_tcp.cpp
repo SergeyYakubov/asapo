@@ -247,7 +247,7 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
 void RequestHandlerTcpTests::ExpectFailSendData(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, nullptr,(size_t) expected_file_size, _))
+        EXPECT_CALL(mock_io, Send_t(expected_sd, nullptr, (size_t) expected_file_size, _))
         .Times(1)
         .WillOnce(
             DoAll(
@@ -305,7 +305,7 @@ void RequestHandlerTcpTests::ExpectFailReceive(bool only_once) {
 
 void RequestHandlerTcpTests::ExpectOKSendData(bool only_once) {
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, nullptr,(size_t)expected_file_size, _))
+        EXPECT_CALL(mock_io, Send_t(expected_sd, nullptr, (size_t)expected_file_size, _))
         .Times(1)
         .WillOnce(
             DoAll(

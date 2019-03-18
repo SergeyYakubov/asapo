@@ -36,7 +36,7 @@ Error Request::ReceiveData() {
     if (err) {
         return err;
     }
-    io__->Receive(socket_fd_, GetData(),(size_t) request_header_.data_size, &err);
+    io__->Receive(socket_fd_, GetData(), (size_t) request_header_.data_size, &err);
     if (slot_meta_) {
         cache__->UnlockSlot(slot_meta_);
     }

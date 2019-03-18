@@ -19,7 +19,7 @@ Error RequestHandlerFileWrite::ProcessRequest(Request* request) const {
     auto root_folder = GetReceiverConfig()->root_folder + kPathSeparator
                        + request->GetBeamline() + kPathSeparator
                        + request->GetBeamtimeId();
-    auto err =  io__->WriteDataToFile(root_folder, fname, (uint8_t*)data,(size_t) fsize, true);
+    auto err =  io__->WriteDataToFile(root_folder, fname, (uint8_t*)data, (size_t) fsize, true);
     if (!err) {
         log__->Debug("saved file of size " + std::to_string(fsize) + " to " + root_folder + kPathSeparator + fname);
     }

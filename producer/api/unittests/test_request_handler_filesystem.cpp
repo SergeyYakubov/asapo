@@ -90,7 +90,8 @@ MATCHER_P2(M_CheckSendDataRequest, file_id, file_size,
 }
 
 TEST_F(RequestHandlerFilesystemTests, CallBackErrorIfCannotSaveFile) {
-    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr, (size_t)expected_file_size, true))
+    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr, (size_t)expected_file_size,
+                                           true))
     .WillOnce(
         Return(
             asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
@@ -105,7 +106,8 @@ TEST_F(RequestHandlerFilesystemTests, CallBackErrorIfCannotSaveFile) {
 }
 
 TEST_F(RequestHandlerFilesystemTests, WorksWithemptyCallback) {
-    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr,(size_t) expected_file_size, true))
+    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr, (size_t) expected_file_size,
+                                           true))
     .WillOnce(
         Return(nullptr)
     );
@@ -140,7 +142,8 @@ TEST_F(RequestHandlerFilesystemTests, FileRequestOK) {
             Return(nullptr)
         ));
 
-    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr, (size_t)expected_file_size, true))
+    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr, (size_t)expected_file_size,
+                                           true))
     .WillOnce(
         Return(nullptr)
     );
@@ -152,7 +155,8 @@ TEST_F(RequestHandlerFilesystemTests, FileRequestOK) {
 
 
 TEST_F(RequestHandlerFilesystemTests, TransferOK) {
-    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr,(size_t) expected_file_size, true))
+    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr, (size_t) expected_file_size,
+                                           true))
     .WillOnce(
         Return(
             nullptr)
