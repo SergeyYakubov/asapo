@@ -128,7 +128,7 @@ class TcpClientTests : public Test {
 
     void ExpectGetData(asapo::SocketDescriptor sd, bool ok) {
 
-        EXPECT_CALL(mock_io, Receive_t(sd, _, expected_size, _))
+        EXPECT_CALL(mock_io, Receive_t(sd, _,(size_t) expected_size, _))
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(ok ? nullptr : asapo::IOErrorTemplates::kTimeout.Generate().release()),

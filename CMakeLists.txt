@@ -5,6 +5,7 @@ IF(WIN32)
     set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
     set(CMAKE_CXX_FLAGS_RELEASE "/MT")
     add_definitions(-DWIN32)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 #todo: added fPIC to be able to create shared libs for Python - check it does not change performance

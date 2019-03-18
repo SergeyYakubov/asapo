@@ -48,7 +48,7 @@ Error FolderDataBroker::GetFileByIndex(uint64_t nfile_to_get, FileInfo* info, Fi
         return err;
     }
 
-    *info = filelist_[nfile_to_get];
+    *info = filelist_[(size_t)nfile_to_get];
 
     if (data == nullptr) {
         return nullptr;

@@ -50,7 +50,7 @@ Error ProducerImpl::Send(const EventHeader& event_header,
                          FileData data,
                          std::string full_path,
                          RequestCallback callback) {
-    auto err = CheckProducerRequest(event_header.file_size, event_header.file_name.size());
+    auto err = CheckProducerRequest((size_t)event_header.file_size, event_header.file_name.size());
     if (err) {
         log__->Error("error checking request - " + err->Explain());
         return err;

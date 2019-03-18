@@ -68,12 +68,12 @@ Error TcpClient::ReceiveData(SocketDescriptor sd, const FileInfo* info, FileData
     Error err;
     uint8_t* data_array = nullptr;
     try {
-        data_array = new uint8_t[info->size];
+        data_array = new uint8_t[(size_t)info->size];
     } catch (...) {
         connection_pool__->ReleaseConnection(sd);
         return ErrorTemplates::kMemoryAllocationError.Generate();
     }
-    io__->Receive(sd, data_array, info->size, &err);
+    io__->Receive(sd, data_array, (size_t)info->size, &err);
     connection_pool__->ReleaseConnection(sd);
     if (!err) {
         *data = FileData{data_array};

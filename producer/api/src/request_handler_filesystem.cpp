@@ -25,7 +25,7 @@ Error RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request) 
     }
 
     err = io__->WriteDataToFile(destination_folder_, request->header.message, (uint8_t*)producer_request->data.get(),
-                                request->header.data_size, true);
+                                (size_t)request->header.data_size, true);
     if (producer_request->callback) {
         producer_request->callback(request->header, std::move(err));
     }

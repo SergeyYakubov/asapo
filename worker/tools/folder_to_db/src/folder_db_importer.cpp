@@ -27,7 +27,7 @@ Error FolderToDbImporter::ImportSingleFile(const std::unique_ptr<asapo::Database
 Error FolderToDbImporter::ImportFilelistChunk(const std::unique_ptr<asapo::Database>& db,
                                               const FileInfos& file_list, uint64_t begin, uint64_t end) const {
     for (auto i = begin; i < end; i++) {
-        auto err = ImportSingleFile(db, file_list[i]);
+        auto err = ImportSingleFile(db, file_list[(size_t)i]);
         if (err != nullptr) {
             return err;
         }

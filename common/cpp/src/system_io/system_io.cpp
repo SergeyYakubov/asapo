@@ -72,7 +72,7 @@ std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostn
 uint8_t* AllocateArray(uint64_t fsize, Error* err) {
     uint8_t* data_array = nullptr;
     try {
-        data_array = new uint8_t[fsize];
+        data_array = new uint8_t[(size_t)fsize];
     } catch (...) {
         *err = ErrorTemplates::kMemoryAllocationError.Generate();
         return nullptr;
@@ -103,7 +103,7 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t* fsize, Er
         return nullptr;
     }
 
-    Read(fd, data_array, *fsize, err);
+    Read(fd, data_array, (size_t)*fsize, err);
     if (*err != nullptr) {
         (*err)->Append(fname);
         Close(fd, nullptr);
@@ -194,7 +194,7 @@ std::string SystemIO::ReadFileToString(const std::string& fname, Error* err) con
         return "";
     }
 
-    return std::string(reinterpret_cast<const char*>(data.get()), size);
+    return std::string(reinterpret_cast<const char*>(data.get()), (size_t)size);
 }
 
 std::unique_ptr<std::thread> SystemIO::NewThread(std::function<void()> function) const {
