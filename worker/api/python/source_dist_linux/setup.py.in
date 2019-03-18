@@ -13,7 +13,7 @@ ext_modules = [
 ]
 
 setup(
-      name ="asapo_worker_py",
+      name ="asapo_worker",
       ext_modules = ext_modules,
       version = "@ASAPO_VERSION@",
       setup_requires=["numpy"],

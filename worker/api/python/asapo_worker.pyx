@@ -1,3 +1,5 @@
+#distutils: language=c++
+
 cimport asapo_worker
 import numpy as np
 cimport numpy as np
