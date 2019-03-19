@@ -15,7 +15,7 @@ ext_modules = [
 setup(
       name ="asapo_worker",
       ext_modules = ext_modules,
-      version = "@ASAPO_VERSION@",
+      version = "@ASAPO_VERSION_PYTHON@",
       setup_requires=["numpy"],
       install_requires=["numpy"]
       )
