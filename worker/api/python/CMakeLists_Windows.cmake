@@ -19,9 +19,9 @@ set(SOURCE_FILES
 
 add_library(${TARGET_NAME} SHARED ${SOURCE_FILES})
 set_target_properties(${TARGET_NAME} PROPERTIES SUFFIX ".pyd")
-#set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
-#        ${CMAKE_CURRENT_BINARY_DIR}$<$<CONFIG:Debug>:>
-#        )
+set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+        ${CMAKE_CURRENT_BINARY_DIR}$<$<CONFIG:Debug>:>
+        )
 
 target_link_libraries(${TARGET_NAME}  asapo-worker ${Python3_LIBRARIES})
 target_include_directories(${TARGET_NAME} PUBLIC include  ${Python3_INCLUDE_DIRS} ${PYTHON_NUMPY_INCLUDE_DIR})
