@@ -7,7 +7,7 @@ ADD_CUSTOM_TARGET(windows-bdist ALL
 
 ADD_CUSTOM_TARGET(copy_python_bdist ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/asapo_worker
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/../asapo_worker.pyd ${CMAKE_CURRENT_BINARY_DIR}/asapo_worker/
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:asapo_worker> ${CMAKE_CURRENT_BINARY_DIR}/asapo_worker/
         )
 
 

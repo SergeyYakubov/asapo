@@ -1,8 +1,4 @@
 
-get_property(ASAPO_WORKER_LIB TARGET asapo-worker PROPERTY LOCATION)
-
-set (ASAPO_WORKER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/include)
-
 if (UNIX)
     include(CMakeLists_Linux.cmake)
     set (suf "so")

@@ -6,6 +6,10 @@ ELSE()
     set (EXTRA_LINK_ARGS "['-static-libgcc','-static-libstdc++']")
 ENDIF()
 
+get_property(ASAPO_WORKER_LIB TARGET asapo-worker PROPERTY LOCATION)
+
+set (ASAPO_WORKER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/include)
+
 configure_files(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 
 ADD_CUSTOM_TARGET(python-lib2 ALL

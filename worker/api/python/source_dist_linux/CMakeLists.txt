@@ -6,9 +6,7 @@ ADD_CUSTOM_TARGET(python-dist ALL
         COMMAND python setup.py sdist
         )
 
-get_property(ASAPO_WORKER_LIB TARGET asapo-worker PROPERTY LOCATION)
-
-
+#get_property(ASAPO_WORKER_LIB TARGET asapo-worker PROPERTY LOCATION)
 
 ADD_CUSTOM_TARGET(copy_python_dist ALL
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/../asapo_wrappers.h ${CMAKE_CURRENT_BINARY_DIR}/.
@@ -18,7 +16,7 @@ ADD_CUSTOM_TARGET(copy_python_dist ALL
         COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_BINARY_DIR}/include/common/version.h.in
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/lib
         COMMAND ${CMAKE_COMMAND} -E copy ${CURL_LIBRARIES} ${CMAKE_CURRENT_BINARY_DIR}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy ${ASAPO_WORKER_LIB} ${CMAKE_CURRENT_BINARY_DIR}/lib
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:asapo-worker> ${CMAKE_CURRENT_BINARY_DIR}/lib
 
         )
 
