@@ -39,7 +39,7 @@ uint64_t Statistics::GetTotalElapsedMs() const noexcept {
 
 
 void Statistics::SetWriteInterval(uint64_t interval_ms) {
-    write_interval_ = interval_ms;
+    write_interval_ = (size_t) interval_ms;
 }
 
 void Statistics::ResetStatistics() noexcept {

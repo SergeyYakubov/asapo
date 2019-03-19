@@ -13,7 +13,7 @@ Request::Request(const GenericRequestHeader& header,
 Error Request::PrepareDataBuffer() {
     if (cache__ == nullptr) {
         try {
-            data_buffer_.reset(new uint8_t[request_header_.data_size]);
+            data_buffer_.reset(new uint8_t[(size_t)request_header_.data_size]);
         } catch(std::exception& e) {
             auto err = ErrorTemplates::kMemoryAllocationError.Generate();
             err->Append(e.what());
@@ -36,7 +36,7 @@ Error Request::ReceiveData() {
     if (err) {
         return err;
     }
-    io__->Receive(socket_fd_, GetData(), request_header_.data_size, &err);
+    io__->Receive(socket_fd_, GetData(), (size_t) request_header_.data_size, &err);
     if (slot_meta_) {
         cache__->UnlockSlot(slot_meta_);
     }
@@ -94,7 +94,14 @@ void* Request::GetData() const {
 }
 
 std::string Request::GetFileName() const {
-    return std::to_string(request_header_.data_id);
+    std::string orig_name = request_header_.message;
+    if (kPathSeparator == '/') {
+        std::replace(orig_name.begin(), orig_name.end(), '\\', kPathSeparator);
+    } else {
+        std::replace(orig_name.begin(), orig_name.end(), '/', kPathSeparator);
+    }
+
+    return orig_name;
 }
 
 const std::string& Request::GetOriginUri() const {

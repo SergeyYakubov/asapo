@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <algorithm>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <iostream>
@@ -14,7 +15,6 @@
 #include <sys/epoll.h>
 
 #include "system_io.h"
-
 
 using std::string;
 using std::vector;
@@ -212,7 +212,9 @@ void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const
         setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
         ||
         setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) != 0 ||
-        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &flag, sizeof(int)) != 0
+        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) != 0 ||
+        setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int)) != 0
+
     ) {
         *err = GetLastError();
     }

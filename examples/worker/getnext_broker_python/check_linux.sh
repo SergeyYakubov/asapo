@@ -6,6 +6,8 @@ token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
 #set -e
 
+
+
 trap Cleanup EXIT
 
 Cleanup() {
@@ -27,7 +29,23 @@ done
 
 sleep 1
 
-$@ 127.0.0.1:8400 $source_path $database_name 2 $token_test_run 1000 1  | tee /dev/stderr | grep "Processed 3 file(s)"
+export PYTHONPATH=$1:${PYTHONPATH}
+
+python getnext.py 127.0.0.1:8400 $source_path $database_name $token_test_run > out
+cat out
+cat out | grep '"size": 100'
+cat out | grep '"_id": 1'
+
+python getnext.py 127.0.0.1:8400 $source_path $database_name $token_test_run > out
+cat out
+cat out | grep '"_id": 2'
+
+python3 getnext.py 127.0.0.1:8400 $source_path $database_name $token_test_run > out
+cat out
+cat out | grep '"_id": 3'
+
+
+#echo $?
 
 
 

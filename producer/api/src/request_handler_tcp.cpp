@@ -55,7 +55,7 @@ Error RequestHandlerTcp::SendHeaderAndData(const ProducerRequest* request) {
         return io_error;
     }
 
-    io__->Send(sd_, (void*) request->data.get(), request->header.data_size, &io_error);
+    io__->Send(sd_, (void*) request->data.get(), (size_t)request->header.data_size, &io_error);
     if(io_error) {
         return io_error;
     }

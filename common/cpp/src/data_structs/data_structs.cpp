@@ -12,10 +12,23 @@ namespace asapo {
 std::string FileInfo::Json() const {
     auto nanoseconds_from_epoch = std::chrono::time_point_cast<std::chrono::nanoseconds>(modify_date).
                                   time_since_epoch().count();
+
+    std::string x = name;
+//todo: change this - use / when sending file from windows
+#ifdef WIN32
+    std::string old {kPathSeparator};
+    std::string rep = old + kPathSeparator;
+    int pos = 0;
+    while ((pos = x.find(old, pos)) != std::string::npos) {
+        x.replace(pos, old.length(), rep);
+        pos += rep.length();
+    }
+#endif
+
     int64_t buf_id_int = static_cast<int64_t>(buf_id);
     std::string s = "{\"_id\":" + std::to_string(id) + ","
                     "\"size\":" + std::to_string(size) + ","
-                    "\"name\":\"" + name + "\","
+                    "\"name\":\"" + x + "\","
                     "\"lastchange\":" + std::to_string(nanoseconds_from_epoch) + ","
                     "\"source\":\"" + source + "\","
                     "\"buf_id\":" + std::to_string(buf_id_int)

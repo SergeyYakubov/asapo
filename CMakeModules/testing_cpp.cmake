@@ -94,7 +94,7 @@ function(gtest target test_source_files linktarget)
         message(STATUS "Added test 'test-${target}'")
 
         if (CMAKE_COMPILER_IS_GNUCXX)
-            set(COVERAGE_EXCLUDES "*/unittests/*" "*/3d_party/*")
+            set(COVERAGE_EXCLUDES "*/unittests/*" "*/3d_party/*" "*/python/*")
             if (ARGN)
                 set(COVERAGE_EXCLUDES ${COVERAGE_EXCLUDES} ${ARGN})
             endif ()

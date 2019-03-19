@@ -1,5 +1,5 @@
 #include "common/data_structs.h"
-
+#include "preprocessor/definitions.h"
 #include <gmock/gmock.h>
 #include "gtest/gtest.h"
 #include <chrono>
@@ -26,7 +26,7 @@ FileInfo PrepareFileInfo() {
     FileInfo finfo;
     finfo.size = 100;
     finfo.id = 1;
-    finfo.name = "name";
+    finfo.name = std::string("folder") + asapo::kPathSeparator + "test";
     finfo.source = "host:1234";
     finfo.buf_id = big_uint;
     finfo.modify_date = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
@@ -44,9 +44,14 @@ TEST(FileInFo, Defaults) {
 TEST(FileInFo, CorrectConvertToJson) {
     auto finfo = PrepareFileInfo();
     std::string json = finfo.Json();
-
-    ASSERT_THAT(json, Eq(
-                    R"({"_id":1,"size":100,"name":"name","lastchange":1000000,"source":"host:1234","buf_id":-1})"));
+    printf("%s\n", json.c_str());
+    if (asapo::kPathSeparator == '/') {
+        ASSERT_THAT(json, Eq(
+                        R"({"_id":1,"size":100,"name":"folder/test","lastchange":1000000,"source":"host:1234","buf_id":-1})"));
+    } else {
+        ASSERT_THAT(json, Eq(
+                        R"({"_id":1,"size":100,"name":"folder\\test","lastchange":1000000,"source":"host:1234","buf_id":-1})"));
+    }
 }
 
 TEST(FileInFo, CorrectConvertFromJsonReturnsError) {
