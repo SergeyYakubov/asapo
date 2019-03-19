@@ -17,7 +17,15 @@ set PYTHONPATH=%1
 python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% > out
 type out
 type out | findstr /c:"100" || goto :error
-type out | findstr /c:"\"id_\": 1" || goto :error
+type out | findstr /c:"\"_id\": 1" || goto :error
+
+python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% > out
+type out
+type out | findstr /c:"\"_id\": 2" || goto :error
+
+python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% > out
+type out
+type out | findstr /c:"\"_id\": 3" || goto :error
 
 
 goto :clean
