@@ -76,3 +76,6 @@ cdef class PyDataBrokerFactory:
 def create_server_broker(server_name,source_path,beamtime_id,token,timeout):
     factory = PyDataBrokerFactory()
     return factory.create_server_broker(_bytes(server_name),_bytes(source_path),_bytes(beamtime_id),_bytes(token),timeout)
+
+
+__version__ = "@ASAPO_VERSION_PYTHON@"
