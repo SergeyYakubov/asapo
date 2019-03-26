@@ -22,9 +22,9 @@ $1 -config settings.json &
 sleep 0.3
 brokerid=`echo $!`
 
+groupid=`curl -d '' --silent 127.0.0.1:5005/creategroup`
 
+curl -v  --silent 127.0.0.1:5005/database/data/${groupid}/next?token=$token --stderr - | grep '"_id":1'
+curl -v  --silent 127.0.0.1:5005/database/data/${groupid}/next?token=$token --stderr - | grep '"_id":2'
 
-curl -v  --silent 127.0.0.1:5005/database/data/next?token=$token --stderr - | grep '"_id":1'
-curl -v  --silent 127.0.0.1:5005/database/data/next?token=$token --stderr - | grep '"_id":2'
-
-curl -v  --silent 127.0.0.1:5005/database/data/next?token=$token --stderr - | grep "not found"
+curl -v  --silent 127.0.0.1:5005/database/data/${groupid}/next?token=$token --stderr - | grep "not found"
