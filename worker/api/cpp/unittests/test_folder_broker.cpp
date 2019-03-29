@@ -134,7 +134,7 @@ TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithoutConnectReturnsError) {
-    auto err = data_broker->GetNext(nullptr, nullptr);
+    auto err = data_broker->GetNext(nullptr, "", nullptr);
 
     ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kSourceNotConnected));
 }
@@ -142,7 +142,7 @@ TEST_F(FolderDataBrokerTests, GetNextWithoutConnectReturnsError) {
 TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
     data_broker->Connect();
 
-    auto err = data_broker->GetNext(nullptr, nullptr);
+    auto err = data_broker->GetNext(nullptr, "", nullptr);
 
     ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kWrongInput));
 }
@@ -151,7 +151,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
     data_broker->Connect();
     FileInfo fi;
 
-    auto err = data_broker->GetNext(&fi, nullptr);
+    auto err = data_broker->GetNext(&fi, "", nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(fi.name, Eq("1"));
@@ -164,7 +164,7 @@ TEST_F(FolderDataBrokerTests, GetLastReturnsFileInfo) {
     data_broker->Connect();
     FileInfo fi;
 
-    auto err = data_broker->GetLast(&fi, nullptr);
+    auto err = data_broker->GetLast(&fi, "", nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(fi.name, Eq("3"));
@@ -176,9 +176,9 @@ TEST_F(FolderDataBrokerTests, GetLastSecondTimeReturnsSameFileInfo) {
     data_broker->Connect();
     FileInfo fi;
 
-    auto err = data_broker->GetLast(&fi, nullptr);
+    auto err = data_broker->GetLast(&fi, "", nullptr);
     ASSERT_THAT(err, Eq(nullptr));
-    err = data_broker->GetLast(&fi, nullptr);
+    err = data_broker->GetLast(&fi, "", nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(fi.name, Eq("3"));
@@ -191,9 +191,9 @@ TEST_F(FolderDataBrokerTests, GetLastSecondTimeReturnsSameFileInfo) {
 TEST_F(FolderDataBrokerTests, SecondNextReturnsAnotherFileInfo) {
     data_broker->Connect();
     FileInfo fi;
-    data_broker->GetNext(&fi, nullptr);
+    data_broker->GetNext(&fi, "", nullptr);
 
-    auto err = data_broker->GetNext(&fi, nullptr);
+    auto err = data_broker->GetNext(&fi, "", nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(fi.name, Eq("2"));
@@ -204,7 +204,7 @@ TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
     data_broker->Connect();
     FileInfo fi;
 
-    auto err = data_broker->GetNext(&fi, nullptr);
+    auto err = data_broker->GetNext(&fi, "", nullptr);
     ASSERT_TRUE(asapo::ErrorTemplates::kEndOfFile == err);
 
     ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kNoData));
@@ -216,7 +216,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
     FileInfo fi;
     FileData data;
 
-    auto err = data_broker->GetNext(&fi, &data);
+    auto err = data_broker->GetNext(&fi, "", &data);
     ASSERT_THAT(err->Explain(), Eq(asapo::IOErrorTemplates::kPermissionDenied.Generate()->Explain()));
 }
 
@@ -244,7 +244,7 @@ TEST_F(GetDataFromFileTests, GetNextCallsGetDataFileWithFileName) {
     EXPECT_CALL(mock, GetDataFromFile_t(std::string("/path/to/file") + asapo::kPathSeparator + "1", _, _)).
     WillOnce(DoAll(testing::SetArgPointee<2>(static_cast<SimpleError*>(nullptr)), testing::Return(nullptr)));
 
-    data_broker->GetNext(&fi, &data);
+    data_broker->GetNext(&fi, "", &data);
 }
 
 
@@ -252,7 +252,7 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
     EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).
     WillOnce(DoAll(testing::SetArgPointee<2>(nullptr), testing::Return(new uint8_t[1] {'1'})));
 
-    data_broker->GetNext(&fi, &data);
+    data_broker->GetNext(&fi, "", &data);
 
     ASSERT_THAT(data[0], Eq('1'));
     ASSERT_THAT(fi.name, Eq("1"));
@@ -264,7 +264,7 @@ TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
     WillOnce(DoAll(testing::SetArgPointee<2>(asapo::IOErrorTemplates::kReadError.Generate().release()),
                    testing::Return(nullptr)));
 
-    auto err = data_broker->GetNext(&fi, &data);
+    auto err = data_broker->GetNext(&fi, "", &data);
 
     ASSERT_THAT(err->Explain(), Eq(asapo::IOErrorTemplates::kReadError.Generate()->Explain()));
 }
@@ -274,7 +274,7 @@ TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotAllocateData) {
     WillOnce(DoAll(testing::SetArgPointee<2>(asapo::ErrorTemplates::kMemoryAllocationError.Generate().release()),
                    testing::Return(nullptr)));
 
-    auto err = data_broker->GetNext(&fi, &data);
+    auto err = data_broker->GetNext(&fi, "", &data);
 
     ASSERT_THAT(err->Explain(), Eq(asapo::ErrorTemplates::kMemoryAllocationError.Generate()->Explain()));
 }

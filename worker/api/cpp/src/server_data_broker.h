@@ -19,8 +19,9 @@ class ServerDataBroker final : public asapo::DataBroker {
   public:
     explicit ServerDataBroker(std::string server_uri, std::string source_path, std::string source_name, std::string token);
     Error Connect() override;
-    Error GetNext(FileInfo* info, FileData* data) override;
-    Error GetLast(FileInfo* info, FileData* data) override;
+    Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
+    Error GetLast(FileInfo* info, std::string group_id, FileData* data) override;
+    std::string GenerateNewGroupId(Error* err) override;
 
     void SetTimeout(uint64_t timeout_ms) override;
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
@@ -28,12 +29,12 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::unique_ptr<NetClient> net_client__;
   private:
     std::string RequestWithToken(std::string uri);
-    Error GetFileInfoFromServer(FileInfo* info, GetImageServerOperation op);
+    Error GetFileInfoFromServer(FileInfo* info, std::string group_id, GetImageServerOperation op);
     Error GetDataIfNeeded(FileInfo* info, FileData* data);
     Error GetBrokerUri();
     void ProcessServerError(Error* err, const std::string& response, std::string* redirect_uri);
-    Error ProcessRequest(std::string* response, std::string request_uri);
-    Error GetImageFromServer(GetImageServerOperation op, FileInfo* info, FileData* data);
+    Error ProcessRequest(std::string* response, std::string request_uri, bool post);
+    Error GetImageFromServer(GetImageServerOperation op, std::string group_id, FileInfo* info, FileData* data);
     bool DataCanBeInBuffer(const FileInfo* info);
     Error TryGetDataFromBuffer(const FileInfo* info, FileData* data);
     std::string OpToUriCmd(GetImageServerOperation op);

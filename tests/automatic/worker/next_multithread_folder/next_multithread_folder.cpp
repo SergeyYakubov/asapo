@@ -45,7 +45,7 @@ void GetAllFromBroker(const Args& args) {
 
     std::vector<asapo::FileInfo>file_infos(args.nthreads);
     auto exec_next = [&](int i) {
-        broker->GetNext(&file_infos[i], nullptr);
+        broker->GetNext(&file_infos[i], "", nullptr);
     };
 
     std::vector<std::thread> threads;

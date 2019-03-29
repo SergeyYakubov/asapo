@@ -23,6 +23,7 @@ func extractRequestParameters(r *http.Request, needGroupID bool) (string, string
 
 func getImage(w http.ResponseWriter, r *http.Request, op string, id int, needGroupID bool) {
 	r.Header.Set("Content-type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	db_name, group_id, ok := extractRequestParameters(r, needGroupID)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)

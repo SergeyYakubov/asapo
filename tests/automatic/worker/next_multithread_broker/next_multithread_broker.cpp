@@ -50,11 +50,11 @@ Args GetArgs(int argc, char* argv[]) {
 void GetAllFromBroker(const Args& args) {
     asapo::Error err;
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", args.run_name, args.token, &err);
-
+    auto group_id = broker->GenerateNewGroupId(&err);
     std::vector<asapo::FileInfos>file_infos(args.nthreads);
     auto exec_next = [&](int i) {
         asapo::FileInfo fi;
-        while ((err = broker->GetNext(&fi, nullptr)) == nullptr) {
+        while ((err = broker->GetNext(&fi, group_id, nullptr)) == nullptr) {
             file_infos[i].emplace_back(fi);
         }
         printf("%s\n", err->Explain().c_str());

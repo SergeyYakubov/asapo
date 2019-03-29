@@ -14,9 +14,11 @@ class FolderDataBroker final : public asapo::DataBroker {
   public:
     explicit FolderDataBroker(const std::string& source_name);
     Error Connect() override;
-    Error GetNext(FileInfo* info, FileData* data) override;
-    Error GetLast(FileInfo* info, FileData* data) override;
+    Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
+    Error GetLast(FileInfo* info, std::string group_id, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override {}; // to timeout in this case
+    std::string GenerateNewGroupId(Error* err)
+    override; // return "0" always and no error - no group ids for folder datra broker
 
     std::unique_ptr<asapo::IO> io__; // modified in testings to mock system calls,otherwise do not touch
   private:

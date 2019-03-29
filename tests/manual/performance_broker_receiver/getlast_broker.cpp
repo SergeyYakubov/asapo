@@ -9,6 +9,11 @@
 
 #include "asapo_worker.h"
 
+#include <mutex>
+
+std::string group_id = "";
+std::mutex lock;
+
 using std::chrono::high_resolution_clock;
 using asapo::Error;
 
@@ -46,10 +51,22 @@ std::vector<std::thread> StartThreads(const Params& params,
         broker->SetTimeout(params.timeout_ms);
         asapo::FileData data;
 
+        lock.lock();
+
+        if (group_id.empty()) {
+            group_id = broker->GenerateNewGroupId(&err);
+            if (err) {
+                (*errors)[i] += ProcessError(err);
+                return;
+            }
+        }
+
+        lock.unlock();
+
         auto start = high_resolution_clock::now();
         while (std::chrono::duration_cast<std::chrono::milliseconds>(high_resolution_clock::now() - start).count() <
                 params.timeout_ms) {
-            err = broker->GetLast(&fi, params.read_data ? &data : nullptr);
+            err = broker->GetLast(&fi, group_id, params.read_data ? &data : nullptr);
             if (err == nullptr) {
                 (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
                 if (params.read_data && (*nfiles)[i] < 10 && fi.size < 10) {

@@ -35,18 +35,24 @@ class DataBroker {
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
     //! Receive next image.
     /*!
-      \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
-      \param data - where to store image data. Can be set to nullptr only image metadata is needed.
-      \return Error if both pointers are nullptr or data cannot be read, WorkerErrorCode::OK otherwise.
+      \param err - return nullptr of operation succeed, error otherwise.
+      \return group id if OK, "" otherwise.
     */
-    virtual Error GetNext(FileInfo* info, FileData* data) = 0;
+    virtual std::string GenerateNewGroupId(Error* err) = 0;
     //! Receive last available image.
     /*!
       \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
       \param data - where to store image data. Can be set to nullptr only image metadata is needed.
-      \return Error if both pointers are nullptr or data cannot be read, WorkerErrorCode::OK otherwise.
+      \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetLast(FileInfo* info, FileData* data) = 0;
+    virtual Error GetNext(FileInfo* info, std::string group_id, FileData* data) = 0;
+    //! Receive last available image.
+    /*!
+      \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
+      \param data - where to store image data. Can be set to nullptr only image metadata is needed.
+      \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
+    */
+    virtual Error GetLast(FileInfo* info, std::string group_id, FileData* data) = 0;
     virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
 };
 

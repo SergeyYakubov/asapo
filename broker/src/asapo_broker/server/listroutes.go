@@ -24,12 +24,11 @@ var listRoutes = utils.Routes{
 		routeGetByID,
 	},
 	utils.Route{
-		"GetID",
+		"CreateGroup",
 		"Post",
 		"/creategroup",
 		routeCreateGroupID,
 	},
-
 	utils.Route{
 		"Health",
 		"Get",

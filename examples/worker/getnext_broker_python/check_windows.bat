@@ -3,6 +3,7 @@ SET database_name=test_run
 
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 set token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
+set group_id=bif31l2uiddd4r0q6b40
 
 c:\opt\consul\nomad run discovery.nmd
 c:\opt\consul\nomad run broker.nmd
@@ -14,18 +15,24 @@ for /l %%x in (1, 1, 3) do echo db.data.insert({"_id":%%x,"size":100,"name":"%%x
 
 set PYTHONPATH=%1
 
-python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% > out
+python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% %group_id% > out
 type out
 type out | findstr /c:"100" || goto :error
 type out | findstr /c:"\"_id\": 1" || goto :error
 
-python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% > out
+python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% %group_id% > out
 type out
 type out | findstr /c:"\"_id\": 2" || goto :error
 
-python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% > out
+python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% %group_id% > out
 type out
 type out | findstr /c:"\"_id\": 3" || goto :error
+
+
+python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% new > out
+type out
+type out | findstr /c:"100" || goto :error
+type out | findstr /c:"\"_id\": 1" || goto :error
 
 
 goto :clean

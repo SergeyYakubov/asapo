@@ -4,11 +4,21 @@ import asapo_worker
 import json
 import sys
 
-source, path, beamtime, token = sys.argv[1:]
+source, path, beamtime, token, group_id = sys.argv[1:]
 
 broker, err = asapo_worker.create_server_broker(source,path, beamtime,token,1000)
 
-_, meta, err = broker.get_next(meta_only=True)
+
+if group_id == "new":
+    group_id_new, err = broker.generate_group_id()
+    if err != None:
+        print ('cannot generate group id, err: ', err)
+    else:
+        print ('generated group id: ', group_id_new)
+else:
+    group_id_new = group_id
+
+_, meta, err = broker.get_next(group_id_new, meta_only=True)
 if err != None:
     print ('err: ', err)
 else:
