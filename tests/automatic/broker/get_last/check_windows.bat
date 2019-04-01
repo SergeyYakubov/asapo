@@ -10,7 +10,7 @@ set short_name="%~nx1"
 "%2" token -secret broker_secret.key data > token
 set /P token=< token
 
-curl -d '' --silent 127.0.0.1:5005/creategroup > groupid
+C:\Curl\curl.exe -d '' --silent 127.0.0.1:5005/creategroup > groupid
 set /P groupid=< groupid
 
 
