@@ -38,3 +38,8 @@ echo "db.data.insert({"_id":4})" | mongo ${database_name}
 
 curl -v  --silent 127.0.0.1:5005/database/data/${groupid}/next?token=$token --stderr - | grep '"_id":4'
 curl -v  --silent 127.0.0.1:5005/database/data/${groupid}/last?token=$token --stderr - | grep '"_id":4'
+
+#with a new group
+groupid=`curl -d '' --silent 127.0.0.1:5005/creategroup`
+curl -v  --silent 127.0.0.1:5005/database/data/${groupid}/next?token=$token --stderr - | grep '"_id":1'
+curl -v  --silent 127.0.0.1:5005/database/data/${groupid}/last?token=$token --stderr - | grep '"_id":4'

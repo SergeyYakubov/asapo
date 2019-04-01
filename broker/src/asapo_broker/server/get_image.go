@@ -21,6 +21,22 @@ func extractRequestParameters(r *http.Request, needGroupID bool) (string, string
 	return db_name, group_id, ok1 && ok2
 }
 
+func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_name string, op string) bool {
+	if !needGroupID {
+		return true
+	}
+	if _, err := xid.FromString(group_id); err != nil {
+		err_str := "wrong groupid " + group_id
+		log_str := "processing get " + op + " request in " + db_name + " at " + settings.BrokerDbAddress + ": " + err_str
+		logger.Error(log_str)
+		fmt.Println(log_str)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err_str))
+		return false
+	}
+	return true
+}
+
 func getImage(w http.ResponseWriter, r *http.Request, op string, id int, needGroupID bool) {
 	r.Header.Set("Content-type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -35,17 +51,10 @@ func getImage(w http.ResponseWriter, r *http.Request, op string, id int, needGro
 		return
 	}
 
-	if needGroupID {
-		if _, err := xid.FromString(group_id); err != nil {
-			err_str := "wrong groupid " + group_id
-			log_str := "processing get " + op + " request in " + db_name + " at " + settings.BrokerDbAddress + ": " + err_str
-			logger.Error(log_str)
-			fmt.Println(log_str)
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err_str))
-			return
-		}
+	if !checkGroupID(w, needGroupID, group_id, db_name, op) {
+		return
 	}
+
 	answer, code := getRecord(db_name, group_id, op, id)
 	w.WriteHeader(code)
 	w.Write(answer)
