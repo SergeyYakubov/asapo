@@ -28,9 +28,9 @@ cdef extern from "asapo_worker.h" namespace "asapo":
     cdef cppclass DataBroker:
         DataBroker() except +
         void SetTimeout(uint64_t timeout_ms)
-        Error GetNext(FileInfo* info, FileData* data)
-        Error GetLast(FileInfo* info, FileData* data)
-
+        Error GetNext(FileInfo* info, string group_id, FileData* data)
+        Error GetLast(FileInfo* info, string group_id, FileData* data)
+        string GenerateNewGroupId(Error* err)
 
 cdef extern from "asapo_worker.h" namespace "asapo":
     cdef cppclass DataBrokerFactory:

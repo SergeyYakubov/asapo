@@ -61,7 +61,7 @@ Error FolderDataBroker::GetFileByIndex(uint64_t nfile_to_get, FileInfo* info, Fi
 }
 
 
-Error FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
+Error FolderDataBroker::GetNext(FileInfo* info, std::string group_id, FileData* data) {
 // could probably use atomic here, but just to make sure (tests showed no performance difference)
     mutex_.lock();
     uint64_t nfile_to_get = ++current_file_;
@@ -70,9 +70,14 @@ Error FolderDataBroker::GetNext(FileInfo* info, FileData* data) {
     return GetFileByIndex(nfile_to_get, info, data);
 
 }
-Error FolderDataBroker::GetLast(FileInfo* info, FileData* data) {
+Error FolderDataBroker::GetLast(FileInfo* info, std::string group_id,  FileData* data) {
     uint64_t nfile_to_get = filelist_.size() - 1;
     return GetFileByIndex(nfile_to_get, info, data);
+}
+
+std::string FolderDataBroker::GenerateNewGroupId(Error* err) {
+    *err = nullptr;
+    return "";
 }
 
 }

@@ -16,6 +16,9 @@ import (
 
 var correctTokenSuffix, wrongTokenSuffix, suffixWithWrongToken, expectedBeamtimeId string
 
+const expectedGroupID = "bid2a5auidddp1vl71d0"
+const wrongGroupID = "bid2a5auidddp1vl71"
+
 func prepareTestAuth() {
 	expectedBeamtimeId = "beamtime_id"
 	auth = utils.NewHMACAuth("secret")
@@ -46,9 +49,14 @@ func containsMatcher(substrings ...string) func(str string) bool {
 	}
 }
 
-func doRequest(path string) *httptest.ResponseRecorder {
+func doRequest(path string, method ...string) *httptest.ResponseRecorder {
+	m := "GET"
+	if len(method) > 0 {
+		m = method[0]
+	}
+
 	mux := utils.NewRouter(listRoutes)
-	req, _ := http.NewRequest("GET", path, nil)
+	req, _ := http.NewRequest(m, path, nil)
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, req)
 	return w
@@ -90,7 +98,7 @@ func TestGetImageTestSuite(t *testing.T) {
 func (suite *GetImageTestSuite) TestGetImageWithWrongToken() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong token")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/next" + suffixWithWrongToken)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
 
 	suite.Equal(http.StatusUnauthorized, w.Code, "wrong token")
 }
@@ -98,37 +106,43 @@ func (suite *GetImageTestSuite) TestGetImageWithWrongToken() {
 func (suite *GetImageTestSuite) TestGetImageWithNoToken() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("cannot extract")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/next" + wrongTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + wrongTokenSuffix)
 
 	suite.Equal(http.StatusUnauthorized, w.Code, "no token")
 }
 
 func (suite *GetImageTestSuite) TestGetImageWithWrongDatabaseName() {
-	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, "next", 0).Return([]byte(""),
+	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte(""),
 		&database.DBError{utils.StatusWrongInput, ""})
 
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("get next request")))
 	ExpectCopyClose(suite.mock_db)
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/next" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong database name")
 }
 
 func (suite *GetImageTestSuite) TestGetImageWithInternalDBError() {
-	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, "next", 0).Return([]byte(""), errors.New(""))
+	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte(""), errors.New(""))
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("get next request")))
 	ExpectCopyClose(suite.mock_db)
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/next" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(http.StatusInternalServerError, w.Code, "internal error")
 }
 
 func (suite *GetImageTestSuite) TestGetImageAddsCounter() {
-	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, "next", 0).Return([]byte("Hello"), nil)
+	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("get next request in "+expectedBeamtimeId)))
 	ExpectCopyClose(suite.mock_db)
 
-	doRequest("/database/" + expectedBeamtimeId + "/next" + correctTokenSuffix)
+	doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(1, statistics.GetCounter(), "GetImage increases counter")
+}
+
+func (suite *GetImageTestSuite) TestGetImageWrongGroupID() {
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong groupid")))
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + wrongGroupID + "/next" + correctTokenSuffix)
+	suite.Equal(http.StatusBadRequest, w.Code, "wrong group id")
 }

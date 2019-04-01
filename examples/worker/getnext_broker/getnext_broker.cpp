@@ -6,11 +6,15 @@
 #include <chrono>
 #include <iomanip>
 #include <numeric>
+#include <mutex>
 
 #include "asapo_worker.h"
 
 using std::chrono::high_resolution_clock;
 using asapo::Error;
+
+std::string group_id = "";
+std::mutex lock;
 
 struct Params {
     std::string server;
@@ -46,8 +50,20 @@ std::vector<std::thread> StartThreads(const Params& params,
         broker->SetTimeout((uint64_t) params.timeout_ms);
         asapo::FileData data;
 
+        lock.lock();
+
+        if (group_id.empty()) {
+            group_id = broker->GenerateNewGroupId(&err);
+            if (err) {
+                (*errors)[i] += ProcessError(err);
+                return;
+            }
+        }
+
+        lock.unlock();
+
         while (true) {
-            err = broker->GetNext(&fi, params.read_data ? &data : nullptr);
+            err = broker->GetNext(&fi, group_id, params.read_data ? &data : nullptr);
             if (err == nullptr) {
                 (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
                 if (params.read_data && (*nfiles)[i] < 10 && fi.size < 10) {

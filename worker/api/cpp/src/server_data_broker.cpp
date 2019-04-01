@@ -36,7 +36,7 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
         message = WorkerErrorMessage::kNoData;
         return TextErrorWithType(message, ErrorType::kEndOfFile);
     default:
-        message = WorkerErrorMessage::kErrorReadingSource;
+        message = WorkerErrorMessage::kUnknownIOError;
         break;
     }
     return Error{new HttpError(message, code)};
@@ -88,10 +88,14 @@ std::string ServerDataBroker::RequestWithToken(std::string uri) {
     return std::move(uri) + "?token=" + token_;
 }
 
-Error ServerDataBroker::ProcessRequest(std::string* response, std::string request_uri) {
+Error ServerDataBroker::ProcessRequest(std::string* response, std::string request_uri, bool post) {
     Error err;
     HttpCode code;
-    *response = httpclient__->Get(RequestWithToken(request_uri), &code, &err);
+    if (post) {
+        *response = httpclient__->Post(RequestWithToken(request_uri), "", &code, &err);
+    } else {
+        *response = httpclient__->Get(RequestWithToken(request_uri), &code, &err);
+    }
     if (err != nullptr) {
         current_broker_uri_ = "";
         return err;
@@ -106,7 +110,7 @@ Error ServerDataBroker::GetBrokerUri() {
 
     std::string request_uri = server_uri_ + "/discovery/broker";
     Error err;
-    err = ProcessRequest(&current_broker_uri_, request_uri);
+    err = ProcessRequest(&current_broker_uri_, request_uri, false);
     if (err != nullptr || current_broker_uri_.empty()) {
         current_broker_uri_ = "";
         return TextError("cannot get broker uri from " + server_uri_);
@@ -115,15 +119,15 @@ Error ServerDataBroker::GetBrokerUri() {
 }
 
 
-Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, GetImageServerOperation op) {
-    std::string request_suffix = OpToUriCmd(op);
+Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_id, GetImageServerOperation op) {
+    std::string request_suffix = std::move(group_id) + "/" + OpToUriCmd(op);
     uint64_t elapsed_ms = 0;
     std::string response;
     while (true) {
         auto err = GetBrokerUri();
         if (err == nullptr) {
             std::string request_api = current_broker_uri_ + "/database/" + source_name_ + "/";
-            err = ProcessRequest(&response, request_api + request_suffix);
+            err = ProcessRequest(&response, request_api + request_suffix, false);
             if (err == nullptr) {
                 break;
             }
@@ -145,12 +149,12 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, GetImageServerOper
     return nullptr;
 }
 
-Error ServerDataBroker::GetNext(FileInfo* info, FileData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetNext, info, data);
+Error ServerDataBroker::GetNext(FileInfo* info, std::string group_id, FileData* data) {
+    return GetImageFromServer(GetImageServerOperation::GetNext, std::move(group_id), info, data);
 }
 
-Error ServerDataBroker::GetLast(FileInfo* info, FileData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetLast, info, data);
+Error ServerDataBroker::GetLast(FileInfo* info, std::string group_id, FileData* data) {
+    return GetImageFromServer(GetImageServerOperation::GetLast, std::move(group_id), info, data);
 }
 
 std::string ServerDataBroker::OpToUriCmd(GetImageServerOperation op) {
@@ -163,12 +167,13 @@ std::string ServerDataBroker::OpToUriCmd(GetImageServerOperation op) {
     return "";
 }
 
-Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, FileInfo* info, FileData* data) {
+Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, std::string group_id, FileInfo* info,
+                                           FileData* data) {
     if (info == nullptr) {
         return TextError(WorkerErrorMessage::kWrongInput);
     }
 
-    auto err = GetFileInfoFromServer(info, op);
+    auto err = GetFileInfoFromServer(info, std::move(group_id), op);
     if (err != nullptr) {
         return err;
     }
@@ -200,6 +205,26 @@ bool ServerDataBroker::DataCanBeInBuffer(const FileInfo* info) {
 
 Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* data) {
     return net_client__->GetData(info, data);
+}
+
+std::string ServerDataBroker::GenerateNewGroupId(Error* err) {
+    uint64_t elapsed_ms = 0;
+    std::string response;
+    while (elapsed_ms <= timeout_ms_) {
+        *err = GetBrokerUri();
+        if (*err == nullptr) {
+            std::string request = current_broker_uri_ + "/creategroup";
+            *err = ProcessRequest(&response, request, true);
+            if (*err == nullptr) {
+                return response;
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        elapsed_ms += 100;
+    }
+
+    *err = TextErrorWithType("exit on timeout, last error: " + (*err)->Explain(), asapo::ErrorType::kTimeOut);
+    return "";
 }
 
 }

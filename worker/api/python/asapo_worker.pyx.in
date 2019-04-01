@@ -26,15 +26,15 @@ cdef bytes _bytes(s):
 
 cdef class PyDataBroker:
     cdef DataBroker* c_broker
-    def _op(self, op, meta_only):
+    def _op(self, op, group_id, meta_only):
         cdef FileInfo info
         cdef FileData data
         cdef Error err
         cdef np.npy_intp dims[1]
         if op == "next":
-            err =  self.c_broker.GetNext(&info,<FileData*>NULL if meta_only else &data)
+            err =  self.c_broker.GetNext(&info, _bytes(group_id), <FileData*>NULL if meta_only else &data)
         elif op == "last":
-            err =  self.c_broker.GetLast(&info,<FileData*>NULL if meta_only else &data)
+            err =  self.c_broker.GetLast(&info,_bytes(group_id), <FileData*>NULL if meta_only else &data)
         err_str = _str(GetErrorString(&err))
         if err_str.strip():
             return None,None,err_str
@@ -49,13 +49,19 @@ cdef class PyDataBroker:
         del meta['lastchange']
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         return arr,meta,None
-
-
-    def get_next(self, meta_only = True):
-        return self._op("next",meta_only)
-    def get_last(self, meta_only = True):
-        return self._op("last",meta_only)
-
+    def get_next(self, group_id, meta_only = True):
+        return self._op("next",group_id,meta_only)
+    def get_last(self, group_id, meta_only = True):
+        return self._op("last",group_id,meta_only)
+    def generate_group_id(self):
+        cdef Error err
+        cdef string group_id
+        group_id = self.c_broker.GenerateNewGroupId(&err)
+        err_str = _str(GetErrorString(&err))
+        if err_str.strip():
+            return None, err_str
+        else:
+            return _str(group_id), None
 
 cdef class PyDataBrokerFactory:
     cdef DataBrokerFactory c_factory

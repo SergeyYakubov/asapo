@@ -45,7 +45,7 @@ func TestGetIDTestSuite(t *testing.T) {
 }
 
 func (suite *GetIDTestSuite) TestGetIdCallsCorrectRoutine() {
-	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, "id", 1).Return([]byte("Hello"), nil)
+	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, "", "id", 1).Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("get id request")))
 	ExpectCopyClose(suite.mock_db)
 

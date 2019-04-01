@@ -33,11 +33,11 @@ func TestGetNextTestSuite(t *testing.T) {
 }
 
 func (suite *GetNextTestSuite) TestGetNextCallsCorrectRoutine() {
-	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, "next", 0).Return([]byte("Hello"), nil)
+	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("get next request")))
 	ExpectCopyClose(suite.mock_db)
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/next" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(http.StatusOK, w.Code, "GetNext OK")
 	suite.Equal("Hello", string(w.Body.Bytes()), "GetNext sends data")
 }

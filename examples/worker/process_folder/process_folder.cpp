@@ -57,7 +57,7 @@ void ReadAllData(std::unique_ptr<asapo::DataBroker>* broker, Statistics* statist
 
     int nfiles = 0;
     uint64_t size = 0;
-    while ((err = (*broker)->GetNext(&file_info, &file_data)) == nullptr) {
+    while ((err = (*broker)->GetNext(&file_info, "", &file_data)) == nullptr) {
         nfiles++;
         size += file_info.size;
     }

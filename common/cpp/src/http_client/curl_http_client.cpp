@@ -38,8 +38,9 @@ void SetCurlOptions(CURL* curl, bool post, const std::string& data, const std::s
 
     if (post) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+    } else {
+        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
     }
-
 }
 
 HttpCode GetResponseCode(CURL* curl) {

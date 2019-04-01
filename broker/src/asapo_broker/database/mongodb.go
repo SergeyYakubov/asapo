@@ -127,32 +127,32 @@ func (db *Mongodb) getMaxIndex(dbname string) (max_id int, err error) {
 	return id.ID, nil
 }
 
-func (db *Mongodb) createLocationPointers(dbname string) (err error) {
+func (db *Mongodb) createLocationPointers(dbname string, group_id string) (err error) {
 	change := mgo.Change{
 		Update: bson.M{"$inc": bson.M{pointer_field_name: 0}},
 		Upsert: true,
 	}
-	q := bson.M{"_id": 0}
+	q := bson.M{"_id": group_id}
 	c := db.session.DB(dbname).C(pointer_collection_name)
 	var res map[string]interface{}
 	_, err = c.Find(q).Apply(change, &res)
 	return err
 }
 
-func (db *Mongodb) setCounter(dbname string, ind int) (err error) {
+func (db *Mongodb) setCounter(dbname string, group_id string, ind int) (err error) {
 	update := bson.M{"$set": bson.M{pointer_field_name: ind}}
 	c := db.session.DB(dbname).C(pointer_collection_name)
-	return c.UpdateId(0, update)
+	return c.UpdateId(group_id, update)
 }
 
-func (db *Mongodb) incrementField(dbname string, max_ind int, res interface{}) (err error) {
+func (db *Mongodb) incrementField(dbname string, group_id string, max_ind int, res interface{}) (err error) {
 	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
 	change := mgo.Change{
 		Update:    update,
 		Upsert:    false,
 		ReturnNew: true,
 	}
-	q := bson.M{"_id": 0, pointer_field_name: bson.M{"$lt": max_ind}}
+	q := bson.M{"_id": group_id, pointer_field_name: bson.M{"$lt": max_ind}}
 	c := db.session.DB(dbname).C(pointer_collection_name)
 	_, err = c.Find(q).Apply(change, res)
 	if err == mgo.ErrNotFound {
@@ -186,26 +186,26 @@ func (db *Mongodb) GetRecordByID(dbname string, id int, returnID bool) ([]byte, 
 	return utils.MapToJson(&res)
 }
 
-func (db *Mongodb) needCreateLocationPointersInDb(db_name string) bool {
+func (db *Mongodb) needCreateLocationPointersInDb(group_id string) bool {
 	dbPointersLock.RLock()
-	needCreate := !db.db_pointers_created[db_name]
+	needCreate := !db.db_pointers_created[group_id]
 	dbPointersLock.RUnlock()
 	return needCreate
 }
 
-func (db *Mongodb) SetLocationPointersCreateFlag(db_name string) {
+func (db *Mongodb) SetLocationPointersCreateFlag(group_id string) {
 	dbPointersLock.Lock()
 	if db.db_pointers_created == nil {
 		db.db_pointers_created = make(map[string]bool)
 	}
-	db.db_pointers_created[db_name] = true
+	db.db_pointers_created[group_id] = true
 	dbPointersLock.Unlock()
 }
 
-func (db *Mongodb) generateLocationPointersInDbIfNeeded(db_name string) {
-	if db.needCreateLocationPointersInDb(db_name) {
-		db.createLocationPointers(db_name)
-		db.SetLocationPointersCreateFlag(db_name)
+func (db *Mongodb) generateLocationPointersInDbIfNeeded(db_name string, group_id string) {
+	if db.needCreateLocationPointersInDb(group_id) {
+		db.createLocationPointers(db_name, group_id)
+		db.SetLocationPointersCreateFlag(group_id)
 	}
 }
 
@@ -217,7 +217,7 @@ func (db *Mongodb) getParentDB() *Mongodb {
 	}
 }
 
-func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string) error {
+func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id string) error {
 	if db.session == nil {
 		return &DBError{utils.StatusError, no_session_msg}
 	}
@@ -226,18 +226,18 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string) error {
 		return &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	db.getParentDB().generateLocationPointersInDbIfNeeded(db_name)
+	db.getParentDB().generateLocationPointersInDbIfNeeded(db_name, group_id)
 
 	return nil
 }
 
-func (db *Mongodb) getCurrentPointer(db_name string) (Pointer, error) {
+func (db *Mongodb) getCurrentPointer(db_name string, group_id string) (Pointer, error) {
 	max_ind, err := db.getMaxIndex(db_name)
 	if err != nil {
 		return Pointer{}, err
 	}
 	var curPointer Pointer
-	err = db.incrementField(db_name, max_ind, &curPointer)
+	err = db.incrementField(db_name, group_id, max_ind, &curPointer)
 	if err != nil {
 		return Pointer{}, err
 	}
@@ -245,51 +245,51 @@ func (db *Mongodb) getCurrentPointer(db_name string) (Pointer, error) {
 	return curPointer, nil
 }
 
-func (db *Mongodb) GetNextRecord(db_name string) ([]byte, error) {
+func (db *Mongodb) GetNextRecord(db_name string, group_id string) ([]byte, error) {
 
-	if err := db.checkDatabaseOperationPrerequisites(db_name); err != nil {
+	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
 		return nil, err
 	}
 
-	curPointer, err := db.getCurrentPointer(db_name)
+	curPointer, err := db.getCurrentPointer(db_name, group_id)
 	if err != nil {
-		log_str := "error getting next pointer for " + db_name + ":" + err.Error()
+		log_str := "error getting next pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
 		logger.Debug(log_str)
 		return nil, err
 	}
-	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name
+	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
 	logger.Debug(log_str)
 	return db.GetRecordByID(db_name, curPointer.Value, true)
 
 }
 
-func (db *Mongodb) GetLastRecord(db_name string) ([]byte, error) {
+func (db *Mongodb) GetLastRecord(db_name string, group_id string) ([]byte, error) {
 
-	if err := db.checkDatabaseOperationPrerequisites(db_name); err != nil {
+	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
 		return nil, err
 	}
 
 	max_ind, err := db.getMaxIndex(db_name)
 	if err != nil {
-		log_str := "error getting last pointer for " + db_name + ":" + err.Error()
+		log_str := "error getting last pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
 		logger.Debug(log_str)
 		return nil, err
 	}
 	res, err := db.GetRecordByID(db_name, max_ind, false)
 
-	db.setCounter(db_name, max_ind)
+	db.setCounter(db_name, group_id, max_ind)
 
 	return res, err
 }
 
-func (db *Mongodb) GetRecordFromDb(db_name string, op string, id int) (answer []byte, err error) {
+func (db *Mongodb) GetRecordFromDb(db_name string, group_id string, op string, id int) (answer []byte, err error) {
 	switch op {
 	case "next":
-		return db.GetNextRecord(db_name)
+		return db.GetNextRecord(db_name, group_id)
 	case "id":
 		return db.GetRecordByID(db_name, id, true)
 	case "last":
-		return db.GetLastRecord(db_name)
+		return db.GetLastRecord(db_name, group_id)
 	}
 	return nil, errors.New("Wrong db operation: " + op)
 }

@@ -5,5 +5,5 @@ import (
 )
 
 func routeGetLast(w http.ResponseWriter, r *http.Request) {
-	getImage(w, r, "last", 0)
+	getImage(w, r, "last", 0, true)
 }
