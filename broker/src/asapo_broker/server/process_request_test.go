@@ -62,7 +62,7 @@ func doRequest(path string, method ...string) *httptest.ResponseRecorder {
 	return w
 }
 
-func TestGetImageWithoutDatabaseName(t *testing.T) {
+func TestProcessRequestWithoutDatabaseName(t *testing.T) {
 	w := doRequest("/database/next")
 	assert.Equal(t, http.StatusNotFound, w.Code, "no database name")
 }
@@ -72,12 +72,12 @@ func ExpectCopyClose(mock_db *database.MockedDatabase) {
 	mock_db.On("Close").Return()
 }
 
-type GetImageTestSuite struct {
+type ProcessRequestTestSuite struct {
 	suite.Suite
 	mock_db *database.MockedDatabase
 }
 
-func (suite *GetImageTestSuite) SetupTest() {
+func (suite *ProcessRequestTestSuite) SetupTest() {
 	statistics.Reset()
 	suite.mock_db = new(database.MockedDatabase)
 	db = suite.mock_db
@@ -85,17 +85,17 @@ func (suite *GetImageTestSuite) SetupTest() {
 	logger.SetMockLog()
 }
 
-func (suite *GetImageTestSuite) TearDownTest() {
+func (suite *ProcessRequestTestSuite) TearDownTest() {
 	assertExpectations(suite.T(), suite.mock_db)
 	logger.UnsetMockLog()
 	db = nil
 }
 
-func TestGetImageTestSuite(t *testing.T) {
-	suite.Run(t, new(GetImageTestSuite))
+func TestProcessRequestTestSuite(t *testing.T) {
+	suite.Run(t, new(ProcessRequestTestSuite))
 }
 
-func (suite *GetImageTestSuite) TestGetImageWithWrongToken() {
+func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong token")))
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
@@ -103,7 +103,7 @@ func (suite *GetImageTestSuite) TestGetImageWithWrongToken() {
 	suite.Equal(http.StatusUnauthorized, w.Code, "wrong token")
 }
 
-func (suite *GetImageTestSuite) TestGetImageWithNoToken() {
+func (suite *ProcessRequestTestSuite) TestProcessRequestWithNoToken() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("cannot extract")))
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + wrongTokenSuffix)
@@ -111,11 +111,11 @@ func (suite *GetImageTestSuite) TestGetImageWithNoToken() {
 	suite.Equal(http.StatusUnauthorized, w.Code, "no token")
 }
 
-func (suite *GetImageTestSuite) TestGetImageWithWrongDatabaseName() {
-	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte(""),
+func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() {
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte(""),
 		&database.DBError{utils.StatusWrongInput, ""})
 
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("get next request")))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
 	ExpectCopyClose(suite.mock_db)
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix)
@@ -123,25 +123,25 @@ func (suite *GetImageTestSuite) TestGetImageWithWrongDatabaseName() {
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong database name")
 }
 
-func (suite *GetImageTestSuite) TestGetImageWithInternalDBError() {
-	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte(""), errors.New(""))
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("get next request")))
+func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte(""), errors.New(""))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
 	ExpectCopyClose(suite.mock_db)
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(http.StatusInternalServerError, w.Code, "internal error")
 }
 
-func (suite *GetImageTestSuite) TestGetImageAddsCounter() {
-	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte("Hello"), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("get next request in "+expectedBeamtimeId)))
+func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte("Hello"), nil)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedBeamtimeId)))
 	ExpectCopyClose(suite.mock_db)
 
 	doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix)
-	suite.Equal(1, statistics.GetCounter(), "GetImage increases counter")
+	suite.Equal(1, statistics.GetCounter(), "ProcessRequest increases counter")
 }
 
-func (suite *GetImageTestSuite) TestGetImageWrongGroupID() {
+func (suite *ProcessRequestTestSuite) TestProcessRequestWrongGroupID() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong groupid")))
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + wrongGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong group id")

@@ -12,6 +12,12 @@ var listRoutes = utils.Routes{
 		routeGetNext,
 	},
 	utils.Route{
+		"GetSize",
+		"Get",
+		"/database/{dbname}/size",
+		routeGetSize,
+	},
+	utils.Route{
 		"GetLast",
 		"Get",
 		"/database/{dbname}/{groupid}/last",

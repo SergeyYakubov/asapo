@@ -282,7 +282,7 @@ func (db *Mongodb) GetLastRecord(db_name string, group_id string) ([]byte, error
 	return res, err
 }
 
-func (db *Mongodb) GetRecordFromDb(db_name string, group_id string, op string, id int) (answer []byte, err error) {
+func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, id int) (answer []byte, err error) {
 	switch op {
 	case "next":
 		return db.GetNextRecord(db_name, group_id)

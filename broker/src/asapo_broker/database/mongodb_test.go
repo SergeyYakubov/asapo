@@ -15,6 +15,11 @@ type TestRecord struct {
 	FName string `bson:"fname" json:"fname"`
 }
 
+type TestSizeRecord struct {
+	Size    int    `bson:"size" json:"size"`
+}
+
+
 var db Mongodb
 
 const dbname = "run1"
@@ -27,6 +32,10 @@ var rec3 = TestRecord{3, "ccc"}
 var rec1_expect, _ = json.Marshal(rec1)
 var rec2_expect, _ = json.Marshal(rec2)
 var rec3_expect, _ = json.Marshal(rec3)
+
+var recs1 = TestSizeRecord{3}
+var recs1_expect, _ = json.Marshal(recs1)
+
 
 func cleanup() {
 	db.DeleteAllRecords(dbname)
@@ -178,7 +187,7 @@ func TestMongoDBGetRecordNext(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
-	res, err := db.GetRecordFromDb(dbname, groupId, "next", 0)
+	res, err := db.ProcessRequest(dbname, groupId, "next", 0)
 	assert.Nil(t, err)
 	assert.Equal(t, string(rec1_expect), string(res))
 }
@@ -187,7 +196,7 @@ func TestMongoDBGetRecordID(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
-	res, err := db.GetRecordFromDb(dbname, groupId, "id", 1)
+	res, err := db.ProcessRequest(dbname, groupId, "id", 1)
 	assert.Nil(t, err)
 	assert.Equal(t, string(rec1_expect), string(res))
 }
@@ -196,7 +205,7 @@ func TestMongoDBWrongOp(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
-	_, err := db.GetRecordFromDb(dbname, groupId, "bla", 0)
+	_, err := db.ProcessRequest(dbname, groupId, "bla", 0)
 	assert.NotNil(t, err)
 }
 
@@ -206,7 +215,7 @@ func TestMongoDBGetRecordLast(t *testing.T) {
 	db.InsertRecord(dbname, &rec1)
 	db.InsertRecord(dbname, &rec2)
 
-	res, err := db.GetRecordFromDb(dbname, groupId, "last", 0)
+	res, err := db.ProcessRequest(dbname, groupId, "last", 0)
 	assert.Nil(t, err)
 	assert.Equal(t, string(rec2_expect), string(res))
 }
@@ -217,14 +226,24 @@ func TestMongoDBGetNextAfterGetLastCorrect(t *testing.T) {
 	db.InsertRecord(dbname, &rec1)
 	db.InsertRecord(dbname, &rec2)
 
-	res, err := db.GetRecordFromDb(dbname, groupId, "last", 0)
+	res, err := db.ProcessRequest(dbname, groupId, "last", 0)
 	assert.Nil(t, err)
 	assert.Equal(t, string(rec2_expect), string(res))
 
 	db.InsertRecord(dbname, &rec3)
 
-	res, err = db.GetRecordFromDb(dbname, groupId, "next", 0)
+	res, err = db.ProcessRequest(dbname, groupId, "next", 0)
 	assert.Nil(t, err)
 	assert.Equal(t, string(rec3_expect), string(res))
 
 }
+
+/*
+func TestMongoDBGetSize(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec1)
+	res, err := db.ProcessRequest(dbname, "", "size", 0)
+	assert.Nil(t, err)
+	assert.Equal(t, string(recs1_expect), string(res))
+}*/

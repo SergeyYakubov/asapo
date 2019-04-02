@@ -33,8 +33,8 @@ func TestGetLastTestSuite(t *testing.T) {
 }
 
 func (suite *GetLastTestSuite) TestGetLastCallsCorrectRoutine() {
-	suite.mock_db.On("GetRecordFromDb", expectedBeamtimeId, expectedGroupID, "last", 0).Return([]byte("Hello"), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("get last request")))
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "last", 0).Return([]byte("Hello"), nil)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request last")))
 	ExpectCopyClose(suite.mock_db)
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/last" + correctTokenSuffix)
