@@ -207,24 +207,63 @@ Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* dat
     return net_client__->GetData(info, data);
 }
 
+
 std::string ServerDataBroker::GenerateNewGroupId(Error* err) {
+    return BrokerRequestWithTimeout("creategroup",true,err);
+}
+
+std::string ServerDataBroker::BrokerRequestWithTimeout(std::string request_string, bool post_request, Error* err) {
     uint64_t elapsed_ms = 0;
     std::string response;
     while (elapsed_ms <= timeout_ms_) {
         *err = GetBrokerUri();
         if (*err == nullptr) {
-            std::string request = current_broker_uri_ + "/creategroup";
-            *err = ProcessRequest(&response, request, true);
-            if (*err == nullptr) {
+            *err = ProcessRequest(&response, current_broker_uri_ + "/" + request_string, post_request);
+            if (*err == nullptr || (*err)->GetErrorType() == ErrorType::kEndOfFile) {
                 return response;
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         elapsed_ms += 100;
     }
-
     *err = TextErrorWithType("exit on timeout, last error: " + (*err)->Explain(), asapo::ErrorType::kTimeOut);
     return "";
+}
+
+Error ServerDataBroker::ResetCounter(std::string group_id) {
+    std::string request_string =  "database/" + source_name_+"/"+std::move(group_id) + "/resetcounter";
+    Error err;
+    BrokerRequestWithTimeout(request_string,true,&err);
+    return err;
+}
+
+uint64_t ServerDataBroker::GetNDataSets(Error* err) {
+    std::string request_string =  "database/" + source_name_+"/size";
+    auto responce = BrokerRequestWithTimeout(request_string,false,err);
+    if (*err) {
+        return 0;
+    }
+    JsonStringParser parser(responce);
+    uint64_t size;
+    if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
+        return 0;
+    }
+    return size;
+
+}
+Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, FileData* data) {
+    std::string request_string =  "database/" + source_name_+"/"+std::to_string(id);
+    Error err;
+    auto responce = BrokerRequestWithTimeout(request_string,false,&err);
+    if (err) {
+        return err;
+    }
+
+    if (!info->SetFromJson(responce)) {
+        return TextError(WorkerErrorMessage::kErrorReadingSource);
+    }
+
+    return nullptr;
 }
 
 }

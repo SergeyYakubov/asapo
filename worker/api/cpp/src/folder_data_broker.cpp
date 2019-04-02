@@ -79,5 +79,18 @@ std::string FolderDataBroker::GenerateNewGroupId(Error* err) {
     *err = nullptr;
     return "";
 }
+Error FolderDataBroker::ResetCounter(std::string group_id) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    current_file_ = -1;
+    return nullptr;
+}
+uint64_t FolderDataBroker::GetNDataSets(Error* err) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    return filelist_.size();
+}
+
+Error FolderDataBroker::GetById(uint64_t id, FileInfo* info, FileData* data) {
+    return GetFileByIndex(id -1 , info, data);
+}
 
 }
