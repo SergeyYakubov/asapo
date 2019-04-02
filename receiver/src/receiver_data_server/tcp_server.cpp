@@ -70,7 +70,7 @@ GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) co
 }
 
 GenericRequests TcpServer::GetNewRequests(Error* err) const noexcept {
-    if (*err = InitializeMasterSocketIfNeeded()) {
+    if ( (*err = InitializeMasterSocketIfNeeded()) ) {
         return {};
     }
 

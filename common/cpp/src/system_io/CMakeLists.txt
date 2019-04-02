@@ -4,7 +4,11 @@ set(SOURCE_FILES
         system_io.cpp)
 IF(WIN32)
     set(SOURCE_FILES ${SOURCE_FILES} system_io_windows.cpp)
+ELSEIF(UNIX AND APPLE)
+    set(SOURCE_FILES ${SOURCE_FILES} system_io_linux_mac.cpp)
+    set(SOURCE_FILES ${SOURCE_FILES} system_io_mac.cpp)
 ELSEIF(UNIX)
+    set(SOURCE_FILES ${SOURCE_FILES} system_io_linux_mac.cpp)
     set(SOURCE_FILES ${SOURCE_FILES} system_io_linux.cpp)
 ENDIF(WIN32)
 
