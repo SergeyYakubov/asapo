@@ -4,6 +4,7 @@ package server
 
 import (
 	"log"
+        "github.com/influxdata/influxdb1-client/v2"
 	"time"
 )
 
