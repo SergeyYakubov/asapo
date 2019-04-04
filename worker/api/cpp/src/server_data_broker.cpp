@@ -252,8 +252,8 @@ uint64_t ServerDataBroker::GetNDataSets(Error* err) {
     return size;
 
 }
-Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, FileData* data) {
-    std::string request_string =  "database/" + source_name_ + "/" + std::to_string(id);
+Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) {
+    std::string request_string =  "database/" + source_name_ + "/" + std::move(group_id)+ "/" + std::to_string(id);
     std::string extra_params =  "&reset=true";
     Error err;
     auto responce = BrokerRequestWithTimeout(request_string, extra_params, false, &err);

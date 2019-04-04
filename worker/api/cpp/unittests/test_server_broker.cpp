@@ -454,7 +454,8 @@ TEST_F(ServerDataBrokerTests, GetByIdUsesCorrectUri) {
     auto to_send = CreateFI();
     auto json = to_send.Json();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + std::to_string(
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/"  + expected_group_id
+                                            + "/" + std::to_string(
                                             expected_dataset_id) + "?token="
                                         + expected_token+"&reset=true", _,
                                         _)).WillOnce(DoAll(
@@ -462,7 +463,7 @@ TEST_F(ServerDataBrokerTests, GetByIdUsesCorrectUri) {
                                                 SetArgPointee<2>(nullptr),
                                                 Return(json)));
 
-    auto err = data_broker->GetById(expected_dataset_id, &info, nullptr);
+    auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(info.name, Eq(to_send.name));
@@ -475,7 +476,8 @@ TEST_F(ServerDataBrokerTests, GetByIdReturnsNoData) {
     auto to_send = CreateFI();
     auto json = to_send.Json();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + std::to_string(
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_group_id
+                                            + "/" + std::to_string(
                                             expected_dataset_id) + "?token="
                                         + expected_token+"&reset=true", _,
                                         _)).WillOnce(DoAll(
@@ -483,7 +485,7 @@ TEST_F(ServerDataBrokerTests, GetByIdReturnsNoData) {
                                                 SetArgPointee<2>(nullptr),
                                                 Return("{\"id\":1}")));
 
-    auto err = data_broker->GetById(expected_dataset_id, &info, nullptr);
+    auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
 
     ASSERT_THAT(err->GetErrorType(), Eq(asapo::ErrorType::kEndOfFile));
 

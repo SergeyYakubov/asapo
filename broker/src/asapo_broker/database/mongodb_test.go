@@ -285,3 +285,25 @@ func TestMongoDBGetRecordByIDNotConnected(t *testing.T) {
 	_, err := db.GetRecordByID(dbname, "", 2, true, false)
 	assert.Equal(t, utils.StatusError, err.(*DBError).Code)
 }
+
+func TestMongoDBResetCounter(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec1)
+	db.InsertRecord(dbname, &rec2)
+
+	res1, err1 := db.ProcessRequest(dbname, groupId, "next", 0)
+
+	assert.Nil(t, err1)
+	assert.Equal(t, string(rec1_expect), string(res1))
+
+	_,err_reset := db.ProcessRequest(dbname, groupId, "resetcounter", 0)
+	assert.Nil(t, err_reset)
+
+	res2, err2 := db.ProcessRequest(dbname, groupId, "next", 0)
+
+
+	assert.Nil(t, err2)
+	assert.Equal(t, string(rec1_expect), string(res2))
+
+}

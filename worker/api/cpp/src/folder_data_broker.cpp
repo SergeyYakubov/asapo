@@ -89,7 +89,7 @@ uint64_t FolderDataBroker::GetNDataSets(Error* err) {
     return filelist_.size();
 }
 
-Error FolderDataBroker::GetById(uint64_t id, FileInfo* info, FileData* data) {
+Error FolderDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) {
     return GetFileByIndex(id - 1 , info, data);
 }
 

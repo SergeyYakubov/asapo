@@ -74,7 +74,7 @@ class DataBroker {
       \param data - where to store image data. Can be set to nullptr only image metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetById(uint64_t id, FileInfo* info, FileData* data) = 0;
+    virtual Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) = 0;
 
 
     //! Receive last available image.

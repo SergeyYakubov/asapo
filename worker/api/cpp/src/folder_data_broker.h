@@ -21,7 +21,7 @@ class FolderDataBroker final : public asapo::DataBroker {
     std::string GenerateNewGroupId(Error* err)
     override; // return "0" always and no error - no group ids for folder datra broker
     uint64_t GetNDataSets(Error* err) override;
-    Error GetById(uint64_t id, FileInfo* info, FileData* data) override;
+    Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     std::unique_ptr<asapo::IO> io__; // modified in testings to mock system calls,otherwise do not touch
   private:
     std::string base_path_;

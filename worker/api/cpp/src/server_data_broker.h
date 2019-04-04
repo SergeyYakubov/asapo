@@ -24,7 +24,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetLast(FileInfo* info, std::string group_id, FileData* data) override;
     std::string GenerateNewGroupId(Error* err) override;
     uint64_t GetNDataSets(Error* err) override;
-    Error GetById(uint64_t id, FileInfo* info, FileData* data) override;
+    Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override;
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
