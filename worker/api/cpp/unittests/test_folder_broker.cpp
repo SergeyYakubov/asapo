@@ -307,7 +307,7 @@ TEST_F(FolderDataBrokerTests, GetByIdReturnsFileInfo) {
     data_broker->Connect();
     FileInfo fi;
 
-    auto err = data_broker->GetById(1, &fi,nullptr);
+    auto err = data_broker->GetById(1, &fi, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(fi.name, Eq("1"));
@@ -319,8 +319,8 @@ TEST_F(FolderDataBrokerTests, GetByIdReturnsError) {
     data_broker->Connect();
     FileInfo fi;
 
-    auto err1 = data_broker->GetById(0, &fi,nullptr);
-    auto err2 = data_broker->GetById(10, &fi,nullptr);
+    auto err1 = data_broker->GetById(0, &fi, nullptr);
+    auto err2 = data_broker->GetById(10, &fi, nullptr);
 
     ASSERT_THAT(err1, Ne(nullptr));
     ASSERT_THAT(err2, Ne(nullptr));

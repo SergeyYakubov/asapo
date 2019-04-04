@@ -90,7 +90,7 @@ uint64_t FolderDataBroker::GetNDataSets(Error* err) {
 }
 
 Error FolderDataBroker::GetById(uint64_t id, FileInfo* info, FileData* data) {
-    return GetFileByIndex(id -1 , info, data);
+    return GetFileByIndex(id - 1 , info, data);
 }
 
 }

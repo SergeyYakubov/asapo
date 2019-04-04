@@ -15,11 +15,6 @@ type TestRecord struct {
 	FName string `bson:"fname" json:"fname"`
 }
 
-type TestSizeRecord struct {
-	Size    int    `bson:"size" json:"size"`
-}
-
-
 var db Mongodb
 
 const dbname = "run1"
@@ -33,9 +28,10 @@ var rec1_expect, _ = json.Marshal(rec1)
 var rec2_expect, _ = json.Marshal(rec2)
 var rec3_expect, _ = json.Marshal(rec3)
 
-var recs1 = TestSizeRecord{3}
+var recs1 = SizeRecord{3}
 var recs1_expect, _ = json.Marshal(recs1)
-
+var recs2 = SizeRecord{0}
+var recs2_expect, _ = json.Marshal(recs2)
 
 func cleanup() {
 	db.DeleteAllRecords(dbname)
@@ -169,7 +165,7 @@ func TestMongoDBGetRecordByID(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
-	res, err := db.GetRecordByID(dbname, 1, true)
+	res, err := db.GetRecordByID(dbname, "", 1, true, false)
 	assert.Nil(t, err)
 	assert.Equal(t, string(rec1_expect), string(res))
 }
@@ -178,7 +174,7 @@ func TestMongoDBGetRecordByIDFails(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
-	_, err := db.GetRecordByID(dbname, 2, true)
+	_, err := db.GetRecordByID(dbname, "", 2, true, false)
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 	assert.Equal(t, "{\"id\":2}", err.Error())
 }
@@ -238,12 +234,54 @@ func TestMongoDBGetNextAfterGetLastCorrect(t *testing.T) {
 
 }
 
-/*
 func TestMongoDBGetSize(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
+	db.InsertRecord(dbname, &rec2)
+	db.InsertRecord(dbname, &rec3)
+
 	res, err := db.ProcessRequest(dbname, "", "size", 0)
 	assert.Nil(t, err)
 	assert.Equal(t, string(recs1_expect), string(res))
-}*/
+}
+
+func TestMongoDBGetSizeNoRecords(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	// to have empty collection
+	db.InsertRecord(dbname, &rec1)
+	db.session.DB(dbname).C(data_collection_name).RemoveId(1)
+
+	res, err := db.ProcessRequest(dbname, "", "size", 0)
+	assert.Nil(t, err)
+	assert.Equal(t, string(recs2_expect), string(res))
+}
+
+func TestMongoDBGetSizeNoDatabase(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	_, err := db.ProcessRequest(dbname, "", "size", 0)
+	assert.NotNil(t, err)
+}
+
+func TestMongoDBGetRecordIDWithReset(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.InsertRecord(dbname, &rec1)
+	db.InsertRecord(dbname, &rec2)
+
+	res1, err1 := db.ProcessRequest(dbname, groupId, "idreset", 1)
+	res2, err2 := db.ProcessRequest(dbname, groupId, "next", 0)
+
+	assert.Nil(t, err1)
+	assert.Equal(t, string(rec1_expect), string(res1))
+	assert.Nil(t, err2)
+	assert.Equal(t, string(rec2_expect), string(res2))
+
+}
+
+func TestMongoDBGetRecordByIDNotConnected(t *testing.T) {
+	_, err := db.GetRecordByID(dbname, "", 2, true, false)
+	assert.Equal(t, utils.StatusError, err.(*DBError).Code)
+}

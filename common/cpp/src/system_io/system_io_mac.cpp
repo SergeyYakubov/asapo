@@ -21,9 +21,9 @@ using std::chrono::system_clock;
 
 namespace asapo {
 ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_socket,
-                                                    ListSocketDescriptors* sockets_to_listen,
-                                                    std::vector<std::string>* new_connections,
-                                                    Error* err) const {
+        ListSocketDescriptors* sockets_to_listen,
+        std::vector<std::string>* new_connections,
+        Error* err) const {
     fd_set readfds;
     ListSocketDescriptors active_sockets;
     bool client_activity = false;

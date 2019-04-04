@@ -88,13 +88,13 @@ std::string ServerDataBroker::RequestWithToken(std::string uri) {
     return std::move(uri) + "?token=" + token_;
 }
 
-Error ServerDataBroker::ProcessRequest(std::string* response, std::string request_uri, bool post) {
+Error ServerDataBroker::ProcessRequest(std::string* response, std::string request_uri, std::string extra_params, bool post) {
     Error err;
     HttpCode code;
     if (post) {
-        *response = httpclient__->Post(RequestWithToken(request_uri), "", &code, &err);
+        *response = httpclient__->Post(RequestWithToken(request_uri)+extra_params, "", &code, &err);
     } else {
-        *response = httpclient__->Get(RequestWithToken(request_uri), &code, &err);
+        *response = httpclient__->Get(RequestWithToken(request_uri)+extra_params, &code, &err);
     }
     if (err != nullptr) {
         current_broker_uri_ = "";
@@ -110,7 +110,7 @@ Error ServerDataBroker::GetBrokerUri() {
 
     std::string request_uri = server_uri_ + "/discovery/broker";
     Error err;
-    err = ProcessRequest(&current_broker_uri_, request_uri, false);
+    err = ProcessRequest(&current_broker_uri_, request_uri, "", false);
     if (err != nullptr || current_broker_uri_.empty()) {
         current_broker_uri_ = "";
         return TextError("cannot get broker uri from " + server_uri_);
@@ -127,7 +127,7 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_
         auto err = GetBrokerUri();
         if (err == nullptr) {
             std::string request_api = current_broker_uri_ + "/database/" + source_name_ + "/";
-            err = ProcessRequest(&response, request_api + request_suffix, false);
+            err = ProcessRequest(&response, request_api + request_suffix, "", false);
             if (err == nullptr) {
                 break;
             }
@@ -209,16 +209,17 @@ Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* dat
 
 
 std::string ServerDataBroker::GenerateNewGroupId(Error* err) {
-    return BrokerRequestWithTimeout("creategroup",true,err);
+    return BrokerRequestWithTimeout("creategroup","", true, err);
 }
 
-std::string ServerDataBroker::BrokerRequestWithTimeout(std::string request_string, bool post_request, Error* err) {
+std::string ServerDataBroker::BrokerRequestWithTimeout(std::string request_string, std::string extra_params,
+    bool post_request, Error* err) {
     uint64_t elapsed_ms = 0;
     std::string response;
     while (elapsed_ms <= timeout_ms_) {
         *err = GetBrokerUri();
         if (*err == nullptr) {
-            *err = ProcessRequest(&response, current_broker_uri_ + "/" + request_string, post_request);
+            *err = ProcessRequest(&response, current_broker_uri_ + "/" + request_string,extra_params, post_request);
             if (*err == nullptr || (*err)->GetErrorType() == ErrorType::kEndOfFile) {
                 return response;
             }
@@ -231,15 +232,15 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(std::string request_strin
 }
 
 Error ServerDataBroker::ResetCounter(std::string group_id) {
-    std::string request_string =  "database/" + source_name_+"/"+std::move(group_id) + "/resetcounter";
+    std::string request_string =  "database/" + source_name_ + "/" + std::move(group_id) + "/resetcounter";
     Error err;
-    BrokerRequestWithTimeout(request_string,true,&err);
+    BrokerRequestWithTimeout(request_string,"", true, &err);
     return err;
 }
 
 uint64_t ServerDataBroker::GetNDataSets(Error* err) {
-    std::string request_string =  "database/" + source_name_+"/size";
-    auto responce = BrokerRequestWithTimeout(request_string,false,err);
+    std::string request_string =  "database/" + source_name_ + "/size";
+    auto responce = BrokerRequestWithTimeout(request_string,"", false, err);
     if (*err) {
         return 0;
     }
@@ -252,9 +253,10 @@ uint64_t ServerDataBroker::GetNDataSets(Error* err) {
 
 }
 Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, FileData* data) {
-    std::string request_string =  "database/" + source_name_+"/"+std::to_string(id);
+    std::string request_string =  "database/" + source_name_ + "/" + std::to_string(id);
+    std::string extra_params =  "&reset=true";
     Error err;
-    auto responce = BrokerRequestWithTimeout(request_string,false,&err);
+    auto responce = BrokerRequestWithTimeout(request_string, extra_params, false, &err);
     if (err) {
         return err;
     }

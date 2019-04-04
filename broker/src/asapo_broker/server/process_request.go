@@ -55,6 +55,10 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, id int, n
 		return
 	}
 
+	if op == "id" && resetRequested(r) {
+		op = "idreset"
+	}
+
 	answer, code := processRequestInDb(db_name, group_id, op, id)
 	w.WriteHeader(code)
 	w.Write(answer)

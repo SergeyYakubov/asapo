@@ -26,7 +26,7 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"GetID",
 		"Get",
-		"/database/{dbname}/{id}",
+		"/database/{dbname}/{groupid}/{id}",
 		routeGetByID,
 	},
 	utils.Route{
@@ -34,6 +34,12 @@ var listRoutes = utils.Routes{
 		"Post",
 		"/creategroup",
 		routeCreateGroupID,
+	},
+	utils.Route{
+		"ResetCounter",
+		"Post",
+		"/database/{dbname}/{groupid}/resetcounter",
+		routeResetCounter,
 	},
 	utils.Route{
 		"Health",
