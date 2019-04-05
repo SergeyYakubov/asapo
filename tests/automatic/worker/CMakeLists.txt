@@ -4,7 +4,10 @@ add_subdirectory(next_multithread_folder)
 add_subdirectory(next_multithread_broker)
 add_subdirectory(connect_multithread)
 add_subdirectory(worker_api)
-add_subdirectory(worker_api_python)
+
+if (UNIX OR CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_subdirectory(worker_api_python)
+endif()
 
 if(BUILD_WORKER_TOOLS)
     add_subdirectory(folder_to_db)
