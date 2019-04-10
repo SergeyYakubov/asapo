@@ -255,7 +255,8 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsEOFFromHttpClientUntilTimeout) {
                 SetArgPointee<2>(nullptr),
                 Return("{\"id\":1}")));
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/1?token=" + expected_token, _,
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_group_id
+                                        + "/1?token=" + expected_token, _,
                                         _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::Conflict),
                                                     SetArgPointee<2>(nullptr),
@@ -455,9 +456,9 @@ TEST_F(ServerDataBrokerTests, GetByIdUsesCorrectUri) {
     auto json = to_send.Json();
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/"  + expected_group_id
-                                            + "/" + std::to_string(
+                                        + "/" + std::to_string(
                                             expected_dataset_id) + "?token="
-                                        + expected_token+"&reset=true", _,
+                                        + expected_token + "&reset=true", _,
                                         _)).WillOnce(DoAll(
                                                 SetArgPointee<1>(HttpCode::OK),
                                                 SetArgPointee<2>(nullptr),
@@ -477,9 +478,9 @@ TEST_F(ServerDataBrokerTests, GetByIdReturnsNoData) {
     auto json = to_send.Json();
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_group_id
-                                            + "/" + std::to_string(
+                                        + "/" + std::to_string(
                                             expected_dataset_id) + "?token="
-                                        + expected_token+"&reset=true", _,
+                                        + expected_token + "&reset=true", _,
                                         _)).WillOnce(DoAll(
                                                 SetArgPointee<1>(HttpCode::Conflict),
                                                 SetArgPointee<2>(nullptr),

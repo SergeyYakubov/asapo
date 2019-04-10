@@ -7,7 +7,7 @@ namespace asapo {
 
 void M_AssertEq(const std::string& expected, const std::string& got);
 void M_AssertEq(int expected, int got);
-void M_AssertTrue(bool value,std::string name = "");
+void M_AssertTrue(bool value, std::string name = "");
 void M_AssertContains(const std::string& whole, const std::string& sub);
 
 
