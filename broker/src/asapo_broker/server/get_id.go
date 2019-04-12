@@ -22,5 +22,5 @@ func routeGetByID(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	getImage(w, r, "id", id, false)
+	processRequest(w, r, "id", id, true)
 }

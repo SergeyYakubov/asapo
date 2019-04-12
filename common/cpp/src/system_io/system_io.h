@@ -84,11 +84,11 @@ class SystemIO final : public IO {
     /*
      * Special
      */
-    std::unique_ptr<std::thread>    NewThread(std::function<void()> function) const;
+    std::unique_ptr<std::thread> NewThread(std::function<void()> function) const override;
 
 
     // this is not standard function - to be implemented differently in windows and linux
-    std::vector<FileInfo>   FilesInFolder(const std::string& folder, Error* err) const;
+    std::vector<FileInfo>   FilesInFolder(const std::string& folder, Error* err) const override;
 
     /*
      * Network
@@ -99,21 +99,21 @@ class SystemIO final : public IO {
 
 
     SocketDescriptor  CreateSocket(AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol,
-                                   Error* err) const;
-    void            Listen(SocketDescriptor socket_fd, int backlog, Error* err) const;
-    void            InetBind(SocketDescriptor socket_fd, const std::string& address, Error* err) const;
-    SocketDescriptor  CreateAndBindIPTCPSocketListener(const std::string& address, int backlog, Error* err) const;
+                                   Error* err) const override;
+    void            Listen(SocketDescriptor socket_fd, int backlog, Error* err) const override;
+    void            InetBind(SocketDescriptor socket_fd, const std::string& address, Error* err) const override;
+    SocketDescriptor  CreateAndBindIPTCPSocketListener(const std::string& address, int backlog, Error* err) const override;
     std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAcceptConnection(SocketDescriptor socket_fd,
-            Error* err) const;
-    std::string     ResolveHostnameToIp(const std::string& hostname, Error* err) const;
-    void            InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const;
-    SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, Error* err) const;
-    size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, Error* err) const;
+            Error* err) const override;
+    std::string     ResolveHostnameToIp(const std::string& hostname, Error* err) const override;
+    void            InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const override;
+    SocketDescriptor  CreateAndConnectIPTCPSocket(const std::string& address, Error* err) const override;
+    size_t          Receive(SocketDescriptor socket_fd, void* buf, size_t length, Error* err) const override;
     size_t          ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
-                                       Error* err) const;
-    size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const;
-    void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const;
-    void            CloseSocket(SocketDescriptor socket_fd, Error* err) const;
+                                       Error* err) const override;
+    size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const override;
+    void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const override;
+    void            CloseSocket(SocketDescriptor socket_fd, Error* err) const override;
     std::string     GetHostName(Error* err) const noexcept override;
 
     /*

@@ -141,6 +141,19 @@ TEST(ParseString, ErrorOnWrongDocument) {
 
 }
 
+TEST(ParseString, ErrorOnWrongFormatt) {
+    std::string json = "10";
+
+    JsonStringParser parser{json};
+
+    uint64_t id;
+    auto err = parser.GetUInt64("_id", &id);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err->Explain(), ::testing::HasSubstr("parse"));
+
+}
+
 
 TEST(ParseString, IntArrayConvertToJson) {
     std::string json = R"({"array":[1,2,3]})";

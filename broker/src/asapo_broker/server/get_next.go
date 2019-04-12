@@ -5,5 +5,5 @@ import (
 )
 
 func routeGetNext(w http.ResponseWriter, r *http.Request) {
-	getImage(w, r, "next", 0, true)
+	processRequest(w, r, "next", 0, true)
 }

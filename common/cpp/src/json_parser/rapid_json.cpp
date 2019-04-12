@@ -28,11 +28,13 @@ Error RapidJson::LazyInitialize() const noexcept {
         }
     }
 
-    if (doc_.Parse(str.c_str()).HasParseError()) {
+    ParseResult ok = doc_.Parse(str.c_str());
+    if (!ok || !doc_.IsObject()) {
         return TextError("Cannot parse document");
     }
 
     object_ = doc_.GetObject();
+
     object_p_ = &object_;
     initialized_ = true;
     return nullptr;

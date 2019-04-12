@@ -13,6 +13,20 @@ func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, 
 	w.Write([]byte(err))
 }
 
+func resetRequested(r *http.Request) bool {
+	val := r.URL.Query().Get("reset")
+
+	if len(val) == 0 {
+		return false
+	}
+
+	if val == "true" {
+		return true
+	}
+
+	return false
+}
+
 func testAuth(r *http.Request, beamtime_id string) error {
 	token_got := r.URL.Query().Get("token")
 

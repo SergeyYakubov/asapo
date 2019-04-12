@@ -29,6 +29,10 @@ const already_connected_msg = "already connected"
 var dbListLock sync.RWMutex
 var dbPointersLock sync.RWMutex
 
+type SizeRecord struct {
+	Size int `bson:"size" json:"size"`
+}
+
 type Mongodb struct {
 	session             *mgo.Session
 	timeout             time.Duration
@@ -161,7 +165,8 @@ func (db *Mongodb) incrementField(dbname string, group_id string, max_ind int, r
 	return err
 }
 
-func (db *Mongodb) GetRecordByID(dbname string, id int, returnID bool) ([]byte, error) {
+func (db *Mongodb) GetRecordByIDRow(dbname string, id int, returnID bool) ([]byte, error) {
+
 	var res map[string]interface{}
 	q := bson.M{"_id": id}
 	c := db.session.DB(dbname).C(data_collection_name)
@@ -170,20 +175,33 @@ func (db *Mongodb) GetRecordByID(dbname string, id int, returnID bool) ([]byte, 
 		var r = struct {
 			Id int `json:"id""`
 		}{id}
-		res, _ := json.Marshal(&r)
+		answer, _ := json.Marshal(&r)
 		log_str := "error getting record id " + strconv.Itoa(id) + " for " + dbname + " : " + err.Error()
 		logger.Debug(log_str)
 		if returnID {
-			return nil, &DBError{utils.StatusNoData, string(res)}
+			return nil, &DBError{utils.StatusNoData, string(answer)}
 		} else {
 			return nil, &DBError{utils.StatusNoData, err.Error()}
 		}
 
 	}
-
 	log_str := "got record id " + strconv.Itoa(id) + " for " + dbname
 	logger.Debug(log_str)
 	return utils.MapToJson(&res)
+}
+
+func (db *Mongodb) GetRecordByID(dbname string, group_id string, id int, returnID bool, reset bool) ([]byte, error) {
+
+	if err := db.checkDatabaseOperationPrerequisites(dbname, group_id); err != nil {
+		return nil, err
+	}
+	res, err := db.GetRecordByIDRow(dbname, id, returnID)
+
+	if reset {
+		db.setCounter(dbname, group_id, id)
+	}
+
+	return res, err
 }
 
 func (db *Mongodb) needCreateLocationPointersInDb(group_id string) bool {
@@ -226,8 +244,9 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id 
 		return &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	db.getParentDB().generateLocationPointersInDbIfNeeded(db_name, group_id)
-
+	if len(group_id) > 0 {
+		db.getParentDB().generateLocationPointersInDbIfNeeded(db_name, group_id)
+	}
 	return nil
 }
 
@@ -259,7 +278,7 @@ func (db *Mongodb) GetNextRecord(db_name string, group_id string) ([]byte, error
 	}
 	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
 	logger.Debug(log_str)
-	return db.GetRecordByID(db_name, curPointer.Value, true)
+	return db.GetRecordByIDRow(db_name, curPointer.Value, true)
 
 }
 
@@ -275,21 +294,56 @@ func (db *Mongodb) GetLastRecord(db_name string, group_id string) ([]byte, error
 		logger.Debug(log_str)
 		return nil, err
 	}
-	res, err := db.GetRecordByID(db_name, max_ind, false)
+	res, err := db.GetRecordByIDRow(db_name, max_ind, false)
 
 	db.setCounter(db_name, group_id, max_ind)
 
 	return res, err
 }
 
-func (db *Mongodb) GetRecordFromDb(db_name string, group_id string, op string, id int) (answer []byte, err error) {
+func (db *Mongodb) GetSize(db_name string) ([]byte, error) {
+
+	if err := db.checkDatabaseOperationPrerequisites(db_name, ""); err != nil {
+		return nil, err
+	}
+
+	c := db.session.DB(db_name).C(data_collection_name)
+	var rec SizeRecord
+	var err error
+	rec.Size, err = c.Count()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(&rec)
+}
+
+func (db *Mongodb) ResetCounter(db_name string, group_id string) ([]byte, error) {
+
+	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
+		return nil, err
+	}
+
+	err := db.setCounter(db_name, group_id, 0)
+
+	return []byte(""), err
+}
+
+
+func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, id int) (answer []byte, err error) {
 	switch op {
 	case "next":
 		return db.GetNextRecord(db_name, group_id)
 	case "id":
-		return db.GetRecordByID(db_name, id, true)
+		return db.GetRecordByID(db_name, group_id, id, true, false)
+	case "idreset":
+		return db.GetRecordByID(db_name, group_id, id, true, true)
 	case "last":
 		return db.GetLastRecord(db_name, group_id)
+	case "resetcounter":
+		return db.ResetCounter(db_name, group_id)
+	case "size":
+		return db.GetSize(db_name)
 	}
+
 	return nil, errors.New("Wrong db operation: " + op)
 }

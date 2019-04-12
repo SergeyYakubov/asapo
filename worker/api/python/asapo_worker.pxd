@@ -30,6 +30,9 @@ cdef extern from "asapo_worker.h" namespace "asapo":
         void SetTimeout(uint64_t timeout_ms)
         Error GetNext(FileInfo* info, string group_id, FileData* data)
         Error GetLast(FileInfo* info, string group_id, FileData* data)
+        Error GetById(uint64_t id, FileInfo* info, string group_id, FileData* data)
+        uint64_t GetNDataSets(Error* err)
+        Error ResetCounter(string group_id)
         string GenerateNewGroupId(Error* err)
 
 cdef extern from "asapo_worker.h" namespace "asapo":

@@ -31,24 +31,56 @@ class DataBroker {
     //! Connect to the data source - will scan file folders or connect to the database.
 // TODO: do we need this?
     virtual Error Connect() = 0;
+    //! Reset counter for the specific group.
+    /*!
+      \param group_id - group id to use.
+      \return nullptr of command was successful, otherwise error.
+    */
+    virtual Error ResetCounter(std::string group_id) = 0;
+
     //! Set timeout for broker operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
-    //! Receive next image.
+
+
+    //! Get current number of datasets
     /*!
       \param err - return nullptr of operation succeed, error otherwise.
-      \return group id if OK, "" otherwise.
+      \return number of datasets.
+    */
+    virtual uint64_t GetNDataSets(Error* err) = 0;
+
+    //! Generate new GroupID.
+    /*!
+      \param err - return nullptr of operation succeed, error otherwise.
+      \return group ID.
     */
     virtual std::string GenerateNewGroupId(Error* err) = 0;
-    //! Receive last available image.
+
+
+    //! Receive next available image.
     /*!
       \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
+      \param group_id - group id to use.
       \param data - where to store image data. Can be set to nullptr only image metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetNext(FileInfo* info, std::string group_id, FileData* data) = 0;
+
+
+    //! Receive dataset by id.
+    /*!
+      \param id - dataset id
+      \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
+      \param data - where to store image data. Can be set to nullptr only image metadata is needed.
+      \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
+    */
+    virtual Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) = 0;
+
+
     //! Receive last available image.
     /*!
       \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
+      \param group_id - group id to use.
       \param data - where to store image data. Can be set to nullptr only image metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
