@@ -15,6 +15,7 @@ enum Opcode : uint8_t {
     kOpcodeTransferData,
     kOpcodeGetBufferData,
     kOpcodeAuthorize,
+    kOpcodeTransferMetaData,
     kOpcodeCount,
 };
 
