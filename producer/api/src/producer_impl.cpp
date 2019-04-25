@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iostream>
 #include <cstring>
 
 #include "producer_impl.h"
@@ -105,11 +106,11 @@ Error ProducerImpl::SetBeamtimeId(std::string beamtime_id) {
 }
 
 Error ProducerImpl::SendMetaData(const std::string& metadata, RequestCallback callback) {
-    GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size()+1, beamtime_id_+".meta"};
-    FileData data{new uint8_t[metadata.size()+1]};
-    strcpy((char*)data.get(), metadata.c_str());
+    GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), beamtime_id_ + ".meta"};
+    FileData data{new uint8_t[metadata.size()]};
+    strncpy((char*)data.get(), metadata.c_str(),metadata.size());
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{beamtime_id_, std::move(request_header),
-                                                                                            std::move(data), "", callback}
+                std::move(data), "", callback}
     });
 }
 

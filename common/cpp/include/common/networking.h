@@ -25,6 +25,7 @@ enum NetworkErrorCode : uint16_t {
     kNetErrorNoData,
     kNetAuthorizationError,
     kNetErrorFileIdAlreadyInUse,
+    kNetErrorErrorInMetadata,
     kNetErrorAllocateStorageFailed,
     kNetErrorInternalServerError = 65535,
 };

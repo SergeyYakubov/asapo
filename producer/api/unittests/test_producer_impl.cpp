@@ -110,16 +110,16 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
 TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
     uint64_t expected_id = 0;
     std::string expected_metadata = "{\"meta\":10}";
-    uint64_t expected_size = expected_metadata.size()+1;
+    uint64_t expected_size = expected_metadata.size();
 
     std::string expected_beamtimeid = "beamtime_id";
 
     producer.SetBeamtimeId(expected_beamtimeid);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferMetaData,
                                         expected_beamtimeid, expected_id, expected_size, "beamtime_id.meta"))).WillOnce(Return(
-        nullptr));
+                                                    nullptr));
 
-    auto err = producer.SendMetaData(expected_metadata,nullptr);
+    auto err = producer.SendMetaData(expected_metadata, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }

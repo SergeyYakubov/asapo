@@ -40,11 +40,11 @@ class Producer {
     virtual Error SendFile(const EventHeader& event_header, std::string full_path, RequestCallback callback) = 0;
 
     //! Sends metadata for the current beamtime to the receiver
-  /*!
-    \param metadata - a JSON string with metadata
-    \param callback - callback function
-    \return Error - will be nullptr on success
-  */
+    /*!
+      \param metadata - a JSON string with metadata
+      \param callback - callback function
+      \return Error - will be nullptr on success
+    */
     virtual Error SendMetaData(const std::string& metadata, RequestCallback callback) = 0;
 
     //! Set internal log level

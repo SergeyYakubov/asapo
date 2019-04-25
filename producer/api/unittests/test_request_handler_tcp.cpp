@@ -97,7 +97,7 @@ class RequestHandlerTcpTests : public testing::Test {
     void ExpectFailReceive(bool only_once = false);
     void ExpectOKReceive(bool only_once = true);
     void DoSingleSend(bool connect = true, bool success = true);
-
+    void AssertImmediatelyCallBack(asapo::NetworkErrorCode error_code,const asapo::ProducerErrorTemplate& err_template);
     void SetUp() override {
         request_handler.log__ = &mock_logger;
         request_handler.io__.reset(&mock_io);
@@ -218,7 +218,7 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
 void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(asapo::kOpcodeTransferData, expected_file_id,
+        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(expected_op_code, expected_file_id,
                                     expected_file_size, expected_file_name),
                                     sizeof(asapo::GenericRequestHeader), _))
         .WillOnce(
@@ -321,7 +321,7 @@ void RequestHandlerTcpTests::ExpectOKSendData(bool only_once) {
 
 void RequestHandlerTcpTests::ExpectOKSendHeader(bool only_once) {
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(asapo::kOpcodeTransferData, expected_file_id,
+        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(expected_op_code, expected_file_id,
                                     expected_file_size, expected_file_name),
                                     sizeof(asapo::GenericRequestHeader), _))
         .WillOnce(
@@ -559,29 +559,39 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotReceiveData) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
 }
 
-TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
+void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode error_code,
+    const asapo::ProducerErrorTemplate& err_template) {
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true);
     ExpectOKSendData(true);
 
     EXPECT_CALL(mock_io, Receive_t(expected_sds[0], _, sizeof(asapo::SendDataResponse), _))
-    .InSequence(seq_receive)
-    .WillOnce(
-        DoAll(
-            testing::SetArgPointee<3>(nullptr),
-            A_WriteSendDataResponse(asapo::kNetErrorFileIdAlreadyInUse),
-            testing::ReturnArg<2>()
-        ));
+        .InSequence(seq_receive)
+        .WillOnce(
+            DoAll(
+                testing::SetArgPointee<3>(nullptr),
+                A_WriteSendDataResponse(error_code),
+                testing::ReturnArg<2>()
+            ));
 
 
     request_handler.PrepareProcessingRequestLocked();
     auto err = request_handler.ProcessRequestUnlocked(&request);
-
-    ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kFileIdAlreadyInUse));
+    ASSERT_THAT(callback_err, Eq(err_template));
     ASSERT_THAT(called, Eq(true));
     ASSERT_THAT(err, Eq(nullptr));
 }
+
+
+TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
+    AssertImmediatelyCallBack(asapo::kNetErrorFileIdAlreadyInUse,asapo::ProducerErrorTemplates::kFileIdAlreadyInUse);
+}
+
+TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfWrongMetadata) {
+    AssertImmediatelyCallBack(asapo::kNetErrorErrorInMetadata,asapo::ProducerErrorTemplates::kErrorInMetadata);
+}
+
 
 
 TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {

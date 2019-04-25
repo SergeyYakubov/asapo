@@ -78,6 +78,11 @@ Error RequestHandlerTcp::ReceiveResponse() {
         res_err->Append(sendDataResponse.message);
         return res_err;
     }
+    case kNetErrorErrorInMetadata : {
+        auto res_err = ProducerErrorTemplates::kErrorInMetadata.Generate();
+        res_err->Append(sendDataResponse.message);
+        return res_err;
+    }
     case kNetErrorNoError :
         return nullptr;
     default:
@@ -155,7 +160,8 @@ void RequestHandlerTcp::Disconnect() {
 }
 
 bool RequestHandlerTcp::ServerError(const Error& err) {
-    return err != nullptr && err != ProducerErrorTemplates::kFileIdAlreadyInUse;
+    return err != nullptr && (err != ProducerErrorTemplates::kFileIdAlreadyInUse &&
+                              err != ProducerErrorTemplates::kErrorInMetadata);
 }
 
 Error RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {

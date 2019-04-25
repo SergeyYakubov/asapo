@@ -13,6 +13,7 @@ enum class ProducerErrorType {
     kBeamtimeIdTooLong,
     kBeamtimeAlreadySet,
     kFileIdAlreadyInUse,
+    kErrorInMetadata,
     kAuthorizationFailed,
     kInternalServerError,
     kCannotSendDataToReceivers,
@@ -66,6 +67,11 @@ auto const kCannotSendDataToReceivers = ProducerErrorTemplate {
 auto const kRequestPoolIsFull = ProducerErrorTemplate {
     "Cannot add request to poll - hit pool size limit", ProducerErrorType::kRequestPoolIsFull
 };
+
+auto const kErrorInMetadata = ProducerErrorTemplate {
+    "error in metadata", ProducerErrorType::kErrorInMetadata
+};
+
 
 
 
