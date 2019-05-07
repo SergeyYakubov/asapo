@@ -8,6 +8,7 @@ namespace asapo {
 enum class ReceiverErrorType {
     kInvalidOpCode,
     kBadRequest,
+    kReject,
     kAuthorizationFailure
 };
 
@@ -18,6 +19,11 @@ namespace ReceiverErrorTemplates {
 auto const kInvalidOpCode = ReceiverErrorTemplate{
     "Invalid Opcode", ReceiverErrorType::kInvalidOpCode
 };
+
+auto const kReject = ReceiverErrorTemplate{
+    "request rejected", ReceiverErrorType::kReject
+};
+
 auto const kBadRequest = ReceiverErrorTemplate{
     "Bad request", ReceiverErrorType::kBadRequest
 };

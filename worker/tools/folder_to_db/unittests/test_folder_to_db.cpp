@@ -132,7 +132,7 @@ class FolderDBConverterTests : public Test {
 
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
-    EXPECT_CALL(*(mock_dbf->db[0]), Connect_t(uri, db_name, kDBCollectionName)).
+    EXPECT_CALL(*(mock_dbf->db[0]), Connect_t(uri, db_name, kDBDataCollectionName)).
     WillOnce(testing::Return(new SimpleError(asapo::DBError::kConnectionError)));
 
     auto error = converter.Convert(uri, folder, db_name);

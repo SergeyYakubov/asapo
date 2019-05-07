@@ -106,6 +106,19 @@ bson_p PrepareBsonDocument(const FileInfo& file, Error* err) {
     return bson_p{bson};
 }
 
+bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, Error* err) {
+    bson_error_t mongo_err;
+    auto bson = bson_new_from_json(json, len, &mongo_err);
+    if (!bson) {
+        *err = TextError(std::string(DBError::kInsertError) + ": " + mongo_err.message);
+        return nullptr;
+    }
+
+    *err = nullptr;
+    return bson_p{bson};
+}
+
+
 Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const {
     bson_error_t mongo_err;
     if (!mongoc_collection_insert_one(collection_, document.get(), NULL, NULL, &mongo_err)) {
@@ -116,6 +129,25 @@ Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_dupl
     }
 
     return nullptr;
+}
+
+
+Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p& document, bool upsert) const {
+    bson_error_t mongo_err;
+
+    bson_t* opts = BCON_NEW ("upsert", BCON_BOOL(upsert));
+    bson_t* selector = BCON_NEW ("_id", BCON_INT64 (id));
+
+    Error err = nullptr;
+
+    if (!mongoc_collection_replace_one(collection_, selector, document.get(), opts, NULL, &mongo_err)) {
+        err = TextError(std::string(DBError::kInsertError) + " - " + mongo_err.message);
+    }
+
+    bson_free (opts);
+    bson_free (selector);
+
+    return err;
 }
 
 
@@ -139,6 +171,25 @@ MongoDBClient::~MongoDBClient() {
         return;
     }
     CleanUp();
+}
+
+Error MongoDBClient::Upsert(uint64_t id, const uint8_t* data, uint64_t size) const {
+    if (!connected_) {
+        return TextError(DBError::kNotConnected);
+    }
+
+    Error err;
+    auto document = PrepareBsonDocument(data, (ssize_t) size, &err);
+    if (err) {
+        return err;
+    }
+
+    if (!BSON_APPEND_INT64(document.get(), "_id", id)) {
+        err = TextError(std::string(DBError::kInsertError) + "- cannot assign document id " );
+    }
+
+    return UpdateBsonDocument(id, document, true);
+
 }
 
 }

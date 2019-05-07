@@ -10,6 +10,8 @@
 #include "request_handler_file_write.h"
 #include "request_handler_db_write.h"
 #include "request_handler_authorize.h"
+#include "request_handler_db_meta_write.h"
+
 
 #include "receiver_statistics.h"
 #include "data_cache.h"
@@ -56,17 +58,6 @@ class Request {
     CacheMeta* slot_meta_ = nullptr;
 };
 
-class RequestFactory {
-  public:
-    explicit RequestFactory (SharedCache cache);
-    virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
-                                                     SocketDescriptor socket_fd, std::string origin_uri, Error* err) const noexcept;
-  private:
-    RequestHandlerFileWrite request_handler_filewrite_;
-    RequestHandlerDbWrite request_handler_dbwrite_;
-    RequestHandlerAuthorize request_handler_authorize_;
-    SharedCache cache_;
-};
 
 }
 

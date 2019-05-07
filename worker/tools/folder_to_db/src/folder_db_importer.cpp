@@ -16,7 +16,7 @@ FolderToDbImporter::FolderToDbImporter() :
 }
 
 Error FolderToDbImporter::ConnectToDb(const std::unique_ptr<asapo::Database>& db) const {
-    return db->Connect(db_uri_, db_name_, kDBCollectionName);
+    return db->Connect(db_uri_, db_name_, kDBDataCollectionName);
 }
 
 Error FolderToDbImporter::ImportSingleFile(const std::unique_ptr<asapo::Database>& db,

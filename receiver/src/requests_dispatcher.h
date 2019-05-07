@@ -4,6 +4,7 @@
 #include "preprocessor/definitions.h"
 #include "common/error.h"
 #include "request.h"
+#include "request_factory.h"
 #include "io/io.h"
 #include "receiver_statistics.h"
 #include "logger/logger.h"

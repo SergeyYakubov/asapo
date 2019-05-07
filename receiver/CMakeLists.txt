@@ -18,7 +18,10 @@ set(SOURCE_FILES
         src/receiver_data_server/receiver_data_server_logger.cpp
         src/data_cache.cpp src/receiver_data_server/receiver_data_server_request_handler_factory.cpp
         src/receiver_data_server/receiver_data_server_request_handler.cpp
-        src/receiver_statistics.cpp src/receiver_data_server/receiver_datacenter_config.h)
+        src/receiver_statistics.cpp
+        src/request_handler_db_meta_write.cpp
+        src/request_factory.cpp
+        src/request_handler_db.cpp)
 
 
 ################################
@@ -61,6 +64,8 @@ set(TEST_SOURCE_FILES
         unittests/test_request_factory.cpp
         unittests/test_request_handler_file_write.cpp
         unittests/test_request_handler_db_writer.cpp
+        unittests/test_request_handler_db_meta_writer.cpp
+        unittests/test_request_handler_db.cpp
         unittests/test_request_handler_authorizer.cpp
         unittests/test_statistics_sender_influx_db.cpp
         unittests/test_statistics_sender_fluentd.cpp

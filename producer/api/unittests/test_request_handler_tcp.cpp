@@ -97,7 +97,7 @@ class RequestHandlerTcpTests : public testing::Test {
     void ExpectFailReceive(bool only_once = false);
     void ExpectOKReceive(bool only_once = true);
     void DoSingleSend(bool connect = true, bool success = true);
-    void AssertImmediatelyCallBack(asapo::NetworkErrorCode error_code,const asapo::ProducerErrorTemplate& err_template);
+    void AssertImmediatelyCallBack(asapo::NetworkErrorCode error_code, const asapo::ProducerErrorTemplate& err_template);
     void SetUp() override {
         request_handler.log__ = &mock_logger;
         request_handler.io__.reset(&mock_io);
@@ -560,20 +560,20 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotReceiveData) {
 }
 
 void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode error_code,
-    const asapo::ProducerErrorTemplate& err_template) {
+        const asapo::ProducerErrorTemplate& err_template) {
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true);
     ExpectOKSendData(true);
 
     EXPECT_CALL(mock_io, Receive_t(expected_sds[0], _, sizeof(asapo::SendDataResponse), _))
-        .InSequence(seq_receive)
-        .WillOnce(
-            DoAll(
-                testing::SetArgPointee<3>(nullptr),
-                A_WriteSendDataResponse(error_code),
-                testing::ReturnArg<2>()
-            ));
+    .InSequence(seq_receive)
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(nullptr),
+            A_WriteSendDataResponse(error_code),
+            testing::ReturnArg<2>()
+        ));
 
 
     request_handler.PrepareProcessingRequestLocked();
@@ -585,11 +585,11 @@ void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode e
 
 
 TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
-    AssertImmediatelyCallBack(asapo::kNetErrorFileIdAlreadyInUse,asapo::ProducerErrorTemplates::kFileIdAlreadyInUse);
+    AssertImmediatelyCallBack(asapo::kNetErrorFileIdAlreadyInUse, asapo::ProducerErrorTemplates::kFileIdAlreadyInUse);
 }
 
 TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfWrongMetadata) {
-    AssertImmediatelyCallBack(asapo::kNetErrorErrorInMetadata,asapo::ProducerErrorTemplates::kErrorInMetadata);
+    AssertImmediatelyCallBack(asapo::kNetErrorErrorInMetadata, asapo::ProducerErrorTemplates::kErrorInMetadata);
 }
 
 
