@@ -1,6 +1,7 @@
 #include "folder_data_broker.h"
 
 #include "io/io_factory.h"
+#include "preprocessor/definitions.h"
 
 namespace asapo {
 
@@ -91,6 +92,10 @@ uint64_t FolderDataBroker::GetNDataSets(Error* err) {
 
 Error FolderDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) {
     return GetFileByIndex(id - 1 , info, data);
+}
+
+std::string FolderDataBroker::GetBeamtimeMeta(Error* err) {
+    return io__->ReadFileToString(base_path_ + kPathSeparator + "beamtime_global.meta", err);
 }
 
 }

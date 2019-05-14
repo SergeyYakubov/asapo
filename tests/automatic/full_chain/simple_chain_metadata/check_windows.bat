@@ -22,14 +22,12 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 REM producer
 mkdir %receiver_folder%
-start /B "" "%1" %proxy_address% %beamtime_id% 100 1000 4 0 100
-ping 1.0.0.0 -n 1 -w 100 > nul
+"%1" %proxy_address% %beamtime_id% 100 0 1 0 100
 
 REM worker
-"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 5000  1 > out.txt
+"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 0  1 > out.txt
 type out.txt
-findstr /i /l /c:"Processed 1000 file(s)"  out.txt || goto :error
-findstr /i /l /c:"Cannot get metadata"  out.txt || goto :error
+findstr /i /l /c:"dummy_meta"  out.txt || goto :error
 
 
 goto :clean

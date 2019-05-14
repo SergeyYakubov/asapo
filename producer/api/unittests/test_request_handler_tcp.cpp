@@ -232,11 +232,11 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
                                        )
                                       ));
 
-        EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("cannot send"),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+        EXPECT_CALL(mock_logger, Warning(AllOf(
+                                             HasSubstr("cannot send"),
+                                             HasSubstr(receivers_list[i])
+                                         )
+                                        ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
         i++;
@@ -260,11 +260,11 @@ void RequestHandlerTcpTests::ExpectFailSendData(bool only_once) {
                                        )
                                       ));
 
-        EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("cannot send"),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+        EXPECT_CALL(mock_logger, Warning(AllOf(
+                                             HasSubstr("cannot send"),
+                                             HasSubstr(receivers_list[i])
+                                         )
+                                        ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
         i++;
@@ -290,11 +290,11 @@ void RequestHandlerTcpTests::ExpectFailReceive(bool only_once) {
                                       ));
 
 
-        EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("cannot send"),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+        EXPECT_CALL(mock_logger, Warning(AllOf(
+                                             HasSubstr("cannot send"),
+                                             HasSubstr(receivers_list[i])
+                                         )
+                                        ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
         i++;

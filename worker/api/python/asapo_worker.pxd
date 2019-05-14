@@ -34,6 +34,8 @@ cdef extern from "asapo_worker.h" namespace "asapo":
         uint64_t GetNDataSets(Error* err)
         Error ResetCounter(string group_id)
         string GenerateNewGroupId(Error* err)
+        string GetBeamtimeMeta(Error* err)
+
 
 cdef extern from "asapo_worker.h" namespace "asapo":
     cdef cppclass DataBrokerFactory:

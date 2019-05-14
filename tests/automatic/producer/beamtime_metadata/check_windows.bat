@@ -4,10 +4,10 @@ mkdir %folder%
 
 "%1" %folder% beamtime_id 1
 
-FOR /F "usebackq" %%A IN ('%folder%\beamtime_id.meta') DO set size=%%~zA
+FOR /F "usebackq" %%A IN ('%folder%\beamtime_global.meta') DO set size=%%~zA
 if %size% NEQ 5 goto :error
 
-type %folder%\beamtime_id.meta | findstr /c:"hello"  || goto :error
+type %folder%\beamtime_global.meta | findstr /c:"hello"  || goto :error
 
 goto :clean
 

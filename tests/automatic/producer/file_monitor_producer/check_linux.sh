@@ -24,6 +24,8 @@ sleep 0.5
 echo test1 > /tmp/asapo/test_in/test1/test1.dat
 echo test2 > /tmp/asapo/test_in/test2/test2.tmp
 mkdir -p /tmp/asapo/test_in/test2/subdir
+sleep 0.1
+
 echo test3 > /tmp/asapo/test_in/test2/subdir/test3.dat
 
 sleep 0.1

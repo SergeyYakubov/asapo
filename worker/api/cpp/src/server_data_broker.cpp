@@ -164,8 +164,9 @@ std::string ServerDataBroker::OpToUriCmd(GetImageServerOperation op) {
         return "next";
     case GetImageServerOperation::GetLast:
         return "last";
+    default:
+        return "last";
     }
-    return "";
 }
 
 Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id,
@@ -279,6 +280,11 @@ Error ServerDataBroker::GetFileInfoFromServerById(uint64_t id, FileInfo* info, s
     }
 
     return nullptr;
+}
+
+std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
+    std::string request_string =  "database/" + source_name_ + "/0/meta/0";
+    return BrokerRequestWithTimeout(request_string, "", false, err);
 }
 
 }

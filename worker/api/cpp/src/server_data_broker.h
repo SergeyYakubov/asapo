@@ -24,6 +24,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
     Error GetLast(FileInfo* info, std::string group_id, FileData* data) override;
     std::string GenerateNewGroupId(Error* err) override;
+    std::string GetBeamtimeMeta(Error* err) override;
     uint64_t GetNDataSets(Error* err) override;
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override;

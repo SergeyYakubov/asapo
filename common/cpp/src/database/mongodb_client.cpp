@@ -1,4 +1,5 @@
 #include "mongodb_client.h"
+#include "database/db_error.h"
 
 namespace asapo {
 
@@ -25,7 +26,7 @@ Error MongoDBClient::Ping() {
     bson_destroy (&reply);
     bson_destroy (command);
 
-    return !retval ? TextError(DBError::kConnectionError) : nullptr;
+    return !retval ? DBErrorTemplates::kConnectionError.Generate() : nullptr;
 
 }
 MongoDBClient::MongoDBClient() {
@@ -37,7 +38,7 @@ Error MongoDBClient::InitializeClient(const string& address) {
     client_ = mongoc_client_new (uri_str.c_str());
 
     if (client_ == nullptr) {
-        return TextError(DBError::kBadAddress);
+        return DBErrorTemplates::kBadAddress.Generate();
     }
     return nullptr;
 
@@ -65,7 +66,7 @@ Error MongoDBClient::TryConnectDatabase() {
 Error MongoDBClient::Connect(const string& address, const string& database_name,
                              const string& collection_name) {
     if (connected_) {
-        return TextError(DBError::kAlreadyConnected);
+        return DBErrorTemplates::kAlreadyConnected.Generate();
     }
 
     auto err = InitializeClient(address);
@@ -98,7 +99,7 @@ bson_p PrepareBsonDocument(const FileInfo& file, Error* err) {
     auto json = reinterpret_cast<const uint8_t*>(s.c_str());
     auto bson = bson_new_from_json(json, -1, &mongo_err);
     if (!bson) {
-        *err = TextError(std::string(DBError::kInsertError) + ": " + mongo_err.message);
+        *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);
         return nullptr;
     }
 
@@ -110,7 +111,7 @@ bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, Error* err) {
     bson_error_t mongo_err;
     auto bson = bson_new_from_json(json, len, &mongo_err);
     if (!bson) {
-        *err = TextError(std::string(DBError::kInsertError) + ": " + mongo_err.message);
+        *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);
         return nullptr;
     }
 
@@ -123,9 +124,9 @@ Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_dupl
     bson_error_t mongo_err;
     if (!mongoc_collection_insert_one(collection_, document.get(), NULL, NULL, &mongo_err)) {
         if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
-            return ignore_duplicates ? nullptr : TextError(DBError::kDuplicateID);
+            return ignore_duplicates ? nullptr : DBErrorTemplates::kDuplicateID.Generate();
         }
-        return TextError(std::string(DBError::kInsertError) + " - " + mongo_err.message);
+        return DBErrorTemplates::kInsertError.Generate(mongo_err.message);
     }
 
     return nullptr;
@@ -141,7 +142,7 @@ Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p& document, boo
     Error err = nullptr;
 
     if (!mongoc_collection_replace_one(collection_, selector, document.get(), opts, NULL, &mongo_err)) {
-        err = TextError(std::string(DBError::kInsertError) + " - " + mongo_err.message);
+        err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
     }
 
     bson_free (opts);
@@ -153,7 +154,7 @@ Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p& document, boo
 
 Error MongoDBClient::Insert(const FileInfo& file, bool ignore_duplicates) const {
     if (!connected_) {
-        return TextError(DBError::kNotConnected);
+        return DBErrorTemplates::kNotConnected.Generate();
     }
 
     Error err;
@@ -175,7 +176,7 @@ MongoDBClient::~MongoDBClient() {
 
 Error MongoDBClient::Upsert(uint64_t id, const uint8_t* data, uint64_t size) const {
     if (!connected_) {
-        return TextError(DBError::kNotConnected);
+        return DBErrorTemplates::kNotConnected.Generate();
     }
 
     Error err;
@@ -185,7 +186,7 @@ Error MongoDBClient::Upsert(uint64_t id, const uint8_t* data, uint64_t size) con
     }
 
     if (!BSON_APPEND_INT64(document.get(), "_id", id)) {
-        err = TextError(std::string(DBError::kInsertError) + "- cannot assign document id " );
+        err = DBErrorTemplates::kInsertError.Generate("cannot assign document id ");
     }
 
     return UpdateBsonDocument(id, document, true);

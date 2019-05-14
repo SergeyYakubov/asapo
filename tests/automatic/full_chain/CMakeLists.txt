@@ -1,4 +1,5 @@
 add_subdirectory(simple_chain)
+add_subdirectory(simple_chain_metadata)
 add_subdirectory(two_beamlines)
 add_subdirectory(simple_chain_filegen)
 add_subdirectory(simple_chain_filegen_readdata_cache)

@@ -20,6 +20,7 @@ class FolderDataBroker final : public asapo::DataBroker {
     void SetTimeout(uint64_t timeout_ms) override {}; // to timeout in this case
     std::string GenerateNewGroupId(Error* err)
     override; // return "0" always and no error - no group ids for folder datra broker
+    std::string GetBeamtimeMeta(Error* err) override;
     uint64_t GetNDataSets(Error* err) override;
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     std::unique_ptr<asapo::IO> io__; // modified in testings to mock system calls,otherwise do not touch

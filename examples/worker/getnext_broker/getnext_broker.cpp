@@ -62,6 +62,14 @@ std::vector<std::thread> StartThreads(const Params& params,
 
         lock.unlock();
 
+        if (i == 0) {
+            auto meta = broker->GetBeamtimeMeta(&err);
+            if (err == nullptr) {
+                std::cout << meta << std::endl;
+            } else {
+                std::cout << "Cannot get metadata: " << err->Explain() << std::endl;
+            }
+        }
         while (true) {
             err = broker->GetNext(&fi, group_id, params.read_data ? &data : nullptr);
             if (err == nullptr) {
@@ -101,7 +109,6 @@ int ReadAllData(const Params& params, uint64_t* duration_ms, int* nerrors, int* 
     int n_total = std::accumulate(nfiles.begin(), nfiles.end(), 0);
     *nerrors = std::accumulate(errors.begin(), errors.end(), 0);
     *nbuf = std::accumulate(nfiles_frombuf.begin(), nfiles_frombuf.end(), 0);
-
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);

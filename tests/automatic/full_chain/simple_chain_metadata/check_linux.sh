@@ -23,7 +23,6 @@ Cleanup() {
     nomad stop broker
     nomad stop authorizer
     rm -rf out
-#    kill $producerid
     echo "db.dropDatabase()" | mongo ${beamtime_id}
     influx -execute "drop database ${monitor_database_name}"
 }
@@ -41,11 +40,8 @@ sleep 1
 
 #producer
 mkdir -p ${receiver_folder}
-$1 localhost:8400 ${beamtime_id} 100 1000 4 0 100 &
-#producerid=`echo $!`
+$1 localhost:8400 ${beamtime_id} 100 0 1 0 100
 
-
-$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 5000 1 > out
+$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 0 1 > out
 cat out
-cat out   | grep "Processed 1000 file(s)"
-cat out | grep "Cannot get metadata"
+cat out | grep "dummy_meta"

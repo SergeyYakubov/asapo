@@ -94,6 +94,7 @@ Error SystemFolderWatch::ProcessFileEvent(const InotifyEvent& event, FilesToSend
         return err;
     }
     GetDefaultEventMonLogger()->Debug(((event.GetMask() & IN_CLOSE_WRITE) ? "file closed: " : "file moved: ") + fname);
+// todo - check if filename already manually added?
     processed_filenames_[processed_filenames_counter_] = fname;
     processed_filenames_counter_++;
     if (processed_filenames_counter_ == kProcessedFilenamesBufLen) {

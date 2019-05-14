@@ -116,7 +116,7 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
 
     producer.SetBeamtimeId(expected_beamtimeid);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferMetaData,
-                                        expected_beamtimeid, expected_id, expected_size, "beamtime_id.meta"))).WillOnce(Return(
+                                        expected_beamtimeid, expected_id, expected_size, "beamtime_global.meta"))).WillOnce(Return(
                                                     nullptr));
 
     auto err = producer.SendMetaData(expected_metadata, nullptr);

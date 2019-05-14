@@ -13,6 +13,7 @@ enum class ErrorType {
     kAsapoError,
     kHttpError,
     kIOError,
+    kDBError,
     kReceiverError,
     kProducerError,
 

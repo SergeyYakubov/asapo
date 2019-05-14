@@ -56,6 +56,12 @@ class DataBroker {
     */
     virtual std::string GenerateNewGroupId(Error* err) = 0;
 
+    //! Get Beamtime metadata.
+    /*!
+      \param err - return nullptr of operation succeed, error otherwise.
+      \return beamtime metadata.
+    */
+    virtual std::string GetBeamtimeMeta(Error* err) = 0;
 
     //! Receive next available image.
     /*!

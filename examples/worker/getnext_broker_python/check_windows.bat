@@ -13,12 +13,16 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 for /l %%x in (1, 1, 3) do echo db.data.insert({"_id":%%x,"size":100,"name":"%%x","lastchange":1,"source":"none","buf_id":0}) | %mongo_exe% %database_name%  || goto :error
 
+
+echo db.meta.insert({"_id":0,"meta_test":"test"}) | %mongo_exe% %database_name%  || goto :error
+
 set PYTHONPATH=%1
 
 python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% %group_id% > out
 type out
 type out | findstr /c:"100" || goto :error
 type out | findstr /c:"\"_id\": 1" || goto :error
+type out | findstr /c:"\"meta_test\": \"test\"" || goto :error
 
 python3 getnext.py 127.0.0.1:8400  %source_path% %database_name%  %token_test_run% %group_id% > out
 type out

@@ -2,7 +2,7 @@
 #include "request.h"
 #include "io/io_factory.h"
 #include "receiver_logger.h"
-
+#include "database/db_error.h"
 namespace asapo {
 
 RequestsDispatcher::RequestsDispatcher(SocketDescriptor socket_fd, std::string address,
@@ -20,6 +20,8 @@ NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
             return NetworkErrorCode::kNetErrorFileIdAlreadyInUse;
         } else if (err == ReceiverErrorTemplates::kAuthorizationFailure) {
             return NetworkErrorCode::kNetAuthorizationError;
+        } else if (err == DBErrorTemplates::kJsonParseError) {
+            return NetworkErrorCode::kNetErrorErrorInMetadata;
         } else {
             return NetworkErrorCode::kNetErrorInternalServerError;
         }

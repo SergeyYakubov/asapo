@@ -8,18 +8,6 @@
 
 namespace asapo {
 
-namespace DBError {
-auto const KUnknownError = "Inknown error";
-auto const kConnectionError = "Connection error";
-auto const kInsertError = "Insert error";
-auto const kDuplicateID = "Duplicate ID";
-auto const kAlreadyConnected = "Already connected";
-auto const kNotConnected = "Not connected";
-auto const kBadAddress = "Bad address";
-auto const kMemoryError = "Memory error";
-
-}
-
 constexpr char kDBDataCollectionName[] = "data";
 constexpr char kDBMetaCollectionName[] = "meta";
 

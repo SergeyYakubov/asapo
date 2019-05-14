@@ -58,7 +58,8 @@ Error GetLastErrorFromErrno() {
         return IOErrorTemplates::kSocketOperationUnknownAtLevel.Generate();
     case EDOM:
         return IOErrorTemplates::kSocketOperationValueOutOfBound.Generate();
-
+    case EPIPE:
+        return IOErrorTemplates::kBrokenPipe.Generate();
     default:
         std::cout << "[IOErrorsFromErrno] Unknown error code: " << errno << std::endl;
         Error err = IOErrorTemplates::kUnknownIOError.Generate();

@@ -13,8 +13,8 @@ start /B "" "%full_name%" -config settings.json
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/%database_name%/0/meta?token=%token% --stderr - | findstr /c:\"_id\":0  || goto :error
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/%database_name%/1/meta?token=%token% --stderr - | findstr /c:"not found"  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/%database_name%/0/meta/0?token=%token% --stderr - | findstr /c:\"_id\":0  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/%database_name%/0/meta/1?token=%token% --stderr - | findstr /c:"not found"  || goto :error
 
 
 goto :clean

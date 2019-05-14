@@ -26,7 +26,8 @@ enum class IOErrorType {
     kUnableToResolveHostname,
     kSocketOperationUnknownAtLevel,
     kSocketOperationValueOutOfBound,
-    kAddressNotValid
+    kAddressNotValid,
+    kBrokenPipe
 
 };
 
@@ -97,6 +98,11 @@ auto const kSocketOperationValueOutOfBound =  IOErrorTemplate {
 auto const kAddressNotValid =  IOErrorTemplate {
     "Address not valid", IOErrorType::kAddressNotValid
 };
+
+auto const kBrokenPipe =  IOErrorTemplate {
+    "Broken pipe/connection", IOErrorType::kBrokenPipe
+};
+
 
 }
 
