@@ -20,6 +20,7 @@ type Pointer struct {
 }
 
 const data_collection_name = "data"
+const meta_collection_name = "meta"
 const pointer_collection_name = "current_location"
 const pointer_field_name = "current_pointer"
 const no_session_msg = "database session not created"
@@ -117,6 +118,16 @@ func (db *Mongodb) InsertRecord(dbname string, s interface{}) error {
 	}
 
 	c := db.session.DB(dbname).C(data_collection_name)
+
+	return c.Insert(s)
+}
+
+func (db *Mongodb) InsertMeta(dbname string, s interface{}) error {
+	if db.session == nil {
+		return errors.New(no_session_msg)
+	}
+
+	c := db.session.DB(dbname).C(meta_collection_name)
 
 	return c.Insert(s)
 }
@@ -328,6 +339,22 @@ func (db *Mongodb) ResetCounter(db_name string, group_id string) ([]byte, error)
 	return []byte(""), err
 }
 
+func (db *Mongodb) getMeta(dbname string, id int) ([]byte, error) {
+
+	var res map[string]interface{}
+	q := bson.M{"_id": id}
+	c := db.session.DB(dbname).C(meta_collection_name)
+	err := c.Find(q).One(&res)
+	if err != nil {
+		log_str := "error getting meta with id " + strconv.Itoa(id) + " for " + dbname + " : " + err.Error()
+		logger.Debug(log_str)
+		return nil, &DBError{utils.StatusNoData, err.Error()}
+	}
+
+	log_str := "got record id " + strconv.Itoa(id) + " for " + dbname
+	logger.Debug(log_str)
+	return utils.MapToJson(&res)
+}
 
 func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, id int) (answer []byte, err error) {
 	switch op {
@@ -343,6 +370,9 @@ func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, id
 		return db.ResetCounter(db_name, group_id)
 	case "size":
 		return db.GetSize(db_name)
+	case "meta":
+		return db.getMeta(db_name, id)
+
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

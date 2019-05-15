@@ -39,6 +39,7 @@ class MongoDBClient final : public Database {
     Error Connect(const std::string& address, const std::string& database,
                   const std::string& collection) override;
     Error Insert(const FileInfo& file, bool ignore_duplicates) const override;
+    Error Upsert(uint64_t id, const uint8_t* data, uint64_t size) const override;
     ~MongoDBClient() override;
   private:
     mongoc_client_t* client_{nullptr};
@@ -53,6 +54,8 @@ class MongoDBClient final : public Database {
     Error Ping();
     Error TryConnectDatabase();
     Error InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const;
+    Error UpdateBsonDocument(uint64_t id, const bson_p& document, bool upsert) const;
+
 };
 
 }

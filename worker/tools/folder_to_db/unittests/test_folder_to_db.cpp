@@ -5,6 +5,8 @@
 #include "io/io.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 
+#include "database/db_error.h"
+
 
 #include "database/database.h"
 
@@ -12,6 +14,7 @@
 #include "unittests/MockDatabase.h"
 
 #include "../src/folder_db_importer.h"
+#include "database/db_error.h"
 
 #include "unittests/MockIO.h"
 
@@ -85,7 +88,7 @@ class MockDatabaseFactory : public DatabaseFactory {
 
 class FakeDatabaseFactory : public DatabaseFactory {
     std::unique_ptr<Database> Create(Error* err) const noexcept override {
-        *err = asapo::TextError(asapo::DBError::kMemoryError);
+        *err = asapo::ErrorTemplates::kMemoryAllocationError.Generate();
         return {};
     }
 };
@@ -129,11 +132,9 @@ class FolderDBConverterTests : public Test {
     }
 };
 
-
-
 TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
-    EXPECT_CALL(*(mock_dbf->db[0]), Connect_t(uri, db_name, kDBCollectionName)).
-    WillOnce(testing::Return(new SimpleError(asapo::DBError::kConnectionError)));
+    EXPECT_CALL(*(mock_dbf->db[0]), Connect_t(uri, db_name, kDBDataCollectionName)).
+    WillOnce(testing::Return(asapo::DBErrorTemplates::kConnectionError.Generate().release()));
 
     auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Ne(nullptr));
@@ -142,11 +143,11 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
 TEST_F(FolderDBConverterTests, ErrorWhenCannotCreateDbParallel) {
     int nparallel = 3;
     EXPECT_CALL(*(mock_dbf->db[0]), Connect_t(uri, _, _)).
-    WillOnce(testing::Return(new SimpleError(asapo::DBError::kConnectionError)));
+    WillOnce(testing::Return(asapo::DBErrorTemplates::kConnectionError.Generate().release()));
     EXPECT_CALL(*(mock_dbf->db[1]), Connect_t(uri, _, _)).
-    WillOnce(testing::Return(new SimpleError(asapo::DBError::kConnectionError)));
+    WillOnce(testing::Return(asapo::DBErrorTemplates::kConnectionError.Generate().release()));
     EXPECT_CALL(*(mock_dbf->db[2]), Connect_t(uri, _, _)).
-    WillOnce(testing::Return(new SimpleError(asapo::DBError::kConnectionError)));
+    WillOnce(testing::Return(asapo::DBErrorTemplates::kConnectionError.Generate().release()));
 
     converter.SetNParallelTasks(nparallel);
     auto error = converter.Convert(uri, folder, db_name);
@@ -184,7 +185,7 @@ TEST_F(FolderDBConverterTests, PassesIgnoreDuplicates) {
 TEST_F(FolderDBConverterTests, ErrorWhenCannotImportFileListToDb) {
 
     EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(_, _)).
-    WillOnce(testing::Return(new SimpleError(asapo::DBError::kInsertError)));
+    WillOnce(testing::Return(asapo::DBErrorTemplates::kInsertError.Generate().release()));
 
     auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Ne(nullptr));

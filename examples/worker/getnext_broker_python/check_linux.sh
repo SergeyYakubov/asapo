@@ -27,6 +27,8 @@ do
 	echo 'db.data.insert({"_id":'$i',"size":100,"name":"'$i'","lastchange":1,"source":"none","buf_id":0})' | mongo ${database_name}
 done
 
+echo 'db.meta.insert({"_id":0,"meta_test":"test"})' | mongo ${database_name}
+
 sleep 1
 
 export PYTHONPATH=$1:${PYTHONPATH}
@@ -35,6 +37,7 @@ python getnext.py 127.0.0.1:8400 $source_path $database_name $token_test_run $gr
 cat out
 cat out | grep '"size": 100'
 cat out | grep '"_id": 1'
+cat out | grep '"meta_test": "test"'
 
 python getnext.py 127.0.0.1:8400 $source_path $database_name $token_test_run $group_id> out
 cat out

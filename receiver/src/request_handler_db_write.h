@@ -4,24 +4,18 @@
 #include "request_handler.h"
 #include "database/database.h"
 #include "logger/logger.h"
-
+#include "request_handler_db.h"
 #include "io/io.h"
 
 namespace asapo {
 
-class RequestHandlerDbWrite final: public ReceiverRequestHandler {
+class RequestHandlerDbWrite final: public RequestHandlerDb {
   public:
-    RequestHandlerDbWrite();
-    StatisticEntity GetStatisticEntity() const override;
     Error ProcessRequest(Request* request) const override;
-    std::unique_ptr<Database> db_client__;
-    const AbstractLogger* log__;
+    RequestHandlerDbWrite(std::string collection_name);
   private:
     FileInfo PrepareFileInfo(const Request* request) const;
     Error InsertRecordToDb(const Request* request) const;
-    Error ConnectToDbIfNeeded() const;
-    mutable bool connected_to_db = false;
-    mutable std::string db_name_;
 };
 
 }

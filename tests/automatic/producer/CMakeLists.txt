@@ -1,1 +1,2 @@
 add_subdirectory(file_monitor_producer)
+add_subdirectory(beamtime_metadata)

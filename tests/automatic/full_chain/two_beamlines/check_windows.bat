@@ -35,11 +35,11 @@ start /B "" "%1" %proxy_address% %beamtime_id2% 100 900 4 0 100
 ping 1.0.0.0 -n 1 -w 100 > nul
 
 REM worker
-"%2" %proxy_address% %receiver_folder1% %beamtime_id1% 2 %token1% 2000  0 > out1.txt
+"%2" %proxy_address% %receiver_folder1% %beamtime_id1% 2 %token1% 10000  0 > out1.txt
 type out1.txt
 findstr /i /l /c:"Processed 1000 file(s)"  out1.txt || goto :error
 
-"%2" %proxy_address% %receiver_folder2% %beamtime_id2% 2 %token2% 2000  0 > out2.txt
+"%2" %proxy_address% %receiver_folder2% %beamtime_id2% 2 %token2% 10000  0 > out2.txt
 type out2.txt
 findstr /i /l /c:"Processed 900 file(s)"  out2.txt || goto :error
 

@@ -78,10 +78,17 @@ Error RequestHandlerTcp::ReceiveResponse() {
         res_err->Append(sendDataResponse.message);
         return res_err;
     }
+    case kNetErrorErrorInMetadata : {
+        auto res_err = ProducerErrorTemplates::kErrorInMetadata.Generate();
+        res_err->Append(sendDataResponse.message);
+        return res_err;
+    }
     case kNetErrorNoError :
         return nullptr;
     default:
-        return ProducerErrorTemplates::kInternalServerError.Generate();
+        auto res_err = ProducerErrorTemplates::kInternalServerError.Generate();
+        res_err->Append(sendDataResponse.message);
+        return res_err;
     }
 }
 
@@ -155,7 +162,8 @@ void RequestHandlerTcp::Disconnect() {
 }
 
 bool RequestHandlerTcp::ServerError(const Error& err) {
-    return err != nullptr && err != ProducerErrorTemplates::kFileIdAlreadyInUse;
+    return err != nullptr && (err != ProducerErrorTemplates::kFileIdAlreadyInUse &&
+                              err != ProducerErrorTemplates::kErrorInMetadata);
 }
 
 Error RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {
@@ -168,8 +176,9 @@ Error RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {
         auto err = TrySendToReceiver(request);
         if (ServerError(err))  {
             Disconnect();
-            log__->Debug("cannot send data id " + std::to_string(request->header.data_id) + " to " + receiver_uri + ": " +
-                         err->Explain());
+            log__->Warning("cannot send data, opcode: " + std::to_string(request->header.op_code) +
+                           ", id: " + std::to_string(request->header.data_id) + " to " + receiver_uri + ": " +
+                           err->Explain());
             continue;
         }
 

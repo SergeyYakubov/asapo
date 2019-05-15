@@ -24,3 +24,10 @@ if err != None:
 else:
     print ('filename: ', meta['name'])
     print ('meta: ', json.dumps(meta, indent=4, sort_keys=True))
+
+
+beamtime_meta,err = broker.get_beamtime_meta()
+if err != None:
+    print ('error getting beamtime meta: ', err)
+else:
+    print ('beamtime meta: ', json.dumps(beamtime_meta, indent=4, sort_keys=True))

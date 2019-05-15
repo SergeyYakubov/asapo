@@ -24,6 +24,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
     Error GetLast(FileInfo* info, std::string group_id, FileData* data) override;
     std::string GenerateNewGroupId(Error* err) override;
+    std::string GetBeamtimeMeta(Error* err) override;
     uint64_t GetNDataSets(Error* err) override;
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override;
@@ -38,7 +39,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetBrokerUri();
     void ProcessServerError(Error* err, const std::string& response, std::string* redirect_uri);
     Error ProcessRequest(std::string* response, std::string request_uri, std::string extra_params, bool post);
-    Error GetImageFromServer(GetImageServerOperation op,uint64_t id, std::string group_id, FileInfo* info, FileData* data);
+    Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, FileInfo* info, FileData* data);
     bool DataCanBeInBuffer(const FileInfo* info);
     Error TryGetDataFromBuffer(const FileInfo* info, FileData* data);
     std::string BrokerRequestWithTimeout(std::string request_string, std::string extra_params, bool post_request,

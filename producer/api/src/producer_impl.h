@@ -33,6 +33,8 @@ class ProducerImpl : public Producer {
     AbstractLogger* log__;
     std::unique_ptr<RequestPool> request_pool__;
     Error SetBeamtimeId(std::string beamtime_id) override;
+    Error SendMetaData(const std::string& metadata, RequestCallback callback) override;
+
   private:
     Error Send(const EventHeader& event_header, FileData data, std::string full_path, RequestCallback callback);
     GenericRequestHeader GenerateNextSendRequest(uint64_t file_id, uint64_t file_size, std::string file_name);

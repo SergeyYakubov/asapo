@@ -15,6 +15,7 @@ enum Opcode : uint8_t {
     kOpcodeTransferData,
     kOpcodeGetBufferData,
     kOpcodeAuthorize,
+    kOpcodeTransferMetaData,
     kOpcodeCount,
 };
 
@@ -24,6 +25,7 @@ enum NetworkErrorCode : uint16_t {
     kNetErrorNoData,
     kNetAuthorizationError,
     kNetErrorFileIdAlreadyInUse,
+    kNetErrorErrorInMetadata,
     kNetErrorAllocateStorageFailed,
     kNetErrorInternalServerError = 65535,
 };

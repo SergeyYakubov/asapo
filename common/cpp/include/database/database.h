@@ -8,25 +8,17 @@
 
 namespace asapo {
 
-namespace DBError {
-auto const KUnknownError = "Inknown error";
-auto const kConnectionError = "Connection error";
-auto const kInsertError = "Insert error";
-auto const kDuplicateID = "Duplicate ID";
-auto const kAlreadyConnected = "Already connected";
-auto const kNotConnected = "Not connected";
-auto const kBadAddress = "Bad address";
-auto const kMemoryError = "Memory error";
+constexpr char kDBDataCollectionName[] = "data";
+constexpr char kDBMetaCollectionName[] = "meta";
 
-}
-
-constexpr char kDBCollectionName[] = "data";
 
 class Database {
   public:
     virtual Error Connect(const std::string& address, const std::string& database,
                           const std::string& collection ) = 0;
     virtual Error Insert(const FileInfo& file, bool ignore_duplicates) const = 0;
+    virtual Error Upsert(uint64_t id, const uint8_t* data, uint64_t size) const = 0;
+
     virtual ~Database() = default;
 };
 

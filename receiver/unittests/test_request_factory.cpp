@@ -8,6 +8,7 @@
 #include "../src/connection.h"
 #include "../src/receiver_error.h"
 #include "../src/request.h"
+#include "../src/request_factory.h"
 #include "../src/request_handler.h"
 #include "../src/request_handler_file_write.h"
 #include "../src/request_handler_db_write.h"
@@ -127,6 +128,30 @@ TEST_F(FactoryTests, CachePassedToRequest) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(request->cache__, Ne(nullptr));
 
+}
+
+TEST_F(FactoryTests, ReturnsMetaDataRequestOnkOpcodeTransferMetaData) {
+    generic_request_header.op_code = asapo::Opcode::kOpcodeTransferMetaData;
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::Request*>(request->cache__), Eq(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbMetaWrite*>(request->GetListHandlers().back()), Ne(nullptr));
+}
+
+
+TEST_F(FactoryTests, DonNotGenerateMetadataRequestIfNoDbConfigured) {
+    config.write_to_db = false;
+
+    SetReceiverConfig(config, "none");
+
+
+    generic_request_header.op_code = asapo::Opcode::kOpcodeTransferMetaData;
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReject));
 }
 
 

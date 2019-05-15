@@ -10,6 +10,7 @@
 #include "mock_receiver_config.h"
 
 #include "../src/requests_dispatcher.h"
+#include "database/db_error.h"
 
 
 using ::testing::Test;
@@ -259,6 +260,18 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAuthorizationFailure) {
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
     ASSERT_THAT(response.error_code, Eq(asapo::kNetAuthorizationError));
     ASSERT_THAT(std::string(response.message), HasSubstr("authorization"));
+}
+
+
+TEST_F(RequestsDispatcherTests, ProcessRequestReturnsMetaDataFailure) {
+    MockHandleRequest(true, asapo::DBErrorTemplates::kJsonParseError.Generate());
+    MockSendResponse(&response, false);
+
+    auto err = dispatcher->ProcessRequest(request);
+
+    ASSERT_THAT(err, Eq(asapo::DBErrorTemplates::kJsonParseError));
+    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorErrorInMetadata));
+    ASSERT_THAT(std::string(response.message), HasSubstr("parse"));
 }
 
 

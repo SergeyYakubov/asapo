@@ -30,6 +30,12 @@ var listRoutes = utils.Routes{
 		routeGetByID,
 	},
 	utils.Route{
+		"GetMeta",
+		"Get",
+		"/database/{dbname}/0/meta/{id}",
+		routeGetMeta,
+	},
+	utils.Route{
 		"CreateGroup",
 		"Post",
 		"/creategroup",

@@ -82,6 +82,17 @@ cdef class PyDataBroker:
             return None, err_str
         else:
             return _str(group_id), None
+    def get_beamtime_meta(self):
+            cdef Error err
+            cdef string meta_str
+            meta_str = self.c_broker.GetBeamtimeMeta(&err)
+            err_str = _str(GetErrorString(&err))
+            if err_str.strip():
+                return None, err_str
+            else:
+                meta = json.loads(_str(meta_str))
+                del meta['_id']
+                return meta, None
 
 cdef class PyDataBrokerFactory:
     cdef DataBrokerFactory c_factory

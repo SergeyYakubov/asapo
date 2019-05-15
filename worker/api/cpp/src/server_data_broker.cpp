@@ -164,11 +164,13 @@ std::string ServerDataBroker::OpToUriCmd(GetImageServerOperation op) {
         return "next";
     case GetImageServerOperation::GetLast:
         return "last";
+    default:
+        return "last";
     }
-    return "";
 }
 
-Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op,uint64_t id,std::string group_id, FileInfo* info,
+Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id,
+                                           FileInfo* info,
                                            FileData* data) {
     if (info == nullptr) {
         return TextError(WorkerErrorMessage::kWrongInput);
@@ -176,7 +178,7 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op,uint64_t i
 
     Error err;
     if (op == GetImageServerOperation::GetID) {
-        err = GetFileInfoFromServerById(id,info, std::move(group_id));
+        err = GetFileInfoFromServerById(id, info, std::move(group_id));
     } else {
         err = GetFileInfoFromServer(info, std::move(group_id), op);
     }
@@ -260,7 +262,7 @@ uint64_t ServerDataBroker::GetNDataSets(Error* err) {
 
 }
 Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetID,id,group_id,info,data);
+    return GetImageFromServer(GetImageServerOperation::GetID, id, group_id, info, data);
 }
 
 
@@ -278,6 +280,11 @@ Error ServerDataBroker::GetFileInfoFromServerById(uint64_t id, FileInfo* info, s
     }
 
     return nullptr;
+}
+
+std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
+    std::string request_string =  "database/" + source_name_ + "/0/meta/0";
+    return BrokerRequestWithTimeout(request_string, "", false, err);
 }
 
 }

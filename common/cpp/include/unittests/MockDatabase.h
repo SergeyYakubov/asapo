@@ -20,8 +20,16 @@ class MockDatabase : public Database {
         return Error{Insert_t(file, ignore_duplicates)};
     }
 
-    MOCK_METHOD3(Connect_t, SimpleError * (const std::string&, const std::string&, const std::string&));
-    MOCK_CONST_METHOD2(Insert_t, SimpleError * (const FileInfo&, bool));
+    MOCK_METHOD3(Connect_t, ErrorInterface * (const std::string&, const std::string&, const std::string&));
+    MOCK_CONST_METHOD2(Insert_t, ErrorInterface * (const FileInfo&, bool));
+
+    Error Upsert(uint64_t id, const uint8_t* data, uint64_t size) const override {
+        return Error{Upsert_t(id, data, size)};
+
+    }
+    MOCK_CONST_METHOD3(Upsert_t, ErrorInterface * (uint64_t id, const uint8_t* data, uint64_t size));
+
+
 
     // stuff to test db destructor is called and avoid "uninteresting call" messages
     MOCK_METHOD0(Die, void());

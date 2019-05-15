@@ -20,6 +20,7 @@ var db Mongodb
 const dbname = "run1"
 const dbaddress = "127.0.0.1:27017"
 const groupId = "bid2a5auidddp1vl71d0"
+const metaID = 0
 
 var rec1 = TestRecord{1, "aaa"}
 var rec2 = TestRecord{2, "bbb"}
@@ -297,13 +298,33 @@ func TestMongoDBResetCounter(t *testing.T) {
 	assert.Nil(t, err1)
 	assert.Equal(t, string(rec1_expect), string(res1))
 
-	_,err_reset := db.ProcessRequest(dbname, groupId, "resetcounter", 0)
+	_, err_reset := db.ProcessRequest(dbname, groupId, "resetcounter", 0)
 	assert.Nil(t, err_reset)
 
 	res2, err2 := db.ProcessRequest(dbname, groupId, "next", 0)
 
-
 	assert.Nil(t, err2)
 	assert.Equal(t, string(rec1_expect), string(res2))
 
+}
+
+func TestMongoDBGetMetaOK(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	rec1.ID = metaID
+	rec_expect, _ := json.Marshal(rec1)
+	db.InsertMeta(dbname, &rec1)
+
+	res, err := db.ProcessRequest(dbname, "", "meta", metaID)
+
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec_expect), string(res))
+}
+
+func TestMongoDBGetMetaErr(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	_, err := db.ProcessRequest(dbname, "", "meta", metaID)
+	assert.NotNil(t, err)
 }

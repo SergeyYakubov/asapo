@@ -7,6 +7,7 @@
 
 #include "../src/receiver_error.h"
 #include "../src/request.h"
+#include "../src/request_factory.h"
 #include "../src/request_handler.h"
 #include "../src/request_handler_db_write.h"
 #include "common/networking.h"
@@ -54,7 +55,8 @@ namespace {
 
 class DbWriterHandlerTests : public Test {
   public:
-    RequestHandlerDbWrite handler;
+    std::string expected_collection_name = asapo::kDBDataCollectionName;
+    RequestHandlerDbWrite handler{expected_collection_name};
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
     NiceMock<asapo::MockLogger> mock_logger;
@@ -77,56 +79,6 @@ class DbWriterHandlerTests : public Test {
 
 
 };
-
-TEST(DBWritewr, Constructor) {
-    RequestHandlerDbWrite handler;
-    ASSERT_THAT(dynamic_cast<asapo::MongoDBClient*>(handler.db_client__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(handler.log__), Ne(nullptr));
-}
-
-
-TEST_F(DbWriterHandlerTests, CheckStatisticEntity) {
-    auto entity = handler.GetStatisticEntity();
-    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kDatabase));
-}
-
-
-TEST_F(DbWriterHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
-    config.broker_db_uri = "127.0.0.1:27017";
-    SetReceiverConfig(config, "none");
-
-
-    EXPECT_CALL(*mock_request, GetBeamtimeId())
-    .WillOnce(ReturnRef(expected_beamtime_id))
-    ;
-
-
-    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id, asapo::kDBCollectionName)).
-    WillOnce(testing::Return(nullptr));
-
-    auto err = handler.ProcessRequest(mock_request.get());
-    ASSERT_THAT(err, Eq(nullptr));
-}
-
-TEST_F(DbWriterHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
-
-    EXPECT_CALL(mock_db, Connect_t(_, _, asapo::kDBCollectionName)).
-    WillOnce(testing::Return(new asapo::SimpleError("")));
-
-    auto err = handler.ProcessRequest(mock_request.get());
-
-    ASSERT_THAT(err, Ne(nullptr));
-
-}
-
-TEST_F(DbWriterHandlerTests, ProcessRequestDoesNotCallConnectSecondTime) {
-
-    EXPECT_CALL(mock_db, Connect_t(_, _, asapo::kDBCollectionName)).
-    WillOnce(testing::Return(nullptr));
-
-    handler.ProcessRequest(mock_request.get());
-    handler.ProcessRequest(mock_request.get());
-}
 
 MATCHER_P(CompareFileInfo, file, "") {
     if (arg.size != file.size) return false;
@@ -155,7 +107,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     ;
 
 
-    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, expected_beamtime_id, asapo::kDBCollectionName)).
+    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, expected_beamtime_id, expected_collection_name)).
     WillOnce(testing::Return(nullptr));
 
     std::string expected_file_name = "2";
@@ -187,7 +139,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
                                          HasSubstr(config.broker_db_uri),
                                          HasSubstr(expected_beamtime_id),
-                                         HasSubstr(asapo::kDBCollectionName)
+                                         HasSubstr(expected_collection_name)
                                         )
                                   )
                );

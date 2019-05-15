@@ -3,7 +3,7 @@
 
 #include "../../../common/cpp/src/database/mongodb_client.h"
 #include "testing.h"
-
+#include "database/db_error.h"
 
 using asapo::M_AssertContains;
 using asapo::Error;
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 
     if (err == nullptr) {
         err = db.Connect(args.address, args.database_name, args.collection_name);
-        Assert(err, asapo::DBError::kAlreadyConnected);
+        Assert(err, asapo::DBErrorTemplates::kAlreadyConnected.Generate()->Explain());
     }
     return 0;
 }

@@ -62,6 +62,7 @@ class ServerDataBrokerTests : public Test {
     std::string expected_filename = "filename";
     std::string expected_full_path = std::string("/tmp/beamline/beamtime") + asapo::kPathSeparator + expected_filename;
     std::string expected_group_id = "groupid";
+    std::string expected_metadata = "{\"meta\":1}";
     uint64_t expected_dataset_id = 1;
     static const uint64_t expected_buf_id = 123;
     void SetUp() override {
@@ -471,24 +472,23 @@ TEST_F(ServerDataBrokerTests, GetByIdUsesCorrectUri) {
 
 }
 
-TEST_F(ServerDataBrokerTests, GetByIdReturnsNoData) {
+TEST_F(ServerDataBrokerTests, GetMetaDataOK) {
     MockGetBrokerUri();
     data_broker->SetTimeout(100);
-    auto to_send = CreateFI();
-    auto json = to_send.Json();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_group_id
-                                        + "/" + std::to_string(
-                                            expected_dataset_id) + "?token="
-                                        + expected_token + "&reset=true", _,
+
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/0/meta/0?token="
+                                        + expected_token, _,
                                         _)).WillOnce(DoAll(
-                                                SetArgPointee<1>(HttpCode::Conflict),
+                                                SetArgPointee<1>(HttpCode::OK),
                                                 SetArgPointee<2>(nullptr),
-                                                Return("{\"id\":1}")));
+                                                Return(expected_metadata)));
 
-    auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
+    asapo::Error err;
+    auto res = data_broker->GetBeamtimeMeta(&err);
 
-    ASSERT_THAT(err->GetErrorType(), Eq(asapo::ErrorType::kEndOfFile));
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(res, Eq(expected_metadata));
 
 }
 

@@ -38,10 +38,6 @@ TEST(FolderDataBroker, SetCorrectIO) {
 class FakeIO: public asapo::MockIO {
   public:
 
-    virtual std::string ReadFileToString(const std::string& fname, Error* err) const noexcept override {
-        return "OK";
-    }
-
     FileInfos FilesInFolder(const std::string& folder, Error* err) const override {
         *err = nullptr;
         FileInfos file_infos;
@@ -253,8 +249,9 @@ class GetDataFromFileTests : public Test {
     OpenFileMock mock;
     FileInfo fi;
     FileData data;
+    std::string expected_base_path = "/path/to/file";
     void SetUp() override {
-        data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker("/path/to/file")};
+        data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker(expected_base_path)};
         data_broker->io__ = std::unique_ptr<IO> {&mock};
         data_broker->Connect();
     }
@@ -325,6 +322,28 @@ TEST_F(FolderDataBrokerTests, GetByIdReturnsError) {
     ASSERT_THAT(err1, Ne(nullptr));
     ASSERT_THAT(err2, Ne(nullptr));
 }
+
+TEST_F(GetDataFromFileTests, GetMetaDataReturnsError) {
+    EXPECT_CALL(mock, ReadFileToString_t(_, _)).
+    WillOnce(DoAll(testing::SetArgPointee<1>(asapo::IOErrorTemplates::kReadError.Generate().release()),
+                   testing::Return("")));
+
+    Error err;
+    auto meta = data_broker->GetBeamtimeMeta(&err);
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
+}
+
+TEST_F(GetDataFromFileTests, GetMetaDataReturnsOK) {
+    EXPECT_CALL(mock, ReadFileToString_t(expected_base_path + asapo::kPathSeparator + "beamtime_global.meta", _)).
+    WillOnce(DoAll(testing::SetArgPointee<1>(nullptr),
+                   testing::Return("OK")));
+
+    Error err;
+    auto meta = data_broker->GetBeamtimeMeta(&err);
+    ASSERT_THAT(meta, Eq("OK"));
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
 
 
 }

@@ -72,12 +72,35 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
     mutex.unlock();
 }
 
+void ProcessAfterMetaDataSend(asapo::GenericRequestHeader header, asapo::Error err) {
+    mutex.lock();
+    iterations_remained--;
+    if (err) {
+        std::cerr << "Metadata was not successfully send: " << err << std::endl;
+    } else {
+        std::cout << "Metadata was successfully send" << std::endl;
+    }
+    mutex.unlock();
+    return;
+}
+
 asapo::FileData CreateMemoryBuffer(size_t size) {
     return asapo::FileData(new uint8_t[size]);
 }
 
 
 bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations) {
+
+    asapo::Error err;
+    if (iterations > 0) { // send wrong meta, for negative integration tests
+        err = producer->SendMetaData("bla", &ProcessAfterMetaDataSend);
+    } else {
+        err = producer->SendMetaData("{\"dummy_meta\":\"test\"}", &ProcessAfterMetaDataSend);
+    }
+    if (err) {
+        std::cerr << "Cannot send metadata: " << err << std::endl;
+        return false;
+    }
 
     for(uint64_t i = 0; i < iterations; i++) {
         auto buffer = CreateMemoryBuffer(number_of_byte);
@@ -142,7 +165,7 @@ int main (int argc, char* argv[]) {
 
     auto producer = CreateProducer(args);
 
-    iterations_remained = args.iterations;
+    iterations_remained = args.iterations + 1;
 
     high_resolution_clock::time_point start_time = high_resolution_clock::now();
 
