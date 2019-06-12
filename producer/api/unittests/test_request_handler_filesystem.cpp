@@ -44,6 +44,7 @@ class RequestHandlerFilesystemTests : public testing::Test {
 
     uint64_t expected_file_id = 42;
     uint64_t expected_file_size = 1337;
+    uint64_t expected_meta_size = 2337;
     std::string  expected_file_name = "test_name";
     uint64_t expected_thread_id = 2;
     std::string  expected_destination = "destination";
@@ -52,17 +53,18 @@ class RequestHandlerFilesystemTests : public testing::Test {
 
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     asapo::Error callback_err;
-    asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_file_name};
+    asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,
+                                       expected_meta_size, expected_file_name};
     bool called = false;
     asapo::GenericRequestHeader callback_header;
-    asapo::ProducerRequest request{"", header, nullptr, "", [this](asapo::GenericRequestHeader header, asapo::Error err) {
+    asapo::ProducerRequest request{"", header, nullptr, "", "", [this](asapo::GenericRequestHeader header, asapo::Error err) {
         called = true;
         callback_err = std::move(err);
         callback_header = header;
     }};
 
-    asapo::ProducerRequest request_nocallback{"", header, nullptr, "", nullptr};
-    asapo::ProducerRequest request_filesend{"", header, nullptr, expected_origin_fullpath, nullptr};
+    asapo::ProducerRequest request_nocallback{"", header, nullptr, "", "", nullptr};
+    asapo::ProducerRequest request_filesend{"", header, nullptr, "", expected_origin_fullpath, nullptr};
 
     testing::NiceMock<asapo::MockLogger> mock_logger;
 

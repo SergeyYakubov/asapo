@@ -32,7 +32,7 @@ class RequestHandlerTcp: public RequestHandler {
     Error Authorize(const std::string& beamtime_id);
     Error ConnectToReceiver(const std::string& beamtime_id, const std::string& receiver_address);
     Error SendDataToOneOfTheReceivers(ProducerRequest* request);
-    Error SendHeaderAndData(const ProducerRequest*);
+    Error SendRequestContent(const ProducerRequest* request);
     Error ReceiveResponse();
     Error TrySendToReceiver(const ProducerRequest* request);
     SocketDescriptor sd_{kDisconnectedSocketDescriptor};
