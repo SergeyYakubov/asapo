@@ -68,6 +68,8 @@ class RequestTests : public Test {
     uint64_t data_id_{15};
     uint64_t expected_slot_id{16};
     std::string expected_origin_uri = "origin_uri";
+    std::string expected_metadata = "meta";
+    uint64_t expected_metadata_size = expected_metadata.size();
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     char expected_request_message[asapo::kMaxMessageSize] = "test_message";
     std::unique_ptr<Request> request;
@@ -79,6 +81,7 @@ class RequestTests : public Test {
         stat = &mock_statistics;
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
+        generic_request_header.meta_size = expected_metadata_size;
         generic_request_header.op_code = expected_op_code;
         strcpy(generic_request_header.message, expected_request_message);
         request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
@@ -92,12 +95,45 @@ class RequestTests : public Test {
         request->io__.release();
     }
     void ExpectFileName(std::string sended, std::string received);
+    void ExpectReceive(uint64_t expected_size, bool ok = true);
+    void ExpectReceiveData(bool ok = true);
+    void ExpectReceiveMetaData(bool ok = true);
+    void ExpectReceiveAllOK();
 
 
 };
 
+ACTION_P(CopyStr,value) {
+    if (value.size()<=arg2) {
+        strcpy(static_cast<char*>(arg1), value.c_str());
+    }
+}
+
+
+void RequestTests::ExpectReceive(uint64_t expected_size,bool ok) {
+    EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, expected_size, _)).WillOnce(
+        DoAll(
+              CopyStr(expected_metadata),
+              SetArgPointee<3>(ok?nullptr:new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
+              Return(0)
+        ));
+
+}
+void RequestTests::ExpectReceiveData(bool ok) {
+    ExpectReceive(data_size_,ok);
+}
+void RequestTests::ExpectReceiveMetaData(bool ok) {
+    ExpectReceive(expected_metadata_size,ok);
+}
+
+void RequestTests::ExpectReceiveAllOK() {
+    ExpectReceiveData(true);
+    ExpectReceiveMetaData(true);
+}
+
 TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
     generic_request_header.data_size = 0;
+    generic_request_header.meta_size = 0;
     request->io__.release();
     request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
@@ -110,14 +146,18 @@ TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
 }
 
 TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
-    EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillOnce(
-        DoAll(SetArgPointee<3>(new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
-              Return(0)
-             ));
-
+    ExpectReceiveData(false);
     auto err = request->Handle(stat);
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
 }
+
+TEST_F(RequestTests, HandleReturnsErrorOnMetaDataReceive) {
+    ExpectReceiveData(true);
+    ExpectReceiveMetaData(false);
+    auto err = request->Handle(stat);
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
+}
+
 
 
 TEST_F(RequestTests, HandleGetsMemoryFromCache) {
@@ -131,7 +171,7 @@ TEST_F(RequestTests, HandleGetsMemoryFromCache) {
 
     EXPECT_CALL(mock_cache, UnlockSlot(&meta));
 
-    auto err = request->Handle(stat);
+    request->Handle(stat);
 
     ASSERT_THAT(request->GetSlotId(), Eq(expected_slot_id));
 }
@@ -154,18 +194,20 @@ TEST_F(RequestTests, ErrorGetMemoryFromCache) {
 }
 
 
-TEST_F(RequestTests, HandleMeasuresTimeOnDataReceive) {
+TEST_F(RequestTests, HandleMeasuresTimeOnContentReceive) {
 
     EXPECT_CALL(mock_statistics, StartTimer_t(asapo::StatisticEntity::kNetwork));
 
-    EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillOnce(
-        DoAll(SetArgPointee<3>(nullptr),
-              Return(0)
-             ));
+    ExpectReceiveAllOK();
 
     EXPECT_CALL(mock_statistics, StopTimer_t());
 
     request->Handle(stat);
+
+
+    ASSERT_THAT(request->GetMetaData(), Eq(expected_metadata));
+
+
 }
 
 
@@ -256,6 +298,7 @@ void RequestTests::ExpectFileName(std::string sended, std::string received) {
     ASSERT_THAT(fname, Eq(received));
 
 }
+
 
 TEST_F(RequestTests, GetFileName) {
     ExpectFileName("filename.txt", "filename.txt");

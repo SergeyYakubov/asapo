@@ -37,6 +37,7 @@ class Request {
     VIRTUAL const char* GetMessage() const;
 
     const std::string& GetOriginUri() const;
+    VIRTUAL const std::string& GetMetaData() const;
     VIRTUAL const std::string& GetBeamtimeId() const;
     VIRTUAL void SetBeamtimeId(std::string beamtime_id);
     VIRTUAL void SetBeamline(std::string beamline);
@@ -47,6 +48,9 @@ class Request {
   private:
     Error PrepareDataBuffer();
     Error ReceiveData();
+    Error ReceiveMetaData();
+    Error ReceiveRequestContent(ReceiverStatistics* statistics);
+
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     FileData data_buffer_;
@@ -55,6 +59,7 @@ class Request {
     std::string origin_uri_;
     std::string beamtime_id_;
     std::string beamline_;
+    std::string metadata_;
     CacheMeta* slot_meta_ = nullptr;
 };
 
