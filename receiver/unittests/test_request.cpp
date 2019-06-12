@@ -104,8 +104,8 @@ class RequestTests : public Test {
 };
 
 ACTION_P(CopyStr,value) {
-    if (value.size()<=arg2) {
-        strcpy(static_cast<char*>(arg1), value.c_str());
+    if (value.size()<=arg2 && value.size()>0) {
+        memcpy(static_cast<char*>(arg1), value.c_str(),value.size());
     }
 }
 
