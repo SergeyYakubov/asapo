@@ -42,7 +42,7 @@ Error Request::ReceiveMetaData() {
     if (err) {
         return err;
     }
-    metadata_.assign((char*)buf.get(),request_header_.meta_size);
+    metadata_.assign((char*)buf.get(), request_header_.meta_size);
     return nullptr;
 }
 

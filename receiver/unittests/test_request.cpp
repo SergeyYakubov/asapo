@@ -103,27 +103,27 @@ class RequestTests : public Test {
 
 };
 
-ACTION_P(CopyStr,value) {
-    if (value.size()<=arg2 && value.size()>0) {
-        memcpy(static_cast<char*>(arg1), value.c_str(),value.size());
+ACTION_P(CopyStr, value) {
+    if (value.size() <= arg2 && value.size() > 0) {
+        memcpy(static_cast<char*>(arg1), value.c_str(), value.size());
     }
 }
 
 
-void RequestTests::ExpectReceive(uint64_t expected_size,bool ok) {
+void RequestTests::ExpectReceive(uint64_t expected_size, bool ok) {
     EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, expected_size, _)).WillOnce(
         DoAll(
-              CopyStr(expected_metadata),
-              SetArgPointee<3>(ok?nullptr:new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
-              Return(0)
+            CopyStr(expected_metadata),
+            SetArgPointee<3>(ok ? nullptr : new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
+            Return(0)
         ));
 
 }
 void RequestTests::ExpectReceiveData(bool ok) {
-    ExpectReceive(data_size_,ok);
+    ExpectReceive(data_size_, ok);
 }
 void RequestTests::ExpectReceiveMetaData(bool ok) {
-    ExpectReceive(expected_metadata_size,ok);
+    ExpectReceive(expected_metadata_size, ok);
 }
 
 void RequestTests::ExpectReceiveAllOK() {

@@ -86,6 +86,7 @@ MATCHER_P(CompareFileInfo, file, "") {
     if (arg.buf_id != file.buf_id) return false;
     if (arg.name != file.name) return false;
     if (arg.id != file.id) return false;
+    if (arg.metadata != file.metadata) return false;
 
     return true;
 }
@@ -111,6 +112,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     WillOnce(testing::Return(nullptr));
 
     std::string expected_file_name = "2";
+    std::string expected_metadata = "meta";
     uint64_t expected_file_size = 10;
     uint64_t expected_id = 15;
     EXPECT_CALL(*mock_request, GetDataSize())
@@ -120,6 +122,11 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     EXPECT_CALL(*mock_request, GetFileName())
     .WillOnce(Return(expected_file_name))
     ;
+
+    EXPECT_CALL(*mock_request, GetMetaData())
+    .WillOnce(ReturnRef(expected_metadata))
+    ;
+
 
     EXPECT_CALL(*mock_request, GetDataID())
     .WillOnce(Return(expected_id))
@@ -131,7 +138,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     file_info.id = expected_id;
     file_info.buf_id = expected_buf_id;
     file_info.source = expected_hostname + ":" + std::to_string(expected_port);
-
+    file_info.metadata = expected_metadata;
 
     EXPECT_CALL(mock_db, Insert_t(CompareFileInfo(file_info), _)).
     WillOnce(testing::Return(nullptr));

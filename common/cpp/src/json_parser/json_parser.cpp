@@ -50,6 +50,10 @@ JsonParser::JsonParser(JsonParser&& other) {
     rapid_json_ = std::move(other.rapid_json_);
 }
 
+Error JsonParser::GetRawString(std::string* val) const noexcept {
+    return rapid_json_->GetRawString(val);
+}
+
 }
 
 
