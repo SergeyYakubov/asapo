@@ -35,7 +35,7 @@ void GetAllFromBroker(const Args& args) {
     asapo::FileInfo fi;
     err = broker->GetNext(&fi, group_id, nullptr);
     if (err) {
-        std::cout<<err->Explain()<<std::endl;
+        std::cout << err->Explain() << std::endl;
     }
     M_AssertTrue(err == nullptr, "GetNext no error");
     M_AssertTrue(fi.name == "1", "GetNext filename");

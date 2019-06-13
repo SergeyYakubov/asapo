@@ -21,6 +21,14 @@ def assert_metaname(meta,compare,name):
         print ('meta: ', json.dumps(meta, indent=4, sort_keys=True))
         sys.exit(1)
 
+def assert_usermetadata(meta,name):
+    if meta['user_metadata']['test'] != 10:
+        print ('meta: ', json.dumps(meta, indent=4, sort_keys=True))
+        print ("error at "+name)
+        print ('meta: ', json.dumps(meta, indent=4, sort_keys=True))
+        sys.exit(1)
+
+
 def assert_eq(val,expected,name):
     if val != expected:
         print ("error at "+name)
@@ -38,14 +46,18 @@ assert_err(err,"generate_group")
 _, meta, err = broker.get_next(group_id_new, meta_only=True)
 assert_err(err,"get_next")
 assert_metaname(meta,"1","get next1")
+assert_usermetadata(meta,"get next1")
+
 
 _, meta, err = broker.get_next(group_id_new, meta_only=True)
 assert_err(err,"get_next2")
 assert_metaname(meta,"2","get next2")
+assert_usermetadata(meta,"get next2")
 
 _, meta, err = broker.get_last(group_id_new, meta_only=True)
 assert_err(err,"get_last1")
 assert_metaname(meta,"5","get last1")
+assert_usermetadata(meta,"get last1")
 
 _, meta, err = broker.get_next(group_id_new, meta_only=True)
 assert_noterr(err,"get_next3")
@@ -61,12 +73,15 @@ assert_err(err,"reset_counter")
 _, meta, err = broker.get_next(group_id_new, meta_only=True)
 assert_err(err,"get_next4")
 assert_metaname(meta,"1","get next4")
+assert_usermetadata(meta,"get next4")
 
 
 _, meta, err = broker.get_by_id(3, group_id_new, meta_only=True)
 assert_err(err,"get_by_id")
 assert_metaname(meta,"3","get get_by_id")
+assert_usermetadata(meta,"get get_by_id")
 
 _, meta, err = broker.get_next(group_id_new, meta_only=True)
 assert_err(err,"get_next5")
 assert_metaname(meta,"4","get next5")
+assert_usermetadata(meta,"get next5")
