@@ -28,7 +28,7 @@ class ProducerImpl : public Producer {
     void SetLogLevel(LogLevel level) override;
     void EnableLocalLog(bool enable) override;
     void EnableRemoteLog(bool enable) override;
-    Error SendData(const EventHeader& event_header, FileData data, RequestCallback callback) override;
+    Error SendData(const EventHeader& event_header, FileData data, std::string metadata, RequestCallback callback) override;
     Error SendFile(const EventHeader& event_header, std::string full_path, RequestCallback callback) override;
     AbstractLogger* log__;
     std::unique_ptr<RequestPool> request_pool__;
@@ -36,8 +36,10 @@ class ProducerImpl : public Producer {
     Error SendMetaData(const std::string& metadata, RequestCallback callback) override;
 
   private:
-    Error Send(const EventHeader& event_header, FileData data, std::string full_path, RequestCallback callback);
-    GenericRequestHeader GenerateNextSendRequest(uint64_t file_id, uint64_t file_size, std::string file_name);
+    Error Send(const EventHeader& event_header, FileData data, std::string metadata, std::string full_path,
+               RequestCallback callback);
+    GenericRequestHeader GenerateNextSendRequest(uint64_t file_id, uint64_t file_size, uint64_t meta_size,
+                                                 std::string file_name);
     std::string beamtime_id_;
 };
 

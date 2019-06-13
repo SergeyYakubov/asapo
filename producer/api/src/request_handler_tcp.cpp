@@ -15,7 +15,7 @@ RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service
 }
 
 Error RequestHandlerTcp::Authorize(const std::string& beamtime_id) {
-    GenericRequestHeader header{kOpcodeAuthorize, 0, 0, beamtime_id.c_str()};
+    GenericRequestHeader header{kOpcodeAuthorize, 0, 0, 0, beamtime_id.c_str()};
     Error err;
     io__->Send(sd_, &header, sizeof(header), &err);
     if(err) {
@@ -48,7 +48,7 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id, const
     return nullptr;
 }
 
-Error RequestHandlerTcp::SendHeaderAndData(const ProducerRequest* request) {
+Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
     Error io_error;
     io__->Send(sd_, &(request->header), sizeof(request->header), &io_error);
     if(io_error) {
@@ -60,7 +60,9 @@ Error RequestHandlerTcp::SendHeaderAndData(const ProducerRequest* request) {
         return io_error;
     }
 
-    return nullptr;
+    io__->Send(sd_, (void*) request->metadata.c_str(), (size_t)request->header.meta_size, &io_error);
+    return io_error;
+
 }
 
 Error RequestHandlerTcp::ReceiveResponse() {
@@ -93,7 +95,7 @@ Error RequestHandlerTcp::ReceiveResponse() {
 }
 
 Error RequestHandlerTcp::TrySendToReceiver(const ProducerRequest* request) {
-    auto err = SendHeaderAndData(request);
+    auto err = SendRequestContent(request);
     if (err)  {
         return err;
     }

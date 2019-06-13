@@ -43,6 +43,7 @@ FileInfo RequestHandlerDbWrite::PrepareFileInfo(const Request* request) const {
     file_info.buf_id = request->GetSlotId();
     file_info.source = GetReceiverConfig()->source_host + ":" + string_format("%ld",
                        GetReceiverConfig()->dataserver.listen_port);
+    file_info.metadata = request->GetMetaData();
     return file_info;
 }
 RequestHandlerDbWrite::RequestHandlerDbWrite(std::string collection_name) : RequestHandlerDb(std::move(

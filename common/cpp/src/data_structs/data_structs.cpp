@@ -25,13 +25,15 @@ std::string FileInfo::Json() const {
     }
 #endif
 
+
     int64_t buf_id_int = static_cast<int64_t>(buf_id);
     std::string s = "{\"_id\":" + std::to_string(id) + ","
                     "\"size\":" + std::to_string(size) + ","
                     "\"name\":\"" + x + "\","
                     "\"lastchange\":" + std::to_string(nanoseconds_from_epoch) + ","
                     "\"source\":\"" + source + "\","
-                    "\"buf_id\":" + std::to_string(buf_id_int)
+                    "\"buf_id\":" + std::to_string(buf_id_int) + ","
+                    "\"meta\":" + (metadata.size() == 0 ? std::string("{}") : metadata)
                     + "}";
     return s;
 }
@@ -61,10 +63,13 @@ bool FileInfo::SetFromJson(const std::string& json_string) {
             parser.GetString("name", &name) ||
             parser.GetString("source", &source) ||
             parser.GetUInt64("buf_id", &buf_id) ||
+            parser.Embedded("meta").GetRawString(&metadata) ||
             !TimeFromJson(parser, "lastchange", &modify_date)) {
         *this = old;
         return false;
     }
+
+//ignore error if meta not found
 
     return true;
 }

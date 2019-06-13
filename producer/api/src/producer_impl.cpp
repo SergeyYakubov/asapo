@@ -29,9 +29,9 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, a
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
 }
 
-GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, uint64_t file_size,
+GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, uint64_t file_size, uint64_t meta_size,
         std::string file_name) {
-    GenericRequestHeader request{kOpcodeTransferData, file_id, file_size, std::move(file_name)};
+    GenericRequestHeader request{kOpcodeTransferData, file_id, file_size, meta_size, std::move(file_name)};
     return request;
 }
 
@@ -49,6 +49,7 @@ Error CheckProducerRequest(size_t file_size, size_t filename_size) {
 
 Error ProducerImpl::Send(const EventHeader& event_header,
                          FileData data,
+                         std::string metadata,
                          std::string full_path,
                          RequestCallback callback) {
     auto err = CheckProducerRequest((size_t)event_header.file_size, event_header.file_name.size());
@@ -57,23 +58,24 @@ Error ProducerImpl::Send(const EventHeader& event_header,
         return err;
     }
 
-    auto request_header = GenerateNextSendRequest(event_header.file_id, event_header.file_size, event_header.file_name);
+    auto request_header = GenerateNextSendRequest(event_header.file_id, event_header.file_size,
+                                                  metadata.size(), event_header.file_name);
 
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{beamtime_id_, std::move(request_header),
-                std::move(data), std::move(full_path), callback}
+                std::move(data), std::move(metadata), std::move(full_path), callback}
     });
 
 }
 
 
-Error ProducerImpl::SendData(const EventHeader& event_header, FileData data,
+Error ProducerImpl::SendData(const EventHeader& event_header, FileData data, std::string metadata,
                              RequestCallback callback) {
-    return Send(event_header, std::move(data), "", callback);
+    return Send(event_header, std::move(data), std::move(metadata), "", callback);
 }
 
 
 Error ProducerImpl::SendFile(const EventHeader& event_header, std::string full_path, RequestCallback callback) {
-    return Send(event_header, nullptr, std::move(full_path), callback);
+    return Send(event_header, nullptr, "", std::move(full_path), callback);
 }
 
 
@@ -106,11 +108,11 @@ Error ProducerImpl::SetBeamtimeId(std::string beamtime_id) {
 }
 
 Error ProducerImpl::SendMetaData(const std::string& metadata, RequestCallback callback) {
-    GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), "beamtime_global.meta"};
+    GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0, "beamtime_global.meta"};
     FileData data{new uint8_t[metadata.size()]};
     strncpy((char*)data.get(), metadata.c_str(), metadata.size());
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{beamtime_id_, std::move(request_header),
-                std::move(data), "", callback}
+                std::move(data), "", "", callback}
     });
 }
 

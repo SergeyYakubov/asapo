@@ -34,12 +34,17 @@ void GetAllFromBroker(const Args& args) {
     auto group_id = broker->GenerateNewGroupId(&err);
     asapo::FileInfo fi;
     err = broker->GetNext(&fi, group_id, nullptr);
+    if (err) {
+        std::cout << err->Explain() << std::endl;
+    }
     M_AssertTrue(err == nullptr, "GetNext no error");
     M_AssertTrue(fi.name == "1", "GetNext filename");
+    M_AssertTrue(fi.metadata == "{\"test\":10}", "GetNext metadata");
 
     err = broker->GetLast(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetLast no error");
     M_AssertTrue(fi.name == "10", "GetLast filename");
+    M_AssertTrue(fi.metadata == "{\"test\":10}", "GetLast metadata");
 
     err = broker->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err != nullptr, "GetNext2 error");

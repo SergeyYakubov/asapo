@@ -20,6 +20,8 @@ class JsonParser {
     Error GetString(const std::string& name, std::string* val) const noexcept;
     Error GetArrayUInt64(const std::string& name, std::vector<uint64_t>* val) const noexcept;
     Error GetArrayString(const std::string& name, std::vector<std::string>* val) const noexcept;
+    Error GetRawString(std::string* val) const noexcept;
+
     JsonParser Embedded(const std::string& name) const noexcept;
     ~JsonParser();
   protected:

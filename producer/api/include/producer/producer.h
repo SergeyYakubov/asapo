@@ -28,9 +28,11 @@ class Producer {
     /*!
       \param event_header - A stucture with the meta information (file name, size).
       \param data - A pointer to the data to send
+      \param metadata - A string with metadata (JSON format)
       \return Error - Will be nullptr on success
     */
-    virtual Error SendData(const EventHeader& event_header, FileData data, RequestCallback callback) = 0;
+    virtual Error SendData(const EventHeader& event_header, FileData data, std::string metadata,
+                           RequestCallback callback) = 0;
     //! Sends files to the receiver
     /*!
       \param event_header - A stucture with the meta information (file name, size is ignored).

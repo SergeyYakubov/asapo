@@ -42,13 +42,15 @@ cdef class PyDataBroker:
             return None,None,err_str
         info_str = _str(info.Json())
         meta = json.loads(info_str)
+        del meta['buf_id']
+        del meta['source']
+        del meta['lastchange']
+        if 'meta' in meta:
+            meta['user_metadata'] = meta.pop('meta')
         if meta_only:
             return None,meta,None
         cdef char* ptr = <char*> data.release()
         dims[0] = meta['size']
-        del meta['buf_id']
-        del meta['source']
-        del meta['lastchange']
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         return arr,meta,None
     def get_next(self, group_id, meta_only = True):

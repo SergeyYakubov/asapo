@@ -36,18 +36,19 @@ const std::size_t kMaxMessageSize = 1024;
 
 struct GenericRequestHeader {
     GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
-                         uint64_t i_data_size = 0, const std::string& i_message = ""):
-        op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size} {
+                         uint64_t i_data_size = 0, uint64_t i_meta_size = 0, const std::string& i_message = ""):
+        op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size}, meta_size{i_meta_size} {
         strncpy(message, i_message.c_str(), kMaxMessageSize);
     }
     GenericRequestHeader(const GenericRequestHeader& header) {
-        op_code = header.op_code, data_id = header.data_id, data_size = header.data_size,
+        op_code = header.op_code, data_id = header.data_id, data_size = header.data_size, meta_size = header.meta_size,
         strncpy(message, header.message, kMaxMessageSize);
     }
 
     Opcode      op_code;
     uint64_t    data_id;
     uint64_t    data_size;
+    uint64_t    meta_size;
     char        message[kMaxMessageSize];
 };
 

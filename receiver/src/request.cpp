@@ -31,7 +31,27 @@ Error Request::PrepareDataBuffer() {
     return nullptr;
 }
 
+Error Request::ReceiveMetaData() {
+    if (request_header_.meta_size == 0) {
+        return nullptr;
+    }
+
+    Error err;
+    auto buf = std::unique_ptr<uint8_t[]> {new uint8_t[(size_t)request_header_.meta_size]};
+    io__->Receive(socket_fd_, (void*) buf.get(), (size_t) request_header_.meta_size, &err);
+    if (err) {
+        return err;
+    }
+    metadata_.assign((char*)buf.get(), request_header_.meta_size);
+    return nullptr;
+}
+
+
 Error Request::ReceiveData() {
+    if (request_header_.data_size == 0) {
+        return nullptr;
+    }
+
     auto err = PrepareDataBuffer();
     if (err) {
         return err;
@@ -44,16 +64,31 @@ Error Request::ReceiveData() {
 }
 
 
-Error Request::Handle(ReceiverStatistics* statistics) {
-    Error err;
-    if (request_header_.data_size != 0) {
-        statistics->StartTimer(StatisticEntity::kNetwork);
-        auto err = ReceiveData();
-        if (err) {
-            return err;
-        }
-        statistics->StopTimer();
+Error Request::ReceiveRequestContent(ReceiverStatistics* statistics) {
+    statistics->StartTimer(StatisticEntity::kNetwork);
+    auto err = ReceiveData();
+    if (err) {
+        return err;
     }
+
+    err = ReceiveMetaData();
+    if (err) {
+        return err;
+    }
+
+    statistics->StopTimer();
+
+    return nullptr;
+}
+
+
+
+Error Request::Handle(ReceiverStatistics* statistics) {
+    auto err = ReceiveRequestContent(statistics);
+    if (err) {
+        return err;
+    }
+
     for (auto handler : handlers_) {
         statistics->StartTimer(handler->GetStatisticEntity());
         auto err = handler->ProcessRequest(this);
@@ -136,4 +171,9 @@ uint64_t Request::GetSlotId() const {
         return 0;
     }
 }
+
+const std::string& Request::GetMetaData() const {
+    return metadata_;
+}
+
 }

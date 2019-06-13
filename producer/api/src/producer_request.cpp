@@ -14,9 +14,14 @@ Error ProducerRequest::ReadDataFromFileIfNeeded(const IO* io) {
 ProducerRequest::ProducerRequest(std::string beamtime_id,
                                  GenericRequestHeader h,
                                  FileData data,
+                                 std::string metadata,
                                  std::string original_filepath,
-                                 RequestCallback callback) : GenericRequest(std::move(h)), beamtime_id{beamtime_id}, data{std::move(data)},
-    original_filepath{std::move(original_filepath)}, callback{callback} {
+                                 RequestCallback callback) : GenericRequest(std::move(h)),
+    beamtime_id{std::move(beamtime_id)},
+    metadata{std::move(metadata)},
+    data{std::move(data)},
+    original_filepath{std::move(original_filepath)},
+    callback{callback} {
 }
 
 }

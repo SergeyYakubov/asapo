@@ -54,9 +54,11 @@ class RequestHandlerTests : public Test {
     ReceiverDataServerRequestHandler handler_no_cache{&mock_net, nullptr, &mock_stat};
     NiceMock<asapo::MockLogger> mock_logger;
     uint64_t expected_data_size = 1001243214;
+    uint64_t expected_meta_size = 100;
     uint64_t expected_buf_id = 12345;
     uint64_t expected_source_id = 11;
-    asapo::GenericRequestHeader header{asapo::kOpcodeGetBufferData, expected_buf_id, expected_data_size, ""};
+    asapo::GenericRequestHeader header{asapo::kOpcodeGetBufferData, expected_buf_id, expected_data_size,
+                                       expected_meta_size, ""};
     asapo::ReceiverDataServerRequest request{std::move(header), expected_source_id};
     uint8_t tmp;
     void SetUp() override {

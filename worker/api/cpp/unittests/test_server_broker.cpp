@@ -292,7 +292,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsParseError) {
     MockGet("error_response");
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kErrorReadingSource));
+    ASSERT_THAT(err->Explain(), ::testing::HasSubstr(asapo::WorkerErrorMessage::kErrorReadingSource));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfNoDtataNeeded) {

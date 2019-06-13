@@ -1,5 +1,6 @@
 #include "rapid_json.h"
-#include "rapid_json.h"
+#include "rapidjson/stringbuffer.h"
+#include <rapidjson/writer.h>
 
 using namespace rapidjson;
 
@@ -171,6 +172,18 @@ RapidJson::RapidJson(const RapidJson& parent, const std::string& subname) {
         return;
     }
     initialized_ = true;
+}
+
+Error RapidJson::GetRawString(std::string* val) const noexcept {
+    if (Error err = LazyInitialize()) {
+        return err;
+    }
+
+    StringBuffer buffer;
+    Writer<StringBuffer> writer(buffer);
+    object_p_->Accept(writer);
+    val->assign(buffer.GetString());
+    return nullptr;
 }
 
 }
