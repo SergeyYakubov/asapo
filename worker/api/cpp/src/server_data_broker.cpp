@@ -145,7 +145,7 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_
     }
 
     if (!info->SetFromJson(response)) {
-        return TextError(WorkerErrorMessage::kErrorReadingSource);
+        return TextError(WorkerErrorMessage::kErrorReadingSource+std::string(":")+response);
     }
     return nullptr;
 }
