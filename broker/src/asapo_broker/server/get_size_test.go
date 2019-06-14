@@ -33,7 +33,7 @@ func TestGetSizeTestSuite(t *testing.T) {
 }
 
 func (suite *GetSizeTestSuite) TestGetSizeOK() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, "", "size", 0).Return([]byte("{\"size\":10}"), nil)
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, "", "size", "0").Return([]byte("{\"size\":10}"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request size")))
 	ExpectCopyClose(suite.mock_db)
 

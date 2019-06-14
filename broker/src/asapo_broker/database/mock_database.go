@@ -24,7 +24,7 @@ func (db *MockedDatabase) Copy() Agent {
 	return db
 }
 
-func (db *MockedDatabase) ProcessRequest(db_name string, group_id string, op string, id int) (answer []byte, err error) {
-	args := db.Called(db_name, group_id, op, id)
+func (db *MockedDatabase) ProcessRequest(db_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
+	args := db.Called(db_name, group_id, op, extra_param)
 	return args.Get(0).([]byte), args.Error(1)
 }

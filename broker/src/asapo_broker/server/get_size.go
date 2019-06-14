@@ -5,5 +5,5 @@ import (
 )
 
 func routeGetSize(w http.ResponseWriter, r *http.Request) {
-	processRequest(w, r, "size", 0, false)
+	processRequest(w, r, "size", "0", false)
 }

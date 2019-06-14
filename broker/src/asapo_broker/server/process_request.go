@@ -37,7 +37,7 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 	return true
 }
 
-func processRequest(w http.ResponseWriter, r *http.Request, op string, id int, needGroupID bool) {
+func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_param string, needGroupID bool) {
 	r.Header.Set("Content-type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	db_name, group_id, ok := extractRequestParameters(r, needGroupID)
@@ -59,7 +59,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, id int, n
 		op = "idreset"
 	}
 
-	answer, code := processRequestInDb(db_name, group_id, op, id)
+	answer, code := processRequestInDb(db_name, group_id, op, extra_param)
 	w.WriteHeader(code)
 	w.Write(answer)
 }
@@ -78,11 +78,11 @@ func returnError(err error, log_str string) (answer []byte, code int) {
 	return []byte(err.Error()), code
 }
 
-func processRequestInDb(db_name string, group_id string, op string, id int) (answer []byte, code int) {
+func processRequestInDb(db_name string, group_id string, op string, extra_param string) (answer []byte, code int) {
 	db_new := db.Copy()
 	defer db_new.Close()
 	statistics.IncreaseCounter()
-	answer, err := db_new.ProcessRequest(db_name, group_id, op, id)
+	answer, err := db_new.ProcessRequest(db_name, group_id, op, extra_param)
 	log_str := "processing request " + op + " in " + db_name + " at " + settings.BrokerDbAddress
 	if err != nil {
 		return returnError(err, log_str)
