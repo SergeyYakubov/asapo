@@ -3,45 +3,83 @@
 package database
 
 import (
-	"fmt"
+	"errors"
 	"github.com/globalsign/mgo/bson"
 	"github.com/knocknote/vitess-sqlparser/sqlparser"
 	"strconv"
 )
 
-var res bson.M
+var global_query bson.M
+
+func SQLOperatorToMongo(sqlOp string) string {
+	switch sqlOp {
+	case sqlparser.EqualStr:
+		return "$eq"
+	case sqlparser.LessThanStr:
+		return "$lt"
+	case sqlparser.GreaterThanStr:
+		return "$gt"
+	case sqlparser.LessEqualStr:
+		return "$lte"
+	case sqlparser.GreaterEqualStr:
+		return "$gte"
+	case sqlparser.NotEqualStr:
+		return "$ne"
+	case sqlparser.InStr:
+		return "$in"
+	case sqlparser.NotInStr:
+		return "$nin"
+		//	case sqlparser.LikeStr:
+		//		return "$eq"
+		//	case sqlparser.NotLikeStr:
+		//		return "$eq"
+		//	case sqlparser.RegexpStr:
+		//		return "$eq"
+		//	case sqlparser.NotRegexpStr:
+		//		return "$eq"
+	default:
+		return "unknown"
+	}
+}
 
 func Visit(node sqlparser.SQLNode) (kontinue bool, err error) {
 	//fmt.Printf("%T\n", node)
 	switch expr := node.(type) {
 	case *sqlparser.ComparisonExpr:
-		//op := expr.Operator
+		mongoOp := SQLOperatorToMongo(expr.Operator)
+		par_key := expr.Left.(*sqlparser.ColName).Qualifier.Name.String()
+		par_par_key := expr.Left.(*sqlparser.ColName).Qualifier.Qualifier.String()
 		key := expr.Left.(*sqlparser.ColName).Name.String()
+		if len(par_key) > 0 {
+			key = par_key + "." + key
+		}
+		if len(par_par_key) > 0 {
+			key = par_par_key + "." + key
+		}
 		val := expr.Right.(*sqlparser.SQLVal)
 		if val.Type == sqlparser.IntVal {
 			num, _ := strconv.Atoi(string(val.Val))
-			res = bson.M{key: num}
+			global_query = bson.M{key: bson.M{mongoOp: num}}
 		}
+	default:
+		return false, errors.New("unkwnown expression ")
 	}
 
 	return false, nil
 }
 
 func (db *Mongodb) BSONFromSQL(dbname string, query string) (bson.M, error) {
+	global_query = bson.M{}
+
 	stmt, err := sqlparser.Parse("select * from " + dbname + " where " + query)
 	if err != nil {
-		panic(err)
+		return global_query, err
 	}
 
-	res = bson.M{}
 	switch stmt := stmt.(type) {
 	case *sqlparser.Select:
 		where := stmt.Where.Expr
-		sqlparser.Walk(Visit, where)
+		err = sqlparser.Walk(Visit, where)
 	}
-
-	//res = bson.M{"temp": 10}
-	fmt.Println(res)
-
-	return res, nil
+	return global_query, err
 }

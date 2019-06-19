@@ -357,7 +357,6 @@ func (db *Mongodb) getMeta(dbname string, id_str string) ([]byte, error) {
 		logger.Debug(log_str)
 		return nil, &DBError{utils.StatusNoData, err.Error()}
 	}
-
 	log_str := "got record id " + strconv.Itoa(id) + " for " + dbname
 	logger.Debug(log_str)
 	return utils.MapToJson(&res)
@@ -365,14 +364,13 @@ func (db *Mongodb) getMeta(dbname string, id_str string) ([]byte, error) {
 
 func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
 	var res []map[string]interface{}
-	metaq, err := db.BSONFromSQL(dbname, query)
+	q, err := db.BSONFromSQL(dbname, query)
 	if err != nil {
 		log_str := "error parsing query: " + query + " for " + dbname + " : " + err.Error()
 		logger.Debug(log_str)
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	q := bson.M{"meta": metaq}
 	c := db.session.DB(dbname).C(data_collection_name)
 	err = c.Find(q).All(&res)
 	if err != nil {

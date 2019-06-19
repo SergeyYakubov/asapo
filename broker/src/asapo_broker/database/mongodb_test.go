@@ -3,6 +3,7 @@
 package database
 
 import (
+	"asapo_common/logger"
 	"asapo_common/utils"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -31,6 +32,7 @@ const metaID_str = "0"
 var rec1 = TestRecord{1, "aaa", MetaData{10}}
 var rec2 = TestRecord{2, "bbb", MetaData{11}}
 var rec3 = TestRecord{3, "ccc", MetaData{10}}
+
 var rec1_expect, _ = json.Marshal(rec1)
 var rec2_expect, _ = json.Marshal(rec2)
 var rec3_expect, _ = json.Marshal(rec3)
@@ -335,35 +337,44 @@ func TestMongoDBGetMetaErr(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+var recq1 = TestRecord{1, "aaa", MetaData{10}}
+var recq2 = TestRecord{2, "bbb", MetaData{11}}
+var recq3 = TestRecord{3, "ccc", MetaData{10}}
+var recq4 = TestRecord{4, "ddd", MetaData{13}}
+
 var tests = []struct {
 	query string
 	res   []TestRecord
 	ok    bool
 }{
-	{"temp = 10", []TestRecord{rec1, rec3}, true},
-	//	{"temp = 11", []TestRecord{rec2}, true},
-	//	{"give_error", []TestRecord{}, false},
+	{"meta.temp = 10", []TestRecord{recq1, recq3}, true},
+	{"meta.temp = 11", []TestRecord{recq2}, true},
+	{"meta.temp > 11", []TestRecord{recq4}, true},
+	{"meta.temp < 11", []TestRecord{recq1, recq3}, true},
+	{"meta.temp <= 11", []TestRecord{recq1, recq2, recq3}, true},
+	{"meta.temp >= 11", []TestRecord{recq2, recq4}, true},
+	{"give_error", []TestRecord{}, false},
 }
 
 func TestMongoDBQueryImagesOK(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 
-	db.InsertRecord(dbname, &rec1)
-	db.InsertRecord(dbname, &rec2)
-	db.InsertRecord(dbname, &rec3)
+	logger.SetLevel(logger.DebugLevel)
+	db.InsertRecord(dbname, &recq1)
+	db.InsertRecord(dbname, &recq2)
+	db.InsertRecord(dbname, &recq3)
+	db.InsertRecord(dbname, &recq4)
 
 	for _, test := range tests {
 		res, err := db.ProcessRequest(dbname, "", "queryimages", test.query)
 		res_expect, _ := json.Marshal(test.res)
-
 		if test.ok {
 			assert.Nil(t, err)
 			assert.Equal(t, string(res_expect), string(res), test.query)
 		} else {
-			assert.Equal(t, len(rec1_expect), 0)
 			assert.NotNil(t, err, test.query)
-
+			assert.Equal(t, 2, len(res_expect))
 		}
 
 	}
