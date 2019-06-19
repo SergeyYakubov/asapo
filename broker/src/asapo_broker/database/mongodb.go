@@ -363,6 +363,29 @@ func (db *Mongodb) getMeta(dbname string, id_str string) ([]byte, error) {
 	return utils.MapToJson(&res)
 }
 
+func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
+	var res []map[string]interface{}
+	metaq, err := db.BSONFromSQL(dbname, query)
+	if err != nil {
+		log_str := "error parsing query: " + query + " for " + dbname + " : " + err.Error()
+		logger.Debug(log_str)
+		return nil, &DBError{utils.StatusWrongInput, err.Error()}
+	}
+
+	q := bson.M{"meta": metaq}
+	c := db.session.DB(dbname).C(data_collection_name)
+	err = c.Find(q).All(&res)
+	if err != nil {
+		log_str := "error processing query: " + query + " for " + dbname + " : " + err.Error()
+		logger.Debug(log_str)
+		return nil, &DBError{utils.StatusNoData, err.Error()}
+	}
+
+	log_str := "processed query " + query + " for " + dbname
+	logger.Debug(log_str)
+	return utils.MapToJson(&res)
+}
+
 func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
 	switch op {
 	case "next":
@@ -379,7 +402,8 @@ func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, ex
 		return db.GetSize(db_name)
 	case "meta":
 		return db.getMeta(db_name, extra_param)
-
+	case "queryimages":
+		return db.queryImages(db_name, extra_param)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

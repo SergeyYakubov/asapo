@@ -10,9 +10,14 @@ import (
 	"testing"
 )
 
+type MetaData struct {
+	Temp int `bson:"temp" json:"temp"`
+}
+
 type TestRecord struct {
-	ID    int    `bson:"_id" json:"_id"`
-	FName string `bson:"fname" json:"fname"`
+	ID    int      `bson:"_id" json:"_id"`
+	FName string   `bson:"fname" json:"fname"`
+	Meta  MetaData `bson:"meta" json:"meta"`
 }
 
 var db Mongodb
@@ -23,9 +28,9 @@ const groupId = "bid2a5auidddp1vl71d0"
 const metaID = 0
 const metaID_str = "0"
 
-var rec1 = TestRecord{1, "aaa"}
-var rec2 = TestRecord{2, "bbb"}
-var rec3 = TestRecord{3, "ccc"}
+var rec1 = TestRecord{1, "aaa", MetaData{10}}
+var rec2 = TestRecord{2, "bbb", MetaData{11}}
+var rec3 = TestRecord{3, "ccc", MetaData{10}}
 var rec1_expect, _ = json.Marshal(rec1)
 var rec2_expect, _ = json.Marshal(rec2)
 var rec3_expect, _ = json.Marshal(rec3)
@@ -328,4 +333,39 @@ func TestMongoDBGetMetaErr(t *testing.T) {
 
 	_, err := db.ProcessRequest(dbname, "", "meta", metaID_str)
 	assert.NotNil(t, err)
+}
+
+var tests = []struct {
+	query string
+	res   []TestRecord
+	ok    bool
+}{
+	{"temp = 10", []TestRecord{rec1, rec3}, true},
+	//	{"temp = 11", []TestRecord{rec2}, true},
+	//	{"give_error", []TestRecord{}, false},
+}
+
+func TestMongoDBQueryImagesOK(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	db.InsertRecord(dbname, &rec1)
+	db.InsertRecord(dbname, &rec2)
+	db.InsertRecord(dbname, &rec3)
+
+	for _, test := range tests {
+		res, err := db.ProcessRequest(dbname, "", "queryimages", test.query)
+		res_expect, _ := json.Marshal(test.res)
+
+		if test.ok {
+			assert.Nil(t, err)
+			assert.Equal(t, string(res_expect), string(res), test.query)
+		} else {
+			assert.Equal(t, len(rec1_expect), 0)
+			assert.NotNil(t, err, test.query)
+
+		}
+
+	}
+
 }
