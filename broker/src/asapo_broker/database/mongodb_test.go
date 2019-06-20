@@ -3,7 +3,6 @@
 package database
 
 import (
-	"asapo_common/logger"
 	"asapo_common/utils"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -11,14 +10,9 @@ import (
 	"testing"
 )
 
-type MetaData struct {
-	Temp int `bson:"temp" json:"temp"`
-}
-
 type TestRecord struct {
-	ID    int      `bson:"_id" json:"_id"`
-	FName string   `bson:"fname" json:"fname"`
-	Meta  MetaData `bson:"meta" json:"meta"`
+	ID    int    `bson:"_id" json:"_id"`
+	FName string `bson:"fname" json:"fname"`
 }
 
 var db Mongodb
@@ -29,9 +23,9 @@ const groupId = "bid2a5auidddp1vl71d0"
 const metaID = 0
 const metaID_str = "0"
 
-var rec1 = TestRecord{1, "aaa", MetaData{10}}
-var rec2 = TestRecord{2, "bbb", MetaData{11}}
-var rec3 = TestRecord{3, "ccc", MetaData{10}}
+var rec1 = TestRecord{1, "aaa"}
+var rec2 = TestRecord{2, "bbb"}
+var rec3 = TestRecord{3, "ccc"}
 
 var rec1_expect, _ = json.Marshal(rec1)
 var rec2_expect, _ = json.Marshal(rec2)
@@ -337,46 +331,63 @@ func TestMongoDBGetMetaErr(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-var recq1 = TestRecord{1, "aaa", MetaData{10}}
-var recq2 = TestRecord{2, "bbb", MetaData{11}}
-var recq3 = TestRecord{3, "ccc", MetaData{10}}
-var recq4 = TestRecord{4, "ddd", MetaData{13}}
+type MetaData struct {
+	Temp    float64 `bson:"temp" json:"temp"`
+	Counter int     `bson:"counter" json:"counter"`
+	Text    string  `bson:"text" json:"text"`
+}
+
+type TestRecordMeta struct {
+	ID    int      `bson:"_id" json:"_id"`
+	FName string   `bson:"fname" json:"fname"`
+	Meta  MetaData `bson:"meta" json:"meta"`
+}
+
+var recq1 = TestRecordMeta{1, "aaa", MetaData{10.2, 10, "aaa"}}
+var recq2 = TestRecordMeta{2, "bbb", MetaData{11.2, 11, "bbb"}}
+var recq3 = TestRecordMeta{3, "ccc", MetaData{10.2, 10, "ccc"}}
+var recq4 = TestRecordMeta{4, "ddd", MetaData{13.2, 13, "ddd"}}
 
 var tests = []struct {
 	query string
-	res   []TestRecord
+	res   []TestRecordMeta
 	ok    bool
 }{
-	{"meta.temp = 10", []TestRecord{recq1, recq3}, true},
-	{"meta.temp = 11", []TestRecord{recq2}, true},
-	{"meta.temp > 11", []TestRecord{recq4}, true},
-	{"meta.temp < 11", []TestRecord{recq1, recq3}, true},
-	{"meta.temp <= 11", []TestRecord{recq1, recq2, recq3}, true},
-	{"meta.temp >= 11", []TestRecord{recq2, recq4}, true},
-	{"give_error", []TestRecord{}, false},
+	{"meta.counter = 10", []TestRecordMeta{recq1, recq3}, true},
+	{"meta.counter = 11", []TestRecordMeta{recq2}, true},
+	{"meta.counter > 11", []TestRecordMeta{recq4}, true},
+	{"meta.counter < 11", []TestRecordMeta{recq1, recq3}, true},
+	{"meta.counter <= 11", []TestRecordMeta{recq1, recq2, recq3}, true},
+	{"meta.counter >= 11", []TestRecordMeta{recq2, recq4}, true},
+	{"meta.temp = 11.2", []TestRecordMeta{recq2}, true},
+	{"meta.text = 'ccc'", []TestRecordMeta{recq3}, true},
+	{"meta.text = ccc", []TestRecordMeta{}, false},
+	{"meta.text != 'ccc'", []TestRecordMeta{recq1, recq2, recq4}, true},
+
+	{"give_error", []TestRecordMeta{}, false},
 }
 
 func TestMongoDBQueryImagesOK(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 
-	logger.SetLevel(logger.DebugLevel)
+	//	logger.SetLevel(logger.DebugLevel)
 	db.InsertRecord(dbname, &recq1)
 	db.InsertRecord(dbname, &recq2)
 	db.InsertRecord(dbname, &recq3)
 	db.InsertRecord(dbname, &recq4)
 
 	for _, test := range tests {
-		res, err := db.ProcessRequest(dbname, "", "queryimages", test.query)
-		res_expect, _ := json.Marshal(test.res)
+		res_string, err := db.ProcessRequest(dbname, "", "queryimages", test.query)
+		var res []TestRecordMeta
+		json.Unmarshal(res_string, &res)
 		if test.ok {
 			assert.Nil(t, err)
-			assert.Equal(t, string(res_expect), string(res), test.query)
+			assert.Equal(t, test.res, res, test.query)
 		} else {
 			assert.NotNil(t, err, test.query)
-			assert.Equal(t, 2, len(res_expect))
+			assert.Equal(t, 0, len(res))
 		}
-
 	}
 
 }

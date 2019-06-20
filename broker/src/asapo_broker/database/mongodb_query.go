@@ -42,6 +42,37 @@ func SQLOperatorToMongo(sqlOp string) string {
 	}
 }
 
+/*func bsonM(key string, value interface{}) bson.M {
+	v := reflect.ValueOf(value)
+	switch v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return bson.M{key: v.Int()}
+	case reflect.Float32, reflect.Float64:
+		return bson.M{key: v.Float()}
+	case reflect.String:
+		return bson.M{key: v.String()}
+	case reflect.Bool:
+		return bson.M{key: v.Bool()}
+	default:
+		return bson.M{}
+	}
+}*/
+
+func bsonM(key string, val *sqlparser.SQLVal) bson.M {
+	switch val.Type {
+	case sqlparser.IntVal:
+		num, _ := strconv.Atoi(string(val.Val))
+		return bson.M{key: num}
+	case sqlparser.FloatVal:
+		num, _ := strconv.ParseFloat(string(val.Val), 64)
+		return bson.M{key: num}
+	case sqlparser.StrVal:
+		return bson.M{key: string(val.Val)}
+	default:
+		return bson.M{}
+	}
+}
+
 func Visit(node sqlparser.SQLNode) (kontinue bool, err error) {
 	//fmt.Printf("%T\n", node)
 	switch expr := node.(type) {
@@ -56,11 +87,12 @@ func Visit(node sqlparser.SQLNode) (kontinue bool, err error) {
 		if len(par_par_key) > 0 {
 			key = par_par_key + "." + key
 		}
-		val := expr.Right.(*sqlparser.SQLVal)
-		if val.Type == sqlparser.IntVal {
-			num, _ := strconv.Atoi(string(val.Val))
-			global_query = bson.M{key: bson.M{mongoOp: num}}
+		val, con_err := expr.Right.(*sqlparser.SQLVal)
+		if !con_err {
+			return false, errors.New("wrong value")
 		}
+
+		global_query = bson.M{key: bsonM(mongoOp, val)}
 	default:
 		return false, errors.New("unkwnown expression ")
 	}
