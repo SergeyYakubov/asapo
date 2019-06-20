@@ -346,7 +346,7 @@ type TestRecordMeta struct {
 var recq1 = TestRecordMeta{1, "aaa", MetaData{10.2, 10, "aaa"}}
 var recq2 = TestRecordMeta{2, "bbb", MetaData{11.2, 11, "bbb"}}
 var recq3 = TestRecordMeta{3, "ccc", MetaData{10.2, 10, "ccc"}}
-var recq4 = TestRecordMeta{4, "ddd", MetaData{13.2, 13, "ddd"}}
+var recq4 = TestRecordMeta{4, "ddd", MetaData{13.2, 13, ""}}
 
 var tests = []struct {
 	query string
@@ -361,9 +361,18 @@ var tests = []struct {
 	{"meta.counter >= 11", []TestRecordMeta{recq2, recq4}, true},
 	{"meta.temp = 11.2", []TestRecordMeta{recq2}, true},
 	{"meta.text = 'ccc'", []TestRecordMeta{recq3}, true},
+	{"meta.text = ''", []TestRecordMeta{recq4}, true},
 	{"meta.text = ccc", []TestRecordMeta{}, false},
 	{"meta.text != 'ccc'", []TestRecordMeta{recq1, recq2, recq4}, true},
-
+	{"meta.temp BETWEEN 11 AND 13", []TestRecordMeta{recq2}, true},
+	{"meta.temp NOT BETWEEN 11 AND 13", []TestRecordMeta{recq1, recq3, recq4}, true},
+	{"meta.counter IN (10,13)", []TestRecordMeta{recq1, recq3, recq4}, true},
+	{"meta.counter NOT IN (10,13)", []TestRecordMeta{recq2}, true},
+	{"meta.text IN ('aaa','ccc')", []TestRecordMeta{recq1, recq3}, true},
+	{"_id = 1", []TestRecordMeta{recq1}, true},
+	{"meta.text REGEXP '^c+'", []TestRecordMeta{recq3}, true},
+	{"meta.text REGEXP '^a|b'", []TestRecordMeta{recq1, recq2}, true},
+	{"meta.text NOT REGEXP '^c+'", []TestRecordMeta{recq1, recq2, recq4}, true},
 	{"give_error", []TestRecordMeta{}, false},
 }
 

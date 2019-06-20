@@ -33,30 +33,14 @@ func SQLOperatorToMongo(sqlOp string) string {
 		//		return "$eq"
 		//	case sqlparser.NotLikeStr:
 		//		return "$eq"
-		//	case sqlparser.RegexpStr:
-		//		return "$eq"
-		//	case sqlparser.NotRegexpStr:
-		//		return "$eq"
+	case sqlparser.RegexpStr:
+		return "$regex"
+	case sqlparser.NotRegexpStr:
+		return "$regex"
 	default:
 		return "unknown"
 	}
 }
-
-/*func bsonM(key string, value interface{}) bson.M {
-	v := reflect.ValueOf(value)
-	switch v.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return bson.M{key: v.Int()}
-	case reflect.Float32, reflect.Float64:
-		return bson.M{key: v.Float()}
-	case reflect.String:
-		return bson.M{key: v.String()}
-	case reflect.Bool:
-		return bson.M{key: v.Bool()}
-	default:
-		return bson.M{}
-	}
-}*/
 
 func bsonM(key string, val *sqlparser.SQLVal) bson.M {
 	switch val.Type {
@@ -67,32 +51,104 @@ func bsonM(key string, val *sqlparser.SQLVal) bson.M {
 		num, _ := strconv.ParseFloat(string(val.Val), 64)
 		return bson.M{key: num}
 	case sqlparser.StrVal:
-		return bson.M{key: string(val.Val)}
+		str := string(val.Val)
+		return bson.M{key: str}
 	default:
 		return bson.M{}
 	}
 }
 
+func bsonMArray(key string, vals []*sqlparser.SQLVal) bson.M {
+	if len(vals) == 0 {
+		return bson.M{}
+	}
+	switch vals[0].Type {
+	case sqlparser.IntVal:
+		nums := make([]int, len(vals))
+		for i, val := range vals {
+			nums[i], _ = strconv.Atoi(string(val.Val))
+		}
+		return bson.M{key: nums}
+	case sqlparser.FloatVal:
+		nums := make([]float64, len(vals))
+		for i, val := range vals {
+			nums[i], _ = strconv.ParseFloat(string(val.Val), 64)
+		}
+		return bson.M{key: nums}
+	case sqlparser.StrVal:
+		strings := make([]string, len(vals))
+		for i, val := range vals {
+			strings[i] = string(val.Val)
+		}
+		return bson.M{key: strings}
+	default:
+		return bson.M{}
+	}
+}
+
+func keyFromColumnName(cn *sqlparser.ColName) string {
+	par_key := cn.Qualifier.Name.String()
+	par_par_key := cn.Qualifier.Qualifier.String()
+	key := cn.Name.String()
+	if len(par_key) > 0 {
+		key = par_key + "." + key
+	}
+	if len(par_par_key) > 0 {
+		key = par_par_key + "." + key
+	}
+	return key
+}
+
 func Visit(node sqlparser.SQLNode) (kontinue bool, err error) {
-	//fmt.Printf("%T\n", node)
 	switch expr := node.(type) {
 	case *sqlparser.ComparisonExpr:
 		mongoOp := SQLOperatorToMongo(expr.Operator)
-		par_key := expr.Left.(*sqlparser.ColName).Qualifier.Name.String()
-		par_par_key := expr.Left.(*sqlparser.ColName).Qualifier.Qualifier.String()
-		key := expr.Left.(*sqlparser.ColName).Name.String()
-		if len(par_key) > 0 {
-			key = par_key + "." + key
+		key := keyFromColumnName(expr.Left.(*sqlparser.ColName))
+		var vals []*sqlparser.SQLVal
+		if tuple, ok := expr.Right.(sqlparser.ValTuple); ok {
+			for _, elem := range tuple {
+				val, ok := elem.(*sqlparser.SQLVal)
+				if !ok {
+					return false, errors.New("wrong value")
+				}
+				vals = append(vals, val)
+			}
+			global_query = bson.M{key: bsonMArray(mongoOp, vals)}
+		} else {
+			val, con_err := expr.Right.(*sqlparser.SQLVal)
+			if !con_err {
+				return false, errors.New("wrong value")
+			}
+			if expr.Operator == sqlparser.NotRegexpStr {
+				global_query = bson.M{key: bson.M{"$not": bsonM(mongoOp, val)}}
+			} else {
+				global_query = bson.M{key: bsonM(mongoOp, val)}
+			}
 		}
-		if len(par_par_key) > 0 {
-			key = par_par_key + "." + key
+
+	case *sqlparser.RangeCond:
+		key := keyFromColumnName(expr.Left.(*sqlparser.ColName))
+		var mongoOpLeft, mongoOpRight, mongoCond string
+		if expr.Operator == sqlparser.BetweenStr {
+			mongoOpLeft = "$gte"
+			mongoOpRight = "$lte"
+			mongoCond = "$and"
+		} else {
+			mongoOpLeft = "$lt"
+			mongoOpRight = "$gt"
+			mongoCond = "$or"
 		}
-		val, con_err := expr.Right.(*sqlparser.SQLVal)
+		from, con_err := expr.From.(*sqlparser.SQLVal)
 		if !con_err {
 			return false, errors.New("wrong value")
 		}
-
-		global_query = bson.M{key: bsonM(mongoOp, val)}
+		to, con_err := expr.To.(*sqlparser.SQLVal)
+		if !con_err {
+			return false, errors.New("wrong value")
+		}
+		global_query = bson.M{mongoCond: []bson.M{{key: bsonM(mongoOpLeft, from)},
+			{key: bsonM(mongoOpRight, to)}},
+		}
 	default:
 		return false, errors.New("unkwnown expression ")
 	}
