@@ -4,12 +4,11 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"github.com/globalsign/mgo/bson"
 	"github.com/knocknote/vitess-sqlparser/sqlparser"
 	"strconv"
 )
-
-var global_query bson.M
 
 func SQLOperatorToMongo(sqlOp string) string {
 	switch sqlOp {
@@ -99,75 +98,92 @@ func keyFromColumnName(cn *sqlparser.ColName) string {
 	return key
 }
 
-func Visit(node sqlparser.SQLNode) (kontinue bool, err error) {
+func processComparisonExpr(expr *sqlparser.ComparisonExpr) (res bson.M, err error) {
+	mongoOp := SQLOperatorToMongo(expr.Operator)
+	key := keyFromColumnName(expr.Left.(*sqlparser.ColName))
+	var vals []*sqlparser.SQLVal
+	if tuple, ok := expr.Right.(sqlparser.ValTuple); ok { // SQL in
+		for _, elem := range tuple {
+			val, ok := elem.(*sqlparser.SQLVal)
+			if !ok {
+				return bson.M{}, errors.New("wrong value")
+			}
+			vals = append(vals, val)
+		}
+		return bson.M{key: bsonMArray(mongoOp, vals)}, nil
+	} else { // SQL =,>,<,>=,<=,regexp
+		val, ok := expr.Right.(*sqlparser.SQLVal)
+		if !ok {
+			return bson.M{}, errors.New("wrong value")
+		}
+		if expr.Operator == sqlparser.NotRegexpStr {
+			return bson.M{key: bson.M{"$not": bsonM(mongoOp, val)}}, nil
+		} else {
+			return bson.M{key: bsonM(mongoOp, val)}, nil
+		}
+	}
+}
+
+func processRangeCond(expr *sqlparser.RangeCond) (res bson.M, err error) {
+	key := keyFromColumnName(expr.Left.(*sqlparser.ColName))
+	var mongoOpLeft, mongoOpRight, mongoCond string
+	if expr.Operator == sqlparser.BetweenStr {
+		mongoOpLeft = "$gte"
+		mongoOpRight = "$lte"
+		mongoCond = "$and"
+	} else {
+		mongoOpLeft = "$lt"
+		mongoOpRight = "$gt"
+		mongoCond = "$or"
+	}
+	from, ok := expr.From.(*sqlparser.SQLVal)
+	if !ok {
+		return bson.M{}, errors.New("wrong value")
+	}
+	to, ok := expr.To.(*sqlparser.SQLVal)
+	if !ok {
+		return bson.M{}, errors.New("wrong value")
+	}
+	return bson.M{mongoCond: []bson.M{{key: bsonM(mongoOpLeft, from)},
+		{key: bsonM(mongoOpRight, to)}}}, nil
+
+}
+
+func processAndOrExpression(left sqlparser.Expr, right sqlparser.Expr, op string) (res bson.M, err error) {
+	bson_left, errLeft := getBSONFromExpression(left)
+	if errLeft != nil {
+		return bson.M{}, errLeft
+	}
+	bson_right, errRight := getBSONFromExpression(right)
+	if errRight != nil {
+		return bson.M{}, errRight
+	}
+	return bson.M{op: []bson.M{bson_left, bson_right}}, nil
+}
+
+func getBSONFromExpression(node sqlparser.Expr) (res bson.M, err error) {
 	switch expr := node.(type) {
 	case *sqlparser.ComparisonExpr:
-		mongoOp := SQLOperatorToMongo(expr.Operator)
-		key := keyFromColumnName(expr.Left.(*sqlparser.ColName))
-		var vals []*sqlparser.SQLVal
-		if tuple, ok := expr.Right.(sqlparser.ValTuple); ok {
-			for _, elem := range tuple {
-				val, ok := elem.(*sqlparser.SQLVal)
-				if !ok {
-					return false, errors.New("wrong value")
-				}
-				vals = append(vals, val)
-			}
-			global_query = bson.M{key: bsonMArray(mongoOp, vals)}
-		} else {
-			val, con_err := expr.Right.(*sqlparser.SQLVal)
-			if !con_err {
-				return false, errors.New("wrong value")
-			}
-			if expr.Operator == sqlparser.NotRegexpStr {
-				global_query = bson.M{key: bson.M{"$not": bsonM(mongoOp, val)}}
-			} else {
-				global_query = bson.M{key: bsonM(mongoOp, val)}
-			}
-		}
-
+		return processComparisonExpr(expr)
 	case *sqlparser.RangeCond:
-		key := keyFromColumnName(expr.Left.(*sqlparser.ColName))
-		var mongoOpLeft, mongoOpRight, mongoCond string
-		if expr.Operator == sqlparser.BetweenStr {
-			mongoOpLeft = "$gte"
-			mongoOpRight = "$lte"
-			mongoCond = "$and"
-		} else {
-			mongoOpLeft = "$lt"
-			mongoOpRight = "$gt"
-			mongoCond = "$or"
-		}
-		from, con_err := expr.From.(*sqlparser.SQLVal)
-		if !con_err {
-			return false, errors.New("wrong value")
-		}
-		to, con_err := expr.To.(*sqlparser.SQLVal)
-		if !con_err {
-			return false, errors.New("wrong value")
-		}
-		global_query = bson.M{mongoCond: []bson.M{{key: bsonM(mongoOpLeft, from)},
-			{key: bsonM(mongoOpRight, to)}},
-		}
+		return processRangeCond(expr)
+	case *sqlparser.AndExpr:
+		return processAndOrExpression(expr.Left, expr.Right, "$and")
+	case *sqlparser.OrExpr:
+		return processAndOrExpression(expr.Left, expr.Right, "$or")
+	case *sqlparser.ParenExpr:
+		return getBSONFromExpression(expr.Expr)
 	default:
-		return false, errors.New("unkwnown expression ")
+		return bson.M{}, errors.New("unkwnown expression " + fmt.Sprintf("%T", expr))
 	}
-
-	return false, nil
 }
 
 func (db *Mongodb) BSONFromSQL(dbname string, query string) (bson.M, error) {
-	global_query = bson.M{}
-
 	stmt, err := sqlparser.Parse("select * from " + dbname + " where " + query)
 	if err != nil {
-		return global_query, err
+		return bson.M{}, err
 	}
 
-	switch stmt := stmt.(type) {
-	case *sqlparser.Select:
-		where := stmt.Where.Expr
-		err = sqlparser.Walk(Visit, where)
-	}
-	return global_query, err
+	sel, _ := stmt.(*sqlparser.Select)
+	return getBSONFromExpression(sel.Where.Expr)
 }

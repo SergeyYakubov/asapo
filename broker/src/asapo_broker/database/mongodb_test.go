@@ -5,7 +5,9 @@ package database
 import (
 	"asapo_common/utils"
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -365,15 +367,20 @@ var tests = []struct {
 	{"meta.text = ccc", []TestRecordMeta{}, false},
 	{"meta.text != 'ccc'", []TestRecordMeta{recq1, recq2, recq4}, true},
 	{"meta.temp BETWEEN 11 AND 13", []TestRecordMeta{recq2}, true},
-	{"meta.temp NOT BETWEEN 11 AND 13", []TestRecordMeta{recq1, recq3, recq4}, true},
+	{"meta.temp not BETWEEN 11 and 13", []TestRecordMeta{recq1, recq3, recq4}, true},
 	{"meta.counter IN (10,13)", []TestRecordMeta{recq1, recq3, recq4}, true},
 	{"meta.counter NOT IN (10,13)", []TestRecordMeta{recq2}, true},
 	{"meta.text IN ('aaa','ccc')", []TestRecordMeta{recq1, recq3}, true},
 	{"_id = 1", []TestRecordMeta{recq1}, true},
 	{"meta.text REGEXP '^c+'", []TestRecordMeta{recq3}, true},
 	{"meta.text REGEXP '^a|b'", []TestRecordMeta{recq1, recq2}, true},
+	// mongo 4.07+ is needed for NOT REXEXP
 	{"meta.text NOT REGEXP '^c+'", []TestRecordMeta{recq1, recq2, recq4}, true},
 	{"give_error", []TestRecordMeta{}, false},
+	{"meta.counter = 10 AND meta.text = 'ccc'", []TestRecordMeta{recq3}, true},
+	{"meta.counter = 10 OR meta.text = 'bbb'", []TestRecordMeta{recq1, recq2, recq3}, true},
+	{"(meta.counter = 10 OR meta.counter = 11) AND (meta.text = 'bbb' OR meta.text = 'ccc')", []TestRecordMeta{recq2, recq3}, true},
+	{"(meta.counter = 10 OR meta.counter = 11 AND (meta.text = 'bbb' OR meta.text = 'ccc')", []TestRecordMeta{}, false},
 }
 
 func TestMongoDBQueryImagesOK(t *testing.T) {
@@ -387,6 +394,12 @@ func TestMongoDBQueryImagesOK(t *testing.T) {
 	db.InsertRecord(dbname, &recq4)
 
 	for _, test := range tests {
+		info, _ := db.session.BuildInfo()
+		if strings.Contains(test.query, "NOT REGEXP") && !info.VersionAtLeast(4, 0, 7) {
+			fmt.Println("Skipping NOT REGEXP test since it is not supported by this mongodb version")
+			continue
+		}
+
 		res_string, err := db.ProcessRequest(dbname, "", "queryimages", test.query)
 		var res []TestRecordMeta
 		json.Unmarshal(res_string, &res)

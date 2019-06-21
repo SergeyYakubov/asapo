@@ -379,7 +379,7 @@ func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
 		return nil, &DBError{utils.StatusNoData, err.Error()}
 	}
 
-	log_str := "processed query " + query + " for " + dbname
+	log_str := "processed query " + query + " for " + dbname + " ,found" + strconv.Itoa(len(res)) + " records"
 	logger.Debug(log_str)
 	return utils.MapToJson(&res)
 }
