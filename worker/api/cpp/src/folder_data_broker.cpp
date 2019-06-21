@@ -98,4 +98,9 @@ std::string FolderDataBroker::GetBeamtimeMeta(Error* err) {
     return io__->ReadFileToString(base_path_ + kPathSeparator + "beamtime_global.meta", err);
 }
 
+FileInfos FolderDataBroker::QueryImages(std::string query, Error* err) {
+    *err=TextError("Not supported for folder data broker");
+    return FileInfos{};
+}
+
 }

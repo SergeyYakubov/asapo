@@ -344,6 +344,16 @@ TEST_F(GetDataFromFileTests, GetMetaDataReturnsOK) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
+TEST(FolderDataBroker, QueryImages) {
+    auto data_broker = std::unique_ptr<FolderDataBroker>{new FolderDataBroker("test")};
+
+    Error err;
+    auto infos = data_broker->QueryImages("bla",&err);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(infos.size(), Eq(0));
+}
+
 
 
 }

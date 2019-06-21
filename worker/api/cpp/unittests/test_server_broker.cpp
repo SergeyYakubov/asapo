@@ -63,6 +63,8 @@ class ServerDataBrokerTests : public Test {
     std::string expected_full_path = std::string("/tmp/beamline/beamtime") + asapo::kPathSeparator + expected_filename;
     std::string expected_group_id = "groupid";
     std::string expected_metadata = "{\"meta\":1}";
+    std::string expected_query_string = "bla";
+
     uint64_t expected_dataset_id = 1;
     static const uint64_t expected_buf_id = 123;
     void SetUp() override {
@@ -490,6 +492,26 @@ TEST_F(ServerDataBrokerTests, GetMetaDataOK) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(res, Eq(expected_metadata));
 
+}
+
+
+TEST_F(ServerDataBrokerTests, QueryImagesReturnError) {
+    return;
+    MockGetBrokerUri();
+
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
+        SetArgPointee<2>(HttpCode::BadRequest),
+        SetArgPointee<3>(nullptr),
+        Return("error in query")));
+
+    data_broker->SetTimeout(1000);
+    asapo::Error err;
+    auto images = data_broker->QueryImages(expected_query_string,&err);
+
+//    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::WrongInput));
+//    ASSERT_THAT(err, HasSubstr("query"));
+
+    ASSERT_THAT(images.size(), Eq(0));
 }
 
 

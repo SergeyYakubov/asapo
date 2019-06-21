@@ -88,14 +88,13 @@ std::string ServerDataBroker::RequestWithToken(std::string uri) {
     return std::move(uri) + "?token=" + token_;
 }
 
-Error ServerDataBroker::ProcessRequest(std::string* response, std::string request_uri, std::string extra_params,
-                                       bool post) {
+Error ServerDataBroker::ProcessRequest(std::string* response, const RequestInfo& request) {
     Error err;
     HttpCode code;
-    if (post) {
-        *response = httpclient__->Post(RequestWithToken(request_uri) + extra_params, "", &code, &err);
+    if (request.post) {
+        *response = httpclient__->Post(RequestWithToken(request.host+request.api) + request.extra_params, request.body, &code, &err);
     } else {
-        *response = httpclient__->Get(RequestWithToken(request_uri) + extra_params, &code, &err);
+        *response = httpclient__->Get(RequestWithToken(request.host+request.api) + request.extra_params, &code, &err);
     }
     if (err != nullptr) {
         current_broker_uri_ = "";
@@ -109,9 +108,12 @@ Error ServerDataBroker::GetBrokerUri() {
         return nullptr;
     }
 
-    std::string request_uri = server_uri_ + "/discovery/broker";
+    RequestInfo ri;
+    ri.host = server_uri_;
+    ri.api= "/discovery/broker";
+
     Error err;
-    err = ProcessRequest(&current_broker_uri_, request_uri, "", false);
+    err = ProcessRequest(&current_broker_uri_, ri);
     if (err != nullptr || current_broker_uri_.empty()) {
         current_broker_uri_ = "";
         return TextError("cannot get broker uri from " + server_uri_);
@@ -128,7 +130,10 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_
     while (true) {
         auto err = GetBrokerUri();
         if (err == nullptr) {
-            err = ProcessRequest(&response, current_broker_uri_ + request_api + request_suffix, "", false);
+            RequestInfo ri;
+            ri.host = current_broker_uri_;
+            ri.api = request_api + request_suffix;
+            err = ProcessRequest(&response, ri);
             if (err == nullptr) {
                 break;
             }
@@ -218,18 +223,29 @@ Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* dat
 
 
 std::string ServerDataBroker::GenerateNewGroupId(Error* err) {
-    return BrokerRequestWithTimeout("creategroup", "", true, err);
+    RequestInfo ri;
+    ri.api = "/creategroup";
+    ri.post = true;
+    return BrokerRequestWithTimeout(ri, err);
 }
 
-std::string ServerDataBroker::BrokerRequestWithTimeout(std::string request_string, std::string extra_params,
-        bool post_request, Error* err) {
+
+std::string ServerDataBroker::AppendUri(std::string request_string) {
+    return current_broker_uri_ + "/"+std::move(request_string);
+}
+
+
+
+std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Error* err) {
     uint64_t elapsed_ms = 0;
     std::string response;
     while (elapsed_ms <= timeout_ms_) {
         *err = GetBrokerUri();
         if (*err == nullptr) {
-            *err = ProcessRequest(&response, current_broker_uri_ + "/" + request_string, extra_params, post_request);
-            if (*err == nullptr || (*err)->GetErrorType() == ErrorType::kEndOfFile) {
+            request.host = current_broker_uri_;
+            *err = ProcessRequest(&response, request);
+            if (*err == nullptr || (*err)->GetErrorType() == ErrorType::kEndOfFile ){
+//            || (*err) == kWrongInput) {
                 return response;
             }
         }
@@ -241,18 +257,23 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(std::string request_strin
 }
 
 Error ServerDataBroker::ResetCounter(std::string group_id) {
-    std::string request_string =  "database/" + source_name_ + "/" + std::move(group_id) + "/resetcounter";
+    RequestInfo ri;
+    ri.api = "/database/" + source_name_ + "/" + std::move(group_id) + "/resetcounter";
+    ri.post = true;
+
     Error err;
-    BrokerRequestWithTimeout(request_string, "", true, &err);
+    BrokerRequestWithTimeout(ri, &err);
     return err;
 }
 
 uint64_t ServerDataBroker::GetNDataSets(Error* err) {
-    std::string request_string =  "database/" + source_name_ + "/size";
-    auto responce = BrokerRequestWithTimeout(request_string, "", false, err);
+    RequestInfo ri;
+    ri.api = "/database/" + source_name_ + "/size";
+    auto responce = BrokerRequestWithTimeout(ri, err);
     if (*err) {
         return 0;
     }
+
     JsonStringParser parser(responce);
     uint64_t size;
     if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
@@ -267,10 +288,14 @@ Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_i
 
 
 Error ServerDataBroker::GetFileInfoFromServerById(uint64_t id, FileInfo* info, std::string group_id) {
-    std::string request_string =  "database/" + source_name_ + "/" + std::move(group_id) + "/" + std::to_string(id);
-    std::string extra_params =  "&reset=true";
+
+    RequestInfo ri;
+    ri.api = "/database/" + source_name_ + "/" + std::move(group_id) + "/" + std::to_string(id);
+    ri.extra_params = "&reset=true";
+
+
     Error err;
-    auto responce = BrokerRequestWithTimeout(request_string, extra_params, false, &err);
+    auto responce = BrokerRequestWithTimeout(ri, &err);
     if (err) {
         return err;
     }
@@ -283,8 +308,21 @@ Error ServerDataBroker::GetFileInfoFromServerById(uint64_t id, FileInfo* info, s
 }
 
 std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
-    std::string request_string =  "database/" + source_name_ + "/0/meta/0";
-    return BrokerRequestWithTimeout(request_string, "", false, err);
+    RequestInfo ri;
+    ri.api = "/database/" + source_name_ + "/0/meta/0";
+
+    return BrokerRequestWithTimeout(ri, err);
+}
+
+FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_name_ + "/0/queryimages";
+    ri.post = true;
+    ri.body = std::move(query);
+
+    auto images = BrokerRequestWithTimeout(ri, err);
+
+    return FileInfos{};
 }
 
 }

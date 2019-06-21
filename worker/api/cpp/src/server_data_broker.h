@@ -16,6 +16,15 @@ enum class GetImageServerOperation {
     GetID
 };
 
+struct RequestInfo {
+    std::string host;
+    std::string api;
+    std::string extra_params;
+    std::string body;
+    bool post = false;
+};
+
+
 class ServerDataBroker final : public asapo::DataBroker {
   public:
     explicit ServerDataBroker(std::string server_uri, std::string source_path, std::string source_name, std::string token);
@@ -28,6 +37,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     uint64_t GetNDataSets(Error* err) override;
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override;
+    FileInfos QueryImages(std::string query,Error* err) override;
+
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<NetClient> net_client__;
@@ -38,13 +49,14 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetDataIfNeeded(FileInfo* info, FileData* data);
     Error GetBrokerUri();
     void ProcessServerError(Error* err, const std::string& response, std::string* redirect_uri);
-    Error ProcessRequest(std::string* response, std::string request_uri, std::string extra_params, bool post);
+    Error ProcessRequest(std::string* response, const RequestInfo& request);
     Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, FileInfo* info, FileData* data);
     bool DataCanBeInBuffer(const FileInfo* info);
     Error TryGetDataFromBuffer(const FileInfo* info, FileData* data);
-    std::string BrokerRequestWithTimeout(std::string request_string, std::string extra_params, bool post_request,
-                                         Error* err);
-    std::string OpToUriCmd(GetImageServerOperation op);
+    std::string BrokerRequestWithTimeout(RequestInfo request,Error* err);
+    std::string AppendUri(std::string request_string);
+
+        std::string OpToUriCmd(GetImageServerOperation op);
     std::string server_uri_;
     std::string current_broker_uri_;
     std::string source_path_;
