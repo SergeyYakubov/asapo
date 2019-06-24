@@ -81,7 +81,7 @@ class DataBroker {
       \param err - will be set in case of error, nullptr otherwise
       \return vector of image metadata matchiing to specified query. Empty if nothing found or error
     */
-    virtual FileInfos QueryImages(std::string query,Error* err) = 0;
+    virtual FileInfos QueryImages(std::string query, Error* err) = 0;
 
     virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
 };

@@ -3,6 +3,7 @@
 #include <thread>
 #include <algorithm>
 #include "worker/data_broker.h"
+#include "worker/worker_error.h"
 #include "testing.h"
 
 using asapo::M_AssertEq;
@@ -15,7 +16,7 @@ void Assert(std::vector<asapo::Error>& errors, int nthreads) {
     int count_already_connected = 0;
     for (auto& error : errors) {
         if (!error) continue;
-        if (error->Explain().find(asapo::WorkerErrorMessage::kSourceAlreadyConnected) != std::string::npos)
+        if (error == asapo::WorkerErrorTemplates::kSourceAlreadyConnected)
             count_already_connected++;
     }
 

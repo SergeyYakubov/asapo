@@ -499,18 +499,64 @@ TEST_F(ServerDataBrokerTests, QueryImagesReturnError) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
-        SetArgPointee<2>(HttpCode::BadRequest),
-        SetArgPointee<3>(nullptr),
-        Return("error in query")));
+                SetArgPointee<2>(HttpCode::BadRequest),
+                SetArgPointee<3>(nullptr),
+                Return("error in query")));
 
     data_broker->SetTimeout(1000);
     asapo::Error err;
-    auto images = data_broker->QueryImages(expected_query_string,&err);
+    auto images = data_broker->QueryImages(expected_query_string, &err);
 
     ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kWrongInput));
     ASSERT_THAT(err->Explain(), HasSubstr("query"));
-
     ASSERT_THAT(images.size(), Eq(0));
+}
+
+
+TEST_F(ServerDataBrokerTests, QueryImagesReturnEmptyResults) {
+    MockGetBrokerUri();
+
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
+                SetArgPointee<2>(HttpCode::OK),
+                SetArgPointee<3>(nullptr),
+                Return("[]")));
+
+    data_broker->SetTimeout(100);
+    asapo::Error err;
+    auto images = data_broker->QueryImages(expected_query_string, &err);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(images.size(), Eq(0));
+}
+
+
+TEST_F(ServerDataBrokerTests, QueryImagesReturnRecords) {
+    return;
+    MockGetBrokerUri();
+
+    auto rec1 = CreateFI();
+    auto rec2 = CreateFI();
+    auto json1 = rec1.Json();
+    auto json2 = rec2.Json();
+    auto responce_string = "[" + json1 + "," + json2 + "]";
+
+
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
+                SetArgPointee<2>(HttpCode::OK),
+                SetArgPointee<3>(nullptr),
+                Return(responce_string)));
+
+    data_broker->SetTimeout(100);
+    asapo::Error err;
+    auto images = data_broker->QueryImages(expected_query_string, &err);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(images.size(), Eq(2));
+
+    ASSERT_THAT(images[0], Eq(rec1));
+    ASSERT_THAT(images[1], Eq(rec2));
+
+
 }
 
 

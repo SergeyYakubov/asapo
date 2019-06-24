@@ -100,7 +100,7 @@ std::string FolderDataBroker::GetBeamtimeMeta(Error* err) {
 }
 
 FileInfos FolderDataBroker::QueryImages(std::string query, Error* err) {
-    *err=TextError("Not supported for folder data broker");
+    *err = TextError("Not supported for folder data broker");
     return FileInfos{};
 }
 

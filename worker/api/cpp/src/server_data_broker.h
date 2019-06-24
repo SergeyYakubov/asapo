@@ -37,7 +37,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     uint64_t GetNDataSets(Error* err) override;
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override;
-    FileInfos QueryImages(std::string query,Error* err) override;
+    FileInfos QueryImages(std::string query, Error* err) override;
 
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
@@ -53,10 +53,10 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, FileInfo* info, FileData* data);
     bool DataCanBeInBuffer(const FileInfo* info);
     Error TryGetDataFromBuffer(const FileInfo* info, FileData* data);
-    std::string BrokerRequestWithTimeout(RequestInfo request,Error* err);
+    std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
     std::string AppendUri(std::string request_string);
 
-        std::string OpToUriCmd(GetImageServerOperation op);
+    std::string OpToUriCmd(GetImageServerOperation op);
     std::string server_uri_;
     std::string current_broker_uri_;
     std::string source_path_;

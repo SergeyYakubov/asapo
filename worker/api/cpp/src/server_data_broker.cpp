@@ -22,8 +22,8 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
         return nullptr;
     case HttpCode::BadRequest:
         return WorkerErrorTemplates::kWrongInput.Generate();
-   case HttpCode::Unauthorized:
-       return WorkerErrorTemplates::kAuthorizationError.Generate();
+    case HttpCode::Unauthorized:
+        return WorkerErrorTemplates::kAuthorizationError.Generate();
     case HttpCode::InternalServerError:
         return WorkerErrorTemplates::kInternalError.Generate();
     case HttpCode::NotFound:
@@ -85,9 +85,10 @@ Error ServerDataBroker::ProcessRequest(std::string* response, const RequestInfo&
     Error err;
     HttpCode code;
     if (request.post) {
-        *response = httpclient__->Post(RequestWithToken(request.host+request.api) + request.extra_params, request.body, &code, &err);
+        *response = httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.body, &code,
+                                       &err);
     } else {
-        *response = httpclient__->Get(RequestWithToken(request.host+request.api) + request.extra_params, &code, &err);
+        *response = httpclient__->Get(RequestWithToken(request.host + request.api) + request.extra_params, &code, &err);
     }
     if (err != nullptr) {
         current_broker_uri_ = "";
@@ -103,7 +104,7 @@ Error ServerDataBroker::GetBrokerUri() {
 
     RequestInfo ri;
     ri.host = server_uri_;
-    ri.api= "/discovery/broker";
+    ri.api = "/discovery/broker";
 
     Error err;
     err = ProcessRequest(&current_broker_uri_, ri);
@@ -135,7 +136,7 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_
         ProcessServerError(&err, response, &request_suffix);
 
         if (elapsed_ms >= timeout_ms_) {
-            err = IOErrorTemplates::kTimeout.Generate( ", last error: "+err->Explain());
+            err = IOErrorTemplates::kTimeout.Generate( ", last error: " + err->Explain());
             return err;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -224,7 +225,7 @@ std::string ServerDataBroker::GenerateNewGroupId(Error* err) {
 
 
 std::string ServerDataBroker::AppendUri(std::string request_string) {
-    return current_broker_uri_ + "/"+std::move(request_string);
+    return current_broker_uri_ + "/" + std::move(request_string);
 }
 
 
@@ -244,7 +245,7 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Erro
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         elapsed_ms += 100;
     }
-    *err = IOErrorTemplates::kTimeout.Generate( ", last error: "+(*err)->Explain());
+    *err = IOErrorTemplates::kTimeout.Generate( ", last error: " + (*err)->Explain());
     return "";
 }
 
@@ -313,7 +314,7 @@ FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
     ri.body = std::move(query);
 
     auto responce = BrokerRequestWithTimeout(ri, err);
-    if (err) {
+    if (*err) {
         (*err)->Append(responce);
     }
 
