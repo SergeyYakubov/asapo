@@ -2,6 +2,7 @@
 #define ASAPO_WORKER_ERROR_H
 
 #include "common/error.h"
+#include "common/io_error.h"
 
 namespace asapo {
 

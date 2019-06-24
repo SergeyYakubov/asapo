@@ -8,8 +8,7 @@
 namespace asapo {
 
 enum class ErrorType {
-    kUnknownError,
-
+    kUnknownError = 0,
     kAsapoError,
     kHttpError,
     kIOError,
@@ -19,7 +18,6 @@ enum class ErrorType {
     kWorkerError,
     kMemoryAllocationError,
     kEndOfFile,
-    kTimeOut
 };
 
 class ErrorInterface;

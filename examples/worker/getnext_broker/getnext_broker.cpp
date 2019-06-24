@@ -10,6 +10,7 @@
 
 #include "asapo_worker.h"
 
+
 using std::chrono::high_resolution_clock;
 using asapo::Error;
 
@@ -35,7 +36,7 @@ void WaitThreads(std::vector<std::thread>* threads) {
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
     std::cout << err->Explain() << std::endl;
-    return err->GetErrorType() == asapo::ErrorType::kTimeOut ? 0 : 1;
+    return err == asapo::IOErrorTemplates::kTimeout ? 0 : 1;
 }
 
 std::vector<std::thread> StartThreads(const Params& params,
@@ -80,7 +81,8 @@ std::vector<std::thread> StartThreads(const Params& params,
                 }
             } else {
                 (*errors)[i] += ProcessError(err);
-                if (err->GetErrorType() == asapo::ErrorType::kTimeOut) {
+                std::cout << "Received: " << (int)err->GetErrorType() << err << std::endl;
+                if (err == asapo::IOErrorTemplates::kTimeout) {
                     break;
                 }
             }

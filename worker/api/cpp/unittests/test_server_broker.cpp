@@ -532,6 +532,7 @@ TEST_F(ServerDataBrokerTests, QueryImagesReturnEmptyResults) {
 
 TEST_F(ServerDataBrokerTests, QueryImagesReturnRecords) {
     return;
+    
     MockGetBrokerUri();
 
     auto rec1 = CreateFI();
