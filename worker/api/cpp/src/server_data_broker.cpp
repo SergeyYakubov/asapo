@@ -1,7 +1,6 @@
 #include "server_data_broker.h"
 
 #include <chrono>
-#include <iostream>
 
 #include <json_parser/json_parser.h>
 #include "io/io_factory.h"
@@ -306,18 +305,42 @@ std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
     return BrokerRequestWithTimeout(ri, err);
 }
 
+
+FileInfos ServerDataBroker::DecodeFromResponse(std::string response, Error* err) {
+    auto parser = JsonStringParser("{ \"images\":"+response+"}");
+
+    std::vector<std::string> vec_fi_endcoded;
+    auto parse_err = parser.GetArrayRawStrings("images", &vec_fi_endcoded);
+    if (parse_err) {
+        *err = WorkerErrorTemplates::kInternalError.Generate("cannot parse response:" + parse_err->Explain());
+    }
+
+    auto res = FileInfos{};
+    for (auto fi_encoded : vec_fi_endcoded) {
+        FileInfo fi;
+        if (!fi.SetFromJson(fi_encoded)) {
+            *err = WorkerErrorTemplates::kInternalError.Generate("cannot parse response:"+fi_encoded);
+            return FileInfos{};
+        }
+        res.emplace_back(fi);
+    }
+    return res;
+}
+
+
 FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
     RequestInfo ri;
     ri.api = "/database/" + source_name_ + "/0/queryimages";
     ri.post = true;
     ri.body = std::move(query);
 
-    auto responce = BrokerRequestWithTimeout(ri, err);
+    auto response = BrokerRequestWithTimeout(ri, err);
     if (*err) {
-        (*err)->Append(responce);
+        (*err)->Append(response);
+        return FileInfos{};
     }
 
-    return FileInfos{};
+    return DecodeFromResponse(response,err);
 }
 
 }

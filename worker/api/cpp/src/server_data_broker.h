@@ -55,6 +55,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error TryGetDataFromBuffer(const FileInfo* info, FileData* data);
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
     std::string AppendUri(std::string request_string);
+    FileInfos DecodeFromResponse(std::string response, Error* err);
 
     std::string OpToUriCmd(GetImageServerOperation op);
     std::string server_uri_;

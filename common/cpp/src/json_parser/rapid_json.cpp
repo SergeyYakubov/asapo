@@ -186,4 +186,29 @@ Error RapidJson::GetRawString(std::string* val) const noexcept {
     return nullptr;
 }
 
+Error RapidJson::GetArrayRawStrings(const std::string& name, std::vector<std::string>* val) const noexcept {
+    if (Error err = LazyInitialize()) {
+        return err;
+    }
+
+    Value* json_val;
+    if (Error err = GetValuePointer(name, ValueType::kArray, &json_val)) {
+        return err;
+    }
+
+    val->clear();
+    for (auto& v : json_val->GetArray()) {
+        if (!v.IsObject()) {
+            return TextError("wrong type of array element: " + name);
+        }
+        StringBuffer buffer;
+        Writer<StringBuffer> writer(buffer);
+        v.Accept(writer);
+        val->push_back(buffer.GetString());
+    }
+
+    return nullptr;
+
+}
+
 }
