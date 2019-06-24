@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 
 #include "worker/data_broker.h"
+#include "worker/worker_error.h"
 #include "io/io.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 #include "../src/server_data_broker.h"
@@ -128,8 +129,8 @@ TEST_F(ServerDataBrokerTests, CanConnect) {
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsErrorOnWrongInput) {
-    auto return_code = data_broker->GetNext(nullptr, "", nullptr);
-    ASSERT_THAT(return_code->Explain(), Eq(asapo::WorkerErrorMessage::kWrongInput));
+    auto err = data_broker->GetNext(nullptr, "", nullptr);
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ServerDataBrokerTests, GetNextUsesCorrectUri) {
@@ -181,7 +182,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsNotAuthorized) {
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
     ASSERT_THAT(err, Ne(nullptr));
-    ASSERT_THAT(err->Explain(), HasSubstr("authorization"));
+    ASSERT_THAT(err->Explain(), HasSubstr("Authorization"));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsWrongResponseFromHttpClient) {
@@ -292,9 +293,10 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsFileInfo) {
 TEST_F(ServerDataBrokerTests, GetImageReturnsParseError) {
     MockGetBrokerUri();
     MockGet("error_response");
+
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err->Explain(), ::testing::HasSubstr(asapo::WorkerErrorMessage::kErrorReadingSource));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kErrorReadingSource));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfNoDtataNeeded) {
@@ -359,7 +361,7 @@ TEST_F(ServerDataBrokerTests, GetImageCallsReadFromFileIfZeroBufId) {
 TEST_F(ServerDataBrokerTests, GenerateNewGroupIdReturnsErrorCreateGroup) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("creategroup"), "", _, _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("creategroup"), "", _, _)).WillOnce(DoAll(
                 SetArgPointee<2>(HttpCode::BadRequest),
                 SetArgPointee<3>(nullptr),
                 Return("")));
@@ -367,9 +369,7 @@ TEST_F(ServerDataBrokerTests, GenerateNewGroupIdReturnsErrorCreateGroup) {
     data_broker->SetTimeout(100);
     asapo::Error err;
     auto groupid = data_broker->GenerateNewGroupId(&err);
-    if (err != nullptr ) {
-        ASSERT_THAT(err->Explain(), HasSubstr("timeout"));
-    }
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kWrongInput));
     ASSERT_THAT(groupid, Eq(""));
 }
 
@@ -496,7 +496,6 @@ TEST_F(ServerDataBrokerTests, GetMetaDataOK) {
 
 
 TEST_F(ServerDataBrokerTests, QueryImagesReturnError) {
-    return;
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
@@ -508,8 +507,8 @@ TEST_F(ServerDataBrokerTests, QueryImagesReturnError) {
     asapo::Error err;
     auto images = data_broker->QueryImages(expected_query_string,&err);
 
-//    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::WrongInput));
-//    ASSERT_THAT(err, HasSubstr("query"));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kWrongInput));
+    ASSERT_THAT(err->Explain(), HasSubstr("query"));
 
     ASSERT_THAT(images.size(), Eq(0));
 }

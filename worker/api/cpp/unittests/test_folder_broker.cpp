@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 
 #include "worker/data_broker.h"
+#include "worker/worker_error.h"
 #include "io/io.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 #include "../src/folder_data_broker.h"
@@ -107,32 +108,32 @@ TEST_F(FolderDataBrokerTests, CanConnect) {
 TEST_F(FolderDataBrokerTests, CannotConnectTwice) {
     data_broker->Connect();
 
-    auto return_code = data_broker->Connect();
+    auto err = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(asapo::WorkerErrorMessage::kSourceAlreadyConnected));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kSourceAlreadyConnected));
 }
 
 
 TEST_F(FolderDataBrokerTests, CannotConnectWhenNoFolder) {
     data_broker->io__ = std::unique_ptr<IO> {new IOFolderNotFound()};
 
-    auto return_code = data_broker->Connect();
+    auto err = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(asapo::IOErrorTemplates::kFileNotFound.Generate()->Explain()));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kFileNotFound));
 }
 
 TEST_F(FolderDataBrokerTests, ConnectReturnsUnknownIOError) {
     data_broker->io__ = std::unique_ptr<IO> {new IOFolderUnknownError()};
 
-    auto return_code = data_broker->Connect();
+    auto err = data_broker->Connect();
 
-    ASSERT_THAT(return_code->Explain(), Eq(asapo::IOErrorTemplates::kUnknownIOError.Generate()->Explain()));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithoutConnectReturnsError) {
     auto err = data_broker->GetNext(nullptr, "", nullptr);
 
-    ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kSourceNotConnected));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kSourceNotConnected));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
@@ -140,7 +141,7 @@ TEST_F(FolderDataBrokerTests, GetNextWithNullPointersReturnsError) {
 
     auto err = data_broker->GetNext(nullptr, "", nullptr);
 
-    ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kWrongInput));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kWrongInput));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
@@ -224,9 +225,7 @@ TEST_F(FolderDataBrokerTests, GetNextFromEmptyFolderReturnsError) {
     FileInfo fi;
 
     auto err = data_broker->GetNext(&fi, "", nullptr);
-    ASSERT_TRUE(asapo::ErrorTemplates::kEndOfFile == err);
-
-    ASSERT_THAT(err->Explain(), Eq(asapo::WorkerErrorMessage::kNoData));
+    ASSERT_THAT(err, Eq(asapo::ErrorTemplates::kEndOfFile));
 }
 
 TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
@@ -236,7 +235,7 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsErrorWhenFilePermissionsDenied) {
     FileData data;
 
     auto err = data_broker->GetNext(&fi, "", &data);
-    ASSERT_THAT(err->Explain(), Eq(asapo::IOErrorTemplates::kPermissionDenied.Generate()->Explain()));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kPermissionDenied));
 }
 
 

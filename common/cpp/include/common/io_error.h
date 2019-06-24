@@ -70,7 +70,7 @@ auto const kConnectionResetByPeer = IOErrorTemplate {
     "kConnectionResetByPeer", IOErrorType::kConnectionResetByPeer
 };
 auto const kTimeout = IOErrorTemplate {
-    "kTimeout", IOErrorType::kTimeout
+    "timeout", IOErrorType::kTimeout
 };
 auto const kFileAlreadyExists = IOErrorTemplate {
     "kFileAlreadyExists", IOErrorType::kFileAlreadyExists

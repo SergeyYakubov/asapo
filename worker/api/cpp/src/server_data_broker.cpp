@@ -10,36 +10,29 @@
 #include "tcp_client.h"
 
 #include <iostream>
+#include <asapo_worker.h>
 
 using std::chrono::high_resolution_clock;
 
 namespace asapo {
 
 Error HttpCodeToWorkerError(const HttpCode& code) {
-    const char* message;
     switch (code) {
     case HttpCode::OK:
         return nullptr;
     case HttpCode::BadRequest:
-        message = WorkerErrorMessage::kWrongInput;
-        break;
-    case HttpCode::Unauthorized:
-        message = WorkerErrorMessage::kAuthorizationError;
-        break;
+        return WorkerErrorTemplates::kWrongInput.Generate();
+   case HttpCode::Unauthorized:
+       return WorkerErrorTemplates::kAuthorizationError.Generate();
     case HttpCode::InternalServerError:
-        message = WorkerErrorMessage::kErrorReadingSource;
-        break;
+        return WorkerErrorTemplates::kInternalError.Generate();
     case HttpCode::NotFound:
-        message = WorkerErrorMessage::kErrorReadingSource;
-        break;
+        return WorkerErrorTemplates::kErrorReadingSource.Generate();
     case HttpCode::Conflict:
-        message = WorkerErrorMessage::kNoData;
-        return TextErrorWithType(message, ErrorType::kEndOfFile);
+        return asapo::ErrorTemplates::kEndOfFile.Generate("No Data");
     default:
-        message = WorkerErrorMessage::kUnknownIOError;
-        break;
+        return WorkerErrorTemplates::kUnknownIOError.Generate();
     }
-    return Error{new HttpError(message, code)};
 }
 
 ServerDataBroker::ServerDataBroker(std::string server_uri,
@@ -142,7 +135,7 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_
         ProcessServerError(&err, response, &request_suffix);
 
         if (elapsed_ms >= timeout_ms_) {
-            err = TextErrorWithType("exit on timeout, last error: " + err->Explain(), asapo::ErrorType::kTimeOut);
+            err = IOErrorTemplates::kTimeout.Generate( ", last error: "+err->Explain());
             return err;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -150,7 +143,7 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_
     }
 
     if (!info->SetFromJson(response)) {
-        return TextError(WorkerErrorMessage::kErrorReadingSource + std::string(":") + response);
+        return WorkerErrorTemplates::kErrorReadingSource.Generate(std::string(":") + response);
     }
     return nullptr;
 }
@@ -178,7 +171,7 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t 
                                            FileInfo* info,
                                            FileData* data) {
     if (info == nullptr) {
-        return TextError(WorkerErrorMessage::kWrongInput);
+        return WorkerErrorTemplates::kWrongInput.Generate();
     }
 
     Error err;
@@ -244,15 +237,14 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Erro
         if (*err == nullptr) {
             request.host = current_broker_uri_;
             *err = ProcessRequest(&response, request);
-            if (*err == nullptr || (*err)->GetErrorType() == ErrorType::kEndOfFile ){
-//            || (*err) == kWrongInput) {
+            if (*err == nullptr || (*err)->GetErrorType() == ErrorType::kEndOfFile || (*err) == WorkerErrorTemplates::kWrongInput) {
                 return response;
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         elapsed_ms += 100;
     }
-    *err = TextErrorWithType("exit on timeout, last error: " + (*err)->Explain(), asapo::ErrorType::kTimeOut);
+    *err = IOErrorTemplates::kTimeout.Generate( ", last error: "+(*err)->Explain());
     return "";
 }
 
@@ -301,7 +293,7 @@ Error ServerDataBroker::GetFileInfoFromServerById(uint64_t id, FileInfo* info, s
     }
 
     if (!info->SetFromJson(responce)) {
-        return TextError(WorkerErrorMessage::kErrorReadingSource);
+        return WorkerErrorTemplates::kErrorReadingSource.Generate();
     }
 
     return nullptr;
@@ -320,7 +312,10 @@ FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
     ri.post = true;
     ri.body = std::move(query);
 
-    auto images = BrokerRequestWithTimeout(ri, err);
+    auto responce = BrokerRequestWithTimeout(ri, err);
+    if (err) {
+        (*err)->Append(responce);
+    }
 
     return FileInfos{};
 }

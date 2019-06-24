@@ -9,23 +9,6 @@
 
 namespace asapo {
 
-namespace WorkerErrorMessage {
-
-auto const kMemoryError = "Memory Error";
-auto const kEmptyDatasource = "Empty Data Source";
-auto const kSourceNotFound = "Source Not Found";
-auto const kSourceNotConnected = "Source Not Connacted";
-auto const kSourceAlreadyConnected = "Source Already Connected";
-auto const kErrorReadingSource = "Error Reading Source";
-auto const kNotFound = "Uri not found";
-auto const kPermissionDenied = "Permissionn Denied";
-auto const kNoData = "No Data";
-auto const kWrongInput = "Wrong Input";
-auto const kAuthorizationError = "authorization error";
-auto const kInternalError = "Internal Error";
-auto const kUnknownIOError = "Unknown IO Error";
-}
-
 class DataBroker {
   public:
     //! Connect to the data source - will scan file folders or connect to the database.
