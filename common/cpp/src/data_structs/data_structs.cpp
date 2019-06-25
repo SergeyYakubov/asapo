@@ -99,19 +99,25 @@ std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec) {
     std::tm timetm = *std::gmtime(&time);
     std::stringstream ssTp;
     auto zz = time_from_epoch_nanosec % 1000000000;
-    ssTp << std::put_time(&timetm, "%Y-%m-%dT%H:%M:%S");
+
+    std::string s;
+    char buff[100];
+
+    sprintf(buff, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d", timetm.tm_year + 1900, timetm.tm_mon + 1, timetm.tm_mday,
+            timetm.tm_hour, timetm.tm_min, timetm.tm_sec);
     if (zz > 0) {
-        ssTp << "." << std::setw(9) << std::setfill('0') << zz;
+        sprintf(buff + 19, ".%.9ld", zz);
     }
-    return ssTp.str();
+
+    return buff;
 }
 
 uint64_t NanosecsEpochFromISODate(std::string date_time) {
     double frac = 0;
     int pos = date_time.find_first_of('.');
-    if (pos!=std::string::npos) {
+    if (pos != std::string::npos) {
         std::string frac_str = date_time.substr(pos);
-        if (sscanf(frac_str.c_str(), "%lf", &frac)!=1) {
+        if (sscanf(frac_str.c_str(), "%lf", &frac) != 1) {
             return 0;
         }
         date_time = date_time.substr(0, pos);
@@ -128,7 +134,7 @@ uint64_t NanosecsEpochFromISODate(std::string date_time) {
     if (!(year >= 1970 && month >= 1 && month <= 12 && day >= 1 && day <= 31) || (n != 3 && n != 6)) {
         return 0;
     }
-    if ((n==3 && date_time.size()!=10) || (n==6 && date_time.size()!=19)) {
+    if ((n == 3 && date_time.size() != 10) || (n == 6 && date_time.size() != 19)) {
         return 0;
     }
 
@@ -136,8 +142,8 @@ uint64_t NanosecsEpochFromISODate(std::string date_time) {
     tm.tm_min = minute;
     tm.tm_hour = hour;
     tm.tm_mday = day;
-    tm.tm_mon = month-1;
-    tm.tm_year = year-1900;
+    tm.tm_mon = month - 1;
+    tm.tm_year = year - 1900;
 
     system_clock::time_point tp = system_clock::from_time_t (timegm(&tm));
     uint64_t ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(tp).

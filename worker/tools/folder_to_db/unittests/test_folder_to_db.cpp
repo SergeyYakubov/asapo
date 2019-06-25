@@ -22,6 +22,7 @@
 using ::testing::AtLeast;
 using ::testing::Eq;
 using ::testing::Gt;
+using ::testing::Ge;
 using ::testing::Ne;
 using ::testing::Test;
 using ::testing::_;
@@ -247,13 +248,16 @@ TEST_F(FolderDBConverterTests, ComputesStatistics) {
     WillRepeatedly(testing::Return(nullptr));
 
     asapo::FolderImportStatistics statistics;
+
+    statistics.time_read_folder = std::chrono::nanoseconds{-1};
+    statistics.time_import_files = std::chrono::nanoseconds{-1};
+
     auto error = converter.Convert(uri, folder, db_name, &statistics);
 
     ASSERT_THAT(error, Eq(nullptr));
     ASSERT_THAT(statistics.n_files_converted, Eq(file_infos.size()));
-// tests may fail is function call is smaller than 1 ns
-    ASSERT_THAT(statistics.time_read_folder.count(), Gt(0));
-    ASSERT_THAT(statistics.time_import_files.count(), Gt(0));
+    ASSERT_THAT(statistics.time_read_folder.count(), Ge(0));
+    ASSERT_THAT(statistics.time_import_files.count(), Ge(0));
 }
 
 
