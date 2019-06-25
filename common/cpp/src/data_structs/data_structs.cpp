@@ -1,10 +1,21 @@
 #include "common/data_structs.h"
 
-#include "json_parser/json_parser.h"
+#include <chrono>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <iomanip>
 
+
+#include "json_parser/json_parser.h"
 #include "preprocessor/definitions.h"
 
-#include <iostream>
+using std::chrono::system_clock;
+
+#ifdef _WIN32
+#define timegm _mkgmtime
+#endif
+
 
 namespace asapo {
 
@@ -80,4 +91,49 @@ std::string FileInfo::FullName(const std::string& base_path) const  {
     return full_name + name;
 }
 
+std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec) {
+    std::chrono::nanoseconds ns = std::chrono::nanoseconds {time_from_epoch_nanosec};
+    auto tp = std::chrono::system_clock::time_point
+    {std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)};
+    std::time_t time = std::chrono::system_clock::to_time_t(tp);
+    std::tm timetm = *std::gmtime(&time);
+    std::stringstream ssTp;
+    auto zz = time_from_epoch_nanosec % 1000000000;
+    ssTp << std::put_time(&timetm, "%Y-%m-%dT%H:%M:%S");
+    if (zz > 0) {
+        ssTp << "." << std::setw(9) << std::setfill('0') << zz;
+    }
+    return ssTp.str();
 }
+
+uint64_t NanosecsEpochFromISODate(std::string date_time) {
+    std::istringstream iss{date_time};
+    std::tm tm{};
+    if (!(iss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S"))) {
+        return 0;
+    }
+
+    system_clock::time_point tp = system_clock::from_time_t (timegm(&tm));
+    uint64_t ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(tp).
+                  time_since_epoch().count();
+
+    if (iss.eof()) {
+        return ns > 0 ? ns : 1;
+    }
+
+    double zz = 0;
+    if (iss.peek() != '.' || !(iss >> zz)) {
+        return 0;
+    }
+
+    ns = ns + uint64_t(zz * 1000000000);
+    return ns > 0 ? ns : 1;
+}
+
+uint64_t EpochNanosecsFromNow() {
+    return (uint64_t) std::chrono::duration_cast<std::chrono::nanoseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+}
+
+

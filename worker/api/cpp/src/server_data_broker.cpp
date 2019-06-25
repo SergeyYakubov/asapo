@@ -10,7 +10,7 @@
 
 #include "asapo_worker.h"
 
-using std::chrono::high_resolution_clock;
+using std::chrono::system_clock;
 
 namespace asapo {
 
@@ -307,7 +307,7 @@ std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
 
 
 FileInfos ServerDataBroker::DecodeFromResponse(std::string response, Error* err) {
-    auto parser = JsonStringParser("{ \"images\":"+response+"}");
+    auto parser = JsonStringParser("{ \"images\":" + response + "}");
 
     std::vector<std::string> vec_fi_endcoded;
     auto parse_err = parser.GetArrayRawStrings("images", &vec_fi_endcoded);
@@ -319,7 +319,7 @@ FileInfos ServerDataBroker::DecodeFromResponse(std::string response, Error* err)
     for (auto fi_encoded : vec_fi_endcoded) {
         FileInfo fi;
         if (!fi.SetFromJson(fi_encoded)) {
-            *err = WorkerErrorTemplates::kInternalError.Generate("cannot parse response:"+fi_encoded);
+            *err = WorkerErrorTemplates::kInternalError.Generate("cannot parse response:" + fi_encoded);
             return FileInfos{};
         }
         res.emplace_back(fi);
@@ -340,7 +340,7 @@ FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
         return FileInfos{};
     }
 
-    return DecodeFromResponse(response,err);
+    return DecodeFromResponse(response, err);
 }
 
 }

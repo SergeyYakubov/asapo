@@ -14,7 +14,7 @@
 std::string group_id = "";
 std::mutex lock;
 
-using std::chrono::high_resolution_clock;
+using std::chrono::system_clock;
 using asapo::Error;
 
 struct Params {
@@ -63,8 +63,8 @@ std::vector<std::thread> StartThreads(const Params& params,
 
         lock.unlock();
 
-        auto start = high_resolution_clock::now();
-        while (std::chrono::duration_cast<std::chrono::milliseconds>(high_resolution_clock::now() - start).count() <
+        auto start = system_clock::now();
+        while (std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count() <
                 params.timeout_ms) {
             err = broker->GetLast(&fi, group_id, params.read_data ? &data : nullptr);
             if (err == nullptr) {
@@ -94,7 +94,7 @@ std::vector<std::thread> StartThreads(const Params& params,
 
 int ReadAllData(const Params& params, uint64_t* duration_ms, int* nerrors, int* nbuf) {
     asapo::FileInfo fi;
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    system_clock::time_point t1 = system_clock::now();
 
     std::vector<int> nfiles(params.nthreads, 0);
     std::vector<int> errors(params.nthreads, 0);
@@ -108,7 +108,7 @@ int ReadAllData(const Params& params, uint64_t* duration_ms, int* nerrors, int* 
     *nbuf = std::accumulate(nfiles_frombuf.begin(), nfiles_frombuf.end(), 0);
 
 
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    system_clock::time_point t2 = system_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
     *duration_ms = duration_read.count();
     return n_total;

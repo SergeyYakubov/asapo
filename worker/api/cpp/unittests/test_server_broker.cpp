@@ -541,9 +541,9 @@ TEST_F(ServerDataBrokerTests, QueryImagesWrongResponseArray) {
 
 
     EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
-        SetArgPointee<2>(HttpCode::OK),
-        SetArgPointee<3>(nullptr),
-        Return(responce_string)));
+                SetArgPointee<2>(HttpCode::OK),
+                SetArgPointee<3>(nullptr),
+                Return(responce_string)));
 
     data_broker->SetTimeout(100);
     asapo::Error err;
@@ -562,9 +562,9 @@ TEST_F(ServerDataBrokerTests, QueryImagesWrongResponseRecorsd) {
 
 
     EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
-        SetArgPointee<2>(HttpCode::OK),
-        SetArgPointee<3>(nullptr),
-        Return(responce_string)));
+                SetArgPointee<2>(HttpCode::OK),
+                SetArgPointee<3>(nullptr),
+                Return(responce_string)));
 
     data_broker->SetTimeout(100);
     asapo::Error err;

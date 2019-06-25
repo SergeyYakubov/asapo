@@ -9,6 +9,10 @@
 
 namespace asapo {
 
+std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec);
+uint64_t NanosecsEpochFromISODate(std::string date_time);
+uint64_t  EpochNanosecsFromNow();
+
 class FileInfo {
   public:
     std::string name;
@@ -28,7 +32,6 @@ inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
              lhs.id == rhs.id &&
              lhs.modify_date == rhs.modify_date &&
              lhs.size == rhs.size);
-
 }
 
 using FileData = std::unique_ptr<uint8_t[]>;

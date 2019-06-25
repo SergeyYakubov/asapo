@@ -7,7 +7,7 @@
 #include "asapo_producer.h"
 
 
-using std::chrono::high_resolution_clock;
+using std::chrono::system_clock;
 
 std::mutex mutex;
 int iterations_remained;
@@ -149,8 +149,8 @@ void WaitThreadsFinished(const Args& args) {
 
 }
 
-void PrintOutput(const Args& args, const high_resolution_clock::time_point& start) {
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+void PrintOutput(const Args& args, const system_clock::time_point& start) {
+    system_clock::time_point t2 = system_clock::now();
     double duration_sec = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - start ).count() / 1000.0;
     double size_gb = double(args.number_of_bytes) * args.iterations / 1000.0  / 1000.0 / 1000.0 * 8.0;
     double rate = args.iterations / duration_sec;
@@ -168,7 +168,7 @@ int main (int argc, char* argv[]) {
 
     iterations_remained = args.iterations + 1;
 
-    high_resolution_clock::time_point start_time = high_resolution_clock::now();
+    system_clock::time_point start_time = system_clock::now();
 
     if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations)) {
         return EXIT_FAILURE;

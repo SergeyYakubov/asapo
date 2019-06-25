@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-using std::chrono::high_resolution_clock;
+using std::chrono::system_clock;
 
 namespace asapo {
 
@@ -34,7 +34,7 @@ StatisticsToSend Statistics::PrepareStatisticsToSend() const noexcept {
 
 uint64_t Statistics::GetTotalElapsedMs() const noexcept {
     return std::chrono::duration_cast<std::chrono::milliseconds>
-           ( high_resolution_clock::now() - last_timepoint_).count();
+           ( system_clock::now() - last_timepoint_).count();
 }
 
 
@@ -43,7 +43,7 @@ void Statistics::SetWriteInterval(uint64_t interval_ms) {
 }
 
 void Statistics::ResetStatistics() noexcept {
-    last_timepoint_ = high_resolution_clock::now();
+    last_timepoint_ = system_clock::now();
     nrequests_ = 0;
     volume_counter_ = 0;
 }
