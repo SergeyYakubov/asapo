@@ -136,8 +136,7 @@ auto tests = std::vector<TestEpochFromISODate> {
     TestEpochFromISODate{"2019-07-25T15:38:11.100010002", 1564069091100010002},
 //errors
     TestEpochFromISODate{"1970-13-01T00:00:00.000000002", 0},
-    TestEpochFromISODate{"1970-12-01T00:00:00,0", 0},
-
+    TestEpochFromISODate{"1970-12-01T00:00:00.", 0},
 };
 
 TEST(FileInFo, NanosecsEpochFromISODate) {
