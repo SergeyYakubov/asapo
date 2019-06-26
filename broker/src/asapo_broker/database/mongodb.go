@@ -381,7 +381,12 @@ func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
 
 	log_str := "processed query " + query + " for " + dbname + " ,found" + strconv.Itoa(len(res)) + " records"
 	logger.Debug(log_str)
-	return utils.MapToJson(&res)
+	if res != nil {
+		return utils.MapToJson(&res)
+	} else {
+		return []byte("[]"), nil
+	}
+
 }
 
 func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, extra_param string) (answer []byte, err error) {

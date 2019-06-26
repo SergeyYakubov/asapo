@@ -105,7 +105,7 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
     for(uint64_t i = 0; i < iterations; i++) {
         auto buffer = CreateMemoryBuffer(number_of_byte);
         asapo::EventHeader event_header{i + 1, number_of_byte, std::to_string(i + 1)};
-        std::string meta = "{\"dummy_meta\":\"test" + std::to_string(i + 1) + "\"}";
+        std::string meta = "{\"user_meta\":\"test" + std::to_string(i + 1) + "\"}";
         auto err = producer->SendData(event_header, std::move(buffer), std::move(meta), &ProcessAfterSend);
         if (err) {
             std::cerr << "Cannot send file: " << err << std::endl;

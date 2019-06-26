@@ -76,6 +76,27 @@ void GetAllFromBroker(const Args& args) {
     M_AssertTrue(err == nullptr, "GetNext5 no error");
     M_AssertTrue(fi.name == "1", "GetNext5  filename");
 
+    auto images = broker->QueryImages("meta.test = 10", &err);
+    M_AssertTrue(err == nullptr, "query1");
+    M_AssertTrue(images.size() == 10, "size of query answer 1");
+
+    images = broker->QueryImages("meta.test = 10 AND name='1'", &err);
+    M_AssertTrue(err == nullptr, "query2");
+    M_AssertTrue(images.size() == 1, "size of query answer 2");
+    M_AssertTrue(fi.name == "1", "GetNext5  filename");
+
+
+    images = broker->QueryImages("meta.test = 11", &err);
+    M_AssertTrue(err == nullptr, "query3");
+    M_AssertTrue(images.size() == 0, "size of query answer 3");
+
+    images = broker->QueryImages("meta.test = 18", &err);
+    M_AssertTrue(err == nullptr, "query4");
+    M_AssertTrue(images.size() == 0, "size of query answer 4");
+
+    images = broker->QueryImages("bla", &err);
+    M_AssertTrue(err != nullptr, "query5");
+    M_AssertTrue(images.size() == 0, "size of query answer 5");
 }
 
 int main(int argc, char* argv[]) {

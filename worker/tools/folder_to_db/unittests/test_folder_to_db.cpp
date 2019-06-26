@@ -249,8 +249,8 @@ TEST_F(FolderDBConverterTests, ComputesStatistics) {
 
     asapo::FolderImportStatistics statistics;
 
-    statistics.time_read_folder = std::chrono::nanoseconds{-1};
-    statistics.time_import_files = std::chrono::nanoseconds{-1};
+    statistics.time_read_folder = std::chrono::nanoseconds{ -1};
+    statistics.time_import_files = std::chrono::nanoseconds{ -1};
 
     auto error = converter.Convert(uri, folder, db_name, &statistics);
 

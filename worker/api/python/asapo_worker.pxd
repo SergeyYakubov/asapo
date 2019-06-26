@@ -1,5 +1,6 @@
 from libcpp.memory cimport unique_ptr
 from libcpp.string cimport string
+from libcpp.vector cimport vector
 
 
 ctypedef unsigned char uint8_t
@@ -21,6 +22,9 @@ cdef extern from "asapo_worker.h" namespace "asapo":
 cdef extern from "asapo_worker.h" namespace "asapo":
   cppclass FileInfo:
     string Json()
+  cppclass FileInfos:
+    vector[FileInfo].iterator begin()
+    vector[FileInfo].iterator end()
 
 
 
@@ -35,6 +39,7 @@ cdef extern from "asapo_worker.h" namespace "asapo":
         Error ResetCounter(string group_id)
         string GenerateNewGroupId(Error* err)
         string GetBeamtimeMeta(Error* err)
+        FileInfos QueryImages(string query, Error* err)
 
 
 cdef extern from "asapo_worker.h" namespace "asapo":

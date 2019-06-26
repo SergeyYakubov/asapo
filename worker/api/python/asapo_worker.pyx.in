@@ -45,8 +45,6 @@ cdef class PyDataBroker:
         del meta['buf_id']
         del meta['source']
         del meta['lastchange']
-        if 'meta' in meta:
-            meta['user_metadata'] = meta.pop('meta')
         if meta_only:
             return None,meta,None
         cdef char* ptr = <char*> data.release()
@@ -84,6 +82,20 @@ cdef class PyDataBroker:
             return None, err_str
         else:
             return _str(group_id), None
+    def query_images(self,query):
+        cdef Error err
+        cdef FileInfos file_infos
+        file_infos = self.c_broker.QueryImages(_bytes(query),&err)
+        err_str = _str(GetErrorString(&err))
+        if err_str.strip():
+            return None, err_str
+        else:
+            json_list = []
+            for fi in file_infos:
+                json_list.append(json.loads(_str(fi.Json())))
+            return json_list, None
+
+
     def get_beamtime_meta(self):
             cdef Error err
             cdef string meta_str

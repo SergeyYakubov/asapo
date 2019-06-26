@@ -1,4 +1,7 @@
 add_subdirectory(simple_chain)
+if (UNIX OR CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_subdirectory(simple_chain_usermeta_python)
+endif()
 add_subdirectory(simple_chain_metadata)
 add_subdirectory(two_beamlines)
 add_subdirectory(simple_chain_filegen)

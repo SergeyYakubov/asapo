@@ -356,6 +356,7 @@ var tests = []struct {
 	ok    bool
 }{
 	{"meta.counter = 10", []TestRecordMeta{recq1, recq3}, true},
+	{"meta.counter = 18", []TestRecordMeta{}, true},
 	{"meta.counter = 11", []TestRecordMeta{recq2}, true},
 	{"meta.counter > 11", []TestRecordMeta{recq4}, true},
 	{"meta.counter < 11", []TestRecordMeta{recq1, recq3}, true},
