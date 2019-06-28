@@ -45,7 +45,6 @@ TEST(FileInFo, Defaults) {
 TEST(FileInFo, CorrectConvertToJson) {
     auto finfo = PrepareFileInfo();
     std::string json = finfo.Json();
-    printf("%s\n", json.c_str());
     if (asapo::kPathSeparator == '/') {
         ASSERT_THAT(json, Eq(
                         R"({"_id":1,"size":100,"name":"folder/test","lastchange":1000000,"source":"host:1234","buf_id":-1,"meta":{"bla":10}})"));
@@ -119,5 +118,45 @@ TEST(FileInFo, CorrectConvertFromJsonEmptyMeta) {
 }
 
 
+TEST(FileInFo, EpochNanosecsFromNow) {
+    auto ns = asapo::EpochNanosecsFromNow();
+    ASSERT_THAT(ns, ::testing::Gt(0));
+}
+
+
+struct TestEpochFromISODate {
+    std::string iso;
+    uint64_t ns;
+};
+
+auto tests = std::vector<TestEpochFromISODate> {
+    TestEpochFromISODate{"1970-01-01T00:00:00.0", 1}, // 0 reserved for errors
+    TestEpochFromISODate{"1970-01-01", 1},
+    TestEpochFromISODate{"1970-01-01T00:00:00.000000002", 2},
+    TestEpochFromISODate{"2019-07-25T15:38:11.100010002", 1564069091100010002},
+//errors
+    TestEpochFromISODate{"1970-13-01T00:00:00.000000002", 0},
+    TestEpochFromISODate{"1970-12-01T00:00:00.", 0},
+};
+
+TEST(FileInFo, NanosecsEpochFromISODate) {
+    for (auto test : tests) {
+        auto res = asapo::NanosecsEpochFromISODate(test.iso);
+        ASSERT_THAT(res, Eq(test.ns));
+    }
+}
+
+auto tests2 = std::vector<TestEpochFromISODate> {
+    TestEpochFromISODate{"1970-01-01T00:00:00", 0},
+    TestEpochFromISODate{"1970-01-01T00:00:00.000000002", 2},
+    TestEpochFromISODate{"2019-07-25T15:38:11.100010002", 1564069091100010002},
+};
+
+TEST(FileInFo, ISODateFromNanosecsEpoch) {
+    for (auto test : tests2) {
+        auto res = asapo::IsoDateFromEpochNanosecs(test.ns);
+        ASSERT_THAT(res, Eq(test.iso));
+    }
+}
 
 }

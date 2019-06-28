@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -49,14 +50,18 @@ func containsMatcher(substrings ...string) func(str string) bool {
 	}
 }
 
-func doRequest(path string, method ...string) *httptest.ResponseRecorder {
+func doRequest(path string, extra_params ...string) *httptest.ResponseRecorder {
 	m := "GET"
-	if len(method) > 0 {
-		m = method[0]
+	if len(extra_params) > 0 {
+		m = extra_params[0]
+	}
+	var body io.Reader = nil
+	if len(extra_params) > 1 {
+		body = strings.NewReader(extra_params[1])
 	}
 
 	mux := utils.NewRouter(listRoutes)
-	req, _ := http.NewRequest(m, path, nil)
+	req, _ := http.NewRequest(m, path, body)
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, req)
 	return w
@@ -112,7 +117,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithNoToken() {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte(""),
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", "0").Return([]byte(""),
 		&database.DBError{utils.StatusWrongInput, ""})
 
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
@@ -124,7 +129,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() 
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte(""), errors.New(""))
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", "0").Return([]byte(""), errors.New(""))
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
 	ExpectCopyClose(suite.mock_db)
 
@@ -133,7 +138,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", 0).Return([]byte("Hello"), nil)
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", "0").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedBeamtimeId)))
 	ExpectCopyClose(suite.mock_db)
 

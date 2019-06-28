@@ -3,43 +3,34 @@
 #include <chrono>
 
 #include <json_parser/json_parser.h>
-
 #include "io/io_factory.h"
-
 #include "http_client/http_error.h"
 #include "tcp_client.h"
 
-#include <iostream>
 
-using std::chrono::high_resolution_clock;
+#include "asapo_worker.h"
+
+using std::chrono::system_clock;
 
 namespace asapo {
 
 Error HttpCodeToWorkerError(const HttpCode& code) {
-    const char* message;
     switch (code) {
     case HttpCode::OK:
         return nullptr;
     case HttpCode::BadRequest:
-        message = WorkerErrorMessage::kWrongInput;
-        break;
+        return WorkerErrorTemplates::kWrongInput.Generate();
     case HttpCode::Unauthorized:
-        message = WorkerErrorMessage::kAuthorizationError;
-        break;
+        return WorkerErrorTemplates::kAuthorizationError.Generate();
     case HttpCode::InternalServerError:
-        message = WorkerErrorMessage::kErrorReadingSource;
-        break;
+        return WorkerErrorTemplates::kInternalError.Generate();
     case HttpCode::NotFound:
-        message = WorkerErrorMessage::kErrorReadingSource;
-        break;
+        return WorkerErrorTemplates::kErrorReadingSource.Generate();
     case HttpCode::Conflict:
-        message = WorkerErrorMessage::kNoData;
-        return TextErrorWithType(message, ErrorType::kEndOfFile);
+        return asapo::ErrorTemplates::kEndOfFile.Generate("No Data");
     default:
-        message = WorkerErrorMessage::kUnknownIOError;
-        break;
+        return WorkerErrorTemplates::kUnknownIOError.Generate();
     }
-    return Error{new HttpError(message, code)};
 }
 
 ServerDataBroker::ServerDataBroker(std::string server_uri,
@@ -88,14 +79,14 @@ std::string ServerDataBroker::RequestWithToken(std::string uri) {
     return std::move(uri) + "?token=" + token_;
 }
 
-Error ServerDataBroker::ProcessRequest(std::string* response, std::string request_uri, std::string extra_params,
-                                       bool post) {
+Error ServerDataBroker::ProcessRequest(std::string* response, const RequestInfo& request) {
     Error err;
     HttpCode code;
-    if (post) {
-        *response = httpclient__->Post(RequestWithToken(request_uri) + extra_params, "", &code, &err);
+    if (request.post) {
+        *response = httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.body, &code,
+                                       &err);
     } else {
-        *response = httpclient__->Get(RequestWithToken(request_uri) + extra_params, &code, &err);
+        *response = httpclient__->Get(RequestWithToken(request.host + request.api) + request.extra_params, &code, &err);
     }
     if (err != nullptr) {
         current_broker_uri_ = "";
@@ -109,9 +100,12 @@ Error ServerDataBroker::GetBrokerUri() {
         return nullptr;
     }
 
-    std::string request_uri = server_uri_ + "/discovery/broker";
+    RequestInfo ri;
+    ri.host = server_uri_;
+    ri.api = "/discovery/broker";
+
     Error err;
-    err = ProcessRequest(&current_broker_uri_, request_uri, "", false);
+    err = ProcessRequest(&current_broker_uri_, ri);
     if (err != nullptr || current_broker_uri_.empty()) {
         current_broker_uri_ = "";
         return TextError("cannot get broker uri from " + server_uri_);
@@ -128,7 +122,10 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_
     while (true) {
         auto err = GetBrokerUri();
         if (err == nullptr) {
-            err = ProcessRequest(&response, current_broker_uri_ + request_api + request_suffix, "", false);
+            RequestInfo ri;
+            ri.host = current_broker_uri_;
+            ri.api = request_api + request_suffix;
+            err = ProcessRequest(&response, ri);
             if (err == nullptr) {
                 break;
             }
@@ -137,7 +134,7 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_
         ProcessServerError(&err, response, &request_suffix);
 
         if (elapsed_ms >= timeout_ms_) {
-            err = TextErrorWithType("exit on timeout, last error: " + err->Explain(), asapo::ErrorType::kTimeOut);
+            err = IOErrorTemplates::kTimeout.Generate( ", last error: " + err->Explain());
             return err;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -145,7 +142,7 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_
     }
 
     if (!info->SetFromJson(response)) {
-        return TextError(WorkerErrorMessage::kErrorReadingSource + std::string(":") + response);
+        return WorkerErrorTemplates::kErrorReadingSource.Generate(std::string(":") + response);
     }
     return nullptr;
 }
@@ -173,7 +170,7 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t 
                                            FileInfo* info,
                                            FileData* data) {
     if (info == nullptr) {
-        return TextError(WorkerErrorMessage::kWrongInput);
+        return WorkerErrorTemplates::kWrongInput.Generate();
     }
 
     Error err;
@@ -218,41 +215,56 @@ Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* dat
 
 
 std::string ServerDataBroker::GenerateNewGroupId(Error* err) {
-    return BrokerRequestWithTimeout("creategroup", "", true, err);
+    RequestInfo ri;
+    ri.api = "/creategroup";
+    ri.post = true;
+    return BrokerRequestWithTimeout(ri, err);
 }
 
-std::string ServerDataBroker::BrokerRequestWithTimeout(std::string request_string, std::string extra_params,
-        bool post_request, Error* err) {
+
+std::string ServerDataBroker::AppendUri(std::string request_string) {
+    return current_broker_uri_ + "/" + std::move(request_string);
+}
+
+
+
+std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Error* err) {
     uint64_t elapsed_ms = 0;
     std::string response;
     while (elapsed_ms <= timeout_ms_) {
         *err = GetBrokerUri();
         if (*err == nullptr) {
-            *err = ProcessRequest(&response, current_broker_uri_ + "/" + request_string, extra_params, post_request);
-            if (*err == nullptr || (*err)->GetErrorType() == ErrorType::kEndOfFile) {
+            request.host = current_broker_uri_;
+            *err = ProcessRequest(&response, request);
+            if (*err == nullptr || (*err)->GetErrorType() == ErrorType::kEndOfFile || (*err) == WorkerErrorTemplates::kWrongInput) {
                 return response;
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         elapsed_ms += 100;
     }
-    *err = TextErrorWithType("exit on timeout, last error: " + (*err)->Explain(), asapo::ErrorType::kTimeOut);
+    *err = IOErrorTemplates::kTimeout.Generate( ", last error: " + (*err)->Explain());
     return "";
 }
 
 Error ServerDataBroker::ResetCounter(std::string group_id) {
-    std::string request_string =  "database/" + source_name_ + "/" + std::move(group_id) + "/resetcounter";
+    RequestInfo ri;
+    ri.api = "/database/" + source_name_ + "/" + std::move(group_id) + "/resetcounter";
+    ri.post = true;
+
     Error err;
-    BrokerRequestWithTimeout(request_string, "", true, &err);
+    BrokerRequestWithTimeout(ri, &err);
     return err;
 }
 
 uint64_t ServerDataBroker::GetNDataSets(Error* err) {
-    std::string request_string =  "database/" + source_name_ + "/size";
-    auto responce = BrokerRequestWithTimeout(request_string, "", false, err);
+    RequestInfo ri;
+    ri.api = "/database/" + source_name_ + "/size";
+    auto responce = BrokerRequestWithTimeout(ri, err);
     if (*err) {
         return 0;
     }
+
     JsonStringParser parser(responce);
     uint64_t size;
     if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
@@ -267,24 +279,68 @@ Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_i
 
 
 Error ServerDataBroker::GetFileInfoFromServerById(uint64_t id, FileInfo* info, std::string group_id) {
-    std::string request_string =  "database/" + source_name_ + "/" + std::move(group_id) + "/" + std::to_string(id);
-    std::string extra_params =  "&reset=true";
+
+    RequestInfo ri;
+    ri.api = "/database/" + source_name_ + "/" + std::move(group_id) + "/" + std::to_string(id);
+    ri.extra_params = "&reset=true";
+
+
     Error err;
-    auto responce = BrokerRequestWithTimeout(request_string, extra_params, false, &err);
+    auto responce = BrokerRequestWithTimeout(ri, &err);
     if (err) {
         return err;
     }
 
     if (!info->SetFromJson(responce)) {
-        return TextError(WorkerErrorMessage::kErrorReadingSource);
+        return WorkerErrorTemplates::kErrorReadingSource.Generate();
     }
 
     return nullptr;
 }
 
 std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
-    std::string request_string =  "database/" + source_name_ + "/0/meta/0";
-    return BrokerRequestWithTimeout(request_string, "", false, err);
+    RequestInfo ri;
+    ri.api = "/database/" + source_name_ + "/0/meta/0";
+
+    return BrokerRequestWithTimeout(ri, err);
+}
+
+
+FileInfos ServerDataBroker::DecodeFromResponse(std::string response, Error* err) {
+    auto parser = JsonStringParser("{ \"images\":" + response + "}");
+
+    std::vector<std::string> vec_fi_endcoded;
+    auto parse_err = parser.GetArrayRawStrings("images", &vec_fi_endcoded);
+    if (parse_err) {
+        *err = WorkerErrorTemplates::kInternalError.Generate("cannot parse response:" + parse_err->Explain());
+    }
+
+    auto res = FileInfos{};
+    for (auto fi_encoded : vec_fi_endcoded) {
+        FileInfo fi;
+        if (!fi.SetFromJson(fi_encoded)) {
+            *err = WorkerErrorTemplates::kInternalError.Generate("cannot parse response:" + fi_encoded);
+            return FileInfos{};
+        }
+        res.emplace_back(fi);
+    }
+    return res;
+}
+
+
+FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_name_ + "/0/queryimages";
+    ri.post = true;
+    ri.body = std::move(query);
+
+    auto response = BrokerRequestWithTimeout(ri, err);
+    if (*err) {
+        (*err)->Append(response);
+        return FileInfos{};
+    }
+
+    return DecodeFromResponse(response, err);
 }
 
 }

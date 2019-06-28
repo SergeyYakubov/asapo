@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 
 #include "worker/data_broker.h"
+#include "worker/worker_error.h"
 #include "io/io.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 #include "../src/server_data_broker.h"
@@ -63,6 +64,8 @@ class ServerDataBrokerTests : public Test {
     std::string expected_full_path = std::string("/tmp/beamline/beamtime") + asapo::kPathSeparator + expected_filename;
     std::string expected_group_id = "groupid";
     std::string expected_metadata = "{\"meta\":1}";
+    std::string expected_query_string = "bla";
+
     uint64_t expected_dataset_id = 1;
     static const uint64_t expected_buf_id = 123;
     void SetUp() override {
@@ -126,8 +129,8 @@ TEST_F(ServerDataBrokerTests, CanConnect) {
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsErrorOnWrongInput) {
-    auto return_code = data_broker->GetNext(nullptr, "", nullptr);
-    ASSERT_THAT(return_code->Explain(), Eq(asapo::WorkerErrorMessage::kWrongInput));
+    auto err = data_broker->GetNext(nullptr, "", nullptr);
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ServerDataBrokerTests, GetNextUsesCorrectUri) {
@@ -179,7 +182,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsNotAuthorized) {
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
     ASSERT_THAT(err, Ne(nullptr));
-    ASSERT_THAT(err->Explain(), HasSubstr("authorization"));
+    ASSERT_THAT(err->Explain(), HasSubstr("Authorization"));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsWrongResponseFromHttpClient) {
@@ -290,9 +293,10 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsFileInfo) {
 TEST_F(ServerDataBrokerTests, GetImageReturnsParseError) {
     MockGetBrokerUri();
     MockGet("error_response");
+
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err->Explain(), ::testing::HasSubstr(asapo::WorkerErrorMessage::kErrorReadingSource));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kErrorReadingSource));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfNoDtataNeeded) {
@@ -357,7 +361,7 @@ TEST_F(ServerDataBrokerTests, GetImageCallsReadFromFileIfZeroBufId) {
 TEST_F(ServerDataBrokerTests, GenerateNewGroupIdReturnsErrorCreateGroup) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("creategroup"), "", _, _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("creategroup"), "", _, _)).WillOnce(DoAll(
                 SetArgPointee<2>(HttpCode::BadRequest),
                 SetArgPointee<3>(nullptr),
                 Return("")));
@@ -365,9 +369,7 @@ TEST_F(ServerDataBrokerTests, GenerateNewGroupIdReturnsErrorCreateGroup) {
     data_broker->SetTimeout(100);
     asapo::Error err;
     auto groupid = data_broker->GenerateNewGroupId(&err);
-    if (err != nullptr ) {
-        ASSERT_THAT(err->Explain(), HasSubstr("timeout"));
-    }
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kWrongInput));
     ASSERT_THAT(groupid, Eq(""));
 }
 
@@ -490,6 +492,116 @@ TEST_F(ServerDataBrokerTests, GetMetaDataOK) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(res, Eq(expected_metadata));
 
+}
+
+
+TEST_F(ServerDataBrokerTests, QueryImagesReturnError) {
+    MockGetBrokerUri();
+
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
+                SetArgPointee<2>(HttpCode::BadRequest),
+                SetArgPointee<3>(nullptr),
+                Return("error in query")));
+
+    data_broker->SetTimeout(1000);
+    asapo::Error err;
+    auto images = data_broker->QueryImages(expected_query_string, &err);
+
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kWrongInput));
+    ASSERT_THAT(err->Explain(), HasSubstr("query"));
+    ASSERT_THAT(images.size(), Eq(0));
+}
+
+
+TEST_F(ServerDataBrokerTests, QueryImagesReturnEmptyResults) {
+    MockGetBrokerUri();
+
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
+                SetArgPointee<2>(HttpCode::OK),
+                SetArgPointee<3>(nullptr),
+                Return("[]")));
+
+    data_broker->SetTimeout(100);
+    asapo::Error err;
+    auto images = data_broker->QueryImages(expected_query_string, &err);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(images.size(), Eq(0));
+}
+
+TEST_F(ServerDataBrokerTests, QueryImagesWrongResponseArray) {
+
+    MockGetBrokerUri();
+
+    auto rec1 = CreateFI();
+    auto rec2 = CreateFI();
+    auto json1 = rec1.Json();
+    auto json2 = rec2.Json();
+    auto responce_string = json1 + "," + json2 + "]"; // no [ at the beginning
+
+
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
+                SetArgPointee<2>(HttpCode::OK),
+                SetArgPointee<3>(nullptr),
+                Return(responce_string)));
+
+    data_broker->SetTimeout(100);
+    asapo::Error err;
+    auto images = data_broker->QueryImages(expected_query_string, &err);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(images.size(), Eq(0));
+    ASSERT_THAT(err->Explain(), HasSubstr("response"));
+}
+
+TEST_F(ServerDataBrokerTests, QueryImagesWrongResponseRecorsd) {
+
+    MockGetBrokerUri();
+
+    auto responce_string = R"([{"bla":1},{"err":}])";
+
+
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
+                SetArgPointee<2>(HttpCode::OK),
+                SetArgPointee<3>(nullptr),
+                Return(responce_string)));
+
+    data_broker->SetTimeout(100);
+    asapo::Error err;
+    auto images = data_broker->QueryImages(expected_query_string, &err);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(images.size(), Eq(0));
+    ASSERT_THAT(err->Explain(), HasSubstr("response"));
+}
+
+
+
+TEST_F(ServerDataBrokerTests, QueryImagesReturnRecords) {
+
+    MockGetBrokerUri();
+
+    auto rec1 = CreateFI();
+    auto rec2 = CreateFI();
+    auto json1 = rec1.Json();
+    auto json2 = rec2.Json();
+    auto responce_string = "[" + json1 + "," + json2 + "]";
+
+
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), expected_query_string, _, _)).WillOnce(DoAll(
+                SetArgPointee<2>(HttpCode::OK),
+                SetArgPointee<3>(nullptr),
+                Return(responce_string)));
+
+    data_broker->SetTimeout(100);
+    asapo::Error err;
+    auto images = data_broker->QueryImages(expected_query_string, &err);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(images.size(), Eq(2));
+
+    ASSERT_THAT(images[0], Eq(rec1));
+    ASSERT_THAT(images[1], Eq(rec2));
 }
 
 

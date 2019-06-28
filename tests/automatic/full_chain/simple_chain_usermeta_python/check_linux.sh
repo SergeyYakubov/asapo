@@ -5,7 +5,7 @@ set -e
 trap Cleanup EXIT
 
 beamtime_id=asapo_test
-token=`$3 token -secret broker_secret.key $beamtime_id`
+token=`$2 token -secret broker_secret.key $beamtime_id`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -23,7 +23,6 @@ Cleanup() {
     nomad stop broker
     nomad stop authorizer
     rm -rf out
-#    kill $producerid
     echo "db.dropDatabase()" | mongo ${beamtime_id}
     influx -execute "drop database ${monitor_database_name}"
 }
@@ -41,11 +40,12 @@ sleep 1
 
 #producer
 mkdir -p ${receiver_folder}
-$1 localhost:8400 ${beamtime_id} 100 1000 4 0 100 &
-#producerid=`echo $!`
+$1 localhost:8400 ${beamtime_id} 100 100 1 0 100
+
+export PYTHONPATH=$4:${PYTHONPATH}
 
 
-$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 5000 1 > out
+python $3/get_user_meta.py $proxy_address $receiver_folder $beamtime_id $token new > out
 cat out
-cat out   | grep "Processed 1000 file(s)"
-cat out | grep "Cannot get metadata"
+cat out | grep "found images: 100"
+cat out | grep "test100"

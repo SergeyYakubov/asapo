@@ -5,7 +5,7 @@
 
 #include "json_parser/json_parser.h"
 
-using std::chrono::high_resolution_clock;
+using std::chrono::system_clock;
 
 namespace asapo {
 
@@ -41,7 +41,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* beamtime_
         return auth_error;
     }
 
-    last_updated_ = high_resolution_clock::now();
+    last_updated_ = system_clock::now();
 
     JsonStringParser parser{response};
     (err = parser.GetString("BeamtimeId", &beamtime_id_)) ||
@@ -74,7 +74,7 @@ Error RequestHandlerAuthorize::ProcessOtherRequest(Request* request) const {
     }
 
     uint64_t elapsed_ms = (uint64_t) std::chrono::duration_cast<std::chrono::milliseconds>
-                          (high_resolution_clock::now() - last_updated_).count();
+                          (system_clock::now() - last_updated_).count();
     if (elapsed_ms >= GetReceiverConfig()->authorization_interval_ms) {
         auto err = Authorize(request, beamtime_id_.c_str());
         if (err) {

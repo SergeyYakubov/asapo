@@ -120,7 +120,7 @@ void RequestHandlerTcp::UpdateIfNewConnection() {
 
 bool RequestHandlerTcp::UpdateReceiversList() {
     auto thread_receivers_new = discovery_service__->RotatedUriList(thread_id_);
-    last_receivers_uri_update_ = high_resolution_clock::now();
+    last_receivers_uri_update_ = system_clock::now();
     if (thread_receivers_new != receivers_list_) {
         receivers_list_ = thread_receivers_new;
         return true;
@@ -129,7 +129,7 @@ bool RequestHandlerTcp::UpdateReceiversList() {
 }
 
 bool RequestHandlerTcp::TimeToUpdateReceiverList() {
-    uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>( high_resolution_clock::now() -
+    uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>( system_clock::now() -
                           last_receivers_uri_update_).count();
     return elapsed_ms > discovery_service__->UpdateFrequency();
 }

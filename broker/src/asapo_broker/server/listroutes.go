@@ -42,6 +42,12 @@ var listRoutes = utils.Routes{
 		routeCreateGroupID,
 	},
 	utils.Route{
+		"QueryImages",
+		"Post",
+		"/database/{dbname}/0/queryimages",
+		routeQueryImages,
+	},
+	utils.Route{
 		"ResetCounter",
 		"Post",
 		"/database/{dbname}/{groupid}/resetcounter",

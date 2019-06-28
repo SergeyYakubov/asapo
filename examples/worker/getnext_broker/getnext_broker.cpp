@@ -10,7 +10,8 @@
 
 #include "asapo_worker.h"
 
-using std::chrono::high_resolution_clock;
+
+using std::chrono::system_clock;
 using asapo::Error;
 
 std::string group_id = "";
@@ -35,7 +36,7 @@ void WaitThreads(std::vector<std::thread>* threads) {
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
     std::cout << err->Explain() << std::endl;
-    return err->GetErrorType() == asapo::ErrorType::kTimeOut ? 0 : 1;
+    return err == asapo::IOErrorTemplates::kTimeout ? 0 : 1;
 }
 
 std::vector<std::thread> StartThreads(const Params& params,
@@ -80,7 +81,8 @@ std::vector<std::thread> StartThreads(const Params& params,
                 }
             } else {
                 (*errors)[i] += ProcessError(err);
-                if (err->GetErrorType() == asapo::ErrorType::kTimeOut) {
+                std::cout << "Received: " << (int)err->GetErrorType() << err << std::endl;
+                if (err == asapo::IOErrorTemplates::kTimeout) {
                     break;
                 }
             }
@@ -97,7 +99,7 @@ std::vector<std::thread> StartThreads(const Params& params,
 
 int ReadAllData(const Params& params, uint64_t* duration_ms, int* nerrors, int* nbuf) {
     asapo::FileInfo fi;
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    system_clock::time_point t1 = system_clock::now();
 
     std::vector<int> nfiles(params.nthreads, 0);
     std::vector<int> errors(params.nthreads, 0);
@@ -110,7 +112,7 @@ int ReadAllData(const Params& params, uint64_t* duration_ms, int* nerrors, int* 
     *nerrors = std::accumulate(errors.begin(), errors.end(), 0);
     *nbuf = std::accumulate(nfiles_frombuf.begin(), nfiles_frombuf.end(), 0);
 
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    system_clock::time_point t2 = system_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
     *duration_ms = duration_read.count();
     return n_total;

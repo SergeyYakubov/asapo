@@ -45,7 +45,7 @@ func TestGetIDTestSuite(t *testing.T) {
 }
 
 func (suite *GetIDTestSuite) TestGetIdCallsCorrectRoutine() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "id", 1).Return([]byte("Hello"), nil)
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "id", "1").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request")))
 	ExpectCopyClose(suite.mock_db)
 
@@ -55,7 +55,7 @@ func (suite *GetIDTestSuite) TestGetIdCallsCorrectRoutine() {
 }
 
 func (suite *GetIDTestSuite) TestGetIdWithResetCallsCorrectRoutine() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "idreset", 1).Return([]byte("Hello"), nil)
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "idreset", "1").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request")))
 	ExpectCopyClose(suite.mock_db)
 

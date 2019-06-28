@@ -54,6 +54,10 @@ Error JsonParser::GetRawString(std::string* val) const noexcept {
     return rapid_json_->GetRawString(val);
 }
 
+Error JsonParser::GetArrayRawStrings(const std::string& name, std::vector<std::string>* val) const noexcept {
+    return rapid_json_->GetArrayRawStrings(name, val);
+}
+
 }
 
 

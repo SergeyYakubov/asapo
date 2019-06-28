@@ -33,7 +33,7 @@ func TestResetCounterTestSuite(t *testing.T) {
 }
 
 func (suite *ResetCounterTestSuite) TestResetCounterOK() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "resetcounter", 0).Return([]byte(""), nil)
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "resetcounter", "0").Return([]byte(""), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request resetcounter")))
 	ExpectCopyClose(suite.mock_db)
 

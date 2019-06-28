@@ -33,7 +33,7 @@ func TestGetMetaTestSuite(t *testing.T) {
 }
 
 func (suite *GetMetaTestSuite) TestGetMetaOK() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, "", "meta", 0).Return([]byte("{\"test\":10}"), nil)
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, "", "meta", "0").Return([]byte("{\"test\":10}"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request meta")))
 	ExpectCopyClose(suite.mock_db)
 

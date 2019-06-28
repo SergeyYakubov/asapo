@@ -2,6 +2,7 @@
 
 #include "io/io_factory.h"
 #include "preprocessor/definitions.h"
+#include "worker/worker_error.h"
 
 namespace asapo {
 
@@ -14,7 +15,7 @@ Error FolderDataBroker::Connect() {
     std::lock_guard<std::mutex> lock{mutex_};
 
     if (is_connected_) {
-        return TextError(WorkerErrorMessage::kSourceAlreadyConnected);
+        return WorkerErrorTemplates::kSourceAlreadyConnected.Generate();
     }
 
     Error error;
@@ -30,15 +31,15 @@ Error FolderDataBroker::Connect() {
 
 Error FolderDataBroker::CanGetData(FileInfo* info, FileData* data, uint64_t nfile) const noexcept {
     if (!is_connected_) {
-        return TextError(WorkerErrorMessage::kSourceNotConnected);
+        return WorkerErrorTemplates::kSourceNotConnected.Generate();
     }
 
     if (info == nullptr) {
-        return TextError(WorkerErrorMessage::kWrongInput);
+        return WorkerErrorTemplates::kWrongInput.Generate();
     }
 
     if (nfile >= (uint64_t) filelist_.size()) {
-        return Error{TextErrorWithType(WorkerErrorMessage::kNoData, ErrorType::kEndOfFile)};
+        return asapo::ErrorTemplates::kEndOfFile.Generate("No Data");
     }
     return nullptr;
 }
@@ -96,6 +97,11 @@ Error FolderDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_i
 
 std::string FolderDataBroker::GetBeamtimeMeta(Error* err) {
     return io__->ReadFileToString(base_path_ + kPathSeparator + "beamtime_global.meta", err);
+}
+
+FileInfos FolderDataBroker::QueryImages(std::string query, Error* err) {
+    *err = TextError("Not supported for folder data broker");
+    return FileInfos{};
 }
 
 }

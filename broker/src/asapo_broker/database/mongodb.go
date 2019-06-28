@@ -177,7 +177,6 @@ func (db *Mongodb) incrementField(dbname string, group_id string, max_ind int, r
 }
 
 func (db *Mongodb) GetRecordByIDRow(dbname string, id int, returnID bool) ([]byte, error) {
-
 	var res map[string]interface{}
 	q := bson.M{"_id": id}
 	c := db.session.DB(dbname).C(data_collection_name)
@@ -201,7 +200,11 @@ func (db *Mongodb) GetRecordByIDRow(dbname string, id int, returnID bool) ([]byt
 	return utils.MapToJson(&res)
 }
 
-func (db *Mongodb) GetRecordByID(dbname string, group_id string, id int, returnID bool, reset bool) ([]byte, error) {
+func (db *Mongodb) GetRecordByID(dbname string, group_id string, id_str string, returnID bool, reset bool) ([]byte, error) {
+	id, err := strconv.Atoi(id_str)
+	if err != nil {
+		return nil, err
+	}
 
 	if err := db.checkDatabaseOperationPrerequisites(dbname, group_id); err != nil {
 		return nil, err
@@ -339,31 +342,65 @@ func (db *Mongodb) ResetCounter(db_name string, group_id string) ([]byte, error)
 	return []byte(""), err
 }
 
-func (db *Mongodb) getMeta(dbname string, id int) ([]byte, error) {
+func (db *Mongodb) getMeta(dbname string, id_str string) ([]byte, error) {
+	id, err := strconv.Atoi(id_str)
+	if err != nil {
+		return nil, err
+	}
 
 	var res map[string]interface{}
 	q := bson.M{"_id": id}
 	c := db.session.DB(dbname).C(meta_collection_name)
-	err := c.Find(q).One(&res)
+	err = c.Find(q).One(&res)
 	if err != nil {
 		log_str := "error getting meta with id " + strconv.Itoa(id) + " for " + dbname + " : " + err.Error()
 		logger.Debug(log_str)
 		return nil, &DBError{utils.StatusNoData, err.Error()}
 	}
-
 	log_str := "got record id " + strconv.Itoa(id) + " for " + dbname
 	logger.Debug(log_str)
 	return utils.MapToJson(&res)
 }
 
-func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, id int) (answer []byte, err error) {
+func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
+	var res []map[string]interface{}
+	q, sort, err := db.BSONFromSQL(dbname, query)
+	if err != nil {
+		log_str := "error parsing query: " + query + " for " + dbname + " : " + err.Error()
+		logger.Debug(log_str)
+		return nil, &DBError{utils.StatusWrongInput, err.Error()}
+	}
+
+	c := db.session.DB(dbname).C(data_collection_name)
+	if len(sort) > 0 {
+		err = c.Find(q).Sort(sort).All(&res)
+	} else {
+		err = c.Find(q).All(&res)
+	}
+	if err != nil {
+		log_str := "error processing query: " + query + " for " + dbname + " : " + err.Error()
+		logger.Debug(log_str)
+		return nil, &DBError{utils.StatusNoData, err.Error()}
+	}
+
+	log_str := "processed query " + query + " for " + dbname + " ,found" + strconv.Itoa(len(res)) + " records"
+	logger.Debug(log_str)
+	if res != nil {
+		return utils.MapToJson(&res)
+	} else {
+		return []byte("[]"), nil
+	}
+
+}
+
+func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
 	switch op {
 	case "next":
 		return db.GetNextRecord(db_name, group_id)
 	case "id":
-		return db.GetRecordByID(db_name, group_id, id, true, false)
+		return db.GetRecordByID(db_name, group_id, extra_param, true, false)
 	case "idreset":
-		return db.GetRecordByID(db_name, group_id, id, true, true)
+		return db.GetRecordByID(db_name, group_id, extra_param, true, true)
 	case "last":
 		return db.GetLastRecord(db_name, group_id)
 	case "resetcounter":
@@ -371,8 +408,9 @@ func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, id
 	case "size":
 		return db.GetSize(db_name)
 	case "meta":
-		return db.getMeta(db_name, id)
-
+		return db.getMeta(db_name, extra_param)
+	case "queryimages":
+		return db.queryImages(db_name, extra_param)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

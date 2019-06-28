@@ -9,7 +9,7 @@
 #include "asapo_worker.h"
 
 
-using std::chrono::high_resolution_clock;
+using std::chrono::system_clock;
 using asapo::Error;
 
 struct Statistics {
@@ -39,13 +39,13 @@ std::unique_ptr<asapo::DataBroker> CreateBroker(const std::string& folder) {
 }
 
 void ConnectToBrocker(std::unique_ptr<asapo::DataBroker>* broker, Statistics* statistics) {
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    system_clock::time_point t1 = system_clock::now();
     Error err = (*broker)->Connect();
     if (err != nullptr) {
         std::cout << err->Explain() << std::endl;
         exit(EXIT_FAILURE);
     }
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    system_clock::time_point t2 = system_clock::now();
     statistics->duration_scan = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 );
 }
 
@@ -53,7 +53,7 @@ void ReadAllData(std::unique_ptr<asapo::DataBroker>* broker, Statistics* statist
     Error err;
     asapo::FileInfo file_info;
     asapo::FileData file_data;
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    system_clock::time_point t1 = system_clock::now();
 
     int nfiles = 0;
     uint64_t size = 0;
@@ -66,7 +66,7 @@ void ReadAllData(std::unique_ptr<asapo::DataBroker>* broker, Statistics* statist
         exit(EXIT_FAILURE);
     }
 
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    system_clock::time_point t2 = system_clock::now();
     statistics->nfiles = nfiles;
     statistics->size_gb = double(size) / 1000 / 1000 / 1000;
     statistics->duration_read = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 );

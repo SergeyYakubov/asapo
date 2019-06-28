@@ -64,7 +64,7 @@ asapo::Error RapidJson::CheckValueType(const std::string& name, ValueType type, 
         break;
     }
     if (!res) {
-        return TextError("wrong type: " + name + " in: " + json_);
+        return TextError("wrong type for: " + name + " in: " + json_);
     }
 
     return nullptr;
@@ -184,6 +184,31 @@ Error RapidJson::GetRawString(std::string* val) const noexcept {
     object_p_->Accept(writer);
     val->assign(buffer.GetString());
     return nullptr;
+}
+
+Error RapidJson::GetArrayRawStrings(const std::string& name, std::vector<std::string>* val) const noexcept {
+    if (Error err = LazyInitialize()) {
+        return err;
+    }
+
+    Value* json_val;
+    if (Error err = GetValuePointer(name, ValueType::kArray, &json_val)) {
+        return err;
+    }
+
+    val->clear();
+    for (auto& v : json_val->GetArray()) {
+        if (!v.IsObject()) {
+            return TextError("wrong type of array element: " + name);
+        }
+        StringBuffer buffer;
+        Writer<StringBuffer> writer(buffer);
+        v.Accept(writer);
+        val->push_back(buffer.GetString());
+    }
+
+    return nullptr;
+
 }
 
 }
