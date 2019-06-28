@@ -48,4 +48,4 @@ export PYTHONPATH=$4:${PYTHONPATH}
 python $3/get_user_meta.py $proxy_address $receiver_folder $beamtime_id $token new > out
 cat out
 cat out | grep "found images: 100"
-#cat out | grep "test100"
+cat out | grep "test100"

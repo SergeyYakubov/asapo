@@ -178,12 +178,41 @@ func getBSONFromExpression(node sqlparser.Expr) (res bson.M, err error) {
 	}
 }
 
-func (db *Mongodb) BSONFromSQL(dbname string, query string) (bson.M, error) {
+func getSortBSONFromOrderArray(order_array sqlparser.OrderBy) (string, error) {
+	if len(order_array) != 1 {
+		return "", errors.New("order by should have single column name")
+	}
+
+	order := order_array[0]
+	val, ok := order.Expr.(*sqlparser.ColName)
+	if !ok {
+		return "", errors.New("order be key name")
+	}
+
+	name := keyFromColumnName(val)
+	if order.Direction == sqlparser.DescScr {
+		name = "-" + name
+	}
+	return name, nil
+}
+
+func (db *Mongodb) BSONFromSQL(dbname string, query string) (bson.M, string, error) {
 	stmt, err := sqlparser.Parse("select * from " + dbname + " where " + query)
 	if err != nil {
-		return bson.M{}, err
+		return bson.M{}, "", err
 	}
 
 	sel, _ := stmt.(*sqlparser.Select)
-	return getBSONFromExpression(sel.Where.Expr)
+	query_mongo, err := getBSONFromExpression(sel.Where.Expr)
+	if err != nil || len(sel.OrderBy) == 0 {
+		return query_mongo, "", err
+	}
+
+	sort_mongo, err := getSortBSONFromOrderArray(sel.OrderBy)
+	if err != nil {
+		return bson.M{}, "", err
+	}
+
+	return query_mongo, sort_mongo, nil
+
 }

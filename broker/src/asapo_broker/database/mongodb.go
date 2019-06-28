@@ -364,7 +364,7 @@ func (db *Mongodb) getMeta(dbname string, id_str string) ([]byte, error) {
 
 func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
 	var res []map[string]interface{}
-	q, err := db.BSONFromSQL(dbname, query)
+	q, sort, err := db.BSONFromSQL(dbname, query)
 	if err != nil {
 		log_str := "error parsing query: " + query + " for " + dbname + " : " + err.Error()
 		logger.Debug(log_str)
@@ -372,7 +372,11 @@ func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
 	}
 
 	c := db.session.DB(dbname).C(data_collection_name)
-	err = c.Find(q).All(&res)
+	if len(sort) > 0 {
+		err = c.Find(q).Sort(sort).All(&res)
+	} else {
+		err = c.Find(q).All(&res)
+	}
 	if err != nil {
 		log_str := "error processing query: " + query + " for " + dbname + " : " + err.Error()
 		logger.Debug(log_str)

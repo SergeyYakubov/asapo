@@ -356,6 +356,8 @@ var tests = []struct {
 	ok    bool
 }{
 	{"meta.counter = 10", []TestRecordMeta{recq1, recq3}, true},
+	{"meta.counter = 10 ORDER BY _id DESC", []TestRecordMeta{recq3, recq1}, true},
+	{"meta.counter > 10 ORDER BY meta.counter DESC", []TestRecordMeta{recq4, recq2}, true},
 	{"meta.counter = 18", []TestRecordMeta{}, true},
 	{"meta.counter = 11", []TestRecordMeta{recq2}, true},
 	{"meta.counter > 11", []TestRecordMeta{recq4}, true},
