@@ -29,19 +29,28 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, a
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
 }
 
-GenericRequestHeader ProducerImpl::GenerateNextSendRequest(uint64_t file_id, uint64_t file_size, uint64_t meta_size,
-        std::string file_name) {
-    GenericRequestHeader request{kOpcodeTransferData, file_id, file_size, meta_size, std::move(file_name)};
+GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& event_header, uint64_t meta_size) {
+    GenericRequestHeader request{kOpcodeTransferData, event_header.file_id, event_header.file_size,
+                                 meta_size, std::move(event_header.file_name)};
+    if (event_header.expected_subset_id != 0) {
+        request.op_code = kOpcodeTransferSubsetData;
+        request.custom_data[0] = event_header.expected_subset_id;
+        request.custom_data[1] = event_header.expected_subset_size;
+    }
     return request;
 }
 
-Error CheckProducerRequest(size_t file_size, size_t filename_size) {
-    if (file_size > ProducerImpl::kMaxChunkSize) {
+Error CheckProducerRequest(const EventHeader& event_header) {
+    if ((size_t)event_header.file_size > ProducerImpl::kMaxChunkSize) {
         return ProducerErrorTemplates::kFileTooLarge.Generate();
     }
 
-    if (filename_size > kMaxMessageSize) {
+    if (event_header.file_name.size() > kMaxMessageSize) {
         return ProducerErrorTemplates::kFileNameTooLong.Generate();
+    }
+
+    if (event_header.expected_subset_id > 0 && event_header.expected_subset_size == 0) {
+        return ProducerErrorTemplates::kErrorSubsetSize.Generate();
     }
 
     return nullptr;
@@ -52,14 +61,13 @@ Error ProducerImpl::Send(const EventHeader& event_header,
                          std::string metadata,
                          std::string full_path,
                          RequestCallback callback) {
-    auto err = CheckProducerRequest((size_t)event_header.file_size, event_header.file_name.size());
+    auto err = CheckProducerRequest(event_header);
     if (err) {
         log__->Error("error checking request - " + err->Explain());
         return err;
     }
 
-    auto request_header = GenerateNextSendRequest(event_header.file_id, event_header.file_size,
-                                                  metadata.size(), event_header.file_name);
+    auto request_header = GenerateNextSendRequest(event_header, metadata.size());
 
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{beamtime_id_, std::move(request_header),
                 std::move(data), std::move(metadata), std::move(full_path), callback}

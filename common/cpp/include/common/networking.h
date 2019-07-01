@@ -13,6 +13,7 @@ typedef uint64_t NetworkRequestId;
 enum Opcode : uint8_t {
     kOpcodeUnknownOp = 1,
     kOpcodeTransferData,
+    kOpcodeTransferSubsetData,
     kOpcodeGetBufferData,
     kOpcodeAuthorize,
     kOpcodeTransferMetaData,
@@ -33,6 +34,7 @@ enum NetworkErrorCode : uint16_t {
 //TODO need to use an serialization framework to ensure struct consistency on different computers
 
 const std::size_t kMaxMessageSize = 1024;
+const std::size_t kNCustomParams = 2;
 
 struct GenericRequestHeader {
     GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
@@ -42,6 +44,7 @@ struct GenericRequestHeader {
     }
     GenericRequestHeader(const GenericRequestHeader& header) {
         op_code = header.op_code, data_id = header.data_id, data_size = header.data_size, meta_size = header.meta_size,
+        memcpy(custom_data, header.custom_data, kNCustomParams * sizeof(uint64_t)),
         strncpy(message, header.message, kMaxMessageSize);
     }
 
@@ -49,6 +52,7 @@ struct GenericRequestHeader {
     uint64_t    data_id;
     uint64_t    data_size;
     uint64_t    meta_size;
+    uint64_t    custom_data[kNCustomParams];
     char        message[kMaxMessageSize];
 };
 

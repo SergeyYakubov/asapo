@@ -38,12 +38,10 @@ class ProducerImpl : public Producer {
   private:
     Error Send(const EventHeader& event_header, FileData data, std::string metadata, std::string full_path,
                RequestCallback callback);
-    GenericRequestHeader GenerateNextSendRequest(uint64_t file_id, uint64_t file_size, uint64_t meta_size,
-                                                 std::string file_name);
+    GenericRequestHeader GenerateNextSendRequest(const EventHeader& event_header, uint64_t meta_size);
     std::string beamtime_id_;
 };
 
-Error CheckProducerRequest(const GenericRequestHeader header);
 }
 
 #endif //ASAPO_PRODUCER__PRODUCER_IMPL_H
