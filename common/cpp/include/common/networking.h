@@ -35,6 +35,8 @@ enum NetworkErrorCode : uint16_t {
 
 const std::size_t kMaxMessageSize = 1024;
 const std::size_t kNCustomParams = 2;
+using CustomRequestData = uint64_t[kNCustomParams];
+
 
 struct GenericRequestHeader {
     GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
@@ -52,7 +54,7 @@ struct GenericRequestHeader {
     uint64_t    data_id;
     uint64_t    data_size;
     uint64_t    meta_size;
-    uint64_t    custom_data[kNCustomParams];
+    CustomRequestData    custom_data;
     char        message[kMaxMessageSize];
 };
 

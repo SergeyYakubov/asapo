@@ -192,5 +192,11 @@ Error MongoDBClient::Upsert(uint64_t id, const uint8_t* data, uint64_t size) con
     return UpdateBsonDocument(id, document, true);
 
 }
+Error MongoDBClient::InsertAsSubset(const FileInfo& file,
+                                    uint64_t subset_id,
+                                    uint64_t subset_size,
+                                    bool ignore_duplicates) const {
+    return nullptr;
+}
 
 }

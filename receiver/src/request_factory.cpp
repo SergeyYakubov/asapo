@@ -10,7 +10,8 @@ std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHea
     *err = nullptr;
     auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri), cache_.get()}};
     switch (request_header.op_code) {
-    case Opcode::kOpcodeTransferData: {
+    case Opcode::kOpcodeTransferData:
+    case Opcode::kOpcodeTransferSubsetData:        {
         request->AddHandler(&request_handler_authorize_);
         if (GetReceiverConfig()->write_to_disk) {
             request->AddHandler(&request_handler_filewrite_);

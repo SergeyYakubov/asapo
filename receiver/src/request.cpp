@@ -176,4 +176,9 @@ const std::string& Request::GetMetaData() const {
     return metadata_;
 }
 
+const CustomRequestData& Request::GetCustomData() const {
+    return request_header_.custom_data;
+}
+
+
 }
