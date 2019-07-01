@@ -34,7 +34,7 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
     } else {
         auto subset_id = request->GetCustomData()[0];
         auto subset_size = request->GetCustomData()[1];
-        err =  db_client__->InsertAsSubset(file_info,subset_id,subset_size,true);
+        err =  db_client__->InsertAsSubset(file_info, subset_id, subset_size, true);
     }
 
     if (!err) {

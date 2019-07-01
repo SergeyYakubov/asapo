@@ -21,8 +21,8 @@ class MockDatabase : public Database {
     }
 
     Error InsertAsSubset(const FileInfo& file, uint64_t subset_id,
-        uint64_t subset_size, bool ignore_duplicates) const override {
-        return Error{Insert_t(file, ignore_duplicates)};
+                         uint64_t subset_size, bool ignore_duplicates) const override {
+        return Error{InsertAsSubset_t(file, subset_id, subset_size, ignore_duplicates)};
     }
 
 
@@ -30,7 +30,7 @@ class MockDatabase : public Database {
     MOCK_CONST_METHOD2(Insert_t, ErrorInterface * (const FileInfo&, bool));
 
 
-    MOCK_CONST_METHOD4(InsertAsSubset_t, ErrorInterface * (const FileInfo&,uint64_t,uint64_t, bool));
+    MOCK_CONST_METHOD4(InsertAsSubset_t, ErrorInterface * (const FileInfo&, uint64_t, uint64_t, bool));
 
 
     Error Upsert(uint64_t id, const uint8_t* data, uint64_t size) const override {

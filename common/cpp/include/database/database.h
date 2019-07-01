@@ -18,9 +18,10 @@ class Database {
                           const std::string& collection ) = 0;
     virtual Error Insert(const FileInfo& file, bool ignore_duplicates) const = 0;
     virtual Error Upsert(uint64_t id, const uint8_t* data, uint64_t size) const = 0;
-    virtual Error InsertAsSubset(const FileInfo& file, uint64_t subset_id,uint64_t subset_size, bool ignore_duplicates) const = 0;
+    virtual Error InsertAsSubset(const FileInfo& file, uint64_t subset_id, uint64_t subset_size,
+                                 bool ignore_duplicates) const = 0;
 
-        virtual ~Database() = default;
+    virtual ~Database() = default;
 };
 
 class DatabaseFactory {

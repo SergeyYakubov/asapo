@@ -71,7 +71,7 @@ class DbWriterHandlerTests : public Test {
     uint64_t expected_id = 15;
     uint64_t expected_subset_id = 15;
     uint64_t expected_subset_size = 2;
-    asapo:: CustomRequestData expected_custom_data{expected_subset_id,expected_subset_size};
+    asapo:: CustomRequestData expected_custom_data{expected_subset_id, expected_subset_size};
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
@@ -140,8 +140,8 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code) {
     ;
 
     if (op_code == asapo::Opcode::kOpcodeTransferSubsetData) {
-        EXPECT_CALL(*mock_request, GetCustomData())
-        .WillOnce(ReturnRef(expected_custom_data))
+        EXPECT_CALL(*mock_request, GetCustomData()).Times(2).
+        WillRepeatedly(ReturnRef(expected_custom_data))
         ;
     }
 }
