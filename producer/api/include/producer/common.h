@@ -26,11 +26,11 @@ struct EventHeader {
         file_id{file_id_i}, file_size{file_size_i}, file_name{std::move(file_name_i)},
         expected_subset_id{expected_subset_id_i},
         expected_subset_size{expected_subset_size_i} {};
-    uint64_t file_id;
-    uint64_t file_size;
+    uint64_t file_id = 0;
+    uint64_t file_size = 0;
     std::string file_name;
-    uint64_t expected_subset_id;
-    uint64_t expected_subset_size;
+    uint64_t expected_subset_id = 0;
+    uint64_t expected_subset_size = 0;
 };
 
 }

@@ -37,9 +37,9 @@ MATCHER_P8(M_CheckSendDataRequest, op_code, beamtime_id, metadata, file_id, file
            && ((asapo::GenericRequestHeader)(arg->header)).data_size == uint64_t(file_size)
            && request->beamtime_id == beamtime_id
            && request->metadata == metadata
-           && (op_code == asapo::kOpcodeTransferMetaData ? ((asapo::GenericRequestHeader)(arg->header)).custom_data[0] ==
+           && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader)(arg->header)).custom_data[0] ==
                uint64_t(subset_id) : true)
-           && (op_code == asapo::kOpcodeTransferMetaData ? ((asapo::GenericRequestHeader)(arg->header)).custom_data[1] ==
+           && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader)(arg->header)).custom_data[1] ==
                uint64_t(subset_size) : true)
            && strcmp(((asapo::GenericRequestHeader)(arg->header)).message, message) == 0;
 }
@@ -146,7 +146,7 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
     producer.SetBeamtimeId(expected_beamtimeid);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferMetaData,
                                         expected_beamtimeid, "", expected_id,
-                                        expected_size, "beamtime_global.meta", 0, 0))).WillOnce(Return(
+                                        expected_size, "beamtime_global.meta", 10, 10))).WillOnce(Return(
                                                     nullptr));
 
     auto err = producer.SendMetaData(expected_metadata, nullptr);
