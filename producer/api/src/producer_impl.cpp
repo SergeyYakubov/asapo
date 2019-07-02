@@ -32,10 +32,10 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, a
 GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& event_header, uint64_t meta_size) {
     GenericRequestHeader request{kOpcodeTransferData, event_header.file_id, event_header.file_size,
                                  meta_size, std::move(event_header.file_name)};
-    if (event_header.expected_subset_id != 0) {
+    if (event_header.subset_id != 0) {
         request.op_code = kOpcodeTransferSubsetData;
-        request.custom_data[0] = event_header.expected_subset_id;
-        request.custom_data[1] = event_header.expected_subset_size;
+        request.custom_data[0] = event_header.subset_id;
+        request.custom_data[1] = event_header.subset_size;
     }
     return request;
 }
@@ -49,7 +49,7 @@ Error CheckProducerRequest(const EventHeader& event_header) {
         return ProducerErrorTemplates::kFileNameTooLong.Generate();
     }
 
-    if (event_header.expected_subset_id > 0 && event_header.expected_subset_size == 0) {
+    if (event_header.subset_id > 0 && event_header.subset_size == 0) {
         return ProducerErrorTemplates::kErrorSubsetSize.Generate();
     }
 

@@ -55,12 +55,8 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetBeamline, const std::string & ());
     MOCK_CONST_METHOD0(GetOpCode,
                        asapo::Opcode ());
-    mutable asapo::CustomRequestData t;
     const asapo::CustomRequestData& GetCustomData() const override {
-        auto a =  GetCustomData_t();
-        t[0]=a[0];
-        t[1]=a[1];
-        return t;
+        return (asapo::CustomRequestData&) * GetCustomData_t();
     };
 
     MOCK_CONST_METHOD0(GetCustomData_t, const uint64_t* ());
