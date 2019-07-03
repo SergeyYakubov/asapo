@@ -104,4 +104,9 @@ FileInfos FolderDataBroker::QueryImages(std::string query, Error* err) {
     return FileInfos{};
 }
 
+FileInfos FolderDataBroker::GetNextDataset(std::string group_id,Error* err) {
+    *err = TextError("Not supported for folder data broker");
+    return FileInfos{};
+}
+
 }

@@ -25,6 +25,7 @@ class FolderDataBroker final : public asapo::DataBroker {
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     std::unique_ptr<asapo::IO> io__; // modified in testings to mock system calls,otherwise do not touch
     FileInfos QueryImages(std::string query, Error* err) override;
+    FileInfos GetNextDataset(std::string group_id,Error* err) override;
   private:
     std::string base_path_;
     bool is_connected_;

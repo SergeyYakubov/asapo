@@ -114,24 +114,26 @@ Error ServerDataBroker::GetBrokerUri() {
 }
 
 
-Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_id, GetImageServerOperation op) {
+Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string group_id, GetImageServerOperation op,bool dataset) {
     std::string request_suffix = OpToUriCmd(op);
     std::string request_api = "/database/" + source_name_ + "/" + std::move(group_id) + "/";
     uint64_t elapsed_ms = 0;
-    std::string response;
     while (true) {
         auto err = GetBrokerUri();
         if (err == nullptr) {
             RequestInfo ri;
             ri.host = current_broker_uri_;
             ri.api = request_api + request_suffix;
-            err = ProcessRequest(&response, ri);
+            if (dataset) {
+                ri.extra_params = "&dataset=true";
+            }
+            err = ProcessRequest(response, ri);
             if (err == nullptr) {
                 break;
             }
         }
 
-        ProcessServerError(&err, response, &request_suffix);
+        ProcessServerError(&err, *response, &request_suffix);
 
         if (elapsed_ms >= timeout_ms_) {
             err = IOErrorTemplates::kTimeout.Generate( ", last error: " + err->Explain());
@@ -141,9 +143,6 @@ Error ServerDataBroker::GetFileInfoFromServer(FileInfo* info, std::string group_
         elapsed_ms += 100;
     }
 
-    if (!info->SetFromJson(response)) {
-        return WorkerErrorTemplates::kErrorReadingSource.Generate(std::string(":") + response);
-    }
     return nullptr;
 }
 
@@ -174,14 +173,18 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t 
     }
 
     Error err;
+    std::string response;
     if (op == GetImageServerOperation::GetID) {
-        err = GetFileInfoFromServerById(id, info, std::move(group_id));
+        err = GetRecordFromServerById(id, &response, std::move(group_id));
     } else {
-        err = GetFileInfoFromServer(info, std::move(group_id), op);
+        err = GetRecordFromServer(&response, std::move(group_id), op);
     }
-
     if (err != nullptr) {
         return err;
+    }
+
+    if (!info->SetFromJson(response)) {
+        return WorkerErrorTemplates::kErrorReadingSource.Generate(std::string(":") + response);
     }
 
     return GetDataIfNeeded(info, data);
@@ -278,24 +281,17 @@ Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_i
 }
 
 
-Error ServerDataBroker::GetFileInfoFromServerById(uint64_t id, FileInfo* info, std::string group_id) {
-
+Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* response, std::string group_id,bool dataset) {
     RequestInfo ri;
     ri.api = "/database/" + source_name_ + "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.extra_params = "&reset=true";
-
+    if (dataset) {
+        ri.extra_params+="&dataset=true";
+    }
 
     Error err;
-    auto responce = BrokerRequestWithTimeout(ri, &err);
-    if (err) {
-        return err;
-    }
-
-    if (!info->SetFromJson(responce)) {
-        return WorkerErrorTemplates::kErrorReadingSource.Generate();
-    }
-
-    return nullptr;
+    *response = BrokerRequestWithTimeout(ri, &err);
+    return err;
 }
 
 std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
@@ -306,8 +302,8 @@ std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
 }
 
 
-FileInfos ServerDataBroker::DecodeFromResponse(std::string response, Error* err) {
-    auto parser = JsonStringParser("{ \"images\":" + response + "}");
+FileInfos ServerDataBroker::DecodeFileInfosFromResponse(std::string response, Error* err) {
+    auto parser = JsonStringParser(std::move(response));
 
     std::vector<std::string> vec_fi_endcoded;
     auto parse_err = parser.GetArrayRawStrings("images", &vec_fi_endcoded);
@@ -340,7 +336,28 @@ FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
         return FileInfos{};
     }
 
-    return DecodeFromResponse(response, err);
+    return DecodeFileInfosFromResponse("{ \"images\":" + response + "}", err);
+}
+
+FileInfos ServerDataBroker::GetNextDataset(std::string group_id,Error* err) {
+    return GetFileInfosFromServer(GetImageServerOperation::GetNext, 0, std::move(group_id), err);
+}
+
+FileInfos ServerDataBroker::GetFileInfosFromServer(GetImageServerOperation op,
+                                                   uint64_t id,
+                                                   std::string group_id,
+                                                   Error* err) {
+    FileInfos infos;
+    std::string response;
+    if (op == GetImageServerOperation::GetID) {
+        *err = GetRecordFromServerById(id, &response, std::move(group_id),true);
+    } else {
+        *err = GetRecordFromServer(&response, std::move(group_id), op,true);
+    }
+    if (*err != nullptr) {
+        return FileInfos{};
+    }
+    return DecodeFileInfosFromResponse(response, err);
 }
 
 }

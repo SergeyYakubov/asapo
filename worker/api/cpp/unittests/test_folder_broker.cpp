@@ -354,5 +354,16 @@ TEST(FolderDataBroker, QueryImages) {
 }
 
 
+TEST(FolderDataBroker, NextDataset) {
+    auto data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker("test")};
+
+    Error err;
+    auto infos = data_broker->GetNextDataset("bla", &err);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(infos.size(), Eq(0));
+}
+
+
 
 }

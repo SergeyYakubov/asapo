@@ -54,8 +54,13 @@ class DataBroker {
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetNext(FileInfo* info, std::string group_id, FileData* data) = 0;
-
-
+    //! Receive next available image.
+    /*!
+      \param err -  will be set to error data cannot be read, nullptr otherwise.
+      \param group_id - group id to use.
+      \return FileInfos - vector of dataset images
+    */
+    virtual FileInfos GetNextDataset(std::string group_id,Error* err) = 0;
     //! Receive dataset by id.
     /*!
       \param id - dataset id
