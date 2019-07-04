@@ -10,6 +10,7 @@ import (
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -132,10 +133,16 @@ func (db *Mongodb) InsertMeta(dbname string, s interface{}) error {
 	return c.Insert(s)
 }
 
-func (db *Mongodb) getMaxIndex(dbname string) (max_id int, err error) {
+func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int, err error) {
 	c := db.session.DB(dbname).C(data_collection_name)
 	var id Pointer
-	err = c.Find(nil).Sort("-_id").Select(bson.M{"_id": 1}).One(&id)
+	var q bson.M
+	if dataset {
+		q = bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$images"}}}}
+	} else {
+		q = nil
+	}
+	err = c.Find(q).Sort("-_id").Select(bson.M{"_id": 1}).One(&id)
 	if err != nil {
 		return 0, nil
 	}
@@ -176,9 +183,15 @@ func (db *Mongodb) incrementField(dbname string, group_id string, max_ind int, r
 	return err
 }
 
-func (db *Mongodb) GetRecordByIDRow(dbname string, id int, returnID bool) ([]byte, error) {
+func (db *Mongodb) GetRecordByIDRow(dbname string, id int, returnID bool, dataset bool) ([]byte, error) {
 	var res map[string]interface{}
-	q := bson.M{"_id": id}
+	var q bson.M
+	if dataset {
+		q = bson.M{"$and": []bson.M{bson.M{"_id": id}, bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$images"}}}}}}
+	} else {
+		q = bson.M{"_id": id}
+	}
+
 	c := db.session.DB(dbname).C(data_collection_name)
 	err := c.Find(q).One(&res)
 	if err != nil {
@@ -200,7 +213,7 @@ func (db *Mongodb) GetRecordByIDRow(dbname string, id int, returnID bool) ([]byt
 	return utils.MapToJson(&res)
 }
 
-func (db *Mongodb) GetRecordByID(dbname string, group_id string, id_str string, returnID bool, reset bool) ([]byte, error) {
+func (db *Mongodb) GetRecordByID(dbname string, group_id string, id_str string, returnID bool, reset bool, dataset bool) ([]byte, error) {
 	id, err := strconv.Atoi(id_str)
 	if err != nil {
 		return nil, err
@@ -209,7 +222,7 @@ func (db *Mongodb) GetRecordByID(dbname string, group_id string, id_str string, 
 	if err := db.checkDatabaseOperationPrerequisites(dbname, group_id); err != nil {
 		return nil, err
 	}
-	res, err := db.GetRecordByIDRow(dbname, id, returnID)
+	res, err := db.GetRecordByIDRow(dbname, id, returnID, dataset)
 
 	if reset {
 		db.setCounter(dbname, group_id, id)
@@ -265,7 +278,7 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id 
 }
 
 func (db *Mongodb) getCurrentPointer(db_name string, group_id string) (Pointer, error) {
-	max_ind, err := db.getMaxIndex(db_name)
+	max_ind, err := db.getMaxIndex(db_name, false)
 	if err != nil {
 		return Pointer{}, err
 	}
@@ -278,7 +291,7 @@ func (db *Mongodb) getCurrentPointer(db_name string, group_id string) (Pointer, 
 	return curPointer, nil
 }
 
-func (db *Mongodb) GetNextRecord(db_name string, group_id string) ([]byte, error) {
+func (db *Mongodb) GetNextRecord(db_name string, group_id string, dataset bool) ([]byte, error) {
 
 	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
 		return nil, err
@@ -292,23 +305,23 @@ func (db *Mongodb) GetNextRecord(db_name string, group_id string) ([]byte, error
 	}
 	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
 	logger.Debug(log_str)
-	return db.GetRecordByIDRow(db_name, curPointer.Value, true)
+	return db.GetRecordByIDRow(db_name, curPointer.Value, true, dataset)
 
 }
 
-func (db *Mongodb) GetLastRecord(db_name string, group_id string) ([]byte, error) {
+func (db *Mongodb) GetLastRecord(db_name string, group_id string, dataset bool) ([]byte, error) {
 
 	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
 		return nil, err
 	}
 
-	max_ind, err := db.getMaxIndex(db_name)
+	max_ind, err := db.getMaxIndex(db_name, dataset)
 	if err != nil {
 		log_str := "error getting last pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
 		logger.Debug(log_str)
 		return nil, err
 	}
-	res, err := db.GetRecordByIDRow(db_name, max_ind, false)
+	res, err := db.GetRecordByIDRow(db_name, max_ind, false, dataset)
 
 	db.setCounter(db_name, group_id, max_ind)
 
@@ -394,15 +407,20 @@ func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
 }
 
 func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
+	dataset := false
+	if strings.HasSuffix(op, "_dataset") {
+		dataset = true
+		op = op[:len(op)-8]
+	}
 	switch op {
 	case "next":
-		return db.GetNextRecord(db_name, group_id)
+		return db.GetNextRecord(db_name, group_id, dataset)
 	case "id":
-		return db.GetRecordByID(db_name, group_id, extra_param, true, false)
+		return db.GetRecordByID(db_name, group_id, extra_param, true, false, dataset)
 	case "idreset":
-		return db.GetRecordByID(db_name, group_id, extra_param, true, true)
+		return db.GetRecordByID(db_name, group_id, extra_param, true, true, dataset)
 	case "last":
-		return db.GetLastRecord(db_name, group_id)
+		return db.GetLastRecord(db_name, group_id, dataset)
 	case "resetcounter":
 		return db.ResetCounter(db_name, group_id)
 	case "size":

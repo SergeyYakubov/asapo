@@ -59,6 +59,10 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 		op = "idreset"
 	}
 
+	if datasetRequested(r) {
+		op = op + "_dataset"
+	}
+
 	answer, code := processRequestInDb(db_name, group_id, op, extra_param)
 	w.WriteHeader(code)
 	w.Write(answer)
