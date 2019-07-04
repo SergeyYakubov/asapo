@@ -60,7 +60,7 @@ class DataBroker {
       \param group_id - group id to use.
       \return FileInfos - vector of dataset images
     */
-    virtual FileInfos GetNextDataset(std::string group_id,Error* err) = 0;
+    virtual FileInfos GetNextDataset(std::string group_id, Error* err) = 0;
     //! Receive dataset by id.
     /*!
       \param id - dataset id

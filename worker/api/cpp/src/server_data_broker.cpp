@@ -114,7 +114,8 @@ Error ServerDataBroker::GetBrokerUri() {
 }
 
 
-Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string group_id, GetImageServerOperation op,bool dataset) {
+Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string group_id, GetImageServerOperation op,
+                                            bool dataset) {
     std::string request_suffix = OpToUriCmd(op);
     std::string request_api = "/database/" + source_name_ + "/" + std::move(group_id) + "/";
     uint64_t elapsed_ms = 0;
@@ -281,12 +282,13 @@ Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_i
 }
 
 
-Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* response, std::string group_id,bool dataset) {
+Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* response, std::string group_id,
+                                                bool dataset) {
     RequestInfo ri;
     ri.api = "/database/" + source_name_ + "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.extra_params = "&reset=true";
     if (dataset) {
-        ri.extra_params+="&dataset=true";
+        ri.extra_params += "&dataset=true";
     }
 
     Error err;
@@ -339,20 +341,20 @@ FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
     return DecodeFileInfosFromResponse("{ \"images\":" + response + "}", err);
 }
 
-FileInfos ServerDataBroker::GetNextDataset(std::string group_id,Error* err) {
+FileInfos ServerDataBroker::GetNextDataset(std::string group_id, Error* err) {
     return GetFileInfosFromServer(GetImageServerOperation::GetNext, 0, std::move(group_id), err);
 }
 
 FileInfos ServerDataBroker::GetFileInfosFromServer(GetImageServerOperation op,
-                                                   uint64_t id,
-                                                   std::string group_id,
-                                                   Error* err) {
+        uint64_t id,
+        std::string group_id,
+        Error* err) {
     FileInfos infos;
     std::string response;
     if (op == GetImageServerOperation::GetID) {
-        *err = GetRecordFromServerById(id, &response, std::move(group_id),true);
+        *err = GetRecordFromServerById(id, &response, std::move(group_id), true);
     } else {
-        *err = GetRecordFromServer(&response, std::move(group_id), op,true);
+        *err = GetRecordFromServer(&response, std::move(group_id), op, true);
     }
     if (*err != nullptr) {
         return FileInfos{};

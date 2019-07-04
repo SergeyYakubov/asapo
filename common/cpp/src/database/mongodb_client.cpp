@@ -215,7 +215,13 @@ Error MongoDBClient::InsertAsSubset(const FileInfo& file,
 
     bson_error_t mongo_err;
     if (!mongoc_collection_update (collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
-        err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
+        if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
+            if (!mongoc_collection_update (collection_, MONGOC_UPDATE_NONE, query, update, NULL, &mongo_err)) {
+                err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
+            }
+        } else {
+            err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
+        }
     }
 
     bson_destroy (query);

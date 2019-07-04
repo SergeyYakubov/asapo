@@ -608,13 +608,13 @@ TEST_F(ServerDataBrokerTests, GetNextDatasetUsesCorrectUri) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_group_id + "/next?token="
-                                            + expected_token+"&dataset=true", _,
+                                        + expected_token + "&dataset=true", _,
                                         _)).WillOnce(DoAll(
-        SetArgPointee<1>(HttpCode::OK),
-        SetArgPointee<2>(nullptr),
-        Return("")));
+                                                SetArgPointee<1>(HttpCode::OK),
+                                                SetArgPointee<2>(nullptr),
+                                                Return("")));
     asapo::Error err;
-    data_broker->GetNextDataset(expected_group_id,&err);
+    data_broker->GetNextDataset(expected_group_id, &err);
 }
 
 
@@ -631,15 +631,15 @@ TEST_F(ServerDataBrokerTests, GetDataSetReturnsFileInfos) {
     to_send3.id = 3;
     auto json3 = to_send3.Json();
 
-    auto json=std::string("{")+
-        "\"_id\":1,"+
-        "\"size\":3,"+
-        "\"images\":["+json1+","+json2+","+json3+"]"+
-        "}";
+    auto json = std::string("{") +
+                "\"_id\":1," +
+                "\"size\":3," +
+                "\"images\":[" + json1 + "," + json2 + "," + json3 + "]" +
+                "}";
 
     MockGet(json);
 
-    auto infos = data_broker->GetNextDataset(expected_group_id,&err);
+    auto infos = data_broker->GetNextDataset(expected_group_id, &err);
 
     ASSERT_THAT(err, Eq(nullptr));
 
@@ -654,7 +654,7 @@ TEST_F(ServerDataBrokerTests, GetDataSetReturnsParseError) {
     MockGet("error_response");
 
     asapo::Error err;
-    auto infos = data_broker->GetNextDataset(expected_group_id,&err);
+    auto infos = data_broker->GetNextDataset(expected_group_id, &err);
 
     ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kInternalError));
     ASSERT_THAT(infos.size(), Eq(0));

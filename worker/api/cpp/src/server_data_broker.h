@@ -38,15 +38,15 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override;
     FileInfos QueryImages(std::string query, Error* err) override;
-    FileInfos GetNextDataset(std::string group_id,Error* err) override;
+    FileInfos GetNextDataset(std::string group_id, Error* err) override;
 
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<NetClient> net_client__;
   private:
     std::string RequestWithToken(std::string uri);
-    Error GetRecordFromServer(std::string* info, std::string group_id, GetImageServerOperation op,bool dataset=false);
-    Error GetRecordFromServerById(uint64_t id, std::string* info, std::string group_id,bool dataset=false);
+    Error GetRecordFromServer(std::string* info, std::string group_id, GetImageServerOperation op, bool dataset = false);
+    Error GetRecordFromServerById(uint64_t id, std::string* info, std::string group_id, bool dataset = false);
     Error GetDataIfNeeded(FileInfo* info, FileData* data);
     Error GetBrokerUri();
     void ProcessServerError(Error* err, const std::string& response, std::string* redirect_uri);
