@@ -22,7 +22,7 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 REM producer
 mkdir %receiver_folder%
-start /B "" "%1" %proxy_address% %beamtime_id% 100 100 4 0 100
+start /B "" "%1" %proxy_address% %beamtime_id% 100 100 4 0 100 5
 ping 1.0.0.0 -n 1 -w 100 > nul
 
 REM worker
