@@ -358,12 +358,35 @@ TEST(FolderDataBroker, NextDataset) {
     auto data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker("test")};
 
     Error err;
-    auto infos = data_broker->GetNextDataset("bla", &err);
+    auto dataset = data_broker->GetNextDataset("bla", &err);
 
     ASSERT_THAT(err, Ne(nullptr));
-    ASSERT_THAT(infos.size(), Eq(0));
+    ASSERT_THAT(dataset.content.size(), Eq(0));
+    ASSERT_THAT(dataset.id, Eq(0));
 }
 
+TEST(FolderDataBroker, LastDataset) {
+    auto data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker("test")};
+
+    Error err;
+    auto dataset = data_broker->GetLastDataset("bla", &err);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(dataset.content.size(), Eq(0));
+    ASSERT_THAT(dataset.id, Eq(0));
+}
+
+
+TEST(FolderDataBroker, DatasetById) {
+    auto data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker("test")};
+
+    Error err;
+    auto dataset = data_broker->GetDatasetById(0, "bla", &err);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(dataset.content.size(), Eq(0));
+    ASSERT_THAT(dataset.id, Eq(0));
+}
 
 
 }

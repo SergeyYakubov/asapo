@@ -37,6 +37,12 @@ inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
 using FileData = std::unique_ptr<uint8_t[]>;
 
 using FileInfos = std::vector<FileInfo>;
+
+struct DataSet {
+    uint64_t id;
+    FileInfos content;
+};
+
 using SubDirList = std::vector<std::string>;
 
 }

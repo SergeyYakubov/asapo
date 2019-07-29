@@ -104,9 +104,17 @@ FileInfos FolderDataBroker::QueryImages(std::string query, Error* err) {
     return FileInfos{};
 }
 
-FileInfos FolderDataBroker::GetNextDataset(std::string group_id, Error* err) {
+DataSet FolderDataBroker::GetNextDataset(std::string group_id, Error* err) {
     *err = TextError("Not supported for folder data broker");
-    return FileInfos{};
+    return {0, FileInfos{}};
+}
+DataSet FolderDataBroker::GetLastDataset(std::string group_id, Error* err) {
+    *err = TextError("Not supported for folder data broker");
+    return {0, FileInfos{}};
+}
+DataSet FolderDataBroker::GetDatasetById(uint64_t id, std::string group_id, Error* err) {
+    *err = TextError("Not supported for folder data broker");
+    return {0, FileInfos{}};
 }
 
 }

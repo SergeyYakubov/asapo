@@ -74,9 +74,9 @@ std::vector<std::thread> StartThreads(const Params& params,
         }
         while (true) {
             if (params.datasets) {
-                auto file_infos = broker->GetNextDataset(group_id, &err);
+                auto dataset = broker->GetNextDataset(group_id, &err);
                 if (err == nullptr) {
-                    for (auto& fi : file_infos) {
+                    for (auto& fi : dataset.content) {
                         (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
                         (*nfiles_total)[i]++;
                     }

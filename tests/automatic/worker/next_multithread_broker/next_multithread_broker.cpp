@@ -47,7 +47,7 @@ Args GetArgs(int argc, char* argv[]) {
     return Args{server, source_name, token, nthreads, nfiles};
 }
 
-void GetAllFromBroker(const Args& args) {
+void TestAll(const Args& args) {
     asapo::Error err;
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", args.run_name, args.token, &err);
     auto group_id = broker->GenerateNewGroupId(&err);
@@ -76,6 +76,6 @@ int main(int argc, char* argv[]) {
 
     auto args = GetArgs(argc, argv);
 
-    GetAllFromBroker(args);
+    TestAll(args);
     return 0;
 }

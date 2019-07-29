@@ -496,7 +496,7 @@ func TestMongoDBGetDatasetIDWithReset(t *testing.T) {
 	db.InsertRecord(dbname, &rec_dataset3)
 
 	_, err1 := db.ProcessRequest(dbname, groupId, "idreset_dataset", "2")  //error while record is not complete, but reset counter to 2
-	res2s, err2 := db.ProcessRequest(dbname, groupId, "next_dataset", "0") // so getnext woudl get record number 3
+	res2s, err2 := db.ProcessRequest(dbname, groupId, "next_dataset", "0") // so getnext would get record number 3
 
 	assert.NotNil(t, err1)
 	assert.Nil(t, err2)
