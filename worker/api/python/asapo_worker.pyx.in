@@ -94,6 +94,32 @@ cdef class PyDataBroker:
             for fi in file_infos:
                 json_list.append(json.loads(_str(fi.Json())))
             return json_list, None
+    def _op_dataset(self, op, group_id, id):
+        cdef FileInfos file_infos
+        cdef DataSet dataset
+        cdef Error err
+        if op == "next":
+            dataset = self.c_broker.GetNextDataset(_bytes(group_id),&err)
+        elif op == "last":
+            dataset = self.c_broker.GetLastDataset(_bytes(group_id),&err)
+        elif op == "id":
+            dataset = self.c_broker.GetDatasetById(id,_bytes(group_id),&err)
+        err_str = _str(GetErrorString(&err))
+        if err_str.strip():
+            return None, None, err_str
+        else:
+            json_list = []
+            for fi in dataset.content:
+                json_list.append(json.loads(_str(fi.Json())))
+            return dataset.id, json_list, None
+
+
+    def get_next_dataset(self, group_id):
+        return self._op_dataset("next",group_id,0)
+    def get_last_dataset(self, group_id):
+        return self._op_dataset("last",group_id,0)
+    def get_dataset_by_id(self, id, group_id):
+        return self._op_dataset("id",group_id,id)
 
 
     def get_beamtime_meta(self):

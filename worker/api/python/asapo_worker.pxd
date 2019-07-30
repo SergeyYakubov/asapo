@@ -25,7 +25,9 @@ cdef extern from "asapo_worker.h" namespace "asapo":
   cppclass FileInfos:
     vector[FileInfo].iterator begin()
     vector[FileInfo].iterator end()
-
+  struct DataSet:
+    uint64_t id
+    FileInfos content
 
 
 cdef extern from "asapo_worker.h" namespace "asapo":
@@ -40,6 +42,9 @@ cdef extern from "asapo_worker.h" namespace "asapo":
         string GenerateNewGroupId(Error* err)
         string GetBeamtimeMeta(Error* err)
         FileInfos QueryImages(string query, Error* err)
+        DataSet GetNextDataset(string group_id, Error* err)
+        DataSet GetLastDataset(string group_id, Error* err)
+        DataSet GetDatasetById(uint64_t id,string group_id, Error* err)
 
 
 cdef extern from "asapo_worker.h" namespace "asapo":

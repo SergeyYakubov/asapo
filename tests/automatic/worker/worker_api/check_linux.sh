@@ -39,7 +39,7 @@ do
 	images=''
 	for j in `seq 1 3`;
 	do
-		images="$images,{"_id":$j,"size":100,"name":'$i_$j',"lastchange":1,"source":'none',"buf_id":0,"meta":{"test":10}}"
+		images="$images,{"_id":$j,"size":100,"name":'${i}_${j}',"lastchange":1,"source":'none',"buf_id":0,"meta":{"test":10}}"
 	done
 	images=${images#?}
 	echo 'db.data.insert({"_id":'$i',"size":3,"images":['$images']})' | mongo ${database_name}

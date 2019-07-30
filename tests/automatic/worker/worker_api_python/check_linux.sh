@@ -30,9 +30,24 @@ sleep 1
 
 export PYTHONPATH=$1:${PYTHONPATH}
 
-python worker_api.py 127.0.0.1:8400 $source_path $database_name $token_test_run
+python worker_api.py 127.0.0.1:8400 $source_path $database_name $token_test_run single
 
 
+#check datasets
+echo "db.dropDatabase()" | mongo ${database_name}
+
+sleep 1
+
+for i in `seq 1 10`;
+do
+	images=''
+	for j in `seq 1 3`;
+	do
+		images="$images,{"_id":$j,"size":100,"name":'${i}_${j}',"lastchange":1,"source":'none',"buf_id":0,"meta":{"test":10}}"
+	done
+	images=${images#?}
+	echo 'db.data.insert({"_id":'$i',"size":3,"images":['$images']})' | mongo ${database_name}
+done
 
 
-
+python worker_api.py 127.0.0.1:8400 $source_path $database_name $token_test_run dataset
