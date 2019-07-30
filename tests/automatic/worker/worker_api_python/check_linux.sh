@@ -50,4 +50,4 @@ do
 done
 
 
-python worker_api.py 127.0.0.1:8400 $source_path $database_name $token_test_run dataset
+python worker_api.py 127.0.0.1:8400 $source_path $database_name $token_test_run datasets

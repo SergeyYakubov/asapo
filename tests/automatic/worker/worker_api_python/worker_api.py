@@ -144,6 +144,6 @@ assert_noterr(err, "generate_group")
 if mode == "single":
     check_single(broker,group_id_new)
 
-if mode == "dataset":
+if mode == "datasets":
     check_dataset(broker,group_id_new)
 

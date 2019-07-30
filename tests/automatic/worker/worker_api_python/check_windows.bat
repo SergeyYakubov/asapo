@@ -20,7 +20,7 @@ echo db.dropDatabase() | %mongo_exe% %database_name%
 
 for /l %%x in (1, 1, 10) do echo db.data.insert({"_id":%%x,"size":3,"images":[{"_id":1, "size":100,"name":"%%x_1","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}},{"_id":2, "size":100,"name":"%%x_2","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}},{"_id":3, "size":100,"name":"%%x_3","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}]}) | %mongo_exe% %database_name%  || goto :error
 
-python worker_api.py 127.0.0.1:8400 %source_path% %database_name%  %token_test_run% dataset || goto :error
+python worker_api.py 127.0.0.1:8400 %source_path% %database_name%  %token_test_run% datasets || goto :error
 
 
 goto :clean
