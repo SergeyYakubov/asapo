@@ -28,7 +28,7 @@ class FolderDataBroker final : public asapo::DataBroker {
     DataSet GetNextDataset(std::string group_id, Error* err) override;
     DataSet GetLastDataset(std::string group_id, Error* err) override;
     DataSet GetDatasetById(uint64_t id, std::string group_id, Error* err) override;
-
+    Error RetrieveData(FileInfo* info, FileData* data) override;
   private:
     std::string base_path_;
     bool is_connected_;

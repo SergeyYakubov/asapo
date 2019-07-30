@@ -44,22 +44,31 @@ Error FolderDataBroker::CanGetData(FileInfo* info, FileData* data, uint64_t nfil
     return nullptr;
 }
 
+
+Error FolderDataBroker::RetrieveData(FileInfo* info, FileData* data) {
+    if (data == nullptr || info == nullptr ) {
+        return TextError("pointers are empty");
+    }
+
+    Error error;
+    *data = io__->GetDataFromFile(info->FullName(base_path_), &info->size, &error);
+    return error;
+}
+
+
 Error FolderDataBroker::GetFileByIndex(uint64_t nfile_to_get, FileInfo* info, FileData* data) {
     auto err = CanGetData(info, data, nfile_to_get);
     if (err != nullptr) {
         return err;
     }
 
-    *info = filelist_[(size_t)nfile_to_get];
+    *info = filelist_[(size_t) nfile_to_get];
 
     if (data == nullptr) {
         return nullptr;
     }
 
-    Error error;
-    *data = io__->GetDataFromFile(info->FullName(base_path_), &info->size, &error);
-
-    return error;
+    return RetrieveData(info, data);
 }
 
 
@@ -116,5 +125,6 @@ DataSet FolderDataBroker::GetDatasetById(uint64_t id, std::string group_id, Erro
     *err = TextError("Not supported for folder data broker");
     return {0, FileInfos{}};
 }
+
 
 }

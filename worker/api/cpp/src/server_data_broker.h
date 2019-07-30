@@ -41,6 +41,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     DataSet GetNextDataset(std::string group_id, Error* err) override;
     DataSet GetLastDataset(std::string group_id, Error* err) override;
     DataSet GetDatasetById(uint64_t id, std::string group_id, Error* err) override;
+    Error RetrieveData(FileInfo* info, FileData* data) override;
 
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;

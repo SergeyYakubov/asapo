@@ -42,9 +42,6 @@ cdef class PyDataBroker:
             return None,None,err_str
         info_str = _str(info.Json())
         meta = json.loads(info_str)
-        del meta['buf_id']
-        del meta['source']
-        del meta['lastchange']
         if meta_only:
             return None,meta,None
         cdef char* ptr = <char*> data.release()
@@ -57,6 +54,24 @@ cdef class PyDataBroker:
         return self._op("last",group_id,meta_only,0)
     def get_by_id(self,id,group_id,meta_only = True):
         return self._op("id",group_id,meta_only,id)
+    def retrieve_data(self,meta):
+        json_str = json.dumps(meta)
+        cdef FileInfo info
+        if not info.SetFromJson(_bytes(json_str)):
+            return None,"wrong metadata"
+        cdef Error err
+        cdef FileData data
+        err =  self.c_broker.RetrieveData(&info, &data)
+        err_str = _str(GetErrorString(&err))
+        if err_str.strip():
+            return None,err_str
+        cdef np.npy_intp dims[1]
+        dims[0] = meta['size']
+        cdef char* ptr = <char*> data.release()
+        arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
+        return arr,None
+
+
     def get_ndatasets(self):
         cdef Error err
         size =  self.c_broker.GetNDataSets(&err)

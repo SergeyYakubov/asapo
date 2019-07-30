@@ -156,7 +156,6 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
 
 }
 
-
 TEST_F(FolderDataBrokerTests, GetNDataSets) {
     data_broker->Connect();
     Error err;
@@ -277,6 +276,32 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
     ASSERT_THAT(fi.name, Eq("1"));
 
 }
+
+
+TEST_F(GetDataFromFileTests, RetrieveDataCallsReadsFile) {
+    data_broker->Connect();
+    FileInfo fi;
+    fi.name = "test";
+
+
+    EXPECT_CALL(mock, GetDataFromFile_t(expected_base_path+asapo::kPathSeparator+"test", _, _)).
+        WillOnce(DoAll(testing::SetArgPointee<2>(nullptr), testing::Return(new uint8_t[1] {'1'})));
+
+    auto err = data_broker->RetrieveData(&fi, &data);
+
+    ASSERT_THAT(data[0], Eq('1'));
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(GetDataFromFileTests, RetrieveDataReturnsErrorWithEmptyPointer) {
+    data_broker->Connect();
+
+    auto err = data_broker->RetrieveData(&fi, nullptr);
+
+    ASSERT_THAT(err, Ne(nullptr));
+}
+
+
 
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
     EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).

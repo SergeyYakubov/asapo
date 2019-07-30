@@ -55,7 +55,13 @@ class DataBroker {
     */
     virtual Error GetNext(FileInfo* info, std::string group_id, FileData* data) = 0;
 
-
+    //! Retrieves image using fileinfo.
+    /*!
+      \param info - image metadata to use, can be updated after operation
+      \param data - where to store image data. Can be set to nullptr only image metadata is needed.
+      \return Error if data is nullptr or data cannot be read, nullptr otherwise.
+    */
+    virtual Error RetrieveData(FileInfo* info, FileData* data) = 0;
 
 
     //! Receive next available completed dataset.

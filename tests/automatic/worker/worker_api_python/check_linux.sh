@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source_path=dummy
+source_path=.
 database_name=test_run
 token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 set -e
@@ -15,15 +15,20 @@ Cleanup() {
     nomad stop discovery
     nomad stop broker
 	echo "db.dropDatabase()" | mongo ${database_name}
+	rm 1 1_1
 }
 
 nomad run nginx.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
+echo hello1 > 1
+echo hello1 > 1_1
+
+
 for i in `seq 1 5`;
 do
-	echo 'db.data.insert({"_id":'$i',"size":100,"name":"'$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
+	echo 'db.data.insert({"_id":'$i',"size":6,"name":"'$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
 sleep 1
@@ -43,7 +48,7 @@ do
 	images=''
 	for j in `seq 1 3`;
 	do
-		images="$images,{"_id":$j,"size":100,"name":'${i}_${j}',"lastchange":1,"source":'none',"buf_id":0,"meta":{"test":10}}"
+		images="$images,{"_id":$j,"size":6,"name":'${i}_${j}',"lastchange":1,"source":'none',"buf_id":0,"meta":{"test":10}}"
 	done
 	images=${images#?}
 	echo 'db.data.insert({"_id":'$i',"size":3,"images":['$images']})' | mongo ${database_name}

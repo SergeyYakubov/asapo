@@ -191,9 +191,9 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t 
     return GetDataIfNeeded(info, data);
 }
 
-Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
-    if (data == nullptr) {
-        return nullptr;
+Error ServerDataBroker::RetrieveData(FileInfo* info, FileData* data) {
+    if (data == nullptr || info == nullptr ) {
+        return TextError("pointers are empty");
     }
 
     if (DataCanBeInBuffer(info)) {
@@ -207,6 +207,16 @@ Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
     Error error;
     *data = io__->GetDataFromFile(info->FullName(source_path_), &info->size, &error);
     return error;
+}
+
+
+Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
+    if (data == nullptr) {
+        return nullptr;
+    }
+
+    return RetrieveData(info,data);
+
 }
 
 bool ServerDataBroker::DataCanBeInBuffer(const FileInfo* info) {
@@ -373,5 +383,6 @@ DataSet ServerDataBroker::GetLastDataset(std::string group_id, Error* err) {
 DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string group_id, Error* err) {
     return GetDatasetFromServer(GetImageServerOperation::GetID, id, std::move(group_id), err);
 }
+
 
 }

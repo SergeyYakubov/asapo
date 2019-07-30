@@ -42,6 +42,12 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(fi.name == "1", "GetNext filename");
     M_AssertTrue(fi.metadata == "{\"test\":10}", "GetNext metadata");
 
+    asapo::FileData data;
+    err = broker->RetrieveData(&fi,&data);
+    M_AssertTrue(err == nullptr, "RetrieveData no error");
+    M_AssertEq("hello1",std::string(reinterpret_cast<char*>(data.get())));
+
+
     err = broker->GetLast(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetLast no error");
     M_AssertTrue(fi.name == "10", "GetLast filename");
@@ -115,6 +121,12 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
     M_AssertTrue(dataset.content[2].name == "1_3", "GetNextDataSet filename");
     M_AssertTrue(dataset.content[0].metadata == "{\"test\":10}", "GetNext metadata");
 
+    asapo::FileData data;
+    err = broker->RetrieveData(&dataset.content[0],&data);
+    M_AssertTrue(err == nullptr, "RetrieveData no error");
+    M_AssertEq("hello1",std::string(reinterpret_cast<char*>(data.get())));
+
+
     dataset = broker->GetLastDataset(group_id, &err);
     M_AssertTrue(err == nullptr, "GetLast no error");
     M_AssertTrue(dataset.content[0].name == "10_1", "GetLastDataset filename");
@@ -134,7 +146,7 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
 
 void TestAll(const Args& args) {
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", args.run_name, args.token, &err);
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".", args.run_name, args.token, &err);
     broker->SetTimeout(100);
     auto group_id = broker->GenerateNewGroupId(&err);
 

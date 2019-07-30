@@ -1,6 +1,7 @@
 from libcpp.memory cimport unique_ptr
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libcpp cimport bool
 
 
 ctypedef unsigned char uint8_t
@@ -22,6 +23,7 @@ cdef extern from "asapo_worker.h" namespace "asapo":
 cdef extern from "asapo_worker.h" namespace "asapo":
   cppclass FileInfo:
     string Json()
+    bool SetFromJson(string json_str)
   cppclass FileInfos:
     vector[FileInfo].iterator begin()
     vector[FileInfo].iterator end()
@@ -45,6 +47,7 @@ cdef extern from "asapo_worker.h" namespace "asapo":
         DataSet GetNextDataset(string group_id, Error* err)
         DataSet GetLastDataset(string group_id, Error* err)
         DataSet GetDatasetById(uint64_t id,string group_id, Error* err)
+        Error RetrieveData(FileInfo* info, FileData* data)
 
 
 cdef extern from "asapo_worker.h" namespace "asapo":
