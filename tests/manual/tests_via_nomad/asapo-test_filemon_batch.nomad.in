@@ -1,4 +1,4 @@
-job "asapo-filemon-producer" {
+job "asapo-filemon" {
   datacenters = [
     "dc1"]
 
@@ -41,7 +41,8 @@ job "asapo-filemon-producer" {
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
  "Subset": {
-  	"Mode":"none"
+  	"Mode":"batch",
+  	"BatchSize": {{ keyOrDefault "monitor_batch_size" "3" }}
  }
 }
         EOH
@@ -100,7 +101,8 @@ job "asapo-filemon-producer" {
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
  "Subset": {
-  	"Mode":"none"
+  	"Mode":"batch",
+  	"BatchSize": {{ keyOrDefault "monitor_batch_size" "3" }}
  }
 
 }
