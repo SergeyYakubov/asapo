@@ -8,5 +8,9 @@
  "RootMonitoredFolder":"@ROOT_PATH@test_in",
  "MonitoredSubFolders":["test1","test2"],
  "IgnoreExtentions":["tmp"],
- "RemoveAfterSend":true
+ "RemoveAfterSend":true,
+ "Subset": {
+  	"Mode":"none"
+ }
+
 }

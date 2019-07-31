@@ -38,7 +38,7 @@ Args GetArgs(int argc, char* argv[]) {
     return Args{folder, nthreads, nattempts};
 }
 
-void GetAllFromBroker(const Args& args) {
+void TestAll(const Args& args) {
     asapo::Error err;
     auto broker = asapo::DataBrokerFactory::CreateFolderBroker(args.folder, &err);
     broker->Connect();
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
 
     for (int nattempt = 0; nattempt < args.nattempts; nattempt++) {
-        GetAllFromBroker(args);
+        TestAll(args);
     }
     return 0;
 }

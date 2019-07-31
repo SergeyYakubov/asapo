@@ -156,7 +156,6 @@ TEST_F(FolderDataBrokerTests, GetNextReturnsFileInfo) {
 
 }
 
-
 TEST_F(FolderDataBrokerTests, GetNDataSets) {
     data_broker->Connect();
     Error err;
@@ -278,6 +277,32 @@ TEST_F(GetDataFromFileTests, GetNextReturnsDataAndInfo) {
 
 }
 
+
+TEST_F(GetDataFromFileTests, RetrieveDataCallsReadsFile) {
+    data_broker->Connect();
+    FileInfo fi;
+    fi.name = "test";
+
+
+    EXPECT_CALL(mock, GetDataFromFile_t(expected_base_path + asapo::kPathSeparator + "test", _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(nullptr), testing::Return(new uint8_t[1] {'1'})));
+
+    auto err = data_broker->RetrieveData(&fi, &data);
+
+    ASSERT_THAT(data[0], Eq('1'));
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(GetDataFromFileTests, RetrieveDataReturnsErrorWithEmptyPointer) {
+    data_broker->Connect();
+
+    auto err = data_broker->RetrieveData(&fi, nullptr);
+
+    ASSERT_THAT(err, Ne(nullptr));
+}
+
+
+
 TEST_F(GetDataFromFileTests, GetNextReturnsErrorWhenCannotReadData) {
     EXPECT_CALL(mock, GetDataFromFile_t(_, _, _)).
     WillOnce(DoAll(testing::SetArgPointee<2>(asapo::IOErrorTemplates::kReadError.Generate().release()),
@@ -353,6 +378,40 @@ TEST(FolderDataBroker, QueryImages) {
     ASSERT_THAT(infos.size(), Eq(0));
 }
 
+
+TEST(FolderDataBroker, NextDataset) {
+    auto data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker("test")};
+
+    Error err;
+    auto dataset = data_broker->GetNextDataset("bla", &err);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(dataset.content.size(), Eq(0));
+    ASSERT_THAT(dataset.id, Eq(0));
+}
+
+TEST(FolderDataBroker, LastDataset) {
+    auto data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker("test")};
+
+    Error err;
+    auto dataset = data_broker->GetLastDataset("bla", &err);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(dataset.content.size(), Eq(0));
+    ASSERT_THAT(dataset.id, Eq(0));
+}
+
+
+TEST(FolderDataBroker, DatasetById) {
+    auto data_broker = std::unique_ptr<FolderDataBroker> {new FolderDataBroker("test")};
+
+    Error err;
+    auto dataset = data_broker->GetDatasetById(0, "bla", &err);
+
+    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(dataset.content.size(), Eq(0));
+    ASSERT_THAT(dataset.id, Eq(0));
+}
 
 
 }

@@ -9,6 +9,12 @@
 
 namespace asapo {
 
+enum class SubSetMode {
+    kNone,
+    kBatch,
+    kMultiSource
+};
+
 struct EventMonConfig {
     std::string asapo_endpoint;
     LogLevel log_level = LogLevel::Info;
@@ -20,6 +26,10 @@ struct EventMonConfig {
     std::vector<std::string> monitored_subfolders;
     std::vector<std::string> ignored_extentions;
     bool remove_after_send = false;
+    SubSetMode subset_mode = SubSetMode::kNone;
+    uint64_t subset_batch_size = 1;
+    uint64_t subset_multisource_nsources = 1;
+    uint64_t subset_multisource_sourceid = 1;
   private:
     std::string log_level_str;
     std::string mode_str;

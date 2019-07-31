@@ -31,6 +31,8 @@ using ::asapo::MockIO;
 using ::asapo::EventMonConfigFactory;
 using asapo::EventMonConfig;
 
+using asapo::SubSetMode;
+
 namespace {
 
 
@@ -60,6 +62,8 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     test_config.monitored_subfolders = {"test1", "test2"};
     test_config.ignored_extentions = {"tmp", "test"};
     test_config.remove_after_send = true;
+    test_config.subset_mode = SubSetMode::kBatch;
+    test_config.subset_batch_size = 9;
     auto err = asapo::SetFolderMonConfig(test_config);
 
     auto config = asapo::GetEventMonConfig();
@@ -75,8 +79,31 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     ASSERT_THAT(config->root_monitored_folder, Eq("tmp"));
     ASSERT_THAT(config->ignored_extentions, ElementsAre("tmp", "test"));
     ASSERT_THAT(config->remove_after_send, Eq(true));
+    ASSERT_THAT(config->subset_mode, Eq(SubSetMode::kBatch));
+    ASSERT_THAT(config->subset_batch_size, Eq(9));
+
 
 }
+
+TEST_F(ConfigTests, ReadSettingsMultiSourceOK) {
+    asapo::EventMonConfig test_config;
+    test_config.subset_mode = SubSetMode::kMultiSource;
+    test_config.subset_multisource_nsources = 2;
+    test_config.subset_multisource_sourceid = 12;
+    auto err = asapo::SetFolderMonConfig(test_config);
+
+    auto config = asapo::GetEventMonConfig();
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(config->subset_mode, Eq(SubSetMode::kMultiSource));
+    ASSERT_THAT(config->subset_multisource_nsources, Eq(2));
+    ASSERT_THAT(config->subset_multisource_sourceid, Eq(12));
+
+}
+
+
+
+
 
 TEST_F(ConfigTests, ReadSettingsChecksNthreads) {
     asapo::EventMonConfig test_config;
@@ -90,6 +117,31 @@ TEST_F(ConfigTests, ReadSettingsChecksNthreads) {
     err = asapo::SetFolderMonConfig(test_config);
     ASSERT_THAT(err, Ne(nullptr));
 
+}
+
+TEST_F(ConfigTests, ReadSettingsChecksSubsets) {
+    asapo::EventMonConfig test_config;
+    test_config.subset_mode = SubSetMode::kBatch;
+    test_config.subset_batch_size = 0;
+
+    auto err = asapo::SetFolderMonConfig(test_config);
+    ASSERT_THAT(err, Ne(nullptr));
+
+    test_config.subset_mode = SubSetMode::kMultiSource;
+    test_config.subset_multisource_nsources = 0;
+
+    err = asapo::SetFolderMonConfig(test_config);
+    ASSERT_THAT(err, Ne(nullptr));
+
+
+}
+
+TEST_F(ConfigTests, ReadSettingsDoesnotChecksSubsetsIfNoSubsets) {
+    asapo::EventMonConfig test_config;
+    test_config.subset_batch_size = 0;
+
+    auto err = asapo::SetFolderMonConfig(test_config);
+    ASSERT_THAT(err, Eq(nullptr));
 }
 
 

@@ -151,3 +151,11 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWrongGroupID() {
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + wrongGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong group id")
 }
+
+func (suite *ProcessRequestTestSuite) TestProcessRequestAddsDataset() {
+	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next_dataset", "0").Return([]byte("Hello"), nil)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next_dataset in "+expectedBeamtimeId)))
+	ExpectCopyClose(suite.mock_db)
+
+	doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix + "&dataset=true")
+}

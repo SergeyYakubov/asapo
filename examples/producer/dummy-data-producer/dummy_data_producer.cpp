@@ -20,6 +20,7 @@ struct Args {
     uint64_t nthreads;
     uint64_t mode;
     uint64_t timeout_sec;
+    uint64_t images_in_set;
 };
 
 void PrintCommandArguments(const Args& args) {
@@ -30,17 +31,18 @@ void PrintCommandArguments(const Args& args) {
               << "nthreads: " << args.nthreads << std::endl
               << "mode: " << args.mode << std::endl
               << "timeout: " << args.timeout_sec << std::endl
+              << "images in set: " << args.images_in_set << std::endl
               << std::endl;
 }
 
 
 void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     asapo::ExitAfterPrintVersionIfNeeded("Dummy Data Producer", argc, argv);
-    if (argc != 8) {
+    if (argc != 8 && argc != 9) {
         std::cout <<
                   "Usage: " << argv[0] <<
                   " <destination> <beamtime_id> <number_of_byte> <iterations> <nthreads>"
-                  " <mode 0 -t tcp, 1 - filesystem> <timeout (sec)>"
+                  " <mode 0 -t tcp, 1 - filesystem> <timeout (sec)> [n images in set (default 1)]"
                   << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -52,6 +54,11 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         args->nthreads = std::stoull(argv[5]);
         args->mode = std::stoull(argv[6]);
         args->timeout_sec = std::stoull(argv[7]);
+        if (argc == 9) {
+            args->images_in_set = std::stoull(argv[8]);
+        } else {
+            args->images_in_set = 1;
+        }
         PrintCommandArguments(*args);
         return;
     } catch(std::exception& e) {
@@ -89,7 +96,7 @@ asapo::FileData CreateMemoryBuffer(size_t size) {
 }
 
 
-bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations) {
+bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations, uint64_t images_in_set) {
 
     asapo::Error err;
     if (iterations > 0) { // send wrong meta, for negative integration tests
@@ -106,10 +113,25 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         auto buffer = CreateMemoryBuffer(number_of_byte);
         asapo::EventHeader event_header{i + 1, number_of_byte, std::to_string(i + 1)};
         std::string meta = "{\"user_meta\":\"test" + std::to_string(i + 1) + "\"}";
-        auto err = producer->SendData(event_header, std::move(buffer), std::move(meta), &ProcessAfterSend);
-        if (err) {
-            std::cerr << "Cannot send file: " << err << std::endl;
-            return false;
+        if (images_in_set == 1) {
+            auto err = producer->SendData(event_header, std::move(buffer), std::move(meta), &ProcessAfterSend);
+            if (err) {
+                std::cerr << "Cannot send file: " << err << std::endl;
+                return false;
+            }
+        } else {
+            for (uint64_t id = 0; id < images_in_set; id++) {
+                auto buffer = CreateMemoryBuffer(number_of_byte);
+                event_header.subset_id = i + 1;
+                event_header.subset_size = images_in_set;
+                event_header.file_id = id + 1;
+                event_header.file_name = std::to_string(i + 1) + "_" + std::to_string(id + 1);
+                auto err = producer->SendData(event_header, std::move(buffer), meta, &ProcessAfterSend);
+                if (err) {
+                    std::cerr << "Cannot send file: " << err << std::endl;
+                    return false;
+                }
+            }
         }
     }
     return true;
@@ -166,11 +188,11 @@ int main (int argc, char* argv[]) {
 
     auto producer = CreateProducer(args);
 
-    iterations_remained = args.iterations + 1;
+    iterations_remained = args.iterations * args.images_in_set + 1;
 
     system_clock::time_point start_time = system_clock::now();
 
-    if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations)) {
+    if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.images_in_set)) {
         return EXIT_FAILURE;
     }
 

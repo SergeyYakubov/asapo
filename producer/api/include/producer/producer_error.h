@@ -14,6 +14,7 @@ enum class ProducerErrorType {
     kBeamtimeAlreadySet,
     kFileIdAlreadyInUse,
     kErrorInMetadata,
+    kErrorSubsetSize,
     kAuthorizationFailed,
     kInternalServerError,
     kCannotSendDataToReceivers,
@@ -29,6 +30,11 @@ auto const kAlreadyConnected = ProducerErrorTemplate {
 auto const kConnectionNotReady = ProducerErrorTemplate {
     "Connection not ready", ProducerErrorType::kConnectionNotReady
 };
+
+auto const kErrorSubsetSize = ProducerErrorTemplate {
+    "Error in subset size", ProducerErrorType::kErrorSubsetSize
+};
+
 
 auto const kFileTooLarge = ProducerErrorTemplate {
     "File too large", ProducerErrorType::kFileTooLarge

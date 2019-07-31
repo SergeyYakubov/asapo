@@ -192,5 +192,42 @@ Error MongoDBClient::Upsert(uint64_t id, const uint8_t* data, uint64_t size) con
     return UpdateBsonDocument(id, document, true);
 
 }
+Error MongoDBClient::InsertAsSubset(const FileInfo& file,
+                                    uint64_t subset_id,
+                                    uint64_t subset_size,
+                                    bool ignore_duplicates) const {
+    if (!connected_) {
+        return DBErrorTemplates::kNotConnected.Generate();
+    }
+
+    Error err;
+    auto document = PrepareBsonDocument(file, &err);
+    if (err) {
+        return err;
+    }
+    auto query = BCON_NEW ("_id", BCON_INT64(subset_id));
+    auto update = BCON_NEW ("$setOnInsert", "{",
+                            "size", BCON_INT64 (subset_size),
+                            "}",
+                            "$addToSet", "{",
+                            "images", BCON_DOCUMENT(document.get()), "}");
+
+
+    bson_error_t mongo_err;
+    if (!mongoc_collection_update (collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
+        if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
+            if (!mongoc_collection_update (collection_, MONGOC_UPDATE_NONE, query, update, NULL, &mongo_err)) {
+                err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
+            }
+        } else {
+            err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
+        }
+    }
+
+    bson_destroy (query);
+    bson_destroy (update);
+
+    return err;
+}
 
 }

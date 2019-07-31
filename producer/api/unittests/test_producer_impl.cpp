@@ -29,7 +29,7 @@ using asapo::RequestPool;
 using asapo::ProducerRequest;
 
 
-MATCHER_P6(M_CheckSendDataRequest, op_code, beamtime_id, metadata, file_id, file_size, message,
+MATCHER_P8(M_CheckSendDataRequest, op_code, beamtime_id, metadata, file_id, file_size, message, subset_id, subset_size,
            "Checks if a valid GenericRequestHeader was Send") {
     auto request = static_cast<ProducerRequest*>(arg);
     return ((asapo::GenericRequestHeader)(arg->header)).op_code == op_code
@@ -37,6 +37,10 @@ MATCHER_P6(M_CheckSendDataRequest, op_code, beamtime_id, metadata, file_id, file
            && ((asapo::GenericRequestHeader)(arg->header)).data_size == uint64_t(file_size)
            && request->beamtime_id == beamtime_id
            && request->metadata == metadata
+           && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader)(arg->header)).custom_data[0] ==
+               uint64_t(subset_id) : true)
+           && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader)(arg->header)).custom_data[1] ==
+               uint64_t(subset_size) : true)
            && strcmp(((asapo::GenericRequestHeader)(arg->header)).message, message) == 0;
 }
 
@@ -54,6 +58,15 @@ class ProducerImplTests : public testing::Test {
     testing::NiceMock<asapo::MockLogger> mock_logger;
     testing::NiceMock<MockRequestPull> mock_pull{&factory, &mock_logger};
     asapo::ProducerImpl producer{"", 1, asapo::RequestHandlerType::kTcp};
+    uint64_t expected_size = 100;
+    uint64_t expected_id = 10;
+    uint64_t expected_subset_id = 100;
+    uint64_t expected_subset_size = 4;
+
+    char expected_name[asapo::kMaxMessageSize] = "test_name";
+    std::string expected_beamtimeid = "beamtime_id";
+    std::string expected_metadata = "meta";
+    std::string expected_fullpath = "filename";
     void SetUp() override {
         producer.log__ = &mock_logger;
         producer.request_pool__ = std::unique_ptr<RequestPool> {&mock_pull};
@@ -86,23 +99,21 @@ TEST_F(ProducerImplTests, ErrorIfSizeTooLarge) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileTooLarge));
 }
 
+TEST_F(ProducerImplTests, ErrorIfSubsetSizeNotDefined) {
+    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("subset size")));
+    asapo::EventHeader event_header{1, asapo::ProducerImpl::kMaxChunkSize, "", 1};
+    auto err = producer.SendData(event_header, nullptr, "", nullptr);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kErrorSubsetSize));
+}
+
+
 
 TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
-    uint64_t expected_size = 100;
-    uint64_t expected_meta_size = 4;
-    uint64_t expected_id = 10;
-    char expected_name[asapo::kMaxMessageSize] = "test_name";
-    std::string expected_beamtimeid = "beamtime_id";
-    std::string expected_metadata = "meta";
-
     producer.SetBeamtimeId(expected_beamtimeid);
-    ProducerRequest request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id,
-                            expected_size, expected_meta_size, expected_name},
-                            nullptr, expected_metadata, "", nullptr};
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
                                         expected_beamtimeid, expected_metadata,
-                                        expected_id, expected_size, expected_name))).WillOnce(Return(
+                                        expected_id, expected_size, expected_name, 0, 0))).WillOnce(Return(
                                                     nullptr));
 
     asapo::EventHeader event_header{expected_id, expected_size, expected_name};
@@ -111,17 +122,31 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
+TEST_F(ProducerImplTests, OKSendingSendSubsetDataRequest) {
+    producer.SetBeamtimeId(expected_beamtimeid);
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferSubsetData,
+                                        expected_beamtimeid, expected_metadata,
+                                        expected_id, expected_size, expected_name,
+                                        expected_subset_id, expected_subset_size))).WillOnce(Return(
+                                                    nullptr));
+
+    asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_subset_id, expected_subset_size};
+    auto err = producer.SendData(event_header, nullptr, expected_metadata, nullptr);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
 
 TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
-    uint64_t expected_id = 0;
-    std::string expected_metadata = "{\"meta\":10}";
-    uint64_t expected_size = expected_metadata.size();
-
-    std::string expected_beamtimeid = "beamtime_id";
+    expected_id = 0;
+    expected_metadata = "{\"meta\":10}";
+    expected_size = expected_metadata.size();
 
     producer.SetBeamtimeId(expected_beamtimeid);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferMetaData,
-                                        expected_beamtimeid, "", expected_id, expected_size, "beamtime_global.meta"))).WillOnce(Return(
+                                        expected_beamtimeid, "", expected_id,
+                                        expected_size, "beamtime_global.meta", 10, 10))).WillOnce(Return(
                                                     nullptr));
 
     auto err = producer.SendMetaData(expected_metadata, nullptr);
@@ -130,17 +155,10 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
 }
 
 TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
-    uint64_t expected_id = 10;
-    char expected_name[asapo::kMaxMessageSize] = "test_name";
-    std::string expected_beamtimeid = "beamtime_id";
-    std::string expected_fullpath = "filename";
-
     producer.SetBeamtimeId(expected_beamtimeid);
-    ProducerRequest request{"", asapo::GenericRequestHeader{asapo::kOpcodeTransferData, expected_id, 0, 0, expected_name},
-                            nullptr, "", "", nullptr};
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
-                                        expected_beamtimeid, "", expected_id, 0, expected_name))).WillOnce(Return(
+                                        expected_beamtimeid, "", expected_id, 0, expected_name, 0, 0))).WillOnce(Return(
                                                     nullptr));
 
     asapo::EventHeader event_header{expected_id, 0, expected_name};

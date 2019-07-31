@@ -65,14 +65,29 @@ class DbWriterHandlerTests : public Test {
     std::string expected_hostname = "host";
     uint64_t expected_port = 1234;
     uint64_t expected_buf_id = 18446744073709551615ull;
+    std::string expected_file_name = "2";
+    std::string expected_metadata = "meta";
+    uint64_t expected_file_size = 10;
+    uint64_t expected_id = 15;
+    uint64_t expected_subset_id = 15;
+    uint64_t expected_subset_size = 2;
+    uint64_t expected_custom_data[2] {expected_subset_id, expected_subset_size};
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
+        request_header.op_code = asapo::Opcode::kOpcodeTransferData;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, ""});
+        config.broker_db_uri = "127.0.0.1:27017";
+        config.source_host = expected_hostname;
+        config.dataserver.listen_port = expected_port;
+        SetReceiverConfig(config, "none");
+
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
     }
+    void ExpectRequestParams(asapo::Opcode op_code);
+    FileInfo PrepareFileInfo();
     void TearDown() override {
         handler.db_client__.release();
     }
@@ -92,13 +107,7 @@ MATCHER_P(CompareFileInfo, file, "") {
 }
 
 
-TEST_F(DbWriterHandlerTests, CallsInsert) {
-    config.broker_db_uri = "127.0.0.1:27017";
-    config.source_host = expected_hostname;
-    config.dataserver.listen_port = expected_port;
-
-    SetReceiverConfig(config, "none");
-
+void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code) {
     EXPECT_CALL(*mock_request, GetBeamtimeId())
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
@@ -107,14 +116,9 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     .WillOnce(Return(expected_buf_id))
     ;
 
-
     EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, expected_beamtime_id, expected_collection_name)).
     WillOnce(testing::Return(nullptr));
 
-    std::string expected_file_name = "2";
-    std::string expected_metadata = "meta";
-    uint64_t expected_file_size = 10;
-    uint64_t expected_id = 15;
     EXPECT_CALL(*mock_request, GetDataSize())
     .WillOnce(Return(expected_file_size))
     ;
@@ -127,11 +131,23 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     .WillOnce(ReturnRef(expected_metadata))
     ;
 
-
     EXPECT_CALL(*mock_request, GetDataID())
     .WillOnce(Return(expected_id))
     ;
 
+    EXPECT_CALL(*mock_request, GetOpCode())
+    .WillOnce(Return(op_code))
+    ;
+
+    if (op_code == asapo::Opcode::kOpcodeTransferSubsetData) {
+        EXPECT_CALL(*mock_request, GetCustomData_t()).Times(2).
+        WillRepeatedly(Return(expected_custom_data))
+        ;
+    }
+}
+
+
+FileInfo DbWriterHandlerTests::PrepareFileInfo() {
     FileInfo file_info;
     file_info.size = expected_file_size;
     file_info.name = expected_file_name;
@@ -139,6 +155,13 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     file_info.buf_id = expected_buf_id;
     file_info.source = expected_hostname + ":" + std::to_string(expected_port);
     file_info.metadata = expected_metadata;
+    return file_info;
+}
+
+TEST_F(DbWriterHandlerTests, CallsInsert) {
+
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData);
+    auto file_info = PrepareFileInfo();
 
     EXPECT_CALL(mock_db, Insert_t(CompareFileInfo(file_info), _)).
     WillOnce(testing::Return(nullptr));
@@ -153,5 +176,26 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
 
     handler.ProcessRequest(mock_request.get());
 }
+
+TEST_F(DbWriterHandlerTests, CallsInsertSubset) {
+
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferSubsetData);
+    auto file_info = PrepareFileInfo();
+
+
+    EXPECT_CALL(mock_db, InsertAsSubset_t(CompareFileInfo(file_info), expected_subset_id, expected_subset_size, _)).
+    WillOnce(testing::Return(nullptr));
+
+    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
+                                         HasSubstr(config.broker_db_uri),
+                                         HasSubstr(expected_beamtime_id),
+                                         HasSubstr(expected_collection_name)
+                                        )
+                                  )
+               );
+
+    handler.ProcessRequest(mock_request.get());
+}
+
 
 }

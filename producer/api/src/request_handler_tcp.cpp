@@ -105,8 +105,9 @@ Error RequestHandlerTcp::TrySendToReceiver(const ProducerRequest* request) {
         return err;
     }
 
-    log__->Debug(std::string("successfully sent data ") + " id: " + std::to_string(request->header.data_id) + " to " +
-                 connected_receiver_uri_);
+    log__->Debug("successfully sent data, opcode: " + std::to_string(request->header.op_code) +
+                 ", id: " + std::to_string(request->header.data_id) + " to " + connected_receiver_uri_);
+
     return nullptr;
 }
 

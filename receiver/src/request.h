@@ -42,6 +42,8 @@ class Request {
     VIRTUAL void SetBeamtimeId(std::string beamtime_id);
     VIRTUAL void SetBeamline(std::string beamline);
     VIRTUAL const std::string& GetBeamline() const;
+    VIRTUAL const CustomRequestData& GetCustomData() const;
+
     std::unique_ptr<IO> io__;
     DataCache* cache__ = nullptr;
     VIRTUAL uint64_t GetSlotId() const;

@@ -50,6 +50,32 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     config_string += "," + std::string("\"LogLevel\":") + "\"" + log_level + "\"";
     config_string += "," + std::string("\"RemoveAfterSend\":") + (config.remove_after_send ? "true" : "false");
 
+    std::string subset_mode;
+    switch (config.subset_mode) {
+    case SubSetMode::kBatch:
+        subset_mode = "batch";
+        break;
+    case SubSetMode::kMultiSource:
+        subset_mode = "multisource";
+        break;
+
+    case SubSetMode::kNone:
+        subset_mode = "none";
+        break;
+
+    }
+    config_string += "," + std::string("\"Subset\":{");
+    config_string += std::string("\"Mode\":") + "\"" + subset_mode + "\"";
+    if (config.subset_mode == SubSetMode::kBatch) {
+        config_string += "," + std::string("\"BatchSize\":") + std::to_string(config.subset_batch_size);
+    }
+    if (config.subset_mode == SubSetMode::kMultiSource) {
+        config_string += "," + std::string("\"SourceId\":") + std::to_string(config.subset_multisource_sourceid);
+        config_string += "," + std::string("\"NSources\":") + std::to_string(config.subset_multisource_nsources);
+    }
+
+    config_string += "}";
+
     std::string mon_folders;
     for (auto folder : config.monitored_subfolders) {
         mon_folders += "\"" + folder + "\"" + ",";
@@ -74,7 +100,6 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     config_string += "," + std::string("\"AsapoEndpoint\":") + "\"" + config.asapo_endpoint + "\"";
 
     config_string += "}";
-
 
     EXPECT_CALL(mock_io, ReadFileToString_t("fname", _)).WillOnce(
         testing::Return(config_string)

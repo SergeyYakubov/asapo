@@ -39,7 +39,10 @@ job "asapo-produceronly" {
  "RootMonitoredFolder":"c:\\tmp\\asapo\\test_in",
  "MonitoredSubFolders":["test_folder"],
  "IgnoreExtentions":["tmp"],
- "RemoveAfterSend":true
+ "RemoveAfterSend":true,
+  "Subset": {
+   	"Mode":"none"
+  }
 }
         EOH
         destination = "local/test.json"
@@ -95,7 +98,11 @@ job "asapo-produceronly" {
  "RootMonitoredFolder":"/tmp/asapo/test_in",
  "MonitoredSubFolders":["test_folder"],
  "IgnoreExtentions":["tmp"],
- "RemoveAfterSend":true
+ "RemoveAfterSend":true,
+ "Subset": {
+  	"Mode":"none"
+ }
+
 }
         EOH
         destination = "local/test.json"

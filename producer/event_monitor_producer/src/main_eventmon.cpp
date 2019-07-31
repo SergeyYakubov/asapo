@@ -73,6 +73,22 @@ void SignalHandler(int signal) {
 }
 
 
+void HandleSubsets(asapo::EventHeader* header) {
+    switch (GetEventMonConfig()->subset_mode) {
+    case asapo::SubSetMode::kNone:
+        return;
+    case asapo::SubSetMode::kBatch:
+        header->subset_size = GetEventMonConfig()->subset_batch_size;
+        header->subset_id = (header->file_id - 1) / header->subset_size + 1;
+        break;
+    case asapo::SubSetMode::kMultiSource:
+        header->subset_size = GetEventMonConfig()->subset_multisource_nsources;
+        header->subset_id = header->file_id;
+        header->file_id = GetEventMonConfig()->subset_multisource_sourceid;
+        break;
+    }
+}
+
 int main (int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("ASAPO Event Monitor", argc, argv);
 
@@ -117,6 +133,7 @@ int main (int argc, char* argv[]) {
             continue;
         }
         event_header.file_id = ++i;
+        HandleSubsets(&event_header);
         producer->SendFile(event_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
                            event_header.file_name, ProcessAfterSend);
     }

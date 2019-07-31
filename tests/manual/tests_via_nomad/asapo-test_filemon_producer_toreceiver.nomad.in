@@ -39,7 +39,10 @@ job "asapo-filemon-producer" {
  "RootMonitoredFolder":"u:\\asapo",
  "MonitoredSubFolders":["test_folder"],
  "IgnoreExtentions":["tmp"],
- "RemoveAfterSend":true
+ "RemoveAfterSend":true,
+ "Subset": {
+  	"Mode":"none"
+ }
 }
         EOH
         destination = "local/test.json"
@@ -95,7 +98,11 @@ job "asapo-filemon-producer" {
  "RootMonitoredFolder":"/run/user",
  "MonitoredSubFolders":["data"],
  "IgnoreExtentions":["tmp"],
- "RemoveAfterSend":true
+ "RemoveAfterSend":true,
+ "Subset": {
+  	"Mode":"none"
+ }
+
 }
         EOH
         destination = "local/test.json"

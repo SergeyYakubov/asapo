@@ -76,14 +76,16 @@ TEST_F(FactoryTests, ErrorOnWrongCode) {
 }
 
 TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCode) {
-    generic_request_header.op_code = asapo::Opcode::kOpcodeTransferData;
-    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+    for (auto code : std::vector<asapo::Opcode> {asapo::Opcode::kOpcodeTransferData, asapo::Opcode::kOpcodeTransferSubsetData}) {
+        generic_request_header.op_code = code;
+        auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
 
-    ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileWrite*>(request->GetListHandlers()[1]), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
+        ASSERT_THAT(err, Eq(nullptr));
+        ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileWrite*>(request->GetListHandlers()[1]), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
+    }
 }
 
 
