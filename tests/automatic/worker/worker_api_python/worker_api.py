@@ -42,7 +42,7 @@ def check_single(broker,group_id_new):
     assert_usermetadata(meta,"get next1")
 
     data, err = broker.retrieve_data(meta)
-    assert_eq(data.tostring(),"hello1","retrieve_data data")
+    assert_eq(data.tostring().decode("utf-8"),"hello1","retrieve_data data")
     assert_noterr(err, "retrieve_data err")
 
     _, meta, err = broker.get_next(group_id_new, meta_only=True)
@@ -113,7 +113,7 @@ def check_dataset(broker,group_id_new):
     assert_usermetadata(metas[0],"get nextdataset1 meta")
 
     data, err = broker.retrieve_data(metas[0])
-    assert_eq(data.tostring(),"hello1","retrieve_data from dataset data")
+    assert_eq(data.tostring().decode("utf-8"),"hello1","retrieve_data from dataset data")
     assert_noterr(err, "retrieve_data from dataset err")
 
 
