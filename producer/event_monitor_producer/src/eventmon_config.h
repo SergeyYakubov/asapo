@@ -25,7 +25,7 @@ struct EventMonConfig {
     std::vector<std::string> monitored_subfolders;
     std::vector<std::string> ignored_extentions;
     bool remove_after_send = false;
-    SubSetMode subset_mode;
+    SubSetMode subset_mode = SubSetMode::kNone;
     uint64_t subset_batch_size = 1;
   private:
     std::string log_level_str;
