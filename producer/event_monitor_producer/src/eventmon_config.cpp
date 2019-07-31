@@ -22,6 +22,12 @@ Error SubsetModeToEnum(const std::string& mode_str, SubSetMode* mode) {
         return nullptr;
     }
 
+    if (mode_str == "multisource") {
+        *mode = SubSetMode::kMultiSource;
+        return nullptr;
+    }
+
+
     return TextError("Wrone subset mode:" + mode_str);
 }
 
@@ -50,6 +56,12 @@ Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
         err = parser.Embedded("Subset").GetUInt64("BatchSize", &config.subset_batch_size);
     }
 
+    if (config.subset_mode == SubSetMode::kMultiSource) {
+        err = parser.Embedded("Subset").GetUInt64("NSources", &config.subset_multisource_nsources);
+        err = parser.Embedded("Subset").GetUInt64("SourceId", &config.subset_multisource_sourceid);
+    }
+
+
     return err;
 }
 
@@ -58,7 +70,7 @@ Error EventMonConfigFactory::CheckConfig() {
     Error err;
     (err = CheckMode()) ||
     (err = CheckLogLevel()) ||
-    (err = CheckNThreads());
+    (err = CheckNThreads()) ||
     (err = CheckSubsets());
 
 //todo: check monitored folders exist?
@@ -102,8 +114,14 @@ Error EventMonConfigFactory::CheckNThreads() {
 
 Error EventMonConfigFactory::CheckSubsets() {
     if (config.subset_mode == SubSetMode::kBatch && config.subset_batch_size < 1) {
-        return  TextError("Batch size should > 1");
+        return  TextError("Batch size should > 0");
     }
+
+
+    if (config.subset_mode == SubSetMode::kMultiSource && config.subset_multisource_nsources < 1) {
+        return  TextError("Number of sources size should be > 0");
+    }
+
 
     return nullptr;
 }

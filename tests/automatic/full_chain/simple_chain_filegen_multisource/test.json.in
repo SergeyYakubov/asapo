@@ -1,0 +1,17 @@
+{
+ "AsapoEndpoint":"localhost:8400",
+ "Tag":"test_tag",
+ "BeamtimeID":"asapo_test",
+ "Mode":"tcp",
+ "NThreads":1,
+ "LogLevel":"debug",
+ "RootMonitoredFolder":"@ROOT_PATH@test_in",
+ "MonitoredSubFolders":["test@ID@"],
+ "IgnoreExtentions":["tmp"],
+ "RemoveAfterSend":true,
+ "Subset": {
+ 	"Mode":"multisource",
+  	"SourceId":@ID@,
+  	"NSources":2
+ }
+}
