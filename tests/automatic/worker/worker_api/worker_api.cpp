@@ -43,9 +43,9 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(fi.metadata == "{\"test\":10}", "GetNext metadata");
 
     asapo::FileData data;
-    err = broker->RetrieveData(&fi,&data);
+    err = broker->RetrieveData(&fi, &data);
     M_AssertTrue(err == nullptr, "RetrieveData no error");
-    M_AssertEq("hello1",std::string(data.get(),data.get()+fi.size));
+    M_AssertEq("hello1", std::string(data.get(), data.get() + fi.size));
 
 
     err = broker->GetLast(&fi, group_id, nullptr);
@@ -122,9 +122,9 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
     M_AssertTrue(dataset.content[0].metadata == "{\"test\":10}", "GetNext metadata");
 
     asapo::FileData data;
-    err = broker->RetrieveData(&dataset.content[0],&data);
+    err = broker->RetrieveData(&dataset.content[0], &data);
     M_AssertTrue(err == nullptr, "RetrieveData no error");
-    M_AssertEq("hello1",std::string(data.get(),data.get()+dataset.content[0].size));
+    M_AssertEq("hello1", std::string(data.get(), data.get() + dataset.content[0].size));
 
 
     dataset = broker->GetLastDataset(group_id, &err);

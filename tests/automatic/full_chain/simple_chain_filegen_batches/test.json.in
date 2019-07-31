@@ -1,8 +1,8 @@
 {
- "AsapoEndpoint":"@ROOT_PATH@test_out",
+ "AsapoEndpoint":"localhost:8400",
  "Tag":"test_tag",
  "BeamtimeID":"asapo_test",
- "Mode":"filesystem",
+ "Mode":"tcp",
  "NThreads":1,
  "LogLevel":"debug",
  "RootMonitoredFolder":"@ROOT_PATH@test_in",
@@ -10,7 +10,7 @@
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
  "Subset": {
-  	"Mode":"none"
+ 	"Mode":"batch",
+  	"BatchSize":3
  }
-
 }

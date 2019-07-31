@@ -284,8 +284,8 @@ TEST_F(GetDataFromFileTests, RetrieveDataCallsReadsFile) {
     fi.name = "test";
 
 
-    EXPECT_CALL(mock, GetDataFromFile_t(expected_base_path+asapo::kPathSeparator+"test", _, _)).
-        WillOnce(DoAll(testing::SetArgPointee<2>(nullptr), testing::Return(new uint8_t[1] {'1'})));
+    EXPECT_CALL(mock, GetDataFromFile_t(expected_base_path + asapo::kPathSeparator + "test", _, _)).
+    WillOnce(DoAll(testing::SetArgPointee<2>(nullptr), testing::Return(new uint8_t[1] {'1'})));
 
     auto err = data_broker->RetrieveData(&fi, &data);
 

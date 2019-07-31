@@ -215,7 +215,7 @@ Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
         return nullptr;
     }
 
-    return RetrieveData(info,data);
+    return RetrieveData(info, data);
 
 }
 
