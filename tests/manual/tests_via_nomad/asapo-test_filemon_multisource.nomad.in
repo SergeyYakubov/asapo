@@ -1,4 +1,4 @@
-job "asapo-filemon" {
+job "asapo-filemon_multisource" {
   datacenters = [
     "dc1"]
 
@@ -32,7 +32,7 @@ job "asapo-filemon" {
 {
  "AsapoEndpoint":"psana002:8400",
  "Tag":"test_tag",
- "BeamtimeID":"asapo_test1",
+ "BeamtimeID":"asapo_test",
  "Mode":"tcp",
  "NThreads":8,
  "LogLevel":"info",
@@ -41,7 +41,9 @@ job "asapo-filemon" {
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
  "Subset": {
-  	"Mode":"none"
+  	"Mode":"multisource",
+  	"SourceId": 1,
+  	"NSources":2
  }
 }
         EOH
@@ -91,7 +93,7 @@ job "asapo-filemon" {
 {
  "AsapoEndpoint":"psana002:8400",
  "Tag":"test_tag",
- "BeamtimeID":"asapo_test2",
+ "BeamtimeID":"asapo_test",
  "Mode":"tcp",
  "NThreads":8,
  "LogLevel":"info",
@@ -100,7 +102,9 @@ job "asapo-filemon" {
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
  "Subset": {
-  	"Mode":"none"
+  	"Mode":"multisource",
+  	"SourceId": 2,
+  	"NSources":2
  }
 
 }

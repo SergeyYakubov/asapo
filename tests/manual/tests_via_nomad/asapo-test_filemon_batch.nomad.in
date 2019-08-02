@@ -1,4 +1,4 @@
-job "asapo-filemon" {
+job "asapo-filemon_batch" {
   datacenters = [
     "dc1"]
 
@@ -35,7 +35,7 @@ job "asapo-filemon" {
  "BeamtimeID":"asapo_test1",
  "Mode":"tcp",
  "NThreads":8,
- "LogLevel":"debug",
+ "LogLevel":"info",
  "RootMonitoredFolder":"u:\\asapo",
  "MonitoredSubFolders":["test_folder"],
  "IgnoreExtentions":["tmp"],
@@ -95,7 +95,7 @@ job "asapo-filemon" {
  "BeamtimeID":"asapo_test2",
  "Mode":"tcp",
  "NThreads":8,
- "LogLevel":"debug",
+ "LogLevel":"info",
  "RootMonitoredFolder":"/run/user",
  "MonitoredSubFolders":["data"],
  "IgnoreExtentions":["tmp"],
