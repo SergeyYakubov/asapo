@@ -35,11 +35,15 @@ Error HttpCodeToWorkerError(const HttpCode& code) {
 
 ServerDataBroker::ServerDataBroker(std::string server_uri,
                                    std::string source_path,
-                                   std::string source_name,
-                                   std::string token) :
+                                   SourceCredentials source) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
     net_client__{new TcpClient()},
-server_uri_{std::move(server_uri)}, source_path_{std::move(source_path)}, source_name_{std::move(source_name)}, token_{std::move(token)} {
+server_uri_{std::move(server_uri)}, source_path_{std::move(source_path)}, source_credentials_{std::move(source)} {
+
+    if (source_credentials_.stream.empty()) {
+        source_credentials_.stream = SourceCredentials::kDefaultStream;
+    }
+
 }
 
 Error ServerDataBroker::Connect() {
@@ -76,7 +80,7 @@ void ServerDataBroker::ProcessServerError(Error* err, const std::string& respons
 }
 
 std::string ServerDataBroker::RequestWithToken(std::string uri) {
-    return std::move(uri) + "?token=" + token_;
+    return std::move(uri) + "?token=" + source_credentials_.user_token;
 }
 
 Error ServerDataBroker::ProcessRequest(std::string* response, const RequestInfo& request) {
@@ -117,7 +121,8 @@ Error ServerDataBroker::GetBrokerUri() {
 Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string group_id, GetImageServerOperation op,
                                             bool dataset) {
     std::string request_suffix = OpToUriCmd(op);
-    std::string request_api = "/database/" + source_name_ + "/" + std::move(group_id) + "/";
+    std::string request_api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/" +
+                              std::move(group_id) + "/";
     uint64_t elapsed_ms = 0;
     while (true) {
         auto err = GetBrokerUri();
@@ -263,7 +268,8 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Erro
 
 Error ServerDataBroker::ResetCounter(std::string group_id) {
     RequestInfo ri;
-    ri.api = "/database/" + source_name_ + "/" + std::move(group_id) + "/resetcounter";
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/" + std::move(
+                 group_id) + "/resetcounter";
     ri.post = true;
 
     Error err;
@@ -273,7 +279,7 @@ Error ServerDataBroker::ResetCounter(std::string group_id) {
 
 uint64_t ServerDataBroker::GetNDataSets(Error* err) {
     RequestInfo ri;
-    ri.api = "/database/" + source_name_ + "/size";
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/size";
     auto responce = BrokerRequestWithTimeout(ri, err);
     if (*err) {
         return 0;
@@ -295,7 +301,8 @@ Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_i
 Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* response, std::string group_id,
                                                 bool dataset) {
     RequestInfo ri;
-    ri.api = "/database/" + source_name_ + "/" + std::move(group_id) + "/" + std::to_string(id);
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/" + std::move(
+                 group_id) + "/" + std::to_string(id);
     ri.extra_params = "&reset=true";
     if (dataset) {
         ri.extra_params += "&dataset=true";
@@ -308,7 +315,7 @@ Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* respon
 
 std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
     RequestInfo ri;
-    ri.api = "/database/" + source_name_ + "/0/meta/0";
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/0/meta/0";
 
     return BrokerRequestWithTimeout(ri, err);
 }
@@ -342,7 +349,7 @@ DataSet ServerDataBroker::DecodeDatasetFromResponse(std::string response, Error*
 
 FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
     RequestInfo ri;
-    ri.api = "/database/" + source_name_ + "/0/queryimages";
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/0/queryimages";
     ri.post = true;
     ri.body = std::move(query);
 

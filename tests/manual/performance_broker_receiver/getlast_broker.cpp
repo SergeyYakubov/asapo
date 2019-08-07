@@ -47,8 +47,8 @@ std::vector<std::thread> StartThreads(const Params& params,
     auto exec_next = [&params, nfiles, errors, nbuf, nfiles_total](int i) {
         asapo::FileInfo fi;
         Error err;
-        auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, params.beamtime_id,
-                      params.token, &err);
+        auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path,
+                      asapo::SourceCredentials{params.beamtime_id, "", params.token}, &err);
         broker->SetTimeout((uint64_t) params.timeout_ms);
         asapo::FileData data;
 

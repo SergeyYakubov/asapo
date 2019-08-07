@@ -11,11 +11,11 @@ namespace asapo {
 
 class ProducerRequest : public GenericRequest {
   public:
-    ProducerRequest(std::string beamtime_id, GenericRequestHeader header, FileData data,
+    ProducerRequest(std::string source_credentials, GenericRequestHeader header, FileData data,
                     std::string metadata,
                     std::string original_filepath,
                     RequestCallback callback);
-    std::string beamtime_id;
+    std::string source_credentials;
     std::string metadata;
     FileData data;
     std::string original_filepath;

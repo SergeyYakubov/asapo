@@ -172,7 +172,7 @@ bool RequestHandlerTcp::ServerError(const Error& err) {
 Error RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {
     for (auto receiver_uri : receivers_list_) {
         if (Disconnected()) {
-            auto err = ConnectToReceiver(request->beamtime_id, receiver_uri);
+            auto err = ConnectToReceiver(request->source_credentials, receiver_uri);
             if (err != nullptr ) continue;
         }
 

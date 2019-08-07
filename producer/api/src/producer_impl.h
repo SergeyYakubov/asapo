@@ -32,14 +32,16 @@ class ProducerImpl : public Producer {
     Error SendFile(const EventHeader& event_header, std::string full_path, RequestCallback callback) override;
     AbstractLogger* log__;
     std::unique_ptr<RequestPool> request_pool__;
-    Error SetBeamtimeId(std::string beamtime_id) override;
+
+    Error SetCredentials(SourceCredentials source_cred) override;
+
     Error SendMetaData(const std::string& metadata, RequestCallback callback) override;
 
   private:
     Error Send(const EventHeader& event_header, FileData data, std::string metadata, std::string full_path,
                RequestCallback callback);
     GenericRequestHeader GenerateNextSendRequest(const EventHeader& event_header, uint64_t meta_size);
-    std::string beamtime_id_;
+    std::string source_cred_string_;
 };
 
 }

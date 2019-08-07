@@ -35,7 +35,7 @@ using ::testing::Sequence;
 
 TEST(ProducerRequest, Constructor) {
     char  expected_file_name[asapo::kMaxMessageSize] = "test_name";
-    char  expected_beamtime_id[asapo::kMaxMessageSize] = "test_beamtime_id";
+    char  expected_source_credentials[asapo::kMaxMessageSize] = "test_beamtime_id%test_streamid%test_token";
     uint64_t expected_file_id = 42;
     uint64_t expected_file_size = 1337;
     uint64_t expected_meta_size = 137;
@@ -44,9 +44,9 @@ TEST(ProducerRequest, Constructor) {
 
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,
                                        expected_meta_size, expected_file_name};
-    asapo::ProducerRequest request{expected_beamtime_id, std::move(header), nullptr, expected_meta, "", nullptr};
+    asapo::ProducerRequest request{expected_source_credentials, std::move(header), nullptr, expected_meta, "", nullptr};
 
-    ASSERT_THAT(request.beamtime_id, Eq(expected_beamtime_id));
+    ASSERT_THAT(request.source_credentials, Eq(expected_source_credentials));
     ASSERT_THAT(request.metadata, Eq(expected_meta));
     ASSERT_THAT(request.header.message, testing::StrEq(expected_file_name));
     ASSERT_THAT(request.header.data_size, Eq(expected_file_size));

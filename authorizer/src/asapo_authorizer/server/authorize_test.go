@@ -3,12 +3,12 @@ package server
 import (
 	"asapo_common/utils"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
-	"io/ioutil"
-	"os"
 )
 
 type request struct {
@@ -40,20 +40,44 @@ func doAuthorizeRequest(path string,buf string) *httptest.ResponseRecorder {
 	return w
 }
 
-func TestAuthorizeOK(t *testing.T) {
-	allowBeamlines([]beamtimeInfo{{"asapo_test","beamline"}})
-	request :=  makeRequest(authorizationRequest{"asapo_test","host"})
+
+var credTests = [] struct {
+	request string
+	cred SourceCredentials
+	message string
+} {
+	{"asapo_test%%", SourceCredentials{"asapo_test","detector",""},"default stream and no token"},
+	{"asapo_test%%token", SourceCredentials{"asapo_test","detector","token"},"default stream"},
+	{"asapo_test%stream%", SourceCredentials{"asapo_test","stream",""},"no token"},
+	{"asapo_test%stream%token", SourceCredentials{"asapo_test","stream","token"},"all set"},
+}
+
+func TestSplitCreds(t *testing.T) {
+
+	for _, test := range credTests {
+		request :=  authorizationRequest{test.request,"host"}
+		creds,err := getSourceCredentials(request)
+		assert.Nil(t,err)
+		assert.Equal(t,creds,test.cred,test.message)
+	}
+}
+
+func TestAuthorizeDefaultOK(t *testing.T) {
+	allowBeamlines([]beamtimeInfo{{"asapo_test","beamline",""}})
+	request :=  makeRequest(authorizationRequest{"asapo_test%%","host"})
 	w := doAuthorizeRequest("/authorize",request)
 
 	body, _ := ioutil.ReadAll(w.Body)
 
 	assert.Contains(t, string(body), "asapo_test", "")
 	assert.Contains(t, string(body), "beamline", "")
+	assert.Contains(t, string(body), "detector", "")
+
 	assert.Equal(t, http.StatusOK, w.Code, "")
 }
 
 func TestNotAuthorized(t *testing.T) {
-	request :=  makeRequest(authorizationRequest{"any_id","host"})
+	request :=  makeRequest(authorizationRequest{"any_id%%","host"})
 	w := doAuthorizeRequest("/authorize",request)
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
 }
@@ -70,10 +94,11 @@ func TestAuthorizeWrongPath(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, w.Code, "")
 }
 
-func TestAlwaysAuthorizeAllowed(t *testing.T) {
-	allowBeamlines([]beamtimeInfo{{"test","beamline"}})
-	request :=  authorizationRequest{"asapo_test","host"}
-	ok,_ := authorize(request)
+func TestDoNotAuthorizeIfNotInAllowed(t *testing.T) {
+	allowBeamlines([]beamtimeInfo{{"test","beamline",""}})
+	request :=  authorizationRequest{"asapo_test%%","host"}
+	creds,_ := getSourceCredentials(request)
+	ok,_ := authorize(request,creds)
 	assert.Equal(t,false, ok, "")
 }
 
@@ -95,7 +120,7 @@ func TestGetBeamlineFromIP(t *testing.T) {
 
 }
 func TestCheckBeamtimeExistsInStringsFalse(t *testing.T) {
-	beamInfo := beamtimeInfo{"123","bl"}
+	beamInfo := beamtimeInfo{"123","bl",""}
 	lines:=[]string{"111","flash	pg2	11003932		beamtime	start: 2018-06-11","petra3	p01	c20180508-000-COM20181	commissioning"}
 	ok := checkBeamtimeExistsInStrings(beamInfo,lines)
 	assert.False(t,ok, "")
@@ -103,7 +128,7 @@ func TestCheckBeamtimeExistsInStringsFalse(t *testing.T) {
 
 
 func TestCheckBeamtimeExistsInStringsOk(t *testing.T) {
-	beamInfo := beamtimeInfo{"11003932","pg2"}
+	beamInfo := beamtimeInfo{"11003932","pg2",""}
 	lines:=[]string{"111","flash	pg2	11003932		beamtime	start: 2018-06-11","petra3	p01	c20180508-000-COM20181	commissioning"}
 	ok := checkBeamtimeExistsInStrings(beamInfo,lines)
 	assert.True(t,ok, "")
@@ -142,11 +167,11 @@ petra3	p02.1	11004341		beamtime	start: 2018-06-18
 	ioutil.WriteFile("127.0.0.1", []byte("bl1"), 0644)
 
 
-	request := authorizationRequest{"11003924","127.0.0.1"}
+	request := authorizationRequest{"11003924%%","127.0.0.1"}
 	w := doAuthorizeRequest("/authorize",makeRequest(request))
 
 	body, _ := ioutil.ReadAll(w.Body)
-	assert.Contains(t, string(body), request.BeamtimeId, "")
+	assert.Contains(t, string(body), "11003924", "")
 	assert.Contains(t, string(body), "bl1", "")
 	assert.Equal(t, http.StatusOK, w.Code, "")
 

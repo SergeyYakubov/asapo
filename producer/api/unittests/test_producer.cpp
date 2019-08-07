@@ -8,12 +8,14 @@
 using ::testing::Ne;
 using ::testing::Eq;
 
+using asapo::SourceCredentials;
+
 namespace {
 
 TEST(CreateProducer, TcpProducer) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, asapo::RequestHandlerType::kTcp,
-                                                "bt", &err);
+                                                SourceCredentials{"bt", "", ""}, &err);
     ASSERT_THAT(dynamic_cast<asapo::ProducerImpl*>(producer.get()), Ne(nullptr));
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -22,9 +24,9 @@ TEST(CreateProducer, ErrorBeamtime) {
     asapo::Error err;
     std::string expected_beamtimeid(asapo::kMaxMessageSize * 10, 'a');
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, asapo::RequestHandlerType::kTcp,
-                                                expected_beamtimeid, &err);
+                                                SourceCredentials{expected_beamtimeid, "", ""}, &err);
     ASSERT_THAT(producer, Eq(nullptr));
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kBeamtimeIdTooLong));
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCredentialsTooLong));
 }
 
 
@@ -42,14 +44,15 @@ TEST(CreateProducer, FileSystemProducer) {
 TEST(CreateProducer, TooManyThreads) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("", asapo::kMaxProcessingThreads + 1,
-                                                asapo::RequestHandlerType::kTcp, "bt", &err);
+                                                asapo::RequestHandlerType::kTcp, SourceCredentials{"bt", "", ""}, &err);
     ASSERT_THAT(producer, Eq(nullptr));
     ASSERT_THAT(err, Ne(nullptr));
 }
 
 TEST(Producer, SimpleWorkflowWihoutConnection) {
     asapo::Error err;
-    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("hello", 5, asapo::RequestHandlerType::kTcp, "bt",
+    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("hello", 5, asapo::RequestHandlerType::kTcp,
+                                                SourceCredentials{"bt", "", ""},
                                                 &err);
 
     asapo::EventHeader event_header{1, 1, ""};

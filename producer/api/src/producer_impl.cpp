@@ -69,7 +69,7 @@ Error ProducerImpl::Send(const EventHeader& event_header,
 
     auto request_header = GenerateNextSendRequest(event_header, metadata.size());
 
-    return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{beamtime_id_, std::move(request_header),
+    return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
                 std::move(data), std::move(metadata), std::move(full_path), callback}
     });
 
@@ -99,19 +99,24 @@ void ProducerImpl::EnableRemoteLog(bool enable) {
     log__->EnableRemoteLog(enable);
 }
 
-Error ProducerImpl::SetBeamtimeId(std::string beamtime_id) {
+Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
 
-    if (!beamtime_id_.empty()) {
-        log__->Error("beamtime_id already set");
-        return ProducerErrorTemplates::kBeamtimeAlreadySet.Generate();
+    if (!source_cred_string_.empty()) {
+        log__->Error("credentials already set");
+        return ProducerErrorTemplates::kCredentialsAlreadySet.Generate();
     }
 
-    if (beamtime_id.size() > kMaxMessageSize) {
-        log__->Error("beamtime_id is too long - " + beamtime_id);
-        return ProducerErrorTemplates::kBeamtimeIdTooLong.Generate();
+    if (source_cred.stream.empty()) {
+        source_cred.stream = SourceCredentials::kDefaultStream;
     }
 
-    beamtime_id_ = std::move(beamtime_id);
+    source_cred_string_ = source_cred.GetString();
+    if (source_cred_string_.size()  + source_cred.user_token.size() > kMaxMessageSize) {
+        log__->Error("credentials string is too long - " + source_cred_string_);
+        source_cred_string_ = "";
+        return ProducerErrorTemplates::kCredentialsTooLong.Generate();
+    }
+
     return nullptr;
 }
 
@@ -119,7 +124,7 @@ Error ProducerImpl::SendMetaData(const std::string& metadata, RequestCallback ca
     GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0, "beamtime_global.meta"};
     FileData data{new uint8_t[metadata.size()]};
     strncpy((char*)data.get(), metadata.c_str(), metadata.size());
-    return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{beamtime_id_, std::move(request_header),
+    return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
                 std::move(data), "", "", callback}
     });
 }

@@ -29,13 +29,14 @@ using asapo::RequestPool;
 using asapo::ProducerRequest;
 
 
-MATCHER_P8(M_CheckSendDataRequest, op_code, beamtime_id, metadata, file_id, file_size, message, subset_id, subset_size,
+MATCHER_P8(M_CheckSendDataRequest, op_code, source_credentials, metadata, file_id, file_size, message, subset_id,
+           subset_size,
            "Checks if a valid GenericRequestHeader was Send") {
     auto request = static_cast<ProducerRequest*>(arg);
     return ((asapo::GenericRequestHeader)(arg->header)).op_code == op_code
            && ((asapo::GenericRequestHeader)(arg->header)).data_id == file_id
            && ((asapo::GenericRequestHeader)(arg->header)).data_size == uint64_t(file_size)
-           && request->beamtime_id == beamtime_id
+           && request->source_credentials == source_credentials
            && request->metadata == metadata
            && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader)(arg->header)).custom_data[0] ==
                uint64_t(subset_id) : true)
@@ -64,7 +65,17 @@ class ProducerImplTests : public testing::Test {
     uint64_t expected_subset_size = 4;
 
     char expected_name[asapo::kMaxMessageSize] = "test_name";
-    std::string expected_beamtimeid = "beamtime_id";
+    asapo::SourceCredentials expected_credentials {
+        "beamtime_id", "subname", "token"
+    };
+    asapo::SourceCredentials expected_default_credentials {
+        "beamtime_id", "", "token"
+    };
+
+
+    std::string expected_credentials_str = "beamtime_id%subname%token";
+    std::string expected_default_credentials_str = "beamtime_id%detector%token";
+
     std::string expected_metadata = "meta";
     std::string expected_fullpath = "filename";
     void SetUp() override {
@@ -107,12 +118,26 @@ TEST_F(ProducerImplTests, ErrorIfSubsetSizeNotDefined) {
 }
 
 
-
-TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
-    producer.SetBeamtimeId(expected_beamtimeid);
+TEST_F(ProducerImplTests, UsesDefaultStream) {
+    producer.SetCredentials(expected_default_credentials);
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
-                                        expected_beamtimeid, expected_metadata,
+                                        expected_default_credentials_str, expected_metadata,
+                                        expected_id, expected_size, expected_name, 0, 0))).WillOnce(Return(
+                                                    nullptr));
+
+    asapo::EventHeader event_header{expected_id, expected_size, expected_name};
+    auto err = producer.SendData(event_header, nullptr, expected_metadata, nullptr);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
+TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
+    producer.SetCredentials(expected_credentials);
+
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+                                        expected_credentials_str, expected_metadata,
                                         expected_id, expected_size, expected_name, 0, 0))).WillOnce(Return(
                                                     nullptr));
 
@@ -123,9 +148,9 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
 }
 
 TEST_F(ProducerImplTests, OKSendingSendSubsetDataRequest) {
-    producer.SetBeamtimeId(expected_beamtimeid);
+    producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferSubsetData,
-                                        expected_beamtimeid, expected_metadata,
+                                        expected_credentials_str, expected_metadata,
                                         expected_id, expected_size, expected_name,
                                         expected_subset_id, expected_subset_size))).WillOnce(Return(
                                                     nullptr));
@@ -143,9 +168,9 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
     expected_metadata = "{\"meta\":10}";
     expected_size = expected_metadata.size();
 
-    producer.SetBeamtimeId(expected_beamtimeid);
+    producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferMetaData,
-                                        expected_beamtimeid, "", expected_id,
+                                        expected_credentials_str, "", expected_id,
                                         expected_size, "beamtime_global.meta", 10, 10))).WillOnce(Return(
                                                     nullptr));
 
@@ -155,10 +180,10 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
 }
 
 TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
-    producer.SetBeamtimeId(expected_beamtimeid);
+    producer.SetCredentials(expected_credentials);
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
-                                        expected_beamtimeid, "", expected_id, 0, expected_name, 0, 0))).WillOnce(Return(
+                                        expected_credentials_str, "", expected_id, 0, expected_name, 0, 0))).WillOnce(Return(
                                                     nullptr));
 
     asapo::EventHeader event_header{expected_id, 0, expected_name};
@@ -169,21 +194,22 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
 
 
 TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
-    std::string expected_beamtimeid(asapo::kMaxMessageSize * 10, 'a');
+    std::string long_str(asapo::kMaxMessageSize * 10, 'a');
+    expected_credentials = asapo::SourceCredentials{long_str, "", ""};
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("too long")));
 
-    auto err = producer.SetBeamtimeId(expected_beamtimeid);
+    auto err = producer.SetCredentials(expected_credentials);
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kBeamtimeIdTooLong));
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCredentialsTooLong));
 }
 
 TEST_F(ProducerImplTests, ErrorSettingSecondTime) {
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("already")));
 
-    producer.SetBeamtimeId("1");
-    auto err = producer.SetBeamtimeId("2");
+    producer.SetCredentials(asapo::SourceCredentials{"1", "2", "3"});
+    auto err = producer.SetCredentials(asapo::SourceCredentials{"4", "5", "6"});
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kBeamtimeAlreadySet));
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCredentialsAlreadySet));
 }
 
 

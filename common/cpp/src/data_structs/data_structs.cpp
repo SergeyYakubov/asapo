@@ -19,6 +19,8 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
+const std::string SourceCredentials::kDefaultStream = "detector";
+
 
 std::string FileInfo::Json() const {
     auto nanoseconds_from_epoch = std::chrono::time_point_cast<std::chrono::nanoseconds>(modify_date).

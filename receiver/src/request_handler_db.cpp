@@ -8,7 +8,12 @@ namespace asapo {
 Error RequestHandlerDb::ProcessRequest(Request* request) const {
     if (db_name_.empty()) {
         db_name_ = request->GetBeamtimeId();
+        auto stream = request->GetStream();
+        if (stream != "detector") {
+            db_name_+="_"+stream;
+        }
     }
+
 
     return ConnectToDbIfNeeded();
 }

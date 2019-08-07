@@ -45,5 +45,16 @@ struct DataSet {
 
 using SubDirList = std::vector<std::string>;
 
+
+struct SourceCredentials {
+    static const std::string kDefaultStream;
+    std::string beamtime_id;
+    std::string stream;
+    std::string user_token;
+    std::string GetString() {
+        return beamtime_id + "%" + stream + "%" + user_token;
+    };
+};
+
 }
 #endif //ASAPO_FILE_INFO_H

@@ -27,7 +27,7 @@ struct RequestInfo {
 
 class ServerDataBroker final : public asapo::DataBroker {
   public:
-    explicit ServerDataBroker(std::string server_uri, std::string source_path, std::string source_name, std::string token);
+    explicit ServerDataBroker(std::string server_uri, std::string source_path, SourceCredentials source);
     Error Connect() override;
     Error ResetCounter(std::string group_id) override;
     Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
@@ -66,8 +66,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::string server_uri_;
     std::string current_broker_uri_;
     std::string source_path_;
-    std::string source_name_;
-    std::string token_;
+    SourceCredentials source_credentials_;
     uint64_t timeout_ms_ = 0;
 };
 

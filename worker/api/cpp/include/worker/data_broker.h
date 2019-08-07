@@ -128,7 +128,7 @@ class DataBrokerFactory {
     static std::unique_ptr<DataBroker> CreateFolderBroker(const std::string& source_name,
             Error* error) noexcept;
     static std::unique_ptr<DataBroker> CreateServerBroker(std::string server_name, std::string source_path,
-            std::string beamtime_id, std::string token,
+            SourceCredentials source,
             Error* error) noexcept;
 
 };

@@ -4,6 +4,7 @@ package server
 type  beamtimeInfo struct {
 	BeamtimeId string
 	Beamline string
+	Stream string
 }
 
 type serverSettings struct {

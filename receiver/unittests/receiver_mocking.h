@@ -51,6 +51,7 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetSlotId, uint64_t());
     MOCK_CONST_METHOD0(GetData, void* ());
     MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
+    MOCK_CONST_METHOD0(GetStream, const std::string & ());
     MOCK_CONST_METHOD0(GetMetaData, const std::string & ());
     MOCK_CONST_METHOD0(GetBeamline, const std::string & ());
     MOCK_CONST_METHOD0(GetOpCode,
@@ -62,6 +63,7 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetCustomData_t, const uint64_t* ());
     MOCK_CONST_METHOD0(GetMessage, const char* ());
     MOCK_METHOD1(SetBeamtimeId, void (std::string));
+    MOCK_METHOD1(SetStream, void (std::string));
     MOCK_METHOD1(SetBeamline, void (std::string));
 };
 

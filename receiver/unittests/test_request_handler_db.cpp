@@ -62,6 +62,9 @@ class DbHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
+    std::string expected_stream = "stream";
+    std::string expected_default_stream = "detector";
+
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
@@ -69,6 +72,8 @@ class DbHandlerTests : public Test {
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, ""});
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        ON_CALL(*mock_request, GetStream()).WillByDefault(ReturnRef(expected_stream));
+
     }
     void TearDown() override {
         handler.db_client__.release();
@@ -99,13 +104,40 @@ TEST_F(DbHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
+    EXPECT_CALL(*mock_request, GetStream())
+        .WillOnce(ReturnRef(expected_stream))
+        ;
 
-    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id, expected_collection_name)).
+
+
+    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id+"_"+expected_stream, expected_collection_name)).
     WillOnce(testing::Return(nullptr));
 
     auto err = handler.ProcessRequest(mock_request.get());
     ASSERT_THAT(err, Eq(nullptr));
 }
+
+TEST_F(DbHandlerTests, ProcessRequestUsesCorrectDbNameForDetector) {
+    config.broker_db_uri = "127.0.0.1:27017";
+    SetReceiverConfig(config, "none");
+
+
+    EXPECT_CALL(*mock_request, GetBeamtimeId())
+        .WillOnce(ReturnRef(expected_beamtime_id))
+        ;
+
+    EXPECT_CALL(*mock_request, GetStream())
+        .WillOnce(ReturnRef(expected_default_stream))
+        ;
+
+
+    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id, expected_collection_name)).
+        WillOnce(testing::Return(nullptr));
+
+    auto err = handler.ProcessRequest(mock_request.get());
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
 
 TEST_F(DbHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
 

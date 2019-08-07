@@ -146,7 +146,8 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
 
 void TestAll(const Args& args) {
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".", args.run_name, args.token, &err);
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".",
+                  asapo::SourceCredentials{args.run_name, "", args.token}, &err);
     broker->SetTimeout(100);
     auto group_id = broker->GenerateNewGroupId(&err);
 

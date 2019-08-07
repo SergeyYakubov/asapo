@@ -44,12 +44,12 @@ auto const kFileNameTooLong = ProducerErrorTemplate {
     "filename too long", ProducerErrorType::kFileNameTooLong
 };
 
-auto const kBeamtimeIdTooLong = ProducerErrorTemplate {
+auto const kCredentialsTooLong = ProducerErrorTemplate {
     "beamtime id too long", ProducerErrorType::kBeamtimeIdTooLong
 };
 
 
-auto const kBeamtimeAlreadySet = ProducerErrorTemplate {
+auto const kCredentialsAlreadySet = ProducerErrorTemplate {
     "beamtime id already set", ProducerErrorType::kBeamtimeAlreadySet
 };
 

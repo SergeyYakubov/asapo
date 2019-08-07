@@ -41,6 +41,11 @@ class Request {
     VIRTUAL const std::string& GetBeamtimeId() const;
     VIRTUAL void SetBeamtimeId(std::string beamtime_id);
     VIRTUAL void SetBeamline(std::string beamline);
+
+    VIRTUAL const std::string& GetStream() const;
+    VIRTUAL void SetStream(std::string stream);
+
+
     VIRTUAL const std::string& GetBeamline() const;
     VIRTUAL const CustomRequestData& GetCustomData() const;
 
@@ -60,6 +65,7 @@ class Request {
     RequestHandlerList handlers_;
     std::string origin_uri_;
     std::string beamtime_id_;
+    std::string stream_;
     std::string beamline_;
     std::string metadata_;
     CacheMeta* slot_meta_ = nullptr;

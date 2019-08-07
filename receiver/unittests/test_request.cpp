@@ -324,6 +324,13 @@ TEST_F(RequestTests, SetGetBeamtimeId) {
 }
 
 
+TEST_F(RequestTests, SetGetStream) {
+    request->SetStream("stream");
+
+    ASSERT_THAT(request->GetStream(), "stream");
+}
+
+
 TEST_F(RequestTests, SetGetBeamline) {
     request->SetBeamline("beamline");
 

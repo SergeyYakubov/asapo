@@ -2,7 +2,7 @@
 #include "producer_impl.h"
 
 std::unique_ptr<asapo::Producer> asapo::Producer::Create(const std::string& endpoint, uint8_t n_processing_threads,
-        asapo::RequestHandlerType type, std::string beamtime_id, Error* err) {
+        asapo::RequestHandlerType type, SourceCredentials source_cred, Error* err) {
     if (n_processing_threads > kMaxProcessingThreads) {
         *err = TextError("Too many processing threads: " + std::to_string(n_processing_threads));
         return nullptr;
@@ -19,7 +19,7 @@ std::unique_ptr<asapo::Producer> asapo::Producer::Create(const std::string& endp
         return nullptr;
     }
 
-    *err = producer->SetBeamtimeId(beamtime_id);
+    *err = producer->SetCredentials(std::move(source_cred));
     if (*err) {
         return nullptr;
     }

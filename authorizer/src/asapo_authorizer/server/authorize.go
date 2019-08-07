@@ -1,18 +1,37 @@
 package server
 
 import (
-	"net/http"
-	"encoding/json"
+	log "asapo_common/logger"
 	"asapo_common/utils"
+	"encoding/json"
+	"errors"
+	"net/http"
 	"path/filepath"
 	"strings"
-	log "asapo_common/logger"
-	"errors"
 )
 
-type authorizationRequest struct {
+type SourceCredentials struct {
 	BeamtimeId string
+	Stream string
+	Token string
+}
+
+type authorizationRequest struct {
+	SourceCredentials string
 	OriginHost string
+}
+
+func getSourceCredentials(request authorizationRequest ) (SourceCredentials,error){
+	vals := strings.Split(request.SourceCredentials,"%")
+
+	if len(vals)!=3 {
+		return SourceCredentials{}, errors.New("cannot get source credentials from "+request.SourceCredentials)
+	}
+	creds := SourceCredentials{vals[0],vals[1],vals[2]}
+	if creds.Stream=="" {
+		creds.Stream="detector"
+	}
+	return creds,nil
 }
 
 func extractRequest(r *http.Request) (request authorizationRequest, err error) {
@@ -63,9 +82,10 @@ func beamtimeExists(info beamtimeInfo) bool {
 	return checkBeamtimeExistsInStrings(info, lines)
 }
 
-func authorize(request authorizationRequest) (bool, beamtimeInfo) {
+func authorize(request authorizationRequest,creds SourceCredentials) (bool, beamtimeInfo) {
 	for _, pair := range settings.AlwaysAllowedBeamtimes {
-		if pair.BeamtimeId == request.BeamtimeId {
+		if pair.BeamtimeId == creds.BeamtimeId {
+			pair.Stream = creds.Stream
 			return true, pair
 		}
 	}
@@ -78,7 +98,8 @@ func authorize(request authorizationRequest) (bool, beamtimeInfo) {
 	}
 
 	answer.Beamline = beamline
-	answer.BeamtimeId = request.BeamtimeId
+	answer.BeamtimeId = creds.BeamtimeId
+	answer.Stream = creds.Stream
 	if (!beamtimeExists(answer)) {
 		log.Error("cannot authorize beamtime " + answer.BeamtimeId + " for " + request.OriginHost + " in " + answer.Beamline)
 		return false, beamtimeInfo{}
@@ -95,7 +116,15 @@ func routeAuthorize(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	ok, beamtimeInfo := authorize(request)
+
+
+	creds,err := getSourceCredentials(request)
+	if err!=nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	ok, beamtimeInfo := authorize(request,creds)
 	if (!ok) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
