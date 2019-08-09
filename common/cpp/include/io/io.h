@@ -7,6 +7,7 @@
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <functional>
 
 #include "common/data_structs.h"
 #include "common/io_error.h"

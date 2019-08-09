@@ -45,54 +45,54 @@ std::vector<std::thread> StartThreads(const Params& params,
                                       std::vector<int>* nbuf,
                                       std::vector<int>* nfiles_total) {
     auto exec_next = [&params, nfiles, errors, nbuf, nfiles_total](int i) {
-      asapo::FileInfo fi;
-      Error err;
-      auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, params.beamtime_id,
-                                                                 params.token, &err);
-      broker->SetTimeout((uint64_t) params.timeout_ms);
-      asapo::FileData data;
+        asapo::FileInfo fi;
+        Error err;
+        auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, params.beamtime_id,
+                      params.token, &err);
+        broker->SetTimeout((uint64_t) params.timeout_ms);
+        asapo::FileData data;
 
-      lock.lock();
+        lock.lock();
 
-      if (group_id.empty()) {
-          group_id = broker->GenerateNewGroupId(&err);
-          if (err) {
-              (*errors)[i] += ProcessError(err);
-              return;
-          }
-      }
+        if (group_id.empty()) {
+            group_id = broker->GenerateNewGroupId(&err);
+            if (err) {
+                (*errors)[i] += ProcessError(err);
+                return;
+            }
+        }
 
-      lock.unlock();
+        lock.unlock();
 
-      auto start = system_clock::now();
-      while (std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count() <
-          params.timeout_ms) {
-          if (params.datasets) {
-              auto dataset = broker->GetLastDataset(group_id, &err);
-              if (err == nullptr) {
-                  for (auto& fi : dataset.content) {
-                      (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
-                      (*nfiles_total)[i]++;
-                  }
-              }
-          } else {
-              err = broker->GetLast(&fi, group_id, params.read_data ? &data : nullptr);
-              if (err == nullptr) {
-                  (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
-                  if (params.read_data && (*nfiles)[i] < 10 && fi.size < 10) {
-                      data[9] = 0;
-                      std::cout << "Received: " << reinterpret_cast<char const*>(data.get()) << std::endl;
-                  }
-              }
-          }
-          if (err) {
-              (*errors)[i] += ProcessError(err);
-              if (err == asapo::IOErrorTemplates::kTimeout) {
-                  break;
-              }
-          }
-          (*nfiles)[i]++;
-      }
+        auto start = system_clock::now();
+        while (std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count() <
+                params.timeout_ms) {
+            if (params.datasets) {
+                auto dataset = broker->GetLastDataset(group_id, &err);
+                if (err == nullptr) {
+                    for (auto& fi : dataset.content) {
+                        (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
+                        (*nfiles_total)[i]++;
+                    }
+                }
+            } else {
+                err = broker->GetLast(&fi, group_id, params.read_data ? &data : nullptr);
+                if (err == nullptr) {
+                    (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
+                    if (params.read_data && (*nfiles)[i] < 10 && fi.size < 10) {
+                        data[9] = 0;
+                        std::cout << "Received: " << reinterpret_cast<char const*>(data.get()) << std::endl;
+                    }
+                }
+            }
+            if (err) {
+                (*errors)[i] += ProcessError(err);
+                if (err == asapo::IOErrorTemplates::kTimeout) {
+                    break;
+                }
+            }
+            (*nfiles)[i]++;
+        }
     };
 
     std::vector<std::thread> threads;
@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
     params.datasets = false;
     if (argc != 8 && argc != 9) {
         std::cout << "Usage: " + std::string{argv[0]}
-            + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
+                  + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
                   <<
                   std::endl;
         exit(EXIT_FAILURE);
