@@ -11,7 +11,7 @@ namespace asapo {
 
 std::string RequestHandlerAuthorize::GetRequestString(const Request* request, const char* source_credentials) const {
     std::string request_string = std::string("{\"SourceCredentials\":\"") +
-        source_credentials + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\"}";
+                                 source_credentials + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\"}";
     return request_string;
 }
 
@@ -49,7 +49,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
         return ErrorFromServerResponse(err, code);
     } else {
         log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() + " beamline: " +
-                     beamline_ + ", beamtime id: " + beamtime_id_+", stream: "+stream_);
+                     beamline_ + ", beamtime id: " + beamtime_id_ + ", stream: " + stream_);
     }
 
     last_updated_ = system_clock::now();

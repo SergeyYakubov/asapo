@@ -38,7 +38,7 @@ ServerDataBroker::ServerDataBroker(std::string server_uri,
                                    SourceCredentials source) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
     net_client__{new TcpClient()},
-server_uri_{std::move(server_uri)}, source_path_{std::move(source_path)}, source_credentials_{std::move(source)} {
+server_uri_{std::move(server_uri)}, source_path_{std::move(source_path)}, source_credentials_(std::move(source)) {
 
     if (source_credentials_.stream.empty()) {
         source_credentials_.stream = SourceCredentials::kDefaultStream;

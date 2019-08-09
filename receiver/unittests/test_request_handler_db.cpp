@@ -105,12 +105,13 @@ TEST_F(DbHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
     ;
 
     EXPECT_CALL(*mock_request, GetStream())
-        .WillOnce(ReturnRef(expected_stream))
-        ;
+    .WillOnce(ReturnRef(expected_stream))
+    ;
 
 
 
-    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id+"_"+expected_stream, expected_collection_name)).
+    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id + "_" + expected_stream,
+                                   expected_collection_name)).
     WillOnce(testing::Return(nullptr));
 
     auto err = handler.ProcessRequest(mock_request.get());
@@ -123,16 +124,16 @@ TEST_F(DbHandlerTests, ProcessRequestUsesCorrectDbNameForDetector) {
 
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
-        .WillOnce(ReturnRef(expected_beamtime_id))
-        ;
+    .WillOnce(ReturnRef(expected_beamtime_id))
+    ;
 
     EXPECT_CALL(*mock_request, GetStream())
-        .WillOnce(ReturnRef(expected_default_stream))
-        ;
+    .WillOnce(ReturnRef(expected_default_stream))
+    ;
 
 
     EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id, expected_collection_name)).
-        WillOnce(testing::Return(nullptr));
+    WillOnce(testing::Return(nullptr));
 
     auto err = handler.ProcessRequest(mock_request.get());
     ASSERT_THAT(err, Eq(nullptr));

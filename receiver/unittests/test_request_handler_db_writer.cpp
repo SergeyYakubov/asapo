@@ -88,9 +88,9 @@ class DbWriterHandlerTests : public Test {
 
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
     }
-    void ExpectRequestParams(asapo::Opcode op_code,const std::string& stream);
+    void ExpectRequestParams(asapo::Opcode op_code, const std::string& stream);
 
-        FileInfo PrepareFileInfo();
+    FileInfo PrepareFileInfo();
     void TearDown() override {
         handler.db_client__.release();
     }
@@ -110,14 +110,14 @@ MATCHER_P(CompareFileInfo, file, "") {
 }
 
 
-void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code,const std::string& stream) {
+void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std::string& stream) {
     EXPECT_CALL(*mock_request, GetBeamtimeId())
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
     EXPECT_CALL(*mock_request, GetStream())
-        .WillOnce(ReturnRef(stream))
-        ;
+    .WillOnce(ReturnRef(stream))
+    ;
 
 
     EXPECT_CALL(*mock_request, GetSlotId())
@@ -126,7 +126,7 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code,const std::
 
     std::string db_name = expected_beamtime_id;
     if (stream != "detector") {
-        db_name +="_"+stream;
+        db_name += "_" + stream;
     }
     EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, db_name, expected_collection_name)).
     WillOnce(testing::Return(nullptr));
@@ -174,7 +174,7 @@ FileInfo DbWriterHandlerTests::PrepareFileInfo() {
 
 TEST_F(DbWriterHandlerTests, CallsInsert) {
 
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData,expected_stream);
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_stream);
     auto file_info = PrepareFileInfo();
 
     EXPECT_CALL(mock_db, Insert_t(CompareFileInfo(file_info), _)).
@@ -194,7 +194,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
 
 TEST_F(DbWriterHandlerTests, CallsInsertSubset) {
 
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferSubsetData,expected_default_stream);
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferSubsetData, expected_default_stream);
     auto file_info = PrepareFileInfo();
 
 

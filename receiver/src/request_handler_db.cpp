@@ -10,7 +10,7 @@ Error RequestHandlerDb::ProcessRequest(Request* request) const {
         db_name_ = request->GetBeamtimeId();
         auto stream = request->GetStream();
         if (stream != "detector") {
-            db_name_+="_"+stream;
+            db_name_ += "_" + stream;
         }
     }
 

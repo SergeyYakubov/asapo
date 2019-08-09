@@ -152,6 +152,7 @@ Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::strin
         full_name = fname;
     }
     Error err;
+    //todo:: add IO_OPEN_MODE_SET_LENGTH_0 + tests
     auto fd = Open(full_name, IO_OPEN_MODE_CREATE | IO_OPEN_MODE_RW, &err);
     if (err == IOErrorTemplates::kFileNotFound && create_directories) {
         size_t pos = fname.rfind(kPathSeparator);

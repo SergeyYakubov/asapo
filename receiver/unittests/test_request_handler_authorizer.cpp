@@ -69,7 +69,8 @@ class AuthorizerHandlerTests : public Test {
     std::string expected_beamline = "beamline";
     std::string expected_producer_uri = "producer_uri";
     std::string expected_authorization_server = "authorizer_host";
-    std::string expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials + "\",\"OriginHost\":\"" +
+    std::string expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
+                                        "\",\"OriginHost\":\"" +
                                         expected_producer_uri + "\"}";
 
     void MockRequestData();
@@ -104,8 +105,8 @@ class AuthorizerHandlerTests : public Test {
                 DoAll(SetArgPointee<3>(nullptr),
                       SetArgPointee<2>(code),
                       Return("{\"BeamtimeId\":\"" + expected_beamtime_id +
-                          "\",\"Stream\":" + "\"" + expected_stream +
-                      "\",\"Beamline\":" + "\"" + expected_beamline + "\"}")
+                             "\",\"Stream\":" + "\"" + expected_stream +
+                             "\",\"Beamline\":" + "\"" + expected_beamline + "\"}")
                      ));
             if (code != HttpCode::OK) {
                 EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
