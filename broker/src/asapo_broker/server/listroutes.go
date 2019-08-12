@@ -8,31 +8,31 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"GetNext",
 		"Get",
-		"/database/{dbname}/{groupid}/next",
+		"/database/{dbname}/{stream}/{groupid}/next",
 		routeGetNext,
 	},
 	utils.Route{
 		"GetSize",
 		"Get",
-		"/database/{dbname}/size",
+		"/database/{dbname}/{stream}/size",
 		routeGetSize,
 	},
 	utils.Route{
 		"GetLast",
 		"Get",
-		"/database/{dbname}/{groupid}/last",
+		"/database/{dbname}/{stream}/{groupid}/last",
 		routeGetLast,
 	},
 	utils.Route{
 		"GetID",
 		"Get",
-		"/database/{dbname}/{groupid}/{id}",
+		"/database/{dbname}/{stream}/{groupid}/{id}",
 		routeGetByID,
 	},
 	utils.Route{
 		"GetMeta",
 		"Get",
-		"/database/{dbname}/0/meta/{id}",
+		"/database/{dbname}/{stream}/0/meta/{id}",
 		routeGetMeta,
 	},
 	utils.Route{
@@ -44,13 +44,13 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"QueryImages",
 		"Post",
-		"/database/{dbname}/0/queryimages",
+		"/database/{dbname}/{stream}/0/queryimages",
 		routeQueryImages,
 	},
 	utils.Route{
 		"ResetCounter",
 		"Post",
-		"/database/{dbname}/{groupid}/resetcounter",
+		"/database/{dbname}/{stream}/{groupid}/resetcounter",
 		routeResetCounter,
 	},
 	utils.Route{

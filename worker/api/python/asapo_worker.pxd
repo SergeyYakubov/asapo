@@ -30,7 +30,10 @@ cdef extern from "asapo_worker.h" namespace "asapo":
   struct DataSet:
     uint64_t id
     FileInfos content
-
+  struct  SourceCredentials:
+    string beamtime_id
+    string stream
+    string user_token
 
 cdef extern from "asapo_worker.h" namespace "asapo" nogil:
     cdef cppclass DataBroker:
@@ -53,6 +56,6 @@ cdef extern from "asapo_worker.h" namespace "asapo" nogil:
 cdef extern from "asapo_worker.h" namespace "asapo" nogil:
     cdef cppclass DataBrokerFactory:
         DataBrokerFactory() except +
-        unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,string beamtime_id,string token,Error* error)
+        unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,SourceCredentials source,Error* error)
 
 

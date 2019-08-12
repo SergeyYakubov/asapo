@@ -34,10 +34,10 @@ func TestQueryTestSuite(t *testing.T) {
 
 func (suite *QueryTestSuite) TestQueryOK() {
 	query_str := "aaaa"
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, "", "queryimages", query_str).Return([]byte("{}"), nil)
+	suite.mock_db.On("ProcessRequest", expectedDBName, "", "queryimages", query_str).Return([]byte("{}"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request queryimages")))
 	ExpectCopyClose(suite.mock_db)
 
-	w := doRequest("/database/"+expectedBeamtimeId+"/0/queryimages"+correctTokenSuffix, "POST", query_str)
+	w := doRequest("/database/"+expectedBeamtimeId+"/"+expectedStream+"/0/queryimages"+correctTokenSuffix, "POST", query_str)
 	suite.Equal(http.StatusOK, w.Code, "Query OK")
 }

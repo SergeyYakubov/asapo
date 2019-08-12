@@ -177,16 +177,17 @@ cdef class PyDataBrokerFactory:
     def __cinit__(self):
         with nogil:
             self.c_factory = DataBrokerFactory()
-    def create_server_broker(self,server_name,source_path,beamtime_id,token,timeout):
+    def create_server_broker(self,server_name,source_path,beamtime_id,stream,token,timeout):
         cdef string b_server_name = _bytes(server_name)
         cdef string b_source_path = _bytes(source_path)
-        cdef string b_beamtime_id = _bytes(beamtime_id)
-        cdef string b_token = _bytes(token)
+        cdef SourceCredentials source
+        source.beamtime_id = _bytes(beamtime_id)
+        source.user_token = _bytes(token)
+        source.stream = _bytes(stream)
         cdef Error err
         cdef unique_ptr[DataBroker] c_broker
         with nogil:
-            c_broker = self.c_factory.CreateServerBroker(
-                b_server_name, b_source_path, b_beamtime_id, b_token, &err)
+            c_broker = self.c_factory.CreateServerBroker(b_server_name,b_source_path,source,&err)
         broker = PyDataBroker()
         broker.c_broker =  c_broker.release()
         broker.c_broker.SetTimeout(timeout)
@@ -196,9 +197,9 @@ cdef class PyDataBrokerFactory:
         else:
             return broker,err_str
 
-def create_server_broker(server_name,source_path,beamtime_id,token,timeout):
+def create_server_broker(server_name,source_path,beamtime_id,stream,token,timeout):
     factory = PyDataBrokerFactory()
-    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),_bytes(beamtime_id),_bytes(token),timeout)
+    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),_bytes(beamtime_id),_bytes(stream),_bytes(token),timeout)
 
 
 __version__ = "@ASAPO_VERSION_PYTHON@"

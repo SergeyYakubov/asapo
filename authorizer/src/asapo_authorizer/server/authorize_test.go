@@ -175,7 +175,7 @@ petra3	p02.1	11004341		beamtime	start: 2018-06-18
 	assert.Contains(t, string(body), "bl1", "")
 	assert.Equal(t, http.StatusOK, w.Code, "")
 
-	request = authorizationRequest{"wrong","127.0.0.1"}
+	request = authorizationRequest{"wrong%%","127.0.0.1"}
 	w = doAuthorizeRequest("/authorize",makeRequest(request))
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
 

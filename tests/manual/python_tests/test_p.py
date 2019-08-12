@@ -4,7 +4,7 @@ import asapo_worker
 import sys
 import json
 
-broker, err = asapo_worker.create_server_broker("psana002:8400", "/tmp", "asapo_test2",
+broker, err = asapo_worker.create_server_broker("psana002:8400", "/tmp", "asapo_test2","",
                                                 "yzgAcLmijSLWIm8dBiGNCbc0i42u5HSm-zR6FRqo__Y=", 1000000)
 
 if not broker:

@@ -4,6 +4,8 @@ set -e
 
 trap Cleanup EXIT
 
+stream=detector
+
 beamtime_id1=asapo_test1
 token1=`$3 token -secret broker_secret.key $beamtime_id1`
 
@@ -28,14 +30,14 @@ Cleanup() {
     nomad stop broker
     nomad stop authorizer
 #    kill $producerid
-    echo "db.dropDatabase()" | mongo ${beamtime_id1}
-    echo "db.dropDatabase()" | mongo ${beamtime_id2}
+    echo "db.dropDatabase()" | mongo ${beamtime_id1}_${stream}
+    echo "db.dropDatabase()" | mongo ${beamtime_id2}_${stream}
     influx -execute "drop database ${monitor_database_name}"
 }
 
 influx -execute "create database ${monitor_database_name}"
-echo "db.${beamtime_id1}.insert({dummy:1})" | mongo ${beamtime_id1}
-echo "db.${beamtime_id2}.insert({dummy:1})" | mongo ${beamtime_id2}
+echo "db.${beamtime_id1}_${stream}.insert({dummy:1})" | mongo ${beamtime_id1}_${stream}
+echo "db.${beamtime_id2}_${stream}.insert({dummy:1})" | mongo ${beamtime_id2}_${stream}
 
 nomad run nginx.nmd
 nomad run authorizer.nmd

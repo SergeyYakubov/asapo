@@ -33,10 +33,10 @@ func TestResetCounterTestSuite(t *testing.T) {
 }
 
 func (suite *ResetCounterTestSuite) TestResetCounterOK() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "resetcounter", "0").Return([]byte(""), nil)
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "resetcounter", "0").Return([]byte(""), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request resetcounter")))
 	ExpectCopyClose(suite.mock_db)
 
-	w := doRequest("/database/"+expectedBeamtimeId+"/"+expectedGroupID+"/resetcounter"+correctTokenSuffix, "POST")
+	w := doRequest("/database/"+expectedBeamtimeId+"/"+expectedStream+"/"+expectedGroupID+"/resetcounter"+correctTokenSuffix, "POST")
 	suite.Equal(http.StatusOK, w.Code, "ResetCounter OK")
 }

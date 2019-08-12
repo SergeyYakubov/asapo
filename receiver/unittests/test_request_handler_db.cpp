@@ -118,28 +118,6 @@ TEST_F(DbHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-TEST_F(DbHandlerTests, ProcessRequestUsesCorrectDbNameForDetector) {
-    config.broker_db_uri = "127.0.0.1:27017";
-    SetReceiverConfig(config, "none");
-
-
-    EXPECT_CALL(*mock_request, GetBeamtimeId())
-    .WillOnce(ReturnRef(expected_beamtime_id))
-    ;
-
-    EXPECT_CALL(*mock_request, GetStream())
-    .WillOnce(ReturnRef(expected_default_stream))
-    ;
-
-
-    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id, expected_collection_name)).
-    WillOnce(testing::Return(nullptr));
-
-    auto err = handler.ProcessRequest(mock_request.get());
-    ASSERT_THAT(err, Eq(nullptr));
-}
-
-
 TEST_F(DbHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
 
     EXPECT_CALL(mock_db, Connect_t(_, _, expected_collection_name)).

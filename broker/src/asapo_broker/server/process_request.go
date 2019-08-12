@@ -10,15 +10,18 @@ import (
 	"net/http"
 )
 
-func extractRequestParameters(r *http.Request, needGroupID bool) (string, string, bool) {
+func extractRequestParameters(r *http.Request, needGroupID bool) (string, string, string, bool) {
 	vars := mux.Vars(r)
 	db_name, ok1 := vars["dbname"]
+
+	stream, ok3 := vars["stream"]
+
 	ok2 := true
 	group_id := ""
 	if needGroupID {
 		group_id, ok2 = vars["groupid"]
 	}
-	return db_name, group_id, ok1 && ok2
+	return db_name, stream, group_id, ok1 && ok2 && ok3
 }
 
 func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_name string, op string) bool {
@@ -40,7 +43,7 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_param string, needGroupID bool) {
 	r.Header.Set("Content-type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	db_name, group_id, ok := extractRequestParameters(r, needGroupID)
+	db_name, stream, group_id, ok := extractRequestParameters(r, needGroupID)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -63,7 +66,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 		op = op + "_dataset"
 	}
 
-	answer, code := processRequestInDb(db_name, group_id, op, extra_param)
+	answer, code := processRequestInDb(db_name+"_"+stream, group_id, op, extra_param)
 	w.WriteHeader(code)
 	w.Write(answer)
 }

@@ -23,15 +23,12 @@ Cleanup() {
     nomad stop broker
     nomad stop authorizer
     rm -rf out
-#    kill $producerid
-#    echo "db.dropDatabase()" | mongo ${beamtime_id}
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     influx -execute "drop database ${monitor_database_name}"
 }
 
-echo "db.dropDatabase()" | mongo ${beamtime_id}
-
 influx -execute "create database ${monitor_database_name}"
-echo "db.${beamtime_id}.insert({dummy:1})" | mongo ${beamtime_id}
+echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
 
 nomad run nginx.nmd
 nomad run authorizer.nmd

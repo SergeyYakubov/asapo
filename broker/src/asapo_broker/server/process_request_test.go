@@ -15,13 +15,15 @@ import (
 	"testing"
 )
 
-var correctTokenSuffix, wrongTokenSuffix, suffixWithWrongToken, expectedBeamtimeId string
+var correctTokenSuffix, wrongTokenSuffix, suffixWithWrongToken, expectedBeamtimeId, expectedDBName string
 
 const expectedGroupID = "bid2a5auidddp1vl71d0"
 const wrongGroupID = "bid2a5auidddp1vl71"
+const expectedStream = "stream"
 
 func prepareTestAuth() {
 	expectedBeamtimeId = "beamtime_id"
+	expectedDBName = expectedBeamtimeId + "_" + expectedStream
 	auth = utils.NewHMACAuth("secret")
 	token, err := auth.GenerateToken(&expectedBeamtimeId)
 	if err != nil {
@@ -103,7 +105,7 @@ func TestProcessRequestTestSuite(t *testing.T) {
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong token")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
 
 	suite.Equal(http.StatusUnauthorized, w.Code, "wrong token")
 }
@@ -111,51 +113,51 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithNoToken() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("cannot extract")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + wrongTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + wrongTokenSuffix)
 
 	suite.Equal(http.StatusUnauthorized, w.Code, "no token")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", "0").Return([]byte(""),
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next", "0").Return([]byte(""),
 		&database.DBError{utils.StatusWrongInput, ""})
 
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
 	ExpectCopyClose(suite.mock_db)
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong database name")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", "0").Return([]byte(""), errors.New(""))
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next", "0").Return([]byte(""), errors.New(""))
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
 	ExpectCopyClose(suite.mock_db)
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(http.StatusInternalServerError, w.Code, "internal error")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next", "0").Return([]byte("Hello"), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedBeamtimeId)))
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next", "0").Return([]byte("Hello"), nil)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedDBName)))
 	ExpectCopyClose(suite.mock_db)
 
-	doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(1, statistics.GetCounter(), "ProcessRequest increases counter")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWrongGroupID() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong groupid")))
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + wrongGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + wrongGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong group id")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsDataset() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "next_dataset", "0").Return([]byte("Hello"), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next_dataset in "+expectedBeamtimeId)))
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next_dataset", "0").Return([]byte("Hello"), nil)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next_dataset in "+expectedDBName)))
 	ExpectCopyClose(suite.mock_db)
 
-	doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/next" + correctTokenSuffix + "&dataset=true")
+	doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix + "&dataset=true")
 }

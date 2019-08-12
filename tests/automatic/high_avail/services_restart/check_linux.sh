@@ -19,7 +19,7 @@ Cleanup() {
     nomad stop discovery
     nomad stop broker
     nomad stop authorizer
-    echo "db.dropDatabase()" | mongo ${beamtime_id}
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     influx -execute "drop database ${monitor_database_name}"
 }
 
@@ -35,7 +35,7 @@ nomad run broker.nmd
 
 sleep 1
 
-echo "db.${beamtime_id}.insert({dummy:1})" | mongo  ${beamtime_id}
+echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo  ${beamtime_id}_detector
 
 
 

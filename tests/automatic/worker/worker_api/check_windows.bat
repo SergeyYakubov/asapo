@@ -1,4 +1,8 @@
-SET database_name=test_run
+
+SET beamtime_id=test_run
+SET stream=detector
+
+SET database_name=%beamtime_id%_%stream%
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 set token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
@@ -15,7 +19,7 @@ for /l %%x in (1, 1, 10) do echo db.data.insert({"_id":%%x,"size":6,"name":"%%x"
 echo hello1 > 1
 
 
-%1 127.0.0.1:8400 %database_name% %token_test_run%  single || goto :error
+%1 127.0.0.1:8400 %beamtime_id% %token_test_run%  single || goto :error
 
 echo db.dropDatabase() | %mongo_exe% %database_name%
 
@@ -23,7 +27,7 @@ for /l %%x in (1, 1, 10) do echo db.data.insert({"_id":%%x,"size":3,"images":[{"
 
 echo hello1 > 1_1
 
-%1 127.0.0.1:8400 %database_name% %token_test_run%  datasets || goto :error
+%1 127.0.0.1:8400 %beamtime_id% %token_test_run%  datasets || goto :error
 
 goto :clean
 

@@ -47,7 +47,7 @@ Cleanup() {
     nomad stop broker
     nomad stop authorizer
 #    kill $producerid
-    echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}
+    echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}_detector
     influx -execute "drop database ${monitor_database_name}"
     kill_mongo
 }
@@ -70,7 +70,7 @@ nomad run broker.nmd
 
 sleep 1
 
-echo "db.${beamtime_id}.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}
+echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}_detector
 
 
 

@@ -114,6 +114,7 @@ func routeAuthorize(w http.ResponseWriter, r *http.Request) {
 	request, err := extractRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
 		return
 	}
 
@@ -121,6 +122,7 @@ func routeAuthorize(w http.ResponseWriter, r *http.Request) {
 	creds,err := getSourceCredentials(request)
 	if err!=nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
 		return
 	}
 

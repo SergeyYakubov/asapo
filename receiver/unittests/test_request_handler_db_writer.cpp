@@ -125,9 +125,8 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     ;
 
     std::string db_name = expected_beamtime_id;
-    if (stream != "detector") {
-        db_name += "_" + stream;
-    }
+    db_name += "_" + stream;
+
     EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, db_name, expected_collection_name)).
     WillOnce(testing::Return(nullptr));
 

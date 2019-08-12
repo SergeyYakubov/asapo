@@ -5,7 +5,7 @@ SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\%beamline%\%beamtime_id%"
 
 
-echo db.%beamtime_id%.insert({dummy:1})" | %mongo_exe% %beamtime_id%
+echo db.%beamtime_id%_detector.insert({dummy:1})" | %mongo_exe% %beamtime_id%_detector
 
 
 c:\opt\consul\nomad run receiver.nmd
@@ -38,6 +38,6 @@ c:\opt\consul\nomad stop discovery
 c:\opt\consul\nomad stop nginx
 c:\opt\consul\nomad stop authorizer
 rmdir /S /Q %receiver_root_folder%
-echo db.dropDatabase() | %mongo_exe% %beamtime_id%
+echo db.dropDatabase() | %mongo_exe% %beamtime_id%_detector
 
 

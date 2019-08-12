@@ -45,21 +45,21 @@ func TestGetIDTestSuite(t *testing.T) {
 }
 
 func (suite *GetIDTestSuite) TestGetIdCallsCorrectRoutine() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "id", "1").Return([]byte("Hello"), nil)
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "id", "1").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request")))
 	ExpectCopyClose(suite.mock_db)
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/1" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix)
 	suite.Equal(http.StatusOK, w.Code, "GetImage OK")
 	suite.Equal("Hello", string(w.Body.Bytes()), "GetID sends data")
 }
 
 func (suite *GetIDTestSuite) TestGetIdWithResetCallsCorrectRoutine() {
-	suite.mock_db.On("ProcessRequest", expectedBeamtimeId, expectedGroupID, "idreset", "1").Return([]byte("Hello"), nil)
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "idreset", "1").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request")))
 	ExpectCopyClose(suite.mock_db)
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedGroupID + "/1" + correctTokenSuffix + "&reset=true")
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix + "&reset=true")
 	suite.Equal(http.StatusOK, w.Code, "GetImage OK")
 	suite.Equal("Hello", string(w.Body.Bytes()), "GetID sends data")
 }
