@@ -7,6 +7,9 @@
 #include <iomanip>
 #include <numeric>
 #include <mutex>
+#include <string>
+#include <sstream>
+
 
 #include "asapo_worker.h"
 
@@ -20,6 +23,7 @@ struct Params {
     std::string server;
     std::string file_path;
     std::string beamtime_id;
+    std::string stream;
     std::string token;
     int timeout_ms;
     int nthreads;
@@ -48,7 +52,7 @@ std::vector<std::thread> StartThreads(const Params& params,
         asapo::FileInfo fi;
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path,
-                      asapo::SourceCredentials{params.beamtime_id, "", params.token}, &err);
+                      asapo::SourceCredentials{params.beamtime_id, params.stream, params.token}, &err);
 
         broker->SetTimeout((uint64_t) params.timeout_ms);
         asapo::FileData data;
@@ -133,6 +137,26 @@ int ReadAllData(const Params& params, uint64_t* duration_ms, int* nerrors, int* 
     return n_total;
 }
 
+void TryGetStream(Params* args) {
+    std::stringstream test(args->beamtime_id);
+    std::string segment;
+    std::vector<std::string> seglist;
+
+    while(std::getline(test, segment, '%')) {
+        seglist.push_back(segment);
+    }
+    if (seglist.size() == 1) {
+        return;
+    }
+    if (seglist.size() > 1) {
+        args->beamtime_id = seglist[0];
+        args->stream = seglist[1];
+    }
+    return;
+
+}
+
+
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
     Params params;
@@ -147,6 +171,7 @@ int main(int argc, char* argv[]) {
     params.server = std::string{argv[1]};
     params.file_path = std::string{argv[2]};
     params.beamtime_id = std::string{argv[3]};
+    TryGetStream(&params);
     params.nthreads = atoi(argv[4]);
     params.token = std::string{argv[5]};
     params.timeout_ms = atoi(argv[6]);
