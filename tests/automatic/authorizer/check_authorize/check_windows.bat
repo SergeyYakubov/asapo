@@ -9,6 +9,10 @@ C:\Curl\curl.exe -v  --silent --data "{\"SourceCredentials\":\"c20180508-000-COM
 C:\Curl\curl.exe -v  --silent --data "{\"SourceCredentials\":\"c20180508-000-COM20181%%stream%%token\",\"OriginHost\":\"127.0.0.1:5555\"}" 127.0.0.1:5007/authorize --stderr - | findstr p01  || goto :error
 C:\Curl\curl.exe -v  --silent --data "{\"SourceCredentials\":\"c20180508-000-COM20181%%stream%%token\",\"OriginHost\":\"127.0.0.1:5555\"}" 127.0.0.1:5007/authorize --stderr - | findstr stream  || goto :error
 
+
+C:\Curl\curl.exe -v  --silent --data "{\"SourceCredentials\":\"c20180508-000-COM20181%%stream%%onm80KQF8s6d2p_laW0S5IYanUUsLcnB3QO-6QQ1M90=\",\"OriginHost\":\"127.0.0.1:5555\"}" 127.0.0.1:5007/authorize --stderr - | findstr stream  || goto :error
+C:\Curl\curl.exe -v  --silent --data "{\"SourceCredentials\":\"c20180508-000-COM20181%%stream%%wrong\",\"OriginHost\":\"127.0.0.1:5555\"}" 127.0.0.1:5007/authorize --stderr - | findstr 401  || goto :error
+
 goto :clean
 
 :error

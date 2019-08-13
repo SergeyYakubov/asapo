@@ -7,7 +7,7 @@ echo db.data.insert({"_id":2}) | %mongo_exe% %database_name%  || goto :error
 set full_name="%1"
 set short_name="%~nx1"
 
-"%2" token -secret broker_secret.key data > token
+"%2" token -secret auth_secret.key data > token
 set /P token=< token
 
 start /B "" "%full_name%" -config settings.json

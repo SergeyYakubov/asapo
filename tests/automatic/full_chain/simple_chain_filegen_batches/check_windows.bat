@@ -9,7 +9,7 @@ SET receiver_folder="%receiver_root_folder%\%beamline%\%beamtime_id%"
 set producer_short_name="%~nx1"
 
 
-"%3" token -secret broker_secret.key %beamtime_id% > token
+"%3" token -secret auth_secret.key %beamtime_id% > token
 set /P token=< token
 
 set proxy_address="127.0.0.1:8400"

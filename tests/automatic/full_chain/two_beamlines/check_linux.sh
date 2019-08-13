@@ -7,10 +7,10 @@ trap Cleanup EXIT
 stream=detector
 
 beamtime_id1=asapo_test1
-token1=`$3 token -secret broker_secret.key $beamtime_id1`
+token1=`$3 token -secret auth_secret.key $beamtime_id1`
 
 beamtime_id2=asapo_test2
-token2=`$3 token -secret broker_secret.key $beamtime_id2`
+token2=`$3 token -secret auth_secret.key $beamtime_id2`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400

@@ -5,7 +5,7 @@ set -e
 trap Cleanup EXIT
 
 beamtime_id=asapo_test
-token=`$2 token -secret broker_secret.key $beamtime_id`
+token=`$2 token -secret auth_secret.key $beamtime_id`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400

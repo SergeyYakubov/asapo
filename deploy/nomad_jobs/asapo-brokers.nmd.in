@@ -66,7 +66,7 @@ job "asapo-brokers" {
       }
 
       template {
-        source        = "@NOMAD_INSTALL@/broker_secret.key"
+        source        = "@NOMAD_INSTALL@/auth_secret.key"
         destination   = "secrets/secret.key"
         change_mode   = "restart"
       }

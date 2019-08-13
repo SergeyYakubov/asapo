@@ -2,7 +2,8 @@
   "Port": 5007,
   "LogLevel":"debug",
   "BeamtimeBeamlineMappingFile":"@BEAMTIMES_FILE@",
-  "IpBeamlineMappingFolder":"@BEAMLINES_FOLDER@"
+  "IpBeamlineMappingFolder":"@BEAMLINES_FOLDER@",
+  "SecretFile":"auth_secret.key"
 }
 
 

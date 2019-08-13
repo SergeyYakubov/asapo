@@ -5,7 +5,7 @@ SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\%beamline%\%beamtime_id%"
 
 
-"%2" token -secret broker_secret.key %beamtime_id% > token
+"%2" token -secret auth_secret.key %beamtime_id% > token
 set /P token=< token
 
 set proxy_address="127.0.0.1:8400"

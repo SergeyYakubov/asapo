@@ -10,9 +10,9 @@ SET receiver_folder1="%receiver_root_folder%\%beamline1%\%beamtime_id1%"
 SET receiver_folder2="%receiver_root_folder%\%beamline2%\%beamtime_id2%"
 
 
-"%3" token -secret broker_secret.key %beamtime_id1% > token
+"%3" token -secret auth_secret.key %beamtime_id1% > token
 set /P token1=< token
-"%3" token -secret broker_secret.key %beamtime_id2% > token
+"%3" token -secret auth_secret.key %beamtime_id2% > token
 set /P token2=< token
 
 set proxy_address="127.0.0.1:8400"

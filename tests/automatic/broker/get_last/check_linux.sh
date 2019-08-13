@@ -15,7 +15,7 @@ Cleanup() {
 echo "db.data.insert({"_id":2})" | mongo ${database_name}
 echo "db.data.insert({"_id":1})" | mongo ${database_name}
 
-token=`$2 token -secret broker_secret.key data`
+token=`$2 token -secret auth_secret.key data`
 
 $1 -config settings.json &
 

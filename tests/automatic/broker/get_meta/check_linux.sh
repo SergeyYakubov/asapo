@@ -14,7 +14,7 @@ Cleanup() {
 
 echo 'db.meta.insert({"_id":0,"data":"test"})' | mongo ${database_name}
 
-token=`$2 token -secret broker_secret.key test`
+token=`$2 token -secret auth_secret.key test`
 
 $1 -config settings.json &
 

@@ -44,8 +44,8 @@ job "broker" {
       }
 
       template {
-         source        = "@WORK_DIR@/broker_secret.key"
-         destination   = "broker_secret.key"
+         source        = "@WORK_DIR@/auth_secret.key"
+         destination   = "auth_secret.key"
          change_mode   = "signal"
          change_signal = "SIGHUP"
       }

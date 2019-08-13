@@ -17,5 +17,6 @@ setup(
       ext_modules = ext_modules,
       version = "@ASAPO_VERSION_PYTHON@",
       setup_requires=["numpy"],
-      install_requires=["numpy"]
+      install_requires=["numpy"],
+      platforms=["aaa"]
       )

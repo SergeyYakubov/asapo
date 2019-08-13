@@ -5,7 +5,7 @@ set -e
 trap Cleanup EXIT
 
 beamtime_id=asapo_test
-token=`$3 token -secret broker_secret.key $beamtime_id`
+token=`$3 token -secret auth_secret.key $beamtime_id`
 
 stream1=s1
 stream2=s2

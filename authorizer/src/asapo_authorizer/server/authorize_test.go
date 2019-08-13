@@ -11,6 +11,13 @@ import (
 	"testing"
 )
 
+func prepareToken(beamtime_id string) string{
+	auth = utils.NewHMACAuth("secret")
+	token, _ := auth.GenerateToken(&beamtime_id)
+	return token
+}
+
+
 type request struct {
 	path    string
 	cmd     string
@@ -76,6 +83,43 @@ func TestAuthorizeDefaultOK(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code, "")
 }
 
+var authTests = [] struct {
+	stream string
+	token string
+	status int
+	message string
+}{
+	{"stream", prepareToken("test"),http.StatusOK,"user stream with correct token"},
+	{"stream", prepareToken("wrong"),http.StatusUnauthorized,"user stream with wrong token"},
+	{"detector_aaa", prepareToken("test"),http.StatusUnauthorized,"detector stream with correct token and wroung source"},
+}
+func TestAuthorizeWithToken(t *testing.T) {
+	allowBeamlines([]beamtimeInfo{})
+	settings.BeamtimeBeamlineMappingFile="file.tmp"
+	beamtime_id:= "test"
+	lines :="line1\n line2\n flash bl1 "+ beamtime_id	+" start: 2018-04-24"
+	ioutil.WriteFile("file.tmp", []byte(lines), 0644)
+	defer 	os.Remove("file.tmp")
+
+	for _, test := range authTests {
+		request :=  makeRequest(authorizationRequest{beamtime_id+"%"+test.stream+"%"+test.token,"host"})
+		w := doAuthorizeRequest("/authorize",request)
+
+		body, _ := ioutil.ReadAll(w.Body)
+		if test.status==http.StatusOK {
+			assert.Contains(t, string(body), beamtime_id, "")
+			assert.Contains(t, string(body), "bl1", "")
+			assert.Contains(t, string(body), test.stream, "")
+		}
+
+		assert.Equal(t, test.status, w.Code, test.message)
+	}
+
+
+}
+
+
+
 func TestNotAuthorized(t *testing.T) {
 	request :=  makeRequest(authorizationRequest{"any_id%%","host"})
 	w := doAuthorizeRequest("/authorize",request)
@@ -98,7 +142,7 @@ func TestDoNotAuthorizeIfNotInAllowed(t *testing.T) {
 	allowBeamlines([]beamtimeInfo{{"test","beamline",""}})
 	request :=  authorizationRequest{"asapo_test%%","host"}
 	creds,_ := getSourceCredentials(request)
-	ok,_ := authorize(request,creds)
+	_,ok := authorize(request,creds)
 	assert.Equal(t,false, ok, "")
 }
 
@@ -122,16 +166,19 @@ func TestGetBeamlineFromIP(t *testing.T) {
 func TestCheckBeamtimeExistsInStringsFalse(t *testing.T) {
 	beamInfo := beamtimeInfo{"123","bl",""}
 	lines:=[]string{"111","flash	pg2	11003932		beamtime	start: 2018-06-11","petra3	p01	c20180508-000-COM20181	commissioning"}
-	ok := checkBeamtimeExistsInStrings(beamInfo,lines)
+	bl,ok := checkBeamtimeExistsInStrings(beamInfo.BeamtimeId,lines)
 	assert.False(t,ok, "")
+	assert.Equal(t,"",bl, "")
 }
 
 
 func TestCheckBeamtimeExistsInStringsOk(t *testing.T) {
 	beamInfo := beamtimeInfo{"11003932","pg2",""}
 	lines:=[]string{"111","flash	pg2	11003932		beamtime	start: 2018-06-11","petra3	p01	c20180508-000-COM20181	commissioning"}
-	ok := checkBeamtimeExistsInStrings(beamInfo,lines)
+	bl,ok := checkBeamtimeExistsInStrings(beamInfo.BeamtimeId,lines)
 	assert.True(t,ok, "")
+	assert.Equal(t,bl,beamInfo.Beamline,"")
+
 }
 
 func TestAuthorizeWithFile(t *testing.T) {
