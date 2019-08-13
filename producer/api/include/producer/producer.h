@@ -26,12 +26,11 @@ class Producer {
 
     //! Sends data to the receiver
     /*!
-      \param event_header - A stucture with the meta information (file name, size).
+      \param event_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
       \param data - A pointer to the data to send
-      \param metadata - A string with metadata (JSON format)
       \return Error - Will be nullptr on success
     */
-    virtual Error SendData(const EventHeader& event_header, FileData data, std::string metadata,
+    virtual Error SendData(const EventHeader& event_header, FileData data, uint64_t injest_mode,
                            RequestCallback callback) = 0;
     //! Sends files to the receiver
     /*!
@@ -39,7 +38,8 @@ class Producer {
       \param file name - A full path of the file to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendFile(const EventHeader& event_header, std::string full_path, RequestCallback callback) = 0;
+    virtual Error SendFile(const EventHeader& event_header, std::string full_path, uint64_t injest_mode,
+                           RequestCallback callback) = 0;
 
     //! Sends metadata for the current beamtime to the receiver
     /*!

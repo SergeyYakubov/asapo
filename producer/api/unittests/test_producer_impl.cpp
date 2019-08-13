@@ -91,14 +91,14 @@ TEST_F(ProducerImplTests, SendReturnsError) {
     EXPECT_CALL(mock_pull, AddRequest_t(_)).WillOnce(Return(
             asapo::ProducerErrorTemplates::kRequestPoolIsFull.Generate().release()));
     asapo::EventHeader event_header{1, 1, ""};
-    auto err = producer.SendData(event_header, nullptr, "", nullptr);
+    auto err = producer.SendData(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
 }
 
 TEST_F(ProducerImplTests, ErrorIfFileNameTooLong) {
     std::string long_string(asapo::kMaxMessageSize + 100, 'a');
     asapo::EventHeader event_header{1, 1, long_string};
-    auto err = producer.SendData(event_header, nullptr, "", nullptr);
+    auto err = producer.SendData(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileNameTooLong));
 }
 
@@ -106,14 +106,14 @@ TEST_F(ProducerImplTests, ErrorIfFileNameTooLong) {
 TEST_F(ProducerImplTests, ErrorIfSizeTooLarge) {
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("error checking")));
     asapo::EventHeader event_header{1, asapo::ProducerImpl::kMaxChunkSize + 1, ""};
-    auto err = producer.SendData(event_header, nullptr, "", nullptr);
+    auto err = producer.SendData(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileTooLarge));
 }
 
 TEST_F(ProducerImplTests, ErrorIfSubsetSizeNotDefined) {
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("subset size")));
-    asapo::EventHeader event_header{1, asapo::ProducerImpl::kMaxChunkSize, "", 1};
-    auto err = producer.SendData(event_header, nullptr, "", nullptr);
+    asapo::EventHeader event_header{1, asapo::ProducerImpl::kMaxChunkSize, "", "", 1};
+    auto err = producer.SendData(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kErrorSubsetSize));
 }
 
@@ -126,8 +126,8 @@ TEST_F(ProducerImplTests, UsesDefaultStream) {
                                         expected_id, expected_size, expected_name, 0, 0))).WillOnce(Return(
                                                     nullptr));
 
-    asapo::EventHeader event_header{expected_id, expected_size, expected_name};
-    auto err = producer.SendData(event_header, nullptr, expected_metadata, nullptr);
+    asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_metadata};
+    auto err = producer.SendData(event_header, nullptr, asapo::kDefaultIngestMode , nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -141,8 +141,8 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
                                         expected_id, expected_size, expected_name, 0, 0))).WillOnce(Return(
                                                     nullptr));
 
-    asapo::EventHeader event_header{expected_id, expected_size, expected_name};
-    auto err = producer.SendData(event_header, nullptr, expected_metadata, nullptr);
+    asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_metadata};
+    auto err = producer.SendData(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -155,8 +155,8 @@ TEST_F(ProducerImplTests, OKSendingSendSubsetDataRequest) {
                                         expected_subset_id, expected_subset_size))).WillOnce(Return(
                                                     nullptr));
 
-    asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_subset_id, expected_subset_size};
-    auto err = producer.SendData(event_header, nullptr, expected_metadata, nullptr);
+    asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_metadata, expected_subset_id, expected_subset_size};
+    auto err = producer.SendData(event_header, nullptr, asapo::kDefaultIngestMode , nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -187,7 +187,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
                                                     nullptr));
 
     asapo::EventHeader event_header{expected_id, 0, expected_name};
-    auto err = producer.SendFile(event_header, expected_fullpath, nullptr);
+    auto err = producer.SendFile(event_header, expected_fullpath, asapo::kDefaultIngestMode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }

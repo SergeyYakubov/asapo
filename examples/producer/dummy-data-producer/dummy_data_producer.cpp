@@ -146,8 +146,9 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         if (!stream.empty()) {
             event_header.file_name = stream + "/" + event_header.file_name;
         }
+        event_header.user_metadata = std::move(meta);
         if (images_in_set == 1) {
-            auto err = producer->SendData(event_header, std::move(buffer), std::move(meta), &ProcessAfterSend);
+            auto err = producer->SendData(event_header, std::move(buffer), asapo::kDefaultIngestMode, &ProcessAfterSend);
             if (err) {
                 std::cerr << "Cannot send file: " << err << std::endl;
                 return false;
@@ -162,8 +163,8 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
                 if (!stream.empty()) {
                     event_header.file_name = stream + "/" + event_header.file_name;
                 }
-
-                auto err = producer->SendData(event_header, std::move(buffer), meta, &ProcessAfterSend);
+                event_header.user_metadata = meta;
+                auto err = producer->SendData(event_header, std::move(buffer), asapo::kDefaultIngestMode, &ProcessAfterSend);
                 if (err) {
                     std::cerr << "Cannot send file: " << err << std::endl;
                     return false;

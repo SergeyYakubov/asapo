@@ -29,9 +29,9 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, a
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
 }
 
-GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& event_header, uint64_t meta_size) {
+GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& event_header) {
     GenericRequestHeader request{kOpcodeTransferData, event_header.file_id, event_header.file_size,
-                                 meta_size, std::move(event_header.file_name)};
+                                 event_header.user_metadata.size(), std::move(event_header.file_name)};
     if (event_header.subset_id != 0) {
         request.op_code = kOpcodeTransferSubsetData;
         request.custom_data[0] = event_header.subset_id;
@@ -58,8 +58,8 @@ Error CheckProducerRequest(const EventHeader& event_header) {
 
 Error ProducerImpl::Send(const EventHeader& event_header,
                          FileData data,
-                         std::string metadata,
                          std::string full_path,
+                         uint64_t injest_mode,
                          RequestCallback callback) {
     auto err = CheckProducerRequest(event_header);
     if (err) {
@@ -67,23 +67,24 @@ Error ProducerImpl::Send(const EventHeader& event_header,
         return err;
     }
 
-    auto request_header = GenerateNextSendRequest(event_header, metadata.size());
+    auto request_header = GenerateNextSendRequest(event_header);
 
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                std::move(data), std::move(metadata), std::move(full_path), callback}
+                std::move(data), std::move(event_header.user_metadata), std::move(full_path), callback}
     });
 
 }
 
 
-Error ProducerImpl::SendData(const EventHeader& event_header, FileData data, std::string metadata,
-                             RequestCallback callback) {
-    return Send(event_header, std::move(data), std::move(metadata), "", callback);
+Error ProducerImpl::SendData(const EventHeader& event_header, FileData data,
+                             uint64_t injest_mode, RequestCallback callback) {
+    return Send(std::move(event_header), std::move(data), "", injest_mode, callback);
 }
 
 
-Error ProducerImpl::SendFile(const EventHeader& event_header, std::string full_path, RequestCallback callback) {
-    return Send(event_header, nullptr, "", std::move(full_path), callback);
+Error ProducerImpl::SendFile(const EventHeader& event_header, std::string full_path, uint64_t injest_mode,
+                             RequestCallback callback) {
+    return Send(event_header, nullptr, std::move(full_path), injest_mode, callback);
 }
 
 
