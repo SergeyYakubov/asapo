@@ -8,6 +8,10 @@ from cpython.version cimport PY_MAJOR_VERSION
 
 np.import_array()
 
+cdef extern from "numpy/ndarraytypes.h":
+    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+
+
 cdef str _str(b):
     if PY_MAJOR_VERSION < 3:
         return b
@@ -47,6 +51,7 @@ cdef class PyDataBroker:
         cdef char* ptr = <char*> data.release()
         dims[0] = meta['size']
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
+        PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
         return arr,meta,None
     def get_next(self, group_id, meta_only = True):
         return self._op("next",group_id,meta_only,0)
@@ -69,9 +74,8 @@ cdef class PyDataBroker:
         dims[0] = meta['size']
         cdef char* ptr = <char*> data.release()
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
+        PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
         return arr,None
-
-
     def get_ndatasets(self):
         cdef Error err
         size =  self.c_broker.GetNDataSets(&err)
