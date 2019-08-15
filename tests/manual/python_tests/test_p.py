@@ -3,18 +3,32 @@ from __future__ import print_function
 import asapo_worker
 import sys
 import json
+import time
 
+<<<<<<< Updated upstream
 broker, err = asapo_worker.create_server_broker("psana002:8400", "/tmp", "asapo_test2","",
                                                 "yzgAcLmijSLWIm8dBiGNCbc0i42u5HSm-zR6FRqo__Y=", 1000000)
+=======
+source = "psana002:8400"
+path = "/asapo_shared/asapo/data"
+beamtime = "asapo_test"
+token = "KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc="
+>>>>>>> Stashed changes
 
-if not broker:
-    print("Cannot create broker: " + err)
-    sys.exit(1)
 
-last_id = 0
+broker, err = asapo_worker.create_server_broker(
+    source, path, beamtime, token, 1000)
+
+group_id, err = broker.generate_group_id()
+if err is not None:
+    print('cannot generate group id, err: ', err)
+else:
+    print('generated group id: ', group_id)
+
 while True:
-      array, meta, err = broker.get_last(meta_only=False)
-      id = meta['_id']
-      if id != last_id:
-        print ("file content:",array.tostring().strip().decode("utf-8"))
-        last_id = id
+    data, meta, err = broker.get_last(group_id, meta_only=False)
+    if err is not None:
+        print('err: ', err)
+    else:
+        print('filename: ', meta['name'])
+    time.sleep(1)
