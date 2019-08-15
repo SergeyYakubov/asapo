@@ -37,8 +37,8 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
                          " at " + GetReceiverConfig()->broker_db_uri);
         }
     } else {
-        auto subset_id = request->GetCustomData()[0];
-        auto subset_size = request->GetCustomData()[1];
+        auto subset_id = request->GetCustomData()[1];
+        auto subset_size = request->GetCustomData()[2];
         err =  db_client__->InsertAsSubset(file_info, subset_id, subset_size, true);
         if (!err) {
             log__->Debug(std::string{"insert record as subset id "} + std::to_string(subset_id) + ", id: " +

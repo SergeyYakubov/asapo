@@ -18,7 +18,8 @@ enum class ProducerErrorType {
     kAuthorizationFailed,
     kInternalServerError,
     kCannotSendDataToReceivers,
-    kRequestPoolIsFull
+    kRequestPoolIsFull,
+    kWrongInjestMode
 };
 
 using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
@@ -30,6 +31,12 @@ auto const kAlreadyConnected = ProducerErrorTemplate {
 auto const kConnectionNotReady = ProducerErrorTemplate {
     "Connection not ready", ProducerErrorType::kConnectionNotReady
 };
+
+auto const kWrongInjestMode = ProducerErrorTemplate {
+    "wrong injest mode", ProducerErrorType::kWrongInjestMode
+};
+
+
 
 auto const kErrorSubsetSize = ProducerErrorTemplate {
     "Error in subset size", ProducerErrorType::kErrorSubsetSize

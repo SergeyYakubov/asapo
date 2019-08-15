@@ -41,7 +41,7 @@ class ProducerImpl : public Producer {
   private:
     Error Send(const EventHeader& event_header, FileData data, std::string full_path, uint64_t injest_mode,
                RequestCallback callback);
-    GenericRequestHeader GenerateNextSendRequest(const EventHeader& event_header);
+    GenericRequestHeader GenerateNextSendRequest(const EventHeader& event_header, uint64_t injest_mode);
     std::string source_cred_string_;
 };
 

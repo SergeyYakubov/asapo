@@ -43,6 +43,7 @@ TEST(RequestHandlerTcp, Constructor) {
 
 }
 std::string expected_auth_message = {"12345"};
+asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
 
 class RequestHandlerTcpTests : public testing::Test {
   public:
@@ -59,7 +60,6 @@ class RequestHandlerTcpTests : public testing::Test {
 
     uint64_t expected_thread_id = 2;
 
-    asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     asapo::Error callback_err;
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_meta_size, expected_file_name};
     bool called = false;
@@ -97,7 +97,7 @@ class RequestHandlerTcpTests : public testing::Test {
     void ExpectFailSendData(bool only_once = false);
     void ExpectFailSendMetaData(bool only_once = false);
     void ExpectOKConnect(bool only_once = false);
-    void ExpectOKSendHeader(bool only_once = false);
+    void ExpectOKSendHeader(bool only_once = false, asapo::Opcode code = expected_op_code);
     void ExpectOKSend(uint64_t expected_size, bool only_once);
     void ExpectOKSendAll(bool only_once);
     void ExpectOKSendData(bool only_once = false);
@@ -109,6 +109,9 @@ class RequestHandlerTcpTests : public testing::Test {
     void SetUp() override {
         request_handler.log__ = &mock_logger;
         request_handler.io__.reset(&mock_io);
+        request.header.custom_data[0] = asapo::kDefaultIngestMode;
+        request_filesend.header.custom_data[0] = asapo::kDefaultIngestMode;
+        request_nocallback.header.custom_data[0] = asapo::kDefaultIngestMode;
         ON_CALL(mock_discovery_service, RotatedUriList(_)).
         WillByDefault(Return(receivers_list));
 
@@ -352,9 +355,9 @@ void RequestHandlerTcpTests::ExpectOKSendData(bool only_once) {
 
 
 
-void RequestHandlerTcpTests::ExpectOKSendHeader(bool only_once) {
+void RequestHandlerTcpTests::ExpectOKSendHeader(bool only_once, asapo::Opcode opcode) {
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(expected_op_code, expected_file_id,
+        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(opcode, expected_file_id,
                                     expected_file_size, expected_file_name),
                                     sizeof(asapo::GenericRequestHeader), _))
         .WillOnce(
@@ -686,9 +689,6 @@ TEST_F(RequestHandlerTcpTests, FileRequestOK) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-
-
-
 TEST_F(RequestHandlerTcpTests, SendOK) {
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
@@ -705,6 +705,42 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
     ASSERT_THAT(callback_header.op_code, Eq(header.op_code));
     ASSERT_THAT(callback_header.data_id, Eq(header.data_id));
     ASSERT_THAT(std::string{callback_header.message}, Eq(std::string{header.message}));
+}
+
+TEST_F(RequestHandlerTcpTests, SendMetadataIgnoresInjestMode) {
+    ExpectOKConnect(true);
+    ExpectOKAuthorize(true);
+    ExpectOKSendHeader(true, asapo::kOpcodeTransferMetaData);
+    ExpectOKSendData(true);
+    ExpectOKSendMetaData(true);
+    ExpectOKReceive();
+
+    auto injest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
+    request.header.custom_data[0] = injest_mode;
+    request.header.op_code = asapo::kOpcodeTransferMetaData;
+
+    request_handler.PrepareProcessingRequestLocked();
+    auto err = request_handler.ProcessRequestUnlocked(&request);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
+TEST_F(RequestHandlerTcpTests, SendMetaOnlyOK) {
+    ExpectOKConnect(true);
+    ExpectOKAuthorize(true);
+    ExpectOKSendHeader(true);
+    ExpectOKSendMetaData(true);
+    ExpectOKReceive();
+
+    auto injest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
+
+    request.header.custom_data[0] = injest_mode;
+    request_handler.PrepareProcessingRequestLocked();
+    auto err = request_handler.ProcessRequestUnlocked(&request);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(callback_header.custom_data[0], Eq(injest_mode));
 }
 
 

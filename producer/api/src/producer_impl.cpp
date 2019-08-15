@@ -8,6 +8,8 @@
 #include "producer/producer_error.h"
 #include "producer_request_handler_factory.h"
 #include "producer_request.h"
+#include "common/data_structs.h"
+
 
 namespace  asapo {
 
@@ -29,18 +31,33 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, a
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
 }
 
-GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& event_header) {
+GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& event_header, uint64_t injest_mode) {
     GenericRequestHeader request{kOpcodeTransferData, event_header.file_id, event_header.file_size,
                                  event_header.user_metadata.size(), std::move(event_header.file_name)};
     if (event_header.subset_id != 0) {
         request.op_code = kOpcodeTransferSubsetData;
-        request.custom_data[0] = event_header.subset_id;
-        request.custom_data[1] = event_header.subset_size;
+        request.custom_data[1] = event_header.subset_id;
+        request.custom_data[2] = event_header.subset_size;
     }
+    request.custom_data[0] = injest_mode;
     return request;
 }
 
-Error CheckProducerRequest(const EventHeader& event_header) {
+Error CheckInjestMode(uint64_t injest_mode) {
+    if ((injest_mode & IngestModeFlags::kTransferData) &&
+            (injest_mode & IngestModeFlags::kTransferMetaDataOnly)) {
+        return ProducerErrorTemplates::kWrongInjestMode.Generate();
+    }
+
+    if (!(injest_mode & IngestModeFlags::kTransferData) &&
+            !(injest_mode & IngestModeFlags::kTransferMetaDataOnly)) {
+        return ProducerErrorTemplates::kWrongInjestMode.Generate();
+    }
+
+    return nullptr;
+}
+
+Error CheckProducerRequest(const EventHeader& event_header, uint64_t injest_mode) {
     if ((size_t)event_header.file_size > ProducerImpl::kMaxChunkSize) {
         return ProducerErrorTemplates::kFileTooLarge.Generate();
     }
@@ -53,7 +70,7 @@ Error CheckProducerRequest(const EventHeader& event_header) {
         return ProducerErrorTemplates::kErrorSubsetSize.Generate();
     }
 
-    return nullptr;
+    return CheckInjestMode(injest_mode);
 }
 
 Error ProducerImpl::Send(const EventHeader& event_header,
@@ -61,13 +78,13 @@ Error ProducerImpl::Send(const EventHeader& event_header,
                          std::string full_path,
                          uint64_t injest_mode,
                          RequestCallback callback) {
-    auto err = CheckProducerRequest(event_header);
+    auto err = CheckProducerRequest(event_header, injest_mode);
     if (err) {
         log__->Error("error checking request - " + err->Explain());
         return err;
     }
 
-    auto request_header = GenerateNextSendRequest(event_header);
+    auto request_header = GenerateNextSendRequest(event_header, injest_mode);
 
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
                 std::move(data), std::move(event_header.user_metadata), std::move(full_path), callback}

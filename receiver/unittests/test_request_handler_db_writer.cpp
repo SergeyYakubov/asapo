@@ -73,7 +73,7 @@ class DbWriterHandlerTests : public Test {
     uint64_t expected_id = 15;
     uint64_t expected_subset_id = 15;
     uint64_t expected_subset_size = 2;
-    uint64_t expected_custom_data[2] {expected_subset_id, expected_subset_size};
+    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_subset_id, expected_subset_size};
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;

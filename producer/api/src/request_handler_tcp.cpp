@@ -48,6 +48,14 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id, const
     return nullptr;
 }
 
+bool NeedSendData(const ProducerRequest* request) {
+    if (request->header.op_code == kOpcodeTransferData || request->header.op_code == kOpcodeTransferSubsetData) {
+        return request->header.custom_data[0] & IngestModeFlags::kTransferData;
+    }
+
+    return true;
+}
+
 Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
     Error io_error;
     io__->Send(sd_, &(request->header), sizeof(request->header), &io_error);
@@ -55,7 +63,10 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
         return io_error;
     }
 
-    io__->Send(sd_, (void*) request->data.get(), (size_t)request->header.data_size, &io_error);
+    if (NeedSendData(request)) {
+        io__->Send(sd_, (void*) request->data.get(), (size_t)request->header.data_size, &io_error);
+    }
+
     if(io_error) {
         return io_error;
     }
