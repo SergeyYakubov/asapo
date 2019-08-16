@@ -43,7 +43,7 @@ MATCHER_P9(M_CheckSendDataRequest, op_code, source_credentials, metadata, file_i
            && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader) (arg->header)).custom_data[2]
                == uint64_t(subset_size) : true)
            && ((op_code == asapo::kOpcodeTransferSubsetData || op_code == asapo::kOpcodeTransferData) ?
-               ((asapo::GenericRequestHeader) (arg->header)).custom_data[0] == uint64_t(injest_mode) : true)
+               ((asapo::GenericRequestHeader) (arg->header)).custom_data[asapo::kPosInjestMode] == uint64_t(injest_mode) : true)
            && strcmp(((asapo::GenericRequestHeader) (arg->header)).message, message) == 0;
 }
 
@@ -64,7 +64,7 @@ class ProducerImplTests : public testing::Test {
     uint64_t expected_id = 10;
     uint64_t expected_subset_id = 100;
     uint64_t expected_subset_size = 4;
-    uint64_t expected_injest_mode = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInCache;
+    uint64_t expected_injest_mode = asapo::IngestModeFlags::kTransferData;
 
     char expected_name[asapo::kMaxMessageSize] = "test_name";
     asapo::SourceCredentials expected_credentials{

@@ -4,42 +4,62 @@
 
 namespace asapo {
 
-std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&
-        request_header, SocketDescriptor socket_fd, std::string origin_uri,
-        Error* err) const noexcept {
-    *err = nullptr;
-    auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri), cache_.get()}};
+bool NeedFileWriteHandler (const GenericRequestHeader& request_header) {
+    return GetReceiverConfig()->write_to_disk &&
+           (request_header.custom_data[kPosInjestMode] & IngestModeFlags::kStoreInFilesystem);
+}
+
+bool NeedDbHandler (const GenericRequestHeader& request_header) {
+    return GetReceiverConfig()->write_to_db;
+}
+
+Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request>& request,
+                                           const GenericRequestHeader& request_header) const {
+    request->AddHandler(&request_handler_authorize_);
+
     switch (request_header.op_code) {
     case Opcode::kOpcodeTransferData:
     case Opcode::kOpcodeTransferSubsetData:        {
-        request->AddHandler(&request_handler_authorize_);
-        if (GetReceiverConfig()->write_to_disk) {
+        if (NeedFileWriteHandler(request_header)) {
             request->AddHandler(&request_handler_filewrite_);
         }
-        if (GetReceiverConfig()->write_to_db) {
+        if (NeedDbHandler(request_header)) {
             request->AddHandler(&request_handler_dbwrite_);
         }
-        return request;
+        break;
     }
     case Opcode::kOpcodeTransferMetaData: {
-        request->AddHandler(&request_handler_authorize_);
-        if (GetReceiverConfig()->write_to_db) {
+        if (NeedDbHandler(request_header)) {
             request->AddHandler(&request_handler_db_meta_write_);
         } else {
-            *err = ReceiverErrorTemplates::kReject.Generate("reciever does not support writing to database");
-            return nullptr;
+            return ReceiverErrorTemplates::kReject.Generate("reciever does not support writing to database");
         }
-        return request;
+        break;
     }
     case Opcode::kOpcodeAuthorize: {
-        request->AddHandler(&request_handler_authorize_);
-        return request;
+        // do nothing
+        break;
     }
     default:
-        *err = ReceiverErrorTemplates::kInvalidOpCode.Generate();
+        return ReceiverErrorTemplates::kInvalidOpCode.Generate();
+    }
+
+    return nullptr;
+
+}
+
+std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&
+        request_header, SocketDescriptor socket_fd, std::string origin_uri,
+        Error* err) const noexcept {
+    auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri), cache_.get()}};
+    *err = AddHandlersToRequest(request, request_header);
+    if (*err) {
         return nullptr;
     }
+    return request;
 }
+
+
 RequestFactory::RequestFactory(SharedCache cache): cache_{cache} {
 
 }

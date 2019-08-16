@@ -16,7 +16,7 @@ using asapo::Error;
 std::string group_id = "";
 std::mutex lock;
 
-struct Params {
+struct Args {
     std::string server;
     std::string file_path;
     std::string beamtime_id;
@@ -39,7 +39,7 @@ int ProcessError(const Error& err) {
     return err == asapo::IOErrorTemplates::kTimeout ? 0 : 1;
 }
 
-std::vector<std::thread> StartThreads(const Params& params,
+std::vector<std::thread> StartThreads(const Args& params,
                                       std::vector<int>* nfiles,
                                       std::vector<int>* errors,
                                       std::vector<int>* nbuf,
@@ -102,7 +102,7 @@ std::vector<std::thread> StartThreads(const Params& params,
     return threads;
 }
 
-int ReadAllData(const Params& params, uint64_t* duration_ms, int* nerrors, int* nbuf, int* nfiles_total) {
+int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nbuf, int* nfiles_total) {
     asapo::FileInfo fi;
     system_clock::time_point t1 = system_clock::now();
 
@@ -127,7 +127,7 @@ int ReadAllData(const Params& params, uint64_t* duration_ms, int* nerrors, int* 
 
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetLast Broker Example", argc, argv);
-    Params params;
+    Args params;
     params.datasets = false;
     if (argc != 8 && argc != 9) {
         std::cout << "Usage: " + std::string{argv[0]}

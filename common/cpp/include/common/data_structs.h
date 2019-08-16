@@ -59,11 +59,10 @@ struct SourceCredentials {
 enum IngestModeFlags : uint64_t {
     kTransferData = 1 << 0,
     kTransferMetaDataOnly = 1 << 1,
-    kStoreInCache = 1 << 2,
-    kStoreInFilesystem = 1 << 3,
+    kStoreInFilesystem = 1 << 2,
 };
 
-const uint64_t kDefaultIngestMode = kTransferData | kStoreInCache | kStoreInFilesystem;
+const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem;
 
 
 

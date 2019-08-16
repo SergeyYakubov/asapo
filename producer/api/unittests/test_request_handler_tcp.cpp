@@ -109,9 +109,9 @@ class RequestHandlerTcpTests : public testing::Test {
     void SetUp() override {
         request_handler.log__ = &mock_logger;
         request_handler.io__.reset(&mock_io);
-        request.header.custom_data[0] = asapo::kDefaultIngestMode;
-        request_filesend.header.custom_data[0] = asapo::kDefaultIngestMode;
-        request_nocallback.header.custom_data[0] = asapo::kDefaultIngestMode;
+        request.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
+        request_filesend.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
+        request_nocallback.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
         ON_CALL(mock_discovery_service, RotatedUriList(_)).
         WillByDefault(Return(receivers_list));
 
@@ -716,7 +716,7 @@ TEST_F(RequestHandlerTcpTests, SendMetadataIgnoresInjestMode) {
     ExpectOKReceive();
 
     auto injest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
-    request.header.custom_data[0] = injest_mode;
+    request.header.custom_data[asapo::kPosInjestMode] = injest_mode;
     request.header.op_code = asapo::kOpcodeTransferMetaData;
 
     request_handler.PrepareProcessingRequestLocked();
@@ -735,12 +735,12 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyOK) {
 
     auto injest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
 
-    request.header.custom_data[0] = injest_mode;
+    request.header.custom_data[asapo::kPosInjestMode] = injest_mode;
     request_handler.PrepareProcessingRequestLocked();
     auto err = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(callback_header.custom_data[0], Eq(injest_mode));
+    ASSERT_THAT(callback_header.custom_data[asapo::kPosInjestMode], Eq(injest_mode));
 }
 
 

@@ -10,7 +10,7 @@ namespace asapo {
 Error RequestHandlerFileWrite::ProcessRequest(Request* request) const {
     auto fsize = request->GetDataSize();
     if (fsize <= 0 || fsize > kMaxFileSize) {
-        return ReceiverErrorTemplates::kBadRequest.Generate();
+        return ReceiverErrorTemplates::kBadRequest.Generate("wrong file size");
     }
 
     auto data = request->GetData();

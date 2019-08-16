@@ -36,10 +36,10 @@ GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& ev
                                  event_header.user_metadata.size(), std::move(event_header.file_name)};
     if (event_header.subset_id != 0) {
         request.op_code = kOpcodeTransferSubsetData;
-        request.custom_data[1] = event_header.subset_id;
-        request.custom_data[2] = event_header.subset_size;
+        request.custom_data[kPosDataSetId] = event_header.subset_id;
+        request.custom_data[kPosDataSetSize] = event_header.subset_size;
     }
-    request.custom_data[0] = injest_mode;
+    request.custom_data[kPosInjestMode] = injest_mode;
     return request;
 }
 

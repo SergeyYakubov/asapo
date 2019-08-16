@@ -57,7 +57,7 @@ class Request {
     Error ReceiveData();
     Error ReceiveMetaData();
     Error ReceiveRequestContent(ReceiverStatistics* statistics);
-
+    bool NeedReceiveData();
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     FileData data_buffer_;

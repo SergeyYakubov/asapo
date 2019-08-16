@@ -50,7 +50,7 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id, const
 
 bool NeedSendData(const ProducerRequest* request) {
     if (request->header.op_code == kOpcodeTransferData || request->header.op_code == kOpcodeTransferSubsetData) {
-        return request->header.custom_data[0] & IngestModeFlags::kTransferData;
+        return request->header.custom_data[kPosInjestMode] & IngestModeFlags::kTransferData;
     }
 
     return true;

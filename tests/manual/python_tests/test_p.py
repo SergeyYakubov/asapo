@@ -5,16 +5,10 @@ import sys
 import json
 import time
 
-<<<<<<< Updated upstream
-broker, err = asapo_worker.create_server_broker("psana002:8400", "/tmp", "asapo_test2","",
-                                                "yzgAcLmijSLWIm8dBiGNCbc0i42u5HSm-zR6FRqo__Y=", 1000000)
-=======
 source = "psana002:8400"
 path = "/asapo_shared/asapo/data"
 beamtime = "asapo_test"
 token = "KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc="
->>>>>>> Stashed changes
-
 
 broker, err = asapo_worker.create_server_broker(
     source, path, beamtime, token, 1000)

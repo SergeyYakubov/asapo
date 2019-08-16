@@ -8,14 +8,14 @@ using asapo::Error;
 using asapo::FileData;
 
 
-struct Params {
+struct Args {
     std::string fname;
     std::string result;
     std::string message;
     uint64_t length;
 };
 
-Params GetParams(int argc, char* argv[]) {
+Args GetParams(int argc, char* argv[]) {
     if (argc != 4) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
@@ -24,11 +24,11 @@ Params GetParams(int argc, char* argv[]) {
     std::string result{argv[2]};
     std::string message{argv[3]};
 
-    return Params{fname, result, message, 3};
+    return Args{fname, result, message, 3};
 }
 
 void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const FileData& data,
-                      const Params& params) {
+                      const Args& params) {
     if (err) {
         std::cerr << err << std::endl;
         exit(EXIT_FAILURE);
@@ -39,7 +39,7 @@ void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const Fil
     asapo::M_AssertContains(std::string(read_data.get(), read_data.get() + params.length), "123");
 }
 
-void AssertBadResult(const Error& err, const Params& params) {
+void AssertBadResult(const Error& err, const Args& params) {
     if (err == nullptr) {
         std::cerr << "Should be error" << std::endl;
         exit(EXIT_FAILURE);

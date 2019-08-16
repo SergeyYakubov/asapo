@@ -47,8 +47,13 @@ Error Request::ReceiveMetaData() {
 }
 
 
+bool Request::NeedReceiveData() {
+    return request_header_.data_size > 0 &&
+           (request_header_.custom_data[asapo::kPosInjestMode] & asapo::kTransferData);
+}
+
 Error Request::ReceiveData() {
-    if (request_header_.data_size == 0) {
+    if (!NeedReceiveData()) {
         return nullptr;
     }
 
