@@ -105,7 +105,7 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t* fsize, Er
 
     Read(fd, data_array, (size_t)*fsize, err);
     if (*err != nullptr) {
-        (*err)->Append(fname);
+        (*err)->Append(fname + ", expected size: " + std::to_string(*fsize));
         Close(fd, nullptr);
         return nullptr;
     }

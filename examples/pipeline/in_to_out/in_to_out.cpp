@@ -18,7 +18,7 @@ using asapo::Error;
 using BrokerPtr = std::unique_ptr<asapo::DataBroker>;
 using ProducerPtr = std::unique_ptr<asapo::Producer>;
 std::string group_id = "";
-std::mutex lock_in,lock_out;
+std::mutex lock_in, lock_out;
 
 int files_sent;
 bool streamout_timer_started;
@@ -44,7 +44,7 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
     }
     lock_out.lock();
     files_sent++;
-    streamout_finish = max(streamout_finish,system_clock::now());
+    streamout_finish = max(streamout_finish, system_clock::now());
     lock_out.unlock();
 
 }
@@ -62,9 +62,9 @@ int ProcessError(const Error& err) {
     return err == asapo::IOErrorTemplates::kTimeout ? 0 : 1;
 }
 
-BrokerPtr CreateBrokerAndGroup(const Args& args,Error* err) {
+BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.file_path,
-                                                               asapo::SourceCredentials{args.beamtime_id, args.stream_in, args.token}, err);
+                  asapo::SourceCredentials{args.beamtime_id, args.stream_in, args.token}, err);
     if (*err) {
         return nullptr;
     }
@@ -94,7 +94,8 @@ void GetBeamtimeMeta(const BrokerPtr& broker) {
     }
 }
 
-void SendDataDownstreamThePipeline(const Args& args,const asapo::FileInfo& fi,asapo::FileData data, const ProducerPtr& producer) {
+void SendDataDownstreamThePipeline(const Args& args, const asapo::FileInfo& fi, asapo::FileData data,
+                                   const ProducerPtr& producer) {
     asapo::EventHeader header{fi.id, fi.size, fi.name, fi.metadata};
     Error err_send;
     if (args.transfer_data) {
@@ -118,7 +119,7 @@ void SendDataDownstreamThePipeline(const Args& args,const asapo::FileInfo& fi,as
     }
 }
 
-Error ProcessNextEvent(const Args& args,const BrokerPtr& broker,const ProducerPtr& producer) {
+Error ProcessNextEvent(const Args& args, const BrokerPtr& broker, const ProducerPtr& producer) {
     asapo::FileData data;
     asapo::FileInfo fi;
 
@@ -127,14 +128,14 @@ Error ProcessNextEvent(const Args& args,const BrokerPtr& broker,const ProducerPt
         return err;
     }
 
-    SendDataDownstreamThePipeline(args,fi,std::move(data),producer);
+    SendDataDownstreamThePipeline(args, fi, std::move(data), producer);
 
     return nullptr;
 }
 
 std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPtr& producer,
-                                      std::vector<int>* nfiles,
-                                      std::vector<int>* errors) {
+                                              std::vector<int>* nfiles,
+                                              std::vector<int>* errors) {
     auto exec_next = [&args, nfiles, errors, &producer ](int i) {
         asapo::FileInfo fi;
         Error err;
@@ -145,7 +146,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
         }
 
         while (true) {
-            auto err = ProcessNextEvent(args,broker,producer);
+            auto err = ProcessNextEvent(args, broker, producer);
             if (err) {
                 (*errors)[i] += ProcessError(err);
                 if (err == asapo::IOErrorTemplates::kTimeout) {
@@ -200,7 +201,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 void WaitProducerThreadsFinished(const Args& args, int nfiles) {
     int elapsed_ms = 0;
     while (true) {
-        if (files_sent==nfiles) {
+        if (files_sent == nfiles) {
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -242,7 +243,7 @@ int main(int argc, char* argv[]) {
     int nerrors;
     auto nfiles = ProcessAllData(args, producer, &duration_ms, &nerrors);
 
-    WaitProducerThreadsFinished(args,nfiles);
+    WaitProducerThreadsFinished(args, nfiles);
     auto duration_streamout = std::chrono::duration_cast<std::chrono::milliseconds>(streamout_finish - streamout_start);
 
     std::cout << "Stream in " << std::endl;
@@ -261,5 +262,5 @@ int main(int argc, char* argv[]) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 
-    return (nerrors == 0) && (files_sent==nfiles) ? 0 : 1;
+    return (nerrors == 0) && (files_sent == nfiles) ? 0 : 1;
 }
