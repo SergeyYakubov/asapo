@@ -32,7 +32,7 @@ cdef extern from "asapo_worker.h" namespace "asapo":
     FileInfos content
 
 
-cdef extern from "asapo_worker.h" namespace "asapo":
+cdef extern from "asapo_worker.h" namespace "asapo" nogil:
     cdef cppclass DataBroker:
         DataBroker() except +
         void SetTimeout(uint64_t timeout_ms)
@@ -50,7 +50,7 @@ cdef extern from "asapo_worker.h" namespace "asapo":
         Error RetrieveData(FileInfo* info, FileData* data)
 
 
-cdef extern from "asapo_worker.h" namespace "asapo":
+cdef extern from "asapo_worker.h" namespace "asapo" nogil:
     cdef cppclass DataBrokerFactory:
         DataBrokerFactory() except +
         unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,string beamtime_id,string token,Error* error)
