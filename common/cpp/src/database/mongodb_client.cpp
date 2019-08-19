@@ -97,6 +97,7 @@ bson_p PrepareBsonDocument(const FileInfo& file, Error* err) {
     bson_error_t mongo_err;
     auto s = file.Json();
     auto json = reinterpret_cast<const uint8_t*>(s.c_str());
+
     auto bson = bson_new_from_json(json, -1, &mongo_err);
     if (!bson) {
         *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);
@@ -109,6 +110,11 @@ bson_p PrepareBsonDocument(const FileInfo& file, Error* err) {
 
 bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, Error* err) {
     bson_error_t mongo_err;
+    if (json == nullptr) {
+        *err = TextError("empty metadata");
+        return nullptr;
+    }
+
     auto bson = bson_new_from_json(json, len, &mongo_err);
     if (!bson) {
         *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);

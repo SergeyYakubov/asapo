@@ -140,6 +140,7 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
 
 Error ProducerImpl::SendMetaData(const std::string& metadata, RequestCallback callback) {
     GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0, "beamtime_global.meta"};
+    request_header.custom_data[kPosInjestMode] = asapo::IngestModeFlags::kTransferData;
     FileData data{new uint8_t[metadata.size()]};
     strncpy((char*)data.get(), metadata.c_str(), metadata.size());
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),

@@ -1,0 +1,22 @@
+{
+  "MonitorDbAddress":"localhost:8086",
+  "MonitorDbName": "db_test",
+  "BrokerDbAddress":"localhost:27017",
+  "DataServer": {
+    "NThreads": 2,
+    "ListenPort": 22000
+  },
+  "DataCache": {
+    "Use": true,
+    "SizeGB": 1,
+    "ReservedShare": 10
+  },
+  "AuthorizationServer": "localhost:8400/authorizer",
+  "AuthorizationInterval": 10000,
+  "ListenPort": 22001,
+  "Tag": "22001",
+  "WriteToDisk": true,
+  "WriteToDb": true,
+  "LogLevel" : "debug",
+  "RootFolder" : "/tmp/asapo/receiver/files"
+}

@@ -42,8 +42,7 @@ MATCHER_P9(M_CheckSendDataRequest, op_code, source_credentials, metadata, file_i
                == uint64_t(subset_id) : true)
            && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader) (arg->header)).custom_data[2]
                == uint64_t(subset_size) : true)
-           && ((op_code == asapo::kOpcodeTransferSubsetData || op_code == asapo::kOpcodeTransferData) ?
-               ((asapo::GenericRequestHeader) (arg->header)).custom_data[asapo::kPosInjestMode] == uint64_t(injest_mode) : true)
+           && ((asapo::GenericRequestHeader) (arg->header)).custom_data[asapo::kPosInjestMode] == uint64_t(injest_mode)
            && strcmp(((asapo::GenericRequestHeader) (arg->header)).message, message) == 0;
 }
 
@@ -178,6 +177,7 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
     expected_id = 0;
     expected_metadata = "{\"meta\":10}";
     expected_size = expected_metadata.size();
+    expected_injest_mode = asapo::IngestModeFlags::kTransferData;
 
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferMetaData,
@@ -186,7 +186,7 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
                                         expected_id,
                                         expected_size,
                                         "beamtime_global.meta",
-                                        0,
+                                        expected_injest_mode,
                                         10,
                                         10))).WillOnce(Return(
                                                     nullptr));

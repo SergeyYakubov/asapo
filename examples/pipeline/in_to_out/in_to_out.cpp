@@ -10,7 +10,6 @@
 #include <string>
 #include <sstream>
 
-
 #include "asapo_worker.h"
 #include "asapo_producer.h"
 
@@ -18,7 +17,12 @@ using std::chrono::system_clock;
 using asapo::Error;
 
 std::string group_id = "";
-std::mutex lock;
+std::mutex lock_in,lock_out;
+
+int files_sent;
+bool streamout_timer_started;
+system_clock::time_point streamout_start;
+system_clock::time_point streamout_finish;
 
 struct Args {
     std::string server;
@@ -37,6 +41,11 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
         std::cerr << "Data was not successfully send: " << err << std::endl;
         return;
     }
+    lock_out.lock();
+    files_sent++;
+    streamout_finish = max(streamout_finish,system_clock::now());
+    lock_out.unlock();
+
 }
 
 
@@ -63,7 +72,7 @@ std::vector<std::thread> StartThreads(const Args& args, asapo::Producer* produce
 
         broker->SetTimeout((uint64_t) args.timeout_ms);
 
-        lock.lock();
+        lock_in.lock();
 
         if (group_id.empty()) {
             group_id = broker->GenerateNewGroupId(&err);
@@ -73,7 +82,7 @@ std::vector<std::thread> StartThreads(const Args& args, asapo::Producer* produce
             }
         }
 
-        lock.unlock();
+        lock_in.unlock();
 
         if (i == 0) {
             auto meta = broker->GetBeamtimeMeta(&err);
@@ -103,8 +112,14 @@ std::vector<std::thread> StartThreads(const Args& args, asapo::Producer* produce
                 header.file_name = args.file_path + "/" + header.file_name;
                 err_send = producer->SendData(header, nullptr, asapo::IngestModeFlags::kTransferMetaDataOnly, ProcessAfterSend);
                 std::cout << err_send << std::endl;
-
             }
+
+            lock_out.lock();
+            if (!streamout_timer_started) {
+                streamout_timer_started = true;
+                streamout_start = system_clock::now();
+            }
+            lock_out.unlock();
 
             if (err_send) {
                 std::cout << "Send error: " << err_send->Explain() << std::endl;
@@ -155,6 +170,22 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     return producer;
 }
 
+void WaitThreadsFinished(const Args& args, int nfiles) {
+    int elapsed_ms = 0;
+    while (true) {
+        if (files_sent==nfiles) {
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        elapsed_ms += 100;
+        if (elapsed_ms > args.timeout_ms) {
+            std::cerr << "Stream out exit on timeout " << std::endl;
+            break;
+        }
+    }
+}
+
+
 
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
@@ -177,19 +208,32 @@ int main(int argc, char* argv[]) {
     args.transfer_data = atoi(argv[9]) == 1;
 
     auto producer = CreateProducer(args);
+    files_sent = 0;
+    streamout_timer_started = false;
 
     uint64_t duration_ms;
     int nerrors;
     auto nfiles = ProcessAllData(args, producer.get(), &duration_ms, &nerrors);
-    std::cout << "Processed " << nfiles << " file(s)" << std::endl;
-    std::cout << "Successfully: " << nfiles - nerrors << std::endl;
-    std::cout << "Errors : " << nerrors << std::endl;
-    std::cout << "Elapsed : " << duration_ms << "ms" << std::endl;
-    std::cout << "Rate : " << 1000.0f * nfiles / (duration_ms - args.timeout_ms) << std::endl;
+
+
+    WaitThreadsFinished(args,nfiles);
+    auto duration_streamout = std::chrono::duration_cast<std::chrono::milliseconds>(streamout_finish - streamout_start);
+
+    std::cout << "Stream in " << std::endl;
+    std::cout << "  Processed " << nfiles << " file(s)" << std::endl;
+    std::cout << "  Successfully: " << nfiles - nerrors << std::endl;
+    std::cout << "  Errors : " << nerrors << std::endl;
+    std::cout << "  Elapsed : " << duration_ms - args.timeout_ms << "ms" << std::endl;
+    std::cout << "  Rate : " << 1000.0f * nfiles / (duration_ms - args.timeout_ms) << std::endl;
+
+    std::cout << "Stream out " << std::endl;
+    std::cout << "  Sent " << files_sent << " file(s)" << std::endl;
+    std::cout << "  Elapsed : " << duration_streamout.count() << "ms" << std::endl;
+    std::cout << "  Rate : " << 1000.0f * files_sent / (duration_streamout.count()) << std::endl;
 
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 
-    return nerrors == 0 ? 0 : 1;
+    return (nerrors == 0) && (files_sent==nfiles) ? 0 : 1;
 }

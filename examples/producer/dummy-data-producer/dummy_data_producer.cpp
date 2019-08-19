@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iostream>
 #include <chrono>
 #include <vector>
 #include <mutex>
@@ -186,7 +187,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     }
 
     producer->EnableLocalLog(true);
-    producer->SetLogLevel(asapo::LogLevel::Info);
+    producer->SetLogLevel(asapo::LogLevel::Debug);
     return producer;
 }
 
