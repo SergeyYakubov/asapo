@@ -15,7 +15,8 @@
 
 using std::chrono::system_clock;
 using asapo::Error;
-
+using BrokerPtr = std::unique_ptr<asapo::DataBroker>;
+using ProducerPtr = std::unique_ptr<asapo::Producer>;
 std::string group_id = "";
 std::mutex lock_in,lock_out;
 
@@ -49,7 +50,7 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
 }
 
 
-void WaitThreads(std::vector<std::thread>* threads) {
+void WaitConsumerThreadsFinished(std::vector<std::thread>* threads) {
     for (auto& thread : *threads) {
         thread.join();
     }
@@ -61,70 +62,96 @@ int ProcessError(const Error& err) {
     return err == asapo::IOErrorTemplates::kTimeout ? 0 : 1;
 }
 
-std::vector<std::thread> StartThreads(const Args& args, asapo::Producer* producer,
+BrokerPtr CreateBrokerAndGroup(const Args& args,Error* err) {
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.file_path,
+                                                               asapo::SourceCredentials{args.beamtime_id, args.stream_in, args.token}, err);
+    if (*err) {
+        return nullptr;
+    }
+
+    broker->SetTimeout((uint64_t) args.timeout_ms);
+
+    lock_in.lock();
+
+    if (group_id.empty()) {
+        group_id = broker->GenerateNewGroupId(err);
+        if (*err) {
+            lock_in.unlock();
+            return nullptr;
+        }
+    }
+    lock_in.unlock();
+    return broker;
+}
+
+void GetBeamtimeMeta(const BrokerPtr& broker) {
+    Error err;
+    auto meta = broker->GetBeamtimeMeta(&err);
+    if (err == nullptr) {
+        std::cout << meta << std::endl;
+    } else {
+        std::cout << "Cannot get metadata: " << err->Explain() << std::endl;
+    }
+}
+
+void SendDataDownstreamThePipeline(const Args& args,const asapo::FileInfo& fi,asapo::FileData data, const ProducerPtr& producer) {
+    asapo::EventHeader header{fi.id, fi.size, fi.name, fi.metadata};
+    Error err_send;
+    if (args.transfer_data) {
+        header.file_name += "_" + args.stream_out;
+        err_send = producer->SendData(header, std::move(data), asapo::kDefaultIngestMode, ProcessAfterSend);
+    } else {
+        header.file_name = args.file_path + "/" + header.file_name;
+        err_send = producer->SendData(header, nullptr, asapo::IngestModeFlags::kTransferMetaDataOnly, ProcessAfterSend);
+        std::cout << err_send << std::endl;
+    }
+
+    lock_out.lock();
+    if (!streamout_timer_started) {
+        streamout_timer_started = true;
+        streamout_start = system_clock::now();
+    }
+    lock_out.unlock();
+
+    if (err_send) {
+        std::cout << "Send error: " << err_send->Explain() << std::endl;
+    }
+}
+
+Error ProcessNextEvent(const Args& args,const BrokerPtr& broker,const ProducerPtr& producer) {
+    asapo::FileData data;
+    asapo::FileInfo fi;
+
+    auto err = broker->GetNext(&fi, group_id, args.transfer_data ? &data : nullptr);
+    if (err) {
+        return err;
+    }
+
+    SendDataDownstreamThePipeline(args,fi,std::move(data),producer);
+
+    return nullptr;
+}
+
+std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPtr& producer,
                                       std::vector<int>* nfiles,
                                       std::vector<int>* errors) {
-    auto exec_next = [&args, nfiles, errors, producer ](int i) {
+    auto exec_next = [&args, nfiles, errors, &producer ](int i) {
         asapo::FileInfo fi;
         Error err;
-        auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.file_path,
-                      asapo::SourceCredentials{args.beamtime_id, args.stream_in, args.token}, &err);
-
-        broker->SetTimeout((uint64_t) args.timeout_ms);
-
-        lock_in.lock();
-
-        if (group_id.empty()) {
-            group_id = broker->GenerateNewGroupId(&err);
-            if (err) {
-                (*errors)[i] += ProcessError(err);
-                return;
-            }
+        auto broker = CreateBrokerAndGroup(args, &err);
+        if (err) {
+            (*errors)[i] += ProcessError(err);
+            return;
         }
 
-        lock_in.unlock();
-
-        if (i == 0) {
-            auto meta = broker->GetBeamtimeMeta(&err);
-            if (err == nullptr) {
-                std::cout << meta << std::endl;
-            } else {
-                std::cout << "Cannot get metadata: " << err->Explain() << std::endl;
-            }
-        }
         while (true) {
-            asapo::FileData data;
-            err = broker->GetNext(&fi, group_id, args.transfer_data ? &data : nullptr);
+            auto err = ProcessNextEvent(args,broker,producer);
             if (err) {
                 (*errors)[i] += ProcessError(err);
                 if (err == asapo::IOErrorTemplates::kTimeout) {
                     break;
                 }
             }
-
-            asapo::EventHeader header{fi.id, fi.size, fi.name, fi.metadata};
-
-            Error err_send;
-            if (args.transfer_data) {
-                header.file_name += "_" + args.stream_out;
-                err_send = producer->SendData(header, std::move(data), asapo::kDefaultIngestMode, ProcessAfterSend);
-            } else {
-                header.file_name = args.file_path + "/" + header.file_name;
-                err_send = producer->SendData(header, nullptr, asapo::IngestModeFlags::kTransferMetaDataOnly, ProcessAfterSend);
-                std::cout << err_send << std::endl;
-            }
-
-            lock_out.lock();
-            if (!streamout_timer_started) {
-                streamout_timer_started = true;
-                streamout_start = system_clock::now();
-            }
-            lock_out.unlock();
-
-            if (err_send) {
-                std::cout << "Send error: " << err_send->Explain() << std::endl;
-            }
-
             (*nfiles)[i]++;
         }
     };
@@ -136,15 +163,15 @@ std::vector<std::thread> StartThreads(const Args& args, asapo::Producer* produce
     return threads;
 }
 
-int ProcessAllData(const Args& args, asapo::Producer* producer, uint64_t* duration_ms, int* nerrors) {
+int ProcessAllData(const Args& args, const ProducerPtr& producer , uint64_t* duration_ms, int* nerrors) {
     asapo::FileInfo fi;
     system_clock::time_point t1 = system_clock::now();
 
     std::vector<int> nfiles(args.nthreads, 0);
     std::vector<int> errors(args.nthreads, 0);
 
-    auto threads = StartThreads(args, producer, &nfiles, &errors);
-    WaitThreads(&threads);
+    auto threads = StartConsumerThreads(args, producer, &nfiles, &errors);
+    WaitConsumerThreadsFinished(&threads);
 
     int n_total = std::accumulate(nfiles.begin(), nfiles.end(), 0);
     *nerrors = std::accumulate(errors.begin(), errors.end(), 0);
@@ -166,11 +193,11 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     }
 
     producer->EnableLocalLog(true);
-    producer->SetLogLevel(asapo::LogLevel::Debug);
+    producer->SetLogLevel(asapo::LogLevel::Info);
     return producer;
 }
 
-void WaitThreadsFinished(const Args& args, int nfiles) {
+void WaitProducerThreadsFinished(const Args& args, int nfiles) {
     int elapsed_ms = 0;
     while (true) {
         if (files_sent==nfiles) {
@@ -213,10 +240,9 @@ int main(int argc, char* argv[]) {
 
     uint64_t duration_ms;
     int nerrors;
-    auto nfiles = ProcessAllData(args, producer.get(), &duration_ms, &nerrors);
+    auto nfiles = ProcessAllData(args, producer, &duration_ms, &nerrors);
 
-
-    WaitThreadsFinished(args,nfiles);
+    WaitProducerThreadsFinished(args,nfiles);
     auto duration_streamout = std::chrono::duration_cast<std::chrono::milliseconds>(streamout_finish - streamout_start);
 
     std::cout << "Stream in " << std::endl;
