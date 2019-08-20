@@ -1,0 +1,51 @@
+#distutils: language=c++
+
+cimport asapo_producer
+import numpy as np
+cimport numpy as np
+import json
+from cpython.version cimport PY_MAJOR_VERSION
+from libcpp.memory cimport unique_ptr
+
+np.import_array()
+
+cdef extern from "numpy/ndarraytypes.h":
+    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+
+cdef str _str(b):
+    if PY_MAJOR_VERSION < 3:
+        return b
+    return b.decode("utf-8")
+
+cdef bytes _bytes(s):
+    if type(s) is bytes:
+        return s
+
+    elif isinstance(s, unicode):
+        return (<unicode>s).encode('utf-8')
+
+    else:
+        raise TypeError("Could not convert to unicode.")
+
+cdef class PyProducer:
+    cdef unique_ptr[Producer] c_producer
+    @staticmethod
+    def create_producer(endpoint,beamtime_id,stream,token,nthreads):
+        pyProd = PyProducer()
+        cdef Error err
+        cdef SourceCredentials source
+        source.beamtime_id = beamtime_id
+        source.user_token = token
+        source.stream = stream
+        pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,&err)
+        cdef err_str = GetErrorString(&err)
+        if err_str.strip():
+            return None,err_str
+        else:
+            return pyProd,None
+
+def create_producer(endpoint,beamtime_id,stream,token,nthreads):
+    return PyProducer.create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(stream),_bytes(token),nthreads)
+
+
+__version__ = "@ASAPO_VERSION_PYTHON@"

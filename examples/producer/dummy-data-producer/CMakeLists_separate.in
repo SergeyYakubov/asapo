@@ -18,4 +18,4 @@ link_directories(@CMAKE_INSTALL_PREFIX@/lib)
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
 target_include_directories(${TARGET_NAME} PUBLIC @CMAKE_INSTALL_PREFIX@/include)
-target_link_libraries(${TARGET_NAME} producer-api ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${TARGET_NAME} asapo-producer ${CMAKE_THREAD_LIBS_INIT})

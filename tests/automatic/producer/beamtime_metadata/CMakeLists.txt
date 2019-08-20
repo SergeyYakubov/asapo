@@ -8,7 +8,7 @@ target_include_directories(${TARGET_NAME} PUBLIC include ${CMAKE_SOURCE_DIR}/com
 
 #Add all necessary common libraries
 #GET_PROPERTY(ASAPO_COMMON_IO_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_IO_LIBRARIES)
-target_link_libraries(${TARGET_NAME} ${ASAPO_COMMON_IO_LIBRARIES} producer-api)
+target_link_libraries(${TARGET_NAME} ${ASAPO_COMMON_IO_LIBRARIES} asapo-producer)
 
 
 #set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)

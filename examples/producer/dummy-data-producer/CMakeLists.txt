@@ -10,7 +10,7 @@ target_include_directories(${TARGET_NAME} PUBLIC include ${CMAKE_SOURCE_DIR}/com
 GET_PROPERTY(ASAPO_COMMON_IO_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_IO_LIBRARIES)
 target_link_libraries(${TARGET_NAME} ${ASAPO_COMMON_IO_LIBRARIES})
 
-target_link_libraries(${TARGET_NAME} producer-api)
+target_link_libraries(${TARGET_NAME} asapo-producer)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY

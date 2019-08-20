@@ -6,7 +6,7 @@
  
  **Library:** Common library which get shared between the producer and receiver 
  
- - /producer/producer-api
+ - /producer/asapo-producer
  
  **Library:** ProducerImpl library which can send data to the receiver
  

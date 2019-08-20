@@ -3,8 +3,9 @@
 
 std::unique_ptr<asapo::Producer> asapo::Producer::Create(const std::string& endpoint, uint8_t n_processing_threads,
         asapo::RequestHandlerType type, SourceCredentials source_cred, Error* err) {
-    if (n_processing_threads > kMaxProcessingThreads) {
-        *err = TextError("Too many processing threads: " + std::to_string(n_processing_threads));
+
+    if (n_processing_threads > kMaxProcessingThreads || n_processing_threads == 0) {
+        *err = TextError("Set number of processing threads > 0 and <= " + std::to_string(kMaxProcessingThreads));
         return nullptr;
     }
 

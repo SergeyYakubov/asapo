@@ -1,4 +1,4 @@
-set(TARGET_NAME producer-api)
+set(TARGET_NAME asapo-producer)
 set(SOURCE_FILES
         src/producer.cpp
         src/producer_impl.cpp

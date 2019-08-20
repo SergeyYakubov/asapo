@@ -77,7 +77,7 @@ public class PlanSpec {
                                 new Artifact()
                                     .name("Coverage-Producer")
                                     .copyPattern("**/*")
-                                    .location("build/coverage-producer-api"),
+                                    .location("build/coverage-asapo-producer"),
                                 new Artifact()
                                     .name("Coverage-Worker")
                                     .copyPattern("**/*")
