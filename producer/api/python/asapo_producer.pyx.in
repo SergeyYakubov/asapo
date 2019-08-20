@@ -27,10 +27,26 @@ cdef bytes _bytes(s):
     else:
         raise TypeError("Could not convert to unicode.")
 
+ctypedef void (*cb_type)(void*, GenericRequestHeader, Error)
+
+
 cdef class PyProducer:
     cdef unique_ptr[Producer] c_producer
+    cdef object py_callback
+    def send_file(self,string fname):
+        cdef EventHeader event_header
+        err = self.c_producer.get().SendFile(event_header, _bytes(fname), 1,
+        	function_wrapper.make_std_function(<cb_type>self.c_callback, <void*>self))
+        cdef err_str = GetErrorString(&err)
+        if err_str.strip():
+            return err_str
+        else:
+            return "ok"
+    cdef void c_callback(self,GenericRequestHeader header, Error err) with gil:
+        self.py_callback(1,2)
+        return
     @staticmethod
-    def create_producer(endpoint,beamtime_id,stream,token,nthreads):
+    def create_producer(endpoint,beamtime_id,stream,token,nthreads,py_callback):
         pyProd = PyProducer()
         cdef Error err
         cdef SourceCredentials source
@@ -38,14 +54,15 @@ cdef class PyProducer:
         source.user_token = token
         source.stream = stream
         pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,&err)
+        pyProd.py_callback = py_callback
         cdef err_str = GetErrorString(&err)
         if err_str.strip():
             return None,err_str
         else:
             return pyProd,None
 
-def create_producer(endpoint,beamtime_id,stream,token,nthreads):
-    return PyProducer.create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(stream),_bytes(token),nthreads)
+def create_producer(endpoint,beamtime_id,stream,token,nthreads,py_callback):
+    return PyProducer.create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(stream),_bytes(token),nthreads,py_callback)
 
 
 __version__ = "@ASAPO_VERSION_PYTHON@"

@@ -12,7 +12,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 
 
 cdef extern from "asapo_wrappers.h" namespace "asapo":
-  cdef string GetErrorString(Error* err)
+    string GetErrorString(Error* err)
 
 
 cdef extern from "asapo_producer.h" namespace "asapo":
@@ -23,8 +23,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass RequestHandlerType:
     pass
-  cdef RequestHandlerType RequestHandlerType_Tcp "asapo::RequestHandlerType::kTcp"
-
+  RequestHandlerType RequestHandlerType_Tcp "asapo::RequestHandlerType::kTcp"
 
 
 cdef extern from "asapo_producer.h" namespace "asapo":
@@ -34,6 +33,42 @@ cdef extern from "asapo_producer.h" namespace "asapo":
     string user_token
 
 cdef extern from "asapo_producer.h" namespace "asapo":
-    cdef cppclass Producer:
+  struct  EventHeader:
+    uint64_t file_id
+    uint64_t file_size
+    string file_name
+    string user_metadata
+    uint64_t subset_id
+    uint64_t subset_size
+
+cdef extern from "asapo_producer.h" namespace "asapo":
+  struct  EventHeader:
+    uint64_t file_id
+    uint64_t file_size
+    string file_name
+    string user_metadata
+    uint64_t subset_id
+    uint64_t subset_size
+
+cdef extern from "asapo_producer.h" namespace "asapo":
+  struct  GenericRequestHeader:
+    pass
+
+cdef extern from "asapo_producer.h" namespace "asapo":
+  cppclass RequestCallback:
+    pass
+
+
+cdef extern from "asapo_wrappers.h" namespace "asapo":
+    cdef cppclass function_wrapper:
+        ctypedef void (*cy_callback) (void*, GenericRequestHeader, Error)
+        @staticmethod
+        RequestCallback make_std_function(cy_callback, void*)
+
+
+cdef extern from "asapo_producer.h" namespace "asapo":
+    cppclass Producer:
         @staticmethod
         unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,Error* error)
+        Error SendFile(const EventHeader& event_header, string full_path, uint64_t injest_mode,RequestCallback callback)
+

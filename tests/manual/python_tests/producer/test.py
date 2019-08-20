@@ -11,10 +11,19 @@ stream = "stream"
 token = ""
 nthreads = 1
 
-producer, err = asapo_producer.create_producer(endpoint,beamtime, stream, token, nthreads)
+def callback(i,j):
+    print(i,j)
+
+
+producer, err = asapo_producer.create_producer(endpoint,beamtime, stream, token, nthreads,callback)
 
 if err is not None:
     print(err)
+    sys.exit(1)
 else:
     print(producer)
+
+
+producer.send_file("")
+
 
