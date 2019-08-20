@@ -1,12 +1,12 @@
 import setuptools
 
 setuptools.setup(
-      name ="asapo_worker",
+      name ="asapo_producer",
       version = "@ASAPO_VERSION_PYTHON@",
       install_requires=['numpy'],
       include_package_data=True,
-      packages=['asapo_worker'],
+      packages=['asapo_producer'],
       package_data={
-        'asapo_worker': ['asapo_worker.pyd'],
+        'asapo_producer': ['asapo_producer.pyd'],
       },
 )

@@ -3,8 +3,8 @@ from distutils.core import Extension
 import numpy
 
 ext_modules = [
-    Extension("asapo_worker", ["asapo_worker.cpp"],
-              extra_objects=['lib/libasapo-worker.a'],
+    Extension("asapo_producer", ["asapo_producer.cpp"],
+              extra_objects=['lib/libasapo-producer.a'],
 					   libraries = ['curl'],
                        include_dirs=["include/common","include",numpy.get_include()],
                        extra_compile_args=@EXTRA_COMPILE_ARGS@,
@@ -13,10 +13,9 @@ ext_modules = [
 ]
 
 setup(
-      name ="asapo_worker",
+      name ="asapo_producer",
       ext_modules = ext_modules,
       version = "@ASAPO_VERSION_PYTHON@",
       setup_requires=["numpy"],
-      install_requires=["numpy"],
-      platforms=["aaa"]
+      install_requires=["numpy"]
       )

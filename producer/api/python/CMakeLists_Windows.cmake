@@ -7,15 +7,15 @@ message ("   Python includes:" ${Python3_INCLUDE_DIRS})
 message ("   Numpy:" ${PYTHON_NUMPY_INCLUDE_DIR})
 
 
-add_custom_command(OUTPUT asapo_worker.cpp
+add_custom_command(OUTPUT asapo_producer.cpp
         COMMAND ${Python3_EXECUTABLE} cythonize.py
         DEPENDS asapo-producer)
 
 
-set(TARGET_NAME asapo_worker)
+set(TARGET_NAME asapo_producer)
 
 set(SOURCE_FILES
-        asapo_worker.cpp)
+        asapo_producer.cpp)
 
 add_library(${TARGET_NAME} SHARED ${SOURCE_FILES})
 set_target_properties(${TARGET_NAME} PROPERTIES SUFFIX ".pyd")

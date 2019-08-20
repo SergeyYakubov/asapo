@@ -34,8 +34,8 @@ cdef class PyDataBroker:
     def _op(self, op, group_id, meta_only, uint64_t id):
         cdef FileInfo info
         cdef string b_group_id = _bytes(group_id)
-        cdef FileData* p_data =  <FileData*>NULL if meta_only else &data
         cdef FileData data
+        cdef FileData* p_data =  <FileData*>NULL if meta_only else &data
         cdef Error err
         cdef np.npy_intp dims[1]
         if op == "next":
