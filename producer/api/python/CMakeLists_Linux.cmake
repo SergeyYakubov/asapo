@@ -16,10 +16,10 @@ set (ASAPO_PRODUCER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/include)
 configure_files(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 
 ADD_CUSTOM_TARGET(python-lib2-producer ALL
-        COMMAND python setup.py build_ext --inplace)
+        COMMAND python setup.py build_ext --inplace --force )
 
 ADD_CUSTOM_TARGET(python-lib3-producer ALL
-        COMMAND python3 setup.py build_ext --inplace)
+        COMMAND python3 setup.py build_ext --inplace --force)
 
 ADD_DEPENDENCIES(python-lib2-producer asapo-producer)
 ADD_DEPENDENCIES(python-lib3-producer asapo-producer)

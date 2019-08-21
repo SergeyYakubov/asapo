@@ -9,6 +9,12 @@ from libcpp.memory cimport unique_ptr
 
 np.import_array()
 
+DEFAULT_INJEST_MODE = kDefaultIngestMode
+INJEST_MODE_TRANSFER_DATA = kTransferData
+INJEST_MODE_TRANSFER_METADATA_ONLY = kTransferMetaDataOnly
+INJEST_MODE_STORE_IN_FILESYSTEM = kStoreInFilesystem
+
+
 cdef extern from "numpy/ndarraytypes.h":
     void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
 
@@ -27,26 +33,53 @@ cdef bytes _bytes(s):
     else:
         raise TypeError("Could not convert to unicode.")
 
-ctypedef void (*cb_type)(void*, GenericRequestHeader, Error)
-
-
 cdef class PyProducer:
     cdef unique_ptr[Producer] c_producer
-    cdef object py_callback
-    def send_file(self,string fname):
+    def set_log_level(self,level):
+         cdef LogLevel log_level
+         log_level = LogLevel_Info
+         if level == "debug" :
+            log_level = LogLevel_Debug
+         elif level == "info" :
+            log_level = LogLevel_Info
+         elif level == "none" :
+            log_level = LogLevel_None
+         elif level == "warn" :
+            log_level = LogLevel_Warning
+         else:
+            print("wrong loglevel mode: "+level)
+            return
+         self.c_producer.get().SetLogLevel(log_level)
+    def send_file(self,int id,string local_path,string exposed_path,user_meta=None,subset=None,injest_mode = DEFAULT_INJEST_MODE,callback=None):
         cdef EventHeader event_header
-        err = self.c_producer.get().SendFile(event_header, _bytes(fname), 1,
-        	function_wrapper.make_std_function(<cb_type>self.c_callback, <void*>self))
+        event_header.file_id = id
+        event_header.file_size = 0
+        event_header.file_name = exposed_path
+        event_header.user_metadata = user_meta if user_meta!=None else ""
+        if subset == None:
+            event_header.subset_id = 0
+            event_header.subset_size = 0
+        else:
+            event_header.subset_id = subset[0]
+            event_header.subset_size = subset[1]
+        err = self.c_producer.get().SendFile(event_header, _bytes(local_path), injest_mode,
+            unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
         cdef err_str = GetErrorString(&err)
         if err_str.strip():
             return err_str
         else:
-            return "ok"
-    cdef void c_callback(self,GenericRequestHeader header, Error err) with gil:
-        self.py_callback(1,2)
-        return
+            return None
+    cdef void c_callback(self,py_callback,GenericRequestHeader header, Error err) with gil:
+        info_str = _str(header.Json())
+        info = json.loads(info_str)
+        cdef err_str = GetErrorString(&err)
+        if err_str.strip():
+           py_err = err_str
+        else:
+           py_err = None
+        py_callback(info,py_err)
     @staticmethod
-    def create_producer(endpoint,beamtime_id,stream,token,nthreads,py_callback):
+    def create_producer(endpoint,beamtime_id,stream,token,nthreads):
         pyProd = PyProducer()
         cdef Error err
         cdef SourceCredentials source
@@ -54,15 +87,14 @@ cdef class PyProducer:
         source.user_token = token
         source.stream = stream
         pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,&err)
-        pyProd.py_callback = py_callback
         cdef err_str = GetErrorString(&err)
         if err_str.strip():
             return None,err_str
         else:
             return pyProd,None
 
-def create_producer(endpoint,beamtime_id,stream,token,nthreads,py_callback):
-    return PyProducer.create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(stream),_bytes(token),nthreads,py_callback)
+def create_producer(endpoint,beamtime_id,stream,token,nthreads):
+    return PyProducer.create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(stream),_bytes(token),nthreads)
 
 
 __version__ = "@ASAPO_VERSION_PYTHON@"

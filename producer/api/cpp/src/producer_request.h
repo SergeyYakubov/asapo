@@ -21,6 +21,7 @@ class ProducerRequest : public GenericRequest {
     std::string original_filepath;
     RequestCallback callback;
     Error ReadDataFromFileIfNeeded(const IO* io);
+    bool NeedSendData() const;
 };
 
 }

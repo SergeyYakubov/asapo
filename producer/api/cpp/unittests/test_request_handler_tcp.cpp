@@ -15,6 +15,8 @@
 
 #include "mocking.h"
 
+#include <functional>
+
 namespace {
 
 using ::testing::Return;
@@ -62,16 +64,23 @@ class RequestHandlerTcpTests : public testing::Test {
 
     asapo::Error callback_err;
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_meta_size, expected_file_name};
-    bool called = false;
+    bool callback_called = false;
     asapo::GenericRequestHeader callback_header;
+
+
     asapo::ProducerRequest request{expected_beamtime_id, header, nullptr, expected_metadata, "", [this](asapo::GenericRequestHeader header, asapo::Error err) {
-        called = true;
+        callback_called = true;
         callback_err = std::move(err);
         callback_header = header;
     }};
 
     std::string expected_origin_fullpath = std::string("origin/") + expected_file_name;
-    asapo::ProducerRequest request_filesend{expected_beamtime_id, header, nullptr, expected_metadata, expected_origin_fullpath, nullptr};
+    asapo::ProducerRequest request_filesend{expected_beamtime_id, header, nullptr, expected_metadata,
+    expected_origin_fullpath, [this](asapo::GenericRequestHeader header, asapo::Error err) {
+        callback_called = true;
+        callback_err = std::move(err);
+        callback_header = header;
+    }};
 
 
     asapo::ProducerRequest request_nocallback{expected_beamtime_id, header, nullptr, expected_metadata,  "", nullptr};
@@ -626,7 +635,7 @@ void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode e
     request_handler.PrepareProcessingRequestLocked();
     auto err = request_handler.ProcessRequestUnlocked(&request);
     ASSERT_THAT(callback_err, Eq(err_template));
-    ASSERT_THAT(called, Eq(true));
+    ASSERT_THAT(callback_called, Eq(true));
     ASSERT_THAT(err, Eq(nullptr));
 }
 
@@ -650,7 +659,7 @@ TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {
     auto err = request_handler.ProcessRequestUnlocked(&request_nocallback);
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(called, Eq(false));
+    ASSERT_THAT(callback_called, Eq(false));
 }
 
 TEST_F(RequestHandlerTcpTests, FileRequestErrorOnReadData) {
@@ -665,7 +674,10 @@ TEST_F(RequestHandlerTcpTests, FileRequestErrorOnReadData) {
         ));
 
     auto err = request_handler.ProcessRequestUnlocked(&request_filesend);
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
+    ASSERT_THAT(callback_err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
+    ASSERT_THAT(callback_called, Eq(true));
+    ASSERT_THAT(err, Eq(nullptr));
+
 }
 
 
@@ -689,6 +701,8 @@ TEST_F(RequestHandlerTcpTests, FileRequestOK) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
+
+
 TEST_F(RequestHandlerTcpTests, SendOK) {
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
@@ -700,7 +714,7 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(callback_err, Eq(nullptr));
-    ASSERT_THAT(called, Eq(true));
+    ASSERT_THAT(callback_called, Eq(true));
     ASSERT_THAT(callback_header.data_size, Eq(header.data_size));
     ASSERT_THAT(callback_header.op_code, Eq(header.op_code));
     ASSERT_THAT(callback_header.data_id, Eq(header.data_id));
@@ -742,6 +756,25 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyOK) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(callback_header.custom_data[asapo::kPosInjestMode], Eq(injest_mode));
 }
+
+TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
+    ExpectOKConnect(true);
+    ExpectOKAuthorize(true);
+    ExpectOKSendHeader(true);
+    ExpectOKSendMetaData(true);
+    ExpectOKReceive();
+
+    request_handler.PrepareProcessingRequestLocked();
+
+    EXPECT_CALL(mock_io, GetDataFromFile_t(_,_,_)).Times(0);
+
+    auto injest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
+
+    request_filesend.header.custom_data[asapo::kPosInjestMode] = injest_mode;
+    auto err = request_handler.ProcessRequestUnlocked(&request_filesend);
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
 
 
 }

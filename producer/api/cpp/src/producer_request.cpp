@@ -3,7 +3,7 @@
 namespace asapo {
 
 Error ProducerRequest::ReadDataFromFileIfNeeded(const IO* io) {
-    if (data != nullptr || original_filepath.empty()) {
+    if (data != nullptr || original_filepath.empty() || !NeedSendData()) {
         return nullptr;
     }
     Error err;
@@ -22,6 +22,13 @@ ProducerRequest::ProducerRequest(std::string source_credentials,
     data{std::move(data)},
     original_filepath{std::move(original_filepath)},
     callback{callback} {
+}
+
+bool ProducerRequest::NeedSendData() const {
+    if (header.op_code == kOpcodeTransferData || header.op_code == kOpcodeTransferSubsetData) {
+        return header.custom_data[kPosInjestMode] & IngestModeFlags::kTransferData;
+    }
+    return true;
 }
 
 }

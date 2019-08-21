@@ -14,20 +14,17 @@ inline std::string GetErrorString(asapo::Error* err) {
     return "";
 }
 
-using cy_callback = void (*)(void*, GenericRequestHeader header, Error err);
+using RequestCallbackCython = void (*)(void*, void*, GenericRequestHeader header, Error err);
 
-class function_wrapper {
-  public:
-    static
-    RequestCallback make_std_function(cy_callback callback, void* c_self)
-    {
-        RequestCallback wrapper = [=](GenericRequestHeader header, Error err) -> void
-        {
-          callback(c_self, header, std::move(err));
-        };
-        return wrapper;
+RequestCallback unwrap_callback(RequestCallbackCython callback, void* c_self, void* py_func) {
+    if (py_func == NULL) {
+        return nullptr;
     }
-};
+    RequestCallback wrapper = [ = ](GenericRequestHeader header, Error err) -> void {
+        callback(c_self, py_func, header, std::move(err));
+    };
+    return wrapper;
+}
 
 }
 

@@ -66,6 +66,10 @@ Error CheckProducerRequest(const EventHeader& event_header, uint64_t injest_mode
         return ProducerErrorTemplates::kFileNameTooLong.Generate();
     }
 
+    if (event_header.file_name.empty() ) {
+        return ProducerErrorTemplates::kEmptyFileName.Generate();
+    }
+
     if (event_header.subset_id > 0 && event_header.subset_size == 0) {
         return ProducerErrorTemplates::kErrorSubsetSize.Generate();
     }
@@ -101,6 +105,10 @@ Error ProducerImpl::SendData(const EventHeader& event_header, FileData data,
 
 Error ProducerImpl::SendFile(const EventHeader& event_header, std::string full_path, uint64_t injest_mode,
                              RequestCallback callback) {
+    if (full_path.empty()) {
+        return ProducerErrorTemplates::kEmptyFileName.Generate();
+    }
+
     return Send(event_header, nullptr, std::move(full_path), injest_mode, callback);
 }
 

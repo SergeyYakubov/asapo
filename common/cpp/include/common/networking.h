@@ -61,7 +61,16 @@ struct GenericRequestHeader {
     uint64_t    meta_size;
     CustomRequestData    custom_data;
     char        message[kMaxMessageSize];
+    std::string Json() {
+        std::string s = "{\"id\":" + std::to_string(data_id) + ","
+                        "\"buffer\":\"" + std::string(message)+"\""
+            + "}";
+        return s;
+    };
+
 };
+
+
 
 struct GenericNetworkResponse {
     Opcode              op_code;

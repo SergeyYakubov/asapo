@@ -48,14 +48,6 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id, const
     return nullptr;
 }
 
-bool NeedSendData(const ProducerRequest* request) {
-    if (request->header.op_code == kOpcodeTransferData || request->header.op_code == kOpcodeTransferSubsetData) {
-        return request->header.custom_data[kPosInjestMode] & IngestModeFlags::kTransferData;
-    }
-
-    return true;
-}
-
 Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
     Error io_error;
     io__->Send(sd_, &(request->header), sizeof(request->header), &io_error);
@@ -63,7 +55,7 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
         return io_error;
     }
 
-    if (NeedSendData(request)) {
+    if (request->NeedSendData()) {
         io__->Send(sd_, (void*) request->data.get(), (size_t)request->header.data_size, &io_error);
     }
 
@@ -209,7 +201,10 @@ Error RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request) {
     auto producer_request = static_cast<ProducerRequest*>(request);
     auto err = producer_request->ReadDataFromFileIfNeeded(io__.get());
     if (err) {
-        return err;
+        if (producer_request->callback) {
+            producer_request->callback(producer_request->header, std::move(err));
+        }
+        return nullptr;
     }
 
     if (NeedRebalance()) {

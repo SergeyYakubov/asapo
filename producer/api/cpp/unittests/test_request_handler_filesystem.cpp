@@ -71,6 +71,10 @@ class RequestHandlerFilesystemTests : public testing::Test {
     asapo::RequestHandlerFilesystem request_handler{expected_destination, expected_thread_id};
 
     void SetUp() override {
+        request.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
+        request_filesend.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
+        request_nocallback.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
+
         request_handler.log__ = &mock_logger;
         request_handler.io__.reset(&mock_io);
     }

@@ -53,7 +53,7 @@ TEST(CreateProducer, TooManyThreads) {
 TEST(CreateProducer, ZeroThreads) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("", 0,
-                                                                        asapo::RequestHandlerType::kTcp, SourceCredentials{"bt", "", ""}, &err);
+                                                asapo::RequestHandlerType::kTcp, SourceCredentials{"bt", "", ""}, &err);
     ASSERT_THAT(producer, Eq(nullptr));
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -65,7 +65,7 @@ TEST(Producer, SimpleWorkflowWihoutConnection) {
                                                 SourceCredentials{"bt", "", ""},
                                                 &err);
 
-    asapo::EventHeader event_header{1, 1, ""};
+    asapo::EventHeader event_header{1, 1, "test"};
     auto err_send = producer->SendData(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

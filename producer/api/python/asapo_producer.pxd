@@ -27,6 +27,16 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 
 
 cdef extern from "asapo_producer.h" namespace "asapo":
+  cppclass LogLevel:
+    pass
+  LogLevel LogLevel_None "asapo::LogLevel::None"
+  LogLevel LogLevel_Error "asapo::LogLevel::Error"
+  LogLevel LogLevel_Info "asapo::LogLevel::Info"
+  LogLevel LogLevel_Debug "asapo::LogLevel::Debug"
+  LogLevel LogLevel_Warning "asapo::LogLevel::Warning"
+
+
+cdef extern from "asapo_producer.h" namespace "asapo":
   struct  SourceCredentials:
     string beamtime_id
     string stream
@@ -52,7 +62,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   struct  GenericRequestHeader:
-    pass
+    string Json()
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass RequestCallback:
@@ -60,10 +70,9 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 
 
 cdef extern from "asapo_wrappers.h" namespace "asapo":
-    cdef cppclass function_wrapper:
-        ctypedef void (*cy_callback) (void*, GenericRequestHeader, Error)
-        @staticmethod
-        RequestCallback make_std_function(cy_callback, void*)
+    cppclass RequestCallbackCython:
+      pass
+    RequestCallback unwrap_callback(RequestCallbackCython, void*,void*)
 
 
 cdef extern from "asapo_producer.h" namespace "asapo":
@@ -71,4 +80,12 @@ cdef extern from "asapo_producer.h" namespace "asapo":
         @staticmethod
         unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,Error* error)
         Error SendFile(const EventHeader& event_header, string full_path, uint64_t injest_mode,RequestCallback callback)
+        void SetLogLevel(LogLevel level)
+
+cdef extern from "asapo_producer.h" namespace "asapo":
+    uint64_t kDefaultIngestMode
+    enum IngestModeFlags:
+        kTransferData
+        kTransferMetaDataOnly
+        kStoreInFilesystem
 
