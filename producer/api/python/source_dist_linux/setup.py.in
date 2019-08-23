@@ -16,6 +16,6 @@ setup(
       name ="asapo_producer",
       ext_modules = ext_modules,
       version = "@ASAPO_VERSION_PYTHON@",
-      setup_requires=["numpy"],
-      install_requires=["numpy"]
+      setup_requires=["numpy","cython>=0.28"],
+      install_requires=["numpy","cython>=0.28"]
       )

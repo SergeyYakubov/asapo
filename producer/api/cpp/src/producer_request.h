@@ -11,15 +11,18 @@ namespace asapo {
 
 class ProducerRequest : public GenericRequest {
   public:
+    ~ProducerRequest();
     ProducerRequest(std::string source_credentials, GenericRequestHeader header, FileData data,
                     std::string metadata,
                     std::string original_filepath,
-                    RequestCallback callback);
+                    RequestCallback callback,
+                    bool manage_data_memory);
     std::string source_credentials;
     std::string metadata;
     FileData data;
     std::string original_filepath;
     RequestCallback callback;
+    bool manage_data_memory;
     Error ReadDataFromFileIfNeeded(const IO* io);
     bool NeedSendData() const;
 };

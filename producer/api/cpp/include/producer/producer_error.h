@@ -11,6 +11,8 @@ enum class ProducerErrorType {
     kFileTooLarge,
     kFileNameTooLong,
     kEmptyFileName,
+    kNoData,
+    kZeroDataSize,
     kBeamtimeIdTooLong,
     kBeamtimeAlreadySet,
     kFileIdAlreadyInUse,
@@ -20,7 +22,7 @@ enum class ProducerErrorType {
     kInternalServerError,
     kCannotSendDataToReceivers,
     kRequestPoolIsFull,
-    kWrongInjestMode
+    kWrongIngestMode
 };
 
 using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
@@ -33,10 +35,18 @@ auto const kConnectionNotReady = ProducerErrorTemplate {
     "Connection not ready", ProducerErrorType::kConnectionNotReady
 };
 
-auto const kWrongInjestMode = ProducerErrorTemplate {
-    "wrong injest mode", ProducerErrorType::kWrongInjestMode
+auto const kWrongIngestMode = ProducerErrorTemplate {
+    "wrong ingest mode", ProducerErrorType::kWrongIngestMode
 };
 
+auto const kNoData = ProducerErrorTemplate {
+    "no data", ProducerErrorType::kNoData
+};
+
+
+auto const kZeroDataSize = ProducerErrorTemplate {
+    "zero data size", ProducerErrorType::kZeroDataSize
+};
 
 
 auto const kErrorSubsetSize = ProducerErrorTemplate {
@@ -99,3 +109,4 @@ auto const kErrorInMetadata = ProducerErrorTemplate {
 }
 
 #endif //ASAPO_PRODUCER_ERROR_H
+

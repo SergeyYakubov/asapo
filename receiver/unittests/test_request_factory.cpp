@@ -60,7 +60,7 @@ class FactoryTests : public Test {
     std::string origin_uri{"origin_uri"};
     void SetUp() override {
         generic_request_header.op_code = asapo::Opcode::kOpcodeTransferData;
-        generic_request_header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
+        generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         config.write_to_disk = true;
         config.write_to_db = true;
         SetReceiverConfig(config, "none");
@@ -113,7 +113,7 @@ TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWantedInConfig) {
 }
 
 TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWantedInRequest) {
-    generic_request_header.custom_data[asapo::kPosInjestMode] = asapo::IngestModeFlags::kTransferData;
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData;
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(request->GetListHandlers().size(), Eq(2));

@@ -72,14 +72,18 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 cdef extern from "asapo_wrappers.h" namespace "asapo":
     cppclass RequestCallbackCython:
       pass
+    cppclass RequestCallbackCythonMemory:
+      pass
     RequestCallback unwrap_callback(RequestCallbackCython, void*,void*)
+    RequestCallback unwrap_callback_with_memory(RequestCallbackCythonMemory, void*,void*,void*)
 
 
 cdef extern from "asapo_producer.h" namespace "asapo":
     cppclass Producer:
         @staticmethod
         unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,Error* error)
-        Error SendFile(const EventHeader& event_header, string full_path, uint64_t injest_mode,RequestCallback callback)
+        Error SendFile(const EventHeader& event_header, string full_path, uint64_t ingest_mode,RequestCallback callback)
+        Error SendData_(const EventHeader& event_header, void* data, uint64_t ingest_mode,RequestCallback callback)
         void SetLogLevel(LogLevel level)
 
 cdef extern from "asapo_producer.h" namespace "asapo":

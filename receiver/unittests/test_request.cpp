@@ -83,7 +83,7 @@ class RequestTests : public Test {
         generic_request_header.data_id = data_id_;
         generic_request_header.meta_size = expected_metadata_size;
         generic_request_header.op_code = expected_op_code;
-        generic_request_header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
+        generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
         request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
@@ -149,7 +149,7 @@ TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
 
 TEST_F(RequestTests, HandleDoesNotReceiveDataWhenMetadataOnlyWasSent) {
     generic_request_header.data_size = 10;
-    generic_request_header.custom_data[asapo::kPosInjestMode] = asapo::kTransferMetaDataOnly;
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kTransferMetaDataOnly;
     request->io__.release();
     request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;

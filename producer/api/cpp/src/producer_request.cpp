@@ -16,19 +16,27 @@ ProducerRequest::ProducerRequest(std::string source_credentials,
                                  FileData data,
                                  std::string metadata,
                                  std::string original_filepath,
-                                 RequestCallback callback) : GenericRequest(std::move(h)),
+                                 RequestCallback callback,
+                                 bool manage_data_memory) : GenericRequest(std::move(h)),
     source_credentials{std::move(source_credentials)},
     metadata{std::move(metadata)},
     data{std::move(data)},
     original_filepath{std::move(original_filepath)},
-    callback{callback} {
+    callback{callback},
+    manage_data_memory{manage_data_memory} {
 }
 
 bool ProducerRequest::NeedSendData() const {
     if (header.op_code == kOpcodeTransferData || header.op_code == kOpcodeTransferSubsetData) {
-        return header.custom_data[kPosInjestMode] & IngestModeFlags::kTransferData;
+        return header.custom_data[kPosIngestMode] & IngestModeFlags::kTransferData;
     }
     return true;
+}
+
+ProducerRequest::~ProducerRequest() {
+    if (!manage_data_memory && data != nullptr) {
+        data.release();
+    }
 }
 
 }

@@ -6,7 +6,7 @@ namespace asapo {
 
 bool NeedFileWriteHandler (const GenericRequestHeader& request_header) {
     return GetReceiverConfig()->write_to_disk &&
-           (request_header.custom_data[kPosInjestMode] & IngestModeFlags::kStoreInFilesystem);
+           (request_header.custom_data[kPosIngestMode] & IngestModeFlags::kStoreInFilesystem);
 }
 
 bool NeedDbHandler (const GenericRequestHeader& request_header) {

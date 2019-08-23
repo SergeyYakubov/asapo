@@ -66,7 +66,7 @@ TEST(Producer, SimpleWorkflowWihoutConnection) {
                                                 &err);
 
     asapo::EventHeader event_header{1, 1, "test"};
-    auto err_send = producer->SendData(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
+    auto err_send = producer->SendData(event_header, nullptr, asapo::kTransferMetaDataOnly, nullptr);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     ASSERT_THAT(producer, Ne(nullptr));

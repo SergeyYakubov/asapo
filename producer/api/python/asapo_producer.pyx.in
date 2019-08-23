@@ -6,13 +6,14 @@ cimport numpy as np
 import json
 from cpython.version cimport PY_MAJOR_VERSION
 from libcpp.memory cimport unique_ptr
+from cpython.ref cimport PyObject,Py_XINCREF,Py_XDECREF
 
 np.import_array()
 
-DEFAULT_INJEST_MODE = kDefaultIngestMode
-INJEST_MODE_TRANSFER_DATA = kTransferData
-INJEST_MODE_TRANSFER_METADATA_ONLY = kTransferMetaDataOnly
-INJEST_MODE_STORE_IN_FILESYSTEM = kStoreInFilesystem
+DEFAULT_INGEST_MODE = kDefaultIngestMode
+INGEST_MODE_TRANSFER_DATA = kTransferData
+INGEST_MODE_TRANSFER_METADATA_ONLY = kTransferMetaDataOnly
+INGEST_MODE_STORE_IN_FILESYSTEM = kStoreInFilesystem
 
 
 cdef extern from "numpy/ndarraytypes.h":
@@ -33,6 +34,20 @@ cdef bytes _bytes(s):
     else:
         raise TypeError("Could not convert to unicode.")
 
+
+cdef void* data_pointer_nparray(data):
+  if data is None:
+    return <void*>NULL
+  data_char = data.view(np.int8)
+  cdef char[::1] arr_memview = data_char
+  return <void*>&arr_memview[0]
+
+cdef void* data_pointer_bytes(data):
+  if data is None:
+    return <void*>NULL
+  cdef const unsigned char[::1] arr_memview = data
+  return <void*>&arr_memview[0]
+
 cdef class PyProducer:
     cdef unique_ptr[Producer] c_producer
     def set_log_level(self,level):
@@ -47,37 +62,101 @@ cdef class PyProducer:
          elif level == "warn" :
             log_level = LogLevel_Warning
          else:
-            print("wrong loglevel mode: "+level)
+            print("wrong loglevel mode: "+ level)
             return
          self.c_producer.get().SetLogLevel(log_level)
-    def send_file(self,int id,string local_path,string exposed_path,user_meta=None,subset=None,injest_mode = DEFAULT_INJEST_MODE,callback=None):
+
+    def send_np_array(self,int id, exposed_path,data, user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+        cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
+        event_header.file_id = id
+        if data is None:
+            event_header.file_size = 0
+        else:
+            event_header.file_size = data.nbytes
+        err = self.c_producer.get().SendData_(event_header, data_pointer_nparray(data), ingest_mode,
+            unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_ndarr,
+             <void*>self,<void*>callback if callback != None else NULL, <void*>data))
+        cdef err_str = GetErrorString(&err)
+        if err_str.strip():
+            return err_str
+        else:
+          if data is not None:
+            if data.base is not None:
+              Py_XINCREF(<PyObject*>data.base)
+            else:
+              Py_XINCREF(<PyObject*>data)
+          return None
+    cdef EventHeader create_event_header(self,int id, exposed_path,user_meta,subset,ingest_mode):
         cdef EventHeader event_header
         event_header.file_id = id
-        event_header.file_size = 0
-        event_header.file_name = exposed_path
-        event_header.user_metadata = user_meta if user_meta!=None else ""
+        event_header.file_name = _bytes(exposed_path)
+        event_header.user_metadata = _bytes(user_meta) if user_meta!=None else ""
         if subset == None:
             event_header.subset_id = 0
             event_header.subset_size = 0
         else:
             event_header.subset_id = subset[0]
             event_header.subset_size = subset[1]
-        err = self.c_producer.get().SendFile(event_header, _bytes(local_path), injest_mode,
+        return event_header
+
+    def send_bytes(self,int id, exposed_path,data, user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+        cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
+        event_header.file_size = len(data)
+        err = self.c_producer.get().SendData_(event_header, data_pointer_bytes(data), ingest_mode,
+            unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_bytesaddr,
+             <void*>self,<void*>callback if callback != None else NULL, <void*>data))
+        cdef err_str = GetErrorString(&err)
+        if err_str.strip():
+            return err_str
+        else:
+            Py_XINCREF(<PyObject*>data)
+            return None
+
+    def send_data(self,int id, exposed_path,data, user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+        if type(data) == np.ndarray or data == None:
+            return self.send_np_array(id,exposed_path,data,user_meta,subset,ingest_mode,callback)
+        elif type(data) == bytes:
+            return self.send_bytes(id,exposed_path,data,user_meta,subset,ingest_mode,callback)
+        else:
+            return "wrong data type: " + str(type(data))
+
+    def send_file(self,int id, local_path, exposed_path,user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+        cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
+        event_header.file_size = 0
+        err = self.c_producer.get().SendFile(event_header, _bytes(local_path), ingest_mode,
             unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
         cdef err_str = GetErrorString(&err)
         if err_str.strip():
             return err_str
         else:
             return None
-    cdef void c_callback(self,py_callback,GenericRequestHeader header, Error err) with gil:
-        info_str = _str(header.Json())
-        info = json.loads(info_str)
+    cdef void c_callback_python(self,py_callback, GenericRequestHeader header, string err_str):
+        if py_callback != None:
+          info_str = _str(header.Json())
+          info = json.loads(info_str)
+          if err_str.strip():
+             py_err = err_str
+          else:
+             py_err = None
+          py_callback(info,py_err)
+
+    cdef void c_callback(self,py_callback, GenericRequestHeader header, Error err) with gil:
         cdef err_str = GetErrorString(&err)
-        if err_str.strip():
-           py_err = err_str
-        else:
-           py_err = None
-        py_callback(info,py_err)
+        self.c_callback_python(py_callback,header,"")
+
+    cdef void c_callback_ndarr(self,py_callback,nd_array,GenericRequestHeader header, Error err) with gil:
+        if nd_array is not None:
+          if nd_array.base is not None:
+            Py_XDECREF(<PyObject*>nd_array.base)
+          else:
+            Py_XDECREF(<PyObject*>nd_array)
+        self.c_callback_python(py_callback,header,GetErrorString(&err))
+
+    cdef void c_callback_bytesaddr(self,py_callback,bytes_array,GenericRequestHeader header, Error err) with gil:
+        if bytes_array is not None:
+            Py_XDECREF(<PyObject*>bytes_array)
+        self.c_callback_python(py_callback,header,GetErrorString(&err))
+
     @staticmethod
     def create_producer(endpoint,beamtime_id,stream,token,nthreads):
         pyProd = PyProducer()

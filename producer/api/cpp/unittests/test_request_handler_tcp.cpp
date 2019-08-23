@@ -72,7 +72,7 @@ class RequestHandlerTcpTests : public testing::Test {
         callback_called = true;
         callback_err = std::move(err);
         callback_header = header;
-    }};
+    }, true};
 
     std::string expected_origin_fullpath = std::string("origin/") + expected_file_name;
     asapo::ProducerRequest request_filesend{expected_beamtime_id, header, nullptr, expected_metadata,
@@ -80,10 +80,10 @@ class RequestHandlerTcpTests : public testing::Test {
         callback_called = true;
         callback_err = std::move(err);
         callback_header = header;
-    }};
+    }, true};
 
 
-    asapo::ProducerRequest request_nocallback{expected_beamtime_id, header, nullptr, expected_metadata,  "", nullptr};
+    asapo::ProducerRequest request_nocallback{expected_beamtime_id, header, nullptr, expected_metadata,  "", nullptr, true};
     testing::NiceMock<asapo::MockLogger> mock_logger;
     uint64_t n_connections{0};
     asapo::RequestHandlerTcp request_handler{&mock_discovery_service, expected_thread_id, &n_connections};
@@ -118,9 +118,9 @@ class RequestHandlerTcpTests : public testing::Test {
     void SetUp() override {
         request_handler.log__ = &mock_logger;
         request_handler.io__.reset(&mock_io);
-        request.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
-        request_filesend.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
-        request_nocallback.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
+        request.header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
+        request_filesend.header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
+        request_nocallback.header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         ON_CALL(mock_discovery_service, RotatedUriList(_)).
         WillByDefault(Return(receivers_list));
 
@@ -721,7 +721,7 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
     ASSERT_THAT(std::string{callback_header.message}, Eq(std::string{header.message}));
 }
 
-TEST_F(RequestHandlerTcpTests, SendMetadataIgnoresInjestMode) {
+TEST_F(RequestHandlerTcpTests, SendMetadataIgnoresIngestMode) {
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true, asapo::kOpcodeTransferMetaData);
@@ -729,8 +729,8 @@ TEST_F(RequestHandlerTcpTests, SendMetadataIgnoresInjestMode) {
     ExpectOKSendMetaData(true);
     ExpectOKReceive();
 
-    auto injest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
-    request.header.custom_data[asapo::kPosInjestMode] = injest_mode;
+    auto ingest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
+    request.header.custom_data[asapo::kPosIngestMode] = ingest_mode;
     request.header.op_code = asapo::kOpcodeTransferMetaData;
 
     request_handler.PrepareProcessingRequestLocked();
@@ -747,14 +747,14 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyOK) {
     ExpectOKSendMetaData(true);
     ExpectOKReceive();
 
-    auto injest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
+    auto ingest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
 
-    request.header.custom_data[asapo::kPosInjestMode] = injest_mode;
+    request.header.custom_data[asapo::kPosIngestMode] = ingest_mode;
     request_handler.PrepareProcessingRequestLocked();
     auto err = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(callback_header.custom_data[asapo::kPosInjestMode], Eq(injest_mode));
+    ASSERT_THAT(callback_header.custom_data[asapo::kPosIngestMode], Eq(ingest_mode));
 }
 
 TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
@@ -766,11 +766,11 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
 
     request_handler.PrepareProcessingRequestLocked();
 
-    EXPECT_CALL(mock_io, GetDataFromFile_t(_,_,_)).Times(0);
+    EXPECT_CALL(mock_io, GetDataFromFile_t(_, _, _)).Times(0);
 
-    auto injest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
+    auto ingest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
 
-    request_filesend.header.custom_data[asapo::kPosInjestMode] = injest_mode;
+    request_filesend.header.custom_data[asapo::kPosIngestMode] = ingest_mode;
     auto err = request_handler.ProcessRequestUnlocked(&request_filesend);
     ASSERT_THAT(err, Eq(nullptr));
 }

@@ -61,19 +61,19 @@ class RequestHandlerFilesystemTests : public testing::Test {
         called = true;
         callback_err = std::move(err);
         callback_header = header;
-    }};
+    }, true};
 
-    asapo::ProducerRequest request_nocallback{"", header, nullptr, "", "", nullptr};
-    asapo::ProducerRequest request_filesend{"", header, nullptr, "", expected_origin_fullpath, nullptr};
+    asapo::ProducerRequest request_nocallback{"", header, nullptr, "", "", nullptr, true};
+    asapo::ProducerRequest request_filesend{"", header, nullptr, "", expected_origin_fullpath, nullptr, true};
 
     testing::NiceMock<asapo::MockLogger> mock_logger;
 
     asapo::RequestHandlerFilesystem request_handler{expected_destination, expected_thread_id};
 
     void SetUp() override {
-        request.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
-        request_filesend.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
-        request_nocallback.header.custom_data[asapo::kPosInjestMode] = asapo::kDefaultIngestMode;
+        request.header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
+        request_filesend.header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
+        request_nocallback.header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
 
         request_handler.log__ = &mock_logger;
         request_handler.io__.reset(&mock_io);

@@ -3,4 +3,7 @@ export PYTHONPATH=/home/yakubov/projects/asapo/cmake-build-debug/producer/api/py
 
 mkdir -p /tmp/asapo/receiver/files/test1/asapo_test1
 
-python test.py
+python test.py python2
+
+
+python3 test.py python3
