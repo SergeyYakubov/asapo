@@ -8,5 +8,5 @@ RUN apt update && apt install -y cmake g++ golang zlib1g-dev python cython pytho
 ADD install_curl.sh install_curl.sh
 RUN ./install_curl.sh /curl
 
-
+RUN apt install -y python-pip python3-pip && pip install --upgrade cython && pip3 install --upgrade cython
 ADD build.sh /bin/build.sh

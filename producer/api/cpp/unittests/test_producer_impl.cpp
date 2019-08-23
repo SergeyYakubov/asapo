@@ -128,7 +128,7 @@ TEST_F(ProducerImplTests, ErrorIfSubsetSizeNotDefined) {
 }
 
 TEST_F(ProducerImplTests, ErrorIfZeroDataSize) {
-    asapo::FileData data = asapo::FileData{new uint8_t(100) };
+    asapo::FileData data = asapo::FileData{new uint8_t[100] };
     asapo::EventHeader event_header{1, 0, expected_fullpath};
     auto err = producer.SendData(event_header, std::move(data), asapo::kDefaultIngestMode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kZeroDataSize));
@@ -154,7 +154,7 @@ TEST_F(ProducerImplTests, OkIfNoDataWithTransferMetadataOnlyMode) {
 }
 
 TEST_F(ProducerImplTests, OkIfZeroSizeWithTransferMetadataOnlyMode) {
-    asapo::FileData data = asapo::FileData{new uint8_t(100) };
+    asapo::FileData data = asapo::FileData{new uint8_t[100] };
     asapo::EventHeader event_header{1, 0, expected_fullpath};
     auto err = producer.SendData(event_header, std::move(data), asapo::kTransferMetaDataOnly, nullptr);
     ASSERT_THAT(err, Eq(nullptr));
