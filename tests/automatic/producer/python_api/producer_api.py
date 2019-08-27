@@ -65,6 +65,6 @@ err = producer.send_data(6, stream+"/"+"file7",None,
                          ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback = callback)
 assert_err(err)
 
-time.sleep(1)
+time.sleep(5)
 
 

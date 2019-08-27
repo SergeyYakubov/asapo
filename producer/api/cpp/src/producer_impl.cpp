@@ -101,7 +101,7 @@ bool WandTransferData(uint64_t ingest_mode) {
     return ingest_mode & IngestModeFlags::kTransferData;
 }
 
-Error CheckData(uint64_t ingest_mode,const EventHeader& event_header, const FileData* data) {
+Error CheckData(uint64_t ingest_mode, const EventHeader& event_header, const FileData* data) {
     if (WandTransferData(ingest_mode)) {
         if (*data == nullptr) {
             return ProducerErrorTemplates::kNoData.Generate();
@@ -115,7 +115,7 @@ Error CheckData(uint64_t ingest_mode,const EventHeader& event_header, const File
 
 Error ProducerImpl::SendData(const EventHeader& event_header, FileData data,
                              uint64_t ingest_mode, RequestCallback callback) {
-    if (auto err = CheckData(ingest_mode,event_header,&data)) {
+    if (auto err = CheckData(ingest_mode, event_header, &data)) {
         return err;
     }
     return Send(std::move(event_header), std::move(data), "", ingest_mode, callback, true);
@@ -182,7 +182,7 @@ Error ProducerImpl::SendData_(const EventHeader& event_header,
                               RequestCallback callback) {
     FileData data_wrapped = FileData{(uint8_t*)data};
 
-    if (auto err = CheckData(ingest_mode,event_header,&data_wrapped)) {
+    if (auto err = CheckData(ingest_mode, event_header, &data_wrapped)) {
         return err;
     }
 

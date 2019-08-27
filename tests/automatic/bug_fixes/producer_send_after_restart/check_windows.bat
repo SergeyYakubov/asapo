@@ -42,7 +42,7 @@ c:\opt\consul\nomad run receiver.nmd
 
 ping 1.0.0.0 -n 3 -w 100 > nul
 ping 1.0.0.0 -n 3 -w 100 > nul
-ping 1.0.0.0 -n 3 -w 100 > nul
+ping 1.0.0.0 -n 10 -w 100 > nul
 
 
 echo hello > c:\tmp\asapo\test_in\test1\file3
@@ -51,7 +51,7 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 
 REM worker
-"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 1000 1 | findstr /c:"Processed 3 file(s)"  || goto :error
+"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 3000 1 | findstr /c:"Processed 3 file(s)"  || goto :error
 
 
 goto :clean

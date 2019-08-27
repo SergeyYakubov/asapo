@@ -195,7 +195,7 @@ cdef class PyDataBrokerFactory:
         if err_str.strip():
             return None,err_str
         else:
-            return broker,err_str
+            return broker,None
 
 def create_server_broker(server_name,source_path,beamtime_id,stream,token,timeout):
     factory = PyDataBrokerFactory()

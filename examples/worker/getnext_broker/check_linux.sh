@@ -6,7 +6,7 @@ stream=detector
 database_name=${beamtime_id}_${stream}
 token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
-#set -e
+set -e
 
 trap Cleanup EXIT
 
