@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 source_path=.
-database_name=test_run
+beamtime_id=test_run
+stream=detector
+database_name=${beamtime_id}_${stream}
 token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 set -e
 
@@ -35,7 +37,7 @@ sleep 1
 
 export PYTHONPATH=$1:${PYTHONPATH}
 
-python worker_api.py 127.0.0.1:8400 $source_path $database_name $token_test_run single
+python worker_api.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run single
 
 
 #check datasets
@@ -55,4 +57,4 @@ do
 done
 
 
-python worker_api.py 127.0.0.1:8400 $source_path $database_name $token_test_run datasets
+python worker_api.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run datasets

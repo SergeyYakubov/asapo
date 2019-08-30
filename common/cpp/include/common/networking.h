@@ -6,6 +6,8 @@
 #include <string>
 #include <cstring>
 
+#include "data_structs.h"
+
 namespace asapo {
 
 typedef uint64_t NetworkRequestId;
@@ -19,6 +21,7 @@ enum Opcode : uint8_t {
     kOpcodeTransferMetaData,
     kOpcodeCount,
 };
+
 
 enum NetworkErrorCode : uint16_t {
     kNetErrorNoError,
@@ -34,9 +37,11 @@ enum NetworkErrorCode : uint16_t {
 //TODO need to use an serialization framework to ensure struct consistency on different computers
 
 const std::size_t kMaxMessageSize = 1024;
-const std::size_t kNCustomParams = 2;
+const std::size_t kNCustomParams = 3;
 using CustomRequestData = uint64_t[kNCustomParams];
-
+const std::size_t kPosIngestMode = 0;
+const std::size_t kPosDataSetId = 1;
+const std::size_t kPosDataSetSize = 2;
 
 struct GenericRequestHeader {
     GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
@@ -56,7 +61,16 @@ struct GenericRequestHeader {
     uint64_t    meta_size;
     CustomRequestData    custom_data;
     char        message[kMaxMessageSize];
+    std::string Json() {
+        std::string s = "{\"id\":" + std::to_string(data_id) + ","
+                        "\"buffer\":\"" + std::string(message) + "\""
+                        + "}";
+        return s;
+    };
+
 };
+
+
 
 struct GenericNetworkResponse {
     Opcode              op_code;

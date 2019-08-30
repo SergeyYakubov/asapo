@@ -16,7 +16,7 @@ Cleanup() {
     nomad stop discovery
     nomad stop authorizer
     nomad stop nginx
-    echo "db.dropDatabase()" | mongo ${beamtime_id}
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     rm -rf ${receiver_root_folder}
 }
 

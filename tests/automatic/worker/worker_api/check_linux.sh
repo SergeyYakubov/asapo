@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-database_name=test_run
+beamtime_id=test_run
+stream=detector
+database_name=${beamtime_id}_${stream}
 token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
 set -e
@@ -31,7 +33,7 @@ done
 echo hello1 > 1
 
 
-$@ 127.0.0.1:8400 $database_name $token_test_run single
+$@ 127.0.0.1:8400 $beamtime_id $token_test_run single
 
 #check datasets
 echo "db.dropDatabase()" | mongo ${database_name}
@@ -51,4 +53,4 @@ done
 
 echo hello1 > 1_1
 
-$@ 127.0.0.1:8400 $database_name $token_test_run datasets
+$@ 127.0.0.1:8400 $beamtime_id $token_test_run datasets

@@ -1,0 +1,49 @@
+job "discovery" {
+  datacenters = ["dc1"]
+
+  type = "service"
+
+  group "group" {
+    count = 1
+
+    task "discovery" {
+      driver = "raw_exec"
+
+      config {
+        command = "/home/yakubov/projects/asapo/cmake-build-debug/discovery/asapo-discovery",
+        args =  ["-config","${NOMAD_TASK_DIR}/discovery.json"]
+      }
+
+      resources {
+        cpu    = 500 # 500 MHz
+        memory = 256 # 256MB
+        network {
+          port "discovery" {
+            static = "5006"
+          }
+        }
+      }
+
+      service {
+        name = "discovery"
+        port = "discovery"
+        check {
+          name     = "alive"
+          type     = "http"
+          path     = "/receivers"
+          interval = "10s"
+          timeout  = "2s"
+          initial_status =   "passing"
+        }
+      }
+
+      template {
+         source        = "/home/yakubov/projects/asapo/tests/manual/receiver_debug_local/discovery.json.tpl"
+         destination   = "local/discovery.json"
+         change_mode   = "signal"
+         change_signal = "SIGHUP"
+      }
+
+    }
+  }
+}

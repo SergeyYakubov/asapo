@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-database_name=test_run
+database_name=test_run_detector
 token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
 set -e
@@ -27,6 +27,6 @@ do
 	echo 'db.data.insert({"_id":'$i',"size":100,"name":"'$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
-$@ 127.0.0.1:8400 $database_name 4 10 $token_test_run
+$@ 127.0.0.1:8400 test_run 4 10 $token_test_run
 
 

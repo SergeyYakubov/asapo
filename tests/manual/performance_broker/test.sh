@@ -45,7 +45,7 @@ ssh ${service_node} "bash -c 'cd ${service_dir}; nohup ./asapo-discovery -config
 
 scp settings_tmp.json ${service_node}:${service_dir}/settings.json
 
-scp ../../../tests/automatic/settings/broker_secret.key ${service_node}:${service_dir}/broker_secret.key
+scp ../../../tests/automatic/settings/auth_secret.key ${service_node}:${service_dir}/auth_secret.key
 
 
 

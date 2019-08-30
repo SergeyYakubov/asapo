@@ -45,5 +45,26 @@ struct DataSet {
 
 using SubDirList = std::vector<std::string>;
 
+
+struct SourceCredentials {
+    static const std::string kDefaultStream;
+    std::string beamtime_id;
+    std::string stream;
+    std::string user_token;
+    std::string GetString() {
+        return beamtime_id + "%" + stream + "%" + user_token;
+    };
+};
+
+enum IngestModeFlags : uint64_t {
+    kTransferData = 1 << 0,
+    kTransferMetaDataOnly = 1 << 1,
+    kStoreInFilesystem = 1 << 2,
+};
+
+const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem;
+
+
+
 }
 #endif //ASAPO_FILE_INFO_H

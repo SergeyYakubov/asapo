@@ -34,8 +34,8 @@ cdef class PyDataBroker:
     def _op(self, op, group_id, meta_only, uint64_t id):
         cdef FileInfo info
         cdef string b_group_id = _bytes(group_id)
-        cdef FileData* p_data =  <FileData*>NULL if meta_only else &data
         cdef FileData data
+        cdef FileData* p_data =  <FileData*>NULL if meta_only else &data
         cdef Error err
         cdef np.npy_intp dims[1]
         if op == "next":
@@ -177,16 +177,17 @@ cdef class PyDataBrokerFactory:
     def __cinit__(self):
         with nogil:
             self.c_factory = DataBrokerFactory()
-    def create_server_broker(self,server_name,source_path,beamtime_id,token,timeout):
+    def create_server_broker(self,server_name,source_path,beamtime_id,stream,token,timeout):
         cdef string b_server_name = _bytes(server_name)
         cdef string b_source_path = _bytes(source_path)
-        cdef string b_beamtime_id = _bytes(beamtime_id)
-        cdef string b_token = _bytes(token)
+        cdef SourceCredentials source
+        source.beamtime_id = _bytes(beamtime_id)
+        source.user_token = _bytes(token)
+        source.stream = _bytes(stream)
         cdef Error err
         cdef unique_ptr[DataBroker] c_broker
         with nogil:
-            c_broker = self.c_factory.CreateServerBroker(
-                b_server_name, b_source_path, b_beamtime_id, b_token, &err)
+            c_broker = self.c_factory.CreateServerBroker(b_server_name,b_source_path,source,&err)
         broker = PyDataBroker()
         broker.c_broker =  c_broker.release()
         broker.c_broker.SetTimeout(timeout)
@@ -194,11 +195,11 @@ cdef class PyDataBrokerFactory:
         if err_str.strip():
             return None,err_str
         else:
-            return broker,err_str
+            return broker,None
 
-def create_server_broker(server_name,source_path,beamtime_id,token,timeout):
+def create_server_broker(server_name,source_path,beamtime_id,stream,token,timeout):
     factory = PyDataBrokerFactory()
-    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),_bytes(beamtime_id),_bytes(token),timeout)
+    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),_bytes(beamtime_id),_bytes(stream),_bytes(token),timeout)
 
 
 __version__ = "@ASAPO_VERSION_PYTHON@"

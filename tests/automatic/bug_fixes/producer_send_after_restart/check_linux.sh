@@ -22,7 +22,7 @@ Cleanup() {
     nomad stop receiver
     nomad stop discovery
     nomad stop authorizer
-    echo "db.dropDatabase()" | mongo ${beamtime_id}
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
 }
 
 nomad run nginx.nmd

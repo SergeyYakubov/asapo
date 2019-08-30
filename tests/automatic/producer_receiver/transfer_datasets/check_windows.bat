@@ -5,7 +5,7 @@ SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\%beamline%\%beamtime_id%"
 
 
-echo db.%beamtime_id%.insert({dummy:1})" | %mongo_exe% %beamtime_id%
+echo db.%beamtime_id%_detector.insert({dummy:1})" | %mongo_exe% %beamtime_id%_detector
 
 
 c:\opt\consul\nomad run receiver.nmd
@@ -31,9 +31,9 @@ FOR /F "usebackq" %%A IN ('%receiver_folder%\1_3') DO set size=%%~zA
 if %size% NEQ 100000 goto :error
 
 
-echo db.data.find({"images._id":{$gt:0}},{"images.name":1}) | %mongo_exe% %beamtime_id% | findstr 1_1  || goto :error
-echo db.data.find({"images._id":{$gt:0}},{"images.name":1}) | %mongo_exe% %beamtime_id% | findstr 1_2  || goto :error
-echo db.data.find({"images._id":{$gt:0}},{"images.name":1}) | %mongo_exe% %beamtime_id% | findstr 1_3  || goto :error
+echo db.data.find({"images._id":{$gt:0}},{"images.name":1}) | %mongo_exe% %beamtime_id%_detector | findstr 1_1  || goto :error
+echo db.data.find({"images._id":{$gt:0}},{"images.name":1}) | %mongo_exe% %beamtime_id%_detector | findstr 1_2  || goto :error
+echo db.data.find({"images._id":{$gt:0}},{"images.name":1}) | %mongo_exe% %beamtime_id%_detector | findstr 1_3  || goto :error
 
 goto :clean
 
@@ -47,6 +47,6 @@ c:\opt\consul\nomad stop discovery
 c:\opt\consul\nomad stop nginx
 c:\opt\consul\nomad stop authorizer
 rmdir /S /Q %receiver_root_folder%
-echo db.dropDatabase() | %mongo_exe% %beamtime_id%
+echo db.dropDatabase() | %mongo_exe% %beamtime_id%_detector
 
 

@@ -11,6 +11,7 @@ class RequestFactory {
     virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                                      SocketDescriptor socket_fd, std::string origin_uri, Error* err) const noexcept;
   private:
+    Error AddHandlersToRequest(std::unique_ptr<Request>& request,  const GenericRequestHeader& request_header) const;
     RequestHandlerFileWrite request_handler_filewrite_;
     RequestHandlerDbWrite request_handler_dbwrite_{kDBDataCollectionName};
     RequestHandlerDbMetaWrite request_handler_db_meta_write_{kDBMetaCollectionName};

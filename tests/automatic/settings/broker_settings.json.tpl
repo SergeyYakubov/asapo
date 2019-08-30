@@ -4,5 +4,5 @@
   "MonitorDbName": "db_test",
   "port":{{ env "NOMAD_PORT_broker" }},
   "LogLevel":"info",
-  "SecretFile":"broker_secret.key"
+  "SecretFile":"auth_secret.key"
 }

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-#set -e
+set -e
 
 trap Cleanup EXIT
 
 beamtime_id=asapo_test
-token=`$3 token -secret broker_secret.key $beamtime_id`
+token=`$3 token -secret auth_secret.key $beamtime_id`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -27,11 +27,11 @@ Cleanup() {
     nomad stop discovery
     nomad stop broker
     nomad stop authorizer
-    echo "db.dropDatabase()" | mongo ${beamtime_id}
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     rm -rf out
 }
 
-echo "db.${beamtime_id}.insert({dummy:1})" | mongo ${beamtime_id}
+echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
 
 nomad run nginx.nmd
 nomad run authorizer.nmd

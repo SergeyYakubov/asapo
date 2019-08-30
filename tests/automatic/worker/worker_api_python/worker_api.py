@@ -143,7 +143,7 @@ def check_dataset(broker,group_id_new):
 
 source, path, beamtime, token, mode = sys.argv[1:]
 
-broker, err = asapo_worker.create_server_broker(source,path, beamtime,token,1000)
+broker, err = asapo_worker.create_server_broker(source,path, beamtime,"",token,1000)
 
 group_id_new, err = broker.generate_group_id()
 assert_noterr(err, "generate_group")

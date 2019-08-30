@@ -47,8 +47,13 @@ Error Request::ReceiveMetaData() {
 }
 
 
+bool Request::NeedReceiveData() {
+    return request_header_.data_size > 0 &&
+           (request_header_.custom_data[asapo::kPosIngestMode] & asapo::kTransferData);
+}
+
 Error Request::ReceiveData() {
-    if (request_header_.data_size == 0) {
+    if (!NeedReceiveData()) {
         return nullptr;
     }
 
@@ -179,6 +184,11 @@ const std::string& Request::GetMetaData() const {
 const CustomRequestData& Request::GetCustomData() const {
     return request_header_.custom_data;
 }
-
+const std::string& Request::GetStream() const {
+    return stream_;
+}
+void Request::SetStream(std::string stream) {
+    stream_ = std::move(stream);
+}
 
 }

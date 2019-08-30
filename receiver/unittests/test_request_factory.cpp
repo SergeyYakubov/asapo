@@ -60,6 +60,7 @@ class FactoryTests : public Test {
     std::string origin_uri{"origin_uri"};
     void SetUp() override {
         generic_request_header.op_code = asapo::Opcode::kOpcodeTransferData;
+        generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         config.write_to_disk = true;
         config.write_to_db = true;
         SetReceiverConfig(config, "none");
@@ -99,11 +100,20 @@ TEST_F(FactoryTests, ReturnsDataRequestForAuthorizationCode) {
 }
 
 
-TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWanted) {
+TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWantedInConfig) {
     config.write_to_disk = false;
 
     SetReceiverConfig(config, "none");
 
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(2));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
+}
+
+TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWantedInRequest) {
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData;
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(request->GetListHandlers().size(), Eq(2));

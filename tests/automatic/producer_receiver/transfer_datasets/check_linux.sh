@@ -17,16 +17,16 @@ Cleanup() {
     nomad stop discovery
     nomad stop authorizer
     nomad stop nginx
-    echo "db.dropDatabase()" | mongo ${beamtime_id}
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     influx -execute "drop database ${database_name}"
 }
 
-echo "db.dropDatabase()" | mongo ${beamtime_id}
+echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
 
 
 influx -execute "create database ${database_name}"
 # create db before worker starts reading it. todo: git rid of it
-echo "db.${beamtime_id}.insert({dummy:1})" | mongo ${beamtime_id}
+echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
 
 nomad run authorizer.nmd
 nomad run nginx.nmd
@@ -41,4 +41,4 @@ ls -ln ${receiver_folder}/1_1 | awk '{ print $5 }'| grep 100000
 ls -ln ${receiver_folder}/1_2 | awk '{ print $5 }'| grep 100000
 ls -ln ${receiver_folder}/1_3 | awk '{ print $5 }'| grep 100000
 
-echo 'db.data.find({"images._id":{$gt:0}},{"images.name":1})' | mongo asapo_test | grep 1_1 | grep 1_2 | grep 1_3
+echo 'db.data.find({"images._id":{$gt:0}},{"images.name":1})' | mongo asapo_test_detector | grep 1_1 | grep 1_2 | grep 1_3

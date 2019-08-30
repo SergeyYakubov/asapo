@@ -1,8 +1,11 @@
 #include <iostream>
+#include <iostream>
 #include <chrono>
 #include <vector>
 #include <mutex>
 #include <thread>
+#include <string>
+#include <sstream>
 
 #include "asapo_producer.h"
 
@@ -15,6 +18,8 @@ int iterations_remained;
 struct Args {
     std::string receiver_address;
     std::string beamtime_id;
+    std::string stream;
+    std::string token;
     size_t number_of_bytes;
     uint64_t iterations;
     uint64_t nthreads;
@@ -35,13 +40,37 @@ void PrintCommandArguments(const Args& args) {
               << std::endl;
 }
 
+void TryGetStreamAndToken(Args* args) {
+    std::stringstream test(args->beamtime_id);
+    std::string segment;
+    std::vector<std::string> seglist;
+
+    while(std::getline(test, segment, '%')) {
+        seglist.push_back(segment);
+    }
+    if (seglist.size() == 1) {
+        return;
+    }
+    if (seglist.size() > 1) {
+        args->beamtime_id = seglist[0];
+        args->stream = seglist[1];
+    }
+    if (seglist.size() > 2) {
+        args->token = seglist[2];
+    }
+    return;
+
+}
+
+
+
 
 void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     asapo::ExitAfterPrintVersionIfNeeded("Dummy Data Producer", argc, argv);
     if (argc != 8 && argc != 9) {
         std::cout <<
                   "Usage: " << argv[0] <<
-                  " <destination> <beamtime_id> <number_of_byte> <iterations> <nthreads>"
+                  " <destination> <beamtime_id[%<stream>%<token>]> <number_of_byte> <iterations> <nthreads>"
                   " <mode 0 -t tcp, 1 - filesystem> <timeout (sec)> [n images in set (default 1)]"
                   << std::endl;
         exit(EXIT_FAILURE);
@@ -49,6 +78,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     try {
         args->receiver_address = argv[1];
         args->beamtime_id = argv[2];
+        TryGetStreamAndToken(args);
         args->number_of_bytes = std::stoull(argv[3]) * 1000;
         args->iterations = std::stoull(argv[4]);
         args->nthreads = std::stoull(argv[5]);
@@ -96,7 +126,8 @@ asapo::FileData CreateMemoryBuffer(size_t size) {
 }
 
 
-bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations, uint64_t images_in_set) {
+bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations, uint64_t images_in_set,
+                   const std::string& stream) {
 
     asapo::Error err;
     if (iterations > 0) { // send wrong meta, for negative integration tests
@@ -113,8 +144,12 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         auto buffer = CreateMemoryBuffer(number_of_byte);
         asapo::EventHeader event_header{i + 1, number_of_byte, std::to_string(i + 1)};
         std::string meta = "{\"user_meta\":\"test" + std::to_string(i + 1) + "\"}";
+        if (!stream.empty()) {
+            event_header.file_name = stream + "/" + event_header.file_name;
+        }
+        event_header.user_metadata = std::move(meta);
         if (images_in_set == 1) {
-            auto err = producer->SendData(event_header, std::move(buffer), std::move(meta), &ProcessAfterSend);
+            auto err = producer->SendData(event_header, std::move(buffer), asapo::kDefaultIngestMode, &ProcessAfterSend);
             if (err) {
                 std::cerr << "Cannot send file: " << err << std::endl;
                 return false;
@@ -126,7 +161,11 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
                 event_header.subset_size = images_in_set;
                 event_header.file_id = id + 1;
                 event_header.file_name = std::to_string(i + 1) + "_" + std::to_string(id + 1);
-                auto err = producer->SendData(event_header, std::move(buffer), meta, &ProcessAfterSend);
+                if (!stream.empty()) {
+                    event_header.file_name = stream + "/" + event_header.file_name;
+                }
+                event_header.user_metadata = meta;
+                auto err = producer->SendData(event_header, std::move(buffer), asapo::kDefaultIngestMode, &ProcessAfterSend);
                 if (err) {
                     std::cerr << "Cannot send file: " << err << std::endl;
                     return false;
@@ -141,7 +180,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.receiver_address, args.nthreads,
                                             args.mode == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem,
-                                            args.beamtime_id, &err);
+                                            asapo::SourceCredentials{args.beamtime_id, args.stream, args.token }, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);
@@ -192,7 +231,7 @@ int main (int argc, char* argv[]) {
 
     system_clock::time_point start_time = system_clock::now();
 
-    if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.images_in_set)) {
+    if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.images_in_set, args.stream)) {
         return EXIT_FAILURE;
     }
 

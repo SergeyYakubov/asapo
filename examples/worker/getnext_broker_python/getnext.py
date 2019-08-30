@@ -6,7 +6,7 @@ import sys
 
 source, path, beamtime, token, group_id = sys.argv[1:]
 
-broker, err = asapo_worker.create_server_broker(source,path, beamtime,token,1000)
+broker, err = asapo_worker.create_server_broker(source,path, beamtime,"",token,1000)
 
 
 if group_id == "new":

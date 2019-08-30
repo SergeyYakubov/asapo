@@ -15,7 +15,7 @@ Cleanup() {
     nomad stop nginx
     nomad stop broker
     nomad stop discovery
-    echo "db.dropDatabase()" | mongo ${beamtime_id}
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_stream
 }
 
 fname=test.dat
@@ -27,7 +27,7 @@ nomad run broker.nmd
 
 sleep 1
 
-echo 'db.data.insert({"_id":'1',"size":'$size',"name":"'$fname'","lastchange":1,"source":"none","buf_id":0,"meta":{}})' | mongo ${beamtime_id}
+echo 'db.data.insert({"_id":'1',"size":'$size',"name":"'$fname'","lastchange":1,"source":"none","buf_id":0,"meta":{}})' | mongo ${beamtime_id}_stream
 dd if=/dev/zero of=$fname bs=$size count=1
 
 export PYTHONPATH=$1:${PYTHONPATH}

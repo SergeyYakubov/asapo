@@ -5,7 +5,7 @@ import sys
 source, path, beamtime, token = sys.argv[1:]
 
 broker, err = asapo_worker.create_server_broker(
-    source, path, beamtime, token, 1000)
+    source, path, beamtime, "stream", token, 1000)
 
 group_id, err = broker.generate_group_id()
 if err is not None:

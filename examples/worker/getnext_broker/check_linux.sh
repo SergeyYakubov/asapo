@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 source_path=dummy
-database_name=test_run
+beamtime_id=test_run
+stream=detector
+database_name=${beamtime_id}_${stream}
 token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
-#set -e
+set -e
 
 trap Cleanup EXIT
 
@@ -27,7 +29,7 @@ done
 
 sleep 1
 
-$@ 127.0.0.1:8400 $source_path $database_name 2 $token_test_run 1000 1  | tee /dev/stderr | grep "Processed 3 file(s)"
+$@ 127.0.0.1:8400 $source_path $beamtime_id 2 $token_test_run 1000 1  | tee /dev/stderr | grep "Processed 3 file(s)"
 
 
 

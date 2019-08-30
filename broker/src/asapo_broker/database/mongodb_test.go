@@ -477,7 +477,7 @@ func TestMongoDBGetRecordLastDataSetOK(t *testing.T) {
 	defer cleanup()
 
 	db.InsertRecord(dbname, &rec_dataset1)
-	db.InsertRecord(dbname, &rec_dataset1)
+	db.InsertRecord(dbname, &rec_dataset3)
 
 	res_string, err := db.ProcessRequest(dbname, groupId, "last_dataset", "0")
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-database_name=test
+database_name=test_stream
 
 set -e
 
@@ -14,13 +14,13 @@ Cleanup() {
 
 echo 'db.meta.insert({"_id":0,"data":"test"})' | mongo ${database_name}
 
-token=`$2 token -secret broker_secret.key ${database_name}`
+token=`$2 token -secret auth_secret.key test`
 
 $1 -config settings.json &
 
 sleep 0.3
 brokerid=`echo $!`
 
-curl -v  --silent 127.0.0.1:5005/database/${database_name}/0/meta/0?token=$token --stderr - | grep '"data":"test"'
-curl -v  --silent 127.0.0.1:5005/database/${database_name}/0/meta/1?token=$token --stderr - | grep 'not found'
+curl -v  --silent 127.0.0.1:5005/database/test/stream/0/meta/0?token=$token --stderr - | grep '"data":"test"'
+curl -v  --silent 127.0.0.1:5005/database/test/stream/0/meta/1?token=$token --stderr - | grep 'not found'
 

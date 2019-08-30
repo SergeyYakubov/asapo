@@ -3,21 +3,22 @@ SET beamtime_id1=asapo_test1
 SET beamline1=test1
 SET beamtime_id2=asapo_test2
 SET beamline2=test2
+SET stream=detector
 
 SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder1="%receiver_root_folder%\%beamline1%\%beamtime_id1%"
 SET receiver_folder2="%receiver_root_folder%\%beamline2%\%beamtime_id2%"
 
 
-"%3" token -secret broker_secret.key %beamtime_id1% > token
+"%3" token -secret auth_secret.key %beamtime_id1% > token
 set /P token1=< token
-"%3" token -secret broker_secret.key %beamtime_id2% > token
+"%3" token -secret auth_secret.key %beamtime_id2% > token
 set /P token2=< token
 
 set proxy_address="127.0.0.1:8400"
 
-echo db.%beamtime_id1%.insert({dummy:1}) | %mongo_exe% %beamtime_id1%
-echo db.%beamtime_id2%.insert({dummy:1}) | %mongo_exe% %beamtime_id2%
+echo db.%beamtime_id1%_%stream%.insert({dummy:1}) | %mongo_exe% %beamtime_id1%_%stream%
+echo db.%beamtime_id2%_%stream%.insert({dummy:1}) | %mongo_exe% %beamtime_id2%_%stream%
 
 c:\opt\consul\nomad run receiver.nmd
 c:\opt\consul\nomad run authorizer.nmd
@@ -60,7 +61,7 @@ c:\opt\consul\nomad stop nginx
 rmdir /S /Q %receiver_root_folder%
 del /f token1
 del /f token2
-echo db.dropDatabase() | %mongo_exe% %beamtime_id1%
-echo db.dropDatabase() | %mongo_exe% %beamtime_id2%
+echo db.dropDatabase() | %mongo_exe% %beamtime_id1%_%stream%
+echo db.dropDatabase() | %mongo_exe% %beamtime_id2%_%stream%
 
 

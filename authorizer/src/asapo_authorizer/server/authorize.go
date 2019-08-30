@@ -1,18 +1,37 @@
 package server
 
 import (
-	"net/http"
-	"encoding/json"
+	log "asapo_common/logger"
 	"asapo_common/utils"
+	"encoding/json"
+	"errors"
+	"net/http"
 	"path/filepath"
 	"strings"
-	log "asapo_common/logger"
-	"errors"
 )
 
-type authorizationRequest struct {
+type SourceCredentials struct {
 	BeamtimeId string
+	Stream string
+	Token string
+}
+
+type authorizationRequest struct {
+	SourceCredentials string
 	OriginHost string
+}
+
+func getSourceCredentials(request authorizationRequest ) (SourceCredentials,error){
+	vals := strings.Split(request.SourceCredentials,"%")
+
+	if len(vals)!=3 {
+		return SourceCredentials{}, errors.New("cannot get source credentials from "+request.SourceCredentials)
+	}
+	creds := SourceCredentials{vals[0],vals[1],vals[2]}
+	if creds.Stream=="" {
+		creds.Stream="detector"
+	}
+	return creds,nil
 }
 
 func extractRequest(r *http.Request) (request authorizationRequest, err error) {
@@ -40,52 +59,97 @@ func getBeamlineFromIP(ip string) (string, error) {
 	return lines[0], nil
 }
 
-func checkBeamtimeExistsInStrings(info beamtimeInfo, lines []string) bool {
+func checkBeamtimeExistsInStrings(beamtime_id string, lines []string) (string,bool) {
 	for _, line := range lines {
 		words := strings.Fields(line)
 		if len(words) < 3 {
 			continue
 		}
-		if words[1] == info.Beamline && words[2] == info.BeamtimeId {
-			return true
+		if words[2] == beamtime_id {
+			return words[1], true
 		}
 	}
-	return false
+	return "",false
 }
 
-func beamtimeExists(info beamtimeInfo) bool {
+func beamtimeRegistered(beamtime_id string) (string,bool) {
 	lines, err := utils.ReadStringsFromFile(settings.BeamtimeBeamlineMappingFile)
 
 	if err != nil || len(lines) < 3 {
-		return false
+		return "",false
 	}
 	lines = lines[2:]
-	return checkBeamtimeExistsInStrings(info, lines)
+	return checkBeamtimeExistsInStrings(beamtime_id, lines)
 }
 
-func authorize(request authorizationRequest) (bool, beamtimeInfo) {
+func alwaysAllowed(creds SourceCredentials)(beamtimeInfo,bool) {
 	for _, pair := range settings.AlwaysAllowedBeamtimes {
-		if pair.BeamtimeId == request.BeamtimeId {
-			return true, pair
+		if pair.BeamtimeId == creds.BeamtimeId {
+			pair.Stream = creds.Stream
+			return pair,true
 		}
 	}
-	var answer beamtimeInfo
+	return beamtimeInfo{},false
+}
 
-	beamline, err := getBeamlineFromIP(request.OriginHost)
+func authorizeByHost(host,beamline string) (bool) {
+	active_beamline, err := getBeamlineFromIP(host)
 	if err != nil {
-		log.Error("cannot find beamline for " + request.OriginHost + " - " + err.Error())
-		return false, beamtimeInfo{}
+		log.Error("cannot find active beamline for " + host + " - " + err.Error())
+		return false
 	}
 
-	answer.Beamline = beamline
-	answer.BeamtimeId = request.BeamtimeId
-	if (!beamtimeExists(answer)) {
-		log.Error("cannot authorize beamtime " + answer.BeamtimeId + " for " + request.OriginHost + " in " + answer.Beamline)
-		return false, beamtimeInfo{}
+	if (active_beamline != beamline) {
+		log.Error("beamine for host " + host +" - "+ active_beamline+ " does not match " + beamline)
+		return false
 	}
+	return true
+}
+
+func needHostAuthorization(creds SourceCredentials) bool {
+	return strings.HasPrefix(creds.Stream,"detector") || len(creds.Token)==0
+}
+
+func authorizeByToken(creds SourceCredentials) bool {
+	token_expect, _ := auth.GenerateToken(&creds.BeamtimeId)
+
+	if creds.Token != token_expect {
+		log.Error("wrong token for beamtime" + creds.BeamtimeId)
+		return false
+	}
+	return true
+}
+
+
+func authorize(request authorizationRequest,creds SourceCredentials) (beamtimeInfo,bool) {
+	if answer,ok := alwaysAllowed(creds);ok {
+		return answer,ok
+	}
+
+	beamline,ok :=beamtimeRegistered(creds.BeamtimeId)
+	if (!ok) {
+		log.Error("cannot find beamline for " + creds.BeamtimeId)
+		return beamtimeInfo{},false
+	}
+
+	if needHostAuthorization(creds)  {
+		if !authorizeByHost(request.OriginHost,beamline) {
+			return beamtimeInfo{}, false
+		}
+	} else {
+		if !authorizeByToken(creds) {
+			return beamtimeInfo{}, false
+		}
+	}
+
+	var answer beamtimeInfo
+	answer.Beamline = beamline
+	answer.BeamtimeId = creds.BeamtimeId
+	answer.Stream = creds.Stream
+
 	log.Debug("authorized beamtime " + answer.BeamtimeId + " for " + request.OriginHost + " in " + answer.Beamline)
 
-	return true, answer
+	return answer,true
 
 }
 
@@ -93,9 +157,19 @@ func routeAuthorize(w http.ResponseWriter, r *http.Request) {
 	request, err := extractRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
 		return
 	}
-	ok, beamtimeInfo := authorize(request)
+
+
+	creds,err := getSourceCredentials(request)
+	if err!=nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	beamtimeInfo,ok := authorize(request,creds)
 	if (!ok) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return

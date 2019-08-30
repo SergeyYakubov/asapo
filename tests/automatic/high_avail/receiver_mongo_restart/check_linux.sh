@@ -43,7 +43,7 @@ Cleanup() {
     nomad stop discovery
     nomad stop authorizer
     nomad stop nginx
-    echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}
+    echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}_detector
     kill_mongo
 }
 
@@ -52,7 +52,7 @@ wait_mongo
 
 
 # create db before worker starts reading it. todo: git rid of it
-echo "db.${beamtime_id}.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}
+echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}_detector
 
 sed -i 's/27017/27016/g' receiver.json.tpl
 
@@ -79,12 +79,12 @@ start_mongo
 
 wait
 
-echo "db.data.validate(true)" | mongo --port 27016 ${beamtime_id}
+echo "db.data.validate(true)" | mongo --port 27016 ${beamtime_id}_detector
 
 echo processed files:
-echo "db.data.count()" | mongo --port 27016 ${beamtime_id}
+echo "db.data.count()" | mongo --port 27016 ${beamtime_id}_detector
 
 
-echo "db.data.count()" | mongo --port 27016 ${beamtime_id} | grep $nfiles
+echo "db.data.count()" | mongo --port 27016 ${beamtime_id}_detector | grep $nfiles
 
 

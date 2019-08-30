@@ -4,8 +4,8 @@ import numpy
 
 ext_modules = [
     Extension("asapo_worker", ["asapo_worker.cpp"],
-              extra_objects=['lib/libasapo-worker.a',
-                             'lib/libcurl.a'],
+              extra_objects=['lib/libasapo-worker.a'],
+					   libraries = ['curl'],
                        include_dirs=["include/common","include",numpy.get_include()],
                        extra_compile_args=@EXTRA_COMPILE_ARGS@,
                        extra_link_args=@EXTRA_LINK_ARGS@,

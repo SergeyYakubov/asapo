@@ -105,7 +105,7 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t* fsize, Er
 
     Read(fd, data_array, (size_t)*fsize, err);
     if (*err != nullptr) {
-        (*err)->Append(fname);
+        (*err)->Append(fname + ", expected size: " + std::to_string(*fsize));
         Close(fd, nullptr);
         return nullptr;
     }
@@ -152,7 +152,7 @@ Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::strin
         full_name = fname;
     }
     Error err;
-    auto fd = Open(full_name, IO_OPEN_MODE_CREATE | IO_OPEN_MODE_RW, &err);
+    auto fd = Open(full_name, IO_OPEN_MODE_CREATE | IO_OPEN_MODE_RW | IO_OPEN_MODE_SET_LENGTH_0, &err);
     if (err == IOErrorTemplates::kFileNotFound && create_directories) {
         size_t pos = fname.rfind(kPathSeparator);
         if (pos == std::string::npos) {

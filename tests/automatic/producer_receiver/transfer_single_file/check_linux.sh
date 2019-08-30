@@ -17,13 +17,13 @@ Cleanup() {
     nomad stop discovery
     nomad stop authorizer
     nomad stop nginx
-    echo "db.dropDatabase()" | mongo ${beamtime_id}
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     influx -execute "drop database ${database_name}"
 }
 
 influx -execute "create database ${database_name}"
 # create db before worker starts reading it. todo: git rid of it
-echo "db.${beamtime_id}.insert({dummy:1})" | mongo ${beamtime_id}
+echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
 
 nomad run authorizer.nmd
 nomad run nginx.nmd

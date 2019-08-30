@@ -32,10 +32,9 @@ std::unique_ptr<DataBroker> DataBrokerFactory::CreateFolderBroker(const std::str
 };
 
 std::unique_ptr<DataBroker> DataBrokerFactory::CreateServerBroker(std::string server_name, std::string source_path,
-        std::string beamtime_id, std::string token,
+        SourceCredentials source,
         Error* error) noexcept {
-    return Create<ServerDataBroker>(std::move(server_name), error, std::move(source_path), std::move(beamtime_id),
-                                    std::move(token));
+    return Create<ServerDataBroker>(std::move(server_name), error, std::move(source_path), std::move(source));
 }
 
 

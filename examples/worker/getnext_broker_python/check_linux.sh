@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 source_path=dummy
-database_name=test_run
+beamtime_id=test_run
+stream=detector
+database_name=${beamtime_id}_${stream}
 token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 group_id=bif31l2uiddd4r0q6b40
-#set -e
+set -e
 
 
 
@@ -33,22 +35,22 @@ sleep 1
 
 export PYTHONPATH=$1:${PYTHONPATH}
 
-python getnext.py 127.0.0.1:8400 $source_path $database_name $token_test_run $group_id > out
+python getnext.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run $group_id > out
 cat out
 cat out | grep '"size": 100'
 cat out | grep '"_id": 1'
 cat out | grep '"meta_test": "test"'
 
-python getnext.py 127.0.0.1:8400 $source_path $database_name $token_test_run $group_id> out
+python getnext.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run $group_id> out
 cat out
 cat out | grep '"_id": 2'
 
-python3 getnext.py 127.0.0.1:8400 $source_path $database_name $token_test_run $group_id> out
+python3 getnext.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run $group_id> out
 cat out
 cat out | grep '"_id": 3'
 
 
-python3 getnext.py 127.0.0.1:8400 $source_path $database_name $token_test_run new> out
+python3 getnext.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run new> out
 cat out
 cat out | grep '"_id": 1'
 

@@ -1,0 +1,25 @@
+PROGRAM=@TARGET_NAME@
+
+CXX=g++
+CXXFLAGS=-std=c++11
+LDFLAGS=-pthread  -static-libgcc -static-libstdc++
+LIBS=-L @CMAKE_INSTALL_PREFIX@/lib -lasapo-worker -L ${LIBCURL_DIR}/lib -lcurl
+INCLUDE=-I @CMAKE_INSTALL_PREFIX@/include -I ${LIBCURL_DIR}/include
+RM=rm -f
+
+SRCS=@SOURCE_FILES@
+OBJS=$(subst .cpp,.o,$(SRCS))
+
+all: $(PROGRAM)
+
+$(PROGRAM): $(OBJS)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c -o $@ $<
+
+clean:
+	$(RM) $(OBJS)
+
+distclean: clean
+	$(RM) $(PROGRAM)

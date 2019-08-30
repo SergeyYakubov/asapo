@@ -60,6 +60,11 @@ job "asapo-services" {
          destination   = "local/config.json"
          change_mode   = "restart"
       }
+      template {
+        source        = "@NOMAD_INSTALL@/auth_secret.key"
+        destination   = "secrets/secret.key"
+        change_mode   = "restart"
+      }
    }
   } #authorizer
   group "asapo-discovery" {

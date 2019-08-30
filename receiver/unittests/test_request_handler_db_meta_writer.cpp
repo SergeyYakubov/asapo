@@ -62,6 +62,7 @@ class DbMetaWriterHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
+    std::string expected_stream = "stream";
     std::string meta_str =
         R"("info":"stat","int_data":0,"float_data":0.1,"bool":false)";
     const uint8_t* expected_meta = reinterpret_cast<const uint8_t*>(meta_str.c_str());
@@ -90,7 +91,13 @@ TEST_F(DbMetaWriterHandlerTests, CallsUpdate) {
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
-    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, expected_beamtime_id, expected_collection_name)).
+    EXPECT_CALL(*mock_request, GetStream())
+    .WillOnce(ReturnRef(expected_stream))
+    ;
+
+
+    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, expected_beamtime_id + "_" + expected_stream,
+                                   expected_collection_name)).
     WillOnce(testing::Return(nullptr));
 
 

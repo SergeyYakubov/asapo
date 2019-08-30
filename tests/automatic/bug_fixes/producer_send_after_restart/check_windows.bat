@@ -9,12 +9,12 @@ SET receiver_folder="%receiver_root_folder%\%beamline%\%beamtime_id%"
 set producer_short_name="%~nx1"
 
 
-"%3" token -secret broker_secret.key %beamtime_id% > token
+"%3" token -secret auth_secret.key %beamtime_id% > token
 set /P token=< token
 
 set proxy_address="127.0.0.1:8400"
 
-echo db.%beamtime_id%.insert({dummy:1}) | %mongo_exe% %beamtime_id%
+echo db.%beamtime_id%_detector.insert({dummy:1}) | %mongo_exe% %beamtime_id%_detector
 
 c:\opt\consul\nomad run receiver.nmd
 c:\opt\consul\nomad run authorizer.nmd
@@ -42,7 +42,7 @@ c:\opt\consul\nomad run receiver.nmd
 
 ping 1.0.0.0 -n 3 -w 100 > nul
 ping 1.0.0.0 -n 3 -w 100 > nul
-ping 1.0.0.0 -n 3 -w 100 > nul
+ping 1.0.0.0 -n 10 -w 100 > nul
 
 
 echo hello > c:\tmp\asapo\test_in\test1\file3
@@ -51,7 +51,7 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 
 REM worker
-"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 1000 1 | findstr /c:"Processed 3 file(s)"  || goto :error
+"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 3000 1 | findstr /c:"Processed 3 file(s)"  || goto :error
 
 
 goto :clean
@@ -72,7 +72,7 @@ rmdir /S /Q c:\tmp\asapo\test_in\test2
 Taskkill /IM "%producer_short_name%" /F
 
 del /f token
-echo db.dropDatabase() | %mongo_exe% %beamtime_id%
+echo db.dropDatabase() | %mongo_exe% %beamtime_id%_detector
 
 
 
