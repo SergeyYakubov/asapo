@@ -172,7 +172,7 @@ cdef class PyDataBroker:
                 del meta['_id']
                 return meta, None
 
-cdef class PyDataBrokerFactory:
+cdef class __PyDataBrokerFactory:
     cdef DataBrokerFactory c_factory
     def __cinit__(self):
         with nogil:
@@ -198,7 +198,12 @@ cdef class PyDataBrokerFactory:
             return broker,None
 
 def create_server_broker(server_name,source_path,beamtime_id,stream,token,timeout):
-    factory = PyDataBrokerFactory()
+    """
+      :param server_name: Handler to this.
+      :type server_name: String
+      :param source_path: The network this node belongs to.
+	"""
+    factory = __PyDataBrokerFactory()
     return factory.create_server_broker(_bytes(server_name),_bytes(source_path),_bytes(beamtime_id),_bytes(stream),_bytes(token),timeout)
 
 

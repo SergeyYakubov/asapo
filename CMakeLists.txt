@@ -31,6 +31,7 @@ option(BUILD_TESTS "Uses googletest to build tests" OFF)
 option(BUILD_INTEGRATION_TESTS "Include integration tests (CMAKE >3.7 is needed)" OFF)
 option(BUILD_DOCS "Uses doxygen to build the documentaion" OFF)
 option(BUILD_BROKER "Build broker" OFF)
+option(BUILD_PYTHON_DOCS "Uses sphinx to build the Python documentaion" OFF)
 
 option(BUILD_WORKER_TOOLS "Build worker tools" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
@@ -92,5 +93,14 @@ endif()
 if(BUILD_DOCS)
     include(doxygen)
 endif()
+
+
+if(BUILD_PYTHON_DOCS)
+    add_subdirectory (sphinx)
+endif()
+
+
+
+
 
 include(prepare_version)

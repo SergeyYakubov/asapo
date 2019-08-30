@@ -14,7 +14,7 @@ module = Extension("asapo_producer", ["asapo_producer.pyx"],
                        language="c++",
          )
 
-ext_modules = cythonize([module])
+ext_modules = cythonize([module],compiler_directives={'embedsignature': True})
 
 setup(ext_modules = ext_modules,
       setup_requires=["numpy","cython>=0.28"],
