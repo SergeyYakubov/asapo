@@ -136,3 +136,6 @@ asapo_tools/pkg
 
 common/cpp/include/common/version.h
 common/go/src/asapo_common/version/version_lib.go
+
+
+!sphinx/*
