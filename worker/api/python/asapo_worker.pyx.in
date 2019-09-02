@@ -172,7 +172,7 @@ cdef class PyDataBroker:
                 del meta['_id']
                 return meta, None
 
-cdef class PyDataBrokerFactory:
+cdef class __PyDataBrokerFactory:
     cdef DataBrokerFactory c_factory
     def __cinit__(self):
         with nogil:
@@ -197,9 +197,17 @@ cdef class PyDataBrokerFactory:
         else:
             return broker,None
 
-def create_server_broker(server_name,source_path,beamtime_id,stream,token,timeout):
-    factory = PyDataBrokerFactory()
-    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),_bytes(beamtime_id),_bytes(stream),_bytes(token),timeout)
+def create_server_broker(server_name,source_path,beamtime_id,stream,token,timeout_ms):
+    """
+      :param server_name: Server endpoint (hostname:port)
+      :type server_name: string
+      :param source_path: Path to the folder to read data from
+      :type source_path: string
+      :return: Broker object and error. (None,err) if case of error, (broker, None) if success
+      :rtype: Tuple with broker object and error.
+	"""
+    factory = __PyDataBrokerFactory()
+    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),_bytes(beamtime_id),_bytes(stream),_bytes(token),timeout_ms)
 
 
 __version__ = "@ASAPO_VERSION_PYTHON@"
