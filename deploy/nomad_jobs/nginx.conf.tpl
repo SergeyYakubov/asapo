@@ -18,10 +18,28 @@ http {
     server {
           listen {{ env "NOMAD_PORT_nginx" }};
           set $discovery_endpoint asapo-discovery.service.asapo;
-#          set $authorizer_endpoint asapo-authorizer.service.asapo;
+          set $authorizer_endpoint asapo-authorizer.service.asapo;
           set $fluentd_endpoint fluentd.service.asapo;
           set $kibana_endpoint kibana.service.asapo;
           set $grafana_endpoint grafana.service.asapo;
+          set $mongo_endpoint mongo.service.asapo;
+          set $influxdb_endpoint influxdb.service.asapo;
+          set $elasticsearch_endpoint elasticsearch.service.asapo;
+
+   		  location /mongo/ {
+            rewrite ^/mongo(/.*) $1 break;
+            proxy_pass http://$mongo_endpoint:27017$uri$is_args$args;
+          }
+
+   		  location /influxdb/ {
+            rewrite ^/influxdb(/.*) $1 break;
+            proxy_pass http://$influxdb_endpoint:8086$uri$is_args$args;
+          }
+
+   		  location /elasticsearch/ {
+            rewrite ^/elasticsearch(/.*) $1 break;
+            proxy_pass http://$elasticsearch_endpoint:9200$uri$is_args$args;
+          }
 
           location /discovery/ {
             rewrite ^/discovery(/.*) $1 break;
@@ -45,10 +63,10 @@ http {
             proxy_pass http://$grafana_endpoint:3000$uri$is_args$args;
           }
 
-#          location /authorizer/ {
-#             rewrite ^/authorizer(/.*) $1 break;
-#             proxy_pass http://$authorizer_endpoint:5007$uri$is_args$args;
-#          }
+          location /authorizer/ {
+             rewrite ^/authorizer(/.*) $1 break;
+             proxy_pass http://$authorizer_endpoint:5007$uri$is_args$args;
+          }
 
       	  location /nginx-health {
   	        return 200 "healthy\n";

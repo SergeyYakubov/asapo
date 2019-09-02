@@ -7,11 +7,11 @@ trap Cleanup EXIT
 Cleanup() {
 	echo cleanup
 	kill -9 $authorizeid
+	sleep 1
 }
 
 $@ -config settings.json  &
-
-sleep 0.3
+sleep 1
 authorizeid=`echo $!`
 
 curl -v --silent --data '{"SourceCredentials":"c20180508-000-COM20181%stream%","OriginHost":"127.0.0.1:5555"}' 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep c20180508-000-COM20181

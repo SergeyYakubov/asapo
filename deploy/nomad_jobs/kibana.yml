@@ -1,5 +1,5 @@
 elasticsearch:
-  url: "http://elasticsearch.service.asapo:9200"
+  url: "http://localhost:8400/elasticsearch"
 server:
   basePath:   "/logsview"
   rewriteBasePath: true

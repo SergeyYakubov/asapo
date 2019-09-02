@@ -1,8 +1,8 @@
 {
-  "MonitorDbAddress":"influxdb.service.asapo:8086",
+  "MonitorDbAddress":"localhost:8400/influxdb",
   "MonitorDbName": "asapo_receivers",
-  "BrokerDbAddress":"mongo.service.asapo:27017",
-  "AuthorizationServer": "asapo-authorizer.service.asapo:5007",
+  "BrokerDbAddress":"localhost:8400/mongo",
+  "AuthorizationServer": "localhost:8400/authorizer",
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "DataServer": {
