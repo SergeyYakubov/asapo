@@ -19,8 +19,8 @@
 import os
 import sys
 
-sys.path.insert(0, '/home/yakubov/projects/asapo/cmake-build-debug/worker/api/python')
-sys.path.insert(0, '/home/yakubov/projects/asapo/cmake-build-debug/producer/api/python')
+sys.path.insert(0, os.path.abspath('../../../worker/api/python'))
+sys.path.insert(0, os.path.abspath('../../../producer/api/python'))
 
 
 import asapo_producer
