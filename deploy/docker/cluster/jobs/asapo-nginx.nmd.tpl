@@ -25,7 +25,7 @@ job "asapo-nginx" {
 
       config {
         network_mode = "host"
-        image = "nginx:1.14"
+        image = "nginx:${nginx_version}"
         volumes = ["local/nginx.conf:/etc/nginx/nginx.conf"]
       }
 

@@ -12,11 +12,10 @@ job "asapo-services" {
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]
-        image = "yakser/asapo-authorizer-dev:feature_virtualized-deployment.latest"
-	    force_pull = true
-        volumes = ["local/config.json:/var/lib/authorizer/config.json",
-                   "/bldocuments/support/asapo/beamtime_beamline_mapping.txt:/var/lib/authorizer/beamtime_beamline_mapping.txt",
-                   "/bldocuments/support/asapo/ip_beamtime_mapping:/var/lib/authorizer/ip_beamtime_mapping"]
+        image = "yakser/asapo-authorizer${image_suffix}"
+	force_pull = true
+        volumes = ["local/config.json:/var/lib/authorizer/config.json"]
+	%{ if fluentd_logs }
         logging {
             type = "fluentd"
             config {
@@ -25,6 +24,7 @@ job "asapo-services" {
                 tag = "asapo.docker"
             }
         }
+	%{endif}
       }
 
       resources {
@@ -62,7 +62,7 @@ job "asapo-services" {
       }
       template {
         source        = "/usr/local/nomad_jobs/auth_secret.key"
-        destination   = "secrets/secret.key"
+        destination   = "local/secret.key"
         change_mode   = "restart"
       }
    }
@@ -76,7 +76,7 @@ job "asapo-services" {
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]
-        image = "yakser/asapo-discovery-dev:feature_virtualized-deployment.latest"
+        image = "yakser/asapo-discovery${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/discovery/config.json"]
         logging {

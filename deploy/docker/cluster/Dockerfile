@@ -4,6 +4,7 @@ MAINTAINER DESY IT
 
 ENV CONSUL_VERSION=1.6.0
 ENV NOMAD_VERSION=0.9.5
+ENV TERRAFORM_VERSION=0.12.7
 
 ENV HASHICORP_RELEASES=https://releases.hashicorp.com
 
@@ -30,6 +31,8 @@ RUN set -eux && \
     unzip -d /bin consul_${CONSUL_VERSION}_linux_amd64.zip && \
     wget ${HASHICORP_RELEASES}/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip && \
     unzip -d /bin nomad_${NOMAD_VERSION}_linux_amd64.zip && \
+    wget ${HASHICORP_RELEASES}/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
+    unzip -d /bin terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
     cd /tmp && \
     rm -rf /tmp/build && \
 # tiny smoke test to ensure the binary we downloaded runs
