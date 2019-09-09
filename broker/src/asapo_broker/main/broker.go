@@ -39,6 +39,8 @@ func main() {
 
 	log.SetLevel(logLevel)
 
+	server.CreateDiscoveryService()
+
 	err = server.InitDB(NewDefaultDatabase())
 	if err != nil {
 		log.Fatal(err.Error())

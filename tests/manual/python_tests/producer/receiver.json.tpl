@@ -1,7 +1,8 @@
 {
-  "MonitorDbAddress":"localhost:8086",
-  "MonitorDbName": "db_test",
-  "BrokerDbAddress":"localhost:27017",
+  "PerformanceDbServer":"localhost:8086",
+  "PerformanceDbName": "db_test",
+  "DatabaseServer":"localhost:27017",
+  "DiscoveryServer": "localhost:8400/discovery",
   "DataServer": {
     "NThreads": 2,
     "ListenPort": {{ env "NOMAD_PORT_recv_ds" }}

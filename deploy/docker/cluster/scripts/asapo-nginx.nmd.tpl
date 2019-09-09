@@ -59,7 +59,7 @@ job "asapo-nginx" {
       }
 
       template {
-         source        = "/usr/local/nomad_jobs/nginx.conf.tpl"
+         source        = "${scripts_dir}/nginx.conf.tpl"
          destination   = "local/nginx.conf"
          change_mode   = "restart"
       }

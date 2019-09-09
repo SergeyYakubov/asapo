@@ -6,6 +6,8 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -37,7 +39,7 @@ func TestInitDBWithWrongAddress(t *testing.T) {
 
 	mock_db.ExpectedCalls = nil
 
-	settings.BrokerDbAddress = "0.0.0.0:0000"
+	settings.DatabaseServer = "0.0.0.0:0000"
 
 	for _, test := range initDBTests {
 		mock_db.On("Connect", "0.0.0.0:0000").Return(test.answer)
@@ -47,6 +49,28 @@ func TestInitDBWithWrongAddress(t *testing.T) {
 		assert.Equal(t, test.answer, err, test.message)
 		assertExpectations(t, mock_db)
 	}
+	db = nil
+}
+
+func TestInitDBWithAutoAddress(t *testing.T) {
+	mock_db := setup()
+
+	mock_db.ExpectedCalls = nil
+
+	settings.DatabaseServer = "auto"
+	mock_server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, req.URL.String(), "/mongo", "request string")
+		rw.Write([]byte("0.0.0.0:0000"))
+	}))
+	defer mock_server.Close()
+
+	discoveryService = discoveryAPI{mock_server.Client(), mock_server.URL}
+
+	mock_db.On("Connect", "0.0.0.0:0000").Return(nil)
+	err := InitDB(mock_db)
+
+	assert.Equal(t, nil, err, "auto connect ok")
+	assertExpectations(t, mock_db)
 	db = nil
 }
 

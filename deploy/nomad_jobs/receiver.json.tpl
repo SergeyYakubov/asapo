@@ -1,7 +1,8 @@
 {
-  "MonitorDbAddress":"localhost:8400/influxdb",
-  "MonitorDbName": "asapo_receivers",
-  "BrokerDbAddress":"localhost:8400/mongo",
+  "PerformanceDbServer":"localhost:8400/influxdb",
+  "PerformanceDbName": "asapo_receivers",
+  "DatabaseServer":"auto",
+  "DiscoveryServer": "localhost:8400/discovery",
   "AuthorizationServer": "localhost:8400/authorizer",
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},

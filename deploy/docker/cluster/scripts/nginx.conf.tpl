@@ -22,14 +22,8 @@ http {
           set $fluentd_endpoint fluentd.service.asapo;
           set $kibana_endpoint kibana.service.asapo;
           set $grafana_endpoint grafana.service.asapo;
-          set $mongo_endpoint mongo.service.asapo;
           set $influxdb_endpoint influxdb.service.asapo;
           set $elasticsearch_endpoint elasticsearch.service.asapo;
-
-   		  location /mongo/ {
-            rewrite ^/mongo(/.*) $1 break;
-            proxy_pass http://$mongo_endpoint:27017$uri$is_args$args;
-          }
 
    		  location /influxdb/ {
             rewrite ^/influxdb(/.*) $1 break;
@@ -80,7 +74,6 @@ stream {
     map $remote_addr $upstream {
         default fluentd.service.asapo;
     }
-
 
     server {
         listen     9881;

@@ -47,7 +47,7 @@ func (st *serverStatistics) WriteStatistic() (err error) {
 func (st *serverStatistics) Monitor() {
 	for {
 		time.Sleep(1000 * time.Millisecond)
-		logstr := "sending statistics to " + settings.MonitorDbAddress + ", dbname: " + settings.MonitorDbName
+		logstr := "sending statistics to " + settings.PerformanceDbServer + ", dbname: " + settings.PerformanceDbName
 		if err := st.WriteStatistic(); err != nil {
 			log.Error(logstr + " - " + err.Error())
 		} else {

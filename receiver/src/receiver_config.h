@@ -9,9 +9,9 @@
 namespace asapo {
 
 struct ReceiverConfig {
-    std::string monitor_db_uri;
-    std::string monitor_db_name;
-    std::string broker_db_uri;
+    std::string performance_db_uri;
+    std::string performance_db_name;
+    std::string database_uri;
     std::string root_folder;
     uint64_t listen_port = 0;
     std::string authorization_server;
@@ -25,6 +25,7 @@ struct ReceiverConfig {
     std::string tag;
     std::string source_host;
     ReceiverDataCenterConfig dataserver;
+    std::string discovery_server;
 };
 
 const ReceiverConfig* GetReceiverConfig();

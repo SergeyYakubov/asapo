@@ -2,12 +2,6 @@ FROM ubuntu:18.04
 
 MAINTAINER DESY IT
 
-ENV CONSUL_VERSION=1.6.0
-ENV NOMAD_VERSION=0.9.5
-ENV TERRAFORM_VERSION=0.12.7
-
-ENV HASHICORP_RELEASES=https://releases.hashicorp.com
-
 RUN apt-get update && apt-get install -y supervisor apt-transport-https \
         ca-certificates \
         curl \
@@ -24,6 +18,11 @@ RUN add-apt-repository \
 RUN apt-get update && apt-get install -y docker-ce-cli wget unzip
 
 
+ENV CONSUL_VERSION=1.6.0
+ENV NOMAD_VERSION=0.9.5
+ENV TERRAFORM_VERSION=0.12.8
+ENV HASHICORP_RELEASES=https://releases.hashicorp.com
+
 RUN set -eux && \
     mkdir -p /tmp/build && \
     cd /tmp/build && \
@@ -37,10 +36,14 @@ RUN set -eux && \
     rm -rf /tmp/build && \
 # tiny smoke test to ensure the binary we downloaded runs
     consul version && \
-    nomad version
+    nomad version && \
+    terraform version
 
 ADD supervisord.conf /etc/
 
 RUN mkdir -p /var/log/supervisord/
+
+COPY scripts/ /var/run/asapo/
+
 
 ENTRYPOINT ["supervisord", "--configuration", "/etc/supervisord.conf"]

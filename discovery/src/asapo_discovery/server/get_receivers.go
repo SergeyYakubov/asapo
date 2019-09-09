@@ -15,6 +15,10 @@ func getService(service string) (answer []byte, code int) {
 	case "broker":
 		answer, err = requestHandler.GetBroker()
 		break
+	case "mongo":
+		answer, err = requestHandler.GetMongo()
+		break
+
 	default:
 		err = errors.New("wrong request: "+service)
 	}
@@ -39,6 +43,13 @@ func routeGetReceivers(w http.ResponseWriter, r *http.Request) {
 func routeGetBroker(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Content-type", "application/json")
 	answer,code := getService("broker")
+	w.WriteHeader(code)
+	w.Write(answer)
+}
+
+func routeGetMongo(w http.ResponseWriter, r *http.Request) {
+	r.Header.Set("Content-type", "application/json")
+	answer,code := getService("mongo")
 	w.WriteHeader(code)
 	w.Write(answer)
 }

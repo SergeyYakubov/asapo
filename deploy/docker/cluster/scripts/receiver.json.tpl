@@ -1,7 +1,8 @@
 {
-  "MonitorDbAddress":"localhost:8400/influxdb",
-  "MonitorDbName": "asapo_receivers",
-  "BrokerDbAddress":"localhost:8400/mongo",
+  "PerformanceDbServer":"localhost:8400/influxdb",
+  "PerformanceDbName": "asapo_receivers",
+  "DatabaseServer":"auto",
+  "DiscoveryServer": "localhost:8400/discovery",
   "AuthorizationServer": "localhost:8400/authorizer",
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
@@ -11,7 +12,7 @@
   },
   "DataCache": {
     "Use": true,
-    "SizeGB": 30,
+    "SizeGB": {{ env "NOMAD_META_receiver_dataserver_cache_size" }},
     "ReservedShare": 10
   },
   "Tag": "{{ env "NOMAD_ADDR_recv" }}",

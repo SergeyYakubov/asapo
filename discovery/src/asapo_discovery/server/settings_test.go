@@ -14,6 +14,7 @@ func fillSettings(mode string) utils.Settings {
 	settings.LogLevel = "info"
 	settings.Receiver.StaticEndpoints=[]string{"ip1","ip2"}
 	settings.Broker.StaticEndpoint="ip_b"
+	settings.Mongo.StaticEndpoint="ip_m"
 	settings.ConsulEndpoints=[]string{"ipc1","ipc2"}
 	return settings
 }
@@ -44,6 +45,12 @@ func TestSettingsStaticModeNoBrokerEndpoints(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestSettingsStaticModeNoMongoEndpoints(t *testing.T) {
+	settings := fillSettings("static")
+	settings.Mongo.StaticEndpoint=""
+	err := settings.Validate()
+	assert.NotNil(t, err)
+}
 
 
 func TestSettingsConsulModeNoEndpoints(t *testing.T) {

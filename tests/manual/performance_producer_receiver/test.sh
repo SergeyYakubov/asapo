@@ -54,7 +54,7 @@ scp ../../../cmake-build-release/examples/producer/dummy-data-producer/dummy-dat
 function do_work {
 cat receiver.json |
   jq "to_entries |
-       map(if .key == \"MonitorDbAddress\"
+       map(if .key == \"PerformanceDbServer\"
           then . + {value:\"${monitor_node}:${monitor_port}\"}
           elif .key == \"ListenPort\"
           then . + {value:${receiver_port}}

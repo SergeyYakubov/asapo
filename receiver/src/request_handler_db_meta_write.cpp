@@ -20,7 +20,7 @@ Error RequestHandlerDbMetaWrite::ProcessRequest(Request* request) const {
     if (!err) {
         log__->Debug(std::string{"insert beamtime meta"} + " to " + collection_name_ + " in " +
                      db_name_ +
-                     " at " + GetReceiverConfig()->broker_db_uri);
+                     " at " + GetReceiverConfig()->database_uri);
     }
     return err;
 }

@@ -96,7 +96,7 @@ TEST_F(DbMetaWriterHandlerTests, CallsUpdate) {
     ;
 
 
-    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, expected_beamtime_id + "_" + expected_stream,
+    EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_stream,
                                    expected_collection_name)).
     WillOnce(testing::Return(nullptr));
 
@@ -113,7 +113,7 @@ TEST_F(DbMetaWriterHandlerTests, CallsUpdate) {
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert beamtime meta"),
-                                         HasSubstr(config.broker_db_uri),
+                                         HasSubstr(config.database_uri),
                                          HasSubstr(expected_beamtime_id),
                                          HasSubstr(expected_collection_name)
                                         )

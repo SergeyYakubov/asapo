@@ -56,12 +56,12 @@ job "asapo-services" {
       }
 
       template {
-         source        = "/usr/local/nomad_jobs/authorizer.json.tpl"
+         source        = "${scripts_dir}/authorizer.json.tpl"
          destination   = "local/config.json"
          change_mode   = "restart"
       }
       template {
-        source        = "/usr/local/nomad_jobs/auth_secret.key"
+        source        = "${scripts_dir}/auth_secret.key"
         destination   = "local/secret.key"
         change_mode   = "restart"
       }
@@ -79,14 +79,16 @@ job "asapo-services" {
         image = "yakser/asapo-discovery${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/discovery/config.json"]
+        %{ if fluentd_logs }
         logging {
-            type = "fluentd"
-            config {
-                fluentd-address = "localhost:9881"
-                fluentd-async-connect = true
-                tag = "asapo.docker"
-            }
+        type = "fluentd"
+        config {
+        fluentd-address = "localhost:9881"
+        fluentd-async-connect = true
+        tag = "asapo.docker"
         }
+        }
+        %{endif}
       }
 
       resources {
@@ -119,7 +121,7 @@ job "asapo-services" {
       }
 
       template {
-         source        = "/usr/local/nomad_jobs/discovery.json.tpl"
+         source        = "${scripts_dir}/discovery.json.tpl"
          destination   = "local/config.json"
          change_mode   = "restart"
       }

@@ -66,8 +66,8 @@ class SenderInfluxDbTests : public Test {
         statistics.tags.push_back(std::make_pair("name1", "value1"));
         statistics.tags.push_back(std::make_pair("name2", "value2"));
 
-        config.monitor_db_uri = "test_uri";
-        config.monitor_db_name = "test_name";
+        config.performance_db_uri = "test_uri";
+        config.performance_db_name = "test_name";
         SetReceiverConfig(config, "none");
 
         sender.httpclient__.reset(&mock_http_client);
@@ -88,7 +88,7 @@ TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
               Return("")
              ));
 
-    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("sending statistics"), HasSubstr(config.monitor_db_uri))));
+    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("sending statistics"), HasSubstr(config.performance_db_uri))));
 
 
     sender.SendStatistics(statistics);
@@ -113,8 +113,8 @@ TEST_F(SenderInfluxDbTests, LogDebugSendStatistics) {
              ));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending statistics"),
-                                         HasSubstr(config.monitor_db_uri),
-                                         HasSubstr(config.monitor_db_name)
+                                         HasSubstr(config.performance_db_uri),
+                                         HasSubstr(config.performance_db_name)
                                         )
                                   )
                );

@@ -30,7 +30,7 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 	}
 	if _, err := xid.FromString(group_id); err != nil {
 		err_str := "wrong groupid " + group_id
-		log_str := "processing get " + op + " request in " + db_name + " at " + settings.BrokerDbAddress + ": " + err_str
+		log_str := "processing get " + op + " request in " + db_name + " at " + settings.DatabaseServer + ": " + err_str
 		logger.Error(log_str)
 		fmt.Println(log_str)
 		w.WriteHeader(http.StatusBadRequest)
@@ -90,7 +90,7 @@ func processRequestInDb(db_name string, group_id string, op string, extra_param 
 	defer db_new.Close()
 	statistics.IncreaseCounter()
 	answer, err := db_new.ProcessRequest(db_name, group_id, op, extra_param)
-	log_str := "processing request " + op + " in " + db_name + " at " + settings.BrokerDbAddress
+	log_str := "processing request " + op + " in " + db_name + " at " + settings.DatabaseServer
 	if err != nil {
 		return returnError(err, log_str)
 	}

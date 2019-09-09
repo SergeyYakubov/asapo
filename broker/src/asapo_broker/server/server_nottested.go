@@ -38,20 +38,24 @@ func ReadConfig(fname string) (log.Level, error) {
 		return log.FatalLevel, err
 	}
 
-	if settings.BrokerDbAddress == "" {
-		return log.FatalLevel, errors.New("BrokerDbAddress not set")
+	if settings.DatabaseServer == "" {
+		return log.FatalLevel, errors.New("DatabaseServer not set")
 	}
 
-	if settings.MonitorDbAddress == "" {
-		return log.FatalLevel, errors.New("MonitorDbAddress not set")
+	if settings.PerformanceDbServer == "" {
+		return log.FatalLevel, errors.New("PerformanceDbServer not set")
+	}
+
+	if settings.DatabaseServer == "auto" && settings.DiscoveryServer == "" {
+		return log.FatalLevel, errors.New("DiscoveryServer not set for auto DatabaseServer")
 	}
 
 	if settings.Port == 0 {
 		return log.FatalLevel, errors.New("Server port not set")
 	}
 
-	if settings.MonitorDbName == "" {
-		return log.FatalLevel, errors.New("MonitorDbName not set")
+	if settings.PerformanceDbName == "" {
+		return log.FatalLevel, errors.New("PerformanceDbName not set")
 	}
 
 	if settings.SecretFile == "" {

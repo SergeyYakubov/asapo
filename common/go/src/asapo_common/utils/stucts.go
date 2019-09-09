@@ -11,10 +11,14 @@ type BrokerInfo struct {
 	StaticEndpoint		 string
 }
 
+type MongoInfo struct {
+	StaticEndpoint		 string
+}
 
 type Settings struct {
 	Receiver 		ReceiverInfo
 	Broker 		    BrokerInfo
+	Mongo 			MongoInfo
 	ConsulEndpoints []string
 	Mode			string
 	Port            int
@@ -23,8 +27,8 @@ type Settings struct {
 
 func (settings *Settings) Validate() error {
 	if settings.Mode != "consul"{
-		if len(settings.Receiver.StaticEndpoints) == 0 || len(settings.Broker.StaticEndpoint) == 0 {
-		return errors.New("receiver or broker endpoints not set")
+		if len(settings.Receiver.StaticEndpoints) == 0 || len(settings.Broker.StaticEndpoint) == 0 || len(settings.Mongo.StaticEndpoint) == 0{
+			return errors.New("static endpoints not set")
 		}
 	}
 

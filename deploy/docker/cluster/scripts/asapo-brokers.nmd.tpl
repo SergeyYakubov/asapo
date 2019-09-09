@@ -22,18 +22,19 @@ job "asapo-brokers" {
       driver = "docker"
       config {
         network_mode = "host"
-        dns_servers = ["127.0.0.1"]
-        image = "yakser/asapo-broker-dev:feature_virtualized-deployment.latest"
+        image = "yakser/asapo-broker${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/broker/config.json"]
-        logging {
-            type = "fluentd"
-            config {
-                fluentd-address = "localhost:9881"
-                fluentd-async-connect = true
-                tag = "asapo.docker"
-            }
+        %{ if fluentd_logs }
+          logging {
+          type = "fluentd"
+          config {
+            fluentd-address = "localhost:9881"
+            fluentd-async-connect = true
+            tag = "asapo.docker"
+          }
         }
+        %{endif}
       }
 
       resources {
@@ -60,14 +61,14 @@ job "asapo-brokers" {
       }
 
       template {
-         source        = "/usr/local/nomad_jobs/broker.json.tpl"
+         source        = "${scripts_dir}/broker.json.tpl"
          destination   = "local/config.json"
          change_mode   = "restart"
       }
 
       template {
-        source        = "/usr/local/nomad_jobs/auth_secret.key"
-        destination   = "secrets/secret.key"
+        source        = "${scripts_dir}/auth_secret.key"
+        destination   = "local/secret.key"
         change_mode   = "restart"
       }
    } #task brokers

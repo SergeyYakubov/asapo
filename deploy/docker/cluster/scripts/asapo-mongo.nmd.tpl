@@ -23,16 +23,15 @@ job "asapo-mongo" {
 
       config {
         network_mode = "host"
-        image = "mongo:4.0.0"
-        volumes = ["/${meta.shared_storage}/mongodb:/data/db"]
+        image = "mongo:${mongo_version}"
+        volumes = ["/${service_dir}/mongodb:/data/db"]
       }
 
       resources {
-        cpu    = 1500
-        memory = 12560
+        memory = "${mongo_total_memory_size}"
         network {
           port "mongo" {
-          static = 27017
+          static = "${mongo_port}"
           }
         }
       }

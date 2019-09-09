@@ -24,17 +24,20 @@ job "asapo-receivers" {
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]
-        image = "yakser/asapo-receiver-dev:feature_virtualized-deployment.latest"
+        image = "yakser/asapo-receiver${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/receiver/config.json",
-                   "/bldocuments/support/asapo/data:/var/lib/receiver/data"]
+                   "${data_dir}:/var/lib/receiver/data"]
+        %{ if fluentd_logs }
         logging {
-            type = "fluentd"
-            config {
-                fluentd-address = "localhost:9881"
-                tag = "asapo.docker"
-            }
+        type = "fluentd"
+        config {
+        fluentd-address = "localhost:9881"
+        fluentd-async-connect = true
+        tag = "asapo.docker"
         }
+        }
+        %{endif}
       }
 
       resources {
@@ -42,8 +45,10 @@ job "asapo-receivers" {
           port "recv" {}
           port "recv_ds" {}
         }
-          memory = 40000
+          memory = "${receiver_total_memory_size}"
       }
+
+
 
       service {
         name = "asapo-receiver"
@@ -63,8 +68,13 @@ job "asapo-receivers" {
         }
       }
 
+      meta {
+        receiver_dataserver_cache_size = "${receiver_dataserver_cache_size}"
+      }
+
+
       template {
-         source        = "/usr/local/nomad_jobs/receiver.json.tpl"
+         source        = "${scripts_dir}/receiver.json.tpl"
          destination   = "local/config.json"
          change_mode   = "restart"
       }
