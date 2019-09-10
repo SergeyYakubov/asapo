@@ -7,6 +7,18 @@ DATA_GLOBAL_SHARED=/tmp/asapo/global_shared/data
 mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
 
+cd $SERVICE_DATA_CLUSTER_SHARED
+mkdir esdatadir fluentd grafana influxdb mongodb
+chmod 777 *
+
+mmc=`cat /proc/sys/vm/max_map_count`
+
+if (( mmc < 262144 )); then
+ 	echo increase max_map_count - needed for elasticsearch
+    exit 1
+fi
+
+
 docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
  	-v /var/lib/docker:/var/lib/docker \
 	-v $NOMAD_ALLOC_HOST_SHARED:$NOMAD_ALLOC_HOST_SHARED \

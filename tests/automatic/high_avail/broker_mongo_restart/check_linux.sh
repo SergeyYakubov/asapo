@@ -52,8 +52,6 @@ Cleanup() {
     kill_mongo
 }
 
-influx -execute "create database ${monitor_database_name}"
-
 sed -i 's/27017/27016/g' receiver.json.tpl
 sed -i 's/27017/27016/g' discovery.json.tpl
 sed -i 's/info/debug/g' broker.json.tpl

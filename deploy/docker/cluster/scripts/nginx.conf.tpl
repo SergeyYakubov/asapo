@@ -27,26 +27,26 @@ http {
 
    		  location /influxdb/ {
             rewrite ^/influxdb(/.*) $1 break;
-            proxy_pass http://$influxdb_endpoint:8086$uri$is_args$args;
+            proxy_pass http://$influxdb_endpoint:{{ env "NOMAD_META_influxdb_port" }}$uri$is_args$args;
           }
 
    		  location /elasticsearch/ {
             rewrite ^/elasticsearch(/.*) $1 break;
-            proxy_pass http://$elasticsearch_endpoint:9200$uri$is_args$args;
+            proxy_pass http://$elasticsearch_endpoint:{{ env "NOMAD_META_elasticsearch_port" }}$uri$is_args$args;
           }
 
           location /discovery/ {
             rewrite ^/discovery(/.*) $1 break;
-            proxy_pass http://$discovery_endpoint:5006$uri$is_args$args;
+            proxy_pass http://$discovery_endpoint:{{ env "NOMAD_META_discovery_port" }}$uri$is_args$args;
           }
 
           location /logs/ {
               rewrite ^/logs(/.*) $1 break;
-              proxy_pass http://$fluentd_endpoint:9880$uri$is_args$args;
+              proxy_pass http://$fluentd_endpoint:{{ env "NOMAD_META_fluentd_port" }}$uri$is_args$args;
           }
 
           location /logsview/ {
-            proxy_pass http://$kibana_endpoint:5601$uri$is_args$args;
+            proxy_pass http://$kibana_endpoint:{{ env "NOMAD_META_kibana_port" }}$uri$is_args$args;
             proxy_set_header  X-Real-IP  $remote_addr;
             proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header  Host $http_host;
@@ -54,12 +54,12 @@ http {
 
           location /performance/ {
             rewrite ^/performance(/.*) $1 break;
-            proxy_pass http://$grafana_endpoint:3000$uri$is_args$args;
+            proxy_pass http://$grafana_endpoint:{{ env "NOMAD_META_grafana_port" }}$uri$is_args$args;
           }
 
           location /authorizer/ {
              rewrite ^/authorizer(/.*) $1 break;
-             proxy_pass http://$authorizer_endpoint:5007$uri$is_args$args;
+             proxy_pass http://$authorizer_endpoint:{{ env "NOMAD_META_authorizer_port" }}$uri$is_args$args;
           }
 
       	  location /nginx-health {
@@ -77,8 +77,6 @@ stream {
 
     server {
         listen     9881;
-        proxy_pass $upstream:24224;
+        proxy_pass $upstream:{{ env "NOMAD_META_fluentd_port_stream" }};
     }
 }
-
-

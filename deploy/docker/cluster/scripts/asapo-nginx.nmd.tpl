@@ -23,6 +23,17 @@ job "asapo-nginx" {
     task "nginx" {
       driver = "docker"
 
+      meta {
+        fluentd_port = "${fluentd_port}"
+        fluentd_port_stream = "${fluentd_port_stream}"
+        kibana_port = "${kibana_port}"
+        elasticsearch_port = "${elasticsearch_port}"
+        grafana_port = "${grafana_port}"
+        influxdb_port = "${influxdb_port}"
+        authorizer_port = "${authorizer_port}"
+        discovery_port = "${discovery_port}"
+      }
+
       config {
         network_mode = "host"
         image = "nginx:${nginx_version}"

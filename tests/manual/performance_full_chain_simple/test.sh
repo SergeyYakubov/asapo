@@ -116,7 +116,6 @@ scp ../../../cmake-build-release/asapo_tools/asapo ${worker_node}:${worker_dir}
 scp ../../../tests/automatic/settings/auth_secret.key ${worker_node}:${worker_dir}/auth_secret.key
 
 #monitoring_start
-ssh ${monitor_node} influx -execute \"create database db_test\"
 #ssh ${monitor_node} docker run -d -p 8086 -p 8086 --name influxdb influxdb
 
 #mongo_start

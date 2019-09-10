@@ -9,7 +9,8 @@ job "asapo-logging" {
 #  }
 
   group "fluentd" {
-    count = 1
+
+    count = "%{ if elk_logs }1%{ else }0%{ endif }"
     restart {
       attempts = 2
       interval = "3m"
@@ -25,20 +26,20 @@ job "asapo-logging" {
       }
 
       config {
-        dns_servers = ["127.0.0.1"]
         network_mode = "host"
         image = "yakser/fluentd_elastic"
         volumes = ["local/fluentd.conf:/fluentd/etc/fluent.conf",
-        "/${meta.shared_storage}/fluentd:/shared"]
+        "/${service_dir}/fluentd:/shared"]
       }
 
       resources {
-        cpu    = 500
-        memory = 256
+        memory = "${fluentd_total_memory_size}"
         network {
-          mbits = 10
           port "fluentd" {
-          static = 9880
+          static = "${fluentd_port}"
+          }
+          port "fluentd_stream" {
+            static = "${fluentd_port_stream}"
           }
         }
       }
@@ -61,7 +62,7 @@ job "asapo-logging" {
         }
       }
       template {
-         source        = "/usr/local/nomad_jobs/fluentd.conf"
+         source        = "${scripts_dir}/fluentd.conf.tpl"
          destination   = "local/fluentd.conf"
          change_mode   = "restart"
       }
@@ -69,7 +70,7 @@ job "asapo-logging" {
   }
 #elasticsearch
   group "elk" {
-    count = 1
+    count = "%{ if elk_logs }1%{ else }0%{ endif }"
     restart {
       attempts = 2
       interval = "3m"
@@ -93,20 +94,15 @@ job "asapo-logging" {
           nproc = "8192"
         }
         network_mode = "host"
-        dns_servers = ["127.0.0.1"]
-        image = "docker.elastic.co/elasticsearch/elasticsearch:6.3.0"
-        volumes = ["/${meta.shared_storage}/esdatadir:/usr/share/elasticsearch/data"]
+        image = "docker.elastic.co/elasticsearch/elasticsearch:${elasticsearch_version}"
+        volumes = ["/${service_dir}/esdatadir:/usr/share/elasticsearch/data"]
       }
 
       resources {
-        #MHz
-        cpu = 4000
-        #MB
-        memory = 2048
+        memory = "${elasticsearch_total_memory_size}"
         network {
-          mbits = 10
           port "elasticsearch" {
-            static = 9200
+            static = "${elasticsearch_port}"
           }
          }
       }
@@ -134,24 +130,21 @@ job "asapo-logging" {
 
      config {
        network_mode = "host"
-       dns_servers = ["127.0.0.1"]
-       image = "docker.elastic.co/kibana/kibana:6.3.0"
+       image = "docker.elastic.co/kibana/kibana:${kibana_version}"
        volumes = ["local/kibana.yml:/usr/share/kibana/config/kibana.yml"]
      }
 
       template {
-         source        = "/usr/local/nomad_jobs/kibana.yml"
+         source        = "${scripts_dir}/kibana.yml"
          destination   = "local/kibana.yml"
          change_mode   = "restart"
       }
 
      resources {
-       cpu = 256
-       memory = 1024
+       memory = "${kibana_total_memory_size}"
        network {
-         mbits = 10
          port "kibana" {
-           static = 5601
+           static = "${kibana_port}"
          }
         }
      }

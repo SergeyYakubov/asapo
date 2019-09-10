@@ -10,6 +10,11 @@ type mockWriter struct {
 	mock.Mock
 }
 
+func (writer *mockWriter) Init() error {
+	args := writer.Called()
+	return args.Error(0)
+}
+
 func (writer *mockWriter) Write(statistics *serverStatistics) error {
 	args := writer.Called(statistics)
 	return args.Error(0)

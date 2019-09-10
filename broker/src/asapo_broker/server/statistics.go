@@ -9,6 +9,17 @@ import (
 
 type statisticsWriter interface {
 	Write(*serverStatistics) error
+	Init() error
+}
+
+func (st *serverStatistics) Init() {
+	st.mux.Lock()
+	defer st.mux.Unlock()
+	if err := st.Writer.Init(); err != nil {
+		log.Warning("cannot initialize statistic writer: " + err.Error())
+	} else {
+		log.Debug("initialized statistic at " + settings.PerformanceDbServer + " for " + settings.PerformanceDbName)
+	}
 }
 
 type serverStatistics struct {

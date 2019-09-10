@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+cd /var/run/asapo && terraform destroy -auto-approve "$@"

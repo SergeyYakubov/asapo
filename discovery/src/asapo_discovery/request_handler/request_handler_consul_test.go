@@ -51,7 +51,7 @@ func (suite *ConsulHandlerTestSuite) SetupTest() {
 
 	suite.registerAgents("asapo-receiver")
 	suite.registerAgents("asapo-broker")
-	suite.registerAgents("asapo-mongo")
+	suite.registerAgents("mongo")
 
 }
 
@@ -60,8 +60,8 @@ func (suite *ConsulHandlerTestSuite) TearDownTest() {
 	suite.client.Agent().ServiceDeregister("asapo-receiver1235")
 	suite.client.Agent().ServiceDeregister("asapo-broker1234")
 	suite.client.Agent().ServiceDeregister("asapo-broker1235")
-	suite.client.Agent().ServiceDeregister("asapo-mongo1234")
-	suite.client.Agent().ServiceDeregister("asapo-mongo1235")
+	suite.client.Agent().ServiceDeregister("mongo1234")
+	suite.client.Agent().ServiceDeregister("mongo1235")
 
 }
 

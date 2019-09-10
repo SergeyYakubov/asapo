@@ -1,13 +1,13 @@
 <source>
   @type forward
-  port 24224
+  port {{ env "NOMAD_PORT_fluentd_stream" }}
   source_hostname_key source_addr
   bind 0.0.0.0
 </source>
 
 <source>
  @type http
- port 9880
+ port {{ env "NOMAD_PORT_fluentd" }}
  bind 0.0.0.0
  add_remote_addr true
  format json

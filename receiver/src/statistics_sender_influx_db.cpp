@@ -54,6 +54,24 @@ std::string StatisticsSenderInfluxDb::StatisticsToString(const StatisticsToSend&
 }
 
 StatisticsSenderInfluxDb::StatisticsSenderInfluxDb(): httpclient__{DefaultHttpClient()}, log__{GetDefaultReceiverLogger()} {
+    HttpCode code;
+    Error err;
+    auto response = httpclient__->Post(GetReceiverConfig()->performance_db_uri + "/query",
+                                       "q=create database " + GetReceiverConfig()->performance_db_name, &code, &err);
+    std::string msg = "initializing statistics for " + GetReceiverConfig()->performance_db_name + " at " +
+                      GetReceiverConfig()->performance_db_uri;
+    if (err) {
+        log__->Warning(msg + " - " + err->Explain());
+        return;
+    }
+
+    if (code != HttpCode::OK && code != HttpCode::NoContent) {
+        log__->Warning(msg + " - " + response);
+        return;
+    }
+
+    log__->Debug(msg);
+
 };
 
 

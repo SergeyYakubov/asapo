@@ -15,7 +15,7 @@ job "asapo-services" {
         image = "yakser/asapo-authorizer${image_suffix}"
 	force_pull = true
         volumes = ["local/config.json:/var/lib/authorizer/config.json"]
-	%{ if fluentd_logs }
+	%{ if elk_logs }
         logging {
             type = "fluentd"
             config {
@@ -28,11 +28,10 @@ job "asapo-services" {
       }
 
       resources {
-        cpu    = 500 # 500 MHz
-        memory = 256 # 256MB
+        memory = "${authorizer_total_memory_size}"
         network {
           port "authorizer" {
-            static = "5007"
+            static = "${authorizer_port}"
           }
         }
       }
@@ -79,7 +78,7 @@ job "asapo-services" {
         image = "yakser/asapo-discovery${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/discovery/config.json"]
-        %{ if fluentd_logs }
+        %{ if elk_logs }
         logging {
         type = "fluentd"
         config {
@@ -92,11 +91,10 @@ job "asapo-services" {
       }
 
       resources {
-        cpu    = 500 # 500 MHz
-        memory = 256 # 256MB
+        memory = "${discovery_total_memory_size}"
         network {
           port "discovery" {
-            static = "5006"
+            static = "${discovery_port}"
           }
         }
       }

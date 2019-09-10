@@ -97,7 +97,7 @@ func (rh *ConsulRequestHandler) GetMongo() ([]byte, error) {
 	if (rh.client == nil) {
 		return nil, errors.New("consul client not connected")
 	}
-	response, err := rh.GetServices("asapo-mongo")
+	response, err := rh.GetServices("mongo")
 	if err != nil {
 		return nil, err
 	}

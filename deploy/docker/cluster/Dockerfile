@@ -6,7 +6,8 @@ RUN apt-get update && apt-get install -y supervisor apt-transport-https \
         ca-certificates \
         curl \
         gnupg-agent \
-        software-properties-common
+        software-properties-common dnsutils
+
 
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 
@@ -45,5 +46,8 @@ RUN mkdir -p /var/log/supervisord/
 
 COPY scripts/ /var/run/asapo/
 
+RUN cd /var/run/asapo asapo && terraform init
+
+COPY asapo-*  /usr/bin/
 
 ENTRYPOINT ["supervisord", "--configuration", "/etc/supervisord.conf"]

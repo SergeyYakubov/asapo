@@ -39,6 +39,8 @@ func main() {
 
 	log.SetLevel(logLevel)
 
+	log.Info("Starting Asapo Broker, version " + version.GetVersion())
+
 	server.CreateDiscoveryService()
 
 	err = server.InitDB(NewDefaultDatabase())

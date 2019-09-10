@@ -1,23 +1,31 @@
-resource "nomad_job" "asapo-perfmetrics" {
-  jobspec = "${data.template_file.asapo_perfmetrics.rendered}"
+resource "nomad_job" "asapo-nginx" {
+  jobspec = "${data.template_file.nginx.rendered}"
 }
 
 resource "nomad_job" "asapo-mongo" {
   jobspec = "${data.template_file.asapo_mongo.rendered}"
 }
 
-resource "nomad_job" "asapo-nginx" {
-  jobspec = "${data.template_file.nginx.rendered}"
+resource "nomad_job" "asapo-perfmetrics" {
+  jobspec = "${data.template_file.asapo_perfmetrics.rendered}"
+}
+
+resource "nomad_job" "asapo-logging" {
+  jobspec = "${data.template_file.asapo_logging.rendered}"
+  depends_on = [null_resource.nginx]
 }
 
 resource "nomad_job" "asapo-services" {
   jobspec = "${data.template_file.asapo_services.rendered}"
+  depends_on = [null_resource.nginx,null_resource.mongo,null_resource.influxdb,null_resource.fluentd,null_resource.elasticsearch]
 }
 
 resource "nomad_job" "asapo-receivers" {
   jobspec = "${data.template_file.asapo_receivers.rendered}"
+  depends_on = [nomad_job.asapo-services,null_resource.asapo-authorizer,null_resource.asapo-discovery]
 }
 
 resource "nomad_job" "asapo-brokers" {
   jobspec = "${data.template_file.asapo_brokers.rendered}"
+  depends_on = [nomad_job.asapo-services,null_resource.asapo-authorizer,null_resource.asapo-discovery]
 }
