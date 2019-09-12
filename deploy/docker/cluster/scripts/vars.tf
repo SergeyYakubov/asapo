@@ -1,121 +1,61 @@
-variable "elk_logs" {
- default = true
-}
+variable "elk_logs" {}
 
-variable "nginx_version" {
-  default = "latest"
-}
+variable "nginx_version" {}
 
-variable "grafana_version" {
-  default = "latest"
-}
+variable "grafana_version" {}
 
-variable "elasticsearch_version" {
-  default = "latest"
-}
+variable "elasticsearch_version" {}
 
-variable "kibana_version" {
-  default = "latest"
-}
+variable "kibana_version" {}
 
-variable "influxdb_version" {
-  default = "latest"
-}
+variable "influxdb_version" {}
 
-variable "mongo_version" {
-  default = "latest"
-}
+variable "mongo_version" {}
 
-variable "asapo_imagename_suffix" {
-  default = ""
-}
+variable "asapo_imagename_suffix" {}
 
-variable "asapo_image_tag" {
-#  default = "latest"
-}
+variable "asapo_image_tag" {}
 
-variable "job_scripts_dir" {
-  default = "/var/run/asapo"
-}
+variable "job_scripts_dir" {}
 
-variable "service_dir" {
-}
+variable "service_dir" {}
 
-variable "data_dir" {
-}
+variable "data_dir" {}
 
-variable "receiver_total_memory_size" {
-  default = "2000" #mb
-}
+variable "receiver_total_memory_size" {}
 
-variable "receiver_dataserver_cache_size" {
-  default = "1"
-}
+variable "receiver_dataserver_cache_size" {}
 
-variable "grafana_total_memory_size" {
-  default = "256" #mb
-}
+variable "grafana_total_memory_size" {}
 
-variable "influxdb_total_memory_size" {
-  default = "256" #mb
-}
+variable "influxdb_total_memory_size" {}
 
-variable "fluentd_total_memory_size" {
-  default = "256"
-}
+variable "fluentd_total_memory_size" {}
 
-variable "elasticsearch_total_memory_size" {
-  default = "256"
-}
+variable "elasticsearch_total_memory_size" {}
 
-variable "kibana_total_memory_size" {
-  default = "256"
-}
+variable "kibana_total_memory_size" {}
 
-variable "mongo_total_memory_size" {
-  default = "300"
-}
+variable "mongo_total_memory_size" {}
 
-variable "authorizer_total_memory_size" {
-  default = "256"
-}
+variable "authorizer_total_memory_size" {}
 
-variable "discovery_total_memory_size" {
-  default = "256"
-}
+variable "discovery_total_memory_size" {}
 
-variable "grafana_port" {
-  default = "3000"
-}
+variable "grafana_port" {}
 
-variable "influxdb_port" {
-  default = "8086"
-}
+variable "influxdb_port" {}
 
-variable "mongo_port" {
-  default = "27017"
-}
+variable "mongo_port" {}
 
-variable "fluentd_port" {
-  default = "9880"
-}
+variable "fluentd_port" {}
 
-variable "fluentd_port_stream" {
-  default = "24224"
-}
+variable "fluentd_port_stream" {}
 
-variable "elasticsearch_port" {
-  default = "9200"
-}
+variable "elasticsearch_port" {}
 
-variable "kibana_port" {
-  default = "5601"
-}
+variable "kibana_port" {}
 
-variable "discovery_port" {
-  default = "5006"
-}
+variable "discovery_port" {}
 
-variable "authorizer_port" {
-  default = "5007"
-}
+variable "authorizer_port" {}

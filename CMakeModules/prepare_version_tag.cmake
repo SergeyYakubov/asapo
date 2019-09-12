@@ -23,6 +23,13 @@ endfunction()
 
 cleanup(BRANCH)
 
+if (${BRANCH} STREQUAL "master")
+    SET (ASAPO_VERSION_DOCKER_SUFFIX "")
+else()
+    SET (ASAPO_VERSION_DOCKER_SUFFIX "-dev")
+endif()
+
+
 
 if (${BRANCH} STREQUAL "develop")
     SET (ASAPO_VERSION_PYTHON ${VERSION_TAGS}.${BRANCH}.${VERSION_COMMIT})
