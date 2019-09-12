@@ -13,6 +13,9 @@ Cleanup() {
 	kill -9 $brokerid
 }
 
+! influx -execute "drop database ${database_name}"
+
+
 token=`$2 token -secret auth_secret.key data`
 
 $1 -config settings.json &
