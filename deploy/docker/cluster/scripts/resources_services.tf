@@ -15,7 +15,7 @@ resource "null_resource" "influxdb" {
 
 resource "null_resource" "fluentd" {
   provisioner "local-exec" {
-    command = "asapo-wait-service fluentd ${var.elk_logs}"
+    command = "asapo-wait-service fluentd ${! var.nomad_logs}"
   }
   depends_on = [nomad_job.asapo-logging]
 }

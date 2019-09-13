@@ -189,6 +189,25 @@ TEST_F(RequestsDispatcherTests, ErrorReceivetNextRequest) {
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
 
+
+TEST_F(RequestsDispatcherTests, ClosedConnectionOnReceivetNextRequest) {
+    EXPECT_CALL(mock_statictics, StartTimer_t(StatisticEntity::kNetwork));
+    EXPECT_CALL(mock_io, Receive_t(_, _, _, _))
+        .WillOnce(
+            DoAll(SetArgPointee<3>(asapo::ErrorTemplates::kEndOfFile.Generate().release()),
+                  Return(0))
+        );
+    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("peer has performed an orderly shutdown"),
+        HasSubstr("getting next request"), HasSubstr(connected_uri))));
+
+    Error err;
+    dispatcher->GetNextRequest(&err);
+
+    ASSERT_THAT(err, Eq(asapo::ErrorTemplates::kEndOfFile));
+}
+
+
+
 TEST_F(RequestsDispatcherTests, ErrorCreatetNextRequest) {
     MockReceiveRequest(false);
     MockCreateRequest(true);

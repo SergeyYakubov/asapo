@@ -33,7 +33,9 @@
 
 <match asapo.**>
 @type copy
-<store>
+{{ $use_logs := env "NOMAD_META_elk_logs" }}
+{{ if eq $use_logs "true"}}
+  <store>
   @type elasticsearch
   hosts localhost:8400/elasticsearch
   flush_interval 5s
@@ -44,6 +46,7 @@
   buffer_type memory
   flush_interval 1s
   </store>
+{{ end }}
   <store>
   @type file
   flush_interval 1s

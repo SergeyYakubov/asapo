@@ -58,9 +58,13 @@ std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const no
     io__-> Receive(socket_fd_, &generic_request_header,
                    sizeof(GenericRequestHeader), err);
     if(*err) {
-        log__->Error("error getting next request from " + producer_uri_ + " - " + (*err)->
-                     Explain()
-                    );
+        if (*err == ErrorTemplates::kEndOfFile) {
+            log__->Debug("error getting next request from " + producer_uri_ + " - " + "peer has performed an orderly shutdown");
+        } else {
+            log__->Error("error getting next request from " + producer_uri_ + " - " + (*err)->
+                Explain()
+            );
+        }
         return nullptr;
     }
     statistics__-> StopTimer();

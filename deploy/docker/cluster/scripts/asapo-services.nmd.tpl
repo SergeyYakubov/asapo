@@ -15,7 +15,7 @@ job "asapo-services" {
         image = "yakser/asapo-authorizer${image_suffix}"
 	force_pull = true
         volumes = ["local/config.json:/var/lib/authorizer/config.json"]
-	%{ if elk_logs }
+	%{ if ! nomad_logs }
         logging {
             type = "fluentd"
             config {
@@ -78,7 +78,7 @@ job "asapo-services" {
         image = "yakser/asapo-discovery${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/discovery/config.json"]
-        %{ if elk_logs }
+        %{ if ! nomad_logs  }
         logging {
         type = "fluentd"
         config {

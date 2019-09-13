@@ -25,7 +25,7 @@ job "asapo-brokers" {
         image = "yakser/asapo-broker${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/broker/config.json"]
-        %{ if elk_logs }
+        %{ if ! nomad_logs  }
           logging {
           type = "fluentd"
           config {

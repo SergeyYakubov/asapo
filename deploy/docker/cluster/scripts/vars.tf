@@ -1,5 +1,7 @@
 variable "elk_logs" {}
 
+variable "nomad_logs" {}
+
 variable "nginx_version" {}
 
 variable "grafana_version" {}

@@ -10,7 +10,7 @@ job "asapo-logging" {
 
   group "fluentd" {
 
-    count = "%{ if elk_logs }1%{ else }0%{ endif }"
+    count = "%{ if nomad_logs }0%{ else }1%{ endif }"
     restart {
       attempts = 2
       interval = "3m"
@@ -23,8 +23,8 @@ job "asapo-logging" {
 
       meta {
         change_me_to_restart = 1
+        elk_logs = "${elk_logs}"
       }
-
       config {
         network_mode = "host"
         image = "yakser/fluentd_elastic"

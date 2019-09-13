@@ -9,6 +9,7 @@ mongo_version = "4.0.0"
 grafana_version="latest"
 influxdb_version = "latest"
 elk_logs = true
+nomad_logs = false
 
 
 

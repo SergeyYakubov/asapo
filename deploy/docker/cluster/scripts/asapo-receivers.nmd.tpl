@@ -28,7 +28,7 @@ job "asapo-receivers" {
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/receiver/config.json",
                    "${data_dir}:/var/lib/receiver/data"]
-        %{ if elk_logs }
+        %{ if ! nomad_logs  }
         logging {
         type = "fluentd"
         config {

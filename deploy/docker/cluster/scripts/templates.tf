@@ -19,12 +19,11 @@ data "template_file" "asapo_services" {
   vars = {
     scripts_dir = "${var.job_scripts_dir}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
-    elk_logs = "${var.elk_logs}"
+    nomad_logs = "${var.nomad_logs}"
     authorizer_total_memory_size = "${var.authorizer_total_memory_size}"
     discovery_total_memory_size = "${var.discovery_total_memory_size}"
     authorizer_port = "${var.authorizer_port}"
     discovery_port = "${var.discovery_port}"
-
   }
 }
 
@@ -34,7 +33,7 @@ data "template_file" "asapo_receivers" {
     scripts_dir = "${var.job_scripts_dir}"
     data_dir = "${var.data_dir}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
-    elk_logs = "${var.elk_logs}"
+    nomad_logs = "${var.nomad_logs}"
     receiver_total_memory_size = "${var.receiver_total_memory_size}"
     receiver_dataserver_cache_size = "${var.receiver_dataserver_cache_size}"
   }
@@ -45,7 +44,7 @@ data "template_file" "asapo_brokers" {
   vars = {
     scripts_dir = "${var.job_scripts_dir}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
-    elk_logs = "${var.elk_logs}"
+    nomad_logs = "${var.nomad_logs}"
   }
 }
 
@@ -80,6 +79,7 @@ data "template_file" "asapo_logging" {
     service_dir = "${var.service_dir}"
     scripts_dir = "${var.job_scripts_dir}"
     elk_logs = "${var.elk_logs}"
+    nomad_logs = "${var.nomad_logs}"
     fluentd_total_memory_size = "${var.fluentd_total_memory_size}"
     fluentd_port = "${var.fluentd_port}"
     fluentd_port_stream = "${var.fluentd_port_stream}"
