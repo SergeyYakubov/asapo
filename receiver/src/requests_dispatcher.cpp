@@ -62,8 +62,8 @@ std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const no
             log__->Debug("error getting next request from " + producer_uri_ + " - " + "peer has performed an orderly shutdown");
         } else {
             log__->Error("error getting next request from " + producer_uri_ + " - " + (*err)->
-                Explain()
-            );
+                         Explain()
+                        );
         }
         return nullptr;
     }

@@ -1,5 +1,3 @@
-"data_dir" = "$data_dir"
-
 advertise {
   http = "$advertise_ip"
   rpc = "$advertise_ip"
@@ -12,11 +10,15 @@ acl {
 
 server {
   enabled          = $is_server
-  bootstrap_expect = 3
+  bootstrap_expect = $n_servers
 }
 
+data_dir = "/var/nomad"
+
 client {
-#  network_interface = "$network_interface"
   enabled       = true
-  node_class = "$node_class"
+  alloc_dir="$nomad_alloc_dir"
 }
+
+
+

@@ -1,3 +1,11 @@
 #!/usr/bin/env bash
 
+
+if [ ! -f  /var/nomad/token_all ]; then
+	nomad acl bootstrap > /var/nomad/bootstrap
+	cat /var/nomad/bootstrap | grep Secret | awk '{print $4}' > /var/nomad/token
+fi
+
+#export NOMAD_TOKEN=`cat /var/nomad/token `
+
 cd /var/run/asapo && terraform apply -auto-approve "$@"

@@ -193,12 +193,12 @@ TEST_F(RequestsDispatcherTests, ErrorReceivetNextRequest) {
 TEST_F(RequestsDispatcherTests, ClosedConnectionOnReceivetNextRequest) {
     EXPECT_CALL(mock_statictics, StartTimer_t(StatisticEntity::kNetwork));
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _))
-        .WillOnce(
-            DoAll(SetArgPointee<3>(asapo::ErrorTemplates::kEndOfFile.Generate().release()),
-                  Return(0))
-        );
+    .WillOnce(
+        DoAll(SetArgPointee<3>(asapo::ErrorTemplates::kEndOfFile.Generate().release()),
+              Return(0))
+    );
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("peer has performed an orderly shutdown"),
-        HasSubstr("getting next request"), HasSubstr(connected_uri))));
+                                         HasSubstr("getting next request"), HasSubstr(connected_uri))));
 
     Error err;
     dispatcher->GetNextRequest(&err);

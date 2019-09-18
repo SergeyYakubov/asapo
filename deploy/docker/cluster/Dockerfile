@@ -40,14 +40,19 @@ RUN set -eux && \
     nomad version && \
     terraform version
 
+RUN apt-get install -y iproute2
+
 ADD supervisord.conf /etc/
 
-RUN mkdir -p /var/log/supervisord/
+RUN mkdir -p /var/log/supervisord/ /etc/consul.d /etc/nomad.d
 
 COPY scripts/ /var/run/asapo/
 
 RUN cd /var/run/asapo asapo && terraform init
 
 COPY asapo-*  /usr/bin/
+
+COPY *.py  /etc/asapo/
+COPY *.hcl.tpl  /etc/asapo/
 
 ENTRYPOINT ["supervisord", "--configuration", "/etc/supervisord.conf"]
