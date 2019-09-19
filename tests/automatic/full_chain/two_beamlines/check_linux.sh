@@ -35,7 +35,6 @@ Cleanup() {
     influx -execute "drop database ${monitor_database_name}"
 }
 
-influx -execute "create database ${monitor_database_name}"
 echo "db.${beamtime_id1}_${stream}.insert({dummy:1})" | mongo ${beamtime_id1}_${stream}
 echo "db.${beamtime_id2}_${stream}.insert({dummy:1})" | mongo ${beamtime_id2}_${stream}
 

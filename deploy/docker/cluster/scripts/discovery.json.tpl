@@ -4,7 +4,7 @@
     "MaxConnections": 32
   },
   "Port": {{ env "NOMAD_PORT_discovery" }},
-  "LogLevel":"debug"
+  "LogLevel": "{{ keyOrDefault "log_level" "info" }}"
 }
 
 

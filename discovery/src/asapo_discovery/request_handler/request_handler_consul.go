@@ -12,6 +12,7 @@ import (
 type ConsulRequestHandler struct {
 	MaxConnections int
 	client         *api.Client
+	staticHandler *StaticRequestHandler
 }
 
 type Responce struct {
@@ -48,20 +49,30 @@ func (rh *ConsulRequestHandler) GetServices(name string) ([]string, error) {
 }
 
 func (rh *ConsulRequestHandler) GetReceivers() ([]byte, error) {
+	if len(rh.staticHandler.receiverResponce.Uris)>0 {
+		return rh.staticHandler.GetReceivers()
+	}
+
+
+	var response Responce
+	response.MaxConnections = rh.MaxConnections
+
 	if (rh.client == nil) {
 		return nil, errors.New("consul client not connected")
 	}
-	var response Responce
 	var err error
 	response.Uris, err = rh.GetServices("asapo-receiver")
 	if err != nil {
 		return nil, err
 	}
-	response.MaxConnections = rh.MaxConnections
 	return utils.MapToJson(&response)
 }
 
 func (rh *ConsulRequestHandler) GetBroker() ([]byte, error) {
+	if len(rh.staticHandler.broker)>0 {
+		return rh.staticHandler.GetBroker()
+	}
+
 	if (rh.client == nil) {
 		return nil, errors.New("consul client not connected")
 	}
@@ -77,6 +88,28 @@ func (rh *ConsulRequestHandler) GetBroker() ([]byte, error) {
 	}
 	return nil, nil
 }
+
+func (rh *ConsulRequestHandler) GetMongo() ([]byte, error) {
+	if len(rh.staticHandler.mongo)>0 {
+		return rh.staticHandler.GetMongo()
+	}
+
+	if (rh.client == nil) {
+		return nil, errors.New("consul client not connected")
+	}
+	response, err := rh.GetServices("mongo")
+	if err != nil {
+		return nil, err
+	}
+	size := len(response)
+	if size ==0 {
+		return []byte(""),nil
+	}else {
+		return []byte(response[counter.Next(size)]),nil
+	}
+	return nil, nil
+}
+
 
 func (rh *ConsulRequestHandler) connectClient(uri string) (client *api.Client, err error) {
 	config := api.DefaultConfig()
@@ -94,6 +127,8 @@ func (rh *ConsulRequestHandler) connectClient(uri string) (client *api.Client, e
 }
 
 func (rh *ConsulRequestHandler) Init(settings utils.Settings) (err error) {
+	rh.staticHandler = new(StaticRequestHandler)
+	rh.staticHandler.Init(settings)
 	rh.MaxConnections = settings.Receiver.MaxConnections
 	if len(settings.ConsulEndpoints) == 0 {
 		rh.client, err = rh.connectClient("")

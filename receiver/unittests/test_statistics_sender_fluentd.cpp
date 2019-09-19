@@ -65,8 +65,8 @@ class SenderFluentdTests : public Test {
         statistics.tags.push_back(std::make_pair("name1", "value1"));
         statistics.tags.push_back(std::make_pair("name2", "value2"));
 
-        config.monitor_db_uri = "test_uri";
-        config.monitor_db_name = "test_name";
+        config.performance_db_uri = "test_uri";
+        config.performance_db_name = "test_name";
         SetReceiverConfig(config, "none");
 
         sender.statistics_log__.reset(&mock_logger);

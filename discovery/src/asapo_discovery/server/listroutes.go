@@ -17,5 +17,11 @@ var listRoutes = utils.Routes{
 		"/broker",
 		routeGetBroker,
 	},
+	utils.Route{
+		"GetMongo",
+		"Get",
+		"/mongo",
+		routeGetMongo,
+	},
 
 }

@@ -47,11 +47,11 @@ class ConfigTests : public Test {
         test_config.listen_port = 4200;
         test_config.dataserver.listen_port = 4201;
         test_config.tag = "receiver1";
-        test_config.monitor_db_name = "db_test";
-        test_config.monitor_db_uri = "localhost:8086";
+        test_config.performance_db_name = "db_test";
+        test_config.performance_db_uri = "localhost:8086";
         test_config.write_to_disk = true;
         test_config.write_to_db = true;
-        test_config.broker_db_uri = "localhost:27017";
+        test_config.database_uri = "localhost:27017";
         test_config.log_level = asapo::LogLevel::Error;
         test_config.root_folder = "test_fodler";
         test_config.authorization_interval_ms = 10000;
@@ -61,6 +61,7 @@ class ConfigTests : public Test {
         test_config.datacache_size_gb = 2;
         test_config.source_host = "host";
         test_config.dataserver.nthreads = 5;
+        test_config.discovery_server = "discovery";
     }
 
 };
@@ -74,9 +75,9 @@ TEST_F(ConfigTests, ReadSettings) {
     auto config = GetReceiverConfig();
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(config->monitor_db_uri, Eq("localhost:8086"));
-    ASSERT_THAT(config->monitor_db_name, Eq("db_test"));
-    ASSERT_THAT(config->broker_db_uri, Eq("localhost:27017"));
+    ASSERT_THAT(config->performance_db_uri, Eq("localhost:8086"));
+    ASSERT_THAT(config->performance_db_name, Eq("db_test"));
+    ASSERT_THAT(config->database_uri, Eq("localhost:27017"));
     ASSERT_THAT(config->listen_port, Eq(4200));
     ASSERT_THAT(config->dataserver.listen_port, Eq(4201));
     ASSERT_THAT(config->authorization_interval_ms, Eq(10000));
@@ -92,18 +93,17 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->source_host, Eq("host"));
     ASSERT_THAT(config->dataserver.nthreads, Eq(5));
     ASSERT_THAT(config->dataserver.tag, Eq("receiver1_ds"));
-
-
+    ASSERT_THAT(config->discovery_server, Eq("discovery"));
 }
 
 
 TEST_F(ConfigTests, ErrorReadSettings) {
     PrepareConfig();
 
-    std::vector<std::string>fields {"MonitorDbAddress", "ListenPort", "DataServer", "ListenPort", "WriteToDisk",
-                                    "WriteToDb", "DataCache", "Use", "SizeGB", "ReservedShare", "BrokerDbAddress", "Tag",
-                                    "AuthorizationServer", "AuthorizationInterval", "RootFolder", "MonitorDbName", "LogLevel",
-                                    "SourceHost", "NThreads"};
+    std::vector<std::string>fields {"PerformanceDbServer", "ListenPort", "DataServer", "ListenPort", "WriteToDisk",
+                                    "WriteToDb", "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
+                                    "AuthorizationServer", "AuthorizationInterval", "RootFolder", "PerformanceDbName", "LogLevel",
+                                    "SourceHost", "NThreads", "DiscoveryServer"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfig(test_config, field);
         ASSERT_THAT(err, Ne(nullptr));

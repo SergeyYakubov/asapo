@@ -22,8 +22,6 @@ Cleanup() {
 
 mkdir -p ${receiver_folder}
 
-influx -execute "create database ${database_name}"
-
 nomad run authorizer.nmd
 nomad run receiver.nmd
 nomad run discovery.nmd
@@ -36,4 +34,4 @@ $1 localhost:8400 ${beamtime_id} 100 112 4  0 100
 sleep 2
 
 # should be 118 requests (112 data transfers +  5 authorizations (4 + 1 after reconnection due to wrong meta))
-influx -execute "select sum(n_requests) from statistics" -database=${database_name} -format=json  | jq .results[0].series[0].values[0][1] | tee /dev/stderr | grep 117
+influx -execute "select sum(n_requests) from statistics" -database=${database_name} -format=json | tee /dev/stderr  | jq .results[0].series[0].values[0][1] | tee /dev/stderr | grep 117

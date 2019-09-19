@@ -43,7 +43,7 @@ ssh ${receiver_node} mkdir -p ${receiver_dir}/files/${beamline}/${beamtime_id}
 scp ../../../cmake-build-release/receiver/receiver ${receiver_node}:${receiver_dir}
 cat receiver.json |
   jq "to_entries |
-       map(if .key == \"MonitorDbAddress\"
+       map(if .key == \"PerformanceDbServer\"
           then . + {value:\"${monitor_node}:${monitor_port}\"}
           elif .key == \"ListenPort\"
           then . + {value:${receiver_port}}
@@ -96,7 +96,7 @@ broker_dir=~/fullchain_tests
 ssh ${broker_node} mkdir -p ${broker_dir}/logs
 cat broker.json |
   jq "to_entries |
-       map(if .key == \"MonitorDbAddress\"
+       map(if .key == \"PerformanceDbServer\"
           then . + {value:\"${monitor_node}:${monitor_port}\"}
           else .
           end
@@ -116,7 +116,6 @@ scp ../../../cmake-build-release/asapo_tools/asapo ${worker_node}:${worker_dir}
 scp ../../../tests/automatic/settings/auth_secret.key ${worker_node}:${worker_dir}/auth_secret.key
 
 #monitoring_start
-ssh ${monitor_node} influx -execute \"create database db_test\"
 #ssh ${monitor_node} docker run -d -p 8086 -p 8086 --name influxdb influxdb
 
 #mongo_start

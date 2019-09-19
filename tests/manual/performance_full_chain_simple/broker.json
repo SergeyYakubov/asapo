@@ -1,7 +1,7 @@
 {
-  "BrokerDbAddress":"localhost:27017",
-  "MonitorDbAddress": "localhost:8086",
-  "MonitorDbName": "db_test",
+  "DatabaseServer":"localhost:27017",
+  "PerformanceDbServer": "localhost:8086",
+  "PerformanceDbName": "db_test",
   "port":5005,
   "LogLevel":"info",
   "SecretFile":"auth_secret.key"

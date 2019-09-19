@@ -34,7 +34,7 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
         if (!err) {
             log__->Debug(std::string{"insert record id "} + std::to_string(file_info.id) + " to " + collection_name_ + " in " +
                          db_name_ +
-                         " at " + GetReceiverConfig()->broker_db_uri);
+                         " at " + GetReceiverConfig()->database_uri);
         }
     } else {
         auto subset_id = request->GetCustomData()[1];
@@ -44,7 +44,7 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
             log__->Debug(std::string{"insert record as subset id "} + std::to_string(subset_id) + ", id: " +
                          std::to_string(file_info.id) + " to " + collection_name_ + " in " +
                          db_name_ +
-                         " at " + GetReceiverConfig()->broker_db_uri);
+                         " at " + GetReceiverConfig()->database_uri);
         }
     }
     return err;

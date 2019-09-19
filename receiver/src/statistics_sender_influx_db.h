@@ -13,9 +13,7 @@ class StatisticsSenderInfluxDb : public StatisticsSender {
     virtual void SendStatistics(const StatisticsToSend& statistic) const noexcept override;
     std::unique_ptr<HttpClient> httpclient__;
     const AbstractLogger* log__;
-    ~StatisticsSenderInfluxDb() {
-        printf("Deleting StatisticsSenderInfluxDb\n");
-    };
+    ~StatisticsSenderInfluxDb() {};
   private:
     std::string StatisticsToString(const StatisticsToSend& statistic) const noexcept;
 

@@ -23,8 +23,6 @@ Cleanup() {
     influx -execute "drop database ${monitor_database_name}"
 }
 
-influx -execute "create database ${monitor_database_name}"
-
 sed -i 's/info/debug/g' broker.json.tpl
 
 nomad run nginx.nmd

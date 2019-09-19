@@ -98,7 +98,6 @@ std::vector<std::thread> StartThreads(const Args& params,
             }
             if (err) {
                 (*errors)[i] += ProcessError(err);
-                std::cout << "Received: " << (int) err->GetErrorType() << err << std::endl;
                 if (err == asapo::IOErrorTemplates::kTimeout) {
                     break;
                 }

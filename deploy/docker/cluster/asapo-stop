@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+#export NOMAD_TOKEN=`cat /var/nomad/token `
+
+cd /var/run/asapo && terraform destroy -auto-approve "$@"

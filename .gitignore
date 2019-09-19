@@ -139,3 +139,5 @@ common/go/src/asapo_common/version/version_lib.go
 
 
 !sphinx/*
+.terraform
+terraform.tfstate*

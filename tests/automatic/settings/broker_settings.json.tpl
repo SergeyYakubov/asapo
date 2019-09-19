@@ -1,7 +1,8 @@
 {
-  "BrokerDbAddress":"127.0.0.1:27017",
-  "MonitorDbAddress": "localhost:8086",
-  "MonitorDbName": "db_test",
+  "DatabaseServer":"auto",
+  "DiscoveryServer": "localhost:8400/discovery",
+  "PerformanceDbServer": "localhost:8086",
+  "PerformanceDbName": "db_test",
   "port":{{ env "NOMAD_PORT_broker" }},
   "LogLevel":"info",
   "SecretFile":"auth_secret.key"

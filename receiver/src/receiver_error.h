@@ -9,7 +9,8 @@ enum class ReceiverErrorType {
     kInvalidOpCode,
     kBadRequest,
     kReject,
-    kAuthorizationFailure
+    kAuthorizationFailure,
+    kCannotConnectToDatabase
 };
 
 using ReceiverErrorTemplate = ServiceErrorTemplate<ReceiverErrorType, ErrorType::kReceiverError>;
@@ -23,6 +24,12 @@ auto const kInvalidOpCode = ReceiverErrorTemplate{
 auto const kReject = ReceiverErrorTemplate{
     "request rejected", ReceiverErrorType::kReject
 };
+
+
+auto const kCannotConnectToDatabase = ReceiverErrorTemplate{
+    "cannot connect to database", ReceiverErrorType::kCannotConnectToDatabase
+};
+
 
 auto const kBadRequest = ReceiverErrorTemplate{
     "Bad request", ReceiverErrorType::kBadRequest

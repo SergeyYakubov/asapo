@@ -6,7 +6,7 @@ job "authorizer" {
   group "group" {
     count = 1
 
-    task "authorizer" {
+    task "asapo-authorizer" {
       driver = "raw_exec"
 
       config {

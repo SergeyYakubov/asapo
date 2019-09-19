@@ -51,6 +51,7 @@ func (suite *ConsulHandlerTestSuite) SetupTest() {
 
 	suite.registerAgents("asapo-receiver")
 	suite.registerAgents("asapo-broker")
+	suite.registerAgents("mongo")
 
 }
 
@@ -59,6 +60,9 @@ func (suite *ConsulHandlerTestSuite) TearDownTest() {
 	suite.client.Agent().ServiceDeregister("asapo-receiver1235")
 	suite.client.Agent().ServiceDeregister("asapo-broker1234")
 	suite.client.Agent().ServiceDeregister("asapo-broker1235")
+	suite.client.Agent().ServiceDeregister("mongo1234")
+	suite.client.Agent().ServiceDeregister("mongo1235")
+
 }
 
 func (suite *ConsulHandlerTestSuite) TestInitDefaultUri() {
@@ -95,6 +99,14 @@ func (suite *ConsulHandlerTestSuite) TestGetReceivers() {
 	suite.Equal("{\"MaxConnections\":10,\"Uris\":[\"127.0.0.1:1234\",\"127.0.0.1:1235\"]}", string(res), "uris")
 }
 
+func (suite *ConsulHandlerTestSuite) TestGetReceiversStatic() {
+	consul_settings.Receiver.StaticEndpoints= []string{"127.0.0.1:0000"}
+	suite.handler.Init(consul_settings)
+	res, err := suite.handler.GetReceivers()
+	suite.NoError(err, "")
+	suite.Equal("{\"MaxConnections\":10,\"Uris\":[\"127.0.0.1:0000\"]}", string(res), "uris")
+}
+
 func (suite *ConsulHandlerTestSuite) TestGetReceiversWhenNotConnected() {
 	consul_settings.ConsulEndpoints = []string{"blabla"}
 	suite.handler.Init(consul_settings)
@@ -125,6 +137,45 @@ func (suite *ConsulHandlerTestSuite) TestGetBrokerRoundRobin() {
 
 }
 
+
+func (suite *ConsulHandlerTestSuite) TestGetMongoRoundRobin() {
+	suite.handler.Init(consul_settings)
+	res, err := suite.handler.GetMongo()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:1235", string(res), "uris")
+
+	res, err = suite.handler.GetMongo()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:1234", string(res), "uris")
+
+	res, err = suite.handler.GetMongo()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:1235", string(res), "uris")
+}
+
+func (suite *ConsulHandlerTestSuite) TestGetMongoStatic() {
+	consul_settings.Mongo.StaticEndpoint="127.0.0.1:0000"
+	suite.handler.Init(consul_settings)
+	res, err := suite.handler.GetMongo()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:0000", string(res), "uris")
+
+	res, err = suite.handler.GetMongo()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:0000", string(res), "uris")
+}
+
+func (suite *ConsulHandlerTestSuite) TestGetBrokerStatic() {
+	consul_settings.Broker.StaticEndpoint="127.0.0.1:0000"
+	suite.handler.Init(consul_settings)
+	res, err := suite.handler.GetBroker()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:0000", string(res), "uris")
+
+	res, err = suite.handler.GetBroker()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:0000", string(res), "uris")
+}
 
 func (suite *ConsulHandlerTestSuite) TestGetBrokerEmpty() {
 	suite.client.Agent().ServiceDeregister("asapo-broker1234")

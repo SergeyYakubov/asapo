@@ -31,7 +31,7 @@ type GetReceiversTestSuite struct {
 func (suite *GetReceiversTestSuite) SetupTest() {
 	requestHandler = new(request_handler.StaticRequestHandler)
 	var s utils.Settings= utils.Settings{Receiver:utils.ReceiverInfo{MaxConnections:10,StaticEndpoints:[]string{"ip1","ip2"}},
-	Broker:utils.BrokerInfo{StaticEndpoint:"ip_broker"}}
+	Broker:utils.BrokerInfo{StaticEndpoint:"ip_broker"},Mongo:utils.MongoInfo{StaticEndpoint:"ip_mongo"}}
 
 	requestHandler.Init(s)
 	logger.SetMockLog()
@@ -77,4 +77,12 @@ func (suite *GetReceiversTestSuite) TestGetBroker() {
 	assertExpectations(suite.T())
 }
 
+func (suite *GetReceiversTestSuite) TestGetMongo() {
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get mongo")))
 
+	w := doRequest("/mongo")
+
+	suite.Equal(http.StatusOK, w.Code, "code ok")
+	suite.Equal(w.Body.String(), "ip_mongo", "result")
+	assertExpectations(suite.T())
+}

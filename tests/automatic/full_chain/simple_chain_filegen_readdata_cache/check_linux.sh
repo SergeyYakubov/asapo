@@ -32,9 +32,6 @@ Cleanup() {
     rm out.txt
 }
 
-influx -execute "create database ${monitor_database_name}"
-
-
 echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
 
 nomad run nginx.nmd
@@ -63,6 +60,6 @@ grep "hello1" out.txt
 grep "hello2" out.txt
 grep "hello3" out.txt
 
-sleep 10
+sleep 12
 
 influx -execute "select sum(n_requests) from statistics where receiver_ds_tag !=''" -database=${monitor_database_name} -format=json  | jq .results[0].series[0].values[0][1] | tee /dev/stderr | grep 3

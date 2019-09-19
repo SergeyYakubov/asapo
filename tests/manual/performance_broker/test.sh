@@ -22,7 +22,7 @@ worker_dir=~/broker_test
 service_dir=~/broker_test
 
 
-cat settings.json | jq ".MonitorDbAddress = \"${monitor_node}:${monitor_port}\"" > settings_tmp.json
+cat settings.json | jq ".PerformanceDbServer = \"${monitor_node}:${monitor_port}\"" > settings_tmp.json
 
 cat discovery.json | jq ".Broker.StaticEndpoint = \"${service_node}:5005\"" > discovery_tmp.json
 

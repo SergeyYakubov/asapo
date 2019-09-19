@@ -7,5 +7,9 @@ endif()
 configure_files(${CMAKE_CURRENT_SOURCE_DIR}/nomad_jobs ${CMAKE_CURRENT_BINARY_DIR}/nomad_jobs)
 
 
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/docker/cluster ${CMAKE_CURRENT_BINARY_DIR}/docker/cluster)
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/docker/cluster/scripts ${CMAKE_CURRENT_BINARY_DIR}/docker/cluster/scripts)
+
+
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/nomad_jobs/ DESTINATION ${NOMAD_INSTALL})
 

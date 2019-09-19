@@ -1,7 +1,8 @@
 {
-  "BrokerDbAddress":"mongo.service.asapo:27017",
-  "MonitorDbAddress":"influxdb.service.asapo:8086",
-  "MonitorDbName": "asapo_brokers",
+  "DatabaseServer":"auto",
+  "DiscoveryServer": "localhost:8400/discovery",
+  "PerformanceDbServer":"localhost:8400/influxdb",
+  "PerformanceDbName": "asapo_brokers",
   "port":{{ env "NOMAD_PORT_broker" }},
   "LogLevel":"info",
   "SecretFile":"/secrets/secret.key"

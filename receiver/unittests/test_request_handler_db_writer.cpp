@@ -53,6 +53,13 @@ using asapo::ReceiverConfig;
 
 namespace {
 
+TEST(DbWriterHandler, Constructor) {
+    RequestHandlerDbWrite handler{""};
+    ASSERT_THAT(dynamic_cast<asapo::HttpClient*>(handler.http_client__.get()), Ne(nullptr));
+}
+
+
+
 class DbWriterHandlerTests : public Test {
   public:
     std::string expected_collection_name = asapo::kDBDataCollectionName;
@@ -81,7 +88,7 @@ class DbWriterHandlerTests : public Test {
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, ""});
-        config.broker_db_uri = "127.0.0.1:27017";
+        config.database_uri = "127.0.0.1:27017";
         config.source_host = expected_hostname;
         config.dataserver.listen_port = expected_port;
         SetReceiverConfig(config, "none");
@@ -127,7 +134,7 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     std::string db_name = expected_beamtime_id;
     db_name += "_" + stream;
 
-    EXPECT_CALL(mock_db, Connect_t(config.broker_db_uri, db_name, expected_collection_name)).
+    EXPECT_CALL(mock_db, Connect_t(config.database_uri, db_name, expected_collection_name)).
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(*mock_request, GetDataSize())
@@ -180,7 +187,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
-                                         HasSubstr(config.broker_db_uri),
+                                         HasSubstr(config.database_uri),
                                          HasSubstr(expected_beamtime_id),
                                          HasSubstr(expected_stream),
                                          HasSubstr(expected_collection_name)
@@ -201,7 +208,7 @@ TEST_F(DbWriterHandlerTests, CallsInsertSubset) {
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
-                                         HasSubstr(config.broker_db_uri),
+                                         HasSubstr(config.database_uri),
                                          HasSubstr(expected_beamtime_id),
                                          HasSubstr(expected_collection_name)
                                         )
