@@ -20,6 +20,7 @@ job "asapo-brokers" {
 
     task "brokers" {
       driver = "docker"
+      user = "${asapo_user}"
       config {
         network_mode = "host"
         image = "yakser/asapo-broker${image_suffix}"

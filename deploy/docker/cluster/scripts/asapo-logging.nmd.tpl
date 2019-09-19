@@ -20,7 +20,7 @@ job "asapo-logging" {
 
     task "fluentd" {
       driver = "docker"
-
+      user = "${asapo_user}"
       meta {
         change_me_to_restart = 1
         elk_logs = "${elk_logs}"
@@ -51,7 +51,7 @@ job "asapo-logging" {
           name     = "alive"
           type     = "script"
           command  = "/bin/pidof"
-          args     = ["ruby2.3"]
+          args     = ["ruby"]
           timeout  = "2s"
 	      interval = "10s"
         }
@@ -80,11 +80,12 @@ job "asapo-logging" {
 
     task "elasticsearch" {
       driver = "docker"
-
+      user = "${asapo_user}"
       env {
         bootstrap.memory_lock = "true"
         cluster.name = "asapo-logging"
         ES_JAVA_OPTS = "-Xms512m -Xmx512m"
+        discovery.type="single-node"
       }
 
       config {
@@ -94,7 +95,7 @@ job "asapo-logging" {
           nproc = "8192"
         }
         network_mode = "host"
-        image = "docker.elastic.co/elasticsearch/elasticsearch:${elasticsearch_version}"
+        image = "yakser/elasticsearch:${elasticsearch_version}"
         volumes = ["/${service_dir}/esdatadir:/usr/share/elasticsearch/data"]
       }
 
@@ -127,10 +128,10 @@ job "asapo-logging" {
 #kibana
    task "kibana" {
      driver = "docker"
-
+     user = "${asapo_user}"
      config {
        network_mode = "host"
-       image = "docker.elastic.co/kibana/kibana:${kibana_version}"
+       image = "yakser/kibana:${kibana_version}"
        volumes = ["local/kibana.yml:/usr/share/kibana/config/kibana.yml"]
      }
 

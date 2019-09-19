@@ -20,7 +20,7 @@ job "asapo-receivers" {
 
     task "receivers" {
       driver = "docker"
-
+      user = "${asapo_user}"
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]

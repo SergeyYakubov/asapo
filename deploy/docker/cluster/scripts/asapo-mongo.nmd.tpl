@@ -20,6 +20,7 @@ job "asapo-mongo" {
 
     task "mongo" {
       driver = "docker"
+      user = "${asapo_user}"
 
       config {
         network_mode = "host"

@@ -4,6 +4,7 @@
 if [ ! -f  /var/nomad/token_all ]; then
 	nomad acl bootstrap > /var/nomad/bootstrap
 	cat /var/nomad/bootstrap | grep Secret | awk '{print $4}' > /var/nomad/token
+	cp /var/nomad/token $TF_VAR_service_dir/nomad_token
 fi
 
 #export NOMAD_TOKEN=`cat /var/nomad/token `

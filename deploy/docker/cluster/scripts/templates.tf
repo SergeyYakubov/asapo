@@ -11,6 +11,7 @@ data "template_file" "nginx" {
     influxdb_port = "${var.influxdb_port}"
     authorizer_port = "${var.authorizer_port}"
     discovery_port = "${var.discovery_port}"
+    asapo_user = "${var.asapo_user}"
   }
 }
 
@@ -24,6 +25,7 @@ data "template_file" "asapo_services" {
     discovery_total_memory_size = "${var.discovery_total_memory_size}"
     authorizer_port = "${var.authorizer_port}"
     discovery_port = "${var.discovery_port}"
+    asapo_user = "${var.asapo_user}"
   }
 }
 
@@ -36,6 +38,7 @@ data "template_file" "asapo_receivers" {
     nomad_logs = "${var.nomad_logs}"
     receiver_total_memory_size = "${var.receiver_total_memory_size}"
     receiver_dataserver_cache_size = "${var.receiver_dataserver_cache_size}"
+    asapo_user = "${var.asapo_user}"
   }
 }
 
@@ -45,6 +48,7 @@ data "template_file" "asapo_brokers" {
     scripts_dir = "${var.job_scripts_dir}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
     nomad_logs = "${var.nomad_logs}"
+    asapo_user = "${var.asapo_user}"
   }
 }
 
@@ -59,6 +63,7 @@ data "template_file" "asapo_perfmetrics" {
     grafana_port = "${var.grafana_port}"
     influxdb_total_memory_size = "${var.influxdb_total_memory_size}"
     influxdb_port = "${var.influxdb_port}"
+    asapo_user = "${var.asapo_user}"
     }
 }
 
@@ -70,6 +75,7 @@ data "template_file" "asapo_mongo" {
     mongo_version = "${var.mongo_version}"
     mongo_total_memory_size = "${var.mongo_total_memory_size}"
     mongo_port = "${var.mongo_port}"
+    asapo_user = "${var.asapo_user}"
   }
 }
 
@@ -89,6 +95,7 @@ data "template_file" "asapo_logging" {
     elasticsearch_version = "${var.elasticsearch_version}"
     elasticsearch_total_memory_size = "${var.elasticsearch_total_memory_size}"
     elasticsearch_port = "${var.elasticsearch_port}"
+    asapo_user = "${var.asapo_user}"
   }
 }
 

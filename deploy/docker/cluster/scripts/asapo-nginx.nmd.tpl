@@ -23,6 +23,8 @@ job "asapo-nginx" {
     task "nginx" {
       driver = "docker"
 
+      user = "${asapo_user}"
+
       meta {
         fluentd_port = "${fluentd_port}"
         fluentd_port_stream = "${fluentd_port_stream}"
@@ -37,7 +39,9 @@ job "asapo-nginx" {
       config {
         network_mode = "host"
         image = "nginx:${nginx_version}"
-        volumes = ["local/nginx.conf:/etc/nginx/nginx.conf"]
+        volumes = [
+          "local/nginx.conf:/etc/nginx/nginx.conf"
+        ]
       }
 
       resources {

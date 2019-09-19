@@ -3,15 +3,13 @@ asapo_image_tag = "@ASAPO_VERSION@"
 
 
 nginx_version = "1.14"
-elasticsearch_version = "6.3.0"
-kibana_version = "6.3.0"
+elasticsearch_version = "7.3.2"
+kibana_version = "7.3.2"
 mongo_version = "4.0.0"
 grafana_version="latest"
 influxdb_version = "latest"
 elk_logs = true
 nomad_logs = false
-
-
 
 job_scripts_dir = "/var/run/asapo"
 

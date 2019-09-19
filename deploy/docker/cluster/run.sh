@@ -4,6 +4,8 @@ NOMAD_ALLOC_HOST_SHARED=/tmp/asapo/container_host_shared/nomad_alloc
 SERVICE_DATA_CLUSTER_SHARED=/tmp/asapo/asapo_cluster_shared/service_data
 DATA_GLOBAL_SHARED=/tmp/asapo/global_shared/data
 
+ASAPO_USER=`id -u`:`id -g`
+
 #ADVERTISE_IP=
 #RECURSORS=
 #IB_ADDRESS=
@@ -25,6 +27,7 @@ if (( mmc < 262144 )); then
 fi
 
 docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
+	-u $ASAPO_USER \
  	-v /var/lib/docker:/var/lib/docker \
 	-v $NOMAD_ALLOC_HOST_SHARED:$NOMAD_ALLOC_HOST_SHARED \
 	-v $SERVICE_DATA_CLUSTER_SHARED:$SERVICE_DATA_CLUSTER_SHARED \
@@ -34,6 +37,7 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
 	-e TF_VAR_data_dir=$DATA_GLOBAL_SHARED \
 	-e ADVERTISE_IP=$ADVERTISE_IP \
 	-e RECURSORS=$RECURSORS \
+	-e TF_VAR_asapo_user=$ASAPO_USER \
 	-e IB_ADDRESS=$IB_ADDRESS \
 	-e SERVER_ADRESSES=$SERVER_ADRESSES \
 	-e N_SERVERS=$N_SERVERS \

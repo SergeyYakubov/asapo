@@ -1,5 +1,7 @@
 variable "elk_logs" {}
 
+variable "asapo_user" {}
+
 variable "nomad_logs" {}
 
 variable "nginx_version" {}

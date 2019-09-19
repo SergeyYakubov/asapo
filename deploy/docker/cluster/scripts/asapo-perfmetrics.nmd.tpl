@@ -19,7 +19,7 @@ job "asapo-perfmetrics" {
 
     task "influxdb" {
       driver = "docker"
-
+      user = "${asapo_user}"
       config {
         network_mode = "host"
         image = "influxdb:${influxdb_version}"
@@ -61,7 +61,7 @@ job "asapo-perfmetrics" {
 
     task "grafana" {
       driver = "docker"
-
+      user = "${asapo_user}"
       env {
         GF_SERVER_DOMAIN = "$${attr.unique.hostname}"
         GF_SERVER_ROOT_URL = "%(protocol)s://%(domain)s/performance/"

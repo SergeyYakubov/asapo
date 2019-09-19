@@ -8,7 +8,7 @@ job "asapo-services" {
 
     task "asapo-authorizer" {
       driver = "docker"
-
+      user = "${asapo_user}"
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]
@@ -71,7 +71,7 @@ job "asapo-services" {
 
     task "asapo-discovery" {
       driver = "docker"
-
+      user = "${asapo_user}"
       config {
         network_mode = "host"
         dns_servers = ["127.0.0.1"]

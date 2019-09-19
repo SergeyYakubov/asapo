@@ -16,12 +16,12 @@ RUN add-apt-repository \
    $(lsb_release -cs) \
    stable"
 
-RUN apt-get update && apt-get install -y docker-ce-cli wget unzip
+RUN apt-get update && apt-get install -y docker-ce-cli wget unzip iproute2
 
 
 ENV CONSUL_VERSION=1.6.0
 ENV NOMAD_VERSION=0.9.5
-ENV TERRAFORM_VERSION=0.12.8
+ENV TERRAFORM_VERSION=0.12.9
 ENV HASHICORP_RELEASES=https://releases.hashicorp.com
 
 RUN set -eux && \
@@ -40,8 +40,6 @@ RUN set -eux && \
     nomad version && \
     terraform version
 
-RUN apt-get install -y iproute2
-
 ADD supervisord.conf /etc/
 
 RUN mkdir -p /var/log/supervisord/ /etc/consul.d /etc/nomad.d
@@ -54,5 +52,7 @@ COPY asapo-*  /usr/bin/
 
 COPY *.py  /etc/asapo/
 COPY *.hcl.tpl  /etc/asapo/
+
+RUN chmod -R og+wrX /var /run /etc/consul.d /etc/nomad.d
 
 ENTRYPOINT ["supervisord", "--configuration", "/etc/supervisord.conf"]
