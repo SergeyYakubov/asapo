@@ -28,14 +28,13 @@ struct RequestInfo {
 class ServerDataBroker final : public asapo::DataBroker {
   public:
     explicit ServerDataBroker(std::string server_uri, std::string source_path, SourceCredentials source);
-    Error Connect() override;
     Error ResetLastReadMarker(std::string group_id) override;
     Error SetLastReadMarker(uint64_t value, std::string group_id) override;
     Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
     Error GetLast(FileInfo* info, std::string group_id, FileData* data) override;
     std::string GenerateNewGroupId(Error* err) override;
     std::string GetBeamtimeMeta(Error* err) override;
-    uint64_t GetNDataSets(Error* err) override;
+    uint64_t GetCurrentSize(Error* err) override;
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override;
     FileInfos QueryImages(std::string query, Error* err) override;

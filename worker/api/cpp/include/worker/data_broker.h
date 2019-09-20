@@ -11,9 +11,6 @@ namespace asapo {
 
 class DataBroker {
   public:
-    //! Connect to the data source - will scan file folders or connect to the database.
-// TODO: do we need this?
-    virtual Error Connect() = 0;
     //! Reset counter for the specific group.
     /*!
       \param group_id - group id to use.
@@ -31,7 +28,7 @@ class DataBroker {
       \param err - return nullptr of operation succeed, error otherwise.
       \return number of datasets.
     */
-    virtual uint64_t GetNDataSets(Error* err) = 0;
+    virtual uint64_t GetCurrentSize(Error* err) = 0;
 
     //! Generate new GroupID.
     /*!
@@ -126,8 +123,6 @@ class DataBroker {
 /*! A class to create a data broker instance. The class's only function Create is used for this*/
 class DataBrokerFactory {
   public:
-    static std::unique_ptr<DataBroker> CreateFolderBroker(const std::string& source_name,
-            Error* error) noexcept;
     static std::unique_ptr<DataBroker> CreateServerBroker(std::string server_name, std::string source_path,
             SourceCredentials source,
             Error* error) noexcept;

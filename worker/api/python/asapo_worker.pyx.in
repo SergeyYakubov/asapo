@@ -83,11 +83,11 @@ cdef class PyDataBroker:
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
         return arr,None
-    def get_ndatasets(self):
+    def get_current_size(self):
         cdef Error err
         cdef uint64_t size
         with nogil:
-            size =  self.c_broker.GetNDataSets(&err)
+            size =  self.c_broker.GetCurrentSize(&err)
         err_str = _str(GetErrorString(&err))
         if err_str.strip():
             return None,err_str

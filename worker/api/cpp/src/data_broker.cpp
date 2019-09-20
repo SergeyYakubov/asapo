@@ -1,5 +1,4 @@
 #include "worker/data_broker.h"
-#include "folder_data_broker.h"
 #include "server_data_broker.h"
 
 
@@ -25,11 +24,6 @@ std::unique_ptr<DataBroker> Create(const std::string& source_name,
     return p;
 
 }
-
-std::unique_ptr<DataBroker> DataBrokerFactory::CreateFolderBroker(const std::string& source_name,
-        Error* error) noexcept {
-    return Create<FolderDataBroker>(source_name, error);
-};
 
 std::unique_ptr<DataBroker> DataBrokerFactory::CreateServerBroker(std::string server_name, std::string source_path,
         SourceCredentials source,

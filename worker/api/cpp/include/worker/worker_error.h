@@ -7,77 +7,39 @@
 namespace asapo {
 
 enum class WorkerErrorType {
-    kMemoryError,
-    kEmptyDatasource,
-    kSourceNotFound,
-    kSourceNotConnected,
-    kSourceAlreadyConnected,
-    kErrorReadingSource,
-    kNotFound,
-    kPermissionDenied,
     kNoData,
-    kWrongInput,
-    kAuthorizationError,
-    kInternalError,
-    kUnknownIOError
+    kBrokerServersNotFound,
+    kBrokerServerError,
+    kIOError,
+    kWrongInput
 };
-
 
 using WorkerErrorTemplate = ServiceErrorTemplate<WorkerErrorType, ErrorType::kWorkerError>;
 
 namespace WorkerErrorTemplates {
 
-auto const kMemoryError = WorkerErrorTemplate{
-    "Memory Error", WorkerErrorType::kMemoryError
+auto const kIOError = WorkerErrorTemplate{
+    "i/o error", WorkerErrorType::kIOError
 };
 
-auto const kEmptyDatasource = WorkerErrorTemplate{
-    "Empty Data Source", WorkerErrorType::kEmptyDatasource
-};
-
-auto const kSourceNotFound = WorkerErrorTemplate{
-    "Source Not Found", WorkerErrorType::kSourceNotFound
-};
-
-auto const kSourceNotConnected = WorkerErrorTemplate{
-    "Source Not Connected", WorkerErrorType::kSourceNotConnected
-};
-
-auto const kSourceAlreadyConnected = WorkerErrorTemplate{
-    "Source Already Connected", WorkerErrorType::kSourceAlreadyConnected
-};
-
-auto const kErrorReadingSource = WorkerErrorTemplate{
-    "Error Reading Source", WorkerErrorType::kErrorReadingSource
-};
-
-auto const kNotFound = WorkerErrorTemplate{
-    "Uri not found", WorkerErrorType::kNotFound
-};
-
-auto const kPermissionDenied = WorkerErrorTemplate{
-    "Permission Denied", WorkerErrorType::kPermissionDenied
-};
 
 auto const kNoData = WorkerErrorTemplate{
-    "No Data", WorkerErrorType::kNoData
+    "no data", WorkerErrorType::kNoData
 };
 
 auto const kWrongInput = WorkerErrorTemplate{
-    "Wrong Input", WorkerErrorType::kWrongInput
+    "wrong input", WorkerErrorType::kWrongInput
 };
 
-auto const kAuthorizationError = WorkerErrorTemplate{
-    "Authorization Error", WorkerErrorType::kAuthorizationError
+auto const kBrokerServerError = WorkerErrorTemplate{
+    "error from broker server", WorkerErrorType::kBrokerServerError
 };
 
-auto const kInternalError = WorkerErrorTemplate{
-    "Internal Error", WorkerErrorType::kInternalError
+auto const kBrokerServersNotFound = WorkerErrorTemplate{
+    "cannot find brokers", WorkerErrorType::kBrokerServersNotFound
 };
 
-auto const kUnknownIOError = WorkerErrorTemplate{
-    "Unknown IO Error", WorkerErrorType::kUnknownIOError
-};
+
 
 }
 }

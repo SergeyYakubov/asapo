@@ -81,9 +81,9 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(err == nullptr, "GetNext3 no error");
     M_AssertTrue(fi.name == "9", "GetNext3 filename");
 
-    auto size = broker->GetNDataSets(&err);
-    M_AssertTrue(err == nullptr, "GetNDataSets no error");
-    M_AssertTrue(size == 10, "GetNDataSets size");
+    auto size = broker->GetCurrentSize(&err);
+    M_AssertTrue(err == nullptr, "GetCurrentSize no error");
+    M_AssertTrue(size == 10, "GetCurrentSize size");
 
     err = broker->ResetLastReadMarker(group_id);
     M_AssertTrue(err == nullptr, "SetLastReadMarker");

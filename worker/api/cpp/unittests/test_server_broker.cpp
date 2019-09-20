@@ -98,7 +98,6 @@ class ServerDataBrokerTests : public Test {
                     Return("")
                 ));
     }
-
     void MockGetBrokerUri() {
         EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/broker"), _, _)).WillOnce(DoAll(
                     SetArgPointee<1>(HttpCode::OK),
@@ -125,10 +124,6 @@ class ServerDataBrokerTests : public Test {
     }
 };
 
-TEST_F(ServerDataBrokerTests, CanConnect) {
-    auto return_code = data_broker->Connect();
-    ASSERT_THAT(return_code, Eq(nullptr));
-}
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsErrorOnWrongInput) {
     auto err = data_broker->GetNext(nullptr, "", nullptr);
@@ -197,8 +192,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsEOFFromHttpClient) {
 
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err, Ne(nullptr));
-    ASSERT_THAT(err->Explain(), HasSubstr("timeout"));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kNoData));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsNotAuthorized) {
@@ -211,8 +205,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsNotAuthorized) {
 
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err, Ne(nullptr));
-    ASSERT_THAT(err->Explain(), HasSubstr("Authorization"));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsWrongResponseFromHttpClient) {
@@ -226,7 +219,8 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsWrongResponseFromHttpClient) {
 
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err->Explain(), HasSubstr("Cannot parse"));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kBrokerServerError));
+    ASSERT_THAT(err->Explain(), HasSubstr("malformed"));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerAddressNotFound) {
@@ -239,7 +233,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerAddressNotFound) {
     data_broker->SetTimeout(100);
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err->Explain(), AllOf(HasSubstr("broker uri"), HasSubstr("cannot")));
+    ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("cannot")));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerUriEmpty) {
@@ -252,7 +246,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerUriEmpty) {
     data_broker->SetTimeout(100);
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err->Explain(), AllOf(HasSubstr("broker uri"), HasSubstr("cannot")));
+    ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("cannot")));
 }
 
 TEST_F(ServerDataBrokerTests, GetDoNotCallBrokerUriIfAlreadyFound) {
@@ -292,15 +286,31 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsEOFFromHttpClientUntilTimeout) {
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/" +
                                         expected_group_id
                                         + "/1?token=" + expected_token, _,
-                                        _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
+                                        _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::Conflict),
                                                     SetArgPointee<2>(nullptr),
                                                     Return("{\"id\":1}")));
 
-    data_broker->SetTimeout(100);
+    data_broker->SetTimeout(300);
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err->Explain(), HasSubstr("timeout"));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kNoData));
+}
+
+TEST_F(ServerDataBrokerTests, GetNextImageReturnsImmediatelyOnServerError) {
+    MockGetBrokerUri();
+
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::InternalServerError),
+        SetArgPointee<2>(asapo::IOErrorTemplates::kSocketOperationOnNonSocket.Generate("sss").release()),
+        Return("")));
+
+    data_broker->SetTimeout(300);
+    auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
+
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kBrokerServerError));
+    ASSERT_THAT(err->Explain(), HasSubstr("sss"));
+
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsFileInfo) {
@@ -327,7 +337,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsParseError) {
 
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kErrorReadingSource));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kBrokerServerError));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfNoDataNeeded) {
@@ -450,7 +460,7 @@ TEST_F(ServerDataBrokerTests, ResetCounterUsesCorrectUri) {
 }
 
 
-TEST_F(ServerDataBrokerTests, GetNDataSetsUsesCorrectUri) {
+TEST_F(ServerDataBrokerTests, GetCurrentSizeUsesCorrectUri) {
     MockGetBrokerUri();
     data_broker->SetTimeout(100);
 
@@ -460,13 +470,13 @@ TEST_F(ServerDataBrokerTests, GetNDataSetsUsesCorrectUri) {
                                                     SetArgPointee<2>(nullptr),
                                                     Return("{\"size\":10}")));
     asapo::Error err;
-    auto size = data_broker->GetNDataSets(&err);
+    auto size = data_broker->GetCurrentSize(&err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(size, Eq(10));
 }
 
 
-TEST_F(ServerDataBrokerTests, GetNDataSetsErrorOnWrongResponce) {
+TEST_F(ServerDataBrokerTests, GetCurrentSizeErrorOnWrongResponce) {
     MockGetBrokerUri();
     data_broker->SetTimeout(100);
 
@@ -476,7 +486,7 @@ TEST_F(ServerDataBrokerTests, GetNDataSetsErrorOnWrongResponce) {
                                                     SetArgPointee<2>(nullptr),
                                                     Return("")));
     asapo::Error err;
-    auto size = data_broker->GetNDataSets(&err);
+    auto size = data_broker->GetCurrentSize(&err);
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(size, Eq(0));
 }
@@ -492,7 +502,7 @@ TEST_F(ServerDataBrokerTests, GetNDataErrorOnWrongParse) {
                                                     SetArgPointee<2>(nullptr),
                                                     Return("{\"siz\":10}")));
     asapo::Error err;
-    auto size = data_broker->GetNDataSets(&err);
+    auto size = data_broker->GetCurrentSize(&err);
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(size, Eq(0));
 }
@@ -533,7 +543,7 @@ TEST_F(ServerDataBrokerTests, GetByIdTimeouts) {
 
     auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kTimeout));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kNoData));
 }
 
 TEST_F(ServerDataBrokerTests, GetMetaDataOK) {
@@ -721,7 +731,7 @@ TEST_F(ServerDataBrokerTests, GetDataSetReturnsParseError) {
     asapo::Error err;
     auto dataset = data_broker->GetNextDataset(expected_group_id, &err);
 
-    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kInternalError));
+    ASSERT_THAT(err, Eq(asapo::WorkerErrorTemplates::kBrokerServerError));
     ASSERT_THAT(dataset.content.size(), Eq(0));
     ASSERT_THAT(dataset.id, Eq(0));
 

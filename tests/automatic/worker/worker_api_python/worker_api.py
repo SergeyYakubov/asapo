@@ -58,9 +58,9 @@ def check_single(broker,group_id_new):
     _, meta, err = broker.get_next(group_id_new, meta_only=True)
     assert_err(err, "get_next3")
 
-    size,err = broker.get_ndatasets()
-    assert_noterr(err, "get_ndatasets")
-    assert_eq(size,5,"get_ndatasets")
+    size,err = broker.get_current_size()
+    assert_noterr(err, "get_current_size")
+    assert_eq(size,5,"get_current_size")
 
 
     err = broker.reset_lastread_marker(group_id_new)

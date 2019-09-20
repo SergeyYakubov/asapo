@@ -42,7 +42,7 @@ cdef extern from "asapo_worker.h" namespace "asapo" nogil:
         Error GetNext(FileInfo* info, string group_id, FileData* data)
         Error GetLast(FileInfo* info, string group_id, FileData* data)
         Error GetById(uint64_t id, FileInfo* info, string group_id, FileData* data)
-        uint64_t GetNDataSets(Error* err)
+        uint64_t GetCurrentSize(Error* err)
         Error SetLastReadMarker(uint64_t value, string group_id)
         Error ResetLastReadMarker(string group_id)
         string GenerateNewGroupId(Error* err)
