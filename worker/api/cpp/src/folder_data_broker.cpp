@@ -90,7 +90,7 @@ std::string FolderDataBroker::GenerateNewGroupId(Error* err) {
     *err = nullptr;
     return "";
 }
-Error FolderDataBroker::ResetCounter(std::string group_id) {
+Error FolderDataBroker::ResetLastReadMarker(std::string group_id) {
     std::lock_guard<std::mutex> lock{mutex_};
     current_file_ = -1;
     return nullptr;
@@ -125,6 +125,10 @@ DataSet FolderDataBroker::GetDatasetById(uint64_t id, std::string group_id, Erro
     *err = TextError("Not supported for folder data broker");
     return {0, FileInfos{}};
 }
-
+Error FolderDataBroker::SetLastReadMarker(uint64_t value, std::string group_id) {
+    std::lock_guard<std::mutex> lock{mutex_};
+    current_file_ = value - 1;
+    return nullptr;
+}
 
 }

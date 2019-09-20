@@ -56,12 +56,26 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     err = broker->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err != nullptr, "GetNext2 error");
 
-    err = broker->GetLast(&fi, group_id, nullptr);
-    M_AssertTrue(err == nullptr, "GetLast2 no error");
+    err = broker->SetLastReadMarker(2, group_id);
+    M_AssertTrue(err == nullptr, "SetLastReadMarker no error");
+
 
     err = broker->GetById(8, &fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetById error");
     M_AssertTrue(fi.name == "8", "GetById filename");
+
+    err = broker->GetNext(&fi, group_id, nullptr);
+    M_AssertTrue(err == nullptr, "GetNext After GetById  no error");
+    M_AssertTrue(fi.name == "3", "GetNext After GetById filename");
+
+
+    err = broker->GetLast(&fi, group_id, nullptr);
+    M_AssertTrue(err == nullptr, "GetLast2 no error");
+
+
+    err = broker->SetLastReadMarker(8, group_id);
+    M_AssertTrue(err == nullptr, "SetLastReadMarker 2 no error");
+
 
     err = broker->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNext3 no error");
@@ -71,8 +85,8 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(err == nullptr, "GetNDataSets no error");
     M_AssertTrue(size == 10, "GetNDataSets size");
 
-    err = broker->ResetCounter(group_id);
-    M_AssertTrue(err == nullptr, "ResetCounter");
+    err = broker->ResetLastReadMarker(group_id);
+    M_AssertTrue(err == nullptr, "SetLastReadMarker");
 
     err = broker->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNext4 no error");

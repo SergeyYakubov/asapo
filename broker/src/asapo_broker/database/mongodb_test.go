@@ -308,14 +308,13 @@ func TestMongoDBResetCounter(t *testing.T) {
 	assert.Nil(t, err1)
 	assert.Equal(t, string(rec1_expect), string(res1))
 
-	_, err_reset := db.ProcessRequest(dbname, groupId, "resetcounter", "0")
+	_, err_reset := db.ProcessRequest(dbname, groupId, "resetcounter", "1")
 	assert.Nil(t, err_reset)
 
 	res2, err2 := db.ProcessRequest(dbname, groupId, "next", "0")
 
 	assert.Nil(t, err2)
-	assert.Equal(t, string(rec1_expect), string(res2))
-
+	assert.Equal(t, string(rec2_expect), string(res2))
 }
 
 func TestMongoDBGetMetaOK(t *testing.T) {

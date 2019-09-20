@@ -344,13 +344,17 @@ func (db *Mongodb) GetSize(db_name string) ([]byte, error) {
 	return json.Marshal(&rec)
 }
 
-func (db *Mongodb) ResetCounter(db_name string, group_id string) ([]byte, error) {
+func (db *Mongodb) ResetCounter(db_name string, group_id string, id_str string) ([]byte, error) {
+	id, err := strconv.Atoi(id_str)
+	if err != nil {
+		return nil, err
+	}
 
 	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
 		return nil, err
 	}
 
-	err := db.setCounter(db_name, group_id, 0)
+	err = db.setCounter(db_name, group_id, id)
 
 	return []byte(""), err
 }
@@ -422,7 +426,7 @@ func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, ex
 	case "last":
 		return db.GetLastRecord(db_name, group_id, dataset)
 	case "resetcounter":
-		return db.ResetCounter(db_name, group_id)
+		return db.ResetCounter(db_name, group_id, extra_param)
 	case "size":
 		return db.GetSize(db_name)
 	case "meta":

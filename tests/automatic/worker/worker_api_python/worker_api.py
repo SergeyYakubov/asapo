@@ -63,8 +63,8 @@ def check_single(broker,group_id_new):
     assert_eq(size,5,"get_ndatasets")
 
 
-    err = broker.reset_counter(group_id_new)
-    assert_noterr(err, "reset_counter")
+    err = broker.reset_lastread_marker(group_id_new)
+    assert_noterr(err, "reset_lastread_marker")
 
     _, meta, err = broker.get_next(group_id_new, meta_only=True)
     assert_noterr(err, "get_next4")
@@ -79,8 +79,17 @@ def check_single(broker,group_id_new):
 
     _, meta, err = broker.get_next(group_id_new, meta_only=True)
     assert_noterr(err, "get_next5")
-    assert_metaname(meta,"4","get next5")
+    assert_metaname(meta,"2","get next5")
     assert_usermetadata(meta,"get next5")
+
+
+    err = broker.set_lastread_marker(4, group_id_new)
+    assert_noterr(err, "set_lastread_marker")
+
+    _, meta, err = broker.get_next(group_id_new, meta_only=True)
+    assert_noterr(err, "get_next6")
+    assert_metaname(meta,"5","get next6")
+    assert_usermetadata(meta,"get next6")
 
 
     images,err = broker.query_images("meta.test = 10")
@@ -138,7 +147,7 @@ def check_dataset(broker,group_id_new):
     assert_metaname(metas[2],"8_3","get get_dataset_by_id1 name3")
 
     id, metas, err = broker.get_next_dataset(group_id_new)
-    assert_eq(id,9,"get_next_dataset4 id")
+    assert_eq(id,None,"get_next_dataset4 id")
 
 
 source, path, beamtime, token, mode = sys.argv[1:]

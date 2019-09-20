@@ -421,18 +421,31 @@ TEST_F(ServerDataBrokerTests, GenerateNewGroupIdReturnsGroupID) {
     ASSERT_THAT(groupid, Eq(expected_group_id));
 }
 
+TEST_F(ServerDataBrokerTests, ResetCounterByDefaultUsesCorrectUri) {
+    MockGetBrokerUri();
+    data_broker->SetTimeout(100);
+
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/" +
+                                         expected_group_id +
+                                         "/resetcounter?token=" + expected_token + "&value=0", _, _, _)).WillOnce(DoAll(
+                                                     SetArgPointee<2>(HttpCode::OK),
+                                                     SetArgPointee<3>(nullptr),
+                                                     Return("")));
+    auto err = data_broker->ResetLastReadMarker(expected_group_id);
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
 TEST_F(ServerDataBrokerTests, ResetCounterUsesCorrectUri) {
     MockGetBrokerUri();
     data_broker->SetTimeout(100);
 
     EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/" +
                                          expected_group_id +
-                                         "/resetcounter?token="
-                                         + expected_token, _, _, _)).WillOnce(DoAll(
+                                         "/resetcounter?token=" + expected_token + "&value=10", _, _, _)).WillOnce(DoAll(
                                                      SetArgPointee<2>(HttpCode::OK),
                                                      SetArgPointee<3>(nullptr),
                                                      Return("")));
-    auto err = data_broker->ResetCounter(expected_group_id);
+    auto err = data_broker->SetLastReadMarker(10, expected_group_id);
     ASSERT_THAT(err, Eq(nullptr));
 }
 
@@ -494,7 +507,7 @@ TEST_F(ServerDataBrokerTests, GetByIdUsesCorrectUri) {
                                         expected_group_id
                                         + "/" + std::to_string(
                                             expected_dataset_id) + "?token="
-                                        + expected_token + "&reset=true", _,
+                                        + expected_token, _,
                                         _)).WillOnce(DoAll(
                                                 SetArgPointee<1>(HttpCode::OK),
                                                 SetArgPointee<2>(nullptr),
@@ -504,7 +517,23 @@ TEST_F(ServerDataBrokerTests, GetByIdUsesCorrectUri) {
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(info.name, Eq(to_send.name));
+}
 
+
+TEST_F(ServerDataBrokerTests, GetByIdTimeouts) {
+    MockGetBrokerUri();
+    data_broker->SetTimeout(10);
+
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"  +
+                                        expected_group_id + "/" + std::to_string(expected_dataset_id) + "?token="
+                                        + expected_token, _, _)).WillOnce(DoAll(
+                                                    SetArgPointee<1>(HttpCode::Conflict),
+                                                    SetArgPointee<2>(nullptr),
+                                                    Return("")));
+
+    auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
+
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kTimeout));
 }
 
 TEST_F(ServerDataBrokerTests, GetMetaDataOK) {
@@ -719,7 +748,7 @@ TEST_F(ServerDataBrokerTests, GetDatasetByIdUsesCorrectUri) {
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/" +
                                         expected_group_id +
                                         "/" + std::to_string(expected_dataset_id) + "?token="
-                                        + expected_token + "&reset=true&dataset=true", _,
+                                        + expected_token + "&dataset=true", _,
                                         _)).WillOnce(DoAll(
                                                 SetArgPointee<1>(HttpCode::OK),
                                                 SetArgPointee<2>(nullptr),

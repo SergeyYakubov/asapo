@@ -93,11 +93,22 @@ cdef class PyDataBroker:
             return None,err_str
         else:
             return size,None
-    def reset_counter(self,group_id):
+    def set_lastread_marker(self,value,group_id):
+        cdef string b_group_id = _bytes(group_id)
+        cdef Error err
+        cdef uint64_t id = value
+        with nogil:
+            err =  self.c_broker.SetLastReadMarker(id,b_group_id)
+        err_str = _str(GetErrorString(&err))
+        if err_str.strip():
+            return err_str
+        else:
+            return None
+    def reset_lastread_marker(self,group_id):
         cdef string b_group_id = _bytes(group_id)
         cdef Error err
         with nogil:
-            err =  self.c_broker.ResetCounter(b_group_id)
+            err =  self.c_broker.ResetLastReadMarker(b_group_id)
         err_str = _str(GetErrorString(&err))
         if err_str.strip():
             return err_str

@@ -19,7 +19,8 @@ class DataBroker {
       \param group_id - group id to use.
       \return nullptr of command was successful, otherwise error.
     */
-    virtual Error ResetCounter(std::string group_id) = 0;
+    virtual Error ResetLastReadMarker(std::string group_id) = 0;
+    virtual Error SetLastReadMarker(uint64_t value, std::string group_id) = 0;
 
     //! Set timeout for broker operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;

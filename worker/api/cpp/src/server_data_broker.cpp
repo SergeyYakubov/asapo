@@ -255,7 +255,7 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Erro
         if (*err == nullptr) {
             request.host = current_broker_uri_;
             *err = ProcessRequest(&response, request);
-            if (*err == nullptr || (*err)->GetErrorType() == ErrorType::kEndOfFile || (*err) == WorkerErrorTemplates::kWrongInput) {
+            if (*err == nullptr || (*err) == WorkerErrorTemplates::kWrongInput) {
                 return response;
             }
         }
@@ -266,15 +266,22 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Erro
     return "";
 }
 
-Error ServerDataBroker::ResetCounter(std::string group_id) {
+
+Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/" + std::move(
                  group_id) + "/resetcounter";
+    ri.extra_params = "&value=" + std::to_string(value);
     ri.post = true;
 
     Error err;
     BrokerRequestWithTimeout(ri, &err);
     return err;
+}
+
+
+Error ServerDataBroker::ResetLastReadMarker(std::string group_id) {
+    return SetLastReadMarker(0, group_id);
 }
 
 uint64_t ServerDataBroker::GetNDataSets(Error* err) {
@@ -303,7 +310,6 @@ Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* respon
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/" + std::move(
                  group_id) + "/" + std::to_string(id);
-    ri.extra_params = "&reset=true";
     if (dataset) {
         ri.extra_params += "&dataset=true";
     }
@@ -390,6 +396,5 @@ DataSet ServerDataBroker::GetLastDataset(std::string group_id, Error* err) {
 DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string group_id, Error* err) {
     return GetDatasetFromServer(GetImageServerOperation::GetID, id, std::move(group_id), err);
 }
-
 
 }

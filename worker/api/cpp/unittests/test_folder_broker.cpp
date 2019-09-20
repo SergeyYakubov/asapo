@@ -209,7 +209,7 @@ TEST_F(FolderDataBrokerTests, SecondNextReturnsSameFileInfoIfReset) {
     FileInfo fi;
     data_broker->GetNext(&fi, "", nullptr);
 
-    auto err = data_broker->ResetCounter("");
+    auto err = data_broker->ResetLastReadMarker("");
     ASSERT_THAT(err, Eq(nullptr));
 
     err = data_broker->GetNext(&fi, "", nullptr);

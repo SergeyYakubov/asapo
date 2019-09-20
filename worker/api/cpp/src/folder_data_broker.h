@@ -14,7 +14,8 @@ class FolderDataBroker final : public asapo::DataBroker {
   public:
     explicit FolderDataBroker(const std::string& source_name);
     Error Connect() override;
-    Error ResetCounter(std::string group_id) override;
+    Error ResetLastReadMarker(std::string group_id) override;
+    Error SetLastReadMarker(uint64_t value, std::string group_id) override;
     Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
     Error GetLast(FileInfo* info, std::string group_id, FileData* data) override;
     void SetTimeout(uint64_t timeout_ms) override {}; // to timeout in this case
