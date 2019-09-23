@@ -105,7 +105,7 @@ void ServerDataBroker::ProcessServerError(Error* err, const std::string& respons
             Error parse_error;
             auto id = GetIDFromJson(response, &parse_error);
             if (parse_error) {
-                *err = WorkerErrorTemplates::kBrokerServerError.Generate("malformed response - "+response);
+                *err = WorkerErrorTemplates::kBrokerServerError.Generate("malformed response - " + response);
                 return;
             }
             *op = id;
@@ -137,7 +137,7 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
 
         ProcessServerError(&err, *response, &request_suffix);
 
-        if (err==WorkerErrorTemplates::kBrokerServerError && request_suffix == "next") {
+        if (err == WorkerErrorTemplates::kBrokerServerError && request_suffix == "next") {
             return err;
         }
 

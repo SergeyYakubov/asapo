@@ -301,9 +301,9 @@ TEST_F(ServerDataBrokerTests, GetNextImageReturnsImmediatelyOnServerError) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
-        SetArgPointee<1>(HttpCode::InternalServerError),
-        SetArgPointee<2>(asapo::IOErrorTemplates::kSocketOperationOnNonSocket.Generate("sss").release()),
-        Return("")));
+                SetArgPointee<1>(HttpCode::InternalServerError),
+                SetArgPointee<2>(asapo::IOErrorTemplates::kSocketOperationOnNonSocket.Generate("sss").release()),
+                Return("")));
 
     data_broker->SetTimeout(300);
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
