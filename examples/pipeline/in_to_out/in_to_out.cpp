@@ -59,7 +59,7 @@ void WaitConsumerThreadsFinished(std::vector<std::thread>* threads) {
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
     std::cout << err->Explain() << std::endl;
-    return err == asapo::IOErrorTemplates::kTimeout ? 0 : 1;
+    return err == asapo::WorkerErrorTemplates::kEndOfStream ? 0 : 1;
 }
 
 BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
@@ -149,7 +149,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
             auto err = ProcessNextEvent(args, broker, producer);
             if (err) {
                 (*errors)[i] += ProcessError(err);
-                if (err == asapo::IOErrorTemplates::kTimeout) {
+                if (err == asapo::WorkerErrorTemplates::kEndOfStream) {
                     break;
                 }
             }

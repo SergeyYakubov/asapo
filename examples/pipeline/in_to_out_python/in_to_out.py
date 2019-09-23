@@ -69,7 +69,7 @@ while True:
         err = producer.send_data(meta['_id'],meta['name']+"_"+stream_out ,data,
                              ingest_mode = ingest_mode, callback = callback)
         assert_err(err)
-    elif 'timeout' in err:
+    elif 'no data' in err:
             break
     else:
         assert_err(err)

@@ -7,29 +7,59 @@
 #include "http_client/http_error.h"
 #include "tcp_client.h"
 
-
 #include "asapo_worker.h"
 
 using std::chrono::system_clock;
 
 namespace asapo {
 
-Error HttpCodeToWorkerError(const HttpCode& code) {
+Error GetIDsFromJson(const std::string& json_string, uint64_t* id, uint64_t* id_max) {
+    JsonStringParser parser(json_string);
+    Error err;
+    if ((err = parser.GetUInt64("id", id)) || (err = parser.GetUInt64("id_max", id_max))) {
+        return err;
+    }
+    return nullptr;
+}
+
+Error ErrorFromNoDataResponse(const std::string& response) {
+    if (response.find("get_record_by_id") != std::string::npos) {
+        uint64_t id, id_max;
+        auto parse_error = GetIDsFromJson(response, &id, &id_max);
+        if (parse_error) {
+            return WorkerErrorTemplates::kBrokerServerError.Generate("malformed response - " + response);
+        }
+        Error err;
+        if (id >= id_max ) {
+            err = WorkerErrorTemplates::kEndOfStream.Generate();
+        } else {
+            err = WorkerErrorTemplates::kNoData.Generate();
+        }
+        WorkerErrorData* error_data = new WorkerErrorData;
+        error_data->id = id;
+        error_data->id_max = id_max;
+        err->SetCustomData(std::unique_ptr<CustomErrorData> {error_data});
+        return err;
+    }
+    return WorkerErrorTemplates::kNoData.Generate();
+}
+
+Error ErrorFromServerResponce(const std::string& response, const HttpCode& code) {
     switch (code) {
     case HttpCode::OK:
         return nullptr;
     case HttpCode::BadRequest:
-        return WorkerErrorTemplates::kWrongInput.Generate();
+        return WorkerErrorTemplates::kWrongInput.Generate(response);
     case HttpCode::Unauthorized:
-        return WorkerErrorTemplates::kWrongInput.Generate();
+        return WorkerErrorTemplates::kWrongInput.Generate(response);
     case HttpCode::InternalServerError:
-        return WorkerErrorTemplates::kBrokerServerError.Generate();
+        return WorkerErrorTemplates::kBrokerServerError.Generate(response);
     case HttpCode::NotFound:
-        return WorkerErrorTemplates::kBrokerServersNotFound.Generate();
+        return WorkerErrorTemplates::kBrokerServersNotFound.Generate(response);
     case HttpCode::Conflict:
-        return WorkerErrorTemplates::kNoData.Generate();
+        return ErrorFromNoDataResponse(response);
     default:
-        return WorkerErrorTemplates::kBrokerServerError.Generate();
+        return WorkerErrorTemplates::kBrokerServerError.Generate(response);
     }
 }
 
@@ -50,15 +80,6 @@ void ServerDataBroker::SetTimeout(uint64_t timeout_ms) {
     timeout_ms_ = timeout_ms;
 }
 
-std::string GetIDFromJson(const std::string& json_string, Error* err) {
-    JsonStringParser parser(json_string);
-    uint64_t id;
-    if ((*err = parser.GetUInt64("id", &id)) != nullptr) {
-        return "";
-    }
-    return std::to_string(id);
-}
-
 std::string ServerDataBroker::RequestWithToken(std::string uri) {
     return std::move(uri) + "?token=" + source_credentials_.user_token;
 }
@@ -67,8 +88,9 @@ Error ServerDataBroker::ProcessRequest(std::string* response, const RequestInfo&
     Error err;
     HttpCode code;
     if (request.post) {
-        *response = httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.body, &code,
-                                       &err);
+        *response =
+            httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.body, &code,
+                               &err);
     } else {
         *response = httpclient__->Get(RequestWithToken(request.host + request.api) + request.extra_params, &code, &err);
     }
@@ -76,7 +98,7 @@ Error ServerDataBroker::ProcessRequest(std::string* response, const RequestInfo&
         current_broker_uri_ = "";
         return WorkerErrorTemplates::kBrokerServerError.Generate("error processing request: " + err->Explain());
     }
-    return HttpCodeToWorkerError(code);
+    return ErrorFromServerResponce(*response, code);
 }
 
 Error ServerDataBroker::GetBrokerUri() {
@@ -93,23 +115,20 @@ Error ServerDataBroker::GetBrokerUri() {
     if (err != nullptr || current_broker_uri_.empty()) {
         current_broker_uri_ = "";
         return WorkerErrorTemplates::kBrokerServersNotFound.Generate(" on " + server_uri_
-                + (err != nullptr ? ": " + err->Explain() : ""));
+                + (err != nullptr ? ": " + err->Explain()
+                   : ""));
     }
     return nullptr;
 }
 
 void ServerDataBroker::ProcessServerError(Error* err, const std::string& response, std::string* op) {
-    (*err)->Append(response);
     if (*err == WorkerErrorTemplates::kNoData) {
-        if (response.find("id") != std::string::npos) {
-            Error parse_error;
-            auto id = GetIDFromJson(response, &parse_error);
-            if (parse_error) {
-                *err = WorkerErrorTemplates::kBrokerServerError.Generate("malformed response - " + response);
-                return;
-            }
-            *op = id;
+        auto error_data = static_cast<const WorkerErrorData*>((*err)->GetCustomData());
+        if (error_data == nullptr) {
+            *err = WorkerErrorTemplates::kBrokerServerError.Generate("malformed response - " + response);
+            return;
         }
+        *op = std::to_string(error_data->id);
     }
     return;
 }
@@ -195,7 +214,7 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t 
 }
 
 Error ServerDataBroker::RetrieveData(FileInfo* info, FileData* data) {
-    if (data == nullptr || info == nullptr ) {
+    if (data == nullptr || info == nullptr) {
         return WorkerErrorTemplates::kWrongInput.Generate("pointers are empty");
     }
 
@@ -216,7 +235,6 @@ Error ServerDataBroker::RetrieveData(FileInfo* info, FileData* data) {
     return nullptr;
 }
 
-
 Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
     if (data == nullptr) {
         return nullptr;
@@ -234,7 +252,6 @@ Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* dat
     return net_client__->GetData(info, data);
 }
 
-
 std::string ServerDataBroker::GenerateNewGroupId(Error* err) {
     RequestInfo ri;
     ri.api = "/creategroup";
@@ -242,12 +259,9 @@ std::string ServerDataBroker::GenerateNewGroupId(Error* err) {
     return BrokerRequestWithTimeout(ri, err);
 }
 
-
 std::string ServerDataBroker::AppendUri(std::string request_string) {
     return current_broker_uri_ + "/" + std::move(request_string);
 }
-
-
 
 std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Error* err) {
     uint64_t elapsed_ms = 0;
@@ -267,7 +281,6 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Erro
     return "";
 }
 
-
 Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/" + std::move(
@@ -279,7 +292,6 @@ Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id) 
     BrokerRequestWithTimeout(ri, &err);
     return err;
 }
-
 
 Error ServerDataBroker::ResetLastReadMarker(std::string group_id) {
     return SetLastReadMarker(0, group_id);
@@ -305,7 +317,6 @@ Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_i
     return GetImageFromServer(GetImageServerOperation::GetID, id, group_id, info, data);
 }
 
-
 Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* response, std::string group_id,
                                                 bool dataset) {
     RequestInfo ri;
@@ -326,7 +337,6 @@ std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
 
     return BrokerRequestWithTimeout(ri, err);
 }
-
 
 DataSet ServerDataBroker::DecodeDatasetFromResponse(std::string response, Error* err) {
     auto parser = JsonStringParser(std::move(response));
@@ -353,7 +363,6 @@ DataSet ServerDataBroker::DecodeDatasetFromResponse(std::string response, Error*
     return {id, std::move(res)};
 }
 
-
 FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/0/queryimages";
@@ -362,7 +371,6 @@ FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
 
     auto response = BrokerRequestWithTimeout(ri, err);
     if (*err) {
-        (*err)->Append(response);
         return FileInfos{};
     }
 

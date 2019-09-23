@@ -8,7 +8,8 @@
 
 namespace asapo {
 
-Error HttpCodeToWorkerError(const HttpCode& code);
+Error ErrorFromServerResponce(const std::string& response, const HttpCode& code);
+Error ErrorFromNoDataResponse(const std::string& response);
 
 enum class GetImageServerOperation {
     GetNext,

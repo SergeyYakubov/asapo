@@ -22,6 +22,7 @@ enum class ErrorType {
 
 class ErrorInterface;
 class ErrorTemplateInterface;
+class CustomErrorData;
 
 // nullptr == noError
 // Example check:
@@ -37,6 +38,8 @@ class ErrorInterface {
     virtual std::string Explain() const noexcept = 0;
     virtual void Append(const std::string& value) noexcept = 0;
     virtual ErrorType GetErrorType() const noexcept = 0;
+    virtual const CustomErrorData* GetCustomData() = 0;
+    virtual void SetCustomData(std::unique_ptr<CustomErrorData> data) = 0;
     virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
 };
 
@@ -75,15 +78,33 @@ static inline std::ostream& operator<<(std::ostream& os, const Error& err) {
     return os;
 }
 
+class CustomErrorData {
+  public:
+    virtual ~CustomErrorData() = default;
+};
+
 class SimpleError: public ErrorInterface {
   private:
     std::string error_;
+    std::unique_ptr<CustomErrorData> custom_data_;
     ErrorType error_type_ = ErrorType::kAsapoError;
   public:
     explicit SimpleError(std::string error): error_{std::move(error)} {
 
     }
     SimpleError(std::string error, ErrorType error_type ): error_{std::move(error)}, error_type_{error_type} {
+    }
+
+    const CustomErrorData* GetCustomData() {
+        if (custom_data_) {
+            return custom_data_.get();
+        } else {
+            return nullptr;
+        }
+    };
+
+    void SetCustomData(std::unique_ptr<CustomErrorData> data) {
+        custom_data_ = std::move(data);
     }
 
     void Append(const std::string& value) noexcept override {

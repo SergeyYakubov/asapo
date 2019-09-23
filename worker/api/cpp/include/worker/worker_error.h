@@ -8,6 +8,7 @@ namespace asapo {
 
 enum class WorkerErrorType {
     kNoData,
+    kEndOfStream,
     kBrokerServersNotFound,
     kBrokerServerError,
     kIOError,
@@ -16,12 +17,23 @@ enum class WorkerErrorType {
 
 using WorkerErrorTemplate = ServiceErrorTemplate<WorkerErrorType, ErrorType::kWorkerError>;
 
+
+class WorkerErrorData : public CustomErrorData {
+  public:
+    uint64_t id;
+    uint64_t id_max;
+};
+
+
 namespace WorkerErrorTemplates {
 
 auto const kIOError = WorkerErrorTemplate{
     "i/o error", WorkerErrorType::kIOError
 };
 
+auto const kEndOfStream = WorkerErrorTemplate{
+    "no data - end of stream", WorkerErrorType::kEndOfStream
+};
 
 auto const kNoData = WorkerErrorTemplate{
     "no data", WorkerErrorType::kNoData
@@ -45,3 +57,4 @@ auto const kBrokerServersNotFound = WorkerErrorTemplate{
 }
 
 #endif //ASAPO_WORKER_ERROR_H
+

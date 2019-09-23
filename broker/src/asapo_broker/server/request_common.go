@@ -25,10 +25,6 @@ func ValueTrue(r *http.Request, key string) bool {
 	return false
 }
 
-func resetRequested(r *http.Request) bool {
-	return ValueTrue(r, "reset")
-}
-
 func datasetRequested(r *http.Request) bool {
 	return ValueTrue(r, "dataset")
 }

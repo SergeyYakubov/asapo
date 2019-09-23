@@ -40,7 +40,7 @@ void WaitThreads(std::vector<std::thread>* threads) {
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
     std::cout << err->Explain() << std::endl;
-    return err == asapo::WorkerErrorTemplates::kNoData ? 0 : 1;
+    return err == asapo::WorkerErrorTemplates::kEndOfStream ? 0 : 1;
 }
 
 std::vector<std::thread> StartThreads(const Args& params,
@@ -58,7 +58,6 @@ std::vector<std::thread> StartThreads(const Args& params,
         asapo::FileData data;
 
         lock.lock();
-
         if (group_id.empty()) {
             group_id = broker->GenerateNewGroupId(&err);
             if (err) {
@@ -96,9 +95,10 @@ std::vector<std::thread> StartThreads(const Args& params,
                     }
                 }
             }
+
             if (err) {
                 (*errors)[i] += ProcessError(err);
-                if (err == asapo::WorkerErrorTemplates::kNoData) {
+                if (err != asapo::WorkerErrorTemplates::kNoData ) {
                     break;
                 }
             }
