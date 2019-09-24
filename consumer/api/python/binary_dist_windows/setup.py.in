@@ -1,0 +1,12 @@
+import setuptools
+
+setuptools.setup(
+      name ="asapo_consumer",
+      version = "@ASAPO_VERSION_PYTHON@",
+      install_requires=['numpy'],
+      include_package_data=True,
+      packages=['asapo_consumer'],
+      package_data={
+        'asapo_consumer': ['asapo_consumer.pyd'],
+      },
+)

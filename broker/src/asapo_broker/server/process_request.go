@@ -58,10 +58,6 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 		return
 	}
 
-	if op == "id" && resetRequested(r) {
-		op = "idreset"
-	}
-
 	if datasetRequested(r) {
 		op = op + "_dataset"
 	}

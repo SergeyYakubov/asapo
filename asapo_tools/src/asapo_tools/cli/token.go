@@ -23,7 +23,7 @@ func generateToken(id string,secret string) string {
 }
 
 
-// GenerateToken generates token for workers
+// GenerateToken generates token for consumers
 func (cmd *command) CommandToken() error {
 
 	message_string := "Generate token"

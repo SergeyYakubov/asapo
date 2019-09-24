@@ -50,7 +50,7 @@ echo hello > c:\tmp\asapo\test_in\test1\file3
 ping 1.0.0.0 -n 10 -w 100 > nul
 
 
-REM worker
+REM consumer
 "%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 3000 1 | findstr /c:"Processed 3 file(s)"  || goto :error
 
 

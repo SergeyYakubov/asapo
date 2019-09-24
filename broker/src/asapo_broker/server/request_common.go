@@ -15,7 +15,6 @@ func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, 
 
 func ValueTrue(r *http.Request, key string) bool {
 	val := r.URL.Query().Get(key)
-
 	if len(val) == 0 {
 		return false
 	}
@@ -23,13 +22,7 @@ func ValueTrue(r *http.Request, key string) bool {
 	if val == "true" {
 		return true
 	}
-
 	return false
-
-}
-
-func resetRequested(r *http.Request) bool {
-	return ValueTrue(r, "reset")
 }
 
 func datasetRequested(r *http.Request) bool {

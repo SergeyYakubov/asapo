@@ -51,7 +51,7 @@ start_mongo
 wait_mongo
 
 
-# create db before worker starts reading it. todo: git rid of it
+# create db before consumer starts reading it. todo: git rid of it
 echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}_detector
 
 sed -i 's/27017/27016/g' discovery.json.tpl

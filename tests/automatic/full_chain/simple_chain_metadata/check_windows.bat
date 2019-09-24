@@ -24,7 +24,7 @@ REM producer
 mkdir %receiver_folder%
 "%1" %proxy_address% %beamtime_id% 100 0 1 0 100
 
-REM worker
+REM consumer
 "%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 0  1 > out.txt
 type out.txt
 findstr /i /l /c:"dummy_meta"  out.txt || goto :error

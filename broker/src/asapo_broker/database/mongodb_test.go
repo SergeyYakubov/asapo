@@ -91,7 +91,7 @@ func TestMongoDBGetNextErrorWhenRecordNotThereYet(t *testing.T) {
 	db.InsertRecord(dbname, &rec2)
 	_, err := db.GetNextRecord(dbname, groupId, false)
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"id\":1}", err.Error())
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":2}", err.Error())
 }
 
 func TestMongoDBGetNextOK(t *testing.T) {
@@ -110,7 +110,16 @@ func TestMongoDBGetNextErrorOnNoMoreData(t *testing.T) {
 	db.GetNextRecord(dbname, groupId, false)
 	_, err := db.GetNextRecord(dbname, groupId, false)
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1}", err.(*DBError).Message)
 }
+
+//func TestMongoDBGetNextErrorOnDataAtAll(t *testing.T) {
+//	db.Connect(dbaddress)
+//	defer cleanup()
+//	_, err := db.GetNextRecord(dbname, groupId, false)
+//	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+//	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0}", err.(*DBError).Message)
+//}
 
 func TestMongoDBGetNextCorrectOrder(t *testing.T) {
 	db.Connect(dbaddress)
@@ -176,7 +185,7 @@ func TestMongoDBGetRecordByID(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
-	res, err := db.GetRecordByID(dbname, "", "1", true, false, false)
+	res, err := db.GetRecordByID(dbname, "", "1", false)
 	assert.Nil(t, err)
 	assert.Equal(t, string(rec1_expect), string(res))
 }
@@ -185,9 +194,9 @@ func TestMongoDBGetRecordByIDFails(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.InsertRecord(dbname, &rec1)
-	_, err := db.GetRecordByID(dbname, "", "2", true, false, false)
+	_, err := db.GetRecordByID(dbname, "", "2", false)
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"id\":2}", err.Error())
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":1}", err.Error())
 }
 
 func TestMongoDBGetRecordNext(t *testing.T) {
@@ -276,24 +285,8 @@ func TestMongoDBGetSizeNoDatabase(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestMongoDBGetRecordIDWithReset(t *testing.T) {
-	db.Connect(dbaddress)
-	defer cleanup()
-	db.InsertRecord(dbname, &rec1)
-	db.InsertRecord(dbname, &rec2)
-
-	res1, err1 := db.ProcessRequest(dbname, groupId, "idreset", "1")
-	res2, err2 := db.ProcessRequest(dbname, groupId, "next", "0")
-
-	assert.Nil(t, err1)
-	assert.Equal(t, string(rec1_expect), string(res1))
-	assert.Nil(t, err2)
-	assert.Equal(t, string(rec2_expect), string(res2))
-
-}
-
 func TestMongoDBGetRecordByIDNotConnected(t *testing.T) {
-	_, err := db.GetRecordByID(dbname, "", "2", true, false, false)
+	_, err := db.GetRecordByID(dbname, "", "2", false)
 	assert.Equal(t, utils.StatusError, err.(*DBError).Code)
 }
 
@@ -308,14 +301,13 @@ func TestMongoDBResetCounter(t *testing.T) {
 	assert.Nil(t, err1)
 	assert.Equal(t, string(rec1_expect), string(res1))
 
-	_, err_reset := db.ProcessRequest(dbname, groupId, "resetcounter", "0")
+	_, err_reset := db.ProcessRequest(dbname, groupId, "resetcounter", "1")
 	assert.Nil(t, err_reset)
 
 	res2, err2 := db.ProcessRequest(dbname, groupId, "next", "0")
 
 	assert.Nil(t, err2)
-	assert.Equal(t, string(rec1_expect), string(res2))
-
+	assert.Equal(t, string(rec2_expect), string(res2))
 }
 
 func TestMongoDBGetMetaOK(t *testing.T) {
@@ -424,7 +416,8 @@ func TestMongoDBQueryImagesOK(t *testing.T) {
 }
 
 var rec_dataset1 = TestDataset{1, 3, []TestRecord{rec1, rec2, rec3}}
-var rec_dataset2 = TestDataset{2, 2, []TestRecord{rec1, rec2, rec3}}
+var rec_dataset1_incomplete = TestDataset{1, 4, []TestRecord{rec1, rec2, rec3}}
+var rec_dataset2 = TestDataset{2, 4, []TestRecord{rec1, rec2, rec3}}
 var rec_dataset3 = TestDataset{3, 3, []TestRecord{rec3, rec2, rec2}}
 
 func TestMongoDBGetDataset(t *testing.T) {
@@ -443,15 +436,17 @@ func TestMongoDBGetDataset(t *testing.T) {
 	assert.Equal(t, rec_dataset1, res)
 }
 
-func TestMongoDBNoDataOnNotCompletedDataset(t *testing.T) {
+func TestMongoDBNoDataOnNotCompletedFirstDataset(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 
-	db.InsertRecord(dbname, &rec_dataset2)
+	db.InsertRecord(dbname, &rec_dataset1_incomplete)
 
 	res_string, err := db.ProcessRequest(dbname, groupId, "next_dataset", "0")
 
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0}", err.(*DBError).Message)
+
 	assert.Equal(t, "", string(res_string))
 }
 
@@ -487,25 +482,6 @@ func TestMongoDBGetRecordLastDataSetOK(t *testing.T) {
 	json.Unmarshal(res_string, &res)
 
 	assert.Equal(t, rec_dataset3, res)
-}
-
-func TestMongoDBGetDatasetIDWithReset(t *testing.T) {
-	db.Connect(dbaddress)
-	defer cleanup()
-	db.InsertRecord(dbname, &rec_dataset1)
-	db.InsertRecord(dbname, &rec_dataset3)
-
-	_, err1 := db.ProcessRequest(dbname, groupId, "idreset_dataset", "2")  //error while record is not complete, but reset counter to 2
-	res2s, err2 := db.ProcessRequest(dbname, groupId, "next_dataset", "0") // so getnext would get record number 3
-
-	assert.NotNil(t, err1)
-	assert.Nil(t, err2)
-
-	var res2 TestDataset
-	json.Unmarshal(res2s, &res2)
-
-	assert.Equal(t, rec_dataset3, res2)
-
 }
 
 func TestMongoDBGetDatasetID(t *testing.T) {

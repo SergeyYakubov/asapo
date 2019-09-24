@@ -24,7 +24,7 @@ REM producer
 mkdir %receiver_folder%
 "%1" %proxy_address% %beamtime_id% 100 100 4 0 100
 
-REM worker
+REM consumer
 set PYTHONPATH=%4
 
 python3 %3/get_user_meta.py %proxy_address%  %receiver_folder% %beamtime_id%  %token% new > out

@@ -133,7 +133,7 @@ func (db *Mongodb) InsertMeta(dbname string, s interface{}) error {
 	return c.Insert(s)
 }
 
-func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int, err error) {
+func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int) {
 	c := db.session.DB(dbname).C(data_collection_name)
 	var id Pointer
 	var q bson.M
@@ -142,11 +142,11 @@ func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int, err err
 	} else {
 		q = nil
 	}
-	err = c.Find(q).Sort("-_id").Select(bson.M{"_id": 1}).One(&id)
+	err := c.Find(q).Sort("-_id").Select(bson.M{"_id": 1}).One(&id)
 	if err != nil {
-		return 0, nil
+		return 0
 	}
-	return id.ID, nil
+	return id.ID
 }
 
 func (db *Mongodb) createLocationPointers(dbname string, group_id string) (err error) {
@@ -178,12 +178,22 @@ func (db *Mongodb) incrementField(dbname string, group_id string, max_ind int, r
 	c := db.session.DB(dbname).C(pointer_collection_name)
 	_, err = c.Find(q).Apply(change, res)
 	if err == mgo.ErrNotFound {
-		return &DBError{utils.StatusNoData, err.Error()}
+		return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind)}
 	}
 	return err
 }
 
-func (db *Mongodb) GetRecordByIDRow(dbname string, id int, returnID bool, dataset bool) ([]byte, error) {
+func encodeAnswer(id, id_max int) string {
+	var r = struct {
+		Op     string `json:"op""`
+		Id     int    `json:"id""`
+		Id_max int    `json:"id_max""`
+	}{"get_record_by_id", id, id_max}
+	answer, _ := json.Marshal(&r)
+	return string(answer)
+}
+
+func (db *Mongodb) GetRecordByIDRow(dbname string, id, id_max int, dataset bool) ([]byte, error) {
 	var res map[string]interface{}
 	var q bson.M
 	if dataset {
@@ -195,25 +205,17 @@ func (db *Mongodb) GetRecordByIDRow(dbname string, id int, returnID bool, datase
 	c := db.session.DB(dbname).C(data_collection_name)
 	err := c.Find(q).One(&res)
 	if err != nil {
-		var r = struct {
-			Id int `json:"id""`
-		}{id}
-		answer, _ := json.Marshal(&r)
+		answer := encodeAnswer(id, id_max)
 		log_str := "error getting record id " + strconv.Itoa(id) + " for " + dbname + " : " + err.Error()
 		logger.Debug(log_str)
-		if returnID {
-			return nil, &DBError{utils.StatusNoData, string(answer)}
-		} else {
-			return nil, &DBError{utils.StatusNoData, err.Error()}
-		}
-
+		return nil, &DBError{utils.StatusNoData, answer}
 	}
 	log_str := "got record id " + strconv.Itoa(id) + " for " + dbname
 	logger.Debug(log_str)
 	return utils.MapToJson(&res)
 }
 
-func (db *Mongodb) GetRecordByID(dbname string, group_id string, id_str string, returnID bool, reset bool, dataset bool) ([]byte, error) {
+func (db *Mongodb) GetRecordByID(dbname string, group_id string, id_str string, dataset bool) ([]byte, error) {
 	id, err := strconv.Atoi(id_str)
 	if err != nil {
 		return nil, err
@@ -222,11 +224,9 @@ func (db *Mongodb) GetRecordByID(dbname string, group_id string, id_str string, 
 	if err := db.checkDatabaseOperationPrerequisites(dbname, group_id); err != nil {
 		return nil, err
 	}
-	res, err := db.GetRecordByIDRow(dbname, id, returnID, dataset)
 
-	if reset {
-		db.setCounter(dbname, group_id, id)
-	}
+	max_ind := db.getMaxIndex(dbname, dataset)
+	res, err := db.GetRecordByIDRow(dbname, id, max_ind, dataset)
 
 	return res, err
 }
@@ -277,27 +277,24 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id 
 	return nil
 }
 
-func (db *Mongodb) getCurrentPointer(db_name string, group_id string) (Pointer, error) {
-	max_ind, err := db.getMaxIndex(db_name, false)
-	if err != nil {
-		return Pointer{}, err
-	}
+func (db *Mongodb) getCurrentPointer(db_name string, group_id string, dataset bool) (Pointer, int, error) {
+	max_ind := db.getMaxIndex(db_name, dataset)
+
 	var curPointer Pointer
-	err = db.incrementField(db_name, group_id, max_ind, &curPointer)
+	err := db.incrementField(db_name, group_id, max_ind, &curPointer)
 	if err != nil {
-		return Pointer{}, err
+		return Pointer{}, 0, err
 	}
 
-	return curPointer, nil
+	return curPointer, max_ind, nil
 }
 
 func (db *Mongodb) GetNextRecord(db_name string, group_id string, dataset bool) ([]byte, error) {
-
 	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
 		return nil, err
 	}
 
-	curPointer, err := db.getCurrentPointer(db_name, group_id)
+	curPointer, max_ind, err := db.getCurrentPointer(db_name, group_id, dataset)
 	if err != nil {
 		log_str := "error getting next pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
 		logger.Debug(log_str)
@@ -305,7 +302,7 @@ func (db *Mongodb) GetNextRecord(db_name string, group_id string, dataset bool) 
 	}
 	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
 	logger.Debug(log_str)
-	return db.GetRecordByIDRow(db_name, curPointer.Value, true, dataset)
+	return db.GetRecordByIDRow(db_name, curPointer.Value, max_ind, dataset)
 
 }
 
@@ -315,13 +312,8 @@ func (db *Mongodb) GetLastRecord(db_name string, group_id string, dataset bool) 
 		return nil, err
 	}
 
-	max_ind, err := db.getMaxIndex(db_name, dataset)
-	if err != nil {
-		log_str := "error getting last pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
-		logger.Debug(log_str)
-		return nil, err
-	}
-	res, err := db.GetRecordByIDRow(db_name, max_ind, false, dataset)
+	max_ind := db.getMaxIndex(db_name, dataset)
+	res, err := db.GetRecordByIDRow(db_name, max_ind, max_ind, dataset)
 
 	db.setCounter(db_name, group_id, max_ind)
 
@@ -344,13 +336,17 @@ func (db *Mongodb) GetSize(db_name string) ([]byte, error) {
 	return json.Marshal(&rec)
 }
 
-func (db *Mongodb) ResetCounter(db_name string, group_id string) ([]byte, error) {
+func (db *Mongodb) ResetCounter(db_name string, group_id string, id_str string) ([]byte, error) {
+	id, err := strconv.Atoi(id_str)
+	if err != nil {
+		return nil, err
+	}
 
 	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
 		return nil, err
 	}
 
-	err := db.setCounter(db_name, group_id, 0)
+	err = db.setCounter(db_name, group_id, id)
 
 	return []byte(""), err
 }
@@ -416,13 +412,11 @@ func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, ex
 	case "next":
 		return db.GetNextRecord(db_name, group_id, dataset)
 	case "id":
-		return db.GetRecordByID(db_name, group_id, extra_param, true, false, dataset)
-	case "idreset":
-		return db.GetRecordByID(db_name, group_id, extra_param, true, true, dataset)
+		return db.GetRecordByID(db_name, group_id, extra_param, dataset)
 	case "last":
 		return db.GetLastRecord(db_name, group_id, dataset)
 	case "resetcounter":
-		return db.ResetCounter(db_name, group_id)
+		return db.ResetCounter(db_name, group_id, extra_param)
 	case "size":
 		return db.GetSize(db_name)
 	case "meta":

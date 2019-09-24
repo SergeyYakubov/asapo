@@ -53,13 +53,3 @@ func (suite *GetIDTestSuite) TestGetIdCallsCorrectRoutine() {
 	suite.Equal(http.StatusOK, w.Code, "GetImage OK")
 	suite.Equal("Hello", string(w.Body.Bytes()), "GetID sends data")
 }
-
-func (suite *GetIDTestSuite) TestGetIdWithResetCallsCorrectRoutine() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "idreset", "1").Return([]byte("Hello"), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request")))
-	ExpectCopyClose(suite.mock_db)
-
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix + "&reset=true")
-	suite.Equal(http.StatusOK, w.Code, "GetImage OK")
-	suite.Equal("Hello", string(w.Body.Bytes()), "GetID sends data")
-}

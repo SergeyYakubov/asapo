@@ -48,7 +48,7 @@ var listRoutes = utils.Routes{
 		routeQueryImages,
 	},
 	utils.Route{
-		"ResetCounter",
+		"ResetConter",
 		"Post",
 		"/database/{dbname}/{stream}/{groupid}/resetcounter",
 		routeResetCounter,

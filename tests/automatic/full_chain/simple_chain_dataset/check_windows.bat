@@ -25,7 +25,7 @@ mkdir %receiver_folder%
 start /B "" "%1" %proxy_address% %beamtime_id% 100 100 4 0 100 5
 ping 1.0.0.0 -n 1 -w 100 > nul
 
-REM worker
+REM consumer
 "%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 5000 1 1 > out.txt
 type out.txt
 findstr /i /l /c:"Processed 100 dataset(s)"  out.txt || goto :error

@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
-#include "worker/data_broker.h"
+#include "consumer/data_broker.h"
 #include "testing.h"
-#include "../../../worker/api/cpp/src/server_data_broker.h"
+#include "../../../consumer/api/cpp/src/server_data_broker.h"
 
 using asapo::M_AssertEq;
 using asapo::M_AssertContains;

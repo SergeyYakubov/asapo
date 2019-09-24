@@ -6,8 +6,6 @@
 namespace asapo {
 
 enum class ProducerErrorType {
-    kAlreadyConnected,
-    kConnectionNotReady,
     kFileTooLarge,
     kFileNameTooLong,
     kEmptyFileName,
@@ -28,12 +26,7 @@ enum class ProducerErrorType {
 using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
 
 namespace ProducerErrorTemplates {
-auto const kAlreadyConnected = ProducerErrorTemplate {
-    "Already connected", ProducerErrorType::kAlreadyConnected
-};
-auto const kConnectionNotReady = ProducerErrorTemplate {
-    "Connection not ready", ProducerErrorType::kConnectionNotReady
-};
+
 
 auto const kWrongIngestMode = ProducerErrorTemplate {
     "wrong ingest mode", ProducerErrorType::kWrongIngestMode

@@ -30,6 +30,9 @@ Cleanup() {
 
 echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
 
+echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
+
+
 nomad run nginx.nmd
 nomad run authorizer.nmd
 nomad run receiver.nmd

@@ -79,9 +79,9 @@ public class PlanSpec {
                                     .copyPattern("**/*")
                                     .location("build/coverage-asapo-producer"),
                                 new Artifact()
-                                    .name("Coverage-Worker")
+                                    .name("Coverage-Consumer")
                                     .copyPattern("**/*")
-                                    .location("build/coverage-hidra2-worker"),
+                                    .location("build/coverage-hidra2-consumer"),
                                 new Artifact()
                                     .name("Coverage-Broker")
                                     .copyPattern("coverage.html")
@@ -113,7 +113,7 @@ public class PlanSpec {
                                 new CommandTask()
                                     .description("build")
                                     .executable("bash")
-                                    .argument("-c \"/opt/asapo/cmake-3.7.2/bin/cmake -DLIBCURL_DIR=/opt/asapo/libcurl -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DBUILD_DOCS=ON -DBUILD_INTEGRATION_TESTS=ON -DBUILD_EXAMPLES=ON -DBUILD_WORKER_TOOLS=ON -DBUILD_BROKER=ON .. && make\"")
+                                    .argument("-c \"/opt/asapo/cmake-3.7.2/bin/cmake -DLIBCURL_DIR=/opt/asapo/libcurl -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DBUILD_DOCS=ON -DBUILD_INTEGRATION_TESTS=ON -DBUILD_EXAMPLES=ON -DBUILD_CONSUMER_TOOLS=ON -DBUILD_BROKER=ON .. && make\"")
                                     .environmentVariables("PATH=$PATH:/usr/local/go/bin GOPATH=/opt/asapo/go GOROOT=/usr/local/go")
                                     .workingSubdirectory("build"),
                                 new CommandTask()
@@ -172,7 +172,7 @@ public class PlanSpec {
                                 new ScriptTask()
                                     .description("build with CMake")
                                     .interpreter(ScriptTaskProperties.Interpreter.BINSH_OR_CMDEXE)
-                                    .inlineBody("SET GOPATH=\"c:\\GoPath\"\n\"c:\\Program Files\\CMake\\bin\\cmake\" -DLIBCURL_DIR=c:/Curl -Dgtest_SOURCE_DIR=c:/googletest -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DBUILD_DOCS=ON -DBUILD_INTEGRATION_TESTS=ON -DBUILD_EXAMPLES=ON -DBUILD_WORKER_TOOLS=ON -DBUILD_BROKER=ON -Dlibmongoc-static-1.0_DIR=\"c:\\mongo-c-driver\\lib\\cmake\\libmongoc-static-1.0\" -Dlibbson-static-1.0_DIR=\"c:\\mongo-c-driver\\lib\\cmake\\libbson-static-1.0\" ..\n\"c:\\Program Files\\CMake\\bin\\cmake\" --build .")
+                                    .inlineBody("SET GOPATH=\"c:\\GoPath\"\n\"c:\\Program Files\\CMake\\bin\\cmake\" -DLIBCURL_DIR=c:/Curl -Dgtest_SOURCE_DIR=c:/googletest -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DBUILD_DOCS=ON -DBUILD_INTEGRATION_TESTS=ON -DBUILD_EXAMPLES=ON -DBUILD_CONSUMER_TOOLS=ON -DBUILD_BROKER=ON -Dlibmongoc-static-1.0_DIR=\"c:\\mongo-c-driver\\lib\\cmake\\libmongoc-static-1.0\" -Dlibbson-static-1.0_DIR=\"c:\\mongo-c-driver\\lib\\cmake\\libbson-static-1.0\" ..\n\"c:\\Program Files\\CMake\\bin\\cmake\" --build .")
                                     .workingSubdirectory("build"),
                                 new ScriptTask()
                                     .description("Run tests")
@@ -209,7 +209,7 @@ public class PlanSpec {
                                 new ScriptTask()
                                     .description("build with CMake")
                                     .interpreter(ScriptTaskProperties.Interpreter.BINSH_OR_CMDEXE)
-                                    .inlineBody("SET GOPATH=\"c:\\GoPath\"\n\"c:\\Program Files\\CMake\\bin\\cmake\" -DLIBCURL_DIR=c:/Curl -Dgtest_SOURCE_DIR=c:/googletest -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DBUILD_DOCS=OFF -DBUILD_INTEGRATION_TESTS=OFF -DBUILD_EXAMPLES=ON -DBUILD_WORKER_TOOLS=ON -DBUILD_BROKER=ON -Dlibmongoc-static-1.0_DIR=\"c:\\mongo-c-driver\\lib\\cmake\\libmongoc-static-1.0\" -Dlibbson-static-1.0_DIR=\"c:\\mongo-c-driver\\lib\\cmake\\libbson-static-1.0\" ..\n\"c:\\Program Files\\CMake\\bin\\cmake\" --build .")
+                                    .inlineBody("SET GOPATH=\"c:\\GoPath\"\n\"c:\\Program Files\\CMake\\bin\\cmake\" -DLIBCURL_DIR=c:/Curl -Dgtest_SOURCE_DIR=c:/googletest -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DBUILD_DOCS=OFF -DBUILD_INTEGRATION_TESTS=OFF -DBUILD_EXAMPLES=ON -DBUILD_CONSUMER_TOOLS=ON -DBUILD_BROKER=ON -Dlibmongoc-static-1.0_DIR=\"c:\\mongo-c-driver\\lib\\cmake\\libmongoc-static-1.0\" -Dlibbson-static-1.0_DIR=\"c:\\mongo-c-driver\\lib\\cmake\\libbson-static-1.0\" ..\n\"c:\\Program Files\\CMake\\bin\\cmake\" --build .")
                                     .workingSubdirectory("build"),
                                 new ScriptTask()
                                     .description("Run tests")
@@ -261,9 +261,9 @@ public class PlanSpec {
                                     .location("build_release/producer/event_monitor_producer")
                                     .shared(true),
                                 new Artifact()
-                                    .name("Worker Linux")
+                                    .name("Consumer Linux")
                                     .copyPattern("getnext_broker")
-                                    .location("build_release/examples/worker/getnext_broker")
+                                    .location("build_release/examples/consumer/getnext_broker")
                                     .shared(true))
                             .tasks(new VcsCheckoutTask()
                                     .checkoutItems(new CheckoutItem().defaultRepository())
@@ -275,7 +275,7 @@ public class PlanSpec {
                                 new CommandTask()
                                     .description("build")
                                     .executable("bash")
-                                    .argument("-c \"/opt/asapo/cmake-3.7.2/bin/cmake -DLIBCURL_DIR=/opt/asapo/libcurl -DCMAKE_BUILD_TYPE=Release  -DBUILD_EXAMPLES=ON -DBUILD_WORKER_TOOLS=ON -DBUILD_BROKER=ON .. && make\"")
+                                    .argument("-c \"/opt/asapo/cmake-3.7.2/bin/cmake -DLIBCURL_DIR=/opt/asapo/libcurl -DCMAKE_BUILD_TYPE=Release  -DBUILD_EXAMPLES=ON -DBUILD_CONSUMER_TOOLS=ON -DBUILD_BROKER=ON .. && make\"")
                                     .environmentVariables("PATH=$PATH:/usr/local/go/bin GOPATH=/opt/asapo/go GOROOT=/usr/local/go")
                                     .workingSubdirectory("build_release"),
                                 new CommandTask()
@@ -340,7 +340,7 @@ public class PlanSpec {
                                     .artifacts(new DownloadItem()
                                             .artifact("Dummy Producer Linux"),
                                         new DownloadItem()
-                                            .artifact("Worker Linux"),
+                                            .artifact("Consumer Linux"),
                                         new DownloadItem()
                                             .artifact("File Monitor Producer Windows"),
                                         new DownloadItem()

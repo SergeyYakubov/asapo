@@ -18,7 +18,7 @@ C:\Curl\curl.exe -d '' --silent 127.0.0.1:5005/creategroup > groupid
 set /P groupid=< groupid
 C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/stream/%groupid%/next?token=%token% --stderr - | findstr /c:\"_id\":1  || goto :error
 C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/stream/%groupid%/next?token=%token% --stderr - | findstr /c:\"_id\":2  || goto :error
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/stream/%groupid%/next?token=%token% --stderr - | findstr  /c:"not found"  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/stream/%groupid%/next?token=%token% --stderr - | findstr  /c:\"id_max\":2  || goto :error
 
 C:\Curl\curl.exe -d '' --silent 127.0.0.1:5005/creategroup > groupid
 set /P groupid=< groupid
