@@ -39,7 +39,7 @@ echo hello3 > c:\tmp\asapo\test_in\test2\file2
 ping 1.0.0.0 -n 10 -w 100 > nul
 
 
-REM worker
+REM consumer
 "%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 1000 0 > out.txt
 type out.txt
 findstr /i /l /c:"Processed 3 file(s)" out.txt || goto :error

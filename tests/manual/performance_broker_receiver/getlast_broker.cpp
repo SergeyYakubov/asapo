@@ -8,7 +8,7 @@
 #include <numeric>
 #include <mutex>
 
-#include "asapo_worker.h"
+#include "asapo_consumer.h"
 
 using std::chrono::system_clock;
 using asapo::Error;
@@ -36,7 +36,7 @@ void WaitThreads(std::vector<std::thread>* threads) {
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
     std::cout << err->Explain() << std::endl;
-    return err == asapo::WorkerErrorTemplates::kEndOfStream ? 0 : 1;
+    return err == asapo::ConsumerErrorTemplates::kEndOfStream ? 0 : 1;
 }
 
 std::vector<std::thread> StartThreads(const Args& params,
@@ -87,7 +87,7 @@ std::vector<std::thread> StartThreads(const Args& params,
             }
             if (err) {
                 (*errors)[i] += ProcessError(err);
-                if (err == asapo::WorkerErrorTemplates::kEndOfStream) {
+                if (err == asapo::ConsumerErrorTemplates::kEndOfStream) {
                     break;
                 }
             }

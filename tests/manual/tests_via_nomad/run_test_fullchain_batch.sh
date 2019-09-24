@@ -8,5 +8,5 @@ sleep 1
 nomad stop asapo-test
 . ./clean_after_tests.sh
 
-nomad run asapo-test_filegen_worker_batch.nomad
+nomad run asapo-test_filegen_consumer_batch.nomad
 

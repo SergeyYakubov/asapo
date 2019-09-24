@@ -17,7 +17,7 @@ endif()
 
 add_subdirectory(authorizer)
 
-add_subdirectory(worker)
+add_subdirectory(consumer)
 
 add_subdirectory(curl_http_client)
 

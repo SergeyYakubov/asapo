@@ -1,4 +1,4 @@
-import asapo_worker
+import asapo_consumer
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 #dset = f.create_dataset("mydataset", data = d1)
 #f.close()
 
-broker, err = asapo_worker.create_server_broker("psana002:8400", "/tmp", "asapo_test2","","yzgAcLmijSLWIm8dBiGNCbc0i42u5HSm-zR6FRqo__Y=", 1000000)
+broker, err = asapo_consumer.create_server_broker("psana002:8400", "/tmp", "asapo_test2","","yzgAcLmijSLWIm8dBiGNCbc0i42u5HSm-zR6FRqo__Y=", 1000000)
 
 last_id = 0
 while True:

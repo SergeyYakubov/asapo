@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import asapo_worker
+import asapo_consumer
 import asapo_producer
 import json
 import sys
@@ -41,7 +41,7 @@ timeout_s=int(timeout_s)
 nthreads=int(nthreads)
 transfer_data=int(transfer_data)>0
 
-broker = asapo_worker.create_server_broker(source,path, beamtime,stream_in,token,timeout_s*1000)
+broker = asapo_consumer.create_server_broker(source,path, beamtime,stream_in,token,timeout_s*1000)
 
 producer, err = asapo_producer.create_producer(source,beamtime, stream_out, token, nthreads)
 assert_err(err)
@@ -63,7 +63,7 @@ while True:
         err = producer.send_data(meta['_id'],meta['name']+"_"+stream_out ,data,
                              ingest_mode = ingest_mode, callback = callback)
         assert_err(err)
-    except  asapo_worker.AsapoEndOfStreamError:
+    except  asapo_consumer.AsapoEndOfStreamError:
         break
 
 

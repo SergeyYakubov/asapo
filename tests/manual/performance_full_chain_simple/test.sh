@@ -107,13 +107,13 @@ rm settings_tmp.json
 scp ../../../cmake-build-release/broker/asapo-broker ${broker_node}:${broker_dir}
 
 
-#worker_setup
-worker_node=max-display002
-worker_dir=~/fullchain_tests
+#consumer_setup
+consumer_node=max-display002
+consumer_dir=~/fullchain_tests
 nthreads=16
-scp ../../../cmake-build-release/examples/worker/getnext_broker/getnext_broker ${worker_node}:${worker_dir}
-scp ../../../cmake-build-release/asapo_tools/asapo ${worker_node}:${worker_dir}
-scp ../../../tests/automatic/settings/auth_secret.key ${worker_node}:${worker_dir}/auth_secret.key
+scp ../../../cmake-build-release/examples/consumer/getnext_broker/getnext_broker ${consumer_node}:${consumer_dir}
+scp ../../../cmake-build-release/asapo_tools/asapo ${consumer_node}:${consumer_dir}
+scp ../../../tests/automatic/settings/auth_secret.key ${consumer_node}:${consumer_dir}/auth_secret.key
 
 #monitoring_start
 #ssh ${monitor_node} docker run -d -p 8086 -p 8086 --name influxdb influxdb
@@ -144,8 +144,8 @@ ssh ${producer_node} "bash -c 'cd ${producer_dir}; nohup ./dummy-data-producer $
 sleep 1
 
 #prepare token
-ssh ${worker_node} "bash -c '${worker_dir}/asapo token -secret ${worker_dir}/auth_secret.key ${beamtime_id} >${worker_dir}/token'"
-#worker_start
-ssh ${worker_node} "bash -c '${worker_dir}/getnext_broker ${receiver_node}:8400 ${beamtime_id} ${nthreads} \`cat ${worker_dir}/token\`'"
+ssh ${consumer_node} "bash -c '${consumer_dir}/asapo token -secret ${consumer_dir}/auth_secret.key ${beamtime_id} >${consumer_dir}/token'"
+#consumer_start
+ssh ${consumer_node} "bash -c '${consumer_dir}/getnext_broker ${receiver_node}:8400 ${beamtime_id} ${nthreads} \`cat ${consumer_dir}/token\`'"
 
 

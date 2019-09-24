@@ -634,7 +634,7 @@
           "tags": []
         },
         {
-          "alias": "Worker",
+          "alias": "Consumer",
           "groupBy": [
             {
               "params": [
@@ -668,7 +668,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Receiver/Worker Rates",
+      "title": "Receiver/Consumer Rates",
       "tooltip": {
         "shared": true,
         "sort": 0,

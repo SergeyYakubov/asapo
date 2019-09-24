@@ -42,7 +42,7 @@ $1 localhost:8400 ${beamtime_id} 100 $5 4 0 100 &
 #producerid=`echo $!`
 
 
-#worker
+#consumer
 $2 ${proxy_address} dummy_path ${beamtime_id} 2 $token 30000 1 &> output.txt &
 
 sleep 1

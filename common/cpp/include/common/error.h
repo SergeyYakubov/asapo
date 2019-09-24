@@ -15,7 +15,7 @@ enum class ErrorType {
     kDBError,
     kReceiverError,
     kProducerError,
-    kWorkerError,
+    kConsumerError,
     kMemoryAllocationError,
     kEndOfFile,
 };

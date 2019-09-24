@@ -24,7 +24,7 @@ Cleanup() {
 echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
 
 
-# create db before worker starts reading it. todo: git rid of it
+# create db before consumer starts reading it. todo: git rid of it
 echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
 
 nomad run authorizer.nmd

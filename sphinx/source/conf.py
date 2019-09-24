@@ -19,7 +19,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../../worker/api/python'))
+sys.path.insert(0, os.path.abspath('../../../consumer/api/python'))
 sys.path.insert(0, os.path.abspath('../../../producer/api/python'))
 
 

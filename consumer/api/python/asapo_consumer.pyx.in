@@ -1,0 +1,240 @@
+#distutils: language=c++
+
+cimport asapo_consumer
+import numpy as np
+cimport numpy as np
+import json
+from cpython.version cimport PY_MAJOR_VERSION
+from libcpp.string cimport string
+
+np.import_array()
+
+cdef extern from "numpy/ndarraytypes.h":
+    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+
+
+cdef str _str(b):
+    if PY_MAJOR_VERSION < 3:
+        return b
+    return b.decode("utf-8")
+
+cdef bytes _bytes(s):
+    if type(s) is bytes:
+        return s
+
+    elif isinstance(s, unicode):
+        return (<unicode>s).encode('utf-8')
+
+    else:
+        raise TypeError("Could not convert to unicode.")
+
+class AsapoConsumerError(Exception):
+  pass
+
+class AsapoWrongInputError(AsapoConsumerError):
+  pass
+
+class AsapoEndOfStreamError(AsapoConsumerError):
+  def __init__(self,message,id_max=None):
+    AsapoConsumerError.__init__(self,message)
+    self.id_max = id_max
+
+class AsapoNoDataError(AsapoConsumerError):
+  def __init__(self,message,id=None,id_max=None):
+    AsapoConsumerError.__init__(self,message)
+    self.id_max = id_max
+    self.id = id
+
+
+cdef throw_exception(Error& err):
+    cdef ConsumerErrorData* data
+    if err == kEndOfStream:
+            data=<ConsumerErrorData*>err.get().GetCustomData()
+            if data != NULL:
+                raise AsapoEndOfStreamError(err.get().Explain(),data.id_max)
+            else:
+                raise AsapoEndOfStreamError(err.get().Explain())
+    elif err == kNoData:
+            data=<ConsumerErrorData*>err.get().GetCustomData()
+            if data != NULL:
+                raise AsapoNoDataError(err.get().Explain(),data.id,data.id_max)
+            else:
+                raise AsapoNoDataError(err.get().Explain())
+    elif err == kWrongInput:
+            raise AsapoWrongInputError(err.get().Explain())
+    else:
+        raise AsapoConsumerError(err.get().Explain())
+
+
+cdef class PyDataBroker:
+    cdef DataBroker* c_broker
+    def _op(self, op, group_id, meta_only, uint64_t id):
+        cdef FileInfo info
+        cdef string b_group_id = _bytes(group_id)
+        cdef FileData data
+        cdef FileData* p_data =  <FileData*>NULL if meta_only else &data
+        cdef Error err
+        cdef np.npy_intp dims[1]
+        if op == "next":
+            with nogil:
+                err =  self.c_broker.GetNext(&info, b_group_id, p_data)
+        elif op == "last":
+            with nogil:
+                err =  self.c_broker.GetLast(&info, b_group_id, p_data)
+        elif op == "id":
+            with nogil:
+                err =  self.c_broker.GetById(id, &info, b_group_id, p_data)
+        if err:
+            throw_exception(err)
+        info_str = _str(info.Json())
+        meta = json.loads(info_str)
+        if meta_only:
+            return None,meta
+        cdef char* ptr = <char*> data.release()
+        dims[0] = meta['size']
+        arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
+        PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
+        return arr,meta
+    def get_next(self, group_id, meta_only = True):
+        return self._op("next",group_id,meta_only,0)
+    def get_last(self, group_id, meta_only = True):
+        return self._op("last",group_id,meta_only,0)
+    def get_by_id(self,id,group_id,meta_only = True):
+        return self._op("id",group_id,meta_only,id)
+    def retrieve_data(self,meta):
+        json_str = json.dumps(meta)
+        cdef FileInfo info
+        if not info.SetFromJson(_bytes(json_str)):
+            raise AsapoWrongInputError("wrong metadata")
+        cdef Error err
+        cdef FileData data
+        with nogil:
+            err =  self.c_broker.RetrieveData(&info, &data)
+        if err:
+            throw_exception(err)
+        cdef np.npy_intp dims[1]
+        dims[0] = meta['size']
+        cdef char* ptr = <char*> data.release()
+        arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
+        PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
+        return arr
+    def get_current_size(self):
+        cdef Error err
+        cdef uint64_t size
+        with nogil:
+            size =  self.c_broker.GetCurrentSize(&err)
+        err_str = _str(GetErrorString(&err))
+        if err:
+            throw_exception(err)
+        return size
+    def set_lastread_marker(self,value,group_id):
+        cdef string b_group_id = _bytes(group_id)
+        cdef Error err
+        cdef uint64_t id = value
+        with nogil:
+            err =  self.c_broker.SetLastReadMarker(id,b_group_id)
+        if err:
+            throw_exception(err)
+        return
+    def reset_lastread_marker(self,group_id):
+        cdef string b_group_id = _bytes(group_id)
+        cdef Error err
+        with nogil:
+            err =  self.c_broker.ResetLastReadMarker(b_group_id)
+        if err:
+            throw_exception(err)
+        return
+    def generate_group_id(self):
+        cdef Error err
+        cdef string group_id
+        with nogil:
+            group_id = self.c_broker.GenerateNewGroupId(&err)
+        if err:
+            throw_exception(err)
+        return _str(group_id)
+    def query_images(self,query):
+        cdef string b_query = _bytes(query)
+        cdef Error err
+        cdef FileInfos file_infos
+        with nogil:
+            file_infos = self.c_broker.QueryImages(b_query,&err)
+        if err:
+            throw_exception(err)
+        json_list = []
+        for fi in file_infos:
+            json_list.append(json.loads(_str(fi.Json())))
+        return json_list
+    def _op_dataset(self, op, group_id, uint64_t id):
+        cdef string b_group_id = _bytes(group_id)
+        cdef FileInfos file_infos
+        cdef DataSet dataset
+        cdef Error err
+        if op == "next":
+            with nogil:
+                dataset = self.c_broker.GetNextDataset(b_group_id, &err)
+        elif op == "last":
+            with nogil:
+                dataset = self.c_broker.GetLastDataset(b_group_id, &err)
+        elif op == "id":
+            with nogil:
+                dataset = self.c_broker.GetDatasetById(id, b_group_id, &err)
+        if err:
+            throw_exception(err)
+        json_list = []
+        for fi in dataset.content:
+            json_list.append(json.loads(_str(fi.Json())))
+        return dataset.id, json_list
+    def get_next_dataset(self, group_id):
+        return self._op_dataset("next",group_id,0)
+    def get_last_dataset(self, group_id):
+        return self._op_dataset("last",group_id,0)
+    def get_dataset_by_id(self, id, group_id):
+        return self._op_dataset("id",group_id,id)
+    def get_beamtime_meta(self):
+        cdef Error err
+        cdef string meta_str
+        with nogil:
+            meta_str = self.c_broker.GetBeamtimeMeta(&err)
+        if err:
+            throw_exception(err)
+        meta = json.loads(_str(meta_str))
+        del meta['_id']
+        return meta
+
+cdef class __PyDataBrokerFactory:
+    cdef DataBrokerFactory c_factory
+    def __cinit__(self):
+        with nogil:
+            self.c_factory = DataBrokerFactory()
+    def create_server_broker(self,server_name,source_path,beamtime_id,stream,token,timeout):
+        cdef string b_server_name = _bytes(server_name)
+        cdef string b_source_path = _bytes(source_path)
+        cdef SourceCredentials source
+        source.beamtime_id = _bytes(beamtime_id)
+        source.user_token = _bytes(token)
+        source.stream = _bytes(stream)
+        cdef Error err
+        cdef unique_ptr[DataBroker] c_broker
+        with nogil:
+            c_broker = self.c_factory.CreateServerBroker(b_server_name,b_source_path,source,&err)
+        broker = PyDataBroker()
+        broker.c_broker =  c_broker.release()
+        broker.c_broker.SetTimeout(timeout)
+        if err:
+            throw_exception(err)
+        return broker
+
+def create_server_broker(server_name,source_path,beamtime_id,stream,token,timeout_ms):
+    """
+      :param server_name: Server endpoint (hostname:port)
+      :type server_name: string
+      :param source_path: Path to the folder to read data from
+      :type source_path: string
+      :return: Broker object and error. (None,err) if case of error, (broker, None) if success
+      :rtype: Tuple with broker object and error.
+	"""
+    factory = __PyDataBrokerFactory()
+    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),_bytes(beamtime_id),_bytes(stream),_bytes(token),timeout_ms)
+
+
+__version__ = "@ASAPO_VERSION_PYTHON@"

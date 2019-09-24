@@ -93,7 +93,7 @@ job "asapo-test" {
   }
   #linux
 
-  group "worker-linux1" {
+  group "consumer-linux1" {
 
     constraint {
       attribute = "${attr.kernel.name}"
@@ -109,12 +109,12 @@ job "asapo-test" {
     count = 0
 
 
-    task "worker-linux" {
+    task "consumer-linux" {
       driver = "raw_exec"
 
     template {
      data = <<EOH
-        WORKER_READ_META_ONLY = "{{ keyOrDefault "worker_read_meta_only" "1" }}"
+        CONSUMER_READ_META_ONLY = "{{ keyOrDefault "consumer_read_meta_only" "1" }}"
         EOH
      destination = "secrets/file.env"
      env         = true
@@ -129,7 +129,7 @@ job "asapo-test" {
           "16",
           "oTsKsj8i6WcW_gVzeIFvZCtSfMErjDELJEyAI23n7Ik=",
           "30000",
-          "${WORKER_READ_META_ONLY}"]
+          "${CONSUMER_READ_META_ONLY}"]
       }
 
       resources {
@@ -148,10 +148,10 @@ job "asapo-test" {
     }
 
   }
-  # worker-linux1
+  # consumer-linux1
 
 
-  group "worker-linux2" {
+  group "consumer-linux2" {
 
     constraint {
       attribute = "${attr.kernel.name}"
@@ -167,12 +167,12 @@ job "asapo-test" {
 
 	count = 0
 
-    task "worker-linux" {
+    task "consumer-linux" {
       driver = "raw_exec"
 
     template {
      data = <<EOH
-        WORKER_READ_META_ONLY = "{{ keyOrDefault "worker_read_meta_only" "1" }}"
+        CONSUMER_READ_META_ONLY = "{{ keyOrDefault "consumer_read_meta_only" "1" }}"
         EOH
      destination = "secrets/file.env"
      env         = true
@@ -187,7 +187,7 @@ job "asapo-test" {
           "16",
           "yzgAcLmijSLWIm8dBiGNCbc0i42u5HSm-zR6FRqo__Y=",
           "30000",
-          "${WORKER_READ_META_ONLY}"]
+          "${CONSUMER_READ_META_ONLY}"]
       }
       resources {
         cpu = 5000
@@ -208,4 +208,4 @@ job "asapo-test" {
   }
 
 }
-# worker-linux2
+# consumer-linux2

@@ -33,7 +33,7 @@ option(BUILD_DOCS "Uses doxygen to build the documentaion" OFF)
 option(BUILD_BROKER "Build broker" OFF)
 option(BUILD_PYTHON_DOCS "Uses sphinx to build the Python documentaion" OFF)
 
-option(BUILD_WORKER_TOOLS "Build worker tools" OFF)
+option(BUILD_CONSUMER_TOOLS "Build consumer tools" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
@@ -57,19 +57,19 @@ include(testing_cpp)
 
 include(prepare_asapo)
 
-if(BUILD_WORKER_TOOLS)
+if(BUILD_CONSUMER_TOOLS)
     set (BUILD_MONGODB_CLIENTLIB ON)
 endif()
 
 add_subdirectory(common/cpp)
 
-if (BUILD_BROKER)#TODO: Somehow make it clear that this is needed by examples/worker/getnext_broker
+if (BUILD_BROKER)#TODO: Somehow make it clear that this is needed by examples/consumer/getnext_broker
     add_subdirectory(broker)
 endif()
 
 add_subdirectory(producer)
 
-add_subdirectory(worker)
+add_subdirectory(consumer)
 
 add_subdirectory(receiver)
 

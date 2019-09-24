@@ -2,7 +2,7 @@ set(TARGET_NAME pipeline_inout)
 set(SOURCE_FILES in_to_out.cpp)
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
-target_link_libraries(${TARGET_NAME} asapo-worker asapo-producer)
+target_link_libraries(${TARGET_NAME} asapo-consumer asapo-producer)
 
 #use expression generator to get rid of VS adding Debug/Release folders
 set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY

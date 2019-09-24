@@ -10,7 +10,7 @@
 #include <string>
 #include <sstream>
 
-#include "asapo_worker.h"
+#include "asapo_consumer.h"
 #include "asapo_producer.h"
 
 using std::chrono::system_clock;
@@ -59,7 +59,7 @@ void WaitConsumerThreadsFinished(std::vector<std::thread>* threads) {
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
     std::cout << err->Explain() << std::endl;
-    return err == asapo::WorkerErrorTemplates::kEndOfStream ? 0 : 1;
+    return err == asapo::ConsumerErrorTemplates::kEndOfStream ? 0 : 1;
 }
 
 BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
@@ -149,7 +149,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
             auto err = ProcessNextEvent(args, broker, producer);
             if (err) {
                 (*errors)[i] += ProcessError(err);
-                if (err == asapo::WorkerErrorTemplates::kEndOfStream) {
+                if (err == asapo::ConsumerErrorTemplates::kEndOfStream) {
                     break;
                 }
             }

@@ -3,7 +3,7 @@ set(SOURCE_FILES getlast_broker.cpp)
 
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
-target_link_libraries(${TARGET_NAME} asapo-worker)
+target_link_libraries(${TARGET_NAME} asapo-consumer)
 
 #use expression generator to get rid of VS adding Debug/Release folders
 set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY

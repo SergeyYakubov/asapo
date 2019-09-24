@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import asapo_worker
+import asapo_consumer
 import sys
 import json
 import time
@@ -10,7 +10,7 @@ path = "/asapo_shared/asapo/data"
 beamtime = "asapo_test"
 token = "KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc="
 
-broker, err = asapo_worker.create_server_broker(
+broker, err = asapo_consumer.create_server_broker(
     source, path, beamtime, token, 1000)
 
 group_id, err = broker.generate_group_id()

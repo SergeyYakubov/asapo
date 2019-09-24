@@ -95,7 +95,7 @@ Error TcpServer::SendData(uint64_t source_id, void* buf, uint64_t size) const no
     Error err;
     io__->Send(source_id, buf, size, &err);
     if (err) {
-        log__->Error("cannot send to worker" + err->Explain());
+        log__->Error("cannot send to consumer" + err->Explain());
     }
     return err;
 }
