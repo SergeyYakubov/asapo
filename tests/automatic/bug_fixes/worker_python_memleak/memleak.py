@@ -4,20 +4,19 @@ import sys
 
 source, path, beamtime, token = sys.argv[1:]
 
-broker, err = asapo_worker.create_server_broker(
+broker = asapo_worker.create_server_broker(
     source, path, beamtime, "stream", token, 1000)
 
-group_id, err = broker.generate_group_id()
-if err is not None:
-    print('cannot generate group id, err: ', err)
-else:
-    print('generated group id: ', group_id)
+group_id  = broker.generate_group_id()
+print('generated group id: ', group_id)
 
 while True:
-    data, meta, err = broker.get_last(group_id, meta_only=False)
-    if err is not None:
-        print('err: ', err)
-    else:
+    try:
+        data, meta  = broker.get_last(group_id, meta_only=False)
         print('filename: ', meta['name'])
+    except Exception as err:
+        print('err: ', err)
+
     sys.stdout.flush()
     time.sleep(1)
+

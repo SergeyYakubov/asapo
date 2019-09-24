@@ -36,23 +36,17 @@ def assert_err(err):
         sys.exit(1)
 
 
-
-
-
 source, path, beamtime,stream_in, stream_out, token, timeout_s,nthreads, transfer_data = sys.argv[1:]
 timeout_s=int(timeout_s)
 nthreads=int(nthreads)
 transfer_data=int(transfer_data)>0
 
-broker, err = asapo_worker.create_server_broker(source,path, beamtime,stream_in,token,timeout_s*1000)
-assert_err(err)
-
+broker = asapo_worker.create_server_broker(source,path, beamtime,stream_in,token,timeout_s*1000)
 
 producer, err = asapo_producer.create_producer(source,beamtime, stream_out, token, nthreads)
 assert_err(err)
 
-group_id, err = broker.generate_group_id()
-assert_err(err)
+group_id  = broker.generate_group_id()
 
 n_recv = 0
 
@@ -62,19 +56,15 @@ else:
     ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY
 
 while True:
-    data, meta, err = broker.get_next(group_id, meta_only=not transfer_data)
-    if err is None:
+    try:
+        data, meta = broker.get_next(group_id, meta_only=not transfer_data)
         print ("received: ",meta)
         n_recv = n_recv + 1
         err = producer.send_data(meta['_id'],meta['name']+"_"+stream_out ,data,
                              ingest_mode = ingest_mode, callback = callback)
         assert_err(err)
-    elif 'no data' in err:
-            break
-    else:
-        assert_err(err)
-
-
+    except  asapo_worker.AsapoEndOfStreamError:
+        break
 
 
 wait_send(n_recv,timeout_s)

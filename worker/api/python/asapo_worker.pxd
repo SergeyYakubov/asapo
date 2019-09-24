@@ -7,10 +7,15 @@ from libcpp cimport bool
 ctypedef unsigned char uint8_t
 ctypedef unsigned long uint64_t
 
+ctypedef unique_ptr[ErrorInterface] Error
 
 cdef extern from "asapo_worker.h" namespace "asapo":
-  cppclass Error:
+  cppclass ErrorInterface:
+    string Explain()
+  cppclass ErrorTemplateInterface:
     pass
+  cdef bool operator==(Error lhs, ErrorTemplateInterface rhs)
+
 
 cdef extern from "asapo_wrappers.h" namespace "asapo":
   cdef string GetErrorString(Error* err)
@@ -60,3 +65,10 @@ cdef extern from "asapo_worker.h" namespace "asapo" nogil:
         unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,SourceCredentials source,Error* error)
 
 
+cdef extern from "asapo_worker.h" namespace "asapo":
+  ErrorTemplateInterface kNoData "asapo::WorkerErrorTemplates::kNoData"
+  ErrorTemplateInterface kEndOfStream "asapo::WorkerErrorTemplates::kEndOfStream"
+  ErrorTemplateInterface kBrokerServersNotFound "asapo::WorkerErrorTemplates::kBrokerServersNotFound"
+  ErrorTemplateInterface kBrokerServerError "asapo::WorkerErrorTemplates::kBrokerServerError"
+  ErrorTemplateInterface kIOError "asapo::WorkerErrorTemplates::kIOError"
+  ErrorTemplateInterface kWrongInput "asapo::WorkerErrorTemplates::kWrongInput"

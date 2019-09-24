@@ -28,6 +28,28 @@ cdef bytes _bytes(s):
     else:
         raise TypeError("Could not convert to unicode.")
 
+class AsapoConsumerError(Exception):
+  pass
+
+class AsapoWrongInputError(AsapoConsumerError):
+  pass
+
+class AsapoEndOfStreamError(AsapoConsumerError):
+  pass
+
+class AsapoNoDataError(AsapoConsumerError):
+  pass
+
+cdef throw_exception(Error& err):
+    if err == kEndOfStream:
+            raise AsapoEndOfStreamError(err.get().Explain())
+    elif err == kNoData:
+            raise AsapoNoDataError(err.get().Explain())
+    elif err == kWrongInput:
+            raise AsapoWrongInputError(err.get().Explain())
+    else:
+        raise AsapoConsumerError(err.get().Explain())
+
 
 cdef class PyDataBroker:
     cdef DataBroker* c_broker
@@ -47,18 +69,17 @@ cdef class PyDataBroker:
         elif op == "id":
             with nogil:
                 err =  self.c_broker.GetById(id, &info, b_group_id, p_data)
-        err_str = _str(GetErrorString(&err))
-        if err_str.strip():
-            return None,None,err_str
+        if err:
+            throw_exception(err)
         info_str = _str(info.Json())
         meta = json.loads(info_str)
         if meta_only:
-            return None,meta,None
+            return None,meta
         cdef char* ptr = <char*> data.release()
         dims[0] = meta['size']
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
-        return arr,meta,None
+        return arr,meta
     def get_next(self, group_id, meta_only = True):
         return self._op("next",group_id,meta_only,0)
     def get_last(self, group_id, meta_only = True):
@@ -69,75 +90,65 @@ cdef class PyDataBroker:
         json_str = json.dumps(meta)
         cdef FileInfo info
         if not info.SetFromJson(_bytes(json_str)):
-            return None,"wrong metadata"
+            raise AsapoWrongInputError("wrong metadata")
         cdef Error err
         cdef FileData data
         with nogil:
             err =  self.c_broker.RetrieveData(&info, &data)
-        err_str = _str(GetErrorString(&err))
-        if err_str.strip():
-            return None,err_str
+        if err:
+            throw_exception(err)
         cdef np.npy_intp dims[1]
         dims[0] = meta['size']
         cdef char* ptr = <char*> data.release()
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
-        return arr,None
+        return arr
     def get_current_size(self):
         cdef Error err
         cdef uint64_t size
         with nogil:
             size =  self.c_broker.GetCurrentSize(&err)
         err_str = _str(GetErrorString(&err))
-        if err_str.strip():
-            return None,err_str
-        else:
-            return size,None
+        if err:
+            throw_exception(err)
+        return size
     def set_lastread_marker(self,value,group_id):
         cdef string b_group_id = _bytes(group_id)
         cdef Error err
         cdef uint64_t id = value
         with nogil:
             err =  self.c_broker.SetLastReadMarker(id,b_group_id)
-        err_str = _str(GetErrorString(&err))
-        if err_str.strip():
-            return err_str
-        else:
-            return None
+        if err:
+            throw_exception(err)
+        return
     def reset_lastread_marker(self,group_id):
         cdef string b_group_id = _bytes(group_id)
         cdef Error err
         with nogil:
             err =  self.c_broker.ResetLastReadMarker(b_group_id)
-        err_str = _str(GetErrorString(&err))
-        if err_str.strip():
-            return err_str
-        else:
-            return None
+        if err:
+            throw_exception(err)
+        return
     def generate_group_id(self):
         cdef Error err
         cdef string group_id
         with nogil:
             group_id = self.c_broker.GenerateNewGroupId(&err)
-        err_str = _str(GetErrorString(&err))
-        if err_str.strip():
-            return None, err_str
-        else:
-            return _str(group_id), None
+        if err:
+            throw_exception(err)
+        return _str(group_id)
     def query_images(self,query):
         cdef string b_query = _bytes(query)
         cdef Error err
         cdef FileInfos file_infos
         with nogil:
             file_infos = self.c_broker.QueryImages(b_query,&err)
-        err_str = _str(GetErrorString(&err))
-        if err_str.strip():
-            return None, err_str
-        else:
-            json_list = []
-            for fi in file_infos:
-                json_list.append(json.loads(_str(fi.Json())))
-            return json_list, None
+        if err:
+            throw_exception(err)
+        json_list = []
+        for fi in file_infos:
+            json_list.append(json.loads(_str(fi.Json())))
+        return json_list
     def _op_dataset(self, op, group_id, uint64_t id):
         cdef string b_group_id = _bytes(group_id)
         cdef FileInfos file_infos
@@ -152,36 +163,28 @@ cdef class PyDataBroker:
         elif op == "id":
             with nogil:
                 dataset = self.c_broker.GetDatasetById(id, b_group_id, &err)
-        err_str = _str(GetErrorString(&err))
-        if err_str.strip():
-            return None, None, err_str
-        else:
-            json_list = []
-            for fi in dataset.content:
-                json_list.append(json.loads(_str(fi.Json())))
-            return dataset.id, json_list, None
-
-
+        if err:
+            throw_exception(err)
+        json_list = []
+        for fi in dataset.content:
+            json_list.append(json.loads(_str(fi.Json())))
+        return dataset.id, json_list
     def get_next_dataset(self, group_id):
         return self._op_dataset("next",group_id,0)
     def get_last_dataset(self, group_id):
         return self._op_dataset("last",group_id,0)
     def get_dataset_by_id(self, id, group_id):
         return self._op_dataset("id",group_id,id)
-
-
     def get_beamtime_meta(self):
-            cdef Error err
-            cdef string meta_str
-            with nogil:
-                meta_str = self.c_broker.GetBeamtimeMeta(&err)
-            err_str = _str(GetErrorString(&err))
-            if err_str.strip():
-                return None, err_str
-            else:
-                meta = json.loads(_str(meta_str))
-                del meta['_id']
-                return meta, None
+        cdef Error err
+        cdef string meta_str
+        with nogil:
+            meta_str = self.c_broker.GetBeamtimeMeta(&err)
+        if err:
+            throw_exception(err)
+        meta = json.loads(_str(meta_str))
+        del meta['_id']
+        return meta
 
 cdef class __PyDataBrokerFactory:
     cdef DataBrokerFactory c_factory
@@ -202,11 +205,9 @@ cdef class __PyDataBrokerFactory:
         broker = PyDataBroker()
         broker.c_broker =  c_broker.release()
         broker.c_broker.SetTimeout(timeout)
-        err_str = GetErrorString(&err)
-        if err_str.strip():
-            return None,err_str
-        else:
-            return broker,None
+        if err:
+            throw_exception(err)
+        return broker
 
 def create_server_broker(server_name,source_path,beamtime_id,stream,token,timeout_ms):
     """

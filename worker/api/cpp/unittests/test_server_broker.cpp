@@ -580,11 +580,11 @@ TEST_F(ServerDataBrokerTests, GetByIdReturnsEndOfStreamWhenIdTooLarge) {
     data_broker->SetTimeout(10);
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"  +
-        expected_group_id + "/" + std::to_string(expected_dataset_id) + "?token="
-                                            + expected_token, _, _)).WillOnce(DoAll(
-        SetArgPointee<1>(HttpCode::Conflict),
-        SetArgPointee<2>(nullptr),
-        Return("{\"op\":\"get_record_by_id\",\"id\":100,\"id_max\":1}")));
+                                        expected_group_id + "/" + std::to_string(expected_dataset_id) + "?token="
+                                        + expected_token, _, _)).WillOnce(DoAll(
+                                                    SetArgPointee<1>(HttpCode::Conflict),
+                                                    SetArgPointee<2>(nullptr),
+                                                    Return("{\"op\":\"get_record_by_id\",\"id\":100,\"id_max\":1}")));
 
 
     auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
