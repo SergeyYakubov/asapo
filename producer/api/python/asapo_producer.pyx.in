@@ -34,6 +34,21 @@ cdef bytes _bytes(s):
         raise TypeError("Could not convert to unicode.")
 
 
+class AsapoProducerError(Exception):
+  pass
+
+class AsapoWrongInputError(AsapoProducerError):
+  pass
+
+#todo: more types
+cdef python_exception_from_error(Error& err):
+    return AsapoProducerError(err.get().Explain())
+
+
+cdef throw_exception(Error& err):
+    raise python_exception_from_error(err)
+
+
 cdef void* data_pointer_nparray(data):
   if data is None:
     return <void*>NULL
@@ -77,16 +92,14 @@ cdef class PyProducer:
         err = self.c_producer.get().SendData_(event_header, data_pointer_nparray(data), ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_ndarr,
              <void*>self,<void*>callback if callback != None else NULL, <void*>data))
-        cdef err_str = GetErrorString(&err)
-        if err_str.strip():
-            return err_str
-        else:
-          if data is not None:
-            if data.base is not None:
-              Py_XINCREF(<PyObject*>data.base)
-            else:
-              Py_XINCREF(<PyObject*>data)
-          return None
+        if err:
+            throw_exception(err)
+        if data is not None:
+          if data.base is not None:
+            Py_XINCREF(<PyObject*>data.base)
+          else:
+            Py_XINCREF(<PyObject*>data)
+        return
     cdef EventHeader create_event_header(self,int id, exposed_path,user_meta,subset,ingest_mode):
         cdef EventHeader event_header
         event_header.file_id = id
@@ -106,12 +119,10 @@ cdef class PyProducer:
         err = self.c_producer.get().SendData_(event_header, data_pointer_bytes(data), ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_bytesaddr,
              <void*>self,<void*>callback if callback != None else NULL, <void*>data))
-        cdef err_str = GetErrorString(&err)
-        if err_str.strip():
-            return err_str
-        else:
-            Py_XINCREF(<PyObject*>data)
-            return None
+        if err:
+            throw_exception(err)
+        Py_XINCREF(<PyObject*>data)
+        return
 
     def send_data(self, id, exposed_path,data, user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
         """
@@ -129,16 +140,16 @@ cdef class PyProducer:
          :type ingest_mode: int
          :param callback: callback function, default None
          :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
-         :return: error, None if success.
+         :raises: AsapoProducerError
          :rtype: string
         """
 
         if type(data) == np.ndarray or data == None:
-            return self.__send_np_array(id,exposed_path,data,user_meta,subset,ingest_mode,callback)
+            self.__send_np_array(id,exposed_path,data,user_meta,subset,ingest_mode,callback)
         elif type(data) == bytes:
-            return self.__send_bytes(id,exposed_path,data,user_meta,subset,ingest_mode,callback)
+            self.__send_bytes(id,exposed_path,data,user_meta,subset,ingest_mode,callback)
         else:
-            return "wrong data type: " + str(type(data))
+            raise(AsapoProducerError("wrong data type: " + str(type(data))))
 
     def send_file(self, id, local_path, exposed_path,user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
         """
@@ -156,7 +167,7 @@ cdef class PyProducer:
          :type ingest_mode: int
          :param callback: callback function, default None
          :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
-         :return: error, None if success.
+         :raises: AsapoProducerError
          :rtype: string
         """
 
@@ -164,24 +175,21 @@ cdef class PyProducer:
         event_header.file_size = 0
         err = self.c_producer.get().SendFile(event_header, _bytes(local_path), ingest_mode,
             unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
-        cdef err_str = GetErrorString(&err)
-        if err_str.strip():
-            return err_str
-        else:
-            return None
-    cdef void c_callback_python(self,py_callback, GenericRequestHeader header, string err_str):
+        if err:
+            throw_exception(err)
+        return
+    cdef void c_callback_python(self,py_callback, GenericRequestHeader header, Error& err):
         if py_callback != None:
           info_str = _str(header.Json())
           info = json.loads(info_str)
-          if err_str.strip():
-             py_err = err_str
+          if err:
+            py_err = python_exception_from_error(err)
           else:
-             py_err = None
+            py_err = None
           py_callback(info,py_err)
 
     cdef void c_callback(self,py_callback, GenericRequestHeader header, Error err) with gil:
-        cdef err_str = GetErrorString(&err)
-        self.c_callback_python(py_callback,header,"")
+        self.c_callback_python(py_callback,header,err)
 
     cdef void c_callback_ndarr(self,py_callback,nd_array,GenericRequestHeader header, Error err) with gil:
         if nd_array is not None:
@@ -189,12 +197,12 @@ cdef class PyProducer:
             Py_XDECREF(<PyObject*>nd_array.base)
           else:
             Py_XDECREF(<PyObject*>nd_array)
-        self.c_callback_python(py_callback,header,GetErrorString(&err))
+        self.c_callback_python(py_callback,header,err)
 
     cdef void c_callback_bytesaddr(self,py_callback,bytes_array,GenericRequestHeader header, Error err) with gil:
         if bytes_array is not None:
             Py_XDECREF(<PyObject*>bytes_array)
-        self.c_callback_python(py_callback,header,GetErrorString(&err))
+        self.c_callback_python(py_callback,header,err)
 
     @staticmethod
     def __create_producer(endpoint,beamtime_id,stream,token,nthreads):
@@ -205,11 +213,9 @@ cdef class PyProducer:
         source.user_token = token
         source.stream = stream
         pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,&err)
-        cdef err_str = GetErrorString(&err)
-        if err_str.strip():
-            return None,err_str
-        else:
-            return pyProd,None
+        if err:
+            throw_exception(err)
+        return pyProd
 
 def create_producer(endpoint,beamtime_id,stream,token,nthreads):
     return PyProducer.__create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(stream),_bytes(token),nthreads)

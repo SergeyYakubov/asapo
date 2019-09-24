@@ -6,14 +6,33 @@ from libcpp cimport bool
 ctypedef unsigned char uint8_t
 ctypedef unsigned long uint64_t
 
+ctypedef unique_ptr[ErrorInterface] Error
+
 cdef extern from "asapo_producer.h" namespace "asapo":
-  cppclass Error:
+  cppclass CustomErrorData:
     pass
+  cppclass ErrorInterface:
+    string Explain()
+  cppclass ErrorTemplateInterface:
+    pass
+  cdef bool operator==(Error lhs, ErrorTemplateInterface rhs)
 
-
-cdef extern from "asapo_wrappers.h" namespace "asapo":
-    string GetErrorString(Error* err)
-
+cdef extern from "asapo_producer.h" namespace "asapo":
+  ErrorTemplateInterface kFileTooLarge "asapo::ProducerErrorTemplates::kFileTooLarge"
+  ErrorTemplateInterface kFileNameTooLong "asapo::ProducerErrorTemplates::kFileNameTooLong"
+  ErrorTemplateInterface kEmptyFileName "asapo::ProducerErrorTemplates::kEmptyFileName"
+  ErrorTemplateInterface kNoData "asapo::ProducerErrorTemplates::kNoData"
+  ErrorTemplateInterface kZeroDataSize "asapo::ProducerErrorTemplates::kZeroDataSize"
+  ErrorTemplateInterface kBeamtimeIdTooLong "asapo::ProducerErrorTemplates::kBeamtimeIdTooLong"
+  ErrorTemplateInterface kBeamtimeAlreadySet "asapo::ProducerErrorTemplates::kBeamtimeAlreadySet"
+  ErrorTemplateInterface kFileIdAlreadyInUse "asapo::ProducerErrorTemplates::kFileIdAlreadyInUse"
+  ErrorTemplateInterface kErrorInMetadata "asapo::ProducerErrorTemplates::kErrorInMetadata"
+  ErrorTemplateInterface kErrorSubsetSize "asapo::ProducerErrorTemplates::kErrorSubsetSize"
+  ErrorTemplateInterface kAuthorizationFailed "asapo::ProducerErrorTemplates::kAuthorizationFailed"
+  ErrorTemplateInterface kInternalServerError "asapo::ProducerErrorTemplates::kInternalServerError"
+  ErrorTemplateInterface kCannotSendDataToReceivers "asapo::ProducerErrorTemplates::kCannotSendDataToReceivers"
+  ErrorTemplateInterface kRequestPoolIsFull "asapo::ProducerErrorTemplates::kRequestPoolIsFull"
+  ErrorTemplateInterface kWrongIngestMode "asapo::ProducerErrorTemplates::kWrongIngestMode"
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass FileData:
