@@ -34,6 +34,15 @@ class AsapoConsumerError(Exception):
 class AsapoWrongInputError(AsapoConsumerError):
   pass
 
+class AsapoBrokerServerError(AsapoConsumerError):
+  pass
+
+class AsapoBrokerServersNotFound(AsapoConsumerError):
+  pass
+
+class AsapoIOError(AsapoConsumerError):
+  pass
+
 class AsapoEndOfStreamError(AsapoConsumerError):
   def __init__(self,message,id_max=None):
     AsapoConsumerError.__init__(self,message)
@@ -44,7 +53,6 @@ class AsapoNoDataError(AsapoConsumerError):
     AsapoConsumerError.__init__(self,message)
     self.id_max = id_max
     self.id = id
-
 
 cdef throw_exception(Error& err):
     cdef ConsumerErrorData* data
@@ -62,9 +70,14 @@ cdef throw_exception(Error& err):
                 raise AsapoNoDataError(err.get().Explain())
     elif err == kWrongInput:
             raise AsapoWrongInputError(err.get().Explain())
+    elif err == kIOError:
+            raise AsapoIOError(err.get().Explain())
+    elif err == kBrokerServersNotFound:
+            raise AsapoBrokerServersNotFound(err.get().Explain())
+    elif err == kBrokerServerError:
+            raise AsapoBrokerServerError(err.get().Explain())
     else:
         raise AsapoConsumerError(err.get().Explain())
-
 
 cdef class PyDataBroker:
     cdef DataBroker* c_broker

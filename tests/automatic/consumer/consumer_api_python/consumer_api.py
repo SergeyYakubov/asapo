@@ -29,6 +29,16 @@ def assert_eq(val,expected,name):
         print ('val: ', val,' expected: ',expected)
         sys.exit(1)
 
+
+def check_broker_server_error(broker,group_id_new):
+    try:
+        broker.get_last(group_id_new, meta_only=True)
+    except asapo_consumer.AsapoBrokerServerError as err:
+        print(err)
+        pass
+    else:
+        exit_on_noerr("AsapoBrokerServerError")
+
 def check_single(broker,group_id_new):
 
     _, meta = broker.get_next(group_id_new, meta_only=True)
@@ -79,6 +89,22 @@ def check_single(broker,group_id_new):
     assert_metaname(meta,"5","get next6")
     assert_usermetadata(meta,"get next6")
 
+    try:
+        broker.get_next("bla", meta_only=True)
+    except asapo_consumer.AsapoWrongInputError as err:
+        print(err)
+        pass
+    else:
+        exit_on_noerr("wrong input")
+
+
+    try:
+        broker.get_last(group_id_new, meta_only=False)
+    except asapo_consumer.AsapoIOError as err:
+        print(err)
+        pass
+    else:
+        exit_on_noerr("io error")
 
     images = broker.query_images("meta.test = 10")
     assert_eq(len(images),5,"size of query answer 1")
@@ -101,6 +127,17 @@ def check_single(broker,group_id_new):
         pass
     else:
         exit_on_noerr("wrong query")
+
+    broker = asapo_consumer.create_server_broker("bla",path, beamtime,"",token,1000)
+    try:
+        broker.get_last(group_id_new, meta_only=True)
+    except asapo_consumer.AsapoBrokerServersNotFound as err:
+        print(err)
+        pass
+    else:
+        exit_on_noerr("AsapoBrokerServersNotFound")
+
+
 
 def check_dataset(broker,group_id_new):
     id, metas = broker.get_next_dataset(group_id_new)
@@ -145,6 +182,9 @@ source, path, beamtime, token, mode = sys.argv[1:]
 broker = asapo_consumer.create_server_broker(source,path, beamtime,"",token,1000)
 
 group_id_new = broker.generate_group_id()
+
+if mode == "broker_server_error":
+    check_broker_server_error(broker,group_id_new)
 
 
 if mode == "single":
