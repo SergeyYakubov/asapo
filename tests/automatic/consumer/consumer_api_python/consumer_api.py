@@ -33,7 +33,7 @@ def assert_eq(val,expected,name):
 def check_broker_server_error(broker,group_id_new):
     try:
         broker.get_last(group_id_new, meta_only=True)
-    except asapo_consumer.AsapoBrokerServerError as err:
+    except asapo_consumer.AsapoBrokerServersNotFound as err:
         print(err)
         pass
     else:

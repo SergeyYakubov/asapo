@@ -73,7 +73,7 @@ func (db *Mongodb) dataBaseExist(dbname string) (err error) {
 	}
 
 	if !db.databaseInList(dbname) {
-		return errors.New("dataset not found: " + dbname)
+		return &DBError{utils.StatusWrongInput, "stream not found: " + dbname}
 	}
 
 	return nil
@@ -81,7 +81,7 @@ func (db *Mongodb) dataBaseExist(dbname string) (err error) {
 
 func (db *Mongodb) Connect(address string) (err error) {
 	if db.session != nil {
-		return errors.New(already_connected_msg)
+		return &DBError{utils.StatusServiceUnavailable, already_connected_msg}
 	}
 
 	db.session, err = mgo.DialWithTimeout(address, time.Second)
@@ -108,14 +108,14 @@ func (db *Mongodb) Close() {
 
 func (db *Mongodb) DeleteAllRecords(dbname string) (err error) {
 	if db.session == nil {
-		return errors.New(no_session_msg)
+		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 	return db.session.DB(dbname).DropDatabase()
 }
 
 func (db *Mongodb) InsertRecord(dbname string, s interface{}) error {
 	if db.session == nil {
-		return errors.New(no_session_msg)
+		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
 	c := db.session.DB(dbname).C(data_collection_name)
@@ -125,7 +125,7 @@ func (db *Mongodb) InsertRecord(dbname string, s interface{}) error {
 
 func (db *Mongodb) InsertMeta(dbname string, s interface{}) error {
 	if db.session == nil {
-		return errors.New(no_session_msg)
+		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
 	c := db.session.DB(dbname).C(meta_collection_name)
@@ -133,7 +133,7 @@ func (db *Mongodb) InsertMeta(dbname string, s interface{}) error {
 	return c.Insert(s)
 }
 
-func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int) {
+func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int,err error) {
 	c := db.session.DB(dbname).C(data_collection_name)
 	var id Pointer
 	var q bson.M
@@ -142,11 +142,11 @@ func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int) {
 	} else {
 		q = nil
 	}
-	err := c.Find(q).Sort("-_id").Select(bson.M{"_id": 1}).One(&id)
-	if err != nil {
-		return 0
+	err = c.Find(q).Sort("-_id").Select(bson.M{"_id": 1}).One(&id)
+	if err == mgo.ErrNotFound {
+		return 0,nil
 	}
-	return id.ID
+	return id.ID,err
 }
 
 func (db *Mongodb) createLocationPointers(dbname string, group_id string) (err error) {
@@ -179,8 +179,10 @@ func (db *Mongodb) incrementField(dbname string, group_id string, max_ind int, r
 	_, err = c.Find(q).Apply(change, res)
 	if err == mgo.ErrNotFound {
 		return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind)}
+	} else if err !=nil { // we do not know if counter was updated
+		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
 	}
-	return err
+	return nil
 }
 
 func encodeAnswer(id, id_max int) string {
@@ -218,17 +220,20 @@ func (db *Mongodb) GetRecordByIDRow(dbname string, id, id_max int, dataset bool)
 func (db *Mongodb) GetRecordByID(dbname string, group_id string, id_str string, dataset bool) ([]byte, error) {
 	id, err := strconv.Atoi(id_str)
 	if err != nil {
-		return nil, err
+		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
 	if err := db.checkDatabaseOperationPrerequisites(dbname, group_id); err != nil {
 		return nil, err
 	}
 
-	max_ind := db.getMaxIndex(dbname, dataset)
-	res, err := db.GetRecordByIDRow(dbname, id, max_ind, dataset)
+	max_ind,err := db.getMaxIndex(dbname, dataset)
+	if err != nil {
+		return nil,err
+	}
 
-	return res, err
+	return  db.GetRecordByIDRow(dbname, id, max_ind, dataset)
+
 }
 
 func (db *Mongodb) needCreateLocationPointersInDb(group_id string) bool {
@@ -264,11 +269,11 @@ func (db *Mongodb) getParentDB() *Mongodb {
 
 func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id string) error {
 	if db.session == nil {
-		return &DBError{utils.StatusError, no_session_msg}
+		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
 	if err := db.getParentDB().dataBaseExist(db_name); err != nil {
-		return &DBError{utils.StatusWrongInput, err.Error()}
+		return err
 	}
 
 	if len(group_id) > 0 {
@@ -278,10 +283,13 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id 
 }
 
 func (db *Mongodb) getCurrentPointer(db_name string, group_id string, dataset bool) (Pointer, int, error) {
-	max_ind := db.getMaxIndex(db_name, dataset)
+	max_ind,err := db.getMaxIndex(db_name, dataset)
+	if err != nil {
+		return Pointer{}, 0, err
+	}
 
 	var curPointer Pointer
-	err := db.incrementField(db_name, group_id, max_ind, &curPointer)
+	err = db.incrementField(db_name, group_id, max_ind, &curPointer)
 	if err != nil {
 		return Pointer{}, 0, err
 	}
@@ -303,8 +311,8 @@ func (db *Mongodb) GetNextRecord(db_name string, group_id string, dataset bool) 
 	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
 	logger.Debug(log_str)
 	return db.GetRecordByIDRow(db_name, curPointer.Value, max_ind, dataset)
-
 }
+
 
 func (db *Mongodb) GetLastRecord(db_name string, group_id string, dataset bool) ([]byte, error) {
 
@@ -312,7 +320,10 @@ func (db *Mongodb) GetLastRecord(db_name string, group_id string, dataset bool) 
 		return nil, err
 	}
 
-	max_ind := db.getMaxIndex(db_name, dataset)
+	max_ind,err := db.getMaxIndex(db_name, dataset)
+	if err !=nil {
+		return nil,err
+	}
 	res, err := db.GetRecordByIDRow(db_name, max_ind, max_ind, dataset)
 
 	db.setCounter(db_name, group_id, max_ind)

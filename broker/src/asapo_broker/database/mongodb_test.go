@@ -67,7 +67,7 @@ func TestMongoDBConnectOK(t *testing.T) {
 
 func TestMongoDBGetNextErrorWhenNotConnected(t *testing.T) {
 	_, err := db.GetNextRecord("", groupId, false)
-	assert.Equal(t, utils.StatusError, err.(*DBError).Code)
+	assert.Equal(t, utils.StatusServiceUnavailable, err.(*DBError).Code)
 }
 
 func TestMongoDBGetNextErrorWhenWrongDatabasename(t *testing.T) {
@@ -287,7 +287,7 @@ func TestMongoDBGetSizeNoDatabase(t *testing.T) {
 
 func TestMongoDBGetRecordByIDNotConnected(t *testing.T) {
 	_, err := db.GetRecordByID(dbname, "", "2", false)
-	assert.Equal(t, utils.StatusError, err.(*DBError).Code)
+	assert.Equal(t, utils.StatusServiceUnavailable, err.(*DBError).Code)
 }
 
 func TestMongoDBResetCounter(t *testing.T) {

@@ -136,7 +136,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
 	ExpectCopyClose(suite.mock_db)
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
-	suite.Equal(http.StatusInternalServerError, w.Code, "internal error")
+	suite.Equal(http.StatusNotFound, w.Code, "internal error")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
