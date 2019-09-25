@@ -58,7 +58,7 @@ def check_single(broker,group_id_new):
 
     try:
         broker.get_by_id(30, group_id_new, meta_only=True)
-    except asapo_consumer.AsapoNoDataError:
+    except asapo_consumer.AsapoEndOfStreamError:
         pass
     else:
         exit_on_noerr("get_by_id no data")
