@@ -34,13 +34,13 @@ class AsapoConsumerError(Exception):
 class AsapoWrongInputError(AsapoConsumerError):
   pass
 
-class AsapoBrokerServerError(AsapoConsumerError):
+class AsapoInterruptedTransactionError(AsapoConsumerError):
   pass
 
-class AsapoBrokerServersNotFound(AsapoConsumerError):
+class AsapoUnavailableServiceError(AsapoConsumerError):
   pass
 
-class AsapoIOError(AsapoConsumerError):
+class AsapoLocalIOError(AsapoConsumerError):
   pass
 
 class AsapoEndOfStreamError(AsapoConsumerError):
@@ -70,12 +70,12 @@ cdef throw_exception(Error& err):
                 raise AsapoNoDataError(err.get().Explain())
     elif err == kWrongInput:
             raise AsapoWrongInputError(err.get().Explain())
-    elif err == kIOError:
-            raise AsapoIOError(err.get().Explain())
-    elif err == kBrokerServersNotFound:
-            raise AsapoBrokerServersNotFound(err.get().Explain())
-    elif err == kBrokerServerError:
-            raise AsapoBrokerServerError(err.get().Explain())
+    elif err == kLocalIOError:
+            raise AsapoLocalIOError(err.get().Explain())
+    elif err == kUnavailableService:
+            raise AsapoUnavailableServiceError(err.get().Explain())
+    elif err == kInterruptedTransaction:
+            raise AsapoInterruptedTransactionError(err.get().Explain())
     else:
         raise AsapoConsumerError(err.get().Explain())
 

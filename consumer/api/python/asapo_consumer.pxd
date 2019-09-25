@@ -71,9 +71,9 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
 cdef extern from "asapo_consumer.h" namespace "asapo":
   ErrorTemplateInterface kNoData "asapo::ConsumerErrorTemplates::kNoData"
   ErrorTemplateInterface kEndOfStream "asapo::ConsumerErrorTemplates::kEndOfStream"
-  ErrorTemplateInterface kBrokerServersNotFound "asapo::ConsumerErrorTemplates::kBrokerServersNotFound"
-  ErrorTemplateInterface kBrokerServerError "asapo::ConsumerErrorTemplates::kBrokerServerError"
-  ErrorTemplateInterface kIOError "asapo::ConsumerErrorTemplates::kIOError"
+  ErrorTemplateInterface kUnavailableService "asapo::ConsumerErrorTemplates::kUnavailableService"
+  ErrorTemplateInterface kInterruptedTransaction "asapo::ConsumerErrorTemplates::kInterruptedTransaction"
+  ErrorTemplateInterface kLocalIOError "asapo::ConsumerErrorTemplates::kLocalIOError"
   ErrorTemplateInterface kWrongInput "asapo::ConsumerErrorTemplates::kWrongInput"
   cdef cppclass ConsumerErrorData:
     uint64_t id

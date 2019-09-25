@@ -33,7 +33,7 @@ def assert_eq(val,expected,name):
 def check_broker_server_error(broker,group_id_new):
     try:
         broker.get_last(group_id_new, meta_only=True)
-    except asapo_consumer.AsapoBrokerServersNotFound as err:
+    except asapo_consumer.AsapoUnavailableServiceError as err:
         print(err)
         pass
     else:
@@ -57,8 +57,16 @@ def check_single(broker,group_id_new):
     assert_usermetadata(meta,"get last1")
 
     try:
+        broker.get_by_id(30, group_id_new, meta_only=True)
+    except asapo_consumer.AsapoNoDataError:
+        pass
+    else:
+        exit_on_noerr("get_by_id no data")
+
+
+    try:
         _, meta = broker.get_next(group_id_new, meta_only=True)
-    except:
+    except asapo_consumer.AsapoEndOfStreamError:
         pass
     else:
         exit_on_noerr("get_next3")
@@ -100,7 +108,7 @@ def check_single(broker,group_id_new):
 
     try:
         broker.get_last(group_id_new, meta_only=False)
-    except asapo_consumer.AsapoIOError as err:
+    except asapo_consumer.AsapoLocalIOError as err:
         print(err)
         pass
     else:
@@ -131,7 +139,7 @@ def check_single(broker,group_id_new):
     broker = asapo_consumer.create_server_broker("bla",path, beamtime,"",token,1000)
     try:
         broker.get_last(group_id_new, meta_only=True)
-    except asapo_consumer.AsapoBrokerServersNotFound as err:
+    except asapo_consumer.AsapoUnavailableServiceError as err:
         print(err)
         pass
     else:

@@ -239,7 +239,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsWrongResponseFromHttpClient) {
 
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kBrokerServerError));
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
     ASSERT_THAT(err->Explain(), HasSubstr("malformed"));
 }
 
@@ -320,7 +320,7 @@ TEST_F(ServerDataBrokerTests, GetNextImageReturnsImmediatelyOnServerError) {
     data_broker->SetTimeout(300);
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kBrokerServerError));
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
     ASSERT_THAT(err->Explain(), HasSubstr("sss"));
 
 }
@@ -349,7 +349,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsParseError) {
 
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kBrokerServerError));
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfNoDataNeeded) {
@@ -778,7 +778,7 @@ TEST_F(ServerDataBrokerTests, GetDataSetReturnsParseError) {
     asapo::Error err;
     auto dataset = data_broker->GetNextDataset(expected_group_id, &err);
 
-    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kBrokerServerError));
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
     ASSERT_THAT(dataset.content.size(), Eq(0));
     ASSERT_THAT(dataset.id, Eq(0));
 
