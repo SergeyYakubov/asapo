@@ -12,6 +12,7 @@ ADD_CUSTOM_TARGET(copy_python_dist-producer ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/producer/api/cpp/include ${CMAKE_CURRENT_BINARY_DIR}/include
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASAPO_CXX_COMMON_INCLUDE_DIR}/common ${CMAKE_CURRENT_BINARY_DIR}/include/common
         COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_BINARY_DIR}/include/common/version.h.in
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${ASAPO_CXX_COMMON_INCLUDE_DIR}/logger ${CMAKE_CURRENT_BINARY_DIR}/include/logger
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/lib
         COMMAND ${CMAKE_COMMAND} -E copy ${CURL_LIBRARIES} ${CMAKE_CURRENT_BINARY_DIR}/lib
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:asapo-producer> ${CMAKE_CURRENT_BINARY_DIR}/lib
