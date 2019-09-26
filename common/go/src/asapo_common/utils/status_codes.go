@@ -8,7 +8,8 @@ const (
 )
 const (
 	//error codes
-	StatusError      = http.StatusInternalServerError
-	StatusWrongInput = http.StatusBadRequest
-	StatusNoData     = http.StatusConflict
+	StatusTransactionInterrupted = http.StatusInternalServerError
+	StatusServiceUnavailable	 = http.StatusNotFound
+	StatusWrongInput             = http.StatusBadRequest
+	StatusNoData                 = http.StatusConflict
 )

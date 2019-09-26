@@ -27,7 +27,7 @@ Error ErrorFromNoDataResponse(const std::string& response) {
         uint64_t id, id_max;
         auto parse_error = GetIDsFromJson(response, &id, &id_max);
         if (parse_error) {
-            return ConsumerErrorTemplates::kBrokerServerError.Generate("malformed response - " + response);
+            return ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response - " + response);
         }
         Error err;
         if (id >= id_max ) {
@@ -53,13 +53,13 @@ Error ErrorFromServerResponce(const std::string& response, const HttpCode& code)
     case HttpCode::Unauthorized:
         return ConsumerErrorTemplates::kWrongInput.Generate(response);
     case HttpCode::InternalServerError:
-        return ConsumerErrorTemplates::kBrokerServerError.Generate(response);
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response);
     case HttpCode::NotFound:
-        return ConsumerErrorTemplates::kBrokerServersNotFound.Generate(response);
+        return ConsumerErrorTemplates::kUnavailableService.Generate(response);
     case HttpCode::Conflict:
         return ErrorFromNoDataResponse(response);
     default:
-        return ConsumerErrorTemplates::kBrokerServerError.Generate(response);
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response);
     }
 }
 
@@ -96,7 +96,7 @@ Error ServerDataBroker::ProcessRequest(std::string* response, const RequestInfo&
     }
     if (err != nullptr) {
         current_broker_uri_ = "";
-        return ConsumerErrorTemplates::kBrokerServerError.Generate("error processing request: " + err->Explain());
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate("error processing request: " + err->Explain());
     }
     return ErrorFromServerResponce(*response, code);
 }
@@ -114,7 +114,7 @@ Error ServerDataBroker::GetBrokerUri() {
     err = ProcessRequest(&current_broker_uri_, ri);
     if (err != nullptr || current_broker_uri_.empty()) {
         current_broker_uri_ = "";
-        return ConsumerErrorTemplates::kBrokerServersNotFound.Generate(" on " + server_uri_
+        return ConsumerErrorTemplates::kUnavailableService.Generate(" on " + server_uri_
                 + (err != nullptr ? ": " + err->Explain()
                    : ""));
     }
@@ -125,7 +125,7 @@ void ServerDataBroker::ProcessServerError(Error* err, const std::string& respons
     if (*err == ConsumerErrorTemplates::kNoData) {
         auto error_data = static_cast<const ConsumerErrorData*>((*err)->GetCustomData());
         if (error_data == nullptr) {
-            *err = ConsumerErrorTemplates::kBrokerServerError.Generate("malformed response - " + response);
+            *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response - " + response);
             return;
         }
         *op = std::to_string(error_data->id);
@@ -156,7 +156,7 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
 
         ProcessServerError(&err, *response, &request_suffix);
 
-        if (err == ConsumerErrorTemplates::kBrokerServerError && request_suffix == "next") {
+        if (err == ConsumerErrorTemplates::kInterruptedTransaction && request_suffix == "next") {
             return err;
         }
 
@@ -207,7 +207,7 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t 
     }
 
     if (!info->SetFromJson(response)) {
-        return ConsumerErrorTemplates::kBrokerServerError.Generate(std::string("malformed response:") + response);
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(std::string("malformed response:") + response);
     }
 
     return GetDataIfNeeded(info, data);
@@ -229,7 +229,7 @@ Error ServerDataBroker::RetrieveData(FileInfo* info, FileData* data) {
     Error error;
     *data = io__->GetDataFromFile(info->FullName(source_path_), &info->size, &error);
     if (error) {
-        return ConsumerErrorTemplates::kIOError.Generate(error->Explain());
+        return ConsumerErrorTemplates::kLocalIOError.Generate(error->Explain());
     }
 
     return nullptr;
@@ -347,7 +347,7 @@ DataSet ServerDataBroker::DecodeDatasetFromResponse(std::string response, Error*
     (parse_err = parser.GetArrayRawStrings("images", &vec_fi_endcoded)) ||
     (parse_err = parser.GetUInt64("_id", &id));
     if (parse_err) {
-        *err = ConsumerErrorTemplates::kBrokerServerError.Generate("malformed response:" + parse_err->Explain());
+        *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response:" + parse_err->Explain());
         return {0, FileInfos{}};
     }
 
@@ -355,7 +355,7 @@ DataSet ServerDataBroker::DecodeDatasetFromResponse(std::string response, Error*
     for (auto fi_encoded : vec_fi_endcoded) {
         FileInfo fi;
         if (!fi.SetFromJson(fi_encoded)) {
-            *err = ConsumerErrorTemplates::kBrokerServerError.Generate("malformed response:" + fi_encoded);
+            *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response:" + fi_encoded);
             return {0, FileInfos{}};
         }
         res.emplace_back(fi);

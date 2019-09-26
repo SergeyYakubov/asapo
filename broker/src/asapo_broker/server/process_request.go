@@ -68,8 +68,8 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 }
 
 func returnError(err error, log_str string) (answer []byte, code int) {
+	code = utils.StatusServiceUnavailable
 	err_db, ok := err.(*database.DBError)
-	code = utils.StatusError
 	if ok {
 		code = err_db.Code
 	}

@@ -9,9 +9,9 @@ namespace asapo {
 enum class ConsumerErrorType {
     kNoData,
     kEndOfStream,
-    kBrokerServersNotFound,
-    kBrokerServerError,
-    kIOError,
+    kUnavailableService,
+    kInterruptedTransaction,
+    kLocalIOError,
     kWrongInput
 };
 
@@ -27,8 +27,8 @@ class ConsumerErrorData : public CustomErrorData {
 
 namespace ConsumerErrorTemplates {
 
-auto const kIOError = ConsumerErrorTemplate{
-    "i/o error", ConsumerErrorType::kIOError
+auto const kLocalIOError = ConsumerErrorTemplate{
+    "local i/o error", ConsumerErrorType::kLocalIOError
 };
 
 auto const kEndOfStream = ConsumerErrorTemplate{
@@ -43,12 +43,12 @@ auto const kWrongInput = ConsumerErrorTemplate{
     "wrong input", ConsumerErrorType::kWrongInput
 };
 
-auto const kBrokerServerError = ConsumerErrorTemplate{
-    "error from broker server", ConsumerErrorType::kBrokerServerError
+auto const kInterruptedTransaction = ConsumerErrorTemplate{
+    "error from broker server", ConsumerErrorType::kInterruptedTransaction
 };
 
-auto const kBrokerServersNotFound = ConsumerErrorTemplate{
-    "cannot find brokers", ConsumerErrorType::kBrokerServersNotFound
+auto const kUnavailableService = ConsumerErrorTemplate{
+    "cannot find brokers", ConsumerErrorType::kUnavailableService
 };
 
 
