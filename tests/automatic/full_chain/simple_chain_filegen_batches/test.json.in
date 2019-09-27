@@ -9,6 +9,7 @@
  "MonitoredSubFolders":["test1","test2"],
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":false,
+ "Stream": "",
  "Subset": {
  	"Mode":"batch",
   	"BatchSize":3

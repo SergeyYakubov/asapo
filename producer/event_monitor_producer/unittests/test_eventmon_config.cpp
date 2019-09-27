@@ -64,6 +64,8 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     test_config.remove_after_send = true;
     test_config.subset_mode = SubSetMode::kBatch;
     test_config.subset_batch_size = 9;
+    test_config.stream = "stream";
+
     auto err = asapo::SetFolderMonConfig(test_config);
 
     auto config = asapo::GetEventMonConfig();
@@ -81,6 +83,7 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     ASSERT_THAT(config->remove_after_send, Eq(true));
     ASSERT_THAT(config->subset_mode, Eq(SubSetMode::kBatch));
     ASSERT_THAT(config->subset_batch_size, Eq(9));
+    ASSERT_THAT(config->stream, Eq("stream"));
 
 
 }

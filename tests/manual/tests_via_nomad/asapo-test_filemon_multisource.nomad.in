@@ -40,6 +40,7 @@ job "asapo-filemon_multisource" {
  "MonitoredSubFolders":["test_folder"],
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
   	"Mode":"multisource",
   	"SourceId": 1,
@@ -101,6 +102,7 @@ job "asapo-filemon_multisource" {
  "MonitoredSubFolders":["data"],
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
   	"Mode":"multisource",
   	"SourceId": 2,

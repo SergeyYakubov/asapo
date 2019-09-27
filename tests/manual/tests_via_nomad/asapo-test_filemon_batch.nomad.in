@@ -40,6 +40,7 @@ job "asapo-filemon_batch" {
  "MonitoredSubFolders":["test_folder"],
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
   	"Mode":"batch",
   	"BatchSize": {{ keyOrDefault "monitor_batch_size" "3" }}
@@ -100,6 +101,7 @@ job "asapo-filemon_batch" {
  "MonitoredSubFolders":["data"],
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
   	"Mode":"batch",
   	"BatchSize": {{ keyOrDefault "monitor_batch_size" "3" }}

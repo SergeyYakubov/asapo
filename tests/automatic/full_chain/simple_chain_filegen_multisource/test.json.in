@@ -9,6 +9,7 @@
  "MonitoredSubFolders":["test@ID@"],
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
  	"Mode":"multisource",
   	"SourceId":@ID@,

@@ -9,6 +9,7 @@
  "MonitoredSubFolders":["test1"],
  "IgnoreExtentions":["tmp"],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
   	"Mode":"none"
  }
