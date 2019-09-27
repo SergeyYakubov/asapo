@@ -46,7 +46,8 @@ Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     (err = parser.GetString("LogLevel", &config.log_level_str)) ||
     (err = parser.GetBool("RemoveAfterSend", &config.remove_after_send)) ||
     (err = parser.GetArrayString("MonitoredSubFolders", &config.monitored_subfolders)) ||
-    (err = parser.GetArrayString("IgnoreExtentions", &config.ignored_extentions)) ||
+    (err = parser.GetArrayString("IgnoreExtensions", &config.ignored_extensions)) ||
+    (err = parser.GetArrayString("WhitelistExtensions", &config.whitelisted_extensions)) ||
     (err = parser.Embedded("Subset").GetString("Mode", &subset_mode)) ||
     (err = SubsetModeToEnum(subset_mode, &config.subset_mode));
     if (err) {
@@ -72,6 +73,7 @@ Error EventMonConfigFactory::CheckConfig() {
     (err = CheckMode()) ||
     (err = CheckLogLevel()) ||
     (err = CheckNThreads()) ||
+    (err = CheckBlackWhiteLists()) ||
     (err = CheckSubsets());
 
 //todo: check monitored folders exist?
@@ -103,6 +105,13 @@ Error EventMonConfigFactory::CheckLogLevel() {
     Error err;
     config.log_level = StringToLogLevel(config.log_level_str, &err);
     return err;
+}
+
+Error EventMonConfigFactory::CheckBlackWhiteLists() {
+    if (config.whitelisted_extensions.size() && config.ignored_extensions.size() ) {
+        return  TextError("only one of IgnoreExtensions/WhitelistExtensions can be set");
+    }
+    return nullptr;
 }
 
 

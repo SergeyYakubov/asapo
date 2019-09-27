@@ -38,7 +38,7 @@ job "asapo-produceronly" {
  "LogLevel":"debug",
  "RootMonitoredFolder":"c:\\tmp\\asapo\\test_in",
  "MonitoredSubFolders":["test_folder"],
- "IgnoreExtentions":["tmp"],
+ "IgnoreExtensions":["tmp"],
  "RemoveAfterSend":true,
  "Stream": "",
   "Subset": {
@@ -98,7 +98,7 @@ job "asapo-produceronly" {
  "LogLevel":"debug",
  "RootMonitoredFolder":"/tmp/asapo/test_in",
  "MonitoredSubFolders":["test_folder"],
- "IgnoreExtentions":["tmp"],
+ "IgnoreExtensions":["tmp"],
  "RemoveAfterSend":true,
  "Stream": "",
  "Subset": {

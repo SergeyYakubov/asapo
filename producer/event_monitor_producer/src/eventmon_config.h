@@ -24,7 +24,8 @@ struct EventMonConfig {
     RequestHandlerType mode = RequestHandlerType::kTcp;
     std::string root_monitored_folder;
     std::vector<std::string> monitored_subfolders;
-    std::vector<std::string> ignored_extentions;
+    std::vector<std::string> ignored_extensions;
+    std::vector<std::string> whitelisted_extensions;
     bool remove_after_send = false;
     SubSetMode subset_mode = SubSetMode::kNone;
     uint64_t subset_batch_size = 1;

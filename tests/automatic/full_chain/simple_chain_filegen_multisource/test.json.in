@@ -7,7 +7,7 @@
  "LogLevel":"debug",
  "RootMonitoredFolder":"@ROOT_PATH@test_in",
  "MonitoredSubFolders":["test@ID@"],
- "IgnoreExtentions":["tmp"],
+ "IgnoreExtensions":["tmp"],
  "RemoveAfterSend":true,
  "Stream": "",
  "Subset": {

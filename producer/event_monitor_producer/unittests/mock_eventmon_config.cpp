@@ -86,7 +86,7 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     }
 
     std::string ignored_exts;
-    for (auto ext : config.ignored_extentions) {
+    for (auto ext : config.ignored_extensions) {
         ignored_exts += "\"" + ext + "\"" + ",";
     }
     if (ignored_exts.size()) {
@@ -94,9 +94,19 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     }
 
 
+    std::string whitelisted_exts;
+    for (auto ext : config.whitelisted_extensions) {
+        whitelisted_exts += "\"" + ext + "\"" + ",";
+    }
+    if (whitelisted_exts.size()) {
+        whitelisted_exts.pop_back();
+    }
+
     config_string += "," + std::string("\"MonitoredSubFolders\":") + "[" + mon_folders + "]";
     config_string += "," + std::string("\"RootMonitoredFolder\":") + "\"" + config.root_monitored_folder + "\"";
-    config_string += "," + std::string("\"IgnoreExtentions\":") + "[" + ignored_exts + "]";
+    config_string += "," + std::string("\"IgnoreExtensions\":") + "[" + ignored_exts + "]";
+    config_string += "," + std::string("\"WhitelistExtensions\":") + "[" + whitelisted_exts + "]";
+
     config_string += "," + std::string("\"Tag\":") + "\"" + config.tag + "\"";
     config_string += "," + std::string("\"AsapoEndpoint\":") + "\"" + config.asapo_endpoint + "\"";
 

@@ -25,6 +25,7 @@ class FolderEventDetector : public AbstractEventDetector {
     Error UpdateEventsBuffer();
     Error GetHeaderFromBuffer(EventHeader* event_header);
     bool IgnoreFile(const std::string& event);
+    bool FileInWhiteList(const std::string& file);
     bool BufferIsEmpty() const;
 };
 
