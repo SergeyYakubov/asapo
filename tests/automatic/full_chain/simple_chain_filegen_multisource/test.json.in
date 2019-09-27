@@ -8,6 +8,7 @@
  "RootMonitoredFolder":"@ROOT_PATH@test_in",
  "MonitoredSubFolders":["test@ID@"],
  "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
  "Stream": "",
  "Subset": {

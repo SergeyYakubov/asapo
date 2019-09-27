@@ -73,7 +73,6 @@ Error EventMonConfigFactory::CheckConfig() {
     (err = CheckMode()) ||
     (err = CheckLogLevel()) ||
     (err = CheckNThreads()) ||
-    (err = CheckBlackWhiteLists()) ||
     (err = CheckSubsets());
 
 //todo: check monitored folders exist?
@@ -106,14 +105,6 @@ Error EventMonConfigFactory::CheckLogLevel() {
     config.log_level = StringToLogLevel(config.log_level_str, &err);
     return err;
 }
-
-Error EventMonConfigFactory::CheckBlackWhiteLists() {
-    if (config.whitelisted_extensions.size() && config.ignored_extensions.size() ) {
-        return  TextError("only one of IgnoreExtensions/WhitelistExtensions can be set");
-    }
-    return nullptr;
-}
-
 
 Error EventMonConfigFactory::CheckNThreads() {
     if (config.nthreads == 0 || config.nthreads > kMaxProcessingThreads ) {

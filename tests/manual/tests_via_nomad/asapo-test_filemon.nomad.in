@@ -39,6 +39,7 @@ job "asapo-filemon" {
  "RootMonitoredFolder":"u:\\asapo",
  "MonitoredSubFolders":["test_folder"],
  "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
  "Stream": "",
  "Subset": {
@@ -99,6 +100,7 @@ job "asapo-filemon" {
  "RootMonitoredFolder":"/run/user",
  "MonitoredSubFolders":["data"],
  "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
  "Stream": "",
  "Subset": {

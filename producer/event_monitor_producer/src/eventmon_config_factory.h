@@ -19,10 +19,7 @@ class EventMonConfigFactory {
     Error CheckSubsets();
     Error CheckNThreads();
     Error CheckConfig();
-    Error CheckBlackWhiteLists();
-
-
-  };
+};
 
 }
 

@@ -15,7 +15,7 @@ inline bool ends_with(std::string const& value, std::string const& ending) {
 }
 
 
-bool FileInList(const std::vector<std::string>&list,const std::string& file) {
+bool FileInList(const std::vector<std::string>& list, const std::string& file) {
     for (auto& ext : list) {
         if (ends_with(file, ext)) {
             return true;
@@ -25,14 +25,14 @@ bool FileInList(const std::vector<std::string>&list,const std::string& file) {
 }
 
 bool FolderEventDetector::IgnoreFile(const std::string& file) {
-    return FileInList(config_->ignored_extensions,file);
+    return FileInList(config_->ignored_extensions, file);
 }
 
 bool FolderEventDetector::FileInWhiteList(const std::string& file) {
     if (config_->whitelisted_extensions.empty()) {
         return true;
     }
-    return FileInList(config_->whitelisted_extensions,file);
+    return FileInList(config_->whitelisted_extensions, file);
 }
 
 

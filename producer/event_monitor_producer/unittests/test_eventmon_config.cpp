@@ -65,7 +65,7 @@ TEST_F(ConfigTests, ReadSettingsOK) {
     test_config.subset_mode = SubSetMode::kBatch;
     test_config.subset_batch_size = 9;
     test_config.stream = "stream";
-    test_config.whitelisted_extensions =  {};
+    test_config.whitelisted_extensions =  {"bla"};
 
     auto err = asapo::SetFolderMonConfig(test_config);
 
@@ -90,7 +90,7 @@ TEST_F(ConfigTests, ReadSettingsOK) {
 
 TEST_F(ConfigTests, ReadSettingsWhiteListOK) {
     asapo::EventMonConfig test_config;
-    test_config.whitelisted_extensions =  {"tmp","test"};
+    test_config.whitelisted_extensions =  {"tmp", "test"};
     test_config.ignored_extensions = {};
 
     auto err = asapo::SetFolderMonConfig(test_config);
@@ -100,19 +100,6 @@ TEST_F(ConfigTests, ReadSettingsWhiteListOK) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(config->whitelisted_extensions,  ElementsAre("tmp", "test"));
 }
-
-
-TEST_F(ConfigTests, ReadSettingsErrorBothIgnoreAndWhitelistSet) {
-    asapo::EventMonConfig test_config;
-    test_config.whitelisted_extensions =  {"tmp","test"};
-    test_config.ignored_extensions =  {"tmp","test"};
-
-    auto err = asapo::SetFolderMonConfig(test_config);
-
-    ASSERT_THAT(err, Ne(nullptr));
-}
-
-
 
 TEST_F(ConfigTests, ReadSettingsMultiSourceOK) {
     asapo::EventMonConfig test_config;

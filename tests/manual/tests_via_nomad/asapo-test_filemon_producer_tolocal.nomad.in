@@ -39,6 +39,7 @@ job "asapo-produceronly" {
  "RootMonitoredFolder":"c:\\tmp\\asapo\\test_in",
  "MonitoredSubFolders":["test_folder"],
  "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
  "Stream": "",
   "Subset": {
@@ -99,6 +100,7 @@ job "asapo-produceronly" {
  "RootMonitoredFolder":"/tmp/asapo/test_in",
  "MonitoredSubFolders":["test_folder"],
  "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
  "Stream": "",
  "Subset": {
