@@ -57,6 +57,9 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
         return;
     }
     auto config = GetEventMonConfig();
+    if (!config->remove_after_send) {
+        return;
+    }
     std::string fname = config->root_monitored_folder + asapo::kPathSeparator + header.message;
     auto error = io->RemoveFile(fname);
     if (error) {

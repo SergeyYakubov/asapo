@@ -8,7 +8,7 @@
  "RootMonitoredFolder":"@ROOT_PATH@test_in",
  "MonitoredSubFolders":["test1","test2"],
  "IgnoreExtentions":["tmp"],
- "RemoveAfterSend":true,
+ "RemoveAfterSend":false,
  "Subset": {
  	"Mode":"batch",
   	"BatchSize":3
