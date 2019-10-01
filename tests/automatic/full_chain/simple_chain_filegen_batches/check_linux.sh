@@ -56,3 +56,7 @@ $2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 2000 1 1 > out
 cat out
 cat out   | grep "Processed 1 dataset(s)"
 cat out   | grep "with 3 file(s)"
+
+test -f /tmp/asapo/test_in/test1/file1
+test -f /tmp/asapo/test_in/test1/file2
+test -f /tmp/asapo/test_in/test2/file2

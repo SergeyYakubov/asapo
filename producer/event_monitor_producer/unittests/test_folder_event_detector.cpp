@@ -65,7 +65,7 @@ class FolderEventDetectorTests : public testing::Test {
     }
     void MockStartMonitoring();
     void MockGetEvents();
-    void InitiateAndReadSingleEvent();
+    asapo::EventHeader InitiateAndReadSingleEvent();
 };
 
 void FolderEventDetectorTests::MockStartMonitoring() {
@@ -153,13 +153,14 @@ void FolderEventDetectorTests::MockGetEvents() {
         ));
 }
 
-void FolderEventDetectorTests::InitiateAndReadSingleEvent() {
+asapo::EventHeader FolderEventDetectorTests::InitiateAndReadSingleEvent() {
     MockStartMonitoring();
     MockGetEvents();
     detector.StartMonitoring();
     asapo::EventHeader event_header;
     detector.GetNextEvent(&event_header);
     Mock::VerifyAndClearExpectations(&mock_system_folder_watch);
+    return event_header;
 };
 
 
@@ -210,7 +211,7 @@ TEST_F(FolderEventDetectorTests, GetNextEventDoesSystemCallIfListEmpty) {
 }
 
 TEST_F(FolderEventDetectorTests, GetNextIgnoresTmpFiles) {
-    test_config.ignored_extentions = {"tmp"};
+    test_config.ignored_extensions = {"tmp"};
     InitiateAndReadSingleEvent();
     asapo::EventHeader event_header;
     err = detector.GetNextEvent(&event_header);
@@ -220,6 +221,13 @@ TEST_F(FolderEventDetectorTests, GetNextIgnoresTmpFiles) {
 // try read event 3 test3.tmp sould be ignored
     err = detector.GetNextEvent(&event_header);
     ASSERT_THAT(err, Eq(asapo::EventMonitorErrorTemplates::kNoNewEvent));
+}
+
+TEST_F(FolderEventDetectorTests, GetNextRespectsWhiteList) {
+    test_config.whitelisted_extensions = {"tmp"};
+    auto event_header = InitiateAndReadSingleEvent();
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(event_header.file_name, Eq("test3.tmp"));
 }
 
 }

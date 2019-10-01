@@ -38,8 +38,10 @@ job "asapo-filemon_multisource" {
  "LogLevel":"info",
  "RootMonitoredFolder":"u:\\asapo",
  "MonitoredSubFolders":["test_folder"],
- "IgnoreExtentions":["tmp"],
+ "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
   	"Mode":"multisource",
   	"SourceId": 1,
@@ -99,8 +101,10 @@ job "asapo-filemon_multisource" {
  "LogLevel":"info",
  "RootMonitoredFolder":"/run/user",
  "MonitoredSubFolders":["data"],
- "IgnoreExtentions":["tmp"],
+ "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
   	"Mode":"multisource",
   	"SourceId": 2,

@@ -39,13 +39,15 @@ Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     (err = parser.GetString("AsapoEndpoint", &config.asapo_endpoint)) ||
     (err = parser.GetString("Tag", &config.tag)) ||
     (err = parser.GetString("BeamtimeID", &config.beamtime_id)) ||
+    (err = parser.GetString("Stream", &config.stream)) ||
     (err = parser.GetString("Mode", &config.mode_str)) ||
     (err = parser.GetUInt64("NThreads", &config.nthreads)) ||
     (err = parser.GetString("RootMonitoredFolder", &config.root_monitored_folder)) ||
     (err = parser.GetString("LogLevel", &config.log_level_str)) ||
     (err = parser.GetBool("RemoveAfterSend", &config.remove_after_send)) ||
     (err = parser.GetArrayString("MonitoredSubFolders", &config.monitored_subfolders)) ||
-    (err = parser.GetArrayString("IgnoreExtentions", &config.ignored_extentions)) ||
+    (err = parser.GetArrayString("IgnoreExtensions", &config.ignored_extensions)) ||
+    (err = parser.GetArrayString("WhitelistExtensions", &config.whitelisted_extensions)) ||
     (err = parser.Embedded("Subset").GetString("Mode", &subset_mode)) ||
     (err = SubsetModeToEnum(subset_mode, &config.subset_mode));
     if (err) {
@@ -103,7 +105,6 @@ Error EventMonConfigFactory::CheckLogLevel() {
     config.log_level = StringToLogLevel(config.log_level_str, &err);
     return err;
 }
-
 
 Error EventMonConfigFactory::CheckNThreads() {
     if (config.nthreads == 0 || config.nthreads > kMaxProcessingThreads ) {

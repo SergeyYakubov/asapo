@@ -15,13 +15,24 @@ inline bool ends_with(std::string const& value, std::string const& ending) {
 }
 
 
-bool FolderEventDetector::IgnoreFile(const std::string& file) {
-    for (auto& ext : config_->ignored_extentions) {
+bool FileInList(const std::vector<std::string>& list, const std::string& file) {
+    for (auto& ext : list) {
         if (ends_with(file, ext)) {
             return true;
         }
     }
     return false;
+}
+
+bool FolderEventDetector::IgnoreFile(const std::string& file) {
+    return FileInList(config_->ignored_extensions, file);
+}
+
+bool FolderEventDetector::FileInWhiteList(const std::string& file) {
+    if (config_->whitelisted_extensions.empty()) {
+        return true;
+    }
+    return FileInList(config_->whitelisted_extensions, file);
 }
 
 
@@ -37,7 +48,7 @@ Error FolderEventDetector::UpdateEventsBuffer() {
     }
 
     for (auto& file : files) {
-        if (!IgnoreFile(file)) {
+        if (!IgnoreFile(file) && FileInWhiteList(file) ) {
             events_buffer_.emplace_back(EventHeader{0, 0, file});
         }
     }

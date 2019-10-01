@@ -7,8 +7,10 @@
  "LogLevel":"debug",
  "RootMonitoredFolder":"@ROOT_PATH@test_in",
  "MonitoredSubFolders":["test@ID@"],
- "IgnoreExtentions":["tmp"],
+ "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
  	"Mode":"multisource",
   	"SourceId":@ID@,

@@ -38,8 +38,10 @@ job "asapo-produceronly" {
  "LogLevel":"debug",
  "RootMonitoredFolder":"c:\\tmp\\asapo\\test_in",
  "MonitoredSubFolders":["test_folder"],
- "IgnoreExtentions":["tmp"],
+ "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
+ "Stream": "",
   "Subset": {
    	"Mode":"none"
   }
@@ -97,8 +99,10 @@ job "asapo-produceronly" {
  "LogLevel":"debug",
  "RootMonitoredFolder":"/tmp/asapo/test_in",
  "MonitoredSubFolders":["test_folder"],
- "IgnoreExtentions":["tmp"],
+ "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
   	"Mode":"none"
  }

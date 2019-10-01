@@ -38,8 +38,10 @@ job "asapo-filemon_batch" {
  "LogLevel":"info",
  "RootMonitoredFolder":"u:\\asapo",
  "MonitoredSubFolders":["test_folder"],
- "IgnoreExtentions":["tmp"],
+ "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
   	"Mode":"batch",
   	"BatchSize": {{ keyOrDefault "monitor_batch_size" "3" }}
@@ -98,8 +100,10 @@ job "asapo-filemon_batch" {
  "LogLevel":"info",
  "RootMonitoredFolder":"/run/user",
  "MonitoredSubFolders":["data"],
- "IgnoreExtentions":["tmp"],
+ "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
  "RemoveAfterSend":true,
+ "Stream": "",
  "Subset": {
   	"Mode":"batch",
   	"BatchSize": {{ keyOrDefault "monitor_batch_size" "3" }}

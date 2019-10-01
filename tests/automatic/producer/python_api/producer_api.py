@@ -44,15 +44,15 @@ producer.send_file(3, local_path = "./not_exist",exposed_path = "./whatever",
 data = np.arange(10,dtype=np.float64)
 
 #send data from array
-err = producer.send_data(4, stream+"/"+"file5",data,
+producer.send_data(4, stream+"/"+"file5",data,
                          ingest_mode = asapo_producer.DEFAULT_INGEST_MODE, callback = callback)
 
 #send data from string
-err = producer.send_data(5, stream+"/"+"file6",b"hello",
+producer.send_data(5, stream+"/"+"file6",b"hello",
                          ingest_mode = asapo_producer.DEFAULT_INGEST_MODE, callback = callback)
 
 #send metadata only
-err = producer.send_data(6, stream+"/"+"file7",None,
+producer.send_data(6, stream+"/"+"file7",None,
                          ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback = callback)
 
 
@@ -67,6 +67,6 @@ else:
 
 
 
-time.sleep(5)
+time.sleep(10)
 
 

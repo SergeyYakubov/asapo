@@ -7,8 +7,10 @@
  "LogLevel":"debug",
  "RootMonitoredFolder":"@ROOT_PATH@test_in",
  "MonitoredSubFolders":["test1","test2"],
- "IgnoreExtentions":["tmp"],
- "RemoveAfterSend":true,
+ "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
+ "RemoveAfterSend":false,
+ "Stream": "",
  "Subset": {
  	"Mode":"batch",
   	"BatchSize":3

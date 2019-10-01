@@ -39,7 +39,7 @@ std::unique_ptr<Producer> CreateProducer() {
 
     Error err;
     auto producer = Producer::Create(config->asapo_endpoint, (uint8_t) config->nthreads,
-                                     config->mode, asapo::SourceCredentials{config->beamtime_id, "", ""}, &err);
+                                     config->mode, asapo::SourceCredentials{config->beamtime_id, config->stream, ""}, &err);
     if(err) {
         std::cerr << "cannot create producer: " << err << std::endl;
         exit(EXIT_FAILURE);
@@ -57,6 +57,9 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
         return;
     }
     auto config = GetEventMonConfig();
+    if (!config->remove_after_send) {
+        return;
+    }
     std::string fname = config->root_monitored_folder + asapo::kPathSeparator + header.message;
     auto error = io->RemoveFile(fname);
     if (error) {
