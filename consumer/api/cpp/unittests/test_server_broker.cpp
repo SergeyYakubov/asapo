@@ -253,7 +253,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerAddressNotFound) {
     data_broker->SetTimeout(100);
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("cannot")));
+    ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("unavailable")));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerUriEmpty) {
@@ -266,7 +266,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerUriEmpty) {
     data_broker->SetTimeout(100);
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
-    ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("cannot")));
+    ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("unavailable")));
 }
 
 TEST_F(ServerDataBrokerTests, GetDoNotCallBrokerUriIfAlreadyFound) {

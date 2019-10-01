@@ -15,6 +15,7 @@ beamline=test
 Cleanup() {
     echo cleanup
     nomad stop nginx
+    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop receiver
     nomad stop discovery
     nomad stop broker
@@ -51,6 +52,7 @@ nomad stop $4
 nomad stop authorizer
 nomad stop discovery
 nomad stop nginx
+nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
 nomad stop receiver
 
 nomad run nginx.nmd

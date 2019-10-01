@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 var correctTokenSuffix, wrongTokenSuffix, suffixWithWrongToken, expectedBeamtimeId, expectedDBName string
@@ -79,6 +80,12 @@ func ExpectCopyClose(mock_db *database.MockedDatabase) {
 	mock_db.On("Close").Return()
 }
 
+func ExpectCopyCloseReconnect(mock_db *database.MockedDatabase) {
+	mock_db.On("Copy").Return(mock_db)
+	mock_db.On("Close").Twice().Return()
+	mock_db.On("Connect", mock.AnythingOfType("string")).Return(nil)
+}
+
 type ProcessRequestTestSuite struct {
 	suite.Suite
 	mock_db *database.MockedDatabase
@@ -130,12 +137,28 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() 
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong database name")
 }
 
+func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next", "0").Return([]byte(""),
+		&database.DBError{utils.StatusServiceUnavailable, ""})
+
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
+	ExpectCopyCloseReconnect(suite.mock_db)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("reconnected")))
+
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	time.Sleep(time.Second)
+	suite.Equal(http.StatusNotFound, w.Code, "wrong database name")
+}
+
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
 	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next", "0").Return([]byte(""), errors.New(""))
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
-	ExpectCopyClose(suite.mock_db)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("reconnected")))
 
+	ExpectCopyCloseReconnect(suite.mock_db)
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	time.Sleep(time.Second)
+
 	suite.Equal(http.StatusNotFound, w.Code, "internal error")
 }
 

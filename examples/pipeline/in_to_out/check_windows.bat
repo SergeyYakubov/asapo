@@ -67,6 +67,7 @@ exit /b 1
 c:\opt\consul\nomad stop discovery
 c:\opt\consul\nomad stop broker
 c:\opt\consul\nomad stop nginx
+c:\opt\consul\nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
 c:\opt\consul\nomad stop receiver
 c:\opt\consul\nomad stop authorizer
 

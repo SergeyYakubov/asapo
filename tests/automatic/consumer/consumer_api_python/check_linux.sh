@@ -36,6 +36,7 @@ function start_mongo {
 Cleanup() {
     set +e
     nomad stop nginx >/dev/null
+    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop discovery >/dev/null
     nomad stop broker >/dev/null
 	echo "db.dropDatabase()" | mongo --port 27016 ${database_name} >/dev/null

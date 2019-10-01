@@ -24,6 +24,7 @@ Cleanup() {
     rm -rf /tmp/asapo/test_in/test1
     rm -rf /tmp/asapo/test_in/test2
     nomad stop nginx
+    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop receiver
     nomad stop discovery
     nomad stop broker

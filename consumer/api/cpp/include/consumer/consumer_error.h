@@ -48,7 +48,7 @@ auto const kInterruptedTransaction = ConsumerErrorTemplate{
 };
 
 auto const kUnavailableService = ConsumerErrorTemplate{
-    "cannot find brokers", ConsumerErrorType::kUnavailableService
+    "broker service unavailable", ConsumerErrorType::kUnavailableService
 };
 
 

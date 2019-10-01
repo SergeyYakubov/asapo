@@ -15,7 +15,14 @@ func setup() *database.MockedDatabase {
 	mock_db := new(database.MockedDatabase)
 	mock_db.On("Connect", mock.AnythingOfType("string")).Return(nil)
 	return mock_db
+}
 
+func setup_and_init(t *testing.T) *database.MockedDatabase {
+	mock_db := new(database.MockedDatabase)
+	mock_db.On("Connect", mock.AnythingOfType("string")).Return(nil)
+	InitDB(mock_db)
+	assertExpectations(t, mock_db)
+	return mock_db
 }
 
 func assertExpectations(t *testing.T, mock_db *database.MockedDatabase) {
@@ -53,6 +60,7 @@ func TestInitDBWithWrongAddress(t *testing.T) {
 }
 
 func TestInitDBWithAutoAddress(t *testing.T) {
+	mongo_address := "0.0.0.0:0000"
 	mock_db := setup()
 
 	mock_db.ExpectedCalls = nil
@@ -60,7 +68,7 @@ func TestInitDBWithAutoAddress(t *testing.T) {
 	settings.DatabaseServer = "auto"
 	mock_server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, req.URL.String(), "/mongo", "request string")
-		rw.Write([]byte("0.0.0.0:0000"))
+		rw.Write([]byte(mongo_address))
 	}))
 	defer mock_server.Close()
 
@@ -74,6 +82,33 @@ func TestInitDBWithAutoAddress(t *testing.T) {
 	db = nil
 }
 
+func TestReconnectDB(t *testing.T) {
+	mongo_address := "0.0.0.0:0000"
+	mock_server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, req.URL.String(), "/mongo", "request string")
+		rw.Write([]byte(mongo_address))
+	}))
+	discoveryService = discoveryAPI{mock_server.Client(), mock_server.URL}
+
+	defer mock_server.Close()
+
+	settings.DatabaseServer = "auto"
+	mock_db := setup_and_init(t)
+	mock_db.ExpectedCalls = nil
+
+	mongo_address = "1.0.0.0:0000"
+
+	mock_db.On("Close").Return()
+
+	mock_db.On("Connect", "1.0.0.0:0000").Return(nil)
+
+	err := ReconnectDb()
+	assert.Equal(t, nil, err, "auto connect ok")
+	assertExpectations(t, mock_db)
+
+	db = nil
+}
+
 func TestCleanupDBWithoutInit(t *testing.T) {
 	mock_db := setup()
 
@@ -83,11 +118,11 @@ func TestCleanupDBWithoutInit(t *testing.T) {
 }
 
 func TestCleanupDBInit(t *testing.T) {
-	mock_db := setup()
+	settings.DatabaseServer = "0.0.0.0"
+	mock_db := setup_and_init(t)
 
 	mock_db.On("Close").Return()
 
-	InitDB(mock_db)
 	CleanupDB()
 
 	assertExpectations(t, mock_db)

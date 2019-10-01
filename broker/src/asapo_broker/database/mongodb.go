@@ -45,7 +45,9 @@ type Mongodb struct {
 
 func (db *Mongodb) Copy() Agent {
 	new_db := new(Mongodb)
-	new_db.session = db.session.Copy()
+	if db.session != nil {
+		new_db.session = db.session.Copy()
+	}
 	new_db.parent_db = db
 	return new_db
 }
@@ -106,14 +108,14 @@ func (db *Mongodb) Close() {
 
 }
 
-func (db *Mongodb) DeleteAllRecords(dbname string) (err error) {
+func (db *Mongodb) deleteAllRecords(dbname string) (err error) {
 	if db.session == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 	return db.session.DB(dbname).DropDatabase()
 }
 
-func (db *Mongodb) InsertRecord(dbname string, s interface{}) error {
+func (db *Mongodb) insertRecord(dbname string, s interface{}) error {
 	if db.session == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
@@ -123,7 +125,7 @@ func (db *Mongodb) InsertRecord(dbname string, s interface{}) error {
 	return c.Insert(s)
 }
 
-func (db *Mongodb) InsertMeta(dbname string, s interface{}) error {
+func (db *Mongodb) insertMeta(dbname string, s interface{}) error {
 	if db.session == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
@@ -133,7 +135,7 @@ func (db *Mongodb) InsertMeta(dbname string, s interface{}) error {
 	return c.Insert(s)
 }
 
-func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int,err error) {
+func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int, err error) {
 	c := db.session.DB(dbname).C(data_collection_name)
 	var id Pointer
 	var q bson.M
@@ -144,9 +146,9 @@ func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int,err erro
 	}
 	err = c.Find(q).Sort("-_id").Select(bson.M{"_id": 1}).One(&id)
 	if err == mgo.ErrNotFound {
-		return 0,nil
+		return 0, nil
 	}
-	return id.ID,err
+	return id.ID, err
 }
 
 func (db *Mongodb) createLocationPointers(dbname string, group_id string) (err error) {
@@ -179,7 +181,7 @@ func (db *Mongodb) incrementField(dbname string, group_id string, max_ind int, r
 	_, err = c.Find(q).Apply(change, res)
 	if err == mgo.ErrNotFound {
 		return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind)}
-	} else if err !=nil { // we do not know if counter was updated
+	} else if err != nil { // we do not know if counter was updated
 		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
 	}
 	return nil
@@ -195,7 +197,7 @@ func encodeAnswer(id, id_max int) string {
 	return string(answer)
 }
 
-func (db *Mongodb) GetRecordByIDRow(dbname string, id, id_max int, dataset bool) ([]byte, error) {
+func (db *Mongodb) getRecordByIDRow(dbname string, id, id_max int, dataset bool) ([]byte, error) {
 	var res map[string]interface{}
 	var q bson.M
 	if dataset {
@@ -217,22 +219,18 @@ func (db *Mongodb) GetRecordByIDRow(dbname string, id, id_max int, dataset bool)
 	return utils.MapToJson(&res)
 }
 
-func (db *Mongodb) GetRecordByID(dbname string, group_id string, id_str string, dataset bool) ([]byte, error) {
+func (db *Mongodb) getRecordByID(dbname string, group_id string, id_str string, dataset bool) ([]byte, error) {
 	id, err := strconv.Atoi(id_str)
 	if err != nil {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	if err := db.checkDatabaseOperationPrerequisites(dbname, group_id); err != nil {
+	max_ind, err := db.getMaxIndex(dbname, dataset)
+	if err != nil {
 		return nil, err
 	}
 
-	max_ind,err := db.getMaxIndex(dbname, dataset)
-	if err != nil {
-		return nil,err
-	}
-
-	return  db.GetRecordByIDRow(dbname, id, max_ind, dataset)
+	return db.getRecordByIDRow(dbname, id, max_ind, dataset)
 
 }
 
@@ -243,7 +241,7 @@ func (db *Mongodb) needCreateLocationPointersInDb(group_id string) bool {
 	return needCreate
 }
 
-func (db *Mongodb) SetLocationPointersCreateFlag(group_id string) {
+func (db *Mongodb) setLocationPointersCreateFlag(group_id string) {
 	dbPointersLock.Lock()
 	if db.db_pointers_created == nil {
 		db.db_pointers_created = make(map[string]bool)
@@ -255,7 +253,7 @@ func (db *Mongodb) SetLocationPointersCreateFlag(group_id string) {
 func (db *Mongodb) generateLocationPointersInDbIfNeeded(db_name string, group_id string) {
 	if db.needCreateLocationPointersInDb(group_id) {
 		db.createLocationPointers(db_name, group_id)
-		db.SetLocationPointersCreateFlag(group_id)
+		db.setLocationPointersCreateFlag(group_id)
 	}
 }
 
@@ -283,7 +281,7 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id 
 }
 
 func (db *Mongodb) getCurrentPointer(db_name string, group_id string, dataset bool) (Pointer, int, error) {
-	max_ind,err := db.getMaxIndex(db_name, dataset)
+	max_ind, err := db.getMaxIndex(db_name, dataset)
 	if err != nil {
 		return Pointer{}, 0, err
 	}
@@ -297,11 +295,7 @@ func (db *Mongodb) getCurrentPointer(db_name string, group_id string, dataset bo
 	return curPointer, max_ind, nil
 }
 
-func (db *Mongodb) GetNextRecord(db_name string, group_id string, dataset bool) ([]byte, error) {
-	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
-		return nil, err
-	}
-
+func (db *Mongodb) getNextRecord(db_name string, group_id string, dataset bool) ([]byte, error) {
 	curPointer, max_ind, err := db.getCurrentPointer(db_name, group_id, dataset)
 	if err != nil {
 		log_str := "error getting next pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
@@ -310,33 +304,22 @@ func (db *Mongodb) GetNextRecord(db_name string, group_id string, dataset bool) 
 	}
 	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
 	logger.Debug(log_str)
-	return db.GetRecordByIDRow(db_name, curPointer.Value, max_ind, dataset)
+	return db.getRecordByIDRow(db_name, curPointer.Value, max_ind, dataset)
 }
 
-
-func (db *Mongodb) GetLastRecord(db_name string, group_id string, dataset bool) ([]byte, error) {
-
-	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
+func (db *Mongodb) getLastRecord(db_name string, group_id string, dataset bool) ([]byte, error) {
+	max_ind, err := db.getMaxIndex(db_name, dataset)
+	if err != nil {
 		return nil, err
 	}
-
-	max_ind,err := db.getMaxIndex(db_name, dataset)
-	if err !=nil {
-		return nil,err
-	}
-	res, err := db.GetRecordByIDRow(db_name, max_ind, max_ind, dataset)
+	res, err := db.getRecordByIDRow(db_name, max_ind, max_ind, dataset)
 
 	db.setCounter(db_name, group_id, max_ind)
 
 	return res, err
 }
 
-func (db *Mongodb) GetSize(db_name string) ([]byte, error) {
-
-	if err := db.checkDatabaseOperationPrerequisites(db_name, ""); err != nil {
-		return nil, err
-	}
-
+func (db *Mongodb) getSize(db_name string) ([]byte, error) {
 	c := db.session.DB(db_name).C(data_collection_name)
 	var rec SizeRecord
 	var err error
@@ -347,13 +330,9 @@ func (db *Mongodb) GetSize(db_name string) ([]byte, error) {
 	return json.Marshal(&rec)
 }
 
-func (db *Mongodb) ResetCounter(db_name string, group_id string, id_str string) ([]byte, error) {
+func (db *Mongodb) resetCounter(db_name string, group_id string, id_str string) ([]byte, error) {
 	id, err := strconv.Atoi(id_str)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
 		return nil, err
 	}
 
@@ -419,17 +398,22 @@ func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, ex
 		dataset = true
 		op = op[:len(op)-8]
 	}
+
+	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
+		return nil, err
+	}
+
 	switch op {
 	case "next":
-		return db.GetNextRecord(db_name, group_id, dataset)
+		return db.getNextRecord(db_name, group_id, dataset)
 	case "id":
-		return db.GetRecordByID(db_name, group_id, extra_param, dataset)
+		return db.getRecordByID(db_name, group_id, extra_param, dataset)
 	case "last":
-		return db.GetLastRecord(db_name, group_id, dataset)
+		return db.getLastRecord(db_name, group_id, dataset)
 	case "resetcounter":
-		return db.ResetCounter(db_name, group_id, extra_param)
+		return db.resetCounter(db_name, group_id, extra_param)
 	case "size":
-		return db.GetSize(db_name)
+		return db.getSize(db_name)
 	case "meta":
 		return db.getMeta(db_name, extra_param)
 	case "queryimages":

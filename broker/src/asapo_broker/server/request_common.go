@@ -7,7 +7,7 @@ import (
 )
 
 func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, err string) {
-	log_str := "processing " + requestName + " request in " + db_name + " at " + settings.DatabaseServer
+	log_str := "processing " + requestName + " request in " + db_name + " at " + settings.GetDatabaseServer()
 	logger.Error(log_str + " - " + err)
 	w.WriteHeader(http.StatusUnauthorized)
 	w.Write([]byte(err))
