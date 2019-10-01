@@ -36,7 +36,7 @@ exit /b 1
 c:\opt\consul\nomad stop receiver
 c:\opt\consul\nomad stop discovery
 c:\opt\consul\nomad stop nginx
-c:\opt\consul\nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
+c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill
 c:\opt\consul\nomad stop authorizer
 rmdir /S /Q %receiver_root_folder%
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%_detector

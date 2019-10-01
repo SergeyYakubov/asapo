@@ -45,7 +45,7 @@ func main() {
 
 	err = server.InitDB(NewDefaultDatabase())
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Error(err.Error())
 	}
 	defer server.CleanupDB()
 	server.Start()
