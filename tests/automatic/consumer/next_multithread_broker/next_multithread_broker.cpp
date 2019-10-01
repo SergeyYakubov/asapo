@@ -51,6 +51,7 @@ void TestAll(const Args& args) {
     asapo::Error err;
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", asapo::SourceCredentials{args.run_name, "", args.token}, &err);
     auto group_id = broker->GenerateNewGroupId(&err);
+    broker->SetTimeout(10000);
     std::vector<asapo::FileInfos>file_infos(args.nthreads);
     auto exec_next = [&](int i) {
         asapo::FileInfo fi;
