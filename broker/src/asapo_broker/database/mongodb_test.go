@@ -302,6 +302,18 @@ func TestMongoDBGetSizeNoDatabase(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestMongoPing(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	err := db.Ping()
+	assert.Nil(t, err)
+}
+
+func TestMongoPingNotConected(t *testing.T) {
+	err := db.Ping()
+	assert.NotNil(t, err)
+}
+
 func TestMongoDBgetRecordByIDNotConnected(t *testing.T) {
 	_, err := db.ProcessRequest(dbname, "", "id", "2")
 	assert.Equal(t, utils.StatusServiceUnavailable, err.(*DBError).Code)

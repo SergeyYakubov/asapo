@@ -65,6 +65,13 @@ func (db *Mongodb) updateDatabaseList() (err error) {
 	return err
 }
 
+func (db *Mongodb) Ping() (err error) {
+	if db.session == nil {
+		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
+	}
+	return db.session.Ping()
+}
+
 func (db *Mongodb) dataBaseExist(dbname string) (err error) {
 	if db.databaseInList(dbname) {
 		return nil
