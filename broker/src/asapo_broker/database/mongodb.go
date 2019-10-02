@@ -30,6 +30,7 @@ const already_connected_msg = "already connected"
 
 var dbListLock sync.RWMutex
 var dbPointersLock sync.RWMutex
+var dbSessionLock sync.RWMutex
 
 type SizeRecord struct {
 	Size int `bson:"size" json:"size"`
@@ -46,7 +47,9 @@ type Mongodb struct {
 func (db *Mongodb) Copy() Agent {
 	new_db := new(Mongodb)
 	if db.session != nil {
+		dbSessionLock.RLock()
 		new_db.session = db.session.Copy()
+		dbSessionLock.RUnlock()
 	}
 	new_db.parent_db = db
 	return new_db
@@ -109,10 +112,11 @@ func (db *Mongodb) Connect(address string) (err error) {
 
 func (db *Mongodb) Close() {
 	if db.session != nil {
+		dbSessionLock.Lock()
 		db.session.Close()
 		db.session = nil
+		dbSessionLock.Unlock()
 	}
-
 }
 
 func (db *Mongodb) deleteAllRecords(dbname string) (err error) {
