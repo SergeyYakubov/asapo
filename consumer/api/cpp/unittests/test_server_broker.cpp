@@ -309,6 +309,30 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsEofStreamFromHttpClientUntilTimeout
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kEndOfStream));
 }
 
+TEST_F(ServerDataBrokerTests, GetImageReturnsNoDataAfterTimeoutEvenIfOtherErrorOccured) {
+    MockGetBrokerUri();
+    data_broker->SetTimeout(300);
+
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
+                SetArgPointee<1>(HttpCode::Conflict),
+                SetArgPointee<2>(nullptr),
+                Return("{\"op\":\"get_record_by_id\",\"id\":" + std::to_string(expected_dataset_id) + ",\"id_max\":2}")));
+
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"  +
+                                        expected_group_id + "/" + std::to_string(expected_dataset_id) + "?token="
+                                        + expected_token, _, _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
+                                                    SetArgPointee<1>(HttpCode::NotFound),
+                                                    SetArgPointee<2>(nullptr),
+                                                    Return("")));
+
+
+    data_broker->SetTimeout(300);
+    auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
+
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
+}
+
+
 TEST_F(ServerDataBrokerTests, GetNextImageReturnsImmediatelyOnServerError) {
     MockGetBrokerUri();
 

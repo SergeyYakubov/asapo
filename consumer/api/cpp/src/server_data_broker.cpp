@@ -121,17 +121,29 @@ Error ServerDataBroker::GetBrokerUri() {
     return nullptr;
 }
 
-void ServerDataBroker::ProcessServerError(Error* err, const std::string& response, std::string* op) {
+bool ServerDataBroker::SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* redirect_uri) {
     if (*err == ConsumerErrorTemplates::kNoData) {
         auto error_data = static_cast<const ConsumerErrorData*>((*err)->GetCustomData());
         if (error_data == nullptr) {
             *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response - " + response);
-            return;
+            return false;
         }
-        *op = std::to_string(error_data->id);
+        *redirect_uri = std::to_string(error_data->id);
+        return true;
     }
-    return;
+    return false;
 }
+
+RequestInfo ServerDataBroker::PrepareRequestInfo(std::string api_url, bool dataset) {
+    RequestInfo ri;
+    ri.host = current_broker_uri_;
+    ri.api = std::move(api_url);
+    if (dataset) {
+        ri.extra_params = "&dataset=true";
+    }
+    return ri;
+}
+
 
 Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string group_id, GetImageServerOperation op,
                                             bool dataset) {
@@ -139,29 +151,28 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
     std::string request_api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/" +
                               std::move(group_id) + "/";
     uint64_t elapsed_ms = 0;
+    Error no_data_error;
     while (true) {
         auto err = GetBrokerUri();
         if (err == nullptr) {
-            RequestInfo ri;
-            ri.host = current_broker_uri_;
-            ri.api = request_api + request_suffix;
-            if (dataset) {
-                ri.extra_params = "&dataset=true";
-            }
+            auto  ri = PrepareRequestInfo(request_api + request_suffix, dataset);
             err = ProcessRequest(response, ri);
             if (err == nullptr) {
                 break;
             }
         }
 
-        ProcessServerError(&err, *response, &request_suffix);
-
-        if (err == ConsumerErrorTemplates::kInterruptedTransaction && request_suffix == "next") {
-            return err;
+        if (request_suffix == "next") {
+            auto save_error = SwitchToGetByIdIfNoData(&err, *response, &request_suffix);
+            if (err == ConsumerErrorTemplates::kInterruptedTransaction) {
+                return err;
+            }
+            if (save_error) {
+                no_data_error = std::move(err);
+            }
         }
-
         if (elapsed_ms >= timeout_ms_) {
-            return err;
+            return no_data_error ? std::move(no_data_error) : std::move(err);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         elapsed_ms += 100;

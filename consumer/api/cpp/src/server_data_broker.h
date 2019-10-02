@@ -53,7 +53,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetRecordFromServerById(uint64_t id, std::string* info, std::string group_id, bool dataset = false);
     Error GetDataIfNeeded(FileInfo* info, FileData* data);
     Error GetBrokerUri();
-    void ProcessServerError(Error* err, const std::string& response, std::string* redirect_uri);
+    bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* redirect_uri);
     Error ProcessRequest(std::string* response, const RequestInfo& request);
     Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, FileInfo* info, FileData* data);
     DataSet GetDatasetFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, Error* err);
@@ -62,7 +62,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
     std::string AppendUri(std::string request_string);
     DataSet DecodeDatasetFromResponse(std::string response, Error* err);
-
+    RequestInfo PrepareRequestInfo(std::string api_url, bool dataset);
     std::string OpToUriCmd(GetImageServerOperation op);
     std::string server_uri_;
     std::string current_broker_uri_;
