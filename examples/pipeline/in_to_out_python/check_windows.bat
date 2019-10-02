@@ -17,6 +17,7 @@ SET receiver_folder="%receiver_root_folder%\%beamline%\%beamtime_id%"
 SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
 
 SET timeout=2
+SET timeout_producer=25
 SET nthreads=4
 
 c:\opt\consul\nomad run discovery.nmd
@@ -37,7 +38,7 @@ echo hello3 > file3
 
 set PYTHONPATH=%2;%3
 
-"%1" "%4" 127.0.0.1:8400 %source_path% %beamtime_id% %stream_in% %stream_out% %token% %timeout% %nthreads% 1  > out
+"%1" "%4" 127.0.0.1:8400 %source_path% %beamtime_id% %stream_in% %stream_out% %token% %timeout% %timeout_producer% %nthreads% 1  > out
 
 type out
 findstr /I /L /C:"Processed 3 file(s)" out || goto :error

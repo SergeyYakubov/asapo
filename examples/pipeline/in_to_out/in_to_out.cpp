@@ -33,6 +33,7 @@ struct Args {
     std::string stream_out;
     std::string token;
     int timeout_ms;
+    int timeout_ms_producer;
     int nthreads;
     bool transfer_data;
 };
@@ -206,7 +207,7 @@ void WaitProducerThreadsFinished(const Args& args, int nfiles) {
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         elapsed_ms += 100;
-        if (elapsed_ms > args.timeout_ms) {
+        if (elapsed_ms > args.timeout_ms_producer) {
             std::cerr << "Stream out exit on timeout " << std::endl;
             break;
         }
@@ -218,9 +219,9 @@ void WaitProducerThreadsFinished(const Args& args, int nfiles) {
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
     Args args;
-    if (argc != 10) {
+    if (argc != 11) {
         std::cout << "Usage: " + std::string{argv[0]}
-                  + " <server> <files_path> <beamtime_id> <stream_in> <stream_out> <nthreads> <token> <timeout ms> <transfer data>"
+                  + " <server> <files_path> <beamtime_id> <stream_in> <stream_out> <nthreads> <token> <timeout ms>  <timeout ms producer> <transfer data>"
                   <<
                   std::endl;
         exit(EXIT_FAILURE);
@@ -233,7 +234,8 @@ int main(int argc, char* argv[]) {
     args.token = std::string{argv[6]};
     args.nthreads = atoi(argv[7]);
     args.timeout_ms = atoi(argv[8]);
-    args.transfer_data = atoi(argv[9]) == 1;
+    args.timeout_ms_producer = atoi(argv[9]);
+    args.transfer_data = atoi(argv[10]) == 1;
 
     auto producer = CreateProducer(args);
     files_sent = 0;

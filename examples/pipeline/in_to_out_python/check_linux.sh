@@ -6,6 +6,7 @@ stream_in=detector
 stream_out=stream
 
 timeout=2
+timeout_producer=25
 nthreads=4
 
 indatabase_name=${beamtime_id}_${stream_in}
@@ -60,7 +61,7 @@ sleep 1
 export PYTHONPATH=$2:$3:${PYTHONPATH}
 
 
-$1 $4 127.0.0.1:8400 $source_path $beamtime_id $stream_in $stream_out $token $timeout $nthreads 1  > out
+$1 $4 127.0.0.1:8400 $source_path $beamtime_id $stream_in $stream_out $token $timeout $timeout_producer $nthreads 1  > out
 cat out
 cat out | grep "Processed 3 file(s)"
 cat out | grep "Sent 3 file(s)"

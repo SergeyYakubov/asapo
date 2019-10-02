@@ -29,8 +29,9 @@ def wait_send(n_files, timeout_s):
             break
         time.sleep(1)
 
-source, path, beamtime,stream_in, stream_out, token, timeout_s,nthreads, transfer_data = sys.argv[1:]
+source, path, beamtime,stream_in, stream_out, token, timeout_s,timeout_s_producer,nthreads, transfer_data = sys.argv[1:]
 timeout_s=int(timeout_s)
+timeout_s_producer=int(timeout_s_producer)
 nthreads=int(nthreads)
 transfer_data=int(transfer_data)>0
 
@@ -60,7 +61,7 @@ while True:
         break
 
 
-wait_send(n_recv,timeout_s)
+wait_send(n_recv,timeout_s_producer)
 
 print ("Processed "+str(n_recv)+" file(s)")
 print ("Sent "+str(n_send)+" file(s)")
