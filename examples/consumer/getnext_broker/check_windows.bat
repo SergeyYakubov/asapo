@@ -27,4 +27,5 @@ exit /b 1
 c:\opt\consul\nomad stop discovery
 c:\opt\consul\nomad stop broker
 c:\opt\consul\nomad stop nginx
+c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill
 echo db.dropDatabase() | %mongo_exe% %database_name%

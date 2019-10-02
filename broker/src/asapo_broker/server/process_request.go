@@ -3,6 +3,7 @@ package server
 import (
 	"asapo_broker/database"
 	"asapo_common/logger"
+	log "asapo_common/logger"
 	"asapo_common/utils"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -30,7 +31,7 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 	}
 	if _, err := xid.FromString(group_id); err != nil {
 		err_str := "wrong groupid " + group_id
-		log_str := "processing get " + op + " request in " + db_name + " at " + settings.DatabaseServer + ": " + err_str
+		log_str := "processing get " + op + " request in " + db_name + " at " + settings.GetDatabaseServer() + ": " + err_str
 		logger.Error(log_str)
 		fmt.Println(log_str)
 		w.WriteHeader(http.StatusBadRequest)
@@ -67,12 +68,17 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 	w.Write(answer)
 }
 
-func returnError(err error, log_str string) (answer []byte, code int) {
-	code = utils.StatusServiceUnavailable
+func getStatusCodeFromDbError(err error) int {
 	err_db, ok := err.(*database.DBError)
 	if ok {
-		code = err_db.Code
+		return err_db.Code
+	} else {
+		return utils.StatusServiceUnavailable
 	}
+}
+
+func returnError(err error, log_str string) (answer []byte, code int) {
+	code = getStatusCodeFromDbError(err)
 	if code != utils.StatusNoData {
 		logger.Error(log_str + " - " + err.Error())
 	} else {
@@ -81,13 +87,27 @@ func returnError(err error, log_str string) (answer []byte, code int) {
 	return []byte(err.Error()), code
 }
 
+func reconnectIfNeeded(db_error error) {
+	code := getStatusCodeFromDbError(db_error)
+	if code != utils.StatusServiceUnavailable {
+		return
+	}
+
+	if err := ReconnectDb(); err != nil {
+		log.Error("cannot reconnect to database at : " + settings.GetDatabaseServer() + " " + err.Error())
+	} else {
+		log.Debug("reconnected to database" + settings.GetDatabaseServer())
+	}
+}
+
 func processRequestInDb(db_name string, group_id string, op string, extra_param string) (answer []byte, code int) {
 	db_new := db.Copy()
 	defer db_new.Close()
 	statistics.IncreaseCounter()
 	answer, err := db_new.ProcessRequest(db_name, group_id, op, extra_param)
-	log_str := "processing request " + op + " in " + db_name + " at " + settings.DatabaseServer
+	log_str := "processing request " + op + " in " + db_name + " at " + settings.GetDatabaseServer()
 	if err != nil {
+		go reconnectIfNeeded(err)
 		return returnError(err, log_str)
 	}
 	logger.Debug(log_str)

@@ -13,6 +13,7 @@ Cleanup() {
     echo cleanup
     rm -rf $fname
     nomad stop nginx
+    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop broker
     nomad stop discovery
     echo "db.dropDatabase()" | mongo ${beamtime_id}_stream

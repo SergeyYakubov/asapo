@@ -19,6 +19,11 @@ func (db *MockedDatabase) Close() {
 	db.Called()
 }
 
+func (db *MockedDatabase) Ping() error {
+	args := db.Called()
+	return args.Error(0)
+}
+
 func (db *MockedDatabase) Copy() Agent {
 	db.Called()
 	return db

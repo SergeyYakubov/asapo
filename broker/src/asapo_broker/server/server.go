@@ -12,13 +12,22 @@ import (
 var db database.Agent
 
 type serverSettings struct {
-	DiscoveryServer  string
-	DatabaseServer  string
+	DiscoveryServer     string
+	DatabaseServer      string
 	PerformanceDbServer string
-	PerformanceDbName    string
-	SecretFile       string
-	Port             int
-	LogLevel         string
+	PerformanceDbName   string
+	SecretFile          string
+	Port                int
+	LogLevel            string
+	discoveredDbAddress string
+}
+
+func (s *serverSettings) GetDatabaseServer() string {
+	if s.DatabaseServer == "auto" {
+		return s.discoveredDbAddress
+	} else {
+		return s.DatabaseServer
+	}
 }
 
 var settings serverSettings
@@ -42,21 +51,28 @@ func (api *discoveryAPI) GetMongoDbAddress() (string, error) {
 	return string(body), err
 }
 
+func ReconnectDb() (err error) {
+	if db == nil {
+		return errors.New("database not initialized")
+	}
+	db.Close()
+	return InitDB(db)
+}
+
 func InitDB(dbAgent database.Agent) (err error) {
 	db = dbAgent
 	if settings.DatabaseServer == "auto" {
-		settings.DatabaseServer, err = discoveryService.GetMongoDbAddress()
+		settings.discoveredDbAddress, err = discoveryService.GetMongoDbAddress()
 		if err != nil {
 			return err
 		}
-		if settings.DatabaseServer == "" {
+		if settings.discoveredDbAddress == "" {
 			return errors.New("no database servers found")
 		}
-		log.Debug("Got mongodb server: " + settings.DatabaseServer)
+		log.Debug("Got mongodb server: " + settings.discoveredDbAddress)
 	}
 
-	err = db.Connect(settings.DatabaseServer)
-	return err
+	return db.Connect(settings.GetDatabaseServer())
 }
 
 func CreateDiscoveryService() {

@@ -17,6 +17,7 @@ Cleanup() {
     nomad stop discovery >/dev/null
     nomad stop authorizer >/dev/null
     nomad stop nginx >/dev/null
+    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill > /dev/null
     echo "db.dropDatabase()" | mongo ${beamtime_id}_${stream} >/dev/null
 }
 

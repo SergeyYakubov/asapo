@@ -1,13 +1,48 @@
 package server
 
 import (
-	"github.com/stretchr/testify/assert"
+	"asapo_broker/database"
+	"asapo_common/logger"
+	"errors"
+	"github.com/stretchr/testify/suite"
 	"net/http"
 	"testing"
 )
 
+type GetHealthTestSuite struct {
+	suite.Suite
+	mock_db *database.MockedDatabase
+}
 
-func TestGetNext(t *testing.T) {
+func (suite *GetHealthTestSuite) SetupTest() {
+	statistics.Reset()
+	suite.mock_db = new(database.MockedDatabase)
+	db = suite.mock_db
+	logger.SetMockLog()
+}
+
+func (suite *GetHealthTestSuite) TearDownTest() {
+	assertExpectations(suite.T(), suite.mock_db)
+	logger.UnsetMockLog()
+	db = nil
+}
+
+func TestGetHealthTestSuite(t *testing.T) {
+	suite.Run(t, new(GetHealthTestSuite))
+}
+
+func (suite *GetHealthTestSuite) TestGetHealthOk() {
+	suite.mock_db.On("Ping").Return(nil)
+	ExpectCopyClose(suite.mock_db)
+
 	w := doRequest("/health")
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	suite.Equal(http.StatusNoContent, w.Code)
+}
+
+func (suite *GetHealthTestSuite) TestGetHealthTriesToReconnectsToDataBase() {
+	suite.mock_db.On("Ping").Return(errors.New("ping error"))
+	ExpectCopyCloseReconnect(suite.mock_db)
+
+	w := doRequest("/health")
+	suite.Equal(http.StatusNoContent, w.Code)
 }

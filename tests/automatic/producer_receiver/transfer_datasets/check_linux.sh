@@ -17,6 +17,7 @@ Cleanup() {
     nomad stop discovery
     nomad stop authorizer
     nomad stop nginx
+    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     influx -execute "drop database ${database_name}"
 }

@@ -21,6 +21,7 @@ Cleanup() {
     rm -rf /tmp/asapo/test_in/test1
     rm -rf ${receiver_root_folder}
     nomad stop nginx
+    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop receiver
     nomad stop discovery
     nomad stop authorizer

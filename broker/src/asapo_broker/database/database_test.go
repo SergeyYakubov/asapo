@@ -10,12 +10,14 @@ func TestMockDataBase(t *testing.T) {
 	var db MockedDatabase
 	db.On("Connect", mock.AnythingOfType("string")).Return(nil)
 	db.On("Close").Return()
+	db.On("Ping").Return(nil)
 	db.On("Copy").Return(nil)
 	db.On("ProcessRequest", "", "", 0).Return([]byte(""), nil)
 
 	db.Connect("")
 	db.Close()
 	db.Copy()
+	db.Ping()
 	var err DBError
 	err.Error()
 }

@@ -24,6 +24,7 @@ trap Cleanup EXIT
 Cleanup() {
     set +e
     nomad stop nginx
+    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop discovery
     nomad stop broker
     nomad stop receiver
