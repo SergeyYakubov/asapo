@@ -57,7 +57,7 @@ class MongoDBClient final : public Database {
     Error TryConnectDatabase();
     Error InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const;
     Error UpdateBsonDocument(uint64_t id, const bson_p& document, bool upsert) const;
-
+    Error AddBsonDocumentToArray(bson_t* query, bson_t* update, bool ignore_duplicates) const;
 };
 
 }

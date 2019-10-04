@@ -198,6 +198,31 @@ Error MongoDBClient::Upsert(uint64_t id, const uint8_t* data, uint64_t size) con
     return UpdateBsonDocument(id, document, true);
 
 }
+
+
+Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool ignore_duplicates) const {
+    Error err;
+    bson_error_t mongo_err;
+// first update may fail due to multiple threads try to create document at once, the second one should succeed
+// https://jira.mongodb.org/browse/SERVER-14322
+    if (!mongoc_collection_update (collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
+        if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
+            if (!mongoc_collection_update (collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
+                if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
+                    err =  ignore_duplicates ? nullptr : DBErrorTemplates::kDuplicateID.Generate();
+                } else {
+                    err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
+                }
+            }
+        } else {
+            err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
+        }
+    }
+    return err;
+}
+
+
+
 Error MongoDBClient::InsertAsSubset(const FileInfo& file,
                                     uint64_t subset_id,
                                     uint64_t subset_size,
@@ -211,24 +236,14 @@ Error MongoDBClient::InsertAsSubset(const FileInfo& file,
     if (err) {
         return err;
     }
-    auto query = BCON_NEW ("_id", BCON_INT64(subset_id));
+    auto query = BCON_NEW ("$and","[","{","_id", BCON_INT64(subset_id),"}","{","images._id","{","$ne",BCON_INT64(file.id),"}","}","]");
     auto update = BCON_NEW ("$setOnInsert", "{",
                             "size", BCON_INT64 (subset_size),
                             "}",
                             "$addToSet", "{",
                             "images", BCON_DOCUMENT(document.get()), "}");
 
-
-    bson_error_t mongo_err;
-    if (!mongoc_collection_update (collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
-        if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
-            if (!mongoc_collection_update (collection_, MONGOC_UPDATE_NONE, query, update, NULL, &mongo_err)) {
-                err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
-            }
-        } else {
-            err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
-        }
-    }
+    err = AddBsonDocumentToArray(query, update,ignore_duplicates);
 
     bson_destroy (query);
     bson_destroy (update);
