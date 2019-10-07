@@ -22,6 +22,9 @@ job "asapo-perfmetrics" {
       user = "${asapo_user}"
       config {
         network_mode = "host"
+	    privileged = true
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
         image = "influxdb:${influxdb_version}"
         volumes = ["/${service_dir}/influxdb:/var/lib/influxdb"]
       }
@@ -69,6 +72,9 @@ job "asapo-perfmetrics" {
 
       config {
         network_mode = "host"
+	    privileged = true
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
         image = "grafana/grafana:${grafana_version}"
         volumes = ["/${service_dir}/grafana:/var/lib/grafana"]
       }

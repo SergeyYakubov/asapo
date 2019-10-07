@@ -33,6 +33,8 @@ def set_parameters():
     except:
         print ("cannot define own ip")
         my_ip = "127.0.0.1"
+
+    d['docker_endpoint']=my_get_env('DOCKER_ENDPOINT',"unix:///var/run/docker.sock")
     d['advertise_ip']=my_get_env('ADVERTISE_IP',my_ip)
     d['n_servers']=my_get_env('N_SERVERS',1)
     d['server_adresses']=my_get_env('SERVER_ADRESSES','["'+socket.gethostname()+'"]')

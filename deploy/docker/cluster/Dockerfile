@@ -16,7 +16,7 @@ RUN add-apt-repository \
    $(lsb_release -cs) \
    stable"
 
-RUN apt-get update && apt-get install -y docker-ce-cli wget unzip iproute2
+RUN apt-get update && apt-get install -y docker-ce-cli wget unzip iproute2 vim
 
 
 ENV CONSUL_VERSION=1.6.0
@@ -49,6 +49,8 @@ COPY scripts/ /var/run/asapo/
 RUN cd /var/run/asapo asapo && terraform init
 
 COPY asapo-*  /usr/bin/
+
+COPY *.sh  /tmp/asapo_runscripts/
 
 COPY *.py  /etc/asapo/
 COPY *.hcl.tpl  /etc/asapo/

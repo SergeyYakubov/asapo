@@ -38,6 +38,9 @@ job "asapo-nginx" {
 
       config {
         network_mode = "host"
+	    privileged = true
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
         image = "nginx:${nginx_version}"
         volumes = [
           "local/nginx.conf:/etc/nginx/nginx.conf"

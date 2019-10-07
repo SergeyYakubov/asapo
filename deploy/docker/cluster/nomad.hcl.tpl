@@ -21,4 +21,18 @@ client {
 }
 
 
+plugin "docker" {
+  config {
+    endpoint = "$docker_endpoint"
+
+    tls {
+      cert = "/etc/nomad/cert.pem"
+      key  = "/etc/nomad/key.pem"
+      ca   = "/etc/nomad/ca.pem"
+    }
+
+    allow_privileged = true
+
+  }
+}
 
