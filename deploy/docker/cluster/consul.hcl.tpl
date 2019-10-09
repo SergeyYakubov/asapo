@@ -22,7 +22,7 @@ node_meta = {
   ib_address = "$ib_address"
 }
 
-server =  $is_server
+server = $is_server
 $bootstrap_expect_string
 
 rejoin_after_leave = true

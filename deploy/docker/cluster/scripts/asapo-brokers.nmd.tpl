@@ -1,7 +1,7 @@
 job "asapo-brokers" {
   datacenters = ["dc1"]
   affinity {
-    attribute = "${meta.asapo_service}"
+    attribute = "$${meta.asapo_service}"
     value     = "false"
     weight    = 100
   }
