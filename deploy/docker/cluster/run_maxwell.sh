@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
 NOMAD_ALLOC_HOST_SHARED=/tmp/asapo/container_host_shared/nomad_alloc
-SERVICE_DATA_CLUSTER_SHARED=/tmp/asapo/asapo_cluster_shared/service_data
-DATA_GLOBAL_SHARED=/tmp/asapo/global_shared/data
-
+SERVICE_DATA_CLUSTER_SHARED=/home/yakubov/asapo/asapo_cluster_shared/service_data
+DATA_GLOBAL_SHARED=/home/yakubov/asapo/global_shared/data
+MAX_NOMAD_SERVERS=3 #  rest are clients
+N_ASAPO_LIGHTWEIGHT_SERVICE_NODES=1 # where to put influx, elk, ... . Rest are receivers, brokers, mongodb
 ASAPO_USER=`id -u`:`id -g`
 
 USE_IB=True
@@ -17,8 +18,9 @@ DOCKER_TLS_CERT=/data/netapp/docker/certs/$USER/cert.pem
 IB_ADDRESS=`hostname --short`-ib
 
 RECURSORS=["\"131.169.40.200\"",\""131.169.194.200\""]
-SERVER_ADRESSES=`scontrol show hostnames $SLURM_JOB_NODELIST | awk 'BEGIN{printf "[\""} {printf "%s%s",sep,$0; sep=","} END{print "\"]"}'`
-N_SERVERS=$SLURM_JOB_NUM_NODES
+N_SERVERS=$(( $SLURM_JOB_NUM_NODES > $MAX_NOMAD_SERVERS ? $MAX_NOMAD_SERVERS : $SLURM_JOB_NUM_NODES ))
+SERVER_ADRESSES=`scontrol show hostnames $SLURM_JOB_NODELIST | head -$N_SERVERS | awk 'BEGIN{printf "["} {printf "%s\"%s\"",sep,$0; sep=","} END{print "]"}'`
+ASAPO_LIGHTWEIGHT_SERVICE_NODES=`scontrol show hostnames $SLURM_JOB_NODELIST | head -$N_ASAPO_LIGHTWEIGHT_SERVICE_NODES | awk 'BEGIN{printf "["} {printf "%s\"%s\"",sep,$0; sep=","} END{print "]"}'`
 
 mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
@@ -33,9 +35,14 @@ if (( mmc < 262144 )); then
 #    exit 1
 fi
 
-docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
+docker rm -f asapo
+
+docker pull yakser/asapo-cluster
+
+
+dockerrun --rm  \
 	-u $ASAPO_USER \
- 	-v /var/lib/docker:/var/lib/docker \
+ 	-v /scratch/docker/100000.100000:/scratch/docker/100000.100000 \
 	-v $NOMAD_ALLOC_HOST_SHARED:$NOMAD_ALLOC_HOST_SHARED \
 	-v $SERVICE_DATA_CLUSTER_SHARED:$SERVICE_DATA_CLUSTER_SHARED \
 	-v $DOCKER_TLS_CA:/etc/nomad/ca.pem \
@@ -50,7 +57,8 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
 	-e TF_VAR_asapo_user=$ASAPO_USER \
 	-e IB_ADDRESS=$IB_ADDRESS \
 	-e SERVER_ADRESSES=$SERVER_ADRESSES \
+	-e ASAPO_LIGHTWEIGHT_SERVICE_NODES=$ASAPO_LIGHTWEIGHT_SERVICE_NODES \
 	-e DOCKER_ENDPOINT=$DOCKER_ENDPOINT \
 	-e N_SERVERS=$N_SERVERS \
- 	--name asapo --net=host yakser/asapo-cluster
+ 	--name asapo yakser/asapo-cluster
 

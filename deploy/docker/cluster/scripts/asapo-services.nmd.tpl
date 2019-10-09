@@ -1,5 +1,10 @@
 job "asapo-services" {
   datacenters = ["dc1"]
+  affinity {
+    attribute = "${meta.asapo_service}"
+    value     = "true"
+    weight    = 100
+  }
 
   type = "service"
 

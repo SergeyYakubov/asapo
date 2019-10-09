@@ -10,7 +10,7 @@ acl {
 
 server {
   enabled          = $is_server
-  bootstrap_expect = $n_servers
+  $bootstrap_expect_string
 }
 
 data_dir = "/var/nomad"
@@ -20,6 +20,9 @@ client {
   alloc_dir="$nomad_alloc_dir"
 }
 
+meta {
+    "asapo_service" = $is_asapo_lightweight_service_node
+}
 
 plugin "docker" {
   config {

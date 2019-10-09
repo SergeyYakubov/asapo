@@ -1,5 +1,10 @@
 job "asapo-receivers" {
   datacenters = ["dc1"]
+  affinity {
+    attribute = "${meta.asapo_service}"
+    value     = "false"
+    weight    = 100
+  }
 
   update {
     max_parallel = 1

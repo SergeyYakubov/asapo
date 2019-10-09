@@ -23,7 +23,7 @@ node_meta = {
 }
 
 server =  $is_server
-bootstrap_expect = $n_servers
+$bootstrap_expect_string
 
 rejoin_after_leave = true
 retry_join = $server_adresses

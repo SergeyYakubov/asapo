@@ -1,5 +1,10 @@
 job "asapo-perfmetrics" {
   datacenters = ["dc1"]
+  affinity {
+    attribute = "${meta.asapo_service}"
+    value     = "true"
+    weight    = 100
+  }
 
 #  update {
 #    max_parallel = 1

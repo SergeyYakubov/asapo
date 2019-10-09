@@ -39,9 +39,14 @@ def set_parameters():
     d['n_servers']=my_get_env('N_SERVERS',1)
     d['server_adresses']=my_get_env('SERVER_ADRESSES','["'+socket.gethostname()+'"]')
     d['is_server']=is_server(d['advertise_ip'],d['server_adresses'])
+    if d['is_server']=="true":
+        d['bootstrap_expect_string'] = "bootstrap_expect = "+d['n_servers']
+    else:
+        d['bootstrap_expect_string'] = ""
     d['ib_address']=my_get_env('IB_ADDRESS',"none")
     d['nomad_alloc_dir']=my_get_env('NOMAD_ALLOC_DIR','')
     d['recursors']=my_get_env('RECURSORS','["8.8.8.8"]')
+
     return d
 
 def process_file(file_in,file_out):
