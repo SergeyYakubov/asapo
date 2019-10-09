@@ -17,7 +17,7 @@ resource "null_resource" "fluentd" {
   provisioner "local-exec" {
     command = "asapo-wait-service fluentd ${! var.nomad_logs}"
   }
-  depends_on = [nomad_job.asapo-logging]
+  depends_on = [nomad_job.asapo-logging,null_resource.elasticsearch]
 }
 
 resource "null_resource" "mongo" {
