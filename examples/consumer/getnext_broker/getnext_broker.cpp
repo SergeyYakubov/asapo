@@ -98,7 +98,7 @@ std::vector<std::thread> StartThreads(const Args& params,
 
             if (err) {
                 (*errors)[i] += ProcessError(err);
-                if (err != asapo::ConsumerErrorTemplates::kNoData ) {
+                if (err) {
                     std::cout << "Thread exit: " << i << std::endl;
                     break;
                 }

@@ -14,7 +14,7 @@ RECURSORS=["\"131.169.40.200\"",\""131.169.194.200\""]
 
 ASAPO_USER=`id -u`:`id -g`
 
-ASAPO_VAR_FILE=`pwd`/asapo_overwrite_vars.tf
+ASAPO_VAR_FILE=`pwd`/asapo_overwrite_vars.tfvars
 
 
 # use ib interface for service discovery (all communications goes thourgh this interface)
@@ -60,7 +60,7 @@ docker rm -f asapo
 docker pull yakser/asapo-cluster
 
 if [ -f $ASAPO_VAR_FILE ]; then
-  MOUNT_VAR_FILE="-v $ASAPO_VAR_FILE:/var/run/asapo/user_vars.tf"
+  MOUNT_VAR_FILE="-v $ASAPO_VAR_FILE:/var/run/asapo/user_vars.tfvars"
 fi
 
 dockerrun --rm  \

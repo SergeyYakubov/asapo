@@ -1,5 +1,5 @@
 elasticsearch:
-  url: "http://localhost:8400/elasticsearch"
+  hosts: ["http://localhost:8400/elasticsearch"]
 server:
   basePath:   "/logsview"
   rewriteBasePath: true

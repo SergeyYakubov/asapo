@@ -30,7 +30,7 @@ done
 
 sleep 1
 
-$@ 127.0.0.1:8400 $source_path $beamtime_id 2 $token_test_run 1000 1  | tee /dev/stderr | grep "Processed 3 file(s)"
+$@ 127.0.0.1:8400 $source_path $beamtime_id 2 $token_test_run 12000 1  | tee /dev/stderr | grep "Processed 3 file(s)"
 
 
 
