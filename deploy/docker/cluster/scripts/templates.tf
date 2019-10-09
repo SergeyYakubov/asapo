@@ -39,6 +39,7 @@ data "template_file" "asapo_receivers" {
     receiver_total_memory_size = "${var.receiver_total_memory_size}"
     receiver_dataserver_cache_size = "${var.receiver_dataserver_cache_size}"
     asapo_user = "${var.asapo_user}"
+    n_receivers = "${var.n_receivers}"
   }
 }
 
@@ -49,6 +50,7 @@ data "template_file" "asapo_brokers" {
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
     nomad_logs = "${var.nomad_logs}"
     asapo_user = "${var.asapo_user}"
+    n_brokers = "${var.n_brokers}"
   }
 }
 

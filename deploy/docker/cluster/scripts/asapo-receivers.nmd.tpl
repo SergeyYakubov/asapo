@@ -14,7 +14,7 @@ job "asapo-receivers" {
   }
 
   group "receivers" {
-    count = 1
+    count = ${n_receivers}
 
     restart {
       attempts = 2

@@ -14,6 +14,9 @@ RECURSORS=["\"131.169.40.200\"",\""131.169.194.200\""]
 
 ASAPO_USER=`id -u`:`id -g`
 
+ASAPO_VAR_FILE=`pwd`/asapo_overwrite_vars.tf
+
+
 # use ib interface for service discovery (all communications goes thourgh this interface)
 # todo: use ib only for communications with receiver (asapo discovery service should return correct ip using node meta IB_ADDRESS)
 USE_IP_OVER_IB=true
@@ -56,6 +59,10 @@ docker rm -f asapo
 
 docker pull yakser/asapo-cluster
 
+if [ -f $ASAPO_VAR_FILE ]; then
+  MOUNT_VAR_FILE="-v $ASAPO_VAR_FILE:/var/run/asapo/user_vars.tf"
+fi
+
 dockerrun --rm  \
 	-u $ASAPO_USER \
  	-v /scratch/docker/100000.100000:/scratch/docker/100000.100000 \
@@ -65,6 +72,7 @@ dockerrun --rm  \
 	-v $DOCKER_TLS_KEY:/etc/nomad/key.pem \
 	-v $DOCKER_TLS_CERT:/etc/nomad/cert.pem \
 	-v $DATA_GLOBAL_SHARED:$DATA_GLOBAL_SHARED \
+	 $MOUNT_VAR_FILE \
 	-e NOMAD_ALLOC_DIR=$NOMAD_ALLOC_HOST_SHARED \
 	-e TF_VAR_service_dir=$SERVICE_DATA_CLUSTER_SHARED \
 	-e TF_VAR_data_dir=$DATA_GLOBAL_SHARED \

@@ -14,8 +14,7 @@ job "asapo-brokers" {
   }
 
   group "brokers" {
-    count = 1
-
+    count = ${n_brokers}
     restart {
       attempts = 2
       interval = "3m"
