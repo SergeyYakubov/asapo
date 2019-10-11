@@ -20,6 +20,7 @@ client {
   alloc_dir="$nomad_alloc_dir"
   meta {
       "asapo_service" = $is_asapo_lightweight_service_node
+      "ib_address" = "$ib_address"
   }
 }
 
