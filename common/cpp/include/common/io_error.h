@@ -51,6 +51,7 @@ auto const kBadFileNumber = IOErrorTemplate {
 auto const kResourceTemporarilyUnavailable = IOErrorTemplate {
     "Resource temporarily unavailable", IOErrorType::kResourceTemporarilyUnavailable
 };
+
 auto const kPermissionDenied = IOErrorTemplate {
     "Permission denied", IOErrorType::kPermissionDenied
 };

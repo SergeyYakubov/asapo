@@ -63,3 +63,7 @@ variable "kibana_port" {}
 variable "discovery_port" {}
 
 variable "authorizer_port" {}
+
+variable "n_receivers" {}
+
+variable "n_brokers" {}

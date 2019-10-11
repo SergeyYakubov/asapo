@@ -1,4 +1,5 @@
 {
+  "AdvertiseIP": "{{ if or (env "meta.ib_address") "none" | regexMatch "none" }}{{ env "NOMAD_IP_recv" }}{{ else }}{{ env "meta.ib_address" }}{{ end }}",
   "PerformanceDbServer":"localhost:8400/influxdb",
   "PerformanceDbName": "asapo_receivers",
   "DatabaseServer":"auto",
@@ -15,7 +16,7 @@
     "SizeGB": {{ env "NOMAD_META_receiver_dataserver_cache_size" }},
     "ReservedShare": 10
   },
-  "Tag": "{{ env "NOMAD_ADDR_recv" }}",
+  "Tag": "{{ env "attr.unique.hostname" }}",
   "WriteToDisk":true,
   "WriteToDb":true,
   "LogLevel": "{{ keyOrDefault "receiver_log_level" "info" }}",

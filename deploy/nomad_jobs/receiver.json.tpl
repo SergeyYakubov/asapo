@@ -1,4 +1,5 @@
 {
+  "AdvertiseIP": "127.0.0.1",
   "PerformanceDbServer":"localhost:8400/influxdb",
   "PerformanceDbName": "asapo_receivers",
   "DatabaseServer":"auto",

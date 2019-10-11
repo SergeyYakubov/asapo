@@ -17,6 +17,7 @@
 <filter asapo.docker>
   @type parser
   key_name log
+
   format json
   time_format %Y-%m-%d %H:%M:%S.%N
   reserve_data true
@@ -37,14 +38,15 @@
 {{ if eq $use_logs "true"}}
   <store>
   @type elasticsearch
-  hosts localhost:8400/elasticsearch
+  host localhost
+  port 8400
+  path /elasticsearch/
   flush_interval 5s
   logstash_format true
   time_key_format %Y-%m-%dT%H:%M:%S.%N
   time_key time
   time_key_exclude_timestamp true
   buffer_type memory
-  flush_interval 1s
   </store>
 {{ end }}
   <store>

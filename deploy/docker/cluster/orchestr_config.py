@@ -5,9 +5,9 @@ import socket
 import json
 import os
 
-def is_server(ip,server_names):
+def in_server_list(ip,server_names, check_single=False):
     servers = json.loads(server_names)
-    if len(servers) == 1:
+    if len(servers) == 1 and check_single == False:
         return "true"
     for server in json.loads(server_names):
         try:
@@ -33,13 +33,21 @@ def set_parameters():
     except:
         print ("cannot define own ip")
         my_ip = "127.0.0.1"
+
+    d['docker_endpoint']=my_get_env('DOCKER_ENDPOINT',"unix:///var/run/docker.sock")
     d['advertise_ip']=my_get_env('ADVERTISE_IP',my_ip)
     d['n_servers']=my_get_env('N_SERVERS',1)
     d['server_adresses']=my_get_env('SERVER_ADRESSES','["'+socket.gethostname()+'"]')
-    d['is_server']=is_server(d['advertise_ip'],d['server_adresses'])
+    d['is_server']=in_server_list(d['advertise_ip'],d['server_adresses'])
+    if d['is_server']=="true":
+        d['bootstrap_expect_string'] = "bootstrap_expect = "+ str(d['n_servers'])
+    else:
+        d['bootstrap_expect_string'] = ""
     d['ib_address']=my_get_env('IB_ADDRESS',"none")
     d['nomad_alloc_dir']=my_get_env('NOMAD_ALLOC_DIR','')
     d['recursors']=my_get_env('RECURSORS','["8.8.8.8"]')
+    lightweight_service_nodes=my_get_env('ASAPO_LIGHTWEIGHT_SERVICE_NODES','[]')
+    d['is_asapo_lightweight_service_node']=in_server_list(d['advertise_ip'],lightweight_service_nodes, True)
     return d
 
 def process_file(file_in,file_out):

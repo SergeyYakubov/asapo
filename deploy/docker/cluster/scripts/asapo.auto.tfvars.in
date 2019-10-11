@@ -39,4 +39,5 @@ discovery_port = 5006
 authorizer_port = 5007
 
 
-
+n_receivers = 1
+n_brokers = 1

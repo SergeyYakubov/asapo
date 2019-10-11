@@ -1,6 +1,10 @@
 job "asapo-mongo" {
   datacenters = ["dc1"]
-
+  affinity {
+    attribute = "$${meta.asapo_service}"
+    value     = "false"
+    weight    = 100
+  }
   update {
     max_parallel = 1
     min_healthy_time = "10s"
@@ -24,6 +28,9 @@ job "asapo-mongo" {
 
       config {
         network_mode = "host"
+	    privileged = true
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
         image = "mongo:${mongo_version}"
         volumes = ["/${service_dir}/mongodb:/data/db"]
       }

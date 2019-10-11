@@ -290,10 +290,13 @@ std::unique_ptr<sockaddr_in> SystemIO::BuildSockaddrIn(const std::string& addres
     std::string host;
     uint16_t port = 0;
     std::tie(host, port) = *hostname_port_tuple;
-    host = ResolveHostnameToIp(host, err);
-    if (*err != nullptr) {
-        return nullptr;
-    }
+
+// this is not thread safe call we should not resolve hostname here - we actually already have ip in address.
+// todo: remove this
+//    host = ResolveHostnameToIp(host, err);
+//    if (*err != nullptr) {
+//        return nullptr;
+//    }
 
     short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {

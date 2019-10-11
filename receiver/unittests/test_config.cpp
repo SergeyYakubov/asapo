@@ -59,9 +59,10 @@ class ConfigTests : public Test {
         test_config.use_datacache = false;
         test_config.datacache_reserved_share = 10;
         test_config.datacache_size_gb = 2;
-        test_config.source_host = "host";
+        test_config.advertise_ip = "host";
         test_config.dataserver.nthreads = 5;
         test_config.discovery_server = "discovery";
+        test_config.advertise_ip = "0.0.0.1";
     }
 
 };
@@ -90,10 +91,11 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->use_datacache, Eq(false));
     ASSERT_THAT(config->datacache_reserved_share, Eq(10));
     ASSERT_THAT(config->datacache_size_gb, Eq(2));
-    ASSERT_THAT(config->source_host, Eq("host"));
     ASSERT_THAT(config->dataserver.nthreads, Eq(5));
     ASSERT_THAT(config->dataserver.tag, Eq("receiver1_ds"));
     ASSERT_THAT(config->discovery_server, Eq("discovery"));
+    ASSERT_THAT(config->advertise_ip, Eq("0.0.0.1"));
+
 }
 
 
@@ -103,7 +105,7 @@ TEST_F(ConfigTests, ErrorReadSettings) {
     std::vector<std::string>fields {"PerformanceDbServer", "ListenPort", "DataServer", "ListenPort", "WriteToDisk",
                                     "WriteToDb", "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
                                     "AuthorizationServer", "AuthorizationInterval", "RootFolder", "PerformanceDbName", "LogLevel",
-                                    "SourceHost", "NThreads", "DiscoveryServer"};
+                                    "NThreads", "DiscoveryServer", "AdvertiseIP"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfig(test_config, field);
         ASSERT_THAT(err, Ne(nullptr));

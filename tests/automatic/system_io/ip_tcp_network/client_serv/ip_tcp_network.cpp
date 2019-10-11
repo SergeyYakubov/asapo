@@ -16,7 +16,8 @@ using asapo::M_AssertEq;
 
 using namespace std::chrono;
 
-static const std::unique_ptr<asapo::IO> io(asapo::GenerateDefaultIO());
+static const std::unique_ptr<asapo::IO>
+    io(asapo::GenerateDefaultIO());
 static const std::string kListenAddress = "127.0.0.1:60123";
 static std::promise<void> kThreadStarted;
 static const int kNumberOfChecks = 2;
@@ -158,7 +159,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "[META] Check unknown host" << std::endl;
     io->CreateAndConnectIPTCPSocket("some-host-that-might-not-exists.aa:1234", &err);
-    if(asapo::IOErrorTemplates::kUnableToResolveHostname != err) {
+    if(err != asapo::IOErrorTemplates::kAddressNotValid) {
         ExitIfErrIsNotOk(&err, 303);
     }
 

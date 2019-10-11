@@ -1,5 +1,10 @@
 job "asapo-perfmetrics" {
   datacenters = ["dc1"]
+  affinity {
+    attribute = "$${meta.asapo_service}"
+    value     = "true"
+    weight    = 100
+  }
 
 #  update {
 #    max_parallel = 1
@@ -22,6 +27,9 @@ job "asapo-perfmetrics" {
       user = "${asapo_user}"
       config {
         network_mode = "host"
+	    privileged = true
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
         image = "influxdb:${influxdb_version}"
         volumes = ["/${service_dir}/influxdb:/var/lib/influxdb"]
       }
@@ -69,6 +77,9 @@ job "asapo-perfmetrics" {
 
       config {
         network_mode = "host"
+	    privileged = true
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
         image = "grafana/grafana:${grafana_version}"
         volumes = ["/${service_dir}/grafana:/var/lib/grafana"]
       }

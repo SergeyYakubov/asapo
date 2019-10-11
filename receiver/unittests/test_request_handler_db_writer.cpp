@@ -71,7 +71,7 @@ class DbWriterHandlerTests : public Test {
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_default_stream = "detector";
     std::string expected_stream = "stream";
-    std::string expected_hostname = "host";
+    std::string expected_host_ip = "127.0.0.1";
     uint64_t expected_port = 1234;
     uint64_t expected_buf_id = 18446744073709551615ull;
     std::string expected_file_name = "2";
@@ -89,7 +89,7 @@ class DbWriterHandlerTests : public Test {
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, ""});
         config.database_uri = "127.0.0.1:27017";
-        config.source_host = expected_hostname;
+        config.advertise_ip = expected_host_ip;
         config.dataserver.listen_port = expected_port;
         SetReceiverConfig(config, "none");
 
@@ -173,7 +173,7 @@ FileInfo DbWriterHandlerTests::PrepareFileInfo() {
     file_info.name = expected_file_name;
     file_info.id = expected_id;
     file_info.buf_id = expected_buf_id;
-    file_info.source = expected_hostname + ":" + std::to_string(expected_port);
+    file_info.source = expected_host_ip + ":" + std::to_string(expected_port);
     file_info.metadata = expected_metadata;
     return file_info;
 }

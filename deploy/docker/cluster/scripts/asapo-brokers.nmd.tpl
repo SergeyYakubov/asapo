@@ -1,5 +1,10 @@
 job "asapo-brokers" {
   datacenters = ["dc1"]
+  affinity {
+    attribute = "$${meta.asapo_service}"
+    value     = "false"
+    weight    = 100
+  }
 
   update {
     max_parallel = 1
@@ -9,8 +14,7 @@ job "asapo-brokers" {
   }
 
   group "brokers" {
-    count = 1
-
+    count = ${n_brokers}
     restart {
       attempts = 2
       interval = "3m"
@@ -23,6 +27,9 @@ job "asapo-brokers" {
       user = "${asapo_user}"
       config {
         network_mode = "host"
+	    privileged = true
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
         image = "yakser/asapo-broker${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/broker/config.json"]

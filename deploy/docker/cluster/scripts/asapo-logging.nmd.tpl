@@ -1,5 +1,11 @@
 job "asapo-logging" {
   datacenters = ["dc1"]
+  affinity {
+    attribute = "$${meta.asapo_service}"
+    value     = "true"
+    weight    = 100
+  }
+
 
 #  update {
 #    max_parallel = 1
@@ -27,6 +33,9 @@ job "asapo-logging" {
       }
       config {
         network_mode = "host"
+	    privileged = true
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
         image = "yakser/fluentd_elastic"
         volumes = ["local/fluentd.conf:/fluentd/etc/fluent.conf",
         "/${service_dir}/fluentd:/shared"]
@@ -95,6 +104,9 @@ job "asapo-logging" {
           nproc = "8192"
         }
         network_mode = "host"
+	    privileged = true
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
         image = "yakser/elasticsearch:${elasticsearch_version}"
         volumes = ["/${service_dir}/esdatadir:/usr/share/elasticsearch/data"]
       }
@@ -131,6 +143,9 @@ job "asapo-logging" {
      user = "${asapo_user}"
      config {
        network_mode = "host"
+       privileged = true
+	   security_opt = ["no-new-privileges"]
+	   userns_mode = "host"
        image = "yakser/kibana:${kibana_version}"
        volumes = ["local/kibana.yml:/usr/share/kibana/config/kibana.yml"]
      }

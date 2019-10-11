@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     fi.source = "host:1234";
     fi.id = 1;
 
-    uint64_t subset_size=2;
+    uint64_t subset_size = 2;
 
     if (args.keyword != "Notconnected") {
         db.Connect("127.0.0.1", "data", "test");

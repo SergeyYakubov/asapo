@@ -22,8 +22,8 @@ node_meta = {
   ib_address = "$ib_address"
 }
 
-server =  $is_server
-bootstrap_expect = $n_servers
+server = $is_server
+$bootstrap_expect_string
 
 rejoin_after_leave = true
 retry_join = $server_adresses
