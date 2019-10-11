@@ -36,7 +36,7 @@ Error GetLastErrorFromErrno() {
     case EAGAIN:
         return IOErrorTemplates::kResourceTemporarilyUnavailable.Generate();
     case ENETUNREACH:
-        return IOErrorTemplates::kUnreachableNetwork.Generate();
+        return IOErrorTemplates::kAddressNotValid.Generate();
     case ENOENT:
     case ENOTDIR:
         return IOErrorTemplates::kFileNotFound.Generate();

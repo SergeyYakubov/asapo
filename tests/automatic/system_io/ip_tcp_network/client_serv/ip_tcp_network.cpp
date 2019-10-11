@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "[META] Check unknown host" << std::endl;
     io->CreateAndConnectIPTCPSocket("some-host-that-might-not-exists.aa:1234", &err);
-    if(err != asapo::IOErrorTemplates::kUnreachableNetwork) {
+    if(err != asapo::IOErrorTemplates::kAddressNotValid) {
         ExitIfErrIsNotOk(&err, 303);
     }
 
