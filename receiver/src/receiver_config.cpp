@@ -34,6 +34,7 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     (err = parser.GetUInt64("AuthorizationInterval", &config.authorization_interval_ms)) ||
     (err = parser.GetString("RootFolder", &config.root_folder)) ||
     (err = parser.GetString("PerformanceDbName", &config.performance_db_name)) ||
+    (err = parser.GetString("AdvertiseIP", &config.advertise_ip)) ||
     (err = parser.GetString("LogLevel", &log_level));
 
     if (err) {
@@ -41,11 +42,6 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     }
 
     config.dataserver.tag = config.tag + "_ds";
-
-    config.source_host = io__->GetHostName(&err);
-    if (err) {
-        return err;
-    }
 
     config.log_level = StringToLogLevel(log_level, &err);
     return err;

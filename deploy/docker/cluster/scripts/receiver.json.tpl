@@ -1,4 +1,5 @@
 {
+  "AdvertiseIP": "{{ env "NOMAD_IP_recv" }}",
   "PerformanceDbServer":"localhost:8400/influxdb",
   "PerformanceDbName": "asapo_receivers",
   "DatabaseServer":"auto",

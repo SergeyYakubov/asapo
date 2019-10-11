@@ -49,6 +49,8 @@ Error IOErrorFromGetLastError() {
         return IOErrorTemplates::kPermissionDenied.Generate();
     case ERROR_CONNECTION_REFUSED:
         return IOErrorTemplates::kConnectionRefused.Generate();
+    case WSAEADDRNOTAVAIL:
+        return IOErrorTemplates::kUnreachableNetwork.Generate();
     case WSAEFAULT:
         return IOErrorTemplates::kInvalidMemoryAddress.Generate();
     case WSAECONNRESET:

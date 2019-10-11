@@ -56,7 +56,7 @@ FileInfo RequestHandlerDbWrite::PrepareFileInfo(const Request* request) const {
     file_info.size = request->GetDataSize();
     file_info.id = request->GetDataID();
     file_info.buf_id = request->GetSlotId();
-    file_info.source = GetReceiverConfig()->source_host + ":" + string_format("%ld",
+    file_info.source = GetReceiverConfig()->advertise_ip + ":" + string_format("%ld",
                        GetReceiverConfig()->dataserver.listen_port);
     file_info.metadata = request->GetMetaData();
     return file_info;

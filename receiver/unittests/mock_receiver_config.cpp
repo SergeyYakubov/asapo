@@ -61,6 +61,7 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
     config_string += "," +  Key("WriteToDisk", error_field) + (config.write_to_disk ? "true" : "false");
     config_string += "," +  Key("WriteToDb", error_field) + (config.write_to_db ? "true" : "false");
     config_string += "," +  Key("LogLevel", error_field) + "\"" + log_level + "\"";
+    config_string += "," +  Key("AdvertiseIP", error_field) + "\"" + config.advertise_ip + "\"";
     config_string += "," +  Key("Tag", error_field) + "\"" + config.tag + "\"";
     config_string += "," +  Key("RootFolder", error_field) + "\"" + config.root_folder + "\"";
     config_string += "}";
@@ -70,20 +71,7 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
         testing::Return(config_string)
     );
 
-    if (error_field == "SourceHost") {
-        EXPECT_CALL(mock_io, GetHostName_t(_)).
-        WillOnce(
-            DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
-                  Return("")
-                 ));
-    } else if (error_field == "none") {
-        EXPECT_CALL(mock_io, GetHostName_t(_)).
-        WillOnce(
-            DoAll(SetArgPointee<0>(nullptr),
-                  Return(config.source_host)
-                 ));
-    }
-
+    printf("%s\n", config_string.c_str());
     auto err = config_factory.SetConfig("fname");
 
     config_factory.io__.release();
