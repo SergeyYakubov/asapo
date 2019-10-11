@@ -236,14 +236,15 @@ Error MongoDBClient::InsertAsSubset(const FileInfo& file,
     if (err) {
         return err;
     }
-    auto query = BCON_NEW ("$and","[","{","_id", BCON_INT64(subset_id),"}","{","images._id","{","$ne",BCON_INT64(file.id),"}","}","]");
+    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(subset_id), "}", "{", "images._id", "{", "$ne",
+                           BCON_INT64(file.id), "}", "}", "]");
     auto update = BCON_NEW ("$setOnInsert", "{",
                             "size", BCON_INT64 (subset_size),
                             "}",
                             "$addToSet", "{",
                             "images", BCON_DOCUMENT(document.get()), "}");
 
-    err = AddBsonDocumentToArray(query, update,ignore_duplicates);
+    err = AddBsonDocumentToArray(query, update, ignore_duplicates);
 
     bson_destroy (query);
     bson_destroy (update);

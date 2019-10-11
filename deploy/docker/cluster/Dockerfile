@@ -50,7 +50,7 @@ RUN cd /var/run/asapo asapo && terraform init
 
 COPY asapo-*  /usr/bin/
 
-COPY *.sh  /tmp/asapo_runscripts/
+COPY *.sh  asapo_overwrite_vars.tfvars /tmp/asapo_runscripts/
 
 COPY *.py  /etc/asapo/
 COPY *.hcl.tpl  /etc/asapo/

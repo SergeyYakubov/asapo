@@ -18,6 +18,7 @@ enum class IOErrorType {
     kAddressAlreadyInUse,
     kConnectionRefused,
     kConnectionResetByPeer,
+    kUnreachableNetwork,
     kTimeout,
     kFileAlreadyExists,
     kNoSpaceLeft,
@@ -51,6 +52,11 @@ auto const kBadFileNumber = IOErrorTemplate {
 auto const kResourceTemporarilyUnavailable = IOErrorTemplate {
     "Resource temporarily unavailable", IOErrorType::kResourceTemporarilyUnavailable
 };
+
+auto const kUnreachableNetwork = IOErrorTemplate {
+    "Network is unreachable", IOErrorType::kUnreachableNetwork
+};
+
 auto const kPermissionDenied = IOErrorTemplate {
     "Permission denied", IOErrorType::kPermissionDenied
 };
