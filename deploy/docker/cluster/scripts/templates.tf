@@ -75,6 +75,7 @@ data "template_file" "asapo_mongo" {
   template = "${file("${var.job_scripts_dir}/asapo-mongo.nmd.tpl")}"
   vars = {
     service_dir = "${var.service_dir}"
+    mongo_dir = "${var.mongo_dir}"
     mongo_version = "${var.mongo_version}"
     mongo_total_memory_size = "${var.mongo_total_memory_size}"
     mongo_port = "${var.mongo_port}"

@@ -3,8 +3,8 @@
 #folders
 NOMAD_ALLOC_HOST_SHARED=/tmp/asapo/container_host_shared/nomad_alloc
 SERVICE_DATA_CLUSTER_SHARED=/home/yakubov/asapo/asapo_cluster_shared/service_data
-DATA_GLOBAL_SHARED=/home/yakubov/asapo/global_shared/data
-
+DATA_GLOBAL_SHARED=/gpfs/petra3/scratch/yakubov/asapo_shared
+MONGO_DIR=/scratch/mongodb # due to performance reasons mongodb can benefit from writing to local filesystem (HA to be worked on)
 #service distribution
 MAX_NOMAD_SERVERS=3 #  rest are clients
 N_ASAPO_LIGHTWEIGHT_SERVICE_NODES=1 # where to put influx, elk, ... . Rest are receivers, brokers, mongodb
@@ -38,8 +38,8 @@ SERVER_ADRESSES=`scontrol show hostnames $SLURM_JOB_NODELIST | head -$N_SERVERS 
 ASAPO_LIGHTWEIGHT_SERVICE_NODES=`scontrol show hostnames $SLURM_JOB_NODELIST | head -$N_ASAPO_LIGHTWEIGHT_SERVICE_NODES | 'BEGIN{printf "["} {printf "%s\"%s\"",sep,$0; sep=","} END{print "]"}'`
 
 # make folders if not exist
-mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
-chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
+mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $MONGO_DIR
+chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $MONGO_DIR
 cd $SERVICE_DATA_CLUSTER_SHARED
 mkdir esdatadir fluentd grafana influxdb mongodb
 chmod 777 *
@@ -72,6 +72,7 @@ dockerrun --rm  \
 	-e NOMAD_ALLOC_DIR=$NOMAD_ALLOC_HOST_SHARED \
 	-e TF_VAR_service_dir=$SERVICE_DATA_CLUSTER_SHARED \
 	-e TF_VAR_data_dir=$DATA_GLOBAL_SHARED \
+	-e TF_VAR_mongo_dir=$MONGO_DIR \
 	-e ADVERTISE_IP=$ADVERTISE_IP \
 	-e RECURSORS=$RECURSORS \
 	-e TF_VAR_asapo_user=$ASAPO_USER \

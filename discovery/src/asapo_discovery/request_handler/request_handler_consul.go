@@ -35,24 +35,33 @@ func (c *SafeCounter) Next(size int) int {
 
 var counter SafeCounter
 
-func (rh *ConsulRequestHandler) GetServices(name string) ([]string, error) {
+func (rh *ConsulRequestHandler) GetServices(name string,use_ib bool) ([]string, error) {
 	var result = make([]string, 0)
 	services, _, err := rh.client.Health().Service(name, "", true, nil)
 	if err != nil {
 		return nil, err
 	}
 	for _, service := range (services) {
-		result = append(result, service.Node.Address+":"+strconv.Itoa(service.Service.Port))
+		var address string
+		if use_ib {
+			var ok bool
+			address,ok  = service.Node.Meta["ib_address"];
+			if !ok || address=="none" {
+				address = service.Node.Address
+			}
+		} else {
+			address = service.Node.Address
+		}
+		result = append(result, address+":"+strconv.Itoa(service.Service.Port))
 	}
 	sort.Strings(result)
 	return result, nil
 }
 
-func (rh *ConsulRequestHandler) GetReceivers() ([]byte, error) {
+func (rh *ConsulRequestHandler) GetReceivers(use_ib bool) ([]byte, error) {
 	if len(rh.staticHandler.receiverResponce.Uris)>0 {
-		return rh.staticHandler.GetReceivers()
+		return rh.staticHandler.GetReceivers(false)
 	}
-
 
 	var response Responce
 	response.MaxConnections = rh.MaxConnections
@@ -61,7 +70,7 @@ func (rh *ConsulRequestHandler) GetReceivers() ([]byte, error) {
 		return nil, errors.New("consul client not connected")
 	}
 	var err error
-	response.Uris, err = rh.GetServices("asapo-receiver")
+	response.Uris, err = rh.GetServices("asapo-receiver",use_ib)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +85,7 @@ func (rh *ConsulRequestHandler) GetBroker() ([]byte, error) {
 	if (rh.client == nil) {
 		return nil, errors.New("consul client not connected")
 	}
-	response, err := rh.GetServices("asapo-broker")
+	response, err := rh.GetServices("asapo-broker",false)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +106,7 @@ func (rh *ConsulRequestHandler) GetMongo() ([]byte, error) {
 	if (rh.client == nil) {
 		return nil, errors.New("consul client not connected")
 	}
-	response, err := rh.GetServices("mongo")
+	response, err := rh.GetServices("mongo",false)
 	if err != nil {
 		return nil, err
 	}

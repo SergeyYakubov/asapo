@@ -11,7 +11,7 @@ type StaticRequestHandler struct {
 }
 
 
-func (rh *StaticRequestHandler) GetReceivers() ([]byte, error) {
+func (rh *StaticRequestHandler) GetReceivers(bool) ([]byte, error) {
 	return utils.MapToJson(&rh.receiverResponce)
 }
 
