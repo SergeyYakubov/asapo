@@ -8,7 +8,7 @@
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "DataServer": {
-    "NThreads": 2,
+    "NThreads": {{ env "NOMAD_META_receiver_dataserver_nthreads" }},
     "ListenPort": {{ env "NOMAD_PORT_recv_ds" }}
   },
   "DataCache": {

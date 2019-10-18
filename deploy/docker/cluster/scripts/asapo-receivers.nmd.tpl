@@ -77,6 +77,7 @@ job "asapo-receivers" {
 
       meta {
         receiver_dataserver_cache_size = "${receiver_dataserver_cache_size}"
+        receiver_dataserver_nthreads = "${receiver_dataserver_nthreads}"
       }
 
 

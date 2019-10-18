@@ -16,6 +16,8 @@ job_scripts_dir = "/var/run/asapo"
 receiver_total_memory_size = "2000"
 
 receiver_dataserver_cache_size = "1" #gb
+receiver_dataserver_nthreads = 4
+
 grafana_total_memory_size = "256"
 
 influxdb_total_memory_size = "256"

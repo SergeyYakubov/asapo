@@ -130,14 +130,12 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
                    const std::string& stream, bool write_files) {
 
     asapo::Error err;
-    if (iterations > 0) { // send wrong meta, for negative integration tests
-        err = producer->SendMetaData("bla", &ProcessAfterMetaDataSend);
-    } else {
+    if (iterations == 0) {
         err = producer->SendMetaData("{\"dummy_meta\":\"test\"}", &ProcessAfterMetaDataSend);
-    }
-    if (err) {
-        std::cerr << "Cannot send metadata: " << err << std::endl;
-        return false;
+        if (err) {
+            std::cerr << "Cannot send metadata: " << err << std::endl;
+            return false;
+        }
     }
 
     for(uint64_t i = 0; i < iterations; i++) {
@@ -219,6 +217,7 @@ void PrintOutput(const Args& args, const system_clock::time_point& start) {
     double rate = args.iterations / duration_sec;
     std::cout << "Rate: " << rate << " Hz" << std::endl;
     std::cout << "Bandwidth " << size_gb / duration_sec << " Gbit/s" << std::endl;
+    std::cout << "Bandwidth " << size_gb / duration_sec / 8 << " GBytes/s" << std::endl;
 }
 
 
@@ -229,7 +228,11 @@ int main (int argc, char* argv[]) {
 
     auto producer = CreateProducer(args);
 
-    iterations_remained = args.iterations * args.images_in_set + 1;
+    if (args.iterations == 0) {
+        iterations_remained = 1; // metadata
+    } else {
+        iterations_remained = args.iterations * args.images_in_set;
+    }
 
     system_clock::time_point start_time = system_clock::now();
 

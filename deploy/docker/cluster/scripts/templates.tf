@@ -38,6 +38,7 @@ data "template_file" "asapo_receivers" {
     nomad_logs = "${var.nomad_logs}"
     receiver_total_memory_size = "${var.receiver_total_memory_size}"
     receiver_dataserver_cache_size = "${var.receiver_dataserver_cache_size}"
+    receiver_dataserver_nthreads = "${var.receiver_dataserver_nthreads}"
     asapo_user = "${var.asapo_user}"
     n_receivers = "${var.n_receivers}"
   }

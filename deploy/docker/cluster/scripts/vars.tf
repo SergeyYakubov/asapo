@@ -30,6 +30,8 @@ variable "receiver_total_memory_size" {}
 
 variable "receiver_dataserver_cache_size" {}
 
+variable "receiver_dataserver_nthreads" {}
+
 variable "grafana_total_memory_size" {}
 
 variable "influxdb_total_memory_size" {}

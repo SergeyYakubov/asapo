@@ -51,4 +51,3 @@ $1 localhost:8400 ${beamtime_id} 100 1000 4 0 100
 $2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 5000 1 > out
 cat out
 cat out   | grep "Processed 1000 file(s)"
-cat out | grep "Cannot get metadata"
