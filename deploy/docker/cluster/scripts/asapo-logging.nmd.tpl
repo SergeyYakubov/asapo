@@ -19,7 +19,7 @@ job "asapo-logging" {
     count = "%{ if nomad_logs }0%{ else }1%{ endif }"
     restart {
       attempts = 2
-      interval = "3m"h nnodes
+      interval = "3m"
 
       delay = "15s"
       mode = "delay"

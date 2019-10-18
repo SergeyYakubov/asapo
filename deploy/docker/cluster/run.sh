@@ -3,6 +3,7 @@
 NOMAD_ALLOC_HOST_SHARED=/tmp/asapo/container_host_shared/nomad_alloc
 SERVICE_DATA_CLUSTER_SHARED=/tmp/asapo/asapo_cluster_shared/service_data
 DATA_GLOBAL_SHARED=/tmp/asapo/global_shared/data
+MONGO_DIR=$SERVICE_DATA_CLUSTER_SHARED/mongodb
 
 ASAPO_USER=`id -u`:`id -g`
 
@@ -35,6 +36,7 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
 	-e NOMAD_ALLOC_DIR=$NOMAD_ALLOC_HOST_SHARED \
 	-e TF_VAR_service_dir=$SERVICE_DATA_CLUSTER_SHARED \
 	-e TF_VAR_data_dir=$DATA_GLOBAL_SHARED \
+	-e TF_VAR_mongo_dir=$MONGO_DIR \
 	-e ADVERTISE_IP=$ADVERTISE_IP \
 	-e RECURSORS=$RECURSORS \
 	-e TF_VAR_asapo_user=$ASAPO_USER \
