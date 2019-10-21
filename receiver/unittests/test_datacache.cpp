@@ -122,18 +122,29 @@ TEST_F(DataCacheTests, PrepareToReadFailsIfTooCloseToCurrentPointer) {
 }
 
 TEST_F(DataCacheTests, GetFreeSlotRemovesOldMetadataRecords) {
+    DataCache cache{expected_cache_size, 0};
     CacheMeta* meta3, *meta4, *meta5;
     CacheMeta* meta;
-    cache.GetFreeSlotAndLock(10, &meta1);
+    auto addr = cache.GetFreeSlotAndLock(10, &meta1);
     cache.GetFreeSlotAndLock(10, &meta2);
     cache.GetFreeSlotAndLock(expected_cache_size - 30, &meta3);
-    cache.GetFreeSlotAndLock(10, &meta4);
+    auto id1 = meta1->id;
+    auto id2 = meta2->id;
+    auto id3 = meta3->id;
 
+    cache.UnlockSlot(meta1);
+    cache.UnlockSlot(meta2);
+    cache.UnlockSlot(meta3);
+
+    cache.GetFreeSlotAndLock(10, &meta4);
+    auto id4 = meta4->id;
+
+    cache.UnlockSlot(meta4);
     cache.GetFreeSlotAndLock(30, &meta5);
-    uint8_t* addr1 = (uint8_t*) cache.GetSlotToReadAndLock(meta1->id, 10, &meta);
-    uint8_t* addr2 = (uint8_t*) cache.GetSlotToReadAndLock(meta2->id, 10, &meta);
-    uint8_t* addr3 = (uint8_t*) cache.GetSlotToReadAndLock(meta3->id, expected_cache_size - 30, &meta);
-    uint8_t* addr4 = (uint8_t*) cache.GetSlotToReadAndLock(meta4->id, 10, &meta);
+    uint8_t* addr1 = (uint8_t*) cache.GetSlotToReadAndLock(id1, 10, &meta);
+    uint8_t* addr2 = (uint8_t*) cache.GetSlotToReadAndLock(id2, 10, &meta);
+    uint8_t* addr3 = (uint8_t*) cache.GetSlotToReadAndLock(id3, expected_cache_size - 30, &meta);
+    uint8_t* addr4 = (uint8_t*) cache.GetSlotToReadAndLock(id4, 10, &meta);
 
     ASSERT_THAT(addr1, Eq(nullptr));
     ASSERT_THAT(addr2, Eq(nullptr));
@@ -141,6 +152,48 @@ TEST_F(DataCacheTests, GetFreeSlotRemovesOldMetadataRecords) {
     ASSERT_THAT(addr4, Ne(nullptr));
     ASSERT_THAT(meta->size, Eq(10));
 }
+
+TEST_F(DataCacheTests, GetFreeSlotRemovesOldWhenCrossTheBoundary) {
+    DataCache cache{expected_cache_size, 0};
+    CacheMeta* meta1, *meta2, *meta3;
+    CacheMeta* meta4,*meta5,*meta;
+    auto addr1_alloc = cache.GetFreeSlotAndLock(expected_cache_size/3-1, &meta1);
+    auto addr2_alloc = cache.GetFreeSlotAndLock(expected_cache_size/3-1, &meta2);
+    auto addr3_alloc = cache.GetFreeSlotAndLock(expected_cache_size/3-1, &meta3);
+    auto id1 = meta1->id;
+    auto id2 = meta2->id;
+    auto id3 = meta3->id;
+    cache.UnlockSlot(meta1);
+    cache.UnlockSlot(meta2);
+    cache.UnlockSlot(meta3);
+    auto addr4_alloc = cache.GetFreeSlotAndLock(expected_cache_size/2+5, &meta4);
+    auto id4 = meta4->id;
+    cache.UnlockSlot(meta4);
+    auto addr5_alloc = cache.GetFreeSlotAndLock(expected_cache_size/2+5, &meta5);
+    auto id5 = meta5->id;
+
+    uint8_t* addr1 = (uint8_t*) cache.GetSlotToReadAndLock(id1, expected_cache_size/3-1, &meta);
+    uint8_t* addr2 = (uint8_t*) cache.GetSlotToReadAndLock(id2, expected_cache_size/3-1, &meta);
+    uint8_t* addr3 = (uint8_t*) cache.GetSlotToReadAndLock(id3, expected_cache_size/3-1, &meta);
+    uint8_t* addr4 = (uint8_t*) cache.GetSlotToReadAndLock(id4, expected_cache_size/2+5, &meta);
+    uint8_t* addr5 = (uint8_t*) cache.GetSlotToReadAndLock(id5, expected_cache_size/2+5, &meta);
+
+    ASSERT_THAT(addr1_alloc, Ne(nullptr));
+    ASSERT_THAT(addr2_alloc, Ne(nullptr));
+    ASSERT_THAT(addr3_alloc, Ne(nullptr));
+    ASSERT_THAT(addr4_alloc, Ne(nullptr));
+    ASSERT_THAT(addr5_alloc, Ne(nullptr));
+
+    ASSERT_THAT(addr1, Eq(nullptr));
+    ASSERT_THAT(addr2, Eq(nullptr));
+    ASSERT_THAT(addr3, Eq(nullptr));
+    ASSERT_THAT(addr4, Eq(nullptr));
+    ASSERT_THAT(addr5, Ne(nullptr));
+
+
+    ASSERT_THAT(meta->size, Eq(expected_cache_size/2+5));
+}
+
 
 
 TEST_F(DataCacheTests, GetSlotToReadSizeOk) {
