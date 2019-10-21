@@ -1,4 +1,5 @@
 #include "data_cache.h"
+#include "data_cache.h"
 
 #include <iostream>
 #include <chrono>
@@ -97,21 +98,25 @@ bool Intersects(uint64_t left1, uint64_t right1, uint64_t left2, uint64_t right2
 }
 
 bool DataCache::CleanOldSlots(uint64_t size) {
-    uint64_t n_del = 0;
+    int64_t last_del = -1;
+    bool was_intersecting = false;
     for (uint64_t i = 0; i < meta_.size(); i++) {
         uint64_t start_position = (uint8_t*) meta_[i]->addr - cache_.get();
         if (Intersects(start_position, start_position + meta_[i]->size, cur_pointer_ - size, cur_pointer_)) {
-            n_del++;
+            last_del = i;
+            was_intersecting = true;
         } else {
-            break;
+            if (cur_pointer_ - size > 0 || was_intersecting) {
+                break; // if we (re)started from 0, the intersecting slot might be not number 0, so we don't break until intersection was found
+            }
         }
     }
 
-    for (uint64_t i = 0; i < n_del; i++) {
+    for (int i = 0; i <= last_del; i++) {
         if (meta_[i]->lock > 0) return false;
     }
 
-    meta_.erase(meta_.begin(), meta_.begin() + n_del);
+    meta_.erase(meta_.begin(), meta_.begin() + last_del + 1);
 
     return true;
 }
