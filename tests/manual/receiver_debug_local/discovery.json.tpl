@@ -2,7 +2,7 @@
   "Mode": "static",
   "Receiver": {
     "StaticEndpoints": [
-      "localhost:22001"
+      "127.0.0.1:22001"
     ],
     "MaxConnections": 32
   },

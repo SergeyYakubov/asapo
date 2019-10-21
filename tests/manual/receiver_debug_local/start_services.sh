@@ -2,4 +2,5 @@
 
 nomad run authorizer.nmd
 nomad run discovery.nmd
+nomad run broker.nmd
 nomad run nginx.nmd

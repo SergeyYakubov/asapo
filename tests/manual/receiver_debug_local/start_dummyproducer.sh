@@ -2,11 +2,11 @@
 
 beamtime_id=asapo_test
 
-nfiles=1000
+nfiles=10
 timeout=100
-fsize=10000
-mode=10 #tcp & no file write
-nthreads=32
+fsize=500000
+mode=0 #tcp & no file write
+nthreads=3
 
 exec=/home/yakubov/projects/asapo/cmake-build-debug/examples/producer/dummy-data-producer/dummy-data-producer
 
