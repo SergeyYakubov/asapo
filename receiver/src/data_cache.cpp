@@ -116,8 +116,8 @@ bool DataCache::CleanOldSlots(uint64_t size) {
         if (meta_[i]->lock > 0) return false;
     }
 
-    if (last_del >=0) {
-     meta_.erase(meta_.begin(), meta_.begin() + last_del + 1);
+    if (last_del >= 0) {
+        meta_.erase(meta_.begin(), meta_.begin() + last_del + 1);
     }
     return true;
 }

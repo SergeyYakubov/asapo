@@ -32,6 +32,8 @@ nomad run discovery.nmd
 
 mkdir -p ${receiver_folder}
 
+sleep 1
+
 $1 localhost:8400 ${beamtime_id} 100 1 1  0 30
 
 ls -ln ${receiver_folder}/1 | awk '{ print $5 }'| grep 100000
