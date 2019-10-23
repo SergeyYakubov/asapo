@@ -5,6 +5,7 @@ import "errors"
 type ReceiverInfo struct {
 	StaticEndpoints	 []string
 	MaxConnections   int
+	UseIBAddress bool
 }
 
 type BrokerInfo struct {

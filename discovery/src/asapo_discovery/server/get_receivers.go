@@ -10,7 +10,7 @@ func getService(service string) (answer []byte, code int) {
 	var err error
 	switch service {
 	case "receivers":
-		answer, err = requestHandler.GetReceivers()
+		answer, err = requestHandler.GetReceivers(settings.Receiver.UseIBAddress)
 		break
 	case "broker":
 		answer, err = requestHandler.GetBroker()

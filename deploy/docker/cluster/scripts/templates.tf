@@ -38,6 +38,7 @@ data "template_file" "asapo_receivers" {
     nomad_logs = "${var.nomad_logs}"
     receiver_total_memory_size = "${var.receiver_total_memory_size}"
     receiver_dataserver_cache_size = "${var.receiver_dataserver_cache_size}"
+    receiver_dataserver_nthreads = "${var.receiver_dataserver_nthreads}"
     asapo_user = "${var.asapo_user}"
     n_receivers = "${var.n_receivers}"
   }
@@ -74,6 +75,7 @@ data "template_file" "asapo_mongo" {
   template = "${file("${var.job_scripts_dir}/asapo-mongo.nmd.tpl")}"
   vars = {
     service_dir = "${var.service_dir}"
+    mongo_dir = "${var.mongo_dir}"
     mongo_version = "${var.mongo_version}"
     mongo_total_memory_size = "${var.mongo_total_memory_size}"
     mongo_port = "${var.mongo_port}"

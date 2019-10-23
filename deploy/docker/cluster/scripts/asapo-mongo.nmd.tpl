@@ -32,7 +32,7 @@ job "asapo-mongo" {
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "mongo:${mongo_version}"
-        volumes = ["/${service_dir}/mongodb:/data/db"]
+        volumes = ["${mongo_dir}:/data/db"]
       }
 
       resources {

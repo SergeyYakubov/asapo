@@ -1,7 +1,8 @@
 {
   "Mode": "consul",
   "Receiver": {
-    "MaxConnections": 32
+    "MaxConnections": 32,
+    "UseIBAddress": false
   },
   "Mongo": {
     "StaticEndpoint": "127.0.0.1:27017"

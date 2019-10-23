@@ -94,15 +94,24 @@ func (suite *ConsulHandlerTestSuite) TestInitOkUriNotFirst() {
 
 func (suite *ConsulHandlerTestSuite) TestGetReceivers() {
 	suite.handler.Init(consul_settings)
-	res, err := suite.handler.GetReceivers()
+	res, err := suite.handler.GetReceivers(false)
 	suite.NoError(err, "")
 	suite.Equal("{\"MaxConnections\":10,\"Uris\":[\"127.0.0.1:1234\",\"127.0.0.1:1235\"]}", string(res), "uris")
 }
 
+func (suite *ConsulHandlerTestSuite) TestGetReceiversWithIB() {
+	consul_settings.Receiver.UseIBAddress = true
+	suite.handler.Init(consul_settings)
+	res, err := suite.handler.GetReceivers(true)
+	suite.NoError(err, "")
+	suite.Equal("{\"MaxConnections\":10,\"Uris\":[\"10.10.0.1:1234\",\"10.10.0.1:1235\"]}", string(res), "uris")
+}
+
+
 func (suite *ConsulHandlerTestSuite) TestGetReceiversStatic() {
 	consul_settings.Receiver.StaticEndpoints= []string{"127.0.0.1:0000"}
 	suite.handler.Init(consul_settings)
-	res, err := suite.handler.GetReceivers()
+	res, err := suite.handler.GetReceivers(false)
 	suite.NoError(err, "")
 	suite.Equal("{\"MaxConnections\":10,\"Uris\":[\"127.0.0.1:0000\"]}", string(res), "uris")
 }
@@ -110,7 +119,7 @@ func (suite *ConsulHandlerTestSuite) TestGetReceiversStatic() {
 func (suite *ConsulHandlerTestSuite) TestGetReceiversWhenNotConnected() {
 	consul_settings.ConsulEndpoints = []string{"blabla"}
 	suite.handler.Init(consul_settings)
-	_, err := suite.handler.GetReceivers()
+	_, err := suite.handler.GetReceivers(false)
 	suite.Error(err, "")
 }
 

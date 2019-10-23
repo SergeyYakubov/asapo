@@ -24,7 +24,7 @@ func TestStaticHandlerInitOK(t *testing.T) {
 
 func TestStaticHandlerGetReceviersOK(t *testing.T) {
 	rh.Init(static_settings)
-	res,err := rh.GetReceivers()
+	res,err := rh.GetReceivers(false)
 	assert.Equal(t,string(res), "{\"MaxConnections\":1,\"Uris\":[\"ip1\",\"ip2\"]}")
 	assert.Nil(t, err)
 }

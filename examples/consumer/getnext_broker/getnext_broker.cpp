@@ -19,6 +19,9 @@ using asapo::Error;
 std::string group_id = "";
 std::mutex lock;
 
+uint64_t file_size = 0;
+
+
 struct Args {
     std::string server;
     std::string file_path;
@@ -89,6 +92,11 @@ std::vector<std::thread> StartThreads(const Args& params,
                 err = broker->GetNext(&fi, group_id, params.read_data ? &data : nullptr);
                 if (err == nullptr) {
                     (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
+                    if (file_size == 0) {
+                        lock.lock();
+                        file_size = fi.size;
+                        lock.unlock();
+                    }
                     if (params.read_data && (*nfiles)[i] < 10 && fi.size < 10) {
                         data[9] = 0;
                         std::cout << "Received: " << reinterpret_cast<char const*>(data.get()) << std::endl;
@@ -193,6 +201,12 @@ int main(int argc, char* argv[]) {
     }
     std::cout << "Errors : " << nerrors << std::endl;
     std::cout << "Elapsed : " << duration_ms << "ms" << std::endl;
-    std::cout << "Rate : " << 1000.0f * nfiles / (duration_ms - params.timeout_ms) << std::endl;
+    auto rate = 1000.0f * nfiles / (duration_ms - params.timeout_ms);
+    auto bw_gbytes = rate * file_size / 1000.0f / 1000.0f / 1000.0f;
+    std::cout << "Rate : " << rate << std::endl;
+    if (file_size > 0) {
+        std::cout << "Bandwidth " << bw_gbytes * 8 << " Gbit/s" << std::endl;
+        std::cout << "Bandwidth " << bw_gbytes << " GBytes/s" << std::endl;
+    }
     return nerrors == 0 ? 0 : 1;
 }

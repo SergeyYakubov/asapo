@@ -29,8 +29,6 @@ REM consumer
 "%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 5000  1 > out.txt
 type out.txt
 findstr /i /l /c:"Processed 1000 file(s)"  out.txt || goto :error
-findstr /i /l /c:"Cannot get metadata"  out.txt || goto :error
-
 
 goto :clean
 

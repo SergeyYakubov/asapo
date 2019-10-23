@@ -20,6 +20,7 @@ job "asapo-logging" {
     restart {
       attempts = 2
       interval = "3m"
+
       delay = "15s"
       mode = "delay"
     }
