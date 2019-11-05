@@ -55,17 +55,22 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
         return io_error;
     }
 
+
+    if (request->NeedSendMetaData()) {
+        io__->Send(sd_, (void*) request->metadata.c_str(), (size_t) request->header.meta_size, &io_error);
+        if (io_error) {
+            return io_error;
+        }
+    }
+
     if (request->NeedSendData()) {
         io__->Send(sd_, (void*) request->data.get(), (size_t)request->header.data_size, &io_error);
+        if (io_error) {
+            return io_error;
+        }
     }
 
-    if(io_error) {
-        return io_error;
-    }
-
-    io__->Send(sd_, (void*) request->metadata.c_str(), (size_t)request->header.meta_size, &io_error);
-    return io_error;
-
+    return nullptr;
 }
 
 Error RequestHandlerTcp::ReceiveResponse() {

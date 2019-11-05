@@ -25,6 +25,8 @@ namespace asapo {
 class SystemIO final : public IO {
   private:
     static const int kNetBufferSize;//TODO: need to set by config
+    static const size_t kMaxTransferChunkSize;
+
     static const int kWaitTimeoutMs;
 
     void ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const;

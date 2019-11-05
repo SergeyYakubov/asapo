@@ -13,7 +13,6 @@
 
 namespace  asapo {
 
-const size_t ProducerImpl::kMaxChunkSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(2); //2GiByte
 const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
 
 
@@ -58,10 +57,6 @@ Error CheckIngestMode(uint64_t ingest_mode) {
 }
 
 Error CheckProducerRequest(const EventHeader& event_header, uint64_t ingest_mode) {
-    if ((size_t)event_header.file_size > ProducerImpl::kMaxChunkSize) {
-        return ProducerErrorTemplates::kFileTooLarge.Generate();
-    }
-
     if (event_header.file_name.size() > kMaxMessageSize) {
         return ProducerErrorTemplates::kFileNameTooLong.Generate();
     }

@@ -6,7 +6,6 @@
 namespace asapo {
 
 enum class ProducerErrorType {
-    kFileTooLarge,
     kFileNameTooLong,
     kEmptyFileName,
     kNoData,
@@ -44,11 +43,6 @@ auto const kZeroDataSize = ProducerErrorTemplate {
 
 auto const kErrorSubsetSize = ProducerErrorTemplate {
     "Error in subset size", ProducerErrorType::kErrorSubsetSize
-};
-
-
-auto const kFileTooLarge = ProducerErrorTemplate {
-    "File too large", ProducerErrorType::kFileTooLarge
 };
 
 auto const kFileNameTooLong = ProducerErrorTemplate {

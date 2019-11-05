@@ -89,16 +89,6 @@ TEST_F(FileWriteHandlerTests, ErrorWhenZeroFileSize) {
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
 }
 
-TEST_F(FileWriteHandlerTests, ErrorWhenTooBigFileSize) {
-    EXPECT_CALL(*mock_request, GetDataSize())
-    .WillOnce(Return(asapo::kMaxFileSize + 1))
-    ;
-
-    auto err = handler.ProcessRequest(mock_request.get());
-
-    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
-}
-
 void FileWriteHandlerTests::MockRequestData() {
     EXPECT_CALL(*mock_request, GetDataSize())
     .WillOnce(Return(expected_file_size))

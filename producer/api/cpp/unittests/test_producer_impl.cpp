@@ -113,16 +113,10 @@ TEST_F(ProducerImplTests, ErrorIfFileEmpty) {
 }
 
 
-TEST_F(ProducerImplTests, ErrorIfSizeTooLarge) {
-    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("error checking")));
-    asapo::EventHeader event_header{1, asapo::ProducerImpl::kMaxChunkSize + 1, ""};
-    auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kFileTooLarge));
-}
 
 TEST_F(ProducerImplTests, ErrorIfSubsetSizeNotDefined) {
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("subset size")));
-    asapo::EventHeader event_header{1, asapo::ProducerImpl::kMaxChunkSize, "test", "", 1};
+    asapo::EventHeader event_header{1, 1000, "test", "", 1};
     auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kErrorSubsetSize));
 }

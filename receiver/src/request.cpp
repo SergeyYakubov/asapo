@@ -71,12 +71,13 @@ Error Request::ReceiveData() {
 
 Error Request::ReceiveRequestContent(ReceiverStatistics* statistics) {
     statistics->StartTimer(StatisticEntity::kNetwork);
-    auto err = ReceiveData();
+
+    auto err = ReceiveMetaData();
     if (err) {
         return err;
     }
 
-    err = ReceiveMetaData();
+    err = ReceiveData();
     if (err) {
         return err;
     }

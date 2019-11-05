@@ -18,7 +18,6 @@ class ProducerImpl : public Producer {
     std::unique_ptr<ReceiverDiscoveryService> discovery_service_;
     std::unique_ptr<RequestHandlerFactory> request_handler_factory_;
   public:
-    static const size_t kMaxChunkSize;
     static const size_t kDiscoveryServiceUpdateFrequencyMs;
 
     explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads, asapo::RequestHandlerType type);

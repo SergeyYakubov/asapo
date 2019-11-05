@@ -26,6 +26,7 @@ namespace asapo {
 
 const int SystemIO::kNetBufferSize = 1024 * 1024;
 const int SystemIO::kWaitTimeoutMs = 1000;
+const size_t SystemIO::kMaxTransferChunkSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(2); //2GiByte
 
 
 /*******************************************************************************
@@ -553,7 +554,8 @@ size_t SystemIO::Transfer(ssize_t (* method)(FileDescriptor, void*, size_t), Fil
     size_t already_transferred = 0;
 
     while (already_transferred < length) {
-        ssize_t received_amount = method(fd, (uint8_t*) buf + already_transferred, length - already_transferred);
+        ssize_t received_amount = method(fd, (uint8_t*) buf + already_transferred,
+                                         std::min(kMaxTransferChunkSize, length - already_transferred));
         if (received_amount == 0) {
             *err = ErrorTemplates::kEndOfFile.Generate();
             return already_transferred;

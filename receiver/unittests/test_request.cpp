@@ -163,13 +163,13 @@ TEST_F(RequestTests, HandleDoesNotReceiveDataWhenMetadataOnlyWasSent) {
 
 
 TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
+    ExpectReceiveMetaData(true);
     ExpectReceiveData(false);
     auto err = request->Handle(stat);
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
 }
 
 TEST_F(RequestTests, HandleReturnsErrorOnMetaDataReceive) {
-    ExpectReceiveData(true);
     ExpectReceiveMetaData(false);
     auto err = request->Handle(stat);
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));

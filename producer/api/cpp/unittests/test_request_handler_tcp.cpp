@@ -334,8 +334,8 @@ void RequestHandlerTcpTests::ExpectFailReceive(bool only_once) {
 
 void RequestHandlerTcpTests::ExpectOKSendAll(bool only_once) {
     ExpectOKSendHeader(only_once);
-    ExpectOKSendData(only_once);
     ExpectOKSendMetaData(only_once);
+    ExpectOKSendData(only_once);
 }
 
 
@@ -579,6 +579,7 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendData) {
     ExpectOKConnect();
     ExpectOKAuthorize();
     ExpectOKSendHeader();
+    ExpectOKSendMetaData();
     ExpectFailSendData();
 
     request_handler.PrepareProcessingRequestLocked();
@@ -591,7 +592,6 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendMetaData) {
     ExpectOKConnect();
     ExpectOKAuthorize();
     ExpectOKSendHeader();
-    ExpectOKSendData();
     ExpectFailSendMetaData();
 
     request_handler.PrepareProcessingRequestLocked();

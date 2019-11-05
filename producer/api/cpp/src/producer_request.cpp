@@ -33,6 +33,11 @@ bool ProducerRequest::NeedSendData() const {
     return true;
 }
 
+bool ProducerRequest::NeedSendMetaData() const {
+    return header.meta_size > 0;
+}
+
+
 ProducerRequest::~ProducerRequest() {
     if (!manage_data_memory && data != nullptr) {
         data.release();

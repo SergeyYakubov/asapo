@@ -25,6 +25,7 @@ class ProducerRequest : public GenericRequest {
     bool manage_data_memory;
     Error ReadDataFromFileIfNeeded(const IO* io);
     bool NeedSendData() const;
+    bool NeedSendMetaData() const;
 };
 
 }
