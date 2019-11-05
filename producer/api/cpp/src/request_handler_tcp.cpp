@@ -21,7 +21,7 @@ Error RequestHandlerTcp::Authorize(const std::string& beamtime_id) {
     if(err) {
         return err;
     }
-    return ReceiveResponse();
+    return ReceiveResponse(header);
 }
 
 
@@ -64,7 +64,11 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
     }
 
     if (request->NeedSendData()) {
-        io__->Send(sd_, (void*) request->data.get(), (size_t)request->header.data_size, &io_error);
+        if (request->DataFromFile()) {
+            io_error = io__->SendFile(sd_,  request->original_filepath, (size_t)request->header.data_size);
+        } else {
+            io__->Send(sd_, (void*) request->data.get(), (size_t)request->header.data_size, &io_error);
+        }
         if (io_error) {
             return io_error;
         }
@@ -73,7 +77,7 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
     return nullptr;
 }
 
-Error RequestHandlerTcp::ReceiveResponse() {
+Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_header) {
     Error err;
     SendDataResponse sendDataResponse;
     io__->Receive(sd_, &sendDataResponse, sizeof(sendDataResponse), &err);
@@ -82,14 +86,15 @@ Error RequestHandlerTcp::ReceiveResponse() {
     }
     switch (sendDataResponse.error_code) {
     case kNetErrorFileIdAlreadyInUse :
-        return ProducerErrorTemplates::kFileIdAlreadyInUse.Generate();
+        return ProducerErrorTemplates::kWrongInput.Generate("file id already in use: " + std::to_string(
+                    request_header.data_id));
     case kNetAuthorizationError : {
-        auto res_err = ProducerErrorTemplates::kAuthorizationFailed.Generate();
+        auto res_err = ProducerErrorTemplates::kWrongInput.Generate("authorization failed");
         res_err->Append(sendDataResponse.message);
         return res_err;
     }
     case kNetErrorErrorInMetadata : {
-        auto res_err = ProducerErrorTemplates::kErrorInMetadata.Generate();
+        auto res_err = ProducerErrorTemplates::kWrongInput.Generate();
         res_err->Append(sendDataResponse.message);
         return res_err;
     }
@@ -108,7 +113,7 @@ Error RequestHandlerTcp::TrySendToReceiver(const ProducerRequest* request) {
         return err;
     }
 
-    err = ReceiveResponse();
+    err = ReceiveResponse(request->header);
     if (err)  {
         return err;
     }
@@ -173,11 +178,12 @@ void RequestHandlerTcp::Disconnect() {
 }
 
 bool RequestHandlerTcp::ServerError(const Error& err) {
-    return err != nullptr && (err != ProducerErrorTemplates::kFileIdAlreadyInUse &&
-                              err != ProducerErrorTemplates::kErrorInMetadata);
+    return err != nullptr && (err != ProducerErrorTemplates::kWrongInput &&
+                              err != ProducerErrorTemplates::kLocalIOError
+                             );
 }
 
-Error RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {
+bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {
     for (auto receiver_uri : receivers_list_) {
         if (Disconnected()) {
             auto err = ConnectToReceiver(request->source_credentials, receiver_uri);
@@ -185,33 +191,29 @@ Error RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {
         }
 
         auto err = TrySendToReceiver(request);
-        if (ServerError(err))  {
+        if (err) {
             Disconnect();
             log__->Warning("cannot send data, opcode: " + std::to_string(request->header.op_code) +
                            ", id: " + std::to_string(request->header.data_id) + " to " + receiver_uri + ": " +
                            err->Explain());
+        }
+        if (ServerError(err))  {
             continue;
         }
 
         if (request->callback) {
             request->callback(request->header, std::move(err));
         }
-        return nullptr;
+        return true;
     }
-    return ProducerErrorTemplates::kCannotSendDataToReceivers.Generate();
+    log__->Warning("put back to the queue, request opcode: " + std::to_string(request->header.op_code) +
+                   ", id: " + std::to_string(request->header.data_id));
+    return false;
 }
 
 
-Error RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request) {
+bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request) {
     auto producer_request = static_cast<ProducerRequest*>(request);
-    auto err = producer_request->ReadDataFromFileIfNeeded(io__.get());
-    if (err) {
-        if (producer_request->callback) {
-            producer_request->callback(producer_request->header, std::move(err));
-        }
-        return nullptr;
-    }
-
     if (NeedRebalance()) {
         CloseConnectionToPeformRebalance();
     }
@@ -234,11 +236,10 @@ void RequestHandlerTcp::PrepareProcessingRequestLocked() {
     UpdateIfNewConnection();
 }
 
-void RequestHandlerTcp::TearDownProcessingRequestLocked(const Error& error_from_process) {
-    if (error_from_process) {
+void RequestHandlerTcp::TearDownProcessingRequestLocked(bool processing_succeeded) {
+    if (!processing_succeeded) {
         (*ncurrent_connections_)--;
     }
-
 }
 
 }

@@ -618,4 +618,8 @@ std::string SystemIO::GetHostName(Error* err) const noexcept {
     }
 }
 
+Error SystemIO::SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const {
+    return nullptr;
+}
+
 }

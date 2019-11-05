@@ -26,7 +26,7 @@ TEST(CreateProducer, ErrorBeamtime) {
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, asapo::RequestHandlerType::kTcp,
                                                 SourceCredentials{expected_beamtimeid, "", ""}, &err);
     ASSERT_THAT(producer, Eq(nullptr));
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCredentialsTooLong));
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 

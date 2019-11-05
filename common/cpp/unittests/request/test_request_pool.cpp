@@ -101,8 +101,8 @@ TEST_F(RequestPoolTests, NRequestsInQueue) {
 void ExpectSend(MockRequestHandler* mock_handler, int ntimes = 1) {
     EXPECT_CALL(*mock_handler, ReadyProcessRequest()).Times(ntimes).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock_handler, PrepareProcessingRequestLocked()).Times(ntimes);
-    EXPECT_CALL(*mock_handler, ProcessRequestUnlocked_t(_)).Times(ntimes).WillRepeatedly(Return(nullptr));
-    EXPECT_CALL(*mock_handler, TearDownProcessingRequestLocked_t(nullptr)).Times(ntimes);
+    EXPECT_CALL(*mock_handler, ProcessRequestUnlocked_t(_)).Times(ntimes).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock_handler, TearDownProcessingRequestLocked(true)).Times(ntimes);
 }
 
 

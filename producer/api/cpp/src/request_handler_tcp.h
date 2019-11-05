@@ -19,10 +19,10 @@ namespace asapo {
 class RequestHandlerTcp: public RequestHandler {
   public:
     explicit RequestHandlerTcp(ReceiverDiscoveryService* discovery_service, uint64_t thread_id, uint64_t* shared_counter);
-    Error ProcessRequestUnlocked(GenericRequest* request) override;
+    bool ProcessRequestUnlocked(GenericRequest* request) override;
     bool ReadyProcessRequest() override;
     void PrepareProcessingRequestLocked()  override;
-    void TearDownProcessingRequestLocked(const Error& error_from_process)  override;
+    void TearDownProcessingRequestLocked(bool processing_succeeded)  override;
 
     virtual ~RequestHandlerTcp() = default;
     std::unique_ptr<IO> io__;
@@ -31,9 +31,9 @@ class RequestHandlerTcp: public RequestHandler {
   private:
     Error Authorize(const std::string& beamtime_id);
     Error ConnectToReceiver(const std::string& beamtime_id, const std::string& receiver_address);
-    Error SendDataToOneOfTheReceivers(ProducerRequest* request);
+    bool SendDataToOneOfTheReceivers(ProducerRequest* request);
     Error SendRequestContent(const ProducerRequest* request);
-    Error ReceiveResponse();
+    Error ReceiveResponse(const GenericRequestHeader& request_header);
     Error TrySendToReceiver(const ProducerRequest* request);
     SocketDescriptor sd_{kDisconnectedSocketDescriptor};
     void UpdateIfNewConnection();

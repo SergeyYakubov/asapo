@@ -104,11 +104,11 @@ TEST_F(RequestHandlerFilesystemTests, CallBackErrorIfCannotSaveFile) {
     );
 
 
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
     ASSERT_THAT(callback_err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
     ASSERT_THAT(called, Eq(true));
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
 }
 
 TEST_F(RequestHandlerFilesystemTests, WorksWithemptyCallback) {
@@ -119,10 +119,10 @@ TEST_F(RequestHandlerFilesystemTests, WorksWithemptyCallback) {
     );
 
 
-    auto err = request_handler.ProcessRequestUnlocked(&request_nocallback);
+    auto success = request_handler.ProcessRequestUnlocked(&request_nocallback);
 
     ASSERT_THAT(called, Eq(false));
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
 }
 
 
@@ -135,8 +135,8 @@ TEST_F(RequestHandlerFilesystemTests, FileRequestErrorOnReadData) {
             Return(nullptr)
         ));
 
-    auto err = request_handler.ProcessRequestUnlocked(&request_filesend);
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    ASSERT_THAT(success, Eq(false));
 }
 
 TEST_F(RequestHandlerFilesystemTests, FileRequestOK) {
@@ -154,8 +154,8 @@ TEST_F(RequestHandlerFilesystemTests, FileRequestOK) {
         Return(nullptr)
     );
 
-    auto err = request_handler.ProcessRequestUnlocked(&request_filesend);
-    ASSERT_THAT(err, Eq(nullptr));
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    ASSERT_THAT(success, Eq(true));
 }
 
 
@@ -169,9 +169,9 @@ TEST_F(RequestHandlerFilesystemTests, TransferOK) {
     );
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
     ASSERT_THAT(callback_err, Eq(nullptr));
     ASSERT_THAT(called, Eq(true));
     ASSERT_THAT(callback_header.data_size, Eq(header.data_size));

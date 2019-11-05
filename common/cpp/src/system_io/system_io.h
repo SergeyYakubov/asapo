@@ -114,6 +114,7 @@ class SystemIO final : public IO {
     size_t          ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
                                        Error* err) const override;
     size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const override;
+    Error           SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const override;
     void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const override;
     void            CloseSocket(SocketDescriptor socket_fd, Error* err) const override;
     std::string     GetHostName(Error* err) const noexcept override;

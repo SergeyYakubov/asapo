@@ -80,7 +80,7 @@ class IO {
                                                long timeout_in_usec,
                                                Error* err) const = 0;
     virtual size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const = 0;
-
+    virtual Error           SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const = 0;
     virtual void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const = 0;
     /**
      * @param err Since CloseSocket if often used in an error case, it's able to accept err as nullptr.

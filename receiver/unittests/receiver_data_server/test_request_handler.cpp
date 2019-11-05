@@ -97,18 +97,18 @@ TEST_F(RequestHandlerTests, ProcessRequest_WronOpCode) {
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("wrong request")));
 
-    auto err  = handler.ProcessRequestUnlocked(&request);
+    auto success = handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
 }
 
 TEST_F(RequestHandlerTests, ProcessRequestReturnsNoDataWhenCacheNotUsed) {
     MockSendResponce(asapo::kNetErrorNoData, true);
 
-    auto err  = handler_no_cache.ProcessRequestUnlocked(&request);
+    auto success  = handler_no_cache.ProcessRequestUnlocked(&request);
     EXPECT_CALL(mock_logger, Debug(_)).Times(0);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
 }
 
 TEST_F(RequestHandlerTests, ProcessRequestReadSlotReturnsNull) {
@@ -116,9 +116,9 @@ TEST_F(RequestHandlerTests, ProcessRequestReadSlotReturnsNull) {
     MockSendResponce(asapo::kNetErrorNoData, true);
     EXPECT_CALL(mock_logger, Debug(HasSubstr("not found")));
 
-    auto err  = handler.ProcessRequestUnlocked(&request);
+    auto success = handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
 }
 
 
@@ -128,9 +128,9 @@ TEST_F(RequestHandlerTests, ProcessRequestReadSlotErrorSendingResponce) {
     EXPECT_CALL(mock_net, SendData_t(expected_source_id, &tmp, expected_data_size)).Times(0);
     EXPECT_CALL(mock_cache, UnlockSlot(_));
 
-    auto err  = handler.ProcessRequestUnlocked(&request);
+    auto success  = handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
 }
 
 
@@ -145,9 +145,9 @@ TEST_F(RequestHandlerTests, ProcessRequestOk) {
     EXPECT_CALL(mock_logger, Debug(HasSubstr("sending")));
     EXPECT_CALL(mock_stat, IncreaseRequestCounter_t());
     EXPECT_CALL(mock_stat, IncreaseRequestDataVolume_t(expected_data_size));
-    auto err  = handler.ProcessRequestUnlocked(&request);
+    auto success  = handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
 }
 
 }

@@ -110,6 +110,8 @@ class RequestHandlerTcpTests : public testing::Test {
     void ExpectOKSend(uint64_t expected_size, bool only_once);
     void ExpectOKSendAll(bool only_once);
     void ExpectOKSendData(bool only_once = false);
+    void ExpectOKSendFile(bool only_once = false);
+    void ExpectFailSendFile(const asapo::ProducerErrorTemplate& err_template, bool only_once = false);
     void ExpectOKSendMetaData(bool only_once = false);
     void ExpectFailReceive(bool only_once = false);
     void ExpectOKReceive(bool only_once = true);
@@ -261,8 +263,37 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
         if (only_once) break;
         i++;
     }
+    EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
+}
+
+void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTemplate& err_template, bool only_once) {
+    int i = 0;
+    for (auto expected_sd : expected_sds) {
+        EXPECT_CALL(mock_io, SendFile_t(expected_sd, expected_origin_fullpath, (size_t) expected_file_size))
+        .Times(1)
+        .WillOnce(
+            Return(err_template.Generate().release())
+        );
+        EXPECT_CALL(mock_logger, Debug(AllOf(
+                                           HasSubstr("disconnected"),
+                                           HasSubstr(receivers_list[i])
+                                       )
+                                      ));
+
+        EXPECT_CALL(mock_logger, Warning(AllOf(
+                                             HasSubstr("cannot send"),
+                                             HasSubstr(receivers_list[i])             )
+                                        ));
+        EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
+        if (only_once) break;
+        i++;
+    }
+    if (err_template != asapo::ProducerErrorTemplates::kLocalIOError.Generate()) {
+        EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
+    }
 
 }
+
 
 void RequestHandlerTcpTests::ExpectFailSend(uint64_t expected_size, bool only_once) {
     int i = 0;
@@ -289,7 +320,7 @@ void RequestHandlerTcpTests::ExpectFailSend(uint64_t expected_size, bool only_on
         if (only_once) break;
         i++;
     }
-
+    EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
 }
 
 
@@ -329,6 +360,7 @@ void RequestHandlerTcpTests::ExpectFailReceive(bool only_once) {
         if (only_once) break;
         i++;
     }
+    EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
 
 }
 
@@ -362,7 +394,14 @@ void RequestHandlerTcpTests::ExpectOKSendData(bool only_once) {
     ExpectOKSend(expected_file_size, only_once);
 }
 
-
+void RequestHandlerTcpTests::ExpectOKSendFile(bool only_once) {
+    for (auto expected_sd : expected_sds) {
+        EXPECT_CALL(mock_io, SendFile_t(expected_sd, expected_origin_fullpath, (size_t)expected_file_size))
+        .Times(1)
+        .WillOnce(Return(nullptr));
+        if (only_once) break;
+    }
+}
 
 void RequestHandlerTcpTests::ExpectOKSendHeader(bool only_once, asapo::Opcode opcode) {
     for (auto expected_sd : expected_sds) {
@@ -475,10 +514,9 @@ TEST_F(RequestHandlerTcpTests, DoesNotGetsUriIfAlreadyConnected) {
 }
 
 TEST_F(RequestHandlerTcpTests, ReduceConnectionNumberAtTearDownIfError) {
-    auto err = asapo::TextError("error");
     n_connections = 1;
 
-    request_handler.TearDownProcessingRequestLocked(err);
+    request_handler.TearDownProcessingRequestLocked(false);
 
     ASSERT_THAT(n_connections, Eq(0));
 
@@ -487,7 +525,7 @@ TEST_F(RequestHandlerTcpTests, ReduceConnectionNumberAtTearDownIfError) {
 TEST_F(RequestHandlerTcpTests, DoNotReduceConnectionNumberAtTearDownIfNoError) {
     n_connections = 1;
 
-    request_handler.TearDownProcessingRequestLocked(nullptr);
+    request_handler.TearDownProcessingRequestLocked(true);
 
     ASSERT_THAT(n_connections, Eq(1));
 }
@@ -497,9 +535,9 @@ TEST_F(RequestHandlerTcpTests, TriesConnectWhenNotConnected) {
     ExpectFailConnect();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+    ASSERT_THAT(success, Eq(false));
 }
 
 TEST_F(RequestHandlerTcpTests, FailsWhenCannotAuthorize) {
@@ -507,10 +545,10 @@ TEST_F(RequestHandlerTcpTests, FailsWhenCannotAuthorize) {
     ExpectFailAuthorize();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
-    request_handler.TearDownProcessingRequestLocked(err);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
+    request_handler.TearDownProcessingRequestLocked(success);
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+    ASSERT_THAT(success, Eq(false));
     ASSERT_THAT(n_connections, Eq(0));
 }
 
@@ -527,9 +565,9 @@ TEST_F(RequestHandlerTcpTests, DoesNotTryConnectWhenConnected) {
 
     ExpectFailSendHeader(true);
 
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+    ASSERT_THAT(success, Eq(false));
 }
 
 
@@ -541,9 +579,9 @@ TEST_F(RequestHandlerTcpTests, DoNotCloseWhenNotConnected) {
     ExpectFailSendHeader();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+    ASSERT_THAT(success, Eq(false));
 }
 
 
@@ -556,9 +594,9 @@ TEST_F(RequestHandlerTcpTests, CloseConnectionWhenRebalance) {
 
     EXPECT_CALL(mock_io, CloseSocket_t(_, _));
 
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+    ASSERT_THAT(success, Eq(false));
 }
 
 
@@ -569,9 +607,9 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendHeader) {
     ExpectFailSendHeader();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+    ASSERT_THAT(success, Eq(false));
 }
 
 
@@ -583,9 +621,9 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendData) {
     ExpectFailSendData();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+    ASSERT_THAT(success, Eq(false));
 }
 
 TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendMetaData) {
@@ -595,11 +633,10 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendMetaData) {
     ExpectFailSendMetaData();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+    ASSERT_THAT(success, Eq(false));
 }
-
 
 TEST_F(RequestHandlerTcpTests, ErrorWhenCannotReceiveData) {
     EXPECT_CALL(mock_discovery_service, RotatedUriList(_)).
@@ -611,9 +648,9 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotReceiveData) {
     ExpectFailReceive(true);
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kCannotSendDataToReceivers));
+    ASSERT_THAT(success, Eq(false));
 }
 
 void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode error_code,
@@ -630,24 +667,36 @@ void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode e
             A_WriteSendDataResponse(error_code),
             testing::ReturnArg<2>()
         ));
+    EXPECT_CALL(mock_logger, Debug(AllOf(
+                                       HasSubstr("disconnected"),
+                                       HasSubstr(receivers_list[0])
+                                   )
+                                  ));
 
+    EXPECT_CALL(mock_logger, Warning(AllOf(
+                                         HasSubstr("cannot send"),
+                                         HasSubstr(receivers_list[0])
+                                     )
+                                    ));
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
     ASSERT_THAT(callback_err, Eq(err_template));
     ASSERT_THAT(callback_called, Eq(true));
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
+}
+
+TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfAuthorizationFailure) {
+    AssertImmediatelyCallBack(asapo::kNetAuthorizationError, asapo::ProducerErrorTemplates::kWrongInput);
 }
 
 TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
-    AssertImmediatelyCallBack(asapo::kNetErrorFileIdAlreadyInUse, asapo::ProducerErrorTemplates::kFileIdAlreadyInUse);
+    AssertImmediatelyCallBack(asapo::kNetErrorFileIdAlreadyInUse, asapo::ProducerErrorTemplates::kWrongInput);
 }
 
 TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfWrongMetadata) {
-    AssertImmediatelyCallBack(asapo::kNetErrorErrorInMetadata, asapo::ProducerErrorTemplates::kErrorInMetadata);
+    AssertImmediatelyCallBack(asapo::kNetErrorErrorInMetadata, asapo::ProducerErrorTemplates::kWrongInput);
 }
-
-
 
 TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {
     ExpectOKConnect(true);
@@ -656,49 +705,56 @@ TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {
     ExpectOKReceive();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request_nocallback);
+    auto success = request_handler.ProcessRequestUnlocked(&request_nocallback);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
     ASSERT_THAT(callback_called, Eq(false));
 }
 
-TEST_F(RequestHandlerTcpTests, FileRequestErrorOnReadData) {
+TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithReadError) {
+    ExpectOKConnect(true);
+    ExpectOKAuthorize(true);
+    ExpectOKSendHeader(true);
+    ExpectOKSendMetaData(true);
+    ExpectFailSendFile(asapo::ProducerErrorTemplates::kLocalIOError, true);
 
     request_handler.PrepareProcessingRequestLocked();
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
 
-    EXPECT_CALL(mock_io, GetDataFromFile_t(expected_origin_fullpath, testing::Pointee(expected_file_size), _))
-    .WillOnce(
-        DoAll(
-            testing::SetArgPointee<2>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
-            Return(nullptr)
-        ));
-
-    auto err = request_handler.ProcessRequestUnlocked(&request_filesend);
-    ASSERT_THAT(callback_err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
+    ASSERT_THAT(success, Eq(true));
     ASSERT_THAT(callback_called, Eq(true));
-    ASSERT_THAT(err, Eq(nullptr));
-
+    ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kLocalIOError));
 }
 
+TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithServerError) {
+    ExpectOKConnect();
+    ExpectOKAuthorize();
+    ExpectOKSendHeader();
+    ExpectOKSendMetaData();
+    ExpectFailSendFile(asapo::ProducerErrorTemplates::kInternalServerError);
+
+    request_handler.PrepareProcessingRequestLocked();
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+
+    ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(callback_called, Eq(false));
+}
 
 
 TEST_F(RequestHandlerTcpTests, FileRequestOK) {
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
-    ExpectOKSendAll(true);
+    ExpectOKSendHeader(true);
+    ExpectOKSendMetaData(true);
+    ExpectOKSendFile(true);
     ExpectOKReceive();
 
     request_handler.PrepareProcessingRequestLocked();
 
-    EXPECT_CALL(mock_io, GetDataFromFile_t(expected_origin_fullpath, testing::Pointee(expected_file_size), _))
-    .WillOnce(
-        DoAll(
-            testing::SetArgPointee<2>(nullptr),
-            Return(nullptr)
-        ));
-
-    auto err = request_handler.ProcessRequestUnlocked(&request_filesend);
-    ASSERT_THAT(err, Eq(nullptr));
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    ASSERT_THAT(success, Eq(true));
+    ASSERT_THAT(callback_called, Eq(true));
+    ASSERT_THAT(callback_err, Eq(nullptr));
 }
 
 
@@ -710,9 +766,9 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
     ExpectOKReceive();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
     ASSERT_THAT(callback_err, Eq(nullptr));
     ASSERT_THAT(callback_called, Eq(true));
     ASSERT_THAT(callback_header.data_size, Eq(header.data_size));
@@ -734,9 +790,9 @@ TEST_F(RequestHandlerTcpTests, SendMetadataIgnoresIngestMode) {
     request.header.op_code = asapo::kOpcodeTransferMetaData;
 
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
 }
 
 
@@ -751,9 +807,9 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyOK) {
 
     request.header.custom_data[asapo::kPosIngestMode] = ingest_mode;
     request_handler.PrepareProcessingRequestLocked();
-    auto err = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request);
 
-    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(success, Eq(true));
     ASSERT_THAT(callback_header.custom_data[asapo::kPosIngestMode], Eq(ingest_mode));
 }
 
@@ -766,13 +822,13 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
 
     request_handler.PrepareProcessingRequestLocked();
 
-    EXPECT_CALL(mock_io, GetDataFromFile_t(_, _, _)).Times(0);
+    EXPECT_CALL(mock_io, SendFile_t(_, _, _)).Times(0);
 
     auto ingest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
 
     request_filesend.header.custom_data[asapo::kPosIngestMode] = ingest_mode;
-    auto err = request_handler.ProcessRequestUnlocked(&request_filesend);
-    ASSERT_THAT(err, Eq(nullptr));
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    ASSERT_THAT(success, Eq(true));
 }
 
 

@@ -45,12 +45,12 @@ GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& ev
 Error CheckIngestMode(uint64_t ingest_mode) {
     if ((ingest_mode & IngestModeFlags::kTransferData) &&
             (ingest_mode & IngestModeFlags::kTransferMetaDataOnly)) {
-        return ProducerErrorTemplates::kWrongIngestMode.Generate();
+        return ProducerErrorTemplates::kWrongInput.Generate("wrong ingest mode");
     }
 
     if (!(ingest_mode & IngestModeFlags::kTransferData) &&
             !(ingest_mode & IngestModeFlags::kTransferMetaDataOnly)) {
-        return ProducerErrorTemplates::kWrongIngestMode.Generate();
+        return ProducerErrorTemplates::kWrongInput.Generate("wrong ingest mode");
     }
 
     return nullptr;
@@ -58,15 +58,15 @@ Error CheckIngestMode(uint64_t ingest_mode) {
 
 Error CheckProducerRequest(const EventHeader& event_header, uint64_t ingest_mode) {
     if (event_header.file_name.size() > kMaxMessageSize) {
-        return ProducerErrorTemplates::kFileNameTooLong.Generate();
+        return ProducerErrorTemplates::kWrongInput.Generate("too long filename");
     }
 
     if (event_header.file_name.empty() ) {
-        return ProducerErrorTemplates::kEmptyFileName.Generate();
+        return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }
 
     if (event_header.subset_id > 0 && event_header.subset_size == 0) {
-        return ProducerErrorTemplates::kErrorSubsetSize.Generate();
+        return ProducerErrorTemplates::kWrongInput.Generate("subset dimensions");
     }
 
     return CheckIngestMode(ingest_mode);
@@ -99,10 +99,10 @@ bool WandTransferData(uint64_t ingest_mode) {
 Error CheckData(uint64_t ingest_mode, const EventHeader& event_header, const FileData* data) {
     if (WandTransferData(ingest_mode)) {
         if (*data == nullptr) {
-            return ProducerErrorTemplates::kNoData.Generate();
+            return ProducerErrorTemplates::kWrongInput.Generate("need data for this ingest mode");
         }
         if (event_header.file_size == 0) {
-            return ProducerErrorTemplates::kZeroDataSize.Generate();
+            return ProducerErrorTemplates::kWrongInput.Generate("zero data size");
         }
     }
     return nullptr;
@@ -120,7 +120,7 @@ Error ProducerImpl::SendData(const EventHeader& event_header, FileData data,
 Error ProducerImpl::SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,
                              RequestCallback callback) {
     if (full_path.empty()) {
-        return ProducerErrorTemplates::kEmptyFileName.Generate();
+        return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }
 
     return Send(event_header, nullptr, std::move(full_path), ingest_mode, callback, true);
@@ -143,7 +143,7 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
 
     if (!source_cred_string_.empty()) {
         log__->Error("credentials already set");
-        return ProducerErrorTemplates::kCredentialsAlreadySet.Generate();
+        return ProducerErrorTemplates::kWrongInput.Generate("credentials already set");
     }
 
     if (source_cred.stream.empty()) {
@@ -154,7 +154,7 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
     if (source_cred_string_.size()  + source_cred.user_token.size() > kMaxMessageSize) {
         log__->Error("credentials string is too long - " + source_cred_string_);
         source_cred_string_ = "";
-        return ProducerErrorTemplates::kCredentialsTooLong.Generate();
+        return ProducerErrorTemplates::kWrongInput.Generate("credentials string is too long");
     }
 
     return nullptr;

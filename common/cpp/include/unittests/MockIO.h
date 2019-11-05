@@ -211,6 +211,10 @@ class MockIO : public IO {
 
     MOCK_CONST_METHOD0(GetLastError_t, ErrorInterface * ());
 
+    Error SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const override {
+        return Error{SendFile_t(socket_fd, fname, length)};
+    }
+    MOCK_CONST_METHOD3(SendFile_t, ErrorInterface * (SocketDescriptor socket_fd, const std::string& fname, size_t length));
 
     Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
                           size_t length, bool create_directories) const override {

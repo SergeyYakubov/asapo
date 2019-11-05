@@ -23,7 +23,7 @@ class ProducerRequest : public GenericRequest {
     std::string original_filepath;
     RequestCallback callback;
     bool manage_data_memory;
-    Error ReadDataFromFileIfNeeded(const IO* io);
+    bool DataFromFile() const;
     bool NeedSendData() const;
     bool NeedSendMetaData() const;
 };

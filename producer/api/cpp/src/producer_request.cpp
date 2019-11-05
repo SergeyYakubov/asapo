@@ -2,13 +2,11 @@
 
 namespace asapo {
 
-Error ProducerRequest::ReadDataFromFileIfNeeded(const IO* io) {
+bool ProducerRequest::DataFromFile() const {
     if (data != nullptr || original_filepath.empty() || !NeedSendData()) {
-        return nullptr;
+        return false;
     }
-    Error err;
-    data = io->GetDataFromFile(original_filepath, &header.data_size, &err);
-    return err;
+    return true;
 }
 
 ProducerRequest::ProducerRequest(std::string source_credentials,
