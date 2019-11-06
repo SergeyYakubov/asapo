@@ -41,7 +41,8 @@ Error RequestHandlerDb::GetDatabaseServerUri(std::string* uri) const {
     if (http_err) {
         log__->Error(std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
                      + " : " + http_err->Explain());
-        return ReceiverErrorTemplates::kInternalServerError.Generate("http error when discover database server"+http_err->Explain());
+        return ReceiverErrorTemplates::kInternalServerError.Generate("http error when discover database server" +
+                http_err->Explain());
     }
 
     if (code != HttpCode::OK) {

@@ -17,7 +17,7 @@ std::string RequestHandlerAuthorize::GetRequestString(const Request* request, co
 
 Error RequestHandlerAuthorize::ErrorFromServerResponse(const Error& err, HttpCode code) const {
     if (err) {
-        return asapo::ReceiverErrorTemplates::kInternalServerError.Generate("cannot authorize request: "+ err->Explain());
+        return asapo::ReceiverErrorTemplates::kInternalServerError.Generate("cannot authorize request: " + err->Explain());
     } else {
         return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("return code " + std::to_string(int(code)));
     }

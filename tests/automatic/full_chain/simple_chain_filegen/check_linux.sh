@@ -52,9 +52,7 @@ echo hello > /tmp/asapo/test_in/test1/file1
 echo hello > /tmp/asapo/test_in/test1/file2
 echo hello > /tmp/asapo/test_in/test2/file2
 
-sleep 100
-
-#$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | tee /dev/stderr | grep "Processed 3 file(s)"
+$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | tee /dev/stderr | grep "Processed 3 file(s)"
 
 test ! -f /tmp/asapo/test_in/test1/file1
 test ! -f /tmp/asapo/test_in/test1/file2

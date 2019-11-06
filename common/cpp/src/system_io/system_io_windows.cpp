@@ -9,7 +9,6 @@
 #include <iostream>
 #include <direct.h>
 
-
 using std::string;
 using std::vector;
 using std::chrono::system_clock;
@@ -40,34 +39,34 @@ IOInstance::~IOInstance() {
 Error IOErrorFromGetLastError() {
     DWORD last_error = GetLastError();
     switch (last_error) {
-    case ERROR_SUCCESS:
-        return nullptr;
-    case ERROR_PATH_NOT_FOUND:
-    case ERROR_FILE_NOT_FOUND:
-        return IOErrorTemplates::kFileNotFound.Generate();
-    case ERROR_ACCESS_DENIED:
-        return IOErrorTemplates::kPermissionDenied.Generate();
-    case ERROR_CONNECTION_REFUSED:
-        return IOErrorTemplates::kConnectionRefused.Generate();
-    case WSAEFAULT:
-        return IOErrorTemplates::kInvalidMemoryAddress.Generate();
-    case WSAECONNRESET:
-        return IOErrorTemplates::kConnectionResetByPeer.Generate();
-    case WSAENOTSOCK:
-        return IOErrorTemplates::kSocketOperationOnNonSocket.Generate();
-    case WSAEWOULDBLOCK:
-        return IOErrorTemplates::kResourceTemporarilyUnavailable.Generate();
-    case WSAEADDRNOTAVAIL:
-        return IOErrorTemplates::kAddressNotValid.Generate();
-    case WSAECONNREFUSED:
-        return IOErrorTemplates::kConnectionRefused.Generate();
-    case ERROR_FILE_EXISTS:
-        return IOErrorTemplates::kFileAlreadyExists.Generate();
-    default:
-        std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
-        Error err = IOErrorTemplates::kUnknownIOError.Generate();
-        (*err).Append("Unknown error code: " + std::to_string(last_error));
-        return err;
+        case ERROR_SUCCESS:
+            return nullptr;
+        case ERROR_PATH_NOT_FOUND:
+        case ERROR_FILE_NOT_FOUND:
+            return IOErrorTemplates::kFileNotFound.Generate();
+        case ERROR_ACCESS_DENIED:
+            return IOErrorTemplates::kPermissionDenied.Generate();
+        case ERROR_CONNECTION_REFUSED:
+            return IOErrorTemplates::kConnectionRefused.Generate();
+        case WSAEFAULT:
+            return IOErrorTemplates::kInvalidMemoryAddress.Generate();
+        case WSAECONNRESET:
+            return IOErrorTemplates::kConnectionResetByPeer.Generate();
+        case WSAENOTSOCK:
+            return IOErrorTemplates::kSocketOperationOnNonSocket.Generate();
+        case WSAEWOULDBLOCK:
+            return IOErrorTemplates::kResourceTemporarilyUnavailable.Generate();
+        case WSAEADDRNOTAVAIL:
+            return IOErrorTemplates::kAddressNotValid.Generate();
+        case WSAECONNREFUSED:
+            return IOErrorTemplates::kConnectionRefused.Generate();
+        case ERROR_FILE_EXISTS:
+            return IOErrorTemplates::kFileAlreadyExists.Generate();
+        default:
+            std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
+            Error err = IOErrorTemplates::kUnknownIOError.Generate();
+            (*err).Append("Unknown error code: " + std::to_string(last_error));
+            return err;
     }
 }
 
@@ -76,7 +75,7 @@ Error SystemIO::GetLastError() const {
 }
 
 Error CheckFileTime(const FILETIME& ft) {
-    SYSTEMTIME st = { 0 };
+    SYSTEMTIME st = {0};
     if (!FileTimeToSystemTime(&ft, &st)) {
         return IOErrorFromGetLastError();
     }
@@ -110,11 +109,11 @@ std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, Err
     auto sec = GetLinuxEpochSecFromWindowsEpoch(ull);
     auto nsec = GetLinuxNanosecFromWindowsEpoch(ull);
 
-    std::chrono::nanoseconds d = std::chrono::nanoseconds {nsec} +
-                                 std::chrono::seconds{sec};
+    std::chrono::nanoseconds d = std::chrono::nanoseconds{nsec} +
+        std::chrono::seconds{sec};
 
     auto tp = system_clock::time_point
-    {std::chrono::duration_cast<std::chrono::system_clock::duration>(d)};
+        {std::chrono::duration_cast<std::chrono::system_clock::duration>(d)};
 
     *err = nullptr;
     return tp;
@@ -122,8 +121,8 @@ std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, Err
 
 bool IsDirectory(const WIN32_FIND_DATA f) {
     return (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
-           strstr(f.cFileName, "..") == nullptr &&
-           strstr(f.cFileName, ".") == nullptr;
+        strstr(f.cFileName, "..") == nullptr &&
+        strstr(f.cFileName, ".") == nullptr;
 }
 
 FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* err) {
@@ -144,7 +143,6 @@ FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* er
 
     return file_info;
 }
-
 
 FileInfo SystemIO::GetFileInfo(const std::string& name, Error* err) const {
     WIN32_FIND_DATA f;
@@ -202,7 +200,6 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
         *err = IOErrorFromGetLastError();
     }
 }
-
 
 void SystemIO::CollectFileInformationRecursively(const std::string& path,
                                                  FileInfos* files, Error* err) const {
@@ -275,19 +272,19 @@ SocketDescriptor SystemIO::_connect(SocketDescriptor socket_fd, const void* addr
 }
 
 ssize_t SystemIO::_read(FileDescriptor fd, void* buffer, size_t length) {
-    return ::_read(fd, (char*)buffer, length);
+    return ::_read(fd, (char*) buffer, length);
 }
 
 ssize_t SystemIO::_write(FileDescriptor fd, const void* buffer, size_t length) {
-    return ::_write(fd, (const char*)buffer, length);
+    return ::_write(fd, (const char*) buffer, length);
 }
 
 ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) {
-    return ::send(socket_fd, (char*)buffer, length, 0);
+    return ::send(socket_fd, (char*) buffer, length, 0);
 }
 
 ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length) {
-    return ::recv(socket_fd, (char*)buffer, length, 0);
+    return ::recv(socket_fd, (char*) buffer, length, 0);
 }
 
 int SystemIO::_mkdir(const char* dirname) const {
@@ -299,7 +296,7 @@ int SystemIO::_listen(SocketDescriptor fd, int backlog) const {
 }
 
 SocketDescriptor SystemIO::_accept(SocketDescriptor socket_fd, void* address, size_t* address_length) const {
-    return ::accept(socket_fd, static_cast<sockaddr*>(address), (int*)address_length);
+    return ::accept(socket_fd, static_cast<sockaddr*>(address), (int*) address_length);
 }
 
 std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept {
@@ -316,9 +313,9 @@ std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept 
 }
 
 ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_socket,
-        ListSocketDescriptors* sockets_to_listen,
-        std::vector<std::string>* new_connections,
-        Error* err) const {
+                                                    ListSocketDescriptors* sockets_to_listen,
+                                                    std::vector<std::string>* new_connections,
+                                                    Error* err) const {
     fd_set readfds;
     ListSocketDescriptors active_sockets;
     bool client_activity = false;
@@ -380,6 +377,20 @@ void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
     }
 }
 
+Error SystemIO::SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const {
+    auto hFile = _open(fname.c_str(), O_RDONLY);
+    if (hFile < 0) {
+        return GetLastError();
+    }
+
+    if (!TransmitFile(socket_fd, hFile, 0, 0, NULL, NULL, TF_USE_DEFAULT_WORKER)) {
+        _close(hFile);
+        return GetLastError();
+    }
+
+    _close(hFile);
+    return nullptr;
+}
 
 SystemIO::~SystemIO() {
     // do nothing;
