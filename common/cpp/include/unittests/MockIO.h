@@ -240,6 +240,17 @@ class MockIO : public IO {
     MOCK_CONST_METHOD5(WriteDataToFile_t, ErrorInterface * (const std::string& root_folder, const std::string& fname,
                        const uint8_t* data, size_t fsize, bool create_directories));
 
+
+    FileInfo GetFileInfo(const std::string& name, Error* err) const override {
+        ErrorInterface* error = nullptr;
+        auto data = GetFileInfo_t(name, &error);
+        err->reset(error);
+        return data;
+
+    }
+
+    MOCK_CONST_METHOD2(GetFileInfo_t, FileInfo (const std::string& name, ErrorInterface** err));
+
     std::vector<FileInfo> FilesInFolder(const std::string& folder, Error* err) const override {
         ErrorInterface* error = nullptr;
         auto data = FilesInFolder_t(folder, &error);

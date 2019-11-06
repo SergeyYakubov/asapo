@@ -26,6 +26,8 @@ class ProducerRequest : public GenericRequest {
     bool DataFromFile() const;
     bool NeedSendData() const;
     bool NeedSendMetaData() const;
+    Error UpdateDataSizeFromFileIfNeeded(const IO* io);
+
 };
 
 }

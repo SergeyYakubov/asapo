@@ -51,8 +51,6 @@ class SystemIO final : public IO {
 
     std::unique_ptr<std::tuple<std::string, uint16_t>>  SplitAddressToHostnameAndPort(std::string address) const;
 
-    FileInfo GetFileInfo(const std::string& name, Error* err) const;
-
     std::unique_ptr<sockaddr_in> BuildSockaddrIn(const std::string& address, Error* err) const;
 
     /*
@@ -137,6 +135,7 @@ class SystemIO final : public IO {
     Error           RemoveFile(const std::string& fname) const override;
     Error           GetLastError() const override;
     std::string     AddressFromSocket(SocketDescriptor socket) const noexcept override;
+    FileInfo        GetFileInfo(const std::string& name, Error* err) const;
 
 
 };

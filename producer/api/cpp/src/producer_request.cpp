@@ -1,3 +1,4 @@
+#include <asapo_producer.h>
 #include "producer_request.h"
 
 namespace asapo {
@@ -40,6 +41,19 @@ ProducerRequest::~ProducerRequest() {
     if (!manage_data_memory && data != nullptr) {
         data.release();
     }
+}
+Error ProducerRequest::UpdateDataSizeFromFileIfNeeded(const IO* io) {
+    if (data != nullptr || original_filepath.empty() || header.data_size > 0) {
+        return nullptr;
+    }
+
+    Error err;
+    auto finfo = io->GetFileInfo(original_filepath, &err);
+    if (err) {
+        return ProducerErrorTemplates::kLocalIOError.Generate(err->Explain());
+    }
+    header.data_size = finfo.size;
+    return nullptr;
 }
 
 }

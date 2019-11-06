@@ -64,6 +64,7 @@ class RequestHandlerTcpTests : public testing::Test {
 
     asapo::Error callback_err;
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_meta_size, expected_file_name};
+    asapo::GenericRequestHeader header_fromfile{expected_op_code, expected_file_id, 0, expected_meta_size, expected_file_name};
     bool callback_called = false;
     asapo::GenericRequestHeader callback_header;
 
@@ -75,7 +76,7 @@ class RequestHandlerTcpTests : public testing::Test {
     }, true};
 
     std::string expected_origin_fullpath = std::string("origin/") + expected_file_name;
-    asapo::ProducerRequest request_filesend{expected_beamtime_id, header, nullptr, expected_metadata,
+    asapo::ProducerRequest request_filesend{expected_beamtime_id, header_fromfile, nullptr, expected_metadata,
     expected_origin_fullpath, [this](asapo::GenericRequestHeader header, asapo::Error err) {
         callback_called = true;
         callback_err = std::move(err);
@@ -109,6 +110,7 @@ class RequestHandlerTcpTests : public testing::Test {
     void ExpectOKSendHeader(bool only_once = false, asapo::Opcode code = expected_op_code);
     void ExpectOKSend(uint64_t expected_size, bool only_once);
     void ExpectOKSendAll(bool only_once);
+    void ExpectGetFileSize(bool ok);
     void ExpectOKSendData(bool only_once = false);
     void ExpectOKSendFile(bool only_once = false);
     void ExpectFailSendFile(const asapo::ProducerErrorTemplate& err_template, bool only_once = false);
@@ -686,6 +688,19 @@ void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode e
     ASSERT_THAT(success, Eq(true));
 }
 
+void RequestHandlerTcpTests::ExpectGetFileSize(bool ok) {
+    asapo::FileInfo fi;
+    if (ok) {
+        fi.size = expected_file_size;
+    }
+
+    EXPECT_CALL(mock_io, GetFileInfo_t(expected_origin_fullpath, _)).WillOnce(
+        DoAll(
+            testing::SetArgPointee<1>(ok ? nullptr : asapo::IOErrorTemplates::kFileNotFound.Generate().release()),
+            testing::Return(fi)
+        ));
+}
+
 TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfAuthorizationFailure) {
     AssertImmediatelyCallBack(asapo::kNetAuthorizationError, asapo::ProducerErrorTemplates::kWrongInput);
 }
@@ -712,6 +727,7 @@ TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {
 }
 
 TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithReadError) {
+    ExpectGetFileSize(true);
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true);
@@ -727,6 +743,7 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithReadError) {
 }
 
 TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithServerError) {
+    ExpectGetFileSize(true);
     ExpectOKConnect();
     ExpectOKAuthorize();
     ExpectOKSendHeader();
@@ -740,8 +757,21 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithServerError) {
     ASSERT_THAT(callback_called, Eq(false));
 }
 
+TEST_F(RequestHandlerTcpTests, FileRequestErrorGettingFileSize) {
+    ExpectGetFileSize(false);
+
+    request_handler.PrepareProcessingRequestLocked();
+
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    ASSERT_THAT(success, Eq(true));
+    ASSERT_THAT(callback_called, Eq(true));
+    ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kLocalIOError));
+}
+
+
 
 TEST_F(RequestHandlerTcpTests, FileRequestOK) {
+    ExpectGetFileSize(true);
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true);
@@ -814,6 +844,7 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyOK) {
 }
 
 TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
+    ExpectGetFileSize(true);
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true);

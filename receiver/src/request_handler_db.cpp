@@ -41,13 +41,13 @@ Error RequestHandlerDb::GetDatabaseServerUri(std::string* uri) const {
     if (http_err) {
         log__->Error(std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
                      + " : " + http_err->Explain());
-        return ReceiverErrorTemplates::kCannotConnectToDatabase.Generate(http_err->Explain());
+        return ReceiverErrorTemplates::kInternalServerError.Generate("http error when discover database server"+http_err->Explain());
     }
 
     if (code != HttpCode::OK) {
         log__->Error(std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
                      + " : http code" + std::to_string((int)code));
-        return ReceiverErrorTemplates::kCannotConnectToDatabase.Generate("error from discovery service");
+        return ReceiverErrorTemplates::kInternalServerError.Generate("error when discover database server");
     }
 
     log__->Debug(std::string{"found database server "} + *uri);
@@ -65,7 +65,7 @@ Error RequestHandlerDb::ConnectToDbIfNeeded() const {
         }
         err = db_client__->Connect(uri, db_name_, collection_name_);
         if (err) {
-            return err;
+            return ReceiverErrorTemplates::kInternalServerError.Generate("error connecting to database " + err->Explain());
         }
         connected_to_db = true;
     }

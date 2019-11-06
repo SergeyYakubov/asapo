@@ -175,7 +175,7 @@ TEST_F(DbHandlerTests, ProcessRequestErrorDiscoversMongoDbAddress) {
     EXPECT_CALL(mock_db, Connect_t(_, _, _)).Times(0);
 
     auto err = handler.ProcessRequest(mock_request.get());
-    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kCannotConnectToDatabase));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInternalServerError));
 }
 
 
@@ -210,7 +210,7 @@ TEST_F(DbHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
 
     auto err = handler.ProcessRequest(mock_request.get());
 
-    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInternalServerError));
 
 }
 

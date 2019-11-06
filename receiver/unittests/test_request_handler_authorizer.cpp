@@ -173,7 +173,7 @@ TEST_F(AuthorizerHandlerTests, ErrorProcessingAuthorizeRequest) {
 
     auto err = MockFirstAuthorization(true);
 
-    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInternalServerError));
 }
 
 
@@ -210,7 +210,7 @@ TEST_F(AuthorizerHandlerTests, ErrorOnDataTransferRequestAuthorize) {
     MockFirstAuthorization(false);
     auto err = MockRequestAuthorization(true);
 
-    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInternalServerError));
 }
 
 

@@ -89,7 +89,7 @@ Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_hea
         return ProducerErrorTemplates::kWrongInput.Generate("file id already in use: " + std::to_string(
                     request_header.data_id));
     case kNetAuthorizationError : {
-        auto res_err = ProducerErrorTemplates::kWrongInput.Generate("authorization failed");
+        auto res_err = ProducerErrorTemplates::kWrongInput.Generate();
         res_err->Append(sendDataResponse.message);
         return res_err;
     }
@@ -214,6 +214,16 @@ bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {
 
 bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request) {
     auto producer_request = static_cast<ProducerRequest*>(request);
+
+    auto err = producer_request->UpdateDataSizeFromFileIfNeeded(io__.get());
+    if (err) {
+        if (producer_request->callback) {
+            producer_request->callback(producer_request->header, std::move(err));
+        }
+        return true;
+    }
+
+
     if (NeedRebalance()) {
         CloseConnectionToPeformRebalance();
     }
