@@ -20,7 +20,8 @@ bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request) {
     auto producer_request = static_cast<ProducerRequest*>(request);
     Error err;
     if (producer_request->DataFromFile()) {
-        auto data = io__->GetDataFromFile(producer_request->original_filepath, &producer_request->header.data_size, &err);
+        producer_request->data = io__->GetDataFromFile(producer_request->original_filepath, &producer_request->header.data_size,
+                                                       &err);
         if (err) {
             return false;
         }

@@ -844,7 +844,7 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyOK) {
 }
 
 TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
-    ExpectGetFileSize(true);
+    expected_file_size = 0;
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true);
@@ -854,7 +854,7 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
     request_handler.PrepareProcessingRequestLocked();
 
     EXPECT_CALL(mock_io, SendFile_t(_, _, _)).Times(0);
-
+    EXPECT_CALL(mock_io, GetFileInfo_t(_, _)).Times(0);
     auto ingest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
 
     request_filesend.header.custom_data[asapo::kPosIngestMode] = ingest_mode;

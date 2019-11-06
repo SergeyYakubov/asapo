@@ -8,6 +8,8 @@
 #include <fcntl.h>
 #include <iostream>
 #include <direct.h>
+#include <mswsock.h>
+
 
 using std::string;
 using std::vector;
@@ -39,34 +41,34 @@ IOInstance::~IOInstance() {
 Error IOErrorFromGetLastError() {
     DWORD last_error = GetLastError();
     switch (last_error) {
-        case ERROR_SUCCESS:
-            return nullptr;
-        case ERROR_PATH_NOT_FOUND:
-        case ERROR_FILE_NOT_FOUND:
-            return IOErrorTemplates::kFileNotFound.Generate();
-        case ERROR_ACCESS_DENIED:
-            return IOErrorTemplates::kPermissionDenied.Generate();
-        case ERROR_CONNECTION_REFUSED:
-            return IOErrorTemplates::kConnectionRefused.Generate();
-        case WSAEFAULT:
-            return IOErrorTemplates::kInvalidMemoryAddress.Generate();
-        case WSAECONNRESET:
-            return IOErrorTemplates::kConnectionResetByPeer.Generate();
-        case WSAENOTSOCK:
-            return IOErrorTemplates::kSocketOperationOnNonSocket.Generate();
-        case WSAEWOULDBLOCK:
-            return IOErrorTemplates::kResourceTemporarilyUnavailable.Generate();
-        case WSAEADDRNOTAVAIL:
-            return IOErrorTemplates::kAddressNotValid.Generate();
-        case WSAECONNREFUSED:
-            return IOErrorTemplates::kConnectionRefused.Generate();
-        case ERROR_FILE_EXISTS:
-            return IOErrorTemplates::kFileAlreadyExists.Generate();
-        default:
-            std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
-            Error err = IOErrorTemplates::kUnknownIOError.Generate();
-            (*err).Append("Unknown error code: " + std::to_string(last_error));
-            return err;
+    case ERROR_SUCCESS:
+        return nullptr;
+    case ERROR_PATH_NOT_FOUND:
+    case ERROR_FILE_NOT_FOUND:
+        return IOErrorTemplates::kFileNotFound.Generate();
+    case ERROR_ACCESS_DENIED:
+        return IOErrorTemplates::kPermissionDenied.Generate();
+    case ERROR_CONNECTION_REFUSED:
+        return IOErrorTemplates::kConnectionRefused.Generate();
+    case WSAEFAULT:
+        return IOErrorTemplates::kInvalidMemoryAddress.Generate();
+    case WSAECONNRESET:
+        return IOErrorTemplates::kConnectionResetByPeer.Generate();
+    case WSAENOTSOCK:
+        return IOErrorTemplates::kSocketOperationOnNonSocket.Generate();
+    case WSAEWOULDBLOCK:
+        return IOErrorTemplates::kResourceTemporarilyUnavailable.Generate();
+    case WSAEADDRNOTAVAIL:
+        return IOErrorTemplates::kAddressNotValid.Generate();
+    case WSAECONNREFUSED:
+        return IOErrorTemplates::kConnectionRefused.Generate();
+    case ERROR_FILE_EXISTS:
+        return IOErrorTemplates::kFileAlreadyExists.Generate();
+    default:
+        std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
+        Error err = IOErrorTemplates::kUnknownIOError.Generate();
+        (*err).Append("Unknown error code: " + std::to_string(last_error));
+        return err;
     }
 }
 
@@ -110,10 +112,10 @@ std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, Err
     auto nsec = GetLinuxNanosecFromWindowsEpoch(ull);
 
     std::chrono::nanoseconds d = std::chrono::nanoseconds{nsec} +
-        std::chrono::seconds{sec};
+                                 std::chrono::seconds{sec};
 
     auto tp = system_clock::time_point
-        {std::chrono::duration_cast<std::chrono::system_clock::duration>(d)};
+    {std::chrono::duration_cast<std::chrono::system_clock::duration>(d)};
 
     *err = nullptr;
     return tp;
@@ -121,8 +123,8 @@ std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, Err
 
 bool IsDirectory(const WIN32_FIND_DATA f) {
     return (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
-        strstr(f.cFileName, "..") == nullptr &&
-        strstr(f.cFileName, ".") == nullptr;
+           strstr(f.cFileName, "..") == nullptr &&
+           strstr(f.cFileName, ".") == nullptr;
 }
 
 FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* err) {
@@ -313,9 +315,9 @@ std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept 
 }
 
 ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_socket,
-                                                    ListSocketDescriptors* sockets_to_listen,
-                                                    std::vector<std::string>* new_connections,
-                                                    Error* err) const {
+        ListSocketDescriptors* sockets_to_listen,
+        std::vector<std::string>* new_connections,
+        Error* err) const {
     fd_set readfds;
     ListSocketDescriptors active_sockets;
     bool client_activity = false;

@@ -295,27 +295,36 @@ std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept 
 
 Error SystemIO::SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const {
 
-    ssize_t bytes_sent, total_bytes_sent = 0;
-    off_t offset = 0;
+    size_t total_bytes_sent = 0;
 
-    int in_fd = _open(fname.c_str(), O_RDONLY);
-    if (in_fd < 0) {
-        return GetLastError();
+    size_t buf_size = std::min(length, kReadBufSize);
+
+    Error err;
+    auto fd = Open(fname, IO_OPEN_MODE_READ, &err);
+    if (err != nullptr) {
+        return err;
+    }
+
+    auto data_array = std::unique_ptr<uint8_t> {AllocateArray(buf_size, &err)};
+    if (err != nullptr) {
+        return err;
     }
 
     while (total_bytes_sent < length) {
-        if ((bytes_sent = sendfile(socket_fd, in_fd, &offset,
-                                   std::min(kMaxTransferChunkSize, length - total_bytes_sent))) <= 0) {
-            if (errno == EINTR || errno == EAGAIN) {
-                // Interrupted system call/try again, just skip to the top of the loop and try again
-                continue;
-            }
-            close(in_fd);
-            return GetLastError();
+        auto bytes_read = Read(fd, data_array.get(), buf_size, &err);
+        if (err != nullptr && err != ErrorTemplates::kEndOfFile) {
+            Close(fd, nullptr);
+            return err;
+        }
+        auto bytes_sent = Send(socket_fd, data_array.get(), bytes_read, &err);
+        if (err != nullptr) {
+            Close(fd, nullptr);
+            return err;
         }
         total_bytes_sent += bytes_sent;
     }
-    close(in_fd);
+
+    Close(fd, nullptr);
     return nullptr;
 }
 

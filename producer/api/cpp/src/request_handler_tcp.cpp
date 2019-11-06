@@ -6,12 +6,10 @@
 
 namespace asapo {
 
-
 RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service, uint64_t thread_id,
                                      uint64_t* shared_counter):
     io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()}, discovery_service__{discovery_service}, thread_id_{thread_id},
     ncurrent_connections_{shared_counter} {
-
 }
 
 Error RequestHandlerTcp::Authorize(const std::string& beamtime_id) {

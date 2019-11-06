@@ -27,6 +27,8 @@ namespace asapo {
 const int SystemIO::kNetBufferSize = 1024 * 1024;
 const int SystemIO::kWaitTimeoutMs = 1000;
 const size_t SystemIO::kMaxTransferChunkSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(2); //2GiByte
+const size_t SystemIO::kReadBufSize = size_t(1024) * 1024 * 50; //50MiByte
+
 
 
 /*******************************************************************************
@@ -70,7 +72,7 @@ std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostn
     }
 }
 
-uint8_t* AllocateArray(uint64_t fsize, Error* err) {
+uint8_t* SystemIO::AllocateArray(uint64_t fsize, Error* err) const {
     uint8_t* data_array = nullptr;
     try {
         data_array = new uint8_t[(size_t)fsize];

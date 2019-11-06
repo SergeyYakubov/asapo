@@ -26,6 +26,7 @@ class SystemIO final : public IO {
   private:
     static const int kNetBufferSize;//TODO: need to set by config
     static const size_t kMaxTransferChunkSize;
+    static const size_t kReadBufSize;
 
     static const int kWaitTimeoutMs;
 
@@ -77,6 +78,7 @@ class SystemIO final : public IO {
     Error CreateEpoolIfNeeded(SocketDescriptor master_socket) const;
     Error ProcessNewConnection(SocketDescriptor master_socket, std::vector<std::string>* new_connections,
                                ListSocketDescriptors* sockets_to_listen) const;
+    uint8_t* AllocateArray(uint64_t fsize, Error* err) const;
 
 #endif
   public:
