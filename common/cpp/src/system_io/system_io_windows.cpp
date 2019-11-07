@@ -8,8 +8,6 @@
 #include <fcntl.h>
 #include <iostream>
 #include <direct.h>
-#include <mswsock.h>
-
 
 using std::string;
 using std::vector;
@@ -385,7 +383,7 @@ Error SystemIO::SendFile(SocketDescriptor socket_fd, const std::string& fname, s
         return GetLastError();
     }
 
-    if (!TransmitFile(socket_fd, hFile, 0, 0, NULL, NULL, TF_USE_DEFAULT_WORKER)) {
+    if (!TransmitFile(socket_fd, hFile, 0, 0, NULL, NULL, 0)) {
         _close(hFile);
         return GetLastError();
     }

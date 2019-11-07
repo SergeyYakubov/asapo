@@ -70,6 +70,8 @@ class SystemIO final : public IO {
                                                       Error* err) const;
     void            GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const;
     Error           CreateDirectoryWithParents(const std::string& root_path, const std::string& path) const;
+    uint8_t* AllocateArray(uint64_t fsize, Error* err) const;
+
 #if defined(__linux__) || defined (__APPLE__)
     // used to for epoll - assumed single epoll instance per class instance
     const int kMaxEpollEvents = 10;
@@ -78,8 +80,6 @@ class SystemIO final : public IO {
     Error CreateEpoolIfNeeded(SocketDescriptor master_socket) const;
     Error ProcessNewConnection(SocketDescriptor master_socket, std::vector<std::string>* new_connections,
                                ListSocketDescriptors* sockets_to_listen) const;
-    uint8_t* AllocateArray(uint64_t fsize, Error* err) const;
-
 #endif
   public:
     ~SystemIO();
