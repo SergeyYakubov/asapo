@@ -65,6 +65,7 @@ std::vector<std::thread> StartThreads(const Args& params,
             group_id = broker->GenerateNewGroupId(&err);
             if (err) {
                 (*errors)[i] += ProcessError(err);
+                lock.unlock();
                 return;
             }
         }

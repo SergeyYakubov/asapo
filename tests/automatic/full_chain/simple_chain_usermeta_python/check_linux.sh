@@ -36,7 +36,7 @@ nomad run receiver.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
-sleep 1
+sleep 2
 
 #producer
 mkdir -p ${receiver_folder}
