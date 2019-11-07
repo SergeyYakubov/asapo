@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 #include <algorithm>
 #include <io.h>
-#include <windows.h>
 #include <fcntl.h>
 #include <iostream>
 #include <direct.h>
@@ -375,21 +374,6 @@ void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
     if (!_close_socket(fd) && err) {
         *err = GetLastError();
     }
-}
-
-Error SystemIO::SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const {
-    auto hFile = _open(fname.c_str(), O_RDONLY);
-    if (hFile < 0) {
-        return GetLastError();
-    }
-
-    if (!TransmitFile(socket_fd, hFile, 0, 0, NULL, NULL, 0)) {
-        _close(hFile);
-        return GetLastError();
-    }
-
-    _close(hFile);
-    return nullptr;
 }
 
 SystemIO::~SystemIO() {
