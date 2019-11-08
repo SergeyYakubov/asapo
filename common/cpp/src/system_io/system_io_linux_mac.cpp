@@ -12,7 +12,6 @@
 #include <iostream>
 #include <zconf.h>
 #include <netdb.h>
-#include <sys/sendfile.h>
 
 #include "system_io.h"
 

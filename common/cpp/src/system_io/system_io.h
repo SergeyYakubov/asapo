@@ -137,7 +137,7 @@ class SystemIO final : public IO {
     Error           RemoveFile(const std::string& fname) const override;
     Error           GetLastError() const override;
     std::string     AddressFromSocket(SocketDescriptor socket) const noexcept override;
-    FileInfo        GetFileInfo(const std::string& name, Error* err) const;
+    FileInfo        GetFileInfo(const std::string& name, Error* err) const override;
 
 
 };
