@@ -10,7 +10,7 @@ Request::Request(const GenericRequestHeader& header,
     socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)} {
 }
 
-Error Request::PrepareDataBuffer() {
+Error Request::PrepareDataBufferAndLockIfNeeded() {
     if (cache__ == nullptr) {
         try {
             data_buffer_.reset(new uint8_t[(size_t)request_header_.data_size]);
@@ -31,74 +31,14 @@ Error Request::PrepareDataBuffer() {
     return nullptr;
 }
 
-Error Request::ReceiveMetaData() {
-    if (request_header_.meta_size == 0) {
-        return nullptr;
-    }
-
-    Error err;
-    auto buf = std::unique_ptr<uint8_t[]> {new uint8_t[(size_t)request_header_.meta_size]};
-    io__->Receive(socket_fd_, (void*) buf.get(), (size_t) request_header_.meta_size, &err);
-    if (err) {
-        return err;
-    }
-    metadata_.assign((char*)buf.get(), request_header_.meta_size);
-    return nullptr;
-}
-
-
-bool Request::NeedReceiveData() {
-    return request_header_.data_size > 0 &&
-           (request_header_.custom_data[asapo::kPosIngestMode] & asapo::kTransferData);
-}
-
-Error Request::ReceiveData() {
-    if (!NeedReceiveData()) {
-        return nullptr;
-    }
-
-    auto err = PrepareDataBuffer();
-    if (err) {
-        return err;
-    }
-    io__->Receive(socket_fd_, GetData(), (size_t) request_header_.data_size, &err);
-    if (slot_meta_) {
-        cache__->UnlockSlot(slot_meta_);
-    }
-    return err;
-}
-
-
-Error Request::ReceiveRequestContent(ReceiverStatistics* statistics) {
-    statistics->StartTimer(StatisticEntity::kNetwork);
-
-    auto err = ReceiveMetaData();
-    if (err) {
-        return err;
-    }
-
-    err = ReceiveData();
-    if (err) {
-        return err;
-    }
-
-    statistics->StopTimer();
-
-    return nullptr;
-}
-
-
 
 Error Request::Handle(ReceiverStatistics* statistics) {
-    auto err = ReceiveRequestContent(statistics);
-    if (err) {
-        return err;
-    }
-
     for (auto handler : handlers_) {
         statistics->StartTimer(handler->GetStatisticEntity());
         auto err = handler->ProcessRequest(this);
         if (err) {
+            if (dynamic_cast<const RequestHandlerAuthorize*>(handler));
+
             return err;
         }
         statistics->StopTimer();
@@ -190,6 +130,23 @@ const std::string& Request::GetStream() const {
 }
 void Request::SetStream(std::string stream) {
     stream_ = std::move(stream);
+}
+
+void Request::UnlockDataBufferIfNeeded() {
+    if (slot_meta_) {
+        cache__->UnlockSlot(slot_meta_);
+    }
+}
+SocketDescriptor Request::GetSocket() {
+    return socket_fd_;
+}
+
+void Request::SetMetadata(std::string metadata) {
+    metadata_ = std::move(metadata);
+}
+
+uint64_t Request::GetMetaDataSize() const {
+    return request_header_.meta_size;
 }
 
 }

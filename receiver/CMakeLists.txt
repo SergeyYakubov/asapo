@@ -9,6 +9,7 @@ set(SOURCE_FILES
         src/receiver_config.cpp
         src/receiver_logger.cpp
         src/request_handler_db_write.cpp
+        src/request_handler_receive_data.cpp
         src/request_handler_authorize.cpp
         src/statistics_sender_fluentd.cpp
         src/requests_dispatcher.cpp
@@ -72,6 +73,7 @@ set(TEST_SOURCE_FILES
         unittests/mock_receiver_config.cpp
         unittests/test_requests_dispatcher.cpp
         unittests/test_datacache.cpp
+        unittests/test_request_handler_receive_data.cpp
         )
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")

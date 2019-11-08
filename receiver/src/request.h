@@ -30,6 +30,7 @@ class Request {
     VIRTUAL void AddHandler(const ReceiverRequestHandler*);
     VIRTUAL const RequestHandlerList& GetListHandlers() const;
     VIRTUAL uint64_t GetDataSize() const;
+    VIRTUAL uint64_t GetMetaDataSize() const;
     VIRTUAL uint64_t GetDataID() const;
     VIRTUAL std::string GetFileName() const;
     VIRTUAL void* GetData() const;
@@ -44,20 +45,18 @@ class Request {
 
     VIRTUAL const std::string& GetStream() const;
     VIRTUAL void SetStream(std::string stream);
+    VIRTUAL void SetMetadata(std::string metadata);
 
 
     VIRTUAL const std::string& GetBeamline() const;
     VIRTUAL const CustomRequestData& GetCustomData() const;
-
+    VIRTUAL Error PrepareDataBufferAndLockIfNeeded();
+    VIRTUAL void UnlockDataBufferIfNeeded();
+    VIRTUAL  SocketDescriptor GetSocket();
     std::unique_ptr<IO> io__;
     DataCache* cache__ = nullptr;
     VIRTUAL uint64_t GetSlotId() const;
   private:
-    Error PrepareDataBuffer();
-    Error ReceiveData();
-    Error ReceiveMetaData();
-    Error ReceiveRequestContent(ReceiverStatistics* statistics);
-    bool NeedReceiveData();
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     FileData data_buffer_;
