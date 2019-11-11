@@ -710,7 +710,7 @@ TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
 }
 
 TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfWrongMetadata) {
-    AssertImmediatelyCallBack(asapo::kNetErrorErrorInMetadata, asapo::ProducerErrorTemplates::kWrongInput);
+    AssertImmediatelyCallBack(asapo::kNetErrorWrongRequest, asapo::ProducerErrorTemplates::kWrongInput);
 }
 
 TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {

@@ -57,6 +57,8 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
     config_string += "," + Key("ReservedShare", error_field) + std::to_string(config.datacache_reserved_share);
     config_string += "}";
     config_string += "," +  Key("AuthorizationInterval", error_field) + std::to_string(config.authorization_interval_ms);
+    config_string += "," +  Key("ReceiveToDiskThresholdMB",
+                                error_field) + std::to_string(config.receive_to_disk_threshold_mb);
     config_string += "," +  Key("AuthorizationServer", error_field) + "\"" + config.authorization_server + "\"";
     config_string += "," +  Key("WriteToDisk", error_field) + (config.write_to_disk ? "true" : "false");
     config_string += "," +  Key("WriteToDb", error_field) + (config.write_to_db ? "true" : "false");

@@ -14,6 +14,7 @@
 #include "../src/request_handler_db_write.h"
 #include "../src/request_handler_authorize.h"
 #include "../src/request_handler_receive_data.h"
+#include "../src/request_handler_receive_metadata.h"
 
 #include "database/database.h"
 
@@ -84,10 +85,30 @@ TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCode) {
 
         ASSERT_THAT(err, Eq(nullptr));
         ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
+        ASSERT_THAT(request->GetListHandlers().size(), Eq(5));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveMetaData*>(request->GetListHandlers()[1]), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveData*>(request->GetListHandlers()[2]), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileWrite*>(request->GetListHandlers()[3]), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
+    }
+}
+
+TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCodeLargeFile) {
+    for (auto code : std::vector<asapo::Opcode> {asapo::Opcode::kOpcodeTransferData, asapo::Opcode::kOpcodeTransferSubsetData}) {
+        generic_request_header.op_code = code;
+        config.receive_to_disk_threshold_mb = 0;
+        SetReceiverConfig(config, "none");
+
+        generic_request_header.data_size = 1;
+        auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+
+        ASSERT_THAT(err, Eq(nullptr));
+        ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
         ASSERT_THAT(request->GetListHandlers().size(), Eq(4));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
-        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveData*>(request->GetListHandlers()[1]), Ne(nullptr));
-        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileWrite*>(request->GetListHandlers()[2]), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveMetaData*>(request->GetListHandlers()[1]), Ne(nullptr));
+        ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileReceive*>(request->GetListHandlers()[2]), Ne(nullptr));
         ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
     }
 }
@@ -110,7 +131,7 @@ TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWantedInConfig) {
 
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(request->GetListHandlers().size(), Eq(3));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(4));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
 }
@@ -119,7 +140,7 @@ TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWantedInRequest) {
     generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData;
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(request->GetListHandlers().size(), Eq(3));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(4));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
 }
@@ -131,10 +152,11 @@ TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
 
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(request->GetListHandlers().size(), Eq(3));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(4));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveData*>(request->GetListHandlers()[1]), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileWrite*>(request->GetListHandlers()[2]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveMetaData*>(request->GetListHandlers()[1]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveData*>(request->GetListHandlers()[2]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerFileWrite*>(request->GetListHandlers()[3]), Ne(nullptr));
 }
 
 TEST_F(FactoryTests, CachePassedToRequest) {
@@ -169,6 +191,34 @@ TEST_F(FactoryTests, DonNotGenerateMetadataRequestIfNoDbConfigured) {
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReject));
+}
+
+
+TEST_F(FactoryTests, DonNotGenerateRequestIfWriteToDiskNotActive) {
+    config.write_to_disk = false;
+    config.receive_to_disk_threshold_mb = 0;
+
+    SetReceiverConfig(config, "none");
+
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
+    generic_request_header.data_size = 1;
+
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReject));
+}
+
+TEST_F(FactoryTests, DonNotGenerateRequestIfIngestModeIsWrong) {
+    config.receive_to_disk_threshold_mb = 0;
+
+    SetReceiverConfig(config, "none");
+
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kTransferData;
+    generic_request_header.data_size = 1;
+
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
 }
 
 

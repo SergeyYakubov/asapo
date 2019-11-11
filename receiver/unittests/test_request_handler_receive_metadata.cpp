@@ -5,7 +5,7 @@
 #include "../src/receiver_error.h"
 #include "../src/request.h"
 #include "../src/request_handler.h"
-#include "../src/request_handler_receive_data.h"
+#include "../src/request_handler_receive_metadata.h"
 #include "database/database.h"
 #include "unittests/MockLogger.h"
 
@@ -42,16 +42,16 @@ using asapo::StatisticEntity;
 using asapo::ReceiverConfig;
 using asapo::SetReceiverConfig;
 using asapo::RequestFactory;
-using asapo:: RequestHandlerReceiveData;
+using asapo:: RequestHandlerReceiveMetaData;
 namespace {
 
 TEST(ReceiveData, Constructor) {
-    RequestHandlerReceiveData handler;
+    RequestHandlerReceiveMetaData handler;
     ASSERT_THAT(dynamic_cast<asapo::IO*>(handler.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(handler.log__), Ne(nullptr));
 }
 
-class ReceiveDataHandlerTests : public Test {
+class ReceiveMetaDataHandlerTests : public Test {
   public:
     GenericRequestHeader generic_request_header;
     asapo::SocketDescriptor socket_fd_{1};
@@ -62,13 +62,10 @@ class ReceiveDataHandlerTests : public Test {
     std::string expected_metadata = "meta";
     uint64_t expected_metadata_size = expected_metadata.size();
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
-    char expected_request_message[asapo::kMaxMessageSize] = "test_message";
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
-    MockDataCache mock_cache;
-    RequestHandlerReceiveData handler;
+    RequestHandlerReceiveMetaData handler;
     NiceMock<asapo::MockLogger> mock_logger;
-
 
     void SetUp() override {
         generic_request_header.data_size = data_size_;
@@ -76,20 +73,14 @@ class ReceiveDataHandlerTests : public Test {
         generic_request_header.meta_size = expected_metadata_size;
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
-        strcpy(generic_request_header.message, expected_request_message);
         request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
-        //ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
-        //DoAll(SetArgPointee<3>(nullptr),
-//                  Return(0)
-//                 ));
     }
     void TearDown() override {
         handler.io__.release();
     }
     void ExpectReceive(uint64_t expected_size, bool ok = true);
-    void ExpectReceiveData(bool ok = true);
     void ExpectReceiveMetaData(bool ok = true);
 };
 
@@ -100,7 +91,7 @@ ACTION_P(CopyStr, value) {
 }
 
 
-void ReceiveDataHandlerTests::ExpectReceive(uint64_t expected_size, bool ok) {
+void ReceiveMetaDataHandlerTests::ExpectReceive(uint64_t expected_size, bool ok) {
     EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, expected_size, _)).WillOnce(
         DoAll(
             CopyStr(expected_metadata),
@@ -109,97 +100,27 @@ void ReceiveDataHandlerTests::ExpectReceive(uint64_t expected_size, bool ok) {
         ));
 
 }
-void ReceiveDataHandlerTests::ExpectReceiveData(bool ok) {
-    ExpectReceive(data_size_, ok);
-}
-void ReceiveDataHandlerTests::ExpectReceiveMetaData(bool ok) {
+
+void ReceiveMetaDataHandlerTests::ExpectReceiveMetaData(bool ok) {
     ExpectReceive(expected_metadata_size, ok);
 }
 
-TEST_F(ReceiveDataHandlerTests, CheckStatisticEntity) {
+TEST_F(ReceiveMetaDataHandlerTests, CheckStatisticEntity) {
     auto entity = handler.GetStatisticEntity();
     ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetwork));
 }
 
-
-TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveEmptyData) {
-    generic_request_header.data_size = 0;
-    generic_request_header.meta_size = 0;
-    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
-
-    EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
-
-    auto err = handler.ProcessRequest(request.get());
-
-    ASSERT_THAT(err, Eq(nullptr));
-}
-
-
-TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveDataWhenMetadataOnlyWasSent) {
-    generic_request_header.data_size = 10;
-    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kTransferMetaDataOnly;
-    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
-
-    ExpectReceiveMetaData(true);
-
-    auto err = handler.ProcessRequest(request.get());
-
-    ASSERT_THAT(err, Eq(nullptr));
-}
-
-TEST_F(ReceiveDataHandlerTests, HandleReturnsErrorOnDataReceive) {
-    ExpectReceiveMetaData(true);
-    ExpectReceiveData(false);
-    auto err = handler.ProcessRequest(request.get());
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
-}
-
-TEST_F(ReceiveDataHandlerTests, HandleReturnsErrorOnMetaDataReceive) {
+TEST_F(ReceiveMetaDataHandlerTests, HandleReturnsErrorOnMetaDataReceive) {
     ExpectReceiveMetaData(false);
     auto err = handler.ProcessRequest(request.get());
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
 }
 
-TEST_F(ReceiveDataHandlerTests, HandleReturnsOK) {
+TEST_F(ReceiveMetaDataHandlerTests, HandleReturnsOK) {
     ExpectReceiveMetaData(true);
-    ExpectReceiveData(true);
     auto err = handler.ProcessRequest(request.get());
     ASSERT_THAT(err, Eq(nullptr));
 }
-
-TEST_F(ReceiveDataHandlerTests, HandleGetsMemoryFromCache) {
-    request->cache__ = &mock_cache;
-    asapo::CacheMeta meta;
-    meta.id = expected_slot_id;
-    EXPECT_CALL(mock_cache, GetFreeSlotAndLock(data_size_, _)).WillOnce(
-        DoAll(SetArgPointee<1>(&meta),
-              Return(&mock_cache)
-             ));
-
-    EXPECT_CALL(mock_cache, UnlockSlot(&meta));
-
-    auto err = handler.ProcessRequest(request.get());
-
-    ASSERT_THAT(request->GetSlotId(), Eq(expected_slot_id));
-}
-
-
-TEST_F(ReceiveDataHandlerTests, ErrorGetMemoryFromCache) {
-    request->cache__ = &mock_cache;
-
-    EXPECT_CALL(mock_cache, GetFreeSlotAndLock(data_size_, _)).WillOnce(
-        Return(nullptr)
-    );
-
-    EXPECT_CALL(mock_cache, UnlockSlot(_)).Times(0);
-
-
-    auto err = handler.ProcessRequest(request.get());
-
-    ASSERT_THAT(request->GetSlotId(), Eq(0));
-    ASSERT_THAT(err, Eq(asapo::ErrorTemplates::kMemoryAllocationError));
-}
-
 
 
 }

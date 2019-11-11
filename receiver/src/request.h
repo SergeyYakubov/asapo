@@ -12,7 +12,8 @@
 #include "request_handler_authorize.h"
 #include "request_handler_db_meta_write.h"
 #include "request_handler_receive_data.h"
-
+#include "request_handler_receive_metadata.h"
+#include "request_handler_file_receive.h"
 
 #include "receiver_statistics.h"
 #include "data_cache.h"
@@ -53,7 +54,7 @@ class Request {
     VIRTUAL const CustomRequestData& GetCustomData() const;
     VIRTUAL Error PrepareDataBufferAndLockIfNeeded();
     VIRTUAL void UnlockDataBufferIfNeeded();
-    VIRTUAL  SocketDescriptor GetSocket();
+    VIRTUAL  SocketDescriptor GetSocket() const ;
     std::unique_ptr<IO> io__;
     DataCache* cache__ = nullptr;
     VIRTUAL uint64_t GetSlotId() const;

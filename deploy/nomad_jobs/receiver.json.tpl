@@ -18,6 +18,7 @@
   },
   "Tag": "{{ env "NOMAD_ADDR_recv" }}",
   "WriteToDisk":true,
+  "ReceiveToDiskThresholdMB":50,
   "WriteToDb":true,
   "LogLevel": "{{ keyOrDefault "receiver_log_level" "info" }}",
   "RootFolder" : "/var/lib/receiver/data"

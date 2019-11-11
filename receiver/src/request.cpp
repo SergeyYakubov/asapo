@@ -135,7 +135,7 @@ void Request::UnlockDataBufferIfNeeded() {
         cache__->UnlockSlot(slot_meta_);
     }
 }
-SocketDescriptor Request::GetSocket() {
+SocketDescriptor Request::GetSocket() const {
     return socket_fd_;
 }
 

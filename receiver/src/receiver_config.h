@@ -21,6 +21,7 @@ struct ReceiverConfig {
     bool use_datacache = true;
     uint64_t datacache_size_gb = 0;
     uint64_t datacache_reserved_share = 0;
+    uint64_t receive_to_disk_threshold_mb = 0;
     LogLevel log_level = LogLevel::Info;
     std::string tag;
     std::string advertise_ip;

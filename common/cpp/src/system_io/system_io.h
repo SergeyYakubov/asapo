@@ -26,7 +26,7 @@ class SystemIO final : public IO {
   private:
     static const int kNetBufferSize;//TODO: need to set by config
     static const size_t kMaxTransferChunkSize;
-    static const size_t kReadBufSize;
+    static const size_t kReadWriteBufSize;
 
     static const int kWaitTimeoutMs;
 
@@ -80,6 +80,9 @@ class SystemIO final : public IO {
     Error CreateEpoolIfNeeded(SocketDescriptor master_socket) const;
     Error ProcessNewConnection(SocketDescriptor master_socket, std::vector<std::string>* new_connections,
                                ListSocketDescriptors* sockets_to_listen) const;
+    FileDescriptor OpenWithCreateFolders(const std::string& root_folder, const std::string& fname,
+                                         bool create_directories, Error* err) const;
+
 #endif
   public:
     ~SystemIO();
@@ -130,6 +133,9 @@ class SystemIO final : public IO {
     FileData        GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override;
     Error           WriteDataToFile  (const std::string& root_folder, const std::string& fname, const FileData& data,
                                       size_t length, bool create_directories) const override;
+    Error           ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
+                                      size_t length, bool create_directories) const override;
+
     Error           WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
                                     size_t length, bool create_directories) const override;
     SubDirList      GetSubDirectories(const std::string& path, Error* err) const override;

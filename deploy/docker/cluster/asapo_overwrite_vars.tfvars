@@ -2,6 +2,7 @@ elk_logs = true
 
 receiver_total_memory_size = 35000
 receiver_dataserver_cache_size = 30 #gb
+receiver_receive_to_disk_threshold = 50 # mb
 receiver_dataserver_nthreads = 8
 
 grafana_total_memory_size = 2000

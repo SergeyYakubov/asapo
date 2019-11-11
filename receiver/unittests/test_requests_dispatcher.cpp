@@ -289,8 +289,17 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsMetaDataFailure) {
     auto err = dispatcher->ProcessRequest(request);
 
     ASSERT_THAT(err, Eq(asapo::DBErrorTemplates::kJsonParseError));
-    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorErrorInMetadata));
+    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorWrongRequest));
     ASSERT_THAT(std::string(response.message), HasSubstr("parse"));
+}
+
+TEST_F(RequestsDispatcherTests, ProcessRequestReturnsBadRequest) {
+    MockHandleRequest(true, asapo::ReceiverErrorTemplates::kBadRequest.Generate());
+    MockSendResponse(&response, false);
+
+    auto err = dispatcher->ProcessRequest(request);
+
+    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorWrongRequest));
 }
 
 

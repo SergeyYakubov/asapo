@@ -103,7 +103,8 @@ class IO {
                                              size_t length, bool create_directories) const = 0;
     virtual Error          WriteDataToFile  (const std::string& root_folder, const std::string& fname, const uint8_t* data,
                                              size_t length, bool create_directories) const = 0;
-
+    virtual Error ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
+                                    size_t length, bool create_directories) const = 0;
     virtual void            CreateNewDirectory      (const std::string& directory_name, Error* err) const = 0;
     virtual FileData        GetDataFromFile         (const std::string& fname, uint64_t* fsize, Error* err) const = 0;
     virtual SubDirList      GetSubDirectories(const std::string& path, Error* err) const = 0;

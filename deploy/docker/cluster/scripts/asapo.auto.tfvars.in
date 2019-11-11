@@ -17,6 +17,7 @@ receiver_total_memory_size = "2000"
 
 receiver_dataserver_cache_size = "1" #gb
 receiver_dataserver_nthreads = 4
+receiver_receive_to_disk_threshold = 50 #mb
 
 grafana_total_memory_size = "256"
 

@@ -18,6 +18,7 @@
   "ListenPort": 22001,
   "Tag": "22001",
   "WriteToDisk": true,
+  "ReceiveToDiskThresholdMB":50,
   "WriteToDb": true,
   "LogLevel" : "debug",
   "RootFolder" : "/tmp/asapo/receiver/files"

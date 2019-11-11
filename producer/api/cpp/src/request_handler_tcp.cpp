@@ -91,7 +91,7 @@ Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_hea
         res_err->Append(sendDataResponse.message);
         return res_err;
     }
-    case kNetErrorErrorInMetadata : {
+    case kNetErrorWrongRequest : {
         auto res_err = ProducerErrorTemplates::kWrongInput.Generate();
         res_err->Append(sendDataResponse.message);
         return res_err;

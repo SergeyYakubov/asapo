@@ -235,6 +235,13 @@ class MockIO : public IO {
     }
 
 
+    MOCK_CONST_METHOD5(ReceiveDataToFile_t, ErrorInterface * (SocketDescriptor socket, const std::string& root_folder,
+                       const std::string& fname, size_t fsize, bool create_directories));
+
+    Error ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
+                            size_t length, bool create_directories) const override {
+        return Error{ReceiveDataToFile_t(socket, root_folder, fname, length, create_directories)};
+    }
 
 
     MOCK_CONST_METHOD5(WriteDataToFile_t, ErrorInterface * (const std::string& root_folder, const std::string& fname,

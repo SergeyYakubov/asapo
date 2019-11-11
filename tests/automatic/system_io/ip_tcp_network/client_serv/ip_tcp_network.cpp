@@ -79,7 +79,8 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
                 io->Send(client_fd, buffer.get(), received, &err);
                 ExitIfErrIsNotOk(&err, 107);
 
-                received = io->Receive(client_fd, buffer.get(), need_to_receive_size, &err);
+                io->ReceiveDataToFile(client_fd, "", "received", need_to_receive_size, false);
+                buffer = io->GetDataFromFile("received", &need_to_receive_size, &err);
                 io->Send(client_fd, buffer.get(), received, &err);
                 ExitIfErrIsNotOk(&err, 108);
             }
@@ -113,7 +114,7 @@ void CheckNormal(int times, size_t size) {
             buffer[i] = rand();
         }
 
-        FILE* out = fopen("data", "wb");
+        FILE* out = fopen("sent", "wb");
         fwrite(buffer.get(), 1, size, out);
         fclose(out);
 
@@ -147,7 +148,7 @@ void CheckNormal(int times, size_t size) {
         }
 
         std::cout << "[CLIENT] send file" << std::endl;
-        err = io->SendFile(socket, "data", size);
+        err = io->SendFile(socket, "sent", size);
         ExitIfErrIsNotOk(&err, 208);
         std::cout << "[CLIENT] receive file" << std::endl;
         receive_count = io->Receive(socket, buffer2.get(), size, &err);
@@ -206,6 +207,8 @@ int main(int argc, char* argv[]) {
     if(asapo::IOErrorTemplates::kConnectionRefused != err) {
         ExitIfErrIsNotOk(&err, 304);
     }
+    remove("sent");
+    remove("received");
 
     return 0;
 }
