@@ -11,6 +11,7 @@
 #include "request_handler_db_write.h"
 #include "request_handler_authorize.h"
 #include "request_handler_db_meta_write.h"
+#include "request_handler_receive_data.h"
 
 
 #include "receiver_statistics.h"

@@ -15,11 +15,11 @@ class RequestHandlerReceiveData final: public ReceiverRequestHandler {
     Error ProcessRequest(Request* request) const override;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
- private:
-  Error ReceiveData(Request* request)const;
-  Error ReceiveMetaData(Request* request) const;
-  Error ReceiveRequestContent(Request* request) const;
-  bool NeedReceiveData(const Request* request) const;
+  private:
+    Error ReceiveData(Request* request)const;
+    Error ReceiveMetaData(Request* request) const;
+    Error ReceiveRequestContent(Request* request) const;
+    bool NeedReceiveData(const Request* request) const;
 
 };
 

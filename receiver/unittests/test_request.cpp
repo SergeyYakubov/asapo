@@ -63,7 +63,7 @@ class MockReqestHandler : public asapo::ReceiverRequestHandler {
 class RequestTests : public Test {
   public:
     GenericRequestHeader generic_request_header;
-    asapo::SocketDescriptor socket_fd_{1};
+    asapo::SocketDescriptor expected_socket_id{1};
     uint64_t data_size_ {100};
     uint64_t data_id_{15};
     uint64_t expected_slot_id{16};
@@ -85,9 +85,9 @@ class RequestTests : public Test {
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
-        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
+        request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
-        ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
+        ON_CALL(mock_io, Receive_t(expected_socket_id, _, data_size_, _)).WillByDefault(
             DoAll(SetArgPointee<3>(nullptr),
                   Return(0)
                  ));
@@ -147,7 +147,7 @@ TEST_F(RequestTests, GetRequestMessage) {
 }
 
 
-TEST_F(RequestTests, OriginUriEmptyByDefault) {
+TEST_F(RequestTests, GetOriginUri) {
     auto uri = request->GetOriginUri();
 
     ASSERT_THAT(uri, Eq(expected_origin_uri));
@@ -165,7 +165,7 @@ void RequestTests::ExpectFileName(std::string sended, std::string received) {
     strcpy(generic_request_header.message, sended.c_str());
 
     request->io__.release();
-    request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
+    request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
 
     auto fname = request->GetFileName();
@@ -173,7 +173,6 @@ void RequestTests::ExpectFileName(std::string sended, std::string received) {
     ASSERT_THAT(fname, Eq(received));
 
 }
-
 
 TEST_F(RequestTests, GetFileName) {
     ExpectFileName("filename.txt", "filename.txt");
@@ -210,6 +209,15 @@ TEST_F(RequestTests, SetGetBeamline) {
     request->SetBeamline("beamline");
 
     ASSERT_THAT(request->GetBeamline(), "beamline");
+}
+
+TEST_F(RequestTests, SetGetSocket) {
+    ASSERT_THAT(request->GetSocket(), expected_socket_id);
+}
+
+TEST_F(RequestTests, SetGetMetadata) {
+    request->SetMetadata("aaa");
+    ASSERT_THAT(request->GetMetaData(), "aaa");
 }
 
 

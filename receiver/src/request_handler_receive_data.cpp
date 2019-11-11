@@ -29,7 +29,7 @@ Error RequestHandlerReceiveData::ReceiveMetaData(Request* request) const {
 
 bool RequestHandlerReceiveData::NeedReceiveData(const Request* request) const {
     return request->GetDataSize() > 0 &&
-        (request->GetCustomData()[asapo::kPosIngestMode] & asapo::kTransferData);
+           (request->GetCustomData()[asapo::kPosIngestMode] & asapo::kTransferData);
 }
 
 Error RequestHandlerReceiveData::ReceiveData(Request* request) const {

@@ -70,7 +70,7 @@ class ReceiveDataHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
 
 
-  void SetUp() override {
+    void SetUp() override {
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         generic_request_header.meta_size = expected_metadata_size;
@@ -80,8 +80,8 @@ class ReceiveDataHandlerTests : public Test {
         request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
-            //ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
-            //DoAll(SetArgPointee<3>(nullptr),
+        //ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
+        //DoAll(SetArgPointee<3>(nullptr),
 //                  Return(0)
 //                 ));
     }

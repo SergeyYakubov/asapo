@@ -1,7 +1,7 @@
 #include "request.h"
 #include "io/io_factory.h"
-
 #include "receiver_config.h"
+
 namespace asapo {
 
 Request::Request(const GenericRequestHeader& header,
@@ -37,8 +37,6 @@ Error Request::Handle(ReceiverStatistics* statistics) {
         statistics->StartTimer(handler->GetStatisticEntity());
         auto err = handler->ProcessRequest(this);
         if (err) {
-            if (dynamic_cast<const RequestHandlerAuthorize*>(handler));
-
             return err;
         }
         statistics->StopTimer();
