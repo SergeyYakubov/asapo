@@ -1,4 +1,4 @@
-set(TARGET_NAME transfer-single-file)
+set(TARGET_NAME transfer-single-file_bypass)
 
 ################################
 # Testing
