@@ -16,9 +16,6 @@ class RequestHandlerReceiveData final: public ReceiverRequestHandler {
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
   private:
-    Error ReceiveData(Request* request)const;
-    Error ReceiveMetaData(Request* request) const;
-    Error ReceiveRequestContent(Request* request) const;
     bool NeedReceiveData(const Request* request) const;
 
 };

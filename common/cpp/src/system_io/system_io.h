@@ -30,6 +30,16 @@ class SystemIO final : public IO {
 
     static const int kWaitTimeoutMs;
 
+#if defined(__linux__) || defined (__APPLE__)
+    // used to for epoll - assumed single epoll instance per class instance
+    const int kMaxEpollEvents = 10;
+    mutable int epoll_fd_ = -1;
+    Error AddToEpool(SocketDescriptor sd) const;
+    Error CreateEpoolIfNeeded(SocketDescriptor master_socket) const;
+    Error ProcessNewConnection(SocketDescriptor master_socket, std::vector<std::string>* new_connections,
+                               ListSocketDescriptors* sockets_to_listen) const;
+#endif
+
     void ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const;
 
     //void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
@@ -71,19 +81,8 @@ class SystemIO final : public IO {
     void            GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const;
     Error           CreateDirectoryWithParents(const std::string& root_path, const std::string& path) const;
     uint8_t* AllocateArray(uint64_t fsize, Error* err) const;
-
-#if defined(__linux__) || defined (__APPLE__)
-    // used to for epoll - assumed single epoll instance per class instance
-    const int kMaxEpollEvents = 10;
-    mutable int epoll_fd_ = -1;
-    Error AddToEpool(SocketDescriptor sd) const;
-    Error CreateEpoolIfNeeded(SocketDescriptor master_socket) const;
-    Error ProcessNewConnection(SocketDescriptor master_socket, std::vector<std::string>* new_connections,
-                               ListSocketDescriptors* sockets_to_listen) const;
     FileDescriptor OpenWithCreateFolders(const std::string& root_folder, const std::string& fname,
                                          bool create_directories, Error* err) const;
-
-#endif
   public:
     ~SystemIO();
     /*

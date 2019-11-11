@@ -60,7 +60,6 @@ class ReceiveDataHandlerTests : public Test {
     uint64_t expected_slot_id{16};
     std::string expected_origin_uri = "origin_uri";
     std::string expected_metadata = "meta";
-    uint64_t expected_metadata_size = expected_metadata.size();
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     char expected_request_message[asapo::kMaxMessageSize] = "test_message";
     std::unique_ptr<Request> request;
@@ -73,24 +72,18 @@ class ReceiveDataHandlerTests : public Test {
     void SetUp() override {
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
-        generic_request_header.meta_size = expected_metadata_size;
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
         request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
-        //ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
-        //DoAll(SetArgPointee<3>(nullptr),
-//                  Return(0)
-//                 ));
     }
     void TearDown() override {
         handler.io__.release();
     }
     void ExpectReceive(uint64_t expected_size, bool ok = true);
     void ExpectReceiveData(bool ok = true);
-    void ExpectReceiveMetaData(bool ok = true);
 };
 
 ACTION_P(CopyStr, value) {
@@ -112,9 +105,6 @@ void ReceiveDataHandlerTests::ExpectReceive(uint64_t expected_size, bool ok) {
 void ReceiveDataHandlerTests::ExpectReceiveData(bool ok) {
     ExpectReceive(data_size_, ok);
 }
-void ReceiveDataHandlerTests::ExpectReceiveMetaData(bool ok) {
-    ExpectReceive(expected_metadata_size, ok);
-}
 
 TEST_F(ReceiveDataHandlerTests, CheckStatisticEntity) {
     auto entity = handler.GetStatisticEntity();
@@ -124,7 +114,6 @@ TEST_F(ReceiveDataHandlerTests, CheckStatisticEntity) {
 
 TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveEmptyData) {
     generic_request_header.data_size = 0;
-    generic_request_header.meta_size = 0;
     request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
@@ -140,28 +129,18 @@ TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveDataWhenMetadataOnlyWasSent)
     generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kTransferMetaDataOnly;
     request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
 
-    ExpectReceiveMetaData(true);
-
     auto err = handler.ProcessRequest(request.get());
 
     ASSERT_THAT(err, Eq(nullptr));
 }
 
 TEST_F(ReceiveDataHandlerTests, HandleReturnsErrorOnDataReceive) {
-    ExpectReceiveMetaData(true);
     ExpectReceiveData(false);
     auto err = handler.ProcessRequest(request.get());
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
 }
 
-TEST_F(ReceiveDataHandlerTests, HandleReturnsErrorOnMetaDataReceive) {
-    ExpectReceiveMetaData(false);
-    auto err = handler.ProcessRequest(request.get());
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
-}
-
 TEST_F(ReceiveDataHandlerTests, HandleReturnsOK) {
-    ExpectReceiveMetaData(true);
     ExpectReceiveData(true);
     auto err = handler.ProcessRequest(request.get());
     ASSERT_THAT(err, Eq(nullptr));
