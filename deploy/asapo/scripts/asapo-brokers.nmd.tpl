@@ -27,7 +27,6 @@ job "asapo-brokers" {
       user = "${asapo_user}"
       config {
         network_mode = "host"
-	    privileged = true
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "yakser/asapo-broker${image_suffix}"

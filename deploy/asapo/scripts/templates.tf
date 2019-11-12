@@ -12,6 +12,7 @@ data "template_file" "nginx" {
     authorizer_port = "${var.authorizer_port}"
     discovery_port = "${var.discovery_port}"
     asapo_user = "${var.asapo_user}"
+    consul_dns_port = "${var.consul_dns_port}"
   }
 }
 

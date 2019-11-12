@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+scp scripts/* psana002:@NOMAD_INSTALL@/terraform_scripts/
+scp asap3.tfvars psana002:@NOMAD_INSTALL@/terraform_scripts/

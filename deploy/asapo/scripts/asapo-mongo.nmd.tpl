@@ -1,6 +1,10 @@
 job "asapo-mongo" {
   datacenters = ["dc1"]
-
+  affinity {
+    attribute = "$${meta.asapo_service}"
+    value     = "false"
+    weight    = 100
+  }
   update {
     max_parallel = 1
     min_healthy_time = "10s"
@@ -20,19 +24,21 @@ job "asapo-mongo" {
 
     task "mongo" {
       driver = "docker"
+      user = "${asapo_user}"
 
       config {
         network_mode = "host"
-        image = "mongo:4.0.0"
-        volumes = ["/${meta.shared_storage}/mongodb:/data/db"]
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
+        image = "mongo:${mongo_version}"
+        volumes = ["${mongo_dir}:/data/db"]
       }
 
       resources {
-        cpu    = 1500
-        memory = 12560
+        memory = "${mongo_total_memory_size}"
         network {
           port "mongo" {
-          static = 27017
+          static = "${mongo_port}"
           }
         }
       }

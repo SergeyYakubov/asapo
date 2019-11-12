@@ -1,5 +1,10 @@
 job "asapo-perfmetrics" {
   datacenters = ["dc1"]
+  affinity {
+    attribute = "$${meta.asapo_service}"
+    value     = "true"
+    weight    = 100
+  }
 
 #  update {
 #    max_parallel = 1
@@ -19,21 +24,24 @@ job "asapo-perfmetrics" {
 
     task "influxdb" {
       driver = "docker"
-
+      user = "${asapo_user}"
       config {
-        dns_servers = ["127.0.0.1"]
         network_mode = "host"
-        image = "influxdb"
-        volumes = ["/${meta.shared_storage}/influxdb:/var/lib/influxdb"]
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
+        image = "influxdb:${influxdb_version}"
+        volumes = ["/${service_dir}/influxdb:/var/lib/influxdb"]
+      }
+
+      env {
+        PRE_CREATE_DB="asapo_receivers;asapo_brokers"
       }
 
       resources {
-        cpu    = 1500
-        memory = 32000
+        memory = "${influxdb_total_memory_size}"
         network {
-          mbits = 10
           port "influxdb" {
-          static = 8086
+          static = "${influxdb_port}"
           }
         }
       }
@@ -60,26 +68,25 @@ job "asapo-perfmetrics" {
 
     task "grafana" {
       driver = "docker"
-
+      user = "${asapo_user}"
       env {
-        GF_SERVER_DOMAIN = "${attr.unique.hostname}"
+        GF_SERVER_DOMAIN = "$${attr.unique.hostname}"
         GF_SERVER_ROOT_URL = "%(protocol)s://%(domain)s/performance/"
       }
 
       config {
-        dns_servers = ["127.0.0.1"]
         network_mode = "host"
-        image = "grafana/grafana"
-        volumes = ["/${meta.shared_storage}/grafana:/var/lib/grafana"]
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
+        image = "grafana/grafana:${grafana_version}"
+        volumes = ["/${service_dir}/grafana:/var/lib/grafana"]
       }
 
       resources {
-        cpu    = 1500
-        memory = 2560
+        memory = "${grafana_total_memory_size}"
         network {
-          mbits = 10
           port "grafana" {
-          static = 3000
+          static = "${grafana_port}"
           }
         }
       }

@@ -70,6 +70,8 @@ variable "discovery_port" {}
 
 variable "authorizer_port" {}
 
+variable "consul_dns_port" {}
+
 variable "n_receivers" {}
 
 variable "n_brokers" {}

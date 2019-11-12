@@ -40,7 +40,7 @@ elasticsearch_port = 9200
 kibana_port = 5601
 discovery_port = 5006
 authorizer_port = 5007
-
+consul_dns_port = 8600
 
 n_receivers = 1
 n_brokers = 1

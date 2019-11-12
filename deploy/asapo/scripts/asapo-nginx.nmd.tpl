@@ -23,10 +23,28 @@ job "asapo-nginx" {
     task "nginx" {
       driver = "docker"
 
+      user = "${asapo_user}"
+
+      meta {
+        fluentd_port = "${fluentd_port}"
+        fluentd_port_stream = "${fluentd_port_stream}"
+        kibana_port = "${kibana_port}"
+        elasticsearch_port = "${elasticsearch_port}"
+        grafana_port = "${grafana_port}"
+        influxdb_port = "${influxdb_port}"
+        authorizer_port = "${authorizer_port}"
+        discovery_port = "${discovery_port}"
+        consul_dns_port = "${consul_dns_port}"
+      }
+
       config {
         network_mode = "host"
-        image = "nginx:1.14"
-        volumes = ["local/nginx.conf:/etc/nginx/nginx.conf"]
+	    security_opt = ["no-new-privileges"]
+	    userns_mode = "host"
+        image = "nginx:${nginx_version}"
+        volumes = [
+          "local/nginx.conf:/etc/nginx/nginx.conf"
+        ]
       }
 
       resources {
@@ -59,7 +77,7 @@ job "asapo-nginx" {
       }
 
       template {
-         source        = "@NOMAD_INSTALL@/nginx.conf.tpl"
+         source        = "${scripts_dir}/nginx.conf.tpl"
          destination   = "local/nginx.conf"
          change_mode   = "restart"
       }

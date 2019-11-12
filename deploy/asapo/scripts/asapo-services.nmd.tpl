@@ -16,7 +16,6 @@ job "asapo-services" {
       user = "${asapo_user}"
       config {
         network_mode = "host"
-	    privileged = true
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "yakser/asapo-authorizer${image_suffix}"
@@ -81,7 +80,6 @@ job "asapo-services" {
       user = "${asapo_user}"
       config {
         network_mode = "host"
-	    privileged = true
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "yakser/asapo-discovery${image_suffix}"

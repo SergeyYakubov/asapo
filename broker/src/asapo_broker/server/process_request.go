@@ -5,7 +5,6 @@ import (
 	"asapo_common/logger"
 	log "asapo_common/logger"
 	"asapo_common/utils"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/rs/xid"
 	"net/http"
@@ -33,7 +32,6 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 		err_str := "wrong groupid " + group_id
 		log_str := "processing get " + op + " request in " + db_name + " at " + settings.GetDatabaseServer() + ": " + err_str
 		logger.Error(log_str)
-		fmt.Println(log_str)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err_str))
 		return false
