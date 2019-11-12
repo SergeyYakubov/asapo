@@ -63,7 +63,7 @@ class MockReqestHandler : public asapo::ReceiverRequestHandler {
 class RequestTests : public Test {
   public:
     GenericRequestHeader generic_request_header;
-    asapo::SocketDescriptor socket_fd_{1};
+    asapo::SocketDescriptor expected_socket_id{1};
     uint64_t data_size_ {100};
     uint64_t data_id_{15};
     uint64_t expected_slot_id{16};
@@ -85,9 +85,9 @@ class RequestTests : public Test {
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
-        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
+        request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
-        ON_CALL(mock_io, Receive_t(socket_fd_, _, data_size_, _)).WillByDefault(
+        ON_CALL(mock_io, Receive_t(expected_socket_id, _, data_size_, _)).WillByDefault(
             DoAll(SetArgPointee<3>(nullptr),
                   Return(0)
                  ));
@@ -96,143 +96,12 @@ class RequestTests : public Test {
         request->io__.release();
     }
     void ExpectFileName(std::string sended, std::string received);
-    void ExpectReceive(uint64_t expected_size, bool ok = true);
-    void ExpectReceiveData(bool ok = true);
-    void ExpectReceiveMetaData(bool ok = true);
-    void ExpectReceiveAllOK();
-
-
 };
-
-ACTION_P(CopyStr, value) {
-    if (value.size() <= arg2 && value.size() > 0) {
-        memcpy(static_cast<char*>(arg1), value.c_str(), value.size());
-    }
-}
-
-
-void RequestTests::ExpectReceive(uint64_t expected_size, bool ok) {
-    EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, expected_size, _)).WillOnce(
-        DoAll(
-            CopyStr(expected_metadata),
-            SetArgPointee<3>(ok ? nullptr : new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
-            Return(0)
-        ));
-
-}
-void RequestTests::ExpectReceiveData(bool ok) {
-    ExpectReceive(data_size_, ok);
-}
-void RequestTests::ExpectReceiveMetaData(bool ok) {
-    ExpectReceive(expected_metadata_size, ok);
-}
-
-void RequestTests::ExpectReceiveAllOK() {
-    ExpectReceiveData(true);
-    ExpectReceiveMetaData(true);
-}
-
-TEST_F(RequestTests, HandleDoesNotReceiveEmptyData) {
-    generic_request_header.data_size = 0;
-    generic_request_header.meta_size = 0;
-    request->io__.release();
-    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
-    request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
-
-    EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
-
-    auto err = request->Handle(stat);
-
-    ASSERT_THAT(err, Eq(nullptr));
-}
-
-
-TEST_F(RequestTests, HandleDoesNotReceiveDataWhenMetadataOnlyWasSent) {
-    generic_request_header.data_size = 10;
-    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kTransferMetaDataOnly;
-    request->io__.release();
-    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
-    request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
-
-    ExpectReceiveMetaData(true);
-
-    auto err = request->Handle(stat);
-
-    ASSERT_THAT(err, Eq(nullptr));
-}
-
-
-TEST_F(RequestTests, HandleReturnsErrorOnDataReceive) {
-    ExpectReceiveData(false);
-    auto err = request->Handle(stat);
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
-}
-
-TEST_F(RequestTests, HandleReturnsErrorOnMetaDataReceive) {
-    ExpectReceiveData(true);
-    ExpectReceiveMetaData(false);
-    auto err = request->Handle(stat);
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
-}
-
-
-
-TEST_F(RequestTests, HandleGetsMemoryFromCache) {
-    request->cache__ = &mock_cache;
-    asapo::CacheMeta meta;
-    meta.id = expected_slot_id;
-    EXPECT_CALL(mock_cache, GetFreeSlotAndLock(data_size_, _)).WillOnce(
-        DoAll(SetArgPointee<1>(&meta),
-              Return(&mock_cache)
-             ));
-
-    EXPECT_CALL(mock_cache, UnlockSlot(&meta));
-
-    request->Handle(stat);
-
-    ASSERT_THAT(request->GetSlotId(), Eq(expected_slot_id));
-}
-
-
-TEST_F(RequestTests, ErrorGetMemoryFromCache) {
-    request->cache__ = &mock_cache;
-
-    EXPECT_CALL(mock_cache, GetFreeSlotAndLock(data_size_, _)).WillOnce(
-        Return(nullptr)
-    );
-
-    EXPECT_CALL(mock_cache, UnlockSlot(_)).Times(0);
-
-
-    auto err = request->Handle(stat);
-
-    ASSERT_THAT(request->GetSlotId(), Eq(0));
-    ASSERT_THAT(err, Eq(asapo::ErrorTemplates::kMemoryAllocationError));
-}
-
-
-TEST_F(RequestTests, HandleMeasuresTimeOnContentReceive) {
-
-    EXPECT_CALL(mock_statistics, StartTimer_t(asapo::StatisticEntity::kNetwork));
-
-    ExpectReceiveAllOK();
-
-    EXPECT_CALL(mock_statistics, StopTimer_t());
-
-    request->Handle(stat);
-
-
-    ASSERT_THAT(request->GetMetaData(), Eq(expected_metadata));
-
-
-}
 
 
 TEST_F(RequestTests, HandleProcessesRequests) {
 
     MockReqestHandler mock_request_handler;
-
-    EXPECT_CALL(mock_statistics, StartTimer_t(asapo::StatisticEntity::kNetwork));
 
     EXPECT_CALL(mock_request_handler, ProcessRequest_t(_)).WillOnce(
         Return(nullptr)
@@ -245,7 +114,7 @@ TEST_F(RequestTests, HandleProcessesRequests) {
 
     EXPECT_CALL(mock_statistics, StartTimer_t(asapo::StatisticEntity::kDisk)).Times(2);
 
-    EXPECT_CALL(mock_statistics, StopTimer_t()).Times(2);
+    EXPECT_CALL(mock_statistics, StopTimer_t()).Times(1);
 
 
     auto err = request->Handle(stat);
@@ -256,17 +125,6 @@ TEST_F(RequestTests, HandleProcessesRequests) {
 TEST_F(RequestTests, DataIsNullAtInit) {
     auto data = request->GetData();
     ASSERT_THAT(data, Eq(nullptr));
-}
-
-TEST_F(RequestTests, GetDataIsNotNullptr) {
-
-    request->Handle(stat);
-    auto data = request->GetData();
-
-
-    ASSERT_THAT(data, Ne(nullptr));
-
-
 }
 
 TEST_F(RequestTests, GetDataID) {
@@ -289,7 +147,7 @@ TEST_F(RequestTests, GetRequestMessage) {
 }
 
 
-TEST_F(RequestTests, OriginUriEmptyByDefault) {
+TEST_F(RequestTests, GetOriginUri) {
     auto uri = request->GetOriginUri();
 
     ASSERT_THAT(uri, Eq(expected_origin_uri));
@@ -307,7 +165,7 @@ void RequestTests::ExpectFileName(std::string sended, std::string received) {
     strcpy(generic_request_header.message, sended.c_str());
 
     request->io__.release();
-    request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
+    request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
 
     auto fname = request->GetFileName();
@@ -315,7 +173,6 @@ void RequestTests::ExpectFileName(std::string sended, std::string received) {
     ASSERT_THAT(fname, Eq(received));
 
 }
-
 
 TEST_F(RequestTests, GetFileName) {
     ExpectFileName("filename.txt", "filename.txt");
@@ -352,6 +209,15 @@ TEST_F(RequestTests, SetGetBeamline) {
     request->SetBeamline("beamline");
 
     ASSERT_THAT(request->GetBeamline(), "beamline");
+}
+
+TEST_F(RequestTests, SetGetSocket) {
+    ASSERT_THAT(request->GetSocket(), expected_socket_id);
+}
+
+TEST_F(RequestTests, SetGetMetadata) {
+    request->SetMetadata("aaa");
+    ASSERT_THAT(request->GetMetaData(), "aaa");
 }
 
 

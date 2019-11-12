@@ -95,7 +95,7 @@ class SimpleError: public ErrorInterface {
     SimpleError(std::string error, ErrorType error_type ): error_{std::move(error)}, error_type_{error_type} {
     }
 
-    const CustomErrorData* GetCustomData() {
+    const CustomErrorData* GetCustomData() override {
         if (custom_data_) {
             return custom_data_.get();
         } else {
@@ -103,7 +103,7 @@ class SimpleError: public ErrorInterface {
         }
     };
 
-    void SetCustomData(std::unique_ptr<CustomErrorData> data) {
+    void SetCustomData(std::unique_ptr<CustomErrorData> data) override {
         custom_data_ = std::move(data);
     }
 

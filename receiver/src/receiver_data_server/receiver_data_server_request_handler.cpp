@@ -46,25 +46,25 @@ void* ReceiverDataServerRequestHandler::GetSlot(const ReceiverDataServerRequest*
 }
 
 
-Error ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* request) {
+bool ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* request) {
     auto receiver_request = dynamic_cast<ReceiverDataServerRequest*>(request);
     if (!CheckRequest(receiver_request)) {
         SendResponce(receiver_request, kNetErrorWrongRequest);
         server_->HandleAfterError(receiver_request->source_id);
         log__->Error("wrong request, code:" + std::to_string(receiver_request->header.op_code));
-        return nullptr;
+        return true;
     }
 
     CacheMeta* meta;
     auto buf = GetSlot(receiver_request, &meta);
     if (buf == nullptr) {
-        return nullptr;
+        return true;
     }
 
     SendData(receiver_request, buf, meta);
     statistics__->IncreaseRequestCounter();
     statistics__->IncreaseRequestDataVolume(receiver_request->header.data_size);
-    return nullptr;
+    return true;
 }
 
 bool ReceiverDataServerRequestHandler::ReadyProcessRequest() {
@@ -75,7 +75,7 @@ void ReceiverDataServerRequestHandler::PrepareProcessingRequestLocked() {
 // do nothing
 }
 
-void ReceiverDataServerRequestHandler::TearDownProcessingRequestLocked(const Error& error_from_process) {
+void ReceiverDataServerRequestHandler::TearDownProcessingRequestLocked(bool processing_succeeded) {
 // do nothing
 }
 

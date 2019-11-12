@@ -43,10 +43,10 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_
     request_handler->PrepareProcessingRequestLocked();
     auto request = GetRequestFromQueue();
     thread_info->lock.unlock();
-    auto err = request_handler->ProcessRequestUnlocked(request.get());
+    auto success = request_handler->ProcessRequestUnlocked(request.get());
     thread_info->lock.lock();
-    request_handler->TearDownProcessingRequestLocked(err);
-    if (err) {
+    request_handler->TearDownProcessingRequestLocked(success);
+    if (!success) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         PutRequestBackToQueue(std::move(request));
         condition_.notify_all();

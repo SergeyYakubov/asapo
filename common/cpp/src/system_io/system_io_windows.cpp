@@ -4,11 +4,9 @@
 #include <sys/stat.h>
 #include <algorithm>
 #include <io.h>
-#include <windows.h>
 #include <fcntl.h>
 #include <iostream>
 #include <direct.h>
-
 
 using std::string;
 using std::vector;
@@ -76,7 +74,7 @@ Error SystemIO::GetLastError() const {
 }
 
 Error CheckFileTime(const FILETIME& ft) {
-    SYSTEMTIME st = { 0 };
+    SYSTEMTIME st = {0};
     if (!FileTimeToSystemTime(&ft, &st)) {
         return IOErrorFromGetLastError();
     }
@@ -110,7 +108,7 @@ std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, Err
     auto sec = GetLinuxEpochSecFromWindowsEpoch(ull);
     auto nsec = GetLinuxNanosecFromWindowsEpoch(ull);
 
-    std::chrono::nanoseconds d = std::chrono::nanoseconds {nsec} +
+    std::chrono::nanoseconds d = std::chrono::nanoseconds{nsec} +
                                  std::chrono::seconds{sec};
 
     auto tp = system_clock::time_point
@@ -144,7 +142,6 @@ FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* er
 
     return file_info;
 }
-
 
 FileInfo SystemIO::GetFileInfo(const std::string& name, Error* err) const {
     WIN32_FIND_DATA f;
@@ -202,7 +199,6 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
         *err = IOErrorFromGetLastError();
     }
 }
-
 
 void SystemIO::CollectFileInformationRecursively(const std::string& path,
                                                  FileInfos* files, Error* err) const {
@@ -275,19 +271,19 @@ SocketDescriptor SystemIO::_connect(SocketDescriptor socket_fd, const void* addr
 }
 
 ssize_t SystemIO::_read(FileDescriptor fd, void* buffer, size_t length) {
-    return ::_read(fd, (char*)buffer, length);
+    return ::_read(fd, (char*) buffer, length);
 }
 
 ssize_t SystemIO::_write(FileDescriptor fd, const void* buffer, size_t length) {
-    return ::_write(fd, (const char*)buffer, length);
+    return ::_write(fd, (const char*) buffer, length);
 }
 
 ssize_t SystemIO::_send(SocketDescriptor socket_fd, const void* buffer, size_t length) {
-    return ::send(socket_fd, (char*)buffer, length, 0);
+    return ::send(socket_fd, (char*) buffer, length, 0);
 }
 
 ssize_t SystemIO::_recv(SocketDescriptor socket_fd, void* buffer, size_t length) {
-    return ::recv(socket_fd, (char*)buffer, length, 0);
+    return ::recv(socket_fd, (char*) buffer, length, 0);
 }
 
 int SystemIO::_mkdir(const char* dirname) const {
@@ -299,7 +295,7 @@ int SystemIO::_listen(SocketDescriptor fd, int backlog) const {
 }
 
 SocketDescriptor SystemIO::_accept(SocketDescriptor socket_fd, void* address, size_t* address_length) const {
-    return ::accept(socket_fd, static_cast<sockaddr*>(address), (int*)address_length);
+    return ::accept(socket_fd, static_cast<sockaddr*>(address), (int*) address_length);
 }
 
 std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept {
@@ -379,7 +375,6 @@ void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
         *err = GetLastError();
     }
 }
-
 
 SystemIO::~SystemIO() {
     // do nothing;

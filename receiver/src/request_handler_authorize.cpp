@@ -16,13 +16,10 @@ std::string RequestHandlerAuthorize::GetRequestString(const Request* request, co
 }
 
 Error RequestHandlerAuthorize::ErrorFromServerResponse(const Error& err, HttpCode code) const {
-    Error auth_error = asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate();
     if (err) {
-        auth_error->Append(err->Explain());
-        return auth_error;
+        return asapo::ReceiverErrorTemplates::kInternalServerError.Generate("cannot authorize request: " + err->Explain());
     } else {
-        auth_error->Append("return code " + std::to_string(int(code)));
-        return auth_error;
+        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("return code " + std::to_string(int(code)));
     }
 }
 

@@ -16,12 +16,15 @@ RequestHandlerFilesystem::RequestHandlerFilesystem(std::string destination_folde
     thread_id_{thread_id} {
 }
 
-Error RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request) {
+bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request) {
     auto producer_request = static_cast<ProducerRequest*>(request);
-
-    auto err = producer_request->ReadDataFromFileIfNeeded(io__.get());
-    if (err) {
-        return err;
+    Error err;
+    if (producer_request->DataFromFile()) {
+        producer_request->data = io__->GetDataFromFile(producer_request->original_filepath, &producer_request->header.data_size,
+                                                       &err);
+        if (err) {
+            return false;
+        }
     }
 
     err = io__->WriteDataToFile(destination_folder_, request->header.message, (uint8_t*)producer_request->data.get(),
@@ -29,7 +32,7 @@ Error RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request) 
     if (producer_request->callback) {
         producer_request->callback(request->header, std::move(err));
     }
-    return nullptr;
+    return true;
 }
 
 

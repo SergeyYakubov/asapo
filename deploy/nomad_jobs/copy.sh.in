@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-scp * psana002:@NOMAD_INSTALL@/

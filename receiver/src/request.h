@@ -11,7 +11,9 @@
 #include "request_handler_db_write.h"
 #include "request_handler_authorize.h"
 #include "request_handler_db_meta_write.h"
-
+#include "request_handler_receive_data.h"
+#include "request_handler_receive_metadata.h"
+#include "request_handler_file_receive.h"
 
 #include "receiver_statistics.h"
 #include "data_cache.h"
@@ -30,6 +32,7 @@ class Request {
     VIRTUAL void AddHandler(const ReceiverRequestHandler*);
     VIRTUAL const RequestHandlerList& GetListHandlers() const;
     VIRTUAL uint64_t GetDataSize() const;
+    VIRTUAL uint64_t GetMetaDataSize() const;
     VIRTUAL uint64_t GetDataID() const;
     VIRTUAL std::string GetFileName() const;
     VIRTUAL void* GetData() const;
@@ -44,20 +47,18 @@ class Request {
 
     VIRTUAL const std::string& GetStream() const;
     VIRTUAL void SetStream(std::string stream);
+    VIRTUAL void SetMetadata(std::string metadata);
 
 
     VIRTUAL const std::string& GetBeamline() const;
     VIRTUAL const CustomRequestData& GetCustomData() const;
-
+    VIRTUAL Error PrepareDataBufferAndLockIfNeeded();
+    VIRTUAL void UnlockDataBufferIfNeeded();
+    VIRTUAL  SocketDescriptor GetSocket() const ;
     std::unique_ptr<IO> io__;
     DataCache* cache__ = nullptr;
     VIRTUAL uint64_t GetSlotId() const;
   private:
-    Error PrepareDataBuffer();
-    Error ReceiveData();
-    Error ReceiveMetaData();
-    Error ReceiveRequestContent(ReceiverStatistics* statistics);
-    bool NeedReceiveData();
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     FileData data_buffer_;

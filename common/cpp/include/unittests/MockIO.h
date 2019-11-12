@@ -211,6 +211,10 @@ class MockIO : public IO {
 
     MOCK_CONST_METHOD0(GetLastError_t, ErrorInterface * ());
 
+    Error SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const override {
+        return Error{SendFile_t(socket_fd, fname, length)};
+    }
+    MOCK_CONST_METHOD3(SendFile_t, ErrorInterface * (SocketDescriptor socket_fd, const std::string& fname, size_t length));
 
     Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
                           size_t length, bool create_directories) const override {
@@ -231,10 +235,28 @@ class MockIO : public IO {
     }
 
 
+    MOCK_CONST_METHOD5(ReceiveDataToFile_t, ErrorInterface * (SocketDescriptor socket, const std::string& root_folder,
+                       const std::string& fname, size_t fsize, bool create_directories));
+
+    Error ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
+                            size_t length, bool create_directories) const override {
+        return Error{ReceiveDataToFile_t(socket, root_folder, fname, length, create_directories)};
+    }
 
 
     MOCK_CONST_METHOD5(WriteDataToFile_t, ErrorInterface * (const std::string& root_folder, const std::string& fname,
                        const uint8_t* data, size_t fsize, bool create_directories));
+
+
+    FileInfo GetFileInfo(const std::string& name, Error* err) const override {
+        ErrorInterface* error = nullptr;
+        auto data = GetFileInfo_t(name, &error);
+        err->reset(error);
+        return data;
+
+    }
+
+    MOCK_CONST_METHOD2(GetFileInfo_t, FileInfo (const std::string& name, ErrorInterface** err));
 
     std::vector<FileInfo> FilesInFolder(const std::string& folder, Error* err) const override {
         ErrorInterface* error = nullptr;

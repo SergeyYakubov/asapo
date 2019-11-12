@@ -18,21 +18,10 @@ cdef extern from "asapo_producer.h" namespace "asapo":
   cdef bool operator==(Error lhs, ErrorTemplateInterface rhs)
 
 cdef extern from "asapo_producer.h" namespace "asapo":
-  ErrorTemplateInterface kFileTooLarge "asapo::ProducerErrorTemplates::kFileTooLarge"
-  ErrorTemplateInterface kFileNameTooLong "asapo::ProducerErrorTemplates::kFileNameTooLong"
-  ErrorTemplateInterface kEmptyFileName "asapo::ProducerErrorTemplates::kEmptyFileName"
-  ErrorTemplateInterface kNoData "asapo::ProducerErrorTemplates::kNoData"
-  ErrorTemplateInterface kZeroDataSize "asapo::ProducerErrorTemplates::kZeroDataSize"
-  ErrorTemplateInterface kBeamtimeIdTooLong "asapo::ProducerErrorTemplates::kBeamtimeIdTooLong"
-  ErrorTemplateInterface kBeamtimeAlreadySet "asapo::ProducerErrorTemplates::kBeamtimeAlreadySet"
-  ErrorTemplateInterface kFileIdAlreadyInUse "asapo::ProducerErrorTemplates::kFileIdAlreadyInUse"
-  ErrorTemplateInterface kErrorInMetadata "asapo::ProducerErrorTemplates::kErrorInMetadata"
-  ErrorTemplateInterface kErrorSubsetSize "asapo::ProducerErrorTemplates::kErrorSubsetSize"
-  ErrorTemplateInterface kAuthorizationFailed "asapo::ProducerErrorTemplates::kAuthorizationFailed"
   ErrorTemplateInterface kInternalServerError "asapo::ProducerErrorTemplates::kInternalServerError"
   ErrorTemplateInterface kCannotSendDataToReceivers "asapo::ProducerErrorTemplates::kCannotSendDataToReceivers"
   ErrorTemplateInterface kRequestPoolIsFull "asapo::ProducerErrorTemplates::kRequestPoolIsFull"
-  ErrorTemplateInterface kWrongIngestMode "asapo::ProducerErrorTemplates::kWrongIngestMode"
+  ErrorTemplateInterface kWrongInput "asapo::ProducerErrorTemplates::kWrongInput"
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass FileData:

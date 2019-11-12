@@ -20,6 +20,7 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
 
     (err = parser.GetString("PerformanceDbServer", &config.performance_db_uri)) ||
     (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||
+    (err = parser.GetUInt64("ReceiveToDiskThresholdMB", &config.receive_to_disk_threshold_mb)) ||
     (err = parser.Embedded("DataServer").GetUInt64("ListenPort", &config.dataserver.listen_port)) ||
     (err = parser.Embedded("DataServer").GetUInt64("NThreads", &config.dataserver.nthreads)) ||
     (err = parser.GetBool("WriteToDisk", &config.write_to_disk)) ||

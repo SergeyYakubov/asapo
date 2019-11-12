@@ -18,7 +18,7 @@ c:\opt\consul\nomad run discovery.nmd
 c:\opt\consul\nomad run broker.nmd
 c:\opt\consul\nomad run nginx.nmd
 
-ping 1.0.0.0 -n 10 -w 100 > nul
+ping 1.0.0.0 -n 20 -w 100 > nul
 
 REM producer
 mkdir %receiver_folder%

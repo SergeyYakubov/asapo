@@ -16,6 +16,7 @@
     "ReservedShare": 10
   },
   "WriteToDisk":true,
+  "ReceiveToDiskThresholdMB":50,
   "WriteToDb":true,
   "LogLevel":"info",
   "Tag": "test_receiver",

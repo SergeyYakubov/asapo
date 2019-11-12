@@ -24,7 +24,7 @@ ping 1.0.0.0 -n 1 -w 100 > nul
 FOR /F "usebackq" %%A IN ('%receiver_folder%\1') DO set size=%%~zA
 if %size% NEQ 100000 goto :error
 
-"%1" localhost:8400 wrong_id 100 1 1 0 2 2>1 | findstr /c:"authorization failed"  || goto :error
+"%1" localhost:8400 wrong_id 100 1 1 0 2 2>1 | findstr /c:"authorization"  || goto :error
 
 goto :clean
 

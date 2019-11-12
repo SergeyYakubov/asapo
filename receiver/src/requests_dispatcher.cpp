@@ -20,8 +20,8 @@ NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
             return NetworkErrorCode::kNetErrorFileIdAlreadyInUse;
         } else if (err == ReceiverErrorTemplates::kAuthorizationFailure) {
             return NetworkErrorCode::kNetAuthorizationError;
-        } else if (err == DBErrorTemplates::kJsonParseError) {
-            return NetworkErrorCode::kNetErrorErrorInMetadata;
+        } else if (err == DBErrorTemplates::kJsonParseError || err == ReceiverErrorTemplates::kBadRequest) {
+            return NetworkErrorCode::kNetErrorWrongRequest;
         } else {
             return NetworkErrorCode::kNetErrorInternalServerError;
         }

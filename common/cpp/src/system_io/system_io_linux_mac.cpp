@@ -135,7 +135,7 @@ FileInfo SystemIO::GetFileInfo(const string& name, Error* err) const {
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
-                       FileInfos* files, Error* err)  {
+                       FileInfos* files, Error* err) {
 
     *err = nullptr;
     if (entity->d_type != DT_REG) {
@@ -148,8 +148,6 @@ void ProcessFileEntity(const struct dirent* entity, const std::string& path,
     }
     files->push_back(file_info);
 }
-
-
 
 void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const {
     errno = 0;
@@ -177,7 +175,7 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
 }
 
 void SystemIO::CollectFileInformationRecursively(const std::string& path,
-                                                 FileInfos* files, Error* err)  const {
+                                                 FileInfos* files, Error* err) const {
     errno = 0;
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
@@ -211,7 +209,7 @@ void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const
         ||
         fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) == -1
         ||*/
-        setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*)&kNetBufferSize, sizeof(kNetBufferSize)) != 0
+        setsockopt(socket_fd, SOL_SOCKET, SO_SNDBUF, (char*) &kNetBufferSize, sizeof(kNetBufferSize)) != 0
         ||
         setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) != 0 ||
         setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) != 0 ||
@@ -223,7 +221,7 @@ void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const
 }
 
 FileDescriptor SystemIO::_open(const char* filename, int posix_open_flags) const {
-    return ::open(filename, posix_open_flags, S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH );
+    return ::open(filename, posix_open_flags, S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP | S_IROTH);
 }
 
 bool SystemIO::_close(asapo::FileDescriptor fd) const {
@@ -293,6 +291,5 @@ std::string SystemIO::AddressFromSocket(SocketDescriptor socket) const noexcept 
 
     return std::string(ipstr) + ':' + std::to_string(port);
 }
-
 
 }

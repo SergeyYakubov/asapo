@@ -63,6 +63,8 @@ class ConfigTests : public Test {
         test_config.dataserver.nthreads = 5;
         test_config.discovery_server = "discovery";
         test_config.advertise_ip = "0.0.0.1";
+        test_config.receive_to_disk_threshold_mb = 50;
+
     }
 
 };
@@ -95,7 +97,7 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->dataserver.tag, Eq("receiver1_ds"));
     ASSERT_THAT(config->discovery_server, Eq("discovery"));
     ASSERT_THAT(config->advertise_ip, Eq("0.0.0.1"));
-
+    ASSERT_THAT(config->receive_to_disk_threshold_mb, Eq(50));
 }
 
 
@@ -105,7 +107,7 @@ TEST_F(ConfigTests, ErrorReadSettings) {
     std::vector<std::string>fields {"PerformanceDbServer", "ListenPort", "DataServer", "ListenPort", "WriteToDisk",
                                     "WriteToDb", "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
                                     "AuthorizationServer", "AuthorizationInterval", "RootFolder", "PerformanceDbName", "LogLevel",
-                                    "NThreads", "DiscoveryServer", "AdvertiseIP"};
+                                    "NThreads", "DiscoveryServer", "AdvertiseIP", "ReceiveToDiskThresholdMB"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfig(test_config, field);
         ASSERT_THAT(err, Ne(nullptr));

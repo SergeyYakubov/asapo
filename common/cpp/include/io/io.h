@@ -80,7 +80,7 @@ class IO {
                                                long timeout_in_usec,
                                                Error* err) const = 0;
     virtual size_t          Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const = 0;
-
+    virtual Error           SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const = 0;
     virtual void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const = 0;
     /**
      * @param err Since CloseSocket if often used in an error case, it's able to accept err as nullptr.
@@ -103,7 +103,8 @@ class IO {
                                              size_t length, bool create_directories) const = 0;
     virtual Error          WriteDataToFile  (const std::string& root_folder, const std::string& fname, const uint8_t* data,
                                              size_t length, bool create_directories) const = 0;
-
+    virtual Error ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
+                                    size_t length, bool create_directories) const = 0;
     virtual void            CreateNewDirectory      (const std::string& directory_name, Error* err) const = 0;
     virtual FileData        GetDataFromFile         (const std::string& fname, uint64_t* fsize, Error* err) const = 0;
     virtual SubDirList      GetSubDirectories(const std::string& path, Error* err) const = 0;
@@ -112,6 +113,8 @@ class IO {
     virtual Error GetLastError() const = 0;
     virtual std::string AddressFromSocket(SocketDescriptor socket) const noexcept = 0;
     virtual std::string     GetHostName(Error* err) const noexcept = 0;
+    virtual FileInfo        GetFileInfo(const std::string& name, Error* err) const = 0;
+
     virtual ~IO() = default;
 };
 

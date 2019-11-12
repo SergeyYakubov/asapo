@@ -26,6 +26,9 @@ namespace asapo {
 
 const int SystemIO::kNetBufferSize = 1024 * 1024;
 const int SystemIO::kWaitTimeoutMs = 1000;
+const size_t SystemIO::kMaxTransferChunkSize = size_t(1024) * size_t(1024) * size_t(1024) * size_t(2); //2GiByte
+const size_t SystemIO::kReadWriteBufSize = size_t(1024) * 1024 * 50; //50MiByte
+
 
 
 /*******************************************************************************
@@ -69,7 +72,7 @@ std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostn
     }
 }
 
-uint8_t* AllocateArray(uint64_t fsize, Error* err) {
+uint8_t* SystemIO::AllocateArray(uint64_t fsize, Error* err) const {
     uint8_t* data_array = nullptr;
     try {
         data_array = new uint8_t[(size_t)fsize];
@@ -143,36 +146,43 @@ void asapo::SystemIO::CreateNewDirectory(const std::string& directory_name, Erro
     }
 }
 
-Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
-                                size_t length, bool create_directories) const {
+FileDescriptor SystemIO::OpenWithCreateFolders(const std::string& root_folder, const std::string& fname,
+                                               bool create_directories, Error* err) const {
     std::string full_name;
     if (!root_folder.empty()) {
         full_name = root_folder + kPathSeparator + fname;
     } else {
         full_name = fname;
     }
-    Error err;
-    auto fd = Open(full_name, IO_OPEN_MODE_CREATE | IO_OPEN_MODE_RW | IO_OPEN_MODE_SET_LENGTH_0, &err);
-    if (err == IOErrorTemplates::kFileNotFound && create_directories) {
+    auto fd = Open(full_name, IO_OPEN_MODE_CREATE | IO_OPEN_MODE_RW | IO_OPEN_MODE_SET_LENGTH_0, err);
+    if (*err == IOErrorTemplates::kFileNotFound && create_directories)  {
         size_t pos = fname.rfind(kPathSeparator);
         if (pos == std::string::npos) {
-            return IOErrorTemplates::kFileNotFound.Generate();
+            *err = IOErrorTemplates::kFileNotFound.Generate(full_name);
+            return -1;
         }
-        auto err_create = CreateDirectoryWithParents(root_folder, fname.substr(0, pos));
-        if (err_create) {
-            return err_create;
+        *err = CreateDirectoryWithParents(root_folder, fname.substr(0, pos));
+        if (*err) {
+            return -1;
         }
-        return WriteDataToFile(root_folder, fname, data, length, false);
+        return OpenWithCreateFolders(root_folder, fname, false, err);
     }
 
+    return fd;
+
+}
+
+Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
+                                size_t length, bool create_directories) const {
+    Error err;
+    auto fd = OpenWithCreateFolders(root_folder, fname, create_directories, &err);
     if (err) {
-        err->Append(full_name);
         return err;
     }
 
     Write(fd, data, length, &err);
     if (err) {
-        err->Append(full_name);
+        err->Append(fname);
         return err;
     }
 
@@ -553,7 +563,8 @@ size_t SystemIO::Transfer(ssize_t (* method)(FileDescriptor, void*, size_t), Fil
     size_t already_transferred = 0;
 
     while (already_transferred < length) {
-        ssize_t received_amount = method(fd, (uint8_t*) buf + already_transferred, length - already_transferred);
+        ssize_t received_amount = method(fd, (uint8_t*) buf + already_transferred,
+                                         std::min(kMaxTransferChunkSize, length - already_transferred));
         if (received_amount == 0) {
             *err = ErrorTemplates::kEndOfFile.Generate();
             return already_transferred;
@@ -615,5 +626,75 @@ std::string SystemIO::GetHostName(Error* err) const noexcept {
         return host;
     }
 }
+
+Error SystemIO::SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const {
+
+    size_t total_bytes_sent = 0;
+
+    size_t buf_size = std::min(length, kReadWriteBufSize);
+
+    Error err;
+    auto fd = Open(fname, IO_OPEN_MODE_READ, &err);
+    if (err != nullptr) {
+        return err;
+    }
+
+    auto data_array = std::unique_ptr<uint8_t> {AllocateArray(buf_size, &err)};
+    if (err != nullptr) {
+        return err;
+    }
+
+    while (total_bytes_sent < length) {
+        auto bytes_read = Read(fd, data_array.get(), buf_size, &err);
+        if (err != nullptr && err != ErrorTemplates::kEndOfFile) {
+            Close(fd, nullptr);
+            return err;
+        }
+        auto bytes_sent = Send(socket_fd, data_array.get(), bytes_read, &err);
+        if (err != nullptr) {
+            Close(fd, nullptr);
+            return err;
+        }
+        total_bytes_sent += bytes_sent;
+    }
+
+    Close(fd, nullptr);
+    return nullptr;
+}
+
+Error SystemIO:: ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
+                                   size_t length, bool create_directories) const {
+    Error err;
+    auto fd = OpenWithCreateFolders(root_folder, fname, create_directories, &err);
+    if (err) {
+        return err;
+    }
+
+    size_t buf_size = std::min(length, kReadWriteBufSize);
+    auto data_array = std::unique_ptr<uint8_t> {AllocateArray(buf_size, &err)};
+    if (err != nullptr) {
+        return err;
+    }
+
+    size_t total_bytes_written = 0;
+    while (total_bytes_written < length) {
+        auto bytes_received = Receive(socket, data_array.get(), std::min(buf_size, length - total_bytes_written), &err);
+        if (err != nullptr && err != ErrorTemplates::kEndOfFile) {
+            Close(fd, nullptr);
+            return err;
+        }
+        auto bytes_written = Write(fd, data_array.get(), bytes_received, &err);
+        if (err != nullptr) {
+            Close(fd, nullptr);
+            return err;
+        }
+        total_bytes_written += bytes_written;
+    }
+
+    Close(fd, nullptr);
+    return nullptr;
+}
+
+
 
 }

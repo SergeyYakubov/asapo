@@ -54,8 +54,9 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetStream, const std::string & ());
     MOCK_CONST_METHOD0(GetMetaData, const std::string & ());
     MOCK_CONST_METHOD0(GetBeamline, const std::string & ());
-    MOCK_CONST_METHOD0(GetOpCode,
-                       asapo::Opcode ());
+    MOCK_CONST_METHOD0(GetOpCode, asapo::Opcode ());
+    MOCK_CONST_METHOD0(GetSocket, asapo::SocketDescriptor ());
+
     const asapo::CustomRequestData& GetCustomData() const override {
         return (asapo::CustomRequestData&) * GetCustomData_t();
     };

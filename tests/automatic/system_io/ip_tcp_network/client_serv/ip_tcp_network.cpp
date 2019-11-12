@@ -3,6 +3,7 @@
 #include <chrono>
 #include <thread>
 #include <future>
+#include <stdio.h>
 
 #include "testing.h"
 
@@ -77,15 +78,20 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
                 size_t received = io->Receive(client_fd, buffer.get(), need_to_receive_size, &err);
                 io->Send(client_fd, buffer.get(), received, &err);
                 ExitIfErrIsNotOk(&err, 107);
+
+                io->ReceiveDataToFile(client_fd, "", "received", need_to_receive_size, false);
+                buffer = io->GetDataFromFile("received", &need_to_receive_size, &err);
+                io->Send(client_fd, buffer.get(), received, &err);
+                ExitIfErrIsNotOk(&err, 108);
             }
 
             std::cout << "[SERVER][" << i << "] Close client_fd" << std::endl;
             io->CloseSocket(client_fd, &err);
-            ExitIfErrIsNotOk(&err, 108);
+            ExitIfErrIsNotOk(&err, 109);
         }
         std::cout << "[SERVER] Close server socket" << std::endl;
         io->CloseSocket(socket, &err);
-        ExitIfErrIsNotOk(&err, 109);
+        ExitIfErrIsNotOk(&err, 110);
     });
 }
 
@@ -107,6 +113,10 @@ void CheckNormal(int times, size_t size) {
         for (size_t i = 0; i < size; i++) {
             buffer[i] = rand();
         }
+
+        FILE* out = fopen("sent", "wb");
+        fwrite(buffer.get(), 1, size, out);
+        fclose(out);
 
         uint64_t send_size = size;
 
@@ -136,6 +146,24 @@ void CheckNormal(int times, size_t size) {
                 Exit(207);
             }
         }
+
+        std::cout << "[CLIENT] send file" << std::endl;
+        err = io->SendFile(socket, "sent", size);
+        ExitIfErrIsNotOk(&err, 208);
+        std::cout << "[CLIENT] receive file" << std::endl;
+        receive_count = io->Receive(socket, buffer2.get(), size, &err);
+        ExitIfErrIsNotOk(&err, 209);
+        if(receive_count != size) {
+            Exit(210);
+        }
+        std::cout << "[CLIENT] buffer check after receive file" << std::endl;
+        for (size_t i = 0; i < size; i++) {
+            if (buffer[i] != buffer2[i]) {
+                Exit(211);
+            }
+        }
+
+
     }
 
     std::cout << "[CLIENT] Close" << std::endl;
@@ -179,6 +207,8 @@ int main(int argc, char* argv[]) {
     if(asapo::IOErrorTemplates::kConnectionRefused != err) {
         ExitIfErrIsNotOk(&err, 304);
     }
+    remove("sent");
+    remove("received");
 
     return 0;
 }
