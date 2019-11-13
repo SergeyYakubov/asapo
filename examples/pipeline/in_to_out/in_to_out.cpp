@@ -199,23 +199,6 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     return producer;
 }
 
-void WaitProducerThreadsFinished(const Args& args, int nfiles) {
-    int elapsed_ms = 0;
-    while (true) {
-        if (files_sent == nfiles) {
-            break;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += 100;
-        if (elapsed_ms > args.timeout_ms_producer) {
-            std::cerr << "Stream out exit on timeout " << std::endl;
-            break;
-        }
-    }
-}
-
-
-
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
     Args args;
@@ -245,7 +228,9 @@ int main(int argc, char* argv[]) {
     int nerrors;
     auto nfiles = ProcessAllData(args, producer, &duration_ms, &nerrors);
 
-    WaitProducerThreadsFinished(args, nfiles);
+    if (producer->WaitRequestsFinished(args.timeout_ms_producer)!=nullptr) {
+        std::cerr << "Stream out exit on timeout " << std::endl;
+    }
     auto duration_streamout = std::chrono::duration_cast<std::chrono::milliseconds>(streamout_finish - streamout_start);
 
     std::cout << "Stream in " << std::endl;

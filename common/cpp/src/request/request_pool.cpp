@@ -42,9 +42,11 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_
                                  ThreadInformation* thread_info) {
     request_handler->PrepareProcessingRequestLocked();
     auto request = GetRequestFromQueue();
+    requests_in_progress_++;
     thread_info->lock.unlock();
     auto success = request_handler->ProcessRequestUnlocked(request.get());
     thread_info->lock.lock();
+    requests_in_progress_--;
     request_handler->TearDownProcessingRequestLocked(success);
     if (!success) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -81,9 +83,9 @@ RequestPool::~RequestPool() {
         }
     }
 }
-uint64_t RequestPool::NRequestsInQueue() {
+uint64_t RequestPool::NRequestsInPool() {
     std::lock_guard<std::mutex> lock{mutex_};
-    return request_queue_.size();
+    return request_queue_.size()+requests_in_progress_;
 }
 Error RequestPool::AddRequests(GenericRequests requests) {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -96,5 +98,22 @@ Error RequestPool::AddRequests(GenericRequests requests) {
     return nullptr;
 
 }
+
+Error RequestPool::WaitRequestsFinished(uint64_t timeout_ms) {
+    uint64_t elapsed_ms = 0;
+    while (true) {
+        auto n_requests = NRequestsInPool();
+        if (n_requests == 0) {
+            break;
+        }
+        if (elapsed_ms >= timeout_ms) {
+            return IOErrorTemplates::kTimeout.Generate();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        elapsed_ms += 100;
+    }
+    return nullptr;
+}
+
 
 }

@@ -178,6 +178,19 @@ cdef class PyProducer:
         if err:
             throw_exception(err)
         return
+    def get_requests_queue_size(self):
+        return self.c_producer.get().GetRequestsQueueSize()
+    def wait_requests_finished(self,timeout_ms):
+        """
+         :param timeout_ms: timeout in milliseconds
+         :type timeout_ms: int
+         :raises: AsapoProducerError
+        """
+
+        err = self.c_producer.get().WaitRequestsFinished(timeout_ms)
+        if err:
+            throw_exception(err)
+        return
     cdef void c_callback_python(self,py_callback, GenericRequestHeader header, Error& err):
         if py_callback != None:
           info_str = _str(header.Json())

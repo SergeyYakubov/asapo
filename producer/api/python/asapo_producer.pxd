@@ -93,6 +93,8 @@ cdef extern from "asapo_producer.h" namespace "asapo":
         Error SendFile(const EventHeader& event_header, string full_path, uint64_t ingest_mode,RequestCallback callback)
         Error SendData_(const EventHeader& event_header, void* data, uint64_t ingest_mode,RequestCallback callback)
         void SetLogLevel(LogLevel level)
+        uint64_t  GetRequestsQueueSize()
+        Error WaitRequestsFinished(uint64_t timeout_ms)
 
 cdef extern from "asapo_producer.h" namespace "asapo":
     uint64_t kDefaultIngestMode

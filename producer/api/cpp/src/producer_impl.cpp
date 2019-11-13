@@ -185,4 +185,17 @@ Error ProducerImpl::SendData_(const EventHeader& event_header,
     return Send(std::move(event_header), std::move(data_wrapped), "", ingest_mode, callback, false);
 }
 
+uint64_t  ProducerImpl::GetRequestsQueueSize() {
+    return request_pool__->NRequestsInPool();
+};
+
+Error ProducerImpl::WaitRequestsFinished(uint64_t timeout_ms) {
+    if (request_pool__->WaitRequestsFinished(timeout_ms)!=nullptr) {
+        return ProducerErrorTemplates::kTimeout.Generate("waiting to finish processing requests");
+    } else {
+        return nullptr;
+    }
+}
+
+
 }

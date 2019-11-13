@@ -39,6 +39,8 @@ class ProducerImpl : public Producer {
     Error SetCredentials(SourceCredentials source_cred) override;
 
     Error SendMetaData(const std::string& metadata, RequestCallback callback) override;
+    uint64_t  GetRequestsQueueSize() override;
+    Error WaitRequestsFinished(uint64_t timeout_ms) override;
 
   private:
     Error Send(const EventHeader& event_header, FileData data, std::string full_path, uint64_t ingest_mode,

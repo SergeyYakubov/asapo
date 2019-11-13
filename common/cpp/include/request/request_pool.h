@@ -24,10 +24,10 @@ class RequestPool {
     explicit RequestPool(uint8_t n_threads, RequestHandlerFactory* request_handler_factory, const AbstractLogger* log);
     VIRTUAL Error AddRequest(GenericRequestPtr request);
     VIRTUAL Error AddRequests(GenericRequests requests);
-
     ~RequestPool();
-    uint64_t NRequestsInQueue();
-  private:
+    VIRTUAL uint64_t NRequestsInPool();
+    VIRTUAL Error WaitRequestsFinished(uint64_t timeout_ms);
+ private:
     const AbstractLogger* log__;
     RequestHandlerFactory* request_handler_factory__;
     std::vector<std::thread> threads_;
@@ -41,6 +41,7 @@ class RequestPool {
     GenericRequestPtr GetRequestFromQueue();
     void PutRequestBackToQueue(GenericRequestPtr request);
     uint64_t shared_counter_{0};
+    uint64_t requests_in_progress_{0};
 
 };
 

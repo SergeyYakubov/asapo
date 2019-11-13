@@ -344,4 +344,21 @@ TEST_F(ProducerImplTests, ErrorSendingWrongIngestMode) {
 }
 
 
+TEST_F(ProducerImplTests, GetQueueSize) {
+    EXPECT_CALL(mock_pull, NRequestsInPool()).WillOnce(Return(10));
+
+    auto size  = producer.GetRequestsQueueSize();
+
+    ASSERT_THAT(size, Eq(10));
+}
+
+TEST_F(ProducerImplTests, WaitRequestsFinished) {
+    EXPECT_CALL(mock_pull, WaitRequestsFinished_t(_)).WillOnce(Return(asapo::IOErrorTemplates::kTimeout.Generate().release()));
+
+    auto err  = producer.WaitRequestsFinished(100);
+
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kTimeout));
+}
+
+
 }

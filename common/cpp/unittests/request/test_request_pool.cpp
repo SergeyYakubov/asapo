@@ -93,10 +93,12 @@ TEST_F(RequestPoolTests, AddRequestDoesNotGoFurtherWhenNotReady) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-TEST_F(RequestPoolTests, NRequestsInQueue) {
-    auto nreq = pool.NRequestsInQueue();
+TEST_F(RequestPoolTests, NRequestsInPoolInitial) {
+    auto nreq = pool.NRequestsInPool();
     ASSERT_THAT(nreq, Eq(0));
 }
+
+
 
 void ExpectSend(MockRequestHandler* mock_handler, int ntimes = 1) {
     EXPECT_CALL(*mock_handler, ReadyProcessRequest()).Times(ntimes).WillRepeatedly(Return(true));
@@ -104,7 +106,6 @@ void ExpectSend(MockRequestHandler* mock_handler, int ntimes = 1) {
     EXPECT_CALL(*mock_handler, ProcessRequestUnlocked_t(_)).Times(ntimes).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock_handler, TearDownProcessingRequestLocked(true)).Times(ntimes);
 }
-
 
 
 TEST_F(RequestPoolTests, AddRequestCallsSend) {
@@ -117,6 +118,30 @@ TEST_F(RequestPoolTests, AddRequestCallsSend) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
+TEST_F(RequestPoolTests, NRequestsInPool) {
+
+    pool.AddRequest(std::move(request));
+    auto nreq = pool.NRequestsInPool();
+
+    ASSERT_THAT(nreq, Eq(1));
+}
+
+TEST_F(RequestPoolTests, NRequestsInPoolAccountsForRequestsInProgress) {
+    ExpectSend(mock_request_handler,1);
+
+    pool.AddRequest(std::move(request));
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+
+    auto nreq1 = pool.NRequestsInPool();
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    auto nreq2 = pool.NRequestsInPool();
+
+    ASSERT_THAT(nreq1, Eq(1));
+    ASSERT_THAT(nreq2, Eq(0));
+}
+
 
 TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 
@@ -124,13 +149,11 @@ TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 
     ExpectSend(mock_request_handler, 2);
 
-
-
     auto err1 = pool.AddRequest(std::move(request));
     request.reset(request2);
     auto err2 = pool.AddRequest(std::move(request));
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    std::this_thread::sleep_for(std::chrono::milliseconds(80));
     ASSERT_THAT(err1, Eq(nullptr));
     ASSERT_THAT(err2, Eq(nullptr));
 }
@@ -148,14 +171,42 @@ TEST_F(RequestPoolTests, AddRequestsOk) {
 
     auto err = pool.AddRequests(std::move(requests));
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    std::this_thread::sleep_for(std::chrono::milliseconds(80));
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-
-
 TEST_F(RequestPoolTests, FinishProcessingThreads) {
     EXPECT_CALL(mock_logger, Debug(HasSubstr("finishing thread"))).Times(nthreads);
+}
+
+TEST_F(RequestPoolTests, WaitRequestsFinished) {
+    ExpectSend(mock_request_handler);
+
+    pool.AddRequest(std::move(request));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+
+    auto err = pool.WaitRequestsFinished(1000);
+
+    auto nreq = pool.NRequestsInPool();
+
+    ASSERT_THAT(nreq, Eq(0));
+    ASSERT_THAT(err, Eq(nullptr));
+
+}
+
+TEST_F(RequestPoolTests, WaitRequestsFinishedTimeout) {
+    ExpectSend(mock_request_handler);
+
+    pool.AddRequest(std::move(request));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+
+    auto err = pool.WaitRequestsFinished(0);
+
+    auto nreq = pool.NRequestsInPool();
+
+    ASSERT_THAT(nreq, Eq(1));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kTimeout));
+
 }
 
 

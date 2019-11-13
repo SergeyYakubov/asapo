@@ -22,13 +22,6 @@ def callback(header,err):
         n_send = n_send + 1
     lock.release()
 
-def wait_send(n_files, timeout_s):
-    elapsed = 0
-    while elapsed < timeout_s:
-        if n_send == n_files:
-            break
-        time.sleep(1)
-
 source, path, beamtime,stream_in, stream_out, token, timeout_s,timeout_s_producer,nthreads, transfer_data = sys.argv[1:]
 timeout_s=int(timeout_s)
 timeout_s_producer=int(timeout_s_producer)
@@ -60,8 +53,7 @@ while True:
     except  asapo_producer.AsapoProducerError:
         break
 
-
-wait_send(n_recv,timeout_s_producer)
+producer.wait_requests_finished(timeout_s_producer*1000)
 
 print ("Processed "+str(n_recv)+" file(s)")
 print ("Sent "+str(n_send)+" file(s)")

@@ -191,25 +191,6 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     return producer;
 }
 
-void WaitThreadsFinished(const Args& args) {
-    uint64_t elapsed_ms = 0;
-    while (true) {
-        mutex.lock();
-        if (iterations_remained <= 0) {
-            mutex.unlock();
-            break;
-        }
-        mutex.unlock();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += 100;
-        if (elapsed_ms > args.timeout_sec * 1000) {
-            std::cerr << "Producer exit on timeout " << std::endl;
-            exit(EXIT_FAILURE);
-        }
-    }
-
-}
-
 void PrintOutput(const Args& args, const system_clock::time_point& start) {
     system_clock::time_point t2 = system_clock::now();
     double duration_sec = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - start ).count() / 1000.0;
@@ -219,8 +200,6 @@ void PrintOutput(const Args& args, const system_clock::time_point& start) {
     std::cout << "Bandwidth " << size_gb / duration_sec << " Gbit/s" << std::endl;
     std::cout << "Bandwidth " << size_gb / duration_sec / 8 << " GBytes/s" << std::endl;
 }
-
-
 
 int main (int argc, char* argv[]) {
     Args args;
@@ -241,7 +220,16 @@ int main (int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    WaitThreadsFinished(args);
+    auto err = producer->WaitRequestsFinished(args.timeout_sec*1000);
+    if (err) {
+            std::cerr << "Producer exit on timeout " << std::endl;
+            exit(EXIT_FAILURE);
+    }
+
+    if (iterations_remained!=0) {
+        std::cerr << "Producer did not send all data " << std::endl;
+        exit(EXIT_FAILURE);
+    }
     PrintOutput(args, start_time);
 
     return EXIT_SUCCESS;
