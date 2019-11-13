@@ -55,12 +55,15 @@ producer.send_data(5, stream+"/"+"file6",b"hello",
 producer.send_data(6, stream+"/"+"file7",None,
                          ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback = callback)
 
-producer.wait_requests_finished(25000)
-n = producer.get_requests_queue_size()
-if n!=0:
-    print("number of remaining requestst should be zero, got ",n)
+try:
+    producer.wait_requests_finished(50000)
+    n = producer.get_requests_queue_size()
+    if n!=0:
+        print("number of remaining requestst should be zero, got ",n)
+        sys.exit(1)
+except:
+    print("waiting requests finished failed")
     sys.exit(1)
-
 
 
 # create with error

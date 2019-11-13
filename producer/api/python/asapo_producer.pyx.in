@@ -187,7 +187,10 @@ cdef class PyProducer:
          :raises: AsapoProducerError
         """
 
-        err = self.c_producer.get().WaitRequestsFinished(timeout_ms)
+        cdef Error err
+        cdef uint64_t timeout = timeout_ms
+        with nogil:
+            err = self.c_producer.get().WaitRequestsFinished(timeout)
         if err:
             throw_exception(err)
         return

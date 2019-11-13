@@ -86,7 +86,7 @@ cdef extern from "asapo_wrappers.h" namespace "asapo":
     RequestCallback unwrap_callback_with_memory(RequestCallbackCythonMemory, void*,void*,void*)
 
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo_producer.h" namespace "asapo" nogil:
     cppclass Producer:
         @staticmethod
         unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,Error* error)
