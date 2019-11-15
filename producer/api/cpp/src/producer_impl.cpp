@@ -171,10 +171,10 @@ Error ProducerImpl::SendMetaData(const std::string& metadata, RequestCallback ca
 }
 
 
-Error ProducerImpl::SendData_(const EventHeader& event_header,
-                              void* data,
-                              uint64_t ingest_mode,
-                              RequestCallback callback) {
+Error ProducerImpl::SendData__(const EventHeader& event_header,
+                               void* data,
+                               uint64_t ingest_mode,
+                               RequestCallback callback) {
     FileData data_wrapped = FileData{(uint8_t*)data};
 
     if (auto err = CheckData(ingest_mode, event_header, &data_wrapped)) {
@@ -197,5 +197,8 @@ Error ProducerImpl::WaitRequestsFinished(uint64_t timeout_ms) {
     }
 }
 
+void ProducerImpl::StopThreads__() {
+    request_pool__->StopThreads();
+}
 
 }

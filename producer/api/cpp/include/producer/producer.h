@@ -36,9 +36,12 @@ class Producer {
 
     //! Sends data to the receiver - same as SendData - memory should not be freed until send is finished
     //! used e.g. for Python bindings
-    virtual Error SendData_(const EventHeader& event_header, void* data, uint64_t ingest_mode,
-                            RequestCallback callback) = 0;
+    virtual Error SendData__(const EventHeader& event_header, void* data, uint64_t ingest_mode,
+                             RequestCallback callback) = 0;
 
+    //! Stop processing threads
+    //! used e.g. for Python bindings
+    virtual void StopThreads__() = 0;
 
     //! Sends files to the receiver
     /*!

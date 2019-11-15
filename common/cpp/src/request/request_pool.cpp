@@ -71,18 +71,9 @@ void RequestPool::ThreadHandler(uint64_t id) {
 }
 
 RequestPool::~RequestPool() {
-    mutex_.lock();
-    quit_ = true;
-    mutex_.unlock();
-    condition_.notify_all();
-
-    for(size_t i = 0; i < threads_.size(); i++) {
-        if(threads_[i].joinable()) {
-            log__->Debug("finishing thread " + std::to_string(i));
-            threads_[i].join();
-        }
-    }
+    StopThreads();
 }
+
 uint64_t RequestPool::NRequestsInPool() {
     std::lock_guard<std::mutex> lock{mutex_};
     return request_queue_.size()+requests_in_progress_;
@@ -115,5 +106,19 @@ Error RequestPool::WaitRequestsFinished(uint64_t timeout_ms) {
     return nullptr;
 }
 
+void RequestPool::StopThreads() {
+    mutex_.lock();
+    quit_ = true;
+    mutex_.unlock();
+    condition_.notify_all();
+
+    for(size_t i = 0; i < threads_.size(); i++) {
+        if(threads_[i].joinable()) {
+            log__->Debug("finishing thread " + std::to_string(i));
+            threads_[i].join();
+        }
+    }
+
+}
 
 }

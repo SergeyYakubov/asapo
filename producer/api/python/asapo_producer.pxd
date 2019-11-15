@@ -91,7 +91,8 @@ cdef extern from "asapo_producer.h" namespace "asapo" nogil:
         @staticmethod
         unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,Error* error)
         Error SendFile(const EventHeader& event_header, string full_path, uint64_t ingest_mode,RequestCallback callback)
-        Error SendData_(const EventHeader& event_header, void* data, uint64_t ingest_mode,RequestCallback callback)
+        Error SendData__(const EventHeader& event_header, void* data, uint64_t ingest_mode,RequestCallback callback)
+        void StopThreads__()
         void SetLogLevel(LogLevel level)
         uint64_t  GetRequestsQueueSize()
         Error WaitRequestsFinished(uint64_t timeout_ms)

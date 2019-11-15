@@ -7,6 +7,7 @@ import json
 from cpython.version cimport PY_MAJOR_VERSION
 from libcpp.memory cimport unique_ptr
 from cpython.ref cimport PyObject,Py_XINCREF,Py_XDECREF
+import atexit
 
 np.import_array()
 
@@ -64,6 +65,8 @@ cdef void* data_pointer_bytes(data):
 
 cdef class PyProducer:
     cdef unique_ptr[Producer] c_producer
+    def __init__(self):
+        atexit.register(self.cleanup)
     def set_log_level(self,level):
          cdef LogLevel log_level
          log_level = LogLevel_Info
@@ -89,7 +92,7 @@ cdef class PyProducer:
             event_header.file_size = 0
         else:
             event_header.file_size = data.nbytes
-        err = self.c_producer.get().SendData_(event_header, data_pointer_nparray(data), ingest_mode,
+        err = self.c_producer.get().SendData__(event_header, data_pointer_nparray(data), ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_ndarr,
              <void*>self,<void*>callback if callback != None else NULL, <void*>data))
         if err:
@@ -116,7 +119,7 @@ cdef class PyProducer:
     def __send_bytes(self,int id, exposed_path,data, user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
         cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
         event_header.file_size = len(data)
-        err = self.c_producer.get().SendData_(event_header, data_pointer_bytes(data), ingest_mode,
+        err = self.c_producer.get().SendData__(event_header, data_pointer_bytes(data), ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_bytesaddr,
              <void*>self,<void*>callback if callback != None else NULL, <void*>data))
         if err:
@@ -219,7 +222,9 @@ cdef class PyProducer:
         if bytes_array is not None:
             Py_XDECREF(<PyObject*>bytes_array)
         self.c_callback_python(py_callback,header,err)
-
+    def cleanup(self):
+        with  nogil:
+            self.c_producer.get().StopThreads__()
     @staticmethod
     def __create_producer(endpoint,beamtime_id,stream,token,nthreads):
         pyProd = PyProducer()

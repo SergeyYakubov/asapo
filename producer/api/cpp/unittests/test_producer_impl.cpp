@@ -136,7 +136,7 @@ TEST_F(ProducerImplTests, ErrorIfNoData) {
 
 TEST_F(ProducerImplTests, ErrorIfNoDataSend_) {
     asapo::EventHeader event_header{1, 100, expected_fullpath};
-    auto err = producer.SendData_(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
+    auto err = producer.SendData__(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
@@ -215,7 +215,7 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequesUnmanagedMemory) {
                                                                       nullptr));
 
     asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_metadata};
-    auto err = producer.SendData_(event_header, nullptr, expected_ingest_mode, nullptr);
+    auto err = producer.SendData__(event_header, nullptr, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
