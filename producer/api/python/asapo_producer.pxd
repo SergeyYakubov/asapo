@@ -18,10 +18,9 @@ cdef extern from "asapo_producer.h" namespace "asapo":
   cdef bool operator==(Error lhs, ErrorTemplateInterface rhs)
 
 cdef extern from "asapo_producer.h" namespace "asapo":
-  ErrorTemplateInterface kInternalServerError "asapo::ProducerErrorTemplates::kInternalServerError"
-  ErrorTemplateInterface kCannotSendDataToReceivers "asapo::ProducerErrorTemplates::kCannotSendDataToReceivers"
-  ErrorTemplateInterface kRequestPoolIsFull "asapo::ProducerErrorTemplates::kRequestPoolIsFull"
+  ErrorTemplateInterface kTimeout "asapo::ProducerErrorTemplates::kTimeout"
   ErrorTemplateInterface kWrongInput "asapo::ProducerErrorTemplates::kWrongInput"
+  ErrorTemplateInterface kLocalIOError "asapo::ProducerErrorTemplates::kLocalIOError"
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass FileData:
@@ -86,13 +85,16 @@ cdef extern from "asapo_wrappers.h" namespace "asapo":
     RequestCallback unwrap_callback_with_memory(RequestCallbackCythonMemory, void*,void*,void*)
 
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo_producer.h" namespace "asapo" nogil:
     cppclass Producer:
         @staticmethod
         unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,Error* error)
         Error SendFile(const EventHeader& event_header, string full_path, uint64_t ingest_mode,RequestCallback callback)
-        Error SendData_(const EventHeader& event_header, void* data, uint64_t ingest_mode,RequestCallback callback)
+        Error SendData__(const EventHeader& event_header, void* data, uint64_t ingest_mode,RequestCallback callback)
+        void StopThreads__()
         void SetLogLevel(LogLevel level)
+        uint64_t  GetRequestsQueueSize()
+        Error WaitRequestsFinished(uint64_t timeout_ms)
 
 cdef extern from "asapo_producer.h" namespace "asapo":
     uint64_t kDefaultIngestMode

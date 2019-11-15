@@ -4,7 +4,6 @@
 #include <memory>
 #include <functional>
 
-
 namespace asapo {
 
 inline std::string GetErrorString(asapo::Error* err) {
@@ -22,7 +21,7 @@ RequestCallback unwrap_callback(RequestCallbackCython callback, void* c_self, vo
         return nullptr;
     }
     RequestCallback wrapper = [ = ](GenericRequestHeader header, Error err) -> void {
-        callback(c_self, py_func, header, std::move(err));
+        callback(c_self, py_func, std::move(header), std::move(err));
     };
     return wrapper;
 }
@@ -30,7 +29,7 @@ RequestCallback unwrap_callback(RequestCallbackCython callback, void* c_self, vo
 RequestCallback unwrap_callback_with_memory(RequestCallbackCythonMemory callback, void* c_self, void* py_func,
                                             void* nd_array) {
     RequestCallback wrapper = [ = ](GenericRequestHeader header, Error err) -> void {
-        callback(c_self, py_func, nd_array, header, std::move(err));
+        callback(c_self, py_func, nd_array, std::move(header), std::move(err));
     };
     return wrapper;
 }

@@ -36,6 +36,7 @@ echo test > file1
 
 sleep 1
 
-$1 $3 $stream $beamtime_id  "127.0.0.1:8400" > out
+$1 $3 $stream $beamtime_id  "127.0.0.1:8400" > out || cat out
 cat out
 cat out | grep "successfuly sent" | wc -l | grep 7
+cat out | grep "local i/o error"

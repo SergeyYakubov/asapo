@@ -33,6 +33,16 @@ class MockRequestPull : public RequestPool {
         return asapo::Error{AddRequest_t(request.get())};
     }
     MOCK_METHOD1(AddRequest_t, asapo::ErrorInterface * (GenericRequest*));
+    MOCK_METHOD0(NRequestsInPool, uint64_t ());
+
+    MOCK_METHOD1(WaitRequestsFinished_t, asapo::ErrorInterface * (uint64_t timeout_ms));
+
+    asapo::Error WaitRequestsFinished(uint64_t timeout_ms) override {
+        return asapo::Error{WaitRequestsFinished_t(timeout_ms)};
+    }
+
+
+
 };
 
 

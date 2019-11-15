@@ -42,9 +42,11 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_
                                  ThreadInformation* thread_info) {
     request_handler->PrepareProcessingRequestLocked();
     auto request = GetRequestFromQueue();
+    requests_in_progress_++;
     thread_info->lock.unlock();
     auto success = request_handler->ProcessRequestUnlocked(request.get());
     thread_info->lock.lock();
+    requests_in_progress_--;
     request_handler->TearDownProcessingRequestLocked(success);
     if (!success) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -69,6 +71,42 @@ void RequestPool::ThreadHandler(uint64_t id) {
 }
 
 RequestPool::~RequestPool() {
+    StopThreads();
+}
+
+uint64_t RequestPool::NRequestsInPool() {
+    std::lock_guard<std::mutex> lock{mutex_};
+    return request_queue_.size() + requests_in_progress_;
+}
+Error RequestPool::AddRequests(GenericRequests requests) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    for (auto& elem : requests) {
+        request_queue_.emplace_front(std::move(elem));
+    }
+    lock.unlock();
+//todo: maybe notify_one is better here
+    condition_.notify_all();
+    return nullptr;
+
+}
+
+Error RequestPool::WaitRequestsFinished(uint64_t timeout_ms) {
+    uint64_t elapsed_ms = 0;
+    while (true) {
+        auto n_requests = NRequestsInPool();
+        if (n_requests == 0) {
+            break;
+        }
+        if (elapsed_ms >= timeout_ms) {
+            return IOErrorTemplates::kTimeout.Generate();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        elapsed_ms += 100;
+    }
+    return nullptr;
+}
+
+void RequestPool::StopThreads() {
     mutex_.lock();
     quit_ = true;
     mutex_.unlock();
@@ -80,20 +118,6 @@ RequestPool::~RequestPool() {
             threads_[i].join();
         }
     }
-}
-uint64_t RequestPool::NRequestsInQueue() {
-    std::lock_guard<std::mutex> lock{mutex_};
-    return request_queue_.size();
-}
-Error RequestPool::AddRequests(GenericRequests requests) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    for (auto& elem : requests) {
-        request_queue_.emplace_front(std::move(elem));
-    }
-    lock.unlock();
-//todo: maybe notify_one is better here
-    condition_.notify_all();
-    return nullptr;
 
 }
 

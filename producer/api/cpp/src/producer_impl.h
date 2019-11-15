@@ -28,9 +28,9 @@ class ProducerImpl : public Producer {
     void EnableLocalLog(bool enable) override;
     void EnableRemoteLog(bool enable) override;
     Error SendData(const EventHeader& event_header, FileData data, uint64_t ingest_mode, RequestCallback callback) override;
-    Error SendData_(const EventHeader& event_header, void* data , uint64_t ingest_mode,
-                    RequestCallback callback) override;
-
+    Error SendData__(const EventHeader& event_header, void* data , uint64_t ingest_mode,
+                     RequestCallback callback) override;
+    void StopThreads__() override;
     Error SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,
                    RequestCallback callback) override;
     AbstractLogger* log__;
@@ -39,6 +39,8 @@ class ProducerImpl : public Producer {
     Error SetCredentials(SourceCredentials source_cred) override;
 
     Error SendMetaData(const std::string& metadata, RequestCallback callback) override;
+    uint64_t  GetRequestsQueueSize() override;
+    Error WaitRequestsFinished(uint64_t timeout_ms) override;
 
   private:
     Error Send(const EventHeader& event_header, FileData data, std::string full_path, uint64_t ingest_mode,

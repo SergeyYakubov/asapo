@@ -46,7 +46,7 @@ TEST(CreateProducer, TooManyThreads) {
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("", asapo::kMaxProcessingThreads + 1,
                                                 asapo::RequestHandlerType::kTcp, SourceCredentials{"bt", "", ""}, &err);
     ASSERT_THAT(producer, Eq(nullptr));
-    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 
@@ -55,7 +55,7 @@ TEST(CreateProducer, ZeroThreads) {
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("", 0,
                                                 asapo::RequestHandlerType::kTcp, SourceCredentials{"bt", "", ""}, &err);
     ASSERT_THAT(producer, Eq(nullptr));
-    ASSERT_THAT(err, Ne(nullptr));
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 

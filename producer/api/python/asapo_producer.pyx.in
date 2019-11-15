@@ -7,6 +7,7 @@ import json
 from cpython.version cimport PY_MAJOR_VERSION
 from libcpp.memory cimport unique_ptr
 from cpython.ref cimport PyObject,Py_XINCREF,Py_XDECREF
+import atexit
 
 np.import_array()
 
@@ -40,14 +41,24 @@ class AsapoProducerError(Exception):
 class AsapoWrongInputError(AsapoProducerError):
   pass
 
-#todo: more types
-cdef python_exception_from_error(Error& err):
-    return AsapoProducerError(err.get().Explain())
+class AsapoLocalIOError(AsapoProducerError):
+  pass
 
+class AsapoTimeOutError(AsapoProducerError):
+  pass
+
+cdef python_exception_from_error(Error& err):
+    if err == kTimeout:
+                return AsapoTimeOutError(err.get().Explain())
+    elif err == kWrongInput:
+            return AsapoWrongInputError(err.get().Explain())
+    elif err == kLocalIOError:
+            return AsapoLocalIOError(err.get().Explain())
+    else:
+        return AsapoProducerError(err.get().Explain())
 
 cdef throw_exception(Error& err):
     raise python_exception_from_error(err)
-
 
 cdef void* data_pointer_nparray(data):
   if data is None:
@@ -64,6 +75,8 @@ cdef void* data_pointer_bytes(data):
 
 cdef class PyProducer:
     cdef unique_ptr[Producer] c_producer
+    def __init__(self):
+        atexit.register(self.cleanup)
     def set_log_level(self,level):
          cdef LogLevel log_level
          log_level = LogLevel_Info
@@ -89,9 +102,9 @@ cdef class PyProducer:
             event_header.file_size = 0
         else:
             event_header.file_size = data.nbytes
-        err = self.c_producer.get().SendData_(event_header, data_pointer_nparray(data), ingest_mode,
+        err = self.c_producer.get().SendData__(event_header, data_pointer_nparray(data), ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_ndarr,
-             <void*>self,<void*>callback if callback != None else NULL, <void*>data))
+             <void*>self,<void*>callback, <void*>data))
         if err:
             throw_exception(err)
         if data is not None:
@@ -116,9 +129,9 @@ cdef class PyProducer:
     def __send_bytes(self,int id, exposed_path,data, user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
         cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
         event_header.file_size = len(data)
-        err = self.c_producer.get().SendData_(event_header, data_pointer_bytes(data), ingest_mode,
+        err = self.c_producer.get().SendData__(event_header, data_pointer_bytes(data), ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_bytesaddr,
-             <void*>self,<void*>callback if callback != None else NULL, <void*>data))
+             <void*>self,<void*>callback, <void*>data))
         if err:
             throw_exception(err)
         Py_XINCREF(<PyObject*>data)
@@ -140,8 +153,9 @@ cdef class PyProducer:
          :type ingest_mode: int
          :param callback: callback function, default None
          :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
-         :raises: AsapoProducerError
-         :rtype: string
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, meta, ...)
+            AsapoProducerError: actually should not happen
         """
 
         if type(data) == np.ndarray or data == None:
@@ -167,14 +181,32 @@ cdef class PyProducer:
          :type ingest_mode: int
          :param callback: callback function, default None
          :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
-         :raises: AsapoProducerError
-         :rtype: string
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, meta, ...)
+			AsapoLocalIOError: problems reading file to send
+            AsapoProducerError: actually should not happen
         """
 
         cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
         event_header.file_size = 0
         err = self.c_producer.get().SendFile(event_header, _bytes(local_path), ingest_mode,
             unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
+        if err:
+            throw_exception(err)
+        return
+    def get_requests_queue_size(self):
+        return self.c_producer.get().GetRequestsQueueSize()
+    def wait_requests_finished(self,timeout_ms):
+        """
+         :param timeout_ms: timeout in milliseconds
+         :type timeout_ms: int
+         :raises:
+			AsapoTimeoutError: requests not finished for a given timeout
+        """
+        cdef Error err
+        cdef uint64_t timeout = timeout_ms
+        with nogil:
+            err = self.c_producer.get().WaitRequestsFinished(timeout)
         if err:
             throw_exception(err)
         return
@@ -203,7 +235,10 @@ cdef class PyProducer:
         if bytes_array is not None:
             Py_XDECREF(<PyObject*>bytes_array)
         self.c_callback_python(py_callback,header,err)
-
+    def cleanup(self):
+        with  nogil:
+            if self.c_producer.get() is not NULL:
+                self.c_producer.get().StopThreads__()
     @staticmethod
     def __create_producer(endpoint,beamtime_id,stream,token,nthreads):
         pyProd = PyProducer()
@@ -218,6 +253,21 @@ cdef class PyProducer:
         return pyProd
 
 def create_producer(endpoint,beamtime_id,stream,token,nthreads):
+    """
+         :param endpoint: server endpoint (url:port)
+         :type endpoint: string
+         :param beamtime_id: beamtime id
+         :type beamtime_id: string
+         :param stream: stream to producer data to
+         :type stream: string
+         :param token: authorization token
+         :type token: string
+         :param nthreads: ingest mode flag
+         :type nthreads: int
+         :raises:
+            AsapoWrongInputError: wrong input (number of threads, ,,,)
+            AsapoProducerError: actually should not happen
+    """
     return PyProducer.__create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(stream),_bytes(token),nthreads)
 
 

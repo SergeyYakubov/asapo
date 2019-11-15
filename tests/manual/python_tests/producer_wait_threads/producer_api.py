@@ -7,9 +7,9 @@ import numpy as np
 import threading
 lock = threading.Lock()
 
-stream = sys.argv[1]
-beamtime = sys.argv[2]
-endpoint = sys.argv[3]
+stream = "python"
+beamtime = "asapo_test"
+endpoint = "127.0.0.1:8400"
 
 token = ""
 nthreads = 8
@@ -54,10 +54,7 @@ producer.send_data(5, stream+"/"+"file6",b"hello",
 producer.send_data(6, stream+"/"+"file7",None,
                          ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback = callback)
 
-#send single file/wrong filename
-producer.send_file(1, local_path = "./file2", exposed_path = stream+"/"+"file1", callback = callback)
-
-producer.wait_requests_finished(50000)
+producer.wait_requests_finished(1000)
 n = producer.get_requests_queue_size()
 if n!=0:
 	print("number of remaining requestst should be zero, got ",n)
@@ -67,7 +64,7 @@ if n!=0:
 # create with error
 try:
     producer  = asapo_producer.create_producer(endpoint,beamtime, stream, token, 0)
-except asapo_producer.AsapoWrongInputError as e:
+except Exception as Asapo:
     print(e)
 else:
     print("should be error")

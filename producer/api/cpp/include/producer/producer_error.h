@@ -9,7 +9,8 @@ enum class ProducerErrorType {
     kInternalServerError,
     kRequestPoolIsFull,
     kLocalIOError,
-    kWrongInput
+    kWrongInput,
+    kTimeout
 };
 
 using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
@@ -31,6 +32,11 @@ auto const kWrongInput = ProducerErrorTemplate {
 auto const kInternalServerError = ProducerErrorTemplate {
     "Internal server error", ProducerErrorType::kInternalServerError
 };
+
+auto const kTimeout = ProducerErrorTemplate {
+    "Timeout", ProducerErrorType::kTimeout
+};
+
 
 };
 }

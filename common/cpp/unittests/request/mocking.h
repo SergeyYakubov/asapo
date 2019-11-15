@@ -18,6 +18,7 @@ class MockRequestHandler : public RequestHandler {
     MOCK_METHOD1(ProcessRequestUnlocked_t, bool (const GenericRequest* request));
 
     bool ProcessRequestUnlocked(GenericRequest* request)  override {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         return ProcessRequestUnlocked_t(request);
     }
 
