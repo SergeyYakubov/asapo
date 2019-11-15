@@ -64,7 +64,7 @@ if n!=0:
 # create with error
 try:
     producer  = asapo_producer.create_producer(endpoint,beamtime, stream, token, 0)
-except Exception as e:
+except Exception as Asapo:
     print(e)
 else:
     print("should be error")

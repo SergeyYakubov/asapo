@@ -18,10 +18,9 @@ cdef extern from "asapo_producer.h" namespace "asapo":
   cdef bool operator==(Error lhs, ErrorTemplateInterface rhs)
 
 cdef extern from "asapo_producer.h" namespace "asapo":
-  ErrorTemplateInterface kInternalServerError "asapo::ProducerErrorTemplates::kInternalServerError"
-  ErrorTemplateInterface kCannotSendDataToReceivers "asapo::ProducerErrorTemplates::kCannotSendDataToReceivers"
-  ErrorTemplateInterface kRequestPoolIsFull "asapo::ProducerErrorTemplates::kRequestPoolIsFull"
+  ErrorTemplateInterface kTimeout "asapo::ProducerErrorTemplates::kTimeout"
   ErrorTemplateInterface kWrongInput "asapo::ProducerErrorTemplates::kWrongInput"
+  ErrorTemplateInterface kLocalIOError "asapo::ProducerErrorTemplates::kLocalIOError"
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass FileData:
