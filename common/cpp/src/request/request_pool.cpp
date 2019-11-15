@@ -76,7 +76,7 @@ RequestPool::~RequestPool() {
 
 uint64_t RequestPool::NRequestsInPool() {
     std::lock_guard<std::mutex> lock{mutex_};
-    return request_queue_.size()+requests_in_progress_;
+    return request_queue_.size() + requests_in_progress_;
 }
 Error RequestPool::AddRequests(GenericRequests requests) {
     std::unique_lock<std::mutex> lock(mutex_);

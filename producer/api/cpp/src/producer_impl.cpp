@@ -190,7 +190,7 @@ uint64_t  ProducerImpl::GetRequestsQueueSize() {
 };
 
 Error ProducerImpl::WaitRequestsFinished(uint64_t timeout_ms) {
-    if (request_pool__->WaitRequestsFinished(timeout_ms)!=nullptr) {
+    if (request_pool__->WaitRequestsFinished(timeout_ms) != nullptr) {
         return ProducerErrorTemplates::kTimeout.Generate("waiting to finish processing requests");
     } else {
         return nullptr;

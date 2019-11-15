@@ -53,11 +53,7 @@ while True:
     except  asapo_producer.AsapoProducerError:
         break
 
-try:
-    producer.wait_requests_finished(timeout_s_producer*1000)
-except:
-    print("waiting requestst finished failed")
-
+producer.wait_requests_finished(timeout_s_producer*1000)
 
 print ("Processed "+str(n_recv)+" file(s)")
 print ("Sent "+str(n_send)+" file(s)")

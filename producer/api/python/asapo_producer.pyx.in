@@ -94,7 +94,7 @@ cdef class PyProducer:
             event_header.file_size = data.nbytes
         err = self.c_producer.get().SendData__(event_header, data_pointer_nparray(data), ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_ndarr,
-             <void*>self,<void*>callback if callback != None else NULL, <void*>data))
+             <void*>self,<void*>callback, <void*>data))
         if err:
             throw_exception(err)
         if data is not None:
@@ -121,7 +121,7 @@ cdef class PyProducer:
         event_header.file_size = len(data)
         err = self.c_producer.get().SendData__(event_header, data_pointer_bytes(data), ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_bytesaddr,
-             <void*>self,<void*>callback if callback != None else NULL, <void*>data))
+             <void*>self,<void*>callback, <void*>data))
         if err:
             throw_exception(err)
         Py_XINCREF(<PyObject*>data)
@@ -189,7 +189,6 @@ cdef class PyProducer:
          :type timeout_ms: int
          :raises: AsapoProducerError
         """
-
         cdef Error err
         cdef uint64_t timeout = timeout_ms
         with nogil:
@@ -224,7 +223,8 @@ cdef class PyProducer:
         self.c_callback_python(py_callback,header,err)
     def cleanup(self):
         with  nogil:
-            self.c_producer.get().StopThreads__()
+            if self.c_producer.get() is not NULL:
+                self.c_producer.get().StopThreads__()
     @staticmethod
     def __create_producer(endpoint,beamtime_id,stream,token,nthreads):
         pyProd = PyProducer()

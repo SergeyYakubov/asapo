@@ -4,7 +4,6 @@
 #include <memory>
 #include <functional>
 
-
 namespace asapo {
 
 inline std::string GetErrorString(asapo::Error* err) {

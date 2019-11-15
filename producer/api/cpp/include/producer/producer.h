@@ -68,9 +68,9 @@ class Producer {
     virtual void EnableRemoteLog(bool enable) = 0;
     //! Set beamtime id which producer will use to send data
     virtual Error SetCredentials(SourceCredentials source_cred) = 0;
-  //! Set get current size of the requests queue
+    //! Set get current size of the requests queue
     virtual  uint64_t  GetRequestsQueueSize() = 0;
-  //! Wait until all current requests are processed or timeout
+    //! Wait until all current requests are processed or timeout
     virtual Error WaitRequestsFinished(uint64_t timeout_ms) = 0;
 
 };

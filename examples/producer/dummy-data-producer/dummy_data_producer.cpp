@@ -220,13 +220,13 @@ int main (int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    auto err = producer->WaitRequestsFinished(args.timeout_sec*1000);
+    auto err = producer->WaitRequestsFinished(args.timeout_sec * 1000);
     if (err) {
-            std::cerr << "Producer exit on timeout " << std::endl;
-            exit(EXIT_FAILURE);
+        std::cerr << "Producer exit on timeout " << std::endl;
+        exit(EXIT_FAILURE);
     }
 
-    if (iterations_remained!=0) {
+    if (iterations_remained != 0) {
         std::cerr << "Producer did not send all data " << std::endl;
         exit(EXIT_FAILURE);
     }

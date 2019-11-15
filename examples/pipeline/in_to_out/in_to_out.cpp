@@ -228,7 +228,7 @@ int main(int argc, char* argv[]) {
     int nerrors;
     auto nfiles = ProcessAllData(args, producer, &duration_ms, &nerrors);
 
-    if (producer->WaitRequestsFinished(args.timeout_ms_producer)!=nullptr) {
+    if (producer->WaitRequestsFinished(args.timeout_ms_producer) != nullptr) {
         std::cerr << "Stream out exit on timeout " << std::endl;
     }
     auto duration_streamout = std::chrono::duration_cast<std::chrono::milliseconds>(streamout_finish - streamout_start);

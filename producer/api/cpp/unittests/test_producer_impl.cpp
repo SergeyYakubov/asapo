@@ -353,7 +353,8 @@ TEST_F(ProducerImplTests, GetQueueSize) {
 }
 
 TEST_F(ProducerImplTests, WaitRequestsFinished) {
-    EXPECT_CALL(mock_pull, WaitRequestsFinished_t(_)).WillOnce(Return(asapo::IOErrorTemplates::kTimeout.Generate().release()));
+    EXPECT_CALL(mock_pull, WaitRequestsFinished_t(_)).WillOnce(Return(
+                asapo::IOErrorTemplates::kTimeout.Generate().release()));
 
     auto err  = producer.WaitRequestsFinished(100);
 

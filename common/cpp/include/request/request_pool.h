@@ -28,7 +28,7 @@ class RequestPool {
     VIRTUAL uint64_t NRequestsInPool();
     VIRTUAL Error WaitRequestsFinished(uint64_t timeout_ms);
     VIRTUAL void StopThreads();
- private:
+  private:
     const AbstractLogger* log__;
     RequestHandlerFactory* request_handler_factory__;
     std::vector<std::thread> threads_;

@@ -127,7 +127,7 @@ TEST_F(RequestPoolTests, NRequestsInPool) {
 }
 
 TEST_F(RequestPoolTests, NRequestsInPoolAccountsForRequestsInProgress) {
-    ExpectSend(mock_request_handler,1);
+    ExpectSend(mock_request_handler, 1);
 
     pool.AddRequest(std::move(request));
 
@@ -207,6 +207,14 @@ TEST_F(RequestPoolTests, WaitRequestsFinishedTimeout) {
     ASSERT_THAT(nreq, Eq(1));
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kTimeout));
 
+}
+
+TEST_F(RequestPoolTests, StopThreads) {
+    EXPECT_CALL(mock_logger, Debug(HasSubstr("finishing thread"))).Times(nthreads);
+
+    pool.StopThreads();
+
+    Mock::VerifyAndClearExpectations(&mock_logger);
 }
 
 
