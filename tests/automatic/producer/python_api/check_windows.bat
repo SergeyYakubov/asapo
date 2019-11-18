@@ -27,11 +27,9 @@ set PYTHONPATH=%2
 type out
 set NUM=0
 for /F %%N in ('find /C "successfuly sent" ^< "out"') do set NUM=%%N
-echo %NUM% | findstr 7 || goto error
-
+echo %NUM% | findstr 8 || goto error
 
 goto :clean
-
 
 :error
 call :clean

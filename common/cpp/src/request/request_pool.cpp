@@ -49,9 +49,11 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_
     requests_in_progress_--;
     request_handler->TearDownProcessingRequestLocked(success);
     if (!success) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         PutRequestBackToQueue(std::move(request));
         condition_.notify_all();
+        thread_info->lock.unlock();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        thread_info->lock.lock();
     }
 }
 
@@ -107,11 +109,11 @@ Error RequestPool::WaitRequestsFinished(uint64_t timeout_ms) {
 }
 
 void RequestPool::StopThreads() {
+    log__->Debug("trying to stop threads");
     mutex_.lock();
     quit_ = true;
     mutex_.unlock();
     condition_.notify_all();
-
     for(size_t i = 0; i < threads_.size(); i++) {
         if(threads_[i].joinable()) {
             log__->Debug("finishing thread " + std::to_string(i));
