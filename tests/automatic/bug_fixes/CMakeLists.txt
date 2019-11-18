@@ -4,3 +4,4 @@ if (UNIX)
 endif()
 
 add_subdirectory(producer_send_after_restart)
+add_subdirectory(error-sending-data-using-callback-method)

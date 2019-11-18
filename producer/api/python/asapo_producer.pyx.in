@@ -161,6 +161,8 @@ cdef class PyProducer:
             AsapoWrongInputError: wrong input (authorization, meta, ...)
             AsapoProducerError: actually should not happen
         """
+        if callback != None:
+            Py_XINCREF(<PyObject*>callback)
 
         if type(data) == np.ndarray or data == None:
             self.__send_np_array(id,exposed_path,data,user_meta,subset,ingest_mode,callback)
@@ -223,6 +225,8 @@ cdef class PyProducer:
           else:
             py_err = None
           py_callback(info,py_err)
+          if py_callback != None:
+              Py_XDECREF(<PyObject*>py_callback)
 
     cdef void c_callback(self,py_callback, GenericRequestHeader header, Error err) with gil:
         self.c_callback_python(py_callback,header,err)
