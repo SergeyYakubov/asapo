@@ -109,7 +109,6 @@ Error RequestPool::WaitRequestsFinished(uint64_t timeout_ms) {
 }
 
 void RequestPool::StopThreads() {
-    log__->Debug("trying to stop threads");
     mutex_.lock();
     quit_ = true;
     mutex_.unlock();
@@ -120,7 +119,6 @@ void RequestPool::StopThreads() {
             threads_[i].join();
         }
     }
-
 }
 
 }
