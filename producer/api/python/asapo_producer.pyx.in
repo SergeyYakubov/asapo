@@ -60,10 +60,14 @@ cdef python_exception_from_error(Error& err):
 cdef throw_exception(Error& err):
     raise python_exception_from_error(err)
 
-cdef void* data_pointer_nparray(data):
+cdef void* data_pointer_nparray(data) except? NULL:
   if data is None:
     return <void*>NULL
   data_char = data.view(np.int8)
+  try:
+    data_char.shape=(-1)
+  except:
+    raise AsapoWrongInputError("cannot do no-copy flatten - non-contiguous array?")
   cdef char[::1] arr_memview = data_char
   return <void*>&arr_memview[0]
 
@@ -112,6 +116,9 @@ cdef class PyProducer:
             Py_XINCREF(<PyObject*>data.base)
           else:
             Py_XINCREF(<PyObject*>data)
+        if callback != None:
+            Py_XINCREF(<PyObject*>callback)
+
         return
     cdef EventHeader create_event_header(self,int id, exposed_path,user_meta,subset,ingest_mode):
         cdef EventHeader event_header
@@ -135,6 +142,8 @@ cdef class PyProducer:
         if err:
             throw_exception(err)
         Py_XINCREF(<PyObject*>data)
+        if callback != None:
+            Py_XINCREF(<PyObject*>callback)
         return
 
     def send_data(self, id, exposed_path,data, user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
@@ -157,7 +166,6 @@ cdef class PyProducer:
             AsapoWrongInputError: wrong input (authorization, meta, ...)
             AsapoProducerError: actually should not happen
         """
-
         if type(data) == np.ndarray or data == None:
             self.__send_np_array(id,exposed_path,data,user_meta,subset,ingest_mode,callback)
         elif type(data) == bytes:
@@ -183,7 +191,7 @@ cdef class PyProducer:
          :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
          :raises:
             AsapoWrongInputError: wrong input (authorization, meta, ...)
-			AsapoLocalIOError: problems reading file to send
+            AsapoLocalIOError: problems reading file to send
             AsapoProducerError: actually should not happen
         """
 
@@ -193,6 +201,10 @@ cdef class PyProducer:
             unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
         if err:
             throw_exception(err)
+
+        if callback != None:
+            Py_XINCREF(<PyObject*>callback)
+
         return
     def get_requests_queue_size(self):
         return self.c_producer.get().GetRequestsQueueSize()
@@ -201,7 +213,7 @@ cdef class PyProducer:
          :param timeout_ms: timeout in milliseconds
          :type timeout_ms: int
          :raises:
-			AsapoTimeoutError: requests not finished for a given timeout
+            AsapoTimeoutError: requests not finished for a given timeout
         """
         cdef Error err
         cdef uint64_t timeout = timeout_ms
@@ -219,6 +231,7 @@ cdef class PyProducer:
           else:
             py_err = None
           py_callback(info,py_err)
+          Py_XDECREF(<PyObject*>py_callback)
 
     cdef void c_callback(self,py_callback, GenericRequestHeader header, Error err) with gil:
         self.c_callback_python(py_callback,header,err)

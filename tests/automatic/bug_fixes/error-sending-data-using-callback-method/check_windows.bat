@@ -25,9 +25,7 @@ set PYTHONPATH=%2
 
 "%1" "%3" %stream% %beamtime_id%  "127.0.0.1:8400" > out
 type out
-set NUM=0
-for /F %%N in ('find /C "successfuly sent" ^< "out"') do set NUM=%%N
-echo %NUM% | findstr 8 || goto error
+type out | findstr /c:"hello self callback" || goto error
 
 goto :clean
 

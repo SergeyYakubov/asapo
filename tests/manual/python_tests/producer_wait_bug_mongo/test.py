@@ -29,7 +29,7 @@ def assert_err(err):
 
 producer = asapo_producer.create_producer(endpoint,beamtime, stream, token, nthreads)
 
-producer.set_log_level("info")
+producer.set_log_level("debug")
 
 #send single file
 producer.send_file(1, local_path = "./file1", exposed_path = stream+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)
@@ -69,7 +69,7 @@ try:
 except:
 	pass
 else:
-	print ("sohuld be exception")
+	print ("should be exception")
 
 
 producer.wait_requests_finished(1000)

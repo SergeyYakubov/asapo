@@ -57,10 +57,25 @@ producer.send_data(6, stream+"/"+"file7",None,
 #send single file/wrong filename
 producer.send_file(1, local_path = "./file2", exposed_path = stream+"/"+"file1", callback = callback)
 
+x = np.array([[1, 2, 3], [4, 5, 6]], np.float32)
+producer.send_data(8, stream+"/"+"file8",x,
+                         ingest_mode = asapo_producer.DEFAULT_INGEST_MODE, callback = callback)
+
+try:
+	x = x.T
+	producer.send_data(8, stream+"/"+"file8",x,
+                         ingest_mode = asapo_producer.DEFAULT_INGEST_MODE, callback = callback)
+except asapo_producer.AsapoWrongInputError as e:
+    print(e)
+else:
+    print("should be error sending non-cont array")
+    sys.exit(1)
+
+
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
 if n!=0:
-	print("number of remaining requestst should be zero, got ",n)
+	print("number of remaining requests should be zero, got ",n)
 	sys.exit(1)
 
 
