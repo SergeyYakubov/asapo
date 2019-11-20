@@ -5,9 +5,7 @@ import (
 )
 
 func routeGetHealth(w http.ResponseWriter, r *http.Request) {
-	db_new := db.Copy()
-	defer db_new.Close()
-	err := db_new.Ping()
+	err := db.Ping()
 	if err != nil {
 		ReconnectDb()
 	}

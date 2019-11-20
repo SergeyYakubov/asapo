@@ -5,26 +5,32 @@ package database
 import (
 	"asapo_common/logger"
 	"asapo_common/utils"
+	"context"
 	"encoding/json"
 	"errors"
-	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
-type Pointer struct {
-	ID    int `bson:"_id"`
-	Value int `bson:"current_pointer"`
+type ID struct {
+	ID int `bson:"_id"`
+}
+
+type LocationPointer struct {
+	GroupID string `bson:"_id"`
+	Value   int    `bson:"current_pointer"`
 }
 
 const data_collection_name = "data"
 const meta_collection_name = "meta"
 const pointer_collection_name = "current_location"
 const pointer_field_name = "current_pointer"
-const no_session_msg = "database session not created"
+const no_session_msg = "database client not created"
 const wrong_id_type = "wrong id type"
 const already_connected_msg = "already connected"
 
@@ -37,22 +43,11 @@ type SizeRecord struct {
 }
 
 type Mongodb struct {
-	session             *mgo.Session
+	client              *mongo.Client
 	timeout             time.Duration
 	databases           []string
 	parent_db           *Mongodb
 	db_pointers_created map[string]bool
-}
-
-func (db *Mongodb) Copy() Agent {
-	new_db := new(Mongodb)
-	if db.session != nil {
-		dbSessionLock.RLock()
-		new_db.session = db.session.Copy()
-		dbSessionLock.RUnlock()
-	}
-	new_db.parent_db = db
-	return new_db
 }
 
 func (db *Mongodb) databaseInList(dbname string) bool {
@@ -63,16 +58,20 @@ func (db *Mongodb) databaseInList(dbname string) bool {
 
 func (db *Mongodb) updateDatabaseList() (err error) {
 	dbListLock.Lock()
-	db.databases, err = db.session.DatabaseNames()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	db.databases, err = db.client.ListDatabaseNames(ctx, bson.M{})
 	dbListLock.Unlock()
 	return err
 }
 
 func (db *Mongodb) Ping() (err error) {
-	if db.session == nil {
+	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
-	return db.session.Ping()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	return db.client.Ping(ctx, nil)
 }
 
 func (db *Mongodb) dataBaseExist(dbname string) (err error) {
@@ -92,18 +91,26 @@ func (db *Mongodb) dataBaseExist(dbname string) (err error) {
 }
 
 func (db *Mongodb) Connect(address string) (err error) {
-	if db.session != nil {
+	if db.client != nil {
 		return &DBError{utils.StatusServiceUnavailable, already_connected_msg}
 	}
 
-	db.session, err = mgo.DialWithTimeout(address, time.Second)
+	db.client, err = mongo.NewClient(options.Client().SetConnectTimeout(20 * time.Second).ApplyURI("mongodb://" + address))
 	if err != nil {
 		return err
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	err = db.client.Connect(ctx)
+	if err != nil {
+		db.client = nil
+		return err
+	}
 
-	//	db.session.SetSafe(&mgo.Safe{J: true})
+	//	db.client.SetSafe(&mgo.Safe{J: true})
 
 	if err := db.updateDatabaseList(); err != nil {
+		db.Close()
 		return err
 	}
 
@@ -111,90 +118,94 @@ func (db *Mongodb) Connect(address string) (err error) {
 }
 
 func (db *Mongodb) Close() {
-	if db.session != nil {
+	if db.client != nil {
 		dbSessionLock.Lock()
-		db.session.Close()
-		db.session = nil
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		db.client.Disconnect(ctx)
+		db.client = nil
 		dbSessionLock.Unlock()
 	}
 }
 
 func (db *Mongodb) deleteAllRecords(dbname string) (err error) {
-	if db.session == nil {
+	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
-	return db.session.DB(dbname).DropDatabase()
+	return db.client.Database(dbname).Drop(context.TODO())
 }
 
 func (db *Mongodb) insertRecord(dbname string, s interface{}) error {
-	if db.session == nil {
+	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
-	c := db.session.DB(dbname).C(data_collection_name)
+	c := db.client.Database(dbname).Collection(data_collection_name)
 
-	return c.Insert(s)
+	_, err := c.InsertOne(context.TODO(), s)
+	return err
 }
 
 func (db *Mongodb) insertMeta(dbname string, s interface{}) error {
-	if db.session == nil {
+	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
-	c := db.session.DB(dbname).C(meta_collection_name)
+	c := db.client.Database(dbname).Collection(meta_collection_name)
 
-	return c.Insert(s)
+	_, err := c.InsertOne(context.TODO(), s)
+	return err
 }
 
 func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int, err error) {
-	c := db.session.DB(dbname).C(data_collection_name)
-	var id Pointer
+	c := db.client.Database(dbname).Collection(data_collection_name)
 	var q bson.M
 	if dataset {
 		q = bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$images"}}}}
 	} else {
 		q = nil
 	}
-	err = c.Find(q).Sort("-_id").Select(bson.M{"_id": 1}).One(&id)
-	if err == mgo.ErrNotFound {
+	opts := options.FindOne().SetSort(bson.M{"_id": -1}).SetReturnKey(true)
+	var result ID
+	err = c.FindOne(context.TODO(), q, opts).Decode(&result)
+	if err == mongo.ErrNoDocuments {
 		return 0, nil
 	}
-	return id.ID, err
+
+	return result.ID, err
 }
 
 func (db *Mongodb) createLocationPointers(dbname string, group_id string) (err error) {
-	change := mgo.Change{
-		Update: bson.M{"$inc": bson.M{pointer_field_name: 0}},
-		Upsert: true,
-	}
+	opts := options.Update().SetUpsert(true)
+	update := bson.M{"$inc": bson.M{pointer_field_name: 0}}
 	q := bson.M{"_id": group_id}
-	c := db.session.DB(dbname).C(pointer_collection_name)
-	var res map[string]interface{}
-	_, err = c.Find(q).Apply(change, &res)
-	return err
+	c := db.client.Database(dbname).Collection(pointer_collection_name)
+	_, err = c.UpdateOne(context.TODO(), q, update, opts)
+	return
 }
 
 func (db *Mongodb) setCounter(dbname string, group_id string, ind int) (err error) {
 	update := bson.M{"$set": bson.M{pointer_field_name: ind}}
-	c := db.session.DB(dbname).C(pointer_collection_name)
-	return c.UpdateId(group_id, update)
+	c := db.client.Database(dbname).Collection(pointer_collection_name)
+	q := bson.M{"_id": group_id}
+	_, err = c.UpdateOne(context.TODO(), q, update, options.Update())
+	return
 }
 
 func (db *Mongodb) incrementField(dbname string, group_id string, max_ind int, res interface{}) (err error) {
 	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
-	change := mgo.Change{
-		Update:    update,
-		Upsert:    false,
-		ReturnNew: true,
-	}
+	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
 	q := bson.M{"_id": group_id, pointer_field_name: bson.M{"$lt": max_ind}}
-	c := db.session.DB(dbname).C(pointer_collection_name)
-	_, err = c.Find(q).Apply(change, res)
-	if err == mgo.ErrNotFound {
-		return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind)}
-	} else if err != nil { // we do not know if counter was updated
+	c := db.client.Database(dbname).Collection(pointer_collection_name)
+
+	err = c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind)}
+		}
 		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
 	}
+
 	return nil
 }
 
@@ -217,8 +228,8 @@ func (db *Mongodb) getRecordByIDRow(dbname string, id, id_max int, dataset bool)
 		q = bson.M{"_id": id}
 	}
 
-	c := db.session.DB(dbname).C(data_collection_name)
-	err := c.Find(q).One(&res)
+	c := db.client.Database(dbname).Collection(data_collection_name)
+	err := c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
 	if err != nil {
 		answer := encodeAnswer(id, id_max)
 		log_str := "error getting record id " + strconv.Itoa(id) + " for " + dbname + " : " + err.Error()
@@ -277,7 +288,7 @@ func (db *Mongodb) getParentDB() *Mongodb {
 }
 
 func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id string) error {
-	if db.session == nil {
+	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
@@ -291,16 +302,16 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id 
 	return nil
 }
 
-func (db *Mongodb) getCurrentPointer(db_name string, group_id string, dataset bool) (Pointer, int, error) {
+func (db *Mongodb) getCurrentPointer(db_name string, group_id string, dataset bool) (LocationPointer, int, error) {
 	max_ind, err := db.getMaxIndex(db_name, dataset)
 	if err != nil {
-		return Pointer{}, 0, err
+		return LocationPointer{}, 0, err
 	}
 
-	var curPointer Pointer
+	var curPointer LocationPointer
 	err = db.incrementField(db_name, group_id, max_ind, &curPointer)
 	if err != nil {
-		return Pointer{}, 0, err
+		return LocationPointer{}, 0, err
 	}
 
 	return curPointer, max_ind, nil
@@ -331,13 +342,15 @@ func (db *Mongodb) getLastRecord(db_name string, group_id string, dataset bool) 
 }
 
 func (db *Mongodb) getSize(db_name string) ([]byte, error) {
-	c := db.session.DB(db_name).C(data_collection_name)
+	c := db.client.Database(db_name).Collection(data_collection_name)
 	var rec SizeRecord
 	var err error
-	rec.Size, err = c.Count()
+
+	size, err := c.CountDocuments(context.TODO(), bson.M{}, options.Count())
 	if err != nil {
 		return nil, err
 	}
+	rec.Size = int(size)
 	return json.Marshal(&rec)
 }
 
@@ -360,8 +373,8 @@ func (db *Mongodb) getMeta(dbname string, id_str string) ([]byte, error) {
 
 	var res map[string]interface{}
 	q := bson.M{"_id": id}
-	c := db.session.DB(dbname).C(meta_collection_name)
-	err = c.Find(q).One(&res)
+	c := db.client.Database(dbname).Collection(meta_collection_name)
+	err = c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
 	if err != nil {
 		log_str := "error getting meta with id " + strconv.Itoa(id) + " for " + dbname + " : " + err.Error()
 		logger.Debug(log_str)
@@ -370,6 +383,12 @@ func (db *Mongodb) getMeta(dbname string, id_str string) ([]byte, error) {
 	log_str := "got record id " + strconv.Itoa(id) + " for " + dbname
 	logger.Debug(log_str)
 	return utils.MapToJson(&res)
+}
+
+func (db *Mongodb) processQueryError(query, dbname string, err error) ([]byte, error) {
+	log_str := "error processing query: " + query + " for " + dbname + " : " + err.Error()
+	logger.Debug(log_str)
+	return nil, &DBError{utils.StatusNoData, err.Error()}
 }
 
 func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
@@ -381,16 +400,21 @@ func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	c := db.session.DB(dbname).C(data_collection_name)
+	c := db.client.Database(dbname).Collection(data_collection_name)
+	opts := options.Find()
+
 	if len(sort) > 0 {
-		err = c.Find(q).Sort(sort).All(&res)
+		opts = opts.SetSort(sort)
 	} else {
-		err = c.Find(q).All(&res)
 	}
+
+	cursor, err := c.Find(context.TODO(), q, opts)
 	if err != nil {
-		log_str := "error processing query: " + query + " for " + dbname + " : " + err.Error()
-		logger.Debug(log_str)
-		return nil, &DBError{utils.StatusNoData, err.Error()}
+		return db.processQueryError(query, dbname, err)
+	}
+	err = cursor.All(context.TODO(), &res)
+	if err != nil {
+		return db.processQueryError(query, dbname, err)
 	}
 
 	log_str := "processed query " + query + " for " + dbname + " ,found" + strconv.Itoa(len(res)) + " records"

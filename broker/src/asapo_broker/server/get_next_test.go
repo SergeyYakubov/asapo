@@ -35,7 +35,6 @@ func TestGetNextTestSuite(t *testing.T) {
 func (suite *GetNextTestSuite) TestGetNextCallsCorrectRoutine() {
 	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next", "0").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next")))
-	ExpectCopyClose(suite.mock_db)
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(http.StatusOK, w.Code, "GetNext OK")

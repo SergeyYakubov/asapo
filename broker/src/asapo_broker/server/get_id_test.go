@@ -15,11 +15,6 @@ func TestGetIdWithoutDatabaseName(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, w.Code, "no database name")
 }
 
-func ExpectCopyCloseOnID(mock_db *database.MockedDatabase) {
-	mock_db.On("Copy").Return(mock_db)
-	mock_db.On("Close").Return()
-}
-
 type GetIDTestSuite struct {
 	suite.Suite
 	mock_db *database.MockedDatabase
@@ -31,7 +26,6 @@ func (suite *GetIDTestSuite) SetupTest() {
 	suite.mock_db = new(database.MockedDatabase)
 	db = suite.mock_db
 	logger.SetMockLog()
-	ExpectCopyCloseOnID(suite.mock_db)
 }
 
 func (suite *GetIDTestSuite) TearDownTest() {
@@ -47,7 +41,6 @@ func TestGetIDTestSuite(t *testing.T) {
 func (suite *GetIDTestSuite) TestGetIdCallsCorrectRoutine() {
 	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "id", "1").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request")))
-	ExpectCopyClose(suite.mock_db)
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix)
 	suite.Equal(http.StatusOK, w.Code, "GetImage OK")
