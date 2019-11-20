@@ -21,6 +21,6 @@ $1 -config settings.json &
 sleep 0.3
 brokerid=`echo $!`
 
-curl -v  --silent 127.0.0.1:5005/database/test/stream/0/meta/0?token=$token --stderr - | grep '"data":"test"'
-curl -v  --silent 127.0.0.1:5005/database/test/stream/0/meta/1?token=$token --stderr - | grep 'not found'
+curl -v  --silent 127.0.0.1:5005/database/test/stream/0/meta/0?token=$token --stderr - | tee /dev/stderr | grep '"data":"test"'
+curl -v  --silent 127.0.0.1:5005/database/test/stream/0/meta/1?token=$token --stderr - | tee /dev/stderr | grep 'no documents'
 
