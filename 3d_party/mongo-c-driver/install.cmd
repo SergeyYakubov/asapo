@@ -1,8 +1,8 @@
 :: download and untar mongoc driver sources to dir
-:: https://github.com/mongodb/mongo-c-driver/releases/download/1.9.0/mongo-c-driver-1.9.0.tar.gz
+:: https://github.com/mongodb/mongo-c-driver/releases/download/1.15.2/mongo-c-driver-1.15.2.tar.gz
 
 :: set directory with mongoc driver sources
-SET dir=c:\tmp\mongo-c-driver-1.9.0
+SET dir=c:\tmp\mongo-c-driver-1.15.2
 
 set mypath=%cd%
 cd /d %dir%
