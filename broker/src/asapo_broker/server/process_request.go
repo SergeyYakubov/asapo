@@ -99,10 +99,8 @@ func reconnectIfNeeded(db_error error) {
 }
 
 func processRequestInDb(db_name string, group_id string, op string, extra_param string) (answer []byte, code int) {
-	db_new := db.Copy()
-	defer db_new.Close()
 	statistics.IncreaseCounter()
-	answer, err := db_new.ProcessRequest(db_name, group_id, op, extra_param)
+	answer, err := db.ProcessRequest(db_name, group_id, op, extra_param)
 	log_str := "processing request " + op + " in " + db_name + " at " + settings.GetDatabaseServer()
 	if err != nil {
 		go reconnectIfNeeded(err)

@@ -33,15 +33,13 @@ func TestGetHealthTestSuite(t *testing.T) {
 
 func (suite *GetHealthTestSuite) TestGetHealthOk() {
 	suite.mock_db.On("Ping").Return(nil)
-	ExpectCopyClose(suite.mock_db)
-
 	w := doRequest("/health")
 	suite.Equal(http.StatusNoContent, w.Code)
 }
 
 func (suite *GetHealthTestSuite) TestGetHealthTriesToReconnectsToDataBase() {
 	suite.mock_db.On("Ping").Return(errors.New("ping error"))
-	ExpectCopyCloseReconnect(suite.mock_db)
+	ExpectReconnect(suite.mock_db)
 
 	w := doRequest("/health")
 	suite.Equal(http.StatusNoContent, w.Code)

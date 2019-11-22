@@ -5,7 +5,6 @@ type Agent interface {
 	Ping() error
 	Connect(string) error
 	Close()
-	Copy() Agent
 }
 
 type DBError struct {

@@ -24,11 +24,6 @@ func (db *MockedDatabase) Ping() error {
 	return args.Error(0)
 }
 
-func (db *MockedDatabase) Copy() Agent {
-	db.Called()
-	return db
-}
-
 func (db *MockedDatabase) ProcessRequest(db_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
 	args := db.Called(db_name, group_id, op, extra_param)
 	return args.Get(0).([]byte), args.Error(1)

@@ -6,7 +6,7 @@ set(SOURCE_FILES
 ################################
 # Library
 ################################
-find_package (libmongoc-static-1.0 1.9 REQUIRED)
+find_package (libmongoc-static-1.0 1.15 REQUIRED)
 message ("--   mongoc found version \"${MONGOC_STATIC_VERSION}\"")
 message ("--   mongoc include path \"${MONGOC_STATIC_INCLUDE_DIRS}\"")
 message ("--   mongoc libraries \"${MONGOC_STATIC_LIBRARIES}\"")

@@ -16,7 +16,6 @@ func TestMockDataBase(t *testing.T) {
 
 	db.Connect("")
 	db.Close()
-	db.Copy()
 	db.Ping()
 	var err DBError
 	err.Error()

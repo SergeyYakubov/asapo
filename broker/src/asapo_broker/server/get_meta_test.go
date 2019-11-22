@@ -35,7 +35,6 @@ func TestGetMetaTestSuite(t *testing.T) {
 func (suite *GetMetaTestSuite) TestGetMetaOK() {
 	suite.mock_db.On("ProcessRequest", expectedDBName, "", "meta", "0").Return([]byte("{\"test\":10}"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request meta")))
-	ExpectCopyClose(suite.mock_db)
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/0/meta/0" + correctTokenSuffix)
 	suite.Equal(http.StatusOK, w.Code, "GetSize OK")

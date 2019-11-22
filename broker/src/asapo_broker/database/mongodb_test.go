@@ -4,10 +4,11 @@ package database
 
 import (
 	"asapo_common/utils"
+	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/stretchr/testify/assert"
-	"strings"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"sync"
 	"testing"
 )
@@ -45,13 +46,16 @@ var recs2 = SizeRecord{0}
 var recs2_expect, _ = json.Marshal(recs2)
 
 func cleanup() {
+	if db.client == nil {
+		return
+	}
 	db.deleteAllRecords(dbname)
 	db.db_pointers_created = nil
 	db.Close()
 }
 
-// these are tjhe integration tests. They assume mongo db is runnig on 127.0.0.1:27027
-// test names shlud contain MongoDB*** so that go test could find them:
+// these are the integration tests. They assume mongo db is runnig on 127.0.0.1:27027
+// test names should contain MongoDB*** so that go test could find them:
 // go_integration_test(${TARGET_NAME}-connectdb "./..." "MongoDBConnect")
 func TestMongoDBConnectFails(t *testing.T) {
 	err := db.Connect("blabla")
@@ -63,12 +67,6 @@ func TestMongoDBConnectOK(t *testing.T) {
 	err := db.Connect(dbaddress)
 	defer cleanup()
 	assert.Nil(t, err)
-}
-
-func TestMongoCopyWhenNoSession(t *testing.T) {
-	db_new := db.Copy()
-	err := db_new.Connect("sss")
-	assert.NotNil(t, err)
 }
 
 func TestMongoDBGetNextErrorWhenNotConnected(t *testing.T) {
@@ -129,14 +127,6 @@ func TestMongoDBGetNextErrorOnNoMoreData(t *testing.T) {
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1}", err.(*DBError).Message)
 }
-
-//func TestMongoDBGetNextErrorOnDataAtAll(t *testing.T) {
-//	db.Connect(dbaddress)
-//	defer cleanup()
-//	_, err := db.GetNextRecord(dbname, groupId, false)
-//	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-//	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0}", err.(*DBError).Message)
-//}
 
 func TestMongoDBGetNextCorrectOrder(t *testing.T) {
 	db.Connect(dbaddress)
@@ -288,7 +278,7 @@ func TestMongoDBGetSizeNoRecords(t *testing.T) {
 	defer cleanup()
 	// to have empty collection
 	db.insertRecord(dbname, &rec1)
-	db.session.DB(dbname).C(data_collection_name).RemoveId(1)
+	db.client.Database(dbname).Collection(data_collection_name).DeleteOne(context.TODO(), bson.M{"_id": 1}, options.Delete())
 
 	res, err := db.ProcessRequest(dbname, "", "size", "0")
 	assert.Nil(t, err)
@@ -424,18 +414,19 @@ func TestMongoDBQueryImagesOK(t *testing.T) {
 	db.insertRecord(dbname, &recq4)
 
 	for _, test := range tests {
-		info, _ := db.session.BuildInfo()
-		if strings.Contains(test.query, "NOT REGEXP") && !info.VersionAtLeast(4, 0, 7) {
-			fmt.Println("Skipping NOT REGEXP test since it is not supported by this mongodb version")
-			continue
-		}
+		//		info, _ := db.client.BuildInfo()
+		//		if strings.Contains(test.query, "NOT REGEXP") && !info.VersionAtLeast(4, 0, 7) {
+		//			fmt.Println("Skipping NOT REGEXP test since it is not supported by this mongodb version")
+		//			continue
+		//		}
 
 		res_string, err := db.ProcessRequest(dbname, "", "queryimages", test.query)
 		var res []TestRecordMeta
 		json.Unmarshal(res_string, &res)
+		//		fmt.Println(string(res_string))
 		if test.ok {
-			assert.Nil(t, err)
-			assert.Equal(t, test.res, res, test.query)
+			assert.Nil(t, err, test.query)
+			assert.Equal(t, test.res, res)
 		} else {
 			assert.NotNil(t, err, test.query)
 			assert.Equal(t, 0, len(res))

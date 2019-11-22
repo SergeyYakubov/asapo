@@ -35,7 +35,6 @@ func TestGetLastTestSuite(t *testing.T) {
 func (suite *GetLastTestSuite) TestGetLastCallsCorrectRoutine() {
 	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "last", "0").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request last")))
-	ExpectCopyClose(suite.mock_db)
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/last" + correctTokenSuffix)
 	suite.Equal(http.StatusOK, w.Code, "GetLast OK")

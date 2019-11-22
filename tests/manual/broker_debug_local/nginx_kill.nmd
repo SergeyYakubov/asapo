@@ -1,0 +1,17 @@
+job "nginx_kill" {
+  datacenters = ["dc1"]
+
+  type = "batch"
+
+  group "nginx_kill" {
+    count = 1
+
+    task "nginx_kill" {
+      driver = "raw_exec"
+      config {
+        command = "killall",
+        args =  ["nginx"]
+      }
+   }
+  }
+}
