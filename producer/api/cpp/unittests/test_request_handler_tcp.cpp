@@ -59,12 +59,15 @@ class RequestHandlerTcpTests : public testing::Test {
 
     char  expected_file_name[asapo::kMaxMessageSize] = "test_name";
     char  expected_beamtime_id[asapo::kMaxMessageSize] = "test_beamtime_id";
+    char  expected_substream[asapo::kMaxMessageSize] = "test_substream";
 
     uint64_t expected_thread_id = 2;
 
     asapo::Error callback_err;
-    asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size, expected_meta_size, expected_file_name};
-    asapo::GenericRequestHeader header_fromfile{expected_op_code, expected_file_id, 0, expected_meta_size, expected_file_name};
+    asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,
+                                       expected_meta_size, expected_file_name, expected_substream};
+    asapo::GenericRequestHeader header_fromfile{expected_op_code, expected_file_id, 0, expected_meta_size,
+                                                expected_file_name, expected_substream};
     bool callback_called = false;
     asapo::GenericRequestHeader callback_header;
 
@@ -140,12 +143,14 @@ ACTION_P(A_WriteSendDataResponse, error_code) {
     strcpy(((asapo::SendDataResponse*)arg1)->message, expected_auth_message.c_str());
 }
 
-MATCHER_P4(M_CheckSendDataRequest, op_code, file_id, file_size, message,
+MATCHER_P5(M_CheckSendDataRequest, op_code, file_id, file_size, message, substream,
            "Checks if a valid GenericRequestHeader was Send") {
     return ((asapo::GenericRequestHeader*)arg)->op_code == op_code
            && ((asapo::GenericRequestHeader*)arg)->data_id == uint64_t(file_id)
            && ((asapo::GenericRequestHeader*)arg)->data_size == uint64_t(file_size)
-           && strcmp(((asapo::GenericRequestHeader*)arg)->message, message) == 0;
+           && strcmp(((asapo::GenericRequestHeader*)arg)->message, message) == 0
+           && strcmp(((asapo::GenericRequestHeader*)arg)->substream, substream) == 0;
+
 }
 
 
@@ -172,7 +177,8 @@ void RequestHandlerTcpTests::ExpectFailConnect(bool only_once) {
 void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id),
+        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id,
+                                    ""),
                                     sizeof(asapo::GenericRequestHeader), _))
         .WillOnce(
             DoAll(
@@ -209,7 +215,8 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
 void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id),
+        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id,
+                                    ""),
                                     sizeof(asapo::GenericRequestHeader), _))
         .WillOnce(
             DoAll(
@@ -243,7 +250,7 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(expected_op_code, expected_file_id,
-                                    expected_file_size, expected_file_name),
+                                    expected_file_size, expected_file_name, expected_substream),
                                     sizeof(asapo::GenericRequestHeader), _))
         .WillOnce(
             DoAll(
@@ -408,7 +415,7 @@ void RequestHandlerTcpTests::ExpectOKSendFile(bool only_once) {
 void RequestHandlerTcpTests::ExpectOKSendHeader(bool only_once, asapo::Opcode opcode) {
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(opcode, expected_file_id,
-                                    expected_file_size, expected_file_name),
+                                    expected_file_size, expected_file_name, expected_substream),
                                     sizeof(asapo::GenericRequestHeader), _))
         .WillOnce(
             DoAll(

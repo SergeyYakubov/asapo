@@ -39,18 +39,44 @@ class Producer {
     virtual Error SendData__(const EventHeader& event_header, void* data, uint64_t ingest_mode,
                              RequestCallback callback) = 0;
 
+    //! Sends data to the receiver
+    /*!
+      \param event_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
+      \param data - A pointer to the data to send
+      \return Error - Will be nullptr on success
+    */
+    virtual Error SendData(const EventHeader& event_header, std::string substream, FileData data, uint64_t ingest_mode,
+                           RequestCallback callback) = 0;
+
+
+    //! Sends data to the receiver - same as SendData - memory should not be freed until send is finished
+    //! used e.g. for Python bindings
+    virtual Error SendData__(const EventHeader& event_header, std::string substream, void* data, uint64_t ingest_mode,
+                             RequestCallback callback) = 0;
+
     //! Stop processing threads
     //! used e.g. for Python bindings
     virtual void StopThreads__() = 0;
 
-    //! Sends files to the receiver
+    //! Sends files to the default substream
     /*!
       \param event_header - A stucture with the meta information (file name, size is ignored).
-      \param file name - A full path of the file to send
+      \param full_path - A full path of the file to send
       \return Error - Will be nullptr on success
     */
     virtual Error SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,
                            RequestCallback callback) = 0;
+
+    //! Sends files to the substream
+    /*!
+      \param event_header - A stucture with the meta information (file name, size is ignored).
+      \param full_path - A full path of the file to send
+      \return Error - Will be nullptr on success
+    */
+    virtual Error SendFile(const EventHeader& event_header, std::string substream, std::string full_path,
+                           uint64_t ingest_mode,
+                           RequestCallback callback) = 0;
+
 
     //! Sends metadata for the current beamtime to the receiver
     /*!
