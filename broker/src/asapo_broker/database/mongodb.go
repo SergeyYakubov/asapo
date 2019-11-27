@@ -26,7 +26,7 @@ type LocationPointer struct {
 	Value   int    `bson:"current_pointer"`
 }
 
-const data_collection_name = "data"
+const data_collection_name = "data_default"
 const meta_collection_name = "meta"
 const pointer_collection_name = "current_location"
 const pointer_field_name = "current_pointer"

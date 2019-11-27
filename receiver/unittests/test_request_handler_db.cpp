@@ -156,8 +156,7 @@ TEST_F(DbHandlerTests, ProcessRequestDiscoversMongoDbAddress) {
     ;
 
 
-    EXPECT_CALL(mock_db, Connect_t(expected_database_server, expected_beamtime_id + "_" + expected_stream,
-                                   expected_collection_name)).
+    EXPECT_CALL(mock_db, Connect_t(expected_database_server, expected_beamtime_id + "_" + expected_stream)).
     WillOnce(testing::Return(nullptr));
 
     auto err = handler.ProcessRequest(mock_request.get());
@@ -172,7 +171,7 @@ TEST_F(DbHandlerTests, ProcessRequestErrorDiscoversMongoDbAddress) {
 
     MockAuthRequest(true, HttpCode::BadRequest);
 
-    EXPECT_CALL(mock_db, Connect_t(_, _, _)).Times(0);
+    EXPECT_CALL(mock_db, Connect_t(_, _)).Times(0);
 
     auto err = handler.ProcessRequest(mock_request.get());
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInternalServerError));
@@ -195,8 +194,7 @@ TEST_F(DbHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
 
 
 
-    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id + "_" + expected_stream,
-                                   expected_collection_name)).
+    EXPECT_CALL(mock_db, Connect_t("127.0.0.1:27017", expected_beamtime_id + "_" + expected_stream)).
     WillOnce(testing::Return(nullptr));
 
     auto err = handler.ProcessRequest(mock_request.get());
@@ -205,7 +203,7 @@ TEST_F(DbHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
 
 TEST_F(DbHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
 
-    EXPECT_CALL(mock_db, Connect_t(_, _, expected_collection_name)).
+    EXPECT_CALL(mock_db, Connect_t(_, _)).
     WillOnce(testing::Return(new asapo::SimpleError("")));
 
     auto err = handler.ProcessRequest(mock_request.get());
@@ -216,7 +214,7 @@ TEST_F(DbHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
 
 TEST_F(DbHandlerTests, ProcessRequestDoesNotCallConnectSecondTime) {
 
-    EXPECT_CALL(mock_db, Connect_t(_, _, expected_collection_name)).
+    EXPECT_CALL(mock_db, Connect_t(_, _)).
     WillOnce(testing::Return(nullptr));
 
     handler.ProcessRequest(mock_request.get());

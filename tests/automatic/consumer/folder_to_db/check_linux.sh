@@ -20,8 +20,8 @@ touch test/file1
 $@ test test_run 127.0.0.1
 
 echo "show collections" | mongo ${database_name} | grep data
-echo "db.data.find({"_id":1})" | mongo ${database_name} | grep file2
-echo "db.data.find({"_id":2})" | mongo ${database_name} | grep file1
+echo "db.data_default.find({"_id":1})" | mongo ${database_name} | grep file2
+echo "db.data_default.find({"_id":2})" | mongo ${database_name} | grep file1
 
 # check if gives error on duplicates
 ! $@ test test_run 127.0.0.1

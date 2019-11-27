@@ -45,17 +45,17 @@ int main(int argc, char* argv[]) {
 
 
     if (args.keyword != "Notconnected") {
-        db.Connect("127.0.0.1", "test", "meta");
+        db.Connect("127.0.0.1", "test");
     }
 
-    auto err = db.Upsert(0, reinterpret_cast<const uint8_t*>(json.c_str()), json.size());
+    auto err = db.Upsert("meta", 0, reinterpret_cast<const uint8_t*>(json.c_str()), json.size());
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
 
     Assert(err, args.keyword);
 
-    err = db.Upsert(0, reinterpret_cast<const uint8_t*>(json.c_str()), json.size());
+    err = db.Upsert("meta", 0, reinterpret_cast<const uint8_t*>(json.c_str()), json.size());
     if (err) {
         std::cout << err->Explain() << std::endl;
     }

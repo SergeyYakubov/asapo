@@ -96,8 +96,7 @@ TEST_F(DbMetaWriterHandlerTests, CallsUpdate) {
     ;
 
 
-    EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_stream,
-                                   expected_collection_name)).
+    EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_stream)).
     WillOnce(testing::Return(nullptr));
 
 
@@ -109,7 +108,7 @@ TEST_F(DbMetaWriterHandlerTests, CallsUpdate) {
     .WillOnce(Return((void*)expected_meta))
     ;
 
-    EXPECT_CALL(mock_db, Upsert_t(expected_meta_id, expected_meta, expected_meta_size)).
+    EXPECT_CALL(mock_db, Upsert_t(expected_collection_name, expected_meta_id, expected_meta, expected_meta_size)).
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert beamtime meta"),

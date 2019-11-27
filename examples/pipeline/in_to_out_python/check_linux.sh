@@ -56,7 +56,7 @@ echo hello3 > file3
 
 for i in `seq 1 3`;
 do
-	echo 'db.data.insert({"_id":'$i',"size":6,"name":"'file$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${indatabase_name}
+	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'file$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${indatabase_name}
 done
 
 sleep 1
@@ -69,7 +69,7 @@ cat out
 cat out | grep "Processed 3 file(s)"
 cat out | grep "Sent 3 file(s)"
 
-echo "db.data.find({"_id":1})" | mongo ${outdatabase_name} | tee /dev/stderr | grep "file1_${stream_out}"
+echo "db.data_default.find({"_id":1})" | mongo ${outdatabase_name} | tee /dev/stderr | grep "file1_${stream_out}"
 
 cat ${receiver_folder}/file1_${stream_out} | grep hello1
 cat ${receiver_folder}/file2_${stream_out} | grep hello2

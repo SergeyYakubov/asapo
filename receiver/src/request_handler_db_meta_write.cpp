@@ -16,9 +16,9 @@ Error RequestHandlerDbMetaWrite::ProcessRequest(Request* request) const {
     auto meta = (uint8_t*)request->GetData();
     auto meta_id = request->GetDataID();
 
-    auto err =  db_client__->Upsert(meta_id, meta, size);
+    auto err =  db_client__->Upsert(collection_name_prefix_, meta_id, meta, size);
     if (!err) {
-        log__->Debug(std::string{"insert beamtime meta"} + " to " + collection_name_ + " in " +
+        log__->Debug(std::string{"insert beamtime meta"} + " to " + collection_name_prefix_ + " in " +
                      db_name_ +
                      " at " + GetReceiverConfig()->database_uri);
     }

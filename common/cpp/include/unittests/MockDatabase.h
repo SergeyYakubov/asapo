@@ -11,33 +11,32 @@ namespace asapo {
 
 class MockDatabase : public Database {
   public:
-    Error Connect(const std::string& address, const std::string& database,
-                  const std::string& collection ) override {
-        return Error{Connect_t(address, database, collection)};
+    Error Connect(const std::string& address, const std::string& database) override {
+        return Error{Connect_t(address, database)};
 
     }
-    Error Insert(const FileInfo& file, bool ignore_duplicates) const override {
-        return Error{Insert_t(file, ignore_duplicates)};
+    Error Insert(const std::string& collection, const FileInfo& file, bool ignore_duplicates) const override {
+        return Error{Insert_t(collection, file, ignore_duplicates)};
     }
 
-    Error InsertAsSubset(const FileInfo& file, uint64_t subset_id,
+    Error InsertAsSubset(const std::string& collection, const FileInfo& file, uint64_t subset_id,
                          uint64_t subset_size, bool ignore_duplicates) const override {
-        return Error{InsertAsSubset_t(file, subset_id, subset_size, ignore_duplicates)};
+        return Error{InsertAsSubset_t(collection, file, subset_id, subset_size, ignore_duplicates)};
     }
 
 
-    MOCK_METHOD3(Connect_t, ErrorInterface * (const std::string&, const std::string&, const std::string&));
-    MOCK_CONST_METHOD2(Insert_t, ErrorInterface * (const FileInfo&, bool));
+    MOCK_METHOD2(Connect_t, ErrorInterface * (const std::string&, const std::string&));
+    MOCK_CONST_METHOD3(Insert_t, ErrorInterface * (const std::string&, const FileInfo&, bool));
 
 
-    MOCK_CONST_METHOD4(InsertAsSubset_t, ErrorInterface * (const FileInfo&, uint64_t, uint64_t, bool));
+    MOCK_CONST_METHOD5(InsertAsSubset_t, ErrorInterface * (const std::string&, const FileInfo&, uint64_t, uint64_t, bool));
 
 
-    Error Upsert(uint64_t id, const uint8_t* data, uint64_t size) const override {
-        return Error{Upsert_t(id, data, size)};
+    Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const override {
+        return Error{Upsert_t(collection, id, data, size)};
 
     }
-    MOCK_CONST_METHOD3(Upsert_t, ErrorInterface * (uint64_t id, const uint8_t* data, uint64_t size));
+    MOCK_CONST_METHOD4(Upsert_t, ErrorInterface * (const std::string&, uint64_t id, const uint8_t* data, uint64_t size));
 
 
 

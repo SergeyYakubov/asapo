@@ -83,12 +83,12 @@ start_mongo
 
 wait
 
-echo "db.data.validate(true)" | mongo --port 27016 ${beamtime_id}_detector
+echo "db.data_default.validate(true)" | mongo --port 27016 ${beamtime_id}_detector
 
 echo processed files:
-echo "db.data.count()" | mongo --port 27016 ${beamtime_id}_detector
+echo "db.data_default.count()" | mongo --port 27016 ${beamtime_id}_detector
 
 
-echo "db.data.count()" | mongo --port 27016 ${beamtime_id}_detector | grep $nfiles
+echo "db.data_default.count()" | mongo --port 27016 ${beamtime_id}_detector | grep $nfiles
 
 

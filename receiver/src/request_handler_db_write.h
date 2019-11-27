@@ -12,7 +12,7 @@ namespace asapo {
 class RequestHandlerDbWrite final: public RequestHandlerDb {
   public:
     Error ProcessRequest(Request* request) const override;
-    RequestHandlerDbWrite(std::string collection_name);
+    RequestHandlerDbWrite(std::string collection_name_prefix);
   private:
     FileInfo PrepareFileInfo(const Request* request) const;
     Error InsertRecordToDb(const Request* request) const;
