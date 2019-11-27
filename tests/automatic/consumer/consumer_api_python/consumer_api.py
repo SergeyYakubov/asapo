@@ -30,16 +30,6 @@ def assert_eq(val,expected,name):
         print ('val: ', val,' expected: ',expected)
         sys.exit(1)
 
-
-def check_broker_server_error(broker,group_id_new):
-    try:
-        broker.get_last(group_id_new, meta_only=True)
-    except asapo_consumer.AsapoUnavailableServiceError as err:
-        print(err)
-        pass
-    else:
-        exit_on_noerr("AsapoBrokerServerError")
-
 def check_single(broker,group_id_new):
 
     _, meta = broker.get_next(group_id_new, meta_only=True)
@@ -194,10 +184,6 @@ source, path, beamtime, token, mode = sys.argv[1:]
 broker = asapo_consumer.create_server_broker(source,path, beamtime,"",token,60000)
 
 group_id_new = broker.generate_group_id()
-
-if mode == "broker_server_error":
-    check_broker_server_error(broker,group_id_new)
-
 
 if mode == "single":
     check_single(broker,group_id_new)
