@@ -17,7 +17,10 @@ class DataBroker {
       \return nullptr of command was successful, otherwise error.
     */
     virtual Error ResetLastReadMarker(std::string group_id) = 0;
+    virtual Error ResetLastReadMarker(std::string group_id, std::string substream) = 0;
+
     virtual Error SetLastReadMarker(uint64_t value, std::string group_id) = 0;
+    virtual Error SetLastReadMarker(uint64_t value, std::string group_id, std::string substream) = 0;
 
     //! Set timeout for broker operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
@@ -29,6 +32,7 @@ class DataBroker {
       \return number of datasets.
     */
     virtual uint64_t GetCurrentSize(Error* err) = 0;
+    virtual uint64_t GetCurrentSize(std::string substream, Error* err) = 0;
 
     //! Generate new GroupID.
     /*!
@@ -52,6 +56,7 @@ class DataBroker {
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetNext(FileInfo* info, std::string group_id, FileData* data) = 0;
+    virtual Error GetNext(FileInfo* info, std::string group_id, std::string substream, FileData* data) = 0;
 
     //! Retrieves image using fileinfo.
     /*!
@@ -69,6 +74,7 @@ class DataBroker {
       \return DataSet - information about the dataset
     */
     virtual DataSet GetNextDataset(std::string group_id, Error* err) = 0;
+    virtual DataSet GetNextDataset(std::string group_id, std::string substream, Error* err) = 0;
 
     //! Receive last available completed dataset.
     /*!
@@ -77,6 +83,7 @@ class DataBroker {
       \return DataSet - information about the dataset
     */
     virtual DataSet GetLastDataset(std::string group_id, Error* err) = 0;
+    virtual DataSet GetLastDataset(std::string group_id, std::string substream, Error* err) = 0;
 
 
     //! Receive dataset by id.
@@ -87,8 +94,7 @@ class DataBroker {
       \return DataSet - information about the dataset
     */
     virtual DataSet GetDatasetById(uint64_t id, std::string group_id, Error* err) = 0;
-
-
+    virtual DataSet GetDatasetById(uint64_t id, std::string group_id, std::string substream, Error* err) = 0;
 
     //! Receive single image by id.
     /*!
@@ -98,6 +104,7 @@ class DataBroker {
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) = 0;
+    virtual Error GetById(uint64_t id, FileInfo* info, std::string group_id, std::string substream, FileData* data) = 0;
 
 
     //! Receive last available image.
@@ -108,6 +115,7 @@ class DataBroker {
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetLast(FileInfo* info, std::string group_id, FileData* data) = 0;
+    virtual Error GetLast(FileInfo* info, std::string group_id, std::string substream, FileData* data) = 0;
 
     //! Get all images matching the query.
     /*!
@@ -116,6 +124,7 @@ class DataBroker {
       \return vector of image metadata matchiing to specified query. Empty if nothing found or error
     */
     virtual FileInfos QueryImages(std::string query, Error* err) = 0;
+    virtual FileInfos QueryImages(std::string query, std::string substream, Error* err) = 0;
 
     virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
 };

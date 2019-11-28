@@ -14,7 +14,6 @@
 namespace  asapo {
 
 const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
-const std::string ProducerImpl::kDefaultSubstream = "default";
 
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, asapo::RequestHandlerType type):

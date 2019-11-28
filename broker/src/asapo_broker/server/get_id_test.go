@@ -42,7 +42,7 @@ func (suite *GetIDTestSuite) TestGetIdCallsCorrectRoutine() {
 	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "id", "1").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/1" + correctTokenSuffix)
 	suite.Equal(http.StatusOK, w.Code, "GetImage OK")
 	suite.Equal("Hello", string(w.Body.Bytes()), "GetID sends data")
 }

@@ -168,7 +168,7 @@ TEST_F(ProducerImplTests, UsesDefaultStream) {
                                         expected_id,
                                         expected_size,
                                         expected_name,
-                                        asapo::ProducerImpl::kDefaultSubstream.c_str(),
+                                        asapo::kDefaultSubstream.c_str(),
                                         expected_ingest_mode,
                                         0,
                                         0))).WillOnce(Return(nullptr));
@@ -188,7 +188,7 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
                                         expected_id,
                                         expected_size,
                                         expected_name,
-                                        asapo::ProducerImpl::kDefaultSubstream.c_str(),
+                                        asapo::kDefaultSubstream.c_str(),
                                         expected_ingest_mode,
                                         0,
                                         0
@@ -228,7 +228,7 @@ TEST_F(ProducerImplTests, OKSendingSendSubsetDataRequest) {
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferSubsetData,
                                         expected_credentials_str, expected_metadata,
-                                        expected_id, expected_size, expected_name, asapo::ProducerImpl::kDefaultSubstream.c_str(),
+                                        expected_id, expected_size, expected_name, asapo::kDefaultSubstream.c_str(),
                                         expected_ingest_mode,
                                         expected_subset_id, expected_subset_size))).WillOnce(
                                             Return(
@@ -301,7 +301,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
                                         expected_id,
                                         0,
                                         expected_name,
-                                        asapo::ProducerImpl::kDefaultSubstream.c_str(),
+                                        asapo::kDefaultSubstream.c_str(),
                                         expected_ingest_mode,
                                         0,
                                         0))).WillOnce(Return(

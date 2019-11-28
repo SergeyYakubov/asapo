@@ -23,10 +23,10 @@ sleep 0.3
 brokerid=`echo $!`
 
 groupid=`curl -d '' --silent 127.0.0.1:5005/creategroup`
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${groupid}/next?token=$token --stderr - | tee /dev/stderr  | grep '"_id":1'
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${groupid}/next?token=$token --stderr - | tee /dev/stderr  | grep '"_id":2'
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${groupid}/next?token=$token --stderr - | tee /dev/stderr  | grep '"id_max":2'
+curl -v  --silent 127.0.0.1:5005/database/data/stream/substream/${groupid}/next?token=$token --stderr - | tee /dev/stderr  | grep '"_id":1'
+curl -v  --silent 127.0.0.1:5005/database/data/stream/substream/${groupid}/next?token=$token --stderr - | tee /dev/stderr  | grep '"_id":2'
+curl -v  --silent 127.0.0.1:5005/database/data/stream/substream/${groupid}/next?token=$token --stderr - | tee /dev/stderr  | grep '"id_max":2'
 
 # with a new group
 groupid=`curl -d '' --silent 127.0.0.1:5005/creategroup`
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${groupid}/next?token=$token --stderr - | tee /dev/stderr | grep '"_id":1'
+curl -v  --silent 127.0.0.1:5005/database/data/stream/substream/${groupid}/next?token=$token --stderr - | tee /dev/stderr | grep '"_id":1'

@@ -36,7 +36,7 @@ func (suite *GetSizeTestSuite) TestGetSizeOK() {
 	suite.mock_db.On("ProcessRequest", expectedDBName, "", "size", "0").Return([]byte("{\"size\":10}"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request size")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/size" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/size" + correctTokenSuffix)
 	suite.Equal(http.StatusOK, w.Code, "GetSize OK")
 	suite.Equal("{\"size\":10}", string(w.Body.Bytes()), "GetSize sends size")
 }
