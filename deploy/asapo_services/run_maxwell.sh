@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #folders
-NOMAD_ALLOC_HOST_SHARED=/tmp/asapo/container_host_shared/nomad_alloc
+NOMAD_ALLOC_HOST_SHARED=/var/tmp/asapo/container_host_shared/nomad_alloc
 SERVICE_DATA_CLUSTER_SHARED=/home/yakubov/asapo/asapo_cluster_shared/service_data
 DATA_GLOBAL_SHARED=/gpfs/petra3/scratch/yakubov/asapo_shared
 MONGO_DIR=/scratch/mongodb # due to performance reasons mongodb can benefit from writing to local filesystem (HA to be worked on)
@@ -15,6 +15,7 @@ RECURSORS=["\"131.169.40.200\"",\""131.169.194.200\""]
 ASAPO_USER=`id -u`:`id -g`
 
 ASAPO_VAR_FILE=`pwd`/asapo_overwrite_vars.tfvars
+ACL_ENABLED=true
 
 
 #docker stuff
@@ -77,6 +78,7 @@ dockerrun --rm  \
 	-e RECURSORS=$RECURSORS \
 	-e TF_VAR_asapo_user=$ASAPO_USER \
 	-e IB_ADDRESS=$IB_ADDRESS \
+    -e ACL_ENABLED=$ACL_ENABLED \
 	-e SERVER_ADRESSES=$SERVER_ADRESSES \
 	-e ASAPO_LIGHTWEIGHT_SERVICE_NODES=$ASAPO_LIGHTWEIGHT_SERVICE_NODES \
 	-e DOCKER_ENDPOINT=$DOCKER_ENDPOINT \

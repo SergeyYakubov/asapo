@@ -5,7 +5,7 @@ advertise {
 }
 
 acl {
-  enabled = true
+  enabled = $acl_enabled
 }
 
 server {

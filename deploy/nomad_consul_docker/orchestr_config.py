@@ -44,6 +44,7 @@ def set_parameters():
     else:
         d['bootstrap_expect_string'] = ""
     d['ib_address']=my_get_env('IB_ADDRESS',"none")
+    d['acl_enabled']=my_get_env('ACL_ENABLED',"false")
     d['nomad_alloc_dir']=my_get_env('NOMAD_ALLOC_DIR','')
     d['recursors']=my_get_env('RECURSORS','["8.8.8.8"]')
     lightweight_service_nodes=my_get_env('ASAPO_LIGHTWEIGHT_SERVICE_NODES','[]')
