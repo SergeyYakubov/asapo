@@ -49,6 +49,9 @@ def set_parameters():
     d['recursors']=my_get_env('RECURSORS','["8.8.8.8"]')
     lightweight_service_nodes=my_get_env('ASAPO_LIGHTWEIGHT_SERVICE_NODES','[]')
     d['is_asapo_lightweight_service_node']=in_server_list(d['advertise_ip'],lightweight_service_nodes, True)
+    d['use_telemetry'] = my_get_env('NOMAD_TELEMETRY','false')
+    d['telegraf_address'] = my_get_env('TELEGRAF_ADDRESS','localhost:8125')
+
     return d
 
 def process_file(file_in,file_out):

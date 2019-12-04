@@ -12,13 +12,17 @@ ASAPO_USER=`id -u`:`id -g`
 #SERVER_ADRESSES=
 #N_SERVERS=
 
+NOMAD_TELEMETRY=true
+NGINX_PORT_STREAM=8402
+TELEGRAF_ADDRESS="127.0.0.1:${NGINX_PORT_STREAM}"
+
 ASAPO_VAR_FILE=`pwd`/asapo_client_overwrite_vars.tfvars
 
 mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
 
 cd $SERVICE_DATA_CLUSTER_SHARED
-mkdir grafana
+mkdir grafana influxdb
 chmod 777 *
 
 if [ -f $ASAPO_VAR_FILE ]; then
@@ -36,12 +40,15 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
   -e NOMAD_ALLOC_DIR=$NOMAD_ALLOC_HOST_SHARED \
   -e TF_VAR_service_dir=$SERVICE_DATA_CLUSTER_SHARED \
   -e TF_VAR_data_dir=$DATA_GLOBAL_SHARED \
+  -e TF_VAR_nginx_port_stream=$NGINX_PORT_STREAM \
    $MOUNT_VAR_FILE \
   -e ADVERTISE_IP=$ADVERTISE_IP \
   -e RECURSORS=$RECURSORS \
   -e TF_VAR_asapo_user=$ASAPO_USER \
   -e IB_ADDRESS=$IB_ADDRESS \
   -e SERVER_ADRESSES=$SERVER_ADRESSES \
+  -e TELEGRAF_ADDRESS=$TELEGRAF_ADDRESS \
+  -e NOMAD_TELEMETRY=$NOMAD_TELEMETRY \
   -e N_SERVERS=$N_SERVERS \
   --name asapo-client --net=host -d yakser/asapo-client
 
