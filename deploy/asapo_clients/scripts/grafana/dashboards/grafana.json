@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1575473439512,
+  "iteration": 1575563736443,
   "links": [],
   "panels": [
     {
@@ -95,9 +95,9 @@
           ],
           "tags": [
             {
-              "key": "job",
+              "key": "task",
               "operator": "=~",
-              "value": "/^$job$/"
+              "value": "/^$task$/"
             }
           ]
         }
@@ -167,7 +167,7 @@
       "gridPos": {
         "h": 5,
         "w": 4,
-        "x": 0,
+        "x": 1,
         "y": 8
       },
       "id": 13,
@@ -301,141 +301,7 @@
       "gridPos": {
         "h": 5,
         "w": 4,
-        "x": 4,
-        "y": 8
-      },
-      "id": 14,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "options": {},
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "consul_health_checks",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "passing"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "service_name",
-              "operator": "=",
-              "value": "grafana"
-            }
-          ]
-        }
-      ],
-      "thresholds": "1,1",
-      "timeFrom": "20s",
-      "timeShift": null,
-      "title": "Grafana",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "Not running",
-          "value": "0"
-        },
-        {
-          "op": "=",
-          "text": "Running",
-          "value": "1"
-        },
-        {
-          "op": "=",
-          "text": "",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": true,
-      "colorPostfix": false,
-      "colorPrefix": false,
-      "colorValue": false,
-      "colors": [
-        "#d44a3a",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
-      ],
-      "datasource": "InfluxDB",
-      "description": "",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 8,
+        "x": 7,
         "y": 8
       },
       "id": 15,
@@ -708,10 +574,10 @@
       "gridPos": {
         "h": 5,
         "w": 4,
-        "x": 16,
-        "y": 8
+        "x": 1,
+        "y": 13
       },
-      "id": 16,
+      "id": 14,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -788,7 +654,7 @@
             {
               "key": "service_name",
               "operator": "=",
-              "value": "influxdb"
+              "value": "grafana"
             }
           ]
         }
@@ -796,7 +662,7 @@
       "thresholds": "1,1",
       "timeFrom": "20s",
       "timeShift": null,
-      "title": "InfluxDB",
+      "title": "Grafana",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -877,7 +743,7 @@
           "measurement": "nomad_client_allocs",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"memory_rss\") /mean([[memory_allocated]]) * 100 FROM \"nomad_client_allocs\" WHERE (\"job\" = 'monitoring') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT mean(\"memory_rss\") /mean([[memory_allocated]]) * 100 FROM \"nomad_client_allocs\" WHERE (\"task\" = 'grafana') AND $timeFilter GROUP BY time($__interval) fill(null)",
           "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
@@ -903,9 +769,9 @@
           ],
           "tags": [
             {
-              "key": "job",
+              "key": "task",
               "operator": "=",
-              "value": "monitoring"
+              "value": "grafana"
             }
           ]
         }
@@ -921,7 +787,7 @@
       "gridPos": {
         "h": 5,
         "w": 4,
-        "x": 12,
+        "x": 11,
         "y": 13
       },
       "hideTimeOverride": true,
@@ -989,9 +855,9 @@
           ],
           "tags": [
             {
-              "key": "job",
+              "key": "task",
               "operator": "=",
-              "value": "monitoring"
+              "value": "grafana"
             }
           ]
         }
@@ -1018,14 +884,14 @@
           ]
         },
         "datasource": "InfluxDB",
-        "definition": "SHOW TAG VALUES WITH KEY = \"job\"",
+        "definition": "SHOW TAG VALUES WITH KEY = \"task\"",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
-        "name": "job",
+        "name": "task",
         "options": [],
-        "query": "SHOW TAG VALUES WITH KEY = \"job\"",
+        "query": "SHOW TAG VALUES WITH KEY = \"task\"",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -1059,5 +925,5 @@
   "timezone": "",
   "title": "Asapo Client Monitor",
   "uid": "acm",
-  "version": 2
+  "version": 5
 }

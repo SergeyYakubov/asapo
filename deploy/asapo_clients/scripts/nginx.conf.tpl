@@ -1,10 +1,10 @@
 worker_processes  1;
 
 events {
-    worker_connections  1024;
+    worker_connections  10000;
 }
 
-error_log         "/tmp/nginx_error.log";
+error_log         "/dev/stdout";
 pid               "/tmp/nginx.pid";
 
 http {
@@ -17,6 +17,8 @@ http {
 #    keepalive_timeout  0;
 #    keepalive_timeout  65;
 
+	 access_log off;
+
 
     client_body_temp_path  "/tmp/client_body" 1 2;
     proxy_temp_path        "/tmp/proxy" 1 2;
@@ -27,7 +29,7 @@ http {
 
     resolver 127.0.0.1:{{ env "NOMAD_META_consul_dns_port" }} valid=1s;
     server {
-          listen {{ env "NOMAD_PORT_nginx" }};
+          listen {{ env "NOMAD_PORT_nginx" }} reuseport;
           set $grafana_endpoint grafana.service.asapo;
           set $influxdb_endpoint influxdb.service.asapo;
 
@@ -48,13 +50,6 @@ http {
 }
 
 stream {
-    log_format  basic   '$time_iso8601 $remote_addr '
-                        '$protocol $status $bytes_sent $bytes_received '
-                        '$session_time $upstream_addr '
-                        '"$upstream_bytes_sent" "$upstream_bytes_received" "$upstream_connect_time"';
-
-    access_log      /tmp/nginx_stream.log  basic buffer=10k flush=1s;
-
     resolver 127.0.0.1:{{ env "NOMAD_META_consul_dns_port" }} valid=1s;
 
     map $remote_addr $upstream {
