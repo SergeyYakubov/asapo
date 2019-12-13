@@ -81,5 +81,5 @@ dockerrun --rm  \
 	-e ASAPO_LIGHTWEIGHT_SERVICE_NODES=$ASAPO_LIGHTWEIGHT_SERVICE_NODES \
 	-e DOCKER_ENDPOINT=$DOCKER_ENDPOINT \
 	-e N_SERVERS=$N_SERVERS \
- 	--name asapo yakser/asapo-client
+ 	--name asapo yakser/asapo-client-template
 

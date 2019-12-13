@@ -4,4 +4,4 @@ MAINTAINER DESY IT
 
 COPY scripts/ /var/run/asapo/
 
-RUN cd /var/run/asapo asapo && terraform init
+RUN cd /var/run/asapo && terraform init

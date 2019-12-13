@@ -6,12 +6,6 @@ DATA_GLOBAL_SHARED=$HOME/asapo_client/global_shared/data
 
 ASAPO_USER=`id -u`:`id -g`
 
-#ADVERTISE_IP=
-#RECURSORS=
-#IB_ADDRESS=
-#SERVER_ADRESSES=
-#N_SERVERS=
-
 NOMAD_TELEMETRY=true
 NGINX_PORT_STREAM=8402
 TELEGRAF_ADDRESS="127.0.0.1:${NGINX_PORT_STREAM}"
@@ -42,14 +36,9 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
   -e TF_VAR_data_dir=$DATA_GLOBAL_SHARED \
   -e TF_VAR_nginx_port_stream=$NGINX_PORT_STREAM \
    $MOUNT_VAR_FILE \
-  -e ADVERTISE_IP=$ADVERTISE_IP \
-  -e RECURSORS=$RECURSORS \
   -e TF_VAR_asapo_user=$ASAPO_USER \
-  -e IB_ADDRESS=$IB_ADDRESS \
-  -e SERVER_ADRESSES=$SERVER_ADRESSES \
   -e TELEGRAF_ADDRESS=$TELEGRAF_ADDRESS \
   -e NOMAD_TELEMETRY=$NOMAD_TELEMETRY \
-  -e N_SERVERS=$N_SERVERS \
-  --name asapo-client --net=host -d yakser/asapo-client
+  --name asapo-client --net=host -d yakser/asapo-client-template
 
 sleep 5
