@@ -187,7 +187,7 @@ def check_dataset(broker,group_id_new):
 
 source, path, beamtime, token, mode = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,path, beamtime,"",token,1000)
+broker = asapo_consumer.create_server_broker(source,path, beamtime,"",token,5000)
 
 group_id_new = broker.generate_group_id()
 
