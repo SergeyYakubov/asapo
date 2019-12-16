@@ -46,11 +46,9 @@ RUN mkdir -p /var/log/supervisord/ /etc/consul.d /etc/nomad.d
 
 COPY scripts/ /var/run/asapo/
 
-RUN cd /var/run/asapo asapo && terraform init
+RUN cd /var/run/asapo && terraform init
 
-COPY asapo-*  /usr/bin/
-
-COPY *.sh  asapo_overwrite_vars.tfvars /tmp/asapo_runscripts/
+COPY jobs-*  /usr/bin/
 
 COPY *.py  /etc/asapo/
 COPY *.hcl.tpl  /etc/asapo/

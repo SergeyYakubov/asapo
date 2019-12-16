@@ -16,7 +16,7 @@ http {
 
     resolver 127.0.0.1:8600 valid=1s;
     server {
-          listen {{ env "NOMAD_PORT_nginx" }};
+          listen {{ env "NOMAD_PORT_nginx" }} reuseport;
           set $discovery_endpoint discovery.service.asapo;
           set $authorizer_endpoint authorizer.service.asapo;
           set $fluentd_endpoint fluentd.service.asapo;

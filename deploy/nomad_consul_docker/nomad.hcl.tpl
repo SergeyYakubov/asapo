@@ -5,7 +5,7 @@ advertise {
 }
 
 acl {
-  enabled = true
+  enabled = $acl_enabled
 }
 
 server {
@@ -38,4 +38,13 @@ plugin "docker" {
 
   }
 }
+
+telemetry {
+  publish_allocation_metrics = $use_telemetry
+  publish_node_metrics       = $use_telemetry
+  statsd_address = "$telegraf_address"
+  collection_interval = "10s"
+}
+
+
 

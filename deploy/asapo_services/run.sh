@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-NOMAD_ALLOC_HOST_SHARED=/tmp/asapo/container_host_shared/nomad_alloc
-SERVICE_DATA_CLUSTER_SHARED=/tmp/asapo/asapo_cluster_shared/service_data
-DATA_GLOBAL_SHARED=/tmp/asapo/global_shared/data
+NOMAD_ALLOC_HOST_SHARED=/var/tmp/asapo/container_host_shared/nomad_alloc
+SERVICE_DATA_CLUSTER_SHARED=/var/tmp/asapo/asapo_cluster_shared/service_data
+DATA_GLOBAL_SHARED=/var/tmp/asapo/global_shared/data
 MONGO_DIR=$SERVICE_DATA_CLUSTER_SHARED/mongodb
 
 ASAPO_USER=`id -u`:`id -g`
@@ -14,7 +14,7 @@ ASAPO_USER=`id -u`:`id -g`
 #N_SERVERS=
 
 ASAPO_VAR_FILE=`pwd`/asapo_overwrite_vars.tfvars
-
+ACL_ENABLED=true
 
 mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
@@ -52,6 +52,7 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
   -e RECURSORS=$RECURSORS \
   -e TF_VAR_asapo_user=$ASAPO_USER \
   -e IB_ADDRESS=$IB_ADDRESS \
+  -e ACL_ENABLED=$ACL_ENABLED \
   -e SERVER_ADRESSES=$SERVER_ADRESSES \
   -e N_SERVERS=$N_SERVERS \
   --name asapo --net=host -d yakser/asapo-cluster
