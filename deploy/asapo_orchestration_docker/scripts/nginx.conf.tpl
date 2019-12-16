@@ -1,7 +1,7 @@
 worker_processes  1;
 
 events {
-    worker_connections  10000;
+    worker_connections  100000;
 }
 
 error_log         "/dev/stdout";
