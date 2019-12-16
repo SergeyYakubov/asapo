@@ -1,0 +1,42 @@
+There are following 3rd party libraries and tools used in various parts of the ASAP::O:
+
+========
+MIT - https://opensource.org/licenses/MIT
+========
+ctest to junit converter - https://github.com/genome/build-common
+rapidjson - https://github.com/Tencent/rapidjson
+go testing packages - https://github.com/stretchr/testify
+go unique id generator package https://github.com/rs/xid
+go influxdb client - https://github.com/influxdata/influxdb1-client
+using Visual Studio to compile for Windows - https://visualstudio.microsoft.com
+
+========
+Apache2 - https://www.apache.org/licenses/LICENSE-2.0
+========
+mongo-c-driver - https://github.com/mongodb/mongo-c-driver
+go mongodb packages - https://github.com/mongodb/mongo-go-driver
+go SQL parser package - https://github.com/knocknote/vitess-sqlparser/sqlparser
+cython - https://github.com/cython/cython
+Docker open source components - https://www.docker.com/
+
+========
+BSD 3-Clause - https://opensource.org/licenses/BSD-3-Clause
+========
+go request router package - https://github.com/gorilla/mux
+using go to compile binaries - http://golang.org
+
+========
+Mozilla Public License, v. 2.0 - http://mozilla.org/MPL/2.0/
+========
+go consul client - github.com/hashicorp/consul/api
+
+========
+Custom licenses
+========
+libcurl - https://curl.haxx.se/ - MIT-like license - https://curl.haxx.se/docs/copyright.html
+
+========
+Remarks
+========
+gcc compiled binaries fall into the GCC Runtime Library Exception - https://www.gnu.org/licenses/gcc-exception.html
+

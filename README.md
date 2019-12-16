@@ -36,3 +36,6 @@ Need googletest >= [1.8.0](https://github.com/google/googletest/releases/tag/rel
  - mkdir build
  - cd build
  - cmake -DBUILD_TESTS=ON ..
+
+The software is MIT licensed (see LICENSE.txt) and uses third party libraries that are distributed under their own terms
+(see LICENSE-3RD-PARTY.txt)

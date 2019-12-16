@@ -5,7 +5,7 @@ package database
 import (
 	"errors"
 	"fmt"
-	"github.com/globalsign/mgo/bson"
+	"go.mongodb.org/mongo-driver/bson"
 	"github.com/knocknote/vitess-sqlparser/sqlparser"
 	"strconv"
 )
