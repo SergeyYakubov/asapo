@@ -1,3 +1,3 @@
-[submodule "deploy/asapo-client-template"]
-	path = deploy/asapo_client_template
-	url = ssh://yakubov@stash.desy.de:7999/asapo/asapo-client-template.git
+[submodule "deploy/asapo-worker-node-template"]
+	path = deploy/asapo_worker_node_template
+	url = ssh://yakubov@stash.desy.de:7999/asapo/asapo-worker-node-template.git
