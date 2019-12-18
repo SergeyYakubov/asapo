@@ -32,7 +32,7 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"GetMeta",
 		"Get",
-		"/database/{dbname}/{stream}/default/0/meta/{id}",
+		"/database/{dbname}/{stream}/{substream}/0/meta/{id}",
 		routeGetMeta,
 	},
 	utils.Route{

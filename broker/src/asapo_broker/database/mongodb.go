@@ -26,7 +26,7 @@ type LocationPointer struct {
 	Value   int    `bson:"current_pointer"`
 }
 
-const data_collection_name = "data_default"
+const data_collection_name_prefix = "data_"
 const meta_collection_name = "meta"
 const pointer_collection_name = "current_location"
 const pointer_field_name = "current_pointer"
@@ -135,12 +135,12 @@ func (db *Mongodb) deleteAllRecords(dbname string) (err error) {
 	return db.client.Database(dbname).Drop(context.TODO())
 }
 
-func (db *Mongodb) insertRecord(dbname string, s interface{}) error {
+func (db *Mongodb) insertRecord(dbname string, collection_name string, s interface{}) error {
 	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
-	c := db.client.Database(dbname).Collection(data_collection_name)
+	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
 
 	_, err := c.InsertOne(context.TODO(), s)
 	return err
@@ -157,8 +157,8 @@ func (db *Mongodb) insertMeta(dbname string, s interface{}) error {
 	return err
 }
 
-func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int, err error) {
-	c := db.client.Database(dbname).Collection(data_collection_name)
+func (db *Mongodb) getMaxIndex(dbname string, collection_name string, dataset bool) (max_id int, err error) {
+	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
 	var q bson.M
 	if dataset {
 		q = bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$images"}}}}
@@ -175,27 +175,27 @@ func (db *Mongodb) getMaxIndex(dbname string, dataset bool) (max_id int, err err
 	return result.ID, err
 }
 
-func (db *Mongodb) createLocationPointers(dbname string, group_id string) (err error) {
+func (db *Mongodb) createLocationPointers(dbname string, collection_name string, group_id string) (err error) {
 	opts := options.Update().SetUpsert(true)
 	update := bson.M{"$inc": bson.M{pointer_field_name: 0}}
-	q := bson.M{"_id": group_id}
+	q := bson.M{"_id": group_id + "_" + collection_name}
 	c := db.client.Database(dbname).Collection(pointer_collection_name)
 	_, err = c.UpdateOne(context.TODO(), q, update, opts)
 	return
 }
 
-func (db *Mongodb) setCounter(dbname string, group_id string, ind int) (err error) {
+func (db *Mongodb) setCounter(dbname string, collection_name string, group_id string, ind int) (err error) {
 	update := bson.M{"$set": bson.M{pointer_field_name: ind}}
 	c := db.client.Database(dbname).Collection(pointer_collection_name)
-	q := bson.M{"_id": group_id}
+	q := bson.M{"_id": group_id + "_" + collection_name}
 	_, err = c.UpdateOne(context.TODO(), q, update, options.Update())
 	return
 }
 
-func (db *Mongodb) incrementField(dbname string, group_id string, max_ind int, res interface{}) (err error) {
+func (db *Mongodb) incrementField(dbname string, collection_name string, group_id string, max_ind int, res interface{}) (err error) {
 	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
 	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
-	q := bson.M{"_id": group_id, pointer_field_name: bson.M{"$lt": max_ind}}
+	q := bson.M{"_id": group_id + "_" + collection_name, pointer_field_name: bson.M{"$lt": max_ind}}
 	c := db.client.Database(dbname).Collection(pointer_collection_name)
 
 	err = c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res)
@@ -219,7 +219,7 @@ func encodeAnswer(id, id_max int) string {
 	return string(answer)
 }
 
-func (db *Mongodb) getRecordByIDRow(dbname string, id, id_max int, dataset bool) ([]byte, error) {
+func (db *Mongodb) getRecordByIDRow(dbname string, collection_name string, id, id_max int, dataset bool) ([]byte, error) {
 	var res map[string]interface{}
 	var q bson.M
 	if dataset {
@@ -228,7 +228,7 @@ func (db *Mongodb) getRecordByIDRow(dbname string, id, id_max int, dataset bool)
 		q = bson.M{"_id": id}
 	}
 
-	c := db.client.Database(dbname).Collection(data_collection_name)
+	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
 	err := c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
 	if err != nil {
 		answer := encodeAnswer(id, id_max)
@@ -241,41 +241,41 @@ func (db *Mongodb) getRecordByIDRow(dbname string, id, id_max int, dataset bool)
 	return utils.MapToJson(&res)
 }
 
-func (db *Mongodb) getRecordByID(dbname string, group_id string, id_str string, dataset bool) ([]byte, error) {
+func (db *Mongodb) getRecordByID(dbname string, collection_name string, group_id string, id_str string, dataset bool) ([]byte, error) {
 	id, err := strconv.Atoi(id_str)
 	if err != nil {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	max_ind, err := db.getMaxIndex(dbname, dataset)
+	max_ind, err := db.getMaxIndex(dbname, collection_name, dataset)
 	if err != nil {
 		return nil, err
 	}
 
-	return db.getRecordByIDRow(dbname, id, max_ind, dataset)
+	return db.getRecordByIDRow(dbname, collection_name, id, max_ind, dataset)
 
 }
 
-func (db *Mongodb) needCreateLocationPointersInDb(group_id string) bool {
+func (db *Mongodb) needCreateLocationPointersInDb(collection_name string, group_id string) bool {
 	dbPointersLock.RLock()
-	needCreate := !db.db_pointers_created[group_id]
+	needCreate := !db.db_pointers_created[group_id+"_"+collection_name]
 	dbPointersLock.RUnlock()
 	return needCreate
 }
 
-func (db *Mongodb) setLocationPointersCreateFlag(group_id string) {
+func (db *Mongodb) setLocationPointersCreateFlag(collection_name string, group_id string) {
 	dbPointersLock.Lock()
 	if db.db_pointers_created == nil {
 		db.db_pointers_created = make(map[string]bool)
 	}
-	db.db_pointers_created[group_id] = true
+	db.db_pointers_created[group_id+"_"+collection_name] = true
 	dbPointersLock.Unlock()
 }
 
-func (db *Mongodb) generateLocationPointersInDbIfNeeded(db_name string, group_id string) {
-	if db.needCreateLocationPointersInDb(group_id) {
-		db.createLocationPointers(db_name, group_id)
-		db.setLocationPointersCreateFlag(group_id)
+func (db *Mongodb) generateLocationPointersInDbIfNeeded(db_name string, collection_name string, group_id string) {
+	if db.needCreateLocationPointersInDb(collection_name, group_id) {
+		db.createLocationPointers(db_name, collection_name, group_id)
+		db.setLocationPointersCreateFlag(collection_name, group_id)
 	}
 }
 
@@ -287,7 +287,7 @@ func (db *Mongodb) getParentDB() *Mongodb {
 	}
 }
 
-func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id string) error {
+func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, collection_name string, group_id string) error {
 	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
@@ -297,19 +297,19 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, group_id 
 	}
 
 	if len(group_id) > 0 {
-		db.getParentDB().generateLocationPointersInDbIfNeeded(db_name, group_id)
+		db.getParentDB().generateLocationPointersInDbIfNeeded(db_name, collection_name, group_id)
 	}
 	return nil
 }
 
-func (db *Mongodb) getCurrentPointer(db_name string, group_id string, dataset bool) (LocationPointer, int, error) {
-	max_ind, err := db.getMaxIndex(db_name, dataset)
+func (db *Mongodb) getCurrentPointer(db_name string, collection_name string, group_id string, dataset bool) (LocationPointer, int, error) {
+	max_ind, err := db.getMaxIndex(db_name, collection_name, dataset)
 	if err != nil {
 		return LocationPointer{}, 0, err
 	}
 
 	var curPointer LocationPointer
-	err = db.incrementField(db_name, group_id, max_ind, &curPointer)
+	err = db.incrementField(db_name, collection_name, group_id, max_ind, &curPointer)
 	if err != nil {
 		return LocationPointer{}, 0, err
 	}
@@ -317,8 +317,8 @@ func (db *Mongodb) getCurrentPointer(db_name string, group_id string, dataset bo
 	return curPointer, max_ind, nil
 }
 
-func (db *Mongodb) getNextRecord(db_name string, group_id string, dataset bool) ([]byte, error) {
-	curPointer, max_ind, err := db.getCurrentPointer(db_name, group_id, dataset)
+func (db *Mongodb) getNextRecord(db_name string, collection_name string, group_id string, dataset bool) ([]byte, error) {
+	curPointer, max_ind, err := db.getCurrentPointer(db_name, collection_name, group_id, dataset)
 	if err != nil {
 		log_str := "error getting next pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
 		logger.Debug(log_str)
@@ -326,23 +326,23 @@ func (db *Mongodb) getNextRecord(db_name string, group_id string, dataset bool) 
 	}
 	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
 	logger.Debug(log_str)
-	return db.getRecordByIDRow(db_name, curPointer.Value, max_ind, dataset)
+	return db.getRecordByIDRow(db_name, collection_name, curPointer.Value, max_ind, dataset)
 }
 
-func (db *Mongodb) getLastRecord(db_name string, group_id string, dataset bool) ([]byte, error) {
-	max_ind, err := db.getMaxIndex(db_name, dataset)
+func (db *Mongodb) getLastRecord(db_name string, collection_name string, group_id string, dataset bool) ([]byte, error) {
+	max_ind, err := db.getMaxIndex(db_name, collection_name, dataset)
 	if err != nil {
 		return nil, err
 	}
-	res, err := db.getRecordByIDRow(db_name, max_ind, max_ind, dataset)
+	res, err := db.getRecordByIDRow(db_name, collection_name, max_ind, max_ind, dataset)
 
-	db.setCounter(db_name, group_id, max_ind)
+	db.setCounter(db_name, collection_name, group_id, max_ind)
 
 	return res, err
 }
 
-func (db *Mongodb) getSize(db_name string) ([]byte, error) {
-	c := db.client.Database(db_name).Collection(data_collection_name)
+func (db *Mongodb) getSize(db_name string, collection_name string) ([]byte, error) {
+	c := db.client.Database(db_name).Collection(data_collection_name_prefix + collection_name)
 	var rec SizeRecord
 	var err error
 
@@ -354,13 +354,13 @@ func (db *Mongodb) getSize(db_name string) ([]byte, error) {
 	return json.Marshal(&rec)
 }
 
-func (db *Mongodb) resetCounter(db_name string, group_id string, id_str string) ([]byte, error) {
+func (db *Mongodb) resetCounter(db_name string, collection_name string, group_id string, id_str string) ([]byte, error) {
 	id, err := strconv.Atoi(id_str)
 	if err != nil {
 		return nil, err
 	}
 
-	err = db.setCounter(db_name, group_id, id)
+	err = db.setCounter(db_name, collection_name, group_id, id)
 
 	return []byte(""), err
 }
@@ -391,7 +391,7 @@ func (db *Mongodb) processQueryError(query, dbname string, err error) ([]byte, e
 	return nil, &DBError{utils.StatusNoData, err.Error()}
 }
 
-func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
+func (db *Mongodb) queryImages(dbname string, collection_name string, query string) ([]byte, error) {
 	var res []map[string]interface{}
 	q, sort, err := db.BSONFromSQL(dbname, query)
 	if err != nil {
@@ -400,7 +400,7 @@ func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	c := db.client.Database(dbname).Collection(data_collection_name)
+	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
 	opts := options.Find()
 
 	if len(sort) > 0 {
@@ -427,32 +427,32 @@ func (db *Mongodb) queryImages(dbname string, query string) ([]byte, error) {
 
 }
 
-func (db *Mongodb) ProcessRequest(db_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
+func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
 	dataset := false
 	if strings.HasSuffix(op, "_dataset") {
 		dataset = true
 		op = op[:len(op)-8]
 	}
 
-	if err := db.checkDatabaseOperationPrerequisites(db_name, group_id); err != nil {
+	if err := db.checkDatabaseOperationPrerequisites(db_name, collection_name, group_id); err != nil {
 		return nil, err
 	}
 
 	switch op {
 	case "next":
-		return db.getNextRecord(db_name, group_id, dataset)
+		return db.getNextRecord(db_name, collection_name, group_id, dataset)
 	case "id":
-		return db.getRecordByID(db_name, group_id, extra_param, dataset)
+		return db.getRecordByID(db_name, collection_name, group_id, extra_param, dataset)
 	case "last":
-		return db.getLastRecord(db_name, group_id, dataset)
+		return db.getLastRecord(db_name, collection_name, group_id, dataset)
 	case "resetcounter":
-		return db.resetCounter(db_name, group_id, extra_param)
+		return db.resetCounter(db_name, collection_name, group_id, extra_param)
 	case "size":
-		return db.getSize(db_name)
+		return db.getSize(db_name, collection_name)
 	case "meta":
 		return db.getMeta(db_name, extra_param)
 	case "queryimages":
-		return db.queryImages(db_name, extra_param)
+		return db.queryImages(db_name, collection_name, extra_param)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

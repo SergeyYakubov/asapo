@@ -33,7 +33,7 @@ func TestGetLastTestSuite(t *testing.T) {
 }
 
 func (suite *GetLastTestSuite) TestGetLastCallsCorrectRoutine() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "last", "0").Return([]byte("Hello"), nil)
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "last", "0").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request last")))
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/last" + correctTokenSuffix)
