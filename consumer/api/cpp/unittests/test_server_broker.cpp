@@ -71,6 +71,7 @@ class ServerDataBrokerTests : public Test {
 
     uint64_t expected_dataset_id = 1;
     static const uint64_t expected_buf_id = 123;
+    std::string expected_next_substream = "nextsubstream";
     void SetUp() override {
         data_broker = std::unique_ptr<ServerDataBroker> {
             new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id", expected_stream, expected_token})
@@ -203,7 +204,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsEndOfStreamFromHttpClient) {
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
                 SetArgPointee<1>(HttpCode::Conflict),
                 SetArgPointee<2>(nullptr),
-                Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1}")));
+                Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"\"}")));
 
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
@@ -212,6 +213,25 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsEndOfStreamFromHttpClient) {
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kEndOfStream));
     ASSERT_THAT(err_data->id, Eq(1));
     ASSERT_THAT(err_data->id_max, Eq(1));
+    ASSERT_THAT(err_data->next_substream, Eq(""));
+}
+
+TEST_F(ServerDataBrokerTests, GetImageReturnsStreamFinishedFromHttpClient) {
+    MockGetBrokerUri();
+
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
+                SetArgPointee<1>(HttpCode::Conflict),
+                SetArgPointee<2>(nullptr),
+                Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"" + expected_next_substream + "\"}")));
+
+    auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
+
+    auto err_data = static_cast<const asapo::ConsumerErrorData*>(err->GetCustomData());
+
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kStreamFinished));
+    ASSERT_THAT(err_data->id, Eq(1));
+    ASSERT_THAT(err_data->id_max, Eq(1));
+    ASSERT_THAT(err_data->next_substream, Eq(expected_next_substream));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsNoDataFromHttpClient) {
@@ -220,13 +240,16 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsNoDataFromHttpClient) {
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
                 SetArgPointee<1>(HttpCode::Conflict),
                 SetArgPointee<2>(nullptr),
-                Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":2}")));
+                Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":2,\"next_substream\":\"""\"}")));
+
 
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
     auto err_data = static_cast<const asapo::ConsumerErrorData*>(err->GetCustomData());
 
     ASSERT_THAT(err_data->id, Eq(1));
     ASSERT_THAT(err_data->id_max, Eq(2));
+    ASSERT_THAT(err_data->next_substream, Eq(""));
+
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
 }
 
@@ -316,7 +339,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsEofStreamFromHttpClientUntilTimeout
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
                 SetArgPointee<1>(HttpCode::Conflict),
                 SetArgPointee<2>(nullptr),
-                Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1}")));
+                Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"""\"}")));
 
     data_broker->SetTimeout(300);
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
@@ -331,7 +354,8 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsNoDataAfterTimeoutEvenIfOtherErrorO
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
                 SetArgPointee<1>(HttpCode::Conflict),
                 SetArgPointee<2>(nullptr),
-                Return("{\"op\":\"get_record_by_id\",\"id\":" + std::to_string(expected_dataset_id) + ",\"id_max\":2}")));
+                Return("{\"op\":\"get_record_by_id\",\"id\":" + std::to_string(expected_dataset_id) +
+                       ",\"id_max\":2,\"next_substream\":\"""\"}")));
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/"  +
                                         expected_group_id + "/" + std::to_string(expected_dataset_id) + "?token="
@@ -385,6 +409,20 @@ TEST_F(ServerDataBrokerTests, GetNextRetriesIfConnectionHttpClientErrorUntilTime
     auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kUnavailableService));
+}
+
+TEST_F(ServerDataBrokerTests, GetNextImageReturnsImmediatelyOnFinshedSubstream) {
+    MockGetBrokerUri();
+
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::Conflict),
+        SetArgPointee<2>(nullptr),
+        Return("{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":2,\"next_substream\":\"next\"}")));
+
+    data_broker->SetTimeout(300);
+    auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
+
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kStreamFinished));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsFileInfo) {
@@ -663,7 +701,7 @@ TEST_F(ServerDataBrokerTests, GetByIdReturnsEndOfStream) {
                                         + expected_token, _, _)).WillOnce(DoAll(
                                                     SetArgPointee<1>(HttpCode::Conflict),
                                                     SetArgPointee<2>(nullptr),
-                                                    Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1}")));
+                                                    Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"""\"}")));
 
 
     auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
@@ -680,7 +718,7 @@ TEST_F(ServerDataBrokerTests, GetByIdReturnsEndOfStreamWhenIdTooLarge) {
                                         + expected_token, _, _)).WillOnce(DoAll(
                                                     SetArgPointee<1>(HttpCode::Conflict),
                                                     SetArgPointee<2>(nullptr),
-                                                    Return("{\"op\":\"get_record_by_id\",\"id\":100,\"id_max\":1}")));
+                                                    Return("{\"op\":\"get_record_by_id\",\"id\":100,\"id_max\":1,\"next_substream\":\"""\"}")));
 
 
     auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);

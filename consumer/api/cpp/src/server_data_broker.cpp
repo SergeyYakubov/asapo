@@ -13,10 +13,11 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
-Error GetIDsFromJson(const std::string& json_string, uint64_t* id, uint64_t* id_max) {
+Error GetNoDataResponseFromJson(const std::string& json_string, ConsumerErrorData* data) {
     JsonStringParser parser(json_string);
     Error err;
-    if ((err = parser.GetUInt64("id", id)) || (err = parser.GetUInt64("id_max", id_max))) {
+    if ((err = parser.GetUInt64("id", &data->id)) || (err = parser.GetUInt64("id_max", &data->id_max))
+            || (err = parser.GetString("next_substream", &data->next_substream))) {
         return err;
     }
     return nullptr;
@@ -24,20 +25,20 @@ Error GetIDsFromJson(const std::string& json_string, uint64_t* id, uint64_t* id_
 
 Error ErrorFromNoDataResponse(const std::string& response) {
     if (response.find("get_record_by_id") != std::string::npos) {
-        uint64_t id, id_max;
-        auto parse_error = GetIDsFromJson(response, &id, &id_max);
+        ConsumerErrorData data;
+        auto parse_error = GetNoDataResponseFromJson(response, &data);
+        std::cout<<response<<std::endl;
         if (parse_error) {
             return ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response - " + response);
         }
         Error err;
-        if (id >= id_max ) {
-            err = ConsumerErrorTemplates::kEndOfStream.Generate();
+        if (data.id >= data.id_max ) {
+            err = data.next_substream.empty() ? ConsumerErrorTemplates::kEndOfStream.Generate() :
+                  ConsumerErrorTemplates::kStreamFinished.Generate();
         } else {
             err = ConsumerErrorTemplates::kNoData.Generate();
         }
-        ConsumerErrorData* error_data = new ConsumerErrorData;
-        error_data->id = id;
-        error_data->id_max = id_max;
+        ConsumerErrorData* error_data = new ConsumerErrorData{data};
         err->SetCustomData(std::unique_ptr<CustomErrorData> {error_data});
         return err;
     }
@@ -167,6 +168,10 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
             if (err == nullptr) {
                 break;
             }
+        }
+
+        if (err == ConsumerErrorTemplates::kStreamFinished) {
+            return err;
         }
 
         if (request_suffix == "next") {

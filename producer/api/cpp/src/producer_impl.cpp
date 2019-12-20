@@ -14,6 +14,8 @@
 namespace  asapo {
 
 const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
+const std::string ProducerImpl::kFinishSubStreamKeyword = "asapo_finish_substream";
+const std::string ProducerImpl::kNoNextSubStreamKeyword = "asapo_no_next";
 
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, asapo::RequestHandlerType type):
@@ -127,6 +129,18 @@ Error ProducerImpl::SendData(const EventHeader& event_header,
 
 }
 
+Error ProducerImpl::SendSubstreamFinishedFlag(std::string substream, uint64_t last_id, std::string next_substream,
+                                              RequestCallback callback) {
+    EventHeader event_header;
+    event_header.file_name = kFinishSubStreamKeyword;
+    event_header.file_size = 0;
+    event_header.file_id = last_id + 1;
+    if (next_substream.empty()) {
+        next_substream = kNoNextSubStreamKeyword;
+    }
+    event_header.user_metadata =  std::string("{\"next_substream\":") + "\"" + next_substream + "\"}";
+    return Send(event_header, std::move(substream), nullptr, "", IngestModeFlags::kTransferMetaDataOnly, callback, true);
+}
 
 Error ProducerImpl::SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,
                              RequestCallback callback) {
@@ -225,6 +239,5 @@ Error ProducerImpl::SendFile(const EventHeader& event_header,
     return Send(event_header, std::move(substream), nullptr, std::move(full_path), ingest_mode, callback, true);
 
 }
-
 
 }

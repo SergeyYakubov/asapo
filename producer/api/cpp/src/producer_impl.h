@@ -19,6 +19,8 @@ class ProducerImpl : public Producer {
     std::unique_ptr<RequestHandlerFactory> request_handler_factory_;
   public:
     static const size_t kDiscoveryServiceUpdateFrequencyMs;
+    static const std::string kFinishSubStreamKeyword;
+    static const std::string kNoNextSubStreamKeyword;
 
     explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads, asapo::RequestHandlerType type);
     ProducerImpl(const ProducerImpl&) = delete;
@@ -39,6 +41,10 @@ class ProducerImpl : public Producer {
                    RequestCallback callback) override;
     Error SendFile(const EventHeader& event_header, std::string substream, std::string full_path, uint64_t ingest_mode,
                    RequestCallback callback) override;
+
+    Error SendSubstreamFinishedFlag(std::string substream, uint64_t last_id, std::string next_substream,
+                                    RequestCallback callback) override;
+
 
     AbstractLogger* log__;
     std::unique_ptr<RequestPool> request_pool__;

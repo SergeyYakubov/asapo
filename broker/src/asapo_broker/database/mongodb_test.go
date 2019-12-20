@@ -14,8 +14,9 @@ import (
 )
 
 type TestRecord struct {
-	ID    int    `bson:"_id" json:"_id"`
-	FName string `bson:"fname" json:"fname"`
+	ID   int               `bson:"_id" json:"_id"`
+	Meta map[string]string `bson:"meta" json:"meta"`
+	Name string            `bson:"name" json:"name"`
 }
 
 type TestDataset struct {
@@ -34,9 +35,12 @@ const groupId = "bid2a5auidddp1vl71d0"
 const metaID = 0
 const metaID_str = "0"
 
-var rec1 = TestRecord{1, "aaa"}
-var rec2 = TestRecord{2, "bbb"}
-var rec3 = TestRecord{3, "ccc"}
+var empty_next = map[string]string{"next_substream": ""}
+
+var rec1 = TestRecord{1, empty_next, "aaa"}
+var rec_finished = TestRecord{2, map[string]string{"next_substream": "next1"}, finish_substream_keyword}
+var rec2 = TestRecord{2, empty_next, "bbb"}
+var rec3 = TestRecord{3, empty_next, "ccc"}
 
 var rec1_expect, _ = json.Marshal(rec1)
 var rec2_expect, _ = json.Marshal(rec2)
@@ -114,7 +118,7 @@ func TestMongoDBGetNextErrorWhenRecordNotThereYet(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec2)
 	_, err := db.ProcessRequest(dbname, collection, groupId, "next", "")
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":2}", err.Error())
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":2,\"next_substream\":\"\"}", err.Error())
 }
 
 func TestMongoDBGetNextOK(t *testing.T) {
@@ -126,6 +130,19 @@ func TestMongoDBGetNextOK(t *testing.T) {
 	assert.Equal(t, string(rec1_expect), string(res))
 }
 
+func TestMongoDBGetNextErrorOnFinishedStream(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec_finished)
+
+	db.ProcessRequest(dbname, collection, groupId, "next", "")
+	_, err := db.ProcessRequest(dbname, collection, groupId, "next", "")
+
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":2,\"next_substream\":\"next1\"}", err.(*DBError).Message)
+}
+
 func TestMongoDBGetNextErrorOnNoMoreData(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
@@ -134,7 +151,7 @@ func TestMongoDBGetNextErrorOnNoMoreData(t *testing.T) {
 	_, err := db.ProcessRequest(dbname, collection, groupId, "next", "")
 
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1}", err.(*DBError).Message)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"\"}", err.(*DBError).Message)
 }
 
 func TestMongoDBGetNextCorrectOrder(t *testing.T) {
@@ -162,7 +179,7 @@ func insertRecords(n int) {
 	records := make([]TestRecord, n)
 	for ind, record := range records {
 		record.ID = ind
-		record.FName = string(ind)
+		record.Name = string(ind)
 		db.insertRecord(dbname, collection, &record)
 	}
 
@@ -212,7 +229,7 @@ func TestMongoDBgetRecordByIDFails(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec1)
 	_, err := db.ProcessRequest(dbname, collection, groupId, "id", "2")
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":1}", err.Error())
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":1,\"next_substream\":\"\"}", err.Error())
 }
 
 func TestMongoDBGetRecordNext(t *testing.T) {
@@ -493,7 +510,7 @@ func TestMongoDBNoDataOnNotCompletedFirstDataset(t *testing.T) {
 	res_string, err := db.ProcessRequest(dbname, collection, groupId, "next_dataset", "0")
 
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0}", err.(*DBError).Message)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.(*DBError).Message)
 
 	assert.Equal(t, "", string(res_string))
 }

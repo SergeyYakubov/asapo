@@ -77,6 +77,16 @@ class Producer {
                            uint64_t ingest_mode,
                            RequestCallback callback) = 0;
 
+    //! Marks substream finished
+    /*!
+      \param substream - Name of the substream to makr finished
+      \param last_id - ID of the last image in substream
+      \param next_substream - Name of the next substream (empty if not set)
+      \return Error - Will be nullptr on success
+    */
+    virtual Error SendSubstreamFinishedFlag(std::string substream, uint64_t last_id, std::string next_substream,
+                                            RequestCallback callback) = 0;
+
 
     //! Sends metadata for the current beamtime to the receiver
     /*!

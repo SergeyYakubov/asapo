@@ -21,6 +21,12 @@ type ID struct {
 	ID int `bson:"_id"`
 }
 
+type ServiceRecord struct {
+	ID   int                    `json:"_id"`
+	Name string                 `json:"name"`
+	Meta map[string]interface{} `json:"meta"`
+}
+
 type LocationPointer struct {
 	GroupID string `bson:"_id"`
 	Value   int    `bson:"current_pointer"`
@@ -33,6 +39,9 @@ const pointer_field_name = "current_pointer"
 const no_session_msg = "database client not created"
 const wrong_id_type = "wrong id type"
 const already_connected_msg = "already connected"
+
+const finish_substream_keyword = "asapo_finish_substream"
+const no_next_substream_keyword = "asapo_no_next"
 
 var dbListLock sync.RWMutex
 var dbPointersLock sync.RWMutex
@@ -201,7 +210,7 @@ func (db *Mongodb) incrementField(dbname string, collection_name string, group_i
 	err = c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind)}
+			return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind, "")}
 		}
 		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
 	}
@@ -209,12 +218,13 @@ func (db *Mongodb) incrementField(dbname string, collection_name string, group_i
 	return nil
 }
 
-func encodeAnswer(id, id_max int) string {
+func encodeAnswer(id, id_max int, next_substream string) string {
 	var r = struct {
-		Op     string `json:"op""`
-		Id     int    `json:"id""`
-		Id_max int    `json:"id_max""`
-	}{"get_record_by_id", id, id_max}
+		Op             string `json:"op"`
+		Id             int    `json:"id"`
+		Id_max         int    `json:"id_max"`
+		Next_substream string `json:"next_substream"`
+	}{"get_record_by_id", id, id_max, next_substream}
 	answer, _ := json.Marshal(&r)
 	return string(answer)
 }
@@ -231,7 +241,7 @@ func (db *Mongodb) getRecordByIDRow(dbname string, collection_name string, id, i
 	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
 	err := c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
 	if err != nil {
-		answer := encodeAnswer(id, id_max)
+		answer := encodeAnswer(id, id_max, "")
 		log_str := "error getting record id " + strconv.Itoa(id) + " for " + dbname + " : " + err.Error()
 		logger.Debug(log_str)
 		return nil, &DBError{utils.StatusNoData, answer}
@@ -317,6 +327,24 @@ func (db *Mongodb) getCurrentPointer(db_name string, collection_name string, gro
 	return curPointer, max_ind, nil
 }
 
+func processLastRecord(data []byte, collection_name string, err error) ([]byte, error) {
+	var r ServiceRecord
+	err = json.Unmarshal(data, &r)
+	if err != nil || r.Name != finish_substream_keyword {
+		return data, err
+	}
+	var next_substream string
+	next_substream, ok := r.Meta["next_substream"].(string)
+	if !ok {
+		next_substream = no_next_substream_keyword
+	}
+
+	answer := encodeAnswer(r.ID, r.ID, next_substream)
+	log_str := "reached end of substream " + collection_name + " , next_substream: " + next_substream
+	logger.Debug(log_str)
+	return nil, &DBError{utils.StatusNoData, answer}
+}
+
 func (db *Mongodb) getNextRecord(db_name string, collection_name string, group_id string, dataset bool) ([]byte, error) {
 	curPointer, max_ind, err := db.getCurrentPointer(db_name, collection_name, group_id, dataset)
 	if err != nil {
@@ -326,7 +354,11 @@ func (db *Mongodb) getNextRecord(db_name string, collection_name string, group_i
 	}
 	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
 	logger.Debug(log_str)
-	return db.getRecordByIDRow(db_name, collection_name, curPointer.Value, max_ind, dataset)
+	data, err := db.getRecordByIDRow(db_name, collection_name, curPointer.Value, max_ind, dataset)
+	if curPointer.Value != max_ind {
+		return data, err
+	}
+	return processLastRecord(data, collection_name, err)
 }
 
 func (db *Mongodb) getLastRecord(db_name string, collection_name string, group_id string, dataset bool) ([]byte, error) {
