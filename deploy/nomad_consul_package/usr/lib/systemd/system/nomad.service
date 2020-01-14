@@ -7,7 +7,7 @@ After=consul.service
 
 [Service]
 User=asapo
-Group=asapo
+Group=it
 Environment=GOMAXPROCS=4
 Restart=on-failure
 ExecStart=/usr/bin/nomad agent -config=/etc/nomad.d

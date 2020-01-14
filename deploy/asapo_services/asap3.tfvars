@@ -1,12 +1,10 @@
-consul_dns_port = 53
-
 elk_logs = true
 
-service_dir="/bldocuments/support/asapo"
-data_dir="/bldocuments/support/asapo/data"
-mongo_dir="/bldocuments/support/asapo/mongodb"
-asapo_user="994:989"
-job_scripts_dir="/bldocuments/support/asapo/config/nomad_jobs/terraform_scripts"
+service_dir="/gpfs/asapo/shared/service_dir"
+data_dir="/beamline"
+mongo_dir="/gpfs/asapo/shared/service_dir/mongodb"
+asapo_user="35841:1000"
+job_scripts_dir="/gpfs/asapo/shared/terraform"
 
 receiver_total_memory_size = 35000
 receiver_dataserver_cache_size = 30 #gb

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
 
-scp scripts/* psana002:@NOMAD_INSTALL@/terraform_scripts/
-scp asap3.tfvars psana002:@NOMAD_INSTALL@/terraform_scripts/
+scp scripts/* asap3-utl01:@NOMAD_INSTALL@/terraform/
+scp asap3.tfvars asap3-utl01:@NOMAD_INSTALL@/terraform/
+ssh asap3-utl01 chown asapo: -R @NOMAD_INSTALL@/terraform/
+ssh asap3-utl01 rm @NOMAD_INSTALL@/terraform/auth_secret.key
+ssh asap3-utl01 ln -s @NOMAD_INSTALL@/access/secret.key @NOMAD_INSTALL@/terraform/auth_secret.key

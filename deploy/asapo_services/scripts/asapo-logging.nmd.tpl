@@ -1,8 +1,8 @@
 job "asapo-logging" {
   datacenters = ["dc1"]
   affinity {
-    attribute = "$${meta.asapo_service}"
-    value     = "true"
+    attribute = "$${meta.node_group}"
+    value     = "utl"
     weight    = 100
   }
 
