@@ -18,20 +18,13 @@ job "asapo-nginx" {
 
       user = "${asapo_user}"
 
-      meta {
-        telegraf_port_stream = "${telegraf_port_stream}"
-        grafana_port = "${grafana_port}"
-        influxdb_port = "${influxdb_port}"
-        consul_dns_port = "${consul_dns_port}"
-      }
-
       config {
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "nginx:${nginx_version}"
         volumes = [
-          "local/nginx.conf:/etc/nginx/nginx.conf"
+          "local:/etc/nginx"
         ]
       }
 
@@ -70,7 +63,8 @@ job "asapo-nginx" {
       template {
          source        = "${scripts_dir}/nginx.conf.tpl"
          destination   = "local/nginx.conf"
-         change_mode   = "restart"
+         change_mode   = "signal"
+         change_signal   = "SIGHUP"
       }
    }
   }

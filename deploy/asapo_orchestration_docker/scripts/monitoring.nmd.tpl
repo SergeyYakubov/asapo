@@ -39,13 +39,16 @@ job "monitoring" {
 
       env {
         PRE_CREATE_DB="asapo_receivers;asapo_brokers"
+        INFLUXDB_BIND_ADDRESS="127.0.0.1:$${NOMAD_PORT_influxdb_rpc}"
+        INFLUXDB_HTTP_BIND_ADDRESS=":$${NOMAD_PORT_influxdb}"
       }
 
       resources {
         memory = "${influxdb_total_memory_size}"
         network {
           port "influxdb" {
-          static = "${influxdb_port}"
+          }
+		  port "influxdb_rpc" {
           }
         }
       }
@@ -94,7 +97,6 @@ job "monitoring" {
         memory = "${grafana_total_memory_size}"
         network {
           port "grafana" {
-          static = "${grafana_port}"
           }
         }
       }
@@ -156,7 +158,6 @@ job "monitoring" {
         memory = "${telegraf_total_memory_size}"
         network {
           port "telegraf_stream" {
-          static = "${telegraf_port_stream}"
           }
         }
       }
@@ -167,16 +168,16 @@ job "monitoring" {
         check {
           name     = "telegraf-alive"
           type     = "script"
-          command  = "/bin/ps"
-          args     = ["-fC","telegraf"]
+          command  = "/bin/pidof"
+          args     = ["telegraf"]
           interval = "10s"
           timeout  = "2s"
         }
-        check_restart {
-          limit = 2
-          grace = "15s"
-          ignore_warnings = false
-        }
+#        check_restart {
+#          limit = 2
+#          grace = "15s"
+#          ignore_warnings = false
+#        }
       }
 
       template {
