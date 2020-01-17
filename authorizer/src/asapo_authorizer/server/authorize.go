@@ -5,6 +5,7 @@ import (
 	"asapo_common/utils"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -72,14 +73,42 @@ func checkBeamtimeExistsInStrings(beamtime_id string, lines []string) (string,bo
 	return "",false
 }
 
-func beamtimeRegistered(beamtime_id string) (string,bool) {
-	lines, err := utils.ReadStringsFromFile(settings.BeamtimeBeamlineMappingFile)
-
-	if err != nil || len(lines) < 3 {
-		return "",false
+func beamtimeInfoFromMatch(match string) (beamtimeInfo,error) {
+	match = strings.TrimPrefix(match, settings.RootBeamtimesFolder)
+	match = strings.TrimPrefix(match, "/")
+	vars := strings.Split(match,"/")
+	if len(vars)!=6 {
+		return beamtimeInfo{},errors.New("bad pattern")
 	}
-	lines = lines[2:]
-	return checkBeamtimeExistsInStrings(beamtime_id, lines)
+	var bt beamtimeInfo
+	ignoredFoldersAfterGpfs:=[]string{"common","BeamtimeUsers","state","support"}
+	if utils.StringInSlice(vars[2],ignoredFoldersAfterGpfs) {
+		return beamtimeInfo{},errors.New("skipped fodler")
+	}
+
+	bt.Facility,bt.Beamline,bt.Year,bt.BeamtimeId = vars[0],vars[2],vars[3],vars[5]
+
+	return bt,nil
+}
+
+func findBeamtime(beamtime_id string) (beamtimeInfo,bool) {
+	matches, err := filepath.Glob(settings.RootBeamtimesFolder+"/*/gpfs/*/*/*/"+beamtime_id)
+	fmt.Println(matches)
+
+	if err!=nil || len(matches)==0 {
+		return beamtimeInfo{},false
+	}
+
+	for _,match := range (matches) {
+		btInfo,err := beamtimeInfoFromMatch(match)
+		if err!= nil {
+			continue
+		}
+		if btInfo.BeamtimeId == beamtime_id {
+			return btInfo,true
+		}
+	}
+	return beamtimeInfo{},false
 }
 
 func alwaysAllowed(creds SourceCredentials)(beamtimeInfo,bool) {
@@ -114,7 +143,7 @@ func authorizeByToken(creds SourceCredentials) bool {
 	token_expect, _ := auth.GenerateToken(&creds.BeamtimeId)
 
 	if creds.Token != token_expect {
-		log.Error("wrong token for beamtime" + creds.BeamtimeId)
+		log.Error("wrong token for beamtime " + creds.BeamtimeId)
 		return false
 	}
 	return true
@@ -126,14 +155,14 @@ func authorize(request authorizationRequest,creds SourceCredentials) (beamtimeIn
 		return answer,ok
 	}
 
-	beamline,ok :=beamtimeRegistered(creds.BeamtimeId)
+	beamlineInfo,ok := findBeamtime(creds.BeamtimeId)
 	if (!ok) {
 		log.Error("cannot find beamline for " + creds.BeamtimeId)
 		return beamtimeInfo{},false
 	}
 
 	if needHostAuthorization(creds)  {
-		if !authorizeByHost(request.OriginHost,beamline) {
+		if !authorizeByHost(request.OriginHost,beamlineInfo.Beamline) {
 			return beamtimeInfo{}, false
 		}
 	} else {
@@ -143,7 +172,9 @@ func authorize(request authorizationRequest,creds SourceCredentials) (beamtimeIn
 	}
 
 	var answer beamtimeInfo
-	answer.Beamline = beamline
+	answer.Beamline = beamlineInfo.Beamline
+	answer.Facility = beamlineInfo.Facility
+	answer.Year = beamlineInfo.Year
 	answer.BeamtimeId = creds.BeamtimeId
 	answer.Stream = creds.Stream
 
