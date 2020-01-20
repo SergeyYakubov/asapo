@@ -54,6 +54,9 @@ class Request {
     VIRTUAL const std::string& GetFacility() const;
     VIRTUAL const std::string& GetBeamtimeYear() const;
 
+    VIRTUAL std::string GetFullPath(std::string root_folder) const;
+
+
     VIRTUAL const std::string& GetBeamline() const;
     VIRTUAL const CustomRequestData& GetCustomData() const;
     VIRTUAL Error PrepareDataBufferAndLockIfNeeded();

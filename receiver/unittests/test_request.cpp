@@ -231,6 +231,21 @@ TEST_F(RequestTests, RequestTests_SetGetBeamtimeYear_Test) {
     ASSERT_THAT(request->GetBeamtimeYear(), "2020");
 }
 
+TEST_F(RequestTests, RequestTests_GetFullPath) {
+    request->SetFacility("test_facility");
+    request->SetBeamtimeYear("2020");
+    request->SetBeamtimeId("beamtime");
+    request->SetBeamline("beamline");
+
+    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + "test_facility" +
+                                asapo::kPathSeparator + "gpfs" +
+                                asapo::kPathSeparator + "beamline" +
+                                asapo::kPathSeparator + "2020" +
+                                asapo::kPathSeparator + "data" +
+                                asapo::kPathSeparator + "beamtime";
+    ASSERT_THAT(request->GetFullPath("test_folder"), expected_path);
+}
+
 
 
 }

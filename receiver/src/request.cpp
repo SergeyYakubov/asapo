@@ -163,4 +163,14 @@ const std::string& Request::GetBeamtimeYear() const {
     return beamtime_year_;
 }
 
+std::string Request::GetFullPath(std::string root_folder) const {
+    return std::move(root_folder) + kPathSeparator
+           + GetFacility() + kPathSeparator
+           + "gpfs" + kPathSeparator
+           + GetBeamline() + kPathSeparator
+           + GetBeamtimeYear() + kPathSeparator
+           + "data" + kPathSeparator
+           + GetBeamtimeId();
+}
+
 }

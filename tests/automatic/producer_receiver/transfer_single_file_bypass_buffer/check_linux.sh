@@ -14,8 +14,9 @@ receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/dat
 
 
 Cleanup() {
+
 	echo cleanup
-#	rm -rf ${receiver_root_folder}
+	rm -rf ${receiver_root_folder}
     nomad stop receiver
     nomad stop discovery
     nomad stop authorizer

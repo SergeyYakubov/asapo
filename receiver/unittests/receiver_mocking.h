@@ -71,6 +71,8 @@ class MockRequest: public Request {
     MOCK_METHOD1(SetBeamline, void (std::string));
     MOCK_METHOD1(SetFacility, void (std::string));
     MOCK_METHOD1(SetBeamtimeYear, void (std::string));
+    MOCK_CONST_METHOD1(GetFullPath, std::string (std::string));
+
 
 };
 
