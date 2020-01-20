@@ -18,8 +18,12 @@ proxy_address=127.0.0.1:8400
 beamline1=test1
 beamline2=test2
 receiver_root_folder=/tmp/asapo/receiver/files
-receiver_folder1=${receiver_root_folder}/${beamline1}/${beamtime_id1}
-receiver_folder2=${receiver_root_folder}/${beamline2}/${beamtime_id2}
+facility=test_facility
+year=2019
+receiver_folder1=${receiver_root_folder}/${facility}/gpfs/${beamline1}/${year}/data/${beamtime_id1}
+receiver_folder2=${receiver_root_folder}/${facility}/gpfs/${beamline2}/${year}/data/${beamtime_id2}
+
+
 
 Cleanup() {
     echo cleanup

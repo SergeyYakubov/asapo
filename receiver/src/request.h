@@ -49,6 +49,10 @@ class Request {
     VIRTUAL void SetStream(std::string stream);
     VIRTUAL void SetMetadata(std::string metadata);
 
+    VIRTUAL void SetFacility(std::string facility);
+    VIRTUAL void SetBeamtimeYear(std::string year);
+    VIRTUAL const std::string& GetFacility() const;
+    VIRTUAL const std::string& GetBeamtimeYear() const;
 
     VIRTUAL const std::string& GetBeamline() const;
     VIRTUAL const CustomRequestData& GetCustomData() const;
@@ -68,6 +72,8 @@ class Request {
     std::string beamtime_id_;
     std::string stream_;
     std::string beamline_;
+    std::string facility_;
+    std::string beamtime_year_;
     std::string metadata_;
     CacheMeta* slot_meta_ = nullptr;
 };

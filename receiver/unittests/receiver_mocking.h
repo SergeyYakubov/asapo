@@ -57,6 +57,9 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetOpCode, asapo::Opcode ());
     MOCK_CONST_METHOD0(GetSocket, asapo::SocketDescriptor ());
 
+    MOCK_CONST_METHOD0(GetFacility, const std::string & ());
+    MOCK_CONST_METHOD0(GetBeamtimeYear, const std::string & ());
+
     const asapo::CustomRequestData& GetCustomData() const override {
         return (asapo::CustomRequestData&) * GetCustomData_t();
     };
@@ -66,6 +69,9 @@ class MockRequest: public Request {
     MOCK_METHOD1(SetBeamtimeId, void (std::string));
     MOCK_METHOD1(SetStream, void (std::string));
     MOCK_METHOD1(SetBeamline, void (std::string));
+    MOCK_METHOD1(SetFacility, void (std::string));
+    MOCK_METHOD1(SetBeamtimeYear, void (std::string));
+
 };
 
 

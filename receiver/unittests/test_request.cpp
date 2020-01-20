@@ -221,5 +221,16 @@ TEST_F(RequestTests, SetGetMetadata) {
 }
 
 
+TEST_F(RequestTests, SetGetFacility) {
+    request->SetFacility("p00");
+    ASSERT_THAT(request->GetFacility(), "p00");
+}
+
+TEST_F(RequestTests, RequestTests_SetGetBeamtimeYear_Test) {
+    request->SetBeamtimeYear("2020");
+    ASSERT_THAT(request->GetBeamtimeYear(), "2020");
+}
+
+
 
 }

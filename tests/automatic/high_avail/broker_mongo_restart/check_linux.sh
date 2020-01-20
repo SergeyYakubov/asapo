@@ -12,7 +12,10 @@ proxy_address=127.0.0.1:8400
 
 beamline=test
 receiver_root_folder=/tmp/asapo/receiver/files
-receiver_folder=${receiver_root_folder}/${beamline}/${beamtime_id}
+facility=test_facility
+year=2019
+receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
+
 
 function wait_mongo {
 NEXT_WAIT_TIME=0

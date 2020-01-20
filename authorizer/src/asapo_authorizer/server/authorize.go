@@ -60,19 +60,6 @@ func getBeamlineFromIP(ip string) (string, error) {
 	return lines[0], nil
 }
 
-func checkBeamtimeExistsInStrings(beamtime_id string, lines []string) (string,bool) {
-	for _, line := range lines {
-		words := strings.Fields(line)
-		if len(words) < 3 {
-			continue
-		}
-		if words[2] == beamtime_id {
-			return words[1], true
-		}
-	}
-	return "",false
-}
-
 func beamtimeInfoFromMatch(match string) (beamtimeInfo,error) {
 	match = strings.TrimPrefix(match, settings.RootBeamtimesFolder)
 	match = strings.TrimPrefix(match, "/")

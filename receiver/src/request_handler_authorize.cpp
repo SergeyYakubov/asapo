@@ -41,6 +41,8 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     JsonStringParser parser{response};
     (err = parser.GetString("BeamtimeId", &beamtime_id_)) ||
     (err = parser.GetString("Stream", &stream_)) ||
+    (err = parser.GetString("Facility", &facility_)) ||
+    (err = parser.GetString("Year", &beamtime_year_)) ||
     (err = parser.GetString("Beamline", &beamline_));
     if (err) {
         return ErrorFromServerResponse(err, code);
@@ -83,6 +85,8 @@ Error RequestHandlerAuthorize::ProcessOtherRequest(Request* request) const {
     request->SetBeamtimeId(beamtime_id_);
     request->SetBeamline(beamline_);
     request->SetStream(stream_);
+    request->SetBeamtimeYear(beamtime_year_);
+    request->SetFacility(facility_);
     return nullptr;
 }
 
