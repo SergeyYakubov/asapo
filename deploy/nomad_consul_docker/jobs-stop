@@ -2,4 +2,8 @@
 
 #export NOMAD_TOKEN=`cat /var/nomad/token `
 
-cd /var/run/asapo && terraform destroy -auto-approve "$@"
+if [ -f /var/run/asapo/user_vars.tfvars ]; then
+  USER_VAR_FILE="-var-file=/var/run/asapo/user_vars.tfvars"
+fi
+
+cd /var/run/asapo && terraform destroy -auto-approve $USER_VAR_FILE "$@"

@@ -147,4 +147,30 @@ uint64_t Request::GetMetaDataSize() const {
     return request_header_.meta_size;
 }
 
+void Request::SetFacility(std::string facility) {
+    facility_ = std::move(facility);
+}
+
+void Request::SetBeamtimeYear(std::string year) {
+    beamtime_year_ = std::move(year);
+}
+
+const std::string& Request::GetFacility() const {
+    return facility_;
+}
+
+const std::string& Request::GetBeamtimeYear() const {
+    return beamtime_year_;
+}
+
+std::string Request::GetFullPath(std::string root_folder) const {
+    return std::move(root_folder) + kPathSeparator
+           + GetFacility() + kPathSeparator
+           + "gpfs" + kPathSeparator
+           + GetBeamline() + kPathSeparator
+           + GetBeamtimeYear() + kPathSeparator
+           + "data" + kPathSeparator
+           + GetBeamtimeId();
+}
+
 }

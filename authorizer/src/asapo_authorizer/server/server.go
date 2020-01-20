@@ -6,15 +6,17 @@ type  beamtimeInfo struct {
 	BeamtimeId string
 	Beamline string
 	Stream string
+	Year string
+	Facility string
 }
 
 type serverSettings struct {
-	Port             int
-	LogLevel         string
+	Port                    int
+	LogLevel                string
 	IpBeamlineMappingFolder string
-	BeamtimeBeamlineMappingFile string
-	AlwaysAllowedBeamtimes []beamtimeInfo
-	SecretFile       string
+	RootBeamtimesFolder     string
+	AlwaysAllowedBeamtimes  []beamtimeInfo
+	SecretFile              string
 }
 
 var settings serverSettings

@@ -67,6 +67,8 @@ class AuthorizerHandlerTests : public Test {
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_stream = "stream";
     std::string expected_beamline = "beamline";
+    std::string expected_facility = "facility";
+    std::string expected_year = "2020";
     std::string expected_producer_uri = "producer_uri";
     std::string expected_authorization_server = "authorizer_host";
     std::string expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
@@ -106,6 +108,8 @@ class AuthorizerHandlerTests : public Test {
                       SetArgPointee<2>(code),
                       Return("{\"BeamtimeId\":\"" + expected_beamtime_id +
                              "\",\"Stream\":" + "\"" + expected_stream +
+                             "\",\"Facility\":" + "\"" + expected_facility +
+                             "\",\"Year\":" + "\"" + expected_year +
                              "\",\"Beamline\":" + "\"" + expected_beamline + "\"}")
                      ));
             if (code != HttpCode::OK) {
@@ -145,6 +149,8 @@ class AuthorizerHandlerTests : public Test {
         if (!error && code == HttpCode::OK) {
             EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
             EXPECT_CALL(*mock_request, SetStream(expected_stream));
+            EXPECT_CALL(*mock_request, SetFacility(expected_facility));
+            EXPECT_CALL(*mock_request, SetBeamtimeYear(expected_year));
             EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
         }
 
@@ -240,6 +246,8 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeUsesCachedValue) {
     EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
     EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
     EXPECT_CALL(*mock_request, SetStream(expected_stream));
+    EXPECT_CALL(*mock_request, SetFacility(expected_facility));
+    EXPECT_CALL(*mock_request, SetBeamtimeYear(expected_year));
 
     auto err =  handler.ProcessRequest(mock_request.get());
 

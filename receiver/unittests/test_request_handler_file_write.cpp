@@ -58,7 +58,16 @@ class FileWriteHandlerTests : public Test {
     std::string expected_file_name = "2";
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_beamline = "beamline";
+    std::string expected_facility = "facility";
+    std::string expected_year = "2020";
     uint64_t expected_file_size = 10;
+    std::string expected_root_folder = "root_folder";
+    std::string expected_full_path =  expected_root_folder + asapo::kPathSeparator + expected_facility +
+                                      asapo::kPathSeparator + "gpfs" +
+                                      asapo::kPathSeparator + expected_beamline +
+                                      asapo::kPathSeparator + expected_year +
+                                      asapo::kPathSeparator + "data" +
+                                      asapo::kPathSeparator + expected_beamtime_id;
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
@@ -78,11 +87,9 @@ TEST_F(FileWriteHandlerTests, CheckStatisticEntity) {
     ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kDisk));
 }
 
-
 TEST_F(FileWriteHandlerTests, ErrorWhenZeroFileSize) {
     EXPECT_CALL(*mock_request, GetDataSize())
-    .WillOnce(Return(0))
-    ;
+    .WillOnce(Return(0));
 
     auto err = handler.ProcessRequest(mock_request.get());
 
@@ -91,39 +98,27 @@ TEST_F(FileWriteHandlerTests, ErrorWhenZeroFileSize) {
 
 void FileWriteHandlerTests::MockRequestData() {
     EXPECT_CALL(*mock_request, GetDataSize())
-    .WillOnce(Return(expected_file_size))
-    ;
+    .WillOnce(Return(expected_file_size));
 
     EXPECT_CALL(*mock_request, GetData())
-    .WillOnce(Return(nullptr))
-    ;
+    .WillOnce(Return(nullptr));
 
-    EXPECT_CALL(*mock_request, GetBeamtimeId())
-    .WillOnce(ReturnRef(expected_beamtime_id))
-    ;
-
-    EXPECT_CALL(*mock_request, GetBeamline())
-    .WillOnce(ReturnRef(expected_beamline))
-    ;
-
+    EXPECT_CALL(*mock_request, GetFullPath(expected_root_folder))
+    .WillOnce(Return(expected_full_path));
 
     EXPECT_CALL(*mock_request, GetFileName())
-    .WillOnce(Return(expected_file_name))
-    ;
+    .WillOnce(Return(expected_file_name));
 }
 
 TEST_F(FileWriteHandlerTests, CallsWriteFile) {
     asapo::ReceiverConfig test_config;
-    test_config.root_folder = "test_folder";
+    test_config.root_folder = expected_root_folder;
 
     asapo::SetReceiverConfig(test_config, "none");
 
     MockRequestData();
 
-    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + expected_beamline
-                                + asapo::kPathSeparator + expected_beamtime_id;
-
-    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_path, expected_file_name, _, expected_file_size, true))
+    EXPECT_CALL(mock_io, WriteDataToFile_t(expected_full_path, expected_file_name, _, expected_file_size, true))
     .WillOnce(
         Return(asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
     );
@@ -132,7 +127,6 @@ TEST_F(FileWriteHandlerTests, CallsWriteFile) {
 
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
-
 
 TEST_F(FileWriteHandlerTests, WritesToLog) {
 
@@ -144,12 +138,13 @@ TEST_F(FileWriteHandlerTests, WritesToLog) {
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("saved file"),
                                          HasSubstr(expected_file_name),
                                          HasSubstr(expected_beamtime_id),
+                                         HasSubstr(expected_facility),
+                                         HasSubstr(expected_year),
                                          HasSubstr(std::to_string(expected_file_size))
                                         )
                                   )
                );
     handler.ProcessRequest(mock_request.get());
 }
-
 
 }

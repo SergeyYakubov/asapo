@@ -70,7 +70,7 @@ func TestSplitCreds(t *testing.T) {
 }
 
 func TestAuthorizeDefaultOK(t *testing.T) {
-	allowBeamlines([]beamtimeInfo{{"asapo_test","beamline",""}})
+	allowBeamlines([]beamtimeInfo{{"asapo_test","beamline","","2019","tf"}})
 	request :=  makeRequest(authorizationRequest{"asapo_test%%","host"})
 	w := doAuthorizeRequest("/authorize",request)
 
@@ -84,31 +84,34 @@ func TestAuthorizeDefaultOK(t *testing.T) {
 }
 
 var authTests = [] struct {
+	beamtime_id string
 	stream string
 	token string
 	status int
 	message string
 }{
-	{"stream", prepareToken("test"),http.StatusOK,"user stream with correct token"},
-	{"stream", prepareToken("wrong"),http.StatusUnauthorized,"user stream with wrong token"},
-	{"detector_aaa", prepareToken("test"),http.StatusUnauthorized,"detector stream with correct token and wroung source"},
+	{"test","stream", prepareToken("test"),http.StatusOK,"user stream with correct token"},
+	{"test1","stream", prepareToken("test1"),http.StatusUnauthorized,"correct token, beamtime not found"},
+	{"test","stream", prepareToken("wrong"),http.StatusUnauthorized,"user stream with wrong token"},
+	{"test","detector_aaa", prepareToken("test"),http.StatusUnauthorized,"detector stream with correct token and wroung source"},
 }
 func TestAuthorizeWithToken(t *testing.T) {
 	allowBeamlines([]beamtimeInfo{})
-	settings.BeamtimeBeamlineMappingFile="file.tmp"
-	beamtime_id:= "test"
-	lines :="line1\n line2\n flash bl1 "+ beamtime_id	+" start: 2018-04-24"
-	ioutil.WriteFile("file.tmp", []byte(lines), 0644)
-	defer 	os.Remove("file.tmp")
+	settings.RootBeamtimesFolder ="."
+	os.MkdirAll("tf/gpfs/bl1/2019/data/test", os.ModePerm)
+	defer 	os.RemoveAll("tf")
 
 	for _, test := range authTests {
-		request :=  makeRequest(authorizationRequest{beamtime_id+"%"+test.stream+"%"+test.token,"host"})
+		request :=  makeRequest(authorizationRequest{test.beamtime_id+"%"+test.stream+"%"+test.token,"host"})
 		w := doAuthorizeRequest("/authorize",request)
 
 		body, _ := ioutil.ReadAll(w.Body)
 		if test.status==http.StatusOK {
-			assert.Contains(t, string(body), beamtime_id, "")
+			assert.Contains(t, string(body), test.beamtime_id, "")
 			assert.Contains(t, string(body), "bl1", "")
+			assert.Contains(t, string(body), "stream", "")
+			assert.Contains(t, string(body), "2019", "")
+			assert.Contains(t, string(body), "tf", "")
 			assert.Contains(t, string(body), test.stream, "")
 		}
 
@@ -139,7 +142,8 @@ func TestAuthorizeWrongPath(t *testing.T) {
 }
 
 func TestDoNotAuthorizeIfNotInAllowed(t *testing.T) {
-	allowBeamlines([]beamtimeInfo{{"test","beamline",""}})
+	allowBeamlines([]beamtimeInfo{{"test","beamline","","2019","tf"}})
+
 	request :=  authorizationRequest{"asapo_test%%","host"}
 	creds,_ := getSourceCredentials(request)
 	_,ok := authorize(request,creds)
@@ -163,54 +167,13 @@ func TestGetBeamlineFromIP(t *testing.T) {
 	assert.Empty(t,beamline, "")
 
 }
-func TestCheckBeamtimeExistsInStringsFalse(t *testing.T) {
-	beamInfo := beamtimeInfo{"123","bl",""}
-	lines:=[]string{"111","flash	pg2	11003932		beamtime	start: 2018-06-11","petra3	p01	c20180508-000-COM20181	commissioning"}
-	bl,ok := checkBeamtimeExistsInStrings(beamInfo.BeamtimeId,lines)
-	assert.False(t,ok, "")
-	assert.Equal(t,"",bl, "")
-}
-
-
-func TestCheckBeamtimeExistsInStringsOk(t *testing.T) {
-	beamInfo := beamtimeInfo{"11003932","pg2",""}
-	lines:=[]string{"111","flash	pg2	11003932		beamtime	start: 2018-06-11","petra3	p01	c20180508-000-COM20181	commissioning"}
-	bl,ok := checkBeamtimeExistsInStrings(beamInfo.BeamtimeId,lines)
-	assert.True(t,ok, "")
-	assert.Equal(t,bl,beamInfo.Beamline,"")
-
-}
 
 func TestAuthorizeWithFile(t *testing.T) {
 	settings.IpBeamlineMappingFolder="."
-	settings.BeamtimeBeamlineMappingFile="file.tmp"
+	settings.RootBeamtimesFolder ="."
+	os.MkdirAll("tf/gpfs/bl1/2019/data/11003924", os.ModePerm)
 
-	lines :=`
-Open beam times as of  Thursday, 2018/06/21 11:32
-Faclty	BL	BeamTime Id		kind
-flash	bl1	11003924		beamtime	start: 2018-04-24
-flash	bl2	11003921		beamtime	start: 2018-06-08
-flash	fl24	11001734		beamtime	start: 2018-06-13
-flash	pg2	11003932		beamtime	start: 2018-06-11
-flash	thz	11005667		beamtime	start: 2018-05-24
-petra3	ext	50000181		beamtime	start: 2017-04-12
-petra3	ext	50000193		beamtime	start: 2017-10-12
-petra3	ext	50000202		beamtime	start: 2017-12-06
-petra3	ext	50000209		beamtime	start: 2018-02-19
-petra3	ext	50000211		beamtime	start: 2018-02-19
-petra3	ext	50000214		beamtime	start: 2018-04-23
-petra3	ext	50000215		beamtime	start: 2018-03-23
-petra3	ext	50000216		beamtime	start: 2018-03-23
-petra3	ext	50000217		beamtime	start: 2018-03-23
-petra3	ext	50000218		beamtime	start: 2018-03-23
-petra3	ext	50000219		beamtime	start: 2018-04-24
-petra3	ext	50000221		beamtime	start: 2018-06-14
-petra3	p01	11004172		beamtime	start: 2018-06-20
-petra3	p01	c20180508-000-COM20181	commissioning
-petra3	p02.1	11004341		beamtime	start: 2018-06-18
-`
 
-	ioutil.WriteFile("file.tmp", []byte(lines), 0644)
 	ioutil.WriteFile("127.0.0.1", []byte("bl1"), 0644)
 
 
@@ -220,6 +183,9 @@ petra3	p02.1	11004341		beamtime	start: 2018-06-18
 	body, _ := ioutil.ReadAll(w.Body)
 	assert.Contains(t, string(body), "11003924", "")
 	assert.Contains(t, string(body), "bl1", "")
+	assert.Contains(t, string(body), "detector", "")
+	assert.Contains(t, string(body), "2019", "")
+	assert.Contains(t, string(body), "tf", "")
 	assert.Equal(t, http.StatusOK, w.Code, "")
 
 	request = authorizationRequest{"wrong%%","127.0.0.1"}
@@ -227,8 +193,43 @@ petra3	p02.1	11004341		beamtime	start: 2018-06-18
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
 
 	os.Remove("127.0.0.1")
-	os.Remove("file.tmp")
+	os.RemoveAll("tf")
 
 }
 
 
+var extractBtinfoTests = [] struct {
+	root string
+	fname string
+	facility string
+	beamline string
+	year string
+	id string
+	ok bool
+}{
+	{".","tf/gpfs/bl1.01/2019/data/123","tf", "bl1.01","2019","123",true},
+	{"/blabla/tratartra","tf/gpfs/bl1.01/2019/data/123","tf", "bl1.01","2019","123",true},
+	{".","tf/gpfs/common/2019/data/123","tf", "bl1.01","2019","123",false},
+	{".","tf/gpfs/BeamtimeUsers/2019/data/123","tf", "bl1.01","2019","123",false},
+	{".","tf/gpfs/state/2019/data/123","tf", "bl1.01","2019","123",false},
+	{".","tf/gpfs/support/2019/data/123","tf", "bl1.01","2019","123",false},
+	{".","petra3/gpfs/p01/2019/comissioning/c20180508-000-COM20181","petra3", "p01","2019","c20180508-000-COM20181",true},
+
+}
+func TestGetBeamtimeInfo(t *testing.T) {
+	for _, test := range extractBtinfoTests {
+		settings.RootBeamtimesFolder=test.root
+		bt,err:=beamtimeInfoFromMatch(test.root+"/"+test.fname)
+		if test.ok {
+			assert.Equal(t,bt.Facility,test.facility)
+			assert.Equal(t,bt.Beamline,test.beamline)
+			assert.Equal(t,bt.Year,test.year)
+			assert.Equal(t,bt.BeamtimeId,test.id)
+			assert.Equal(t,bt.Facility,test.facility)
+			assert.Nil(t,err,"should not be error")
+		} else {
+			assert.NotNil(t,err,"should be error")
+		}
+	}
+
+}

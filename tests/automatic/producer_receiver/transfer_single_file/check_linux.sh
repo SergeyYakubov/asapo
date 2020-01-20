@@ -8,7 +8,10 @@ database_name=db_test
 beamtime_id=asapo_test
 beamline=test
 receiver_root_folder=/tmp/asapo/receiver/files
-receiver_folder=${receiver_root_folder}/${beamline}/${beamtime_id}
+facility=test_facility
+year=2019
+receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
+
 
 Cleanup() {
 	echo cleanup

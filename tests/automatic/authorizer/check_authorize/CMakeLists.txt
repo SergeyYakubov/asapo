@@ -3,10 +3,10 @@ set(TARGET_NAME asapo-authorizer)
 ################################
 # Testing
 ################################
-file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/OpenBeamTimes.txt BEAMTIMES_FILE )
+file(TO_NATIVE_PATH ${CMAKE_CURRENT_BINARY_DIR}/asap3 ASAP3_FOLDER )
 file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/ip_bl_mapping BEAMLINES_FOLDER )
 if (WIN32)
-    string(REPLACE "\\" "\\\\" BEAMTIMES_FILE "${BEAMTIMES_FILE}")
+    string(REPLACE "\\" "\\\\" ASAP3_FOLDER "${ASAP3_FOLDER}")
     string(REPLACE "\\" "\\\\" BEAMLINES_FOLDER "${BEAMLINES_FOLDER}")
 endif()
 
