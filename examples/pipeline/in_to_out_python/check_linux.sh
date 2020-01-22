@@ -5,7 +5,7 @@ beamtime_id=asapo_test
 stream_in=detector
 stream_out=stream
 
-timeout=2
+timeout=15
 timeout_producer=25
 nthreads=4
 
