@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <direct.h>
+#include <sstream>
 
 using std::string;
 using std::vector;

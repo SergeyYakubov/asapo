@@ -5,7 +5,7 @@
 #include <string>
 
 #include "common/error.h"
-
+#include <ostream>
 namespace asapo {
 
 enum class LogLevel {

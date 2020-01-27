@@ -2,7 +2,7 @@
 #define ASAPO_DATABASE_H
 
 #include <string>
-
+#include <ostream>
 #include "common/data_structs.h"
 #include "common/error.h"
 

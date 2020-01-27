@@ -9,6 +9,8 @@
 #undef max
 #undef min
 typedef SSIZE_T ssize_t;
+#include <ostream>
+#include <sstream>
 #endif
 
 #if defined(__linux__) || defined (__APPLE__)

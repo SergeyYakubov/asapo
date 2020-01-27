@@ -3,6 +3,7 @@
 
 #include <string>
 #include <mutex>
+#include <ostream>
 
 #include "http_client/http_client.h"
 #include "curl/curl.h"
