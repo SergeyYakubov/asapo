@@ -3,7 +3,7 @@ SET beamtime_id=test_run
 SET stream=detector
 SET database_name=%beamtime_id%_%stream%
 
-SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
+SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 set token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 set group_id=bif31l2uiddd4r0q6b40
 

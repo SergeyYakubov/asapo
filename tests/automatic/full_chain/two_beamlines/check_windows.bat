@@ -1,4 +1,4 @@
-SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
+SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 SET beamtime_id1=asapo_test1
 SET beamline1=test1
 SET beamtime_id2=asapo_test2
