@@ -4,6 +4,8 @@ events {
     worker_connections  1024;
 }
 
+error_log stderr info;
+
 http {
 #    include       mime.types;
 #    default_type  application/octet-stream;
@@ -16,7 +18,7 @@ http {
 
     resolver 127.0.0.1:8600 valid=1s;
     server {
-          listen {{ env "NOMAD_PORT_nginx" }} reuseport;
+          listen {{ env "NOMAD_PORT_nginx" }};
           set $discovery_endpoint discovery.service.asapo;
           set $authorizer_endpoint authorizer.service.asapo;
           set $fluentd_endpoint fluentd.service.asapo;
