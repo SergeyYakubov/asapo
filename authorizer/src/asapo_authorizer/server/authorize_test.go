@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -98,7 +99,7 @@ var authTests = [] struct {
 func TestAuthorizeWithToken(t *testing.T) {
 	allowBeamlines([]beamtimeInfo{})
 	settings.RootBeamtimesFolder ="."
-	os.MkdirAll("tf/gpfs/bl1/2019/data/test", os.ModePerm)
+	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test"), os.ModePerm)
 	defer 	os.RemoveAll("tf")
 
 	for _, test := range authTests {
@@ -171,7 +172,7 @@ func TestGetBeamlineFromIP(t *testing.T) {
 func TestAuthorizeWithFile(t *testing.T) {
 	settings.IpBeamlineMappingFolder="."
 	settings.RootBeamtimesFolder ="."
-	os.MkdirAll("tf/gpfs/bl1/2019/data/11003924", os.ModePerm)
+	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/11003924"), os.ModePerm)
 
 
 	ioutil.WriteFile("127.0.0.1", []byte("bl1"), 0644)
@@ -207,19 +208,19 @@ var extractBtinfoTests = [] struct {
 	id string
 	ok bool
 }{
-	{".","tf/gpfs/bl1.01/2019/data/123","tf", "bl1.01","2019","123",true},
-	{"/blabla/tratartra","tf/gpfs/bl1.01/2019/data/123","tf", "bl1.01","2019","123",true},
-	{".","tf/gpfs/common/2019/data/123","tf", "bl1.01","2019","123",false},
-	{".","tf/gpfs/BeamtimeUsers/2019/data/123","tf", "bl1.01","2019","123",false},
-	{".","tf/gpfs/state/2019/data/123","tf", "bl1.01","2019","123",false},
-	{".","tf/gpfs/support/2019/data/123","tf", "bl1.01","2019","123",false},
-	{".","petra3/gpfs/p01/2019/comissioning/c20180508-000-COM20181","petra3", "p01","2019","c20180508-000-COM20181",true},
+	{".",filepath.Clean("tf/gpfs/bl1.01/2019/data/123"),"tf", "bl1.01","2019","123",true},
+	{filepath.Clean("/blabla/tratartra"),filepath.Clean("tf/gpfs/bl1.01/2019/data/123"),"tf", "bl1.01","2019","123",true},
+	{".",filepath.Clean("tf/gpfs/common/2019/data/123"),"tf", "bl1.01","2019","123",false},
+	{".",filepath.Clean("tf/gpfs/BeamtimeUsers/2019/data/123"),"tf", "bl1.01","2019","123",false},
+	{".",filepath.Clean("tf/gpfs/state/2019/data/123"),"tf", "bl1.01","2019","123",false},
+	{".",filepath.Clean("tf/gpfs/support/2019/data/123"),"tf", "bl1.01","2019","123",false},
+	{".",filepath.Clean("petra3/gpfs/p01/2019/comissioning/c20180508-000-COM20181"),"petra3", "p01","2019","c20180508-000-COM20181",true},
 
 }
 func TestGetBeamtimeInfo(t *testing.T) {
 	for _, test := range extractBtinfoTests {
 		settings.RootBeamtimesFolder=test.root
-		bt,err:=beamtimeInfoFromMatch(test.root+"/"+test.fname)
+		bt,err:=beamtimeInfoFromMatch(test.root+string(filepath.Separator)+test.fname)
 		if test.ok {
 			assert.Equal(t,bt.Facility,test.facility)
 			assert.Equal(t,bt.Beamline,test.beamline)
