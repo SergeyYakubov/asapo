@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 #include <utility>
-
+#include <ostream>
 namespace asapo {
 
 enum class ErrorType {

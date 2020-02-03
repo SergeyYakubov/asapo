@@ -4,7 +4,11 @@ events {
     worker_connections  1024;
 }
 
+error_log stderr info;
+pid   "{{ env "NOMAD_ALLOC_DIR" }}/nginx.pid";
+
 http {
+	access_log off;
 #    include       mime.types;
 #    default_type  application/octet-stream;
 
@@ -14,9 +18,15 @@ http {
 #    keepalive_timeout  0;
 #    keepalive_timeout  65;
 
+    client_body_temp_path  "{{ env "NOMAD_ALLOC_DIR" }}/tmp/client_body" 1 2;
+    proxy_temp_path        "{{ env "NOMAD_ALLOC_DIR" }}/tmp/proxy" 1 2;
+    fastcgi_temp_path      "{{ env "NOMAD_ALLOC_DIR" }}/tmp/fastcgi" 1 2;
+    scgi_temp_path         "{{ env "NOMAD_ALLOC_DIR" }}/tmp/scgi" 1 2;
+    uwsgi_temp_path        "{{ env "NOMAD_ALLOC_DIR" }}/tmp/uwsgi" 1 2;
+
     resolver 127.0.0.1:8600 valid=1s;
     server {
-          listen {{ env "NOMAD_PORT_nginx" }} reuseport;
+          listen {{ env "NOMAD_PORT_nginx" }};
           set $discovery_endpoint discovery.service.asapo;
           set $authorizer_endpoint authorizer.service.asapo;
           set $fluentd_endpoint fluentd.service.asapo;

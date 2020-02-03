@@ -22,7 +22,7 @@ using ::testing::HasSubstr;
 using ::testing::Contains;
 using ::testing::IsEmpty;
 using ::testing::Mock;
-
+using ::testing::DoAll;
 
 using asapo::TcpServer;
 using asapo::MockIO;

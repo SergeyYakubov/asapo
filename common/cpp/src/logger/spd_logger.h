@@ -4,6 +4,7 @@
 #include "logger/logger.h"
 #include "spdlog/spdlog.h"
 
+#include <ostream>
 namespace asapo {
 
 class SpdLogger : public AbstractLogger {

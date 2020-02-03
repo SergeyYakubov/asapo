@@ -150,7 +150,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
             auto err = ProcessNextEvent(args, broker, producer);
             if (err) {
                 (*errors)[i] += ProcessError(err);
-                if (err == asapo::ConsumerErrorTemplates::kEndOfStream) {
+                if (err == asapo::ConsumerErrorTemplates::kEndOfStream || err == asapo::ConsumerErrorTemplates::kWrongInput) {
                     break;
                 }
             }

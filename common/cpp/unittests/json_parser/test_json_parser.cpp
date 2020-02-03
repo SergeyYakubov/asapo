@@ -19,6 +19,7 @@ using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::HasSubstr;
 using ::testing::ElementsAre;
+using ::testing::DoAll;
 
 using asapo::JsonFileParser;
 using asapo::JsonStringParser;

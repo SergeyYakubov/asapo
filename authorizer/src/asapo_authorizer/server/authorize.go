@@ -5,7 +5,6 @@ import (
 	"asapo_common/utils"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -62,8 +61,8 @@ func getBeamlineFromIP(ip string) (string, error) {
 
 func beamtimeInfoFromMatch(match string) (beamtimeInfo,error) {
 	match = strings.TrimPrefix(match, settings.RootBeamtimesFolder)
-	match = strings.TrimPrefix(match, "/")
-	vars := strings.Split(match,"/")
+	match = strings.TrimPrefix(match, string(filepath.Separator))
+	vars := strings.Split(match,string(filepath.Separator))
 	if len(vars)!=6 {
 		return beamtimeInfo{},errors.New("bad pattern")
 	}
@@ -79,8 +78,9 @@ func beamtimeInfoFromMatch(match string) (beamtimeInfo,error) {
 }
 
 func findBeamtime(beamtime_id string) (beamtimeInfo,bool) {
-	matches, err := filepath.Glob(settings.RootBeamtimesFolder+"/*/gpfs/*/*/*/"+beamtime_id)
-	fmt.Println(matches)
+	sep := string(filepath.Separator)
+	pattern := sep+"*"+sep+"gpfs"+sep+"*"+sep+"*"+sep+"*"+sep
+	matches, err := filepath.Glob(settings.RootBeamtimesFolder+pattern+beamtime_id)
 
 	if err!=nil || len(matches)==0 {
 		return beamtimeInfo{},false

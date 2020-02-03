@@ -26,6 +26,7 @@ using ::testing::_;
 using ::testing::SetArgPointee;
 using ::testing::NiceMock;
 using ::testing::HasSubstr;
+using ::testing::DoAll;
 
 
 using asapo::MockLogger;

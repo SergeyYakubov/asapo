@@ -29,6 +29,7 @@ using ::testing::Return;
 using ::testing::SetArgPointee;
 using ::testing::SetArgReferee;
 using testing::AllOf;
+using ::testing::DoAll;
 
 namespace {
 

@@ -1,5 +1,5 @@
 SET database_name=data_stream
-SET mongo_exe="c:\Program Files\MongoDB\Server\3.6\bin\mongo.exe"
+SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 
 echo db.data.insert({"_id":1}) | %mongo_exe% %database_name%  || goto :error
 echo db.data.insert({"_id":2}) | %mongo_exe% %database_name%  || goto :error
