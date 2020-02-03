@@ -6,9 +6,12 @@ SET beamline2=test2
 SET stream=detector
 
 SET receiver_root_folder=c:\tmp\asapo\receiver\files
-SET receiver_folder1="%receiver_root_folder%\%beamline1%\%beamtime_id1%"
-SET receiver_folder2="%receiver_root_folder%\%beamline2%\%beamtime_id2%"
+SET facility=test_facility
+SET year=2019
 
+
+SET receiver_folder1="%receiver_root_folder%\%facility%\gpfs\%beamline1%\%year%\data\%beamtime_id1%"
+SET receiver_folder2="%receiver_root_folder%\%facility%\gpfs\%beamline2%\%year%\data\%beamtime_id2%"
 
 "%3" token -secret auth_secret.key %beamtime_id1% > token
 set /P token1=< token
