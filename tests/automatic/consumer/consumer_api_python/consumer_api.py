@@ -10,6 +10,7 @@ def exit_on_noerr(name):
 
 
 def assert_metaname(meta,compare,name):
+    print ("asserting meta for "+name)
     if meta['name'] != compare:
         print ("error at "+name)
         print ('meta: ', json.dumps(meta, indent=4, sort_keys=True))
@@ -44,6 +45,8 @@ def check_single(broker,group_id_new):
     _, meta = broker.get_next(group_id_new, meta_only=True)
     assert_metaname(meta,"1","get next1")
     assert_usermetadata(meta,"get next1")
+
+    broker.set_timeout(1000)
 
     data = broker.retrieve_data(meta)
     assert_eq(data.tostring().decode("utf-8"),"hello1","retrieve_data data")
@@ -136,16 +139,14 @@ def check_single(broker,group_id_new):
     else:
         exit_on_noerr("wrong query")
 
-#    broker = asapo_consumer.create_server_broker("bla",path, beamtime,"",token,60000)
-#    try:
-#        broker.get_last(group_id_new, meta_only=True)
-#    except asapo_consumer.AsapoUnavailableServiceError as err:
-#        print(err)
-#        pass
-#    else:
-#        exit_on_noerr("AsapoBrokerServersNotFound")
-
-
+    broker = asapo_consumer.create_server_broker("bla",path, beamtime,"",token,1000)
+    try:
+        broker.get_last(group_id_new, meta_only=True)
+    except asapo_consumer.AsapoUnavailableServiceError as err:
+        print(err)
+        pass
+    else:
+        exit_on_noerr("AsapoBrokerServersNotFound")
 
 def check_dataset(broker,group_id_new):
     id, metas = broker.get_next_dataset(group_id_new)
@@ -153,6 +154,9 @@ def check_dataset(broker,group_id_new):
     assert_metaname(metas[0],"1_1","get nextdataset1 name1")
     assert_metaname(metas[1],"1_2","get nextdataset1 name2")
     assert_usermetadata(metas[0],"get nextdataset1 meta")
+
+    broker.set_timeout(1000)
+
 
     data = broker.retrieve_data(metas[0])
     assert_eq(data.tostring().decode("utf-8"),"hello1","retrieve_data from dataset data")

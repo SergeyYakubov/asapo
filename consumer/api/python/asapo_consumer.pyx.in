@@ -140,6 +140,8 @@ cdef class PyDataBroker:
         if err:
             throw_exception(err)
         return size
+    def set_timeout(self,timeout):
+        self.c_broker.SetTimeout(timeout)
     def set_lastread_marker(self,value,group_id):
         cdef string b_group_id = _bytes(group_id)
         cdef Error err

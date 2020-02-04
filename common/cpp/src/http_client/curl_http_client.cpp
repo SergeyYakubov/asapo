@@ -1,6 +1,7 @@
 #include "curl_http_client.h"
 
 #include <cstring>
+#include "http_client/http_error.h"
 
 namespace asapo {
 
@@ -64,7 +65,11 @@ Error ProcessCurlResponse(CURL* curl, CURLcode res, const char* errbuf,
         return nullptr;
     } else {
         *buffer = GetCurlError(curl, res, errbuf);
-        return TextError("Curl client error: " + *buffer);
+        if (res == CURLE_COULDNT_CONNECT || res == CURLE_COULDNT_RESOLVE_HOST) {
+            return HttpErrorTemplates::kConnectionError.Generate(*buffer);
+        } else {
+            return HttpErrorTemplates::kTransferError.Generate(*buffer);
+        }
     }
 }
 

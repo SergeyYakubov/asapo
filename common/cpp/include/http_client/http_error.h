@@ -6,16 +6,24 @@
 
 namespace asapo {
 
-class HttpError: public SimpleError {
-  public:
-    HttpError(const std::string& error, HttpCode http_code): SimpleError{error, ErrorType::kHttpError}, http_code_{http_code} {
-    }
-    HttpCode GetCode() const {
-        return http_code_;
-    }
-  private:
-    HttpCode http_code_;
+enum class HttpErrorType {
+    kTransferError,
+    kConnectionError
 };
+
+using HttpErrorTemplate = ServiceErrorTemplate<HttpErrorType, ErrorType::kHttpError>;
+
+namespace HttpErrorTemplates {
+
+auto const kTransferError = HttpErrorTemplate{
+    "possible transfer error", HttpErrorType::kTransferError
+};
+
+auto const kConnectionError = HttpErrorTemplate{
+    "connection error", HttpErrorType::kConnectionError
+};
+
+}
 
 }
 
