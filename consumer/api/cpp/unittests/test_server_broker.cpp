@@ -23,7 +23,6 @@ using asapo::MockIO;
 using asapo::MockHttpClient;
 using asapo::MockNetClient;
 using asapo::HttpCode;
-using asapo::HttpError;
 using asapo::SimpleError;
 
 using ::testing::AtLeast;
@@ -335,12 +334,12 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsNoDataAfterTimeoutEvenIfOtherErrorO
 }
 
 
-TEST_F(ServerDataBrokerTests, GetNextImageReturnsImmediatelyOnServerError) {
+TEST_F(ServerDataBrokerTests, GetNextImageReturnsImmediatelyOnTransferError) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
                 SetArgPointee<1>(HttpCode::InternalServerError),
-                SetArgPointee<2>(asapo::IOErrorTemplates::kSocketOperationOnNonSocket.Generate("sss").release()),
+                SetArgPointee<2>(asapo::HttpErrorTemplates::kTransferError.Generate("sss").release()),
                 Return("")));
 
     data_broker->SetTimeout(300);
@@ -348,7 +347,30 @@ TEST_F(ServerDataBrokerTests, GetNextImageReturnsImmediatelyOnServerError) {
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
     ASSERT_THAT(err->Explain(), HasSubstr("sss"));
+}
 
+
+ACTION(AssignArg2) {
+    *arg2 = asapo::HttpErrorTemplates::kConnectionError.Generate().release();
+}
+
+
+TEST_F(ServerDataBrokerTests, GetNextRetriesIfConnectionHttpClientErrorUntilTimeout) {
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/broker"), _,
+                                        _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
+                                                    SetArgPointee<1>(HttpCode::OK),
+                                                    SetArgPointee<2>(nullptr),
+                                                    Return(expected_broker_uri)));
+
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
+                SetArgPointee<1>(HttpCode::Conflict),
+                AssignArg2(),
+                Return("")));
+
+    data_broker->SetTimeout(300);
+    auto err = data_broker->GetNext(&info, expected_group_id, nullptr);
+
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kUnavailableService));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsFileInfo) {

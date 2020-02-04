@@ -96,7 +96,11 @@ Error ServerDataBroker::ProcessRequest(std::string* response, const RequestInfo&
     }
     if (err != nullptr) {
         current_broker_uri_ = "";
-        return ConsumerErrorTemplates::kInterruptedTransaction.Generate("error processing request: " + err->Explain());
+        if (err == HttpErrorTemplates::kTransferError) {
+            return ConsumerErrorTemplates::kInterruptedTransaction.Generate("error processing request: " + err->Explain());
+        } else {
+            return ConsumerErrorTemplates::kUnavailableService.Generate("error processing request: " + err->Explain());
+        }
     }
     return ErrorFromServerResponce(*response, code);
 }
@@ -153,6 +157,7 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
     uint64_t elapsed_ms = 0;
     Error no_data_error;
     while (true) {
+        auto start = system_clock::now();
         auto err = GetBrokerUri();
         if (err == nullptr) {
             auto  ri = PrepareRequestInfo(request_api + request_suffix, dataset);
@@ -175,7 +180,7 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
             return no_data_error ? std::move(no_data_error) : std::move(err);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += 100;
+        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>( system_clock::now() - start).count();
     }
     return nullptr;
 }
@@ -278,6 +283,7 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Erro
     uint64_t elapsed_ms = 0;
     std::string response;
     while (elapsed_ms <= timeout_ms_) {
+        auto start = system_clock::now();
         *err = GetBrokerUri();
         if (*err == nullptr) {
             request.host = current_broker_uri_;
@@ -287,7 +293,7 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Erro
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += 100;
+        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>( system_clock::now() - start).count();
     }
     return "";
 }
