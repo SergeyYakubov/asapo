@@ -18,6 +18,12 @@ var listRoutes = utils.Routes{
 		routeGetSize,
 	},
 	utils.Route{
+		"GetSubstreams",
+		"Get",
+		"/database/{dbname}/{stream}/{substream}/substreams",
+		routeGetSubstreams,
+	},
+	utils.Route{
 		"GetLast",
 		"Get",
 		"/database/{dbname}/{stream}/{substream}/{groupid}/last",

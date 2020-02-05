@@ -983,6 +983,24 @@ TEST_F(ServerDataBrokerTests, GetDatasetByIdUsesCorrectUri) {
     data_broker->GetDatasetById(expected_dataset_id, expected_group_id, &err);
 }
 
+TEST_F(ServerDataBrokerTests, GetSubstreamListUsesCorrectUri) {
+    MockGetBrokerUri();
+
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/0/substreams"
+     + "?token="+ expected_token, _,
+                                        _)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return("{\"substreams\":[\"s1\",\"s2\"]}")));
+
+    asapo::Error err;
+    auto substreams = data_broker->GetSubstreamList(&err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(substreams.size(), Eq(2));
+    ASSERT_THAT(substreams, testing::ElementsAre("s1","s2"));
+
+}
+
 
 
 

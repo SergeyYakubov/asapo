@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "common/data_structs.h"
 #include "common/error.h"
@@ -25,6 +26,8 @@ class DataBroker {
     //! Set timeout for broker operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
 
+    //! Set list of substreams
+    virtual std::vector<std::string> GetSubstreamList(Error* err) = 0;
 
     //! Get current number of datasets
     /*!

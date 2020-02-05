@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,6 +26,10 @@ type ServiceRecord struct {
 	ID   int                    `json:"_id"`
 	Name string                 `json:"name"`
 	Meta map[string]interface{} `json:"meta"`
+}
+
+type SubstreamsRecord struct {
+	Substreams []string `bson:"substreams" json:"substreams"`
 }
 
 type LocationPointer struct {
@@ -456,7 +461,24 @@ func (db *Mongodb) queryImages(dbname string, collection_name string, query stri
 	} else {
 		return []byte("[]"), nil
 	}
+}
 
+func (db *Mongodb) getSubstreams(db_name string) ([]byte, error) {
+	database := db.client.Database(db_name)
+
+	result, err := database.ListCollectionNames(context.TODO(), bson.D{})
+	if err != nil {
+		return db.processQueryError("get substreams", db_name, err)
+	}
+
+	var rec SubstreamsRecord
+	for _, coll := range result {
+		if strings.HasPrefix(coll, data_collection_name_prefix) {
+			rec.Substreams = append(rec.Substreams, strings.TrimPrefix(coll, data_collection_name_prefix))
+		}
+	}
+	sort.Strings(rec.Substreams)
+	return json.Marshal(&rec)
 }
 
 func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
@@ -485,6 +507,8 @@ func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_
 		return db.getMeta(db_name, extra_param)
 	case "queryimages":
 		return db.queryImages(db_name, collection_name, extra_param)
+	case "substreams":
+		return db.getSubstreams(db_name)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

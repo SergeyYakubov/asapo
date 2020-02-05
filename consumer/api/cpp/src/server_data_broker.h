@@ -66,6 +66,8 @@ class ServerDataBroker final : public asapo::DataBroker {
 
     Error RetrieveData(FileInfo* info, FileData* data) override;
 
+    std::vector<std::string> GetSubstreamList(Error* err) override;
+
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<NetClient> net_client__;

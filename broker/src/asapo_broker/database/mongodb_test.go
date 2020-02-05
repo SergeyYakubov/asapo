@@ -564,3 +564,32 @@ func TestMongoDBGetDatasetID(t *testing.T) {
 	assert.Equal(t, rec_dataset1, res)
 
 }
+
+var testsSubstreams = []struct {
+	substreams SubstreamsRecord
+	test       string
+	ok         bool
+}{
+	{SubstreamsRecord{[]string{}}, "no substreams", false},
+	{SubstreamsRecord{[]string{"ss1"}}, "one substream", true},
+	{SubstreamsRecord{[]string{"ss1", "ss2"}}, "two substreams", true},
+}
+
+func TestMongoDBListSubstreams(t *testing.T) {
+	for _, test := range testsSubstreams {
+		db.Connect(dbaddress)
+		for _, stream := range test.substreams.Substreams {
+			db.insertRecord(dbname, stream, &rec1)
+		}
+		var rec_substreams_expect, _ = json.Marshal(test.substreams)
+		res, err := db.ProcessRequest(dbname, "0", "0", "substreams", "0")
+		if test.ok {
+			assert.Nil(t, err, test.test)
+			assert.Equal(t, string(rec_substreams_expect), string(res), test.test)
+		} else {
+			assert.NotNil(t, err, test.test)
+		}
+		cleanup()
+	}
+
+}
