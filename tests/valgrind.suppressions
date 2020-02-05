@@ -76,6 +76,12 @@
    fun:strlen
 }
 {
+   temp_ignore_strlen
+   Memcheck:Addr1
+   fun:strlen
+   ...
+}
+{
    temp_ignore_screate
    Memcheck:Leak
    ...
