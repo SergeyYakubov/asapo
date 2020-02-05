@@ -122,6 +122,28 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     images = broker->QueryImages("bla", &err);
     M_AssertTrue(err != nullptr, "query5");
     M_AssertTrue(images.size() == 0, "size of query answer 5");
+
+
+//streams
+
+    err = broker->GetNext(&fi, group_id,"stream1", nullptr);
+    if (err) {
+        std::cout << err->Explain() << std::endl;
+    }
+
+    M_AssertTrue(err == nullptr, "GetNext stream1 no error");
+    M_AssertTrue(fi.name == "11", "GetNext stream1 filename");
+
+    err = broker->GetNext(&fi, group_id,"stream2", nullptr);
+    M_AssertTrue(err == nullptr, "GetNext stream2 no error");
+    M_AssertTrue(fi.name == "21", "GetNext stream2 filename");
+
+    auto substreams = broker->GetSubstreamList(&err);
+    M_AssertTrue(err == nullptr, "GetSubstreamList no error");
+    M_AssertTrue(substreams.size() == 3, "substreams.size");
+    M_AssertTrue(substreams[0] == "default", "substreams.name1");
+    M_AssertTrue(substreams[1] == "stream1", "substreams.name2");
+    M_AssertTrue(substreams[2] == "stream2", "substreams.name3");
 }
 
 
