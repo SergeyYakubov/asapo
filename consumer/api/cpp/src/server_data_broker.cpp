@@ -27,7 +27,6 @@ Error ErrorFromNoDataResponse(const std::string& response) {
     if (response.find("get_record_by_id") != std::string::npos) {
         ConsumerErrorData data;
         auto parse_error = GetNoDataResponseFromJson(response, &data);
-        std::cout<<response<<std::endl;
         if (parse_error) {
             return ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response - " + response);
         }
@@ -336,7 +335,6 @@ Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id, 
     Error err;
     BrokerRequestWithTimeout(ri, &err);
     return err;
-    asapo::Error();
 }
 
 uint64_t ServerDataBroker::GetCurrentSize(std::string substream, Error* err) {
