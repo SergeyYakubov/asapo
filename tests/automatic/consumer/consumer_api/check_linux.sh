@@ -15,7 +15,7 @@ Cleanup() {
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop discovery
     nomad stop broker
-#	echo "db.dropDatabase()" | mongo ${database_name}
+    echo "db.dropDatabase()" | mongo ${database_name}
 	rm -f 1_1 1
 }
 
