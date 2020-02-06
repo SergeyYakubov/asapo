@@ -47,19 +47,20 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass DataBroker:
         DataBroker() except +
         void SetTimeout(uint64_t timeout_ms)
-        Error GetNext(FileInfo* info, string group_id, FileData* data)
-        Error GetLast(FileInfo* info, string group_id, FileData* data)
-        Error GetById(uint64_t id, FileInfo* info, string group_id, FileData* data)
-        uint64_t GetCurrentSize(Error* err)
-        Error SetLastReadMarker(uint64_t value, string group_id)
-        Error ResetLastReadMarker(string group_id)
+        Error GetNext(FileInfo* info, string group_id,string substream, FileData* data)
+        Error GetLast(FileInfo* info, string group_id,string substream, FileData* data)
+        Error GetById(uint64_t id, FileInfo* info, string group_id,string substream, FileData* data)
+        uint64_t GetCurrentSize(string substream, Error* err)
+        Error SetLastReadMarker(uint64_t value, string group_id,string substream)
+        Error ResetLastReadMarker(string group_id,string substream)
         string GenerateNewGroupId(Error* err)
         string GetBeamtimeMeta(Error* err)
-        FileInfos QueryImages(string query, Error* err)
-        DataSet GetNextDataset(string group_id, Error* err)
-        DataSet GetLastDataset(string group_id, Error* err)
-        DataSet GetDatasetById(uint64_t id,string group_id, Error* err)
+        FileInfos QueryImages(string query,string substream, Error* err)
+        DataSet GetNextDataset(string group_id,string substream, Error* err)
+        DataSet GetLastDataset(string group_id,string substream, Error* err)
+        DataSet GetDatasetById(uint64_t id,string group_id,string substream, Error* err)
         Error RetrieveData(FileInfo* info, FileData* data)
+        vector[string] GetSubstreamList(Error* err)
 
 
 cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
