@@ -3,7 +3,7 @@ configure_file(MANIFEST.in MANIFEST.in @ONLY)
 
 
 ADD_CUSTOM_TARGET(python-dist ALL
-        COMMAND python setup.py sdist
+        COMMAND ${Python_EXECUTABLE} setup.py sdist
         )
 
 #get_property(ASAPO_CONSUMER_LIB TARGET asapo-consumer PROPERTY LOCATION)
@@ -21,6 +21,6 @@ ADD_CUSTOM_TARGET(copy_python_dist ALL
         )
 
 
-ADD_DEPENDENCIES(copy_python_dist python-lib3)
+ADD_DEPENDENCIES(copy_python_dist python-lib)
 
 ADD_DEPENDENCIES(python-dist copy_python_dist)
