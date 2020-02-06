@@ -8,31 +8,37 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"GetNext",
 		"Get",
-		"/database/{dbname}/{stream}/{groupid}/next",
+		"/database/{dbname}/{stream}/{substream}/{groupid}/next",
 		routeGetNext,
 	},
 	utils.Route{
 		"GetSize",
 		"Get",
-		"/database/{dbname}/{stream}/size",
+		"/database/{dbname}/{stream}/{substream}/size",
 		routeGetSize,
+	},
+	utils.Route{
+		"GetSubstreams",
+		"Get",
+		"/database/{dbname}/{stream}/{substream}/substreams",
+		routeGetSubstreams,
 	},
 	utils.Route{
 		"GetLast",
 		"Get",
-		"/database/{dbname}/{stream}/{groupid}/last",
+		"/database/{dbname}/{stream}/{substream}/{groupid}/last",
 		routeGetLast,
 	},
 	utils.Route{
 		"GetID",
 		"Get",
-		"/database/{dbname}/{stream}/{groupid}/{id}",
+		"/database/{dbname}/{stream}/{substream}/{groupid}/{id}",
 		routeGetByID,
 	},
 	utils.Route{
 		"GetMeta",
 		"Get",
-		"/database/{dbname}/{stream}/0/meta/{id}",
+		"/database/{dbname}/{stream}/{substream}/0/meta/{id}",
 		routeGetMeta,
 	},
 	utils.Route{
@@ -44,13 +50,13 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"QueryImages",
 		"Post",
-		"/database/{dbname}/{stream}/0/queryimages",
+		"/database/{dbname}/{stream}/{substream}/0/queryimages",
 		routeQueryImages,
 	},
 	utils.Route{
 		"ResetConter",
 		"Post",
-		"/database/{dbname}/{stream}/{groupid}/resetcounter",
+		"/database/{dbname}/{stream}/{substream}/{groupid}/resetcounter",
 		routeResetCounter,
 	},
 	utils.Route{

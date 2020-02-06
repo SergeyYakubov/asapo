@@ -16,7 +16,7 @@ class RequestFactory {
     RequestHandlerFileWrite request_handler_filewrite_;
     RequestHandlerReceiveData request_handler_receivedata_;
     RequestHandlerReceiveMetaData request_handler_receive_metadata_;
-    RequestHandlerDbWrite request_handler_dbwrite_{kDBDataCollectionName};
+    RequestHandlerDbWrite request_handler_dbwrite_{kDBDataCollectionNamePrefix};
     RequestHandlerDbMetaWrite request_handler_db_meta_write_{kDBMetaCollectionName};
     RequestHandlerAuthorize request_handler_authorize_;
     RequestHandlerFileReceive request_handler_filereceive_;

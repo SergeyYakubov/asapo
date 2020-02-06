@@ -83,6 +83,10 @@ std::string Request::GetFileName() const {
     return orig_name;
 }
 
+std::string Request::GetSubstream() const {
+    return request_header_.substream;
+}
+
 const std::string& Request::GetOriginUri() const {
     return origin_uri_;
 }

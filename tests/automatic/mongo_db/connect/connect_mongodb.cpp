@@ -39,11 +39,11 @@ int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
     asapo::MongoDBClient db;
 
-    auto err = db.Connect(args.address, args.database_name, args.collection_name);
+    auto err = db.Connect(args.address, args.database_name);
     Assert(err, args.keyword);
 
     if (err == nullptr) {
-        err = db.Connect(args.address, args.database_name, args.collection_name);
+        err = db.Connect(args.address, args.database_name);
         Assert(err, asapo::DBErrorTemplates::kAlreadyConnected.Generate()->Explain());
     }
     return 0;

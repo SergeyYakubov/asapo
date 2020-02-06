@@ -62,8 +62,9 @@ TEST(DbWriterHandler, Constructor) {
 
 class DbWriterHandlerTests : public Test {
   public:
-    std::string expected_collection_name = asapo::kDBDataCollectionName;
-    RequestHandlerDbWrite handler{expected_collection_name};
+    std::string expected_substream = "substream";
+    std::string expected_collection_name = std::string(asapo::kDBDataCollectionNamePrefix) + "_" + expected_substream;
+    RequestHandlerDbWrite handler{asapo::kDBDataCollectionNamePrefix};
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
     NiceMock<asapo::MockLogger> mock_logger;
@@ -134,7 +135,7 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     std::string db_name = expected_beamtime_id;
     db_name += "_" + stream;
 
-    EXPECT_CALL(mock_db, Connect_t(config.database_uri, db_name, expected_collection_name)).
+    EXPECT_CALL(mock_db, Connect_t(config.database_uri, db_name)).
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(*mock_request, GetDataSize())
@@ -144,6 +145,11 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     EXPECT_CALL(*mock_request, GetFileName())
     .WillOnce(Return(expected_file_name))
     ;
+
+    EXPECT_CALL(*mock_request, GetSubstream())
+    .WillOnce(Return(expected_substream))
+    ;
+
 
     EXPECT_CALL(*mock_request, GetMetaData())
     .WillOnce(ReturnRef(expected_metadata))
@@ -183,7 +189,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_stream);
     auto file_info = PrepareFileInfo();
 
-    EXPECT_CALL(mock_db, Insert_t(CompareFileInfo(file_info), _)).
+    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareFileInfo(file_info), _)).
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
@@ -204,7 +210,8 @@ TEST_F(DbWriterHandlerTests, CallsInsertSubset) {
     auto file_info = PrepareFileInfo();
 
 
-    EXPECT_CALL(mock_db, InsertAsSubset_t(CompareFileInfo(file_info), expected_subset_id, expected_subset_size, _)).
+    EXPECT_CALL(mock_db, InsertAsSubset_t(expected_collection_name, CompareFileInfo(file_info), expected_subset_id,
+                                          expected_subset_size, _)).
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),

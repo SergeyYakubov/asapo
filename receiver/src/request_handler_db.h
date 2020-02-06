@@ -13,7 +13,7 @@ namespace asapo {
 class RequestHandlerDb : public ReceiverRequestHandler {
   public:
     RequestHandlerDb() = delete;
-    RequestHandlerDb(std::string collection_name);
+    RequestHandlerDb(std::string collection_name_prefix);
     StatisticEntity GetStatisticEntity() const override;
     Error ProcessRequest(Request* request) const override;
     std::unique_ptr<Database> db_client__;
@@ -23,7 +23,7 @@ class RequestHandlerDb : public ReceiverRequestHandler {
     Error ConnectToDbIfNeeded() const;
     mutable bool connected_to_db = false;
     mutable std::string db_name_;
-    std::string collection_name_;
+    std::string collection_name_prefix_;
   private:
     Error GetDatabaseServerUri(std::string* uri) const ;
 };

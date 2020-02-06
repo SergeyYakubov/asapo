@@ -33,10 +33,10 @@ func TestGetMetaTestSuite(t *testing.T) {
 }
 
 func (suite *GetMetaTestSuite) TestGetMetaOK() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, "", "meta", "0").Return([]byte("{\"test\":10}"), nil)
+	suite.mock_db.On("ProcessRequest", expectedDBName, "default", "", "meta", "0").Return([]byte("{\"test\":10}"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request meta")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/0/meta/0" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/default/0/meta/0" + correctTokenSuffix)
 	suite.Equal(http.StatusOK, w.Code, "GetSize OK")
 	suite.Equal("{\"test\":10}", string(w.Body.Bytes()), "GetMeta sends meta")
 }

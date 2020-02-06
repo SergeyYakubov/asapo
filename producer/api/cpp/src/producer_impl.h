@@ -19,6 +19,8 @@ class ProducerImpl : public Producer {
     std::unique_ptr<RequestHandlerFactory> request_handler_factory_;
   public:
     static const size_t kDiscoveryServiceUpdateFrequencyMs;
+    static const std::string kFinishSubStreamKeyword;
+    static const std::string kNoNextSubStreamKeyword;
 
     explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads, asapo::RequestHandlerType type);
     ProducerImpl(const ProducerImpl&) = delete;
@@ -30,9 +32,20 @@ class ProducerImpl : public Producer {
     Error SendData(const EventHeader& event_header, FileData data, uint64_t ingest_mode, RequestCallback callback) override;
     Error SendData__(const EventHeader& event_header, void* data , uint64_t ingest_mode,
                      RequestCallback callback) override;
+    Error SendData(const EventHeader& event_header, std::string substream, FileData data, uint64_t ingest_mode,
+                   RequestCallback callback) override;
+    Error SendData__(const EventHeader& event_header, std::string substream, void* data , uint64_t ingest_mode,
+                     RequestCallback callback) override;
     void StopThreads__() override;
     Error SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,
                    RequestCallback callback) override;
+    Error SendFile(const EventHeader& event_header, std::string substream, std::string full_path, uint64_t ingest_mode,
+                   RequestCallback callback) override;
+
+    Error SendSubstreamFinishedFlag(std::string substream, uint64_t last_id, std::string next_substream,
+                                    RequestCallback callback) override;
+
+
     AbstractLogger* log__;
     std::unique_ptr<RequestPool> request_pool__;
 
@@ -43,9 +56,11 @@ class ProducerImpl : public Producer {
     Error WaitRequestsFinished(uint64_t timeout_ms) override;
 
   private:
-    Error Send(const EventHeader& event_header, FileData data, std::string full_path, uint64_t ingest_mode,
+    Error Send(const EventHeader& event_header, std::string substream, FileData data, std::string full_path,
+               uint64_t ingest_mode,
                RequestCallback callback, bool manage_data_memory);
-    GenericRequestHeader GenerateNextSendRequest(const EventHeader& event_header, uint64_t ingest_mode);
+    GenericRequestHeader GenerateNextSendRequest(const EventHeader& event_header, std::string substream,
+                                                 uint64_t ingest_mode);
     std::string source_cred_string_;
 };
 

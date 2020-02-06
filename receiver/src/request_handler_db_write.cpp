@@ -28,21 +28,22 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
     auto file_info = PrepareFileInfo(request);
 
     auto op_code = request->GetOpCode();
+    auto col_name = collection_name_prefix_ + "_" + request->GetSubstream();
     Error err;
     if (op_code == Opcode::kOpcodeTransferData) {
-        err =  db_client__->Insert(file_info, true);
+        err =  db_client__->Insert(col_name, file_info, true);
         if (!err) {
-            log__->Debug(std::string{"insert record id "} + std::to_string(file_info.id) + " to " + collection_name_ + " in " +
+            log__->Debug(std::string{"insert record id "} + std::to_string(file_info.id) + " to " + col_name + " in " +
                          db_name_ +
                          " at " + GetReceiverConfig()->database_uri);
         }
     } else {
         auto subset_id = request->GetCustomData()[1];
         auto subset_size = request->GetCustomData()[2];
-        err =  db_client__->InsertAsSubset(file_info, subset_id, subset_size, true);
+        err =  db_client__->InsertAsSubset(col_name, file_info, subset_id, subset_size, true);
         if (!err) {
             log__->Debug(std::string{"insert record as subset id "} + std::to_string(subset_id) + ", id: " +
-                         std::to_string(file_info.id) + " to " + collection_name_ + " in " +
+                         std::to_string(file_info.id) + " to " + col_name + " in " +
                          db_name_ +
                          " at " + GetReceiverConfig()->database_uri);
         }
@@ -61,8 +62,8 @@ FileInfo RequestHandlerDbWrite::PrepareFileInfo(const Request* request) const {
     file_info.metadata = request->GetMetaData();
     return file_info;
 }
-RequestHandlerDbWrite::RequestHandlerDbWrite(std::string collection_name) : RequestHandlerDb(std::move(
-                collection_name)) {
+RequestHandlerDbWrite::RequestHandlerDbWrite(std::string collection_name_prefix) : RequestHandlerDb(std::move(
+                collection_name_prefix)) {
 
 }
 

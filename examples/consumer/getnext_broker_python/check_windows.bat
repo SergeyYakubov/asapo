@@ -13,7 +13,7 @@ c:\opt\consul\nomad run nginx.nmd
 
 ping 1.0.0.0 -n 10 -w 100 > nul
 
-for /l %%x in (1, 1, 3) do echo db.data.insert({"_id":%%x,"size":100,"name":"%%x","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
+for /l %%x in (1, 1, 3) do echo db.data_default.insert({"_id":%%x,"size":100,"name":"%%x","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
 
 echo db.meta.insert({"_id":0,"meta_test":"test"}) | %mongo_exe% %database_name%  || goto :error

@@ -30,33 +30,61 @@ class ServerDataBroker final : public asapo::DataBroker {
   public:
     explicit ServerDataBroker(std::string server_uri, std::string source_path, SourceCredentials source);
     Error ResetLastReadMarker(std::string group_id) override;
+    Error ResetLastReadMarker(std::string group_id, std::string substream) override;
+
     Error SetLastReadMarker(uint64_t value, std::string group_id) override;
+    Error SetLastReadMarker(uint64_t value, std::string group_id, std::string substream) override;
+
     Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
+    Error GetNext(FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
+
     Error GetLast(FileInfo* info, std::string group_id, FileData* data) override;
+    Error GetLast(FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
+
     std::string GenerateNewGroupId(Error* err) override;
     std::string GetBeamtimeMeta(Error* err) override;
+
     uint64_t GetCurrentSize(Error* err) override;
+    uint64_t GetCurrentSize(std::string substream, Error* err) override;
+
+
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
+    Error GetById(uint64_t id, FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
+
     void SetTimeout(uint64_t timeout_ms) override;
     FileInfos QueryImages(std::string query, Error* err) override;
+    FileInfos QueryImages(std::string query, std::string substream, Error* err) override;
+
     DataSet GetNextDataset(std::string group_id, Error* err) override;
+    DataSet GetNextDataset(std::string group_id, std::string substream, Error* err) override;
+
     DataSet GetLastDataset(std::string group_id, Error* err) override;
+    DataSet GetLastDataset(std::string group_id, std::string substream, Error* err) override;
+
     DataSet GetDatasetById(uint64_t id, std::string group_id, Error* err) override;
+    DataSet GetDatasetById(uint64_t id, std::string group_id, std::string substream, Error* err) override;
+
     Error RetrieveData(FileInfo* info, FileData* data) override;
+
+    std::vector<std::string> GetSubstreamList(Error* err) override;
 
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<NetClient> net_client__;
   private:
     std::string RequestWithToken(std::string uri);
-    Error GetRecordFromServer(std::string* info, std::string group_id, GetImageServerOperation op, bool dataset = false);
-    Error GetRecordFromServerById(uint64_t id, std::string* info, std::string group_id, bool dataset = false);
+    Error GetRecordFromServer(std::string* info, std::string group_id, std::string substream, GetImageServerOperation op,
+                              bool dataset = false);
+    Error GetRecordFromServerById(uint64_t id, std::string* info, std::string group_id, std::string substream,
+                                  bool dataset = false);
     Error GetDataIfNeeded(FileInfo* info, FileData* data);
     Error GetBrokerUri();
     bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* redirect_uri);
     Error ProcessRequest(std::string* response, const RequestInfo& request);
-    Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, FileInfo* info, FileData* data);
-    DataSet GetDatasetFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, Error* err);
+    Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string substream,
+                             FileInfo* info, FileData* data);
+    DataSet GetDatasetFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string substream,
+                                 Error* err);
     bool DataCanBeInBuffer(const FileInfo* info);
     Error TryGetDataFromBuffer(const FileInfo* info, FileData* data);
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);

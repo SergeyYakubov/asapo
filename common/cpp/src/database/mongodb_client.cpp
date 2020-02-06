@@ -40,19 +40,27 @@ Error MongoDBClient::InitializeClient(const string& address) {
     if (client_ == nullptr) {
         return DBErrorTemplates::kBadAddress.Generate();
     }
-    return nullptr;
-
-}
-
-void MongoDBClient::InitializeCollection(const string& database_name,
-                                         const string& collection_name) {
-    collection_ = mongoc_client_get_collection (client_, database_name.c_str(),
-                                                collection_name.c_str());
 
     write_concern_ = mongoc_write_concern_new ();
     mongoc_write_concern_set_w (write_concern_, MONGOC_WRITE_CONCERN_W_DEFAULT);
     mongoc_write_concern_set_journal (write_concern_, true);
-    mongoc_collection_set_write_concern (collection_, write_concern_);
+
+    return nullptr;
+
+}
+
+void MongoDBClient::UpdateCurrentCollectionIfNeeded(const string& collection_name) const {
+    if (collection_name == current_collection_name_) {
+        return;
+    }
+    if (current_collection_ != nullptr) {
+        mongoc_collection_destroy (current_collection_);
+    }
+
+    current_collection_ = mongoc_client_get_collection (client_, database_name_.c_str(),
+                          collection_name.c_str());
+    current_collection_name_ = collection_name;
+    mongoc_collection_set_write_concern (current_collection_, write_concern_);
 }
 
 Error MongoDBClient::TryConnectDatabase() {
@@ -63,8 +71,7 @@ Error MongoDBClient::TryConnectDatabase() {
     return err;
 }
 
-Error MongoDBClient::Connect(const string& address, const string& database_name,
-                             const string& collection_name) {
+Error MongoDBClient::Connect(const string& address, const string& database_name) {
     if (connected_) {
         return DBErrorTemplates::kAlreadyConnected.Generate();
     }
@@ -74,7 +81,7 @@ Error MongoDBClient::Connect(const string& address, const string& database_name,
         return err;
     }
 
-    InitializeCollection(database_name, collection_name);
+    database_name_ = std::move(database_name);
 
     err = TryConnectDatabase();
     if (err) {
@@ -88,9 +95,15 @@ string MongoDBClient::DBAddress(const string& address) const {
 }
 
 void MongoDBClient::CleanUp() {
-    mongoc_write_concern_destroy(write_concern_);
-    mongoc_collection_destroy (collection_);
-    mongoc_client_destroy (client_);
+    if (write_concern_) {
+        mongoc_write_concern_destroy(write_concern_);
+    }
+    if (current_collection_) {
+        mongoc_collection_destroy (current_collection_);
+    }
+    if (client_) {
+        mongoc_client_destroy (client_);
+    }
 }
 
 bson_p PrepareBsonDocument(const FileInfo& file, Error* err) {
@@ -128,7 +141,7 @@ bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, Error* err) {
 
 Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const {
     bson_error_t mongo_err;
-    if (!mongoc_collection_insert_one(collection_, document.get(), NULL, NULL, &mongo_err)) {
+    if (!mongoc_collection_insert_one(current_collection_, document.get(), NULL, NULL, &mongo_err)) {
         if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
             return ignore_duplicates ? nullptr : DBErrorTemplates::kDuplicateID.Generate();
         }
@@ -147,7 +160,7 @@ Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p& document, boo
 
     Error err = nullptr;
 
-    if (!mongoc_collection_replace_one(collection_, selector, document.get(), opts, NULL, &mongo_err)) {
+    if (!mongoc_collection_replace_one(current_collection_, selector, document.get(), opts, NULL, &mongo_err)) {
         err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
     }
 
@@ -158,10 +171,12 @@ Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p& document, boo
 }
 
 
-Error MongoDBClient::Insert(const FileInfo& file, bool ignore_duplicates) const {
+Error MongoDBClient::Insert(const std::string& collection, const FileInfo& file, bool ignore_duplicates) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
+
+    UpdateCurrentCollectionIfNeeded(collection);
 
     Error err;
     auto document = PrepareBsonDocument(file, &err);
@@ -180,10 +195,12 @@ MongoDBClient::~MongoDBClient() {
     CleanUp();
 }
 
-Error MongoDBClient::Upsert(uint64_t id, const uint8_t* data, uint64_t size) const {
+Error MongoDBClient::Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
+
+    UpdateCurrentCollectionIfNeeded(collection);
 
     Error err;
     auto document = PrepareBsonDocument(data, (ssize_t) size, &err);
@@ -205,9 +222,9 @@ Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool 
     bson_error_t mongo_err;
 // first update may fail due to multiple threads try to create document at once, the second one should succeed
 // https://jira.mongodb.org/browse/SERVER-14322
-    if (!mongoc_collection_update (collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
+    if (!mongoc_collection_update (current_collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
         if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
-            if (!mongoc_collection_update (collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
+            if (!mongoc_collection_update (current_collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
                 if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
                     err =  ignore_duplicates ? nullptr : DBErrorTemplates::kDuplicateID.Generate();
                 } else {
@@ -223,13 +240,15 @@ Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool 
 
 
 
-Error MongoDBClient::InsertAsSubset(const FileInfo& file,
+Error MongoDBClient::InsertAsSubset(const std::string& collection, const FileInfo& file,
                                     uint64_t subset_id,
                                     uint64_t subset_size,
                                     bool ignore_duplicates) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
+
+    UpdateCurrentCollectionIfNeeded(collection);
 
     Error err;
     auto document = PrepareBsonDocument(file, &err);

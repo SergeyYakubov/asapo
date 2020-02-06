@@ -9,6 +9,7 @@ namespace asapo {
 enum class ConsumerErrorType {
     kNoData,
     kEndOfStream,
+    kStreamFinished,
     kUnavailableService,
     kInterruptedTransaction,
     kLocalIOError,
@@ -22,6 +23,7 @@ class ConsumerErrorData : public CustomErrorData {
   public:
     uint64_t id;
     uint64_t id_max;
+    std::string next_substream;
 };
 
 
@@ -29,6 +31,10 @@ namespace ConsumerErrorTemplates {
 
 auto const kLocalIOError = ConsumerErrorTemplate{
     "local i/o error", ConsumerErrorType::kLocalIOError
+};
+
+auto const kStreamFinished = ConsumerErrorTemplate{
+    "stream finished", ConsumerErrorType::kStreamFinished
 };
 
 auto const kEndOfStream = ConsumerErrorTemplate{

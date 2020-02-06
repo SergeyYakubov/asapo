@@ -27,7 +27,7 @@ c:\opt\consul\nomad run authorizer.nmd
 
 ping 1.0.0.0 -n 10 -w 100 > nul
 
-for /l %%x in (1, 1, 3) do echo db.data.insert({"_id":%%x,"size":6,"name":"file%%x","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %indatabase_name%  || goto :error
+for /l %%x in (1, 1, 3) do echo db.data_default.insert({"_id":%%x,"size":6,"name":"file%%x","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %indatabase_name%  || goto :error
 
 mkdir %receiver_folder%
 
@@ -41,7 +41,7 @@ type out
 findstr /I /L /C:"Processed 3 file(s)" out || goto :error
 findstr /I /L /C:"Sent 3 file(s)" out || goto :error
 
-echo db.data.find({"_id":1}) | %mongo_exe% %outdatabase_name% | findstr  /c:"file1_%stream_out%"  || goto :error
+echo db.data_default.find({"_id":1}) | %mongo_exe% %outdatabase_name% | findstr  /c:"file1_%stream_out%"  || goto :error
 
 findstr /I /L /C:"hello1" %receiver_folder%\file1_%stream_out% || goto :error
 findstr /I /L /C:"hello2" %receiver_folder%\file2_%stream_out% || goto :error
@@ -54,7 +54,7 @@ findstr /I /L /C:"Processed 3 file(s)" out2 || goto :error
 findstr /I /L /C:"Sent 3 file(s)" out2 || goto :error
 
 
-echo db.data.find({"_id":1}) | %mongo_exe% %outdatabase_name2% | findstr /c:".\\\\file1" || goto :error
+echo db.data_default.find({"_id":1}) | %mongo_exe% %outdatabase_name2% | findstr /c:".\\\\file1" || goto :error
 
 
 goto :clean

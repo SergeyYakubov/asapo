@@ -17,6 +17,7 @@ def assert_metaname(meta,compare,name):
         sys.exit(1)
 
 def assert_usermetadata(meta,name):
+    print ("asserting usermetadata for "+name)
     if meta['meta']['test'] != 10:
         print ('meta: ', json.dumps(meta, indent=4, sort_keys=True))
         print ("error at "+name)
@@ -29,16 +30,6 @@ def assert_eq(val,expected,name):
         print ("error at "+name)
         print ('val: ', val,' expected: ',expected)
         sys.exit(1)
-
-
-def check_broker_server_error(broker,group_id_new):
-    try:
-        broker.get_last(group_id_new, meta_only=True)
-    except asapo_consumer.AsapoUnavailableServiceError as err:
-        print(err)
-        pass
-    else:
-        exit_on_noerr("AsapoBrokerServerError")
 
 def check_single(broker,group_id_new):
 
@@ -108,7 +99,6 @@ def check_single(broker,group_id_new):
     else:
         exit_on_noerr("wrong input")
 
-
     try:
         broker.get_last(group_id_new, meta_only=False)
     except asapo_consumer.AsapoLocalIOError as err:
@@ -116,6 +106,18 @@ def check_single(broker,group_id_new):
         pass
     else:
         exit_on_noerr("io error")
+
+    _, meta = broker.get_next(group_id_new,"stream1", meta_only=True)
+    assert_metaname(meta,"11","get next stream1")
+
+    _, meta = broker.get_next(group_id_new,"stream2", meta_only=True)
+    assert_metaname(meta,"21","get next stream2")
+
+    substreams = broker.get_substream_list()
+    assert_eq(len(substreams),3,"number of substreams")
+    assert_eq(substreams[0],"default","substreams_name1")
+    assert_eq(substreams[1],"stream1","substreams_name2")
+    assert_eq(substreams[2],"stream2","substreams_name3")
 
     images = broker.query_images("meta.test = 10")
     assert_eq(len(images),5,"size of query answer 1")
@@ -157,7 +159,6 @@ def check_dataset(broker,group_id_new):
 
     broker.set_timeout(1000)
 
-
     data = broker.retrieve_data(metas[0])
     assert_eq(data.tostring().decode("utf-8"),"hello1","retrieve_data from dataset data")
 
@@ -194,10 +195,6 @@ source, path, beamtime, token, mode = sys.argv[1:]
 broker = asapo_consumer.create_server_broker(source,path, beamtime,"",token,60000)
 
 group_id_new = broker.generate_group_id()
-
-if mode == "broker_server_error":
-    check_broker_server_error(broker,group_id_new)
-
 
 if mode == "single":
     check_single(broker,group_id_new)

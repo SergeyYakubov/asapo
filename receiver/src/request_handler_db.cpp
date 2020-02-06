@@ -16,9 +16,9 @@ Error RequestHandlerDb::ProcessRequest(Request* request) const {
     return ConnectToDbIfNeeded();
 }
 
-RequestHandlerDb::RequestHandlerDb(std::string collection_name): log__{GetDefaultReceiverLogger()},
+RequestHandlerDb::RequestHandlerDb(std::string collection_name_prefix): log__{GetDefaultReceiverLogger()},
     http_client__{DefaultHttpClient()},
-    collection_name_{std::move(collection_name)} {
+    collection_name_prefix_{std::move(collection_name_prefix)} {
     DatabaseFactory factory;
     Error err;
     db_client__ = factory.Create(&err);
@@ -64,7 +64,7 @@ Error RequestHandlerDb::ConnectToDbIfNeeded() const {
         if (err) {
             return err;
         }
-        err = db_client__->Connect(uri, db_name_, collection_name_);
+        err = db_client__->Connect(uri, db_name_);
         if (err) {
             return ReceiverErrorTemplates::kInternalServerError.Generate("error connecting to database " + err->Explain());
         }

@@ -28,15 +28,16 @@ using ::testing::HasSubstr;
 using asapo::RequestPool;
 using asapo::ProducerRequest;
 
-MATCHER_P10(M_CheckSendDataRequest, op_code, source_credentials, metadata, file_id, file_size, message, ingest_mode,
+MATCHER_P10(M_CheckSendDataRequest, op_code, source_credentials, metadata, file_id, file_size, message, substream,
+            ingest_mode,
             subset_id,
-            subset_size, manage_data_memory,
+            subset_size,
             "Checks if a valid GenericRequestHeader was Send") {
     auto request = static_cast<ProducerRequest*>(arg);
     return ((asapo::GenericRequestHeader) (arg->header)).op_code == op_code
            && ((asapo::GenericRequestHeader) (arg->header)).data_id == file_id
            && ((asapo::GenericRequestHeader) (arg->header)).data_size == uint64_t(file_size)
-           && request->manage_data_memory == manage_data_memory
+           && request->manage_data_memory == true
            && request->source_credentials == source_credentials
            && request->metadata == metadata
            && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader) (arg->header)).custom_data[1]
@@ -44,7 +45,8 @@ MATCHER_P10(M_CheckSendDataRequest, op_code, source_credentials, metadata, file_
            && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader) (arg->header)).custom_data[2]
                == uint64_t(subset_size) : true)
            && ((asapo::GenericRequestHeader) (arg->header)).custom_data[asapo::kPosIngestMode] == uint64_t(ingest_mode)
-           && strcmp(((asapo::GenericRequestHeader) (arg->header)).message, message) == 0;
+           && strcmp(((asapo::GenericRequestHeader) (arg->header)).message, message) == 0
+           && strcmp(((asapo::GenericRequestHeader) (arg->header)).substream, substream) == 0;
 }
 
 TEST(ProducerImpl, Constructor) {
@@ -67,6 +69,9 @@ class ProducerImplTests : public testing::Test {
     uint64_t expected_ingest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
 
     char expected_name[asapo::kMaxMessageSize] = "test_name";
+    char expected_substream[asapo::kMaxMessageSize] = "test_substream";
+    std::string expected_next_substream = "next_substream";
+
     asapo::SourceCredentials expected_credentials{
         "beamtime_id", "subname", "token"
     };
@@ -164,12 +169,10 @@ TEST_F(ProducerImplTests, UsesDefaultStream) {
                                         expected_id,
                                         expected_size,
                                         expected_name,
+                                        asapo::kDefaultSubstream.c_str(),
                                         expected_ingest_mode,
                                         0,
-                                        0,
-                                        expected_managed_memory
-                                                              ))).WillOnce(Return(
-                                                                      nullptr));
+                                        0))).WillOnce(Return(nullptr));
 
     asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_metadata};
     auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
@@ -186,11 +189,12 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
                                         expected_id,
                                         expected_size,
                                         expected_name,
+                                        asapo::kDefaultSubstream.c_str(),
                                         expected_ingest_mode,
                                         0,
-                                        0,
-                                        expected_managed_memory))).WillOnce(Return(
-                                                    nullptr));
+                                        0
+                                                              ))).WillOnce(Return(
+                                                                      nullptr));
 
     asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_metadata};
     auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
@@ -198,7 +202,7 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-TEST_F(ProducerImplTests, OKSendingSendDataRequesUnmanagedMemory) {
+TEST_F(ProducerImplTests, OKSendingSendDataRequestWithSubstream) {
     producer.SetCredentials(expected_credentials);
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
@@ -207,26 +211,77 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequesUnmanagedMemory) {
                                         expected_id,
                                         expected_size,
                                         expected_name,
+                                        expected_substream,
                                         expected_ingest_mode,
                                         0,
-                                        0,
-                                        expected_unmanaged_memory
+                                        0
                                                               ))).WillOnce(Return(
                                                                       nullptr));
 
     asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_metadata};
-    auto err = producer.SendData__(event_header, nullptr, expected_ingest_mode, nullptr);
+    auto err = producer.SendData(event_header, expected_substream, nullptr, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
+
+TEST_F(ProducerImplTests, OKSendingSubstreamFinish) {
+    producer.SetCredentials(expected_credentials);
+
+    std::string next_stream_meta = std::string("{\"next_substream\":") + "\"" + expected_next_substream + "\"}";
+
+
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+                                        expected_credentials_str,
+                                        next_stream_meta.c_str(),
+                                        expected_id + 1,
+                                        0,
+                                        asapo::ProducerImpl::kFinishSubStreamKeyword.c_str(),
+                                        expected_substream,
+                                        asapo::IngestModeFlags::kTransferMetaDataOnly,
+                                        0,
+                                        0
+                                                              ))).WillOnce(Return(
+                                                                      nullptr));
+
+    auto err = producer.SendSubstreamFinishedFlag(expected_substream, expected_id, expected_next_substream, nullptr);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(ProducerImplTests, OKSendingSubstreamFinishWithNoNextStream) {
+    producer.SetCredentials(expected_credentials);
+
+    std::string next_stream_meta = std::string("{\"next_substream\":") + "\"" + asapo::ProducerImpl::kNoNextSubStreamKeyword
+                                   + "\"}";
+
+
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+                                        expected_credentials_str,
+                                        next_stream_meta.c_str(),
+                                        expected_id + 1,
+                                        0,
+                                        asapo::ProducerImpl::kFinishSubStreamKeyword.c_str(),
+                                        expected_substream,
+                                        asapo::IngestModeFlags::kTransferMetaDataOnly,
+                                        0,
+                                        0
+                                                              ))).WillOnce(Return(
+                                                                      nullptr));
+
+    auto err = producer.SendSubstreamFinishedFlag(expected_substream, expected_id, "", nullptr);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
 
 TEST_F(ProducerImplTests, OKSendingSendSubsetDataRequest) {
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferSubsetData,
                                         expected_credentials_str, expected_metadata,
-                                        expected_id, expected_size, expected_name,
+                                        expected_id, expected_size, expected_name, asapo::kDefaultSubstream.c_str(),
                                         expected_ingest_mode,
-                                        expected_subset_id, expected_subset_size, expected_managed_memory))).WillOnce(
+                                        expected_subset_id, expected_subset_size))).WillOnce(
                                             Return(
                                                 nullptr));
 
@@ -250,9 +305,10 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
                                         expected_id,
                                         expected_size,
                                         "beamtime_global.meta",
+                                        "",
                                         expected_ingest_mode,
                                         10,
-                                        10, expected_managed_memory))).WillOnce(Return(
+                                        10))).WillOnce(Return(
                                                     nullptr));
 
     auto err = producer.SendMetaData(expected_metadata, nullptr);
@@ -296,13 +352,35 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
                                         expected_id,
                                         0,
                                         expected_name,
+                                        asapo::kDefaultSubstream.c_str(),
                                         expected_ingest_mode,
                                         0,
-                                        0, expected_managed_memory))).WillOnce(Return(
-                                                    nullptr));
+                                        0))).WillOnce(Return(
+                                                nullptr));
 
     asapo::EventHeader event_header{expected_id, 0, expected_name};
     auto err = producer.SendFile(event_header, expected_fullpath, expected_ingest_mode, nullptr);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(ProducerImplTests, OKSendingSendFileRequestWithSubstream) {
+    producer.SetCredentials(expected_credentials);
+
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+                                        expected_credentials_str,
+                                        "",
+                                        expected_id,
+                                        0,
+                                        expected_name,
+                                        expected_substream,
+                                        expected_ingest_mode,
+                                        0,
+                                        0))).WillOnce(Return(
+                                                nullptr));
+
+    asapo::EventHeader event_header{expected_id, 0, expected_name};
+    auto err = producer.SendFile(event_header, expected_substream, expected_fullpath, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }

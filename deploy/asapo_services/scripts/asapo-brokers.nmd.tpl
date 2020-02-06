@@ -1,8 +1,8 @@
 job "asapo-brokers" {
   datacenters = ["dc1"]
   affinity {
-    attribute = "$${meta.asapo_service}"
-    value     = "false"
+    attribute = "$${meta.node_group}"
+    value     = "blprx"
     weight    = 100
   }
 

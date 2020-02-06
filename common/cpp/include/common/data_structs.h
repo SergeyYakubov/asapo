@@ -64,6 +64,7 @@ enum IngestModeFlags : uint64_t {
 
 const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem;
 
+const std::string kDefaultSubstream = "default";
 
 
 }

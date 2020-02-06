@@ -36,23 +36,23 @@ using bson_p = std::unique_ptr<_bson_t, BsonDestroyFunctor>;
 class MongoDBClient final : public Database {
   public:
     MongoDBClient();
-    Error Connect(const std::string& address, const std::string& database,
-                  const std::string& collection) override;
-    Error Insert(const FileInfo& file, bool ignore_duplicates) const override;
-    Error InsertAsSubset(const FileInfo& file, uint64_t subset_id, uint64_t subset_size,
+    Error Connect(const std::string& address, const std::string& database) override;
+    Error Insert(const std::string& collection, const FileInfo& file, bool ignore_duplicates) const override;
+    Error InsertAsSubset(const std::string& collection, const FileInfo& file, uint64_t subset_id, uint64_t subset_size,
                          bool ignore_duplicates) const override;
-    Error Upsert(uint64_t id, const uint8_t* data, uint64_t size) const override;
+    Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const override;
     ~MongoDBClient() override;
   private:
     mongoc_client_t* client_{nullptr};
-    mongoc_collection_t* collection_{nullptr};
-    mongoc_write_concern_t* write_concern_;
+    mutable mongoc_collection_t* current_collection_{nullptr};
+    mutable std::string current_collection_name_;
+    std::string database_name_;
+    mongoc_write_concern_t* write_concern_{nullptr};
     bool connected_{false};
     void CleanUp();
     std::string DBAddress(const std::string& address) const;
     Error InitializeClient(const std::string& address);
-    void InitializeCollection(const std::string& database_name,
-                              const std::string& collection_name);
+    void UpdateCurrentCollectionIfNeeded(const std::string& collection_name) const ;
     Error Ping();
     Error TryConnectDatabase();
     Error InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const;

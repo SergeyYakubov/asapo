@@ -1,0 +1,22 @@
+rm *.rpm
+cmake .
+cmake .
+make package
+rm *.cmake
+rm -rf CMakeFiles
+rm -rf *_CPack_*
+rm Makefile
+rm CMakeCache.txt
+rm install*.txt
+rm -rf consul-prefix nomad-prefix terraform-prefix
+
+cd Packages
+rm *.cmake
+rm -rf CMakeFiles
+rm -rf *_CPack_*
+rm Makefile
+rm CMakeCache.txt
+rm install*.txt
+
+cd -
+

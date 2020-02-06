@@ -56,47 +56,50 @@ class AsapoNoDataError(AsapoConsumerError):
 
 cdef throw_exception(Error& err):
     cdef ConsumerErrorData* data
+    error_string =  _str(err.get().Explain())
     if err == kEndOfStream:
             data=<ConsumerErrorData*>err.get().GetCustomData()
             if data != NULL:
-                raise AsapoEndOfStreamError(err.get().Explain(),data.id_max)
+                raise AsapoEndOfStreamError(error_string,data.id_max)
             else:
-                raise AsapoEndOfStreamError(err.get().Explain())
+                raise AsapoEndOfStreamError(error_string)
     elif err == kNoData:
             data=<ConsumerErrorData*>err.get().GetCustomData()
             if data != NULL:
-                raise AsapoNoDataError(err.get().Explain(),data.id,data.id_max)
+                raise AsapoNoDataError(error_string,data.id,data.id_max)
             else:
-                raise AsapoNoDataError(err.get().Explain())
+                raise AsapoNoDataError(error_string)
     elif err == kWrongInput:
-            raise AsapoWrongInputError(err.get().Explain())
+            raise AsapoWrongInputError(error_string)
     elif err == kLocalIOError:
-            raise AsapoLocalIOError(err.get().Explain())
+            raise AsapoLocalIOError(error_string)
     elif err == kUnavailableService:
-            raise AsapoUnavailableServiceError(err.get().Explain())
+            raise AsapoUnavailableServiceError(error_string)
     elif err == kInterruptedTransaction:
-            raise AsapoInterruptedTransactionError(err.get().Explain())
+            raise AsapoInterruptedTransactionError(error_string)
     else:
-        raise AsapoConsumerError(err.get().Explain())
+        raise AsapoConsumerError(error_string)
 
 cdef class PyDataBroker:
+    _default_stream = "default"
     cdef DataBroker* c_broker
-    def _op(self, op, group_id, meta_only, uint64_t id):
+    def _op(self, op, group_id, substream, meta_only, uint64_t id):
         cdef FileInfo info
         cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
         cdef FileData data
         cdef FileData* p_data =  <FileData*>NULL if meta_only else &data
         cdef Error err
         cdef np.npy_intp dims[1]
         if op == "next":
             with nogil:
-                err =  self.c_broker.GetNext(&info, b_group_id, p_data)
+                err =  self.c_broker.GetNext(&info, b_group_id,b_substream, p_data)
         elif op == "last":
             with nogil:
-                err =  self.c_broker.GetLast(&info, b_group_id, p_data)
+                err =  self.c_broker.GetLast(&info, b_group_id,b_substream, p_data)
         elif op == "id":
             with nogil:
-                err =  self.c_broker.GetById(id, &info, b_group_id, p_data)
+                err =  self.c_broker.GetById(id, &info, b_group_id,b_substream, p_data)
         if err:
             throw_exception(err)
         info_str = _str(info.Json())
@@ -108,12 +111,12 @@ cdef class PyDataBroker:
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
         return arr,meta
-    def get_next(self, group_id, meta_only = True):
-        return self._op("next",group_id,meta_only,0)
-    def get_last(self, group_id, meta_only = True):
-        return self._op("last",group_id,meta_only,0)
-    def get_by_id(self,id,group_id,meta_only = True):
-        return self._op("id",group_id,meta_only,id)
+    def get_next(self, group_id, substream = _default_stream, meta_only = True):
+        return self._op("next",group_id,substream,meta_only,0)
+    def get_last(self, group_id, substream = _default_stream, meta_only = True):
+        return self._op("last",group_id,substream,meta_only,0)
+    def get_by_id(self,id,group_id, substream = _default_stream,meta_only = True):
+        return self._op("id",group_id,substream,meta_only,id)
     def retrieve_data(self,meta):
         json_str = json.dumps(meta)
         cdef FileInfo info
@@ -131,31 +134,34 @@ cdef class PyDataBroker:
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
         return arr
-    def get_current_size(self):
+    def get_current_size(self, substream = _default_stream):
         cdef Error err
         cdef uint64_t size
+        cdef string b_substream = _bytes(substream)
         with nogil:
-            size =  self.c_broker.GetCurrentSize(&err)
+            size =  self.c_broker.GetCurrentSize(b_substream,&err)
         err_str = _str(GetErrorString(&err))
         if err:
             throw_exception(err)
         return size
     def set_timeout(self,timeout):
         self.c_broker.SetTimeout(timeout)
-    def set_lastread_marker(self,value,group_id):
+    def set_lastread_marker(self,value,group_id, substream = _default_stream):
         cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
         cdef Error err
         cdef uint64_t id = value
         with nogil:
-            err =  self.c_broker.SetLastReadMarker(id,b_group_id)
+            err =  self.c_broker.SetLastReadMarker(id,b_group_id,b_substream)
         if err:
             throw_exception(err)
         return
-    def reset_lastread_marker(self,group_id):
+    def reset_lastread_marker(self,group_id, substream = _default_stream):
         cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
         cdef Error err
         with nogil:
-            err =  self.c_broker.ResetLastReadMarker(b_group_id)
+            err =  self.c_broker.ResetLastReadMarker(b_group_id,b_substream)
         if err:
             throw_exception(err)
         return
@@ -167,44 +173,58 @@ cdef class PyDataBroker:
         if err:
             throw_exception(err)
         return _str(group_id)
-    def query_images(self,query):
+    def get_substream_list(self):
+        cdef Error err
+        cdef vector[string] substreams
+        with nogil:
+            substreams = self.c_broker.GetSubstreamList(&err)
+        if err:
+            throw_exception(err)
+        list = []
+        for substream in substreams:
+            list.append(_str(substream))
+        return list
+
+    def query_images(self,query, substream = _default_stream):
         cdef string b_query = _bytes(query)
+        cdef string b_substream = _bytes(substream)
         cdef Error err
         cdef FileInfos file_infos
         with nogil:
-            file_infos = self.c_broker.QueryImages(b_query,&err)
+            file_infos = self.c_broker.QueryImages(b_query,b_substream,&err)
         if err:
             throw_exception(err)
         json_list = []
         for fi in file_infos:
             json_list.append(json.loads(_str(fi.Json())))
         return json_list
-    def _op_dataset(self, op, group_id, uint64_t id):
+    def _op_dataset(self, op, group_id, substream, uint64_t id):
         cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
         cdef FileInfos file_infos
         cdef DataSet dataset
         cdef Error err
         if op == "next":
             with nogil:
-                dataset = self.c_broker.GetNextDataset(b_group_id, &err)
+                dataset = self.c_broker.GetNextDataset(b_group_id,b_substream, &err)
         elif op == "last":
             with nogil:
-                dataset = self.c_broker.GetLastDataset(b_group_id, &err)
+                dataset = self.c_broker.GetLastDataset(b_group_id,b_substream, &err)
         elif op == "id":
             with nogil:
-                dataset = self.c_broker.GetDatasetById(id, b_group_id, &err)
+                dataset = self.c_broker.GetDatasetById(id, b_group_id,b_substream, &err)
         if err:
             throw_exception(err)
         json_list = []
         for fi in dataset.content:
             json_list.append(json.loads(_str(fi.Json())))
         return dataset.id, json_list
-    def get_next_dataset(self, group_id):
-        return self._op_dataset("next",group_id,0)
-    def get_last_dataset(self, group_id):
-        return self._op_dataset("last",group_id,0)
-    def get_dataset_by_id(self, id, group_id):
-        return self._op_dataset("id",group_id,id)
+    def get_next_dataset(self, group_id, substream = _default_stream):
+        return self._op_dataset("next",group_id,substream,0)
+    def get_last_dataset(self, group_id, substream = _default_stream):
+        return self._op_dataset("last",group_id,substream,0)
+    def get_dataset_by_id(self, id, group_id, substream = _default_stream):
+        return self._op_dataset("id",group_id,substream,id)
     def get_beamtime_meta(self):
         cdef Error err
         cdef string meta_str

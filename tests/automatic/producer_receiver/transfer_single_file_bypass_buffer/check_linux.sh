@@ -40,7 +40,7 @@ sleep 1
 
 $1 localhost:8400 ${beamtime_id} 60000 1 1  0 30
 
-echo "db.data.find({"_id":1})" | mongo ${beamtime_id}_detector  > out
+echo "db.data_default.find({"_id":1})" | mongo ${beamtime_id}_detector  > out
 cat out
 cat out | grep '"buf_id" : 0'
 cat out | grep user_meta

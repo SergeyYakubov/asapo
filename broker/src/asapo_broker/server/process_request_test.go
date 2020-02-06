@@ -21,6 +21,7 @@ var correctTokenSuffix, wrongTokenSuffix, suffixWithWrongToken, expectedBeamtime
 const expectedGroupID = "bid2a5auidddp1vl71d0"
 const wrongGroupID = "bid2a5auidddp1vl71"
 const expectedStream = "stream"
+const expectedSubstream = "substream"
 
 func prepareTestAuth() {
 	expectedBeamtimeId = "beamtime_id"
@@ -106,7 +107,7 @@ func TestProcessRequestTestSuite(t *testing.T) {
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong token")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
 
 	suite.Equal(http.StatusUnauthorized, w.Code, "wrong token")
 }
@@ -114,64 +115,64 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithNoToken() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("cannot extract")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + wrongTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + wrongTokenSuffix)
 
 	suite.Equal(http.StatusUnauthorized, w.Code, "no token")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next", "0").Return([]byte(""),
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next", "0").Return([]byte(""),
 		&database.DBError{utils.StatusWrongInput, ""})
 
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong database name")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next", "0").Return([]byte(""),
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next", "0").Return([]byte(""),
 		&database.DBError{utils.StatusServiceUnavailable, ""})
 
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
 	ExpectReconnect(suite.mock_db)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("reconnected")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	time.Sleep(time.Second)
 	suite.Equal(http.StatusNotFound, w.Code, "wrong database name")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next", "0").Return([]byte(""), errors.New(""))
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next", "0").Return([]byte(""), errors.New(""))
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("reconnected")))
 
 	ExpectReconnect(suite.mock_db)
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	time.Sleep(time.Second)
 
 	suite.Equal(http.StatusNotFound, w.Code, "internal error")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next", "0").Return([]byte("Hello"), nil)
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next", "0").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedDBName)))
 
-	doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(1, statistics.GetCounter(), "ProcessRequest increases counter")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWrongGroupID() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong groupid")))
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + wrongGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + wrongGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong group id")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsDataset() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedGroupID, "next_dataset", "0").Return([]byte("Hello"), nil)
+	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next_dataset", "0").Return([]byte("Hello"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next_dataset in "+expectedDBName)))
 
-	doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix + "&dataset=true")
+	doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + correctTokenSuffix + "&dataset=true")
 }

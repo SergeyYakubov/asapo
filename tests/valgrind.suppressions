@@ -74,7 +74,11 @@
    temp_ignore_strlen
    Memcheck:Cond
    fun:strlen
-   fun:bson_strdup
+}
+{
+   temp_ignore_strlen
+   Memcheck:Addr1
+   fun:strlen
    ...
 }
 {

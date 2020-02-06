@@ -49,18 +49,18 @@ int main(int argc, char* argv[]) {
     uint64_t subset_size = 2;
 
     if (args.keyword != "Notconnected") {
-        db.Connect("127.0.0.1", "data", "test");
+        db.Connect("127.0.0.1", "data");
     }
 
-    auto err =  db.InsertAsSubset(fi, subset_id, subset_size, true);
+    auto err =  db.InsertAsSubset("test", fi, subset_id, subset_size, true);
 
 
     if (args.keyword == "DuplicateID") {
         Assert(err, "OK");
         fi.id = 2;
-        err =  db.InsertAsSubset(fi, subset_id, subset_size, true);
+        err =  db.InsertAsSubset("test", fi, subset_id, subset_size, true);
 //        Assert(err, "OK");
-        err =  db.InsertAsSubset(fi, subset_id, subset_size, false);
+        err =  db.InsertAsSubset("test", fi, subset_id, subset_size, false);
     }
 
     Assert(err, args.keyword);

@@ -46,14 +46,14 @@ int main(int argc, char* argv[]) {
     fi.source = "host:1234";
 
     if (args.keyword != "Notconnected") {
-        db.Connect("127.0.0.1", "data", "test");
+        db.Connect("127.0.0.1", "data");
     }
 
-    auto err = db.Insert(fi, false);
+    auto err = db.Insert("test", fi, false);
 
     if (args.keyword == "DuplicateID") {
         Assert(err, "OK");
-        err = db.Insert(fi, false);
+        err = db.Insert("test", fi, false);
     }
 
     Assert(err, args.keyword);

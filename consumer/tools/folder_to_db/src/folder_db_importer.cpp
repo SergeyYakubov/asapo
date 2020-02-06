@@ -16,12 +16,12 @@ FolderToDbImporter::FolderToDbImporter() :
 }
 
 Error FolderToDbImporter::ConnectToDb(const std::unique_ptr<asapo::Database>& db) const {
-    return db->Connect(db_uri_, db_name_, kDBDataCollectionName);
+    return db->Connect(db_uri_, db_name_);
 }
 
 Error FolderToDbImporter::ImportSingleFile(const std::unique_ptr<asapo::Database>& db,
                                            const FileInfo& file) const {
-    return db->Insert(file, ignore_duplicates_);
+    return db->Insert(std::string(kDBDataCollectionNamePrefix) + "_default", file, ignore_duplicates_);
 }
 
 Error FolderToDbImporter::ImportFilelistChunk(const std::unique_ptr<asapo::Database>& db,

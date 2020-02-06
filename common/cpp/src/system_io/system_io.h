@@ -14,7 +14,7 @@ typedef SSIZE_T ssize_t;
 #endif
 
 #if defined(__linux__) || defined (__APPLE__)
-#include "../../../../../../../../usr/include/netinet/in.h"
+#include "netinet/in.h"
 #endif
 
 #ifdef __APPLE__
