@@ -16,13 +16,11 @@ if(DOXYGEN_EXECUTABLE)
             WORKING_DIRECTORY consumer
     )
     add_custom_target(
-            docs-cpp
+            docs-cpp ALL
             COMMAND
             PROJECT_NUMBER=${ASAPO_VERSION}  ${DOXYGEN_EXECUTABLE} doxygen.ini VERBATIM
     )
     add_dependencies(docs-cpp docs-cpp-producer docs-cpp-consumer)
-
-
 else()
     message(FATAL_ERROR "Unable to find doxygen.")
 endif()
