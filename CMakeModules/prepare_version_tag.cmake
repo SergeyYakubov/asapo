@@ -15,9 +15,9 @@ else()
 endif()
 
 execute_process(COMMAND git describe --tags --abbrev=0
-                OUTPUT_VARIABLE VERSION_TAGS
+                OUTPUT_VARIABLE ASAPO_VERSION_TAG
                 WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-string(STRIP ${VERSION_TAGS} VERSION_TAGS)
+string(STRIP ${ASAPO_VERSION_TAG} ASAPO_VERSION_TAG)
 
 execute_process(COMMAND git rev-parse --short HEAD
                 OUTPUT_VARIABLE VERSION_COMMIT
@@ -40,9 +40,9 @@ endif()
 
 
 if (${BRANCH} STREQUAL "develop")
-    SET (ASAPO_VERSION_PYTHON ${VERSION_TAGS}.${BRANCH}.${VERSION_COMMIT})
+    SET (ASAPO_VERSION_PYTHON ${ASAPO_VERSION_TAG}.${BRANCH}.${VERSION_COMMIT})
 else()
-    SET (ASAPO_VERSION_PYTHON ${VERSION_TAGS}.${BRANCH}.latest)
+    SET (ASAPO_VERSION_PYTHON ${ASAPO_VERSION_TAG}.${BRANCH}.latest)
 endif()
 
 

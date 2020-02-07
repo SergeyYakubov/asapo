@@ -6,19 +6,19 @@ if(DOXYGEN_EXECUTABLE)
     add_custom_target(
             docs-cpp-producer
             COMMAND
-            PROJECT_NUMBER=${ASAPO_VERSION} ${DOXYGEN_EXECUTABLE} doxygen.ini VERBATIM
+            PROJECT_NUMBER=${ASAPO_VERSION_TAG}-${ASAPO_VERSION} ${DOXYGEN_EXECUTABLE} doxygen.ini VERBATIM
             WORKING_DIRECTORY producer
     )
     add_custom_target(
             docs-cpp-consumer
             COMMAND
-            PROJECT_NUMBER=${ASAPO_VERSION} ${DOXYGEN_EXECUTABLE} doxygen.ini VERBATIM
+            PROJECT_NUMBER=${ASAPO_VERSION_TAG}-${ASAPO_VERSION} ${DOXYGEN_EXECUTABLE} doxygen.ini VERBATIM
             WORKING_DIRECTORY consumer
     )
     add_custom_target(
             docs-cpp ALL
             COMMAND
-            PROJECT_NUMBER=${ASAPO_VERSION}  ${DOXYGEN_EXECUTABLE} doxygen.ini VERBATIM
+            PROJECT_NUMBER=${ASAPO_VERSION_TAG}-${ASAPO_VERSION}  ${DOXYGEN_EXECUTABLE} doxygen.ini VERBATIM
     )
     add_dependencies(docs-cpp docs-cpp-producer docs-cpp-consumer)
 else()
