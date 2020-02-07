@@ -35,6 +35,7 @@ option(BUILD_TESTS "Uses googletest to build tests" OFF)
 option(BUILD_INTEGRATION_TESTS "Include integration tests (CMAKE >3.7 is needed)" OFF)
 option(BUILD_CPP_DOCS "Uses doxygen to build the C++ documentaion" OFF)
 option(BUILD_BROKER "Build broker" OFF)
+option(BUILD_EVENT_MONITOR_PRODUCER "Build the event monitor producer" OFF)
 option(BUILD_PYTHON_DOCS "Uses sphinx to build the Python documentaion" OFF)
 
 option(BUILD_CONSUMER_TOOLS "Build consumer tools" OFF)
