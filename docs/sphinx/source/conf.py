@@ -19,8 +19,8 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../../consumer/api/python'))
-sys.path.insert(0, os.path.abspath('../../../producer/api/python'))
+sys.path.insert(0, os.path.abspath('../../../../consumer/api/python'))
+sys.path.insert(0, os.path.abspath('../../../../producer/api/python'))
 
 
 import asapo_producer
@@ -54,7 +54,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'ASAP::O'
-copyright = u'2019, DESY IT'
+copyright = u'2019-2020, DESY IT'
 author = u'DESY IT'
 
 # The version info for the project you're documenting, acts as replacement for

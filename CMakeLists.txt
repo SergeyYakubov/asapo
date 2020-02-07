@@ -33,7 +33,7 @@ endif()
 
 option(BUILD_TESTS "Uses googletest to build tests" OFF)
 option(BUILD_INTEGRATION_TESTS "Include integration tests (CMAKE >3.7 is needed)" OFF)
-option(BUILD_DOCS "Uses doxygen to build the documentaion" OFF)
+option(BUILD_CPP_DOCS "Uses doxygen to build the C++ documentaion" OFF)
 option(BUILD_BROKER "Build broker" OFF)
 option(BUILD_PYTHON_DOCS "Uses sphinx to build the Python documentaion" OFF)
 
@@ -85,7 +85,6 @@ add_subdirectory(asapo_tools)
 
 add_subdirectory(deploy)
 
-
 if(BUILD_INTEGRATION_TESTS)
     add_subdirectory(tests)
 endif()
@@ -94,17 +93,6 @@ if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
-if(BUILD_DOCS)
-    include(doxygen)
-endif()
-
-
-if(BUILD_PYTHON_DOCS)
-    add_subdirectory (sphinx)
-endif()
-
-
-
-
-
 include(prepare_version)
+
+add_subdirectory(docs)
