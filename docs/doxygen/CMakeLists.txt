@@ -1,5 +1,6 @@
 find_program(DOXYGEN_EXECUTABLE doxygen)
 if(DOXYGEN_EXECUTABLE)
+    file(MAKE_DIRECTORY html)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
     message("Found doxygen - ${DOXYGEN_EXECUTABLE}.")
     add_custom_target(
