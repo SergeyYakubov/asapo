@@ -11,7 +11,7 @@
 namespace asapo {
 
 
-
+/** @ingroup producer */
 class Producer {
   public:
     //! Creates a new producer
