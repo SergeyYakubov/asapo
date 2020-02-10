@@ -105,7 +105,7 @@ ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_sock
 }
 
 SystemIO::~SystemIO() {
-    if (epoll_fd_ != -kDisconnectedSocketDescriptor) {
+    if (epoll_fd_ != kDisconnectedSocketDescriptor) {
         close(epoll_fd_);
     }
 }

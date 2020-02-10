@@ -9,19 +9,15 @@ else()
     set (EXTRA_LINK_ARGS "[]")
 ENDIF()
 
-get_property(ASAPO_PRODUCER_LIB TARGET asapo-producer PROPERTY LOCATION)
-
 set (ASAPO_PRODUCER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/include)
 
 configure_files(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
+file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py INPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 
-ADD_CUSTOM_TARGET(python-lib2-producer ALL
-        COMMAND python setup.py build_ext --inplace --force )
 
-ADD_CUSTOM_TARGET(python-lib3-producer ALL
-        COMMAND python3 setup.py build_ext --inplace --force)
+ADD_CUSTOM_TARGET(python-lib-producer ALL
+        COMMAND ${Python_EXECUTABLE} setup.py build_ext --inplace --force)
 
-ADD_DEPENDENCIES(python-lib2-producer asapo-producer)
-ADD_DEPENDENCIES(python-lib3-producer asapo-producer)
+ADD_DEPENDENCIES(python-lib-producer asapo-producer)
 
 add_subdirectory(source_dist_linux)

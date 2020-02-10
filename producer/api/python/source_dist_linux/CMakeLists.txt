@@ -3,7 +3,7 @@ configure_file(MANIFEST.in MANIFEST.in @ONLY)
 
 
 ADD_CUSTOM_TARGET(python-dist-producer ALL
-        COMMAND python setup.py sdist
+        COMMAND ${Python_EXECUTABLE} setup.py sdist
         )
 
 ADD_CUSTOM_TARGET(copy_python_dist-producer ALL
@@ -20,6 +20,6 @@ ADD_CUSTOM_TARGET(copy_python_dist-producer ALL
         )
 
 
-ADD_DEPENDENCIES(copy_python_dist-producer python-lib3-producer)
+ADD_DEPENDENCIES(copy_python_dist-producer python-lib-producer)
 
 ADD_DEPENDENCIES(python-dist-producer copy_python_dist-producer)

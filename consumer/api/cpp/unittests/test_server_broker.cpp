@@ -837,6 +837,7 @@ TEST_F(ServerDataBrokerTests, QueryImagesReturnRecords) {
 
     auto rec1 = CreateFI();
     auto rec2 = CreateFI();
+    rec2.name = "ttt";
     auto json1 = rec1.Json();
     auto json2 = rec2.Json();
     auto responce_string = "[" + json1 + "," + json2 + "]";
@@ -855,8 +856,8 @@ TEST_F(ServerDataBrokerTests, QueryImagesReturnRecords) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(images.size(), Eq(2));
 
-    ASSERT_THAT(images[0], Eq(rec1));
-    ASSERT_THAT(images[1], Eq(rec2));
+    ASSERT_THAT(images[0].name, Eq(rec1.name));
+    ASSERT_THAT(images[1].name, Eq(rec2.name));
 }
 
 TEST_F(ServerDataBrokerTests, QueryImagesUsesCorrectUriWithSubstream) {
@@ -987,17 +988,17 @@ TEST_F(ServerDataBrokerTests, GetSubstreamListUsesCorrectUri) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/0/substreams"
-     + "?token="+ expected_token, _,
+                                        + "?token=" + expected_token, _,
                                         _)).WillOnce(DoAll(
-        SetArgPointee<1>(HttpCode::OK),
-        SetArgPointee<2>(nullptr),
-        Return("{\"substreams\":[\"s1\",\"s2\"]}")));
+                                                SetArgPointee<1>(HttpCode::OK),
+                                                SetArgPointee<2>(nullptr),
+                                                Return("{\"substreams\":[\"s1\",\"s2\"]}")));
 
     asapo::Error err;
     auto substreams = data_broker->GetSubstreamList(&err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(substreams.size(), Eq(2));
-    ASSERT_THAT(substreams, testing::ElementsAre("s1","s2"));
+    ASSERT_THAT(substreams, testing::ElementsAre("s1", "s2"));
 
 }
 

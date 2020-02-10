@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.7)
 project(ASAPO)
 set(CMAKE_CXX_STANDARD 11)
 IF(WIN32)
@@ -35,6 +35,7 @@ option(BUILD_TESTS "Uses googletest to build tests" OFF)
 option(BUILD_INTEGRATION_TESTS "Include integration tests (CMAKE >3.7 is needed)" OFF)
 option(BUILD_CPP_DOCS "Uses doxygen to build the C++ documentaion" OFF)
 option(BUILD_BROKER "Build broker" OFF)
+option(BUILD_EVENT_MONITOR_PRODUCER "Build the event monitor producer" OFF)
 option(BUILD_PYTHON_DOCS "Uses sphinx to build the Python documentaion" OFF)
 
 option(BUILD_CONSUMER_TOOLS "Build consumer tools" OFF)
@@ -50,6 +51,16 @@ set (CMAKE_PREFIX_PATH "${LIBCURL_DIR}")
 find_package (CURL REQUIRED)
 message (STATUS "Found cURL libraries: ${CURL_LIBRARIES}")
 message (STATUS "cURL include: ${CURL_INCLUDE_DIRS}")
+
+
+if ("${Python_EXECUTABLE}" STREQUAL "")
+    find_package (Python COMPONENTS Interpreter Development)
+    if (NOT Python_FOUND)
+        message (FATAL "Cannot find Python")
+    endif()
+endif()
+message (STATUS "Using Python: ${Python_EXECUTABLE}")
+
 
 
 # format sources

@@ -44,8 +44,8 @@ done
 sleep 1
 
 export PYTHONPATH=$1:${PYTHONPATH}
-
-python consumer_api.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run single
+export Python_EXECUTABLE=$2
+$Python_EXECUTABLE consumer_api.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run single
 
 
 #check datasets
@@ -65,4 +65,4 @@ do
 done
 
 
-python consumer_api.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run datasets
+$Python_EXECUTABLE consumer_api.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run datasets

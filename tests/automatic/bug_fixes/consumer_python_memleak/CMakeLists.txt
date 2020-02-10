@@ -4,12 +4,12 @@ set(TARGET_NAME consumer_python_memleak)
 prepare_asapo()
 
 if (UNIX)
-    get_target_property(PYTHON_LIBS python-lib2 BINARY_DIR)
+    get_target_property(PYTHON_LIBS python-lib BINARY_DIR)
 else()
     get_target_property(PYTHON_LIBS asapo_consumer BINARY_DIR)
 endif()
 
-add_script_test("${TARGET_NAME}" ${PYTHON_LIBS} nomem)
+add_script_test("${TARGET_NAME}" "${PYTHON_LIBS} ${Python_EXECUTABLE}" nomem)
 
 configure_file(memleak.py memleak.py COPYONLY)
 

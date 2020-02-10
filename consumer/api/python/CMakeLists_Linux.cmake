@@ -9,19 +9,16 @@ else()
     set (EXTRA_LINK_ARGS "[]")
 ENDIF()
 
-get_property(ASAPO_CONSUMER_LIB TARGET asapo-consumer PROPERTY LOCATION)
+configure_files(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
+file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py INPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 
 set (ASAPO_CONSUMER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/include)
 
 configure_files(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 
-ADD_CUSTOM_TARGET(python-lib2 ALL
-        COMMAND python setup.py build_ext --inplace --force)
+ADD_CUSTOM_TARGET(python-lib ALL
+        COMMAND ${Python_EXECUTABLE} setup.py build_ext --inplace --force)
 
-ADD_CUSTOM_TARGET(python-lib3 ALL
-        COMMAND python3 setup.py build_ext --inplace --force)
-
-ADD_DEPENDENCIES(python-lib2 asapo-consumer)
-ADD_DEPENDENCIES(python-lib3 asapo-consumer)
+ADD_DEPENDENCIES(python-lib asapo-consumer)
 
 add_subdirectory(source_dist_linux)

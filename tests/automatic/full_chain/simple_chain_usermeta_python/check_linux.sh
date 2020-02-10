@@ -46,9 +46,10 @@ mkdir -p ${receiver_folder}
 $1 localhost:8400 ${beamtime_id} 100 100 1 0 100
 
 export PYTHONPATH=$4:${PYTHONPATH}
+export Python_EXECUTABLE=$5
 
 
-python $3/get_user_meta.py $proxy_address $receiver_folder $beamtime_id $token new > out
+$Python_EXECUTABLE $3/get_user_meta.py $proxy_address $receiver_folder $beamtime_id $token new > out
 cat out
 cat out | grep "found images: 100"
 cat out | grep "test100"

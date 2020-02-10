@@ -126,7 +126,7 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
 
 //streams
 
-    err = broker->GetNext(&fi, group_id,"stream1", nullptr);
+    err = broker->GetNext(&fi, group_id, "stream1", nullptr);
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
@@ -134,7 +134,7 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(err == nullptr, "GetNext stream1 no error");
     M_AssertTrue(fi.name == "11", "GetNext stream1 filename");
 
-    err = broker->GetNext(&fi, group_id,"stream2", nullptr);
+    err = broker->GetNext(&fi, group_id, "stream2", nullptr);
     M_AssertTrue(err == nullptr, "GetNext stream2 no error");
     M_AssertTrue(fi.name == "21", "GetNext stream2 filename");
 

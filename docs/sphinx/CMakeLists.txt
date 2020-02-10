@@ -8,5 +8,5 @@ add_custom_target(
         WORKING_DIRECTORY sphinx
 )
 
-add_dependencies(docs-py python-lib3-producer)
-add_dependencies(docs-py python-lib3)
+add_dependencies(docs-py python-lib-producer)
+add_dependencies(docs-py python-lib)

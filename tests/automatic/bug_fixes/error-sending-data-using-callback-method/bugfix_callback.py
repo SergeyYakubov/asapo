@@ -36,4 +36,4 @@ meta['name'] = stream+"/"+"file1"
 data = np.array([[1, 2, 3], [4, 5, 6]], np.float32)
 sender.send(data, meta)
 
-producer.wait_requests_finished(5000)
+producer.wait_requests_finished(15000)
