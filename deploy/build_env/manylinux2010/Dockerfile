@@ -11,4 +11,6 @@ ADD build.sh /bin/build.sh
 
 RUN chmod og+rwX -R /opt
 
+ADD install_cmake.sh install_cmake.sh
+RUN ./install_cmake.sh
 

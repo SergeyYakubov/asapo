@@ -6,7 +6,7 @@ from Cython.Build import cythonize
 import numpy
 
 module = Extension("asapo_producer", ["asapo_producer.pyx"],
-                       extra_objects=['@ASAPO_PRODUCER_LIB@',
+                       extra_objects=[$<TARGET_FILE:asapo-producer>,
                                       '@CURL_LIBRARIES@'],
                        include_dirs=["@ASAPO_CXX_COMMON_INCLUDE_DIR@","@ASAPO_PRODUCER_INCLUDE_DIR@",numpy.get_include()],
                        extra_compile_args=@EXTRA_COMPILE_ARGS@,

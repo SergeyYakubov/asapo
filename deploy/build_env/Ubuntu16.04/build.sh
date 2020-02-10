@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 cd /asapo/build
 cmake \
     -DCMAKE_BUILD_TYPE="Release" \

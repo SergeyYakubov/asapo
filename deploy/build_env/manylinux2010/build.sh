@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -e
 
 for python_path in /opt/python/cp{27,35,36,37}*m; do
     python=$python_path/bin/python

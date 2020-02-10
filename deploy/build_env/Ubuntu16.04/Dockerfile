@@ -11,5 +11,9 @@ RUN ./install_curl.sh /curl
 RUN apt install -y python-pip python3-pip && pip install --upgrade cython && pip3 install --upgrade cython
 RUN pip3 install sphinx
 
+ADD install_cmake.sh install_cmake.sh
+RUN ./install_cmake.sh
+
+
 ADD build.sh /bin/build.sh
 
