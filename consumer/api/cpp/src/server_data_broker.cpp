@@ -481,12 +481,12 @@ DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string group_id, std:
     return GetDatasetFromServer(GetImageServerOperation::GetID, id, std::move(group_id), std::move(substream), err);
 }
 
-std::vector<std::string> ParseSubstreamsFromResponse(std::string response,Error* err) {
+std::vector<std::string> ParseSubstreamsFromResponse(std::string response, Error* err) {
     auto parser = JsonStringParser(std::move(response));
     std::vector<std::string> substreams;
     *err = parser.GetArrayString("substreams", &substreams);
     if (*err) {
-        return std::vector<std::string>{};
+        return std::vector<std::string> {};
     }
     return substreams;
 }
@@ -500,10 +500,10 @@ std::vector<std::string> ServerDataBroker::GetSubstreamList(Error* err) {
 
     auto response = BrokerRequestWithTimeout(ri, err);
     if (*err) {
-        return std::vector<std::string>{};
+        return std::vector<std::string> {};
     }
 
-    return ParseSubstreamsFromResponse(std::move(response),err);
+    return ParseSubstreamsFromResponse(std::move(response), err);
 }
 
 }

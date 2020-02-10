@@ -5,7 +5,7 @@ set -e
 trap Cleanup EXIT
 
 beamtime_id=asapo_test
-stream=$1
+stream=python
 beamline=test
 receiver_root_folder=/tmp/asapo/receiver/files
 facility=test_facility

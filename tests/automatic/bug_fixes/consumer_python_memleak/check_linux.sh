@@ -32,11 +32,10 @@ echo 'db.data_default.insert({"_id":'1',"size":'$size',"name":"'$fname'","lastch
 dd if=/dev/zero of=$fname bs=$size count=1
 
 export PYTHONPATH=$1:${PYTHONPATH}
+export Python_EXECUTABLE=$2
 
-export PYTHONPATH=/home/yakubov/projects/asapo/cmake-build-debug/consumer/api/python:${PYTHONPATH}
 
-
-python memleak.py $endpoint $path $beamtime_id $token &> out &
+$Python_EXECUTABLE memleak.py $endpoint $path $beamtime_id $token &> out &
 pid=`echo $!`
 
 sleep 1

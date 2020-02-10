@@ -53,6 +53,16 @@ message (STATUS "Found cURL libraries: ${CURL_LIBRARIES}")
 message (STATUS "cURL include: ${CURL_INCLUDE_DIRS}")
 
 
+if ("${Python_EXECUTABLE}" STREQUAL "")
+    find_package (Python COMPONENTS Interpreter Development)
+    if (NOT Python_FOUND)
+        message (FATAL "Cannot find Python")
+    endif()
+endif()
+message (STATUS "Using Python: ${Python_EXECUTABLE}")
+
+
+
 # format sources
 include(astyle)
 

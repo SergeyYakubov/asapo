@@ -73,7 +73,6 @@ find_program( GCOV_PATH gcov )
 find_program( LCOV_PATH lcov )
 find_program( GENHTML_PATH genhtml )
 find_program( GCOVR_PATH gcovr PATHS ${CMAKE_SOURCE_DIR}/scripts/test)
-find_program( SIMPLE_PYTHON_EXECUTABLE python )
 
 if(NOT GCOV_PATH)
     message(FATAL_ERROR "gcov not found! Aborting...")
@@ -203,10 +202,6 @@ function(SETUP_TARGET_FOR_COVERAGE_COBERTURA)
     set(oneValueArgs NAME)
     set(multiValueArgs EXECUTABLE EXECUTABLE_ARGS DEPENDENCIES)
     cmake_parse_arguments(Coverage "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    if(NOT SIMPLE_PYTHON_EXECUTABLE)
-        message(FATAL_ERROR "python not found! Aborting...")
-    endif() # NOT SIMPLE_PYTHON_EXECUTABLE
 
     if(NOT GCOVR_PATH)
         message(FATAL_ERROR "gcovr not found! Aborting...")
