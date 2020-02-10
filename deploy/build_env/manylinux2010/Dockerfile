@@ -8,3 +8,7 @@ ADD install_curl.sh install_curl.sh
 RUN ./install_curl.sh /curl
 
 ADD build.sh /bin/build.sh
+
+RUN chmod og+rwX -R /opt
+
+
