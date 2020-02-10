@@ -8,7 +8,7 @@
  
  - /producer/asapo-producer
  
- **Library:** ProducerImpl library which can send data to the receiver
+ **Library:** Producer library which can send data to the receiver
  
  - /receiver
  
@@ -24,10 +24,11 @@
 ## With documentation
 
 Need Doxygen >= [1.8.10](https://github.com/doxygen/doxygen/releases/tag/Release_1_8_11)
+and sphinx
 
  - mkdir build
  - cd build
- - cmake -DBUILD_DOCS=ON ..
+ - cmake -DBUILD_CPP_DOCS=ON _DBUILD_PYTHON_DOCS ..
 
 ## With tests
 
