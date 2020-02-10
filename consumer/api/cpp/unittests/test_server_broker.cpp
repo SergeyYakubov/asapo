@@ -837,6 +837,7 @@ TEST_F(ServerDataBrokerTests, QueryImagesReturnRecords) {
 
     auto rec1 = CreateFI();
     auto rec2 = CreateFI();
+    rec2.name = "ttt";
     auto json1 = rec1.Json();
     auto json2 = rec2.Json();
     auto responce_string = "[" + json1 + "," + json2 + "]";
@@ -855,8 +856,8 @@ TEST_F(ServerDataBrokerTests, QueryImagesReturnRecords) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(images.size(), Eq(2));
 
-    ASSERT_THAT(images[0], Eq(rec1));
-    ASSERT_THAT(images[1], Eq(rec2));
+    ASSERT_THAT(images[0].name, Eq(rec1.name));
+    ASSERT_THAT(images[1].name, Eq(rec2.name));
 }
 
 TEST_F(ServerDataBrokerTests, QueryImagesUsesCorrectUriWithSubstream) {
