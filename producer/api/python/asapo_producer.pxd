@@ -89,12 +89,13 @@ cdef extern from "asapo_producer.h" namespace "asapo" nogil:
     cppclass Producer:
         @staticmethod
         unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,Error* error)
-        Error SendFile(const EventHeader& event_header, string full_path, uint64_t ingest_mode,RequestCallback callback)
-        Error SendData__(const EventHeader& event_header, void* data, uint64_t ingest_mode,RequestCallback callback)
+        Error SendFile(const EventHeader& event_header, string substream, string full_path, uint64_t ingest_mode,RequestCallback callback)
+        Error SendData__(const EventHeader& event_header, string substream, void* data, uint64_t ingest_mode,RequestCallback callback)
         void StopThreads__()
         void SetLogLevel(LogLevel level)
         uint64_t  GetRequestsQueueSize()
         Error WaitRequestsFinished(uint64_t timeout_ms)
+        Error SendSubstreamFinishedFlag(string substream, uint64_t last_id, string next_substream, RequestCallback callback)
 
 cdef extern from "asapo_producer.h" namespace "asapo":
     uint64_t kDefaultIngestMode

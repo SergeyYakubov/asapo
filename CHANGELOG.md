@@ -7,6 +7,7 @@ IMPROVEMENTS
 * receiver use ASAP3 directory structure to save files to
 * API documentation is available at [asapo-docs.desy.de](asapo-docs.desy.de)
 * switch to using cmake 3.7+
+* error messages in Python as Python strings, not byte objects
 
 BUG FIXES
 * consumer operation timout - take duration of the operation into account
