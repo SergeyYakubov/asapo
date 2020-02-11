@@ -216,7 +216,7 @@ cdef class PyProducer:
 
         cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
         event_header.file_size = 0
-        err = self.c_producer.get().SendFile(event_header, _bytes(local_path), _bytes(substream), ingest_mode,
+        err = self.c_producer.get().SendFile(event_header, _bytes(substream), _bytes(local_path), ingest_mode,
             unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
         if err:
             throw_exception(err)
