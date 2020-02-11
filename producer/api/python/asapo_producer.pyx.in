@@ -48,14 +48,15 @@ class AsapoTimeOutError(AsapoProducerError):
   pass
 
 cdef python_exception_from_error(Error& err):
+    error_string =  _str(err.get().Explain())
     if err == kTimeout:
-                return AsapoTimeOutError(err.get().Explain())
+                return AsapoTimeOutError(error_string)
     elif err == kWrongInput:
-            return AsapoWrongInputError(err.get().Explain())
+            return AsapoWrongInputError(error_string)
     elif err == kLocalIOError:
-            return AsapoLocalIOError(err.get().Explain())
+            return AsapoLocalIOError(error_string)
     else:
-        return AsapoProducerError(err.get().Explain())
+        return AsapoProducerError(error_string)
 
 cdef throw_exception(Error& err):
     raise python_exception_from_error(err)
@@ -99,14 +100,14 @@ cdef class PyProducer:
             return
          self.c_producer.get().SetLogLevel(log_level)
 
-    def __send_np_array(self,int id, exposed_path,data, user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+    def __send_np_array(self,int id, exposed_path,data, user_meta=None,subset=None,substream="default",ingest_mode = DEFAULT_INGEST_MODE,callback=None):
         cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
         event_header.file_id = id
         if data is None:
             event_header.file_size = 0
         else:
             event_header.file_size = data.nbytes
-        err = self.c_producer.get().SendData__(event_header, data_pointer_nparray(data), ingest_mode,
+        err = self.c_producer.get().SendData__(event_header, _bytes(substream), data_pointer_nparray(data),ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_ndarr,
              <void*>self,<void*>callback, <void*>data))
         if err:
@@ -133,10 +134,10 @@ cdef class PyProducer:
             event_header.subset_size = subset[1]
         return event_header
 
-    def __send_bytes(self,int id, exposed_path,data, user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+    def __send_bytes(self,int id, exposed_path,data, user_meta=None,subset=None, substream="default", ingest_mode = DEFAULT_INGEST_MODE,callback=None):
         cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
         event_header.file_size = len(data)
-        err = self.c_producer.get().SendData__(event_header, data_pointer_bytes(data), ingest_mode,
+        err = self.c_producer.get().SendData__(event_header,_bytes(substream),  data_pointer_bytes(data), ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_bytesaddr,
              <void*>self,<void*>callback, <void*>data))
         if err:
@@ -146,7 +147,7 @@ cdef class PyProducer:
             Py_XINCREF(<PyObject*>callback)
         return
 
-    def send_data(self, id, exposed_path,data, user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+    def send_data(self, id, exposed_path, data, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
         """
          :param id: unique data id
          :type id: int
@@ -167,13 +168,31 @@ cdef class PyProducer:
             AsapoProducerError: actually should not happen
         """
         if type(data) == np.ndarray or data == None:
-            self.__send_np_array(id,exposed_path,data,user_meta,subset,ingest_mode,callback)
+            self.__send_np_array(id,exposed_path,data,user_meta,subset,substream,ingest_mode,callback)
         elif type(data) == bytes:
-            self.__send_bytes(id,exposed_path,data,user_meta,subset,ingest_mode,callback)
+            self.__send_bytes(id,exposed_path,data,user_meta,subset,substream,ingest_mode,callback)
         else:
             raise(AsapoProducerError("wrong data type: " + str(type(data))))
+    def send_substream_finished_flag(self, substream, last_id, next_substream = None, callback = None):
+        """
+         :param substream: substream name
+         :type substream: string
+         :param id: id of the last record
+         :param next_substream: name of the next substream or None
+         :type substream: string
+         :param callback: callback function, default None
+         :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, meta, ...)
+            AsapoProducerError: actually should not happen
+        """
+        err = self.c_producer.get().SendSubstreamFinishedFlag(_bytes(substream), last_id,_bytes(next_substream) if next_substream != None else "",
+        unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
+        if err:
+            throw_exception(err)
 
-    def send_file(self, id, local_path, exposed_path,user_meta=None,subset=None,ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+
+    def send_file(self, id, local_path, exposed_path, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
         """
          :param id: unique data id
          :type id: int
@@ -197,7 +216,7 @@ cdef class PyProducer:
 
         cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
         event_header.file_size = 0
-        err = self.c_producer.get().SendFile(event_header, _bytes(local_path), ingest_mode,
+        err = self.c_producer.get().SendFile(event_header, _bytes(substream), _bytes(local_path), ingest_mode,
             unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
         if err:
             throw_exception(err)

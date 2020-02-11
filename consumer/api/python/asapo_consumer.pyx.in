@@ -37,11 +37,21 @@ class AsapoWrongInputError(AsapoConsumerError):
 class AsapoInterruptedTransactionError(AsapoConsumerError):
   pass
 
+class AsapoStreamFinishedError(AsapoConsumerError):
+  pass
+
 class AsapoUnavailableServiceError(AsapoConsumerError):
   pass
 
 class AsapoLocalIOError(AsapoConsumerError):
   pass
+
+class AsapoStreamFinishedError(AsapoConsumerError):
+  def __init__(self,message,id_max=None,next_substream=None):
+    AsapoConsumerError.__init__(self,message)
+    self.id_max = id_max
+    self.next_substream = _str(next_substream)
+
 
 class AsapoEndOfStreamError(AsapoConsumerError):
   def __init__(self,message,id_max=None):
@@ -63,6 +73,12 @@ cdef throw_exception(Error& err):
                 raise AsapoEndOfStreamError(error_string,data.id_max)
             else:
                 raise AsapoEndOfStreamError(error_string)
+    elif err == kStreamFinished:
+            data=<ConsumerErrorData*>err.get().GetCustomData()
+            if data != NULL:
+                raise AsapoStreamFinishedError(error_string,data.id_max,data.next_substream)
+            else:
+                raise AsapoStreamFinishedError(error_string)
     elif err == kNoData:
             data=<ConsumerErrorData*>err.get().GetCustomData()
             if data != NULL:
@@ -81,7 +97,6 @@ cdef throw_exception(Error& err):
         raise AsapoConsumerError(error_string)
 
 cdef class PyDataBroker:
-    _default_stream = "default"
     cdef DataBroker* c_broker
     def _op(self, op, group_id, substream, meta_only, uint64_t id):
         cdef FileInfo info
@@ -111,11 +126,11 @@ cdef class PyDataBroker:
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
         return arr,meta
-    def get_next(self, group_id, substream = _default_stream, meta_only = True):
+    def get_next(self, group_id, substream = "default", meta_only = True):
         return self._op("next",group_id,substream,meta_only,0)
-    def get_last(self, group_id, substream = _default_stream, meta_only = True):
+    def get_last(self, group_id, substream = "default", meta_only = True):
         return self._op("last",group_id,substream,meta_only,0)
-    def get_by_id(self,id,group_id, substream = _default_stream,meta_only = True):
+    def get_by_id(self,id,group_id, substream = "default",meta_only = True):
         return self._op("id",group_id,substream,meta_only,id)
     def retrieve_data(self,meta):
         json_str = json.dumps(meta)
@@ -134,7 +149,7 @@ cdef class PyDataBroker:
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
         return arr
-    def get_current_size(self, substream = _default_stream):
+    def get_current_size(self, substream = "default"):
         cdef Error err
         cdef uint64_t size
         cdef string b_substream = _bytes(substream)
@@ -146,7 +161,7 @@ cdef class PyDataBroker:
         return size
     def set_timeout(self,timeout):
         self.c_broker.SetTimeout(timeout)
-    def set_lastread_marker(self,value,group_id, substream = _default_stream):
+    def set_lastread_marker(self,value,group_id, substream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_substream = _bytes(substream)
         cdef Error err
@@ -156,7 +171,7 @@ cdef class PyDataBroker:
         if err:
             throw_exception(err)
         return
-    def reset_lastread_marker(self,group_id, substream = _default_stream):
+    def reset_lastread_marker(self,group_id, substream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_substream = _bytes(substream)
         cdef Error err
@@ -185,7 +200,7 @@ cdef class PyDataBroker:
             list.append(_str(substream))
         return list
 
-    def query_images(self,query, substream = _default_stream):
+    def query_images(self,query, substream = "default"):
         cdef string b_query = _bytes(query)
         cdef string b_substream = _bytes(substream)
         cdef Error err
@@ -219,11 +234,11 @@ cdef class PyDataBroker:
         for fi in dataset.content:
             json_list.append(json.loads(_str(fi.Json())))
         return dataset.id, json_list
-    def get_next_dataset(self, group_id, substream = _default_stream):
+    def get_next_dataset(self, group_id, substream = "default"):
         return self._op_dataset("next",group_id,substream,0)
-    def get_last_dataset(self, group_id, substream = _default_stream):
+    def get_last_dataset(self, group_id, substream = "default"):
         return self._op_dataset("last",group_id,substream,0)
-    def get_dataset_by_id(self, id, group_id, substream = _default_stream):
+    def get_dataset_by_id(self, id, group_id, substream = "default"):
         return self._op_dataset("id",group_id,substream,id)
     def get_beamtime_meta(self):
         cdef Error err
