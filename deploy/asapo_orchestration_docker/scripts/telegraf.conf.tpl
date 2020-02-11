@@ -9,6 +9,9 @@
 
 [[inputs.consul]]
 
+[[inputs.internal]]
+  collect_memstats = false
+
 [[outputs.file]]
 	files=["stdout"]
 
@@ -16,3 +19,16 @@
 [[outputs.influxdb]]
     urls = ["http://localhost:{{ env "NOMAD_META_nginx_port" }}/influxdb"]
 
+
+[[outputs.health]]
+  service_address = "http://{{ env "NOMAD_ADDR_telegraf_health" }}"
+
+  namepass = ["internal_write"]
+  tagpass = { output = ["influxdb"] }
+
+  [[outputs.health.compares]]
+    field = "buffer_size"
+    lt = 5000.0
+
+  [[outputs.health.contains]]
+    field = "buffer_size"
