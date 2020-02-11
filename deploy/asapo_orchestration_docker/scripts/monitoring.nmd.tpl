@@ -159,6 +159,8 @@ job "monitoring" {
         network {
           port "telegraf_stream" {
           }
+          port "telegraf_health" {
+          }
         }
       }
 
@@ -167,9 +169,9 @@ job "monitoring" {
         port = "telegraf_stream"
         check {
           name     = "telegraf-alive"
-          type     = "script"
-          command  = "/bin/pidof"
-          args     = ["telegraf"]
+          type     = "http"
+          path     = "/"
+          port     = "telegraf_health"
           interval = "10s"
           timeout  = "2s"
         }
