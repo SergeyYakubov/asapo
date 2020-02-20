@@ -38,7 +38,7 @@ void RequestFactory::AddReceiveViaBufferHandlers(std::unique_ptr<Request>& reque
 Error RequestFactory::AddReceiveDirectToFileHandler(std::unique_ptr<Request>& request,
         const GenericRequestHeader& request_header) const {
     if (!GetReceiverConfig()->write_to_disk) {
-        return ReceiverErrorTemplates::kReject.Generate("reciever does not support writing to disk");
+        return ReceiverErrorTemplates::kInternalServerError.Generate("reciever does not support writing to disk");
     }
     if (! (request_header.custom_data[kPosIngestMode] & kStoreInFilesystem)) {
         return ReceiverErrorTemplates::kBadRequest.Generate("ingest mode should include kStoreInFilesystem for large files ");
@@ -69,7 +69,7 @@ Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request>& request,
             request->AddHandler(&request_handler_receivedata_);
             request->AddHandler(&request_handler_db_meta_write_);
         } else {
-            return ReceiverErrorTemplates::kReject.Generate("reciever does not support writing to database");
+            return ReceiverErrorTemplates::kInternalServerError.Generate("reciever does not support writing to database");
         }
         break;
     }
@@ -88,7 +88,9 @@ Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request>& request,
 std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&
         request_header, SocketDescriptor socket_fd, std::string origin_uri,
         Error* err) const noexcept {
-    auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri), cache_.get()}};
+    auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri), cache_.get(),
+                &request_handler_db_check_}
+    };
     *err = AddHandlersToRequest(request, request_header);
     if (*err) {
         return nullptr;

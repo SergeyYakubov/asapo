@@ -44,7 +44,7 @@ TEST(ProducerRequest, Constructor) {
 
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,
                                        expected_meta_size, expected_file_name};
-    asapo::ProducerRequest request{expected_source_credentials, std::move(header), nullptr, expected_meta, "", nullptr, true};
+    asapo::ProducerRequest request{expected_source_credentials, std::move(header), nullptr, expected_meta, "", nullptr, true, 0};
 
     ASSERT_THAT(request.source_credentials, Eq(expected_source_credentials));
     ASSERT_THAT(request.metadata, Eq(expected_meta));
@@ -62,7 +62,7 @@ TEST(ProducerRequest, Destructor) {
     char data_[100];
     asapo::FileData data{(uint8_t*)data_};
     asapo::GenericRequestHeader header{asapo::kOpcodeTransferData, 1, 1, 1, ""};
-    asapo::ProducerRequest* request = new asapo::ProducerRequest{"", std::move(header), std::move(data), "", "", nullptr, false};
+    asapo::ProducerRequest* request = new asapo::ProducerRequest{"", std::move(header), std::move(data), "", "", nullptr, false, 0};
 
     delete request;
 

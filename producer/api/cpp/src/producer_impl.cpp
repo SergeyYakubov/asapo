@@ -18,8 +18,9 @@ const std::string ProducerImpl::kFinishSubStreamKeyword = "asapo_finish_substrea
 const std::string ProducerImpl::kNoNextSubStreamKeyword = "asapo_no_next";
 
 
-ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, asapo::RequestHandlerType type):
-    log__{GetDefaultProducerLogger()} {
+ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_sec,
+                           asapo::RequestHandlerType type):
+    log__{GetDefaultProducerLogger()}, timeout_sec_{timeout_sec} {
     switch (type) {
     case RequestHandlerType::kTcp:
         discovery_service_.reset(new ReceiverDiscoveryService{endpoint, ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
@@ -91,7 +92,7 @@ Error ProducerImpl::Send(const EventHeader& event_header,
     auto request_header = GenerateNextSendRequest(event_header, std::move(substream), ingest_mode);
 
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                std::move(data), std::move(event_header.user_metadata), std::move(full_path), callback, manage_data_memory}
+                std::move(data), std::move(event_header.user_metadata), std::move(full_path), callback, manage_data_memory, timeout_sec_ * 1000}
     });
 
 }
@@ -187,7 +188,7 @@ Error ProducerImpl::SendMetaData(const std::string& metadata, RequestCallback ca
     FileData data{new uint8_t[metadata.size()]};
     strncpy((char*)data.get(), metadata.c_str(), metadata.size());
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                std::move(data), "", "", callback, true}
+                std::move(data), "", "", callback, true, timeout_sec_}
     });
 }
 

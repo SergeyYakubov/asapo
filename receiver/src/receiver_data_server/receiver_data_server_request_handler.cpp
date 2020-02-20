@@ -86,4 +86,8 @@ Error ReceiverDataServerRequestHandler::SendResponce(const ReceiverDataServerReq
     return server_->SendData(request->source_id, &responce, sizeof(GenericNetworkResponse));
 }
 
+void ReceiverDataServerRequestHandler::ProcessRequestTimeout(GenericRequest* request) {
+// do nothing
+}
+
 }

@@ -22,7 +22,8 @@ class ProducerImpl : public Producer {
     static const std::string kFinishSubStreamKeyword;
     static const std::string kNoNextSubStreamKeyword;
 
-    explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads, asapo::RequestHandlerType type);
+    explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_sec,
+                          asapo::RequestHandlerType type);
     ProducerImpl(const ProducerImpl&) = delete;
     ProducerImpl& operator=(const ProducerImpl&) = delete;
 
@@ -62,6 +63,7 @@ class ProducerImpl : public Producer {
     GenericRequestHeader GenerateNextSendRequest(const EventHeader& event_header, std::string substream,
                                                  uint64_t ingest_mode);
     std::string source_cred_string_;
+    uint64_t timeout_sec_;
 };
 
 }

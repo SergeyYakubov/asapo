@@ -4,7 +4,7 @@ SET beamline=test
 SET stream=python
 SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\data\%beamtime_id%"
-SET dbname = %beamtime_id%_%stream%
+SET dbname=%beamtime_id%_%stream%
 
 echo db.%dbname%.insert({dummy:1})" | %mongo_exe% %dbname%
 
@@ -27,7 +27,14 @@ set PYTHONPATH=%2
 type out
 set NUM=0
 for /F %%N in ('find /C "successfuly sent" ^< "out"') do set NUM=%%N
-echo %NUM% | findstr 8 || goto error
+echo %NUM% | findstr 10 || goto error
+
+for /F %%N in ('find /C "already have record with same id" ^< "out"') do set NUM=%%N
+echo %NUM% | findstr 4 || goto error
+
+
+for /F %%N in ('find /C "duplicate" ^< "out"') do set NUM=%%N
+echo %NUM% | findstr 4 || goto error
 
 goto :clean
 

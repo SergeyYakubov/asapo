@@ -15,13 +15,19 @@ enum class DBErrorType {
     kDuplicateID,
     kAlreadyConnected,
     kBadAddress,
-    kMemoryError
+    kMemoryError,
+    kNoRecord
 };
 
 using DBError = ServiceError<DBErrorType, ErrorType::kDBError>;
 using DBErrorTemplate = ServiceErrorTemplate<DBErrorType, ErrorType::kDBError>;
 
 namespace DBErrorTemplates {
+
+auto const kNoRecord = DBErrorTemplate {
+    "No record", DBErrorType::kNoRecord
+};
+
 
 auto const kNotConnected = DBErrorTemplate {
     "Not connected", DBErrorType::kNotConnected

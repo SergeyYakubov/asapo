@@ -217,16 +217,16 @@ class MockIO : public IO {
     MOCK_CONST_METHOD3(SendFile_t, ErrorInterface * (SocketDescriptor socket_fd, const std::string& fname, size_t length));
 
     Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
-                          size_t length, bool create_directories) const override {
-        return Error{WriteDataToFile_t(root_folder, fname, data.get(), length, create_directories)};
+                          size_t length, bool create_directories, bool allow_ovewrite) const override {
+        return Error{WriteDataToFile_t(root_folder, fname, data.get(), length, create_directories, allow_ovewrite)};
 
     }
 
     MOCK_CONST_METHOD1(RemoveFile_t, ErrorInterface * (const std::string& fname));
 
     Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
-                          size_t length, bool create_directories) const override {
-        return Error{WriteDataToFile_t(root_folder, fname, data, length, create_directories)};
+                          size_t length, bool create_directories, bool allow_ovewrite) const override {
+        return Error{WriteDataToFile_t(root_folder, fname, data, length, create_directories, allow_ovewrite)};
     }
 
 
@@ -235,17 +235,17 @@ class MockIO : public IO {
     }
 
 
-    MOCK_CONST_METHOD5(ReceiveDataToFile_t, ErrorInterface * (SocketDescriptor socket, const std::string& root_folder,
-                       const std::string& fname, size_t fsize, bool create_directories));
+    MOCK_CONST_METHOD6(ReceiveDataToFile_t, ErrorInterface * (SocketDescriptor socket, const std::string& root_folder,
+                       const std::string& fname, size_t fsize, bool create_directories, bool allow_ovewrite));
 
     Error ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
-                            size_t length, bool create_directories) const override {
-        return Error{ReceiveDataToFile_t(socket, root_folder, fname, length, create_directories)};
+                            size_t length, bool create_directories, bool allow_ovewrite) const override {
+        return Error{ReceiveDataToFile_t(socket, root_folder, fname, length, create_directories, allow_ovewrite)};
     }
 
 
-    MOCK_CONST_METHOD5(WriteDataToFile_t, ErrorInterface * (const std::string& root_folder, const std::string& fname,
-                       const uint8_t* data, size_t fsize, bool create_directories));
+    MOCK_CONST_METHOD6(WriteDataToFile_t, ErrorInterface * (const std::string& root_folder, const std::string& fname,
+                       const uint8_t* data, size_t fsize, bool create_directories, bool allow_ovewrite));
 
 
     FileInfo GetFileInfo(const std::string& name, Error* err) const override {

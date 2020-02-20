@@ -3,8 +3,10 @@
 
 #ifdef UNIT_TESTS
 #define VIRTUAL virtual
+#define FINAL
 #else
 #define VIRTUAL
+#define FINAL final
 #endif
 
 namespace  asapo {

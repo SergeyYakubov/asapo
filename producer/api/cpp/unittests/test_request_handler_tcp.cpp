@@ -56,7 +56,7 @@ class RequestHandlerTcpTests : public testing::Test {
     uint64_t expected_file_size = 1337;
     uint64_t expected_meta_size = 4;
     std::string expected_metadata = "meta";
-
+    std::string expected_warning = "warning";
     char  expected_file_name[asapo::kMaxMessageSize] = "test_name";
     char  expected_beamtime_id[asapo::kMaxMessageSize] = "test_beamtime_id";
     char  expected_substream[asapo::kMaxMessageSize] = "test_substream";
@@ -76,7 +76,7 @@ class RequestHandlerTcpTests : public testing::Test {
         callback_called = true;
         callback_err = std::move(err);
         callback_header = header;
-    }, true};
+    }, true, 0};
 
     std::string expected_origin_fullpath = std::string("origin/") + expected_file_name;
     asapo::ProducerRequest request_filesend{expected_beamtime_id, header_fromfile, nullptr, expected_metadata,
@@ -84,10 +84,10 @@ class RequestHandlerTcpTests : public testing::Test {
         callback_called = true;
         callback_err = std::move(err);
         callback_header = header;
-    }, true};
+    }, true, 0};
 
 
-    asapo::ProducerRequest request_nocallback{expected_beamtime_id, header, nullptr, expected_metadata,  "", nullptr, true};
+    asapo::ProducerRequest request_nocallback{expected_beamtime_id, header, nullptr, expected_metadata,  "", nullptr, true, 0};
     testing::NiceMock<asapo::MockLogger> mock_logger;
     uint64_t n_connections{0};
     asapo::RequestHandlerTcp request_handler{&mock_discovery_service, expected_thread_id, &n_connections};
@@ -116,10 +116,11 @@ class RequestHandlerTcpTests : public testing::Test {
     void ExpectGetFileSize(bool ok);
     void ExpectOKSendData(bool only_once = false);
     void ExpectOKSendFile(bool only_once = false);
-    void ExpectFailSendFile(const asapo::ProducerErrorTemplate& err_template, bool only_once = false);
+    void ExpectFailSendFile(const asapo::ProducerErrorTemplate& err_template, bool client_error = false);
     void ExpectOKSendMetaData(bool only_once = false);
     void ExpectFailReceive(bool only_once = false);
-    void ExpectOKReceive(bool only_once = true);
+    void ExpectOKReceive(bool only_once = true, asapo::NetworkErrorCode code = asapo::kNetErrorNoError,
+                         std::string message = "");
     void DoSingleSend(bool connect = true, bool success = true);
     void AssertImmediatelyCallBack(asapo::NetworkErrorCode error_code, const asapo::ProducerErrorTemplate& err_template);
     void SetUp() override {
@@ -137,10 +138,10 @@ class RequestHandlerTcpTests : public testing::Test {
     }
 };
 
-ACTION_P(A_WriteSendDataResponse, error_code) {
+ACTION_P2(A_WriteSendDataResponse, error_code, message) {
     ((asapo::SendDataResponse*)arg1)->op_code = asapo::kOpcodeTransferData;
     ((asapo::SendDataResponse*)arg1)->error_code = error_code;
-    strcpy(((asapo::SendDataResponse*)arg1)->message, expected_auth_message.c_str());
+    strcpy(((asapo::SendDataResponse*)arg1)->message, message.c_str());
 }
 
 MATCHER_P5(M_CheckSendDataRequest, op_code, file_id, file_size, message, substream,
@@ -191,7 +192,7 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(nullptr),
-                A_WriteSendDataResponse(asapo::kNetAuthorizationError),
+                A_WriteSendDataResponse(asapo::kNetAuthorizationError, expected_auth_message),
                 testing::ReturnArg<2>()
             ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
@@ -230,7 +231,7 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(nullptr),
-                A_WriteSendDataResponse(asapo::kNetErrorNoError),
+                A_WriteSendDataResponse(asapo::kNetErrorNoError, expected_auth_message),
                 testing::ReturnArg<2>()
             ));
         EXPECT_CALL(mock_logger, Info(AllOf(
@@ -275,7 +276,7 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
     EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
 }
 
-void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTemplate& err_template, bool only_once) {
+void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTemplate& err_template, bool client_error) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, SendFile_t(expected_sd, expected_origin_fullpath, (size_t) expected_file_size))
@@ -288,13 +289,19 @@ void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTempla
                                            HasSubstr(receivers_list[i])
                                        )
                                       ));
-
-        EXPECT_CALL(mock_logger, Warning(AllOf(
-                                             HasSubstr("cannot send"),
-                                             HasSubstr(receivers_list[i])             )
-                                        ));
+        if (client_error) {
+            EXPECT_CALL(mock_logger, Error(AllOf(
+                                               HasSubstr("cannot send"),
+                                               HasSubstr(receivers_list[i])             )
+                                          ));
+        } else {
+            EXPECT_CALL(mock_logger, Warning(AllOf(
+                                                 HasSubstr("cannot send"),
+                                                 HasSubstr(receivers_list[i])             )
+                                            ));
+        }
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
-        if (only_once) break;
+        if (client_error) break;
         i++;
     }
     if (err_template != asapo::ProducerErrorTemplates::kLocalIOError.Generate()) {
@@ -448,7 +455,7 @@ void RequestHandlerTcpTests::ExpectOKConnect(bool only_once) {
 }
 
 
-void RequestHandlerTcpTests::ExpectOKReceive(bool only_once) {
+void RequestHandlerTcpTests::ExpectOKReceive(bool only_once, asapo::NetworkErrorCode code, std::string message) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
@@ -456,7 +463,7 @@ void RequestHandlerTcpTests::ExpectOKReceive(bool only_once) {
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(nullptr),
-                A_WriteSendDataResponse(asapo::kNetErrorNoError),
+                A_WriteSendDataResponse(code, message),
                 testing::ReturnArg<2>()
             ));
         EXPECT_CALL(mock_logger, Debug(AllOf(
@@ -673,7 +680,7 @@ void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode e
     .WillOnce(
         DoAll(
             testing::SetArgPointee<3>(nullptr),
-            A_WriteSendDataResponse(error_code),
+            A_WriteSendDataResponse(error_code, expected_auth_message),
             testing::ReturnArg<2>()
         ));
     EXPECT_CALL(mock_logger, Debug(AllOf(
@@ -682,11 +689,11 @@ void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode e
                                    )
                                   ));
 
-    EXPECT_CALL(mock_logger, Warning(AllOf(
-                                         HasSubstr("cannot send"),
-                                         HasSubstr(receivers_list[0])
-                                     )
-                                    ));
+    EXPECT_CALL(mock_logger, Error(AllOf(
+                                       HasSubstr("cannot send"),
+                                       HasSubstr(receivers_list[0])
+                                   )
+                                  ));
 
     request_handler.PrepareProcessingRequestLocked();
     auto success = request_handler.ProcessRequestUnlocked(&request);
@@ -712,13 +719,11 @@ TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfAuthorizationFailure) {
     AssertImmediatelyCallBack(asapo::kNetAuthorizationError, asapo::ProducerErrorTemplates::kWrongInput);
 }
 
-TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfFileAlreadyInUse) {
-    AssertImmediatelyCallBack(asapo::kNetErrorFileIdAlreadyInUse, asapo::ProducerErrorTemplates::kWrongInput);
-}
 
 TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfWrongMetadata) {
     AssertImmediatelyCallBack(asapo::kNetErrorWrongRequest, asapo::ProducerErrorTemplates::kWrongInput);
 }
+
 
 TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {
     ExpectOKConnect(true);
@@ -867,6 +872,46 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
     request_filesend.header.custom_data[asapo::kPosIngestMode] = ingest_mode;
     auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
     ASSERT_THAT(success, Eq(true));
+}
+
+
+TEST_F(RequestHandlerTcpTests, TimeoutCallsCallback) {
+    EXPECT_CALL(mock_logger, Error(AllOf(
+                                       HasSubstr("timeout"),
+                                       HasSubstr("substream"))
+                                  ));
+
+    request_handler.ProcessRequestTimeout(&request);
+
+    ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kTimeout));
+    ASSERT_THAT(callback_called, Eq(true));
+}
+
+
+
+TEST_F(RequestHandlerTcpTests, SendWithWarning) {
+    ExpectOKConnect(true);
+    ExpectOKAuthorize(true);
+    ExpectOKSendAll(true);
+    ExpectOKReceive(true, asapo::kNetErrorWarning, expected_warning);
+
+    EXPECT_CALL(mock_logger, Warning(AllOf(
+                                         HasSubstr("server"),
+                                         HasSubstr(expected_warning))
+                                    ));
+
+
+    request_handler.PrepareProcessingRequestLocked();
+    auto success = request_handler.ProcessRequestUnlocked(&request);
+
+    ASSERT_THAT(success, Eq(true));
+    ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kServerWarning));
+    ASSERT_THAT(callback_err->Explain(), HasSubstr(expected_warning));
+    ASSERT_THAT(callback_called, Eq(true));
+    ASSERT_THAT(callback_header.data_size, Eq(header.data_size));
+    ASSERT_THAT(callback_header.op_code, Eq(header.op_code));
+    ASSERT_THAT(callback_header.data_id, Eq(header.data_id));
+    ASSERT_THAT(std::string{callback_header.message}, Eq(std::string{header.message}));
 }
 
 

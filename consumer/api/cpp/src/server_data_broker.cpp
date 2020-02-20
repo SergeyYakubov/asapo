@@ -395,28 +395,14 @@ std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
 }
 
 DataSet ServerDataBroker::DecodeDatasetFromResponse(std::string response, Error* err) {
-    auto parser = JsonStringParser(std::move(response));
-
-    std::vector<std::string> vec_fi_endcoded;
-    Error parse_err;
-    uint64_t id;
-    (parse_err = parser.GetArrayRawStrings("images", &vec_fi_endcoded)) ||
-    (parse_err = parser.GetUInt64("_id", &id));
-    if (parse_err) {
-        *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response:" + parse_err->Explain());
+    DataSet res;
+    if (!res.SetFromJson(std::move(response))) {
+        *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response:" + response);
         return {0, FileInfos{}};
+    } else {
+        *err = nullptr;
+        return res;
     }
-
-    auto res = FileInfos{};
-    for (auto fi_encoded : vec_fi_endcoded) {
-        FileInfo fi;
-        if (!fi.SetFromJson(fi_encoded)) {
-            *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response:" + fi_encoded);
-            return {0, FileInfos{}};
-        }
-        res.emplace_back(fi);
-    }
-    return {id, std::move(res)};
 }
 
 FileInfos ServerDataBroker::QueryImages(std::string query, std::string substream, Error* err) {

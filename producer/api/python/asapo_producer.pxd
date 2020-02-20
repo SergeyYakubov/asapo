@@ -21,6 +21,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
   ErrorTemplateInterface kTimeout "asapo::ProducerErrorTemplates::kTimeout"
   ErrorTemplateInterface kWrongInput "asapo::ProducerErrorTemplates::kWrongInput"
   ErrorTemplateInterface kLocalIOError "asapo::ProducerErrorTemplates::kLocalIOError"
+  ErrorTemplateInterface kServerWarning "asapo::ProducerErrorTemplates::kServerWarning"
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass FileData:
@@ -88,7 +89,7 @@ cdef extern from "asapo_wrappers.h" namespace "asapo":
 cdef extern from "asapo_producer.h" namespace "asapo" nogil:
     cppclass Producer:
         @staticmethod
-        unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,Error* error)
+        unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,uint64_t timeout_sec, Error* error)
         Error SendFile(const EventHeader& event_header, string substream, string full_path, uint64_t ingest_mode,RequestCallback callback)
         Error SendData__(const EventHeader& event_header, string substream, void* data, uint64_t ingest_mode,RequestCallback callback)
         void StopThreads__()

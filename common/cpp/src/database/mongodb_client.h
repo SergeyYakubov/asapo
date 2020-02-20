@@ -41,6 +41,8 @@ class MongoDBClient final : public Database {
     Error InsertAsSubset(const std::string& collection, const FileInfo& file, uint64_t subset_id, uint64_t subset_size,
                          bool ignore_duplicates) const override;
     Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const override;
+    Error GetById(const std::string& collection, uint64_t id, FileInfo* file) const override;
+    Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const override;
     ~MongoDBClient() override;
   private:
     mongoc_client_t* client_{nullptr};
@@ -58,6 +60,8 @@ class MongoDBClient final : public Database {
     Error InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const;
     Error UpdateBsonDocument(uint64_t id, const bson_p& document, bool upsert) const;
     Error AddBsonDocumentToArray(bson_t* query, bson_t* update, bool ignore_duplicates) const;
+    Error GetRecordFromDb(const std::string& collection, uint64_t id, std::string* res) const;
+
 };
 
 }

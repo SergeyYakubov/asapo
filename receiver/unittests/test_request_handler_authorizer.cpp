@@ -78,7 +78,7 @@ class AuthorizerHandlerTests : public Test {
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
-        mock_request.reset(new MockRequest{request_header, 1, expected_producer_uri});
+        mock_request.reset(new MockRequest{request_header, 1, expected_producer_uri, nullptr});
         handler.http_client__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         handler.log__ = &mock_logger;
         config.authorization_server = expected_authorization_server;

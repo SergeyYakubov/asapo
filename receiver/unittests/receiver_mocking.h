@@ -7,6 +7,7 @@
 #include "../src/receiver_statistics.h"
 #include "../src/request.h"
 #include "../src/data_cache.h"
+#include "../src/file_processor.h"
 
 namespace asapo {
 
@@ -40,10 +41,28 @@ class MockStatistics : public asapo::ReceiverStatistics {
 
 };
 
+class MockHandlerDbCheckRequest : public asapo::RequestHandlerDbCheckRequest {
+  public:
+    MockHandlerDbCheckRequest(std::string collection_name_prefix): RequestHandlerDbCheckRequest(collection_name_prefix) {};
+
+    Error ProcessRequest(Request* request) const override {
+        return Error{ProcessRequest_t(*request)};
+    }
+
+    StatisticEntity GetStatisticEntity() const override {
+        return StatisticEntity::kDatabase;
+    }
+
+    MOCK_CONST_METHOD1(ProcessRequest_t, ErrorInterface * (const Request& request));
+
+};
+
+
 class MockRequest: public Request {
   public:
-    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri):
-        Request(request_header, socket_fd, std::move(origin_uri), nullptr) {};
+    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
+                const RequestHandlerDbCheckRequest* db_check_handler ):
+        Request(request_header, socket_fd, std::move(origin_uri), nullptr, db_check_handler) {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetSubstream, std::string());
@@ -74,7 +93,17 @@ class MockRequest: public Request {
     MOCK_METHOD1(SetBeamtimeYear, void (std::string));
     MOCK_CONST_METHOD1(GetFullPath, std::string (std::string));
 
+    MOCK_CONST_METHOD0(WasAlreadyProcessed, bool());
+    MOCK_METHOD0(SetAlreadyProcessedFlag, void());
+    MOCK_METHOD1(SetWarningMessage, void(std::string));
+    MOCK_CONST_METHOD0(GetWarningMessage,  const std::string & ());
 
+
+    Error CheckForDuplicates()  override {
+        return Error{CheckForDuplicates_t()};
+    }
+
+    MOCK_METHOD0(CheckForDuplicates_t, ErrorInterface * ());
 };
 
 
@@ -98,6 +127,15 @@ class MockStatisticsSender: public StatisticsSender {
     MOCK_CONST_METHOD1(SendStatistics_t, void (const StatisticsToSend&));
 };
 
+
+class MockFileProcessor: public FileProcessor {
+  public:
+    Error ProcessFile(const Request* request, bool overwrite) const override {
+        return Error{ProcessFile_t(request, overwrite)};
+
+    }
+    MOCK_CONST_METHOD2(ProcessFile_t, ErrorInterface * (const Request*, bool));
+};
 
 }
 

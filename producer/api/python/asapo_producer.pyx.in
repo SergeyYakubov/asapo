@@ -47,6 +47,10 @@ class AsapoLocalIOError(AsapoProducerError):
 class AsapoTimeOutError(AsapoProducerError):
   pass
 
+class AsapoServerWarning(AsapoProducerError):
+  pass
+
+
 cdef python_exception_from_error(Error& err):
     error_string =  _str(err.get().Explain())
     if err == kTimeout:
@@ -55,6 +59,8 @@ cdef python_exception_from_error(Error& err):
             return AsapoWrongInputError(error_string)
     elif err == kLocalIOError:
             return AsapoLocalIOError(error_string)
+    elif err == kServerWarning:
+            return AsapoServerWarning(error_string)
     else:
         return AsapoProducerError(error_string)
 
@@ -272,19 +278,19 @@ cdef class PyProducer:
             if self.c_producer.get() is not NULL:
                 self.c_producer.get().StopThreads__()
     @staticmethod
-    def __create_producer(endpoint,beamtime_id,stream,token,nthreads):
+    def __create_producer(endpoint,beamtime_id,stream,token,nthreads,timeout_sec):
         pyProd = PyProducer()
         cdef Error err
         cdef SourceCredentials source
         source.beamtime_id = beamtime_id
         source.user_token = token
         source.stream = stream
-        pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,&err)
+        pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,timeout_sec,&err)
         if err:
             throw_exception(err)
         return pyProd
 
-def create_producer(endpoint,beamtime_id,stream,token,nthreads):
+def create_producer(endpoint,beamtime_id,stream,token,nthreads,timeout_sec):
     """
          :param endpoint: server endpoint (url:port)
          :type endpoint: string
@@ -296,11 +302,13 @@ def create_producer(endpoint,beamtime_id,stream,token,nthreads):
          :type token: string
          :param nthreads: ingest mode flag
          :type nthreads: int
+         :param timeout_sec: send requests timeout
+         :type timeout_sec: int
          :raises:
             AsapoWrongInputError: wrong input (number of threads, ,,,)
             AsapoProducerError: actually should not happen
     """
-    return PyProducer.__create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(stream),_bytes(token),nthreads)
+    return PyProducer.__create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(stream),_bytes(token),nthreads,timeout_sec)
 
 
 __version__ = "@ASAPO_VERSION_PYTHON@"

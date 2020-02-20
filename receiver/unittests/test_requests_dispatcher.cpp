@@ -65,7 +65,7 @@ TEST(RequestDispatcher, Constructor) {
 class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-        Request(request_header, socket_fd, "", nullptr) {};
+        Request(request_header, socket_fd, "", nullptr, nullptr) {};
     Error Handle(ReceiverStatistics* statistics) override {
         return Error{Handle_t()};
     };
@@ -259,15 +259,16 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestSendOK) {
 }
 
 
-TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAlreadyExist) {
-    MockHandleRequest(true, asapo::IOErrorTemplates::kFileAlreadyExists.Generate());
+TEST_F(RequestsDispatcherTests, ProcessRequestReturnsOkWithWarning) {
+    MockHandleRequest(false);
     MockSendResponse(&response, false);
+    request->SetWarningMessage("duplicate");
 
     auto err = dispatcher->ProcessRequest(request);
 
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kFileAlreadyExists));
-    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorFileIdAlreadyInUse));
-    ASSERT_THAT(std::string(response.message), HasSubstr(std::string("kFileAlreadyExists")));
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorWarning));
+    ASSERT_THAT(std::string(response.message), HasSubstr(std::string("duplicate")));
 }
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAuthorizationFailure) {

@@ -84,7 +84,7 @@ class SystemIO final : public IO {
     Error           CreateDirectoryWithParents(const std::string& root_path, const std::string& path) const;
     uint8_t* AllocateArray(uint64_t fsize, Error* err) const;
     FileDescriptor OpenWithCreateFolders(const std::string& root_folder, const std::string& fname,
-                                         bool create_directories, Error* err) const;
+                                         bool create_directories, bool allow_ovewrite, Error* err) const;
   public:
     ~SystemIO();
     /*
@@ -133,12 +133,12 @@ class SystemIO final : public IO {
     void            CreateNewDirectory(const std::string& directory_name, Error* err) const override;
     FileData        GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override;
     Error           WriteDataToFile  (const std::string& root_folder, const std::string& fname, const FileData& data,
-                                      size_t length, bool create_directories) const override;
+                                      size_t length, bool create_directories, bool allow_ovewrite) const override;
     Error           ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
-                                      size_t length, bool create_directories) const override;
+                                      size_t length, bool create_directories, bool allow_ovewrite) const override;
 
     Error           WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
-                                    size_t length, bool create_directories) const override;
+                                    size_t length, bool create_directories, bool allow_ovewrite) const override;
     SubDirList      GetSubDirectories(const std::string& path, Error* err) const override;
     std::string     ReadFileToString(const std::string& fname, Error* err) const override;
     Error           RemoveFile(const std::string& fname) const override;

@@ -147,14 +147,15 @@ void asapo::SystemIO::CreateNewDirectory(const std::string& directory_name, Erro
 }
 
 FileDescriptor SystemIO::OpenWithCreateFolders(const std::string& root_folder, const std::string& fname,
-                                               bool create_directories, Error* err) const {
+                                               bool create_directories, bool allow_ovewrite, Error* err) const {
     std::string full_name;
     if (!root_folder.empty()) {
         full_name = root_folder + kPathSeparator + fname;
     } else {
         full_name = fname;
     }
-    auto fd = Open(full_name, IO_OPEN_MODE_CREATE | IO_OPEN_MODE_RW | IO_OPEN_MODE_SET_LENGTH_0, err);
+    auto create_flag = allow_ovewrite ? IO_OPEN_MODE_CREATE : IO_OPEN_MODE_CREATE_AND_FAIL_IF_EXISTS;
+    auto fd = Open(full_name, create_flag | IO_OPEN_MODE_RW | IO_OPEN_MODE_SET_LENGTH_0, err);
     if (*err == IOErrorTemplates::kFileNotFound && create_directories)  {
         size_t pos = fname.rfind(kPathSeparator);
         if (pos == std::string::npos) {
@@ -165,7 +166,7 @@ FileDescriptor SystemIO::OpenWithCreateFolders(const std::string& root_folder, c
         if (*err) {
             return -1;
         }
-        return OpenWithCreateFolders(root_folder, fname, false, err);
+        return OpenWithCreateFolders(root_folder, fname, false, allow_ovewrite, err);
     }
 
     return fd;
@@ -173,9 +174,9 @@ FileDescriptor SystemIO::OpenWithCreateFolders(const std::string& root_folder, c
 }
 
 Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
-                                size_t length, bool create_directories) const {
+                                size_t length, bool create_directories, bool allow_ovewrite) const {
     Error err;
-    auto fd = OpenWithCreateFolders(root_folder, fname, create_directories, &err);
+    auto fd = OpenWithCreateFolders(root_folder, fname, create_directories, allow_ovewrite, &err);
     if (err) {
         return err;
     }
@@ -192,8 +193,8 @@ Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::strin
 }
 
 Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
-                                size_t length, bool create_directories) const {
-    return WriteDataToFile(root_folder, fname, data.get(), length, create_directories);
+                                size_t length, bool create_directories, bool allow_ovewrite) const {
+    return WriteDataToFile(root_folder, fname, data.get(), length, create_directories, allow_ovewrite);
 }
 
 std::string SystemIO::ReadFileToString(const std::string& fname, Error* err) const {
@@ -663,9 +664,9 @@ Error SystemIO::SendFile(SocketDescriptor socket_fd, const std::string& fname, s
 }
 
 Error SystemIO:: ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
-                                   size_t length, bool create_directories) const {
+                                   size_t length, bool create_directories, bool allow_ovewrite) const {
     Error err;
-    auto fd = OpenWithCreateFolders(root_folder, fname, create_directories, &err);
+    auto fd = OpenWithCreateFolders(root_folder, fname, create_directories, allow_ovewrite, &err);
     if (err) {
         return err;
     }

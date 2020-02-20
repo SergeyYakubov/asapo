@@ -10,12 +10,17 @@ enum class ProducerErrorType {
     kRequestPoolIsFull,
     kLocalIOError,
     kWrongInput,
+    kServerWarning,
     kTimeout
 };
 
 using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
 
 namespace ProducerErrorTemplates {
+
+auto const kServerWarning = ProducerErrorTemplate {
+    "server warning", ProducerErrorType::kServerWarning
+};
 
 auto const kLocalIOError = ProducerErrorTemplate {
     "local i/o error", ProducerErrorType::kLocalIOError

@@ -17,8 +17,7 @@ using asapo::M_AssertEq;
 
 using namespace std::chrono;
 
-static const std::unique_ptr<asapo::IO>
-io(asapo::GenerateDefaultIO());
+static const std::unique_ptr<asapo::IO> io(asapo::GenerateDefaultIO());
 static const std::string kListenAddress = "127.0.0.1:60123";
 static std::promise<void> kThreadStarted;
 static const int kNumberOfChecks = 2;
@@ -79,7 +78,7 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
                 io->Send(client_fd, buffer.get(), received, &err);
                 ExitIfErrIsNotOk(&err, 107);
 
-                io->ReceiveDataToFile(client_fd, "", "received", need_to_receive_size, false);
+                io->ReceiveDataToFile(client_fd, "", "received", need_to_receive_size, false, true);
                 buffer = io->GetDataFromFile("received", &need_to_receive_size, &err);
                 io->Send(client_fd, buffer.get(), received, &err);
                 ExitIfErrIsNotOk(&err, 108);

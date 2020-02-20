@@ -20,6 +20,7 @@ class Producer {
      */
     static std::unique_ptr<Producer> Create(const std::string& endpoint, uint8_t n_processing_threads,
                                             asapo::RequestHandlerType type, SourceCredentials source_cred,
+                                            uint64_t timeout_sec,
                                             Error* err);
 
     virtual ~Producer() = default;

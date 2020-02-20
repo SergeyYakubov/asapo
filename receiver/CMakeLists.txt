@@ -3,7 +3,7 @@ set(SOURCE_FILES
         src/receiver.cpp
         src/connection.cpp
         src/request.cpp
-        src/request_handler_file_write.cpp
+        src/request_handler_file_process.cpp
         src/statistics.cpp
         src/statistics_sender_influx_db.cpp
         src/receiver_config.cpp
@@ -23,9 +23,12 @@ set(SOURCE_FILES
         src/receiver_statistics.cpp
         src/request_handler_db_meta_write.cpp
         src/request_handler_receive_metadata.cpp
-        src/request_handler_file_receive.cpp
+        src/request_handler_db_check_request.cpp
         src/request_factory.cpp
-        src/request_handler_db.cpp)
+        src/write_file_processor.cpp
+        src/request_handler_db.cpp
+        src/file_processor.cpp
+        src/receive_file_processor.cpp)
 
 
 ################################
@@ -66,9 +69,9 @@ set(TEST_SOURCE_FILES
         unittests/test_config.cpp
         unittests/test_request.cpp
         unittests/test_request_factory.cpp
-        unittests/test_request_handler_file_write.cpp
-        unittests/test_request_handler_file_receive.cpp
+        unittests/test_request_handler_file_process.cpp
         unittests/test_request_handler_db_writer.cpp
+        unittests/test_request_handler_db_check_request.cpp
         unittests/test_request_handler_db_meta_writer.cpp
         unittests/test_request_handler_db.cpp
         unittests/test_request_handler_authorizer.cpp
@@ -79,6 +82,8 @@ set(TEST_SOURCE_FILES
         unittests/mock_receiver_config.cpp
         unittests/test_requests_dispatcher.cpp
         unittests/test_datacache.cpp
+        unittests/test_write_file_processor.cpp
+        unittests/test_receive_file_processor.cpp
         )
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")

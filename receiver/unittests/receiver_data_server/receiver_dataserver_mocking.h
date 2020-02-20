@@ -47,7 +47,7 @@ class MockPool : public RequestPool {
     Error AddRequests(GenericRequests requests) noexcept override {
         std::vector<GenericRequest> reqs;
         for (const auto& preq : requests) {
-            reqs.push_back(GenericRequest{preq->header});
+            reqs.push_back(GenericRequest{preq->header, 0});
         }
         return Error(AddRequests_t(std::move(reqs)));
 

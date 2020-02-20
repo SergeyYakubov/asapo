@@ -38,7 +38,18 @@ class MockDatabase : public Database {
     }
     MOCK_CONST_METHOD4(Upsert_t, ErrorInterface * (const std::string&, uint64_t id, const uint8_t* data, uint64_t size));
 
+    Error GetById(const std::string& collection, uint64_t id, FileInfo* file) const override {
+        return Error{GetById_t(collection, id, file)};
+    }
 
+    MOCK_CONST_METHOD3(GetById_t, ErrorInterface * (const std::string&, uint64_t id, FileInfo*));
+
+
+    Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const override {
+        return Error{GetSetById_t(collection, set_id, id, file)};
+    }
+
+    MOCK_CONST_METHOD4(GetSetById_t, ErrorInterface * (const std::string&, uint64_t set_id, uint64_t id, FileInfo*));
 
     // stuff to test db destructor is called and avoid "uninteresting call" messages
     MOCK_METHOD0(Die, void());

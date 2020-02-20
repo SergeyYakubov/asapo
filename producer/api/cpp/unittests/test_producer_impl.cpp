@@ -50,7 +50,7 @@ MATCHER_P10(M_CheckSendDataRequest, op_code, source_credentials, metadata, file_
 }
 
 TEST(ProducerImpl, Constructor) {
-    asapo::ProducerImpl producer{"", 4, asapo::RequestHandlerType::kTcp};
+    asapo::ProducerImpl producer{"", 4, 3600, asapo::RequestHandlerType::kTcp};
     ASSERT_THAT(dynamic_cast<asapo::AbstractLogger*>(producer.log__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestPool*>(producer.request_pool__.get()), Ne(nullptr));
 }
@@ -61,7 +61,7 @@ class ProducerImplTests : public testing::Test {
     asapo::ProducerRequestHandlerFactory factory{&service};
     testing::NiceMock<asapo::MockLogger> mock_logger;
     testing::NiceMock<MockRequestPull> mock_pull{&factory, &mock_logger};
-    asapo::ProducerImpl producer{"", 1, asapo::RequestHandlerType::kTcp};
+    asapo::ProducerImpl producer{"", 1, 3600, asapo::RequestHandlerType::kTcp};
     uint64_t expected_size = 100;
     uint64_t expected_id = 10;
     uint64_t expected_subset_id = 100;

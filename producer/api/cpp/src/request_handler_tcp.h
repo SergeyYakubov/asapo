@@ -23,6 +23,7 @@ class RequestHandlerTcp: public RequestHandler {
     bool ReadyProcessRequest() override;
     void PrepareProcessingRequestLocked()  override;
     void TearDownProcessingRequestLocked(bool processing_succeeded)  override;
+    void ProcessRequestTimeout(GenericRequest* request)  override;
 
     virtual ~RequestHandlerTcp() = default;
     std::unique_ptr<IO> io__;
@@ -44,10 +45,12 @@ class RequestHandlerTcp: public RequestHandler {
     bool Disconnected();
     void Disconnect();
     bool ServerError(const Error& err);
-    ReceiversList receivers_list_;
-    system_clock::time_point last_receivers_uri_update_;
     bool Connected();
     bool CanCreateNewConnections();
+    bool ProcessErrorFromReceiver(const Error& error, const ProducerRequest* request, const std::string& receiver_uri);
+    ReceiversList receivers_list_;
+    system_clock::time_point last_receivers_uri_update_;
+
     uint64_t thread_id_;
     uint64_t* ncurrent_connections_;
     std::string connected_receiver_uri_;

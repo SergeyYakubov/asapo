@@ -16,8 +16,10 @@ class MockRequestHandler : public RequestHandler {
     MOCK_METHOD0(ReadyProcessRequest, bool());
     MOCK_METHOD1(TearDownProcessingRequestLocked, void(bool processing_succeeded));
     MOCK_METHOD1(ProcessRequestUnlocked_t, bool (const GenericRequest* request));
-
+    MOCK_METHOD1(ProcessRequestTimeout, void(GenericRequest* request));
+    uint64_t retry_counter = 0;
     bool ProcessRequestUnlocked(GenericRequest* request)  override {
+        retry_counter = request->GetRetryCounter();
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         return ProcessRequestUnlocked_t(request);
     }

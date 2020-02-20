@@ -16,7 +16,8 @@ class ProducerRequest : public GenericRequest {
                     std::string metadata,
                     std::string original_filepath,
                     RequestCallback callback,
-                    bool manage_data_memory);
+                    bool manage_data_memory,
+                    uint64_t timeout_ms);
     std::string source_credentials;
     std::string metadata;
     FileData data;

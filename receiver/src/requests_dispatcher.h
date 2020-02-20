@@ -24,6 +24,10 @@ class RequestsDispatcher {
   private:
     SocketDescriptor socket_fd_;
     std::string producer_uri_;
+    GenericNetworkResponse CreateResponseToRequest(const std::unique_ptr<Request>& request,
+                                                   const Error& handle_error) const;
+    Error HandleRequest(const std::unique_ptr<Request>& request) const;
+    Error SendResponse(const std::unique_ptr<Request>& request, const Error& handle_error) const;
 };
 
 }

@@ -64,7 +64,29 @@ bool TimeFromJson(const JsonStringParser& parser, const std::string name, std::c
     return true;
 }
 
+bool DataSet::SetFromJson(const std::string& json_string) {
+    auto old = *this;
 
+    auto parser = JsonStringParser(std::move(json_string));
+
+    std::vector<std::string> vec_fi_endcoded;
+    Error parse_err;
+    (parse_err = parser.GetArrayRawStrings("images", &vec_fi_endcoded)) ||
+    (parse_err = parser.GetUInt64("_id", &id));
+    if (parse_err) {
+        *this = old;
+        return false;
+    }
+    for (auto fi_encoded : vec_fi_endcoded) {
+        FileInfo fi;
+        if (!fi.SetFromJson(fi_encoded)) {
+            *this = old;
+            return false;
+        }
+        content.emplace_back(fi);
+    }
+    return true;
+}
 
 bool FileInfo::SetFromJson(const std::string& json_string) {
     auto old = *this;

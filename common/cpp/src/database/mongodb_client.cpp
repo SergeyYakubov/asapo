@@ -1,9 +1,9 @@
 #include "mongodb_client.h"
+#include "mongodb_client.h"
 #include "database/db_error.h"
 
 namespace asapo {
 
-using std::string;
 using asapo::Database;
 
 MongoDbInstance::MongoDbInstance() {
@@ -33,7 +33,7 @@ MongoDBClient::MongoDBClient() {
     MongoDbInstance::Instantiate();
 }
 
-Error MongoDBClient::InitializeClient(const string& address) {
+Error MongoDBClient::InitializeClient(const std::string& address) {
     auto uri_str = DBAddress(address);
     client_ = mongoc_client_new (uri_str.c_str());
 
@@ -49,7 +49,7 @@ Error MongoDBClient::InitializeClient(const string& address) {
 
 }
 
-void MongoDBClient::UpdateCurrentCollectionIfNeeded(const string& collection_name) const {
+void MongoDBClient::UpdateCurrentCollectionIfNeeded(const std::string& collection_name) const {
     if (collection_name == current_collection_name_) {
         return;
     }
@@ -71,7 +71,7 @@ Error MongoDBClient::TryConnectDatabase() {
     return err;
 }
 
-Error MongoDBClient::Connect(const string& address, const string& database_name) {
+Error MongoDBClient::Connect(const std::string& address, const std::string& database_name) {
     if (connected_) {
         return DBErrorTemplates::kAlreadyConnected.Generate();
     }
@@ -90,7 +90,7 @@ Error MongoDBClient::Connect(const string& address, const string& database_name)
     return err;
 }
 
-string MongoDBClient::DBAddress(const string& address) const {
+std::string MongoDBClient::DBAddress(const std::string& address) const {
     return "mongodb://" + address + "/?appname=asapo";
 }
 
@@ -269,6 +269,87 @@ Error MongoDBClient::InsertAsSubset(const std::string& collection, const FileInf
     bson_destroy (update);
 
     return err;
+}
+
+Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, std::string* res) const {
+    if (!connected_) {
+        return DBErrorTemplates::kNotConnected.Generate();
+    }
+
+    UpdateCurrentCollectionIfNeeded(collection);
+
+
+    Error err;
+    bson_error_t mongo_err;
+    bson_t* filter;
+    bson_t* opts;
+    mongoc_cursor_t* cursor;
+    const bson_t* doc;
+    char* str;
+
+    filter = BCON_NEW ("_id", BCON_INT64 (id));
+    opts = BCON_NEW ("limit", BCON_INT64 (1));
+
+    cursor = mongoc_collection_find_with_opts (current_collection_, filter, opts, NULL);
+
+    bool found = false;
+    while (mongoc_cursor_next (cursor, &doc)) {
+        str = bson_as_relaxed_extended_json (doc, NULL);
+        *res = str;
+        found = true;
+        bson_free (str);
+    }
+
+    if (mongoc_cursor_error (cursor, &mongo_err)) {
+        err = DBErrorTemplates::kDBError.Generate(mongo_err.message);
+    } else {
+        if (!found) {
+            err = DBErrorTemplates::kNoRecord.Generate();
+        }
+    }
+
+    mongoc_cursor_destroy (cursor);
+    bson_destroy (filter);
+    bson_destroy (opts);
+
+    return err;
+}
+
+
+Error MongoDBClient::GetById(const std::string& collection, uint64_t id, FileInfo* file) const {
+    std::string record_str;
+    auto err = GetRecordFromDb(collection, id, &record_str);
+    if (err) {
+        return err;
+    }
+
+    if (!file->SetFromJson(record_str)) {
+        DBErrorTemplates::kJsonParseError.Generate(record_str);
+    }
+    return nullptr;
+}
+
+Error MongoDBClient::GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const {
+    std::string record_str;
+    auto err = GetRecordFromDb(collection, set_id, &record_str);
+    if (err) {
+        return err;
+    }
+
+    DataSet dataset;
+    if (!dataset.SetFromJson(record_str)) {
+        DBErrorTemplates::kJsonParseError.Generate(record_str);
+    }
+
+    for (const auto& fileinfo : dataset.content) {
+        if (fileinfo.id == id) {
+            *file = fileinfo;
+            return nullptr;
+        }
+    }
+
+    return DBErrorTemplates::kNoRecord.Generate();
+
 }
 
 }

@@ -5,7 +5,7 @@
 #include "../src/receiver_error.h"
 #include "../src/request.h"
 #include "../src/request_handler.h"
-#include "../src/request_handler_file_write.h"
+#include "../src/request_handler_file_process.h"
 #include "../src/request_handler_db_write.h"
 #include "database/database.h"
 
@@ -60,6 +60,16 @@ class MockReqestHandler : public asapo::ReceiverRequestHandler {
 
 };
 
+
+
+TEST(RequestTest, Constructor) {
+    std::unique_ptr<Request> request;
+    GenericRequestHeader generic_request_header;
+    request.reset(new Request{generic_request_header, 1, "", nullptr, nullptr});
+    ASSERT_THAT(request->WasAlreadyProcessed(), false);
+}
+
+
 class RequestTests : public Test {
   public:
     GenericRequestHeader generic_request_header;
@@ -86,7 +96,7 @@ class RequestTests : public Test {
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
-        request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr});
+        request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(expected_socket_id, _, data_size_, _)).WillByDefault(
             DoAll(SetArgPointee<3>(nullptr),
@@ -166,7 +176,7 @@ void RequestTests::ExpectFileName(std::string sended, std::string received) {
     strcpy(generic_request_header.message, sended.c_str());
 
     request->io__.release();
-    request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr});
+    request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
 
     auto fname = request->GetFileName();
@@ -180,7 +190,7 @@ TEST_F(RequestTests, GetSubstream) {
     strcpy(generic_request_header.substream, expected_substream.c_str());
 
     request->io__.release();
-    request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr});
+    request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
 
     auto substream = request->GetSubstream();
@@ -261,6 +271,18 @@ TEST_F(RequestTests, RequestTests_GetFullPath) {
     ASSERT_THAT(request->GetFullPath("test_folder"), expected_path);
 }
 
+TEST_F(RequestTests, SetGetWarningMessage) {
+    request->SetWarningMessage("warn");
+
+    ASSERT_THAT(request->GetWarningMessage(), "warn");
+}
+
+
+TEST_F(RequestTests, SetGetOverwriteAllowed) {
+    request->SetAlreadyProcessedFlag();
+
+    ASSERT_THAT(request->WasAlreadyProcessed(), true);
+}
 
 
 }

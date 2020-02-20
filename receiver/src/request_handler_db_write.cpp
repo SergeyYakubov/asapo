@@ -3,6 +3,7 @@
 #include "receiver_config.h"
 #include "receiver_logger.h"
 #include "io/io_factory.h"
+#include "database/db_error.h"
 
 
 namespace asapo {
@@ -17,12 +18,34 @@ std::string string_format( const std::string& format, Args ... args ) {
 
 
 Error RequestHandlerDbWrite::ProcessRequest(Request* request) const {
-    if (Error err = RequestHandlerDb::ProcessRequest(request) ) {
+    if (request->WasAlreadyProcessed()) {
+        return nullptr;
+    }
+
+    if (auto err = RequestHandlerDb::ProcessRequest(request) ) {
         return err;
     }
 
-    return InsertRecordToDb(request);
+    auto err =  InsertRecordToDb(request);
+    if (err == DBErrorTemplates::kDuplicateID) {
+        return ProcessDuplicateRecordSituation(request);
+    } else {
+        return err;
+    }
 }
+
+Error RequestHandlerDbWrite::ProcessDuplicateRecordSituation(Request* request) const {
+    auto check_err = request->CheckForDuplicates();
+    if (check_err == ReceiverErrorTemplates::kWarningDuplicatedRequest) {
+        std::string warn_str = "ignoring duplicate record for id " + std::to_string(request->GetDataID());
+        request->SetWarningMessage(warn_str);
+        log__->Warning(warn_str);
+        return nullptr;
+    }
+
+    return check_err;
+}
+
 
 Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
     auto file_info = PrepareFileInfo(request);
@@ -31,7 +54,7 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
     auto col_name = collection_name_prefix_ + "_" + request->GetSubstream();
     Error err;
     if (op_code == Opcode::kOpcodeTransferData) {
-        err =  db_client__->Insert(col_name, file_info, true);
+        err =  db_client__->Insert(col_name, file_info, false);
         if (!err) {
             log__->Debug(std::string{"insert record id "} + std::to_string(file_info.id) + " to " + col_name + " in " +
                          db_name_ +
@@ -40,7 +63,7 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
     } else {
         auto subset_id = request->GetCustomData()[1];
         auto subset_size = request->GetCustomData()[2];
-        err =  db_client__->InsertAsSubset(col_name, file_info, subset_id, subset_size, true);
+        err =  db_client__->InsertAsSubset(col_name, file_info, subset_id, subset_size, false);
         if (!err) {
             log__->Debug(std::string{"insert record as subset id "} + std::to_string(subset_id) + ", id: " +
                          std::to_string(file_info.id) + " to " + col_name + " in " +
@@ -62,9 +85,11 @@ FileInfo RequestHandlerDbWrite::PrepareFileInfo(const Request* request) const {
     file_info.metadata = request->GetMetaData();
     return file_info;
 }
+
 RequestHandlerDbWrite::RequestHandlerDbWrite(std::string collection_name_prefix) : RequestHandlerDb(std::move(
                 collection_name_prefix)) {
 
 }
+
 
 }

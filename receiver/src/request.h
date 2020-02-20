@@ -7,13 +7,13 @@
 #include "common/networking.h"
 #include "io/io.h"
 #include "request_handler.h"
-#include "request_handler_file_write.h"
+#include "request_handler_file_process.h"
 #include "request_handler_db_write.h"
 #include "request_handler_authorize.h"
 #include "request_handler_db_meta_write.h"
 #include "request_handler_receive_data.h"
 #include "request_handler_receive_metadata.h"
-#include "request_handler_file_receive.h"
+#include "request_handler_db_check_request.h"
 
 #include "receiver_statistics.h"
 #include "data_cache.h"
@@ -27,8 +27,9 @@ class Request {
   public:
     VIRTUAL Error Handle(ReceiverStatistics*);
     ~Request() = default;
+    Request() = delete;
     Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
-            DataCache* cache);
+            DataCache* cache, const RequestHandlerDbCheckRequest* db_check_handler);
     VIRTUAL void AddHandler(const ReceiverRequestHandler*);
     VIRTUAL const RequestHandlerList& GetListHandlers() const;
     VIRTUAL uint64_t GetDataSize() const;
@@ -66,6 +67,11 @@ class Request {
     std::unique_ptr<IO> io__;
     DataCache* cache__ = nullptr;
     VIRTUAL uint64_t GetSlotId() const;
+    VIRTUAL bool WasAlreadyProcessed() const;
+    VIRTUAL void SetAlreadyProcessedFlag();
+    VIRTUAL void SetWarningMessage(std::string message);
+    VIRTUAL const std::string& GetWarningMessage() const;
+    VIRTUAL Error CheckForDuplicates();
   private:
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
@@ -80,6 +86,9 @@ class Request {
     std::string beamtime_year_;
     std::string metadata_;
     CacheMeta* slot_meta_ = nullptr;
+    bool already_processed_ = false;
+    std::string warning_message_;
+    const RequestHandlerDbCheckRequest* check_duplicate_request_handler_;
 };
 
 

@@ -55,10 +55,14 @@ int main(int argc, char* argv[]) {
     auto array = new uint8_t[params.length] {'1', '2', '3'};
     FileData data{array};
 
-    auto err = io->WriteDataToFile("", params.fname, data, params.length, true);
+    auto err = io->WriteDataToFile("", params.fname, data, params.length, true, true);
 
     if (params.result == "ok") {
         AssertGoodResult(io, err, data, params);
+        // check allow_overwrite works
+        auto err = io->WriteDataToFile("", params.fname, data, params.length, true, false);
+        params.message = asapo::IOErrorTemplates::kFileAlreadyExists.Generate()->Explain();
+        AssertBadResult(err, params);
     } else {
         AssertBadResult(err, params);
     }

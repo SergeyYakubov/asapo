@@ -16,6 +16,8 @@ class RequestHandlerDbWrite final: public RequestHandlerDb {
   private:
     FileInfo PrepareFileInfo(const Request* request) const;
     Error InsertRecordToDb(const Request* request) const;
+    Error ProcessDuplicateRecordSituation(Request* request) const;
+
 };
 
 }

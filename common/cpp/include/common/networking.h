@@ -25,11 +25,10 @@ enum Opcode : uint8_t {
 
 enum NetworkErrorCode : uint16_t {
     kNetErrorNoError,
+    kNetErrorWarning,
     kNetErrorWrongRequest,
     kNetErrorNoData,
     kNetAuthorizationError,
-    kNetErrorFileIdAlreadyInUse,
-    kNetErrorAllocateStorageFailed,
     kNetErrorInternalServerError = 65535,
 };
 

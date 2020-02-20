@@ -8,6 +8,9 @@ cd cmake-3.*
 make -j$(nproc)
 make install
 
+cd ..
+rm -rf cmake-3*
+
 cmake --version
 
 /usr/local/bin/cmake --version

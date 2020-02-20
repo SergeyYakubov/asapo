@@ -5,9 +5,11 @@
 namespace asapo {
 
 Request::Request(const GenericRequestHeader& header,
-                 SocketDescriptor socket_fd, std::string origin_uri, DataCache* cache) : io__{GenerateDefaultIO()},
+                 SocketDescriptor socket_fd, std::string origin_uri, DataCache* cache,
+                 const RequestHandlerDbCheckRequest* db_check_handler) : io__{GenerateDefaultIO()},
     cache__{cache}, request_header_(header),
-    socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)} {
+    socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
+    check_duplicate_request_handler_{db_check_handler} {
 }
 
 Error Request::PrepareDataBufferAndLockIfNeeded() {
@@ -175,6 +177,26 @@ std::string Request::GetFullPath(std::string root_folder) const {
            + GetBeamtimeYear() + kPathSeparator
            + "data" + kPathSeparator
            + GetBeamtimeId();
+}
+
+bool Request::WasAlreadyProcessed() const {
+    return already_processed_;
+}
+
+void Request::SetAlreadyProcessedFlag() {
+    already_processed_ = true;
+}
+
+void Request::SetWarningMessage(std::string message) {
+    warning_message_ = std::move(message);
+}
+
+const std::string& Request::GetWarningMessage() const {
+    return warning_message_;
+}
+
+Error Request::CheckForDuplicates()  {
+    return check_duplicate_request_handler_->ProcessRequest(this);
 }
 
 }

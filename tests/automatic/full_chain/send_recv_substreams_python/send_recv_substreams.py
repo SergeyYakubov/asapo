@@ -28,7 +28,7 @@ def callback(header,err):
 source, beamtime, token = sys.argv[1:]
 
 broker = asapo_consumer.create_server_broker(source,".", beamtime,"",token,timeout)
-producer  = asapo_producer.create_producer(source,beamtime, "", token, 1)
+producer  = asapo_producer.create_producer(source,beamtime, "", token, 1, 600)
 producer.set_log_level("debug")
 
 group_id  = broker.generate_group_id()

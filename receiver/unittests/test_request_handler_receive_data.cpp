@@ -75,7 +75,7 @@ class ReceiveDataHandlerTests : public Test {
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
-        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
+        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }
@@ -114,7 +114,7 @@ TEST_F(ReceiveDataHandlerTests, CheckStatisticEntity) {
 
 TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveEmptyData) {
     generic_request_header.data_size = 0;
-    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
+    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr, nullptr});
 
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _)).Times(0);
 
@@ -127,7 +127,7 @@ TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveEmptyData) {
 TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveDataWhenMetadataOnlyWasSent) {
     generic_request_header.data_size = 10;
     generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kTransferMetaDataOnly;
-    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr});
+    request.reset(new Request{generic_request_header, socket_fd_, "", nullptr, nullptr});
 
     auto err = handler.ProcessRequest(request.get());
 

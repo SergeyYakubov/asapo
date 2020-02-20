@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <database/db_error.h>
 
 #include "unittests/MockIO.h"
 #include "unittests/MockDatabase.h"
@@ -34,6 +35,7 @@ using ::testing::InSequence;
 using ::testing::SetArgPointee;
 using ::testing::AllOf;
 using ::testing::HasSubstr;
+using ::testing::AtLeast;
 
 
 using ::asapo::Error;
@@ -82,13 +84,15 @@ class DbWriterHandlerTests : public Test {
     uint64_t expected_subset_id = 15;
     uint64_t expected_subset_size = 2;
     uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_subset_id, expected_subset_size};
+    asapo::MockHandlerDbCheckRequest mock_db_check_handler{asapo::kDBDataCollectionNamePrefix};
+
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
         request_header.op_code = asapo::Opcode::kOpcodeTransferData;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, ""});
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", &mock_db_check_handler});
         config.database_uri = "127.0.0.1:27017";
         config.advertise_ip = expected_host_ip;
         config.dataserver.listen_port = expected_port;
@@ -97,7 +101,8 @@ class DbWriterHandlerTests : public Test {
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
     }
     void ExpectRequestParams(asapo::Opcode op_code, const std::string& stream);
-
+    void ExpectLogger();
+    void ExpectDuplicatedID();
     FileInfo PrepareFileInfo();
     void TearDown() override {
         handler.db_client__.release();
@@ -119,6 +124,11 @@ MATCHER_P(CompareFileInfo, file, "") {
 
 
 void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std::string& stream) {
+
+    EXPECT_CALL(*mock_request, WasAlreadyProcessed())
+    .WillOnce(Return(false))
+    ;
+
     EXPECT_CALL(*mock_request, GetBeamtimeId())
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
@@ -155,8 +165,8 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     .WillOnce(ReturnRef(expected_metadata))
     ;
 
-    EXPECT_CALL(*mock_request, GetDataID())
-    .WillOnce(Return(expected_id))
+    EXPECT_CALL(*mock_request, GetDataID()).Times(AtLeast(1)).WillRepeatedly
+    (Return(expected_id))
     ;
 
     EXPECT_CALL(*mock_request, GetOpCode())
@@ -183,15 +193,7 @@ FileInfo DbWriterHandlerTests::PrepareFileInfo() {
     file_info.metadata = expected_metadata;
     return file_info;
 }
-
-TEST_F(DbWriterHandlerTests, CallsInsert) {
-
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_stream);
-    auto file_info = PrepareFileInfo();
-
-    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareFileInfo(file_info), _)).
-    WillOnce(testing::Return(nullptr));
-
+void DbWriterHandlerTests::ExpectLogger() {
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
                                          HasSubstr(config.database_uri),
                                          HasSubstr(expected_beamtime_id),
@@ -200,6 +202,17 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
                                         )
                                   )
                );
+
+}
+
+TEST_F(DbWriterHandlerTests, CallsInsert) {
+
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_stream);
+    auto file_info = PrepareFileInfo();
+
+    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareFileInfo(file_info), false)).
+    WillOnce(testing::Return(nullptr));
+    ExpectLogger();
 
     handler.ProcessRequest(mock_request.get());
 }
@@ -211,18 +224,60 @@ TEST_F(DbWriterHandlerTests, CallsInsertSubset) {
 
 
     EXPECT_CALL(mock_db, InsertAsSubset_t(expected_collection_name, CompareFileInfo(file_info), expected_subset_id,
-                                          expected_subset_size, _)).
+                                          expected_subset_size, false)).
     WillOnce(testing::Return(nullptr));
-
-    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
-                                         HasSubstr(config.database_uri),
-                                         HasSubstr(expected_beamtime_id),
-                                         HasSubstr(expected_collection_name)
-                                        )
-                                  )
-               );
+    ExpectLogger();
 
     handler.ProcessRequest(mock_request.get());
+}
+
+
+void DbWriterHandlerTests::ExpectDuplicatedID() {
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_stream);
+    auto file_info = PrepareFileInfo();
+
+    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareFileInfo(file_info), false)).
+    WillOnce(testing::Return(asapo::DBErrorTemplates::kDuplicateID.Generate().release()));
+}
+
+TEST_F(DbWriterHandlerTests, SkipIfWasAlreadyProcessed) {
+    EXPECT_CALL(*mock_request, WasAlreadyProcessed())
+    .WillOnce(Return(true));
+
+    EXPECT_CALL(*mock_request, GetBeamtimeId()).Times(0);
+
+    auto err = handler.ProcessRequest(mock_request.get());
+    ASSERT_THAT(err, Eq(nullptr));
+
+}
+
+TEST_F(DbWriterHandlerTests, DuplicatedRequest_SameRecord) {
+    ExpectDuplicatedID();
+
+    EXPECT_CALL(*mock_request, SetWarningMessage(HasSubstr("duplicate record")));
+    EXPECT_CALL(*mock_request, CheckForDuplicates_t())
+    .WillOnce(
+        Return(asapo::ReceiverErrorTemplates::kWarningDuplicatedRequest.Generate().release())
+    );
+
+    EXPECT_CALL(mock_logger, Warning(HasSubstr("ignoring")));
+
+    auto err = handler.ProcessRequest(mock_request.get());
+    ASSERT_THAT(err, Eq(nullptr));
+
+}
+
+TEST_F(DbWriterHandlerTests, DuplicatedRequest_DifferentRecord) {
+    ExpectDuplicatedID();
+
+    EXPECT_CALL(*mock_request, CheckForDuplicates_t())
+    .WillOnce(
+        Return(asapo::ReceiverErrorTemplates::kBadRequest.Generate().release())
+    );
+
+    auto err = handler.ProcessRequest(mock_request.get());
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
+
 }
 
 

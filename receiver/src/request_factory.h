@@ -2,6 +2,8 @@
 #define ASAPO_REQUEST_FACTORY_H
 
 #include "request.h"
+#include "write_file_processor.h"
+#include "receive_file_processor.h"
 
 namespace asapo {
 
@@ -13,13 +15,16 @@ class RequestFactory {
   private:
     Error AddHandlersToRequest(std::unique_ptr<Request>& request,  const GenericRequestHeader& request_header) const;
     Error AddReceiveWriteHandlers(std::unique_ptr<Request>& request, const GenericRequestHeader& request_header) const;
-    RequestHandlerFileWrite request_handler_filewrite_;
+    WriteFileProcessor write_file_processor_;
+    ReceiveFileProcessor receive_file_processor_;
+    RequestHandlerFileProcess request_handler_filewrite_{&write_file_processor_};
+    RequestHandlerFileProcess request_handler_filereceive_{&receive_file_processor_};
     RequestHandlerReceiveData request_handler_receivedata_;
     RequestHandlerReceiveMetaData request_handler_receive_metadata_;
     RequestHandlerDbWrite request_handler_dbwrite_{kDBDataCollectionNamePrefix};
     RequestHandlerDbMetaWrite request_handler_db_meta_write_{kDBMetaCollectionName};
     RequestHandlerAuthorize request_handler_authorize_;
-    RequestHandlerFileReceive request_handler_filereceive_;
+    RequestHandlerDbCheckRequest request_handler_db_check_{kDBDataCollectionNamePrefix};;
     SharedCache cache_;
     bool ReceiveDirectToFile(const GenericRequestHeader& request_header) const;
     Error AddReceiveDirectToFileHandler(std::unique_ptr<Request>& request,

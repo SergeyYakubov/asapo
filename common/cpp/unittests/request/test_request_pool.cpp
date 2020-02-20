@@ -53,7 +53,7 @@ class MockRequestHandlerFactory : public asapo::RequestHandlerFactory {
 
 class TestRequest : public GenericRequest {
   public:
-    TestRequest(GenericRequestHeader header): GenericRequest(header) {};
+    TestRequest(GenericRequestHeader header, uint64_t timeout): GenericRequest(header, timeout) {};
 };
 
 
@@ -64,7 +64,7 @@ class RequestPoolTests : public testing::Test {
     MockRequestHandlerFactory request_handler_factory{mock_request_handler};
     const uint8_t nthreads = 1;
     asapo::RequestPool pool {nthreads, &request_handler_factory, &mock_logger};
-    std::unique_ptr<GenericRequest> request{new TestRequest{GenericRequestHeader{}}};
+    std::unique_ptr<GenericRequest> request{new TestRequest{GenericRequestHeader{}, 0}};
     void SetUp() override {
     }
     void TearDown() override {
@@ -98,13 +98,46 @@ TEST_F(RequestPoolTests, NRequestsInPoolInitial) {
     ASSERT_THAT(nreq, Eq(0));
 }
 
+TEST_F(RequestPoolTests, TimeOut) {
+    std::unique_ptr<GenericRequest> request{new TestRequest{GenericRequestHeader{}, 10}};
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
+    EXPECT_CALL(*mock_request_handler, ReadyProcessRequest()).Times(1).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock_request_handler, PrepareProcessingRequestLocked()).Times(0);
+    EXPECT_CALL(*mock_request_handler, ProcessRequestUnlocked_t(_)).Times(0);
+    EXPECT_CALL(*mock_request_handler, ProcessRequestTimeout(_)).Times(1);
+
+    auto err = pool.AddRequest(std::move(request));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
 
 void ExpectSend(MockRequestHandler* mock_handler, int ntimes = 1) {
     EXPECT_CALL(*mock_handler, ReadyProcessRequest()).Times(ntimes).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock_handler, PrepareProcessingRequestLocked()).Times(ntimes);
     EXPECT_CALL(*mock_handler, ProcessRequestUnlocked_t(_)).Times(ntimes).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock_handler, TearDownProcessingRequestLocked(true)).Times(ntimes);
+}
+
+void ExpectFailProcessRequest(MockRequestHandler* mock_handler) {
+    EXPECT_CALL(*mock_handler, ReadyProcessRequest()).Times(AtLeast(1)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock_handler, PrepareProcessingRequestLocked()).Times(AtLeast(1));
+    EXPECT_CALL(*mock_handler, ProcessRequestUnlocked_t(_)).Times(AtLeast(1)).WillRepeatedly(Return(false));
+    EXPECT_CALL(*mock_handler, TearDownProcessingRequestLocked(false)).Times(AtLeast(1));
+}
+
+
+
+TEST_F(RequestPoolTests, AddRequestIncreasesRetryCounter) {
+
+    ExpectFailProcessRequest(mock_request_handler);
+
+    auto err = pool.AddRequest(std::move(request));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(mock_request_handler->retry_counter, Gt(0));
 }
 
 
@@ -145,7 +178,7 @@ TEST_F(RequestPoolTests, NRequestsInPoolAccountsForRequestsInProgress) {
 
 TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 
-    TestRequest* request2 = new TestRequest{GenericRequestHeader{}};
+    TestRequest* request2 = new TestRequest{GenericRequestHeader{}, 0};
 
     ExpectSend(mock_request_handler, 2);
 
@@ -161,7 +194,7 @@ TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
 
 TEST_F(RequestPoolTests, AddRequestsOk) {
 
-    TestRequest* request2 = new TestRequest{GenericRequestHeader{}};
+    TestRequest* request2 = new TestRequest{GenericRequestHeader{}, 0};
 
     ExpectSend(mock_request_handler, 2);
 

@@ -4,7 +4,7 @@
 namespace asapo {
 
 ReceiverDataServerRequest::ReceiverDataServerRequest(GenericRequestHeader header, uint64_t source_id) :
-    GenericRequest(std::move(header)),
+    GenericRequest(std::move(header), 0),
     source_id{source_id} {
 }
 

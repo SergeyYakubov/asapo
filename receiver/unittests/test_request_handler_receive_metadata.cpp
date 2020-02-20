@@ -73,7 +73,7 @@ class ReceiveMetaDataHandlerTests : public Test {
         generic_request_header.meta_size = expected_metadata_size;
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
-        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr});
+        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }

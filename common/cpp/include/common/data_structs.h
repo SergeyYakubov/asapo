@@ -41,6 +41,8 @@ using FileInfos = std::vector<FileInfo>;
 struct DataSet {
     uint64_t id;
     FileInfos content;
+    bool SetFromJson(const std::string& json_string);
+
 };
 
 using SubDirList = std::vector<std::string>;

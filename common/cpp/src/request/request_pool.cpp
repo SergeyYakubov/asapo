@@ -35,13 +35,19 @@ GenericRequestPtr RequestPool::GetRequestFromQueue() {
 }
 
 void RequestPool::PutRequestBackToQueue(GenericRequestPtr request) {
+// do not need to lock since we already own it
+    request->IncreaseRetryCounter();
     request_queue_.emplace_front(std::move(request));
 }
 
 void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler,
                                  ThreadInformation* thread_info) {
-    request_handler->PrepareProcessingRequestLocked();
     auto request = GetRequestFromQueue();
+    if (request->TimedOut()) {
+        request_handler->ProcessRequestTimeout(request.get());
+        return;
+    }
+    request_handler->PrepareProcessingRequestLocked();
     requests_in_progress_++;
     thread_info->lock.unlock();
     auto success = request_handler->ProcessRequestUnlocked(request.get());
@@ -50,8 +56,8 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_
     request_handler->TearDownProcessingRequestLocked(success);
     if (!success) {
         PutRequestBackToQueue(std::move(request));
-        condition_.notify_all();
         thread_info->lock.unlock();
+        condition_.notify_all();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         thread_info->lock.lock();
     }

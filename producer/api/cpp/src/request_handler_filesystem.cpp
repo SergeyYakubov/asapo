@@ -28,12 +28,16 @@ bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request) {
     }
 
     err = io__->WriteDataToFile(destination_folder_, request->header.message, (uint8_t*)producer_request->data.get(),
-                                (size_t)request->header.data_size, true);
+                                (size_t)request->header.data_size, true, true);
     if (producer_request->callback) {
         producer_request->callback(request->header, std::move(err));
     }
     return true;
 }
 
+void RequestHandlerFilesystem::ProcessRequestTimeout(GenericRequest* request) {
+    log__->Error("request timeout, id:" + std::to_string(request->header.data_id) + " to " + request->header.substream +
+                 " substream");
+}
 
 }

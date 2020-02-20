@@ -21,6 +21,9 @@ class Database {
                                  uint64_t subset_size,
                                  bool ignore_duplicates) const = 0;
 
+    virtual Error GetById(const std::string& collection, uint64_t id, FileInfo* file) const = 0;
+    virtual Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const = 0;
+
     virtual ~Database() = default;
 };
 

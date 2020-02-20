@@ -8,23 +8,24 @@ namespace asapo {
 enum class ReceiverErrorType {
     kInvalidOpCode,
     kBadRequest,
-    kReject,
     kAuthorizationFailure,
     kInternalServerError,
+    kWarningDuplicatedRequest
 };
 
 using ReceiverErrorTemplate = ServiceErrorTemplate<ReceiverErrorType, ErrorType::kReceiverError>;
 
 
 namespace ReceiverErrorTemplates {
+
+auto const kWarningDuplicatedRequest = ReceiverErrorTemplate{
+    "Duplicated request, possible due to retry", ReceiverErrorType::kWarningDuplicatedRequest
+};
+
+
 auto const kInvalidOpCode = ReceiverErrorTemplate{
     "Invalid Opcode", ReceiverErrorType::kInvalidOpCode
 };
-
-auto const kReject = ReceiverErrorTemplate{
-    "request rejected", ReceiverErrorType::kReject
-};
-
 
 auto const kInternalServerError = ReceiverErrorTemplate{
     "server error", ReceiverErrorType::kInternalServerError

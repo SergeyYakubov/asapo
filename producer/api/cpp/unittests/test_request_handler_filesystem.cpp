@@ -61,10 +61,10 @@ class RequestHandlerFilesystemTests : public testing::Test {
         called = true;
         callback_err = std::move(err);
         callback_header = header;
-    }, true};
+    }, true, 0};
 
-    asapo::ProducerRequest request_nocallback{"", header, nullptr, "", "", nullptr, true};
-    asapo::ProducerRequest request_filesend{"", header, nullptr, "", expected_origin_fullpath, nullptr, true};
+    asapo::ProducerRequest request_nocallback{"", header, nullptr, "", "", nullptr, true, 0};
+    asapo::ProducerRequest request_filesend{"", header, nullptr, "", expected_origin_fullpath, nullptr, true, 0};
 
     testing::NiceMock<asapo::MockLogger> mock_logger;
 
@@ -97,7 +97,7 @@ MATCHER_P2(M_CheckSendDataRequest, file_id, file_size,
 
 TEST_F(RequestHandlerFilesystemTests, CallBackErrorIfCannotSaveFile) {
     EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr, (size_t)expected_file_size,
-                                           true))
+                                           true, true))
     .WillOnce(
         Return(
             asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
@@ -113,7 +113,7 @@ TEST_F(RequestHandlerFilesystemTests, CallBackErrorIfCannotSaveFile) {
 
 TEST_F(RequestHandlerFilesystemTests, WorksWithemptyCallback) {
     EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr, (size_t) expected_file_size,
-                                           true))
+                                           true, true))
     .WillOnce(
         Return(nullptr)
     );
@@ -149,7 +149,7 @@ TEST_F(RequestHandlerFilesystemTests, FileRequestOK) {
         ));
 
     EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr, (size_t)expected_file_size,
-                                           true))
+                                           true, true))
     .WillOnce(
         Return(nullptr)
     );
@@ -162,7 +162,7 @@ TEST_F(RequestHandlerFilesystemTests, FileRequestOK) {
 
 TEST_F(RequestHandlerFilesystemTests, TransferOK) {
     EXPECT_CALL(mock_io, WriteDataToFile_t(expected_destination, expected_file_name, nullptr, (size_t) expected_file_size,
-                                           true))
+                                           true, true))
     .WillOnce(
         Return(
             nullptr)

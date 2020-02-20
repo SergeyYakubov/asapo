@@ -39,7 +39,7 @@ struct Args {
 };
 
 void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
-    if (err) {
+    if (err && err!=asapo::ProducerErrorTemplates::kServerWarning) {
         std::cerr << "Data was not successfully send: " << err << std::endl;
         return;
     }
@@ -188,7 +188,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.server, args.nthreads,
                                             asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{args.beamtime_id, args.stream_out, args.token }, &err);
+                                            asapo::SourceCredentials{args.beamtime_id, args.stream_out, args.token }, 60, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);
