@@ -82,6 +82,7 @@ Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_hea
     if(err != nullptr) {
         return err;
     }
+
     switch (sendDataResponse.error_code) {
     case kNetAuthorizationError : {
         auto res_err = ProducerErrorTemplates::kWrongInput.Generate();
@@ -97,6 +98,10 @@ Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_hea
         auto res_err = ProducerErrorTemplates::kServerWarning.Generate();
         res_err->Append(sendDataResponse.message);
         return res_err;
+    }
+    case kNetErrorReauthorize: {
+        auto res_err = ProducerErrorTemplates::kReAuthorizationNeeded.Generate();
+            return res_err;
     }
     case kNetErrorNoError :
         return nullptr;

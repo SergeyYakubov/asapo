@@ -72,15 +72,14 @@ class ProducerImplTests : public testing::Test {
     char expected_substream[asapo::kMaxMessageSize] = "test_substream";
     std::string expected_next_substream = "next_substream";
 
-    asapo::SourceCredentials expected_credentials{
-        "beamtime_id", "subname", "token"
+    asapo::SourceCredentials expected_credentials{"beamtime_id", "beamline","subname", "token"
     };
     asapo::SourceCredentials expected_default_credentials{
-        "beamtime_id", "", "token"
+        "beamtime_id", "","", "token"
     };
 
-    std::string expected_credentials_str = "beamtime_id%subname%token";
-    std::string expected_default_credentials_str = "beamtime_id%detector%token";
+    std::string expected_credentials_str = "beamtime_id%beamline%subname%token";
+    std::string expected_default_credentials_str = "beamtime_id%auto%detector%token";
 
     std::string expected_metadata = "meta";
     std::string expected_fullpath = "filename";

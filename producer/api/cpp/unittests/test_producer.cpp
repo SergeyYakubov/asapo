@@ -29,17 +29,14 @@ TEST(CreateProducer, ErrorBeamtime) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
-
-//todo: memtest fails on old linux machine. Add valgrind suppressions?
-/*
-TEST(CreateProducer, FileSystemProducer) {
+TEST(CreateProducer, ErrorOnBothAutoBeamlineBeamtime) {
+    asapo::SourceCredentials creds{"auto", "auto","subname", "token"};
     asapo::Error err;
-    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4,
-                                                asapo::RequestHandlerType::kFilesystem, "bt", &err);
-    ASSERT_THAT(dynamic_cast<asapo::ProducerImpl*>(producer.get()), Ne(nullptr));
-    ASSERT_THAT(err, Eq(nullptr));
+    std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, asapo::RequestHandlerType::kTcp,
+                                                                        creds, 3600, &err);
+    ASSERT_THAT(producer, Eq(nullptr));
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
-*/
 
 TEST(CreateProducer, TooManyThreads) {
     asapo::Error err;

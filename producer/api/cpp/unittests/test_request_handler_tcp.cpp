@@ -102,7 +102,7 @@ class RequestHandlerTcpTests : public testing::Test {
     std::vector<asapo::SocketDescriptor> expected_sds{83942, 83943};
 
     bool retry;
-    Sequence seq_receive;
+    Sequence seq_receive[2];
     void ExpectFailConnect(bool only_once = false);
     void ExpectFailAuthorize(bool only_once = false);
     void ExpectOKAuthorize(bool only_once = false);
@@ -164,7 +164,8 @@ void RequestHandlerTcpTests::ExpectFailConnect(bool only_once) {
                 testing::SetArgPointee<1>(asapo::IOErrorTemplates::kInvalidAddressFormat.Generate().release()),
                 Return(asapo::kDisconnectedSocketDescriptor)
             ));
-        EXPECT_CALL(mock_logger, Debug(AllOf(
+        if (only_once)
+            EXPECT_CALL(mock_logger, Debug(AllOf(
                                            HasSubstr("cannot connect"),
                                            HasSubstr(expected_address)
                                        )
@@ -189,7 +190,7 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
             ));
 
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
-        .InSequence(seq_receive)
+        .InSequence(seq_receive[i])
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(nullptr),
@@ -197,7 +198,9 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
                 testing::ReturnArg<2>()
             ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
-        EXPECT_CALL(mock_logger, Debug(AllOf(
+        if (only_once)
+        {
+            EXPECT_CALL(mock_logger, Debug(AllOf(
                                            HasSubstr("disconnected"),
                                            HasSubstr(receivers_list[i])
                                        )
@@ -209,6 +212,7 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
                                            HasSubstr(receivers_list[i])
                                        )
                                       ));
+        }
         if (only_once) break;
         i++;
     }
@@ -228,18 +232,21 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
 
 
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
-        .InSequence(seq_receive)
+        .InSequence(seq_receive[i])
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(nullptr),
                 A_WriteSendDataResponse(asapo::kNetErrorNoError, expected_auth_message),
                 testing::ReturnArg<2>()
             ));
-        EXPECT_CALL(mock_logger, Info(AllOf(
+        if (only_once)
+        {
+            EXPECT_CALL(mock_logger, Info(AllOf(
                                           HasSubstr("authorized"),
                                           HasSubstr(receivers_list[i])
                                       )
                                      ));
+        }
         if (only_once) break;
         i++;
     }
@@ -259,22 +266,26 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
                 testing::SetArgPointee<3>(asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
                 Return(-1)
             ));
-        EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("disconnected"),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+        if (only_once) {
+            EXPECT_CALL(mock_logger, Debug(AllOf(
+                HasSubstr("disconnected"),
+                HasSubstr(receivers_list[i])
+                                           )
+            ));
 
-        EXPECT_CALL(mock_logger, Warning(AllOf(
-                                             HasSubstr("cannot send"),
-                                             HasSubstr(receivers_list[i])
-                                         )
-                                        ));
+            EXPECT_CALL(mock_logger, Warning(AllOf(
+                HasSubstr("cannot send"),
+                HasSubstr(receivers_list[i])
+                                             )
+            ));
+        }
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
         i++;
     }
-    EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
+    if (only_once) {
+        EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
+    }
 }
 
 void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTemplate& err_template, bool client_error) {
@@ -285,27 +296,26 @@ void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTempla
         .WillOnce(
             Return(err_template.Generate().release())
         );
-        EXPECT_CALL(mock_logger, Debug(AllOf(
+
+        if (client_error) {
+
+            EXPECT_CALL(mock_logger, Debug(AllOf(
                                            HasSubstr("disconnected"),
                                            HasSubstr(receivers_list[i])
                                        )
                                       ));
-        if (client_error) {
             EXPECT_CALL(mock_logger, Error(AllOf(
                                                HasSubstr("cannot send"),
                                                HasSubstr(receivers_list[i])             )
                                           ));
-        } else {
-            EXPECT_CALL(mock_logger, Warning(AllOf(
-                                                 HasSubstr("cannot send"),
-                                                 HasSubstr(receivers_list[i])             )
-                                            ));
+
         }
+
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (client_error) break;
         i++;
     }
-    if (err_template != asapo::ProducerErrorTemplates::kLocalIOError.Generate()) {
+    if (client_error && err_template != asapo::ProducerErrorTemplates::kLocalIOError.Generate()) {
         EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
     }
 
@@ -322,22 +332,25 @@ void RequestHandlerTcpTests::ExpectFailSend(uint64_t expected_size, bool only_on
                 testing::SetArgPointee<3>(asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
                 Return(-1)
             ));
-        EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("disconnected"),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+        if (only_once) {
+            EXPECT_CALL(mock_logger, Debug(AllOf(
+                HasSubstr("disconnected"),
+                HasSubstr(receivers_list[i])
+                                           )
+            ));
 
-        EXPECT_CALL(mock_logger, Warning(AllOf(
-                                             HasSubstr("cannot send"),
-                                             HasSubstr(receivers_list[i])
-                                         )
-                                        ));
+            EXPECT_CALL(mock_logger, Warning(AllOf(
+                HasSubstr("cannot send"),
+                HasSubstr(receivers_list[i])
+                                             )
+            ));
+
+        }
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
         i++;
     }
-    EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
+    if (only_once) EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
 }
 
 void RequestHandlerTcpTests::ExpectFailSendData(bool only_once) {
@@ -354,7 +367,7 @@ void RequestHandlerTcpTests::ExpectFailReceive(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
-        .InSequence(seq_receive)
+        .InSequence(seq_receive[i])
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
@@ -444,11 +457,13 @@ void RequestHandlerTcpTests::ExpectOKConnect(bool only_once) {
                 testing::SetArgPointee<1>(nullptr),
                 Return(expected_sds[i])
             ));
-        EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("connected to"),
-                                           HasSubstr(expected_address)
-                                       )
-                                      ));
+        if (only_once) {
+            EXPECT_CALL(mock_logger, Debug(AllOf(
+                HasSubstr("connected to"),
+                HasSubstr(expected_address)
+                                           )
+            ));
+        }
         if (only_once) break;
         i++;
     }
@@ -459,18 +474,20 @@ void RequestHandlerTcpTests::ExpectOKReceive(bool only_once, asapo::NetworkError
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
-        .InSequence(seq_receive)
+        .InSequence(seq_receive[i])
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(nullptr),
                 A_WriteSendDataResponse(code, message),
                 testing::ReturnArg<2>()
             ));
-        EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("sent data"),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+        if (only_once) {
+            EXPECT_CALL(mock_logger, Debug(AllOf(
+                HasSubstr("sent data"),
+                HasSubstr(receivers_list[i])
+                                           )
+            ));
+        }
         if (only_once) break;
         i++;
     }
@@ -693,7 +710,7 @@ void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode e
     ExpectOKSendAll(true);
 
     EXPECT_CALL(mock_io, Receive_t(expected_sds[0], _, sizeof(asapo::SendDataResponse), _))
-    .InSequence(seq_receive)
+    .InSequence(seq_receive[0])
     .WillOnce(
         DoAll(
             testing::SetArgPointee<3>(nullptr),
@@ -790,8 +807,25 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithServerError) {
     ASSERT_THAT(success, Eq(false));
     ASSERT_THAT(callback_called, Eq(false));
     ASSERT_THAT(retry, Eq(true));
-
 }
+
+
+
+TEST_F(RequestHandlerTcpTests, RetryOnReauthorize) {
+    ExpectOKConnect(false);
+    ExpectOKAuthorize(false);
+    ExpectOKSendAll(false);
+    ExpectOKReceive(false,asapo::kNetErrorReauthorize);
+
+    request_handler.PrepareProcessingRequestLocked();
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
+
+    ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(callback_called, Eq(false));
+    ASSERT_THAT(retry, Eq(true));
+}
+
+
 
 TEST_F(RequestHandlerTcpTests, FileRequestErrorGettingFileSize) {
     ExpectGetFileSize(false);

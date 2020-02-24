@@ -25,6 +25,7 @@ enum Opcode : uint8_t {
 
 enum NetworkErrorCode : uint16_t {
     kNetErrorNoError,
+    kNetErrorReauthorize,
     kNetErrorWarning,
     kNetErrorWrongRequest,
     kNetErrorNoData,

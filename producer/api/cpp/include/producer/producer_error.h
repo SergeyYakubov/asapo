@@ -11,6 +11,7 @@ enum class ProducerErrorType {
     kLocalIOError,
     kWrongInput,
     kServerWarning,
+    kReAuthorizationNeeded,
     kTimeout
 };
 
@@ -41,6 +42,11 @@ auto const kInternalServerError = ProducerErrorTemplate {
 auto const kTimeout = ProducerErrorTemplate {
     "Timeout", ProducerErrorType::kTimeout
 };
+
+auto const kReAuthorizationNeeded = ProducerErrorTemplate {
+    "reauthorization needed", ProducerErrorType::kReAuthorizationNeeded
+};
+
 
 
 };
