@@ -15,10 +15,13 @@ std::string RequestHandlerAuthorize::GetRequestString(const Request* request, co
     return request_string;
 }
 
-Error RequestHandlerAuthorize::ErrorFromServerResponse(const Error& err, HttpCode code) const {
+Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error& err, HttpCode code) const {
     if (err) {
         return asapo::ReceiverErrorTemplates::kInternalServerError.Generate("cannot authorize request: " + err->Explain());
     } else {
+        if (code != HttpCode::Unauthorized) {
+            return asapo::ReceiverErrorTemplates::kInternalServerError.Generate("return code " + std::to_string(int(code)));
+        }
         return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("return code " + std::to_string(int(code)));
     }
 }
@@ -31,7 +34,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     auto response = http_client__->Post(GetReceiverConfig()->authorization_server + "/authorize", request_string, &code,
                                         &err);
     if (err || code != HttpCode::OK) {
-        auto auth_error = ErrorFromServerResponse(err, code);
+        auto auth_error = ErrorFromAuthorizationServerResponse(err, code);
         log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " request: " + request_string +
                      " - " +
                      auth_error->Explain());
@@ -45,7 +48,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     (err = parser.GetString("Year", &beamtime_year_)) ||
     (err = parser.GetString("Beamline", &beamline_));
     if (err) {
-        return ErrorFromServerResponse(err, code);
+        return ErrorFromAuthorizationServerResponse(err, code);
     } else {
         log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() + " beamline: " +
                      beamline_ + ", beamtime id: " + beamtime_id_ + ", stream: " + stream_);

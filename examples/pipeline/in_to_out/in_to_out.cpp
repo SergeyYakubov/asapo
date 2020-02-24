@@ -39,7 +39,7 @@ struct Args {
 };
 
 void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
-    if (err && err!=asapo::ProducerErrorTemplates::kServerWarning) {
+    if (err && err != asapo::ProducerErrorTemplates::kServerWarning) {
         std::cerr << "Data was not successfully send: " << err << std::endl;
         return;
     }

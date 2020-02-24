@@ -50,11 +50,12 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_
     request_handler->PrepareProcessingRequestLocked();
     requests_in_progress_++;
     thread_info->lock.unlock();
-    auto success = request_handler->ProcessRequestUnlocked(request.get());
+    bool retry;
+    auto success = request_handler->ProcessRequestUnlocked(request.get(), &retry);
     thread_info->lock.lock();
     requests_in_progress_--;
     request_handler->TearDownProcessingRequestLocked(success);
-    if (!success) {
+    if (retry) {
         PutRequestBackToQueue(std::move(request));
         thread_info->lock.unlock();
         condition_.notify_all();

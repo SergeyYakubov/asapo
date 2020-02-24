@@ -16,13 +16,14 @@ RequestHandlerFilesystem::RequestHandlerFilesystem(std::string destination_folde
     thread_id_{thread_id} {
 }
 
-bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request) {
+bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request, bool* retry) {
     auto producer_request = static_cast<ProducerRequest*>(request);
     Error err;
     if (producer_request->DataFromFile()) {
         producer_request->data = io__->GetDataFromFile(producer_request->original_filepath, &producer_request->header.data_size,
                                                        &err);
         if (err) {
+            *retry = true;
             return false;
         }
     }
@@ -32,6 +33,7 @@ bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request) {
     if (producer_request->callback) {
         producer_request->callback(request->header, std::move(err));
     }
+    *retry = false;
     return true;
 }
 

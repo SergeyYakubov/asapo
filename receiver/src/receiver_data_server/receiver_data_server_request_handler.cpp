@@ -46,7 +46,8 @@ void* ReceiverDataServerRequestHandler::GetSlot(const ReceiverDataServerRequest*
 }
 
 
-bool ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* request) {
+bool ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* request, bool* retry) {
+    *retry = false;
     auto receiver_request = dynamic_cast<ReceiverDataServerRequest*>(request);
     if (!CheckRequest(receiver_request)) {
         SendResponce(receiver_request, kNetErrorWrongRequest);

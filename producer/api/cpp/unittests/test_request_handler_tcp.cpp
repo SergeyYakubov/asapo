@@ -101,6 +101,7 @@ class RequestHandlerTcpTests : public testing::Test {
 
     std::vector<asapo::SocketDescriptor> expected_sds{83942, 83943};
 
+    bool retry;
     Sequence seq_receive;
     void ExpectFailConnect(bool only_once = false);
     void ExpectFailAuthorize(bool only_once = false);
@@ -339,7 +340,6 @@ void RequestHandlerTcpTests::ExpectFailSend(uint64_t expected_size, bool only_on
     EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
 }
 
-
 void RequestHandlerTcpTests::ExpectFailSendData(bool only_once) {
     ExpectFailSend(expected_file_size, only_once);
 }
@@ -495,7 +495,7 @@ void RequestHandlerTcpTests::DoSingleSend(bool connect, bool success) {
     }
 
     request_handler.PrepareProcessingRequestLocked();
-    request_handler.ProcessRequestUnlocked(&request);
+    request_handler.ProcessRequestUnlocked(&request, &retry);
 
     Mock::VerifyAndClearExpectations(&mock_io);
     Mock::VerifyAndClearExpectations(&mock_logger);
@@ -531,11 +531,9 @@ TEST_F(RequestHandlerTcpTests, DoesNotGetsUriIfAlreadyConnected) {
 
 TEST_F(RequestHandlerTcpTests, ReduceConnectionNumberAtTearDownIfError) {
     n_connections = 1;
-
     request_handler.TearDownProcessingRequestLocked(false);
 
     ASSERT_THAT(n_connections, Eq(0));
-
 }
 
 TEST_F(RequestHandlerTcpTests, DoNotReduceConnectionNumberAtTearDownIfNoError) {
@@ -551,21 +549,27 @@ TEST_F(RequestHandlerTcpTests, TriesConnectWhenNotConnected) {
     ExpectFailConnect();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(retry, Eq(true));
 }
 
 TEST_F(RequestHandlerTcpTests, FailsWhenCannotAuthorize) {
-    ExpectOKConnect();
-    ExpectFailAuthorize();
+    ExpectOKConnect(true);
+    ExpectFailAuthorize(true);
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
     request_handler.TearDownProcessingRequestLocked(success);
 
-    ASSERT_THAT(success, Eq(false));
     ASSERT_THAT(n_connections, Eq(0));
+    ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+    ASSERT_THAT(callback_called, Eq(true));
+    ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(retry, Eq(false));
+
+
 }
 
 
@@ -581,11 +585,12 @@ TEST_F(RequestHandlerTcpTests, DoesNotTryConnectWhenConnected) {
 
     ExpectFailSendHeader(true);
 
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(false));
-}
+    ASSERT_THAT(retry, Eq(true));
 
+}
 
 
 TEST_F(RequestHandlerTcpTests, DoNotCloseWhenNotConnected) {
@@ -595,9 +600,11 @@ TEST_F(RequestHandlerTcpTests, DoNotCloseWhenNotConnected) {
     ExpectFailSendHeader();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(retry, Eq(true));
+
 }
 
 
@@ -610,9 +617,11 @@ TEST_F(RequestHandlerTcpTests, CloseConnectionWhenRebalance) {
 
     EXPECT_CALL(mock_io, CloseSocket_t(_, _));
 
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(retry, Eq(true));
+
 }
 
 
@@ -623,9 +632,11 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendHeader) {
     ExpectFailSendHeader();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(retry, Eq(true));
+
 }
 
 
@@ -637,9 +648,11 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendData) {
     ExpectFailSendData();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(retry, Eq(true));
+
 }
 
 TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendMetaData) {
@@ -649,9 +662,11 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendMetaData) {
     ExpectFailSendMetaData();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(retry, Eq(true));
+
 }
 
 TEST_F(RequestHandlerTcpTests, ErrorWhenCannotReceiveData) {
@@ -664,9 +679,11 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotReceiveData) {
     ExpectFailReceive(true);
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(retry, Eq(true));
+
 }
 
 void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode error_code,
@@ -696,10 +713,12 @@ void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode e
                                   ));
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
     ASSERT_THAT(callback_err, Eq(err_template));
     ASSERT_THAT(callback_called, Eq(true));
-    ASSERT_THAT(success, Eq(true));
+    ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(retry, Eq(false));
+
 }
 
 void RequestHandlerTcpTests::ExpectGetFileSize(bool ok) {
@@ -732,10 +751,11 @@ TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {
     ExpectOKReceive();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request_nocallback);
+    auto success = request_handler.ProcessRequestUnlocked(&request_nocallback, &retry);
 
     ASSERT_THAT(success, Eq(true));
     ASSERT_THAT(callback_called, Eq(false));
+    ASSERT_THAT(retry, Eq(false));
 }
 
 TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithReadError) {
@@ -747,11 +767,13 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithReadError) {
     ExpectFailSendFile(asapo::ProducerErrorTemplates::kLocalIOError, true);
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
 
-    ASSERT_THAT(success, Eq(true));
+    ASSERT_THAT(success, Eq(false));
     ASSERT_THAT(callback_called, Eq(true));
     ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kLocalIOError));
+    ASSERT_THAT(retry, Eq(false));
+
 }
 
 TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithServerError) {
@@ -763,10 +785,12 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithServerError) {
     ExpectFailSendFile(asapo::ProducerErrorTemplates::kInternalServerError);
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
 
     ASSERT_THAT(success, Eq(false));
     ASSERT_THAT(callback_called, Eq(false));
+    ASSERT_THAT(retry, Eq(true));
+
 }
 
 TEST_F(RequestHandlerTcpTests, FileRequestErrorGettingFileSize) {
@@ -774,10 +798,12 @@ TEST_F(RequestHandlerTcpTests, FileRequestErrorGettingFileSize) {
 
     request_handler.PrepareProcessingRequestLocked();
 
-    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
-    ASSERT_THAT(success, Eq(true));
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
+    ASSERT_THAT(success, Eq(false));
     ASSERT_THAT(callback_called, Eq(true));
     ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kLocalIOError));
+    ASSERT_THAT(retry, Eq(false));
+
 }
 
 
@@ -793,10 +819,12 @@ TEST_F(RequestHandlerTcpTests, FileRequestOK) {
 
     request_handler.PrepareProcessingRequestLocked();
 
-    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
     ASSERT_THAT(success, Eq(true));
     ASSERT_THAT(callback_called, Eq(true));
     ASSERT_THAT(callback_err, Eq(nullptr));
+    ASSERT_THAT(retry, Eq(false));
+
 }
 
 
@@ -808,9 +836,10 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
     ExpectOKReceive();
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(true));
+    ASSERT_THAT(retry, Eq(false));
     ASSERT_THAT(callback_err, Eq(nullptr));
     ASSERT_THAT(callback_called, Eq(true));
     ASSERT_THAT(callback_header.data_size, Eq(header.data_size));
@@ -832,9 +861,11 @@ TEST_F(RequestHandlerTcpTests, SendMetadataIgnoresIngestMode) {
     request.header.op_code = asapo::kOpcodeTransferMetaData;
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(true));
+    ASSERT_THAT(retry, Eq(false));
+
 }
 
 
@@ -849,9 +880,10 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyOK) {
 
     request.header.custom_data[asapo::kPosIngestMode] = ingest_mode;
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(true));
+    ASSERT_THAT(retry, Eq(false));
     ASSERT_THAT(callback_header.custom_data[asapo::kPosIngestMode], Eq(ingest_mode));
 }
 
@@ -870,8 +902,10 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
     auto ingest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
 
     request_filesend.header.custom_data[asapo::kPosIngestMode] = ingest_mode;
-    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
     ASSERT_THAT(success, Eq(true));
+    ASSERT_THAT(retry, Eq(false));
+
 }
 
 
@@ -902,9 +936,10 @@ TEST_F(RequestHandlerTcpTests, SendWithWarning) {
 
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(true));
+    ASSERT_THAT(retry, Eq(false));
     ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kServerWarning));
     ASSERT_THAT(callback_err->Explain(), HasSubstr(expected_warning));
     ASSERT_THAT(callback_called, Eq(true));
@@ -913,7 +948,5 @@ TEST_F(RequestHandlerTcpTests, SendWithWarning) {
     ASSERT_THAT(callback_header.data_id, Eq(header.data_id));
     ASSERT_THAT(std::string{callback_header.message}, Eq(std::string{header.message}));
 }
-
-
 
 }

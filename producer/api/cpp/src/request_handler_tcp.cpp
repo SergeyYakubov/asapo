@@ -12,8 +12,8 @@ RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service
     ncurrent_connections_{shared_counter} {
 }
 
-Error RequestHandlerTcp::Authorize(const std::string& beamtime_id) {
-    GenericRequestHeader header{kOpcodeAuthorize, 0, 0, 0, beamtime_id.c_str()};
+Error RequestHandlerTcp::Authorize(const std::string& source_credentials) {
+    GenericRequestHeader header{kOpcodeAuthorize, 0, 0, 0, source_credentials.c_str()};
     Error err;
     io__->Send(sd_, &header, sizeof(header), &err);
     if(err) {
@@ -23,7 +23,7 @@ Error RequestHandlerTcp::Authorize(const std::string& beamtime_id) {
 }
 
 
-Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id, const std::string& receiver_address) {
+Error RequestHandlerTcp::ConnectToReceiver(const std::string& source_credentials, const std::string& receiver_address) {
     Error err;
 
     sd_ = io__->CreateAndConnectIPTCPSocket(receiver_address, &err);
@@ -34,7 +34,7 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& beamtime_id, const
     log__->Debug("connected to receiver at " + receiver_address);
 
     connected_receiver_uri_ = receiver_address;
-    err = Authorize(beamtime_id);
+    err = Authorize(source_credentials);
     if (err != nullptr) {
         log__->Error("authorization failed at " + receiver_address + " - " + err->Explain());
         Disconnect();
@@ -206,31 +206,44 @@ bool RequestHandlerTcp::ProcessErrorFromReceiver(const Error& error,
 }
 
 
-bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request) {
+void RequestHandlerTcp::ProcessRequestCallback(Error err, ProducerRequest* request,bool* retry) {
+    if (request->callback) {
+        request->callback(request->header, std::move(err));
+    }
+    *retry = false;
+}
+
+
+bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request, bool* retry) {
     for (auto receiver_uri : receivers_list_) {
         if (Disconnected()) {
             auto err = ConnectToReceiver(request->source_credentials, receiver_uri);
-            if (err != nullptr ) continue;
+            if (err == ProducerErrorTemplates::kWrongInput) {
+                ProcessRequestCallback(std::move(err),request,retry);
+                return false;
+            } else {
+                if (err != nullptr ) continue;
+            }
         }
 
         auto err = TrySendToReceiver(request);
-        auto retry = ProcessErrorFromReceiver(err, request, receiver_uri);
-        if (retry)  {
+        bool server_error_can_retry = ProcessErrorFromReceiver(err, request, receiver_uri);
+        if (server_error_can_retry)  {
             continue;
         }
 
-        if (request->callback) {
-            request->callback(request->header, std::move(err));
-        }
-        return true;
+        bool success = err && err != ProducerErrorTemplates::kServerWarning ? false : true;
+        ProcessRequestCallback(std::move(err),request,retry);
+        return success;
     }
     log__->Warning("put back to the queue, request opcode: " + std::to_string(request->header.op_code) +
                    ", id: " + std::to_string(request->header.data_id));
+    *retry = true;
     return false;
 }
 
 
-bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request) {
+bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request, bool* retry) {
     auto producer_request = static_cast<ProducerRequest*>(request);
 
     auto err = producer_request->UpdateDataSizeFromFileIfNeeded(io__.get());
@@ -238,14 +251,15 @@ bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request) {
         if (producer_request->callback) {
             producer_request->callback(producer_request->header, std::move(err));
         }
-        return true;
+        *retry = false;
+        return false;
     }
 
 
     if (NeedRebalance()) {
         CloseConnectionToPeformRebalance();
     }
-    return SendDataToOneOfTheReceivers(producer_request);
+    return SendDataToOneOfTheReceivers(producer_request, retry);
 }
 
 bool RequestHandlerTcp::Connected() {
@@ -264,8 +278,8 @@ void RequestHandlerTcp::PrepareProcessingRequestLocked() {
     UpdateIfNewConnection();
 }
 
-void RequestHandlerTcp::TearDownProcessingRequestLocked(bool processing_succeeded) {
-    if (!processing_succeeded) {
+void RequestHandlerTcp::TearDownProcessingRequestLocked(bool request_processed_successfully) {
+    if (!request_processed_successfully) {
         (*ncurrent_connections_)--;
     }
 }

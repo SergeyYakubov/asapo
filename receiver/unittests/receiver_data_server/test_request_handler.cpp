@@ -57,6 +57,7 @@ class RequestHandlerTests : public Test {
     uint64_t expected_meta_size = 100;
     uint64_t expected_buf_id = 12345;
     uint64_t expected_source_id = 11;
+    bool retry;
     asapo::GenericRequestHeader header{asapo::kOpcodeGetBufferData, expected_buf_id, expected_data_size,
                                        expected_meta_size, ""};
     asapo::ReceiverDataServerRequest request{std::move(header), expected_source_id};
@@ -97,7 +98,7 @@ TEST_F(RequestHandlerTests, ProcessRequest_WronOpCode) {
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("wrong request")));
 
-    auto success = handler.ProcessRequestUnlocked(&request);
+    auto success = handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(true));
 }
@@ -105,7 +106,7 @@ TEST_F(RequestHandlerTests, ProcessRequest_WronOpCode) {
 TEST_F(RequestHandlerTests, ProcessRequestReturnsNoDataWhenCacheNotUsed) {
     MockSendResponce(asapo::kNetErrorNoData, true);
 
-    auto success  = handler_no_cache.ProcessRequestUnlocked(&request);
+    auto success  = handler_no_cache.ProcessRequestUnlocked(&request, &retry);
     EXPECT_CALL(mock_logger, Debug(_)).Times(0);
 
     ASSERT_THAT(success, Eq(true));
@@ -116,7 +117,7 @@ TEST_F(RequestHandlerTests, ProcessRequestReadSlotReturnsNull) {
     MockSendResponce(asapo::kNetErrorNoData, true);
     EXPECT_CALL(mock_logger, Debug(HasSubstr("not found")));
 
-    auto success = handler.ProcessRequestUnlocked(&request);
+    auto success = handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(true));
 }
@@ -128,7 +129,7 @@ TEST_F(RequestHandlerTests, ProcessRequestReadSlotErrorSendingResponce) {
     EXPECT_CALL(mock_net, SendData_t(expected_source_id, &tmp, expected_data_size)).Times(0);
     EXPECT_CALL(mock_cache, UnlockSlot(_));
 
-    auto success  = handler.ProcessRequestUnlocked(&request);
+    auto success  = handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(true));
 }
@@ -145,7 +146,7 @@ TEST_F(RequestHandlerTests, ProcessRequestOk) {
     EXPECT_CALL(mock_logger, Debug(HasSubstr("sending")));
     EXPECT_CALL(mock_stat, IncreaseRequestCounter_t());
     EXPECT_CALL(mock_stat, IncreaseRequestDataVolume_t(expected_data_size));
-    auto success  = handler.ProcessRequestUnlocked(&request);
+    auto success  = handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(true));
 }

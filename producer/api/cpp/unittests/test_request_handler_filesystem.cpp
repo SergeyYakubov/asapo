@@ -50,7 +50,7 @@ class RequestHandlerFilesystemTests : public testing::Test {
     std::string  expected_destination = "destination";
     std::string expected_fullpath = expected_destination + "/" + expected_file_name;
     std::string expected_origin_fullpath = std::string("origin/") + expected_file_name;
-
+    bool retry;
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     asapo::Error callback_err;
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,
@@ -104,7 +104,7 @@ TEST_F(RequestHandlerFilesystemTests, CallBackErrorIfCannotSaveFile) {
     );
 
 
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(callback_err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
     ASSERT_THAT(called, Eq(true));
@@ -119,7 +119,7 @@ TEST_F(RequestHandlerFilesystemTests, WorksWithemptyCallback) {
     );
 
 
-    auto success = request_handler.ProcessRequestUnlocked(&request_nocallback);
+    auto success = request_handler.ProcessRequestUnlocked(&request_nocallback, &retry);
 
     ASSERT_THAT(called, Eq(false));
     ASSERT_THAT(success, Eq(true));
@@ -135,7 +135,7 @@ TEST_F(RequestHandlerFilesystemTests, FileRequestErrorOnReadData) {
             Return(nullptr)
         ));
 
-    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
     ASSERT_THAT(success, Eq(false));
 }
 
@@ -154,7 +154,7 @@ TEST_F(RequestHandlerFilesystemTests, FileRequestOK) {
         Return(nullptr)
     );
 
-    auto success = request_handler.ProcessRequestUnlocked(&request_filesend);
+    auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
     ASSERT_THAT(success, Eq(true));
 }
 
@@ -169,7 +169,7 @@ TEST_F(RequestHandlerFilesystemTests, TransferOK) {
     );
 
     request_handler.PrepareProcessingRequestLocked();
-    auto success = request_handler.ProcessRequestUnlocked(&request);
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
 
     ASSERT_THAT(success, Eq(true));
     ASSERT_THAT(callback_err, Eq(nullptr));
