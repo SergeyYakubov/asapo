@@ -19,6 +19,5 @@
   "ReceiveToDiskThresholdMB":50,
   "WriteToDb":true,
   "LogLevel":"info",
-  "Tag": "test_receiver",
-  "RootFolder" : "/gpfs/petra3/scratch/yakubov/receiver_tests/files"
+  "Tag": "test_receiver"
 }

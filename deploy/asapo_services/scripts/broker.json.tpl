@@ -3,7 +3,7 @@
   "DiscoveryServer": "localhost:8400/discovery",
   "PerformanceDbServer":"localhost:8400/influxdb",
   "PerformanceDbName": "asapo_brokers",
-  "port":{{ env "NOMAD_PORT_broker" }},
+  "Port":{{ env "NOMAD_PORT_broker" }},
   "LogLevel":"info",
   "SecretFile":"/local/secret.key"
 }

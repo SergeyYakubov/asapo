@@ -73,7 +73,6 @@ class WriteFileProcessorTests : public Test {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
         asapo::ReceiverConfig test_config;
-        test_config.root_folder = expected_root_folder;
         asapo::SetReceiverConfig(test_config, "none");
         processor.log__ = &mock_logger;
         mock_request.reset(new MockRequest{request_header, 1, "", nullptr});
@@ -101,8 +100,8 @@ void WriteFileProcessorTests::MockRequestData(int times) {
     EXPECT_CALL(*mock_request, GetData()).Times(times)
     .WillRepeatedly(Return(nullptr));
 
-    EXPECT_CALL(*mock_request, GetFullPath(expected_root_folder)).Times(times)
-    .WillRepeatedly(Return(expected_full_path));
+    EXPECT_CALL(*mock_request, GetOfflinePath()).Times(times)
+    .WillRepeatedly(ReturnRef(expected_full_path));
 
     EXPECT_CALL(*mock_request, GetFileName()).Times(times)
     .WillRepeatedly(Return(expected_file_name));

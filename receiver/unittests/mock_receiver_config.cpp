@@ -65,7 +65,6 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
     config_string += "," +  Key("LogLevel", error_field) + "\"" + log_level + "\"";
     config_string += "," +  Key("AdvertiseIP", error_field) + "\"" + config.advertise_ip + "\"";
     config_string += "," +  Key("Tag", error_field) + "\"" + config.tag + "\"";
-    config_string += "," +  Key("RootFolder", error_field) + "\"" + config.root_folder + "\"";
     config_string += "}";
 
 

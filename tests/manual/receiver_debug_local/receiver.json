@@ -20,6 +20,5 @@
   "WriteToDisk": true,
   "ReceiveToDiskThresholdMB":50,
   "WriteToDb": true,
-  "LogLevel" : "debug",
-  "RootFolder" : "/tmp/asapo/receiver/files"
+  "LogLevel" : "debug"
 }

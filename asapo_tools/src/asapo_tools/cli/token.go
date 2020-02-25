@@ -8,7 +8,7 @@ import (
 )
 
 type tokenFlags struct {
-	BeamtimeID string
+	Name       string
 	SecretFile string
 }
 
@@ -42,7 +42,7 @@ func (cmd *command) CommandToken() error {
 		return err
 	}
 
-	fmt.Fprintf(outBuf, "%s\n", generateToken(flags.BeamtimeID,secret))
+	fmt.Fprintf(outBuf, "%s\n", generateToken(flags.Name,secret))
 
 	return nil
 }
@@ -51,7 +51,7 @@ func (cmd *command) CommandToken() error {
 func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 
 	var flags tokenFlags
-	flagset := cmd.createDefaultFlagset(message_string, "<beamtime id>")
+	flagset := cmd.createDefaultFlagset(message_string, "<token_body>")
 	flagset.StringVar(&flags.SecretFile, "secret", "", "path to file with secret")
 
 	flagset.Parse(cmd.args)
@@ -60,10 +60,10 @@ func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 		os.Exit(0)
 	}
 
-	flags.BeamtimeID = flagset.Arg(0)
+	flags.Name = flagset.Arg(0)
 
-	if flags.BeamtimeID == "" {
-		return flags, errors.New("beamtime id missed ")
+	if flags.Name == "" {
+		return flags, errors.New("beamtime id or beamline missed ")
 	}
 
 	if flags.SecretFile == "" {

@@ -74,7 +74,6 @@ class ReceiveFileProcessorTests : public Test {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
         asapo::ReceiverConfig test_config;
-        test_config.root_folder = expected_root_folder;
         asapo::SetReceiverConfig(test_config, "none");
         processor.log__ = &mock_logger;
         mock_request.reset(new MockRequest{request_header, 1, "", nullptr});
@@ -95,8 +94,8 @@ void ReceiveFileProcessorTests::MockRequestData() {
     EXPECT_CALL(*mock_request, GetDataSize()).Times(1)
     .WillRepeatedly(Return(expected_file_size));
 
-    EXPECT_CALL(*mock_request, GetFullPath(expected_root_folder)).Times(1)
-    .WillRepeatedly(Return(expected_full_path));
+    EXPECT_CALL(*mock_request, GetOfflinePath()).Times(1)
+    .WillRepeatedly(ReturnRef(expected_full_path));
 
     EXPECT_CALL(*mock_request, GetFileName()).Times(1)
     .WillRepeatedly(Return(expected_file_name));
@@ -111,7 +110,6 @@ void ReceiveFileProcessorTests::ExpectFileWrite(const asapo::SimpleErrorTemplate
 
 TEST_F(ReceiveFileProcessorTests, CallsReceiveFile) {
     asapo::ReceiverConfig test_config;
-    test_config.root_folder = expected_root_folder;
 
     asapo::SetReceiverConfig(test_config, "none");
 

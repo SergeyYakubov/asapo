@@ -44,7 +44,7 @@ Settings Parse(const std::string& fname, Error* err) {
 
     Settings settings;
 
-    (*err = parser.GetUInt64("port", &settings.port)) ||
+    (*err = parser.GetUInt64("Port", &settings.port)) ||
     (*err = parser.GetArrayString("some_string_array", &settings.stringarray)) ||
     (*err = parser.GetArrayUInt64("some_array", &settings.intarray)) ||
     (*err = parser.Embedded("embedded_stuff").GetString("some_string", &settings.embedded_string)) ||

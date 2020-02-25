@@ -2,7 +2,7 @@
   "DatabaseServer":"127.0.0.1:27017",
   "PerformanceDbServer": "localhost:8086",
   "PerformanceDbName": "db_test",
-  "port":5005,
+  "Port":5005,
   "LogLevel":"info",
   "SecretFile":"auth_secret.key"
 }

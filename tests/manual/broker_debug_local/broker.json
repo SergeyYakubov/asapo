@@ -3,7 +3,7 @@
   "DiscoveryServer": "localhost:8400/discovery",
   "PerformanceDbServer": "localhost:8086",
   "PerformanceDbName": "db_test",
-  "port": 5005,
+  "Port": 5005,
   "LogLevel":"info",
   "SecretFile":"auth_secret.key"
 }

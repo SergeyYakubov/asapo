@@ -1,9 +1,9 @@
 {
   "Port": {{ env "NOMAD_PORT_authorizer" }},
   "LogLevel":"debug",
-  "AlwaysAllowedBeamtimes":[{"BeamtimeId":"asapo_test","Beamline":"test","Year":"2019","Facility":"test_facility"},
-  {"BeamtimeId":"asapo_test1","Beamline":"test1","Year":"2019","Facility":"test_facility"},
-  {"BeamtimeId":"asapo_test2","Beamline":"test2","Year":"2019","Facility":"test_facility"}],
+  "AlwaysAllowedBeamtimes":[{"beamtimeId":"asapo_test","beamline":"test","Year":"2019","Facility":"test_facility"},
+  {"beamtimeId":"asapo_test1","beamline":"test1","Year":"2019","Facility":"test_facility"},
+  {"beamtimeId":"asapo_test2","beamline":"test2","Year":"2019","Facility":"test_facility"}],
   "SecretFile":"auth_secret.key"
 }
 

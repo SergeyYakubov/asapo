@@ -12,40 +12,40 @@ import (
 
 type SourceCredentials struct {
 	BeamtimeId string
-	Beamline string
-	Stream string
-	Token string
+	Beamline   string
+	Stream     string
+	Token      string
 }
 
 type authorizationRequest struct {
 	SourceCredentials string
-	OriginHost string
+	OriginHost        string
 }
 
-func getSourceCredentials(request authorizationRequest ) (SourceCredentials,error){
-	vals := strings.Split(request.SourceCredentials,"%")
+func getSourceCredentials(request authorizationRequest) (SourceCredentials, error) {
+	vals := strings.Split(request.SourceCredentials, "%")
 
-	if len(vals)!=4 {
-		return SourceCredentials{}, errors.New("cannot get source credentials from "+request.SourceCredentials)
+	if len(vals) != 4 {
+		return SourceCredentials{}, errors.New("cannot get source credentials from " + request.SourceCredentials)
 	}
-	creds := SourceCredentials{vals[0],vals[1],vals[2],vals[3]}
-	if creds.Stream=="" {
-		creds.Stream="detector"
-	}
-
-	if creds.Beamline=="" {
-		creds.Beamline="auto"
+	creds := SourceCredentials{vals[0], vals[1], vals[2], vals[3]}
+	if creds.Stream == "" {
+		creds.Stream = "detector"
 	}
 
-	if creds.BeamtimeId=="" {
-		creds.BeamtimeId="auto"
+	if creds.Beamline == "" {
+		creds.Beamline = "auto"
 	}
 
-	if creds.BeamtimeId=="auto" && creds.Beamline=="auto" {
+	if creds.BeamtimeId == "" {
+		creds.BeamtimeId = "auto"
+	}
+
+	if creds.BeamtimeId == "auto" && creds.Beamline == "auto" {
 		return SourceCredentials{}, errors.New("cannot automaticaly detect both beamline and beamtime_id ")
 	}
 
-	return creds,nil
+	return creds, nil
 }
 
 func extractRequest(r *http.Request) (request authorizationRequest, err error) {
@@ -73,121 +73,185 @@ func getBeamlineFromIP(ip string) (string, error) {
 	return lines[0], nil
 }
 
-func beamtimeInfoFromMatch(match string) (beamtimeInfo,error) {
-	match = strings.TrimPrefix(match, settings.RootBeamtimesFolder)
-	match = strings.TrimPrefix(match, string(filepath.Separator))
-	vars := strings.Split(match,string(filepath.Separator))
-	if len(vars)!=6 {
-		return beamtimeInfo{},errors.New("bad pattern")
+func beamtimeMetaFromJson(fname string) (beamtimeMeta, error) {
+	var meta beamtimeMeta
+	err := utils.ReadJsonFromFile(fname, &meta)
+	if err != nil {
+		return beamtimeMeta{}, err
 	}
-	var bt beamtimeInfo
-	ignoredFoldersAfterGpfs:=[]string{"common","BeamtimeUsers","state","support"}
-	if utils.StringInSlice(vars[2],ignoredFoldersAfterGpfs) {
-		return beamtimeInfo{},errors.New("skipped fodler")
-	}
-
-	bt.Facility,bt.Beamline,bt.Year,bt.BeamtimeId = vars[0],vars[2],vars[3],vars[5]
-
-	return bt,nil
+	return meta, nil
 }
 
-func findBeamtime(beamtime_id string) (beamtimeInfo,bool) {
-	sep := string(filepath.Separator)
-	pattern := sep+"*"+sep+"gpfs"+sep+"*"+sep+"*"+sep+"*"+sep
-	matches, err := filepath.Glob(settings.RootBeamtimesFolder+pattern+beamtime_id)
-
-	if err!=nil || len(matches)==0 {
-		return beamtimeInfo{},false
+func beamtimeMetaFromMatch(match string) (beamtimeMeta, error) {
+	match = strings.TrimPrefix(match, settings.RootBeamtimesFolder)
+	match = strings.TrimPrefix(match, string(filepath.Separator))
+	vars := strings.Split(match, string(filepath.Separator))
+	if len(vars) != 6 {
+		return beamtimeMeta{}, errors.New("bad pattern")
+	}
+	var bt beamtimeMeta
+	ignoredFoldersAfterGpfs := []string{"common", "BeamtimeUsers", "state", "support"}
+	if utils.StringInSlice(vars[2], ignoredFoldersAfterGpfs) {
+		return beamtimeMeta{}, errors.New("skipped fodler")
 	}
 
-	for _,match := range (matches) {
-		btInfo,err := beamtimeInfoFromMatch(match)
-		if err!= nil {
+	bt.OfflinePath = match
+	bt.Beamline, bt.BeamtimeId = vars[2], vars[5]
+
+	return bt, nil
+}
+
+func findBeamtimeInfoFromId(beamtime_id string) (beamtimeMeta, error) {
+	sep := string(filepath.Separator)
+	pattern := sep + "*" + sep + "gpfs" + sep + "*" + sep + "*" + sep + "*" + sep
+	matches, err := filepath.Glob(settings.RootBeamtimesFolder + pattern + beamtime_id)
+
+	if err != nil || len(matches) == 0 {
+		return beamtimeMeta{}, errors.New("Cannot find beamline for "+beamtime_id)
+	}
+
+	for _, match := range (matches) {
+		btInfo, err := beamtimeMetaFromMatch(match)
+		if err != nil {
 			continue
 		}
 		if btInfo.BeamtimeId == beamtime_id {
-			return btInfo,true
+			return btInfo, nil
 		}
 	}
-	return beamtimeInfo{},false
+	return beamtimeMeta{}, errors.New("Cannot find beamline for "+beamtime_id)
 }
 
-func alwaysAllowed(creds SourceCredentials)(beamtimeInfo,bool) {
+func findBeamtimeMetaFromBeamline(beamline string) (beamtimeMeta, error) {
+	sep := string(filepath.Separator)
+	pattern := "beamtime-metadata-*.json"
+	online_path := settings.CurrentBeamlinesFolder + sep + beamline + sep + "current"
+
+	matches, err := filepath.Glob(online_path + sep + pattern)
+	if err != nil || len(matches) != 1 {
+		return beamtimeMeta{}, err
+	}
+
+	meta, err := beamtimeMetaFromJson(matches[0])
+	if (err != nil) {
+		return beamtimeMeta{}, err
+	}
+	meta.OnlinePath = online_path
+	return meta, nil
+}
+
+func alwaysAllowed(creds SourceCredentials) (beamtimeMeta, bool) {
 	for _, pair := range settings.AlwaysAllowedBeamtimes {
 		if pair.BeamtimeId == creds.BeamtimeId {
 			pair.Stream = creds.Stream
-			return pair,true
+			return pair, true
 		}
 	}
-	return beamtimeInfo{},false
+	return beamtimeMeta{}, false
 }
 
-func authorizeByHost(host,beamline string) (bool) {
+func authorizeByHost(host, beamline string) (error) {
 	active_beamline, err := getBeamlineFromIP(host)
 	if err != nil {
 		log.Error("cannot find active beamline for " + host + " - " + err.Error())
-		return false
+		return err
 	}
 
 	if (active_beamline != beamline) {
-		log.Error("beamine for host " + host +" - "+ active_beamline+ " does not match " + beamline)
-		return false
+		err_string := "beamine for host " + host + " - " + active_beamline + " does not match " + beamline
+		log.Error(err_string)
+		return errors.New(err_string)
 	}
-	return true
+	return nil
 }
 
 func needHostAuthorization(creds SourceCredentials) bool {
-	return strings.HasPrefix(creds.Stream,"detector") || len(creds.Token)==0
+	return strings.HasPrefix(creds.Stream, "detector") || len(creds.Token) == 0
 }
 
-func authorizeByToken(creds SourceCredentials) bool {
-	token_expect, _ := auth.GenerateToken(&creds.BeamtimeId)
+func authorizeByToken(creds SourceCredentials) error {
+	var token_expect string
+	if (creds.BeamtimeId != "auto") {
+		token_expect, _ = auth.GenerateToken(&creds.BeamtimeId)
+	} else {
+		key := "bl_" + creds.Beamline
+		token_expect, _ = auth.GenerateToken(&key)
+	}
 
+	var err_string string
 	if creds.Token != token_expect {
-		log.Error("wrong token for beamtime " + creds.BeamtimeId)
-		return false
+		if creds.BeamtimeId != "auto" {
+			err_string = "wrong token for beamtime " + creds.BeamtimeId
+		} else {
+			err_string = "wrong token for beamline " + creds.Beamline
+		}
+		log.Error(err_string)
+		return errors.New(err_string)
 	}
-	return true
+	return nil
 }
 
-
-func authorize(request authorizationRequest,creds SourceCredentials) (beamtimeInfo,bool) {
-	if answer,ok := alwaysAllowed(creds);ok {
-		return answer,ok
-	}
-
-	beamlineInfo,ok := findBeamtime(creds.BeamtimeId)
-	if (!ok) {
-		log.Error("cannot find beamline for " + creds.BeamtimeId)
-		return beamtimeInfo{},false
-	}
-
-	if needHostAuthorization(creds)  {
-		if !authorizeByHost(request.OriginHost,beamlineInfo.Beamline) {
-			return beamtimeInfo{}, false
+func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
+	var err error
+	var meta beamtimeMeta
+	if (creds.BeamtimeId != "auto") {
+		meta, err = findBeamtimeInfoFromId(creds.BeamtimeId)
+		if (err == nil ) {
+			meta_onilne, err_online := findBeamtimeMetaFromBeamline(meta.Beamline)
+			if err_online == nil && meta.BeamtimeId == meta_onilne.BeamtimeId {
+				meta.OnlinePath = meta_onilne.OnlinePath
+			}
 		}
 	} else {
-		if !authorizeByToken(creds) {
-			return beamtimeInfo{}, false
+		meta, err = findBeamtimeMetaFromBeamline(creds.Beamline)
+	}
+
+	if (err != nil) {
+		log.Error(err.Error())
+		return beamtimeMeta{}, err
+	}
+
+	return meta, nil
+}
+
+func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds SourceCredentials) error {
+
+	if needHostAuthorization(creds) {
+		if err := authorizeByHost(request.OriginHost, meta.Beamline); err != nil {
+			return err
+		}
+	} else {
+		if err := authorizeByToken(creds); err != nil {
+			return err
 		}
 	}
 
-	if creds.Beamline !="auto"  && beamlineInfo.Beamline != creds.Beamline{
-		log.Debug("given beamline (" + creds.Beamline+") does not match the found one (" +beamlineInfo.Beamline+")" )
-		return beamtimeInfo{}, false
+	if creds.Beamline != "auto" && meta.Beamline != creds.Beamline {
+		err_string := "given beamline (" + creds.Beamline + ") does not match the found one (" + meta.Beamline + ")"
+		log.Debug(err_string)
+		return errors.New(err_string)
+	}
+	return nil
+}
+
+func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeMeta, error) {
+	if meta, ok := alwaysAllowed(creds); ok {
+		return meta, nil
 	}
 
-	var answer beamtimeInfo
-	answer.Beamline = beamlineInfo.Beamline
-	answer.Facility = beamlineInfo.Facility
-	answer.Year = beamlineInfo.Year
-	answer.BeamtimeId = creds.BeamtimeId
-	answer.Stream = creds.Stream
+	meta, err := findMeta(creds)
+	if err != nil {
+		return beamtimeMeta{}, err
+	}
 
-	log.Debug("authorized beamtime " + answer.BeamtimeId + " for " + request.OriginHost + " in " + answer.Beamline)
+	if err := authorizeMeta(meta, request, creds); err != nil {
+		return beamtimeMeta{}, err
+	}
 
-	return answer,true
+	meta.Stream = creds.Stream
 
+	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " + meta.Beamline)
+	return meta, nil
 }
 
 func routeAuthorize(w http.ResponseWriter, r *http.Request) {
@@ -198,17 +262,17 @@ func routeAuthorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
-	creds,err := getSourceCredentials(request)
-	if err!=nil {
+	creds, err := getSourceCredentials(request)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	beamtimeInfo,ok := authorize(request,creds)
-	if (!ok) {
+	beamtimeInfo, err := authorize(request, creds)
+	if (err != nil) {
 		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(err.Error()))
 		return
 	}
 

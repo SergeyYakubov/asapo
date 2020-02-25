@@ -1,6 +1,6 @@
 {
   "server":"some_string",
-  "port": 10,
+  "Port": 10,
   "some_array":1,
   "some_string_array":["s1","s2","s3"],
   "embedded_stuff":

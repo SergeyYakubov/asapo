@@ -42,11 +42,11 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     }
 
     JsonStringParser parser{response};
-    (err = parser.GetString("BeamtimeId", &beamtime_id_)) ||
-    (err = parser.GetString("Stream", &stream_)) ||
-    (err = parser.GetString("Facility", &facility_)) ||
-    (err = parser.GetString("Year", &beamtime_year_)) ||
-    (err = parser.GetString("Beamline", &beamline_));
+    (err = parser.GetString("beamtimeId", &beamtime_id_)) ||
+    (err = parser.GetString("stream", &stream_)) ||
+    (err = parser.GetString("core-path", &offline_path_)) ||
+    (err = parser.GetString("beamline-path", &online_path_)) ||
+    (err = parser.GetString("beamline", &beamline_));
     if (err) {
         return ErrorFromAuthorizationServerResponse(err, code);
     } else {
@@ -88,8 +88,8 @@ Error RequestHandlerAuthorize::ProcessOtherRequest(Request* request) const {
     request->SetBeamtimeId(beamtime_id_);
     request->SetBeamline(beamline_);
     request->SetStream(stream_);
-    request->SetBeamtimeYear(beamtime_year_);
-    request->SetFacility(facility_);
+    request->SetOfflinePath(offline_path_);
+    request->SetOnlinePath(online_path_);
     return nullptr;
 }
 

@@ -53,7 +53,6 @@ class ConfigTests : public Test {
         test_config.write_to_db = true;
         test_config.database_uri = "localhost:27017";
         test_config.log_level = asapo::LogLevel::Error;
-        test_config.root_folder = "test_fodler";
         test_config.authorization_interval_ms = 10000;
         test_config.authorization_server = "AuthorizationServer/aa";
         test_config.use_datacache = false;
@@ -89,7 +88,6 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->write_to_db, Eq(true));
     ASSERT_THAT(config->log_level, Eq(asapo::LogLevel::Error));
     ASSERT_THAT(config->tag, Eq("receiver1"));
-    ASSERT_THAT(config->root_folder, Eq("test_fodler"));
     ASSERT_THAT(config->use_datacache, Eq(false));
     ASSERT_THAT(config->datacache_reserved_share, Eq(10));
     ASSERT_THAT(config->datacache_size_gb, Eq(2));
@@ -106,7 +104,7 @@ TEST_F(ConfigTests, ErrorReadSettings) {
 
     std::vector<std::string>fields {"PerformanceDbServer", "ListenPort", "DataServer", "ListenPort", "WriteToDisk",
                                     "WriteToDb", "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
-                                    "AuthorizationServer", "AuthorizationInterval", "RootFolder", "PerformanceDbName", "LogLevel",
+                                    "AuthorizationServer", "AuthorizationInterval", "PerformanceDbName", "LogLevel",
                                     "NThreads", "DiscoveryServer", "AdvertiseIP", "ReceiveToDiskThresholdMB"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfig(test_config, field);
