@@ -52,12 +52,19 @@ func doAuthorizeRequest(path string,buf string) *httptest.ResponseRecorder {
 var credTests = [] struct {
 	request string
 	cred SourceCredentials
+	ok bool
 	message string
 } {
-	{"asapo_test%%", SourceCredentials{"asapo_test","detector",""},"default stream and no token"},
-	{"asapo_test%%token", SourceCredentials{"asapo_test","detector","token"},"default stream"},
-	{"asapo_test%stream%", SourceCredentials{"asapo_test","stream",""},"no token"},
-	{"asapo_test%stream%token", SourceCredentials{"asapo_test","stream","token"},"all set"},
+	{"asapo_test%auto%%", SourceCredentials{"asapo_test","auto","detector",""},true,"auto beamline, stream and no token"},
+	{"asapo_test%auto%%token", SourceCredentials{"asapo_test","auto","detector","token"},true,"auto beamline, stream"},
+	{"asapo_test%auto%stream%", SourceCredentials{"asapo_test","auto","stream",""},true,"auto beamline, no token"},
+	{"asapo_test%auto%stream%token", SourceCredentials{"asapo_test","auto","stream","token"},true,"auto beamline,stream, token"},
+	{"asapo_test%beamline%stream%token", SourceCredentials{"asapo_test","beamline","stream","token"},true,"all set"},
+	{"auto%beamline%stream%token", SourceCredentials{"auto","beamline","stream","token"},true,"auto beamtime"},
+	{"auto%auto%stream%token", SourceCredentials{},false,"auto beamtime and beamline"},
+	{"%beamline%stream%token", SourceCredentials{"auto","beamline","stream","token"},true,"empty beamtime"},
+	{"asapo_test%%stream%token", SourceCredentials{"asapo_test","auto","stream","token"},true,"empty bealine"},
+	{"%%stream%token", SourceCredentials{},false,"both empty"},
 }
 
 func TestSplitCreds(t *testing.T) {
@@ -65,14 +72,19 @@ func TestSplitCreds(t *testing.T) {
 	for _, test := range credTests {
 		request :=  authorizationRequest{test.request,"host"}
 		creds,err := getSourceCredentials(request)
-		assert.Nil(t,err)
-		assert.Equal(t,creds,test.cred,test.message)
+		if test.ok {
+			assert.Nil(t,err)
+			assert.Equal(t,creds,test.cred,test.message)
+		} else {
+			assert.NotNil(t,err,test.message)
+		}
+
 	}
 }
 
 func TestAuthorizeDefaultOK(t *testing.T) {
 	allowBeamlines([]beamtimeInfo{{"asapo_test","beamline","","2019","tf"}})
-	request :=  makeRequest(authorizationRequest{"asapo_test%%","host"})
+	request :=  makeRequest(authorizationRequest{"asapo_test%%%","host"})
 	w := doAuthorizeRequest("/authorize",request)
 
 	body, _ := ioutil.ReadAll(w.Body)
@@ -86,15 +98,18 @@ func TestAuthorizeDefaultOK(t *testing.T) {
 
 var authTests = [] struct {
 	beamtime_id string
+	beamline string
 	stream string
 	token string
 	status int
 	message string
 }{
-	{"test","stream", prepareToken("test"),http.StatusOK,"user stream with correct token"},
-	{"test1","stream", prepareToken("test1"),http.StatusUnauthorized,"correct token, beamtime not found"},
-	{"test","stream", prepareToken("wrong"),http.StatusUnauthorized,"user stream with wrong token"},
-	{"test","detector_aaa", prepareToken("test"),http.StatusUnauthorized,"detector stream with correct token and wroung source"},
+	{"test","auto","stream", prepareToken("test"),http.StatusOK,"user stream with correct token"},
+	{"test1","auto","stream", prepareToken("test1"),http.StatusUnauthorized,"correct token, beamtime not found"},
+	{"test","auto","stream", prepareToken("wrong"),http.StatusUnauthorized,"user stream with wrong token"},
+	{"test","auto","detector_aaa", prepareToken("test"),http.StatusUnauthorized,"detector stream with correct token and wroung source"},
+	{"test","bl1","stream", prepareToken("test"),http.StatusOK,"correct beamline given"},
+	{"test","bl2","stream", prepareToken("test"),http.StatusUnauthorized,"incorrect beamline given"},
 }
 func TestAuthorizeWithToken(t *testing.T) {
 	allowBeamlines([]beamtimeInfo{})
@@ -103,7 +118,7 @@ func TestAuthorizeWithToken(t *testing.T) {
 	defer 	os.RemoveAll("tf")
 
 	for _, test := range authTests {
-		request :=  makeRequest(authorizationRequest{test.beamtime_id+"%"+test.stream+"%"+test.token,"host"})
+		request :=  makeRequest(authorizationRequest{test.beamtime_id+"%"+test.beamline+"%"+test.stream+"%"+test.token,"host"})
 		w := doAuthorizeRequest("/authorize",request)
 
 		body, _ := ioutil.ReadAll(w.Body)
@@ -125,7 +140,7 @@ func TestAuthorizeWithToken(t *testing.T) {
 
 
 func TestNotAuthorized(t *testing.T) {
-	request :=  makeRequest(authorizationRequest{"any_id%%","host"})
+	request :=  makeRequest(authorizationRequest{"any_id%%%","host"})
 	w := doAuthorizeRequest("/authorize",request)
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
 }
@@ -178,7 +193,7 @@ func TestAuthorizeWithFile(t *testing.T) {
 	ioutil.WriteFile("127.0.0.1", []byte("bl1"), 0644)
 
 
-	request := authorizationRequest{"11003924%%","127.0.0.1"}
+	request := authorizationRequest{"11003924%%%","127.0.0.1"}
 	w := doAuthorizeRequest("/authorize",makeRequest(request))
 
 	body, _ := ioutil.ReadAll(w.Body)
@@ -189,7 +204,7 @@ func TestAuthorizeWithFile(t *testing.T) {
 	assert.Contains(t, string(body), "tf", "")
 	assert.Equal(t, http.StatusOK, w.Code, "")
 
-	request = authorizationRequest{"wrong%%","127.0.0.1"}
+	request = authorizationRequest{"wrong%%%","127.0.0.1"}
 	w = doAuthorizeRequest("/authorize",makeRequest(request))
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
 

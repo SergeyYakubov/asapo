@@ -12,6 +12,7 @@ import (
 
 type SourceCredentials struct {
 	BeamtimeId string
+	Beamline string
 	Stream string
 	Token string
 }
@@ -24,13 +25,26 @@ type authorizationRequest struct {
 func getSourceCredentials(request authorizationRequest ) (SourceCredentials,error){
 	vals := strings.Split(request.SourceCredentials,"%")
 
-	if len(vals)!=3 {
+	if len(vals)!=4 {
 		return SourceCredentials{}, errors.New("cannot get source credentials from "+request.SourceCredentials)
 	}
-	creds := SourceCredentials{vals[0],vals[1],vals[2]}
+	creds := SourceCredentials{vals[0],vals[1],vals[2],vals[3]}
 	if creds.Stream=="" {
 		creds.Stream="detector"
 	}
+
+	if creds.Beamline=="" {
+		creds.Beamline="auto"
+	}
+
+	if creds.BeamtimeId=="" {
+		creds.BeamtimeId="auto"
+	}
+
+	if creds.BeamtimeId=="auto" && creds.Beamline=="auto" {
+		return SourceCredentials{}, errors.New("cannot automaticaly detect both beamline and beamtime_id ")
+	}
+
 	return creds,nil
 }
 
@@ -156,6 +170,11 @@ func authorize(request authorizationRequest,creds SourceCredentials) (beamtimeIn
 		if !authorizeByToken(creds) {
 			return beamtimeInfo{}, false
 		}
+	}
+
+	if creds.Beamline !="auto"  && beamlineInfo.Beamline != creds.Beamline{
+		log.Debug("given beamline (" + creds.Beamline+") does not match the found one (" +beamlineInfo.Beamline+")" )
+		return beamtimeInfo{}, false
 	}
 
 	var answer beamtimeInfo
