@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
 
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.uri, "", asapo::SourceCredentials{"", "", ""}, &err);
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.uri, "", asapo::SourceCredentials{"", "","", ""}, &err);
     auto server_broker = static_cast<asapo::ServerDataBroker*>(broker.get());
 
     asapo::HttpCode code;

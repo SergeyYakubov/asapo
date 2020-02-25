@@ -44,7 +44,7 @@ namespace {
 
 TEST(FolderDataBroker, Constructor) {
     auto data_broker =
-    std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "path", asapo::SourceCredentials{"beamtime_id", "", "token"})};
+    std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "path", asapo::SourceCredentials{"beamtime_id", "", "", "token"})};
     ASSERT_THAT(dynamic_cast<asapo::SystemIO*>(data_broker->io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::CurlHttpClient*>(data_broker->httpclient__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::TcpClient*>(data_broker->net_client__.get()), Ne(nullptr));
@@ -74,7 +74,7 @@ class ServerDataBrokerTests : public Test {
     std::string expected_next_substream = "nextsubstream";
     void SetUp() override {
         data_broker = std::unique_ptr<ServerDataBroker> {
-            new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id", expected_stream, expected_token})
+            new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id","", expected_stream, expected_token})
         };
         data_broker->io__ = std::unique_ptr<IO> {&mock_io};
         data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
@@ -137,7 +137,7 @@ TEST_F(ServerDataBrokerTests, DefaultStreamIsDetector) {
     data_broker->httpclient__.release();
     data_broker->net_client__.release();
     data_broker = std::unique_ptr<ServerDataBroker> {
-        new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id", "", expected_token})
+        new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id","", "", expected_token})
     };
     data_broker->io__ = std::unique_ptr<IO> {&mock_io};
     data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};

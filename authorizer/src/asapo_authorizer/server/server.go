@@ -15,6 +15,7 @@ type serverSettings struct {
 	LogLevel                string
 	IpBeamlineMappingFolder string
 	RootBeamtimesFolder     string
+	CurrentBeamlinesFolder string
 	AlwaysAllowedBeamtimes  []beamtimeInfo
 	SecretFile              string
 }

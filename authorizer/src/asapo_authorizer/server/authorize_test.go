@@ -49,6 +49,7 @@ func doAuthorizeRequest(path string,buf string) *httptest.ResponseRecorder {
 }
 
 
+
 var credTests = [] struct {
 	request string
 	cred SourceCredentials
@@ -114,8 +115,13 @@ var authTests = [] struct {
 func TestAuthorizeWithToken(t *testing.T) {
 	allowBeamlines([]beamtimeInfo{})
 	settings.RootBeamtimesFolder ="."
+	settings.CurrentBeamlinesFolder="."
 	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test"), os.ModePerm)
+	os.MkdirAll(filepath.Clean("p07/current"), os.ModePerm)
+	ioutil.WriteFile("p07/current/beamtime-metadata-11111111.json", []byte(beamtime_meta), 0644)
+
 	defer 	os.RemoveAll("tf")
+	defer 	os.RemoveAll("p07")
 
 	for _, test := range authTests {
 		request :=  makeRequest(authorizationRequest{test.beamtime_id+"%"+test.beamline+"%"+test.stream+"%"+test.token,"host"})
@@ -138,6 +144,82 @@ func TestAuthorizeWithToken(t *testing.T) {
 }
 
 
+var beamtime_meta =`
+{
+"applicant": {
+"email": "test",
+"institute": "test",
+"lastname": "test",
+"userId": "1234",
+"username": "test"
+},
+"beamline": "p07",
+"beamline_alias": "P07",
+"beamtimeId": "11111111",
+"contact": "None",
+"core-path": "/asap3/petra3/gpfs/p07/2020/data/11111111",
+"event-end": "2020-03-03 09:00:00",
+"event-start": "2020-03-02 09:00:00",
+"facility": "PETRA III",
+"generated": "2020-02-22 22:37:16",
+"pi": {
+"email": "test",
+"institute": "test",
+"lastname": "test",
+"userId": "14",
+"username": "test"
+},
+"proposalId": "12345678",
+"proposalType": "H",
+"title": "In-House Research (P07)",
+"unixId": "None",
+"users": {
+"door-db": [
+"test"
+],
+"special": [],
+"unknown": []
+}
+}
+`
+
+var authBeamlineTests = [] struct {
+	beamtime_id string
+	beamline string
+	token string
+	status int
+	message string
+}{
+	{"11111111","p07", prepareToken("1111111"),http.StatusOK,"beamtime found"},
+	{"11111111","p08", prepareToken("1111111"),http.StatusUnauthorized,"beamtime not found"},
+}
+/*
+func TestAuthorizeBeamline(t *testing.T) {
+	allowBeamlines([]beamtimeInfo{})
+	settings.CurrentBeamlinesFolder="."
+	os.MkdirAll(filepath.Clean("p07/current"), os.ModePerm)
+	ioutil.WriteFile("p07/current/beamtime-metadata-11111111.json", []byte(beamtime_meta), 0644)
+	defer 	os.RemoveAll("p07")
+
+	for _, test := range authTests {
+		request :=  makeRequest(authorizationRequest{"auto%"+test.beamline+"%%"+test.token,"host"})
+		w := doAuthorizeRequest("/authorize",request)
+
+		body, _ := ioutil.ReadAll(w.Body)
+		if test.status==http.StatusOK {
+			assert.Contains(t, string(body), test.beamtime_id, "")
+			assert.Contains(t, string(body), test.beamline, "")
+//			assert.Contains(t, string(body), "2019", "")
+			assert.Contains(t, string(body), "default", "")
+		}
+
+		assert.Equal(t, test.status, w.Code, test.message)
+	}
+
+
+}
+
+*/
 
 func TestNotAuthorized(t *testing.T) {
 	request :=  makeRequest(authorizationRequest{"any_id%%%","host"})

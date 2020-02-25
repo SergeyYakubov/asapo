@@ -386,7 +386,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequestWithSubstream) {
 
 TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
     std::string long_str(asapo::kMaxMessageSize * 10, 'a');
-    expected_credentials = asapo::SourceCredentials{long_str, "", ""};
+    expected_credentials = asapo::SourceCredentials{long_str,"", "", ""};
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("too long")));
 
     auto err = producer.SetCredentials(expected_credentials);
@@ -397,8 +397,8 @@ TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
 TEST_F(ProducerImplTests, ErrorSettingSecondTime) {
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("already")));
 
-    producer.SetCredentials(asapo::SourceCredentials{"1", "2", "3"});
-    auto err = producer.SetCredentials(asapo::SourceCredentials{"4", "5", "6"});
+    producer.SetCredentials(asapo::SourceCredentials{"1", "","2", "3"});
+    auto err = producer.SetCredentials(asapo::SourceCredentials{"4","", "5", "6"});
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }

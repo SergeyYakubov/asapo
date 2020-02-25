@@ -15,7 +15,7 @@ namespace {
 TEST(CreateProducer, TcpProducer) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, asapo::RequestHandlerType::kTcp,
-                                                SourceCredentials{"bt", "", ""}, 3600, &err);
+                                                SourceCredentials{"bt", "","", ""}, 3600, &err);
     ASSERT_THAT(dynamic_cast<asapo::ProducerImpl*>(producer.get()), Ne(nullptr));
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -24,7 +24,7 @@ TEST(CreateProducer, ErrorBeamtime) {
     asapo::Error err;
     std::string expected_beamtimeid(asapo::kMaxMessageSize * 10, 'a');
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, asapo::RequestHandlerType::kTcp,
-                                                SourceCredentials{expected_beamtimeid, "", ""}, 3600, &err);
+                                                SourceCredentials{expected_beamtimeid,"", "", ""}, 3600, &err);
     ASSERT_THAT(producer, Eq(nullptr));
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
@@ -41,7 +41,7 @@ TEST(CreateProducer, ErrorOnBothAutoBeamlineBeamtime) {
 TEST(CreateProducer, TooManyThreads) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("", asapo::kMaxProcessingThreads + 1,
-                                                asapo::RequestHandlerType::kTcp, SourceCredentials{"bt", "", ""}, 3600, &err);
+                                                asapo::RequestHandlerType::kTcp, SourceCredentials{"bt","", "", ""}, 3600, &err);
     ASSERT_THAT(producer, Eq(nullptr));
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
@@ -50,7 +50,7 @@ TEST(CreateProducer, TooManyThreads) {
 TEST(CreateProducer, ZeroThreads) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("", 0,
-                                                asapo::RequestHandlerType::kTcp, SourceCredentials{"bt", "", ""}, 3600, &err);
+                                                asapo::RequestHandlerType::kTcp, SourceCredentials{"bt", "","", ""}, 3600, &err);
     ASSERT_THAT(producer, Eq(nullptr));
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
@@ -59,7 +59,7 @@ TEST(CreateProducer, ZeroThreads) {
 TEST(Producer, SimpleWorkflowWihoutConnection) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("hello", 5, asapo::RequestHandlerType::kTcp,
-                                                SourceCredentials{"bt", "", ""}, 3600,
+                                                SourceCredentials{"bt", "","", ""}, 3600,
                                                 &err);
 
     asapo::EventHeader event_header{1, 1, "test"};

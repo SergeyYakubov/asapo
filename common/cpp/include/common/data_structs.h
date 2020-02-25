@@ -49,7 +49,14 @@ using SubDirList = std::vector<std::string>;
 
 
 struct SourceCredentials {
-    static const std::string kDefaultStream;
+    SourceCredentials(std::string beamtime,std::string beamline,std::string stream,std::string token):
+    beamtime_id{std::move(beamtime)},
+    beamline{std::move(beamline)},
+    stream{std::move(stream)},
+    user_token{std::move(token)}
+    {};
+    SourceCredentials(){};
+  static const std::string kDefaultStream;
     static const std::string kDefaultBeamline;
     static const std::string kDefaultBeamtimeId;
     std::string beamtime_id;
