@@ -72,26 +72,32 @@ Error RequestHandlerAuthorize::ProcessAuthorizationRequest(Request* request) con
     return Authorize(request, request->GetMessage());
 }
 
-Error RequestHandlerAuthorize::ProcessReAuthorization(const Request* request, Error err) const {
+Error RequestHandlerAuthorize::ProcessReAuthorization(Request* request) const {
+    std::string old_beamtimeId = beamtime_id_;
+    auto err = Authorize(request, cached_source_credentials_.c_str());
     if (err == asapo::ReceiverErrorTemplates::kAuthorizationFailure || (
-        err==nullptr && request->GetBeamtimeId()!=beamtime_id_)) {
+        err==nullptr && old_beamtimeId!=beamtime_id_)) {
         return asapo::ReceiverErrorTemplates::kReAuthorizationFailure.Generate();
     }
     return err;
 }
+
+bool RequestHandlerAuthorize::NeedReauthorize() const {
+    uint64_t elapsed_ms = (uint64_t) std::chrono::duration_cast<std::chrono::milliseconds>
+        (system_clock::now() - last_updated_).count();
+    return elapsed_ms >= GetReceiverConfig()->authorization_interval_ms;
+}
+
 
 Error RequestHandlerAuthorize::ProcessOtherRequest(Request* request) const {
     if (cached_source_credentials_.empty()) {
         return ReceiverErrorTemplates::kAuthorizationFailure.Generate();
     }
 
-    uint64_t elapsed_ms = (uint64_t) std::chrono::duration_cast<std::chrono::milliseconds>
-                          (system_clock::now() - last_updated_).count();
-    if (elapsed_ms >= GetReceiverConfig()->authorization_interval_ms) {
-        auto err = Authorize(request, cached_source_credentials_.c_str());
-        auto reauth_err = ProcessReAuthorization(request, std::move(err));
-        if (reauth_err) {
-            return reauth_err;
+    if (NeedReauthorize()) {
+        auto err = ProcessReAuthorization(request);
+        if (err) {
+            return err;
         }
     }
     request->SetBeamtimeId(beamtime_id_);
@@ -118,6 +124,5 @@ RequestHandlerAuthorize::RequestHandlerAuthorize(): log__{GetDefaultReceiverLogg
 StatisticEntity RequestHandlerAuthorize::GetStatisticEntity() const {
     return StatisticEntity::kNetwork;
 }
-
 
 }

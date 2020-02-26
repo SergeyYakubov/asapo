@@ -33,7 +33,7 @@ set PYTHONPATH=%2
 type out
 set NUM=0
 for /F %%N in ('find /C "successfuly sent" ^< "out"') do set NUM=%%N
-echo %NUM% | findstr 4 || goto error
+echo %NUM% | findstr 3 || goto error
 
 for /F %%N in ('find /C "reauthorization" ^< "out"') do set NUM=%%N
 echo %NUM% | findstr 1 || goto error

@@ -291,7 +291,7 @@ cdef class PyProducer:
             throw_exception(err)
         return pyProd
 
-def create_producer(endpoint,beamtime_id='auto',beamline='auto',stream='detector',token='',nthreads=1,timeout_sec=3600):
+def create_producer(endpoint,beamtime_id,beamline,stream,token,nthreads,timeout_sec):
     """
          :param endpoint: server endpoint (url:port)
          :type endpoint: string

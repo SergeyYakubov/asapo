@@ -26,7 +26,7 @@ def callback(header,err):
     lock.release()
 
 
-producer  = asapo_producer.create_producer(endpoint,beamline=beamline, stream=stream, token=token, nthreads=nthreads, timeout_sec=60)
+producer  = asapo_producer.create_producer(endpoint,'auto',beamline, stream, token, nthreads, 60)
 
 producer.set_log_level("debug")
 
@@ -35,10 +35,12 @@ producer.send_file(1, local_path = "./file1", exposed_path = stream+"/"+"file1",
 
 producer.wait_requests_finished(10000)
 
+time.sleep(2)
 
-#send single file to other beamtime - should be warning on duplicated request
+#send single file to other beamtime - should be warning on duplicated request (same beamtime, no reauthorization)
 producer.send_file(1, local_path = "./file1", exposed_path = stream+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)
 producer.wait_requests_finished(10000)
+
 
 fname = 'beamline/p07/current/beamtime-metadata-11111111.json'
 with open(fname) as json_file:

@@ -22,7 +22,7 @@ def callback(header,err):
         print ("successfuly sent: ",header)
     lock.release()
 
-producer  = asapo_producer.create_producer(endpoint,beamtime, stream, token, nthreads, 600)
+producer  = asapo_producer.create_producer(endpoint,beamtime,'auto', stream, token, nthreads, 600)
 
 producer.set_log_level("info")
 

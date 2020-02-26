@@ -24,7 +24,7 @@ def callback(header,err):
         print ("successfuly sent: ",header)
     lock.release()
 
-producer  = asapo_producer.create_producer(endpoint,beamtime, stream, token, nthreads,60)
+producer  = asapo_producer.create_producer(endpoint,beamtime,'auto', stream, token, nthreads,60)
 
 producer.set_log_level("debug")
 
@@ -96,7 +96,7 @@ if n!=0:
 
 # create with error
 try:
-    producer  = asapo_producer.create_producer(endpoint,beamtime, stream, token, 0,0)
+    producer  = asapo_producer.create_producer(endpoint,beamtime,'auto', stream, token, 0,0)
 except asapo_producer.AsapoWrongInputError as e:
     print(e)
 else:

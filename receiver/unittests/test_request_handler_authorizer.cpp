@@ -144,12 +144,12 @@ class AuthorizerHandlerTests : public Test {
         MockAuthRequest(error, code);
         return handler.ProcessRequest(mock_request.get());
     }
-    Error MockRequestAuthorization(bool error, HttpCode code = HttpCode::OK,std::string return_beamtime_id="beamtime_id") {
+    Error MockRequestAuthorization(bool error, HttpCode code = HttpCode::OK,bool set_request=true) {
         EXPECT_CALL(*mock_request, GetOpCode())
         .WillOnce(Return(asapo::kOpcodeTransferData))
         ;
 
-        if (!error && code == HttpCode::OK && return_beamtime_id==expected_beamtime_id) {
+        if (!error && code == HttpCode::OK && set_request) {
             EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
             EXPECT_CALL(*mock_request, SetStream(expected_stream));
             EXPECT_CALL(*mock_request, SetOfflinePath(expected_core_path));
@@ -234,10 +234,6 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturns401) {
 
 TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturnsSameBeamtimeId) {
     MockFirstAuthorization(false);
-    EXPECT_CALL(*mock_request, GetBeamtimeId())
-        .WillOnce(ReturnRef(expected_beamtime_id))
-        ;
-
     auto err = MockRequestAuthorization(false);
 
     ASSERT_THAT(err, Eq(nullptr));
@@ -245,11 +241,9 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturnsSameBeamtimeId
 
 TEST_F(AuthorizerHandlerTests, RequestAuthorizeReturnsDifferentBeamtimeId) {
     MockFirstAuthorization(false);
-    EXPECT_CALL(*mock_request, GetBeamtimeId())
-        .WillOnce(ReturnRef("beamtime_id2"))
-        ;
 
-    auto err = MockRequestAuthorization(false,HttpCode::OK,"beamtime_id2");
+    expected_beamtime_id = "different_id";
+    auto err = MockRequestAuthorization(false,HttpCode::OK,false);
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReAuthorizationFailure));
 }

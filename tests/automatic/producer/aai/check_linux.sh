@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#set -e
+set -e
 
 trap Cleanup EXIT
 
@@ -30,8 +30,6 @@ Cleanup() {
 
 export PYTHONPATH=$2:${PYTHONPATH}
 
-echo "db.${beamtime_id}_${stream}.insert({dummy:1})" | mongo ${beamtime_id}_${stream}  >/dev/null
-
 nomad run authorizer.nmd >/dev/null
 nomad run nginx.nmd >/dev/null
 nomad run receiver.nmd >/dev/null
@@ -46,7 +44,7 @@ echo test > file1
 
 $1 $3 $beamline $token $stream "127.0.0.1:8400" > out || cat out
 cat out
-cat out | grep "successfuly sent" | wc -l | grep 4
+cat out | grep "successfuly sent" | wc -l | grep 3
 cat out | grep "reauthorization" | wc -l | grep 1
 cat out | grep "duplicated" | wc -l | grep 2
 
