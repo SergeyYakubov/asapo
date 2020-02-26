@@ -144,17 +144,12 @@ class AuthorizerHandlerTests : public Test {
         MockAuthRequest(error, code);
         return handler.ProcessRequest(mock_request.get());
     }
-    Error MockRequestAuthorization(bool error, HttpCode code = HttpCode::OK) {
+    Error MockRequestAuthorization(bool error, HttpCode code = HttpCode::OK,std::string return_beamtime_id="beamtime_id") {
         EXPECT_CALL(*mock_request, GetOpCode())
         .WillOnce(Return(asapo::kOpcodeTransferData))
         ;
 
-        if (!error && code == HttpCode::Unauthorized) {
-        EXPECT_CALL(*mock_request, GetBeamtimeId())
-            .WillOnce(ReturnRef(expected_beamtime_id))
-            ;
-        }
-        if (!error && code == HttpCode::OK) {
+        if (!error && code == HttpCode::OK && return_beamtime_id==expected_beamtime_id) {
             EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
             EXPECT_CALL(*mock_request, SetStream(expected_stream));
             EXPECT_CALL(*mock_request, SetOfflinePath(expected_core_path));
@@ -222,6 +217,7 @@ TEST_F(AuthorizerHandlerTests, ErrorOnSecondAuthorize) {
 
 TEST_F(AuthorizerHandlerTests, ErrorOnDataTransferRequestAuthorize) {
     MockFirstAuthorization(false);
+
     auto err = MockRequestAuthorization(true);
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInternalServerError));
@@ -233,26 +229,27 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturns401) {
 
     auto err = MockRequestAuthorization(false, HttpCode::Unauthorized);
 
-    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReAuthorizationFailure));
 }
 
-TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturnsOK) {
+TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturnsSameBeamtimeId) {
     MockFirstAuthorization(false);
+    EXPECT_CALL(*mock_request, GetBeamtimeId())
+        .WillOnce(ReturnRef(expected_beamtime_id))
+        ;
 
     auto err = MockRequestAuthorization(false);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-TEST_F(AuthorizerHandlerTests, RequestAuthorizeReturnsReqauthorize) {
-    expected_beamtime_id="auto";
-    expected_source_credentials = "auto%stream%token";
-    expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
-        "\",\"OriginHost\":\"" +expected_producer_uri + "\"}";
-
+TEST_F(AuthorizerHandlerTests, RequestAuthorizeReturnsDifferentBeamtimeId) {
     MockFirstAuthorization(false);
+    EXPECT_CALL(*mock_request, GetBeamtimeId())
+        .WillOnce(ReturnRef("beamtime_id2"))
+        ;
 
-    auto err = MockRequestAuthorization(false,HttpCode::Unauthorized);
+    auto err = MockRequestAuthorization(false,HttpCode::OK,"beamtime_id2");
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReAuthorizationFailure));
 }

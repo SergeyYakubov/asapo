@@ -278,11 +278,12 @@ cdef class PyProducer:
             if self.c_producer.get() is not NULL:
                 self.c_producer.get().StopThreads__()
     @staticmethod
-    def __create_producer(endpoint,beamtime_id,stream,token,nthreads,timeout_sec):
+    def __create_producer(endpoint,beamtime_id,beamline,stream,token,nthreads,timeout_sec):
         pyProd = PyProducer()
         cdef Error err
         cdef SourceCredentials source
         source.beamtime_id = beamtime_id
+        source.beamline = beamline
         source.user_token = token
         source.stream = stream
         pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,timeout_sec,&err)
@@ -290,7 +291,7 @@ cdef class PyProducer:
             throw_exception(err)
         return pyProd
 
-def create_producer(endpoint,beamtime_id,stream,token,nthreads,timeout_sec):
+def create_producer(endpoint,beamtime_id='auto',beamline='auto',stream='detector',token='',nthreads=1,timeout_sec=3600):
     """
          :param endpoint: server endpoint (url:port)
          :type endpoint: string
@@ -308,7 +309,7 @@ def create_producer(endpoint,beamtime_id,stream,token,nthreads,timeout_sec):
             AsapoWrongInputError: wrong input (number of threads, ,,,)
             AsapoProducerError: actually should not happen
     """
-    return PyProducer.__create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(stream),_bytes(token),nthreads,timeout_sec)
+    return PyProducer.__create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(beamline),_bytes(stream),_bytes(token),nthreads,timeout_sec)
 
 
 __version__ = "@ASAPO_VERSION_PYTHON@"

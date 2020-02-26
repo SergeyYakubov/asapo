@@ -5,7 +5,7 @@
   "DatabaseServer":"auto",
   "DiscoveryServer": "localhost:8400/discovery",
   "AuthorizationServer": "localhost:8400/authorizer",
-  "AuthorizationInterval": 10000,
+  "AuthorizationInterval": 1000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "DataServer": {
     "NThreads": 2,
