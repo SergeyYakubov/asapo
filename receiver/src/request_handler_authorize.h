@@ -31,7 +31,7 @@ class RequestHandlerAuthorize final: public ReceiverRequestHandler {
     Error ProcessOtherRequest(Request* request) const;
     Error Authorize(Request* request, const char* source_credentials) const;
     Error ErrorFromAuthorizationServerResponse(const Error& err, HttpCode code) const;
-
+    Error ProcessReAuthorizeError(const Request* request,Error err) const;
     std::string GetRequestString(const Request* request, const char* source_credentials) const;
 };
 

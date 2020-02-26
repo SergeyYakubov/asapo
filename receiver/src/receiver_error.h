@@ -10,6 +10,7 @@ enum class ReceiverErrorType {
     kBadRequest,
     kAuthorizationFailure,
     kInternalServerError,
+    kReAuthorizationFailure,
     kWarningDuplicatedRequest
 };
 
@@ -38,6 +39,10 @@ auto const kBadRequest = ReceiverErrorTemplate{
 
 auto const kAuthorizationFailure = ReceiverErrorTemplate{
     "authorization failure", ReceiverErrorType::kAuthorizationFailure
+};
+
+auto const kReAuthorizationFailure = ReceiverErrorTemplate{
+    "reauthorization for auto beamtime failed", ReceiverErrorType::kReAuthorizationFailure
 };
 
 };

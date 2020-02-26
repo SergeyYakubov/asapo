@@ -63,7 +63,6 @@ class AuthorizerHandlerTests : public Test {
     ReceiverConfig config;
 
     NiceMock<asapo::MockLogger> mock_logger;
-    std::string expected_source_credentials = "beamtime_id%stream%token";
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_stream = "stream";
     std::string expected_beamline = "beamline";
@@ -71,13 +70,16 @@ class AuthorizerHandlerTests : public Test {
     std::string expected_core_path = "/gpfs/blabla";
     std::string expected_producer_uri = "producer_uri";
     std::string expected_authorization_server = "authorizer_host";
-    std::string expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
-                                        "\",\"OriginHost\":\"" +
-                                        expected_producer_uri + "\"}";
-
+    std::string expect_request_string;
+    std::string expected_source_credentials;
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
+        expected_source_credentials = expected_beamtime_id+"%stream%token";
+        expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
+            "\",\"OriginHost\":\"" +
+            expected_producer_uri + "\"}";
+
         mock_request.reset(new MockRequest{request_header, 1, expected_producer_uri, nullptr});
         handler.http_client__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         handler.log__ = &mock_logger;
@@ -146,6 +148,12 @@ class AuthorizerHandlerTests : public Test {
         EXPECT_CALL(*mock_request, GetOpCode())
         .WillOnce(Return(asapo::kOpcodeTransferData))
         ;
+
+        if (!error && code == HttpCode::Unauthorized) {
+        EXPECT_CALL(*mock_request, GetBeamtimeId())
+            .WillOnce(ReturnRef(expected_beamtime_id))
+            ;
+        }
         if (!error && code == HttpCode::OK) {
             EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
             EXPECT_CALL(*mock_request, SetStream(expected_stream));
@@ -235,6 +243,21 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturnsOK) {
 
     ASSERT_THAT(err, Eq(nullptr));
 }
+
+TEST_F(AuthorizerHandlerTests, RequestAuthorizeReturnsReqauthorize) {
+    expected_beamtime_id="auto";
+    expected_source_credentials = "auto%stream%token";
+    expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
+        "\",\"OriginHost\":\"" +expected_producer_uri + "\"}";
+
+    MockFirstAuthorization(false);
+
+    auto err = MockRequestAuthorization(false,HttpCode::Unauthorized);
+
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReAuthorizationFailure));
+}
+
+
 
 TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeUsesCachedValue) {
     config.authorization_interval_ms = 10000;
