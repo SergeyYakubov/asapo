@@ -47,6 +47,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 cdef extern from "asapo_producer.h" namespace "asapo":
   struct  SourceCredentials:
     string beamtime_id
+    string beamline
     string stream
     string user_token
 

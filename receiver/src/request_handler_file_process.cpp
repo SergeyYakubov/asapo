@@ -21,7 +21,7 @@ Error RequestHandlerFileProcess::ProcessFileExistSituation(Request* request) con
     auto err_duplicate = request->CheckForDuplicates();
     if (err_duplicate == nullptr) {
         request->SetWarningMessage("file has been overwritten");
-        log__->Warning("overwriting file " + request->GetFullPath(GetReceiverConfig()->root_folder));
+        log__->Warning(std::string("overwriting file " ) + request->GetOfflinePath() + kPathSeparator + request->GetFileName());
         return file_processor_->ProcessFile(request, true);
     }
 

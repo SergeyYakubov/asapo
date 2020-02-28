@@ -5,7 +5,7 @@
   "DatabaseServer":"auto",
   "DiscoveryServer": "localhost:8400/discovery",
   "AuthorizationServer": "localhost:8400/authorizer",
-  "AuthorizationInterval": 10000,
+  "AuthorizationInterval": 1000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "DataServer": {
     "NThreads": 2,
@@ -20,6 +20,5 @@
   "WriteToDisk": @RECEIVER_WRITE_TO_DISK@,
   "ReceiveToDiskThresholdMB":50,
   "WriteToDb": true,
-  "LogLevel" : "debug",
-  "RootFolder" : "c:\\tmp\\asapo\\receiver\\files"
+  "LogLevel" : "debug"
 }

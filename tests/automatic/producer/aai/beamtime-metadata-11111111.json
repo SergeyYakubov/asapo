@@ -1,0 +1,36 @@
+{
+  "applicant": {
+    "email": "test",
+    "institute": "test",
+    "lastname": "test",
+    "userId": "1234",
+    "username": "test"
+  },
+  "beamline": "p07",
+  "beamline_alias": "P07",
+  "beamtimeId": "11111111",
+  "contact": "None",
+  "core-path": "/tmp/asapo/receiver/files/test_facility/gpfs/p07/2019/data/11111111",
+  "event-end": "2020-03-03 09:00:00",
+  "event-start": "2020-03-02 09:00:00",
+  "facility": "PETRA III",
+  "generated": "2020-02-22 22:37:16",
+  "pi": {
+    "email": "test",
+    "institute": "test",
+    "lastname": "test",
+    "userId": "14",
+    "username": "test"
+  },
+  "proposalId": "12345678",
+  "proposalType": "H",
+  "title": "In-House Research (P07)",
+  "unixId": "None",
+  "users": {
+    "door-db": [
+      "test"
+    ],
+    "special": [],
+    "unknown": []
+  }
+}

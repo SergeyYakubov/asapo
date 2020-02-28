@@ -2,12 +2,12 @@ package server
 
 import "asapo_common/utils"
 
-type  beamtimeInfo struct {
-	BeamtimeId string
-	Beamline string
-	Stream string
-	Year string
-	Facility string
+type  beamtimeMeta struct {
+	BeamtimeId string  `json:"beamtimeId"`
+	Beamline string     `json:"beamline"`
+	Stream string       `json:"stream"`
+	OfflinePath string `json:"core-path"`
+	OnlinePath string `json:"beamline-path"`
 }
 
 type serverSettings struct {
@@ -15,7 +15,8 @@ type serverSettings struct {
 	LogLevel                string
 	IpBeamlineMappingFolder string
 	RootBeamtimesFolder     string
-	AlwaysAllowedBeamtimes  []beamtimeInfo
+	CurrentBeamlinesFolder string
+	AlwaysAllowedBeamtimes  []beamtimeMeta
 	SecretFile              string
 }
 

@@ -150,17 +150,17 @@ class RequestsDispatcherTests : public Test {
 
 
     }
-    void MockHandleRequest(bool error, Error err = asapo::IOErrorTemplates::kUnknownIOError.Generate() ) {
+    void MockHandleRequest(int error_mode, Error err = asapo::IOErrorTemplates::kUnknownIOError.Generate() ) {
         EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("processing request"), HasSubstr(connected_uri))));
 
         EXPECT_CALL(mock_request, Handle_t()).WillOnce(
-            Return(error ? err.release() : nullptr)
+            Return(error_mode > 0 ? err.release() : nullptr)
         );
-        if (error) {
+        if (error_mode == 1) {
             EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request from"), HasSubstr(connected_uri))));
+        } else if (error_mode == 2) {
+            EXPECT_CALL(mock_logger, Warning(AllOf(HasSubstr("warning processing request from"), HasSubstr(connected_uri))));
         }
-
-
     }
     void MockSendResponse(GenericNetworkResponse* response, bool error ) {
         EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response to"), HasSubstr(connected_uri))));
@@ -230,7 +230,7 @@ TEST_F(RequestsDispatcherTests, OkCreatetNextRequest) {
 
 
 TEST_F(RequestsDispatcherTests, ErrorProcessRequestErrorSend) {
-    MockHandleRequest(true);
+    MockHandleRequest(1);
     MockSendResponse(&response, true);
 
     auto err = dispatcher->ProcessRequest(request);
@@ -240,7 +240,7 @@ TEST_F(RequestsDispatcherTests, ErrorProcessRequestErrorSend) {
 
 
 TEST_F(RequestsDispatcherTests, OkProcessRequestErrorSend) {
-    MockHandleRequest(false);
+    MockHandleRequest(0);
     MockSendResponse(&response, true);
 
     auto err = dispatcher->ProcessRequest(request);
@@ -250,7 +250,7 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestErrorSend) {
 
 
 TEST_F(RequestsDispatcherTests, OkProcessRequestSendOK) {
-    MockHandleRequest(false);
+    MockHandleRequest(0);
     MockSendResponse(&response, false);
 
     auto err = dispatcher->ProcessRequest(request);
@@ -260,7 +260,7 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestSendOK) {
 
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsOkWithWarning) {
-    MockHandleRequest(false);
+    MockHandleRequest(0);
     MockSendResponse(&response, false);
     request->SetWarningMessage("duplicate");
 
@@ -272,7 +272,7 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsOkWithWarning) {
 }
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAuthorizationFailure) {
-    MockHandleRequest(true, asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate());
+    MockHandleRequest(1, asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate());
     MockSendResponse(&response, false);
 
     auto err = dispatcher->ProcessRequest(request);
@@ -282,9 +282,20 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAuthorizationFailure) {
     ASSERT_THAT(std::string(response.message), HasSubstr("authorization"));
 }
 
+TEST_F(RequestsDispatcherTests, ProcessRequestReturnsReAuthorizationFailure) {
+    MockHandleRequest(2, asapo::ReceiverErrorTemplates::kReAuthorizationFailure.Generate());
+    MockSendResponse(&response, false);
+
+    auto err = dispatcher->ProcessRequest(request);
+
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReAuthorizationFailure));
+    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorReauthorize));
+    ASSERT_THAT(std::string(response.message), HasSubstr("reauthorization"));
+}
+
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsMetaDataFailure) {
-    MockHandleRequest(true, asapo::DBErrorTemplates::kJsonParseError.Generate());
+    MockHandleRequest(1, asapo::DBErrorTemplates::kJsonParseError.Generate());
     MockSendResponse(&response, false);
 
     auto err = dispatcher->ProcessRequest(request);
@@ -295,7 +306,7 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsMetaDataFailure) {
 }
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsBadRequest) {
-    MockHandleRequest(true, asapo::ReceiverErrorTemplates::kBadRequest.Generate());
+    MockHandleRequest(1, asapo::ReceiverErrorTemplates::kBadRequest.Generate());
     MockSendResponse(&response, false);
 
     auto err = dispatcher->ProcessRequest(request);

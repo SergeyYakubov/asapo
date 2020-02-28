@@ -1,7 +1,7 @@
 {
   "server":"some_string",
 
-  "port": 10,
+  "Port": 10,
   "//": "This is a way to make comments",
   "some_array":[1,2,3],
   "//": "Another comment",

@@ -17,12 +17,12 @@ namespace asapo {
 class RequestHandlerFilesystem: public RequestHandler {
   public:
     explicit RequestHandlerFilesystem(std::string destination_folder, uint64_t thread_id);
-    bool ProcessRequestUnlocked(GenericRequest* request) override;
+    bool ProcessRequestUnlocked(GenericRequest* request, bool* retry) override;
     bool ReadyProcessRequest() override {
         return true;
     };
     void PrepareProcessingRequestLocked()  override {};
-    void TearDownProcessingRequestLocked(bool processing_succeeded)  override {};
+    void TearDownProcessingRequestLocked(bool request_processed_successfully)  override {};
     void ProcessRequestTimeout(GenericRequest* request)  override;
 
     virtual ~RequestHandlerFilesystem() = default;

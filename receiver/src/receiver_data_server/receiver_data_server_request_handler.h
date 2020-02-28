@@ -13,7 +13,7 @@ namespace asapo {
 class ReceiverDataServerRequestHandler: public RequestHandler {
   public:
     explicit ReceiverDataServerRequestHandler(const NetServer* server, DataCache* data_cache, Statistics* statistics);
-    bool ProcessRequestUnlocked(GenericRequest* request) override;
+    bool ProcessRequestUnlocked(GenericRequest* request, bool* retry) override;
     bool ReadyProcessRequest() override;
     void PrepareProcessingRequestLocked()  override;
     void TearDownProcessingRequestLocked(bool processing_succeeded)  override;

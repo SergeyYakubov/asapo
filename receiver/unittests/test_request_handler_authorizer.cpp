@@ -63,21 +63,23 @@ class AuthorizerHandlerTests : public Test {
     ReceiverConfig config;
 
     NiceMock<asapo::MockLogger> mock_logger;
-    std::string expected_source_credentials = "beamtime_id%stream%token";
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_stream = "stream";
     std::string expected_beamline = "beamline";
-    std::string expected_facility = "facility";
-    std::string expected_year = "2020";
+    std::string expected_beamline_path = "/beamline/p01/current";
+    std::string expected_core_path = "/gpfs/blabla";
     std::string expected_producer_uri = "producer_uri";
     std::string expected_authorization_server = "authorizer_host";
-    std::string expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
-                                        "\",\"OriginHost\":\"" +
-                                        expected_producer_uri + "\"}";
-
+    std::string expect_request_string;
+    std::string expected_source_credentials;
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
+        expected_source_credentials = expected_beamtime_id + "%stream%token";
+        expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
+                                "\",\"OriginHost\":\"" +
+                                expected_producer_uri + "\"}";
+
         mock_request.reset(new MockRequest{request_header, 1, expected_producer_uri, nullptr});
         handler.http_client__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         handler.log__ = &mock_logger;
@@ -106,11 +108,11 @@ class AuthorizerHandlerTests : public Test {
             WillOnce(
                 DoAll(SetArgPointee<3>(nullptr),
                       SetArgPointee<2>(code),
-                      Return("{\"BeamtimeId\":\"" + expected_beamtime_id +
-                             "\",\"Stream\":" + "\"" + expected_stream +
-                             "\",\"Facility\":" + "\"" + expected_facility +
-                             "\",\"Year\":" + "\"" + expected_year +
-                             "\",\"Beamline\":" + "\"" + expected_beamline + "\"}")
+                      Return("{\"beamtimeId\":\"" + expected_beamtime_id +
+                             "\",\"stream\":" + "\"" + expected_stream +
+                             "\",\"beamline-path\":" + "\"" + expected_beamline_path +
+                             "\",\"core-path\":" + "\"" + expected_core_path +
+                             "\",\"beamline\":" + "\"" + expected_beamline + "\"}")
                      ));
             if (code != HttpCode::OK) {
                 EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
@@ -142,15 +144,16 @@ class AuthorizerHandlerTests : public Test {
         MockAuthRequest(error, code);
         return handler.ProcessRequest(mock_request.get());
     }
-    Error MockRequestAuthorization(bool error, HttpCode code = HttpCode::OK) {
+    Error MockRequestAuthorization(bool error, HttpCode code = HttpCode::OK, bool set_request = true) {
         EXPECT_CALL(*mock_request, GetOpCode())
         .WillOnce(Return(asapo::kOpcodeTransferData))
         ;
-        if (!error && code == HttpCode::OK) {
+
+        if (!error && code == HttpCode::OK && set_request) {
             EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
             EXPECT_CALL(*mock_request, SetStream(expected_stream));
-            EXPECT_CALL(*mock_request, SetFacility(expected_facility));
-            EXPECT_CALL(*mock_request, SetBeamtimeYear(expected_year));
+            EXPECT_CALL(*mock_request, SetOfflinePath(expected_core_path));
+            EXPECT_CALL(*mock_request, SetOnlinePath(expected_beamline_path));
             EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
         }
 
@@ -214,6 +217,7 @@ TEST_F(AuthorizerHandlerTests, ErrorOnSecondAuthorize) {
 
 TEST_F(AuthorizerHandlerTests, ErrorOnDataTransferRequestAuthorize) {
     MockFirstAuthorization(false);
+
     auto err = MockRequestAuthorization(true);
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInternalServerError));
@@ -225,16 +229,26 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturns401) {
 
     auto err = MockRequestAuthorization(false, HttpCode::Unauthorized);
 
-    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReAuthorizationFailure));
 }
 
-TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturnsOK) {
+TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeReturnsSameBeamtimeId) {
     MockFirstAuthorization(false);
-
     auto err = MockRequestAuthorization(false);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
+
+TEST_F(AuthorizerHandlerTests, RequestAuthorizeReturnsDifferentBeamtimeId) {
+    MockFirstAuthorization(false);
+
+    expected_beamtime_id = "different_id";
+    auto err = MockRequestAuthorization(false, HttpCode::OK, false);
+
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReAuthorizationFailure));
+}
+
+
 
 TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeUsesCachedValue) {
     config.authorization_interval_ms = 10000;
@@ -246,8 +260,8 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeUsesCachedValue) {
     EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
     EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
     EXPECT_CALL(*mock_request, SetStream(expected_stream));
-    EXPECT_CALL(*mock_request, SetFacility(expected_facility));
-    EXPECT_CALL(*mock_request, SetBeamtimeYear(expected_year));
+    EXPECT_CALL(*mock_request, SetOnlinePath(expected_beamline_path));
+    EXPECT_CALL(*mock_request, SetOfflinePath(expected_core_path));
 
     auto err =  handler.ProcessRequest(mock_request.get());
 

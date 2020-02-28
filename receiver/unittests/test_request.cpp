@@ -247,28 +247,13 @@ TEST_F(RequestTests, SetGetMetadata) {
 
 
 TEST_F(RequestTests, SetGetFacility) {
-    request->SetFacility("p00");
-    ASSERT_THAT(request->GetFacility(), "p00");
+    request->SetOnlinePath("p00");
+    ASSERT_THAT(request->GetOnlinePath(), "p00");
 }
 
 TEST_F(RequestTests, RequestTests_SetGetBeamtimeYear_Test) {
-    request->SetBeamtimeYear("2020");
-    ASSERT_THAT(request->GetBeamtimeYear(), "2020");
-}
-
-TEST_F(RequestTests, RequestTests_GetFullPath) {
-    request->SetFacility("test_facility");
-    request->SetBeamtimeYear("2020");
-    request->SetBeamtimeId("beamtime");
-    request->SetBeamline("beamline");
-
-    std::string expected_path = std::string("test_folder") + asapo::kPathSeparator + "test_facility" +
-                                asapo::kPathSeparator + "gpfs" +
-                                asapo::kPathSeparator + "beamline" +
-                                asapo::kPathSeparator + "2020" +
-                                asapo::kPathSeparator + "data" +
-                                asapo::kPathSeparator + "beamtime";
-    ASSERT_THAT(request->GetFullPath("test_folder"), expected_path);
+    request->SetOfflinePath("2020");
+    ASSERT_THAT(request->GetOfflinePath(), "2020");
 }
 
 TEST_F(RequestTests, SetGetWarningMessage) {

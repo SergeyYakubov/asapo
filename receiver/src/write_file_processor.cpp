@@ -21,7 +21,7 @@ Error WriteFileProcessor::ProcessFile(const Request* request, bool overwrite) co
 
     auto data = request->GetData();
     auto fname = request->GetFileName();
-    auto root_folder = request->GetFullPath(GetReceiverConfig()->root_folder);
+    auto root_folder = request->GetOfflinePath();
 
     auto err =  io__->WriteDataToFile(root_folder, fname, (uint8_t*)data, (size_t) fsize, true, overwrite);
     if (!err) {

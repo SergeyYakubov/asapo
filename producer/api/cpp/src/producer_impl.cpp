@@ -172,6 +172,21 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
         source_cred.stream = SourceCredentials::kDefaultStream;
     }
 
+    if (source_cred.beamline.empty()) {
+        source_cred.beamline = SourceCredentials::kDefaultBeamline;
+    }
+
+    if (source_cred.beamtime_id.empty()) {
+        source_cred.beamtime_id = SourceCredentials::kDefaultBeamtimeId;
+    }
+
+    if (source_cred.beamtime_id == SourceCredentials::kDefaultBeamtimeId
+            && source_cred.beamline == SourceCredentials::kDefaultBeamline) {
+        log__->Error("beamtime or beamline should be set");
+        source_cred_string_ = "";
+        return ProducerErrorTemplates::kWrongInput.Generate("beamtime or beamline should be set");
+    }
+
     source_cred_string_ = source_cred.GetString();
     if (source_cred_string_.size()  + source_cred.user_token.size() > kMaxMessageSize) {
         log__->Error("credentials string is too long - " + source_cred_string_);

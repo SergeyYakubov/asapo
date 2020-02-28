@@ -77,8 +77,8 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetOpCode, asapo::Opcode ());
     MOCK_CONST_METHOD0(GetSocket, asapo::SocketDescriptor ());
 
-    MOCK_CONST_METHOD0(GetFacility, const std::string & ());
-    MOCK_CONST_METHOD0(GetBeamtimeYear, const std::string & ());
+    MOCK_CONST_METHOD0(GetOnlinePath, const std::string & ());
+    MOCK_CONST_METHOD0(GetOfflinePath, const std::string & ());
 
     const asapo::CustomRequestData& GetCustomData() const override {
         return (asapo::CustomRequestData&) * GetCustomData_t();
@@ -89,9 +89,8 @@ class MockRequest: public Request {
     MOCK_METHOD1(SetBeamtimeId, void (std::string));
     MOCK_METHOD1(SetStream, void (std::string));
     MOCK_METHOD1(SetBeamline, void (std::string));
-    MOCK_METHOD1(SetFacility, void (std::string));
-    MOCK_METHOD1(SetBeamtimeYear, void (std::string));
-    MOCK_CONST_METHOD1(GetFullPath, std::string (std::string));
+    MOCK_METHOD1(SetOnlinePath, void (std::string));
+    MOCK_METHOD1(SetOfflinePath, void (std::string));
 
     MOCK_CONST_METHOD0(WasAlreadyProcessed, bool());
     MOCK_METHOD0(SetAlreadyProcessedFlag, void());

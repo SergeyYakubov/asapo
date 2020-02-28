@@ -18,6 +18,8 @@ NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
     if (err) {
         if (err == ReceiverErrorTemplates::kAuthorizationFailure) {
             return NetworkErrorCode::kNetAuthorizationError;
+        } else if (err == ReceiverErrorTemplates::kReAuthorizationFailure) {
+            return NetworkErrorCode::kNetErrorReauthorize;
         } else if (err == DBErrorTemplates::kJsonParseError || err == ReceiverErrorTemplates::kBadRequest) {
             return NetworkErrorCode::kNetErrorWrongRequest;
         } else {
@@ -49,7 +51,11 @@ Error RequestsDispatcher::HandleRequest(const std::unique_ptr<Request>& request)
     Error handle_err;
     handle_err = request->Handle(statistics__);
     if (handle_err) {
-        log__->Error("error processing request from " + producer_uri_ + " - " + handle_err->Explain());
+        if (handle_err == ReceiverErrorTemplates::kReAuthorizationFailure) {
+            log__->Warning("warning processing request from " + producer_uri_ + " - " + handle_err->Explain());
+        } else {
+            log__->Error("error processing request from " + producer_uri_ + " - " + handle_err->Explain());
+        }
     }
     return handle_err;
 }
