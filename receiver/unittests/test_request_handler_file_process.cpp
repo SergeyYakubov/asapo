@@ -88,10 +88,10 @@ TEST_F(FileWriteHandlerTests, FileAlreadyExists_NoRecordInDb) {
     );
     std::string ref_str;
     EXPECT_CALL(*mock_request, GetOfflinePath()).WillOnce
-        (ReturnRef(ref_str));
+    (ReturnRef(ref_str));
 
     EXPECT_CALL(*mock_request, GetFileName()).WillOnce
-        (Return(""));
+    (Return(""));
 
 
     EXPECT_CALL(mock_logger, Warning(HasSubstr("overwriting")));

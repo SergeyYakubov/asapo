@@ -75,10 +75,10 @@ class AuthorizerHandlerTests : public Test {
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
-        expected_source_credentials = expected_beamtime_id+"%stream%token";
+        expected_source_credentials = expected_beamtime_id + "%stream%token";
         expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
-            "\",\"OriginHost\":\"" +
-            expected_producer_uri + "\"}";
+                                "\",\"OriginHost\":\"" +
+                                expected_producer_uri + "\"}";
 
         mock_request.reset(new MockRequest{request_header, 1, expected_producer_uri, nullptr});
         handler.http_client__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
@@ -144,7 +144,7 @@ class AuthorizerHandlerTests : public Test {
         MockAuthRequest(error, code);
         return handler.ProcessRequest(mock_request.get());
     }
-    Error MockRequestAuthorization(bool error, HttpCode code = HttpCode::OK,bool set_request=true) {
+    Error MockRequestAuthorization(bool error, HttpCode code = HttpCode::OK, bool set_request = true) {
         EXPECT_CALL(*mock_request, GetOpCode())
         .WillOnce(Return(asapo::kOpcodeTransferData))
         ;
@@ -243,7 +243,7 @@ TEST_F(AuthorizerHandlerTests, RequestAuthorizeReturnsDifferentBeamtimeId) {
     MockFirstAuthorization(false);
 
     expected_beamtime_id = "different_id";
-    auto err = MockRequestAuthorization(false,HttpCode::OK,false);
+    auto err = MockRequestAuthorization(false, HttpCode::OK, false);
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReAuthorizationFailure));
 }

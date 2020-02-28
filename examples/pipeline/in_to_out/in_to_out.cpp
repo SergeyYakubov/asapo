@@ -65,7 +65,7 @@ int ProcessError(const Error& err) {
 
 BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.file_path,
-                  asapo::SourceCredentials{args.beamtime_id, "",args.stream_in, args.token}, err);
+                  asapo::SourceCredentials{args.beamtime_id, "", args.stream_in, args.token}, err);
     if (*err) {
         return nullptr;
     }

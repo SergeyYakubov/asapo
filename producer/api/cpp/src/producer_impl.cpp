@@ -180,7 +180,8 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
         source_cred.beamtime_id = SourceCredentials::kDefaultBeamtimeId;
     }
 
-    if (source_cred.beamtime_id == SourceCredentials::kDefaultBeamtimeId && source_cred.beamline == SourceCredentials::kDefaultBeamline) {
+    if (source_cred.beamtime_id == SourceCredentials::kDefaultBeamtimeId
+            && source_cred.beamline == SourceCredentials::kDefaultBeamline) {
         log__->Error("beamtime or beamline should be set");
         source_cred_string_ = "";
         return ProducerErrorTemplates::kWrongInput.Generate("beamtime or beamline should be set");

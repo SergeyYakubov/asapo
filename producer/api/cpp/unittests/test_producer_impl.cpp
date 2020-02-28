@@ -72,10 +72,10 @@ class ProducerImplTests : public testing::Test {
     char expected_substream[asapo::kMaxMessageSize] = "test_substream";
     std::string expected_next_substream = "next_substream";
 
-    asapo::SourceCredentials expected_credentials{"beamtime_id", "beamline","subname", "token"
-    };
+    asapo::SourceCredentials expected_credentials{"beamtime_id", "beamline", "subname", "token"
+                                                 };
     asapo::SourceCredentials expected_default_credentials{
-        "beamtime_id", "","", "token"
+        "beamtime_id", "", "", "token"
     };
 
     std::string expected_credentials_str = "beamtime_id%beamline%subname%token";
@@ -386,7 +386,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequestWithSubstream) {
 
 TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
     std::string long_str(asapo::kMaxMessageSize * 10, 'a');
-    expected_credentials = asapo::SourceCredentials{long_str,"", "", ""};
+    expected_credentials = asapo::SourceCredentials{long_str, "", "", ""};
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("too long")));
 
     auto err = producer.SetCredentials(expected_credentials);
@@ -397,8 +397,8 @@ TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
 TEST_F(ProducerImplTests, ErrorSettingSecondTime) {
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("already")));
 
-    producer.SetCredentials(asapo::SourceCredentials{"1", "","2", "3"});
-    auto err = producer.SetCredentials(asapo::SourceCredentials{"4","", "5", "6"});
+    producer.SetCredentials(asapo::SourceCredentials{"1", "", "2", "3"});
+    auto err = producer.SetCredentials(asapo::SourceCredentials{"4", "", "5", "6"});
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }

@@ -74,7 +74,7 @@ class ServerDataBrokerTests : public Test {
     std::string expected_next_substream = "nextsubstream";
     void SetUp() override {
         data_broker = std::unique_ptr<ServerDataBroker> {
-            new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id","", expected_stream, expected_token})
+            new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id", "", expected_stream, expected_token})
         };
         data_broker->io__ = std::unique_ptr<IO> {&mock_io};
         data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
@@ -137,7 +137,7 @@ TEST_F(ServerDataBrokerTests, DefaultStreamIsDetector) {
     data_broker->httpclient__.release();
     data_broker->net_client__.release();
     data_broker = std::unique_ptr<ServerDataBroker> {
-        new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id","", "", expected_token})
+        new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id", "", "", expected_token})
     };
     data_broker->io__ = std::unique_ptr<IO> {&mock_io};
     data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};

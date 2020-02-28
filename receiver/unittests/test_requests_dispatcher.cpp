@@ -154,7 +154,7 @@ class RequestsDispatcherTests : public Test {
         EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("processing request"), HasSubstr(connected_uri))));
 
         EXPECT_CALL(mock_request, Handle_t()).WillOnce(
-            Return(error_mode>0 ? err.release() : nullptr)
+            Return(error_mode > 0 ? err.release() : nullptr)
         );
         if (error_mode == 1) {
             EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request from"), HasSubstr(connected_uri))));

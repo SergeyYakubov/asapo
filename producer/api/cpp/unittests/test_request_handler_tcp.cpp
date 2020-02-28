@@ -166,10 +166,10 @@ void RequestHandlerTcpTests::ExpectFailConnect(bool only_once) {
             ));
         if (only_once)
             EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("cannot connect"),
-                                           HasSubstr(expected_address)
-                                       )
-                                      ));
+                                               HasSubstr("cannot connect"),
+                                               HasSubstr(expected_address)
+                                           )
+                                          ));
 
         if (only_once) break;
     }
@@ -198,20 +198,19 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
                 testing::ReturnArg<2>()
             ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
-        if (only_once)
-        {
+        if (only_once) {
             EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("disconnected"),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+                                               HasSubstr("disconnected"),
+                                               HasSubstr(receivers_list[i])
+                                           )
+                                          ));
 
-        EXPECT_CALL(mock_logger, Error(AllOf(
-                                           HasSubstr("authorization"),
-                                           HasSubstr(expected_auth_message),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+            EXPECT_CALL(mock_logger, Error(AllOf(
+                                               HasSubstr("authorization"),
+                                               HasSubstr(expected_auth_message),
+                                               HasSubstr(receivers_list[i])
+                                           )
+                                          ));
         }
         if (only_once) break;
         i++;
@@ -239,13 +238,12 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
                 A_WriteSendDataResponse(asapo::kNetErrorNoError, expected_auth_message),
                 testing::ReturnArg<2>()
             ));
-        if (only_once)
-        {
+        if (only_once) {
             EXPECT_CALL(mock_logger, Info(AllOf(
-                                          HasSubstr("authorized"),
-                                          HasSubstr(receivers_list[i])
-                                      )
-                                     ));
+                                              HasSubstr("authorized"),
+                                              HasSubstr(receivers_list[i])
+                                          )
+                                         ));
         }
         if (only_once) break;
         i++;
@@ -268,16 +266,16 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
             ));
         if (only_once) {
             EXPECT_CALL(mock_logger, Debug(AllOf(
-                HasSubstr("disconnected"),
-                HasSubstr(receivers_list[i])
+                                               HasSubstr("disconnected"),
+                                               HasSubstr(receivers_list[i])
                                            )
-            ));
+                                          ));
 
             EXPECT_CALL(mock_logger, Warning(AllOf(
-                HasSubstr("cannot send"),
-                HasSubstr(receivers_list[i])
+                                                 HasSubstr("cannot send"),
+                                                 HasSubstr(receivers_list[i])
                                              )
-            ));
+                                            ));
         }
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
         if (only_once) break;
@@ -300,10 +298,10 @@ void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTempla
         if (client_error) {
 
             EXPECT_CALL(mock_logger, Debug(AllOf(
-                                           HasSubstr("disconnected"),
-                                           HasSubstr(receivers_list[i])
-                                       )
-                                      ));
+                                               HasSubstr("disconnected"),
+                                               HasSubstr(receivers_list[i])
+                                           )
+                                          ));
             EXPECT_CALL(mock_logger, Error(AllOf(
                                                HasSubstr("cannot send"),
                                                HasSubstr(receivers_list[i])             )
@@ -334,16 +332,16 @@ void RequestHandlerTcpTests::ExpectFailSend(uint64_t expected_size, bool only_on
             ));
         if (only_once) {
             EXPECT_CALL(mock_logger, Debug(AllOf(
-                HasSubstr("disconnected"),
-                HasSubstr(receivers_list[i])
+                                               HasSubstr("disconnected"),
+                                               HasSubstr(receivers_list[i])
                                            )
-            ));
+                                          ));
 
             EXPECT_CALL(mock_logger, Warning(AllOf(
-                HasSubstr("cannot send"),
-                HasSubstr(receivers_list[i])
+                                                 HasSubstr("cannot send"),
+                                                 HasSubstr(receivers_list[i])
                                              )
-            ));
+                                            ));
 
         }
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
@@ -459,10 +457,10 @@ void RequestHandlerTcpTests::ExpectOKConnect(bool only_once) {
             ));
         if (only_once) {
             EXPECT_CALL(mock_logger, Debug(AllOf(
-                HasSubstr("connected to"),
-                HasSubstr(expected_address)
+                                               HasSubstr("connected to"),
+                                               HasSubstr(expected_address)
                                            )
-            ));
+                                          ));
         }
         if (only_once) break;
         i++;
@@ -483,10 +481,10 @@ void RequestHandlerTcpTests::ExpectOKReceive(bool only_once, asapo::NetworkError
             ));
         if (only_once) {
             EXPECT_CALL(mock_logger, Debug(AllOf(
-                HasSubstr("sent data"),
-                HasSubstr(receivers_list[i])
+                                               HasSubstr("sent data"),
+                                               HasSubstr(receivers_list[i])
                                            )
-            ));
+                                          ));
         }
         if (only_once) break;
         i++;
@@ -815,7 +813,7 @@ TEST_F(RequestHandlerTcpTests, RetryOnReauthorize) {
     ExpectOKConnect(false);
     ExpectOKAuthorize(false);
     ExpectOKSendAll(false);
-    ExpectOKReceive(false,asapo::kNetErrorReauthorize);
+    ExpectOKReceive(false, asapo::kNetErrorReauthorize);
 
     request_handler.PrepareProcessingRequestLocked();
     auto success = request_handler.ProcessRequestUnlocked(&request, &retry);

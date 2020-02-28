@@ -101,7 +101,7 @@ Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_hea
     }
     case kNetErrorReauthorize: {
         auto res_err = ProducerErrorTemplates::kReAuthorizationNeeded.Generate();
-            return res_err;
+        return res_err;
     }
     case kNetErrorNoError :
         return nullptr;
@@ -211,7 +211,7 @@ bool RequestHandlerTcp::ProcessErrorFromReceiver(const Error& error,
 }
 
 
-void RequestHandlerTcp::ProcessRequestCallback(Error err, ProducerRequest* request,bool* retry) {
+void RequestHandlerTcp::ProcessRequestCallback(Error err, ProducerRequest* request, bool* retry) {
     if (request->callback) {
         request->callback(request->header, std::move(err));
     }
@@ -224,7 +224,7 @@ bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request, bo
         if (Disconnected()) {
             auto err = ConnectToReceiver(request->source_credentials, receiver_uri);
             if (err == ProducerErrorTemplates::kWrongInput) {
-                ProcessRequestCallback(std::move(err),request,retry);
+                ProcessRequestCallback(std::move(err), request, retry);
                 return false;
             } else {
                 if (err != nullptr ) continue;
@@ -238,7 +238,7 @@ bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request, bo
         }
 
         bool success = err && err != ProducerErrorTemplates::kServerWarning ? false : true;
-        ProcessRequestCallback(std::move(err),request,retry);
+        ProcessRequestCallback(std::move(err), request, retry);
         return success;
     }
     log__->Warning("put back to the queue, request opcode: " + std::to_string(request->header.op_code) +

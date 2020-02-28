@@ -295,8 +295,10 @@ def create_producer(endpoint,beamtime_id,beamline,stream,token,nthreads,timeout_
     """
          :param endpoint: server endpoint (url:port)
          :type endpoint: string
-         :param beamtime_id: beamtime id
+         :param beamtime_id: beamtime id, can be "auto" if beamline is given, will automatically select the current beamtime id
          :type beamtime_id: string
+         :param beamline: beamline name, can be "auto" if beamtime_id is given
+         :type beamline: string
          :param stream: stream to producer data to
          :type stream: string
          :param token: authorization token

@@ -104,7 +104,7 @@ TEST_F(RequestPoolTests, TimeOut) {
 
     EXPECT_CALL(*mock_request_handler, ReadyProcessRequest()).Times(1).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock_request_handler, PrepareProcessingRequestLocked()).Times(0);
-    EXPECT_CALL(*mock_request_handler, ProcessRequestUnlocked_t(_,_)).Times(0);
+    EXPECT_CALL(*mock_request_handler, ProcessRequestUnlocked_t(_, _)).Times(0);
     EXPECT_CALL(*mock_request_handler, ProcessRequestTimeout(_)).Times(1);
 
     auto err = pool.AddRequest(std::move(request));
@@ -116,21 +116,21 @@ TEST_F(RequestPoolTests, TimeOut) {
 void ExpectSend(MockRequestHandler* mock_handler, int ntimes = 1) {
     EXPECT_CALL(*mock_handler, ReadyProcessRequest()).Times(ntimes).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock_handler, PrepareProcessingRequestLocked()).Times(ntimes);
-    EXPECT_CALL(*mock_handler, ProcessRequestUnlocked_t(_,_)).Times(ntimes).WillRepeatedly(
+    EXPECT_CALL(*mock_handler, ProcessRequestUnlocked_t(_, _)).Times(ntimes).WillRepeatedly(
         DoAll(            testing::SetArgPointee<1>(false),
-            Return(true)
-            ));
+                          Return(true)
+             ));
     EXPECT_CALL(*mock_handler, TearDownProcessingRequestLocked(true)).Times(ntimes);
 }
 
 void ExpectFailProcessRequest(MockRequestHandler* mock_handler) {
     EXPECT_CALL(*mock_handler, ReadyProcessRequest()).Times(AtLeast(1)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock_handler, PrepareProcessingRequestLocked()).Times(AtLeast(1));
-    EXPECT_CALL(*mock_handler, ProcessRequestUnlocked_t(_,_)).Times(AtLeast(1)).WillRepeatedly(
+    EXPECT_CALL(*mock_handler, ProcessRequestUnlocked_t(_, _)).Times(AtLeast(1)).WillRepeatedly(
         DoAll(            testing::SetArgPointee<1>(true),
                           Return(false)
-        ));
-        EXPECT_CALL(*mock_handler, TearDownProcessingRequestLocked(false)).Times(AtLeast(1));
+             ));
+    EXPECT_CALL(*mock_handler, TearDownProcessingRequestLocked(false)).Times(AtLeast(1));
 }
 
 

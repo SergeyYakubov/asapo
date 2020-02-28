@@ -76,7 +76,7 @@ Error RequestHandlerAuthorize::ProcessReAuthorization(Request* request) const {
     std::string old_beamtimeId = beamtime_id_;
     auto err = Authorize(request, cached_source_credentials_.c_str());
     if (err == asapo::ReceiverErrorTemplates::kAuthorizationFailure || (
-        err==nullptr && old_beamtimeId!=beamtime_id_)) {
+                err == nullptr && old_beamtimeId != beamtime_id_)) {
         return asapo::ReceiverErrorTemplates::kReAuthorizationFailure.Generate();
     }
     return err;
@@ -84,7 +84,7 @@ Error RequestHandlerAuthorize::ProcessReAuthorization(Request* request) const {
 
 bool RequestHandlerAuthorize::NeedReauthorize() const {
     uint64_t elapsed_ms = (uint64_t) std::chrono::duration_cast<std::chrono::milliseconds>
-        (system_clock::now() - last_updated_).count();
+                          (system_clock::now() - last_updated_).count();
     return elapsed_ms >= GetReceiverConfig()->authorization_interval_ms;
 }
 
