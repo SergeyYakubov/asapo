@@ -1,15 +1,16 @@
 package utils
 
 import (
-	"errors"
-	"net/http"
-	"net/url"
-	"strings"
 	"context"
-	"github.com/dgrijalva/jwt-go"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
+	"github.com/dgrijalva/jwt-go"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 )
 
 type AuthorizationRequest struct {
@@ -78,11 +79,8 @@ func ExtractAuthInfo(r *http.Request) (authType, token string, err error) {
 
 type CustomClaims struct {
 	jwt.StandardClaims
+	Duration    time.Duration
 	ExtraClaims interface{}
-}
-
-type JobClaim struct {
-	BeamtimeId string
 }
 
 type JWTAuth struct {
@@ -103,9 +101,9 @@ func (t JWTAuth) GenerateToken(val ...interface{}) (string, error) {
 		return "", errors.New("Wrong claims")
 	}
 
-//	if claims.Duration > 0 {
-//		claims.ExpiresAt = time.Now().Add(claims.Duration).Unix()
-//	}
+	if claims.Duration > 0 {
+		claims.ExpiresAt = time.Now().Add(claims.Duration).Unix()
+	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(t.Key))
@@ -134,7 +132,7 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 				http.Error(w, "Internal authorization error - tocken does not match", http.StatusUnauthorized)
 				return
 			} else {
-				ctx = context.WithValue(ctx, "JobClaim", claims)
+				ctx = context.WithValue(ctx, "TokenClaims", claims)
 			}
 		} else {
 			http.Error(w, "Internal authorization error - wrong auth type", http.StatusUnauthorized)
@@ -162,7 +160,7 @@ func CheckJWTToken(token, key string) (jwt.Claims, bool) {
 }
 
 func JobClaimFromContext(r *http.Request, val interface{}) error {
-	c := r.Context().Value("JobClaim")
+	c := r.Context().Value("TokenClaims")
 
 	if c == nil {
 		return errors.New("Empty context")

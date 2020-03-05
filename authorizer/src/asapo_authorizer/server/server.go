@@ -18,8 +18,11 @@ type serverSettings struct {
 	CurrentBeamlinesFolder string
 	AlwaysAllowedBeamtimes  []beamtimeMeta
 	SecretFile              string
+	TokenDurationMin    	int
+	secret 					string
 }
 
 var settings serverSettings
 var auth utils.Auth
+
 

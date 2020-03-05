@@ -23,6 +23,7 @@ func createAuth() (utils.Auth, error) {
 	if err != nil {
 		return nil, err
 	}
+	settings.secret = secret
 	return utils.NewHMACAuth(secret), nil
 }
 

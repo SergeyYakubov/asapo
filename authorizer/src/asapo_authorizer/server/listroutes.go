@@ -17,5 +17,10 @@ var listRoutes = utils.Routes{
 		"/health-check",
 		routeGetHealth,
 	},
-
+	utils.Route{
+		"Folder Token",
+		"POST",
+		"/folder",
+		routeFolderToken,
+	},
 }
