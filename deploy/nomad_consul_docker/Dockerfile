@@ -9,14 +9,19 @@ RUN apt-get update && apt-get install -y supervisor apt-transport-https \
         software-properties-common dnsutils
 
 
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
+    curl -fsSL https://packages.fluentbit.io/fluentbit.key | apt-key add -
 
 RUN add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
    $(lsb_release -cs) \
-   stable"
+   stable" && \
+   add-apt-repository \
+   "deb [arch=amd64] https://packages.fluentbit.io/ubuntu/$(lsb_release -cs) \
+   $(lsb_release -cs) \
+   main"
 
-RUN apt-get update && apt-get install -y docker-ce-cli wget unzip iproute2 vim
+RUN apt-get update && apt-get install -y docker-ce-cli wget unzip iproute2 vim td-agent-bit
 
 
 ENV CONSUL_VERSION=1.6.0
