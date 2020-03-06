@@ -112,7 +112,7 @@ func (t JWTAuth) GenerateToken(val ...interface{}) (string, error) {
 		return "", err
 	}
 
-	return tokenString, nil
+	return "Bearer " + tokenString, nil
 }
 
 func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
@@ -129,13 +129,13 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 
 		if authType == "Bearer" {
 			if claims, ok := CheckJWTToken(token, key); !ok {
-				http.Error(w, "Internal authorization error - tocken does not match", http.StatusUnauthorized)
+				http.Error(w, "Authorization error - tocken does not match", http.StatusUnauthorized)
 				return
 			} else {
 				ctx = context.WithValue(ctx, "TokenClaims", claims)
 			}
 		} else {
-			http.Error(w, "Internal authorization error - wrong auth type", http.StatusUnauthorized)
+			http.Error(w, "Authorization error - wrong auth type", http.StatusUnauthorized)
 			return
 		}
 		fn(w, r.WithContext(ctx))
@@ -190,7 +190,7 @@ func generateHMACToken(value string, key string) string {
 	mac.Write([]byte(value))
 
 	return base64.URLEncoding.EncodeToString(mac.Sum(nil))
-}
+	}
 
 func (h HMACAuth) GenerateToken(val ...interface{}) (string, error) {
 	if len(val) != 1 {
@@ -202,6 +202,7 @@ func (h HMACAuth) GenerateToken(val ...interface{}) (string, error) {
 	}
 
 	sha := generateHMACToken(*value, h.Key)
+
 	return sha, nil
 }
 
@@ -217,7 +218,7 @@ func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 	// todo extract beamline from request
 		value := "beamline"
 		if authType == "HMAC-SHA-256" {
-			if !checkHMACToken(value, token, key) {
+			if !CheckHMACToken(value, token, key) {
 				http.Error(w, "Internal authorization error - tocken does not match", http.StatusUnauthorized)
 				return
 			}
@@ -229,7 +230,7 @@ func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 	}
 }
 
-func checkHMACToken(value string, token, key string) bool {
+func CheckHMACToken(value string, token, key string) bool {
 
 	if token == "" {
 		return false

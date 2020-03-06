@@ -15,17 +15,8 @@ func Start() {
 	mux := utils.NewRouter(listRoutes)
 	log.Info("Starting ASAPO Authorizer, version " + version.GetVersion())
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), utils.ProcessJWTAuth(mux.ServeHTTP, settings.key)))
 }
-
-func createAuth() (utils.Auth,utils.Auth, error) {
-	secret, err := utils.ReadFirstStringFromFile(settings.SecretFile)
-	if err != nil {
-		return nil,nil, err
-	}
-	return utils.NewHMACAuth(secret),utils.NewJWTAuth(secret), nil
-}
-
 
 func ReadConfig(fname string) (log.Level, error) {
 	if err := utils.ReadJsonFromFile(fname, &settings); err != nil {
@@ -41,9 +32,9 @@ func ReadConfig(fname string) (log.Level, error) {
 	}
 
 	var err error
-	authHMAC,authJWT, err = createAuth()
+	settings.key, err = utils.ReadFirstStringFromFile(settings.SecretFile)
 	if err != nil {
-		return log.FatalLevel, err
+		return log.FatalLevel, errors.New("Cannot read secret from file " + err.Error())
 	}
 
 	level, err := log.LevelFromString(settings.LogLevel)

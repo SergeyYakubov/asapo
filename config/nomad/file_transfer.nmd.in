@@ -1,0 +1,55 @@
+job "file_transfer" {
+  datacenters = ["dc1"]
+
+  type = "service"
+
+  group "group" {
+    count = 1
+
+    task "file_transfer" {
+      driver = "raw_exec"
+
+      config {
+        command = "@FILE_TRANSFER_FULLPATH@",
+        args =  ["-config","${NOMAD_TASK_DIR}/file_transfer.json"]
+      }
+
+      resources {
+        cpu    = 500 # 500 MHz
+        memory = 256 # 256MB
+        network {
+          port "file_transfer" {
+            static = "5008"
+          }
+        }
+      }
+
+      service {
+        name = "file-transfer"
+        port = "file_transfer"
+        check {
+          name     = "alive"
+          type     = "http"
+          path     = "/health-check"
+          interval = "10s"
+          timeout  = "2s"
+          initial_status =   "passing"
+        }
+      }
+
+      template {
+         source        = "@WORK_DIR@/file_transfer.json.tpl"
+         destination   = "local/file_transfer.json"
+         change_mode   = "signal"
+         change_signal = "SIGHUP"
+      }
+
+      template {
+         source        = "@WORK_DIR@/auth_secret.key"
+         destination   = "auth_secret.key"
+         change_mode   = "signal"
+         change_signal = "SIGHUP"
+      }
+    }
+  }
+}

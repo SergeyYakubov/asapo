@@ -1,6 +1,8 @@
 package server
 
-import "asapo_common/utils"
+import (
+"asapo_common/utils"
+)
 
 type  beamtimeMeta struct {
 	BeamtimeId string  `json:"beamtimeId"`
@@ -19,10 +21,9 @@ type serverSettings struct {
 	AlwaysAllowedBeamtimes  []beamtimeMeta
 	SecretFile              string
 	TokenDurationMin    	int
-	secret 					string
 }
 
 var settings serverSettings
-var auth utils.Auth
-
+var authHMAC utils.Auth
+var authJWT utils.Auth
 

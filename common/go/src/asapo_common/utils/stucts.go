@@ -51,3 +51,7 @@ func (settings *Settings) Validate() error {
 
 	return nil
 }
+
+type FolderTokenTokenExtraClaim struct {
+	RootFolder string
+}

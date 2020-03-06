@@ -13,8 +13,8 @@ import (
 )
 
 func prepareToken(beamtime_or_beamline string) string{
-	auth = utils.NewHMACAuth("secret")
-	token, _ := auth.GenerateToken(&beamtime_or_beamline)
+	authHMAC = utils.NewHMACAuth("secret")
+	token, _ := authHMAC.GenerateToken(&beamtime_or_beamline)
 	return token
 }
 
