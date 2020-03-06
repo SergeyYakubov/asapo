@@ -196,5 +196,19 @@ job "monitoring" {
 
    } #telegraf
 
+    task "fluent-bit-cluster" {
+      driver = "raw_exec"
+
+      config {
+        command = "/opt/td-agent-bit/bin/td-agent-bit"
+        args    = ["-c", "local/fluent-bit.conf"]
+      }
+
+      template {
+        source        = "${scripts_dir}/fluent-bit-cluster.conf.tpl"
+        destination   = "local/fluent-bit.conf"
+        change_mode   = "restart"
+      }
+    } # fluent-bit-cluster
   }
 }
