@@ -30,15 +30,17 @@ job "monitoring" {
       driver = "docker"
       user = "${asapo_user}"
       config {
-        network_mode = "host"
+        network_mode = "bridge"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "influxdb:${influxdb_version}"
-        volumes = ["/${service_dir}/influxdb:/var/lib/influxdb"]
+        volumes = [
+          "/${service_dir}/influxdb:/var/lib/influxdb",
+          "local/influxdb:/docker-entrypoint-initdb.d"]
+        command = "influxd"
       }
 
       env {
-        PRE_CREATE_DB="asapo_receivers;asapo_brokers"
         INFLUXDB_BIND_ADDRESS="127.0.0.1:$${NOMAD_PORT_influxdb_rpc}"
         INFLUXDB_HTTP_BIND_ADDRESS=":$${NOMAD_PORT_influxdb}"
       }
@@ -70,6 +72,10 @@ job "monitoring" {
        }
      }
 
+    template {
+      source = "${scripts_dir}/influxdb/create_db_logs.sh.tpl"
+      destination = "local/influxdb/create_db_logs.sh"
+    }
    } #influxdb
 
 
