@@ -29,6 +29,9 @@ add_subdirectory(spd_logger)
 
 add_subdirectory(producer)
 
+add_subdirectory(file_transfer_service)
+
+
 if (UNIX)
     add_subdirectory(high_avail)
 endif()

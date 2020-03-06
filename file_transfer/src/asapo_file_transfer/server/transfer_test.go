@@ -45,7 +45,7 @@ func prepareToken(folder string) string{
 func doPostRequest(path string,buf string,token string) *httptest.ResponseRecorder {
 	mux := utils.NewRouter(listRoutes)
 	req, _ := http.NewRequest("POST", path, strings.NewReader(buf))
-	req.Header.Add("Authorization", token)
+	req.Header.Add("Authorization", "Bearer "+token)
 	w := httptest.NewRecorder()
 	utils.ProcessJWTAuth(mux.ServeHTTP, "key")(w,req)
 	return w

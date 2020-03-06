@@ -52,7 +52,7 @@ func routeFileTransfer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, file := path.Split(fullName)
-	w.Header().Set("Content-Disposition", "attachment; filename="+file)
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+file+"\"")
 
 	log.Debug("Transferring file " + fullName)
 

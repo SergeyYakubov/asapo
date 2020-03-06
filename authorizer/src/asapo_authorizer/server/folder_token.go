@@ -35,10 +35,7 @@ func prepareJWTToken(request folderTokenRequest) (string,error) {
 }
 
 func folderTokenResponce(token string) []byte{
-	var response folderToken
-	response.Token = token
-	answer,_ := utils.MapToJson(response)
-	return answer
+	return []byte(token)
 }
 
 func checkBeamtimeToken(request folderTokenRequest) error {
@@ -53,9 +50,22 @@ func checkBeamtimeToken(request folderTokenRequest) error {
 }
 
 
-func routeFolderToken(w http.ResponseWriter, r *http.Request) {
+func extractFolderTokenrequest(r *http.Request) (folderTokenRequest,error) {
 	var request folderTokenRequest
 	err := utils.ExtractRequest(r,&request)
+	if err != nil {
+		return folderTokenRequest{},err
+	}
+
+	if len(request.Folder)==0 ||len(request.BeamtimeId)==0 || len(request.Token) == 0 {
+		return folderTokenRequest{},errors.New("some request fields are empty")
+	}
+	return request,nil
+
+}
+
+func routeFolderToken(w http.ResponseWriter, r *http.Request) {
+	request, err := extractFolderTokenrequest(r)
 	if err != nil {
 		utils.WriteServerError(w,err,http.StatusBadRequest)
 		return

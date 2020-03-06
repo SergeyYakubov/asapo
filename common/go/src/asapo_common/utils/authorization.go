@@ -112,7 +112,7 @@ func (t JWTAuth) GenerateToken(val ...interface{}) (string, error) {
 		return "", err
 	}
 
-	return "Bearer " + tokenString, nil
+	return tokenString, nil
 }
 
 func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {

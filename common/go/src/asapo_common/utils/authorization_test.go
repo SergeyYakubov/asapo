@@ -26,7 +26,7 @@ func TestGenerateJWTToken(t *testing.T) {
 
 	a := NewJWTAuth("hi")
 	token, _ := a.GenerateToken((&CustomClaims{Duration: 0, ExtraClaims: nil}))
-	assert.Equal(t, "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJEdXJhdGlvbiI"+
+	assert.Equal(t, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJEdXJhdGlvbiI"+
 		"6MCwiRXh0cmFDbGFpbXMiOm51bGx9.JJcqNZciIDILk-A2sJZCY1sND458bcjNv6tXC2jxric",
 		token, "jwt token")
 
@@ -60,11 +60,11 @@ func TestProcessJWTAuth(t *testing.T) {
 
 		token, _ := a.GenerateToken((&CustomClaims{Duration: test.Duration, ExtraClaims: &claim}))
 		if test.Mode == "header" {
-			req.Header.Add("Authorization", token)
+			req.Header.Add("Authorization", "Bearer "+token)
 		}
 
 		if test.Mode == "cookie" {
-			c := http.Cookie{Name: "Authorization", Value: token}
+			c := http.Cookie{Name: "Authorization", Value: "Bearer "+token}
 			req.AddCookie(&c)
 		}
 
