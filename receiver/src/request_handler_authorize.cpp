@@ -31,7 +31,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     Error err;
     std::string request_string = GetRequestString(request, source_credentials);
 
-    auto response = http_client__->Post(GetReceiverConfig()->authorization_server + "/authorize", request_string, &code,
+    auto response = http_client__->Post(GetReceiverConfig()->authorization_server + "/authorize", "", request_string, &code,
                                         &err);
     if (err || code != HttpCode::OK) {
         auto auth_error = ErrorFromAuthorizationServerResponse(err, code);

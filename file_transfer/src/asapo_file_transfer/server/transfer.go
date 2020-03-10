@@ -1,12 +1,13 @@
 package server
 
 import (
+	log "asapo_common/logger"
 	"asapo_common/utils"
-	"net/http"
 	"errors"
+	"fmt"
+	"net/http"
 	"os"
 	"path"
-	log "asapo_common/logger"
 )
 
 
@@ -17,14 +18,15 @@ type fileTransferRequest struct {
 
 
 func Exists(name string) bool {
-	_, err := os.Stat(name)
-	return !os.IsNotExist(err)
+	fi, err := os.Stat(name)
+	return !os.IsNotExist(err) && !fi.IsDir()
 }
 
 
 func routeFileTransfer(w http.ResponseWriter, r *http.Request) {
 	var request fileTransferRequest
 	err := utils.ExtractRequest(r,&request)
+	fmt.Println(request)
 	if err != nil {
 		utils.WriteServerError(w,err,http.StatusBadRequest)
 		return

@@ -2,6 +2,7 @@
 #define ASAPO_HTTP_CLIENT_H
 
 #include "common/error.h"
+#include "common/data_structs.h"
 
 namespace asapo {
 
@@ -10,10 +11,17 @@ enum class HttpCode;
 class HttpClient {
   public:
     virtual std::string Get(const std::string& uri, HttpCode* response_code, Error* err) const noexcept = 0;
-    virtual std::string Post(const std::string& uri, const std::string& data, HttpCode* response_code,
+    virtual std::string Post(const std::string& uri, const std::string& cookie, const std::string& data,
+                             HttpCode* response_code,
                              Error* err) const noexcept = 0;
+    virtual Error Post(const std::string& uri, const std::string& cookie,
+                       const std::string& input_data, FileData* ouput_data,
+                       uint64_t output_data_size,
+                       HttpCode* response_code)  const noexcept = 0;
+    virtual Error Post(const std::string& uri, const std::string& cookie,
+                       const std::string& input_data, std::string output_file_name,
+                       HttpCode* response_code)  const noexcept = 0;
     virtual ~HttpClient() = default;
-
 };
 
 std::unique_ptr<HttpClient> DefaultHttpClient();

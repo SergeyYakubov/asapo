@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 
+#include "error.h"
+
 namespace asapo {
 
 std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec);
@@ -35,6 +37,7 @@ inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
 }
 
 using FileData = std::unique_ptr<uint8_t[]>;
+
 
 using FileInfos = std::vector<FileInfo>;
 

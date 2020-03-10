@@ -16,12 +16,27 @@ class MockHttpClient : public HttpClient {
         err->reset(error);
         return response;
     }
-    std::string Post(const std::string& uri, const std::string& data, HttpCode* code, Error* err) const noexcept override {
+    std::string Post(const std::string& uri, const std::string& cookie, const std::string& data, HttpCode* code,
+                     Error* err) const noexcept override {
         ErrorInterface* error = nullptr;
         auto response = Post_t(uri, data, code, &error);
         err->reset(error);
         return response;
     }
+
+    Error Post(const std::string& uri,  const std::string& cookie, const std::string& input_data, FileData* ouput_data,
+               uint64_t output_data_size,
+               HttpCode* response_code)  const noexcept override {
+        return nullptr;
+    };
+
+    Error Post(const std::string& uri, const std::string& cookie,
+               const std::string& input_data, std::string output_file_name,
+               HttpCode* response_code)  const noexcept override {
+        return nullptr;
+    };
+
+
     MOCK_CONST_METHOD3(Get_t,
                        std::string(const std::string& uri, HttpCode* code, ErrorInterface** err));
     MOCK_CONST_METHOD4(Post_t,

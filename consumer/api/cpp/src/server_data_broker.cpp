@@ -13,6 +13,9 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
+const std::string ServerDataBroker::kBrokerDerviceName = "broker";
+const std::string ServerDataBroker::kFileTransferService_name = "fts";
+
 Error GetNoDataResponseFromJson(const std::string& json_string, ConsumerErrorData* data) {
     JsonStringParser parser(json_string);
     Error err;
@@ -31,7 +34,7 @@ Error ErrorFromNoDataResponse(const std::string& response) {
             return ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response - " + response);
         }
         Error err;
-        if (data.id >= data.id_max ) {
+        if (data.id >= data.id_max) {
             err = data.next_substream.empty() ? ConsumerErrorTemplates::kEndOfStream.Generate() :
                   ConsumerErrorTemplates::kStreamFinished.Generate();
         } else {
@@ -44,22 +47,22 @@ Error ErrorFromNoDataResponse(const std::string& response) {
     return ConsumerErrorTemplates::kNoData.Generate();
 }
 
-Error ErrorFromServerResponce(const std::string& response, const HttpCode& code) {
+Error ErrorFromServerResponce(const RequestOutput* response, const HttpCode& code) {
     switch (code) {
     case HttpCode::OK:
         return nullptr;
     case HttpCode::BadRequest:
-        return ConsumerErrorTemplates::kWrongInput.Generate(response);
+        return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
     case HttpCode::Unauthorized:
-        return ConsumerErrorTemplates::kWrongInput.Generate(response);
+        return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
     case HttpCode::InternalServerError:
-        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response);
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response->to_string());
     case HttpCode::NotFound:
-        return ConsumerErrorTemplates::kUnavailableService.Generate(response);
+        return ConsumerErrorTemplates::kUnavailableService.Generate(response->to_string());
     case HttpCode::Conflict:
-        return ErrorFromNoDataResponse(response);
+        return ErrorFromNoDataResponse(response->to_string());
     default:
-        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response);
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response->to_string());
     }
 }
 
@@ -68,7 +71,7 @@ ServerDataBroker::ServerDataBroker(std::string server_uri,
                                    SourceCredentials source) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
     net_client__{new TcpClient()},
-server_uri_{std::move(server_uri)}, source_path_{std::move(source_path)}, source_credentials_(std::move(source)) {
+endpoint_{std::move(server_uri)}, source_path_{std::move(source_path)}, source_credentials_(std::move(source)) {
 
     if (source_credentials_.stream.empty()) {
         source_credentials_.stream = SourceCredentials::kDefaultStream;
@@ -84,41 +87,53 @@ std::string ServerDataBroker::RequestWithToken(std::string uri) {
     return std::move(uri) + "?token=" + source_credentials_.user_token;
 }
 
-Error ServerDataBroker::ProcessRequest(std::string* response, const RequestInfo& request) {
+Error ServerDataBroker::ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri) {
     Error err;
     HttpCode code;
     if (request.post) {
-        *response =
-            httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.body, &code,
-                               &err);
+        switch (request.output_mode) {
+        case OutputDataMode::string:
+            response->string_output =
+                httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params,
+                                   request.cookie,
+                                   request.body,
+                                   &code,
+                                   &err);
+            break;
+        }
     } else {
-        *response = httpclient__->Get(RequestWithToken(request.host + request.api) + request.extra_params, &code, &err);
+        response->string_output =
+            httpclient__->Get(RequestWithToken(request.host + request.api) + request.extra_params, &code, &err);
     }
     if (err != nullptr) {
-        current_broker_uri_ = "";
+        if (service_uri) {
+            service_uri->clear();
+        }
         if (err == HttpErrorTemplates::kTransferError) {
-            return ConsumerErrorTemplates::kInterruptedTransaction.Generate("error processing request: " + err->Explain());
+            return ConsumerErrorTemplates::kInterruptedTransaction.Generate(
+                       "error processing request: " + err->Explain());
         } else {
             return ConsumerErrorTemplates::kUnavailableService.Generate("error processing request: " + err->Explain());
         }
     }
-    return ErrorFromServerResponce(*response, code);
+    return ErrorFromServerResponce(response, code);
 }
 
-Error ServerDataBroker::GetBrokerUri() {
-    if (!current_broker_uri_.empty()) {
+Error ServerDataBroker::DiscoverService(const std::string& service_name, std::string* uri_to_set) {
+    if (!uri_to_set->empty()) {
         return nullptr;
     }
 
     RequestInfo ri;
-    ri.host = server_uri_;
-    ri.api = "/discovery/broker";
-
+    ri.host = endpoint_;
+    ri.api = "/discovery/" + service_name;
+    RequestOutput output;
     Error err;
-    err = ProcessRequest(&current_broker_uri_, ri);
-    if (err != nullptr || current_broker_uri_.empty()) {
-        current_broker_uri_ = "";
-        return ConsumerErrorTemplates::kUnavailableService.Generate(" on " + server_uri_
+    err = ProcessRequest(&output, ri, nullptr);
+    *uri_to_set = std::move(output.string_output);
+    if (err != nullptr || uri_to_set->empty()) {
+        uri_to_set->clear();
+        return ConsumerErrorTemplates::kUnavailableService.Generate(" on " + endpoint_
                 + (err != nullptr ? ": " + err->Explain()
                    : ""));
     }
@@ -148,22 +163,23 @@ RequestInfo ServerDataBroker::PrepareRequestInfo(std::string api_url, bool datas
     return ri;
 }
 
-
 Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string group_id, std::string substream,
                                             GetImageServerOperation op,
                                             bool dataset) {
     std::string request_suffix = OpToUriCmd(op);
     std::string request_api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream
                               + "/" + std::move(substream) +
-                              + "/" + std::move(group_id) + "/";
+                              +"/" + std::move(group_id) + "/";
     uint64_t elapsed_ms = 0;
     Error no_data_error;
     while (true) {
         auto start = system_clock::now();
-        auto err = GetBrokerUri();
+        auto err = DiscoverService(kBrokerDerviceName, &current_broker_uri_);
         if (err == nullptr) {
-            auto  ri = PrepareRequestInfo(request_api + request_suffix, dataset);
-            err = ProcessRequest(response, ri);
+            auto ri = PrepareRequestInfo(request_api + request_suffix, dataset);
+            RequestOutput output;
+            err = ProcessRequest(&output, ri, &current_broker_uri_);
+            *response = std::move(output.string_output);
             if (err == nullptr) {
                 break;
             }
@@ -186,7 +202,7 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
             return no_data_error ? std::move(no_data_error) : std::move(err);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>( system_clock::now() - start).count();
+        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
     }
     return nullptr;
 }
@@ -196,7 +212,12 @@ Error ServerDataBroker::GetNext(FileInfo* info, std::string group_id, FileData* 
 }
 
 Error ServerDataBroker::GetNext(FileInfo* info, std::string group_id, std::string substream, FileData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetNext, 0, std::move(group_id), std::move(substream), info, data);
+    return GetImageFromServer(GetImageServerOperation::GetNext,
+                              0,
+                              std::move(group_id),
+                              std::move(substream),
+                              info,
+                              data);
 }
 
 Error ServerDataBroker::GetLast(FileInfo* info, std::string group_id, FileData* data) {
@@ -204,7 +225,12 @@ Error ServerDataBroker::GetLast(FileInfo* info, std::string group_id, FileData* 
 }
 
 Error ServerDataBroker::GetLast(FileInfo* info, std::string group_id, std::string substream, FileData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetLast, 0, std::move(group_id), std::move(substream), info, data);
+    return GetImageFromServer(GetImageServerOperation::GetLast,
+                              0,
+                              std::move(group_id),
+                              std::move(substream),
+                              info,
+                              data);
 }
 
 std::string ServerDataBroker::OpToUriCmd(GetImageServerOperation op) {
@@ -294,23 +320,35 @@ std::string ServerDataBroker::AppendUri(std::string request_string) {
     return current_broker_uri_ + "/" + std::move(request_string);
 }
 
-std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Error* err) {
+Error ServerDataBroker::ServiceRequestWithTimeout(const std::string& service_name,
+                                                  std::string* service_uri,
+                                                  RequestInfo request,
+                                                  RequestOutput* response) {
     uint64_t elapsed_ms = 0;
-    std::string response;
+    Error err;
     while (elapsed_ms <= timeout_ms_) {
         auto start = system_clock::now();
-        *err = GetBrokerUri();
-        if (*err == nullptr) {
-            request.host = current_broker_uri_;
-            *err = ProcessRequest(&response, request);
-            if (*err == nullptr || (*err) == ConsumerErrorTemplates::kWrongInput) {
-                return response;
+        err = DiscoverService(service_name, service_uri);
+        if (err == nullptr) {
+            request.host = *service_uri;
+            err = ProcessRequest(response, request, service_uri);
+            if (err == nullptr || err == ConsumerErrorTemplates::kWrongInput) {
+                break;
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>( system_clock::now() - start).count();
+        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
     }
-    return "";
+    return err;
+}
+
+std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Error* err) {
+    RequestOutput response;
+    *err = ServiceRequestWithTimeout(kBrokerDerviceName, &current_broker_uri_, request, &response);
+    if (*err) {
+        return "";
+    }
+    return std::move(response.string_output);
 }
 
 Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id) {
@@ -340,7 +378,7 @@ Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id, 
 uint64_t ServerDataBroker::GetCurrentSize(std::string substream, Error* err) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
-             + "/" + std::move(substream) + "/size";
+             +"/" + std::move(substream) + "/size";
     auto responce = BrokerRequestWithTimeout(ri, err);
     if (*err) {
         return 0;
@@ -369,13 +407,12 @@ Error ServerDataBroker::GetById(uint64_t id,
     return GetImageFromServer(GetImageServerOperation::GetID, id, group_id, substream, info, data);
 }
 
-
 Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* response, std::string group_id,
                                                 std::string substream,
                                                 bool dataset) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
-             + "/" + std::move(substream) +
+             +"/" + std::move(substream) +
              "/" + std::move(
                  group_id) + "/" + std::to_string(id);
     if (dataset) {
@@ -420,7 +457,6 @@ FileInfos ServerDataBroker::QueryImages(std::string query, std::string substream
     auto dataset = DecodeDatasetFromResponse("{\"_id\":0, \"images\":" + response + "}", err);
     return dataset.content;
 }
-
 
 FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
     return QueryImages(std::move(query), kDefaultSubstream, err);
@@ -476,7 +512,6 @@ std::vector<std::string> ParseSubstreamsFromResponse(std::string response, Error
     }
     return substreams;
 }
-
 
 std::vector<std::string> ServerDataBroker::GetSubstreamList(Error* err) {
 
