@@ -68,10 +68,12 @@ Error ErrorFromServerResponce(const RequestOutput* response, const HttpCode& cod
 
 ServerDataBroker::ServerDataBroker(std::string server_uri,
                                    std::string source_path,
+                                   bool has_filesystem,
                                    SourceCredentials source) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
     net_client__{new TcpClient()},
-endpoint_{std::move(server_uri)}, source_path_{std::move(source_path)}, source_credentials_(std::move(source)) {
+             endpoint_{std::move(server_uri)}, source_path_{std::move(source_path)}, has_filesystem_{has_filesystem},
+source_credentials_(std::move(source)) {
 
     if (source_credentials_.stream.empty()) {
         source_credentials_.stream = SourceCredentials::kDefaultStream;
@@ -270,6 +272,16 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t 
     return GetDataIfNeeded(info, data);
 }
 
+Error ServerDataBroker::GetDataFromFile(FileInfo* info, FileData* data) {
+    Error error;
+    *data = io__->GetDataFromFile(info->FullName(source_path_), &info->size, &error);
+    if (error) {
+        return ConsumerErrorTemplates::kLocalIOError.Generate(error->Explain());
+    }
+    return nullptr;
+}
+
+
 Error ServerDataBroker::RetrieveData(FileInfo* info, FileData* data) {
     if (data == nullptr || info == nullptr) {
         return ConsumerErrorTemplates::kWrongInput.Generate("pointers are empty");
@@ -283,13 +295,11 @@ Error ServerDataBroker::RetrieveData(FileInfo* info, FileData* data) {
         }
     }
 
-    Error error;
-    *data = io__->GetDataFromFile(info->FullName(source_path_), &info->size, &error);
-    if (error) {
-        return ConsumerErrorTemplates::kLocalIOError.Generate(error->Explain());
+    if (has_filesystem_) {
+        return GetDataFromFile(info, data);
     }
 
-    return nullptr;
+    return GetDataFromFileTransferService(info, data);
 }
 
 Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
@@ -525,6 +535,24 @@ std::vector<std::string> ServerDataBroker::GetSubstreamList(Error* err) {
     }
 
     return ParseSubstreamsFromResponse(std::move(response), err);
+}
+
+
+Error ServerDataBroker::GetDataFromFileTransferService(FileInfo* info, FileData* data) {
+    RequestInfo ri;
+    ri.host = endpoint_;
+    ri.api = "/authorizer/folder";
+    ri.post = true;
+    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"Beamtime:\"" + source_credentials_.beamtime_id + ",\"Token\":\"" +
+              source_credentials_.user_token + "\"}";
+    Error err;
+    RequestOutput output;
+    err = ProcessRequest(&output, ri, nullptr);
+    if (err) {
+        return err;
+    }
+    auto folder_token_ = std::move(output.string_output);
+    return nullptr;
 }
 
 }

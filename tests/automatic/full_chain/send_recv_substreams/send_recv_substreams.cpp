@@ -35,7 +35,7 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
 }
 
 BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".",
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".", true,
                   asapo::SourceCredentials{args.beamtime_id, "", "", args.token}, err);
     if (*err) {
         return nullptr;

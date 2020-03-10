@@ -141,7 +141,7 @@ def check_single(broker,group_id_new):
     else:
         exit_on_noerr("wrong query")
 
-    broker = asapo_consumer.create_server_broker("bla",path, beamtime,"",token,1000)
+    broker = asapo_consumer.create_server_broker("bla",path, True, beamtime,"",token,1000)
     try:
         broker.get_last(group_id_new, meta_only=True)
     except asapo_consumer.AsapoUnavailableServiceError as err:
@@ -192,7 +192,7 @@ def check_dataset(broker,group_id_new):
 
 source, path, beamtime, token, mode = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,path, beamtime,"",token,60000)
+broker = asapo_consumer.create_server_broker(source,path,True, beamtime,"",token,60000)
 
 group_id_new = broker.generate_group_id()
 

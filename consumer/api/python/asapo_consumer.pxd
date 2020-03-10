@@ -66,7 +66,7 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
 cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass DataBrokerFactory:
         DataBrokerFactory() except +
-        unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,SourceCredentials source,Error* error)
+        unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,bool has_filesystem,SourceCredentials source,Error* error)
 
 
 cdef extern from "asapo_consumer.h" namespace "asapo":

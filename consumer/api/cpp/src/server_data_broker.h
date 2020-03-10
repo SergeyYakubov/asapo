@@ -50,7 +50,8 @@ Error ErrorFromNoDataResponse(const std::string& response);
 
 class ServerDataBroker final : public asapo::DataBroker {
   public:
-    explicit ServerDataBroker(std::string server_uri, std::string source_path, SourceCredentials source);
+    explicit ServerDataBroker(std::string server_uri, std::string source_path, bool has_filesystem,
+                              SourceCredentials source);
     Error ResetLastReadMarker(std::string group_id) override;
     Error ResetLastReadMarker(std::string group_id, std::string substream) override;
 
@@ -94,6 +95,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<NetClient> net_client__;
   private:
+    Error GetDataFromFileTransferService(FileInfo* info, FileData* data);
+    Error GetDataFromFile(FileInfo* info, FileData* data);
     static const std::string kBrokerDerviceName;
     static const std::string kFileTransferService_name;
     std::string RequestWithToken(std::string uri);
@@ -121,6 +124,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::string endpoint_;
     std::string current_broker_uri_;
     std::string source_path_;
+    bool has_filesystem_;
     SourceCredentials source_credentials_;
     uint64_t timeout_ms_ = 0;
 };

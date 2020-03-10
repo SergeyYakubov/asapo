@@ -109,7 +109,7 @@ Error CurlHttpClient::Command(bool post, CurlDataContainer* data_container, cons
 FileData AllocateMemory(uint64_t size, Error* err) {
     FileData data;
     try {
-        data = FileData{new uint8_t[(size_t)size+1]};
+        data = FileData{new uint8_t[(size_t)size + 1]};
         data[size] = 0; // for reinterpret cast to string worked
     } catch (...) {
         *err = ErrorTemplates::kMemoryAllocationError.Generate();

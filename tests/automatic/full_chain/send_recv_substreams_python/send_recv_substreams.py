@@ -27,7 +27,7 @@ def callback(header,err):
 
 source, beamtime, token = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,".", beamtime,"",token,timeout)
+broker = asapo_consumer.create_server_broker(source,".",True, beamtime,"",token,timeout)
 producer  = asapo_producer.create_producer(source,beamtime,'auto', "", token, 1, 600)
 producer.set_log_level("debug")
 
