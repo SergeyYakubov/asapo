@@ -18,7 +18,9 @@ func getService(service string) (answer []byte, code int) {
 	case "mongo":
 		answer, err = requestHandler.GetMongo()
 		break
-
+	case "fts":
+		answer, err = requestHandler.GetFts()
+		break
 	default:
 		err = errors.New("wrong request: "+service)
 	}
@@ -50,6 +52,13 @@ func routeGetBroker(w http.ResponseWriter, r *http.Request) {
 func routeGetMongo(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Content-type", "application/json")
 	answer,code := getService("mongo")
+	w.WriteHeader(code)
+	w.Write(answer)
+}
+
+func routeGetFileTransferService(w http.ResponseWriter, r *http.Request) {
+	r.Header.Set("Content-type", "application/json")
+	answer,code := getService("fts")
 	w.WriteHeader(code)
 	w.Write(answer)
 }

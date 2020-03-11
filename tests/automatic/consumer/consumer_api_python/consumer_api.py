@@ -26,10 +26,17 @@ def assert_usermetadata(meta,name):
 
 
 def assert_eq(val,expected,name):
+    print ("asserting eq for "+name)
     if val != expected:
         print ("error at "+name)
         print ('val: ', val,' expected: ',expected)
         sys.exit(1)
+
+def check_file_transfer_service(broker,group_id):
+    broker.set_timeout(1000)
+    data, meta = broker.get_by_id(1, group_id, meta_only=False)
+    assert_eq(data.tostring().decode("utf-8"),"hello1","check_file_transfer_service ok")
+
 
 def check_single(broker,group_id_new):
 
@@ -193,11 +200,15 @@ def check_dataset(broker,group_id_new):
 source, path, beamtime, token, mode = sys.argv[1:]
 
 broker = asapo_consumer.create_server_broker(source,path,True, beamtime,"",token,60000)
+broker_fts = asapo_consumer.create_server_broker(source,path,False, beamtime,"",token,60000)
 
 group_id_new = broker.generate_group_id()
 
+group_id_fts = broker_fts.generate_group_id()
+
 if mode == "single":
     check_single(broker,group_id_new)
+    check_file_transfer_service(broker_fts,group_id_fts)
 
 if mode == "datasets":
     check_dataset(broker,group_id_new)

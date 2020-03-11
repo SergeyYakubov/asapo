@@ -1,4 +1,5 @@
 #include "server_data_broker.h"
+#include "server_data_broker.h"
 
 #include <chrono>
 
@@ -13,8 +14,8 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
-const std::string ServerDataBroker::kBrokerDerviceName = "broker";
-const std::string ServerDataBroker::kFileTransferService_name = "fts";
+const std::string ServerDataBroker::kBrokerServiceName = "broker";
+const std::string ServerDataBroker::kFileTransferServiceName = "fts";
 
 Error GetNoDataResponseFromJson(const std::string& json_string, ConsumerErrorData* data) {
     JsonStringParser parser(json_string);
@@ -102,6 +103,10 @@ Error ServerDataBroker::ProcessRequest(RequestOutput* response, const RequestInf
                                    &code,
                                    &err);
             break;
+        case OutputDataMode::array:
+            err = httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.cookie,
+                                     request.body, &response->data_output, response->data_output_size, &code);
+            break;
         }
     } else {
         response->string_output =
@@ -121,11 +126,10 @@ Error ServerDataBroker::ProcessRequest(RequestOutput* response, const RequestInf
     return ErrorFromServerResponce(response, code);
 }
 
-Error ServerDataBroker::DiscoverService(const std::string& service_name, std::string* uri_to_set) {
+Error ServerDataBroker::DiscoverService(const std::string& service_name , std::string* uri_to_set) {
     if (!uri_to_set->empty()) {
         return nullptr;
     }
-
     RequestInfo ri;
     ri.host = endpoint_;
     ri.api = "/discovery/" + service_name;
@@ -176,7 +180,7 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
     Error no_data_error;
     while (true) {
         auto start = system_clock::now();
-        auto err = DiscoverService(kBrokerDerviceName, &current_broker_uri_);
+        auto err = DiscoverService(kBrokerServiceName, &current_broker_uri_);
         if (err == nullptr) {
             auto ri = PrepareRequestInfo(request_api + request_suffix, dataset);
             RequestOutput output;
@@ -268,7 +272,6 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t 
     if (!info->SetFromJson(response)) {
         return ConsumerErrorTemplates::kInterruptedTransaction.Generate(std::string("malformed response:") + response);
     }
-
     return GetDataIfNeeded(info, data);
 }
 
@@ -299,7 +302,7 @@ Error ServerDataBroker::RetrieveData(FileInfo* info, FileData* data) {
         return GetDataFromFile(info, data);
     }
 
-    return GetDataFromFileTransferService(info, data);
+    return GetDataFromFileTransferService(info, data, false);
 }
 
 Error ServerDataBroker::GetDataIfNeeded(FileInfo* info, FileData* data) {
@@ -352,9 +355,27 @@ Error ServerDataBroker::ServiceRequestWithTimeout(const std::string& service_nam
     return err;
 }
 
+Error ServerDataBroker::FtsRequestWithTimeout(const FileInfo* info, FileData* data) {
+    RequestInfo ri;
+    ri.api = "/transfer";
+    ri.post = true;
+    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"FileName\":\"" + info->name + "\"}";
+    ri.cookie = "Authorization=Bearer " + folder_token_;
+    ri.output_mode = OutputDataMode::array;
+    RequestOutput response;
+    response.data_output_size = info->size;
+    auto err = ServiceRequestWithTimeout(kFileTransferServiceName, &current_fts_uri_, ri, &response);
+    if (err) {
+        return err;
+    }
+    *data = std::move(response.data_output);
+    return nullptr;
+}
+
+
 std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Error* err) {
     RequestOutput response;
-    *err = ServiceRequestWithTimeout(kBrokerDerviceName, &current_broker_uri_, request, &response);
+    *err = ServiceRequestWithTimeout(kBrokerServiceName, &current_broker_uri_, request, &response);
     if (*err) {
         return "";
     }
@@ -537,13 +558,17 @@ std::vector<std::string> ServerDataBroker::GetSubstreamList(Error* err) {
     return ParseSubstreamsFromResponse(std::move(response), err);
 }
 
+Error ServerDataBroker::UpdateFolderTokenIfNeeded(bool ignore_existing) {
+    if (!folder_token_.empty() && !ignore_existing) {
+        return nullptr;
+    }
+    folder_token_.clear();
 
-Error ServerDataBroker::GetDataFromFileTransferService(FileInfo* info, FileData* data) {
     RequestInfo ri;
     ri.host = endpoint_;
     ri.api = "/authorizer/folder";
     ri.post = true;
-    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"Beamtime:\"" + source_credentials_.beamtime_id + ",\"Token\":\"" +
+    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\"" +
               source_credentials_.user_token + "\"}";
     Error err;
     RequestOutput output;
@@ -551,8 +576,25 @@ Error ServerDataBroker::GetDataFromFileTransferService(FileInfo* info, FileData*
     if (err) {
         return err;
     }
-    auto folder_token_ = std::move(output.string_output);
+    folder_token_ = std::move(output.string_output);
     return nullptr;
 }
+
+
+Error ServerDataBroker::GetDataFromFileTransferService(const FileInfo* info, FileData* data,
+        bool retry_with_new_token) {
+    auto err = UpdateFolderTokenIfNeeded(retry_with_new_token);
+    if (err) {
+        return err;
+    }
+
+    err = FtsRequestWithTimeout(info, data);
+    if (err == ConsumerErrorTemplates::kWrongInput
+            && !retry_with_new_token) { // token expired? Refresh token and try again.
+        return GetDataFromFileTransferService(info, data, true);
+    }
+    return err;
+}
+
 
 }

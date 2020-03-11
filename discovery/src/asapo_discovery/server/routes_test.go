@@ -31,7 +31,8 @@ type GetReceiversTestSuite struct {
 func (suite *GetReceiversTestSuite) SetupTest() {
 	requestHandler = new(request_handler.StaticRequestHandler)
 	var s utils.Settings= utils.Settings{Receiver:utils.ReceiverInfo{MaxConnections:10,StaticEndpoints:[]string{"ip1","ip2"}},
-	Broker:utils.BrokerInfo{StaticEndpoint:"ip_broker"},Mongo:utils.MongoInfo{StaticEndpoint:"ip_mongo"}}
+	Broker:utils.BrokerInfo{StaticEndpoint:"ip_broker"},Mongo:utils.MongoInfo{StaticEndpoint:"ip_mongo"},
+		FileTransferService:utils.FtsInfo{StaticEndpoint:"ip_fts"}}
 
 	requestHandler.Init(s)
 	logger.SetMockLog()
@@ -84,5 +85,15 @@ func (suite *GetReceiversTestSuite) TestGetMongo() {
 
 	suite.Equal(http.StatusOK, w.Code, "code ok")
 	suite.Equal(w.Body.String(), "ip_mongo", "result")
+	assertExpectations(suite.T())
+}
+
+func (suite *GetReceiversTestSuite) TestGetFts() {
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get fts")))
+
+	w := doRequest("/fts")
+
+	suite.Equal(http.StatusOK, w.Code, "code ok")
+	suite.Equal(w.Body.String(), "ip_fts", "result")
 	assertExpectations(suite.T())
 }

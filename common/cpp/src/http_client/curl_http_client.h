@@ -21,7 +21,7 @@ struct CurlDataContainer {
     std::string string_buffer;
     FileData* p_array;
     uint64_t array_size;
-    uint64_t array_already_written = 0;
+    uint64_t bytes_received = 0;
     CurlDataMode mode;
     FileDescriptor fd;
     const IO* io;
@@ -34,7 +34,7 @@ class CurlHttpClient final : public HttpClient {
     std::string Get(const std::string& uri, HttpCode* response_code, Error* err) const noexcept override;
     std::string Post(const std::string& uri, const std::string& cookie, const std::string& data, HttpCode* response_code,
                      Error* err) const noexcept override;
-    Error Post(const std::string& uri,  const std::string& cookie, const std::string& input_data, FileData* ouput_data,
+    Error Post(const std::string& uri,  const std::string& cookie, const std::string& input_data, FileData* output_data,
                uint64_t output_data_size,
                HttpCode* response_code)  const noexcept override;
     Error Post(const std::string& uri, const std::string& cookie,

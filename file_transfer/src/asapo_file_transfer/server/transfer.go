@@ -4,7 +4,6 @@ import (
 	log "asapo_common/logger"
 	"asapo_common/utils"
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -23,40 +22,58 @@ func Exists(name string) bool {
 }
 
 
-func routeFileTransfer(w http.ResponseWriter, r *http.Request) {
-	var request fileTransferRequest
-	err := utils.ExtractRequest(r,&request)
-	fmt.Println(request)
-	if err != nil {
-		utils.WriteServerError(w,err,http.StatusBadRequest)
-		return
-	}
-
+func checkClaim(r *http.Request,request* fileTransferRequest) (int,error) {
 	var extraClaim utils.FolderTokenTokenExtraClaim
 	if err := utils.JobClaimFromContext(r, &extraClaim); err != nil {
-		utils.WriteServerError(w,err,http.StatusInternalServerError)
-		return
+		return http.StatusInternalServerError,err
 	}
-
 	if extraClaim.RootFolder!=request.Folder {
 		err_txt := "access forbidden for folder "+request.Folder
 		log.Error("cannot transfer file: "+err_txt)
-		utils.WriteServerError(w,errors.New(err_txt),http.StatusUnauthorized)
-		return
+		return http.StatusUnauthorized, errors.New(err_txt)
 	}
+	return http.StatusOK,nil
+}
 
-	fullName := request.Folder+string(os.PathSeparator)+request.FileName
-
-	if !Exists(fullName) {
-		err_txt := "file "+fullName+" does not exist"
+func checkFileExists(r *http.Request,name string) (int,error) {
+	if !Exists(name) {
+		err_txt := "file "+name+" does not exist"
 		log.Error("cannot transfer file: "+err_txt)
-		utils.WriteServerError(w,errors.New(err_txt),http.StatusBadRequest)
-		return
+		return http.StatusBadRequest,errors.New(err_txt)
 	}
+	return http.StatusOK,nil
+
+}
+
+func checkRequest(r *http.Request) (string,int,error) {
+	var request fileTransferRequest
+	err := utils.ExtractRequest(r,&request)
+	if err != nil {
+		return "",http.StatusBadRequest,err
+	}
+
+	if status,err := checkClaim(r,&request); err != nil {
+		return "",status,err
+	}
+	fullName := request.Folder+string(os.PathSeparator)+request.FileName
+	if status,err := checkFileExists(r,fullName); err != nil {
+		return "",status,err
+	}
+	return fullName,http.StatusOK,nil
+}
+
+func serveFile(w http.ResponseWriter, r *http.Request, fullName string) {
 	_, file := path.Split(fullName)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+file+"\"")
-
 	log.Debug("Transferring file " + fullName)
-
 	http.ServeFile(w,r, fullName)
+}
+
+func routeFileTransfer(w http.ResponseWriter, r *http.Request) {
+	fullName, status,err := checkRequest(r);
+	if err != nil {
+		utils.WriteServerError(w,err,status)
+		return
+	}
+	serveFile(w,r,fullName)
 }

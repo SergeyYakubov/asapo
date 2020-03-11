@@ -117,7 +117,10 @@ func (t JWTAuth) GenerateToken(val ...interface{}) (string, error) {
 
 func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		if (r.RequestURI == "/health-check") { // always allow /health-check request
+			fn(w,r)
+			return
+		}
 		authType, token, err := ExtractAuthInfo(r)
 
 		if err != nil {

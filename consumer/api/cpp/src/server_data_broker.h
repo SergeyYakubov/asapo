@@ -35,6 +35,7 @@ struct RequestInfo {
 struct RequestOutput {
     std::string string_output;
     FileData data_output;
+    uint64_t data_output_size;
     const char* to_string() const {
         if (!data_output) {
             return string_output.c_str();
@@ -95,10 +96,10 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<NetClient> net_client__;
   private:
-    Error GetDataFromFileTransferService(FileInfo* info, FileData* data);
+    Error GetDataFromFileTransferService(const FileInfo* info, FileData* data, bool retry_with_new_token);
     Error GetDataFromFile(FileInfo* info, FileData* data);
-    static const std::string kBrokerDerviceName;
-    static const std::string kFileTransferService_name;
+    static const std::string kBrokerServiceName;
+    static const std::string kFileTransferServiceName;
     std::string RequestWithToken(std::string uri);
     Error GetRecordFromServer(std::string* info, std::string group_id, std::string substream, GetImageServerOperation op,
                               bool dataset = false);
@@ -117,16 +118,22 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error ServiceRequestWithTimeout(const std::string& service_name, std::string* service_uri, RequestInfo request,
                                     RequestOutput* response);
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
+    Error FtsRequestWithTimeout(const FileInfo* info, FileData* data);
+    Error RequestDataFromFts(const FileInfo* info, FileData* data);
+
     std::string AppendUri(std::string request_string);
     DataSet DecodeDatasetFromResponse(std::string response, Error* err);
     RequestInfo PrepareRequestInfo(std::string api_url, bool dataset);
     std::string OpToUriCmd(GetImageServerOperation op);
+    Error UpdateFolderTokenIfNeeded(bool ignore_existing);
     std::string endpoint_;
     std::string current_broker_uri_;
+    std::string current_fts_uri_;
     std::string source_path_;
     bool has_filesystem_;
     SourceCredentials source_credentials_;
     uint64_t timeout_ms_ = 0;
+    std::string folder_token_;
 };
 
 

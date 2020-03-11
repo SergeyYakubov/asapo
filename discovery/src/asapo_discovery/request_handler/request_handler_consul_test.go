@@ -51,8 +51,8 @@ func (suite *ConsulHandlerTestSuite) SetupTest() {
 
 	suite.registerAgents("asapo-receiver")
 	suite.registerAgents("asapo-broker")
+	suite.registerAgents("asapo-fts")
 	suite.registerAgents("mongo")
-
 }
 
 func (suite *ConsulHandlerTestSuite) TearDownTest() {
@@ -62,6 +62,8 @@ func (suite *ConsulHandlerTestSuite) TearDownTest() {
 	suite.client.Agent().ServiceDeregister("asapo-broker1235")
 	suite.client.Agent().ServiceDeregister("mongo1234")
 	suite.client.Agent().ServiceDeregister("mongo1235")
+	suite.client.Agent().ServiceDeregister("asapo-fts1234")
+	suite.client.Agent().ServiceDeregister("asapo-fts1235")
 
 }
 
@@ -146,20 +148,19 @@ func (suite *ConsulHandlerTestSuite) TestGetBrokerRoundRobin() {
 
 }
 
-
 func (suite *ConsulHandlerTestSuite) TestGetMongoRoundRobin() {
 	suite.handler.Init(consul_settings)
 	res, err := suite.handler.GetMongo()
-	suite.NoError(err, "")
-	suite.Equal("127.0.0.1:1235", string(res), "uris")
-
-	res, err = suite.handler.GetMongo()
 	suite.NoError(err, "")
 	suite.Equal("127.0.0.1:1234", string(res), "uris")
 
 	res, err = suite.handler.GetMongo()
 	suite.NoError(err, "")
 	suite.Equal("127.0.0.1:1235", string(res), "uris")
+
+	res, err = suite.handler.GetMongo()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:1234", string(res), "uris")
 }
 
 func (suite *ConsulHandlerTestSuite) TestGetMongoStatic() {
@@ -194,6 +195,33 @@ func (suite *ConsulHandlerTestSuite) TestGetBrokerEmpty() {
 	res, err := suite.handler.GetBroker()
 	suite.NoError(err, "")
 	suite.Equal("", string(res), "uris")
+}
+
+func (suite *ConsulHandlerTestSuite) TestGetFtsRoundRobin() {
+	suite.handler.Init(consul_settings)
+	res, err := suite.handler.GetFts()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:1235", string(res), "uris")
+
+	res, err = suite.handler.GetFts()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:1234", string(res), "uris")
+
+	res, err = suite.handler.GetFts()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:1235", string(res), "uris")
+}
+
+func (suite *ConsulHandlerTestSuite) TestGetFtsStatic() {
+	consul_settings.FileTransferService.StaticEndpoint="127.0.0.1:0000"
+	suite.handler.Init(consul_settings)
+	res, err := suite.handler.GetFts()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:0000", string(res), "uris")
+
+	res, err = suite.handler.GetFts()
+	suite.NoError(err, "")
+	suite.Equal("127.0.0.1:0000", string(res), "uris")
 }
 
 

@@ -24,25 +24,27 @@ CurlHttpClientInstance::~CurlHttpClientInstance() {
 
 size_t curl_write( void* ptr, size_t size, size_t nmemb, void* data_container) {
     auto container = (CurlDataContainer*)data_container;
+    size_t nbytes = size * nmemb;
     switch (container->mode) {
     case CurlDataMode::string:
-        container->string_buffer.append((char*)ptr, size * nmemb);
+        container->string_buffer.append((char*)ptr, nbytes);
         break;
     case CurlDataMode::array:
-        if (container->array_already_written + size > container->array_size) {
+        if (container->bytes_received + nbytes > container->array_size) {
             return -1;
         }
-        memcpy(container->p_array->get(), ptr, size * nmemb);
+        memcpy(container->p_array->get(), ptr, nbytes);
+        container->bytes_received += nbytes;
         break;
     case CurlDataMode::file:
         Error err;
-        container->io->Write(container->fd, ptr, size * nmemb, &err);
+        container->io->Write(container->fd, ptr, nbytes, &err);
         if (err) {
             return -1;
         }
         break;
     }
-    return size * nmemb;
+    return nbytes;
 }
 
 void SetCurlOptions(CURL* curl, bool post, const std::string& cookie, const std::string& data, const std::string& uri,
@@ -109,8 +111,7 @@ Error CurlHttpClient::Command(bool post, CurlDataContainer* data_container, cons
 FileData AllocateMemory(uint64_t size, Error* err) {
     FileData data;
     try {
-        data = FileData{new uint8_t[(size_t)size + 1]};
-        data[size] = 0; // for reinterpret cast to string worked
+        data = FileData{new uint8_t[(size_t)size +1 ]};
     } catch (...) {
         *err = ErrorTemplates::kMemoryAllocationError.Generate();
         return nullptr;
@@ -122,20 +123,30 @@ FileData AllocateMemory(uint64_t size, Error* err) {
 Error CurlHttpClient::Post(const std::string& uri,
                            const std::string& cookie,
                            const std::string& input_data,
-                           FileData* ouput_data,
+                           FileData* output_data,
                            uint64_t output_data_size,
                            HttpCode* response_code) const noexcept {
     Error err;
     CurlDataContainer data_container;
     data_container.mode = CurlDataMode::array;
-    *ouput_data = AllocateMemory(output_data_size, &err);
+    uint64_t extended_size =output_data_size + 10000; // for error messages
+    *output_data = AllocateMemory(extended_size, &err);
     if (err) {
         return err;
     }
-    data_container.p_array = ouput_data;
-    data_container.array_size = output_data_size;
+    data_container.p_array = output_data;
+    data_container.array_size = extended_size;
     err = Command(true, &data_container, uri, cookie, input_data, response_code);
     if (!err) {
+        if (*response_code == HttpCode::OK) {
+            if (output_data_size != data_container.bytes_received) {
+                return HttpErrorTemplates::kTransferError.Generate("received " +
+                    std::to_string(data_container.bytes_received) + ", expected " + std::to_string(output_data_size) + "bytes");
+            }
+            (*output_data)[output_data_size] = 0; // for reinterpret cast to string worked
+        } else {
+            (*output_data)[data_container.bytes_received] = 0; // for reinterpret cast to string worked
+        }
         return nullptr;
     } else {
         return err;
