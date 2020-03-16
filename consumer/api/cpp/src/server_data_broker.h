@@ -45,8 +45,8 @@ struct RequestOutput {
     }
 };
 
-Error ErrorFromServerResponce(const RequestOutput* response, const HttpCode& code);
-Error ErrorFromNoDataResponse(const std::string& response);
+Error ProcessRequestResponce(const Error& server_err, const RequestOutput* response, const HttpCode& code);
+Error ConsumerErrorFromNoDataResponse(const std::string& response);
 
 
 class ServerDataBroker final : public asapo::DataBroker {
@@ -120,8 +120,9 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
     Error FtsRequestWithTimeout(const FileInfo* info, FileData* data);
     Error RequestDataFromFts(const FileInfo* info, FileData* data);
+    Error ProcessPostRequest(const RequestInfo& request,RequestOutput* response, HttpCode* code);
+    Error ProcessGetRequest(const RequestInfo& request,RequestOutput* response, HttpCode* code);
 
-    std::string AppendUri(std::string request_string);
     DataSet DecodeDatasetFromResponse(std::string response, Error* err);
     RequestInfo PrepareRequestInfo(std::string api_url, bool dataset);
     std::string OpToUriCmd(GetImageServerOperation op);
@@ -134,6 +135,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     SourceCredentials source_credentials_;
     uint64_t timeout_ms_ = 0;
     std::string folder_token_;
+    RequestInfo CreateFolderTokenRequest() const;
+    RequestInfo CreateFileTransferRequest(const FileInfo* info) const;
 };
 
 

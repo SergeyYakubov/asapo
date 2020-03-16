@@ -27,7 +27,7 @@ Error GetNoDataResponseFromJson(const std::string& json_string, ConsumerErrorDat
     return nullptr;
 }
 
-Error ErrorFromNoDataResponse(const std::string& response) {
+Error ConsumerErrorFromNoDataResponse(const std::string& response) {
     if (response.find("get_record_by_id") != std::string::npos) {
         ConsumerErrorData data;
         auto parse_error = GetNoDataResponseFromJson(response, &data);
@@ -48,7 +48,7 @@ Error ErrorFromNoDataResponse(const std::string& response) {
     return ConsumerErrorTemplates::kNoData.Generate();
 }
 
-Error ErrorFromServerResponce(const RequestOutput* response, const HttpCode& code) {
+Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode& code) {
     switch (code) {
     case HttpCode::OK:
         return nullptr;
@@ -61,10 +61,25 @@ Error ErrorFromServerResponce(const RequestOutput* response, const HttpCode& cod
     case HttpCode::NotFound:
         return ConsumerErrorTemplates::kUnavailableService.Generate(response->to_string());
     case HttpCode::Conflict:
-        return ErrorFromNoDataResponse(response->to_string());
+        return ConsumerErrorFromNoDataResponse(response->to_string());
     default:
         return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response->to_string());
     }
+}
+Error ConsumerErrorFromServerError(const Error& server_err) {
+    if (server_err == HttpErrorTemplates::kTransferError) {
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(
+            "error processing request: " + server_err->Explain());
+    } else {
+        return ConsumerErrorTemplates::kUnavailableService.Generate("error processing request: " + server_err->Explain());
+    }
+}
+
+Error ProcessRequestResponce(const Error& server_err, const RequestOutput* response, const HttpCode& code) {
+    if (server_err != nullptr) {
+        return ConsumerErrorFromServerError(server_err);
+    }
+    return ConsumerErrorFromHttpCode(response, code);
 }
 
 ServerDataBroker::ServerDataBroker(std::string server_uri,
@@ -90,40 +105,46 @@ std::string ServerDataBroker::RequestWithToken(std::string uri) {
     return std::move(uri) + "?token=" + source_credentials_.user_token;
 }
 
-Error ServerDataBroker::ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri) {
+Error ServerDataBroker::ProcessPostRequest(const RequestInfo& request,RequestOutput* response, HttpCode* code) {
     Error err;
-    HttpCode code;
-    if (request.post) {
-        switch (request.output_mode) {
+    switch (request.output_mode) {
         case OutputDataMode::string:
             response->string_output =
                 httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params,
                                    request.cookie,
                                    request.body,
-                                   &code,
+                                   code,
                                    &err);
             break;
         case OutputDataMode::array:
             err = httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.cookie,
-                                     request.body, &response->data_output, response->data_output_size, &code);
+                                     request.body, &response->data_output, response->data_output_size, code);
             break;
-        }
+    }
+    return err;
+}
+
+
+Error ServerDataBroker::ProcessGetRequest(const RequestInfo& request,RequestOutput* response, HttpCode* code) {
+    Error err;
+    response->string_output =
+        httpclient__->Get(RequestWithToken(request.host + request.api) + request.extra_params, code, &err);
+    return err;
+}
+
+
+Error ServerDataBroker::ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri) {
+    Error err;
+    HttpCode code;
+    if (request.post) {
+        err = ProcessPostRequest(request,response,&code);
     } else {
-        response->string_output =
-            httpclient__->Get(RequestWithToken(request.host + request.api) + request.extra_params, &code, &err);
+        err = ProcessGetRequest(request,response,&code);
     }
-    if (err != nullptr) {
-        if (service_uri) {
-            service_uri->clear();
-        }
-        if (err == HttpErrorTemplates::kTransferError) {
-            return ConsumerErrorTemplates::kInterruptedTransaction.Generate(
-                       "error processing request: " + err->Explain());
-        } else {
-            return ConsumerErrorTemplates::kUnavailableService.Generate("error processing request: " + err->Explain());
-        }
+    if (err && service_uri) {
+        service_uri->clear();
     }
-    return ErrorFromServerResponce(response, code);
+    return ProcessRequestResponce(err, response, code);
 }
 
 Error ServerDataBroker::DiscoverService(const std::string& service_name , std::string* uri_to_set) {
@@ -329,10 +350,6 @@ std::string ServerDataBroker::GenerateNewGroupId(Error* err) {
     return BrokerRequestWithTimeout(ri, err);
 }
 
-std::string ServerDataBroker::AppendUri(std::string request_string) {
-    return current_broker_uri_ + "/" + std::move(request_string);
-}
-
 Error ServerDataBroker::ServiceRequestWithTimeout(const std::string& service_name,
                                                   std::string* service_uri,
                                                   RequestInfo request,
@@ -356,12 +373,7 @@ Error ServerDataBroker::ServiceRequestWithTimeout(const std::string& service_nam
 }
 
 Error ServerDataBroker::FtsRequestWithTimeout(const FileInfo* info, FileData* data) {
-    RequestInfo ri;
-    ri.api = "/transfer";
-    ri.post = true;
-    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"FileName\":\"" + info->name + "\"}";
-    ri.cookie = "Authorization=Bearer " + folder_token_;
-    ri.output_mode = OutputDataMode::array;
+    RequestInfo ri = CreateFileTransferRequest(info);
     RequestOutput response;
     response.data_output_size = info->size;
     auto err = ServiceRequestWithTimeout(kFileTransferServiceName, &current_fts_uri_, ri, &response);
@@ -372,6 +384,15 @@ Error ServerDataBroker::FtsRequestWithTimeout(const FileInfo* info, FileData* da
     return nullptr;
 }
 
+RequestInfo ServerDataBroker::CreateFileTransferRequest(const FileInfo* info) const {
+    RequestInfo ri;
+    ri.api = "/transfer";
+    ri.post = true;
+    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"FileName\":\"" + info->name + "\"}";
+    ri.cookie = "Authorization=Bearer " + folder_token_;
+    ri.output_mode = OutputDataMode::array;
+    return ri;
+}
 
 std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Error* err) {
     RequestOutput response;
@@ -564,15 +585,9 @@ Error ServerDataBroker::UpdateFolderTokenIfNeeded(bool ignore_existing) {
     }
     folder_token_.clear();
 
-    RequestInfo ri;
-    ri.host = endpoint_;
-    ri.api = "/authorizer/folder";
-    ri.post = true;
-    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\"" +
-              source_credentials_.user_token + "\"}";
-    Error err;
     RequestOutput output;
-    err = ProcessRequest(&output, ri, nullptr);
+    RequestInfo ri = CreateFolderTokenRequest();
+    auto err = ProcessRequest(&output, ri, nullptr);
     if (err) {
         return err;
     }
@@ -580,6 +595,15 @@ Error ServerDataBroker::UpdateFolderTokenIfNeeded(bool ignore_existing) {
     return nullptr;
 }
 
+RequestInfo ServerDataBroker::CreateFolderTokenRequest() const {
+    RequestInfo ri;
+    ri.host = endpoint_;
+    ri.api = "/authorizer/folder";
+    ri.post = true;
+    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\"" +
+              source_credentials_.user_token + "\"}";
+    return ri;
+}
 
 Error ServerDataBroker::GetDataFromFileTransferService(const FileInfo* info, FileData* data,
         bool retry_with_new_token) {
@@ -595,6 +619,5 @@ Error ServerDataBroker::GetDataFromFileTransferService(const FileInfo* info, Fil
     }
     return err;
 }
-
 
 }
