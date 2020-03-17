@@ -8,3 +8,10 @@ datasources:
     url: http://localhost:{{ env "NOMAD_META_nginx_port" }}/influxdb
     jsonData:
       httpMode: GET
+  - name: InfluxDB-logs
+    type: influxdb
+    access: proxy
+    database: logs
+    url: http://localhost:{{ env "NOMAD_META_nginx_port" }}/influxdb
+    jsonData:
+      httpMode: GET
