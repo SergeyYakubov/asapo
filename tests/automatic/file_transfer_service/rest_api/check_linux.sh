@@ -4,7 +4,7 @@ set -e
 
 trap Cleanup EXIT
 
-file_transfer_folder=/tmp/asapo/file_transfer/files
+file_transfer_folder=`pwd`/asap3/petra3/gpfs/p01/2019/data/aaa
 
 
 Cleanup() {
@@ -19,10 +19,12 @@ nomad run file_transfer.nmd
 
 sleep 1
 
+mkdir -p $file_transfer_folder
+
 token=bnCXpOdBV90wU1zybEw1duQNSORuwaKz6oDHqmL35p0= #token for aaa
 folder_token=`curl --silent --data "{\"Folder\":\"$file_transfer_folder\",\"BeamtimeId\":\"aaa\",\"Token\":\"$token\"}" 127.0.0.1:5007/folder`
+echo $folder_token
 
-mkdir -p $file_transfer_folder
 echo hello > $file_transfer_folder/aaa
 
 curl -o aaa --silent -H "Authorization: Bearer ${folder_token}" --data "{\"Folder\":\"$file_transfer_folder\",\"FileName\":\"aaa\",\"Token\":\"$folder_token\"}" 127.0.0.1:5008/transfer --stderr - | tee /dev/stderr

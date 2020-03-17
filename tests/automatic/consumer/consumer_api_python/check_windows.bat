@@ -1,6 +1,8 @@
-SET source_path=c:\\tmp\\asapo\\consumer_test\\files
-
+setlocal
 SET beamtime_id=test_run
+SET source_path=%cd%\asap3\petra3\gpfs\p01\2019\data\%beamtime_id%
+set source_path=%source_path:\=\\%
+
 SET stream=detector
 
 SET database_name=%beamtime_id%_%stream%

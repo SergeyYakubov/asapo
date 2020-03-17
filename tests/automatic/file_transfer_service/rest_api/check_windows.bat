@@ -1,4 +1,8 @@
-SET file_transfer_folder=c:\\tmp\\asapo\\file_transfer\\files
+setlocal
+SET beamtime_id=aaa
+SET file_transfer_folder=%cd%\asap3\petra3\gpfs\p01\2019\data\%beamtime_id%
+set file_transfer_folder=%file_transfer_folder:\=\\%
+
 
 c:\opt\consul\nomad run authorizer.nmd
 c:\opt\consul\nomad run file_transfer.nmd
@@ -7,10 +11,10 @@ ping 1.0.0.0 -n 1 -w 100 > nul
 
 set token=bnCXpOdBV90wU1zybEw1duQNSORuwaKz6oDHqmL35p0=
 
+mkdir %file_transfer_folder%
+
 C:\Curl\curl.exe --silent --data "{\"Folder\":\"%file_transfer_folder%\",\"BeamtimeId\":\"aaa\",\"Token\":\"%token%\"}" 127.0.0.1:5007/folder > token
 set /P folder_token=< token
-
-mkdir %file_transfer_folder%
 
 echo hello > %file_transfer_folder%\aaa
 

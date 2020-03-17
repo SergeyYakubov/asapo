@@ -4,7 +4,8 @@ set -e
 
 trap Cleanup EXIT
 
-file_transfer_folder=/tmp/asapo/file_transfer/files
+beamtime_id=aaa
+file_transfer_folder=`pwd`/asap3/petra3/gpfs/p01/2019/data/$beamtime_id
 
 Cleanup() {
   echo cleanup

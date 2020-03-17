@@ -1,4 +1,9 @@
-SET file_transfer_folder=c:\\tmp\\asapo\\file_transfer\\files
+setlocal
+SET beamtime_id=aaa
+SET file_transfer_folder=%cd%\asap3\petra3\gpfs\p01\2019\data\%beamtime_id%
+set file_transfer_folder=%file_transfer_folder:\=\\%
+
+
 
 c:\opt\consul\nomad run authorizer.nmd
 c:\opt\consul\nomad run file_transfer.nmd

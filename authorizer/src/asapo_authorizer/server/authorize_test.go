@@ -148,7 +148,7 @@ func TestAuthorizeWithToken(t *testing.T) {
 			assert.Contains(t, body_str, "tf/gpfs/bl1/2019/data/test", "")
 			if (test.beamtime_id == "test_online") {
 				assert.Contains(t, body_str, "tf/gpfs/bl1/2019/data/test_online", "")
-				assert.Contains(t, body_str, "./bl1/current", "")
+				assert.Contains(t, body_str, "bl1/current", "")
 			} else {
 				assert.NotContains(t, body_str, "current", "")
 			}
@@ -339,7 +339,7 @@ func TestGetBeamtimeInfo(t *testing.T) {
 		settings.RootBeamtimesFolder=test.root
 		bt,err:= beamtimeMetaFromMatch(test.root+string(filepath.Separator)+test.fname)
 		if test.ok {
-			assert.Equal(t,bt.OfflinePath,test.fname)
+			assert.Equal(t,bt.OfflinePath,test.root+string(filepath.Separator)+test.fname)
 			assert.Equal(t,bt.Beamline,test.beamline)
 			assert.Equal(t,bt.BeamtimeId,test.id)
 			assert.Nil(t,err,"should not be error")

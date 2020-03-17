@@ -6,6 +6,7 @@ import (
 	"time"
 	log "asapo_common/logger"
 	"errors"
+	"path/filepath"
 )
 
 type folderTokenRequest struct {
@@ -64,6 +65,23 @@ func extractFolderTokenrequest(r *http.Request) (folderTokenRequest,error) {
 
 }
 
+func checkBeamtimeFolder(request folderTokenRequest) error {
+	beamtimeMeta, err := findMeta(SourceCredentials{request.BeamtimeId,"auto","",""})
+	if err != nil {
+		log.Error("cannot get beamtime meta"+err.Error())
+		return err
+	}
+
+	folder := filepath.Clean(request.Folder)
+	if (folder != filepath.Clean(beamtimeMeta.OnlinePath) && folder != filepath.Clean(beamtimeMeta.OfflinePath)) {
+		err_string := folder + " does not match beamtime folders "+beamtimeMeta.OnlinePath+" or " +beamtimeMeta.OfflinePath
+		log.Error(err_string)
+		return errors.New(err_string)
+	}
+
+	return nil
+}
+
 func routeFolderToken(w http.ResponseWriter, r *http.Request) {
 	request, err := extractFolderTokenrequest(r)
 	if err != nil {
@@ -77,11 +95,19 @@ func routeFolderToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = checkBeamtimeFolder(request)
+	if err != nil {
+		utils.WriteServerError(w,err,http.StatusUnauthorized)
+		return
+	}
+
 	token, err := prepareJWTToken(request)
 	if err != nil {
 		utils.WriteServerError(w,err,http.StatusInternalServerError)
 		return
 	}
+
+	log.Debug("generated folder token for beamtime " + request.BeamtimeId + ", folder " + request.Folder)
 
 	answer := folderTokenResponce(token)
 	w.WriteHeader(http.StatusOK)

@@ -89,7 +89,7 @@ func beamtimeMetaFromMatch(match string) (beamtimeMeta, error) {
 		return beamtimeMeta{}, errors.New("skipped fodler")
 	}
 
-	bt.OfflinePath = match
+	bt.OfflinePath = settings.RootBeamtimesFolder+string(filepath.Separator)+match
 	bt.Beamline, bt.BeamtimeId = vars[2], vars[5]
 
 	return bt, nil
