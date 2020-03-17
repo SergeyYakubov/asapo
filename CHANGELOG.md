@@ -3,6 +3,8 @@ FEATURES
 * introduced substreams for producer/consumer
 * introduced timeout for producer requests
 * producer accepts "auto" for beamtime, will automatically select a current one for a given beamline
+* introduced file transfer service - possibility for consumer clients to receive data also in case filesystem is inaccessible
+
 
 IMPROVEMENTS
 * switch to MongoDB 4.2

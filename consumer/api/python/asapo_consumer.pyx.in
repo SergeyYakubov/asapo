@@ -281,7 +281,7 @@ def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stre
       :type server_name: string
       :param source_path: Path to the folder to read data from
       :type source_path: string
-      :param has_filesystem: Path to the folder to read data from
+      :param has_filesystem: True if the source_path is accessible locally, otherwise will use file transfer service to get data
       :type has_filesystem: bool
       :return: Broker object and error. (None,err) if case of error, (broker, None) if success
       :rtype: Tuple with broker object and error.
