@@ -65,26 +65,26 @@ class RequestHandlerTcpTests : public testing::Test {
 
     asapo::Error callback_err;
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,
-                                       expected_meta_size, expected_file_name, expected_substream};
+              expected_meta_size, expected_file_name, expected_substream};
     asapo::GenericRequestHeader header_fromfile{expected_op_code, expected_file_id, 0, expected_meta_size,
-                                                expected_file_name, expected_substream};
+              expected_file_name, expected_substream};
     bool callback_called = false;
     asapo::GenericRequestHeader callback_header;
 
 
     asapo::ProducerRequest request{expected_beamtime_id, header, nullptr, expected_metadata, "", [this](asapo::GenericRequestHeader header, asapo::Error err) {
-        callback_called = true;
-        callback_err = std::move(err);
-        callback_header = header;
-    }, true, 0};
+            callback_called = true;
+            callback_err = std::move(err);
+            callback_header = header;
+        }, true, 0};
 
     std::string expected_origin_fullpath = std::string("origin/") + expected_file_name;
     asapo::ProducerRequest request_filesend{expected_beamtime_id, header_fromfile, nullptr, expected_metadata,
-    expected_origin_fullpath, [this](asapo::GenericRequestHeader header, asapo::Error err) {
-        callback_called = true;
-        callback_err = std::move(err);
-        callback_header = header;
-    }, true, 0};
+        expected_origin_fullpath, [this](asapo::GenericRequestHeader header, asapo::Error err) {
+            callback_called = true;
+            callback_err = std::move(err);
+            callback_header = header;
+        }, true, 0};
 
 
     asapo::ProducerRequest request_nocallback{expected_beamtime_id, header, nullptr, expected_metadata,  "", nullptr, true, 0};

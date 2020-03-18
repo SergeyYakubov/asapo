@@ -59,7 +59,7 @@ class RequestHandlerTests : public Test {
     uint64_t expected_source_id = 11;
     bool retry;
     asapo::GenericRequestHeader header{asapo::kOpcodeGetBufferData, expected_buf_id, expected_data_size,
-                                       expected_meta_size, ""};
+              expected_meta_size, ""};
     asapo::ReceiverDataServerRequest request{std::move(header), expected_source_id};
     uint8_t tmp;
     void SetUp() override {

@@ -29,31 +29,31 @@ class ConsumerErrorData : public CustomErrorData {
 
 namespace ConsumerErrorTemplates {
 
-auto const kLocalIOError = ConsumerErrorTemplate{
+auto const kLocalIOError = ConsumerErrorTemplate {
     "local i/o error", ConsumerErrorType::kLocalIOError
 };
 
-auto const kStreamFinished = ConsumerErrorTemplate{
+auto const kStreamFinished = ConsumerErrorTemplate {
     "stream finished", ConsumerErrorType::kStreamFinished
 };
 
-auto const kEndOfStream = ConsumerErrorTemplate{
+auto const kEndOfStream = ConsumerErrorTemplate {
     "no data - end of stream", ConsumerErrorType::kEndOfStream
 };
 
-auto const kNoData = ConsumerErrorTemplate{
+auto const kNoData = ConsumerErrorTemplate {
     "no data", ConsumerErrorType::kNoData
 };
 
-auto const kWrongInput = ConsumerErrorTemplate{
+auto const kWrongInput = ConsumerErrorTemplate {
     "wrong input", ConsumerErrorType::kWrongInput
 };
 
-auto const kInterruptedTransaction = ConsumerErrorTemplate{
+auto const kInterruptedTransaction = ConsumerErrorTemplate {
     "error from broker server", ConsumerErrorType::kInterruptedTransaction
 };
 
-auto const kUnavailableService = ConsumerErrorTemplate{
+auto const kUnavailableService = ConsumerErrorTemplate {
     "service unavailable", ConsumerErrorType::kUnavailableService
 };
 

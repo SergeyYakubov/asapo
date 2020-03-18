@@ -231,6 +231,10 @@ void SystemIO::CollectFileInformationRecursively(const std::string& path,
 
 }
 
+void SystemIO::SetThreadName(std::thread* threadHandle, const std::string& name) const {
+    // Not supported
+}
+
 void asapo::SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const {
     //TODO: Seeing issues when using these settings - need further investigation
     //Event if NonBlockingIO is set, it seems that _recv is a blocking call :/

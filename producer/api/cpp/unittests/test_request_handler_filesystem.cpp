@@ -54,14 +54,14 @@ class RequestHandlerFilesystemTests : public testing::Test {
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     asapo::Error callback_err;
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,
-                                       expected_meta_size, expected_file_name};
+              expected_meta_size, expected_file_name};
     bool called = false;
     asapo::GenericRequestHeader callback_header;
     asapo::ProducerRequest request{"", header, nullptr, "", "", [this](asapo::GenericRequestHeader header, asapo::Error err) {
-        called = true;
-        callback_err = std::move(err);
-        callback_header = header;
-    }, true, 0};
+            called = true;
+            callback_err = std::move(err);
+            callback_header = header;
+        }, true, 0};
 
     asapo::ProducerRequest request_nocallback{"", header, nullptr, "", "", nullptr, true, 0};
     asapo::ProducerRequest request_filesend{"", header, nullptr, "", expected_origin_fullpath, nullptr, true, 0};

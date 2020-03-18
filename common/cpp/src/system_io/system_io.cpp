@@ -208,8 +208,17 @@ std::string SystemIO::ReadFileToString(const std::string& fname, Error* err) con
     return std::string(reinterpret_cast<const char*>(data.get()), (size_t)size);
 }
 
-std::unique_ptr<std::thread> SystemIO::NewThread(std::function<void()> function) const {
-    return std::unique_ptr<std::thread>(new std::thread(function));
+std::unique_ptr<std::thread> SystemIO::NewThread(const std::string& name, std::function<void()> function) const {
+    auto thread = std::unique_ptr<std::thread>(new std::thread(function));
+    SetThreadName(thread.get(), name);
+    return thread;
+}
+
+std::unique_ptr<std::thread> SystemIO::NewThread(const std::string& name, std::function<void(uint64_t index)> function,
+                                                 uint64_t index) const {
+    auto thread = std::unique_ptr<std::thread>(new std::thread(function, index));
+    SetThreadName(thread.get(), name + ":" + std::to_string(index));
+    return thread;
 }
 
 void SystemIO::Skip(SocketDescriptor socket_fd, size_t length, Error* err) const {

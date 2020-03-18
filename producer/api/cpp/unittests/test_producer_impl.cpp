@@ -73,7 +73,7 @@ class ProducerImplTests : public testing::Test {
     std::string expected_next_substream = "next_substream";
 
     asapo::SourceCredentials expected_credentials{"beamtime_id", "beamline", "subname", "token"
-                                                 };
+    };
     asapo::SourceCredentials expected_default_credentials{
         "beamtime_id", "", "", "token"
     };

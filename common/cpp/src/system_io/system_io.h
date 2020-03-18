@@ -42,6 +42,8 @@ class SystemIO final : public IO {
                                ListSocketDescriptors* sockets_to_listen) const;
 #endif
 
+    void SetThreadName(std::thread* threadHandle, const std::string& name) const;
+
     void ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const;
 
     //void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
@@ -88,9 +90,15 @@ class SystemIO final : public IO {
   public:
     ~SystemIO();
     /*
-     * Special
+     * Special thread functions, the name is limited to 15 chars.
+     * More then 16 will result in a truncation.
+     * Setting the name is a best effort feature and currently just works on UNIX systems.
+     * The indexed function will add :<index> as an postfix to the name.
      */
-    std::unique_ptr<std::thread> NewThread(std::function<void()> function) const override;
+    std::unique_ptr<std::thread> NewThread(const std::string& name,
+                                           std::function<void()> function) const override;
+    std::unique_ptr<std::thread> NewThread(const std::string& name,
+                                           std::function<void(uint64_t index)> function, uint64_t index) const override;
 
 
     // this is not standard function - to be implemented differently in windows and linux

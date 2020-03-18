@@ -14,7 +14,7 @@
 
 namespace asapo {
 
-//Need to be "enum" since multiple flags are allowed
+// Can't be enum class since multiple flags are allowed
 enum FileOpenMode : unsigned short {
     IO_OPEN_MODE_READ = 1,
     IO_OPEN_MODE_WRITE = 1 << 1,
@@ -49,9 +49,15 @@ class IO {
   public:
 
     /*
-     * Special
+     * Special thread functions, the name is limited to 15 chars.
+     * More then 16 will result in a truncation.
+     * Setting the name is a best effort feature and currently just works on UNIX systems.
+     * The indexed function will add :<index> as an postfix to the name.
      */
-    virtual std::unique_ptr<std::thread> NewThread       (std::function<void()> function) const = 0;
+    virtual std::unique_ptr<std::thread> NewThread(const std::string& name,
+                                                   std::function<void()> function) const = 0;
+    virtual std::unique_ptr<std::thread> NewThread(const std::string& name,
+                                                   std::function<void(uint64_t index)> function, uint64_t index) const = 0;
 
     /*
      * Network

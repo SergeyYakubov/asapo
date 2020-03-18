@@ -15,11 +15,11 @@ using HttpErrorTemplate = ServiceErrorTemplate<HttpErrorType, ErrorType::kHttpEr
 
 namespace HttpErrorTemplates {
 
-auto const kTransferError = HttpErrorTemplate{
+auto const kTransferError = HttpErrorTemplate {
     "possible transfer error", HttpErrorType::kTransferError
 };
 
-auto const kConnectionError = HttpErrorTemplate{
+auto const kConnectionError = HttpErrorTemplate {
     "connection error", HttpErrorType::kConnectionError
 };
 

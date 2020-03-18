@@ -111,7 +111,7 @@ Error CurlHttpClient::Command(bool post, CurlDataContainer* data_container, cons
 FileData AllocateMemory(uint64_t size, Error* err) {
     FileData data;
     try {
-        data = FileData{new uint8_t[(size_t)size +1 ]};
+        data = FileData{new uint8_t[(size_t)size + 1 ]};
     } catch (...) {
         *err = ErrorTemplates::kMemoryAllocationError.Generate();
         return nullptr;
@@ -129,7 +129,7 @@ Error CurlHttpClient::Post(const std::string& uri,
     Error err;
     CurlDataContainer data_container;
     data_container.mode = CurlDataMode::array;
-    uint64_t extended_size =output_data_size + 10000; // for error messages
+    uint64_t extended_size = output_data_size + 10000; // for error messages
     *output_data = AllocateMemory(extended_size, &err);
     if (err) {
         return err;
@@ -141,7 +141,7 @@ Error CurlHttpClient::Post(const std::string& uri,
         if (*response_code == HttpCode::OK) {
             if (output_data_size != data_container.bytes_received) {
                 return HttpErrorTemplates::kTransferError.Generate("received " +
-                    std::to_string(data_container.bytes_received) + ", expected " + std::to_string(output_data_size) + "bytes");
+                        std::to_string(data_container.bytes_received) + ", expected " + std::to_string(output_data_size) + "bytes");
             }
             (*output_data)[output_data_size] = 0; // for reinterpret cast to string worked
         } else {

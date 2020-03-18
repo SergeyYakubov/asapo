@@ -165,7 +165,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
     return threads;
 }
 
-int ProcessAllData(const Args& args, const ProducerPtr& producer , uint64_t* duration_ms, int* nerrors) {
+int ProcessAllData(const Args& args, const ProducerPtr& producer, uint64_t* duration_ms, int* nerrors) {
     asapo::FileInfo fi;
     system_clock::time_point t1 = system_clock::now();
 

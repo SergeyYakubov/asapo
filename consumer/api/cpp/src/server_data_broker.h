@@ -120,8 +120,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
     Error FtsRequestWithTimeout(const FileInfo* info, FileData* data);
     Error RequestDataFromFts(const FileInfo* info, FileData* data);
-    Error ProcessPostRequest(const RequestInfo& request,RequestOutput* response, HttpCode* code);
-    Error ProcessGetRequest(const RequestInfo& request,RequestOutput* response, HttpCode* code);
+    Error ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
+    Error ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
 
     DataSet DecodeDatasetFromResponse(std::string response, Error* err);
     RequestInfo PrepareRequestInfo(std::string api_url, bool dataset);

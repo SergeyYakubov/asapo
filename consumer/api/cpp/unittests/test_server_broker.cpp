@@ -1050,7 +1050,8 @@ void ServerDataBrokerTests::MockBeforeFTS(FileData* data) {
 }
 
 void ServerDataBrokerTests::ExpectFolderToken() {
-    std::string expected_folder_query_string = "{\"Folder\":\"" + expected_path + "\",\"BeamtimeId\":\"" + expected_beamtime_id
+    std::string expected_folder_query_string = "{\"Folder\":\"" + expected_path + "\",\"BeamtimeId\":\"" +
+                                               expected_beamtime_id
                                                + "\",\"Token\":\"" + expected_token + "\"}";
 
     EXPECT_CALL(mock_http_client, Post_t(HasSubstr(expected_server_uri + "/authorizer/folder"),

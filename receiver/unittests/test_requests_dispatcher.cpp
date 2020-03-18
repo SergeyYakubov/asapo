@@ -86,7 +86,7 @@ class MockRequestFactory: public asapo::RequestFactory {
     }
 
     MOCK_CONST_METHOD4(GenerateRequest_t, Request * (const GenericRequestHeader&,
-                                                     SocketDescriptor , std::string ,
+                                                     SocketDescriptor, std::string,
                                                      ErrorInterface**));
 
 };

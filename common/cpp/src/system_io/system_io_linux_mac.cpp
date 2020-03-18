@@ -201,6 +201,11 @@ void SystemIO::CollectFileInformationRecursively(const std::string& path,
     closedir(dir);
 }
 
+void SystemIO::SetThreadName(std::thread* threadHandle, const std::string& name) const {
+    // If the length of name is greater than 15 characters, the excess characters are ignored.
+    pthread_setname_np(threadHandle->native_handle(), name.c_str());
+}
+
 void SystemIO::ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const {
     //TODO: Need to change network layer code, so everything can be NonBlocking
     int flag = 1;

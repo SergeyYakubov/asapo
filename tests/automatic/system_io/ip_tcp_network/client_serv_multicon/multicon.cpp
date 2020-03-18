@@ -36,7 +36,7 @@ void ExitIfErrIsNotOk(Error* err, int exit_number) {
 }
 
 std::unique_ptr<std::thread> CreateEchoServerThread() {
-    return io->NewThread([&] {
+    return io->NewThread("EchoServer", [&] {
         Error err;
         SocketDescriptor master_socket = io->CreateAndBindIPTCPSocketListener(kListenAddress, 3, &err);
         std::cout << "[SERVER] master socket " << master_socket << std::endl;
@@ -113,13 +113,13 @@ int main(int argc, char* argv[]) {
     kThreadStarted.get_future().get();//Make sure that the server is started
 
     std::cout << "Check" << std::endl;
-    auto thread1 = io->NewThread([&] {
+    auto thread1 = io->NewThread("CheckNormal 1",  [&] {
         CheckNormal(30);
     });
-    auto thread2 = io->NewThread([&] {
+    auto thread2 = io->NewThread("CheckNormal 2", [&] {
         CheckNormal(30);
     });
-    auto thread3 = io->NewThread([&] {
+    auto thread3 = io->NewThread("CheckNormal 3", [&] {
         CheckNormal(30);
     });
 
