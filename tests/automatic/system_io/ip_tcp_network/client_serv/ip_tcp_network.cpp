@@ -36,7 +36,7 @@ void ExitIfErrIsNotOk(Error* err, int exit_number) {
 }
 
 std::unique_ptr<std::thread> CreateEchoServerThread() {
-    return io->NewThread([&] {
+    return io->NewThread("EchoServer", [&] {
         Error err;
         FileDescriptor socket = io->CreateSocket(AddressFamilies::INET, SocketTypes::STREAM, SocketProtocols::IP, &err);
         ExitIfErrIsNotOk(&err, 100);

@@ -69,7 +69,7 @@ Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode& c
 Error ConsumerErrorFromServerError(const Error& server_err) {
     if (server_err == HttpErrorTemplates::kTransferError) {
         return ConsumerErrorTemplates::kInterruptedTransaction.Generate(
-            "error processing request: " + server_err->Explain());
+                   "error processing request: " + server_err->Explain());
     } else {
         return ConsumerErrorTemplates::kUnavailableService.Generate("error processing request: " + server_err->Explain());
     }
@@ -105,27 +105,27 @@ std::string ServerDataBroker::RequestWithToken(std::string uri) {
     return std::move(uri) + "?token=" + source_credentials_.user_token;
 }
 
-Error ServerDataBroker::ProcessPostRequest(const RequestInfo& request,RequestOutput* response, HttpCode* code) {
+Error ServerDataBroker::ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code) {
     Error err;
     switch (request.output_mode) {
-        case OutputDataMode::string:
-            response->string_output =
-                httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params,
-                                   request.cookie,
-                                   request.body,
-                                   code,
-                                   &err);
-            break;
-        case OutputDataMode::array:
-            err = httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.cookie,
-                                     request.body, &response->data_output, response->data_output_size, code);
-            break;
+    case OutputDataMode::string:
+        response->string_output =
+            httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params,
+                               request.cookie,
+                               request.body,
+                               code,
+                               &err);
+        break;
+    case OutputDataMode::array:
+        err = httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.cookie,
+                                 request.body, &response->data_output, response->data_output_size, code);
+        break;
     }
     return err;
 }
 
 
-Error ServerDataBroker::ProcessGetRequest(const RequestInfo& request,RequestOutput* response, HttpCode* code) {
+Error ServerDataBroker::ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code) {
     Error err;
     response->string_output =
         httpclient__->Get(RequestWithToken(request.host + request.api) + request.extra_params, code, &err);
@@ -137,9 +137,9 @@ Error ServerDataBroker::ProcessRequest(RequestOutput* response, const RequestInf
     Error err;
     HttpCode code;
     if (request.post) {
-        err = ProcessPostRequest(request,response,&code);
+        err = ProcessPostRequest(request, response, &code);
     } else {
-        err = ProcessGetRequest(request,response,&code);
+        err = ProcessGetRequest(request, response, &code);
     }
     if (err && service_uri) {
         service_uri->clear();
@@ -147,7 +147,7 @@ Error ServerDataBroker::ProcessRequest(RequestOutput* response, const RequestInf
     return ProcessRequestResponce(err, response, code);
 }
 
-Error ServerDataBroker::DiscoverService(const std::string& service_name , std::string* uri_to_set) {
+Error ServerDataBroker::DiscoverService(const std::string& service_name, std::string* uri_to_set) {
     if (!uri_to_set->empty()) {
         return nullptr;
     }
@@ -600,7 +600,8 @@ RequestInfo ServerDataBroker::CreateFolderTokenRequest() const {
     ri.host = endpoint_;
     ri.api = "/authorizer/folder";
     ri.post = true;
-    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\"" +
+    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\""
+              +
               source_credentials_.user_token + "\"}";
     return ri;
 }

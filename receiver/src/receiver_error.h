@@ -19,29 +19,29 @@ using ReceiverErrorTemplate = ServiceErrorTemplate<ReceiverErrorType, ErrorType:
 
 namespace ReceiverErrorTemplates {
 
-auto const kWarningDuplicatedRequest = ReceiverErrorTemplate{
+auto const kWarningDuplicatedRequest = ReceiverErrorTemplate {
     "Duplicated request, possible due to retry", ReceiverErrorType::kWarningDuplicatedRequest
 };
 
 
-auto const kInvalidOpCode = ReceiverErrorTemplate{
+auto const kInvalidOpCode = ReceiverErrorTemplate {
     "Invalid Opcode", ReceiverErrorType::kInvalidOpCode
 };
 
-auto const kInternalServerError = ReceiverErrorTemplate{
+auto const kInternalServerError = ReceiverErrorTemplate {
     "server error", ReceiverErrorType::kInternalServerError
 };
 
 
-auto const kBadRequest = ReceiverErrorTemplate{
+auto const kBadRequest = ReceiverErrorTemplate {
     "Bad request", ReceiverErrorType::kBadRequest
 };
 
-auto const kAuthorizationFailure = ReceiverErrorTemplate{
+auto const kAuthorizationFailure = ReceiverErrorTemplate {
     "authorization failure", ReceiverErrorType::kAuthorizationFailure
 };
 
-auto const kReAuthorizationFailure = ReceiverErrorTemplate{
+auto const kReAuthorizationFailure = ReceiverErrorTemplate {
     "reauthorization for auto beamtime failed", ReceiverErrorType::kReAuthorizationFailure
 };
 

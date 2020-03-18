@@ -31,11 +31,11 @@ class ProducerImpl : public Producer {
     void EnableLocalLog(bool enable) override;
     void EnableRemoteLog(bool enable) override;
     Error SendData(const EventHeader& event_header, FileData data, uint64_t ingest_mode, RequestCallback callback) override;
-    Error SendData__(const EventHeader& event_header, void* data , uint64_t ingest_mode,
+    Error SendData__(const EventHeader& event_header, void* data, uint64_t ingest_mode,
                      RequestCallback callback) override;
     Error SendData(const EventHeader& event_header, std::string substream, FileData data, uint64_t ingest_mode,
                    RequestCallback callback) override;
-    Error SendData__(const EventHeader& event_header, std::string substream, void* data , uint64_t ingest_mode,
+    Error SendData__(const EventHeader& event_header, std::string substream, void* data, uint64_t ingest_mode,
                      RequestCallback callback) override;
     void StopThreads__() override;
     Error SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,

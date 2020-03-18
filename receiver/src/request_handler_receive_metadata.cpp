@@ -24,7 +24,7 @@ Error RequestHandlerReceiveMetaData::ProcessRequest(Request* request) const {
     return nullptr;
 }
 
-RequestHandlerReceiveMetaData::RequestHandlerReceiveMetaData() : io__{GenerateDefaultIO()} , log__{GetDefaultReceiverLogger()} {
+RequestHandlerReceiveMetaData::RequestHandlerReceiveMetaData() : io__{GenerateDefaultIO()}, log__{GetDefaultReceiverLogger()} {
 
 }
 

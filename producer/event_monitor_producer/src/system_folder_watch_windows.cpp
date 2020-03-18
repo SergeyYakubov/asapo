@@ -11,7 +11,7 @@ namespace asapo {
 Error SystemFolderWatch::StartFolderMonitor(const std::string& root_folder,
                                             const std::vector<std::string>& monitored_folders) {
     for (auto& folder : monitored_folders ) {
-        auto thread = io__->NewThread([root_folder, folder, this] {
+        auto thread = io__->NewThread("FolderMonitor", [root_folder, folder, this] {
             auto folder_watch = std::unique_ptr<SingleFolderWatch>(new SingleFolderWatch(root_folder, folder, &event_list_));
             while (true) {
                 auto err = folder_watch->Watch();

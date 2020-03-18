@@ -55,7 +55,8 @@ void Receiver::ProcessConnections(Error* err) {
 
 void Receiver::StartNewConnectionInSeparateThread(int connection_socket_fd, const std::string& address)  {
     log__->Info("new connection from " + address);
-    auto thread = io__->NewThread([connection_socket_fd, address, this] {
+    auto thread = io__->NewThread("ConFd:" + std::to_string(connection_socket_fd),
+    [connection_socket_fd, address, this] {
         auto connection = std::unique_ptr<Connection>(new Connection(connection_socket_fd, address, cache_, GetReceiverConfig()->tag));
         connection->Listen();
     });
@@ -63,7 +64,6 @@ void Receiver::StartNewConnectionInSeparateThread(int connection_socket_fd, cons
     if (thread) {
         threads_.emplace_back(std::move(thread));
     }
-    return;
 }
 
 }

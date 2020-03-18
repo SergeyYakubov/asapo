@@ -25,7 +25,7 @@ Error RequestHandlerReceiveData::ProcessRequest(Request* request) const {
     return err;
 }
 
-RequestHandlerReceiveData::RequestHandlerReceiveData() : io__{GenerateDefaultIO()} , log__{GetDefaultReceiverLogger()} {
+RequestHandlerReceiveData::RequestHandlerReceiveData() : io__{GenerateDefaultIO()}, log__{GetDefaultReceiverLogger()} {
 
 }
 
