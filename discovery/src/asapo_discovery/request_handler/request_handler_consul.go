@@ -119,6 +119,26 @@ func (rh *ConsulRequestHandler) GetMongo() ([]byte, error) {
 	return nil, nil
 }
 
+func (rh *ConsulRequestHandler) GetFts() ([]byte, error) {
+	if len(rh.staticHandler.fts)>0 {
+		return rh.staticHandler.GetFts()
+	}
+
+	if (rh.client == nil) {
+		return nil, errors.New("consul client not connected")
+	}
+	response, err := rh.GetServices("asapo-fts",false)
+	if err != nil {
+		return nil, err
+	}
+	size := len(response)
+	if size ==0 {
+		return []byte(""),nil
+	}else {
+		return []byte(response[counter.Next(size)]),nil
+	}
+	return nil, nil
+}
 
 func (rh *ConsulRequestHandler) connectClient(uri string) (client *api.Client, err error) {
 	config := api.DefaultConfig()

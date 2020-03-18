@@ -22,7 +22,7 @@ void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic)
     HttpCode code;
     Error err;
     auto response = httpclient__->Post(GetReceiverConfig()->performance_db_uri + "/write?db=" +
-                                       GetReceiverConfig()->performance_db_name, StatisticsToString(statistic),
+                                       GetReceiverConfig()->performance_db_name, "", StatisticsToString(statistic),
                                        &code, &err);
     std::string msg = "sending statistics to " + GetReceiverConfig()->performance_db_name + " at " +
                       GetReceiverConfig()->performance_db_uri;
@@ -56,7 +56,7 @@ std::string StatisticsSenderInfluxDb::StatisticsToString(const StatisticsToSend&
 StatisticsSenderInfluxDb::StatisticsSenderInfluxDb(): httpclient__{DefaultHttpClient()}, log__{GetDefaultReceiverLogger()} {
     HttpCode code;
     Error err;
-    auto response = httpclient__->Post(GetReceiverConfig()->performance_db_uri + "/query",
+    auto response = httpclient__->Post(GetReceiverConfig()->performance_db_uri + "/query", "",
                                        "q=create database " + GetReceiverConfig()->performance_db_name, &code, &err);
     std::string msg = "initializing statistics for " + GetReceiverConfig()->performance_db_name + " at " +
                       GetReceiverConfig()->performance_db_uri;

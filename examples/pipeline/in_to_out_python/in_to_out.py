@@ -28,7 +28,7 @@ timeout_s_producer=int(timeout_s_producer)
 nthreads=int(nthreads)
 transfer_data=int(transfer_data)>0
 
-broker = asapo_consumer.create_server_broker(source,path, beamtime,stream_in,token,timeout_s*1000)
+broker = asapo_consumer.create_server_broker(source,path, True,beamtime,stream_in,token,timeout_s*1000)
 
 producer  = asapo_producer.create_producer(source,beamtime,'auto', stream_out, token, nthreads, 600)
 

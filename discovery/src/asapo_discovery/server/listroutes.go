@@ -23,5 +23,11 @@ var listRoutes = utils.Routes{
 		"/mongo",
 		routeGetMongo,
 	},
+	utils.Route{
+		"GetFTS",
+		"Get",
+		"/fts",
+		routeGetFileTransferService,
+	},
 
 }

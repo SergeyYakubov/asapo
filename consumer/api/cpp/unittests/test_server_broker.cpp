@@ -1,4 +1,5 @@
 #include <gmock/gmock.h>
+#include <gmock/gmock.h>
 #include "gtest/gtest.h"
 
 #include "consumer/data_broker.h"
@@ -44,21 +45,26 @@ namespace {
 
 TEST(FolderDataBroker, Constructor) {
     auto data_broker =
-    std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "path", asapo::SourceCredentials{"beamtime_id", "", "", "token"})};
+    std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "path", false,
+                asapo::SourceCredentials{"beamtime_id", "", "", "token"})
+    };
     ASSERT_THAT(dynamic_cast<asapo::SystemIO*>(data_broker->io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::CurlHttpClient*>(data_broker->httpclient__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::TcpClient*>(data_broker->net_client__.get()), Ne(nullptr));
 }
 
+const uint8_t expected_value = 1;
+
 class ServerDataBrokerTests : public Test {
   public:
-    std::unique_ptr<ServerDataBroker> data_broker;
+    std::unique_ptr<ServerDataBroker> data_broker, fts_data_broker;
     NiceMock<MockIO> mock_io;
     NiceMock<MockHttpClient> mock_http_client;
     NiceMock<MockNetClient> mock_netclient;
     FileInfo info;
     std::string expected_server_uri = "test:8400";
     std::string expected_broker_uri = "broker:5005";
+    std::string expected_fts_uri = "fts:5008";
     std::string expected_token = "token";
     std::string expected_path = "/tmp/beamline/beamtime";
     std::string expected_filename = "filename";
@@ -68,22 +74,40 @@ class ServerDataBrokerTests : public Test {
     std::string expected_substream = "substream";
     std::string expected_metadata = "{\"meta\":1}";
     std::string expected_query_string = "bla";
-
+    std::string expected_folder_token = "folder_token";
+    std::string expected_beamtime_id = "beamtime_id";
+    uint64_t expected_image_size = 100;
     uint64_t expected_dataset_id = 1;
     static const uint64_t expected_buf_id = 123;
     std::string expected_next_substream = "nextsubstream";
+    std::string expected_fts_query_string = "{\"Folder\":\"" + expected_path + "\",\"FileName\":\"" + expected_filename +
+                                            "\"}";
+    std::string expected_cookie = "Authorization=Bearer " + expected_folder_token;
+
+    void AssertSingleFileTransfer();
     void SetUp() override {
         data_broker = std::unique_ptr<ServerDataBroker> {
-            new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id", "", expected_stream, expected_token})
+            new ServerDataBroker(expected_server_uri, expected_path, true, asapo::SourceCredentials{expected_beamtime_id, "", expected_stream, expected_token})
+        };
+        fts_data_broker = std::unique_ptr<ServerDataBroker> {
+            new ServerDataBroker(expected_server_uri, expected_path, false, asapo::SourceCredentials{expected_beamtime_id, "", expected_stream, expected_token})
         };
         data_broker->io__ = std::unique_ptr<IO> {&mock_io};
         data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         data_broker->net_client__ = std::unique_ptr<asapo::NetClient> {&mock_netclient};
+        fts_data_broker->io__ = std::unique_ptr<IO> {&mock_io};
+        fts_data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
+        fts_data_broker->net_client__ = std::unique_ptr<asapo::NetClient> {&mock_netclient};
+
     }
     void TearDown() override {
         data_broker->io__.release();
         data_broker->httpclient__.release();
         data_broker->net_client__.release();
+        fts_data_broker->io__.release();
+        fts_data_broker->httpclient__.release();
+        fts_data_broker->net_client__.release();
+
     }
     void MockGet(const std::string& response) {
         EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_broker_uri), _, _)).WillOnce(DoAll(
@@ -100,11 +124,25 @@ class ServerDataBrokerTests : public Test {
                     Return("")
                 ));
     }
-    void MockGetBrokerUri() {
-        EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/broker"), _, _)).WillOnce(DoAll(
+    void MockGetServiceUri(std::string service, std::string result) {
+        EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/" + service), _, _)).WillOnce(DoAll(
                     SetArgPointee<1>(HttpCode::OK),
                     SetArgPointee<2>(nullptr),
-                    Return(expected_broker_uri)));
+                    Return(result)));
+    }
+
+    void MockBeforeFTS(FileData* data);
+
+    void MockGetFTSUri() {
+        MockGetServiceUri("fts", expected_fts_uri);
+    }
+
+    void ExpectFolderToken();
+    void ExpectFileTransfer(const asapo::ConsumerErrorTemplate* p_err_template);
+    void ExpectRepeatedFileTransfer();
+
+    void MockGetBrokerUri() {
+        MockGetServiceUri("broker", expected_broker_uri);
     }
     void MockReadDataFromFile(int times = 1) {
         if (times == 0) {
@@ -117,7 +155,7 @@ class ServerDataBrokerTests : public Test {
     }
     FileInfo CreateFI(uint64_t buf_id = expected_buf_id) {
         FileInfo fi;
-        fi.size = 100;
+        fi.size = expected_image_size;
         fi.id = 1;
         fi.buf_id = buf_id;
         fi.name = expected_filename;
@@ -137,7 +175,7 @@ TEST_F(ServerDataBrokerTests, DefaultStreamIsDetector) {
     data_broker->httpclient__.release();
     data_broker->net_client__.release();
     data_broker = std::unique_ptr<ServerDataBroker> {
-        new ServerDataBroker(expected_server_uri, expected_path, asapo::SourceCredentials{"beamtime_id", "", "", expected_token})
+        new ServerDataBroker(expected_server_uri, expected_path, false, asapo::SourceCredentials{"beamtime_id", "", "", expected_token})
     };
     data_broker->io__ = std::unique_ptr<IO> {&mock_io};
     data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
@@ -1002,7 +1040,97 @@ TEST_F(ServerDataBrokerTests, GetSubstreamListUsesCorrectUri) {
 
 }
 
+void ServerDataBrokerTests::MockBeforeFTS(FileData* data) {
+    auto to_send = CreateFI();
+    auto json = to_send.Json();
+    MockGet(json);
+
+    EXPECT_CALL(mock_netclient, GetData_t(&info,
+                                          data)).WillOnce(Return(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()));
+}
+
+void ServerDataBrokerTests::ExpectFolderToken() {
+    std::string expected_folder_query_string = "{\"Folder\":\"" + expected_path + "\",\"BeamtimeId\":\"" + expected_beamtime_id
+                                               + "\",\"Token\":\"" + expected_token + "\"}";
+
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr(expected_server_uri + "/authorizer/folder"),
+                                         expected_folder_query_string, _, _)).WillOnce(DoAll(
+                                                     SetArgPointee<2>(HttpCode::OK),
+                                                     SetArgPointee<3>(nullptr),
+                                                     Return(expected_folder_token)
+                                                 ));
+
+}
+
+ACTION_P(AssignArg3, assign) {
+    if (assign) {
+        asapo::FileData data = asapo::FileData{new uint8_t[1] };
+        data[0] = expected_value;
+        *arg3 = std::move(data);
+    }
+}
+
+void ServerDataBrokerTests::ExpectFileTransfer(const asapo::ConsumerErrorTemplate* p_err_template) {
+    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/transfer"),
+                                                    expected_cookie, expected_fts_query_string, _, expected_image_size, _)).WillOnce(DoAll(
+                                                            SetArgPointee<5>(HttpCode::OK),
+                                                            AssignArg3(p_err_template == nullptr),
+                                                            Return(p_err_template == nullptr ? nullptr : p_err_template->Generate().release())
+                                                            ));
+}
+
+void ServerDataBrokerTests::ExpectRepeatedFileTransfer() {
+    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/transfer"),
+                                                    expected_cookie, expected_fts_query_string, _, expected_image_size, _)).
+    WillOnce(DoAll(
+                 SetArgPointee<5>(HttpCode::Unauthorized),
+                 Return(nullptr))).
+    WillOnce(DoAll(
+                 SetArgPointee<5>(HttpCode::OK),
+                 Return(nullptr)
+             ));
+}
+
+void ServerDataBrokerTests::AssertSingleFileTransfer() {
+    asapo::FileData data = asapo::FileData{new uint8_t[1] };
+    MockGetBrokerUri();
+    MockBeforeFTS(&data);
+    ExpectFolderToken();
+    MockGetFTSUri();
+    ExpectFileTransfer(nullptr);
+
+    fts_data_broker->GetNext(&info, expected_group_id, &data);
+
+    ASSERT_THAT(data[0], Eq(expected_value));
+    Mock::VerifyAndClearExpectations(&mock_http_client);
+    Mock::VerifyAndClearExpectations(&mock_netclient);
+    Mock::VerifyAndClearExpectations(&mock_io);
+}
 
 
+TEST_F(ServerDataBrokerTests, GetImageUsesFileTransferServiceIfCannotReadFromCache) {
+    AssertSingleFileTransfer();
+}
+
+TEST_F(ServerDataBrokerTests, GetImageReusesTokenAndUri) {
+    AssertSingleFileTransfer();
+
+    asapo::FileData data = asapo::FileData{new uint8_t[1] };
+    MockBeforeFTS(&data);
+    ExpectFileTransfer(nullptr);
+
+    auto err = fts_data_broker->GetNext(&info, expected_group_id, &data);
+}
+
+TEST_F(ServerDataBrokerTests, GetImageTriesToGetTokenAgainIfTransferFailed) {
+    AssertSingleFileTransfer();
+
+    asapo::FileData data;
+    MockBeforeFTS(&data);
+    ExpectRepeatedFileTransfer();
+    ExpectFolderToken();
+
+    auto err = fts_data_broker->GetNext(&info, expected_group_id, &data);
+}
 
 }

@@ -54,7 +54,7 @@ auto const kInterruptedTransaction = ConsumerErrorTemplate{
 };
 
 auto const kUnavailableService = ConsumerErrorTemplate{
-    "broker service unavailable", ConsumerErrorType::kUnavailableService
+    "service unavailable", ConsumerErrorType::kUnavailableService
 };
 
 

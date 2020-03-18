@@ -21,6 +21,6 @@ set(TEST_SOURCE_FILES ../../unittests/logger/test_logger.cpp
 
 link_libraries(${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
-set(TEST_LIBRARIES "${TARGET_NAME};curl_http_client")
+set(TEST_LIBRARIES "${TARGET_NAME};curl_http_client;system_io")
 include_directories(${ASAPO_CXX_COMMON_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3d_party/spd_log/include)
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")

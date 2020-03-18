@@ -8,6 +8,7 @@ type StaticRequestHandler struct {
 	receiverResponce Responce
 	broker string
 	mongo string
+	fts string
 }
 
 
@@ -23,6 +24,9 @@ func (rh *StaticRequestHandler) GetMongo() ([]byte, error) {
 	return []byte(rh.mongo),nil
 }
 
+func (rh *StaticRequestHandler) GetFts() ([]byte, error) {
+	return []byte(rh.fts),nil
+}
 
 
 func (rh *StaticRequestHandler) Init(settings utils.Settings) error {
@@ -30,6 +34,6 @@ func (rh *StaticRequestHandler) Init(settings utils.Settings) error {
 	rh.receiverResponce.Uris = settings.Receiver.StaticEndpoints
 	rh.broker = settings.Broker.StaticEndpoint
 	rh.mongo = settings.Mongo.StaticEndpoint
-
+	rh.fts = settings.FileTransferService.StaticEndpoint
 	return nil
 }

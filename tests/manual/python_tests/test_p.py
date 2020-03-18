@@ -11,7 +11,7 @@ beamtime = "asapo_test"
 token = "KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc="
 
 broker, err = asapo_consumer.create_server_broker(
-    source, path, beamtime, token, 1000)
+    source, path, True, beamtime, token, 1000)
 
 group_id, err = broker.generate_group_id()
 if err is not None:

@@ -94,6 +94,8 @@ add_subdirectory(authorizer)
 
 add_subdirectory(asapo_tools)
 
+add_subdirectory(file_transfer)
+
 add_subdirectory(deploy)
 
 if(BUILD_INTEGRATION_TESTS)

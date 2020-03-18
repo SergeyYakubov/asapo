@@ -3,7 +3,6 @@ package server
 import (
 	log "asapo_common/logger"
 	"asapo_common/utils"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"path/filepath"
@@ -48,11 +47,6 @@ func getSourceCredentials(request authorizationRequest) (SourceCredentials, erro
 	return creds, nil
 }
 
-func extractRequest(r *http.Request) (request authorizationRequest, err error) {
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	return
-}
 
 func splitHost(hostPort string) string {
 	s := strings.Split(hostPort, ":")
@@ -95,7 +89,7 @@ func beamtimeMetaFromMatch(match string) (beamtimeMeta, error) {
 		return beamtimeMeta{}, errors.New("skipped fodler")
 	}
 
-	bt.OfflinePath = match
+	bt.OfflinePath = settings.RootBeamtimesFolder+string(filepath.Separator)+match
 	bt.Beamline, bt.BeamtimeId = vars[2], vars[5]
 
 	return bt, nil
@@ -172,10 +166,10 @@ func needHostAuthorization(creds SourceCredentials) bool {
 func authorizeByToken(creds SourceCredentials) error {
 	var token_expect string
 	if (creds.BeamtimeId != "auto") {
-		token_expect, _ = auth.GenerateToken(&creds.BeamtimeId)
+		token_expect, _ = authHMAC.GenerateToken(&creds.BeamtimeId)
 	} else {
 		key := "bl_" + creds.Beamline
-		token_expect, _ = auth.GenerateToken(&key)
+		token_expect, _ = authHMAC.GenerateToken(&key)
 	}
 
 	var err_string string
@@ -255,33 +249,31 @@ func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeM
 }
 
 func routeAuthorize(w http.ResponseWriter, r *http.Request) {
-	request, err := extractRequest(r)
+	var request authorizationRequest
+	err := utils.ExtractRequest(r,&request)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		utils.WriteServerError(w,err,http.StatusBadRequest)
 		return
 	}
 
 	creds, err := getSourceCredentials(request)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		utils.WriteServerError(w,err,http.StatusBadRequest)
 		return
 	}
 
 	beamtimeInfo, err := authorize(request, creds)
 	if (err != nil) {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(err.Error()))
+		utils.WriteServerError(w,err,http.StatusUnauthorized)
 		return
 	}
 
 	res, err := utils.MapToJson(&beamtimeInfo)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		utils.WriteServerError(w,err,http.StatusInternalServerError)
 		return
-
 	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res))
 }

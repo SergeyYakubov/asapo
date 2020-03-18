@@ -1,0 +1,8 @@
+{
+  "Port": {{ env "NOMAD_PORT_authorizer" }},
+  "LogLevel":"debug",
+  "RootBeamtimesFolder":"@ASAP3_FOLDER@",
+  "CurrentBeamlinesFolder":"@CURRENT_BEAMLINES_FOLDER@",
+  "SecretFile":"auth_secret.key",
+  "TokenDurationMin":600
+}

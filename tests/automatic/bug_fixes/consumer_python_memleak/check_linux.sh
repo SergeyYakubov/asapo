@@ -53,4 +53,4 @@ leak=$(( $mem2 - $mem1 ))
 cat out
 echo leak: $leak
 
-test $leak -eq 0
+test $leak -lt 300000

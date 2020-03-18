@@ -16,10 +16,15 @@ type MongoInfo struct {
 	StaticEndpoint		 string
 }
 
+type FtsInfo struct {
+	StaticEndpoint		 string
+}
+
 type Settings struct {
 	Receiver 		ReceiverInfo
 	Broker 		    BrokerInfo
 	Mongo 			MongoInfo
+	FileTransferService  FtsInfo
 	ConsulEndpoints []string
 	Mode			string
 	Port            int
@@ -50,4 +55,8 @@ func (settings *Settings) Validate() error {
 	}
 
 	return nil
+}
+
+type FolderTokenTokenExtraClaim struct {
+	RootFolder string
 }

@@ -13,8 +13,8 @@ import (
 )
 
 func prepareToken(beamtime_or_beamline string) string{
-	auth = utils.NewHMACAuth("secret")
-	token, _ := auth.GenerateToken(&beamtime_or_beamline)
+	authHMAC = utils.NewHMACAuth("secret")
+	token, _ := authHMAC.GenerateToken(&beamtime_or_beamline)
 	return token
 }
 
@@ -35,12 +35,12 @@ func containsMatcher(substr string) func(str string) bool {
 	return func(str string) bool { return strings.Contains(str, substr) }
 }
 
-func makeRequest(request authorizationRequest) string {
+func makeRequest(request interface{}) string {
 	buf, _ := utils.MapToJson(request)
 	return string(buf)
 }
 
-func doAuthorizeRequest(path string,buf string) *httptest.ResponseRecorder {
+func doPostRequest(path string,buf string) *httptest.ResponseRecorder {
 	mux := utils.NewRouter(listRoutes)
 	req, _ := http.NewRequest("POST", path, strings.NewReader(buf))
 	w := httptest.NewRecorder()
@@ -86,7 +86,7 @@ func TestSplitCreds(t *testing.T) {
 func TestAuthorizeDefaultOK(t *testing.T) {
 	allowBeamlines([]beamtimeMeta{{"asapo_test","beamline","","2019","tf"}})
 	request :=  makeRequest(authorizationRequest{"asapo_test%%%","host"})
-	w := doAuthorizeRequest("/authorize",request)
+	w := doPostRequest("/authorize",request)
 
 	body, _ := ioutil.ReadAll(w.Body)
 
@@ -135,7 +135,7 @@ func TestAuthorizeWithToken(t *testing.T) {
 
 	for _, test := range authTests {
 		request :=  makeRequest(authorizationRequest{test.beamtime_id+"%"+test.beamline+"%"+test.stream+"%"+test.token,"host"})
-		w := doAuthorizeRequest("/authorize",request)
+		w := doPostRequest("/authorize",request)
 
 		body, _ := ioutil.ReadAll(w.Body)
 		if test.status==http.StatusOK {
@@ -148,7 +148,7 @@ func TestAuthorizeWithToken(t *testing.T) {
 			assert.Contains(t, body_str, "tf/gpfs/bl1/2019/data/test", "")
 			if (test.beamtime_id == "test_online") {
 				assert.Contains(t, body_str, "tf/gpfs/bl1/2019/data/test_online", "")
-				assert.Contains(t, body_str, "./bl1/current", "")
+				assert.Contains(t, body_str, "bl1/current", "")
 			} else {
 				assert.NotContains(t, body_str, "current", "")
 			}
@@ -222,7 +222,7 @@ func TestAuthorizeBeamline(t *testing.T) {
 
 	for _, test := range authBeamlineTests {
 		request :=  makeRequest(authorizationRequest{"auto%"+test.beamline+"%stream%"+test.token,"host"})
-		w := doAuthorizeRequest("/authorize",request)
+		w := doPostRequest("/authorize",request)
 
 		body, _ := ioutil.ReadAll(w.Body)
 		body_str:=string(body)
@@ -243,19 +243,19 @@ func TestAuthorizeBeamline(t *testing.T) {
 
 func TestNotAuthorized(t *testing.T) {
 	request :=  makeRequest(authorizationRequest{"any_id%%%","host"})
-	w := doAuthorizeRequest("/authorize",request)
+	w := doPostRequest("/authorize",request)
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
 }
 
 
 func TestAuthorizeWrongRequest(t *testing.T) {
-	w := doAuthorizeRequest("/authorize","babla")
+	w := doPostRequest("/authorize","babla")
 	assert.Equal(t, http.StatusBadRequest, w.Code, "")
 }
 
 
 func TestAuthorizeWrongPath(t *testing.T) {
-	w := doAuthorizeRequest("/authorized","")
+	w := doPostRequest("/authorized","")
 	assert.Equal(t, http.StatusNotFound, w.Code, "")
 }
 
@@ -296,7 +296,7 @@ func TestAuthorizeWithFile(t *testing.T) {
 
 
 	request := authorizationRequest{"11003924%%%","127.0.0.1"}
-	w := doAuthorizeRequest("/authorize",makeRequest(request))
+	w := doPostRequest("/authorize",makeRequest(request))
 
 	body, _ := ioutil.ReadAll(w.Body)
 	body_str:=string(body)
@@ -309,7 +309,7 @@ func TestAuthorizeWithFile(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code, "")
 
 	request = authorizationRequest{"wrong%%%","127.0.0.1"}
-	w = doAuthorizeRequest("/authorize",makeRequest(request))
+	w = doPostRequest("/authorize",makeRequest(request))
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
 
 	os.Remove("127.0.0.1")
@@ -339,7 +339,7 @@ func TestGetBeamtimeInfo(t *testing.T) {
 		settings.RootBeamtimesFolder=test.root
 		bt,err:= beamtimeMetaFromMatch(test.root+string(filepath.Separator)+test.fname)
 		if test.ok {
-			assert.Equal(t,bt.OfflinePath,test.fname)
+			assert.Equal(t,bt.OfflinePath,test.root+string(filepath.Separator)+test.fname)
 			assert.Equal(t,bt.Beamline,test.beamline)
 			assert.Equal(t,bt.BeamtimeId,test.id)
 			assert.Nil(t,err,"should not be error")

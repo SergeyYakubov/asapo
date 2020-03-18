@@ -18,12 +18,12 @@ func Start() {
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }
 
-func createAuth() (utils.Auth, error) {
+func createAuth() (utils.Auth,utils.Auth, error) {
 	secret, err := utils.ReadFirstStringFromFile(settings.SecretFile)
 	if err != nil {
-		return nil, err
+		return nil,nil, err
 	}
-	return utils.NewHMACAuth(secret), nil
+	return utils.NewHMACAuth(secret),utils.NewJWTAuth(secret), nil
 }
 
 
@@ -41,7 +41,7 @@ func ReadConfig(fname string) (log.Level, error) {
 	}
 
 	var err error
-	auth, err = createAuth()
+	authHMAC,authJWT, err = createAuth()
 	if err != nil {
 		return log.FatalLevel, err
 	}

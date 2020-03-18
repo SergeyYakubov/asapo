@@ -6,7 +6,7 @@ import sys
 
 source, path, beamtime, token, group_id = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,path, beamtime,"",token,60000)
+broker = asapo_consumer.create_server_broker(source,path,True, beamtime,"",token,60000)
 
 images = broker.query_images("meta.user_meta regexp 'test*' order by _id")
 
