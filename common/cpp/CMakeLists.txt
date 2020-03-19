@@ -12,6 +12,8 @@ add_subdirectory(src/logger)
 
 add_subdirectory(src/request)
 
+add_subdirectory(src/asapo_fabric)
+
 if(BUILD_MONGODB_CLIENTLIB)
     add_subdirectory(src/database)
 endif()

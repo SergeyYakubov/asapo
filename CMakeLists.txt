@@ -41,6 +41,8 @@ option(BUILD_PYTHON_DOCS "Uses sphinx to build the Python documentaion" OFF)
 option(BUILD_CONSUMER_TOOLS "Build consumer tools" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
 
+option(ENABLE_LIBFABRIC "Enables LibFabric support for RDMA transfers" OFF)
+
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
 
 set (ASAPO_CXX_COMMON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/common/cpp/include)
@@ -61,7 +63,16 @@ if ("${Python_EXECUTABLE}" STREQUAL "")
 endif()
 message (STATUS "Using Python: ${Python_EXECUTABLE}")
 
-
+IF(ENABLE_LIBFABRIC)
+    find_package(LibFabric)
+    if(NOT LIBFABRIC_LIBRARY)
+        message(FATAL_ERROR "Did not find libfabric")
+    endif()
+    message(STATUS "LibFabric support enabled")
+    message(STATUS "LIB_FABRIC: Path: ${LIBFABRIC_LIBRARY} Include: ${LIBFABRIC_INCLUDE_DIR}")
+    SET_PROPERTY(GLOBAL PROPERTY ASAPO_COMMON_FABRIC_LIBRARIES ${ASAPO_COMMON_IO_LIBRARIES} libfabric)
+    add_definitions(-DLIBFABRIC_ENABLED)
+ENDIF()
 
 # format sources
 include(astyle)
