@@ -1,7 +1,8 @@
 elk_logs = true
 
 service_dir="/gpfs/asapo/shared/service_dir"
-data_dir="/beamline"
+online_dir="/beamline"
+offline_dir="/asap3"
 mongo_dir="/gpfs/asapo/shared/service_dir/mongodb"
 asapo_user="35841:1000"
 job_scripts_dir="/gpfs/asapo/shared/terraform"
@@ -22,3 +23,6 @@ discovery_total_memory_size = 512
 
 n_receivers = 1
 n_brokers = 1
+n_fts = 1
+
+

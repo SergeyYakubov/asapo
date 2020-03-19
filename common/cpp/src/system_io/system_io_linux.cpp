@@ -110,6 +110,11 @@ SystemIO::~SystemIO() {
     }
 }
 
+void SystemIO::SetThreadName(std::thread* threadHandle, const std::string& name) const {
+    // If the length of name is greater than 15 characters, the excess characters are ignored.
+    pthread_setname_np(threadHandle->native_handle(), name.c_str());
+}
+
 void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
     if (err) {
         *err = nullptr;

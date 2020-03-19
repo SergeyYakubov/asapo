@@ -4,6 +4,7 @@
 NOMAD_ALLOC_HOST_SHARED=/var/tmp/asapo/container_host_shared/nomad_alloc
 SERVICE_DATA_CLUSTER_SHARED=/home/yakubov/asapo/asapo_cluster_shared/service_data
 DATA_GLOBAL_SHARED=/gpfs/petra3/scratch/yakubov/asapo_shared
+DATA_GLOBAL_SHARED_ONLINE=/tmp
 MONGO_DIR=/scratch/mongodb # due to performance reasons mongodb can benefit from writing to local filesystem (HA to be worked on)
 #service distribution
 MAX_NOMAD_SERVERS=3 #  rest are clients
@@ -72,7 +73,8 @@ dockerrun --rm  \
 	 $MOUNT_VAR_FILE \
 	-e NOMAD_ALLOC_DIR=$NOMAD_ALLOC_HOST_SHARED \
 	-e TF_VAR_service_dir=$SERVICE_DATA_CLUSTER_SHARED \
-	-e TF_VAR_data_dir=$DATA_GLOBAL_SHARED \
+  -e TF_VAR_online_dir=$DATA_GLOBAL_SHARED_ONLINE \
+  -e TF_VAR_offline_dir=$DATA_GLOBAL_SHARED \
 	-e TF_VAR_mongo_dir=$MONGO_DIR \
 	-e ADVERTISE_IP=$ADVERTISE_IP \
 	-e RECURSORS=$RECURSORS \

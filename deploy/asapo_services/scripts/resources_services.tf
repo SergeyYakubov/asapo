@@ -51,6 +51,13 @@ resource "null_resource" "asapo-broker" {
   depends_on = [nomad_job.asapo-brokers]
 }
 
+resource "null_resource" "asapo-fts" {
+  provisioner "local-exec" {
+    command = "asapo-wait-service asapo-fts"
+  }
+  depends_on = [nomad_job.asapo-fts]
+}
+
 resource "null_resource" "asapo-receiver" {
   provisioner "local-exec" {
     command = "asapo-wait-service asapo-receiver"

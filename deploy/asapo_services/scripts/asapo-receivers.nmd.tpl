@@ -33,7 +33,8 @@ job "asapo-receivers" {
         image = "yakser/asapo-receiver${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/receiver/config.json",
-                   "${data_dir}:/var/lib/receiver/data"]
+                   "${offline_dir}:${offline_dir}",
+                   "${online_dir}:${online_dir}"]
         %{ if ! nomad_logs  }
         logging {
         type = "fluentd"

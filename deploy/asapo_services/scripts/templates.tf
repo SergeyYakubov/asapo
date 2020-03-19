@@ -20,6 +20,8 @@ data "template_file" "asapo_services" {
   template = "${file("${var.job_scripts_dir}/asapo-services.nmd.tpl")}"
   vars = {
     scripts_dir = "${var.job_scripts_dir}"
+    online_dir = "${var.online_dir}"
+    offline_dir = "${var.offline_dir}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
     nomad_logs = "${var.nomad_logs}"
     authorizer_total_memory_size = "${var.authorizer_total_memory_size}"
@@ -34,7 +36,8 @@ data "template_file" "asapo_receivers" {
   template = "${file("${var.job_scripts_dir}/asapo-receivers.nmd.tpl")}"
   vars = {
     scripts_dir = "${var.job_scripts_dir}"
-    data_dir = "${var.data_dir}"
+    online_dir = "${var.online_dir}"
+    offline_dir = "${var.offline_dir}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
     nomad_logs = "${var.nomad_logs}"
     receiver_total_memory_size = "${var.receiver_total_memory_size}"
@@ -57,6 +60,19 @@ data "template_file" "asapo_brokers" {
   }
 }
 
+
+data "template_file" "asapo_fts" {
+  template = "${file("${var.job_scripts_dir}/asapo-fts.nmd.tpl")}"
+  vars = {
+    scripts_dir = "${var.job_scripts_dir}"
+    online_dir = "${var.online_dir}"
+    offline_dir = "${var.offline_dir}"
+    image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
+    nomad_logs = "${var.nomad_logs}"
+    asapo_user = "${var.asapo_user}"
+    n_fts = "${var.n_fts}"
+  }
+}
 
 data "template_file" "asapo_perfmetrics" {
   template = "${file("${var.job_scripts_dir}/asapo-perfmetrics.nmd.tpl")}"
