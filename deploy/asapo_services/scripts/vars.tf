@@ -24,7 +24,8 @@ variable "job_scripts_dir" {}
 
 variable "service_dir" {}
 
-variable "data_dir" {}
+variable "online_dir" {}
+variable "offline_dir" {}
 
 variable "mongo_dir" {}
 
@@ -75,3 +76,5 @@ variable "consul_dns_port" {}
 variable "n_receivers" {}
 
 variable "n_brokers" {}
+
+variable "n_fts" {}

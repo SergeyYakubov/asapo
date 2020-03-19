@@ -29,3 +29,9 @@ resource "nomad_job" "asapo-brokers" {
   jobspec = "${data.template_file.asapo_brokers.rendered}"
   depends_on = [nomad_job.asapo-services,null_resource.asapo-authorizer,null_resource.asapo-discovery]
 }
+
+resource "nomad_job" "asapo-fts" {
+  jobspec = "${data.template_file.asapo_fts.rendered}"
+  depends_on = [nomad_job.asapo-services,null_resource.asapo-authorizer,null_resource.asapo-discovery]
+}
+

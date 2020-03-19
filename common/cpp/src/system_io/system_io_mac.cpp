@@ -76,6 +76,10 @@ ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_sock
     return active_sockets;
 }
 
+void SystemIO::SetThreadName(std::thread* threadHandle, const std::string& name) const {
+    // does not work on macos (could only set name for current thread, which is not what we want)
+}
+
 void asapo::SystemIO::CloseSocket(SocketDescriptor fd, Error* err) const {
     if (err) {
         *err = nullptr;

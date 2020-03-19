@@ -20,7 +20,10 @@ job "asapo-services" {
 	    userns_mode = "host"
         image = "yakser/asapo-authorizer${image_suffix}"
 	force_pull = true
-        volumes = ["local/config.json:/var/lib/authorizer/config.json"]
+        volumes = ["local/config.json:/var/lib/authorizer/config.json",
+                           "${offline_dir}:${offline_dir}",
+                           "${online_dir}:${online_dir}"]
+
 	%{ if ! nomad_logs }
         logging {
             type = "fluentd"
@@ -40,6 +43,11 @@ job "asapo-services" {
             static = "${authorizer_port}"
           }
         }
+      }
+
+      meta {
+        offline_dir = "${offline_dir}"
+        online_dir = "${online_dir}"
       }
 
       service {
