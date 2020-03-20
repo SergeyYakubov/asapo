@@ -1,4 +1,4 @@
-+## 20.03
+## 20.03
 FEATURES
 * introduced substreams for producer/consumer
 * introduced timeout for producer requests
@@ -8,7 +8,6 @@ FEATURES
 
 IMPROVEMENTS
 * switch to MongoDB 4.2
-* receiver use file paths provided during connection authorization structure
 * API documentation is available for C++ and Python
 * switch to using cmake 3.7+
 * error messages in Python as Python strings, not byte objects
