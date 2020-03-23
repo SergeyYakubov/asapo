@@ -39,6 +39,12 @@ plugin "docker" {
   }
 }
 
+plugin "raw_exec" {
+  config {
+    enabled = true
+  }
+}
+
 telemetry {
   publish_allocation_metrics = $use_telemetry
   publish_node_metrics       = $use_telemetry

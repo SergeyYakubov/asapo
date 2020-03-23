@@ -67,5 +67,20 @@ job "asapo-nginx" {
          change_signal   = "SIGHUP"
       }
    }
+
+  task "fluent-bit" {
+      driver = "raw_exec"
+
+      config {
+        command = "/opt/td-agent-bit/bin/td-agent-bit"
+        args    = ["-c", "local/fluent-bit.conf"]
+      }
+
+      template {
+        source        = "${scripts_dir}/fluent-bit-nginx.conf.tpl"
+        destination   = "local/fluent-bit.conf"
+        change_mode   = "restart"
+      }
+    } # fluent-bit
   }
 }
