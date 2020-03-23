@@ -1,5 +1,7 @@
 #include "fabric_factory_impl.h"
-#include "fabric_internal_impl_common.h"
+#include "fabric_error.h"
+#include "client/fabric_client_impl.h"
+#include "server/fabric_server_impl.h"
 #include <rdma/fabric.h>
 
 using namespace asapo::fabric;
@@ -11,18 +13,31 @@ std::string fi_version_string(uint32_t version) {
 bool FabricFactoryImpl::HasValidVersion(Error* error) const {
     auto current_version = fi_version();
 
-    if (FI_VERSION_LT(current_version, EXPECTED_FI_VERSION)) {
+    DBG("Found LibFabric version: " + fi_version_string(current_version));
+
+    if (FI_VERSION_LT(current_version, FabricContextImpl::kMinExpectedLibFabricVersion)) {
         std::string found_version_str = fi_version_string(current_version);
-        std::string expected_version_str = fi_version_string(EXPECTED_FI_VERSION);
+        std::string expected_version_str = fi_version_string(FabricContextImpl::kMinExpectedLibFabricVersion);
 
-        std::string errorText = "LibFabric outdated.";
-        errorText += " (Found " + found_version_str + " but expected at least " + expected_version_str + ")";
-
-        *error = TextError(errorText);
+        std::string errorText = "Found " + found_version_str + " but expected at least " + expected_version_str;
+        *error = FabricErrorTemplates::kOutdatedLibraryError.Generate(errorText);
         return false;
     }
 
     return true;
+}
+
+std::unique_ptr<FabricServer>
+FabricFactoryImpl::CreateAndBindServer(const std::string& host, uint16_t port, Error* error) const {
+    if (!HasValidVersion(error)) {
+        return nullptr;
+    }
+
+    auto server = std::unique_ptr<FabricServerImpl>(new FabricServerImpl());
+
+    server->InitAndStartServer(host, port, error);
+
+    return server;
 }
 
 std::unique_ptr<FabricClient>
@@ -31,15 +46,5 @@ FabricFactoryImpl::CreateClient(Error* error) const {
         return nullptr;
     }
 
-    *error = TextError("This build of ASAPO does not support LibFabric.");
-    return nullptr;
-}
-
-std::unique_ptr<FabricServer> FabricFactoryImpl::CreateAndBindServer(Error* error) const {
-    if (!HasValidVersion(error)) {
-        return nullptr;
-    }
-
-    *error = TextError("This build of ASAPO does not support LibFabric.");
-    return nullptr;
+    return std::unique_ptr<FabricClient>(new FabricClientImpl());
 }

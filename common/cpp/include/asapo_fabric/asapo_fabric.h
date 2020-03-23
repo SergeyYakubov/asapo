@@ -26,9 +26,6 @@ namespace asapo { namespace fabric {
 
         class FabricContext {
         public:
-            /// If this function is not called, the default timeout is 5000 ms
-            virtual void SetRequestTimeout(uint64_t msTimeout) = 0;
-
             virtual std::string GetAddress() const = 0;
 
             virtual std::unique_ptr<FabricMemoryRegion> ShareMemoryRegion(void* src, size_t size, Error* error) = 0;
@@ -40,7 +37,7 @@ namespace asapo { namespace fabric {
                               void* dst, size_t size, Error* error) = 0;
 
             virtual void RdmaWrite(FabricAddress dstAddress,
-                                   MemoryRegionDetails* details, const void* buffer, size_t size,
+                                   const MemoryRegionDetails* details, const void* buffer, size_t size,
                                    Error* error) = 0;
 
             // Since RdmaRead heavily impacts the performance we will not implement this
@@ -53,6 +50,7 @@ namespace asapo { namespace fabric {
         public:
             virtual ~FabricClient() = default;
 
+            /// The serverAddress must be in this format: "hostname:port"
             virtual FabricAddress AddServerAddress(const std::string& serverAddress, Error* error) = 0;
         };
 
@@ -60,13 +58,20 @@ namespace asapo { namespace fabric {
         public:
             virtual ~FabricServer() = default;
 
-            virtual void RecvAny(FabricAddress* srcAddress, FabricMessageId* messageId, void* src, size_t size, Error* error) = 0;
+            virtual void RecvAny(FabricAddress* srcAddress, FabricMessageId* messageId, void* dst, size_t size, Error* error) = 0;
         };
 
         class FabricFactory {
         public:
-            virtual std::unique_ptr<FabricServer> CreateAndBindServer(Error* error) const = 0;
+            /**
+             * Creates a new server and will immediately allocate and listen to the given host:port
+             */
+            virtual std::unique_ptr<FabricServer>
+            CreateAndBindServer(const std::string& host, uint16_t port, Error* error) const = 0;
 
+            /**
+             * Will allocate a proper domain as soon as the client gets his first server address added
+             */
             virtual std::unique_ptr<FabricClient> CreateClient(Error* error) const = 0;
         };
 

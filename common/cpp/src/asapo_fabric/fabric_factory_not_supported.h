@@ -5,7 +5,7 @@
 
 namespace asapo { namespace fabric {
     class FabricFactoryNotSupported : public FabricFactory {
-        std::unique_ptr<FabricServer> CreateAndBindServer(Error* error) const override;
+        std::unique_ptr<FabricServer> CreateAndBindServer(uint16_t port, Error* error) const override;
 
         std::unique_ptr<FabricClient> CreateClient(Error* error) const override;
     };
