@@ -13,13 +13,14 @@ class FabricServerImpl : public FabricServer, public FabricContextImpl {
     friend class FabricHandshakeAcceptingTask;
 
 private:
+    const AbstractLogger* log__;
     std::unique_ptr<FabricHandshakeAcceptingTask> accepting_task_;
     bool accepting_task_running = false;
 
     void InitAndStartServer(const std::string& host, uint16_t port, Error* error);
 public:
     ~FabricServerImpl() override;
-    explicit FabricServerImpl();
+    explicit FabricServerImpl(const AbstractLogger* logger);
 public: // Link to FabricContext
     std::string GetAddress() const override;
 

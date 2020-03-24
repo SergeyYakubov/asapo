@@ -6,6 +6,9 @@ using namespace asapo;
 using namespace fabric;
 
 std::string FabricClientImpl::GetAddress() const {
+    if (!domain_) {
+        return "";
+    }
     return FabricContextImpl::GetAddress();
 }
 
@@ -64,8 +67,6 @@ FabricAddress FabricClientImpl::AddServerAddress(const std::string& serverAddres
         *error = ErrorFromFabricInternal("fi_av_insertsvc", result);
         return FI_ADDR_NOTAVAIL;
     }
-
-    DBG("Inserted '" + serverIp + "' with port " + std::to_string(port) + " as id: " + std::to_string(addrIdx));
 
     FabricHandshakePayload handshake {};
     strcpy(handshake.hostnameAndPort, GetAddress().c_str());

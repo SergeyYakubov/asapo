@@ -6,28 +6,39 @@
 using namespace asapo;
 using namespace asapo::fabric;
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        std::cout
+                    << "Usage: " << argv[0] << " <serverAddress> <serverPort>" << std::endl
+                    << "If the address is localhost or 127.0.0.1 the verbs connection will be emulated" << std::endl
+        ;
+        return 1;
+    }
+
+    std::string serverAddressString = std::string(argv[1]) + ':' + std::string(argv[2]);
+
     Error error;
     auto factory = GenerateDefaultFabricFactory();
 
     auto client = factory->CreateClient(&error);
     if (error) {
-        std::cerr << error << std::endl;
+        std::cout << "Client exited with error: " << error << std::endl;
         return 1;
     }
 
     size_t dataBufferSize = 1024*1024*400 /*400 MiByte*/;
     FileData dataBuffer = FileData{new uint8_t[dataBufferSize]};
 
-    auto serverAddress = client->AddServerAddress("127.0.0.1:1319", &error);
+    auto serverAddress = client->AddServerAddress(serverAddressString, &error);
     if (error) {
-        std::cerr << error << std::endl;
+        std::cout << "Client exited with error: " << error << std::endl;
         return 1;
     }
+    std::cout << "Added server address" << std::endl;
 
     auto mr = client->ShareMemoryRegion(dataBuffer.get(), dataBufferSize, &error);
     if (error) {
-        std::cerr << error << std::endl;
+        std::cout << "Client exited with error: " << error << std::endl;
         return 1;
     }
 
@@ -60,7 +71,7 @@ int main() {
     auto end = std::chrono::high_resolution_clock::now();
 
     if (error) {
-        std::cerr << "Client exited with error: " << error << std::endl;
+        std::cout << "Client exited with error: " << error << std::endl;
         return 1;
     }
 

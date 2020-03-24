@@ -10,8 +10,8 @@ FabricServerImpl::~FabricServerImpl() {
     accepting_task_->DeleteRequest();
 }
 
-FabricServerImpl::FabricServerImpl() : accepting_task_ {new FabricHandshakeAcceptingTask(this)} {
-
+FabricServerImpl::FabricServerImpl(const AbstractLogger* logger)
+        : log__{logger}, accepting_task_ {new FabricHandshakeAcceptingTask(this)} {
 }
 
 std::string FabricServerImpl::GetAddress() const {
@@ -42,7 +42,7 @@ FabricServerImpl::RecvAny(FabricAddress* srcAddress, FabricMessageId* messageId,
     FabricRecvAnyTask anyTask;
 
     HandleFiCommandAndWait(fi_trecv, &anyTask, error,
-                           endpoint_, dst, size, nullptr, TODO_UNKNOWN_ADDRESS, 0, ~0ULL);
+                           endpoint_, dst, size, nullptr, FI_ADDR_UNSPEC, 0, ~0ULL);
 
     if (!(*error)) {
         if (anyTask.GetSource() == FI_ADDR_NOTAVAIL) {
@@ -56,6 +56,8 @@ FabricServerImpl::RecvAny(FabricAddress* srcAddress, FabricMessageId* messageId,
 void FabricServerImpl::InitAndStartServer(const std::string& host, uint16_t port, Error* error) {
     InitCommon(host, port, error);
 
-    accepting_task_running = true;
-    accepting_task_->StartRequest();
+    if (!(*error)) {
+        accepting_task_running = true;
+        accepting_task_->StartRequest();
+    }
 }

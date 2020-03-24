@@ -35,7 +35,8 @@ void FabricHandshakeAcceptingTask::StartRequest() {
     if (server_->accepting_task_running) {
         Error error;
         server_->HandleFiCommand(fi_recv, this, &error,
-                                 server_->endpoint_, &handshake_payload_, sizeof(handshake_payload_), nullptr, TODO_UNKNOWN_ADDRESS);
+                                 server_->endpoint_, &handshake_payload_, sizeof(handshake_payload_),
+                                 nullptr, FI_ADDR_UNSPEC);
 
         if (error) {
             OnError(&error);
@@ -59,8 +60,7 @@ void FabricHandshakeAcceptingTask::HandleAccept(Error* error) {
         *error = ErrorFromFabricInternal("fi_av_insertsvc", ret);
         return;
     }
-    DBG("[Handshake] Added as: " + std::to_string(tmpAddr));
-
+    server_->log__->Debug("Got handshake from " + hostname + ":" + std::to_string(port));
 
     // TODO: This could slow down the whole complete queue process, maybe use another thread? :/
     // Send and forget
@@ -72,5 +72,5 @@ void FabricHandshakeAcceptingTask::HandleAccept(Error* error) {
 }
 
 void FabricHandshakeAcceptingTask::OnError(Error* error) {
-    DBG("[Error] HandleCompletion: " + (*error)->Explain());
+    server_->log__->Warning("AsapoFabric FabricHandshakeAcceptingTask: " + (*error)->Explain());
 }

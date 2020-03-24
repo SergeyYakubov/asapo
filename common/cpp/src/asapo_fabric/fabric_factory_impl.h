@@ -8,7 +8,9 @@ namespace asapo { namespace fabric {
     public:
         bool HasValidVersion(Error* error) const;
 
-        std::unique_ptr<FabricServer> CreateAndBindServer(const std::string& host, uint16_t port, Error* error) const override;
+        std::unique_ptr<FabricServer>
+        CreateAndBindServer(const AbstractLogger* logger,
+                const std::string& host, uint16_t port, Error* error) const override;
 
         std::unique_ptr<FabricClient> CreateClient(Error* error) const override;
     };

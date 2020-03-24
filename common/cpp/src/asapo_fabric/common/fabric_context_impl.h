@@ -10,21 +10,11 @@
 #include "../fabric_error.h"
 
 namespace asapo { namespace fabric {
-
-    static auto start = std::chrono::high_resolution_clock::now();
-    inline void DBG(const std::string& message) {
-        std::string tmpMessage = "[FABRIC DEBUG][" + std::to_string(std::chrono::duration_cast<std::chrono::microseconds>( std::chrono::high_resolution_clock::now() - start ).count()) + "] " + message;
-        fprintf(stderr, "%s\n", tmpMessage.c_str());
-    }
-
-#pragma pack(push, 1)
+        // TODO Use a serialization framework
         struct FabricHandshakePayload {
             // Hostnames can be up to 256 Bytes long. We also need to store the port number.
             char hostnameAndPort[512];
         };
-#pragma pack(pop)
-
-#define TODO_UNKNOWN_ADDRESS 0//(FI_ADDR_NOTAVAIL - 1)
 
         class FabricContextImpl : public FabricContext {
         public:
@@ -109,17 +99,22 @@ namespace asapo { namespace fabric {
                 }
 
                 if (ret != 0) {
-                    if (ret == -FI_EAGAIN) {
-                        *error = TextError("Timeout");
-                    } else {
-                        *error = ErrorFromFabricInternal("HandleFiCommandAndWait", ret);
+                    switch (-ret) {
+                        case FI_EAGAIN:
+                            *error = FabricErrorTemplates::kTimeout.Generate();
+                            break;
+                        case FI_ENOENT:
+                            *error = FabricErrorTemplates::kConnectionRefusedError.Generate();
+                            break;
+                        default:
+                            *error = ErrorFromFabricInternal("HandleFiCommandAndWait", ret);
                     }
                     return;
                 }
             }
 
         private:
-            void CompletionThreadTask();
+            void CompletionThread();
         };
 
 }}

@@ -145,6 +145,10 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD4(Send_t, size_t(SocketDescriptor socket_fd, const void* buf, size_t length, ErrorInterface** err));
 
+
+    MOCK_CONST_METHOD1(SplitAddressToHostnameAndPort,
+            std::unique_ptr<std::tuple<std::string, uint16_t>>(const std::string& address));
+
     void Skip(SocketDescriptor socket_fd, size_t length, Error* err) const override {
         ErrorInterface* error = nullptr;
         Skip_t(socket_fd, length, &error);

@@ -5,18 +5,18 @@
 #include <string>
 #include <memory>
 #include <common/error.h>
+#include <logger/logger.h>
 
 namespace asapo { namespace fabric {
         typedef uint64_t FabricAddress;
         typedef uint64_t FabricMessageId;
 
-#pragma pack(push, 1)
+        // TODO Use a serialization framework
         struct MemoryRegionDetails {
             uint64_t addr;
             uint64_t length;
             uint64_t key;
         };
-#pragma pack(pop)
 
         class FabricMemoryRegion {
         public:
@@ -67,7 +67,8 @@ namespace asapo { namespace fabric {
              * Creates a new server and will immediately allocate and listen to the given host:port
              */
             virtual std::unique_ptr<FabricServer>
-            CreateAndBindServer(const std::string& host, uint16_t port, Error* error) const = 0;
+            CreateAndBindServer(const AbstractLogger* logger, const std::string& host, uint16_t port,
+                                Error* error) const = 0;
 
             /**
              * Will allocate a proper domain as soon as the client gets his first server address added

@@ -32,17 +32,28 @@ void ServerThread(FabricServer* server, size_t bufferSize, FileData* buffer) {
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        std::cout
+                << "Usage: " << argv[0] << " <listenAddress> <listenPort>" << std::endl
+                << "If the address is localhost or 127.0.0.1 the verbs connection will be emulated" << std::endl
+                ;
+        return 1;
+    }
+
     Error error;
     auto io = GenerateDefaultIO();
     auto factory = GenerateDefaultFabricFactory();
+    Logger log = CreateDefaultLoggerBin("FabricTestServer");
 
-    uint16_t port = 1319;
-    auto server = factory->CreateAndBindServer("127.0.0.1", port, &error);
+    uint16_t port = (uint16_t)strtoul(argv[2], nullptr, 10);
+    auto server = factory->CreateAndBindServer(log.get(), argv[1], port, &error);
     if (error) {
         std::cerr << error << std::endl;
         return 1;
     }
+
+    std::cout << "Server is listening on " << server->GetAddress() << std::endl;
 
     size_t dataBufferSize = 1024*1024*400 /*400 MiByte*/;
     FileData dataBuffer = FileData{new uint8_t[dataBufferSize]};
@@ -53,7 +64,6 @@ int main() {
         ServerThread(server.get(), dataBufferSize, &dataBuffer);
     });
 
-    std::cout << "Server is listening on " << server->GetAddress() << std::endl;
     std::cout << "Press Enter to stop the server." << std::endl;
 
     getchar();

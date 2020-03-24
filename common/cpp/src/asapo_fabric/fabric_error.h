@@ -11,6 +11,7 @@ enum class FabricErrorType {
     kNoDeviceFound,
     kClientNotInitialized,
     kTimeout,
+    kConnectionRefused,
 };
 
 
@@ -36,6 +37,14 @@ namespace FabricErrorTemplates {
     auto const kClientNotInitializedError = FabricErrorTemplate {
             "The client was not initialized. Add server address first!",
             FabricErrorType::kClientNotInitialized
+    };
+    auto const kTimeout = FabricErrorTemplate {
+            "Timeout",
+            FabricErrorType::kTimeout
+    };
+    auto const kConnectionRefusedError = FabricErrorTemplate {
+            "Connection refused",
+            FabricErrorType::kConnectionRefused
     };
 
 }

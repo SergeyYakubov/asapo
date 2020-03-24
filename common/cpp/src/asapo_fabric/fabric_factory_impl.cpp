@@ -13,8 +13,6 @@ std::string fi_version_string(uint32_t version) {
 bool FabricFactoryImpl::HasValidVersion(Error* error) const {
     auto current_version = fi_version();
 
-    DBG("Found LibFabric version: " + fi_version_string(current_version));
-
     if (FI_VERSION_LT(current_version, FabricContextImpl::kMinExpectedLibFabricVersion)) {
         std::string found_version_str = fi_version_string(current_version);
         std::string expected_version_str = fi_version_string(FabricContextImpl::kMinExpectedLibFabricVersion);
@@ -28,12 +26,13 @@ bool FabricFactoryImpl::HasValidVersion(Error* error) const {
 }
 
 std::unique_ptr<FabricServer>
-FabricFactoryImpl::CreateAndBindServer(const std::string& host, uint16_t port, Error* error) const {
+FabricFactoryImpl::CreateAndBindServer(const AbstractLogger* logger, const std::string& host, uint16_t port,
+                                       Error* error) const {
     if (!HasValidVersion(error)) {
         return nullptr;
     }
 
-    auto server = std::unique_ptr<FabricServerImpl>(new FabricServerImpl());
+    auto server = std::unique_ptr<FabricServerImpl>(new FabricServerImpl(logger));
 
     server->InitAndStartServer(host, port, error);
 

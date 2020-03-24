@@ -129,11 +129,10 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     if (networkIpHint == "127.0.0.1") {
         // sockets mode
         hints->fabric_attr->prov_name = strdup("sockets");
-        DBG("Using sockets provider. (Should only be used for integration tests)");
     } else {
         // verbs mode
         hints->fabric_attr->prov_name = strdup("verbs;ofi_rxm");
-        hints->domain_attr->caps = FI_RMA | FI_TAGGED | FI_REMOTE_WRITE | FI_SOURCE | FI_SEND | FI_RECV;
+        hints->caps = FI_TAGGED | FI_RMA | additionalFlags;
     }
 
     if (isServer) {
@@ -159,7 +158,7 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
         fi_freeinfo(hints);
         return;
     }
-    DBG(fi_tostr(fabric_info_, FI_TYPE_INFO));
+    // fprintf(stderr, fi_tostr(fabric_info_, FI_TYPE_INFO)); // Print the found fabric details
 
     // We have to reapply the memory mode because they get resetted
     fabric_info_->domain_attr->mr_mode = hints->domain_attr->mr_mode;
@@ -191,48 +190,40 @@ void FabricContextImpl::StartBackgroundThreads() {
     background_threads_running_ = true;
 
     completion_thread_ = io__->NewThread("ASAPO/FI/CQ", [this]() {
-        CompletionThreadTask();
+        CompletionThread();
     });
 }
 
 void FabricContextImpl::StopBackgroundThreads() {
     background_threads_running_ = false;
     if (completion_thread_) {
-        DBG("Stop completion thread - wait");
         completion_thread_->join();
         completion_thread_ = nullptr;
-        DBG("Stop completion thread - done");
     }
 }
 
-void FabricContextImpl::CompletionThreadTask() {
+void FabricContextImpl::CompletionThread() {
     Error error;
     fi_cq_tagged_entry entry;
     FabricAddress tmpAddress;
     while(background_threads_running_ && !error) {
         ssize_t ret;
-        memset(&entry, 0, sizeof(entry));
         ret = fi_cq_readfrom(completion_queue_, &entry, 1, &tmpAddress);
         if (ret == -FI_EAGAIN) {
+            // Unfortunately the verbs;ofi_rxm provider does not support waitset
             //std::this_thread::sleep_for(std::chrono::milliseconds(10));
             std::this_thread::yield();
             continue; // No data
         }
 
         if (ret == -FI_EAVAIL) {
-            DBG("Ich habe einen error");
             fi_cq_err_entry errEntry{};
             ret = fi_cq_readerr(completion_queue_, &errEntry, 0);
-            DBG("After fi_cq_readerr");
             if (ret != 1) {
                 error = ErrorFromFabricInternal("Unknown error while fi_cq_readerr", ret);
             } else {
                 auto task = (FabricWaitableTask*)(errEntry.op_context);
-                if (task) {
-                    task->HandleErrorCompletion(&errEntry);
-                } else {
-                    DBG("[WARN] errEntry.op_context without context!");
-                }
+                task->HandleErrorCompletion(&errEntry);
             }
 
             continue;
@@ -244,14 +235,10 @@ void FabricContextImpl::CompletionThreadTask() {
         }
 
         auto task = (FabricWaitableTask*)(entry.op_context);
-        if (task) {
-            task->HandleCompletion(&entry, tmpAddress);
-        } else {
-            DBG("[WARN] entry.op_context without context!");
-        }
+        task->HandleCompletion(&entry, tmpAddress);
     }
 
     if (error) {
-        DBG("[Error] CompletionThreadTask exited with error: " + error->Explain());
+        throw std::runtime_error("ASAPO Fabric CompletionThread exited with error: " + error->Explain());
     }
 }
