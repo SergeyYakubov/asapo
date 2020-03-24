@@ -14,7 +14,7 @@ namespace asapo { namespace fabric {
 
         void SetArguments(fid_mr* mr, uint64_t address, uint64_t length);
 
-        MemoryRegionDetails* GetDetails() override;
+        const MemoryRegionDetails* GetDetails() const override;
     };
 }}
 

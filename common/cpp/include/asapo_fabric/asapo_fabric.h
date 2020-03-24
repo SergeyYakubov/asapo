@@ -21,7 +21,7 @@ namespace asapo { namespace fabric {
         class FabricMemoryRegion {
         public:
             virtual ~FabricMemoryRegion() = default;
-            virtual MemoryRegionDetails* GetDetails() = 0;
+            virtual const MemoryRegionDetails* GetDetails() const = 0;
         };
 
         class FabricContext {

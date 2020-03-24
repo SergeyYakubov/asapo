@@ -3,7 +3,8 @@
 
 using namespace asapo::fabric;
 
-std::unique_ptr<FabricServer> asapo::fabric::FabricFactoryNotSupported::CreateAndBindServer(uint16_t port,
+std::unique_ptr<FabricServer> asapo::fabric::FabricFactoryNotSupported::CreateAndBindServer(
+        const AbstractLogger* logger, const std::string& host, uint16_t port,
         Error* error) const {
     *error = FabricErrorTemplates::kNotSupportedOnBuildError.Generate();
     return nullptr;

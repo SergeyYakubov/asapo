@@ -141,7 +141,10 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
         hints->dest_addr = strdup(networkIpHint.c_str());
     }
 
-    hints->domain_attr->mr_mode = FI_MR_ALLOCATED | FI_MR_VIRT_ADDR | FI_MR_PROV_KEY;
+    // I've deliberately removed the FI_MR_LOCAL flag, which forces the user of the API to pre register the
+    // memory that is going to be transferred via RDMA.
+    // Since performance tests showed that the performance is roughly equal I've removed it.
+    hints->domain_attr->mr_mode = FI_MR_ALLOCATED | FI_MR_VIRT_ADDR | FI_MR_PROV_KEY;// | FI_MR_LOCAL;
     hints->ep_attr->type = FI_EP_RDM;
     hints->addr_format = FI_SOCKADDR_IN;
 
