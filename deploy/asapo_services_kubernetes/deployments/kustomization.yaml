@@ -1,0 +1,12 @@
+configMapGenerator:
+  - name: authorizer-config
+    files:
+      - authorizer.json
+
+secretGenerator:
+  - name: auth-secret
+    files:
+      - auth_secret.key
+
+resources:
+  - authorizer.yaml
