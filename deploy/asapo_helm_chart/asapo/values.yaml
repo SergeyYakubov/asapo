@@ -1,0 +1,7 @@
+authorizer:
+  replicaCount: 1
+
+common:
+  authSecret: "blabla"
+  offlineDir: "/test_offline1"
+  onlineDir: "/test_online"
