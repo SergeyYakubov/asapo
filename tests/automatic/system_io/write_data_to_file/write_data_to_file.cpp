@@ -36,7 +36,7 @@ void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const Fil
     Error read_err;
     uint64_t size = params.length;
     auto read_data = io->GetDataFromFile(params.fname, &size, &read_err);
-    asapo::M_AssertContains(std::string(read_data.get(), read_data.get() + params.length), "123");
+    M_AssertContains(std::string(read_data.get(), read_data.get() + params.length), "123");
 }
 
 void AssertBadResult(const Error& err, const Args& params) {
@@ -44,7 +44,7 @@ void AssertBadResult(const Error& err, const Args& params) {
         std::cerr << "Should be error" << std::endl;
         exit(EXIT_FAILURE);
     }
-    asapo::M_AssertContains(err->Explain(), params.message);
+    M_AssertContains(err->Explain(), params.message);
 }
 
 

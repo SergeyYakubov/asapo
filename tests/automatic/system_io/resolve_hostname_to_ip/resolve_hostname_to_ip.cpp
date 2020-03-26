@@ -6,10 +6,6 @@
 using asapo::Error;
 using asapo::ErrorType;
 
-using asapo::M_AssertEq;
-using asapo::M_AssertTrue;
-
-
 void Check(const std::string& expected_ip_address, const std::string& hostname) {
     std::cout << "Checking: " << hostname << std::endl;
     Error err;

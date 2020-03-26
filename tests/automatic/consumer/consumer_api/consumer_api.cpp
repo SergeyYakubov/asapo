@@ -6,10 +6,6 @@
 #include "consumer/data_broker.h"
 #include "testing.h"
 
-using asapo::M_AssertEq;
-using asapo::M_AssertTrue;
-
-
 struct Args {
     std::string server;
     std::string run_name;

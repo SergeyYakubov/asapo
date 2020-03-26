@@ -5,10 +5,6 @@
 #include "../../../consumer/api/cpp/src/server_data_broker.h"
 #include "preprocessor/definitions.h"
 
-using asapo::M_AssertEq;
-using asapo::M_AssertContains;
-using asapo::M_AssertTrue;
-
 struct Args {
     std::string uri_authorizer;
     std::string uri_fts;

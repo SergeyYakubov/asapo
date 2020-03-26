@@ -4,12 +4,7 @@
 #include "../../../common/cpp/src/database/mongodb_client.h"
 #include "testing.h"
 
-
-using asapo::M_AssertContains;
-using asapo::M_AssertTrue;
-
 using asapo::Error;
-
 
 void Assert(const Error& error, const std::string& expect) {
     std::string result;
@@ -71,7 +66,7 @@ int main(int argc, char* argv[]) {
         asapo::FileInfo fi_db;
         err = db.GetDataSetById("test", subset_id, fi.id, &fi_db);
         M_AssertTrue(fi_db == fi, "get record from db");
-        Assert(err, "OK");
+        M_AssertEq(nullptr, err);
         err = db.GetDataSetById("test", 0, 0, &fi_db);
         Assert(err, "No record");
     }

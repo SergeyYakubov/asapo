@@ -13,7 +13,6 @@ using asapo::AddressFamilies;
 using asapo::SocketTypes;
 using asapo::SocketProtocols;
 using asapo::FileDescriptor;
-using asapo::M_AssertEq;
 
 using namespace std::chrono;
 

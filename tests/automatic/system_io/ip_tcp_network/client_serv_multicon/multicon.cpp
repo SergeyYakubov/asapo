@@ -14,7 +14,6 @@ using asapo::AddressFamilies;
 using asapo::SocketTypes;
 using asapo::SocketProtocols;
 using asapo::SocketDescriptor;
-using asapo::M_AssertEq;
 
 using namespace std::chrono;
 

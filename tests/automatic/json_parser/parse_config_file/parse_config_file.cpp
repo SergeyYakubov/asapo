@@ -6,9 +6,6 @@
 
 #include "testing.h"
 
-using asapo::M_AssertEq;
-
-
 using namespace asapo;
 
 struct Settings {
