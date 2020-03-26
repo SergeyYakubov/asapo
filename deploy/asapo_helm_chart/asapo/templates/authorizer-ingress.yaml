@@ -11,7 +11,7 @@ spec:
     - host: "*.desy.de"
       http:
         paths:
-          - path: /authorizer(/|$)(.*)
+          - path: /{{ .Release.Namespace }}/authorizer(/|$)(.*)
             backend:
               serviceName: authorizer
               servicePort: 5007

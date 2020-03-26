@@ -25,13 +25,25 @@ spec:
                   name: authorizer-config
               - secret:
                   name: auth-secret
+        - name: shared-volume-offline
+          persistentVolumeClaim:
+            claimName: asapo-offline-pv
+        - name: shared-volume-online
+          persistentVolumeClaim:
+            claimName: asapo-online-pv
       containers:
         - name: authorizer
-          image: "yakser/asapo-authorizer-dev:develop.19.09-210-gd2bfa78"
+          image: "yakser/asapo-authorizer-dev:{{ .Values.common.asapoVersionTag }}"
           command: ["/asapo-authorizer"]
           args: ["-config", "/etc/authorizer/authorizer.json"]
           ports:
             - containerPort: 5007
           volumeMounts:
-            - name: all-in-one
-              mountPath: "/etc/authorizer"
+            - mountPath: "/etc/authorizer"
+              name: all-in-one
+            - mountPath: {{ .Values.common.offlineDir }}
+              name: shared-volume-offline
+            - mountPath: {{ .Values.common.onlineDir }}
+              name: shared-volume-online
+
+

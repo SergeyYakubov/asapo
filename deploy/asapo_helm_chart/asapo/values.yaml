@@ -2,6 +2,7 @@ authorizer:
   replicaCount: 1
 
 common:
-  authSecret: "blabla"
-  offlineDir: "/test_offline1"
+  authSecret: "12ljzgneasfd"
+  offlineDir: "/test_offline"
   onlineDir: "/test_online"
+  asapoVersionTag: "develop.20.03-10-g06dc0be"
