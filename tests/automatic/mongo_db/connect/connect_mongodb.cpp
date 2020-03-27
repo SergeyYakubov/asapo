@@ -5,7 +5,6 @@
 #include "testing.h"
 #include "database/db_error.h"
 
-using asapo::M_AssertContains;
 using asapo::Error;
 
 void Assert(const Error& error, const std::string& expect) {

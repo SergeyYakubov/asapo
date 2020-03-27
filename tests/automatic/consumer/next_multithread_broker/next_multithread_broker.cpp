@@ -5,9 +5,6 @@
 #include "consumer/data_broker.h"
 #include "testing.h"
 
-using asapo::M_AssertEq;
-using asapo::M_AssertTrue;
-
 void Assert(std::vector<asapo::FileInfos> file_infos, int nthreads, int nfiles) {
     std::vector<std::string> expect, result;
     for (int i = 1; i <= nfiles; i++) {

@@ -22,6 +22,6 @@ int main(int argc, char* argv[]) {
         result = err->Explain();
     }
 
-    asapo::M_AssertContains(result, expect);
+    M_AssertContains(result, expect);
     return 0;
 }

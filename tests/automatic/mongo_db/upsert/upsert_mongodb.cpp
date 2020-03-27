@@ -4,10 +4,7 @@
 #include "../../../common/cpp/src/database/mongodb_client.h"
 #include "testing.h"
 
-
-using asapo::M_AssertContains;
 using asapo::Error;
-
 
 void Assert(const Error& error, const std::string& expect) {
     std::string result;
