@@ -9,9 +9,9 @@ using namespace asapo::fabric;
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         std::cout
-                    << "Usage: " << argv[0] << " <serverAddress> <serverPort>" << std::endl
-                    << "If the address is localhost or 127.0.0.1 the verbs connection will be emulated" << std::endl
-        ;
+                << "Usage: " << argv[0] << " <serverAddress> <serverPort>" << std::endl
+                << "If the address is localhost or 127.0.0.1 the verbs connection will be emulated" << std::endl
+                ;
         return 1;
     }
 
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    size_t dataBufferSize = 1024*1024*400 /*400 MiByte*/;
+    size_t dataBufferSize = 1024 * 1024 * 400 /*400 MiByte*/;
     FileData dataBuffer = FileData{new uint8_t[dataBufferSize]};
 
     auto serverAddress = client->AddServerAddress(serverAddressString, &error);
@@ -76,8 +76,8 @@ int main(int argc, char* argv[]) {
     }
 
     auto timeTook = end - start;
-    std::cout << "Transferred " << (((totalTransferSize)/1024)/1024) << " MiBytes in "
-    << std::chrono::duration_cast<std::chrono::milliseconds>(timeTook).count() << "ms" << std::endl;
+    std::cout << "Transferred " << (((totalTransferSize) / 1024) / 1024) << " MiBytes in "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(timeTook).count() << "ms" << std::endl;
 
     return 0;
 }

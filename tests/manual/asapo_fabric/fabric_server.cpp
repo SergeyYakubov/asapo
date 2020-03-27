@@ -55,12 +55,12 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Server is listening on " << server->GetAddress() << std::endl;
 
-    size_t dataBufferSize = 1024*1024*400 /*400 MiByte*/;
+    size_t dataBufferSize = 1024 * 1024 * 400 /*400 MiByte*/;
     FileData dataBuffer = FileData{new uint8_t[dataBufferSize]};
     strcpy((char*)dataBuffer.get(), "I (the server) wrote into your buffer.");
 
     running = true;
-    auto thread = io->NewThread("ServerThread", [&server, &dataBufferSize, &dataBuffer](){
+    auto thread = io->NewThread("ServerThread", [&server, &dataBufferSize, &dataBuffer]() {
         ServerThread(server.get(), dataBufferSize, &dataBuffer);
     });
 

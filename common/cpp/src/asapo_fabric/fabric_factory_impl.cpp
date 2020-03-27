@@ -1,5 +1,5 @@
 #include "fabric_factory_impl.h"
-#include "fabric_error.h"
+#include "fabric_internal_error.h"
 #include "client/fabric_client_impl.h"
 #include "server/fabric_server_impl.h"
 #include <rdma/fabric.h>

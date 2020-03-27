@@ -11,7 +11,7 @@ FabricServerImpl::~FabricServerImpl() {
 }
 
 FabricServerImpl::FabricServerImpl(const AbstractLogger* logger)
-        : log__{logger}, accepting_task_ {new FabricHandshakeAcceptingTask(this)} {
+    : log__{logger}, accepting_task_ {new FabricHandshakeAcceptingTask(this)} {
 }
 
 std::string FabricServerImpl::GetAddress() const {
@@ -32,7 +32,8 @@ void FabricServerImpl::Recv(FabricAddress srcAddress, FabricMessageId messageId,
 }
 
 void
-FabricServerImpl::RdmaWrite(FabricAddress dstAddress, const MemoryRegionDetails* details, const void* buffer, size_t size,
+FabricServerImpl::RdmaWrite(FabricAddress dstAddress, const MemoryRegionDetails* details, const void* buffer,
+                            size_t size,
                             Error* error) {
     FabricContextImpl::RdmaWrite(dstAddress, details, buffer, size, error);
 }

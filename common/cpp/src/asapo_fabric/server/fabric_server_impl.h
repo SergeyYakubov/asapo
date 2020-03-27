@@ -6,22 +6,23 @@
 #include "../fabric_factory_impl.h"
 #include "task/fabric_handshake_accepting_task.h"
 
-namespace asapo { namespace fabric {
+namespace asapo {
+namespace fabric {
 
 class FabricServerImpl : public FabricServer, public FabricContextImpl {
     friend FabricFactoryImpl;
     friend class FabricHandshakeAcceptingTask;
 
-private:
+  private:
     const AbstractLogger* log__;
     std::unique_ptr<FabricHandshakeAcceptingTask> accepting_task_;
     bool accepting_task_running = false;
 
     void InitAndStartServer(const std::string& host, uint16_t port, Error* error);
-public:
+  public:
     ~FabricServerImpl() override;
     explicit FabricServerImpl(const AbstractLogger* logger);
-public: // Link to FabricContext
+  public: // Link to FabricContext
     std::string GetAddress() const override;
 
     std::unique_ptr<FabricMemoryRegion> ShareMemoryRegion(void* src, size_t size, Error* error) override;
@@ -35,10 +36,11 @@ public: // Link to FabricContext
     void RdmaWrite(FabricAddress dstAddress,
                    const MemoryRegionDetails* details, const void* buffer, size_t size,
                    Error* error) override;
-public:
+  public:
     void RecvAny(FabricAddress* srcAddress, FabricMessageId* messageId, void* dst, size_t size, Error* error) override;
 };
 
-}}
+}
+}
 
 #endif //ASAPO_FABRIC_SERVER_IMPL_H

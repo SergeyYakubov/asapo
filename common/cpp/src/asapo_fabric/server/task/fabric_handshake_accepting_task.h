@@ -4,7 +4,8 @@
 #include "../../common/fabric_task.h"
 #include "../../common/fabric_context_impl.h"
 
-namespace asapo { namespace fabric {
+namespace asapo {
+namespace fabric {
 
 // Need forward declaration for reference inside the task
 class FabricServerImpl;
@@ -14,10 +15,10 @@ class FabricServerImpl;
  */
 class FabricHandshakeAcceptingTask : public FabricTask {
 
-private:
+  private:
     FabricServerImpl* server_;
     FabricHandshakePayload handshake_payload_{};
-public:
+  public:
     ~FabricHandshakeAcceptingTask();
     explicit FabricHandshakeAcceptingTask(FabricServerImpl* server);
 
@@ -27,11 +28,12 @@ public:
     void StartRequest();
     void DeleteRequest();
 
-private:
+  private:
     void HandleAccept(Error* error);
     void OnError(Error* error);
 };
 
-}}
+}
+}
 
 #endif //ASAPO_FABRIC_HANDSHAKE_ACCEPTING_TASK_H

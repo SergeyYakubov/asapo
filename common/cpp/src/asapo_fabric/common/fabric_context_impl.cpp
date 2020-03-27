@@ -13,8 +13,7 @@
 using namespace asapo;
 using namespace fabric;
 
-std::string __PRETTY_FUNCTION_TO_NAMESPACE__(const std::string& prettyFunction)
-{
+std::string __PRETTY_FUNCTION_TO_NAMESPACE__(const std::string& prettyFunction) {
     auto functionParamBegin = prettyFunction.find('(');
     auto spaceBegin = prettyFunction.substr(0, functionParamBegin).find(' ');
     return prettyFunction.substr(spaceBegin + 1, functionParamBegin - spaceBegin - 1);
@@ -58,6 +57,77 @@ FabricContextImpl::~FabricContextImpl() {
         fi_freeinfo(fabric_info_);
 }
 
+void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t serverListenPort, Error* error) {
+    const bool isServer = serverListenPort != 0;
+
+    // The server must know where the packages are coming from, FI_SOURCE allows this.
+    uint64_t additionalFlags = isServer ? FI_SOURCE : 0;
+
+    fi_info* hints = fi_allocinfo();
+    // We somehow have to know if we should allocate a dummy sockets domain or a real verbs domain
+    if (networkIpHint == "127.0.0.1") {
+        // sockets mode
+        hints->fabric_attr->prov_name = strdup("sockets");
+        hints->ep_attr->type = FI_EP_RDM;
+    } else {
+        // verbs mode
+        hints->fabric_attr->prov_name = strdup("verbs;ofi_rxm");
+        hints->caps = FI_TAGGED | FI_RMA | FI_DIRECTED_RECV | additionalFlags;
+    }
+
+    if (isServer) {
+        hints->src_addr = strdup(networkIpHint.c_str());
+    } else {
+        hints->dest_addr = strdup(networkIpHint.c_str());
+    }
+
+    // I've deliberately removed the FI_MR_LOCAL flag, which forces the user of the API to pre register the
+    // memory that is going to be transferred via RDMA.
+    // Since performance tests showed that the performance is roughly equal I've removed it.
+    hints->domain_attr->mr_mode = FI_MR_ALLOCATED | FI_MR_VIRT_ADDR | FI_MR_PROV_KEY;// | FI_MR_LOCAL;
+    hints->addr_format = FI_SOCKADDR_IN;
+
+    int ret = fi_getinfo(
+                  kMinExpectedLibFabricVersion, networkIpHint.c_str(), isServer ? std::to_string(serverListenPort).c_str() : nullptr,
+                  additionalFlags, hints, &fabric_info_);
+
+    if (ret) {
+        if (ret == -FI_ENODATA) {
+            *error = FabricErrorTemplates::kNoDeviceFoundError.Generate();
+        } else {
+            *error = ErrorFromFabricInternal("fi_getinfo", ret);
+        }
+        fi_freeinfo(hints);
+        return;
+    }
+    // fprintf(stderr, fi_tostr(fabric_info_, FI_TYPE_INFO)); // Print the found fabric details
+
+    // We have to reapply the memory mode because they get resetted
+    fabric_info_->domain_attr->mr_mode = hints->domain_attr->mr_mode;
+    fi_freeinfo(hints);
+
+    FI_OK(fi_fabric(fabric_info_->fabric_attr, &fabric_, nullptr));
+    FI_OK(fi_domain(fabric_, fabric_info_, &domain_, nullptr));
+
+    fi_av_attr av_attr{};
+    FI_OK(fi_av_open(domain_, &av_attr, &address_vector_, nullptr));
+
+    fi_cq_attr cq_attr{};
+    if (serverListenPort) {
+        // The server must know where the data is coming from(FI_SOURCE) and what the tag is(MessageId).
+        cq_attr.format = FI_CQ_FORMAT_TAGGED;
+    }
+    FI_OK(fi_cq_open(domain_, &cq_attr, &completion_queue_, nullptr));
+
+    FI_OK(fi_endpoint(domain_, fabric_info_, &endpoint_, nullptr));
+    FI_OK(fi_ep_bind(endpoint_, &address_vector_->fid, 0));
+    FI_OK(fi_ep_bind(endpoint_, &completion_queue_->fid, FI_RECV | FI_SEND));
+
+    FI_OK(fi_enable(endpoint_));
+
+    StartBackgroundThreads();
+}
+
 std::string FabricContextImpl::GetAddress() const {
     sockaddr_in sin{};
     size_t sin_size = sizeof(sin);
@@ -65,10 +135,10 @@ std::string FabricContextImpl::GetAddress() const {
 
     // TODO Maybe expose such a function to io__
     switch(sin.sin_family) {
-        case AF_INET:
-            return std::string(inet_ntoa(sin.sin_addr)) + ":" + std::to_string(ntohs(sin.sin_port));
-        default:
-            throw std::runtime_error("Unknown addr family: " + std::to_string(sin.sin_family));
+    case AF_INET:
+        return std::string(inet_ntoa(sin.sin_addr)) + ":" + std::to_string(ntohs(sin.sin_port));
+    default:
+        throw std::runtime_error("Unknown addr family: " + std::to_string(sin.sin_family));
     }
 }
 
@@ -111,82 +181,12 @@ void FabricContextImpl::RawRecv(FabricAddress srcAddress, void* dst, size_t size
 }
 
 void
-FabricContextImpl::RdmaWrite(FabricAddress dstAddress, const MemoryRegionDetails* details, const void* buffer, size_t size,
+FabricContextImpl::RdmaWrite(FabricAddress dstAddress, const MemoryRegionDetails* details, const void* buffer,
+                             size_t size,
                              Error* error) {
     HandleFiCommandWithBasicTaskAndWait(fi_write, error,
                                         endpoint_, buffer, size, nullptr, dstAddress, details->addr, details->key);
 
-}
-
-void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t serverListenPort, Error* error) {
-    const bool isServer = serverListenPort != 0;
-
-    // The server must know where the packages are coming from, FI_SOURCE allows this.
-    uint64_t additionalFlags = isServer ? FI_SOURCE : 0;
-
-    fi_info* hints = fi_allocinfo();
-    // We somehow have to know if we should allocate a dummy sockets domain or a real verbs domain
-    if (networkIpHint == "127.0.0.1") {
-        // sockets mode
-        hints->fabric_attr->prov_name = strdup("sockets");
-    } else {
-        // verbs mode
-        hints->fabric_attr->prov_name = strdup("verbs;ofi_rxm");
-        hints->caps = FI_TAGGED | FI_RMA | additionalFlags;
-    }
-
-    if (isServer) {
-        hints->src_addr = strdup(networkIpHint.c_str());
-    } else {
-        hints->dest_addr = strdup(networkIpHint.c_str());
-    }
-
-    // I've deliberately removed the FI_MR_LOCAL flag, which forces the user of the API to pre register the
-    // memory that is going to be transferred via RDMA.
-    // Since performance tests showed that the performance is roughly equal I've removed it.
-    hints->domain_attr->mr_mode = FI_MR_ALLOCATED | FI_MR_VIRT_ADDR | FI_MR_PROV_KEY;// | FI_MR_LOCAL;
-    hints->ep_attr->type = FI_EP_RDM;
-    hints->addr_format = FI_SOCKADDR_IN;
-
-    int ret = fi_getinfo(
-            kMinExpectedLibFabricVersion, networkIpHint.c_str(), isServer ? std::to_string(serverListenPort).c_str() : nullptr,
-            additionalFlags, hints, &fabric_info_);
-
-    if (ret) {
-        if (ret == -FI_ENODATA) {
-            *error = FabricErrorTemplates::kNoDeviceFoundError.Generate();
-        } else {
-            *error = ErrorFromFabricInternal("fi_getinfo", ret);
-        }
-        fi_freeinfo(hints);
-        return;
-    }
-    // fprintf(stderr, fi_tostr(fabric_info_, FI_TYPE_INFO)); // Print the found fabric details
-
-    // We have to reapply the memory mode because they get resetted
-    fabric_info_->domain_attr->mr_mode = hints->domain_attr->mr_mode;
-    fi_freeinfo(hints);
-
-    FI_OK(fi_fabric(fabric_info_->fabric_attr, &fabric_, nullptr));
-    FI_OK(fi_domain(fabric_, fabric_info_, &domain_, nullptr));
-
-    fi_av_attr av_attr{};
-    FI_OK(fi_av_open(domain_, &av_attr, &address_vector_, nullptr));
-
-    fi_cq_attr cq_attr{};
-    if (serverListenPort) {
-        // The server must know where the data is coming from(FI_SOURCE) and what the tag is(MessageId).
-        cq_attr.format = FI_CQ_FORMAT_TAGGED;
-    }
-    FI_OK(fi_cq_open(domain_, &cq_attr, &completion_queue_, nullptr));
-
-    FI_OK(fi_endpoint(domain_, fabric_info_, &endpoint_, nullptr));
-    FI_OK(fi_ep_bind(endpoint_, &address_vector_->fid, 0));
-    FI_OK(fi_ep_bind(endpoint_, &completion_queue_->fid, FI_RECV | FI_SEND));
-
-    FI_OK(fi_enable(endpoint_));
-
-    StartBackgroundThreads();
 }
 
 void FabricContextImpl::StartBackgroundThreads() {

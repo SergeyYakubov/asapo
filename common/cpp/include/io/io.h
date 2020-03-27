@@ -94,7 +94,8 @@ class IO {
     virtual void            CloseSocket(SocketDescriptor socket_fd, Error* err) const = 0;
     virtual std::string AddressFromSocket(SocketDescriptor socket) const noexcept = 0;
     virtual std::string     GetHostName(Error* err) const noexcept = 0;
-    virtual std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostnameAndPort(const std::string& address) const = 0;
+    virtual std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostnameAndPort(
+                const std::string& address) const = 0;
 
     /*
      * Filesystem

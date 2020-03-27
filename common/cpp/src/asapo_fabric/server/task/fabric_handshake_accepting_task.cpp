@@ -55,7 +55,8 @@ void FabricHandshakeAcceptingTask::HandleAccept(Error* error) {
     uint16_t port;
     std::tie(hostname, port) = *server_->io__->SplitAddressToHostnameAndPort(handshake_payload_.hostnameAndPort);
     FabricAddress tmpAddr;
-    int ret = fi_av_insertsvc(server_->address_vector_, hostname.c_str(), std::to_string(port).c_str(), &tmpAddr, 0, nullptr);
+    int ret = fi_av_insertsvc(server_->address_vector_, hostname.c_str(), std::to_string(port).c_str(), &tmpAddr, 0,
+                              nullptr);
     if (ret != 1) {
         *error = ErrorFromFabricInternal("fi_av_insertsvc", ret);
         return;

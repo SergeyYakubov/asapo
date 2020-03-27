@@ -38,7 +38,8 @@ void FabricClientImpl::Recv(FabricAddress srcAddress, FabricMessageId messageId,
 }
 
 void
-FabricClientImpl::RdmaWrite(FabricAddress dstAddress, const MemoryRegionDetails* details, const void* buffer, size_t size,
+FabricClientImpl::RdmaWrite(FabricAddress dstAddress, const MemoryRegionDetails* details, const void* buffer,
+                            size_t size,
                             Error* error) {
     if (!domain_) {
         *error = FabricErrorTemplates::kClientNotInitializedError.Generate();

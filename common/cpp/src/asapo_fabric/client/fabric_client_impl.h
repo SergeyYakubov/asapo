@@ -4,12 +4,13 @@
 #include <asapo_fabric/asapo_fabric.h>
 #include "../common/fabric_context_impl.h"
 
-namespace asapo { namespace fabric {
+namespace asapo {
+namespace fabric {
 
 class FabricClientImpl : public FabricClient, public FabricContextImpl {
-private:
+  private:
     std::mutex initMutex_;
-public: // Link to FabricContext
+  public: // Link to FabricContext
     std::string GetAddress() const override;
 
     std::unique_ptr<FabricMemoryRegion> ShareMemoryRegion(void* src, size_t size, Error* error) override;
@@ -23,13 +24,14 @@ public: // Link to FabricContext
     void RdmaWrite(FabricAddress dstAddress,
                    const MemoryRegionDetails* details, const void* buffer, size_t size,
                    Error* error) override;
-public:
+  public:
     FabricAddress AddServerAddress(const std::string& serverAddress, Error* error) override;
 
-private:
+  private:
     void InitIfNeeded(const std::string& targetIpHint, Error* error);
 };
 
-}}
+}
+}
 
 #endif //ASAPO_FABRIC_CLIENT_IMPL_H

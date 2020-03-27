@@ -1,5 +1,5 @@
 #include "fabric_waitable_task.h"
-#include "../fabric_error.h"
+#include "../fabric_internal_error.h"
 
 using namespace asapo;
 using namespace fabric;

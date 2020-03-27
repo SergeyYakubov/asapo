@@ -6,7 +6,7 @@ set(SOURCE_FILES asapo_fabric.cpp)
 
 IF(ENABLE_LIBFABRIC)
 	set(SOURCE_FILES ${SOURCE_FILES}
-			fabric_error.cpp
+            fabric_internal_error.cpp
 			fabric_factory_impl.cpp
 			common/fabric_context_impl.cpp
 			common/fabric_memory_region_impl.cpp
