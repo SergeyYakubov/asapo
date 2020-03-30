@@ -23,13 +23,13 @@ auto const kNotSupportedOnBuildError = FabricErrorTemplate {
     "This build of ASAPO does not support LibFabric", FabricErrorType::kNotSupported
 };
 auto const kOutdatedLibraryError = FabricErrorTemplate {
-        "LibFabric outdated", FabricErrorType::kOutdatedLibrary
+    "LibFabric outdated", FabricErrorType::kOutdatedLibrary
 };
 auto const kInternalError = FabricErrorTemplate {
-        "Internal LibFabric error", FabricErrorType::kInternalError
+    "Internal LibFabric error", FabricErrorType::kInternalError
 };
 auto const kInternalOperationCanceledError = FabricErrorTemplate {
-        "Internal LibFabric operation canceled error", FabricErrorType::kInternalOperationCanceled
+    "Internal LibFabric operation canceled error", FabricErrorType::kInternalOperationCanceled
 };
 auto const kNoDeviceFoundError = FabricErrorTemplate {
     "No device was found (Check your config)", FabricErrorType::kNoDeviceFound
