@@ -1,0 +1,9 @@
+{{ $servicesToConfig := list .Values.ownServices.authorizer.serviceName .Values.ownServices.broker.serviceName }}
+
+{{- range .Values.ownServices }}
+  {{ $data := dict "Chart" $.Chart "Template" $.Template "Values" $.Values "Files" $.Files "service" . }}
+    {{- if has .serviceName $servicesToConfig }}
+    {{- template "asapo.configmap-fromfile" $data }}
+---
+  {{- end }}
+{{- end }}

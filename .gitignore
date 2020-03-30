@@ -141,3 +141,8 @@ common/go/src/asapo_common/version/version_lib.go
 
 .terraform
 terraform.tfstate*
+
+
+#helm chart
+deploy/asapo_helm_chart/asapo/Chart.lock
+deploy/asapo_helm_chart/asapo/charts/

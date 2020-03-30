@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: authorizer-deployment
+  name: asapo-authorizer
   labels:
-    app: authorizer
+    app: asapo-authorizer
 spec:
-  replicas: {{ .Values.authorizer.replicaCount }}
+  replicas: {{ .Values.ownServices.authorizer.replicaCount }}
   selector:
     matchLabels:
-      app: authorizer
+      app: asapo-authorizer
   template:
     metadata:
       labels:
-        app: authorizer
+        app: asapo-authorizer
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/authorizer-config.yaml") . | sha256sum }}
+        checksum/config: {{ .Files.Get "configs/asapo-authorizer.json" | sha256sum  }}
         checksum/secret: {{ include (print $.Template.BasePath "/auth-secret.yaml") . | sha256sum }}
     spec:
       volumes:
@@ -22,7 +22,7 @@ spec:
           projected:
             sources:
               - configMap:
-                  name: authorizer-config
+                  name: asapo-authorizer-config
               - secret:
                   name: auth-secret
         - name: shared-volume-offline
@@ -35,9 +35,9 @@ spec:
         - name: authorizer
           image: "yakser/asapo-authorizer-dev:{{ .Values.common.asapoVersionTag }}"
           command: ["/asapo-authorizer"]
-          args: ["-config", "/etc/authorizer/authorizer.json"]
+          args: ["-config", "/etc/authorizer/asapo-authorizer.json"]
           ports:
-            - containerPort: 5007
+            - containerPort: {{ .Values.ownServices.authorizer.port }}
           volumeMounts:
             - mountPath: "/etc/authorizer"
               name: all-in-one

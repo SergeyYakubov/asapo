@@ -1,0 +1,9 @@
+{
+  "DatabaseServer":"auto",
+  "DiscoveryServer": "discovery:{{ .Values.ownServices.discovery.port }}",
+  "PerformanceDbServer":"{{ .Chart.Name }}-influxdb:{{ .Values.influxdb.influxdb.service.port }}",
+  "PerformanceDbName": "asapo_brokers",
+  "Port": {{ .Values.ownServices.broker.port }},
+  "LogLevel":"debug",
+  "SecretFile":"/etc/broker/auth_secret.key"
+}

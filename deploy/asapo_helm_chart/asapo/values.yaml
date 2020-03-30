@@ -1,8 +1,29 @@
-authorizer:
-  replicaCount: 1
+ownServices:
+  authorizer:
+    serviceName: asapo-authorizer
+    replicaCount: 1
+    port: 5006
+    _exposeServiceExtrernally: false
+  broker:
+    serviceName: asapo-broker
+    replicaCount: 1
+    port: 5007
+    _exposeServiceExtrernally: true
+  discovery:
+    serviceName: asapo-discovery
+    replicaCount: 1
+    port: 5008
+    _exposeServiceExtrernally: false
 
 common:
   authSecret: "12ljzgneasfd"
   offlineDir: "/test_offline"
   onlineDir: "/test_online"
   asapoVersionTag: "develop.20.03-10-g06dc0be"
+
+influxdb:
+  authEnabled: false
+  influxdb:
+    updateStrategy: Recreate
+    service:
+      port: 8086

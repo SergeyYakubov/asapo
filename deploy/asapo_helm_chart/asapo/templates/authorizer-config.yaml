@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: authorizer-config
-data:
-  authorizer.json:  {{ tpl (.Files.Get "configs/authorizer.json") . | quote }}

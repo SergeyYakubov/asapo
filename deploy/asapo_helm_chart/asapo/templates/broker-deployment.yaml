@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asapo-broker
+  labels:
+    app: asapo-broker
+spec:
+  replicas: {{ .Values.ownServices.broker.replicaCount }}
+  selector:
+    matchLabels:
+      app: broker
+  template:
+    metadata:
+      labels:
+        app: broker
+      annotations:
+        checksum/config: {{ .Files.Get "configs/asapo-broker.json" | sha256sum  }}
+        checksum/secret: {{ include (print $.Template.BasePath "/auth-secret.yaml") . | sha256sum }}
+    spec:
+      volumes:
+        - name: all-in-one
+          projected:
+            sources:
+              - configMap:
+                  name: asapo-broker-config
+              - secret:
+                  name: auth-secret
+      initContainers:
+        - name: wait-databases
+          image: busybox:1.28
+          command: ['sh', '-c', "until wget asapo-influxdb:8086/ping; do echo waiting for influxdb; sleep 2; done"]
+      containers:
+        - name: broker
+          image: "yakser/asapo-broker-dev:{{ .Values.common.asapoVersionTag }}"
+          command: ["/asapo-broker"]
+          args: ["-config", "/etc/broker/asapo-broker.json"]
+          ports:
+            - containerPort: {{ .Values.ownServices.broker.port }}
+          volumeMounts:
+            - mountPath: "/etc/broker"
+              name: all-in-one
+

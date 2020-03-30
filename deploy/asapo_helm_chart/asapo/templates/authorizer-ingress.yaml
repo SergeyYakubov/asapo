@@ -1,17 +1,2 @@
-apiVersion: networking.k8s.io/v1beta1
-kind: Ingress
-metadata:
-  name: ingress-authorizer
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/whitelist-source-range: 131.169.0.0/16
-spec:
-  rules:
-    - host: "*.desy.de"
-      http:
-        paths:
-          - path: /{{ .Release.Namespace }}/authorizer(/|$)(.*)
-            backend:
-              serviceName: authorizer
-              servicePort: 5007
+{{ $data := dict "Release" .Release "Values" .Values "service" .Values.ownServices.authorizer }}
+{{- template "asapo.ingress" $data }}
