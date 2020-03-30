@@ -21,7 +21,7 @@ class FabricWaitableTask : FabricTask {
     void HandleCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) override;
     void HandleErrorCompletion(fi_cq_err_entry* errEntry) override;
 
-    void Wait(Error* error);
+    void Wait(uint32_t sleepInMs, Error* error);
 
     FabricAddress GetSource() const;
 

@@ -18,8 +18,15 @@ void FabricWaitableTask::HandleErrorCompletion(fi_cq_err_entry* errEntry) {
     promise_.set_value();
 }
 
-void FabricWaitableTask::Wait(Error* error) {
-    future_.wait();
+void FabricWaitableTask::Wait(uint32_t sleepInMs, Error* error) {
+    if (sleepInMs) {
+        if (future_.wait_for(std::chrono::milliseconds(sleepInMs)) == std::future_status::timeout) {
+            *error = FabricErrorTemplates::kTimeout.Generate();
+            return;
+        }
+    } else {
+        future_.wait();
+    }
     error->swap(error_);
 }
 

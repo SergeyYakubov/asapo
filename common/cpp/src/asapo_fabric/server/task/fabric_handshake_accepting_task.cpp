@@ -47,6 +47,15 @@ void FabricHandshakeAcceptingTask::StartRequest() {
 void FabricHandshakeAcceptingTask::DeleteRequest() {
     if (server_->endpoint_) { // The endpoint could not have been initialized
         fi_cancel(&server_->endpoint_->fid, this);
+
+        // TODO Temporary fix:
+        // Since the fi_cancel is not invoked instantly we have to wait a bit until the task was completed.
+        // Theoretically we need a barrier(Promise) that is invoked on OnError.
+        // And THEN there is also the possibility that we dont even exists in the queue,
+        // so we have to timeout the promise too
+
+        // Use verbs when testing this behavior!
+        std::this_thread::sleep_for(std::chrono::seconds(2));
     }
 }
 
@@ -73,5 +82,8 @@ void FabricHandshakeAcceptingTask::HandleAccept(Error* error) {
 }
 
 void FabricHandshakeAcceptingTask::OnError(Error* error) {
+    if (*error == FabricErrorTemplates::kInternalOperationCanceledError && !server_->accepting_task_running) {
+        return; // The task was successfully canceled
+    }
     server_->log__->Warning("AsapoFabric FabricHandshakeAcceptingTask: " + (*error)->Explain());
 }

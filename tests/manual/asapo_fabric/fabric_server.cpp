@@ -16,6 +16,10 @@ void ServerThread(FabricServer* server, size_t bufferSize, FileData* buffer) {
         GenericRequestHeader request;
 
         server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &error);
+        if (error == FabricErrorTemplates::kTimeout) {
+            error = nullptr;
+            continue;
+        }
         if (error) {
             break;
         }
@@ -67,7 +71,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Press Enter to stop the server." << std::endl;
 
     getchar();
-    std::cout << "Stopping server..." << std::endl;
+    std::cout << "Stopping server... Please wait until the RecvAny is timing out." << std::endl;
 
     running = false;
     thread->join();

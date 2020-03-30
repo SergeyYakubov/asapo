@@ -112,4 +112,6 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Done testing. Joining server" << std::endl;
     serverThread.join();
+
+    return 0;
 }

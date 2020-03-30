@@ -7,6 +7,7 @@ enum class FabricErrorType {
     kNotSupported,
     kOutdatedLibrary,
     kInternalError, // An error that was produced by LibFabric
+    kInternalOperationCanceled, // An error that was produced by LibFabric
     kNoDeviceFound,
     kClientNotInitialized,
     kTimeout,
@@ -25,7 +26,10 @@ auto const kOutdatedLibraryError = FabricErrorTemplate {
         "LibFabric outdated", FabricErrorType::kOutdatedLibrary
 };
 auto const kInternalError = FabricErrorTemplate {
-        "Internal LibFabric Error", FabricErrorType::kInternalError
+        "Internal LibFabric error", FabricErrorType::kInternalError
+};
+auto const kInternalOperationCanceledError = FabricErrorTemplate {
+        "Internal LibFabric operation canceled error", FabricErrorType::kInternalOperationCanceled
 };
 auto const kNoDeviceFoundError = FabricErrorTemplate {
     "No device was found (Check your config)", FabricErrorType::kNoDeviceFound

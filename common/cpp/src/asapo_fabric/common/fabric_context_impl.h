@@ -28,7 +28,7 @@ class FabricContextImpl : public FabricContext {
     fid_av* address_vector_{};
     fid_ep* endpoint_{};
 
-    uint64_t requestTimeoutMs_ = 5000;
+    uint64_t requestTimeoutMs_ = 10000; // 10 sec should be enough. TODO: maybe make a public variable setter
 
     std::unique_ptr<std::thread> completion_thread_;
     bool background_threads_running_ = false;
@@ -77,7 +77,19 @@ class FabricContextImpl : public FabricContext {
     inline void HandleFiCommandAndWait(FuncType func, FabricWaitableTask* task, Error* error, ArgTypes... args) {
         HandleFiCommand(func, task, error, args...);
         if (!(*error)) {
-            task->Wait(error);
+            task->Wait(requestTimeoutMs_, error);
+
+            // If a timeout occurs we want to cancel the action,
+            // which invokes an 'Operation canceled' error in the completion queue.
+            if (*error == FabricErrorTemplates::kTimeout) {
+                fi_cancel(&endpoint_->fid, task);
+                task->Wait(0, error);
+                // We expect the task to fail with 'Operation canceled'
+                if (*error == FabricErrorTemplates::kInternalOperationCanceledError) {
+                    // Switch it to a timeout so its more clearly what happened
+                    *error = FabricErrorTemplates::kTimeout.Generate();
+                }
+            }
         }
     }
 

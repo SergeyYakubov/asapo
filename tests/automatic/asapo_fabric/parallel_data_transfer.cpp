@@ -126,7 +126,7 @@ void ClientMasterThread(char* expectedRdmaBuffer) {
 
     clientIsDone.set_value();
     std::cout << "[Client] Waiting for server to finish" << std::endl;
-    serverIsDoneFuture.wait();
+    serverIsDoneFuture.get();
 }
 
 int main(int argc, char* argv[]) {
@@ -146,4 +146,6 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Done testing. Joining server" << std::endl;
     serverMasterThread.join();
+
+    return 0;
 }

@@ -66,14 +66,14 @@ void ClientThread() {
     memcpy(request.substream, mr->GetDetails(), sizeof(MemoryRegionDetails));
 
     // Simulate faulty data
-    ((MemoryRegionDetails*)(&request.substream))->key = ((MemoryRegionDetails*)(&request.substream))->key + 1;
+    ((MemoryRegionDetails*)(&request.substream))->key++;
     FabricMessageId messageId = 123;
     client->Send(serverAddress, messageId, &request, sizeof(request), &err);
     M_AssertEq(nullptr, err, "client->Send");
 
     clientIsDone.set_value();
     std::cout << "[Client] Waiting for server to finish" << std::endl;
-    serverIsDoneFuture.wait();
+    serverIsDoneFuture.get();
 }
 
 int main(int argc, char* argv[]) {
@@ -84,4 +84,6 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Done testing. Joining server" << std::endl;
     serverThread.join();
+
+    return 0;
 }
