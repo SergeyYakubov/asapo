@@ -3,6 +3,7 @@
 
 #include <io/io.h>
 #include <rdma/fabric.h>
+#include <rdma/fi_endpoint.h>
 #include <memory>
 #include <asapo_fabric/asapo_fabric.h>
 #include <thread>

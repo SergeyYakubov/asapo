@@ -29,6 +29,7 @@ std::string __PRETTY_FUNCTION_TO_NAMESPACE__(const std::string& prettyFunction) 
         }                                                       \
     } while(0)
 
+// TODO: It is super important that version 1.10 is installed, but since its not released yet we go with 1.9
 const uint32_t FabricContextImpl::kMinExpectedLibFabricVersion = FI_VERSION(1, 9);
 
 FabricContextImpl::FabricContextImpl() : io__{ GenerateDefaultIO() } {
