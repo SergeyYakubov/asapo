@@ -3,11 +3,13 @@ ownServices:
     serviceName: asapo-authorizer
     replicaCount: 1
     port: 5006
+    sidecarLogs: true
     _exposeServiceExtrernally: false
   broker:
     serviceName: asapo-broker
     replicaCount: 1
     port: 5007
+    sidecarLogs: true
     _exposeServiceExtrernally: true
   discovery:
     serviceName: asapo-discovery
@@ -20,10 +22,40 @@ common:
   offlineDir: "/test_offline"
   onlineDir: "/test_online"
   asapoVersionTag: "develop.20.03-10-g06dc0be"
-
+  nodesPrefix: g
 influxdb:
   authEnabled: false
   influxdb:
     updateStrategy: Recreate
     service:
       port: 8086
+    ingress:
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: "nginx"
+        nginx.ingress.kubernetes.io/whitelist-source-range: 131.169.0.0/16
+      hosts:
+        - name: "*.desy.de"
+          path_template: "/{{ .Release.Namespace }}/perfview"
+
+elasticsearch:
+  global:
+    kibanaEnabled: true
+    coordinating:
+      name: elk-coordinating
+  kibana:
+    extraConfiguration:
+      "server.basePath": /{{ .Release.Namespace }}/logsview
+      "server.rewriteBasePath": true
+    plugins:
+      - "https://github.com/sivasamyk/logtrail/releases/download/v0.1.31/logtrail-7.6.1-0.1.31.zip"
+      - "x-pack"
+    healthCheckPathTemplate: "/{{ .Release.Namespace }}/logsview/app/kibana"
+    ingress:
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: "nginx"
+        nginx.ingress.kubernetes.io/whitelist-source-range: 131.169.0.0/16
+      hosts:
+        - name: "*.desy.de"
+          path_template: "/{{ .Release.Namespace }}/logsview"

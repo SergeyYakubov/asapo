@@ -16,6 +16,7 @@ spec:
       annotations:
         checksum/config: {{ .Files.Get "configs/asapo-authorizer.json" | sha256sum  }}
         checksum/secret: {{ include (print $.Template.BasePath "/auth-secret.yaml") . | sha256sum }}
+        checksum/fluentd-config: {{ .Files.Get "configs/asapo-fluentd.conf" | sha256sum  }}
     spec:
       volumes:
         - name: all-in-one
@@ -31,8 +32,9 @@ spec:
         - name: shared-volume-online
           persistentVolumeClaim:
             claimName: asapo-online-pv
+        {{- include "asapo.fluentd.volumes" .Values.ownServices.authorizer | indent 8 }}
       containers:
-        - name: authorizer
+        - name: asapo-authorizer
           image: "yakser/asapo-authorizer-dev:{{ .Values.common.asapoVersionTag }}"
           command: ["/asapo-authorizer"]
           args: ["-config", "/etc/authorizer/asapo-authorizer.json"]
@@ -45,5 +47,4 @@ spec:
               name: shared-volume-offline
             - mountPath: {{ .Values.common.onlineDir }}
               name: shared-volume-online
-
-
+      {{- include "asapo.fluentd.container" . | indent 8 }}

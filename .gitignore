@@ -145,4 +145,4 @@ terraform.tfstate*
 
 #helm chart
 deploy/asapo_helm_chart/asapo/Chart.lock
-deploy/asapo_helm_chart/asapo/charts/
+deploy/asapo_helm_chart/asapo/charts/*.tgz

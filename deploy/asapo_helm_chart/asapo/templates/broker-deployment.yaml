@@ -15,6 +15,7 @@ spec:
         app: broker
       annotations:
         checksum/config: {{ .Files.Get "configs/asapo-broker.json" | sha256sum  }}
+        checksum/fluentd-config: {{ .Files.Get "configs/asapo-fluentd.conf" | sha256sum  }}
         checksum/secret: {{ include (print $.Template.BasePath "/auth-secret.yaml") . | sha256sum }}
     spec:
       volumes:
@@ -25,12 +26,13 @@ spec:
                   name: asapo-broker-config
               - secret:
                   name: auth-secret
+        {{- include "asapo.fluentd.volumes" .Values.ownServices.broker | indent 8 }}
       initContainers:
         - name: wait-databases
           image: busybox:1.28
-          command: ['sh', '-c', "until wget asapo-influxdb:8086/ping; do echo waiting for influxdb; sleep 2; done"]
+          command: ['sh', '-c', "echo initializing;until wget asapo-influxdb:8086/ping; do echo waiting for influxdb; sleep 2; done"]
       containers:
-        - name: broker
+        - name: asapo-broker
           image: "yakser/asapo-broker-dev:{{ .Values.common.asapoVersionTag }}"
           command: ["/asapo-broker"]
           args: ["-config", "/etc/broker/asapo-broker.json"]
@@ -39,4 +41,4 @@ spec:
           volumeMounts:
             - mountPath: "/etc/broker"
               name: all-in-one
-
+        {{- include "asapo.fluentd.container" . | indent 8 }}
