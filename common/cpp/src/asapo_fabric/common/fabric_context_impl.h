@@ -100,8 +100,6 @@ class FabricContextImpl : public FabricContext {
         // Since handling timeouts is an overhead, we first try to send the data regularly
         ret = func(args..., context);
         if (ret == -FI_EAGAIN) {
-            fprintf(stderr, "[WARN|HandleFiCommandAndWait] Start time tracker overhead\n");
-
             using namespace std::chrono;
             using clock = std::chrono::high_resolution_clock;
             auto maxTime = clock::now() + milliseconds(requestTimeoutMs_);

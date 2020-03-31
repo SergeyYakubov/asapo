@@ -105,6 +105,12 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
 
     // We have to reapply the memory mode because they get resetted
     fabric_info_->domain_attr->mr_mode = hints->domain_attr->mr_mode;
+
+    // total_buffered_recv is a hint to the provider of the total available space that may be needed to buffer messages
+    // that are received for which there is no matching receive operation.
+    // fabric_info_->rx_attr->total_buffered_recv = 0;
+    // If something strange is happening with receive requests, we should set this to 0.
+
     fi_freeinfo(hints);
 
     FI_OK(fi_fabric(fabric_info_->fabric_attr, &fabric_, nullptr));
@@ -115,9 +121,10 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
 
     fi_cq_attr cq_attr{};
     if (serverListenPort) {
-        // The server must know where the data is coming from(FI_SOURCE) and what the tag is(MessageId).
+        // The server must know where the data is coming from(FI_SOURCE) and what the MessageId(TAG) is.
         cq_attr.format = FI_CQ_FORMAT_TAGGED;
     }
+    cq_attr.wait_obj = FI_WAIT_UNSPEC; // Allow the wait of querying the cq
     FI_OK(fi_cq_open(domain_, &cq_attr, &completion_queue_, nullptr));
 
     FI_OK(fi_endpoint(domain_, fabric_info_, &endpoint_, nullptr));
@@ -212,10 +219,8 @@ void FabricContextImpl::CompletionThread() {
     FabricAddress tmpAddress;
     while(background_threads_running_ && !error) {
         ssize_t ret;
-        ret = fi_cq_readfrom(completion_queue_, &entry, 1, &tmpAddress);
+        ret = fi_cq_sreadfrom(completion_queue_, &entry, 1, &tmpAddress, nullptr, 10 /*ms*/);
         if (ret == -FI_EAGAIN) {
-            // Unfortunately the verbs;ofi_rxm provider does not support waitset
-            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
             std::this_thread::yield();
             continue; // No data
         }

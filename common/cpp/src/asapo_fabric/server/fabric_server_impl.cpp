@@ -47,7 +47,7 @@ FabricServerImpl::RecvAny(FabricAddress* srcAddress, FabricMessageId* messageId,
 
     if (!(*error)) {
         if (anyTask.GetSource() == FI_ADDR_NOTAVAIL) {
-            *error = TextError("Source address is unavailable");
+            *error = FabricErrorTemplates::kInternalError.Generate("Source address is unavailable");
         }
         *messageId = anyTask.GetMessageId();
         *srcAddress = anyTask.GetSource();
