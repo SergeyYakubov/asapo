@@ -156,7 +156,7 @@ std::unique_ptr<FabricMemoryRegion> FabricContextImpl::ShareMemoryRegion(void* s
     }
 
     region->SetArguments(mr, (uint64_t)src, size);
-    return region;
+    return std::unique_ptr<FabricMemoryRegion>(region.release());
 }
 
 void FabricContextImpl::Send(FabricAddress dstAddress, FabricMessageId messageId, const void* src, size_t size,
