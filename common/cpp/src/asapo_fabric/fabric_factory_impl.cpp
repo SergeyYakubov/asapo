@@ -32,11 +32,11 @@ FabricFactoryImpl::CreateAndBindServer(const AbstractLogger* logger, const std::
         return nullptr;
     }
 
-    auto server = std::unique_ptr<FabricServerImpl>(new FabricServerImpl(logger));
+    auto server = new FabricServerImpl(logger);
 
     server->InitAndStartServer(host, port, error);
 
-    return server;
+    return std::unique_ptr<FabricServer>(server);
 }
 
 std::unique_ptr<FabricClient>
