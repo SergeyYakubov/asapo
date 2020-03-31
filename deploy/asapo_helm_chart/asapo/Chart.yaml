@@ -25,6 +25,10 @@ dependencies:
   - name: influxdb
     version: "~0.4.3"
     repository: "https://charts.bitnami.com/bitnami"
+#  - name: grafana
+#    version: "~1.3.7"
+#    repository: "https://charts.bitnami.com/bitnami"
+
 #  - name: elasticsearch
 #    version: "~11.0.13"
 #    repository: "https://charts.bitnami.com/bitnami"

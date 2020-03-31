@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asapo-grafana
+  labels:
+    app: asapo-grafana
+spec:
+  replicas: {{ .Values.ownServices.grafana.replicaCount }}
+  selector:
+    matchLabels:
+      app: asapo-grafana
+  template:
+    metadata:
+      labels:
+        app: asapo-grafana
+    spec:
+      volumes:
+        - name: asapo-grafana
+          persistentVolumeClaim:
+            claimName: asapo-online-pv
+      containers:
+        - name: asapo-grafana
+          image: "grafana/grafana:6.7.1-ubuntu"
+          ports:
+            - containerPort: {{ .Values.ownServices.grafana.port }}
+          volumeMounts:
+            - mountPath: /var/lib/grafana
+              name: asapo-grafana
+          env:
+            - name: GF_SERVER_ROOT_URL
+              value: "%(protocol)s://%(domain)s/{{ .Release.Namespace }}/asapo-grafana/"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"

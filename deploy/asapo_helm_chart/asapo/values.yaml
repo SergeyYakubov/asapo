@@ -15,6 +15,7 @@ ownServices:
     serviceName: asapo-discovery
     replicaCount: 1
     port: 5008
+    sidecarLogs: true
     _exposeServiceExtrernally: false
   receiver:
     serviceName: asapo-receiver
@@ -38,6 +39,12 @@ ownServices:
     port: 5011
     sidecarLogs: true
     _exposeServiceExtrernally: true
+  grafana:
+    serviceName: asapo-grafana
+    replicaCount: 1
+    port: 3000
+    sidecarLogs: false
+    _exposeServiceExtrernally: false
 
 
 common:
@@ -46,20 +53,13 @@ common:
   onlineDir: "/test_online"
   asapoVersionTag: "develop.20.03-10-g06dc0be"
   nodesPrefix: g
+
 influxdb:
   authEnabled: false
   influxdb:
     updateStrategy: Recreate
     service:
       port: 8086
-    ingress:
-      enabled: true
-      annotations:
-        kubernetes.io/ingress.class: "nginx"
-        nginx.ingress.kubernetes.io/whitelist-source-range: 131.169.0.0/16
-      hosts:
-        - name: "*.desy.de"
-          path_template: "/{{ .Release.Namespace }}/perfview"
 
 elasticsearch:
   global:
