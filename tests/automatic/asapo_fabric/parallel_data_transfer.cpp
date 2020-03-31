@@ -55,7 +55,7 @@ void ServerMasterThread(char* expectedRdmaBuffer) {
     auto factory = GenerateDefaultFabricFactory();
     auto server = factory->CreateAndBindServer(log.get(), "127.0.0.1", 1816, &err);
     M_AssertEq(nullptr, err, "factory->CreateAndBindServer");
-    std::atomic<int> serverTotalRequests;
+    std::atomic<int> serverTotalRequests(0);
 
     std::thread threads[kServerThreads];
     for (auto& thread : threads) {
