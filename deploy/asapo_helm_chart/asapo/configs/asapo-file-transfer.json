@@ -1,0 +1,5 @@
+{
+  "Port": {{ .Values.ownServices.fileTransfer.port }},
+  "LogLevel":"debug",
+  "SecretFile":"/etc/file-transfer/auth_secret.key"
+}

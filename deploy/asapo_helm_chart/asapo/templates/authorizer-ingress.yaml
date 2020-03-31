@@ -1,2 +1,0 @@
-{{ $data := dict "Release" .Release "Values" .Values "service" .Values.ownServices.authorizer }}
-{{- template "asapo.ingress" $data }}

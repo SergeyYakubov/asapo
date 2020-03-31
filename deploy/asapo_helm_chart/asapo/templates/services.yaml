@@ -1,9 +1,7 @@
-{{ $servicesToConfig := list .Values.ownServices.authorizer.serviceName .Values.ownServices.broker.serviceName }}
-
 {{- range .Values.ownServices }}
   {{ $data := dict "Values" $.Values "service" . }}
-  {{- if has .serviceName $servicesToConfig }}
     {{- template "asapo.service" $data }}
 ---
-  {{- end }}
 {{- end }}
+{{ $data := dict "Values" $.Values "service" .Values.ownServices.receiver.dataServer }}
+{{- template "asapo.service" $data }}

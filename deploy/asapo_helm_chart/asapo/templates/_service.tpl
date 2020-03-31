@@ -10,5 +10,5 @@ spec:
     - protocol: TCP
       port: {{ .service.port }}
   selector:
-    app: {{ .service.serviceName }}
+    app: {{ .service.appName | default .service.serviceName }}
 {{- end }}
