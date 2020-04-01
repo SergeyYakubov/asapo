@@ -215,7 +215,7 @@ void FabricContextImpl::StopBackgroundThreads() {
 
 void FabricContextImpl::CompletionThread() {
     Error error;
-    fi_cq_tagged_entry entry;
+    fi_cq_tagged_entry entry{};
     FabricAddress tmpAddress;
     while(background_threads_running_ && !error) {
         ssize_t ret;

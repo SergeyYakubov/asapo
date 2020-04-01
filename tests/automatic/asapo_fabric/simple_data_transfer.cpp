@@ -100,7 +100,7 @@ void ClientThread(char* expectedRdmaBuffer) {
 }
 
 int main(int argc, char* argv[]) {
-    auto expectedRdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);;
+    auto expectedRdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);
     for (size_t i = 0; i < kRdmaSize; i++) {
         expectedRdmaBuffer[i] = (char)i;
     }
