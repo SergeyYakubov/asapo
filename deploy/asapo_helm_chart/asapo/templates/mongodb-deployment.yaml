@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asapo-mongodb
+  labels:
+    app: asapo-mongodb
+spec:
+  replicas: {{ .Values.ownServices.mongodb.replicaCount }}
+  selector:
+    matchLabels:
+      app: asapo-mongodb
+  template:
+    metadata:
+      labels:
+        app: asapo-mongodb
+    spec:
+      volumes:
+        - name: asapo-mongodb
+          persistentVolumeClaim:
+            claimName: asapo-mongodb
+      containers:
+        - name: asapo-mongodb
+          image: "mongo:4.0.0"
+          ports:
+            - containerPort: {{ .Values.ownServices.mongodb.port }}
+          volumeMounts:
+            - mountPath: /data/db
+              name: asapo-mongodb

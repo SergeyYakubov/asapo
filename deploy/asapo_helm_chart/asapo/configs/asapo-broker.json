@@ -1,5 +1,5 @@
 {
-  "DatabaseServer":"auto",
+  "DatabaseServer":"asapo-mongodb:{{ .Values.ownServices.mongodb.port }}",
   "DiscoveryServer": "asapo-discovery:{{ .Values.ownServices.discovery.port }}",
   "PerformanceDbServer":"{{ .Chart.Name }}-influxdb:{{ .Values.influxdb.influxdb.service.port }}",
   "PerformanceDbName": "asapo_brokers",

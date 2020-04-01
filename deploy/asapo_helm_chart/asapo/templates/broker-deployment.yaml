@@ -30,7 +30,7 @@ spec:
       initContainers:
         - name: wait-databases
           image: busybox:1.28
-          command: ['sh', '-c', "echo initializing;until wget asapo-influxdb:8086/ping; do echo waiting for influxdb; sleep 2; done"]
+          command: ['sh', '-c', "echo initializing;until wget -T 2 asapo-influxdb:8086/ping; do echo waiting for influxdb; sleep 2; done"]
       containers:
         - name: asapo-broker
           image: "yakser/asapo-broker-dev:{{ .Values.common.asapoVersionTag }}"

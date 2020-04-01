@@ -45,6 +45,12 @@ ownServices:
     port: 3000
     sidecarLogs: false
     _exposeServiceExtrernally: false
+  mongodb:
+    serviceName: asapo-mongodb
+    replicaCount: 1
+    port: 27017
+    sidecarLogs: false
+    _exposeServiceExtrernally: false
 
 
 common:

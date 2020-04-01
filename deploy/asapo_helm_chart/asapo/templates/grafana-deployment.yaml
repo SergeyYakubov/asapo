@@ -14,10 +14,12 @@ spec:
       labels:
         app: asapo-grafana
     spec:
+      securityContext:
+        fsGroup: 472
       volumes:
         - name: asapo-grafana
           persistentVolumeClaim:
-            claimName: asapo-online-pv
+            claimName: asapo-grafana
       containers:
         - name: asapo-grafana
           image: "grafana/grafana:6.7.1-ubuntu"
