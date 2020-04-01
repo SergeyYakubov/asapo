@@ -81,9 +81,9 @@ void ClientChildThread(int index, char* expectedRdmaBuffer) {
     auto serverAddress = client->AddServerAddress("127.0.0.1:1816", &err);
     M_AssertEq(nullptr, err, "client->AddServerAddress");
 
-    char* actualRdmaBuffer = new char[kRdmaSize];
+    auto actualRdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);
 
-    auto mr = client->ShareMemoryRegion(actualRdmaBuffer, kRdmaSize, &err);
+    auto mr = client->ShareMemoryRegion(actualRdmaBuffer.get(), kRdmaSize, &err);
     M_AssertEq(nullptr, err, "client->ShareMemoryRegion");
 
     for (int run = 0; run < kEachInstanceRuns; run++) {
@@ -134,15 +134,15 @@ int main(int argc, char* argv[]) {
     std::cout << "Client is writing to std::cout" << std::endl;
     std::cerr << "Server is writing to std::cerr" << std::endl;
 
-    char* expectedRdmaBuffer = new char[kRdmaSize];
+    auto expectedRdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);
     for (size_t i = 0; i < kRdmaSize; i++) {
         expectedRdmaBuffer[i] = (char)i;
     }
 
-    std::thread serverMasterThread(ServerMasterThread, expectedRdmaBuffer);
+    std::thread serverMasterThread(ServerMasterThread, expectedRdmaBuffer.get());
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    ClientMasterThread(expectedRdmaBuffer);
+    ClientMasterThread(expectedRdmaBuffer.get());
 
     std::cout << "Done testing. Joining server" << std::endl;
     serverMasterThread.join();

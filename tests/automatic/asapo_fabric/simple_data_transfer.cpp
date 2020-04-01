@@ -69,9 +69,9 @@ void ClientThread(char* expectedRdmaBuffer) {
             auto serverAddress = client->AddServerAddress("127.0.0.1:1816", &err);
             M_AssertEq(nullptr, err, "client->AddServerAddress");
 
-            char* actualRdmaBuffer = new char[kRdmaSize];
+            auto actualRdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);
 
-            auto mr = client->ShareMemoryRegion(actualRdmaBuffer, kRdmaSize, &err);
+            auto mr = client->ShareMemoryRegion(actualRdmaBuffer.get(), kRdmaSize, &err);
             M_AssertEq(nullptr, err, "client->ShareMemoryRegion");
 
             GenericRequestHeader request{};
@@ -100,15 +100,15 @@ void ClientThread(char* expectedRdmaBuffer) {
 }
 
 int main(int argc, char* argv[]) {
-    char* expectedRdmaBuffer = new char[kRdmaSize];
+    auto expectedRdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);;
     for (size_t i = 0; i < kRdmaSize; i++) {
         expectedRdmaBuffer[i] = (char)i;
     }
 
-    std::thread serverThread(ServerMasterThread, expectedRdmaBuffer);
+    std::thread serverThread(ServerMasterThread, expectedRdmaBuffer.get());
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    ClientThread(expectedRdmaBuffer);
+    ClientThread(expectedRdmaBuffer.get());
 
     std::cout << "Done testing. Joining server" << std::endl;
     serverThread.join();

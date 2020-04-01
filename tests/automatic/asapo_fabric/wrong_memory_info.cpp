@@ -29,8 +29,8 @@ void ServerMasterThread() {
 
     GenericRequestHeader request{};
 
-    char* rdmaBuffer = new char[kRdmaSize];
-    char* dummyData = new char[kDummyDataSize];
+    auto rdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);
+    auto dummyData = std::unique_ptr<char[]>(new char[kDummyDataSize]);
 
     FabricAddress clientAddress;
     FabricMessageId messageId;
@@ -40,19 +40,19 @@ void ServerMasterThread() {
     M_AssertEq(nullptr, err, "server->RecvAny(1)");
     M_AssertEq(1, messageId);
     M_AssertEq("Hello World", request.message);
-    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer, kRdmaSize, &err);
+    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer.get(), kRdmaSize, &err);
     M_AssertEq(FabricErrorTemplates::kInternalError, err, "server->RdmaWrite(1)");
     err = nullptr; // We have to reset the error by ourselves
-    server->Send(clientAddress, messageId, dummyData, kDummyDataSize, &err);
+    server->Send(clientAddress, messageId, dummyData.get(), kDummyDataSize, &err);
     M_AssertEq(nullptr, err, "server->Send(1)");
 
     // Simulate correct memory details
     server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &err);
     M_AssertEq(nullptr, err, "server->RecvAny(2)");
     M_AssertEq(2, messageId);
-    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer, kRdmaSize, &err);
+    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer.get(), kRdmaSize, &err);
     M_AssertEq(nullptr, err, "server->RdmaWrite(2)");
-    server->Send(clientAddress, messageId, dummyData, kDummyDataSize, &err);
+    server->Send(clientAddress, messageId, dummyData.get(), kDummyDataSize, &err);
     M_AssertEq(nullptr, err, "server->Send(2)");
 
     // Simulate old (unregistered) memory details
@@ -60,7 +60,7 @@ void ServerMasterThread() {
     server->RecvAny(&clientAddress, &messageId, &request2, sizeof(request2), &err);
     M_AssertEq(nullptr, err, "server->RecvAny(3)");
     M_AssertEq(3, messageId);
-    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer, kRdmaSize, &err);
+    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer.get(), kRdmaSize, &err);
     M_AssertEq(FabricErrorTemplates::kInternalError, err, "server->RdmaWrite(3)");
 
     std::cout << "[SERVER] Waiting for client to finish" << std::endl;
@@ -79,8 +79,8 @@ void ClientThread() {
     auto serverAddress = client->AddServerAddress("127.0.0.1:1816", &err);
     M_AssertEq(nullptr, err, "client->AddServerAddress");
 
-    char* actualRdmaBuffer = new char[kRdmaSize];
-    char* dummyData = new char[512];
+    auto actualRdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);
+    auto dummyData = std::unique_ptr<char[]>(new char[kDummyDataSize]);
 
     GenericRequestHeader request{};
     FabricMessageId messageId = 1;
@@ -88,7 +88,7 @@ void ClientThread() {
 
     // Scoped MemoryRegion
     {
-        auto mr = client->ShareMemoryRegion(actualRdmaBuffer, kRdmaSize, &err);
+        auto mr = client->ShareMemoryRegion(actualRdmaBuffer.get(), kRdmaSize, &err);
         M_AssertEq(nullptr, err, "client->ShareMemoryRegion");
         memcpy(request.substream, mr->GetDetails(), sizeof(MemoryRegionDetails));
 
@@ -96,7 +96,7 @@ void ClientThread() {
         ((MemoryRegionDetails*)(&request.substream))->key++;
         client->Send(serverAddress, messageId, &request, sizeof(request), &err);
         M_AssertEq(nullptr, err, "client->Send(1)");
-        client->Recv(serverAddress, messageId, dummyData, kDummyDataSize, &err);
+        client->Recv(serverAddress, messageId, dummyData.get(), kDummyDataSize, &err);
         M_AssertEq(nullptr, err, "client->Recv(1)");
         messageId++;
 
@@ -104,7 +104,7 @@ void ClientThread() {
         memcpy(request.substream, mr->GetDetails(), sizeof(MemoryRegionDetails));
         client->Send(serverAddress, messageId, &request, sizeof(request), &err);
         M_AssertEq(nullptr, err, "client->Send(2)");
-        client->Recv(serverAddress, messageId, dummyData, kDummyDataSize, &err);
+        client->Recv(serverAddress, messageId, dummyData.get(), kDummyDataSize, &err);
         M_AssertEq(nullptr, err, "client->Recv(2)");
         messageId++;
     }
