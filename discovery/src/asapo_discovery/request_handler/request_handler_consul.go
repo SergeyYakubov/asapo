@@ -1,12 +1,13 @@
 package request_handler
 
 import (
-	"asapo_common/utils"
 	"github.com/hashicorp/consul/api"
 	"strconv"
 	"errors"
 	"sort"
 	"sync"
+	"asapo_discovery/common"
+	"asapo_common/utils"
 )
 
 type ConsulRequestHandler struct {
@@ -15,10 +16,6 @@ type ConsulRequestHandler struct {
 	staticHandler *StaticRequestHandler
 }
 
-type Responce struct {
-	MaxConnections int
-	Uris           []string
-}
 
 type SafeCounter struct {
 	counter   int
@@ -77,15 +74,15 @@ func (rh *ConsulRequestHandler) GetReceivers(use_ib bool) ([]byte, error) {
 	return utils.MapToJson(&response)
 }
 
-func (rh *ConsulRequestHandler) GetBroker() ([]byte, error) {
-	if len(rh.staticHandler.broker)>0 {
-		return rh.staticHandler.GetBroker()
+func (rh *ConsulRequestHandler) GetSingleService(name string) ([]byte, error) {
+	if len(rh.staticHandler.singleServices[name])>0 {
+		return rh.staticHandler.GetSingleService(name)
 	}
 
 	if (rh.client == nil) {
 		return nil, errors.New("consul client not connected")
 	}
-	response, err := rh.GetServices("asapo-broker",false)
+	response, err := rh.GetServices(name,false)
 	if err != nil {
 		return nil, err
 	}
@@ -96,48 +93,7 @@ func (rh *ConsulRequestHandler) GetBroker() ([]byte, error) {
 		return []byte(response[counter.Next(size)]),nil
 	}
 	return nil, nil
-}
 
-func (rh *ConsulRequestHandler) GetMongo() ([]byte, error) {
-	if len(rh.staticHandler.mongo)>0 {
-		return rh.staticHandler.GetMongo()
-	}
-
-	if (rh.client == nil) {
-		return nil, errors.New("consul client not connected")
-	}
-	response, err := rh.GetServices("mongo",false)
-	if err != nil {
-		return nil, err
-	}
-	size := len(response)
-	if size ==0 {
-		return []byte(""),nil
-	}else {
-		return []byte(response[counter.Next(size)]),nil
-	}
-	return nil, nil
-}
-
-func (rh *ConsulRequestHandler) GetFts() ([]byte, error) {
-	if len(rh.staticHandler.fts)>0 {
-		return rh.staticHandler.GetFts()
-	}
-
-	if (rh.client == nil) {
-		return nil, errors.New("consul client not connected")
-	}
-	response, err := rh.GetServices("asapo-fts",false)
-	if err != nil {
-		return nil, err
-	}
-	size := len(response)
-	if size ==0 {
-		return []byte(""),nil
-	}else {
-		return []byte(response[counter.Next(size)]),nil
-	}
-	return nil, nil
 }
 
 func (rh *ConsulRequestHandler) connectClient(uri string) (client *api.Client, err error) {
@@ -155,7 +111,7 @@ func (rh *ConsulRequestHandler) connectClient(uri string) (client *api.Client, e
 	return
 }
 
-func (rh *ConsulRequestHandler) Init(settings utils.Settings) (err error) {
+func (rh *ConsulRequestHandler) Init(settings common.Settings) (err error) {
 	rh.staticHandler = new(StaticRequestHandler)
 	rh.staticHandler.Init(settings)
 	rh.MaxConnections = settings.Receiver.MaxConnections

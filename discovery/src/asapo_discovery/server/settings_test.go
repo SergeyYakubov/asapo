@@ -3,11 +3,11 @@ package server
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"asapo_common/utils"
+	"asapo_discovery/common"
 )
 
-func fillSettings(mode string) utils.Settings {
-	var settings utils.Settings
+func fillSettings(mode string) common.Settings {
+	var settings common.Settings
 	settings.Port = 1
 	settings.Mode = mode
 	settings.Receiver.MaxConnections = 10

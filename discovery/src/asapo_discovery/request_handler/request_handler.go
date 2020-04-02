@@ -1,12 +1,16 @@
 package request_handler
 
-import "asapo_common/utils"
+import (
+	"asapo_discovery/common"
+)
 
 type Agent interface {
 	GetReceivers(bool) ([]byte, error)
-	GetBroker() ([]byte, error)
-	GetMongo() ([]byte, error)
-	GetFts() ([]byte, error)
-	Init(settings utils.Settings) error
+	GetSingleService(service string) ([]byte, error)
+	Init(settings common.Settings) error
 }
 
+type Responce struct {
+	MaxConnections int
+	Uris           []string
+}

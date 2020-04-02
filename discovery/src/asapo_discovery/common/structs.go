@@ -1,4 +1,4 @@
-package utils
+package common
 
 import "errors"
 
@@ -55,8 +55,4 @@ func (settings *Settings) Validate() error {
 	}
 
 	return nil
-}
-
-type FolderTokenTokenExtraClaim struct {
-	RootFolder string
 }

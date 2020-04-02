@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 	"asapo_discovery/request_handler"
+	"asapo_discovery/common"
 )
 
 func containsMatcher(substr string) func(str string) bool {
@@ -24,27 +25,27 @@ func doRequest(path string) *httptest.ResponseRecorder {
 	return w
 }
 
-type GetReceiversTestSuite struct {
+type GetServicesTestSuite struct {
 	suite.Suite
 }
 
-func (suite *GetReceiversTestSuite) SetupTest() {
+func (suite *GetServicesTestSuite) SetupTest() {
 	requestHandler = new(request_handler.StaticRequestHandler)
-	var s utils.Settings= utils.Settings{Receiver:utils.ReceiverInfo{MaxConnections:10,StaticEndpoints:[]string{"ip1","ip2"}},
-	Broker:utils.BrokerInfo{StaticEndpoint:"ip_broker"},Mongo:utils.MongoInfo{StaticEndpoint:"ip_mongo"},
-		FileTransferService:utils.FtsInfo{StaticEndpoint:"ip_fts"}}
+	var s common.Settings= common.Settings{Receiver:common.ReceiverInfo{MaxConnections:10,StaticEndpoints:[]string{"ip1","ip2"}},
+	Broker:common.BrokerInfo{StaticEndpoint:"ip_broker"},Mongo:common.MongoInfo{StaticEndpoint:"ip_mongo"},
+		FileTransferService:common.FtsInfo{StaticEndpoint:"ip_fts"}}
 
 	requestHandler.Init(s)
 	logger.SetMockLog()
 }
 
-func (suite *GetReceiversTestSuite) TearDownTest() {
+func (suite *GetServicesTestSuite) TearDownTest() {
 	logger.UnsetMockLog()
 	requestHandler = nil
 }
 
-func TestGetReceiversTestSuite(t *testing.T) {
-	suite.Run(t, new(GetReceiversTestSuite))
+func TestGetServicesTestSuite(t *testing.T) {
+	suite.Run(t, new(GetServicesTestSuite))
 }
 
 func assertExpectations(t *testing.T) {
@@ -52,15 +53,15 @@ func assertExpectations(t *testing.T) {
 	logger.MockLog.ExpectedCalls = nil
 }
 
-func (suite *GetReceiversTestSuite) TestWrongPath() {
+func (suite *GetServicesTestSuite) TestWrongPath() {
 	w := doRequest("/blabla")
 	suite.Equal(http.StatusNotFound, w.Code, "wrong path")
 }
 
-func (suite *GetReceiversTestSuite) TestGetReceivers() {
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get receivers")))
+func (suite *GetServicesTestSuite) TestGetReceivers() {
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameReceiverService)))
 
-	w := doRequest("/receivers")
+	w := doRequest("/asapo-receiver")
 
 	suite.Equal(http.StatusOK, w.Code, "code ok")
 	suite.Equal(w.Body.String(), "{\"MaxConnections\":10,\"Uris\":[\"ip1\",\"ip2\"]}", "result")
@@ -68,30 +69,30 @@ func (suite *GetReceiversTestSuite) TestGetReceivers() {
 }
 
 
-func (suite *GetReceiversTestSuite) TestGetBroker() {
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get broker")))
+func (suite *GetServicesTestSuite) TestGetBroker() {
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameBrokerService)))
 
-	w := doRequest("/broker")
+	w := doRequest("/asapo-broker")
 
 	suite.Equal(http.StatusOK, w.Code, "code ok")
 	suite.Equal(w.Body.String(), "ip_broker", "result")
 	assertExpectations(suite.T())
 }
 
-func (suite *GetReceiversTestSuite) TestGetMongo() {
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get mongo")))
+func (suite *GetServicesTestSuite) TestGetMongo() {
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameMongoService)))
 
-	w := doRequest("/mongo")
+	w := doRequest("/asapo-mongodb")
 
 	suite.Equal(http.StatusOK, w.Code, "code ok")
 	suite.Equal(w.Body.String(), "ip_mongo", "result")
 	assertExpectations(suite.T())
 }
 
-func (suite *GetReceiversTestSuite) TestGetFts() {
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get fts")))
+func (suite *GetServicesTestSuite) TestGetFts() {
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameFtsService)))
 
-	w := doRequest("/fts")
+	w := doRequest("/asapo-file-transfer")
 
 	suite.Equal(http.StatusOK, w.Code, "code ok")
 	suite.Equal(w.Body.String(), "ip_fts", "result")
