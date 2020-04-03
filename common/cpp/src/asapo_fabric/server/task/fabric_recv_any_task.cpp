@@ -8,7 +8,7 @@ void FabricRecvAnyTask::HandleCompletion(const fi_cq_tagged_entry* entry, Fabric
     FabricWaitableTask::HandleCompletion(entry, source);
 }
 
-void FabricRecvAnyTask::HandleErrorCompletion(fi_cq_err_entry* errEntry) {
+void FabricRecvAnyTask::HandleErrorCompletion(const fi_cq_err_entry* errEntry) {
     messageId_ = errEntry->tag;
     FabricWaitableTask::HandleErrorCompletion(errEntry);
 }

@@ -3,7 +3,7 @@
 
 #include <asapo_fabric/asapo_fabric.h>
 #include <rdma/fi_eq.h>
-#include "../../common/fabric_waitable_task.h"
+#include "../../common/task/fabric_waitable_task.h"
 
 namespace asapo {
 namespace fabric {
@@ -13,7 +13,7 @@ class FabricRecvAnyTask : public FabricWaitableTask {
     FabricMessageId messageId_;
   public:
     void HandleCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) override;
-    void HandleErrorCompletion(fi_cq_err_entry* errEntry) override;
+    void HandleErrorCompletion(const fi_cq_err_entry* errEntry) override;
 
     FabricMessageId GetMessageId() const;
 };

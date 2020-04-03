@@ -1,7 +1,7 @@
 #include <rdma/fi_endpoint.h>
 #include "fabric_handshake_accepting_task.h"
 #include "../fabric_server_impl.h"
-#include "fabric_self_deleting_task.h"
+#include "../../common/task/fabric_self_deleting_task.h"
 
 using namespace asapo;
 using namespace fabric;
@@ -13,7 +13,7 @@ FabricHandshakeAcceptingTask::~FabricHandshakeAcceptingTask() {
 FabricHandshakeAcceptingTask::FabricHandshakeAcceptingTask(FabricServerImpl* server) : server_{server} {
 }
 
-void FabricHandshakeAcceptingTask::HandleCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) {
+void FabricHandshakeAcceptingTask::HandleCompletion(const fi_cq_tagged_entry*, FabricAddress) {
     Error error;
     HandleAccept(&error);
     if (error) {
@@ -23,7 +23,7 @@ void FabricHandshakeAcceptingTask::HandleCompletion(const fi_cq_tagged_entry* en
     StartRequest();
 }
 
-void FabricHandshakeAcceptingTask::HandleErrorCompletion(fi_cq_err_entry* errEntry) {
+void FabricHandshakeAcceptingTask::HandleErrorCompletion(const fi_cq_err_entry* errEntry) {
     Error error;
     error = ErrorFromFabricInternal("FabricWaitableTask", -errEntry->err);
     OnError(&error);
@@ -34,9 +34,8 @@ void FabricHandshakeAcceptingTask::HandleErrorCompletion(fi_cq_err_entry* errEnt
 void FabricHandshakeAcceptingTask::StartRequest() {
     if (server_->accepting_task_running) {
         Error error;
-        server_->HandleFiCommand(fi_recv, this, &error,
-                                 server_->endpoint_, &handshake_payload_, sizeof(handshake_payload_),
-                                 nullptr, FI_ADDR_UNSPEC);
+        server_->HandleRawFiCommand(this, &error,
+                                    fi_recv, &handshake_payload_, sizeof(handshake_payload_), nullptr, FI_ADDR_UNSPEC);
 
         if (error) {
             OnError(&error);
@@ -74,8 +73,8 @@ void FabricHandshakeAcceptingTask::HandleAccept(Error* error) {
 
     // TODO: This could slow down the whole complete queue process, maybe use another thread? :/
     // Send and forget
-    server_->HandleFiCommand(fi_send, new FabricSelfDeletingTask(), error,
-                             server_->endpoint_, nullptr, 0, nullptr, tmpAddr);
+    server_->HandleRawFiCommand(new FabricSelfDeletingTask(), error,
+                                fi_send, nullptr, 0, nullptr, tmpAddr);
     if (*error) {
         return;
     }

@@ -41,9 +41,8 @@ FabricServerImpl::RdmaWrite(FabricAddress dstAddress, const MemoryRegionDetails*
 void
 FabricServerImpl::RecvAny(FabricAddress* srcAddress, FabricMessageId* messageId, void* dst, size_t size, Error* error) {
     FabricRecvAnyTask anyTask;
-
-    HandleFiCommandAndWait(fi_trecv, &anyTask, error,
-                           endpoint_, dst, size, nullptr, FI_ADDR_UNSPEC, 0, ~0ULL);
+    HandleFiCommandAndWait(FI_ASAPO_ADDR_NO_ALIVE_CHECK, &anyTask, error,
+                           fi_trecv, dst, size, nullptr, FI_ADDR_UNSPEC, 0, kRecvTaggedAnyMatch);
 
     if (!(*error)) {
         if (anyTask.GetSource() == FI_ADDR_NOTAVAIL) {

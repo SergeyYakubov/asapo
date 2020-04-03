@@ -1,19 +1,19 @@
 #include "fabric_waitable_task.h"
-#include "../fabric_internal_error.h"
+#include "../../fabric_internal_error.h"
 
 using namespace asapo;
 using namespace fabric;
 
-FabricWaitableTask::FabricWaitableTask() : future_{promise_.get_future()} {
+FabricWaitableTask::FabricWaitableTask() : future_{promise_.get_future()}, source_{FI_ADDR_NOTAVAIL} {
 
 }
 
-void FabricWaitableTask::HandleCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) {
+void FabricWaitableTask::HandleCompletion(const fi_cq_tagged_entry*, FabricAddress source) {
     source_ = source;
     promise_.set_value();
 }
 
-void FabricWaitableTask::HandleErrorCompletion(fi_cq_err_entry* errEntry) {
+void FabricWaitableTask::HandleErrorCompletion(const fi_cq_err_entry* errEntry) {
     error_ = ErrorFromFabricInternal("FabricWaitableTask", -errEntry->err);
     promise_.set_value();
 }

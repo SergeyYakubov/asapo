@@ -14,9 +14,10 @@ int main(int argc, char* argv[]) {
 
     M_AssertEq("", client->GetAddress());
 
-    int dummyBuffer;
+    int dummyBuffer = 0;
     auto mr = client->ShareMemoryRegion(&dummyBuffer, sizeof(dummyBuffer), &err);
     M_AssertEq(FabricErrorTemplates::kClientNotInitializedError, err, "client->ShareMemoryRegion");
+    err = nullptr;
 
     // Other methods require an serverAddress which initializes the client
 

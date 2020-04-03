@@ -20,42 +20,45 @@ constexpr int kTotalRuns = 3;
 constexpr int kEachInstanceRuns = 5;
 constexpr size_t kRdmaSize = 5 * 1024 * 1024;
 
-void ServerMasterThread(char* expectedRdmaBuffer) {
-    Error err;
-    auto log = CreateDefaultLoggerBin("AutomaticTesting");
+void ServerMasterThread(const std::string& hostname, uint16_t port, char* expectedRdmaBuffer) {
+    {
+        Error err;
+        auto log = CreateDefaultLoggerBin("AutomaticTesting");
 
-    auto factory = GenerateDefaultFabricFactory();
-    auto server = factory->CreateAndBindServer(log.get(), "127.0.0.1", 1816, &err);
-    M_AssertEq(nullptr, err, "factory->CreateAndBindServer");
+        auto factory = GenerateDefaultFabricFactory();
+        auto server = factory->CreateAndBindServer(log.get(), hostname, port, &err);
+        M_AssertEq(nullptr, err, "factory->CreateAndBindServer");
 
-    for (int run = 0; run < kTotalRuns; run++) {
-        for (int instanceRuns = 0; instanceRuns < kEachInstanceRuns; instanceRuns++) {
-            GenericRequestHeader request{};
+        for (int run = 0; run < kTotalRuns; run++) {
+            for (int instanceRuns = 0; instanceRuns < kEachInstanceRuns; instanceRuns++) {
+                GenericRequestHeader request{};
 
-            FabricAddress clientAddress;
-            FabricMessageId messageId;
-            server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &err);
-            M_AssertEq(nullptr, err, "server->RecvAny");
-            M_AssertEq(123 + instanceRuns, messageId);
-            M_AssertEq("Hello World", request.message);
+                FabricAddress clientAddress;
+                FabricMessageId messageId;
+                server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &err);
+                M_AssertEq(nullptr, err, "server->RecvAny");
+                M_AssertEq(123 + instanceRuns, messageId);
+                M_AssertEq("Hello World", request.message);
 
-            server->RdmaWrite(clientAddress, (MemoryRegionDetails*) &request.substream, expectedRdmaBuffer, kRdmaSize,
-                              &err);
-            M_AssertEq(nullptr, err, "server->RdmaWrite");
+                server->RdmaWrite(clientAddress, (MemoryRegionDetails*) &request.substream, expectedRdmaBuffer, kRdmaSize,
+                                  &err);
+                M_AssertEq(nullptr, err, "server->RdmaWrite");
 
-            GenericNetworkResponse response{};
-            strcpy(response.message, "Hey, I am the Server");
-            server->Send(clientAddress, messageId, &response, sizeof(response), &err);
-            M_AssertEq(nullptr, err, "server->Send");
+                GenericNetworkResponse response{};
+                strcpy(response.message, "Hey, I am the Server");
+                server->Send(clientAddress, messageId, &response, sizeof(response), &err);
+                M_AssertEq(nullptr, err, "server->Send");
+            }
         }
-    }
 
-    std::cout << "[SERVER] Waiting for client to finish" << std::endl;
-    clientIsDoneFuture.get();
+        std::cout << "[SERVER] Waiting for client to finish" << std::endl;
+        clientIsDoneFuture.get();
+    }
+    std::cout << "[SERVER] Server is done" << std::endl;
     serverIsDone.set_value();
 }
 
-void ClientThread(char* expectedRdmaBuffer) {
+void ClientThread(const std::string& hostname, uint16_t port, char* expectedRdmaBuffer) {
     Error err;
 
     for (int run = 0; run < kTotalRuns; run++) {
@@ -66,7 +69,7 @@ void ClientThread(char* expectedRdmaBuffer) {
             auto client = factory->CreateClient(&err);
             M_AssertEq(nullptr, err, "factory->CreateClient");
 
-            auto serverAddress = client->AddServerAddress("127.0.0.1:1816", &err);
+            auto serverAddress = client->AddServerAddress(hostname + ":" + std::to_string(port), &err);
             M_AssertEq(nullptr, err, "client->AddServerAddress");
 
             auto actualRdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);
@@ -95,20 +98,35 @@ void ClientThread(char* expectedRdmaBuffer) {
             }
         }
     }
+
     clientIsDone.set_value();
     serverIsDoneFuture.get();
 }
 
 int main(int argc, char* argv[]) {
+    std::string hostname = "127.0.0.1";
+    uint16_t port = 1816;
+
+    if (argc > 3) {
+        std::cout << "Usage: " << argv[0] << " [<host>] [<port>]" << std::endl;
+        return 1;
+    }
+    if (argc == 2) {
+        hostname = argv[1];
+    }
+    if (argc == 3) {
+        port = (uint16_t) strtoul(argv[2], nullptr, 10);
+    }
+
     auto expectedRdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);
     for (size_t i = 0; i < kRdmaSize; i++) {
         expectedRdmaBuffer[i] = (char)i;
     }
 
-    std::thread serverThread(ServerMasterThread, expectedRdmaBuffer.get());
+    std::thread serverThread(ServerMasterThread, hostname, port, expectedRdmaBuffer.get());
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    ClientThread(expectedRdmaBuffer.get());
+    ClientThread(hostname, port, expectedRdmaBuffer.get());
 
     std::cout << "Done testing. Joining server" << std::endl;
     serverThread.join();

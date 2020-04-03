@@ -10,12 +10,14 @@ IF(ENABLE_LIBFABRIC)
 			fabric_factory_impl.cpp
 			common/fabric_context_impl.cpp
 			common/fabric_memory_region_impl.cpp
-			common/fabric_waitable_task.cpp
+            common/task/fabric_waitable_task.cpp
+			common/task/fabric_self_deleting_task.cpp
+			common/task/fabric_self_requeuing_task.cpp
+			common/task/fabric_alive_check_response_task.cpp
 			client/fabric_client_impl.cpp
 			server/fabric_server_impl.cpp
             server/task/fabric_recv_any_task.cpp
 			server/task/fabric_handshake_accepting_task.cpp
-			server/task/fabric_self_deleting_task.cpp
 		)
 ELSE()
 	set(SOURCE_FILES ${SOURCE_FILES}

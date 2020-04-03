@@ -9,7 +9,7 @@ namespace fabric {
 class FabricTask {
   public:
     virtual void HandleCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) = 0;
-    virtual void HandleErrorCompletion(fi_cq_err_entry* errEntry) = 0;
+    virtual void HandleErrorCompletion(const fi_cq_err_entry* errEntry) = 0;
 };
 }
 }

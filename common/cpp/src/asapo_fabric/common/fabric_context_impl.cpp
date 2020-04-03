@@ -32,8 +32,7 @@ std::string __PRETTY_FUNCTION_TO_NAMESPACE__(const std::string& prettyFunction) 
 // TODO: It is super important that version 1.10 is installed, but since its not released yet we go with 1.9
 const uint32_t FabricContextImpl::kMinExpectedLibFabricVersion = FI_VERSION(1, 9);
 
-FabricContextImpl::FabricContextImpl() : io__{ GenerateDefaultIO() } {
-
+FabricContextImpl::FabricContextImpl() : io__{ GenerateDefaultIO() }, alive_check_response_task_(this) {
 }
 
 FabricContextImpl::~FabricContextImpl() {
@@ -69,12 +68,13 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     if (networkIpHint == "127.0.0.1") {
         // sockets mode
         hints->fabric_attr->prov_name = strdup("sockets");
-        hints->ep_attr->type = FI_EP_RDM;
+        hotfix_using_sockets_ = true;
     } else {
         // verbs mode
         hints->fabric_attr->prov_name = strdup("verbs;ofi_rxm");
-        hints->caps = FI_TAGGED | FI_RMA | FI_DIRECTED_RECV | additionalFlags;
     }
+    hints->ep_attr->type = FI_EP_RDM;
+    hints->caps = FI_TAGGED | FI_RMA | FI_DIRECTED_RECV | additionalFlags;
 
     if (isServer) {
         hints->src_addr = strdup(networkIpHint.c_str());
@@ -168,32 +168,32 @@ std::unique_ptr<FabricMemoryRegion> FabricContextImpl::ShareMemoryRegion(void* s
 
 void FabricContextImpl::Send(FabricAddress dstAddress, FabricMessageId messageId, const void* src, size_t size,
                              Error* error) {
-    HandleFiCommandWithBasicTaskAndWait(fi_tsend, error,
-                                        endpoint_, src, size, nullptr, dstAddress, messageId);
+    HandleFiCommandWithBasicTaskAndWait(FI_ASAPO_ADDR_NO_ALIVE_CHECK, error,
+                                        fi_tsend, src, size, nullptr, dstAddress, messageId);
 }
 
 void FabricContextImpl::Recv(FabricAddress srcAddress, FabricMessageId messageId, void* dst, size_t size,
                              Error* error) {
-    HandleFiCommandWithBasicTaskAndWait(fi_trecv, error,
-                                        endpoint_, dst, size, nullptr, srcAddress, messageId, 0);
+    HandleFiCommandWithBasicTaskAndWait(srcAddress, error,
+                                        fi_trecv, dst, size, nullptr, srcAddress, messageId, kRecvTaggedExactMatch);
 }
 
 void FabricContextImpl::RawSend(FabricAddress dstAddress, const void* src, size_t size, Error* error) {
-    HandleFiCommandWithBasicTaskAndWait(fi_send, error,
-                                        endpoint_, src, size, nullptr, dstAddress);
+    HandleFiCommandWithBasicTaskAndWait(FI_ASAPO_ADDR_NO_ALIVE_CHECK, error,
+                                        fi_send, src, size, nullptr, dstAddress);
 }
 
 void FabricContextImpl::RawRecv(FabricAddress srcAddress, void* dst, size_t size, Error* error) {
-    HandleFiCommandWithBasicTaskAndWait(fi_recv, error,
-                                        endpoint_, dst, size, nullptr, srcAddress);
+    HandleFiCommandWithBasicTaskAndWait(FI_ASAPO_ADDR_NO_ALIVE_CHECK, error,
+                                        fi_recv, dst, size, nullptr, srcAddress);
 }
 
 void
 FabricContextImpl::RdmaWrite(FabricAddress dstAddress, const MemoryRegionDetails* details, const void* buffer,
                              size_t size,
                              Error* error) {
-    HandleFiCommandWithBasicTaskAndWait(fi_write, error,
-                                        endpoint_, buffer, size, nullptr, dstAddress, details->addr, details->key);
+    HandleFiCommandWithBasicTaskAndWait(dstAddress, error,
+                                        fi_write,  buffer, size, nullptr, dstAddress, details->addr, details->key);
 
 }
 
@@ -203,6 +203,8 @@ void FabricContextImpl::StartBackgroundThreads() {
     completion_thread_ = io__->NewThread("ASAPO/FI/CQ", [this]() {
         CompletionThread();
     });
+
+    alive_check_response_task_.Start();
 }
 
 void FabricContextImpl::StopBackgroundThreads() {
@@ -211,6 +213,8 @@ void FabricContextImpl::StopBackgroundThreads() {
         completion_thread_->join();
         completion_thread_ = nullptr;
     }
+
+    alive_check_response_task_.Stop();
 }
 
 void FabricContextImpl::CompletionThread() {
@@ -225,29 +229,50 @@ void FabricContextImpl::CompletionThread() {
             continue; // No data
         }
 
-        if (ret == -FI_EAVAIL) {
+        // TODO Refactor, maybe put it in other functions and/or switch case of ret
+
+        if (ret == -FI_EAVAIL) { // An error is available
             fi_cq_err_entry errEntry{};
             ret = fi_cq_readerr(completion_queue_, &errEntry, 0);
             if (ret != 1) {
                 error = ErrorFromFabricInternal("Unknown error while fi_cq_readerr", ret);
             } else {
                 auto task = (FabricWaitableTask*)(errEntry.op_context);
-                task->HandleErrorCompletion(&errEntry);
+                if (task) {
+                    task->HandleErrorCompletion(&errEntry);
+                } else if (hotfix_using_sockets_) {
+                    printf("[Known Sockets bug libfabric/#5795] Ignoring nullptr task!\n");
+                } else {
+                    error = FabricErrorTemplates::kInternalError.Generate("nullptr context from fi_cq_readerr");
+                }
             }
 
             continue;
         }
 
-        if (ret != 1) {
+        if (ret != 1) { // We expect to receive 1 event
             error = ErrorFromFabricInternal("Unknown error while fi_cq_readfrom", ret);
             break;
         }
 
         auto task = (FabricWaitableTask*)(entry.op_context);
-        task->HandleCompletion(&entry, tmpAddress);
+        if (task) {
+            task->HandleCompletion(&entry, tmpAddress);
+        } else {
+            error = FabricErrorTemplates::kInternalError.Generate("nullptr context from fi_cq_sreadfrom");
+        }
     }
 
     if (error) {
         throw std::runtime_error("ASAPO Fabric CompletionThread exited with error: " + error->Explain());
     }
+}
+
+bool FabricContextImpl::TargetIsAliveCheck(FabricAddress address) {
+    Error error;
+
+    HandleFiCommandWithBasicTaskAndWait(FI_ASAPO_ADDR_NO_ALIVE_CHECK, &error,
+                                        fi_tsend, nullptr, 0, nullptr, address, FI_ASAPO_TAG_ALIVE_CHECK);
+    // If the send was successful, then we are still able to communicate with the peer
+    return !(error != nullptr);
 }

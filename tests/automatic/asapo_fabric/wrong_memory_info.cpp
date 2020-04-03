@@ -19,12 +19,12 @@ std::future<void> serverIsDoneFuture = serverIsDone.get_future();
 constexpr size_t kRdmaSize = 5 * 1024;
 constexpr size_t kDummyDataSize = 512;
 
-void ServerMasterThread() {
+void ServerMasterThread(const std::string& hostname, uint16_t port) {
     Error err;
     auto log = CreateDefaultLoggerBin("AutomaticTesting");
 
     auto factory = GenerateDefaultFabricFactory();
-    auto server = factory->CreateAndBindServer(log.get(), "127.0.0.1", 1816, &err);
+    auto server = factory->CreateAndBindServer(log.get(), hostname, port, &err);
     M_AssertEq(nullptr, err, "factory->CreateAndBindServer");
 
     GenericRequestHeader request{};
@@ -68,7 +68,7 @@ void ServerMasterThread() {
     serverIsDone.set_value();
 }
 
-void ClientThread() {
+void ClientThread(const std::string& hostname, uint16_t port) {
     Error err;
 
     auto factory = GenerateDefaultFabricFactory();
@@ -76,7 +76,7 @@ void ClientThread() {
     auto client = factory->CreateClient(&err);
     M_AssertEq(nullptr, err, "factory->CreateClient");
 
-    auto serverAddress = client->AddServerAddress("127.0.0.1:1816", &err);
+    auto serverAddress = client->AddServerAddress(hostname + ":" + std::to_string(port), &err);
     M_AssertEq(nullptr, err, "client->AddServerAddress");
 
     auto actualRdmaBuffer = std::unique_ptr<char[]>(new char[kRdmaSize]);
@@ -120,10 +120,24 @@ void ClientThread() {
 }
 
 int main(int argc, char* argv[]) {
-    std::thread serverThread(ServerMasterThread);
+    std::string hostname = "127.0.0.1";
+    uint16_t port = 1816;
+
+    if (argc > 3) {
+        std::cout << "Usage: " << argv[0] << " [<host>] [<port>]" << std::endl;
+        return 1;
+    }
+    if (argc == 2) {
+        hostname = argv[1];
+    }
+    if (argc == 3) {
+        port = (uint16_t) strtoul(argv[2], nullptr, 10);
+    }
+
+    std::thread serverThread(ServerMasterThread, hostname, port);
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    ClientThread();
+    ClientThread(hostname, port);
 
     std::cout << "Done testing. Joining server" << std::endl;
     serverThread.join();

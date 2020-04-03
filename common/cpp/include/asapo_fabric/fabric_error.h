@@ -8,6 +8,7 @@ enum class FabricErrorType {
     kOutdatedLibrary,
     kInternalError, // An error that was produced by LibFabric
     kInternalOperationCanceled, // An error that was produced by LibFabric
+    kInternalConnectionError, // This might occur when the connection is unexpectedly closed
     kNoDeviceFound,
     kClientNotInitialized,
     kTimeout,
@@ -45,6 +46,10 @@ auto const kTimeout = FabricErrorTemplate {
 auto const kConnectionRefusedError = FabricErrorTemplate {
     "Connection refused",
     FabricErrorType::kConnectionRefused
+};
+auto const kInternalConnectionError = FabricErrorTemplate {
+    "Connection error (maybe a disconnect?)",
+    FabricErrorType::kInternalConnectionError
 };
 }
 

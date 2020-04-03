@@ -1,7 +1,7 @@
 #ifndef ASAPO_FABRIC_HANDSHAKE_ACCEPTING_TASK_H
 #define ASAPO_FABRIC_HANDSHAKE_ACCEPTING_TASK_H
 
-#include "../../common/fabric_task.h"
+#include "../../common/task/fabric_task.h"
 #include "../../common/fabric_context_impl.h"
 
 namespace asapo {
@@ -23,7 +23,7 @@ class FabricHandshakeAcceptingTask : public FabricTask {
     explicit FabricHandshakeAcceptingTask(FabricServerImpl* server);
 
     void HandleCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) override;
-    void HandleErrorCompletion(fi_cq_err_entry* errEntry) override;
+    void HandleErrorCompletion(const fi_cq_err_entry* errEntry) override;
 
     void StartRequest();
     void DeleteRequest();
