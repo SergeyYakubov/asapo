@@ -8,11 +8,11 @@ spec:
   replicas: {{ .Values.ownServices.broker.replicaCount }}
   selector:
     matchLabels:
-      app: broker
+      app: asapo-broker
   template:
     metadata:
       labels:
-        app: broker
+        app: asapo-broker
       annotations:
         checksum/config: {{ .Files.Get "configs/asapo-broker.json" | sha256sum  }}
         checksum/fluentd-config: {{ .Files.Get "configs/asapo-fluentd.conf" | sha256sum  }}

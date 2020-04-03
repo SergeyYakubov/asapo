@@ -16,6 +16,8 @@ func fillSettings(mode string) common.Settings {
 	settings.Broker.StaticEndpoint="ip_b"
 	settings.Mongo.StaticEndpoint="ip_m"
 	settings.ConsulEndpoints=[]string{"ipc1","ipc2"}
+	settings.Kubernetes.ConfigFile=""
+	settings.Kubernetes.Mode="external"
 	return settings
 }
 
@@ -64,4 +66,10 @@ func TestGetHandlerMode(t *testing.T) {
 	mode := "consul"
 	settings = fillSettings(mode)
 	assert.Equal(t,mode,GetHandlerMode())
+}
+
+func TestSettingsOKKubernetes(t *testing.T) {
+	settings := fillSettings("kubernetes")
+	err := settings.Validate()
+	assert.Nil(t, err)
 }

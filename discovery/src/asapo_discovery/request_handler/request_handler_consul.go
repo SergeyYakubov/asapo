@@ -1,12 +1,12 @@
 package request_handler
 
 import (
+	"asapo_discovery/common"
 	"github.com/hashicorp/consul/api"
 	"strconv"
 	"errors"
 	"sort"
 	"sync"
-	"asapo_discovery/common"
 	"asapo_common/utils"
 )
 
