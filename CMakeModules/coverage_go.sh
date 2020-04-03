@@ -1,20 +1,21 @@
 #!/bin/bash
 
-OUT_DIR=$1
-ASAPO_MINIMUM_COVERAGE=$2
+SOURCE_DIR=$1
+OUT_DIR=$2
+ASAPO_MINIMUM_COVERAGE=$3
 
-export GOPATH=$GOPATH:$3
+export GOPATH=$GOPATH:$4
 
 echo $OUT_DIR
 
-mapfile -t PACKAGES < <( find ./src -type d -not -path '*/\.*' )
+mapfile -t PACKAGES < <( find $SOURCE_DIR -type d -not -path '*/\.*' )
 
 echo "mode: count" > $OUT_DIR/coverage-all.out
 for pkg in ${PACKAGES[@]}
 do
 #	echo $pkg
 	go test -coverprofile=$OUT_DIR/coverage.out -tags test $pkg #>/dev/null 2>&1
-	tail -n +2 $OUT_DIR/coverage.out >> $OUT_DIR/coverage-all.out #2>/dev/null
+	tail -n +2 $OUT_DIR/coverage.out | grep -v kubernetes >> $OUT_DIR/coverage-all.out #2>/dev/null
 done
 
 coverage=`go tool cover -func=$OUT_DIR/coverage-all.out | grep total | cut -d ")" -f 2 | cut -d "." -f 1`
