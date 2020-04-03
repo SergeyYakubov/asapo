@@ -8,7 +8,9 @@ export GOPATH=$GOPATH:$4
 
 echo $OUT_DIR
 
-mapfile -t PACKAGES < <( find $SOURCE_DIR -type d -not -path '*/\.*' )
+touch $OUT_DIR/coverage.out
+
+mapfile -t PACKAGES < <( find $SOURCE_DIR/src -type d -not -path '*/\.*' )
 
 echo "mode: count" > $OUT_DIR/coverage-all.out
 for pkg in ${PACKAGES[@]}

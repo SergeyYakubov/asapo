@@ -21,8 +21,8 @@ function(gotest target source_dir test_source_files)
         message(STATUS "Added test 'test-${target}'")
         if (CMAKE_COMPILER_IS_GNUCXX)
         add_test(NAME coveragetest-${target}
-                        COMMAND ${CMAKE_MODULE_PATH}/coverage_go.sh ${CMAKE_CURRENT_SOURCE_DIR}
-                        ${CMAKE_CURRENT_BINARY_DIR} ${ASAPO_MINIMUM_COVERAGE} ${gopath}
+                        COMMAND ${CMAKE_MODULE_PATH}/coverage_go.sh
+                        ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${ASAPO_MINIMUM_COVERAGE} ${gopath}
                         WORKING_DIRECTORY ${source_dir})
         set_tests_properties(coveragetest-${target} PROPERTIES LABELS "coverage;all")
         endif()
