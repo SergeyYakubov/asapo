@@ -10,27 +10,26 @@ namespace fabric {
 // Need forward declaration for reference inside the task
 class FabricServerImpl;
 
-/**
- * This task will automatically requeue itself
- */
-class FabricHandshakeAcceptingTask : public FabricTask {
-
+class FabricHandshakeAcceptingTask : public FabricSelfRequeuingTask {
   private:
-    FabricServerImpl* server_;
     FabricHandshakePayload handshake_payload_{};
+
   public:
-    ~FabricHandshakeAcceptingTask();
     explicit FabricHandshakeAcceptingTask(FabricServerImpl* server);
 
-    void HandleCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) override;
-    void HandleErrorCompletion(const fi_cq_err_entry* errEntry) override;
+  private:
+    FabricServerImpl* ServerContext();
 
-    void StartRequest();
-    void DeleteRequest();
+  protected: // override FabricSelfRequeuingTask
+    void RequeueSelf() override;
+
+    void OnCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) override;
+
+    void OnErrorCompletion(const fi_cq_err_entry* errEntry) override;
 
   private:
     void HandleAccept(Error* error);
-    void OnError(Error* error);
+    void OnError(const Error* error);
 };
 
 }

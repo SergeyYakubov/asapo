@@ -5,10 +5,10 @@
 using namespace asapo;
 using namespace fabric;
 
-void FabricAliveCheckResponseTask::RequeueSelf(FabricContextImpl* parentContext) {
+void FabricAliveCheckResponseTask::RequeueSelf() {
     Error tmpError = nullptr;
 
-    parentContext->HandleRawFiCommand(this, &tmpError,
+    ParentContext()->HandleRawFiCommand(this, &tmpError,
                                       fi_trecv, nullptr, 0, nullptr, FI_ADDR_UNSPEC, FI_ASAPO_TAG_ALIVE_CHECK, kRecvTaggedExactMatch);
 
     // Error is ignored
@@ -22,7 +22,7 @@ void FabricAliveCheckResponseTask::OnErrorCompletion(const fi_cq_err_entry*) {
     // Error is ignored
 }
 
-FabricAliveCheckResponseTask::FabricAliveCheckResponseTask(FabricContextImpl* parentContext) : FabricSelfRequeuingTask(
-        parentContext) {
+FabricAliveCheckResponseTask::FabricAliveCheckResponseTask(FabricContextImpl* parentContext)
+: FabricSelfRequeuingTask(parentContext) {
 
 }

@@ -15,9 +15,7 @@ class FabricServerImpl : public FabricServer, public FabricContextImpl {
 
   private:
     const AbstractLogger* log__;
-    std::unique_ptr<FabricHandshakeAcceptingTask> accepting_task_;
-    bool accepting_task_running = false;
-
+    FabricHandshakeAcceptingTask accepting_task_;
     void InitAndStartServer(const std::string& host, uint16_t port, Error* error);
   public:
     ~FabricServerImpl() override;

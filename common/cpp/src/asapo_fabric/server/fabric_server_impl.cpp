@@ -6,12 +6,11 @@ using namespace asapo;
 using namespace fabric;
 
 FabricServerImpl::~FabricServerImpl() {
-    accepting_task_running = false;
-    accepting_task_->DeleteRequest();
+    accepting_task_.Stop();
 }
 
 FabricServerImpl::FabricServerImpl(const AbstractLogger* logger)
-    : log__{logger}, accepting_task_ {new FabricHandshakeAcceptingTask(this)} {
+    : log__{logger}, accepting_task_(this) {
 }
 
 std::string FabricServerImpl::GetAddress() const {
@@ -57,7 +56,6 @@ void FabricServerImpl::InitAndStartServer(const std::string& host, uint16_t port
     InitCommon(host, port, error);
 
     if (!(*error)) {
-        accepting_task_running = true;
-        accepting_task_->StartRequest();
+        accepting_task_.Start();
     }
 }

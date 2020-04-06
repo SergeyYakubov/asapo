@@ -6,83 +6,61 @@
 using namespace asapo;
 using namespace fabric;
 
-FabricHandshakeAcceptingTask::~FabricHandshakeAcceptingTask() {
-    DeleteRequest();
+FabricHandshakeAcceptingTask::FabricHandshakeAcceptingTask(FabricServerImpl* parentServerContext)
+: FabricSelfRequeuingTask(parentServerContext) {
 }
 
-FabricHandshakeAcceptingTask::FabricHandshakeAcceptingTask(FabricServerImpl* server) : server_{server} {
+FabricServerImpl* FabricHandshakeAcceptingTask::ServerContext() {
+    return dynamic_cast<FabricServerImpl*>(ParentContext());
 }
 
-void FabricHandshakeAcceptingTask::HandleCompletion(const fi_cq_tagged_entry*, FabricAddress) {
+void FabricHandshakeAcceptingTask::RequeueSelf() {
+    Error ignored;
+    ServerContext()->HandleRawFiCommand(this, &ignored,
+                                fi_recv, &handshake_payload_, sizeof(handshake_payload_), nullptr, FI_ADDR_UNSPEC);
+}
+
+void FabricHandshakeAcceptingTask::OnCompletion(const fi_cq_tagged_entry*, FabricAddress) {
     Error error;
     HandleAccept(&error);
     if (error) {
         OnError(&error);
         return;
     }
-    StartRequest();
 }
 
-void FabricHandshakeAcceptingTask::HandleErrorCompletion(const fi_cq_err_entry* errEntry) {
+void FabricHandshakeAcceptingTask::OnErrorCompletion(const fi_cq_err_entry* errEntry) {
     Error error;
     error = ErrorFromFabricInternal("FabricWaitableTask", -errEntry->err);
     OnError(&error);
-
-    StartRequest();
-}
-
-void FabricHandshakeAcceptingTask::StartRequest() {
-    if (server_->accepting_task_running) {
-        Error error;
-        server_->HandleRawFiCommand(this, &error,
-                                    fi_recv, &handshake_payload_, sizeof(handshake_payload_), nullptr, FI_ADDR_UNSPEC);
-
-        if (error) {
-            OnError(&error);
-        }
-    }
-}
-
-void FabricHandshakeAcceptingTask::DeleteRequest() {
-    if (server_->endpoint_) { // The endpoint could not have been initialized
-        fi_cancel(&server_->endpoint_->fid, this);
-
-        // TODO Temporary fix:
-        // Since the fi_cancel is not invoked instantly we have to wait a bit until the task was completed.
-        // Theoretically we need a barrier(Promise) that is invoked on OnError.
-        // And THEN there is also the possibility that we dont even exists in the queue,
-        // so we have to timeout the promise too
-
-        // Use verbs when testing this behavior!
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-    }
 }
 
 void FabricHandshakeAcceptingTask::HandleAccept(Error* error) {
+    auto server = ServerContext();
     std::string hostname;
     uint16_t port;
-    std::tie(hostname, port) = *server_->io__->SplitAddressToHostnameAndPort(handshake_payload_.hostnameAndPort);
+    std::tie(hostname, port) =
+            *(server->io__->SplitAddressToHostnameAndPort(handshake_payload_.hostnameAndPort));
     FabricAddress tmpAddr;
-    int ret = fi_av_insertsvc(server_->address_vector_, hostname.c_str(), std::to_string(port).c_str(), &tmpAddr, 0,
-                              nullptr);
+    int ret = fi_av_insertsvc(
+            server->address_vector_,
+            hostname.c_str(),
+            std::to_string(port).c_str(),
+            &tmpAddr,
+            0,
+            nullptr);
     if (ret != 1) {
         *error = ErrorFromFabricInternal("fi_av_insertsvc", ret);
         return;
     }
-    server_->log__->Debug("Got handshake from " + hostname + ":" + std::to_string(port));
+    server->log__->Debug("Got handshake from " + hostname + ":" + std::to_string(port));
 
-    // TODO: This could slow down the whole complete queue process, maybe use another thread? :/
+    // TODO: This could slow down the whole complete queue process, maybe use another thread?
     // Send and forget
-    server_->HandleRawFiCommand(new FabricSelfDeletingTask(), error,
+    server->HandleRawFiCommand(new FabricSelfDeletingTask(), error,
                                 fi_send, nullptr, 0, nullptr, tmpAddr);
-    if (*error) {
-        return;
-    }
 }
 
-void FabricHandshakeAcceptingTask::OnError(Error* error) {
-    if (*error == FabricErrorTemplates::kInternalOperationCanceledError && !server_->accepting_task_running) {
-        return; // The task was successfully canceled
-    }
-    server_->log__->Warning("AsapoFabric FabricHandshakeAcceptingTask: " + (*error)->Explain());
+void FabricHandshakeAcceptingTask::OnError(const Error* error) {
+    ServerContext()->log__->Warning("AsapoFabric FabricHandshakeAcceptingTask: " + (*error)->Explain());
 }

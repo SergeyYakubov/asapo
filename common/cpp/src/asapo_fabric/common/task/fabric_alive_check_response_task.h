@@ -13,7 +13,7 @@ class FabricAliveCheckResponseTask : public FabricSelfRequeuingTask {
   public:
     explicit FabricAliveCheckResponseTask(FabricContextImpl* parentContext);
   protected:
-    void RequeueSelf(FabricContextImpl* parentContext) override;
+    void RequeueSelf() override;
 
     void OnCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) override;
 
