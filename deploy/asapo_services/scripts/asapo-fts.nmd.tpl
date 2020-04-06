@@ -1,4 +1,4 @@
-job "asapo-fts" {
+job "asapo-file-transfer" {
   datacenters = ["dc1"]
   affinity {
     attribute = "$${meta.node_group}"
@@ -13,8 +13,8 @@ job "asapo-fts" {
     auto_revert = false
   }
 
-  group "fts" {
-    count = ${n_fts}
+  group "file-transfer" {
+    count = ${n_file-transfer}
     restart {
       attempts = 2
       interval = "3m"
@@ -22,7 +22,7 @@ job "asapo-fts" {
       mode = "fail"
     }
 
-    task "fts" {
+    task "file-transfer" {
       driver = "docker"
       user = "${asapo_user}"
       config {
@@ -49,15 +49,15 @@ job "asapo-fts" {
 
       resources {
         network {
-          port "fts" {}
+          port "file-transfer" {}
         }
       }
 
       service {
-        port = "fts"
-        name = "asapo-fts"
+        port = "file-transfer"
+        name = "asapo-file-transfer"
         check {
-          name     = "asapo-fts-alive"
+          name     = "asapo-file-transfer-alive"
           type     = "http"
           path     = "/health-check"
           interval = "10s"
@@ -71,7 +71,7 @@ job "asapo-fts" {
       }
 
       template {
-         source        = "${scripts_dir}/fts.json.tpl"
+         source        = "${scripts_dir}/file-transfer.json.tpl"
          destination   = "local/config.json"
          change_mode   = "restart"
       }

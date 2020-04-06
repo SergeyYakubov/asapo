@@ -320,7 +320,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsWrongResponseFromHttpClient) {
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerAddressNotFound) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::NotFound),
                                                     SetArgPointee<2>(nullptr),
@@ -333,7 +333,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerAddressNotFound) {
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerUriEmpty) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::OK),
                                                     SetArgPointee<2>(nullptr),
@@ -353,7 +353,7 @@ TEST_F(ServerDataBrokerTests, GetDoNotCallBrokerUriIfAlreadyFound) {
     data_broker->GetNext(&info, expected_group_id, nullptr);
     Mock::VerifyAndClearExpectations(&mock_http_client);
 
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/broker"), _, _)).Times(0);
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/asap-broker"), _, _)).Times(0);
     MockGet("error_response");
     data_broker->GetNext(&info, expected_group_id, nullptr);
 }
@@ -432,7 +432,7 @@ ACTION(AssignArg2) {
 
 
 TEST_F(ServerDataBrokerTests, GetNextRetriesIfConnectionHttpClientErrorUntilTimeout) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::OK),
                                                     SetArgPointee<2>(nullptr),

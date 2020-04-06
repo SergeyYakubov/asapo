@@ -14,8 +14,8 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
-const std::string ServerDataBroker::kBrokerServiceName = "broker";
-const std::string ServerDataBroker::kFileTransferServiceName = "fts";
+const std::string ServerDataBroker::kBrokerServiceName = "asapo-broker";
+const std::string ServerDataBroker::kFileTransferServiceName = "asapo-file-transfer";
 
 Error GetNoDataResponseFromJson(const std::string& json_string, ConsumerErrorData* data) {
     JsonStringParser parser(json_string);
@@ -598,7 +598,7 @@ Error ServerDataBroker::UpdateFolderTokenIfNeeded(bool ignore_existing) {
 RequestInfo ServerDataBroker::CreateFolderTokenRequest() const {
     RequestInfo ri;
     ri.host = endpoint_;
-    ri.api = "/authorizer/folder";
+    ri.api = "/asapo-authorizer/folder";
     ri.post = true;
     ri.body = "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\""
               +

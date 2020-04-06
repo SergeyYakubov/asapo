@@ -25,7 +25,7 @@ job "authorizer" {
       }
 
       service {
-        name = "authorizer"
+        name = "asapo-authorizer"
         port = "authorizer"
         check {
           name     = "alive"
