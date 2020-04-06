@@ -3,8 +3,8 @@
   "PerformanceDbServer":"localhost:8400/influxdb",
   "PerformanceDbName": "asapo_receivers",
   "DatabaseServer":"auto",
-  "DiscoveryServer": "localhost:8400/discovery",
-  "AuthorizationServer": "localhost:8400/authorizer",
+  "DiscoveryServer": "localhost:8400/asapo-discovery",
+  "AuthorizationServer": "localhost:8400/asapo-authorizer",
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "DataServer": {

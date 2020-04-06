@@ -63,8 +63,8 @@ class ServerDataBrokerTests : public Test {
     NiceMock<MockNetClient> mock_netclient;
     FileInfo info;
     std::string expected_server_uri = "test:8400";
-    std::string expected_broker_uri = "broker:5005";
-    std::string expected_fts_uri = "fts:5008";
+    std::string expected_broker_uri = "asapo-broker:5005";
+    std::string expected_fts_uri = "asapo-file-transfer:5008";
     std::string expected_token = "token";
     std::string expected_path = "/tmp/beamline/beamtime";
     std::string expected_filename = "filename";
@@ -125,7 +125,7 @@ class ServerDataBrokerTests : public Test {
                 ));
     }
     void MockGetServiceUri(std::string service, std::string result) {
-        EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/" + service), _, _)).WillOnce(DoAll(
+        EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/" + service), _, _)).WillOnce(DoAll(
                     SetArgPointee<1>(HttpCode::OK),
                     SetArgPointee<2>(nullptr),
                     Return(result)));
@@ -134,7 +134,7 @@ class ServerDataBrokerTests : public Test {
     void MockBeforeFTS(FileData* data);
 
     void MockGetFTSUri() {
-        MockGetServiceUri("fts", expected_fts_uri);
+        MockGetServiceUri("asapo-file-transfer", expected_fts_uri);
     }
 
     void ExpectFolderToken();
@@ -142,7 +142,7 @@ class ServerDataBrokerTests : public Test {
     void ExpectRepeatedFileTransfer();
 
     void MockGetBrokerUri() {
-        MockGetServiceUri("broker", expected_broker_uri);
+        MockGetServiceUri("asapo-broker", expected_broker_uri);
     }
     void MockReadDataFromFile(int times = 1) {
         if (times == 0) {
@@ -320,7 +320,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsWrongResponseFromHttpClient) {
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerAddressNotFound) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/asapo-broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::NotFound),
                                                     SetArgPointee<2>(nullptr),
@@ -333,7 +333,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerAddressNotFound) {
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsIfBrokerUriEmpty) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/asapo-broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::OK),
                                                     SetArgPointee<2>(nullptr),
@@ -353,7 +353,7 @@ TEST_F(ServerDataBrokerTests, GetDoNotCallBrokerUriIfAlreadyFound) {
     data_broker->GetNext(&info, expected_group_id, nullptr);
     Mock::VerifyAndClearExpectations(&mock_http_client);
 
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/asap-broker"), _, _)).Times(0);
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asap-broker"), _, _)).Times(0);
     MockGet("error_response");
     data_broker->GetNext(&info, expected_group_id, nullptr);
 }
@@ -432,7 +432,7 @@ ACTION(AssignArg2) {
 
 
 TEST_F(ServerDataBrokerTests, GetNextRetriesIfConnectionHttpClientErrorUntilTimeout) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/discovery/asapo-broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
                                                     SetArgPointee<1>(HttpCode::OK),
                                                     SetArgPointee<2>(nullptr),
@@ -1054,7 +1054,7 @@ void ServerDataBrokerTests::ExpectFolderToken() {
                                                expected_beamtime_id
                                                + "\",\"Token\":\"" + expected_token + "\"}";
 
-    EXPECT_CALL(mock_http_client, Post_t(HasSubstr(expected_server_uri + "/authorizer/folder"),
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr(expected_server_uri + "/asapo-authorizer/folder"),
                                          expected_folder_query_string, _, _)).WillOnce(DoAll(
                                                      SetArgPointee<2>(HttpCode::OK),
                                                      SetArgPointee<3>(nullptr),

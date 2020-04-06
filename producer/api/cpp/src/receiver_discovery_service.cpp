@@ -9,7 +9,7 @@
 
 namespace  asapo {
 
-const std::string ReceiverDiscoveryService::kServiceEndpointSuffix = "/discovery/asapo-receiver";
+const std::string ReceiverDiscoveryService::kServiceEndpointSuffix = "/asapo-discovery/asapo-receiver";
 
 ReceiverDiscoveryService::ReceiverDiscoveryService(std::string endpoint, uint64_t update_frequency_ms): httpclient__{DefaultHttpClient()},
     log__{GetDefaultProducerLogger()},

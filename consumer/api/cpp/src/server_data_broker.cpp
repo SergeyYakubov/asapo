@@ -153,7 +153,7 @@ Error ServerDataBroker::DiscoverService(const std::string& service_name, std::st
     }
     RequestInfo ri;
     ri.host = endpoint_;
-    ri.api = "/discovery/" + service_name;
+    ri.api = "/asapo-discovery/" + service_name;
     RequestOutput output;
     Error err;
     err = ProcessRequest(&output, ri, nullptr);

@@ -48,7 +48,7 @@ class ReceiversStatusTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     NiceMock<MockHttpClient>* mock_http_client;
 
-    std::string expected_endpoint{"endpoint/discovery/asapo-receiver"};
+    std::string expected_endpoint{"endpoint/asapo-discovery/asapo-receiver"};
     ReceiverDiscoveryService status{"endpoint", 20};
 
     void SetUp() override {
