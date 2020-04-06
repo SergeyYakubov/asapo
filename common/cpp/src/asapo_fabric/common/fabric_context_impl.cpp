@@ -19,6 +19,8 @@ std::string __PRETTY_FUNCTION_TO_NAMESPACE__(const std::string& prettyFunction) 
     return prettyFunction.substr(spaceBegin + 1, functionParamBegin - spaceBegin - 1);
 }
 
+// This marco checks if the call that is being made returns FI_SUCCESS. Should only be used with LiFabric functions
+// *error is set to the corresponding LiFabric error
 #define FI_OK(functionCall)                                     \
     do {                                                        \
         int tmp_fi_status = functionCall;                       \
@@ -27,7 +29,7 @@ std::string __PRETTY_FUNCTION_TO_NAMESPACE__(const std::string& prettyFunction) 
             *error = ErrorFromFabricInternal(__PRETTY_FUNCTION_TO_NAMESPACE__(__PRETTY_FUNCTION__) + " Line " + std::to_string(__LINE__) + ": " + tmp_fi_s.substr(0, tmp_fi_s.find('(')), tmp_fi_status);\
         return;                                                 \
         }                                                       \
-    } while(0)
+    } while(0) // Enforce ';'
 
 // TODO: It is super important that version 1.10 is installed, but since its not released yet we go with 1.9
 const uint32_t FabricContextImpl::kMinExpectedLibFabricVersion = FI_VERSION(1, 9);
@@ -64,7 +66,6 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     uint64_t additionalFlags = isServer ? FI_SOURCE : 0;
 
     fi_info* hints = fi_allocinfo();
-    // We somehow have to know if we should allocate a dummy sockets domain or a real verbs domain
     if (networkIpHint == "127.0.0.1") {
         // sockets mode
         hints->fabric_attr->prov_name = strdup("sockets");
@@ -208,13 +209,13 @@ void FabricContextImpl::StartBackgroundThreads() {
 }
 
 void FabricContextImpl::StopBackgroundThreads() {
+    alive_check_response_task_.Stop(); // This has to be done before we kill the completion thread
+
     background_threads_running_ = false;
     if (completion_thread_) {
         completion_thread_->join();
         completion_thread_ = nullptr;
     }
-
-    alive_check_response_task_.Stop();
 }
 
 void FabricContextImpl::CompletionThread() {
@@ -224,47 +225,48 @@ void FabricContextImpl::CompletionThread() {
     while(background_threads_running_ && !error) {
         ssize_t ret;
         ret = fi_cq_sreadfrom(completion_queue_, &entry, 1, &tmpAddress, nullptr, 10 /*ms*/);
-        if (ret == -FI_EAGAIN) {
-            std::this_thread::yield();
-            continue; // No data
-        }
 
-        // TODO Refactor, maybe put it in other functions and/or switch case of ret
-
-        if (ret == -FI_EAVAIL) { // An error is available
-            fi_cq_err_entry errEntry{};
-            ret = fi_cq_readerr(completion_queue_, &errEntry, 0);
-            if (ret != 1) {
-                error = ErrorFromFabricInternal("Unknown error while fi_cq_readerr", ret);
-            } else {
-                auto task = (FabricWaitableTask*)(errEntry.op_context);
+        switch (ret) {
+            case -FI_EAGAIN: // No data
+                std::this_thread::yield();
+                break;
+            case -FI_EAVAIL: // An error is in the queue
+                CompletionThreadHandleErrorAvailable(&error);
+                break;
+            case 1: { // We got 1 data entry back
+                auto task = (FabricWaitableTask*)(entry.op_context);
                 if (task) {
-                    task->HandleErrorCompletion(&errEntry);
-                } else if (hotfix_using_sockets_) {
-                    printf("[Known Sockets bug libfabric/#5795] Ignoring nullptr task!\n");
+                    task->HandleCompletion(&entry, tmpAddress);
                 } else {
-                    error = FabricErrorTemplates::kInternalError.Generate("nullptr context from fi_cq_readerr");
+                    error = FabricErrorTemplates::kInternalError.Generate("nullptr context from fi_cq_sreadfrom");
                 }
+                break;
             }
-
-            continue;
-        }
-
-        if (ret != 1) { // We expect to receive 1 event
-            error = ErrorFromFabricInternal("Unknown error while fi_cq_readfrom", ret);
-            break;
-        }
-
-        auto task = (FabricWaitableTask*)(entry.op_context);
-        if (task) {
-            task->HandleCompletion(&entry, tmpAddress);
-        } else {
-            error = FabricErrorTemplates::kInternalError.Generate("nullptr context from fi_cq_sreadfrom");
+            default:
+                error = ErrorFromFabricInternal("Unknown error while fi_cq_readfrom", ret);
+                break;
         }
     }
 
     if (error) {
         throw std::runtime_error("ASAPO Fabric CompletionThread exited with error: " + error->Explain());
+    }
+}
+
+void FabricContextImpl::CompletionThreadHandleErrorAvailable(Error* error) {
+    fi_cq_err_entry errEntry{};
+    ssize_t ret = fi_cq_readerr(completion_queue_, &errEntry, 0);
+    if (ret != 1) {
+        *error = ErrorFromFabricInternal("Unknown error while fi_cq_readerr", ret);
+    } else {
+        auto task = (FabricWaitableTask*)(errEntry.op_context);
+        if (task) {
+            task->HandleErrorCompletion(&errEntry);
+        } else if (hotfix_using_sockets_) {
+            printf("[Known Sockets bug libfabric/#5795] Ignoring nullptr task!\n");
+        } else {
+            *error = FabricErrorTemplates::kInternalError.Generate("nullptr context from fi_cq_readerr");
+        }
     }
 }
 
@@ -275,4 +277,51 @@ bool FabricContextImpl::TargetIsAliveCheck(FabricAddress address) {
                                         fi_tsend, nullptr, 0, nullptr, address, FI_ASAPO_TAG_ALIVE_CHECK);
     // If the send was successful, then we are still able to communicate with the peer
     return !(error != nullptr);
+}
+
+void FabricContextImpl::InternalWait(FabricAddress targetAddress, FabricWaitableTask* task, Error* error) {
+
+    // Check if we simply can wait for our task
+    task->Wait(requestTimeoutMs_, error);
+
+    if (*error == FabricErrorTemplates::kTimeout) {
+        if (targetAddress == FI_ASAPO_ADDR_NO_ALIVE_CHECK) {
+            CancelTask(task, error);
+            // We expect the task to fail with 'Operation canceled'
+            if (*error == FabricErrorTemplates::kInternalOperationCanceledError) {
+                // Switch it to a timeout so its more clearly what happened
+                *error = FabricErrorTemplates::kTimeout.Generate();
+            }
+        } else {
+            InternalWaitWithAliveCheck(targetAddress, task, error);
+        }
+    }
+}
+
+void FabricContextImpl::InternalWaitWithAliveCheck(FabricAddress targetAddress, FabricWaitableTask* task,
+                                                   Error* error) {// Handle advanced alive check
+    bool aliveCheckFailed = false;
+    for (uint32_t i = 0; i < maxTimeoutRetires_ && *error == FabricErrorTemplates::kTimeout; i++) {
+        *error = nullptr;
+        printf("HandleFiCommandAndWait - Tries: %d\n", i);
+        if (!TargetIsAliveCheck(targetAddress)) {
+            aliveCheckFailed = true;
+            break;
+        }
+        task->Wait(requestTimeoutMs_, error);
+    }
+
+    CancelTask(task, error);
+
+    if (aliveCheckFailed) {
+        *error = FabricErrorTemplates::kInternalConnectionError.Generate();
+    } else if(*error == FabricErrorTemplates::kInternalOperationCanceledError) {
+        *error = FabricErrorTemplates::kTimeout.Generate();
+    }
+}
+
+void FabricContextImpl::CancelTask(FabricWaitableTask* task, Error* error) {
+    *error = nullptr;
+    fi_cancel(&endpoint_->fid, task);
+    task->Wait(0, error); // You can probably expect a kInternalOperationCanceledError
 }

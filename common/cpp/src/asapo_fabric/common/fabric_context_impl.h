@@ -102,7 +102,7 @@ class FabricContextImpl : public FabricContext {
     void StartBackgroundThreads();
     void StopBackgroundThreads();
 
-    // If the targetAddress is FI_ASAPO_ADDR_NO_ALIVE_CHECK and a timeout occurs, no further ping is being done
+    // If the targetAddress is FI_ASAPO_ADDR_NO_ALIVE_CHECK and a timeout occurs, no further ping is being done.
     // Alive check is generally only necessary if you are trying to receive data or RDMA send.
     template<class FuncType, class... ArgTypes>
     inline void HandleFiCommandWithBasicTaskAndWait(FabricAddress targetAddress, Error* error,
@@ -111,51 +111,12 @@ class FabricContextImpl : public FabricContext {
         HandleFiCommandAndWait(targetAddress, &task, error, func, args...);
     }
 
-    // If the targetAddress is FI_ASAPO_ADDR_NO_ALIVE_CHECK and a timeout occurs, no further ping is being done.
-    // Alive check is generally only necessary if you are trying to receive data or RDMA send.
     template<class FuncType, class... ArgTypes>
     inline void HandleFiCommandAndWait(FabricAddress targetAddress, FabricWaitableTask* task, Error* error,
                                        FuncType func, ArgTypes... args) {
         HandleRawFiCommand(task, error, func, args...);
-
-        if (!(*error)) {
-            task->Wait(requestTimeoutMs_, error);
-            if (*error == FabricErrorTemplates::kTimeout) {
-                if (targetAddress != FI_ASAPO_ADDR_NO_ALIVE_CHECK) {
-                    // Handle advanced alive check
-                    bool aliveCheckFailed = false;
-                    for (uint32_t i = 0; i < maxTimeoutRetires_ && *error == FabricErrorTemplates::kTimeout; i++) {
-                        *error = nullptr;
-                        printf("HandleFiCommandAndWait - Tries: %d\n", i);
-                        if (!TargetIsAliveCheck(targetAddress)) {
-                            aliveCheckFailed = true;
-                            break;
-                        }
-                        task->Wait(requestTimeoutMs_, error);
-                    }
-
-                    // TODO refactor this if/else mess
-                    if (aliveCheckFailed) {
-                        fi_cancel(&endpoint_->fid, task);
-                        task->Wait(0, error);
-                        *error = FabricErrorTemplates::kInternalConnectionError.Generate();
-                    } else if(*error == FabricErrorTemplates::kTimeout) {
-                        fi_cancel(&endpoint_->fid, task);
-                        task->Wait(0, error);
-                        *error = FabricErrorTemplates::kTimeout.Generate();
-                    }
-                } else {
-                    // If a timeout occurs we want to cancel the action,
-                    // which invokes an 'Operation canceled' error in the completion queue.
-                    fi_cancel(&endpoint_->fid, task);
-                    task->Wait(0, error);
-                    // We expect the task to fail with 'Operation canceled'
-                    if (*error == FabricErrorTemplates::kInternalOperationCanceledError) {
-                        // Switch it to a timeout so its more clearly what happened
-                        *error = FabricErrorTemplates::kTimeout.Generate();
-                    }
-                }
-            }
+        if (!(*error)) { // We successfully queued our request
+            InternalWait(targetAddress, task, error);
         }
     }
 
@@ -175,24 +136,33 @@ class FabricContextImpl : public FabricContext {
             } while (ret == -FI_EAGAIN && maxTime >= clock::now());
         }
 
-        if (ret != 0) {
-            switch (-ret) {
-            case FI_EAGAIN:
-                *error = FabricErrorTemplates::kTimeout.Generate();
-                break;
-            case FI_ENOENT:
-                *error = FabricErrorTemplates::kConnectionRefusedError.Generate();
-                break;
-            default:
-                *error = ErrorFromFabricInternal("HandleFiCommandAndWait", ret);
-            }
-            return;
+        switch (-ret) {
+        case FI_SUCCESS:
+            // Success
+            break;
+        case FI_EAGAIN: // We felt trough our own timeout loop
+            *error = FabricErrorTemplates::kTimeout.Generate();
+            break;
+        case FI_ENOENT:
+            *error = FabricErrorTemplates::kConnectionRefusedError.Generate();
+            break;
+        default:
+            *error = ErrorFromFabricInternal("HandleRawFiCommand", ret);
+            break;
         }
     }
 
   private:
     bool TargetIsAliveCheck(FabricAddress address);
     void CompletionThread();
+
+    void InternalWait(FabricAddress targetAddress, FabricWaitableTask* task, Error* error);
+
+    void InternalWaitWithAliveCheck(FabricAddress targetAddress, FabricWaitableTask* task, Error* error);
+
+    void CompletionThreadHandleErrorAvailable(Error* error);
+
+    void CancelTask(FabricWaitableTask* task, Error* error);
 };
 
 }
