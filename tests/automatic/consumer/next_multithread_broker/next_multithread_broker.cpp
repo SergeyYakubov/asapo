@@ -64,7 +64,9 @@ void TestAll(const Args& args) {
     }
 
     for (auto& thread : threads) {
-        thread.join();
+        if (thread.joinable()) {
+            thread.join();
+        }
     }
 
     Assert(file_infos, args.nthreads, args.nfiles);

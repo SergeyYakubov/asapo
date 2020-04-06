@@ -22,7 +22,7 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 REM producer
 mkdir %receiver_folder%
-"%1" %proxy_address% %beamtime_id% 100 0 1 0 100
+"%1" %proxy_address% %beamtime_id% 100 0 1 0 10000
 
 REM consumer
 "%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 0  1 > out.txt
