@@ -1,10 +1,10 @@
 {
-  "AdvertiseIP": "127.0.0.1",
   "PerformanceDbServer":"localhost:8086",
   "PerformanceDbName": "db_test",
   "DatabaseServer":"auto",
   "DiscoveryServer": "localhost:8400/discovery",
   "DataServer": {
+    "AdvertiseURI": "127.0.0.1",
     "NThreads": 2,
     "ListenPort": {{ env "NOMAD_PORT_recv_ds" }}
   },

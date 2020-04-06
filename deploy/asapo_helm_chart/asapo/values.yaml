@@ -30,7 +30,7 @@ ownServices:
       nThreads: 1
       _exposeServiceExtrernally: true
     dataCache:
-      enable: false
+      enable: true
       sizeGb: 1
     receiveToDiskThresholdMB: 200
   fileTransfer:
