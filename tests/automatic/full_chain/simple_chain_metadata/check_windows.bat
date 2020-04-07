@@ -20,6 +20,19 @@ c:\opt\consul\nomad run nginx.nmd
 
 ping 1.0.0.0 -n 10 -w 100 > nul
 
+set i=0
+:repeat
+set /a i=%i%+1
+echo %i%
+if %i% EQU 20 (
+    goto :error
+)
+timeout /t 1
+curl --fail 127.0.0.1:8400/asapo-discovery/asapo-receiver || goto :repeat
+curl --fail 127.0.0.1:8400/asapo-discovery/asapo-broker|| goto :repeat
+echo discovery ready
+
+
 REM producer
 mkdir %receiver_folder%
 "%1" %proxy_address% %beamtime_id% 100 0 1 0 1000
