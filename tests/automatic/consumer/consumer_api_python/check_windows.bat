@@ -10,13 +10,7 @@ SET database_name=%beamtime_id%_%stream%
 SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 set token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
-c:\opt\consul\nomad run discovery.nmd
-c:\opt\consul\nomad run broker.nmd
-c:\opt\consul\nomad run nginx.nmd
-c:\opt\consul\nomad run file_transfer.nmd
-c:\opt\consul\nomad run authorizer.nmd
-
-ping 1.0.0.0 -n 10 -w 100 > nul
+call start_services.bat
 
 for /l %%x in (1, 1, 5) do echo db.data_default.insert({"_id":%%x,"size":6,"name":"%%x","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
@@ -49,12 +43,7 @@ call :clean
 exit /b 1
 
 :clean
-c:\opt\consul\nomad stop discovery
-c:\opt\consul\nomad stop broker
-c:\opt\consul\nomad stop nginx
-c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill
-c:\opt\consul\nomad stop file_transfer
-c:\opt\consul\nomad stop authorizer
+call stop_services.bat
 
 echo db.dropDatabase() | %mongo_exe% %database_name%
 del c:\tmp\asapo\consumer_test\files\1

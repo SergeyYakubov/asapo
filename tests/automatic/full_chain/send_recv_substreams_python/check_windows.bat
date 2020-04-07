@@ -10,12 +10,7 @@ SET beamline=test
 
 SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 
-
-c:\opt\consul\nomad run discovery.nmd
-c:\opt\consul\nomad run broker.nmd
-c:\opt\consul\nomad run nginx.nmd
-c:\opt\consul\nomad run receiver.nmd
-c:\opt\consul\nomad run authorizer.nmd
+call start_services.bat
 
 "%1" 127.0.0.1:8400 %beamtime_id% %token%
 
@@ -26,11 +21,5 @@ call :clean
 exit /b 1
 
 :clean
-c:\opt\consul\nomad stop discovery
-c:\opt\consul\nomad stop broker
-c:\opt\consul\nomad stop nginx
-c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill
-c:\opt\consul\nomad stop receiver
-c:\opt\consul\nomad stop authorizer
-
+call stop_services.bat
 echo db.dropDatabase() | %mongo_exe% %indatabase_name%

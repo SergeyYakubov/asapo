@@ -4,7 +4,6 @@ SET beamline=test
 SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\data\%beamtime_id%"
 
-
 "%3" token -secret auth_secret.key %beamtime_id% > token
 set /P token=< token
 
@@ -12,26 +11,7 @@ set proxy_address="127.0.0.1:8400"
 
 echo db.%beamtime_id%_detector.insert({dummy:1}) | %mongo_exe% %beamtime_id%_detector
 
-c:\opt\consul\nomad run receiver.nmd
-c:\opt\consul\nomad run authorizer.nmd
-c:\opt\consul\nomad run discovery.nmd
-c:\opt\consul\nomad run broker.nmd
-c:\opt\consul\nomad run nginx.nmd
-
-ping 1.0.0.0 -n 10 -w 100 > nul
-
-set i=0
-:repeat
-set /a i=%i%+1
-echo %i%
-if %i% EQU 20 (
-    goto :error
-)
-timeout /t 1
-curl --fail 127.0.0.1:8400/asapo-discovery/asapo-receiver || goto :repeat
-curl --fail 127.0.0.1:8400/asapo-discovery/asapo-broker|| goto :repeat
-echo discovery ready
-
+call start_services.bat
 
 REM producer
 mkdir %receiver_folder%
@@ -50,12 +30,7 @@ call :clean
 exit /b 1
 
 :clean
-c:\opt\consul\nomad stop receiver
-c:\opt\consul\nomad stop discovery
-c:\opt\consul\nomad stop broker
-c:\opt\consul\nomad stop authorizer
-c:\opt\consul\nomad stop nginx
-c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill
+call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
 del /f token
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%_detector

@@ -20,13 +20,7 @@ SET timeout=2
 SET timeout_producer=25
 SET nthreads=4
 
-c:\opt\consul\nomad run discovery.nmd
-c:\opt\consul\nomad run broker.nmd
-c:\opt\consul\nomad run nginx.nmd
-c:\opt\consul\nomad run receiver.nmd
-c:\opt\consul\nomad run authorizer.nmd
-
-ping 1.0.0.0 -n 10 -w 100 > nul
+call start_services.bat
 
 for /l %%x in (1, 1, 3) do echo db.data_default.insert({"_id":%%x,"size":6,"name":"file%%x","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %indatabase_name%  || goto :error
 
@@ -58,13 +52,7 @@ call :clean
 exit /b 1
 
 :clean
-c:\opt\consul\nomad stop discovery
-c:\opt\consul\nomad stop broker
-c:\opt\consul\nomad stop nginx
-c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill
-c:\opt\consul\nomad stop receiver
-c:\opt\consul\nomad stop authorizer
-
+call stop_services.bat
 echo db.dropDatabase() | %mongo_exe% %indatabase_name%
 echo db.dropDatabase() | %mongo_exe% %outdatabase_name%
 rmdir /S /Q %receiver_root_folder%
