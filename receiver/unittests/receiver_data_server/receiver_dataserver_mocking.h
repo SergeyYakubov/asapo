@@ -27,12 +27,17 @@ class MockNetServer : public NetServer {
     MOCK_CONST_METHOD1(GetNewRequests_t, std::vector<ReceiverDataServerRequest> (ErrorInterface**
                        error));
 
-    Error SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept override {
-        return  Error{SendData_t(source_id, buf, size)};
-
+    Error SendResponse(uint64_t source_id, GenericNetworkResponse* response) const noexcept override  {
+        return  Error{SendResponse_t(source_id, response)};
     };
+    MOCK_CONST_METHOD2(SendResponse_t, ErrorInterface * (uint64_t source_id, GenericNetworkResponse* response));
 
-    MOCK_CONST_METHOD3(SendData_t, ErrorInterface * (uint64_t source_id, void* buf, uint64_t size));
+    Error SendResponseAndSlotData(uint64_t source_id, GenericNetworkResponse* response, GenericRequestHeader* request,
+                                  CacheMeta* cache_slot) const noexcept override {
+        return  Error{SendResponseAndSlotData_t(source_id, response, request, cache_slot)};
+    };
+    MOCK_CONST_METHOD4(SendResponseAndSlotData_t, ErrorInterface * (uint64_t source_id, GenericNetworkResponse* response,
+            GenericRequestHeader* request, CacheMeta* cache_slot));
 
     void  HandleAfterError(uint64_t source_id) const noexcept override {
         HandleAfterError_t(source_id);
@@ -47,7 +52,7 @@ class MockPool : public RequestPool {
     Error AddRequests(GenericRequests requests) noexcept override {
         std::vector<GenericRequest> reqs;
         for (const auto& preq : requests) {
-            reqs.push_back(GenericRequest{preq->header, 0});
+            reqs.emplace_back(preq->header, 0);
         }
         return Error(AddRequests_t(std::move(reqs)));
 

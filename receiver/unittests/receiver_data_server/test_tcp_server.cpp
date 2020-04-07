@@ -234,21 +234,92 @@ TEST_F(TCPServerTests, GetNewRequestsReadOk) {
 
 }
 
-TEST_F(TCPServerTests, SendData) {
-    uint8_t tmp;
+TEST_F(TCPServerTests, SendResponse) {
+    asapo::GenericNetworkResponse tmp {};
 
-    EXPECT_CALL(mock_io, Send_t(1, &tmp, 10, _))
-    .WillOnce(
-        DoAll(
-            testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
-            Return(1)
-        ));
+    EXPECT_CALL(mock_io, Send_t(1, &tmp, sizeof(asapo::GenericNetworkResponse), _))
+            .WillOnce(
+                    DoAll(
+                            testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+                            Return(1)
+                    ));
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
 
-    auto err = tcp_server.SendData(1, &tmp, 10);
+    auto err = tcp_server.SendResponse(1, &tmp);
 
     ASSERT_THAT(err, Ne(nullptr));
+}
+
+TEST_F(TCPServerTests, SendResponseAndSlotData_SendResponseError) {
+    asapo::GenericNetworkResponse tmp {};
+
+
+    asapo::GenericRequestHeader expectedRequest {};
+    asapo::CacheMeta expectedMeta {};
+    expectedMeta.id = 20;
+    expectedMeta.addr = (void*)0x9234;
+    expectedMeta.size = 50;
+    expectedMeta.lock = 123;
+
+    EXPECT_CALL(mock_io, Send_t(1, &tmp, sizeof(asapo::GenericNetworkResponse), _))
+            .WillOnce(DoAll(
+                    testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+                    Return(0)
+            ));
+    EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
+
+    auto err = tcp_server.SendResponseAndSlotData(1, &tmp, &expectedRequest, &expectedMeta);
+
+    ASSERT_THAT(err, Ne(nullptr));
+}
+
+TEST_F(TCPServerTests, SendResponseAndSlotData_SendDataError) {
+    asapo::GenericNetworkResponse tmp {};
+
+
+    asapo::GenericRequestHeader expectedRequest {};
+    asapo::CacheMeta expectedMeta {};
+    expectedMeta.id = 20;
+    expectedMeta.addr = (void*)0x9234;
+    expectedMeta.size = 50;
+    expectedMeta.lock = 123;
+
+    EXPECT_CALL(mock_io, Send_t(1, &tmp, sizeof(asapo::GenericNetworkResponse), _))
+            .WillOnce(Return(1));
+    EXPECT_CALL(mock_io, Send_t(1, expectedMeta.addr, expectedMeta.size, _))
+            .WillOnce(
+                    DoAll(
+                            testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+                            Return(0)
+                    ));
+
+    EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
+
+    auto err = tcp_server.SendResponseAndSlotData(1, &tmp, &expectedRequest, &expectedMeta);
+
+    ASSERT_THAT(err, Ne(nullptr));
+}
+
+TEST_F(TCPServerTests, SendResponseAndSlotData_Ok) {
+    asapo::GenericNetworkResponse tmp {};
+
+
+    asapo::GenericRequestHeader expectedRequest {};
+    asapo::CacheMeta expectedMeta {};
+    expectedMeta.id = 20;
+    expectedMeta.addr = (void*)0x9234;
+    expectedMeta.size = 50;
+    expectedMeta.lock = 123;
+
+    EXPECT_CALL(mock_io, Send_t(1, &tmp, sizeof(asapo::GenericNetworkResponse), _))
+            .WillOnce(Return(1));
+    EXPECT_CALL(mock_io, Send_t(1, expectedMeta.addr, expectedMeta.size, _))
+            .WillOnce(Return(expectedMeta.size));
+
+    auto err = tcp_server.SendResponseAndSlotData(1, &tmp, &expectedRequest, &expectedMeta);
+
+    ASSERT_THAT(err, Eq(nullptr));
 }
 
 TEST_F(TCPServerTests, HandleAfterError) {

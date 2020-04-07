@@ -1,5 +1,5 @@
-#ifndef ASAPO_TCP_SERVER_H
-#define ASAPO_TCP_SERVER_H
+#ifndef ASAPO_RDS_TCP_SERVER_H
+#define ASAPO_RDS_TCP_SERVER_H
 
 #include "net_server.h"
 #include "io/io.h"
@@ -11,10 +11,12 @@ const int kMaxPendingConnections = 5;
 
 class TcpServer : public NetServer {
   public:
-    TcpServer(std::string address);
-    ~TcpServer();
+    explicit TcpServer(std::string address);
+    ~TcpServer() override;
     GenericRequests GetNewRequests(Error* err) const noexcept override ;
-    Error SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept override;
+    Error SendResponse(uint64_t source_id, GenericNetworkResponse* response) const noexcept override;
+    Error SendResponseAndSlotData(uint64_t source_id, GenericNetworkResponse* response,
+                                          GenericRequestHeader* request, CacheMeta* cache_slot) const noexcept override;
     void HandleAfterError(uint64_t source_id) const noexcept override;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
@@ -31,4 +33,4 @@ class TcpServer : public NetServer {
 
 }
 
-#endif //ASAPO_TCP_SERVER_H
+#endif //ASAPO_RDS_TCP_SERVER_H

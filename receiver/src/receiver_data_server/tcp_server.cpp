@@ -51,7 +51,7 @@ ReceiverDataServerRequestPtr TcpServer::ReadRequest(SocketDescriptor socket, Err
                     );
         return nullptr;
     }
-    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{std::move(header), (uint64_t) socket}};
+    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{header, (uint64_t) socket}};
 }
 
 GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noexcept {
@@ -90,18 +90,33 @@ TcpServer::~TcpServer() {
     io__->CloseSocket(master_socket_, nullptr);
 }
 
+void TcpServer::HandleAfterError(uint64_t source_id) const noexcept {
+    CloseSocket(source_id);
+}
 
-Error TcpServer::SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept {
+Error TcpServer::SendResponse(uint64_t source_id, GenericNetworkResponse* response) const noexcept {
     Error err;
-    io__->Send(source_id, buf, size, &err);
+    io__->Send(source_id, response, sizeof(*response), &err);
     if (err) {
         log__->Error("cannot send to consumer" + err->Explain());
     }
     return err;
 }
 
-void TcpServer::HandleAfterError(uint64_t source_id) const noexcept {
-    CloseSocket(source_id);
+Error TcpServer::SendResponseAndSlotData(uint64_t source_id, GenericNetworkResponse* response,
+                                         GenericRequestHeader* /*request*/, CacheMeta* cache_slot) const noexcept {
+    Error err;
+
+    err = SendResponse(source_id, response);
+    if (err) {
+        return err;
+    }
+
+    io__->Send(source_id, cache_slot->addr, cache_slot->size, &err);
+    if (err) {
+        log__->Error("cannot send slot to worker" + err->Explain());
+    }
+    return err;
 }
 
 }

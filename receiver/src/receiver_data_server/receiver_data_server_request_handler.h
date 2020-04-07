@@ -25,9 +25,9 @@ class ReceiverDataServerRequestHandler: public RequestHandler {
     const NetServer* server_;
     DataCache* data_cache_;
     bool CheckRequest(const ReceiverDataServerRequest* request);
-    Error SendResponce(const ReceiverDataServerRequest* request, NetworkErrorCode code);
-    Error SendData(const ReceiverDataServerRequest* request, void* data, CacheMeta* meta);
-    void* GetSlot(const ReceiverDataServerRequest* request, CacheMeta** meta);
+    Error SendResponse(const ReceiverDataServerRequest* request, NetworkErrorCode code);
+    Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, CacheMeta* meta);
+    CacheMeta* GetSlotAndLock(const ReceiverDataServerRequest* request);
 };
 
 }
