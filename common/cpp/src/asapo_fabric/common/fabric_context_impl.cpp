@@ -227,24 +227,24 @@ void FabricContextImpl::CompletionThread() {
         ret = fi_cq_sreadfrom(completion_queue_, &entry, 1, &tmpAddress, nullptr, 10 /*ms*/);
 
         switch (ret) {
-            case -FI_EAGAIN: // No data
-                std::this_thread::yield();
-                break;
-            case -FI_EAVAIL: // An error is in the queue
-                CompletionThreadHandleErrorAvailable(&error);
-                break;
-            case 1: { // We got 1 data entry back
-                auto task = (FabricWaitableTask*)(entry.op_context);
-                if (task) {
-                    task->HandleCompletion(&entry, tmpAddress);
-                } else {
-                    error = FabricErrorTemplates::kInternalError.Generate("nullptr context from fi_cq_sreadfrom");
-                }
-                break;
+        case -FI_EAGAIN: // No data
+            std::this_thread::yield();
+            break;
+        case -FI_EAVAIL: // An error is in the queue
+            CompletionThreadHandleErrorAvailable(&error);
+            break;
+        case 1: { // We got 1 data entry back
+            auto task = (FabricWaitableTask*)(entry.op_context);
+            if (task) {
+                task->HandleCompletion(&entry, tmpAddress);
+            } else {
+                error = FabricErrorTemplates::kInternalError.Generate("nullptr context from fi_cq_sreadfrom");
             }
-            default:
-                error = ErrorFromFabricInternal("Unknown error while fi_cq_readfrom", ret);
-                break;
+            break;
+        }
+        default:
+            error = ErrorFromFabricInternal("Unknown error while fi_cq_readfrom", ret);
+            break;
         }
     }
 
@@ -299,7 +299,7 @@ void FabricContextImpl::InternalWait(FabricAddress targetAddress, FabricWaitable
 }
 
 void FabricContextImpl::InternalWaitWithAliveCheck(FabricAddress targetAddress, FabricWaitableTask* task,
-                                                   Error* error) {// Handle advanced alive check
+        Error* error) {// Handle advanced alive check
     bool aliveCheckFailed = false;
     for (uint32_t i = 0; i < maxTimeoutRetires_ && *error == FabricErrorTemplates::kTimeout; i++) {
         *error = nullptr;

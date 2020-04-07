@@ -9,7 +9,7 @@ void FabricAliveCheckResponseTask::RequeueSelf() {
     Error tmpError = nullptr;
 
     ParentContext()->HandleRawFiCommand(this, &tmpError,
-                                      fi_trecv, nullptr, 0, nullptr, FI_ADDR_UNSPEC, FI_ASAPO_TAG_ALIVE_CHECK, kRecvTaggedExactMatch);
+                                        fi_trecv, nullptr, 0, nullptr, FI_ADDR_UNSPEC, FI_ASAPO_TAG_ALIVE_CHECK, kRecvTaggedExactMatch);
 
     // Error is ignored
 }
@@ -23,6 +23,6 @@ void FabricAliveCheckResponseTask::OnErrorCompletion(const fi_cq_err_entry*) {
 }
 
 FabricAliveCheckResponseTask::FabricAliveCheckResponseTask(FabricContextImpl* parentContext)
-: FabricSelfRequeuingTask(parentContext) {
+    : FabricSelfRequeuingTask(parentContext) {
 
 }

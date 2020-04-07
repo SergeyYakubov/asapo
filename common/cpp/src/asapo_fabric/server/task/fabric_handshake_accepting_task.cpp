@@ -7,7 +7,7 @@ using namespace asapo;
 using namespace fabric;
 
 FabricHandshakeAcceptingTask::FabricHandshakeAcceptingTask(FabricServerImpl* parentServerContext)
-: FabricSelfRequeuingTask(parentServerContext) {
+    : FabricSelfRequeuingTask(parentServerContext) {
 }
 
 FabricServerImpl* FabricHandshakeAcceptingTask::ServerContext() {
@@ -17,7 +17,7 @@ FabricServerImpl* FabricHandshakeAcceptingTask::ServerContext() {
 void FabricHandshakeAcceptingTask::RequeueSelf() {
     Error ignored;
     ServerContext()->HandleRawFiCommand(this, &ignored,
-                                fi_recv, &handshake_payload_, sizeof(handshake_payload_), nullptr, FI_ADDR_UNSPEC);
+                                        fi_recv, &handshake_payload_, sizeof(handshake_payload_), nullptr, FI_ADDR_UNSPEC);
 }
 
 void FabricHandshakeAcceptingTask::OnCompletion(const fi_cq_tagged_entry*, FabricAddress) {
@@ -40,15 +40,15 @@ void FabricHandshakeAcceptingTask::HandleAccept(Error* error) {
     std::string hostname;
     uint16_t port;
     std::tie(hostname, port) =
-            *(server->io__->SplitAddressToHostnameAndPort(handshake_payload_.hostnameAndPort));
+        *(server->io__->SplitAddressToHostnameAndPort(handshake_payload_.hostnameAndPort));
     FabricAddress tmpAddr;
     int ret = fi_av_insertsvc(
-            server->address_vector_,
-            hostname.c_str(),
-            std::to_string(port).c_str(),
-            &tmpAddr,
-            0,
-            nullptr);
+                  server->address_vector_,
+                  hostname.c_str(),
+                  std::to_string(port).c_str(),
+                  &tmpAddr,
+                  0,
+                  nullptr);
     if (ret != 1) {
         *error = ErrorFromFabricInternal("fi_av_insertsvc", ret);
         return;
@@ -58,7 +58,7 @@ void FabricHandshakeAcceptingTask::HandleAccept(Error* error) {
     // TODO: This could slow down the whole complete queue process, maybe use another thread?
     // Send and forget
     server->HandleRawFiCommand(new FabricSelfDeletingTask(), error,
-                                fi_send, nullptr, 0, nullptr, tmpAddr);
+                               fi_send, nullptr, 0, nullptr, tmpAddr);
 }
 
 void FabricHandshakeAcceptingTask::OnError(const Error* error) {
