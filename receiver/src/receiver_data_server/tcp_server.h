@@ -16,7 +16,7 @@ class TcpServer : public NetServer {
     GenericRequests GetNewRequests(Error* err) const noexcept override ;
     Error SendResponse(uint64_t source_id, GenericNetworkResponse* response) const noexcept override;
     Error SendResponseAndSlotData(uint64_t source_id, GenericNetworkResponse* response,
-                                          GenericRequestHeader* request, CacheMeta* cache_slot) const noexcept override;
+                                  GenericRequestHeader* request, CacheMeta* cache_slot) const noexcept override;
     void HandleAfterError(uint64_t source_id) const noexcept override;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;

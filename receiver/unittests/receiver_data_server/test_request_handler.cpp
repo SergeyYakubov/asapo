@@ -32,9 +32,9 @@ using asapo::ReceiverDataServerRequestHandler;
 namespace {
 
 MATCHER_P3(M_CheckResponse, op_code, error_code, message,
-    "Checks if a valid GenericNetworkResponse was used") {
+           "Checks if a valid GenericNetworkResponse was used") {
     return ((asapo::GenericNetworkResponse*)arg)->op_code == op_code
-            && ((asapo::GenericNetworkResponse*)arg)->error_code == uint64_t(error_code);
+           && ((asapo::GenericNetworkResponse*)arg)->error_code == uint64_t(error_code);
 }
 
 TEST(RequestHandlerTest, Constructor) {
@@ -77,9 +77,9 @@ class RequestHandlerTests : public Test {
 
 void RequestHandlerTests::MockGetSlotAndUnlockIt(bool return_without_error) {
     EXPECT_CALL(mock_cache, GetSlotToReadAndLock(expected_buf_id, expected_data_size, _)).WillOnce(DoAll(
-        SetArgPointee<2>(return_without_error ? &expected_meta : nullptr),
-        Return(return_without_error ? &tmp : nullptr)
-    ));
+                SetArgPointee<2>(return_without_error ? &expected_meta : nullptr),
+                Return(return_without_error ? &tmp : nullptr)
+            ));
     if (return_without_error) {
         EXPECT_CALL(mock_cache, UnlockSlot(_));
     }
@@ -87,23 +87,23 @@ void RequestHandlerTests::MockGetSlotAndUnlockIt(bool return_without_error) {
 
 void RequestHandlerTests::MockSendResponse(asapo::NetworkErrorCode expected_response_code, bool return_without_error) {
     EXPECT_CALL(mock_net, SendResponse_t(
-            expected_source_id,
-            M_CheckResponse(asapo::kOpcodeGetBufferData, expected_response_code, "")
-    )).WillOnce(
-            Return(return_without_error ? nullptr : asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
-    );
+                    expected_source_id,
+                    M_CheckResponse(asapo::kOpcodeGetBufferData, expected_response_code, "")
+                )).WillOnce(
+                    Return(return_without_error ? nullptr : asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
+                );
 }
 
 void RequestHandlerTests::MockSendResponseAndSlotData(asapo::NetworkErrorCode expected_response_code,
-                                                      bool return_without_error) {
+        bool return_without_error) {
     EXPECT_CALL(mock_net, SendResponseAndSlotData_t(
-            expected_source_id,
-            M_CheckResponse(asapo::kOpcodeGetBufferData, expected_response_code, ""),
-            &request.header,
-            &expected_meta
-    )).WillOnce(
-            Return(return_without_error ? nullptr : asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
-    );
+                    expected_source_id,
+                    M_CheckResponse(asapo::kOpcodeGetBufferData, expected_response_code, ""),
+                    &request.header,
+                    &expected_meta
+                )).WillOnce(
+                    Return(return_without_error ? nullptr : asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
+                );
 }
 
 TEST_F(RequestHandlerTests, RequestAlwaysReady) {

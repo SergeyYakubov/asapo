@@ -23,7 +23,7 @@ Error ReceiverDataServerRequestHandler::SendResponse(const ReceiverDataServerReq
 }
 
 Error ReceiverDataServerRequestHandler::SendResponseAndSlotData(const ReceiverDataServerRequest* request,
-                                                                CacheMeta* meta) {
+        CacheMeta* meta) {
     GenericNetworkResponse response{};
     response.op_code = kOpcodeGetBufferData;
     response.error_code = kNetErrorNoError;

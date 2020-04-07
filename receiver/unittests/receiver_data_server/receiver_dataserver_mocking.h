@@ -37,7 +37,7 @@ class MockNetServer : public NetServer {
         return  Error{SendResponseAndSlotData_t(source_id, response, request, cache_slot)};
     };
     MOCK_CONST_METHOD4(SendResponseAndSlotData_t, ErrorInterface * (uint64_t source_id, GenericNetworkResponse* response,
-            GenericRequestHeader* request, CacheMeta* cache_slot));
+                       GenericRequestHeader* request, CacheMeta* cache_slot));
 
     void  HandleAfterError(uint64_t source_id) const noexcept override {
         HandleAfterError_t(source_id);
