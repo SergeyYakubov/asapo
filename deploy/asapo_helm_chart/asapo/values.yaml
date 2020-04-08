@@ -57,8 +57,7 @@ common:
   authSecret: "12ljzgneasfd"
   offlineDir: "/test_offline"
   onlineDir: "/test_online"
-  asapoVersionTag: "develop.20.03-10-g06dc0be"
-  nodesPrefix: g
+  asapoVersionTag: "feature_ASAPO-108-kubernetes-deployment.latest"
 
 influxdb:
   authEnabled: false

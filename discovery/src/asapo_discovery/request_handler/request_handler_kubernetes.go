@@ -23,6 +23,9 @@ type KubernetesRequestHandler struct {
 
 func (rh *KubernetesRequestHandler) GetServices(name string, use_ib bool) ([]string, error) {
 	pods, err := rh.client.CoreV1().Pods(rh.namespace).List(metav1.ListOptions{LabelSelector:"app="+name,FieldSelector:"status.phase=Running"})
+	if err != nil {
+		return []string{},err
+	}
 
 	var result = make([]string, 0)
 

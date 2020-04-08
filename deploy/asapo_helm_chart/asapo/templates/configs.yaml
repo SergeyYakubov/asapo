@@ -1,5 +1,5 @@
 {{- range .Values.ownServices }}
-  {{ $data := dict "Chart" $.Chart "Template" $.Template "Values" $.Values "Files" $.Files "service" . }}
+  {{ $data := dict "Release" $.Release "Chart" $.Chart "Template" $.Template "Values" $.Values "Files" $.Files "service" . }}
     {{- template "asapo.configmap-fromfile" $data }}
 ---
 {{- end }}

@@ -1,20 +1,12 @@
 {
-  "Mode": "static",
+  "Mode": "kubernetes",
+  "Kubernetes":{
+    "Mode": "internal",
+    "Namespace": "{{ .Release.Namespace }}"
+  },
   "Receiver": {
-    "StaticEndpoints": [
-      "127.0.0.1:22001"
-    ],
     "MaxConnections": 32,
     "UseIBAddress": false
-  },
-  "Broker": {
-    "StaticEndpoint": "127.0.0.1:5005"
-  },
-  "Mongo": {
-    "StaticEndpoint": "127.0.0.1:27017"
-  },
-  "FileTransferService": {
-    "StaticEndpoint": "127.0.0.1:27017"
   },
   "Port": {{ .Values.ownServices.discovery.port }},
   "LogLevel": "debug"

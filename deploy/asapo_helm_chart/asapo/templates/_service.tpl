@@ -6,6 +6,7 @@ metadata:
   name: {{ .service.serviceName }}
 spec:
   type: {{ if .service._exposeServiceExtrernally }}NodePort{{ else }}ClusterIP{{ end }}
+  {{ if .service._exposeServiceExtrernally }}externalTrafficPolicy: Local{{ end }}
   ports:
     - protocol: TCP
       port: {{ .service.port }}
