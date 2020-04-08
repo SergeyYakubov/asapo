@@ -104,7 +104,7 @@ Error TcpServer::SendResponse(uint64_t source_id, GenericNetworkResponse* respon
 }
 
 Error TcpServer::SendResponseAndSlotData(uint64_t source_id, GenericNetworkResponse* response,
-                                         GenericRequestHeader* /*request*/, CacheMeta* cache_slot) const noexcept {
+                                         GenericRequestHeader* /*request*/, const CacheMeta* cache_slot) const noexcept {
     Error err;
 
     err = SendResponse(source_id, response);

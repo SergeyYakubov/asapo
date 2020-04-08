@@ -13,7 +13,7 @@ class NetServer {
     virtual GenericRequests GetNewRequests(Error* err) const noexcept = 0;
     virtual Error SendResponse(uint64_t source_id, GenericNetworkResponse* response) const noexcept = 0;
     virtual Error SendResponseAndSlotData(uint64_t source_id, GenericNetworkResponse* response,
-                                          GenericRequestHeader* request, CacheMeta* cache_slot) const noexcept = 0;
+                                          GenericRequestHeader* request, const CacheMeta* cache_slot) const noexcept = 0;
     virtual void HandleAfterError(uint64_t source_id) const noexcept = 0;
     virtual ~NetServer() = default;
 };

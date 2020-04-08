@@ -33,11 +33,11 @@ class MockNetServer : public NetServer {
     MOCK_CONST_METHOD2(SendResponse_t, ErrorInterface * (uint64_t source_id, GenericNetworkResponse* response));
 
     Error SendResponseAndSlotData(uint64_t source_id, GenericNetworkResponse* response, GenericRequestHeader* request,
-                                  CacheMeta* cache_slot) const noexcept override {
+                                  const CacheMeta* cache_slot) const noexcept override {
         return  Error{SendResponseAndSlotData_t(source_id, response, request, cache_slot)};
     };
     MOCK_CONST_METHOD4(SendResponseAndSlotData_t, ErrorInterface * (uint64_t source_id, GenericNetworkResponse* response,
-                       GenericRequestHeader* request, CacheMeta* cache_slot));
+                       GenericRequestHeader* request, const CacheMeta* cache_slot));
 
     void  HandleAfterError(uint64_t source_id) const noexcept override {
         HandleAfterError_t(source_id);

@@ -26,8 +26,12 @@ class ReceiverDataServerRequestHandler: public RequestHandler {
     DataCache* data_cache_;
     bool CheckRequest(const ReceiverDataServerRequest* request);
     Error SendResponse(const ReceiverDataServerRequest* request, NetworkErrorCode code);
-    Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, CacheMeta* meta);
+    Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, const CacheMeta* meta);
     CacheMeta* GetSlotAndLock(const ReceiverDataServerRequest* request);
+
+    void HandleInvalidRequest(const ReceiverDataServerRequest* receiver_request);
+
+    void HandleValidRequest(const ReceiverDataServerRequest* receiver_request, const CacheMeta* meta);
 };
 
 }

@@ -23,7 +23,7 @@ Error ReceiverDataServerRequestHandler::SendResponse(const ReceiverDataServerReq
 }
 
 Error ReceiverDataServerRequestHandler::SendResponseAndSlotData(const ReceiverDataServerRequest* request,
-        CacheMeta* meta) {
+        const CacheMeta* meta) {
     GenericNetworkResponse response{};
     response.op_code = kOpcodeGetBufferData;
     response.error_code = kNetErrorNoError;
@@ -41,14 +41,11 @@ CacheMeta* ReceiverDataServerRequestHandler::GetSlotAndLock(const ReceiverDataSe
     return meta;
 }
 
-
 bool ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* request, bool* retry) {
     *retry = false;
     auto receiver_request = dynamic_cast<ReceiverDataServerRequest*>(request);
     if (!CheckRequest(receiver_request)) {
-        SendResponse(receiver_request, kNetErrorWrongRequest);
-        server_->HandleAfterError(receiver_request->source_id);
-        log__->Error("wrong request, code:" + std::to_string(receiver_request->header.op_code));
+        HandleInvalidRequest(receiver_request);
         return true;
     }
 
@@ -58,18 +55,11 @@ bool ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* re
         return true;
     }
 
-    auto err = SendResponseAndSlotData(receiver_request, meta);
+    HandleValidRequest(receiver_request, meta);
     data_cache_->UnlockSlot(meta);
-    if (err) {
-        log__->Error("failed to send slot:" + err->Explain());
-        server_->HandleAfterError(receiver_request->source_id);
-        return true;
-    }
-
-    statistics__->IncreaseRequestCounter();
-    statistics__->IncreaseRequestDataVolume(receiver_request->header.data_size);
     return true;
 }
+
 
 bool ReceiverDataServerRequestHandler::ReadyProcessRequest() {
     return true; // always ready
@@ -85,6 +75,24 @@ void ReceiverDataServerRequestHandler::TearDownProcessingRequestLocked(bool /*pr
 
 void ReceiverDataServerRequestHandler::ProcessRequestTimeout(GenericRequest* /*request*/) {
 // do nothing
+}
+
+void ReceiverDataServerRequestHandler::HandleInvalidRequest(const ReceiverDataServerRequest* receiver_request) {
+    SendResponse(receiver_request, kNetErrorWrongRequest);
+    server_->HandleAfterError(receiver_request->source_id);
+    log__->Error("wrong request, code:" + std::to_string(receiver_request->header.op_code));
+}
+
+void ReceiverDataServerRequestHandler::HandleValidRequest(const ReceiverDataServerRequest* receiver_request,
+        const CacheMeta* meta) {
+    auto err = SendResponseAndSlotData(receiver_request, meta);
+    if (err) {
+        log__->Error("failed to send slot:" + err->Explain());
+        server_->HandleAfterError(receiver_request->source_id);
+    } else {
+        statistics__->IncreaseRequestCounter();
+        statistics__->IncreaseRequestDataVolume(receiver_request->header.data_size);
+    }
 }
 
 }
