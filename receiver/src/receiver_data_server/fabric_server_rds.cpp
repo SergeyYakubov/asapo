@@ -2,7 +2,7 @@
 
 using namespace asapo;
 
-FabricServerRds::FabricServerRds(const std::string& address) {
+FabricServerRds::FabricServerRds(const std::string& address) : factory__(fabric::GenerateDefaultFabricFactory()) {
 
 }
 
@@ -14,7 +14,14 @@ GenericRequests FabricServerRds::GetNewRequests(Error* err) const noexcept {
     return asapo::GenericRequests();
 }
 
-Error FabricServerRds::SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept {
+Error
+FabricServerRds::SendResponse(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response) const noexcept {
+    return asapo::Error();
+}
+
+Error FabricServerRds::SendResponseAndSlotData(const ReceiverDataServerRequest* request,
+                                               const GenericNetworkResponse* response,
+                                               const CacheMeta* cache_slot) const noexcept {
     return asapo::Error();
 }
 
