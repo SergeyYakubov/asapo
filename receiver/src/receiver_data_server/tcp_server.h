@@ -13,7 +13,10 @@ class TcpServer : public RdsNetServer {
   public:
     explicit TcpServer(std::string address);
     ~TcpServer() override;
-    GenericRequests GetNewRequests(Error* err) const noexcept override ;
+
+    Error Initialize() override;
+
+    GenericRequests GetNewRequests(Error* err) const noexcept override;
     Error SendResponse(const ReceiverDataServerRequest* request,
                        const GenericNetworkResponse* response) const noexcept override;
     Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response,
@@ -24,7 +27,6 @@ class TcpServer : public RdsNetServer {
   private:
     void CloseSocket(SocketDescriptor socket) const noexcept;
     ListSocketDescriptors GetActiveSockets(Error* err) const noexcept;
-    Error InitializeMasterSocketIfNeeded() const noexcept;
     ReceiverDataServerRequestPtr ReadRequest(SocketDescriptor socket, Error* err) const noexcept;
     GenericRequests ReadRequests(const ListSocketDescriptors& sockets) const noexcept;
     mutable SocketDescriptor master_socket_{kDisconnectedSocketDescriptor};

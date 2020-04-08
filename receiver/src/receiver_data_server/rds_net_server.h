@@ -9,6 +9,10 @@ namespace asapo {
 
 class RdsNetServer {
   public:
+    /**
+     * It is very important that this function is successfully called, before any other call is is made!
+     */
+    virtual Error Initialize() = 0;
     virtual GenericRequests GetNewRequests(Error* err) const noexcept = 0;
     virtual Error SendResponse(const ReceiverDataServerRequest* request,
                                const GenericNetworkResponse* response) const noexcept = 0;

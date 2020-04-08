@@ -9,7 +9,7 @@ namespace asapo {
 TcpServer::TcpServer(std::string address) : io__{GenerateDefaultIO()}, log__{GetDefaultReceiverDataServerLogger()},
     address_{std::move(address)} {}
 
-Error TcpServer::InitializeMasterSocketIfNeeded() const noexcept {
+Error TcpServer::Initialize() {
     Error err;
     if (master_socket_ == kDisconnectedSocketDescriptor) {
         master_socket_ = io__->CreateAndBindIPTCPSocketListener(address_, kMaxPendingConnections, &err);
@@ -18,6 +18,8 @@ Error TcpServer::InitializeMasterSocketIfNeeded() const noexcept {
         } else {
             log__->Error("dataserver cannot listen on " + address_ + ": " + err->Explain());
         }
+    } else {
+        err = TextError("Server was already initialized");
     }
     return err;
 }
@@ -70,10 +72,6 @@ GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) co
 }
 
 GenericRequests TcpServer::GetNewRequests(Error* err) const noexcept {
-    if ( (*err = InitializeMasterSocketIfNeeded()) ) {
-        return {};
-    }
-
     auto sockets = GetActiveSockets(err);
     if (*err) {
         return {};

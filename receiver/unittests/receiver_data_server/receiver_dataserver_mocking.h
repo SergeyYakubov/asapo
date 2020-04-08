@@ -12,6 +12,11 @@ namespace asapo {
 
 class MockNetServer : public RdsNetServer {
   public:
+    Error Initialize() override {
+        return  Error{Initialize_t()};
+    };
+    MOCK_CONST_METHOD0(Initialize_t, ErrorInterface * ());
+
     GenericRequests GetNewRequests(Error* err) const noexcept override {
         ErrorInterface* error = nullptr;
         auto reqs = GetNewRequests_t(&error);
