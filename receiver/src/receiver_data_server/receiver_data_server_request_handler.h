@@ -12,7 +12,7 @@ namespace asapo {
 
 class ReceiverDataServerRequestHandler: public RequestHandler {
   public:
-    explicit ReceiverDataServerRequestHandler(const RdsNetServer* server, DataCache* data_cache, Statistics* statistics);
+    explicit ReceiverDataServerRequestHandler(RdsNetServer* server, DataCache* data_cache, Statistics* statistics);
     bool ProcessRequestUnlocked(GenericRequest* request, bool* retry) override;
     bool ReadyProcessRequest() override;
     void PrepareProcessingRequestLocked()  override;
@@ -22,7 +22,7 @@ class ReceiverDataServerRequestHandler: public RequestHandler {
     const AbstractLogger* log__;
     Statistics* statistics__;
   private:
-    const RdsNetServer* server_;
+    RdsNetServer* server_;
     DataCache* data_cache_;
     bool CheckRequest(const ReceiverDataServerRequest* request);
     Error SendResponse(const ReceiverDataServerRequest* request, NetworkErrorCode code);

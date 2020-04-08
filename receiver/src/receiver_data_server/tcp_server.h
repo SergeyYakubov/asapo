@@ -16,21 +16,21 @@ class TcpServer : public RdsNetServer {
 
     Error Initialize() override;
 
-    GenericRequests GetNewRequests(Error* err) const noexcept override;
+    GenericRequests GetNewRequests(Error* err) override;
     Error SendResponse(const ReceiverDataServerRequest* request,
-                       const GenericNetworkResponse* response) const noexcept override;
+                       const GenericNetworkResponse* response) override;
     Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response,
-                                  const CacheMeta* cache_slot) const noexcept override;
-    void HandleAfterError(uint64_t source_id) const noexcept override;
+                                  const CacheMeta* cache_slot) override;
+    void HandleAfterError(uint64_t source_id) override;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
   private:
-    void CloseSocket(SocketDescriptor socket) const noexcept;
-    ListSocketDescriptors GetActiveSockets(Error* err) const noexcept;
-    ReceiverDataServerRequestPtr ReadRequest(SocketDescriptor socket, Error* err) const noexcept;
-    GenericRequests ReadRequests(const ListSocketDescriptors& sockets) const noexcept;
-    mutable SocketDescriptor master_socket_{kDisconnectedSocketDescriptor};
-    mutable ListSocketDescriptors sockets_to_listen_;
+    void CloseSocket(SocketDescriptor socket);
+    ListSocketDescriptors GetActiveSockets(Error* err);
+    ReceiverDataServerRequestPtr ReadRequest(SocketDescriptor socket, Error* err) ;
+    GenericRequests ReadRequests(const ListSocketDescriptors& sockets);
+    SocketDescriptor master_socket_{kDisconnectedSocketDescriptor};
+    ListSocketDescriptors sockets_to_listen_;
     std::string address_;
 };
 

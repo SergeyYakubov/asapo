@@ -13,10 +13,10 @@ namespace asapo {
 
 class ReceiverDataServerRequestHandlerFactory : public RequestHandlerFactory {
   public:
-    ReceiverDataServerRequestHandlerFactory (const RdsNetServer* server, DataCache* data_cache, Statistics* statistics);
+    ReceiverDataServerRequestHandlerFactory(RdsNetServer* server, DataCache* data_cache, Statistics* statistics);
     VIRTUAL std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) override;
   private:
-    const RdsNetServer* server_;
+    RdsNetServer* server_;
     DataCache* data_cache_;
     Statistics* statistics_;
 };

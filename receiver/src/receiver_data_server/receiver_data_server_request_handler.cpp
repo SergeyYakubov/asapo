@@ -4,7 +4,7 @@
 
 namespace asapo {
 
-ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(const RdsNetServer* server,
+ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(RdsNetServer* server,
         DataCache* data_cache, Statistics* statistics): log__{GetDefaultReceiverDataServerLogger()}, statistics__{statistics},
     server_{server}, data_cache_{data_cache} {
 

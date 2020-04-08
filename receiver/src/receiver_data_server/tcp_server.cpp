@@ -24,7 +24,7 @@ Error TcpServer::Initialize() {
     return err;
 }
 
-ListSocketDescriptors TcpServer::GetActiveSockets(Error* err) const noexcept {
+ListSocketDescriptors TcpServer::GetActiveSockets(Error* err) {
     std::vector<std::string> new_connections;
     auto sockets = io__->WaitSocketsActivity(master_socket_, &sockets_to_listen_, &new_connections, err);
     for (auto& connection : new_connections) {
@@ -33,14 +33,14 @@ ListSocketDescriptors TcpServer::GetActiveSockets(Error* err) const noexcept {
     return sockets;
 }
 
-void TcpServer::CloseSocket(SocketDescriptor socket) const noexcept {
+void TcpServer::CloseSocket(SocketDescriptor socket) {
     sockets_to_listen_.erase(std::remove(sockets_to_listen_.begin(), sockets_to_listen_.end(), socket),
                              sockets_to_listen_.end());
     log__->Debug("connection " + io__->AddressFromSocket(socket) + " closed");
     io__->CloseSocket(socket, nullptr);
 }
 
-ReceiverDataServerRequestPtr TcpServer::ReadRequest(SocketDescriptor socket, Error* err) const noexcept {
+ReceiverDataServerRequestPtr TcpServer::ReadRequest(SocketDescriptor socket, Error* err) {
     GenericRequestHeader header;
     io__->Receive(socket, &header,
                   sizeof(GenericRequestHeader), err);
@@ -56,7 +56,7 @@ ReceiverDataServerRequestPtr TcpServer::ReadRequest(SocketDescriptor socket, Err
     return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{header, (uint64_t) socket}};
 }
 
-GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noexcept {
+GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) {
     GenericRequests requests;
     for (auto client : sockets) {
         Error err;
@@ -71,7 +71,7 @@ GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) co
     return requests;
 }
 
-GenericRequests TcpServer::GetNewRequests(Error* err) const noexcept {
+GenericRequests TcpServer::GetNewRequests(Error* err) {
     auto sockets = GetActiveSockets(err);
     if (*err) {
         return {};
@@ -88,12 +88,11 @@ TcpServer::~TcpServer() {
     io__->CloseSocket(master_socket_, nullptr);
 }
 
-void TcpServer::HandleAfterError(uint64_t source_id) const noexcept {
+void TcpServer::HandleAfterError(uint64_t source_id) {
     CloseSocket(source_id);
 }
 
-Error TcpServer::SendResponse(const ReceiverDataServerRequest* request,
-                              const GenericNetworkResponse* response) const noexcept {
+Error TcpServer::SendResponse(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response) {
     Error err;
     io__->Send(request->source_id, response, sizeof(*response), &err);
     if (err) {
@@ -104,7 +103,7 @@ Error TcpServer::SendResponse(const ReceiverDataServerRequest* request,
 
 Error
 TcpServer::SendResponseAndSlotData(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response,
-                                   const CacheMeta* cache_slot) const noexcept {
+                                   const CacheMeta* cache_slot) {
     Error err;
 
     err = SendResponse(request, response);
