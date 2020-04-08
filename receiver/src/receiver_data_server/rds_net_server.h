@@ -10,11 +10,10 @@ namespace asapo {
 class RdsNetServer {
   public:
     virtual GenericRequests GetNewRequests(Error* err) const noexcept = 0;
-    virtual Error SendResponse(const ReceiverDataServerRequest* request, uint64_t source_id,
+    virtual Error SendResponse(const ReceiverDataServerRequest* request,
                                const GenericNetworkResponse* response) const noexcept = 0;
     virtual Error
-    SendResponseAndSlotData(const ReceiverDataServerRequest* request, uint64_t source_id,
-                            const GenericNetworkResponse* response,
+    SendResponseAndSlotData(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response,
                             const CacheMeta* cache_slot) const noexcept = 0;
     virtual void HandleAfterError(uint64_t source_id) const noexcept = 0;
     virtual ~RdsNetServer() = default;

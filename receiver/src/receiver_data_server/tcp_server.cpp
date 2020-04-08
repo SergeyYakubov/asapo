@@ -94,10 +94,10 @@ void TcpServer::HandleAfterError(uint64_t source_id) const noexcept {
     CloseSocket(source_id);
 }
 
-Error TcpServer::SendResponse(const ReceiverDataServerRequest* request, uint64_t source_id,
+Error TcpServer::SendResponse(const ReceiverDataServerRequest* request,
                               const GenericNetworkResponse* response) const noexcept {
     Error err;
-    io__->Send(source_id, response, sizeof(*response), &err);
+    io__->Send(request->source_id, response, sizeof(*response), &err);
     if (err) {
         log__->Error("cannot send to consumer" + err->Explain());
     }
@@ -105,17 +105,16 @@ Error TcpServer::SendResponse(const ReceiverDataServerRequest* request, uint64_t
 }
 
 Error
-TcpServer::SendResponseAndSlotData(const ReceiverDataServerRequest* request, uint64_t source_id,
-                                   const GenericNetworkResponse* response,
+TcpServer::SendResponseAndSlotData(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response,
                                    const CacheMeta* cache_slot) const noexcept {
     Error err;
 
-    err = SendResponse(nullptr, source_id, response);
+    err = SendResponse(request, response);
     if (err) {
         return err;
     }
 
-    io__->Send(source_id, cache_slot->addr, cache_slot->size, &err);
+    io__->Send(request->source_id, cache_slot->addr, cache_slot->size, &err);
     if (err) {
         log__->Error("cannot send slot to worker" + err->Explain());
     }

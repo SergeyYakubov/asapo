@@ -27,20 +27,19 @@ class MockNetServer : public RdsNetServer {
     MOCK_CONST_METHOD1(GetNewRequests_t, std::vector<ReceiverDataServerRequest> (ErrorInterface**
                        error));
 
-    Error SendResponse(const ReceiverDataServerRequest* request, uint64_t source_id,
+    Error SendResponse(const ReceiverDataServerRequest* request,
                        const GenericNetworkResponse* response) const noexcept override  {
-        return  Error{SendResponse_t(request, source_id, response)};
+        return  Error{SendResponse_t(request, response)};
     };
-    MOCK_CONST_METHOD3(SendResponse_t, ErrorInterface * (const ReceiverDataServerRequest* request, uint64_t source_id,
+    MOCK_CONST_METHOD2(SendResponse_t, ErrorInterface * (const ReceiverDataServerRequest* request,
                        const GenericNetworkResponse* response));
 
-    Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, uint64_t source_id,
-                                  const GenericNetworkResponse* response,
+    Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response,
                                   const CacheMeta* cache_slot) const noexcept override {
-        return  Error{SendResponseAndSlotData_t(request, source_id, response, cache_slot)};
+        return  Error{SendResponseAndSlotData_t(request, response, cache_slot)};
     };
-    MOCK_CONST_METHOD4(SendResponseAndSlotData_t, ErrorInterface * (const ReceiverDataServerRequest* request,
-                       uint64_t source_id, const GenericNetworkResponse* response,
+    MOCK_CONST_METHOD3(SendResponseAndSlotData_t, ErrorInterface * (const ReceiverDataServerRequest* request,
+                       const GenericNetworkResponse* response,
                        const CacheMeta* cache_slot));
 
     void  HandleAfterError(uint64_t source_id) const noexcept override {

@@ -247,7 +247,7 @@ TEST_F(TCPServerTests, SendResponse) {
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
 
-    auto err = tcp_server.SendResponse(&expectedRequest, 30, &tmp);
+    auto err = tcp_server.SendResponse(&expectedRequest, &tmp);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -270,7 +270,7 @@ TEST_F(TCPServerTests, SendResponseAndSlotData_SendResponseError) {
               ));
     EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
 
-    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, 30, &tmp, &expectedMeta);
+    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -296,7 +296,7 @@ TEST_F(TCPServerTests, SendResponseAndSlotData_SendDataError) {
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
 
-    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, 30, &tmp, &expectedMeta);
+    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -316,7 +316,7 @@ TEST_F(TCPServerTests, SendResponseAndSlotData_Ok) {
     EXPECT_CALL(mock_io, Send_t(30, expectedMeta.addr, expectedMeta.size, _))
     .WillOnce(Return(expectedMeta.size));
 
-    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, 30, &tmp, &expectedMeta);
+    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
 
     ASSERT_THAT(err, Eq(nullptr));
 }

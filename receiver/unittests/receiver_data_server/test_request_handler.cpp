@@ -88,7 +88,6 @@ void RequestHandlerTests::MockGetSlotAndUnlockIt(bool return_without_error) {
 void RequestHandlerTests::MockSendResponse(asapo::NetworkErrorCode expected_response_code, bool return_without_error) {
     EXPECT_CALL(mock_net, SendResponse_t(
                     &request,
-                    expected_source_id,
                     M_CheckResponse(asapo::kOpcodeGetBufferData, expected_response_code, "")
                 )).WillOnce(
                     Return(return_without_error ? nullptr : asapo::IOErrorTemplates::kUnknownIOError.Generate().release())
@@ -99,7 +98,6 @@ void RequestHandlerTests::MockSendResponseAndSlotData(asapo::NetworkErrorCode ex
         bool return_without_error) {
     EXPECT_CALL(mock_net, SendResponseAndSlotData_t(
                     &request,
-                    expected_source_id,
                     M_CheckResponse(asapo::kOpcodeGetBufferData, expected_response_code, ""),
                     &expected_meta
                 )).WillOnce(
