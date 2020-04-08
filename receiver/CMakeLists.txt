@@ -33,6 +33,8 @@ set(RDS_FILES
         src/receiver_data_server/net_server/rds_tcp_server.cpp
         src/receiver_data_server/request_handler/receiver_data_server_request_handler_factory.cpp
         src/receiver_data_server/request_handler/receiver_data_server_request_handler.cpp
+        src/receiver_data_server/fabric_server_rds.cpp
+        src/receiver_data_server/fabric_rds_request.cpp
         )
 
 
