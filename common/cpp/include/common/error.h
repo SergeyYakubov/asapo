@@ -18,6 +18,7 @@ enum class ErrorType {
     kConsumerError,
     kMemoryAllocationError,
     kEndOfFile,
+    kFabricError,
 };
 
 class ErrorInterface;
@@ -213,7 +214,7 @@ class ServiceErrorTemplate : public SimpleErrorTemplate {
     }
 
     inline Error Generate(const std::string& suffix) const noexcept override {
-        return Error(new ServiceError<ServiceErrorType, MainErrorType>(error_ + " :" + suffix, error_type_));
+        return Error(new ServiceError<ServiceErrorType, MainErrorType>(error_ + ": " + suffix, error_type_));
     }
 
     inline bool operator==(const Error& rhs) const override {

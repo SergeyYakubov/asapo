@@ -47,13 +47,13 @@ struct GenericRequestHeader {
                          uint64_t i_data_size = 0, uint64_t i_meta_size = 0, const std::string& i_message = "",
                          const std::string& i_substream = ""):
         op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size}, meta_size{i_meta_size} {
-        strncpy(message, i_message.c_str(), kMaxMessageSize);
+        strncpy(message, i_message.c_str(), kMaxMessageSize); // TODO must be memcpy in order to send raw MemoryDetails
         strncpy(substream, i_substream.c_str(), kMaxMessageSize);
     }
     GenericRequestHeader(const GenericRequestHeader& header) {
         op_code = header.op_code, data_id = header.data_id, data_size = header.data_size, meta_size = header.meta_size,
         memcpy(custom_data, header.custom_data, kNCustomParams * sizeof(uint64_t)),
-        strncpy(message, header.message, kMaxMessageSize);
+        strncpy(message, header.message, kMaxMessageSize); // TODO must be memcpy in order to send raw MemoryDetails
         strncpy(substream, header.substream, kMaxMessageSize);
     }
 

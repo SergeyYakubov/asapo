@@ -59,7 +59,8 @@ void AssignIDs(FileInfos* file_list) {
     }
 }
 
-std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostnameAndPort(std::string address) const {
+std::unique_ptr<std::tuple<std::string, uint16_t>> SystemIO::SplitAddressToHostnameAndPort(
+const std::string& address) const {
     try {
         std::string host = address.substr(0, address.find(':'));
 

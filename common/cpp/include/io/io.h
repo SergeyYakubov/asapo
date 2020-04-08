@@ -92,6 +92,10 @@ class IO {
      * @param err Since CloseSocket if often used in an error case, it's able to accept err as nullptr.
      */
     virtual void            CloseSocket(SocketDescriptor socket_fd, Error* err) const = 0;
+    virtual std::string AddressFromSocket(SocketDescriptor socket) const noexcept = 0;
+    virtual std::string     GetHostName(Error* err) const noexcept = 0;
+    virtual std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostnameAndPort(
+                const std::string& address) const = 0;
 
     /*
      * Filesystem
@@ -117,8 +121,6 @@ class IO {
     virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, Error* err) const = 0;
     virtual std::string     ReadFileToString        (const std::string& fname, Error* err) const = 0;
     virtual Error GetLastError() const = 0;
-    virtual std::string AddressFromSocket(SocketDescriptor socket) const noexcept = 0;
-    virtual std::string     GetHostName(Error* err) const noexcept = 0;
     virtual FileInfo        GetFileInfo(const std::string& name, Error* err) const = 0;
 
     virtual ~IO() = default;
