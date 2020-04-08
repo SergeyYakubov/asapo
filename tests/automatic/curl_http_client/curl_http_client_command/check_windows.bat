@@ -13,7 +13,7 @@ ping 1.0.0.0 -n 1 -w 100 > nul
 mkdir %file_transfer_folder%
 echo | set /p dummyName="hello" > %file_transfer_folder%\aaa
 
-"%1"  127.0.0.1:5007 127.0.0.1:5008 %file_transfer_folder% aaa  || goto :error
+"%1"  127.0.0.1:5007 127.0.0.1:5008 %file_transfer_folder%   || goto :error
 
 type bbb | findstr /c:"hello"  || goto :error
 
