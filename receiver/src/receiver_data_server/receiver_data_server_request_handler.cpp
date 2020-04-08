@@ -4,7 +4,7 @@
 
 namespace asapo {
 
-ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(const NetServer* server,
+ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(const RdsNetServer* server,
         DataCache* data_cache, Statistics* statistics): log__{GetDefaultReceiverDataServerLogger()}, statistics__{statistics},
     server_{server}, data_cache_{data_cache} {
 
@@ -27,7 +27,8 @@ Error ReceiverDataServerRequestHandler::SendResponseAndSlotData(const ReceiverDa
     GenericNetworkResponse response{};
     response.op_code = kOpcodeGetBufferData;
     response.error_code = kNetErrorNoError;
-    return server_->SendResponseAndSlotData(request->source_id, &response, (GenericRequestHeader*) &request->header, meta);
+    return server_->SendResponseAndSlotData(request, request->source_id, &response,
+                                            meta);
 }
 
 CacheMeta* ReceiverDataServerRequestHandler::GetSlotAndLock(const ReceiverDataServerRequest* request) {

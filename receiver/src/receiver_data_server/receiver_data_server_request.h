@@ -7,7 +7,7 @@
 
 namespace asapo {
 
-class NetServer;
+class RdsNetServer;
 
 class ReceiverDataServerRequest : public GenericRequest {
   public:

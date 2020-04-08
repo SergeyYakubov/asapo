@@ -1,7 +1,7 @@
 #ifndef ASAPO_RDS_TCP_SERVER_H
 #define ASAPO_RDS_TCP_SERVER_H
 
-#include "net_server.h"
+#include "rds_net_server.h"
 #include "io/io.h"
 #include "logger/logger.h"
 #include "receiver_data_server_request.h"
@@ -9,14 +9,15 @@ namespace asapo {
 
 const int kMaxPendingConnections = 5;
 
-class TcpServer : public NetServer {
+class TcpServer : public RdsNetServer {
   public:
     explicit TcpServer(std::string address);
     ~TcpServer() override;
     GenericRequests GetNewRequests(Error* err) const noexcept override ;
-    Error SendResponse(uint64_t source_id, GenericNetworkResponse* response) const noexcept override;
-    Error SendResponseAndSlotData(uint64_t source_id, GenericNetworkResponse* response,
-                                  GenericRequestHeader* request, const CacheMeta* cache_slot) const noexcept override;
+    Error SendResponse(uint64_t source_id, const GenericNetworkResponse* response) const noexcept override;
+    Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, uint64_t source_id,
+                                  const GenericNetworkResponse* response,
+                                  const CacheMeta* cache_slot) const noexcept override;
     void HandleAfterError(uint64_t source_id) const noexcept override;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;

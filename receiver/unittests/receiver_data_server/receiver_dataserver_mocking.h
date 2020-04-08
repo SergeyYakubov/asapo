@@ -4,13 +4,13 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "../../src/receiver_data_server/net_server.h"
+#include "../../src/receiver_data_server/rds_net_server.h"
 #include "request/request_pool.h"
 #include "../../src/receiver_data_server/receiver_data_server_request.h"
 
 namespace asapo {
 
-class MockNetServer : public NetServer {
+class MockNetServer : public RdsNetServer {
   public:
     GenericRequests GetNewRequests(Error* err) const noexcept override {
         ErrorInterface* error = nullptr;
@@ -27,17 +27,19 @@ class MockNetServer : public NetServer {
     MOCK_CONST_METHOD1(GetNewRequests_t, std::vector<ReceiverDataServerRequest> (ErrorInterface**
                        error));
 
-    Error SendResponse(uint64_t source_id, GenericNetworkResponse* response) const noexcept override  {
+    Error SendResponse(uint64_t source_id, const GenericNetworkResponse* response) const noexcept override  {
         return  Error{SendResponse_t(source_id, response)};
     };
-    MOCK_CONST_METHOD2(SendResponse_t, ErrorInterface * (uint64_t source_id, GenericNetworkResponse* response));
+    MOCK_CONST_METHOD2(SendResponse_t, ErrorInterface * (uint64_t source_id, const GenericNetworkResponse* response));
 
-    Error SendResponseAndSlotData(uint64_t source_id, GenericNetworkResponse* response, GenericRequestHeader* request,
+    Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, uint64_t source_id,
+                                  const GenericNetworkResponse* response,
                                   const CacheMeta* cache_slot) const noexcept override {
-        return  Error{SendResponseAndSlotData_t(source_id, response, request, cache_slot)};
+        return  Error{SendResponseAndSlotData_t(request, source_id, response, cache_slot)};
     };
-    MOCK_CONST_METHOD4(SendResponseAndSlotData_t, ErrorInterface * (uint64_t source_id, GenericNetworkResponse* response,
-                       GenericRequestHeader* request, const CacheMeta* cache_slot));
+    MOCK_CONST_METHOD4(SendResponseAndSlotData_t, ErrorInterface * (const ReceiverDataServerRequest* request,
+                       uint64_t source_id, const GenericNetworkResponse* response,
+                       const CacheMeta* cache_slot));
 
     void  HandleAfterError(uint64_t source_id) const noexcept override {
         HandleAfterError_t(source_id);

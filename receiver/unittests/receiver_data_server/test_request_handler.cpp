@@ -97,9 +97,9 @@ void RequestHandlerTests::MockSendResponse(asapo::NetworkErrorCode expected_resp
 void RequestHandlerTests::MockSendResponseAndSlotData(asapo::NetworkErrorCode expected_response_code,
         bool return_without_error) {
     EXPECT_CALL(mock_net, SendResponseAndSlotData_t(
+                    &request,
                     expected_source_id,
                     M_CheckResponse(asapo::kOpcodeGetBufferData, expected_response_code, ""),
-                    &request.header,
                     &expected_meta
                 )).WillOnce(
                     Return(return_without_error ? nullptr : asapo::IOErrorTemplates::kUnknownIOError.Generate().release())

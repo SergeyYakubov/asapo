@@ -94,7 +94,7 @@ void TcpServer::HandleAfterError(uint64_t source_id) const noexcept {
     CloseSocket(source_id);
 }
 
-Error TcpServer::SendResponse(uint64_t source_id, GenericNetworkResponse* response) const noexcept {
+Error TcpServer::SendResponse(uint64_t source_id, const GenericNetworkResponse* response) const noexcept {
     Error err;
     io__->Send(source_id, response, sizeof(*response), &err);
     if (err) {
@@ -103,8 +103,10 @@ Error TcpServer::SendResponse(uint64_t source_id, GenericNetworkResponse* respon
     return err;
 }
 
-Error TcpServer::SendResponseAndSlotData(uint64_t source_id, GenericNetworkResponse* response,
-                                         GenericRequestHeader* /*request*/, const CacheMeta* cache_slot) const noexcept {
+Error
+TcpServer::SendResponseAndSlotData(const ReceiverDataServerRequest* request, uint64_t source_id,
+                                   const GenericNetworkResponse* response,
+                                   const CacheMeta* cache_slot) const noexcept {
     Error err;
 
     err = SendResponse(source_id, response);
