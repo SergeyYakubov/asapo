@@ -87,6 +87,7 @@ void RequestHandlerTests::MockGetSlotAndUnlockIt(bool return_without_error) {
 
 void RequestHandlerTests::MockSendResponse(asapo::NetworkErrorCode expected_response_code, bool return_without_error) {
     EXPECT_CALL(mock_net, SendResponse_t(
+                    &request,
                     expected_source_id,
                     M_CheckResponse(asapo::kOpcodeGetBufferData, expected_response_code, "")
                 )).WillOnce(

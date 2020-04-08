@@ -236,8 +236,9 @@ TEST_F(TCPServerTests, GetNewRequestsReadOk) {
 
 TEST_F(TCPServerTests, SendResponse) {
     asapo::GenericNetworkResponse tmp {};
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30};
 
-    EXPECT_CALL(mock_io, Send_t(1, &tmp, sizeof(asapo::GenericNetworkResponse), _))
+    EXPECT_CALL(mock_io, Send_t(30, &tmp, sizeof(asapo::GenericNetworkResponse), _))
     .WillOnce(
         DoAll(
             testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
@@ -246,7 +247,7 @@ TEST_F(TCPServerTests, SendResponse) {
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
 
-    auto err = tcp_server.SendResponse(1, &tmp);
+    auto err = tcp_server.SendResponse(&expectedRequest, 30, &tmp);
 
     ASSERT_THAT(err, Ne(nullptr));
 }

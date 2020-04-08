@@ -14,7 +14,8 @@ class TcpServer : public RdsNetServer {
     explicit TcpServer(std::string address);
     ~TcpServer() override;
     GenericRequests GetNewRequests(Error* err) const noexcept override ;
-    Error SendResponse(uint64_t source_id, const GenericNetworkResponse* response) const noexcept override;
+    Error SendResponse(const ReceiverDataServerRequest* request, uint64_t source_id,
+                       const GenericNetworkResponse* response) const noexcept override;
     Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, uint64_t source_id,
                                   const GenericNetworkResponse* response,
                                   const CacheMeta* cache_slot) const noexcept override;

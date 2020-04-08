@@ -19,7 +19,7 @@ Error ReceiverDataServerRequestHandler::SendResponse(const ReceiverDataServerReq
     GenericNetworkResponse response{};
     response.op_code = kOpcodeGetBufferData;
     response.error_code = code;
-    return server_->SendResponse(request->source_id, &response);
+    return server_->SendResponse(request, request->source_id, &response);
 }
 
 Error ReceiverDataServerRequestHandler::SendResponseAndSlotData(const ReceiverDataServerRequest* request,

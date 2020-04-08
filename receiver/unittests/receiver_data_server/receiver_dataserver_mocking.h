@@ -27,10 +27,12 @@ class MockNetServer : public RdsNetServer {
     MOCK_CONST_METHOD1(GetNewRequests_t, std::vector<ReceiverDataServerRequest> (ErrorInterface**
                        error));
 
-    Error SendResponse(uint64_t source_id, const GenericNetworkResponse* response) const noexcept override  {
-        return  Error{SendResponse_t(source_id, response)};
+    Error SendResponse(const ReceiverDataServerRequest* request, uint64_t source_id,
+                       const GenericNetworkResponse* response) const noexcept override  {
+        return  Error{SendResponse_t(request, source_id, response)};
     };
-    MOCK_CONST_METHOD2(SendResponse_t, ErrorInterface * (uint64_t source_id, const GenericNetworkResponse* response));
+    MOCK_CONST_METHOD3(SendResponse_t, ErrorInterface * (const ReceiverDataServerRequest* request, uint64_t source_id,
+                       const GenericNetworkResponse* response));
 
     Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, uint64_t source_id,
                                   const GenericNetworkResponse* response,
