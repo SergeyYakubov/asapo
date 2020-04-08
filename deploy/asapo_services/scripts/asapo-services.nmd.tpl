@@ -120,7 +120,7 @@ job "asapo-services" {
         check {
           name     = "alive"
           type     = "http"
-          path     = "/receivers"
+          path     = "/asapo-receiver"
           interval = "10s"
           timeout  = "2s"
           initial_status =   "passing"

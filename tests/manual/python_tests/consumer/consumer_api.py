@@ -10,7 +10,7 @@ group_id = broker.generate_group_id()
 
 _, meta = broker.get_by_id(1,group_id, meta_only=True)
 
-meta["buf_id"]=0
+#meta["buf_id"]=0
 data = broker.retrieve_data(meta)
 
 print (meta)

@@ -22,7 +22,7 @@ resource "null_resource" "fluentd" {
 
 resource "null_resource" "mongo" {
   provisioner "local-exec" {
-    command = "asapo-wait-service mongo"
+    command = "asapo-wait-service asapo-mongodb"
   }
   depends_on = [nomad_job.asapo-mongo]
 
@@ -53,7 +53,7 @@ resource "null_resource" "asapo-broker" {
 
 resource "null_resource" "asapo-fts" {
   provisioner "local-exec" {
-    command = "asapo-wait-service asapo-fts"
+    command = "asapo-wait-service asapo-file-transfer"
   }
   depends_on = [nomad_job.asapo-fts]
 }

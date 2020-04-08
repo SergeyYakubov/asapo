@@ -14,7 +14,7 @@ job "asapo-file-transfer" {
   }
 
   group "file-transfer" {
-    count = ${n_file-transfer}
+    count = ${n_fts}
     restart {
       attempts = 2
       interval = "3m"
@@ -49,12 +49,12 @@ job "asapo-file-transfer" {
 
       resources {
         network {
-          port "file-transfer" {}
+          port "fts" {}
         }
       }
 
       service {
-        port = "file-transfer"
+        port = "fts"
         name = "asapo-file-transfer"
         check {
           name     = "asapo-file-transfer-alive"
