@@ -8,7 +8,7 @@ std::unique_ptr<RequestHandler> ReceiverDataServerRequestHandlerFactory::NewRequ
         uint64_t* shared_counter) {
     return std::unique_ptr<RequestHandler> {new ReceiverDataServerRequestHandler(server_, data_cache_, statistics_)};
 }
-ReceiverDataServerRequestHandlerFactory::ReceiverDataServerRequestHandlerFactory(const NetServer* server,
+ReceiverDataServerRequestHandlerFactory::ReceiverDataServerRequestHandlerFactory(RdsNetServer* server,
         DataCache* data_cache, Statistics* statistics) : server_{server},
     data_cache_{data_cache}, statistics_{statistics} {
 

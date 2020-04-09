@@ -9,7 +9,7 @@ namespace asapo {
 TcpServer::TcpServer(std::string address) : io__{GenerateDefaultIO()}, log__{GetDefaultReceiverDataServerLogger()},
     address_{std::move(address)} {}
 
-Error TcpServer::InitializeMasterSocketIfNeeded() const noexcept {
+Error TcpServer::Initialize() {
     Error err;
     if (master_socket_ == kDisconnectedSocketDescriptor) {
         master_socket_ = io__->CreateAndBindIPTCPSocketListener(address_, kMaxPendingConnections, &err);
@@ -18,11 +18,13 @@ Error TcpServer::InitializeMasterSocketIfNeeded() const noexcept {
         } else {
             log__->Error("dataserver cannot listen on " + address_ + ": " + err->Explain());
         }
+    } else {
+        err = TextError("Server was already initialized");
     }
     return err;
 }
 
-ListSocketDescriptors TcpServer::GetActiveSockets(Error* err) const noexcept {
+ListSocketDescriptors TcpServer::GetActiveSockets(Error* err) {
     std::vector<std::string> new_connections;
     auto sockets = io__->WaitSocketsActivity(master_socket_, &sockets_to_listen_, &new_connections, err);
     for (auto& connection : new_connections) {
@@ -31,14 +33,14 @@ ListSocketDescriptors TcpServer::GetActiveSockets(Error* err) const noexcept {
     return sockets;
 }
 
-void TcpServer::CloseSocket(SocketDescriptor socket) const noexcept {
+void TcpServer::CloseSocket(SocketDescriptor socket) {
     sockets_to_listen_.erase(std::remove(sockets_to_listen_.begin(), sockets_to_listen_.end(), socket),
                              sockets_to_listen_.end());
     log__->Debug("connection " + io__->AddressFromSocket(socket) + " closed");
     io__->CloseSocket(socket, nullptr);
 }
 
-ReceiverDataServerRequestPtr TcpServer::ReadRequest(SocketDescriptor socket, Error* err) const noexcept {
+ReceiverDataServerRequestPtr TcpServer::ReadRequest(SocketDescriptor socket, Error* err) {
     GenericRequestHeader header;
     io__->Receive(socket, &header,
                   sizeof(GenericRequestHeader), err);
@@ -51,10 +53,10 @@ ReceiverDataServerRequestPtr TcpServer::ReadRequest(SocketDescriptor socket, Err
                     );
         return nullptr;
     }
-    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{std::move(header), (uint64_t) socket}};
+    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{header, (uint64_t) socket}};
 }
 
-GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) const noexcept {
+GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) {
     GenericRequests requests;
     for (auto client : sockets) {
         Error err;
@@ -69,11 +71,7 @@ GenericRequests TcpServer::ReadRequests(const ListSocketDescriptors& sockets) co
     return requests;
 }
 
-GenericRequests TcpServer::GetNewRequests(Error* err) const noexcept {
-    if ( (*err = InitializeMasterSocketIfNeeded()) ) {
-        return {};
-    }
-
+GenericRequests TcpServer::GetNewRequests(Error* err) {
     auto sockets = GetActiveSockets(err);
     if (*err) {
         return {};
@@ -90,18 +88,34 @@ TcpServer::~TcpServer() {
     io__->CloseSocket(master_socket_, nullptr);
 }
 
+void TcpServer::HandleAfterError(uint64_t source_id) {
+    CloseSocket(source_id);
+}
 
-Error TcpServer::SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept {
+Error TcpServer::SendResponse(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response) {
     Error err;
-    io__->Send(source_id, buf, size, &err);
+    io__->Send(request->source_id, response, sizeof(*response), &err);
     if (err) {
         log__->Error("cannot send to consumer" + err->Explain());
     }
     return err;
 }
 
-void TcpServer::HandleAfterError(uint64_t source_id) const noexcept {
-    CloseSocket(source_id);
+Error
+TcpServer::SendResponseAndSlotData(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response,
+                                   const CacheMeta* cache_slot) {
+    Error err;
+
+    err = SendResponse(request, response);
+    if (err) {
+        return err;
+    }
+
+    io__->Send(request->source_id, cache_slot->addr, cache_slot->size, &err);
+    if (err) {
+        log__->Error("cannot send slot to worker" + err->Explain());
+    }
+    return err;
 }
 
 }

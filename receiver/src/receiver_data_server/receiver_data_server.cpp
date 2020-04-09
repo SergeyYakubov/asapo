@@ -17,6 +17,13 @@ config_{config}, statistics__{new Statistics()} {
 }
 
 void ReceiverDataServer::Run() {
+    {
+        Error startError = net__->Initialize();
+        if (startError) {
+            log__->Error(std::string("Error starting rds net server: ") + startError->Explain());
+            return;
+        }
+    }
     while (true) {
         statistics__->SendIfNeeded();
         Error err;

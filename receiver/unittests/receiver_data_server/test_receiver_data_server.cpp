@@ -59,7 +59,7 @@ class ReceiverDataServerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     NiceMock<asapo::MockStatistics> mock_statistics;
     void SetUp() override {
-        data_server.net__ = std::unique_ptr<asapo::NetServer> {&mock_net};
+        data_server.net__ = std::unique_ptr<asapo::RdsNetServer> {&mock_net};
         data_server.request_pool__ = std::unique_ptr<asapo::RequestPool> {&mock_pool};
         data_server.log__ = &mock_logger;
         data_server.statistics__ = std::unique_ptr<asapo::Statistics> {&mock_statistics};;

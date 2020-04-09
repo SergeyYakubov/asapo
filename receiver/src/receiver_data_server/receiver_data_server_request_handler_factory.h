@@ -5,7 +5,7 @@
 #include "request/request_handler.h"
 #include "preprocessor/definitions.h"
 
-#include "net_server.h"
+#include "rds_net_server.h"
 #include "../data_cache.h"
 #include "../statistics.h"
 
@@ -13,10 +13,10 @@ namespace asapo {
 
 class ReceiverDataServerRequestHandlerFactory : public RequestHandlerFactory {
   public:
-    ReceiverDataServerRequestHandlerFactory (const NetServer* server, DataCache* data_cache, Statistics* statistics);
+    ReceiverDataServerRequestHandlerFactory(RdsNetServer* server, DataCache* data_cache, Statistics* statistics);
     VIRTUAL std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) override;
   private:
-    const NetServer* server_;
+    RdsNetServer* server_;
     DataCache* data_cache_;
     Statistics* statistics_;
 };
