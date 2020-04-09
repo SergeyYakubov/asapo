@@ -20,6 +20,7 @@ class ReceiverDataServer {
   public:
     explicit ReceiverDataServer(std::unique_ptr<RdsNetServer> net_server, LogLevel log_level, SharedCache data_cache,
                                 const ReceiverDataServerConfig& config);
+
     std::unique_ptr<RequestPool> request_pool__;
     std::unique_ptr<RdsNetServer> net__;
     const AbstractLogger* log__;

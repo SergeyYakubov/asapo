@@ -20,13 +20,18 @@ asapo::Error ReadConfigFile(int argc, char* argv[]) {
     return factory.SetConfig(argv[1]);
 }
 
+void AddDataServers(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
+                    std::vector<asapo::RdsNetServerPtr>& netServers) {
+    // Add TCP
+    netServers.emplace_back(new asapo::RdsTcpServer("0.0.0.0:" + std::to_string(config->dataserver.listen_port)));
+}
+
 std::vector<std::thread> StartDataServers(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
                                           asapo::Error* error) {
     std::vector<asapo::RdsNetServerPtr> netServers;
     std::vector<std::thread> dataServerThreads;
 
-    // Add TCP
-    netServers.emplace_back(new asapo::RdsTcpServer("0.0.0.0:" + std::to_string(config->dataserver.listen_port)));
+    AddDataServers(config, cache, netServers);
 
     for (auto& server : netServers) {
         *error = server->Initialize();
@@ -37,13 +42,15 @@ std::vector<std::thread> StartDataServers(const asapo::ReceiverConfig* config, a
 
     dataServerThreads.reserve(netServers.size());
     for (auto& server : netServers) {
-        dataServerThreads.emplace_back(std::thread([config, cache, &server] {
-            asapo::ReceiverDataServer data_server{
-                std::move(server),
-                config->log_level,
-                cache,
-                config->dataserver};
-            data_server.Run();
+        // Allocate the server here in order to make sure all variables are still available
+        auto data_server = new asapo::ReceiverDataServer{
+            std::move(server),
+            config->log_level,
+            cache,
+            config->dataserver};
+        dataServerThreads.emplace_back(std::thread([data_server] {
+            // We use a std::unique_ptr here in order to clean up the data_server once Run() is done.
+            std::unique_ptr<asapo::ReceiverDataServer>(data_server)->Run();
         }));
     }
 
