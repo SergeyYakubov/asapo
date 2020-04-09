@@ -8,12 +8,7 @@ SET dbname=%beamtime_id%_%stream%
 
 echo db.%dbname%.insert({dummy:1})" | %mongo_exe% %dbname%
 
-c:\opt\consul\nomad run receiver.nmd
-c:\opt\consul\nomad run authorizer.nmd
-c:\opt\consul\nomad run discovery.nmd
-c:\opt\consul\nomad run nginx.nmd
-
-ping 1.0.0.0 -n 5 -w 100 > nul
+call start_services.bat
 
 mkdir %receiver_folder%
 
@@ -45,11 +40,7 @@ call :clean
 exit /b 1
 
 :clean
-c:\opt\consul\nomad stop receiver
-c:\opt\consul\nomad stop discovery
-c:\opt\consul\nomad stop nginx
-c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill
-c:\opt\consul\nomad stop authorizer
+call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
 echo db.dropDatabase() | %mongo_exe% %dbname%
 

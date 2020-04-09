@@ -67,7 +67,7 @@ func TestInitDBWithAutoAddress(t *testing.T) {
 
 	settings.DatabaseServer = "auto"
 	mock_server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, req.URL.String(), "/mongo", "request string")
+		assert.Equal(t, req.URL.String(), "/asapo-mongodb", "request string")
 		rw.Write([]byte(mongo_address))
 	}))
 	defer mock_server.Close()
@@ -85,7 +85,7 @@ func TestInitDBWithAutoAddress(t *testing.T) {
 func TestReconnectDB(t *testing.T) {
 	mongo_address := "0.0.0.0:0000"
 	mock_server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, req.URL.String(), "/mongo", "request string")
+		assert.Equal(t, req.URL.String(), "/asapo-mongodb", "request string")
 		rw.Write([]byte(mongo_address))
 	}))
 	discoveryService = discoveryAPI{mock_server.Client(), mock_server.URL}

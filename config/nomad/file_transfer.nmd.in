@@ -25,7 +25,7 @@ job "file_transfer" {
       }
 
       service {
-        name = "asapo-fts"
+        name = "asapo-file-transfer"
         port = "file_transfer"
         check {
           name     = "alive"

@@ -49,6 +49,7 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
     config_string += "," + Key("ListenPort", error_field) + std::to_string(config.listen_port);
     config_string += "," + Key("DataServer", error_field) + "{";
     config_string += Key("ListenPort", error_field) + std::to_string(config.dataserver.listen_port);
+    config_string += "," +  Key("AdvertiseURI", error_field) + "\"" + config.dataserver.advertise_uri + "\"";
     config_string += "," + Key("NThreads", error_field) + std::to_string(config.dataserver.nthreads);
     config_string += "}";
     config_string += "," + Key("DataCache", error_field) + "{";
@@ -63,7 +64,6 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
     config_string += "," +  Key("WriteToDisk", error_field) + (config.write_to_disk ? "true" : "false");
     config_string += "," +  Key("WriteToDb", error_field) + (config.write_to_db ? "true" : "false");
     config_string += "," +  Key("LogLevel", error_field) + "\"" + log_level + "\"";
-    config_string += "," +  Key("AdvertiseIP", error_field) + "\"" + config.advertise_ip + "\"";
     config_string += "," +  Key("Tag", error_field) + "\"" + config.tag + "\"";
     config_string += "}";
 

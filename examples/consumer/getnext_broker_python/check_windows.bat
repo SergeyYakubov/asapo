@@ -7,11 +7,7 @@ SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 set token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 set group_id=bif31l2uiddd4r0q6b40
 
-c:\opt\consul\nomad run discovery.nmd
-c:\opt\consul\nomad run broker.nmd
-c:\opt\consul\nomad run nginx.nmd
-
-ping 1.0.0.0 -n 10 -w 100 > nul
+call start_services.bat
 
 for /l %%x in (1, 1, 3) do echo db.data_default.insert({"_id":%%x,"size":100,"name":"%%x","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
@@ -48,8 +44,5 @@ call :clean
 exit /b 1
 
 :clean
-c:\opt\consul\nomad stop discovery
-c:\opt\consul\nomad stop broker
-c:\opt\consul\nomad stop nginx
-c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill
+call stop_services.bat
 echo db.dropDatabase() | %mongo_exe% %database_name%

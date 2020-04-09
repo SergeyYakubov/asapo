@@ -1,4 +1,4 @@
-package utils
+package common
 
 import "errors"
 
@@ -27,12 +27,17 @@ type Settings struct {
 	FileTransferService  FtsInfo
 	ConsulEndpoints []string
 	Mode			string
+	Kubernetes struct {
+		Mode string
+		ConfigFile string
+		Namespace string
+	}
 	Port            int
 	LogLevel        string
 }
 
 func (settings *Settings) Validate() error {
-	if settings.Mode != "consul"{
+	if settings.Mode == "static"{
 		if len(settings.Receiver.StaticEndpoints) == 0 || len(settings.Broker.StaticEndpoint) == 0 || len(settings.Mongo.StaticEndpoint) == 0{
 			return errors.New("static endpoints not set")
 		}
@@ -50,13 +55,9 @@ func (settings *Settings) Validate() error {
 		return errors.New("Mode not set")
 	}
 
-	if settings.Mode != "static" && settings.Mode != "consul" {
-		return errors.New("wrong mode: "  + settings.Mode+ ", (allowed static|consul)")
+	if settings.Mode != "static" && settings.Mode != "consul" && settings.Mode != "kubernetes" {
+		return errors.New("wrong mode: "  + settings.Mode+ ", (allowed static|consul|kubernetes)")
 	}
 
 	return nil
-}
-
-type FolderTokenTokenExtraClaim struct {
-	RootFolder string
 }

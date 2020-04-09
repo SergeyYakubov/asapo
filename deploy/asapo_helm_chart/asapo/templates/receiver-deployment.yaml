@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-script
+data:
+  entrypoint.sh: |-
+    #!/bin/bash
+    export TOKEN=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
+    export NODE_PORT=`curl https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces/{{ .Release.Namespace }}/services/asapo-receiver-dataserver --insecure --header "Authorization: Bearer $TOKEN" --silent | jq .spec.ports[0].nodePort`
+    jq ".DataServer.AdvertiseURI = \"$NODE_IP:$NODE_PORT\"" /etc/receiver/init/asapo-receiver.json > /etc/receiver/asapo-receiver.json
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asapo-receiver
+  labels:
+    app: asapo-receiver
+spec:
+  replicas: {{ .Values.ownServices.receiver.replicaCount }}
+  selector:
+    matchLabels:
+      app: asapo-receiver
+  template:
+    metadata:
+      labels:
+        app: asapo-receiver
+      annotations:
+        checksum/config: {{ .Files.Get "configs/asapo-receiver.json" | sha256sum  }}
+        checksum/fluentd-config: {{ .Files.Get "configs/asapo-fluentd.conf" | sha256sum  }}
+    spec:
+      volumes:
+        - name: config-script
+          configMap:
+            defaultMode: 0700
+            name: config-script
+        - name: asapo-receiver-config
+          emptyDir: {}
+        - name: asapo-receiver-config-init
+          configMap:
+            name: asapo-receiver-config
+        - name: shared-volume-offline
+          persistentVolumeClaim:
+            claimName: asapo-offline-pv
+        - name: shared-volume-online
+          persistentVolumeClaim:
+            claimName: asapo-online-pv
+        {{- include "asapo.fluentd.volumes" .Values.ownServices.receiver | indent 8 }}
+      initContainers:
+        - name: prepare-config
+          image: yakser/alpine_curl_jq
+          command: ['/bin/entrypoint.sh']
+          env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          volumeMounts:
+            - mountPath: "/etc/receiver"
+              name: asapo-receiver-config
+            - mountPath: "/etc/receiver/init"
+              name: asapo-receiver-config-init
+            - mountPath: /bin/entrypoint.sh
+              name: config-script
+              readOnly: true
+              subPath: entrypoint.sh
+
+      containers:
+        - name: asapo-receiver
+          image: "yakser/asapo-receiver-dev:{{ .Values.common.asapoVersionTag }}"
+          command: ["/receiver"]
+          args: ["/etc/receiver/asapo-receiver.json"]
+          ports:
+            - containerPort: {{ .Values.ownServices.receiver.port }}
+              name: http
+            - containerPort: {{ .Values.ownServices.receiver.dataServer.port }}
+              name: http-ds
+          volumeMounts:
+            - mountPath: "/etc/receiver"
+              name: asapo-receiver-config
+            - mountPath: {{ .Values.common.offlineDir }}
+              name: shared-volume-offline
+            - mountPath: {{ .Values.common.onlineDir }}
+              name: shared-volume-online
+
+      {{- include "asapo.fluentd.container" . | indent 8 }}

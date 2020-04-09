@@ -27,8 +27,8 @@ http {
     resolver 127.0.0.1:8600 valid=1s;
     server {
           listen {{ env "NOMAD_PORT_nginx" }};
-          set $discovery_endpoint discovery.service.asapo;
-          set $authorizer_endpoint authorizer.service.asapo;
+          set $discovery_endpoint asapo-discovery.service.asapo;
+          set $authorizer_endpoint asapo-authorizer.service.asapo;
           set $fluentd_endpoint fluentd.service.asapo;
           set $kibana_endpoint kibana.service.asapo;
           set $grafana_endpoint grafana.service.asapo;
@@ -45,8 +45,8 @@ http {
             proxy_pass http://$elasticsearch_endpoint:9200$uri$is_args$args;
           }
 
-          location /discovery/ {
-            rewrite ^/discovery(/.*) $1 break;
+          location /asapo-discovery/ {
+            rewrite ^/asapo-discovery(/.*) $1 break;
             proxy_pass http://$discovery_endpoint:5006$uri$is_args$args;
           }
 
@@ -67,8 +67,8 @@ http {
             proxy_pass http://$grafana_endpoint:3000$uri$is_args$args;
           }
 
-          location /authorizer/ {
-             rewrite ^/authorizer(/.*) $1 break;
+          location /asapo-authorizer/ {
+             rewrite ^/asapo-authorizer(/.*) $1 break;
              proxy_pass http://$authorizer_endpoint:5007$uri$is_args$args;
           }
 

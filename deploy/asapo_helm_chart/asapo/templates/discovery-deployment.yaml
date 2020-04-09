@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asapo-discovery
+  labels:
+    app: asapo-discovery
+spec:
+  replicas: {{ .Values.ownServices.discovery.replicaCount }}
+  selector:
+    matchLabels:
+      app: asapo-discovery
+  template:
+    metadata:
+      labels:
+        app: asapo-discovery
+      annotations:
+        checksum/config: {{ .Files.Get "configs/asapo-discovery.json" | sha256sum  }}
+        checksum/fluentd-config: {{ .Files.Get "configs/asapo-fluentd.conf" | sha256sum  }}
+    spec:
+      volumes:
+        - name: asapo-discovery-config
+          configMap:
+            name: asapo-discovery-config
+        {{- include "asapo.fluentd.volumes" .Values.ownServices.discovery | indent 8 }}
+      containers:
+        - name: asapo-discovery
+          image: "yakser/asapo-discovery-dev:{{ .Values.common.asapoVersionTag }}"
+          command: ["/asapo-discovery"]
+          args: ["-config", "/etc/discovery/asapo-discovery.json"]
+          ports:
+            - containerPort: {{ .Values.ownServices.discovery.port }}
+          volumeMounts:
+            - mountPath: "/etc/discovery"
+              name: asapo-discovery-config
+      {{- include "asapo.fluentd.container" . | indent 8 }}

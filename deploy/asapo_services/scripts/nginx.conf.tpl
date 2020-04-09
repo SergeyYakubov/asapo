@@ -46,8 +46,8 @@ http {
             proxy_pass http://$elasticsearch_endpoint:{{ env "NOMAD_META_elasticsearch_port" }}$uri$is_args$args;
           }
 
-          location /discovery/ {
-            rewrite ^/discovery(/.*) $1 break;
+          location /asapo-discovery/ {
+            rewrite ^/asapo-discovery(/.*) $1 break;
             proxy_pass http://$discovery_endpoint:{{ env "NOMAD_META_discovery_port" }}$uri$is_args$args;
           }
 
@@ -68,8 +68,8 @@ http {
             proxy_pass http://$grafana_endpoint:{{ env "NOMAD_META_grafana_port" }}$uri$is_args$args;
           }
 
-          location /authorizer/ {
-             rewrite ^/authorizer(/.*) $1 break;
+          location /asapo-authorizer/ {
+             rewrite ^/asapo-authorizer(/.*) $1 break;
              proxy_pass http://$authorizer_endpoint:{{ env "NOMAD_META_authorizer_port" }}$uri$is_args$args;
           }
 

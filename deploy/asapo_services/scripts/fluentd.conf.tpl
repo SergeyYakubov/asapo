@@ -17,7 +17,6 @@
 <filter asapo.docker>
   @type parser
   key_name log
-
   format json
   time_format %Y-%m-%d %H:%M:%S.%N
   reserve_data true

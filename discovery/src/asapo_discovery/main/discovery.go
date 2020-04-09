@@ -17,6 +17,8 @@ func NewDefaultHandler() request_handler.Agent {
 		return new(request_handler.StaticRequestHandler)
 	case "consul":
 		return new(request_handler.ConsulRequestHandler)
+	case "kubernetes":
+		return new(request_handler.KubernetesRequestHandler)
 	default:
 		log.Fatal("wrong handler")
 		return nil

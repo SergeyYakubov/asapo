@@ -23,7 +23,6 @@ struct ReceiverConfig {
     uint64_t receive_to_disk_threshold_mb = 0;
     LogLevel log_level = LogLevel::Info;
     std::string tag;
-    std::string advertise_ip;
     ReceiverDataCenterConfig dataserver;
     std::string discovery_server;
 };

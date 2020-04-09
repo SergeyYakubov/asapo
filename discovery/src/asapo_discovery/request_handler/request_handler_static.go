@@ -2,38 +2,33 @@ package request_handler
 
 import (
 	"asapo_common/utils"
+	"errors"
+	"asapo_discovery/common"
 )
 
 type StaticRequestHandler struct {
 	receiverResponce Responce
-	broker string
-	mongo string
-	fts string
+	singleServices map[string]string
 }
 
+func (rh *StaticRequestHandler) GetSingleService(service string) ([]byte, error) {
+	uri,ok := rh.singleServices[service]
+	if !ok {
+		return nil, errors.New("wrong service: " + service)
+	}
+	return  []byte(uri),nil
+}
 
 func (rh *StaticRequestHandler) GetReceivers(bool) ([]byte, error) {
 	return utils.MapToJson(&rh.receiverResponce)
 }
 
-func (rh *StaticRequestHandler) GetBroker() ([]byte, error) {
-	return []byte(rh.broker),nil
-}
-
-func (rh *StaticRequestHandler) GetMongo() ([]byte, error) {
-	return []byte(rh.mongo),nil
-}
-
-func (rh *StaticRequestHandler) GetFts() ([]byte, error) {
-	return []byte(rh.fts),nil
-}
-
-
-func (rh *StaticRequestHandler) Init(settings utils.Settings) error {
+func (rh *StaticRequestHandler) Init(settings common.Settings) error {
 	rh.receiverResponce.MaxConnections = settings.Receiver.MaxConnections
 	rh.receiverResponce.Uris = settings.Receiver.StaticEndpoints
-	rh.broker = settings.Broker.StaticEndpoint
-	rh.mongo = settings.Mongo.StaticEndpoint
-	rh.fts = settings.FileTransferService.StaticEndpoint
+	rh.singleServices = make(map[string]string)
+	rh.singleServices[common.NameBrokerService] = settings.Broker.StaticEndpoint
+	rh.singleServices[common.NameMongoService] = settings.Mongo.StaticEndpoint
+	rh.singleServices[common.NameFtsService] = settings.FileTransferService.StaticEndpoint
 	return nil
 }

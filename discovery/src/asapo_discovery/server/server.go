@@ -2,13 +2,13 @@ package server
 
 import (
 	"asapo_discovery/request_handler"
-	"asapo_common/utils"
+	"asapo_discovery/common"
 )
 
 var requestHandler request_handler.Agent
 
 
-var settings utils.Settings
+var settings common.Settings
 
 func SetHandler(rh request_handler.Agent) error {
 	requestHandler = rh
@@ -20,3 +20,4 @@ func SetHandler(rh request_handler.Agent) error {
 func GetHandlerMode()string {
 	return settings.Mode
 }
+
