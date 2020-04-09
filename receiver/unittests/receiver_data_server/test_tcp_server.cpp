@@ -59,14 +59,15 @@ class TCPServerTests : public Test {
     void TearDown() override {
         tcp_server.io__.release();
     }
-    void ExpectListenMaster(bool ok);
+    void ExpectTcpBind(bool ok);
     void WaitSockets(bool ok, ListSocketDescriptors clients = {});
-    void MockReceiveRequest(bool ok );
+    void MockReceiveRequest(bool ok);
+    void InitMasterServer();
     void ExpectReceiveOk();
     void ExpectReceiveRequestEof();
 };
 
-void TCPServerTests::ExpectListenMaster(bool ok) {
+void TCPServerTests::ExpectTcpBind(bool ok) {
     EXPECT_CALL(mock_io, CreateAndBindIPTCPSocketListener_t(expected_address, asapo::kMaxPendingConnections, _))
     .WillOnce(DoAll(
                   SetArgPointee<2>(ok ? nullptr : asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
@@ -93,24 +94,28 @@ void TCPServerTests::WaitSockets(bool ok, ListSocketDescriptors clients) {
     }
 }
 
-TEST_F(TCPServerTests, GetNewRequestsInitializesSocket) {
-    Error err;
-    ExpectListenMaster(false);
-
-    auto requests = tcp_server.GetNewRequests(&err);
-
-    ASSERT_THAT(err, Ne(nullptr));
-    ASSERT_THAT(requests, IsEmpty());
+void TCPServerTests::InitMasterServer() {
+    ExpectTcpBind(true);
+    ASSERT_THAT(tcp_server.Initialize(), Eq(nullptr));
 }
 
-TEST_F(TCPServerTests, GetNewRequestsInitializesSocketOnlyOnce) {
+TEST_F(TCPServerTests, Initialize_Error) {
+    ExpectTcpBind(false);
+
+    Error err = tcp_server.Initialize();
+
+    ASSERT_THAT(err, Ne(nullptr));
+}
+
+TEST_F(TCPServerTests, Initialize_ErrorDoubleInitialize) {
     Error err;
-    ExpectListenMaster(false);
 
-    tcp_server.GetNewRequests(&err);
-    tcp_server.GetNewRequests(&err);
+    ExpectTcpBind(true);
+    err = tcp_server.Initialize();
+    ASSERT_THAT(err, Eq(nullptr));
 
-//    ASSERT_THAT(err, Ne(nullptr));
+    err = tcp_server.Initialize();
+    ASSERT_THAT(err, Ne(nullptr));
 }
 
 void TCPServerTests::MockReceiveRequest(bool ok ) {
@@ -162,10 +167,9 @@ void TCPServerTests::ExpectReceiveOk() {
     }
 }
 
-
 TEST_F(TCPServerTests, GetNewRequestsWaitsSocketActivitiesError) {
     Error err;
-    ExpectListenMaster(true);
+    InitMasterServer();
     WaitSockets(false);
 
     auto requests = tcp_server.GetNewRequests(&err);
@@ -176,7 +180,7 @@ TEST_F(TCPServerTests, GetNewRequestsWaitsSocketActivitiesError) {
 
 TEST_F(TCPServerTests, GetNewRequestsWaitsSocketReceiveFailure) {
     Error err;
-    ExpectListenMaster(true);
+    InitMasterServer();
     WaitSockets(true);
     MockReceiveRequest(false);
 
@@ -194,7 +198,7 @@ TEST_F(TCPServerTests, GetNewRequestsWaitsSocketReceiveFailure) {
 
 TEST_F(TCPServerTests, GetNewRequestsReadEof) {
     Error err;
-    ExpectListenMaster(true);
+    InitMasterServer();
     WaitSockets(true);
     ExpectReceiveRequestEof();
 
@@ -212,9 +216,8 @@ TEST_F(TCPServerTests, GetNewRequestsReadEof) {
 }
 
 TEST_F(TCPServerTests, GetNewRequestsReadOk) {
-    Error
-    err;
-    ExpectListenMaster(true);
+    Error err;
+    InitMasterServer();
     WaitSockets(true);
     ExpectReceiveOk();
 
@@ -234,10 +237,11 @@ TEST_F(TCPServerTests, GetNewRequestsReadOk) {
 
 }
 
-TEST_F(TCPServerTests, SendData) {
-    uint8_t tmp;
+TEST_F(TCPServerTests, SendResponse) {
+    asapo::GenericNetworkResponse tmp {};
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30};
 
-    EXPECT_CALL(mock_io, Send_t(1, &tmp, 10, _))
+    EXPECT_CALL(mock_io, Send_t(30, &tmp, sizeof(asapo::GenericNetworkResponse), _))
     .WillOnce(
         DoAll(
             testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
@@ -246,9 +250,78 @@ TEST_F(TCPServerTests, SendData) {
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
 
-    auto err = tcp_server.SendData(1, &tmp, 10);
+    auto err = tcp_server.SendResponse(&expectedRequest, &tmp);
 
     ASSERT_THAT(err, Ne(nullptr));
+}
+
+TEST_F(TCPServerTests, SendResponseAndSlotData_SendResponseError) {
+    asapo::GenericNetworkResponse tmp {};
+
+
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30};
+    asapo::CacheMeta expectedMeta {};
+    expectedMeta.id = 20;
+    expectedMeta.addr = (void*)0x9234;
+    expectedMeta.size = 50;
+    expectedMeta.lock = 123;
+
+    EXPECT_CALL(mock_io, Send_t(30, &tmp, sizeof(asapo::GenericNetworkResponse), _))
+    .WillOnce(DoAll(
+                  testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+                  Return(0)
+              ));
+    EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
+
+    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
+
+    ASSERT_THAT(err, Ne(nullptr));
+}
+
+TEST_F(TCPServerTests, SendResponseAndSlotData_SendDataError) {
+    asapo::GenericNetworkResponse tmp {};
+
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30};
+    asapo::CacheMeta expectedMeta {};
+    expectedMeta.id = 20;
+    expectedMeta.addr = (void*)0x9234;
+    expectedMeta.size = 50;
+    expectedMeta.lock = 123;
+
+    EXPECT_CALL(mock_io, Send_t(30, &tmp, sizeof(asapo::GenericNetworkResponse), _))
+    .WillOnce(Return(1));
+    EXPECT_CALL(mock_io, Send_t(30, expectedMeta.addr, expectedMeta.size, _))
+    .WillOnce(
+        DoAll(
+            testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+            Return(0)
+        ));
+
+    EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
+
+    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
+
+    ASSERT_THAT(err, Ne(nullptr));
+}
+
+TEST_F(TCPServerTests, SendResponseAndSlotData_Ok) {
+    asapo::GenericNetworkResponse tmp {};
+
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30};
+    asapo::CacheMeta expectedMeta {};
+    expectedMeta.id = 20;
+    expectedMeta.addr = (void*)0x9234;
+    expectedMeta.size = 50;
+    expectedMeta.lock = 123;
+
+    EXPECT_CALL(mock_io, Send_t(30, &tmp, sizeof(asapo::GenericNetworkResponse), _))
+    .WillOnce(Return(1));
+    EXPECT_CALL(mock_io, Send_t(30, expectedMeta.addr, expectedMeta.size, _))
+    .WillOnce(Return(expectedMeta.size));
+
+    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
+
+    ASSERT_THAT(err, Eq(nullptr));
 }
 
 TEST_F(TCPServerTests, HandleAfterError) {

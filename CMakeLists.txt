@@ -17,10 +17,11 @@ ENDIF(WIN32)
 #TODO: Better way then GLOBAL PROPERTY
 IF(WIN32)
     find_package(Threads REQUIRED)
-    SET_PROPERTY(GLOBAL PROPERTY ASAPO_COMMON_IO_LIBRARIES ${CMAKE_THREAD_LIBS_INIT} wsock32 ws2_32)
+    SET(ASAPO_COMMON_IO_LIBRARIES ${CMAKE_THREAD_LIBS_INIT} wsock32 ws2_32)
 ELSEIF(UNIX)
-    SET_PROPERTY(GLOBAL PROPERTY ASAPO_COMMON_IO_LIBRARIES Threads::Threads)
+    SET(ASAPO_COMMON_IO_LIBRARIES Threads::Threads)
 ENDIF(WIN32)
+SET_PROPERTY(GLOBAL PROPERTY ASAPO_COMMON_IO_LIBRARIES ${ASAPO_COMMON_IO_LIBRARIES})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DUNIT_TESTS)
@@ -40,6 +41,8 @@ option(BUILD_PYTHON_DOCS "Uses sphinx to build the Python documentaion" OFF)
 
 option(BUILD_CONSUMER_TOOLS "Build consumer tools" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
+
+option(ENABLE_LIBFABRIC "Enables LibFabric support for RDMA transfers" OFF)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
 
@@ -62,6 +65,18 @@ endif()
 message (STATUS "Using Python: ${Python_EXECUTABLE}")
 
 
+SET(ASAPO_COMMON_FABRIC_LIBRARIES ${ASAPO_COMMON_IO_LIBRARIES})
+IF(ENABLE_LIBFABRIC)
+    find_package(LibFabric)
+    if(NOT LIBFABRIC_LIBRARY)
+        message(FATAL_ERROR "Did not find libfabric")
+    endif()
+    message(STATUS "LibFabric support enabled")
+    message(STATUS "LIB_FABRIC: Path: ${LIBFABRIC_LIBRARY} Include: ${LIBFABRIC_INCLUDE_DIR}")
+    add_definitions(-DLIBFABRIC_ENABLED)
+    SET(ASAPO_COMMON_FABRIC_LIBRARIES ${ASAPO_COMMON_FABRIC_LIBRARIES} fabric)
+ENDIF()
+SET_PROPERTY(GLOBAL PROPERTY ASAPO_COMMON_FABRIC_LIBRARIES ${ASAPO_COMMON_FABRIC_LIBRARIES})
 
 # format sources
 include(astyle)

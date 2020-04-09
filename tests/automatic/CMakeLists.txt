@@ -37,3 +37,7 @@ if (UNIX)
 endif()
 
 add_subdirectory(bug_fixes)
+
+if (ENABLE_LIBFABRIC)
+    add_subdirectory(asapo_fabric)
+endif()

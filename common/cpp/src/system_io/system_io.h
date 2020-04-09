@@ -64,8 +64,6 @@ class SystemIO final : public IO {
     SocketDescriptor	_accept(SocketDescriptor socket_fd, void* address, size_t* address_length) const;
     bool			    _close_socket(SocketDescriptor socket_fd) const;
 
-    std::unique_ptr<std::tuple<std::string, uint16_t>>  SplitAddressToHostnameAndPort(std::string address) const;
-
     std::unique_ptr<sockaddr_in> BuildSockaddrIn(const std::string& address, Error* err) const;
 
     /*
@@ -130,6 +128,8 @@ class SystemIO final : public IO {
     void            Skip(SocketDescriptor socket_fd, size_t length, Error* err) const override;
     void            CloseSocket(SocketDescriptor socket_fd, Error* err) const override;
     std::string     GetHostName(Error* err) const noexcept override;
+    std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostnameAndPort(const std::string& address) const
+                                                    override;
 
     /*
      * Filesystem

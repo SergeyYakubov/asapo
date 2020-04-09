@@ -90,3 +90,36 @@
    fun:*_M_mutate*
    ...
 }
+{
+   asapo_fabric__sockets__uninitialised_bytes
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:send
+   fun:ofi_send_socket
+}
+{
+   asapo_fabric__sockets__leak
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   fun:sock_rx_new_buffered_entry
+   fun:sock_pe_process_rx_send
+   fun:sock_pe_process_recv
+   fun:sock_pe_progress_rx_pe_entry
+   fun:sock_pe_progress_rx_ctx
+   fun:sock_pe_progress_thread
+   fun:start_thread
+   fun:clone
+}
+{
+   asapo_fabric__verbs__rdma_accept__uninitialised_bytes
+   Memcheck:Param
+   write(buf)
+   obj:*libpthread*
+   fun:rdma_accept
+   fun:vrb_msg_ep_accept
+   fun:fi_accept
+   fun:rxm_msg_process_connreq
+}
+
+

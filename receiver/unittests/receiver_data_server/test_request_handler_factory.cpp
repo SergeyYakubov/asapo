@@ -35,7 +35,7 @@ TEST(ReceiverDataServerRequestHandlerFactory, Constructor) {
     config.nthreads = 4;
     ReceiverDataServer data_server{"", asapo::LogLevel::Debug, nullptr, config};
     asapo::Statistics stat;
-    ReceiverDataServerRequestHandlerFactory factory((asapo::NetServer*)&data_server, nullptr, &stat);
+    ReceiverDataServerRequestHandlerFactory factory((asapo::RdsNetServer*)&data_server, nullptr, &stat);
     auto handler = factory.NewRequestHandler(1, nullptr);
     ASSERT_THAT(dynamic_cast<const asapo::ReceiverDataServerRequestHandler*>(handler.get()), Ne(nullptr));
 }

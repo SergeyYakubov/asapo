@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "net_server.h"
+#include "rds_net_server.h"
 #include "request/request_pool.h"
 #include "logger/logger.h"
 #include "../data_cache.h"
@@ -21,7 +21,7 @@ class ReceiverDataServer {
     explicit ReceiverDataServer(std::string address, LogLevel log_level, SharedCache data_cache,
                                 const ReceiverDataCenterConfig& config);
     std::unique_ptr<RequestPool> request_pool__;
-    std::unique_ptr<NetServer> net__;
+    std::unique_ptr<RdsNetServer> net__;
     const AbstractLogger* log__;
     void Run();
   private:

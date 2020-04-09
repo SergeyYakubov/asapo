@@ -4,15 +4,20 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "../../src/receiver_data_server/net_server.h"
+#include "../../src/receiver_data_server/rds_net_server.h"
 #include "request/request_pool.h"
 #include "../../src/receiver_data_server/receiver_data_server_request.h"
 
 namespace asapo {
 
-class MockNetServer : public NetServer {
+class MockNetServer : public RdsNetServer {
   public:
-    GenericRequests GetNewRequests(Error* err) const noexcept override {
+    Error Initialize() override {
+        return  Error{Initialize_t()};
+    };
+    MOCK_METHOD0(Initialize_t, ErrorInterface * ());
+
+    GenericRequests GetNewRequests(Error* err) override {
         ErrorInterface* error = nullptr;
         auto reqs = GetNewRequests_t(&error);
         err->reset(error);
@@ -24,21 +29,29 @@ class MockNetServer : public NetServer {
         return  res;
     }
 
-    MOCK_CONST_METHOD1(GetNewRequests_t, std::vector<ReceiverDataServerRequest> (ErrorInterface**
-                       error));
+    MOCK_METHOD1(GetNewRequests_t, std::vector<ReceiverDataServerRequest> (ErrorInterface**
+                 error));
 
-    Error SendData(uint64_t source_id, void* buf, uint64_t size) const noexcept override {
-        return  Error{SendData_t(source_id, buf, size)};
-
+    Error SendResponse(const ReceiverDataServerRequest* request,
+                       const GenericNetworkResponse* response) override  {
+        return  Error{SendResponse_t(request, response)};
     };
+    MOCK_METHOD2(SendResponse_t, ErrorInterface * (const ReceiverDataServerRequest* request,
+                                                   const GenericNetworkResponse* response));
 
-    MOCK_CONST_METHOD3(SendData_t, ErrorInterface * (uint64_t source_id, void* buf, uint64_t size));
+    Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response,
+                                  const CacheMeta* cache_slot) override {
+        return  Error{SendResponseAndSlotData_t(request, response, cache_slot)};
+    };
+    MOCK_METHOD3(SendResponseAndSlotData_t, ErrorInterface * (const ReceiverDataServerRequest* request,
+                 const GenericNetworkResponse* response,
+                 const CacheMeta* cache_slot));
 
-    void  HandleAfterError(uint64_t source_id) const noexcept override {
+    void  HandleAfterError(uint64_t source_id) override {
         HandleAfterError_t(source_id);
     }
 
-    MOCK_CONST_METHOD1(HandleAfterError_t, void (uint64_t source_id));
+    MOCK_METHOD1(HandleAfterError_t, void (uint64_t source_id));
 };
 
 class MockPool : public RequestPool {
@@ -47,7 +60,7 @@ class MockPool : public RequestPool {
     Error AddRequests(GenericRequests requests) noexcept override {
         std::vector<GenericRequest> reqs;
         for (const auto& preq : requests) {
-            reqs.push_back(GenericRequest{preq->header, 0});
+            reqs.emplace_back(preq->header, 0);
         }
         return Error(AddRequests_t(std::move(reqs)));
 
