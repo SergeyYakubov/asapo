@@ -5,10 +5,10 @@
 
 namespace asapo {
 
-ReceiverDataServer::ReceiverDataServer(std::string address, LogLevel log_level,
-                                       SharedCache data_cache, const ReceiverDataCenterConfig& config) : net__{new RdsTcpServer(address)},
-                                                   log__{GetDefaultReceiverDataServerLogger()}, data_cache_{data_cache},
-config_{config}, statistics__{new Statistics()} {
+ReceiverDataServer::ReceiverDataServer(std::unique_ptr<RdsNetServer> net_server, LogLevel log_level,
+                                       SharedCache data_cache, const ReceiverDataServerConfig& config) : net__{std::move(net_server)},
+    log__{GetDefaultReceiverDataServerLogger()}, data_cache_{data_cache},
+    config_{config}, statistics__{new Statistics()} {
     request_handler_factory_.reset(new ReceiverDataServerRequestHandlerFactory(net__.get(), data_cache_.get(),
                                    statistics__.get()));
     GetDefaultReceiverDataServerLogger()->SetLogLevel(log_level);
@@ -17,13 +17,6 @@ config_{config}, statistics__{new Statistics()} {
 }
 
 void ReceiverDataServer::Run() {
-    {
-        Error startError = net__->Initialize();
-        if (startError) {
-            log__->Error(std::string("Error starting rds net server: ") + startError->Explain());
-            return;
-        }
-    }
     while (true) {
         statistics__->SendIfNeeded();
         Error err;

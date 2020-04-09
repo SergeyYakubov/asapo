@@ -40,10 +40,11 @@ using asapo::ReceiverDataServerRequest;
 namespace {
 
 TEST(ReceiverDataServer, Constructor) {
-    asapo::ReceiverDataCenterConfig config;
+    asapo::ReceiverDataServerConfig config;
     config.nthreads = 4;
-    ReceiverDataServer data_server{"", asapo::LogLevel::Debug, nullptr, config};
-    ASSERT_THAT(dynamic_cast<const asapo::RdsTcpServer*>(data_server.net__.get()), Ne(nullptr));
+    asapo::MockNetServer mock_net;
+    ReceiverDataServer data_server{asapo::RdsNetServerPtr(&mock_net), asapo::LogLevel::Debug, nullptr, config};
+    ASSERT_THAT(data_server.net__.release(), Eq(&mock_net));
     ASSERT_THAT(dynamic_cast<asapo::RequestPool*>(data_server.request_pool__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(data_server.log__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::Statistics*>(data_server.statistics__.get()), Ne(nullptr));
@@ -51,15 +52,20 @@ TEST(ReceiverDataServer, Constructor) {
 
 class ReceiverDataServerTests : public Test {
   public:
-    asapo::ReceiverDataCenterConfig config;
+    asapo::ReceiverDataServerConfig config;
     std::string expected_address = "somehost:123";
-    ReceiverDataServer data_server{expected_address, asapo::LogLevel::Debug, nullptr, config};
     asapo::MockNetServer mock_net;
     asapo::MockPool mock_pool;
     NiceMock<asapo::MockLogger> mock_logger;
     NiceMock<asapo::MockStatistics> mock_statistics;
+
+    ReceiverDataServer data_server{
+        asapo::RdsNetServerPtr(&mock_net),
+        asapo::LogLevel::Debug,
+        nullptr,
+        config};
+
     void SetUp() override {
-        data_server.net__ = std::unique_ptr<asapo::RdsNetServer> {&mock_net};
         data_server.request_pool__ = std::unique_ptr<asapo::RequestPool> {&mock_pool};
         data_server.log__ = &mock_logger;
         data_server.statistics__ = std::unique_ptr<asapo::Statistics> {&mock_statistics};;

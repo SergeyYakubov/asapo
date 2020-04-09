@@ -24,7 +24,7 @@ struct ReceiverConfig {
     LogLevel log_level = LogLevel::Info;
     std::string tag;
     std::string advertise_ip;
-    ReceiverDataCenterConfig dataserver;
+    ReceiverDataServerConfig dataserver;
     std::string discovery_server;
 };
 

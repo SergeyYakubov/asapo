@@ -1,4 +1,5 @@
 #include <iostream>
+#include <utility>
 #include "receiver.h"
 
 #include "receiver_config_factory.h"
@@ -8,8 +9,7 @@
 #include "common/version.h"
 
 #include "receiver_data_server/receiver_data_server.h"
-
-#include "data_cache.h"
+#include "receiver_data_server/net_server/rds_tcp_server.h"
 
 asapo::Error ReadConfigFile(int argc, char* argv[]) {
     if (argc != 2) {
@@ -20,12 +20,34 @@ asapo::Error ReadConfigFile(int argc, char* argv[]) {
     return factory.SetConfig(argv[1]);
 }
 
-std::thread StartDataServer(const asapo::ReceiverConfig* config, asapo::SharedCache cache) {
-    static const std::string dataserver_address = "0.0.0.0:" + std::to_string(config->dataserver.listen_port);
-    return std::thread([config, cache] {
-        asapo::ReceiverDataServer data_server{dataserver_address, config->log_level, cache, config->dataserver};
-        data_server.Run();
-    });
+std::vector<std::thread> StartDataServers(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
+                                          asapo::Error* error) {
+    std::vector<asapo::RdsNetServerPtr> netServers;
+    std::vector<std::thread> dataServerThreads;
+
+    // Add TCP
+    netServers.emplace_back(new asapo::RdsTcpServer("0.0.0.0:" + std::to_string(config->dataserver.listen_port)));
+
+    for (auto& server : netServers) {
+        *error = server->Initialize();
+        if (*error) {
+            return {};
+        }
+    }
+
+    dataServerThreads.reserve(netServers.size());
+    for (auto& server : netServers) {
+        dataServerThreads.emplace_back(std::thread([config, cache, &server] {
+            asapo::ReceiverDataServer data_server{
+                std::move(server),
+                config->log_level,
+                cache,
+                config->dataserver};
+            data_server.Run();
+        }));
+    }
+
+    return dataServerThreads;
 }
 
 int StartReceiver(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
@@ -66,7 +88,12 @@ int main (int argc, char* argv[]) {
         cache.reset(new asapo::DataCache{config->datacache_size_gb * 1024 * 1024 * 1024, (float)config->datacache_reserved_share / 100});
     }
 
-    auto data_thread = StartDataServer(config, cache);
+    auto dataServerThreads = StartDataServers(config, cache, &err);
+    if (err) {
+        logger->Error("Cannot start data server: " + err->Explain());
+        return 1;
+    }
+
     auto exit_code = StartReceiver(config, cache, logger);
     return exit_code;
 }

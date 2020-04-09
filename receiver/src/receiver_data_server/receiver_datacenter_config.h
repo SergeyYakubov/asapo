@@ -5,7 +5,7 @@
 
 namespace asapo {
 
-struct ReceiverDataCenterConfig {
+struct ReceiverDataServerConfig {
     uint64_t listen_port = 0;
     uint64_t nthreads = 0;
     std::string tag;

@@ -31,9 +31,9 @@ using asapo::ReceiverDataServerRequestHandlerFactory;
 namespace {
 
 TEST(ReceiverDataServerRequestHandlerFactory, Constructor) {
-    asapo::ReceiverDataCenterConfig config;
+    asapo::ReceiverDataServerConfig config;
     config.nthreads = 4;
-    ReceiverDataServer data_server{"", asapo::LogLevel::Debug, nullptr, config};
+    ReceiverDataServer data_server{nullptr, asapo::LogLevel::Debug, nullptr, config};
     asapo::Statistics stat;
     ReceiverDataServerRequestHandlerFactory factory((asapo::RdsNetServer*)&data_server, nullptr, &stat);
     auto handler = factory.NewRequestHandler(1, nullptr);

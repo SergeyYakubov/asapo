@@ -23,6 +23,8 @@ class RdsNetServer {
     virtual ~RdsNetServer() = default;
 };
 
+using RdsNetServerPtr = std::unique_ptr<asapo::RdsNetServer>;
+
 }
 
 #endif //ASAPO_RDS_NET_SERVER_H
