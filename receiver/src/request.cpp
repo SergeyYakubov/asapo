@@ -153,20 +153,20 @@ uint64_t Request::GetMetaDataSize() const {
     return request_header_.meta_size;
 }
 
-void Request::SetOnlinePath(std::string facility) {
-    offline_path_ = std::move(facility);
-}
-
-void Request::SetOfflinePath(std::string path) {
+void Request::SetOnlinePath(std::string path) {
     online_path_ = std::move(path);
 }
 
+void Request::SetOfflinePath(std::string path) {
+    offline_path_ = std::move(path);
+}
+
 const std::string& Request::GetOnlinePath() const {
-    return offline_path_;
+    return online_path_;
 }
 
 const std::string& Request::GetOfflinePath() const {
-    return online_path_;
+    return offline_path_;
 }
 
 bool Request::WasAlreadyProcessed() const {
