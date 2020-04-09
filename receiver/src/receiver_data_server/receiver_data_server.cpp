@@ -1,12 +1,12 @@
 #include "receiver_data_server.h"
-#include "tcp_server.h"
+#include "net_server/rds_tcp_server.h"
 #include "receiver_data_server_logger.h"
-#include "receiver_data_server_request_handler_factory.h"
+#include "request_handler/receiver_data_server_request_handler_factory.h"
 
 namespace asapo {
 
 ReceiverDataServer::ReceiverDataServer(std::string address, LogLevel log_level,
-                                       SharedCache data_cache, const ReceiverDataCenterConfig& config) : net__{new TcpServer(address)},
+                                       SharedCache data_cache, const ReceiverDataCenterConfig& config) : net__{new RdsTcpServer(address)},
                                                    log__{GetDefaultReceiverDataServerLogger()}, data_cache_{data_cache},
 config_{config}, statistics__{new Statistics()} {
     request_handler_factory_.reset(new ReceiverDataServerRequestHandlerFactory(net__.get(), data_cache_.get(),

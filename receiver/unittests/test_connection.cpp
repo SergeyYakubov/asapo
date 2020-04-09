@@ -6,11 +6,11 @@
 #include "../src/connection.h"
 #include "../src/receiver_error.h"
 #include "../src/request.h"
-#include "../src/receiver_statistics.h"
+#include "../src/statistics/receiver_statistics.h"
 #include "receiver_mocking.h"
 #include "../src/receiver_config.h"
 #include "../src/receiver_config_factory.h"
-#include "../src/requests_dispatcher.h"
+#include "../src/request_handler/requests_dispatcher.h"
 
 #include "mock_receiver_config.h"
 

@@ -4,13 +4,13 @@
 
 #include "unittests/MockLogger.h"
 #include "../../src/receiver_data_server/receiver_data_server.h"
-#include "../../src/receiver_data_server/tcp_server.h"
+#include "../../src/receiver_data_server/net_server/rds_tcp_server.h"
 
 #include "receiver_dataserver_mocking.h"
 
 #include "common/io_error.h"
 #include "../../src/receiver_data_server/receiver_data_server_error.h"
-#include "../../src/statistics.h"
+#include "../../src/statistics/statistics.h"
 
 #include "../receiver_mocking.h"
 
@@ -43,7 +43,7 @@ TEST(ReceiverDataServer, Constructor) {
     asapo::ReceiverDataCenterConfig config;
     config.nthreads = 4;
     ReceiverDataServer data_server{"", asapo::LogLevel::Debug, nullptr, config};
-    ASSERT_THAT(dynamic_cast<const asapo::TcpServer*>(data_server.net__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RdsTcpServer*>(data_server.net__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestPool*>(data_server.request_pool__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(data_server.log__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::Statistics*>(data_server.statistics__.get()), Ne(nullptr));

@@ -14,9 +14,9 @@
 #include "common/networking.h"
 #include "io/io.h"
 #include "request.h"
-#include "receiver_statistics.h"
+#include "statistics/receiver_statistics.h"
 #include "logger/logger.h"
-#include "requests_dispatcher.h"
+#include "request_handler/requests_dispatcher.h"
 #include "data_cache.h"
 
 namespace asapo {

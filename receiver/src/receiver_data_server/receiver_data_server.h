@@ -3,11 +3,11 @@
 
 #include <memory>
 
-#include "rds_net_server.h"
+#include "net_server/rds_net_server.h"
 #include "request/request_pool.h"
 #include "logger/logger.h"
 #include "../data_cache.h"
-#include "../statistics.h"
+#include "../statistics/statistics.h"
 
 #include "receiver_datacenter_config.h"
 
