@@ -6,7 +6,6 @@
   "AuthorizationServer": "asapo-authorizer:{{ .Values.ownServices.authorizer.port }}",
   "AuthorizationInterval": 10000,
   "ListenPort": {{ .Values.ownServices.receiver.port }},
-  "AdvertiseIP": "auto",
   "DataServer": {
     "AdvertiseURI": "auto",
     "NThreads": {{ .Values.ownServices.receiver.dataServer.nThreads }},
