@@ -12,6 +12,10 @@ namespace asapo {
 
 typedef uint64_t NetworkRequestId;
 
+enum class NetworkConnectionType {
+    kAsapoTcp, // ASAPOs TCP (Multiple connections for parallel data transfers)
+};
+
 enum Opcode : uint8_t {
     kOpcodeUnknownOp = 1,
     kOpcodeTransferData,

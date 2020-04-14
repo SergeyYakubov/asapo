@@ -16,7 +16,7 @@ std::mutex mutex;
 int iterations_remained;
 
 struct Args {
-    std::string receiver_address;
+    std::string discovery_service_endpoint;
     std::string beamtime_id;
     std::string stream;
     std::string token;
@@ -29,7 +29,7 @@ struct Args {
 };
 
 void PrintCommandArguments(const Args& args) {
-    std::cout << "receiver_address: " << args.receiver_address << std::endl
+    std::cout << "discovery_service_endpoint: " << args.discovery_service_endpoint << std::endl
               << "beamtime_id: " << args.beamtime_id << std::endl
               << "Package size: " << args.number_of_bytes / 1000 << "k" << std::endl
               << "iterations: " << args.iterations << std::endl
@@ -76,7 +76,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         exit(EXIT_FAILURE);
     }
     try {
-        args->receiver_address = argv[1];
+        args->discovery_service_endpoint = argv[1];
         args->beamtime_id = argv[2];
         TryGetStreamAndToken(args);
         args->number_of_bytes = std::stoull(argv[3]) * 1000;
@@ -178,7 +178,7 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
 
 std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
-    auto producer = asapo::Producer::Create(args.receiver_address, args.nthreads,
+    auto producer = asapo::Producer::Create(args.discovery_service_endpoint, args.nthreads,
                                             args.mode % 10 == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem,
                                             asapo::SourceCredentials{args.beamtime_id, "", args.stream, args.token }, 3600, &err);
     if(err) {

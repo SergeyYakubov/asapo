@@ -1,0 +1,126 @@
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include <unittests/MockIO.h>
+#include "../../src/connection.h"
+#include "../../src/receiver_error.h"
+#include "../../src/request.h"
+#include "../../src/request_handler/request_handler.h"
+#include "../../src/request_handler/request_handler_receive_metadata.h"
+#include "database/database.h"
+#include "unittests/MockLogger.h"
+
+#include "../receiver_mocking.h"
+#include "../mock_receiver_config.h"
+
+using ::testing::Test;
+using ::testing::Return;
+using ::testing::_;
+using ::testing::DoAll;
+using ::testing::SetArgReferee;
+using ::testing::Gt;
+using ::testing::Eq;
+using ::testing::Ne;
+using ::testing::Mock;
+using ::testing::NiceMock;
+using ::testing::InSequence;
+using ::testing::SetArgPointee;
+using ::asapo::Error;
+using ::asapo::ErrorInterface;
+using ::asapo::FileDescriptor;
+using ::asapo::SocketDescriptor;
+using ::asapo::GenericRequestHeader;
+using ::asapo::SendDataResponse;
+using ::asapo::GenericRequestHeader;
+using ::asapo::GenericNetworkResponse;
+using ::asapo::Opcode;
+using ::asapo::Connection;
+using ::asapo::MockIO;
+using asapo::Request;
+using asapo::MockDataCache;
+using asapo::StatisticEntity;
+
+using asapo::ReceiverConfig;
+using asapo::SetReceiverConfig;
+using asapo::RequestFactory;
+using asapo:: RequestHandlerReceiveMetaData;
+namespace {
+
+TEST(ReceiveData, Constructor) {
+    RequestHandlerReceiveMetaData handler;
+    ASSERT_THAT(dynamic_cast<asapo::IO*>(handler.io__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(handler.log__), Ne(nullptr));
+}
+
+class ReceiveMetaDataHandlerTests : public Test {
+  public:
+    GenericRequestHeader generic_request_header;
+    asapo::SocketDescriptor socket_fd_{1};
+    uint64_t data_size_ {100};
+    uint64_t data_id_{15};
+    uint64_t expected_slot_id{16};
+    std::string expected_origin_uri = "origin_uri";
+    std::string expected_metadata = "meta";
+    uint64_t expected_metadata_size = expected_metadata.size();
+    asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
+    std::unique_ptr<Request> request;
+    NiceMock<MockIO> mock_io;
+    RequestHandlerReceiveMetaData handler;
+    NiceMock<asapo::MockLogger> mock_logger;
+
+    void SetUp() override {
+        generic_request_header.data_size = data_size_;
+        generic_request_header.data_id = data_id_;
+        generic_request_header.meta_size = expected_metadata_size;
+        generic_request_header.op_code = expected_op_code;
+        generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
+        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr});
+        handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
+        handler.log__ = &mock_logger;
+    }
+    void TearDown() override {
+        handler.io__.release();
+    }
+    void ExpectReceive(uint64_t expected_size, bool ok = true);
+    void ExpectReceiveMetaData(bool ok = true);
+};
+
+ACTION_P(CopyStr, value) {
+    if (value.size() <= arg2 && value.size() > 0) {
+        memcpy(static_cast<char*>(arg1), value.c_str(), value.size());
+    }
+}
+
+
+void ReceiveMetaDataHandlerTests::ExpectReceive(uint64_t expected_size, bool ok) {
+    EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, expected_size, _)).WillOnce(
+        DoAll(
+            CopyStr(expected_metadata),
+            SetArgPointee<3>(ok ? nullptr : new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
+            Return(0)
+        ));
+
+}
+
+void ReceiveMetaDataHandlerTests::ExpectReceiveMetaData(bool ok) {
+    ExpectReceive(expected_metadata_size, ok);
+}
+
+TEST_F(ReceiveMetaDataHandlerTests, CheckStatisticEntity) {
+    auto entity = handler.GetStatisticEntity();
+    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetwork));
+}
+
+TEST_F(ReceiveMetaDataHandlerTests, HandleReturnsErrorOnMetaDataReceive) {
+    ExpectReceiveMetaData(false);
+    auto err = handler.ProcessRequest(request.get());
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
+}
+
+TEST_F(ReceiveMetaDataHandlerTests, HandleReturnsOK) {
+    ExpectReceiveMetaData(true);
+    auto err = handler.ProcessRequest(request.get());
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
+}

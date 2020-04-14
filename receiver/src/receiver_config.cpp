@@ -48,7 +48,7 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
 
 }
 
-const ReceiverConfig*  GetReceiverConfig() {
+const ReceiverConfig* GetReceiverConfig() {
     return &config;
 }
 
