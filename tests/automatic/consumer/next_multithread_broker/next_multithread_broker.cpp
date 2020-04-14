@@ -18,8 +18,15 @@ void Assert(std::vector<asapo::FileInfos> file_infos, int nthreads, int nfiles) 
         }
     }
     // file names created by setup.sh should be '1','2',... Each thread should access different files.
-    M_AssertEq(nfiles, nfiles_read);
-    M_AssertTrue(std::is_permutation(expect.begin(), expect.end(), result.begin()));
+    if (nfiles != nfiles_read) {
+        std::cout << "nfiles != nfiles_read" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+//    M_AssertEq(nfiles, nfiles_read);
+    if (!std::is_permutation(expect.begin(), expect.end(), result.begin())) {
+        std::cout << "!std::is_permutation" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 struct Args {
@@ -64,7 +71,9 @@ void TestAll(const Args& args) {
     }
 
     for (auto& thread : threads) {
-        thread.join();
+        if (thread.joinable()) {
+            thread.join();
+        }
     }
 
     Assert(file_infos, args.nthreads, args.nfiles);

@@ -94,7 +94,7 @@ class DbWriterHandlerTests : public Test {
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", &mock_db_check_handler});
         config.database_uri = "127.0.0.1:27017";
-        config.advertise_ip = expected_host_ip;
+        config.dataserver.advertise_uri = expected_host_ip+":"+std::to_string(expected_port);
         config.dataserver.listen_port = expected_port;
         SetReceiverConfig(config, "none");
 

@@ -1,0 +1,89 @@
+ownServices:
+  authorizer:
+    serviceName: asapo-authorizer
+    replicaCount: 1
+    port: 5006
+    sidecarLogs: true
+    _exposeServiceExtrernally: false
+  broker:
+    serviceName: asapo-broker
+    replicaCount: 1
+    port: 5007
+    sidecarLogs: true
+    _exposeServiceExtrernally: true
+  discovery:
+    serviceName: asapo-discovery
+    replicaCount: 1
+    port: 5008
+    sidecarLogs: true
+    _exposeServiceExtrernally: false
+  receiver:
+    serviceName: asapo-receiver
+    replicaCount: 1
+    port: 5009
+    sidecarLogs: true
+    _exposeServiceExtrernally: true
+    dataServer:
+      appName: asapo-receiver
+      serviceName: asapo-receiver-dataserver
+      port: 5010
+      nThreads: 1
+      _exposeServiceExtrernally: true
+    dataCache:
+      enable: true
+      sizeGb: 1
+    receiveToDiskThresholdMB: 200
+  fileTransfer:
+    serviceName: asapo-file-transfer
+    replicaCount: 1
+    port: 5011
+    sidecarLogs: true
+    _exposeServiceExtrernally: true
+  grafana:
+    serviceName: asapo-grafana
+    replicaCount: 1
+    port: 3000
+    sidecarLogs: false
+    _exposeServiceExtrernally: false
+  mongodb:
+    serviceName: asapo-mongodb
+    replicaCount: 1
+    port: 27017
+    sidecarLogs: false
+    _exposeServiceExtrernally: false
+
+
+common:
+  authSecret: "12ljzgneasfd"
+  offlineDir: "/test_offline"
+  onlineDir: "/test_online"
+  asapoVersionTag: "feature_ASAPO-108-kubernetes-deployment.latest"
+
+influxdb:
+  authEnabled: false
+  influxdb:
+    updateStrategy: Recreate
+    service:
+      port: 8086
+
+elasticsearch:
+  global:
+    kibanaEnabled: true
+    coordinating:
+      name: elk-coordinating
+  kibana:
+    extraConfiguration:
+      "server.basePath": /{{ .Release.Namespace }}/logsview
+      "server.rewriteBasePath": true
+    plugins:
+      - "https://github.com/sivasamyk/logtrail/releases/download/v0.1.31/logtrail-7.6.1-0.1.31.zip"
+      - "x-pack"
+    healthCheckPathTemplate: "/{{ .Release.Namespace }}/logsview/app/kibana"
+    ingress:
+      enabled: true
+      annotations:
+        kubernetes.io/ingress.class: "nginx"
+        nginx.ingress.kubernetes.io/whitelist-source-range: 131.169.0.0/16
+      hosts:
+        - name: "*.desy.de"
+          path_template: "/{{ .Release.Namespace }}/logsview"

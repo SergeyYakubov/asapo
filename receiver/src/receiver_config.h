@@ -5,7 +5,7 @@
 #include "common/error.h"
 #include "logger/logger.h"
 
-#include "receiver_data_server/receiver_datacenter_config.h"
+#include "receiver_data_server/receiver_data_server_config.h"
 namespace asapo {
 
 struct ReceiverConfig {
@@ -23,7 +23,6 @@ struct ReceiverConfig {
     uint64_t receive_to_disk_threshold_mb = 0;
     LogLevel log_level = LogLevel::Info;
     std::string tag;
-    std::string advertise_ip;
     ReceiverDataServerConfig dataserver;
     std::string discovery_server;
 };

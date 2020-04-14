@@ -45,7 +45,7 @@ job "asapo-mongo" {
 
       service {
         port = "mongo"
-        name = "mongo"
+        name = "asapo-mongodb"
         check {
           type     = "script"
           name     = "alive"

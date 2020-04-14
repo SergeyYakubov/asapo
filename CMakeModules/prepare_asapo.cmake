@@ -30,10 +30,16 @@ function(prepare_asapo)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver.json.tpl.win.in receiver.json.tpl @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/config/nomad/nginx_kill_win.nmd nginx_kill.nmd @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/authorizer_settings.json.tpl.win authorizer.json.tpl COPYONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/start_services.bat start_services.bat COPYONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/stop_services.bat stop_services.bat COPYONLY)
+
     else()
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver.json.tpl.lin.in receiver.json.tpl @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/config/nomad/nginx_kill_lin.nmd nginx_kill.nmd @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/authorizer_settings.json.tpl.lin authorizer.json.tpl COPYONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/start_services.sh start_services.sh COPYONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/stop_services.sh stop_services.sh COPYONLY)
+
     endif()
 
     configure_file(${CMAKE_SOURCE_DIR}/config/nomad/receiver.nmd.in  receiver.nmd @ONLY)

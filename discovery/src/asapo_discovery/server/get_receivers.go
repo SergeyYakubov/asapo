@@ -3,28 +3,17 @@ package server
 import (
 	"net/http"
 	"asapo_common/logger"
-	"errors"
+	"asapo_discovery/common"
 )
 
 func getService(service string) (answer []byte, code int) {
 	var err error
-	switch service {
-	case "receivers":
+	if (service == "asapo-receiver") {
 		answer, err = requestHandler.GetReceivers(settings.Receiver.UseIBAddress)
-		break
-	case "broker":
-		answer, err = requestHandler.GetBroker()
-		break
-	case "mongo":
-		answer, err = requestHandler.GetMongo()
-		break
-	case "fts":
-		answer, err = requestHandler.GetFts()
-		break
-	default:
-		err = errors.New("wrong request: "+service)
-	}
+	} else {
+		answer, err = requestHandler.GetSingleService(service)
 
+	}
 	log_str := "processing get "+service
 	if err != nil {
 		logger.Error(log_str + " - " + err.Error())
@@ -37,28 +26,28 @@ func getService(service string) (answer []byte, code int) {
 
 func routeGetReceivers(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Content-type", "application/json")
-	answer,code := getService("receivers")
+	answer,code := getService(common.NameReceiverService)
 	w.WriteHeader(code)
 	w.Write(answer)
 }
 
 func routeGetBroker(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Content-type", "application/json")
-	answer,code := getService("broker")
+	answer,code := getService(common.NameBrokerService)
 	w.WriteHeader(code)
 	w.Write(answer)
 }
 
 func routeGetMongo(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Content-type", "application/json")
-	answer,code := getService("mongo")
+	answer,code := getService(common.NameMongoService)
 	w.WriteHeader(code)
 	w.Write(answer)
 }
 
 func routeGetFileTransferService(w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("Content-type", "application/json")
-	answer,code := getService("fts")
+	answer,code := getService(common.NameFtsService)
 	w.WriteHeader(code)
 	w.Write(answer)
 }

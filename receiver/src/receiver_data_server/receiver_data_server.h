@@ -9,7 +9,7 @@
 #include "../data_cache.h"
 #include "../statistics/statistics.h"
 
-#include "receiver_datacenter_config.h"
+#include "receiver_data_server_config.h"
 
 namespace asapo {
 

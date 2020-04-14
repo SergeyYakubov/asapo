@@ -33,7 +33,7 @@ size_t curl_write( void* ptr, size_t size, size_t nmemb, void* data_container) {
         if (container->bytes_received + nbytes > container->array_size) {
             return -1;
         }
-        memcpy(container->p_array->get(), ptr, nbytes);
+        memcpy(container->p_array->get()+container->bytes_received, ptr, nbytes);
         container->bytes_received += nbytes;
         break;
     case CurlDataMode::file:

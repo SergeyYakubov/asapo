@@ -37,7 +37,7 @@ Error RequestHandlerDb::GetDatabaseServerUri(std::string* uri) const {
 
     HttpCode code;
     Error http_err;
-    *uri = http_client__->Get(GetReceiverConfig()->discovery_server + "/mongo", &code, &http_err);
+    *uri = http_client__->Get(GetReceiverConfig()->discovery_server + "/asapo-mongodb", &code, &http_err);
     if (http_err) {
         log__->Error(std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
                      + " : " + http_err->Explain());

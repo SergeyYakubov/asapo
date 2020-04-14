@@ -43,8 +43,8 @@ sleep 1
 
 #producer
 mkdir -p ${receiver_folder}
-$1 localhost:8400 ${beamtime_id} 100 0 1 0 100
+$1 localhost:8400 ${beamtime_id} 100 0 1 0 1000
 
-$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 0 1 > out
+$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 > out
 cat out
 cat out | grep "dummy_meta"

@@ -34,7 +34,7 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     (err = parser.GetString("AuthorizationServer", &config.authorization_server)) ||
     (err = parser.GetUInt64("AuthorizationInterval", &config.authorization_interval_ms)) ||
     (err = parser.GetString("PerformanceDbName", &config.performance_db_name)) ||
-    (err = parser.GetString("AdvertiseIP", &config.advertise_ip)) ||
+    (err = parser.Embedded("DataServer").GetString("AdvertiseURI", &config.dataserver.advertise_uri)) ||
     (err = parser.GetString("LogLevel", &log_level));
 
     if (err) {
@@ -48,7 +48,7 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
 
 }
 
-const ReceiverConfig*  GetReceiverConfig() {
+const ReceiverConfig* GetReceiverConfig() {
     return &config;
 }
 

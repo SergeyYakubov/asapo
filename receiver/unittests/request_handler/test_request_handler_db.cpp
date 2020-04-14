@@ -95,7 +95,7 @@ class DbHandlerTests : public Test {
 
 void DbHandlerTests::MockAuthRequest(bool error, HttpCode code) {
     if (error) {
-        EXPECT_CALL(mock_http_client, Get_t(expected_discovery_server + "/mongo",  _, _)).
+        EXPECT_CALL(mock_http_client, Get_t(expected_discovery_server + "/asapo-mongodb",  _, _)).
         WillOnce(
             DoAll(SetArgPointee<2>(new asapo::SimpleError("http error")),
                   Return("")
@@ -105,7 +105,7 @@ void DbHandlerTests::MockAuthRequest(bool error, HttpCode code) {
                                              HasSubstr(expected_discovery_server))));
 
     } else {
-        EXPECT_CALL(mock_http_client, Get_t(expected_discovery_server + "/mongo", _, _)).
+        EXPECT_CALL(mock_http_client, Get_t(expected_discovery_server + "/asapo-mongodb", _, _)).
         WillOnce(
             DoAll(
                 SetArgPointee<1>(code),

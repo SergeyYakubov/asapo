@@ -7,13 +7,7 @@ SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\d
 
 echo db.%beamtime_id%_detector.insert({dummy:1})" | %mongo_exe% %beamtime_id%_detector
 
-
-c:\opt\consul\nomad run receiver.nmd
-c:\opt\consul\nomad run authorizer.nmd
-c:\opt\consul\nomad run discovery.nmd
-c:\opt\consul\nomad run nginx.nmd
-
-ping 1.0.0.0 -n 1 -w 100 > nul
+call start_services.bat
 
 mkdir %receiver_folder%
 
@@ -42,11 +36,7 @@ call :clean
 exit /b 1
 
 :clean
-c:\opt\consul\nomad stop receiver
-c:\opt\consul\nomad stop discovery
-c:\opt\consul\nomad stop nginx
-c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill
-c:\opt\consul\nomad stop authorizer
+call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%_detector
 

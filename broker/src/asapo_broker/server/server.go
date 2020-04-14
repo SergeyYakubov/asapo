@@ -42,7 +42,7 @@ type discoveryAPI struct {
 var discoveryService discoveryAPI
 
 func (api *discoveryAPI) GetMongoDbAddress() (string, error) {
-	resp, err := api.Client.Get(api.baseURL + "/mongo")
+	resp, err := api.Client.Get(api.baseURL + "/asapo-mongodb")
 	if err != nil {
 		return "", err
 	}

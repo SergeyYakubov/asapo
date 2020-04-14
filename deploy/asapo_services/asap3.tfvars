@@ -1,5 +1,7 @@
 elk_logs = true
 
+asapo_image_tag = "feature_ASAPO-108-kubernetes-deployment.latest"
+
 service_dir="/gpfs/asapo/shared/service_dir"
 online_dir="/beamline"
 offline_dir="/asap3"

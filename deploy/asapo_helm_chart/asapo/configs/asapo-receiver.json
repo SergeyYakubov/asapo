@@ -1,0 +1,24 @@
+{
+  "PerformanceDbServer": "{{ .Chart.Name }}-influxdb:{{ .Values.influxdb.influxdb.service.port }}",
+  "PerformanceDbName": "asapo_receivers",
+  "DatabaseServer": "asapo-mongodb:{{ .Values.ownServices.mongodb.port }}",
+  "DiscoveryServer": "asapo-discovery:{{ .Values.ownServices.discovery.port }}",
+  "AuthorizationServer": "asapo-authorizer:{{ .Values.ownServices.authorizer.port }}",
+  "AuthorizationInterval": 10000,
+  "ListenPort": {{ .Values.ownServices.receiver.port }},
+  "DataServer": {
+    "AdvertiseURI": "auto",
+    "NThreads": {{ .Values.ownServices.receiver.dataServer.nThreads }},
+    "ListenPort": {{ .Values.ownServices.receiver.dataServer.port }}
+  },
+  "DataCache": {
+    "Use": {{ .Values.ownServices.receiver.dataCache.enable }},
+    "SizeGB": {{ .Values.ownServices.receiver.dataCache.sizeGb }},
+    "ReservedShare": 10
+  },
+  "Tag": "receiver",
+  "WriteToDisk":true,
+  "ReceiveToDiskThresholdMB": {{ .Values.ownServices.receiver.receiveToDiskThresholdMB }},
+  "WriteToDb":true,
+  "LogLevel": "info"
+}

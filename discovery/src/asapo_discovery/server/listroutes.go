@@ -2,32 +2,32 @@ package server
 
 import (
 	"asapo_common/utils"
+	"asapo_discovery/common"
 )
 
 var listRoutes = utils.Routes{
 	utils.Route{
 		"GetReceivers",
 		"Get",
-		"/receivers",
+		"/" + common.NameReceiverService,
 		routeGetReceivers,
 	},
 	utils.Route{
 		"GetBroker",
 		"Get",
-		"/broker",
+		"/asapo-broker",
 		routeGetBroker,
 	},
 	utils.Route{
 		"GetMongo",
 		"Get",
-		"/mongo",
+		"/" + common.NameMongoService,
 		routeGetMongo,
 	},
 	utils.Route{
 		"GetFTS",
 		"Get",
-		"/fts",
+		"/" + common.NameFtsService,
 		routeGetFileTransferService,
 	},
-
 }

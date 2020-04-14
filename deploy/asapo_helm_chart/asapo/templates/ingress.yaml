@@ -1,0 +1,7 @@
+{{- range .Values.ownServices }}
+  {{- if not ._exposeServiceExtrernally }}
+  {{- $data := dict  "Release" $.Release "Values" $.Values "service" . }}
+  {{- template "asapo.ingress" $data }}
+  {{- end }}
+---
+{{- end }}

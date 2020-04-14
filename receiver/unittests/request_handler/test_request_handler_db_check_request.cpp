@@ -75,7 +75,7 @@ class DbCheckRequestHandlerTests : public Test {
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_default_stream = "detector";
     std::string expected_stream = "stream";
-    std::string expected_host_ip = "127.0.0.1";
+    std::string expected_host_uri = "127.0.0.1:1234";
     uint64_t expected_port = 1234;
     uint64_t expected_buf_id = 18446744073709551615ull;
     std::string expected_file_name = "2";
@@ -96,7 +96,7 @@ class DbCheckRequestHandlerTests : public Test {
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
         config.database_uri = "127.0.0.1:27017";
-        config.advertise_ip = expected_host_ip;
+        config.dataserver.advertise_uri = expected_host_uri;
         config.dataserver.listen_port = expected_port;
         SetReceiverConfig(config, "none");
         expected_file_info =  PrepareFileInfo();
@@ -196,7 +196,7 @@ FileInfo DbCheckRequestHandlerTests::PrepareFileInfo() {
     file_info.name = expected_file_name;
     file_info.id = expected_id;
     file_info.buf_id = expected_buf_id;
-    file_info.source = expected_host_ip + ":" + std::to_string(expected_port);
+    file_info.source = expected_host_uri;
     file_info.metadata = expected_metadata;
     return file_info;
 }
