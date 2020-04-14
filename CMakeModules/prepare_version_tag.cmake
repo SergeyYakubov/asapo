@@ -1,4 +1,4 @@
-execute_process(COMMAND git describe --tags --dirty
+execute_process(COMMAND git describe --tags --abbrev=0
                 OUTPUT_VARIABLE VERSION
                 WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 string(STRIP ${VERSION} VERSION)
@@ -8,16 +8,11 @@ execute_process(COMMAND git rev-parse --abbrev-ref HEAD
                 WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 string(STRIP ${BRANCH} BRANCH)
 
-if (${BRANCH} STREQUAL "develop")
+if (${BRANCH} STREQUAL "master")
     SET (ASAPO_VERSION ${BRANCH}.${VERSION})
 else()
     SET (ASAPO_VERSION ${BRANCH}.latest)
 endif()
-
-execute_process(COMMAND git describe --tags --abbrev=0
-                OUTPUT_VARIABLE ASAPO_VERSION_TAG
-                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-string(STRIP ${ASAPO_VERSION_TAG} ASAPO_VERSION_TAG)
 
 execute_process(COMMAND git rev-parse --short HEAD
                 OUTPUT_VARIABLE VERSION_COMMIT
@@ -39,10 +34,10 @@ endif()
 
 
 
-if (${BRANCH} STREQUAL "develop")
-    SET (ASAPO_VERSION_PYTHON ${ASAPO_VERSION_TAG}.${BRANCH}.${VERSION_COMMIT})
+if (${BRANCH} STREQUAL "master")
+    SET (ASAPO_VERSION_PYTHON ${ASAPO_VERSION})
 else()
-    SET (ASAPO_VERSION_PYTHON ${ASAPO_VERSION_TAG}.${BRANCH}.latest)
+    SET (ASAPO_VERSION_PYTHON ${ASAPO_VERSION}.${BRANCH}.latest)
 endif()
 
 
