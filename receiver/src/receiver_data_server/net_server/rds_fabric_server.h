@@ -6,18 +6,18 @@
 
 namespace asapo {
 
-class FabricServerRds : public RdsNetServer {
+class RdsFabricServer : public RdsNetServer {
   public:
-    explicit FabricServerRds(std::string  listenAddress);
-    ~FabricServerRds() override;
+    explicit RdsFabricServer(std::string  listenAddress);
+    ~RdsFabricServer() override;
 
     // modified in testings to mock system calls, otherwise do not touch
     std::unique_ptr<asapo::fabric::FabricFactory> factory__;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
+    std::unique_ptr<fabric::FabricServer> server__;
   private:
     std::string listenAddress_;
-    std::unique_ptr<fabric::FabricServer> server_;
   public: // NetServer implementation
     Error Initialize() override;
 

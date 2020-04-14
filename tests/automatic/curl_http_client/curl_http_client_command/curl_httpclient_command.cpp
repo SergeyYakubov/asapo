@@ -66,15 +66,15 @@ int main(int argc, char* argv[]) {
 
     transfer = "{\"Folder\":\"" + args.folder + "\",\"FileName\":\"random\"}";
     auto io = asapo::GenerateDefaultIO();
-    auto fname = args.folder+asapo::kPathSeparator+"random";
-    uint64_t size=0;
-    auto expected_data = io->GetDataFromFile(fname,&size,&err);
+    auto fname = args.folder + asapo::kPathSeparator + "random";
+    uint64_t size = 0;
+    auto expected_data = io->GetDataFromFile(fname, &size, &err);
     M_AssertEq(nullptr, err);
     err = server_broker->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &data, size, &code);
     M_AssertTrue(code == asapo::HttpCode::OK);
-    for (uint64_t i=0;i<size;i++) {
+    for (uint64_t i = 0; i < size; i++) {
         if (expected_data[i] != data[i]) {
-            M_AssertTrue(false,"recieve array equal to sent array");
+            M_AssertTrue(false, "recieve array equal to sent array");
         }
     }
 

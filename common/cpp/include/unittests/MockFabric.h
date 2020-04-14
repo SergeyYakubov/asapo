@@ -11,6 +11,7 @@ class MockFabricMemoryRegion : public FabricMemoryRegion {
 };
 
 class MockFabricContext : public FabricContext {
+  public:
     MOCK_CONST_METHOD0(GetAddress, std::string());
 
     std::unique_ptr<FabricMemoryRegion> ShareMemoryRegion(void* src, size_t size, Error* error) override {
@@ -61,6 +62,7 @@ class MockFabricClient : public MockFabricContext, public FabricClient {
 };
 
 class MockFabricServer : public MockFabricContext, public FabricServer {
+  public:
     void RecvAny(FabricAddress* srcAddress, FabricMessageId* messageId, void* dst, size_t size, Error* error) override {
         ErrorInterface* err = nullptr;
         RecvAny_t(srcAddress, messageId, dst, size, &err);
@@ -68,6 +70,30 @@ class MockFabricServer : public MockFabricContext, public FabricServer {
     }
     MOCK_METHOD5(RecvAny_t, void(FabricAddress* srcAddress, FabricMessageId* messageId,
                                  void* dst, size_t size, ErrorInterface** err));
+  public: // Link to FabricContext
+    std::string GetAddress() const override {
+        return MockFabricContext::GetAddress();
+    }
+
+    std::unique_ptr<FabricMemoryRegion> ShareMemoryRegion(void* src, size_t size, Error* error) override {
+        return MockFabricContext::ShareMemoryRegion(src, size, error);
+    }
+
+    void Send(FabricAddress dstAddress, FabricMessageId messageId,
+              const void* src, size_t size, Error* error) override {
+        MockFabricContext::Send(dstAddress, messageId, src, size, error);
+    }
+
+    void Recv(FabricAddress srcAddress, FabricMessageId messageId,
+              void* dst, size_t size, Error* error) override {
+        MockFabricContext::Recv(srcAddress, messageId, dst, size, error);
+    }
+
+    void RdmaWrite(FabricAddress dstAddress,
+                   const MemoryRegionDetails* details, const void* buffer, size_t size,
+                   Error* error) override {
+        MockFabricContext::RdmaWrite(dstAddress, details, buffer, size, error);
+    }
 };
 
 class MockFabricFactory : public FabricFactory {

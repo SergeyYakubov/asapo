@@ -125,10 +125,11 @@ class ServerDataBrokerTests : public Test {
                 ));
     }
     void MockGetServiceUri(std::string service, std::string result) {
-        EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/" + service), _, _)).WillOnce(DoAll(
-                    SetArgPointee<1>(HttpCode::OK),
-                    SetArgPointee<2>(nullptr),
-                    Return(result)));
+        EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/" + service), _,
+                                            _)).WillOnce(DoAll(
+                                                    SetArgPointee<1>(HttpCode::OK),
+                                                    SetArgPointee<2>(nullptr),
+                                                    Return(result)));
     }
 
     void MockBeforeFTS(FileData* data);

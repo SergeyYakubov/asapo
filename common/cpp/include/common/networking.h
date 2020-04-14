@@ -51,13 +51,13 @@ struct GenericRequestHeader {
                          uint64_t i_data_size = 0, uint64_t i_meta_size = 0, const std::string& i_message = "",
                          const std::string& i_substream = ""):
         op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size}, meta_size{i_meta_size} {
-        strncpy(message, i_message.c_str(), kMaxMessageSize); // TODO must be memcpy in order to send raw MemoryDetails
+        memcpy(message, i_message.c_str(), kMaxMessageSize);
         strncpy(substream, i_substream.c_str(), kMaxMessageSize);
     }
     GenericRequestHeader(const GenericRequestHeader& header) {
         op_code = header.op_code, data_id = header.data_id, data_size = header.data_size, meta_size = header.meta_size,
         memcpy(custom_data, header.custom_data, kNCustomParams * sizeof(uint64_t)),
-        strncpy(message, header.message, kMaxMessageSize); // TODO must be memcpy in order to send raw MemoryDetails
+        memcpy(message, header.message, kMaxMessageSize);
         strncpy(substream, header.substream, kMaxMessageSize);
     }
 
@@ -66,8 +66,8 @@ struct GenericRequestHeader {
     uint64_t    data_size;
     uint64_t    meta_size;
     CustomRequestData    custom_data;
-    char        message[kMaxMessageSize];
-    char        substream[kMaxMessageSize];
+    char        message[kMaxMessageSize]; /* Can also be a binary message (e.g. MemoryRegionDetails)*/
+    char        substream[kMaxMessageSize]; /* Must be a string (strcpy is used) */
     std::string Json() {
         std::string s = "{\"id\":" + std::to_string(data_id) + ","
                         "\"buffer\":\"" + std::string(message) + "\""

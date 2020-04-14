@@ -1,30 +1,30 @@
 #include <io/io_factory.h>
 
 #include <utility>
-#include "fabric_server_rds.h"
-#include "receiver_data_server_logger.h"
+#include "rds_fabric_server.h"
+#include "../receiver_data_server_logger.h"
 #include "fabric_rds_request.h"
 
 using namespace asapo;
 
-FabricServerRds::FabricServerRds(std::string listenAddress): factory__(fabric::GenerateDefaultFabricFactory()), io__{GenerateDefaultIO()},
+RdsFabricServer::RdsFabricServer(std::string listenAddress): factory__(fabric::GenerateDefaultFabricFactory()), io__{GenerateDefaultIO()},
     log__{GetDefaultReceiverDataServerLogger()}, listenAddress_(std::move(listenAddress)) {
 
 }
 
-FabricServerRds::~FabricServerRds() {
+RdsFabricServer::~RdsFabricServer() {
 
 }
 
-Error FabricServerRds::Initialize() {
-    if (server_) {
+Error RdsFabricServer::Initialize() {
+    if (server__) {
         return TextError("Server was already initialized");
     }
     Error err;
     std::string hostname;
     uint16_t port;
     std::tie(hostname, port) = *io__->SplitAddressToHostnameAndPort(listenAddress_);
-    server_ = factory__->CreateAndBindServer(log__, hostname, port, &err);
+    server__ = factory__->CreateAndBindServer(log__, hostname, port, &err);
     if (err) {
         return err;
     }
@@ -32,14 +32,14 @@ Error FabricServerRds::Initialize() {
     return err;
 }
 
-GenericRequests FabricServerRds::GetNewRequests(Error* err) {
+GenericRequests RdsFabricServer::GetNewRequests(Error* err) {
     // TODO: Should be performance tested, just a single request is returned at a time
     fabric::FabricAddress srcAddress;
     fabric::FabricMessageId messageId;
 
     GenericRequestHeader header;
-    server_->RecvAny(&srcAddress, &messageId, &header, sizeof(header), err);
-    if (err) {
+    server__->RecvAny(&srcAddress, &messageId, &header, sizeof(header), err);
+    if (*err) {
         return {}; // empty result
     }
     auto requestPtr = new FabricRdsRequest(header, srcAddress, messageId);
@@ -49,27 +49,28 @@ GenericRequests FabricServerRds::GetNewRequests(Error* err) {
     return genericRequests;
 }
 
-Error FabricServerRds::SendResponse(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response) {
+Error RdsFabricServer::SendResponse(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response) {
     Error err;
     auto fabricRequest = dynamic_cast<const FabricRdsRequest*>(request);
-    server_->Send(request->source_id, fabricRequest->message_id, response, sizeof(*response), &err);
+    server__->Send(request->source_id, fabricRequest->message_id, response, sizeof(*response), &err);
+    return err;
 }
 
-Error FabricServerRds::SendResponseAndSlotData(const ReceiverDataServerRequest* request,
+Error RdsFabricServer::SendResponseAndSlotData(const ReceiverDataServerRequest* request,
                                                const GenericNetworkResponse* response, const CacheMeta* cache_slot) {
     Error err;
     auto fabricRequest = dynamic_cast<const FabricRdsRequest*>(request);
 
-    server_->RdmaWrite(fabricRequest->source_id, fabricRequest->GetMemoryRegion(), cache_slot->addr, cache_slot->size,
-                       &err);
+    server__->RdmaWrite(fabricRequest->source_id, fabricRequest->GetMemoryRegion(), cache_slot->addr, cache_slot->size,
+                        &err);
     if (err) {
         return err;
     }
 
-    server_->Send(request->source_id, fabricRequest->message_id, response, sizeof(*response), &err);
+    server__->Send(request->source_id, fabricRequest->message_id, response, sizeof(*response), &err);
     return err;
 }
 
-void FabricServerRds::HandleAfterError(uint64_t source_id) {
+void RdsFabricServer::HandleAfterError(uint64_t source_id) {
     /* Do nothing? */
 }
