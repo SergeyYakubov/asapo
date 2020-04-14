@@ -314,4 +314,4 @@ def create_producer(endpoint,beamtime_id,beamline,stream,token,nthreads,timeout_
     return PyProducer.__create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(beamline),_bytes(stream),_bytes(token),nthreads,timeout_sec)
 
 
-__version__ = "@ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"
+__version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"
