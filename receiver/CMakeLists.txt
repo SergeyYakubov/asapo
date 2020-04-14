@@ -1,34 +1,45 @@
 set(TARGET_NAME receiver)
-set(SOURCE_FILES
-        src/receiver.cpp
+
+set(RECEIVER_CORE_FILES
         src/connection.cpp
+        src/data_cache.cpp
+        src/receiver.cpp
         src/request.cpp
-        src/request_handler/request_handler_file_process.cpp
-        src/statistics/statistics.cpp
-        src/statistics/statistics_sender_influx_db.cpp
         src/receiver_config.cpp
         src/receiver_logger.cpp
+        src/statistics/receiver_statistics.cpp
+        src/statistics/statistics.cpp
+        src/statistics/statistics_sender_influx_db.cpp
+        src/statistics/statistics_sender_fluentd.cpp
+        src/request_handler/requests_dispatcher.cpp
+        src/request_handler/request_handler_file_process.cpp
         src/request_handler/request_handler_db_write.cpp
         src/request_handler/request_handler_receive_data.cpp
         src/request_handler/request_handler_authorize.cpp
-        src/statistics/statistics_sender_fluentd.cpp
-        src/request_handler/requests_dispatcher.cpp
-        src/receiver_data_server/receiver_data_server.cpp
-        src/receiver_data_server/net_server/rds_tcp_server.cpp
-        src/receiver_data_server/receiver_data_server_request.cpp
-        src/receiver_data_server/receiver_data_server_logger.cpp
-        src/data_cache.cpp
-        src/receiver_data_server/request_handler/receiver_data_server_request_handler_factory.cpp
-        src/receiver_data_server/request_handler/receiver_data_server_request_handler.cpp
-        src/statistics/receiver_statistics.cpp
         src/request_handler/request_handler_db_meta_write.cpp
         src/request_handler/request_handler_receive_metadata.cpp
         src/request_handler/request_handler_db_check_request.cpp
         src/request_handler/request_factory.cpp
-        src/file_processors/write_file_processor.cpp
         src/request_handler/request_handler_db.cpp
+        src/file_processors/write_file_processor.cpp
         src/file_processors/file_processor.cpp
-        src/file_processors/receive_file_processor.cpp)
+        src/file_processors/receive_file_processor.cpp
+        )
+
+set(RDS_FILES
+        src/receiver_data_server/receiver_data_server.cpp
+        src/receiver_data_server/receiver_data_server_request.cpp
+        src/receiver_data_server/receiver_data_server_logger.cpp
+        src/receiver_data_server/net_server/rds_tcp_server.cpp
+        src/receiver_data_server/request_handler/receiver_data_server_request_handler_factory.cpp
+        src/receiver_data_server/request_handler/receiver_data_server_request_handler.cpp
+        )
+
+
+set(SOURCE_FILES
+        ${RECEIVER_CORE_FILES}
+        ${RDS_FILES}
+        )
 
 
 ################################
@@ -87,7 +98,15 @@ set(TEST_SOURCE_FILES
         )
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")
-gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}" ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
+gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}"
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/net_server/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/net_server/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/request_handler/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/receiver_data_server/request_handler/*.h
+        )
 
 set(TEST_SOURCE_FILES_RDS
         unittests/receiver_data_server/test_receiver_data_server.cpp
@@ -95,4 +114,13 @@ set(TEST_SOURCE_FILES_RDS
         unittests/receiver_data_server/request_handler/test_request_handler_factory.cpp
         unittests/receiver_data_server/request_handler/test_request_handler.cpp
         )
-gtest(${TARGET_NAME}_RDS "${TEST_SOURCE_FILES_RDS}" "${TEST_LIBRARIES}" ${CMAKE_CURRENT_SOURCE_DIR}/src/**.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/**.h)
+gtest(${TARGET_NAME}_RDS "${TEST_SOURCE_FILES_RDS}" "${TEST_LIBRARIES}"
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/request_handler/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/request_handler/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/file_processors/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/file_processors/*.h
+        )
