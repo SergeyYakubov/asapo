@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
       name ="asapo_consumer",
-      version = "@ASAPO_VERSION_PYTHON@",
+      version = "@PYTHON_ASAPO_VERSION@",
       install_requires=['numpy'],
       include_package_data=True,
       packages=['asapo_consumer'],

@@ -290,4 +290,4 @@ def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stre
     return factory.create_server_broker(_bytes(server_name),_bytes(source_path),has_filesystem, _bytes(beamtime_id),_bytes(stream),_bytes(token),timeout_ms)
 
 
-__version__ = "@ASAPO_VERSION_PYTHON@"
+__version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"
