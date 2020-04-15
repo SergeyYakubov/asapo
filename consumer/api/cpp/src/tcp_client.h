@@ -1,5 +1,5 @@
-#ifndef ASAPO_TCP_CLIENT_H
-#define ASAPO_TCP_CLIENT_H
+#ifndef ASAPO_CONSUMER_TCP_CLIENT_H
+#define ASAPO_CONSUMER_TCP_CLIENT_H
 
 #include "net_client.h"
 #include "io/io.h"
@@ -10,7 +10,7 @@ namespace asapo {
 class TcpClient : public NetClient {
   public:
     explicit TcpClient();
-    Error GetData(const FileInfo* info, FileData* data) const noexcept override;
+    Error GetData(const FileInfo* info, FileData* data) override;
     std::unique_ptr<IO> io__;
     std::unique_ptr<TcpConnectionPool> connection_pool__;
   private:
@@ -23,4 +23,4 @@ class TcpClient : public NetClient {
 
 }
 
-#endif //ASAPO_TCP_CLIENT_H
+#endif //ASAPO_CONSUMER_TCP_CLIENT_H

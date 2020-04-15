@@ -84,8 +84,7 @@ Error TcpClient::ReceiveData(SocketDescriptor sd, const FileInfo* info, FileData
     return err;
 }
 
-
-Error TcpClient::GetData(const FileInfo* info, FileData* data) const noexcept {
+Error TcpClient::GetData(const FileInfo* info, FileData* data) {
     Error err;
     bool reused;
     auto sd = connection_pool__->GetFreeConnection(info->source, &reused, &err);

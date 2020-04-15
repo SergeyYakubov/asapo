@@ -12,7 +12,7 @@ namespace asapo {
 class MockNetClient : public asapo::NetClient {
   public:
 
-    Error GetData(const FileInfo* info, FileData* data) const noexcept override {
+    Error GetData(const FileInfo* info, FileData* data) override {
         return Error(GetData_t(info, data));
     }
 
