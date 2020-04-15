@@ -1,0 +1,20 @@
+from distutils.core import setup
+from distutils.core import Extension
+import numpy
+
+ext_modules = [
+    Extension("asapo_consumer", ["asapo_consumer.cpp"],
+              extra_objects=['lib/libasapo-consumer.a', 'lib/libcurl.a'],
+                       include_dirs=["include/common","include",numpy.get_include()],
+                       extra_compile_args=@EXTRA_COMPILE_ARGS@,
+                       extra_link_args=@EXTRA_LINK_ARGS@,
+                       language="c++")
+]
+
+setup(
+      name ="asapo_consumer",
+      ext_modules = ext_modules,
+      version = "@PYTHON_ASAPO_VERSION@",
+      setup_requires=["numpy"],
+      install_requires=["numpy"]
+      )

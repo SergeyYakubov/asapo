@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asapo-file-transfer
+  labels:
+    app: asapo-file-transfer
+spec:
+  replicas: {{ .Values.ownServices.fileTransfer.replicaCount }}
+  selector:
+    matchLabels:
+      app: asapo-file-transfer
+  template:
+    metadata:
+      labels:
+        app: asapo-file-transfer
+      annotations:
+        checksum/config: {{ .Files.Get "configs/asapo-file-transfer.json" | sha256sum  }}
+        checksum/secret: {{ include (print $.Template.BasePath "/auth-secret.yaml") . | sha256sum }}
+        checksum/fluentd-config: {{ .Files.Get "configs/asapo-fluentd.conf" | sha256sum  }}
+    spec:
+      volumes:
+        - name: all-in-one
+          projected:
+            sources:
+              - configMap:
+                  name: asapo-file-transfer-config
+              - secret:
+                  name: auth-secret
+        - name: shared-volume-offline
+          persistentVolumeClaim:
+            claimName: asapo-offline-pv
+        - name: shared-volume-online
+          persistentVolumeClaim:
+            claimName: asapo-online-pv
+        {{- include "asapo.fluentd.volumes" .Values.ownServices.fileTransfer | indent 8 }}
+      containers:
+        - name: asapo-file-transfer
+          image: "yakser/asapo-file-transfer-dev:{{ .Values.common.asapoVersionTag }}"
+          command: ["/asapo-file-transfer"]
+          args: ["-config", "/etc/file-transfer/asapo-file-transfer.json"]
+          ports:
+            - containerPort: {{ .Values.ownServices.fileTransfer.port }}
+          volumeMounts:
+            - mountPath: "/etc/file-transfer"
+              name: all-in-one
+            - mountPath: {{ .Values.common.offlineDir }}
+              name: shared-volume-offline
+            - mountPath: {{ .Values.common.onlineDir }}
+              name: shared-volume-online
+      {{- include "asapo.fluentd.container" . | indent 8 }}

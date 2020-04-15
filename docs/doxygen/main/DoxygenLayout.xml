@@ -1,0 +1,4 @@
+<navindex>
+    <tab type="user" url="consumer/index.html" visible="$ALPHABETICAL_INDEX" title="Consumer API"/>
+    <tab type="user" url="producer/index.html" visible="$ALPHABETICAL_INDEX" title="Producer API"/>
+</navindex>

@@ -1,0 +1,10 @@
+{
+  "Port": 5007,
+  "LogLevel":"debug",
+  "RootBeamtimesFolder":"@ASAP3_FOLDER@",
+  "CurrentBeamlinesFolder":"@CURRENT_BEAMLINES_FOLDER@",
+  "IpBeamlineMappingFolder":"@BEAMLINES_FOLDER@",
+  "SecretFile":"auth_secret.key"
+}
+
+

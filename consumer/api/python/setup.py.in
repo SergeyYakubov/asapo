@@ -1,0 +1,20 @@
+from distutils.core import setup
+from distutils.core import Extension
+
+from Cython.Build import cythonize
+
+import numpy
+
+module = Extension("asapo_consumer", ["asapo_consumer.pyx"],
+                       extra_objects=['$<TARGET_FILE:asapo-consumer>',
+                                      '@CURL_LIBRARIES@'],
+                       include_dirs=["@ASAPO_CXX_COMMON_INCLUDE_DIR@","@ASAPO_CONSUMER_INCLUDE_DIR@",numpy.get_include()],
+                       extra_compile_args=@EXTRA_COMPILE_ARGS@,
+                       extra_link_args=@EXTRA_LINK_ARGS@,
+                       language="c++",
+         )
+
+
+ext_modules = cythonize([module],compiler_directives={'embedsignature': True})
+
+setup(ext_modules = ext_modules)

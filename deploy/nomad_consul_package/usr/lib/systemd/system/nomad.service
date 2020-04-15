@@ -1,0 +1,19 @@
+[Unit]
+Description=nomad agent
+Requires=network-online.target
+After=network-online.target
+Documentation=https://nomadproject.io/docs/
+After=consul.service
+
+[Service]
+User=asapo
+Group=it
+Environment=GOMAXPROCS=4
+Restart=on-failure
+ExecStart=/usr/bin/nomad agent -config=/etc/nomad.d
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+{
+  "Mode": "kubernetes",
+  "Kubernetes":{
+    "Mode": "internal",
+    "Namespace": "{{ .Release.Namespace }}"
+  },
+  "Receiver": {
+    "MaxConnections": 32,
+    "UseIBAddress": false
+  },
+  "Port": {{ .Values.ownServices.discovery.port }},
+  "LogLevel": "debug"
+}
+
+

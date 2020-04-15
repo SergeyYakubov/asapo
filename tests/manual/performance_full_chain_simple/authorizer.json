@@ -1,0 +1,8 @@
+{
+  "Port": 5007,
+  "LogLevel":"info",
+  "AlwaysAllowedBeamtimes":[{"beamtimeId":"asapo_test","beamline":"test","Year":"2019","Facility":"test_facility"}],
+  "SecretFile":"auth_secret.key"
+}
+
+

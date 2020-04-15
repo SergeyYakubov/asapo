@@ -1,0 +1,3 @@
+include asapo_wrappers.h
+recursive-include include *
+recursive-include lib *

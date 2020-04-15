@@ -1,0 +1,7 @@
+{{- range .Values.ownServices }}
+  {{ $data := dict "Values" $.Values "service" . }}
+    {{- template "asapo.service" $data }}
+---
+{{- end }}
+{{ $data := dict "Values" $.Values "service" .Values.ownServices.receiver.dataServer }}
+{{- template "asapo.service" $data }}

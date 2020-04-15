@@ -1,0 +1,11 @@
+{
+  "server":"some_string",
+  "Port": 10,
+  "some_array":1,
+  "some_string_array":["s1","s2","s3"],
+  "embedded_stuff":
+  {
+    "some_string":"embedded_string",
+    "some_int": 20
+  }
+}

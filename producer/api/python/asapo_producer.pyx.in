@@ -1,0 +1,317 @@
+#distutils: language=c++
+
+cimport asapo_producer
+import numpy as np
+cimport numpy as np
+import json
+from cpython.version cimport PY_MAJOR_VERSION
+from libcpp.memory cimport unique_ptr
+from cpython.ref cimport PyObject,Py_XINCREF,Py_XDECREF
+import atexit
+
+np.import_array()
+
+DEFAULT_INGEST_MODE = kDefaultIngestMode
+INGEST_MODE_TRANSFER_DATA = kTransferData
+INGEST_MODE_TRANSFER_METADATA_ONLY = kTransferMetaDataOnly
+INGEST_MODE_STORE_IN_FILESYSTEM = kStoreInFilesystem
+
+cdef extern from "numpy/ndarraytypes.h":
+    void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
+
+cdef str _str(b):
+    if PY_MAJOR_VERSION < 3:
+        return b
+    return b.decode("utf-8")
+
+cdef bytes _bytes(s):
+    if type(s) is bytes:
+        return s
+
+    elif isinstance(s, unicode):
+        return (<unicode>s).encode('utf-8')
+
+    else:
+        raise TypeError("Could not convert to unicode.")
+
+
+class AsapoProducerError(Exception):
+  pass
+
+class AsapoWrongInputError(AsapoProducerError):
+  pass
+
+class AsapoLocalIOError(AsapoProducerError):
+  pass
+
+class AsapoTimeOutError(AsapoProducerError):
+  pass
+
+class AsapoServerWarning(AsapoProducerError):
+  pass
+
+
+cdef python_exception_from_error(Error& err):
+    error_string =  _str(err.get().Explain())
+    if err == kTimeout:
+                return AsapoTimeOutError(error_string)
+    elif err == kWrongInput:
+            return AsapoWrongInputError(error_string)
+    elif err == kLocalIOError:
+            return AsapoLocalIOError(error_string)
+    elif err == kServerWarning:
+            return AsapoServerWarning(error_string)
+    else:
+        return AsapoProducerError(error_string)
+
+cdef throw_exception(Error& err):
+    raise python_exception_from_error(err)
+
+cdef void* data_pointer_nparray(data) except? NULL:
+  if data is None:
+    return <void*>NULL
+  data_char = data.view(np.int8)
+  try:
+    data_char.shape=(-1)
+  except:
+    raise AsapoWrongInputError("cannot do no-copy flatten - non-contiguous array?")
+  cdef char[::1] arr_memview = data_char
+  return <void*>&arr_memview[0]
+
+cdef void* data_pointer_bytes(data):
+  if data is None:
+    return <void*>NULL
+  cdef const unsigned char[::1] arr_memview = data
+  return <void*>&arr_memview[0]
+
+cdef class PyProducer:
+    cdef unique_ptr[Producer] c_producer
+    def __init__(self):
+        atexit.register(self.cleanup)
+    def set_log_level(self,level):
+         cdef LogLevel log_level
+         log_level = LogLevel_Info
+         if level == "debug" :
+            log_level = LogLevel_Debug
+         elif level == "info" :
+            log_level = LogLevel_Info
+         elif level == "error" :
+            log_level = LogLevel_Error
+         elif level == "none" :
+            log_level = LogLevel_None
+         elif level == "warn" :
+            log_level = LogLevel_Warning
+         else:
+            print("wrong loglevel mode: "+ level)
+            return
+         self.c_producer.get().SetLogLevel(log_level)
+
+    def __send_np_array(self,int id, exposed_path,data, user_meta=None,subset=None,substream="default",ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+        cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
+        event_header.file_id = id
+        if data is None:
+            event_header.file_size = 0
+        else:
+            event_header.file_size = data.nbytes
+        err = self.c_producer.get().SendData__(event_header, _bytes(substream), data_pointer_nparray(data),ingest_mode,
+            unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_ndarr,
+             <void*>self,<void*>callback, <void*>data))
+        if err:
+            throw_exception(err)
+        if data is not None:
+          if data.base is not None:
+            Py_XINCREF(<PyObject*>data.base)
+          else:
+            Py_XINCREF(<PyObject*>data)
+        if callback != None:
+            Py_XINCREF(<PyObject*>callback)
+
+        return
+    cdef EventHeader create_event_header(self,int id, exposed_path,user_meta,subset,ingest_mode):
+        cdef EventHeader event_header
+        event_header.file_id = id
+        event_header.file_name = _bytes(exposed_path)
+        event_header.user_metadata = _bytes(user_meta) if user_meta!=None else ""
+        if subset == None:
+            event_header.subset_id = 0
+            event_header.subset_size = 0
+        else:
+            event_header.subset_id = subset[0]
+            event_header.subset_size = subset[1]
+        return event_header
+
+    def __send_bytes(self,int id, exposed_path,data, user_meta=None,subset=None, substream="default", ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+        cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
+        event_header.file_size = len(data)
+        err = self.c_producer.get().SendData__(event_header,_bytes(substream),  data_pointer_bytes(data), ingest_mode,
+            unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_bytesaddr,
+             <void*>self,<void*>callback, <void*>data))
+        if err:
+            throw_exception(err)
+        Py_XINCREF(<PyObject*>data)
+        if callback != None:
+            Py_XINCREF(<PyObject*>callback)
+        return
+
+    def send_data(self, id, exposed_path, data, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
+        """
+         :param id: unique data id
+         :type id: int
+         :param exposed_path: Path which will be exposed to consumers
+         :type exposed_path: string
+         :param data: data to send
+         :type data: contiguous numpy or bytes array, can be None for INGEST_MODE_TRANSFER_METADATA_ONLY ingest mode
+         :param user_meta: user metadata, default None
+         :type user_meta: JSON string
+         :param subset: a tuple with two int values (subset id, subset size), default None
+         :type subset: tuple
+         :param ingest_mode: ingest mode flag
+         :type ingest_mode: int
+         :param callback: callback function, default None
+         :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, meta, ...)
+            AsapoProducerError: actually should not happen
+        """
+        if type(data) == np.ndarray or data == None:
+            self.__send_np_array(id,exposed_path,data,user_meta,subset,substream,ingest_mode,callback)
+        elif type(data) == bytes:
+            self.__send_bytes(id,exposed_path,data,user_meta,subset,substream,ingest_mode,callback)
+        else:
+            raise(AsapoProducerError("wrong data type: " + str(type(data))))
+    def send_substream_finished_flag(self, substream, last_id, next_substream = None, callback = None):
+        """
+         :param substream: substream name
+         :type substream: string
+         :param id: id of the last record
+         :param next_substream: name of the next substream or None
+         :type substream: string
+         :param callback: callback function, default None
+         :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, meta, ...)
+            AsapoProducerError: actually should not happen
+        """
+        err = self.c_producer.get().SendSubstreamFinishedFlag(_bytes(substream), last_id,_bytes(next_substream) if next_substream != None else "",
+        unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
+        if err:
+            throw_exception(err)
+
+
+    def send_file(self, id, local_path, exposed_path, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
+        """
+         :param id: unique data id
+         :type id: int
+         :param local_path: Path to file to send
+         :type local_path: string
+         :param exposed_path: Path which will be exposed to consumers
+         :type exposed_path: string
+         :param user_meta: user metadata, default None
+         :type user_meta: JSON string
+         :param subset: a tuple with two int values (subset id, subset size), default None
+         :type subset: tuple
+         :param ingest_mode: ingest mode flag
+         :type ingest_mode: int
+         :param callback: callback function, default None
+         :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, meta, ...)
+            AsapoLocalIOError: problems reading file to send
+            AsapoProducerError: actually should not happen
+        """
+
+        cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
+        event_header.file_size = 0
+        err = self.c_producer.get().SendFile(event_header, _bytes(substream), _bytes(local_path), ingest_mode,
+            unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
+        if err:
+            throw_exception(err)
+
+        if callback != None:
+            Py_XINCREF(<PyObject*>callback)
+
+        return
+    def get_requests_queue_size(self):
+        return self.c_producer.get().GetRequestsQueueSize()
+    def wait_requests_finished(self,timeout_ms):
+        """
+         :param timeout_ms: timeout in milliseconds
+         :type timeout_ms: int
+         :raises:
+            AsapoTimeoutError: requests not finished for a given timeout
+        """
+        cdef Error err
+        cdef uint64_t timeout = timeout_ms
+        with nogil:
+            err = self.c_producer.get().WaitRequestsFinished(timeout)
+        if err:
+            throw_exception(err)
+        return
+    cdef void c_callback_python(self,py_callback, GenericRequestHeader header, Error& err):
+        if py_callback != None:
+          info_str = _str(header.Json())
+          info = json.loads(info_str)
+          if err:
+            py_err = python_exception_from_error(err)
+          else:
+            py_err = None
+          py_callback(info,py_err)
+          Py_XDECREF(<PyObject*>py_callback)
+
+    cdef void c_callback(self,py_callback, GenericRequestHeader header, Error err) with gil:
+        self.c_callback_python(py_callback,header,err)
+
+    cdef void c_callback_ndarr(self,py_callback,nd_array,GenericRequestHeader header, Error err) with gil:
+        if nd_array is not None:
+          if nd_array.base is not None:
+            Py_XDECREF(<PyObject*>nd_array.base)
+          else:
+            Py_XDECREF(<PyObject*>nd_array)
+        self.c_callback_python(py_callback,header,err)
+
+    cdef void c_callback_bytesaddr(self,py_callback,bytes_array,GenericRequestHeader header, Error err) with gil:
+        if bytes_array is not None:
+            Py_XDECREF(<PyObject*>bytes_array)
+        self.c_callback_python(py_callback,header,err)
+    def cleanup(self):
+        with  nogil:
+            if self.c_producer.get() is not NULL:
+                self.c_producer.get().StopThreads__()
+    @staticmethod
+    def __create_producer(endpoint,beamtime_id,beamline,stream,token,nthreads,timeout_sec):
+        pyProd = PyProducer()
+        cdef Error err
+        cdef SourceCredentials source
+        source.beamtime_id = beamtime_id
+        source.beamline = beamline
+        source.user_token = token
+        source.stream = stream
+        pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,timeout_sec,&err)
+        if err:
+            throw_exception(err)
+        return pyProd
+
+def create_producer(endpoint,beamtime_id,beamline,stream,token,nthreads,timeout_sec):
+    """
+         :param endpoint: server endpoint (url:port)
+         :type endpoint: string
+         :param beamtime_id: beamtime id, can be "auto" if beamline is given, will automatically select the current beamtime id
+         :type beamtime_id: string
+         :param beamline: beamline name, can be "auto" if beamtime_id is given
+         :type beamline: string
+         :param stream: stream to producer data to
+         :type stream: string
+         :param token: authorization token
+         :type token: string
+         :param nthreads: ingest mode flag
+         :type nthreads: int
+         :param timeout_sec: send requests timeout
+         :type timeout_sec: int
+         :raises:
+            AsapoWrongInputError: wrong input (number of threads, ,,,)
+            AsapoProducerError: actually should not happen
+    """
+    return PyProducer.__create_producer(_bytes(endpoint),_bytes(beamtime_id),_bytes(beamline),_bytes(stream),_bytes(token),nthreads,timeout_sec)
+
+
+__version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"

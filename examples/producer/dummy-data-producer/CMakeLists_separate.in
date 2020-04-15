@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 2.8)
+
+project(@TARGET_NAME@)
+
+set(CMAKE_CXX_STANDARD 11)
+
+IF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+ENDIF()
+
+find_package (Threads)
+
+set(TARGET_NAME ${CMAKE_PROJECT_NAME})
+
+set(SOURCE_FILES @SOURCE_FILES@)
+
+link_directories(@CMAKE_INSTALL_PREFIX@/lib)
+
+add_executable(${TARGET_NAME} ${SOURCE_FILES})
+target_include_directories(${TARGET_NAME} PUBLIC @CMAKE_INSTALL_PREFIX@/include)
+target_link_libraries(${TARGET_NAME} asapo-producer ${CMAKE_THREAD_LIBS_INIT})

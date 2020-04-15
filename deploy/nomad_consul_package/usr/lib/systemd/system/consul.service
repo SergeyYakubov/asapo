@@ -1,0 +1,18 @@
+[Unit]
+Description=consul agent
+Requires=network-online.target
+After=network-online.target
+Documentation=https://consul.io/docs/
+
+[Service]
+User=asapo
+Group=it
+Environment=GOMAXPROCS=4
+Restart=on-failure
+ExecStart=/usr/bin/consul agent -config-dir=/etc/consul.d
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
+

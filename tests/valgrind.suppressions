@@ -1,0 +1,125 @@
+{
+   ignore_libcrypto_conditional_jump_errors_in_leak
+   Memcheck:Leak
+   ...
+   obj:*/libcrypto.so.*
+}
+{
+   ignore_libcrypto_conditional_jump_errors_in_cond
+   Memcheck:Cond
+   ...
+   obj:*/libcrypto.so.*
+}
+{
+   ignore_libssl_conditional_jump_errors_in_cond
+   Memcheck:Cond
+   ...
+   obj:*/libssl.so.*
+}
+{
+   ignore_libcrypto_conditional_jump_errors_in_value8
+   Memcheck:Value8
+   ...
+   obj:*/libcrypto.so.*
+}
+{
+   ignore_scram_nonce_uninitialized_warning_cond
+   Memcheck:Cond
+   fun:mongoc_b64_ntop
+   ...
+   fun:_mongoc_scram_step
+   ...
+}
+{
+   ignore_scram_nonce_uninitialized_warning_value8
+   Memcheck:Value8
+   fun:mongoc_b64_ntop
+   ...
+   fun:_mongoc_scram_step
+   ...
+}
+{
+   ignore_libcrypto_conditional_jump_errors_in_param
+   Memcheck:Param
+   sendmsg(msg.msg_iov[0])
+   ...
+   obj:*/libcrypto.so.*
+}
+{
+   ignore_sasl_load_plugin_reachable_warnings
+   Memcheck:Leak
+   ...
+   fun:_sasl_get_plugin
+   ...
+   fun:_mongoc_do_init
+}
+{
+   ignore_sasl_add_plugin_reachable_warnings
+   Memcheck:Leak
+   ...
+   fun:sasl_client_add_plugin
+   ...
+   fun:_mongoc_do_init
+}
+{
+   temp_ignore_vfprintf
+   Memcheck:Cond
+   fun:vfprintf
+   ...
+   fun:bson_vsnprintf
+   fun:bson_strdupv_printf
+   ...
+}
+{
+   temp_ignore_strlen
+   Memcheck:Cond
+   fun:strlen
+}
+{
+   temp_ignore_strlen
+   Memcheck:Addr1
+   fun:strlen
+   ...
+}
+{
+   temp_ignore_screate
+   Memcheck:Leak
+   ...
+   fun:*_S_create*
+   ...
+   fun:*_M_mutate*
+   ...
+}
+{
+   asapo_fabric__sockets__uninitialised_bytes
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:send
+   fun:ofi_send_socket
+}
+{
+   asapo_fabric__sockets__leak
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   fun:sock_rx_new_buffered_entry
+   fun:sock_pe_process_rx_send
+   fun:sock_pe_process_recv
+   fun:sock_pe_progress_rx_pe_entry
+   fun:sock_pe_progress_rx_ctx
+   fun:sock_pe_progress_thread
+   fun:start_thread
+   fun:clone
+}
+{
+   asapo_fabric__verbs__rdma_accept__uninitialised_bytes
+   Memcheck:Param
+   write(buf)
+   obj:*libpthread*
+   fun:rdma_accept
+   fun:vrb_msg_ep_accept
+   fun:fi_accept
+   fun:rxm_msg_process_connreq
+}
+
+

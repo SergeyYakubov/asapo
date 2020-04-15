@@ -1,0 +1,18 @@
+{
+ "AsapoEndpoint":"@ROOT_PATH@test_out",
+ "Tag":"test_tag",
+ "BeamtimeID":"asapo_test",
+ "Mode":"filesystem",
+ "NThreads":1,
+ "LogLevel":"debug",
+ "RootMonitoredFolder":"@ROOT_PATH@test_in",
+ "MonitoredSubFolders":["test1","test2"],
+ "IgnoreExtensions":["tmp"],
+ "WhitelistExtensions":[],
+ "RemoveAfterSend":true,
+ "Stream": "",
+ "Subset": {
+  	"Mode":"none"
+ }
+
+}
