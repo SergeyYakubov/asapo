@@ -4,7 +4,8 @@ set(SOURCE_FILES
         src/data_broker.cpp
         src/server_data_broker.cpp
         src/tcp_client.cpp
-        src/tcp_connection_pool.cpp)
+        src/tcp_connection_pool.cpp
+        src/fabric_client.cpp)
 
 
 ################################
