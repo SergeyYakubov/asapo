@@ -12,7 +12,7 @@ class RdsFabricServer : public RdsNetServer {
     ~RdsFabricServer() override;
 
     // modified in testings to mock system calls, otherwise do not touch
-    std::unique_ptr<asapo::fabric::FabricFactory> factory__;
+    std::unique_ptr<fabric::FabricFactory> factory__;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;
     std::unique_ptr<fabric::FabricServer> server__;

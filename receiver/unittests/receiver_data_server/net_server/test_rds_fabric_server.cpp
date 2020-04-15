@@ -6,11 +6,13 @@
 #include <unittests/MockFabric.h>
 #include "../../../src/receiver_data_server/net_server/rds_fabric_server.h"
 #include "../../../src/receiver_data_server/net_server/fabric_rds_request.h"
+#include "../../../../common/cpp/src/system_io/system_io.h"
 
 using ::testing::Ne;
 using ::testing::Eq;
 using ::testing::Test;
 using ::testing::NiceMock;
+using ::testing::StrictMock;
 using ::testing::DoAll;
 using ::testing::SetArgPointee;
 using ::testing::Return;
@@ -22,18 +24,18 @@ std::string expected_address = "somehost:123";
 
 TEST(RdsFabricServer, Constructor) {
     RdsFabricServer fabric_server("");
-    ASSERT_THAT(dynamic_cast<asapo::IO*>(fabric_server.io__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(fabric_server.log__), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<SystemIO*>(fabric_server.io__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<fabric::FabricFactory*>(fabric_server.factory__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const AbstractLogger*>(fabric_server.log__), Ne(nullptr));
 }
-
 
 class RdsFabricServerTests : public Test {
   public:
     RdsFabricServer rds_server{expected_address};
     NiceMock<MockLogger> mock_logger;
-    MockIO mock_io;
-    fabric::MockFabricFactory mock_fabric_factory;
-    fabric::MockFabricServer mock_fabric_server;
+    StrictMock<MockIO> mock_io;
+    StrictMock<fabric::MockFabricFactory> mock_fabric_factory;
+    StrictMock<fabric::MockFabricServer> mock_fabric_server;
 
     void SetUp() override {
         rds_server.log__ = &mock_logger;
@@ -136,7 +138,6 @@ TEST_F(RdsFabricServerTests, GetNewRequests_Ok) {
     ASSERT_THAT(req->GetMemoryRegion()->length, Eq(10));
     ASSERT_THAT(req->GetMemoryRegion()->key, Eq(23));
 }
-
 
 TEST_F(RdsFabricServerTests, GetNewRequests_Error_RecvAny_InternalError) {
     InitServer();

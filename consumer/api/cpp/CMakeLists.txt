@@ -5,7 +5,7 @@ set(SOURCE_FILES
         src/server_data_broker.cpp
         src/tcp_client.cpp
         src/tcp_connection_pool.cpp
-        src/fabric_client.cpp)
+        src/fabric_consumer_client.cpp)
 
 
 ################################
@@ -21,17 +21,21 @@ IF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 ENDIF()
 
 
-target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+GET_PROPERTY(ASAPO_COMMON_FABRIC_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_FABRIC_LIBRARIES)
+target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
+        asapo-fabric ${ASAPO_COMMON_FABRIC_LIBRARIES})
 
 
 ################################
 # Testing
 ################################
-set(TEST_SOURCE_FILES unittests/test_consumer_api.cpp
-                      unittests/test_server_broker.cpp
-                      unittests/test_tcp_client.cpp
-            unittests/test_tcp_connection_pool.cpp
-        )
+set(TEST_SOURCE_FILES
+        unittests/test_consumer_api.cpp
+        unittests/test_server_broker.cpp
+        unittests/test_tcp_client.cpp
+        unittests/test_tcp_connection_pool.cpp
+        unittests/test_fabric_consumer_client.cpp
+    )
 set(TEST_LIBRARIES "${TARGET_NAME}")
 
 

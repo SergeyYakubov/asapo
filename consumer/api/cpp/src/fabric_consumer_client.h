@@ -10,13 +10,12 @@
 
 namespace asapo {
 
-class FabricClient : NetClient {
+class FabricConsumerClient : public NetClient {
   public:
-    explicit FabricClient();
+    explicit FabricConsumerClient();
 
     // modified in testings to mock system calls, otherwise do not touch
     std::unique_ptr<asapo::fabric::FabricFactory> factory__;
-    std::unique_ptr<IO> io__;
     std::unique_ptr<fabric::FabricClient> client__;
 
   private:
@@ -29,6 +28,8 @@ class FabricClient : NetClient {
   private:
     fabric::FabricAddress GetAddressOrConnect(const FileInfo* info, Error* error);
 
+    void PerformNetworkTransfer(fabric::FabricAddress address, const GenericRequestHeader* request_header,
+                                GenericNetworkResponse* response, Error* err);
 };
 }
 

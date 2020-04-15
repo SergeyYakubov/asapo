@@ -1,14 +1,15 @@
 #include <common/networking.h>
 #include <io/io_factory.h>
-#include "fabric_client.h"
+#include <iostream>
+#include "fabric_consumer_client.h"
 
 using namespace asapo;
 
-FabricClient::FabricClient(): factory__(fabric::GenerateDefaultFabricFactory()), io__{GenerateDefaultIO()} {
+FabricConsumerClient::FabricConsumerClient(): factory__(fabric::GenerateDefaultFabricFactory()) {
 
 }
 
-Error FabricClient::GetData(const FileInfo* info, FileData* data) {
+Error FabricConsumerClient::GetData(const FileInfo* info, FileData* data) {
     Error err;
     if (!client__) {
         client__ = factory__->CreateClient(&err);
@@ -22,25 +23,19 @@ Error FabricClient::GetData(const FileInfo* info, FileData* data) {
         return err;
     }
 
+    FileData tempData{new uint8_t[info->size]};
+
     /* MemoryRegion will be released when out of scope */
-    auto mr = client__->ShareMemoryRegion(data->get(), info->size, &err);
+    auto mr = client__->ShareMemoryRegion(tempData.get(), info->size, &err);
     if (err) {
         return err;
     }
 
     GenericRequestHeader request_header{kOpcodeGetBufferData, info->buf_id, info->size};
     memcpy(request_header.message, mr->GetDetails(), sizeof(fabric::MemoryRegionDetails));
-
-    auto currentMessageId = global_message_id_++;
-    client__->Send(address, currentMessageId, &request_header, sizeof(request_header), &err);
-    if (err) {
-        return err;
-    }
-
-    /* The server is sending us the data over RDMA, and then sending us a confirmation */
-
     GenericNetworkResponse response{};
-    client__->Recv(address, currentMessageId, &response, sizeof(response), &err);
+
+    PerformNetworkTransfer(address, &request_header, &response, &err);
     if (err) {
         return err;
     }
@@ -49,10 +44,12 @@ Error FabricClient::GetData(const FileInfo* info, FileData* data) {
         return TextError("Response NetworkErrorCode " + std::to_string(response.error_code));
     }
 
+    data->swap(tempData);
+
     return nullptr;
 }
 
-fabric::FabricAddress FabricClient::GetAddressOrConnect(const FileInfo* info, Error* error) {
+fabric::FabricAddress FabricConsumerClient::GetAddressOrConnect(const FileInfo* info, Error* error) {
     std::lock_guard<std::mutex> lock(mutex_);
     auto tableEntry = known_addresses_.find(info->source);
 
@@ -66,4 +63,19 @@ fabric::FabricAddress FabricClient::GetAddressOrConnect(const FileInfo* info, Er
     } else {
         return tableEntry->second;
     }
+}
+
+void FabricConsumerClient::PerformNetworkTransfer(fabric::FabricAddress address,
+                                                  const GenericRequestHeader* request_header,
+                                                  GenericNetworkResponse* response, Error* err) {
+    auto currentMessageId = global_message_id_++;
+    client__->Send(address, currentMessageId, request_header, sizeof(*request_header), err);
+    if (*err) {
+        return;
+    }
+
+    /* The server is sending us the data over RDMA, and then sending us a confirmation */
+
+    client__->Recv(address, currentMessageId, response, sizeof(*response), err);
+    // if (*err) ...
 }
