@@ -8,7 +8,7 @@ namespace asapo {
 
 class RdsFabricServer : public RdsNetServer {
   public:
-    explicit RdsFabricServer(std::string  listenAddress);
+    explicit RdsFabricServer(std::string  listenAddress, const AbstractLogger* logger);
     ~RdsFabricServer() override;
 
     // modified in testings to mock system calls, otherwise do not touch

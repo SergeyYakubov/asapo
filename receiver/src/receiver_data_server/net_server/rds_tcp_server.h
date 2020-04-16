@@ -11,7 +11,7 @@ const int kMaxPendingConnections = 5;
 
 class RdsTcpServer : public RdsNetServer {
   public:
-    explicit RdsTcpServer(std::string address);
+    explicit RdsTcpServer(std::string address, const AbstractLogger* logger);
     ~RdsTcpServer() override;
 
     Error Initialize() override;

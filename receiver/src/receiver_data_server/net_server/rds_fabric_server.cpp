@@ -7,8 +7,9 @@
 
 using namespace asapo;
 
-RdsFabricServer::RdsFabricServer(std::string listenAddress): factory__(fabric::GenerateDefaultFabricFactory()), io__{GenerateDefaultIO()},
-    log__{GetDefaultReceiverDataServerLogger()}, listenAddress_(std::move(listenAddress)) {
+RdsFabricServer::RdsFabricServer(std::string listenAddress,
+                                 const AbstractLogger* logger): factory__(fabric::GenerateDefaultFabricFactory()), io__{GenerateDefaultIO()},
+    log__{logger}, listenAddress_(std::move(listenAddress)) {
 
 }
 

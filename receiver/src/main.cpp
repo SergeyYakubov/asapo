@@ -5,7 +5,7 @@
 #include "receiver_config_factory.h"
 #include "receiver_config.h"
 
-#include "receiver_logger.h"
+#include "receiver_data_server/receiver_data_server_logger.h"
 #include "common/version.h"
 
 #include "receiver_data_server/receiver_data_server.h"
@@ -23,16 +23,19 @@ asapo::Error ReadConfigFile(int argc, char* argv[]) {
 
 void AddDataServers(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
                     std::vector<asapo::RdsNetServerPtr>& netServers) {
+    auto logger = asapo::GetDefaultReceiverDataServerLogger();
+    logger->SetLogLevel(config->log_level);
+
     auto ds_config = config->dataserver;
     auto networkingMode = ds_config.network_mode;
     if (std::find(networkingMode.begin(), networkingMode.end(), "tcp") != networkingMode.end()) {
         // Add TCP
-        netServers.emplace_back(new asapo::RdsTcpServer("0.0.0.0:" + std::to_string(ds_config.listen_port)));
+        netServers.emplace_back(new asapo::RdsTcpServer("0.0.0.0:" + std::to_string(ds_config.listen_port), logger));
     }
 
     if (std::find(networkingMode.begin(), networkingMode.end(), "fabric") != networkingMode.end()) {
         // Add Fabric
-        netServers.emplace_back(new asapo::RdsFabricServer(ds_config.advertise_uri));
+        netServers.emplace_back(new asapo::RdsFabricServer(ds_config.advertise_uri, logger));
     }
 }
 

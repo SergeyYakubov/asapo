@@ -6,7 +6,7 @@
 
 namespace asapo {
 
-RdsTcpServer::RdsTcpServer(std::string address) : io__{GenerateDefaultIO()}, log__{GetDefaultReceiverDataServerLogger()},
+RdsTcpServer::RdsTcpServer(std::string address, const AbstractLogger* logger) : io__{GenerateDefaultIO()}, log__{logger},
     address_{std::move(address)} {}
 
 Error RdsTcpServer::Initialize() {

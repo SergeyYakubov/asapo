@@ -1,5 +1,5 @@
-#ifndef ASAPO_RECEIVER_LOGGER_H
-#define ASAPO_RECEIVER_LOGGER_H
+#ifndef ASAPO_DATA_RECEIVER_LOGGER_H
+#define ASAPO_DATA_RECEIVER_LOGGER_H
 
 #include "logger/logger.h"
 
@@ -11,4 +11,4 @@ AbstractLogger* GetDefaultReceiverDataServerLogger();
 }
 
 
-#endif //ASAPO_RECEIVER_LOGGER_H
+#endif //ASAPO_DATA_RECEIVER_LOGGER_H

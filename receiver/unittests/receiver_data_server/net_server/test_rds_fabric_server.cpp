@@ -23,15 +23,16 @@ using namespace asapo;
 std::string expected_address = "somehost:123";
 
 TEST(RdsFabricServer, Constructor) {
-    RdsFabricServer fabric_server("");
+    NiceMock<MockLogger> mock_logger;
+    RdsFabricServer fabric_server("", &mock_logger);
     ASSERT_THAT(dynamic_cast<SystemIO*>(fabric_server.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<fabric::FabricFactory*>(fabric_server.factory__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const AbstractLogger*>(fabric_server.log__), Ne(nullptr));
+    ASSERT_THAT(fabric_server.log__, Eq(&mock_logger));
 }
 
 class RdsFabricServerTests : public Test {
   public:
-    RdsFabricServer rds_server{expected_address};
+    RdsFabricServer rds_server{expected_address, &mock_logger};
     NiceMock<MockLogger> mock_logger;
     StrictMock<MockIO> mock_io;
     StrictMock<fabric::MockFabricFactory> mock_fabric_factory;
@@ -95,6 +96,10 @@ TEST_F(RdsFabricServerTests, Initialize_Error_DoubleInitialize) {
     EXPECT_CALL(mock_fabric_factory, CreateAndBindServer_t(_, "abc", 123, _)).WillOnce(Return(
                 &mock_fabric_server
             ));
+
+    EXPECT_CALL(mock_fabric_server, GetAddress()).WillOnce(Return(
+            "TestAddress"
+    ));
 
     Error err = rds_server.Initialize();
     ASSERT_THAT(rds_server.server__, Ne(nullptr));
