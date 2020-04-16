@@ -29,6 +29,8 @@ Error RdsFabricServer::Initialize() {
         return err;
     }
 
+    log__->Info("Started Fabric ReceiverDataServer at '" + server__->GetAddress() + "'");
+
     return err;
 }
 

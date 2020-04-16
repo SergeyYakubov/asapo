@@ -10,6 +10,7 @@
 
 #include "receiver_data_server/receiver_data_server.h"
 #include "receiver_data_server/net_server/rds_tcp_server.h"
+#include "receiver_data_server/net_server/rds_fabric_server.h"
 
 asapo::Error ReadConfigFile(int argc, char* argv[]) {
     if (argc != 2) {
@@ -22,8 +23,17 @@ asapo::Error ReadConfigFile(int argc, char* argv[]) {
 
 void AddDataServers(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
                     std::vector<asapo::RdsNetServerPtr>& netServers) {
-    // Add TCP
-    netServers.emplace_back(new asapo::RdsTcpServer("0.0.0.0:" + std::to_string(config->dataserver.listen_port)));
+    auto ds_config = config->dataserver;
+    auto networkingMode = ds_config.network_mode;
+    if (std::find(networkingMode.begin(), networkingMode.end(), "tcp") != networkingMode.end()) {
+        // Add TCP
+        netServers.emplace_back(new asapo::RdsTcpServer("0.0.0.0:" + std::to_string(ds_config.listen_port)));
+    }
+
+    if (std::find(networkingMode.begin(), networkingMode.end(), "fabric") != networkingMode.end()) {
+        // Add Fabric
+        netServers.emplace_back(new asapo::RdsFabricServer(ds_config.advertise_uri));
+    }
 }
 
 std::vector<std::thread> StartDataServers(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
