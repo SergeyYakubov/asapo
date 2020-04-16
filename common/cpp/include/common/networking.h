@@ -54,7 +54,7 @@ struct GenericRequestHeader {
         strncpy(substream, header.substream, kMaxMessageSize);
     }
 
-    /* THIS CONSTRUCTOR SHOULD ONLY BE CALLED FOR TESTS! (because the message is only being strncpy'ed */
+    /* Keep in mind that the message here is just strncpy'ed, you can change the message later */
     GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
                          uint64_t i_data_size = 0, uint64_t i_meta_size = 0, const std::string& i_message = "",
                          const std::string& i_substream = ""):
