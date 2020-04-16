@@ -14,6 +14,7 @@ typedef uint64_t NetworkRequestId;
 
 enum class NetworkConnectionType {
     kAsapoTcp, // ASAPOs TCP (Multiple connections for parallel data transfers)
+    kFabric, // Fabric connection (Primarily used for InfiniBand verbs)
 };
 
 enum Opcode : uint8_t {

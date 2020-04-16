@@ -98,8 +98,8 @@ TEST_F(RdsFabricServerTests, Initialize_Error_DoubleInitialize) {
             ));
 
     EXPECT_CALL(mock_fabric_server, GetAddress()).WillOnce(Return(
-            "TestAddress"
-    ));
+                "TestAddress"
+            ));
 
     Error err = rds_server.Initialize();
     ASSERT_THAT(rds_server.server__, Ne(nullptr));
