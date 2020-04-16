@@ -70,7 +70,7 @@ wait_mongo 27016
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 

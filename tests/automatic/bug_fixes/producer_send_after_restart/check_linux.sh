@@ -31,7 +31,7 @@ Cleanup() {
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 
 sleep 1
@@ -47,7 +47,7 @@ echo hello > /tmp/asapo/test_in/test1/file1
 sleep 1
 nomad stop receiver
 sleep 1
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 
 echo hello > /tmp/asapo/test_in/test1/file1
 sleep 1

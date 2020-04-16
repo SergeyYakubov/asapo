@@ -39,7 +39,7 @@ echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 

@@ -28,7 +28,7 @@ sed -i 's/info/debug/g' broker.json.tpl
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
@@ -58,7 +58,7 @@ nomad stop receiver
 nomad run nginx.nmd
 nomad run authorizer.nmd
 nomad run discovery.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 
 nomad run $4.nmd
 

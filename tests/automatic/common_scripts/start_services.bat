@@ -1,4 +1,4 @@
-c:\opt\consul\nomad run receiver.nmd
+c:\opt\consul\nomad run receiver_tcp.nmd
 c:\opt\consul\nomad run authorizer.nmd
 c:\opt\consul\nomad run discovery.nmd
 c:\opt\consul\nomad run broker.nmd

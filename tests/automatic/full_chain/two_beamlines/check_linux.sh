@@ -45,7 +45,7 @@ echo "db.${beamtime_id2}_${stream}.insert({dummy:1})" | mongo ${beamtime_id2}_${
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 

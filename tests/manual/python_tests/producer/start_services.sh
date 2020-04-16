@@ -3,4 +3,4 @@
 nomad run authorizer.nmd
 nomad run discovery.nmd
 nomad run nginx.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
