@@ -11,7 +11,6 @@ enum class FabricErrorType {
     kInternalConnectionError, // This might occur when the connection is unexpectedly closed
     kNoDeviceFound,
     kClientNotInitialized,
-    kTimeout,
     kConnectionRefused,
 };
 
@@ -38,10 +37,6 @@ auto const kNoDeviceFoundError = FabricErrorTemplate {
 auto const kClientNotInitializedError = FabricErrorTemplate {
     "The client was not initialized. Add server address first!",
     FabricErrorType::kClientNotInitialized
-};
-auto const kTimeout = FabricErrorTemplate {
-    "Timeout",
-    FabricErrorType::kTimeout
 };
 auto const kConnectionRefusedError = FabricErrorTemplate {
     "Connection refused",

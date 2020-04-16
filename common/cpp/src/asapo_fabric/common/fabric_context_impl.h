@@ -141,7 +141,7 @@ class FabricContextImpl : public FabricContext {
             // Success
             break;
         case FI_EAGAIN: // We felt trough our own timeout loop
-            *error = FabricErrorTemplates::kTimeout.Generate();
+            *error = IOErrorTemplates::kTimeout.Generate();
             break;
         case FI_ENOENT:
             *error = FabricErrorTemplates::kConnectionRefusedError.Generate();

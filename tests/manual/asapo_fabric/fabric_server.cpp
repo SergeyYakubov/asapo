@@ -16,7 +16,7 @@ void ServerThread(FabricServer* server, size_t bufferSize, FileData* buffer) {
         GenericRequestHeader request;
 
         server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &error);
-        if (error == FabricErrorTemplates::kTimeout) {
+        if (error == IOErrorTemplates::kTimeout) {
             error = nullptr;
             continue;
         }

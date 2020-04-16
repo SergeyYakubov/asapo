@@ -4,6 +4,7 @@
 #include <logger/logger.h>
 #include <testing.h>
 #include <asapo_fabric/asapo_fabric.h>
+#include <common/io_error.h>
 
 using namespace asapo;
 using namespace fabric;
@@ -64,7 +65,7 @@ void ClientThread(const std::string& hostname, uint16_t port) {
               "The following call might take a while since its able to reach the server but the server is not responding"
               << std::endl;
     client->Recv(serverAddress, 0, &dummyBuffer, sizeof(dummyBuffer), &err);
-    M_AssertEq(FabricErrorTemplates::kTimeout, err, "client->Recv");
+    M_AssertEq(IOErrorTemplates::kTimeout, err, "client->Recv");
     err = nullptr;
 
     serverShutdown.set_value();

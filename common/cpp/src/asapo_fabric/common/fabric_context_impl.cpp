@@ -284,13 +284,13 @@ void FabricContextImpl::InternalWait(FabricAddress targetAddress, FabricWaitable
     // Check if we simply can wait for our task
     task->Wait(requestTimeoutMs_, error);
 
-    if (*error == FabricErrorTemplates::kTimeout) {
+    if (*error == IOErrorTemplates::kTimeout) {
         if (targetAddress == FI_ASAPO_ADDR_NO_ALIVE_CHECK) {
             CancelTask(task, error);
             // We expect the task to fail with 'Operation canceled'
             if (*error == FabricErrorTemplates::kInternalOperationCanceledError) {
                 // Switch it to a timeout so its more clearly what happened
-                *error = FabricErrorTemplates::kTimeout.Generate();
+                *error = IOErrorTemplates::kTimeout.Generate();
             }
         } else {
             InternalWaitWithAliveCheck(targetAddress, task, error);
@@ -301,7 +301,7 @@ void FabricContextImpl::InternalWait(FabricAddress targetAddress, FabricWaitable
 void FabricContextImpl::InternalWaitWithAliveCheck(FabricAddress targetAddress, FabricWaitableTask* task,
         Error* error) {// Handle advanced alive check
     bool aliveCheckFailed = false;
-    for (uint32_t i = 0; i < maxTimeoutRetires_ && *error == FabricErrorTemplates::kTimeout; i++) {
+    for (uint32_t i = 0; i < maxTimeoutRetires_ && *error == IOErrorTemplates::kTimeout; i++) {
         *error = nullptr;
         printf("HandleFiCommandAndWait - Tries: %d\n", i);
         if (!TargetIsAliveCheck(targetAddress)) {
@@ -316,7 +316,7 @@ void FabricContextImpl::InternalWaitWithAliveCheck(FabricAddress targetAddress, 
     if (aliveCheckFailed) {
         *error = FabricErrorTemplates::kInternalConnectionError.Generate();
     } else if(*error == FabricErrorTemplates::kInternalOperationCanceledError) {
-        *error = FabricErrorTemplates::kTimeout.Generate();
+        *error = IOErrorTemplates::kTimeout.Generate();
     }
 }
 
