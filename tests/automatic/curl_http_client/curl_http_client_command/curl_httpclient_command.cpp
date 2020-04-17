@@ -15,7 +15,7 @@ struct Args {
 };
 
 Args GetArgs(int argc, char* argv[]) {
-    if (argc != 4) {
+    if (argc != 5) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
     }
