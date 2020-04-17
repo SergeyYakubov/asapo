@@ -281,8 +281,11 @@ bool FabricContextImpl::TargetIsAliveCheck(FabricAddress address) {
 
 void FabricContextImpl::InternalWait(FabricAddress targetAddress, FabricWaitableTask* task, Error* error) {
 
+    // Try to fail fast when no target is set (used by e.g. RecvAny)
+    auto timeoutMs = targetAddress == FI_ASAPO_ADDR_NO_ALIVE_CHECK ? requestFastTimeoutMs_ : requestTimeoutMs_;
+
     // Check if we simply can wait for our task
-    task->Wait(requestTimeoutMs_, error);
+    task->Wait(timeoutMs, error);
 
     if (*error == IOErrorTemplates::kTimeout) {
         if (targetAddress == FI_ASAPO_ADDR_NO_ALIVE_CHECK) {

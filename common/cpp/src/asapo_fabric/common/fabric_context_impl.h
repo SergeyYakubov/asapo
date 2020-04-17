@@ -60,6 +60,7 @@ class FabricContextImpl : public FabricContext {
 
     uint64_t requestEnqueueTimeoutMs_ = 10000; // 10 sec for queuing a task
     uint64_t requestTimeoutMs_ = 20000; // 20 sec to complete a task, otherwise a ping will be send
+    uint64_t requestFastTimeoutMs_ = 7000; // All task that dont have use keepalive check will try to fail fast
     uint32_t maxTimeoutRetires_ = 5; // Timeout retires, if one of them fails, the task will fail with a timeout
 
     std::unique_ptr<std::thread> completion_thread_;
