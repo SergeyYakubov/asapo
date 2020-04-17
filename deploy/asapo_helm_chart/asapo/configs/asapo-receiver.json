@@ -9,7 +9,8 @@
   "DataServer": {
     "AdvertiseURI": "auto",
     "NThreads": {{ .Values.ownServices.receiver.dataServer.nThreads }},
-    "ListenPort": {{ .Values.ownServices.receiver.dataServer.port }}
+    "ListenPort": {{ .Values.ownServices.receiver.dataServer.port }},
+    "NetworkMode": ["tcp"]
   },
   "DataCache": {
     "Use": {{ .Values.ownServices.receiver.dataCache.enable }},
