@@ -36,7 +36,7 @@ job "receiver" {
       }
 
       template {
-         source        = "/home/yakubov/projects/asapo/cmake-build-debug/tests/automatic/producer_receiver/check_monitoring/receiver.json.tpl"
+         source        = "/home/yakubov/projects/asapo/cmake-build-debug/tests/automatic/producer_receiver/check_monitoring/receiver_tcp.json.tpl"
          destination   = "local/receiver.json"
          change_mode   = "signal"
          change_signal = "SIGHUP"
