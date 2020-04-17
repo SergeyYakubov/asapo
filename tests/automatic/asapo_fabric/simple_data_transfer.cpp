@@ -38,6 +38,7 @@ void ServerMasterThread(const std::string& hostname, uint16_t port, char* expect
                 // In order to run the tests more stable. Otherwise a timeout could occurred with valgrind
                 int tries = 0;
                 do {
+                    err = nullptr;
                     server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &err);
                 } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
                 M_AssertEq(nullptr, err, "server->RecvAny");

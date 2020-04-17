@@ -49,6 +49,7 @@ void ServerMasterThread(const std::string& hostname, uint16_t port) {
     // Simulate correct memory details
     int tries = 0;
     do {
+        err = nullptr;
         server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &err);
     } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
     M_AssertEq(nullptr, err, "server->RecvAny(2)");
@@ -62,6 +63,7 @@ void ServerMasterThread(const std::string& hostname, uint16_t port) {
     GenericRequestHeader request2{};
     tries = 0;
     do {
+        err = nullptr;
         server->RecvAny(&clientAddress, &messageId, &request2, sizeof(request2), &err);
     } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
     M_AssertEq(nullptr, err, "server->RecvAny(3)");

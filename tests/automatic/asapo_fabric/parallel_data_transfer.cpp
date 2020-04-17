@@ -33,8 +33,9 @@ void ServerChildThread(FabricServer* server, std::atomic<int>* serverTotalReques
         // In order to run the tests more stable. Otherwise a timeout could occurred with valgrind
         int tries = 0;
         do {
+            err = nullptr;
             server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &err);
-        } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
+        } while (err == IOErrorTemplates::kTimeout && tries++ < 4);
         M_AssertEq(nullptr, err, "server->RecvAny");
         M_AssertEq("Hello World", request.message);
         M_AssertEq(messageId / kEachInstanceRuns, request.data_id); // is client index

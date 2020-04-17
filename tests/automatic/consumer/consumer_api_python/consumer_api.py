@@ -149,7 +149,7 @@ def check_single(broker,group_id_new):
     else:
         exit_on_noerr("wrong query")
 
-    broker = asapo_consumer.create_server_broker("bla",path, True, beamtime,"",token,1000)
+    broker = asapo_consumer.create_server_broker("bla",path, True, beamtime,"",token,1000,network_type)
     try:
         broker.get_last(group_id_new, meta_only=True)
     except asapo_consumer.AsapoUnavailableServiceError as err:

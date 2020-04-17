@@ -62,7 +62,7 @@ nomad run authorizer.nmd
 nomad run discovery.nmd
 nomad run receiver_$7.nmd
 
-if ["$4" = "receiver"]; then
+if [[ "$4" == "receiver" ]]; then
   nomad run $4_$7.nmd
 else
   nomad run $4.nmd
