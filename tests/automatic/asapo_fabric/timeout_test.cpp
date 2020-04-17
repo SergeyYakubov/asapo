@@ -29,7 +29,12 @@ void ServerMasterThread(const std::string& hostname, uint16_t port) {
         int dummyBuffer;
         FabricAddress clientAddress;
         FabricMessageId messageId;
-        server->RecvAny(&clientAddress, &messageId, &dummyBuffer, sizeof(dummyBuffer), &err);
+
+        // In order to run the tests more stable. Otherwise a timeout could occurred with valgrind
+        int tries = 0;
+        do {
+            server->RecvAny(&clientAddress, &messageId, &dummyBuffer, sizeof(dummyBuffer), &err);
+        } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
         M_AssertEq(nullptr, err, "server->RecvAny");
 
         server->Send(clientAddress, messageId, &dummyBuffer, sizeof(dummyBuffer), &err);
