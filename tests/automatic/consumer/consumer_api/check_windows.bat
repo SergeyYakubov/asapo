@@ -16,7 +16,7 @@ for /l %%x in (1, 1, 5) do echo db.data_stream2.insert({"_id":%%x,"size":6,"name
 echo hello1 > 1
 
 
-%1 127.0.0.1:8400 %beamtime_id% %token_test_run%  single || goto :error
+%1 127.0.0.1:8400 tcp %beamtime_id% %token_test_run%  single || goto :error
 
 echo db.dropDatabase() | %mongo_exe% %database_name%
 
@@ -24,7 +24,7 @@ for /l %%x in (1, 1, 10) do echo db.data_default.insert({"_id":%%x,"size":3,"ima
 
 echo hello1 > 1_1
 
-%1 127.0.0.1:8400 %beamtime_id% %token_test_run%  datasets || goto :error
+%1 127.0.0.1:8400 tcp %beamtime_id% %token_test_run%  datasets || goto :error
 
 goto :clean
 

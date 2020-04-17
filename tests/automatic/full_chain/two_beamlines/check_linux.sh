@@ -4,13 +4,18 @@ set -e
 
 trap Cleanup EXIT
 
+producer_bin=$1
+consumer_bin=$2
+asapo_tool_bin=$3
+network_type=$4
+
 stream=detector
 
 beamtime_id1=asapo_test1
-token1=`$3 token -secret auth_secret.key $beamtime_id1`
+token1=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id1`
 
 beamtime_id2=asapo_test2
-token2=`$3 token -secret auth_secret.key $beamtime_id2`
+token2=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id2`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -51,13 +56,13 @@ nomad run broker.nmd
 
 sleep 3
 
-#producer
+echo "Start producers"
 mkdir -p ${receiver_folder1}
 mkdir -p ${receiver_folder2}
-$1 localhost:8400 ${beamtime_id1} 100 1000 4 0 100 &
-$1 localhost:8400 ${beamtime_id2} 100 900 4 0 100 &
+$producer_bin localhost:8400 ${beamtime_id1} 100 1000 4 0 100 &
+$producer_bin localhost:8400 ${beamtime_id2} 100 900 4 0 100 &
 #producerid=`echo $!`
 
-#consumers
-$2 ${proxy_address} ${receiver_folder1} ${beamtime_id1} 2 $token1 12000 0  | tee /dev/stderr | grep "Processed 1000 file(s)"
-$2 ${proxy_address} ${receiver_folder2} ${beamtime_id2} 2 $token2 12000 0 | tee /dev/stderr | grep "Processed 900 file(s)"
+echo "Start consumers in $network_type mode"
+$consumer_bin ${proxy_address} $network_type ${receiver_folder1} ${beamtime_id1} 2 $token1 12000 0  | tee /dev/stderr | grep "Processed 1000 file(s)"
+$consumer_bin ${proxy_address} $network_type ${receiver_folder2} ${beamtime_id2} 2 $token2 12000 0 | tee /dev/stderr | grep "Processed 900 file(s)"

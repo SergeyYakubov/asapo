@@ -3,10 +3,8 @@ from __future__ import print_function
 import asapo_consumer
 import asapo_producer
 import sys
-import os
-
-
 import threading
+
 lock = threading.Lock()
 
 timeout = 10 * 1000
@@ -25,9 +23,9 @@ def callback(header,err):
         print ("successfuly sent: ",header)
     lock.release()
 
-source, beamtime, token = sys.argv[1:]
+source, network_type, beamtime, token = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,".",True, beamtime,"",token,timeout)
+broker = asapo_consumer.create_server_broker(source,".",True, beamtime,"",token,timeout,network_type)
 producer  = asapo_producer.create_producer(source,beamtime,'auto', "", token, 1, 600)
 producer.set_log_level("debug")
 

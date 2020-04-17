@@ -4,8 +4,13 @@ set -e
 
 trap Cleanup EXIT SIGHUP SIGINT SIGTERM
 
+producer_bin=$1
+consumer_bin=$2
+asapo_tool_bin=$3
+network_type=$4
+
 beamtime_id=asapo_test
-token=`$3 token -secret auth_secret.key $beamtime_id`
+token=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -79,15 +84,15 @@ sleep 1
 echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}_detector
 
 
-
-#producer
+echo "Start producer"
 mkdir -p ${receiver_folder}
-$1 localhost:8400 ${beamtime_id} 100 1000 4 0 100 &
+$producer_bin localhost:8400 ${beamtime_id} 100 1000 4 0 100 &
 producerid=`echo $!`
 
 wait
 
-$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 10000 0 &> output.txt &
+echo "Start consumer in $network_type mode"
+$consumer_bin ${proxy_address} $network_type ${receiver_folder} ${beamtime_id} 2 $token 10000 0 &> output.txt &
 workerid=`echo $!`
 
 sleep 2

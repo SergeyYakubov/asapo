@@ -4,6 +4,7 @@ import asapo_consumer
 import json
 import sys
 
+
 def exit_on_noerr(name):
     print (name)
     sys.exit(1)
@@ -197,10 +198,10 @@ def check_dataset(broker,group_id_new):
     else:
         exit_on_noerr("get_next_dataset4 err")
 
-source, path, beamtime, token, mode = sys.argv[1:]
+source, network_type, path, beamtime, token, mode = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,path,True, beamtime,"",token,60000)
-broker_fts = asapo_consumer.create_server_broker(source,path,False, beamtime,"",token,60000)
+broker = asapo_consumer.create_server_broker(source,path,True, beamtime,"",token,60000,network_type)
+broker_fts = asapo_consumer.create_server_broker(source,path,False, beamtime,"",token,60000,network_type)
 
 group_id_new = broker.generate_group_id()
 

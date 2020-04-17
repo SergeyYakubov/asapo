@@ -27,13 +27,13 @@ set PYTHONPATH=%1
 echo | set /p dummyName="hello1" > %source_path%\1
 echo | set /p dummyName="hello1" > %source_path%\1_1
 
-python %3/consumer_api.py 127.0.0.1:8400 %source_path% %beamtime_id%  %token_test_run%  single || goto :error
+python %3/consumer_api.py 127.0.0.1:8400 tcp %source_path% %beamtime_id%  %token_test_run%  single || goto :error
 
 echo db.dropDatabase() | %mongo_exe% %database_name%
 
 for /l %%x in (1, 1, 10) do echo db.data_default.insert({"_id":%%x,"size":3,"images":[{"_id":1, "size":6,"name":"%%x_1","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}},{"_id":2, "size":6,"name":"%%x_2","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}},{"_id":3, "size":6,"name":"%%x_3","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}]}) | %mongo_exe% %database_name%  || goto :error
 
-python %3/consumer_api.py 127.0.0.1:8400 %source_path% %beamtime_id%  %token_test_run% datasets || goto :error
+python %3/consumer_api.py 127.0.0.1:8400 tcp %source_path% %beamtime_id%  %token_test_run% datasets || goto :error
 
 
 goto :clean

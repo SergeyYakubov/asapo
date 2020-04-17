@@ -12,7 +12,7 @@ SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 
 call start_services.bat
 
-"%1" 127.0.0.1:8400 %beamtime_id% %token%
+"%1" 127.0.0.1:8400 "%5" %beamtime_id% %token%
 
 goto :clean
 

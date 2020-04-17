@@ -12,4 +12,4 @@ else()
 endif()
 
 
-add_script_test("${TARGET_NAME}" "$<TARGET_FILE:dummy-data-producer> $<TARGET_PROPERTY:asapo,EXENAME> ${CMAKE_CURRENT_SOURCE_DIR} ${PYTHON_LIBS} ${Python_EXECUTABLE}" nomem)
+add_script_test("${TARGET_NAME}-tcp" "$<TARGET_FILE:dummy-data-producer> $<TARGET_PROPERTY:asapo,EXENAME> ${CMAKE_CURRENT_SOURCE_DIR} ${PYTHON_LIBS} ${Python_EXECUTABLE} tcp" nomem)

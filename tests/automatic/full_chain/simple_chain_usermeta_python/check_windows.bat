@@ -21,7 +21,7 @@ mkdir %receiver_folder%
 REM consumer
 set PYTHONPATH=%4
 
-python3 %3/get_user_meta.py %proxy_address%  %receiver_folder% %beamtime_id%  %token% new > out
+python3 %3/get_user_meta.py %proxy_address% "%6" %receiver_folder% %beamtime_id%  %token% new > out
 type out
 type out | findstr /c:"found images: 100" || goto :error
 type out | findstr /c:"test100" || goto :error

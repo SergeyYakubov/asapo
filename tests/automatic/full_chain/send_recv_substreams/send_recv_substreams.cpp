@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
     Args args;
     if (argc != 5) {
         std::cout << "Usage: " + std::string{argv[0]}
-                  + " <server>  <beamtime_id> <token>"
+                  + " <server> <network_type> <beamtime_id> <token>"
                   <<
                   std::endl;
         exit(EXIT_FAILURE);

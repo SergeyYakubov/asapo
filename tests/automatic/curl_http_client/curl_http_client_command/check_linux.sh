@@ -23,7 +23,7 @@ echo -n hello > $file_transfer_folder/aaa
 
 dd if=/dev/urandom of=$file_transfer_folder/random bs=1 count=100000
 
-$1  127.0.0.1:5007 127.0.0.1:5008 $file_transfer_folder
+$1  127.0.0.1:5007 tcp 127.0.0.1:5008 $file_transfer_folder
 cat bbb | tee /dev/stderr | grep hello
 diff -q random $file_transfer_folder/random
 

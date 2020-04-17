@@ -32,7 +32,7 @@ echo hello3 > file3
 
 set PYTHONPATH=%2;%3
 
-"%1" "%4" 127.0.0.1:8400 %source_path% %beamtime_id% %stream_in% %stream_out% %token% %timeout% %timeout_producer% %nthreads% 1  > out
+"%1" "%4" 127.0.0.1:8400 tcp %source_path% %beamtime_id% %stream_in% %stream_out% %token% %timeout% %timeout_producer% %nthreads% 1  > out
 
 type out
 findstr /I /L /C:"Processed 3 file(s)" out || goto :error

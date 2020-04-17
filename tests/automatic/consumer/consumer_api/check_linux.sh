@@ -45,7 +45,7 @@ done
 echo hello1 > 1
 
 
-$@ 127.0.0.1:8400 $beamtime_id $token_test_run single
+$@ 127.0.0.1:8400 tcp $beamtime_id $token_test_run single
 
 #check datasets
 echo "db.dropDatabase()" | mongo ${database_name}
@@ -65,4 +65,4 @@ done
 
 echo hello1 > 1_1
 
-$@ 127.0.0.1:8400 $beamtime_id $token_test_run datasets
+$@ 127.0.0.1:8400 tcp $beamtime_id $token_test_run datasets

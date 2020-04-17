@@ -13,6 +13,8 @@ set -e
 
 trap Cleanup EXIT
 
+network_type=$5
+
 Cleanup() {
     set +e
     nomad stop nginx
@@ -27,11 +29,11 @@ Cleanup() {
 nomad run nginx.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
-nomad run receiver_tcp.nmd
+nomad run receiver_${network_type}.nmd
 nomad run authorizer.nmd
 
 
 export PYTHONPATH=$2:$3:${PYTHONPATH}
 
 
-$1 $4 127.0.0.1:8400 $beamtime_id $token
+$1 $4 127.0.0.1:8400 $network_type $beamtime_id $token

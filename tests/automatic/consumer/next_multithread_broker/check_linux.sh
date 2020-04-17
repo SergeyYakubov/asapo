@@ -28,6 +28,6 @@ do
 	echo 'db.data_default.insert({"_id":'$i',"size":100,"name":"'$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
-$@ 127.0.0.1:8400 test_run 4 10 $token_test_run
+$@ 127.0.0.1:8400 tcp test_run 4 10 $token_test_run
 
 

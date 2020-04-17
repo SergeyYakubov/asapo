@@ -18,7 +18,7 @@ mkdir %receiver_folder%
 "%1" %proxy_address% %beamtime_id% 100 0 1 0 1000
 
 REM consumer
-"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 5000  1 > out.txt
+"%2" %proxy_address% "%4" %receiver_folder% %beamtime_id% 2 %token% 5000  1 > out.txt
 type out.txt
 findstr /i /l /c:"dummy_meta"  out.txt || goto :error
 

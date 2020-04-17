@@ -29,7 +29,7 @@ echo hello2 > file2
 echo hello3 > file3
 
 
-"%1" 127.0.0.1:8400 %source_path% %beamtime_id%  %stream_in% %stream_out% %token% 2 1000 25000 1 > out
+"%1" 127.0.0.1:8400 tcp %source_path% %beamtime_id%  %stream_in% %stream_out% %token% 2 1000 25000 1 > out
 type out
 findstr /I /L /C:"Processed 3 file(s)" out || goto :error
 findstr /I /L /C:"Sent 3 file(s)" out || goto :error
@@ -41,7 +41,7 @@ findstr /I /L /C:"hello2" %receiver_folder%\file2_%stream_out% || goto :error
 findstr /I /L /C:"hello3" %receiver_folder%\file3_%stream_out% || goto :error
 
 
-"%1" 127.0.0.1:8400 %source_path% %beamtime_id%  %stream_in% %stream_out2% %token% 2 1000 25000 0 > out2
+"%1" 127.0.0.1:8400 tcp %source_path% %beamtime_id%  %stream_in% %stream_out2% %token% 2 1000 25000 0 > out2
 type out2
 findstr /I /L /C:"Processed 3 file(s)" out2 || goto :error
 findstr /I /L /C:"Sent 3 file(s)" out2 || goto :error

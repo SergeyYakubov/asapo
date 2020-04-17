@@ -59,7 +59,7 @@ done
 
 sleep 1
 
-$1 127.0.0.1:8400 $source_path $beamtime_id $stream_in $stream_out $token 2 1000 25000 1  > out
+$1 127.0.0.1:8400 tcp $source_path $beamtime_id $stream_in $stream_out $token 2 1000 25000 1  > out
 cat out
 cat out | grep "Processed 3 file(s)"
 cat out | grep "Sent 3 file(s)"
@@ -70,7 +70,7 @@ cat ${receiver_folder}/file1_${stream_out} | grep hello1
 cat ${receiver_folder}/file2_${stream_out} | grep hello2
 cat ${receiver_folder}/file3_${stream_out} | grep hello3
 
-$1 127.0.0.1:8400 $source_path $beamtime_id $stream_in $stream_out2 $token 2 1000 25000 0  > out2
+$1 127.0.0.1:8400 tcp $source_path $beamtime_id $stream_in $stream_out2 $token 2 1000 25000 0  > out2
 cat out2
 test ! -f ${receiver_folder}/file1_${stream_out2}
 echo "db.data_default.find({"_id":1})" | mongo ${outdatabase_name2} | tee /dev/stderr | grep ./file1

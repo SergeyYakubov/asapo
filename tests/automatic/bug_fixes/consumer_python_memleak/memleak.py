@@ -1,11 +1,11 @@
 import asapo_consumer
-import time
 import sys
+import time
 
-source, path, beamtime, token = sys.argv[1:]
+source, network_type, path, beamtime, token = sys.argv[1:]
 
 broker = asapo_consumer.create_server_broker(
-    source, path,True, beamtime, "stream", token, 1000)
+    source, path,True, beamtime, "stream", token, 1000, network_type)
 
 group_id  = broker.generate_group_id()
 print('generated group id: ', group_id)

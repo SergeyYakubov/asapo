@@ -1,12 +1,11 @@
 from __future__ import print_function
 
 import asapo_consumer
-import json
 import sys
 
-source, path, beamtime, token, group_id = sys.argv[1:]
+source, network_type, path, beamtime, token, group_id = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,path,True, beamtime,"",token,60000)
+broker = asapo_consumer.create_server_broker(source,path,True, beamtime,"",token,60000,network_type)
 
 images = broker.query_images("meta.user_meta regexp 'test*' order by _id")
 

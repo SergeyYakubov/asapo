@@ -35,7 +35,7 @@ export PYTHONPATH=$1:${PYTHONPATH}
 export Python_EXECUTABLE=$2
 
 
-$Python_EXECUTABLE memleak.py $endpoint $path $beamtime_id $token &> out &
+$Python_EXECUTABLE memleak.py $endpoint tcp $path $beamtime_id $token &> out &
 pid=`echo $!`
 
 sleep 1
