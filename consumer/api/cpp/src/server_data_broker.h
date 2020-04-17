@@ -1,6 +1,7 @@
 #ifndef ASAPO_SERVER_DATA_BROKER_H
 #define ASAPO_SERVER_DATA_BROKER_H
 
+#include <common/networking.h>
 #include "consumer/data_broker.h"
 #include "io/io.h"
 #include "http_client/http_client.h"
@@ -52,7 +53,7 @@ Error ConsumerErrorFromNoDataResponse(const std::string& response);
 class ServerDataBroker final : public asapo::DataBroker {
   public:
     explicit ServerDataBroker(std::string server_uri, std::string source_path, bool has_filesystem,
-                              SourceCredentials source);
+                              SourceCredentials source, NetworkConnectionType networkType);
     Error ResetLastReadMarker(std::string group_id) override;
     Error ResetLastReadMarker(std::string group_id, std::string substream) override;
 

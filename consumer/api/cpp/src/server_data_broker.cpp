@@ -9,6 +9,7 @@
 #include "tcp_client.h"
 
 #include "asapo_consumer.h"
+#include "fabric_consumer_client.h"
 
 using std::chrono::system_clock;
 
@@ -85,11 +86,19 @@ Error ProcessRequestResponce(const Error& server_err, const RequestOutput* respo
 ServerDataBroker::ServerDataBroker(std::string server_uri,
                                    std::string source_path,
                                    bool has_filesystem,
-                                   SourceCredentials source) :
+                                   SourceCredentials source,
+                                   NetworkConnectionType networkType) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
-    net_client__{new TcpClient()},
-             endpoint_{std::move(server_uri)}, source_path_{std::move(source_path)}, has_filesystem_{has_filesystem},
-source_credentials_(std::move(source)) {
+    endpoint_{std::move(server_uri)}, source_path_{std::move(source_path)}, has_filesystem_{has_filesystem},
+    source_credentials_(std::move(source)) {
+    switch (networkType) {
+    case NetworkConnectionType::kAsapoTcp:
+        net_client__.reset(new TcpClient());
+        break;
+    case NetworkConnectionType::kFabric:
+        net_client__.reset(new FabricConsumerClient());
+        break;
+    }
 
     if (source_credentials_.stream.empty()) {
         source_credentials_.stream = SourceCredentials::kDefaultStream;

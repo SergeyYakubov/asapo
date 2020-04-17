@@ -18,6 +18,7 @@ std::mutex lock;
 
 struct Args {
     std::string server;
+    std::string network_type;
     std::string file_path;
     std::string beamtime_id;
     std::string token;
@@ -48,7 +49,7 @@ std::vector<std::thread> StartThreads(const Args& params,
         asapo::FileInfo fi;
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, true,
-                      asapo::SourceCredentials{params.beamtime_id, "", "", params.token}, &err);
+                      asapo::SourceCredentials{params.beamtime_id, "", "", params.token}, params.network_type, &err);
         broker->SetTimeout((uint64_t) params.timeout_ms);
         asapo::FileData data;
 
@@ -129,22 +130,23 @@ int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetLast Broker Example", argc, argv);
     Args params;
     params.datasets = false;
-    if (argc != 8 && argc != 9) {
+    if (argc != 9 && argc != 10) {
         std::cout << "Usage: " + std::string{argv[0]}
-                  + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
+                  + " <server> <network_type> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
                   <<
                   std::endl;
         exit(EXIT_FAILURE);
     }
     params.server = std::string{argv[1]};
-    params.file_path = std::string{argv[2]};
-    params.beamtime_id = std::string{argv[3]};
-    params.nthreads = atoi(argv[4]);
-    params.token = std::string{argv[5]};
-    params.timeout_ms = atoi(argv[6]);
-    params.read_data = atoi(argv[7]) != 1;
-    if (argc == 9) {
-        params.datasets = atoi(argv[8]) == 1;
+    params.network_type = std::string{argv[2]};
+    params.file_path = std::string{argv[3]};
+    params.beamtime_id = std::string{argv[4]};
+    params.nthreads = atoi(argv[5]);
+    params.token = std::string{argv[6]};
+    params.timeout_ms = atoi(argv[7]);
+    params.read_data = atoi(argv[8]) != 1;
+    if (argc == 10) {
+        params.datasets = atoi(argv[9]) == 1;
     }
     uint64_t duration_ms;
     int nerrors, nbuf, nfiles_total;

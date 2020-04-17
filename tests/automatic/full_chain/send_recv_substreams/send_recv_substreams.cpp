@@ -22,6 +22,7 @@ int files_sent;
 
 struct Args {
     std::string server;
+    std::string network_type;
     std::string beamtime_id;
     std::string token;
 };
@@ -36,7 +37,7 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
 
 BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".", true,
-                  asapo::SourceCredentials{args.beamtime_id, "", "", args.token}, err);
+                  asapo::SourceCredentials{args.beamtime_id, "", "", args.token}, args.network_type, err);
     if (*err) {
         return nullptr;
     }
@@ -70,7 +71,7 @@ ProducerPtr CreateProducer(const Args& args) {
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
     Args args;
-    if (argc != 4) {
+    if (argc != 5) {
         std::cout << "Usage: " + std::string{argv[0]}
                   + " <server>  <beamtime_id> <token>"
                   <<
@@ -78,8 +79,9 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     args.server = std::string{argv[1]};
-    args.beamtime_id = std::string{argv[2]};
-    args.token = std::string{argv[3]};
+    args.network_type = std::string{argv[2]};
+    args.beamtime_id = std::string{argv[3]};
+    args.token = std::string{argv[4]};
     auto producer = CreateProducer(args);
 
     auto n = 1;
@@ -93,6 +95,10 @@ int main(int argc, char* argv[]) {
 
     Error err;
     auto consumer = CreateBrokerAndGroup(args, &err);
+    if (err) {
+        std::cout << "Error CreateBrokerAndGroup: " << err << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
     asapo::FileInfo fi;
     for (uint64_t i = 0; i < n; i++) {

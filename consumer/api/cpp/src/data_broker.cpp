@@ -1,3 +1,4 @@
+#include <common/networking.h>
 #include "consumer/data_broker.h"
 #include "server_data_broker.h"
 
@@ -25,12 +26,21 @@ std::unique_ptr<DataBroker> Create(const std::string& source_name,
 
 }
 
-// TODO Add NetworkConnectionType
 std::unique_ptr<DataBroker> DataBrokerFactory::CreateServerBroker(std::string server_name, std::string source_path,
-        bool has_filesystem, SourceCredentials source,
+        bool has_filesystem, SourceCredentials source, std::string networkType,
         Error* error) noexcept {
+    NetworkConnectionType networkConnectionType;
+    if (networkType == "tcp") {
+        networkConnectionType = NetworkConnectionType::kAsapoTcp;
+    } else if (networkType == "fabric") {
+        networkConnectionType = NetworkConnectionType::kFabric;
+    } else {
+        *error = TextError("Unknown network type");
+        return nullptr;
+    }
+
     return Create<ServerDataBroker>(std::move(server_name), error, std::move(source_path), has_filesystem,
-                                    std::move(source));
+                                    std::move(source), networkConnectionType);
 }
 
 

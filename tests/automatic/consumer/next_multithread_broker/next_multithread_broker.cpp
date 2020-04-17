@@ -31,6 +31,7 @@ void Assert(std::vector<asapo::FileInfos> file_infos, int nthreads, int nfiles) 
 
 struct Args {
     std::string server;
+    std::string network_type;
     std::string run_name;
     std::string token;
     int nthreads;
@@ -38,22 +39,29 @@ struct Args {
 };
 
 Args GetArgs(int argc, char* argv[]) {
-    if (argc != 6) {
+    if (argc != 7) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
     }
     std::string server{argv[1]};
-    std::string source_name{argv[2]};
-    int nthreads = std::stoi(argv[3]);
-    int nfiles = std::stoi(argv[4]);
-    std::string token{argv[5]};
+    std::string network_type{argv[2]};
+    std::string source_name{argv[3]};
+    int nthreads = std::stoi(argv[4]);
+    int nfiles = std::stoi(argv[5]);
+    std::string token{argv[6]};
 
-    return Args{server, source_name, token, nthreads, nfiles};
+    return Args{server, network_type, source_name, token, nthreads, nfiles};
 }
 
 void TestAll(const Args& args) {
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", true, asapo::SourceCredentials{args.run_name, "", "", args.token}, &err);
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", true, asapo::SourceCredentials{args.run_name, "", "", args.token},
+                  args.network_type, &err);
+    if (err) {
+        std::cout << "Error CreateServerBroker: " << err << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
     auto group_id = broker->GenerateNewGroupId(&err);
     broker->SetTimeout(10000);
     std::vector<asapo::FileInfos>file_infos(args.nthreads);

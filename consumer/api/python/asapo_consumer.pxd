@@ -66,7 +66,7 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
 cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass DataBrokerFactory:
         DataBrokerFactory() except +
-        unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,bool has_filesystem,SourceCredentials source,Error* error)
+        unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,bool has_filesystem,SourceCredentials source,string network_type,Error* error)
 
 
 cdef extern from "asapo_consumer.h" namespace "asapo":
@@ -81,4 +81,3 @@ cdef extern from "asapo_consumer.h" namespace "asapo":
     uint64_t id
     uint64_t id_max
     string next_substream
-

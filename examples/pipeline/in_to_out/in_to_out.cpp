@@ -27,6 +27,7 @@ system_clock::time_point streamout_finish;
 
 struct Args {
     std::string server;
+    std::string network_type;
     std::string file_path;
     std::string beamtime_id;
     std::string stream_in;
@@ -65,7 +66,7 @@ int ProcessError(const Error& err) {
 
 BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.file_path, true,
-                  asapo::SourceCredentials{args.beamtime_id, "", args.stream_in, args.token}, err);
+                  asapo::SourceCredentials{args.beamtime_id, "", args.stream_in, args.token}, args.network_type, err);
     if (*err) {
         return nullptr;
     }
@@ -202,23 +203,24 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
     Args args;
-    if (argc != 11) {
+    if (argc != 12) {
         std::cout << "Usage: " + std::string{argv[0]}
-                  + " <server> <files_path> <beamtime_id> <stream_in> <stream_out> <nthreads> <token> <timeout ms>  <timeout ms producer> <transfer data>"
+                  + " <server> <network_type> <files_path> <beamtime_id> <stream_in> <stream_out> <nthreads> <token> <timeout ms>  <timeout ms producer> <transfer data>"
                   <<
                   std::endl;
         exit(EXIT_FAILURE);
     }
     args.server = std::string{argv[1]};
-    args.file_path = std::string{argv[2]};
-    args.beamtime_id = std::string{argv[3]};
-    args.stream_in = std::string{argv[4]};
-    args.stream_out = std::string{argv[5]};
-    args.token = std::string{argv[6]};
-    args.nthreads = atoi(argv[7]);
-    args.timeout_ms = atoi(argv[8]);
-    args.timeout_ms_producer = atoi(argv[9]);
-    args.transfer_data = atoi(argv[10]) == 1;
+    args.network_type = std::string{argv[2]};
+    args.file_path = std::string{argv[3]};
+    args.beamtime_id = std::string{argv[4]};
+    args.stream_in = std::string{argv[5]};
+    args.stream_out = std::string{argv[6]};
+    args.token = std::string{argv[7]};
+    args.nthreads = atoi(argv[8]);
+    args.timeout_ms = atoi(argv[9]);
+    args.timeout_ms_producer = atoi(argv[10]);
+    args.transfer_data = atoi(argv[11]) == 1;
 
     auto producer = CreateProducer(args);
     files_sent = 0;

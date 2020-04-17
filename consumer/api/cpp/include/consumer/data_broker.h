@@ -7,6 +7,7 @@
 
 #include "common/data_structs.h"
 #include "common/error.h"
+#include "common/networking.h"
 
 namespace asapo {
 
@@ -136,8 +137,7 @@ class DataBroker {
 class DataBrokerFactory {
   public:
     static std::unique_ptr<DataBroker> CreateServerBroker(std::string server_name, std::string source_path,
-            bool has_filesystem,
-            SourceCredentials source,
+            bool has_filesystem, SourceCredentials source, std::string networkType,
             Error* error) noexcept;
 
 };
