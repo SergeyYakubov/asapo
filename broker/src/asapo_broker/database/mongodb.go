@@ -59,24 +59,8 @@ type SizeRecord struct {
 type Mongodb struct {
 	client              *mongo.Client
 	timeout             time.Duration
-	databases           []string
 	parent_db           *Mongodb
 	db_pointers_created map[string]bool
-}
-
-func (db *Mongodb) databaseInList(dbname string) bool {
-	dbListLock.RLock()
-	defer dbListLock.RUnlock()
-	return utils.StringInSlice(dbname, db.databases)
-}
-
-func (db *Mongodb) updateDatabaseList() (err error) {
-	dbListLock.Lock()
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	db.databases, err = db.client.ListDatabaseNames(ctx, bson.M{})
-	dbListLock.Unlock()
-	return err
 }
 
 func (db *Mongodb) Ping() (err error) {
@@ -86,22 +70,6 @@ func (db *Mongodb) Ping() (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	return db.client.Ping(ctx, nil)
-}
-
-func (db *Mongodb) dataBaseExist(dbname string) (err error) {
-	if db.databaseInList(dbname) {
-		return nil
-	}
-
-	if err := db.updateDatabaseList(); err != nil {
-		return err
-	}
-
-	if !db.databaseInList(dbname) {
-		return &DBError{utils.StatusWrongInput, "stream not found: " + dbname}
-	}
-
-	return nil
 }
 
 func (db *Mongodb) Connect(address string) (err error) {
@@ -122,13 +90,7 @@ func (db *Mongodb) Connect(address string) (err error) {
 	}
 
 	//	db.client.SetSafe(&mgo.Safe{J: true})
-
-	if err := db.updateDatabaseList(); err != nil {
-		db.Close()
-		return err
-	}
-
-	return
+	return db.Ping()
 }
 
 func (db *Mongodb) Close() {
@@ -307,9 +269,13 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, collectio
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
-	if err := db.getParentDB().dataBaseExist(db_name); err != nil {
-		return err
+	if len(db_name)==0 || len(collection_name) ==0 {
+		return &DBError{utils.StatusWrongInput, "beamtime_id ans substream must be set"}
 	}
+
+	//	if err := db.getParentDB().dataBaseExist(db_name); err != nil {
+//		return err
+//	}
 
 	if len(group_id) > 0 {
 		db.getParentDB().generateLocationPointersInDbIfNeeded(db_name, collection_name, group_id)
@@ -471,7 +437,7 @@ func (db *Mongodb) getSubstreams(db_name string) ([]byte, error) {
 		return db.processQueryError("get substreams", db_name, err)
 	}
 
-	var rec SubstreamsRecord
+	var rec = SubstreamsRecord{[]string{}}
 	for _, coll := range result {
 		if strings.HasPrefix(coll, data_collection_name_prefix) {
 			rec.Substreams = append(rec.Substreams, strings.TrimPrefix(coll, data_collection_name_prefix))

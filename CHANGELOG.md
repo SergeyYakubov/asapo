@@ -1,3 +1,9 @@
+## 20.03.1
+IMPROVEMENTS
+* change behavior when trying to get data from a substream that not exist - return EndOfStream instead of WrongInput
+* substream name added to producer callback output for Python
+* added simple C++ examples
+
 ## 20.03
 FEATURES
 * introduced substreams for producer/consumer

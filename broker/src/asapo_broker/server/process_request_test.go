@@ -122,13 +122,13 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithNoToken() {
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() {
 	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next", "0").Return([]byte(""),
-		&database.DBError{utils.StatusWrongInput, ""})
+		&database.DBError{utils.StatusNoData, ""})
 
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next")))
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 
-	suite.Equal(http.StatusBadRequest, w.Code, "wrong database name")
+	suite.Equal(http.StatusConflict, w.Code, "wrong database name")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
@@ -141,7 +141,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	time.Sleep(time.Second)
-	suite.Equal(http.StatusNotFound, w.Code, "wrong database name")
+	suite.Equal(http.StatusNotFound, w.Code, "data not found")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
