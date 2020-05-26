@@ -85,6 +85,9 @@ producer.send_file(1, local_path = "./file1", exposed_path = stream+"/"+"file1",
 producer.send_data(6, stream+"/"+"file8",None,
                          ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback = callback)
 
+#send to another substream
+producer.send_data(1, stream+"/"+"file9",None,
+                   ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="substream", callback = callback)
 
 
 producer.wait_requests_finished(50000)

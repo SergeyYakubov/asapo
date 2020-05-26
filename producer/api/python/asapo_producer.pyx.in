@@ -165,6 +165,8 @@ cdef class PyProducer:
          :type user_meta: JSON string
          :param subset: a tuple with two int values (subset id, subset size), default None
          :type subset: tuple
+         :param substream: substream name, default "default"
+         :type substream: string
          :param ingest_mode: ingest mode flag
          :type ingest_mode: int
          :param callback: callback function, default None
@@ -210,6 +212,8 @@ cdef class PyProducer:
          :type user_meta: JSON string
          :param subset: a tuple with two int values (subset id, subset size), default None
          :type subset: tuple
+         :param substream: substream name, default "default"
+         :type substream: string
          :param ingest_mode: ingest mode flag
          :type ingest_mode: int
          :param callback: callback function, default None

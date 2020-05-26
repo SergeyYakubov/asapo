@@ -62,7 +62,7 @@ func cleanup() {
 // go_integration_test(${TARGET_NAME}-connectdb "./..." "MongoDBConnect")
 func TestMongoDBConnectFails(t *testing.T) {
 	err := db.Connect("blabla")
-	defer cleanup()
+	defer db.Close()
 	assert.NotNil(t, err)
 }
 
