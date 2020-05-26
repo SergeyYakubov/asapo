@@ -4,11 +4,8 @@ package database
 
 import (
 	"asapo_common/utils"
-	"context"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"sync"
 	"testing"
 )
@@ -97,20 +94,31 @@ func TestMongoDBGetNextErrorWhenWrongDatabasename(t *testing.T) {
 	assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code)
 }
 
-func TestMongoDBGetNextErrorWhenWrongDatacollectionname(t *testing.T) {
+func TestMongoDBGetNextErrorWhenNonExistingDatacollectionname(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
-	_, err := db.ProcessRequest(dbname, "", groupId, "next", "")
-	assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code)
+	_, err := db.ProcessRequest(dbname, "bla", groupId, "next", "")
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
 }
 
-func TestMongoDBGetNextErrorWhenEmptyCollection(t *testing.T) {
+func TestMongoDBGetLastErrorWhenNonExistingDatacollectionname(t *testing.T) {
 	db.Connect(dbaddress)
-	db.databases = append(db.databases, dbname)
 	defer cleanup()
-	_, err := db.ProcessRequest(dbname, collection, groupId, "next", "")
+	_, err := db.ProcessRequest(dbname, "bla", groupId, "last", "")
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
 }
+
+func TestMongoDBGetByIdErrorWhenNonExistingDatacollectionname(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	_, err := db.ProcessRequest(dbname, collection, groupId, "id", "2")
+
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
+}
+
 
 func TestMongoDBGetNextErrorWhenRecordNotThereYet(t *testing.T) {
 	db.Connect(dbaddress)
@@ -321,20 +329,10 @@ func TestMongoDBGetSize(t *testing.T) {
 func TestMongoDBGetSizeNoRecords(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
-	// to have empty collection
-	db.insertRecord(dbname, collection, &rec1)
-	db.client.Database(dbname).Collection(data_collection_name_prefix+collection).DeleteOne(context.TODO(), bson.M{"_id": 1}, options.Delete())
 
 	res, err := db.ProcessRequest(dbname, collection, "", "size", "0")
 	assert.Nil(t, err)
 	assert.Equal(t, string(recs2_expect), string(res))
-}
-
-func TestMongoDBGetSizeNoDatabase(t *testing.T) {
-	db.Connect(dbaddress)
-	defer cleanup()
-	_, err := db.ProcessRequest(dbname, collection, "", "size", "0")
-	assert.NotNil(t, err)
 }
 
 func TestMongoPing(t *testing.T) {
@@ -480,6 +478,22 @@ func TestMongoDBQueryImagesOK(t *testing.T) {
 
 }
 
+func TestMongoDBQueryImagesOnEmptyDatabase(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	for _, test := range tests {
+		res_string, err := db.ProcessRequest(dbname, collection, "", "queryimages", test.query)
+		var res []TestRecordMeta
+		json.Unmarshal(res_string, &res)
+		assert.Equal(t, 0, len(res))
+		if test.ok {
+			assert.Nil(t, err, test.query)
+		} else {
+			assert.NotNil(t, err, test.query)
+		}
+	}
+}
+
 var rec_dataset1 = TestDataset{1, 3, []TestRecord{rec1, rec2, rec3}}
 var rec_dataset1_incomplete = TestDataset{1, 4, []TestRecord{rec1, rec2, rec3}}
 var rec_dataset2 = TestDataset{2, 4, []TestRecord{rec1, rec2, rec3}}
@@ -570,7 +584,7 @@ var testsSubstreams = []struct {
 	test       string
 	ok         bool
 }{
-	{SubstreamsRecord{[]string{}}, "no substreams", false},
+	{SubstreamsRecord{[]string{}}, "no substreams", true},
 	{SubstreamsRecord{[]string{"ss1"}}, "one substream", true},
 	{SubstreamsRecord{[]string{"ss1", "ss2"}}, "two substreams", true},
 }

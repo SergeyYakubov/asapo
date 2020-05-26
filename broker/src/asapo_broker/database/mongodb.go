@@ -307,9 +307,13 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, collectio
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
-	if err := db.getParentDB().dataBaseExist(db_name); err != nil {
-		return err
+	if len(db_name)==0 || len(collection_name) ==0 {
+		return &DBError{utils.StatusWrongInput, "beamtime_id ans substream must be set"}
 	}
+
+	//	if err := db.getParentDB().dataBaseExist(db_name); err != nil {
+//		return err
+//	}
 
 	if len(group_id) > 0 {
 		db.getParentDB().generateLocationPointersInDbIfNeeded(db_name, collection_name, group_id)
@@ -471,7 +475,7 @@ func (db *Mongodb) getSubstreams(db_name string) ([]byte, error) {
 		return db.processQueryError("get substreams", db_name, err)
 	}
 
-	var rec SubstreamsRecord
+	var rec = SubstreamsRecord{[]string{}}
 	for _, coll := range result {
 		if strings.HasPrefix(coll, data_collection_name_prefix) {
 			rec.Substreams = append(rec.Substreams, strings.TrimPrefix(coll, data_collection_name_prefix))
