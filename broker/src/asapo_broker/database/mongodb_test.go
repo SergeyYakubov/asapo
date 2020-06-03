@@ -53,7 +53,6 @@ func cleanup() {
 		return
 	}
 	db.dropDatabase(dbname)
-	db.db_pointers_created = nil
 	db.Close()
 }
 

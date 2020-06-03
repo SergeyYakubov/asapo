@@ -60,7 +60,6 @@ type Mongodb struct {
 	client              *mongo.Client
 	timeout             time.Duration
 	parent_db           *Mongodb
-	db_pointers_created map[string]bool
 }
 
 func (db *Mongodb) Ping() (err error) {
@@ -152,29 +151,21 @@ func (db *Mongodb) getMaxIndex(dbname string, collection_name string, dataset bo
 	return result.ID, err
 }
 
-func (db *Mongodb) createLocationPointers(dbname string, collection_name string, group_id string) (err error) {
-	opts := options.Update().SetUpsert(true)
-	update := bson.M{"$inc": bson.M{pointer_field_name: 0}}
-	q := bson.M{"_id": group_id + "_" + collection_name}
-	c := db.client.Database(dbname).Collection(pointer_collection_name)
-	_, err = c.UpdateOne(context.TODO(), q, update, opts)
-	return
-}
-
-func (db *Mongodb) setCounter(dbname string, collection_name string, group_id string, ind int) (err error) {
-	update := bson.M{"$set": bson.M{pointer_field_name: ind}}
-	c := db.client.Database(dbname).Collection(pointer_collection_name)
-	q := bson.M{"_id": group_id + "_" + collection_name}
-	_, err = c.UpdateOne(context.TODO(), q, update, options.Update())
-	return
-}
-
 func duplicateError(err error) bool {
 	command_error, ok := err.(mongo.CommandError)
 	if (!ok) {
 		return false
 	}
 	return command_error.Name=="DuplicateKey"
+}
+
+func (db *Mongodb) setCounter(dbname string, collection_name string, group_id string, ind int) (err error) {
+	update := bson.M{"$set": bson.M{pointer_field_name: ind}}
+	opts := options.Update().SetUpsert(true)
+	c := db.client.Database(dbname).Collection(pointer_collection_name)
+	q := bson.M{"_id": group_id + "_" + collection_name}
+	_, err = c.UpdateOne(context.TODO(), q, update, opts)
+	return
 }
 
 func (db *Mongodb) incrementField(dbname string, collection_name string, group_id string, max_ind int, res interface{}) (err error) {
@@ -244,29 +235,6 @@ func (db *Mongodb) getRecordByID(dbname string, collection_name string, group_id
 
 }
 
-func (db *Mongodb) needCreateLocationPointersInDb(collection_name string, group_id string) bool {
-	dbPointersLock.RLock()
-	needCreate := !db.db_pointers_created[group_id+"_"+collection_name]
-	dbPointersLock.RUnlock()
-	return needCreate
-}
-
-func (db *Mongodb) setLocationPointersCreateFlag(collection_name string, group_id string) {
-	dbPointersLock.Lock()
-	if db.db_pointers_created == nil {
-		db.db_pointers_created = make(map[string]bool)
-	}
-	db.db_pointers_created[group_id+"_"+collection_name] = true
-	dbPointersLock.Unlock()
-}
-
-func (db *Mongodb) generateLocationPointersInDbIfNeeded(db_name string, collection_name string, group_id string) {
-	if db.needCreateLocationPointersInDb(collection_name, group_id) {
-		db.createLocationPointers(db_name, collection_name, group_id)
-		db.setLocationPointersCreateFlag(collection_name, group_id)
-	}
-}
-
 func (db *Mongodb) getParentDB() *Mongodb {
 	if db.parent_db == nil {
 		return db
@@ -284,13 +252,6 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, collectio
 		return &DBError{utils.StatusWrongInput, "beamtime_id ans substream must be set"}
 	}
 
-	//	if err := db.getParentDB().dataBaseExist(db_name); err != nil {
-//		return err
-//	}
-
-	if len(group_id) > 0 {
-		db.getParentDB().generateLocationPointersInDbIfNeeded(db_name, collection_name, group_id)
-	}
 	return nil
 }
 
