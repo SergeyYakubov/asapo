@@ -52,7 +52,7 @@ func cleanup() {
 	if db.client == nil {
 		return
 	}
-	db.deleteAllRecords(dbname)
+	db.dropDatabase(dbname)
 	db.db_pointers_created = nil
 	db.Close()
 }
@@ -221,6 +221,47 @@ func TestMongoDBGetNextInParallel(t *testing.T) {
 
 	assert.Equal(t, n, getNOnes(results))
 }
+
+func TestMongoDBGetLastAfterErasingDatabase(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	insertRecords(10)
+	db.ProcessRequest(dbname, collection, groupId, "next", "0")
+	db.dropDatabase(dbname)
+
+	db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec2)
+
+	res, err := db.ProcessRequest(dbname, collection, groupId, "last", "0")
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec2_expect), string(res))
+}
+
+func TestMongoDBGetNextAfterErasingDatabase(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	insertRecords(200)
+	db.ProcessRequest(dbname, collection, groupId, "next", "0")
+	db.dropDatabase(dbname)
+
+	n := 100
+	insertRecords(n)
+	results := getRecords(n)
+	assert.Equal(t, n, getNOnes(results))
+}
+
+func TestMongoDBGetNextEmptyAfterErasingDatabase(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	insertRecords(10)
+	db.ProcessRequest(dbname, collection, groupId, "next", "0")
+	db.dropDatabase(dbname)
+
+	_, err := db.ProcessRequest(dbname, collection, groupId, "next", "0")
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
+}
+
 
 func TestMongoDBgetRecordByID(t *testing.T) {
 	db.Connect(dbaddress)

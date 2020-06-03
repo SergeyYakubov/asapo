@@ -104,7 +104,7 @@ func (db *Mongodb) Close() {
 	}
 }
 
-func (db *Mongodb) deleteAllRecords(dbname string) (err error) {
+func (db *Mongodb) dropDatabase(dbname string) (err error) {
 	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
@@ -146,6 +146,7 @@ func (db *Mongodb) getMaxIndex(dbname string, collection_name string, dataset bo
 	err = c.FindOne(context.TODO(), q, opts).Decode(&result)
 	if err == mongo.ErrNoDocuments {
 		return 0, nil
+
 	}
 
 	return result.ID, err
@@ -168,15 +169,25 @@ func (db *Mongodb) setCounter(dbname string, collection_name string, group_id st
 	return
 }
 
+func duplicateError(err error) bool {
+	command_error, ok := err.(mongo.CommandError)
+	if (!ok) {
+		return false
+	}
+	return command_error.Name=="DuplicateKey"
+}
+
 func (db *Mongodb) incrementField(dbname string, collection_name string, group_id string, max_ind int, res interface{}) (err error) {
 	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
-	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
+	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
 	q := bson.M{"_id": group_id + "_" + collection_name, pointer_field_name: bson.M{"$lt": max_ind}}
 	c := db.client.Database(dbname).Collection(pointer_collection_name)
 
 	err = c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+// duplicateerror can happen because we set Upsert=true to allow insert pointer when it is absent. But then it will try to insert
+// pointer in case query found nothing, also when pointer exists and equal to max_ind. Here we have to return NoData
+		if err == mongo.ErrNoDocuments || duplicateError(err)  {
 			return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind, "")}
 		}
 		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
@@ -287,6 +298,10 @@ func (db *Mongodb) getCurrentPointer(db_name string, collection_name string, gro
 	max_ind, err := db.getMaxIndex(db_name, collection_name, dataset)
 	if err != nil {
 		return LocationPointer{}, 0, err
+	}
+
+	if (max_ind == 0) {
+		return LocationPointer{}, 0, &DBError{utils.StatusNoData, encodeAnswer(0, 0, "")}
 	}
 
 	var curPointer LocationPointer
