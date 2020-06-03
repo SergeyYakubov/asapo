@@ -235,6 +235,17 @@ func (db *Mongodb) getRecordByID(dbname string, collection_name string, group_id
 
 }
 
+func (db *Mongodb) ackRecord(dbname string, collection_name string, group_id string, id_str string) ([]byte, error) {
+	id, err := strconv.Atoi(id_str)
+	if err != nil {
+		return nil, &DBError{utils.StatusWrongInput, err.Error()}
+	}
+	id++
+	return nil,nil
+}
+
+
+
 func (db *Mongodb) getParentDB() *Mongodb {
 	if db.parent_db == nil {
 		return db
@@ -451,6 +462,9 @@ func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_
 		return db.queryImages(db_name, collection_name, extra_param)
 	case "substreams":
 		return db.getSubstreams(db_name)
+	case "ackimages":
+		return db.ackRecord(db_name, collection_name, group_id, extra_param)
+
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

@@ -53,6 +53,9 @@ class ServerDataBroker final : public asapo::DataBroker {
   public:
     explicit ServerDataBroker(std::string server_uri, std::string source_path, bool has_filesystem,
                               SourceCredentials source);
+
+    Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) override;
+
     Error ResetLastReadMarker(std::string group_id) override;
     Error ResetLastReadMarker(std::string group_id, std::string substream) override;
 

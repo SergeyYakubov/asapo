@@ -23,6 +23,15 @@ class DataBroker {
     virtual Error SetLastReadMarker(uint64_t value, std::string group_id) = 0;
     virtual Error SetLastReadMarker(uint64_t value, std::string group_id, std::string substream) = 0;
 
+    //! Acknowledge data tuple fopr specific group id and substream.
+    /*!
+        \param group_id - group id to use.
+        \param id - data tuple id
+        \param substream (optional) - substream
+        \return nullptr of command was successful, otherwise error.
+    */
+    virtual Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) = 0;
+
     //! Set timeout for broker operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
 
@@ -36,6 +45,8 @@ class DataBroker {
     */
     virtual uint64_t GetCurrentSize(Error* err) = 0;
     virtual uint64_t GetCurrentSize(std::string substream, Error* err) = 0;
+
+
 
     //! Generate new GroupID.
     /*!

@@ -1134,4 +1134,21 @@ TEST_F(ServerDataBrokerTests, GetImageTriesToGetTokenAgainIfTransferFailed) {
     auto err = fts_data_broker->GetNext(&info, expected_group_id, &data);
 }
 
+TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUri) {
+    MockGetBrokerUri();
+    auto expected_acknowledge_command = "{\"Op\":\"Acknowledge\"}";
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
+                                            expected_group_id
+                                            + "/" + std::to_string(expected_dataset_id) + "?token="
+                                            + expected_token,expected_acknowledge_command, _,_)).WillOnce(DoAll(
+        SetArgPointee<2>(HttpCode::OK),
+        SetArgPointee<3>(nullptr),
+        Return("")));
+
+    auto err = data_broker->Acknowledge(expected_group_id, expected_dataset_id, expected_substream);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
 }

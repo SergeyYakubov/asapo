@@ -621,4 +621,17 @@ Error ServerDataBroker::GetDataFromFileTransferService(const FileInfo* info, Fil
     return err;
 }
 
+Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::string substream) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+        +"/" + std::move(substream) +
+        "/" + std::move(group_id) + "/" + std::to_string(id);
+    ri.post = true;
+    ri.body = "{\"Op\":\"Acknowledge\"}";
+
+    Error err;
+    BrokerRequestWithTimeout(ri, &err);
+    return err;
+}
+
 }

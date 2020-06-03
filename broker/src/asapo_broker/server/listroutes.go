@@ -60,6 +60,12 @@ var listRoutes = utils.Routes{
 		routeResetCounter,
 	},
 	utils.Route{
+		"ImageOp",
+		"Post",
+		"/database/{dbname}/{stream}/{substream}/{groupid}/{id}",
+		routeImageOp,
+	},
+	utils.Route{
 		"Health",
 		"Get",
 		"/health",
