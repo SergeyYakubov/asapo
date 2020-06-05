@@ -200,6 +200,16 @@ cdef class PyDataBroker:
             list.append(_str(substream))
         return list
 
+    def acknowledge(self, group_id, id, substream = "default"):
+        cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
+        cdef uint64_t uint64_id = id
+        cdef Error err
+        with nogil:
+            err = self.c_broker.Acknowledge(b_group_id,uint64_id,b_substream)
+        if err:
+            throw_exception(err)
+
     def query_images(self,query, substream = "default"):
         cdef string b_query = _bytes(query)
         cdef string b_substream = _bytes(substream)

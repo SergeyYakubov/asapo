@@ -53,6 +53,7 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
         uint64_t GetCurrentSize(string substream, Error* err)
         Error SetLastReadMarker(uint64_t value, string group_id,string substream)
         Error ResetLastReadMarker(string group_id,string substream)
+        Error Acknowledge(string group_id, uint64_t id, string substream)
         string GenerateNewGroupId(Error* err)
         string GetBeamtimeMeta(Error* err)
         FileInfos QueryImages(string query,string substream, Error* err)

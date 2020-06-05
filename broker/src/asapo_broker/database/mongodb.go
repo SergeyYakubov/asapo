@@ -38,6 +38,7 @@ type LocationPointer struct {
 }
 
 const data_collection_name_prefix = "data_"
+const acks_collection_name_prefix = "acks_"
 const meta_collection_name = "meta"
 const pointer_collection_name = "current_location"
 const pointer_field_name = "current_pointer"
@@ -240,8 +241,12 @@ func (db *Mongodb) ackRecord(dbname string, collection_name string, group_id str
 	if err != nil {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
-	id++
-	return nil,nil
+	record := struct {
+		Id int `bson:"_id"`
+	}{id}
+	c := db.client.Database(dbname).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
+	_, err = c.InsertOne(context.Background(), &record)
+	return []byte(""),err
 }
 
 
@@ -462,10 +467,66 @@ func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_
 		return db.queryImages(db_name, collection_name, extra_param)
 	case "substreams":
 		return db.getSubstreams(db_name)
-	case "ackimages":
+	case "ackimage":
 		return db.ackRecord(db_name, collection_name, group_id, extra_param)
 
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)
+}
+
+func makeRange(min, max int) []int {
+	a := make([]int, max-min+1)
+	for i := range a {
+		a[i] = min + i
+	}
+	return a
+}
+
+
+func (db *Mongodb) getNacks(db_name string, collection_name string, group_id string, min_index,max_index int) ([]int,error) {
+
+	c := db.client.Database(db_name).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
+
+	size, err := c.CountDocuments(context.TODO(), bson.M{}, options.Count())
+	if err != nil {
+		return []int{}, err
+	}
+
+	if (size == 0) {
+		return makeRange(min_index,max_index), nil
+	}
+
+	if min_index == 1 && int(size) == max_index {
+		return []int{}, nil
+	}
+
+	matchStage := bson.D{{"$match", bson.D{{"_id", bson.D{{"$lt",max_index+1},{"$gt",min_index-1}}}}}}
+	groupStage := bson.D{
+		{"$group", bson.D{
+			{"_id", 0},
+			{"numbers", bson.D{
+				{"$push", "$_id"},
+			}}},
+		}}
+	projectStage := bson.D{
+		{"$project", bson.D{
+			{"_id", 0},
+			{"numbers", bson.D{
+				{"$setDifference", bson.A{bson.D{{"$range",bson.A{min_index,max_index+1}}},"$numbers"}},
+			}}},
+		}}
+
+	query := mongo.Pipeline{matchStage, groupStage,projectStage}
+	cursor, err := c.Aggregate(context.Background(), query)
+	type res struct {
+		Numbers []int
+	}
+	resp := []res{}
+	err = cursor.All(context.Background(),&resp)
+	if err!= nil || len(resp)!=1 {
+		return []int{}, err
+	}
+
+	return resp[0].Numbers,nil
 }

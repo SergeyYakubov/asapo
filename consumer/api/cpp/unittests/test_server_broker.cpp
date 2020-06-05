@@ -1151,4 +1151,21 @@ TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUri) {
 }
 
 
+TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUriWithDefaultSubStream) {
+    MockGetBrokerUri();
+    auto expected_acknowledge_command = "{\"Op\":\"Acknowledge\"}";
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/"  +
+        expected_group_id
+                                             + "/" + std::to_string(expected_dataset_id) + "?token="
+                                             + expected_token,expected_acknowledge_command, _,_)).WillOnce(DoAll(
+        SetArgPointee<2>(HttpCode::OK),
+        SetArgPointee<3>(nullptr),
+        Return("")));
+
+    auto err = data_broker->Acknowledge(expected_group_id, expected_dataset_id);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
 }

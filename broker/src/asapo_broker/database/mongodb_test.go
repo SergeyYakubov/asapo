@@ -647,3 +647,50 @@ func TestMongoDBListSubstreams(t *testing.T) {
 	}
 
 }
+
+func TestMongoDBAckImage(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	db.insertRecord(dbname, collection, &rec1)
+
+	res, err := db.ProcessRequest(dbname, collection, groupId, "ackimage", "1")
+	nacks,_ := db.getNacks(dbname,collection,groupId,1,1)
+	assert.Nil(t, err)
+	assert.Equal(t, "", string(res))
+	assert.Equal(t, 0, len(nacks))
+}
+
+/*
+func TestMongoDBAckImage(t *testing.T) {
+	db.Connect(dbaddress)
+//	defer cleanup()
+
+//	n := 1000000
+//	records := make([]TestRecord, n)
+//	precords := make([]interface{}, n)
+//	for ind, _ := range records {
+//		records[ind].ID = ind
+//		records[ind].Name = string(ind)
+//		precords[ind] = &records[ind]
+//	}
+//	c.InsertOne(context.TODO(), &record)
+//	c := db.client.Database(dbname).Collection(acks_collection_name_prefix + collection + "_" + groupId)
+//	_,err := c.InsertMany(context.TODO(), precords)
+//	fmt.Println(precords[0])
+
+//	fmt.Println(err)
+
+	res,err := db.getNacks(dbname,collection,groupId,95000,100000)
+	if (len(res) > 100) {
+		fmt.Println("answer length: ", len(res))
+	} else {
+		fmt.Println(res,err)
+	}
+
+
+//	res, err := db.ProcessRequest(dbname, collection, groupId, "ackimage", "1")
+//	assert.Nil(t, err)
+//	assert.Equal(t, "", string(res))
+}
+ */
