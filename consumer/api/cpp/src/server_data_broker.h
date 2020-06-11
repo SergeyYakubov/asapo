@@ -56,6 +56,10 @@ class ServerDataBroker final : public asapo::DataBroker {
 
     Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) override;
 
+   IdList GetUnacknowledgedTuples(std::string group_id, std::string substream, uint64_t from, uint64_t to, Error* error) override;
+   IdList GetUnacknowledgedTuples(std::string group_id, uint64_t from, uint64_t to, Error* error) override;
+
+
     Error ResetLastReadMarker(std::string group_id) override;
     Error ResetLastReadMarker(std::string group_id, std::string substream) override;
 
@@ -122,7 +126,6 @@ class ServerDataBroker final : public asapo::DataBroker {
                                     RequestOutput* response);
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
     Error FtsRequestWithTimeout(const FileInfo* info, FileData* data);
-    Error RequestDataFromFts(const FileInfo* info, FileData* data);
     Error ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
     Error ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
 

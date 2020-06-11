@@ -28,6 +28,10 @@ type ServiceRecord struct {
 	Meta map[string]interface{} `json:"meta"`
 }
 
+type Nacks struct {
+	Unacknowledged   []int `json:"unacknowledged"`
+}
+
 type SubstreamsRecord struct {
 	Substreams []string `bson:"substreams" json:"substreams"`
 }
@@ -469,7 +473,8 @@ func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_
 		return db.getSubstreams(db_name)
 	case "ackimage":
 		return db.ackRecord(db_name, collection_name, group_id, extra_param)
-
+	case "nacks":
+		return db.Nacks(db_name, collection_name, group_id, extra_param)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)
@@ -483,10 +488,64 @@ func makeRange(min, max int) []int {
 	return a
 }
 
+func extractsLimitsFromString(from_to string) (int,int,error) {
+	s := strings.Split(from_to, "_")
+	if len(s)!=2 {
+		return 0,0,errors.New("wrong format: "+from_to)
+	}
+	from, err := strconv.Atoi(s[0])
+	if err != nil {
+		return 0,0, err
+	}
+
+	to, err := strconv.Atoi(s[1])
+	if err != nil {
+		return 0,0, err
+	}
+
+	return from,to,nil
+
+}
+
+func (db *Mongodb) Nacks(db_name string, collection_name string, group_id string,from_to string) ([]byte, error) {
+	from, to, err := extractsLimitsFromString(from_to)
+	if err!=nil {
+		return nil,err
+	}
+
+	if from==0 {
+		from = 1
+	}
+
+	if to == 0 {
+		to, err = db.getMaxIndex(db_name, collection_name, false)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	res := Nacks{[]int{}}
+	if (to == 0) {
+		return utils.MapToJson(&res)
+	}
+
+	res.Unacknowledged, err = db.getNacks(db_name,collection_name,group_id,from,to)
+	if err != nil {
+		return nil, err
+	}
+
+	return utils.MapToJson(&res)
+}
+
+
 
 func (db *Mongodb) getNacks(db_name string, collection_name string, group_id string, min_index,max_index int) ([]int,error) {
 
 	c := db.client.Database(db_name).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
+
+	if (min_index > max_index) {
+		return []int{}, errors.New("from index is greater than to index")
+	}
 
 	size, err := c.CountDocuments(context.TODO(), bson.M{}, options.Count())
 	if err != nil {
@@ -500,6 +559,7 @@ func (db *Mongodb) getNacks(db_name string, collection_name string, group_id str
 	if min_index == 1 && int(size) == max_index {
 		return []int{}, nil
 	}
+
 
 	matchStage := bson.D{{"$match", bson.D{{"_id", bson.D{{"$lt",max_index+1},{"$gt",min_index-1}}}}}}
 	groupStage := bson.D{

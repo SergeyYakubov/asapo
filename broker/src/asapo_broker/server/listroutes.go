@@ -30,6 +30,12 @@ var listRoutes = utils.Routes{
 		routeGetLast,
 	},
 	utils.Route{
+		"GetNacks",
+		"Get",
+		"/database/{dbname}/{stream}/{substream}/{groupid}/nacks",
+		routeGetNacks,
+	},
+	utils.Route{
 		"GetID",
 		"Get",
 		"/database/{dbname}/{stream}/{substream}/{groupid}/{id}",

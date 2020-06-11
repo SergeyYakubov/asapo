@@ -23,7 +23,7 @@ class DataBroker {
     virtual Error SetLastReadMarker(uint64_t value, std::string group_id) = 0;
     virtual Error SetLastReadMarker(uint64_t value, std::string group_id, std::string substream) = 0;
 
-    //! Acknowledge data tuple fopr specific group id and substream.
+    //! Acknowledge data tuple for specific group id and substream.
     /*!
         \param group_id - group id to use.
         \param id - data tuple id
@@ -31,6 +31,19 @@ class DataBroker {
         \return nullptr of command was successful, otherwise error.
     */
     virtual Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) = 0;
+
+  //! Get unacknowledged tuple for specific group id and substream.
+  /*!
+      \param group_id - group id to use.
+      \param substream (optional) - substream
+      \param from - return tuples with ids greater or equal to from (use 0 disable limit)
+      \param to - return tuples with ids less or equal to to (use 0 to disable limit)
+      \param in (optional) - substream
+      \param err - set to nullptr of operation succeed, error otherwise.
+      \return vector of ids, might be empty
+  */
+    virtual IdList GetUnacknowledgedTuples(std::string group_id, std::string substream, uint64_t from, uint64_t to, Error* error) = 0;
+    virtual IdList GetUnacknowledgedTuples(std::string group_id, uint64_t from, uint64_t to, Error* error) = 0;
 
     //! Set timeout for broker operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
@@ -45,8 +58,6 @@ class DataBroker {
     */
     virtual uint64_t GetCurrentSize(Error* err) = 0;
     virtual uint64_t GetCurrentSize(std::string substream, Error* err) = 0;
-
-
 
     //! Generate new GroupID.
     /*!

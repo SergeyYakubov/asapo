@@ -39,7 +39,7 @@ using ::testing::SetArgPointee;
 using ::testing::SetArgReferee;
 using testing::AllOf;
 using ::testing::DoAll;
-
+using ::testing::ElementsAre;
 
 namespace {
 
@@ -140,6 +140,7 @@ class ServerDataBrokerTests : public Test {
     void ExpectFolderToken();
     void ExpectFileTransfer(const asapo::ConsumerErrorTemplate* p_err_template);
     void ExpectRepeatedFileTransfer();
+    void ExpectIdList(bool error);
 
     void MockGetBrokerUri() {
         MockGetServiceUri("asapo-broker", expected_broker_uri);
@@ -1108,7 +1109,6 @@ void ServerDataBrokerTests::AssertSingleFileTransfer() {
     Mock::VerifyAndClearExpectations(&mock_io);
 }
 
-
 TEST_F(ServerDataBrokerTests, GetImageUsesFileTransferServiceIfCannotReadFromCache) {
     AssertSingleFileTransfer();
 }
@@ -1165,6 +1165,33 @@ TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUriWithDefaultSubStream) {
     auto err = data_broker->Acknowledge(expected_group_id, expected_dataset_id);
 
     ASSERT_THAT(err, Eq(nullptr));
+}
+
+void ServerDataBrokerTests::ExpectIdList(bool error) {
+    MockGetBrokerUri();
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
+        expected_group_id + "/nacks?token=" + expected_token+"&from=1&to=0",_,_)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return(error?"":"{\"unacknowledged\":[1,2,3]}")));
+}
+
+TEST_F(ServerDataBrokerTests, GetUnAcknowledgedListReturnsIds) {
+    ExpectIdList(false);
+    asapo::Error err;
+    auto list = data_broker->GetUnacknowledgedTuples(expected_group_id, expected_substream, 1, 0, &err);
+
+    ASSERT_THAT(list, ElementsAre(1,2,3));
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(ServerDataBrokerTests, GetUnAcknowledgedListReturnsError) {
+    ExpectIdList(true);
+    asapo::Error err;
+    auto list = data_broker->GetUnacknowledgedTuples(expected_group_id, expected_substream, 1, 0, &err);
+
+    ASSERT_THAT(list, ::testing::IsEmpty());
+    ASSERT_THAT(err, Ne(nullptr));
 }
 
 

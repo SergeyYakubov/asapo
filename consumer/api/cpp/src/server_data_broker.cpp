@@ -634,4 +634,29 @@ Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::stri
     return err;
 }
 
+IdList ServerDataBroker::GetUnacknowledgedTuples(std::string group_id, std::string substream, uint64_t from, uint64_t to, Error* error) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+        +"/" + std::move(substream) +
+        "/" + std::move(group_id) + "/nacks";
+    ri.extra_params = "&from=" + std::to_string(from)+"&to=" + std::to_string(to);
+
+    auto json_string = BrokerRequestWithTimeout(ri, error);
+    if (*error) {
+        return IdList{};
+    }
+
+    IdList list;
+    JsonStringParser parser(json_string);
+    if ((*error = parser.GetArrayUInt64("unacknowledged", &list))) {
+        return IdList{};
+    }
+
+    return list;
+}
+
+IdList ServerDataBroker::GetUnacknowledgedTuples(std::string group_id, uint64_t from, uint64_t to, Error* error) {
+    return GetUnacknowledgedTuples(std::move(group_id), kDefaultSubstream, from, to, error);
+}
+
 }

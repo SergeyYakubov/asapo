@@ -185,7 +185,7 @@ func getNOnes(array []int) int {
 func insertRecords(n int) {
 	records := make([]TestRecord, n)
 	for ind, record := range records {
-		record.ID = ind
+		record.ID = ind + 1
 		record.Name = string(ind)
 		db.insertRecord(dbname, collection, &record)
 	}
@@ -202,7 +202,7 @@ func getRecords(n int) []int {
 			res_bin, _ := db.ProcessRequest(dbname, collection, groupId, "next", "")
 			var res TestRecord
 			json.Unmarshal(res_bin, &res)
-			results[res.ID] = 1
+			results[res.ID-1] = 1
 		}()
 	}
 	wg.Wait()
@@ -661,36 +661,46 @@ func TestMongoDBAckImage(t *testing.T) {
 	assert.Equal(t, 0, len(nacks))
 }
 
-/*
-func TestMongoDBAckImage(t *testing.T) {
-	db.Connect(dbaddress)
-//	defer cleanup()
-
-//	n := 1000000
-//	records := make([]TestRecord, n)
-//	precords := make([]interface{}, n)
-//	for ind, _ := range records {
-//		records[ind].ID = ind
-//		records[ind].Name = string(ind)
-//		precords[ind] = &records[ind]
-//	}
-//	c.InsertOne(context.TODO(), &record)
-//	c := db.client.Database(dbname).Collection(acks_collection_name_prefix + collection + "_" + groupId)
-//	_,err := c.InsertMany(context.TODO(), precords)
-//	fmt.Println(precords[0])
-
-//	fmt.Println(err)
-
-	res,err := db.getNacks(dbname,collection,groupId,95000,100000)
-	if (len(res) > 100) {
-		fmt.Println("answer length: ", len(res))
-	} else {
-		fmt.Println(res,err)
-	}
-
-
-//	res, err := db.ProcessRequest(dbname, collection, groupId, "ackimage", "1")
-//	assert.Nil(t, err)
-//	assert.Equal(t, "", string(res))
+var testsNacs = []struct {
+	rangeString string
+	resString string
+	insertRecords bool
+	ackRecords bool
+	ok         bool
+	test string
+}{
+	{"0_0", "{\"unacknowledged\":[1,2,3,4,5,6,7,8,9,10]}",true,false,true,"whole range"},
+	{"", "{\"unacknowledged\":[1,2,3,4,5,6,7,8,9,10]}",true,false,false,"empty string range"},
+	{"0_5", "{\"unacknowledged\":[1,2,3,4,5]}",true,false,true,"to given"},
+	{"5_0", "{\"unacknowledged\":[5,6,7,8,9,10]}",true,false,true,"from given"},
+	{"3_7", "{\"unacknowledged\":[3,4,5,6,7]}",true,false,true,"range given"},
+	{"1_1", "{\"unacknowledged\":[1]}",true,false,true,"single record"},
+	{"3_1", "{\"unacknowledged\":[]}",true,false,false,"to lt from"},
+	{"0_0", "{\"unacknowledged\":[]}",false,false,true,"no records"},
+	{"0_0", "{\"unacknowledged\":[1,5,6,7,8,9,10]}",true,true,true,"skip acks"},
+	{"2_4", "{\"unacknowledged\":[]}",true,true,true,"all acknowledged"},
+	{"1_4", "{\"unacknowledged\":[1]}",true,true,true,"some acknowledged"},
 }
- */
+
+
+func TestMongoDBNacks(t *testing.T) {
+	for _, test := range testsNacs {
+		db.Connect(dbaddress)
+		if test.insertRecords  {
+			insertRecords(10)
+		}
+		if (test.ackRecords) {
+			db.ackRecord(dbname, collection, groupId,"2")
+			db.ackRecord(dbname, collection, groupId,"3")
+			db.ackRecord(dbname, collection, groupId,"4")
+		}
+		res, err := db.ProcessRequest(dbname, collection, groupId, "nacks", test.rangeString)
+		if test.ok {
+			assert.Nil(t, err, test.test)
+			assert.Equal(t, test.resString, string(res),test.test)
+		} else {
+			assert.NotNil(t, err, test.test)
+		}
+		cleanup()
+	}
+}
