@@ -659,4 +659,31 @@ IdList ServerDataBroker::GetUnacknowledgedTuples(std::string group_id, uint64_t 
     return GetUnacknowledgedTuples(std::move(group_id), kDefaultSubstream, from, to, error);
 }
 
+uint64_t ServerDataBroker::GetLastAcknowledgedTulpe(std::string group_id, std::string substream, Error* error) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+        +"/" + std::move(substream) +
+        "/" + std::move(group_id) + "/lastack";
+
+    auto json_string = BrokerRequestWithTimeout(ri, error);
+    if (*error) {
+        return 0;
+    }
+
+    uint64_t id;
+    JsonStringParser parser(json_string);
+    if ((*error = parser.GetUInt64("lastAckId", &id))) {
+        return 0;
+    }
+
+    if (id == 0) {
+        *error=ConsumerErrorTemplates::kNoData.Generate();
+    }
+    return id;
+}
+
+uint64_t ServerDataBroker::GetLastAcknowledgedTulpe(std::string group_id, Error* err) {
+    return GetLastAcknowledgedTulpe(std::move(group_id),kDefaultSubstream,err);
+}
+
 }

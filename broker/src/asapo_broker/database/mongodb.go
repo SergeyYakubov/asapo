@@ -32,6 +32,11 @@ type Nacks struct {
 	Unacknowledged   []int `json:"unacknowledged"`
 }
 
+type LastAck struct {
+	ID int `bson:"_id" json:"lastAckId"`
+}
+
+
 type SubstreamsRecord struct {
 	Substreams []string `bson:"substreams" json:"substreams"`
 }
@@ -443,42 +448,6 @@ func (db *Mongodb) getSubstreams(db_name string) ([]byte, error) {
 	return json.Marshal(&rec)
 }
 
-func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
-	dataset := false
-	if strings.HasSuffix(op, "_dataset") {
-		dataset = true
-		op = op[:len(op)-8]
-	}
-
-	if err := db.checkDatabaseOperationPrerequisites(db_name, collection_name, group_id); err != nil {
-		return nil, err
-	}
-
-	switch op {
-	case "next":
-		return db.getNextRecord(db_name, collection_name, group_id, dataset)
-	case "id":
-		return db.getRecordByID(db_name, collection_name, group_id, extra_param, dataset)
-	case "last":
-		return db.getLastRecord(db_name, collection_name, group_id, dataset)
-	case "resetcounter":
-		return db.resetCounter(db_name, collection_name, group_id, extra_param)
-	case "size":
-		return db.getSize(db_name, collection_name)
-	case "meta":
-		return db.getMeta(db_name, extra_param)
-	case "queryimages":
-		return db.queryImages(db_name, collection_name, extra_param)
-	case "substreams":
-		return db.getSubstreams(db_name)
-	case "ackimage":
-		return db.ackRecord(db_name, collection_name, group_id, extra_param)
-	case "nacks":
-		return db.Nacks(db_name, collection_name, group_id, extra_param)
-	}
-
-	return nil, errors.New("Wrong db operation: " + op)
-}
 
 func makeRange(min, max int) []int {
 	a := make([]int, max-min+1)
@@ -507,7 +476,7 @@ func extractsLimitsFromString(from_to string) (int,int,error) {
 
 }
 
-func (db *Mongodb) Nacks(db_name string, collection_name string, group_id string,from_to string) ([]byte, error) {
+func (db *Mongodb) nacks(db_name string, collection_name string, group_id string,from_to string) ([]byte, error) {
 	from, to, err := extractsLimitsFromString(from_to)
 	if err!=nil {
 		return nil,err
@@ -537,6 +506,21 @@ func (db *Mongodb) Nacks(db_name string, collection_name string, group_id string
 	return utils.MapToJson(&res)
 }
 
+func (db *Mongodb) lastAck(db_name string, collection_name string, group_id string) ([]byte, error) {
+	c := db.client.Database(db_name).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
+	opts := options.FindOne().SetSort(bson.M{"_id": -1}).SetReturnKey(true)
+	result := LastAck{0}
+	var q bson.M = nil
+	err := c.FindOne(context.TODO(), q, opts).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		return utils.MapToJson(&result)
+	}
+	if err!=nil {
+		return nil, err
+	}
+
+	return utils.MapToJson(&result)
+}
 
 
 func (db *Mongodb) getNacks(db_name string, collection_name string, group_id string, min_index,max_index int) ([]int,error) {
@@ -589,4 +573,43 @@ func (db *Mongodb) getNacks(db_name string, collection_name string, group_id str
 	}
 
 	return resp[0].Numbers,nil
+}
+
+func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
+	dataset := false
+	if strings.HasSuffix(op, "_dataset") {
+		dataset = true
+		op = op[:len(op)-8]
+	}
+
+	if err := db.checkDatabaseOperationPrerequisites(db_name, collection_name, group_id); err != nil {
+		return nil, err
+	}
+
+	switch op {
+	case "next":
+		return db.getNextRecord(db_name, collection_name, group_id, dataset)
+	case "id":
+		return db.getRecordByID(db_name, collection_name, group_id, extra_param, dataset)
+	case "last":
+		return db.getLastRecord(db_name, collection_name, group_id, dataset)
+	case "resetcounter":
+		return db.resetCounter(db_name, collection_name, group_id, extra_param)
+	case "size":
+		return db.getSize(db_name, collection_name)
+	case "meta":
+		return db.getMeta(db_name, extra_param)
+	case "queryimages":
+		return db.queryImages(db_name, collection_name, extra_param)
+	case "substreams":
+		return db.getSubstreams(db_name)
+	case "ackimage":
+		return db.ackRecord(db_name, collection_name, group_id, extra_param)
+	case "nacks":
+		return db.nacks(db_name, collection_name, group_id, extra_param)
+	case "lastack":
+		return db.lastAck(db_name, collection_name, group_id)
+	}
+
+	return nil, errors.New("Wrong db operation: " + op)
 }

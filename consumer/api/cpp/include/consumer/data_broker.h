@@ -32,6 +32,8 @@ class DataBroker {
     */
     virtual Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) = 0;
 
+
+
   //! Get unacknowledged tuple for specific group id and substream.
   /*!
       \param group_id - group id to use.
@@ -130,6 +132,17 @@ class DataBroker {
     */
     virtual Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) = 0;
     virtual Error GetById(uint64_t id, FileInfo* info, std::string group_id, std::string substream, FileData* data) = 0;
+
+  //! Receive id of last acknowledged data tuple
+  /*!
+    \param group_id - group id to use.
+    \param substream (optional) - substream
+    \param err -  will be set in case of error, nullptr otherwise.
+    \return id of the last acknowledged image, 0 if error
+  */
+    virtual uint64_t GetLastAcknowledgedTulpe(std::string group_id, std::string substream, Error* error) = 0;
+    virtual uint64_t GetLastAcknowledgedTulpe(std::string group_id, Error* error) = 0;
+
 
 
     //! Receive last available image.

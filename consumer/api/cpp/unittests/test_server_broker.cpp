@@ -141,6 +141,7 @@ class ServerDataBrokerTests : public Test {
     void ExpectFileTransfer(const asapo::ConsumerErrorTemplate* p_err_template);
     void ExpectRepeatedFileTransfer();
     void ExpectIdList(bool error);
+    void ExpectLastAckId(bool empty_response);
 
     void MockGetBrokerUri() {
         MockGetServiceUri("asapo-broker", expected_broker_uri);
@@ -1185,14 +1186,36 @@ TEST_F(ServerDataBrokerTests, GetUnAcknowledgedListReturnsIds) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-TEST_F(ServerDataBrokerTests, GetUnAcknowledgedListReturnsError) {
-    ExpectIdList(true);
-    asapo::Error err;
-    auto list = data_broker->GetUnacknowledgedTuples(expected_group_id, expected_substream, 1, 0, &err);
 
-    ASSERT_THAT(list, ::testing::IsEmpty());
-    ASSERT_THAT(err, Ne(nullptr));
+void ServerDataBrokerTests::ExpectLastAckId(bool empty_response) {
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
+        expected_group_id + "/lastack?token=" + expected_token,_,_)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return(empty_response?"{\"lastAckId\":0}":"{\"lastAckId\":1}")));
 }
+
+
+TEST_F(ServerDataBrokerTests, GetLastAcknowledgeUsesOk) {
+    MockGetBrokerUri();
+    ExpectLastAckId(false);
+
+    asapo::Error err;
+    auto ind = data_broker->GetLastAcknowledgedTulpe(expected_group_id, expected_substream,&err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(ind, Eq(1));
+}
+
+TEST_F(ServerDataBrokerTests, GetLastAcknowledgeReturnsNoData) {
+    MockGetBrokerUri();
+    ExpectLastAckId(true);
+
+    asapo::Error err;
+    auto ind = data_broker->GetLastAcknowledgedTulpe(expected_group_id, expected_substream,&err);
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
+    ASSERT_THAT(ind, Eq(0));
+}
+
 
 
 }

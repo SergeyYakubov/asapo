@@ -704,3 +704,33 @@ func TestMongoDBNacks(t *testing.T) {
 		cleanup()
 	}
 }
+
+var testsLastAcs = []struct {
+	insertRecords bool
+	ackRecords bool
+	resString string
+	test string
+}{
+	{false,false,"{\"lastAckId\":0}","empty db"},
+	{true,false,"{\"lastAckId\":0}","no acks"},
+	{true,true,"{\"lastAckId\":4}","last ack 4"},
+}
+
+
+func TestMongoDBLastAcks(t *testing.T) {
+	for _, test := range testsLastAcs {
+		db.Connect(dbaddress)
+		if test.insertRecords  {
+			insertRecords(10)
+		}
+		if (test.ackRecords) {
+			db.ackRecord(dbname, collection, groupId,"2")
+			db.ackRecord(dbname, collection, groupId,"3")
+			db.ackRecord(dbname, collection, groupId,"4")
+		}
+		res, err := db.ProcessRequest(dbname, collection, groupId, "lastack", "")
+		assert.Nil(t, err, test.test)
+		assert.Equal(t, test.resString, string(res),test.test)
+		cleanup()
+	}
+}
