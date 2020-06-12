@@ -14,9 +14,13 @@ RequestPool:: RequestPool(uint8_t n_threads,
 
 }
 
-Error RequestPool::AddRequest(GenericRequestPtr request) {
+Error RequestPool::AddRequest(GenericRequestPtr request,bool top_priority) {
     std::unique_lock<std::mutex> lock(mutex_);
-    request_queue_.emplace_back(std::move(request));
+    if (top_priority) {
+        request_queue_.emplace_front(std::move(request));
+    } else {
+        request_queue_.emplace_back(std::move(request));
+    }
     lock.unlock();
 //todo: maybe notify_one is better here
     condition_.notify_all();

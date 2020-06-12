@@ -20,6 +20,7 @@ enum Opcode : uint8_t {
     kOpcodeUnknownOp = 1,
     kOpcodeTransferData,
     kOpcodeTransferSubsetData,
+    kOpcodeStreamInfo,
     kOpcodeGetBufferData,
     kOpcodeAuthorize,
     kOpcodeTransferMetaData,
