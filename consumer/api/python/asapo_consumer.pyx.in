@@ -210,6 +210,31 @@ cdef class PyDataBroker:
         if err:
             throw_exception(err)
 
+    def get_last_acknowledged_tuple_id(self, group_id, substream = "default"):
+        cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
+        cdef Error err
+        cdef uint64_t id
+        with nogil:
+            id = self.c_broker.GetLastAcknowledgedTulpeId(b_group_id,b_substream,&err)
+        if err:
+            throw_exception(err)
+        return id
+
+    def get_unacknowledged_tuple_ids(self, group_id, substream = "default", uint64_t from_id = 0, uint64_t to_id = 0):
+        cdef Error err
+        cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
+        cdef IdList ids
+        with nogil:
+            ids = self.c_broker.GetUnacknowledgedTupleIds(b_group_id, b_substream, from_id, to_id, &err)
+        if err:
+            throw_exception(err)
+        list = []
+        for id in ids:
+            list.append(id)
+        return list
+
     def query_images(self,query, substream = "default"):
         cdef string b_query = _bytes(query)
         cdef string b_substream = _bytes(substream)

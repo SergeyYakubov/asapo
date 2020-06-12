@@ -1180,7 +1180,7 @@ void ServerDataBrokerTests::ExpectIdList(bool error) {
 TEST_F(ServerDataBrokerTests, GetUnAcknowledgedListReturnsIds) {
     ExpectIdList(false);
     asapo::Error err;
-    auto list = data_broker->GetUnacknowledgedTuples(expected_group_id, expected_substream, 1, 0, &err);
+    auto list = data_broker->GetUnacknowledgedTupleIds(expected_group_id, expected_substream, 1, 0, &err);
 
     ASSERT_THAT(list, ElementsAre(1,2,3));
     ASSERT_THAT(err, Eq(nullptr));
@@ -1201,7 +1201,7 @@ TEST_F(ServerDataBrokerTests, GetLastAcknowledgeUsesOk) {
     ExpectLastAckId(false);
 
     asapo::Error err;
-    auto ind = data_broker->GetLastAcknowledgedTulpe(expected_group_id, expected_substream,&err);
+    auto ind = data_broker->GetLastAcknowledgedTulpeId(expected_group_id, expected_substream, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(ind, Eq(1));
 }
@@ -1211,7 +1211,7 @@ TEST_F(ServerDataBrokerTests, GetLastAcknowledgeReturnsNoData) {
     ExpectLastAckId(true);
 
     asapo::Error err;
-    auto ind = data_broker->GetLastAcknowledgedTulpe(expected_group_id, expected_substream,&err);
+    auto ind = data_broker->GetLastAcknowledgedTulpeId(expected_group_id, expected_substream, &err);
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
     ASSERT_THAT(ind, Eq(0));
 }

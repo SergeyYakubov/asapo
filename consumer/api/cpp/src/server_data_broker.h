@@ -56,11 +56,11 @@ class ServerDataBroker final : public asapo::DataBroker {
 
     Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) override;
 
-    IdList GetUnacknowledgedTuples(std::string group_id, std::string substream, uint64_t from, uint64_t to, Error* error) override;
-    IdList GetUnacknowledgedTuples(std::string group_id, uint64_t from, uint64_t to, Error* error) override;
+    IdList GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id, Error* error) override;
+    IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) override;
 
-    uint64_t GetLastAcknowledgedTulpe(std::string group_id, std::string substream, Error* error) override;
-    uint64_t GetLastAcknowledgedTulpe(std::string group_id, Error* error) override;
+    uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) override;
+    uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) override;
 
 
     Error ResetLastReadMarker(std::string group_id) override;

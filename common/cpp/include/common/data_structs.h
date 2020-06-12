@@ -41,7 +41,7 @@ using FileData = std::unique_ptr<uint8_t[]>;
 using FileInfos = std::vector<FileInfo>;
 
 
-using IdList = std::vector<std::uint64_t>;
+using IdList = std::vector<uint64_t>;
 
 struct DataSet {
     uint64_t id;

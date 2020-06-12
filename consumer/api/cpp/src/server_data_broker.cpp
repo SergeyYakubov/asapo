@@ -634,12 +634,12 @@ Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::stri
     return err;
 }
 
-IdList ServerDataBroker::GetUnacknowledgedTuples(std::string group_id, std::string substream, uint64_t from, uint64_t to, Error* error) {
+IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id, Error* error) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
         +"/" + std::move(substream) +
         "/" + std::move(group_id) + "/nacks";
-    ri.extra_params = "&from=" + std::to_string(from)+"&to=" + std::to_string(to);
+    ri.extra_params = "&from=" + std::to_string(from_id)+"&to=" + std::to_string(to_id);
 
     auto json_string = BrokerRequestWithTimeout(ri, error);
     if (*error) {
@@ -655,11 +655,11 @@ IdList ServerDataBroker::GetUnacknowledgedTuples(std::string group_id, std::stri
     return list;
 }
 
-IdList ServerDataBroker::GetUnacknowledgedTuples(std::string group_id, uint64_t from, uint64_t to, Error* error) {
-    return GetUnacknowledgedTuples(std::move(group_id), kDefaultSubstream, from, to, error);
+IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) {
+    return GetUnacknowledgedTupleIds(std::move(group_id), kDefaultSubstream, from_id, to_id, error);
 }
 
-uint64_t ServerDataBroker::GetLastAcknowledgedTulpe(std::string group_id, std::string substream, Error* error) {
+uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
         +"/" + std::move(substream) +
@@ -682,8 +682,8 @@ uint64_t ServerDataBroker::GetLastAcknowledgedTulpe(std::string group_id, std::s
     return id;
 }
 
-uint64_t ServerDataBroker::GetLastAcknowledgedTulpe(std::string group_id, Error* err) {
-    return GetLastAcknowledgedTulpe(std::move(group_id),kDefaultSubstream,err);
+uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, Error* error) {
+    return GetLastAcknowledgedTulpeId(std::move(group_id), kDefaultSubstream, error);
 }
 
 }

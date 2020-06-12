@@ -38,14 +38,14 @@ class DataBroker {
   /*!
       \param group_id - group id to use.
       \param substream (optional) - substream
-      \param from - return tuples with ids greater or equal to from (use 0 disable limit)
-      \param to - return tuples with ids less or equal to to (use 0 to disable limit)
+      \param from_id - return tuples with ids greater or equal to from (use 0 disable limit)
+      \param to_id - return tuples with ids less or equal to to (use 0 to disable limit)
       \param in (optional) - substream
       \param err - set to nullptr of operation succeed, error otherwise.
       \return vector of ids, might be empty
   */
-    virtual IdList GetUnacknowledgedTuples(std::string group_id, std::string substream, uint64_t from, uint64_t to, Error* error) = 0;
-    virtual IdList GetUnacknowledgedTuples(std::string group_id, uint64_t from, uint64_t to, Error* error) = 0;
+    virtual IdList GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id, Error* error) = 0;
+    virtual IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) = 0;
 
     //! Set timeout for broker operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
@@ -140,8 +140,8 @@ class DataBroker {
     \param err -  will be set in case of error, nullptr otherwise.
     \return id of the last acknowledged image, 0 if error
   */
-    virtual uint64_t GetLastAcknowledgedTulpe(std::string group_id, std::string substream, Error* error) = 0;
-    virtual uint64_t GetLastAcknowledgedTulpe(std::string group_id, Error* error) = 0;
+    virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) = 0;
+    virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) = 0;
 
 
 
