@@ -2,9 +2,8 @@ from libcpp.memory cimport unique_ptr
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp cimport bool
-
-ctypedef unsigned char uint8_t
-ctypedef unsigned long uint64_t
+from libc.stdint cimport uint8_t
+from libc.stdint cimport uint64_t
 
 ctypedef unique_ptr[ErrorInterface] Error
 

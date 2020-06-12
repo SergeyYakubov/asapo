@@ -130,7 +130,7 @@ cdef class PyDataBroker:
         return self._op("next",group_id,substream,meta_only,0)
     def get_last(self, group_id, substream = "default", meta_only = True):
         return self._op("last",group_id,substream,meta_only,0)
-    def get_by_id(self,id,group_id, substream = "default",meta_only = True):
+    def get_by_id(self,uint64_t id,group_id, substream = "default",meta_only = True):
         return self._op("id",group_id,substream,meta_only,id)
     def retrieve_data(self,meta):
         json_str = json.dumps(meta)
@@ -200,13 +200,12 @@ cdef class PyDataBroker:
             list.append(_str(substream))
         return list
 
-    def acknowledge(self, group_id, id, substream = "default"):
+    def acknowledge(self, group_id, uint64_t id, substream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_substream = _bytes(substream)
-        cdef uint64_t uint64_id = id
         cdef Error err
         with nogil:
-            err = self.c_broker.Acknowledge(b_group_id,uint64_id,b_substream)
+            err = self.c_broker.Acknowledge(b_group_id,id,b_substream)
         if err:
             throw_exception(err)
 
@@ -273,7 +272,7 @@ cdef class PyDataBroker:
         return self._op_dataset("next",group_id,substream,0)
     def get_last_dataset(self, group_id, substream = "default"):
         return self._op_dataset("last",group_id,substream,0)
-    def get_dataset_by_id(self, id, group_id, substream = "default"):
+    def get_dataset_by_id(self, uint64_t id, group_id, substream = "default"):
         return self._op_dataset("id",group_id,substream,id)
     def get_beamtime_meta(self):
         cdef Error err

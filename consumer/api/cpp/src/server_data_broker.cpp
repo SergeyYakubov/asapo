@@ -448,6 +448,10 @@ uint64_t ServerDataBroker::GetCurrentSize(Error* err) {
     return GetCurrentSize(kDefaultSubstream, err);
 }
 Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) {
+    if (id == 0) {
+        return ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
+    }
+
     return GetById(id, info, std::move(group_id), kDefaultSubstream, data);
 }
 

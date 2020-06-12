@@ -1216,6 +1216,13 @@ TEST_F(ServerDataBrokerTests, GetLastAcknowledgeReturnsNoData) {
     ASSERT_THAT(ind, Eq(0));
 }
 
+TEST_F(ServerDataBrokerTests, GetByIdErrorsForId0) {
+
+    auto err = data_broker->GetById(0, &info, expected_group_id, nullptr);
+
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
+}
+
 
 
 }

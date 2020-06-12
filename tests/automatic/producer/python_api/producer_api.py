@@ -73,6 +73,14 @@ else:
     print("should be error sending non-cont array")
     sys.exit(1)
 
+try:
+    producer.send_file(0, local_path = "./not_exist",exposed_path = "./whatever",
+                       ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback = callback)
+except asapo_producer.AsapoWrongInputError as e:
+    print(e)
+else:
+    print("should be error sending id 0 ")
+    sys.exit(1)
 
 #send single file once again
 producer.send_file(1, local_path = "./file1", exposed_path = stream+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)

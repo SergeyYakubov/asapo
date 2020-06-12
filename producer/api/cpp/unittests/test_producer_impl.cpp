@@ -144,6 +144,11 @@ TEST_F(ProducerImplTests, ErrorIfNoDataSend_) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
+TEST_F(ProducerImplTests, ErrorIfSendingDataWithZeroId) {
+    asapo::EventHeader event_header{0, 100, expected_fullpath};
+    auto err = producer.SendData(event_header, nullptr, asapo::kTransferMetaDataOnly, nullptr);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+}
 
 TEST_F(ProducerImplTests, OkIfNoDataWithTransferMetadataOnlyMode) {
     asapo::EventHeader event_header{1, 100, expected_fullpath};

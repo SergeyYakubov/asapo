@@ -106,9 +106,8 @@ cdef class PyProducer:
             return
          self.c_producer.get().SetLogLevel(log_level)
 
-    def __send_np_array(self,int id, exposed_path,data, user_meta=None,subset=None,substream="default",ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+    def __send_np_array(self, id, exposed_path,data, user_meta=None,subset=None,substream="default",ingest_mode = DEFAULT_INGEST_MODE,callback=None):
         cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
-        event_header.file_id = id
         if data is None:
             event_header.file_size = 0
         else:
@@ -127,7 +126,7 @@ cdef class PyProducer:
             Py_XINCREF(<PyObject*>callback)
 
         return
-    cdef EventHeader create_event_header(self,int id, exposed_path,user_meta,subset,ingest_mode):
+    cdef EventHeader create_event_header(self,uint64_t id, exposed_path,user_meta,subset,ingest_mode):
         cdef EventHeader event_header
         event_header.file_id = id
         event_header.file_name = _bytes(exposed_path)
@@ -140,7 +139,7 @@ cdef class PyProducer:
             event_header.subset_size = subset[1]
         return event_header
 
-    def __send_bytes(self,int id, exposed_path,data, user_meta=None,subset=None, substream="default", ingest_mode = DEFAULT_INGEST_MODE,callback=None):
+    def __send_bytes(self, id, exposed_path,data, user_meta=None,subset=None, substream="default", ingest_mode = DEFAULT_INGEST_MODE,callback=None):
         cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
         event_header.file_size = len(data)
         err = self.c_producer.get().SendData__(event_header,_bytes(substream),  data_pointer_bytes(data), ingest_mode,
@@ -153,7 +152,7 @@ cdef class PyProducer:
             Py_XINCREF(<PyObject*>callback)
         return
 
-    def send_data(self, id, exposed_path, data, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
+    def send_data(self, uint64_t id, exposed_path, data, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
         """
          :param id: unique data id
          :type id: int
@@ -181,7 +180,7 @@ cdef class PyProducer:
             self.__send_bytes(id,exposed_path,data,user_meta,subset,substream,ingest_mode,callback)
         else:
             raise(AsapoProducerError("wrong data type: " + str(type(data))))
-    def send_substream_finished_flag(self, substream, last_id, next_substream = None, callback = None):
+    def send_substream_finished_flag(self, substream, uint64_t last_id, next_substream = None, callback = None):
         """
          :param substream: substream name
          :type substream: string
@@ -200,7 +199,7 @@ cdef class PyProducer:
             throw_exception(err)
 
 
-    def send_file(self, id, local_path, exposed_path, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
+    def send_file(self, uint64_t id, local_path, exposed_path, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
         """
          :param id: unique data id
          :type id: int

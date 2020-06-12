@@ -73,6 +73,10 @@ Error CheckProducerRequest(const EventHeader& event_header, uint64_t ingest_mode
         return ProducerErrorTemplates::kWrongInput.Generate("subset dimensions");
     }
 
+    if (event_header.file_id == 0) {
+        return ProducerErrorTemplates::kWrongInput.Generate("data tuple id should be positive");
+    }
+
     return CheckIngestMode(ingest_mode);
 }
 
