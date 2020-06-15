@@ -89,6 +89,14 @@ else:
     print("should be error sending id 0 ")
     sys.exit(1)
 
+#send to another substream
+producer.send_data(1, stream+"/"+"file9",None,
+                   ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="stream", callback = callback)
+
+# wait normal requests finished before sending duplicates
+
+producer.wait_requests_finished(50000)
+
 #send single file once again
 producer.send_file(1, local_path = "./file1", exposed_path = stream+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)
 #send metadata only once again
@@ -99,10 +107,6 @@ producer.send_data(6, stream+"/"+"file7",None,
 producer.send_file(1, local_path = "./file1", exposed_path = stream+"/"+"file1", user_meta = '{"test_key1":"test_val"}', callback = callback)#send same id different data
 producer.send_data(6, stream+"/"+"file8",None,
                          ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback = callback)
-
-#send to another substream
-producer.send_data(1, stream+"/"+"file9",None,
-                   ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="stream", callback = callback)
 
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
