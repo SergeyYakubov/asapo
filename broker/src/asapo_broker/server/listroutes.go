@@ -30,6 +30,18 @@ var listRoutes = utils.Routes{
 		routeGetLast,
 	},
 	utils.Route{
+		"GetLastAck",
+		"Get",
+		"/database/{dbname}/{stream}/{substream}/{groupid}/lastack",
+		routeGetLastAck,
+	},
+	utils.Route{
+		"GetNacks",
+		"Get",
+		"/database/{dbname}/{stream}/{substream}/{groupid}/nacks",
+		routeGetNacks,
+	},
+	utils.Route{
 		"GetID",
 		"Get",
 		"/database/{dbname}/{stream}/{substream}/{groupid}/{id}",
@@ -58,6 +70,12 @@ var listRoutes = utils.Routes{
 		"Post",
 		"/database/{dbname}/{stream}/{substream}/{groupid}/resetcounter",
 		routeResetCounter,
+	},
+	utils.Route{
+		"ImageOp",
+		"Post",
+		"/database/{dbname}/{stream}/{substream}/{groupid}/{id}",
+		routeImageOp,
 	},
 	utils.Route{
 		"Health",

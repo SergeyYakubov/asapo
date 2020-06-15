@@ -26,7 +26,7 @@ struct Args {
     std::string token;
 };
 
-void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
+void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
     if (err) {
         std::cerr << "Data was not successfully send: " << err << std::endl;
         return;

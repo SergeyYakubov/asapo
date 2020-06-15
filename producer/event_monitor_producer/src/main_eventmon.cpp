@@ -50,7 +50,7 @@ std::unique_ptr<Producer> CreateProducer() {
 }
 
 
-void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
+void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
     if (err) {
         const auto logger = asapo::GetDefaultEventMonLogger();
         logger->Error("data was not successfully send: " + err->Explain());
@@ -60,7 +60,7 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
     if (!config->remove_after_send) {
         return;
     }
-    std::string fname = config->root_monitored_folder + asapo::kPathSeparator + header.message;
+    std::string fname = config->root_monitored_folder + asapo::kPathSeparator + payload.original_header.message;
     auto error = io->RemoveFile(fname);
     if (error) {
         const auto logger = asapo::GetDefaultEventMonLogger();

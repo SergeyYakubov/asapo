@@ -34,8 +34,8 @@ class RequestHandlerTcp: public RequestHandler {
     Error ConnectToReceiver(const std::string& source_credentials, const std::string& receiver_address);
     bool SendDataToOneOfTheReceivers(ProducerRequest* request, bool* retry);
     Error SendRequestContent(const ProducerRequest* request);
-    Error ReceiveResponse(const GenericRequestHeader& request_header);
-    Error TrySendToReceiver(const ProducerRequest* request);
+    Error ReceiveResponse(const GenericRequestHeader& request_header,std::string* response);
+    Error TrySendToReceiver(const ProducerRequest* request,std::string* response);
     SocketDescriptor sd_{kDisconnectedSocketDescriptor};
     void UpdateIfNewConnection();
     bool UpdateReceiversList();
@@ -50,7 +50,7 @@ class RequestHandlerTcp: public RequestHandler {
     bool ProcessErrorFromReceiver(const Error& error, const ProducerRequest* request, const std::string& receiver_uri);
     ReceiversList receivers_list_;
     system_clock::time_point last_receivers_uri_update_;
-    void ProcessRequestCallback(Error err, ProducerRequest* request, bool* retry);
+    void ProcessRequestCallback(Error err, ProducerRequest* request, std::string response, bool* retry);
     uint64_t thread_id_;
     uint64_t* ncurrent_connections_;
     std::string connected_receiver_uri_;

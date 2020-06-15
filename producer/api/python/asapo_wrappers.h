@@ -13,23 +13,23 @@ inline std::string GetErrorString(asapo::Error* err) {
     return "";
 }
 
-using RequestCallbackCython = void (*)(void*, void*, GenericRequestHeader header, Error err);
-using RequestCallbackCythonMemory = void (*)(void*, void*, void*, GenericRequestHeader header, Error err);
+using RequestCallbackCython = void (*)(void*, void*, RequestCallbackPayload payload , Error err);
+using RequestCallbackCythonMemory = void (*)(void*, void*, void*, RequestCallbackPayload payload, Error err);
 
 RequestCallback unwrap_callback(RequestCallbackCython callback, void* c_self, void* py_func) {
     if (py_func == NULL) {
         return nullptr;
     }
-    RequestCallback wrapper = [ = ](GenericRequestHeader header, Error err) -> void {
-        callback(c_self, py_func, std::move(header), std::move(err));
+    RequestCallback wrapper = [ = ](RequestCallbackPayload payload, Error err) -> void {
+        callback(c_self, py_func, std::move(payload), std::move(err));
     };
     return wrapper;
 }
 
 RequestCallback unwrap_callback_with_memory(RequestCallbackCythonMemory callback, void* c_self, void* py_func,
                                             void* nd_array) {
-    RequestCallback wrapper = [ = ](GenericRequestHeader header, Error err) -> void {
-        callback(c_self, py_func, nd_array, std::move(header), std::move(err));
+    RequestCallback wrapper = [ = ](RequestCallbackPayload payload, Error err) -> void {
+        callback(c_self, py_func, nd_array, std::move(payload), std::move(err));
     };
     return wrapper;
 }

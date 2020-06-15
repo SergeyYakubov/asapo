@@ -6,6 +6,7 @@
 
 
 using asapo::FileInfo;
+using asapo::StreamInfo;
 
 using ::testing::AtLeast;
 using ::testing::Eq;
@@ -158,5 +159,44 @@ TEST(FileInFo, ISODateFromNanosecsEpoch) {
         ASSERT_THAT(res, Eq(test.iso));
     }
 }
+
+
+StreamInfo PrepareStreamInfo() {
+    StreamInfo sinfo;
+    sinfo.last_id = 123;
+    return sinfo;
+}
+
+
+TEST(StreamInfo, ConvertFromJson) {
+    StreamInfo result;
+
+    std::string json = R"({"lastId":123})";
+    auto ok = result.SetFromJson(json);
+
+    ASSERT_THAT(ok, Eq(true));
+    ASSERT_THAT(result.last_id, Eq(123));
+}
+
+
+TEST(StreamInfo, ConvertFromJsonErr) {
+    StreamInfo result;
+
+    std::string json = R"({"lastId":123)";
+    auto ok = result.SetFromJson(json);
+
+    ASSERT_THAT(ok, Eq(false));
+    ASSERT_THAT(result.last_id, Eq(0));
+}
+
+TEST(StreamInfo, ConvertToJson) {
+    auto sinfo = PrepareStreamInfo();
+
+    std::string expected_json = R"({"lastId":123})";
+    auto json = sinfo.Json();
+
+    ASSERT_THAT(expected_json, Eq(json));
+}
+
 
 }

@@ -98,7 +98,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     }
 }
 
-void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
+void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
     mutex.lock();
     iterations_remained--;
     if (err) {
@@ -109,7 +109,7 @@ void ProcessAfterSend(asapo::GenericRequestHeader header, asapo::Error err) {
     mutex.unlock();
 }
 
-void ProcessAfterMetaDataSend(asapo::GenericRequestHeader header, asapo::Error err) {
+void ProcessAfterMetaDataSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
     mutex.lock();
     iterations_remained--;
     if (err) {

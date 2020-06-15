@@ -28,6 +28,15 @@ type ServiceRecord struct {
 	Meta map[string]interface{} `json:"meta"`
 }
 
+type Nacks struct {
+	Unacknowledged   []int `json:"unacknowledged"`
+}
+
+type LastAck struct {
+	ID int `bson:"_id" json:"lastAckId"`
+}
+
+
 type SubstreamsRecord struct {
 	Substreams []string `bson:"substreams" json:"substreams"`
 }
@@ -38,6 +47,7 @@ type LocationPointer struct {
 }
 
 const data_collection_name_prefix = "data_"
+const acks_collection_name_prefix = "acks_"
 const meta_collection_name = "meta"
 const pointer_collection_name = "current_location"
 const pointer_field_name = "current_pointer"
@@ -60,7 +70,6 @@ type Mongodb struct {
 	client              *mongo.Client
 	timeout             time.Duration
 	parent_db           *Mongodb
-	db_pointers_created map[string]bool
 }
 
 func (db *Mongodb) Ping() (err error) {
@@ -104,7 +113,7 @@ func (db *Mongodb) Close() {
 	}
 }
 
-func (db *Mongodb) deleteAllRecords(dbname string) (err error) {
+func (db *Mongodb) dropDatabase(dbname string) (err error) {
 	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
@@ -146,37 +155,40 @@ func (db *Mongodb) getMaxIndex(dbname string, collection_name string, dataset bo
 	err = c.FindOne(context.TODO(), q, opts).Decode(&result)
 	if err == mongo.ErrNoDocuments {
 		return 0, nil
+
 	}
 
 	return result.ID, err
 }
 
-func (db *Mongodb) createLocationPointers(dbname string, collection_name string, group_id string) (err error) {
-	opts := options.Update().SetUpsert(true)
-	update := bson.M{"$inc": bson.M{pointer_field_name: 0}}
-	q := bson.M{"_id": group_id + "_" + collection_name}
-	c := db.client.Database(dbname).Collection(pointer_collection_name)
-	_, err = c.UpdateOne(context.TODO(), q, update, opts)
-	return
+func duplicateError(err error) bool {
+	command_error, ok := err.(mongo.CommandError)
+	if (!ok) {
+		return false
+	}
+	return command_error.Name=="DuplicateKey"
 }
 
 func (db *Mongodb) setCounter(dbname string, collection_name string, group_id string, ind int) (err error) {
 	update := bson.M{"$set": bson.M{pointer_field_name: ind}}
+	opts := options.Update().SetUpsert(true)
 	c := db.client.Database(dbname).Collection(pointer_collection_name)
 	q := bson.M{"_id": group_id + "_" + collection_name}
-	_, err = c.UpdateOne(context.TODO(), q, update, options.Update())
+	_, err = c.UpdateOne(context.TODO(), q, update, opts)
 	return
 }
 
 func (db *Mongodb) incrementField(dbname string, collection_name string, group_id string, max_ind int, res interface{}) (err error) {
 	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
-	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
+	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
 	q := bson.M{"_id": group_id + "_" + collection_name, pointer_field_name: bson.M{"$lt": max_ind}}
 	c := db.client.Database(dbname).Collection(pointer_collection_name)
 
 	err = c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+// duplicateerror can happen because we set Upsert=true to allow insert pointer when it is absent. But then it will try to insert
+// pointer in case query found nothing, also when pointer exists and equal to max_ind. Here we have to return NoData
+		if err == mongo.ErrNoDocuments || duplicateError(err)  {
 			return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind, "")}
 		}
 		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
@@ -233,28 +245,20 @@ func (db *Mongodb) getRecordByID(dbname string, collection_name string, group_id
 
 }
 
-func (db *Mongodb) needCreateLocationPointersInDb(collection_name string, group_id string) bool {
-	dbPointersLock.RLock()
-	needCreate := !db.db_pointers_created[group_id+"_"+collection_name]
-	dbPointersLock.RUnlock()
-	return needCreate
+func (db *Mongodb) ackRecord(dbname string, collection_name string, group_id string, id_str string) ([]byte, error) {
+	id, err := strconv.Atoi(id_str)
+	if err != nil {
+		return nil, &DBError{utils.StatusWrongInput, err.Error()}
+	}
+	record := struct {
+		Id int `bson:"_id"`
+	}{id}
+	c := db.client.Database(dbname).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
+	_, err = c.InsertOne(context.Background(), &record)
+	return []byte(""),err
 }
 
-func (db *Mongodb) setLocationPointersCreateFlag(collection_name string, group_id string) {
-	dbPointersLock.Lock()
-	if db.db_pointers_created == nil {
-		db.db_pointers_created = make(map[string]bool)
-	}
-	db.db_pointers_created[group_id+"_"+collection_name] = true
-	dbPointersLock.Unlock()
-}
 
-func (db *Mongodb) generateLocationPointersInDbIfNeeded(db_name string, collection_name string, group_id string) {
-	if db.needCreateLocationPointersInDb(collection_name, group_id) {
-		db.createLocationPointers(db_name, collection_name, group_id)
-		db.setLocationPointersCreateFlag(collection_name, group_id)
-	}
-}
 
 func (db *Mongodb) getParentDB() *Mongodb {
 	if db.parent_db == nil {
@@ -273,13 +277,6 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, collectio
 		return &DBError{utils.StatusWrongInput, "beamtime_id ans substream must be set"}
 	}
 
-	//	if err := db.getParentDB().dataBaseExist(db_name); err != nil {
-//		return err
-//	}
-
-	if len(group_id) > 0 {
-		db.getParentDB().generateLocationPointersInDbIfNeeded(db_name, collection_name, group_id)
-	}
 	return nil
 }
 
@@ -287,6 +284,10 @@ func (db *Mongodb) getCurrentPointer(db_name string, collection_name string, gro
 	max_ind, err := db.getMaxIndex(db_name, collection_name, dataset)
 	if err != nil {
 		return LocationPointer{}, 0, err
+	}
+
+	if (max_ind == 0) {
+		return LocationPointer{}, 0, &DBError{utils.StatusNoData, encodeAnswer(0, 0, "")}
 	}
 
 	var curPointer LocationPointer
@@ -447,6 +448,133 @@ func (db *Mongodb) getSubstreams(db_name string) ([]byte, error) {
 	return json.Marshal(&rec)
 }
 
+
+func makeRange(min, max int) []int {
+	a := make([]int, max-min+1)
+	for i := range a {
+		a[i] = min + i
+	}
+	return a
+}
+
+func extractsLimitsFromString(from_to string) (int,int,error) {
+	s := strings.Split(from_to, "_")
+	if len(s)!=2 {
+		return 0,0,errors.New("wrong format: "+from_to)
+	}
+	from, err := strconv.Atoi(s[0])
+	if err != nil {
+		return 0,0, err
+	}
+
+	to, err := strconv.Atoi(s[1])
+	if err != nil {
+		return 0,0, err
+	}
+
+	return from,to,nil
+
+}
+
+func (db *Mongodb) nacks(db_name string, collection_name string, group_id string,from_to string) ([]byte, error) {
+	from, to, err := extractsLimitsFromString(from_to)
+	if err!=nil {
+		return nil,err
+	}
+
+	if from==0 {
+		from = 1
+	}
+
+	if to == 0 {
+		to, err = db.getMaxIndex(db_name, collection_name, false)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	res := Nacks{[]int{}}
+	if (to == 0) {
+		return utils.MapToJson(&res)
+	}
+
+	res.Unacknowledged, err = db.getNacks(db_name,collection_name,group_id,from,to)
+	if err != nil {
+		return nil, err
+	}
+
+	return utils.MapToJson(&res)
+}
+
+func (db *Mongodb) lastAck(db_name string, collection_name string, group_id string) ([]byte, error) {
+	c := db.client.Database(db_name).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
+	opts := options.FindOne().SetSort(bson.M{"_id": -1}).SetReturnKey(true)
+	result := LastAck{0}
+	var q bson.M = nil
+	err := c.FindOne(context.TODO(), q, opts).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		return utils.MapToJson(&result)
+	}
+	if err!=nil {
+		return nil, err
+	}
+
+	return utils.MapToJson(&result)
+}
+
+
+func (db *Mongodb) getNacks(db_name string, collection_name string, group_id string, min_index,max_index int) ([]int,error) {
+
+	c := db.client.Database(db_name).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
+
+	if (min_index > max_index) {
+		return []int{}, errors.New("from index is greater than to index")
+	}
+
+	size, err := c.CountDocuments(context.TODO(), bson.M{}, options.Count())
+	if err != nil {
+		return []int{}, err
+	}
+
+	if (size == 0) {
+		return makeRange(min_index,max_index), nil
+	}
+
+	if min_index == 1 && int(size) == max_index {
+		return []int{}, nil
+	}
+
+
+	matchStage := bson.D{{"$match", bson.D{{"_id", bson.D{{"$lt",max_index+1},{"$gt",min_index-1}}}}}}
+	groupStage := bson.D{
+		{"$group", bson.D{
+			{"_id", 0},
+			{"numbers", bson.D{
+				{"$push", "$_id"},
+			}}},
+		}}
+	projectStage := bson.D{
+		{"$project", bson.D{
+			{"_id", 0},
+			{"numbers", bson.D{
+				{"$setDifference", bson.A{bson.D{{"$range",bson.A{min_index,max_index+1}}},"$numbers"}},
+			}}},
+		}}
+
+	query := mongo.Pipeline{matchStage, groupStage,projectStage}
+	cursor, err := c.Aggregate(context.Background(), query)
+	type res struct {
+		Numbers []int
+	}
+	resp := []res{}
+	err = cursor.All(context.Background(),&resp)
+	if err!= nil || len(resp)!=1 {
+		return []int{}, err
+	}
+
+	return resp[0].Numbers,nil
+}
+
 func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
 	dataset := false
 	if strings.HasSuffix(op, "_dataset") {
@@ -475,6 +603,12 @@ func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_
 		return db.queryImages(db_name, collection_name, extra_param)
 	case "substreams":
 		return db.getSubstreams(db_name)
+	case "ackimage":
+		return db.ackRecord(db_name, collection_name, group_id, extra_param)
+	case "nacks":
+		return db.nacks(db_name, collection_name, group_id, extra_param)
+	case "lastack":
+		return db.lastAck(db_name, collection_name, group_id)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

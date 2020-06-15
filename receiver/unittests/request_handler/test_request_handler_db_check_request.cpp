@@ -153,7 +153,6 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
         ;
     }
 
-
     if (expect_compare) {
         EXPECT_CALL(*mock_request, GetDataSize())
         .WillOnce(Return(expected_file_size))
@@ -168,12 +167,9 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
         ;
     }
 
-
     EXPECT_CALL(*mock_request, GetSubstream())
     .WillOnce(Return(expected_substream))
     ;
-
-
 
     EXPECT_CALL(*mock_request, GetDataID())
     .WillOnce(Return(expected_id))

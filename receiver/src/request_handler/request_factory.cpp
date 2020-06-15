@@ -77,6 +77,10 @@ Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request>& request,
         // do nothing
         break;
     }
+    case Opcode::kOpcodeStreamInfo: {
+        request->AddHandler(&request_handler_db_stream_info_);
+        break;
+    }
     default:
         return ReceiverErrorTemplates::kInvalidOpCode.Generate();
     }

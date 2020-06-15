@@ -1,3 +1,4 @@
+#include <json_parser/json_parser.h>
 #include "mongodb_client.h"
 #include "mongodb_client.h"
 #include "database/db_error.h"
@@ -271,7 +272,7 @@ Error MongoDBClient::InsertAsSubset(const std::string& collection, const FileInf
     return err;
 }
 
-Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, std::string* res) const {
+Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, bool ignore_id_return_last, std::string* res) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -287,8 +288,14 @@ Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id,
     const bson_t* doc;
     char* str;
 
-    filter = BCON_NEW ("_id", BCON_INT64 (id));
-    opts = BCON_NEW ("limit", BCON_INT64 (1));
+    if (!ignore_id_return_last) {
+        filter = BCON_NEW ("_id", BCON_INT64 (id));
+        opts = BCON_NEW ("limit", BCON_INT64 (1));
+
+    } else {
+        filter = BCON_NEW (NULL);
+        opts = BCON_NEW ("limit", BCON_INT64 (1), "sort", "{", "_id", BCON_INT64 (-1), "}");
+    }
 
     cursor = mongoc_collection_find_with_opts (current_collection_, filter, opts, NULL);
 
@@ -318,7 +325,7 @@ Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id,
 
 Error MongoDBClient::GetById(const std::string& collection, uint64_t id, FileInfo* file) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, id, &record_str);
+    auto err = GetRecordFromDb(collection, id, false, &record_str);
     if (err) {
         return err;
     }
@@ -331,7 +338,7 @@ Error MongoDBClient::GetById(const std::string& collection, uint64_t id, FileInf
 
 Error MongoDBClient::GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, set_id, &record_str);
+    auto err = GetRecordFromDb(collection, set_id, false, &record_str);
     if (err) {
         return err;
     }
@@ -350,6 +357,29 @@ Error MongoDBClient::GetDataSetById(const std::string& collection, uint64_t set_
 
     return DBErrorTemplates::kNoRecord.Generate();
 
+}
+
+Error StreamInfoFromDbResponse(std::string record_str,StreamInfo* info) {
+    auto parser = JsonStringParser(std::move(record_str));
+    Error parse_err = parser.GetUInt64("_id", &(info->last_id));
+    if (parse_err) {
+        info->last_id = 0;
+        return DBErrorTemplates::kJsonParseError.Generate("cannot parse mongodb response: " + parse_err->Explain());
+    }
+    return nullptr;
+}
+
+Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* info) const {
+    std::string record_str;
+    auto err = GetRecordFromDb(collection, 0,true, &record_str);
+    if (err) {
+        info->last_id = 0;
+        if (err == DBErrorTemplates::kNoRecord) {
+            return nullptr;
+        }
+        return err;
+    }
+    return StreamInfoFromDbResponse(std::move(record_str),info);
 }
 
 }

@@ -57,7 +57,9 @@ class RequestHandlerTcpTests : public testing::Test {
     uint64_t expected_meta_size = 4;
     std::string expected_metadata = "meta";
     std::string expected_warning = "warning";
-    char  expected_file_name[asapo::kMaxMessageSize] = "test_name";
+    std::string expected_response = "response";
+
+  char  expected_file_name[asapo::kMaxMessageSize] = "test_name";
     char  expected_beamtime_id[asapo::kMaxMessageSize] = "test_beamtime_id";
     char  expected_substream[asapo::kMaxMessageSize] = "test_substream";
 
@@ -70,20 +72,22 @@ class RequestHandlerTcpTests : public testing::Test {
               expected_file_name, expected_substream};
     bool callback_called = false;
     asapo::GenericRequestHeader callback_header;
+    std::string callback_response;
 
-
-    asapo::ProducerRequest request{expected_beamtime_id, header, nullptr, expected_metadata, "", [this](asapo::GenericRequestHeader header, asapo::Error err) {
+    asapo::ProducerRequest request{expected_beamtime_id, header, nullptr, expected_metadata, "", [this](asapo::RequestCallbackPayload payload, asapo::Error err) {
             callback_called = true;
             callback_err = std::move(err);
-            callback_header = header;
+            callback_header = payload.original_header;
+            callback_response = payload.response;
         }, true, 0};
 
     std::string expected_origin_fullpath = std::string("origin/") + expected_file_name;
     asapo::ProducerRequest request_filesend{expected_beamtime_id, header_fromfile, nullptr, expected_metadata,
-        expected_origin_fullpath, [this](asapo::GenericRequestHeader header, asapo::Error err) {
+        expected_origin_fullpath, [this](asapo::RequestCallbackPayload payload, asapo::Error err) {
             callback_called = true;
             callback_err = std::move(err);
-            callback_header = header;
+            callback_header = payload.original_header;
+            callback_response = payload.response;
         }, true, 0};
 
 
@@ -847,7 +851,7 @@ TEST_F(RequestHandlerTcpTests, FileRequestOK) {
     ExpectOKSendHeader(true);
     ExpectOKSendMetaData(true);
     ExpectOKSendFile(true);
-    ExpectOKReceive();
+    ExpectOKReceive(true,asapo::kNetErrorNoError,expected_response);
 
     request_handler.PrepareProcessingRequestLocked();
 
@@ -855,6 +859,7 @@ TEST_F(RequestHandlerTcpTests, FileRequestOK) {
     ASSERT_THAT(success, Eq(true));
     ASSERT_THAT(callback_called, Eq(true));
     ASSERT_THAT(callback_err, Eq(nullptr));
+    ASSERT_THAT(callback_response, Eq(expected_response));
     ASSERT_THAT(retry, Eq(false));
 
 }
@@ -865,7 +870,8 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendAll(true);
-    ExpectOKReceive();
+    ExpectOKReceive(true,asapo::kNetErrorNoError,expected_response);
+
 
     request_handler.PrepareProcessingRequestLocked();
     auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
@@ -877,6 +883,7 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
     ASSERT_THAT(callback_header.data_size, Eq(header.data_size));
     ASSERT_THAT(callback_header.op_code, Eq(header.op_code));
     ASSERT_THAT(callback_header.data_id, Eq(header.data_id));
+    ASSERT_THAT(callback_response, Eq(expected_response));
     ASSERT_THAT(std::string{callback_header.message}, Eq(std::string{header.message}));
 }
 

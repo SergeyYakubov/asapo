@@ -53,6 +53,16 @@ class ServerDataBroker final : public asapo::DataBroker {
   public:
     explicit ServerDataBroker(std::string server_uri, std::string source_path, bool has_filesystem,
                               SourceCredentials source);
+
+    Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) override;
+
+    IdList GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id, Error* error) override;
+    IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) override;
+
+    uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) override;
+    uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) override;
+
+
     Error ResetLastReadMarker(std::string group_id) override;
     Error ResetLastReadMarker(std::string group_id, std::string substream) override;
 
@@ -119,7 +129,6 @@ class ServerDataBroker final : public asapo::DataBroker {
                                     RequestOutput* response);
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
     Error FtsRequestWithTimeout(const FileInfo* info, FileData* data);
-    Error RequestDataFromFts(const FileInfo* info, FileData* data);
     Error ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
     Error ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
 
