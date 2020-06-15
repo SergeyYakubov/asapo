@@ -169,7 +169,7 @@ cdef class PyProducer:
          :param ingest_mode: ingest mode flag
          :type ingest_mode: int
          :param callback: callback function, default None
-         :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
+         :type callback: callback(info,err), where info - json string with event header that was used to send data and response, err - error string or None
          :raises:
             AsapoWrongInputError: wrong input (authorization, meta, ...)
             AsapoProducerError: actually should not happen
@@ -188,7 +188,7 @@ cdef class PyProducer:
          :param next_substream: name of the next substream or None
          :type substream: string
          :param callback: callback function, default None
-         :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
+         :type callback: callback(info,err), where info - json string with event header that was used to send data and response, err - error string or None
          :raises:
             AsapoWrongInputError: wrong input (authorization, meta, ...)
             AsapoProducerError: actually should not happen
@@ -198,6 +198,25 @@ cdef class PyProducer:
         if err:
             throw_exception(err)
 
+    def stream_info(self, substream = 'default', uint64_t timeout_ms = 1000):
+        """
+         :param substream: substream name
+         :type substream: string
+         :param timeout_ms: timeout in milliseconds
+         :type timeout_ms: int
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, meta, ...)
+            AsapoTimeoutError: request not finished for a given timeout
+            AsapoProducerError: other errors
+        """
+        cdef Error err
+        cdef StreamInfo info
+        cdef string b_substream = _bytes(substream)
+        with nogil:
+            info = self.c_producer.get().GetStreamInfo(b_substream,timeout_ms,&err)
+        if err:
+            throw_exception(err)
+        return json.loads(_str(info.Json()))
 
     def send_file(self, uint64_t id, local_path, exposed_path, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
         """
@@ -216,7 +235,7 @@ cdef class PyProducer:
          :param ingest_mode: ingest mode flag
          :type ingest_mode: int
          :param callback: callback function, default None
-         :type callback: callback(info,err), where info - json string with event header that was used to send data, err - error string or None
+         :type callback: callback(info,err), where info - json string with event header that was used to send data and response, err - error string or None
          :raises:
             AsapoWrongInputError: wrong input (authorization, meta, ...)
             AsapoLocalIOError: problems reading file to send
@@ -250,10 +269,11 @@ cdef class PyProducer:
         if err:
             throw_exception(err)
         return
-    cdef void c_callback_python(self,py_callback, GenericRequestHeader header, Error& err):
+    cdef void c_callback_python(self,py_callback, RequestCallbackPayload payload, Error& err):
         if py_callback != None:
-          info_str = _str(header.Json())
+          info_str = _str(payload.original_header.Json())
           info = json.loads(info_str)
+          info['server_response'] = payload.response
           if err:
             py_err = python_exception_from_error(err)
           else:
@@ -261,21 +281,21 @@ cdef class PyProducer:
           py_callback(info,py_err)
           Py_XDECREF(<PyObject*>py_callback)
 
-    cdef void c_callback(self,py_callback, GenericRequestHeader header, Error err) with gil:
-        self.c_callback_python(py_callback,header,err)
+    cdef void c_callback(self,py_callback, RequestCallbackPayload payload, Error err) with gil:
+        self.c_callback_python(py_callback,payload,err)
 
-    cdef void c_callback_ndarr(self,py_callback,nd_array,GenericRequestHeader header, Error err) with gil:
+    cdef void c_callback_ndarr(self,py_callback,nd_array,RequestCallbackPayload payload, Error err) with gil:
         if nd_array is not None:
           if nd_array.base is not None:
             Py_XDECREF(<PyObject*>nd_array.base)
           else:
             Py_XDECREF(<PyObject*>nd_array)
-        self.c_callback_python(py_callback,header,err)
+        self.c_callback_python(py_callback,payload,err)
 
-    cdef void c_callback_bytesaddr(self,py_callback,bytes_array,GenericRequestHeader header, Error err) with gil:
+    cdef void c_callback_bytesaddr(self,py_callback,bytes_array,RequestCallbackPayload payload, Error err) with gil:
         if bytes_array is not None:
             Py_XDECREF(<PyObject*>bytes_array)
-        self.c_callback_python(py_callback,header,err)
+        self.c_callback_python(py_callback,payload,err)
     def cleanup(self):
         with  nogil:
             if self.c_producer.get() is not NULL:

@@ -262,13 +262,25 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestSendOK) {
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsOkWithWarning) {
     MockHandleRequest(0);
     MockSendResponse(&response, false);
-    request->SetWarningMessage("duplicate");
+    request->SetResponseMessage("duplicate",asapo::ResponseMessageType::kWarning);
 
     auto err = dispatcher->ProcessRequest(request);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorWarning));
     ASSERT_THAT(std::string(response.message), HasSubstr(std::string("duplicate")));
+}
+
+TEST_F(RequestsDispatcherTests, ProcessRequestReturnsOkWithInfo) {
+    MockHandleRequest(0);
+    MockSendResponse(&response, false);
+    request->SetResponseMessage("some info",asapo::ResponseMessageType::kInfo);
+
+    auto err = dispatcher->ProcessRequest(request);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorNoError));
+    ASSERT_THAT(std::string(response.message), HasSubstr(std::string("some info")));
 }
 
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAuthorizationFailure) {

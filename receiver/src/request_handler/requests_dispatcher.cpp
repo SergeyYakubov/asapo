@@ -38,9 +38,11 @@ GenericNetworkResponse RequestsDispatcher::CreateResponseToRequest(const std::un
     if (handle_error) {
         strncpy(generic_response.message, handle_error->Explain().c_str(), kMaxMessageSize);
     }
-    if (request->GetWarningMessage().size() > 0) {
-        generic_response.error_code = kNetErrorWarning;
-        strncpy(generic_response.message, request->GetWarningMessage().c_str(), kMaxMessageSize);
+    if (request->GetResponseMessage().size() > 0) {
+        if (request->GetResponseMessageType()==ResponseMessageType::kWarning) {
+            generic_response.error_code = kNetErrorWarning;
+        }
+        strncpy(generic_response.message, request->GetResponseMessage().c_str(), kMaxMessageSize);
     }
     return generic_response;
 }

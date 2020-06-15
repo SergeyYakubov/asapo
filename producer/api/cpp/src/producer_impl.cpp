@@ -261,22 +261,22 @@ Error ProducerImpl::SendFile(const EventHeader& event_header,
 
 }
 
-using RequestCallbackWithPromise = void (*)(std::shared_ptr<std::promise<StreamInfoResult>>, GenericRequestHeader header, Error err);
+using RequestCallbackWithPromise = void (*)(std::shared_ptr<std::promise<StreamInfoResult>>, RequestCallbackPayload header, Error err);
 
 RequestCallback unwrap_callback(RequestCallbackWithPromise callback, std::unique_ptr<std::promise<StreamInfoResult>> promise) {
     auto shared_promise = std::shared_ptr<std::promise<StreamInfoResult>>(std::move(promise));
-    RequestCallback wrapper = [ = ](GenericRequestHeader header, Error err) -> void {
-      callback(shared_promise, std::move(header), std::move(err));
+    RequestCallback wrapper = [ = ](RequestCallbackPayload payload, Error err) -> void {
+      callback(shared_promise, std::move(payload), std::move(err));
     };
     return wrapper;
 }
 
-void ActivatePromise(std::shared_ptr<std::promise<StreamInfoResult>> promise, GenericRequestHeader header, Error err) {
+void ActivatePromise(std::shared_ptr<std::promise<StreamInfoResult>> promise, RequestCallbackPayload payload, Error err) {
     StreamInfoResult res;
     if (err == nullptr) {
-        auto ok = res.sinfo.SetFromJson(header.message);
+        auto ok = res.sinfo.SetFromJson(payload.response);
         res.err=ok?nullptr:ProducerErrorTemplates::kInternalServerError.Generate(
-            std::string("cannot read JSON string from ")+header.message).release();
+            std::string("cannot read JSON string from server response: ")+payload.response).release();
     } else {
         res.err=err.release();
     }
@@ -318,7 +318,7 @@ StreamInfo ProducerImpl::GetStreamInfo(std::string substream, uint64_t timeout_s
         return StreamInfo{};
     }
 
-    return GetInfroFromCallback(&promiseResult,timeout_sec+2,err); // we gove two more sec for request to exit by timeout
+    return GetInfroFromCallback(&promiseResult,timeout_sec+2,err); // we give two more sec for request to exit by timeout
 
 }
 

@@ -257,11 +257,20 @@ TEST_F(RequestTests, RequestTests_SetGetBeamtimeYear_Test) {
 }
 
 TEST_F(RequestTests, SetGetWarningMessage) {
-    request->SetWarningMessage("warn");
+    request->SetResponseMessage("warn",asapo::ResponseMessageType::kWarning);
 
-    ASSERT_THAT(request->GetWarningMessage(), "warn");
+    ASSERT_THAT(request->GetResponseMessage(), "warn");
+    ASSERT_THAT(request->GetResponseMessageType(), asapo::ResponseMessageType::kWarning);
+
 }
 
+TEST_F(RequestTests, SetGetInfossage) {
+    request->SetResponseMessage("info",asapo::ResponseMessageType::kInfo);
+
+    ASSERT_THAT(request->GetResponseMessage(), "info");
+    ASSERT_THAT(request->GetResponseMessageType(), asapo::ResponseMessageType::kInfo);
+
+}
 
 TEST_F(RequestTests, SetGetOverwriteAllowed) {
     request->SetAlreadyProcessedFlag();

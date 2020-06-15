@@ -14,6 +14,13 @@ endpoint = sys.argv[3]
 token = ""
 nthreads = 8
 
+def assert_eq(val,expected,name):
+    print ("asserting eq for "+name)
+    if val != expected:
+        print ("error at "+name)
+        print ('val: ', val,' expected: ',expected)
+        sys.exit(1)
+
 def callback(header,err):
     lock.acquire() # to print
     if isinstance(err,asapo_producer.AsapoServerWarning):
@@ -95,14 +102,17 @@ producer.send_data(6, stream+"/"+"file8",None,
 
 #send to another substream
 producer.send_data(1, stream+"/"+"file9",None,
-                   ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="substream", callback = callback)
-
+                   ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="stream", callback = callback)
 
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
-if n!=0:
-    print("number of remaining requests should be zero, got ",n)
-    sys.exit(1)
+assert_eq(n,0,"requests in queue")
+
+info = producer.stream_info()
+assert_eq(info['lastId'],10,"last id")
+
+info = producer.stream_info('stream')
+assert_eq(info['lastId'],1,"last id from different substream")
 
 
 # create with error
@@ -114,6 +124,8 @@ else:
     print("should be error")
     sys.exit(1)
 
+
+print ('Finished successfully')
 
 
 

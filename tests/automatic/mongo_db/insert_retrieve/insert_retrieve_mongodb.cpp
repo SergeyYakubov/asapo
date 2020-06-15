@@ -64,6 +64,11 @@ int main(int argc, char* argv[]) {
         M_AssertEq(nullptr, err);
         err = db_new.GetById("test", 0, &fi_db);
         Assert(err, "No record");
+
+        asapo::StreamInfo info;
+        err = db.GetStreamInfo("test",&info);
+        M_AssertEq(nullptr, err);
+        M_AssertEq(fi.id,info.last_id);
     }
 
     return 0;

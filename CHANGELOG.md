@@ -1,6 +1,7 @@
 ## 20.06.0 (unreleased)
 FEATURES
 * implemented acknowledeges - one can acknowledge a data tuple, get last acknowledged tuple id, get list of unacknowledged tuple ids
+* implement getting substream info (contains last id) by producer client (not need to have consumer client)
 
 IMPROVEMENTS
 * change behavior when trying to get data from a substream that does not exist - return EndOfStream instead of WrongInput

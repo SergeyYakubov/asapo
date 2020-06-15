@@ -177,12 +177,17 @@ void Request::SetAlreadyProcessedFlag() {
     already_processed_ = true;
 }
 
-void Request::SetWarningMessage(std::string message) {
-    warning_message_ = std::move(message);
+void Request::SetResponseMessage(std::string message, ResponseMessageType type) {
+    response_message_ = std::move(message);
+    response_message_type_ = type;
 }
 
-const std::string& Request::GetWarningMessage() const {
-    return warning_message_;
+const std::string& Request::GetResponseMessage() const {
+    return response_message_;
+}
+
+const ResponseMessageType Request::GetResponseMessageType() const {
+    return response_message_type_;
 }
 
 Error Request::CheckForDuplicates()  {
