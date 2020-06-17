@@ -184,6 +184,20 @@ uint64_t EpochNanosecsFromNow() {
     return (uint64_t) std::chrono::duration_cast<std::chrono::nanoseconds>(system_clock::now().time_since_epoch()).count();
 }
 
+std::string StreamInfo::Json() const {
+    std::string s = "{\"lastId\":" + std::to_string(last_id) + "}";
+    return s;
+}
+
+bool StreamInfo::SetFromJson(const std::string &json_string) {
+    JsonStringParser parser(json_string);
+    uint64_t id;
+    if (parser.GetUInt64("lastId", &id)) {
+        return false;
+    }
+    last_id = id;
+    return true;
 }
 
 
+}

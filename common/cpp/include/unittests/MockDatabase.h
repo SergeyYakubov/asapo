@@ -51,7 +51,15 @@ class MockDatabase : public Database {
 
     MOCK_CONST_METHOD4(GetSetById_t, ErrorInterface * (const std::string&, uint64_t set_id, uint64_t id, FileInfo*));
 
-    // stuff to test db destructor is called and avoid "uninteresting call" messages
+
+    Error GetStreamInfo(const std::string& collection, StreamInfo* info) const override {
+      return Error{GetStreamInfo_t(collection, info)};
+    }
+
+    MOCK_CONST_METHOD2(GetStreamInfo_t, ErrorInterface * (const std::string&, StreamInfo*));
+
+
+  // stuff to test db destructor is called and avoid "uninteresting call" messages
     MOCK_METHOD0(Die, void());
     virtual ~MockDatabase() override {
         if (check_destructor)

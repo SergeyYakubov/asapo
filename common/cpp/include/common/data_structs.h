@@ -29,6 +29,12 @@ class FileInfo {
     std::string FullName(const std::string& base_path) const;
 };
 
+struct StreamInfo {
+  uint64_t last_id{0};
+  std::string Json() const;
+  bool SetFromJson(const std::string& json_string);
+};
+
 inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
     return  (lhs.name == rhs.name &&
              lhs.id == rhs.id &&
@@ -38,8 +44,10 @@ inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
 
 using FileData = std::unique_ptr<uint8_t[]>;
 
-
 using FileInfos = std::vector<FileInfo>;
+
+
+using IdList = std::vector<uint64_t>;
 
 struct DataSet {
     uint64_t id;

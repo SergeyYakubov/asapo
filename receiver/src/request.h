@@ -23,6 +23,11 @@ namespace asapo {
 
 using RequestHandlerList = std::vector<const ReceiverRequestHandler*>;
 
+enum class ResponseMessageType {
+  kWarning,
+  kInfo
+};
+
 class Request {
   public:
     VIRTUAL Error Handle(ReceiverStatistics*);
@@ -66,8 +71,9 @@ class Request {
     VIRTUAL uint64_t GetSlotId() const;
     VIRTUAL bool WasAlreadyProcessed() const;
     VIRTUAL void SetAlreadyProcessedFlag();
-    VIRTUAL void SetWarningMessage(std::string message);
-    VIRTUAL const std::string& GetWarningMessage() const;
+    VIRTUAL void SetResponseMessage(std::string message, ResponseMessageType type);
+    VIRTUAL const ResponseMessageType GetResponseMessageType() const;
+    VIRTUAL const std::string& GetResponseMessage() const;
     VIRTUAL Error CheckForDuplicates();
   private:
     const GenericRequestHeader request_header_;
@@ -84,7 +90,8 @@ class Request {
     std::string metadata_;
     CacheMeta* slot_meta_ = nullptr;
     bool already_processed_ = false;
-    std::string warning_message_;
+    std::string response_message_;
+    ResponseMessageType response_message_type_;
     const RequestHandlerDbCheckRequest* check_duplicate_request_handler_;
 };
 

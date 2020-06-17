@@ -2,9 +2,8 @@ from libcpp.memory cimport unique_ptr
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp cimport bool
-
-ctypedef unsigned char uint8_t
-ctypedef unsigned long uint64_t
+from libc.stdint cimport uint8_t
+from libc.stdint cimport uint64_t
 
 ctypedef unique_ptr[ErrorInterface] Error
 
@@ -26,7 +25,9 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass FileData:
     unique_ptr[uint8_t[]] release()
-
+  cppclass StreamInfo:
+    string Json()
+    bool SetFromJson(string json_str)
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass RequestHandlerType:
@@ -72,6 +73,10 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 cdef extern from "asapo_producer.h" namespace "asapo":
   struct  GenericRequestHeader:
     string Json()
+  struct RequestCallbackPayload:
+    GenericRequestHeader original_header
+    string response
+
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass RequestCallback:
@@ -98,6 +103,7 @@ cdef extern from "asapo_producer.h" namespace "asapo" nogil:
         uint64_t  GetRequestsQueueSize()
         Error WaitRequestsFinished(uint64_t timeout_ms)
         Error SendSubstreamFinishedFlag(string substream, uint64_t last_id, string next_substream, RequestCallback callback)
+        StreamInfo GetStreamInfo(string substream, uint64_t timeout_ms, Error* err)
 
 cdef extern from "asapo_producer.h" namespace "asapo":
     uint64_t kDefaultIngestMode

@@ -38,7 +38,7 @@ Error RequestHandlerDbWrite::ProcessDuplicateRecordSituation(Request* request) c
     auto check_err = request->CheckForDuplicates();
     if (check_err == ReceiverErrorTemplates::kWarningDuplicatedRequest) {
         std::string warn_str = "ignoring duplicate record for id " + std::to_string(request->GetDataID());
-        request->SetWarningMessage(warn_str);
+        request->SetResponseMessage(warn_str,ResponseMessageType::kWarning);
         log__->Warning(warn_str);
         return nullptr;
     }

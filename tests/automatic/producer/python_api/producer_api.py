@@ -14,6 +14,13 @@ endpoint = sys.argv[3]
 token = ""
 nthreads = 8
 
+def assert_eq(val,expected,name):
+    print ("asserting eq for "+name)
+    if val != expected:
+        print ("error at "+name)
+        print ('val: ', val,' expected: ',expected)
+        sys.exit(1)
+
 def callback(header,err):
     lock.acquire() # to print
     if isinstance(err,asapo_producer.AsapoServerWarning):
@@ -73,6 +80,22 @@ else:
     print("should be error sending non-cont array")
     sys.exit(1)
 
+try:
+    producer.send_file(0, local_path = "./not_exist",exposed_path = "./whatever",
+                       ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback = callback)
+except asapo_producer.AsapoWrongInputError as e:
+    print(e)
+else:
+    print("should be error sending id 0 ")
+    sys.exit(1)
+
+#send to another substream
+producer.send_data(1, stream+"/"+"file9",None,
+                   ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="stream", callback = callback)
+
+# wait normal requests finished before sending duplicates
+
+producer.wait_requests_finished(50000)
 
 #send single file once again
 producer.send_file(1, local_path = "./file1", exposed_path = stream+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)
@@ -85,13 +108,15 @@ producer.send_file(1, local_path = "./file1", exposed_path = stream+"/"+"file1",
 producer.send_data(6, stream+"/"+"file8",None,
                          ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback = callback)
 
-
-
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
-if n!=0:
-    print("number of remaining requests should be zero, got ",n)
-    sys.exit(1)
+assert_eq(n,0,"requests in queue")
+
+info = producer.stream_info()
+assert_eq(info['lastId'],10,"last id")
+
+info = producer.stream_info('stream')
+assert_eq(info['lastId'],1,"last id from different substream")
 
 
 # create with error
@@ -103,6 +128,8 @@ else:
     print("should be error")
     sys.exit(1)
 
+
+print ('Finished successfully')
 
 
 

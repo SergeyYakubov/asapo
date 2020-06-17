@@ -81,7 +81,7 @@ void FileWriteHandlerTests::ExpecFileProcess(const asapo::SimpleErrorTemplate* e
 }
 
 TEST_F(FileWriteHandlerTests, FileAlreadyExists_NoRecordInDb) {
-    EXPECT_CALL(*mock_request, SetWarningMessage(HasSubstr("overwritten")));
+    EXPECT_CALL(*mock_request, SetResponseMessage(HasSubstr("overwritten"),asapo::ResponseMessageType::kWarning));
     EXPECT_CALL(*mock_request, CheckForDuplicates_t())
     .WillOnce(
         Return(nullptr)
@@ -106,7 +106,7 @@ TEST_F(FileWriteHandlerTests, FileAlreadyExists_NoRecordInDb) {
 
 TEST_F(FileWriteHandlerTests, FileAlreadyExists_DuplicatedRecordInDb) {
 
-    EXPECT_CALL(*mock_request, SetWarningMessage(HasSubstr("ignore")));
+    EXPECT_CALL(*mock_request, SetResponseMessage(HasSubstr("ignore"),asapo::ResponseMessageType::kWarning));
     EXPECT_CALL(*mock_request, SetAlreadyProcessedFlag());
     EXPECT_CALL(mock_logger, Warning(HasSubstr("duplicated")));
     EXPECT_CALL(*mock_request, GetDataID()).WillOnce(Return(1));

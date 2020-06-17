@@ -22,7 +22,7 @@ set PYTHONPATH=%2
 type out
 set NUM=0
 for /F %%N in ('find /C "successfuly sent" ^< "out"') do set NUM=%%N
-echo %NUM% | findstr 10 || goto error
+echo %NUM% | findstr 11 || goto error
 
 for /F %%N in ('find /C "} wrong input: Bad request: already have record with same id" ^< "out"') do set NUM=%%N
 echo %NUM% | findstr 2 || goto error
@@ -32,6 +32,8 @@ echo %NUM% | findstr 1 || goto error
 
 for /F %%N in ('find /C "} server warning: duplicated request" ^< "out"') do set NUM=%%N
 echo %NUM% | findstr 1 || goto error
+
+findstr /I /L /C:"Finished successfully" out || goto :error
 
 goto :clean
 

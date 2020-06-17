@@ -254,7 +254,7 @@ TEST_F(DbWriterHandlerTests, SkipIfWasAlreadyProcessed) {
 TEST_F(DbWriterHandlerTests, DuplicatedRequest_SameRecord) {
     ExpectDuplicatedID();
 
-    EXPECT_CALL(*mock_request, SetWarningMessage(HasSubstr("duplicate record")));
+    EXPECT_CALL(*mock_request, SetResponseMessage(HasSubstr("duplicate record"),asapo::ResponseMessageType::kWarning));
     EXPECT_CALL(*mock_request, CheckForDuplicates_t())
     .WillOnce(
         Return(asapo::ReceiverErrorTemplates::kWarningDuplicatedRequest.Generate().release())

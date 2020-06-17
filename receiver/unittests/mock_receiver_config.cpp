@@ -83,7 +83,6 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
         testing::Return(config_string)
     );
 
-    printf("%s\n", config_string.c_str());
     auto err = config_factory.SetConfig("fname");
 
     config_factory.io__.release();

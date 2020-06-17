@@ -2,10 +2,9 @@ from libcpp.memory cimport unique_ptr
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp cimport bool
+from libc.stdint cimport uint8_t
+from libc.stdint cimport uint64_t
 
-
-ctypedef unsigned char uint8_t
-ctypedef unsigned long uint64_t
 
 ctypedef unique_ptr[ErrorInterface] Error
 
@@ -32,6 +31,9 @@ cdef extern from "asapo_consumer.h" namespace "asapo":
   cppclass FileInfo:
     string Json()
     bool SetFromJson(string json_str)
+  cppclass IdList:
+    vector[uint64_t].iterator begin()
+    vector[uint64_t].iterator end()
   cppclass FileInfos:
     vector[FileInfo].iterator begin()
     vector[FileInfo].iterator end()
@@ -53,6 +55,9 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
         uint64_t GetCurrentSize(string substream, Error* err)
         Error SetLastReadMarker(uint64_t value, string group_id,string substream)
         Error ResetLastReadMarker(string group_id,string substream)
+        Error Acknowledge(string group_id, uint64_t id, string substream)
+        uint64_t GetLastAcknowledgedTulpeId(string group_id, string substream, Error* error)
+        IdList GetUnacknowledgedTupleIds(string group_id, string substream, uint64_t from_id, uint64_t to_id, Error* error)
         string GenerateNewGroupId(Error* err)
         string GetBeamtimeMeta(Error* err)
         FileInfos QueryImages(string query,string substream, Error* err)

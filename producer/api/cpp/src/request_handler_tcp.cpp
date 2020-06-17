@@ -19,7 +19,7 @@ Error RequestHandlerTcp::Authorize(const std::string& source_credentials) {
     if(err) {
         return err;
     }
-    return ReceiveResponse(header);
+    return ReceiveResponse(header, nullptr);
 }
 
 
@@ -75,7 +75,7 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
     return nullptr;
 }
 
-Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_header) {
+Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_header,std::string* response) {
     Error err;
     SendDataResponse sendDataResponse;
     io__->Receive(sd_, &sendDataResponse, sizeof(sendDataResponse), &err);
@@ -104,6 +104,9 @@ Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_hea
         return res_err;
     }
     case kNetErrorNoError :
+        if (response) {
+            *response = sendDataResponse.message;
+        }
         return nullptr;
     default:
         auto res_err = ProducerErrorTemplates::kInternalServerError.Generate();
@@ -112,13 +115,13 @@ Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_hea
     }
 }
 
-Error RequestHandlerTcp::TrySendToReceiver(const ProducerRequest* request) {
+Error RequestHandlerTcp::TrySendToReceiver(const ProducerRequest* request,std::string* response) {
     auto err = SendRequestContent(request);
     if (err)  {
         return err;
     }
 
-    err = ReceiveResponse(request->header);
+    err = ReceiveResponse(request->header,response);
     if (err == nullptr || err == ProducerErrorTemplates::kServerWarning)  {
         log__->Debug("successfully sent data, opcode: " + std::to_string(request->header.op_code) +
                      ", id: " + std::to_string(request->header.data_id) + " to " + connected_receiver_uri_);
@@ -211,9 +214,9 @@ bool RequestHandlerTcp::ProcessErrorFromReceiver(const Error& error,
 }
 
 
-void RequestHandlerTcp::ProcessRequestCallback(Error err, ProducerRequest* request, bool* retry) {
+void RequestHandlerTcp::ProcessRequestCallback(Error err, ProducerRequest* request,std::string response, bool* retry) {
     if (request->callback) {
-        request->callback(request->header, std::move(err));
+        request->callback(RequestCallbackPayload{request->header,std::move(response)}, std::move(err));
     }
     *retry = false;
 }
@@ -224,21 +227,22 @@ bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request, bo
         if (Disconnected()) {
             auto err = ConnectToReceiver(request->source_credentials, receiver_uri);
             if (err == ProducerErrorTemplates::kWrongInput) {
-                ProcessRequestCallback(std::move(err), request, retry);
+                ProcessRequestCallback(std::move(err), request, "", retry);
                 return false;
             } else {
                 if (err != nullptr ) continue;
             }
         }
 
-        auto err = TrySendToReceiver(request);
+        std::string response;
+        auto err = TrySendToReceiver(request,&response);
         bool server_error_can_retry = ProcessErrorFromReceiver(err, request, receiver_uri);
         if (server_error_can_retry)  {
             continue;
         }
 
         bool success = err && err != ProducerErrorTemplates::kServerWarning ? false : true;
-        ProcessRequestCallback(std::move(err), request, retry);
+        ProcessRequestCallback(std::move(err), request, response, retry);
         return success;
     }
     log__->Warning("put back to the queue, request opcode: " + std::to_string(request->header.op_code) +
@@ -254,7 +258,7 @@ bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request, bool* re
     auto err = producer_request->UpdateDataSizeFromFileIfNeeded(io__.get());
     if (err) {
         if (producer_request->callback) {
-            producer_request->callback(producer_request->header, std::move(err));
+            producer_request->callback(RequestCallbackPayload{producer_request->header}, std::move(err));
         }
         *retry = false;
         return false;
@@ -291,13 +295,13 @@ void RequestHandlerTcp::TearDownProcessingRequestLocked(bool request_processed_s
 
 void RequestHandlerTcp::ProcessRequestTimeout(GenericRequest* request) {
     auto producer_request = static_cast<ProducerRequest*>(request);
+    auto err_string ="request id:" + std::to_string(request->header.data_id) + ", opcode: "+std::to_string(request->header.op_code) + " for " + request->header.substream +
+        " substream";
+    log__->Error("timeout "+err_string);
 
-    log__->Error("request timeout, id:" + std::to_string(request->header.data_id) + " to " + request->header.substream +
-                 " substream");
-
-    auto err = ProducerErrorTemplates::kTimeout.Generate();
+    auto err = ProducerErrorTemplates::kTimeout.Generate(err_string);
     if (producer_request->callback) {
-        producer_request->callback(request->header, std::move(err));
+        producer_request->callback(RequestCallbackPayload{request->header,""}, std::move(err));
     }
 
 }

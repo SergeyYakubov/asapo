@@ -150,7 +150,7 @@ TEST_F(ReceiversStatusTests, JoinThreadAtTheEnd) {
 
 TEST_F(ReceiversStatusTests, InitialMaxConnection) {
     auto nc = status.MaxConnections();
-    ASSERT_THAT(nc, Eq(0));
+    ASSERT_THAT(nc, Eq(1));
 }
 
 TEST_F(ReceiversStatusTests, InitialUriList) {

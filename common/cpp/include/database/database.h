@@ -23,7 +23,7 @@ class Database {
 
     virtual Error GetById(const std::string& collection, uint64_t id, FileInfo* file) const = 0;
     virtual Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const = 0;
-
+    virtual Error GetStreamInfo(const std::string& collection, StreamInfo* info) const  = 0;
     virtual ~Database() = default;
 };
 

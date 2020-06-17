@@ -22,7 +22,7 @@ class RequestPool {
     };
   public:
     explicit RequestPool(uint8_t n_threads, RequestHandlerFactory* request_handler_factory, const AbstractLogger* log);
-    VIRTUAL Error AddRequest(GenericRequestPtr request);
+    VIRTUAL Error AddRequest(GenericRequestPtr request, bool top_priority = false);
     VIRTUAL Error AddRequests(GenericRequests requests);
     ~RequestPool();
     VIRTUAL uint64_t NRequestsInPool();

@@ -39,7 +39,7 @@ using ::testing::SetArgPointee;
 using ::testing::SetArgReferee;
 using testing::AllOf;
 using ::testing::DoAll;
-
+using ::testing::ElementsAre;
 
 namespace {
 
@@ -141,6 +141,8 @@ class ServerDataBrokerTests : public Test {
     void ExpectFolderToken();
     void ExpectFileTransfer(const asapo::ConsumerErrorTemplate* p_err_template);
     void ExpectRepeatedFileTransfer();
+    void ExpectIdList(bool error);
+    void ExpectLastAckId(bool empty_response);
 
     void MockGetBrokerUri() {
         MockGetServiceUri("asapo-broker", expected_broker_uri);
@@ -1109,7 +1111,6 @@ void ServerDataBrokerTests::AssertSingleFileTransfer() {
     Mock::VerifyAndClearExpectations(&mock_io);
 }
 
-
 TEST_F(ServerDataBrokerTests, GetImageUsesFileTransferServiceIfCannotReadFromCache) {
     AssertSingleFileTransfer();
 }
@@ -1134,5 +1135,95 @@ TEST_F(ServerDataBrokerTests, GetImageTriesToGetTokenAgainIfTransferFailed) {
 
     auto err = fts_data_broker->GetNext(&info, expected_group_id, &data);
 }
+
+TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUri) {
+    MockGetBrokerUri();
+    auto expected_acknowledge_command = "{\"Op\":\"Acknowledge\"}";
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
+                                            expected_group_id
+                                            + "/" + std::to_string(expected_dataset_id) + "?token="
+                                            + expected_token,expected_acknowledge_command, _,_)).WillOnce(DoAll(
+        SetArgPointee<2>(HttpCode::OK),
+        SetArgPointee<3>(nullptr),
+        Return("")));
+
+    auto err = data_broker->Acknowledge(expected_group_id, expected_dataset_id, expected_substream);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
+TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUriWithDefaultSubStream) {
+    MockGetBrokerUri();
+    auto expected_acknowledge_command = "{\"Op\":\"Acknowledge\"}";
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/"  +
+        expected_group_id
+                                             + "/" + std::to_string(expected_dataset_id) + "?token="
+                                             + expected_token,expected_acknowledge_command, _,_)).WillOnce(DoAll(
+        SetArgPointee<2>(HttpCode::OK),
+        SetArgPointee<3>(nullptr),
+        Return("")));
+
+    auto err = data_broker->Acknowledge(expected_group_id, expected_dataset_id);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+void ServerDataBrokerTests::ExpectIdList(bool error) {
+    MockGetBrokerUri();
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
+        expected_group_id + "/nacks?token=" + expected_token+"&from=1&to=0",_,_)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return(error?"":"{\"unacknowledged\":[1,2,3]}")));
+}
+
+TEST_F(ServerDataBrokerTests, GetUnAcknowledgedListReturnsIds) {
+    ExpectIdList(false);
+    asapo::Error err;
+    auto list = data_broker->GetUnacknowledgedTupleIds(expected_group_id, expected_substream, 1, 0, &err);
+
+    ASSERT_THAT(list, ElementsAre(1,2,3));
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+
+void ServerDataBrokerTests::ExpectLastAckId(bool empty_response) {
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
+        expected_group_id + "/lastack?token=" + expected_token,_,_)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return(empty_response?"{\"lastAckId\":0}":"{\"lastAckId\":1}")));
+}
+
+
+TEST_F(ServerDataBrokerTests, GetLastAcknowledgeUsesOk) {
+    MockGetBrokerUri();
+    ExpectLastAckId(false);
+
+    asapo::Error err;
+    auto ind = data_broker->GetLastAcknowledgedTulpeId(expected_group_id, expected_substream, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(ind, Eq(1));
+}
+
+TEST_F(ServerDataBrokerTests, GetLastAcknowledgeReturnsNoData) {
+    MockGetBrokerUri();
+    ExpectLastAckId(true);
+
+    asapo::Error err;
+    auto ind = data_broker->GetLastAcknowledgedTulpeId(expected_group_id, expected_substream, &err);
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
+    ASSERT_THAT(ind, Eq(0));
+}
+
+TEST_F(ServerDataBrokerTests, GetByIdErrorsForId0) {
+
+    auto err = data_broker->GetById(0, &info, expected_group_id, nullptr);
+
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
+}
+
+
 
 }
