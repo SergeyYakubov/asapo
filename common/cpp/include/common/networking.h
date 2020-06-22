@@ -20,6 +20,7 @@ enum Opcode : uint8_t {
     kOpcodeUnknownOp = 1,
     kOpcodeTransferData,
     kOpcodeTransferSubsetData,
+    kOpcodeStreamInfo,
     kOpcodeGetBufferData,
     kOpcodeAuthorize,
     kOpcodeTransferMetaData,
@@ -70,7 +71,8 @@ struct GenericRequestHeader {
     char        substream[kMaxMessageSize];
     std::string Json() {
         std::string s = "{\"id\":" + std::to_string(data_id) + ","
-                        "\"buffer\":\"" + std::string(message) + "\""
+                        "\"buffer\":\"" + std::string(message) + "\"" + ","
+                        "\"substream\":\"" + std::string(substream) + "\""
                         + "}";
         return s;
     };

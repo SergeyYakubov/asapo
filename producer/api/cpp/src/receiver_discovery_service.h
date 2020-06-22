@@ -37,7 +37,7 @@ class ReceiverDiscoveryService {
     std::thread thread_;
     std::condition_variable condition_;
     std::mutex mutex_;
-    uint64_t max_connections_{0};
+    uint64_t max_connections_{1};
     ReceiversList uri_list_;
     bool quit_{false};
     uint64_t update_frequency_ms_;

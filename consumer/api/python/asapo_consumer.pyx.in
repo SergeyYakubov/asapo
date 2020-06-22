@@ -130,7 +130,7 @@ cdef class PyDataBroker:
         return self._op("next",group_id,substream,meta_only,0)
     def get_last(self, group_id, substream = "default", meta_only = True):
         return self._op("last",group_id,substream,meta_only,0)
-    def get_by_id(self,id,group_id, substream = "default",meta_only = True):
+    def get_by_id(self,uint64_t id,group_id, substream = "default",meta_only = True):
         return self._op("id",group_id,substream,meta_only,id)
     def retrieve_data(self,meta):
         json_str = json.dumps(meta)
@@ -200,6 +200,40 @@ cdef class PyDataBroker:
             list.append(_str(substream))
         return list
 
+    def acknowledge(self, group_id, uint64_t id, substream = "default"):
+        cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
+        cdef Error err
+        with nogil:
+            err = self.c_broker.Acknowledge(b_group_id,id,b_substream)
+        if err:
+            throw_exception(err)
+
+    def get_last_acknowledged_tuple_id(self, group_id, substream = "default"):
+        cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
+        cdef Error err
+        cdef uint64_t id
+        with nogil:
+            id = self.c_broker.GetLastAcknowledgedTulpeId(b_group_id,b_substream,&err)
+        if err:
+            throw_exception(err)
+        return id
+
+    def get_unacknowledged_tuple_ids(self, group_id, substream = "default", uint64_t from_id = 0, uint64_t to_id = 0):
+        cdef Error err
+        cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
+        cdef IdList ids
+        with nogil:
+            ids = self.c_broker.GetUnacknowledgedTupleIds(b_group_id, b_substream, from_id, to_id, &err)
+        if err:
+            throw_exception(err)
+        list = []
+        for id in ids:
+            list.append(id)
+        return list
+
     def query_images(self,query, substream = "default"):
         cdef string b_query = _bytes(query)
         cdef string b_substream = _bytes(substream)
@@ -238,7 +272,7 @@ cdef class PyDataBroker:
         return self._op_dataset("next",group_id,substream,0)
     def get_last_dataset(self, group_id, substream = "default"):
         return self._op_dataset("last",group_id,substream,0)
-    def get_dataset_by_id(self, id, group_id, substream = "default"):
+    def get_dataset_by_id(self, uint64_t id, group_id, substream = "default"):
         return self._op_dataset("id",group_id,substream,id)
     def get_beamtime_meta(self):
         cdef Error err

@@ -7,7 +7,7 @@ add_subdirectory (Packages)
 INCLUDE(ExternalProject)
 ExternalProject_Add(
         consul
-        URL https://releases.hashicorp.com/consul/1.6.2/consul_1.6.2_linux_amd64.zip
+        URL https://releases.hashicorp.com/consul/1.7.3/consul_1.7.3_linux_amd64.zip
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ""
         CMAKE_COMMAND ""
@@ -18,7 +18,7 @@ ExternalProject_Add(
 
 ExternalProject_Add(
         nomad
-        URL https://releases.hashicorp.com/nomad/0.10.2/nomad_0.10.2_linux_amd64.zip
+        URL https://releases.hashicorp.com/nomad/0.11.3/nomad_0.11.3_linux_amd64.zip
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ""
         CMAKE_COMMAND ""
@@ -29,7 +29,7 @@ ExternalProject_Add(
 
 ExternalProject_Add(
         terraform
-        URL https://releases.hashicorp.com/terraform/0.12.19/terraform_0.12.19_linux_amd64.zip
+        URL https://releases.hashicorp.com/terraform/0.12.26/terraform_0.12.26_linux_amd64.zip
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ""
         CMAKE_COMMAND ""

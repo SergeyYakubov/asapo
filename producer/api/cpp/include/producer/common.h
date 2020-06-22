@@ -11,7 +11,13 @@ namespace asapo {
 
 const uint8_t kMaxProcessingThreads = 32;
 
-using RequestCallback =  std::function<void(GenericRequestHeader, Error)>;
+
+struct RequestCallbackPayload {
+  GenericRequestHeader original_header;
+  std::string response; 
+};
+
+using RequestCallback =  std::function<void(RequestCallbackPayload, Error)>;
 
 enum class RequestHandlerType {
     kTcp,

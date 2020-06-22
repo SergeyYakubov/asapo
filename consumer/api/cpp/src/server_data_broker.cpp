@@ -448,6 +448,10 @@ uint64_t ServerDataBroker::GetCurrentSize(Error* err) {
     return GetCurrentSize(kDefaultSubstream, err);
 }
 Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) {
+    if (id == 0) {
+        return ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
+    }
+
     return GetById(id, info, std::move(group_id), kDefaultSubstream, data);
 }
 
@@ -619,6 +623,71 @@ Error ServerDataBroker::GetDataFromFileTransferService(const FileInfo* info, Fil
         return GetDataFromFileTransferService(info, data, true);
     }
     return err;
+}
+
+Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::string substream) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+        +"/" + std::move(substream) +
+        "/" + std::move(group_id) + "/" + std::to_string(id);
+    ri.post = true;
+    ri.body = "{\"Op\":\"Acknowledge\"}";
+
+    Error err;
+    BrokerRequestWithTimeout(ri, &err);
+    return err;
+}
+
+IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id, Error* error) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+        +"/" + std::move(substream) +
+        "/" + std::move(group_id) + "/nacks";
+    ri.extra_params = "&from=" + std::to_string(from_id)+"&to=" + std::to_string(to_id);
+
+    auto json_string = BrokerRequestWithTimeout(ri, error);
+    if (*error) {
+        return IdList{};
+    }
+
+    IdList list;
+    JsonStringParser parser(json_string);
+    if ((*error = parser.GetArrayUInt64("unacknowledged", &list))) {
+        return IdList{};
+    }
+
+    return list;
+}
+
+IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) {
+    return GetUnacknowledgedTupleIds(std::move(group_id), kDefaultSubstream, from_id, to_id, error);
+}
+
+uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+        +"/" + std::move(substream) +
+        "/" + std::move(group_id) + "/lastack";
+
+    auto json_string = BrokerRequestWithTimeout(ri, error);
+    if (*error) {
+        return 0;
+    }
+
+    uint64_t id;
+    JsonStringParser parser(json_string);
+    if ((*error = parser.GetUInt64("lastAckId", &id))) {
+        return 0;
+    }
+
+    if (id == 0) {
+        *error=ConsumerErrorTemplates::kNoData.Generate();
+    }
+    return id;
+}
+
+uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, Error* error) {
+    return GetLastAcknowledgedTulpeId(std::move(group_id), kDefaultSubstream, error);
 }
 
 }

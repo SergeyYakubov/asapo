@@ -27,6 +27,9 @@ class ProducerImpl : public Producer {
     ProducerImpl(const ProducerImpl&) = delete;
     ProducerImpl& operator=(const ProducerImpl&) = delete;
 
+    StreamInfo GetStreamInfo(std::string substream, uint64_t timeout_sec, Error* err) const override ;
+    StreamInfo GetStreamInfo(uint64_t timeout_sec, Error* err) const override;
+
     void SetLogLevel(LogLevel level) override;
     void EnableLocalLog(bool enable) override;
     void EnableRemoteLog(bool enable) override;
@@ -65,6 +68,14 @@ class ProducerImpl : public Producer {
     std::string source_cred_string_;
     uint64_t timeout_sec_;
 };
+
+struct StreamInfoResult {
+  StreamInfo sinfo;
+  ErrorInterface* err;
+};
+
+
+
 
 }
 

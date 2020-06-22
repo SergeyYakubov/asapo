@@ -4,11 +4,8 @@ package database
 
 import (
 	"asapo_common/utils"
-	"context"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"sync"
 	"testing"
 )
@@ -55,8 +52,7 @@ func cleanup() {
 	if db.client == nil {
 		return
 	}
-	db.deleteAllRecords(dbname)
-	db.db_pointers_created = nil
+	db.dropDatabase(dbname)
 	db.Close()
 }
 
@@ -65,7 +61,7 @@ func cleanup() {
 // go_integration_test(${TARGET_NAME}-connectdb "./..." "MongoDBConnect")
 func TestMongoDBConnectFails(t *testing.T) {
 	err := db.Connect("blabla")
-	defer cleanup()
+	defer db.Close()
 	assert.NotNil(t, err)
 }
 
@@ -97,20 +93,31 @@ func TestMongoDBGetNextErrorWhenWrongDatabasename(t *testing.T) {
 	assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code)
 }
 
-func TestMongoDBGetNextErrorWhenWrongDatacollectionname(t *testing.T) {
+func TestMongoDBGetNextErrorWhenNonExistingDatacollectionname(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
-	_, err := db.ProcessRequest(dbname, "", groupId, "next", "")
-	assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code)
+	_, err := db.ProcessRequest(dbname, "bla", groupId, "next", "")
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
 }
 
-func TestMongoDBGetNextErrorWhenEmptyCollection(t *testing.T) {
+func TestMongoDBGetLastErrorWhenNonExistingDatacollectionname(t *testing.T) {
 	db.Connect(dbaddress)
-	db.databases = append(db.databases, dbname)
 	defer cleanup()
-	_, err := db.ProcessRequest(dbname, collection, groupId, "next", "")
+	_, err := db.ProcessRequest(dbname, "bla", groupId, "last", "")
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
 }
+
+func TestMongoDBGetByIdErrorWhenNonExistingDatacollectionname(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	_, err := db.ProcessRequest(dbname, collection, groupId, "id", "2")
+
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
+}
+
 
 func TestMongoDBGetNextErrorWhenRecordNotThereYet(t *testing.T) {
 	db.Connect(dbaddress)
@@ -178,7 +185,7 @@ func getNOnes(array []int) int {
 func insertRecords(n int) {
 	records := make([]TestRecord, n)
 	for ind, record := range records {
-		record.ID = ind
+		record.ID = ind + 1
 		record.Name = string(ind)
 		db.insertRecord(dbname, collection, &record)
 	}
@@ -195,7 +202,7 @@ func getRecords(n int) []int {
 			res_bin, _ := db.ProcessRequest(dbname, collection, groupId, "next", "")
 			var res TestRecord
 			json.Unmarshal(res_bin, &res)
-			results[res.ID] = 1
+			results[res.ID-1] = 1
 		}()
 	}
 	wg.Wait()
@@ -213,6 +220,47 @@ func TestMongoDBGetNextInParallel(t *testing.T) {
 
 	assert.Equal(t, n, getNOnes(results))
 }
+
+func TestMongoDBGetLastAfterErasingDatabase(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	insertRecords(10)
+	db.ProcessRequest(dbname, collection, groupId, "next", "0")
+	db.dropDatabase(dbname)
+
+	db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec2)
+
+	res, err := db.ProcessRequest(dbname, collection, groupId, "last", "0")
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec2_expect), string(res))
+}
+
+func TestMongoDBGetNextAfterErasingDatabase(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	insertRecords(200)
+	db.ProcessRequest(dbname, collection, groupId, "next", "0")
+	db.dropDatabase(dbname)
+
+	n := 100
+	insertRecords(n)
+	results := getRecords(n)
+	assert.Equal(t, n, getNOnes(results))
+}
+
+func TestMongoDBGetNextEmptyAfterErasingDatabase(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	insertRecords(10)
+	db.ProcessRequest(dbname, collection, groupId, "next", "0")
+	db.dropDatabase(dbname)
+
+	_, err := db.ProcessRequest(dbname, collection, groupId, "next", "0")
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
+}
+
 
 func TestMongoDBgetRecordByID(t *testing.T) {
 	db.Connect(dbaddress)
@@ -321,20 +369,10 @@ func TestMongoDBGetSize(t *testing.T) {
 func TestMongoDBGetSizeNoRecords(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
-	// to have empty collection
-	db.insertRecord(dbname, collection, &rec1)
-	db.client.Database(dbname).Collection(data_collection_name_prefix+collection).DeleteOne(context.TODO(), bson.M{"_id": 1}, options.Delete())
 
 	res, err := db.ProcessRequest(dbname, collection, "", "size", "0")
 	assert.Nil(t, err)
 	assert.Equal(t, string(recs2_expect), string(res))
-}
-
-func TestMongoDBGetSizeNoDatabase(t *testing.T) {
-	db.Connect(dbaddress)
-	defer cleanup()
-	_, err := db.ProcessRequest(dbname, collection, "", "size", "0")
-	assert.NotNil(t, err)
 }
 
 func TestMongoPing(t *testing.T) {
@@ -480,6 +518,22 @@ func TestMongoDBQueryImagesOK(t *testing.T) {
 
 }
 
+func TestMongoDBQueryImagesOnEmptyDatabase(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	for _, test := range tests {
+		res_string, err := db.ProcessRequest(dbname, collection, "", "queryimages", test.query)
+		var res []TestRecordMeta
+		json.Unmarshal(res_string, &res)
+		assert.Equal(t, 0, len(res))
+		if test.ok {
+			assert.Nil(t, err, test.query)
+		} else {
+			assert.NotNil(t, err, test.query)
+		}
+	}
+}
+
 var rec_dataset1 = TestDataset{1, 3, []TestRecord{rec1, rec2, rec3}}
 var rec_dataset1_incomplete = TestDataset{1, 4, []TestRecord{rec1, rec2, rec3}}
 var rec_dataset2 = TestDataset{2, 4, []TestRecord{rec1, rec2, rec3}}
@@ -570,7 +624,7 @@ var testsSubstreams = []struct {
 	test       string
 	ok         bool
 }{
-	{SubstreamsRecord{[]string{}}, "no substreams", false},
+	{SubstreamsRecord{[]string{}}, "no substreams", true},
 	{SubstreamsRecord{[]string{"ss1"}}, "one substream", true},
 	{SubstreamsRecord{[]string{"ss1", "ss2"}}, "two substreams", true},
 }
@@ -592,4 +646,91 @@ func TestMongoDBListSubstreams(t *testing.T) {
 		cleanup()
 	}
 
+}
+
+func TestMongoDBAckImage(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	db.insertRecord(dbname, collection, &rec1)
+
+	res, err := db.ProcessRequest(dbname, collection, groupId, "ackimage", "1")
+	nacks,_ := db.getNacks(dbname,collection,groupId,1,1)
+	assert.Nil(t, err)
+	assert.Equal(t, "", string(res))
+	assert.Equal(t, 0, len(nacks))
+}
+
+var testsNacs = []struct {
+	rangeString string
+	resString string
+	insertRecords bool
+	ackRecords bool
+	ok         bool
+	test string
+}{
+	{"0_0", "{\"unacknowledged\":[1,2,3,4,5,6,7,8,9,10]}",true,false,true,"whole range"},
+	{"", "{\"unacknowledged\":[1,2,3,4,5,6,7,8,9,10]}",true,false,false,"empty string range"},
+	{"0_5", "{\"unacknowledged\":[1,2,3,4,5]}",true,false,true,"to given"},
+	{"5_0", "{\"unacknowledged\":[5,6,7,8,9,10]}",true,false,true,"from given"},
+	{"3_7", "{\"unacknowledged\":[3,4,5,6,7]}",true,false,true,"range given"},
+	{"1_1", "{\"unacknowledged\":[1]}",true,false,true,"single record"},
+	{"3_1", "{\"unacknowledged\":[]}",true,false,false,"to lt from"},
+	{"0_0", "{\"unacknowledged\":[]}",false,false,true,"no records"},
+	{"0_0", "{\"unacknowledged\":[1,5,6,7,8,9,10]}",true,true,true,"skip acks"},
+	{"2_4", "{\"unacknowledged\":[]}",true,true,true,"all acknowledged"},
+	{"1_4", "{\"unacknowledged\":[1]}",true,true,true,"some acknowledged"},
+}
+
+
+func TestMongoDBNacks(t *testing.T) {
+	for _, test := range testsNacs {
+		db.Connect(dbaddress)
+		if test.insertRecords  {
+			insertRecords(10)
+		}
+		if (test.ackRecords) {
+			db.ackRecord(dbname, collection, groupId,"2")
+			db.ackRecord(dbname, collection, groupId,"3")
+			db.ackRecord(dbname, collection, groupId,"4")
+		}
+		res, err := db.ProcessRequest(dbname, collection, groupId, "nacks", test.rangeString)
+		if test.ok {
+			assert.Nil(t, err, test.test)
+			assert.Equal(t, test.resString, string(res),test.test)
+		} else {
+			assert.NotNil(t, err, test.test)
+		}
+		cleanup()
+	}
+}
+
+var testsLastAcs = []struct {
+	insertRecords bool
+	ackRecords bool
+	resString string
+	test string
+}{
+	{false,false,"{\"lastAckId\":0}","empty db"},
+	{true,false,"{\"lastAckId\":0}","no acks"},
+	{true,true,"{\"lastAckId\":4}","last ack 4"},
+}
+
+
+func TestMongoDBLastAcks(t *testing.T) {
+	for _, test := range testsLastAcs {
+		db.Connect(dbaddress)
+		if test.insertRecords  {
+			insertRecords(10)
+		}
+		if (test.ackRecords) {
+			db.ackRecord(dbname, collection, groupId,"2")
+			db.ackRecord(dbname, collection, groupId,"3")
+			db.ackRecord(dbname, collection, groupId,"4")
+		}
+		res, err := db.ProcessRequest(dbname, collection, groupId, "lastack", "")
+		assert.Nil(t, err, test.test)
+		assert.Equal(t, test.resString, string(res),test.test)
+		cleanup()
+	}
 }

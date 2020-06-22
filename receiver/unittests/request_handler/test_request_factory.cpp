@@ -13,6 +13,8 @@
 #include "../../src/request_handler/request_handler_file_process.h"
 #include "../../src/request_handler/request_handler_db_write.h"
 #include "../../src/request_handler/request_handler_authorize.h"
+#include "../../src/request_handler/request_handler_db_stream_info.h"
+
 #include "../../src/request_handler/request_handler_receive_data.h"
 #include "../../src/request_handler/request_handler_receive_metadata.h"
 
@@ -219,6 +221,15 @@ TEST_F(FactoryTests, DonNotGenerateRequestIfIngestModeIsWrong) {
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
+}
+
+TEST_F(FactoryTests, StreamInfoRequest) {
+    generic_request_header.op_code = asapo::Opcode::kOpcodeStreamInfo;
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(2));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbStreamInfo*>(request->GetListHandlers()[1]), Ne(nullptr));
 }
 
 

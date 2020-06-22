@@ -80,8 +80,8 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetOnlinePath, const std::string & ());
     MOCK_CONST_METHOD0(GetOfflinePath, const std::string & ());
 
-    const asapo::CustomRequestData& GetCustomData() const override {
-        return (asapo::CustomRequestData&) * GetCustomData_t();
+    const CustomRequestData& GetCustomData() const override {
+        return (CustomRequestData&) * GetCustomData_t();
     };
 
     MOCK_CONST_METHOD0(GetCustomData_t, const uint64_t* ());
@@ -94,9 +94,13 @@ class MockRequest: public Request {
 
     MOCK_CONST_METHOD0(WasAlreadyProcessed, bool());
     MOCK_METHOD0(SetAlreadyProcessedFlag, void());
-    MOCK_METHOD1(SetWarningMessage, void(std::string));
-    MOCK_CONST_METHOD0(GetWarningMessage,  const std::string & ());
+    MOCK_METHOD2(SetResponseMessage, void(std::string,ResponseMessageType));
+    MOCK_CONST_METHOD0(GetResponseMessage, const std::string & ());
+    MOCK_CONST_METHOD0(GetResponseMessageType_t, ResponseMessageType ());
 
+    const ResponseMessageType GetResponseMessageType() const override {
+      return GetResponseMessageType_t();
+    };
 
     Error CheckForDuplicates()  override {
         return Error{CheckForDuplicates_t()};
