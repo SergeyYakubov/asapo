@@ -1,3 +1,8 @@
+## 20.06.1
+
+IMPROVEMENTS
+* allow arbitrary group id
+
 ## 20.06.0
 FEATURES
 * implemented acknowledeges - one can acknowledge a data tuple, get last acknowledged tuple id, get list of unacknowledged tuple ids
