@@ -6,7 +6,6 @@ import (
 	log "asapo_common/logger"
 	"asapo_common/utils"
 	"github.com/gorilla/mux"
-	"github.com/rs/xid"
 	"net/http"
 )
 
@@ -25,19 +24,31 @@ func extractRequestParameters(r *http.Request, needGroupID bool) (string, string
 	return db_name, stream, substream, group_id, ok1 && ok2 && ok3 && ok4
 }
 
+var Sink bool
+
+func IsLetterOrNumbers(s string) bool {
+	for _, r := range s {
+		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') && (r<'0' || r>'9') {
+			return false
+		}
+	}
+	return true
+}
+
+
 func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_name string, op string) bool {
 	if !needGroupID {
 		return true
 	}
-	if _, err := xid.FromString(group_id); err != nil {
-		err_str := "wrong groupid " + group_id
-		log_str := "processing get " + op + " request in " + db_name + " at " + settings.GetDatabaseServer() + ": " + err_str
-		logger.Error(log_str)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err_str))
-		return false
+	if  len(group_id) > 0 && len (group_id) < 100 && IsLetterOrNumbers(group_id) {
+		return true
 	}
-	return true
+	err_str := "wrong groupid " + group_id
+	log_str := "processing get " + op + " request in " + db_name + " at " + settings.GetDatabaseServer() + ": " + err_str
+	logger.Error(log_str)
+	w.WriteHeader(http.StatusBadRequest)
+	w.Write([]byte(err_str))
+	return false
 }
 
 func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_param string, needGroupID bool) {

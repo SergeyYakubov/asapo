@@ -99,12 +99,12 @@ def check_single(broker,group_id):
     assert_usermetadata(meta,"get next6")
 
     try:
-        broker.get_next("bla", meta_only=True)
+        broker.get_next("_wrong_group_name", meta_only=True)
     except asapo_consumer.AsapoWrongInputError as err:
         print(err)
         pass
     else:
-        exit_on_noerr("wrong input")
+        exit_on_noerr("should give wrong input error")
 
     try:
         broker.get_last(group_id, meta_only=False)
@@ -221,7 +221,7 @@ def check_dataset(broker,group_id):
     except:
         pass
     else:
-        exit_on_noerr("get_next_dataset4 err")
+        exit_on_noerr("get_next_dataset4 get next6err")
 
 source, path, beamtime, token, mode = sys.argv[1:]
 

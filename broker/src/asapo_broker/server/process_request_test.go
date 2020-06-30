@@ -19,7 +19,7 @@ import (
 var correctTokenSuffix, wrongTokenSuffix, suffixWithWrongToken, expectedBeamtimeId, expectedDBName string
 
 const expectedGroupID = "bid2a5auidddp1vl71d0"
-const wrongGroupID = "bid2a5auidddp1vl71"
+const wrongGroupID = "_bid2a5auidddp1vl71"
 const expectedStream = "stream"
 const expectedSubstream = "substream"
 
