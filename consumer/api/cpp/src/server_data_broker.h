@@ -106,7 +106,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<NetClient> net_client__;
   private:
-    Error GetDataFromFileTransferService(const FileInfo* info, FileData* data, bool retry_with_new_token);
+    Error GetDataFromFileTransferService(FileInfo* info, FileData* data, bool retry_with_new_token);
     Error GetDataFromFile(FileInfo* info, FileData* data);
     static const std::string kBrokerServiceName;
     static const std::string kFileTransferServiceName;
@@ -128,7 +128,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error ServiceRequestWithTimeout(const std::string& service_name, std::string* service_uri, RequestInfo request,
                                     RequestOutput* response);
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
-    Error FtsRequestWithTimeout(const FileInfo* info, FileData* data);
+    Error FtsRequestWithTimeout(FileInfo* info, FileData* data);
+    Error FtsSizeRequestWithTimeout(FileInfo* info);
     Error ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
     Error ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
 

@@ -36,6 +36,8 @@ def check_file_transfer_service(broker,group_id):
     broker.set_timeout(1000)
     data, meta = broker.get_by_id(1, group_id, meta_only=False)
     assert_eq(data.tostring().decode("utf-8"),"hello1","check_file_transfer_service ok")
+    data, meta = broker.get_by_id(1, group_id,"streamfts", meta_only=False)
+    assert_eq(data.tostring().decode("utf-8"),"hello1","check_file_transfer_service with auto size ok")
 
 
 def check_single(broker,group_id):
@@ -121,7 +123,7 @@ def check_single(broker,group_id):
     assert_metaname(meta,"21","get next stream2")
 
     substreams = broker.get_substream_list()
-    assert_eq(len(substreams),3,"number of substreams")
+    assert_eq(len(substreams),4,"number of substreams")
     assert_eq(substreams[0],"default","substreams_name1")
     assert_eq(substreams[1],"stream1","substreams_name2")
     assert_eq(substreams[2],"stream2","substreams_name3")
