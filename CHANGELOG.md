@@ -1,3 +1,8 @@
+## 20.06.2
+
+BUG FIXES
+* file size obtained automatically when retrieving remote data ingested using metadata only mode
+
 ## 20.06.1
 
 IMPROVEMENTS

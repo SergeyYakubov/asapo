@@ -372,7 +372,23 @@ Error ServerDataBroker::ServiceRequestWithTimeout(const std::string& service_nam
     return err;
 }
 
-Error ServerDataBroker::FtsRequestWithTimeout(const FileInfo* info, FileData* data) {
+Error ServerDataBroker::FtsSizeRequestWithTimeout(FileInfo* info) {
+    RequestInfo ri = CreateFileTransferRequest(info);
+    ri.extra_params="&sizeonly=true";
+    ri.output_mode = OutputDataMode::string;
+    RequestOutput response;
+    auto err = ServiceRequestWithTimeout(kFileTransferServiceName, &current_fts_uri_, ri, &response);
+    if (err) {
+        return err;
+    }
+
+    auto parser = JsonStringParser(std::move(response.string_output));
+    err = parser.GetUInt64("file_size", &(info->size));
+    return err;
+}
+
+
+Error ServerDataBroker::FtsRequestWithTimeout(FileInfo* info, FileData* data) {
     RequestInfo ri = CreateFileTransferRequest(info);
     RequestOutput response;
     response.data_output_size = info->size;
@@ -610,11 +626,22 @@ RequestInfo ServerDataBroker::CreateFolderTokenRequest() const {
     return ri;
 }
 
-Error ServerDataBroker::GetDataFromFileTransferService(const FileInfo* info, FileData* data,
+Error ServerDataBroker::GetDataFromFileTransferService(FileInfo* info, FileData* data,
         bool retry_with_new_token) {
     auto err = UpdateFolderTokenIfNeeded(retry_with_new_token);
     if (err) {
         return err;
+    }
+
+    if (info->size == 0) {
+        err = FtsSizeRequestWithTimeout(info);
+        if (err == ConsumerErrorTemplates::kWrongInput
+            && !retry_with_new_token) { // token expired? Refresh token and try again.
+            return GetDataFromFileTransferService(info, data, true);
+        }
+        if (err) {
+            return err;
+        }
     }
 
     err = FtsRequestWithTimeout(info, data);

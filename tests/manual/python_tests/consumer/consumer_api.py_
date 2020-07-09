@@ -8,10 +8,10 @@ broker = asapo_consumer.create_server_broker(source,path,False, beamtime,"",toke
 group_id = broker.generate_group_id()
 
 
-data, meta = broker.get_by_id(5,group_id,"default", meta_only=False)
+_, meta = broker.get_by_id(1,group_id, meta_only=True)
 
 #meta["buf_id"]=0
-#data = broker.retrieve_data(meta)
+data = broker.retrieve_data(meta)
 
 print (meta)
 print (len(data),data[0:100])

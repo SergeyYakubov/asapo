@@ -41,7 +41,7 @@ class FluentdSinkTests : public Test {
 };
 
 TEST_F(FluentdSinkTests, SendPost) {
-    EXPECT_CALL(mock_http_client, Post_t("test_url", HasSubstr("hello"), _, _));
+    EXPECT_CALL(mock_http_client, Post_t("test_url",_, HasSubstr("hello"),  _, _));
     logger->info("hello");
 }
 

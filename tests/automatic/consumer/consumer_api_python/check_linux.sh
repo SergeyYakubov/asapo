@@ -38,6 +38,8 @@ do
 	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
+echo 'db.data_streamfts.insert({"_id":'1',"size":0,"name":"'1'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
+
 for i in `seq 1 5`;
 do
 	echo 'db.data_stream1.insert({"_id":'$i',"size":6,"name":"'1$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}

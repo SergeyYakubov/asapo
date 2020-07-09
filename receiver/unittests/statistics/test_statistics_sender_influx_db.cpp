@@ -82,9 +82,9 @@ class SenderInfluxDbTests : public Test {
 TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
     std::string expect_string = "statistics,name1=value1,name2=value2 elapsed_ms=100,data_volume=1000,"
                                 "n_requests=4,db_share=0.1000,network_share=0.3000,disk_share=0.6000";
-    EXPECT_CALL(mock_http_client, Post_t("test_uri/write?db=test_name", expect_string, _, _)).
+    EXPECT_CALL(mock_http_client, Post_t("test_uri/write?db=test_name",_, expect_string, _, _)).
     WillOnce(
-        DoAll(SetArgPointee<3>(new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
+        DoAll(SetArgPointee<4>(new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
               Return("")
              ));
 
@@ -95,9 +95,9 @@ TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
 }
 
 TEST_F(SenderInfluxDbTests, LogErrorWithWrongResponceSendStatistics) {
-    EXPECT_CALL(mock_http_client, Post_t(_, _, _, _)).
+    EXPECT_CALL(mock_http_client, Post_t(_,_, _, _, _)).
     WillOnce(
-        DoAll(SetArgPointee<2>(asapo::HttpCode::BadRequest), SetArgPointee<3>(nullptr), Return("error response")
+        DoAll(SetArgPointee<3>(asapo::HttpCode::BadRequest), SetArgPointee<4>(nullptr), Return("error response")
              ));
 
     EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("sending statistics"), HasSubstr("error response"))));
@@ -107,9 +107,9 @@ TEST_F(SenderInfluxDbTests, LogErrorWithWrongResponceSendStatistics) {
 }
 
 TEST_F(SenderInfluxDbTests, LogDebugSendStatistics) {
-    EXPECT_CALL(mock_http_client, Post_t(_, _, _, _)).
+    EXPECT_CALL(mock_http_client, Post_t(_,_, _, _, _)).
     WillOnce(
-        DoAll(SetArgPointee<3>(nullptr), SetArgPointee<2>(asapo::HttpCode::OK), Return("ok response")
+        DoAll(SetArgPointee<4>(nullptr), SetArgPointee<3>(asapo::HttpCode::OK), Return("ok response")
              ));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending statistics"),
