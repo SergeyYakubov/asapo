@@ -63,8 +63,7 @@ job "asapo-nginx" {
       template {
          source        = "${scripts_dir}/nginx.conf.tpl"
          destination   = "local/nginx.conf"
-         change_mode   = "signal"
-         change_signal   = "SIGHUP"
+         change_mode   = "restart"
       }
    }
 

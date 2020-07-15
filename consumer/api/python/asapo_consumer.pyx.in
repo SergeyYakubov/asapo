@@ -144,6 +144,8 @@ cdef class PyDataBroker:
         if err:
             throw_exception(err)
         cdef np.npy_intp dims[1]
+        info_str = _str(info.Json())
+        meta = json.loads(info_str)
         dims[0] = meta['size']
         cdef char* ptr = <char*> data.release()
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
