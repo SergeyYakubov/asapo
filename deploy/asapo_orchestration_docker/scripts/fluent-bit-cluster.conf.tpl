@@ -15,7 +15,7 @@
 {{ range ("influxdb grafana" | split " ") }}
 [INPUT]
     Name tail
-    Path ${NOMAD_ALLOC_DIR}/${NOMAD_ALLOC_ID}/alloc/logs/{{.}}*.0
+    Path ${NOMAD_ALLOC_DIR}/${NOMAD_ALLOC_ID}/alloc/logs/{{.}}*
     Tag asapo.{{.}}
     # Tag_Regex .*/(?<service>.*).(?<channel>stderr|stdout).*
     DB ${NOMAD_TASK_DIR}/logs.db

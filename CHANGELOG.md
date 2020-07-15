@@ -1,3 +1,9 @@
+## 20.06.3
+
+BUG FIXES
+* fix retrieve_data in Python modules for data ingested using metadata only mode
+* fix asapo orchestration image stabilize nginx and update fluentd configuration to follow Nomad jobs log rotation 
+
 ## 20.06.2
 
 BUG FIXES
