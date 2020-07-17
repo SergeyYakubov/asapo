@@ -24,7 +24,7 @@ type TestDataset struct {
 
 var db Mongodb
 
-const dbname = "run1"
+const dbname = "12345"
 const collection = "substream"
 const collection2 = "substream2"
 const dbaddress = "127.0.0.1:27017"
@@ -455,6 +455,7 @@ var tests = []struct {
 	res   []TestRecordMeta
 	ok    bool
 }{
+	{"_id > 0", []TestRecordMeta{recq1, recq2,recq3,recq4}, true},
 	{"meta.counter = 10", []TestRecordMeta{recq1, recq3}, true},
 	{"meta.counter = 10 ORDER BY _id DESC", []TestRecordMeta{recq3, recq1}, true},
 	{"meta.counter > 10 ORDER BY meta.counter DESC", []TestRecordMeta{recq4, recq2}, true},
