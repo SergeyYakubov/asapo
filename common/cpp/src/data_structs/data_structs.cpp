@@ -189,7 +189,7 @@ std::string StreamInfo::Json() const {
     return s;
 }
 
-bool StreamInfo::SetFromJson(const std::string &json_string) {
+bool StreamInfo::SetFromJson(const std::string& json_string) {
     JsonStringParser parser(json_string);
     uint64_t id;
     if (parser.GetUInt64("lastId", &id)) {

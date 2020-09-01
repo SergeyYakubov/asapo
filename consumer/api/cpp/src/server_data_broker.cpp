@@ -108,6 +108,11 @@ void ServerDataBroker::ForceNoRdma() {
     should_try_rdma_first_ = false;
 }
 
+NetworkConnectionType ServerDataBroker::CurrentConnectionType() const {
+    return current_connection_type_;
+}
+
+
 std::string ServerDataBroker::RequestWithToken(std::string uri) {
     return std::move(uri) + "?token=" + source_credentials_.user_token;
 }
@@ -361,6 +366,7 @@ Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* dat
                 // Check if the error comes from the receiver data server (so a connection was made)
                 if (!error || error == RdsResponseErrorTemplates::kNetErrorNoData) {
                     net_client__.swap(fabricClient);
+                    current_connection_type_ = NetworkConnectionType::kFabric;
                     return error; // Successfully received data and is now using a fabric client
                 }
 
@@ -371,6 +377,7 @@ Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* dat
 
             if (!should_try_rdma_first_) {
                 net_client__.reset(new TcpClient());
+                current_connection_type_ = NetworkConnectionType::kAsapoTcp;
                 // If we use tcp, we can fall thought and use the normal GetData code
             }
         }
@@ -728,6 +735,5 @@ uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std:
 uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, Error* error) {
     return GetLastAcknowledgedTulpeId(std::move(group_id), kDefaultSubstream, error);
 }
-
 
 }

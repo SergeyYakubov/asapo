@@ -88,6 +88,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     void SetTimeout(uint64_t timeout_ms) override;
     void ForceNoRdma() override;
 
+    NetworkConnectionType CurrentConnectionType() const override;
+
     FileInfos QueryImages(std::string query, Error* err) override;
     FileInfos QueryImages(std::string query, std::string substream, Error* err) override;
 
@@ -107,6 +109,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<NetClient> net_client__;
+
     std::mutex net_client_mutex__; // Required for the lazy initialization of net_client
   private:
     Error GetDataFromFileTransferService(const FileInfo* info, FileData* data, bool retry_with_new_token);
@@ -148,6 +151,9 @@ class ServerDataBroker final : public asapo::DataBroker {
     uint64_t timeout_ms_ = 0;
     bool should_try_rdma_first_ = true;
     std::string folder_token_;
+
+    NetworkConnectionType current_connection_type_ = NetworkConnectionType::kUndefined;
+
     RequestInfo CreateFolderTokenRequest() const;
     RequestInfo CreateFileTransferRequest(const FileInfo* info) const;
 };

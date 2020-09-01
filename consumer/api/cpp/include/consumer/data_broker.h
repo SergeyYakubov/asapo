@@ -57,6 +57,12 @@ class DataBroker {
     //! This will only have an effect if no previous connection attempted was made on this DataBroker.
     virtual void ForceNoRdma() = 0;
 
+    //! Returns the current network connection type
+    /*!
+     * \return current network connection type. If no connection was made, the result is NetworkConnectionType::kUndefined
+     */
+    virtual NetworkConnectionType CurrentConnectionType() const = 0;
+
     //! Set list of substreams
     virtual std::vector<std::string> GetSubstreamList(Error* err) = 0;
 
