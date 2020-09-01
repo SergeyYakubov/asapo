@@ -28,11 +28,11 @@ class MockRequestPull : public RequestPool {
         RequestPool{1, request_handler_factory, log} {};
     asapo::Error AddRequest(std::unique_ptr<asapo::GenericRequest> request, bool top_priority = false) override {
         if (request == nullptr) {
-            return asapo::Error{AddRequest_t(nullptr,top_priority)};
+            return asapo::Error{AddRequest_t(nullptr, top_priority)};
         }
-        return asapo::Error{AddRequest_t(request.get(),top_priority)};
+        return asapo::Error{AddRequest_t(request.get(), top_priority)};
     }
-    MOCK_METHOD2(AddRequest_t, asapo::ErrorInterface * (GenericRequest*,bool));
+    MOCK_METHOD2(AddRequest_t, asapo::ErrorInterface * (GenericRequest*, bool));
     MOCK_METHOD0(NRequestsInPool, uint64_t ());
 
     MOCK_METHOD1(WaitRequestsFinished_t, asapo::ErrorInterface * (uint64_t timeout_ms));

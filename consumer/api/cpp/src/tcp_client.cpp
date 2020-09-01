@@ -1,6 +1,8 @@
 #include "tcp_client.h"
 #include "io/io_factory.h"
 #include "common/networking.h"
+#include "rds_response_error.h"
+
 namespace asapo {
 
 TcpClient::TcpClient() : io__{GenerateDefaultIO()}, connection_pool__{new TcpConnectionPool()} {
@@ -32,23 +34,25 @@ Error TcpClient::ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const Fi
 Error TcpClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
     Error err;
 
-    GenericNetworkResponse Response;
-    io__->Receive(sd, &Response, sizeof(Response), &err);
+    GenericNetworkResponse response;
+    io__->Receive(sd, &response, sizeof(response), &err);
     if(err != nullptr) {
         io__->CloseSocket(sd, nullptr);
         connection_pool__->ReleaseConnection(sd);
         return err;
     }
-    switch (Response.error_code) {
-    case kNetErrorWrongRequest :
-        io__->CloseSocket(sd, nullptr);
-        return Error{new SimpleError("internal server error: wrong request")};
-    case kNetErrorNoData :
-        connection_pool__->ReleaseConnection(sd);
-        return Error{new SimpleError("no data")};
-    default:
-        return nullptr;
+    if (response.error_code) {
+        switch (response.error_code) {
+        case kNetErrorWrongRequest:
+            io__->CloseSocket(sd, nullptr);
+            break;
+        case kNetErrorNoData:
+            connection_pool__->ReleaseConnection(sd);
+            break;
+        }
+        return ConvertRdsResponseToError(response.error_code);
     }
+    return nullptr;
 }
 
 Error TcpClient::QueryCacheHasData(SocketDescriptor* sd, const FileInfo* info, bool try_reconnect) const noexcept {

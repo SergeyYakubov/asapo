@@ -57,9 +57,9 @@ class RequestHandlerFilesystemTests : public testing::Test {
               expected_meta_size, expected_file_name};
     bool called = false;
     asapo::GenericRequestHeader callback_header;
-  std::string callback_response;
+    std::string callback_response;
 
-  asapo::ProducerRequest request{"", header, nullptr, "", "", [this](asapo::RequestCallbackPayload payload, asapo::Error err) {
+    asapo::ProducerRequest request{"", header, nullptr, "", "", [this](asapo::RequestCallbackPayload payload, asapo::Error err) {
             called = true;
             callback_err = std::move(err);
             callback_header = payload.original_header;

@@ -149,24 +149,24 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(err == asapo::ConsumerErrorTemplates::kNoData, "last ack default stream no data");
     M_AssertTrue(id == 0, "last ack default stream no data id = 0");
 
-    auto nacks = broker->GetUnacknowledgedTupleIds(group_id,0,0,&err);
+    auto nacks = broker->GetUnacknowledgedTupleIds(group_id, 0, 0, &err);
     M_AssertTrue(err == nullptr, "nacks default stream all");
     M_AssertTrue(nacks.size() == 10, "nacks default stream size = 10");
 
-    err = broker->Acknowledge(group_id,1);
+    err = broker->Acknowledge(group_id, 1);
     M_AssertTrue(err == nullptr, "ack default stream no error");
 
-    nacks = broker->GetUnacknowledgedTupleIds(group_id,0,0,&err);
+    nacks = broker->GetUnacknowledgedTupleIds(group_id, 0, 0, &err);
     M_AssertTrue(nacks.size() == 9, "nacks default stream size = 9 after ack");
 
     id = broker->GetLastAcknowledgedTulpeId(group_id, &err);
     M_AssertTrue(err == nullptr, "last ack default stream no error");
     M_AssertTrue(id == 1, "last ack default stream id = 1");
 
-    err = broker->Acknowledge(group_id,1,"stream1");
+    err = broker->Acknowledge(group_id, 1, "stream1");
     M_AssertTrue(err == nullptr, "ack stream1 no error");
 
-    nacks = broker->GetUnacknowledgedTupleIds(group_id,"stream1",0,0,&err);
+    nacks = broker->GetUnacknowledgedTupleIds(group_id, "stream1", 0, 0, &err);
     M_AssertTrue(nacks.size() == 4, "nacks stream1 size = 4 after ack");
 }
 

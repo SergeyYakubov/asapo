@@ -2,6 +2,7 @@
 #define ASAPO_SERVER_DATA_BROKER_H
 
 #include <common/networking.h>
+#include <mutex>
 #include "consumer/data_broker.h"
 #include "io/io.h"
 #include "http_client/http_client.h"
@@ -53,10 +54,11 @@ Error ConsumerErrorFromNoDataResponse(const std::string& response);
 class ServerDataBroker final : public asapo::DataBroker {
   public:
     explicit ServerDataBroker(std::string server_uri, std::string source_path, bool has_filesystem,
-                              SourceCredentials source, NetworkConnectionType networkType);
+                              SourceCredentials source);
     Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) override;
 
-    IdList GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id, Error* error) override;
+    IdList GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id,
+                                     Error* error) override;
     IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) override;
 
     uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) override;
@@ -84,6 +86,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
 
     void SetTimeout(uint64_t timeout_ms) override;
+    void ForceNoRdma() override;
+
     FileInfos QueryImages(std::string query, Error* err) override;
     FileInfos QueryImages(std::string query, std::string substream, Error* err) override;
 
@@ -103,6 +107,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<NetClient> net_client__;
+    std::mutex net_client_mutex__; // Required for the lazy initialization of net_client
   private:
     Error GetDataFromFileTransferService(const FileInfo* info, FileData* data, bool retry_with_new_token);
     Error GetDataFromFile(FileInfo* info, FileData* data);
@@ -141,6 +146,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     bool has_filesystem_;
     SourceCredentials source_credentials_;
     uint64_t timeout_ms_ = 0;
+    bool should_try_rdma_first_ = true;
     std::string folder_token_;
     RequestInfo CreateFolderTokenRequest() const;
     RequestInfo CreateFileTransferRequest(const FileInfo* info) const;

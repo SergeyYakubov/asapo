@@ -46,11 +46,11 @@ namespace {
 TEST(FolderDataBroker, Constructor) {
     auto data_broker =
     std::unique_ptr<ServerDataBroker> {new ServerDataBroker("test", "path", false,
-                asapo::SourceCredentials{"beamtime_id", "", "", "token"}, asapo::NetworkConnectionType::kAsapoTcp)
+                asapo::SourceCredentials{"beamtime_id", "", "", "token"})
     };
     ASSERT_THAT(dynamic_cast<asapo::SystemIO*>(data_broker->io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::CurlHttpClient*>(data_broker->httpclient__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<asapo::TcpClient*>(data_broker->net_client__.get()), Ne(nullptr));
+    ASSERT_THAT(data_broker->net_client__.get(), Eq(nullptr));
 }
 
 const uint8_t expected_value = 1;
@@ -87,10 +87,10 @@ class ServerDataBrokerTests : public Test {
     void AssertSingleFileTransfer();
     void SetUp() override {
         data_broker = std::unique_ptr<ServerDataBroker> {
-            new ServerDataBroker(expected_server_uri, expected_path, true, asapo::SourceCredentials{expected_beamtime_id, "", expected_stream, expected_token}, asapo::NetworkConnectionType::kAsapoTcp)
+            new ServerDataBroker(expected_server_uri, expected_path, true, asapo::SourceCredentials{expected_beamtime_id, "", expected_stream, expected_token})
         };
         fts_data_broker = std::unique_ptr<ServerDataBroker> {
-            new ServerDataBroker(expected_server_uri, expected_path, false, asapo::SourceCredentials{expected_beamtime_id, "", expected_stream, expected_token}, asapo::NetworkConnectionType::kAsapoTcp)
+            new ServerDataBroker(expected_server_uri, expected_path, false, asapo::SourceCredentials{expected_beamtime_id, "", expected_stream, expected_token})
         };
         data_broker->io__ = std::unique_ptr<IO> {&mock_io};
         data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
@@ -178,7 +178,7 @@ TEST_F(ServerDataBrokerTests, DefaultStreamIsDetector) {
     data_broker->httpclient__.release();
     data_broker->net_client__.release();
     data_broker = std::unique_ptr<ServerDataBroker> {
-        new ServerDataBroker(expected_server_uri, expected_path, false, asapo::SourceCredentials{"beamtime_id", "", "", expected_token}, asapo::NetworkConnectionType::kAsapoTcp)
+        new ServerDataBroker(expected_server_uri, expected_path, false, asapo::SourceCredentials{"beamtime_id", "", "", expected_token})
     };
     data_broker->io__ = std::unique_ptr<IO> {&mock_io};
     data_broker->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
@@ -1139,13 +1139,14 @@ TEST_F(ServerDataBrokerTests, GetImageTriesToGetTokenAgainIfTransferFailed) {
 TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUri) {
     MockGetBrokerUri();
     auto expected_acknowledge_command = "{\"Op\":\"Acknowledge\"}";
-    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
-                                            expected_group_id
-                                            + "/" + std::to_string(expected_dataset_id) + "?token="
-                                            + expected_token,expected_acknowledge_command, _,_)).WillOnce(DoAll(
-        SetArgPointee<2>(HttpCode::OK),
-        SetArgPointee<3>(nullptr),
-        Return("")));
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/" +
+                                         expected_substream + "/"  +
+                                         expected_group_id
+                                         + "/" + std::to_string(expected_dataset_id) + "?token="
+                                         + expected_token, expected_acknowledge_command, _, _)).WillOnce(DoAll(
+                                                     SetArgPointee<2>(HttpCode::OK),
+                                                     SetArgPointee<3>(nullptr),
+                                                     Return("")));
 
     auto err = data_broker->Acknowledge(expected_group_id, expected_dataset_id, expected_substream);
 
@@ -1157,12 +1158,12 @@ TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUriWithDefaultSubStream) {
     MockGetBrokerUri();
     auto expected_acknowledge_command = "{\"Op\":\"Acknowledge\"}";
     EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/"  +
-        expected_group_id
-                                             + "/" + std::to_string(expected_dataset_id) + "?token="
-                                             + expected_token,expected_acknowledge_command, _,_)).WillOnce(DoAll(
-        SetArgPointee<2>(HttpCode::OK),
-        SetArgPointee<3>(nullptr),
-        Return("")));
+                                         expected_group_id
+                                         + "/" + std::to_string(expected_dataset_id) + "?token="
+                                         + expected_token, expected_acknowledge_command, _, _)).WillOnce(DoAll(
+                                                     SetArgPointee<2>(HttpCode::OK),
+                                                     SetArgPointee<3>(nullptr),
+                                                     Return("")));
 
     auto err = data_broker->Acknowledge(expected_group_id, expected_dataset_id);
 
@@ -1171,11 +1172,12 @@ TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUriWithDefaultSubStream) {
 
 void ServerDataBrokerTests::ExpectIdList(bool error) {
     MockGetBrokerUri();
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
-        expected_group_id + "/nacks?token=" + expected_token+"&from=1&to=0",_,_)).WillOnce(DoAll(
-        SetArgPointee<1>(HttpCode::OK),
-        SetArgPointee<2>(nullptr),
-        Return(error?"":"{\"unacknowledged\":[1,2,3]}")));
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/" +
+                                        expected_substream + "/"  +
+                                        expected_group_id + "/nacks?token=" + expected_token + "&from=1&to=0", _, _)).WillOnce(DoAll(
+                                                    SetArgPointee<1>(HttpCode::OK),
+                                                    SetArgPointee<2>(nullptr),
+                                                    Return(error ? "" : "{\"unacknowledged\":[1,2,3]}")));
 }
 
 TEST_F(ServerDataBrokerTests, GetUnAcknowledgedListReturnsIds) {
@@ -1183,17 +1185,18 @@ TEST_F(ServerDataBrokerTests, GetUnAcknowledgedListReturnsIds) {
     asapo::Error err;
     auto list = data_broker->GetUnacknowledgedTupleIds(expected_group_id, expected_substream, 1, 0, &err);
 
-    ASSERT_THAT(list, ElementsAre(1,2,3));
+    ASSERT_THAT(list, ElementsAre(1, 2, 3));
     ASSERT_THAT(err, Eq(nullptr));
 }
 
 
 void ServerDataBrokerTests::ExpectLastAckId(bool empty_response) {
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
-        expected_group_id + "/lastack?token=" + expected_token,_,_)).WillOnce(DoAll(
-        SetArgPointee<1>(HttpCode::OK),
-        SetArgPointee<2>(nullptr),
-        Return(empty_response?"{\"lastAckId\":0}":"{\"lastAckId\":1}")));
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/" +
+                                        expected_substream + "/"  +
+                                        expected_group_id + "/lastack?token=" + expected_token, _, _)).WillOnce(DoAll(
+                                                    SetArgPointee<1>(HttpCode::OK),
+                                                    SetArgPointee<2>(nullptr),
+                                                    Return(empty_response ? "{\"lastAckId\":0}" : "{\"lastAckId\":1}")));
 }
 
 

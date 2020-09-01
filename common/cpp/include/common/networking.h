@@ -70,7 +70,7 @@ struct GenericRequestHeader {
     uint64_t    data_size;
     uint64_t    meta_size;
     CustomRequestData    custom_data;
-    char        message[kMaxMessageSize]; /* Can also be a binary message (e.g. MemoryRegionDetails)*/
+    char        message[kMaxMessageSize]; /* Can also be a binary message (e.g. MemoryRegionDetails) */
     char        substream[kMaxMessageSize]; /* Must be a string (strcpy is used) */
     std::string Json() {
         std::string s = "{\"id\":" + std::to_string(data_id) + ","

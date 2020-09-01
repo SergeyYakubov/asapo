@@ -39,7 +39,7 @@ GenericNetworkResponse RequestsDispatcher::CreateResponseToRequest(const std::un
         strncpy(generic_response.message, handle_error->Explain().c_str(), kMaxMessageSize);
     }
     if (request->GetResponseMessage().size() > 0) {
-        if (request->GetResponseMessageType()==ResponseMessageType::kWarning) {
+        if (request->GetResponseMessageType() == ResponseMessageType::kWarning) {
             generic_response.error_code = kNetErrorWarning;
         }
         strncpy(generic_response.message, request->GetResponseMessage().c_str(), kMaxMessageSize);

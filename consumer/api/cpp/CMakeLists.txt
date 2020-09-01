@@ -35,6 +35,7 @@ set(TEST_SOURCE_FILES
         unittests/test_tcp_client.cpp
         unittests/test_tcp_connection_pool.cpp
         unittests/test_fabric_consumer_client.cpp
+        unittests/test_rds_error_mapper.cpp
     )
 set(TEST_LIBRARIES "${TARGET_NAME}")
 

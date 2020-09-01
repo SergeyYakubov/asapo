@@ -16,11 +16,11 @@ Error RequestHandlerDbStreamInfo::ProcessRequest(Request* request) const {
 
     auto col_name = collection_name_prefix_ + "_" + request->GetSubstream();
     StreamInfo info;
-    auto err =  db_client__->GetStreamInfo(col_name,&info);
+    auto err =  db_client__->GetStreamInfo(col_name, &info);
     if (!err) {
-            log__->Debug(std::string{"get stream info from "} + col_name + " in " +
-             db_name_ + " at " + GetReceiverConfig()->database_uri);
-            request->SetResponseMessage(info.Json(),ResponseMessageType::kInfo);
+        log__->Debug(std::string{"get stream info from "} + col_name + " in " +
+                     db_name_ + " at " + GetReceiverConfig()->database_uri);
+        request->SetResponseMessage(info.Json(), ResponseMessageType::kInfo);
     }
     return err;
 }

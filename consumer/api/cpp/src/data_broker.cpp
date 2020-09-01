@@ -39,8 +39,15 @@ std::unique_ptr<DataBroker> DataBrokerFactory::CreateServerBroker(std::string se
         return nullptr;
     }
 
-    return Create<ServerDataBroker>(std::move(server_name), error, std::move(source_path), has_filesystem,
-                                    std::move(source), networkConnectionType);
+    auto broker = Create<ServerDataBroker>(std::move(server_name), error, std::move(source_path), has_filesystem,
+                                           std::move(source));
+
+    // TODO: This is just here to test the old code. Will be removed with the next commit.
+    if (networkConnectionType == NetworkConnectionType::kAsapoTcp) {
+        broker->ForceNoRdma();
+    }
+
+    return broker;
 }
 
 

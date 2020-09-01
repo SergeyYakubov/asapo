@@ -7,9 +7,9 @@
 namespace asapo {
 
 class RequestHandlerDbStreamInfo final: public RequestHandlerDb {
- public:
-  RequestHandlerDbStreamInfo(std::string collection_name_prefix);
-  Error ProcessRequest(Request* request) const override;
+  public:
+    RequestHandlerDbStreamInfo(std::string collection_name_prefix);
+    Error ProcessRequest(Request* request) const override;
 };
 
 }

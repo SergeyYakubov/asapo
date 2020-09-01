@@ -20,14 +20,14 @@ Error RequestHandlerFileProcess::ProcessRequest(Request* request) const {
 Error RequestHandlerFileProcess::ProcessFileExistSituation(Request* request) const {
     auto err_duplicate = request->CheckForDuplicates();
     if (err_duplicate == nullptr) {
-        request->SetResponseMessage("file has been overwritten",ResponseMessageType::kWarning);
+        request->SetResponseMessage("file has been overwritten", ResponseMessageType::kWarning);
         log__->Warning(std::string("overwriting file " ) + request->GetOfflinePath() + kPathSeparator + request->GetFileName());
         return file_processor_->ProcessFile(request, true);
     }
 
     if (err_duplicate == ReceiverErrorTemplates::kWarningDuplicatedRequest) {
         request->SetAlreadyProcessedFlag();
-        request->SetResponseMessage("duplicated request, ignored",ResponseMessageType::kWarning);
+        request->SetResponseMessage("duplicated request, ignored", ResponseMessageType::kWarning);
         log__->Warning("duplicated request, id: " + std::to_string(request->GetDataID()));
         return nullptr;
     }

@@ -10,6 +10,7 @@
 
 #include "asapo_consumer.h"
 #include "fabric_consumer_client.h"
+#include "rds_response_error.h"
 
 using std::chrono::system_clock;
 
@@ -86,19 +87,12 @@ Error ProcessRequestResponce(const Error& server_err, const RequestOutput* respo
 ServerDataBroker::ServerDataBroker(std::string server_uri,
                                    std::string source_path,
                                    bool has_filesystem,
-                                   SourceCredentials source,
-                                   NetworkConnectionType networkType) :
+                                   SourceCredentials source) :
     io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()},
     endpoint_{std::move(server_uri)}, source_path_{std::move(source_path)}, has_filesystem_{has_filesystem},
     source_credentials_(std::move(source)) {
-    switch (networkType) {
-    case NetworkConnectionType::kAsapoTcp:
-        net_client__.reset(new TcpClient());
-        break;
-    case NetworkConnectionType::kFabric:
-        net_client__.reset(new FabricConsumerClient());
-        break;
-    }
+
+    // net_client__ will be lazy initialized
 
     if (source_credentials_.stream.empty()) {
         source_credentials_.stream = SourceCredentials::kDefaultStream;
@@ -108,6 +102,10 @@ ServerDataBroker::ServerDataBroker(std::string server_uri,
 
 void ServerDataBroker::SetTimeout(uint64_t timeout_ms) {
     timeout_ms_ = timeout_ms;
+}
+
+void ServerDataBroker::ForceNoRdma() {
+    should_try_rdma_first_ = false;
 }
 
 std::string ServerDataBroker::RequestWithToken(std::string uri) {
@@ -348,8 +346,38 @@ bool ServerDataBroker::DataCanBeInBuffer(const FileInfo* info) {
     return info->buf_id > 0;
 }
 
+
+
 Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* data) {
-    return net_client__->GetData(info, data);
+    Error error;
+    if (!net_client__) {
+        const std::lock_guard<std::mutex> lock(net_client_mutex__);
+        if (!net_client__) {
+            if (should_try_rdma_first_) { // This will check if a rdma connection can be made and will return early if so
+                auto fabricClient = std::unique_ptr<NetClient>(new FabricConsumerClient());
+
+                error = fabricClient->GetData(info, data);
+
+                // Check if the error comes from the receiver data server (so a connection was made)
+                if (!error || error == RdsResponseErrorTemplates::kNetErrorNoData) {
+                    net_client__.swap(fabricClient);
+                    return error; // Successfully received data and is now using a fabric client
+                }
+
+                // Retry with TCP
+                should_try_rdma_first_ = false;
+                error = nullptr;
+            }
+
+            if (!should_try_rdma_first_) {
+                net_client__.reset(new TcpClient());
+                // If we use tcp, we can fall thought and use the normal GetData code
+            }
+        }
+    }
+
+    error = net_client__->GetData(info, data);
+    return error;
 }
 
 std::string ServerDataBroker::GenerateNewGroupId(Error* err) {
@@ -637,8 +665,8 @@ Error ServerDataBroker::GetDataFromFileTransferService(const FileInfo* info, Fil
 Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::string substream) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
-        +"/" + std::move(substream) +
-        "/" + std::move(group_id) + "/" + std::to_string(id);
+             +"/" + std::move(substream) +
+             "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
     ri.body = "{\"Op\":\"Acknowledge\"}";
 
@@ -647,12 +675,13 @@ Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::stri
     return err;
 }
 
-IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id, Error* error) {
+IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id,
+        uint64_t to_id, Error* error) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
-        +"/" + std::move(substream) +
-        "/" + std::move(group_id) + "/nacks";
-    ri.extra_params = "&from=" + std::to_string(from_id)+"&to=" + std::to_string(to_id);
+             +"/" + std::move(substream) +
+             "/" + std::move(group_id) + "/nacks";
+    ri.extra_params = "&from=" + std::to_string(from_id) + "&to=" + std::to_string(to_id);
 
     auto json_string = BrokerRequestWithTimeout(ri, error);
     if (*error) {
@@ -668,15 +697,16 @@ IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, std::st
     return list;
 }
 
-IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) {
+IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id,
+        Error* error) {
     return GetUnacknowledgedTupleIds(std::move(group_id), kDefaultSubstream, from_id, to_id, error);
 }
 
 uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
-        +"/" + std::move(substream) +
-        "/" + std::move(group_id) + "/lastack";
+             +"/" + std::move(substream) +
+             "/" + std::move(group_id) + "/lastack";
 
     auto json_string = BrokerRequestWithTimeout(ri, error);
     if (*error) {
@@ -690,7 +720,7 @@ uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std:
     }
 
     if (id == 0) {
-        *error=ConsumerErrorTemplates::kNoData.Generate();
+        *error = ConsumerErrorTemplates::kNoData.Generate();
     }
     return id;
 }
@@ -698,5 +728,6 @@ uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std:
 uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, Error* error) {
     return GetLastAcknowledgedTulpeId(std::move(group_id), kDefaultSubstream, error);
 }
+
 
 }

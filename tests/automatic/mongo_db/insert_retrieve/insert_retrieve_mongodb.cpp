@@ -66,9 +66,9 @@ int main(int argc, char* argv[]) {
         Assert(err, "No record");
 
         asapo::StreamInfo info;
-        err = db.GetStreamInfo("test",&info);
+        err = db.GetStreamInfo("test", &info);
         M_AssertEq(nullptr, err);
-        M_AssertEq(fi.id,info.last_id);
+        M_AssertEq(fi.id, info.last_id);
     }
 
     return 0;

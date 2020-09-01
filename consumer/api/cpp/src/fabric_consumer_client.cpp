@@ -2,6 +2,7 @@
 #include <io/io_factory.h>
 #include <iostream>
 #include "fabric_consumer_client.h"
+#include "rds_response_error.h"
 
 using namespace asapo;
 
@@ -41,7 +42,7 @@ Error FabricConsumerClient::GetData(const FileInfo* info, FileData* data) {
     }
 
     if (response.error_code) {
-        return TextError("Response NetworkErrorCode " + std::to_string(response.error_code));
+        return ConvertRdsResponseToError(response.error_code);
     }
 
     data->swap(tempData);
@@ -74,7 +75,7 @@ void FabricConsumerClient::PerformNetworkTransfer(fabric::FabricAddress address,
         return;
     }
 
-    /* The server is sending us the data over RDMA, and then sending us a confirmation */
+    /* The server is _now_ sending us the data over RDMA, and then sending us a confirmation */
 
     client__->Recv(address, currentMessageId, response, sizeof(*response), err);
     // if (*err) ...
