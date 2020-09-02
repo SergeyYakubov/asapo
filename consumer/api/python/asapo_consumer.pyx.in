@@ -161,6 +161,8 @@ cdef class PyDataBroker:
         return size
     def set_timeout(self,timeout):
         self.c_broker.SetTimeout(timeout)
+    def force_no_rdma(self):
+        self.c_broker.ForceNoRdma()
     def current_connection_type(self):
         cdef NetworkConnectionType connection_type = self.c_broker.CurrentConnectionType()
         cdef int cased = <int>connection_type

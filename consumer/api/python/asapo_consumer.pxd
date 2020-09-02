@@ -56,6 +56,7 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass DataBroker:
         DataBroker() except +
         void SetTimeout(uint64_t timeout_ms)
+        void ForceNoRdma()
         NetworkConnectionType CurrentConnectionType()
         Error GetNext(FileInfo* info, string group_id,string substream, FileData* data)
         Error GetLast(FileInfo* info, string group_id,string substream, FileData* data)
