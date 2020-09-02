@@ -12,7 +12,7 @@ namespace asapo {
 
 typedef uint64_t NetworkRequestId;
 
-enum class NetworkConnectionType {
+enum class NetworkConnectionType : uint32_t {
     kUndefined,
     kAsapoTcp, // ASAPOs TCP (Multiple connections for parallel data transfers)
     kFabric, // Fabric connection (Primarily used for InfiniBand verbs)

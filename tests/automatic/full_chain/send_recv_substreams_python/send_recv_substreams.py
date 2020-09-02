@@ -54,5 +54,6 @@ while True:
 
 assert_eq(n_recv, n_send, "send=recv")
 assert_eq(substream_finished, True, "substream finished")
+print ('Network mode:', broker.current_connection_type())
 
 
