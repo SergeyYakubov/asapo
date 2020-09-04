@@ -180,12 +180,11 @@ class DataBroker {
     virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
 };
 
-/*! A class to create a data broker instance. The class's only function Create is used for this*/
+/*! A class to create a data broker instance. The class's only function Create is used for this */
 class DataBrokerFactory {
   public:
     static std::unique_ptr<DataBroker> CreateServerBroker(std::string server_name, std::string source_path,
-            bool has_filesystem, SourceCredentials source, std::string networkType,
-            Error* error) noexcept;
+            bool has_filesystem, SourceCredentials source, Error* error) noexcept;
 
 };
 

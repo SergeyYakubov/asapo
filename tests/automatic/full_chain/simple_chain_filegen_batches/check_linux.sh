@@ -44,7 +44,7 @@ echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detec
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver_${network_type}.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
@@ -61,10 +61,11 @@ echo hello > /tmp/asapo/test_in/test1/file1
 echo hello > /tmp/asapo/test_in/test1/file2
 echo hello > /tmp/asapo/test_in/test2/file2
 
-echo "Start consumer in $network_type mode"
-$consumer_bin ${proxy_address} $network_type ${receiver_folder} ${beamtime_id} 2 $token 2000 1 1 | tee out
-cat out   | grep "Processed 1 dataset(s)"
-cat out   | grep "with 3 file(s)"
+echo "Start consumer in metadata only mode"
+$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 2000 1 1 | tee out
+grep "Processed 1 dataset(s)" out
+grep "with 3 file(s)" out
+grep -i "Using connection type: No connection" out
 
 test -f /tmp/asapo/test_in/test1/file1
 test -f /tmp/asapo/test_in/test1/file2

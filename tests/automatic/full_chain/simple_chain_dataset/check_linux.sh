@@ -50,8 +50,9 @@ echo "Start producer"
 mkdir -p ${receiver_folder}
 $producer_bin localhost:8400 ${beamtime_id} 100 100 4 0 100 5 &
 
-echo "Start consumer in $network_type mode"
-$consumer_bin ${proxy_address} $network_type ${receiver_folder} ${beamtime_id} 2 $token 5000 1 1 | tee out
-cat out   | grep "Processed 100 dataset(s)"
-cat out   | grep "with 500 file(s)"
+echo "Start consumer in metadata only mode"
+$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 5000 1 1 | tee out
+grep "Processed 100 dataset(s)" out
+grep "with 500 file(s)" out
+grep -i "Using connection type: No connection" out
 

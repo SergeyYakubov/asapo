@@ -8,24 +8,22 @@
 
 struct Args {
     std::string server;
-    std::string network_type;
     std::string run_name;
     std::string token;
     std::string datasets;
 };
 
 Args GetArgs(int argc, char* argv[]) {
-    if (argc != 6) {
+    if (argc != 5) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
     }
     std::string server{argv[1]};
-    std::string network_type{argv[2]};
-    std::string source_name{argv[3]};
-    std::string token{argv[4]};
-    std::string datasets{argv[5]};
+    std::string source_name{argv[2]};
+    std::string token{argv[3]};
+    std::string datasets{argv[4]};
 
-    return Args{server, network_type, source_name, token, datasets};
+    return Args{server, source_name, token, datasets};
 }
 
 
@@ -211,7 +209,7 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
 void TestAll(const Args& args) {
     asapo::Error err;
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".", true,
-                  asapo::SourceCredentials{args.run_name, "", "", args.token}, args.network_type, &err);
+                  asapo::SourceCredentials{args.run_name, "", "", args.token}, &err);
     if (err) {
         std::cout << "Error CreateServerBroker: " << err << std::endl;
         exit(EXIT_FAILURE);

@@ -1,4 +1,4 @@
-set(TARGET_NAME full_chain_simple_chain_meta)
+set(TARGET_NAME full_chain_simple_chain_metadata)
 
 ################################
 # Testing

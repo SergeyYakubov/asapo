@@ -62,9 +62,10 @@ echo -n hello2 > /tmp/asapo/test_in/test1/file2
 echo -n hello3 > /tmp/asapo/test_in/test2/file2
 
 echo "Start consumer in $network_type mode"
-$consumer_bin ${proxy_address} $network_type ${receiver_folder} ${beamtime_id} 2 $token 1000 0 | tee out.txt
+$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 0 | tee out.txt
 grep "Processed 3 file(s)" out.txt
 grep "hello1" out.txt
 grep "hello2" out.txt
 grep "hello3" out.txt
+grep -i "Using connection type: No connection" out.txt
 

@@ -23,9 +23,9 @@ def callback(header,err):
         print ("successfuly sent: ",header)
     lock.release()
 
-source, network_type, beamtime, token = sys.argv[1:]
+source, beamtime, token = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,".",True, beamtime,"",token,timeout,network_type)
+broker = asapo_consumer.create_server_broker(source,".",True, beamtime,"",token,timeout)
 producer  = asapo_producer.create_producer(source,beamtime,'auto', "", token, 1, 600)
 producer.set_log_level("debug")
 
@@ -54,6 +54,6 @@ while True:
 
 assert_eq(n_recv, n_send, "send=recv")
 assert_eq(substream_finished, True, "substream finished")
-print ('Network mode:', broker.current_connection_type())
+print('Using connection type: ' + broker.current_connection_type())
 
 

@@ -15,7 +15,7 @@ echo | set /p dummyName="hello" > %file_transfer_folder%\aaa
 
 python3 -c "import os;fout=open('%file_transfer_folder%\\random', 'wb');fout.write(os.urandom(100000))"
 
-"%1"  127.0.0.1:5007 tcp 127.0.0.1:5008 %file_transfer_folder%   || goto :error
+"%1"  127.0.0.1:5007 127.0.0.1:5008 %file_transfer_folder%   || goto :error
 
 type bbb | findstr /c:"hello"  || goto :error
 

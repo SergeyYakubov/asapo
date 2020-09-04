@@ -9,21 +9,19 @@
 
 struct Args {
     std::string uri_authorizer;
-    std::string network_type;
     std::string uri_fts;
     std::string folder;
 };
 
 Args GetArgs(int argc, char* argv[]) {
-    if (argc != 5) {
+    if (argc != 4) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
     }
     std::string uri_authorizer{argv[1]};
-    std::string network_type{argv[2]};
-    std::string uri_fts{argv[3]};
-    std::string folder{argv[4]};
-    return Args{uri_authorizer, network_type, uri_fts, folder};
+    std::string uri_fts{argv[2]};
+    std::string folder{argv[3]};
+    return Args{uri_authorizer, uri_fts, folder};
 }
 
 
@@ -34,8 +32,7 @@ int main(int argc, char* argv[]) {
     std::string authorize_request = "{\"Folder\":\"" + args.folder + "\",\"BeamtimeId\":\"aaa\",\"Token\":\"" + token +
                                     "\"}";
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.uri_authorizer, "", true, asapo::SourceCredentials{"", "", "", ""},
-                  args.network_type, &err);
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.uri_authorizer, "", true, asapo::SourceCredentials{"", "", "", ""}, &err);
     auto server_broker = static_cast<asapo::ServerDataBroker*>(broker.get());
     M_AssertEq(nullptr, err);
 

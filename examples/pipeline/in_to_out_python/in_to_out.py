@@ -20,13 +20,13 @@ def callback(header,err):
         n_send = n_send + 1
     lock.release()
 
-source, network_type, path, beamtime,stream_in, stream_out, token, timeout_s,timeout_s_producer,nthreads, transfer_data = sys.argv[1:]
+source, path, beamtime,stream_in, stream_out, token, timeout_s,timeout_s_producer,nthreads, transfer_data = sys.argv[1:]
 timeout_s=int(timeout_s)
 timeout_s_producer=int(timeout_s_producer)
 nthreads=int(nthreads)
 transfer_data=int(transfer_data)>0
 
-broker = asapo_consumer.create_server_broker(source,path, True,beamtime,stream_in,token,timeout_s*1000,network_type)
+broker = asapo_consumer.create_server_broker(source,path, True,beamtime,stream_in,token,timeout_s*1000)
 
 producer  = asapo_producer.create_producer(source,beamtime,'auto', stream_out, token, nthreads, 600)
 

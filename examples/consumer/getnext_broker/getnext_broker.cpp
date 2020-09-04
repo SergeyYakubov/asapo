@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <thread>
 #include <chrono>
-#include <iomanip>
 #include <numeric>
 #include <mutex>
 #include <string>
@@ -35,7 +34,6 @@ inline std::string ConnectionTypeToString(asapo::NetworkConnectionType type) {
 
 struct Args {
     std::string server;
-    std::string network_type;
     std::string file_path;
     std::string beamtime_id;
     std::string stream;
@@ -68,7 +66,7 @@ std::vector<std::thread> StartThreads(const Args& params,
         asapo::FileInfo fi;
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, true,
-                      asapo::SourceCredentials{params.beamtime_id, "", params.stream, params.token}, params.network_type, &err);
+                      asapo::SourceCredentials{params.beamtime_id, "", params.stream, params.token}, &err);
         if (err) {
             std::cout << "Error CreateServerBroker: " << err << std::endl;
             exit(EXIT_FAILURE);
@@ -123,11 +121,9 @@ std::vector<std::thread> StartThreads(const Args& params,
             }
 
             if (err) {
-                (*errors)[i] += ProcessError(err);
-                if (err) {
-                    std::cout << "Thread exit: " << i << std::endl;
-                    break;
-                }
+                (*errors)[i] += ProcessError(err); // If the error is significant it will be printed here
+                std::cout << "Thread exit: " << i << std::endl;
+                break;
             }
             (*nfiles)[i]++;
         }
@@ -143,7 +139,7 @@ std::vector<std::thread> StartThreads(const Args& params,
 }
 
 int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nbuf, int* nfiles_total,
-                asapo::NetworkConnectionType* connectionType) {
+                asapo::NetworkConnectionType* connection_type) {
     asapo::FileInfo fi;
     system_clock::time_point t1 = system_clock::now();
 
@@ -175,9 +171,9 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nb
             }
         }
 
-        *connectionType = connection_types[firstThreadThatActuallyProcessedData];
+        *connection_type = connection_types[firstThreadThatActuallyProcessedData];
         for (int i = 0; i < params.nthreads; i++) {
-            if (*connectionType != connection_types[i] && nfiles[i] > 0) {
+            if (*connection_type != connection_types[i] && nfiles[i] > 0) {
                 // The output will look like this:
                 // ERROR thread[0](processed 5 files) connection type is 'No connection' but thread[1](processed 3 files) is 'TCP'
 
@@ -185,7 +181,7 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nb
                           ConnectionTypeToString(connection_types[i]) << "' but thread["
                           << firstThreadThatActuallyProcessedData << "](processed "
                           << nfiles[firstThreadThatActuallyProcessedData] << " files) is '" << ConnectionTypeToString(
-                              *connectionType) << "'" << std::endl;
+                              *connection_type) << "'" << std::endl;
             }
         }
     }
@@ -217,25 +213,31 @@ int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
     Args params;
     params.datasets = false;
-    if (argc != 9 && argc != 10) {
+    if (argc != 8 && argc != 9) {
         std::cout << "Usage: " + std::string{argv[0]}
-                  + " <server> <network_type> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
+                  + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
                   <<
                   std::endl;
         exit(EXIT_FAILURE);
     }
     params.server = std::string{argv[1]};
-    params.network_type = std::string{argv[2]};
-    params.file_path = std::string{argv[3]};
-    params.beamtime_id = std::string{argv[4]};
+    params.file_path = std::string{argv[2]};
+    params.beamtime_id = std::string{argv[3]};
     TryGetStream(&params);
-    params.nthreads = atoi(argv[5]);
-    params.token = std::string{argv[6]};
-    params.timeout_ms = atoi(argv[7]);
-    params.read_data = atoi(argv[8]) != 1;
-    if (argc == 10) {
-        params.datasets = atoi(argv[9]) == 1;
+    params.nthreads = atoi(argv[4]);
+    params.token = std::string{argv[5]};
+    params.timeout_ms = atoi(argv[6]);
+    params.read_data = atoi(argv[7]) != 1;
+    if (argc == 9) {
+        params.datasets = atoi(argv[8]) == 1;
     }
+
+    if (params.read_data) {
+        std::cout << "Will read metadata+payload" << std::endl;
+    } else {
+        std::cout << "Will only read metadata" << std::endl;
+    }
+
     uint64_t duration_ms;
     int nerrors, nbuf, nfiles_total;
     asapo::NetworkConnectionType connectionType;

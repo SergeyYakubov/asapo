@@ -18,11 +18,10 @@ using BrokerPtr = std::unique_ptr<asapo::DataBroker>;
 using ProducerPtr = std::unique_ptr<asapo::Producer>;
 std::string group_id = "";
 
-int files_sent;
+uint64_t files_sent;
 
 struct Args {
     std::string server;
-    std::string network_type;
     std::string beamtime_id;
     std::string token;
 };
@@ -37,7 +36,7 @@ void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
 
 BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".", true,
-                  asapo::SourceCredentials{args.beamtime_id, "", "", args.token}, args.network_type, err);
+                  asapo::SourceCredentials{args.beamtime_id, "", "", args.token}, err);
     if (*err) {
         return nullptr;
     }
@@ -79,12 +78,11 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     args.server = std::string{argv[1]};
-    args.network_type = std::string{argv[2]};
-    args.beamtime_id = std::string{argv[3]};
-    args.token = std::string{argv[4]};
+    args.beamtime_id = std::string{argv[2]};
+    args.token = std::string{argv[3]};
     auto producer = CreateProducer(args);
 
-    auto n = 1;
+    uint64_t n = 1;
 
     for (uint64_t i = 0; i < n; i++) {
         asapo::EventHeader event_header{i + 1, 0, std::to_string(i + 1)};

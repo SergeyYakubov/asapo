@@ -34,7 +34,7 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 
 REM consumer
-"%2" %proxy_address% "%4" %receiver_folder% %beamtime_id% 2 %token% 1000 0 > out.txt
+"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 1000 0 > out.txt
 type out.txt
 findstr /i /l /c:"Processed 3 file(s)" out.txt || goto :error
 findstr /i /l /c:"hello1" out.txt || goto :error

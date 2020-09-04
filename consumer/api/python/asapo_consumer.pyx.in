@@ -168,9 +168,9 @@ cdef class PyDataBroker:
         cdef int cased = <int>connection_type
         cdef string result = "Unknown"
         if cased == <int>NetworkConnectionType_kUndefined:
-            result = "Undefined"
+            result = "No connection"
         elif cased == <int>NetworkConnectionType_kAsapoTcp:
-            result = "AsapoTcp"
+            result = "TCP"
         elif cased == <int>NetworkConnectionType_kFabric:
             result = "Fabric"
         return result.decode('utf-8')
@@ -303,7 +303,7 @@ cdef class __PyDataBrokerFactory:
     def __cinit__(self):
         with nogil:
             self.c_factory = DataBrokerFactory()
-    def create_server_broker(self,server_name,source_path,has_filesystem,beamtime_id,stream,token,timeout,network_type):
+    def create_server_broker(self,server_name,source_path,has_filesystem,beamtime_id,stream,token,timeout):
         cdef string b_server_name = _bytes(server_name)
         cdef string b_source_path = _bytes(source_path)
         cdef bool b_has_filesystem = has_filesystem
@@ -311,11 +311,10 @@ cdef class __PyDataBrokerFactory:
         source.beamtime_id = _bytes(beamtime_id)
         source.user_token = _bytes(token)
         source.stream = _bytes(stream)
-        cdef string b_network_type = _bytes(network_type)
         cdef Error err
         cdef unique_ptr[DataBroker] c_broker
         with nogil:
-            c_broker = self.c_factory.CreateServerBroker(b_server_name,b_source_path,b_has_filesystem,source,b_network_type,&err)
+            c_broker = self.c_factory.CreateServerBroker(b_server_name,b_source_path,b_has_filesystem,source,&err)
         broker = PyDataBroker()
         broker.c_broker =  c_broker.release()
         broker.c_broker.SetTimeout(timeout)
@@ -323,7 +322,7 @@ cdef class __PyDataBrokerFactory:
             throw_exception(err)
         return broker
 
-def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stream,token,timeout_ms,network_type):
+def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stream,token,timeout_ms):
     """
       :param server_name: Server endpoint (hostname:port)
       :type server_name: string
@@ -331,13 +330,11 @@ def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stre
       :type source_path: string
       :param has_filesystem: True if the source_path is accessible locally, otherwise will use file transfer service to get data
       :type has_filesystem: bool
-      :param network_type: The networking mode that should be used. Can be "tcp" or "fabric".
-      :type network_type: string
       :return: Broker object and error. (None,err) if case of error, (broker, None) if success
       :rtype: Tuple with broker object and error.
 	"""
     factory = __PyDataBrokerFactory()
-    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),has_filesystem, _bytes(beamtime_id),_bytes(stream),_bytes(token),timeout_ms,_bytes(network_type))
+    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),has_filesystem, _bytes(beamtime_id),_bytes(stream),_bytes(token),timeout_ms)
 
 
 __version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"

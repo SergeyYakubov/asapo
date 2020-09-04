@@ -52,7 +52,7 @@ sleep 1
 
 export PYTHONPATH=$1:${PYTHONPATH}
 export Python_EXECUTABLE=$2
-$Python_EXECUTABLE $3/consumer_api.py 127.0.0.1:8400 tcp $source_path $beamtime_id $token_test_run single
+$Python_EXECUTABLE $3/consumer_api.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run single
 
 #check datasets
 echo "db.dropDatabase()" | mongo ${database_name} > /dev/null
@@ -71,4 +71,4 @@ do
 done
 
 
-$Python_EXECUTABLE $3/consumer_api.py 127.0.0.1:8400 tcp $source_path $beamtime_id $token_test_run datasets
+$Python_EXECUTABLE $3/consumer_api.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run datasets

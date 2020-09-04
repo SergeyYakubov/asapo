@@ -3,8 +3,8 @@ from __future__ import print_function
 import asapo_consumer
 import sys
 
-source, network_type, path, beamtime, token = sys.argv[1:]
-broker = asapo_consumer.create_server_broker(source,path,False, beamtime,"",token,1000,network_type)
+source, path, beamtime, token = sys.argv[1:]
+broker = asapo_consumer.create_server_broker(source,path,False, beamtime,"",token,1000)
 group_id = broker.generate_group_id()
 
 

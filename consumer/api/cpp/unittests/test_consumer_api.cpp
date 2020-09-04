@@ -25,31 +25,12 @@ class DataBrokerFactoryTests : public Test {
 };
 
 
-TEST_F(DataBrokerFactoryTests, CreateServerDataSource_tcp) {
+TEST_F(DataBrokerFactoryTests, CreateServerDataSource) {
 
-    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "path", false, asapo::SourceCredentials{"beamtime_id", "", "", "token"},
-                       "tcp", &error);
-
-    ASSERT_THAT(error, Eq(nullptr));
-    ASSERT_THAT(dynamic_cast<ServerDataBroker*>(data_broker.get()), Ne(nullptr));
-}
-
-TEST_F(DataBrokerFactoryTests, CreateServerDataSource_fabric) {
-
-    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "path", false, asapo::SourceCredentials{"beamtime_id", "", "", "token"},
-                       "fabric", &error);
+    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "path", false, asapo::SourceCredentials{"beamtime_id", "", "", "token"}, &error);
 
     ASSERT_THAT(error, Eq(nullptr));
     ASSERT_THAT(dynamic_cast<ServerDataBroker*>(data_broker.get()), Ne(nullptr));
-}
-
-TEST_F(DataBrokerFactoryTests, CreateServerDataSource_invalid) {
-
-    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "path", false, asapo::SourceCredentials{"beamtime_id", "", "", "token"},
-                       "test", &error);
-
-    ASSERT_THAT(error, Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<ServerDataBroker*>(data_broker.get()), Eq(nullptr));
 }
 
 

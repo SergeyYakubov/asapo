@@ -4,9 +4,9 @@ import asapo_consumer
 import json
 import sys
 
-source, network_type, path, beamtime, token, group_id = sys.argv[1:]
+source, path, beamtime, token, group_id = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,path,True, beamtime,"",token,60000,network_type)
+broker = asapo_consumer.create_server_broker(source,path,True, beamtime,"",token,60000)
 
 
 if group_id == "new":

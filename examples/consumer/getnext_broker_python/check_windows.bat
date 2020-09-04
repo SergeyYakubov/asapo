@@ -16,22 +16,22 @@ echo db.meta.insert({"_id":0,"meta_test":"test"}) | %mongo_exe% %database_name% 
 
 set PYTHONPATH=%1
 
-python3 getnext.py 127.0.0.1:8400 tcp %source_path% %beamtime_id%  %token_test_run% %group_id% > out
+python3 getnext.py 127.0.0.1:8400 %source_path% %beamtime_id%  %token_test_run% %group_id% > out
 type out
 type out | findstr /c:"100" || goto :error
 type out | findstr /c:"\"_id\": 1" || goto :error
 type out | findstr /c:"\"meta_test\": \"test\"" || goto :error
 
-python3 getnext.py 127.0.0.1:8400 tcp %source_path% %beamtime_id%  %token_test_run% %group_id% > out
+python3 getnext.py 127.0.0.1:8400 %source_path% %beamtime_id%  %token_test_run% %group_id% > out
 type out
 type out | findstr /c:"\"_id\": 2" || goto :error
 
-python3 getnext.py 127.0.0.1:8400 tcp %source_path% %beamtime_id%  %token_test_run% %group_id% > out
+python3 getnext.py 127.0.0.1:8400 %source_path% %beamtime_id%  %token_test_run% %group_id% > out
 type out
 type out | findstr /c:"\"_id\": 3" || goto :error
 
 
-python3 getnext.py 127.0.0.1:8400 tcp %source_path% %beamtime_id%  %token_test_run% new > out
+python3 getnext.py 127.0.0.1:8400 %source_path% %beamtime_id%  %token_test_run% new > out
 type out
 type out | findstr /c:"100" || goto :error
 type out | findstr /c:"\"_id\": 1" || goto :error

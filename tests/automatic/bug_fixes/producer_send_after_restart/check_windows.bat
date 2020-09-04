@@ -45,7 +45,7 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 
 REM consumer
-"%2" %proxy_address% "%4" %receiver_folder% %beamtime_id% 2 %token% 3000 1 | findstr /c:"Processed 3 file(s)"  || goto :error
+"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 3000 1 | findstr /c:"Processed 3 file(s)"  || goto :error
 
 
 goto :clean

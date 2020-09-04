@@ -50,7 +50,7 @@ echo "db.${beamtime_id2}_${stream}.insert({dummy:1})" | mongo ${beamtime_id2}_${
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver_tcp.nmd
+nomad run receiver_${network_type}.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
@@ -64,5 +64,11 @@ $producer_bin localhost:8400 ${beamtime_id2} 100 900 4 0 100 &
 #producerid=`echo $!`
 
 echo "Start consumers in $network_type mode"
-$consumer_bin ${proxy_address} $network_type ${receiver_folder1} ${beamtime_id1} 2 $token1 12000 0  | tee /dev/stderr | grep "Processed 1000 file(s)"
-$consumer_bin ${proxy_address} $network_type ${receiver_folder2} ${beamtime_id2} 2 $token2 12000 0 | tee /dev/stderr | grep "Processed 900 file(s)"
+$consumer_bin ${proxy_address} ${receiver_folder1} ${beamtime_id1} 2 $token1 12000 0 | tee /dev/stderr consumer_1.out
+$consumer_bin ${proxy_address} ${receiver_folder2} ${beamtime_id2} 2 $token2 12000 0 | tee /dev/stderr consumer_2.out
+
+grep "from memory buffer: 1000" consumer_1.out
+grep -i "Using connection type: $network_type" consumer_1.out
+
+grep "from memory buffer: 900" consumer_2.out
+grep -i "Using connection type: $network_type" consumer_2.out

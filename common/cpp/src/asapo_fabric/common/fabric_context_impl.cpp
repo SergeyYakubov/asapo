@@ -326,5 +326,5 @@ void FabricContextImpl::InternalWaitWithAliveCheck(FabricAddress targetAddress, 
 void FabricContextImpl::CancelTask(FabricWaitableTask* task, Error* error) {
     *error = nullptr;
     fi_cancel(&endpoint_->fid, task);
-    task->Wait(0, error); // You can probably expect a kInternalOperationCanceledError
+    task->Wait(taskCancelTimeout_, error); // You can probably expect a kInternalOperationCanceledError
 }

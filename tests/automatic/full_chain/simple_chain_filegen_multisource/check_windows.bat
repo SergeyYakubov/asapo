@@ -40,10 +40,11 @@ ping 1.0.0.0 -n 10 -w 100 > nul
 
 
 REM consumer
-"%2" %proxy_address% "%4" %receiver_folder% %beamtime_id% 2 %token% 1000 1 1 > out.txt
+"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 1000 1 1 > out.txt
 type out.txt
-findstr /i /l /c:"Processed 2 dataset(s)"  out.txt || goto :error
-findstr /i /l /c:"with 4 file(s)"  out.txt || goto :error
+findstr /i /l /c:"Processed 2 dataset(s)" out.txt || goto :error
+findstr /i /l /c:"with 4 file(s)" out.txt || goto :error
+findstr /i /l /c:"Using connection type: No connection" out.txt || goto :error
 
 goto :clean
 
@@ -60,5 +61,3 @@ Taskkill /IM "%producer_short_name%" /F
 
 del /f token
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%_detector
-
-

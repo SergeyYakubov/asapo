@@ -36,13 +36,13 @@ export PYTHONPATH=$1:${PYTHONPATH}
 Python_EXECUTABLE=$2
 
 
-$Python_EXECUTABLE getnext.py 127.0.0.1:8400 tcp $source_path $beamtime_id $token_test_run $group_id > out
+$Python_EXECUTABLE getnext.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run $group_id > out
 cat out
 cat out | grep '"size": 100'
 cat out | grep '"_id": 1'
 cat out | grep '"meta_test": "test"'
 
-$Python_EXECUTABLE getnext.py 127.0.0.1:8400 tcp $source_path $beamtime_id $token_test_run $group_id> out
+$Python_EXECUTABLE getnext.py 127.0.0.1:8400 $source_path $beamtime_id $token_test_run $group_id> out
 cat out
 cat out | grep '"_id": 2'
 

@@ -27,27 +27,9 @@ std::unique_ptr<DataBroker> Create(const std::string& source_name,
 }
 
 std::unique_ptr<DataBroker> DataBrokerFactory::CreateServerBroker(std::string server_name, std::string source_path,
-        bool has_filesystem, SourceCredentials source, std::string networkType,
-        Error* error) noexcept {
-    NetworkConnectionType networkConnectionType;
-    if (networkType == "tcp") {
-        networkConnectionType = NetworkConnectionType::kAsapoTcp;
-    } else if (networkType == "fabric") {
-        networkConnectionType = NetworkConnectionType::kFabric;
-    } else {
-        *error = TextError("Unknown network type");
-        return nullptr;
-    }
-
-    auto broker = Create<ServerDataBroker>(std::move(server_name), error, std::move(source_path), has_filesystem,
-                                           std::move(source));
-
-    // TODO: This is just here to test the old code. Will be removed with the next commit.
-    if (networkConnectionType == NetworkConnectionType::kAsapoTcp) {
-        broker->ForceNoRdma();
-    }
-
-    return broker;
+        bool has_filesystem, SourceCredentials source, Error* error) noexcept {
+    return Create<ServerDataBroker>(std::move(server_name), error, std::move(source_path), has_filesystem,
+                                    std::move(source));
 }
 
 
