@@ -72,6 +72,8 @@ func InitDB(dbAgent database.Agent) (err error) {
 		log.Debug("Got mongodb server: " + settings.discoveredDbAddress)
 	}
 
+	db.SetSettings(database.DBSettings{ReadFromInprocessPeriod: 10})
+
 	return db.Connect(settings.GetDatabaseServer())
 }
 

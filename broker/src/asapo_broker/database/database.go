@@ -5,6 +5,11 @@ type Agent interface {
 	Ping() error
 	Connect(string) error
 	Close()
+	SetSettings(settings DBSettings)
+}
+
+type DBSettings struct {
+	ReadFromInprocessPeriod int
 }
 
 type DBError struct {

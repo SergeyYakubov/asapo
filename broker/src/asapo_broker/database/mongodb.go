@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -28,14 +29,19 @@ type ServiceRecord struct {
 	Meta map[string]interface{} `json:"meta"`
 }
 
+type InProcessingRecord struct {
+	ID       int `bson:"_id" json:"_id"`
+	Attempts int
+	Updated  int64
+}
+
 type Nacks struct {
-	Unacknowledged   []int `json:"unacknowledged"`
+	Unacknowledged []int `json:"unacknowledged"`
 }
 
 type LastAck struct {
 	ID int `bson:"_id" json:"lastAckId"`
 }
-
 
 type SubstreamsRecord struct {
 	Substreams []string `bson:"substreams" json:"substreams"`
@@ -48,6 +54,7 @@ type LocationPointer struct {
 
 const data_collection_name_prefix = "data_"
 const acks_collection_name_prefix = "acks_"
+const inprocess_collection_name_prefix = "inprocess_"
 const meta_collection_name = "meta"
 const pointer_collection_name = "current_location"
 const pointer_field_name = "current_pointer"
@@ -58,8 +65,6 @@ const already_connected_msg = "already connected"
 const finish_substream_keyword = "asapo_finish_substream"
 const no_next_substream_keyword = "asapo_no_next"
 
-var dbListLock sync.RWMutex
-var dbPointersLock sync.RWMutex
 var dbSessionLock sync.RWMutex
 
 type SizeRecord struct {
@@ -67,9 +72,15 @@ type SizeRecord struct {
 }
 
 type Mongodb struct {
-	client              *mongo.Client
-	timeout             time.Duration
-	parent_db           *Mongodb
+	client                *mongo.Client
+	timeout               time.Duration
+	parent_db             *Mongodb
+	settings              DBSettings
+	lastReadFromInprocess int64
+}
+
+func (db *Mongodb) SetSettings(settings DBSettings) {
+	db.settings = settings
 }
 
 func (db *Mongodb) Ping() (err error) {
@@ -98,7 +109,8 @@ func (db *Mongodb) Connect(address string) (err error) {
 		return err
 	}
 
-	//	db.client.SetSafe(&mgo.Safe{J: true})
+	atomic.StoreInt64(&db.lastReadFromInprocess, time.Now().Unix())
+
 	return db.Ping()
 }
 
@@ -163,10 +175,14 @@ func (db *Mongodb) getMaxIndex(dbname string, collection_name string, dataset bo
 
 func duplicateError(err error) bool {
 	command_error, ok := err.(mongo.CommandError)
-	if (!ok) {
-		return false
+	if !ok {
+		write_exception_error, ok1 := err.(mongo.WriteException)
+		if !ok1 {
+			return false
+		}
+		return strings.Contains(write_exception_error.Error(),"duplicate key")
 	}
-	return command_error.Name=="DuplicateKey"
+	return command_error.Name == "DuplicateKey"
 }
 
 func (db *Mongodb) setCounter(dbname string, collection_name string, group_id string, ind int) (err error) {
@@ -186,9 +202,9 @@ func (db *Mongodb) incrementField(dbname string, collection_name string, group_i
 
 	err = c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res)
 	if err != nil {
-// duplicateerror can happen because we set Upsert=true to allow insert pointer when it is absent. But then it will try to insert
-// pointer in case query found nothing, also when pointer exists and equal to max_ind. Here we have to return NoData
-		if err == mongo.ErrNoDocuments || duplicateError(err)  {
+		// duplicateerror can happen because we set Upsert=true to allow insert pointer when it is absent. But then it will try to insert
+		// pointer in case query found nothing, also when pointer exists and equal to max_ind. Here we have to return NoData
+		if err == mongo.ErrNoDocuments || duplicateError(err) {
 			return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind, "")}
 		}
 		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
@@ -255,10 +271,17 @@ func (db *Mongodb) ackRecord(dbname string, collection_name string, group_id str
 	}{id}
 	c := db.client.Database(dbname).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
 	_, err = c.InsertOne(context.Background(), &record)
-	return []byte(""),err
+
+	if err==nil {
+		c = db.client.Database(dbname).Collection(inprocess_collection_name_prefix+group_id)
+		_,err_del := c.DeleteOne(context.Background(),bson.M{"_id":id})
+		if err_del != nil {
+			return nil, &DBError{utils.StatusWrongInput, err.Error()}
+		}
+	}
+
+	return []byte(""), err
 }
-
-
 
 func (db *Mongodb) getParentDB() *Mongodb {
 	if db.parent_db == nil {
@@ -273,7 +296,7 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, collectio
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
-	if len(db_name)==0 || len(collection_name) ==0 {
+	if len(db_name) == 0 || len(collection_name) == 0 {
 		return &DBError{utils.StatusWrongInput, "beamtime_id ans substream must be set"}
 	}
 
@@ -286,7 +309,7 @@ func (db *Mongodb) getCurrentPointer(db_name string, collection_name string, gro
 		return LocationPointer{}, 0, err
 	}
 
-	if (max_ind == 0) {
+	if max_ind == 0 {
 		return LocationPointer{}, 0, &DBError{utils.StatusNoData, encodeAnswer(0, 0, "")}
 	}
 
@@ -317,20 +340,102 @@ func processLastRecord(data []byte, collection_name string, err error) ([]byte, 
 	return nil, &DBError{utils.StatusNoData, answer}
 }
 
-func (db *Mongodb) getNextRecord(db_name string, collection_name string, group_id string, dataset bool) ([]byte, error) {
-	curPointer, max_ind, err := db.getCurrentPointer(db_name, collection_name, group_id, dataset)
+func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, resendAfter int) (int, error) {
+	var res InProcessingRecord
+	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
+	tNow := time.Now().Unix()
+	update := bson.M{"$set": bson.M{"updated": tNow}, "$inc": bson.M{"attempts": 1}}
+	q := bson.M{"updated": bson.M{"$lte": tNow - int64(resendAfter)}}
+	c := db.client.Database(dbname).Collection(collection_name)
+	err := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(&res)
 	if err != nil {
-		log_str := "error getting next pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
-		logger.Debug(log_str)
-		return nil, err
+		if err == mongo.ErrNoDocuments {
+			return 0, nil
+		}
+		return 0, err
 	}
-	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
+
+	log_str := "got unprocessed id " + strconv.Itoa(res.ID) + " for " + dbname
 	logger.Debug(log_str)
-	data, err := db.getRecordByIDRow(db_name, collection_name, curPointer.Value, max_ind, dataset)
-	if curPointer.Value != max_ind {
+	return res.ID, nil
+}
+
+func (db *Mongodb) InsertToInprocessIfNeeded(db_name string, collection_name string, id int, extra_param string) (error) {
+	if len(extra_param)==0 {
+		return nil
+	}
+
+	record := InProcessingRecord{
+		id,0,time.Now().Unix(),
+	}
+
+	c := db.client.Database(db_name).Collection(collection_name)
+	_, err := c.InsertOne(context.TODO(), &record)
+	if duplicateError(err) {
+		return nil
+	}
+	return err
+}
+
+func (db *Mongodb) getNextRecord(db_name string, collection_name string, group_id string, dataset bool, extra_param string) ([]byte, error) {
+	record_ind := 0
+	max_ind := 0
+	if len(extra_param) > 0 {
+		resendAfter, _, err := extractsTwoIntsFromString(extra_param)
+		if err != nil {
+			return nil, err
+		}
+		tNow := time.Now().Unix()
+		if atomic.LoadInt64(&db.lastReadFromInprocess) <= tNow-int64(db.settings.ReadFromInprocessPeriod) {
+			record_ind, err = db.getUnProcessedId(db_name, inprocess_collection_name_prefix+group_id, resendAfter)
+			if err != nil {
+				log_str := "error getting unprocessed id " + db_name + ", groupid: " + group_id + ":" + err.Error()
+				logger.Debug(log_str)
+				return nil, err
+			}
+		}
+		if record_ind != 0 {
+			max_ind, err = db.getMaxIndex(db_name, collection_name, dataset)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if record_ind == 0 {
+		var curPointer LocationPointer
+		var err error
+		curPointer, max_ind, err = db.getCurrentPointer(db_name, collection_name, group_id, dataset)
+		if err != nil {
+			log_str := "error getting next pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
+			logger.Debug(log_str)
+			return nil, err
+		}
+		log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
+		logger.Debug(log_str)
+		record_ind = curPointer.Value
+	}
+
+
+	data, err := db.getRecordByIDRow(db_name, collection_name, record_ind, max_ind, dataset)
+	if record_ind != max_ind {
+		if err==nil {
+			err_update := db.InsertToInprocessIfNeeded(db_name,inprocess_collection_name_prefix+group_id,record_ind,extra_param)
+			if err_update!=nil {
+				return nil,err_update
+			}
+		}
 		return data, err
 	}
-	return processLastRecord(data, collection_name, err)
+	data,err =  processLastRecord(data, collection_name, err)
+	if err==nil {
+		err_update := db.InsertToInprocessIfNeeded(db_name,inprocess_collection_name_prefix+group_id,record_ind,extra_param)
+		if err_update!=nil {
+			return nil,err_update
+		}
+	}
+
+	return data, err
 }
 
 func (db *Mongodb) getLastRecord(db_name string, collection_name string, group_id string, dataset bool) ([]byte, error) {
@@ -448,7 +553,6 @@ func (db *Mongodb) getSubstreams(db_name string) ([]byte, error) {
 	return json.Marshal(&rec)
 }
 
-
 func makeRange(min, max int) []int {
 	a := make([]int, max-min+1)
 	for i := range a {
@@ -457,32 +561,32 @@ func makeRange(min, max int) []int {
 	return a
 }
 
-func extractsLimitsFromString(from_to string) (int,int,error) {
+func extractsTwoIntsFromString(from_to string) (int, int, error) {
 	s := strings.Split(from_to, "_")
-	if len(s)!=2 {
-		return 0,0,errors.New("wrong format: "+from_to)
+	if len(s) != 2 {
+		return 0, 0, errors.New("wrong format: " + from_to)
 	}
 	from, err := strconv.Atoi(s[0])
 	if err != nil {
-		return 0,0, err
+		return 0, 0, err
 	}
 
 	to, err := strconv.Atoi(s[1])
 	if err != nil {
-		return 0,0, err
+		return 0, 0, err
 	}
 
-	return from,to,nil
+	return from, to, nil
 
 }
 
-func (db *Mongodb) nacks(db_name string, collection_name string, group_id string,from_to string) ([]byte, error) {
-	from, to, err := extractsLimitsFromString(from_to)
-	if err!=nil {
-		return nil,err
+func (db *Mongodb) nacks(db_name string, collection_name string, group_id string, from_to string) ([]byte, error) {
+	from, to, err := extractsTwoIntsFromString(from_to)
+	if err != nil {
+		return nil, err
 	}
 
-	if from==0 {
+	if from == 0 {
 		from = 1
 	}
 
@@ -494,11 +598,11 @@ func (db *Mongodb) nacks(db_name string, collection_name string, group_id string
 	}
 
 	res := Nacks{[]int{}}
-	if (to == 0) {
+	if to == 0 {
 		return utils.MapToJson(&res)
 	}
 
-	res.Unacknowledged, err = db.getNacks(db_name,collection_name,group_id,from,to)
+	res.Unacknowledged, err = db.getNacks(db_name, collection_name, group_id, from, to)
 	if err != nil {
 		return nil, err
 	}
@@ -515,19 +619,18 @@ func (db *Mongodb) lastAck(db_name string, collection_name string, group_id stri
 	if err == mongo.ErrNoDocuments {
 		return utils.MapToJson(&result)
 	}
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 
 	return utils.MapToJson(&result)
 }
 
-
-func (db *Mongodb) getNacks(db_name string, collection_name string, group_id string, min_index,max_index int) ([]int,error) {
+func (db *Mongodb) getNacks(db_name string, collection_name string, group_id string, min_index, max_index int) ([]int, error) {
 
 	c := db.client.Database(db_name).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
 
-	if (min_index > max_index) {
+	if min_index > max_index {
 		return []int{}, errors.New("from index is greater than to index")
 	}
 
@@ -536,16 +639,15 @@ func (db *Mongodb) getNacks(db_name string, collection_name string, group_id str
 		return []int{}, err
 	}
 
-	if (size == 0) {
-		return makeRange(min_index,max_index), nil
+	if size == 0 {
+		return makeRange(min_index, max_index), nil
 	}
 
 	if min_index == 1 && int(size) == max_index {
 		return []int{}, nil
 	}
 
-
-	matchStage := bson.D{{"$match", bson.D{{"_id", bson.D{{"$lt",max_index+1},{"$gt",min_index-1}}}}}}
+	matchStage := bson.D{{"$match", bson.D{{"_id", bson.D{{"$lt", max_index + 1}, {"$gt", min_index - 1}}}}}}
 	groupStage := bson.D{
 		{"$group", bson.D{
 			{"_id", 0},
@@ -557,22 +659,22 @@ func (db *Mongodb) getNacks(db_name string, collection_name string, group_id str
 		{"$project", bson.D{
 			{"_id", 0},
 			{"numbers", bson.D{
-				{"$setDifference", bson.A{bson.D{{"$range",bson.A{min_index,max_index+1}}},"$numbers"}},
+				{"$setDifference", bson.A{bson.D{{"$range", bson.A{min_index, max_index + 1}}}, "$numbers"}},
 			}}},
 		}}
 
-	query := mongo.Pipeline{matchStage, groupStage,projectStage}
+	query := mongo.Pipeline{matchStage, groupStage, projectStage}
 	cursor, err := c.Aggregate(context.Background(), query)
 	type res struct {
 		Numbers []int
 	}
 	resp := []res{}
-	err = cursor.All(context.Background(),&resp)
-	if err!= nil || len(resp)!=1 {
+	err = cursor.All(context.Background(), &resp)
+	if err != nil || len(resp) != 1 {
 		return []int{}, err
 	}
 
-	return resp[0].Numbers,nil
+	return resp[0].Numbers, nil
 }
 
 func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
@@ -588,7 +690,7 @@ func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_
 
 	switch op {
 	case "next":
-		return db.getNextRecord(db_name, collection_name, group_id, dataset)
+		return db.getNextRecord(db_name, collection_name, group_id, dataset, extra_param)
 	case "id":
 		return db.getRecordByID(db_name, collection_name, group_id, extra_param, dataset)
 	case "last":

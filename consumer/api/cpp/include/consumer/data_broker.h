@@ -32,8 +32,6 @@ class DataBroker {
     */
     virtual Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) = 0;
 
-
-
   //! Get unacknowledged tuple for specific group id and substream.
   /*!
       \param group_id - group id to use.
@@ -112,7 +110,6 @@ class DataBroker {
     virtual DataSet GetLastDataset(std::string group_id, Error* err) = 0;
     virtual DataSet GetLastDataset(std::string group_id, std::string substream, Error* err) = 0;
 
-
     //! Receive dataset by id.
     /*!
       \param id - dataset id
@@ -143,8 +140,6 @@ class DataBroker {
     virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) = 0;
     virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) = 0;
 
-
-
     //! Receive last available image.
     /*!
       \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
@@ -163,6 +158,15 @@ class DataBroker {
     */
     virtual FileInfos QueryImages(std::string query, Error* err) = 0;
     virtual FileInfos QueryImages(std::string query, std::string substream, Error* err) = 0;
+
+  //! Configure resending nonacknowledged data
+  /*!
+    \param resend -  where to resend
+    \param resend_after - how many seconds to wait for acknowledgment
+    \param resend_attempts - how many time to resend.
+  */
+  virtual void SetResendNacs(bool resend, uint64_t resend_after, uint64_t resend_attempts) = 0;
+
 
     virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
 };
