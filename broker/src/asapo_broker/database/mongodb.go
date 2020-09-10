@@ -31,7 +31,7 @@ type ServiceRecord struct {
 
 type InProcessingRecord struct {
 	ID       int `bson:"_id" json:"_id"`
-	Attempts int
+	ResendAttempts int `bson:"resendAttempts" json:"resendAttempts"`
 	Updated  int64
 }
 
@@ -96,7 +96,6 @@ func (db *Mongodb) Connect(address string) (err error) {
 	if db.client != nil {
 		return &DBError{utils.StatusServiceUnavailable, already_connected_msg}
 	}
-
 	db.client, err = mongo.NewClient(options.Client().SetConnectTimeout(20 * time.Second).ApplyURI("mongodb://" + address))
 	if err != nil {
 		return err
@@ -180,7 +179,7 @@ func duplicateError(err error) bool {
 		if !ok1 {
 			return false
 		}
-		return strings.Contains(write_exception_error.Error(),"duplicate key")
+		return strings.Contains(write_exception_error.Error(), "duplicate key")
 	}
 	return command_error.Name == "DuplicateKey"
 }
@@ -205,6 +204,11 @@ func (db *Mongodb) incrementField(dbname string, collection_name string, group_i
 		// duplicateerror can happen because we set Upsert=true to allow insert pointer when it is absent. But then it will try to insert
 		// pointer in case query found nothing, also when pointer exists and equal to max_ind. Here we have to return NoData
 		if err == mongo.ErrNoDocuments || duplicateError(err) {
+			// try again without upsert - if the first error was due to missing pointer
+			opts = options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
+			if err2 := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res);err2==nil {
+				return nil
+			}
 			return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind, "")}
 		}
 		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
@@ -272,9 +276,9 @@ func (db *Mongodb) ackRecord(dbname string, collection_name string, group_id str
 	c := db.client.Database(dbname).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
 	_, err = c.InsertOne(context.Background(), &record)
 
-	if err==nil {
-		c = db.client.Database(dbname).Collection(inprocess_collection_name_prefix+group_id)
-		_,err_del := c.DeleteOne(context.Background(),bson.M{"_id":id})
+	if err == nil {
+		c = db.client.Database(dbname).Collection(inprocess_collection_name_prefix + group_id)
+		_, err_del := c.DeleteOne(context.Background(), bson.M{"_id": id})
 		if err_del != nil {
 			return nil, &DBError{utils.StatusWrongInput, err.Error()}
 		}
@@ -322,30 +326,12 @@ func (db *Mongodb) getCurrentPointer(db_name string, collection_name string, gro
 	return curPointer, max_ind, nil
 }
 
-func processLastRecord(data []byte, collection_name string, err error) ([]byte, error) {
-	var r ServiceRecord
-	err = json.Unmarshal(data, &r)
-	if err != nil || r.Name != finish_substream_keyword {
-		return data, err
-	}
-	var next_substream string
-	next_substream, ok := r.Meta["next_substream"].(string)
-	if !ok {
-		next_substream = no_next_substream_keyword
-	}
-
-	answer := encodeAnswer(r.ID, r.ID, next_substream)
-	log_str := "reached end of substream " + collection_name + " , next_substream: " + next_substream
-	logger.Debug(log_str)
-	return nil, &DBError{utils.StatusNoData, answer}
-}
-
-func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, resendAfter int) (int, error) {
+func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, resendAfter int,nResendAttempts int) (int, error) {
 	var res InProcessingRecord
 	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
 	tNow := time.Now().Unix()
-	update := bson.M{"$set": bson.M{"updated": tNow}, "$inc": bson.M{"attempts": 1}}
-	q := bson.M{"updated": bson.M{"$lte": tNow - int64(resendAfter)}}
+	update := bson.M{"$set": bson.M{"updated": tNow}, "$inc": bson.M{"resendAttempts": 1}}
+	q := bson.M{"updated": bson.M{"$lte": tNow - int64(resendAfter)},"resendAttempts": bson.M{"$lt": nResendAttempts}}
 	c := db.client.Database(dbname).Collection(collection_name)
 	err := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(&res)
 	if err != nil {
@@ -360,13 +346,13 @@ func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, resen
 	return res.ID, nil
 }
 
-func (db *Mongodb) InsertToInprocessIfNeeded(db_name string, collection_name string, id int, extra_param string) (error) {
-	if len(extra_param)==0 {
+func (db *Mongodb) InsertToInprocessIfNeeded(db_name string, collection_name string, id int, extra_param string) error {
+	if len(extra_param) == 0 {
 		return nil
 	}
 
 	record := InProcessingRecord{
-		id,0,time.Now().Unix(),
+		id, 0, time.Now().Unix(),
 	}
 
 	c := db.client.Database(db_name).Collection(collection_name)
@@ -377,64 +363,120 @@ func (db *Mongodb) InsertToInprocessIfNeeded(db_name string, collection_name str
 	return err
 }
 
-func (db *Mongodb) getNextRecord(db_name string, collection_name string, group_id string, dataset bool, extra_param string) ([]byte, error) {
+func (db *Mongodb) getNextIndexesFromInprocessed(db_name string, collection_name string, group_id string, dataset bool, extra_param string, ignoreTimeout bool) (int, int, error) {
+	if len(extra_param) == 0 {
+		return 0, 0, nil
+	}
+
 	record_ind := 0
 	max_ind := 0
-	if len(extra_param) > 0 {
-		resendAfter, _, err := extractsTwoIntsFromString(extra_param)
-		if err != nil {
-			return nil, err
-		}
-		tNow := time.Now().Unix()
-		if atomic.LoadInt64(&db.lastReadFromInprocess) <= tNow-int64(db.settings.ReadFromInprocessPeriod) {
-			record_ind, err = db.getUnProcessedId(db_name, inprocess_collection_name_prefix+group_id, resendAfter)
-			if err != nil {
-				log_str := "error getting unprocessed id " + db_name + ", groupid: " + group_id + ":" + err.Error()
-				logger.Debug(log_str)
-				return nil, err
-			}
-		}
-		if record_ind != 0 {
-			max_ind, err = db.getMaxIndex(db_name, collection_name, dataset)
-			if err != nil {
-				return nil, err
-			}
-		}
+	resendAfter, nResendAttempts, err := extractsTwoIntsFromString(extra_param)
+	if err != nil {
+		return 0, 0, err
 	}
-
-	if record_ind == 0 {
-		var curPointer LocationPointer
-		var err error
-		curPointer, max_ind, err = db.getCurrentPointer(db_name, collection_name, group_id, dataset)
+	tNow := time.Now().Unix()
+	if (atomic.LoadInt64(&db.lastReadFromInprocess) <= tNow-int64(db.settings.ReadFromInprocessPeriod)) || ignoreTimeout {
+		record_ind, err = db.getUnProcessedId(db_name, inprocess_collection_name_prefix+group_id, resendAfter,nResendAttempts)
 		if err != nil {
-			log_str := "error getting next pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
+			log_str := "error getting unprocessed id " + db_name + ", groupid: " + group_id + ":" + err.Error()
 			logger.Debug(log_str)
-			return nil, err
+			return 0, 0, err
 		}
-		log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
-		logger.Debug(log_str)
-		record_ind = curPointer.Value
+	}
+	if record_ind != 0 {
+		max_ind, err = db.getMaxIndex(db_name, collection_name, dataset)
+		if err != nil {
+			return 0, 0, err
+		}
+	} else {
+		atomic.StoreInt64(&db.lastReadFromInprocess, time.Now().Unix())
 	}
 
+	return record_ind, max_ind, nil
 
-	data, err := db.getRecordByIDRow(db_name, collection_name, record_ind, max_ind, dataset)
-	if record_ind != max_ind {
-		if err==nil {
-			err_update := db.InsertToInprocessIfNeeded(db_name,inprocess_collection_name_prefix+group_id,record_ind,extra_param)
-			if err_update!=nil {
-				return nil,err_update
+}
+
+func (db *Mongodb) getNextIndexesFromCurPointer(db_name string, collection_name string, group_id string, dataset bool, extra_param string) (int, int, error) {
+	curPointer, max_ind, err := db.getCurrentPointer(db_name, collection_name, group_id, dataset)
+	if err != nil {
+		log_str := "error getting next pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
+		logger.Debug(log_str)
+		return 0, 0, err
+	}
+	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + db_name + ", groupid: " + group_id
+	logger.Debug(log_str)
+	return curPointer.Value, max_ind, nil
+}
+
+func (db *Mongodb) getNextIndexes(db_name string, collection_name string, group_id string, dataset bool, extra_param string) (int, int, error) {
+	nextInd, maxInd, err := db.getNextIndexesFromInprocessed(db_name, collection_name, group_id, dataset, extra_param, false)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if nextInd == 0 {
+		nextInd, maxInd, err = db.getNextIndexesFromCurPointer(db_name, collection_name, group_id, dataset, extra_param)
+		if err_db, ok := err.(*DBError); ok && err_db.Code == utils.StatusNoData {
+			var err_inproc error
+			nextInd, maxInd, err_inproc = db.getNextIndexesFromInprocessed(db_name, collection_name, group_id, dataset, extra_param, true)
+			if err_inproc != nil {
+				return 0, 0, err_inproc
+			}
+			if nextInd == 0 {
+				return 0, 0, err
 			}
 		}
+	}
+	return nextInd, maxInd, nil
+}
+
+func (db *Mongodb) processLastRecord(data []byte, err error, db_name string, collection_name string,
+				group_id string, dataset bool, extra_param string) ([]byte, error) {
+	var r ServiceRecord
+	err = json.Unmarshal(data, &r)
+	if err != nil || r.Name != finish_substream_keyword {
 		return data, err
 	}
-	data,err =  processLastRecord(data, collection_name, err)
-	if err==nil {
-		err_update := db.InsertToInprocessIfNeeded(db_name,inprocess_collection_name_prefix+group_id,record_ind,extra_param)
-		if err_update!=nil {
-			return nil,err_update
-		}
+	var next_substream string
+	next_substream, ok := r.Meta["next_substream"].(string)
+	if !ok {
+		next_substream = no_next_substream_keyword
 	}
 
+	answer := encodeAnswer(r.ID, r.ID, next_substream)
+	log_str := "reached end of substream " + collection_name + " , next_substream: " + next_substream
+	logger.Debug(log_str)
+
+
+	var err_inproc error
+	nextInd, maxInd, err_inproc := db.getNextIndexesFromInprocessed(db_name, collection_name, group_id, dataset, extra_param, true)
+	if err_inproc != nil {
+		return nil, err_inproc
+	}
+	if nextInd != 0 {
+		return  db.getRecordByIDRow(db_name, collection_name, nextInd, maxInd, dataset)
+	}
+
+	return nil, &DBError{utils.StatusNoData, answer}
+}
+
+func (db *Mongodb) getNextRecord(db_name string, collection_name string, group_id string, dataset bool, extra_param string) ([]byte, error) {
+	nextInd, maxInd, err := db.getNextIndexes(db_name, collection_name, group_id, dataset, extra_param)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := db.getRecordByIDRow(db_name, collection_name, nextInd, maxInd, dataset)
+	if nextInd == maxInd {
+		data, err = db.processLastRecord(data, err,db_name,collection_name,group_id,dataset,extra_param)
+	}
+
+	if err == nil {
+		err_update := db.InsertToInprocessIfNeeded(db_name, inprocess_collection_name_prefix+group_id, nextInd, extra_param)
+		if err_update != nil {
+			return nil, err_update
+		}
+	}
 	return data, err
 }
 

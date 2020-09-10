@@ -5,6 +5,7 @@ package database
 import (
 	"asapo_common/utils"
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
@@ -138,7 +139,7 @@ func TestMongoDBGetNextOK(t *testing.T) {
 	assert.Equal(t, string(rec1_expect), string(res))
 }
 
-/*
+
 func TestMongoDBGetNextErrorOnFinishedStream(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
@@ -151,7 +152,7 @@ func TestMongoDBGetNextErrorOnFinishedStream(t *testing.T) {
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":2,\"next_substream\":\"next1\"}", err.(*DBError).Message)
 }
-*/
+
 func TestMongoDBGetNextErrorOnNoMoreData(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
@@ -189,19 +190,27 @@ func insertRecords(n int) {
 	for ind, record := range records {
 		record.ID = ind + 1
 		record.Name = string(ind)
-		db.insertRecord(dbname, collection, &record)
+		if err:= db.insertRecord(dbname, collection, &record);err!=nil {
+			fmt.Println("error at insert ",ind)
+		}
 	}
-	time.Sleep(time.Millisecond*100)
 }
 
-func getRecords(n int) []int {
+func getRecords(n int, resend bool) []int {
 	results := make([]int, n)
 	var wg sync.WaitGroup
 	wg.Add(n)
+	extra_param:=""
+	if resend {
+		extra_param="0_1"
+	}
 	for i := 0; i < n; i++ {
 		go func() {
 			defer wg.Done()
-			res_bin, _:= db.ProcessRequest(dbname, collection, groupId, "next", "")
+			res_bin, err:= db.ProcessRequest(dbname, collection, groupId, "next", extra_param)
+			if err!=nil {
+				fmt.Println("error at read ",i)
+			}
 			var res TestRecord
 			json.Unmarshal(res_bin, &res)
 			if res.ID>0 {
@@ -220,10 +229,26 @@ func TestMongoDBGetNextInParallel(t *testing.T) {
 	n := 100
 	insertRecords(n)
 
-	results := getRecords(n)
+	results := getRecords(n,false)
 
 	assert.Equal(t, n, getNOnes(results))
 }
+
+func TestMongoDBGetNextInParallelWithResend(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 100})
+	db.Connect(dbaddress)
+	defer cleanup()
+	n := 100
+	insertRecords(n)
+
+	results := getRecords(n,true)
+	results2 := getRecords(n,true)
+
+	assert.Equal(t, n, getNOnes(results),"first")
+	assert.Equal(t, n, getNOnes(results2),"second")
+}
+
+
 
 func TestMongoDBGetLastAfterErasingDatabase(t *testing.T) {
 	db.Connect(dbaddress)
@@ -249,7 +274,7 @@ func TestMongoDBGetNextAfterErasingDatabase(t *testing.T) {
 
 	n := 100
 	insertRecords(n)
-	results := getRecords(n)
+	results := getRecords(n,false)
 	assert.Equal(t, n, getNOnes(results))
 }
 
@@ -742,3 +767,122 @@ func TestMongoDBLastAcks(t *testing.T) {
 }
 
 
+func TestMongoDBGetNextUsesInprocessedImmedeatly(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 0})
+	db.Connect(dbaddress)
+	defer cleanup()
+	err := db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec2)
+	res, err := db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
+	res1, err1 := db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
+
+	assert.Nil(t, err)
+	assert.Nil(t, err1)
+	assert.Equal(t, string(rec1_expect), string(res))
+	assert.Equal(t, string(rec1_expect), string(res1))
+}
+
+func TestMongoDBGetNextUsesInprocessedNumRetry(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 0})
+	db.Connect(dbaddress)
+	defer cleanup()
+	err := db.insertRecord(dbname, collection, &rec1)
+	res, err := db.ProcessRequest(dbname, collection, groupId, "next", "0_1")
+	res1, err1 := db.ProcessRequest(dbname, collection, groupId, "next", "0_1")
+	_, err2 := db.ProcessRequest(dbname, collection, groupId, "next", "0_1")
+
+	assert.Nil(t, err)
+	assert.Nil(t, err1)
+	assert.NotNil(t, err2)
+	if err2!=nil {
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"\"}", err2.Error())
+	}
+	assert.Equal(t, string(rec1_expect), string(res))
+	assert.Equal(t, string(rec1_expect), string(res1))
+}
+
+func TestMongoDBGetNextUsesInprocessedAfterTimeout(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 0})
+	db.Connect(dbaddress)
+	defer cleanup()
+	err := db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec2)
+	res, err := db.ProcessRequest(dbname, collection, groupId, "next", "1_3")
+	res1, err1 := db.ProcessRequest(dbname, collection, groupId, "next", "1_3")
+	time.Sleep(time.Second)
+	res2, err2 := db.ProcessRequest(dbname, collection, groupId, "next", "1_3")
+	assert.Nil(t, err)
+	assert.Nil(t, err1)
+	assert.Nil(t, err2)
+	assert.Equal(t, string(rec1_expect), string(res))
+	assert.Equal(t, string(rec2_expect), string(res1))
+	assert.Equal(t, string(rec1_expect), string(res2))
+}
+
+func TestMongoDBGetNextReturnsToNormalAfterUsesInprocessed(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 0})
+	db.Connect(dbaddress)
+	defer cleanup()
+	err := db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec2)
+	res, err := db.ProcessRequest(dbname, collection, groupId, "next", "1_3")
+	time.Sleep(time.Second)
+	res1, err1 := db.ProcessRequest(dbname, collection, groupId, "next", "1_3")
+	res2, err2 := db.ProcessRequest(dbname, collection, groupId, "next", "1_3")
+	assert.Nil(t, err)
+	assert.Nil(t, err1)
+	assert.Nil(t, err2)
+	assert.Equal(t, string(rec1_expect), string(res))
+	assert.Equal(t, string(rec1_expect), string(res1))
+	assert.Equal(t, string(rec2_expect), string(res2))
+}
+
+
+func TestMongoDBGetNextUsesInprocessedImmedeatlyIfFinishedStream(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 10})
+	db.Connect(dbaddress)
+	defer cleanup()
+	err := db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec_finished)
+	res, err := db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
+	res1, err1 := db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
+	assert.Nil(t, err)
+	assert.Nil(t, err1)
+	assert.Equal(t, string(rec1_expect), string(res))
+	assert.Equal(t, string(rec1_expect), string(res1))
+}
+
+func TestMongoDBGetNextUsesInprocessedImmedeatlyIfEndofStream(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 10})
+	db.Connect(dbaddress)
+	defer cleanup()
+	err := db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec2)
+	res, err := db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
+	res1, err1 := db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
+	res2, err2 := db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
+	assert.Nil(t, err)
+	assert.Nil(t, err1)
+	assert.Nil(t, err2)
+	assert.Equal(t, string(rec1_expect), string(res))
+	assert.Equal(t, string(rec2_expect), string(res1))
+	assert.Equal(t, string(rec1_expect), string(res2))
+}
+
+
+
+func TestMongoDBAckDeletesInprocessed(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 0})
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec1)
+	db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
+	db.ProcessRequest(dbname, collection, groupId, "ackimage", "1")
+	_, err := db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
+
+	assert.NotNil(t, err)
+	if err!=nil {
+		assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"\"}", err.Error())
+	}
+}

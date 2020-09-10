@@ -4,6 +4,7 @@
   "PerformanceDbServer":"{{ .Chart.Name }}-influxdb:{{ .Values.influxdb.influxdb.service.port }}",
   "PerformanceDbName": "asapo_brokers",
   "Port": {{ .Values.ownServices.broker.port }},
+  "CheckResendInterval":10,
   "LogLevel":"debug",
   "SecretFile":"/etc/broker/auth_secret.key"
 }

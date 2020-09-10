@@ -2,6 +2,7 @@
   "DatabaseServer":"auto",
   "DiscoveryServer": "localhost:8400/discovery",
   "PerformanceDbServer": "localhost:8086",
+  "CheckResendInterval":10,
   "PerformanceDbName": "db_test",
   "Port": 5005,
   "LogLevel":"info",
