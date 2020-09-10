@@ -20,6 +20,7 @@ type serverSettings struct {
 	Port                int
 	LogLevel            string
 	discoveredDbAddress string
+	CheckResendInterval int
 }
 
 func (s *serverSettings) GetDatabaseServer() string {
@@ -71,6 +72,8 @@ func InitDB(dbAgent database.Agent) (err error) {
 		}
 		log.Debug("Got mongodb server: " + settings.discoveredDbAddress)
 	}
+
+	db.SetSettings(database.DBSettings{ReadFromInprocessPeriod: settings.CheckResendInterval})
 
 	return db.Connect(settings.GetDatabaseServer())
 }

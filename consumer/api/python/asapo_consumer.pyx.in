@@ -210,6 +210,9 @@ cdef class PyDataBroker:
             err = self.c_broker.Acknowledge(b_group_id,id,b_substream)
         if err:
             throw_exception(err)
+    def set_resend_nacs(self,bool resend, uint64_t resend_after, uint64_t resend_attempts):
+        with nogil:
+            self.c_broker.SetResendNacs(resend,resend_after,resend_attempts)
 
     def get_last_acknowledged_tuple_id(self, group_id, substream = "default"):
         cdef string b_group_id = _bytes(group_id)

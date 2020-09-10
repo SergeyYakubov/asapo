@@ -66,6 +66,7 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
         DataSet GetDatasetById(uint64_t id,string group_id,string substream, Error* err)
         Error RetrieveData(FileInfo* info, FileData* data)
         vector[string] GetSubstreamList(Error* err)
+        void SetResendNacs(bool resend, uint64_t resend_after, uint64_t resend_attempts)
 
 
 cdef extern from "asapo_consumer.h" namespace "asapo" nogil:

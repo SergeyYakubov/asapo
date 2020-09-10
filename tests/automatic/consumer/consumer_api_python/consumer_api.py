@@ -152,6 +152,19 @@ def check_single(broker,group_id):
     nacks = broker.get_unacknowledged_tuple_ids(group_id)
     assert_eq(len(nacks),4,"nacks stream1 size = 4 after ack")
 
+#resend
+    broker.reset_lastread_marker(group_id)
+    broker.set_resend_nacs(True,0,1)
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"1","get next before resend")
+
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"1","get next with resend")
+
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"2","get next after resend")
+
+
 #images
 
     images = broker.query_images("meta.test = 10")

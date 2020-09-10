@@ -1247,6 +1247,20 @@ TEST_F(ServerDataBrokerTests, GetByIdErrorsForId0) {
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
 }
 
+TEST_F(ServerDataBrokerTests, ResendNacks) {
+    MockGetBrokerUri();
+
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/"
+                                            + expected_group_id + "/next?token="
+                                            + expected_token+"&resend_nacks=true&resend_after=10&resend_attempts=3", _,
+                                        _)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return("")));
+
+    data_broker->SetResendNacs(true,10,3);
+    data_broker->GetNext(&info, expected_group_id, nullptr);
+}
 
 
 }

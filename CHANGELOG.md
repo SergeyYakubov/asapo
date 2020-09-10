@@ -1,3 +1,11 @@
+##20.09.0
+
+FEATURES
+* implemented data resend - if data is not acknowledged during a given period it will be redelivered
+
+BUG FIXES
+* fix data query images when beamtime_id starts with number 
+
 ## 20.06.3
 
 BUG FIXES
