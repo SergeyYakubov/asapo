@@ -306,7 +306,6 @@ void FabricContextImpl::InternalWaitWithAliveCheck(FabricAddress targetAddress, 
     bool aliveCheckFailed = false;
     for (uint32_t i = 0; i < maxTimeoutRetires_ && *error == IOErrorTemplates::kTimeout; i++) {
         *error = nullptr;
-        printf("HandleFiCommandAndWait - Tries: %d\n", i);
         if (!TargetIsAliveCheck(targetAddress)) {
             aliveCheckFailed = true;
             break;
