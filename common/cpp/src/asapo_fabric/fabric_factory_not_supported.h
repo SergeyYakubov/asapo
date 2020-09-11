@@ -6,6 +6,11 @@
 namespace asapo {
 namespace fabric {
 class FabricFactoryNotSupported : public FabricFactory {
+private:
+    FabricErrorTemplate reason_;
+public:
+    explicit FabricFactoryNotSupported(FabricErrorTemplate reason);
+
     std::unique_ptr<FabricServer> CreateAndBindServer(
         const AbstractLogger* logger, const std::string& host, uint16_t port, Error* error) const override;
 

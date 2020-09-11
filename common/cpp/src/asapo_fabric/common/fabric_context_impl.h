@@ -10,6 +10,7 @@
 #include "task/fabric_waitable_task.h"
 #include "../fabric_internal_error.h"
 #include "task/fabric_alive_check_response_task.h"
+#include "../fabric_function_map.h"
 
 namespace asapo {
 namespace fabric {

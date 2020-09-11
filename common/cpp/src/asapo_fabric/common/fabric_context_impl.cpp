@@ -56,7 +56,7 @@ FabricContextImpl::~FabricContextImpl() {
         fi_close(&fabric_->fid);
 
     if (fabric_info_)
-        fi_freeinfo(fabric_info_);
+        gffm().fi_freeinfo(fabric_info_);
 }
 
 void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t serverListenPort, Error* error) {
@@ -65,7 +65,7 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     // The server must know where the packages are coming from, FI_SOURCE allows this.
     uint64_t additionalFlags = isServer ? FI_SOURCE : 0;
 
-    fi_info* hints = fi_allocinfo();
+    fi_info* hints = gffm().fi_dupinfo(nullptr);
 
 #ifdef LIBFARBIC_ALLOW_LOCALHOST
     constexpr bool allowLocalhost = true;
@@ -96,7 +96,7 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     hints->domain_attr->mr_mode = FI_MR_ALLOCATED | FI_MR_VIRT_ADDR | FI_MR_PROV_KEY;// | FI_MR_LOCAL;
     hints->addr_format = FI_SOCKADDR_IN;
 
-    int ret = fi_getinfo(
+    int ret = gffm().fi_getinfo(
                   kMinExpectedLibFabricVersion, networkIpHint.c_str(), isServer ? std::to_string(serverListenPort).c_str() : nullptr,
                   additionalFlags, hints, &fabric_info_);
 
@@ -106,7 +106,7 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
         } else {
             *error = ErrorFromFabricInternal("fi_getinfo", ret);
         }
-        fi_freeinfo(hints);
+        gffm().fi_freeinfo(hints);
         return;
     }
     // fprintf(stderr, fi_tostr(fabric_info_, FI_TYPE_INFO)); // Print the found fabric details
@@ -119,9 +119,9 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     // fabric_info_->rx_attr->total_buffered_recv = 0;
     // If something strange is happening with receive requests, we should set this to 0.
 
-    fi_freeinfo(hints);
+    gffm().fi_freeinfo(hints);
 
-    FI_OK(fi_fabric(fabric_info_->fabric_attr, &fabric_, nullptr));
+    FI_OK(gffm().fi_fabric(fabric_info_->fabric_attr, &fabric_, nullptr));
     FI_OK(fi_domain(fabric_, fabric_info_, &domain_, nullptr));
 
     fi_av_attr av_attr{};
