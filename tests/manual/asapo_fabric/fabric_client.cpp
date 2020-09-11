@@ -10,7 +10,9 @@ int main(int argc, char* argv[]) {
     if (argc < 3 || argc > 5) {
         std::cout
                 << "Usage: " << argv[0] << " <serverAddress> <serverPort> [kiByte=1024*400/*400MiByte*/ /*MUST BE SYNC WITH SERVER*/] [count=10]" << std::endl
+                #ifdef LIBFARBIC_ALLOW_LOCALHOST
                 << "If the address is localhost or 127.0.0.1 the verbs connection will be emulated" << std::endl
+                #endif
                 ;
         return 1;
     }

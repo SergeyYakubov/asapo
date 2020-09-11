@@ -66,8 +66,15 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     uint64_t additionalFlags = isServer ? FI_SOURCE : 0;
 
     fi_info* hints = fi_allocinfo();
-    if (networkIpHint == "127.0.0.1") {
+
+#ifdef LIBFARBIC_ALLOW_LOCALHOST
+    constexpr bool allowLocalhost = true;
+#else
+    constexpr bool allowLocalhost = false;
+#endif
+    if (networkIpHint == "127.0.0.1" && allowLocalhost) {
         // sockets mode
+        printf("WARN: Using sockets to emulate RDMA, this should only used for tests.\n");
         hints->fabric_attr->prov_name = strdup("sockets");
         hotfix_using_sockets_ = true;
     } else {

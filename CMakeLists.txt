@@ -43,6 +43,7 @@ option(BUILD_CONSUMER_TOOLS "Build consumer tools" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
 
 option(ENABLE_LIBFABRIC "Enables LibFabric support for RDMA transfers" OFF)
+option(ENABLE_LIBFABRIC_LOCALHOST "Emulates LibFabric stack over TCP. Only for localhost and testing purposes." OFF)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
 
@@ -75,6 +76,10 @@ IF(ENABLE_LIBFABRIC)
     message(STATUS "LIB_FABRIC: Path: ${LIBFABRIC_LIBRARY} Include: ${LIBFABRIC_INCLUDE_DIR}")
     add_definitions(-DLIBFABRIC_ENABLED)
     SET(ASAPO_COMMON_FABRIC_LIBRARIES ${ASAPO_COMMON_FABRIC_LIBRARIES} fabric)
+    IF(ENABLE_LIBFABRIC_LOCALHOST)
+        message(STATUS "LIB_FABRIC: Enabled emulated RDMA when localhost is used. Should only be used for tests.")
+        add_definitions(-DLIBFARBIC_ALLOW_LOCALHOST)
+    ENDIF()
 ENDIF()
 SET_PROPERTY(GLOBAL PROPERTY ASAPO_COMMON_FABRIC_LIBRARIES ${ASAPO_COMMON_FABRIC_LIBRARIES})
 
