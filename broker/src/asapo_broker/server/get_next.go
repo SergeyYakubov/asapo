@@ -9,11 +9,11 @@ import (
 func extractResend(r *http.Request) (string) {
 	keys := r.URL.Query()
 	resend := keys.Get("resend_nacks")
-	resend_after := keys.Get("resend_after")
+	delay_sec := keys.Get("delay_sec")
 	resend_attempts := keys.Get("resend_attempts")
 	resend_params := ""
 	if len(resend)!=0 {
-		resend_params=resend_after+"_"+resend_attempts
+		resend_params=delay_sec+"_"+resend_attempts
 	}
 	return resend_params
 }

@@ -684,8 +684,8 @@ func TestMongoDBAckImage(t *testing.T) {
 	defer cleanup()
 
 	db.insertRecord(dbname, collection, &rec1)
-
-	res, err := db.ProcessRequest(dbname, collection, groupId, "ackimage", "1")
+	query_str := "{\"Id\":1,\"Op\":\"ackimage\"}"
+	res, err := db.ProcessRequest(dbname, collection, groupId, "ackimage", query_str)
 	nacks,_ := db.getNacks(dbname,collection,groupId,1,1)
 	assert.Nil(t, err)
 	assert.Equal(t, "", string(res))
@@ -721,9 +721,9 @@ func TestMongoDBNacks(t *testing.T) {
 			insertRecords(10)
 		}
 		if (test.ackRecords) {
-			db.ackRecord(dbname, collection, groupId,"2")
-			db.ackRecord(dbname, collection, groupId,"3")
-			db.ackRecord(dbname, collection, groupId,"4")
+			db.ackRecord(dbname, collection, groupId,"{\"Id\":2,\"Op\":\"ackimage\"}")
+			db.ackRecord(dbname, collection, groupId,"{\"Id\":3,\"Op\":\"ackimage\"}")
+			db.ackRecord(dbname, collection, groupId,"{\"Id\":4,\"Op\":\"ackimage\"}")
 		}
 		res, err := db.ProcessRequest(dbname, collection, groupId, "nacks", test.rangeString)
 		if test.ok {
@@ -755,9 +755,9 @@ func TestMongoDBLastAcks(t *testing.T) {
 			insertRecords(10)
 		}
 		if (test.ackRecords) {
-			db.ackRecord(dbname, collection, groupId,"2")
-			db.ackRecord(dbname, collection, groupId,"3")
-			db.ackRecord(dbname, collection, groupId,"4")
+			db.ackRecord(dbname, collection, groupId,"{\"Id\":2,\"Op\":\"ackimage\"}")
+			db.ackRecord(dbname, collection, groupId,"{\"Id\":3,\"Op\":\"ackimage\"}")
+			db.ackRecord(dbname, collection, groupId,"{\"Id\":4,\"Op\":\"ackimage\"}")
 		}
 		res, err := db.ProcessRequest(dbname, collection, groupId, "lastack", "")
 		assert.Nil(t, err, test.test)
@@ -869,20 +869,71 @@ func TestMongoDBGetNextUsesInprocessedImmedeatlyIfEndofStream(t *testing.T) {
 	assert.Equal(t, string(rec1_expect), string(res2))
 }
 
-
-
 func TestMongoDBAckDeletesInprocessed(t *testing.T) {
 	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 0})
 	db.Connect(dbaddress)
 	defer cleanup()
 	db.insertRecord(dbname, collection, &rec1)
 	db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
-	db.ProcessRequest(dbname, collection, groupId, "ackimage", "1")
+	query_str := "{\"Id\":1,\"Op\":\"ackimage\"}"
+	db.ProcessRequest(dbname, collection, groupId, "ackimage", query_str)
 	_, err := db.ProcessRequest(dbname, collection, groupId, "next", "0_3")
-
 	assert.NotNil(t, err)
 	if err!=nil {
 		assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"\"}", err.Error())
 	}
+}
+
+
+func TestMongoDBNegAck(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 0})
+	db.Connect(dbaddress)
+	defer cleanup()
+	inputParams := struct {
+		Id int
+		Params struct {
+			DelaySec int
+		}
+	}{}
+	inputParams.Id = 1
+	inputParams.Params.DelaySec=0
+
+
+	db.insertRecord(dbname, collection, &rec1)
+	db.ProcessRequest(dbname, collection, groupId, "next", "")
+	bparam,_:= json.Marshal(&inputParams)
+	db.ProcessRequest(dbname, collection, groupId, "negackimage", string(bparam))
+	res, err := db.ProcessRequest(dbname, collection, groupId, "next", "") // first time image from negack
+	_, err1 := db.ProcessRequest(dbname, collection, groupId, "next", "") // second time nothing
+
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec1_expect), string(res))
+	assert.NotNil(t, err1)
+	if err1!=nil {
+		assert.Equal(t, utils.StatusNoData, err1.(*DBError).Code)
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"\"}", err1.Error())
+	}
+}
+
+func TestMongoDBGetNextClearsInprocessAfterReset(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 0})
+	db.Connect(dbaddress)
+	defer cleanup()
+	err := db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec2)
+	res, err := db.ProcessRequest(dbname, collection, groupId, "next", "0_1")
+	res1, err1 := db.ProcessRequest(dbname, collection, groupId, "next", "0_1")
+	db.ProcessRequest(dbname, collection, groupId, "resetcounter", "0")
+	res2, err2 := db.ProcessRequest(dbname, collection, groupId, "next", "0_1")
+	res3, err3 := db.ProcessRequest(dbname, collection, groupId, "next", "0_1")
+
+	assert.Nil(t, err)
+	assert.Nil(t, err1)
+	assert.Nil(t, err2)
+	assert.Nil(t, err3)
+	assert.Equal(t, string(rec1_expect), string(res))
+	assert.Equal(t, string(rec1_expect), string(res1))
+	assert.Equal(t, string(rec1_expect), string(res2))
+	assert.Equal(t, string(rec1_expect), string(res3))
 }

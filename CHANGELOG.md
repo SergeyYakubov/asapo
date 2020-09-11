@@ -1,7 +1,7 @@
 ##20.09.0
 
 FEATURES
-* implemented data resend - if data is not acknowledged during a given period it will be redelivered
+* implemented data resend - data will be redelivered if it is not acknowledged during a given period or a consumer sent a negative acknowledge  
 
 BUG FIXES
 * fix data query images when beamtime_id starts with number 

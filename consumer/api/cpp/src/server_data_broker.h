@@ -52,6 +52,7 @@ class ServerDataBroker final : public asapo::DataBroker {
                             SourceCredentials source);
 
   Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) override;
+  Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_sec, std::string substream = kDefaultSubstream) override;
 
   IdList GetUnacknowledgedTupleIds(std::string group_id,
                                    std::string substream,
@@ -100,7 +101,7 @@ class ServerDataBroker final : public asapo::DataBroker {
   Error RetrieveData(FileInfo* info, FileData* data) override;
 
   std::vector<std::string> GetSubstreamList(Error* err) override;
-  void SetResendNacs(bool resend, uint64_t resend_after, uint64_t resend_attempts) override;
+  void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) override;
 
   std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
   std::unique_ptr<HttpClient> httpclient__;
@@ -149,7 +150,7 @@ class ServerDataBroker final : public asapo::DataBroker {
   RequestInfo CreateFileTransferRequest(const FileInfo* info) const;
   uint64_t resend_timout_ = 0;
   bool resend_ = false;
-  uint64_t resend_after_;
+  uint64_t delay_sec_;
   uint64_t resend_attempts_;
 };
 
