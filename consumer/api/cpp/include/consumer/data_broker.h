@@ -32,6 +32,17 @@ class DataBroker {
     */
     virtual Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) = 0;
 
+  //! Negative acknowledge data tuple for specific group id and substream.
+  /*!
+      \param group_id - group id to use.
+      \param id - data tuple id
+      \param delay_sec - data tuple will be redelivered after delay, 0 to redeliver immediately
+      \param substream (optional) - substream
+      \return nullptr of command was successful, otherwise error.
+  */
+  virtual Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_sec, std::string substream = kDefaultSubstream) = 0;
+
+
   //! Get unacknowledged tuple for specific group id and substream.
   /*!
       \param group_id - group id to use.
@@ -162,10 +173,10 @@ class DataBroker {
   //! Configure resending nonacknowledged data
   /*!
     \param resend -  where to resend
-    \param resend_after - how many seconds to wait for acknowledgment
-    \param resend_attempts - how many time to resend.
+    \param delay_sec - how many seconds to wait before resending
+    \param resend_attempts - how many resend attempts to make
   */
-  virtual void SetResendNacs(bool resend, uint64_t resend_after, uint64_t resend_attempts) = 0;
+  virtual void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) = 0;
 
 
     virtual ~DataBroker() = default; // needed for unique_ptr to delete itself

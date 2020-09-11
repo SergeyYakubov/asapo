@@ -198,8 +198,8 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
         if (err == nullptr) {
             auto ri = PrepareRequestInfo(request_api + request_suffix, dataset);
             if (request_suffix == "next" && resend_) {
-                ri.extra_params = ri.extra_params + "&resend_nacks=true" + "&resend_after=" +
-                    std::to_string(resend_after_) + "&resend_attempts=" + std::to_string(resend_attempts_);
+                ri.extra_params = ri.extra_params + "&resend_nacks=true" + "&delay_sec=" +
+                    std::to_string(delay_sec_) + "&resend_attempts=" + std::to_string(resend_attempts_);
             }
             RequestOutput output;
             err = ProcessRequest(&output, ri, &current_broker_uri_);
@@ -651,7 +651,7 @@ Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::stri
         +"/" + std::move(substream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
-    ri.body = "{\"Op\":\"Acknowledge\"}";
+    ri.body = "{\"Op\":\"ackimage\"}";
 
     Error err;
     BrokerRequestWithTimeout(ri, &err);
@@ -717,10 +717,26 @@ uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, Erro
     return GetLastAcknowledgedTulpeId(std::move(group_id), kDefaultSubstream, error);
 }
 
-void ServerDataBroker::SetResendNacs(bool resend, uint64_t resend_after, uint64_t resend_attempts) {
+void ServerDataBroker::SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) {
     resend_ = resend;
-    resend_after_ = resend_after;
+    delay_sec_ = delay_sec;
     resend_attempts_ = resend_attempts;
+}
+
+Error ServerDataBroker::NegativeAcknowledge(std::string group_id,
+                                            uint64_t id,
+                                            uint64_t delay_sec,
+                                            std::string substream) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+        +"/" + std::move(substream) +
+        "/" + std::move(group_id) + "/" + std::to_string(id);
+    ri.post = true;
+    ri.body = R"({"Op":"negackimage","Params":{"DelaySec":)"+std::to_string(delay_sec)+"}}";
+
+    Error err;
+    BrokerRequestWithTimeout(ri, &err);
+    return err;
 }
 
 }

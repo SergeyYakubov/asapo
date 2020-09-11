@@ -9,6 +9,8 @@ import (
 	"net/http"
 )
 
+const  kDefaultresendInterval = 10
+
 var db database.Agent
 
 type serverSettings struct {
@@ -20,7 +22,14 @@ type serverSettings struct {
 	Port                int
 	LogLevel            string
 	discoveredDbAddress string
-	CheckResendInterval int
+	CheckResendInterval *int
+}
+
+func (s *serverSettings) GetResendInterval() int {
+	if s.CheckResendInterval==nil {
+		return kDefaultresendInterval
+	}
+	return *s.CheckResendInterval
 }
 
 func (s *serverSettings) GetDatabaseServer() string {
@@ -73,7 +82,7 @@ func InitDB(dbAgent database.Agent) (err error) {
 		log.Debug("Got mongodb server: " + settings.discoveredDbAddress)
 	}
 
-	db.SetSettings(database.DBSettings{ReadFromInprocessPeriod: settings.CheckResendInterval})
+	db.SetSettings(database.DBSettings{ReadFromInprocessPeriod: settings.GetResendInterval()})
 
 	return db.Connect(settings.GetDatabaseServer())
 }

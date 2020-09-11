@@ -1161,7 +1161,7 @@ TEST_F(ServerDataBrokerTests, GetImageTriesToGetTokenAgainIfTransferFailed) {
 
 TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUri) {
     MockGetBrokerUri();
-    auto expected_acknowledge_command = "{\"Op\":\"Acknowledge\"}";
+    auto expected_acknowledge_command = "{\"Op\":\"ackimage\"}";
     EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
                                             expected_group_id
                                             + "/" + std::to_string(expected_dataset_id) + "?token="
@@ -1178,7 +1178,7 @@ TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUri) {
 
 TEST_F(ServerDataBrokerTests, AcknowledgeUsesCorrectUriWithDefaultSubStream) {
     MockGetBrokerUri();
-    auto expected_acknowledge_command = "{\"Op\":\"Acknowledge\"}";
+    auto expected_acknowledge_command = "{\"Op\":\"ackimage\"}";
     EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/"  +
         expected_group_id
                                              + "/" + std::to_string(expected_dataset_id) + "?token="
@@ -1252,7 +1252,7 @@ TEST_F(ServerDataBrokerTests, ResendNacks) {
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/"
                                             + expected_group_id + "/next?token="
-                                            + expected_token+"&resend_nacks=true&resend_after=10&resend_attempts=3", _,
+                                            + expected_token+"&resend_nacks=true&delay_sec=10&resend_attempts=3", _,
                                         _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
@@ -1262,5 +1262,21 @@ TEST_F(ServerDataBrokerTests, ResendNacks) {
     data_broker->GetNext(&info, expected_group_id, nullptr);
 }
 
+
+TEST_F(ServerDataBrokerTests, NegativeAcknowledgeUsesCorrectUri) {
+    MockGetBrokerUri();
+    auto expected_neg_acknowledge_command = R"({"Op":"negackimage","Params":{"DelaySec":10}})";
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/"+expected_substream+"/"  +
+        expected_group_id
+                                             + "/" + std::to_string(expected_dataset_id) + "?token="
+                                             + expected_token,_,expected_neg_acknowledge_command, _,_)).WillOnce(DoAll(
+        SetArgPointee<3>(HttpCode::OK),
+        SetArgPointee<4>(nullptr),
+        Return("")));
+
+    auto err = data_broker->NegativeAcknowledge(expected_group_id, expected_dataset_id,10, expected_substream);
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
 
 }

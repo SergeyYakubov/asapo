@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,9 +32,18 @@ type ServiceRecord struct {
 
 type InProcessingRecord struct {
 	ID       int `bson:"_id" json:"_id"`
+	MaxResendAttempts int `bson:"maxResendAttempts" json:"maxResendAttempts"`
 	ResendAttempts int `bson:"resendAttempts" json:"resendAttempts"`
-	Updated  int64
+	DelaySec  int64 `bson:"delaySec" json:"delaySec"`
 }
+
+type NegAckParamsRecord struct {
+	ID       int `bson:"_id" json:"_id"`
+	MaxResendAttempts int `bson:"maxResendAttempts" json:"maxResendAttempts"`
+	ResendAttempts int `bson:"resendAttempts" json:"resendAttempts"`
+	DelaySec  int64 `bson:"delaySec" json:"delaySec"`
+}
+
 
 type Nacks struct {
 	Unacknowledged []int `json:"unacknowledged"`
@@ -265,20 +275,36 @@ func (db *Mongodb) getRecordByID(dbname string, collection_name string, group_id
 
 }
 
-func (db *Mongodb) ackRecord(dbname string, collection_name string, group_id string, id_str string) ([]byte, error) {
-	id, err := strconv.Atoi(id_str)
+func (db *Mongodb) negAckRecord(dbname string, group_id string, input_str string) ([]byte, error) {
+	input := struct {
+		Id int
+		Params struct {
+			DelaySec int
+		}
+	}{}
+
+	err := json.Unmarshal([]byte(input_str), &input)
 	if err != nil {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
-	record := struct {
-		Id int `bson:"_id"`
-	}{id}
+
+	err =  db.InsertRecordToInprocess(dbname,inprocess_collection_name_prefix+group_id,input.Id,input.Params.DelaySec, 1)
+	return []byte(""), err
+}
+
+
+func (db *Mongodb) ackRecord(dbname string, collection_name string, group_id string, id_str string) ([]byte, error) {
+	var record ID
+	err := json.Unmarshal([]byte(id_str),&record)
+	if err != nil {
+		return nil, &DBError{utils.StatusWrongInput, err.Error()}
+	}
 	c := db.client.Database(dbname).Collection(acks_collection_name_prefix + collection_name + "_" + group_id)
 	_, err = c.InsertOne(context.Background(), &record)
 
 	if err == nil {
 		c = db.client.Database(dbname).Collection(inprocess_collection_name_prefix + group_id)
-		_, err_del := c.DeleteOne(context.Background(), bson.M{"_id": id})
+		_, err_del := c.DeleteOne(context.Background(), bson.M{"_id": record.ID})
 		if err_del != nil {
 			return nil, &DBError{utils.StatusWrongInput, err.Error()}
 		}
@@ -326,12 +352,18 @@ func (db *Mongodb) getCurrentPointer(db_name string, collection_name string, gro
 	return curPointer, max_ind, nil
 }
 
-func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, resendAfter int,nResendAttempts int) (int, error) {
+func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delaySec int,nResendAttempts int) (int, error) {
 	var res InProcessingRecord
 	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
 	tNow := time.Now().Unix()
-	update := bson.M{"$set": bson.M{"updated": tNow}, "$inc": bson.M{"resendAttempts": 1}}
-	q := bson.M{"updated": bson.M{"$lte": tNow - int64(resendAfter)},"resendAttempts": bson.M{"$lt": nResendAttempts}}
+ 	var update bson.M
+	if nResendAttempts==0 {
+		update = bson.M{"$set": bson.M{"delaySec": tNow + int64(delaySec) ,"maxResendAttempts":math.MaxInt32}, "$inc": bson.M{"resendAttempts": 1}}
+	} else {
+		update = bson.M{"$set": bson.M{"delaySec": tNow + int64(delaySec) ,"maxResendAttempts":nResendAttempts}, "$inc": bson.M{"resendAttempts": 1}}
+	}
+
+	q := bson.M{"delaySec": bson.M{"$lte": tNow},"$expr": bson.M{"$lt": []string{"$resendAttempts","$maxResendAttempts"}}}
 	c := db.client.Database(dbname).Collection(collection_name)
 	err := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(&res)
 	if err != nil {
@@ -346,13 +378,9 @@ func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, resen
 	return res.ID, nil
 }
 
-func (db *Mongodb) InsertToInprocessIfNeeded(db_name string, collection_name string, id int, extra_param string) error {
-	if len(extra_param) == 0 {
-		return nil
-	}
-
+func (db *Mongodb) InsertRecordToInprocess(db_name string, collection_name string,id int,delaySec int, nResendAttempts int) error {
 	record := InProcessingRecord{
-		id, 0, time.Now().Unix(),
+		id, nResendAttempts, 0,time.Now().Unix()+int64(delaySec),
 	}
 
 	c := db.client.Database(db_name).Collection(collection_name)
@@ -363,20 +391,33 @@ func (db *Mongodb) InsertToInprocessIfNeeded(db_name string, collection_name str
 	return err
 }
 
-func (db *Mongodb) getNextIndexesFromInprocessed(db_name string, collection_name string, group_id string, dataset bool, extra_param string, ignoreTimeout bool) (int, int, error) {
+func (db *Mongodb) InsertToInprocessIfNeeded(db_name string, collection_name string, id int, extra_param string) error {
 	if len(extra_param) == 0 {
-		return 0, 0, nil
+		return nil
+	}
+	delaySec, nResendAttempts, err := extractsTwoIntsFromString(extra_param)
+	if err != nil {
+		return err
 	}
 
-	record_ind := 0
-	max_ind := 0
-	resendAfter, nResendAttempts, err := extractsTwoIntsFromString(extra_param)
-	if err != nil {
-		return 0, 0, err
+	return db.InsertRecordToInprocess(db_name,collection_name,id,delaySec, nResendAttempts)
+
+}
+
+func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(db_name string, collection_name string, group_id string, dataset bool, extra_param string, ignoreTimeout bool) (int, int, error) {
+	var record_ind,  max_ind, delaySec, nResendAttempts int
+	var err error
+	if len(extra_param) != 0 {
+		delaySec, nResendAttempts, err = extractsTwoIntsFromString(extra_param)
+		if err != nil {
+			return 0, 0, err
+		}
+	} else {
+		nResendAttempts = -1
 	}
 	tNow := time.Now().Unix()
 	if (atomic.LoadInt64(&db.lastReadFromInprocess) <= tNow-int64(db.settings.ReadFromInprocessPeriod)) || ignoreTimeout {
-		record_ind, err = db.getUnProcessedId(db_name, inprocess_collection_name_prefix+group_id, resendAfter,nResendAttempts)
+		record_ind, err = db.getUnProcessedId(db_name, inprocess_collection_name_prefix+group_id, delaySec,nResendAttempts)
 		if err != nil {
 			log_str := "error getting unprocessed id " + db_name + ", groupid: " + group_id + ":" + err.Error()
 			logger.Debug(log_str)
@@ -396,7 +437,7 @@ func (db *Mongodb) getNextIndexesFromInprocessed(db_name string, collection_name
 
 }
 
-func (db *Mongodb) getNextIndexesFromCurPointer(db_name string, collection_name string, group_id string, dataset bool, extra_param string) (int, int, error) {
+func (db *Mongodb) getNextAndMaxIndexesFromCurPointer(db_name string, collection_name string, group_id string, dataset bool, extra_param string) (int, int, error) {
 	curPointer, max_ind, err := db.getCurrentPointer(db_name, collection_name, group_id, dataset)
 	if err != nil {
 		log_str := "error getting next pointer for " + db_name + ", groupid: " + group_id + ":" + err.Error()
@@ -408,17 +449,17 @@ func (db *Mongodb) getNextIndexesFromCurPointer(db_name string, collection_name 
 	return curPointer.Value, max_ind, nil
 }
 
-func (db *Mongodb) getNextIndexes(db_name string, collection_name string, group_id string, dataset bool, extra_param string) (int, int, error) {
-	nextInd, maxInd, err := db.getNextIndexesFromInprocessed(db_name, collection_name, group_id, dataset, extra_param, false)
+func (db *Mongodb) getNextAndMaxIndexes(db_name string, collection_name string, group_id string, dataset bool, extra_param string) (int, int, error) {
+	nextInd, maxInd, err := db.getNextAndMaxIndexesFromInprocessed(db_name, collection_name, group_id, dataset, extra_param, false)
 	if err != nil {
 		return 0, 0, err
 	}
 
 	if nextInd == 0 {
-		nextInd, maxInd, err = db.getNextIndexesFromCurPointer(db_name, collection_name, group_id, dataset, extra_param)
+		nextInd, maxInd, err = db.getNextAndMaxIndexesFromCurPointer(db_name, collection_name, group_id, dataset, extra_param)
 		if err_db, ok := err.(*DBError); ok && err_db.Code == utils.StatusNoData {
 			var err_inproc error
-			nextInd, maxInd, err_inproc = db.getNextIndexesFromInprocessed(db_name, collection_name, group_id, dataset, extra_param, true)
+			nextInd, maxInd, err_inproc = db.getNextAndMaxIndexesFromInprocessed(db_name, collection_name, group_id, dataset, extra_param, true)
 			if err_inproc != nil {
 				return 0, 0, err_inproc
 			}
@@ -449,7 +490,7 @@ func (db *Mongodb) processLastRecord(data []byte, err error, db_name string, col
 
 
 	var err_inproc error
-	nextInd, maxInd, err_inproc := db.getNextIndexesFromInprocessed(db_name, collection_name, group_id, dataset, extra_param, true)
+	nextInd, maxInd, err_inproc := db.getNextAndMaxIndexesFromInprocessed(db_name, collection_name, group_id, dataset, extra_param, true)
 	if err_inproc != nil {
 		return nil, err_inproc
 	}
@@ -461,7 +502,7 @@ func (db *Mongodb) processLastRecord(data []byte, err error, db_name string, col
 }
 
 func (db *Mongodb) getNextRecord(db_name string, collection_name string, group_id string, dataset bool, extra_param string) ([]byte, error) {
-	nextInd, maxInd, err := db.getNextIndexes(db_name, collection_name, group_id, dataset, extra_param)
+	nextInd, maxInd, err := db.getNextAndMaxIndexes(db_name, collection_name, group_id, dataset, extra_param)
 	if err != nil {
 		return nil, err
 	}
@@ -512,8 +553,17 @@ func (db *Mongodb) resetCounter(db_name string, collection_name string, group_id
 	}
 
 	err = db.setCounter(db_name, collection_name, group_id, id)
+	if err!= nil {
+		return []byte(""), err
+	}
 
-	return []byte(""), err
+	c := db.client.Database(db_name).Collection(inprocess_collection_name_prefix + group_id)
+	_, err_del := c.DeleteMany(context.Background(), bson.M{"_id": bson.M{"$gte": id}})
+	if err_del != nil {
+		return nil, &DBError{utils.StatusWrongInput, err.Error()}
+	}
+
+	return []byte(""), nil
 }
 
 func (db *Mongodb) getMeta(dbname string, id_str string) ([]byte, error) {
@@ -749,6 +799,8 @@ func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_
 		return db.getSubstreams(db_name)
 	case "ackimage":
 		return db.ackRecord(db_name, collection_name, group_id, extra_param)
+	case "negackimage":
+		return db.negAckRecord(db_name, group_id, extra_param)
 	case "nacks":
 		return db.nacks(db_name, collection_name, group_id, extra_param)
 	case "lastack":
