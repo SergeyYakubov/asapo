@@ -29,7 +29,7 @@ std::unique_ptr<FabricFactory> asapo::fabric::GenerateDefaultFabricFactory() {
         gffm().is_init_ = true;
 
         return std::unique_ptr<FabricFactory>(new FabricFactoryImpl());
-        functionNotFoundError:
+functionNotFoundError:
         dlclose(handle);
         return std::unique_ptr<FabricFactory>(new FabricFactoryNotSupported(FabricErrorTemplates::kLibraryCompatibilityError));
     } else {

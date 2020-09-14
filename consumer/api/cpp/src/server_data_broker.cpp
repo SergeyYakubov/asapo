@@ -73,7 +73,8 @@ Error ConsumerErrorFromServerError(const Error& server_err) {
         return ConsumerErrorTemplates::kInterruptedTransaction.Generate(
                    "error processing request: " + server_err->Explain());
     } else {
-        return ConsumerErrorTemplates::kUnavailableService.Generate("error processing request: " + server_err->Explain());
+        return ConsumerErrorTemplates::kUnavailableService.Generate(
+                   "error processing request: " + server_err->Explain());
     }
 }
 
@@ -129,13 +130,13 @@ Error ServerDataBroker::ProcessPostRequest(const RequestInfo& request, RequestOu
                                &err);
         break;
     case OutputDataMode::array:
-        err = httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.cookie,
-                                 request.body, &response->data_output, response->data_output_size, code);
+        err =
+            httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.cookie,
+                               request.body, &response->data_output, response->data_output_size, code);
         break;
     }
     return err;
 }
-
 
 Error ServerDataBroker::ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code) {
     Error err;
@@ -143,7 +144,6 @@ Error ServerDataBroker::ProcessGetRequest(const RequestInfo& request, RequestOut
         httpclient__->Get(RequestWithToken(request.host + request.api) + request.extra_params, code, &err);
     return err;
 }
-
 
 Error ServerDataBroker::ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri) {
     Error err;
@@ -216,6 +216,10 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
         auto err = DiscoverService(kBrokerServiceName, &current_broker_uri_);
         if (err == nullptr) {
             auto ri = PrepareRequestInfo(request_api + request_suffix, dataset);
+            if (request_suffix == "next" && resend_) {
+                ri.extra_params = ri.extra_params + "&resend_nacks=true" + "&delay_sec=" +
+                                  std::to_string(delay_sec_) + "&resend_attempts=" + std::to_string(resend_attempts_);
+            }
             RequestOutput output;
             err = ProcessRequest(&output, ri, &current_broker_uri_);
             *response = std::move(output.string_output);
@@ -317,7 +321,6 @@ Error ServerDataBroker::GetDataFromFile(FileInfo* info, FileData* data) {
     return nullptr;
 }
 
-
 Error ServerDataBroker::RetrieveData(FileInfo* info, FileData* data) {
     if (data == nullptr || info == nullptr) {
         return ConsumerErrorTemplates::kWrongInput.Generate("pointers are empty");
@@ -416,7 +419,22 @@ Error ServerDataBroker::ServiceRequestWithTimeout(const std::string& service_nam
     return err;
 }
 
-Error ServerDataBroker::FtsRequestWithTimeout(const FileInfo* info, FileData* data) {
+Error ServerDataBroker::FtsSizeRequestWithTimeout(FileInfo* info) {
+    RequestInfo ri = CreateFileTransferRequest(info);
+    ri.extra_params = "&sizeonly=true";
+    ri.output_mode = OutputDataMode::string;
+    RequestOutput response;
+    auto err = ServiceRequestWithTimeout(kFileTransferServiceName, &current_fts_uri_, ri, &response);
+    if (err) {
+        return err;
+    }
+
+    auto parser = JsonStringParser(std::move(response.string_output));
+    err = parser.GetUInt64("file_size", &(info->size));
+    return err;
+}
+
+Error ServerDataBroker::FtsRequestWithTimeout(FileInfo* info, FileData* data) {
     RequestInfo ri = CreateFileTransferRequest(info);
     RequestOutput response;
     response.data_output_size = info->size;
@@ -648,17 +666,29 @@ RequestInfo ServerDataBroker::CreateFolderTokenRequest() const {
     ri.host = endpoint_;
     ri.api = "/asapo-authorizer/folder";
     ri.post = true;
-    ri.body = "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\""
-              +
-              source_credentials_.user_token + "\"}";
+    ri.body =
+        "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\""
+        +
+        source_credentials_.user_token + "\"}";
     return ri;
 }
 
-Error ServerDataBroker::GetDataFromFileTransferService(const FileInfo* info, FileData* data,
+Error ServerDataBroker::GetDataFromFileTransferService(FileInfo* info, FileData* data,
         bool retry_with_new_token) {
     auto err = UpdateFolderTokenIfNeeded(retry_with_new_token);
     if (err) {
         return err;
+    }
+
+    if (info->size == 0) {
+        err = FtsSizeRequestWithTimeout(info);
+        if (err == ConsumerErrorTemplates::kWrongInput
+                && !retry_with_new_token) { // token expired? Refresh token and try again.
+            return GetDataFromFileTransferService(info, data, true);
+        }
+        if (err) {
+            return err;
+        }
     }
 
     err = FtsRequestWithTimeout(info, data);
@@ -675,15 +705,18 @@ Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::stri
              +"/" + std::move(substream) +
              "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
-    ri.body = "{\"Op\":\"Acknowledge\"}";
+    ri.body = "{\"Op\":\"ackimage\"}";
 
     Error err;
     BrokerRequestWithTimeout(ri, &err);
     return err;
 }
 
-IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id,
-        uint64_t to_id, Error* error) {
+IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id,
+        std::string substream,
+        uint64_t from_id,
+        uint64_t to_id,
+        Error* error) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
              +"/" + std::move(substream) +
@@ -704,7 +737,9 @@ IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, std::st
     return list;
 }
 
-IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id,
+IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id,
+        uint64_t from_id,
+        uint64_t to_id,
         Error* error) {
     return GetUnacknowledgedTupleIds(std::move(group_id), kDefaultSubstream, from_id, to_id, error);
 }
@@ -734,6 +769,28 @@ uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std:
 
 uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, Error* error) {
     return GetLastAcknowledgedTulpeId(std::move(group_id), kDefaultSubstream, error);
+}
+
+void ServerDataBroker::SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) {
+    resend_ = resend;
+    delay_sec_ = delay_sec;
+    resend_attempts_ = resend_attempts;
+}
+
+Error ServerDataBroker::NegativeAcknowledge(std::string group_id,
+                                            uint64_t id,
+                                            uint64_t delay_sec,
+                                            std::string substream) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+             +"/" + std::move(substream) +
+             "/" + std::move(group_id) + "/" + std::to_string(id);
+    ri.post = true;
+    ri.body = R"({"Op":"negackimage","Params":{"DelaySec":)" + std::to_string(delay_sec) + "}}";
+
+    Error err;
+    BrokerRequestWithTimeout(ri, &err);
+    return err;
 }
 
 }

@@ -33,6 +33,16 @@ class DataBroker {
     */
     virtual Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) = 0;
 
+    //! Negative acknowledge data tuple for specific group id and substream.
+    /*!
+        \param group_id - group id to use.
+        \param id - data tuple id
+        \param delay_sec - data tuple will be redelivered after delay, 0 to redeliver immediately
+        \param substream (optional) - substream
+        \return nullptr of command was successful, otherwise error.
+    */
+    virtual Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_sec,
+                                      std::string substream = kDefaultSubstream) = 0;
 
 
     //! Get unacknowledged tuple for specific group id and substream.
@@ -125,7 +135,6 @@ class DataBroker {
     virtual DataSet GetLastDataset(std::string group_id, Error* err) = 0;
     virtual DataSet GetLastDataset(std::string group_id, std::string substream, Error* err) = 0;
 
-
     //! Receive dataset by id.
     /*!
       \param id - dataset id
@@ -156,8 +165,6 @@ class DataBroker {
     virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) = 0;
     virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) = 0;
 
-
-
     //! Receive last available image.
     /*!
       \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
@@ -176,6 +183,15 @@ class DataBroker {
     */
     virtual FileInfos QueryImages(std::string query, Error* err) = 0;
     virtual FileInfos QueryImages(std::string query, std::string substream, Error* err) = 0;
+
+    //! Configure resending nonacknowledged data
+    /*!
+      \param resend -  where to resend
+      \param delay_sec - how many seconds to wait before resending
+      \param resend_attempts - how many resend attempts to make
+    */
+    virtual void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) = 0;
+
 
     virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
 };

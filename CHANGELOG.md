@@ -1,4 +1,28 @@
-## 20.06.0 (unreleased)
+##20.09.0
+
+FEATURES
+* implemented data resend - data will be redelivered if it is not acknowledged during a given period or a consumer sent a negative acknowledge  
+
+BUG FIXES
+* fix data query images when beamtime_id starts with number 
+
+## 20.06.3
+
+BUG FIXES
+* fix retrieve_data in Python modules for data ingested using metadata only mode
+* fix asapo orchestration image stabilize nginx and update fluentd configuration to follow Nomad jobs log rotation 
+
+## 20.06.2
+
+BUG FIXES
+* file size obtained automatically when retrieving remote data ingested using metadata only mode
+
+## 20.06.1
+
+IMPROVEMENTS
+* allow arbitrary group id
+
+## 20.06.0
 FEATURES
 * implemented acknowledeges - one can acknowledge a data tuple, get last acknowledged tuple id, get list of unacknowledged tuple ids
 * implement getting substream info (contains last id) by producer client (not need to have consumer client)

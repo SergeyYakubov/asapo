@@ -22,13 +22,13 @@ using FabricErrorTemplate = ServiceErrorTemplate<FabricErrorType, ErrorType::kFa
 
 namespace FabricErrorTemplates {
 auto const kNotSupportedOnBuildError = FabricErrorTemplate {
-        "This build of ASAPO does not support LibFabric", FabricErrorType::kNotSupported
+    "This build of ASAPO does not support LibFabric", FabricErrorType::kNotSupported
 };
 auto const kLibraryNotFoundError = FabricErrorTemplate {
-        "asapo-fabric, LibFabric or dependencies were not found", FabricErrorType::kLibraryNotFound
+    "asapo-fabric, LibFabric or dependencies were not found", FabricErrorType::kLibraryNotFound
 };
 auto const kLibraryCompatibilityError = FabricErrorTemplate {
-        "LibFabric was found but somehow some a function is missing", FabricErrorType::kLibraryCompatibilityError
+    "LibFabric was found but somehow some a function is missing", FabricErrorType::kLibraryCompatibilityError
 };
 auto const kOutdatedLibraryError = FabricErrorTemplate {
     "LibFabric outdated", FabricErrorType::kLibraryOutdated

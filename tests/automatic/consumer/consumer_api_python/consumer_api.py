@@ -37,6 +37,8 @@ def check_file_transfer_service(broker,group_id):
     broker.set_timeout(1000)
     data, meta = broker.get_by_id(1, group_id, meta_only=False)
     assert_eq(data.tostring().decode("utf-8"),"hello1","check_file_transfer_service ok")
+    data, meta = broker.get_by_id(1, group_id,"streamfts", meta_only=False)
+    assert_eq(data.tostring().decode("utf-8"),"hello1","check_file_transfer_service with auto size ok")
 
 
 def check_single(broker,group_id):
@@ -100,12 +102,12 @@ def check_single(broker,group_id):
     assert_usermetadata(meta,"get next6")
 
     try:
-        broker.get_next("bla", meta_only=True)
+        broker.get_next("_wrong_group_name", meta_only=True)
     except asapo_consumer.AsapoWrongInputError as err:
         print(err)
         pass
     else:
-        exit_on_noerr("wrong input")
+        exit_on_noerr("should give wrong input error")
 
     try:
         broker.get_last(group_id, meta_only=False)
@@ -122,7 +124,7 @@ def check_single(broker,group_id):
     assert_metaname(meta,"21","get next stream2")
 
     substreams = broker.get_substream_list()
-    assert_eq(len(substreams),3,"number of substreams")
+    assert_eq(len(substreams),4,"number of substreams")
     assert_eq(substreams[0],"default","substreams_name1")
     assert_eq(substreams[1],"stream1","substreams_name2")
     assert_eq(substreams[2],"stream2","substreams_name3")
@@ -150,6 +152,27 @@ def check_single(broker,group_id):
     broker.acknowledge(group_id,1,"stream1")
     nacks = broker.get_unacknowledged_tuple_ids(group_id)
     assert_eq(len(nacks),4,"nacks stream1 size = 4 after ack")
+
+# neg acks
+    broker.reset_lastread_marker(group_id)
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"1","get next neg ack before resend")
+    broker.reset_lastread_marker(group_id)
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"1","get next neg ack with resend")
+
+#resend
+    broker.reset_lastread_marker(group_id)
+    broker.set_resend_nacs(True,0,1)
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"1","get next before resend")
+
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"1","get next with resend")
+
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"2","get next after resend")
+
 
 #images
 
@@ -222,7 +245,7 @@ def check_dataset(broker,group_id):
     except:
         pass
     else:
-        exit_on_noerr("get_next_dataset4 err")
+        exit_on_noerr("get_next_dataset4 get next6err")
 
 source, path, beamtime, token, mode = sys.argv[1:]
 

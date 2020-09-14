@@ -24,9 +24,9 @@ RUN add-apt-repository \
 RUN apt-get update && apt-get install -y docker-ce-cli wget unzip iproute2 vim td-agent-bit
 
 
-ENV CONSUL_VERSION=1.6.0
-ENV NOMAD_VERSION=0.9.5
-ENV TERRAFORM_VERSION=0.12.9
+ENV CONSUL_VERSION=1.8.0
+ENV NOMAD_VERSION=0.11.3
+ENV TERRAFORM_VERSION=0.12.28
 ENV HASHICORP_RELEASES=https://releases.hashicorp.com
 
 RUN set -eux && \
@@ -53,7 +53,7 @@ COPY scripts/ /var/run/asapo/
 
 RUN cd /var/run/asapo && terraform init
 
-COPY jobs-*  /usr/bin/
+COPY jobs-* asapo-wait-service /usr/bin/
 
 COPY *.py  /etc/asapo/
 COPY *.hcl.tpl  /etc/asapo/

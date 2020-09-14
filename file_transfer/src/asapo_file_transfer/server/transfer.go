@@ -3,6 +3,7 @@ package server
 import (
 	log "asapo_common/logger"
 	"asapo_common/utils"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"os"
@@ -69,11 +70,38 @@ func serveFile(w http.ResponseWriter, r *http.Request, fullName string) {
 	http.ServeFile(w,r, fullName)
 }
 
+func serveFileSize(w http.ResponseWriter, r *http.Request, fullName string) {
+	var fsize struct {
+		FileSize int64  `json:"file_size"`
+	}
+
+	fi, err := os.Stat(fullName)
+	if err != nil {
+		utils.WriteServerError(w,err,http.StatusBadRequest)
+		log.Error("Error getting file size for " + fullName+": "+err.Error())
+	}
+	log.Debug("Sending file size for " + fullName)
+
+	fsize.FileSize = fi.Size()
+	b,_ := json.Marshal(&fsize)
+	w.Write(b)
+}
+
 func routeFileTransfer(w http.ResponseWriter, r *http.Request) {
 	fullName, status,err := checkRequest(r);
 	if err != nil {
 		utils.WriteServerError(w,err,status)
 		return
 	}
-	serveFile(w,r,fullName)
+
+	sizeonly := r.URL.Query().Get("sizeonly")
+ 	if (sizeonly != "true") {
+		serveFile(w,r,fullName)
+	} else {
+		serveFileSize(w,r,fullName)
+	}
+
+
+
+
 }

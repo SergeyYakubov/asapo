@@ -144,6 +144,8 @@ cdef class PyDataBroker:
         if err:
             throw_exception(err)
         cdef np.npy_intp dims[1]
+        info_str = _str(info.Json())
+        meta = json.loads(info_str)
         dims[0] = meta['size']
         cdef char* ptr = <char*> data.release()
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
@@ -212,7 +214,6 @@ cdef class PyDataBroker:
         for substream in substreams:
             list.append(_str(substream))
         return list
-
     def acknowledge(self, group_id, uint64_t id, substream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_substream = _bytes(substream)
@@ -221,6 +222,17 @@ cdef class PyDataBroker:
             err = self.c_broker.Acknowledge(b_group_id,id,b_substream)
         if err:
             throw_exception(err)
+    def neg_acknowledge(self, group_id, uint64_t id, uint64_t delay_sec, substream = "default"):
+        cdef string b_group_id = _bytes(group_id)
+        cdef string b_substream = _bytes(substream)
+        cdef Error err
+        with nogil:
+            err = self.c_broker.NegativeAcknowledge(b_group_id,id,delay_sec,b_substream)
+        if err:
+            throw_exception(err)
+    def set_resend_nacs(self,bool resend, uint64_t delay_sec, uint64_t resend_attempts):
+        with nogil:
+            self.c_broker.SetResendNacs(resend,delay_sec,resend_attempts)
 
     def get_last_acknowledged_tuple_id(self, group_id, substream = "default"):
         cdef string b_group_id = _bytes(group_id)

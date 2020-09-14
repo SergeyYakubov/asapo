@@ -4,6 +4,7 @@ import (
 	"asapo_broker/database"
 	"asapo_common/logger"
 	"errors"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"net/http"
 	"testing"
@@ -39,6 +40,8 @@ func (suite *GetHealthTestSuite) TestGetHealthOk() {
 
 func (suite *GetHealthTestSuite) TestGetHealthTriesToReconnectsToDataBase() {
 	suite.mock_db.On("Ping").Return(errors.New("ping error"))
+	suite.mock_db.On("SetSettings", mock.Anything).Return()
+
 	ExpectReconnect(suite.mock_db)
 
 	w := doRequest("/health")

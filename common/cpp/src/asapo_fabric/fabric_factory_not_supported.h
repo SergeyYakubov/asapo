@@ -6,9 +6,9 @@
 namespace asapo {
 namespace fabric {
 class FabricFactoryNotSupported : public FabricFactory {
-private:
+  private:
     FabricErrorTemplate reason_;
-public:
+  public:
     explicit FabricFactoryNotSupported(FabricErrorTemplate reason);
 
     std::unique_ptr<FabricServer> CreateAndBindServer(

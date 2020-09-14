@@ -10,7 +10,6 @@
 
 namespace asapo {
 
-
 enum class GetImageServerOperation {
     GetNext,
     GetLast,
@@ -22,7 +21,6 @@ enum class OutputDataMode {
     array,
     file
 };
-
 
 struct RequestInfo {
     std::string host;
@@ -55,14 +53,21 @@ class ServerDataBroker final : public asapo::DataBroker {
   public:
     explicit ServerDataBroker(std::string server_uri, std::string source_path, bool has_filesystem,
                               SourceCredentials source);
-    Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) override;
 
-    IdList GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id,
+    Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) override;
+    Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_sec,
+                              std::string substream = kDefaultSubstream) override;
+
+    IdList GetUnacknowledgedTupleIds(std::string group_id,
+                                     std::string substream,
+                                     uint64_t from_id,
+                                     uint64_t to_id,
                                      Error* error) override;
     IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) override;
 
     uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) override;
     uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) override;
+
     Error ResetLastReadMarker(std::string group_id) override;
     Error ResetLastReadMarker(std::string group_id, std::string substream) override;
 
@@ -81,9 +86,9 @@ class ServerDataBroker final : public asapo::DataBroker {
     uint64_t GetCurrentSize(Error* err) override;
     uint64_t GetCurrentSize(std::string substream, Error* err) override;
 
-
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
     Error GetById(uint64_t id, FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
+
 
     void SetTimeout(uint64_t timeout_ms) override;
     void ForceNoRdma() override;
@@ -105,6 +110,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error RetrieveData(FileInfo* info, FileData* data) override;
 
     std::vector<std::string> GetSubstreamList(Error* err) override;
+    void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) override;
 
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
@@ -112,7 +118,7 @@ class ServerDataBroker final : public asapo::DataBroker {
 
     std::mutex net_client_mutex__; // Required for the lazy initialization of net_client
   private:
-    Error GetDataFromFileTransferService(const FileInfo* info, FileData* data, bool retry_with_new_token);
+    Error GetDataFromFileTransferService(FileInfo* info, FileData* data, bool retry_with_new_token);
     Error GetDataFromFile(FileInfo* info, FileData* data);
     static const std::string kBrokerServiceName;
     static const std::string kFileTransferServiceName;
@@ -134,7 +140,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error ServiceRequestWithTimeout(const std::string& service_name, std::string* service_uri, RequestInfo request,
                                     RequestOutput* response);
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
-    Error FtsRequestWithTimeout(const FileInfo* info, FileData* data);
+    Error FtsRequestWithTimeout(FileInfo* info, FileData* data);
+    Error FtsSizeRequestWithTimeout(FileInfo* info);
     Error ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
     Error ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
 
@@ -150,17 +157,15 @@ class ServerDataBroker final : public asapo::DataBroker {
     SourceCredentials source_credentials_;
     uint64_t timeout_ms_ = 0;
     bool should_try_rdma_first_ = true;
-    std::string folder_token_;
-
     NetworkConnectionType current_connection_type_ = NetworkConnectionType::kUndefined;
-
+    std::string folder_token_;
     RequestInfo CreateFolderTokenRequest() const;
     RequestInfo CreateFileTransferRequest(const FileInfo* info) const;
+    uint64_t resend_timout_ = 0;
+    bool resend_ = false;
+    uint64_t delay_sec_;
+    uint64_t resend_attempts_;
 };
 
-
-
-
 }
-
 #endif //ASAPO_SERVER_DATA_BROKER_H

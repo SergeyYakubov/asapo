@@ -71,6 +71,7 @@ std::vector<std::thread> StartThreads(const Args& params,
             std::cout << "Error CreateServerBroker: " << err << std::endl;
             exit(EXIT_FAILURE);
         }
+        //broker->ForceNoRdma();
 
         broker->SetTimeout((uint64_t) params.timeout_ms);
         asapo::FileData data;

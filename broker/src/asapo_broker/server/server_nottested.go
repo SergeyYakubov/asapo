@@ -53,6 +53,10 @@ func ReadConfig(fname string) (log.Level, error) {
 		return log.FatalLevel, errors.New("Server port not set")
 	}
 
+	if settings.CheckResendInterval==nil || *settings.CheckResendInterval<0  {
+		return log.FatalLevel, errors.New("Resend interval must be set and not negative")
+	}
+
 	if settings.PerformanceDbName == "" {
 		return log.FatalLevel, errors.New("PerformanceDbName not set")
 	}

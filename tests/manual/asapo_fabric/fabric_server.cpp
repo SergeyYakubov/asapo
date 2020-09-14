@@ -39,10 +39,11 @@ void ServerThread(FabricServer* server, size_t bufferSize, FileData* buffer) {
 int main(int argc, char* argv[]) {
     if (argc < 3 || argc > 4) {
         std::cout
-                << "Usage: " << argv[0] << " <listenAddress> <listenPort> [kiByte=1024*400/*400MiByte*/ /*MUST BE SYNC WITH CLIENT*/]" << std::endl
-                #ifdef LIBFARBIC_ALLOW_LOCALHOST
+                << "Usage: " << argv[0] << " <listenAddress> <listenPort> [kiByte=1024*400/*400MiByte*/ /*MUST BE SYNC WITH CLIENT*/]"
+                << std::endl
+#ifdef LIBFARBIC_ALLOW_LOCALHOST
                 << "If the address is localhost or 127.0.0.1 the verbs connection will be emulated" << std::endl
-                #endif
+#endif
                 ;
         return 1;
     }

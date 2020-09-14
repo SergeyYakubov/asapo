@@ -84,4 +84,19 @@ func TestTransferFile(t *testing.T) {
 	}
 }
 
+func TestTransferFileSize(t *testing.T) {
+	os.MkdirAll(filepath.Clean("folder"), os.ModePerm)
+	ioutil.WriteFile(filepath.Clean("folder/exists"), []byte("hello"), 0644)
+	defer 	os.RemoveAll("folder")
 
+	test:=transferFileTests[0]
+		request :=  makeRequest(fileTransferRequest{test.folder,test.fname})
+		w := doPostRequest("/transfer?sizeonly=true",request,test.token)
+		if test.status==http.StatusOK {
+			body, _ := ioutil.ReadAll(w.Body)
+			body_str:=string(body)
+			assert.Equal(t, test.status, w.Code, test.message)
+			assert.Equal(t, "{\"file_size\":5}", body_str, test.message)
+		}
+		assert.Equal(t, test.status, w.Code, test.message)
+}

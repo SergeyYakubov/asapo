@@ -166,6 +166,34 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
 
     nacks = broker->GetUnacknowledgedTupleIds(group_id, "stream1", 0, 0, &err);
     M_AssertTrue(nacks.size() == 4, "nacks stream1 size = 4 after ack");
+
+// negative acks
+    broker->ResetLastReadMarker(group_id);
+    err = broker->GetNext(&fi, group_id, nullptr);
+    M_AssertTrue(err == nullptr, "GetNextNegAckBeforeResend no error");
+    M_AssertTrue(fi.name == "1", "GetNextNegAckBeforeResend filename");
+    err = broker->NegativeAcknowledge(group_id, 1, 0);
+    M_AssertTrue(err == nullptr, "NegativeAcknowledge no error");
+    err = broker->GetNext(&fi, group_id, nullptr);
+    M_AssertTrue(err == nullptr, "GetNextNegAckWithResend no error");
+    M_AssertTrue(fi.name == "1", "GetNextNegAckWithResend filename");
+
+// automatic resend
+    broker->ResetLastReadMarker(group_id);
+    broker->SetResendNacs(true, 0, 1);
+    err = broker->GetNext(&fi, group_id, nullptr);
+    M_AssertTrue(err == nullptr, "GetNextBeforeResend no error");
+    M_AssertTrue(fi.name == "1", "GetNextBeforeResend filename");
+
+    err = broker->GetNext(&fi, group_id, nullptr);
+    M_AssertTrue(err == nullptr, "GetNextWithResend no error");
+    M_AssertTrue(fi.name == "1", "GetNextWithResend filename");
+
+    broker->SetResendNacs(false, 0, 1);
+    err = broker->GetNext(&fi, group_id, nullptr);
+    M_AssertTrue(err == nullptr, "GetNextAfterResend no error");
+    M_AssertTrue(fi.name == "2", "GetNextAfterResend filename");
+
 }
 
 

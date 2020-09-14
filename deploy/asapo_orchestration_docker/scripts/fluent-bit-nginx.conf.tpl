@@ -4,7 +4,7 @@
 
 [INPUT]
     Name tail
-    Path ${NOMAD_ALLOC_DIR}/${NOMAD_ALLOC_ID}/alloc/logs/nginx*.0
+    Path ${NOMAD_ALLOC_DIR}/${NOMAD_ALLOC_ID}/alloc/logs/nginx*
     Tag asapo.nginx
     DB ${NOMAD_TASK_DIR}/logs.db
     Parser level
