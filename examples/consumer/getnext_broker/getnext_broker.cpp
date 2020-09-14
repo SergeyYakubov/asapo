@@ -208,7 +208,6 @@ void TryGetStream(Args* args) {
 
 }
 
-
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
     Args params;
