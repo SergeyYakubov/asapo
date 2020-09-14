@@ -1,8 +1,8 @@
 #include <asapo_fabric/asapo_fabric.h>
-#include <dlfcn.h>
 #include "fabric_factory_not_supported.h"
 
 #ifdef LIBFABRIC_ENABLED
+#include <dlfcn.h>
 #include "fabric_factory_impl.h"
 #include "fabric_function_map.h"
 #endif
@@ -39,8 +39,10 @@ functionNotFoundError:
     return std::unique_ptr<FabricFactory>(new FabricFactoryNotSupported(FabricErrorTemplates::kNotSupportedOnBuildError));
 }
 
+#ifdef LIBFABRIC_ENABLED
 // Global fabric function map
 extern FabricFunctionMap& gffm() {
     static FabricFunctionMap gffm_ {};
     return gffm_;
 }
+#endif
