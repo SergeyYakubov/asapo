@@ -10,6 +10,7 @@ type  beamtimeMeta struct {
 	Stream string       `json:"stream"`
 	OfflinePath string `json:"core-path"`
 	OnlinePath string `json:"beamline-path"`
+	Type string `json:"source-type"`
 }
 
 type serverSettings struct {

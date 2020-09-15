@@ -21,9 +21,13 @@ Error WriteFileProcessor::ProcessFile(const Request* request, bool overwrite) co
 
     auto data = request->GetData();
     auto fname = request->GetFileName();
-    auto root_folder = request->GetOfflinePath();
+    std::string root_folder;
+    auto err = GetRootFolder(request,&root_folder);
+    if (err) {
+        return err;
+    }
 
-    auto err =  io__->WriteDataToFile(root_folder, fname, (uint8_t*)data, (size_t) fsize, true, overwrite);
+    err =  io__->WriteDataToFile(root_folder, fname, (uint8_t*)data, (size_t) fsize, true, overwrite);
     if (!err) {
         log__->Debug("saved file of size " + std::to_string(fsize) + " to " + root_folder + kPathSeparator + fname);
     }

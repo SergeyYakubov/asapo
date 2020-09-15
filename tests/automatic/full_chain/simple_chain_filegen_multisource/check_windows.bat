@@ -19,8 +19,8 @@ echo db.%beamtime_id%_detector.insert({dummy:1}) | %mongo_exe% %beamtime_id%_det
 call start_services.bat
 
 mkdir %receiver_folder%
-mkdir  c:\tmp\asapo\test_in\test1
-mkdir  c:\tmp\asapo\test_in\test2
+mkdir  c:\tmp\asapo\test_in1\processed
+mkdir  c:\tmp\asapo\test_in2\processed
 
 REM producer1
 start /B "" "%1" test1.json
@@ -30,11 +30,13 @@ start /B "" "%1" test2.json
 
 
 ping 1.0.0.0 -n 3 -w 100 > nul
+mkdir  c:\tmp\asapo\test_in1\processed\test1
+mkdir  c:\tmp\asapo\test_in2\processed\test2
 
-echo hello > c:\tmp\asapo\test_in\test1\file1
-echo hello > c:\tmp\asapo\test_in\test1\file2
-echo hello > c:\tmp\asapo\test_in\test2\file1
-echo hello > c:\tmp\asapo\test_in\test2\file2
+echo hello > c:\tmp\asapo\test_in1\processed\test1\file1
+echo hello > c:\tmp\asapo\test_in1\processed\test1\file2
+echo hello > c:\tmp\asapo\test_in2\processed\test2\file1
+echo hello > c:\tmp\asapo\test_in2\processed\test2\file2
 
 ping 1.0.0.0 -n 10 -w 100 > nul
 
@@ -54,8 +56,8 @@ exit /b 1
 :clean
 call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
-rmdir /S /Q c:\tmp\asapo\test_in\test1
-rmdir /S /Q c:\tmp\asapo\test_in\test2
+rmdir /S /Q c:\tmp\asapo\test_in1
+rmdir /S /Q c:\tmp\asapo\test_in2
 Taskkill /IM "%producer_short_name%" /F
 
 del /f token

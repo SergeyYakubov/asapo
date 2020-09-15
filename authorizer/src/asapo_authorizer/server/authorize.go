@@ -14,6 +14,7 @@ type SourceCredentials struct {
 	Beamline   string
 	Stream     string
 	Token      string
+	Type 	   string
 }
 
 type authorizationRequest struct {
@@ -24,10 +25,10 @@ type authorizationRequest struct {
 func getSourceCredentials(request authorizationRequest) (SourceCredentials, error) {
 	vals := strings.Split(request.SourceCredentials, "%")
 
-	if len(vals) != 4 {
+	if len(vals) != 5 {
 		return SourceCredentials{}, errors.New("cannot get source credentials from " + request.SourceCredentials)
 	}
-	creds := SourceCredentials{vals[0], vals[1], vals[2], vals[3]}
+	creds := SourceCredentials{vals[1], vals[2], vals[3], vals[4],vals[0]}
 	if creds.Stream == "" {
 		creds.Stream = "detector"
 	}
@@ -138,6 +139,7 @@ func alwaysAllowed(creds SourceCredentials) (beamtimeMeta, bool) {
 	for _, pair := range settings.AlwaysAllowedBeamtimes {
 		if pair.BeamtimeId == creds.BeamtimeId {
 			pair.Stream = creds.Stream
+			pair.Type = creds.Type
 			return pair, true
 		}
 	}
@@ -200,6 +202,10 @@ func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
 		meta, err = findBeamtimeMetaFromBeamline(creds.Beamline)
 	}
 
+	if creds.Type == "processed" {
+		meta.OnlinePath = ""
+	}
+
 	if (err != nil) {
 		log.Error(err.Error())
 		return beamtimeMeta{}, err
@@ -243,8 +249,9 @@ func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeM
 	}
 
 	meta.Stream = creds.Stream
+	meta.Type = creds.Type
 
-	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " + meta.Beamline)
+	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " + meta.Beamline+", type "+meta.Type)
 	return meta, nil
 }
 

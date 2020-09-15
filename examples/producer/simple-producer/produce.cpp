@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     auto buffer =  asapo::FileData(new uint8_t[send_size]);
     memcpy(buffer.get(),to_send.c_str(),send_size);
 
-    asapo::EventHeader event_header{1, send_size, "test_file"};
+    asapo::EventHeader event_header{1, send_size, "processed"+asapo::kPathseparator +"test_file"};
     err = producer->SendData(event_header, std::move(buffer), asapo::kDefaultIngestMode, &ProcessAfterSend);
     exit_if_error("Cannot send file", err);
 

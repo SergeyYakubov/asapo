@@ -32,8 +32,6 @@ findstr /i /l /c:"Processed 1000 file(s)"  out1.txt || goto :error
 type out2.txt
 findstr /i /l /c:"Processed 900 file(s)"  out2.txt || goto :error
 
-
-
 goto :clean
 
 :error

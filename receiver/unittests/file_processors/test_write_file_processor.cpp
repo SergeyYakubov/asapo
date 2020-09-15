@@ -53,7 +53,8 @@ class WriteFileProcessorTests : public Test {
     NiceMock<MockIO> mock_io;
     std::unique_ptr<MockRequest> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
-    std::string expected_file_name = "2";
+    std::string expected_file_name = std::string("raw")+asapo::kPathSeparator+std::string("2");
+    asapo::SourceType expected_source_type = asapo::SourceType::kRaw;
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_beamline = "beamline";
     std::string expected_facility = "facility";
@@ -100,10 +101,14 @@ void WriteFileProcessorTests::MockRequestData(int times) {
     EXPECT_CALL(*mock_request, GetData()).Times(times)
     .WillRepeatedly(Return(nullptr));
 
-    EXPECT_CALL(*mock_request, GetOfflinePath()).Times(times)
+    EXPECT_CALL(*mock_request, GetOnlinePath()).Times(times)
     .WillRepeatedly(ReturnRef(expected_full_path));
 
-    EXPECT_CALL(*mock_request, GetFileName()).Times(times)
+    EXPECT_CALL(*mock_request, GetSourceType()).Times(times*2)
+        .WillRepeatedly(Return(expected_source_type));
+
+
+    EXPECT_CALL(*mock_request, GetFileName()).Times(times*2)
     .WillRepeatedly(Return(expected_file_name));
 }
 

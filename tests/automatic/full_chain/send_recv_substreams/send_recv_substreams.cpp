@@ -36,7 +36,7 @@ void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
 
 BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".", true,
-                  asapo::SourceCredentials{args.beamtime_id, "", "", args.token}, err);
+                  asapo::SourceCredentials{asapo::SourceType::kProcessed,args.beamtime_id, "", "", args.token}, err);
     if (*err) {
         return nullptr;
     }
@@ -56,7 +56,8 @@ ProducerPtr CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.server, 1,
                                             asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{args.beamtime_id, "", "", args.token }, 60, &err);
+                                            asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                                     args.beamtime_id, "", "", args.token }, 60, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);

@@ -20,13 +20,14 @@ SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 
 call start_services.bat
 
-for /l %%x in (1, 1, 3) do echo db.data_default.insert({"_id":%%x,"size":6,"name":"file%%x","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %indatabase_name%  || goto :error
+for /l %%x in (1, 1, 3) do echo db.data_default.insert({"_id":%%x,"size":6,"name":"processed\\file%%x","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %indatabase_name%  || goto :error
 
 mkdir %receiver_folder%
 
-echo hello1 > file1
-echo hello2 > file2
-echo hello3 > file3
+mkdir processed
+echo hello1 > processed\file1
+echo hello2 > processed\file2
+echo hello3 > processed\file3
 
 
 "%1" 127.0.0.1:8400 %source_path% %beamtime_id%  %stream_in% %stream_out% %token% 2 1000 25000 1 > out
@@ -36,9 +37,9 @@ findstr /I /L /C:"Sent 3 file(s)" out || goto :error
 
 echo db.data_default.find({"_id":1}) | %mongo_exe% %outdatabase_name% | findstr  /c:"file1_%stream_out%"  || goto :error
 
-findstr /I /L /C:"hello1" %receiver_folder%\file1_%stream_out% || goto :error
-findstr /I /L /C:"hello2" %receiver_folder%\file2_%stream_out% || goto :error
-findstr /I /L /C:"hello3" %receiver_folder%\file3_%stream_out% || goto :error
+findstr /I /L /C:"hello1" %receiver_folder%\processed\file1_%stream_out% || goto :error
+findstr /I /L /C:"hello2" %receiver_folder%\processed\file2_%stream_out% || goto :error
+findstr /I /L /C:"hello3" %receiver_folder%\processed\file3_%stream_out% || goto :error
 
 
 "%1" 127.0.0.1:8400 %source_path% %beamtime_id%  %stream_in% %stream_out2% %token% 2 1000 25000 0 > out2
@@ -47,7 +48,7 @@ findstr /I /L /C:"Processed 3 file(s)" out2 || goto :error
 findstr /I /L /C:"Sent 3 file(s)" out2 || goto :error
 
 
-echo db.data_default.find({"_id":1}) | %mongo_exe% %outdatabase_name2% | findstr /c:".\\\\file1" || goto :error
+echo db.data_default.find({"_id":1}) | %mongo_exe% %outdatabase_name2% | findstr /c:"file1" || goto :error
 
 
 goto :clean
@@ -63,4 +64,4 @@ echo db.dropDatabase() | %mongo_exe% %indatabase_name%
 echo db.dropDatabase() | %mongo_exe% %outdatabase_name%
 echo db.dropDatabase() | %mongo_exe% %outdatabase_name2%
 rmdir /S /Q %receiver_root_folder%
-del file1 file2 file3 out out2
+rmdir /S /Q processed

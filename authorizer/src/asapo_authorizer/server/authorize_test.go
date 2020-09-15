@@ -56,16 +56,16 @@ var credTests = [] struct {
 	ok bool
 	message string
 } {
-	{"asapo_test%auto%%", SourceCredentials{"asapo_test","auto","detector",""},true,"auto beamline, stream and no token"},
-	{"asapo_test%auto%%token", SourceCredentials{"asapo_test","auto","detector","token"},true,"auto beamline, stream"},
-	{"asapo_test%auto%stream%", SourceCredentials{"asapo_test","auto","stream",""},true,"auto beamline, no token"},
-	{"asapo_test%auto%stream%token", SourceCredentials{"asapo_test","auto","stream","token"},true,"auto beamline,stream, token"},
-	{"asapo_test%beamline%stream%token", SourceCredentials{"asapo_test","beamline","stream","token"},true,"all set"},
-	{"auto%beamline%stream%token", SourceCredentials{"auto","beamline","stream","token"},true,"auto beamtime"},
-	{"auto%auto%stream%token", SourceCredentials{},false,"auto beamtime and beamline"},
-	{"%beamline%stream%token", SourceCredentials{"auto","beamline","stream","token"},true,"empty beamtime"},
-	{"asapo_test%%stream%token", SourceCredentials{"asapo_test","auto","stream","token"},true,"empty bealine"},
-	{"%%stream%token", SourceCredentials{},false,"both empty"},
+	{"processed%asapo_test%auto%%", SourceCredentials{"asapo_test","auto","detector","","processed"},true,"auto beamline, stream and no token"},
+	{"processed%asapo_test%auto%%token", SourceCredentials{"asapo_test","auto","detector","token","processed"},true,"auto beamline, stream"},
+	{"processed%asapo_test%auto%stream%", SourceCredentials{"asapo_test","auto","stream","","processed"},true,"auto beamline, no token"},
+	{"processed%asapo_test%auto%stream%token", SourceCredentials{"asapo_test","auto","stream","token","processed"},true,"auto beamline,stream, token"},
+	{"processed%asapo_test%beamline%stream%token", SourceCredentials{"asapo_test","beamline","stream","token","processed"},true,"all set"},
+	{"processed%auto%beamline%stream%token", SourceCredentials{"auto","beamline","stream","token","processed"},true,"auto beamtime"},
+	{"raw%auto%auto%stream%token", SourceCredentials{},false,"auto beamtime and beamline"},
+	{"raw%%beamline%stream%token", SourceCredentials{"auto","beamline","stream","token","raw"},true,"empty beamtime"},
+	{"raw%asapo_test%%stream%token", SourceCredentials{"asapo_test","auto","stream","token","raw"},true,"empty bealine"},
+	{"raw%%%stream%token", SourceCredentials{},false,"both empty"},
 }
 
 func TestSplitCreds(t *testing.T) {
@@ -84,8 +84,8 @@ func TestSplitCreds(t *testing.T) {
 }
 
 func TestAuthorizeDefaultOK(t *testing.T) {
-	allowBeamlines([]beamtimeMeta{{"asapo_test","beamline","","2019","tf"}})
-	request :=  makeRequest(authorizationRequest{"asapo_test%%%","host"})
+	allowBeamlines([]beamtimeMeta{{"asapo_test","beamline","","2019","tf",""}})
+	request :=  makeRequest(authorizationRequest{"processed%asapo_test%%%","host"})
 	w := doPostRequest("/authorize",request)
 
 	body, _ := ioutil.ReadAll(w.Body)
@@ -93,6 +93,7 @@ func TestAuthorizeDefaultOK(t *testing.T) {
 	assert.Contains(t, string(body), "asapo_test", "")
 	assert.Contains(t, string(body), "beamline", "")
 	assert.Contains(t, string(body), "detector", "")
+	assert.Contains(t, string(body), "processed", "")
 
 	assert.Equal(t, http.StatusOK, w.Code, "")
 }
@@ -105,6 +106,7 @@ var beamtime_meta_online =`
 `
 
 var authTests = [] struct {
+	source_type string
 	beamtime_id string
 	beamline string
 	stream string
@@ -112,13 +114,14 @@ var authTests = [] struct {
 	status int
 	message string
 }{
-	{"test","auto","stream", prepareToken("test"),http.StatusOK,"user stream with correct token"},
-	{"test_online","auto","stream", prepareToken("test_online"),http.StatusOK,"with online path"},
-	{"test1","auto","stream", prepareToken("test1"),http.StatusUnauthorized,"correct token, beamtime not found"},
-	{"test","auto","stream", prepareToken("wrong"),http.StatusUnauthorized,"user stream with wrong token"},
-	{"test","auto","detector_aaa", prepareToken("test"),http.StatusUnauthorized,"detector stream with correct token and wroung source"},
-	{"test","bl1","stream", prepareToken("test"),http.StatusOK,"correct beamline given"},
-	{"test","bl2","stream", prepareToken("test"),http.StatusUnauthorized,"incorrect beamline given"},
+	{"processed","test","auto","stream", prepareToken("test"),http.StatusOK,"user stream with correct token"},
+	{"processed","test_online","auto","stream", prepareToken("test_online"),http.StatusOK,"with online path, processed type"},
+	{"raw","test_online","auto","stream", prepareToken("test_online"),http.StatusOK,"with online path, raw type"},
+	{"processed","test1","auto","stream", prepareToken("test1"),http.StatusUnauthorized,"correct token, beamtime not found"},
+	{"processed","test","auto","stream", prepareToken("wrong"),http.StatusUnauthorized,"user stream with wrong token"},
+	{"processed","test","auto","detector_aaa", prepareToken("test"),http.StatusUnauthorized,"detector stream with correct token and wroung source"},
+	{"processed","test","bl1","stream", prepareToken("test"),http.StatusOK,"correct beamline given"},
+	{"processed","test","bl2","stream", prepareToken("test"),http.StatusUnauthorized,"incorrect beamline given"},
 }
 func TestAuthorizeWithToken(t *testing.T) {
 	allowBeamlines([]beamtimeMeta{})
@@ -134,7 +137,7 @@ func TestAuthorizeWithToken(t *testing.T) {
 	defer 	os.RemoveAll("bl1")
 
 	for _, test := range authTests {
-		request :=  makeRequest(authorizationRequest{test.beamtime_id+"%"+test.beamline+"%"+test.stream+"%"+test.token,"host"})
+		request :=  makeRequest(authorizationRequest{test.source_type+"%"+test.beamtime_id+"%"+test.beamline+"%"+test.stream+"%"+test.token,"host"})
 		w := doPostRequest("/authorize",request)
 
 		body, _ := ioutil.ReadAll(w.Body)
@@ -142,17 +145,19 @@ func TestAuthorizeWithToken(t *testing.T) {
 			body_str:=string(body)
 			body_str = strings.Replace(body_str,string(os.PathSeparator),"/",-1)
 			body_str = strings.Replace(body_str,"//","/",-1)
-			assert.Contains(t, body_str, test.beamtime_id, "")
-			assert.Contains(t, body_str, "bl1", "")
-			assert.Contains(t, body_str, "stream", "")
-			assert.Contains(t, body_str, "tf/gpfs/bl1/2019/data/test", "")
-			if (test.beamtime_id == "test_online") {
-				assert.Contains(t, body_str, "tf/gpfs/bl1/2019/data/test_online", "")
-				assert.Contains(t, body_str, "bl1/current", "")
+			assert.Contains(t, body_str, test.beamtime_id, test.message)
+			assert.Contains(t, body_str, "bl1", test.message)
+			assert.Contains(t, body_str, "stream", test.message)
+			assert.Contains(t, body_str, "type", test.message)
+			assert.Contains(t, body_str, test.source_type, test.message)
+			assert.Contains(t, body_str, "tf/gpfs/bl1/2019/data/test", test.message)
+			if (test.beamtime_id == "test_online" && test.source_type == "raw") {
+				assert.Contains(t, body_str, "tf/gpfs/bl1/2019/data/test_online", test.message)
+				assert.Contains(t, body_str, "bl1/current", test.message)
 			} else {
-				assert.NotContains(t, body_str, "current", "")
+				assert.NotContains(t, body_str, "current", test.message)
 			}
-			assert.Contains(t, body_str, test.stream, "")
+			assert.Contains(t, body_str, test.stream, test.message)
 		}
 
 		assert.Equal(t, test.status, w.Code, test.message)
@@ -221,7 +226,7 @@ func TestAuthorizeBeamline(t *testing.T) {
 	defer 	os.RemoveAll("p07")
 
 	for _, test := range authBeamlineTests {
-		request :=  makeRequest(authorizationRequest{"auto%"+test.beamline+"%stream%"+test.token,"host"})
+		request :=  makeRequest(authorizationRequest{"raw%auto%"+test.beamline+"%stream%"+test.token,"host"})
 		w := doPostRequest("/authorize",request)
 
 		body, _ := ioutil.ReadAll(w.Body)
@@ -229,11 +234,13 @@ func TestAuthorizeBeamline(t *testing.T) {
 		body_str = strings.Replace(body_str,string(os.PathSeparator),"/",-1)
 		body_str = strings.Replace(body_str,"//","/",-1)
 		if test.status==http.StatusOK {
-			assert.Contains(t, body_str, test.beamtime_id, "")
-			assert.Contains(t, body_str, test.beamline, "")
-			assert.Contains(t, body_str, "asap3/petra3/gpfs/p07/2020/data/11111111", "")
-			assert.Contains(t, body_str, "p07/current", "")
-			assert.Contains(t, body_str, "stream", "")
+			assert.Contains(t, body_str, test.beamtime_id, test.message)
+			assert.Contains(t, body_str, test.beamline, test.message)
+			assert.Contains(t, body_str, test.beamline, test.message)
+			assert.Contains(t, body_str, "raw", test.message)
+			assert.Contains(t, body_str, "asap3/petra3/gpfs/p07/2020/data/11111111", test.message)
+			assert.Contains(t, body_str, "p07/current", test.message)
+			assert.Contains(t, body_str, "stream", test.message)
 		}
 
 		assert.Equal(t, test.status, w.Code, test.message)
@@ -242,7 +249,7 @@ func TestAuthorizeBeamline(t *testing.T) {
 
 
 func TestNotAuthorized(t *testing.T) {
-	request :=  makeRequest(authorizationRequest{"any_id%%%","host"})
+	request :=  makeRequest(authorizationRequest{"raw%any_id%%%","host"})
 	w := doPostRequest("/authorize",request)
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
 }
@@ -260,7 +267,7 @@ func TestAuthorizeWrongPath(t *testing.T) {
 }
 
 func TestDoNotAuthorizeIfNotInAllowed(t *testing.T) {
-	allowBeamlines([]beamtimeMeta{{"test","beamline","","2019","tf"}})
+	allowBeamlines([]beamtimeMeta{{"test","beamline","","2019","tf",""}})
 
 	request :=  authorizationRequest{"asapo_test%%","host"}
 	creds,_ := getSourceCredentials(request)
@@ -295,7 +302,7 @@ func TestAuthorizeWithFile(t *testing.T) {
 	ioutil.WriteFile("127.0.0.1", []byte("bl1"), 0644)
 
 
-	request := authorizationRequest{"11003924%%%","127.0.0.1"}
+	request := authorizationRequest{"raw%11003924%%%","127.0.0.1"}
 	w := doPostRequest("/authorize",makeRequest(request))
 
 	body, _ := ioutil.ReadAll(w.Body)
@@ -305,10 +312,11 @@ func TestAuthorizeWithFile(t *testing.T) {
 	assert.Contains(t,body_str,"tf/gpfs/bl1/2019/data/11003924")
 	assert.Contains(t, body_str, "11003924", "")
 	assert.Contains(t, body_str, "bl1", "")
+	assert.Contains(t, body_str, "raw", "")
 	assert.Contains(t, body_str, "detector", "")
 	assert.Equal(t, http.StatusOK, w.Code, "")
 
-	request = authorizationRequest{"wrong%%%","127.0.0.1"}
+	request = authorizationRequest{"raw%wrong%%%","127.0.0.1"}
 	w = doPostRequest("/authorize",makeRequest(request))
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
 

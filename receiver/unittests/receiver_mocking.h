@@ -92,6 +92,9 @@ class MockRequest: public Request {
     MOCK_METHOD1(SetOnlinePath, void (std::string));
     MOCK_METHOD1(SetOfflinePath, void (std::string));
 
+    MOCK_METHOD1(SetSourceType, void (SourceType));
+    MOCK_CONST_METHOD0(GetSourceType, SourceType ());
+
     MOCK_CONST_METHOD0(WasAlreadyProcessed, bool());
     MOCK_METHOD0(SetAlreadyProcessedFlag, void());
     MOCK_METHOD2(SetResponseMessage, void(std::string,ResponseMessageType));

@@ -6,7 +6,7 @@
  "NThreads":1,
  "LogLevel":"debug",
  "RootMonitoredFolder":"@ROOT_PATH@test_in",
- "MonitoredSubFolders":["test1","test2"],
+ "MonitoredSubFolders":["processed"],
  "IgnoreExtensions":["tmp"],
  "WhitelistExtensions":[],
  "RemoveAfterSend":false,

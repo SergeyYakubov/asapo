@@ -17,15 +17,14 @@ year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
 
 
-mkdir -p /tmp/asapo/test_in/test1/
-mkdir -p /tmp/asapo/test_in/test2/
+mkdir -p /tmp/asapo/test_in/processed
 
 Cleanup() {
     echo cleanup
-    kill $producerid
+    kill -9 $producerid
+    rm -rf /tmp/asapo/test_in
+    rm -rf ${receiver_folder}
     influx -execute "drop database ${monitor_database_name}"
-    rm -rf /tmp/asapo/test_in/test1
-    rm -rf /tmp/asapo/test_in/test2
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop receiver
@@ -52,10 +51,12 @@ $1 test.json &
 producerid=`echo $!`
 
 sleep 1
+mkdir  /tmp/asapo/test_in/processed/test1
+mkdir  /tmp/asapo/test_in/processed/test2
 
-echo -n hello1 > /tmp/asapo/test_in/test1/file1
-echo -n hello2 > /tmp/asapo/test_in/test1/file2
-echo -n hello3 > /tmp/asapo/test_in/test2/file2
+echo -n hello1 > /tmp/asapo/test_in/processed/test1/file1
+echo -n hello2 > /tmp/asapo/test_in/processed/test1/file2
+echo -n hello3 > /tmp/asapo/test_in/processed/test2/file1
 
 $2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 0 > out.txt
 cat out.txt

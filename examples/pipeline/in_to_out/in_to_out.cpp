@@ -12,6 +12,7 @@
 
 #include "asapo_consumer.h"
 #include "asapo_producer.h"
+#include "preprocessor/definitions.h"
 
 using std::chrono::system_clock;
 using asapo::Error;
@@ -65,7 +66,7 @@ int ProcessError(const Error& err) {
 
 BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.file_path, true,
-                  asapo::SourceCredentials{args.beamtime_id, "", args.stream_in, args.token}, err);
+                  asapo::SourceCredentials{asapo::SourceType::kProcessed,args.beamtime_id, "", args.stream_in, args.token}, err);
     if (*err) {
         return nullptr;
     }
@@ -103,7 +104,7 @@ void SendDataDownstreamThePipeline(const Args& args, const asapo::FileInfo& fi, 
         header.file_name += "_" + args.stream_out;
         err_send = producer->SendData(header, std::move(data), asapo::kDefaultIngestMode, ProcessAfterSend);
     } else {
-        header.file_name = args.file_path + "/" + header.file_name;
+        header.file_name = args.file_path + asapo::kPathSeparator + header.file_name;
         err_send = producer->SendData(header, nullptr, asapo::IngestModeFlags::kTransferMetaDataOnly, ProcessAfterSend);
         std::cout << err_send << std::endl;
     }
@@ -188,7 +189,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.server, args.nthreads,
                                             asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{args.beamtime_id, "", args.stream_out, args.token }, 60, &err);
+                                            asapo::SourceCredentials{asapo::SourceType::kProcessed,args.beamtime_id, "", args.stream_out, args.token }, 60, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);

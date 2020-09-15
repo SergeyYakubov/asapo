@@ -45,4 +45,4 @@ cat out
 cat out | grep '"buf_id" : 0'
 cat out | grep user_meta
 
-ls -ln ${receiver_folder}/1 | awk '{ print $5 }'| grep 60000000
+ls -ln ${receiver_folder}/processed/1 | awk '{ print $5 }'| grep 60000000

@@ -66,7 +66,7 @@ func extractFolderTokenrequest(r *http.Request) (folderTokenRequest,error) {
 }
 
 func checkBeamtimeFolder(request folderTokenRequest) error {
-	beamtimeMeta, err := findMeta(SourceCredentials{request.BeamtimeId,"auto","",""})
+	beamtimeMeta, err := findMeta(SourceCredentials{request.BeamtimeId,"auto","","",""})
 	if err != nil {
 		log.Error("cannot get beamtime meta"+err.Error())
 		return err

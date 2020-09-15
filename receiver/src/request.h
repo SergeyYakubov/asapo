@@ -19,6 +19,8 @@
 #include "data_cache.h"
 
 #include "preprocessor/definitions.h"
+#include "file_processors/file_processor.h"
+
 namespace asapo {
 
 using RequestHandlerList = std::vector<const ReceiverRequestHandler*>;
@@ -51,6 +53,9 @@ class Request {
     VIRTUAL const std::string& GetBeamtimeId() const;
     VIRTUAL void SetBeamtimeId(std::string beamtime_id);
     VIRTUAL void SetBeamline(std::string beamline);
+
+    VIRTUAL void SetSourceType(SourceType);
+    VIRTUAL SourceType GetSourceType() const;
 
     VIRTUAL const std::string& GetStream() const;
     VIRTUAL void SetStream(std::string stream);
@@ -93,8 +98,8 @@ class Request {
     std::string response_message_;
     ResponseMessageType response_message_type_;
     const RequestHandlerDbCheckRequest* check_duplicate_request_handler_;
+    SourceType source_type_ = SourceType::kProcessed;
 };
-
 
 }
 

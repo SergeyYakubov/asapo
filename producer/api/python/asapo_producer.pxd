@@ -22,6 +22,8 @@ cdef extern from "asapo_producer.h" namespace "asapo":
   ErrorTemplateInterface kLocalIOError "asapo::ProducerErrorTemplates::kLocalIOError"
   ErrorTemplateInterface kServerWarning "asapo::ProducerErrorTemplates::kServerWarning"
 
+
+
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass FileData:
     unique_ptr[uint8_t[]] release()
@@ -46,11 +48,15 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 
 
 cdef extern from "asapo_producer.h" namespace "asapo":
+  cppclass SourceType:
+    pass
+  cdef Error GetSourceTypeFromString(string types,SourceType * type)
   struct  SourceCredentials:
     string beamtime_id
     string beamline
     string stream
     string user_token
+    SourceType type
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   struct  EventHeader:
@@ -90,6 +96,7 @@ cdef extern from "asapo_wrappers.h" namespace "asapo":
       pass
     RequestCallback unwrap_callback(RequestCallbackCython, void*,void*)
     RequestCallback unwrap_callback_with_memory(RequestCallbackCythonMemory, void*,void*,void*)
+
 
 
 cdef extern from "asapo_producer.h" namespace "asapo" nogil:

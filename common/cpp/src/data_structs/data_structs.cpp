@@ -23,6 +23,25 @@ const std::string SourceCredentials::kDefaultStream = "detector";
 const std::string SourceCredentials::kDefaultBeamline = "auto";
 const std::string SourceCredentials::kDefaultBeamtimeId = "auto";
 
+std::string GetStringFromSourceType(SourceType type) {
+    switch (type) {
+        case SourceType::kRaw:return "raw";
+        case SourceType::kProcessed:return "processed";
+    }
+}
+
+Error GetSourceTypeFromString(std::string stype,SourceType *type) {
+    Error err;
+    if (stype=="raw") {
+        *type = SourceType::kRaw;
+        return nullptr;
+    } else if (stype=="processed") {
+        *type = SourceType::kProcessed;
+        return nullptr;
+    } else {
+        return TextError("cannot parse error type: "+stype);
+    }
+}
 
 std::string FileInfo::Json() const {
     auto nanoseconds_from_epoch = std::chrono::time_point_cast<std::chrono::nanoseconds>(modify_date).

@@ -8,7 +8,7 @@
 #include <sstream>
 
 #include "asapo_producer.h"
-
+#include "preprocessor/definitions.h"
 
 using std::chrono::system_clock;
 
@@ -71,7 +71,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         std::cout <<
                   "Usage: " << argv[0] <<
                   " <destination> <beamtime_id[%<stream>%<token>]> <number_of_byte> <iterations> <nthreads>"
-                  " <mode x0 -t tcp, x1 - filesystem, 0x - write files, 1x - do not write files> <timeout (sec)> [n images in set (default 1)]"
+                  " <mode 0xx - processed source type, 1xx - raw source type, xx0 -t tcp, xx1 - filesystem, x0x - write files, x1x - do not write files> <timeout (sec)> [n images in set (default 1)]"
                   << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -127,7 +127,7 @@ asapo::FileData CreateMemoryBuffer(size_t size) {
 
 
 bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations, uint64_t images_in_set,
-                   const std::string& stream, bool write_files) {
+                   const std::string& stream, bool write_files, asapo::SourceType type) {
 
     asapo::Error err;
     if (iterations == 0) {
@@ -138,13 +138,17 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         }
     }
 
-    for(uint64_t i = 0; i < iterations; i++) {
+    std::string image_folder = GetStringFromSourceType(type)+asapo::kPathSeparator;
+
+
+    for (uint64_t i = 0; i < iterations; i++) {
         auto buffer = CreateMemoryBuffer(number_of_byte);
         asapo::EventHeader event_header{i + 1, number_of_byte, std::to_string(i + 1)};
         std::string meta = "{\"user_meta\":\"test" + std::to_string(i + 1) + "\"}";
         if (!stream.empty()) {
             event_header.file_name = stream + "/" + event_header.file_name;
         }
+        event_header.file_name = image_folder+event_header.file_name;
         event_header.user_metadata = std::move(meta);
         if (images_in_set == 1) {
             auto err = producer->SendData(event_header, std::move(buffer), write_files ? asapo::kDefaultIngestMode :
@@ -163,6 +167,7 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
                 if (!stream.empty()) {
                     event_header.file_name = stream + "/" + event_header.file_name;
                 }
+                event_header.file_name = image_folder + event_header.file_name;
                 event_header.user_metadata = meta;
                 auto err = producer->SendData(event_header, std::move(buffer), write_files ? asapo::kDefaultIngestMode :
                                               asapo::kTransferData, &ProcessAfterSend);
@@ -180,7 +185,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.discovery_service_endpoint, args.nthreads,
                                             args.mode % 10 == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem,
-                                            asapo::SourceCredentials{args.beamtime_id, "", args.stream, args.token }, 3600, &err);
+                                            asapo::SourceCredentials{args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw,args.beamtime_id, "", args.stream, args.token }, 3600, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);
@@ -216,7 +221,7 @@ int main (int argc, char* argv[]) {
     system_clock::time_point start_time = system_clock::now();
 
     if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.images_in_set, args.stream,
-                      args.mode / 10 == 0)) {
+                      args.mode / 10 == 0,args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw)) {
         return EXIT_FAILURE;
     }
 

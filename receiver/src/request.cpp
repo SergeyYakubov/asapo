@@ -193,5 +193,11 @@ const ResponseMessageType Request::GetResponseMessageType() const {
 Error Request::CheckForDuplicates()  {
     return check_duplicate_request_handler_->ProcessRequest(this);
 }
+void Request::SetSourceType(SourceType type) {
+    source_type_ = type;
+}
+SourceType Request::GetSourceType() const {
+    return source_type_;
+}
 
 }
