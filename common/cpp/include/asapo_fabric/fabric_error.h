@@ -25,7 +25,7 @@ auto const kNotSupportedOnBuildError = FabricErrorTemplate {
     "This build of ASAPO does not support LibFabric", FabricErrorType::kNotSupported
 };
 auto const kLibraryNotFoundError = FabricErrorTemplate {
-    "asapo-fabric, LibFabric or dependencies were not found", FabricErrorType::kLibraryNotFound
+    "LibFabric or dependencies were not found", FabricErrorType::kLibraryNotFound
 };
 auto const kLibraryCompatibilityError = FabricErrorTemplate {
     "LibFabric was found but somehow some a function is missing", FabricErrorType::kLibraryCompatibilityError

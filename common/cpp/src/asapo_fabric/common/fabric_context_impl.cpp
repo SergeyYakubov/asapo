@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <rdma/fi_tagged.h>
+#include <iostream>
 #include "fabric_context_impl.h"
 #include "fabric_memory_region_impl.h"
 
@@ -31,8 +32,7 @@ std::string __PRETTY_FUNCTION_TO_NAMESPACE__(const std::string& prettyFunction) 
         }                                                       \
     } while(0) // Enforce ';'
 
-// TODO: It is super important that version 1.10 is installed, but since its not released yet we go with 1.9
-const uint32_t FabricContextImpl::kMinExpectedLibFabricVersion = FI_VERSION(1, 9);
+const uint32_t FabricContextImpl::kMinExpectedLibFabricVersion = FI_VERSION(1, 11);
 
 FabricContextImpl::FabricContextImpl() : io__{ GenerateDefaultIO() }, alive_check_response_task_(this) {
 }

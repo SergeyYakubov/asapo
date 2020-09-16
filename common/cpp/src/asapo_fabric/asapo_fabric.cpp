@@ -15,7 +15,7 @@ std::unique_ptr<FabricFactory> asapo::fabric::GenerateDefaultFabricFactory() {
         return std::unique_ptr<FabricFactory>(new FabricFactoryImpl());
     }
 
-    void* handle = dlopen("libfabric.so", RTLD_LAZY);
+    void* handle = dlopen("libfabric.so.1", RTLD_LAZY);
     if (handle) {
 #define ADD_FABRIC_CALL(fName) do { if (!(*((void**)&gffm().fName) = dlsym(handle, #fName))) goto functionNotFoundError; } while(0)
         ADD_FABRIC_CALL(fi_version);

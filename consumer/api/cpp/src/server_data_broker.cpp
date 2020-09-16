@@ -134,6 +134,8 @@ Error ServerDataBroker::ProcessPostRequest(const RequestInfo& request, RequestOu
             httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.cookie,
                                request.body, &response->data_output, response->data_output_size, code);
         break;
+    default:
+        break;
     }
     return err;
 }
@@ -371,6 +373,10 @@ Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* dat
                     net_client__.swap(fabricClient);
                     current_connection_type_ = NetworkConnectionType::kFabric;
                     return error; // Successfully received data and is now using a fabric client
+                }
+
+                if (std::getenv("ASAPO_PRINT_FALLBACK_REASON")) {
+                    std::cout << "Fallback to TCP because error: " << error << std::endl;
                 }
 
                 // Retry with TCP
