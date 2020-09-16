@@ -1,14 +1,13 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <algorithm>
 #include <thread>
 #include <chrono>
 #include <numeric>
 #include <mutex>
 #include <string>
 #include <sstream>
-
+#include <condition_variable>
 
 #include "asapo_consumer.h"
 
@@ -44,6 +43,40 @@ struct Args {
     bool datasets;
 };
 
+class LatchedTimer {
+private:
+    volatile int count_;
+    std::chrono::system_clock::time_point start_time_ = std::chrono::system_clock::time_point::max();
+    std::mutex mutex;
+    std::condition_variable waiter;
+public:
+    explicit LatchedTimer(int count) : count_{count} {};
+
+    void count_down_and_wait() {
+        std::unique_lock<std::mutex> local_lock(mutex);
+        if (0 == count_) {
+            return;
+        }
+        count_--;
+        if (0 == count_) {
+            waiter.notify_all();
+            start_time_ = std::chrono::high_resolution_clock::now();
+        } else {
+            while (count_ > 0) {
+                waiter.wait(local_lock);
+            }
+        }
+    }
+
+    bool was_triggered() const {
+        return start_time() != std::chrono::system_clock::time_point::max();
+    }
+
+    std::chrono::system_clock::time_point start_time() const {
+        return start_time_;
+    };
+};
+
 void WaitThreads(std::vector<std::thread>* threads) {
     for (auto& thread : *threads) {
         thread.join();
@@ -56,13 +89,11 @@ int ProcessError(const Error& err) {
     return err == asapo::ConsumerErrorTemplates::kEndOfStream ? 0 : 1;
 }
 
-std::vector<std::thread> StartThreads(const Args& params,
-                                      std::vector<int>* nfiles,
-                                      std::vector<int>* errors,
-                                      std::vector<int>* nbuf,
-                                      std::vector<int>* nfiles_total,
-                                      std::vector<asapo::NetworkConnectionType>* connection_type) {
-    auto exec_next = [&params, nfiles, errors, nbuf, nfiles_total, connection_type](int i) {
+std::vector<std::thread>
+StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* errors, std::vector<int>* nbuf,
+             std::vector<int>* nfiles_total, std::vector<asapo::NetworkConnectionType>* connection_type,
+             LatchedTimer* timer) {
+    auto exec_next = [&params, nfiles, errors, nbuf, nfiles_total, connection_type, timer](int i) {
         asapo::FileInfo fi;
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, true,
@@ -96,6 +127,8 @@ std::vector<std::thread> StartThreads(const Args& params,
                 std::cout << "Cannot get metadata: " << err->Explain() << std::endl;
             }
         }
+
+        bool isFirstFile = true;
         while (true) {
             if (params.datasets) {
                 auto dataset = broker->GetNextDataset(group_id, &err);
@@ -107,6 +140,10 @@ std::vector<std::thread> StartThreads(const Args& params,
                 }
             } else {
                 err = broker->GetNext(&fi, group_id, params.read_data ? &data : nullptr);
+                if (isFirstFile) {
+                    isFirstFile = false;
+                    timer->count_down_and_wait();
+                }
                 if (err == nullptr) {
                     (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
                     if (file_size == 0) {
@@ -139,7 +176,7 @@ std::vector<std::thread> StartThreads(const Args& params,
     return threads;
 }
 
-int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nbuf, int* nfiles_total,
+int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_without_first_ms, int* nerrors, int* nbuf, int* nfiles_total,
                 asapo::NetworkConnectionType* connection_type) {
     asapo::FileInfo fi;
     system_clock::time_point t1 = system_clock::now();
@@ -150,17 +187,26 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nb
     std::vector<int> nfiles_total_in_datasets(params.nthreads, 0);
     std::vector<asapo::NetworkConnectionType> connection_types(params.nthreads, asapo::NetworkConnectionType::kUndefined);
 
-    auto threads = StartThreads(params, &nfiles, &errors, &nfiles_frombuf, &nfiles_total_in_datasets, &connection_types);
+    LatchedTimer latched_timer(params.nthreads);
+
+    auto threads = StartThreads(params, &nfiles, &errors, &nfiles_frombuf, &nfiles_total_in_datasets, &connection_types,
+                                &latched_timer);
     WaitThreads(&threads);
+
+    system_clock::time_point t2 = system_clock::now();
+    auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+    *duration_ms = duration_read.count();
+    if (latched_timer.was_triggered()) {
+        auto duration_without_first = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - latched_timer.start_time());
+        *duration_without_first_ms = duration_without_first.count();
+    } else {
+        *duration_without_first_ms = 0;
+    }
 
     int n_total = std::accumulate(nfiles.begin(), nfiles.end(), 0);
     *nerrors = std::accumulate(errors.begin(), errors.end(), 0);
     *nbuf = std::accumulate(nfiles_frombuf.begin(), nfiles_frombuf.end(), 0);
     *nfiles_total = std::accumulate(nfiles_total_in_datasets.begin(), nfiles_total_in_datasets.end(), 0);
-
-    system_clock::time_point t2 = system_clock::now();
-    auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-    *duration_ms = duration_read.count();
 
     // The following two loops will check if all threads that processed some data were using the same network type
     {
@@ -239,9 +285,10 @@ int main(int argc, char* argv[]) {
     }
 
     uint64_t duration_ms;
+    uint64_t duration_without_first_ms;
     int nerrors, nbuf, nfiles_total;
     asapo::NetworkConnectionType connectionType;
-    auto nfiles = ReadAllData(params, &duration_ms, &nerrors, &nbuf, &nfiles_total, &connectionType);
+    auto nfiles = ReadAllData(params, &duration_ms, &duration_without_first_ms, &nerrors, &nbuf, &nfiles_total, &connectionType);
     std::cout << "Processed " << nfiles << (params.datasets ? " dataset(s)" : " file(s)") << std::endl;
     if (params.datasets) {
         std::cout << "  with " << nfiles_total << " file(s)" << std::endl;
@@ -252,8 +299,14 @@ int main(int argc, char* argv[]) {
         std::cout << "  from filesystem: " << nfiles - nerrors - nbuf << std::endl;
     }
     std::cout << "Errors : " << nerrors << std::endl;
-    std::cout << "Elapsed : " << duration_ms << "ms" << std::endl;
-    auto rate = 1000.0f * nfiles / (duration_ms - params.timeout_ms);
+    float rate;
+    if (duration_without_first_ms == 0) {
+        std::cout << "Elapsed : " << duration_ms << "ms" << std::endl;
+        rate = 1000.0f * nfiles / (duration_ms - params.timeout_ms);
+    } else {
+        std::cout << "Elapsed : " << duration_without_first_ms << "ms (With handshake: " << duration_ms << "ms)" << std::endl;
+        rate = 1000.0f * nfiles / (duration_without_first_ms - params.timeout_ms);
+    }
     auto bw_gbytes = rate * file_size / 1000.0f / 1000.0f / 1000.0f;
     std::cout << "Rate : " << rate << std::endl;
     if (file_size > 0) {
