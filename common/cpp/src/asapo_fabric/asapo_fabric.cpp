@@ -3,6 +3,7 @@
 
 #ifdef LIBFABRIC_ENABLED
 #include <dlfcn.h>
+#include <mutex>
 #include "fabric_factory_impl.h"
 #include "fabric_function_map.h"
 #endif
@@ -11,6 +12,9 @@ using namespace asapo::fabric;
 
 std::unique_ptr<FabricFactory> asapo::fabric::GenerateDefaultFabricFactory() {
 #ifdef LIBFABRIC_ENABLED
+    static std::mutex lock;
+    std::unique_lock<std::mutex> local_lock (lock);
+
     if (gffm().is_init_) {
         return std::unique_ptr<FabricFactory>(new FabricFactoryImpl());
     }
