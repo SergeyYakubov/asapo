@@ -356,44 +356,47 @@ bool ServerDataBroker::DataCanBeInBuffer(const FileInfo* info) {
     return info->buf_id > 0;
 }
 
-
-
-Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* data) {
-    Error error;
-    if (!net_client__) {
-        const std::lock_guard<std::mutex> lock(net_client_mutex__);
-        if (!net_client__) {
-            if (should_try_rdma_first_) { // This will check if a rdma connection can be made and will return early if so
-                auto fabricClient = std::unique_ptr<NetClient>(new FabricConsumerClient());
-
-                error = fabricClient->GetData(info, data);
-
-                // Check if the error comes from the receiver data server (so a connection was made)
-                if (!error || error == RdsResponseErrorTemplates::kNetErrorNoData) {
-                    net_client__.swap(fabricClient);
-                    current_connection_type_ = NetworkConnectionType::kFabric;
-                    return error; // Successfully received data and is now using a fabric client
-                }
-
-                if (std::getenv("ASAPO_PRINT_FALLBACK_REASON")) {
-                    std::cout << "Fallback to TCP because error: " << error << std::endl;
-                }
-
-                // Retry with TCP
-                should_try_rdma_first_ = false;
-                error = nullptr;
-            }
-
-            if (!should_try_rdma_first_) {
-                net_client__.reset(new TcpClient());
-                current_connection_type_ = NetworkConnectionType::kAsapoTcp;
-                // If we use tcp, we can fall thought and use the normal GetData code
-            }
-        }
+Error ServerDataBroker::CreateNetClientAndTryToGetFile(const FileInfo* info, FileData* data) {
+    const std::lock_guard<std::mutex> lock(net_client_mutex__);
+    if (net_client__) {
+        return nullptr;
     }
 
-    error = net_client__->GetData(info, data);
-    return error;
+    if (should_try_rdma_first_) { // This will check if a rdma connection can be made and will return early if so
+        auto fabricClient = std::unique_ptr<NetClient>(new FabricConsumerClient());
+
+        Error error = fabricClient->GetData(info, data);
+
+        // Check if the error comes from the receiver data server (so a connection was made)
+        if (!error || error == RdsResponseErrorTemplates::kNetErrorNoData) {
+            net_client__.swap(fabricClient);
+            current_connection_type_ = NetworkConnectionType::kFabric;
+            return error; // Successfully received data and is now using a fabric client
+        }
+
+        // An error occurred!
+
+        if (std::getenv("ASAPO_PRINT_FALLBACK_REASON")) {
+            std::cout << "Fallback to TCP because error: " << error << std::endl;
+        }
+
+        // Retry with TCP
+        should_try_rdma_first_ = false;
+    }
+
+    // Create regular tcp client
+    net_client__.reset(new TcpClient());
+    current_connection_type_ = NetworkConnectionType::kAsapoTcp;
+
+    return net_client__->GetData(info, data);
+}
+
+Error ServerDataBroker::TryGetDataFromBuffer(const FileInfo* info, FileData* data) {
+    if (!net_client__) {
+        return CreateNetClientAndTryToGetFile(info, data);
+    }
+
+    return net_client__->GetData(info, data);
 }
 
 std::string ServerDataBroker::GenerateNewGroupId(Error* err) {

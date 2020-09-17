@@ -137,6 +137,7 @@ class ServerDataBroker final : public asapo::DataBroker {
                                  Error* err);
     bool DataCanBeInBuffer(const FileInfo* info);
     Error TryGetDataFromBuffer(const FileInfo* info, FileData* data);
+    Error CreateNetClientAndTryToGetFile(const FileInfo* info, FileData* data);
     Error ServiceRequestWithTimeout(const std::string& service_name, std::string* service_uri, RequestInfo request,
                                     RequestOutput* response);
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
