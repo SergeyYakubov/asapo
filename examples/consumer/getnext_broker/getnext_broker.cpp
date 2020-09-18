@@ -46,7 +46,7 @@ struct Args {
 class LatchedTimer {
 private:
     volatile int count_;
-    std::chrono::system_clock::time_point start_time_ = std::chrono::system_clock::time_point::max();
+    std::chrono::high_resolution_clock::time_point start_time_ = std::chrono::high_resolution_clock::time_point::max();
     std::mutex mutex;
     std::condition_variable waiter;
 public:
@@ -60,7 +60,8 @@ public:
         count_--;
         if (0 == count_) {
             waiter.notify_all();
-            start_time_ = std::chrono::high_resolution_clock::now();
+            const std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+            start_time_ = now;
         } else {
             while (count_ > 0) {
                 waiter.wait(local_lock);
@@ -69,10 +70,10 @@ public:
     }
 
     bool was_triggered() const {
-        return start_time() != std::chrono::system_clock::time_point::max();
+        return start_time() != std::chrono::high_resolution_clock::time_point::max();
     }
 
-    std::chrono::system_clock::time_point start_time() const {
+    std::chrono::high_resolution_clock::time_point start_time() const {
         return start_time_;
     };
 };
@@ -97,7 +98,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
         asapo::FileInfo fi;
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, true,
-                      asapo::SourceCredentials{params.beamtime_id, "", params.stream, params.token}, &err);
+                                                                   asapo::SourceCredentials{params.beamtime_id, "", params.stream, params.token}, &err);
         if (err) {
             std::cout << "Error CreateServerBroker: " << err << std::endl;
             exit(EXIT_FAILURE);
@@ -179,7 +180,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
 int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_without_first_ms, int* nerrors, int* nbuf, int* nfiles_total,
                 asapo::NetworkConnectionType* connection_type) {
     asapo::FileInfo fi;
-    system_clock::time_point t1 = system_clock::now();
+    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
     std::vector<int> nfiles(params.nthreads, 0);
     std::vector<int> errors(params.nthreads, 0);
@@ -193,7 +194,7 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_wi
                                 &latched_timer);
     WaitThreads(&threads);
 
-    system_clock::time_point t2 = system_clock::now();
+    std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
     *duration_ms = duration_read.count();
     if (latched_timer.was_triggered()) {
@@ -228,7 +229,7 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_wi
                           ConnectionTypeToString(connection_types[i]) << "' but thread["
                           << firstThreadThatActuallyProcessedData << "](processed "
                           << nfiles[firstThreadThatActuallyProcessedData] << " files) is '" << ConnectionTypeToString(
-                              *connection_type) << "'" << std::endl;
+                        *connection_type) << "'" << std::endl;
             }
         }
     }
@@ -261,7 +262,7 @@ int main(int argc, char* argv[]) {
     params.datasets = false;
     if (argc != 8 && argc != 9) {
         std::cout << "Usage: " + std::string{argv[0]}
-                  + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
+                     + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
                   <<
                   std::endl;
         exit(EXIT_FAILURE);
