@@ -5,7 +5,7 @@
 #include <cerrno>
 #include <cstring>
 #include <algorithm>
-
+#include <mutex>
 
 #if defined(__linux__) || defined (__APPLE__)
 #include <sys/socket.h>
@@ -290,8 +290,11 @@ int SystemIO::FileOpenModeToPosixFileOpenMode(int open_flags) const {
 }
 
 std::string SystemIO::ResolveHostnameToIp(const std::string& hostname, Error* err) const {
-    hostent* record = gethostbyname(hostname.c_str());
-    if (record == nullptr) {
+    static std::mutex lock;
+    std::unique_lock<std::mutex> local_lock(lock);
+
+    const hostent* record = gethostbyname(hostname.c_str()); // gethostbyname seems not to be thread safe!
+    if (record == nullptr || record->h_addr == nullptr) {
         *err = IOErrorTemplates::kUnableToResolveHostname.Generate();
         return "";
     }
@@ -312,12 +315,10 @@ std::unique_ptr<sockaddr_in> SystemIO::BuildSockaddrIn(const std::string& addres
     uint16_t port = 0;
     std::tie(host, port) = *hostname_port_tuple;
 
-// this is not thread safe call we should not resolve hostname here - we actually already have ip in address.
-// todo: remove this
-//    host = ResolveHostnameToIp(host, err);
-//    if (*err != nullptr) {
-//        return nullptr;
-//    }
+    host = ResolveHostnameToIp(host, err);
+    if (*err != nullptr) {
+        return nullptr;
+    }
 
     short family = AddressFamilyToPosixFamily(AddressFamilies::INET);
     if (family == -1) {
