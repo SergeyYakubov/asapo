@@ -44,12 +44,12 @@ struct Args {
 };
 
 class LatchedTimer {
-private:
+  private:
     volatile int count_;
     std::chrono::high_resolution_clock::time_point start_time_ = std::chrono::high_resolution_clock::time_point::max();
     std::mutex mutex;
     std::condition_variable waiter;
-public:
+  public:
     explicit LatchedTimer(int count) : count_{count} {};
 
     void count_down_and_wait() {
@@ -98,7 +98,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
         asapo::FileInfo fi;
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, true,
-                                                                   asapo::SourceCredentials{params.beamtime_id, "", params.stream, params.token}, &err);
+                      asapo::SourceCredentials{params.beamtime_id, "", params.stream, params.token}, &err);
         if (err) {
             std::cout << "Error CreateServerBroker: " << err << std::endl;
             exit(EXIT_FAILURE);
@@ -177,7 +177,8 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
     return threads;
 }
 
-int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_without_first_ms, int* nerrors, int* nbuf, int* nfiles_total,
+int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_without_first_ms, int* nerrors, int* nbuf,
+                int* nfiles_total,
                 asapo::NetworkConnectionType* connection_type) {
     asapo::FileInfo fi;
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
@@ -229,7 +230,7 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_wi
                           ConnectionTypeToString(connection_types[i]) << "' but thread["
                           << firstThreadThatActuallyProcessedData << "](processed "
                           << nfiles[firstThreadThatActuallyProcessedData] << " files) is '" << ConnectionTypeToString(
-                        *connection_type) << "'" << std::endl;
+                              *connection_type) << "'" << std::endl;
             }
         }
     }
@@ -262,7 +263,7 @@ int main(int argc, char* argv[]) {
     params.datasets = false;
     if (argc != 8 && argc != 9) {
         std::cout << "Usage: " + std::string{argv[0]}
-                     + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
+                  + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
                   <<
                   std::endl;
         exit(EXIT_FAILURE);
@@ -289,7 +290,8 @@ int main(int argc, char* argv[]) {
     uint64_t duration_without_first_ms;
     int nerrors, nbuf, nfiles_total;
     asapo::NetworkConnectionType connectionType;
-    auto nfiles = ReadAllData(params, &duration_ms, &duration_without_first_ms, &nerrors, &nbuf, &nfiles_total, &connectionType);
+    auto nfiles = ReadAllData(params, &duration_ms, &duration_without_first_ms, &nerrors, &nbuf, &nfiles_total,
+                              &connectionType);
     std::cout << "Processed " << nfiles << (params.datasets ? " dataset(s)" : " file(s)") << std::endl;
     if (params.datasets) {
         std::cout << "  with " << nfiles_total << " file(s)" << std::endl;
