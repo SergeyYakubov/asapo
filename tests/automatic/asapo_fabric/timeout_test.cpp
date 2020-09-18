@@ -83,7 +83,7 @@ void ClientThread(const std::string& hostname, uint16_t port) {
     err = nullptr;
 
     client->Send(serverAddress, 2, &dummyBuffer, sizeof(dummyBuffer), &err);
-    M_AssertEq(FabricErrorTemplates::kInternalConnectionError, err, "client->Send");
+    M_AssertEq(FabricErrorTemplates::kConnectionRefusedError, err, "client->Send");
     err = nullptr;
 }
 
