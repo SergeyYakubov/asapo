@@ -32,7 +32,7 @@ export PYTHONPATH=$2:${PYTHONPATH}
 
 nomad run authorizer.nmd >/dev/null
 nomad run nginx.nmd >/dev/null
-nomad run receiver.nmd >/dev/null
+nomad run receiver_tcp.nmd >/dev/null
 nomad run discovery.nmd >/dev/null
 
 mkdir -p ${receiver_folder} ${receiver_folder2}

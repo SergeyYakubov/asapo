@@ -24,6 +24,7 @@ void ReceiverDataServer::Run() {
         if (err == IOErrorTemplates::kTimeout) {
             continue;
         }
+
         if (!err) {
             err = request_pool__->AddRequests(std::move(requests));
         }

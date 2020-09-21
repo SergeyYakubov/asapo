@@ -78,7 +78,7 @@ class FabricFactory {
     virtual std::unique_ptr<FabricClient> CreateClient(Error* error) const = 0;
 };
 
-std::unique_ptr<FabricFactory> GenerateDefaultFabricFactory();
+std::unique_ptr<FabricFactory> GenerateDefaultFabricFactory(); // <- will try to load the library with dlopen first
 }
 }
 

@@ -13,7 +13,7 @@ inline std::string GetErrorString(asapo::Error* err) {
     return "";
 }
 
-using RequestCallbackCython = void (*)(void*, void*, RequestCallbackPayload payload , Error err);
+using RequestCallbackCython = void (*)(void*, void*, RequestCallbackPayload payload, Error err);
 using RequestCallbackCythonMemory = void (*)(void*, void*, void*, RequestCallbackPayload payload, Error err);
 
 RequestCallback unwrap_callback(RequestCallbackCython callback, void* c_self, void* py_func) {

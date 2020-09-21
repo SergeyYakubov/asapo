@@ -2,11 +2,9 @@ from __future__ import print_function
 
 import asapo_consumer
 import asapo_producer
-import json
 import sys
-import time
-
 import threading
+
 lock = threading.Lock()
 
 

@@ -1,6 +1,6 @@
 import asapo_consumer
-import time
 import sys
+import time
 
 source, path, beamtime, token = sys.argv[1:]
 

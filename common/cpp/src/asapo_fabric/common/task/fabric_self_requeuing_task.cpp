@@ -49,6 +49,6 @@ void FabricSelfRequeuingTask::AfterCompletion() {
     }
 }
 
-FabricContextImpl* FabricSelfRequeuingTask::ParentContext() {
+FabricContextImpl* FabricSelfRequeuingTask::ParentContext() const {
     return parent_context_;
 }

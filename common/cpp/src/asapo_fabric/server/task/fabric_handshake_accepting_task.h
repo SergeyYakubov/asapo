@@ -18,7 +18,7 @@ class FabricHandshakeAcceptingTask : public FabricSelfRequeuingTask {
     explicit FabricHandshakeAcceptingTask(FabricServerImpl* server);
 
   private:
-    FabricServerImpl* ServerContext();
+    FabricServerImpl* ServerContext() const;
 
   protected: // override FabricSelfRequeuingTask
     void RequeueSelf() override;

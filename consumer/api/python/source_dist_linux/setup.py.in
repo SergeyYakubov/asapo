@@ -2,9 +2,10 @@ from distutils.core import setup
 from distutils.core import Extension
 import numpy
 
+# TODO 'lib/libcurl.a' seems to have no effect, because there is a libcurl.so file
 ext_modules = [
     Extension("asapo_consumer", ["asapo_consumer.cpp"],
-              extra_objects=['lib/libasapo-consumer.a', 'lib/libcurl.a'],
+              extra_objects=['lib/libasapo-consumer.a', 'lib/libasapo-fabric.a', 'lib/libcurl.a'],
                        include_dirs=["include/common","include",numpy.get_include()],
                        extra_compile_args=@EXTRA_COMPILE_ARGS@,
                        extra_link_args=@EXTRA_LINK_ARGS@,

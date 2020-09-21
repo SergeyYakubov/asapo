@@ -1,3 +1,4 @@
+#include <common/networking.h>
 #include "consumer/data_broker.h"
 #include "server_data_broker.h"
 
@@ -26,8 +27,7 @@ std::unique_ptr<DataBroker> Create(const std::string& source_name,
 }
 
 std::unique_ptr<DataBroker> DataBrokerFactory::CreateServerBroker(std::string server_name, std::string source_path,
-        bool has_filesystem, SourceCredentials source,
-        Error* error) noexcept {
+        bool has_filesystem, SourceCredentials source, Error* error) noexcept {
     return Create<ServerDataBroker>(std::move(server_name), error, std::move(source_path), has_filesystem,
                                     std::move(source));
 }

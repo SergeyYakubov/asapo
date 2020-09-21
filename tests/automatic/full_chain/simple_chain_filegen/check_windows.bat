@@ -53,5 +53,3 @@ Taskkill /IM "%producer_short_name%" /F
 
 del /f token
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%_detector
-
-

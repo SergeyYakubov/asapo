@@ -1,3 +1,4 @@
+#include <common/io_error.h>
 #include "fabric_waitable_task.h"
 #include "../../fabric_internal_error.h"
 
@@ -21,7 +22,7 @@ void FabricWaitableTask::HandleErrorCompletion(const fi_cq_err_entry* errEntry) 
 void FabricWaitableTask::Wait(uint32_t sleepInMs, Error* error) {
     if (sleepInMs) {
         if (future_.wait_for(std::chrono::milliseconds(sleepInMs)) == std::future_status::timeout) {
-            *error = FabricErrorTemplates::kTimeout.Generate();
+            *error = IOErrorTemplates::kTimeout.Generate();
             return;
         }
     } else {

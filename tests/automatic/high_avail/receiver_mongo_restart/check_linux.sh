@@ -63,7 +63,7 @@ sed -i 's/27017/27016/g' discovery.json.tpl
 
 nomad run authorizer.nmd
 nomad run nginx.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 
 mkdir -p ${receiver_folder}

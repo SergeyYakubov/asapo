@@ -8,7 +8,7 @@ namespace asapo {
 
 class NetClient {
   public:
-    virtual Error GetData(const FileInfo* info, FileData* data) const noexcept = 0;
+    virtual Error GetData(const FileInfo* info, FileData* data) = 0;
     virtual ~NetClient() = default;
 
 };

@@ -24,8 +24,8 @@ namespace asapo {
 using RequestHandlerList = std::vector<const ReceiverRequestHandler*>;
 
 enum class ResponseMessageType {
-  kWarning,
-  kInfo
+    kWarning,
+    kInfo
 };
 
 class Request {

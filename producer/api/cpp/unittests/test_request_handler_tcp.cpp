@@ -59,7 +59,7 @@ class RequestHandlerTcpTests : public testing::Test {
     std::string expected_warning = "warning";
     std::string expected_response = "response";
 
-  char  expected_file_name[asapo::kMaxMessageSize] = "test_name";
+    char  expected_file_name[asapo::kMaxMessageSize] = "test_name";
     char  expected_beamtime_id[asapo::kMaxMessageSize] = "test_beamtime_id";
     char  expected_substream[asapo::kMaxMessageSize] = "test_substream";
 
@@ -851,7 +851,7 @@ TEST_F(RequestHandlerTcpTests, FileRequestOK) {
     ExpectOKSendHeader(true);
     ExpectOKSendMetaData(true);
     ExpectOKSendFile(true);
-    ExpectOKReceive(true,asapo::kNetErrorNoError,expected_response);
+    ExpectOKReceive(true, asapo::kNetErrorNoError, expected_response);
 
     request_handler.PrepareProcessingRequestLocked();
 
@@ -870,7 +870,7 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendAll(true);
-    ExpectOKReceive(true,asapo::kNetErrorNoError,expected_response);
+    ExpectOKReceive(true, asapo::kNetErrorNoError, expected_response);
 
 
     request_handler.PrepareProcessingRequestLocked();

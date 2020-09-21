@@ -53,13 +53,13 @@ class MockDatabase : public Database {
 
 
     Error GetStreamInfo(const std::string& collection, StreamInfo* info) const override {
-      return Error{GetStreamInfo_t(collection, info)};
+        return Error{GetStreamInfo_t(collection, info)};
     }
 
     MOCK_CONST_METHOD2(GetStreamInfo_t, ErrorInterface * (const std::string&, StreamInfo*));
 
 
-  // stuff to test db destructor is called and avoid "uninteresting call" messages
+    // stuff to test db destructor is called and avoid "uninteresting call" messages
     MOCK_METHOD0(Die, void());
     virtual ~MockDatabase() override {
         if (check_destructor)

@@ -2,9 +2,8 @@ from __future__ import print_function
 
 import asapo_producer
 import sys
-import time
-import numpy as np
 import threading
+
 lock = threading.Lock()
 
 

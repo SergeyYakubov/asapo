@@ -35,6 +35,7 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     (err = parser.GetUInt64("AuthorizationInterval", &config.authorization_interval_ms)) ||
     (err = parser.GetString("PerformanceDbName", &config.performance_db_name)) ||
     (err = parser.Embedded("DataServer").GetString("AdvertiseURI", &config.dataserver.advertise_uri)) ||
+    (err = parser.Embedded("DataServer").GetArrayString("NetworkMode", &config.dataserver.network_mode)) ||
     (err = parser.GetString("LogLevel", &log_level));
 
     if (err) {

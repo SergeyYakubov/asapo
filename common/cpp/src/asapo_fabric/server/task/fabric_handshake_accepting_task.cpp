@@ -10,7 +10,7 @@ FabricHandshakeAcceptingTask::FabricHandshakeAcceptingTask(FabricServerImpl* par
     : FabricSelfRequeuingTask(parentServerContext) {
 }
 
-FabricServerImpl* FabricHandshakeAcceptingTask::ServerContext() {
+FabricServerImpl* FabricHandshakeAcceptingTask::ServerContext() const {
     return dynamic_cast<FabricServerImpl*>(ParentContext());
 }
 

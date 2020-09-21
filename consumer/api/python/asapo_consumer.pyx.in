@@ -163,6 +163,19 @@ cdef class PyDataBroker:
         return size
     def set_timeout(self,timeout):
         self.c_broker.SetTimeout(timeout)
+    def force_no_rdma(self):
+        self.c_broker.ForceNoRdma()
+    def current_connection_type(self):
+        cdef NetworkConnectionType connection_type = self.c_broker.CurrentConnectionType()
+        cdef int cased = <int>connection_type
+        cdef string result = "Unknown"
+        if cased == <int>NetworkConnectionType_kUndefined:
+            result = "No connection"
+        elif cased == <int>NetworkConnectionType_kAsapoTcp:
+            result = "TCP"
+        elif cased == <int>NetworkConnectionType_kFabric:
+            result = "Fabric"
+        return result.decode('utf-8')
     def set_lastread_marker(self,value,group_id, substream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_substream = _bytes(substream)

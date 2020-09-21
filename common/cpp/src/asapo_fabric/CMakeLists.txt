@@ -2,7 +2,10 @@ set(TARGET_NAME asapo-fabric)
 
 include_directories(include)
 
-set(SOURCE_FILES asapo_fabric.cpp)
+set(SOURCE_FILES
+		asapo_fabric.cpp
+		fabric_factory_not_supported.cpp
+	)
 
 IF(ENABLE_LIBFABRIC)
 	set(SOURCE_FILES ${SOURCE_FILES}
@@ -19,10 +22,6 @@ IF(ENABLE_LIBFABRIC)
             server/task/fabric_recv_any_task.cpp
 			server/task/fabric_handshake_accepting_task.cpp
 		)
-ELSE()
-	set(SOURCE_FILES ${SOURCE_FILES}
-			fabric_factory_not_supported.cpp
-		)
 ENDIF()
 
 ################################
@@ -31,4 +30,4 @@ ENDIF()
 
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>)
 
-target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR})
+target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR} ${LIBFABRIC_INCLUDE_DIR})

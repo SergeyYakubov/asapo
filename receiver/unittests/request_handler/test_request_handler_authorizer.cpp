@@ -92,7 +92,7 @@ class AuthorizerHandlerTests : public Test {
     }
     void MockAuthRequest(bool error, HttpCode code = HttpCode::OK) {
         if (error) {
-            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", _,expect_request_string, _, _)).
+            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", _, expect_request_string, _, _)).
             WillOnce(
                 DoAll(SetArgPointee<4>(new asapo::SimpleError("http error")),
                       Return("")
@@ -104,7 +104,7 @@ class AuthorizerHandlerTests : public Test {
                                                  HasSubstr(expected_authorization_server))));
 
         } else {
-            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", _,expect_request_string, _, _)).
+            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", _, expect_request_string, _, _)).
             WillOnce(
                 DoAll(SetArgPointee<4>(nullptr),
                       SetArgPointee<3>(code),
@@ -256,7 +256,7 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeUsesCachedValue) {
     MockFirstAuthorization(false);
     EXPECT_CALL(*mock_request, GetOpCode())
     .WillOnce(Return(asapo::kOpcodeTransferData));
-    EXPECT_CALL(mock_http_client, Post_t(_, _, _,_, _)).Times(0);
+    EXPECT_CALL(mock_http_client, Post_t(_, _, _, _, _)).Times(0);
     EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
     EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
     EXPECT_CALL(*mock_request, SetStream(expected_stream));

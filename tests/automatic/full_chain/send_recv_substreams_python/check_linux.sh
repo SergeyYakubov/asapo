@@ -27,11 +27,11 @@ Cleanup() {
 nomad run nginx.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run authorizer.nmd
 
 
 export PYTHONPATH=$2:$3:${PYTHONPATH}
 
 
-$1 $4 127.0.0.1:8400 $beamtime_id $token
+$1 $4 127.0.0.1:8400 $beamtime_id $token | tee out

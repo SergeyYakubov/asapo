@@ -13,8 +13,8 @@ const uint8_t kMaxProcessingThreads = 32;
 
 
 struct RequestCallbackPayload {
-  GenericRequestHeader original_header;
-  std::string response; 
+    GenericRequestHeader original_header;
+    std::string response;
 };
 
 using RequestCallback =  std::function<void(RequestCallbackPayload, Error)>;
