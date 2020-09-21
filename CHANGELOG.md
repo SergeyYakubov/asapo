@@ -1,7 +1,13 @@
 ##20.09.0
 
 FEATURES
-* implemented data resend - data will be redelivered if it is not acknowledged during a given period or a consumer sent a negative acknowledge  
+* implemented data resend - data will be redelivered if it is not acknowledged during a given period or a consumer sent a negative acknowledge
+* Added RDMA support for the communication between consumer and receiver. (Improves transfer speeds while using less CPU resources)
+  Requires LibFabric v1.11.0
+  Receiver must have network mode 'Fabric' enabled and RDMAable AdvertiseURI. See config `DataServer.{AdvertiseURI, NetworkMode}`
+* Added 'ASAPO_PRINT_FALLBACK_REASON' as an environment variable for the consumer in order to get a message why TCP was used
+* Added new consumer broker API call 'ForceNoRdma' to always use TCP and ignore any RDMA capabilities
+* Added new consumer broker API call 'CurrentConnectionType' to see what connection type is currently used
 
 BUG FIXES
 * fix data query images when beamtime_id starts with number 
