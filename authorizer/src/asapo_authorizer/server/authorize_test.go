@@ -1,6 +1,8 @@
 package server
 
 import (
+	"asapo_authorizer/common"
+	"asapo_authorizer/ldap_client"
 	"asapo_common/utils"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -17,6 +19,8 @@ func prepareToken(beamtime_or_beamline string) string{
 	token, _ := authHMAC.GenerateToken(&beamtime_or_beamline)
 	return token
 }
+
+var mockClient = new(ldap_client.MockedLdapClient)
 
 
 type request struct {
@@ -47,8 +51,6 @@ func doPostRequest(path string,buf string) *httptest.ResponseRecorder {
 	mux.ServeHTTP(w, req)
 	return w
 }
-
-
 
 var credTests = [] struct {
 	request string
@@ -105,68 +107,6 @@ var beamtime_meta_online =`
 }
 `
 
-var authTests = [] struct {
-	source_type string
-	beamtime_id string
-	beamline string
-	stream string
-	token string
-	status int
-	message string
-}{
-	{"processed","test","auto","stream", prepareToken("test"),http.StatusOK,"user stream with correct token"},
-	{"processed","test_online","auto","stream", prepareToken("test_online"),http.StatusOK,"with online path, processed type"},
-	{"raw","test_online","auto","stream", prepareToken("test_online"),http.StatusOK,"with online path, raw type"},
-	{"processed","test1","auto","stream", prepareToken("test1"),http.StatusUnauthorized,"correct token, beamtime not found"},
-	{"processed","test","auto","stream", prepareToken("wrong"),http.StatusUnauthorized,"user stream with wrong token"},
-	{"processed","test","auto","detector_aaa", prepareToken("test"),http.StatusUnauthorized,"detector stream with correct token and wroung source"},
-	{"processed","test","bl1","stream", prepareToken("test"),http.StatusOK,"correct beamline given"},
-	{"processed","test","bl2","stream", prepareToken("test"),http.StatusUnauthorized,"incorrect beamline given"},
-}
-func TestAuthorizeWithToken(t *testing.T) {
-	allowBeamlines([]beamtimeMeta{})
-	settings.RootBeamtimesFolder ="."
-	settings.CurrentBeamlinesFolder="."
-	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test"), os.ModePerm)
-	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test_online"), os.ModePerm)
-
-	os.MkdirAll(filepath.Clean("bl1/current"), os.ModePerm)
-	ioutil.WriteFile(filepath.Clean("bl1/current/beamtime-metadata-test_online.json"), []byte(beamtime_meta_online), 0644)
-
-	defer 	os.RemoveAll("tf")
-	defer 	os.RemoveAll("bl1")
-
-	for _, test := range authTests {
-		request :=  makeRequest(authorizationRequest{test.source_type+"%"+test.beamtime_id+"%"+test.beamline+"%"+test.stream+"%"+test.token,"host"})
-		w := doPostRequest("/authorize",request)
-
-		body, _ := ioutil.ReadAll(w.Body)
-		if test.status==http.StatusOK {
-			body_str:=string(body)
-			body_str = strings.Replace(body_str,string(os.PathSeparator),"/",-1)
-			body_str = strings.Replace(body_str,"//","/",-1)
-			assert.Contains(t, body_str, test.beamtime_id, test.message)
-			assert.Contains(t, body_str, "bl1", test.message)
-			assert.Contains(t, body_str, "stream", test.message)
-			assert.Contains(t, body_str, "type", test.message)
-			assert.Contains(t, body_str, test.source_type, test.message)
-			assert.Contains(t, body_str, "tf/gpfs/bl1/2019/data/test", test.message)
-			if (test.beamtime_id == "test_online" && test.source_type == "raw") {
-				assert.Contains(t, body_str, "tf/gpfs/bl1/2019/data/test_online", test.message)
-				assert.Contains(t, body_str, "bl1/current", test.message)
-			} else {
-				assert.NotContains(t, body_str, "current", test.message)
-			}
-			assert.Contains(t, body_str, test.stream, test.message)
-		}
-
-		assert.Equal(t, test.status, w.Code, test.message)
-	}
-
-
-}
-
-
 var beamtime_meta =`
 {
 "applicant": {
@@ -206,47 +146,105 @@ var beamtime_meta =`
 }
 `
 
-var authBeamlineTests = [] struct {
+var authTests = [] struct {
+	source_type string
 	beamtime_id string
 	beamline string
+	stream string
 	token string
+	originHost string
 	status int
 	message string
+	answer string
 }{
-	{"11111111","p07", prepareToken("bl_p07"),http.StatusOK,"beamtime found"},
-	{"11111111","p07", prepareToken("bl_p06"),http.StatusUnauthorized,"wrong token"},
-	{"11111111","p08", prepareToken("bl_p08"),http.StatusUnauthorized,"beamtime not found"},
+	{"processed","test","auto","stream", prepareToken("test"),"127.0.0.2",http.StatusOK,"user stream with correct token",
+		`{"beamtimeId":"test","beamline":"bl1","stream":"stream","core-path":"./tf/gpfs/bl1/2019/data/test","beamline-path":"","source-type":"processed"}`},
+	{"processed","test_online","auto","stream", prepareToken("test_online"),"127.0.0.1",http.StatusOK,"with online path, processed type",
+		`{"beamtimeId":"test_online","beamline":"bl1","stream":"stream","core-path":"./tf/gpfs/bl1/2019/data/test_online","beamline-path":"","source-type":"processed"}`},
+	{"processed","test1","auto","stream", prepareToken("test1"),"127.0.0.1",http.StatusUnauthorized,"correct token, beamtime not found",
+		""},
+	{"processed","test","auto","stream", prepareToken("wrong"),"127.0.0.1",http.StatusUnauthorized,"user stream with wrong token",
+		""},
+	{"processed","test","bl1","stream", prepareToken("test"),"127.0.0.1",http.StatusOK,"correct beamline given",
+		`{"beamtimeId":"test","beamline":"bl1","stream":"stream","core-path":"./tf/gpfs/bl1/2019/data/test","beamline-path":"","source-type":"processed"}`},
+		{"processed","test","bl2","stream", prepareToken("test"),"127.0.0.1",http.StatusUnauthorized,"incorrect beamline given",
+		""},
+	{"processed","auto","p07", "stream",prepareToken("bl_p07"),"127.0.0.1",http.StatusOK,"beamtime found",
+		`{"beamtimeId":"11111111","beamline":"p07","stream":"stream","core-path":"asap3/petra3/gpfs/p07/2020/data/11111111","beamline-path":"","source-type":"processed"}`},
+	{"processed","auto","p07", "stream",prepareToken("bl_p06"),"127.0.0.1",http.StatusUnauthorized,"wrong token",
+		""},
+	{"processed","auto","p08", "stream",prepareToken("bl_p08"),"127.0.0.1",http.StatusUnauthorized,"beamtime not found",
+		""},
+	{"raw","test_online","auto","stream", prepareToken("test_online"),"127.0.0.1",http.StatusOK,"raw type",
+		`{"beamtimeId":"test_online","beamline":"bl1","stream":"stream","core-path":"./tf/gpfs/bl1/2019/data/test_online","beamline-path":"./bl1/current","source-type":"raw"}`},
+	{"raw","test_online","auto","stream", "","127.0.0.1",http.StatusOK,"raw type",
+		`{"beamtimeId":"test_online","beamline":"bl1","stream":"stream","core-path":"./tf/gpfs/bl1/2019/data/test_online","beamline-path":"./bl1/current","source-type":"raw"}`},
+ 	{"raw","auto","p07","stream", "","127.0.0.1",http.StatusOK,"raw type, auto beamtime",
+		`{"beamtimeId":"11111111","beamline":"p07","stream":"stream","core-path":"asap3/petra3/gpfs/p07/2020/data/11111111","beamline-path":"./p07/current","source-type":"raw"}`},
+	{"raw","auto","p07","noldap", "","127.0.0.1",http.StatusNotFound,"no conection to ldap",
+		""},
+	{"raw","test_online","auto","stream", "","127.0.0.2",http.StatusUnauthorized,"raw type, wrong origin host",
+		""},
+	{"raw","test","auto","stream", prepareToken("test"),"127.0.0.1",http.StatusUnauthorized,"raw when not online",
+		""},
+	{"processed","test","auto","stream", "","127.0.0.1:1001",http.StatusOK,"processed without token",
+		`{"beamtimeId":"test","beamline":"bl1","stream":"stream","core-path":"./tf/gpfs/bl1/2019/data/test","beamline-path":"","source-type":"processed"}`},
+	{"processed","test","auto","stream", "","127.0.0.2",http.StatusUnauthorized,"processed without token, wrong host",
+		""},
 }
 
-func TestAuthorizeBeamline(t *testing.T) {
+func TestAuthorize(t *testing.T) {
+	ldapClient = mockClient
 	allowBeamlines([]beamtimeMeta{})
-	settings.CurrentBeamlinesFolder="."
-	os.MkdirAll(filepath.Clean("p07/current"), os.ModePerm)
-	ioutil.WriteFile(filepath.Clean("p07/current/beamtime-metadata-11111111.json"), []byte(beamtime_meta), 0644)
-	defer 	os.RemoveAll("p07")
 
-	for _, test := range authBeamlineTests {
-		request :=  makeRequest(authorizationRequest{"raw%auto%"+test.beamline+"%stream%"+test.token,"host"})
+	expected_uri := "expected_uri"
+	expected_base := "expected_base"
+	allowed_ips := []string{"127.0.0.1"}
+	settings.RootBeamtimesFolder ="."
+	settings.CurrentBeamlinesFolder="."
+	settings.Ldap.FilterTemplate="a3__BEAMLINE__-hosts"
+	settings.Ldap.Uri = expected_uri
+	settings.Ldap.BaseDn = expected_base
+
+	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test"), os.ModePerm)
+	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test_online"), os.ModePerm)
+	os.MkdirAll(filepath.Clean("p07/current"), os.ModePerm)
+	os.MkdirAll(filepath.Clean("bl1/current"), os.ModePerm)
+	ioutil.WriteFile(filepath.Clean("p07/current/beamtime-metadata-11111111.json"), []byte(beamtime_meta), 0644)
+	ioutil.WriteFile(filepath.Clean("bl1/current/beamtime-metadata-test_online.json"), []byte(beamtime_meta_online), 0644)
+	defer 	os.RemoveAll("p07")
+	defer 	os.RemoveAll("tf")
+	defer 	os.RemoveAll("bl1")
+
+	for _, test := range authTests {
+		if test.source_type == "raw" || test.token == "" {bl := test.beamline
+			if test.beamline == "auto" {
+				bl = "bl1"
+			}
+			expected_filter:="a3"+bl+"-hosts"
+			if test.stream == "noldap" {
+				err := &common.ServerError{utils.StatusServiceUnavailable,""}
+				mockClient.On("GetAllowedIpsForBeamline", expected_uri, expected_base,expected_filter).Return([]string{}, err)
+			} else {
+				mockClient.On("GetAllowedIpsForBeamline", expected_uri, expected_base,expected_filter).Return(allowed_ips, nil)
+			}
+		}
+
+		request :=  makeRequest(authorizationRequest{test.source_type+"%"+test.beamtime_id+"%"+test.beamline+"%"+test.stream+"%"+test.token,test.originHost})
 		w := doPostRequest("/authorize",request)
 
 		body, _ := ioutil.ReadAll(w.Body)
-		body_str:=string(body)
-		body_str = strings.Replace(body_str,string(os.PathSeparator),"/",-1)
-		body_str = strings.Replace(body_str,"//","/",-1)
 		if test.status==http.StatusOK {
-			assert.Contains(t, body_str, test.beamtime_id, test.message)
-			assert.Contains(t, body_str, test.beamline, test.message)
-			assert.Contains(t, body_str, test.beamline, test.message)
-			assert.Contains(t, body_str, "raw", test.message)
-			assert.Contains(t, body_str, "asap3/petra3/gpfs/p07/2020/data/11111111", test.message)
-			assert.Contains(t, body_str, "p07/current", test.message)
-			assert.Contains(t, body_str, "stream", test.message)
+			body_str:=string(body)
+			body_str = strings.Replace(body_str,string(os.PathSeparator),"/",-1)
+			body_str = strings.Replace(body_str,"//","/",-1)
+			assert.Equal(t, test.answer,body_str,test.message)
 		}
-
-		assert.Equal(t, test.status, w.Code, test.message)
+		assert.Equal(t, test.status,w.Code, test.message)
+		mockClient.AssertExpectations(t)
+		mockClient.ExpectedCalls=nil
 	}
 }
-
 
 func TestNotAuthorized(t *testing.T) {
 	request :=  makeRequest(authorizationRequest{"raw%any_id%%%","host"})
@@ -285,46 +283,6 @@ func TestSplitHostNoPort(t *testing.T) {
 	host := splitHost("127.0.0.1")
 	assert.Equal(t,"127.0.0.1", host, "")
 }
-
-func TestGetBeamlineFromIP(t *testing.T) {
-	beamline, err := getBeamlineFromIP("127.0.0.1:112")
-	assert.NotNil(t,err, "")
-	assert.Empty(t,beamline, "")
-
-}
-
-func TestAuthorizeWithFile(t *testing.T) {
-	settings.IpBeamlineMappingFolder="."
-	settings.RootBeamtimesFolder ="."
-	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/11003924"), os.ModePerm)
-
-
-	ioutil.WriteFile("127.0.0.1", []byte("bl1"), 0644)
-
-
-	request := authorizationRequest{"raw%11003924%%%","127.0.0.1"}
-	w := doPostRequest("/authorize",makeRequest(request))
-
-	body, _ := ioutil.ReadAll(w.Body)
-	body_str:=string(body)
-	body_str = strings.Replace(body_str,string(os.PathSeparator),"/",-1)
-	body_str = strings.Replace(body_str,"//","/",-1)
-	assert.Contains(t,body_str,"tf/gpfs/bl1/2019/data/11003924")
-	assert.Contains(t, body_str, "11003924", "")
-	assert.Contains(t, body_str, "bl1", "")
-	assert.Contains(t, body_str, "raw", "")
-	assert.Contains(t, body_str, "detector", "")
-	assert.Equal(t, http.StatusOK, w.Code, "")
-
-	request = authorizationRequest{"raw%wrong%%%","127.0.0.1"}
-	w = doPostRequest("/authorize",makeRequest(request))
-	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
-
-	os.Remove("127.0.0.1")
-	os.RemoveAll("tf")
-
-}
-
 
 var extractBtinfoTests = [] struct {
 	root string

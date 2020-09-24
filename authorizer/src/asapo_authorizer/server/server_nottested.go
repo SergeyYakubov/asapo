@@ -3,6 +3,7 @@
 package server
 
 import (
+	"asapo_authorizer/ldap_client"
 	log "asapo_common/logger"
 	"asapo_common/utils"
 	"asapo_common/version"
@@ -13,6 +14,7 @@ import (
 
 func Start() {
 	mux := utils.NewRouter(listRoutes)
+	ldapClient = new (ldap_client.OpenLdapClient)
 	log.Info("Starting ASAPO Authorizer, version " + version.GetVersion())
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))

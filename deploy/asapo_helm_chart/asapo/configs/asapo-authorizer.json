@@ -7,5 +7,11 @@
   "RootBeamtimesFolder":"{{ .Values.common.offlineDir }}",
   "CurrentBeamlinesFolder":"{{ .Values.common.onlineDir }}",
   "SecretFile":"/etc/authorizer/auth_secret.key",
-  "TokenDurationMin":600
+  "TokenDurationMin":600,
+  "Ldap":
+  {
+  "Uri" : "ldap://localhost:389",
+  "BaseDn" : "ou=rgy,o=desy,c=de",
+  "FilterTemplate" : "(cn=a3__BEAMLINE__-hosts)"
+  }
 }

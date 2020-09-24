@@ -7,5 +7,11 @@
   "RootBeamtimesFolder":"{{ env "NOMAD_META_offline_dir" }}",
   "CurrentBeamlinesFolder":"{{ env "NOMAD_META_online_dir" }}",
   "SecretFile":"/local/secret.key",
-  "TokenDurationMin":600
+  "TokenDurationMin":600,
+  "Ldap":
+    {
+        "Uri" : "ldap://localhost:389",
+        "BaseDn" : "ou=rgy,o=desy,c=de",
+        "FilterTemplate" : "(cn=a3__BEAMLINE__-hosts)"
+    }
 }

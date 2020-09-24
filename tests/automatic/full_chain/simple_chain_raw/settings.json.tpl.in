@@ -1,5 +1,5 @@
 {
-  "Port": 5007,
+  "Port": {{ env "NOMAD_PORT_authorizer" }},
   "LogLevel":"debug",
   "RootBeamtimesFolder":"@ASAP3_FOLDER@",
   "CurrentBeamlinesFolder":"@CURRENT_BEAMLINES_FOLDER@",
