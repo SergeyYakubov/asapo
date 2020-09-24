@@ -36,7 +36,7 @@ void PrintCommandArguments(const Args& args) {
               << "nthreads: " << args.nthreads << std::endl
               << "mode: " << args.mode << std::endl
               << "Write files: " << ((args.mode %100) / 10 == 1) << std::endl
-              << "Tcp mode: " << ((args.mode % 10)==0) << std::endl
+              << "Tcp mode: " << ((args.mode % 10) ==0 ) << std::endl
               << "Raw: " << (args.mode / 100 == 1)<< std::endl
               << "timeout: " << args.timeout_sec << std::endl
               << "images in set: " << args.images_in_set << std::endl
@@ -224,7 +224,7 @@ int main (int argc, char* argv[]) {
     system_clock::time_point start_time = system_clock::now();
 
     if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.images_in_set, args.stream,
-                      (args.mode %100) / 10 == 1,args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw)) {
+                      (args.mode %100) / 10 == 0,args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw)) {
         return EXIT_FAILURE;
     }
 

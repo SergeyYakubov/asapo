@@ -41,7 +41,7 @@ nomad run broker.nmd
 sleep 1
 
 #producer
-$1 localhost:8400 ${beamtime_id} 100 10 4 110 100
+$1 localhost:8400 ${beamtime_id} 100 10 4 100 100
 
 
 $2 ${proxy_address} "__" ${beamtime_id} 2 $token 5000 1 > out
