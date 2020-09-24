@@ -2,9 +2,15 @@
 
 FEATURES
 * implemented data resend - data will be redelivered if it is not acknowledged during a given period or a consumer sent a negative acknowledge  
-
+* introduced data source types - "raw" data is written to beamline filesystem and this can only be done from a certain IPs (detector PC,..),
+"processed" data is written to core filesystem
+  
 BUG FIXES
 * fix data query images when beamtime_id starts with number 
+
+BREAKING CHANGES
+* an extra parameter in producer constructor for data source type
+
 
 ## 20.06.3
 
