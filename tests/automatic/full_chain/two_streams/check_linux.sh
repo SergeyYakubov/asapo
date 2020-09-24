@@ -4,8 +4,13 @@ set -e
 
 trap Cleanup EXIT
 
+producer_bin=$1
+consumer_bin=$2
+asapo_tool_bin=$3
+network_type=$4
+
 beamtime_id=asapo_test
-token=`$3 token -secret auth_secret.key $beamtime_id`
+token=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id`
 
 stream1=s1
 stream2=s2
@@ -38,18 +43,23 @@ echo "db.${beamtime_id}_${stream2}.insert({dummy:1})" | mongo ${beamtime_id}_${s
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
 sleep 3
 
-#producer
+echo "Start producers"
 mkdir -p ${receiver_folder}
-$1 localhost:8400 ${beamtime_id}%${stream1} 100 1000 4 0 100 &
-$1 localhost:8400 ${beamtime_id}%${stream2} 100 900 4 0 100 &
+$producer_bin localhost:8400 ${beamtime_id}%${stream1} 100 1000 4 0 100 &
+$producer_bin localhost:8400 ${beamtime_id}%${stream2} 100 900 4 0 100 &
 
+echo "Start consumers in $network_type mode"
+$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id}%${stream1} 2 $token 10000 0 | tee /dev/stderr consumer_1.out
+$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id}%${stream2} 2 $token 10000 0 | tee /dev/stderr consumer_2.out
 
-#consumers
-$2 ${proxy_address} ${receiver_folder} ${beamtime_id}%${stream1} 2 $token 10000 0  | tee /dev/stderr | grep "Processed 1000 file(s)"
-$2 ${proxy_address} ${receiver_folder} ${beamtime_id}%${stream2} 2 $token 10000 0 | tee /dev/stderr | grep "Processed 900 file(s)"
+grep "from memory buffer: 1000" consumer_1.out
+grep -i "Using connection type: $network_type" consumer_1.out
+
+grep "from memory buffer: 900" consumer_2.out
+grep -i "Using connection type: $network_type" consumer_2.out

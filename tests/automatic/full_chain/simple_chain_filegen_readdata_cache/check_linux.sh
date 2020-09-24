@@ -4,6 +4,11 @@ set -e
 
 trap Cleanup EXIT
 
+producer_bin=$1
+consumer_bin=$2
+asapo_tool_bin=$3
+network_type=$4
+
 beamtime_id=asapo_test
 token=`$3 token -secret auth_secret.key $beamtime_id`
 
@@ -39,15 +44,15 @@ echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detec
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_${network_type}.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
 sleep 1
 
-#producer
+echo "Start producer"
 mkdir -p ${receiver_folder}
-$1 test.json &
+$producer_bin test.json &
 producerid=`echo $!`
 
 sleep 1
@@ -58,12 +63,13 @@ echo -n hello1 > /tmp/asapo/test_in/processed/test1/file1
 echo -n hello2 > /tmp/asapo/test_in/processed/test1/file2
 echo -n hello3 > /tmp/asapo/test_in/processed/test2/file1
 
-$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 0 > out.txt
-cat out.txt
+echo "Start consumer in $network_type mode"
+$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 0 | tee out.txt
 grep "Processed 3 file(s)" out.txt
 grep "hello1" out.txt
 grep "hello2" out.txt
 grep "hello3" out.txt
+grep -i "Using connection type: $network_type" out.txt
 
 sleep 12
 

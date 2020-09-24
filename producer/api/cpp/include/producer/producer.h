@@ -24,15 +24,15 @@ class Producer {
 
     virtual ~Producer() = default;
 
-  //! Get substream information from receiver
-  /*!
-    \param substream (optional) - substream
-    \return StreamInfo - a structure with substream information
-  */
-  virtual StreamInfo GetStreamInfo(std::string substream, uint64_t timeout_ms, Error* err) const = 0;
-  virtual StreamInfo GetStreamInfo(uint64_t timeout_ms, Error* err) const = 0;
+    //! Get substream information from receiver
+    /*!
+      \param substream (optional) - substream
+      \return StreamInfo - a structure with substream information
+    */
+    virtual StreamInfo GetStreamInfo(std::string substream, uint64_t timeout_ms, Error* err) const = 0;
+    virtual StreamInfo GetStreamInfo(uint64_t timeout_ms, Error* err) const = 0;
 
-  //! Sends data to the receiver
+    //! Sends data to the receiver
     /*!
       \param event_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
       \param data - A pointer to the data to send

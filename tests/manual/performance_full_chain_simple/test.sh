@@ -6,6 +6,7 @@ trap Cleanup EXIT
 
 #clean-up
 Cleanup() {
+echo cleanup
 set +e
 ssh ${receiver_node} rm -f ${receiver_dir}/files/${beamline}/${beamtime_id}/*
 ssh ${receiver_node} killall receiver

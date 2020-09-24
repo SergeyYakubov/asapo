@@ -2,15 +2,23 @@
 #define ASAPO_MOCKFABRIC_H
 
 #include <asapo_fabric/asapo_fabric.h>
+#include <gmock/gmock.h>
 
 namespace asapo {
 namespace fabric {
 
 class MockFabricMemoryRegion : public FabricMemoryRegion {
+  public:
+    MockFabricMemoryRegion() = default;
+    ~MockFabricMemoryRegion() override {
+        Destructor();
+    }
+    MOCK_METHOD0(Destructor, void());
     MOCK_CONST_METHOD0(GetDetails, const MemoryRegionDetails * ());
 };
 
 class MockFabricContext : public FabricContext {
+  public:
     MOCK_CONST_METHOD0(GetAddress, std::string());
 
     std::unique_ptr<FabricMemoryRegion> ShareMemoryRegion(void* src, size_t size, Error* error) override {
@@ -51,6 +59,7 @@ class MockFabricContext : public FabricContext {
 };
 
 class MockFabricClient : public MockFabricContext, public FabricClient {
+  public:
     FabricAddress AddServerAddress(const std::string& serverAddress, Error* error) override {
         ErrorInterface* err = nullptr;
         auto data = AddServerAddress_t(serverAddress, &err);
@@ -58,9 +67,34 @@ class MockFabricClient : public MockFabricContext, public FabricClient {
         return data;
     }
     MOCK_METHOD2(AddServerAddress_t, FabricAddress (const std::string& serverAddress, ErrorInterface** err));
+  public: // Link to FabricContext
+    std::string GetAddress() const override {
+        return MockFabricContext::GetAddress();
+    }
+
+    std::unique_ptr<FabricMemoryRegion> ShareMemoryRegion(void* src, size_t size, Error* error) override {
+        return MockFabricContext::ShareMemoryRegion(src, size, error);
+    }
+
+    void Send(FabricAddress dstAddress, FabricMessageId messageId,
+              const void* src, size_t size, Error* error) override {
+        MockFabricContext::Send(dstAddress, messageId, src, size, error);
+    }
+
+    void Recv(FabricAddress srcAddress, FabricMessageId messageId,
+              void* dst, size_t size, Error* error) override {
+        MockFabricContext::Recv(srcAddress, messageId, dst, size, error);
+    }
+
+    void RdmaWrite(FabricAddress dstAddress,
+                   const MemoryRegionDetails* details, const void* buffer, size_t size,
+                   Error* error) override {
+        MockFabricContext::RdmaWrite(dstAddress, details, buffer, size, error);
+    }
 };
 
 class MockFabricServer : public MockFabricContext, public FabricServer {
+  public:
     void RecvAny(FabricAddress* srcAddress, FabricMessageId* messageId, void* dst, size_t size, Error* error) override {
         ErrorInterface* err = nullptr;
         RecvAny_t(srcAddress, messageId, dst, size, &err);
@@ -68,6 +102,30 @@ class MockFabricServer : public MockFabricContext, public FabricServer {
     }
     MOCK_METHOD5(RecvAny_t, void(FabricAddress* srcAddress, FabricMessageId* messageId,
                                  void* dst, size_t size, ErrorInterface** err));
+  public: // Link to FabricContext
+    std::string GetAddress() const override {
+        return MockFabricContext::GetAddress();
+    }
+
+    std::unique_ptr<FabricMemoryRegion> ShareMemoryRegion(void* src, size_t size, Error* error) override {
+        return MockFabricContext::ShareMemoryRegion(src, size, error);
+    }
+
+    void Send(FabricAddress dstAddress, FabricMessageId messageId,
+              const void* src, size_t size, Error* error) override {
+        MockFabricContext::Send(dstAddress, messageId, src, size, error);
+    }
+
+    void Recv(FabricAddress srcAddress, FabricMessageId messageId,
+              void* dst, size_t size, Error* error) override {
+        MockFabricContext::Recv(srcAddress, messageId, dst, size, error);
+    }
+
+    void RdmaWrite(FabricAddress dstAddress,
+                   const MemoryRegionDetails* details, const void* buffer, size_t size,
+                   Error* error) override {
+        MockFabricContext::RdmaWrite(dstAddress, details, buffer, size, error);
+    }
 };
 
 class MockFabricFactory : public FabricFactory {

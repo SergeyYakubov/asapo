@@ -73,7 +73,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     if (argc != 8 && argc != 9) {
         std::cout <<
                   "Usage: " << argv[0] <<
-                  " <destination> <beamtime_id[%<stream>%<token>]> <number_of_byte> <iterations> <nthreads>"
+                  " <destination> <beamtime_id[%<stream>%<token>]> <number_of_kbyte> <iterations> <nthreads>"
                   " <mode 0xx - processed source type, 1xx - raw source type, xx0 -t tcp, xx1 - filesystem, x0x - write files, x1x - do not write files> <timeout (sec)> [n images in set (default 1)]"
                   << std::endl;
         exit(EXIT_FAILURE);
@@ -202,7 +202,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 void PrintOutput(const Args& args, const system_clock::time_point& start) {
     system_clock::time_point t2 = system_clock::now();
     double duration_sec = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - start ).count() / 1000.0;
-    double size_gb = double(args.number_of_bytes) * args.iterations / 1000.0  / 1000.0 / 1000.0 * 8.0;
+    double size_gb = double(args.number_of_bytes) * args.iterations / 1000.0 / 1000.0 / 1000.0 * 8.0;
     double rate = args.iterations / duration_sec;
     std::cout << "Rate: " << rate << " Hz" << std::endl;
     std::cout << "Bandwidth " << size_gb / duration_sec << " Gbit/s" << std::endl;

@@ -3,10 +3,8 @@ from __future__ import print_function
 import asapo_consumer
 import asapo_producer
 import sys
-import os
-
-
 import threading
+
 lock = threading.Lock()
 
 timeout = 10 * 1000
@@ -56,5 +54,6 @@ while True:
 
 assert_eq(n_recv, n_send, "send=recv")
 assert_eq(substream_finished, True, "substream finished")
+print('Using connection type: ' + broker.current_connection_type())
 
 

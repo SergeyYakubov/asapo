@@ -25,7 +25,7 @@ class FabricSelfRequeuingTask : public FabricTask {
     void HandleCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) final;
     void HandleErrorCompletion(const fi_cq_err_entry* errEntry) final;
   protected:
-    FabricContextImpl* ParentContext();
+    FabricContextImpl* ParentContext() const;
 
     virtual void RequeueSelf() = 0;
     virtual void OnCompletion(const fi_cq_tagged_entry* entry, FabricAddress source) = 0;

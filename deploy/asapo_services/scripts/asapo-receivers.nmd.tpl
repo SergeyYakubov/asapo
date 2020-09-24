@@ -83,7 +83,7 @@ job "asapo-receivers" {
 
 
       template {
-         source        = "${scripts_dir}/receiver.json.tpl"
+         source        = "${scripts_dir}/receiver_tcp.json.tpl"
          destination   = "local/config.json"
          change_mode   = "restart"
       }

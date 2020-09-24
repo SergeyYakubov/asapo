@@ -47,7 +47,11 @@ void ServerMasterThread(const std::string& hostname, uint16_t port) {
     M_AssertEq(nullptr, err, "server->Send(1)");
 
     // Simulate correct memory details
-    server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &err);
+    int tries = 0;
+    do {
+        err = nullptr;
+        server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &err);
+    } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
     M_AssertEq(nullptr, err, "server->RecvAny(2)");
     M_AssertEq(2, messageId);
     server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer.get(), kRdmaSize, &err);
@@ -57,7 +61,11 @@ void ServerMasterThread(const std::string& hostname, uint16_t port) {
 
     // Simulate old (unregistered) memory details
     GenericRequestHeader request2{};
-    server->RecvAny(&clientAddress, &messageId, &request2, sizeof(request2), &err);
+    tries = 0;
+    do {
+        err = nullptr;
+        server->RecvAny(&clientAddress, &messageId, &request2, sizeof(request2), &err);
+    } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
     M_AssertEq(nullptr, err, "server->RecvAny(3)");
     M_AssertEq(3, messageId);
     server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer.get(), kRdmaSize, &err);

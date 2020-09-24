@@ -31,7 +31,7 @@ echo hello > c:\tmp\asapo\test_in\processed\file2
 ping 1.0.0.0 -n 3 -w 100 > nul
 
 c:\opt\consul\nomad stop receiver
-c:\opt\consul\nomad run receiver.nmd
+c:\opt\consul\nomad run receiver_tcp.nmd
 
 ping 1.0.0.0 -n 3 -w 100 > nul
 ping 1.0.0.0 -n 3 -w 100 > nul

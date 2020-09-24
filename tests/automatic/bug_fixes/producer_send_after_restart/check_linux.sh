@@ -4,6 +4,11 @@ set -e
 
 trap Cleanup EXIT
 
+producer_bin=$1
+consumer_bin=$2
+asapo_tool_bin=$3
+network_type=$4
+
 beamtime_id=asapo_test
 
 monitor_database_name=db_test
@@ -32,14 +37,14 @@ Cleanup() {
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_${network_type}.nmd
 nomad run discovery.nmd
 
 sleep 1
 mkdir  /tmp/asapo/test_in/processed
 #producer
 mkdir -p ${receiver_folder}
-$1 test.json &> output &
+$producer_bin test.json &> output &
 producerid=`echo $!`
 
 sleep 1
@@ -48,7 +53,7 @@ echo hello > /tmp/asapo/test_in/processed/file1
 sleep 1
 nomad stop receiver
 sleep 1
-nomad run receiver.nmd
+nomad run receiver_${network_type}.nmd
 
 echo hello > /tmp/asapo/test_in/processed/file1
 sleep 1

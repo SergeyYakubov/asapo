@@ -10,6 +10,7 @@
 #include "task/fabric_waitable_task.h"
 #include "../fabric_internal_error.h"
 #include "task/fabric_alive_check_response_task.h"
+#include "../fabric_function_map.h"
 
 namespace asapo {
 namespace fabric {
@@ -60,6 +61,8 @@ class FabricContextImpl : public FabricContext {
 
     uint64_t requestEnqueueTimeoutMs_ = 10000; // 10 sec for queuing a task
     uint64_t requestTimeoutMs_ = 20000; // 20 sec to complete a task, otherwise a ping will be send
+    uint64_t requestFastTimeoutMs_ = 7000; // All task that dont have use keepalive check will try to fail fast
+    uint64_t taskCancelTimeout_ = 5000; // The time it takes to timeout a cancel request
     uint32_t maxTimeoutRetires_ = 5; // Timeout retires, if one of them fails, the task will fail with a timeout
 
     std::unique_ptr<std::thread> completion_thread_;
@@ -141,7 +144,7 @@ class FabricContextImpl : public FabricContext {
             // Success
             break;
         case FI_EAGAIN: // We felt trough our own timeout loop
-            *error = FabricErrorTemplates::kTimeout.Generate();
+            *error = IOErrorTemplates::kTimeout.Generate();
             break;
         case FI_ENOENT:
             *error = FabricErrorTemplates::kConnectionRefusedError.Generate();

@@ -10,6 +10,7 @@ struct ReceiverDataServerConfig {
     uint64_t nthreads = 0;
     std::string tag;
     std::string advertise_uri;
+    std::vector<std::string> network_mode;
 };
 
 }

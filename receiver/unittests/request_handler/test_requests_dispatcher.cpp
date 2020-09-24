@@ -262,7 +262,7 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestSendOK) {
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsOkWithWarning) {
     MockHandleRequest(0);
     MockSendResponse(&response, false);
-    request->SetResponseMessage("duplicate",asapo::ResponseMessageType::kWarning);
+    request->SetResponseMessage("duplicate", asapo::ResponseMessageType::kWarning);
 
     auto err = dispatcher->ProcessRequest(request);
 
@@ -274,7 +274,7 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsOkWithWarning) {
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsOkWithInfo) {
     MockHandleRequest(0);
     MockSendResponse(&response, false);
-    request->SetResponseMessage("some info",asapo::ResponseMessageType::kInfo);
+    request->SetResponseMessage("some info", asapo::ResponseMessageType::kInfo);
 
     auto err = dispatcher->ProcessRequest(request);
 

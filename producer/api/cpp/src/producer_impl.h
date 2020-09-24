@@ -70,8 +70,8 @@ class ProducerImpl : public Producer {
 };
 
 struct StreamInfoResult {
-  StreamInfo sinfo;
-  ErrorInterface* err;
+    StreamInfo sinfo;
+    ErrorInterface* err;
 };
 
 

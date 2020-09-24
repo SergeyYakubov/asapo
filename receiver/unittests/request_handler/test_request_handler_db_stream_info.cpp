@@ -67,7 +67,7 @@ class DbMetaStreamInfoTests : public Test {
     std::string info_str = R"({"lastId":10})";
     const uint8_t* expected_info_str = reinterpret_cast<const uint8_t*>(info_str.c_str());
     asapo::StreamInfo expected_stream_info;
-  void SetUp() override {
+    void SetUp() override {
         GenericRequestHeader request_header;
         expected_stream_info.last_id = 10;
         request_header.data_id = 0;
@@ -93,20 +93,20 @@ TEST_F(DbMetaStreamInfoTests, CallsUpdate) {
     ;
 
     EXPECT_CALL(*mock_request, GetSubstream())
-        .WillOnce(Return(expected_substream))
-        ;
+    .WillOnce(Return(expected_substream))
+    ;
 
     EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_stream)).
     WillOnce(testing::Return(nullptr));
 
 
     EXPECT_CALL(mock_db, GetStreamInfo_t(expected_collection_name, _)).
-        WillOnce(DoAll(
-        SetArgPointee<1>(expected_stream_info),
-        testing::Return(nullptr)
-    ));
+    WillOnce(DoAll(
+                 SetArgPointee<1>(expected_stream_info),
+                 testing::Return(nullptr)
+             ));
 
-    EXPECT_CALL(*mock_request, SetResponseMessage(info_str,asapo::ResponseMessageType::kInfo));
+    EXPECT_CALL(*mock_request, SetResponseMessage(info_str, asapo::ResponseMessageType::kInfo));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("get stream info"),
                                          HasSubstr(config.database_uri),

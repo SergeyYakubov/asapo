@@ -4,8 +4,11 @@ set -e
 
 trap Cleanup EXIT
 
+producer_bin=$1
+asapo_tool_bin=$2
+
 beamtime_id=asapo_test
-token=`$2 token -secret auth_secret.key $beamtime_id`
+token=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -35,21 +38,20 @@ echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detec
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd # Only use TCP because the consumer will only use metadata anyways
 nomad run discovery.nmd
 nomad run broker.nmd
 
 sleep 2
 
-#producer
+echo "Start producer"
 mkdir -p ${receiver_folder}
-$1 localhost:8400 ${beamtime_id} 100 100 1 0 100
+$producer_bin localhost:8400 ${beamtime_id} 100 100 1 0 100
 
 export PYTHONPATH=$4:${PYTHONPATH}
 export Python_EXECUTABLE=$5
 
-
-$Python_EXECUTABLE $3/get_user_meta.py $proxy_address $receiver_folder $beamtime_id $token new > out
-cat out
-cat out | grep "found images: 100"
-cat out | grep "test100"
+echo "Start python consumer in metadata only mode"
+$Python_EXECUTABLE $3/get_user_meta.py $proxy_address $receiver_folder $beamtime_id $token new | tee out
+grep "found images: 100" out
+grep "test100" out

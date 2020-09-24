@@ -4,8 +4,13 @@ set -e
 
 trap Cleanup EXIT
 
+producer_bin=$1
+consumer_bin=$2
+asapo_tool_bin=$3
+network_type=$4
+
 beamtime_id=asapo_test
-token=`$3 token -secret auth_secret.key $beamtime_id`
+token=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -36,15 +41,15 @@ echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detec
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_${network_type}.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
 sleep 1
 
-#producer
+echo "Start producer"
 mkdir -p ${receiver_folder}
-$1 test.json &
+$producer_bin test.json &
 producerid=`echo $!`
 
 sleep 1
@@ -57,7 +62,10 @@ echo hello > /tmp/asapo/test_in/processed/test1/file1
 echo hello > /tmp/asapo/test_in/processed/test1/file2
 echo hello > /tmp/asapo/test_in/processed/test2/file1
 
-$2 ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | tee /dev/stderr | grep "Processed 3 file(s)"
+echo "Start consumer in metadata only mode"
+$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | tee /dev/stderr out
+grep "Processed 3 file(s)" out
+grep -i "Using connection type: No connection" out
 
 test ! -f /tmp/asapo/test_in/processed/test1/file1
 test ! -f /tmp/asapo/test_in/processed/test1/file2

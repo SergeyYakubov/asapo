@@ -30,7 +30,7 @@ echo "db.${beamtime_id}_${stream}.insert({dummy:1})" | mongo ${beamtime_id}_${st
 
 nomad run authorizer.nmd >/dev/null
 nomad run nginx.nmd >/dev/null
-nomad run receiver.nmd >/dev/null
+nomad run receiver_tcp.nmd >/dev/null
 nomad run discovery.nmd >/dev/null
 
 mkdir -p ${receiver_folder}

@@ -147,24 +147,24 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(err == asapo::ConsumerErrorTemplates::kNoData, "last ack default stream no data");
     M_AssertTrue(id == 0, "last ack default stream no data id = 0");
 
-    auto nacks = broker->GetUnacknowledgedTupleIds(group_id,0,0,&err);
+    auto nacks = broker->GetUnacknowledgedTupleIds(group_id, 0, 0, &err);
     M_AssertTrue(err == nullptr, "nacks default stream all");
     M_AssertTrue(nacks.size() == 10, "nacks default stream size = 10");
 
-    err = broker->Acknowledge(group_id,1);
+    err = broker->Acknowledge(group_id, 1);
     M_AssertTrue(err == nullptr, "ack default stream no error");
 
-    nacks = broker->GetUnacknowledgedTupleIds(group_id,0,0,&err);
+    nacks = broker->GetUnacknowledgedTupleIds(group_id, 0, 0, &err);
     M_AssertTrue(nacks.size() == 9, "nacks default stream size = 9 after ack");
 
     id = broker->GetLastAcknowledgedTulpeId(group_id, &err);
     M_AssertTrue(err == nullptr, "last ack default stream no error");
     M_AssertTrue(id == 1, "last ack default stream id = 1");
 
-    err = broker->Acknowledge(group_id,1,"stream1");
+    err = broker->Acknowledge(group_id, 1, "stream1");
     M_AssertTrue(err == nullptr, "ack stream1 no error");
 
-    nacks = broker->GetUnacknowledgedTupleIds(group_id,"stream1",0,0,&err);
+    nacks = broker->GetUnacknowledgedTupleIds(group_id, "stream1", 0, 0, &err);
     M_AssertTrue(nacks.size() == 4, "nacks stream1 size = 4 after ack");
 
 // negative acks
@@ -172,7 +172,7 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     err = broker->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNextNegAckBeforeResend no error");
     M_AssertTrue(fi.name == "1", "GetNextNegAckBeforeResend filename");
-    err = broker->NegativeAcknowledge(group_id,1,0);
+    err = broker->NegativeAcknowledge(group_id, 1, 0);
     M_AssertTrue(err == nullptr, "NegativeAcknowledge no error");
     err = broker->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNextNegAckWithResend no error");
@@ -180,7 +180,7 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
 
 // automatic resend
     broker->ResetLastReadMarker(group_id);
-    broker->SetResendNacs(true,0,1);
+    broker->SetResendNacs(true, 0, 1);
     err = broker->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNextBeforeResend no error");
     M_AssertTrue(fi.name == "1", "GetNextBeforeResend filename");
@@ -189,7 +189,7 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(err == nullptr, "GetNextWithResend no error");
     M_AssertTrue(fi.name == "1", "GetNextWithResend filename");
 
-    broker->SetResendNacs(false,0,1);
+    broker->SetResendNacs(false, 0, 1);
     err = broker->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNextAfterResend no error");
     M_AssertTrue(fi.name == "2", "GetNextAfterResend filename");
@@ -238,6 +238,11 @@ void TestAll(const Args& args) {
     asapo::Error err;
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".", true,
                   asapo::SourceCredentials{asapo::SourceType::kProcessed,args.run_name, "", "", args.token}, &err);
+    if (err) {
+        std::cout << "Error CreateServerBroker: " << err << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
     broker->SetTimeout(100);
     auto group_id = broker->GenerateNewGroupId(&err);
 

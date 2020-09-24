@@ -6,7 +6,8 @@
   "DataServer": {
     "AdvertiseURI": "127.0.0.1",
     "NThreads": 2,
-    "ListenPort": {{ env "NOMAD_PORT_recv_ds" }}
+    "ListenPort": {{ env "NOMAD_PORT_recv_ds" }},
+    "NetworkMode": ["tcp"]
   },
   "DataCache": {
     "Use": true,

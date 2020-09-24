@@ -42,6 +42,7 @@ findstr /i /l /c:"Processed 3 file(s)" out.txt || goto :error
 findstr /i /l /c:"hello1" out.txt || goto :error
 findstr /i /l /c:"hello2" out.txt || goto :error
 findstr /i /l /c:"hello3" out.txt || goto :error
+findstr /i /l /c:"Using connection type: No connection" out.txt || goto :error
 
 
 goto :clean

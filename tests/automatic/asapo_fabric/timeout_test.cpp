@@ -4,6 +4,7 @@
 #include <logger/logger.h>
 #include <testing.h>
 #include <asapo_fabric/asapo_fabric.h>
+#include <common/io_error.h>
 
 using namespace asapo;
 using namespace fabric;
@@ -28,7 +29,13 @@ void ServerMasterThread(const std::string& hostname, uint16_t port) {
         int dummyBuffer;
         FabricAddress clientAddress;
         FabricMessageId messageId;
-        server->RecvAny(&clientAddress, &messageId, &dummyBuffer, sizeof(dummyBuffer), &err);
+
+        // In order to run the tests more stable. Otherwise a timeout could occurred with valgrind
+        int tries = 0;
+        do {
+            err = nullptr;
+            server->RecvAny(&clientAddress, &messageId, &dummyBuffer, sizeof(dummyBuffer), &err);
+        } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
         M_AssertEq(nullptr, err, "server->RecvAny");
 
         server->Send(clientAddress, messageId, &dummyBuffer, sizeof(dummyBuffer), &err);
@@ -64,7 +71,7 @@ void ClientThread(const std::string& hostname, uint16_t port) {
               "The following call might take a while since its able to reach the server but the server is not responding"
               << std::endl;
     client->Recv(serverAddress, 0, &dummyBuffer, sizeof(dummyBuffer), &err);
-    M_AssertEq(FabricErrorTemplates::kTimeout, err, "client->Recv");
+    M_AssertEq(IOErrorTemplates::kTimeout, err, "client->Recv");
     err = nullptr;
 
     serverShutdown.set_value();
@@ -76,7 +83,7 @@ void ClientThread(const std::string& hostname, uint16_t port) {
     err = nullptr;
 
     client->Send(serverAddress, 2, &dummyBuffer, sizeof(dummyBuffer), &err);
-    M_AssertEq(FabricErrorTemplates::kInternalConnectionError, err, "client->Send");
+    M_AssertEq(FabricErrorTemplates::kConnectionRefusedError, err, "client->Send");
     err = nullptr;
 }
 

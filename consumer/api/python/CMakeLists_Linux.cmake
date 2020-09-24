@@ -1,12 +1,19 @@
+
+if (ENABLE_LIBFABRIC)
+    set (TEMP_ADDITIONAL_LINK_ARGS_PART ", '-lfabric'")
+else()
+    set (TEMP_ADDITIONAL_LINK_ARGS_PART "")
+endif()
+
 if ((CMAKE_BUILD_TYPE STREQUAL "Debug") AND (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
     set (EXTRA_COMPILE_ARGS "['--std=c++11']")
-    set (EXTRA_LINK_ARGS "['--coverage','-fprofile-arcs','-ftest-coverage','-static-libgcc','-static-libstdc++']")
+    set (EXTRA_LINK_ARGS "['--coverage','-fprofile-arcs','-ftest-coverage','-static-libgcc','-static-libstdc++' ${TEMP_ADDITIONAL_LINK_ARGS_PART}]")
 ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     set (EXTRA_COMPILE_ARGS "['--std=c++11']")
-    set (EXTRA_LINK_ARGS "['-static-libgcc','-static-libstdc++','-Wl,--exclude-libs,ALL']")
+    set (EXTRA_LINK_ARGS "['-static-libgcc','-static-libstdc++','-Wl,--exclude-libs,ALL' ${TEMP_ADDITIONAL_LINK_ARGS_PART}]")
 else()
     set (EXTRA_COMPILE_ARGS "['-std=c++11']")
-    set (EXTRA_LINK_ARGS "[]")
+    set (EXTRA_LINK_ARGS "['' ${TEMP_ADDITIONAL_LINK_ARGS_PART}]")
 ENDIF()
 
 configure_files(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} @ONLY)

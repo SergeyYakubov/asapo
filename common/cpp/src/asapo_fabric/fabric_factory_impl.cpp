@@ -11,7 +11,7 @@ std::string fi_version_string(uint32_t version) {
 }
 
 bool FabricFactoryImpl::HasValidVersion(Error* error) const {
-    auto current_version = fi_version();
+    auto current_version = gffm().fi_version();
 
     if (FI_VERSION_LT(current_version, FabricContextImpl::kMinExpectedLibFabricVersion)) {
         std::string found_version_str = fi_version_string(current_version);

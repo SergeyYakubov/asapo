@@ -272,7 +272,8 @@ Error MongoDBClient::InsertAsSubset(const std::string& collection, const FileInf
     return err;
 }
 
-Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, bool ignore_id_return_last, std::string* res) const {
+Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, bool ignore_id_return_last,
+                                     std::string* res) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -359,7 +360,7 @@ Error MongoDBClient::GetDataSetById(const std::string& collection, uint64_t set_
 
 }
 
-Error StreamInfoFromDbResponse(std::string record_str,StreamInfo* info) {
+Error StreamInfoFromDbResponse(std::string record_str, StreamInfo* info) {
     auto parser = JsonStringParser(std::move(record_str));
     Error parse_err = parser.GetUInt64("_id", &(info->last_id));
     if (parse_err) {
@@ -369,9 +370,9 @@ Error StreamInfoFromDbResponse(std::string record_str,StreamInfo* info) {
     return nullptr;
 }
 
-Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* info) const {
+Error MongoDBClient::GetStreamInfo(const std::string& collection, StreamInfo* info) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, 0,true, &record_str);
+    auto err = GetRecordFromDb(collection, 0, true, &record_str);
     if (err) {
         info->last_id = 0;
         if (err == DBErrorTemplates::kNoRecord) {
@@ -379,7 +380,7 @@ Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* in
         }
         return err;
     }
-    return StreamInfoFromDbResponse(std::move(record_str),info);
+    return StreamInfoFromDbResponse(std::move(record_str), info);
 }
 
 }

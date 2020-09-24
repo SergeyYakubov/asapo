@@ -27,22 +27,25 @@ function(prepare_asapo)
     endif()
 
     if (WIN32)
-        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver.json.tpl.win.in receiver.json.tpl @ONLY)
-        configure_file(${CMAKE_SOURCE_DIR}/config/nomad/nginx_kill_win.nmd nginx_kill.nmd @ONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver_tcp.json.tpl.win.in receiver_tcp.json.tpl @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/authorizer_settings.json.tpl.win authorizer.json.tpl COPYONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/start_services.bat start_services.bat COPYONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/stop_services.bat stop_services.bat COPYONLY)
 
+        configure_file(${CMAKE_SOURCE_DIR}/config/nomad/receiver_tcp.nmd.in  receiver_tcp.nmd @ONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/config/nomad/nginx_kill_win.nmd nginx_kill.nmd @ONLY)
     else()
-        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver.json.tpl.lin.in receiver.json.tpl @ONLY)
-        configure_file(${CMAKE_SOURCE_DIR}/config/nomad/nginx_kill_lin.nmd nginx_kill.nmd @ONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver_tcp.json.tpl.lin.in receiver_tcp.json.tpl @ONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver_fabric.json.tpl.lin.in receiver_fabric.json.tpl @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/authorizer_settings.json.tpl.lin authorizer.json.tpl COPYONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/start_services.sh start_services.sh COPYONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/stop_services.sh stop_services.sh COPYONLY)
 
+        configure_file(${CMAKE_SOURCE_DIR}/config/nomad/receiver_tcp.nmd.in  receiver_tcp.nmd @ONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/config/nomad/receiver_fabric.nmd.in  receiver_fabric.nmd @ONLY)
+        configure_file(${CMAKE_SOURCE_DIR}/config/nomad/nginx_kill_lin.nmd nginx_kill.nmd @ONLY)
     endif()
 
-    configure_file(${CMAKE_SOURCE_DIR}/config/nomad/receiver.nmd.in  receiver.nmd @ONLY)
     configure_file(${CMAKE_SOURCE_DIR}/config/nomad/discovery.nmd.in  discovery.nmd @ONLY)
     configure_file(${CMAKE_SOURCE_DIR}/config/nomad/authorizer.nmd.in  authorizer.nmd @ONLY)
     configure_file(${CMAKE_SOURCE_DIR}/config/nomad/file_transfer.nmd.in  file_transfer.nmd @ONLY)
@@ -53,7 +56,6 @@ function(prepare_asapo)
     configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/auth_secret.key auth_secret.key COPYONLY)
     configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/nginx.conf.tpl nginx.conf.tpl COPYONLY)
     configure_file(${CMAKE_SOURCE_DIR}/config/nomad/nginx.nmd.in nginx.nmd @ONLY)
-
 
 endfunction()
 
