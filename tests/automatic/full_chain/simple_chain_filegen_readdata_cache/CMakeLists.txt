@@ -17,7 +17,7 @@ add_script_test("${TARGET_NAME}-tcp" "$<TARGET_FILE:event-monitor-producer-bin> 
 
 if (ENABLE_LIBFABRIC)
     if (ENABLE_LIBFABRIC_LOCALHOST)
-        add_script_test("${TARGET_NAME}-fabric" "$<TARGET_FILE:event-monitor-producer-bin> $<TARGET_FILE:getnext_broker> $<TARGET_PROPERTY:asapo,EXENAME>" nomem)
+        add_script_test("${TARGET_NAME}-fabric" "$<TARGET_FILE:event-monitor-producer-bin> $<TARGET_FILE:getnext_broker> $<TARGET_PROPERTY:asapo,EXENAME> fabric" nomem)
     else ()
         message(WARNING "Disabled automated LibFabric of '${TARGET_NAME}-fabric' test because 'ENABLE_LIBFABRIC_LOCALHOST' is not enabled.")
     endif()
