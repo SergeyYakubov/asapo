@@ -1,9 +1,5 @@
 
-if (ENABLE_LIBFABRIC)
-    set (TEMP_ADDITIONAL_LINK_ARGS_PART ", '-lfabric'")
-else()
-    set (TEMP_ADDITIONAL_LINK_ARGS_PART "")
-endif()
+set (TEMP_ADDITIONAL_LINK_ARGS_PART "") # Arguments for the linker
 
 if ((CMAKE_BUILD_TYPE STREQUAL "Debug") AND (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
     set (EXTRA_COMPILE_ARGS "['--std=c++11']")
