@@ -1,9 +1,9 @@
 ##20.09.0
 
 FEATURES
-* implemented data resend - data will be redelivered if it is not acknowledged during a given period or a consumer sent a negative acknowledge  
+* implemented negative acknowledges and data redelivery - data will be redelivered automatically for get_next calls if it is not acknowledged during a given period or a consumer sent a negative acknowledge  
 * introduced data source types - "raw" data is written to beamline filesystem and this can only be done from a certain IPs (detector PC,..),
-"processed" data is written to core filesystem
+"processed" data is written to core filesystem. File paths must now start with  `raw/`  or  `processed/`
 * Added RDMA support for the communication between consumer and receiver. (Improves transfer speeds while using less CPU resources)
   Requires LibFabric v1.11.0
   Receiver must have network mode 'Fabric' enabled and RDMAable AdvertiseURI. See config `DataServer.{AdvertiseURI, NetworkMode}`
@@ -16,7 +16,7 @@ BUG FIXES
 
 BREAKING CHANGES
 * an extra parameter in producer constructor for data source type
-
+* path of the files that are send from producer to asapo must start with `raw/` for raw source type or `processed/` for processed source type, otherwise the files will not be written and an error will be sent back 
 
 ## 20.06.3
 
