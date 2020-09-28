@@ -22,14 +22,14 @@ year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
 
 
-mkdir -p /tmp/asapo/test_in/test1/
-mkdir -p /tmp/asapo/test_in/test2/
+mkdir -p /tmp/asapo/test_in/processed
 
 Cleanup() {
     echo cleanup
-    kill $producerid
-    rm -rf /tmp/asapo/test_in/test1
-    rm -rf /tmp/asapo/test_in/test2
+    kill -9 $producerid
+    rm -rf /tmp/asapo/test_in
+    rm -rf ${receiver_folder}
+
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop receiver
@@ -50,6 +50,10 @@ nomad run broker.nmd
 
 sleep 1
 
+mkdir  /tmp/asapo/test_in/processed/test1
+mkdir  /tmp/asapo/test_in/processed/test2
+
+#producer
 echo "Start producer"
 mkdir -p ${receiver_folder}
 $producer_bin test.json &
@@ -57,9 +61,9 @@ producerid=`echo $!`
 
 sleep 1
 
-echo hello > /tmp/asapo/test_in/test1/file1
-echo hello > /tmp/asapo/test_in/test1/file2
-echo hello > /tmp/asapo/test_in/test2/file2
+echo hello > /tmp/asapo/test_in/processed/test1/file1
+echo hello > /tmp/asapo/test_in/processed/test1/file2
+echo hello > /tmp/asapo/test_in/processed/test2/file1
 
 echo "Start consumer in metadata only mode"
 $consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 2000 1 1 | tee out
@@ -67,6 +71,6 @@ grep "Processed 1 dataset(s)" out
 grep "with 3 file(s)" out
 grep -i "Using connection type: No connection" out
 
-test -f /tmp/asapo/test_in/test1/file1
-test -f /tmp/asapo/test_in/test1/file2
-test -f /tmp/asapo/test_in/test2/file2
+test -f /tmp/asapo/test_in/processed/test1/file1
+test -f /tmp/asapo/test_in/processed/test1/file2
+test -f /tmp/asapo/test_in/processed/test2/file1

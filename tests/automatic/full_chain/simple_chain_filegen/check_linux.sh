@@ -21,15 +21,13 @@ facility=test_facility
 year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
 
-
-mkdir -p /tmp/asapo/test_in/test1/
-mkdir -p /tmp/asapo/test_in/test2/
+mkdir -p /tmp/asapo/test_in/processed
 
 Cleanup() {
     echo cleanup
-    kill $producerid
-    rm -rf /tmp/asapo/test_in/test1
-    rm -rf /tmp/asapo/test_in/test2
+    kill -9 $producerid
+    rm -rf /tmp/asapo/test_in
+    rm -rf ${receiver_folder}
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop receiver
@@ -56,15 +54,19 @@ producerid=`echo $!`
 
 sleep 1
 
-echo hello > /tmp/asapo/test_in/test1/file1
-echo hello > /tmp/asapo/test_in/test1/file2
-echo hello > /tmp/asapo/test_in/test2/file2
+mkdir  /tmp/asapo/test_in/processed/test1
+mkdir  /tmp/asapo/test_in/processed/test2
+
+
+echo hello > /tmp/asapo/test_in/processed/test1/file1
+echo hello > /tmp/asapo/test_in/processed/test1/file2
+echo hello > /tmp/asapo/test_in/processed/test2/file1
 
 echo "Start consumer in metadata only mode"
 $consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | tee /dev/stderr out
 grep "Processed 3 file(s)" out
 grep -i "Using connection type: No connection" out
 
-test ! -f /tmp/asapo/test_in/test1/file1
-test ! -f /tmp/asapo/test_in/test1/file2
-test ! -f /tmp/asapo/test_in/test2/file2
+test ! -f /tmp/asapo/test_in/processed/test1/file1
+test ! -f /tmp/asapo/test_in/processed/test1/file2
+test ! -f /tmp/asapo/test_in/processed/test2/file1

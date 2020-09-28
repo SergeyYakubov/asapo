@@ -58,14 +58,21 @@ struct DataSet {
 
 using SubDirList = std::vector<std::string>;
 
+enum class SourceType {
+  kProcessed,
+  kRaw
+};
+
+Error GetSourceTypeFromString(std::string stype,SourceType *type);
+std::string GetStringFromSourceType(SourceType type);
 
 struct SourceCredentials {
-    SourceCredentials(std::string beamtime, std::string beamline, std::string stream, std::string token):
+    SourceCredentials(SourceType type, std::string beamtime, std::string beamline, std::string stream, std::string token):
         beamtime_id{std::move(beamtime)},
         beamline{std::move(beamline)},
         stream{std::move(stream)},
-        user_token{std::move(token)} {
-    };
+        user_token{std::move(token)},
+        type{type}{};
     SourceCredentials() {};
     static const std::string kDefaultStream;
     static const std::string kDefaultBeamline;
@@ -74,8 +81,9 @@ struct SourceCredentials {
     std::string beamline;
     std::string stream;
     std::string user_token;
+    SourceType type = SourceType::kProcessed;
     std::string GetString() {
-        return beamtime_id + "%" + beamline + "%" + stream + "%" + user_token;
+        return (type==SourceType::kRaw?std::string("raw"):std::string("processed")) + "%"+ beamtime_id + "%" + beamline + "%" + stream + "%" + user_token;
     };
 };
 

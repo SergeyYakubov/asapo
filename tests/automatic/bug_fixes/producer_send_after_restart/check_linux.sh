@@ -21,11 +21,12 @@ year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
 
 
-mkdir -p /tmp/asapo/test_in/test1/
+mkdir -p /tmp/asapo/test_in/test1
 
 Cleanup() {
     echo cleanup
     rm -rf ${receiver_root_folder}
+    rm -rf /tmp/asapo/test_in
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop receiver
@@ -40,7 +41,7 @@ nomad run receiver_${network_type}.nmd
 nomad run discovery.nmd
 
 sleep 1
-
+mkdir  /tmp/asapo/test_in/processed
 #producer
 mkdir -p ${receiver_folder}
 $producer_bin test.json &> output &
@@ -48,13 +49,13 @@ producerid=`echo $!`
 
 sleep 1
 
-echo hello > /tmp/asapo/test_in/test1/file1
+echo hello > /tmp/asapo/test_in/processed/file1
 sleep 1
 nomad stop receiver
 sleep 1
 nomad run receiver_${network_type}.nmd
 
-echo hello > /tmp/asapo/test_in/test1/file1
+echo hello > /tmp/asapo/test_in/processed/file1
 sleep 1
 
 kill -s INT $producerid

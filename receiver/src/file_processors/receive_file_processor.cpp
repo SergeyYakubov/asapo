@@ -16,8 +16,12 @@ Error ReceiveFileProcessor::ProcessFile(const Request* request, bool overwrite) 
     auto fsize = request->GetDataSize();
     auto socket = request->GetSocket();
     auto fname = request->GetFileName();
-    auto root_folder = request->GetOfflinePath();
-    auto err =  io__->ReceiveDataToFile(socket, root_folder, fname, (size_t) fsize, true, overwrite);
+    std::string root_folder;
+    auto err = GetRootFolder(request,&root_folder);
+    if (err) {
+        return err;
+    }
+    err =  io__->ReceiveDataToFile(socket, root_folder, fname, (size_t) fsize, true, overwrite);
     if (!err) {
         log__->Debug("received file of size " + std::to_string(fsize) + " to " + root_folder + kPathSeparator + fname);
     }

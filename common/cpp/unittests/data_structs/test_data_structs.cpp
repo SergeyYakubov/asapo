@@ -7,6 +7,8 @@
 
 using asapo::FileInfo;
 using asapo::StreamInfo;
+using asapo::SourceType;
+using asapo::SourceCredentials;
 
 using ::testing::AtLeast;
 using ::testing::Eq;
@@ -196,6 +198,39 @@ TEST(StreamInfo, ConvertToJson) {
     auto json = sinfo.Json();
 
     ASSERT_THAT(expected_json, Eq(json));
+}
+
+TEST(SourceCredentials, ConvertToString) {
+    auto sc = SourceCredentials{SourceType::kRaw,"beamtime","beamline","stream","token"};
+    std::string expected1= "raw%beamtime%beamline%stream%token";
+    std::string expected2= "processed%beamtime%beamline%stream%token";
+
+    auto res1 = sc.GetString();
+    sc.type = asapo::SourceType::kProcessed;
+    auto res2 = sc.GetString();
+
+    ASSERT_THAT(res1, Eq(expected1));
+    ASSERT_THAT(res2, Eq(expected2));
+}
+
+TEST(SourceCredentials, SourceTypeFromString) {
+    SourceType type1,type2,type3;
+
+    auto err1=GetSourceTypeFromString("raw",&type1);
+    auto err2=GetSourceTypeFromString("processed",&type2);
+    auto err3=GetSourceTypeFromString("bla",&type3);
+
+    ASSERT_THAT(err1, Eq(nullptr));
+    ASSERT_THAT(type1, Eq(SourceType::kRaw));
+    ASSERT_THAT(err2, Eq(nullptr));
+    ASSERT_THAT(type2, Eq(SourceType::kProcessed));
+    ASSERT_THAT(err3, Ne(nullptr));
+}
+
+TEST(SourceCredentials, DefaultSourceTypeInSourceCreds) {
+    SourceCredentials sc;
+
+    ASSERT_THAT(sc.type, Eq(SourceType::kProcessed));
 }
 
 

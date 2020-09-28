@@ -100,6 +100,7 @@ set(TEST_SOURCE_FILES
         unittests/request_handler/test_requests_dispatcher.cpp
         unittests/test_datacache.cpp
         unittests/file_processors/test_write_file_processor.cpp
+        unittests/file_processors/test_file_processor.cpp
         unittests/file_processors/test_receive_file_processor.cpp
         )
 #

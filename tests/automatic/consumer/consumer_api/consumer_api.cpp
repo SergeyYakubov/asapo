@@ -237,7 +237,7 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
 void TestAll(const Args& args) {
     asapo::Error err;
     auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".", true,
-                  asapo::SourceCredentials{args.run_name, "", "", args.token}, &err);
+                  asapo::SourceCredentials{asapo::SourceType::kProcessed,args.run_name, "", "", args.token}, &err);
     if (err) {
         std::cout << "Error CreateServerBroker: " << err << std::endl;
         exit(EXIT_FAILURE);

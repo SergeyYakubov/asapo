@@ -106,22 +106,4 @@ TEST_F(SenderInfluxDbTests, LogErrorWithWrongResponceSendStatistics) {
     sender.SendStatistics(statistics);
 }
 
-TEST_F(SenderInfluxDbTests, LogDebugSendStatistics) {
-    EXPECT_CALL(mock_http_client, Post_t(_, _, _, _, _)).
-    WillOnce(
-        DoAll(SetArgPointee<4>(nullptr), SetArgPointee<3>(asapo::HttpCode::OK), Return("ok response")
-             ));
-
-    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending statistics"),
-                                         HasSubstr(config.performance_db_uri),
-                                         HasSubstr(config.performance_db_name)
-                                        )
-                                  )
-               );
-
-
-    sender.SendStatistics(statistics);
-}
-
-
 }

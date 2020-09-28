@@ -28,7 +28,7 @@ transfer_data=int(transfer_data)>0
 
 broker = asapo_consumer.create_server_broker(source,path, True,beamtime,stream_in,token,timeout_s*1000)
 
-producer  = asapo_producer.create_producer(source,beamtime,'auto', stream_out, token, nthreads, 600)
+producer  = asapo_producer.create_producer(source,'processed',beamtime,'auto', stream_out, token, nthreads, 600)
 
 group_id  = broker.generate_group_id()
 

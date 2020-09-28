@@ -15,13 +15,13 @@ mkdir %receiver_folder%
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
-FOR /F "usebackq" %%A IN ('%receiver_folder%\1_1') DO set size=%%~zA
+FOR /F "usebackq" %%A IN ('%receiver_folder%\processed\1_1') DO set size=%%~zA
 if %size% NEQ 100000 goto :error
 
-FOR /F "usebackq" %%A IN ('%receiver_folder%\1_2') DO set size=%%~zA
+FOR /F "usebackq" %%A IN ('%receiver_folder%\processed\1_2') DO set size=%%~zA
 if %size% NEQ 100000 goto :error
 
-FOR /F "usebackq" %%A IN ('%receiver_folder%\1_3') DO set size=%%~zA
+FOR /F "usebackq" %%A IN ('%receiver_folder%\processed\1_3') DO set size=%%~zA
 if %size% NEQ 100000 goto :error
 
 

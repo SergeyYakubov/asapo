@@ -21,15 +21,13 @@ year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
 
 
-mkdir -p /tmp/asapo/test_in/test1/
-mkdir -p /tmp/asapo/test_in/test2/
-
 Cleanup() {
     echo cleanup
-    kill $producerid1
-    kill $producerid2
-    rm -rf /tmp/asapo/test_in/test1
-    rm -rf /tmp/asapo/test_in/test2
+    kill -9 $producerid1
+    kill -9 $producerid2
+    rm -rf /tmp/asapo/test_in1
+    rm -rf /tmp/asapo/test_in2
+    rm -rf ${receiver_folder}
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop receiver
@@ -50,6 +48,10 @@ nomad run broker.nmd
 
 sleep 1
 
+
+mkdir -p /tmp/asapo/test_in1/processed
+mkdir -p /tmp/asapo/test_in2/processed
+
 mkdir -p ${receiver_folder}
 
 echo "Start producer 1"
@@ -61,11 +63,13 @@ $producer_bin test2.json &
 producerid2=`echo $!`
 
 sleep 1
+mkdir -p /tmp/asapo/test_in1/processed/test1
+mkdir -p /tmp/asapo/test_in2/processed/test2
 
-echo hello > /tmp/asapo/test_in/test1/file1
-echo hello > /tmp/asapo/test_in/test1/file2
-echo hello > /tmp/asapo/test_in/test2/file1
-echo hello > /tmp/asapo/test_in/test2/file2
+echo hello > /tmp/asapo/test_in1/processed/test1/file1
+echo hello > /tmp/asapo/test_in1/processed/test1/file2
+echo hello > /tmp/asapo/test_in2/processed/test2/file1
+echo hello > /tmp/asapo/test_in2/processed/test2/file2
 
 echo "Start consumer in metadata only mode"
 $consumer_bin ${proxy_address} $network_type ${receiver_folder} ${beamtime_id} 2 $token 2000 1 1 | tee out

@@ -98,7 +98,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
         asapo::FileInfo fi;
         Error err;
         auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, true,
-                      asapo::SourceCredentials{params.beamtime_id, "", params.stream, params.token}, &err);
+                      asapo::SourceCredentials{asapo::SourceType::kProcessed,params.beamtime_id, "", params.stream, params.token}, &err);
         if (err) {
             std::cout << "Error CreateServerBroker: " << err << std::endl;
             exit(EXIT_FAILURE);

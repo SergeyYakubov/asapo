@@ -230,7 +230,9 @@ bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request, bo
                 ProcessRequestCallback(std::move(err), request, "", retry);
                 return false;
             } else {
-                if (err != nullptr ) continue;
+                if (err != nullptr ) {
+                    continue;
+                }
             }
         }
 
@@ -245,7 +247,7 @@ bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request, bo
         ProcessRequestCallback(std::move(err), request, response, retry);
         return success;
     }
-    log__->Warning("put back to the queue, request opcode: " + std::to_string(request->header.op_code) +
+    log__->Warning((receivers_list_.empty()?std::string("receiver list empty, "):"")+"put back to the queue, request opcode: " + std::to_string(request->header.op_code) +
                    ", id: " + std::to_string(request->header.data_id));
     *retry = true;
     return false;

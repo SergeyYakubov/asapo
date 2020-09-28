@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     std::string authorize_request = "{\"Folder\":\"" + args.folder + "\",\"BeamtimeId\":\"aaa\",\"Token\":\"" + token +
                                     "\"}";
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.uri_authorizer, "", true, asapo::SourceCredentials{"", "", "", ""}, &err);
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.uri_authorizer, "", true, asapo::SourceCredentials{asapo::SourceType::kProcessed,"", "", "", ""}, &err);
     auto server_broker = static_cast<asapo::ServerDataBroker*>(broker.get());
     M_AssertEq(nullptr, err);
 

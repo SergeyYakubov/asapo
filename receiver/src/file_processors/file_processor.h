@@ -8,6 +8,8 @@ namespace asapo {
 
 class Request;
 
+Error GetRootFolder(const Request* request, std::string* root_folder);
+
 class FileProcessor {
   public:
     FileProcessor();

@@ -22,7 +22,7 @@ def callback(header,err):
         print ("successfuly sent: ",header)
     lock.release()
 
-producer  = asapo_producer.create_producer(endpoint,beamtime, 'auto', stream, token, nthreads, 600)
+producer  = asapo_producer.create_producer(endpoint,'processed',beamtime, 'auto', stream, token, nthreads, 600)
 
 producer.set_log_level("info")
 
@@ -63,7 +63,7 @@ if n!=0:
 
 # create with error
 try:
-    producer  = asapo_producer.create_producer(endpoint,beamtime,'auto', stream, token, 0, 600)
+    producer  = asapo_producer.create_producer(endpoint,'processed',beamtime,'auto', stream, token, 0, 600)
 except Exception as Asapo:
     print(e)
 else:
