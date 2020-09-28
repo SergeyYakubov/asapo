@@ -7,13 +7,12 @@ RUN yum update -y && yum install -y golang wget zlib-devel
 ADD install_curl.sh install_curl.sh
 RUN ./install_curl.sh /curl
 
-ADD build.sh /bin/build.sh
-
-RUN chmod og+rwX -R /opt
-
 ADD install_cmake.sh install_cmake.sh
 RUN ./install_cmake.sh
 
 ADD install_libfabric.sh install_libfabric.sh
 RUN ./install_libfabric.sh
 
+RUN chmod og+rwX -R /opt
+
+ADD build.sh /bin/build.sh
