@@ -13,6 +13,7 @@ receiver_total_memory_size = 35000
 receiver_dataserver_cache_size = 30 #gb
 receiver_receive_to_disk_threshold = 50 # mb
 receiver_dataserver_nthreads = 8
+receiver_network_modes = "tcp,fabric"
 
 grafana_total_memory_size = 2000
 influxdb_total_memory_size = 2000

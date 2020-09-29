@@ -30,6 +30,7 @@ job "asapo-receivers" {
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
+	    privileged = true
         image = "yakser/asapo-receiver${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/receiver/config.json",
@@ -79,11 +80,11 @@ job "asapo-receivers" {
         receiver_dataserver_cache_size = "${receiver_dataserver_cache_size}"
         receiver_dataserver_nthreads = "${receiver_dataserver_nthreads}"
         receiver_receive_to_disk_threshold = "${receiver_receive_to_disk_threshold}"
+        receiver_network_modes = "${receiver_network_modes}"
       }
 
-
       template {
-         source        = "${scripts_dir}/receiver_tcp.json.tpl"
+         source        = "${scripts_dir}/receiver.json.tpl"
          destination   = "local/config.json"
          change_mode   = "restart"
       }

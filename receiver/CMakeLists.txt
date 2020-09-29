@@ -69,6 +69,7 @@ set_target_properties(${TARGET_NAME}-bin PROPERTIES RUNTIME_OUTPUT_DIRECTORY
         )
 
 configure_file(docker/Dockerfile . COPYONLY)
+configure_file(docker/install_libfabric.sh . COPYONLY)
 
 
 ################################

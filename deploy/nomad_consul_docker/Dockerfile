@@ -24,9 +24,9 @@ RUN add-apt-repository \
 RUN apt-get update && apt-get install -y docker-ce-cli wget unzip iproute2 vim td-agent-bit
 
 
-ENV CONSUL_VERSION=1.8.0
-ENV NOMAD_VERSION=0.11.3
-ENV TERRAFORM_VERSION=0.12.28
+ENV CONSUL_VERSION=1.8.4
+ENV NOMAD_VERSION=0.12.5
+ENV TERRAFORM_VERSION=0.13.3
 ENV HASHICORP_RELEASES=https://releases.hashicorp.com
 
 RUN set -eux && \
