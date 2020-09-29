@@ -30,6 +30,7 @@ job "asapo-receivers" {
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
+	    privileged = true
         image = "yakser/asapo-receiver${image_suffix}"
 	    force_pull = true
         volumes = ["local/config.json:/var/lib/receiver/config.json",
