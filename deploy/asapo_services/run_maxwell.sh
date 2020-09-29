@@ -28,8 +28,8 @@ DOCKER_TLS_CERT=/data/netapp/docker/certs/$USER/cert.pem
 #adresses to use
 USE_IB_FOR_RECEIVER=true
 if [ "$USE_IB_FOR_RECEIVER" == "true" ]; then
-  IB_HOSTNAME=`hostname --short`-ib
-  IB_ADDRESS=`getent hosts $IB_HOSTNAME | awk '{ print $1 }'`
+IB_HOSTNAME=`hostname --short`-ib
+IB_ADDRESS=`getent hosts $IB_HOSTNAME | awk '{ print $1 }'`
 fi
 #ADVERTISE_IP=  #set if differs from default
 
@@ -49,7 +49,7 @@ chmod 777 *
 #todo: elastic search check
 mmc=`cat /proc/sys/vm/max_map_count`
 if (( mmc < 262144 )); then
- 	echo consider increasing max_map_count - needed for elasticsearch
+echo consider increasing max_map_count - needed for elasticsearch
 #    exit 1
 fi
 
@@ -58,32 +58,32 @@ docker rm -f asapo
 docker pull yakser/asapo-cluster
 
 if [ -f $ASAPO_VAR_FILE ]; then
-  MOUNT_VAR_FILE="-v $ASAPO_VAR_FILE:/var/run/asapo/user_vars.tfvars"
+MOUNT_VAR_FILE="-v $ASAPO_VAR_FILE:/var/run/asapo/user_vars.tfvars"
 fi
 
 dockerrun --rm  \
-	-u $ASAPO_USER \
- 	-v /scratch/docker/100000.100000:/scratch/docker/100000.100000 \
-	-v $NOMAD_ALLOC_HOST_SHARED:$NOMAD_ALLOC_HOST_SHARED \
-	-v $SERVICE_DATA_CLUSTER_SHARED:$SERVICE_DATA_CLUSTER_SHARED \
-	-v $DOCKER_TLS_CA:/etc/nomad/ca.pem \
-	-v $DOCKER_TLS_KEY:/etc/nomad/key.pem \
-	-v $DOCKER_TLS_CERT:/etc/nomad/cert.pem \
-	-v $DATA_GLOBAL_SHARED:$DATA_GLOBAL_SHARED \
-	 $MOUNT_VAR_FILE \
-	-e NOMAD_ALLOC_DIR=$NOMAD_ALLOC_HOST_SHARED \
-	-e TF_VAR_service_dir=$SERVICE_DATA_CLUSTER_SHARED \
-  -e TF_VAR_online_dir=$DATA_GLOBAL_SHARED_ONLINE \
-  -e TF_VAR_offline_dir=$DATA_GLOBAL_SHARED \
-	-e TF_VAR_mongo_dir=$MONGO_DIR \
-	-e ADVERTISE_IP=$ADVERTISE_IP \
-	-e RECURSORS=$RECURSORS \
-	-e TF_VAR_asapo_user=$ASAPO_USER \
-	-e IB_ADDRESS=$IB_ADDRESS \
-    -e ACL_ENABLED=$ACL_ENABLED \
-	-e SERVER_ADRESSES=$SERVER_ADRESSES \
-	-e ASAPO_LIGHTWEIGHT_SERVICE_NODES=$ASAPO_LIGHTWEIGHT_SERVICE_NODES \
-	-e DOCKER_ENDPOINT=$DOCKER_ENDPOINT \
-	-e N_SERVERS=$N_SERVERS \
- 	--name asapo yakser/asapo-cluster
+-u $ASAPO_USER \
+-v /scratch/docker/100000.100000:/scratch/docker/100000.100000 \
+-v $NOMAD_ALLOC_HOST_SHARED:$NOMAD_ALLOC_HOST_SHARED \
+-v $SERVICE_DATA_CLUSTER_SHARED:$SERVICE_DATA_CLUSTER_SHARED \
+-v $DOCKER_TLS_CA:/etc/nomad/ca.pem \
+-v $DOCKER_TLS_KEY:/etc/nomad/key.pem \
+-v $DOCKER_TLS_CERT:/etc/nomad/cert.pem \
+-v $DATA_GLOBAL_SHARED:$DATA_GLOBAL_SHARED \
+$MOUNT_VAR_FILE \
+-e NOMAD_ALLOC_DIR=$NOMAD_ALLOC_HOST_SHARED \
+-e TF_VAR_service_dir=$SERVICE_DATA_CLUSTER_SHARED \
+-e TF_VAR_online_dir=$DATA_GLOBAL_SHARED_ONLINE \
+-e TF_VAR_offline_dir=$DATA_GLOBAL_SHARED \
+-e TF_VAR_mongo_dir=$MONGO_DIR \
+-e ADVERTISE_IP=$ADVERTISE_IP \
+-e RECURSORS=$RECURSORS \
+-e TF_VAR_asapo_user=$ASAPO_USER \
+-e IB_ADDRESS=$IB_ADDRESS \
+-e ACL_ENABLED=$ACL_ENABLED \
+-e SERVER_ADRESSES=$SERVER_ADRESSES \
+-e ASAPO_LIGHTWEIGHT_SERVICE_NODES=$ASAPO_LIGHTWEIGHT_SERVICE_NODES \
+-e DOCKER_ENDPOINT=$DOCKER_ENDPOINT \
+-e N_SERVERS=$N_SERVERS \
+--name asapo yakser/asapo-cluster
 

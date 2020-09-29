@@ -4,6 +4,7 @@ if [ ! -f  /var/nomad/token ] && [ "${ACL_ENABLED}" = "true" ]; then
 	nomad acl bootstrap > /var/nomad/bootstrap && \
 	cat /var/nomad/bootstrap | grep Secret | awk '{print $4}' > /var/nomad/token && \
 	cp /var/nomad/token $NOMAD_ALLOC_DIR/nomad_token
+  cat /var/nomad/token
 fi
 
 if [ -f /var/run/asapo/user_vars.tfvars ]; then

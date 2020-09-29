@@ -79,11 +79,11 @@ job "asapo-receivers" {
         receiver_dataserver_cache_size = "${receiver_dataserver_cache_size}"
         receiver_dataserver_nthreads = "${receiver_dataserver_nthreads}"
         receiver_receive_to_disk_threshold = "${receiver_receive_to_disk_threshold}"
+        receiver_network_modes = "${receiver_network_modes}"
       }
 
-
       template {
-         source        = "${scripts_dir}/receiver_tcp.json.tpl"
+         source        = "${scripts_dir}/receiver.json.tpl"
          destination   = "local/config.json"
          change_mode   = "restart"
       }
