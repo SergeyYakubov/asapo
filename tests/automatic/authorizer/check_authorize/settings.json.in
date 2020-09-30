@@ -3,8 +3,11 @@
   "LogLevel":"debug",
   "RootBeamtimesFolder":"@ASAP3_FOLDER@",
   "CurrentBeamlinesFolder":"@CURRENT_BEAMLINES_FOLDER@",
-  "IpBeamlineMappingFolder":"@BEAMLINES_FOLDER@",
-  "SecretFile":"auth_secret.key"
+  "SecretFile":"auth_secret.key",
+  "Ldap":
+    {
+        "Uri" : "ldap://localhost:389",
+        "BaseDn" : "ou=rgy,o=desy,c=de",
+        "FilterTemplate" : "(cn=a3__BEAMLINE__-hosts)"
+    }
 }
-
-

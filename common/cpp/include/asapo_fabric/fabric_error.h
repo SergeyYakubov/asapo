@@ -5,13 +5,14 @@ namespace asapo {
 namespace fabric {
 enum class FabricErrorType {
     kNotSupported,
-    kOutdatedLibrary,
+    kLibraryNotFound,
+    kLibraryCompatibilityError,
+    kLibraryOutdated,
     kInternalError, // An error that was produced by LibFabric
     kInternalOperationCanceled, // An error that was produced by LibFabric
     kInternalConnectionError, // This might occur when the connection is unexpectedly closed
     kNoDeviceFound,
     kClientNotInitialized,
-    kTimeout,
     kConnectionRefused,
 };
 
@@ -23,8 +24,14 @@ namespace FabricErrorTemplates {
 auto const kNotSupportedOnBuildError = FabricErrorTemplate {
     "This build of ASAPO does not support LibFabric", FabricErrorType::kNotSupported
 };
+auto const kLibraryNotFoundError = FabricErrorTemplate {
+    "LibFabric or dependencies were not found", FabricErrorType::kLibraryNotFound
+};
+auto const kLibraryCompatibilityError = FabricErrorTemplate {
+    "LibFabric was found but somehow some a function is missing", FabricErrorType::kLibraryCompatibilityError
+};
 auto const kOutdatedLibraryError = FabricErrorTemplate {
-    "LibFabric outdated", FabricErrorType::kOutdatedLibrary
+    "LibFabric outdated", FabricErrorType::kLibraryOutdated
 };
 auto const kInternalError = FabricErrorTemplate {
     "Internal LibFabric error", FabricErrorType::kInternalError
@@ -38,10 +45,6 @@ auto const kNoDeviceFoundError = FabricErrorTemplate {
 auto const kClientNotInitializedError = FabricErrorTemplate {
     "The client was not initialized. Add server address first!",
     FabricErrorType::kClientNotInitialized
-};
-auto const kTimeout = FabricErrorTemplate {
-    "Timeout",
-    FabricErrorType::kTimeout
 };
 auto const kConnectionRefusedError = FabricErrorTemplate {
     "Connection refused",

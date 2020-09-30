@@ -31,7 +31,7 @@ echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detec
 
 nomad run authorizer.nmd
 nomad run nginx.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 
 mkdir -p ${receiver_folder}
@@ -45,4 +45,4 @@ cat out
 cat out | grep '"buf_id" : 0'
 cat out | grep user_meta
 
-ls -ln ${receiver_folder}/1 | awk '{ print $5 }'| grep 60000000
+ls -ln ${receiver_folder}/processed/1 | awk '{ print $5 }'| grep 60000000

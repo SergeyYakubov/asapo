@@ -4,8 +4,13 @@ set -e
 
 trap Cleanup EXIT
 
+producer_bin=$1
+consumer_bin=$2
+asapo_tool_bin=$3
+network_type=$7
+
 beamtime_id=asapo_test
-token=`$3 token -secret auth_secret.key $beamtime_id`
+token=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -28,7 +33,7 @@ sed -i 's/info/debug/g' broker.json.tpl
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
@@ -36,15 +41,12 @@ sleep 1
 
 echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo  ${beamtime_id}_detector
 
-
-
-#producer
-$1 localhost:8400 ${beamtime_id} 100 $5 4 0 100 &
+echo "Start producer"
+$producer_bin localhost:8400 ${beamtime_id} 100 $5 4 0 100 &
 #producerid=`echo $!`
 
-
-#consumer
-$2 ${proxy_address} dummy_path ${beamtime_id} 2 $token 30000 1 &> output.txt &
+echo "Start consumer in $network_type mode"
+$consumer_bin ${proxy_address} dummy_path ${beamtime_id} 2 $token 30000 1 &> output.txt &
 
 sleep 1
 
@@ -58,9 +60,13 @@ nomad stop receiver
 nomad run nginx.nmd
 nomad run authorizer.nmd
 nomad run discovery.nmd
-nomad run receiver.nmd
+nomad run receiver_$7.nmd
 
-nomad run $4.nmd
+if [[ "$4" == "receiver" ]]; then
+  nomad run $4_$7.nmd
+else
+  nomad run $4.nmd
+fi
 
 wait
 

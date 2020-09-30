@@ -7,6 +7,7 @@
 
 #include "common/data_structs.h"
 #include "common/error.h"
+#include "common/networking.h"
 
 namespace asapo {
 
@@ -32,23 +33,45 @@ class DataBroker {
     */
     virtual Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) = 0;
 
+    //! Negative acknowledge data tuple for specific group id and substream.
+    /*!
+        \param group_id - group id to use.
+        \param id - data tuple id
+        \param delay_sec - data tuple will be redelivered after delay, 0 to redeliver immediately
+        \param substream (optional) - substream
+        \return nullptr of command was successful, otherwise error.
+    */
+    virtual Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_sec,
+                                      std::string substream = kDefaultSubstream) = 0;
 
 
-  //! Get unacknowledged tuple for specific group id and substream.
-  /*!
-      \param group_id - group id to use.
-      \param substream (optional) - substream
-      \param from_id - return tuples with ids greater or equal to from (use 0 disable limit)
-      \param to_id - return tuples with ids less or equal to to (use 0 to disable limit)
-      \param in (optional) - substream
-      \param err - set to nullptr of operation succeed, error otherwise.
-      \return vector of ids, might be empty
-  */
-    virtual IdList GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id, Error* error) = 0;
+    //! Get unacknowledged tuple for specific group id and substream.
+    /*!
+        \param group_id - group id to use.
+        \param substream (optional) - substream
+        \param from_id - return tuples with ids greater or equal to from (use 0 disable limit)
+        \param to_id - return tuples with ids less or equal to to (use 0 to disable limit)
+        \param in (optional) - substream
+        \param err - set to nullptr of operation succeed, error otherwise.
+        \return vector of ids, might be empty
+    */
+    virtual IdList GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id,
+                                             Error* error) = 0;
     virtual IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) = 0;
 
     //! Set timeout for broker operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
+
+    //! Will disable RDMA.
+    //! If RDMA is disabled, not available or the first connection fails to build up, it will automatically fall back to TCP.
+    //! This will only have an effect if no previous connection attempted was made on this DataBroker.
+    virtual void ForceNoRdma() = 0;
+
+    //! Returns the current network connection type
+    /*!
+     * \return current network connection type. If no connection was made, the result is NetworkConnectionType::kUndefined
+     */
+    virtual NetworkConnectionType CurrentConnectionType() const = 0;
 
     //! Set list of substreams
     virtual std::vector<std::string> GetSubstreamList(Error* err) = 0;
@@ -112,7 +135,6 @@ class DataBroker {
     virtual DataSet GetLastDataset(std::string group_id, Error* err) = 0;
     virtual DataSet GetLastDataset(std::string group_id, std::string substream, Error* err) = 0;
 
-
     //! Receive dataset by id.
     /*!
       \param id - dataset id
@@ -133,17 +155,15 @@ class DataBroker {
     virtual Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) = 0;
     virtual Error GetById(uint64_t id, FileInfo* info, std::string group_id, std::string substream, FileData* data) = 0;
 
-  //! Receive id of last acknowledged data tuple
-  /*!
-    \param group_id - group id to use.
-    \param substream (optional) - substream
-    \param err -  will be set in case of error, nullptr otherwise.
-    \return id of the last acknowledged image, 0 if error
-  */
+    //! Receive id of last acknowledged data tuple
+    /*!
+      \param group_id - group id to use.
+      \param substream (optional) - substream
+      \param err -  will be set in case of error, nullptr otherwise.
+      \return id of the last acknowledged image, 0 if error
+    */
     virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) = 0;
     virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) = 0;
-
-
 
     //! Receive last available image.
     /*!
@@ -164,16 +184,23 @@ class DataBroker {
     virtual FileInfos QueryImages(std::string query, Error* err) = 0;
     virtual FileInfos QueryImages(std::string query, std::string substream, Error* err) = 0;
 
+    //! Configure resending nonacknowledged data
+    /*!
+      \param resend -  where to resend
+      \param delay_sec - how many seconds to wait before resending
+      \param resend_attempts - how many resend attempts to make
+    */
+    virtual void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) = 0;
+
+
     virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
 };
 
-/*! A class to create a data broker instance. The class's only function Create is used for this*/
+/*! A class to create a data broker instance. The class's only function Create is used for this */
 class DataBrokerFactory {
   public:
     static std::unique_ptr<DataBroker> CreateServerBroker(std::string server_name, std::string source_path,
-            bool has_filesystem,
-            SourceCredentials source,
-            Error* error) noexcept;
+            bool has_filesystem, SourceCredentials source, Error* error) noexcept;
 
 };
 

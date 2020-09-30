@@ -11,12 +11,12 @@ void Check(const std::string& expected_ip_address, const std::string& hostname) 
     Error err;
     auto io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
     std::string ip_address = io->ResolveHostnameToIp(hostname, &err);
-    M_AssertEq(expected_ip_address, ip_address);
     if(expected_ip_address.empty()) {
-        M_AssertTrue(err != nullptr && asapo::IOErrorTemplates::kUnableToResolveHostname == err);
-        return;
+        M_AssertEq(asapo::IOErrorTemplates::kUnableToResolveHostname, err);
+    } else {
+        M_AssertEq(nullptr, err);
     }
-    M_AssertTrue(err == nullptr);
+    M_AssertEq(expected_ip_address, ip_address);
 }
 
 int main(int argc, char* argv[]) {
@@ -30,5 +30,9 @@ int main(int argc, char* argv[]) {
 
     Check("", "some-address-that-does-not-exists.ff");
     Check("", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.ff");
+
+    // Fallthrough tests
+    Check("123.123.123.123", "123.123.123.123");
+    Check("8.8.8.8", "8.8.8.8");
     return 0;
 }

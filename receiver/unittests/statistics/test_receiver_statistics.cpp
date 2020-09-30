@@ -127,7 +127,7 @@ TEST_F(ReceiverStatisticTests, TimerForAll) {
     ASSERT_THAT(stat.extra_entities[StatisticEntity::kNetwork].second, Ge(0.25));
     ASSERT_THAT(stat.extra_entities[StatisticEntity::kNetwork].second, Le(0.35));
 
-    ASSERT_THAT(stat.extra_entities[StatisticEntity::kDisk].second, Ge(0.35));
+    ASSERT_THAT(stat.extra_entities[StatisticEntity::kDisk].second, Ge(0.3));
     ASSERT_THAT(stat.extra_entities[StatisticEntity::kDisk].second, Le(0.45));
 }
 

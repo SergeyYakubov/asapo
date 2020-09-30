@@ -11,5 +11,5 @@ set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
 
 prepare_asapo()
 
-add_script_test("${TARGET_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}" nomem)
+add_script_test("${TARGET_NAME}-tcp" "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} tcp" nomem)
 

@@ -54,11 +54,12 @@ class ReceiveFileProcessorTests : public Test {
     std::unique_ptr<MockRequest> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
     SocketDescriptor expected_socket_id = SocketDescriptor{1};
-    std::string expected_file_name = "2";
+    std::string expected_file_name = std::string("processed")+asapo::kPathSeparator+std::string("2");
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_beamline = "beamline";
     std::string expected_facility = "facility";
     std::string expected_year = "2020";
+    asapo::SourceType expected_source_type = asapo::SourceType::kProcessed;
     uint64_t expected_file_size = 10;
     bool expected_overwrite = false;
     std::string expected_root_folder = "root_folder";
@@ -97,7 +98,11 @@ void ReceiveFileProcessorTests::MockRequestData() {
     EXPECT_CALL(*mock_request, GetOfflinePath()).Times(1)
     .WillRepeatedly(ReturnRef(expected_full_path));
 
-    EXPECT_CALL(*mock_request, GetFileName()).Times(1)
+    EXPECT_CALL(*mock_request, GetSourceType()).Times(2)
+        .WillRepeatedly(Return(expected_source_type));
+
+
+    EXPECT_CALL(*mock_request, GetFileName()).Times(2)
     .WillRepeatedly(Return(expected_file_name));
 }
 

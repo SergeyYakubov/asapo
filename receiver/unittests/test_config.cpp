@@ -45,7 +45,6 @@ class ConfigTests : public Test {
     }
     void PrepareConfig() {
         test_config.listen_port = 4200;
-        test_config.dataserver.listen_port = 4201;
         test_config.tag = "receiver1";
         test_config.performance_db_name = "db_test";
         test_config.performance_db_uri = "localhost:8086";
@@ -58,9 +57,11 @@ class ConfigTests : public Test {
         test_config.use_datacache = false;
         test_config.datacache_reserved_share = 10;
         test_config.datacache_size_gb = 2;
-        test_config.dataserver.nthreads = 5;
         test_config.discovery_server = "discovery";
+        test_config.dataserver.nthreads = 5;
+        test_config.dataserver.listen_port = 4201;
         test_config.dataserver.advertise_uri = "0.0.0.1:4201";
+        test_config.dataserver.network_mode = {"tcp", "fabric"};
         test_config.receive_to_disk_threshold_mb = 50;
 
     }
@@ -80,7 +81,6 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->performance_db_name, Eq("db_test"));
     ASSERT_THAT(config->database_uri, Eq("localhost:27017"));
     ASSERT_THAT(config->listen_port, Eq(4200));
-    ASSERT_THAT(config->dataserver.listen_port, Eq(4201));
     ASSERT_THAT(config->authorization_interval_ms, Eq(10000));
     ASSERT_THAT(config->authorization_server, Eq("AuthorizationServer/aa"));
     ASSERT_THAT(config->write_to_disk, Eq(true));
@@ -90,10 +90,14 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->use_datacache, Eq(false));
     ASSERT_THAT(config->datacache_reserved_share, Eq(10));
     ASSERT_THAT(config->datacache_size_gb, Eq(2));
+    ASSERT_THAT(config->discovery_server, Eq("discovery"));
     ASSERT_THAT(config->dataserver.nthreads, Eq(5));
     ASSERT_THAT(config->dataserver.tag, Eq("receiver1_ds"));
-    ASSERT_THAT(config->discovery_server, Eq("discovery"));
+    ASSERT_THAT(config->dataserver.listen_port, Eq(4201));
     ASSERT_THAT(config->dataserver.advertise_uri, Eq("0.0.0.1:4201"));
+    ASSERT_THAT(config->dataserver.network_mode.size(), Eq(2));
+    ASSERT_THAT(config->dataserver.network_mode[0], Eq("tcp"));
+    ASSERT_THAT(config->dataserver.network_mode[1], Eq("fabric"));
     ASSERT_THAT(config->receive_to_disk_threshold_mb, Eq(50));
 }
 
@@ -104,7 +108,8 @@ TEST_F(ConfigTests, ErrorReadSettings) {
     std::vector<std::string>fields {"PerformanceDbServer", "ListenPort", "DataServer", "ListenPort", "WriteToDisk",
                                     "WriteToDb", "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
                                     "AuthorizationServer", "AuthorizationInterval", "PerformanceDbName", "LogLevel",
-                                    "NThreads", "DiscoveryServer", "AdvertiseURI", "ReceiveToDiskThresholdMB"};
+                                    "NThreads", "DiscoveryServer", "AdvertiseURI", "NetworkMode",
+                                    "ReceiveToDiskThresholdMB"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfig(test_config, field);
         ASSERT_THAT(err, Ne(nullptr));

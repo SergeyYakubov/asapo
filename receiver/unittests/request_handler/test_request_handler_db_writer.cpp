@@ -94,7 +94,7 @@ class DbWriterHandlerTests : public Test {
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", &mock_db_check_handler});
         config.database_uri = "127.0.0.1:27017";
-        config.dataserver.advertise_uri = expected_host_ip+":"+std::to_string(expected_port);
+        config.dataserver.advertise_uri = expected_host_ip + ":" + std::to_string(expected_port);
         config.dataserver.listen_port = expected_port;
         SetReceiverConfig(config, "none");
 
@@ -254,7 +254,7 @@ TEST_F(DbWriterHandlerTests, SkipIfWasAlreadyProcessed) {
 TEST_F(DbWriterHandlerTests, DuplicatedRequest_SameRecord) {
     ExpectDuplicatedID();
 
-    EXPECT_CALL(*mock_request, SetResponseMessage(HasSubstr("duplicate record"),asapo::ResponseMessageType::kWarning));
+    EXPECT_CALL(*mock_request, SetResponseMessage(HasSubstr("duplicate record"), asapo::ResponseMessageType::kWarning));
     EXPECT_CALL(*mock_request, CheckForDuplicates_t())
     .WillOnce(
         Return(asapo::ReceiverErrorTemplates::kWarningDuplicatedRequest.Generate().release())

@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <rdma/fi_tagged.h>
+#include <iostream>
 #include "fabric_context_impl.h"
 #include "fabric_memory_region_impl.h"
 
@@ -31,8 +32,7 @@ std::string __PRETTY_FUNCTION_TO_NAMESPACE__(const std::string& prettyFunction) 
         }                                                       \
     } while(0) // Enforce ';'
 
-// TODO: It is super important that version 1.10 is installed, but since its not released yet we go with 1.9
-const uint32_t FabricContextImpl::kMinExpectedLibFabricVersion = FI_VERSION(1, 9);
+const uint32_t FabricContextImpl::kMinExpectedLibFabricVersion = FI_VERSION(1, 11);
 
 FabricContextImpl::FabricContextImpl() : io__{ GenerateDefaultIO() }, alive_check_response_task_(this) {
 }
@@ -56,7 +56,7 @@ FabricContextImpl::~FabricContextImpl() {
         fi_close(&fabric_->fid);
 
     if (fabric_info_)
-        fi_freeinfo(fabric_info_);
+        gffm().fi_freeinfo(fabric_info_);
 }
 
 void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t serverListenPort, Error* error) {
@@ -65,9 +65,16 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     // The server must know where the packages are coming from, FI_SOURCE allows this.
     uint64_t additionalFlags = isServer ? FI_SOURCE : 0;
 
-    fi_info* hints = fi_allocinfo();
-    if (networkIpHint == "127.0.0.1") {
+    fi_info* hints = gffm().fi_dupinfo(nullptr);
+
+#ifdef LIBFARBIC_ALLOW_LOCALHOST
+    constexpr bool allowLocalhost = true;
+#else
+    constexpr bool allowLocalhost = false;
+#endif
+    if (networkIpHint == "127.0.0.1" && allowLocalhost) {
         // sockets mode
+        printf("WARN: Using sockets to emulate RDMA, this should only used for tests.\n");
         hints->fabric_attr->prov_name = strdup("sockets");
         hotfix_using_sockets_ = true;
     } else {
@@ -89,7 +96,7 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     hints->domain_attr->mr_mode = FI_MR_ALLOCATED | FI_MR_VIRT_ADDR | FI_MR_PROV_KEY;// | FI_MR_LOCAL;
     hints->addr_format = FI_SOCKADDR_IN;
 
-    int ret = fi_getinfo(
+    int ret = gffm().fi_getinfo(
                   kMinExpectedLibFabricVersion, networkIpHint.c_str(), isServer ? std::to_string(serverListenPort).c_str() : nullptr,
                   additionalFlags, hints, &fabric_info_);
 
@@ -99,7 +106,7 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
         } else {
             *error = ErrorFromFabricInternal("fi_getinfo", ret);
         }
-        fi_freeinfo(hints);
+        gffm().fi_freeinfo(hints);
         return;
     }
     // fprintf(stderr, fi_tostr(fabric_info_, FI_TYPE_INFO)); // Print the found fabric details
@@ -112,9 +119,9 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     // fabric_info_->rx_attr->total_buffered_recv = 0;
     // If something strange is happening with receive requests, we should set this to 0.
 
-    fi_freeinfo(hints);
+    gffm().fi_freeinfo(hints);
 
-    FI_OK(fi_fabric(fabric_info_->fabric_attr, &fabric_, nullptr));
+    FI_OK(gffm().fi_fabric(fabric_info_->fabric_attr, &fabric_, nullptr));
     FI_OK(fi_domain(fabric_, fabric_info_, &domain_, nullptr));
 
     fi_av_attr av_attr{};
@@ -281,16 +288,19 @@ bool FabricContextImpl::TargetIsAliveCheck(FabricAddress address) {
 
 void FabricContextImpl::InternalWait(FabricAddress targetAddress, FabricWaitableTask* task, Error* error) {
 
-    // Check if we simply can wait for our task
-    task->Wait(requestTimeoutMs_, error);
+    // Try to fail fast when no target is set (used by e.g. RecvAny)
+    auto timeoutMs = targetAddress == FI_ASAPO_ADDR_NO_ALIVE_CHECK ? requestFastTimeoutMs_ : requestTimeoutMs_;
 
-    if (*error == FabricErrorTemplates::kTimeout) {
+    // Check if we simply can wait for our task
+    task->Wait(timeoutMs, error);
+
+    if (*error == IOErrorTemplates::kTimeout) {
         if (targetAddress == FI_ASAPO_ADDR_NO_ALIVE_CHECK) {
             CancelTask(task, error);
             // We expect the task to fail with 'Operation canceled'
             if (*error == FabricErrorTemplates::kInternalOperationCanceledError) {
                 // Switch it to a timeout so its more clearly what happened
-                *error = FabricErrorTemplates::kTimeout.Generate();
+                *error = IOErrorTemplates::kTimeout.Generate();
             }
         } else {
             InternalWaitWithAliveCheck(targetAddress, task, error);
@@ -301,9 +311,8 @@ void FabricContextImpl::InternalWait(FabricAddress targetAddress, FabricWaitable
 void FabricContextImpl::InternalWaitWithAliveCheck(FabricAddress targetAddress, FabricWaitableTask* task,
         Error* error) {// Handle advanced alive check
     bool aliveCheckFailed = false;
-    for (uint32_t i = 0; i < maxTimeoutRetires_ && *error == FabricErrorTemplates::kTimeout; i++) {
+    for (uint32_t i = 0; i < maxTimeoutRetires_ && *error == IOErrorTemplates::kTimeout; i++) {
         *error = nullptr;
-        printf("HandleFiCommandAndWait - Tries: %d\n", i);
         if (!TargetIsAliveCheck(targetAddress)) {
             aliveCheckFailed = true;
             break;
@@ -316,12 +325,12 @@ void FabricContextImpl::InternalWaitWithAliveCheck(FabricAddress targetAddress, 
     if (aliveCheckFailed) {
         *error = FabricErrorTemplates::kInternalConnectionError.Generate();
     } else if(*error == FabricErrorTemplates::kInternalOperationCanceledError) {
-        *error = FabricErrorTemplates::kTimeout.Generate();
+        *error = IOErrorTemplates::kTimeout.Generate();
     }
 }
 
 void FabricContextImpl::CancelTask(FabricWaitableTask* task, Error* error) {
     *error = nullptr;
     fi_cancel(&endpoint_->fid, task);
-    task->Wait(0, error); // You can probably expect a kInternalOperationCanceledError
+    task->Wait(taskCancelTimeout_, error); // You can probably expect a kInternalOperationCanceledError
 }

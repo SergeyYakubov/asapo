@@ -14,7 +14,7 @@ RequestPool:: RequestPool(uint8_t n_threads,
 
 }
 
-Error RequestPool::AddRequest(GenericRequestPtr request,bool top_priority) {
+Error RequestPool::AddRequest(GenericRequestPtr request, bool top_priority) {
     std::unique_lock<std::mutex> lock(mutex_);
     if (top_priority) {
         request_queue_.emplace_front(std::move(request));

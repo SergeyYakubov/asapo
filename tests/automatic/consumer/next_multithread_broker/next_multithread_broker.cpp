@@ -53,7 +53,12 @@ Args GetArgs(int argc, char* argv[]) {
 
 void TestAll(const Args& args) {
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", true, asapo::SourceCredentials{args.run_name, "", "", args.token}, &err);
+    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", true, asapo::SourceCredentials{asapo::SourceType::kProcessed,args.run_name, "", "", args.token}, &err);
+    if (err) {
+        std::cout << "Error CreateServerBroker: " << err << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
     auto group_id = broker->GenerateNewGroupId(&err);
     broker->SetTimeout(10000);
     std::vector<asapo::FileInfos>file_infos(args.nthreads);

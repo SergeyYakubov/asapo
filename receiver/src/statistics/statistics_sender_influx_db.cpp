@@ -35,8 +35,6 @@ void StatisticsSenderInfluxDb::SendStatistics(const StatisticsToSend& statistic)
         log__->Error(msg + " - " + response);
         return;
     }
-
-    log__->Debug(msg);
 }
 
 std::string StatisticsSenderInfluxDb::StatisticsToString(const StatisticsToSend& statistic) const noexcept {

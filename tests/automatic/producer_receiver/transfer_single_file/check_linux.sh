@@ -30,7 +30,7 @@ echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detec
 
 nomad run authorizer.nmd
 nomad run nginx.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 
 mkdir -p ${receiver_folder}
@@ -39,6 +39,6 @@ sleep 1
 
 $1 localhost:8400 ${beamtime_id} 100 1 1  0 30
 
-ls -ln ${receiver_folder}/1 | awk '{ print $5 }'| grep 100000
+ls -ln ${receiver_folder}/processed/1 | awk '{ print $5 }'| grep 100000
 
 $1 localhost:8400 wrong_beamtime_id 100 1 1 0 1 2>&1 | tee /dev/stderr | grep "authorization"

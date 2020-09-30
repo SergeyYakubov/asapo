@@ -37,6 +37,9 @@ variable "receiver_dataserver_nthreads" {}
 
 variable "receiver_receive_to_disk_threshold" {}
 
+variable "receiver_network_modes" {}
+
+
 variable "grafana_total_memory_size" {}
 
 variable "influxdb_total_memory_size" {}

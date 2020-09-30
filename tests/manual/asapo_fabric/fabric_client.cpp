@@ -7,15 +7,27 @@ using namespace asapo;
 using namespace asapo::fabric;
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
+    if (argc < 3 || argc > 5) {
         std::cout
-                << "Usage: " << argv[0] << " <serverAddress> <serverPort>" << std::endl
+                << "Usage: " << argv[0] <<
+                " <serverAddress> <serverPort> [kiByte=1024*400/*400MiByte*/ /*MUST BE SYNC WITH SERVER*/] [count=10]" << std::endl
+#ifdef LIBFARBIC_ALLOW_LOCALHOST
                 << "If the address is localhost or 127.0.0.1 the verbs connection will be emulated" << std::endl
+#endif
                 ;
         return 1;
     }
 
     std::string serverAddressString = std::string(argv[1]) + ':' + std::string(argv[2]);
+
+    int kByte = 1024 * 400 /*400 MiByte*/;
+    if (argc >= 4) {
+        kByte = std::stoi(argv[3]);
+    }
+    int count = 10;
+    if (argc >= 5) {
+        count = std::stoi(argv[4]);
+    }
 
     Error error;
     auto factory = GenerateDefaultFabricFactory();
@@ -26,8 +38,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    size_t dataBufferSize = 1024 * 1024 * 400 /*400 MiByte*/;
+    size_t dataBufferSize = 1024 * kByte;
     FileData dataBuffer = FileData{new uint8_t[dataBufferSize]};
+    std::cout << "Expected file size: " << dataBufferSize << " byte" << std::endl;
 
     auto serverAddress = client->AddServerAddress(serverAddressString, &error);
     if (error) {
@@ -46,7 +59,7 @@ int main(int argc, char* argv[]) {
     auto start = std::chrono::high_resolution_clock::now();
 
     std::cout << "Starting message loop" << std::endl;
-    for (FabricMessageId messageId = 0; messageId < 10 && !error; messageId++) {
+    for (FabricMessageId messageId = 0; messageId < count && !error; messageId++) {
         GenericRequestHeader request{};
         memcpy(&request.message, mr->GetDetails(), sizeof(MemoryRegionDetails));
         client->Send(serverAddress, messageId, &request, sizeof(request), &error);

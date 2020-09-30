@@ -6,7 +6,7 @@
 
 namespace asapo {
 
-RdsTcpServer::RdsTcpServer(std::string address) : io__{GenerateDefaultIO()}, log__{GetDefaultReceiverDataServerLogger()},
+RdsTcpServer::RdsTcpServer(std::string address, const AbstractLogger* logger) : io__{GenerateDefaultIO()}, log__{logger},
     address_{std::move(address)} {}
 
 Error RdsTcpServer::Initialize() {
@@ -14,9 +14,9 @@ Error RdsTcpServer::Initialize() {
     if (master_socket_ == kDisconnectedSocketDescriptor) {
         master_socket_ = io__->CreateAndBindIPTCPSocketListener(address_, kMaxPendingConnections, &err);
         if (!err) {
-            log__->Info("data server listening on " + address_);
+            log__->Info("Started TCP ReceiverDataServer at '" + address_ + "'");
         } else {
-            log__->Error("dataserver cannot listen on " + address_ + ": " + err->Explain());
+            log__->Error("TCP ReceiverDataServer cannot listen on " + address_ + ": " + err->Explain());
         }
     } else {
         err = TextError("Server was already initialized");

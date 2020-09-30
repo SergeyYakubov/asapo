@@ -27,7 +27,7 @@ Cleanup() {
 mkdir -p ${receiver_folder}
 
 nomad run authorizer.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 nomad run nginx.nmd
 

@@ -33,15 +33,15 @@ echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detec
 
 nomad run authorizer.nmd
 nomad run nginx.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run discovery.nmd
 
 mkdir -p ${receiver_folder}
 
-$1 localhost:8400 ${beamtime_id} 100 1 1  0 30 3
+$1 localhost:8400 ${beamtime_id} 100 1 1 0 30 3
 
-ls -ln ${receiver_folder}/1_1 | awk '{ print $5 }'| grep 100000
-ls -ln ${receiver_folder}/1_2 | awk '{ print $5 }'| grep 100000
-ls -ln ${receiver_folder}/1_3 | awk '{ print $5 }'| grep 100000
+ls -ln ${receiver_folder}/processed/1_1 | awk '{ print $5 }'| grep 100000
+ls -ln ${receiver_folder}/processed/1_2 | awk '{ print $5 }'| grep 100000
+ls -ln ${receiver_folder}/processed/1_3 | awk '{ print $5 }'| grep 100000
 
 echo 'db.data_default.find({"images._id":{$gt:0}},{"images.name":1})' | mongo asapo_test_detector | grep 1_1 | grep 1_2 | grep 1_3

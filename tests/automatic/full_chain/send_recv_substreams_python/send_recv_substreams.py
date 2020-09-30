@@ -3,10 +3,8 @@ from __future__ import print_function
 import asapo_consumer
 import asapo_producer
 import sys
-import os
-
-
 import threading
+
 lock = threading.Lock()
 
 timeout = 10 * 1000
@@ -28,7 +26,7 @@ def callback(header,err):
 source, beamtime, token = sys.argv[1:]
 
 broker = asapo_consumer.create_server_broker(source,".",True, beamtime,"",token,timeout)
-producer  = asapo_producer.create_producer(source,beamtime,'auto', "", token, 1, 600)
+producer  = asapo_producer.create_producer(source,'processed',beamtime,'auto', "", token, 1, 600)
 producer.set_log_level("debug")
 
 group_id  = broker.generate_group_id()
@@ -56,5 +54,6 @@ while True:
 
 assert_eq(n_recv, n_send, "send=recv")
 assert_eq(substream_finished, True, "substream finished")
+print('Using connection type: ' + broker.current_connection_type())
 
 

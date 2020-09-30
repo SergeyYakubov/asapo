@@ -16,7 +16,7 @@ void ServerThread(FabricServer* server, size_t bufferSize, FileData* buffer) {
         GenericRequestHeader request;
 
         server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &error);
-        if (error == FabricErrorTemplates::kTimeout) {
+        if (error == IOErrorTemplates::kTimeout) {
             error = nullptr;
             continue;
         }
@@ -37,10 +37,13 @@ void ServerThread(FabricServer* server, size_t bufferSize, FileData* buffer) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
+    if (argc < 3 || argc > 4) {
         std::cout
-                << "Usage: " << argv[0] << " <listenAddress> <listenPort>" << std::endl
+                << "Usage: " << argv[0] << " <listenAddress> <listenPort> [kiByte=1024*400/*400MiByte*/ /*MUST BE SYNC WITH CLIENT*/]"
+                << std::endl
+#ifdef LIBFARBIC_ALLOW_LOCALHOST
                 << "If the address is localhost or 127.0.0.1 the verbs connection will be emulated" << std::endl
+#endif
                 ;
         return 1;
     }
@@ -57,11 +60,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    int kByte = 1024 * 400 /*400 MiByte*/;
+    if (argc >= 4) {
+        kByte = std::stoi(argv[3]);
+    }
+
     std::cout << "Server is listening on " << server->GetAddress() << std::endl;
 
-    size_t dataBufferSize = 1024 * 1024 * 400 /*400 MiByte*/;
+    size_t dataBufferSize = 1024 * kByte;
     FileData dataBuffer = FileData{new uint8_t[dataBufferSize]};
     strcpy((char*)dataBuffer.get(), "I (the server) wrote into your buffer.");
+    std::cout << "Expected file size: " << dataBufferSize << " byte" << std::endl;
 
     running = true;
     auto thread = io->NewThread("ServerThread", [&server, &dataBufferSize, &dataBuffer]() {

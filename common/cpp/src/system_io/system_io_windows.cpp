@@ -61,6 +61,7 @@ Error IOErrorFromGetLastError() {
     case WSAECONNREFUSED:
         return IOErrorTemplates::kConnectionRefused.Generate();
     case ERROR_FILE_EXISTS:
+    case ERROR_ALREADY_EXISTS:
         return IOErrorTemplates::kFileAlreadyExists.Generate();
     default:
         std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;

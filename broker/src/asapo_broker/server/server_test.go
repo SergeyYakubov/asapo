@@ -14,12 +14,16 @@ import (
 func setup() *database.MockedDatabase {
 	mock_db := new(database.MockedDatabase)
 	mock_db.On("Connect", mock.AnythingOfType("string")).Return(nil)
+	mock_db.On("SetSettings", mock.Anything).Return()
+
 	return mock_db
 }
 
 func setup_and_init(t *testing.T) *database.MockedDatabase {
 	mock_db := new(database.MockedDatabase)
 	mock_db.On("Connect", mock.AnythingOfType("string")).Return(nil)
+	mock_db.On("SetSettings", mock.Anything).Return()
+
 	InitDB(mock_db)
 	assertExpectations(t, mock_db)
 	return mock_db
@@ -50,6 +54,7 @@ func TestInitDBWithWrongAddress(t *testing.T) {
 
 	for _, test := range initDBTests {
 		mock_db.On("Connect", "0.0.0.0:0000").Return(test.answer)
+		mock_db.On("SetSettings", mock.Anything).Return()
 
 		err := InitDB(mock_db)
 
@@ -75,6 +80,8 @@ func TestInitDBWithAutoAddress(t *testing.T) {
 	discoveryService = discoveryAPI{mock_server.Client(), mock_server.URL}
 
 	mock_db.On("Connect", "0.0.0.0:0000").Return(nil)
+	mock_db.On("SetSettings", mock.Anything).Return()
+
 	err := InitDB(mock_db)
 
 	assert.Equal(t, nil, err, "auto connect ok")
@@ -101,6 +108,7 @@ func TestReconnectDB(t *testing.T) {
 	mock_db.On("Close").Return()
 
 	mock_db.On("Connect", "1.0.0.0:0000").Return(nil)
+	mock_db.On("SetSettings", mock.Anything).Return()
 
 	err := ReconnectDb()
 	assert.Equal(t, nil, err, "auto connect ok")

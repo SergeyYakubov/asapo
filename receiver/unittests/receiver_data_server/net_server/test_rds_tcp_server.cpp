@@ -26,14 +26,16 @@ using ::testing::DoAll;
 
 using asapo::RdsTcpServer;
 using asapo::MockIO;
+using asapo::MockLogger;
 using asapo::Error;
 using asapo::ListSocketDescriptors;
 namespace {
 
 TEST(RdsTCPServer, Constructor) {
-    RdsTcpServer tcp_server("");
+    NiceMock<MockLogger> mock_logger;
+    RdsTcpServer tcp_server("", &mock_logger);
     ASSERT_THAT(dynamic_cast<asapo::IO*>(tcp_server.io__.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(tcp_server.log__), Ne(nullptr));
+    ASSERT_THAT(tcp_server.log__, Eq(&mock_logger));
 
 }
 
@@ -41,7 +43,7 @@ std::string expected_address = "somehost:123";
 
 class RdsTCPServerTests : public Test {
   public:
-    RdsTcpServer tcp_server {expected_address};
+    RdsTcpServer tcp_server {expected_address, &mock_logger};
     NiceMock<MockIO> mock_io;
     NiceMock<asapo::MockLogger> mock_logger;
     asapo::SocketDescriptor expected_master_socket = 1;
@@ -49,7 +51,6 @@ class RdsTCPServerTests : public Test {
     std::vector<std::string> expected_new_connections = {"test1", "test2"};
     void SetUp() override {
         tcp_server.io__ = std::unique_ptr<asapo::IO> {&mock_io};
-        tcp_server.log__ = &mock_logger;
         for (auto conn : expected_client_sockets) {
             std::string connected_uri = std::to_string(conn);
             ON_CALL(mock_io, AddressFromSocket_t(conn)).WillByDefault(Return(connected_uri));

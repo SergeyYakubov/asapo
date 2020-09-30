@@ -4,5 +4,6 @@
   "PerformanceDbName": "db_test",
   "Port":5005,
   "LogLevel":"info",
+  "CheckResendInterval":10,
   "SecretFile":"auth_secret.key"
 }

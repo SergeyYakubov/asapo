@@ -72,10 +72,12 @@ class AuthorizerHandlerTests : public Test {
     std::string expected_authorization_server = "authorizer_host";
     std::string expect_request_string;
     std::string expected_source_credentials;
+    asapo::SourceType expected_source_type = asapo::SourceType::kProcessed;
+    std::string expected_source_type_str = "processed";
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
-        expected_source_credentials = expected_beamtime_id + "%stream%token";
+        expected_source_credentials = "processed%"+expected_beamtime_id + "%stream%token";
         expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
                                 "\",\"OriginHost\":\"" +
                                 expected_producer_uri + "\"}";
@@ -92,7 +94,7 @@ class AuthorizerHandlerTests : public Test {
     }
     void MockAuthRequest(bool error, HttpCode code = HttpCode::OK) {
         if (error) {
-            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", _,expect_request_string, _, _)).
+            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", _, expect_request_string, _, _)).
             WillOnce(
                 DoAll(SetArgPointee<4>(new asapo::SimpleError("http error")),
                       Return("")
@@ -104,7 +106,7 @@ class AuthorizerHandlerTests : public Test {
                                                  HasSubstr(expected_authorization_server))));
 
         } else {
-            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", _,expect_request_string, _, _)).
+            EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", _, expect_request_string, _, _)).
             WillOnce(
                 DoAll(SetArgPointee<4>(nullptr),
                       SetArgPointee<3>(code),
@@ -112,12 +114,14 @@ class AuthorizerHandlerTests : public Test {
                              "\",\"stream\":" + "\"" + expected_stream +
                              "\",\"beamline-path\":" + "\"" + expected_beamline_path +
                              "\",\"core-path\":" + "\"" + expected_core_path +
+                             "\",\"source-type\":" + "\"" + expected_source_type_str +
                              "\",\"beamline\":" + "\"" + expected_beamline + "\"}")
                      ));
             if (code != HttpCode::OK) {
                 EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
                                                      HasSubstr("return code"),
                                                      HasSubstr(std::to_string(int(code))),
+                                                     HasSubstr(expected_source_type_str),
                                                      HasSubstr(expected_beamtime_id),
                                                      HasSubstr(expected_stream),
                                                      HasSubstr(expected_producer_uri),
@@ -126,6 +130,7 @@ class AuthorizerHandlerTests : public Test {
                 EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("authorized"),
                                                      HasSubstr(expected_beamtime_id),
                                                      HasSubstr(expected_beamline),
+                                                     HasSubstr(expected_source_type_str),
                                                      HasSubstr(expected_stream),
                                                      HasSubstr(expected_producer_uri))));
             }
@@ -155,6 +160,7 @@ class AuthorizerHandlerTests : public Test {
             EXPECT_CALL(*mock_request, SetOfflinePath(expected_core_path));
             EXPECT_CALL(*mock_request, SetOnlinePath(expected_beamline_path));
             EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
+            EXPECT_CALL(*mock_request, SetSourceType(expected_source_type));
         }
 
         MockAuthRequest(error, code);
@@ -256,13 +262,13 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeUsesCachedValue) {
     MockFirstAuthorization(false);
     EXPECT_CALL(*mock_request, GetOpCode())
     .WillOnce(Return(asapo::kOpcodeTransferData));
-    EXPECT_CALL(mock_http_client, Post_t(_, _, _,_, _)).Times(0);
+    EXPECT_CALL(mock_http_client, Post_t(_, _, _, _, _)).Times(0);
     EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
     EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
     EXPECT_CALL(*mock_request, SetStream(expected_stream));
     EXPECT_CALL(*mock_request, SetOnlinePath(expected_beamline_path));
     EXPECT_CALL(*mock_request, SetOfflinePath(expected_core_path));
-
+    EXPECT_CALL(*mock_request, SetSourceType(expected_source_type));
     auto err =  handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Eq(nullptr));

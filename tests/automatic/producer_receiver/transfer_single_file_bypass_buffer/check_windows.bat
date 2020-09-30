@@ -15,7 +15,7 @@ mkdir %receiver_folder%
 
 ping 1.0.0.0 -n 1 -w 100 > nul
 
-FOR /F "usebackq" %%A IN ('%receiver_folder%\1') DO set size=%%~zA
+FOR /F "usebackq" %%A IN ('%receiver_folder%\processed\1') DO set size=%%~zA
 if %size% NEQ 60000000 goto :error
 
 echo db.data_default.find({"_id":1}) |  %mongo_exe% %beamtime_id%_detector  > out

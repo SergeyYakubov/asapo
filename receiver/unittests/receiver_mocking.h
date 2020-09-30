@@ -92,14 +92,17 @@ class MockRequest: public Request {
     MOCK_METHOD1(SetOnlinePath, void (std::string));
     MOCK_METHOD1(SetOfflinePath, void (std::string));
 
+    MOCK_METHOD1(SetSourceType, void (SourceType));
+    MOCK_CONST_METHOD0(GetSourceType, SourceType ());
+
     MOCK_CONST_METHOD0(WasAlreadyProcessed, bool());
     MOCK_METHOD0(SetAlreadyProcessedFlag, void());
-    MOCK_METHOD2(SetResponseMessage, void(std::string,ResponseMessageType));
+    MOCK_METHOD2(SetResponseMessage, void(std::string, ResponseMessageType));
     MOCK_CONST_METHOD0(GetResponseMessage, const std::string & ());
     MOCK_CONST_METHOD0(GetResponseMessageType_t, ResponseMessageType ());
 
     const ResponseMessageType GetResponseMessageType() const override {
-      return GetResponseMessageType_t();
+        return GetResponseMessageType_t();
     };
 
     Error CheckForDuplicates()  override {

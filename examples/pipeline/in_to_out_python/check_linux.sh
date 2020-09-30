@@ -35,8 +35,8 @@ Cleanup() {
     nomad stop receiver
     nomad stop authorizer
     echo "db.dropDatabase()" | mongo ${indatabase_name}
-	echo "db.dropDatabase()" | mongo ${outdatabase_name}
-	rm -rf file1 file2 file3
+  	echo "db.dropDatabase()" | mongo ${outdatabase_name}
+  	rm -rf processed
     rm -rf ${receiver_root_folder}
     rm -rf out
 
@@ -45,18 +45,19 @@ Cleanup() {
 nomad run nginx.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
-nomad run receiver.nmd
+nomad run receiver_tcp.nmd
 nomad run authorizer.nmd
 
 mkdir -p $receiver_folder
 
-echo hello1 > file1
-echo hello2 > file2
-echo hello3 > file3
+mkdir processed
+echo hello1 > processed/file1
+echo hello2 > processed/file2
+echo hello3 > processed/file3
 
 for i in `seq 1 3`;
 do
-	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'file$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${indatabase_name}
+	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'processed/file$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${indatabase_name}
 done
 
 sleep 1
@@ -71,6 +72,6 @@ cat out | grep "Sent 3 file(s)"
 
 echo "db.data_default.find({"_id":1})" | mongo ${outdatabase_name} | tee /dev/stderr | grep "file1_${stream_out}"
 
-cat ${receiver_folder}/file1_${stream_out} | grep hello1
-cat ${receiver_folder}/file2_${stream_out} | grep hello2
-cat ${receiver_folder}/file3_${stream_out} | grep hello3
+cat ${receiver_folder}/processed/file1_${stream_out} | grep hello1
+cat ${receiver_folder}/processed/file2_${stream_out} | grep hello2
+cat ${receiver_folder}/processed/file3_${stream_out} | grep hello3

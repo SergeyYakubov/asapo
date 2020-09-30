@@ -44,6 +44,7 @@ data "template_file" "asapo_receivers" {
     receiver_dataserver_cache_size = "${var.receiver_dataserver_cache_size}"
     receiver_receive_to_disk_threshold= "${var.receiver_receive_to_disk_threshold}"
     receiver_dataserver_nthreads = "${var.receiver_dataserver_nthreads}"
+    receiver_network_modes = "${var.receiver_network_modes}"
     asapo_user = "${var.asapo_user}"
     n_receivers = "${var.n_receivers}"
   }

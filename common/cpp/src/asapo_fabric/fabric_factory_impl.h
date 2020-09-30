@@ -1,4 +1,5 @@
 #include <asapo_fabric/asapo_fabric.h>
+#include "fabric_function_map.h"
 
 #ifndef ASAPO_FABRIC_FACTORY_IMPL_H
 #define ASAPO_FABRIC_FACTORY_IMPL_H

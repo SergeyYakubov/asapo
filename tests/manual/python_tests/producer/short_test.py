@@ -2,9 +2,8 @@ from __future__ import print_function
 
 import asapo_producer
 import sys
-import time
-import numpy as np
 import threading
+
 lock = threading.Lock()
 
 
@@ -27,7 +26,7 @@ def assert_err(err):
         print(err)
         sys.exit(1)
 
-producer = asapo_producer.create_producer(endpoint,beamtime,'auto', stream, token, nthreads ,0)
+producer = asapo_producer.create_producer(endpoint,'processed',beamtime,'auto', stream, token, nthreads ,0)
 
 producer.set_log_level("debug")
 

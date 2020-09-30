@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_authorizer/common"
 	log "asapo_common/logger"
 	"asapo_common/utils"
 	"errors"
@@ -14,6 +15,7 @@ type SourceCredentials struct {
 	Beamline   string
 	Stream     string
 	Token      string
+	Type 	   string
 }
 
 type authorizationRequest struct {
@@ -24,10 +26,10 @@ type authorizationRequest struct {
 func getSourceCredentials(request authorizationRequest) (SourceCredentials, error) {
 	vals := strings.Split(request.SourceCredentials, "%")
 
-	if len(vals) != 4 {
+	if len(vals) != 5 {
 		return SourceCredentials{}, errors.New("cannot get source credentials from " + request.SourceCredentials)
 	}
-	creds := SourceCredentials{vals[0], vals[1], vals[2], vals[3]}
+	creds := SourceCredentials{vals[1], vals[2], vals[3], vals[4],vals[0]}
 	if creds.Stream == "" {
 		creds.Stream = "detector"
 	}
@@ -51,20 +53,6 @@ func getSourceCredentials(request authorizationRequest) (SourceCredentials, erro
 func splitHost(hostPort string) string {
 	s := strings.Split(hostPort, ":")
 	return s[0]
-}
-
-func getBeamlineFromIP(ip string) (string, error) {
-	host := splitHost(ip)
-	lines, err := utils.ReadStringsFromFile(settings.IpBeamlineMappingFolder + string(filepath.Separator) + host)
-	if err != nil {
-		return "", err
-	}
-
-	if len(lines) < 1 || len(lines[0]) == 0 {
-		return "", errors.New("file is empty")
-	}
-
-	return lines[0], nil
 }
 
 func beamtimeMetaFromJson(fname string) (beamtimeMeta, error) {
@@ -125,7 +113,6 @@ func findBeamtimeMetaFromBeamline(beamline string) (beamtimeMeta, error) {
 	if err != nil || len(matches) != 1 {
 		return beamtimeMeta{}, err
 	}
-
 	meta, err := beamtimeMetaFromJson(matches[0])
 	if (err != nil) {
 		return beamtimeMeta{}, err
@@ -138,21 +125,23 @@ func alwaysAllowed(creds SourceCredentials) (beamtimeMeta, bool) {
 	for _, pair := range settings.AlwaysAllowedBeamtimes {
 		if pair.BeamtimeId == creds.BeamtimeId {
 			pair.Stream = creds.Stream
+			pair.Type = creds.Type
 			return pair, true
 		}
 	}
 	return beamtimeMeta{}, false
 }
 
-func authorizeByHost(host, beamline string) (error) {
-	active_beamline, err := getBeamlineFromIP(host)
+func authorizeByHost(host_ip, beamline string) (error) {
+	filter := strings.Replace(settings.Ldap.FilterTemplate,"__BEAMLINE__",beamline,1)
+	allowed_ips, err := ldapClient.GetAllowedIpsForBeamline(settings.Ldap.Uri,settings.Ldap.BaseDn, filter)
 	if err != nil {
-		log.Error("cannot find active beamline for " + host + " - " + err.Error())
+		log.Error("cannot get list of allowed hosts from LDAP: " + err.Error())
 		return err
 	}
 
-	if (active_beamline != beamline) {
-		err_string := "beamine for host " + host + " - " + active_beamline + " does not match " + beamline
+	if (!utils.StringInSlice(splitHost(host_ip),allowed_ips)) {
+		err_string := "beamine " +beamline+" not allowed for host " + host_ip
 		log.Error(err_string)
 		return errors.New(err_string)
 	}
@@ -160,7 +149,7 @@ func authorizeByHost(host, beamline string) (error) {
 }
 
 func needHostAuthorization(creds SourceCredentials) bool {
-	return strings.HasPrefix(creds.Stream, "detector") || len(creds.Token) == 0
+	return creds.Type == "raw" || len(creds.Token) == 0
 }
 
 func authorizeByToken(creds SourceCredentials) error {
@@ -200,15 +189,34 @@ func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
 		meta, err = findBeamtimeMetaFromBeamline(creds.Beamline)
 	}
 
+	if creds.Type == "processed" {
+		meta.OnlinePath = ""
+	}
+
 	if (err != nil) {
 		log.Error(err.Error())
 		return beamtimeMeta{}, err
 	}
 
+	meta.Stream = creds.Stream
+	meta.Type = creds.Type
+
 	return meta, nil
 }
 
 func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds SourceCredentials) error {
+
+	if creds.Type=="raw" && meta.OnlinePath=="" {
+		err_string := "beamtime "+meta.BeamtimeId+" is not online"
+		log.Error(err_string)
+		return errors.New(err_string)
+	}
+
+	if creds.Beamline != "auto" && meta.Beamline != creds.Beamline {
+		err_string := "given beamline (" + creds.Beamline + ") does not match the found one (" + meta.Beamline + ")"
+		log.Debug(err_string)
+		return errors.New(err_string)
+	}
 
 	if needHostAuthorization(creds) {
 		if err := authorizeByHost(request.OriginHost, meta.Beamline); err != nil {
@@ -220,11 +228,6 @@ func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds Source
 		}
 	}
 
-	if creds.Beamline != "auto" && meta.Beamline != creds.Beamline {
-		err_string := "given beamline (" + creds.Beamline + ") does not match the found one (" + meta.Beamline + ")"
-		log.Debug(err_string)
-		return errors.New(err_string)
-	}
 	return nil
 }
 
@@ -242,9 +245,7 @@ func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeM
 		return beamtimeMeta{}, err
 	}
 
-	meta.Stream = creds.Stream
-
-	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " + meta.Beamline)
+	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " + meta.Beamline+", type "+meta.Type)
 	return meta, nil
 }
 
@@ -264,6 +265,11 @@ func routeAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	beamtimeInfo, err := authorize(request, creds)
 	if (err != nil) {
+		serr,ok:=err.(*common.ServerError)
+		if ok {
+			utils.WriteServerError(w,err,serr.Code)
+			return
+		}
 		utils.WriteServerError(w,err,http.StatusUnauthorized)
 		return
 	}

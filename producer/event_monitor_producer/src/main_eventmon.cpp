@@ -39,7 +39,7 @@ std::unique_ptr<Producer> CreateProducer() {
 
     Error err;
     auto producer = Producer::Create(config->asapo_endpoint, (uint8_t) config->nthreads,
-                                     config->mode, asapo::SourceCredentials{config->beamtime_id, "", config->stream, ""}, 3600, &err);
+                                     config->mode, asapo::SourceCredentials{asapo::SourceType::kProcessed,config->beamtime_id, "", config->stream, ""}, 3600, &err);
     if(err) {
         std::cerr << "cannot create producer: " << err << std::endl;
         exit(EXIT_FAILURE);

@@ -20,21 +20,22 @@ call start_services.bat
 
 REM producer
 mkdir %receiver_folder%
-mkdir  c:\tmp\asapo\test_in\test1
-mkdir  c:\tmp\asapo\test_in\test2
+mkdir  c:\tmp\asapo\test_in\processed
 start /B "" "%1" test.json
 
 ping 1.0.0.0 -n 3 -w 100 > nul
 
-echo hello1 > c:\tmp\asapo\test_in\test1\file1
-echo hello2 > c:\tmp\asapo\test_in\test1\file2
-echo hello3 > c:\tmp\asapo\test_in\test2\file2
+mkdir  c:\tmp\asapo\test_in\processed\test1
+mkdir  c:\tmp\asapo\test_in\processed\test2
+echo hello1 > c:\tmp\asapo\test_in\processed\test1\file1
+echo hello2 > c:\tmp\asapo\test_in\processed\test1\file2
+echo hello3 > c:\tmp\asapo\test_in\processed\test2\file2
 
 ping 1.0.0.0 -n 10 -w 100 > nul
 
 
 REM consumer
-"%2" %proxy_address%  %receiver_folder% %beamtime_id% 2 %token% 1000 0 > out.txt
+"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 1000 0 > out.txt
 type out.txt
 findstr /i /l /c:"Processed 3 file(s)" out.txt || goto :error
 findstr /i /l /c:"hello1" out.txt || goto :error
@@ -51,8 +52,7 @@ exit /b 1
 :clean
 call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
-rmdir /S /Q c:\tmp\asapo\test_in\test1
-rmdir /S /Q c:\tmp\asapo\test_in\test2
+rmdir /S /Q c:\tmp\asapo\test_in
 Taskkill /IM "%producer_short_name%" /F
 del /f out.txt
 

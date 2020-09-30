@@ -25,6 +25,7 @@ class RequestHandlerAuthorize final: public ReceiverRequestHandler {
     mutable std::string beamline_;
     mutable std::string offline_path_;
     mutable std::string online_path_;
+    mutable SourceType source_type_;
     mutable std::string cached_source_credentials_;
     mutable std::chrono::system_clock::time_point last_updated_;
     Error ProcessAuthorizationRequest(Request* request) const;

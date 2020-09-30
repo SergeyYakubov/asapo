@@ -4,6 +4,7 @@ import asapo_consumer
 import json
 import sys
 
+
 def exit_on_noerr(name):
     print (name)
     sys.exit(1)
@@ -152,6 +153,27 @@ def check_single(broker,group_id):
     nacks = broker.get_unacknowledged_tuple_ids(group_id)
     assert_eq(len(nacks),4,"nacks stream1 size = 4 after ack")
 
+# neg acks
+    broker.reset_lastread_marker(group_id)
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"1","get next neg ack before resend")
+    broker.reset_lastread_marker(group_id)
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"1","get next neg ack with resend")
+
+#resend
+    broker.reset_lastread_marker(group_id)
+    broker.set_resend_nacs(True,0,1)
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"1","get next before resend")
+
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"1","get next with resend")
+
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta,"2","get next after resend")
+
+
 #images
 
     images = broker.query_images("meta.test = 10")
@@ -227,10 +249,11 @@ def check_dataset(broker,group_id):
 
 source, path, beamtime, token, mode = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,path,True, beamtime,"",token,60000)
-broker_fts = asapo_consumer.create_server_broker(source,path,False, beamtime,"",token,60000)
+broker = asapo_consumer.create_server_broker(source, path, True, beamtime, "", token, 60000)
+broker_fts = asapo_consumer.create_server_broker(source, path, False, beamtime, "", token, 60000)
 
 group_id = broker.generate_group_id()
+
 
 group_id_fts = broker_fts.generate_group_id()
 
