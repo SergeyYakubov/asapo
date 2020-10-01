@@ -17,7 +17,7 @@ call start_services.bat
 REM producer
 mkdir %receiver_folder%
 start /B "" "%1" %proxy_address% %beamtime_id% 100 10 4 100 100
-ping 1.0.0.0 -n 1 -w 100 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 
 REM consumer
 "%2" %proxy_address% "_" %beamtime_id% 2 %token% 5000  1 > out.txt

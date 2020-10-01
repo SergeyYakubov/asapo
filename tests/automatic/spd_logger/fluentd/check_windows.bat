@@ -3,7 +3,7 @@ del %folder%\asapo.*.log
 
 "%1"
 
-ping 1.0.0.0 -n 5 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 
 
 findstr /I /L /C:"\"json_test\":\"info\"" %folder%\asapo.*.log || goto :error
