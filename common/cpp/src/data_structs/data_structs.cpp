@@ -39,7 +39,7 @@ Error GetSourceTypeFromString(std::string stype,SourceType *type) {
         *type = SourceType::kProcessed;
         return nullptr;
     } else {
-        return TextError("cannot parse error type: "+stype);
+        return TextError("cannot parse/wrong source type: "+stype);
     }
 }
 
