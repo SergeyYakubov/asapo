@@ -13,7 +13,7 @@ mkdir %receiver_folder%
 
 "%1" localhost:8400 %beamtime_id% 60000 1 1 0 30
 
-ping 1.0.0.0 -n 1 -w 100 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 
 FOR /F "usebackq" %%A IN ('%receiver_folder%\processed\1') DO set size=%%~zA
 if %size% NEQ 60000000 goto :error

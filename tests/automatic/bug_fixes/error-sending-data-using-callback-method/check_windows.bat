@@ -14,7 +14,7 @@ mkdir %receiver_folder%
 
 echo test > file1
 
-ping 1.0.0.0 -n 1 -w 100 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 
 set PYTHONPATH=%2
 

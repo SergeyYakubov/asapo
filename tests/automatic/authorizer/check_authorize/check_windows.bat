@@ -3,7 +3,7 @@ set short_name="%~nx1"
 
 start /B "" "%full_name%" -config settings.json
 
-ping 1.0.0.0 -n 1 -w 100 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 
 mkdir asap3\petra3\gpfs\p00\2019\comissioning\c20180508-000-COM20181
 mkdir beamline\p07\current

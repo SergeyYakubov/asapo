@@ -23,7 +23,7 @@ mkdir %receiver_folder%
 mkdir  c:\tmp\asapo\test_in\processed
 start /B "" "%1" test.json
 
-ping 1.0.0.0 -n 3 -w 100 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 mkdir  c:\tmp\asapo\test_in\processed\test1
 mkdir  c:\tmp\asapo\test_in\processed\test2
 
@@ -31,7 +31,7 @@ echo hello > c:\tmp\asapo\test_in\processed\test1\file1
 echo hello > c:\tmp\asapo\test_in\processed\test1\file2
 echo hello > c:\tmp\asapo\test_in\processed\test2\file2
 
-ping 1.0.0.0 -n 10 -w 100 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 
 
 REM consumer
