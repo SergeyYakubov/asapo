@@ -1,0 +1,2 @@
+cython
+numpy==@NUMPY_VERSION@
