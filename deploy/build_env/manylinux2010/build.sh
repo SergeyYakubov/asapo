@@ -9,7 +9,7 @@ numpy_versions[cp36m]=1.12.1
 numpy_versions[cp37m]=1.14.5
 numpy_versions[cp38]=1.17.3
 
-for python_path in /opt/python/cp{27,35,36,37}*m; do
+for python_path in /opt/python/cp{27,35,36,37,38}*; do
     python_version=$(basename $python_path)
     python_version=${python_version#*-}
     python=$python_path/bin/python
