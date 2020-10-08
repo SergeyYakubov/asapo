@@ -18,7 +18,7 @@ for python_path in /opt/python/cp{27,35,36,37,38}*; do
     echo "building wheel for python_version=$python_version with numpy_version=$numpy_version"
 
     cd /asapo/build
-    cmake -DENABLE_LIBFABRIC=off -DCMAKE_BUILD_TYPE="Release" -DLIBCURL_DIR=/curl -DPython_EXECUTABLE=$python -DNUMPY_VERSION=$numpy_version ..
+    cmake -DENABLE_LIBFABRIC=on -DCMAKE_BUILD_TYPE="Release" -DLIBCURL_DIR=/curl -DPython_EXECUTABLE=$python -DNUMPY_VERSION=$numpy_version ..
     cd consumer \
         && $pip install -r api/python/dev-requirements.txt\
         && make \
