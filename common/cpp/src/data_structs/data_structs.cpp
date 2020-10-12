@@ -44,7 +44,7 @@ Error GetSourceTypeFromString(std::string stype,SourceType *type) {
 }
 
 std::string FileInfo::Json() const {
-    auto nanoseconds_from_epoch = std::chrono::time_point_cast<std::chrono::nanoseconds>(modify_date).
+    auto nanoseconds_from_epoch = std::chrono::time_point_cast<std::chrono::nanoseconds>(timestamp).
                                   time_since_epoch().count();
 
     std::string x = name;
@@ -64,7 +64,7 @@ std::string FileInfo::Json() const {
     std::string s = "{\"_id\":" + std::to_string(id) + ","
                     "\"size\":" + std::to_string(size) + ","
                     "\"name\":\"" + x + "\","
-                    "\"lastchange\":" + std::to_string(nanoseconds_from_epoch) + ","
+                    "\"timestamp\":" + std::to_string(nanoseconds_from_epoch) + ","
                     "\"source\":\"" + source + "\","
                     "\"buf_id\":" + std::to_string(buf_id_int) + ","
                     "\"meta\":" + (metadata.size() == 0 ? std::string("{}") : metadata)
@@ -120,7 +120,7 @@ bool FileInfo::SetFromJson(const std::string& json_string) {
             parser.GetString("source", &source) ||
             parser.GetUInt64("buf_id", &buf_id) ||
             parser.Embedded("meta").GetRawString(&metadata) ||
-            !TimeFromJson(parser, "lastchange", &modify_date)) {
+            !TimeFromJson(parser, "timestamp", &timestamp)) {
         *this = old;
         return false;
     }
@@ -145,7 +145,6 @@ std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec) {
     std::stringstream ssTp;
     auto zz = time_from_epoch_nanosec % 1000000000;
 
-    std::string s;
     char buff[100];
 
     sprintf(buff, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d", timetm.tm_year + 1900, timetm.tm_mon + 1, timetm.tm_mday,
@@ -153,13 +152,20 @@ std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec) {
     if (zz > 0) {
         sprintf(buff + 19, ".%.9ld", zz);
     }
-
-    return buff;
+    std::string res{buff};
+    return res+"Z";
 }
 
 uint64_t NanosecsEpochFromISODate(std::string date_time) {
     double frac = 0;
-    int pos = date_time.find_first_of('.');
+    size_t pos = date_time.find_last_of("Z");
+    if (pos != std::string::npos) {
+        date_time = date_time.substr(0,pos);
+    } else {
+        return 0;
+    }
+
+    pos = date_time.find_first_of('.');
     if (pos != std::string::npos) {
         std::string frac_str = date_time.substr(pos);
         if (sscanf(frac_str.c_str(), "%lf", &frac) != 1) {

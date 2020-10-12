@@ -32,7 +32,7 @@ FileInfo PrepareFileInfo() {
     finfo.name = std::string("folder") + asapo::kPathSeparator + "test";
     finfo.source = "host:1234";
     finfo.buf_id = big_uint;
-    finfo.modify_date = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
+    finfo.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
     finfo.metadata =  "{\"bla\":10}";
     return finfo;
 }
@@ -50,10 +50,10 @@ TEST(FileInFo, CorrectConvertToJson) {
     std::string json = finfo.Json();
     if (asapo::kPathSeparator == '/') {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder/test","lastchange":1000000,"source":"host:1234","buf_id":-1,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder/test","timestamp":1000000,"source":"host:1234","buf_id":-1,"meta":{"bla":10}})"));
     } else {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder\\test","lastchange":1000000,"source":"host:1234","buf_id":-1,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,"meta":{"bla":10}})"));
     }
 }
 
@@ -99,7 +99,7 @@ TEST(FileInFo, CorrectConvertFromJson) {
     ASSERT_THAT(result.id, Eq(finfo.id));
     ASSERT_THAT(result.name, Eq(finfo.name));
     ASSERT_THAT(result.size, Eq(finfo.size));
-    ASSERT_THAT(result.modify_date, Eq(finfo.modify_date));
+    ASSERT_THAT(result.timestamp, Eq(finfo.timestamp));
     ASSERT_THAT(result.buf_id, Eq(finfo.buf_id));
     ASSERT_THAT(result.source, Eq(finfo.source));
     ASSERT_THAT(result.metadata, Eq(finfo.metadata));
@@ -133,13 +133,14 @@ struct TestEpochFromISODate {
 };
 
 auto tests = std::vector<TestEpochFromISODate> {
-    TestEpochFromISODate{"1970-01-01T00:00:00.0", 1}, // 0 reserved for errors
-    TestEpochFromISODate{"1970-01-01", 1},
-    TestEpochFromISODate{"1970-01-01T00:00:00.000000002", 2},
-    TestEpochFromISODate{"2019-07-25T15:38:11.100010002", 1564069091100010002},
+    TestEpochFromISODate{"1970-01-01T00:00:00.0Z", 1}, // 0 reserved for errors
+    TestEpochFromISODate{"1970-01-01Z", 1},
+    TestEpochFromISODate{"1970-01-01T00:00:00.000000002Z", 2},
+    TestEpochFromISODate{"2019-07-25T15:38:11.100010002Z", 1564069091100010002},
 //errors
     TestEpochFromISODate{"1970-13-01T00:00:00.000000002", 0},
     TestEpochFromISODate{"1970-12-01T00:00:00.", 0},
+    TestEpochFromISODate{"1970-01-01T00:00:00.000000002", 0},
 };
 
 TEST(FileInFo, NanosecsEpochFromISODate) {
@@ -150,9 +151,9 @@ TEST(FileInFo, NanosecsEpochFromISODate) {
 }
 
 auto tests2 = std::vector<TestEpochFromISODate> {
-    TestEpochFromISODate{"1970-01-01T00:00:00", 0},
-    TestEpochFromISODate{"1970-01-01T00:00:00.000000002", 2},
-    TestEpochFromISODate{"2019-07-25T15:38:11.100010002", 1564069091100010002},
+    TestEpochFromISODate{"1970-01-01T00:00:00Z", 0},
+    TestEpochFromISODate{"1970-01-01T00:00:00.000000002Z", 2},
+    TestEpochFromISODate{"2019-07-25T15:38:11.100010002Z", 1564069091100010002},
 };
 
 TEST(FileInFo, ISODateFromNanosecsEpoch) {

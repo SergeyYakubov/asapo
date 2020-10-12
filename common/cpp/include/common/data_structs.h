@@ -18,7 +18,7 @@ uint64_t  EpochNanosecsFromNow();
 class FileInfo {
   public:
     std::string name;
-    std::chrono::system_clock::time_point modify_date;
+    std::chrono::system_clock::time_point timestamp;
     uint64_t size{0};
     uint64_t id{0};
     std::string source;
@@ -38,7 +38,7 @@ struct StreamInfo {
 inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
     return  (lhs.name == rhs.name &&
              lhs.id == rhs.id &&
-             lhs.modify_date == rhs.modify_date &&
+             lhs.timestamp == rhs.timestamp &&
              lhs.size == rhs.size);
 }
 

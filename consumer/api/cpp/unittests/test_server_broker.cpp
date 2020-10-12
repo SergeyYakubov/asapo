@@ -162,7 +162,7 @@ class ServerDataBrokerTests : public Test {
         fi.id = 1;
         fi.buf_id = buf_id;
         fi.name = expected_filename;
-        fi.modify_date = std::chrono::system_clock::now();
+        fi.timestamp = std::chrono::system_clock::now();
         return fi;
     }
 };
@@ -481,7 +481,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsFileInfo) {
     ASSERT_THAT(info.name, Eq(to_send.name));
     ASSERT_THAT(info.size, Eq(to_send.size));
     ASSERT_THAT(info.id, Eq(to_send.id));
-    ASSERT_THAT(info.modify_date, Eq(to_send.modify_date));
+    ASSERT_THAT(info.timestamp, Eq(to_send.timestamp));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsParseError) {
