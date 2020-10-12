@@ -129,7 +129,7 @@ bool IsDirectory(const WIN32_FIND_DATA f) {
 FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* err) {
     FileInfo file_info;
 
-    file_info.modify_date = FileTime2TimePoint(f.ftLastWriteTime, err);
+    file_info.timestamp = FileTime2TimePoint(f.ftLastWriteTime, err);
     if (*err) {
         return {};
     }
