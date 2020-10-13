@@ -15,6 +15,7 @@ class JsonStringParser;
 
 std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec);
 uint64_t NanosecsEpochFromISODate(std::string date_time);
+uint64_t NanosecsEpochFromTimePoint(std::chrono::system_clock::time_point);
 uint64_t  EpochNanosecsFromNow();
 bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val);
 

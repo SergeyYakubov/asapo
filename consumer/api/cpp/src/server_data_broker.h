@@ -109,7 +109,7 @@ class ServerDataBroker final : public asapo::DataBroker {
 
     Error RetrieveData(FileInfo* info, FileData* data) override;
 
-    StreamInfos GetSubstreamList(Error* err) override;
+    StreamInfos GetSubstreamList(std::string from, Error* err) override;
     void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) override;
 
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch

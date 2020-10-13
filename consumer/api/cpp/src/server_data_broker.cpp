@@ -651,11 +651,14 @@ StreamInfos ParseSubstreamsFromResponse(std::string response, Error* err) {
     return substreams;
 }
 
-StreamInfos ServerDataBroker::GetSubstreamList(Error* err) {
+StreamInfos ServerDataBroker::GetSubstreamList(std::string from, Error* err) {
 
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/0/substreams";
     ri.post = false;
+    if (!from.empty()) {
+        ri.extra_params="&from=" + from;
+    }
 
     auto response = BrokerRequestWithTimeout(ri, err);
     if (*err) {

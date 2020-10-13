@@ -16,6 +16,7 @@ type TestRecord struct {
 	ID   int               `bson:"_id" json:"_id"`
 	Meta map[string]string `bson:"meta" json:"meta"`
 	Name string            `bson:"name" json:"name"`
+	Timestamp   int64        `bson:"timestamp" json:"timestamp"`
 }
 
 type TestDataset struct {
@@ -36,10 +37,10 @@ const metaID_str = "0"
 
 var empty_next = map[string]string{"next_substream": ""}
 
-var rec1 = TestRecord{1, empty_next, "aaa"}
-var rec_finished = TestRecord{2, map[string]string{"next_substream": "next1"}, finish_substream_keyword}
-var rec2 = TestRecord{2, empty_next, "bbb"}
-var rec3 = TestRecord{3, empty_next, "ccc"}
+var rec1 = TestRecord{1, empty_next, "aaa",0}
+var rec_finished = TestRecord{2, map[string]string{"next_substream": "next1"}, finish_substream_keyword,0}
+var rec2 = TestRecord{2, empty_next, "bbb",1}
+var rec3 = TestRecord{3, empty_next, "ccc",2}
 
 var rec1_expect, _ = json.Marshal(rec1)
 var rec2_expect, _ = json.Marshal(rec2)
@@ -650,24 +651,34 @@ func TestMongoDBGetDatasetID(t *testing.T) {
 
 }
 
+type Substream struct {
+	name    string
+	records []TestRecord
+}
+
 var testsSubstreams = []struct {
-	substreams SubstreamsRecord
+	from string
+	substreams []Substream
+	expectedSubstreams SubstreamsRecord
 	test       string
 	ok         bool
 }{
-	{SubstreamsRecord{[]string{}}, "no substreams", true},
-	{SubstreamsRecord{[]string{"ss1"}}, "one substream", true},
-	{SubstreamsRecord{[]string{"ss1", "ss2"}}, "two substreams", true},
+	{"",[]Substream{},SubstreamsRecord{[]SubstreamInfo{}}, "no substreams", true},
+	{"",[]Substream{{"ss1",[]TestRecord{rec1,rec2}}},SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss1",Timestamp: 0}}}, "one substream", true},
+	{"",[]Substream{{"ss1",[]TestRecord{rec1,rec2}},{"ss2",[]TestRecord{rec2,rec3}}},SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss1",Timestamp: 0},SubstreamInfo{Name: "ss2",Timestamp: 1}}}, "two substreams", true},
+	{"ss2",[]Substream{{"ss1",[]TestRecord{rec1,rec2}},{"ss2",[]TestRecord{rec2,rec3}}},SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss2",Timestamp: 1}}}, "with from", true},
 }
 
 func TestMongoDBListSubstreams(t *testing.T) {
 	for _, test := range testsSubstreams {
 		db.Connect(dbaddress)
-		for _, stream := range test.substreams.Substreams {
-			db.insertRecord(dbname, stream, &rec1)
+		for _, substream := range test.substreams {
+			for _,rec:= range substream.records {
+				db.insertRecord(dbname, substream.name, &rec)
+			}
 		}
-		var rec_substreams_expect, _ = json.Marshal(test.substreams)
-		res, err := db.ProcessRequest(dbname, "0", "0", "substreams", "0")
+		var rec_substreams_expect, _ = json.Marshal(test.expectedSubstreams)
+		res, err := db.ProcessRequest(dbname, "0", "0", "substreams", test.from)
 		if test.ok {
 			assert.Nil(t, err, test.test)
 			assert.Equal(t, string(rec_substreams_expect), string(res), test.test)

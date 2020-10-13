@@ -53,8 +53,14 @@ type LastAck struct {
 	ID int `bson:"_id" json:"lastAckId"`
 }
 
+type SubstreamInfo struct {
+	LastId int  `bson:"lastId" json:"lastId"`
+	Name string `bson:"name" json:"name"`
+	Timestamp int64  `bson:"timestamp" json:"timestamp"`
+}
+
 type SubstreamsRecord struct {
-	Substreams []string `bson:"substreams" json:"substreams"`
+	Substreams []SubstreamInfo `bson:"substreams" json:"substreams"`
 }
 
 type LocationPointer struct {
@@ -258,6 +264,21 @@ func (db *Mongodb) getRecordByIDRow(dbname string, collection_name string, id, i
 	log_str := "got record id " + strconv.Itoa(id) + " for " + dbname
 	logger.Debug(log_str)
 	return utils.MapToJson(&res)
+}
+
+func (db *Mongodb) getEarliestRecord(dbname string, collection_name string) (map[string]interface{}, error) {
+	var res map[string]interface{}
+	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
+	opts := options.FindOne().SetSort(bson.M{"timestemp": 1})
+	var q bson.M = nil
+	err := c.FindOne(context.TODO(), q, opts).Decode(&res)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return map[string]interface{}{}, nil
+		}
+		return nil,err
+	}
+	return res,nil
 }
 
 func (db *Mongodb) getRecordByID(dbname string, collection_name string, group_id string, id_str string, dataset bool) ([]byte, error) {
@@ -627,7 +648,7 @@ func (db *Mongodb) queryImages(dbname string, collection_name string, query stri
 	}
 }
 
-func (db *Mongodb) getSubstreams(db_name string) ([]byte, error) {
+func (db *Mongodb) getSubstreams(db_name string, from string) ([]byte, error) {
 	database := db.client.Database(db_name)
 
 	result, err := database.ListCollectionNames(context.TODO(), bson.D{})
@@ -635,13 +656,44 @@ func (db *Mongodb) getSubstreams(db_name string) ([]byte, error) {
 		return db.processQueryError("get substreams", db_name, err)
 	}
 
-	var rec = SubstreamsRecord{[]string{}}
+	var rec = SubstreamsRecord{[]SubstreamInfo{}}
 	for _, coll := range result {
 		if strings.HasPrefix(coll, data_collection_name_prefix) {
-			rec.Substreams = append(rec.Substreams, strings.TrimPrefix(coll, data_collection_name_prefix))
+			si := SubstreamInfo{Name: strings.TrimPrefix(coll, data_collection_name_prefix)}
+			rec.Substreams = append(rec.Substreams, si)
 		}
 	}
-	sort.Strings(rec.Substreams)
+
+	for i,record := range rec.Substreams {
+		res,err := db.getEarliestRecord(db_name,record.Name)
+		if err==nil {
+			ts,ok := res["timestamp"].(int64)
+			if ok {
+				rec.Substreams[i].Timestamp = ts
+			}
+		}
+		_, dataset:= res["images"]
+		max, err := db.getMaxIndex(db_name, record.Name, dataset)
+		if err!=nil {
+			rec.Substreams[i].LastId = max
+		}
+	}
+
+	sort.Slice(rec.Substreams[:], func(i, j int) bool {
+		return rec.Substreams[i].Timestamp < rec.Substreams[j].Timestamp
+	})
+
+	if from!="" {
+		ind:=len(rec.Substreams)
+		for i,rec:= range rec.Substreams {
+			if rec.Name == from {
+				ind = i
+				break
+			}
+		}
+		rec.Substreams=rec.Substreams[ind:]
+	}
+
 	return json.Marshal(&rec)
 }
 
@@ -796,7 +848,7 @@ func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_
 	case "queryimages":
 		return db.queryImages(db_name, collection_name, extra_param)
 	case "substreams":
-		return db.getSubstreams(db_name)
+		return db.getSubstreams(db_name,extra_param)
 	case "ackimage":
 		return db.ackRecord(db_name, collection_name, group_id, extra_param)
 	case "negackimage":

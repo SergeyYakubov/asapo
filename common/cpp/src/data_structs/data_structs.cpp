@@ -44,9 +44,7 @@ Error GetSourceTypeFromString(std::string stype,SourceType *type) {
 }
 
 std::string FileInfo::Json() const {
-    auto nanoseconds_from_epoch = std::chrono::time_point_cast<std::chrono::nanoseconds>(timestamp).
-                                  time_since_epoch().count();
-
+    auto nanoseconds_from_epoch = NanosecsEpochFromTimePoint(timestamp);
     std::string x = name;
 //todo: change this - use / when sending file from windows
 #ifdef WIN32
@@ -197,8 +195,7 @@ uint64_t NanosecsEpochFromISODate(std::string date_time) {
     tm.tm_year = year - 1900;
 
     system_clock::time_point tp = system_clock::from_time_t (timegm(&tm));
-    uint64_t ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(tp).
-                  time_since_epoch().count();
+    uint64_t ns = NanosecsEpochFromTimePoint(tp);
 
     ns = ns + uint64_t(frac * 1000000000) ;
 
@@ -206,12 +203,15 @@ uint64_t NanosecsEpochFromISODate(std::string date_time) {
 }
 
 uint64_t EpochNanosecsFromNow() {
-    return (uint64_t) std::chrono::duration_cast<std::chrono::nanoseconds>(system_clock::now().time_since_epoch()).count();
+    return NanosecsEpochFromTimePoint(system_clock::now());
+}
+
+uint64_t NanosecsEpochFromTimePoint(std::chrono::system_clock::time_point time_point) {
+    return (uint64_t) std::chrono::time_point_cast<std::chrono::nanoseconds>(time_point).time_since_epoch().count();
 }
 
 std::string StreamInfo::Json() const {
-    auto nanoseconds_from_epoch = std::chrono::time_point_cast<std::chrono::nanoseconds>(timestamp).
-        time_since_epoch().count();
+    auto nanoseconds_from_epoch = NanosecsEpochFromTimePoint(timestamp);
     return "{\"lastId\":" + std::to_string(last_id) + ","
                     "\"name\":\"" + name + "\","
                     "\"timestamp\":" + std::to_string(nanoseconds_from_epoch)

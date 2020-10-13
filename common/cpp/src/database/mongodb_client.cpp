@@ -261,10 +261,9 @@ Error MongoDBClient::InsertAsSubset(const std::string& collection, const FileInf
     }
     auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(subset_id), "}", "{", "images._id", "{", "$ne",
                            BCON_INT64(file.id), "}", "}", "]");
-    auto ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(file.timestamp).time_since_epoch().count();
     auto update = BCON_NEW ("$setOnInsert", "{",
                             "size", BCON_INT64 (subset_size),
-                            "timestamp", BCON_INT64 (ns),
+                            "timestamp", BCON_INT64 ((int64_t)NanosecsEpochFromTimePoint(file.timestamp)),
                             "}",
                             "$addToSet", "{",
                             "images", BCON_DOCUMENT(document.get()), "}");
