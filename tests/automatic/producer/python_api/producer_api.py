@@ -5,6 +5,8 @@ import sys
 import time
 import numpy as np
 import threading
+from datetime import datetime
+
 
 lock = threading.Lock()
 
@@ -123,7 +125,11 @@ n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")
 
 info = producer.stream_info()
-assert_eq(info['lastId'], 10, "last id")
+assert_eq(info['lastId'], 10, "stream_info last id")
+assert_eq(info['name'], "default", "stream_info name")
+assert_eq(info['timestamp']/1000000000<time.time(),True , "stream_info time")
+assert_eq(info['timestamp']/1000000000>time.time()-10,True , "stream_info time")
+print(datetime.utcfromtimestamp(info['timestamp']/1000000000).strftime('%Y-%m-%d %H:%M:%S'))
 
 info = producer.stream_info('stream')
 assert_eq(info['lastId'], 1, "last id from different substream")

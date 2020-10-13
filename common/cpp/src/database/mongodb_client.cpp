@@ -1,7 +1,10 @@
 #include <json_parser/json_parser.h>
 #include "mongodb_client.h"
-#include "mongodb_client.h"
+
+#include <chrono>
+
 #include "database/db_error.h"
+#include "common/data_structs.h"
 
 namespace asapo {
 
@@ -258,8 +261,10 @@ Error MongoDBClient::InsertAsSubset(const std::string& collection, const FileInf
     }
     auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(subset_id), "}", "{", "images._id", "{", "$ne",
                            BCON_INT64(file.id), "}", "}", "]");
+    auto ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(file.timestamp).time_since_epoch().count();
     auto update = BCON_NEW ("$setOnInsert", "{",
                             "size", BCON_INT64 (subset_size),
+                            "timestamp", BCON_INT64 (ns),
                             "}",
                             "$addToSet", "{",
                             "images", BCON_DOCUMENT(document.get()), "}");
@@ -272,14 +277,13 @@ Error MongoDBClient::InsertAsSubset(const std::string& collection, const FileInf
     return err;
 }
 
-Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, bool ignore_id_return_last,
+Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, GetRecordMode mode,
                                      std::string* res) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
 
     UpdateCurrentCollectionIfNeeded(collection);
-
 
     Error err;
     bson_error_t mongo_err;
@@ -289,13 +293,19 @@ Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id,
     const bson_t* doc;
     char* str;
 
-    if (!ignore_id_return_last) {
-        filter = BCON_NEW ("_id", BCON_INT64 (id));
-        opts = BCON_NEW ("limit", BCON_INT64 (1));
-
-    } else {
-        filter = BCON_NEW (NULL);
-        opts = BCON_NEW ("limit", BCON_INT64 (1), "sort", "{", "_id", BCON_INT64 (-1), "}");
+    switch (mode) {
+        case GetRecordMode::kById:
+            filter = BCON_NEW ("_id", BCON_INT64 (id));
+            opts = BCON_NEW ("limit", BCON_INT64 (1));
+            break;
+        case GetRecordMode::kLast:
+            filter = BCON_NEW (NULL);
+            opts = BCON_NEW ("limit", BCON_INT64 (1), "sort", "{", "_id", BCON_INT64 (-1), "}");
+            break;
+        case GetRecordMode::kEarliest:
+            filter = BCON_NEW (NULL);
+            opts = BCON_NEW ("limit", BCON_INT64 (1), "sort", "{", "timestamp", BCON_INT64 (1), "}");
+            break;
     }
 
     cursor = mongoc_collection_find_with_opts (current_collection_, filter, opts, NULL);
@@ -326,7 +336,7 @@ Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id,
 
 Error MongoDBClient::GetById(const std::string& collection, uint64_t id, FileInfo* file) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, id, false, &record_str);
+    auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
     if (err) {
         return err;
     }
@@ -339,7 +349,7 @@ Error MongoDBClient::GetById(const std::string& collection, uint64_t id, FileInf
 
 Error MongoDBClient::GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, set_id, false, &record_str);
+    auto err = GetRecordFromDb(collection, set_id, GetRecordMode::kById, &record_str);
     if (err) {
         return err;
     }
@@ -360,27 +370,41 @@ Error MongoDBClient::GetDataSetById(const std::string& collection, uint64_t set_
 
 }
 
-Error StreamInfoFromDbResponse(std::string record_str, StreamInfo* info) {
-    auto parser = JsonStringParser(std::move(record_str));
-    Error parse_err = parser.GetUInt64("_id", &(info->last_id));
+Error StreamInfoFromDbResponse(const std::string& last_record_str,const std::string& earliest_record_str, StreamInfo* info) {
+    uint64_t id;
+    auto parser1 = JsonStringParser(last_record_str);
+    Error parse_err = parser1.GetUInt64("_id", &id);
     if (parse_err) {
-        info->last_id = 0;
-        return DBErrorTemplates::kJsonParseError.Generate("cannot parse mongodb response: " + parse_err->Explain());
+        return DBErrorTemplates::kJsonParseError.Generate("StreamInfoFromDbResponse: cannot parse mongodb response: " + last_record_str +": " + parse_err->Explain());
     }
+
+    auto parser2 = JsonStringParser(earliest_record_str);
+    std::chrono::system_clock::time_point timestamp;
+    auto ok = TimeFromJson(parser2, "timestamp", &timestamp);
+    if (!ok) {
+        return DBErrorTemplates::kJsonParseError.Generate("StreamInfoFromDbResponse: cannot parse timestamp in response: " + earliest_record_str);
+    }
+
+    info->last_id = id;
+    info->timestamp = timestamp;
     return nullptr;
 }
 
 Error MongoDBClient::GetStreamInfo(const std::string& collection, StreamInfo* info) const {
-    std::string record_str;
-    auto err = GetRecordFromDb(collection, 0, true, &record_str);
+    std::string last_record_str,earliest_record_str;
+    auto err = GetRecordFromDb(collection, 0, GetRecordMode::kLast, &last_record_str);
     if (err) {
-        info->last_id = 0;
         if (err == DBErrorTemplates::kNoRecord) {
             return nullptr;
         }
         return err;
     }
-    return StreamInfoFromDbResponse(std::move(record_str), info);
+    err = GetRecordFromDb(collection, 0, GetRecordMode::kEarliest, &earliest_record_str);
+    if (err) {
+        return err;
+    }
+
+    return StreamInfoFromDbResponse(last_record_str,earliest_record_str, info);
 }
 
 }

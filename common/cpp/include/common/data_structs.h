@@ -11,9 +11,12 @@
 
 namespace asapo {
 
+class JsonStringParser;
+
 std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec);
 uint64_t NanosecsEpochFromISODate(std::string date_time);
 uint64_t  EpochNanosecsFromNow();
+bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val);
 
 class FileInfo {
   public:
@@ -29,11 +32,16 @@ class FileInfo {
     std::string FullName(const std::string& base_path) const;
 };
 
+
 struct StreamInfo {
     uint64_t last_id{0};
+    std::string name;
+    std::chrono::system_clock::time_point timestamp;
     std::string Json() const;
     bool SetFromJson(const std::string& json_string);
 };
+
+using StreamInfos = std::vector<StreamInfo>;
 
 inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
     return  (lhs.name == rhs.name &&

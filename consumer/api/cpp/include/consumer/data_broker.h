@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "common/data_structs.h"
 #include "common/error.h"
@@ -74,7 +75,7 @@ class DataBroker {
     virtual NetworkConnectionType CurrentConnectionType() const = 0;
 
     //! Set list of substreams
-    virtual std::vector<std::string> GetSubstreamList(Error* err) = 0;
+    virtual StreamInfos GetSubstreamList(Error* err) = 0;
 
     //! Get current number of datasets
     /*!

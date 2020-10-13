@@ -72,7 +72,7 @@ std::string FileInfo::Json() const {
     return s;
 }
 
-bool TimeFromJson(const JsonStringParser& parser, const std::string name, std::chrono::system_clock::time_point* val) {
+bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val) {
     uint64_t nanoseconds_from_epoch;
     if (parser.GetUInt64(name, &nanoseconds_from_epoch)) {
         return false;
@@ -210,19 +210,25 @@ uint64_t EpochNanosecsFromNow() {
 }
 
 std::string StreamInfo::Json() const {
-    std::string s = "{\"lastId\":" + std::to_string(last_id) + "}";
-    return s;
+    auto nanoseconds_from_epoch = std::chrono::time_point_cast<std::chrono::nanoseconds>(timestamp).
+        time_since_epoch().count();
+    return "{\"lastId\":" + std::to_string(last_id) + ","
+                    "\"name\":\"" + name + "\","
+                    "\"timestamp\":" + std::to_string(nanoseconds_from_epoch)
+                    + "}";
 }
 
 bool StreamInfo::SetFromJson(const std::string& json_string) {
+    auto old = *this;
     JsonStringParser parser(json_string);
     uint64_t id;
-    if (parser.GetUInt64("lastId", &id)) {
+    if (parser.GetUInt64("lastId", &last_id) ||
+        parser.GetString("name", &name) ||
+        !TimeFromJson(parser, "timestamp", &timestamp)) {
+        *this = old;
         return false;
     }
-    last_id = id;
     return true;
 }
-
 
 }

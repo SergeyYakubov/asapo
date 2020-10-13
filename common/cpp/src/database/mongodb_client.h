@@ -33,6 +33,12 @@ class BsonDestroyFunctor {
 // using _bson_t here to avoid GNU compiler warnings
 using bson_p = std::unique_ptr<_bson_t, BsonDestroyFunctor>;
 
+enum class GetRecordMode {
+  kById,
+  kLast,
+  kEarliest
+};
+
 class MongoDBClient final : public Database {
   public:
     MongoDBClient();
@@ -61,7 +67,7 @@ class MongoDBClient final : public Database {
     Error InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const;
     Error UpdateBsonDocument(uint64_t id, const bson_p& document, bool upsert) const;
     Error AddBsonDocumentToArray(bson_t* query, bson_t* update, bool ignore_duplicates) const;
-    Error GetRecordFromDb(const std::string& collection, uint64_t id, bool ignore_id_return_last, std::string* res) const;
+    Error GetRecordFromDb(const std::string& collection, uint64_t id, GetRecordMode mode, std::string* res) const;
 };
 
 }

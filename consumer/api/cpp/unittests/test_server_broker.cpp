@@ -1027,20 +1027,21 @@ TEST_F(ServerDataBrokerTests, GetDatasetByIdUsesCorrectUri) {
 
 TEST_F(ServerDataBrokerTests, GetSubstreamListUsesCorrectUri) {
     MockGetBrokerUri();
-
+    std::string return_substreams = R"({"substreams":[{"lastId":123,"name":"test","timestamp":1000000},{"lastId":124,"name":"test1","timestamp":2000000}]})";
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/0/substreams"
                                         + "?token=" + expected_token, _,
                                         _)).WillOnce(DoAll(
                                                 SetArgPointee<1>(HttpCode::OK),
                                                 SetArgPointee<2>(nullptr),
-                                                Return("{\"substreams\":[\"s1\",\"s2\"]}")));
+                                                Return(return_substreams)));
 
     asapo::Error err;
     auto substreams = data_broker->GetSubstreamList(&err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(substreams.size(), Eq(2));
-    ASSERT_THAT(substreams, testing::ElementsAre("s1", "s2"));
-
+    ASSERT_THAT(substreams.size(), 2);
+    ASSERT_THAT(substreams[0].Json(), R"({"lastId":123,"name":"test","timestamp":1000000})");
+    ASSERT_THAT(substreams[1].Json(), R"({"lastId":124,"name":"test1","timestamp":2000000})");
 }
 
 void ServerDataBrokerTests::MockBeforeFTS(FileData* data) {

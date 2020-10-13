@@ -630,17 +630,28 @@ DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string group_id, std:
     return GetDatasetFromServer(GetImageServerOperation::GetID, id, std::move(group_id), std::move(substream), err);
 }
 
-std::vector<std::string> ParseSubstreamsFromResponse(std::string response, Error* err) {
+StreamInfos ParseSubstreamsFromResponse(std::string response, Error* err) {
     auto parser = JsonStringParser(std::move(response));
-    std::vector<std::string> substreams;
-    *err = parser.GetArrayString("substreams", &substreams);
+    std::vector<std::string> substreams_endcoded;
+    StreamInfos substreams;
+    Error parse_err;
+    *err = parser.GetArrayRawStrings("substreams", &substreams_endcoded);
     if (*err) {
-        return std::vector<std::string> {};
+        return StreamInfos {};
+    }
+    for (auto substream_encoded : substreams_endcoded) {
+        StreamInfo si;
+        auto ok = si.SetFromJson(substream_encoded);
+        if (!ok) {
+            *err = TextError("cannot parse "+substream_encoded);
+            return StreamInfos {};
+        }
+        substreams.emplace_back(si);
     }
     return substreams;
 }
 
-std::vector<std::string> ServerDataBroker::GetSubstreamList(Error* err) {
+StreamInfos ServerDataBroker::GetSubstreamList(Error* err) {
 
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/0/substreams";
@@ -648,7 +659,7 @@ std::vector<std::string> ServerDataBroker::GetSubstreamList(Error* err) {
 
     auto response = BrokerRequestWithTimeout(ri, err);
     if (*err) {
-        return std::vector<std::string> {};
+        return StreamInfos {};
     }
 
     return ParseSubstreamsFromResponse(std::move(response), err);

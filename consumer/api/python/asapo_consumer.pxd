@@ -44,6 +44,9 @@ cdef extern from "asapo_consumer.h" namespace "asapo":
     string beamtime_id
     string stream
     string user_token
+  cppclass StreamInfo:
+    string Json()
+    bool SetFromJson(string json_str)
 
 cdef extern from "asapo_consumer.h" namespace "asapo":
   cppclass NetworkConnectionType:
@@ -75,7 +78,7 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
         DataSet GetLastDataset(string group_id, string substream, Error* err)
         DataSet GetDatasetById(uint64_t id, string group_id, string substream, Error* err)
         Error RetrieveData(FileInfo* info, FileData* data)
-        vector[string] GetSubstreamList(Error* err)
+        vector[StreamInfo] GetSubstreamList(Error* err)
         void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts)
 
 

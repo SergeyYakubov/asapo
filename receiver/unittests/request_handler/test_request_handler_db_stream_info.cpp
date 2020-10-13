@@ -64,12 +64,13 @@ class DbMetaStreamInfoTests : public Test {
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_stream = "stream";
-    std::string info_str = R"({"lastId":10})";
-    const uint8_t* expected_info_str = reinterpret_cast<const uint8_t*>(info_str.c_str());
+    std::string info_str = R"({"lastId":10,"name":"substream","timestamp":1000000})";
     asapo::StreamInfo expected_stream_info;
     void SetUp() override {
         GenericRequestHeader request_header;
         expected_stream_info.last_id = 10;
+        expected_stream_info.name = expected_substream;
+        expected_stream_info.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
         request_header.data_id = 0;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
@@ -88,12 +89,10 @@ TEST_F(DbMetaStreamInfoTests, CallsUpdate) {
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
-    EXPECT_CALL(*mock_request, GetStream())
-    .WillOnce(ReturnRef(expected_stream))
-    ;
+    EXPECT_CALL(*mock_request, GetStream()).WillOnce(ReturnRef(expected_stream));
 
-    EXPECT_CALL(*mock_request, GetSubstream())
-    .WillOnce(Return(expected_substream))
+    EXPECT_CALL(*mock_request, GetSubstream()).Times(2)
+    .WillRepeatedly(Return(expected_substream))
     ;
 
     EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_stream)).

@@ -167,6 +167,8 @@ TEST(FileInFo, ISODateFromNanosecsEpoch) {
 StreamInfo PrepareStreamInfo() {
     StreamInfo sinfo;
     sinfo.last_id = 123;
+    sinfo.name = "test";
+    sinfo.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
     return sinfo;
 }
 
@@ -174,11 +176,15 @@ StreamInfo PrepareStreamInfo() {
 TEST(StreamInfo, ConvertFromJson) {
     StreamInfo result;
 
-    std::string json = R"({"lastId":123})";
+    auto sinfo = PrepareStreamInfo();
+    std::string json = sinfo.Json();
+
     auto ok = result.SetFromJson(json);
 
     ASSERT_THAT(ok, Eq(true));
-    ASSERT_THAT(result.last_id, Eq(123));
+    ASSERT_THAT(result.last_id, sinfo.last_id);
+    ASSERT_THAT(result.name, sinfo.name);
+    ASSERT_THAT(result.timestamp, sinfo.timestamp);
 }
 
 
@@ -195,7 +201,7 @@ TEST(StreamInfo, ConvertFromJsonErr) {
 TEST(StreamInfo, ConvertToJson) {
     auto sinfo = PrepareStreamInfo();
 
-    std::string expected_json = R"({"lastId":123})";
+    std::string expected_json = R"({"lastId":123,"name":"test","timestamp":1000000})";
     auto json = sinfo.Json();
 
     ASSERT_THAT(expected_json, Eq(json));

@@ -137,9 +137,21 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     auto substreams = broker->GetSubstreamList(&err);
     M_AssertTrue(err == nullptr, "GetSubstreamList no error");
     M_AssertTrue(substreams.size() == 3, "substreams.size");
-    M_AssertTrue(substreams[0] == "default", "substreams.name1");
-    M_AssertTrue(substreams[1] == "stream1", "substreams.name2");
-    M_AssertTrue(substreams[2] == "stream2", "substreams.name3");
+    M_AssertTrue(substreams[0].name == "default", "substreams.name1");
+    M_AssertTrue(substreams[1].name == "stream1", "substreams.name2");
+    M_AssertTrue(substreams[2].name == "stream2", "substreams.name3");
+    std::cout<<substreams[0].Json()<<std::endl;
+    std::cout<<substreams[1].Json()<<std::endl;
+    std::cout<<substreams[2].Json()<<std::endl;
+    M_AssertTrue(substreams[0].last_id == 10, "substreams.lastid");
+    M_AssertTrue(substreams[1].last_id == 10, "substreams.lastid");
+    M_AssertTrue(substreams[2].last_id == 10, "substreams.lastid");
+    M_AssertTrue(substreams[0].timestamp <= std::chrono::system_clock::now(), "substreams.timestamp");
+    M_AssertTrue(substreams[0].timestamp > std::chrono::system_clock::now() - std::chrono::minutes(10), "substreams.timestamp");
+    M_AssertTrue(substreams[1].timestamp <= std::chrono::system_clock::now(), "substreams.timestamp");
+    M_AssertTrue(substreams[1].timestamp > std::chrono::system_clock::now() - std::chrono::minutes(10), "substreams.timestamp");
+    M_AssertTrue(substreams[2].timestamp <= std::chrono::system_clock::now(), "substreams.timestamp");
+    M_AssertTrue(substreams[2].timestamp > std::chrono::system_clock::now() - std::chrono::minutes(10), "substreams.timestamp");
 
 // acknowledges
 
