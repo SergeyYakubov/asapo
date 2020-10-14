@@ -11,7 +11,7 @@
 
 using std::string;
 using std::vector;
-using std::chrono::high_resolution_clock;
+using std::chrono::system_clock;
 
 namespace asapo {
 
@@ -95,11 +95,11 @@ uint64_t GetLinuxNanosecFromWindowsEpoch(ULARGE_INTEGER ull) {
     return (uint64_t)(ull.QuadPart % k100nsInSec) * 100;
 }
 
-std::chrono::high_resolution_clock::time_point FileTime2TimePoint(const FILETIME& ft, Error* err) {
+std::chrono::system_clock::time_point FileTime2TimePoint(const FILETIME& ft, Error* err) {
 
     *err = CheckFileTime(ft);
     if (*err) {
-        return std::chrono::high_resolution_clock::time_point{};
+        return std::chrono::system_clock::time_point{};
     }
 
     // number of seconds
@@ -113,8 +113,8 @@ std::chrono::high_resolution_clock::time_point FileTime2TimePoint(const FILETIME
     std::chrono::nanoseconds d = std::chrono::nanoseconds{nsec} +
                                  std::chrono::seconds{sec};
 
-    auto tp = high_resolution_clock::time_point
-    {std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(d)};
+    auto tp = system_clock::time_point
+    {std::chrono::duration_cast<std::chrono::system_clock::duration>(d)};
 
     *err = nullptr;
     return tp;

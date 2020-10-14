@@ -10,7 +10,7 @@
 #include "request/request_handler.h"
 #include "logger/logger.h"
 
-using std::chrono::high_resolution_clock;
+using std::chrono::system_clock;
 
 namespace asapo {
 

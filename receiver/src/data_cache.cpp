@@ -59,7 +59,7 @@ void* DataCache::GetFreeSlotAndLock(uint64_t size, CacheMeta** meta) {
 
 uint64_t DataCache::GetNextId() {
     counter_++;
-    std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
     uint32_t timeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
     return (uint64_t) timeMillis << 32 | counter_;
 }

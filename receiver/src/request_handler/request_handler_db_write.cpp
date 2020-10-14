@@ -86,7 +86,7 @@ FileInfo RequestHandlerDbWrite::PrepareFileInfo(const Request* request) const {
     file_info.buf_id = request->GetSlotId();
     file_info.source = GetReceiverConfig()->dataserver.advertise_uri;
     file_info.metadata = request->GetMetaData();
-    file_info.timestamp = std::chrono::high_resolution_clock::now();
+    file_info.timestamp = std::chrono::system_clock::now();
     return file_info;
 }
 

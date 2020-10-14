@@ -144,8 +144,8 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     std::cout<<substreams[1].Json(false)<<std::endl;
     std::cout<<substreams[2].Json(false)<<std::endl;
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[0].timestamp) == 0, "substreams0.timestamp");
-    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[1].timestamp) == 1, "substreams1.timestamp");
-    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[2].timestamp) == 2, "substreams2.timestamp");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[1].timestamp) == 1000, "substreams1.timestamp");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[2].timestamp) == 2000, "substreams2.timestamp");
 // acknowledges
 
     auto id = broker->GetLastAcknowledgedTulpeId(group_id, &err);

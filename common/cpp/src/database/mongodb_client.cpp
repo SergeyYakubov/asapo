@@ -378,7 +378,7 @@ Error StreamInfoFromDbResponse(const std::string& last_record_str,const std::str
     }
 
     auto parser2 = JsonStringParser(earliest_record_str);
-    std::chrono::high_resolution_clock::time_point timestamp;
+    std::chrono::system_clock::time_point timestamp;
     auto ok = TimeFromJson(parser2, "timestamp", &timestamp);
     if (!ok) {
         return DBErrorTemplates::kJsonParseError.Generate("StreamInfoFromDbResponse: cannot parse timestamp in response: " + earliest_record_str);

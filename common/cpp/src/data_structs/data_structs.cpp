@@ -10,7 +10,7 @@
 #include "json_parser/json_parser.h"
 #include "preprocessor/definitions.h"
 
-using std::chrono::high_resolution_clock;
+using std::chrono::system_clock;
 
 #ifdef _WIN32
 #define timegm _mkgmtime
@@ -70,13 +70,13 @@ std::string FileInfo::Json() const {
     return s;
 }
 
-std::chrono::high_resolution_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_from_epoch){
+std::chrono::system_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_from_epoch){
     std::chrono::nanoseconds ns = std::chrono::nanoseconds {nanoseconds_from_epoch};
-    return std::chrono::high_resolution_clock::time_point
-        {std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(ns)};
+    return std::chrono::system_clock::time_point
+        {std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)};
 }
 
-bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::high_resolution_clock::time_point* val) {
+bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val) {
     uint64_t nanoseconds_from_epoch;
     if (parser.GetUInt64(name, &nanoseconds_from_epoch)) {
         return false;
@@ -137,10 +137,10 @@ std::string FileInfo::FullName(const std::string& base_path) const  {
 }
 
 uint64_t EpochNanosecsFromNow() {
-    return NanosecsEpochFromTimePoint(high_resolution_clock::now());
+    return NanosecsEpochFromTimePoint(system_clock::now());
 }
 
-uint64_t NanosecsEpochFromTimePoint(std::chrono::high_resolution_clock::time_point time_point) {
+uint64_t NanosecsEpochFromTimePoint(std::chrono::system_clock::time_point time_point) {
     return (uint64_t) std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count();
 }
 
@@ -164,5 +164,67 @@ bool StreamInfo::SetFromJson(const std::string& json_string,bool read_last_id) {
     }
     return true;
 }
+
+std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec) {
+    auto tp = TimePointfromNanosec(time_from_epoch_nanosec);
+    std::time_t time = std::chrono::system_clock::to_time_t(tp);
+    std::tm timetm = *std::gmtime(&time);
+    std::stringstream ssTp;
+    auto zz = time_from_epoch_nanosec % 1000000000;
+
+    std::string s;
+    char buff[100];
+
+    sprintf(buff, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d", timetm.tm_year + 1900, timetm.tm_mon + 1, timetm.tm_mday,
+            timetm.tm_hour, timetm.tm_min, timetm.tm_sec);
+    if (zz > 0) {
+        sprintf(buff + 19, ".%.9ld", zz);
+    }
+
+    return buff;
+}
+
+uint64_t NanosecsEpochFromISODate(std::string date_time) {
+    double frac = 0;
+    int pos = date_time.find_first_of('.');
+    if (pos != std::string::npos) {
+        std::string frac_str = date_time.substr(pos);
+        if (sscanf(frac_str.c_str(), "%lf", &frac) != 1) {
+            return 0;
+        }
+        date_time = date_time.substr(0, pos);
+    }
+
+    std::tm tm{};
+
+    int year, month, day, hour, minute, second;
+    hour = 0;
+    minute = 0;
+    second = 0;
+
+    auto n = sscanf(date_time.c_str(), "%d-%d-%dT%d:%d:%d", &year, &month, &day, &hour, &minute, &second);
+    if (!(year >= 1970 && month >= 1 && month <= 12 && day >= 1 && day <= 31) || (n != 3 && n != 6)) {
+        return 0;
+    }
+    if ((n == 3 && date_time.size() != 10) || (n == 6 && date_time.size() != 19)) {
+        return 0;
+    }
+
+    tm.tm_sec = second;
+    tm.tm_min = minute;
+    tm.tm_hour = hour;
+    tm.tm_mday = day;
+    tm.tm_mon = month - 1;
+    tm.tm_year = year - 1900;
+
+    system_clock::time_point tp = system_clock::from_time_t (timegm(&tm));
+    uint64_t ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(tp).
+        time_since_epoch().count();
+
+    ns = ns + uint64_t(frac * 1000000000) ;
+
+    return ns > 0 ? ns : 1;
+}
+
 
 }

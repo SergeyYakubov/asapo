@@ -13,17 +13,19 @@ namespace asapo {
 
 class JsonStringParser;
 
-uint64_t NanosecsEpochFromTimePoint(std::chrono::high_resolution_clock::time_point);
+uint64_t NanosecsEpochFromTimePoint(std::chrono::system_clock::time_point);
 uint64_t  EpochNanosecsFromNow();
-std::chrono::high_resolution_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_from_epoch);
+std::chrono::system_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_from_epoch);
+std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec);
+uint64_t NanosecsEpochFromISODate(std::string date_time);
 
 
-bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::high_resolution_clock::time_point* val);
+bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val);
 
 class FileInfo {
   public:
     std::string name;
-    std::chrono::high_resolution_clock::time_point timestamp;
+    std::chrono::system_clock::time_point timestamp;
     uint64_t size{0};
     uint64_t id{0};
     std::string source;
@@ -38,7 +40,7 @@ class FileInfo {
 struct StreamInfo {
     uint64_t last_id{0};
     std::string name;
-    std::chrono::high_resolution_clock::time_point timestamp;
+    std::chrono::system_clock::time_point timestamp;
     std::string Json(bool add_last_id) const;
     bool SetFromJson(const std::string& json_string,bool read_last_id);
 };

@@ -32,7 +32,7 @@ FileInfo PrepareFileInfo() {
     finfo.name = std::string("folder") + asapo::kPathSeparator + "test";
     finfo.source = "host:1234";
     finfo.buf_id = big_uint;
-    finfo.timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(1));
+    finfo.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
     finfo.metadata =  "{\"bla\":10}";
     return finfo;
 }
@@ -137,15 +137,15 @@ StreamInfo PrepareStreamInfo() {
     StreamInfo sinfo;
     sinfo.last_id = 123;
     sinfo.name = "test";
-    sinfo.timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(1));
+    sinfo.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
     return sinfo;
 }
 
 
 TEST(FileInFo, TimeFromNanosec) {
-    auto tp = asapo::TimePointfromNanosec(1);
+    auto tp = asapo::TimePointfromNanosec(1000);
     auto res = asapo::NanosecsEpochFromTimePoint(tp);
-    ASSERT_THAT(res, Eq(1));
+    ASSERT_THAT(res, Eq(1000));
 }
 
 
@@ -236,6 +236,35 @@ TEST(SourceCredentials, DefaultSourceTypeInSourceCreds) {
     SourceCredentials sc;
 
     ASSERT_THAT(sc.type, Eq(SourceType::kProcessed));
+}
+auto tests = std::vector<TestEpochFromISODate> {
+    TestEpochFromISODate{"1970-01-01T00:00:00.0", 1}, // 0 reserved for errors
+    TestEpochFromISODate{"1970-01-01", 1},
+    TestEpochFromISODate{"1970-01-01T00:00:00.000000002", 2},
+    TestEpochFromISODate{"2019-07-25T15:38:11.100010002", 1564069091100010002},
+//errors
+    TestEpochFromISODate{"1970-13-01T00:00:00.000000002", 0},
+    TestEpochFromISODate{"1970-12-01T00:00:00.", 0},
+};
+
+TEST(FileInFo, NanosecsEpochFromISODate) {
+    for (auto test : tests) {
+        auto res = asapo::NanosecsEpochFromISODate(test.iso);
+        ASSERT_THAT(res, Eq(test.ns));
+    }
+}
+
+auto tests2 = std::vector<TestEpochFromISODate> {
+    TestEpochFromISODate{"1970-01-01T00:00:00", 0},
+    TestEpochFromISODate{"1970-01-01T00:00:00.000000002", 2},
+    TestEpochFromISODate{"2019-07-25T15:38:11.100010002", 1564069091100010002},
+};
+
+TEST(FileInFo, ISODateFromNanosecsEpoch) {
+    for (auto test : tests2) {
+        auto res = asapo::IsoDateFromEpochNanosecs(test.ns);
+        ASSERT_THAT(res, Eq(test.iso));
+    }
 }
 
 

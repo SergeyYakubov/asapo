@@ -14,7 +14,7 @@
 #include "asapo_producer.h"
 #include "preprocessor/definitions.h"
 
-using std::chrono::high_resolution_clock;
+using std::chrono::system_clock;
 using asapo::Error;
 using BrokerPtr = std::unique_ptr<asapo::DataBroker>;
 using ProducerPtr = std::unique_ptr<asapo::Producer>;
@@ -23,8 +23,8 @@ std::mutex lock_in, lock_out;
 
 int files_sent;
 bool streamout_timer_started;
-high_resolution_clock::time_point streamout_start;
-high_resolution_clock::time_point streamout_finish;
+system_clock::time_point streamout_start;
+system_clock::time_point streamout_finish;
 
 struct Args {
     std::string server;
@@ -46,7 +46,7 @@ void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
     }
     lock_out.lock();
     files_sent++;
-    streamout_finish = max(streamout_finish, high_resolution_clock::now());
+    streamout_finish = max(streamout_finish, system_clock::now());
     lock_out.unlock();
 
 }
@@ -112,7 +112,7 @@ void SendDataDownstreamThePipeline(const Args& args, const asapo::FileInfo& fi, 
     lock_out.lock();
     if (!streamout_timer_started) {
         streamout_timer_started = true;
-        streamout_start = high_resolution_clock::now();
+        streamout_start = system_clock::now();
     }
     lock_out.unlock();
 
@@ -168,7 +168,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
 
 int ProcessAllData(const Args& args, const ProducerPtr& producer, uint64_t* duration_ms, int* nerrors) {
     asapo::FileInfo fi;
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    system_clock::time_point t1 = system_clock::now();
 
     std::vector<int> nfiles(args.nthreads, 0);
     std::vector<int> errors(args.nthreads, 0);
@@ -179,7 +179,7 @@ int ProcessAllData(const Args& args, const ProducerPtr& producer, uint64_t* dura
     int n_total = std::accumulate(nfiles.begin(), nfiles.end(), 0);
     *nerrors = std::accumulate(errors.begin(), errors.end(), 0);
 
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    system_clock::time_point t2 = system_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
     *duration_ms = duration_read.count();
     return n_total;

@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     fi.size = 100;
     fi.name = "relpath/1";
     fi.id = args.file_id;
-    fi.timestamp = std::chrono::high_resolution_clock::now();
+    fi.timestamp = std::chrono::system_clock::now();
     fi.buf_id = 18446744073709551615ull;
     fi.source = "host:1234";
 

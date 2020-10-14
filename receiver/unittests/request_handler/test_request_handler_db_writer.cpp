@@ -121,7 +121,7 @@ MATCHER_P(CompareFileInfo, file, "") {
     if (arg.id != file.id) return false;
     if (arg.metadata != file.metadata) return false;
 
-    if (arg.timestamp<std::chrono::high_resolution_clock::now()-std::chrono::seconds (5)) {
+    if (arg.timestamp<std::chrono::system_clock::now()-std::chrono::seconds (5)) {
         return false;
     }
 

@@ -162,7 +162,7 @@ class ServerDataBrokerTests : public Test {
         fi.id = 1;
         fi.buf_id = buf_id;
         fi.name = expected_filename;
-        fi.timestamp = std::chrono::high_resolution_clock::now();
+        fi.timestamp = std::chrono::system_clock::now();
         return fi;
     }
 };
