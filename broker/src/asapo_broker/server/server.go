@@ -10,6 +10,7 @@ import (
 )
 
 const  kDefaultresendInterval = 10
+const  kDefaultSubstreamCacheUpdateIntervalMs = 100
 
 var db database.Agent
 
@@ -23,6 +24,7 @@ type serverSettings struct {
 	LogLevel            string
 	discoveredDbAddress string
 	CheckResendInterval *int
+	SubstreamCacheUpdateIntervalMs *int
 }
 
 func (s *serverSettings) GetResendInterval() int {
@@ -30,6 +32,13 @@ func (s *serverSettings) GetResendInterval() int {
 		return kDefaultresendInterval
 	}
 	return *s.CheckResendInterval
+}
+
+func (s *serverSettings) GetSubstreamCacheUpdateInterval() int {
+	if s.SubstreamCacheUpdateIntervalMs==nil {
+		return kDefaultSubstreamCacheUpdateIntervalMs
+	}
+	return *s.SubstreamCacheUpdateIntervalMs
 }
 
 func (s *serverSettings) GetDatabaseServer() string {
@@ -82,7 +91,7 @@ func InitDB(dbAgent database.Agent) (err error) {
 		log.Debug("Got mongodb server: " + settings.discoveredDbAddress)
 	}
 
-	db.SetSettings(database.DBSettings{ReadFromInprocessPeriod: settings.GetResendInterval()})
+	db.SetSettings(database.DBSettings{ReadFromInprocessPeriod: settings.GetResendInterval(),UpdateSubstreamCachePeriodMs: settings.GetSubstreamCacheUpdateInterval()})
 
 	return db.Connect(settings.GetDatabaseServer())
 }

@@ -216,7 +216,7 @@ cdef class PyProducer:
             info = self.c_producer.get().GetStreamInfo(b_substream,timeout_ms,&err)
         if err:
             throw_exception(err)
-        return json.loads(_str(info.Json()))
+        return json.loads(_str(info.Json(True)))
 
     def send_file(self, uint64_t id, local_path, exposed_path, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
         """

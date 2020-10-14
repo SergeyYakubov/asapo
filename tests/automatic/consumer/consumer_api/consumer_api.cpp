@@ -134,21 +134,18 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(err == nullptr, "GetNext stream2 no error");
     M_AssertTrue(fi.name == "21", "GetNext stream2 filename");
 
-    auto substreams = broker->GetSubstreamList(&err);
+    auto substreams = broker->GetSubstreamList("",&err);
     M_AssertTrue(err == nullptr, "GetSubstreamList no error");
     M_AssertTrue(substreams.size() == 3, "substreams.size");
     M_AssertTrue(substreams[0].name == "default", "substreams0.name1");
     M_AssertTrue(substreams[1].name == "stream1", "substreams1.name2");
     M_AssertTrue(substreams[2].name == "stream2", "substreams2.name3");
-    std::cout<<substreams[0].Json()<<std::endl;
-    std::cout<<substreams[1].Json()<<std::endl;
-    std::cout<<substreams[2].Json()<<std::endl;
-    M_AssertTrue(substreams[0].last_id == 10, "substreams0.lastid");
-    M_AssertTrue(substreams[1].last_id == 10, "substreams1.lastid");
-    M_AssertTrue(substreams[2].last_id == 10, "substreams2.lastid");
-    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[0].timestamp) == 1, "substreams0.timestamp");
+    std::cout<<substreams[0].Json(false)<<std::endl;
+    std::cout<<substreams[1].Json(false)<<std::endl;
+    std::cout<<substreams[2].Json(false)<<std::endl;
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[0].timestamp) == 0, "substreams0.timestamp");
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[1].timestamp) == 1, "substreams1.timestamp");
-    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[2].timestamp) == 1, "substreams2.timestamp");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[2].timestamp) == 2, "substreams2.timestamp");
 // acknowledges
 
     auto id = broker->GetLastAcknowledgedTulpeId(group_id, &err);

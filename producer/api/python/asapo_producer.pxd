@@ -28,8 +28,8 @@ cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass FileData:
     unique_ptr[uint8_t[]] release()
   cppclass StreamInfo:
-    string Json()
-    bool SetFromJson(string json_str)
+    string Json(bool add_last_id)
+    bool SetFromJson(string json_str, bool read_last_id)
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass RequestHandlerType:

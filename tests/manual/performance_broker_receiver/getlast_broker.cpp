@@ -10,7 +10,7 @@
 
 #include "asapo_consumer.h"
 
-using std::chrono::system_clock;
+using std::chrono::high_resolution_clock;
 using asapo::Error;
 
 std::string group_id = "";
@@ -77,8 +77,8 @@ std::vector<std::thread> StartThreads(const Args& params,
 
         lock.unlock();
 
-        auto start = system_clock::now();
-        while (std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count() <
+        auto start = high_resolution_clock::now();
+        while (std::chrono::duration_cast<std::chrono::milliseconds>(high_resolution_clock::now() - start).count() <
                 params.timeout_ms) {
             if (params.datasets) {
                 auto dataset = broker->GetLastDataset(group_id, &err);
@@ -118,7 +118,7 @@ std::vector<std::thread> StartThreads(const Args& params,
 int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nbuf, int* nfiles_total,
                 asapo::NetworkConnectionType* connection_type) {
     asapo::FileInfo fi;
-    system_clock::time_point t1 = system_clock::now();
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     std::vector<int> nfiles(params.nthreads, 0);
     std::vector<int> errors(params.nthreads, 0);
@@ -134,7 +134,7 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nb
     *nbuf = std::accumulate(nfiles_frombuf.begin(), nfiles_frombuf.end(), 0);
     *nfiles_total = std::accumulate(nfiles_total_in_datasets.begin(), nfiles_total_in_datasets.end(), 0);
 
-    system_clock::time_point t2 = system_clock::now();
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
     *duration_ms = duration_read.count();
 

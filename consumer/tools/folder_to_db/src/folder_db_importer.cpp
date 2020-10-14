@@ -9,7 +9,7 @@
 
 namespace asapo {
 
-using std::chrono::system_clock;
+using std::chrono::high_resolution_clock;
 
 FolderToDbImporter::FolderToDbImporter() :
     io__{GenerateDefaultIO()}, db_factory__{new asapo::DatabaseFactory} {
@@ -111,7 +111,7 @@ Error FolderToDbImporter::Convert(const std::string& uri, const std::string& fol
                                   FolderImportStatistics* statistics) const {
     db_uri_ = uri;
     db_name_ = db_name;
-    auto time_begin = system_clock::now();
+    auto time_begin = high_resolution_clock::now();
 
     Error err;
     auto file_list = GetFilesInFolder(folder, &err);
@@ -119,11 +119,11 @@ Error FolderToDbImporter::Convert(const std::string& uri, const std::string& fol
         return err;
     }
 
-    auto time_end_read_folder = system_clock::now();
+    auto time_end_read_folder = high_resolution_clock::now();
 
     err = ImportFilelist(file_list);
 
-    auto time_end_import = system_clock::now();
+    auto time_end_import = high_resolution_clock::now();
 
     if (err == nullptr && statistics) {
         statistics->n_files_converted = file_list.size();

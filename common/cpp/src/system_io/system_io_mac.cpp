@@ -17,7 +17,7 @@
 
 using std::string;
 using std::vector;
-using std::chrono::system_clock;
+using std::chrono::high_resolution_clock;
 
 namespace asapo {
 ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_socket,

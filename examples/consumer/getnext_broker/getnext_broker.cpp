@@ -11,7 +11,7 @@
 
 #include "asapo_consumer.h"
 
-using std::chrono::system_clock;
+using std::chrono::high_resolution_clock;
 using asapo::Error;
 
 std::string group_id = "";

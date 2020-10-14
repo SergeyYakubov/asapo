@@ -32,7 +32,7 @@ FileInfo PrepareFileInfo() {
     finfo.name = std::string("folder") + asapo::kPathSeparator + "test";
     finfo.source = "host:1234";
     finfo.buf_id = big_uint;
-    finfo.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
+    finfo.timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(1));
     finfo.metadata =  "{\"bla\":10}";
     return finfo;
 }
@@ -132,44 +132,20 @@ struct TestEpochFromISODate {
     uint64_t ns;
 };
 
-auto tests = std::vector<TestEpochFromISODate> {
-    TestEpochFromISODate{"1970-01-01T00:00:00.0Z", 1}, // 0 reserved for errors
-    TestEpochFromISODate{"1970-01-01Z", 1},
-    TestEpochFromISODate{"1970-01-01T00:00:00.000000002Z", 2},
-    TestEpochFromISODate{"2019-07-25T15:38:11.100010002Z", 1564069091100010002},
-//errors
-    TestEpochFromISODate{"1970-13-01T00:00:00.000000002", 0},
-    TestEpochFromISODate{"1970-12-01T00:00:00.", 0},
-    TestEpochFromISODate{"1970-01-01T00:00:00.000000002", 0},
-};
-
-TEST(FileInFo, NanosecsEpochFromISODate) {
-    for (auto test : tests) {
-        auto res = asapo::NanosecsEpochFromISODate(test.iso);
-        ASSERT_THAT(res, Eq(test.ns));
-    }
-}
-
-auto tests2 = std::vector<TestEpochFromISODate> {
-    TestEpochFromISODate{"1970-01-01T00:00:00Z", 0},
-    TestEpochFromISODate{"1970-01-01T00:00:00.000000002Z", 2},
-    TestEpochFromISODate{"2019-07-25T15:38:11.100010002Z", 1564069091100010002},
-};
-
-TEST(FileInFo, ISODateFromNanosecsEpoch) {
-    for (auto test : tests2) {
-        auto res = asapo::IsoDateFromEpochNanosecs(test.ns);
-        ASSERT_THAT(res, Eq(test.iso));
-    }
-}
-
 
 StreamInfo PrepareStreamInfo() {
     StreamInfo sinfo;
     sinfo.last_id = 123;
     sinfo.name = "test";
-    sinfo.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
+    sinfo.timestamp = std::chrono::time_point<std::chrono::high_resolution_clock>(std::chrono::milliseconds(1));
     return sinfo;
+}
+
+
+TEST(FileInFo, TimeFromNanosec) {
+    auto tp = asapo::TimePointfromNanosec(1);
+    auto res = asapo::NanosecsEpochFromTimePoint(tp);
+    ASSERT_THAT(res, Eq(1));
 }
 
 
@@ -177,12 +153,25 @@ TEST(StreamInfo, ConvertFromJson) {
     StreamInfo result;
 
     auto sinfo = PrepareStreamInfo();
-    std::string json = sinfo.Json();
+    std::string json = sinfo.Json(true);
 
-    auto ok = result.SetFromJson(json);
+    auto ok = result.SetFromJson(json,true);
 
     ASSERT_THAT(ok, Eq(true));
     ASSERT_THAT(result.last_id, sinfo.last_id);
+    ASSERT_THAT(result.name, sinfo.name);
+    ASSERT_THAT(result.timestamp, sinfo.timestamp);
+}
+
+TEST(StreamInfo, ConvertFromJsonWithoutID) {
+    StreamInfo result;
+
+    auto sinfo = PrepareStreamInfo();
+    std::string json = sinfo.Json(false);
+
+    auto ok = result.SetFromJson(json,false);
+
+    ASSERT_THAT(ok, Eq(true));
     ASSERT_THAT(result.name, sinfo.name);
     ASSERT_THAT(result.timestamp, sinfo.timestamp);
 }
@@ -192,7 +181,7 @@ TEST(StreamInfo, ConvertFromJsonErr) {
     StreamInfo result;
 
     std::string json = R"({"lastId":123)";
-    auto ok = result.SetFromJson(json);
+    auto ok = result.SetFromJson(json,true);
 
     ASSERT_THAT(ok, Eq(false));
     ASSERT_THAT(result.last_id, Eq(0));
@@ -202,7 +191,16 @@ TEST(StreamInfo, ConvertToJson) {
     auto sinfo = PrepareStreamInfo();
 
     std::string expected_json = R"({"lastId":123,"name":"test","timestamp":1000000})";
-    auto json = sinfo.Json();
+    auto json = sinfo.Json(true);
+
+    ASSERT_THAT(expected_json, Eq(json));
+}
+
+TEST(StreamInfo, ConvertToJsonWithoutID) {
+    auto sinfo = PrepareStreamInfo();
+
+    std::string expected_json = R"({"name":"test","timestamp":1000000})";
+    auto json = sinfo.Json(false);
 
     ASSERT_THAT(expected_json, Eq(json));
 }

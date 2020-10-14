@@ -4,7 +4,7 @@
 #include <thread>
 
 
-using std::chrono::system_clock;
+using std::chrono::high_resolution_clock;
 
 
 struct Args {

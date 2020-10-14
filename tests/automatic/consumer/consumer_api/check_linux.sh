@@ -28,7 +28,7 @@ sleep 1
 
 for i in `seq 1 10`;
 do
-	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'$i'","timestamp":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
+	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'$i'","timestamp":0,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
 for i in `seq 1 5`;
@@ -38,14 +38,14 @@ done
 
 for i in `seq 1 5`;
 do
-	echo 'db.data_stream2.insert({"_id":'$i',"size":6,"name":"'2$i'","timestamp":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
+	echo 'db.data_stream2.insert({"_id":'$i',"size":6,"name":"'2$i'","timestamp":2,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
 
 echo hello1 > 1
 
-
 $@ 127.0.0.1:8400 $beamtime_id $token_test_run single
+
 
 #check datasets
 echo "db.dropDatabase()" | mongo ${database_name}

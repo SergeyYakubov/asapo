@@ -12,7 +12,7 @@
 #include "request/request_handler.h"
 #include "producer_request.h"
 
-using std::chrono::system_clock;
+using std::chrono::high_resolution_clock;
 
 namespace asapo {
 
@@ -49,7 +49,7 @@ class RequestHandlerTcp: public RequestHandler {
     bool CanCreateNewConnections();
     bool ProcessErrorFromReceiver(const Error& error, const ProducerRequest* request, const std::string& receiver_uri);
     ReceiversList receivers_list_;
-    system_clock::time_point last_receivers_uri_update_;
+    high_resolution_clock::time_point last_receivers_uri_update_;
     void ProcessRequestCallback(Error err, ProducerRequest* request, std::string response, bool* retry);
     uint64_t thread_id_;
     uint64_t* ncurrent_connections_;

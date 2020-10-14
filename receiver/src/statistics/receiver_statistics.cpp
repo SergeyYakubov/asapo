@@ -2,7 +2,7 @@
 
 namespace asapo {
 
-using std::chrono::system_clock;
+using std::chrono::high_resolution_clock;
 
 
 
@@ -31,13 +31,13 @@ void ReceiverStatistics::ResetStatistics() noexcept {
 
 void ReceiverStatistics::StartTimer(const StatisticEntity& entity) noexcept {
     current_statistic_entity_ = entity;
-    current_timer_last_timepoint_ = system_clock::now();
+    current_timer_last_timepoint_ = high_resolution_clock::now();
 }
 
 
 void ReceiverStatistics::StopTimer() noexcept {
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>
-                   (system_clock::now() - current_timer_last_timepoint_);
+                   (high_resolution_clock::now() - current_timer_last_timepoint_);
     time_counters_[current_statistic_entity_] += elapsed;
 }
 

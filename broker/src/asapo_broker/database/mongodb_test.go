@@ -664,8 +664,8 @@ var testsSubstreams = []struct {
 	ok         bool
 }{
 	{"",[]Substream{},SubstreamsRecord{[]SubstreamInfo{}}, "no substreams", true},
-	{"",[]Substream{{"ss1",[]TestRecord{rec1,rec2}}},SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss1",Timestamp: 0}}}, "one substream", true},
-	{"",[]Substream{{"ss1",[]TestRecord{rec1,rec2}},{"ss2",[]TestRecord{rec2,rec3}}},SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss1",Timestamp: 0},SubstreamInfo{Name: "ss2",Timestamp: 1}}}, "two substreams", true},
+	{"",[]Substream{{"ss1",[]TestRecord{rec2,rec1}}},SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss1",Timestamp: 0}}}, "one substream", true},
+	{"",[]Substream{{"ss1",[]TestRecord{rec2,rec1}},{"ss2",[]TestRecord{rec2,rec3}}},SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss1",Timestamp: 0},SubstreamInfo{Name: "ss2",Timestamp: 1}}}, "two substreams", true},
 	{"ss2",[]Substream{{"ss1",[]TestRecord{rec1,rec2}},{"ss2",[]TestRecord{rec2,rec3}}},SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss2",Timestamp: 1}}}, "with from", true},
 }
 
@@ -687,7 +687,6 @@ func TestMongoDBListSubstreams(t *testing.T) {
 		}
 		cleanup()
 	}
-
 }
 
 func TestMongoDBAckImage(t *testing.T) {

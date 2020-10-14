@@ -35,19 +35,19 @@ echo -n hello1 > $source_path/1_1
 
 for i in `seq 1 5`;
 do
-	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'$i'","timestamp":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
+	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'$i'","timestamp":0,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
 echo 'db.data_streamfts.insert({"_id":'1',"size":0,"name":"'1'","timestamp":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
 
 for i in `seq 1 5`;
 do
-	echo 'db.data_stream1.insert({"_id":'$i',"size":6,"name":"'1$i'","timestamp":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
+	echo 'db.data_stream1.insert({"_id":'$i',"size":6,"name":"'1$i'","timestamp":2,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
 for i in `seq 1 5`;
 do
-	echo 'db.data_stream2.insert({"_id":'$i',"size":6,"name":"'2$i'","timestamp":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
+	echo 'db.data_stream2.insert({"_id":'$i',"size":6,"name":"'2$i'","timestamp":3,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
 sleep 1

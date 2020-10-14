@@ -10,7 +10,7 @@
 #include "asapo_producer.h"
 #include "preprocessor/definitions.h"
 
-using std::chrono::system_clock;
+using std::chrono::high_resolution_clock;
 
 std::mutex mutex;
 int iterations_remained;
@@ -199,8 +199,8 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     return producer;
 }
 
-void PrintOutput(const Args& args, const system_clock::time_point& start) {
-    system_clock::time_point t2 = system_clock::now();
+void PrintOutput(const Args& args, const high_resolution_clock::time_point& start) {
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
     double duration_sec = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - start ).count() / 1000.0;
     double size_gb = double(args.number_of_bytes) * args.iterations / 1000.0 / 1000.0 / 1000.0 * 8.0;
     double rate = args.iterations / duration_sec;
@@ -221,7 +221,7 @@ int main (int argc, char* argv[]) {
         iterations_remained = args.iterations * args.images_in_set;
     }
 
-    system_clock::time_point start_time = system_clock::now();
+    high_resolution_clock::time_point start_time = high_resolution_clock::now();
 
     if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.images_in_set, args.stream,
                       (args.mode %100) / 10 == 0,args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw)) {

@@ -12,7 +12,7 @@
 #include "fabric_consumer_client.h"
 #include "rds_response_error.h"
 
-using std::chrono::system_clock;
+using std::chrono::high_resolution_clock;
 
 namespace asapo {
 
@@ -214,7 +214,7 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
     uint64_t elapsed_ms = 0;
     Error no_data_error;
     while (true) {
-        auto start = system_clock::now();
+        auto start = high_resolution_clock::now();
         auto err = DiscoverService(kBrokerServiceName, &current_broker_uri_);
         if (err == nullptr) {
             auto ri = PrepareRequestInfo(request_api + request_suffix, dataset);
@@ -247,7 +247,7 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
             return no_data_error ? std::move(no_data_error) : std::move(err);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
+        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(high_resolution_clock::now() - start).count();
     }
     return nullptr;
 }
@@ -413,7 +413,7 @@ Error ServerDataBroker::ServiceRequestWithTimeout(const std::string& service_nam
     uint64_t elapsed_ms = 0;
     Error err;
     while (elapsed_ms <= timeout_ms_) {
-        auto start = system_clock::now();
+        auto start = high_resolution_clock::now();
         err = DiscoverService(service_name, service_uri);
         if (err == nullptr) {
             request.host = *service_uri;
@@ -423,7 +423,7 @@ Error ServerDataBroker::ServiceRequestWithTimeout(const std::string& service_nam
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
+        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(high_resolution_clock::now() - start).count();
     }
     return err;
 }
@@ -641,7 +641,7 @@ StreamInfos ParseSubstreamsFromResponse(std::string response, Error* err) {
     }
     for (auto substream_encoded : substreams_endcoded) {
         StreamInfo si;
-        auto ok = si.SetFromJson(substream_encoded);
+        auto ok = si.SetFromJson(substream_encoded,false);
         if (!ok) {
             *err = TextError("cannot parse "+substream_encoded);
             return StreamInfos {};

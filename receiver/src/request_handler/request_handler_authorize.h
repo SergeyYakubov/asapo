@@ -27,7 +27,7 @@ class RequestHandlerAuthorize final: public ReceiverRequestHandler {
     mutable std::string online_path_;
     mutable SourceType source_type_;
     mutable std::string cached_source_credentials_;
-    mutable std::chrono::system_clock::time_point last_updated_;
+    mutable std::chrono::high_resolution_clock::time_point last_updated_;
     Error ProcessAuthorizationRequest(Request* request) const;
     Error ProcessOtherRequest(Request* request) const;
     Error Authorize(Request* request, const char* source_credentials) const;

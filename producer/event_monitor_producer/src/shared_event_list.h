@@ -15,7 +15,7 @@ const uint64_t kFileDelayMs = 500;
 
 struct SingleEvent {
     std::string file_name;
-    std::chrono::system_clock::time_point time;
+    std::chrono::high_resolution_clock::time_point time;
     bool apply_delay;
 };
 

@@ -277,7 +277,7 @@ void ActivatePromise(std::shared_ptr<std::promise<StreamInfoResult>> promise, Re
                      Error err) {
     StreamInfoResult res;
     if (err == nullptr) {
-        auto ok = res.sinfo.SetFromJson(payload.response);
+        auto ok = res.sinfo.SetFromJson(payload.response,true);
         res.err = ok ? nullptr : ProducerErrorTemplates::kInternalServerError.Generate(
                       std::string("cannot read JSON string from server response: ") + payload.response).release();
     } else {

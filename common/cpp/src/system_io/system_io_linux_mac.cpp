@@ -17,7 +17,7 @@
 
 using std::string;
 using std::vector;
-using std::chrono::system_clock;
+using std::chrono::high_resolution_clock;
 
 namespace asapo {
 
@@ -92,8 +92,8 @@ void SetModifyDate(const struct stat& t_stat, FileInfo* file_info) {
 #undef st_mtim
 #endif
 
-    file_info->timestamp = system_clock::time_point
-    {std::chrono::duration_cast<system_clock::duration>(d)};
+    file_info->timestamp = high_resolution_clock::time_point
+    {std::chrono::duration_cast<high_resolution_clock::duration>(d)};
 }
 
 void SetFileSize(const struct stat& t_stat, FileInfo* file_info) {

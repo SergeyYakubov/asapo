@@ -162,7 +162,7 @@ class ServerDataBrokerTests : public Test {
         fi.id = 1;
         fi.buf_id = buf_id;
         fi.name = expected_filename;
-        fi.timestamp = std::chrono::system_clock::now();
+        fi.timestamp = std::chrono::high_resolution_clock::now();
         return fi;
     }
 };
@@ -1027,7 +1027,7 @@ TEST_F(ServerDataBrokerTests, GetDatasetByIdUsesCorrectUri) {
 
 TEST_F(ServerDataBrokerTests, GetSubstreamListUsesCorrectUri) {
     MockGetBrokerUri();
-    std::string return_substreams = R"({"substreams":[{"lastId":123,"name":"test","timestamp":1000000},{"lastId":124,"name":"test1","timestamp":2000000}]})";
+    std::string return_substreams = R"({"substreams":[{"lastId":123,"name":"test","timestamp":1000000},{"name":"test1","timestamp":2000000}]})";
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/0/substreams"
                                         + "?token=" + expected_token+"&from=stream_from", _,
                                         _)).WillOnce(DoAll(
@@ -1040,8 +1040,8 @@ TEST_F(ServerDataBrokerTests, GetSubstreamListUsesCorrectUri) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(substreams.size(), Eq(2));
     ASSERT_THAT(substreams.size(), 2);
-    ASSERT_THAT(substreams[0].Json(), R"({"lastId":123,"name":"test","timestamp":1000000})");
-    ASSERT_THAT(substreams[1].Json(), R"({"lastId":124,"name":"test1","timestamp":2000000})");
+    ASSERT_THAT(substreams[0].Json(false), R"({"name":"test","timestamp":1000000})");
+    ASSERT_THAT(substreams[1].Json(false), R"({"name":"test1","timestamp":2000000})");
 }
 
 

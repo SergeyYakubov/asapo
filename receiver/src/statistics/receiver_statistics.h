@@ -23,7 +23,7 @@ class ReceiverStatistics : public Statistics {
     StatisticsToSend PrepareStatisticsToSend() const noexcept override;
     void ResetStatistics() noexcept override;
     uint64_t GetElapsedMs(StatisticEntity entity) const noexcept;
-    std::chrono::system_clock::time_point current_timer_last_timepoint_;
+    std::chrono::high_resolution_clock::time_point current_timer_last_timepoint_;
     StatisticEntity current_statistic_entity_ = StatisticEntity::kDatabase;
     std::chrono::nanoseconds time_counters_[kNStatisticEntities];
 };
