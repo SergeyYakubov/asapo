@@ -1049,7 +1049,10 @@ TEST_F(ServerDataBrokerTests, GetSubstreamListUsesCorrectUriWithoutFrom) {
     MockGetBrokerUri();
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/0/substreams"
                                             + "?token=" + expected_token, _,
-                                        _));
+                                        _)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return("")));;
 
     asapo::Error err;
     auto substreams = data_broker->GetSubstreamList("",&err);
