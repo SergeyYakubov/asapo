@@ -1,6 +1,8 @@
 configure_file(setup.py.in setup.py @ONLY)
 configure_file(MANIFEST.in MANIFEST.in @ONLY)
 
+file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py INPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
+
 
 ADD_CUSTOM_TARGET(python-dist-producer ALL
         COMMAND ${Python_EXECUTABLE} setup.py sdist
@@ -19,6 +21,10 @@ ADD_CUSTOM_TARGET(copy_python_dist-producer ALL
         )
 
 
-ADD_DEPENDENCIES(copy_python_dist-producer python-lib-producer)
+if (UNIX)
+	ADD_DEPENDENCIES(copy_python_dist-producer python-lib-producer)
+ELSE()
+	ADD_DEPENDENCIES(copy_python_dist-producer asapo_producer)
+ENDIF()
 
 ADD_DEPENDENCIES(python-dist-producer copy_python_dist-producer)
