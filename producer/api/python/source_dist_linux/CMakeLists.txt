@@ -16,7 +16,6 @@ ADD_CUSTOM_TARGET(copy_python_dist-producer ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/lib
         COMMAND ${CMAKE_COMMAND} -E copy ${CURL_LIBRARIES} ${CMAKE_CURRENT_BINARY_DIR}/lib
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:asapo-producer> ${CMAKE_CURRENT_BINARY_DIR}/lib
-
         )
 
 
