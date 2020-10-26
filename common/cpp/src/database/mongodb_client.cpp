@@ -406,4 +406,46 @@ Error MongoDBClient::GetStreamInfo(const std::string& collection, StreamInfo* in
     return StreamInfoFromDbResponse(last_record_str,earliest_record_str, info);
 }
 
+Error MongoDBClient::GetLastStream(StreamInfo* info) const {
+    if (!connected_) {
+        return DBErrorTemplates::kNotConnected.Generate();
+    }
+
+    mongoc_database_t *database;
+    bson_t* opts;
+    char **strv;
+    bson_error_t error;
+
+    database = mongoc_client_get_database(client_, database_name_.c_str());
+    opts = BCON_NEW ("nameOnly", BCON_BOOL(true));
+    info->timestamp = std::chrono::system_clock::from_time_t(0);
+    if ((strv = mongoc_database_get_collection_names_with_opts (
+        database, opts, &error))) {
+        for (auto i = 0; strv[i]; i++)
+        {
+            std::string stream_name{strv[i]};
+            std::string prefix = std::string(kDBDataCollectionNamePrefix)+"_";
+            if (stream_name.rfind(prefix,0)==0) {
+                std::string record_str;
+                auto err = GetRecordFromDb(stream_name, 0, GetRecordMode::kLast, &record_str);
+                StreamInfo next_info;
+                StreamInfoFromDbResponse(record_str,record_str,&next_info);
+                next_info.name = stream_name.erase(0,prefix.size());
+                if (next_info.timestamp > info->timestamp) {
+                    *info = next_info;
+                }
+            }
+       }
+        bson_strfreev (strv);
+    } else {
+        fprintf (stderr, "Command failed: %s\n", error.message);
+    }
+
+    fprintf (stderr, "stream: %s \n", info->Json(true).c_str());
+
+    bson_destroy (opts);
+    mongoc_database_destroy (database);
+    return asapo::Error();
+}
+
 }

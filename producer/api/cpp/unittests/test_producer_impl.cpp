@@ -466,7 +466,7 @@ TEST_F(ProducerImplTests, GetStreamInfoMakesCorerctRequest) {
 }
 
 
-TEST(GetStreamInfoTest, GetStreamInfo) {
+TEST(GetStreamInfoTest, GetStreamInfoTimeout) {
     asapo::ProducerImpl producer1{"", 1, 10, asapo::RequestHandlerType::kTcp};
     asapo::Error err;
     auto sinfo  = producer1.GetStreamInfo(5, &err);
@@ -474,5 +474,18 @@ TEST(GetStreamInfoTest, GetStreamInfo) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kTimeout));
     ASSERT_THAT(err->Explain(), HasSubstr("opcode: 4"));
 }
+
+TEST_F(ProducerImplTests, GetLastStreamMakesCorerctRequest) {
+    producer.SetCredentials(expected_credentials);
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetSubstreamInfoRequest(asapo::kOpcodeLastStream,
+                                                                       expected_credentials_str,
+                                                                       ""), true)).WillOnce(
+        Return(nullptr));
+
+    asapo::Error err;
+    producer.GetLastSubstream(1, &err);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kTimeout));
+}
+
 
 }

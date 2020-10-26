@@ -288,7 +288,7 @@ void ActivatePromise(std::shared_ptr<std::promise<StreamInfoResult>> promise, Re
     } catch(...) {}
 }
 
-StreamInfo GetInfroFromCallback(std::future<StreamInfoResult>* promiseResult, uint64_t timeout_sec, Error* err) {
+StreamInfo GetInfoFromCallback(std::future<StreamInfoResult>* promiseResult, uint64_t timeout_sec, Error* err) {
     try {
         auto status = promiseResult->wait_for(std::chrono::milliseconds(timeout_sec * 1000));
         if (status == std::future_status::ready) {
@@ -306,27 +306,43 @@ StreamInfo GetInfroFromCallback(std::future<StreamInfoResult>* promiseResult, ui
     return StreamInfo{};
 }
 
-StreamInfo ProducerImpl::GetStreamInfo(std::string substream, uint64_t timeout_sec, Error* err) const {
-    GenericRequestHeader request_header{kOpcodeStreamInfo, 0, 0, 0, "", substream};
+
+GenericRequestHeader CreateRequestHeaderFromOp(StreamRequestOp op,std::string substream) {
+    switch (op) {
+        case StreamRequestOp::kStreamInfo:
+            return GenericRequestHeader{kOpcodeStreamInfo, 0, 0, 0, "", substream};
+        case StreamRequestOp::kLastStream:
+            return GenericRequestHeader{kOpcodeLastStream, 0, 0, 0, "", ""};
+    }
+}
+
+StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string substream, uint64_t timeout_sec, Error* err) const {
+    auto header = CreateRequestHeaderFromOp(op,substream);
     std::unique_ptr<std::promise<StreamInfoResult>> promise {new std::promise<StreamInfoResult>};
     std::future<StreamInfoResult> promiseResult = promise->get_future();
 
-    *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                nullptr, "", "",
-                unwrap_callback(ActivatePromise, std::move(promise)), true,
-                timeout_sec * 1000}
+    *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(header),
+                                                                                            nullptr, "", "",
+                                                                                            unwrap_callback(ActivatePromise, std::move(promise)), true,
+                                                                                            timeout_sec * 1000}
     }, true);
     if (*err) {
         return StreamInfo{};
     }
+    return GetInfoFromCallback(&promiseResult, timeout_sec + 2,
+                               err); // we give two more sec for request to exit by timeout
+}
 
-    return GetInfroFromCallback(&promiseResult, timeout_sec + 2,
-                                err); // we give two more sec for request to exit by timeout
-
+StreamInfo ProducerImpl::GetStreamInfo(std::string substream, uint64_t timeout_sec, Error* err) const {
+    return StreamRequest(StreamRequestOp::kStreamInfo,substream,timeout_sec,err);
 }
 
 StreamInfo ProducerImpl::GetStreamInfo(uint64_t timeout_sec, Error* err) const {
     return GetStreamInfo(kDefaultSubstream, timeout_sec, err);
+}
+
+StreamInfo ProducerImpl::GetLastSubstream(uint64_t timeout_sec, Error* err) const {
+    return StreamRequest(StreamRequestOp::kLastStream,"",timeout_sec,err);
 }
 
 }

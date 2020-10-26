@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#include <thread>
 
 #include "../../../common/cpp/src/database/mongodb_client.h"
 #include "testing.h"
@@ -46,12 +47,19 @@ int main(int argc, char* argv[]) {
         db.Connect("127.0.0.1", "data");
     }
 
-    auto err = db.Insert("test", fi, false);
+    auto err = db.Insert("data_test", fi, false);
 
     if (args.keyword == "DuplicateID") {
         Assert(err, "OK");
-        err = db.Insert("test", fi, false);
+        err = db.Insert("data_test", fi, false);
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    auto fi1 = fi;
+    fi1.id = 123;
+    fi1.timestamp = std::chrono::system_clock::now();
+    db.Insert("data_test1", fi, false);
+    db.Insert("data_test1", fi1, false);
 
     Assert(err, args.keyword);
 
@@ -59,16 +67,21 @@ int main(int argc, char* argv[]) {
         asapo::FileInfo fi_db;
         asapo::MongoDBClient db_new;
         db_new.Connect("127.0.0.1", "data");
-        err = db_new.GetById("test", fi.id, &fi_db);
+        err = db_new.GetById("data_test", fi.id, &fi_db);
         M_AssertTrue(fi_db == fi, "get record from db");
         M_AssertEq(nullptr, err);
-        err = db_new.GetById("test", 0, &fi_db);
+        err = db_new.GetById("data_test", 0, &fi_db);
         Assert(err, "No record");
 
         asapo::StreamInfo info;
-        err = db.GetStreamInfo("test", &info);
+        err = db.GetStreamInfo("data_test", &info);
         M_AssertEq(nullptr, err);
         M_AssertEq(fi.id, info.last_id);
+
+        err = db.GetLastStream(&info);
+        M_AssertEq(nullptr, err);
+        M_AssertEq(fi1.id, info.last_id);
+        M_AssertEq("test1",info.name);
     }
 
     return 0;

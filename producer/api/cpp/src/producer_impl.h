@@ -12,6 +12,11 @@
 
 namespace asapo {
 
+enum class StreamRequestOp {
+  kStreamInfo,
+  kLastStream
+};
+
 class ProducerImpl : public Producer {
   private:
     // important to create it before request_pool__
@@ -29,6 +34,7 @@ class ProducerImpl : public Producer {
 
     StreamInfo GetStreamInfo(std::string substream, uint64_t timeout_sec, Error* err) const override ;
     StreamInfo GetStreamInfo(uint64_t timeout_sec, Error* err) const override;
+    StreamInfo GetLastSubstream(uint64_t timeout_sec, Error* err) const override;
 
     void SetLogLevel(LogLevel level) override;
     void EnableLocalLog(bool enable) override;
@@ -60,6 +66,7 @@ class ProducerImpl : public Producer {
     Error WaitRequestsFinished(uint64_t timeout_ms) override;
 
   private:
+    StreamInfo StreamRequest(StreamRequestOp op, std::string substream, uint64_t timeout_sec, Error* err) const;
     Error Send(const EventHeader& event_header, std::string substream, FileData data, std::string full_path,
                uint64_t ingest_mode,
                RequestCallback callback, bool manage_data_memory);

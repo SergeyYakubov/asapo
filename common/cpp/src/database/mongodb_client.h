@@ -50,6 +50,7 @@ class MongoDBClient final : public Database {
     Error GetById(const std::string& collection, uint64_t id, FileInfo* file) const override;
     Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const override;
     Error GetStreamInfo(const std::string& collection, StreamInfo* info) const override;
+    Error GetLastStream(StreamInfo* info) const override;
     ~MongoDBClient() override;
   private:
     mongoc_client_t* client_{nullptr};
