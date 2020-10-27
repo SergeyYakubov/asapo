@@ -56,10 +56,12 @@ int main(int argc, char* argv[]) {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     auto fi1 = fi;
-    fi1.id = 123;
+    auto fi2 = fi;
+    fi2.id = 123;
     fi1.timestamp = std::chrono::system_clock::now();
-    db.Insert("data_test1", fi, false);
+    fi2.timestamp = std::chrono::system_clock::now()+std::chrono::minutes(1);
     db.Insert("data_test1", fi1, false);
+    db.Insert("data_test1", fi2, false);
 
     Assert(err, args.keyword);
 
@@ -80,7 +82,7 @@ int main(int argc, char* argv[]) {
 
         err = db.GetLastStream(&info);
         M_AssertEq(nullptr, err);
-        M_AssertEq(fi1.id, info.last_id);
+        M_AssertEq(fi2.id, info.last_id);
         M_AssertEq("test1",info.name);
     }
 
