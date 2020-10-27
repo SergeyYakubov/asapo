@@ -63,13 +63,14 @@ class DbMetaLastStreamTests : public Test {
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_stream = "stream";
-    std::string info_str = R"({"lastId":10,"name":"substream","timestamp":1000000})";
+    std::string info_str = R"({"lastId":10,"name":"substream","timestampCreated":1000000,"timestampLast":2000000})";
     asapo::StreamInfo expected_stream_info;
     void SetUp() override {
         GenericRequestHeader request_header;
         expected_stream_info.last_id = 10;
         expected_stream_info.name = expectedlaststream;
-        expected_stream_info.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
+        expected_stream_info.timestamp_created = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
+        expected_stream_info.timestamp_lastentry = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(2));
         request_header.data_id = 0;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;

@@ -69,6 +69,8 @@ class MongoDBClient final : public Database {
     Error UpdateBsonDocument(uint64_t id, const bson_p& document, bool upsert) const;
     Error AddBsonDocumentToArray(bson_t* query, bson_t* update, bool ignore_duplicates) const;
     Error GetRecordFromDb(const std::string& collection, uint64_t id, GetRecordMode mode, std::string* res) const;
+    Error UpdateStreamInfo(const char *str,StreamInfo* info) const;
+
 };
 
 }

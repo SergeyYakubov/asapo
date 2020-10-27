@@ -40,9 +40,10 @@ class FileInfo {
 struct StreamInfo {
     uint64_t last_id{0};
     std::string name;
-    std::chrono::system_clock::time_point timestamp;
-    std::string Json(bool add_last_id) const;
-    bool SetFromJson(const std::string& json_string,bool read_last_id);
+    std::chrono::system_clock::time_point timestamp_created;
+    std::chrono::system_clock::time_point timestamp_lastentry;
+    std::string Json(bool add_last) const;
+    bool SetFromJson(const std::string& json_string,bool read_last);
 };
 
 using StreamInfos = std::vector<StreamInfo>;

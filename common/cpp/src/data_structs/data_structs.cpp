@@ -6,7 +6,6 @@
 #include <string>
 #include <iomanip>
 
-
 #include "json_parser/json_parser.h"
 #include "preprocessor/definitions.h"
 
@@ -15,7 +14,6 @@ using std::chrono::system_clock;
 #ifdef _WIN32
 #define timegm _mkgmtime
 #endif
-
 
 namespace asapo {
 
@@ -30,16 +28,16 @@ std::string GetStringFromSourceType(SourceType type) {
     }
 }
 
-Error GetSourceTypeFromString(std::string stype,SourceType *type) {
+Error GetSourceTypeFromString(std::string stype, SourceType* type) {
     Error err;
-    if (stype=="raw") {
+    if (stype == "raw") {
         *type = SourceType::kRaw;
         return nullptr;
-    } else if (stype=="processed") {
+    } else if (stype == "processed") {
         *type = SourceType::kProcessed;
         return nullptr;
     } else {
-        return TextError("cannot parse/wrong source type: "+stype);
+        return TextError("cannot parse/wrong source type: " + stype);
     }
 }
 
@@ -57,26 +55,27 @@ std::string FileInfo::Json() const {
     }
 #endif
 
-
     int64_t buf_id_int = static_cast<int64_t>(buf_id);
     std::string s = "{\"_id\":" + std::to_string(id) + ","
-                    "\"size\":" + std::to_string(size) + ","
-                    "\"name\":\"" + x + "\","
-                    "\"timestamp\":" + std::to_string(nanoseconds_from_epoch) + ","
-                    "\"source\":\"" + source + "\","
-                    "\"buf_id\":" + std::to_string(buf_id_int) + ","
-                    "\"meta\":" + (metadata.size() == 0 ? std::string("{}") : metadata)
-                    + "}";
+                                                       "\"size\":" + std::to_string(size) + ","
+                                                                                            "\"name\":\"" + x + "\","
+                                                                                                                "\"timestamp\":"
+        + std::to_string(nanoseconds_from_epoch) + ","
+                                                   "\"source\":\"" + source + "\","
+                                                                              "\"buf_id\":" + std::to_string(buf_id_int)
+        + ","
+          "\"meta\":" + (metadata.size() == 0 ? std::string("{}") : metadata)
+        + "}";
     return s;
 }
 
-std::chrono::system_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_from_epoch){
-    std::chrono::nanoseconds ns = std::chrono::nanoseconds {nanoseconds_from_epoch};
+std::chrono::system_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_from_epoch) {
+    std::chrono::nanoseconds ns = std::chrono::nanoseconds{nanoseconds_from_epoch};
     return std::chrono::system_clock::time_point
         {std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)};
 }
 
-bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val) {
+bool TimeFromJson(const JsonStringParser &parser, const std::string &name, std::chrono::system_clock::time_point* val) {
     uint64_t nanoseconds_from_epoch;
     if (parser.GetUInt64(name, &nanoseconds_from_epoch)) {
         return false;
@@ -85,7 +84,7 @@ bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::
     return true;
 }
 
-bool DataSet::SetFromJson(const std::string& json_string) {
+bool DataSet::SetFromJson(const std::string &json_string) {
     auto old = *this;
 
     auto parser = JsonStringParser(std::move(json_string));
@@ -93,7 +92,7 @@ bool DataSet::SetFromJson(const std::string& json_string) {
     std::vector<std::string> vec_fi_endcoded;
     Error parse_err;
     (parse_err = parser.GetArrayRawStrings("images", &vec_fi_endcoded)) ||
-    (parse_err = parser.GetUInt64("_id", &id));
+        (parse_err = parser.GetUInt64("_id", &id));
     if (parse_err) {
         *this = old;
         return false;
@@ -109,18 +108,18 @@ bool DataSet::SetFromJson(const std::string& json_string) {
     return true;
 }
 
-bool FileInfo::SetFromJson(const std::string& json_string) {
+bool FileInfo::SetFromJson(const std::string &json_string) {
     auto old = *this;
 
     JsonStringParser parser(json_string);
 
     if (parser.GetUInt64("_id", &id) ||
-            parser.GetUInt64("size", &size) ||
-            parser.GetString("name", &name) ||
-            parser.GetString("source", &source) ||
-            parser.GetUInt64("buf_id", &buf_id) ||
-            parser.Embedded("meta").GetRawString(&metadata) ||
-            !TimeFromJson(parser, "timestamp", &timestamp)) {
+        parser.GetUInt64("size", &size) ||
+        parser.GetString("name", &name) ||
+        parser.GetString("source", &source) ||
+        parser.GetUInt64("buf_id", &buf_id) ||
+        parser.Embedded("meta").GetRawString(&metadata) ||
+        !TimeFromJson(parser, "timestamp", &timestamp)) {
         *this = old;
         return false;
     }
@@ -130,7 +129,7 @@ bool FileInfo::SetFromJson(const std::string& json_string) {
     return true;
 }
 
-std::string FileInfo::FullName(const std::string& base_path) const  {
+std::string FileInfo::FullName(const std::string &base_path) const {
     std::string full_name;
     full_name = base_path.empty() ? "" : base_path + kPathSeparator;
     return full_name + name;
@@ -144,21 +143,23 @@ uint64_t NanosecsEpochFromTimePoint(std::chrono::system_clock::time_point time_p
     return (uint64_t) std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count();
 }
 
-std::string StreamInfo::Json(bool add_last_id) const {
-    auto nanoseconds_from_epoch = NanosecsEpochFromTimePoint(timestamp);
-    return (add_last_id?"{\"lastId\":" + std::to_string(last_id) + ",":"{")+
-                    "\"name\":\"" + name + "\","
-                    "\"timestamp\":" + std::to_string(nanoseconds_from_epoch)
-                    + "}";
+std::string StreamInfo::Json(bool add_last) const {
+    auto nanoseconds_from_epoch = NanosecsEpochFromTimePoint(timestamp_created);
+    auto nanoseconds_from_epoch_le = NanosecsEpochFromTimePoint(timestamp_lastentry);
+    return (add_last ? "{\"lastId\":" + std::to_string(last_id) + "," : "{") +
+        "\"name\":\"" + name + "\",\"timestampCreated\":" + std::to_string(nanoseconds_from_epoch)
+        + (add_last ? std::string(",") + "\"timestampLast\":" + std::to_string(nanoseconds_from_epoch_le) : "")
+        + "}";
 }
 
-bool StreamInfo::SetFromJson(const std::string& json_string,bool read_last_id) {
+bool StreamInfo::SetFromJson(const std::string &json_string, bool read_last) {
     auto old = *this;
     JsonStringParser parser(json_string);
     uint64_t id;
-    if ((read_last_id?parser.GetUInt64("lastId", &last_id):nullptr) ||
+    if ((read_last ? parser.GetUInt64("lastId", &last_id) : nullptr) ||
+        (read_last ? !TimeFromJson(parser, "timestampLast", &timestamp_lastentry) : false) ||
         parser.GetString("name", &name) ||
-        !TimeFromJson(parser, "timestamp", &timestamp)) {
+        !TimeFromJson(parser, "timestampCreated", &timestamp_created)) {
         *this = old;
         return false;
     }
@@ -217,14 +218,13 @@ uint64_t NanosecsEpochFromISODate(std::string date_time) {
     tm.tm_mon = month - 1;
     tm.tm_year = year - 1900;
 
-    system_clock::time_point tp = system_clock::from_time_t (timegm(&tm));
+    system_clock::time_point tp = system_clock::from_time_t(timegm(&tm));
     uint64_t ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(tp).
         time_since_epoch().count();
 
-    ns = ns + uint64_t(frac * 1000000000) ;
+    ns = ns + uint64_t(frac * 1000000000);
 
     return ns > 0 ? ns : 1;
 }
-
 
 }

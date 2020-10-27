@@ -198,14 +198,14 @@ cdef class PyProducer:
         if err:
             throw_exception(err)
 
-    def stream_info(self, substream = 'default', uint64_t timeout_ms = 1000):
+    def stream_info(self, substream = 'default', uint64_t timeout_sec = 1):
         """
          :param substream: substream name
          :type substream: string
-         :param timeout_ms: timeout in milliseconds
+         :param timeout_sec: timeout in seconds
          :type timeout_ms: int
          :raises:
-            AsapoWrongInputError: wrong input (authorization, meta, ...)
+            AsapoWrongInputError: wrong input (authorization, ...)
             AsapoTimeoutError: request not finished for a given timeout
             AsapoProducerError: other errors
         """
@@ -213,11 +213,27 @@ cdef class PyProducer:
         cdef StreamInfo info
         cdef string b_substream = _bytes(substream)
         with nogil:
-            info = self.c_producer.get().GetStreamInfo(b_substream,timeout_ms,&err)
+            info = self.c_producer.get().GetStreamInfo(b_substream,timeout_sec,&err)
         if err:
             throw_exception(err)
         return json.loads(_str(info.Json(True)))
 
+    def last_stream(self, uint64_t timeout_sec = 1):
+        """
+         :param timeout_ms: timeout in seconds
+         :type timeout_ms: int
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, ...)
+            AsapoTimeoutError: request not finished for a given timeout
+            AsapoProducerError: other errors
+        """
+        cdef Error err
+        cdef StreamInfo info
+        with nogil:
+            info = self.c_producer.get().GetLastSubstream(timeout_sec,&err)
+        if err:
+            throw_exception(err)
+        return json.loads(_str(info.Json(True)))
     def send_file(self, uint64_t id, local_path, exposed_path, user_meta=None, subset=None, substream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
         """
          :param id: unique data id

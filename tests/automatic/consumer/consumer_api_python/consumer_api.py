@@ -130,6 +130,7 @@ def check_single(broker,group_id):
     assert_eq(substreams[1]["name"],"streamfts","substreams_name2")
     assert_eq(substreams[2]["name"],"stream1","substreams_name2")
     assert_eq(substreams[3]["name"],"stream2","substreams_name3")
+    assert_eq(substreams[1]["timestampCreated"],1000,"substreams_timestamp2")
 
 #acks
     try:

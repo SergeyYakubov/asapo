@@ -124,15 +124,33 @@ producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")
 
+# send to another data to substream stream
+producer.send_data(2, "processed/" + stream + "/" + "file10", None,
+                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="stream", callback=callback)
+
+producer.wait_requests_finished(50000)
+n = producer.get_requests_queue_size()
+assert_eq(n, 0, "requests in queue")
+
+#stream infos
+
+
 info = producer.stream_info()
 assert_eq(info['lastId'], 10, "stream_info last id")
 assert_eq(info['name'], "default", "stream_info name")
-assert_eq(info['timestamp']/1000000000<time.time(),True , "stream_info time")
-assert_eq(info['timestamp']/1000000000>time.time()-10,True , "stream_info time")
-print(datetime.utcfromtimestamp(info['timestamp']/1000000000).strftime('%Y-%m-%d %H:%M:%S'))
+assert_eq(info['timestampCreated']/1000000000<time.time(),True , "stream_info time created")
+assert_eq(info['timestampCreated']/1000000000>time.time()-10,True , "stream_info time created")
+assert_eq(info['timestampLast']/1000000000<time.time(),True , "stream_info time last")
+assert_eq(info['timestampLast']/1000000000>time.time()-10,True , "stream_info time last")
+print("created: ",datetime.utcfromtimestamp(info['timestampCreated']/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f'))
+print("last record: ",datetime.utcfromtimestamp(info['timestampLast']/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f'))
 
 info = producer.stream_info('stream')
-assert_eq(info['lastId'], 1, "last id from different substream")
+assert_eq(info['lastId'], 2, "last id from different substream")
+
+info_last = producer.last_stream()
+assert_eq(info_last['name'], "stream", "last stream")
+assert_eq(info_last['timestampCreated'] <= info_last['timestampLast'], True, "last is later than first")
 
 # create with error
 try:

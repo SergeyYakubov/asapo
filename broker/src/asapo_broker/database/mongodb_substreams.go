@@ -3,7 +3,6 @@
 package database
 
 import (
-	"asapo_common/utils"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,12 +13,12 @@ import (
 )
 
 type SubstreamInfo struct {
-	Name      string `bson:"name" json:"name"`
-	Timestamp int64  `bson:"timestamp" json:"timestamp"`
+	Name      string `json:"name"`
+	Timestamp int64  `json:"timestampCreated"`
 }
 
 type SubstreamsRecord struct {
-	Substreams []SubstreamInfo `bson:"substreams" json:"substreams"`
+	Substreams []SubstreamInfo `json:"substreams"`
 }
 
 type Substreams struct {
@@ -77,11 +76,14 @@ func updateTimestamps(db *Mongodb, db_name string, rec *SubstreamsRecord) {
 		}
 		res, err := db.getEarliestRecord(db_name, record.Name)
 		if err == nil {
-			var si SubstreamInfo
-			err_convert := utils.MapToStruct(res,&si)
-			if err_convert == nil {
-				rec.Substreams[i].Timestamp = si.Timestamp
+			ts,ok:=res["timestamp"].(int64)
+			var tsint float64
+			if !ok { // we need this (at least for tests) since by default values are float in mongo
+				tsint,ok = res["timestamp"].(float64)
+				ts = int64(tsint)
 			}
+			if ok {
+				rec.Substreams[i].Timestamp = ts			}
 		}
 	}
 }
