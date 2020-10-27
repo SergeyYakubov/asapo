@@ -11,14 +11,21 @@
 
 namespace asapo {
 
+class JsonStringParser;
+
+uint64_t NanosecsEpochFromTimePoint(std::chrono::system_clock::time_point);
+uint64_t  EpochNanosecsFromNow();
+std::chrono::system_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_from_epoch);
 std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec);
 uint64_t NanosecsEpochFromISODate(std::string date_time);
-uint64_t  EpochNanosecsFromNow();
+
+
+bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val);
 
 class FileInfo {
   public:
     std::string name;
-    std::chrono::system_clock::time_point modify_date;
+    std::chrono::system_clock::time_point timestamp;
     uint64_t size{0};
     uint64_t id{0};
     std::string source;
@@ -29,16 +36,22 @@ class FileInfo {
     std::string FullName(const std::string& base_path) const;
 };
 
+
 struct StreamInfo {
     uint64_t last_id{0};
-    std::string Json() const;
-    bool SetFromJson(const std::string& json_string);
+    std::string name;
+    std::chrono::system_clock::time_point timestamp_created;
+    std::chrono::system_clock::time_point timestamp_lastentry;
+    std::string Json(bool add_last) const;
+    bool SetFromJson(const std::string& json_string,bool read_last);
 };
+
+using StreamInfos = std::vector<StreamInfo>;
 
 inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
     return  (lhs.name == rhs.name &&
              lhs.id == rhs.id &&
-             lhs.modify_date == rhs.modify_date &&
+             lhs.timestamp == rhs.timestamp &&
              lhs.size == rhs.size);
 }
 
@@ -53,7 +66,6 @@ struct DataSet {
     uint64_t id;
     FileInfos content;
     bool SetFromJson(const std::string& json_string);
-
 };
 
 using SubDirList = std::vector<std::string>;

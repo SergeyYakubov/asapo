@@ -92,7 +92,7 @@ void SetModifyDate(const struct stat& t_stat, FileInfo* file_info) {
 #undef st_mtim
 #endif
 
-    file_info->modify_date = system_clock::time_point
+    file_info->timestamp = system_clock::time_point
     {std::chrono::duration_cast<system_clock::duration>(d)};
 }
 

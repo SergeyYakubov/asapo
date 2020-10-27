@@ -123,11 +123,14 @@ def check_single(broker,group_id):
     _, meta = broker.get_next(group_id,"stream2", meta_only=True)
     assert_metaname(meta,"21","get next stream2")
 
-    substreams = broker.get_substream_list()
+    substreams = broker.get_substream_list("")
     assert_eq(len(substreams),4,"number of substreams")
-    assert_eq(substreams[0],"default","substreams_name1")
-    assert_eq(substreams[1],"stream1","substreams_name2")
-    assert_eq(substreams[2],"stream2","substreams_name3")
+    print(substreams)
+    assert_eq(substreams[0]["name"],"default","substreams_name1")
+    assert_eq(substreams[1]["name"],"streamfts","substreams_name2")
+    assert_eq(substreams[2]["name"],"stream1","substreams_name2")
+    assert_eq(substreams[3]["name"],"stream2","substreams_name3")
+    assert_eq(substreams[1]["timestampCreated"],1000,"substreams_timestamp2")
 
 #acks
     try:

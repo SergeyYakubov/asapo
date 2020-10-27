@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
     }
 
     uint64_t totalTransferSize = 0;
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::system_clock::now();
 
     std::cout << "Starting message loop" << std::endl;
     for (FabricMessageId messageId = 0; messageId < count && !error; messageId++) {
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
 
         totalTransferSize += dataBufferSize;
     }
-    auto end = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::system_clock::now();
 
     if (error) {
         std::cout << "Client exited with error: " << error << std::endl;

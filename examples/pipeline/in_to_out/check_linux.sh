@@ -55,7 +55,7 @@ echo hello3 > processed/file3
 
 for i in `seq 1 3`;
 do
-	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'processed/file$i'","lastchange":1,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${indatabase_name}
+	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'processed/file$i'","timestamp":0,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${indatabase_name}
 done
 
 sleep 1

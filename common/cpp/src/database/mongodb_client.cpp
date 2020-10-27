@@ -1,18 +1,21 @@
 #include <json_parser/json_parser.h>
 #include "mongodb_client.h"
-#include "mongodb_client.h"
+
+#include <chrono>
+
 #include "database/db_error.h"
+#include "common/data_structs.h"
 
 namespace asapo {
 
 using asapo::Database;
 
 MongoDbInstance::MongoDbInstance() {
-    mongoc_init ();
+    mongoc_init();
 }
 
 MongoDbInstance::~MongoDbInstance() {
-    mongoc_cleanup ();
+    mongoc_cleanup();
 }
 
 Error MongoDBClient::Ping() {
@@ -20,12 +23,12 @@ Error MongoDBClient::Ping() {
     bson_error_t error;
     bool retval;
 
-    command = BCON_NEW ("ping", BCON_INT32 (1));
-    retval = mongoc_client_command_simple (
-                 client_, "admin", command, NULL, &reply, &error);
+    command = BCON_NEW ("ping", BCON_INT32(1));
+    retval = mongoc_client_command_simple(
+        client_, "admin", command, NULL, &reply, &error);
 
-    bson_destroy (&reply);
-    bson_destroy (command);
+    bson_destroy(&reply);
+    bson_destroy(command);
 
     return !retval ? DBErrorTemplates::kConnectionError.Generate() : nullptr;
 
@@ -34,34 +37,34 @@ MongoDBClient::MongoDBClient() {
     MongoDbInstance::Instantiate();
 }
 
-Error MongoDBClient::InitializeClient(const std::string& address) {
+Error MongoDBClient::InitializeClient(const std::string &address) {
     auto uri_str = DBAddress(address);
-    client_ = mongoc_client_new (uri_str.c_str());
+    client_ = mongoc_client_new(uri_str.c_str());
 
     if (client_ == nullptr) {
         return DBErrorTemplates::kBadAddress.Generate();
     }
 
-    write_concern_ = mongoc_write_concern_new ();
-    mongoc_write_concern_set_w (write_concern_, MONGOC_WRITE_CONCERN_W_DEFAULT);
-    mongoc_write_concern_set_journal (write_concern_, true);
+    write_concern_ = mongoc_write_concern_new();
+    mongoc_write_concern_set_w(write_concern_, MONGOC_WRITE_CONCERN_W_DEFAULT);
+    mongoc_write_concern_set_journal(write_concern_, true);
 
     return nullptr;
 
 }
 
-void MongoDBClient::UpdateCurrentCollectionIfNeeded(const std::string& collection_name) const {
+void MongoDBClient::UpdateCurrentCollectionIfNeeded(const std::string &collection_name) const {
     if (collection_name == current_collection_name_) {
         return;
     }
     if (current_collection_ != nullptr) {
-        mongoc_collection_destroy (current_collection_);
+        mongoc_collection_destroy(current_collection_);
     }
 
-    current_collection_ = mongoc_client_get_collection (client_, database_name_.c_str(),
-                          collection_name.c_str());
+    current_collection_ = mongoc_client_get_collection(client_, database_name_.c_str(),
+                                                       collection_name.c_str());
     current_collection_name_ = collection_name;
-    mongoc_collection_set_write_concern (current_collection_, write_concern_);
+    mongoc_collection_set_write_concern(current_collection_, write_concern_);
 }
 
 Error MongoDBClient::TryConnectDatabase() {
@@ -72,7 +75,7 @@ Error MongoDBClient::TryConnectDatabase() {
     return err;
 }
 
-Error MongoDBClient::Connect(const std::string& address, const std::string& database_name) {
+Error MongoDBClient::Connect(const std::string &address, const std::string &database_name) {
     if (connected_) {
         return DBErrorTemplates::kAlreadyConnected.Generate();
     }
@@ -91,7 +94,7 @@ Error MongoDBClient::Connect(const std::string& address, const std::string& data
     return err;
 }
 
-std::string MongoDBClient::DBAddress(const std::string& address) const {
+std::string MongoDBClient::DBAddress(const std::string &address) const {
     return "mongodb://" + address + "/?appname=asapo";
 }
 
@@ -100,14 +103,14 @@ void MongoDBClient::CleanUp() {
         mongoc_write_concern_destroy(write_concern_);
     }
     if (current_collection_) {
-        mongoc_collection_destroy (current_collection_);
+        mongoc_collection_destroy(current_collection_);
     }
     if (client_) {
-        mongoc_client_destroy (client_);
+        mongoc_client_destroy(client_);
     }
 }
 
-bson_p PrepareBsonDocument(const FileInfo& file, Error* err) {
+bson_p PrepareBsonDocument(const FileInfo &file, Error* err) {
     bson_error_t mongo_err;
     auto s = file.Json();
     auto json = reinterpret_cast<const uint8_t*>(s.c_str());
@@ -139,8 +142,7 @@ bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, Error* err) {
     return bson_p{bson};
 }
 
-
-Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const {
+Error MongoDBClient::InsertBsonDocument(const bson_p &document, bool ignore_duplicates) const {
     bson_error_t mongo_err;
     if (!mongoc_collection_insert_one(current_collection_, document.get(), NULL, NULL, &mongo_err)) {
         if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
@@ -152,12 +154,11 @@ Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_dupl
     return nullptr;
 }
 
-
-Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p& document, bool upsert) const {
+Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p &document, bool upsert) const {
     bson_error_t mongo_err;
 
     bson_t* opts = BCON_NEW ("upsert", BCON_BOOL(upsert));
-    bson_t* selector = BCON_NEW ("_id", BCON_INT64 (id));
+    bson_t* selector = BCON_NEW ("_id", BCON_INT64(id));
 
     Error err = nullptr;
 
@@ -165,14 +166,13 @@ Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p& document, boo
         err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
     }
 
-    bson_free (opts);
-    bson_free (selector);
+    bson_free(opts);
+    bson_free(selector);
 
     return err;
 }
 
-
-Error MongoDBClient::Insert(const std::string& collection, const FileInfo& file, bool ignore_duplicates) const {
+Error MongoDBClient::Insert(const std::string &collection, const FileInfo &file, bool ignore_duplicates) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -188,7 +188,6 @@ Error MongoDBClient::Insert(const std::string& collection, const FileInfo& file,
     return InsertBsonDocument(document, ignore_duplicates);
 }
 
-
 MongoDBClient::~MongoDBClient() {
     if (!connected_) {
         return;
@@ -196,7 +195,7 @@ MongoDBClient::~MongoDBClient() {
     CleanUp();
 }
 
-Error MongoDBClient::Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const {
+Error MongoDBClient::Upsert(const std::string &collection, uint64_t id, const uint8_t* data, uint64_t size) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -217,17 +216,16 @@ Error MongoDBClient::Upsert(const std::string& collection, uint64_t id, const ui
 
 }
 
-
 Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool ignore_duplicates) const {
     Error err;
     bson_error_t mongo_err;
 // first update may fail due to multiple threads try to create document at once, the second one should succeed
 // https://jira.mongodb.org/browse/SERVER-14322
-    if (!mongoc_collection_update (current_collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
+    if (!mongoc_collection_update(current_collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
         if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
-            if (!mongoc_collection_update (current_collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
+            if (!mongoc_collection_update(current_collection_, MONGOC_UPDATE_UPSERT, query, update, NULL, &mongo_err)) {
                 if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
-                    err =  ignore_duplicates ? nullptr : DBErrorTemplates::kDuplicateID.Generate();
+                    err = ignore_duplicates ? nullptr : DBErrorTemplates::kDuplicateID.Generate();
                 } else {
                     err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
                 }
@@ -239,9 +237,7 @@ Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool 
     return err;
 }
 
-
-
-Error MongoDBClient::InsertAsSubset(const std::string& collection, const FileInfo& file,
+Error MongoDBClient::InsertAsSubset(const std::string &collection, const FileInfo &file,
                                     uint64_t subset_id,
                                     uint64_t subset_size,
                                     bool ignore_duplicates) const {
@@ -259,27 +255,27 @@ Error MongoDBClient::InsertAsSubset(const std::string& collection, const FileInf
     auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(subset_id), "}", "{", "images._id", "{", "$ne",
                            BCON_INT64(file.id), "}", "}", "]");
     auto update = BCON_NEW ("$setOnInsert", "{",
-                            "size", BCON_INT64 (subset_size),
+                            "size", BCON_INT64(subset_size),
+                            "timestamp", BCON_INT64((int64_t) NanosecsEpochFromTimePoint(file.timestamp)),
                             "}",
                             "$addToSet", "{",
                             "images", BCON_DOCUMENT(document.get()), "}");
 
     err = AddBsonDocumentToArray(query, update, ignore_duplicates);
 
-    bson_destroy (query);
-    bson_destroy (update);
+    bson_destroy(query);
+    bson_destroy(update);
 
     return err;
 }
 
-Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, bool ignore_id_return_last,
+Error MongoDBClient::GetRecordFromDb(const std::string &collection, uint64_t id, GetRecordMode mode,
                                      std::string* res) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
 
     UpdateCurrentCollectionIfNeeded(collection);
-
 
     Error err;
     bson_error_t mongo_err;
@@ -289,26 +285,29 @@ Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id,
     const bson_t* doc;
     char* str;
 
-    if (!ignore_id_return_last) {
-        filter = BCON_NEW ("_id", BCON_INT64 (id));
-        opts = BCON_NEW ("limit", BCON_INT64 (1));
-
-    } else {
-        filter = BCON_NEW (NULL);
-        opts = BCON_NEW ("limit", BCON_INT64 (1), "sort", "{", "_id", BCON_INT64 (-1), "}");
+    switch (mode) {
+        case GetRecordMode::kById:filter = BCON_NEW ("_id", BCON_INT64(id));
+            opts = BCON_NEW ("limit", BCON_INT64(1));
+            break;
+        case GetRecordMode::kLast:filter = BCON_NEW (NULL);
+            opts = BCON_NEW ("limit", BCON_INT64(1), "sort", "{", "_id", BCON_INT64(-1), "}");
+            break;
+        case GetRecordMode::kEarliest:filter = BCON_NEW (NULL);
+            opts = BCON_NEW ("limit", BCON_INT64(1), "sort", "{", "timestamp", BCON_INT64(1), "}");
+            break;
     }
 
-    cursor = mongoc_collection_find_with_opts (current_collection_, filter, opts, NULL);
+    cursor = mongoc_collection_find_with_opts(current_collection_, filter, opts, NULL);
 
     bool found = false;
-    while (mongoc_cursor_next (cursor, &doc)) {
-        str = bson_as_relaxed_extended_json (doc, NULL);
+    while (mongoc_cursor_next(cursor, &doc)) {
+        str = bson_as_relaxed_extended_json(doc, NULL);
         *res = str;
         found = true;
-        bson_free (str);
+        bson_free(str);
     }
 
-    if (mongoc_cursor_error (cursor, &mongo_err)) {
+    if (mongoc_cursor_error(cursor, &mongo_err)) {
         err = DBErrorTemplates::kDBError.Generate(mongo_err.message);
     } else {
         if (!found) {
@@ -316,17 +315,16 @@ Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id,
         }
     }
 
-    mongoc_cursor_destroy (cursor);
-    bson_destroy (filter);
-    bson_destroy (opts);
+    mongoc_cursor_destroy(cursor);
+    bson_destroy(filter);
+    bson_destroy(opts);
 
     return err;
 }
 
-
-Error MongoDBClient::GetById(const std::string& collection, uint64_t id, FileInfo* file) const {
+Error MongoDBClient::GetById(const std::string &collection, uint64_t id, FileInfo* file) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, id, false, &record_str);
+    auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
     if (err) {
         return err;
     }
@@ -337,9 +335,9 @@ Error MongoDBClient::GetById(const std::string& collection, uint64_t id, FileInf
     return nullptr;
 }
 
-Error MongoDBClient::GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const {
+Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t set_id, uint64_t id, FileInfo* file) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, set_id, false, &record_str);
+    auto err = GetRecordFromDb(collection, set_id, GetRecordMode::kById, &record_str);
     if (err) {
         return err;
     }
@@ -349,7 +347,7 @@ Error MongoDBClient::GetDataSetById(const std::string& collection, uint64_t set_
         DBErrorTemplates::kJsonParseError.Generate(record_str);
     }
 
-    for (const auto& fileinfo : dataset.content) {
+    for (const auto &fileinfo : dataset.content) {
         if (fileinfo.id == id) {
             *file = fileinfo;
             return nullptr;
@@ -360,27 +358,106 @@ Error MongoDBClient::GetDataSetById(const std::string& collection, uint64_t set_
 
 }
 
-Error StreamInfoFromDbResponse(std::string record_str, StreamInfo* info) {
-    auto parser = JsonStringParser(std::move(record_str));
-    Error parse_err = parser.GetUInt64("_id", &(info->last_id));
+Error StreamInfoFromDbResponse(const std::string &last_record_str,
+                               const std::string &earliest_record_str,
+                               StreamInfo* info) {
+    uint64_t id;
+    std::chrono::system_clock::time_point timestamp_created,timestamp_last;
+
+    auto parser1 = JsonStringParser(last_record_str);
+    Error parse_err = parser1.GetUInt64("_id", &id);
     if (parse_err) {
-        info->last_id = 0;
-        return DBErrorTemplates::kJsonParseError.Generate("cannot parse mongodb response: " + parse_err->Explain());
+        return DBErrorTemplates::kJsonParseError.Generate(
+            "StreamInfoFromDbResponse: cannot parse mongodb response: " + last_record_str + ": "
+                + parse_err->Explain());
     }
+    auto ok = TimeFromJson(parser1, "timestamp", &timestamp_last);
+    if (!ok) {
+        return DBErrorTemplates::kJsonParseError.Generate(
+            "StreamInfoFromDbResponse: cannot parse timestamp in response: " + last_record_str);
+    }
+
+
+    auto parser2 = JsonStringParser(earliest_record_str);
+    ok = TimeFromJson(parser2, "timestamp", &timestamp_created);
+    if (!ok) {
+        return DBErrorTemplates::kJsonParseError.Generate(
+            "StreamInfoFromDbResponse: cannot parse timestamp in response: " + earliest_record_str);
+    }
+
+    info->last_id = id;
+    info->timestamp_created = timestamp_created;
+    info->timestamp_lastentry = timestamp_last;
     return nullptr;
 }
 
-Error MongoDBClient::GetStreamInfo(const std::string& collection, StreamInfo* info) const {
-    std::string record_str;
-    auto err = GetRecordFromDb(collection, 0, true, &record_str);
+Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* info) const {
+    std::string last_record_str, earliest_record_str;
+    auto err = GetRecordFromDb(collection, 0, GetRecordMode::kLast, &last_record_str);
     if (err) {
-        info->last_id = 0;
         if (err == DBErrorTemplates::kNoRecord) {
             return nullptr;
         }
         return err;
     }
-    return StreamInfoFromDbResponse(std::move(record_str), info);
+    err = GetRecordFromDb(collection, 0, GetRecordMode::kEarliest, &earliest_record_str);
+    if (err) {
+        return err;
+    }
+
+    return StreamInfoFromDbResponse(last_record_str, earliest_record_str, info);
+}
+
+Error MongoDBClient::UpdateStreamInfo(const char* str, StreamInfo* info) const {
+    std::string stream_name{str};
+    std::string prefix = std::string(kDBDataCollectionNamePrefix) + "_";
+    if (stream_name.rfind(prefix, 0) == 0) {
+        std::string record_str;
+        StreamInfo next_info;
+        auto err = GetStreamInfo(stream_name, &next_info);
+        if (err) {
+            return err;
+        }
+        if (next_info.timestamp_created > info->timestamp_created) {
+            next_info.name = stream_name.erase(0, prefix.size());
+            *info = next_info;
+        }
+    }
+    return nullptr;
+}
+
+Error MongoDBClient::GetLastStream(StreamInfo* info) const {
+    if (!connected_) {
+        return DBErrorTemplates::kNotConnected.Generate();
+    }
+
+    mongoc_database_t* database;
+    bson_t* opts;
+    char** strv;
+    bson_error_t error;
+
+    database = mongoc_client_get_database(client_, database_name_.c_str());
+    opts = BCON_NEW ("nameOnly", BCON_BOOL(true));
+    auto zero_time = std::chrono::system_clock::from_time_t(0);
+    info->timestamp_created = zero_time;
+    info->timestamp_lastentry = zero_time;
+    Error err;
+    if ((strv = mongoc_database_get_collection_names_with_opts(
+        database, opts, &error))) {
+        for (auto i = 0; strv[i]; i++) {
+            err = UpdateStreamInfo(strv[i], info);
+            if (err) {
+                break;
+            }
+        }
+        bson_strfreev(strv);
+    } else {
+        err = DBErrorTemplates::kDBError.Generate(error.message);
+    }
+
+    bson_destroy(opts);
+    mongoc_database_destroy(database);
+    return err;
 }
 
 }

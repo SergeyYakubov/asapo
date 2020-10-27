@@ -28,8 +28,8 @@ cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass FileData:
     unique_ptr[uint8_t[]] release()
   cppclass StreamInfo:
-    string Json()
-    bool SetFromJson(string json_str)
+    string Json(bool add_last_id)
+    bool SetFromJson(string json_str, bool read_last_id)
 
 cdef extern from "asapo_producer.h" namespace "asapo":
   cppclass RequestHandlerType:
@@ -110,7 +110,9 @@ cdef extern from "asapo_producer.h" namespace "asapo" nogil:
         uint64_t  GetRequestsQueueSize()
         Error WaitRequestsFinished(uint64_t timeout_ms)
         Error SendSubstreamFinishedFlag(string substream, uint64_t last_id, string next_substream, RequestCallback callback)
-        StreamInfo GetStreamInfo(string substream, uint64_t timeout_ms, Error* err)
+        StreamInfo GetStreamInfo(string substream, uint64_t timeout_sec, Error* err)
+        StreamInfo GetLastSubstream(uint64_t timeout_sec, Error* err)
+
 
 cdef extern from "asapo_producer.h" namespace "asapo":
     uint64_t kDefaultIngestMode

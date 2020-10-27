@@ -46,7 +46,7 @@ struct Args {
 class LatchedTimer {
   private:
     volatile int count_;
-    std::chrono::high_resolution_clock::time_point start_time_ = std::chrono::high_resolution_clock::time_point::max();
+    std::chrono::system_clock::time_point start_time_ = std::chrono::system_clock::time_point::max();
     std::mutex mutex;
     std::condition_variable waiter;
   public:
@@ -60,7 +60,7 @@ class LatchedTimer {
         count_--;
         if (0 == count_) {
             waiter.notify_all();
-            const std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+            const std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
             start_time_ = now;
         } else {
             while (count_ > 0) {
@@ -70,10 +70,10 @@ class LatchedTimer {
     }
 
     bool was_triggered() const {
-        return start_time() != std::chrono::high_resolution_clock::time_point::max();
+        return start_time() != std::chrono::system_clock::time_point::max();
     }
 
-    std::chrono::high_resolution_clock::time_point start_time() const {
+    std::chrono::system_clock::time_point start_time() const {
         return start_time_;
     };
 };
@@ -181,7 +181,7 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_wi
                 int* nfiles_total,
                 asapo::NetworkConnectionType* connection_type) {
     asapo::FileInfo fi;
-    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+    std::chrono::system_clock::time_point t1 = std::chrono::system_clock::now();
 
     std::vector<int> nfiles(params.nthreads, 0);
     std::vector<int> errors(params.nthreads, 0);
@@ -195,7 +195,7 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_wi
                                 &latched_timer);
     WaitThreads(&threads);
 
-    std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::system_clock::time_point t2 = std::chrono::system_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
     *duration_ms = duration_read.count();
     if (latched_timer.was_triggered()) {

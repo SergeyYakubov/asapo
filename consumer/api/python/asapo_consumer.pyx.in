@@ -203,16 +203,17 @@ cdef class PyDataBroker:
         if err:
             throw_exception(err)
         return _str(group_id)
-    def get_substream_list(self):
+    def get_substream_list(self,from_substream):
         cdef Error err
-        cdef vector[string] substreams
+        cdef vector[StreamInfo] substreams
+        cdef string b_from_substream = _bytes(from_substream)
         with nogil:
-            substreams = self.c_broker.GetSubstreamList(&err)
+            substreams = self.c_broker.GetSubstreamList(b_from_substream,&err)
         if err:
             throw_exception(err)
         list = []
         for substream in substreams:
-            list.append(_str(substream))
+            list.append(json.loads(_str(substream.Json(False))))
         return list
     def acknowledge(self, group_id, uint64_t id, substream = "default"):
         cdef string b_group_id = _bytes(group_id)

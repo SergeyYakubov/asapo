@@ -27,10 +27,19 @@ class Producer {
     //! Get substream information from receiver
     /*!
       \param substream (optional) - substream
+      \param timeout_sec - operation timeout in seconds
       \return StreamInfo - a structure with substream information
     */
-    virtual StreamInfo GetStreamInfo(std::string substream, uint64_t timeout_ms, Error* err) const = 0;
-    virtual StreamInfo GetStreamInfo(uint64_t timeout_ms, Error* err) const = 0;
+    virtual StreamInfo GetStreamInfo(std::string substream, uint64_t timeout_sec, Error* err) const = 0;
+    virtual StreamInfo GetStreamInfo(uint64_t timeout_sec, Error* err) const = 0;
+
+  //! Get substream that has the newest ingested data
+  /*!
+    \param timeout_ms - operation timeout in seconds
+    \return StreamInfo - a structure with substream information
+  */
+    virtual StreamInfo GetLastSubstream(uint64_t timeout_sec, Error* err) const = 0;
+
 
     //! Sends data to the receiver
     /*!
