@@ -1,4 +1,4 @@
-##20.09.1
+## 20.09.1
 
 FEATURES
 * New function GetLastSubstream/last_stream in Producer API - returns info for a substream which was created last 
@@ -10,7 +10,7 @@ IMPROVEMENTS
 BREAKING CHANGES
 * GetSubstreamList/get_substream_list returns now not an array of strings, but array of StreamInfos/dictionaries
 
-##20.09.0
+## 20.09.0
 
 FEATURES
 * implemented negative acknowledges and data redelivery - data will be redelivered automatically for get_next calls if it is not acknowledged during a given period or a consumer sent a negative acknowledge  
