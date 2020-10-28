@@ -9,7 +9,7 @@
 #include "../../src/request.h"
 #include "../../src/request_handler/request_factory.h"
 #include "../../src/request_handler/request_handler.h"
-#include "../../src/request_handler/request_handler_db_stream_info.h"
+#include "../../src/request_handler/request_handler_db_last_stream.h"
 #include "../../../common/cpp/src/database/mongodb_client.h"
 
 #include "../mock_receiver_config.h"
@@ -42,7 +42,7 @@ using ::asapo::FileDescriptor;
 using ::asapo::SocketDescriptor;
 using ::asapo::MockIO;
 using asapo::Request;
-using asapo::RequestHandlerDbStreamInfo;
+using asapo::RequestHandlerDbLastStream;
 using ::asapo::GenericRequestHeader;
 
 using asapo::MockDatabase;
@@ -53,11 +53,10 @@ using asapo::ReceiverConfig;
 
 namespace {
 
-class DbMetaStreamInfoTests : public Test {
+class DbMetaLastStreamTests : public Test {
   public:
-    std::string expected_substream = "substream";
-    std::string expected_collection_name = std::string(asapo::kDBDataCollectionNamePrefix) + "_" + expected_substream;
-    RequestHandlerDbStreamInfo handler{asapo::kDBDataCollectionNamePrefix};
+    std::string expectedlaststream = "substream";
+    RequestHandlerDbLastStream handler{asapo::kDBDataCollectionNamePrefix};
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
     NiceMock<asapo::MockLogger> mock_logger;
@@ -69,7 +68,7 @@ class DbMetaStreamInfoTests : public Test {
     void SetUp() override {
         GenericRequestHeader request_header;
         expected_stream_info.last_id = 10;
-        expected_stream_info.name = expected_substream;
+        expected_stream_info.name = expectedlaststream;
         expected_stream_info.timestamp_created = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
         expected_stream_info.timestamp_lastentry = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(2));
         request_header.data_id = 0;
@@ -83,7 +82,7 @@ class DbMetaStreamInfoTests : public Test {
     }
 };
 
-TEST_F(DbMetaStreamInfoTests, CallsUpdate) {
+TEST_F(DbMetaLastStreamTests, CallsUpdate) {
     SetReceiverConfig(config, "none");
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
@@ -92,26 +91,21 @@ TEST_F(DbMetaStreamInfoTests, CallsUpdate) {
 
     EXPECT_CALL(*mock_request, GetStream()).WillOnce(ReturnRef(expected_stream));
 
-    EXPECT_CALL(*mock_request, GetSubstream()).Times(2)
-    .WillRepeatedly(Return(expected_substream))
-    ;
-
     EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_stream)).
     WillOnce(testing::Return(nullptr));
 
 
-    EXPECT_CALL(mock_db, GetStreamInfo_t(expected_collection_name, _)).
+    EXPECT_CALL(mock_db, GetLastStream_t(_)).
     WillOnce(DoAll(
-                 SetArgPointee<1>(expected_stream_info),
+                 SetArgPointee<0>(expected_stream_info),
                  testing::Return(nullptr)
              ));
 
     EXPECT_CALL(*mock_request, SetResponseMessage(info_str, asapo::ResponseMessageType::kInfo));
 
-    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("get stream info"),
+    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("get last stream"),
                                          HasSubstr(config.database_uri),
-                                         HasSubstr(expected_beamtime_id),
-                                         HasSubstr(expected_collection_name)
+                                         HasSubstr(expected_beamtime_id)
                                         )
                                   )
                );

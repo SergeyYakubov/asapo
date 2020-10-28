@@ -162,7 +162,7 @@ class ServerDataBrokerTests : public Test {
         fi.id = 1;
         fi.buf_id = buf_id;
         fi.name = expected_filename;
-        fi.modify_date = std::chrono::system_clock::now();
+        fi.timestamp = std::chrono::system_clock::now();
         return fi;
     }
 };
@@ -481,7 +481,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsFileInfo) {
     ASSERT_THAT(info.name, Eq(to_send.name));
     ASSERT_THAT(info.size, Eq(to_send.size));
     ASSERT_THAT(info.id, Eq(to_send.id));
-    ASSERT_THAT(info.modify_date, Eq(to_send.modify_date));
+    ASSERT_THAT(info.timestamp, Eq(to_send.timestamp));
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsParseError) {
@@ -1027,21 +1027,37 @@ TEST_F(ServerDataBrokerTests, GetDatasetByIdUsesCorrectUri) {
 
 TEST_F(ServerDataBrokerTests, GetSubstreamListUsesCorrectUri) {
     MockGetBrokerUri();
-
+    std::string return_substreams = R"({"substreams":[{"lastId":123,"name":"test","timestampCreated":1000000},{"name":"test1","timestampCreated":2000000}]})";
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/0/substreams"
-                                        + "?token=" + expected_token, _,
+                                        + "?token=" + expected_token+"&from=stream_from", _,
                                         _)).WillOnce(DoAll(
                                                 SetArgPointee<1>(HttpCode::OK),
                                                 SetArgPointee<2>(nullptr),
-                                                Return("{\"substreams\":[\"s1\",\"s2\"]}")));
+                                                Return(return_substreams)));
 
     asapo::Error err;
-    auto substreams = data_broker->GetSubstreamList(&err);
+    auto substreams = data_broker->GetSubstreamList("stream_from",&err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(substreams.size(), Eq(2));
-    ASSERT_THAT(substreams, testing::ElementsAre("s1", "s2"));
-
+    ASSERT_THAT(substreams.size(), 2);
+    ASSERT_THAT(substreams[0].Json(false), R"({"name":"test","timestampCreated":1000000})");
+    ASSERT_THAT(substreams[1].Json(false), R"({"name":"test1","timestampCreated":2000000})");
 }
+
+
+TEST_F(ServerDataBrokerTests, GetSubstreamListUsesCorrectUriWithoutFrom) {
+    MockGetBrokerUri();
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/0/substreams"
+                                            + "?token=" + expected_token, _,
+                                        _)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return("")));;
+
+    asapo::Error err;
+    auto substreams = data_broker->GetSubstreamList("",&err);
+}
+
 
 void ServerDataBrokerTests::MockBeforeFTS(FileData* data) {
     auto to_send = CreateFI();

@@ -23,29 +23,22 @@ mkdir %receiver_folder%
 mkdir  c:\tmp\asapo\test_in\processed
 start /B "" "%1" test.json
 
-ping 1.0.0.0 -n 3 -w 100 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 
 echo hello > c:\tmp\asapo\test_in\processed\file1
 echo hello > c:\tmp\asapo\test_in\processed\file2
 
-ping 1.0.0.0 -n 3 -w 100 > nul
+ping 192.0.2.1 -n 3 -w 1000 > nul
 
 c:\opt\consul\nomad stop receiver
+ping 192.0.2.1 -n 1 -w 1000 > nul
 c:\opt\consul\nomad run receiver_tcp.nmd
-
-ping 1.0.0.0 -n 3 -w 100 > nul
-ping 1.0.0.0 -n 3 -w 100 > nul
-ping 1.0.0.0 -n 10 -w 100 > nul
-
-
 echo hello > c:\tmp\asapo\test_in\processed\file3
 
-ping 1.0.0.0 -n 10 -w 100 > nul
-
+ping 192.0.2.1 -n 10 -w 1000 > nul
 
 REM consumer
 "%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 3000 1 | findstr /c:"Processed 3 file(s)"  || goto :error
-
 
 goto :clean
 

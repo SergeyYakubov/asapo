@@ -4,7 +4,7 @@ import numpy
 
 ext_modules = [
     Extension("asapo_producer", ["asapo_producer.cpp"],
-              extra_objects=['lib/libasapo-producer.a', 'lib/libcurl.a'],
+              extra_objects=[ 'lib/$<TARGET_FILE_NAME:asapo-producer>', 'lib/libcurl@CMAKE_STATIC_LIBRARY_SUFFIX@'],
                        include_dirs=["include/common","include",numpy.get_include()],
                        extra_compile_args=@EXTRA_COMPILE_ARGS@,
                        extra_link_args=@EXTRA_LINK_ARGS@,
@@ -15,6 +15,6 @@ setup(
       name ="asapo_producer",
       ext_modules = ext_modules,
       version = "@PYTHON_ASAPO_VERSION@",
-      setup_requires=["numpy","cython>=0.28"],
-      install_requires=["numpy","cython>=0.28"]
+      setup_requires=["numpy>=@NUMPY_VERSION@", "cython>=0.28"],
+      install_requires=["numpy>=@NUMPY_VERSION@"]
       )

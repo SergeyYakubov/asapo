@@ -12,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"math"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -53,10 +52,6 @@ type LastAck struct {
 	ID int `bson:"_id" json:"lastAckId"`
 }
 
-type SubstreamsRecord struct {
-	Substreams []string `bson:"substreams" json:"substreams"`
-}
-
 type LocationPointer struct {
 	GroupID string `bson:"_id"`
 	Value   int    `bson:"current_pointer"`
@@ -75,7 +70,9 @@ const already_connected_msg = "already connected"
 const finish_substream_keyword = "asapo_finish_substream"
 const no_next_substream_keyword = "asapo_no_next"
 
-var dbSessionLock sync.RWMutex
+var dbSessionLock sync.Mutex
+
+
 
 type SizeRecord struct {
 	Size int `bson:"size" json:"size"`
@@ -84,7 +81,6 @@ type SizeRecord struct {
 type Mongodb struct {
 	client                *mongo.Client
 	timeout               time.Duration
-	parent_db             *Mongodb
 	settings              DBSettings
 	lastReadFromInprocess int64
 }
@@ -260,6 +256,22 @@ func (db *Mongodb) getRecordByIDRow(dbname string, collection_name string, id, i
 	return utils.MapToJson(&res)
 }
 
+func (db *Mongodb) getEarliestRecord(dbname string, collection_name string) (map[string]interface{}, error) {
+	var res map[string]interface{}
+	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
+	opts := options.FindOne().SetSort(bson.M{"timestamp": 1})
+	var q bson.M = nil
+	err := c.FindOne(context.TODO(), q, opts).Decode(&res)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return map[string]interface{}{}, nil
+		}
+		return nil,err
+	}
+	return res,nil
+}
+
 func (db *Mongodb) getRecordByID(dbname string, collection_name string, group_id string, id_str string, dataset bool) ([]byte, error) {
 	id, err := strconv.Atoi(id_str)
 	if err != nil {
@@ -311,14 +323,6 @@ func (db *Mongodb) ackRecord(dbname string, collection_name string, group_id str
 	}
 
 	return []byte(""), err
-}
-
-func (db *Mongodb) getParentDB() *Mongodb {
-	if db.parent_db == nil {
-		return db
-	} else {
-		return db.parent_db
-	}
 }
 
 func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, collection_name string, group_id string) error {
@@ -627,24 +631,6 @@ func (db *Mongodb) queryImages(dbname string, collection_name string, query stri
 	}
 }
 
-func (db *Mongodb) getSubstreams(db_name string) ([]byte, error) {
-	database := db.client.Database(db_name)
-
-	result, err := database.ListCollectionNames(context.TODO(), bson.D{})
-	if err != nil {
-		return db.processQueryError("get substreams", db_name, err)
-	}
-
-	var rec = SubstreamsRecord{[]string{}}
-	for _, coll := range result {
-		if strings.HasPrefix(coll, data_collection_name_prefix) {
-			rec.Substreams = append(rec.Substreams, strings.TrimPrefix(coll, data_collection_name_prefix))
-		}
-	}
-	sort.Strings(rec.Substreams)
-	return json.Marshal(&rec)
-}
-
 func makeRange(min, max int) []int {
 	a := make([]int, max-min+1)
 	for i := range a {
@@ -769,6 +755,15 @@ func (db *Mongodb) getNacks(db_name string, collection_name string, group_id str
 	return resp[0].Numbers, nil
 }
 
+func (db *Mongodb) getSubstreams(db_name string, from string) ([]byte, error) {
+	rec, err := substreams.getSubstreams(db,db_name,from)
+	if err != nil {
+		return db.processQueryError("get substreams", db_name, err)
+	}
+	return json.Marshal(&rec)
+}
+
+
 func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
 	dataset := false
 	if strings.HasSuffix(op, "_dataset") {
@@ -796,7 +791,7 @@ func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_
 	case "queryimages":
 		return db.queryImages(db_name, collection_name, extra_param)
 	case "substreams":
-		return db.getSubstreams(db_name)
+		return db.getSubstreams(db_name,extra_param)
 	case "ackimage":
 		return db.ackRecord(db_name, collection_name, group_id, extra_param)
 	case "negackimage":

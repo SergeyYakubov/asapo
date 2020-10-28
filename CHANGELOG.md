@@ -1,3 +1,15 @@
+##20.09.1
+
+FEATURES
+* New function GetLastSubstream/last_stream in Producer API - returns info for a substream which was created last 
+
+IMPROVEMENTS
+* Each data tuple automatically gets a timestamp (nanoseconds from Linux epoch) at the moment it is being inserted to a database 
+* GetSubstreamList/get_substream_list returns now sorted (by timestamp of the earliest data tuple) list of substreams. Parameter `from` allows to limit the list
+
+BREAKING CHANGES
+* GetSubstreamList/get_substream_list returns now not an array of strings, but array of StreamInfos/dictionaries
+
 ##20.09.0
 
 FEATURES

@@ -58,6 +58,12 @@ class MockDatabase : public Database {
 
     MOCK_CONST_METHOD2(GetStreamInfo_t, ErrorInterface * (const std::string&, StreamInfo*));
 
+    Error GetLastStream(StreamInfo* info) const override {
+        return Error{GetLastStream_t(info)};
+    }
+
+    MOCK_CONST_METHOD1(GetLastStream_t, ErrorInterface * (StreamInfo*));
+
 
     // stuff to test db destructor is called and avoid "uninteresting call" messages
     MOCK_METHOD0(Die, void());

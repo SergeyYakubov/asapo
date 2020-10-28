@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
+IMAGE=yakser/asapo-cluster:20.06.3
+
 #folders
 NOMAD_ALLOC_HOST_SHARED=/var/tmp/asapo/container_host_shared/nomad_alloc
 SERVICE_DATA_CLUSTER_SHARED=/home/yakubov/asapo/asapo_cluster_shared/service_data
 DATA_GLOBAL_SHARED=/gpfs/petra3/scratch/yakubov/asapo_shared
-DATA_GLOBAL_SHARED_ONLINE=/tmp
+DATA_GLOBAL_SHARED_ONLINE=/gpfs/petra3/scratch/yakubov/asapo_shared_online
 MONGO_DIR=/scratch/mongodb # due to performance reasons mongodb can benefit from writing to local filesystem (HA to be worked on)
 #service distribution
 MAX_NOMAD_SERVERS=3 #  rest are clients
@@ -21,9 +23,9 @@ ACL_ENABLED=true
 
 #docker stuff
 DOCKER_ENDPOINT="127.0.0.1:2376" #comment to use unix sockets
-DOCKER_TLS_CA=/data/netapp/docker/certs/ca.pem
-DOCKER_TLS_KEY=/data/netapp/docker/certs/$USER/key.pem
-DOCKER_TLS_CERT=/data/netapp/docker/certs/$USER/cert.pem
+DOCKER_TLS_CA=/beegfs/desy/sys/docker/certs/ca.pem
+DOCKER_TLS_KEY=/beegfs/desy/sys/docker/certs/$USER/key.pem
+DOCKER_TLS_CERT=/beegfs/desy/sys/docker/certs/$USER/cert.pem
 
 #adresses to use
 USE_IB_FOR_RECEIVER=true
@@ -53,9 +55,9 @@ echo consider increasing max_map_count - needed for elasticsearch
 #    exit 1
 fi
 
-docker rm -f asapo
+docker rm -f asapo &>/dev/null
 
-docker pull yakser/asapo-cluster
+docker pull $IMAGE
 
 if [ -f $ASAPO_VAR_FILE ]; then
 MOUNT_VAR_FILE="-v $ASAPO_VAR_FILE:/var/run/asapo/user_vars.tfvars"
@@ -76,14 +78,13 @@ $MOUNT_VAR_FILE \
 -e TF_VAR_online_dir=$DATA_GLOBAL_SHARED_ONLINE \
 -e TF_VAR_offline_dir=$DATA_GLOBAL_SHARED \
 -e TF_VAR_mongo_dir=$MONGO_DIR \
+-e TF_VAR_asapo_user=$ASAPO_USER \
 -e ADVERTISE_IP=$ADVERTISE_IP \
 -e RECURSORS=$RECURSORS \
--e TF_VAR_asapo_user=$ASAPO_USER \
 -e IB_ADDRESS=$IB_ADDRESS \
 -e ACL_ENABLED=$ACL_ENABLED \
 -e SERVER_ADRESSES=$SERVER_ADRESSES \
 -e ASAPO_LIGHTWEIGHT_SERVICE_NODES=$ASAPO_LIGHTWEIGHT_SERVICE_NODES \
 -e DOCKER_ENDPOINT=$DOCKER_ENDPOINT \
 -e N_SERVERS=$N_SERVERS \
---name asapo yakser/asapo-cluster
-
+--name asapo $IMAGE

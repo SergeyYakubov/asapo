@@ -130,7 +130,7 @@ class FabricContextImpl : public FabricContext {
         ret = func(endpoint_, args..., context);
         if (ret == -FI_EAGAIN) {
             using namespace std::chrono;
-            using clock = std::chrono::high_resolution_clock;
+            using clock = std::chrono::system_clock;
             auto maxTime = clock::now() + milliseconds(requestEnqueueTimeoutMs_);
 
             do {

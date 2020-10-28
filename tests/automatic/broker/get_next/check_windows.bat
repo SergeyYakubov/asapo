@@ -12,7 +12,7 @@ set /P token=< token
 
 start /B "" "%full_name%" -config settings.json
 
-ping 1.0.0.0 -n 1 -w 100 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 
 C:\Curl\curl.exe -d '' --silent 127.0.0.1:5005/creategroup > groupid
 set /P groupid=< groupid

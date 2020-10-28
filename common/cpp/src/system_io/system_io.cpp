@@ -41,7 +41,7 @@ const size_t SystemIO::kReadWriteBufSize = size_t(1024) * 1024 * 50; //50MiByte
 void SortFileList(std::vector<FileInfo>* file_list) {
     std::sort(file_list->begin(), file_list->end(),
     [](FileInfo const & a, FileInfo const & b) {
-        return a.modify_date < b.modify_date;
+        return a.timestamp < b.timestamp;
     });
 }
 

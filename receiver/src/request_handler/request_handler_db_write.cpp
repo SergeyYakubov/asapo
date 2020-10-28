@@ -1,4 +1,8 @@
 #include "request_handler_db_write.h"
+
+#include <chrono>
+
+
 #include "../request.h"
 #include "../receiver_config.h"
 #include "../receiver_logger.h"
@@ -82,6 +86,7 @@ FileInfo RequestHandlerDbWrite::PrepareFileInfo(const Request* request) const {
     file_info.buf_id = request->GetSlotId();
     file_info.source = GetReceiverConfig()->dataserver.advertise_uri;
     file_info.metadata = request->GetMetaData();
+    file_info.timestamp = std::chrono::system_clock::now();
     return file_info;
 }
 

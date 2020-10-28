@@ -14,7 +14,7 @@ mkdir %receiver_folder%
 
 echo test > file1
 
-ping 1.0.0.0 -n 1 -w 100 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 
 set PYTHONPATH=%2
 
@@ -22,7 +22,7 @@ set PYTHONPATH=%2
 type out
 set NUM=0
 for /F %%N in ('find /C "successfuly sent" ^< "out"') do set NUM=%%N
-echo %NUM% | findstr 11 || goto error
+echo %NUM% | findstr 12 || goto error
 
 for /F %%N in ('find /C "} wrong input: Bad request: already have record with same id" ^< "out"') do set NUM=%%N
 echo %NUM% | findstr 2 || goto error

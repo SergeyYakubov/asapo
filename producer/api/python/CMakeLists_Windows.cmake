@@ -28,3 +28,7 @@ target_include_directories(${TARGET_NAME} PUBLIC include  ${Python3_INCLUDE_DIRS
 
 
 add_subdirectory(binary_dist_windows)
+
+set (EXTRA_COMPILE_ARGS "['/MT']")
+set (EXTRA_LINK_ARGS "[]")
+add_subdirectory(source_dist_linux)

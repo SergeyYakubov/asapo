@@ -3,7 +3,7 @@ SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 
 mkdir test
 echo "" > test/file2
-ping 1.0.0.0 -n 1 -w 100 > nul
+ping 192.0.2.1 -n 1 -w 1000 > nul
 echo "" > test/file1
 
 %* test test_run 127.0.0.1 || goto :error
