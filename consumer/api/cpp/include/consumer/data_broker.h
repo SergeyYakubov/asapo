@@ -74,7 +74,7 @@ class DataBroker {
      */
     virtual NetworkConnectionType CurrentConnectionType() const = 0;
 
-    //! Set list of substreams
+    //! Get list of substreams, set from to "" to get all substreams
     virtual StreamInfos GetSubstreamList(std::string from, Error* err) = 0;
 
     //! Get current number of datasets

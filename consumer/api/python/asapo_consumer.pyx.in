@@ -203,7 +203,7 @@ cdef class PyDataBroker:
         if err:
             throw_exception(err)
         return _str(group_id)
-    def get_substream_list(self,from_substream):
+    def get_substream_list(self, from_substream = ""):
         cdef Error err
         cdef vector[StreamInfo] substreams
         cdef string b_from_substream = _bytes(from_substream)
