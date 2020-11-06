@@ -16,9 +16,15 @@ monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
 
 beamline=test
+receiver_root_folder=/tmp/asapo/receiver/files
+facility=test_facility
+year=2019
+receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
+mkdir -p ${receiver_folder}
 
 Cleanup() {
     echo cleanup
+    rm -rf ${receiver_folder}
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop receiver
@@ -29,7 +35,7 @@ Cleanup() {
     influx -execute "drop database ${monitor_database_name}"
 }
 
-sed -i 's/info/debug/g' broker.json.tpl
+#sed -i 's/info/debug/g' broker.json.tpl
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
