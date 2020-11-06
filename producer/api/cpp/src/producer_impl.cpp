@@ -58,6 +58,16 @@ Error CheckIngestMode(uint64_t ingest_mode) {
         return ProducerErrorTemplates::kWrongInput.Generate("wrong ingest mode");
     }
 
+    if (ingest_mode & IngestModeFlags::kTransferData &&
+        !(ingest_mode & (IngestModeFlags::kStoreInDatabase | IngestModeFlags::kStoreInFilesystem))) {
+        return ProducerErrorTemplates::kWrongInput.Generate("wrong ingest mode");
+    }
+
+    if (ingest_mode & IngestModeFlags::kTransferMetaDataOnly &&
+        (ingest_mode & IngestModeFlags::kStoreInFilesystem)) {
+        return ProducerErrorTemplates::kWrongInput.Generate("wrong ingest mode");
+    }
+
     return nullptr;
 }
 
@@ -204,7 +214,7 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
 
 Error ProducerImpl::SendMetaData(const std::string& metadata, RequestCallback callback) {
     GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0, "beamtime_global.meta"};
-    request_header.custom_data[kPosIngestMode] = asapo::IngestModeFlags::kTransferData;
+    request_header.custom_data[kPosIngestMode] = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInDatabase;
     FileData data{new uint8_t[metadata.size()]};
     strncpy((char*)data.get(), metadata.c_str(), metadata.size());
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),

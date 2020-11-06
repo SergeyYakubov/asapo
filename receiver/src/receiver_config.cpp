@@ -23,8 +23,6 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     (err = parser.GetUInt64("ReceiveToDiskThresholdMB", &config.receive_to_disk_threshold_mb)) ||
     (err = parser.Embedded("DataServer").GetUInt64("ListenPort", &config.dataserver.listen_port)) ||
     (err = parser.Embedded("DataServer").GetUInt64("NThreads", &config.dataserver.nthreads)) ||
-    (err = parser.GetBool("WriteToDisk", &config.write_to_disk)) ||
-    (err = parser.GetBool("WriteToDb", &config.write_to_db)) ||
     (err = parser.Embedded("DataCache").GetBool("Use", &config.use_datacache)) ||
     (err = parser.Embedded("DataCache").GetUInt64("SizeGB", &config.datacache_size_gb)) ||
     (err = parser.Embedded("DataCache").GetUInt64("ReservedShare", &config.datacache_reserved_share)) ||

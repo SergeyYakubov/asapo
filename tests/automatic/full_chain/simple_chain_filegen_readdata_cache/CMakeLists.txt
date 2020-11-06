@@ -3,7 +3,6 @@ set(TARGET_NAME full_chain_simple_chain_withdata_fromcache)
 ################################
 # Testing
 ################################
-set(RECEIVER_WRITE_TO_DISK false)
 prepare_asapo()
 if (UNIX)
     set (ROOT_PATH "/tmp/asapo/")

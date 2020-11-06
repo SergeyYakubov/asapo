@@ -66,8 +66,6 @@ class FactoryTests : public Test {
     void SetUp() override {
         generic_request_header.op_code = asapo::Opcode::kOpcodeTransferData;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
-        config.write_to_disk = true;
-        config.write_to_db = true;
         SetReceiverConfig(config, "none");
     }
     void TearDown() override {
@@ -126,30 +124,16 @@ TEST_F(FactoryTests, ReturnsDataRequestForAuthorizationCode) {
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
 }
 
-
-TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWantedInConfig) {
-    config.write_to_disk = false;
-
-    SetReceiverConfig(config, "none");
-
-    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
-    ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(request->GetListHandlers().size(), Eq(4));
-    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
-}
-
-TEST_F(FactoryTests, DoNotAddDiskWriterIfNotWantedInRequest) {
+TEST_F(FactoryTests, DoNotAddDiskAndDbWriterIfNotWantedInRequest) {
     generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData;
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(request->GetListHandlers().size(), Eq(4));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(3));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers().back()), Ne(nullptr));
 }
 
 TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
-    config.write_to_db = false;
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInFilesystem;
 
     SetReceiverConfig(config, "none");
 
@@ -171,7 +155,21 @@ TEST_F(FactoryTests, CachePassedToRequest) {
 
 }
 
+TEST_F(FactoryTests, ReturnsMetaDataRequestOnTransferMetaDataOnly) {
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferMetaDataOnly;
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(4));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveMetaData*>(request->GetListHandlers()[1]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveData*>(request->GetListHandlers()[2]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbWrite*>(request->GetListHandlers()[3]), Ne(nullptr));
+}
+
 TEST_F(FactoryTests, ReturnsMetaDataRequestOnkOpcodeTransferMetaData) {
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInDatabase;
     generic_request_header.op_code = asapo::Opcode::kOpcodeTransferMetaData;
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
 
@@ -181,34 +179,6 @@ TEST_F(FactoryTests, ReturnsMetaDataRequestOnkOpcodeTransferMetaData) {
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveData*>(request->GetListHandlers()[1]), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbMetaWrite*>(request->GetListHandlers().back()), Ne(nullptr));
-}
-
-
-TEST_F(FactoryTests, DonNotGenerateMetadataRequestIfNoDbConfigured) {
-    config.write_to_db = false;
-
-    SetReceiverConfig(config, "none");
-
-
-    generic_request_header.op_code = asapo::Opcode::kOpcodeTransferMetaData;
-    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
-
-    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInternalServerError));
-}
-
-
-TEST_F(FactoryTests, DonNotGenerateRequestIfWriteToDiskNotActive) {
-    config.write_to_disk = false;
-    config.receive_to_disk_threshold_mb = 0;
-
-    SetReceiverConfig(config, "none");
-
-    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
-    generic_request_header.data_size = 1;
-
-    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
-
-    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInternalServerError));
 }
 
 TEST_F(FactoryTests, DonNotGenerateRequestIfIngestModeIsWrong) {
