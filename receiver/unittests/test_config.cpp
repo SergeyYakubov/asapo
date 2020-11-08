@@ -48,8 +48,6 @@ class ConfigTests : public Test {
         test_config.tag = "receiver1";
         test_config.performance_db_name = "db_test";
         test_config.performance_db_uri = "localhost:8086";
-        test_config.write_to_disk = true;
-        test_config.write_to_db = true;
         test_config.database_uri = "localhost:27017";
         test_config.log_level = asapo::LogLevel::Error;
         test_config.authorization_interval_ms = 10000;
@@ -83,8 +81,6 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->listen_port, Eq(4200));
     ASSERT_THAT(config->authorization_interval_ms, Eq(10000));
     ASSERT_THAT(config->authorization_server, Eq("AuthorizationServer/aa"));
-    ASSERT_THAT(config->write_to_disk, Eq(true));
-    ASSERT_THAT(config->write_to_db, Eq(true));
     ASSERT_THAT(config->log_level, Eq(asapo::LogLevel::Error));
     ASSERT_THAT(config->tag, Eq("receiver1"));
     ASSERT_THAT(config->use_datacache, Eq(false));
@@ -105,8 +101,8 @@ TEST_F(ConfigTests, ReadSettings) {
 TEST_F(ConfigTests, ErrorReadSettings) {
     PrepareConfig();
 
-    std::vector<std::string>fields {"PerformanceDbServer", "ListenPort", "DataServer", "ListenPort", "WriteToDisk",
-                                    "WriteToDb", "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
+    std::vector<std::string>fields {"PerformanceDbServer", "ListenPort", "DataServer", "ListenPort",
+                                    "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
                                     "AuthorizationServer", "AuthorizationInterval", "PerformanceDbName", "LogLevel",
                                     "NThreads", "DiscoveryServer", "AdvertiseURI", "NetworkMode",
                                     "ReceiveToDiskThresholdMB"};

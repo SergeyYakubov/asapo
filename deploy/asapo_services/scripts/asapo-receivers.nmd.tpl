@@ -27,6 +27,9 @@ job "asapo-receivers" {
       driver = "docker"
       user = "${asapo_user}"
       config {
+        ulimit {
+          memlock = "-1:-1"
+        }
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"

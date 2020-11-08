@@ -120,6 +120,11 @@ producer.send_file(1, local_path="./file1", exposed_path="processed/" + stream +
 producer.send_data(6, "processed/" + stream + "/" + "file8", None,
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback=callback)
 
+# send same id without writing to database, should success
+producer.send_file(1, local_path="./file1", exposed_path="processed/" + stream + "/" + "file18",
+                   user_meta='{"test_key1":"test_val"}',
+                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_DATA | asapo_producer.INGEST_MODE_STORE_IN_FILESYSTEM,callback=callback)
+
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")

@@ -18,8 +18,6 @@
     "ReservedShare": 10
   },
   "Tag": "receiver",
-  "WriteToDisk":true,
   "ReceiveToDiskThresholdMB": {{ .Values.ownServices.receiver.receiveToDiskThresholdMB }},
-  "WriteToDb":true,
   "LogLevel": "info"
 }

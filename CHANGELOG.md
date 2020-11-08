@@ -1,3 +1,9 @@
+## 20.09.2
+
+FEATURES
+* implemented possibility to send data without writing to database (no need of consecutive indexes, etc. but will not be able to consume such data) 
+
+
 ## 20.09.1
 
 FEATURES

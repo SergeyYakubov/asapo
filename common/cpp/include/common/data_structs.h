@@ -103,9 +103,10 @@ enum IngestModeFlags : uint64_t {
     kTransferData = 1 << 0,
     kTransferMetaDataOnly = 1 << 1,
     kStoreInFilesystem = 1 << 2,
+    kStoreInDatabase = 1 << 3,
 };
 
-const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem;
+const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem | kStoreInDatabase;
 
 const std::string kDefaultSubstream = "default";
 

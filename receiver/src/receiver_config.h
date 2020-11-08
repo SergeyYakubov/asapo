@@ -15,8 +15,6 @@ struct ReceiverConfig {
     uint64_t listen_port = 0;
     std::string authorization_server;
     uint64_t authorization_interval_ms = 0;
-    bool write_to_disk = false;
-    bool write_to_db = false;
     bool use_datacache = true;
     uint64_t datacache_size_gb = 0;
     uint64_t datacache_reserved_share = 0;

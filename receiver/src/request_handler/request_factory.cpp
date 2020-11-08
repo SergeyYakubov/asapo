@@ -5,12 +5,12 @@
 namespace asapo {
 
 bool NeedFileWriteHandler(const GenericRequestHeader &request_header) {
-    return GetReceiverConfig()->write_to_disk &&
-        (request_header.custom_data[kPosIngestMode] & IngestModeFlags::kStoreInFilesystem);
+    return request_header.custom_data[kPosIngestMode] & IngestModeFlags::kStoreInFilesystem;
 }
 
 bool NeedDbHandler(const GenericRequestHeader &request_header) {
-    return GetReceiverConfig()->write_to_db;
+    return (request_header.custom_data[kPosIngestMode] & IngestModeFlags::kStoreInDatabase) ||
+        (request_header.custom_data[kPosIngestMode] == asapo::IngestModeFlags::kTransferMetaDataOnly);
 }
 
 bool RequestFactory::ReceiveDirectToFile(const GenericRequestHeader &request_header) const {
@@ -37,9 +37,6 @@ void RequestFactory::AddReceiveViaBufferHandlers(std::unique_ptr<Request> &reque
 
 Error RequestFactory::AddReceiveDirectToFileHandler(std::unique_ptr<Request> &request,
                                                     const GenericRequestHeader &request_header) const {
-    if (!GetReceiverConfig()->write_to_disk) {
-        return ReceiverErrorTemplates::kInternalServerError.Generate("reciever does not support writing to disk");
-    }
     if (!(request_header.custom_data[kPosIngestMode] & kStoreInFilesystem)) {
         return ReceiverErrorTemplates::kBadRequest.Generate(
             "ingest mode should include kStoreInFilesystem for large files ");
