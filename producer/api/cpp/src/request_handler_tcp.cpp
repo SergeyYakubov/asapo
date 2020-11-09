@@ -216,7 +216,7 @@ bool RequestHandlerTcp::ProcessErrorFromReceiver(const Error& error,
 
 void RequestHandlerTcp::ProcessRequestCallback(Error err, ProducerRequest* request, std::string response, bool* retry) {
     if (request->callback) {
-        request->callback(RequestCallbackPayload{request->header, std::move(response)}, std::move(err));
+        request->callback(RequestCallbackPayload{request->header, std::move(request->data),std::move(response)}, std::move(err));
     }
     *retry = false;
 }
@@ -266,7 +266,6 @@ bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request, bool* re
         return false;
     }
 
-
     if (NeedRebalance()) {
         CloseConnectionToPeformRebalance();
     }
@@ -304,7 +303,7 @@ void RequestHandlerTcp::ProcessRequestTimeout(GenericRequest* request) {
 
     auto err = ProducerErrorTemplates::kTimeout.Generate(err_string);
     if (producer_request->callback) {
-        producer_request->callback(RequestCallbackPayload{request->header, ""}, std::move(err));
+        producer_request->callback(RequestCallbackPayload{request->header, std::move(producer_request->data),""}, std::move(err));
     }
 
 }
