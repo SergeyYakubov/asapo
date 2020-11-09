@@ -26,14 +26,14 @@ def assert_eq(val, expected, name):
         sys.exit(1)
 
 
-def callback(header, err):
+def callback(payload, err):
     lock.acquire()  # to print
     if isinstance(err, asapo_producer.AsapoServerWarning):
-        print("successfuly sent, but with warning from server: ", header, err)
+        print("successfuly sent, but with warning from server: ", payload, err)
     elif err is not None:
-        print("could not sent: ", header, err)
+        print("could not sent: ", payload, err)
     else:
-        print("successfuly sent: ", header)
+        print("successfuly sent: ", payload)
     lock.release()
 
 

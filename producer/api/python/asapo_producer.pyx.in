@@ -286,11 +286,14 @@ cdef class PyProducer:
         if err:
             throw_exception(err)
         return
-    cdef void c_callback_python(self,py_callback, RequestCallbackPayload payload, Error& err):
+    cdef void c_callback_python(self,py_callback, data, RequestCallbackPayload& payload, Error& err):
         if py_callback != None:
           info_str = _str(payload.original_header.Json())
           info = json.loads(info_str)
           info['server_response'] = payload.response
+          if payload.data.get() != NULL:
+             payload.data.release()
+             info['data'] = data
           if err:
             py_err = python_exception_from_error(err)
           else:
@@ -299,20 +302,20 @@ cdef class PyProducer:
           Py_XDECREF(<PyObject*>py_callback)
 
     cdef void c_callback(self,py_callback, RequestCallbackPayload payload, Error err) with gil:
-        self.c_callback_python(py_callback,payload,err)
+        self.c_callback_python(py_callback,None,payload,err)
 
     cdef void c_callback_ndarr(self,py_callback,nd_array,RequestCallbackPayload payload, Error err) with gil:
+        self.c_callback_python(py_callback,nd_array,payload,err)
         if nd_array is not None:
           if nd_array.base is not None:
             Py_XDECREF(<PyObject*>nd_array.base)
           else:
             Py_XDECREF(<PyObject*>nd_array)
-        self.c_callback_python(py_callback,payload,err)
 
     cdef void c_callback_bytesaddr(self,py_callback,bytes_array,RequestCallbackPayload payload, Error err) with gil:
+        self.c_callback_python(py_callback,bytes_array,payload,err)
         if bytes_array is not None:
             Py_XDECREF(<PyObject*>bytes_array)
-        self.c_callback_python(py_callback,payload,err)
     def cleanup(self):
         with  nogil:
             if self.c_producer.get() is not NULL:
