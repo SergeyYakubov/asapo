@@ -64,7 +64,7 @@ class RequestPoolTests : public testing::Test {
     MockRequestHandlerFactory request_handler_factory{mock_request_handler};
     const uint8_t nthreads = 1;
     asapo::RequestPool pool {nthreads, &request_handler_factory, &mock_logger};
-    std::unique_ptr<GenericRequest> request{new TestRequest{GenericRequestHeader{}, 0}};
+    std::unique_ptr<GenericRequest> request{new TestRequest{GenericRequestHeader{asapo::kOpcodeUnknownOp,0,1000000}, 0}};
     void SetUp() override {
     }
     void TearDown() override {
@@ -195,6 +195,72 @@ TEST_F(RequestPoolTests, AddRequestCallsSendTwoRequests) {
     std::this_thread::sleep_for(std::chrono::milliseconds(80));
     ASSERT_THAT(err1, Eq(nullptr));
     ASSERT_THAT(err2, Eq(nullptr));
+}
+
+TEST_F(RequestPoolTests, RefuseAddRequestIfHitSizeLimitation) {
+    TestRequest* request2 = new TestRequest{GenericRequestHeader{}, 0};
+
+    pool.SetLimits(asapo::RequestPoolLimits({1,0}));
+    pool.AddRequest(std::move(request));
+    request.reset(request2);
+    auto err = pool.AddRequest(std::move(request));
+
+    auto nreq = pool.NRequestsInPool();
+
+    ASSERT_THAT(nreq, Eq(1));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kNoSpaceLeft));
+}
+
+TEST_F(RequestPoolTests, RefuseAddRequestIfHitMemoryLimitation) {
+    auto header = GenericRequestHeader{};
+    header.data_size = 100;
+    TestRequest* request2 = new TestRequest{header, 0};
+
+    pool.SetLimits(asapo::RequestPoolLimits({0,1}));
+    pool.AddRequest(std::move(request));
+    request.reset(request2);
+    auto err = pool.AddRequest(std::move(request));
+
+    auto nreq = pool.NRequestsInPool();
+
+    ASSERT_THAT(nreq, Eq(1));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kNoSpaceLeft));
+}
+
+TEST_F(RequestPoolTests, RefuseAddRequestsIfHitSizeLimitation) {
+
+    TestRequest* request2 = new TestRequest{GenericRequestHeader{}, 0};
+
+    std::vector<std::unique_ptr<GenericRequest>> requests;
+    requests.push_back(std::move(request));
+    requests.push_back(std::unique_ptr<GenericRequest> {request2});
+
+    pool.SetLimits(asapo::RequestPoolLimits({1,0}));
+    auto err = pool.AddRequests(std::move(requests));
+    auto nreq = pool.NRequestsInPool();
+
+    ASSERT_THAT(nreq, Eq(0));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kNoSpaceLeft));
+}
+
+
+TEST_F(RequestPoolTests, RefuseAddRequestsIfHitMemoryLimitation) {
+
+    auto header = GenericRequestHeader{};
+    header.data_size = 100;
+
+    TestRequest* request2 = new TestRequest{header, 0};
+
+    std::vector<std::unique_ptr<GenericRequest>> requests;
+    requests.push_back(std::move(request));
+    requests.push_back(std::unique_ptr<GenericRequest> {request2});
+
+    pool.SetLimits(asapo::RequestPoolLimits({0,1}));
+    auto err = pool.AddRequests(std::move(requests));
+    auto nreq = pool.NRequestsInPool();
+
+    ASSERT_THAT(nreq, Eq(0));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kNoSpaceLeft));
 }
 
 

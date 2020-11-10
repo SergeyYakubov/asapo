@@ -1,8 +1,11 @@
 ## 20.09.2
 
 FEATURES
-* implemented possibility to send data without writing to database (no need of consecutive indexes, etc. but will not be able to consume such data) 
+* implemented possibility to send data without writing to database (no need of consecutive indexes, etc. but will not be able to consume such data)
 
+ IMPROVEMENTS
+* Producer API - return original data in callback payload.  
+* Producer API - allow to set queue limits (number of pending requests and/or max memory), reject new requests if reached the limits  
 
 ## 20.09.1
 

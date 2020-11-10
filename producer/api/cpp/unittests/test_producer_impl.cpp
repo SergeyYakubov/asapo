@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "InfiniteRecursion"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -428,8 +430,25 @@ TEST_F(ProducerImplTests, GetQueueSize) {
     EXPECT_CALL(mock_pull, NRequestsInPool()).WillOnce(Return(10));
 
     auto size = producer.GetRequestsQueueSize();
-
     ASSERT_THAT(size, Eq(10));
+}
+
+TEST_F(ProducerImplTests, GetQueueVolume) {
+    EXPECT_CALL(mock_pull, UsedMemoryInPool()).WillOnce(Return(10000000));
+
+    auto vol = producer.GetRequestsQueueVolumeMb();
+
+    ASSERT_THAT(vol, Eq(10));
+}
+
+MATCHER_P(M_CheckLimits, limits,"Checks if a valid limits were used") {
+    return arg.max_requests == limits.max_requests && arg.max_memory_mb == limits.max_memory_mb;
+};
+
+TEST_F(ProducerImplTests, SetLimits) {
+    EXPECT_CALL(mock_pull, SetLimits(M_CheckLimits(asapo::RequestPoolLimits{10,20})));
+
+    producer.SetRequestsQueueLimits(10,20);
 }
 
 TEST_F(ProducerImplTests, WaitRequestsFinished) {
@@ -483,3 +502,5 @@ TEST_F(ProducerImplTests, GetLastStreamMakesCorerctRequest) {
 }
 
 }
+
+#pragma clang diagnostic pop

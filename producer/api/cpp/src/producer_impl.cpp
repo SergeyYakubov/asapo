@@ -355,4 +355,13 @@ StreamInfo ProducerImpl::GetLastSubstream(uint64_t timeout_sec, Error* err) cons
     return StreamRequest(StreamRequestOp::kLastStream,"",timeout_sec,err);
 }
 
+uint64_t ProducerImpl::GetRequestsQueueVolumeMb() {
+    return request_pool__->UsedMemoryInPool()/1000000;
+}
+
+void ProducerImpl::SetRequestsQueueLimits(uint64_t size, uint64_t volume) {
+    request_pool__->SetLimits(RequestPoolLimits{size,volume});
+}
+
+
 }

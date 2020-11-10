@@ -16,6 +16,11 @@
 
 namespace asapo {
 
+struct RequestPoolLimits {
+ uint64_t max_requests;
+ uint64_t max_memory_mb;
+};
+
 class RequestPool {
     struct ThreadInformation {
         std::unique_lock<std::mutex> lock;
@@ -23,9 +28,11 @@ class RequestPool {
   public:
     explicit RequestPool(uint8_t n_threads, RequestHandlerFactory* request_handler_factory, const AbstractLogger* log);
     VIRTUAL Error AddRequest(GenericRequestPtr request, bool top_priority = false);
+    VIRTUAL void SetLimits(RequestPoolLimits limits);
     VIRTUAL Error AddRequests(GenericRequests requests);
     ~RequestPool();
     VIRTUAL uint64_t NRequestsInPool();
+    VIRTUAL uint64_t UsedMemoryInPool();
     VIRTUAL Error WaitRequestsFinished(uint64_t timeout_ms);
     VIRTUAL void StopThreads();
   private:
@@ -41,8 +48,13 @@ class RequestPool {
     void ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler, ThreadInformation* thread_info);
     GenericRequestPtr GetRequestFromQueue();
     void PutRequestBackToQueue(GenericRequestPtr request);
+    Error CanAddRequest(const GenericRequestPtr& request, bool top_priority);
+    Error CanAddRequests(const GenericRequests &requests);
+    uint64_t NRequestsInPoolWithoutLock();
     uint64_t shared_counter_{0};
     uint64_t requests_in_progress_{0};
+    uint64_t memory_used_{0};
+    RequestPoolLimits limits_{0,0};
 
 };
 
