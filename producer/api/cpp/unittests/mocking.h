@@ -34,6 +34,9 @@ class MockRequestPull : public RequestPool {
     }
     MOCK_METHOD2(AddRequest_t, asapo::ErrorInterface * (GenericRequest*, bool));
     MOCK_METHOD0(NRequestsInPool, uint64_t ());
+    MOCK_METHOD0(UsedMemoryInPool, uint64_t ());
+
+    MOCK_METHOD1(SetLimits, void (asapo::RequestPoolLimits limits));
 
     MOCK_METHOD1(WaitRequestsFinished_t, asapo::ErrorInterface * (uint64_t timeout_ms));
 

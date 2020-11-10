@@ -24,7 +24,7 @@ cdef extern from "asapo_wrappers.h" namespace "asapo":
 
 cdef extern from "asapo_consumer.h" namespace "asapo":
   cppclass FileData:
-    unique_ptr[uint8_t[]] release()
+    uint8_t[] release()
     pass
 
 cdef extern from "asapo_consumer.h" namespace "asapo":

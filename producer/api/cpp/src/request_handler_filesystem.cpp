@@ -23,6 +23,7 @@ bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request, b
         producer_request->data = io__->GetDataFromFile(producer_request->original_filepath, &producer_request->header.data_size,
                                                        &err);
         if (err) {
+            producer_request->data = nullptr;
             *retry = true;
             return false;
         }
@@ -31,7 +32,7 @@ bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request, b
     err = io__->WriteDataToFile(destination_folder_, request->header.message, (uint8_t*)producer_request->data.get(),
                                 (size_t)request->header.data_size, true, true);
     if (producer_request->callback) {
-        producer_request->callback(RequestCallbackPayload{request->header, ""}, std::move(err));
+        producer_request->callback(RequestCallbackPayload{request->header, std::move(producer_request->data),""}, std::move(err));
     }
     *retry = false;
     return true;
