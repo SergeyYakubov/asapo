@@ -25,6 +25,16 @@ func MapToJson(res interface{}) ([]byte, error) {
 	}
 }
 
+func InterfaceToInt64(val interface{}) (int64, bool) {
+	val64, ok := val.(int64)
+	var valf64 float64
+	if !ok { // we need this (at least for tests) since by default values are float in mongo
+		valf64, ok = val.(float64)
+		val64 = int64(valf64)
+	}
+	return val64, ok
+}
+
 func ReadJsonFromFile(fname string, config interface{}) error {
 	content, err := ioutil.ReadFile(fname)
 	if err != nil {

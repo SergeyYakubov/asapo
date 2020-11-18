@@ -8,7 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"math"
@@ -159,14 +161,19 @@ func (db *Mongodb) insertMeta(dbname string, s interface{}) error {
 	return err
 }
 
-func (db *Mongodb) getMaxIndex(request Request) (max_id int, err error) {
+func (db *Mongodb) getMaxIndex(request Request, returnIncompete bool) (max_id int, err error) {
 	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
 	var q bson.M
-	if request.DatasetOp {
-		q = bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$images"}}}}
+	if request.DatasetOp && !returnIncompete {
+		if request.MinDatasetSize>0 {
+			q = bson.M{"size": bson.M{"$gte": request.MinDatasetSize}}
+		} else {
+			q = bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$images"}}}}
+		}
 	} else {
 		q = nil
 	}
+
 	opts := options.FindOne().SetSort(bson.M{"_id": -1}).SetReturnKey(true)
 	var result ID
 	err = c.FindOne(context.TODO(), q, opts).Decode(&result)
@@ -236,24 +243,47 @@ func encodeAnswer(id, id_max int, next_substream string) string {
 
 func (db *Mongodb) getRecordByIDRow(request Request, id, id_max int) ([]byte, error) {
 	var res map[string]interface{}
-	var q bson.M
-	if request.DatasetOp {
-		q = bson.M{"$and": []bson.M{bson.M{"_id": id}, bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$images"}}}}}}
-	} else {
-		q = bson.M{"_id": id}
-	}
+	q := bson.M{"_id": id}
 
 	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
 	err := c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
 	if err != nil {
 		answer := encodeAnswer(id, id_max, "")
 		log_str := "error getting record id " + strconv.Itoa(id) + " for " + request.DbName + " : " + err.Error()
+		fmt.Println(err)
 		logger.Debug(log_str)
 		return nil, &DBError{utils.StatusNoData, answer}
 	}
-	log_str := "got record id " + strconv.Itoa(id) + " for " + request.DbName
-	logger.Debug(log_str)
-	return utils.MapToJson(&res)
+
+	partialData := false
+	if request.DatasetOp {
+		imgs,ok1 :=res["images"].(primitive.A)
+		expectedSize,ok2 := utils.InterfaceToInt64(res["size"])
+		if !ok1 || !ok2 {
+			return nil, &DBError{utils.StatusTransactionInterrupted, "getRecordByIDRow: cannot parse database response" }
+		}
+		nImages := len(imgs)
+		if (request.MinDatasetSize==0 && int64(nImages)!=expectedSize) || (request.MinDatasetSize==0 && nImages<request.MinDatasetSize) {
+			partialData = true
+		}
+	}
+
+	if partialData {
+		log_str := "got record id " + strconv.Itoa(id) + " for " + request.DbName
+		logger.Debug(log_str)
+	} else {
+		log_str := "got record id " + strconv.Itoa(id) + " for " + request.DbName
+		logger.Debug(log_str)
+	}
+
+	answer,err := utils.MapToJson(&res)
+	if err!=nil {
+		return nil,err
+	}
+	if partialData {
+		return nil,&DBError{utils.StatusPartialData, string(answer)}
+	}
+	return answer,nil
 }
 
 func (db *Mongodb) getEarliestRecord(dbname string, collection_name string) (map[string]interface{}, error) {
@@ -278,7 +308,7 @@ func (db *Mongodb) getRecordByID(request Request) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	max_ind, err := db.getMaxIndex(request)
+	max_ind, err := db.getMaxIndex(request,true)
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +368,7 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(request Request) error {
 }
 
 func (db *Mongodb) getCurrentPointer(request Request) (LocationPointer, int, error) {
-	max_ind, err := db.getMaxIndex(request)
+	max_ind, err := db.getMaxIndex(request,true)
 	if err != nil {
 		return LocationPointer{}, 0, err
 	}
@@ -429,7 +459,7 @@ func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTi
 		}
 	}
 	if record_ind != 0 {
-		max_ind, err = db.getMaxIndex(request)
+		max_ind, err = db.getMaxIndex(request, true)
 		if err != nil {
 			return 0, 0, err
 		}
@@ -512,7 +542,7 @@ func (db *Mongodb) getNextRecord(request Request) ([]byte, error) {
 	}
 
 	data, err := db.getRecordByIDRow(request, nextInd, maxInd)
-	if nextInd == maxInd {
+	if nextInd == maxInd && GetStatusCodeFromError(err)!=utils.StatusPartialData {
 		data, err = db.processLastRecord(request,data, err)
 	}
 
@@ -526,7 +556,7 @@ func (db *Mongodb) getNextRecord(request Request) ([]byte, error) {
 }
 
 func (db *Mongodb) getLastRecord(request Request) ([]byte, error) {
-	max_ind, err := db.getMaxIndex(request)
+	max_ind, err := db.getMaxIndex(request, false)
 	if err != nil {
 		return nil, err
 	}
@@ -669,7 +699,7 @@ func (db *Mongodb) nacks(request Request) ([]byte, error) {
 	}
 
 	if to == 0 {
-		to, err = db.getMaxIndex(request)
+		to, err = db.getMaxIndex(request, true)
 		if err != nil {
 			return nil, err
 		}

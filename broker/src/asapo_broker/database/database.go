@@ -1,5 +1,7 @@
 package database
 
+import "asapo_common/utils"
+
 type Request struct {
 	DbName string
 	DbCollectionName string
@@ -31,3 +33,13 @@ type DBError struct {
 func (err *DBError) Error() string {
 	return err.Message
 }
+
+func GetStatusCodeFromError(err error) int {
+	err_db, ok := err.(*DBError)
+	if ok {
+		return err_db.Code
+	} else {
+		return utils.StatusServiceUnavailable
+	}
+}
+

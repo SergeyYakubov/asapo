@@ -83,18 +83,9 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 	w.Write(answer)
 }
 
-func getStatusCodeFromDbError(err error) int {
-	err_db, ok := err.(*database.DBError)
-	if ok {
-		return err_db.Code
-	} else {
-		return utils.StatusServiceUnavailable
-	}
-}
-
 func returnError(err error, log_str string) (answer []byte, code int) {
-	code = getStatusCodeFromDbError(err)
-	if code != utils.StatusNoData {
+	code = database.GetStatusCodeFromError(err)
+	if code != utils.StatusNoData && code != utils.StatusPartialData{
 		logger.Error(log_str + " - " + err.Error())
 	} else {
 		logger.Debug(log_str + " - " + err.Error())
@@ -103,7 +94,7 @@ func returnError(err error, log_str string) (answer []byte, code int) {
 }
 
 func reconnectIfNeeded(db_error error) {
-	code := getStatusCodeFromDbError(db_error)
+	code := database.GetStatusCodeFromError(db_error)
 	if code != utils.StatusServiceUnavailable {
 		return
 	}

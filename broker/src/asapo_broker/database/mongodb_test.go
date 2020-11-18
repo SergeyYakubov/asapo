@@ -13,15 +13,15 @@ import (
 )
 
 type TestRecord struct {
-	ID        int               `bson:"_id" json:"_id"`
+	ID        int64               `bson:"_id" json:"_id"`
 	Meta      map[string]string `bson:"meta" json:"meta"`
 	Name      string            `bson:"name" json:"name"`
 	Timestamp int64             `bson:"timestamp" json:"timestamp"`
 }
 
 type TestDataset struct {
-	ID     int          `bson:"_id" json:"_id"`
-	Size   int          `bson:"size" json:"size"`
+	ID     int64          `bson:"_id" json:"_id"`
+	Size   int64          `bson:"size" json:"size"`
 	Images []TestRecord `bson:"images" json:"images"`
 }
 
@@ -187,7 +187,7 @@ func getNOnes(array []int) int {
 func insertRecords(n int) {
 	records := make([]TestRecord, n)
 	for ind, record := range records {
-		record.ID = ind + 1
+		record.ID = int64(ind) + 1
 		record.Name = string(ind)
 		if err := db.insertRecord(dbname, collection, &record); err != nil {
 			fmt.Println("error at insert ", ind)
@@ -589,13 +589,30 @@ func TestMongoDBNoDataOnNotCompletedFirstDataset(t *testing.T) {
 
 	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
 
-	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", DatasetOp: true})
+	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", DatasetOp: true})
 
-	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.(*DBError).Message)
-
-	assert.Equal(t, "", string(res_string))
+	assert.Equal(t, utils.StatusPartialData, err.(*DBError).Code)
+	var res TestDataset
+	json.Unmarshal([]byte(err.(*DBError).Message), &res)
+	assert.Equal(t, rec_dataset1_incomplete, res)
 }
+
+func TestMongoDBReturnInCompletedDataset(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
+
+	res_string, err := db.ProcessRequest(Request{DbName: dbname,
+		DbCollectionName: collection, GroupId: groupId, Op: "next", DatasetOp: true, MinDatasetSize: 1})
+
+	assert.Nil(t, err)
+	var res TestDataset
+	json.Unmarshal(res_string, &res)
+
+	assert.Equal(t, rec_dataset1_incomplete, res)
+}
+
 
 func TestMongoDBGetRecordLastDataSetSkipsIncompleteSets(t *testing.T) {
 	db.Connect(dbaddress)
@@ -612,6 +629,24 @@ func TestMongoDBGetRecordLastDataSetSkipsIncompleteSets(t *testing.T) {
 	json.Unmarshal(res_string, &res)
 
 	assert.Equal(t, rec_dataset1, res)
+}
+
+func TestMongoDBGetRecordLastDataSetReturnsIncompleteSets(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	db.insertRecord(dbname, collection, &rec_dataset1)
+	db.insertRecord(dbname, collection, &rec_dataset2)
+
+	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last",
+		DatasetOp:true,MinDatasetSize: 2,ExtraParam: "0"})
+
+	assert.Nil(t, err)
+
+	var res TestDataset
+	json.Unmarshal(res_string, &res)
+
+	assert.Equal(t, rec_dataset2, res)
 }
 
 func TestMongoDBGetRecordLastDataSetOK(t *testing.T) {
@@ -644,6 +679,38 @@ func TestMongoDBGetDatasetID(t *testing.T) {
 	json.Unmarshal(res_string, &res)
 
 	assert.Equal(t, rec_dataset1, res)
+
+}
+
+func TestMongoDBErrorOnIncompleteDatasetID(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
+
+	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", DatasetOp:true, ExtraParam: "1"})
+
+	assert.Equal(t, utils.StatusPartialData, err.(*DBError).Code)
+
+	var res TestDataset
+	json.Unmarshal([]byte(err.(*DBError).Message), &res)
+
+	assert.Equal(t, rec_dataset1_incomplete, res)
+
+}
+
+func TestMongoDBOkOnIncompleteDatasetID(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
+
+	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", DatasetOp:true,MinDatasetSize: 3,ExtraParam: "1"})
+
+	assert.Nil(t, err)
+
+	var res TestDataset
+	json.Unmarshal(res_string, &res)
+
+	assert.Equal(t, rec_dataset1_incomplete, res)
 
 }
 
