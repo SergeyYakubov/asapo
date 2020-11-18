@@ -52,11 +52,15 @@ class AsapoStreamFinishedError(AsapoConsumerError):
     self.id_max = id_max
     self.next_substream = _str(next_substream)
 
-
 class AsapoEndOfStreamError(AsapoConsumerError):
   def __init__(self,message,id_max=None):
     AsapoConsumerError.__init__(self,message)
     self.id_max = id_max
+
+class AsapoPartialDataError(AsapoConsumerError):
+  def __init__(self,message,partial_data):
+    AsapoConsumerError.__init__(self,message)
+    self.partial_data = partial_data
 
 class AsapoNoDataError(AsapoConsumerError):
   def __init__(self,message,id=None,id_max=None):
@@ -64,7 +68,7 @@ class AsapoNoDataError(AsapoConsumerError):
     self.id_max = id_max
     self.id = id
 
-cdef throw_exception(Error& err):
+cdef throw_exception(Error& err, res = None):
     cdef ConsumerErrorData* data
     error_string =  _str(err.get().Explain())
     if err == kEndOfStream:
@@ -85,6 +89,8 @@ cdef throw_exception(Error& err):
                 raise AsapoNoDataError(error_string,data.id,data.id_max)
             else:
                 raise AsapoNoDataError(error_string)
+    elif err == kPartialData:
+            raise AsapoPartialDataError(error_string, res)
     elif err == kWrongInput:
             raise AsapoWrongInputError(error_string)
     elif err == kLocalIOError:
@@ -273,7 +279,7 @@ cdef class PyDataBroker:
         for fi in file_infos:
             json_list.append(json.loads(_str(fi.Json())))
         return json_list
-    def _op_dataset(self, op, group_id, substream, uint64_t id):
+    def _op_dataset(self, op, group_id, substream, uint64_t min_size, uint64_t id):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_substream = _bytes(substream)
         cdef FileInfos file_infos
@@ -281,25 +287,26 @@ cdef class PyDataBroker:
         cdef Error err
         if op == "next":
             with nogil:
-                dataset = self.c_broker.GetNextDataset(b_group_id,b_substream, &err)
+                dataset = self.c_broker.GetNextDataset(b_group_id,b_substream, min_size, &err)
         elif op == "last":
             with nogil:
-                dataset = self.c_broker.GetLastDataset(b_group_id,b_substream, &err)
+                dataset = self.c_broker.GetLastDataset(b_group_id,b_substream, min_size, &err)
         elif op == "id":
             with nogil:
-                dataset = self.c_broker.GetDatasetById(id, b_group_id,b_substream, &err)
-        if err:
-            throw_exception(err)
+                dataset = self.c_broker.GetDatasetById(id, b_group_id,b_substream, min_size, &err)
         json_list = []
         for fi in dataset.content:
             json_list.append(json.loads(_str(fi.Json())))
-        return dataset.id, json_list
-    def get_next_dataset(self, group_id, substream = "default"):
-        return self._op_dataset("next",group_id,substream,0)
-    def get_last_dataset(self, group_id, substream = "default"):
-        return self._op_dataset("last",group_id,substream,0)
-    def get_dataset_by_id(self, uint64_t id, group_id, substream = "default"):
-        return self._op_dataset("id",group_id,substream,id)
+        res={'id':dataset.id,'expected_size':dataset.expected_size,'content':json_list}
+        if err:
+            throw_exception(err,res)
+        return res
+    def get_next_dataset(self, group_id, substream = "default", min_size = 0):
+        return self._op_dataset("next",group_id,substream,min_size,0)
+    def get_last_dataset(self, group_id, substream = "default", min_size = 0):
+        return self._op_dataset("last",group_id,substream,min_size,0)
+    def get_dataset_by_id(self, uint64_t id, group_id, substream = "default", min_size = 0):
+        return self._op_dataset("id",group_id,substream,min_size,id)
     def get_beamtime_meta(self):
         cdef Error err
         cdef string meta_str

@@ -122,29 +122,35 @@ class DataBroker {
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
       \param group_id - group id to use.
+      \param substream - substream to use ("" for default).
+      \param min_size - wait until dataset has min_size data tuples (0 for maximum size)
       \return DataSet - information about the dataset
-    */
-    virtual DataSet GetNextDataset(std::string group_id, Error* err) = 0;
-    virtual DataSet GetNextDataset(std::string group_id, std::string substream, Error* err) = 0;
 
-    //! Receive last available completed dataset.
+    */
+    virtual DataSet GetNextDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) = 0;
+    //! Receive last available dataset which has min_size data tuples.
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
       \param group_id - group id to use.
+      \param substream - substream to use ("" for default).
+      \param min_size - amount of data tuples in dataset (0 for maximum size)
       \return DataSet - information about the dataset
     */
-    virtual DataSet GetLastDataset(std::string group_id, Error* err) = 0;
-    virtual DataSet GetLastDataset(std::string group_id, std::string substream, Error* err) = 0;
+    virtual DataSet GetLastDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetLastDataset(std::string group_id, uint64_t min_size, Error* err) = 0;
 
     //! Receive dataset by id.
     /*!
       \param id - dataset id
-      \param err -  will be set to error data cannot be read or dataset is incomplete, nullptr otherwise.
+      \param err -  will be set to error data cannot be read or dataset size less than min_size, nullptr otherwise.
       \param group_id - group id to use.
+      \param substream - substream to use ("" for default).
+      \param min_size - wait until dataset has min_size data tuples (0 for maximum size)
       \return DataSet - information about the dataset
     */
-    virtual DataSet GetDatasetById(uint64_t id, std::string group_id, Error* err) = 0;
-    virtual DataSet GetDatasetById(uint64_t id, std::string group_id, std::string substream, Error* err) = 0;
+    virtual DataSet GetDatasetById(uint64_t id, std::string group_id, std::string substream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetDatasetById(uint64_t id, std::string group_id, uint64_t min_size, Error* err) = 0;
 
     //! Receive single image by id.
     /*!
