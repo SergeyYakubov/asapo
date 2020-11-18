@@ -4,8 +4,6 @@ import (
 	"net/http"
 )
 
-
-
 func extractResend(r *http.Request) (string) {
 	keys := r.URL.Query()
 	resend := keys.Get("resend_nacks")
@@ -17,7 +15,6 @@ func extractResend(r *http.Request) (string) {
 	}
 	return resend_params
 }
-
 
 func routeGetNext(w http.ResponseWriter, r *http.Request) {
 	processRequest(w, r, "next", extractResend(r), true)

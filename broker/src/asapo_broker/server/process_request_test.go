@@ -123,7 +123,10 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithNoToken() {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next", "").Return([]byte(""),
+
+	expectedRequest := database.Request{DbName: expectedDBName, DbCollectionName: expectedSubstream, GroupId:expectedGroupID, Op: "next"}
+
+	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte(""),
 		&database.DBError{utils.StatusNoData, ""})
 
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next")))
@@ -134,7 +137,10 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() 
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next", "").Return([]byte(""),
+
+	expectedRequest := database.Request{DbName: expectedDBName, DbCollectionName: expectedSubstream, GroupId:expectedGroupID, Op: "next"}
+
+	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte(""),
 		&database.DBError{utils.StatusServiceUnavailable, ""})
 
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
@@ -147,7 +153,11 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next", "").Return([]byte(""), errors.New(""))
+
+	expectedRequest := database.Request{DbName: expectedDBName, DbCollectionName: expectedSubstream, GroupId:expectedGroupID, Op: "next"}
+
+
+	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte(""), errors.New(""))
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("reconnected")))
 
@@ -159,7 +169,11 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next", "").Return([]byte("Hello"), nil)
+
+	expectedRequest := database.Request{DbName: expectedDBName, DbCollectionName: expectedSubstream, GroupId:expectedGroupID, Op: "next"}
+	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte("Hello"), nil)
+
+
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedDBName)))
 
 	doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
@@ -173,8 +187,11 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWrongGroupID() {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsDataset() {
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "next_dataset", "").Return([]byte("Hello"), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next_dataset in "+expectedDBName)))
+
+	expectedRequest := database.Request{DbName: expectedDBName, DbCollectionName: expectedSubstream, GroupId:expectedGroupID, DatasetOp:true, Op: "next"}
+	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte("Hello"), nil)
+
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedDBName)))
 
 	doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/next" + correctTokenSuffix + "&dataset=true")
 }

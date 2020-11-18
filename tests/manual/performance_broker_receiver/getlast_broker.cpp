@@ -81,7 +81,7 @@ std::vector<std::thread> StartThreads(const Args& params,
         while (std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count() <
                 params.timeout_ms) {
             if (params.datasets) {
-                auto dataset = broker->GetLastDataset(group_id, &err);
+                auto dataset = broker->GetLastDataset(group_id, 0, &err);
                 if (err == nullptr) {
                     for (auto& fi : dataset.content) {
                         (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;

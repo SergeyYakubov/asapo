@@ -4,6 +4,7 @@ import (
 	"asapo_common/logger"
 	"errors"
 	"net/http"
+	"strconv"
 )
 
 func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, err string) {
@@ -13,7 +14,7 @@ func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, 
 	w.Write([]byte(err))
 }
 
-func ValueTrue(r *http.Request, key string) bool {
+func valueTrue(r *http.Request, key string) bool {
 	val := r.URL.Query().Get(key)
 	if len(val) == 0 {
 		return false
@@ -25,8 +26,21 @@ func ValueTrue(r *http.Request, key string) bool {
 	return false
 }
 
-func datasetRequested(r *http.Request) bool {
-	return ValueTrue(r, "dataset")
+func valueInt(r *http.Request, key string) int {
+	val := r.URL.Query().Get(key)
+	if len(val) == 0 {
+		return 0
+	}
+
+	i, err := strconv.Atoi(val)
+	if err != nil {
+		return 0
+	}
+	return i
+}
+
+func datasetRequested(r *http.Request) (bool,int) {
+	return valueTrue(r, "dataset"),valueInt(r,"minsize")
 }
 
 func testAuth(r *http.Request, beamtime_id string) error {

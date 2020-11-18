@@ -764,43 +764,37 @@ func (db *Mongodb) getSubstreams(db_name string, from string) ([]byte, error) {
 }
 
 
-func (db *Mongodb) ProcessRequest(db_name string, collection_name string, group_id string, op string, extra_param string) (answer []byte, err error) {
-	dataset := false
-	if strings.HasSuffix(op, "_dataset") {
-		dataset = true
-		op = op[:len(op)-8]
-	}
-
-	if err := db.checkDatabaseOperationPrerequisites(db_name, collection_name, group_id); err != nil {
+func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
+	if err := db.checkDatabaseOperationPrerequisites(request.DbName, request.DbCollectionName, request.GroupId); err != nil {
 		return nil, err
 	}
 
-	switch op {
+	switch request.Op {
 	case "next":
-		return db.getNextRecord(db_name, collection_name, group_id, dataset, extra_param)
+		return db.getNextRecord(request.DbName, request.DbCollectionName, request.GroupId, request.DatasetOp, request.ExtraParam)
 	case "id":
-		return db.getRecordByID(db_name, collection_name, group_id, extra_param, dataset)
+		return db.getRecordByID(request.DbName, request.DbCollectionName, request.GroupId, request.ExtraParam, request.DatasetOp)
 	case "last":
-		return db.getLastRecord(db_name, collection_name, group_id, dataset)
+		return db.getLastRecord(request.DbName, request.DbCollectionName, request.GroupId, request.DatasetOp)
 	case "resetcounter":
-		return db.resetCounter(db_name, collection_name, group_id, extra_param)
+		return db.resetCounter(request.DbName, request.DbCollectionName, request.GroupId, request.ExtraParam)
 	case "size":
-		return db.getSize(db_name, collection_name)
+		return db.getSize(request.DbName, request.DbCollectionName)
 	case "meta":
-		return db.getMeta(db_name, extra_param)
+		return db.getMeta(request.DbName, request.ExtraParam)
 	case "queryimages":
-		return db.queryImages(db_name, collection_name, extra_param)
+		return db.queryImages(request.DbName, request.DbCollectionName, request.ExtraParam)
 	case "substreams":
-		return db.getSubstreams(db_name,extra_param)
+		return db.getSubstreams(request.DbName,request.ExtraParam)
 	case "ackimage":
-		return db.ackRecord(db_name, collection_name, group_id, extra_param)
+		return db.ackRecord(request.DbName, request.DbCollectionName, request.GroupId, request.ExtraParam)
 	case "negackimage":
-		return db.negAckRecord(db_name, group_id, extra_param)
+		return db.negAckRecord(request.DbName, request.GroupId, request.ExtraParam)
 	case "nacks":
-		return db.nacks(db_name, collection_name, group_id, extra_param)
+		return db.nacks(request.DbName, request.DbCollectionName, request.GroupId, request.ExtraParam)
 	case "lastack":
-		return db.lastAck(db_name, collection_name, group_id)
+		return db.lastAck(request.DbName, request.DbCollectionName, request.GroupId)
 	}
 
-	return nil, errors.New("Wrong db operation: " + op)
+	return nil, errors.New("Wrong db operation: " + request.Op)
 }

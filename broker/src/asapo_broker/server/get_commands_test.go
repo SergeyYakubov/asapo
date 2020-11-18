@@ -56,7 +56,7 @@ var testsGetCommand = []struct {
 
 func (suite *GetCommandsTestSuite) TestGetCommandsCallsCorrectRoutine() {
 	for _, test := range testsGetCommand {
-		suite.mock_db.On("ProcessRequest", expectedDBName, test.substream, test.groupid, test.command, test.externalParam).Return([]byte("Hello"), nil)
+		suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: test.substream, GroupId: test.groupid, Op: test.command, ExtraParam: test.externalParam}).Return([]byte("Hello"), nil)
 		logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request "+test.command)))
 		w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + test.reqString+correctTokenSuffix+test.queryParams)
 		suite.Equal(http.StatusOK, w.Code, test.command+ " OK")

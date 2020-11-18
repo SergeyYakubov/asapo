@@ -207,7 +207,7 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
     asapo::FileInfo fi;
     asapo::Error err;
 
-    auto dataset = broker->GetNextDataset(group_id, &err);
+    auto dataset = broker->GetNextDataset(group_id, 0, &err);
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
@@ -223,18 +223,18 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
     M_AssertEq("hello1", std::string(data.get(), data.get() + dataset.content[0].size));
 
 
-    dataset = broker->GetLastDataset(group_id, &err);
+    dataset = broker->GetLastDataset(group_id, 0, &err);
     M_AssertTrue(err == nullptr, "GetLast no error");
     M_AssertTrue(dataset.content[0].name == "10_1", "GetLastDataset filename");
     M_AssertTrue(dataset.content[0].metadata == "{\"test\":10}", "GetLastDataset metadata");
 
-    dataset = broker->GetNextDataset(group_id, &err);
+    dataset = broker->GetNextDataset(group_id, 0, &err);
     M_AssertTrue(err != nullptr, "GetNextDataset2 error");
 
-    dataset = broker->GetLastDataset(group_id, &err);
+    dataset = broker->GetLastDataset(group_id,0, &err);
     M_AssertTrue(err == nullptr, "GetLastDataset2 no error");
 
-    dataset = broker->GetDatasetById(8, group_id, &err);
+    dataset = broker->GetDatasetById(8, group_id, 0, &err);
     M_AssertTrue(err == nullptr, "GetDatasetById error");
     M_AssertTrue(dataset.content[2].name == "8_3", "GetDatasetById filename");
 

@@ -1,7 +1,17 @@
 package database
 
+type Request struct {
+	DbName string
+	DbCollectionName string
+	GroupId string
+	Op string
+	DatasetOp bool
+	MinDatasetSize int
+	ExtraParam string
+}
+
 type Agent interface {
-	ProcessRequest(db_name string, data_collection_name string, group_id string, op string, extra string) ([]byte, error)
+	ProcessRequest(request Request) ([]byte, error)
 	Ping() error
 	Connect(string) error
 	Close()
