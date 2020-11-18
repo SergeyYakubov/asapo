@@ -211,40 +211,42 @@ def check_single(broker,group_id):
         exit_on_noerr("AsapoBrokerServersNotFound")
 
 def check_dataset(broker,group_id):
-    id, metas = broker.get_next_dataset(group_id)
-    assert_eq(id,1,"get_next_dataset1")
-    assert_metaname(metas[0],"1_1","get nextdataset1 name1")
-    assert_metaname(metas[1],"1_2","get nextdataset1 name2")
-    assert_usermetadata(metas[0],"get nextdataset1 meta")
+    res = broker.get_next_dataset(group_id)
+    assert_eq(res['id'],1,"get_next_dataset1")
+    assert_metaname(res['content'][0],"1_1","get nextdataset1 name1")
+    assert_metaname(res['content'][1],"1_2","get nextdataset1 name2")
+    assert_usermetadata(res['content'][0],"get nextdataset1 meta")
 
     broker.set_timeout(1000)
 
-    data = broker.retrieve_data(metas[0])
+    data = broker.retrieve_data(res['content'][0])
     assert_eq(data.tostring().decode("utf-8"),"hello1","retrieve_data from dataset data")
 
 
-    id, metas = broker.get_next_dataset(group_id)
-    assert_eq(id,2,"get_next_dataset2")
-    assert_metaname(metas[0],"2_1","get nextdataset2 name1")
+    res = broker.get_next_dataset(group_id)
+    assert_eq(res['id'],2,"get_next_dataset2")
+    assert_metaname(res['content'][0],"2_1","get nextdataset2 name1")
 
-    id, metas = broker.get_last_dataset(group_id)
-    assert_eq(id,10,"get_last_dataset1")
-    assert_metaname(metas[2],"10_3","get get_last_dataset1 name3")
+    res = broker.get_last_dataset(group_id)
+    assert_eq(res['id'],10,"get_last_dataset1")
+    assert_eq(res['expected_size'],3,"get_last_dataset1 size ")
+    assert_metaname(res['content'][2],"10_3","get get_last_dataset1 name3")
 
     try:
-        id, metas = broker.get_next_dataset(group_id)
+        broker.get_next_dataset(group_id)
     except asapo_consumer.AsapoEndOfStreamError as err:
         assert_eq(err.id_max,10,"get_next_dataset3 id_max")
+
         pass
     else:
         exit_on_noerr("get_next_dataset3 err")
 
-    id, metas = broker.get_dataset_by_id(8,group_id)
-    assert_eq(id,8,"get_dataset_by_id1 id")
-    assert_metaname(metas[2],"8_3","get get_dataset_by_id1 name3")
+    res = broker.get_dataset_by_id(8,group_id)
+    assert_eq(res['id'],8,"get_dataset_by_id1 id")
+    assert_metaname(res['content'][2],"8_3","get get_dataset_by_id1 name3")
 
     try:
-        id, metas = broker.get_next_dataset(group_id)
+        broker.get_next_dataset(group_id)
     except:
         pass
     else:
