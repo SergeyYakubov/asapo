@@ -693,8 +693,9 @@ func TestMongoDBAckImage(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec1)
 	query_str := "{\"Id\":1,\"Op\":\"ackimage\"}"
 
-	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "ackimage", ExtraParam: query_str})
-	nacks, _ := db.getNacks(dbname, collection, groupId, 1, 1)
+	request := Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "ackimage", ExtraParam: query_str}
+	res, err := db.ProcessRequest(request)
+	nacks, _ := db.getNacks(request, 1, 1)
 	assert.Nil(t, err)
 	assert.Equal(t, "", string(res))
 	assert.Equal(t, 0, len(nacks))
@@ -728,9 +729,9 @@ func TestMongoDBNacks(t *testing.T) {
 			insertRecords(10)
 		}
 		if test.ackRecords {
-			db.ackRecord(dbname, collection, groupId, "{\"Id\":2,\"Op\":\"ackimage\"}")
-			db.ackRecord(dbname, collection, groupId, "{\"Id\":3,\"Op\":\"ackimage\"}")
-			db.ackRecord(dbname, collection, groupId, "{\"Id\":4,\"Op\":\"ackimage\"}")
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":2,\"Op\":\"ackimage\"}"})
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":3,\"Op\":\"ackimage\"}"})
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":4,\"Op\":\"ackimage\"}"})
 		}
 
 		res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "nacks", ExtraParam: test.rangeString})
@@ -762,9 +763,9 @@ func TestMongoDBLastAcks(t *testing.T) {
 			insertRecords(10)
 		}
 		if test.ackRecords {
-			db.ackRecord(dbname, collection, groupId, "{\"Id\":2,\"Op\":\"ackimage\"}")
-			db.ackRecord(dbname, collection, groupId, "{\"Id\":3,\"Op\":\"ackimage\"}")
-			db.ackRecord(dbname, collection, groupId, "{\"Id\":4,\"Op\":\"ackimage\"}")
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":2,\"Op\":\"ackimage\"}"})
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":3,\"Op\":\"ackimage\"}"})
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":4,\"Op\":\"ackimage\"}"})
 		}
 
 		res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "lastack"})
