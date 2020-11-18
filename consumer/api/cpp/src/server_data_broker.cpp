@@ -267,10 +267,6 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
             return err;
         }
 
-        if (err == ConsumerErrorTemplates::kPartialData) {
-            return err;
-        }
-
         if (request_suffix == "next") {
             auto save_error = SwitchToGetByIdIfNoData(&err, *response, &request_suffix)
                 || SwitchToGetByIdIfPartialData(&err, *response, &request_suffix);
