@@ -91,8 +91,8 @@ else:
     sys.exit(1)
 
 try:
-    producer.send_file(0, local_path="./not_exist", exposed_path="./whatever",
-                       ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback=callback)
+    producer.send_data(0, "processed/" + stream + "/" + "file6", b"hello",
+                       ingest_mode=asapo_producer.DEFAULT_INGEST_MODE, callback=callback)
 except asapo_producer.AsapoWrongInputError as e:
     print(e)
 else:

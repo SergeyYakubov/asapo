@@ -100,6 +100,9 @@ Error ProducerImpl::Send(const EventHeader& event_header,
                          bool manage_data_memory) {
     auto err = CheckProducerRequest(event_header, ingest_mode);
     if (err) {
+        if (!manage_data_memory) {
+            data.release();
+        }
         log__->Error("error checking request - " + err->Explain());
         return err;
     }
@@ -230,6 +233,7 @@ Error ProducerImpl::SendData__(const EventHeader& event_header,
     FileData data_wrapped = FileData{(uint8_t*)data};
 
     if (auto err = CheckData(ingest_mode, event_header, &data_wrapped)) {
+        data_wrapped.release();
         return err;
     }
 

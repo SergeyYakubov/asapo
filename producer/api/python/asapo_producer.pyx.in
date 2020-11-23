@@ -125,7 +125,6 @@ cdef class PyProducer:
             Py_XINCREF(<PyObject*>data)
         if callback != None:
             Py_XINCREF(<PyObject*>callback)
-
         return
     cdef EventHeader create_event_header(self,uint64_t id, exposed_path,user_meta,subset,ingest_mode):
         cdef EventHeader event_header
