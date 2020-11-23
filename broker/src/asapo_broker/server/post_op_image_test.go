@@ -39,3 +39,16 @@ func (suite *ImageOpTestSuite) TestAckImageOpOK() {
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/1" + correctTokenSuffix,"POST",query_str)
 	suite.Equal(http.StatusOK, w.Code, "ackimage OK")
 }
+
+
+func (suite *ImageOpTestSuite) TestAckImageOpErrorWrongOp() {
+	query_str := "\"Id\":1,\"Op\":\"ackimage\"}"
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/1" + correctTokenSuffix,"POST",query_str)
+	suite.Equal(http.StatusBadRequest, w.Code, "ackimage wrong")
+}
+
+func (suite *ImageOpTestSuite) TestAckImageOpErrorWrongID() {
+	query_str := "{\"Id\":1,\"Op\":\"ackimage\"}"
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/bla" + correctTokenSuffix,"POST",query_str)
+	suite.Equal(http.StatusBadRequest, w.Code, "ackimage wrong")
+}
