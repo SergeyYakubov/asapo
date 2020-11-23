@@ -25,7 +25,7 @@ C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/stream/default/%group
 
 echo db.data_default.insert({"_id":4}) | %mongo_exe% %database_name%  || goto :error
 
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/stream/default/%groupid%/next?token=%token% --stderr - | findstr /c:\"_id\":4  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/stream/default/%groupid%/next?token=%token% --stderr - | findstr /c:\"_id\":1  || goto :error
 C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/database/data/stream/default/%groupid%/last?token=%token% --stderr - | findstr /c:\"_id\":4  || goto :error
 
 

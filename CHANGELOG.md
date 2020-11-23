@@ -11,7 +11,7 @@ FEATURES
 
 
 BREAKING CHANGES
-* Consumer API - get_next_dataset, get_last_dataset, get_dataset_by_id return dictionary with 'id','expected_size','content' fields, not tuple
+* Consumer API - get_next_dataset, get_last_dataset, get_dataset_by_id return dictionary with 'id','expected_size','content' fields, not tuple (id,content) as before
 
 
 ## 20.09.1

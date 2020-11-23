@@ -37,7 +37,7 @@ curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/${groupid}/la
 
 echo "db.data_${substream}.insert({"_id":4})" | mongo ${database_name}
 
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/${groupid}/next?token=$token --stderr - | grep '"_id":4'
+curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/${groupid}/next?token=$token --stderr - | grep '"_id":1'
 curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/${groupid}/last?token=$token --stderr - | grep '"_id":4'
 
 #with a new group
