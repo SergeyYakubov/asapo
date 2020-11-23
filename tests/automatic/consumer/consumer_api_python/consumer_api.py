@@ -68,12 +68,9 @@ def check_single(broker, group_id):
     else:
         exit_on_noerr("get_by_id no data")
 
-    try:
-        _, meta = broker.get_next(group_id, meta_only=True)
-    except asapo_consumer.AsapoEndOfStreamError:
-        pass
-    else:
-        exit_on_noerr("get_next3")
+    _, meta = broker.get_next(group_id, meta_only=True)
+    assert_metaname(meta, "3", "get next3")
+
 
     size = broker.get_current_size()
     assert_eq(size, 5, "get_current_size")
@@ -227,25 +224,12 @@ def check_dataset(broker, group_id):
     assert_eq(res['expected_size'], 3, "get_last_dataset1 size ")
     assert_metaname(res['content'][2], "10_3", "get get_last_dataset1 name3")
 
-    try:
-        broker.get_next_dataset(group_id)
-    except asapo_consumer.AsapoEndOfStreamError as err:
-        assert_eq(err.id_max, 10, "get_next_dataset3 id_max")
-
-        pass
-    else:
-        exit_on_noerr("get_next_dataset3 err")
+    res = broker.get_next_dataset(group_id)
+    assert_eq(res['id'], 3, "get_next_dataset3")
 
     res = broker.get_dataset_by_id(8, group_id)
     assert_eq(res['id'], 8, "get_dataset_by_id1 id")
     assert_metaname(res['content'][2], "8_3", "get get_dataset_by_id1 name3")
-
-    try:
-        broker.get_next_dataset(group_id)
-    except:
-        pass
-    else:
-        exit_on_noerr("get_next_dataset4 get next6err")
 
     # incomplete datesets without min_size given
     try:

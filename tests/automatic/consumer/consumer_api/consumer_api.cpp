@@ -51,9 +51,8 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(fi.metadata == "{\"test\":10}", "GetLast metadata");
 
     err = broker->GetNext(&fi, group_id, nullptr);
-    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kEndOfStream, "GetNext2 error");
-    auto error_data = static_cast<const asapo::ConsumerErrorData*>(err->GetCustomData());
-    M_AssertTrue(error_data->id_max == 10, "GetNext2 id max");
+    M_AssertTrue(err == nullptr, "GetNext2 no error");
+    M_AssertTrue(fi.name == "2", "GetNext2 filename");
 
 
     err = broker->SetLastReadMarker(2, group_id);
@@ -229,7 +228,8 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
     M_AssertTrue(dataset.content[0].metadata == "{\"test\":10}", "GetLastDataset metadata");
 
     dataset = broker->GetNextDataset(group_id, 0, &err);
-    M_AssertTrue(err != nullptr, "GetNextDataset2 error");
+    M_AssertTrue(err == nullptr, "GetNextDataset2 no error");
+    M_AssertTrue(dataset.content[0].name == "2_1", "GetNextDataSet2 filename");
 
     dataset = broker->GetLastDataset(group_id,0, &err);
     M_AssertTrue(err == nullptr, "GetLastDataset2 no error");

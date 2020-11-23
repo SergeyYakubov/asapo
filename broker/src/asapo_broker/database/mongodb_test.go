@@ -376,7 +376,7 @@ func TestMongoDBGetNextAfterGetLastCorrect(t *testing.T) {
 
 	res, err = db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})
 	assert.Nil(t, err)
-	assert.Equal(t, string(rec3_expect), string(res))
+	assert.Equal(t, string(rec1_expect), string(res))
 
 }
 

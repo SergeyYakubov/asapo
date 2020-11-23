@@ -5,6 +5,7 @@ FEATURES
 * allow to return incomplete datasets (wihout error if one sets minimum dataset size, otherwise with "partial data" error)
 
  IMPROVEMENTS
+* Consumer API - change behavior of GetLast/get_last - do not set current pointer after call to the last image  
 * Producer API - return original data in callback payload.  
 * Producer API - allow to set queue limits (number of pending requests and/or max memory), reject new requests if reached the limits  
 
