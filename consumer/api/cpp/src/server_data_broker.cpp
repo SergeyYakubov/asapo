@@ -499,9 +499,6 @@ RequestInfo ServerDataBroker::CreateFileTransferRequest(const FileInfo* info) co
 std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Error* err) {
     RequestOutput response;
     *err = ServiceRequestWithTimeout(kBrokerServiceName, &current_broker_uri_, request, &response);
-    if (*err) {
-        return "";
-    }
     return std::move(response.string_output);
 }
 

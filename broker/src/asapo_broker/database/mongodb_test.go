@@ -564,6 +564,7 @@ func TestMongoDBQueryImagesOnEmptyDatabase(t *testing.T) {
 
 var rec_dataset1 = TestDataset{1, 3, []TestRecord{rec1, rec2, rec3}}
 var rec_dataset1_incomplete = TestDataset{1, 4, []TestRecord{rec1, rec2, rec3}}
+var rec_dataset2_incomplete = TestDataset{2, 4, []TestRecord{rec1, rec2, rec3}}
 var rec_dataset2 = TestDataset{2, 4, []TestRecord{rec1, rec2, rec3}}
 var rec_dataset3 = TestDataset{3, 3, []TestRecord{rec3, rec2, rec2}}
 
@@ -596,6 +597,24 @@ func TestMongoDBNoDataOnNotCompletedFirstDataset(t *testing.T) {
 	json.Unmarshal([]byte(err.(*DBError).Message), &res)
 	assert.Equal(t, rec_dataset1_incomplete, res)
 }
+
+func TestMongoDBNoDataOnNotCompletedNextDataset(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
+	db.insertRecord(dbname, collection, &rec_dataset2_incomplete)
+
+	_, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", DatasetOp: true})
+	_, err2 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", DatasetOp: true})
+
+	assert.Equal(t, utils.StatusPartialData, err1.(*DBError).Code)
+	assert.Equal(t, utils.StatusPartialData, err2.(*DBError).Code)
+	var res TestDataset
+	json.Unmarshal([]byte(err2.(*DBError).Message), &res)
+	assert.Equal(t, rec_dataset2_incomplete, res)
+}
+
 
 func TestMongoDBReturnInCompletedDataset(t *testing.T) {
 	db.Connect(dbaddress)

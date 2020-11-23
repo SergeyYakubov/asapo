@@ -238,6 +238,40 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
     M_AssertTrue(err == nullptr, "GetDatasetById error");
     M_AssertTrue(dataset.content[2].name == "8_3", "GetDatasetById filename");
 
+// incomplete datasets without min_size
+
+    dataset = broker->GetNextDataset(group_id,"incomplete",0,&err);
+    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kPartialData, "GetNextDataset incomplete error");
+    M_AssertTrue(dataset.content.size() == 2, "GetNextDataset incomplete size");
+    M_AssertTrue(dataset.content[0].name == "1_1", "GetNextDataset incomplete filename");
+    auto err_data = static_cast<const asapo::PartialErrorData*>(err->GetCustomData());
+    M_AssertTrue(err_data->expected_size == 3, "GetDatasetById expected size in error");
+    M_AssertTrue(err_data->id == 1, "GetDatasetById expected id in error ");
+    M_AssertTrue(dataset.expected_size == 3, "GetDatasetById expected size");
+    M_AssertTrue(dataset.id == 1, "GetDatasetById expected id");
+
+    dataset = broker->GetLastDataset(group_id,"incomplete",0,&err);
+    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kEndOfStream, "GetLastDataset incomplete no data");
+
+    dataset = broker->GetDatasetById(2, group_id,"incomplete", 0, &err);
+    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kPartialData, "GetDatasetById incomplete error");
+    M_AssertTrue(dataset.content[0].name == "2_1", "GetDatasetById incomplete filename");
+
+// incomplete datasets with min_size
+
+    dataset = broker->GetNextDataset(group_id,"incomplete",2,&err);
+    M_AssertTrue(err == nullptr, "GetNextDataset incomplete minsize error");
+    M_AssertTrue(dataset.id == 2, "GetDatasetById minsize id");
+
+    dataset = broker->GetLastDataset(group_id,"incomplete",2,&err);
+    M_AssertTrue(err == nullptr, "GetNextDataset incomplete minsize error");
+    M_AssertTrue(dataset.id == 5, "GetLastDataset minsize id");
+
+    dataset = broker->GetDatasetById(2, group_id,"incomplete", 2, &err);
+    M_AssertTrue(err == nullptr, "GetDatasetById incomplete minsize error");
+    M_AssertTrue(dataset.content[0].name == "2_1", "GetDatasetById incomplete minsize filename");
+
+
 }
 
 void TestAll(const Args& args) {

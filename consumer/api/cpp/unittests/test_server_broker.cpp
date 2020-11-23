@@ -995,6 +995,41 @@ TEST_F(ServerDataBrokerTests, GetDataSetReturnsPartialFileInfos) {
     ASSERT_THAT(dataset.content[1].id, Eq(to_send2.id));
 }
 
+TEST_F(ServerDataBrokerTests, GetDataSetByIdReturnsPartialFileInfos) {
+    asapo::Error err;
+    MockGetBrokerUri();
+
+    auto to_send1 = CreateFI();
+    auto json1 = to_send1.Json();
+    auto to_send2 = CreateFI();
+    to_send2.id = 2;
+    auto json2 = to_send2.Json();
+    auto to_send3 = CreateFI();
+    to_send3.id = 3;
+    auto json3 = to_send3.Json();
+
+    auto json = std::string("{") +
+        "\"_id\":1," +
+        "\"size\":3," +
+        "\"images\":[" + json1 + "," + json2 + "]" +
+        "}";
+
+    MockGet(json, asapo::HttpCode::PartialContent);
+
+    auto dataset = data_broker->GetDatasetById(1,expected_group_id, 0, &err);
+
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kPartialData));
+    auto err_data = static_cast<const asapo::PartialErrorData*>(err->GetCustomData());
+    ASSERT_THAT(err_data->expected_size, Eq(3));
+    ASSERT_THAT(err_data->id, Eq(1));
+
+
+    ASSERT_THAT(dataset.id, Eq(1));
+    ASSERT_THAT(dataset.content.size(), Eq(2));
+    ASSERT_THAT(dataset.content[0].id, Eq(to_send1.id));
+    ASSERT_THAT(dataset.content[1].id, Eq(to_send2.id));
+}
+
 TEST_F(ServerDataBrokerTests, GetDataSetReturnsParseError) {
     MockGetBrokerUri();
     MockGet("error_response");

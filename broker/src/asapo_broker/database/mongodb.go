@@ -562,7 +562,9 @@ func (db *Mongodb) getLastRecord(request Request) ([]byte, error) {
 	}
 	res, err := db.getRecordByIDRow(request, max_ind, max_ind)
 
-	db.setCounter(request, max_ind)
+	if err==nil && max_ind>0 {
+		db.setCounter(request, max_ind)
+	}
 
 	return res, err
 }
