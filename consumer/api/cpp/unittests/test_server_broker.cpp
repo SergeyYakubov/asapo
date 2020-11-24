@@ -247,7 +247,7 @@ TEST_F(ServerDataBrokerTests, GetLastUsesCorrectUri) {
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return("")));
-    data_broker->GetLast(&info, expected_group_id, nullptr);
+    data_broker->GetLast(&info, nullptr);
 }
 
 TEST_F(ServerDataBrokerTests, GetImageReturnsEndOfStreamFromHttpClient) {
@@ -713,7 +713,7 @@ TEST_F(ServerDataBrokerTests, GetByIdUsesCorrectUri) {
         SetArgPointee<2>(nullptr),
         Return(json)));
 
-    auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
+    auto err = data_broker->GetById(expected_dataset_id, &info, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(info.name, Eq(to_send.name));
@@ -730,7 +730,7 @@ TEST_F(ServerDataBrokerTests, GetByIdTimeouts) {
         SetArgPointee<2>(nullptr),
         Return("")));
 
-    auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
+    auto err = data_broker->GetById(expected_dataset_id, &info, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
 }
@@ -746,7 +746,7 @@ TEST_F(ServerDataBrokerTests, GetByIdReturnsEndOfStream) {
         SetArgPointee<2>(nullptr),
         Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"""\"}")));
 
-    auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
+    auto err = data_broker->GetById(expected_dataset_id, &info, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kEndOfStream));
 }
@@ -762,7 +762,7 @@ TEST_F(ServerDataBrokerTests, GetByIdReturnsEndOfStreamWhenIdTooLarge) {
         SetArgPointee<2>(nullptr),
         Return("{\"op\":\"get_record_by_id\",\"id\":100,\"id_max\":1,\"next_substream\":\"""\"}")));
 
-    auto err = data_broker->GetById(expected_dataset_id, &info, expected_group_id, nullptr);
+    auto err = data_broker->GetById(expected_dataset_id, &info, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kEndOfStream));
 }
@@ -1015,7 +1015,7 @@ TEST_F(ServerDataBrokerTests, GetDataSetByIdReturnsPartialFileInfos) {
 
     MockGet(json, asapo::HttpCode::PartialContent);
 
-    auto dataset = data_broker->GetDatasetById(1, expected_group_id, 0, &err);
+    auto dataset = data_broker->GetDatasetById(1, 0, &err);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kPartialData));
     auto err_data = static_cast<const asapo::PartialErrorData*>(err->GetCustomData());
@@ -1052,7 +1052,7 @@ TEST_F(ServerDataBrokerTests, GetLastDatasetUsesCorrectUri) {
         SetArgPointee<2>(nullptr),
         Return("")));
     asapo::Error err;
-    data_broker->GetLastDataset(expected_group_id, 2, &err);
+    data_broker->GetLastDataset(2, &err);
 }
 
 TEST_F(ServerDataBrokerTests, GetLastDatasetUsesCorrectUriWithSubstream) {
@@ -1066,7 +1066,7 @@ TEST_F(ServerDataBrokerTests, GetLastDatasetUsesCorrectUriWithSubstream) {
         SetArgPointee<2>(nullptr),
         Return("")));
     asapo::Error err;
-    data_broker->GetLastDataset(expected_group_id, expected_substream, 1, &err);
+    data_broker->GetLastDataset(expected_substream, 1, &err);
 }
 
 TEST_F(ServerDataBrokerTests, GetDatasetByIdUsesCorrectUri) {
@@ -1080,7 +1080,7 @@ TEST_F(ServerDataBrokerTests, GetDatasetByIdUsesCorrectUri) {
         SetArgPointee<2>(nullptr),
         Return("")));
     asapo::Error err;
-    data_broker->GetDatasetById(expected_dataset_id, expected_group_id, 0, &err);
+    data_broker->GetDatasetById(expected_dataset_id, 0, &err);
 }
 
 TEST_F(ServerDataBrokerTests, GetSubstreamListUsesCorrectUri) {
@@ -1330,7 +1330,7 @@ TEST_F(ServerDataBrokerTests, GetLastAcknowledgeReturnsNoData) {
 
 TEST_F(ServerDataBrokerTests, GetByIdErrorsForId0) {
 
-    auto err = data_broker->GetById(0, &info, expected_group_id, nullptr);
+    auto err = data_broker->GetById(0, &info, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
 }

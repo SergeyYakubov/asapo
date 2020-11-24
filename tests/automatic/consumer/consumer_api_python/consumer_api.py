@@ -37,9 +37,9 @@ def assert_eq(val, expected, name):
 
 def check_file_transfer_service(broker, group_id):
     broker.set_timeout(1000)
-    data, meta = broker.get_by_id(1, group_id, meta_only=False)
+    data, meta = broker.get_by_id(1, meta_only=False)
     assert_eq(data.tostring().decode("utf-8"), "hello1", "check_file_transfer_service ok")
-    data, meta = broker.get_by_id(1, group_id, "streamfts", meta_only=False)
+    data, meta = broker.get_by_id(1, "streamfts", meta_only=False)
     assert_eq(data.tostring().decode("utf-8"), "hello1", "check_file_transfer_service with auto size ok")
 
 
@@ -57,12 +57,12 @@ def check_single(broker, group_id):
     assert_metaname(meta, "2", "get next2")
     assert_usermetadata(meta, "get next2")
 
-    _, meta = broker.get_last(group_id, meta_only=True)
+    _, meta = broker.get_last(meta_only=True)
     assert_metaname(meta, "5", "get last1")
     assert_usermetadata(meta, "get last1")
 
     try:
-        broker.get_by_id(30, group_id, meta_only=True)
+        broker.get_by_id(30, meta_only=True)
     except asapo_consumer.AsapoEndOfStreamError:
         pass
     else:
@@ -81,7 +81,7 @@ def check_single(broker, group_id):
     assert_metaname(meta, "1", "get next4")
     assert_usermetadata(meta, "get next4")
 
-    _, meta = broker.get_by_id(3, group_id, meta_only=True)
+    _, meta = broker.get_by_id(3, meta_only=True)
     assert_metaname(meta, "3", "get get_by_id")
     assert_usermetadata(meta, "get get_by_id")
 
@@ -104,7 +104,7 @@ def check_single(broker, group_id):
         exit_on_noerr("should give wrong input error")
 
     try:
-        broker.get_last(group_id, meta_only=False)
+        broker.get_last(meta_only=False)
     except asapo_consumer.AsapoLocalIOError as err:
         print(err)
         pass
@@ -195,7 +195,7 @@ def check_single(broker, group_id):
 
     broker = asapo_consumer.create_server_broker("bla", path, True, beamtime, "", token, 1000)
     try:
-        broker.get_last(group_id, meta_only=True)
+        broker.get_last(meta_only=True)
     except asapo_consumer.AsapoUnavailableServiceError as err:
         print(err)
         pass
@@ -219,7 +219,7 @@ def check_dataset(broker, group_id):
     assert_eq(res['id'], 2, "get_next_dataset2")
     assert_metaname(res['content'][0], "2_1", "get nextdataset2 name1")
 
-    res = broker.get_last_dataset(group_id)
+    res = broker.get_last_dataset()
     assert_eq(res['id'], 10, "get_last_dataset1")
     assert_eq(res['expected_size'], 3, "get_last_dataset1 size ")
     assert_metaname(res['content'][2], "10_3", "get get_last_dataset1 name3")
@@ -227,7 +227,7 @@ def check_dataset(broker, group_id):
     res = broker.get_next_dataset(group_id)
     assert_eq(res['id'], 3, "get_next_dataset3")
 
-    res = broker.get_dataset_by_id(8, group_id)
+    res = broker.get_dataset_by_id(8)
     assert_eq(res['id'], 8, "get_dataset_by_id1 id")
     assert_metaname(res['content'][2], "8_3", "get get_dataset_by_id1 name3")
 
@@ -244,7 +244,7 @@ def check_dataset(broker, group_id):
         exit_on_noerr("get_next_dataset incomplete err")
 
     try:
-        broker.get_dataset_by_id(2, group_id, "incomplete")
+        broker.get_dataset_by_id(2, "incomplete")
     except asapo_consumer.AsapoPartialDataError as err:
         assert_eq(err.partial_data['expected_size'], 3, "get_next_dataset incomplete expected size")
         assert_eq(err.partial_data['id'], 2, "get_next_dataset incomplete id")
@@ -255,7 +255,7 @@ def check_dataset(broker, group_id):
         exit_on_noerr("get_next_dataset incomplete err")
 
     try:
-        broker.get_last_dataset(group_id, "incomplete")
+        broker.get_last_dataset("incomplete")
     except asapo_consumer.AsapoEndOfStreamError as err:
         pass
     else:
@@ -264,10 +264,10 @@ def check_dataset(broker, group_id):
     res = broker.get_next_dataset(group_id, "incomplete", min_size=2)
     assert_eq(res['id'], 2, "get_next_dataset incomplete with minsize")
 
-    res = broker.get_last_dataset(group_id, "incomplete", min_size=2)
+    res = broker.get_last_dataset("incomplete", min_size=2)
     assert_eq(res['id'], 5, "get_last_dataset incomplete with minsize")
 
-    res = broker.get_dataset_by_id(2, group_id, "incomplete", min_size=1)
+    res = broker.get_dataset_by_id(2, "incomplete", min_size=1)
     assert_eq(res['id'], 2, "get_dataset_by_id incomplete with minsize")
 
 

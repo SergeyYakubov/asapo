@@ -302,11 +302,11 @@ Error ServerDataBroker::GetNext(FileInfo* info, std::string group_id, std::strin
                               data);
 }
 
-Error ServerDataBroker::GetLast(FileInfo* info, std::string group_id, FileData* data) {
-    return GetLast(info, std::move(group_id), kDefaultSubstream, data);
+Error ServerDataBroker::GetLast(FileInfo* info, FileData* data) {
+    return GetLast(info, kDefaultSubstream, data);
 }
 
-Error ServerDataBroker::GetLast(FileInfo* info, std::string group_id, std::string substream, FileData* data) {
+Error ServerDataBroker::GetLast(FileInfo* info, std::string substream, FileData* data) {
     return GetImageFromServer(GetImageServerOperation::GetLast,
                               0,
                               "0",
@@ -549,19 +549,15 @@ uint64_t ServerDataBroker::GetCurrentSize(std::string substream, Error* err) {
 uint64_t ServerDataBroker::GetCurrentSize(Error* err) {
     return GetCurrentSize(kDefaultSubstream, err);
 }
-Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) {
+Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, FileData* data) {
     if (id == 0) {
         return ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
     }
 
-    return GetById(id, info, std::move(group_id), kDefaultSubstream, data);
+    return GetById(id, info, kDefaultSubstream, data);
 }
 
-Error ServerDataBroker::GetById(uint64_t id,
-                                FileInfo* info,
-                                std::string group_id,
-                                std::string substream,
-                                FileData* data) {
+Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string substream, FileData* data) {
     return GetImageFromServer(GetImageServerOperation::GetID, id, "0", substream, info, data);
 }
 
@@ -628,12 +624,12 @@ DataSet ServerDataBroker::GetNextDataset(std::string group_id, std::string subst
     return GetDatasetFromServer(GetImageServerOperation::GetNext, 0, std::move(group_id), std::move(substream),min_size, err);
 }
 
-DataSet ServerDataBroker::GetLastDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) {
+DataSet ServerDataBroker::GetLastDataset(std::string substream, uint64_t min_size, Error* err) {
     return GetDatasetFromServer(GetImageServerOperation::GetLast, 0, "0", std::move(substream),min_size, err);
 }
 
-DataSet ServerDataBroker::GetLastDataset(std::string group_id, uint64_t min_size, Error* err) {
-    return GetLastDataset(std::move(group_id), kDefaultSubstream, min_size, err);
+DataSet ServerDataBroker::GetLastDataset(uint64_t min_size, Error* err) {
+    return GetLastDataset(kDefaultSubstream, min_size, err);
 }
 
 DataSet ServerDataBroker::GetDatasetFromServer(GetImageServerOperation op,
@@ -654,11 +650,11 @@ DataSet ServerDataBroker::GetDatasetFromServer(GetImageServerOperation op,
     return DecodeDatasetFromResponse(response, err);
 }
 
-DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string group_id, uint64_t min_size, Error* err) {
-    return GetDatasetById(id, std::move(group_id), kDefaultSubstream, min_size, err);
+DataSet ServerDataBroker::GetDatasetById(uint64_t id, uint64_t min_size, Error* err) {
+    return GetDatasetById(id, kDefaultSubstream, min_size, err);
 }
 
-DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string group_id, std::string substream, uint64_t min_size, Error* err) {
+DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string substream, uint64_t min_size, Error* err) {
     return GetDatasetFromServer(GetImageServerOperation::GetID, id, "0", std::move(substream), min_size, err);
 }
 

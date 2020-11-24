@@ -78,8 +78,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
     Error GetNext(FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
 
-    Error GetLast(FileInfo* info, std::string group_id, FileData* data) override;
-    Error GetLast(FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
+    Error GetLast(FileInfo* info, FileData* data) override;
+    Error GetLast(FileInfo* info, std::string substream, FileData* data) override;
 
     std::string GenerateNewGroupId(Error* err) override;
     std::string GetBeamtimeMeta(Error* err) override;
@@ -87,8 +87,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     uint64_t GetCurrentSize(Error* err) override;
     uint64_t GetCurrentSize(std::string substream, Error* err) override;
 
-    Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
-    Error GetById(uint64_t id, FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
+    Error GetById(uint64_t id, FileInfo* info, FileData* data) override;
+    Error GetById(uint64_t id, FileInfo* info, std::string substream, FileData* data) override;
 
 
     void SetTimeout(uint64_t timeout_ms) override;
@@ -102,11 +102,11 @@ class ServerDataBroker final : public asapo::DataBroker {
     DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) override;
     DataSet GetNextDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) override;
 
-    DataSet GetLastDataset(std::string group_id, uint64_t min_size, Error* err) override;
-    DataSet GetLastDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) override;
+    DataSet GetLastDataset(uint64_t min_size, Error* err) override;
+    DataSet GetLastDataset(std::string substream, uint64_t min_size, Error* err) override;
 
-    DataSet GetDatasetById(uint64_t id, std::string group_id, uint64_t min_size, Error* err) override;
-    DataSet GetDatasetById(uint64_t id, std::string group_id, std::string substream, uint64_t min_size, Error* err) override;
+    DataSet GetDatasetById(uint64_t id, uint64_t min_size, Error* err) override;
+    DataSet GetDatasetById(uint64_t id, std::string substream, uint64_t min_size, Error* err) override;
 
     Error RetrieveData(FileInfo* info, FileData* data) override;
 

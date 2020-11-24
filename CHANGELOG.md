@@ -1,4 +1,4 @@
-## 20.09.2
+## 20.09.2 (in progress)
 
 FEATURES
 * implemented possibility to send data without writing to database (no need of consecutive indexes, etc. but will not be able to consume such data)
@@ -9,10 +9,9 @@ FEATURES
 * Producer API - return original data in callback payload.  
 * Producer API - allow to set queue limits (number of pending requests and/or max memory), reject new requests if reached the limits  
 
-
 BREAKING CHANGES
 * Consumer API - get_next_dataset, get_last_dataset, get_dataset_by_id return dictionary with 'id','expected_size','content' fields, not tuple (id,content) as before
-
+* Consumer API - remove group_id argument from get_last/get_by_id/get_last_dataset/get_dataset_by_id functions
 
 ## 20.09.1
 
