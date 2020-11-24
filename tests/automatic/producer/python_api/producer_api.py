@@ -50,9 +50,9 @@ producer.send_file(10, local_path="./file1", exposed_path="processed/" + stream 
                    user_meta='{"test_key":"test_val"}', callback=None)
 
 # send subsets
-producer.send_file(2, local_path="./file1", exposed_path="processed/" + stream + "/" + "file2", subset=(2, 2),
+producer.send_file(2, local_path="./file1", exposed_path="processed/" + stream + "/" + "file2", subset=(1, 2),
                    user_meta='{"test_key":"test_val"}', callback=callback)
-producer.send_file(3, local_path="./file1", exposed_path="processed/" + stream + "/" + "file3", subset=(2, 2),
+producer.send_file(2, local_path="./file1", exposed_path="processed/" + stream + "/" + "file3", subset=(2, 2),
                    user_meta='{"test_key":"test_val"}', callback=callback)
 
 # send meta only

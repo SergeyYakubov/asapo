@@ -65,7 +65,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
     uint64_t file_size
     string file_name
     string user_metadata
-    uint64_t subset_id
+    uint64_t id_in_subset
     uint64_t subset_size
 
 cdef extern from "asapo_producer.h" namespace "asapo":
@@ -74,7 +74,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
     uint64_t file_size
     string file_name
     string user_metadata
-    uint64_t subset_id
+    uint64_t id_in_subset
     uint64_t subset_size
 
 cdef extern from "asapo_producer.h" namespace "asapo":

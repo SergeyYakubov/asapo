@@ -238,7 +238,7 @@ Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool 
 }
 
 Error MongoDBClient::InsertAsSubset(const std::string &collection, const FileInfo &file,
-                                    uint64_t subset_id,
+                                    uint64_t id_in_subset,
                                     uint64_t subset_size,
                                     bool ignore_duplicates) const {
     if (!connected_) {
@@ -248,12 +248,14 @@ Error MongoDBClient::InsertAsSubset(const std::string &collection, const FileInf
     UpdateCurrentCollectionIfNeeded(collection);
 
     Error err;
-    auto document = PrepareBsonDocument(file, &err);
+    auto new_fi = file;
+    new_fi.id = id_in_subset;
+    auto document = PrepareBsonDocument(new_fi, &err);
     if (err) {
         return err;
     }
-    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(subset_id), "}", "{", "images._id", "{", "$ne",
-                           BCON_INT64(file.id), "}", "}", "]");
+    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(file.id), "}", "{", "images._id", "{", "$ne",
+                           BCON_INT64(id_in_subset), "}", "}", "]");
     auto update = BCON_NEW ("$setOnInsert", "{",
                             "size", BCON_INT64(subset_size),
                             "timestamp", BCON_INT64((int64_t) NanosecsEpochFromTimePoint(file.timestamp)),

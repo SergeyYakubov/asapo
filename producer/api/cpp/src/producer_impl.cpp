@@ -38,9 +38,9 @@ GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& ev
         uint64_t ingest_mode) {
     GenericRequestHeader request{kOpcodeTransferData, event_header.file_id, event_header.file_size,
                                  event_header.user_metadata.size(), event_header.file_name, substream};
-    if (event_header.subset_id != 0) {
+    if (event_header.id_in_subset != 0) {
         request.op_code = kOpcodeTransferSubsetData;
-        request.custom_data[kPosDataSetId] = event_header.subset_id;
+        request.custom_data[kPosDataSetId] = event_header.id_in_subset;
         request.custom_data[kPosDataSetSize] = event_header.subset_size;
     }
     request.custom_data[kPosIngestMode] = ingest_mode;
@@ -80,7 +80,7 @@ Error CheckProducerRequest(const EventHeader& event_header, uint64_t ingest_mode
         return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }
 
-    if (event_header.subset_id > 0 && event_header.subset_size == 0) {
+    if (event_header.id_in_subset > 0 && event_header.subset_size == 0) {
         return ProducerErrorTemplates::kWrongInput.Generate("subset dimensions");
     }
 

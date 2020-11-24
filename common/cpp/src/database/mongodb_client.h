@@ -44,7 +44,7 @@ class MongoDBClient final : public Database {
     MongoDBClient();
     Error Connect(const std::string& address, const std::string& database) override;
     Error Insert(const std::string& collection, const FileInfo& file, bool ignore_duplicates) const override;
-    Error InsertAsSubset(const std::string& collection, const FileInfo& file, uint64_t subset_id, uint64_t subset_size,
+    Error InsertAsSubset(const std::string& collection, const FileInfo& file, uint64_t id_in_subset, uint64_t subset_size,
                          bool ignore_duplicates) const override;
     Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const override;
     Error GetById(const std::string& collection, uint64_t id, FileInfo* file) const override;

@@ -65,12 +65,12 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
                          " at " + GetReceiverConfig()->database_uri);
         }
     } else {
-        auto subset_id = request->GetCustomData()[1];
+        auto id_in_subset = request->GetCustomData()[1];
         auto subset_size = request->GetCustomData()[2];
-        err =  db_client__->InsertAsSubset(col_name, file_info, subset_id, subset_size, false);
+        err =  db_client__->InsertAsSubset(col_name, file_info, id_in_subset, subset_size, false);
         if (!err) {
-            log__->Debug(std::string{"insert record as subset id "} + std::to_string(subset_id) + ", id: " +
-                         std::to_string(file_info.id) + " to " + col_name + " in " +
+            log__->Debug(std::string{"insert record as subset id "} + std::to_string(file_info.id) + ", id in subset: " +
+                         std::to_string(id_in_subset) + " to " + col_name + " in " +
                          db_name_ +
                          " at " + GetReceiverConfig()->database_uri);
         }
