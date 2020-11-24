@@ -40,8 +40,8 @@ var testsGetCommand = []struct {
 	queryParams string
 	externalParam string
 }{
-	{"last", expectedSubstream, expectedGroupID, expectedSubstream + "/" + expectedGroupID + "/last","","0"},
-	{"id", expectedSubstream, expectedGroupID, expectedSubstream + "/" + expectedGroupID + "/1","","1"},
+	{"last", expectedSubstream, "", expectedSubstream + "/0/last","","0"},
+	{"id", expectedSubstream, "", expectedSubstream + "/0/1","","1"},
 	{"meta", "default", "", "default/0/meta/0","","0"},
 	{"nacks", expectedSubstream, expectedGroupID, expectedSubstream + "/" + expectedGroupID + "/nacks","","0_0"},
 	{"next", expectedSubstream, expectedGroupID, expectedSubstream + "/" + expectedGroupID + "/next","",""},

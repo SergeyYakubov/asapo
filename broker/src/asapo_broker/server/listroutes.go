@@ -26,7 +26,7 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"GetLast",
 		"Get",
-		"/database/{dbname}/{stream}/{substream}/{groupid}/last",
+		"/database/{dbname}/{stream}/{substream}/0/last",
 		routeGetLast,
 	},
 	utils.Route{
@@ -44,7 +44,7 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"GetID",
 		"Get",
-		"/database/{dbname}/{stream}/{substream}/{groupid}/{id}",
+		"/database/{dbname}/{stream}/{substream}/0/{id}",
 		routeGetByID,
 	},
 	utils.Route{
