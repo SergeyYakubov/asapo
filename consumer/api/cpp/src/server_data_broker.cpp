@@ -200,6 +200,7 @@ Error ServerDataBroker::DiscoverService(const std::string &service_name, std::st
 
 bool ServerDataBroker::SwitchToGetByIdIfPartialData(Error* err,
                                                     const std::string &response,
+                                                    std::string* group_id,
                                                     std::string* redirect_uri) {
     if (*err == ConsumerErrorTemplates::kPartialData) {
         auto error_data = static_cast<const PartialErrorData*>((*err)->GetCustomData());
@@ -208,12 +209,13 @@ bool ServerDataBroker::SwitchToGetByIdIfPartialData(Error* err,
             return false;
         }
         *redirect_uri = std::to_string(error_data->id);
+        *group_id = "0";
         return true;
     }
     return false;
 }
 
-bool ServerDataBroker::SwitchToGetByIdIfNoData(Error* err, const std::string &response, std::string* redirect_uri) {
+bool ServerDataBroker::SwitchToGetByIdIfNoData(Error* err, const std::string &response,std::string* group_id, std::string* redirect_uri) {
     if (*err == ConsumerErrorTemplates::kNoData) {
         auto error_data = static_cast<const ConsumerErrorData*>((*err)->GetCustomData());
         if (error_data == nullptr) {
@@ -221,6 +223,7 @@ bool ServerDataBroker::SwitchToGetByIdIfNoData(Error* err, const std::string &re
             return false;
         }
         *redirect_uri = std::to_string(error_data->id);
+        *group_id = "0";
         return true;
     }
     return false;
@@ -241,16 +244,16 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
                                             GetImageServerOperation op,
                                             bool dataset, uint64_t min_size) {
     std::string request_suffix = OpToUriCmd(op);
+    std::string request_group = OpToUriCmd(op);
     std::string request_api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream
-        + "/" + std::move(substream) +
-        +"/" + std::move(group_id) + "/";
+        + "/" + std::move(substream);
     uint64_t elapsed_ms = 0;
     Error no_data_error;
     while (true) {
         auto start = system_clock::now();
         auto err = DiscoverService(kBrokerServiceName, &current_broker_uri_);
         if (err == nullptr) {
-            auto ri = PrepareRequestInfo(request_api + request_suffix, dataset, min_size);
+            auto ri = PrepareRequestInfo(request_api + "/" + group_id + "/" + request_suffix, dataset, min_size);
             if (request_suffix == "next" && resend_) {
                 ri.extra_params = ri.extra_params + "&resend_nacks=true" + "&delay_sec=" +
                     std::to_string(delay_sec_) + "&resend_attempts=" + std::to_string(resend_attempts_);
@@ -268,8 +271,8 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
         }
 
         if (request_suffix == "next") {
-            auto save_error = SwitchToGetByIdIfNoData(&err, *response, &request_suffix)
-                || SwitchToGetByIdIfPartialData(&err, *response, &request_suffix);
+            auto save_error = SwitchToGetByIdIfNoData(&err, *response, &group_id, &request_suffix)
+                || SwitchToGetByIdIfPartialData(&err, *response, &group_id, &request_suffix);
             if (err == ConsumerErrorTemplates::kInterruptedTransaction) {
                 return err;
             }
@@ -306,7 +309,7 @@ Error ServerDataBroker::GetLast(FileInfo* info, std::string group_id, FileData* 
 Error ServerDataBroker::GetLast(FileInfo* info, std::string group_id, std::string substream, FileData* data) {
     return GetImageFromServer(GetImageServerOperation::GetLast,
                               0,
-                              std::move(group_id),
+                              "0",
                               std::move(substream),
                               info,
                               data);
@@ -559,7 +562,7 @@ Error ServerDataBroker::GetById(uint64_t id,
                                 std::string group_id,
                                 std::string substream,
                                 FileData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetID, id, group_id, substream, info, data);
+    return GetImageFromServer(GetImageServerOperation::GetID, id, "0", substream, info, data);
 }
 
 Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* response, std::string group_id,
@@ -626,7 +629,7 @@ DataSet ServerDataBroker::GetNextDataset(std::string group_id, std::string subst
 }
 
 DataSet ServerDataBroker::GetLastDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) {
-    return GetDatasetFromServer(GetImageServerOperation::GetLast, 0, std::move(group_id), std::move(substream),min_size, err);
+    return GetDatasetFromServer(GetImageServerOperation::GetLast, 0, "0", std::move(substream),min_size, err);
 }
 
 DataSet ServerDataBroker::GetLastDataset(std::string group_id, uint64_t min_size, Error* err) {
@@ -656,7 +659,7 @@ DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string group_id, uint
 }
 
 DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string group_id, std::string substream, uint64_t min_size, Error* err) {
-    return GetDatasetFromServer(GetImageServerOperation::GetID, id, std::move(group_id), std::move(substream), min_size, err);
+    return GetDatasetFromServer(GetImageServerOperation::GetID, id, "0", std::move(substream), min_size, err);
 }
 
 StreamInfos ParseSubstreamsFromResponse(std::string response, Error* err) {

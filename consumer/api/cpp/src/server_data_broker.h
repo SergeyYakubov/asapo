@@ -130,8 +130,8 @@ class ServerDataBroker final : public asapo::DataBroker {
                                   bool dataset = false, uint64_t min_size = 0);
     Error GetDataIfNeeded(FileInfo* info, FileData* data);
     Error DiscoverService(const std::string& service_name, std::string* uri_to_set);
-    bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* redirect_uri);
-    bool SwitchToGetByIdIfPartialData(Error* err, const std::string& response, std::string* redirect_uri);
+    bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
+    bool SwitchToGetByIdIfPartialData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
     Error ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri);
     Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string substream,
                              FileInfo* info, FileData* data);
