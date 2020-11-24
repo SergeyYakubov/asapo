@@ -132,7 +132,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
         bool isFirstFile = true;
         while (true) {
             if (params.datasets) {
-                auto dataset = broker->GetNextDataset(group_id, &err);
+                auto dataset = broker->GetNextDataset(group_id, 0, &err);
                 if (err == nullptr) {
                     for (auto& fi : dataset.content) {
                         (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;

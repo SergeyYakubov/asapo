@@ -117,6 +117,13 @@ func TestReconnectDB(t *testing.T) {
 	db = nil
 }
 
+func TestErrorWhenReconnectNotConnectedDB(t *testing.T) {
+	err := ReconnectDb()
+	assert.NotNil(t, err, "error reconnect")
+	db = nil
+}
+
+
 func TestCleanupDBWithoutInit(t *testing.T) {
 	mock_db := setup()
 

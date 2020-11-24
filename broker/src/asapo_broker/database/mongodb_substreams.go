@@ -3,6 +3,7 @@
 package database
 
 import (
+	"asapo_common/utils"
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -76,14 +77,10 @@ func updateTimestamps(db *Mongodb, db_name string, rec *SubstreamsRecord) {
 		}
 		res, err := db.getEarliestRecord(db_name, record.Name)
 		if err == nil {
-			ts,ok:=res["timestamp"].(int64)
-			var tsint float64
-			if !ok { // we need this (at least for tests) since by default values are float in mongo
-				tsint,ok = res["timestamp"].(float64)
-				ts = int64(tsint)
-			}
+			ts,ok:=utils.InterfaceToInt64(res["timestamp"])
 			if ok {
-				rec.Substreams[i].Timestamp = ts			}
+				rec.Substreams[i].Timestamp = ts
+			}
 		}
 	}
 }

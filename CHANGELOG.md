@@ -1,11 +1,18 @@
-## 20.09.2
+## 20.09.2 (in progress)
 
 FEATURES
 * implemented possibility to send data without writing to database (no need of consecutive indexes, etc. but will not be able to consume such data)
+* allow to return incomplete datasets (wihout error if one sets minimum dataset size, otherwise with "partial data" error)
 
  IMPROVEMENTS
+* Consumer API - change behavior of GetLast/get_last - do not set current pointer after call to the last image  
 * Producer API - return original data in callback payload.  
 * Producer API - allow to set queue limits (number of pending requests and/or max memory), reject new requests if reached the limits  
+
+BREAKING CHANGES
+* Consumer API - get_next_dataset, get_last_dataset, get_dataset_by_id return dictionary with 'id','expected_size','content' fields, not tuple (id,content) as before
+* Consumer API - remove group_id argument from get_last/get_by_id/get_last_dataset/get_dataset_by_id functions
+* Producer API - changed meaning of subsets (subset_id replaced with id_in_subset and this means now id of the image within a subset (e.g. module number for multi-module detector)), file_id is now a global id of a multi-set data (i.g. multi-image id) 
 
 ## 20.09.1
 

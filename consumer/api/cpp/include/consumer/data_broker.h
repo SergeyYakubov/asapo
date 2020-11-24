@@ -122,29 +122,33 @@ class DataBroker {
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
       \param group_id - group id to use.
+      \param substream - substream to use ("" for default).
+      \param min_size - wait until dataset has min_size data tuples (0 for maximum size)
       \return DataSet - information about the dataset
-    */
-    virtual DataSet GetNextDataset(std::string group_id, Error* err) = 0;
-    virtual DataSet GetNextDataset(std::string group_id, std::string substream, Error* err) = 0;
 
-    //! Receive last available completed dataset.
+    */
+    virtual DataSet GetNextDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) = 0;
+    //! Receive last available dataset which has min_size data tuples.
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
-      \param group_id - group id to use.
+      \param substream - substream to use ("" for default).
+      \param min_size - amount of data tuples in dataset (0 for maximum size)
       \return DataSet - information about the dataset
     */
-    virtual DataSet GetLastDataset(std::string group_id, Error* err) = 0;
-    virtual DataSet GetLastDataset(std::string group_id, std::string substream, Error* err) = 0;
+    virtual DataSet GetLastDataset(std::string substream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetLastDataset(uint64_t min_size, Error* err) = 0;
 
     //! Receive dataset by id.
     /*!
       \param id - dataset id
-      \param err -  will be set to error data cannot be read or dataset is incomplete, nullptr otherwise.
-      \param group_id - group id to use.
+      \param err -  will be set to error data cannot be read or dataset size less than min_size, nullptr otherwise.
+      \param substream - substream to use ("" for default).
+      \param min_size - wait until dataset has min_size data tuples (0 for maximum size)
       \return DataSet - information about the dataset
     */
-    virtual DataSet GetDatasetById(uint64_t id, std::string group_id, Error* err) = 0;
-    virtual DataSet GetDatasetById(uint64_t id, std::string group_id, std::string substream, Error* err) = 0;
+    virtual DataSet GetDatasetById(uint64_t id, std::string substream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetDatasetById(uint64_t id, uint64_t min_size, Error* err) = 0;
 
     //! Receive single image by id.
     /*!
@@ -153,8 +157,8 @@ class DataBroker {
       \param data - where to store image data. Can be set to nullptr only image metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) = 0;
-    virtual Error GetById(uint64_t id, FileInfo* info, std::string group_id, std::string substream, FileData* data) = 0;
+    virtual Error GetById(uint64_t id, FileInfo* info, FileData* data) = 0;
+    virtual Error GetById(uint64_t id, FileInfo* info, std::string substream, FileData* data) = 0;
 
     //! Receive id of last acknowledged data tuple
     /*!
@@ -169,12 +173,11 @@ class DataBroker {
     //! Receive last available image.
     /*!
       \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
-      \param group_id - group id to use.
       \param data - where to store image data. Can be set to nullptr only image metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetLast(FileInfo* info, std::string group_id, FileData* data) = 0;
-    virtual Error GetLast(FileInfo* info, std::string group_id, std::string substream, FileData* data) = 0;
+    virtual Error GetLast(FileInfo* info, FileData* data) = 0;
+    virtual Error GetLast(FileInfo* info, std::string substream, FileData* data) = 0;
 
     //! Get all images matching the query.
     /*!

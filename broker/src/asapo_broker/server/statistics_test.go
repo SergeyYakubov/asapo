@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -28,16 +29,36 @@ func assertMockWriterExpectations(t *testing.T, mock_writer *mockWriter) {
 func TestWriteStatisticsOK(t *testing.T) {
 	mock_writer := new(mockWriter)
 	statistics.Writer = mock_writer
+
+	mock_writer.On("Init").Return(nil)
+	mock_writer.On("Write", &statistics).Return(nil)
+
+	statistics.Init()
 	statistics.Reset()
 	statistics.IncreaseCounter()
-
-	mock_writer.On("Write", &statistics).Return(nil)
+    counter := statistics.GetCounter()
 
 	err := statistics.WriteStatistic()
 	assert.Nil(t, err, "Statistics written")
+	assert.Equal(t, 1, counter, "counter")
 
 	assertMockWriterExpectations(t, mock_writer)
 }
+
+func TestInitError(t *testing.T) {
+	mock_writer := new(mockWriter)
+	statistics.Writer = mock_writer
+
+	mock_writer.On("Init").Return(errors.New("error"))
+
+	statistics.Init()
+
+	err := statistics.WriteStatistic()
+	assert.NotNil(t, err, "Statistics init error")
+
+	assertMockWriterExpectations(t, mock_writer)
+}
+
 
 func TestWriteStatisticsCatchesError(t *testing.T) {
 	statistics.Writer = nil

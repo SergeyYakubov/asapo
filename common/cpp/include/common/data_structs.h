@@ -64,6 +64,7 @@ using IdList = std::vector<uint64_t>;
 
 struct DataSet {
     uint64_t id;
+    uint64_t expected_size;
     FileInfos content;
     bool SetFromJson(const std::string& json_string);
 };

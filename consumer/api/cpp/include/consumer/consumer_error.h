@@ -13,11 +13,18 @@ enum class ConsumerErrorType {
     kUnavailableService,
     kInterruptedTransaction,
     kLocalIOError,
-    kWrongInput
+    kWrongInput,
+    kPartialData
 };
 
 using ConsumerErrorTemplate = ServiceErrorTemplate<ConsumerErrorType, ErrorType::kConsumerError>;
 
+
+class PartialErrorData : public CustomErrorData {
+ public:
+  uint64_t id;
+  uint64_t expected_size;
+};
 
 class ConsumerErrorData : public CustomErrorData {
   public:
@@ -28,6 +35,13 @@ class ConsumerErrorData : public CustomErrorData {
 
 
 namespace ConsumerErrorTemplates {
+
+
+auto const kPartialData = ConsumerErrorTemplate {
+    "partial data", ConsumerErrorType::kPartialData
+};
+
+
 
 auto const kLocalIOError = ConsumerErrorTemplate {
     "local i/o error", ConsumerErrorType::kLocalIOError

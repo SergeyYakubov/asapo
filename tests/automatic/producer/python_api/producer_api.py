@@ -50,9 +50,9 @@ producer.send_file(10, local_path="./file1", exposed_path="processed/" + stream 
                    user_meta='{"test_key":"test_val"}', callback=None)
 
 # send subsets
-producer.send_file(2, local_path="./file1", exposed_path="processed/" + stream + "/" + "file2", subset=(2, 2),
+producer.send_file(2, local_path="./file1", exposed_path="processed/" + stream + "/" + "file2", subset=(1, 2),
                    user_meta='{"test_key":"test_val"}', callback=callback)
-producer.send_file(3, local_path="./file1", exposed_path="processed/" + stream + "/" + "file3", subset=(2, 2),
+producer.send_file(2, local_path="./file1", exposed_path="processed/" + stream + "/" + "file3", subset=(2, 2),
                    user_meta='{"test_key":"test_val"}', callback=callback)
 
 # send meta only
@@ -91,8 +91,8 @@ else:
     sys.exit(1)
 
 try:
-    producer.send_file(0, local_path="./not_exist", exposed_path="./whatever",
-                       ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback=callback)
+    producer.send_data(0, "processed/" + stream + "/" + "file6", b"hello",
+                       ingest_mode=asapo_producer.DEFAULT_INGEST_MODE, callback=callback)
 except asapo_producer.AsapoWrongInputError as e:
     print(e)
 else:

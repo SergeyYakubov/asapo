@@ -47,7 +47,8 @@ struct RequestOutput {
 
 Error ProcessRequestResponce(const Error& server_err, const RequestOutput* response, const HttpCode& code);
 Error ConsumerErrorFromNoDataResponse(const std::string& response);
-
+Error ConsumerErrorFromPartialDataResponse(const std::string& response);
+DataSet DecodeDatasetFromResponse(std::string response, Error* err);
 
 class ServerDataBroker final : public asapo::DataBroker {
   public:
@@ -77,8 +78,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
     Error GetNext(FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
 
-    Error GetLast(FileInfo* info, std::string group_id, FileData* data) override;
-    Error GetLast(FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
+    Error GetLast(FileInfo* info, FileData* data) override;
+    Error GetLast(FileInfo* info, std::string substream, FileData* data) override;
 
     std::string GenerateNewGroupId(Error* err) override;
     std::string GetBeamtimeMeta(Error* err) override;
@@ -86,8 +87,8 @@ class ServerDataBroker final : public asapo::DataBroker {
     uint64_t GetCurrentSize(Error* err) override;
     uint64_t GetCurrentSize(std::string substream, Error* err) override;
 
-    Error GetById(uint64_t id, FileInfo* info, std::string group_id, FileData* data) override;
-    Error GetById(uint64_t id, FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
+    Error GetById(uint64_t id, FileInfo* info, FileData* data) override;
+    Error GetById(uint64_t id, FileInfo* info, std::string substream, FileData* data) override;
 
 
     void SetTimeout(uint64_t timeout_ms) override;
@@ -98,14 +99,14 @@ class ServerDataBroker final : public asapo::DataBroker {
     FileInfos QueryImages(std::string query, Error* err) override;
     FileInfos QueryImages(std::string query, std::string substream, Error* err) override;
 
-    DataSet GetNextDataset(std::string group_id, Error* err) override;
-    DataSet GetNextDataset(std::string group_id, std::string substream, Error* err) override;
+    DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) override;
+    DataSet GetNextDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) override;
 
-    DataSet GetLastDataset(std::string group_id, Error* err) override;
-    DataSet GetLastDataset(std::string group_id, std::string substream, Error* err) override;
+    DataSet GetLastDataset(uint64_t min_size, Error* err) override;
+    DataSet GetLastDataset(std::string substream, uint64_t min_size, Error* err) override;
 
-    DataSet GetDatasetById(uint64_t id, std::string group_id, Error* err) override;
-    DataSet GetDatasetById(uint64_t id, std::string group_id, std::string substream, Error* err) override;
+    DataSet GetDatasetById(uint64_t id, uint64_t min_size, Error* err) override;
+    DataSet GetDatasetById(uint64_t id, std::string substream, uint64_t min_size, Error* err) override;
 
     Error RetrieveData(FileInfo* info, FileData* data) override;
 
@@ -124,17 +125,18 @@ class ServerDataBroker final : public asapo::DataBroker {
     static const std::string kFileTransferServiceName;
     std::string RequestWithToken(std::string uri);
     Error GetRecordFromServer(std::string* info, std::string group_id, std::string substream, GetImageServerOperation op,
-                              bool dataset = false);
+                              bool dataset = false, uint64_t min_size = 0);
     Error GetRecordFromServerById(uint64_t id, std::string* info, std::string group_id, std::string substream,
-                                  bool dataset = false);
+                                  bool dataset = false, uint64_t min_size = 0);
     Error GetDataIfNeeded(FileInfo* info, FileData* data);
     Error DiscoverService(const std::string& service_name, std::string* uri_to_set);
-    bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* redirect_uri);
+    bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
+    bool SwitchToGetByIdIfPartialData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
     Error ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri);
     Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string substream,
                              FileInfo* info, FileData* data);
     DataSet GetDatasetFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string substream,
-                                 Error* err);
+                                 uint64_t min_size, Error* err);
     bool DataCanBeInBuffer(const FileInfo* info);
     Error TryGetDataFromBuffer(const FileInfo* info, FileData* data);
     Error CreateNetClientAndTryToGetFile(const FileInfo* info, FileData* data);
@@ -146,8 +148,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     Error ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
     Error ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
 
-    DataSet DecodeDatasetFromResponse(std::string response, Error* err);
-    RequestInfo PrepareRequestInfo(std::string api_url, bool dataset);
+    RequestInfo PrepareRequestInfo(std::string api_url, bool dataset, uint64_t min_size);
     std::string OpToUriCmd(GetImageServerOperation op);
     Error UpdateFolderTokenIfNeeded(bool ignore_existing);
     std::string endpoint_;

@@ -1,7 +1,19 @@
 package database
 
+import "asapo_common/utils"
+
+type Request struct {
+	DbName string
+	DbCollectionName string
+	GroupId string
+	Op string
+	DatasetOp bool
+	MinDatasetSize int
+	ExtraParam string
+}
+
 type Agent interface {
-	ProcessRequest(db_name string, data_collection_name string, group_id string, op string, extra string) ([]byte, error)
+	ProcessRequest(request Request) ([]byte, error)
 	Ping() error
 	Connect(string) error
 	Close()
@@ -21,3 +33,13 @@ type DBError struct {
 func (err *DBError) Error() string {
 	return err.Message
 }
+
+func GetStatusCodeFromError(err error) int {
+	err_db, ok := err.(*DBError)
+	if ok {
+		return err_db.Code
+	} else {
+		return utils.StatusServiceUnavailable
+	}
+}
+

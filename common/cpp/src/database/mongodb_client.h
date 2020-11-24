@@ -48,7 +48,7 @@ class MongoDBClient final : public Database {
                          bool ignore_duplicates) const override;
     Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const override;
     Error GetById(const std::string& collection, uint64_t id, FileInfo* file) const override;
-    Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const override;
+    Error GetDataSetById(const std::string& collection, uint64_t id_in_set, uint64_t id, FileInfo* file) const override;
     Error GetStreamInfo(const std::string& collection, StreamInfo* info) const override;
     Error GetLastStream(StreamInfo* info) const override;
     ~MongoDBClient() override;

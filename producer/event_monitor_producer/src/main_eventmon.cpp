@@ -82,12 +82,12 @@ void HandleSubsets(asapo::EventHeader* header) {
         return;
     case asapo::SubSetMode::kBatch:
         header->subset_size = GetEventMonConfig()->subset_batch_size;
-        header->subset_id = (header->file_id - 1) / header->subset_size + 1;
+        header->id_in_subset = (header->file_id - 1) % header->subset_size + 1;
+        header->file_id = (header->file_id - 1) / header->subset_size + 1;
         break;
     case asapo::SubSetMode::kMultiSource:
         header->subset_size = GetEventMonConfig()->subset_multisource_nsources;
-        header->subset_id = header->file_id;
-        header->file_id = GetEventMonConfig()->subset_multisource_sourceid;
+        header->id_in_subset = GetEventMonConfig()->subset_multisource_sourceid;
         break;
     }
 }

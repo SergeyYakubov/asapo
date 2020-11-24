@@ -335,9 +335,9 @@ Error MongoDBClient::GetById(const std::string &collection, uint64_t id, FileInf
     return nullptr;
 }
 
-Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t set_id, uint64_t id, FileInfo* file) const {
+Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_in_set, uint64_t id, FileInfo* file) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, set_id, GetRecordMode::kById, &record_str);
+    auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
     if (err) {
         return err;
     }
@@ -348,7 +348,7 @@ Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t set_
     }
 
     for (const auto &fileinfo : dataset.content) {
-        if (fileinfo.id == id) {
+        if (fileinfo.id == id_in_set) {
             *file = fileinfo;
             return nullptr;
         }

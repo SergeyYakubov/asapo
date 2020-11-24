@@ -39,6 +39,7 @@ cdef extern from "asapo_consumer.h" namespace "asapo":
     vector[FileInfo].iterator end()
   struct DataSet:
     uint64_t id
+    uint64_t expected_size
     FileInfos content
   struct  SourceCredentials:
     string beamtime_id
@@ -62,8 +63,8 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
         void ForceNoRdma()
         NetworkConnectionType CurrentConnectionType()
         Error GetNext(FileInfo* info, string group_id,string substream, FileData* data)
-        Error GetLast(FileInfo* info, string group_id,string substream, FileData* data)
-        Error GetById(uint64_t id, FileInfo* info, string group_id, string substream, FileData* data)
+        Error GetLast(FileInfo* info, string substream, FileData* data)
+        Error GetById(uint64_t id, FileInfo* info, string substream, FileData* data)
         uint64_t GetCurrentSize(string substream, Error* err)
         Error SetLastReadMarker(uint64_t value, string group_id, string substream)
         Error ResetLastReadMarker(string group_id, string substream)
@@ -74,9 +75,9 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
         string GenerateNewGroupId(Error* err)
         string GetBeamtimeMeta(Error* err)
         FileInfos QueryImages(string query, string substream, Error* err)
-        DataSet GetNextDataset(string group_id, string substream, Error* err)
-        DataSet GetLastDataset(string group_id, string substream, Error* err)
-        DataSet GetDatasetById(uint64_t id, string group_id, string substream, Error* err)
+        DataSet GetNextDataset(string group_id, string substream, uint64_t min_size, Error* err)
+        DataSet GetLastDataset(string substream, uint64_t min_size, Error* err)
+        DataSet GetDatasetById(uint64_t id, string substream, uint64_t min_size, Error* err)
         Error RetrieveData(FileInfo* info, FileData* data)
         vector[StreamInfo] GetSubstreamList(string from_substream, Error* err)
         void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts)
@@ -96,6 +97,8 @@ cdef extern from "asapo_consumer.h" namespace "asapo":
   ErrorTemplateInterface kInterruptedTransaction "asapo::ConsumerErrorTemplates::kInterruptedTransaction"
   ErrorTemplateInterface kLocalIOError "asapo::ConsumerErrorTemplates::kLocalIOError"
   ErrorTemplateInterface kWrongInput "asapo::ConsumerErrorTemplates::kWrongInput"
+  ErrorTemplateInterface kPartialData "asapo::ConsumerErrorTemplates::kPartialData"
+
   cdef cppclass ConsumerErrorData:
     uint64_t id
     uint64_t id_max

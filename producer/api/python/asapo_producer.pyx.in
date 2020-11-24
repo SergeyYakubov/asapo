@@ -125,7 +125,6 @@ cdef class PyProducer:
             Py_XINCREF(<PyObject*>data)
         if callback != None:
             Py_XINCREF(<PyObject*>callback)
-
         return
     cdef EventHeader create_event_header(self,uint64_t id, exposed_path,user_meta,subset,ingest_mode):
         cdef EventHeader event_header
@@ -133,10 +132,10 @@ cdef class PyProducer:
         event_header.file_name = _bytes(exposed_path)
         event_header.user_metadata = _bytes(user_meta) if user_meta!=None else ""
         if subset == None:
-            event_header.subset_id = 0
+            event_header.id_in_subset = 0
             event_header.subset_size = 0
         else:
-            event_header.subset_id = subset[0]
+            event_header.id_in_subset = subset[0]
             event_header.subset_size = subset[1]
         return event_header
 
@@ -163,7 +162,7 @@ cdef class PyProducer:
          :type data: contiguous numpy or bytes array, can be None for INGEST_MODE_TRANSFER_METADATA_ONLY ingest mode
          :param user_meta: user metadata, default None
          :type user_meta: JSON string
-         :param subset: a tuple with two int values (subset id, subset size), default None
+         :param subset: a tuple with two int values (id in subset, subset size), default None
          :type subset: tuple
          :param substream: substream name, default "default"
          :type substream: string

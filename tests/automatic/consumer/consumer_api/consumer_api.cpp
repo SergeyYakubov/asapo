@@ -45,22 +45,21 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertEq("hello1", std::string(data.get(), data.get() + fi.size));
 
 
-    err = broker->GetLast(&fi, group_id, nullptr);
+    err = broker->GetLast(&fi, nullptr);
     M_AssertTrue(err == nullptr, "GetLast no error");
     M_AssertTrue(fi.name == "10", "GetLast filename");
     M_AssertTrue(fi.metadata == "{\"test\":10}", "GetLast metadata");
 
     err = broker->GetNext(&fi, group_id, nullptr);
-    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kEndOfStream, "GetNext2 error");
-    auto error_data = static_cast<const asapo::ConsumerErrorData*>(err->GetCustomData());
-    M_AssertTrue(error_data->id_max == 10, "GetNext2 id max");
+    M_AssertTrue(err == nullptr, "GetNext2 no error");
+    M_AssertTrue(fi.name == "2", "GetNext2 filename");
 
 
     err = broker->SetLastReadMarker(2, group_id);
     M_AssertTrue(err == nullptr, "SetLastReadMarker no error");
 
 
-    err = broker->GetById(8, &fi, group_id, nullptr);
+    err = broker->GetById(8, &fi, nullptr);
     M_AssertTrue(err == nullptr, "GetById error");
     M_AssertTrue(fi.name == "8", "GetById filename");
 
@@ -69,7 +68,7 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(fi.name == "3", "GetNext After GetById filename");
 
 
-    err = broker->GetLast(&fi, group_id, nullptr);
+    err = broker->GetLast(&fi, nullptr);
     M_AssertTrue(err == nullptr, "GetLast2 no error");
 
 
@@ -207,7 +206,7 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
     asapo::FileInfo fi;
     asapo::Error err;
 
-    auto dataset = broker->GetNextDataset(group_id, &err);
+    auto dataset = broker->GetNextDataset(group_id, 0, &err);
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
@@ -223,20 +222,55 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
     M_AssertEq("hello1", std::string(data.get(), data.get() + dataset.content[0].size));
 
 
-    dataset = broker->GetLastDataset(group_id, &err);
+    dataset = broker->GetLastDataset(0, &err);
     M_AssertTrue(err == nullptr, "GetLast no error");
     M_AssertTrue(dataset.content[0].name == "10_1", "GetLastDataset filename");
     M_AssertTrue(dataset.content[0].metadata == "{\"test\":10}", "GetLastDataset metadata");
 
-    dataset = broker->GetNextDataset(group_id, &err);
-    M_AssertTrue(err != nullptr, "GetNextDataset2 error");
+    dataset = broker->GetNextDataset(group_id, 0, &err);
+    M_AssertTrue(err == nullptr, "GetNextDataset2 no error");
+    M_AssertTrue(dataset.content[0].name == "2_1", "GetNextDataSet2 filename");
 
-    dataset = broker->GetLastDataset(group_id, &err);
+    dataset = broker->GetLastDataset(0, &err);
     M_AssertTrue(err == nullptr, "GetLastDataset2 no error");
 
-    dataset = broker->GetDatasetById(8, group_id, &err);
+    dataset = broker->GetDatasetById(8, 0, &err);
     M_AssertTrue(err == nullptr, "GetDatasetById error");
     M_AssertTrue(dataset.content[2].name == "8_3", "GetDatasetById filename");
+
+// incomplete datasets without min_size
+
+    dataset = broker->GetNextDataset(group_id,"incomplete",0,&err);
+    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kPartialData, "GetNextDataset incomplete error");
+    M_AssertTrue(dataset.content.size() == 2, "GetNextDataset incomplete size");
+    M_AssertTrue(dataset.content[0].name == "1_1", "GetNextDataset incomplete filename");
+    auto err_data = static_cast<const asapo::PartialErrorData*>(err->GetCustomData());
+    M_AssertTrue(err_data->expected_size == 3, "GetDatasetById expected size in error");
+    M_AssertTrue(err_data->id == 1, "GetDatasetById expected id in error ");
+    M_AssertTrue(dataset.expected_size == 3, "GetDatasetById expected size");
+    M_AssertTrue(dataset.id == 1, "GetDatasetById expected id");
+
+    dataset = broker->GetLastDataset("incomplete", 0, &err);
+    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kEndOfStream, "GetLastDataset incomplete no data");
+
+    dataset = broker->GetDatasetById(2, "incomplete", 0, &err);
+    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kPartialData, "GetDatasetById incomplete error");
+    M_AssertTrue(dataset.content[0].name == "2_1", "GetDatasetById incomplete filename");
+
+// incomplete datasets with min_size
+
+    dataset = broker->GetNextDataset(group_id,"incomplete",2,&err);
+    M_AssertTrue(err == nullptr, "GetNextDataset incomplete minsize error");
+    M_AssertTrue(dataset.id == 2, "GetDatasetById minsize id");
+
+    dataset = broker->GetLastDataset("incomplete", 2, &err);
+    M_AssertTrue(err == nullptr, "GetNextDataset incomplete minsize error");
+    M_AssertTrue(dataset.id == 5, "GetLastDataset minsize id");
+
+    dataset = broker->GetDatasetById(2, "incomplete", 2, &err);
+    M_AssertTrue(err == nullptr, "GetDatasetById incomplete minsize error");
+    M_AssertTrue(dataset.content[0].name == "2_1", "GetDatasetById incomplete minsize filename");
+
 
 }
 
