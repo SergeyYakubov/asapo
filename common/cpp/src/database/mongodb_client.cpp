@@ -238,7 +238,7 @@ Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool 
 }
 
 Error MongoDBClient::InsertAsSubset(const std::string &collection, const FileInfo &file,
-                                    uint64_t id_in_subset,
+                                    uint64_t subset_id,
                                     uint64_t subset_size,
                                     bool ignore_duplicates) const {
     if (!connected_) {
@@ -248,14 +248,12 @@ Error MongoDBClient::InsertAsSubset(const std::string &collection, const FileInf
     UpdateCurrentCollectionIfNeeded(collection);
 
     Error err;
-    auto new_fi = file;
-    new_fi.id = id_in_subset;
-    auto document = PrepareBsonDocument(new_fi, &err);
+    auto document = PrepareBsonDocument(file, &err);
     if (err) {
         return err;
     }
-    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(file.id), "}", "{", "images._id", "{", "$ne",
-                           BCON_INT64(id_in_subset), "}", "}", "]");
+    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(subset_id), "}", "{", "images._id", "{", "$ne",
+                           BCON_INT64(file.id), "}", "}", "]");
     auto update = BCON_NEW ("$setOnInsert", "{",
                             "size", BCON_INT64(subset_size),
                             "timestamp", BCON_INT64((int64_t) NanosecsEpochFromTimePoint(file.timestamp)),
@@ -337,9 +335,9 @@ Error MongoDBClient::GetById(const std::string &collection, uint64_t id, FileInf
     return nullptr;
 }
 
-Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t set_id, uint64_t id, FileInfo* file) const {
+Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_in_set, uint64_t id, FileInfo* file) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, set_id, GetRecordMode::kById, &record_str);
+    auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
     if (err) {
         return err;
     }
@@ -350,7 +348,7 @@ Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t set_
     }
 
     for (const auto &fileinfo : dataset.content) {
-        if (fileinfo.id == id) {
+        if (fileinfo.id == id_in_set) {
             *file = fileinfo;
             return nullptr;
         }

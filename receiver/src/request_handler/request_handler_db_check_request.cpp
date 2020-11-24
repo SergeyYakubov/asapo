@@ -29,10 +29,10 @@ Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, File
         }
         return err;
     } else {
-        auto subset_id = request->GetCustomData()[1];
-        err = db_client__->GetDataSetById(col_name, subset_id, id, record);
+        auto id_in_set = request->GetCustomData()[1];
+        err = db_client__->GetDataSetById(col_name, id_in_set, id, record);
         if (!err) {
-            log__->Debug(std::string{"get subset record id "} + std::to_string(subset_id) + " from " + col_name + " in " +
+            log__->Debug(std::string{"get subset record id "} + std::to_string(id) + " from " + col_name + " in " +
                          db_name_ + " at " + GetReceiverConfig()->database_uri);
         }
         return err;

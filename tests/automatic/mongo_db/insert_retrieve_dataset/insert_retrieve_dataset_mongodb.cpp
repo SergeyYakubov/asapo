@@ -17,8 +17,8 @@ void Assert(const Error& error, const std::string& expect) {
 }
 
 struct Args {
-    std::string keyword;
-    int file_id;
+  std::string keyword;
+  int file_id;
 };
 
 Args GetArgs(int argc, char* argv[]) {
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
 
     if (args.keyword == "OK") { // check retrieve
         asapo::FileInfo fi_db;
-        err = db.GetDataSetById("test", subset_id, fi.id, &fi_db);
+        err = db.GetDataSetById("test", fi.id,subset_id, &fi_db);
         M_AssertTrue(fi_db == fi, "get record from db");
         M_AssertEq(nullptr, err);
         err = db.GetDataSetById("test", 0, 0, &fi_db);
