@@ -1,7 +1,7 @@
 #include <common/networking.h>
 #include "consumer/data_broker.h"
 #include "server_data_broker.h"
-
+#include "consumer//consumer_error.h"
 
 namespace asapo {
 
@@ -10,7 +10,7 @@ std::unique_ptr<DataBroker> Create(const std::string& source_name,
                                    Error* error,
                                    Args&& ... args) noexcept {
     if (source_name.empty()) {
-        error->reset(new SimpleError("Empty Data Source"));
+        *error = ConsumerErrorTemplates::kWrongInput.Generate("Empty Data Source");
         return nullptr;
     }
 

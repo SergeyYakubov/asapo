@@ -335,11 +335,11 @@ cdef class __PyDataBrokerFactory:
         cdef unique_ptr[DataBroker] c_broker
         with nogil:
             c_broker = self.c_factory.CreateServerBroker(b_server_name,b_source_path,b_has_filesystem,source,&err)
+        if err:
+            throw_exception(err)
         broker = PyDataBroker()
         broker.c_broker =  c_broker.release()
         broker.c_broker.SetTimeout(timeout)
-        if err:
-            throw_exception(err)
         return broker
 
 def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stream,token,timeout_ms):
@@ -354,7 +354,7 @@ def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stre
       :rtype: Tuple with broker object and error.
 	"""
     factory = __PyDataBrokerFactory()
-    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),has_filesystem, _bytes(beamtime_id),_bytes(stream),_bytes(token),timeout_ms)
+    return factory.create_server_broker(server_name,source_path,has_filesystem, beamtime_id,stream,token,timeout_ms)
 
 
 __version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"

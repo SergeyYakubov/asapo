@@ -202,6 +202,15 @@ def check_single(broker, group_id):
     else:
         exit_on_noerr("AsapoBrokerServersNotFound")
 
+    try:
+        asapo_consumer.create_server_broker("", "", True, "", "", "", 1000)
+    except asapo_consumer.AsapoWrongInputError as err:
+        print(err)
+        pass
+    else:
+        exit_on_noerr("should be AsapoWrongInputError")
+
+
 
 def check_dataset(broker, group_id):
     res = broker.get_next_dataset(group_id)
