@@ -317,7 +317,8 @@ cdef class PyDataBroker:
         meta = json.loads(_str(meta_str))
         del meta['_id']
         return meta
-
+    def interrupt_current_operation(self):
+        self.c_broker.InterruptCurrentOperation()
 cdef class __PyDataBrokerFactory:
     cdef DataBrokerFactory c_factory
     def __cinit__(self):

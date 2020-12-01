@@ -196,6 +196,8 @@ class DataBroker {
     */
     virtual void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) = 0;
 
+  //! Will try to interrupt current long runnung operations (mainly needed to exit waiting loop in C from Python)
+    virtual void InterruptCurrentOperation() = 0;
 
     virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
 };

@@ -3,6 +3,7 @@
 
 #include <common/networking.h>
 #include <mutex>
+#include <atomic>
 #include "consumer/data_broker.h"
 #include "io/io.h"
 #include "http_client/http_client.h"
@@ -113,10 +114,12 @@ class ServerDataBroker final : public asapo::DataBroker {
     StreamInfos GetSubstreamList(std::string from, Error* err) override;
     void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) override;
 
+    virtual void InterruptCurrentOperation() override;
+
+
     std::unique_ptr<IO> io__; // modified in testings to mock system calls,otherwise do not touch
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<NetClient> net_client__;
-
     std::mutex net_client_mutex__; // Required for the lazy initialization of net_client
   private:
     Error GetDataFromFileTransferService(FileInfo* info, FileData* data, bool retry_with_new_token);
@@ -167,6 +170,7 @@ class ServerDataBroker final : public asapo::DataBroker {
     bool resend_ = false;
     uint64_t delay_sec_;
     uint64_t resend_attempts_;
+    std::atomic<bool> interrupt_flag_{ false};
 };
 
 }

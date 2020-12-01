@@ -1,11 +1,12 @@
-## 20.09.2 (in progress)
+## 20.12.0 (in progress)
 
 FEATURES
 * implemented possibility to send data without writing to database (no need of consecutive indexes, etc. but will not be able to consume such data)
 * allow to return incomplete datasets (wihout error if one sets minimum dataset size, otherwise with "partial data" error)
 
  IMPROVEMENTS
-* Consumer API - change behavior of GetLast/get_last - do not set current pointer after call to the last image  
+* Consumer API - change behavior of GetLast/get_last - do not set current pointer after call to the last image
+* Consumer API - add interrupt_current_operation to allow interrupting (from a separate thread) long consumer operation  
 * Producer API - return original data in callback payload.  
 * Producer API - allow to set queue limits (number of pending requests and/or max memory), reject new requests if reached the limits  
 
