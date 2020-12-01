@@ -1,6 +1,7 @@
 #include <gmock/gmock.h>
 #include <gmock/gmock.h>
 #include "gtest/gtest.h"
+#include <chrono>
 
 #include "consumer/data_broker.h"
 #include "consumer/consumer_error.h"
@@ -411,7 +412,7 @@ TEST_F(ServerDataBrokerTests, GetImageReturnsNoDataAfterTimeoutEvenIfOtherErrorO
             ",\"id_max\":2,\"next_substream\":\"""\"}")));
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/0/"
-    + std::to_string(expected_dataset_id) + "?token="
+                                            + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::NotFound),
         SetArgPointee<2>(nullptr),
@@ -724,7 +725,7 @@ TEST_F(ServerDataBrokerTests, GetByIdTimeouts) {
     data_broker->SetTimeout(10);
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/0/"
-    + std::to_string(expected_dataset_id) + "?token="
+                                            + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::Conflict),
         SetArgPointee<2>(nullptr),
@@ -740,7 +741,7 @@ TEST_F(ServerDataBrokerTests, GetByIdReturnsEndOfStream) {
     data_broker->SetTimeout(10);
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/0/"
-    + std::to_string(expected_dataset_id) + "?token="
+                                            + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::Conflict),
         SetArgPointee<2>(nullptr),
@@ -756,7 +757,7 @@ TEST_F(ServerDataBrokerTests, GetByIdReturnsEndOfStreamWhenIdTooLarge) {
     data_broker->SetTimeout(10);
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_stream + "/default/0/"
-    + std::to_string(expected_dataset_id) + "?token="
+                                            + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::Conflict),
         SetArgPointee<2>(nullptr),
@@ -1366,6 +1367,31 @@ TEST_F(ServerDataBrokerTests, NegativeAcknowledgeUsesCorrectUri) {
     auto err = data_broker->NegativeAcknowledge(expected_group_id, expected_dataset_id, 10, expected_substream);
 
     ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(ServerDataBrokerTests, CanInterruptOperation) {
+    EXPECT_CALL(mock_http_client, Get_t(_, _, _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
+        SetArgPointee<1>(HttpCode::NotFound),
+        SetArgPointee<2>(nullptr),
+        Return("")));
+
+    auto start = std::chrono::system_clock::now();
+    asapo::Error err;
+    auto exec = [this,&err]() {
+      data_broker->SetTimeout(10000);
+      err = data_broker->GetNext(&info, "", nullptr);
+    };
+    auto thread = std::thread(exec);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    data_broker->InterruptCurrentOperation();
+
+    thread.join();
+
+    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count();
+    ASSERT_THAT(elapsed_ms, testing::Lt(1000));
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
+
 }
 
 }

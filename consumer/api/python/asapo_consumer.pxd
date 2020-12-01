@@ -81,7 +81,7 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
         Error RetrieveData(FileInfo* info, FileData* data)
         vector[StreamInfo] GetSubstreamList(string from_substream, Error* err)
         void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts)
-
+        void InterruptCurrentOperation()
 
 cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass DataBrokerFactory:

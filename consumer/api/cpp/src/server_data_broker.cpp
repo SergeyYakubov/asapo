@@ -243,6 +243,7 @@ RequestInfo ServerDataBroker::PrepareRequestInfo(std::string api_url, bool datas
 Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string group_id, std::string substream,
                                             GetImageServerOperation op,
                                             bool dataset, uint64_t min_size) {
+    interrupt_flag_= false;
     std::string request_suffix = OpToUriCmd(op);
     std::string request_group = OpToUriCmd(op);
     std::string request_api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream
@@ -250,6 +251,10 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
     uint64_t elapsed_ms = 0;
     Error no_data_error;
     while (true) {
+        if (interrupt_flag_) {
+            return ConsumerErrorTemplates::kInterruptedTransaction.Generate("interrupted by user request");
+        }
+
         auto start = system_clock::now();
         auto err = DiscoverService(kBrokerServiceName, &current_broker_uri_);
         if (err == nullptr) {
@@ -444,9 +449,14 @@ Error ServerDataBroker::ServiceRequestWithTimeout(const std::string &service_nam
                                                   std::string* service_uri,
                                                   RequestInfo request,
                                                   RequestOutput* response) {
+    interrupt_flag_= false;
     uint64_t elapsed_ms = 0;
     Error err;
     while (elapsed_ms <= timeout_ms_) {
+        if (interrupt_flag_) {
+            err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("interrupted by user request");
+            break;
+        }
         auto start = system_clock::now();
         err = DiscoverService(service_name, service_uri);
         if (err == nullptr) {
@@ -842,6 +852,9 @@ Error ServerDataBroker::NegativeAcknowledge(std::string group_id,
     Error err;
     BrokerRequestWithTimeout(ri, &err);
     return err;
+}
+void ServerDataBroker::InterruptCurrentOperation() {
+    interrupt_flag_= true;
 }
 
 }

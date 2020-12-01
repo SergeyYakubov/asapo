@@ -3,7 +3,10 @@ from __future__ import print_function
 import asapo_consumer
 import json
 import sys
+import time
+from threading import Thread
 
+thread_res = 0
 
 def exit_on_noerr(name):
     print(name)
@@ -44,6 +47,7 @@ def check_file_transfer_service(broker, group_id):
 
 
 def check_single(broker, group_id):
+    global thread_res
     _, meta = broker.get_next(group_id, meta_only=True)
     assert_metaname(meta, "1", "get next1")
     assert_usermetadata(meta, "get next1")
@@ -209,6 +213,31 @@ def check_single(broker, group_id):
         pass
     else:
         exit_on_noerr("should be AsapoWrongInputError")
+
+# interrupt
+    thread_res = 0
+    def long_call(broker):
+        global thread_res
+        try:
+            broker.get_last(meta_only=True)
+            thread_res = 1
+        except asapo_consumer.AsapoInterruptedTransactionError as err:
+            global res
+            print(err)
+            thread_res = 2
+            pass
+        else:
+            print("interrupt test failed")
+            thread_res = 3
+            pass
+
+    broker = asapo_consumer.create_server_broker("bla", path, True, beamtime, "", token, 60000)
+    t = Thread(target =  long_call, args =  (broker,) )
+    t.start()
+    time.sleep(1)
+    broker.interrupt_current_operation()
+    t.join()
+    assert_eq(thread_res, 2, "long call res")
 
 
 
