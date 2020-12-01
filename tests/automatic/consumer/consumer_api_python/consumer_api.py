@@ -234,6 +234,7 @@ def check_single(broker, group_id):
     broker = asapo_consumer.create_server_broker("bla", path, True, beamtime, "", token, 60000)
     t = Thread(target =  long_call, args =  (broker,) )
     t.start()
+    time.sleep(1)
     broker.interrupt_current_operation()
     t.join()
     assert_eq(thread_res, 2, "long call res")
