@@ -2,10 +2,10 @@
 #define ASAPO_REQUEST_HANDLER_DB_META_WRITE_H
 
 #include "request_handler.h"
-#include "database/database.h"
-#include "logger/logger.h"
+#include "asapo/database/database.h"
+#include "asapo/logger/logger.h"
 #include "request_handler_db.h"
-#include "io/io.h"
+#include "asapo/io/io.h"
 
 
 namespace asapo {

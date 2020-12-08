@@ -2,11 +2,11 @@
 #define ASAPO_PRODUCER__PRODUCER_IMPL_H
 
 #include <string>
-#include <common/networking.h>
-#include <io/io.h>
-#include "producer/producer.h"
-#include "logger/logger.h"
-#include "request/request_pool.h"
+#include <asapo/common/networking.h>
+#include <asapo/io/io.h>
+#include "asapo/producer/producer.h"
+#include "asapo/logger/logger.h"
+#include "asapo/request/request_pool.h"
 #include "producer_request_handler_factory.h"
 #include "receiver_discovery_service.h"
 

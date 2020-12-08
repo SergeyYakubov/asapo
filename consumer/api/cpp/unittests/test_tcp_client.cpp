@@ -1,12 +1,12 @@
 #include <gmock/gmock.h>
 #include "gtest/gtest.h"
 
-#include "io/io.h"
-#include "unittests/MockIO.h"
+#include "asapo/io/io.h"
+#include "asapo/unittests/MockIO.h"
 #include "mocking.h"
 #include "../src/tcp_client.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
-#include "common/networking.h"
+#include "asapo/common/networking.h"
 
 using asapo::IO;
 using asapo::FileInfo;

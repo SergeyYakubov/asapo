@@ -1,7 +1,7 @@
 #ifndef ASAPO_SPDLOGGER_H
 #define ASAPO_SPDLOGGER_H
 
-#include "logger/logger.h"
+#include "asapo/logger/logger.h"
 #include "spdlog/spdlog.h"
 
 #include <ostream>

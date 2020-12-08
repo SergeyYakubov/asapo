@@ -1,10 +1,10 @@
 #ifndef ASAPO_EventMon_CONFIG_H
 #define ASAPO_EventMon_CONFIG_H
 
-#include "io/io.h"
-#include "common/error.h"
-#include "logger/logger.h"
-#include "asapo_producer.h"
+#include "asapo/io/io.h"
+#include "asapo/common/error.h"
+#include "asapo/logger/logger.h"
+#include "asapo/asapo_producer.h"
 #include "eventmon_config_factory.h"
 
 namespace asapo {

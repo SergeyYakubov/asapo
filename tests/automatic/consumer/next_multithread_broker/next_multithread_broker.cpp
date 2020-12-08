@@ -2,7 +2,7 @@
 #include <vector>
 #include <thread>
 #include <algorithm>
-#include "consumer/data_broker.h"
+#include "asapo/consumer/data_broker.h"
 #include "testing.h"
 
 void Assert(std::vector<asapo::FileInfos> file_infos, int nthreads, int nfiles) {

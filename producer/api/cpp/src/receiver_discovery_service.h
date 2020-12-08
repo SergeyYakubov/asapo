@@ -8,9 +8,9 @@
 #include <condition_variable>
 
 
-#include "http_client/http_client.h"
-#include "logger/logger.h"
-#include "preprocessor/definitions.h"
+#include "asapo/http_client/http_client.h"
+#include "asapo/logger/logger.h"
+#include "asapo/preprocessor/definitions.h"
 
 namespace  asapo {
 

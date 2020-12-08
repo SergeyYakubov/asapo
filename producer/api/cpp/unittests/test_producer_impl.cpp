@@ -3,11 +3,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "unittests/MockLogger.h"
-#include "common/error.h"
-#include "producer/common.h"
+#include "asapo/unittests/MockLogger.h"
+#include "asapo/common/error.h"
+#include "asapo/producer/common.h"
 #include "../src/producer_impl.h"
-#include "producer/producer_error.h"
+#include "asapo/producer/producer_error.h"
 
 #include "../src/request_handler_tcp.h"
 

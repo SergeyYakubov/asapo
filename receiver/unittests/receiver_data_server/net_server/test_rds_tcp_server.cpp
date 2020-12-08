@@ -2,9 +2,9 @@
 #include <gmock/gmock.h>
 
 
-#include "unittests/MockLogger.h"
-#include "unittests/MockIO.h"
-#include "io/io_factory.h"
+#include "asapo/unittests/MockLogger.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/io/io_factory.h"
 #include "../../../src/receiver_data_server/net_server/rds_tcp_server.h"
 
 using ::testing::Test;

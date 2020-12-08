@@ -2,7 +2,7 @@
 #define ASAPO_EVENT_DETECTOR_H
 
 #include <memory>
-#include "asapo_producer.h"
+#include "asapo/asapo_producer.h"
 
 namespace asapo {
 

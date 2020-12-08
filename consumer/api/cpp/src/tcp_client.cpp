@@ -1,6 +1,6 @@
 #include "tcp_client.h"
-#include "io/io_factory.h"
-#include "common/networking.h"
+#include "asapo/io/io_factory.h"
+#include "asapo/common/networking.h"
 #include "rds_response_error.h"
 
 namespace asapo {

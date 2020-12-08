@@ -2,12 +2,12 @@
 #define ASAPO_CONSUMER_FABRIC_CLIENT_H
 
 #include <map>
-#include <io/io.h>
+#include "asapo/io/io.h"
 #include <atomic>
 #include <mutex>
-#include "asapo_fabric/asapo_fabric.h"
+#include "asapo/asapo_fabric/asapo_fabric.h"
 #include "net_client.h"
-#include "common/networking.h"
+#include "asapo/common/networking.h"
 
 namespace asapo {
 

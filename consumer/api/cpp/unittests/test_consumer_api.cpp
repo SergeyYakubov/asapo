@@ -1,8 +1,8 @@
 #include <gmock/gmock.h>
 
-#include "consumer/data_broker.h"
+#include "asapo/consumer/data_broker.h"
 #include "../src/server_data_broker.h"
-#include "common/error.h"
+#include "asapo/common/error.h"
 
 using asapo::DataBrokerFactory;
 using asapo::DataBroker;

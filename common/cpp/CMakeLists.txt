@@ -18,9 +18,9 @@ if(BUILD_MONGODB_CLIENTLIB)
     add_subdirectory(src/database)
 endif()
 
-install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/common
+install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/common
         DESTINATION ${CMAKE_INSTALL_PREFIX}/include
         PATTERN "*.h.in" EXCLUDE)
 
-install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/logger
+install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/logger
         DESTINATION ${CMAKE_INSTALL_PREFIX}/include )

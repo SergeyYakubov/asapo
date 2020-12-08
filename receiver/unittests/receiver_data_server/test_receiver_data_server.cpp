@@ -2,13 +2,13 @@
 #include <gmock/gmock.h>
 
 
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockLogger.h"
 #include "../../src/receiver_data_server/receiver_data_server.h"
 #include "../../src/receiver_data_server/net_server/rds_tcp_server.h"
 
 #include "receiver_dataserver_mocking.h"
 
-#include "common/io_error.h"
+#include "asapo/common/io_error.h"
 #include "../../src/receiver_data_server/receiver_data_server_error.h"
 #include "../../src/statistics/statistics.h"
 

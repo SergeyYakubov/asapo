@@ -7,7 +7,7 @@ from libc.stdint cimport uint64_t
 
 ctypedef unique_ptr[ErrorInterface] Error
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass CustomErrorData:
     pass
   cppclass ErrorInterface:
@@ -16,7 +16,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
     pass
   cdef bool operator==(Error lhs, ErrorTemplateInterface rhs)
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   ErrorTemplateInterface kTimeout "asapo::ProducerErrorTemplates::kTimeout"
   ErrorTemplateInterface kWrongInput "asapo::ProducerErrorTemplates::kWrongInput"
   ErrorTemplateInterface kLocalIOError "asapo::ProducerErrorTemplates::kLocalIOError"
@@ -24,7 +24,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
 
 
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass FileData:
     uint8_t[] release()
     uint8_t[] get()
@@ -32,13 +32,13 @@ cdef extern from "asapo_producer.h" namespace "asapo":
     string Json(bool add_last_id)
     bool SetFromJson(string json_str, bool read_last_id)
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass RequestHandlerType:
     pass
   RequestHandlerType RequestHandlerType_Tcp "asapo::RequestHandlerType::kTcp"
 
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass LogLevel:
     pass
   LogLevel LogLevel_None "asapo::LogLevel::None"
@@ -48,7 +48,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
   LogLevel LogLevel_Warning "asapo::LogLevel::Warning"
 
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass SourceType:
     pass
   cdef Error GetSourceTypeFromString(string types,SourceType * type)
@@ -59,7 +59,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
     string user_token
     SourceType type
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   struct  EventHeader:
     uint64_t file_id
     uint64_t file_size
@@ -68,7 +68,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
     uint64_t id_in_subset
     uint64_t subset_size
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   struct  EventHeader:
     uint64_t file_id
     uint64_t file_size
@@ -77,7 +77,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
     uint64_t id_in_subset
     uint64_t subset_size
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   struct  GenericRequestHeader:
     string Json()
   struct RequestCallbackPayload:
@@ -85,7 +85,7 @@ cdef extern from "asapo_producer.h" namespace "asapo":
     FileData data
     string response
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass RequestCallback:
     pass
 
@@ -100,7 +100,7 @@ cdef extern from "asapo_wrappers.h" namespace "asapo":
 
 
 
-cdef extern from "asapo_producer.h" namespace "asapo" nogil:
+cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
     cppclass Producer:
         @staticmethod
         unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,uint64_t timeout_sec, Error* error)
@@ -115,7 +115,7 @@ cdef extern from "asapo_producer.h" namespace "asapo" nogil:
         StreamInfo GetLastSubstream(uint64_t timeout_sec, Error* err)
 
 
-cdef extern from "asapo_producer.h" namespace "asapo":
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     uint64_t kDefaultIngestMode
     enum IngestModeFlags:
         kTransferData

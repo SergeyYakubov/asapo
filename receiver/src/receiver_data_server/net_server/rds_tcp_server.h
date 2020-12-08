@@ -2,8 +2,8 @@
 #define ASAPO_RDS_TCP_SERVER_H
 
 #include "rds_net_server.h"
-#include "io/io.h"
-#include "logger/logger.h"
+#include "asapo/io/io.h"
+#include "asapo/logger/logger.h"
 #include "../receiver_data_server_request.h"
 namespace asapo {
 

@@ -1,13 +1,13 @@
 #ifndef ASAPO_REQUESTS_DISPATCHER_H
 #define ASAPO_REQUESTS_DISPATCHER_H
 
-#include "preprocessor/definitions.h"
-#include "common/error.h"
+#include "asapo/preprocessor/definitions.h"
+#include "asapo/common/error.h"
 #include "../request.h"
 #include "request_factory.h"
-#include "io/io.h"
+#include "asapo/io/io.h"
 #include "../statistics/receiver_statistics.h"
-#include "logger/logger.h"
+#include "asapo/logger/logger.h"
 #include "../data_cache.h"
 
 namespace asapo {

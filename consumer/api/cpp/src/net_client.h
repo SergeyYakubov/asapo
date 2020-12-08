@@ -1,8 +1,8 @@
 #ifndef ASAPO_NET_CLIENT_H
 #define ASAPO_NET_CLIENT_H
 
-#include "common/error.h"
-#include "common/data_structs.h"
+#include "asapo/common/error.h"
+#include "asapo/common/data_structs.h"
 
 namespace asapo {
 

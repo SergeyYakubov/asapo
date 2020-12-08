@@ -1,4 +1,4 @@
-#include "common/data_structs.h"
+#include "asapo/common/data_structs.h"
 
 #include <chrono>
 #include <iostream>
@@ -6,8 +6,8 @@
 #include <string>
 #include <iomanip>
 
-#include "json_parser/json_parser.h"
-#include "preprocessor/definitions.h"
+#include "asapo/json_parser/json_parser.h"
+#include "asapo/preprocessor/definitions.h"
 
 using std::chrono::system_clock;
 

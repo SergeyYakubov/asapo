@@ -3,8 +3,8 @@
 
 #include <gtest/gtest.h>
 
-#include "request/request_pool.h"
-#include "request/request_handler_factory.h"
+#include "asapo/request/request_pool.h"
+#include "asapo/request/request_handler_factory.h"
 #include "../src/receiver_discovery_service.h"
 
 namespace asapo {

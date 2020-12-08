@@ -5,8 +5,8 @@
 #include <map>
 #include <string>
 
-#include "common/error.h"
-#include "common.h"
+#include "asapo/common/error.h"
+#include "asapo/common.h"
 
 
 namespace asapo {

@@ -1,7 +1,7 @@
 #include "eventmon_config.h"
 #include "eventmon_config_factory.h"
-#include "io/io_factory.h"
-#include "json_parser/json_parser.h"
+#include "asapo/io/io_factory.h"
+#include "asapo/json_parser/json_parser.h"
 
 namespace asapo {
 

@@ -1,9 +1,9 @@
 #ifndef ASAPO_STATISTICS_SENDER_INFLUX_DB_H
 #define ASAPO_STATISTICS_SENDER_INFLUX_DB_H
 
-#include "http_client/http_client.h"
+#include "asapo/http_client/http_client.h"
 #include "statistics_sender.h"
-#include "logger/logger.h"
+#include "asapo/logger/logger.h"
 
 namespace asapo {
 

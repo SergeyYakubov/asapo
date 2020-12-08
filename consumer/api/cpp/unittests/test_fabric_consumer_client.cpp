@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <unittests/MockFabric.h>
-#include <common/networking.h>
+#include "asapo/unittests/MockFabric.h"
+#include <asapo/common/networking.h>
 #include "../src/fabric_consumer_client.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 

@@ -1,8 +1,8 @@
 #include "rds_tcp_server.h"
 #include "../receiver_data_server_logger.h"
 
-#include "io/io_factory.h"
-#include "common/networking.h"
+#include "asapo/io/io_factory.h"
+#include "asapo/common/networking.h"
 
 namespace asapo {
 

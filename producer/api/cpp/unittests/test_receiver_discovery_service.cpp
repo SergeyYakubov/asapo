@@ -2,12 +2,12 @@
 #include <gmock/gmock.h>
 #include <chrono>
 
-#include "unittests/MockLogger.h"
-#include "common/error.h"
-#include "common/io_error.h"
+#include "asapo/unittests/MockLogger.h"
+#include "asapo/common/error.h"
+#include "asapo/common/io_error.h"
 
 #include "../src/receiver_discovery_service.h"
-#include "unittests/MockHttpClient.h"
+#include "asapo/unittests/MockHttpClient.h"
 
 namespace {
 

@@ -2,14 +2,14 @@
 #include <gmock/gmock.h>
 #include <chrono>
 
-#include "unittests/MockLogger.h"
-#include "common/error.h"
+#include "asapo/unittests/MockLogger.h"
+#include "asapo/common/error.h"
 
-#include "../../include/request/request_pool.h"
-#include "../../include/request/request_handler_factory.h"
+#include "asapo/request/request_pool.h"
+#include "asapo/request/request_handler_factory.h"
 #include "mocking.h"
 
-#include "io/io_factory.h"
+#include "asapo/io/io_factory.h"
 
 namespace {
 

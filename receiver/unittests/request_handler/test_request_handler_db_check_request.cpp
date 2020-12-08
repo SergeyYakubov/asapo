@@ -2,21 +2,21 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <database/db_error.h>
+#include "asapo/database/db_error.h"
 
-#include "unittests/MockIO.h"
-#include "unittests/MockDatabase.h"
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockDatabase.h"
+#include "asapo/unittests/MockLogger.h"
 
 #include "../../src/receiver_error.h"
 #include "../../src/request.h"
 #include "../../src/request_handler/request_factory.h"
 #include "../../src/request_handler/request_handler.h"
 #include "../../src/request_handler/request_handler_db_check_request.h"
-#include "common/networking.h"
+#include "asapo/common/networking.h"
 #include "../../../common/cpp/src/database/mongodb_client.h"
 #include "../mock_receiver_config.h"
-#include "common/data_structs.h"
+#include "asapo/common/data_structs.h"
 
 #include "../receiver_mocking.h"
 

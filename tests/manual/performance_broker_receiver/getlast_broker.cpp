@@ -8,7 +8,7 @@
 #include <numeric>
 #include <mutex>
 
-#include "asapo_consumer.h"
+#include "asapo/asapo_consumer.h"
 
 using std::chrono::system_clock;
 using asapo::Error;

@@ -2,10 +2,10 @@
 #define ASAPO_REQUEST_HANDLER_DB_CHECK_REQUEST_H
 
 #include "request_handler.h"
-#include "database/database.h"
+#include "asapo/database/database.h"
 #include "request_handler_db.h"
-#include "io/io.h"
-#include "preprocessor/definitions.h"
+#include "asapo/io/io.h"
+#include "asapo/preprocessor/definitions.h"
 
 namespace asapo {
 

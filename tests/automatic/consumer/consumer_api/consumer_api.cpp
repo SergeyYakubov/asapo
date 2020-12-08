@@ -2,8 +2,8 @@
 #include <vector>
 #include <thread>
 #include <algorithm>
-#include <asapo_consumer.h>
-#include "consumer/data_broker.h"
+#include <asapo/asapo_consumer.h>
+#include "asapo/consumer/data_broker.h"
 #include "testing.h"
 
 struct Args {
