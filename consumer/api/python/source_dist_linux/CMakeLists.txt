@@ -6,6 +6,14 @@ ADD_CUSTOM_TARGET(python-dist ALL
         COMMAND ${Python_EXECUTABLE} setup.py sdist
         )
 
+ADD_CUSTOM_TARGET(python-rpm
+        COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm
+        )
+
+ADD_CUSTOM_TARGET(python3-rpm
+        COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm
+        )
+
 #get_property(ASAPO_CONSUMER_LIB TARGET asapo-consumer PROPERTY LOCATION)
 
 ADD_CUSTOM_TARGET(copy_python_dist ALL

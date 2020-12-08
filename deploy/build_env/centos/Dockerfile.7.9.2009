@@ -1,0 +1,21 @@
+from centos:7.9.2009
+
+RUN yum update -y && yum install -y epel-release make g++ python python3 git wget rpm-build
+RUN yum -y install gcc gcc-c++ glibc-static libstdc++-static zlib-devel libcurl-devel python-pip python3-pip python-devel python3-devel numpy python3-numpy
+RUN pip install --upgrade pip
+RUN pip install cython
+RUN pip3 install cython
+
+ADD install_cmake.sh install_cmake.sh
+RUN ./install_cmake.sh
+
+ADD install_curl.sh install_curl.sh
+RUN ./install_curl.sh /curl
+
+RUN yum -y install autoconf libtool libibverbs librdmacm librdmacm-devel
+
+ADD install_libfabric.sh install_libfabric.sh
+RUN ./install_libfabric.sh
+
+ENV GOPATH /tmp
+ADD build.sh /bin/build.sh

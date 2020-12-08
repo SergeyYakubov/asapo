@@ -1,6 +1,7 @@
 from distutils.core import setup
 from distutils.core import Extension
 import numpy
+import os
 
 # TODO 'lib/libcurl.a' seems to have no effect, because there is a libcurl.so file
 ext_modules = [
@@ -13,7 +14,7 @@ ext_modules = [
 ]
 
 setup(
-      name ="asapo_consumer",
+      name = os.environ.get('PACKAGE_PREFIX', '') + "asapo_consumer",
       ext_modules = ext_modules,
       version = "@PYTHON_ASAPO_VERSION@",
       setup_requires=["numpy>=@NUMPY_VERSION@", "cython>=0.28"],
