@@ -8,8 +8,8 @@
 
 #include "asapo/common/error.h"
 #include "asapo/preprocessor/definitions.h"
-#include "asapo_producer.h"
-#include "asapo/common.h"
+#include "asapo/asapo_producer.h"
+#include "common.h"
 #include "asapo/io/io.h"
 #include "inotify_event.h"
 #include "inotify_linux.h"
