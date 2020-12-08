@@ -19,8 +19,14 @@ if(BUILD_MONGODB_CLIENTLIB)
 endif()
 
 install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/common
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/asapo
         PATTERN "*.h.in" EXCLUDE)
 
 install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/logger
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include )
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/asapo )
+
+install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/asapo_fabric
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/asapo)
+
+install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/preprocessor
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/asapo)

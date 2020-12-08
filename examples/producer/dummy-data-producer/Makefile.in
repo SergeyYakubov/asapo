@@ -3,7 +3,7 @@ PROGRAM=@TARGET_NAME@
 CXX=g++
 CXXFLAGS=-std=c++11
 LDFLAGS=-pthread -static-libgcc -static-libstdc++
-LIBS=-L @CMAKE_INSTALL_PREFIX@/lib -lproducer-api
+LIBS=-L @CMAKE_INSTALL_PREFIX@/lib -lproducer-api -lcurl
 INCLUDE=-I @CMAKE_INSTALL_PREFIX@/include
 RM=rm -f
 

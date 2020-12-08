@@ -37,9 +37,10 @@ option(BUILD_CPP_DOCS "Uses doxygen to build the C++ documentaion" OFF)
 option(BUILD_BROKER "Build broker" OFF)
 option(BUILD_EVENT_MONITOR_PRODUCER "Build the event monitor producer" OFF)
 option(BUILD_PYTHON_DOCS "Uses sphinx to build the Python documentaion" OFF)
-
+option(BUILD_CORE "Build core asapo services" ON)
 option(BUILD_CONSUMER_TOOLS "Build consumer tools" OFF)
 option(BUILD_EXAMPLES "Build examples" OFF)
+option(INSTALL_EXAMPLES "Install examples" OFF)
 
 option(ENABLE_LIBFABRIC "Enables LibFabric support for RDMA transfers" OFF)
 option(ENABLE_LIBFABRIC_LOCALHOST "Emulates LibFabric stack over TCP. Only for localhost and testing purposes." OFF)
@@ -97,23 +98,19 @@ endif()
 
 add_subdirectory(common/cpp)
 
-if (BUILD_BROKER)#TODO: Somehow make it clear that this is needed by examples/consumer/getnext_broker
-    add_subdirectory(broker)
-endif()
-
 add_subdirectory(producer)
-
 add_subdirectory(consumer)
 
+if (BUILD_CORE)
+    if (BUILD_BROKER) #TODO: Somehow make it clear that this is needed by examples/consumer/getnext_broker
+        add_subdirectory(broker)
+    endif()
 add_subdirectory(receiver)
-
 add_subdirectory(discovery)
-
 add_subdirectory(authorizer)
-
 add_subdirectory(asapo_tools)
-
 add_subdirectory(file_transfer)
+endif()
 
 add_subdirectory(deploy)
 
@@ -121,10 +118,25 @@ if(BUILD_INTEGRATION_TESTS)
     add_subdirectory(tests)
 endif()
 
-if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES OR INSTALL_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
 include(prepare_version)
 
 add_subdirectory(docs)
+
+if(NOT PACKAGE_RELEASE_SUFFIX)
+    set(PACKAGE_RELEASE_SUFFIX linux)
+endif()
+
+
+set(CPACK_PACKAGE_VERSION ${ASAPO_VERSION})
+set(CPACK_GENERATOR "RPM")
+set(CPACK_PACKAGE_NAME "asapo")
+set(CPACK_PACKAGE_RELEASE 1.${PACKAGE_RELEASE_SUFFIX})
+set(CPACK_PACKAGE_CONTACT "IT")
+set(CPACK_PACKAGE_VENDOR "DESY")
+set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
+include(CPack)

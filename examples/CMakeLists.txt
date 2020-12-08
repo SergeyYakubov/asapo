@@ -1,5 +1,9 @@
 add_subdirectory(consumer)
-add_subdirectory(pipeline)
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(pipeline)
+endif()
+
 add_subdirectory(producer)
 
 

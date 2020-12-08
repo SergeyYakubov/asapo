@@ -30,5 +30,5 @@ set(SOURCE_FILES @SOURCE_FILES@)
 link_directories(@CMAKE_INSTALL_PREFIX@/lib)
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
-target_include_directories(${TARGET_NAME} PUBLIC @CMAKE_INSTALL_PREFIX@/include ${CURL_INCLUDE_DIRS})
-target_link_libraries(${TARGET_NAME} asapo-consumer ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_include_directories(${TARGET_NAME} PUBLIC @CMAKE_INSTALL_PREFIX@/include)
+target_link_libraries(${TARGET_NAME} asapo-consumer asapo-fabric dl ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

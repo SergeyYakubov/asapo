@@ -12,6 +12,3 @@ endif()
 add_script_test("${TARGET_NAME}" "${PYTHON_LIBS} ${Python_EXECUTABLE}" nomem)
 
 configure_file(getnext.py getnext.py COPYONLY)
-
-set (dir examples/consumer/${TARGET_NAME})
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/getnext.py DESTINATION "${dir}")

@@ -17,5 +17,8 @@ RUN yum -y install autoconf libtool libibverbs librdmacm librdmacm-devel
 ADD install_libfabric.sh install_libfabric.sh
 RUN ./install_libfabric.sh
 
+RUN yum -y install mc
+
 ENV GOPATH /tmp
+ENV OS el7
 ADD build.sh /bin/build.sh

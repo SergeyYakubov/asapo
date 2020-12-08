@@ -1,6 +1,8 @@
 set(TARGET_NAME getnext_broker)
 set(SOURCE_FILES getnext_broker.cpp)
 
+if (BUILD_EXAMPLES)
+
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
 target_link_libraries(${TARGET_NAME} asapo-consumer)
 
@@ -12,13 +14,15 @@ set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
 get_target_property(VAR ${TARGET_NAME} RUNTIME_OUTPUT_DIRECTORY)
 add_dependencies(${TARGET_NAME} asapo-broker)
 
+
 prepare_asapo()
 
 configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/broker_settings.json settings.json COPYONLY)
 add_script_test("${TARGET_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}")
 
-set (dir examples/consumer/${TARGET_NAME})
-install(TARGETS ${TARGET_NAME} DESTINATION "${dir}")
+endif()
+
+set (dir share/asapo/examples/consumer/${TARGET_NAME})
 install(FILES ${SOURCE_FILES} DESTINATION "${dir}")
 
 configure_file(CMakeLists_separate.in CMakeLists_separate.txt @ONLY)

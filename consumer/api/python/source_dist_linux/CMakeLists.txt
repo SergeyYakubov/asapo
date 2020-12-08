@@ -7,11 +7,11 @@ ADD_CUSTOM_TARGET(python-dist ALL
         )
 
 ADD_CUSTOM_TARGET(python-rpm
-        COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm
+        COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=${PACKAGE_RELEASE_SUFFIX}
         )
 
 ADD_CUSTOM_TARGET(python3-rpm
-        COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm
+        COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=${PACKAGE_RELEASE_SUFFIX}
         )
 
 #get_property(ASAPO_CONSUMER_LIB TARGET asapo-consumer PROPERTY LOCATION)
