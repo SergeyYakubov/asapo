@@ -3,6 +3,13 @@ configure_file(MANIFEST.in MANIFEST.in @ONLY)
 
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py INPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 
+ADD_CUSTOM_TARGET(python-rpm-producer
+		COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=${PACKAGE_RELEASE_SUFFIX} --requires=numpy
+		)
+
+ADD_CUSTOM_TARGET(python3-rpm-producer
+		COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=${PACKAGE_RELEASE_SUFFIX} --requires=python3-numpy
+		)
 
 ADD_CUSTOM_TARGET(python-dist-producer ALL
         COMMAND ${Python_EXECUTABLE} setup.py sdist

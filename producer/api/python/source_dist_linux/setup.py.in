@@ -1,6 +1,6 @@
 from distutils.core import setup
 from distutils.core import Extension
-import numpy
+import numpy, os
 
 ext_modules = [
     Extension("asapo_producer", ["asapo_producer.cpp"],
@@ -12,7 +12,7 @@ ext_modules = [
 ]
 
 setup(
-      name ="asapo_producer",
+      name = os.environ.get('PACKAGE_PREFIX', '') + "asapo_producer",
       ext_modules = ext_modules,
       version = "@PYTHON_ASAPO_VERSION@",
       setup_requires=["numpy>=@NUMPY_VERSION@", "cython>=0.28"],

@@ -14,7 +14,7 @@ add_subdirectory(src/request)
 
 add_subdirectory(src/asapo_fabric)
 
-if(BUILD_MONGODB_CLIENTLIB)
+if(NOT BUILD_CLIENTS_ONLY)
     add_subdirectory(src/database)
 endif()
 
