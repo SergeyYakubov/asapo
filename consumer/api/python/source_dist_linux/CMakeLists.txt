@@ -1,22 +1,21 @@
 configure_file(setup.py.in setup.py @ONLY)
 configure_file(MANIFEST.in MANIFEST.in @ONLY)
 
-
-ADD_CUSTOM_TARGET(python-dist ALL
+ADD_CUSTOM_TARGET(python-dist
         COMMAND ${Python_EXECUTABLE} setup.py sdist
         )
 
 ADD_CUSTOM_TARGET(python-rpm-consumer
-        COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=${PACKAGE_RELEASE_SUFFIX} --requires=numpy
+        COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX} --requires=numpy
         )
 
 ADD_CUSTOM_TARGET(python3-rpm-consumer
-        COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=${PACKAGE_RELEASE_SUFFIX} --requires=python3-numpy
+        COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX} --requires=python3-numpy
         )
 
 #get_property(ASAPO_CONSUMER_LIB TARGET asapo-consumer PROPERTY LOCATION)
 
-ADD_CUSTOM_TARGET(copy_python_dist ALL
+ADD_CUSTOM_TARGET(copy_python_dist
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/../asapo_wrappers.h ${CMAKE_CURRENT_BINARY_DIR}/.
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/../asapo_consumer.cpp ${CMAKE_CURRENT_BINARY_DIR}/.
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/consumer/api/cpp/include ${CMAKE_CURRENT_BINARY_DIR}/include
@@ -33,3 +32,5 @@ ADD_CUSTOM_TARGET(copy_python_dist ALL
 ADD_DEPENDENCIES(copy_python_dist python-lib)
 
 ADD_DEPENDENCIES(python-dist copy_python_dist)
+ADD_DEPENDENCIES(python-rpm-consumer python-dist)
+ADD_DEPENDENCIES(python3-rpm-consumer python-dist)

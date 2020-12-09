@@ -4,18 +4,18 @@ configure_file(MANIFEST.in MANIFEST.in @ONLY)
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py INPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 
 ADD_CUSTOM_TARGET(python-rpm-producer
-		COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=${PACKAGE_RELEASE_SUFFIX} --requires=numpy
+		COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX} --requires=numpy
 		)
 
 ADD_CUSTOM_TARGET(python3-rpm-producer
-		COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=${PACKAGE_RELEASE_SUFFIX} --requires=python3-numpy
+		COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX} --requires=python3-numpy
 		)
 
-ADD_CUSTOM_TARGET(python-dist-producer ALL
+ADD_CUSTOM_TARGET(python-dist-producer
         COMMAND ${Python_EXECUTABLE} setup.py sdist
         )
 
-ADD_CUSTOM_TARGET(copy_python_dist-producer ALL
+ADD_CUSTOM_TARGET(copy_python_dist-producer
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/../asapo_wrappers.h ${CMAKE_CURRENT_BINARY_DIR}/.
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/../asapo_producer.cpp ${CMAKE_CURRENT_BINARY_DIR}/.
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/producer/api/cpp/include ${CMAKE_CURRENT_BINARY_DIR}/include
@@ -35,3 +35,5 @@ ELSE()
 ENDIF()
 
 ADD_DEPENDENCIES(python-dist-producer copy_python_dist-producer)
+ADD_DEPENDENCIES(python3-rpm-producer copy_python_dist-producer)
+ADD_DEPENDENCIES(python-rpm-producer copy_python_dist-producer)

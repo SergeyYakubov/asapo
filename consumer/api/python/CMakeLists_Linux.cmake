@@ -19,8 +19,7 @@ set (ASAPO_CONSUMER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cpp/include)
 
 configure_files(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 
-ADD_CUSTOM_TARGET(python-lib ALL
-        COMMAND ${Python_EXECUTABLE} setup.py build_ext --inplace --force)
+ADD_CUSTOM_TARGET(python-lib COMMAND ${Python_EXECUTABLE} setup.py build_ext --inplace --force)
 
 ADD_DEPENDENCIES(python-lib asapo-consumer)
 

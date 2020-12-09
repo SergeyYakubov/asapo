@@ -10,8 +10,9 @@ cmake \
     -DNUMPY_VERSION=0   \
     -DLIBCURL_DIR=/curl \
     ..
+make
 make package
-cd consumer/api/python/source_dist_linux && make python-rpm-consumer && make python3-rpm-consumer && cd -
-cd producer/api/python/source_dist_linux && make python-rpm-producer && make python3-rpm-producer
+cd consumer/api/python/source_dist_linux && make python-rpm-consumer python3-rpm-consumer && cd -
+cd producer/api/python/source_dist_linux && make python-rpm-producer python3-rpm-producer
 
 

@@ -19,22 +19,22 @@ for python_path in /opt/python/cp{27,35,36,37,38}*; do
 
     cd /asapo/build
     cmake -DENABLE_LIBFABRIC=on -DCMAKE_BUILD_TYPE="Release" -DLIBCURL_DIR=/curl -DPython_EXECUTABLE=$python -DNUMPY_VERSION=$numpy_version ..
-    cd consumer \
-        && $pip install -r api/python/dev-requirements.txt\
-        && make \
-        && $pip wheel api/python/source_dist_linux/dist/*.tar.gz -w wheelhouse --no-deps
-    cd ../producer \
-        && $pip install -r api/python/dev-requirements.txt \
-        && make \
-        && $pip wheel api/python/source_dist_linux/dist/*.tar.gz -w wheelhouse --no-deps
+    cd /asapo/build/consumer/api/python/source_dist_linux \
+        && $pip install -r ../dev-requirements.txt \
+        && make python-dist \
+        && $pip wheel dist/*.tar.gz -w /asapo/build/consumer/wheelhouse --no-deps
+    cd  /asapo/build/producer/api/python/source_dist_linux \
+        && $pip install -r ../dev-requirements.txt \
+        && make python-dist-producer \
+        && $pip wheel dist/*.tar.gz -w /asapo/build/producer/wheelhouse --no-deps
 done
 
-cd ../consumer \
+cd /asapo/build/consumer \
     && for wheel in wheelhouse/asapo_consumer*.whl; do
         auditwheel repair $wheel --plat manylinux2010_x86_64 -w /asapo/build/wheelhouse
     done
 
-cd ../producer \
+cd /asapo/build/producer \
     && for wheel in wheelhouse/asapo_producer*.whl; do
         auditwheel repair $wheel --plat manylinux2010_x86_64 -w /asapo/build/wheelhouse
     done

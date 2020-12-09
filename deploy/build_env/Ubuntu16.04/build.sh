@@ -10,7 +10,7 @@ cmake \
     -DBUILD_PYTHON_DOCS=ON \
     -DBUILD_EVENT_MONITOR_PRODUCER=ON \
     ..
-cd consumer && make
-cd ../producer && make
+cd consumer/api/python/source_dist_linux && make python-dist
+cd ../producer/api/python/source_dist_linux && make python-dist-producer
 cd ../docs/sphinx && make
 
