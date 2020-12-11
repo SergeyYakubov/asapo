@@ -3,19 +3,26 @@ configure_file(MANIFEST.in MANIFEST.in @ONLY)
 
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py INPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 
-ADD_CUSTOM_TARGET(python-rpm-producer
+if ("rpm" IN_LIST BUILD_PYTHON_PACKAGES)
+	ADD_CUSTOM_TARGET(python-rpm-producer ALL
 		COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX} --requires=numpy
 		)
 
-ADD_CUSTOM_TARGET(python3-rpm-producer
+	ADD_CUSTOM_TARGET(python3-rpm-producer ALL
 		COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX} --requires=python3-numpy
 		)
+	ADD_DEPENDENCIES(python3-rpm-producer copy_python_dist-producer)
+	ADD_DEPENDENCIES(python-rpm-producer copy_python_dist-producer)
+endif()
 
-ADD_CUSTOM_TARGET(python-dist-producer
+if ("source" IN_LIST BUILD_PYTHON_PACKAGES )
+	ADD_CUSTOM_TARGET(python-dist-producer ALL
         COMMAND ${Python_EXECUTABLE} setup.py sdist
         )
+	ADD_DEPENDENCIES(python-dist-producer copy_python_dist-producer)
+endif()
 
-ADD_CUSTOM_TARGET(copy_python_dist-producer
+ADD_CUSTOM_TARGET(copy_python_dist-producer ALL
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/../asapo_wrappers.h ${CMAKE_CURRENT_BINARY_DIR}/.
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/../asapo_producer.cpp ${CMAKE_CURRENT_BINARY_DIR}/.
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/producer/api/cpp/include ${CMAKE_CURRENT_BINARY_DIR}/include
@@ -27,13 +34,9 @@ ADD_CUSTOM_TARGET(copy_python_dist-producer
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:asapo-producer> ${CMAKE_CURRENT_BINARY_DIR}/lib
         )
 
-
 if (UNIX)
 	ADD_DEPENDENCIES(copy_python_dist-producer python-lib-producer)
 ELSE()
 	ADD_DEPENDENCIES(copy_python_dist-producer asapo_producer)
 ENDIF()
 
-ADD_DEPENDENCIES(python-dist-producer copy_python_dist-producer)
-ADD_DEPENDENCIES(python3-rpm-producer copy_python_dist-producer)
-ADD_DEPENDENCIES(python-rpm-producer copy_python_dist-producer)

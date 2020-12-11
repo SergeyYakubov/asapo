@@ -18,12 +18,17 @@ for python_path in /opt/python/cp{27,35,36,37,38}*; do
     echo "building wheel for python_version=$python_version with numpy_version=$numpy_version"
 
     cd /asapo/build
-    cmake -DENABLE_LIBFABRIC=on -DCMAKE_BUILD_TYPE="Release" -DLIBCURL_DIR=/curl -DPython_EXECUTABLE=$python -DNUMPY_VERSION=$numpy_version ..
-    cd /asapo/build/consumer/api/python/source_dist_linux \
+    cmake -DENABLE_LIBFABRIC=on \
+          -DCMAKE_BUILD_TYPE="Release" \
+          -DBUILD_CLIENTS_ONLY=ON \
+          -DLIBCURL_DIR=/curl -DPython_EXECUTABLE=$python \
+          -DBUILD_PYTHON_PACKAGES=source \
+          -DNUMPY_VERSION=$numpy_version ..
+    cd /asapo/build/consumer/api/python/dist_linux \
         && $pip install -r ../dev-requirements.txt \
-        && make python-dist \
+        && make python-dist-consumer \
         && $pip wheel dist/*.tar.gz -w /asapo/build/consumer/wheelhouse --no-deps
-    cd  /asapo/build/producer/api/python/source_dist_linux \
+    cd  /asapo/build/producer/api/python/dist_linux \
         && $pip install -r ../dev-requirements.txt \
         && make python-dist-producer \
         && $pip wheel dist/*.tar.gz -w /asapo/build/producer/wheelhouse --no-deps

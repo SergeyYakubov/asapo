@@ -8,9 +8,11 @@ cmake \
     -DENABLE_LIBFABRIC=on \
     -DLIBCURL_DIR=/curl \
     -DBUILD_PYTHON_DOCS=ON \
-    -DBUILD_EVENT_MONITOR_PRODUCER=ON \
+    -DBUILD_PYTHON_PACKAGES=source \
+    -DBUILD_CLIENTS_ONLY=ON \
     ..
-cd consumer/api/python/source_dist_linux && make python-dist
-cd ../producer/api/python/source_dist_linux && make python-dist-producer
-cd ../docs/sphinx && make
+make
+#cd consumer/api/python/dist_linux && make python-dist-consumer
+#cd ../producer/api/python/dist_linux && make python-dist-producer
+#cd ../docs/sphinx && make
 

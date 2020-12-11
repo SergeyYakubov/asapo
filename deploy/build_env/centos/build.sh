@@ -7,12 +7,12 @@ cmake \
     -DINSTALL_EXAMPLES=ON \
     -DBUILD_CLIENTS_ONLY=ON \
     -DPACKAGE_RELEASE_SUFFIX=$OS \
-    -DNUMPY_VERSION=0   \
+    -DBUILD_PYTHON=OFF   \
     -DLIBCURL_DIR=/curl \
     ..
 make
 make package
-cd consumer/api/python/source_dist_linux && make python-rpm-consumer python3-rpm-consumer && cd -
-cd producer/api/python/source_dist_linux && make python-rpm-producer python3-rpm-producer
 
+cmake -DNUMPY_VERSION=0 -DBUILD_PYTHON=ON -DBUILD_PYTHON_PACKAGES="source;rpm" ..
+make
 

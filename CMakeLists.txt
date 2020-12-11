@@ -34,6 +34,13 @@ option(BUILD_CLIENTS_ONLY "Build clients only" OFF)
 option(BUILD_CONSUMER_TOOLS "Build consumer tools" OFF)
 option(BUILD_EVENT_MONITOR_PRODUCER "Build the event monitor producer" OFF)
 
+option(BUILD_PYTHON "Build python libs" ON)
+if(BUILD_PYTHON)
+    set(BUILD_PYTHON_PACKAGES "" CACHE STRING "which python packages to build")
+    set_property(CACHE BUILD_PYTHON_PACKAGES PROPERTY STRINGS source rpm deb win)
+endif()
+
+
 option(BUILD_TESTS "Build unit tests" OFF)
 option(BUILD_INTEGRATION_TESTS "Include integration tests" OFF)
 
@@ -45,6 +52,7 @@ option(BUILD_PYTHON_DOCS "Build the Python documentaion with sphinx" OFF)
 
 option(ENABLE_LIBFABRIC "Enables LibFabric support for RDMA transfers" OFF)
 option(ENABLE_LIBFABRIC_LOCALHOST "Emulates LibFabric stack over TCP. Only for localhost and testing purposes." OFF)
+
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
 

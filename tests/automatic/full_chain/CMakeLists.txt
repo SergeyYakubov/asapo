@@ -1,5 +1,5 @@
 add_subdirectory(simple_chain)
-if (UNIX OR CMAKE_BUILD_TYPE STREQUAL "Release")
+if (BUILD_PYTHON)
     add_subdirectory(simple_chain_usermeta_python)
     add_subdirectory(send_recv_substreams_python)
 endif()
