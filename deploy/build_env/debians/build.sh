@@ -18,5 +18,13 @@ cmake .. #second time for to correctly build deb packages
 make
 make package
 
-cmake -DNUMPY_VERSION=0 -DBUILD_PYTHON=ON -DBUILD_PYTHON_PACKAGES="source;deb" ..
+
+if [ "$OS" = "ubuntu16.04" ]; then
+  BUILD_PYTHON_DOCS=ON
+else
+  BUILD_PYTHON_DOCS=OFF
+fi
+
+
+cmake -DNUMPY_VERSION=0 -DBUILD_PYTHON=ON -DBUILD_PYTHON_PACKAGES="source;deb" -DBUILD_PYTHON_DOCS=$BUILD_PYTHON_DOCS ..
 make

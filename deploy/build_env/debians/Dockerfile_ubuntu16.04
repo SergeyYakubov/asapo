@@ -8,7 +8,7 @@ ADD install_cmake.sh install_cmake.sh
 RUN apt update && apt install -y g++ git wget python python3 python-numpy python3-numpy python-pip python3-pip \
 zlib1g-dev python3-all-dev python-all-dev python-stdeb python3-stdeb
 
-RUN pip  --no-cache-dir install cython && pip3 --no-cache-dir install cython
+RUN pip  --no-cache-dir install cython && pip3 --no-cache-dir install cython sphinx
 
 RUN ./install_curl.sh /curl &&  ./install_cmake.sh
 
