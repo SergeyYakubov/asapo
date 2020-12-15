@@ -7,13 +7,13 @@ if ("rpm" IN_LIST BUILD_PYTHON_PACKAGES)
 	ADD_CUSTOM_TARGET(python-rpm-producer ALL
 		COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX}
 			--requires=numpy --binary-only
-			COMMAND rm -f dist/python*.gz dist/*debuginfo*
+			COMMAND rm -f dist/python*.gz dist/*debuginfo* dist/*debugsource*
 		)
 
 	ADD_CUSTOM_TARGET(python3-rpm-producer ALL
 		COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX}
 			--requires=python3-numpy --binary-only
-		COMMAND rm -f dist/python3*.gz dist/*debuginfo*
+		COMMAND rm -f dist/python3*.gz dist/*debuginfo* dist/*debugsource*
 		)
 	ADD_DEPENDENCIES(python3-rpm-producer copy_python_dist-producer)
 	ADD_DEPENDENCIES(python-rpm-producer copy_python_dist-producer)
