@@ -5,14 +5,38 @@ file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py INPUT ${CMAKE_CURRENT_
 
 if ("rpm" IN_LIST BUILD_PYTHON_PACKAGES)
 	ADD_CUSTOM_TARGET(python-rpm-producer ALL
-		COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX} --requires=numpy
+		COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX}
+			--requires=numpy --binary-only
+			COMMAND rm dist/python*.gz dist/*debuginfo*
 		)
 
 	ADD_CUSTOM_TARGET(python3-rpm-producer ALL
-		COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX} --requires=python3-numpy
+		COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX}
+			--requires=python3-numpy --binary-only
+		COMMAND rm dist/python3*.gz dist/*debuginfo*
 		)
 	ADD_DEPENDENCIES(python3-rpm-producer copy_python_dist-producer)
 	ADD_DEPENDENCIES(python-rpm-producer copy_python_dist-producer)
+endif()
+
+if ("deb" IN_LIST BUILD_PYTHON_PACKAGES)
+	ADD_CUSTOM_TARGET(python-deb-producer ALL
+			COMMAND rm -rf deb_dist/*/
+			COMMAND PACKAGE_PREFIX= python setup.py --command-packages=stdeb.command
+			sdist_dsc --debian-version=${PACKAGE_RELEASE_SUFFIX} --depends=python-numpy bdist_deb
+			COMMAND rm deb_dist/*dbgsym*
+			COMMAND cp deb_dist/*.deb dist/
+			)
+
+	ADD_CUSTOM_TARGET(python3-deb-producer ALL
+			COMMAND rm -rf deb_dist/*/
+			COMMAND PACKAGE_PREFIX= python3 setup.py --command-packages=stdeb.command
+			sdist_dsc --debian-version=${PACKAGE_RELEASE_SUFFIX} --depends3=python3-numpy bdist_deb
+			COMMAND rm deb_dist/*dbgsym*
+			COMMAND cp deb_dist/*.deb dist/
+			)
+	ADD_DEPENDENCIES(python3-deb-producer copy_python_dist-producer)
+	ADD_DEPENDENCIES(python-deb-producer copy_python_dist-producer)
 endif()
 
 if ("source" IN_LIST BUILD_PYTHON_PACKAGES )

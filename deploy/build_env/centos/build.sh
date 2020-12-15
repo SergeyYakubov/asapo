@@ -6,9 +6,11 @@ cmake \
     -DENABLE_LIBFABRIC=ON \
     -DINSTALL_EXAMPLES=ON \
     -DBUILD_CLIENTS_ONLY=ON \
-    -DPACKAGE_RELEASE_SUFFIX=$OS \
+    -DPACKAGE_RELEASE_SUFFIX=1.$OS \
     -DBUILD_PYTHON=OFF   \
     -DLIBCURL_DIR=/curl \
+    -DCPACK_PACKAGE_NAME="asapo-devel" \
+    -DCPACK_GENERATOR="RPM" \
     ..
 make
 make package
