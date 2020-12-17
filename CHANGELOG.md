@@ -9,11 +9,16 @@ FEATURES
 * Consumer API - add interrupt_current_operation to allow interrupting (from a separate thread) long consumer operation  
 * Producer API - return original data in callback payload.  
 * Producer API - allow to set queue limits (number of pending requests and/or max memory), reject new requests if reached the limits  
+* building rpm, deb and exe packages for client libs
 
 BREAKING CHANGES
 * Consumer API - get_next_dataset, get_last_dataset, get_dataset_by_id return dictionary with 'id','expected_size','content' fields, not tuple (id,content) as before
 * Consumer API - remove group_id argument from get_last/get_by_id/get_last_dataset/get_dataset_by_id functions
 * Producer API - changed meaning of subsets (subset_id replaced with id_in_subset and this means now id of the image within a subset (e.g. module number for multi-module detector)), file_id is now a global id of a multi-set data (i.g. multi-image id) 
+
+BUG FIXES
+* fix memory leak bug in Python consumer library (lead to problems when creating many consumer instances)
+
 
 ## 20.09.1
 
