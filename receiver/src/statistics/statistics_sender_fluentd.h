@@ -3,7 +3,7 @@
 #define ASAPO_STATISTICS_SENDER_FLUENTD_H
 
 #include "statistics_sender.h"
-#include "logger/logger.h"
+#include "asapo/logger/logger.h"
 
 namespace asapo {
 

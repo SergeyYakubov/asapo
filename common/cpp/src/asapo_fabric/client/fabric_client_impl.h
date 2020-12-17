@@ -1,7 +1,7 @@
 #ifndef ASAPO_FABRIC_CLIENT_IMPL_H
 #define ASAPO_FABRIC_CLIENT_IMPL_H
 
-#include <asapo_fabric/asapo_fabric.h>
+#include <asapo/asapo_fabric/asapo_fabric.h>
 #include "../common/fabric_context_impl.h"
 
 namespace asapo {

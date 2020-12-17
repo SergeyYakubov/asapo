@@ -5,7 +5,7 @@
 #include <gmock/gmock.h>
 
 #include "../../src/receiver_data_server/net_server/rds_net_server.h"
-#include "request/request_pool.h"
+#include "asapo/request/request_pool.h"
 #include "../../src/receiver_data_server/receiver_data_server_request.h"
 
 namespace asapo {

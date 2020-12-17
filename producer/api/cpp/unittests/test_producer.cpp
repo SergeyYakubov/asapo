@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include <unittests/MockIO.h>
+#include "asapo/unittests/MockIO.h"
 
-#include "producer/producer.h"
+#include "asapo/producer/producer.h"
 #include "../src/producer_impl.h"
-#include "producer/producer_error.h"
+#include "asapo/producer/producer_error.h"
 
 using ::testing::Ne;
 using ::testing::Eq;

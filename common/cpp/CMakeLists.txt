@@ -14,13 +14,19 @@ add_subdirectory(src/request)
 
 add_subdirectory(src/asapo_fabric)
 
-if(BUILD_MONGODB_CLIENTLIB)
+if(NOT BUILD_CLIENTS_ONLY)
     add_subdirectory(src/database)
 endif()
 
-install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/common
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/common
+        DESTINATION include/asapo
         PATTERN "*.h.in" EXCLUDE)
 
-install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/logger
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include )
+install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/logger
+        DESTINATION include/asapo )
+
+install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/asapo_fabric
+        DESTINATION include/asapo)
+
+install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/preprocessor
+        DESTINATION include/asapo)

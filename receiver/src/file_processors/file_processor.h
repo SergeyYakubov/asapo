@@ -1,8 +1,8 @@
 #ifndef ASAPO_FILE_PROCESSOR_H
 #define ASAPO_FILE_PROCESSOR_H
 
-#include "io/io.h"
-#include "logger/logger.h"
+#include "asapo/io/io.h"
+#include "asapo/logger/logger.h"
 
 namespace asapo {
 

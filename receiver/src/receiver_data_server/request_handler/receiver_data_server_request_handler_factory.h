@@ -1,9 +1,9 @@
 #ifndef ASAPO_RECEIVER_DATA_SERVER_REQUEST_HANDLER_FACTORY_H
 #define ASAPO_RECEIVER_DATA_SERVER_REQUEST_HANDLER_FACTORY_H
 
-#include "request/request_handler_factory.h"
-#include "request/request_handler.h"
-#include "preprocessor/definitions.h"
+#include "asapo/request/request_handler_factory.h"
+#include "asapo/request/request_handler.h"
+#include "asapo/preprocessor/definitions.h"
 
 #include "../net_server/rds_net_server.h"
 #include "../../data_cache.h"

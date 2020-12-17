@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "unittests/MockIO.h"
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockLogger.h"
 
 #include "../../src/file_processors/write_file_processor.h"
-#include "common/networking.h"
-#include "preprocessor/definitions.h"
+#include "asapo/common/networking.h"
+#include "asapo/preprocessor/definitions.h"
 #include "../mock_receiver_config.h"
 
 #include "../receiver_mocking.h"

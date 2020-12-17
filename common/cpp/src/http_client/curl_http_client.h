@@ -5,9 +5,9 @@
 #include <mutex>
 #include <ostream>
 
-#include "http_client/http_client.h"
+#include "asapo/http_client/http_client.h"
 #include "curl/curl.h"
-#include "io/io.h"
+#include "asapo/io/io.h"
 
 namespace asapo {
 

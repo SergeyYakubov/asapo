@@ -4,8 +4,8 @@
 #include <string>
 
 #include "receiver_error.h"
-#include "common/networking.h"
-#include "io/io.h"
+#include "asapo/common/networking.h"
+#include "asapo/io/io.h"
 #include "request_handler/request_handler.h"
 #include "request_handler/request_handler_file_process.h"
 #include "request_handler/request_handler_db_write.h"
@@ -18,7 +18,7 @@
 #include "statistics/receiver_statistics.h"
 #include "data_cache.h"
 
-#include "preprocessor/definitions.h"
+#include "asapo/preprocessor/definitions.h"
 #include "file_processors/file_processor.h"
 
 namespace asapo {

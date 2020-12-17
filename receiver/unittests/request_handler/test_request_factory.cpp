@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include "unittests/MockIO.h"
-#include "unittests/MockDatabase.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockDatabase.h"
 #include "../../src/connection.h"
 #include "../../src/receiver_error.h"
 #include "../../src/request.h"
@@ -19,7 +19,7 @@
 #include "../../src/request_handler/request_handler_receive_data.h"
 #include "../../src/request_handler/request_handler_receive_metadata.h"
 
-#include "database/database.h"
+#include "asapo/database/database.h"
 
 #include "../receiver_mocking.h"
 #include "../mock_receiver_config.h"

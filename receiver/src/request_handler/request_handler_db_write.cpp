@@ -6,8 +6,8 @@
 #include "../request.h"
 #include "../receiver_config.h"
 #include "../receiver_logger.h"
-#include "io/io_factory.h"
-#include "database/db_error.h"
+#include "asapo/io/io_factory.h"
+#include "asapo/database/db_error.h"
 
 
 namespace asapo {

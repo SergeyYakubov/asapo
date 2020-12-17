@@ -20,7 +20,4 @@ define_property(TARGET PROPERTY EXENAME
 
 set_target_properties(${TARGET_NAME} PROPERTIES EXENAME ${CMAKE_CURRENT_BINARY_DIR}/${exe_name})
 
-
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${exe_name} DESTINATION bin)
-
 gotest(${TARGET_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/src/asapo_discovery" "./...")

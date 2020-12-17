@@ -4,7 +4,7 @@
 #include "mock_receiver_config.h"
 #include "../src/receiver_config_factory.h"
 
-#include <unittests/MockIO.h>
+#include <asapo/unittests/MockIO.h>
 
 using testing::_;
 using testing::Return;

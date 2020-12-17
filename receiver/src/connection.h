@@ -11,11 +11,11 @@
 #include <atomic>
 #include <vector>
 
-#include "common/networking.h"
-#include "io/io.h"
+#include "asapo/common/networking.h"
+#include "asapo/io/io.h"
 #include "request.h"
 #include "statistics/receiver_statistics.h"
-#include "logger/logger.h"
+#include "asapo/logger/logger.h"
 #include "request_handler/requests_dispatcher.h"
 #include "data_cache.h"
 

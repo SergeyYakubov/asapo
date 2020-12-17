@@ -129,7 +129,7 @@ asapo_tools/pkg
 
 #version files
 
-common/cpp/include/common/version.h
+common/cpp/include/asapo/common/version.h
 common/go/src/asapo_common/version/version_lib.go
 
 

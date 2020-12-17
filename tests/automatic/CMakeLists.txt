@@ -6,14 +6,9 @@ add_subdirectory(system_io)
 
 add_subdirectory(json_parser)
 
-if(BUILD_MONGODB_CLIENTLIB)
-    add_subdirectory(mongo_db)
-endif()
+add_subdirectory(mongo_db)
 
-
-if(BUILD_BROKER)
-    add_subdirectory(broker)
-endif()
+add_subdirectory(broker)
 
 add_subdirectory(authorizer)
 

@@ -5,11 +5,11 @@
 
 #include "producer_impl.h"
 #include "producer_logger.h"
-#include "io/io_factory.h"
-#include "producer/producer_error.h"
+#include "asapo/io/io_factory.h"
+#include "asapo/producer/producer_error.h"
 #include "producer_request_handler_factory.h"
 #include "producer_request.h"
-#include "common/data_structs.h"
+#include "asapo/common/data_structs.h"
 
 
 namespace  asapo {

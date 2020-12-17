@@ -2,21 +2,21 @@
 #include "gtest/gtest.h"
 #include <thread>
 
-#include "io/io.h"
+#include "asapo/io/io.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 
-#include "database/db_error.h"
+#include "asapo/database/db_error.h"
 
 
-#include "database/database.h"
+#include "asapo/database/database.h"
 
-#include "common/data_structs.h"
-#include "unittests/MockDatabase.h"
+#include "asapo/common/data_structs.h"
+#include "asapo/unittests/MockDatabase.h"
 
 #include "../src/folder_db_importer.h"
-#include "database/db_error.h"
+#include "asapo/database/db_error.h"
 
-#include "unittests/MockIO.h"
+#include "asapo/unittests/MockIO.h"
 
 
 using ::testing::AtLeast;

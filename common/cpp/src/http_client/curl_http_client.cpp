@@ -1,9 +1,9 @@
 #include "curl_http_client.h"
 
 #include <cstring>
-#include "http_client/http_error.h"
-#include  "common/data_structs.h"
-#include "io/io_factory.h"
+#include "asapo/http_client/http_error.h"
+#include  "asapo/common/data_structs.h"
+#include "asapo/io/io_factory.h"
 
 namespace asapo {
 

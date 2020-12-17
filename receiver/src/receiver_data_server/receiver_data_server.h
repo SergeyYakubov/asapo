@@ -4,8 +4,8 @@
 #include <memory>
 
 #include "net_server/rds_net_server.h"
-#include "request/request_pool.h"
-#include "logger/logger.h"
+#include "asapo/request/request_pool.h"
+#include "asapo/logger/logger.h"
 #include "../data_cache.h"
 #include "../statistics/statistics.h"
 

@@ -3,12 +3,12 @@
 
 #include <chrono>
 
-#include <json_parser/json_parser.h>
-#include "io/io_factory.h"
-#include "http_client/http_error.h"
+#include "asapo/json_parser/json_parser.h"
+#include "asapo/io/io_factory.h"
+#include "asapo/http_client/http_error.h"
 #include "tcp_client.h"
 
-#include "asapo_consumer.h"
+#include "asapo/asapo_consumer.h"
 #include "fabric_consumer_client.h"
 #include "rds_response_error.h"
 

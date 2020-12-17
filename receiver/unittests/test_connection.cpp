@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "unittests/MockIO.h"
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockLogger.h"
 #include "../src/connection.h"
 #include "../src/receiver_error.h"
 #include "../src/request.h"

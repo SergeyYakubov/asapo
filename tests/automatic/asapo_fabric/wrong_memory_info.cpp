@@ -1,11 +1,11 @@
-#include <common/error.h>
-#include <asapo_fabric/asapo_fabric.h>
+#include <asapo/common/error.h>
+#include <asapo/asapo_fabric/asapo_fabric.h>
 #include <testing.h>
 #include <thread>
 #include <iostream>
 #include <cstring>
 #include <future>
-#include <request/request.h>
+#include "asapo/request/request.h"
 
 using namespace asapo;
 using namespace fabric;

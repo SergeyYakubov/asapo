@@ -13,7 +13,6 @@ ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET(BUILD_SHARED_LIBS OFF)
 ENDIF(WIN32)
 
-
 #TODO: Better way then GLOBAL PROPERTY
 IF(WIN32)
     find_package(Threads REQUIRED)
@@ -31,19 +30,29 @@ if (APPLE)
     link_directories("/usr/local/lib")
 endif()
 
-
-option(BUILD_TESTS "Uses googletest to build tests" OFF)
-option(BUILD_INTEGRATION_TESTS "Include integration tests (CMAKE >3.7 is needed)" OFF)
-option(BUILD_CPP_DOCS "Uses doxygen to build the C++ documentaion" OFF)
-option(BUILD_BROKER "Build broker" OFF)
-option(BUILD_EVENT_MONITOR_PRODUCER "Build the event monitor producer" OFF)
-option(BUILD_PYTHON_DOCS "Uses sphinx to build the Python documentaion" OFF)
-
+option(BUILD_CLIENTS_ONLY "Build clients only" OFF)
 option(BUILD_CONSUMER_TOOLS "Build consumer tools" OFF)
+option(BUILD_EVENT_MONITOR_PRODUCER "Build the event monitor producer" OFF)
+
+option(BUILD_PYTHON "Build python libs" ON)
+if(BUILD_PYTHON)
+    set(BUILD_PYTHON_PACKAGES "" CACHE STRING "which python packages to build")
+    set_property(CACHE BUILD_PYTHON_PACKAGES PROPERTY STRINGS source rpm deb win)
+endif()
+
+
+option(BUILD_TESTS "Build unit tests" OFF)
+option(BUILD_INTEGRATION_TESTS "Include integration tests" OFF)
+
 option(BUILD_EXAMPLES "Build examples" OFF)
+option(INSTALL_EXAMPLES "Install examples" OFF)
+
+option(BUILD_CPP_DOCS "Build the C++ documentaion with doxygen" OFF)
+option(BUILD_PYTHON_DOCS "Build the Python documentaion with sphinx" OFF)
 
 option(ENABLE_LIBFABRIC "Enables LibFabric support for RDMA transfers" OFF)
 option(ENABLE_LIBFABRIC_LOCALHOST "Emulates LibFabric stack over TCP. Only for localhost and testing purposes." OFF)
+
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/)
 
@@ -92,29 +101,19 @@ include(testing_cpp)
 
 include(prepare_asapo)
 
-if(BUILD_CONSUMER_TOOLS)
-    set (BUILD_MONGODB_CLIENTLIB ON)
-endif()
-
 add_subdirectory(common/cpp)
 
-if (BUILD_BROKER)#TODO: Somehow make it clear that this is needed by examples/consumer/getnext_broker
-    add_subdirectory(broker)
-endif()
-
 add_subdirectory(producer)
-
 add_subdirectory(consumer)
 
+if (NOT BUILD_CLIENTS_ONLY)
+add_subdirectory(broker)
 add_subdirectory(receiver)
-
 add_subdirectory(discovery)
-
 add_subdirectory(authorizer)
-
 add_subdirectory(asapo_tools)
-
 add_subdirectory(file_transfer)
+endif()
 
 add_subdirectory(deploy)
 
@@ -122,10 +121,27 @@ if(BUILD_INTEGRATION_TESTS)
     add_subdirectory(tests)
 endif()
 
-if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES OR INSTALL_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
 include(prepare_version)
 
 add_subdirectory(docs)
+
+if(NOT PACKAGE_RELEASE_SUFFIX)
+    set(PACKAGE_RELEASE_SUFFIX linux)
+endif()
+
+
+set(CPACK_PACKAGE_VERSION ${ASAPO_VERSION})
+set(CPACK_PACKAGE_RELEASE ${PACKAGE_RELEASE_SUFFIX})
+set(CPACK_PACKAGE_CONTACT "IT")
+set(CPACK_PACKAGE_VENDOR "DESY")
+IF (WIN32)
+    set(CPACK_PACKAGE_FILE_NAME "asapo-${CPACK_PACKAGE_VERSION}.${CMAKE_SYSTEM_PROCESSOR}")
+else()
+    set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+    set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
+endif()
+include(CPack)

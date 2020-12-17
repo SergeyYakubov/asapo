@@ -1,7 +1,7 @@
 #ifndef ASAPO_FABRIC_MEMORY_REGION_IMPL_H
 #define ASAPO_FABRIC_MEMORY_REGION_IMPL_H
 
-#include <asapo_fabric/asapo_fabric.h>
+#include <asapo/asapo_fabric/asapo_fabric.h>
 #include <rdma/fi_domain.h>
 
 namespace asapo {

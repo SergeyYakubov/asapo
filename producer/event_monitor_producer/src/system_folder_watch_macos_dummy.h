@@ -2,7 +2,7 @@
 #define ASAPO_SYSTEM_FOLDER_WATCH_MACOS_DUMMY_H
 
 #include "common.h"
-#include "preprocessor/definitions.h"
+#include "asapo/preprocessor/definitions.h"
 
 
 // dummy file to make it compile on macos

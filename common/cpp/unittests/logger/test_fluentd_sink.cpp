@@ -4,8 +4,8 @@
 #include "../../src/logger/spd_logger.h"
 #include "../../src/logger/fluentd_sink.h"
 
-#include "unittests/MockHttpClient.h"
-#include "http_client/http_error.h"
+#include "asapo/unittests/MockHttpClient.h"
+#include "asapo/http_client/http_error.h"
 
 using ::testing::AtLeast;
 using ::testing::Eq;

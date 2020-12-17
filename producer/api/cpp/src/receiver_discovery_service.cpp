@@ -1,7 +1,7 @@
 #include "receiver_discovery_service.h"
 
 #include "producer_logger.h"
-#include "json_parser/json_parser.h"
+#include "asapo/json_parser/json_parser.h"
 
 #include <iostream>
 #include <algorithm>

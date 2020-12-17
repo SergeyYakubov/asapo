@@ -1,17 +1,17 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "unittests/MockIO.h"
-#include "unittests/MockLogger.h"
-#include "common/error.h"
-#include "io/io.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockLogger.h"
+#include "asapo/common/error.h"
+#include "asapo/io/io.h"
 
-#include "producer/common.h"
-#include "producer/producer_error.h"
+#include "asapo/producer/common.h"
+#include "asapo/producer/producer_error.h"
 
 #include "../src/request_handler_tcp.h"
-#include <common/networking.h>
-#include "io/io_factory.h"
+#include <asapo/common/networking.h>
+#include "asapo/io/io_factory.h"
 
 #include "mocking.h"
 

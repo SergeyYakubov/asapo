@@ -2,8 +2,8 @@
 #define ASAPO_RAPID_JSON_H
 
 #include "rapidjson/document.h"
-#include "common/error.h"
-#include "io/io.h"
+#include "asapo/common/error.h"
+#include "asapo/io/io.h"
 
 
 namespace asapo {

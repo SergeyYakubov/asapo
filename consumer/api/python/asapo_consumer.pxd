@@ -8,7 +8,7 @@ from libc.stdint cimport uint64_t
 
 ctypedef unique_ptr[ErrorInterface] Error
 
-cdef extern from "asapo_consumer.h" namespace "asapo":
+cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   cppclass CustomErrorData:
     pass
   cppclass ErrorInterface:
@@ -22,12 +22,12 @@ cdef extern from "asapo_consumer.h" namespace "asapo":
 cdef extern from "asapo_wrappers.h" namespace "asapo":
   cdef string GetErrorString(Error* err)
 
-cdef extern from "asapo_consumer.h" namespace "asapo":
+cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   cppclass FileData:
     uint8_t[] release()
     pass
 
-cdef extern from "asapo_consumer.h" namespace "asapo":
+cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   cppclass FileInfo:
     string Json()
     bool SetFromJson(string json_str)
@@ -49,14 +49,14 @@ cdef extern from "asapo_consumer.h" namespace "asapo":
     string Json(bool add_last_id)
     bool SetFromJson(string json_str, bool read_last_id)
 
-cdef extern from "asapo_consumer.h" namespace "asapo":
+cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   cppclass NetworkConnectionType:
     pass
   NetworkConnectionType NetworkConnectionType_kUndefined "asapo::NetworkConnectionType::kUndefined"
   NetworkConnectionType NetworkConnectionType_kAsapoTcp "asapo::NetworkConnectionType::kAsapoTcp"
   NetworkConnectionType NetworkConnectionType_kFabric "asapo::NetworkConnectionType::kFabric"
 
-cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
+cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass DataBroker:
         DataBroker() except +
         void SetTimeout(uint64_t timeout_ms)
@@ -83,13 +83,13 @@ cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
         void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts)
         void InterruptCurrentOperation()
 
-cdef extern from "asapo_consumer.h" namespace "asapo" nogil:
+cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass DataBrokerFactory:
         DataBrokerFactory() except +
         unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,bool has_filesystem,SourceCredentials source,Error* error)
 
 
-cdef extern from "asapo_consumer.h" namespace "asapo":
+cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   ErrorTemplateInterface kNoData "asapo::ConsumerErrorTemplates::kNoData"
   ErrorTemplateInterface kEndOfStream "asapo::ConsumerErrorTemplates::kEndOfStream"
   ErrorTemplateInterface kStreamFinished "asapo::ConsumerErrorTemplates::kStreamFinished"

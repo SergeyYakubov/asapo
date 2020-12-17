@@ -31,4 +31,4 @@ add_subdirectory(binary_dist_windows)
 
 set (EXTRA_COMPILE_ARGS "['/MT']")
 set (EXTRA_LINK_ARGS "[]")
-add_subdirectory(source_dist_linux)
+add_subdirectory(dist_linux)

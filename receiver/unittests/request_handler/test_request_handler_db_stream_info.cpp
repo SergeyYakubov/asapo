@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "unittests/MockIO.h"
-#include "unittests/MockDatabase.h"
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockDatabase.h"
+#include "asapo/unittests/MockLogger.h"
 
 #include "../../src/receiver_error.h"
 #include "../../src/request.h"
@@ -13,8 +13,8 @@
 #include "../../../common/cpp/src/database/mongodb_client.h"
 
 #include "../mock_receiver_config.h"
-#include "common/data_structs.h"
-#include "common/networking.h"
+#include "asapo/common/data_structs.h"
+#include "asapo/common/networking.h"
 #include "../receiver_mocking.h"
 
 using asapo::MockRequest;

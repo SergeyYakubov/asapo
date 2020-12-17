@@ -3,15 +3,15 @@
 #include "gtest/gtest.h"
 #include <chrono>
 
-#include "consumer/data_broker.h"
-#include "consumer/consumer_error.h"
-#include "io/io.h"
+#include "asapo/consumer/data_broker.h"
+#include "asapo/consumer/consumer_error.h"
+#include "asapo/io/io.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 #include "../src/server_data_broker.h"
 #include "../../../../common/cpp/src/http_client/curl_http_client.h"
-#include "unittests/MockIO.h"
-#include "unittests/MockHttpClient.h"
-#include "http_client/http_error.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockHttpClient.h"
+#include "asapo/http_client/http_error.h"
 #include "mocking.h"
 #include "../src/tcp_client.h"
 

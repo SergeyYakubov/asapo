@@ -1,8 +1,8 @@
 #ifndef ASAPO_FABRIC_WAITABLE_TASK_H
 #define ASAPO_FABRIC_WAITABLE_TASK_H
 
-#include <common/error.h>
-#include <asapo_fabric/asapo_fabric.h>
+#include <asapo/common/error.h>
+#include <asapo/asapo_fabric/asapo_fabric.h>
 #include <future>
 #include "fabric_task.h"
 

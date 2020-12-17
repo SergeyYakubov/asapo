@@ -1,7 +1,7 @@
 #ifndef ASAPO_FABRIC_RDS_REQUEST_H
 #define ASAPO_FABRIC_RDS_REQUEST_H
 
-#include <asapo_fabric/asapo_fabric.h>
+#include <asapo/asapo_fabric/asapo_fabric.h>
 #include "../receiver_data_server_request.h"
 
 namespace asapo {

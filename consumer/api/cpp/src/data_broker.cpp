@@ -1,7 +1,7 @@
-#include <common/networking.h>
-#include "consumer/data_broker.h"
+#include "asapo/common/networking.h"
+#include "asapo/consumer/data_broker.h"
 #include "server_data_broker.h"
-#include "consumer//consumer_error.h"
+#include "asapo/consumer/consumer_error.h"
 
 namespace asapo {
 

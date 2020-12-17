@@ -1,5 +1,5 @@
-#include "common/data_structs.h"
-#include "preprocessor/definitions.h"
+#include "asapo/common/data_structs.h"
+#include "asapo/preprocessor/definitions.h"
 #include <gmock/gmock.h>
 #include "gtest/gtest.h"
 #include <chrono>

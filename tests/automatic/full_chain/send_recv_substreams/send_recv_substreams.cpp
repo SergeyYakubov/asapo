@@ -10,8 +10,8 @@
 #include <string>
 #include <sstream>
 
-#include "asapo_consumer.h"
-#include "asapo_producer.h"
+#include "asapo/asapo_consumer.h"
+#include "asapo/asapo_producer.h"
 
 using asapo::Error;
 using BrokerPtr = std::unique_ptr<asapo::DataBroker>;

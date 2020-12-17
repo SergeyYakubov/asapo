@@ -3,8 +3,8 @@
 
 #include <gtest/gtest.h>
 
-#include "../../include/request/request_pool.h"
-#include "../../include/request/request_handler_factory.h"
+#include "asapo/request/request_pool.h"
+#include "asapo/request/request_handler_factory.h"
 
 namespace asapo {
 

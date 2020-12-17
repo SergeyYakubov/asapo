@@ -10,9 +10,9 @@
 #include <string>
 #include <sstream>
 
-#include "asapo_consumer.h"
-#include "asapo_producer.h"
-#include "preprocessor/definitions.h"
+#include "asapo/asapo_consumer.h"
+#include "asapo/asapo_producer.h"
+#include "asapo/preprocessor/definitions.h"
 
 using std::chrono::system_clock;
 using asapo::Error;

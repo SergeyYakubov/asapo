@@ -1,11 +1,11 @@
 #include "request_handler_db_check_request.h"
 
-#include "database/database.h"
-#include "database/db_error.h"
-#include "logger/logger.h"
+#include "asapo/database/database.h"
+#include "asapo/database/db_error.h"
+#include "asapo/logger/logger.h"
 #include "request_handler_db.h"
 #include "../receiver_config.h"
-#include "io/io.h"
+#include "asapo/io/io.h"
 #include "../request.h"
 
 namespace asapo {

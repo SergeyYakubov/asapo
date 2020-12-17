@@ -2,11 +2,11 @@
 #define ASAPO_REQUEST_HANDLER_DB_H
 
 #include "request_handler.h"
-#include "database/database.h"
-#include "logger/logger.h"
-#include "http_client/http_client.h"
+#include "asapo/database/database.h"
+#include "asapo/logger/logger.h"
+#include "asapo/http_client/http_client.h"
 
-#include "io/io.h"
+#include "asapo/io/io.h"
 
 namespace asapo {
 

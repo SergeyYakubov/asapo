@@ -3,13 +3,13 @@
 
 #include <chrono>
 
-#include "io/io.h"
-#include "common/error.h"
+#include "asapo/io/io.h"
+#include "asapo/common/error.h"
 #include "receiver_discovery_service.h"
-#include "common/networking.h"
+#include "asapo/common/networking.h"
 
-#include "producer/common.h"
-#include "request/request_handler.h"
+#include "asapo/producer/common.h"
+#include "asapo/request/request_handler.h"
 #include "producer_request.h"
 
 using std::chrono::system_clock;

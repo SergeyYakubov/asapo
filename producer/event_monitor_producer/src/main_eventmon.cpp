@@ -6,16 +6,16 @@
 #include <csignal>
 #include <atomic>
 
-#include "asapo_producer.h"
+#include "asapo/asapo_producer.h"
 #include "eventmon_config.h"
 #include "eventmon_config_factory.h"
 #include "event_detector_factory.h"
 #include "eventmon_logger.h"
 #include "event_monitor_error.h"
-#include "preprocessor/definitions.h"
+#include "asapo/preprocessor/definitions.h"
 
-#include "io/io_factory.h"
-#include "common/version.h"
+#include "asapo/io/io_factory.h"
+#include "asapo/common/version.h"
 
 using asapo::Producer;
 using asapo::EventMonConfigFactory;

@@ -1,7 +1,7 @@
-#include <asapo_fabric/asapo_fabric.h>
+#include <asapo/asapo_fabric/asapo_fabric.h>
 #include <iostream>
-#include <common/data_structs.h>
-#include <common/networking.h>
+#include <asapo/common/data_structs.h>
+#include <asapo/common/networking.h>
 
 using namespace asapo;
 using namespace asapo::fabric;

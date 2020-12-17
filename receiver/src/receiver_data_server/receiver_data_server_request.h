@@ -1,9 +1,9 @@
 #ifndef ASAPO_RECEIVER_DATA_SERVER_REQUEST_H
 #define ASAPO_RECEIVER_DATA_SERVER_REQUEST_H
 
-#include "common/networking.h"
+#include "asapo/common/networking.h"
 
-#include "request/request.h"
+#include "asapo/request/request.h"
 
 namespace asapo {
 

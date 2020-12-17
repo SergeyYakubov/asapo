@@ -3,9 +3,9 @@
 #include "gtest/gtest.h"
 #include <chrono>
 
-#include "json_parser/json_parser.h"
+#include "asapo/json_parser/json_parser.h"
 #include "../../src/json_parser/rapid_json.h"
-#include "unittests/MockIO.h"
+#include "asapo/unittests/MockIO.h"
 
 
 using ::testing::AtLeast;

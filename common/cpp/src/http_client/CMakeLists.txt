@@ -1,7 +1,7 @@
 set(TARGET_NAME curl_http_client)
 set(SOURCE_FILES
         curl_http_client.cpp
-        http_client_factory.cpp ../../include/preprocessor/definitions.h)
+        http_client_factory.cpp ../../include/asapo/preprocessor/definitions.h)
 
 
 ################################

@@ -1,11 +1,11 @@
 #include <iostream>
 #include <vector>
-#include "consumer/data_broker.h"
+#include "asapo/consumer/data_broker.h"
 #include "testing.h"
 #include "../../../consumer/api/cpp/src/server_data_broker.h"
-#include "preprocessor/definitions.h"
-#include "io/io_factory.h"
-#include "io/io.h"
+#include "asapo/preprocessor/definitions.h"
+#include "asapo/io/io_factory.h"
+#include "asapo/io/io.h"
 
 struct Args {
     std::string uri_authorizer;

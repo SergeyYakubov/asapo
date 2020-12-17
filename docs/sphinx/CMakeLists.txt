@@ -9,4 +9,4 @@ add_custom_target(
 )
 
 add_dependencies(docs-py python-lib-producer)
-add_dependencies(docs-py python-lib)
+add_dependencies(docs-py python-lib-consumer)
