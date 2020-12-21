@@ -31,7 +31,7 @@ struct EventMonConfig {
     uint64_t subset_batch_size = 1;
     uint64_t subset_multisource_nsources = 1;
     uint64_t subset_multisource_sourceid = 1;
-    std::string stream;
+    std::string data_source;
   private:
     std::string log_level_str;
     std::string mode_str;

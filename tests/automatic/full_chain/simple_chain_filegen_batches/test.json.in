@@ -10,7 +10,7 @@
  "IgnoreExtensions":["tmp"],
  "WhitelistExtensions":[],
  "RemoveAfterSend":false,
- "Stream": "",
+ "DataSource": "",
  "Subset": {
  	"Mode":"batch",
   	"BatchSize":3

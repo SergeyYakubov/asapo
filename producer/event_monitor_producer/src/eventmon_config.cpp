@@ -39,7 +39,7 @@ Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     (err = parser.GetString("AsapoEndpoint", &config.asapo_endpoint)) ||
     (err = parser.GetString("Tag", &config.tag)) ||
     (err = parser.GetString("BeamtimeID", &config.beamtime_id)) ||
-    (err = parser.GetString("Stream", &config.stream)) ||
+    (err = parser.GetString("DataSource", &config.data_source)) ||
     (err = parser.GetString("Mode", &config.mode_str)) ||
     (err = parser.GetUInt64("NThreads", &config.nthreads)) ||
     (err = parser.GetString("RootMonitoredFolder", &config.root_monitored_folder)) ||

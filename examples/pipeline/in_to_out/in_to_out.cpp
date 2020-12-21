@@ -230,18 +230,18 @@ int main(int argc, char* argv[]) {
     auto nfiles = ProcessAllData(args, producer, &duration_ms, &nerrors);
 
     if (producer->WaitRequestsFinished(args.timeout_ms_producer) != nullptr) {
-        std::cerr << "Stream out exit on timeout " << std::endl;
+        std::cerr << "Data source out exit on timeout " << std::endl;
     }
     auto duration_streamout = std::chrono::duration_cast<std::chrono::milliseconds>(streamout_finish - streamout_start);
 
-    std::cout << "Stream in " << std::endl;
+    std::cout << "Data source in " << std::endl;
     std::cout << "  Processed " << nfiles << " file(s)" << std::endl;
     std::cout << "  Successfully: " << nfiles - nerrors << std::endl;
     std::cout << "  Errors : " << nerrors << std::endl;
     std::cout << "  Elapsed : " << duration_ms - args.timeout_ms << "ms" << std::endl;
     std::cout << "  Rate : " << 1000.0f * nfiles / (duration_ms - args.timeout_ms) << std::endl;
 
-    std::cout << "Stream out " << std::endl;
+    std::cout << "Data source out " << std::endl;
     std::cout << "  Sent " << files_sent << " file(s)" << std::endl;
     std::cout << "  Elapsed : " << duration_streamout.count() << "ms" << std::endl;
     std::cout << "  Rate : " << 1000.0f * files_sent / (duration_streamout.count()) << std::endl;

@@ -1,10 +1,10 @@
 SET source_path=.
 SET beamtime_id=asapo_test
-SET stream_in=detector
-SET stream_out=stream
+SET data_source_in=detector
+SET data_source_out=simulation
 
-SET indatabase_name=%beamtime_id%_%stream_in%
-SET outdatabase_name=%beamtime_id%_%stream_out%
+SET indatabase_name=%beamtime_id%_%data_source_in%
+SET outdatabase_name=%beamtime_id%_%data_source_out%
 
 SET token=IEfwsWa0GXky2S3MkxJSUHJT1sI8DD5teRdjBUXVRxk=
 
@@ -33,17 +33,17 @@ echo hello3 > processed\file3
 
 set PYTHONPATH=%2;%3
 
-"%1" "%4" 127.0.0.1:8400 %source_path% %beamtime_id% %stream_in% %stream_out% %token% %timeout% %timeout_producer% %nthreads% 1  > out
+"%1" "%4" 127.0.0.1:8400 %source_path% %beamtime_id% %data_source_in% %data_source_out% %token% %timeout% %timeout_producer% %nthreads% 1  > out
 
 type out
 findstr /I /L /C:"Processed 3 file(s)" out || goto :error
 findstr /I /L /C:"Sent 3 file(s)" out || goto :error
 
-echo db.data_default.find({"_id":1}) | %mongo_exe% %outdatabase_name% | findstr  /c:"file1_%stream_out%"  || goto :error
+echo db.data_default.find({"_id":1}) | %mongo_exe% %outdatabase_name% | findstr  /c:"file1_%data_source_out%"  || goto :error
 
-findstr /I /L /C:"hello1" %receiver_folder%\processed\file1_%stream_out% || goto :error
-findstr /I /L /C:"hello2" %receiver_folder%\processed\file2_%stream_out% || goto :error
-findstr /I /L /C:"hello3" %receiver_folder%\processed\file3_%stream_out% || goto :error
+findstr /I /L /C:"hello1" %receiver_folder%\processed\file1_%data_source_out% || goto :error
+findstr /I /L /C:"hello2" %receiver_folder%\processed\file2_%data_source_out% || goto :error
+findstr /I /L /C:"hello3" %receiver_folder%\processed\file3_%data_source_out% || goto :error
 
 
 goto :clean

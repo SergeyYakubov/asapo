@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 beamtime_id=test_run
-stream=detector
-database_name=${beamtime_id}_${stream}
+data_source=detector
+database_name=${beamtime_id}_${data_source}
 token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
 set -e

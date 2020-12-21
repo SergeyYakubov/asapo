@@ -49,7 +49,7 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     config_string += "," + std::string("\"NThreads\":") + std::to_string(config.nthreads);
     config_string += "," + std::string("\"LogLevel\":") + "\"" + log_level + "\"";
     config_string += "," + std::string("\"RemoveAfterSend\":") + (config.remove_after_send ? "true" : "false");
-    config_string += "," + std::string("\"Stream\":") + "\"" + config.stream + "\"";
+    config_string += "," + std::string("\"DataSource\":") + "\"" + config.data_source + "\"";
 
     std::string subset_mode;
     switch (config.subset_mode) {

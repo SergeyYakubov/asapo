@@ -62,7 +62,7 @@ class DbMetaLastStreamTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
-    std::string expected_data_source = "stream";
+    std::string expected_data_source = "source";
     std::string info_str = R"({"lastId":10,"name":"substream","timestampCreated":1000000,"timestampLast":2000000})";
     asapo::StreamInfo expected_stream_info;
     void SetUp() override {

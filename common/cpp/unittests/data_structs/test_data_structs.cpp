@@ -208,9 +208,9 @@ TEST(StreamInfo, ConvertToJsonWithoutID) {
 }
 
 TEST(SourceCredentials, ConvertToString) {
-    auto sc = SourceCredentials{SourceType::kRaw,"beamtime","beamline","stream","token"};
-    std::string expected1= "raw%beamtime%beamline%stream%token";
-    std::string expected2= "processed%beamtime%beamline%stream%token";
+    auto sc = SourceCredentials{SourceType::kRaw,"beamtime","beamline","source","token"};
+    std::string expected1= "raw%beamtime%beamline%source%token";
+    std::string expected2= "processed%beamtime%beamline%source%token";
 
     auto res1 = sc.GetString();
     sc.type = asapo::SourceType::kProcessed;

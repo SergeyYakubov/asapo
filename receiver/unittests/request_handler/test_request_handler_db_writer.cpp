@@ -102,7 +102,7 @@ class DbWriterHandlerTests : public Test {
 
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
     }
-    void ExpectRequestParams(asapo::Opcode op_code, const std::string& stream);
+    void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source);
     void ExpectLogger();
     void ExpectDuplicatedID();
     FileInfo PrepareFileInfo();

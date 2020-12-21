@@ -3,9 +3,9 @@ SET beamtime_id=test_run
 SET source_path=%cd%\asap3\petra3\gpfs\p01\2019\data\%beamtime_id%
 set source_path=%source_path:\=\\%
 
-SET stream=detector
+SET data_source=detector
 
-SET database_name=%beamtime_id%_%stream%
+SET database_name=%beamtime_id%_%data_source%
 
 SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 set token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=

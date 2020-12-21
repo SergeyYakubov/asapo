@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-database_name=data_stream
+database_name=data_detector
 substream=substream
 
 set -e
@@ -26,21 +26,21 @@ brokerid=`echo $!`
 
 groupid=`curl -d '' --silent 127.0.0.1:5005/creategroup`
 
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/0/last?token=$token --stderr -
+curl -v  --silent 127.0.0.1:5005/database/data/detector/${substream}/0/last?token=$token --stderr -
 
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/0/last?token=$token --stderr - | grep '"_id":2'
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/0/last?token=$token --stderr - | grep '"_id":2'
+curl -v  --silent 127.0.0.1:5005/database/data/detector/${substream}/0/last?token=$token --stderr - | grep '"_id":2'
+curl -v  --silent 127.0.0.1:5005/database/data/detector/${substream}/0/last?token=$token --stderr - | grep '"_id":2'
 
 echo "db.data_${substream}.insert({"_id":3})" | mongo ${database_name}
 
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/0/last?token=$token --stderr - | grep '"_id":3'
+curl -v  --silent 127.0.0.1:5005/database/data/detector/${substream}/0/last?token=$token --stderr - | grep '"_id":3'
 
 echo "db.data_${substream}.insert({"_id":4})" | mongo ${database_name}
 
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/${groupid}/next?token=$token --stderr - | grep '"_id":1'
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/0/last?token=$token --stderr - | grep '"_id":4'
+curl -v  --silent 127.0.0.1:5005/database/data/detector/${substream}/${groupid}/next?token=$token --stderr - | grep '"_id":1'
+curl -v  --silent 127.0.0.1:5005/database/data/detector/${substream}/0/last?token=$token --stderr - | grep '"_id":4'
 
 #with a new group
 groupid=`curl -d '' --silent 127.0.0.1:5005/creategroup`
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/${groupid}/next?token=$token --stderr - | grep '"_id":1'
-curl -v  --silent 127.0.0.1:5005/database/data/stream/${substream}/0/last?token=$token --stderr - | grep '"_id":4'
+curl -v  --silent 127.0.0.1:5005/database/data/detector/${substream}/${groupid}/next?token=$token --stderr - | grep '"_id":1'
+curl -v  --silent 127.0.0.1:5005/database/data/detector/${substream}/0/last?token=$token --stderr - | grep '"_id":4'

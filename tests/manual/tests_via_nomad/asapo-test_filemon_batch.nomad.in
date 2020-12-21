@@ -41,7 +41,7 @@ job "asapo-filemon_batch" {
  "IgnoreExtensions":["tmp"],
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
- "Stream": "",
+ "DataSource": "",
  "Subset": {
   	"Mode":"batch",
   	"BatchSize": {{ keyOrDefault "monitor_batch_size" "3" }}
@@ -103,7 +103,7 @@ job "asapo-filemon_batch" {
  "IgnoreExtensions":["tmp"],
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
- "Stream": "",
+ "DataSource": "",
  "Subset": {
   	"Mode":"batch",
   	"BatchSize": {{ keyOrDefault "monitor_batch_size" "3" }}

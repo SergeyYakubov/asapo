@@ -5,7 +5,7 @@ set -e
 trap Cleanup EXIT
 
 beamtime_id=asapo_test
-stream=python
+data_source=python
 beamline=test
 receiver_root_folder=/tmp/asapo/receiver/files
 facility=test_facility
@@ -21,12 +21,12 @@ Cleanup() {
     nomad stop authorizer >/dev/null
     nomad stop nginx >/dev/null
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill > /dev/null
-    echo "db.dropDatabase()" | mongo ${beamtime_id}_${stream} >/dev/null
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_${data_source} >/dev/null
 }
 
 export PYTHONPATH=$2:${PYTHONPATH}
 
-echo "db.${beamtime_id}_${stream}.insert({dummy:1})" | mongo ${beamtime_id}_${stream}  >/dev/null
+echo "db.${beamtime_id}_${data_source}.insert({dummy:1})" | mongo ${beamtime_id}_${data_source}  >/dev/null
 
 nomad run authorizer.nmd >/dev/null
 nomad run nginx.nmd >/dev/null

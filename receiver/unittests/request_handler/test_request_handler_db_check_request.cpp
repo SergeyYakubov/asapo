@@ -111,7 +111,7 @@ class DbCheckRequestHandlerTests : public Test {
 
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
     }
-    void ExpectRequestParams(asapo::Opcode op_code, const std::string& stream, bool expect_compare = true);
+    void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source, bool expect_compare = true);
 
     FileInfo PrepareFileInfo();
     void MockGetByID(asapo::ErrorInterface* error, bool expect_compare);
@@ -135,11 +135,11 @@ MATCHER_P(CompareFileInfo, file, "") {
 }
 
 
-void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std::string& stream,
+void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source,
         bool expect_compare) {
 
     std::string db_name = expected_beamtime_id;
-    db_name += "_" + stream;
+    db_name += "_" + data_source;
 
     if (n_run  == 0) {
         EXPECT_CALL(mock_db, Connect_t(config.database_uri, db_name)).
@@ -149,7 +149,7 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
         ;
 
         EXPECT_CALL(*mock_request, GetDataSource())
-        .WillOnce(ReturnRef(stream))
+        .WillOnce(ReturnRef(data_source))
         ;
     }
 

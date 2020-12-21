@@ -41,7 +41,7 @@ job "asapo-filemon_multisource" {
  "IgnoreExtensions":["tmp"],
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
- "Stream": "",
+ "DataSource": "",
  "Subset": {
   	"Mode":"multisource",
   	"SourceId": 1,
@@ -104,7 +104,7 @@ job "asapo-filemon_multisource" {
  "IgnoreExtensions":["tmp"],
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
- "Stream": "",
+ "DataSource": "",
  "Subset": {
   	"Mode":"multisource",
   	"SourceId": 2,
