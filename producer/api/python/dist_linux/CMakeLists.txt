@@ -15,7 +15,7 @@ if ("rpm" IN_LIST BUILD_PYTHON_PACKAGES)
 			--requires=python3-numpy --binary-only
 		COMMAND rm -f dist/python3*.gz dist/*debuginfo* dist/*debugsource*
 		)
-	ADD_DEPENDENCIES(python3-rpm-producer copy_python_dist-producer)
+	ADD_DEPENDENCIES(python3-rpm-producer python-rpm-producer)
 	ADD_DEPENDENCIES(python-rpm-producer copy_python_dist-producer)
 endif()
 
@@ -35,7 +35,7 @@ if ("deb" IN_LIST BUILD_PYTHON_PACKAGES)
 			COMMAND rm -f deb_dist/*dbgsym*
 			COMMAND cp deb_dist/*.deb dist/
 			)
-	ADD_DEPENDENCIES(python3-deb-producer copy_python_dist-producer)
+	ADD_DEPENDENCIES(python3-deb-producer python-deb-producer)
 	ADD_DEPENDENCIES(python-deb-producer copy_python_dist-producer)
 endif()
 
