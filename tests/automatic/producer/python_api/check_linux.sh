@@ -39,7 +39,7 @@ echo test > file1
 
 sleep 1
 
-$1 $3 $stream $beamtime_id  "127.0.0.1:8400" &> out || cat out
+$1 $3 $data_source $beamtime_id  "127.0.0.1:8400" &> out || cat out
 cat out
 echo count successfully send, expect 13
 cat out | grep "successfuly sent" | wc -l | tee /dev/stderr | grep 13

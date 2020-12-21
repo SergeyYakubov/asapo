@@ -42,7 +42,7 @@ sleep 1
 echo test > file1
 
 
-$1 $3 $beamline $token $stream "127.0.0.1:8400" > out || cat out
+$1 $3 $beamline $token $data_source "127.0.0.1:8400" > out || cat out
 cat out
 cat out | grep "successfuly sent" | wc -l | grep 3
 cat out | grep "reauthorization\|Broken" | wc -l | grep 1
