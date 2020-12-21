@@ -66,8 +66,8 @@ class DbHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
-    std::string expected_stream = "stream";
-    std::string expected_default_stream = "detector";
+    std::string expected_stream = "source";
+    std::string expected_default_source = "detector";
     std::string expected_discovery_server = "discovery";
     std::string expected_database_server = "127.0.0.1:27017";
 
@@ -81,7 +81,7 @@ class DbHandlerTests : public Test {
         handler.http_client__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
-        ON_CALL(*mock_request, GetStream()).WillByDefault(ReturnRef(expected_stream));
+        ON_CALL(*mock_request, GetDataSource()).WillByDefault(ReturnRef(expected_stream));
 
     }
     void TearDown() override {
@@ -151,7 +151,7 @@ TEST_F(DbHandlerTests, ProcessRequestDiscoversMongoDbAddress) {
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
-    EXPECT_CALL(*mock_request, GetStream())
+    EXPECT_CALL(*mock_request, GetDataSource())
     .WillOnce(ReturnRef(expected_stream))
     ;
 
@@ -188,7 +188,7 @@ TEST_F(DbHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
-    EXPECT_CALL(*mock_request, GetStream())
+    EXPECT_CALL(*mock_request, GetDataSource())
     .WillOnce(ReturnRef(expected_stream))
     ;
 

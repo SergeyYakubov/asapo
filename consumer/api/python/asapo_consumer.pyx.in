@@ -324,14 +324,14 @@ cdef class __PyDataBrokerFactory:
     def __cinit__(self):
         with nogil:
             self.c_factory = DataBrokerFactory()
-    def create_server_broker(self,server_name,source_path,has_filesystem,beamtime_id,stream,token,timeout):
+    def create_server_broker(self,server_name,source_path,has_filesystem,beamtime_id,data_source,token,timeout):
         cdef string b_server_name = _bytes(server_name)
         cdef string b_source_path = _bytes(source_path)
         cdef bool b_has_filesystem = has_filesystem
         cdef SourceCredentials source
         source.beamtime_id = _bytes(beamtime_id)
         source.user_token = _bytes(token)
-        source.stream = _bytes(stream)
+        source.data_source = _bytes(data_source)
         cdef Error err
         broker = PyDataBroker()
         with nogil:
@@ -341,7 +341,7 @@ cdef class __PyDataBrokerFactory:
         broker.c_broker.get().SetTimeout(timeout)
         return broker
 
-def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stream,token,timeout_ms):
+def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,data_source,token,timeout_ms):
     """
       :param server_name: Server endpoint (hostname:port)
       :type server_name: string
@@ -353,7 +353,7 @@ def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stre
       :rtype: Tuple with broker object and error.
 	"""
     factory = __PyDataBrokerFactory()
-    return factory.create_server_broker(server_name,source_path,has_filesystem, beamtime_id,stream,token,timeout_ms)
+    return factory.create_server_broker(server_name,source_path,has_filesystem, beamtime_id,data_source,token,timeout_ms)
 
 
 __version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"

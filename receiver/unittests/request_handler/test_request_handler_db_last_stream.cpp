@@ -62,7 +62,7 @@ class DbMetaLastStreamTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
-    std::string expected_stream = "stream";
+    std::string expected_data_source = "stream";
     std::string info_str = R"({"lastId":10,"name":"substream","timestampCreated":1000000,"timestampLast":2000000})";
     asapo::StreamInfo expected_stream_info;
     void SetUp() override {
@@ -89,9 +89,9 @@ TEST_F(DbMetaLastStreamTests, CallsUpdate) {
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
-    EXPECT_CALL(*mock_request, GetStream()).WillOnce(ReturnRef(expected_stream));
+    EXPECT_CALL(*mock_request, GetDataSource()).WillOnce(ReturnRef(expected_data_source));
 
-    EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_stream)).
+    EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_data_source)).
     WillOnce(testing::Return(nullptr));
 
 

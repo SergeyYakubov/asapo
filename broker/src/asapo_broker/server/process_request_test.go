@@ -20,7 +20,7 @@ var correctTokenSuffix, wrongTokenSuffix, suffixWithWrongToken, expectedBeamtime
 
 const expectedGroupID = "bid2a5auidddp1vl71d0"
 const wrongGroupID = "_bid2a5auidddp1vl71"
-const expectedStream = "stream"
+const expectedStream = "datasource"
 const expectedSubstream = "substream"
 
 func prepareTestAuth() {

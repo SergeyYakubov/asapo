@@ -320,7 +320,7 @@ cdef class PyProducer:
             if self.c_producer.get() is not NULL:
                 self.c_producer.get().StopThreads__()
     @staticmethod
-    def __create_producer(endpoint,type,beamtime_id,beamline,stream,token,nthreads,timeout_sec):
+    def __create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthreads,timeout_sec):
         pyProd = PyProducer()
         cdef Error err
         cdef SourceType source_type
@@ -331,14 +331,14 @@ cdef class PyProducer:
         source.beamtime_id = beamtime_id
         source.beamline = beamline
         source.user_token = token
-        source.stream = stream
+        source.data_source = data_source
         source.type = source_type
         pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,timeout_sec,&err)
         if err:
             throw_exception(err)
         return pyProd
 
-def create_producer(endpoint,type,beamtime_id,beamline,stream,token,nthreads,timeout_sec):
+def create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthreads,timeout_sec):
     """
          :param endpoint: server endpoint (url:port)
          :type endpoint: string
@@ -348,8 +348,8 @@ def create_producer(endpoint,type,beamtime_id,beamline,stream,token,nthreads,tim
          :type beamtime_id: string
          :param beamline: beamline name, can be "auto" if beamtime_id is given
          :type beamline: string
-         :param stream: stream to producer data to
-         :type stream: string
+         :param data_source: name of the data source that produces data
+         :type data_source: string
          :param token: authorization token
          :type token: string
          :param nthreads: ingest mode flag
@@ -360,7 +360,7 @@ def create_producer(endpoint,type,beamtime_id,beamline,stream,token,nthreads,tim
             AsapoWrongInputError: wrong input (number of threads, ,,,)
             AsapoProducerError: actually should not happen
     """
-    return PyProducer.__create_producer(_bytes(endpoint),_bytes(type),_bytes(beamtime_id),_bytes(beamline),_bytes(stream),_bytes(token),nthreads,timeout_sec)
+    return PyProducer.__create_producer(_bytes(endpoint),_bytes(type),_bytes(beamtime_id),_bytes(beamline),_bytes(data_source),_bytes(token),nthreads,timeout_sec)
 
 
 __version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"

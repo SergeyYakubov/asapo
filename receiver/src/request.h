@@ -57,8 +57,8 @@ class Request {
     VIRTUAL void SetSourceType(SourceType);
     VIRTUAL SourceType GetSourceType() const;
 
-    VIRTUAL const std::string& GetStream() const;
-    VIRTUAL void SetStream(std::string stream);
+    VIRTUAL const std::string& GetDataSource() const;
+    VIRTUAL void SetDataSource(std::string data_source);
     VIRTUAL void SetMetadata(std::string metadata);
 
     VIRTUAL void SetOnlinePath(std::string facility);
@@ -88,7 +88,7 @@ class Request {
     RequestHandlerList handlers_;
     std::string origin_uri_;
     std::string beamtime_id_;
-    std::string stream_;
+    std::string data_source_;
     std::string beamline_;
     std::string offline_path_;
     std::string online_path_;

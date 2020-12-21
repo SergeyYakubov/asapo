@@ -224,9 +224,9 @@ TEST_F(RequestTests, SetGetBeamtimeId) {
 
 
 TEST_F(RequestTests, SetGetStream) {
-    request->SetStream("stream");
+    request->SetDataSource("stream");
 
-    ASSERT_THAT(request->GetStream(), "stream");
+    ASSERT_THAT(request->GetDataSource(), "stream");
 }
 
 

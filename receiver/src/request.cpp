@@ -129,11 +129,11 @@ const std::string& Request::GetMetaData() const {
 const CustomRequestData& Request::GetCustomData() const {
     return request_header_.custom_data;
 }
-const std::string& Request::GetStream() const {
-    return stream_;
+const std::string& Request::GetDataSource() const {
+    return data_source_;
 }
-void Request::SetStream(std::string stream) {
-    stream_ = std::move(stream);
+void Request::SetDataSource(std::string data_source) {
+    data_source_ = std::move(data_source);
 }
 
 void Request::UnlockDataBufferIfNeeded() {

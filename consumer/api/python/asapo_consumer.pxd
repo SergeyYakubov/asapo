@@ -43,7 +43,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
     FileInfos content
   struct  SourceCredentials:
     string beamtime_id
-    string stream
+    string data_source
     string user_token
   cppclass StreamInfo:
     string Json(bool add_last_id)

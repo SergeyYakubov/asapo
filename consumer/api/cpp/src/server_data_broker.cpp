@@ -114,8 +114,8 @@ ServerDataBroker::ServerDataBroker(std::string server_uri,
 
     // net_client__ will be lazy initialized
 
-    if (source_credentials_.stream.empty()) {
-        source_credentials_.stream = SourceCredentials::kDefaultStream;
+    if (source_credentials_.data_source.empty()) {
+        source_credentials_.data_source = SourceCredentials::kDefaultStream;
     }
 
 }
@@ -246,7 +246,7 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
     interrupt_flag_= false;
     std::string request_suffix = OpToUriCmd(op);
     std::string request_group = OpToUriCmd(op);
-    std::string request_api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream
+    std::string request_api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source
         + "/" + std::move(substream);
     uint64_t elapsed_ms = 0;
     Error no_data_error;
@@ -529,7 +529,7 @@ Error ServerDataBroker::ResetLastReadMarker(std::string group_id, std::string su
 
 Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id, std::string substream) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/"
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/"
         + std::move(substream) + "/" + std::move(group_id) + "/resetcounter";
     ri.extra_params = "&value=" + std::to_string(value);
     ri.post = true;
@@ -541,7 +541,7 @@ Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id, 
 
 uint64_t ServerDataBroker::GetCurrentSize(std::string substream, Error* err) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(substream) + "/size";
     auto responce = BrokerRequestWithTimeout(ri, err);
     if (*err) {
@@ -575,7 +575,7 @@ Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* respon
                                                 std::string substream,
                                                 bool dataset, uint64_t min_size) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(substream) +
         "/" + std::move(
         group_id) + "/" + std::to_string(id);
@@ -591,7 +591,7 @@ Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* respon
 
 std::string ServerDataBroker::GetBeamtimeMeta(Error* err) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/default/0/meta/0";
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/default/0/meta/0";
 
     return BrokerRequestWithTimeout(ri, err);
 }
@@ -608,7 +608,7 @@ DataSet DecodeDatasetFromResponse(std::string response, Error* err) {
 
 FileInfos ServerDataBroker::QueryImages(std::string query, std::string substream, Error* err) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         "/" + std::move(substream) + "/0/queryimages";
     ri.post = true;
     ri.body = std::move(query);
@@ -692,7 +692,7 @@ StreamInfos ParseSubstreamsFromResponse(std::string response, Error* err) {
 StreamInfos ServerDataBroker::GetSubstreamList(std::string from, Error* err) {
 
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream + "/0/substreams";
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/0/substreams";
     ri.post = false;
     if (!from.empty()) {
         ri.extra_params = "&from=" + from;
@@ -762,7 +762,7 @@ Error ServerDataBroker::GetDataFromFileTransferService(FileInfo* info, FileData*
 
 Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::string substream) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(substream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
@@ -779,7 +779,7 @@ IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id,
                                                    uint64_t to_id,
                                                    Error* error) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(substream) +
         "/" + std::move(group_id) + "/nacks";
     ri.extra_params = "&from=" + std::to_string(from_id) + "&to=" + std::to_string(to_id);
@@ -807,7 +807,7 @@ IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id,
 
 uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(substream) +
         "/" + std::move(group_id) + "/lastack";
 
@@ -843,7 +843,7 @@ Error ServerDataBroker::NegativeAcknowledge(std::string group_id,
                                             uint64_t delay_sec,
                                             std::string substream) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.stream +
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(substream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;

@@ -80,10 +80,10 @@ Error GetSourceTypeFromString(std::string stype,SourceType *type);
 std::string GetStringFromSourceType(SourceType type);
 
 struct SourceCredentials {
-    SourceCredentials(SourceType type, std::string beamtime, std::string beamline, std::string stream, std::string token):
+    SourceCredentials(SourceType type, std::string beamtime, std::string beamline, std::string data_source, std::string token):
         beamtime_id{std::move(beamtime)},
         beamline{std::move(beamline)},
-        stream{std::move(stream)},
+        data_source{std::move(data_source)},
         user_token{std::move(token)},
         type{type}{};
     SourceCredentials() {};
@@ -92,11 +92,11 @@ struct SourceCredentials {
     static const std::string kDefaultBeamtimeId;
     std::string beamtime_id;
     std::string beamline;
-    std::string stream;
+    std::string data_source;
     std::string user_token;
     SourceType type = SourceType::kProcessed;
     std::string GetString() {
-        return (type==SourceType::kRaw?std::string("raw"):std::string("processed")) + "%"+ beamtime_id + "%" + beamline + "%" + stream + "%" + user_token;
+        return (type==SourceType::kRaw?std::string("raw"):std::string("processed")) + "%"+ beamtime_id + "%" + beamline + "%" + data_source + "%" + user_token;
     };
 };
 

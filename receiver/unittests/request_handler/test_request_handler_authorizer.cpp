@@ -64,7 +64,7 @@ class AuthorizerHandlerTests : public Test {
 
     NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_beamtime_id = "beamtime_id";
-    std::string expected_stream = "stream";
+    std::string expected_data_source = "source";
     std::string expected_beamline = "beamline";
     std::string expected_beamline_path = "/beamline/p01/current";
     std::string expected_core_path = "/gpfs/blabla";
@@ -77,7 +77,7 @@ class AuthorizerHandlerTests : public Test {
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
-        expected_source_credentials = "processed%"+expected_beamtime_id + "%stream%token";
+        expected_source_credentials = "processed%"+expected_beamtime_id + "%source%token";
         expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
                                 "\",\"OriginHost\":\"" +
                                 expected_producer_uri + "\"}";
@@ -111,7 +111,7 @@ class AuthorizerHandlerTests : public Test {
                 DoAll(SetArgPointee<4>(nullptr),
                       SetArgPointee<3>(code),
                       Return("{\"beamtimeId\":\"" + expected_beamtime_id +
-                             "\",\"stream\":" + "\"" + expected_stream +
+                             "\",\"dataSource\":" + "\"" + expected_data_source +
                              "\",\"beamline-path\":" + "\"" + expected_beamline_path +
                              "\",\"core-path\":" + "\"" + expected_core_path +
                              "\",\"source-type\":" + "\"" + expected_source_type_str +
@@ -123,7 +123,7 @@ class AuthorizerHandlerTests : public Test {
                                                      HasSubstr(std::to_string(int(code))),
                                                      HasSubstr(expected_source_type_str),
                                                      HasSubstr(expected_beamtime_id),
-                                                     HasSubstr(expected_stream),
+                                                     HasSubstr(expected_data_source),
                                                      HasSubstr(expected_producer_uri),
                                                      HasSubstr(expected_authorization_server))));
             } else {
@@ -131,7 +131,7 @@ class AuthorizerHandlerTests : public Test {
                                                      HasSubstr(expected_beamtime_id),
                                                      HasSubstr(expected_beamline),
                                                      HasSubstr(expected_source_type_str),
-                                                     HasSubstr(expected_stream),
+                                                     HasSubstr(expected_data_source),
                                                      HasSubstr(expected_producer_uri))));
             }
         }
@@ -156,7 +156,7 @@ class AuthorizerHandlerTests : public Test {
 
         if (!error && code == HttpCode::OK && set_request) {
             EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
-            EXPECT_CALL(*mock_request, SetStream(expected_stream));
+            EXPECT_CALL(*mock_request, SetDataSource(expected_data_source));
             EXPECT_CALL(*mock_request, SetOfflinePath(expected_core_path));
             EXPECT_CALL(*mock_request, SetOnlinePath(expected_beamline_path));
             EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
@@ -265,7 +265,7 @@ TEST_F(AuthorizerHandlerTests, DataTransferRequestAuthorizeUsesCachedValue) {
     EXPECT_CALL(mock_http_client, Post_t(_, _, _, _, _)).Times(0);
     EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
     EXPECT_CALL(*mock_request, SetBeamline(expected_beamline));
-    EXPECT_CALL(*mock_request, SetStream(expected_stream));
+    EXPECT_CALL(*mock_request, SetDataSource(expected_data_source));
     EXPECT_CALL(*mock_request, SetOnlinePath(expected_beamline_path));
     EXPECT_CALL(*mock_request, SetOfflinePath(expected_core_path));
     EXPECT_CALL(*mock_request, SetSourceType(expected_source_type));

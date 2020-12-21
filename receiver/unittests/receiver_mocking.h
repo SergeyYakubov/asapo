@@ -71,7 +71,7 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetSlotId, uint64_t());
     MOCK_CONST_METHOD0(GetData, void* ());
     MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
-    MOCK_CONST_METHOD0(GetStream, const std::string & ());
+    MOCK_CONST_METHOD0(GetDataSource, const std::string & ());
     MOCK_CONST_METHOD0(GetMetaData, const std::string & ());
     MOCK_CONST_METHOD0(GetBeamline, const std::string & ());
     MOCK_CONST_METHOD0(GetOpCode, asapo::Opcode ());
@@ -87,7 +87,7 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetCustomData_t, const uint64_t* ());
     MOCK_CONST_METHOD0(GetMessage, const char* ());
     MOCK_METHOD1(SetBeamtimeId, void (std::string));
-    MOCK_METHOD1(SetStream, void (std::string));
+    MOCK_METHOD1(SetDataSource, void (std::string));
     MOCK_METHOD1(SetBeamline, void (std::string));
     MOCK_METHOD1(SetOnlinePath, void (std::string));
     MOCK_METHOD1(SetOfflinePath, void (std::string));

@@ -13,7 +13,7 @@ func extractRequestParameters(r *http.Request, needGroupID bool) (string, string
 	vars := mux.Vars(r)
 	db_name, ok1 := vars["dbname"]
 
-	stream, ok3 := vars["stream"]
+	datasource, ok3 := vars["datasource"]
 	substream, ok4 := vars["substream"]
 
 	ok2 := true
@@ -21,7 +21,7 @@ func extractRequestParameters(r *http.Request, needGroupID bool) (string, string
 	if needGroupID {
 		group_id, ok2 = vars["groupid"]
 	}
-	return db_name, stream, substream, group_id, ok1 && ok2 && ok3 && ok4
+	return db_name, datasource, substream, group_id, ok1 && ok2 && ok3 && ok4
 }
 
 func IsLetterOrNumbers(s string) bool {
@@ -52,7 +52,7 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_param string, needGroupID bool) {
 	r.Header.Set("Content-type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	db_name, stream, substream, group_id, ok := extractRequestParameters(r, needGroupID)
+	db_name, datasource, substream, group_id, ok := extractRequestParameters(r, needGroupID)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -68,7 +68,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 	}
 
 	request := database.Request{}
-	request.DbName = db_name+"_"+stream
+	request.DbName = db_name+"_"+datasource
 	request.Op = op
 	request.ExtraParam = extra_param
 	request.DbCollectionName = substream

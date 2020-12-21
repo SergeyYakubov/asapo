@@ -73,8 +73,8 @@ class DbCheckRequestHandlerTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
-    std::string expected_default_stream = "detector";
-    std::string expected_stream = "stream";
+    std::string expected_default_source = "detector";
+    std::string expected_data_source = "source";
     std::string expected_host_uri = "127.0.0.1:1234";
     uint64_t expected_port = 1234;
     uint64_t expected_buf_id = 18446744073709551615ull;
@@ -148,7 +148,7 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
         .WillOnce(ReturnRef(expected_beamtime_id))
         ;
 
-        EXPECT_CALL(*mock_request, GetStream())
+        EXPECT_CALL(*mock_request, GetDataSource())
         .WillOnce(ReturnRef(stream))
         ;
     }
@@ -198,7 +198,7 @@ FileInfo DbCheckRequestHandlerTests::PrepareFileInfo() {
 }
 
 void DbCheckRequestHandlerTests::MockGetByID(asapo::ErrorInterface* error, bool expect_compare ) {
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_stream, expect_compare);
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_data_source, expect_compare);
     EXPECT_CALL(mock_db, GetById_t(expected_collection_name, expected_id, _)).
     WillOnce(DoAll(
                  SetArgPointee<2>(expected_file_info),
@@ -207,7 +207,7 @@ void DbCheckRequestHandlerTests::MockGetByID(asapo::ErrorInterface* error, bool 
 }
 
 void DbCheckRequestHandlerTests::MockGetSetByID(asapo::ErrorInterface* error, bool expect_compare ) {
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferSubsetData, expected_stream, expect_compare);
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferSubsetData, expected_data_source, expect_compare);
     EXPECT_CALL(mock_db, GetSetById_t(expected_collection_name, expected_subset_id, expected_id, _)).
     WillOnce(DoAll(
                  SetArgPointee<3>(expected_file_info),

@@ -186,8 +186,8 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
         return ProducerErrorTemplates::kWrongInput.Generate("credentials already set");
     }
 
-    if (source_cred.stream.empty()) {
-        source_cred.stream = SourceCredentials::kDefaultStream;
+    if (source_cred.data_source.empty()) {
+        source_cred.data_source = SourceCredentials::kDefaultStream;
     }
 
     if (source_cred.beamline.empty()) {
