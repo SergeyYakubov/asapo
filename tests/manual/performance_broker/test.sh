@@ -2,7 +2,7 @@
 
 # starts broker, mongodb on $service_node
 # reads fileset into database
-# calls getnext_broker example from $consumer_node
+# calls getnext example from $consumer_node
 
 nthreads=1
 # a directory with many files in it
@@ -58,8 +58,8 @@ ssh ${consumer_node} ${consumer_dir}/folder2db -n ${nthreads} ${dir} ${run_name}
 
 sleep 3
 
-scp ../../../cmake-build-release/examples/consumer/getnext_broker/getnext_broker ${consumer_node}:${consumer_dir}
-ssh ${consumer_node} ${consumer_dir}/getnext_broker ${service_node}:8400 ${run_name} ${nthreads} $token
+scp ../../../cmake-build-release/examples/consumer/getnext/getnext ${consumer_node}:${consumer_dir}
+ssh ${consumer_node} ${consumer_dir}/getnext ${service_node}:8400 ${run_name} ${nthreads} $token
 
 
 

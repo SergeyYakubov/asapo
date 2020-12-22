@@ -4,7 +4,7 @@
 #include "asapo/io/io.h"
 #include "asapo/unittests/MockIO.h"
 #include "mocking.h"
-#include "../src/tcp_client.h"
+#include "../src/tcp_consumer_client.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 #include "asapo/common/networking.h"
 
@@ -13,7 +13,7 @@ using asapo::FileInfo;
 using asapo::FileData;
 using asapo::MockIO;
 using asapo::SimpleError;
-using asapo::TcpClient;
+using asapo::TcpConsumerClient;
 using asapo::MockTCPConnectionPool;
 
 
@@ -34,7 +34,7 @@ using ::testing::DoAll;
 namespace {
 
 TEST(TcpClient, Constructor) {
-    auto client = std::unique_ptr<TcpClient> {new TcpClient()};
+    auto client = std::unique_ptr<TcpConsumerClient> {new TcpConsumerClient()};
     ASSERT_THAT(dynamic_cast<asapo::SystemIO*>(client->io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::TcpConnectionPool*>(client->connection_pool__.get()), Ne(nullptr));
 }
@@ -55,7 +55,7 @@ ACTION_P(A_WriteSendDataResponse, error_code) {
 
 class TcpClientTests : public Test {
   public:
-    std::unique_ptr<TcpClient> client = std::unique_ptr<TcpClient> {new TcpClient()};
+    std::unique_ptr<TcpConsumerClient> client = std::unique_ptr<TcpConsumerClient> {new TcpConsumerClient()};
     NiceMock<MockIO> mock_io;
     NiceMock<MockTCPConnectionPool> mock_connection_pool;
     FileInfo info;

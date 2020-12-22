@@ -7,9 +7,9 @@
 
 namespace asapo {
 
-class TcpClient : public NetClient {
+class TcpConsumerClient : public NetClient {
   public:
-    explicit TcpClient();
+    explicit TcpConsumerClient();
     Error GetData(const FileInfo* info, FileData* data) override;
     std::unique_ptr<IO> io__;
     std::unique_ptr<TcpConnectionPool> connection_pool__;

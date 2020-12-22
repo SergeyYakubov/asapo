@@ -16,9 +16,10 @@ BREAKING CHANGES
 * Consumer API - remove group_id argument from get_last/get_by_id/get_last_dataset/get_dataset_by_id functions
 * Producer API - changed meaning of subsets (subset_id replaced with id_in_subset and this means now id of the image within a subset (e.g. module number for multi-module detector)), file_id is now a global id of a multi-set data (i.g. multi-image id) 
     ####  renaming - Producer API
-* stream -> data_source, stream -> stream
+* stream -> data_source, substream -> stream
     ####  renaming - Consumer API
-*
+* stream -> data_source, substream -> stream
+* broker -> consumer
 
 BUG FIXES
 * fix memory leak bug in Python consumer library (lead to problems when creating many consumer instances)

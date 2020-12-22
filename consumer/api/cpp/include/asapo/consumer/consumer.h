@@ -12,7 +12,7 @@
 
 namespace asapo {
 
-class DataBroker {
+class Consumer {
   public:
     //! Reset counter for the specific group.
     /*!
@@ -60,12 +60,12 @@ class DataBroker {
                                              Error* error) = 0;
     virtual IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) = 0;
 
-    //! Set timeout for broker operations. Default - no timeout
+    //! Set timeout for consumer operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
 
     //! Will disable RDMA.
     //! If RDMA is disabled, not available or the first connection fails to build up, it will automatically fall back to TCP.
-    //! This will only have an effect if no previous connection attempted was made on this DataBroker.
+    //! This will only have an effect if no previous connection attempted was made on this Consumer.
     virtual void ForceNoRdma() = 0;
 
     //! Returns the current network connection type
@@ -199,14 +199,14 @@ class DataBroker {
   //! Will try to interrupt current long runnung operations (mainly needed to exit waiting loop in C from Python)
     virtual void InterruptCurrentOperation() = 0;
 
-    virtual ~DataBroker() = default; // needed for unique_ptr to delete itself
+    virtual ~Consumer() = default; // needed for unique_ptr to delete itself
 };
 
-/*! A class to create a data broker instance. The class's only function Create is used for this */
-class DataBrokerFactory {
+/*! A class to create consumer instance. The class's only function Create is used for this */
+class ConsumerFactory {
   public:
-    static std::unique_ptr<DataBroker> CreateServerBroker(std::string server_name, std::string source_path,
-            bool has_filesystem, SourceCredentials source, Error* error) noexcept;
+    static std::unique_ptr<Consumer> CreateConsumer(std::string server_name, std::string source_path,
+                                                    bool has_filesystem, SourceCredentials source, Error* error) noexcept;
 
 };
 

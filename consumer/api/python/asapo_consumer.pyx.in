@@ -102,8 +102,8 @@ cdef throw_exception(Error& err, res = None):
     else:
         raise AsapoConsumerError(error_string)
 
-cdef class PyDataBroker:
-    cdef unique_ptr[DataBroker] c_broker
+cdef class PyConsumer:
+    cdef unique_ptr[Consumer] c_consumer
     def _op(self, op, group_id, stream, meta_only, uint64_t id):
         cdef FileInfo info
         cdef string b_group_id = _bytes(group_id)
@@ -114,13 +114,13 @@ cdef class PyDataBroker:
         cdef np.npy_intp dims[1]
         if op == "next":
             with nogil:
-                err =  self.c_broker.get().GetNext(&info, b_group_id,b_stream, p_data)
+                err =  self.c_consumer.get().GetNext(&info, b_group_id,b_stream, p_data)
         elif op == "last":
             with nogil:
-                err =  self.c_broker.get().GetLast(&info, b_stream, p_data)
+                err =  self.c_consumer.get().GetLast(&info, b_stream, p_data)
         elif op == "id":
             with nogil:
-                err =  self.c_broker.get().GetById(id, &info, b_stream, p_data)
+                err =  self.c_consumer.get().GetById(id, &info, b_stream, p_data)
         if err:
             throw_exception(err)
         info_str = _str(info.Json())
@@ -146,7 +146,7 @@ cdef class PyDataBroker:
         cdef Error err
         cdef FileData data
         with nogil:
-            err =  self.c_broker.get().RetrieveData(&info, &data)
+            err =  self.c_consumer.get().RetrieveData(&info, &data)
         if err:
             throw_exception(err)
         cdef np.npy_intp dims[1]
@@ -162,17 +162,17 @@ cdef class PyDataBroker:
         cdef uint64_t size
         cdef string b_stream = _bytes(stream)
         with nogil:
-            size =  self.c_broker.get().GetCurrentSize(b_stream,&err)
+            size =  self.c_consumer.get().GetCurrentSize(b_stream,&err)
         err_str = _str(GetErrorString(&err))
         if err:
             throw_exception(err)
         return size
     def set_timeout(self,timeout):
-        self.c_broker.get().SetTimeout(timeout)
+        self.c_consumer.get().SetTimeout(timeout)
     def force_no_rdma(self):
-        self.c_broker.get().ForceNoRdma()
+        self.c_consumer.get().ForceNoRdma()
     def current_connection_type(self):
-        cdef NetworkConnectionType connection_type = self.c_broker.get().CurrentConnectionType()
+        cdef NetworkConnectionType connection_type = self.c_consumer.get().CurrentConnectionType()
         cdef int cased = <int>connection_type
         cdef string result = "Unknown"
         if cased == <int>NetworkConnectionType_kUndefined:
@@ -188,7 +188,7 @@ cdef class PyDataBroker:
         cdef Error err
         cdef uint64_t id = value
         with nogil:
-            err =  self.c_broker.get().SetLastReadMarker(id,b_group_id,b_stream)
+            err =  self.c_consumer.get().SetLastReadMarker(id,b_group_id,b_stream)
         if err:
             throw_exception(err)
         return
@@ -197,7 +197,7 @@ cdef class PyDataBroker:
         cdef string b_stream = _bytes(stream)
         cdef Error err
         with nogil:
-            err =  self.c_broker.get().ResetLastReadMarker(b_group_id,b_stream)
+            err =  self.c_consumer.get().ResetLastReadMarker(b_group_id,b_stream)
         if err:
             throw_exception(err)
         return
@@ -205,7 +205,7 @@ cdef class PyDataBroker:
         cdef Error err
         cdef string group_id
         with nogil:
-            group_id = self.c_broker.get().GenerateNewGroupId(&err)
+            group_id = self.c_consumer.get().GenerateNewGroupId(&err)
         if err:
             throw_exception(err)
         return _str(group_id)
@@ -214,7 +214,7 @@ cdef class PyDataBroker:
         cdef vector[StreamInfo] streams
         cdef string b_from_stream = _bytes(from_stream)
         with nogil:
-            streams = self.c_broker.get().GetStreamList(b_from_stream,&err)
+            streams = self.c_consumer.get().GetStreamList(b_from_stream,&err)
         if err:
             throw_exception(err)
         list = []
@@ -226,7 +226,7 @@ cdef class PyDataBroker:
         cdef string b_stream = _bytes(stream)
         cdef Error err
         with nogil:
-            err = self.c_broker.get().Acknowledge(b_group_id,id,b_stream)
+            err = self.c_consumer.get().Acknowledge(b_group_id,id,b_stream)
         if err:
             throw_exception(err)
     def neg_acknowledge(self, group_id, uint64_t id, uint64_t delay_sec, stream = "default"):
@@ -234,12 +234,12 @@ cdef class PyDataBroker:
         cdef string b_stream = _bytes(stream)
         cdef Error err
         with nogil:
-            err = self.c_broker.get().NegativeAcknowledge(b_group_id,id,delay_sec,b_stream)
+            err = self.c_consumer.get().NegativeAcknowledge(b_group_id,id,delay_sec,b_stream)
         if err:
             throw_exception(err)
     def set_resend_nacs(self,bool resend, uint64_t delay_sec, uint64_t resend_attempts):
         with nogil:
-            self.c_broker.get().SetResendNacs(resend,delay_sec,resend_attempts)
+            self.c_consumer.get().SetResendNacs(resend,delay_sec,resend_attempts)
 
     def get_last_acknowledged_tuple_id(self, group_id, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
@@ -247,7 +247,7 @@ cdef class PyDataBroker:
         cdef Error err
         cdef uint64_t id
         with nogil:
-            id = self.c_broker.get().GetLastAcknowledgedTulpeId(b_group_id,b_stream,&err)
+            id = self.c_consumer.get().GetLastAcknowledgedTulpeId(b_group_id,b_stream,&err)
         if err:
             throw_exception(err)
         return id
@@ -258,7 +258,7 @@ cdef class PyDataBroker:
         cdef string b_stream = _bytes(stream)
         cdef IdList ids
         with nogil:
-            ids = self.c_broker.get().GetUnacknowledgedTupleIds(b_group_id, b_stream, from_id, to_id, &err)
+            ids = self.c_consumer.get().GetUnacknowledgedTupleIds(b_group_id, b_stream, from_id, to_id, &err)
         if err:
             throw_exception(err)
         list = []
@@ -272,7 +272,7 @@ cdef class PyDataBroker:
         cdef Error err
         cdef FileInfos file_infos
         with nogil:
-            file_infos = self.c_broker.get().QueryImages(b_query,b_stream,&err)
+            file_infos = self.c_consumer.get().QueryImages(b_query,b_stream,&err)
         if err:
             throw_exception(err)
         json_list = []
@@ -287,13 +287,13 @@ cdef class PyDataBroker:
         cdef Error err
         if op == "next":
             with nogil:
-                dataset = self.c_broker.get().GetNextDataset(b_group_id,b_stream, min_size, &err)
+                dataset = self.c_consumer.get().GetNextDataset(b_group_id,b_stream, min_size, &err)
         elif op == "last":
             with nogil:
-                dataset = self.c_broker.get().GetLastDataset(b_stream, min_size, &err)
+                dataset = self.c_consumer.get().GetLastDataset(b_stream, min_size, &err)
         elif op == "id":
             with nogil:
-                dataset = self.c_broker.get().GetDatasetById(id, b_stream, min_size, &err)
+                dataset = self.c_consumer.get().GetDatasetById(id, b_stream, min_size, &err)
         json_list = []
         for fi in dataset.content:
             json_list.append(json.loads(_str(fi.Json())))
@@ -311,20 +311,20 @@ cdef class PyDataBroker:
         cdef Error err
         cdef string meta_str
         with nogil:
-            meta_str = self.c_broker.get().GetBeamtimeMeta(&err)
+            meta_str = self.c_consumer.get().GetBeamtimeMeta(&err)
         if err:
             throw_exception(err)
         meta = json.loads(_str(meta_str))
         del meta['_id']
         return meta
     def interrupt_current_operation(self):
-        self.c_broker.get().InterruptCurrentOperation()
-cdef class __PyDataBrokerFactory:
-    cdef DataBrokerFactory c_factory
+        self.c_consumer.get().InterruptCurrentOperation()
+cdef class __PyConsumerFactory:
+    cdef ConsumerFactory c_factory
     def __cinit__(self):
         with nogil:
-            self.c_factory = DataBrokerFactory()
-    def create_server_broker(self,server_name,source_path,has_filesystem,beamtime_id,data_source,token,timeout):
+            self.c_factory = ConsumerFactory()
+    def create_consumer(self,server_name,source_path,has_filesystem,beamtime_id,data_source,token,timeout):
         cdef string b_server_name = _bytes(server_name)
         cdef string b_source_path = _bytes(source_path)
         cdef bool b_has_filesystem = has_filesystem
@@ -333,15 +333,15 @@ cdef class __PyDataBrokerFactory:
         source.user_token = _bytes(token)
         source.data_source = _bytes(data_source)
         cdef Error err
-        broker = PyDataBroker()
+        consumer = PyConsumer()
         with nogil:
-            broker.c_broker = self.c_factory.CreateServerBroker(b_server_name,b_source_path,b_has_filesystem,source,&err)
+            consumer.c_consumer = self.c_factory.CreateConsumer(b_server_name,b_source_path,b_has_filesystem,source,&err)
         if err:
             throw_exception(err)
-        broker.c_broker.get().SetTimeout(timeout)
-        return broker
+        consumer.c_consumer.get().SetTimeout(timeout)
+        return consumer
 
-def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,data_source,token,timeout_ms):
+def create_consumer(server_name,source_path,has_filesystem,beamtime_id,data_source,token,timeout_ms):
     """
       :param server_name: Server endpoint (hostname:port)
       :type server_name: string
@@ -349,11 +349,11 @@ def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,data
       :type source_path: string
       :param has_filesystem: True if the source_path is accessible locally, otherwise will use file transfer service to get data
       :type has_filesystem: bool
-      :return: Broker object and error. (None,err) if case of error, (broker, None) if success
-      :rtype: Tuple with broker object and error.
+      :return: consumer object and error. (None,err) if case of error, (consumer, None) if success
+      :rtype: Tuple with consumer object and error.
 	"""
-    factory = __PyDataBrokerFactory()
-    return factory.create_server_broker(server_name,source_path,has_filesystem, beamtime_id,data_source,token,timeout_ms)
+    factory = __PyConsumerFactory()
+    return factory.create_consumer(server_name,source_path,has_filesystem, beamtime_id,data_source,token,timeout_ms)
 
 
 __version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"

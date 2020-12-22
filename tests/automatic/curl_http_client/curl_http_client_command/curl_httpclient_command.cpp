@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
-#include "asapo/consumer/data_broker.h"
+#include "asapo/consumer/consumer.h"
 #include "testing.h"
-#include "../../../consumer/api/cpp/src/server_data_broker.h"
+#include "../../../consumer/api/cpp/src/consumer_impl.h"
 #include "asapo/preprocessor/definitions.h"
 #include "asapo/io/io_factory.h"
 #include "asapo/io/io.h"
@@ -32,14 +32,19 @@ int main(int argc, char* argv[]) {
     std::string authorize_request = "{\"Folder\":\"" + args.folder + "\",\"BeamtimeId\":\"aaa\",\"Token\":\"" + token +
                                     "\"}";
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.uri_authorizer, "", true, asapo::SourceCredentials{asapo::SourceType::kProcessed,"", "", "", ""}, &err);
-    auto server_broker = static_cast<asapo::ServerDataBroker*>(broker.get());
+    auto consumer = asapo::ConsumerFactory::CreateConsumer(args.uri_authorizer,
+                                                         "",
+                                                         true,
+                                                         asapo::SourceCredentials{asapo::SourceType::kProcessed, "", "",
+                                                                                  "", ""},
+                                                         &err);
+    auto consumer_impl = static_cast<asapo::ConsumerImpl*>(consumer.get());
     M_AssertEq(nullptr, err);
 
     asapo::HttpCode code;
     std::string response;
     std::string input_data;
-    auto folder_token = server_broker->httpclient__->Post(args.uri_authorizer + "/folder", "", authorize_request, &code,
+    auto folder_token = consumer_impl->httpclient__->Post(args.uri_authorizer + "/folder", "", authorize_request, &code,
                         &err);
     M_AssertTrue(err == nullptr);
     M_AssertTrue(code == asapo::HttpCode::OK);
@@ -47,21 +52,21 @@ int main(int argc, char* argv[]) {
         std::cout << err->Explain();
     }
 
-    server_broker->httpclient__->Post(args.uri_authorizer + "/folder", "", "", &code, &err);
+    consumer_impl->httpclient__->Post(args.uri_authorizer + "/folder", "", "", &code, &err);
     M_AssertTrue(code == asapo::HttpCode::BadRequest);
 
-    server_broker->httpclient__->Post(args.uri_authorizer + "/bla", "", "", &code, &err);
+    consumer_impl->httpclient__->Post(args.uri_authorizer + "/bla", "", "", &code, &err);
     M_AssertTrue(code == asapo::HttpCode::NotFound);
 
 // check post with data
     std::string transfer = "{\"Folder\":\"" + args.folder + "\",\"FileName\":\"aaa\"}";
     std::string cookie = "Authorization=Bearer " + folder_token + ";";
-    auto content = server_broker->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &code, &err);
+    auto content = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &code, &err);
     M_AssertEq("hello", content);
     M_AssertTrue(code == asapo::HttpCode::OK);
 // with array
     asapo::FileData data;
-    err = server_broker->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &data, 5, &code);
+    err = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &data, 5, &code);
     M_AssertEq( "hello", reinterpret_cast<char const*>(data.get()));
     M_AssertTrue(code == asapo::HttpCode::OK);
 
@@ -71,7 +76,7 @@ int main(int argc, char* argv[]) {
     uint64_t size = 0;
     auto expected_data = io->GetDataFromFile(fname, &size, &err);
     M_AssertEq(nullptr, err);
-    err = server_broker->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &data, size, &code);
+    err = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &data, size, &code);
     M_AssertTrue(code == asapo::HttpCode::OK);
     for (uint64_t i = 0; i < size; i++) {
         if (expected_data[i] != data[i]) {
@@ -81,11 +86,11 @@ int main(int argc, char* argv[]) {
 
 // with file
     transfer = "{\"Folder\":\"" + args.folder + "\",\"FileName\":\"aaa\"}";
-    err = server_broker->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, "bbb", &code);
+    err = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, "bbb", &code);
     M_AssertTrue(code == asapo::HttpCode::OK);
 
     transfer = "{\"Folder\":\"" + args.folder + "\",\"FileName\":\"random\"}";
-    err = server_broker->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, "random", &code);
+    err = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, "random", &code);
     M_AssertTrue(code == asapo::HttpCode::OK);
 
     return 0;

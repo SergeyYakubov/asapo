@@ -57,8 +57,8 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   NetworkConnectionType NetworkConnectionType_kFabric "asapo::NetworkConnectionType::kFabric"
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
-    cdef cppclass DataBroker:
-        DataBroker() except +
+    cdef cppclass Consumer:
+        Consumer() except +
         void SetTimeout(uint64_t timeout_ms)
         void ForceNoRdma()
         NetworkConnectionType CurrentConnectionType()
@@ -84,9 +84,9 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         void InterruptCurrentOperation()
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
-    cdef cppclass DataBrokerFactory:
-        DataBrokerFactory() except +
-        unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,bool has_filesystem,SourceCredentials source,Error* error)
+    cdef cppclass ConsumerFactory:
+        ConsumerFactory() except +
+        unique_ptr[Consumer] CreateConsumer(string server_name,string source_path,bool has_filesystem,SourceCredentials source,Error* error)
 
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo":

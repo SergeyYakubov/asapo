@@ -2,7 +2,7 @@
 #include <vector>
 #include <thread>
 #include <algorithm>
-#include "asapo/consumer/data_broker.h"
+#include "asapo/consumer/consumer.h"
 #include "testing.h"
 
 void Assert(std::vector<asapo::FileInfos> file_infos, int nthreads, int nfiles) {
@@ -53,18 +53,23 @@ Args GetArgs(int argc, char* argv[]) {
 
 void TestAll(const Args& args) {
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", true, asapo::SourceCredentials{asapo::SourceType::kProcessed,args.run_name, "", "", args.token}, &err);
+    auto consumer = asapo::ConsumerFactory::CreateConsumer(args.server,
+                                                         "dummy",
+                                                         true,
+                                                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                                                  args.run_name, "", "", args.token},
+                                                         &err);
     if (err) {
-        std::cout << "Error CreateServerBroker: " << err << std::endl;
+        std::cout << "Error CreateConsumer: " << err << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    auto group_id = broker->GenerateNewGroupId(&err);
-    broker->SetTimeout(10000);
+    auto group_id = consumer->GenerateNewGroupId(&err);
+    consumer->SetTimeout(10000);
     std::vector<asapo::FileInfos>file_infos(args.nthreads);
     auto exec_next = [&](int i) {
         asapo::FileInfo fi;
-        while ((err = broker->GetNext(&fi, group_id, nullptr)) == nullptr) {
+        while ((err = consumer->GetNext(&fi, group_id, nullptr)) == nullptr) {
             file_infos[i].emplace_back(fi);
         }
         printf("%s\n", err->Explain().c_str());

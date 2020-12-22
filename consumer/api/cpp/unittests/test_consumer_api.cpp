@@ -1,12 +1,12 @@
 #include <gmock/gmock.h>
 
-#include "asapo/consumer/data_broker.h"
-#include "../src/server_data_broker.h"
+#include "asapo/consumer/consumer.h"
+#include "../src/consumer_impl.h"
 #include "asapo/common/error.h"
 
-using asapo::DataBrokerFactory;
-using asapo::DataBroker;
-using asapo::ServerDataBroker;
+using asapo::ConsumerFactory;
+using asapo::Consumer;
+using asapo::ConsumerImpl;
 
 using asapo::Error;
 using ::testing::Eq;
@@ -16,7 +16,7 @@ using ::testing::Test;
 
 namespace {
 
-class DataBrokerFactoryTests : public Test {
+class ConsumerFactoryTests : public Test {
   public:
     Error error;
     void SetUp() override {
@@ -25,12 +25,17 @@ class DataBrokerFactoryTests : public Test {
 };
 
 
-TEST_F(DataBrokerFactoryTests, CreateServerDataSource) {
+TEST_F(ConsumerFactoryTests, CreateServerDataSource) {
 
-    auto data_broker = DataBrokerFactory::CreateServerBroker("server", "path", false, asapo::SourceCredentials{asapo::SourceType::kProcessed,"beamtime_id", "", "", "token"}, &error);
+    auto consumer = ConsumerFactory::CreateConsumer("server",
+                                                       "path",
+                                                       false,
+                                                       asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                                                "beamtime_id", "", "", "token"},
+                                                       &error);
 
     ASSERT_THAT(error, Eq(nullptr));
-    ASSERT_THAT(dynamic_cast<ServerDataBroker*>(data_broker.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<ConsumerImpl*>(consumer.get()), Ne(nullptr));
 }
 
 

@@ -16,7 +16,7 @@
 
 using std::chrono::system_clock;
 using asapo::Error;
-using BrokerPtr = std::unique_ptr<asapo::DataBroker>;
+using ConsumerPtr = std::unique_ptr<asapo::Consumer>;
 using ProducerPtr = std::unique_ptr<asapo::Producer>;
 std::string group_id = "";
 std::mutex lock_in, lock_out;
@@ -64,31 +64,33 @@ int ProcessError(const Error& err) {
     return err == asapo::ConsumerErrorTemplates::kEndOfStream ? 0 : 1;
 }
 
-BrokerPtr CreateBrokerAndGroup(const Args& args, Error* err) {
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, args.file_path, true,
-                  asapo::SourceCredentials{asapo::SourceType::kProcessed,args.beamtime_id, "", args.stream_in, args.token}, err);
+ConsumerPtr CreateConsumerAndGroup(const Args& args, Error* err) {
+    auto consumer = asapo::ConsumerFactory::CreateConsumer(args.server, args.file_path, true,
+                                                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                                                  args.beamtime_id, "", args.stream_in,
+                                                                                  args.token}, err);
     if (*err) {
         return nullptr;
     }
 
-    broker->SetTimeout((uint64_t) args.timeout_ms);
+    consumer->SetTimeout((uint64_t) args.timeout_ms);
 
     lock_in.lock();
 
     if (group_id.empty()) {
-        group_id = broker->GenerateNewGroupId(err);
+        group_id = consumer->GenerateNewGroupId(err);
         if (*err) {
             lock_in.unlock();
             return nullptr;
         }
     }
     lock_in.unlock();
-    return broker;
+    return consumer;
 }
 
-void GetBeamtimeMeta(const BrokerPtr& broker) {
+void GetBeamtimeMeta(const ConsumerPtr& consumer) {
     Error err;
-    auto meta = broker->GetBeamtimeMeta(&err);
+    auto meta = consumer->GetBeamtimeMeta(&err);
     if (err == nullptr) {
         std::cout << meta << std::endl;
     } else {
@@ -121,11 +123,11 @@ void SendDataDownstreamThePipeline(const Args& args, const asapo::FileInfo& fi, 
     }
 }
 
-Error ProcessNextEvent(const Args& args, const BrokerPtr& broker, const ProducerPtr& producer) {
+Error ProcessNextEvent(const Args& args, const ConsumerPtr& consumer, const ProducerPtr& producer) {
     asapo::FileData data;
     asapo::FileInfo fi;
 
-    auto err = broker->GetNext(&fi, group_id, args.transfer_data ? &data : nullptr);
+    auto err = consumer->GetNext(&fi, group_id, args.transfer_data ? &data : nullptr);
     if (err) {
         return err;
     }
@@ -141,14 +143,14 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
     auto exec_next = [&args, nfiles, errors, &producer ](int i) {
         asapo::FileInfo fi;
         Error err;
-        auto broker = CreateBrokerAndGroup(args, &err);
+        auto consumer = CreateConsumerAndGroup(args, &err);
         if (err) {
             (*errors)[i] += ProcessError(err);
             return;
         }
 
         while (true) {
-            auto err = ProcessNextEvent(args, broker, producer);
+            auto err = ProcessNextEvent(args, consumer, producer);
             if (err) {
                 (*errors)[i] += ProcessError(err);
                 if (err == asapo::ConsumerErrorTemplates::kEndOfStream || err == asapo::ConsumerErrorTemplates::kWrongInput) {
@@ -201,7 +203,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 }
 
 int main(int argc, char* argv[]) {
-    asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
+    asapo::ExitAfterPrintVersionIfNeeded("GetNext consumer Example", argc, argv);
     Args args;
     if (argc != 11) {
         std::cout << "Usage: " + std::string{argv[0]}

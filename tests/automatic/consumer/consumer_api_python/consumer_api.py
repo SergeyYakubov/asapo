@@ -38,69 +38,69 @@ def assert_eq(val, expected, name):
         sys.exit(1)
 
 
-def check_file_transfer_service(broker, group_id):
-    broker.set_timeout(1000)
-    data, meta = broker.get_by_id(1, meta_only=False)
+def check_file_transfer_service(consumer, group_id):
+    consumer.set_timeout(1000)
+    data, meta = consumer.get_by_id(1, meta_only=False)
     assert_eq(data.tostring().decode("utf-8"), "hello1", "check_file_transfer_service ok")
-    data, meta = broker.get_by_id(1, "streamfts", meta_only=False)
+    data, meta = consumer.get_by_id(1, "streamfts", meta_only=False)
     assert_eq(data.tostring().decode("utf-8"), "hello1", "check_file_transfer_service with auto size ok")
 
 
-def check_single(broker, group_id):
+def check_single(consumer, group_id):
     global thread_res
-    _, meta = broker.get_next(group_id, meta_only=True)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "1", "get next1")
     assert_usermetadata(meta, "get next1")
 
-    broker.set_timeout(1000)
+    consumer.set_timeout(1000)
 
-    data = broker.retrieve_data(meta)
+    data = consumer.retrieve_data(meta)
     assert_eq(data.tostring().decode("utf-8"), "hello1", "retrieve_data data")
 
-    _, meta = broker.get_next(group_id, meta_only=True)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "2", "get next2")
     assert_usermetadata(meta, "get next2")
 
-    _, meta = broker.get_last(meta_only=True)
+    _, meta = consumer.get_last(meta_only=True)
     assert_metaname(meta, "5", "get last1")
     assert_usermetadata(meta, "get last1")
 
     try:
-        broker.get_by_id(30, meta_only=True)
+        consumer.get_by_id(30, meta_only=True)
     except asapo_consumer.AsapoEndOfStreamError:
         pass
     else:
         exit_on_noerr("get_by_id no data")
 
-    _, meta = broker.get_next(group_id, meta_only=True)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "3", "get next3")
 
 
-    size = broker.get_current_size()
+    size = consumer.get_current_size()
     assert_eq(size, 5, "get_current_size")
 
-    broker.reset_lastread_marker(group_id)
+    consumer.reset_lastread_marker(group_id)
 
-    _, meta = broker.get_next(group_id, meta_only=True)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "1", "get next4")
     assert_usermetadata(meta, "get next4")
 
-    _, meta = broker.get_by_id(3, meta_only=True)
+    _, meta = consumer.get_by_id(3, meta_only=True)
     assert_metaname(meta, "3", "get get_by_id")
     assert_usermetadata(meta, "get get_by_id")
 
-    _, meta = broker.get_next(group_id, meta_only=True)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "2", "get next5")
     assert_usermetadata(meta, "get next5")
 
-    broker.set_lastread_marker(4, group_id)
+    consumer.set_lastread_marker(4, group_id)
 
-    _, meta = broker.get_next(group_id, meta_only=True)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "5", "get next6")
     assert_usermetadata(meta, "get next6")
 
     try:
-        broker.get_next("_wrong_group_name", meta_only=True)
+        consumer.get_next("_wrong_group_name", meta_only=True)
     except asapo_consumer.AsapoWrongInputError as err:
         print(err)
         pass
@@ -108,20 +108,20 @@ def check_single(broker, group_id):
         exit_on_noerr("should give wrong input error")
 
     try:
-        broker.get_last(meta_only=False)
+        consumer.get_last(meta_only=False)
     except asapo_consumer.AsapoLocalIOError as err:
         print(err)
         pass
     else:
         exit_on_noerr("io error")
 
-    _, meta = broker.get_next(group_id, "stream1", meta_only=True)
+    _, meta = consumer.get_next(group_id, "stream1", meta_only=True)
     assert_metaname(meta, "11", "get next stream1")
 
-    _, meta = broker.get_next(group_id, "stream2", meta_only=True)
+    _, meta = consumer.get_next(group_id, "stream2", meta_only=True)
     assert_metaname(meta, "21", "get next stream2")
 
-    streams = broker.get_stream_list("")
+    streams = consumer.get_stream_list("")
     assert_eq(len(streams), 4, "number of streams")
     print(streams)
     assert_eq(streams[0]["name"], "default", "streams_name1")
@@ -132,82 +132,82 @@ def check_single(broker, group_id):
 
     # acks
     try:
-        id = broker.get_last_acknowledged_tuple_id(group_id)
+        id = consumer.get_last_acknowledged_tuple_id(group_id)
     except asapo_consumer.AsapoNoDataError as err:
         print(err)
         pass
     else:
         exit_on_noerr("get_last_acknowledged_tuple_id")
 
-    nacks = broker.get_unacknowledged_tuple_ids(group_id)
+    nacks = consumer.get_unacknowledged_tuple_ids(group_id)
     assert_eq(len(nacks), 5, "nacks default stream size = 5")
 
-    broker.acknowledge(group_id, 1)
+    consumer.acknowledge(group_id, 1)
 
-    nacks = broker.get_unacknowledged_tuple_ids(group_id)
+    nacks = consumer.get_unacknowledged_tuple_ids(group_id)
     assert_eq(len(nacks), 4, "nacks default stream size = 4")
 
-    id = broker.get_last_acknowledged_tuple_id(group_id)
+    id = consumer.get_last_acknowledged_tuple_id(group_id)
     assert_eq(id, 1, "last ack default stream id = 1")
 
-    broker.acknowledge(group_id, 1, "stream1")
-    nacks = broker.get_unacknowledged_tuple_ids(group_id)
+    consumer.acknowledge(group_id, 1, "stream1")
+    nacks = consumer.get_unacknowledged_tuple_ids(group_id)
     assert_eq(len(nacks), 4, "nacks stream1 size = 4 after ack")
 
     # neg acks
-    broker.reset_lastread_marker(group_id)
-    _, meta = broker.get_next(group_id, meta_only=True)
+    consumer.reset_lastread_marker(group_id)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "1", "get next neg ack before resend")
-    broker.reset_lastread_marker(group_id)
-    _, meta = broker.get_next(group_id, meta_only=True)
+    consumer.reset_lastread_marker(group_id)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "1", "get next neg ack with resend")
 
     # resend
-    broker.reset_lastread_marker(group_id)
-    broker.set_resend_nacs(True, 0, 1)
-    _, meta = broker.get_next(group_id, meta_only=True)
+    consumer.reset_lastread_marker(group_id)
+    consumer.set_resend_nacs(True, 0, 1)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "1", "get next before resend")
 
-    _, meta = broker.get_next(group_id, meta_only=True)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "1", "get next with resend")
 
-    _, meta = broker.get_next(group_id, meta_only=True)
+    _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "2", "get next after resend")
 
     # images
 
-    images = broker.query_images("meta.test = 10")
+    images = consumer.query_images("meta.test = 10")
     assert_eq(len(images), 5, "size of query answer 1")
     for image in images:
         assert_usermetadata(image, "query_images")
 
-    images = broker.query_images("meta.test = 10 AND name='1'")
+    images = consumer.query_images("meta.test = 10 AND name='1'")
     assert_eq(len(images), 1, "size of query answer 2 ")
 
     for image in images:
         assert_usermetadata(image, "query_images")
 
-    images = broker.query_images("meta.test = 11")
+    images = consumer.query_images("meta.test = 11")
     assert_eq(len(images), 0, "size of query answer 3 ")
 
     try:
-        images = broker.query_images("bla")
+        images = consumer.query_images("bla")
     except:
         pass
     else:
         exit_on_noerr("wrong query")
 
-    broker = asapo_consumer.create_server_broker("bla", path, True, beamtime, "", token, 1000)
+    consumer = asapo_consumer.create_consumer("bla", path, True, beamtime, "", token, 1000)
     try:
-        broker.get_last(meta_only=True)
+        consumer.get_last(meta_only=True)
     except asapo_consumer.AsapoUnavailableServiceError as err:
         print(err)
         pass
     else:
-        exit_on_noerr("AsapoBrokerServersNotFound")
+        exit_on_noerr("AsapoconsumerServersNotFound")
 
     try:
-        asapo_consumer.create_server_broker("", "", True, "", "", "", 1000)
+        asapo_consumer.create_consumer("", "", True, "", "", "", 1000)
     except asapo_consumer.AsapoWrongInputError as err:
         print(err)
         pass
@@ -216,10 +216,10 @@ def check_single(broker, group_id):
 
 # interrupt
     thread_res = 0
-    def long_call(broker):
+    def long_call(consumer):
         global thread_res
         try:
-            broker.get_last(meta_only=True)
+            consumer.get_last(meta_only=True)
             thread_res = 1
         except asapo_consumer.AsapoInterruptedTransactionError as err:
             global res
@@ -231,47 +231,47 @@ def check_single(broker, group_id):
             thread_res = 3
             pass
 
-    broker = asapo_consumer.create_server_broker("bla", path, True, beamtime, "", token, 60000)
-    t = Thread(target =  long_call, args =  (broker,) )
+    consumer = asapo_consumer.create_consumer("bla", path, True, beamtime, "", token, 60000)
+    t = Thread(target =  long_call, args =  (consumer,) )
     t.start()
     time.sleep(1)
-    broker.interrupt_current_operation()
+    consumer.interrupt_current_operation()
     t.join()
     assert_eq(thread_res, 2, "long call res")
 
 
 
-def check_dataset(broker, group_id):
-    res = broker.get_next_dataset(group_id)
+def check_dataset(consumer, group_id):
+    res = consumer.get_next_dataset(group_id)
     assert_eq(res['id'], 1, "get_next_dataset1")
     assert_metaname(res['content'][0], "1_1", "get nextdataset1 name1")
     assert_metaname(res['content'][1], "1_2", "get nextdataset1 name2")
     assert_usermetadata(res['content'][0], "get nextdataset1 meta")
 
-    broker.set_timeout(1000)
+    consumer.set_timeout(1000)
 
-    data = broker.retrieve_data(res['content'][0])
+    data = consumer.retrieve_data(res['content'][0])
     assert_eq(data.tostring().decode("utf-8"), "hello1", "retrieve_data from dataset data")
 
-    res = broker.get_next_dataset(group_id)
+    res = consumer.get_next_dataset(group_id)
     assert_eq(res['id'], 2, "get_next_dataset2")
     assert_metaname(res['content'][0], "2_1", "get nextdataset2 name1")
 
-    res = broker.get_last_dataset()
+    res = consumer.get_last_dataset()
     assert_eq(res['id'], 10, "get_last_dataset1")
     assert_eq(res['expected_size'], 3, "get_last_dataset1 size ")
     assert_metaname(res['content'][2], "10_3", "get get_last_dataset1 name3")
 
-    res = broker.get_next_dataset(group_id)
+    res = consumer.get_next_dataset(group_id)
     assert_eq(res['id'], 3, "get_next_dataset3")
 
-    res = broker.get_dataset_by_id(8)
+    res = consumer.get_dataset_by_id(8)
     assert_eq(res['id'], 8, "get_dataset_by_id1 id")
     assert_metaname(res['content'][2], "8_3", "get get_dataset_by_id1 name3")
 
     # incomplete datesets without min_size given
     try:
-        broker.get_next_dataset(group_id, "incomplete")
+        consumer.get_next_dataset(group_id, "incomplete")
     except asapo_consumer.AsapoPartialDataError as err:
         assert_eq(err.partial_data['expected_size'], 3, "get_next_dataset incomplete expected size")
         assert_eq(err.partial_data['id'], 1, "get_next_dataset incomplete id")
@@ -282,7 +282,7 @@ def check_dataset(broker, group_id):
         exit_on_noerr("get_next_dataset incomplete err")
 
     try:
-        broker.get_dataset_by_id(2, "incomplete")
+        consumer.get_dataset_by_id(2, "incomplete")
     except asapo_consumer.AsapoPartialDataError as err:
         assert_eq(err.partial_data['expected_size'], 3, "get_next_dataset incomplete expected size")
         assert_eq(err.partial_data['id'], 2, "get_next_dataset incomplete id")
@@ -293,37 +293,37 @@ def check_dataset(broker, group_id):
         exit_on_noerr("get_next_dataset incomplete err")
 
     try:
-        broker.get_last_dataset("incomplete")
+        consumer.get_last_dataset("incomplete")
     except asapo_consumer.AsapoEndOfStreamError as err:
         pass
     else:
         exit_on_noerr("get_last_dataset incomplete err")
     # incomplete with min_size given
-    res = broker.get_next_dataset(group_id, "incomplete", min_size=2)
+    res = consumer.get_next_dataset(group_id, "incomplete", min_size=2)
     assert_eq(res['id'], 2, "get_next_dataset incomplete with minsize")
 
-    res = broker.get_last_dataset("incomplete", min_size=2)
+    res = consumer.get_last_dataset("incomplete", min_size=2)
     assert_eq(res['id'], 5, "get_last_dataset incomplete with minsize")
 
-    res = broker.get_dataset_by_id(2, "incomplete", min_size=1)
+    res = consumer.get_dataset_by_id(2, "incomplete", min_size=1)
     assert_eq(res['id'], 2, "get_dataset_by_id incomplete with minsize")
 
 
 source, path, beamtime, token, mode = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source, path, True, beamtime, "", token, 60000)
-broker_fts = asapo_consumer.create_server_broker(source, path, False, beamtime, "", token, 60000)
+consumer = asapo_consumer.create_consumer(source, path, True, beamtime, "", token, 60000)
+consumer_fts = asapo_consumer.create_consumer(source, path, False, beamtime, "", token, 60000)
 
-group_id = broker.generate_group_id()
+group_id = consumer.generate_group_id()
 
-group_id_fts = broker_fts.generate_group_id()
+group_id_fts = consumer_fts.generate_group_id()
 
 if mode == "single":
-    check_single(broker, group_id)
-    check_file_transfer_service(broker_fts, group_id_fts)
+    check_single(consumer, group_id)
+    check_file_transfer_service(consumer_fts, group_id_fts)
 
 if mode == "datasets":
-    check_dataset(broker, group_id)
+    check_dataset(consumer, group_id)
 
 print("tests done")
 sys.exit(0)

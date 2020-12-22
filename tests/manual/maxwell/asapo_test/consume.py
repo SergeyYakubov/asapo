@@ -9,5 +9,5 @@ with open('asapo_host', 'r') as file:
 token="KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc="
 
 os.system("hostname")
-os.system("./getnext_broker "+host+":8400 /gpfs/petra3/scratch/yakubov/asapo_shared/test/asapo_test asapo_test%data_source"+str(rank)+" 8 "+token+" 1000 0")
+os.system("./getnext "+host+":8400 /gpfs/petra3/scratch/yakubov/asapo_shared/test/asapo_test asapo_test%data_source"+str(rank)+" 8 "+token+" 1000 0")
 

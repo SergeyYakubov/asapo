@@ -1,14 +1,3 @@
-/** @defgroup producer The Producer Group
- *  This is the producer group
- *  @{
- */
-/** @} */ // end of producer
-
-/**
-* @file asapo_producer.h
-* @ingroup producer
-*/
-
 #ifndef ASAPO_ASAPO_PRODUCER_H
 #define ASAPO_ASAPO_PRODUCER_H
 

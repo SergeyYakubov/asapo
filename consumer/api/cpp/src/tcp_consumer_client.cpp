@@ -1,16 +1,16 @@
-#include "tcp_client.h"
+#include "tcp_consumer_client.h"
 #include "asapo/io/io_factory.h"
 #include "asapo/common/networking.h"
 #include "rds_response_error.h"
 
 namespace asapo {
 
-TcpClient::TcpClient() : io__{GenerateDefaultIO()}, connection_pool__{new TcpConnectionPool()} {
+TcpConsumerClient::TcpConsumerClient() : io__{GenerateDefaultIO()}, connection_pool__{new TcpConnectionPool()} {
 
 }
 
 
-Error TcpClient::SendGetDataRequest(SocketDescriptor sd, const FileInfo* info) const noexcept {
+Error TcpConsumerClient::SendGetDataRequest(SocketDescriptor sd, const FileInfo* info) const noexcept {
     Error err;
     GenericRequestHeader request_header{kOpcodeGetBufferData, info->buf_id, info->size};
     io__->Send(sd, &request_header, sizeof(request_header), &err);
@@ -21,7 +21,7 @@ Error TcpClient::SendGetDataRequest(SocketDescriptor sd, const FileInfo* info) c
     return err;
 }
 
-Error TcpClient::ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const FileInfo* info) const noexcept {
+Error TcpConsumerClient::ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const FileInfo* info) const noexcept {
     Error err;
     *sd = connection_pool__->Reconnect(*sd, &err);
     if (err) {
@@ -31,7 +31,7 @@ Error TcpClient::ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const Fi
     }
 }
 
-Error TcpClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
+Error TcpConsumerClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
     Error err;
 
     GenericNetworkResponse response;
@@ -55,7 +55,7 @@ Error TcpClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
     return nullptr;
 }
 
-Error TcpClient::QueryCacheHasData(SocketDescriptor* sd, const FileInfo* info, bool try_reconnect) const noexcept {
+Error TcpConsumerClient::QueryCacheHasData(SocketDescriptor* sd, const FileInfo* info, bool try_reconnect) const noexcept {
     Error err;
     err = SendGetDataRequest(*sd, info);
     if (err && try_reconnect) {
@@ -68,7 +68,7 @@ Error TcpClient::QueryCacheHasData(SocketDescriptor* sd, const FileInfo* info, b
     return ReceiveResponce(*sd);
 }
 
-Error TcpClient::ReceiveData(SocketDescriptor sd, const FileInfo* info, FileData* data) const noexcept {
+Error TcpConsumerClient::ReceiveData(SocketDescriptor sd, const FileInfo* info, FileData* data) const noexcept {
     Error err;
     uint8_t* data_array = nullptr;
     try {
@@ -88,7 +88,7 @@ Error TcpClient::ReceiveData(SocketDescriptor sd, const FileInfo* info, FileData
     return err;
 }
 
-Error TcpClient::GetData(const FileInfo* info, FileData* data) {
+Error TcpConsumerClient::GetData(const FileInfo* info, FileData* data) {
     Error err;
     bool reused;
     auto sd = connection_pool__->GetFreeConnection(info->source, &reused, &err);

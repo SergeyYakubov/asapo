@@ -20,4 +20,4 @@ configure_file(beamtime-metadata-11111111.json beamtime-metadata-11111111.json C
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/settings.json.tpl.in authorizer.json.tpl @ONLY)
 
-add_script_test("${TARGET_NAME}" "$<TARGET_FILE:dummy-data-producer> $<TARGET_FILE:getnext_broker> $<TARGET_PROPERTY:asapo,EXENAME>" nomem)
+add_script_test("${TARGET_NAME}" "$<TARGET_FILE:dummy-data-producer> $<TARGET_FILE:getnext> $<TARGET_PROPERTY:asapo,EXENAME>" nomem)

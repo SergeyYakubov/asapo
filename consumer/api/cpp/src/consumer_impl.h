@@ -1,10 +1,10 @@
-#ifndef ASAPO_SERVER_DATA_BROKER_H
-#define ASAPO_SERVER_DATA_BROKER_H
+#ifndef ASAPO_CONSUMER_IMPL_H
+#define ASAPO_CONSUMER_IMPL_H
 
 #include "asapo/common/networking.h"
 #include <mutex>
 #include <atomic>
-#include "asapo/consumer/data_broker.h"
+#include "asapo/consumer/consumer.h"
 #include "asapo/io/io.h"
 #include "asapo/http_client/http_client.h"
 #include "net_client.h"
@@ -51,10 +51,10 @@ Error ConsumerErrorFromNoDataResponse(const std::string& response);
 Error ConsumerErrorFromPartialDataResponse(const std::string& response);
 DataSet DecodeDatasetFromResponse(std::string response, Error* err);
 
-class ServerDataBroker final : public asapo::DataBroker {
+class ConsumerImpl final : public asapo::Consumer {
   public:
-    explicit ServerDataBroker(std::string server_uri, std::string source_path, bool has_filesystem,
-                              SourceCredentials source);
+    explicit ConsumerImpl(std::string server_uri, std::string source_path, bool has_filesystem,
+                          SourceCredentials source);
 
     Error Acknowledge(std::string group_id, uint64_t id, std::string stream = kDefaultStream) override;
     Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_sec,
@@ -174,4 +174,4 @@ class ServerDataBroker final : public asapo::DataBroker {
 };
 
 }
-#endif //ASAPO_SERVER_DATA_BROKER_H
+#endif //ASAPO_CONSUMER_IMPL_H

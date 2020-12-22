@@ -26,11 +26,11 @@ timeout_s_producer=int(timeout_s_producer)
 nthreads=int(nthreads)
 transfer_data=int(transfer_data)>0
 
-broker = asapo_consumer.create_server_broker(source,path, True,beamtime,stream_in,token,timeout_s*1000)
+consumer = asapo_consumer.create_consumer(source,path, True,beamtime,stream_in,token,timeout_s*1000)
 
 producer  = asapo_producer.create_producer(source,'processed',beamtime,'auto', stream_out, token, nthreads, 600)
 
-group_id  = broker.generate_group_id()
+group_id  = consumer.generate_group_id()
 
 n_recv = 0
 
@@ -41,7 +41,7 @@ else:
 
 while True:
     try:
-        data, meta = broker.get_next(group_id, meta_only=not transfer_data)
+        data, meta = consumer.get_next(group_id, meta_only=not transfer_data)
         print ("received: ",meta)
         n_recv = n_recv + 1
         producer.send_data(meta['_id'],meta['name']+"_"+stream_out ,data,

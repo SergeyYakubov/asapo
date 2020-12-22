@@ -25,11 +25,11 @@ def callback(header,err):
 
 source, beamtime, token = sys.argv[1:]
 
-broker = asapo_consumer.create_server_broker(source,".",True, beamtime,"",token,timeout)
+consumer = asapo_consumer.create_consumer(source,".",True, beamtime,"",token,timeout)
 producer  = asapo_producer.create_producer(source,'processed',beamtime,'auto', "", token, 1, 600)
 producer.set_log_level("debug")
 
-group_id  = broker.generate_group_id()
+group_id  = consumer.generate_group_id()
 
 n_send = 10
 
@@ -43,7 +43,7 @@ n_recv = 0
 stream_finished=False
 while True:
     try:
-        data, meta = broker.get_next(group_id,stream = "stream", meta_only=True)
+        data, meta = consumer.get_next(group_id,stream = "stream", meta_only=True)
         print ("received: ",meta)
         n_recv = n_recv + 1
     except  asapo_consumer.AsapoStreamFinishedError as finished_stream:
@@ -54,6 +54,6 @@ while True:
 
 assert_eq(n_recv, n_send, "send=recv")
 assert_eq(stream_finished, True, "stream finished")
-print('Using connection type: ' + broker.current_connection_type())
+print('Using connection type: ' + consumer.current_connection_type())
 
 

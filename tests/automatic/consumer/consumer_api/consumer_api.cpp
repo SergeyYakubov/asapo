@@ -3,7 +3,7 @@
 #include <thread>
 #include <algorithm>
 #include <asapo/asapo_consumer.h>
-#include "asapo/consumer/data_broker.h"
+#include "asapo/consumer/consumer.h"
 #include "testing.h"
 
 struct Args {
@@ -27,11 +27,11 @@ Args GetArgs(int argc, char* argv[]) {
 }
 
 
-void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::string& group_id) {
+void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::string& group_id) {
     asapo::FileInfo fi;
     asapo::Error err;
 
-    err = broker->GetNext(&fi, group_id, nullptr);
+    err = consumer->GetNext(&fi, group_id, nullptr);
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
@@ -40,88 +40,88 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(fi.metadata == "{\"test\":10}", "GetNext metadata");
 
     asapo::FileData data;
-    err = broker->RetrieveData(&fi, &data);
+    err = consumer->RetrieveData(&fi, &data);
     M_AssertTrue(err == nullptr, "RetrieveData no error");
     M_AssertEq("hello1", std::string(data.get(), data.get() + fi.size));
 
 
-    err = broker->GetLast(&fi, nullptr);
+    err = consumer->GetLast(&fi, nullptr);
     M_AssertTrue(err == nullptr, "GetLast no error");
     M_AssertTrue(fi.name == "10", "GetLast filename");
     M_AssertTrue(fi.metadata == "{\"test\":10}", "GetLast metadata");
 
-    err = broker->GetNext(&fi, group_id, nullptr);
+    err = consumer->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNext2 no error");
     M_AssertTrue(fi.name == "2", "GetNext2 filename");
 
 
-    err = broker->SetLastReadMarker(2, group_id);
+    err = consumer->SetLastReadMarker(2, group_id);
     M_AssertTrue(err == nullptr, "SetLastReadMarker no error");
 
 
-    err = broker->GetById(8, &fi, nullptr);
+    err = consumer->GetById(8, &fi, nullptr);
     M_AssertTrue(err == nullptr, "GetById error");
     M_AssertTrue(fi.name == "8", "GetById filename");
 
-    err = broker->GetNext(&fi, group_id, nullptr);
+    err = consumer->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNext After GetById  no error");
     M_AssertTrue(fi.name == "3", "GetNext After GetById filename");
 
 
-    err = broker->GetLast(&fi, nullptr);
+    err = consumer->GetLast(&fi, nullptr);
     M_AssertTrue(err == nullptr, "GetLast2 no error");
 
 
-    err = broker->SetLastReadMarker(8, group_id);
+    err = consumer->SetLastReadMarker(8, group_id);
     M_AssertTrue(err == nullptr, "SetLastReadMarker 2 no error");
 
 
-    err = broker->GetNext(&fi, group_id, nullptr);
+    err = consumer->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNext3 no error");
     M_AssertTrue(fi.name == "9", "GetNext3 filename");
 
-    auto size = broker->GetCurrentSize(&err);
+    auto size = consumer->GetCurrentSize(&err);
     M_AssertTrue(err == nullptr, "GetCurrentSize no error");
     M_AssertTrue(size == 10, "GetCurrentSize size");
 
-    err = broker->ResetLastReadMarker(group_id);
+    err = consumer->ResetLastReadMarker(group_id);
     M_AssertTrue(err == nullptr, "SetLastReadMarker");
 
-    err = broker->GetNext(&fi, group_id, nullptr);
+    err = consumer->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNext4 no error");
     M_AssertTrue(fi.name == "1", "GetNext4 filename");
 
-    auto group_id2 = broker->GenerateNewGroupId(&err);
-    err = broker->GetNext(&fi, group_id2, nullptr);
+    auto group_id2 = consumer->GenerateNewGroupId(&err);
+    err = consumer->GetNext(&fi, group_id2, nullptr);
     M_AssertTrue(err == nullptr, "GetNext5 no error");
     M_AssertTrue(fi.name == "1", "GetNext5  filename");
 
-    auto images = broker->QueryImages("meta.test = 10", &err);
+    auto images = consumer->QueryImages("meta.test = 10", &err);
     M_AssertTrue(err == nullptr, "query1");
     M_AssertTrue(images.size() == 10, "size of query answer 1");
 
-    images = broker->QueryImages("meta.test = 10 AND name='1'", &err);
+    images = consumer->QueryImages("meta.test = 10 AND name='1'", &err);
     M_AssertTrue(err == nullptr, "query2");
     M_AssertTrue(images.size() == 1, "size of query answer 2");
     M_AssertTrue(fi.name == "1", "GetNext5  filename");
 
 
-    images = broker->QueryImages("meta.test = 11", &err);
+    images = consumer->QueryImages("meta.test = 11", &err);
     M_AssertTrue(err == nullptr, "query3");
     M_AssertTrue(images.size() == 0, "size of query answer 3");
 
-    images = broker->QueryImages("meta.test = 18", &err);
+    images = consumer->QueryImages("meta.test = 18", &err);
     M_AssertTrue(err == nullptr, "query4");
     M_AssertTrue(images.size() == 0, "size of query answer 4");
 
-    images = broker->QueryImages("bla", &err);
+    images = consumer->QueryImages("bla", &err);
     M_AssertTrue(err != nullptr, "query5");
     M_AssertTrue(images.size() == 0, "size of query answer 5");
 
 
 //streams
 
-    err = broker->GetNext(&fi, group_id, "stream1", nullptr);
+    err = consumer->GetNext(&fi, group_id, "stream1", nullptr);
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
@@ -129,11 +129,11 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(err == nullptr, "GetNext stream1 no error");
     M_AssertTrue(fi.name == "11", "GetNext stream1 filename");
 
-    err = broker->GetNext(&fi, group_id, "stream2", nullptr);
+    err = consumer->GetNext(&fi, group_id, "stream2", nullptr);
     M_AssertTrue(err == nullptr, "GetNext stream2 no error");
     M_AssertTrue(fi.name == "21", "GetNext stream2 filename");
 
-    auto streams = broker->GetStreamList("",&err);
+    auto streams = consumer->GetStreamList("",&err);
     M_AssertTrue(err == nullptr, "GetStreamList no error");
     M_AssertTrue(streams.size() == 3, "streams.size");
     M_AssertTrue(streams[0].name == "default", "streams0.name1");
@@ -148,65 +148,65 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[2].timestamp_created) == 2000, "streams2.timestamp");
 // acknowledges
 
-    auto id = broker->GetLastAcknowledgedTulpeId(group_id, &err);
+    auto id = consumer->GetLastAcknowledgedTulpeId(group_id, &err);
     M_AssertTrue(err == asapo::ConsumerErrorTemplates::kNoData, "last ack default stream no data");
     M_AssertTrue(id == 0, "last ack default stream no data id = 0");
 
-    auto nacks = broker->GetUnacknowledgedTupleIds(group_id, 0, 0, &err);
+    auto nacks = consumer->GetUnacknowledgedTupleIds(group_id, 0, 0, &err);
     M_AssertTrue(err == nullptr, "nacks default stream all");
     M_AssertTrue(nacks.size() == 10, "nacks default stream size = 10");
 
-    err = broker->Acknowledge(group_id, 1);
+    err = consumer->Acknowledge(group_id, 1);
     M_AssertTrue(err == nullptr, "ack default stream no error");
 
-    nacks = broker->GetUnacknowledgedTupleIds(group_id, 0, 0, &err);
+    nacks = consumer->GetUnacknowledgedTupleIds(group_id, 0, 0, &err);
     M_AssertTrue(nacks.size() == 9, "nacks default stream size = 9 after ack");
 
-    id = broker->GetLastAcknowledgedTulpeId(group_id, &err);
+    id = consumer->GetLastAcknowledgedTulpeId(group_id, &err);
     M_AssertTrue(err == nullptr, "last ack default stream no error");
     M_AssertTrue(id == 1, "last ack default stream id = 1");
 
-    err = broker->Acknowledge(group_id, 1, "stream1");
+    err = consumer->Acknowledge(group_id, 1, "stream1");
     M_AssertTrue(err == nullptr, "ack stream1 no error");
 
-    nacks = broker->GetUnacknowledgedTupleIds(group_id, "stream1", 0, 0, &err);
+    nacks = consumer->GetUnacknowledgedTupleIds(group_id, "stream1", 0, 0, &err);
     M_AssertTrue(nacks.size() == 4, "nacks stream1 size = 4 after ack");
 
 // negative acks
-    broker->ResetLastReadMarker(group_id);
-    err = broker->GetNext(&fi, group_id, nullptr);
+    consumer->ResetLastReadMarker(group_id);
+    err = consumer->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNextNegAckBeforeResend no error");
     M_AssertTrue(fi.name == "1", "GetNextNegAckBeforeResend filename");
-    err = broker->NegativeAcknowledge(group_id, 1, 0);
+    err = consumer->NegativeAcknowledge(group_id, 1, 0);
     M_AssertTrue(err == nullptr, "NegativeAcknowledge no error");
-    err = broker->GetNext(&fi, group_id, nullptr);
+    err = consumer->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNextNegAckWithResend no error");
     M_AssertTrue(fi.name == "1", "GetNextNegAckWithResend filename");
 
 // automatic resend
-    broker->ResetLastReadMarker(group_id);
-    broker->SetResendNacs(true, 0, 1);
-    err = broker->GetNext(&fi, group_id, nullptr);
+    consumer->ResetLastReadMarker(group_id);
+    consumer->SetResendNacs(true, 0, 1);
+    err = consumer->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNextBeforeResend no error");
     M_AssertTrue(fi.name == "1", "GetNextBeforeResend filename");
 
-    err = broker->GetNext(&fi, group_id, nullptr);
+    err = consumer->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNextWithResend no error");
     M_AssertTrue(fi.name == "1", "GetNextWithResend filename");
 
-    broker->SetResendNacs(false, 0, 1);
-    err = broker->GetNext(&fi, group_id, nullptr);
+    consumer->SetResendNacs(false, 0, 1);
+    err = consumer->GetNext(&fi, group_id, nullptr);
     M_AssertTrue(err == nullptr, "GetNextAfterResend no error");
     M_AssertTrue(fi.name == "2", "GetNextAfterResend filename");
 
 }
 
 
-void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::string& group_id) {
+void TestDataset(const std::unique_ptr<asapo::Consumer>& consumer, const std::string& group_id) {
     asapo::FileInfo fi;
     asapo::Error err;
 
-    auto dataset = broker->GetNextDataset(group_id, 0, &err);
+    auto dataset = consumer->GetNextDataset(group_id, 0, &err);
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
@@ -217,30 +217,30 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
     M_AssertTrue(dataset.content[0].metadata == "{\"test\":10}", "GetNext metadata");
 
     asapo::FileData data;
-    err = broker->RetrieveData(&dataset.content[0], &data);
+    err = consumer->RetrieveData(&dataset.content[0], &data);
     M_AssertTrue(err == nullptr, "RetrieveData no error");
     M_AssertEq("hello1", std::string(data.get(), data.get() + dataset.content[0].size));
 
 
-    dataset = broker->GetLastDataset(0, &err);
+    dataset = consumer->GetLastDataset(0, &err);
     M_AssertTrue(err == nullptr, "GetLast no error");
     M_AssertTrue(dataset.content[0].name == "10_1", "GetLastDataset filename");
     M_AssertTrue(dataset.content[0].metadata == "{\"test\":10}", "GetLastDataset metadata");
 
-    dataset = broker->GetNextDataset(group_id, 0, &err);
+    dataset = consumer->GetNextDataset(group_id, 0, &err);
     M_AssertTrue(err == nullptr, "GetNextDataset2 no error");
     M_AssertTrue(dataset.content[0].name == "2_1", "GetNextDataSet2 filename");
 
-    dataset = broker->GetLastDataset(0, &err);
+    dataset = consumer->GetLastDataset(0, &err);
     M_AssertTrue(err == nullptr, "GetLastDataset2 no error");
 
-    dataset = broker->GetDatasetById(8, 0, &err);
+    dataset = consumer->GetDatasetById(8, 0, &err);
     M_AssertTrue(err == nullptr, "GetDatasetById error");
     M_AssertTrue(dataset.content[2].name == "8_3", "GetDatasetById filename");
 
 // incomplete datasets without min_size
 
-    dataset = broker->GetNextDataset(group_id,"incomplete",0,&err);
+    dataset = consumer->GetNextDataset(group_id,"incomplete",0,&err);
     M_AssertTrue(err == asapo::ConsumerErrorTemplates::kPartialData, "GetNextDataset incomplete error");
     M_AssertTrue(dataset.content.size() == 2, "GetNextDataset incomplete size");
     M_AssertTrue(dataset.content[0].name == "1_1", "GetNextDataset incomplete filename");
@@ -250,24 +250,24 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
     M_AssertTrue(dataset.expected_size == 3, "GetDatasetById expected size");
     M_AssertTrue(dataset.id == 1, "GetDatasetById expected id");
 
-    dataset = broker->GetLastDataset("incomplete", 0, &err);
+    dataset = consumer->GetLastDataset("incomplete", 0, &err);
     M_AssertTrue(err == asapo::ConsumerErrorTemplates::kEndOfStream, "GetLastDataset incomplete no data");
 
-    dataset = broker->GetDatasetById(2, "incomplete", 0, &err);
+    dataset = consumer->GetDatasetById(2, "incomplete", 0, &err);
     M_AssertTrue(err == asapo::ConsumerErrorTemplates::kPartialData, "GetDatasetById incomplete error");
     M_AssertTrue(dataset.content[0].name == "2_1", "GetDatasetById incomplete filename");
 
 // incomplete datasets with min_size
 
-    dataset = broker->GetNextDataset(group_id,"incomplete",2,&err);
+    dataset = consumer->GetNextDataset(group_id,"incomplete",2,&err);
     M_AssertTrue(err == nullptr, "GetNextDataset incomplete minsize error");
     M_AssertTrue(dataset.id == 2, "GetDatasetById minsize id");
 
-    dataset = broker->GetLastDataset("incomplete", 2, &err);
+    dataset = consumer->GetLastDataset("incomplete", 2, &err);
     M_AssertTrue(err == nullptr, "GetNextDataset incomplete minsize error");
     M_AssertTrue(dataset.id == 5, "GetLastDataset minsize id");
 
-    dataset = broker->GetDatasetById(2, "incomplete", 2, &err);
+    dataset = consumer->GetDatasetById(2, "incomplete", 2, &err);
     M_AssertTrue(err == nullptr, "GetDatasetById incomplete minsize error");
     M_AssertTrue(dataset.content[0].name == "2_1", "GetDatasetById incomplete minsize filename");
 
@@ -276,21 +276,25 @@ void TestDataset(const std::unique_ptr<asapo::DataBroker>& broker, const std::st
 
 void TestAll(const Args& args) {
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, ".", true,
-                  asapo::SourceCredentials{asapo::SourceType::kProcessed,args.run_name, "", "", args.token}, &err);
+    auto consumer = asapo::ConsumerFactory::CreateConsumer(args.server,
+                                                         ".",
+                                                         true,
+                                                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                                                  args.run_name, "", "", args.token},
+                                                         &err);
     if (err) {
-        std::cout << "Error CreateServerBroker: " << err << std::endl;
+        std::cout << "Error CreateConsumer: " << err << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    broker->SetTimeout(100);
-    auto group_id = broker->GenerateNewGroupId(&err);
+    consumer->SetTimeout(100);
+    auto group_id = consumer->GenerateNewGroupId(&err);
 
     if (args.datasets == "single") {
-        TestSingle(broker, group_id);
+        TestSingle(consumer, group_id);
     }
     if (args.datasets == "dataset") {
-        TestDataset(broker, group_id);
+        TestDataset(consumer, group_id);
     }
 
 }
