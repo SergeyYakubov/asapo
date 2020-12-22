@@ -25,9 +25,9 @@ FOR /F "usebackq" %%A IN ('%receiver_folder%\processed\1_3') DO set size=%%~zA
 if %size% NEQ 100000 goto :error
 
 
-echo db.data_default.find({"images._id":{$gt:0}},{"images.name":1}) | %mongo_exe% %beamtime_id%_detector | findstr 1_1  || goto :error
-echo db.data_default.find({"images._id":{$gt:0}},{"images.name":1}) | %mongo_exe% %beamtime_id%_detector | findstr 1_2  || goto :error
-echo db.data_default.find({"images._id":{$gt:0}},{"images.name":1}) | %mongo_exe% %beamtime_id%_detector | findstr 1_3  || goto :error
+echo db.data_default.find({"messages._id":{$gt:0}},{"messages.name":1}) | %mongo_exe% %beamtime_id%_detector | findstr 1_1  || goto :error
+echo db.data_default.find({"messages._id":{$gt:0}},{"messages.name":1}) | %mongo_exe% %beamtime_id%_detector | findstr 1_2  || goto :error
+echo db.data_default.find({"messages._id":{$gt:0}},{"messages.name":1}) | %mongo_exe% %beamtime_id%_detector | findstr 1_3  || goto :error
 
 goto :clean
 

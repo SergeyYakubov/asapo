@@ -44,4 +44,4 @@ ls -ln ${receiver_folder}/processed/1_1 | awk '{ print $5 }'| grep 100000
 ls -ln ${receiver_folder}/processed/1_2 | awk '{ print $5 }'| grep 100000
 ls -ln ${receiver_folder}/processed/1_3 | awk '{ print $5 }'| grep 100000
 
-echo 'db.data_default.find({"images._id":{$gt:0}},{"images.name":1})' | mongo asapo_test_detector | grep 1_1 | grep 1_2 | grep 1_3
+echo 'db.data_default.find({"messages._id":{$gt:0}},{"messages.name":1})' | mongo asapo_test_detector | grep 1_1 | grep 1_2 | grep 1_3

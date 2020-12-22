@@ -23,7 +23,7 @@ set PYTHONPATH=%4
 
 python3 %3/get_user_meta.py %proxy_address% %receiver_folder% %beamtime_id%  %token% new > out
 type out
-type out | findstr /c:"found images: 100" || goto :error
+type out | findstr /c:"found messages: 100" || goto :error
 type out | findstr /c:"test100" || goto :error
 
 goto :clean
