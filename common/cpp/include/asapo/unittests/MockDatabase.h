@@ -19,9 +19,9 @@ class MockDatabase : public Database {
         return Error{Insert_t(collection, file, ignore_duplicates)};
     }
 
-    Error InsertAsSubset(const std::string& collection, const MessageMeta& file, uint64_t subset_id,
-                         uint64_t subset_size, bool ignore_duplicates) const override {
-        return Error{InsertAsSubset_t(collection, file, subset_id, subset_size, ignore_duplicates)};
+    Error InsertAsDatasetMessage(const std::string& collection, const MessageMeta& file,
+                         uint64_t dataset_size, bool ignore_duplicates) const override {
+        return Error{InsertAsDatasetMessage_t(collection, file, dataset_size, ignore_duplicates)};
     }
 
 
@@ -29,7 +29,7 @@ class MockDatabase : public Database {
     MOCK_CONST_METHOD3(Insert_t, ErrorInterface * (const std::string&, const MessageMeta&, bool));
 
 
-    MOCK_CONST_METHOD5(InsertAsSubset_t, ErrorInterface * (const std::string&, const MessageMeta&, uint64_t, uint64_t, bool));
+    MOCK_CONST_METHOD4(InsertAsDatasetMessage_t, ErrorInterface * (const std::string&, const MessageMeta&, uint64_t, bool));
 
 
     Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const override {

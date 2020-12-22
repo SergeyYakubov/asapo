@@ -11,7 +11,7 @@
  "WhitelistExtensions":[],
  "RemoveAfterSend":false,
  "DataSource": "",
- "Subset": {
+ "Dataset": {
  	"Mode":"batch",
   	"BatchSize":3
  }

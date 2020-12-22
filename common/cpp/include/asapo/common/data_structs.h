@@ -31,6 +31,7 @@ class MessageMeta {
     std::string source;
     std::string metadata;
     uint64_t buf_id{0};
+    uint64_t dataset_substream{0};
     std::string Json() const;
     bool SetFromJson(const std::string& json_string);
     std::string FullName(const std::string& base_path) const;

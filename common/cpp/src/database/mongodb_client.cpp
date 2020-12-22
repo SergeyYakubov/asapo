@@ -237,9 +237,8 @@ Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool 
     return err;
 }
 
-Error MongoDBClient::InsertAsSubset(const std::string &collection, const MessageMeta &file,
-                                    uint64_t subset_id,
-                                    uint64_t subset_size,
+Error MongoDBClient::InsertAsDatasetMessage(const std::string &collection, const MessageMeta &file,
+                                    uint64_t dataset_size,
                                     bool ignore_duplicates) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
@@ -252,10 +251,10 @@ Error MongoDBClient::InsertAsSubset(const std::string &collection, const Message
     if (err) {
         return err;
     }
-    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(subset_id), "}", "{", "messages._id", "{", "$ne",
-                           BCON_INT64(file.id), "}", "}", "]");
+    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(file.id), "}", "{", "messages.dataset_substream", "{", "$ne",
+                           BCON_INT64(file.dataset_substream), "}", "}", "]");
     auto update = BCON_NEW ("$setOnInsert", "{",
-                            "size", BCON_INT64(subset_size),
+                            "size", BCON_INT64(dataset_size),
                             "timestamp", BCON_INT64((int64_t) NanosecsEpochFromTimePoint(file.timestamp)),
                             "}",
                             "$addToSet", "{",
@@ -348,7 +347,7 @@ Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_i
     }
 
     for (const auto &message_meta : dataset.content) {
-        if (message_meta.id == id_in_set) {
+        if (message_meta.dataset_substream == id_in_set) {
             *file = message_meta;
             return nullptr;
         }

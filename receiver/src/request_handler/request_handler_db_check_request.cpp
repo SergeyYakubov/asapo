@@ -32,7 +32,7 @@ Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, Mess
         auto id_in_set = request->GetCustomData()[1];
         err = db_client__->GetDataSetById(col_name, id_in_set, id, record);
         if (!err) {
-            log__->Debug(std::string{"get subset record id "} + std::to_string(id) + " from " + col_name + " in " +
+            log__->Debug(std::string{"get dataset record id "} + std::to_string(id) + " from " + col_name + " in " +
                          db_name_ + " at " + GetReceiverConfig()->database_uri);
         }
         return err;

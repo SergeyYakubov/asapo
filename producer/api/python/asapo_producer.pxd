@@ -65,8 +65,8 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     uint64_t data_size
     string file_name
     string user_metadata
-    uint64_t id_in_subset
-    uint64_t subset_size
+    uint64_t dataset_substream
+    uint64_t dataset_size
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   struct  GenericRequestHeader:
@@ -95,7 +95,7 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
     cppclass Producer:
         @staticmethod
         unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,uint64_t timeout_ms, Error* error)
-        Error SendFromFile(const MessageHeader& message_header, string stream, string full_path, uint64_t ingest_mode,RequestCallback callback)
+        Error SendFile(const MessageHeader& message_header, string stream, string full_path, uint64_t ingest_mode,RequestCallback callback)
         Error Send__(const MessageHeader& message_header, string stream, void* data, uint64_t ingest_mode,RequestCallback callback)
         void StopThreads__()
         void SetLogLevel(LogLevel level)

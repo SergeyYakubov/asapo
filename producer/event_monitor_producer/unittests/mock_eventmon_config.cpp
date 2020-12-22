@@ -51,28 +51,28 @@ Error SetFolderMonConfig (const EventMonConfig& config) {
     config_string += "," + std::string("\"RemoveAfterSend\":") + (config.remove_after_send ? "true" : "false");
     config_string += "," + std::string("\"DataSource\":") + "\"" + config.data_source + "\"";
 
-    std::string subset_mode;
-    switch (config.subset_mode) {
-    case SubSetMode::kBatch:
-        subset_mode = "batch";
+    std::string dataset_mode;
+    switch (config.dataset_mode) {
+    case DatasetMode::kBatch:
+        dataset_mode = "batch";
         break;
-    case SubSetMode::kMultiSource:
-        subset_mode = "multisource";
+    case DatasetMode::kMultiSource:
+        dataset_mode = "multisource";
         break;
 
-    case SubSetMode::kNone:
-        subset_mode = "none";
+    case DatasetMode::kNone:
+        dataset_mode = "none";
         break;
 
     }
-    config_string += "," + std::string("\"Subset\":{");
-    config_string += std::string("\"Mode\":") + "\"" + subset_mode + "\"";
-    if (config.subset_mode == SubSetMode::kBatch) {
-        config_string += "," + std::string("\"BatchSize\":") + std::to_string(config.subset_batch_size);
+    config_string += "," + std::string("\"Dataset\":{");
+    config_string += std::string("\"Mode\":") + "\"" + dataset_mode + "\"";
+    if (config.dataset_mode == DatasetMode::kBatch) {
+        config_string += "," + std::string("\"BatchSize\":") + std::to_string(config.dataset_batch_size);
     }
-    if (config.subset_mode == SubSetMode::kMultiSource) {
-        config_string += "," + std::string("\"SourceId\":") + std::to_string(config.subset_multisource_sourceid);
-        config_string += "," + std::string("\"NSources\":") + std::to_string(config.subset_multisource_nsources);
+    if (config.dataset_mode == DatasetMode::kMultiSource) {
+        config_string += "," + std::string("\"SourceId\":") + std::to_string(config.dataset_multisource_sourceid);
+        config_string += "," + std::string("\"NSources\":") + std::to_string(config.dataset_multisource_nsources);
     }
 
     config_string += "}";

@@ -62,8 +62,8 @@ std::string MessageMeta::Json() const {
                                                                                                                 "\"timestamp\":"
         + std::to_string(nanoseconds_from_epoch) + ","
                                                    "\"source\":\"" + source + "\","
-                                                                              "\"buf_id\":" + std::to_string(buf_id_int)
-        + ","
+                                                                              "\"buf_id\":" + std::to_string(buf_id_int) + ","
+         "\"dataset_substream\":" + std::to_string(dataset_substream) + ","
           "\"meta\":" + (metadata.size() == 0 ? std::string("{}") : metadata)
         + "}";
     return s;
@@ -119,6 +119,7 @@ bool MessageMeta::SetFromJson(const std::string &json_string) {
         parser.GetString("name", &name) ||
         parser.GetString("source", &source) ||
         parser.GetUInt64("buf_id", &buf_id) ||
+        parser.GetUInt64("dataset_substream", &dataset_substream) ||
         parser.Embedded("meta").GetRawString(&metadata) ||
         !TimeFromJson(parser, "timestamp", &timestamp)) {
         *this = old;

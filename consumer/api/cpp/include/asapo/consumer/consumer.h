@@ -181,7 +181,7 @@ class Consumer {
 
     //! Get all messages matching the query.
     /*!
-      \param sql_query -  query string in SQL format. Limit subset is supported
+      \param sql_query -  query string in SQL format. Limit dataset is supported
       \param err - will be set in case of error, nullptr otherwise
       \return vector of message metadata matchiing to specified query. Empty if nothing found or error
     */

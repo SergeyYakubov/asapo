@@ -18,7 +18,7 @@ class AsapoSender:
         self.ingest_mode = asapo_producer.DEFAULT_INGEST_MODE
         self._n_queued = 8
     def send(self, data, metadata):
-        self.producer.send_data(
+        self.producer.send(
                 metadata['_id'], metadata['name'], data,
                 ingest_mode=self.ingest_mode,
                 callback=self._callback)

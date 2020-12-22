@@ -163,8 +163,8 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         } else {
             for (uint64_t id = 0; id < messages_in_set; id++) {
                 auto buffer = CreateMemoryBuffer(number_of_byte);
-                message_header.id_in_subset = id + 1;
-                message_header.subset_size = messages_in_set;
+                message_header.dataset_substream = id + 1;
+                message_header.dataset_size = messages_in_set;
                 message_header.message_id = i + 1;
                 message_header.file_name = std::to_string(i + 1) + "_" + std::to_string(id + 1);
                 if (!data_source.empty()) {

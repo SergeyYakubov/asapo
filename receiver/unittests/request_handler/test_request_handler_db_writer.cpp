@@ -83,9 +83,9 @@ class DbWriterHandlerTests : public Test {
     std::string expected_metadata = "meta";
     uint64_t expected_file_size = 10;
     uint64_t expected_id = 15;
-    uint64_t expected_subset_id = 15;
-    uint64_t expected_subset_size = 2;
-    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_subset_id, expected_subset_size};
+    uint64_t expected_substream = 20;
+    uint64_t expected_dataset_size = 2;
+    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_substream, expected_dataset_size};
     asapo::MockHandlerDbCheckRequest mock_db_check_handler{asapo::kDBDataCollectionNamePrefix};
 
     void SetUp() override {
@@ -105,7 +105,7 @@ class DbWriterHandlerTests : public Test {
     void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source);
     void ExpectLogger();
     void ExpectDuplicatedID();
-    MessageMeta PrepareMessageMeta();
+    MessageMeta PrepareMessageMeta(bool substream = false);
     void TearDown() override {
         handler.db_client__.release();
     }
@@ -117,6 +117,7 @@ MATCHER_P(CompareMessageMeta, file, "") {
     if (arg.size != file.size) return false;
     if (arg.source != file.source) return false;
     if (arg.buf_id != file.buf_id) return false;
+    if (arg.dataset_substream != file.dataset_substream) return false;
     if (arg.name != file.name) return false;
     if (arg.id != file.id) return false;
     if (arg.metadata != file.metadata) return false;
@@ -179,7 +180,7 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     .WillOnce(Return(op_code))
     ;
 
-    if (op_code == asapo::Opcode::kOpcodeTransferSubsetData) {
+    if (op_code == asapo::Opcode::kOpcodeTransferDatasetData) {
         EXPECT_CALL(*mock_request, GetCustomData_t()).Times(2).
         WillRepeatedly(Return(expected_custom_data))
         ;
@@ -189,11 +190,14 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
 
 
 
-MessageMeta DbWriterHandlerTests::PrepareMessageMeta() {
+MessageMeta DbWriterHandlerTests::PrepareMessageMeta(bool substream) {
     MessageMeta message_meta;
     message_meta.size = expected_file_size;
     message_meta.name = expected_file_name;
     message_meta.id = expected_id;
+    if (substream) {
+        message_meta.dataset_substream = expected_substream;
+    }
     message_meta.buf_id = expected_buf_id;
     message_meta.source = expected_host_ip + ":" + std::to_string(expected_port);
     message_meta.metadata = expected_metadata;
@@ -223,14 +227,14 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     handler.ProcessRequest(mock_request.get());
 }
 
-TEST_F(DbWriterHandlerTests, CallsInsertSubset) {
+TEST_F(DbWriterHandlerTests, CallsInsertDataset) {
 
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferSubsetData, expected_data_source);
-    auto message_meta = PrepareMessageMeta();
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferDatasetData, expected_data_source);
+    auto message_meta = PrepareMessageMeta(true);
 
 
-    EXPECT_CALL(mock_db, InsertAsSubset_t(expected_collection_name, CompareMessageMeta(message_meta), expected_subset_id,
-                                          expected_subset_size, false)).
+    EXPECT_CALL(mock_db, InsertAsDatasetMessage_t(expected_collection_name, CompareMessageMeta(message_meta),
+                                                  expected_dataset_size, false)).
     WillOnce(testing::Return(   nullptr));
     ExpectLogger();
 

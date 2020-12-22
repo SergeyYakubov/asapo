@@ -44,7 +44,7 @@ while True:
         data, meta = consumer.get_next(group_id, meta_only=not transfer_data)
         print ("received: ",meta)
         n_recv = n_recv + 1
-        producer.send_data(meta['_id'],meta['name']+"_"+stream_out ,data,
+        producer.send(meta['_id'],meta['name']+"_"+stream_out ,data,
                              ingest_mode = ingest_mode, callback = callback)
     except  asapo_consumer.AsapoEndOfStreamError:
         break

@@ -80,7 +80,7 @@ class Producer {
       \param full_path - A full path of the file to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendFromFile(const MessageHeader& message_header, std::string full_path, uint64_t ingest_mode,
+    virtual Error SendFile(const MessageHeader& message_header, std::string full_path, uint64_t ingest_mode,
                                RequestCallback callback) = 0;
 
     //! Sends message from a file to a stream
@@ -89,7 +89,7 @@ class Producer {
       \param full_path - A full path of the file to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendFromFile(const MessageHeader& message_header, std::string stream, std::string full_path,
+    virtual Error SendFile(const MessageHeader& message_header, std::string stream, std::string full_path,
                                uint64_t ingest_mode,
                                RequestCallback callback) = 0;
 

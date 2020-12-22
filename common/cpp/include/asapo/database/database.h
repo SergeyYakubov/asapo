@@ -17,8 +17,8 @@ class Database {
     virtual Error Connect(const std::string& address, const std::string& database) = 0;
     virtual Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const = 0;
     virtual Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const = 0;
-    virtual Error InsertAsSubset(const std::string& collection, const MessageMeta& file, uint64_t subset_id,
-                                 uint64_t subset_size,
+    virtual Error InsertAsDatasetMessage(const std::string& collection, const MessageMeta& file,
+                                 uint64_t dataset_size,
                                  bool ignore_duplicates) const = 0;
 
     virtual Error GetById(const std::string& collection, uint64_t id, MessageMeta* file) const = 0;

@@ -76,18 +76,18 @@ void SignalHandler(int signal) {
 }
 
 
-void HandleSubsets(asapo::MessageHeader* header) {
-    switch (GetEventMonConfig()->subset_mode) {
-    case asapo::SubSetMode::kNone:
+void HandleDatasets(asapo::MessageHeader* header) {
+    switch (GetEventMonConfig()->dataset_mode) {
+    case asapo::DatasetMode::kNone:
         return;
-    case asapo::SubSetMode::kBatch:
-        header->subset_size = GetEventMonConfig()->subset_batch_size;
-        header->id_in_subset = (header->message_id - 1) % header->subset_size + 1;
-        header->message_id = (header->message_id - 1) / header->subset_size + 1;
+    case asapo::DatasetMode::kBatch:
+        header->dataset_size = GetEventMonConfig()->dataset_batch_size;
+        header->dataset_substream = (header->message_id - 1) % header->dataset_size + 1;
+        header->message_id = (header->message_id - 1) / header->dataset_size + 1;
         break;
-    case asapo::SubSetMode::kMultiSource:
-        header->subset_size = GetEventMonConfig()->subset_multisource_nsources;
-        header->id_in_subset = GetEventMonConfig()->subset_multisource_sourceid;
+    case asapo::DatasetMode::kMultiSource:
+        header->dataset_size = GetEventMonConfig()->dataset_multisource_nsources;
+        header->dataset_substream = GetEventMonConfig()->dataset_multisource_sourceid;
         break;
     }
 }
@@ -136,8 +136,8 @@ int main (int argc, char* argv[]) {
             continue;
         }
         message_header.message_id = ++i;
-        HandleSubsets(&message_header);
-        producer->SendFromFile(message_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
+        HandleDatasets(&message_header);
+        producer->SendFile(message_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
             message_header.file_name, asapo::kDefaultIngestMode, ProcessAfterSend);
     }
 

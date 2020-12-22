@@ -42,7 +42,7 @@ job "asapo-filemon" {
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
  "DataSource": "",
- "Subset": {
+ "Dataset": {
   	"Mode":"none"
  }
 }
@@ -103,7 +103,7 @@ job "asapo-filemon" {
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
  "DataSource": "",
- "Subset": {
+ "Dataset": {
   	"Mode":"none"
  }
 

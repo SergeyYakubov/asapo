@@ -82,9 +82,9 @@ class DbCheckRequestHandlerTests : public Test {
     std::string expected_metadata = "meta";
     uint64_t expected_file_size = 10;
     uint64_t expected_id = 15;
-    uint64_t expected_subset_id = 16;
-    uint64_t expected_subset_size = 2;
-    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_subset_id, expected_subset_size};
+    uint64_t expected_dataset_id = 16;
+    uint64_t expected_dataset_size = 2;
+    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_dataset_id, expected_dataset_size};
     MessageMeta expected_message_meta;
     MockFunctions mock_functions;
     int n_run = 0;
@@ -179,7 +179,7 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
     .WillOnce(Return(op_code))
     ;
 
-    if (op_code == asapo::Opcode::kOpcodeTransferSubsetData) {
+    if (op_code == asapo::Opcode::kOpcodeTransferDatasetData) {
         EXPECT_CALL(*mock_request, GetCustomData_t())
         .WillOnce(Return(expected_custom_data))
         ;
@@ -207,8 +207,8 @@ void DbCheckRequestHandlerTests::MockGetByID(asapo::ErrorInterface* error, bool 
 }
 
 void DbCheckRequestHandlerTests::MockGetSetByID(asapo::ErrorInterface* error, bool expect_compare ) {
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferSubsetData, expected_data_source, expect_compare);
-    EXPECT_CALL(mock_db, GetSetById_t(expected_collection_name, expected_subset_id, expected_id, _)).
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferDatasetData, expected_data_source, expect_compare);
+    EXPECT_CALL(mock_db, GetSetById_t(expected_collection_name, expected_dataset_id, expected_id, _)).
     WillOnce(DoAll(
                  SetArgPointee<3>(expected_message_meta),
                  testing::Return(error)

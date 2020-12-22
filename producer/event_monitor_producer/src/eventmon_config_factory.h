@@ -16,7 +16,7 @@ class EventMonConfigFactory {
     Error ParseConfigFile(std::string file_name);
     Error CheckMode();
     Error CheckLogLevel();
-    Error CheckSubsets();
+    Error CheckDatasets();
     Error CheckNThreads();
     Error CheckConfig();
 };

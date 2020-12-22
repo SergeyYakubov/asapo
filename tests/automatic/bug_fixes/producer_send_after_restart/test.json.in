@@ -11,7 +11,7 @@
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
  "DataSource": "",
- "Subset": {
+ "Dataset": {
   	"Mode":"none"
  }
 

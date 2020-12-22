@@ -50,9 +50,9 @@ class ProducerImpl : public Producer {
   Error Send__(const MessageHeader &message_header, std::string stream, void* data, uint64_t ingest_mode,
                RequestCallback callback) override;
   void StopThreads__() override;
-  Error SendFromFile(const MessageHeader &message_header, std::string full_path, uint64_t ingest_mode,
+  Error SendFile(const MessageHeader &message_header, std::string full_path, uint64_t ingest_mode,
                      RequestCallback callback) override;
-  Error SendFromFile(const MessageHeader &message_header, std::string stream, std::string full_path, uint64_t ingest_mode,
+  Error SendFile(const MessageHeader &message_header, std::string stream, std::string full_path, uint64_t ingest_mode,
                      RequestCallback callback) override;
 
   Error SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,

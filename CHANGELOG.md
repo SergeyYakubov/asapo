@@ -21,7 +21,8 @@ BREAKING CHANGES
 * use term `message` for blob of information we send around, rename related structs, parameters, ...  
     ####  renaming - Producer API
 * SendData/send_data -> Send/send    
-* SendFile/send_file -> SendFromFile/send_from_file
+* id_in_subset -> dataset_substream
+* subset_size -> dataset_size (and in general replace subset with dataset)
     ####  renaming - Consumer API
 * broker -> consumer
 

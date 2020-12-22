@@ -132,8 +132,8 @@ class RequestHandlerTcpTests : public testing::Test {
   void ExpectOKSendAll(bool only_once);
   void ExpectGetFileSize(bool ok);
   void ExpectOKSend(bool only_once = false);
-  void ExpectOKSendFromFile(bool only_once = false);
-  void ExpectFailSendFromFile(const asapo::ProducerErrorTemplate &err_template, bool client_error = false);
+  void ExpectOKSendFile(bool only_once = false);
+  void ExpectFailSendFile(const asapo::ProducerErrorTemplate &err_template, bool client_error = false);
   void ExpectOKSendMetaData(bool only_once = false);
   void ExpectFailReceive(bool only_once = false);
   void ExpectOKReceive(bool only_once = true, asapo::NetworkErrorCode code = asapo::kNetErrorNoError,
@@ -302,7 +302,7 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
     }
 }
 
-void RequestHandlerTcpTests::ExpectFailSendFromFile(const asapo::ProducerErrorTemplate &err_template, bool client_error) {
+void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTemplate &err_template, bool client_error) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, SendFile_t(expected_sd, expected_origin_fullpath, (size_t) expected_file_size))
@@ -430,7 +430,7 @@ void RequestHandlerTcpTests::ExpectOKSend(bool only_once) {
     ExpectOKSend(expected_file_size, only_once);
 }
 
-void RequestHandlerTcpTests::ExpectOKSendFromFile(bool only_once) {
+void RequestHandlerTcpTests::ExpectOKSendFile(bool only_once) {
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, SendFile_t(expected_sd, expected_origin_fullpath, (size_t) expected_file_size))
             .Times(1)
@@ -772,13 +772,13 @@ TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {
     ASSERT_THAT(retry, Eq(false));
 }
 
-TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFromFileWithReadError) {
+TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithReadError) {
     ExpectGetFileSize(true);
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true);
     ExpectOKSendMetaData(true);
-    ExpectFailSendFromFile(asapo::ProducerErrorTemplates::kLocalIOError, true);
+    ExpectFailSendFile(asapo::ProducerErrorTemplates::kLocalIOError, true);
 
     request_handler.PrepareProcessingRequestLocked();
     auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
@@ -790,13 +790,13 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFromFileWithReadError) {
 
 }
 
-TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFromFileWithServerError) {
+TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithServerError) {
     ExpectGetFileSize(true);
     ExpectOKConnect();
     ExpectOKAuthorize();
     ExpectOKSendHeader();
     ExpectOKSendMetaData();
-    ExpectFailSendFromFile(asapo::ProducerErrorTemplates::kInternalServerError);
+    ExpectFailSendFile(asapo::ProducerErrorTemplates::kInternalServerError);
 
     request_handler.PrepareProcessingRequestLocked();
     auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
@@ -839,7 +839,7 @@ TEST_F(RequestHandlerTcpTests, FileRequestOK) {
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true);
     ExpectOKSendMetaData(true);
-    ExpectOKSendFromFile(true);
+    ExpectOKSendFile(true);
     ExpectOKReceive(true, asapo::kNetErrorNoError, expected_response);
 
     request_handler.PrepareProcessingRequestLocked();

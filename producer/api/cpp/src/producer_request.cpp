@@ -27,7 +27,7 @@ ProducerRequest::ProducerRequest(std::string source_credentials,
 }
 
 bool ProducerRequest::NeedSend() const {
-    if (header.op_code == kOpcodeTransferData || header.op_code == kOpcodeTransferSubsetData) {
+    if (header.op_code == kOpcodeTransferData || header.op_code == kOpcodeTransferDatasetData) {
         return header.custom_data[kPosIngestMode] & IngestModeFlags::kTransferData;
     }
     return true;

@@ -34,7 +34,7 @@ group_id  = consumer.generate_group_id()
 n_send = 10
 
 for i in range(n_send):
-    producer.send_data(i+1, "name"+str(i),None,ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY,stream = "stream", callback = callback)
+    producer.send(i+1, "name"+str(i),None,ingest_mode = asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY,stream = "stream", callback = callback)
 
 producer.send_stream_finished_flag("stream", 10, next_stream = "next_stream", callback = callback)
 producer.wait_requests_finished(timeout)

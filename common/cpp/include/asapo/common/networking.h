@@ -21,7 +21,7 @@ enum class NetworkConnectionType : uint32_t {
 enum Opcode : uint8_t {
     kOpcodeUnknownOp = 1,
     kOpcodeTransferData,
-    kOpcodeTransferSubsetData,
+    kOpcodeTransferDatasetData,
     kOpcodeStreamInfo,
     kOpcodeLastStream,
     kOpcodeGetBufferData,

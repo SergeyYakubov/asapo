@@ -38,10 +38,10 @@ GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const MessageHeader& 
                                                            uint64_t ingest_mode) {
     GenericRequestHeader request{kOpcodeTransferData, message_header.message_id, message_header.data_size,
                                  message_header.user_metadata.size(), message_header.file_name, stream};
-    if (message_header.id_in_subset != 0) {
-        request.op_code = kOpcodeTransferSubsetData;
-        request.custom_data[kPosDataSetId] = message_header.id_in_subset;
-        request.custom_data[kPosDataSetSize] = message_header.subset_size;
+    if (message_header.dataset_substream != 0) {
+        request.op_code = kOpcodeTransferDatasetData;
+        request.custom_data[kPosDataSetId] = message_header.dataset_substream;
+        request.custom_data[kPosDataSetSize] = message_header.dataset_size;
     }
     request.custom_data[kPosIngestMode] = ingest_mode;
     return request;
@@ -80,8 +80,8 @@ Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_
         return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }
 
-    if (message_header.id_in_subset > 0 && message_header.subset_size == 0) {
-        return ProducerErrorTemplates::kWrongInput.Generate("subset dimensions");
+    if (message_header.dataset_substream > 0 && message_header.dataset_size == 0) {
+        return ProducerErrorTemplates::kWrongInput.Generate("dataset dimensions");
     }
 
     if (message_header.message_id == 0) {
@@ -161,9 +161,9 @@ Error ProducerImpl::SendStreamFinishedFlag(std::string stream, uint64_t last_id,
     return Send(message_header, std::move(stream), nullptr, "", IngestModeFlags::kTransferMetaDataOnly, callback, true);
 }
 
-Error ProducerImpl::SendFromFile(const MessageHeader& message_header, std::string full_path, uint64_t ingest_mode,
+Error ProducerImpl::SendFile(const MessageHeader& message_header, std::string full_path, uint64_t ingest_mode,
                                  RequestCallback callback) {
-    return SendFromFile(message_header, kDefaultStream, std::move(full_path), ingest_mode, callback);
+    return SendFile(message_header, kDefaultStream, std::move(full_path), ingest_mode, callback);
 }
 
 
@@ -262,7 +262,7 @@ Error ProducerImpl::WaitRequestsFinished(uint64_t timeout_ms) {
 void ProducerImpl::StopThreads__() {
     request_pool__->StopThreads();
 }
-Error ProducerImpl::SendFromFile(const MessageHeader& message_header,
+Error ProducerImpl::SendFile(const MessageHeader& message_header,
                                         std::string stream,
                                         std::string full_path,
                                         uint64_t ingest_mode,

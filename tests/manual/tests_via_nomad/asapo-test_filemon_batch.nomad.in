@@ -42,7 +42,7 @@ job "asapo-filemon_batch" {
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
  "DataSource": "",
- "Subset": {
+ "Dataset": {
   	"Mode":"batch",
   	"BatchSize": {{ keyOrDefault "monitor_batch_size" "3" }}
  }
@@ -104,7 +104,7 @@ job "asapo-filemon_batch" {
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
  "DataSource": "",
- "Subset": {
+ "Dataset": {
   	"Mode":"batch",
   	"BatchSize": {{ keyOrDefault "monitor_batch_size" "3" }}
  }

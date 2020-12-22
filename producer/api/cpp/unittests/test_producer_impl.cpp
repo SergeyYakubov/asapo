@@ -32,8 +32,8 @@ using asapo::ProducerRequest;
 
 MATCHER_P10(M_CheckSendRequest, op_code, source_credentials, metadata, file_id, file_size, message, stream,
             ingest_mode,
-            subset_id,
-            subset_size,
+            dataset_id,
+            dataset_size,
             "Checks if a valid GenericRequestHeader was Send") {
     auto request = static_cast<ProducerRequest*>(arg);
     return ((asapo::GenericRequestHeader) (arg->header)).op_code == op_code
@@ -42,10 +42,10 @@ MATCHER_P10(M_CheckSendRequest, op_code, source_credentials, metadata, file_id, 
         && request->manage_data_memory == true
         && request->source_credentials == source_credentials
         && request->metadata == metadata
-        && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader) (arg->header)).custom_data[1]
-            == uint64_t(subset_id) : true)
-        && (op_code == asapo::kOpcodeTransferSubsetData ? ((asapo::GenericRequestHeader) (arg->header)).custom_data[2]
-            == uint64_t(subset_size) : true)
+        && (op_code == asapo::kOpcodeTransferDatasetData ? ((asapo::GenericRequestHeader) (arg->header)).custom_data[1]
+            == uint64_t(dataset_id) : true)
+        && (op_code == asapo::kOpcodeTransferDatasetData ? ((asapo::GenericRequestHeader) (arg->header)).custom_data[2]
+            == uint64_t(dataset_size) : true)
         && ((asapo::GenericRequestHeader) (arg->header)).custom_data[asapo::kPosIngestMode] == uint64_t(ingest_mode)
         && strcmp(((asapo::GenericRequestHeader) (arg->header)).message, message) == 0
         && strcmp(((asapo::GenericRequestHeader) (arg->header)).stream, stream) == 0;
@@ -66,8 +66,8 @@ class ProducerImplTests : public testing::Test {
   asapo::ProducerImpl producer{"", 1, 3600000, asapo::RequestHandlerType::kTcp};
   uint64_t expected_size = 100;
   uint64_t expected_id = 10;
-  uint64_t expected_subset_id = 100;
-  uint64_t expected_subset_size = 4;
+  uint64_t expected_dataset_id = 100;
+  uint64_t expected_dataset_size = 4;
   uint64_t expected_ingest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
 
   char expected_name[asapo::kMaxMessageSize] = "test_name";
@@ -118,8 +118,8 @@ TEST_F(ProducerImplTests, ErrorIfFileEmpty) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
-TEST_F(ProducerImplTests, ErrorIfSubsetSizeNotDefined) {
-    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("subset dimensions")));
+TEST_F(ProducerImplTests, ErrorIfDatasetSizeNotDefined) {
+    EXPECT_CALL(mock_logger, Error(testing::HasSubstr("dataset dimensions")));
     asapo::MessageHeader message_header{1, 1000, "test", "", 1};
     auto err = producer.Send(message_header, nullptr, expected_ingest_mode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
@@ -275,9 +275,9 @@ TEST_F(ProducerImplTests, OKSendingStreamFinishWithNoNextStream) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-TEST_F(ProducerImplTests, OKSendingSendSubsetDataRequest) {
+TEST_F(ProducerImplTests, OKSendingSendDatasetDataRequest) {
     producer.SetCredentials(expected_credentials);
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferSubsetData,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferDatasetData,
                                                                expected_credentials_str,
                                                                expected_metadata,
                                                                expected_id,
@@ -285,13 +285,13 @@ TEST_F(ProducerImplTests, OKSendingSendSubsetDataRequest) {
                                                                expected_name,
                                                                asapo::kDefaultStream.c_str(),
                                                                expected_ingest_mode,
-                                                               expected_subset_id,
-                                                               expected_subset_size), false)).WillOnce(
+                                                               expected_dataset_id,
+                                                               expected_dataset_size), false)).WillOnce(
         Return(
             nullptr));
 
     asapo::MessageHeader message_header
-        {expected_id, expected_size, expected_name, expected_metadata, expected_subset_id, expected_subset_size};
+        {expected_id, expected_size, expected_name, expected_metadata, expected_dataset_id, expected_dataset_size};
     auto err = producer.Send(message_header, nullptr, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
@@ -327,7 +327,7 @@ TEST_F(ProducerImplTests, ErrorSendingEmptyFileName) {
     EXPECT_CALL(mock_pull, AddRequest_t(_, _)).Times(0);
 
     asapo::MessageHeader message_header{expected_id, 0, expected_name};
-    auto err = producer.SendFromFile(message_header, "", expected_ingest_mode, nullptr);
+    auto err = producer.SendFile(message_header, "", expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 
@@ -339,7 +339,7 @@ TEST_F(ProducerImplTests, ErrorSendingEmptyRelativeFileName) {
     EXPECT_CALL(mock_pull, AddRequest_t(_, _)).Times(0);
 
     asapo::MessageHeader message_header{expected_id, 0, ""};
-    auto err = producer.SendFromFile(message_header, expected_fullpath, expected_ingest_mode, nullptr);
+    auto err = producer.SendFile(message_header, expected_fullpath, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 
@@ -361,7 +361,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
         nullptr));
 
     asapo::MessageHeader message_header{expected_id, 0, expected_name};
-    auto err = producer.SendFromFile(message_header, expected_fullpath, expected_ingest_mode, nullptr);
+    auto err = producer.SendFile(message_header, expected_fullpath, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -383,7 +383,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequestWithStream) {
 
     asapo::MessageHeader message_header{expected_id, 0, expected_name};
     auto err =
-        producer.SendFromFile(message_header, expected_stream, expected_fullpath, expected_ingest_mode, nullptr);
+        producer.SendFile(message_header, expected_stream, expected_fullpath, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -421,7 +421,7 @@ TEST_F(ProducerImplTests, ErrorSendingWrongIngestMode) {
     EXPECT_CALL(mock_pull, AddRequest_t(_, _)).Times(0);
 
     for (auto ingest_mode : ingest_modes) {
-        auto err = producer.SendFromFile(message_header, expected_fullpath, ingest_mode, nullptr);
+        auto err = producer.SendFile(message_header, expected_fullpath, ingest_mode, nullptr);
         ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
     }
 
