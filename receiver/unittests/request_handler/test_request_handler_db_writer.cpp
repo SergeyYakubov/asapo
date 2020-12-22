@@ -66,8 +66,8 @@ TEST(DbWriterHandler, Constructor) {
 
 class DbWriterHandlerTests : public Test {
   public:
-    std::string expected_substream = "substream";
-    std::string expected_collection_name = std::string(asapo::kDBDataCollectionNamePrefix) + "_" + expected_substream;
+    std::string expected_stream = "stream";
+    std::string expected_collection_name = std::string(asapo::kDBDataCollectionNamePrefix) + "_" + expected_stream;
     RequestHandlerDbWrite handler{asapo::kDBDataCollectionNamePrefix};
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
@@ -162,8 +162,8 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     .WillOnce(Return(expected_file_name))
     ;
 
-    EXPECT_CALL(*mock_request, GetSubstream())
-    .WillOnce(Return(expected_substream))
+    EXPECT_CALL(*mock_request, GetStream())
+    .WillOnce(Return(expected_stream))
     ;
 
 

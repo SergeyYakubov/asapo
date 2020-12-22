@@ -60,15 +60,15 @@ class RequestHandlerTcpTests : public testing::Test {
 
   char expected_file_name[asapo::kMaxMessageSize] = "test_name";
   char expected_beamtime_id[asapo::kMaxMessageSize] = "test_beamtime_id";
-  char expected_substream[asapo::kMaxMessageSize] = "test_substream";
+  char expected_stream[asapo::kMaxMessageSize] = "test_stream";
 
   uint64_t expected_thread_id = 2;
 
   asapo::Error callback_err;
   asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,
-                                     expected_meta_size, expected_file_name, expected_substream};
+                                     expected_meta_size, expected_file_name, expected_stream};
   asapo::GenericRequestHeader header_fromfile{expected_op_code, expected_file_id, 0, expected_meta_size,
-                                              expected_file_name, expected_substream};
+                                              expected_file_name, expected_stream};
   bool callback_called = false;
   asapo::GenericRequestHeader callback_header;
   std::string callback_response;
@@ -161,13 +161,13 @@ ACTION_P2(A_WriteSendDataResponse, error_code, message) {
     strcpy(((asapo::SendDataResponse*) arg1)->message, message.c_str());
 }
 
-MATCHER_P5(M_CheckSendDataRequest, op_code, file_id, file_size, message, substream,
+MATCHER_P5(M_CheckSendDataRequest, op_code, file_id, file_size, message, stream,
            "Checks if a valid GenericRequestHeader was Send") {
     return ((asapo::GenericRequestHeader*) arg)->op_code == op_code
         && ((asapo::GenericRequestHeader*) arg)->data_id == uint64_t(file_id)
         && ((asapo::GenericRequestHeader*) arg)->data_size == uint64_t(file_size)
         && strcmp(((asapo::GenericRequestHeader*) arg)->message, message) == 0
-        && strcmp(((asapo::GenericRequestHeader*) arg)->substream, substream) == 0;
+        && strcmp(((asapo::GenericRequestHeader*) arg)->stream, stream) == 0;
 
 }
 
@@ -273,7 +273,7 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
                                                                         expected_file_id,
                                                                         expected_file_size,
                                                                         expected_file_name,
-                                                                        expected_substream),
+                                                                        expected_stream),
                                     sizeof(asapo::GenericRequestHeader), _))
             .WillOnce(
                 DoAll(
@@ -445,7 +445,7 @@ void RequestHandlerTcpTests::ExpectOKSendHeader(bool only_once, asapo::Opcode op
                                                                         expected_file_id,
                                                                         expected_file_size,
                                                                         expected_file_name,
-                                                                        expected_substream),
+                                                                        expected_stream),
                                     sizeof(asapo::GenericRequestHeader), _))
             .WillOnce(
                 DoAll(
@@ -941,7 +941,7 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
 TEST_F(RequestHandlerTcpTests, TimeoutCallsCallback) {
     EXPECT_CALL(mock_logger, Error(AllOf(
         HasSubstr("timeout"),
-        HasSubstr("substream"))
+        HasSubstr("stream"))
     ));
 
     request_handler.ProcessRequestTimeout(&request);

@@ -74,16 +74,16 @@ int main(int argc, char* argv[]) {
             auto send_size = to_send.size() + 1;
             auto buffer =  asapo::FileData(new uint8_t[send_size]);
             memcpy(buffer.get(), to_send.c_str(), send_size);
-            std::string substream = std::to_string(start_number);
+            std::string stream = std::to_string(start_number);
             // std::cout<<"submodule:"<<submodule
-            //          <<"- substream:"<<substream
+            //          <<"- stream:"<<stream
             //          <<"- filename:"<<to_send<<std::endl;
 
             asapo::EventHeader event_header{submodule, send_size, to_send,"", part,modules};
-            // err = producer->SendData(event_header,substream, std::move(buffer),
+            // err = producer->SendData(event_header,stream, std::move(buffer),
             //                          asapo::kTransferMetaDataOnly, &ProcessAfterSend);
 
-            err = producer->SendData(event_header,substream, std::move(buffer),
+            err = producer->SendData(event_header,stream, std::move(buffer),
                                      asapo::kDefaultIngestMode, &ProcessAfterSend);
             exit_if_error("Cannot send file", err);
 
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
             // if(part == number_of_splitted_files)
             // {
 
-            //     err = producer->SendSubstreamFinishedFlag(substream,
+            //     err = producer->SendStreamFinishedFlag(stream,
             //                                               part,
             //                                               std::to_string(start_number+1),
             //                                               &ProcessAfterSend);

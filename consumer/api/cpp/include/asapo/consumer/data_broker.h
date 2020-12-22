@@ -20,43 +20,43 @@ class DataBroker {
       \return nullptr of command was successful, otherwise error.
     */
     virtual Error ResetLastReadMarker(std::string group_id) = 0;
-    virtual Error ResetLastReadMarker(std::string group_id, std::string substream) = 0;
+    virtual Error ResetLastReadMarker(std::string group_id, std::string stream) = 0;
 
     virtual Error SetLastReadMarker(uint64_t value, std::string group_id) = 0;
-    virtual Error SetLastReadMarker(uint64_t value, std::string group_id, std::string substream) = 0;
+    virtual Error SetLastReadMarker(uint64_t value, std::string group_id, std::string stream) = 0;
 
-    //! Acknowledge data tuple for specific group id and substream.
+    //! Acknowledge data tuple for specific group id and stream.
     /*!
         \param group_id - group id to use.
         \param id - data tuple id
-        \param substream (optional) - substream
+        \param stream (optional) - stream
         \return nullptr of command was successful, otherwise error.
     */
-    virtual Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) = 0;
+    virtual Error Acknowledge(std::string group_id, uint64_t id, std::string stream = kDefaultStream) = 0;
 
-    //! Negative acknowledge data tuple for specific group id and substream.
+    //! Negative acknowledge data tuple for specific group id and stream.
     /*!
         \param group_id - group id to use.
         \param id - data tuple id
         \param delay_sec - data tuple will be redelivered after delay, 0 to redeliver immediately
-        \param substream (optional) - substream
+        \param stream (optional) - stream
         \return nullptr of command was successful, otherwise error.
     */
     virtual Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_sec,
-                                      std::string substream = kDefaultSubstream) = 0;
+                                      std::string stream = kDefaultStream) = 0;
 
 
-    //! Get unacknowledged tuple for specific group id and substream.
+    //! Get unacknowledged tuple for specific group id and stream.
     /*!
         \param group_id - group id to use.
-        \param substream (optional) - substream
+        \param stream (optional) - stream
         \param from_id - return tuples with ids greater or equal to from (use 0 disable limit)
         \param to_id - return tuples with ids less or equal to to (use 0 to disable limit)
-        \param in (optional) - substream
+        \param in (optional) - stream
         \param err - set to nullptr of operation succeed, error otherwise.
         \return vector of ids, might be empty
     */
-    virtual IdList GetUnacknowledgedTupleIds(std::string group_id, std::string substream, uint64_t from_id, uint64_t to_id,
+    virtual IdList GetUnacknowledgedTupleIds(std::string group_id, std::string stream, uint64_t from_id, uint64_t to_id,
                                              Error* error) = 0;
     virtual IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) = 0;
 
@@ -74,8 +74,8 @@ class DataBroker {
      */
     virtual NetworkConnectionType CurrentConnectionType() const = 0;
 
-    //! Get list of substreams, set from to "" to get all substreams
-    virtual StreamInfos GetSubstreamList(std::string from, Error* err) = 0;
+    //! Get list of streams, set from to "" to get all streams
+    virtual StreamInfos GetStreamList(std::string from, Error* err) = 0;
 
     //! Get current number of datasets
     /*!
@@ -83,7 +83,7 @@ class DataBroker {
       \return number of datasets.
     */
     virtual uint64_t GetCurrentSize(Error* err) = 0;
-    virtual uint64_t GetCurrentSize(std::string substream, Error* err) = 0;
+    virtual uint64_t GetCurrentSize(std::string stream, Error* err) = 0;
 
     //! Generate new GroupID.
     /*!
@@ -107,7 +107,7 @@ class DataBroker {
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetNext(FileInfo* info, std::string group_id, FileData* data) = 0;
-    virtual Error GetNext(FileInfo* info, std::string group_id, std::string substream, FileData* data) = 0;
+    virtual Error GetNext(FileInfo* info, std::string group_id, std::string stream, FileData* data) = 0;
 
     //! Retrieves image using fileinfo.
     /*!
@@ -122,32 +122,32 @@ class DataBroker {
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
       \param group_id - group id to use.
-      \param substream - substream to use ("" for default).
+      \param stream - stream to use ("" for default).
       \param min_size - wait until dataset has min_size data tuples (0 for maximum size)
       \return DataSet - information about the dataset
 
     */
-    virtual DataSet GetNextDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) = 0;
     virtual DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) = 0;
     //! Receive last available dataset which has min_size data tuples.
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
-      \param substream - substream to use ("" for default).
+      \param stream - stream to use ("" for default).
       \param min_size - amount of data tuples in dataset (0 for maximum size)
       \return DataSet - information about the dataset
     */
-    virtual DataSet GetLastDataset(std::string substream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetLastDataset(std::string stream, uint64_t min_size, Error* err) = 0;
     virtual DataSet GetLastDataset(uint64_t min_size, Error* err) = 0;
 
     //! Receive dataset by id.
     /*!
       \param id - dataset id
       \param err -  will be set to error data cannot be read or dataset size less than min_size, nullptr otherwise.
-      \param substream - substream to use ("" for default).
+      \param stream - stream to use ("" for default).
       \param min_size - wait until dataset has min_size data tuples (0 for maximum size)
       \return DataSet - information about the dataset
     */
-    virtual DataSet GetDatasetById(uint64_t id, std::string substream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) = 0;
     virtual DataSet GetDatasetById(uint64_t id, uint64_t min_size, Error* err) = 0;
 
     //! Receive single image by id.
@@ -158,16 +158,16 @@ class DataBroker {
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetById(uint64_t id, FileInfo* info, FileData* data) = 0;
-    virtual Error GetById(uint64_t id, FileInfo* info, std::string substream, FileData* data) = 0;
+    virtual Error GetById(uint64_t id, FileInfo* info, std::string stream, FileData* data) = 0;
 
     //! Receive id of last acknowledged data tuple
     /*!
       \param group_id - group id to use.
-      \param substream (optional) - substream
+      \param stream (optional) - stream
       \param err -  will be set in case of error, nullptr otherwise.
       \return id of the last acknowledged image, 0 if error
     */
-    virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) = 0;
+    virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string stream, Error* error) = 0;
     virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) = 0;
 
     //! Receive last available image.
@@ -177,7 +177,7 @@ class DataBroker {
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetLast(FileInfo* info, FileData* data) = 0;
-    virtual Error GetLast(FileInfo* info, std::string substream, FileData* data) = 0;
+    virtual Error GetLast(FileInfo* info, std::string stream, FileData* data) = 0;
 
     //! Get all images matching the query.
     /*!
@@ -186,7 +186,7 @@ class DataBroker {
       \return vector of image metadata matchiing to specified query. Empty if nothing found or error
     */
     virtual FileInfos QueryImages(std::string query, Error* err) = 0;
-    virtual FileInfos QueryImages(std::string query, std::string substream, Error* err) = 0;
+    virtual FileInfos QueryImages(std::string query, std::string stream, Error* err) = 0;
 
     //! Configure resending nonacknowledged data
     /*!

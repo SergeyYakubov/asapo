@@ -55,7 +55,7 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
     auto file_info = PrepareFileInfo(request);
 
     auto op_code = request->GetOpCode();
-    auto col_name = collection_name_prefix_ + "_" + request->GetSubstream();
+    auto col_name = collection_name_prefix_ + "_" + request->GetStream();
     Error err;
     if (op_code == Opcode::kOpcodeTransferData) {
         err =  db_client__->Insert(col_name, file_info, false);

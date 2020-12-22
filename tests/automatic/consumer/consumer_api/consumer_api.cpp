@@ -133,19 +133,19 @@ void TestSingle(const std::unique_ptr<asapo::DataBroker>& broker, const std::str
     M_AssertTrue(err == nullptr, "GetNext stream2 no error");
     M_AssertTrue(fi.name == "21", "GetNext stream2 filename");
 
-    auto substreams = broker->GetSubstreamList("",&err);
-    M_AssertTrue(err == nullptr, "GetSubstreamList no error");
-    M_AssertTrue(substreams.size() == 3, "substreams.size");
-    M_AssertTrue(substreams[0].name == "default", "substreams0.name1");
-    M_AssertTrue(substreams[1].name == "stream1", "substreams1.name2");
-    M_AssertTrue(substreams[2].name == "stream2", "substreams2.name3");
-    std::cout<<substreams[0].Json(false)<<std::endl;
-    std::cout<<substreams[1].Json(false)<<std::endl;
-    std::cout<<substreams[2].Json(false)<<std::endl;
-    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[0].timestamp_created) == 0, "substreams0.timestamp");
-    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[0].timestamp_lastentry) == 0, "substreams0.timestamp lastentry not set");
-    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[1].timestamp_created) == 1000, "substreams1.timestamp");
-    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(substreams[2].timestamp_created) == 2000, "substreams2.timestamp");
+    auto streams = broker->GetStreamList("",&err);
+    M_AssertTrue(err == nullptr, "GetStreamList no error");
+    M_AssertTrue(streams.size() == 3, "streams.size");
+    M_AssertTrue(streams[0].name == "default", "streams0.name1");
+    M_AssertTrue(streams[1].name == "stream1", "streams1.name2");
+    M_AssertTrue(streams[2].name == "stream2", "streams2.name3");
+    std::cout<<streams[0].Json(false)<<std::endl;
+    std::cout<<streams[1].Json(false)<<std::endl;
+    std::cout<<streams[2].Json(false)<<std::endl;
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[0].timestamp_created) == 0, "streams0.timestamp");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[0].timestamp_lastentry) == 0, "streams0.timestamp lastentry not set");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[1].timestamp_created) == 1000, "streams1.timestamp");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[2].timestamp_created) == 2000, "streams2.timestamp");
 // acknowledges
 
     auto id = broker->GetLastAcknowledgedTulpeId(group_id, &err);

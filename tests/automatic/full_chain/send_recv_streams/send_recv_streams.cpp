@@ -87,9 +87,9 @@ int main(int argc, char* argv[]) {
 
     for (uint64_t i = 0; i < n; i++) {
         asapo::EventHeader event_header{i + 1, 0, std::to_string(i + 1)};
-        producer->SendData(event_header, "substream1", nullptr, asapo::kTransferMetaDataOnly, ProcessAfterSend);
+        producer->SendData(event_header, "stream1", nullptr, asapo::kTransferMetaDataOnly, ProcessAfterSend);
     }
-    producer->SendSubstreamFinishedFlag("substream1", n, "substream2", ProcessAfterSend);
+    producer->SendStreamFinishedFlag("stream1", n, "stream2", ProcessAfterSend);
     producer->WaitRequestsFinished(10000);
 
     Error err;
@@ -101,14 +101,14 @@ int main(int argc, char* argv[]) {
 
     asapo::FileInfo fi;
     for (uint64_t i = 0; i < n; i++) {
-        consumer->GetNext(&fi, group_id, "substream1", nullptr);
+        consumer->GetNext(&fi, group_id, "stream1", nullptr);
     }
 
-    err = consumer->GetNext(&fi, group_id, "substream1", nullptr);
+    err = consumer->GetNext(&fi, group_id, "stream1", nullptr);
     if (err != asapo::ConsumerErrorTemplates::kStreamFinished) {
         return 1;
     }
     auto err_data = static_cast<const asapo::ConsumerErrorData*>(err->GetCustomData());
 
-    return (err_data->next_substream == "substream2") && (files_sent == n + 1) ? 0 : 1;
+    return (err_data->next_stream == "stream2") && (files_sent == n + 1) ? 0 : 1;
 }

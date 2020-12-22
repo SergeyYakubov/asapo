@@ -7,7 +7,7 @@ source, path, beamtime, token = sys.argv[1:]
 broker = asapo_consumer.create_server_broker(source,path,False, beamtime,"",token,1000)
 group_id = broker.generate_group_id()
 
-res = broker.query_images("_id > 0", substream="1")
+res = broker.query_images("_id > 0", stream="1")
 
 print(res)
 

@@ -23,7 +23,7 @@ Error GetNoDataResponseFromJson(const std::string &json_string, ConsumerErrorDat
     JsonStringParser parser(json_string);
     Error err;
     if ((err = parser.GetUInt64("id", &data->id)) || (err = parser.GetUInt64("id_max", &data->id_max))
-        || (err = parser.GetString("next_substream", &data->next_substream))) {
+        || (err = parser.GetString("next_stream", &data->next_stream))) {
         return err;
     }
     return nullptr;
@@ -63,7 +63,7 @@ Error ConsumerErrorFromNoDataResponse(const std::string &response) {
         }
         Error err;
         if (data.id >= data.id_max) {
-            err = data.next_substream.empty() ? ConsumerErrorTemplates::kEndOfStream.Generate() :
+            err = data.next_stream.empty() ? ConsumerErrorTemplates::kEndOfStream.Generate() :
                   ConsumerErrorTemplates::kStreamFinished.Generate();
         } else {
             err = ConsumerErrorTemplates::kNoData.Generate();
@@ -240,14 +240,14 @@ RequestInfo ServerDataBroker::PrepareRequestInfo(std::string api_url, bool datas
     return ri;
 }
 
-Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string group_id, std::string substream,
+Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string group_id, std::string stream,
                                             GetImageServerOperation op,
                                             bool dataset, uint64_t min_size) {
     interrupt_flag_= false;
     std::string request_suffix = OpToUriCmd(op);
     std::string request_group = OpToUriCmd(op);
     std::string request_api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source
-        + "/" + std::move(substream);
+        + "/" + std::move(stream);
     uint64_t elapsed_ms = 0;
     Error no_data_error;
     while (true) {
@@ -295,27 +295,27 @@ Error ServerDataBroker::GetRecordFromServer(std::string* response, std::string g
 }
 
 Error ServerDataBroker::GetNext(FileInfo* info, std::string group_id, FileData* data) {
-    return GetNext(info, std::move(group_id), kDefaultSubstream, data);
+    return GetNext(info, std::move(group_id), kDefaultStream, data);
 }
 
-Error ServerDataBroker::GetNext(FileInfo* info, std::string group_id, std::string substream, FileData* data) {
+Error ServerDataBroker::GetNext(FileInfo* info, std::string group_id, std::string stream, FileData* data) {
     return GetImageFromServer(GetImageServerOperation::GetNext,
                               0,
                               std::move(group_id),
-                              std::move(substream),
+                              std::move(stream),
                               info,
                               data);
 }
 
 Error ServerDataBroker::GetLast(FileInfo* info, FileData* data) {
-    return GetLast(info, kDefaultSubstream, data);
+    return GetLast(info, kDefaultStream, data);
 }
 
-Error ServerDataBroker::GetLast(FileInfo* info, std::string substream, FileData* data) {
+Error ServerDataBroker::GetLast(FileInfo* info, std::string stream, FileData* data) {
     return GetImageFromServer(GetImageServerOperation::GetLast,
                               0,
                               "0",
-                              std::move(substream),
+                              std::move(stream),
                               info,
                               data);
 }
@@ -329,7 +329,7 @@ std::string ServerDataBroker::OpToUriCmd(GetImageServerOperation op) {
 }
 
 Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id,
-                                           std::string substream,
+                                           std::string stream,
                                            FileInfo* info,
                                            FileData* data) {
     if (info == nullptr) {
@@ -339,9 +339,9 @@ Error ServerDataBroker::GetImageFromServer(GetImageServerOperation op, uint64_t 
     Error err;
     std::string response;
     if (op == GetImageServerOperation::GetID) {
-        err = GetRecordFromServerById(id, &response, std::move(group_id), std::move(substream));
+        err = GetRecordFromServerById(id, &response, std::move(group_id), std::move(stream));
     } else {
-        err = GetRecordFromServer(&response, std::move(group_id), std::move(substream), op);
+        err = GetRecordFromServer(&response, std::move(group_id), std::move(stream), op);
     }
     if (err != nullptr) {
         return err;
@@ -516,21 +516,21 @@ std::string ServerDataBroker::BrokerRequestWithTimeout(RequestInfo request, Erro
 }
 
 Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id) {
-    return SetLastReadMarker(value, std::move(group_id), kDefaultSubstream);
+    return SetLastReadMarker(value, std::move(group_id), kDefaultStream);
 }
 
 Error ServerDataBroker::ResetLastReadMarker(std::string group_id) {
-    return ResetLastReadMarker(std::move(group_id), kDefaultSubstream);
+    return ResetLastReadMarker(std::move(group_id), kDefaultStream);
 }
 
-Error ServerDataBroker::ResetLastReadMarker(std::string group_id, std::string substream) {
-    return SetLastReadMarker(0, group_id, substream);
+Error ServerDataBroker::ResetLastReadMarker(std::string group_id, std::string stream) {
+    return SetLastReadMarker(0, group_id, stream);
 }
 
-Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id, std::string substream) {
+Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id, std::string stream) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/"
-        + std::move(substream) + "/" + std::move(group_id) + "/resetcounter";
+        + std::move(stream) + "/" + std::move(group_id) + "/resetcounter";
     ri.extra_params = "&value=" + std::to_string(value);
     ri.post = true;
 
@@ -539,10 +539,10 @@ Error ServerDataBroker::SetLastReadMarker(uint64_t value, std::string group_id, 
     return err;
 }
 
-uint64_t ServerDataBroker::GetCurrentSize(std::string substream, Error* err) {
+uint64_t ServerDataBroker::GetCurrentSize(std::string stream, Error* err) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        +"/" + std::move(substream) + "/size";
+        +"/" + std::move(stream) + "/size";
     auto responce = BrokerRequestWithTimeout(ri, err);
     if (*err) {
         return 0;
@@ -557,26 +557,26 @@ uint64_t ServerDataBroker::GetCurrentSize(std::string substream, Error* err) {
 }
 
 uint64_t ServerDataBroker::GetCurrentSize(Error* err) {
-    return GetCurrentSize(kDefaultSubstream, err);
+    return GetCurrentSize(kDefaultStream, err);
 }
 Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, FileData* data) {
     if (id == 0) {
         return ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
     }
 
-    return GetById(id, info, kDefaultSubstream, data);
+    return GetById(id, info, kDefaultStream, data);
 }
 
-Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string substream, FileData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetID, id, "0", substream, info, data);
+Error ServerDataBroker::GetById(uint64_t id, FileInfo* info, std::string stream, FileData* data) {
+    return GetImageFromServer(GetImageServerOperation::GetID, id, "0", stream, info, data);
 }
 
 Error ServerDataBroker::GetRecordFromServerById(uint64_t id, std::string* response, std::string group_id,
-                                                std::string substream,
+                                                std::string stream,
                                                 bool dataset, uint64_t min_size) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        +"/" + std::move(substream) +
+        +"/" + std::move(stream) +
         "/" + std::move(
         group_id) + "/" + std::to_string(id);
     if (dataset) {
@@ -606,10 +606,10 @@ DataSet DecodeDatasetFromResponse(std::string response, Error* err) {
     }
 }
 
-FileInfos ServerDataBroker::QueryImages(std::string query, std::string substream, Error* err) {
+FileInfos ServerDataBroker::QueryImages(std::string query, std::string stream, Error* err) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        "/" + std::move(substream) + "/0/queryimages";
+        "/" + std::move(stream) + "/0/queryimages";
     ri.post = true;
     ri.body = std::move(query);
 
@@ -623,36 +623,36 @@ FileInfos ServerDataBroker::QueryImages(std::string query, std::string substream
 }
 
 FileInfos ServerDataBroker::QueryImages(std::string query, Error* err) {
-    return QueryImages(std::move(query), kDefaultSubstream, err);
+    return QueryImages(std::move(query), kDefaultStream, err);
 }
 
 DataSet ServerDataBroker::GetNextDataset(std::string group_id, uint64_t min_size, Error* err) {
-    return GetNextDataset(std::move(group_id), kDefaultSubstream, min_size, err);
+    return GetNextDataset(std::move(group_id), kDefaultStream, min_size, err);
 }
 
-DataSet ServerDataBroker::GetNextDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) {
-    return GetDatasetFromServer(GetImageServerOperation::GetNext, 0, std::move(group_id), std::move(substream),min_size, err);
+DataSet ServerDataBroker::GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) {
+    return GetDatasetFromServer(GetImageServerOperation::GetNext, 0, std::move(group_id), std::move(stream),min_size, err);
 }
 
-DataSet ServerDataBroker::GetLastDataset(std::string substream, uint64_t min_size, Error* err) {
-    return GetDatasetFromServer(GetImageServerOperation::GetLast, 0, "0", std::move(substream),min_size, err);
+DataSet ServerDataBroker::GetLastDataset(std::string stream, uint64_t min_size, Error* err) {
+    return GetDatasetFromServer(GetImageServerOperation::GetLast, 0, "0", std::move(stream),min_size, err);
 }
 
 DataSet ServerDataBroker::GetLastDataset(uint64_t min_size, Error* err) {
-    return GetLastDataset(kDefaultSubstream, min_size, err);
+    return GetLastDataset(kDefaultStream, min_size, err);
 }
 
 DataSet ServerDataBroker::GetDatasetFromServer(GetImageServerOperation op,
                                                uint64_t id,
-                                               std::string group_id, std::string substream,
+                                               std::string group_id, std::string stream,
                                                uint64_t min_size,
                                                Error* err) {
     FileInfos infos;
     std::string response;
     if (op == GetImageServerOperation::GetID) {
-        *err = GetRecordFromServerById(id, &response, std::move(group_id), std::move(substream), true, min_size);
+        *err = GetRecordFromServerById(id, &response, std::move(group_id), std::move(stream), true, min_size);
     } else {
-        *err = GetRecordFromServer(&response, std::move(group_id), std::move(substream), op, true, min_size);
+        *err = GetRecordFromServer(&response, std::move(group_id), std::move(stream), op, true, min_size);
     }
     if (*err != nullptr && *err!=ConsumerErrorTemplates::kPartialData) {
         return {0, 0,FileInfos{}};
@@ -661,38 +661,38 @@ DataSet ServerDataBroker::GetDatasetFromServer(GetImageServerOperation op,
 }
 
 DataSet ServerDataBroker::GetDatasetById(uint64_t id, uint64_t min_size, Error* err) {
-    return GetDatasetById(id, kDefaultSubstream, min_size, err);
+    return GetDatasetById(id, kDefaultStream, min_size, err);
 }
 
-DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string substream, uint64_t min_size, Error* err) {
-    return GetDatasetFromServer(GetImageServerOperation::GetID, id, "0", std::move(substream), min_size, err);
+DataSet ServerDataBroker::GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) {
+    return GetDatasetFromServer(GetImageServerOperation::GetID, id, "0", std::move(stream), min_size, err);
 }
 
-StreamInfos ParseSubstreamsFromResponse(std::string response, Error* err) {
+StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
     auto parser = JsonStringParser(std::move(response));
-    std::vector<std::string> substreams_endcoded;
-    StreamInfos substreams;
+    std::vector<std::string> streams_endcoded;
+    StreamInfos streams;
     Error parse_err;
-    *err = parser.GetArrayRawStrings("substreams", &substreams_endcoded);
+    *err = parser.GetArrayRawStrings("streams", &streams_endcoded);
     if (*err) {
         return StreamInfos{};
     }
-    for (auto substream_encoded : substreams_endcoded) {
+    for (auto stream_encoded : streams_endcoded) {
         StreamInfo si;
-        auto ok = si.SetFromJson(substream_encoded, false);
+        auto ok = si.SetFromJson(stream_encoded, false);
         if (!ok) {
-            *err = TextError("cannot parse " + substream_encoded);
+            *err = TextError("cannot parse " + stream_encoded);
             return StreamInfos{};
         }
-        substreams.emplace_back(si);
+        streams.emplace_back(si);
     }
-    return substreams;
+    return streams;
 }
 
-StreamInfos ServerDataBroker::GetSubstreamList(std::string from, Error* err) {
+StreamInfos ServerDataBroker::GetStreamList(std::string from, Error* err) {
 
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/0/substreams";
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/0/streams";
     ri.post = false;
     if (!from.empty()) {
         ri.extra_params = "&from=" + from;
@@ -703,7 +703,7 @@ StreamInfos ServerDataBroker::GetSubstreamList(std::string from, Error* err) {
         return StreamInfos{};
     }
 
-    return ParseSubstreamsFromResponse(std::move(response), err);
+    return ParseStreamsFromResponse(std::move(response), err);
 }
 
 Error ServerDataBroker::UpdateFolderTokenIfNeeded(bool ignore_existing) {
@@ -760,10 +760,10 @@ Error ServerDataBroker::GetDataFromFileTransferService(FileInfo* info, FileData*
     return err;
 }
 
-Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::string substream) {
+Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::string stream) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        +"/" + std::move(substream) +
+        +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
     ri.body = "{\"Op\":\"ackimage\"}";
@@ -774,13 +774,13 @@ Error ServerDataBroker::Acknowledge(std::string group_id, uint64_t id, std::stri
 }
 
 IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id,
-                                                   std::string substream,
+                                                   std::string stream,
                                                    uint64_t from_id,
                                                    uint64_t to_id,
                                                    Error* error) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        +"/" + std::move(substream) +
+        +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/nacks";
     ri.extra_params = "&from=" + std::to_string(from_id) + "&to=" + std::to_string(to_id);
 
@@ -802,13 +802,13 @@ IdList ServerDataBroker::GetUnacknowledgedTupleIds(std::string group_id,
                                                    uint64_t from_id,
                                                    uint64_t to_id,
                                                    Error* error) {
-    return GetUnacknowledgedTupleIds(std::move(group_id), kDefaultSubstream, from_id, to_id, error);
+    return GetUnacknowledgedTupleIds(std::move(group_id), kDefaultStream, from_id, to_id, error);
 }
 
-uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) {
+uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std::string stream, Error* error) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        +"/" + std::move(substream) +
+        +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/lastack";
 
     auto json_string = BrokerRequestWithTimeout(ri, error);
@@ -829,7 +829,7 @@ uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, std:
 }
 
 uint64_t ServerDataBroker::GetLastAcknowledgedTulpeId(std::string group_id, Error* error) {
-    return GetLastAcknowledgedTulpeId(std::move(group_id), kDefaultSubstream, error);
+    return GetLastAcknowledgedTulpeId(std::move(group_id), kDefaultStream, error);
 }
 
 void ServerDataBroker::SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) {
@@ -841,10 +841,10 @@ void ServerDataBroker::SetResendNacs(bool resend, uint64_t delay_sec, uint64_t r
 Error ServerDataBroker::NegativeAcknowledge(std::string group_id,
                                             uint64_t id,
                                             uint64_t delay_sec,
-                                            std::string substream) {
+                                            std::string stream) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        +"/" + std::move(substream) +
+        +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
     ri.body = R"({"Op":"negackimage","Params":{"DelaySec":)" + std::to_string(delay_sec) + "}}";

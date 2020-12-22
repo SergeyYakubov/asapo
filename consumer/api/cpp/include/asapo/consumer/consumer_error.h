@@ -30,7 +30,7 @@ class ConsumerErrorData : public CustomErrorData {
   public:
     uint64_t id;
     uint64_t id_max;
-    std::string next_substream;
+    std::string next_stream;
 };
 
 

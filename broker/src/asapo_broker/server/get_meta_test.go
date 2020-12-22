@@ -33,9 +33,9 @@ func TestGetMetaTestSuite(t *testing.T) {
 }
 
 func (suite *GetMetaTestSuite) TestGetMetaOK() {
-	suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: expectedSubstream, Op: "meta", ExtraParam: "1"}).Return([]byte(""), nil)
+	suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: expectedStream, Op: "meta", ExtraParam: "1"}).Return([]byte(""), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request meta")))
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/0/meta"  + "/1" + correctTokenSuffix,"GET")
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedStream + "/0/meta"  + "/1" + correctTokenSuffix,"GET")
 	suite.Equal(http.StatusOK, w.Code, "meta OK")
 }
 

@@ -99,9 +99,9 @@ else:
     print("should be error sending id 0 ")
     sys.exit(1)
 
-# send to another substream
+# send to another stream
 producer.send_data(1, "processed/" + data_source + "/" + "file9", None,
-                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="stream", callback=callback)
+                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream", callback=callback)
 
 # wait normal requests finished before sending duplicates
 
@@ -129,9 +129,9 @@ producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")
 
-# send to another data to substream stream
+# send to another data to stream stream
 producer.send_data(2, "processed/" + data_source + "/" + "file10", None,
-                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="stream", callback=callback)
+                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream", callback=callback)
 
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
@@ -151,7 +151,7 @@ print("created: ",datetime.utcfromtimestamp(info['timestampCreated']/1000000000)
 print("last record: ",datetime.utcfromtimestamp(info['timestampLast']/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f'))
 
 info = producer.stream_info('stream')
-assert_eq(info['lastId'], 2, "last id from different substream")
+assert_eq(info['lastId'], 2, "last id from different stream")
 
 info_last = producer.last_stream()
 assert_eq(info_last['name'], "stream", "last stream")

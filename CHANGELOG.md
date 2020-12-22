@@ -16,7 +16,7 @@ BREAKING CHANGES
 * Consumer API - remove group_id argument from get_last/get_by_id/get_last_dataset/get_dataset_by_id functions
 * Producer API - changed meaning of subsets (subset_id replaced with id_in_subset and this means now id of the image within a subset (e.g. module number for multi-module detector)), file_id is now a global id of a multi-set data (i.g. multi-image id) 
     ####  renaming - Producer API
-* stream -> data_source, substream -> stream
+* stream -> data_source, stream -> stream
     ####  renaming - Consumer API
 *
 
@@ -27,14 +27,14 @@ BUG FIXES
 ## 20.09.1
 
 FEATURES
-* New function GetLastSubstream/last_stream in Producer API - returns info for a substream which was created last 
+* New function GetLastStream/last_stream in Producer API - returns info for a stream which was created last 
 
 IMPROVEMENTS
 * Each data tuple automatically gets a timestamp (nanoseconds from Linux epoch) at the moment it is being inserted to a database 
-* GetSubstreamList/get_substream_list returns now sorted (by timestamp of the earliest data tuple) list of substreams. Parameter `from` allows to limit the list
+* GetStreamList/get_stream_list returns now sorted (by timestamp of the earliest data tuple) list of streams. Parameter `from` allows to limit the list
 
 BREAKING CHANGES
-* GetSubstreamList/get_substream_list returns now not an array of strings, but array of StreamInfos/dictionaries
+* GetStreamList/get_stream_list returns now not an array of strings, but array of StreamInfos/dictionaries
 
 ## 20.09.0
 
@@ -75,12 +75,12 @@ IMPROVEMENTS
 ## 20.06.0
 FEATURES
 * implemented acknowledeges - one can acknowledge a data tuple, get last acknowledged tuple id, get list of unacknowledged tuple ids
-* implement getting substream info (contains last id) by producer client (not need to have consumer client)
+* implement getting stream info (contains last id) by producer client (not need to have consumer client)
 
 IMPROVEMENTS
-* change behavior when trying to get data from a substream that does not exist - return EndOfStream instead of WrongInput
-* change behavior of GetLastXX/get_lastXX functions - current pointer is not being set to the end of a substream after this command anymore
-* substream name added to producer callback output for Python
+* change behavior when trying to get data from a stream that does not exist - return EndOfStream instead of WrongInput
+* change behavior of GetLastXX/get_lastXX functions - current pointer is not being set to the end of a stream after this command anymore
+* stream name added to producer callback output for Python
 * added simple C++ examples
 
 BUG FIXES
@@ -88,7 +88,7 @@ BUG FIXES
 
 ## 20.03.0
 FEATURES
-* introduced substreams for producer/consumer
+* introduced streams for producer/consumer
 * introduced timeout for producer requests
 * producer accepts "auto" for beamtime, will automatically select a current one for a given beamline
 * introduced file transfer service - possibility for consumer clients to receive data also in case filesystem is inaccessible

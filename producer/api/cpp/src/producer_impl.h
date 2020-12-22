@@ -24,17 +24,17 @@ class ProducerImpl : public Producer {
   std::unique_ptr<RequestHandlerFactory> request_handler_factory_;
  public:
   static const size_t kDiscoveryServiceUpdateFrequencyMs;
-  static const std::string kFinishSubStreamKeyword;
-  static const std::string kNoNextSubStreamKeyword;
+  static const std::string kFinishStreamKeyword;
+  static const std::string kNoNextStreamKeyword;
 
   explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_sec,
                         asapo::RequestHandlerType type);
   ProducerImpl(const ProducerImpl &) = delete;
   ProducerImpl &operator=(const ProducerImpl &) = delete;
 
-  StreamInfo GetStreamInfo(std::string substream, uint64_t timeout_sec, Error* err) const override;
+  StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_sec, Error* err) const override;
   StreamInfo GetStreamInfo(uint64_t timeout_sec, Error* err) const override;
-  StreamInfo GetLastSubstream(uint64_t timeout_sec, Error* err) const override;
+  StreamInfo GetLastStream(uint64_t timeout_sec, Error* err) const override;
 
   void SetLogLevel(LogLevel level) override;
   void EnableLocalLog(bool enable) override;
@@ -45,17 +45,17 @@ class ProducerImpl : public Producer {
                  RequestCallback callback) override;
   Error SendData__(const EventHeader &event_header, void* data, uint64_t ingest_mode,
                    RequestCallback callback) override;
-  Error SendData(const EventHeader &event_header, std::string substream, FileData data, uint64_t ingest_mode,
+  Error SendData(const EventHeader &event_header, std::string stream, FileData data, uint64_t ingest_mode,
                  RequestCallback callback) override;
-  Error SendData__(const EventHeader &event_header, std::string substream, void* data, uint64_t ingest_mode,
+  Error SendData__(const EventHeader &event_header, std::string stream, void* data, uint64_t ingest_mode,
                    RequestCallback callback) override;
   void StopThreads__() override;
   Error SendFile(const EventHeader &event_header, std::string full_path, uint64_t ingest_mode,
                  RequestCallback callback) override;
-  Error SendFile(const EventHeader &event_header, std::string substream, std::string full_path, uint64_t ingest_mode,
+  Error SendFile(const EventHeader &event_header, std::string stream, std::string full_path, uint64_t ingest_mode,
                  RequestCallback callback) override;
 
-  Error SendSubstreamFinishedFlag(std::string substream, uint64_t last_id, std::string next_substream,
+  Error SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,
                                   RequestCallback callback) override;
 
   AbstractLogger* log__;
@@ -69,11 +69,11 @@ class ProducerImpl : public Producer {
   uint64_t GetRequestsQueueVolumeMb() override;
   void SetRequestsQueueLimits(uint64_t size, uint64_t volume) override;
  private:
-  StreamInfo StreamRequest(StreamRequestOp op, std::string substream, uint64_t timeout_sec, Error* err) const;
-  Error Send(const EventHeader &event_header, std::string substream, FileData data, std::string full_path,
+  StreamInfo StreamRequest(StreamRequestOp op, std::string stream, uint64_t timeout_sec, Error* err) const;
+  Error Send(const EventHeader &event_header, std::string stream, FileData data, std::string full_path,
              uint64_t ingest_mode,
              RequestCallback callback, bool manage_data_memory);
-  GenericRequestHeader GenerateNextSendRequest(const EventHeader &event_header, std::string substream,
+  GenericRequestHeader GenerateNextSendRequest(const EventHeader &event_header, std::string stream,
                                                uint64_t ingest_mode);
   std::string source_cred_string_;
   uint64_t timeout_sec_;

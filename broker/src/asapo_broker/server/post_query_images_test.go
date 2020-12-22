@@ -35,10 +35,10 @@ func TestQueryTestSuite(t *testing.T) {
 func (suite *QueryTestSuite) TestQueryOK() {
 	query_str := "aaaa"
 
-	suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: expectedSubstream,Op: "queryimages", ExtraParam: query_str}).Return([]byte("{}"), nil)
+	suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: expectedStream,Op: "queryimages", ExtraParam: query_str}).Return([]byte("{}"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request queryimages")))
 
-	w := doRequest("/database/"+expectedBeamtimeId+"/"+expectedStream+"/"+expectedSubstream+"/0/queryimages"+correctTokenSuffix, "POST", query_str)
+	w := doRequest("/database/"+expectedBeamtimeId+"/"+expectedStream+"/"+expectedStream+"/0/queryimages"+correctTokenSuffix, "POST", query_str)
 	suite.Equal(http.StatusOK, w.Code, "Query OK")
 }
 

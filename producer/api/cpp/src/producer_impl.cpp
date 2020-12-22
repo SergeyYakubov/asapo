@@ -15,8 +15,8 @@
 namespace  asapo {
 
 const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
-const std::string ProducerImpl::kFinishSubStreamKeyword = "asapo_finish_substream";
-const std::string ProducerImpl::kNoNextSubStreamKeyword = "asapo_no_next";
+const std::string ProducerImpl::kFinishStreamKeyword = "asapo_finish_stream";
+const std::string ProducerImpl::kNoNextStreamKeyword = "asapo_no_next";
 
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_sec,
@@ -34,10 +34,10 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, u
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
 }
 
-GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& event_header, std::string substream,
+GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& event_header, std::string stream,
         uint64_t ingest_mode) {
     GenericRequestHeader request{kOpcodeTransferData, event_header.file_id, event_header.file_size,
-                                 event_header.user_metadata.size(), event_header.file_name, substream};
+                                 event_header.user_metadata.size(), event_header.file_name, stream};
     if (event_header.id_in_subset != 0) {
         request.op_code = kOpcodeTransferSubsetData;
         request.custom_data[kPosDataSetId] = event_header.id_in_subset;
@@ -92,7 +92,7 @@ Error CheckProducerRequest(const EventHeader& event_header, uint64_t ingest_mode
 }
 
 Error ProducerImpl::Send(const EventHeader& event_header,
-                         std::string substream,
+                         std::string stream,
                          FileData data,
                          std::string full_path,
                          uint64_t ingest_mode,
@@ -107,7 +107,7 @@ Error ProducerImpl::Send(const EventHeader& event_header,
         return err;
     }
 
-    auto request_header = GenerateNextSendRequest(event_header, std::move(substream), ingest_mode);
+    auto request_header = GenerateNextSendRequest(event_header, std::move(stream), ingest_mode);
 
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
                 std::move(data), std::move(event_header.user_metadata), std::move(full_path), callback, manage_data_memory, timeout_sec_ * 1000}
@@ -133,37 +133,37 @@ Error CheckData(uint64_t ingest_mode, const EventHeader& event_header, const Fil
 
 Error ProducerImpl::SendData(const EventHeader& event_header, FileData data,
                              uint64_t ingest_mode, RequestCallback callback) {
-    return SendData(event_header, kDefaultSubstream, std::move(data), ingest_mode, callback);
+    return SendData(event_header, kDefaultStream, std::move(data), ingest_mode, callback);
 }
 
 Error ProducerImpl::SendData(const EventHeader& event_header,
-                             std::string substream,
+                             std::string stream,
                              FileData data,
                              uint64_t ingest_mode,
                              RequestCallback callback) {
     if (auto err = CheckData(ingest_mode, event_header, &data)) {
         return err;
     }
-    return Send(event_header, std::move(substream), std::move(data), "", ingest_mode, callback, true);
+    return Send(event_header, std::move(stream), std::move(data), "", ingest_mode, callback, true);
 
 }
 
-Error ProducerImpl::SendSubstreamFinishedFlag(std::string substream, uint64_t last_id, std::string next_substream,
+Error ProducerImpl::SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,
                                               RequestCallback callback) {
     EventHeader event_header;
-    event_header.file_name = kFinishSubStreamKeyword;
+    event_header.file_name = kFinishStreamKeyword;
     event_header.file_size = 0;
     event_header.file_id = last_id + 1;
-    if (next_substream.empty()) {
-        next_substream = kNoNextSubStreamKeyword;
+    if (next_stream.empty()) {
+        next_stream = kNoNextStreamKeyword;
     }
-    event_header.user_metadata =  std::string("{\"next_substream\":") + "\"" + next_substream + "\"}";
-    return Send(event_header, std::move(substream), nullptr, "", IngestModeFlags::kTransferMetaDataOnly, callback, true);
+    event_header.user_metadata =  std::string("{\"next_stream\":") + "\"" + next_stream + "\"}";
+    return Send(event_header, std::move(stream), nullptr, "", IngestModeFlags::kTransferMetaDataOnly, callback, true);
 }
 
 Error ProducerImpl::SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,
                              RequestCallback callback) {
-    return SendFile(event_header, kDefaultSubstream, std::move(full_path), ingest_mode, callback);
+    return SendFile(event_header, kDefaultStream, std::move(full_path), ingest_mode, callback);
 }
 
 
@@ -226,7 +226,7 @@ Error ProducerImpl::SendMetaData(const std::string& metadata, RequestCallback ca
 }
 
 Error ProducerImpl::SendData__(const EventHeader& event_header,
-                               std::string substream,
+                               std::string stream,
                                void* data,
                                uint64_t ingest_mode,
                                RequestCallback callback) {
@@ -237,14 +237,14 @@ Error ProducerImpl::SendData__(const EventHeader& event_header,
         return err;
     }
 
-    return Send(std::move(event_header), std::move(substream), std::move(data_wrapped), "", ingest_mode, callback, false);
+    return Send(std::move(event_header), std::move(stream), std::move(data_wrapped), "", ingest_mode, callback, false);
 }
 
 Error ProducerImpl::SendData__(const EventHeader& event_header,
                                void* data,
                                uint64_t ingest_mode,
                                RequestCallback callback) {
-    return SendData__(event_header, kDefaultSubstream, data, ingest_mode, callback);
+    return SendData__(event_header, kDefaultStream, data, ingest_mode, callback);
 }
 
 uint64_t  ProducerImpl::GetRequestsQueueSize() {
@@ -263,7 +263,7 @@ void ProducerImpl::StopThreads__() {
     request_pool__->StopThreads();
 }
 Error ProducerImpl::SendFile(const EventHeader& event_header,
-                             std::string substream,
+                             std::string stream,
                              std::string full_path,
                              uint64_t ingest_mode,
                              RequestCallback callback) {
@@ -271,7 +271,7 @@ Error ProducerImpl::SendFile(const EventHeader& event_header,
         return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }
 
-    return Send(event_header, std::move(substream), nullptr, std::move(full_path), ingest_mode, callback, true);
+    return Send(event_header, std::move(stream), nullptr, std::move(full_path), ingest_mode, callback, true);
 
 }
 
@@ -321,17 +321,17 @@ StreamInfo GetInfoFromCallback(std::future<StreamInfoResult>* promiseResult, uin
 }
 
 
-GenericRequestHeader CreateRequestHeaderFromOp(StreamRequestOp op,std::string substream) {
+GenericRequestHeader CreateRequestHeaderFromOp(StreamRequestOp op,std::string stream) {
     switch (op) {
         case StreamRequestOp::kStreamInfo:
-            return GenericRequestHeader{kOpcodeStreamInfo, 0, 0, 0, "", substream};
+            return GenericRequestHeader{kOpcodeStreamInfo, 0, 0, 0, "", stream};
         case StreamRequestOp::kLastStream:
             return GenericRequestHeader{kOpcodeLastStream, 0, 0, 0, "", ""};
     }
 }
 
-StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string substream, uint64_t timeout_sec, Error* err) const {
-    auto header = CreateRequestHeaderFromOp(op,substream);
+StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string stream, uint64_t timeout_sec, Error* err) const {
+    auto header = CreateRequestHeaderFromOp(op,stream);
     std::unique_ptr<std::promise<StreamInfoResult>> promise {new std::promise<StreamInfoResult>};
     std::future<StreamInfoResult> promiseResult = promise->get_future();
 
@@ -347,15 +347,15 @@ StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string substream,
                                err); // we give two more sec for request to exit by timeout
 }
 
-StreamInfo ProducerImpl::GetStreamInfo(std::string substream, uint64_t timeout_sec, Error* err) const {
-    return StreamRequest(StreamRequestOp::kStreamInfo,substream,timeout_sec,err);
+StreamInfo ProducerImpl::GetStreamInfo(std::string stream, uint64_t timeout_sec, Error* err) const {
+    return StreamRequest(StreamRequestOp::kStreamInfo,stream,timeout_sec,err);
 }
 
 StreamInfo ProducerImpl::GetStreamInfo(uint64_t timeout_sec, Error* err) const {
-    return GetStreamInfo(kDefaultSubstream, timeout_sec, err);
+    return GetStreamInfo(kDefaultStream, timeout_sec, err);
 }
 
-StreamInfo ProducerImpl::GetLastSubstream(uint64_t timeout_sec, Error* err) const {
+StreamInfo ProducerImpl::GetLastStream(uint64_t timeout_sec, Error* err) const {
     return StreamRequest(StreamRequestOp::kLastStream,"",timeout_sec,err);
 }
 

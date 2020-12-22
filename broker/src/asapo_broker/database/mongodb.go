@@ -69,8 +69,8 @@ const no_session_msg = "database client not created"
 const wrong_id_type = "wrong id type"
 const already_connected_msg = "already connected"
 
-const finish_substream_keyword = "asapo_finish_substream"
-const no_next_substream_keyword = "asapo_no_next"
+const finish_stream_keyword = "asapo_finish_stream"
+const no_next_stream_keyword = "asapo_no_next"
 
 var dbSessionLock sync.Mutex
 
@@ -230,13 +230,13 @@ func (db *Mongodb) incrementField(request Request, max_ind int, res interface{})
 	return nil
 }
 
-func encodeAnswer(id, id_max int, next_substream string) string {
+func encodeAnswer(id, id_max int, next_stream string) string {
 	var r = struct {
 		Op             string `json:"op"`
 		Id             int    `json:"id"`
 		Id_max         int    `json:"id_max"`
-		Next_substream string `json:"next_substream"`
-	}{"get_record_by_id", id, id_max, next_substream}
+		Next_stream string `json:"next_stream"`
+	}{"get_record_by_id", id, id_max, next_stream}
 	answer, _ := json.Marshal(&r)
 	return string(answer)
 }
@@ -361,7 +361,7 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(request Request) error {
 	}
 
 	if len(request.DbName) == 0 || len(request.DbCollectionName) == 0 {
-		return &DBError{utils.StatusWrongInput, "beamtime_id ans substream must be set"}
+		return &DBError{utils.StatusWrongInput, "beamtime_id ans stream must be set"}
 	}
 
 	return nil
@@ -508,17 +508,17 @@ func (db *Mongodb) getNextAndMaxIndexes(request Request) (int, int, error) {
 func (db *Mongodb) processLastRecord(request Request, data []byte, err error) ([]byte, error) {
 	var r ServiceRecord
 	err = json.Unmarshal(data, &r)
-	if err != nil || r.Name != finish_substream_keyword {
+	if err != nil || r.Name != finish_stream_keyword {
 		return data, err
 	}
-	var next_substream string
-	next_substream, ok := r.Meta["next_substream"].(string)
+	var next_stream string
+	next_stream, ok := r.Meta["next_stream"].(string)
 	if !ok {
-		next_substream = no_next_substream_keyword
+		next_stream = no_next_stream_keyword
 	}
 
-	answer := encodeAnswer(r.ID, r.ID, next_substream)
-	log_str := "reached end of substream " + request.DbCollectionName + " , next_substream: " + next_substream
+	answer := encodeAnswer(r.ID, r.ID, next_stream)
+	log_str := "reached end of stream " + request.DbCollectionName + " , next_stream: " + next_stream
 	logger.Debug(log_str)
 
 
@@ -781,10 +781,10 @@ func (db *Mongodb) getNacks(request Request, min_index, max_index int) ([]int, e
 	return resp[0].Numbers, nil
 }
 
-func (db *Mongodb) getSubstreams(request Request) ([]byte, error) {
-	rec, err := substreams.getSubstreams(db,request.DbName,request.ExtraParam)
+func (db *Mongodb) getStreams(request Request) ([]byte, error) {
+	rec, err := streams.getStreams(db,request.DbName,request.ExtraParam)
 	if err != nil {
-		return db.processQueryError("get substreams", request.DbName, err)
+		return db.processQueryError("get streams", request.DbName, err)
 	}
 	return json.Marshal(&rec)
 }
@@ -810,8 +810,8 @@ func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
 		return db.getMeta(request)
 	case "queryimages":
 		return db.queryImages(request)
-	case "substreams":
-		return db.getSubstreams(request)
+	case "streams":
+		return db.getStreams(request)
 	case "ackimage":
 		return db.ackRecord(request)
 	case "negackimage":

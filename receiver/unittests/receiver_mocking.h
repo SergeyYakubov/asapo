@@ -65,7 +65,7 @@ class MockRequest: public Request {
         Request(request_header, socket_fd, std::move(origin_uri), nullptr, db_check_handler) {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
-    MOCK_CONST_METHOD0(GetSubstream, std::string());
+    MOCK_CONST_METHOD0(GetStream, std::string());
     MOCK_CONST_METHOD0(GetDataSize, uint64_t());
     MOCK_CONST_METHOD0(GetDataID, uint64_t());
     MOCK_CONST_METHOD0(GetSlotId, uint64_t());

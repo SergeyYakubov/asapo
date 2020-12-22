@@ -56,40 +56,40 @@ class ServerDataBroker final : public asapo::DataBroker {
     explicit ServerDataBroker(std::string server_uri, std::string source_path, bool has_filesystem,
                               SourceCredentials source);
 
-    Error Acknowledge(std::string group_id, uint64_t id, std::string substream = kDefaultSubstream) override;
+    Error Acknowledge(std::string group_id, uint64_t id, std::string stream = kDefaultStream) override;
     Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_sec,
-                              std::string substream = kDefaultSubstream) override;
+                              std::string stream = kDefaultStream) override;
 
     IdList GetUnacknowledgedTupleIds(std::string group_id,
-                                     std::string substream,
+                                     std::string stream,
                                      uint64_t from_id,
                                      uint64_t to_id,
                                      Error* error) override;
     IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) override;
 
-    uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string substream, Error* error) override;
+    uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string stream, Error* error) override;
     uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) override;
 
     Error ResetLastReadMarker(std::string group_id) override;
-    Error ResetLastReadMarker(std::string group_id, std::string substream) override;
+    Error ResetLastReadMarker(std::string group_id, std::string stream) override;
 
     Error SetLastReadMarker(uint64_t value, std::string group_id) override;
-    Error SetLastReadMarker(uint64_t value, std::string group_id, std::string substream) override;
+    Error SetLastReadMarker(uint64_t value, std::string group_id, std::string stream) override;
 
     Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
-    Error GetNext(FileInfo* info, std::string group_id, std::string substream, FileData* data) override;
+    Error GetNext(FileInfo* info, std::string group_id, std::string stream, FileData* data) override;
 
     Error GetLast(FileInfo* info, FileData* data) override;
-    Error GetLast(FileInfo* info, std::string substream, FileData* data) override;
+    Error GetLast(FileInfo* info, std::string stream, FileData* data) override;
 
     std::string GenerateNewGroupId(Error* err) override;
     std::string GetBeamtimeMeta(Error* err) override;
 
     uint64_t GetCurrentSize(Error* err) override;
-    uint64_t GetCurrentSize(std::string substream, Error* err) override;
+    uint64_t GetCurrentSize(std::string stream, Error* err) override;
 
     Error GetById(uint64_t id, FileInfo* info, FileData* data) override;
-    Error GetById(uint64_t id, FileInfo* info, std::string substream, FileData* data) override;
+    Error GetById(uint64_t id, FileInfo* info, std::string stream, FileData* data) override;
 
 
     void SetTimeout(uint64_t timeout_ms) override;
@@ -98,20 +98,20 @@ class ServerDataBroker final : public asapo::DataBroker {
     NetworkConnectionType CurrentConnectionType() const override;
 
     FileInfos QueryImages(std::string query, Error* err) override;
-    FileInfos QueryImages(std::string query, std::string substream, Error* err) override;
+    FileInfos QueryImages(std::string query, std::string stream, Error* err) override;
 
     DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) override;
-    DataSet GetNextDataset(std::string group_id, std::string substream, uint64_t min_size, Error* err) override;
+    DataSet GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) override;
 
     DataSet GetLastDataset(uint64_t min_size, Error* err) override;
-    DataSet GetLastDataset(std::string substream, uint64_t min_size, Error* err) override;
+    DataSet GetLastDataset(std::string stream, uint64_t min_size, Error* err) override;
 
     DataSet GetDatasetById(uint64_t id, uint64_t min_size, Error* err) override;
-    DataSet GetDatasetById(uint64_t id, std::string substream, uint64_t min_size, Error* err) override;
+    DataSet GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) override;
 
     Error RetrieveData(FileInfo* info, FileData* data) override;
 
-    StreamInfos GetSubstreamList(std::string from, Error* err) override;
+    StreamInfos GetStreamList(std::string from, Error* err) override;
     void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) override;
 
     virtual void InterruptCurrentOperation() override;
@@ -127,18 +127,18 @@ class ServerDataBroker final : public asapo::DataBroker {
     static const std::string kBrokerServiceName;
     static const std::string kFileTransferServiceName;
     std::string RequestWithToken(std::string uri);
-    Error GetRecordFromServer(std::string* info, std::string group_id, std::string substream, GetImageServerOperation op,
+    Error GetRecordFromServer(std::string* info, std::string group_id, std::string stream, GetImageServerOperation op,
                               bool dataset = false, uint64_t min_size = 0);
-    Error GetRecordFromServerById(uint64_t id, std::string* info, std::string group_id, std::string substream,
+    Error GetRecordFromServerById(uint64_t id, std::string* info, std::string group_id, std::string stream,
                                   bool dataset = false, uint64_t min_size = 0);
     Error GetDataIfNeeded(FileInfo* info, FileData* data);
     Error DiscoverService(const std::string& service_name, std::string* uri_to_set);
     bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
     bool SwitchToGetByIdIfPartialData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
     Error ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri);
-    Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string substream,
+    Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string stream,
                              FileInfo* info, FileData* data);
-    DataSet GetDatasetFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string substream,
+    DataSet GetDatasetFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string stream,
                                  uint64_t min_size, Error* err);
     bool DataCanBeInBuffer(const FileInfo* info);
     Error TryGetDataFromBuffer(const FileInfo* info, FileData* data);

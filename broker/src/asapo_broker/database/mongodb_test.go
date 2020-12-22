@@ -28,17 +28,17 @@ type TestDataset struct {
 var db Mongodb
 
 const dbname = "12345"
-const collection = "substream"
-const collection2 = "substream2"
+const collection = "stream"
+const collection2 = "stream2"
 const dbaddress = "127.0.0.1:27017"
 const groupId = "bid2a5auidddp1vl71d0"
 const metaID = 0
 const metaID_str = "0"
 
-var empty_next = map[string]string{"next_substream": ""}
+var empty_next = map[string]string{"next_stream": ""}
 
 var rec1 = TestRecord{1, empty_next, "aaa", 0}
-var rec_finished = TestRecord{2, map[string]string{"next_substream": "next1"}, finish_substream_keyword, 0}
+var rec_finished = TestRecord{2, map[string]string{"next_stream": "next1"}, finish_stream_keyword, 0}
 var rec2 = TestRecord{2, empty_next, "bbb", 1}
 var rec3 = TestRecord{3, empty_next, "ccc", 2}
 
@@ -101,7 +101,7 @@ func TestMongoDBGetNextErrorWhenNonExistingDatacollectionname(t *testing.T) {
 	defer cleanup()
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: "bla", GroupId: groupId, Op: "next"})
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_stream\":\"\"}", err.Error())
 }
 
 func TestMongoDBGetLastErrorWhenNonExistingDatacollectionname(t *testing.T) {
@@ -109,7 +109,7 @@ func TestMongoDBGetLastErrorWhenNonExistingDatacollectionname(t *testing.T) {
 	defer cleanup()
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: "bla", GroupId: groupId, Op: "last"})
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_stream\":\"\"}", err.Error())
 }
 
 func TestMongoDBGetByIdErrorWhenNoData(t *testing.T) {
@@ -118,7 +118,7 @@ func TestMongoDBGetByIdErrorWhenNoData(t *testing.T) {
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", ExtraParam: "2"})
 
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":0,\"next_stream\":\"\"}", err.Error())
 }
 
 func TestMongoDBGetNextErrorWhenRecordNotThereYet(t *testing.T) {
@@ -127,7 +127,7 @@ func TestMongoDBGetNextErrorWhenRecordNotThereYet(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec2)
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":2,\"next_substream\":\"\"}", err.Error())
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":2,\"next_stream\":\"\"}", err.Error())
 }
 
 func TestMongoDBGetNextOK(t *testing.T) {
@@ -149,7 +149,7 @@ func TestMongoDBGetNextErrorOnFinishedStream(t *testing.T) {
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})
 
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":2,\"next_substream\":\"next1\"}", err.(*DBError).Message)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":2,\"next_stream\":\"next1\"}", err.(*DBError).Message)
 }
 
 func TestMongoDBGetNextErrorOnNoMoreData(t *testing.T) {
@@ -160,7 +160,7 @@ func TestMongoDBGetNextErrorOnNoMoreData(t *testing.T) {
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})
 
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"\"}", err.(*DBError).Message)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"\"}", err.(*DBError).Message)
 }
 
 func TestMongoDBGetNextCorrectOrder(t *testing.T) {
@@ -284,7 +284,7 @@ func TestMongoDBGetNextEmptyAfterErasingDatabase(t *testing.T) {
 
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_substream\":\"\"}", err.Error())
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":0,\"id_max\":0,\"next_stream\":\"\"}", err.Error())
 }
 
 func TestMongoDBgetRecordByID(t *testing.T) {
@@ -303,7 +303,7 @@ func TestMongoDBgetRecordByIDFails(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec1)
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", ExtraParam: "2"})
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":1,\"next_substream\":\"\"}", err.Error())
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":1,\"next_stream\":\"\"}", err.Error())
 }
 
 func TestMongoDBGetRecordNext(t *testing.T) {
@@ -733,38 +733,38 @@ func TestMongoDBOkOnIncompleteDatasetID(t *testing.T) {
 
 }
 
-type Substream struct {
+type Stream struct {
 	name    string
 	records []TestRecord
 }
 
-var testsSubstreams = []struct {
+var testsStreams = []struct {
 	from               string
-	substreams         []Substream
-	expectedSubstreams SubstreamsRecord
+	streams         []Stream
+	expectedStreams StreamsRecord
 	test               string
 	ok                 bool
 }{
-	{"", []Substream{}, SubstreamsRecord{[]SubstreamInfo{}}, "no substreams", true},
-	{"", []Substream{{"ss1", []TestRecord{rec2, rec1}}}, SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss1", Timestamp: 0}}}, "one substream", true},
-	{"", []Substream{{"ss1", []TestRecord{rec2, rec1}}, {"ss2", []TestRecord{rec2, rec3}}}, SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss1", Timestamp: 0}, SubstreamInfo{Name: "ss2", Timestamp: 1}}}, "two substreams", true},
-	{"ss2", []Substream{{"ss1", []TestRecord{rec1, rec2}}, {"ss2", []TestRecord{rec2, rec3}}}, SubstreamsRecord{[]SubstreamInfo{SubstreamInfo{Name: "ss2", Timestamp: 1}}}, "with from", true},
+	{"", []Stream{}, StreamsRecord{[]StreamInfo{}}, "no streams", true},
+	{"", []Stream{{"ss1", []TestRecord{rec2, rec1}}}, StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss1", Timestamp: 0}}}, "one stream", true},
+	{"", []Stream{{"ss1", []TestRecord{rec2, rec1}}, {"ss2", []TestRecord{rec2, rec3}}}, StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss1", Timestamp: 0}, StreamInfo{Name: "ss2", Timestamp: 1}}}, "two streams", true},
+	{"ss2", []Stream{{"ss1", []TestRecord{rec1, rec2}}, {"ss2", []TestRecord{rec2, rec3}}}, StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss2", Timestamp: 1}}}, "with from", true},
 }
 
-func TestMongoDBListSubstreams(t *testing.T) {
-	for _, test := range testsSubstreams {
+func TestMongoDBListStreams(t *testing.T) {
+	for _, test := range testsStreams {
 		db.Connect(dbaddress)
-		for _, substream := range test.substreams {
-			for _, rec := range substream.records {
-				db.insertRecord(dbname, substream.name, &rec)
+		for _, stream := range test.streams {
+			for _, rec := range stream.records {
+				db.insertRecord(dbname, stream.name, &rec)
 			}
 		}
-		var rec_substreams_expect, _ = json.Marshal(test.expectedSubstreams)
+		var rec_streams_expect, _ = json.Marshal(test.expectedStreams)
 
-		res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: "0", Op: "substreams", ExtraParam: test.from})
+		res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: "0", Op: "streams", ExtraParam: test.from})
 		if test.ok {
 			assert.Nil(t, err, test.test)
-			assert.Equal(t, string(rec_substreams_expect), string(res), test.test)
+			assert.Equal(t, string(rec_streams_expect), string(res), test.test)
 		} else {
 			assert.NotNil(t, err, test.test)
 		}
@@ -890,7 +890,7 @@ func TestMongoDBGetNextUsesInprocessedNumRetry(t *testing.T) {
 	assert.Nil(t, err1)
 	assert.NotNil(t, err2)
 	if err2 != nil {
-		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"\"}", err2.Error())
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"\"}", err2.Error())
 	}
 	assert.Equal(t, string(rec1_expect), string(res))
 	assert.Equal(t, string(rec1_expect), string(res1))
@@ -976,7 +976,7 @@ func TestMongoDBAckDeletesInprocessed(t *testing.T) {
 	assert.NotNil(t, err)
 	if err != nil {
 		assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"\"}", err.Error())
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"\"}", err.Error())
 	}
 }
 
@@ -1006,7 +1006,7 @@ func TestMongoDBNegAck(t *testing.T) {
 	assert.NotNil(t, err1)
 	if err1 != nil {
 		assert.Equal(t, utils.StatusNoData, err1.(*DBError).Code)
-		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_substream\":\"\"}", err1.Error())
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"\"}", err1.Error())
 	}
 }
 

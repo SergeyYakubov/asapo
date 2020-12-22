@@ -24,21 +24,21 @@ class Producer {
 
     virtual ~Producer() = default;
 
-    //! Get substream information from receiver
+    //! Get stream information from receiver
     /*!
-      \param substream (optional) - substream
+      \param stream (optional) - stream
       \param timeout_sec - operation timeout in seconds
-      \return StreamInfo - a structure with substream information
+      \return StreamInfo - a structure with stream information
     */
-    virtual StreamInfo GetStreamInfo(std::string substream, uint64_t timeout_sec, Error* err) const = 0;
+    virtual StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_sec, Error* err) const = 0;
     virtual StreamInfo GetStreamInfo(uint64_t timeout_sec, Error* err) const = 0;
 
-  //! Get substream that has the newest ingested data
+  //! Get stream that has the newest ingested data
   /*!
     \param timeout_ms - operation timeout in seconds
-    \return StreamInfo - a structure with substream information
+    \return StreamInfo - a structure with stream information
   */
-    virtual StreamInfo GetLastSubstream(uint64_t timeout_sec, Error* err) const = 0;
+    virtual StreamInfo GetLastStream(uint64_t timeout_sec, Error* err) const = 0;
 
 
     //! Sends data to the receiver
@@ -62,20 +62,20 @@ class Producer {
       \param data - A pointer to the data to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendData(const EventHeader& event_header, std::string substream, FileData data, uint64_t ingest_mode,
+    virtual Error SendData(const EventHeader& event_header, std::string stream, FileData data, uint64_t ingest_mode,
                            RequestCallback callback) = 0;
 
 
     //! Sends data to the receiver - same as SendData - memory should not be freed until send is finished
     //! used e.g. for Python bindings
-    virtual Error SendData__(const EventHeader& event_header, std::string substream, void* data, uint64_t ingest_mode,
+    virtual Error SendData__(const EventHeader& event_header, std::string stream, void* data, uint64_t ingest_mode,
                              RequestCallback callback) = 0;
 
     //! Stop processing threads
     //! used e.g. for Python bindings
     virtual void StopThreads__() = 0;
 
-    //! Sends files to the default substream
+    //! Sends files to the default stream
     /*!
       \param event_header - A stucture with the meta information (file name, size is ignored).
       \param full_path - A full path of the file to send
@@ -84,24 +84,24 @@ class Producer {
     virtual Error SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,
                            RequestCallback callback) = 0;
 
-    //! Sends files to the substream
+    //! Sends files to the stream
     /*!
       \param event_header - A stucture with the meta information (file name, size is ignored).
       \param full_path - A full path of the file to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendFile(const EventHeader& event_header, std::string substream, std::string full_path,
+    virtual Error SendFile(const EventHeader& event_header, std::string stream, std::string full_path,
                            uint64_t ingest_mode,
                            RequestCallback callback) = 0;
 
-    //! Marks substream finished
+    //! Marks stream finished
     /*!
-      \param substream - Name of the substream to makr finished
-      \param last_id - ID of the last image in substream
-      \param next_substream - Name of the next substream (empty if not set)
+      \param stream - Name of the stream to makr finished
+      \param last_id - ID of the last image in stream
+      \param next_stream - Name of the next stream (empty if not set)
       \return Error - Will be nullptr on success
     */
-    virtual Error SendSubstreamFinishedFlag(std::string substream, uint64_t last_id, std::string next_substream,
+    virtual Error SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,
                                             RequestCallback callback) = 0;
 
 

@@ -1,4 +1,4 @@
-set(TARGET_NAME send_recv_substreams_python)
+set(TARGET_NAME send_recv_streams_python)
 prepare_asapo()
 
 if (UNIX)
@@ -9,6 +9,6 @@ else()
     get_target_property(PYTHON_LIBS_PRODUCER asapo_producer BINARY_DIR)
 endif()
 
-file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/send_recv_substreams.py TEST_SCRIPT )
+file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/send_recv_streams.py TEST_SCRIPT )
 
 add_script_test("${TARGET_NAME}" "${Python_EXECUTABLE} ${PYTHON_LIBS_CONSUMER} ${PYTHON_LIBS_PRODUCER} ${TEST_SCRIPT}" nomem)

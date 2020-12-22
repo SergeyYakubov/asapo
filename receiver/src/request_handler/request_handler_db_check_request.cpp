@@ -19,7 +19,7 @@ RequestHandlerDbCheckRequest::RequestHandlerDbCheckRequest(std::string collectio
 Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, FileInfo* record ) const {
     auto op_code = request->GetOpCode();
     auto id = request->GetDataID();
-    auto col_name = collection_name_prefix_ + "_" + request->GetSubstream();
+    auto col_name = collection_name_prefix_ + "_" + request->GetStream();
     Error err;
     if (op_code == Opcode::kOpcodeTransferData) {
         err =  db_client__->GetById(col_name, id, record);
