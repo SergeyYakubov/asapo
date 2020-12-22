@@ -260,8 +260,8 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
         if (err == nullptr) {
             auto ri = PrepareRequestInfo(request_api + "/" + group_id + "/" + request_suffix, dataset, min_size);
             if (request_suffix == "next" && resend_) {
-                ri.extra_params = ri.extra_params + "&resend_nacks=true" + "&delay_sec=" +
-                    std::to_string(delay_sec_) + "&resend_attempts=" + std::to_string(resend_attempts_);
+                ri.extra_params = ri.extra_params + "&resend_nacks=true" + "&delay_ms=" +
+                    std::to_string(delay_ms_) + "&resend_attempts=" + std::to_string(resend_attempts_);
             }
             RequestOutput output;
             err = ProcessRequest(&output, ri, &current_broker_uri_);
@@ -832,22 +832,22 @@ uint64_t ConsumerImpl::GetLastAcknowledgedTulpeId(std::string group_id, Error* e
     return GetLastAcknowledgedTulpeId(std::move(group_id), kDefaultStream, error);
 }
 
-void ConsumerImpl::SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) {
+void ConsumerImpl::SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts) {
     resend_ = resend;
-    delay_sec_ = delay_sec;
+    delay_ms_ = delay_ms;
     resend_attempts_ = resend_attempts;
 }
 
 Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
                                         uint64_t id,
-                                        uint64_t delay_sec,
+                                        uint64_t delay_ms,
                                         std::string stream) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
-    ri.body = R"({"Op":"negackimage","Params":{"DelaySec":)" + std::to_string(delay_sec) + "}}";
+    ri.body = R"({"Op":"negackimage","Params":{"DelayMs":)" + std::to_string(delay_ms) + "}}";
 
     Error err;
     BrokerRequestWithTimeout(ri, &err);

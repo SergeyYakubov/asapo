@@ -38,11 +38,11 @@ class Consumer {
     /*!
         \param group_id - group id to use.
         \param id - data tuple id
-        \param delay_sec - data tuple will be redelivered after delay, 0 to redeliver immediately
+        \param delay_ms - data tuple will be redelivered after delay, 0 to redeliver immediately
         \param stream (optional) - stream
         \return nullptr of command was successful, otherwise error.
     */
-    virtual Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_sec,
+    virtual Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_ms,
                                       std::string stream = kDefaultStream) = 0;
 
 
@@ -191,10 +191,10 @@ class Consumer {
     //! Configure resending nonacknowledged data
     /*!
       \param resend -  where to resend
-      \param delay_sec - how many seconds to wait before resending
+      \param delay_ms - how many milliseconds to wait before resending
       \param resend_attempts - how many resend attempts to make
     */
-    virtual void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) = 0;
+    virtual void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts) = 0;
 
   //! Will try to interrupt current long runnung operations (mainly needed to exit waiting loop in C from Python)
     virtual void InterruptCurrentOperation() = 0;

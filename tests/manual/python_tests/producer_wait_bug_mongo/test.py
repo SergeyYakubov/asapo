@@ -27,7 +27,7 @@ def assert_err(err):
         print(err)
         sys.exit(1)
 
-producer = asapo_producer.create_producer(endpoint,'processed',beamtime,'auto', data_source, token, nthreads, 600)
+producer = asapo_producer.create_producer(endpoint,'processed',beamtime,'auto', data_source, token, nthreads, 600000)
 
 producer.set_log_level("debug")
 

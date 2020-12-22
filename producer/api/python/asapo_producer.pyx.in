@@ -198,11 +198,11 @@ cdef class PyProducer:
         if err:
             throw_exception(err)
 
-    def stream_info(self, stream = 'default', uint64_t timeout_sec = 1):
+    def stream_info(self, stream = 'default', uint64_t timeout_ms = 1000):
         """
          :param stream: stream name
          :type stream: string
-         :param timeout_sec: timeout in seconds
+         :param timeout_ms: timeout in milliseconds
          :type timeout_ms: int
          :raises:
             AsapoWrongInputError: wrong input (authorization, ...)
@@ -213,12 +213,12 @@ cdef class PyProducer:
         cdef StreamInfo info
         cdef string b_stream = _bytes(stream)
         with nogil:
-            info = self.c_producer.get().GetStreamInfo(b_stream,timeout_sec,&err)
+            info = self.c_producer.get().GetStreamInfo(b_stream,timeout_ms,&err)
         if err:
             throw_exception(err)
         return json.loads(_str(info.Json(True)))
 
-    def last_stream(self, uint64_t timeout_sec = 1):
+    def last_stream(self, uint64_t timeout_ms = 1000):
         """
          :param timeout_ms: timeout in seconds
          :type timeout_ms: int
@@ -230,7 +230,7 @@ cdef class PyProducer:
         cdef Error err
         cdef StreamInfo info
         with nogil:
-            info = self.c_producer.get().GetLastStream(timeout_sec,&err)
+            info = self.c_producer.get().GetLastStream(timeout_ms,&err)
         if err:
             throw_exception(err)
         return json.loads(_str(info.Json(True)))
@@ -320,7 +320,7 @@ cdef class PyProducer:
             if self.c_producer.get() is not NULL:
                 self.c_producer.get().StopThreads__()
     @staticmethod
-    def __create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthreads,timeout_sec):
+    def __create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthreads,timeout_ms):
         pyProd = PyProducer()
         cdef Error err
         cdef SourceType source_type
@@ -333,12 +333,12 @@ cdef class PyProducer:
         source.user_token = token
         source.data_source = data_source
         source.type = source_type
-        pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,timeout_sec,&err)
+        pyProd.c_producer = Producer.Create(endpoint,nthreads,RequestHandlerType_Tcp,source,timeout_ms,&err)
         if err:
             throw_exception(err)
         return pyProd
 
-def create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthreads,timeout_sec):
+def create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthreads,timeout_ms):
     """
          :param endpoint: server endpoint (url:port)
          :type endpoint: string
@@ -354,13 +354,13 @@ def create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthread
          :type token: string
          :param nthreads: ingest mode flag
          :type nthreads: int
-         :param timeout_sec: send requests timeout
-         :type timeout_sec: int
+         :param timeout_ms: send requests timeout in milliseconds
+         :type timeout_ms: int
          :raises:
             AsapoWrongInputError: wrong input (number of threads, ,,,)
             AsapoProducerError: actually should not happen
     """
-    return PyProducer.__create_producer(_bytes(endpoint),_bytes(type),_bytes(beamtime_id),_bytes(beamline),_bytes(data_source),_bytes(token),nthreads,timeout_sec)
+    return PyProducer.__create_producer(_bytes(endpoint),_bytes(type),_bytes(beamtime_id),_bytes(beamline),_bytes(data_source),_bytes(token),nthreads,timeout_ms)
 
 
 __version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"

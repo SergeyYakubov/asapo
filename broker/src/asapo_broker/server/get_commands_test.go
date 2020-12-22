@@ -46,7 +46,7 @@ var testsGetCommand = []struct {
 	{"nacks", expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/nacks","","0_0"},
 	{"next", expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/next","",""},
 	{"next", expectedStream, expectedGroupID, expectedStream + "/" +
-		expectedGroupID + "/next","&resend_nacks=true&delay_sec=10&resend_attempts=3","10_3"},
+		expectedGroupID + "/next","&resend_nacks=true&delay_ms=10000&resend_attempts=3","10000_3"},
 	{"size", expectedStream, "", expectedStream  + "/size","","0"},
 	{"streams", "0", "", "0/streams","",""},
 	{"lastack", expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/lastack","",""},

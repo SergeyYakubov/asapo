@@ -902,10 +902,10 @@ func TestMongoDBGetNextUsesInprocessedAfterTimeout(t *testing.T) {
 	defer cleanup()
 	err := db.insertRecord(dbname, collection, &rec1)
 	db.insertRecord(dbname, collection, &rec2)
-	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1_3"})
-	res1, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1_3"})
+	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1000_3"})
+	res1, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1000_3"})
 	time.Sleep(time.Second)
-	res2, err2 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1_3"})
+	res2, err2 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1000_3"})
 	assert.Nil(t, err)
 	assert.Nil(t, err1)
 	assert.Nil(t, err2)
@@ -920,10 +920,10 @@ func TestMongoDBGetNextReturnsToNormalAfterUsesInprocessed(t *testing.T) {
 	defer cleanup()
 	err := db.insertRecord(dbname, collection, &rec1)
 	db.insertRecord(dbname, collection, &rec2)
-	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1_3"})
+	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1000_3"})
 	time.Sleep(time.Second)
-	res1, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1_3"})
-	res2, err2 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1_3"})
+	res1, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1000_3"})
+	res2, err2 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1000_3"})
 	assert.Nil(t, err)
 	assert.Nil(t, err1)
 	assert.Nil(t, err2)
@@ -987,11 +987,11 @@ func TestMongoDBNegAck(t *testing.T) {
 	inputParams := struct {
 		Id     int
 		Params struct {
-			DelaySec int
+			DelayMs int
 		}
 	}{}
 	inputParams.Id = 1
-	inputParams.Params.DelaySec = 0
+	inputParams.Params.DelayMs = 0
 
 	db.insertRecord(dbname, collection, &rec1)
 	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})

@@ -37,7 +37,7 @@ def callback(payload, err):
     lock.release()
 
 
-producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', data_source, token, nthreads, 60)
+producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', data_source, token, nthreads, 60000)
 
 producer.set_log_level("debug")
 

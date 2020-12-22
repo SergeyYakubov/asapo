@@ -229,17 +229,17 @@ cdef class PyConsumer:
             err = self.c_consumer.get().Acknowledge(b_group_id,id,b_stream)
         if err:
             throw_exception(err)
-    def neg_acknowledge(self, group_id, uint64_t id, uint64_t delay_sec, stream = "default"):
+    def neg_acknowledge(self, group_id, uint64_t id, uint64_t delay_ms, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_stream = _bytes(stream)
         cdef Error err
         with nogil:
-            err = self.c_consumer.get().NegativeAcknowledge(b_group_id,id,delay_sec,b_stream)
+            err = self.c_consumer.get().NegativeAcknowledge(b_group_id,id,delay_ms,b_stream)
         if err:
             throw_exception(err)
-    def set_resend_nacs(self,bool resend, uint64_t delay_sec, uint64_t resend_attempts):
+    def set_resend_nacs(self,bool resend, uint64_t delay_ms, uint64_t resend_attempts):
         with nogil:
-            self.c_consumer.get().SetResendNacs(resend,delay_sec,resend_attempts)
+            self.c_consumer.get().SetResendNacs(resend,delay_ms,resend_attempts)
 
     def get_last_acknowledged_tuple_id(self, group_id, stream = "default"):
         cdef string b_group_id = _bytes(group_id)

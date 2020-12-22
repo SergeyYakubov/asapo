@@ -26,7 +26,7 @@ def callback(header,err):
 source, beamtime, token = sys.argv[1:]
 
 consumer = asapo_consumer.create_consumer(source,".",True, beamtime,"",token,timeout)
-producer  = asapo_producer.create_producer(source,'processed',beamtime,'auto', "", token, 1, 600)
+producer  = asapo_producer.create_producer(source,'processed',beamtime,'auto', "", token, 1, 600000)
 producer.set_log_level("debug")
 
 group_id  = consumer.generate_group_id()

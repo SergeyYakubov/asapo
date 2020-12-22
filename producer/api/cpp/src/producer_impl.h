@@ -27,14 +27,14 @@ class ProducerImpl : public Producer {
   static const std::string kFinishStreamKeyword;
   static const std::string kNoNextStreamKeyword;
 
-  explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_sec,
+  explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
                         asapo::RequestHandlerType type);
   ProducerImpl(const ProducerImpl &) = delete;
   ProducerImpl &operator=(const ProducerImpl &) = delete;
 
-  StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_sec, Error* err) const override;
-  StreamInfo GetStreamInfo(uint64_t timeout_sec, Error* err) const override;
-  StreamInfo GetLastStream(uint64_t timeout_sec, Error* err) const override;
+  StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const override;
+  StreamInfo GetStreamInfo(uint64_t timeout_ms, Error* err) const override;
+  StreamInfo GetLastStream(uint64_t timeout_ms, Error* err) const override;
 
   void SetLogLevel(LogLevel level) override;
   void EnableLocalLog(bool enable) override;
@@ -69,14 +69,14 @@ class ProducerImpl : public Producer {
   uint64_t GetRequestsQueueVolumeMb() override;
   void SetRequestsQueueLimits(uint64_t size, uint64_t volume) override;
  private:
-  StreamInfo StreamRequest(StreamRequestOp op, std::string stream, uint64_t timeout_sec, Error* err) const;
+  StreamInfo StreamRequest(StreamRequestOp op, std::string stream, uint64_t timeout_ms, Error* err) const;
   Error Send(const EventHeader &event_header, std::string stream, FileData data, std::string full_path,
              uint64_t ingest_mode,
              RequestCallback callback, bool manage_data_memory);
   GenericRequestHeader GenerateNextSendRequest(const EventHeader &event_header, std::string stream,
                                                uint64_t ingest_mode);
   std::string source_cred_string_;
-  uint64_t timeout_sec_;
+  uint64_t timeout_ms_;
 };
 
 struct StreamInfoResult {

@@ -19,9 +19,9 @@ const std::string ProducerImpl::kFinishStreamKeyword = "asapo_finish_stream";
 const std::string ProducerImpl::kNoNextStreamKeyword = "asapo_no_next";
 
 
-ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_sec,
+ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
                            asapo::RequestHandlerType type):
-    log__{GetDefaultProducerLogger()}, timeout_sec_{timeout_sec} {
+    log__{GetDefaultProducerLogger()}, timeout_ms_{timeout_ms} {
     switch (type) {
     case RequestHandlerType::kTcp:
         discovery_service_.reset(new ReceiverDiscoveryService{endpoint, ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
@@ -110,7 +110,7 @@ Error ProducerImpl::Send(const EventHeader& event_header,
     auto request_header = GenerateNextSendRequest(event_header, std::move(stream), ingest_mode);
 
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                std::move(data), std::move(event_header.user_metadata), std::move(full_path), callback, manage_data_memory, timeout_sec_ * 1000}
+                std::move(data), std::move(event_header.user_metadata), std::move(full_path), callback, manage_data_memory, timeout_ms_}
     });
 
 }
@@ -221,7 +221,7 @@ Error ProducerImpl::SendMetaData(const std::string& metadata, RequestCallback ca
     FileData data{new uint8_t[metadata.size()]};
     strncpy((char*)data.get(), metadata.c_str(), metadata.size());
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                std::move(data), "", "", callback, true, timeout_sec_}
+                std::move(data), "", "", callback, true, timeout_ms_}
     });
 }
 
@@ -302,9 +302,9 @@ void ActivatePromise(std::shared_ptr<std::promise<StreamInfoResult>> promise, Re
     } catch(...) {}
 }
 
-StreamInfo GetInfoFromCallback(std::future<StreamInfoResult>* promiseResult, uint64_t timeout_sec, Error* err) {
+StreamInfo GetInfoFromCallback(std::future<StreamInfoResult>* promiseResult, uint64_t timeout_ms, Error* err) {
     try {
-        auto status = promiseResult->wait_for(std::chrono::milliseconds(timeout_sec * 1000));
+        auto status = promiseResult->wait_for(std::chrono::milliseconds(timeout_ms));
         if (status == std::future_status::ready) {
             auto res = promiseResult->get();
             if (res.err == nullptr) {
@@ -330,7 +330,7 @@ GenericRequestHeader CreateRequestHeaderFromOp(StreamRequestOp op,std::string st
     }
 }
 
-StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string stream, uint64_t timeout_sec, Error* err) const {
+StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string stream, uint64_t timeout_ms, Error* err) const {
     auto header = CreateRequestHeaderFromOp(op,stream);
     std::unique_ptr<std::promise<StreamInfoResult>> promise {new std::promise<StreamInfoResult>};
     std::future<StreamInfoResult> promiseResult = promise->get_future();
@@ -338,25 +338,25 @@ StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string stream, ui
     *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(header),
                                                                                             nullptr, "", "",
                                                                                             unwrap_callback(ActivatePromise, std::move(promise)), true,
-                                                                                            timeout_sec * 1000}
+                                                                                            timeout_ms}
     }, true);
     if (*err) {
         return StreamInfo{};
     }
-    return GetInfoFromCallback(&promiseResult, timeout_sec + 2,
+    return GetInfoFromCallback(&promiseResult, timeout_ms + 2000,
                                err); // we give two more sec for request to exit by timeout
 }
 
-StreamInfo ProducerImpl::GetStreamInfo(std::string stream, uint64_t timeout_sec, Error* err) const {
-    return StreamRequest(StreamRequestOp::kStreamInfo,stream,timeout_sec,err);
+StreamInfo ProducerImpl::GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const {
+    return StreamRequest(StreamRequestOp::kStreamInfo,stream,timeout_ms,err);
 }
 
-StreamInfo ProducerImpl::GetStreamInfo(uint64_t timeout_sec, Error* err) const {
-    return GetStreamInfo(kDefaultStream, timeout_sec, err);
+StreamInfo ProducerImpl::GetStreamInfo(uint64_t timeout_ms, Error* err) const {
+    return GetStreamInfo(kDefaultStream, timeout_ms, err);
 }
 
-StreamInfo ProducerImpl::GetLastStream(uint64_t timeout_sec, Error* err) const {
-    return StreamRequest(StreamRequestOp::kLastStream,"",timeout_sec,err);
+StreamInfo ProducerImpl::GetLastStream(uint64_t timeout_ms, Error* err) const {
+    return StreamRequest(StreamRequestOp::kLastStream,"",timeout_ms,err);
 }
 
 uint64_t ProducerImpl::GetRequestsQueueVolumeMb() {

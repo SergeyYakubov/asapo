@@ -69,7 +69,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         Error SetLastReadMarker(uint64_t value, string group_id, string stream)
         Error ResetLastReadMarker(string group_id, string stream)
         Error Acknowledge(string group_id, uint64_t id, string stream)
-        Error NegativeAcknowledge(string group_id, uint64_t id, uint64_t delay_sec, string stream)
+        Error NegativeAcknowledge(string group_id, uint64_t id, uint64_t delay_ms, string stream)
         uint64_t GetLastAcknowledgedTulpeId(string group_id, string stream, Error* error)
         IdList GetUnacknowledgedTupleIds(string group_id, string stream, uint64_t from_id, uint64_t to_id, Error* error)
         string GenerateNewGroupId(Error* err)
@@ -80,7 +80,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         DataSet GetDatasetById(uint64_t id, string stream, uint64_t min_size, Error* err)
         Error RetrieveData(FileInfo* info, FileData* data)
         vector[StreamInfo] GetStreamList(string from_stream, Error* err)
-        void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts)
+        void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts)
         void InterruptCurrentOperation()
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:

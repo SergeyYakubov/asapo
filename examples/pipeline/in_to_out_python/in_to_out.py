@@ -28,7 +28,7 @@ transfer_data=int(transfer_data)>0
 
 consumer = asapo_consumer.create_consumer(source,path, True,beamtime,stream_in,token,timeout_s*1000)
 
-producer  = asapo_producer.create_producer(source,'processed',beamtime,'auto', stream_out, token, nthreads, 600)
+producer  = asapo_producer.create_producer(source,'processed',beamtime,'auto', stream_out, token, nthreads, 600000)
 
 group_id  = consumer.generate_group_id()
 

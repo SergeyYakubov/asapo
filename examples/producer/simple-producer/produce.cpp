@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     auto beamtime = "asapo_test";
 
     auto producer = asapo::Producer::Create(source, 1, asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{beamtime, "", "", ""}, 60, &err);
+                                            asapo::SourceCredentials{beamtime, "", "", ""}, 60000, &err);
     exit_if_error("Cannot start producer", err);
 
     std::string to_send = "hello";

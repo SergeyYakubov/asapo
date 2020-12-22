@@ -57,7 +57,7 @@ class ConsumerImpl final : public asapo::Consumer {
                           SourceCredentials source);
 
     Error Acknowledge(std::string group_id, uint64_t id, std::string stream = kDefaultStream) override;
-    Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_sec,
+    Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_ms,
                               std::string stream = kDefaultStream) override;
 
     IdList GetUnacknowledgedTupleIds(std::string group_id,
@@ -112,7 +112,7 @@ class ConsumerImpl final : public asapo::Consumer {
     Error RetrieveData(FileInfo* info, FileData* data) override;
 
     StreamInfos GetStreamList(std::string from, Error* err) override;
-    void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts) override;
+    void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts) override;
 
     virtual void InterruptCurrentOperation() override;
 
@@ -168,7 +168,7 @@ class ConsumerImpl final : public asapo::Consumer {
     RequestInfo CreateFileTransferRequest(const FileInfo* info) const;
     uint64_t resend_timout_ = 0;
     bool resend_ = false;
-    uint64_t delay_sec_;
+    uint64_t delay_ms_;
     uint64_t resend_attempts_;
     std::atomic<bool> interrupt_flag_{ false};
 };

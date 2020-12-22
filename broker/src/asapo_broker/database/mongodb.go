@@ -35,14 +35,14 @@ type InProcessingRecord struct {
 	ID       int `bson:"_id" json:"_id"`
 	MaxResendAttempts int `bson:"maxResendAttempts" json:"maxResendAttempts"`
 	ResendAttempts int `bson:"resendAttempts" json:"resendAttempts"`
-	DelaySec  int64 `bson:"delaySec" json:"delaySec"`
+	DelayMs  int64 `bson:"delayMs" json:"delayMs"`
 }
 
 type NegAckParamsRecord struct {
 	ID       int `bson:"_id" json:"_id"`
 	MaxResendAttempts int `bson:"maxResendAttempts" json:"maxResendAttempts"`
 	ResendAttempts int `bson:"resendAttempts" json:"resendAttempts"`
-	DelaySec  int64 `bson:"delaySec" json:"delaySec"`
+	DelayMs  int64 `bson:"delayMs" json:"delayMs"`
 }
 
 
@@ -321,7 +321,7 @@ func (db *Mongodb) negAckRecord(request Request) ([]byte, error) {
 	input := struct {
 		Id int
 		Params struct {
-			DelaySec int
+			DelayMs int
 		}
 	}{}
 
@@ -330,7 +330,7 @@ func (db *Mongodb) negAckRecord(request Request) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	err =  db.InsertRecordToInprocess(request.DbName,inprocess_collection_name_prefix+request.GroupId,input.Id,input.Params.DelaySec, 1)
+	err =  db.InsertRecordToInprocess(request.DbName,inprocess_collection_name_prefix+request.GroupId,input.Id,input.Params.DelayMs, 1)
 	return []byte(""), err
 }
 
@@ -386,18 +386,18 @@ func (db *Mongodb) getCurrentPointer(request Request) (LocationPointer, int, err
 	return curPointer, max_ind, nil
 }
 
-func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delaySec int,nResendAttempts int) (int, error) {
+func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delayMs int,nResendAttempts int) (int, error) {
 	var res InProcessingRecord
 	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
-	tNow := time.Now().Unix()
+	tNow := time.Now().UnixNano()
  	var update bson.M
 	if nResendAttempts==0 {
-		update = bson.M{"$set": bson.M{"delaySec": tNow + int64(delaySec) ,"maxResendAttempts":math.MaxInt32}, "$inc": bson.M{"resendAttempts": 1}}
+		update = bson.M{"$set": bson.M{"delayMs": tNow + int64(delayMs*1e6) ,"maxResendAttempts":math.MaxInt32}, "$inc": bson.M{"resendAttempts": 1}}
 	} else {
-		update = bson.M{"$set": bson.M{"delaySec": tNow + int64(delaySec) ,"maxResendAttempts":nResendAttempts}, "$inc": bson.M{"resendAttempts": 1}}
+		update = bson.M{"$set": bson.M{"delayMs": tNow + int64(delayMs*1e6) ,"maxResendAttempts":nResendAttempts}, "$inc": bson.M{"resendAttempts": 1}}
 	}
 
-	q := bson.M{"delaySec": bson.M{"$lte": tNow},"$expr": bson.M{"$lt": []string{"$resendAttempts","$maxResendAttempts"}}}
+	q := bson.M{"delayMs": bson.M{"$lte": tNow},"$expr": bson.M{"$lt": []string{"$resendAttempts","$maxResendAttempts"}}}
 	c := db.client.Database(dbname).Collection(collection_name)
 	err := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(&res)
 	if err != nil {
@@ -412,9 +412,9 @@ func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delay
 	return res.ID, nil
 }
 
-func (db *Mongodb) InsertRecordToInprocess(db_name string, collection_name string,id int,delaySec int, nResendAttempts int) error {
+func (db *Mongodb) InsertRecordToInprocess(db_name string, collection_name string,id int,delayMs int, nResendAttempts int) error {
 	record := InProcessingRecord{
-		id, nResendAttempts, 0,time.Now().Unix()+int64(delaySec),
+		id, nResendAttempts, 0,time.Now().UnixNano()+int64(delayMs*1e6),
 	}
 
 	c := db.client.Database(db_name).Collection(collection_name)
@@ -429,20 +429,20 @@ func (db *Mongodb) InsertToInprocessIfNeeded(db_name string, collection_name str
 	if len(extra_param) == 0 {
 		return nil
 	}
-	delaySec, nResendAttempts, err := extractsTwoIntsFromString(extra_param)
+	delayMs, nResendAttempts, err := extractsTwoIntsFromString(extra_param)
 	if err != nil {
 		return err
 	}
 
-	return db.InsertRecordToInprocess(db_name,collection_name,id,delaySec, nResendAttempts)
+	return db.InsertRecordToInprocess(db_name,collection_name,id,delayMs, nResendAttempts)
 
 }
 
 func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTimeout bool) (int, int, error) {
-	var record_ind,  max_ind, delaySec, nResendAttempts int
+	var record_ind,  max_ind, delayMs, nResendAttempts int
 	var err error
 	if len(request.ExtraParam) != 0 {
-		delaySec, nResendAttempts, err = extractsTwoIntsFromString(request.ExtraParam)
+		delayMs, nResendAttempts, err = extractsTwoIntsFromString(request.ExtraParam)
 		if err != nil {
 			return 0, 0, err
 		}
@@ -451,7 +451,7 @@ func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTi
 	}
 	tNow := time.Now().Unix()
 	if (atomic.LoadInt64(&db.lastReadFromInprocess) <= tNow-int64(db.settings.ReadFromInprocessPeriod)) || ignoreTimeout {
-		record_ind, err = db.getUnProcessedId(request.DbName, inprocess_collection_name_prefix+request.GroupId, delaySec,nResendAttempts)
+		record_ind, err = db.getUnProcessedId(request.DbName, inprocess_collection_name_prefix+request.GroupId, delayMs,nResendAttempts)
 		if err != nil {
 			log_str := "error getting unprocessed id " + request.DbName + ", groupid: " + request.GroupId + ":" + err.Error()
 			logger.Debug(log_str)

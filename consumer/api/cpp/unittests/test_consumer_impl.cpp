@@ -1341,19 +1341,19 @@ TEST_F(ConsumerImplTests, ResendNacks) {
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/"
                                             + expected_group_id + "/next?token="
-                                            + expected_token + "&resend_nacks=true&delay_sec=10&resend_attempts=3", _,
+                                            + expected_token + "&resend_nacks=true&delay_ms=10000&resend_attempts=3", _,
                                         _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return("")));
 
-    consumer->SetResendNacs(true, 10, 3);
+    consumer->SetResendNacs(true, 10000, 3);
     consumer->GetNext(&info, expected_group_id, nullptr);
 }
 
 TEST_F(ConsumerImplTests, NegativeAcknowledgeUsesCorrectUri) {
     MockGetBrokerUri();
-    auto expected_neg_acknowledge_command = R"({"Op":"negackimage","Params":{"DelaySec":10}})";
+    auto expected_neg_acknowledge_command = R"({"Op":"negackimage","Params":{"DelayMs":10000}})";
     EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
         expected_stream + "/" +
         expected_group_id
@@ -1364,7 +1364,7 @@ TEST_F(ConsumerImplTests, NegativeAcknowledgeUsesCorrectUri) {
             SetArgPointee<4>(nullptr),
             Return("")));
 
-    auto err = consumer->NegativeAcknowledge(expected_group_id, expected_dataset_id, 10, expected_stream);
+    auto err = consumer->NegativeAcknowledge(expected_group_id, expected_dataset_id, 10000, expected_stream);
 
     ASSERT_THAT(err, Eq(nullptr));
 }

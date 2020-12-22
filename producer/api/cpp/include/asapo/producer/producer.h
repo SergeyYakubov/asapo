@@ -18,7 +18,7 @@ class Producer {
      */
     static std::unique_ptr<Producer> Create(const std::string& endpoint, uint8_t n_processing_threads,
                                             asapo::RequestHandlerType type, SourceCredentials source_cred,
-                                            uint64_t timeout_sec,
+                                            uint64_t timeout_ms,
                                             Error* err);
 
     virtual ~Producer() = default;
@@ -26,18 +26,18 @@ class Producer {
     //! Get stream information from receiver
     /*!
       \param stream (optional) - stream
-      \param timeout_sec - operation timeout in seconds
+      \param timeout_ms - operation timeout in milliseconds
       \return StreamInfo - a structure with stream information
     */
-    virtual StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_sec, Error* err) const = 0;
-    virtual StreamInfo GetStreamInfo(uint64_t timeout_sec, Error* err) const = 0;
+    virtual StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const = 0;
+    virtual StreamInfo GetStreamInfo(uint64_t timeout_ms, Error* err) const = 0;
 
   //! Get stream that has the newest ingested data
   /*!
-    \param timeout_ms - operation timeout in seconds
+    \param timeout_ms - operation timeout in milliseconds
     \return StreamInfo - a structure with stream information
   */
-    virtual StreamInfo GetLastStream(uint64_t timeout_sec, Error* err) const = 0;
+    virtual StreamInfo GetLastStream(uint64_t timeout_ms, Error* err) const = 0;
 
 
     //! Sends data to the receiver

@@ -24,7 +24,7 @@ struct Args {
     uint64_t iterations;
     uint64_t nthreads;
     uint64_t mode;
-    uint64_t timeout_sec;
+    uint64_t timeout_ms;
     uint64_t images_in_set;
 };
 
@@ -38,7 +38,7 @@ void PrintCommandArguments(const Args& args) {
               << "Write files: " << ((args.mode %100) / 10 == 1) << std::endl
               << "Tcp mode: " << ((args.mode % 10) ==0 ) << std::endl
               << "Raw: " << (args.mode / 100 == 1)<< std::endl
-              << "timeout: " << args.timeout_sec << std::endl
+              << "timeout: " << args.timeout_ms << std::endl
               << "images in set: " << args.images_in_set << std::endl
               << std::endl;
 }
@@ -86,7 +86,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         args->iterations = std::stoull(argv[4]);
         args->nthreads = std::stoull(argv[5]);
         args->mode = std::stoull(argv[6]);
-        args->timeout_sec = std::stoull(argv[7]);
+        args->timeout_ms = std::stoull(argv[7])*1000;
         if (argc == 9) {
             args->images_in_set = std::stoull(argv[8]);
         } else {
@@ -188,7 +188,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.discovery_service_endpoint, args.nthreads,
                                             args.mode % 10 == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem,
-                                            asapo::SourceCredentials{args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw,args.beamtime_id, "", args.data_source, args.token }, 3600, &err);
+                                            asapo::SourceCredentials{args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw,args.beamtime_id, "", args.data_source, args.token }, 3600000, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);
@@ -228,7 +228,7 @@ int main (int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    auto err = producer->WaitRequestsFinished(args.timeout_sec * 1000);
+    auto err = producer->WaitRequestsFinished(args.timeout_ms);
     if (err) {
         std::cerr << "Producer exit on timeout " << std::endl;
         exit(EXIT_FAILURE);
