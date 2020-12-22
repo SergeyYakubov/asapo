@@ -229,7 +229,7 @@ cdef class PyConsumer:
             err = self.c_consumer.get().Acknowledge(b_group_id,id,b_stream)
         if err:
             throw_exception(err)
-    def neg_acknowledge(self, group_id, uint64_t id, uint64_t delay_ms, stream = "default"):
+    def neg_acknowledge(self, group_id, uint64_t id, uint64_t delay_ms = 0, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_stream = _bytes(stream)
         cdef Error err
