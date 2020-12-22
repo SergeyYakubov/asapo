@@ -58,7 +58,7 @@ func (suite *GetCommandsTestSuite) TestGetCommandsCallsCorrectRoutine() {
 	for _, test := range testsGetCommand {
 		suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: test.stream, GroupId: test.groupid, Op: test.command, ExtraParam: test.externalParam}).Return([]byte("Hello"), nil)
 		logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request "+test.command)))
-		w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + test.reqString+correctTokenSuffix+test.queryParams)
+		w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + test.reqString+correctTokenSuffix+test.queryParams)
 		suite.Equal(http.StatusOK, w.Code, test.command+ " OK")
 		suite.Equal("Hello", string(w.Body.Bytes()), test.command+" sends data")
 	}
