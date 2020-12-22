@@ -10,7 +10,7 @@ TcpConsumerClient::TcpConsumerClient() : io__{GenerateDefaultIO()}, connection_p
 }
 
 
-Error TcpConsumerClient::SendGetDataRequest(SocketDescriptor sd, const FileInfo* info) const noexcept {
+Error TcpConsumerClient::SendGetDataRequest(SocketDescriptor sd, const MessageMeta* info) const noexcept {
     Error err;
     GenericRequestHeader request_header{kOpcodeGetBufferData, info->buf_id, info->size};
     io__->Send(sd, &request_header, sizeof(request_header), &err);
@@ -21,7 +21,7 @@ Error TcpConsumerClient::SendGetDataRequest(SocketDescriptor sd, const FileInfo*
     return err;
 }
 
-Error TcpConsumerClient::ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const FileInfo* info) const noexcept {
+Error TcpConsumerClient::ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const MessageMeta* info) const noexcept {
     Error err;
     *sd = connection_pool__->Reconnect(*sd, &err);
     if (err) {
@@ -55,7 +55,7 @@ Error TcpConsumerClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
     return nullptr;
 }
 
-Error TcpConsumerClient::QueryCacheHasData(SocketDescriptor* sd, const FileInfo* info, bool try_reconnect) const noexcept {
+Error TcpConsumerClient::QueryCacheHasData(SocketDescriptor* sd, const MessageMeta* info, bool try_reconnect) const noexcept {
     Error err;
     err = SendGetDataRequest(*sd, info);
     if (err && try_reconnect) {
@@ -68,7 +68,7 @@ Error TcpConsumerClient::QueryCacheHasData(SocketDescriptor* sd, const FileInfo*
     return ReceiveResponce(*sd);
 }
 
-Error TcpConsumerClient::ReceiveData(SocketDescriptor sd, const FileInfo* info, FileData* data) const noexcept {
+Error TcpConsumerClient::ReceiveData(SocketDescriptor sd, const MessageMeta* info, MessageData* data) const noexcept {
     Error err;
     uint8_t* data_array = nullptr;
     try {
@@ -80,7 +80,7 @@ Error TcpConsumerClient::ReceiveData(SocketDescriptor sd, const FileInfo* info, 
     io__->Receive(sd, data_array, (size_t)info->size, &err);
     connection_pool__->ReleaseConnection(sd);
     if (!err) {
-        *data = FileData{data_array};
+        *data = MessageData{data_array};
     } else {
         io__->CloseSocket(sd, nullptr);
         delete[] data_array;
@@ -88,7 +88,7 @@ Error TcpConsumerClient::ReceiveData(SocketDescriptor sd, const FileInfo* info, 
     return err;
 }
 
-Error TcpConsumerClient::GetData(const FileInfo* info, FileData* data) {
+Error TcpConsumerClient::GetData(const MessageMeta* info, MessageData* data) {
     Error err;
     bool reused;
     auto sd = connection_pool__->GetFreeConnection(info->source, &reused, &err);

@@ -19,8 +19,8 @@ using asapo::ConsumerFactory;
 using asapo::Consumer;
 using asapo::ConsumerImpl;
 using asapo::IO;
-using asapo::FileInfo;
-using asapo::FileData;
+using asapo::MessageMeta;
+using asapo::MessageData;
 using asapo::MockIO;
 using asapo::MockHttpClient;
 using asapo::MockNetClient;
@@ -63,7 +63,7 @@ class ConsumerImplTests : public Test {
   NiceMock<MockIO> mock_io;
   NiceMock<MockHttpClient> mock_http_client;
   NiceMock<MockNetClient> mock_netclient;
-  FileInfo info;
+  MessageMeta info;
   std::string expected_server_uri = "test:8400";
   std::string expected_broker_uri = "asapo-broker:5005";
   std::string expected_fts_uri = "asapo-file-transfer:5008";
@@ -142,7 +142,7 @@ class ConsumerImplTests : public Test {
           Return(result)));
   }
 
-  void MockBeforeFTS(FileData* data);
+  void MockBeforeFTS(MessageData* data);
 
   void MockGetFTSUri() {
       MockGetServiceUri("asapo-file-transfer", expected_fts_uri);
@@ -166,8 +166,8 @@ class ConsumerImplTests : public Test {
       EXPECT_CALL(mock_io, GetDataFromFile_t(expected_full_path, testing::Pointee(100), _)).Times(times).
           WillRepeatedly(DoAll(SetArgPointee<2>(new asapo::SimpleError{"s"}), testing::Return(nullptr)));
   }
-  FileInfo CreateFI(uint64_t buf_id = expected_buf_id) {
-      FileInfo fi;
+  MessageMeta CreateFI(uint64_t buf_id = expected_buf_id) {
+      MessageMeta fi;
       fi.size = expected_image_size;
       fi.id = 1;
       fi.buf_id = buf_id;
@@ -475,7 +475,7 @@ TEST_F(ConsumerImplTests, GetNextImageReturnsImmediatelyOnFinshedStream) {
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kStreamFinished));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsFileInfo) {
+TEST_F(ConsumerImplTests, GetImageReturnsMessageMeta) {
     MockGetBrokerUri();
 
     auto to_send = CreateFI();
@@ -517,7 +517,7 @@ TEST_F(ConsumerImplTests, GetImageTriesToGetDataFromMemoryCache) {
     auto to_send = CreateFI();
     auto json = to_send.Json();
     MockGet(json);
-    FileData data;
+    MessageData data;
 
     EXPECT_CALL(mock_netclient, GetData_t(&info, &data)).WillOnce(Return(nullptr));
     MockReadDataFromFile(0);
@@ -534,7 +534,7 @@ TEST_F(ConsumerImplTests, GetImageCallsReadFromFileIfCannotReadFromCache) {
     auto json = to_send.Json();
     MockGet(json);
 
-    FileData data;
+    MessageData data;
 
     EXPECT_CALL(mock_netclient, GetData_t(&info,
                                           &data)).WillOnce(Return(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()));
@@ -550,7 +550,7 @@ TEST_F(ConsumerImplTests, GetImageCallsReadFromFileIfZeroBufId) {
     auto json = to_send.Json();
     MockGet(json);
 
-    FileData data;
+    MessageData data;
 
     EXPECT_CALL(mock_netclient, GetData_t(_, _)).Times(0);
 
@@ -928,7 +928,7 @@ TEST_F(ConsumerImplTests, GetNextDatasetUsesCorrectUri) {
     consumer->GetNextDataset(expected_group_id, 0, &err);
 }
 
-TEST_F(ConsumerImplTests, GetDataSetReturnsFileInfos) {
+TEST_F(ConsumerImplTests, GetDataSetReturnsMessageMetas) {
     asapo::Error err;
     MockGetBrokerUri();
 
@@ -960,7 +960,7 @@ TEST_F(ConsumerImplTests, GetDataSetReturnsFileInfos) {
     ASSERT_THAT(dataset.content[2].id, Eq(to_send3.id));
 }
 
-TEST_F(ConsumerImplTests, GetDataSetReturnsPartialFileInfos) {
+TEST_F(ConsumerImplTests, GetDataSetReturnsPartialMessageMetas) {
     asapo::Error err;
     MockGetBrokerUri();
 
@@ -995,7 +995,7 @@ TEST_F(ConsumerImplTests, GetDataSetReturnsPartialFileInfos) {
     ASSERT_THAT(dataset.content[1].id, Eq(to_send2.id));
 }
 
-TEST_F(ConsumerImplTests, GetDataSetByIdReturnsPartialFileInfos) {
+TEST_F(ConsumerImplTests, GetDataSetByIdReturnsPartialMessageMetas) {
     asapo::Error err;
     MockGetBrokerUri();
 
@@ -1119,7 +1119,7 @@ TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUriWithoutFrom) {
     auto streams = consumer->GetStreamList("", &err);
 }
 
-void ConsumerImplTests::MockBeforeFTS(FileData* data) {
+void ConsumerImplTests::MockBeforeFTS(MessageData* data) {
     auto to_send = CreateFI();
     auto json = to_send.Json();
     MockGet(json);
@@ -1144,7 +1144,7 @@ void ConsumerImplTests::ExpectFolderToken() {
 
 ACTION_P(AssignArg3, assign) {
     if (assign) {
-        asapo::FileData data = asapo::FileData{new uint8_t[1]};
+        asapo::MessageData data = asapo::MessageData{new uint8_t[1]};
         data[0] = expected_value;
         *arg3 = std::move(data);
     }
@@ -1180,7 +1180,7 @@ void ConsumerImplTests::ExpectRepeatedFileTransfer() {
 }
 
 void ConsumerImplTests::AssertSingleFileTransfer() {
-    asapo::FileData data = asapo::FileData{new uint8_t[1]};
+    asapo::MessageData data = asapo::MessageData{new uint8_t[1]};
     MockGetBrokerUri();
     MockBeforeFTS(&data);
     ExpectFolderToken();
@@ -1220,7 +1220,7 @@ TEST_F(ConsumerImplTests, FileTransferReadsFileSize) {
         Return(nullptr)
     ));
 
-    FileData data;
+    MessageData data;
     info.size = 0;
     info.buf_id = 0;
     auto err = fts_consumer->RetrieveData(&info, &data);
@@ -1229,7 +1229,7 @@ TEST_F(ConsumerImplTests, FileTransferReadsFileSize) {
 TEST_F(ConsumerImplTests, GetImageReusesTokenAndUri) {
     AssertSingleFileTransfer();
 
-    asapo::FileData data = asapo::FileData{new uint8_t[1]};
+    asapo::MessageData data = asapo::MessageData{new uint8_t[1]};
     MockBeforeFTS(&data);
     ExpectFileTransfer(nullptr);
 
@@ -1239,7 +1239,7 @@ TEST_F(ConsumerImplTests, GetImageReusesTokenAndUri) {
 TEST_F(ConsumerImplTests, GetImageTriesToGetTokenAgainIfTransferFailed) {
     AssertSingleFileTransfer();
 
-    asapo::FileData data;
+    asapo::MessageData data;
     MockBeforeFTS(&data);
     ExpectRepeatedFileTransfer();
     ExpectFolderToken();

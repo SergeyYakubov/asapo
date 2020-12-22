@@ -5,15 +5,15 @@
 #include "asapo/consumer/consumer.h"
 #include "testing.h"
 
-void Assert(std::vector<asapo::FileInfos> file_infos, int nthreads, int nfiles) {
+void Assert(std::vector<asapo::MessageMetas> message_metas, int nthreads, int nfiles) {
     std::vector<std::string> expect, result;
     for (int i = 1; i <= nfiles; i++) {
         expect.push_back(std::to_string(i));
     }
     int nfiles_read = 0;
     for (int i = 0; i < nthreads; i++) {
-        nfiles_read += file_infos[i].size();
-        for (const auto& fi : file_infos[i]) {
+        nfiles_read += message_metas[i].size();
+        for (const auto& fi : message_metas[i]) {
             result.push_back(fi.name);
         }
     }
@@ -66,11 +66,11 @@ void TestAll(const Args& args) {
 
     auto group_id = consumer->GenerateNewGroupId(&err);
     consumer->SetTimeout(10000);
-    std::vector<asapo::FileInfos>file_infos(args.nthreads);
+    std::vector<asapo::MessageMetas>message_metas(args.nthreads);
     auto exec_next = [&](int i) {
-        asapo::FileInfo fi;
+        asapo::MessageMeta fi;
         while ((err = consumer->GetNext(&fi, group_id, nullptr)) == nullptr) {
-            file_infos[i].emplace_back(fi);
+            message_metas[i].emplace_back(fi);
         }
         printf("%s\n", err->Explain().c_str());
     };
@@ -86,7 +86,7 @@ void TestAll(const Args& args) {
         }
     }
 
-    Assert(file_infos, args.nthreads, args.nfiles);
+    Assert(message_metas, args.nthreads, args.nfiles);
 }
 
 int main(int argc, char* argv[]) {

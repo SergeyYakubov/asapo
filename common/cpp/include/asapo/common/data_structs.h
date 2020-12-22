@@ -1,5 +1,5 @@
-#ifndef ASAPO_FILE_INFO_H
-#define ASAPO_FILE_INFO_H
+#ifndef ASAPO_message_meta_H
+#define ASAPO_message_meta_H
 
 #include <cinttypes>
 #include <chrono>
@@ -22,7 +22,7 @@ uint64_t NanosecsEpochFromISODate(std::string date_time);
 
 bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val);
 
-class FileInfo {
+class MessageMeta {
   public:
     std::string name;
     std::chrono::system_clock::time_point timestamp;
@@ -48,16 +48,16 @@ struct StreamInfo {
 
 using StreamInfos = std::vector<StreamInfo>;
 
-inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
+inline bool operator==(const MessageMeta& lhs, const MessageMeta& rhs) {
     return  (lhs.name == rhs.name &&
              lhs.id == rhs.id &&
              lhs.timestamp == rhs.timestamp &&
              lhs.size == rhs.size);
 }
 
-using FileData = std::unique_ptr<uint8_t[]>;
+using MessageData = std::unique_ptr<uint8_t[]>;
 
-using FileInfos = std::vector<FileInfo>;
+using MessageMetas = std::vector<MessageMeta>;
 
 
 using IdList = std::vector<uint64_t>;
@@ -65,7 +65,7 @@ using IdList = std::vector<uint64_t>;
 struct DataSet {
     uint64_t id;
     uint64_t expected_size;
-    FileInfos content;
+    MessageMetas content;
     bool SetFromJson(const std::string& json_string);
 };
 
@@ -113,4 +113,4 @@ const std::string kDefaultStream = "default";
 
 
 }
-#endif //ASAPO_FILE_INFO_H
+#endif //ASAPO_message_meta_H

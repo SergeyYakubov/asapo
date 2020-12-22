@@ -21,8 +21,8 @@ int main(int argc, char* argv[]) {
     auto group_id = consumer->GenerateNewGroupId(&err);
     exit_if_error("Cannot create group id", err);
 
-    asapo::FileInfo fi;
-    asapo::FileData data;
+    asapo::MessageMeta fi;
+    asapo::MessageData data;
 
     err = consumer->GetLast(&fi, group_id, &data);
     exit_if_error("Cannot get next record", err);

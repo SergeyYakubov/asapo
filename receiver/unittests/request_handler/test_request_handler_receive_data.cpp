@@ -29,7 +29,7 @@ using ::asapo::ErrorInterface;
 using ::asapo::FileDescriptor;
 using ::asapo::SocketDescriptor;
 using ::asapo::GenericRequestHeader;
-using ::asapo::SendDataResponse;
+using ::asapo::SendResponse;
 using ::asapo::GenericRequestHeader;
 using ::asapo::GenericNetworkResponse;
 using ::asapo::Opcode;

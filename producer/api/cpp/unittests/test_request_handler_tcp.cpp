@@ -73,14 +73,14 @@ class RequestHandlerTcpTests : public testing::Test {
   asapo::GenericRequestHeader callback_header;
   std::string callback_response;
   uint8_t expected_callback_data = 2;
-  asapo::FileData expected_data{[this]() {
+  asapo::MessageData expected_data{[this]() {
     auto a = new uint8_t[expected_file_size];
     for (auto i = 0; i < expected_file_size; i++) {
         a[i] = expected_callback_data;
     }
     return a;
   }()};
-  asapo::FileData callback_data;
+  asapo::MessageData callback_data;
 
   asapo::ProducerRequest request{expected_beamtime_id, header, std::move(expected_data), expected_metadata, "",
                                  [this](asapo::RequestCallbackPayload payload, asapo::Error err) {
@@ -124,16 +124,16 @@ class RequestHandlerTcpTests : public testing::Test {
   void ExpectOKAuthorize(bool only_once = false);
   void ExpectFailSendHeader(bool only_once = false);
   void ExpectFailSend(uint64_t expected_size, bool only_once);
-  void ExpectFailSendData(bool only_once = false);
+  void ExpectFailSend(bool only_once = false);
   void ExpectFailSendMetaData(bool only_once = false);
   void ExpectOKConnect(bool only_once = false);
   void ExpectOKSendHeader(bool only_once = false, asapo::Opcode code = expected_op_code);
   void ExpectOKSend(uint64_t expected_size, bool only_once);
   void ExpectOKSendAll(bool only_once);
   void ExpectGetFileSize(bool ok);
-  void ExpectOKSendData(bool only_once = false);
-  void ExpectOKSendFile(bool only_once = false);
-  void ExpectFailSendFile(const asapo::ProducerErrorTemplate &err_template, bool client_error = false);
+  void ExpectOKSend(bool only_once = false);
+  void ExpectOKSendFromFile(bool only_once = false);
+  void ExpectFailSendFromFile(const asapo::ProducerErrorTemplate &err_template, bool client_error = false);
   void ExpectOKSendMetaData(bool only_once = false);
   void ExpectFailReceive(bool only_once = false);
   void ExpectOKReceive(bool only_once = true, asapo::NetworkErrorCode code = asapo::kNetErrorNoError,
@@ -155,13 +155,13 @@ class RequestHandlerTcpTests : public testing::Test {
   }
 };
 
-ACTION_P2(A_WriteSendDataResponse, error_code, message) {
-    ((asapo::SendDataResponse*) arg1)->op_code = asapo::kOpcodeTransferData;
-    ((asapo::SendDataResponse*) arg1)->error_code = error_code;
-    strcpy(((asapo::SendDataResponse*) arg1)->message, message.c_str());
+ACTION_P2(A_WriteSendResponse, error_code, message) {
+    ((asapo::SendResponse*) arg1)->op_code = asapo::kOpcodeTransferData;
+    ((asapo::SendResponse*) arg1)->error_code = error_code;
+    strcpy(((asapo::SendResponse*) arg1)->message, message.c_str());
 }
 
-MATCHER_P5(M_CheckSendDataRequest, op_code, file_id, file_size, message, stream,
+MATCHER_P5(M_CheckSendRequest, op_code, file_id, file_size, message, stream,
            "Checks if a valid GenericRequestHeader was Send") {
     return ((asapo::GenericRequestHeader*) arg)->op_code == op_code
         && ((asapo::GenericRequestHeader*) arg)->data_id == uint64_t(file_id)
@@ -195,7 +195,7 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io,
-                    Send_t(expected_sd, M_CheckSendDataRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id,
+                    Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id,
                                                                ""),
                            sizeof(asapo::GenericRequestHeader), _))
             .WillOnce(
@@ -204,12 +204,12 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
                     Return(sizeof(asapo::GenericRequestHeader))
                 ));
 
-        EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
+        EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))
             .InSequence(seq_receive[i])
             .WillOnce(
                 DoAll(
                     testing::SetArgPointee<3>(nullptr),
-                    A_WriteSendDataResponse(asapo::kNetAuthorizationError, expected_auth_message),
+                    A_WriteSendResponse(asapo::kNetAuthorizationError, expected_auth_message),
                     testing::ReturnArg<2>()
                 ));
         EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
@@ -236,7 +236,7 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io,
-                    Send_t(expected_sd, M_CheckSendDataRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id,
+                    Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id,
                                                                ""),
                            sizeof(asapo::GenericRequestHeader), _))
             .WillOnce(
@@ -245,12 +245,12 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
                     Return(sizeof(asapo::GenericRequestHeader))
                 ));
 
-        EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
+        EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))
             .InSequence(seq_receive[i])
             .WillOnce(
                 DoAll(
                     testing::SetArgPointee<3>(nullptr),
-                    A_WriteSendDataResponse(asapo::kNetErrorNoError, expected_auth_message),
+                    A_WriteSendResponse(asapo::kNetErrorNoError, expected_auth_message),
                     testing::ReturnArg<2>()
                 ));
         if (only_once) {
@@ -269,7 +269,7 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
 void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(expected_op_code,
+        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendRequest(expected_op_code,
                                                                         expected_file_id,
                                                                         expected_file_size,
                                                                         expected_file_name,
@@ -302,7 +302,7 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
     }
 }
 
-void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTemplate &err_template, bool client_error) {
+void RequestHandlerTcpTests::ExpectFailSendFromFile(const asapo::ProducerErrorTemplate &err_template, bool client_error) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, SendFile_t(expected_sd, expected_origin_fullpath, (size_t) expected_file_size))
@@ -366,7 +366,7 @@ void RequestHandlerTcpTests::ExpectFailSend(uint64_t expected_size, bool only_on
     if (only_once) EXPECT_CALL(mock_logger, Warning(HasSubstr("put back")));
 }
 
-void RequestHandlerTcpTests::ExpectFailSendData(bool only_once) {
+void RequestHandlerTcpTests::ExpectFailSend(bool only_once) {
     ExpectFailSend(expected_file_size, only_once);
 }
 
@@ -377,7 +377,7 @@ void RequestHandlerTcpTests::ExpectFailSendMetaData(bool only_once) {
 void RequestHandlerTcpTests::ExpectFailReceive(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
+        EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))
             .InSequence(seq_receive[i])
             .WillOnce(
                 DoAll(
@@ -406,7 +406,7 @@ void RequestHandlerTcpTests::ExpectFailReceive(bool only_once) {
 void RequestHandlerTcpTests::ExpectOKSendAll(bool only_once) {
     ExpectOKSendHeader(only_once);
     ExpectOKSendMetaData(only_once);
-    ExpectOKSendData(only_once);
+    ExpectOKSend(only_once);
 }
 
 void RequestHandlerTcpTests::ExpectOKSend(uint64_t expected_size, bool only_once) {
@@ -426,11 +426,11 @@ void RequestHandlerTcpTests::ExpectOKSendMetaData(bool only_once) {
     ExpectOKSend(expected_meta_size, only_once);
 }
 
-void RequestHandlerTcpTests::ExpectOKSendData(bool only_once) {
+void RequestHandlerTcpTests::ExpectOKSend(bool only_once) {
     ExpectOKSend(expected_file_size, only_once);
 }
 
-void RequestHandlerTcpTests::ExpectOKSendFile(bool only_once) {
+void RequestHandlerTcpTests::ExpectOKSendFromFile(bool only_once) {
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, SendFile_t(expected_sd, expected_origin_fullpath, (size_t) expected_file_size))
             .Times(1)
@@ -441,7 +441,7 @@ void RequestHandlerTcpTests::ExpectOKSendFile(bool only_once) {
 
 void RequestHandlerTcpTests::ExpectOKSendHeader(bool only_once, asapo::Opcode opcode) {
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendDataRequest(opcode,
+        EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendRequest(opcode,
                                                                         expected_file_id,
                                                                         expected_file_size,
                                                                         expected_file_name,
@@ -481,12 +481,12 @@ void RequestHandlerTcpTests::ExpectOKConnect(bool only_once) {
 void RequestHandlerTcpTests::ExpectOKReceive(bool only_once, asapo::NetworkErrorCode code, std::string message) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendDataResponse), _))
+        EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))
             .InSequence(seq_receive[i])
             .WillOnce(
                 DoAll(
                     testing::SetArgPointee<3>(nullptr),
-                    A_WriteSendDataResponse(code, message),
+                    A_WriteSendResponse(code, message),
                     testing::ReturnArg<2>()
                 ));
         if (only_once) {
@@ -656,12 +656,12 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendHeader) {
 
 }
 
-TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendData) {
+TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSend) {
     ExpectOKConnect();
     ExpectOKAuthorize();
     ExpectOKSendHeader();
     ExpectOKSendMetaData();
-    ExpectFailSendData();
+    ExpectFailSend();
 
     request_handler.PrepareProcessingRequestLocked();
     auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
@@ -708,12 +708,12 @@ void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode e
     ExpectOKAuthorize(true);
     ExpectOKSendAll(true);
 
-    EXPECT_CALL(mock_io, Receive_t(expected_sds[0], _, sizeof(asapo::SendDataResponse), _))
+    EXPECT_CALL(mock_io, Receive_t(expected_sds[0], _, sizeof(asapo::SendResponse), _))
         .InSequence(seq_receive[0])
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(nullptr),
-                A_WriteSendDataResponse(error_code, expected_auth_message),
+                A_WriteSendResponse(error_code, expected_auth_message),
                 testing::ReturnArg<2>()
             ));
     EXPECT_CALL(mock_logger, Debug(AllOf(
@@ -738,12 +738,12 @@ void RequestHandlerTcpTests::AssertImmediatelyCallBack(asapo::NetworkErrorCode e
 }
 
 void RequestHandlerTcpTests::ExpectGetFileSize(bool ok) {
-    asapo::FileInfo fi;
+    asapo::MessageMeta fi;
     if (ok) {
         fi.size = expected_file_size;
     }
 
-    EXPECT_CALL(mock_io, GetFileInfo_t(expected_origin_fullpath, _)).WillOnce(
+    EXPECT_CALL(mock_io, GetMessageMeta_t(expected_origin_fullpath, _)).WillOnce(
         DoAll(
             testing::SetArgPointee<1>(ok ? nullptr : asapo::IOErrorTemplates::kFileNotFound.Generate().release()),
             testing::Return(fi)
@@ -772,13 +772,13 @@ TEST_F(RequestHandlerTcpTests, SendEmptyCallBack) {
     ASSERT_THAT(retry, Eq(false));
 }
 
-TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithReadError) {
+TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFromFileWithReadError) {
     ExpectGetFileSize(true);
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true);
     ExpectOKSendMetaData(true);
-    ExpectFailSendFile(asapo::ProducerErrorTemplates::kLocalIOError, true);
+    ExpectFailSendFromFile(asapo::ProducerErrorTemplates::kLocalIOError, true);
 
     request_handler.PrepareProcessingRequestLocked();
     auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
@@ -790,13 +790,13 @@ TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithReadError) {
 
 }
 
-TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFileWithServerError) {
+TEST_F(RequestHandlerTcpTests, ErrorWhenCannotSendFromFileWithServerError) {
     ExpectGetFileSize(true);
     ExpectOKConnect();
     ExpectOKAuthorize();
     ExpectOKSendHeader();
     ExpectOKSendMetaData();
-    ExpectFailSendFile(asapo::ProducerErrorTemplates::kInternalServerError);
+    ExpectFailSendFromFile(asapo::ProducerErrorTemplates::kInternalServerError);
 
     request_handler.PrepareProcessingRequestLocked();
     auto success = request_handler.ProcessRequestUnlocked(&request_filesend, &retry);
@@ -839,7 +839,7 @@ TEST_F(RequestHandlerTcpTests, FileRequestOK) {
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true);
     ExpectOKSendMetaData(true);
-    ExpectOKSendFile(true);
+    ExpectOKSendFromFile(true);
     ExpectOKReceive(true, asapo::kNetErrorNoError, expected_response);
 
     request_handler.PrepareProcessingRequestLocked();
@@ -883,7 +883,7 @@ TEST_F(RequestHandlerTcpTests, SendMetadataIgnoresIngestMode) {
     ExpectOKConnect(true);
     ExpectOKAuthorize(true);
     ExpectOKSendHeader(true, asapo::kOpcodeTransferMetaData);
-    ExpectOKSendData(true);
+    ExpectOKSend(true);
     ExpectOKSendMetaData(true);
     ExpectOKReceive();
 
@@ -928,7 +928,7 @@ TEST_F(RequestHandlerTcpTests, SendMetaOnlyForFileReadOK) {
     request_handler.PrepareProcessingRequestLocked();
 
     EXPECT_CALL(mock_io, SendFile_t(_, _, _)).Times(0);
-    EXPECT_CALL(mock_io, GetFileInfo_t(_, _)).Times(0);
+    EXPECT_CALL(mock_io, GetMessageMeta_t(_, _)).Times(0);
     auto ingest_mode = asapo::IngestModeFlags::kTransferMetaDataOnly;
 
     request_filesend.header.custom_data[asapo::kPosIngestMode] = ingest_mode;

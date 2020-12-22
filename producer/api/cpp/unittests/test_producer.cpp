@@ -62,8 +62,8 @@ TEST(Producer, SimpleWorkflowWihoutConnection) {
                                                 SourceCredentials{asapo::SourceType::kRaw,"bt", "", "", ""}, 3600000,
                                                 &err);
 
-    asapo::EventHeader event_header{1, 1, "test"};
-    auto err_send = producer->SendData(event_header, nullptr, asapo::kTransferMetaDataOnly, nullptr);
+    asapo::MessageHeader message_header{1, 1, "test"};
+    auto err_send = producer->Send(message_header, nullptr, asapo::kTransferMetaDataOnly, nullptr);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     ASSERT_THAT(producer, Ne(nullptr));

@@ -39,21 +39,21 @@ class ProducerImpl : public Producer {
   void SetLogLevel(LogLevel level) override;
   void EnableLocalLog(bool enable) override;
   void EnableRemoteLog(bool enable) override;
-  Error SendData(const EventHeader &event_header,
-                 FileData data,
-                 uint64_t ingest_mode,
-                 RequestCallback callback) override;
-  Error SendData__(const EventHeader &event_header, void* data, uint64_t ingest_mode,
-                   RequestCallback callback) override;
-  Error SendData(const EventHeader &event_header, std::string stream, FileData data, uint64_t ingest_mode,
-                 RequestCallback callback) override;
-  Error SendData__(const EventHeader &event_header, std::string stream, void* data, uint64_t ingest_mode,
-                   RequestCallback callback) override;
+  Error Send(const MessageHeader &message_header,
+             MessageData data,
+             uint64_t ingest_mode,
+             RequestCallback callback) override;
+  Error Send__(const MessageHeader &message_header, void* data, uint64_t ingest_mode,
+               RequestCallback callback) override;
+  Error Send(const MessageHeader &message_header, std::string stream, MessageData data, uint64_t ingest_mode,
+             RequestCallback callback) override;
+  Error Send__(const MessageHeader &message_header, std::string stream, void* data, uint64_t ingest_mode,
+               RequestCallback callback) override;
   void StopThreads__() override;
-  Error SendFile(const EventHeader &event_header, std::string full_path, uint64_t ingest_mode,
-                 RequestCallback callback) override;
-  Error SendFile(const EventHeader &event_header, std::string stream, std::string full_path, uint64_t ingest_mode,
-                 RequestCallback callback) override;
+  Error SendFromFile(const MessageHeader &message_header, std::string full_path, uint64_t ingest_mode,
+                     RequestCallback callback) override;
+  Error SendFromFile(const MessageHeader &message_header, std::string stream, std::string full_path, uint64_t ingest_mode,
+                     RequestCallback callback) override;
 
   Error SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,
                                   RequestCallback callback) override;
@@ -63,17 +63,17 @@ class ProducerImpl : public Producer {
 
   Error SetCredentials(SourceCredentials source_cred) override;
 
-  Error SendMetaData(const std::string &metadata, RequestCallback callback) override;
+  Error SendMetadata(const std::string &metadata, RequestCallback callback) override;
   uint64_t GetRequestsQueueSize() override;
   Error WaitRequestsFinished(uint64_t timeout_ms) override;
   uint64_t GetRequestsQueueVolumeMb() override;
   void SetRequestsQueueLimits(uint64_t size, uint64_t volume) override;
  private:
   StreamInfo StreamRequest(StreamRequestOp op, std::string stream, uint64_t timeout_ms, Error* err) const;
-  Error Send(const EventHeader &event_header, std::string stream, FileData data, std::string full_path,
+  Error Send(const MessageHeader &message_header, std::string stream, MessageData data, std::string full_path,
              uint64_t ingest_mode,
              RequestCallback callback, bool manage_data_memory);
-  GenericRequestHeader GenerateNextSendRequest(const EventHeader &event_header, std::string stream,
+  GenericRequestHeader GenerateNextSendRequest(const MessageHeader &message_header, std::string stream,
                                                uint64_t ingest_mode);
   std::string source_cred_string_;
   uint64_t timeout_ms_;

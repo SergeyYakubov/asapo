@@ -12,7 +12,7 @@ namespace asapo {
 class ProducerRequest : public GenericRequest {
   public:
     ~ProducerRequest();
-    ProducerRequest(std::string source_credentials, GenericRequestHeader header, FileData data,
+    ProducerRequest(std::string source_credentials, GenericRequestHeader header, MessageData data,
                     std::string metadata,
                     std::string original_filepath,
                     RequestCallback callback,
@@ -20,12 +20,12 @@ class ProducerRequest : public GenericRequest {
                     uint64_t timeout_ms);
     std::string source_credentials;
     std::string metadata;
-    FileData data;
+    MessageData data;
     std::string original_filepath;
     RequestCallback callback;
     bool manage_data_memory;
     bool DataFromFile() const;
-    bool NeedSendData() const;
+    bool NeedSend() const;
     bool NeedSendMetaData() const;
     Error UpdateDataSizeFromFileIfNeeded(const IO* io);
 

@@ -31,11 +31,11 @@ int main(int argc, char* argv[]) {
 
     std::string to_send = "hello";
     auto send_size = to_send.size() + 1;
-    auto buffer =  asapo::FileData(new uint8_t[send_size]);
+    auto buffer =  asapo::MessageData(new uint8_t[send_size]);
     memcpy(buffer.get(), to_send.c_str(), send_size);
 
-    asapo::EventHeader event_header{1, send_size, "processed"+asapo::kPathseparator +"test_file"};
-    err = producer->SendData(event_header, std::move(buffer), asapo::kDefaultIngestMode, &ProcessAfterSend);
+    asapo::EventHeader message_header{1, send_size, "processed"+asapo::kPathseparator +"test_file"};
+    err = producer->Send(message_header, std::move(buffer), asapo::kDefaultIngestMode, &ProcessAfterSend);
     exit_if_error("Cannot send file", err);
 
     err = producer->WaitRequestsFinished(1000);

@@ -15,21 +15,21 @@ class MockDatabase : public Database {
         return Error{Connect_t(address, database)};
 
     }
-    Error Insert(const std::string& collection, const FileInfo& file, bool ignore_duplicates) const override {
+    Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const override {
         return Error{Insert_t(collection, file, ignore_duplicates)};
     }
 
-    Error InsertAsSubset(const std::string& collection, const FileInfo& file, uint64_t subset_id,
+    Error InsertAsSubset(const std::string& collection, const MessageMeta& file, uint64_t subset_id,
                          uint64_t subset_size, bool ignore_duplicates) const override {
         return Error{InsertAsSubset_t(collection, file, subset_id, subset_size, ignore_duplicates)};
     }
 
 
     MOCK_METHOD2(Connect_t, ErrorInterface * (const std::string&, const std::string&));
-    MOCK_CONST_METHOD3(Insert_t, ErrorInterface * (const std::string&, const FileInfo&, bool));
+    MOCK_CONST_METHOD3(Insert_t, ErrorInterface * (const std::string&, const MessageMeta&, bool));
 
 
-    MOCK_CONST_METHOD5(InsertAsSubset_t, ErrorInterface * (const std::string&, const FileInfo&, uint64_t, uint64_t, bool));
+    MOCK_CONST_METHOD5(InsertAsSubset_t, ErrorInterface * (const std::string&, const MessageMeta&, uint64_t, uint64_t, bool));
 
 
     Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const override {
@@ -38,18 +38,18 @@ class MockDatabase : public Database {
     }
     MOCK_CONST_METHOD4(Upsert_t, ErrorInterface * (const std::string&, uint64_t id, const uint8_t* data, uint64_t size));
 
-    Error GetById(const std::string& collection, uint64_t id, FileInfo* file) const override {
+    Error GetById(const std::string& collection, uint64_t id, MessageMeta* file) const override {
         return Error{GetById_t(collection, id, file)};
     }
 
-    MOCK_CONST_METHOD3(GetById_t, ErrorInterface * (const std::string&, uint64_t id, FileInfo*));
+    MOCK_CONST_METHOD3(GetById_t, ErrorInterface * (const std::string&, uint64_t id, MessageMeta*));
 
 
-    Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, FileInfo* file) const override {
+    Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, MessageMeta* file) const override {
         return Error{GetSetById_t(collection, set_id, id, file)};
     }
 
-    MOCK_CONST_METHOD4(GetSetById_t, ErrorInterface * (const std::string&, uint64_t set_id, uint64_t id, FileInfo*));
+    MOCK_CONST_METHOD4(GetSetById_t, ErrorInterface * (const std::string&, uint64_t set_id, uint64_t id, MessageMeta*));
 
 
     Error GetStreamInfo(const std::string& collection, StreamInfo* info) const override {

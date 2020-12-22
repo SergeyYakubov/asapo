@@ -95,7 +95,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
              std::vector<int>* nfiles_total, std::vector<asapo::NetworkConnectionType>* connection_type,
              LatchedTimer* timer) {
     auto exec_next = [&params, nfiles, errors, nbuf, nfiles_total, connection_type, timer](int i) {
-        asapo::FileInfo fi;
+        asapo::MessageMeta fi;
         Error err;
         auto consumer = asapo::ConsumerFactory::CreateConsumer(params.server,
                                                              params.file_path,
@@ -111,7 +111,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
         //consumer->ForceNoRdma();
 
         consumer->SetTimeout((uint64_t) params.timeout_ms);
-        asapo::FileData data;
+        asapo::MessageData data;
 
         lock.lock();
         if (group_id.empty()) {
@@ -185,7 +185,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
 int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_without_first_ms, int* nerrors, int* nbuf,
                 int* nfiles_total,
                 asapo::NetworkConnectionType* connection_type) {
-    asapo::FileInfo fi;
+    asapo::MessageMeta fi;
     std::chrono::system_clock::time_point t1 = std::chrono::system_clock::now();
 
     std::vector<int> nfiles(params.nthreads, 0);

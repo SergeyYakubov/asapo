@@ -98,16 +98,17 @@ void GetBeamtimeMeta(const ConsumerPtr& consumer) {
     }
 }
 
-void SendDataDownstreamThePipeline(const Args& args, const asapo::FileInfo& fi, asapo::FileData data,
+void SendDownstreamThePipeline(const Args& args, const asapo::MessageMeta& fi, asapo::MessageData data,
                                    const ProducerPtr& producer) {
-    asapo::EventHeader header{fi.id, fi.size, fi.name, fi.metadata};
+    asapo::MessageHeader header{fi.id, fi.size, fi.name, fi.metadata};
     Error err_send;
     if (args.transfer_data) {
         header.file_name += "_" + args.stream_out;
-        err_send = producer->SendData(header, std::move(data), asapo::kDefaultIngestMode, ProcessAfterSend);
+        err_send = producer->Send(header, std::move(data), asapo::kDefaultIngestMode, ProcessAfterSend);
     } else {
         header.file_name = args.file_path + asapo::kPathSeparator + header.file_name;
-        err_send = producer->SendData(header, nullptr, asapo::IngestModeFlags::kTransferMetaDataOnly, ProcessAfterSend);
+        err_send =
+            producer->Send(header, nullptr, asapo::IngestModeFlags::kTransferMetaDataOnly, ProcessAfterSend);
         std::cout << err_send << std::endl;
     }
 
@@ -124,15 +125,15 @@ void SendDataDownstreamThePipeline(const Args& args, const asapo::FileInfo& fi, 
 }
 
 Error ProcessNextEvent(const Args& args, const ConsumerPtr& consumer, const ProducerPtr& producer) {
-    asapo::FileData data;
-    asapo::FileInfo fi;
+    asapo::MessageData data;
+    asapo::MessageMeta fi;
 
     auto err = consumer->GetNext(&fi, group_id, args.transfer_data ? &data : nullptr);
     if (err) {
         return err;
     }
 
-    SendDataDownstreamThePipeline(args, fi, std::move(data), producer);
+    SendDownstreamThePipeline(args, fi, std::move(data), producer);
 
     return nullptr;
 }
@@ -141,7 +142,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
                                               std::vector<int>* nfiles,
                                               std::vector<int>* errors) {
     auto exec_next = [&args, nfiles, errors, &producer ](int i) {
-        asapo::FileInfo fi;
+        asapo::MessageMeta fi;
         Error err;
         auto consumer = CreateConsumerAndGroup(args, &err);
         if (err) {
@@ -169,7 +170,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
 }
 
 int ProcessAllData(const Args& args, const ProducerPtr& producer, uint64_t* duration_ms, int* nerrors) {
-    asapo::FileInfo fi;
+    asapo::MessageMeta fi;
     system_clock::time_point t1 = system_clock::now();
 
     std::vector<int> nfiles(args.nthreads, 0);

@@ -16,7 +16,7 @@ RequestHandlerDbCheckRequest::RequestHandlerDbCheckRequest(std::string collectio
 
 }
 
-Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, FileInfo* record ) const {
+Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, MessageMeta* record ) const {
     auto op_code = request->GetOpCode();
     auto id = request->GetDataID();
     auto col_name = collection_name_prefix_ + "_" + request->GetStream();
@@ -40,7 +40,7 @@ Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, File
 }
 
 
-bool RequestHandlerDbCheckRequest::SameRequestInRecord(const Request* request, const FileInfo& record) const {
+bool RequestHandlerDbCheckRequest::SameRequestInRecord(const Request* request, const MessageMeta& record) const {
     std::string meta = request->GetMetaData();
     if (meta.size() == 0) { // so it is stored in database
         meta = "{}";
@@ -55,7 +55,7 @@ Error RequestHandlerDbCheckRequest::ProcessRequest(Request* request) const {
         return err;
     }
 
-    FileInfo record;
+    MessageMeta record;
     auto  err = GetRecordFromDb(request, &record);
     if (err) {
         return err == DBErrorTemplates::kNoRecord ? nullptr : std::move(err);

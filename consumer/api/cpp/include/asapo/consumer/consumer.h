@@ -106,8 +106,8 @@ class Consumer {
       \param data - where to store image data. Can be set to nullptr only image metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetNext(FileInfo* info, std::string group_id, FileData* data) = 0;
-    virtual Error GetNext(FileInfo* info, std::string group_id, std::string stream, FileData* data) = 0;
+    virtual Error GetNext(MessageMeta* info, std::string group_id, MessageData* data) = 0;
+    virtual Error GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) = 0;
 
     //! Retrieves image using fileinfo.
     /*!
@@ -115,7 +115,7 @@ class Consumer {
       \param data - where to store image data. Can be set to nullptr only image metadata is needed.
       \return Error if data is nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error RetrieveData(FileInfo* info, FileData* data) = 0;
+    virtual Error RetrieveData(MessageMeta* info, MessageData* data) = 0;
 
 
     //! Receive next available completed dataset.
@@ -157,8 +157,8 @@ class Consumer {
       \param data - where to store image data. Can be set to nullptr only image metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetById(uint64_t id, FileInfo* info, FileData* data) = 0;
-    virtual Error GetById(uint64_t id, FileInfo* info, std::string stream, FileData* data) = 0;
+    virtual Error GetById(uint64_t id, MessageMeta* info, MessageData* data) = 0;
+    virtual Error GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) = 0;
 
     //! Receive id of last acknowledged data tuple
     /*!
@@ -176,8 +176,8 @@ class Consumer {
       \param data - where to store image data. Can be set to nullptr only image metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetLast(FileInfo* info, FileData* data) = 0;
-    virtual Error GetLast(FileInfo* info, std::string stream, FileData* data) = 0;
+    virtual Error GetLast(MessageMeta* info, MessageData* data) = 0;
+    virtual Error GetLast(MessageMeta* info, std::string stream, MessageData* data) = 0;
 
     //! Get all images matching the query.
     /*!
@@ -185,8 +185,8 @@ class Consumer {
       \param err - will be set in case of error, nullptr otherwise
       \return vector of image metadata matchiing to specified query. Empty if nothing found or error
     */
-    virtual FileInfos QueryImages(std::string query, Error* err) = 0;
-    virtual FileInfos QueryImages(std::string query, std::string stream, Error* err) = 0;
+    virtual MessageMetas QueryImages(std::string query, Error* err) = 0;
+    virtual MessageMetas QueryImages(std::string query, std::string stream, Error* err) = 0;
 
     //! Configure resending nonacknowledged data
     /*!

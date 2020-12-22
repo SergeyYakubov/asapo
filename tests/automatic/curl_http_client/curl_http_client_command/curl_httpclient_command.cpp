@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
     M_AssertEq("hello", content);
     M_AssertTrue(code == asapo::HttpCode::OK);
 // with array
-    asapo::FileData data;
+    asapo::MessageData data;
     err = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &data, 5, &code);
     M_AssertEq( "hello", reinterpret_cast<char const*>(data.get()));
     M_AssertTrue(code == asapo::HttpCode::OK);

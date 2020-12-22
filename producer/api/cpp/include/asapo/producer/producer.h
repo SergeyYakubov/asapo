@@ -40,58 +40,58 @@ class Producer {
     virtual StreamInfo GetLastStream(uint64_t timeout_ms, Error* err) const = 0;
 
 
-    //! Sends data to the receiver
+    //! Sends message to the receiver
     /*!
-      \param event_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
-      \param data - A pointer to the data to send
+      \param message_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
+      \param data - A smart pointer to the message data to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendData(const EventHeader& event_header, FileData data, uint64_t ingest_mode,
-                           RequestCallback callback) = 0;
+    virtual Error Send(const MessageHeader& message_header, MessageData data, uint64_t ingest_mode,
+                       RequestCallback callback) = 0;
 
 
-    //! Sends data to the receiver - same as SendData - memory should not be freed until send is finished
+    //! Sends message to the receiver - same as Send - memory should not be freed until send is finished
     //! used e.g. for Python bindings
-    virtual Error SendData__(const EventHeader& event_header, void* data, uint64_t ingest_mode,
-                             RequestCallback callback) = 0;
+    virtual Error Send__(const MessageHeader& message_header, void* data, uint64_t ingest_mode,
+                         RequestCallback callback) = 0;
 
-    //! Sends data to the receiver
+    //! Sends message to the receiver
     /*!
-      \param event_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
-      \param data - A pointer to the data to send
+      \param message_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
+      \param data - A smart pointer to the message data to send, can be nullptr
       \return Error - Will be nullptr on success
     */
-    virtual Error SendData(const EventHeader& event_header, std::string stream, FileData data, uint64_t ingest_mode,
-                           RequestCallback callback) = 0;
+    virtual Error Send(const MessageHeader& message_header, std::string stream, MessageData data, uint64_t ingest_mode,
+                       RequestCallback callback) = 0;
 
 
-    //! Sends data to the receiver - same as SendData - memory should not be freed until send is finished
+    //! Sends data to the receiver - same as Send - memory should not be freed until send is finished
     //! used e.g. for Python bindings
-    virtual Error SendData__(const EventHeader& event_header, std::string stream, void* data, uint64_t ingest_mode,
-                             RequestCallback callback) = 0;
+    virtual Error Send__(const MessageHeader& message_header, std::string stream, void* data, uint64_t ingest_mode,
+                         RequestCallback callback) = 0;
 
     //! Stop processing threads
     //! used e.g. for Python bindings
     virtual void StopThreads__() = 0;
 
-    //! Sends files to the default stream
+    //! Sends message from a file to the default stream
     /*!
-      \param event_header - A stucture with the meta information (file name, size is ignored).
+      \param message_header - A stucture with the meta information (file name, size is ignored).
       \param full_path - A full path of the file to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,
-                           RequestCallback callback) = 0;
+    virtual Error SendFromFile(const MessageHeader& message_header, std::string full_path, uint64_t ingest_mode,
+                               RequestCallback callback) = 0;
 
-    //! Sends files to the stream
+    //! Sends message from a file to a stream
     /*!
-      \param event_header - A stucture with the meta information (file name, size is ignored).
+      \param message_header - A stucture with the meta information (file name, size is ignored).
       \param full_path - A full path of the file to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendFile(const EventHeader& event_header, std::string stream, std::string full_path,
-                           uint64_t ingest_mode,
-                           RequestCallback callback) = 0;
+    virtual Error SendFromFile(const MessageHeader& message_header, std::string stream, std::string full_path,
+                               uint64_t ingest_mode,
+                               RequestCallback callback) = 0;
 
     //! Marks stream finished
     /*!
@@ -110,7 +110,7 @@ class Producer {
       \param callback - callback function
       \return Error - will be nullptr on success
     */
-    virtual Error SendMetaData(const std::string& metadata, RequestCallback callback) = 0;
+    virtual Error SendMetadata(const std::string& metadata, RequestCallback callback) = 0;
 
     //! Set internal log level
     virtual void SetLogLevel(LogLevel level) = 0;

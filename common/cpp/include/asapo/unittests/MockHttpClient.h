@@ -24,7 +24,7 @@ class MockHttpClient : public HttpClient {
         return response;
     }
 
-    Error Post(const std::string& uri,  const std::string& cookie, const std::string& input_data, FileData* ouput_data,
+    Error Post(const std::string& uri, const std::string& cookie, const std::string& input_data, MessageData* ouput_data,
                uint64_t output_data_size,
                HttpCode* response_code)  const noexcept override {
         return Error{PostReturnArray_t(uri, cookie, input_data, ouput_data, output_data_size, response_code)};
@@ -44,7 +44,7 @@ class MockHttpClient : public HttpClient {
                                    ErrorInterface** err));
     MOCK_CONST_METHOD6(PostReturnArray_t,
                        ErrorInterface * (const std::string& uri, const std::string& cookie, const std::string& input_data,
-                                         FileData* ouput_data, uint64_t output_data_size, HttpCode* code));
+                                         MessageData* ouput_data, uint64_t output_data_size, HttpCode* code));
 
 
 };

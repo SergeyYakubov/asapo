@@ -20,12 +20,12 @@ Error FolderToDbImporter::ConnectToDb(const std::unique_ptr<asapo::Database>& db
 }
 
 Error FolderToDbImporter::ImportSingleFile(const std::unique_ptr<asapo::Database>& db,
-                                           const FileInfo& file) const {
+                                           const MessageMeta& file) const {
     return db->Insert(std::string(kDBDataCollectionNamePrefix) + "_default", file, ignore_duplicates_);
 }
 
 Error FolderToDbImporter::ImportFilelistChunk(const std::unique_ptr<asapo::Database>& db,
-                                              const FileInfos& file_list, uint64_t begin, uint64_t end) const {
+                                              const MessageMetas& file_list, uint64_t begin, uint64_t end) const {
     for (auto i = begin; i < end; i++) {
         auto err = ImportSingleFile(db, file_list[(size_t)i]);
         if (err != nullptr) {
@@ -35,7 +35,7 @@ Error FolderToDbImporter::ImportFilelistChunk(const std::unique_ptr<asapo::Datab
     return nullptr;
 }
 
-Error FolderToDbImporter::PerformParallelTask(const FileInfos& file_list, uint64_t begin,
+Error FolderToDbImporter::PerformParallelTask(const MessageMetas& file_list, uint64_t begin,
                                               uint64_t end) const {
     Error err;
     auto db = CreateDbClient(&err);
@@ -66,14 +66,14 @@ Error WaitParallelTasks(std::vector<std::future<Error>>* res) {
 }
 
 
-TaskSplitParameters ComputeSplitParameters(const FileInfos& file_list, int ntasks) {
+TaskSplitParameters ComputeSplitParameters(const MessageMetas& file_list, int ntasks) {
     TaskSplitParameters parameters;
     parameters.chunk = file_list.size() / ntasks;
     parameters.remainder = file_list.size() % ntasks;
     return parameters;
 }
 
-void FolderToDbImporter::ProcessNextChunk(const FileInfos& file_list,
+void FolderToDbImporter::ProcessNextChunk(const MessageMetas& file_list,
                                           std::vector<std::future<Error>>* res,
                                           TaskSplitParameters* p) const {
     p->next_chunk_size = p->chunk + (p->remainder ? 1 : 0);
@@ -88,7 +88,7 @@ void FolderToDbImporter::ProcessNextChunk(const FileInfos& file_list,
     if (p->remainder) p->remainder -= 1;
 }
 
-Error FolderToDbImporter::ImportFilelist(const FileInfos& file_list) const {
+Error FolderToDbImporter::ImportFilelist(const MessageMetas& file_list) const {
     auto split_parameters = ComputeSplitParameters(file_list, n_tasks_);
 
     std::vector<std::future<Error>>res;
@@ -100,7 +100,7 @@ Error FolderToDbImporter::ImportFilelist(const FileInfos& file_list) const {
 }
 
 
-FileInfos FolderToDbImporter::GetFilesInFolder(const std::string& folder, Error* err) const {
+MessageMetas FolderToDbImporter::GetFilesInFolder(const std::string& folder, Error* err) const {
     auto file_list = io__->FilesInFolder(folder, err);
     return file_list;
 }

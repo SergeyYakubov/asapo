@@ -72,19 +72,19 @@ int main(int argc, char* argv[]) {
                 + "_part" + format_string(part) // file part id (chunk id)
                 + "_m" + format_string(submodule, std::string("%02d"));
             auto send_size = to_send.size() + 1;
-            auto buffer =  asapo::FileData(new uint8_t[send_size]);
+            auto buffer =  asapo::MessageData(new uint8_t[send_size]);
             memcpy(buffer.get(), to_send.c_str(), send_size);
             std::string stream = std::to_string(start_number);
             // std::cout<<"submodule:"<<submodule
             //          <<"- stream:"<<stream
             //          <<"- filename:"<<to_send<<std::endl;
 
-            asapo::EventHeader event_header{submodule, send_size, to_send,"", part,modules};
-            // err = producer->SendData(event_header,stream, std::move(buffer),
+            asapo::MessageHeader message_header{submodule, send_size, to_send, "", part, modules};
+            // err = producer->Send(message_header,stream, std::move(buffer),
             //                          asapo::kTransferMetaDataOnly, &ProcessAfterSend);
 
-            err = producer->SendData(event_header,stream, std::move(buffer),
-                                     asapo::kDefaultIngestMode, &ProcessAfterSend);
+            err = producer->Send(message_header, stream, std::move(buffer),
+                                        asapo::kDefaultIngestMode, &ProcessAfterSend);
             exit_if_error("Cannot send file", err);
 
             err = producer->WaitRequestsFinished(1000);

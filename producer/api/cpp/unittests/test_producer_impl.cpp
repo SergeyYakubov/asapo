@@ -30,7 +30,7 @@ using ::testing::HasSubstr;
 using asapo::RequestPool;
 using asapo::ProducerRequest;
 
-MATCHER_P10(M_CheckSendDataRequest, op_code, source_credentials, metadata, file_id, file_size, message, stream,
+MATCHER_P10(M_CheckSendRequest, op_code, source_credentials, metadata, file_id, file_size, message, stream,
             ingest_mode,
             subset_id,
             subset_size,
@@ -99,74 +99,74 @@ class ProducerImplTests : public testing::Test {
 TEST_F(ProducerImplTests, SendReturnsError) {
     EXPECT_CALL(mock_pull, AddRequest_t(_, false)).WillOnce(Return(
         asapo::ProducerErrorTemplates::kRequestPoolIsFull.Generate().release()));
-    asapo::EventHeader event_header{1, 1, "test"};
-    auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{1, 1, "test"};
+    auto err = producer.Send(message_header, nullptr, expected_ingest_mode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
 }
 
 TEST_F(ProducerImplTests, ErrorIfFileNameTooLong) {
     std::string long_string(asapo::kMaxMessageSize + 100, 'a');
-    asapo::EventHeader event_header{1, 1, long_string};
-    auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{1, 1, long_string};
+    auto err = producer.Send(message_header, nullptr, expected_ingest_mode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ProducerImplTests, ErrorIfFileEmpty) {
     std::string long_string(asapo::kMaxMessageSize + 100, 'a');
-    asapo::EventHeader event_header{1, 1, ""};
-    auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{1, 1, ""};
+    auto err = producer.Send(message_header, nullptr, expected_ingest_mode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ProducerImplTests, ErrorIfSubsetSizeNotDefined) {
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("subset dimensions")));
-    asapo::EventHeader event_header{1, 1000, "test", "", 1};
-    auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{1, 1000, "test", "", 1};
+    auto err = producer.Send(message_header, nullptr, expected_ingest_mode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ProducerImplTests, ErrorIfZeroDataSize) {
-    asapo::FileData data = asapo::FileData{new uint8_t[100]};
-    asapo::EventHeader event_header{1, 0, expected_fullpath};
-    auto err = producer.SendData(event_header, std::move(data), asapo::kDefaultIngestMode, nullptr);
+    asapo::MessageData data = asapo::MessageData{new uint8_t[100]};
+    asapo::MessageHeader message_header{1, 0, expected_fullpath};
+    auto err = producer.Send(message_header, std::move(data), asapo::kDefaultIngestMode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ProducerImplTests, ErrorIfNoData) {
-    asapo::EventHeader event_header{1, 100, expected_fullpath};
-    auto err = producer.SendData(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
+    asapo::MessageHeader message_header{1, 100, expected_fullpath};
+    auto err = producer.Send(message_header, nullptr, asapo::kDefaultIngestMode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ProducerImplTests, ErrorIfNoDataSend_) {
-    asapo::EventHeader event_header{1, 100, expected_fullpath};
-    auto err = producer.SendData__(event_header, nullptr, asapo::kDefaultIngestMode, nullptr);
+    asapo::MessageHeader message_header{1, 100, expected_fullpath};
+    auto err = producer.Send__(message_header, nullptr, asapo::kDefaultIngestMode, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ProducerImplTests, ErrorIfSendingDataWithZeroId) {
-    asapo::EventHeader event_header{0, 100, expected_fullpath};
-    auto err = producer.SendData(event_header, nullptr, asapo::kTransferMetaDataOnly, nullptr);
+    asapo::MessageHeader message_header{0, 100, expected_fullpath};
+    auto err = producer.Send(message_header, nullptr, asapo::kTransferMetaDataOnly, nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
 
 TEST_F(ProducerImplTests, OkIfNoDataWithTransferMetadataOnlyMode) {
-    asapo::EventHeader event_header{1, 100, expected_fullpath};
-    auto err = producer.SendData(event_header, nullptr, asapo::kTransferMetaDataOnly, nullptr);
+    asapo::MessageHeader message_header{1, 100, expected_fullpath};
+    auto err = producer.Send(message_header, nullptr, asapo::kTransferMetaDataOnly, nullptr);
     ASSERT_THAT(err, Eq(nullptr));
 }
 
 TEST_F(ProducerImplTests, OkIfZeroSizeWithTransferMetadataOnlyMode) {
-    asapo::FileData data = asapo::FileData{new uint8_t[100]};
-    asapo::EventHeader event_header{1, 0, expected_fullpath};
-    auto err = producer.SendData(event_header, std::move(data), asapo::kTransferMetaDataOnly, nullptr);
+    asapo::MessageData data = asapo::MessageData{new uint8_t[100]};
+    asapo::MessageHeader message_header{1, 0, expected_fullpath};
+    auto err = producer.Send(message_header, std::move(data), asapo::kTransferMetaDataOnly, nullptr);
     ASSERT_THAT(err, Eq(nullptr));
 }
 
 TEST_F(ProducerImplTests, UsesDefaultStream) {
     producer.SetCredentials(expected_default_credentials);
 
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
                                                                expected_default_credentials_str,
                                                                expected_metadata,
                                                                expected_id,
@@ -177,16 +177,16 @@ TEST_F(ProducerImplTests, UsesDefaultStream) {
                                                                0,
                                                                0), false)).WillOnce(Return(nullptr));
 
-    asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_metadata};
-    auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{expected_id, expected_size, expected_name, expected_metadata};
+    auto err = producer.Send(message_header, nullptr, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
+TEST_F(ProducerImplTests, OKSendingSendRequest) {
     producer.SetCredentials(expected_credentials);
 
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
                                                                expected_credentials_str,
                                                                expected_metadata,
                                                                expected_id,
@@ -199,16 +199,16 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequest) {
     ), false)).WillOnce(Return(
         nullptr));
 
-    asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_metadata};
-    auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{expected_id, expected_size, expected_name, expected_metadata};
+    auto err = producer.Send(message_header, nullptr, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
 
-TEST_F(ProducerImplTests, OKSendingSendDataRequestWithStream) {
+TEST_F(ProducerImplTests, OKSendingSendRequestWithStream) {
     producer.SetCredentials(expected_credentials);
 
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
                                                                expected_credentials_str,
                                                                expected_metadata,
                                                                expected_id,
@@ -221,8 +221,8 @@ TEST_F(ProducerImplTests, OKSendingSendDataRequestWithStream) {
     ), false)).WillOnce(Return(
         nullptr));
 
-    asapo::EventHeader event_header{expected_id, expected_size, expected_name, expected_metadata};
-    auto err = producer.SendData(event_header, expected_stream, nullptr, expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{expected_id, expected_size, expected_name, expected_metadata};
+    auto err = producer.Send(message_header, expected_stream, nullptr, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -232,7 +232,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinish) {
 
     std::string next_stream_meta = std::string("{\"next_stream\":") + "\"" + expected_next_stream + "\"}";
 
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
                                                                expected_credentials_str,
                                                                next_stream_meta.c_str(),
                                                                expected_id + 1,
@@ -257,7 +257,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinishWithNoNextStream) {
         next_stream_meta = std::string("{\"next_stream\":") + "\"" + asapo::ProducerImpl::kNoNextStreamKeyword
         + "\"}";
 
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
                                                                expected_credentials_str,
                                                                next_stream_meta.c_str(),
                                                                expected_id + 1,
@@ -277,7 +277,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinishWithNoNextStream) {
 
 TEST_F(ProducerImplTests, OKSendingSendSubsetDataRequest) {
     producer.SetCredentials(expected_credentials);
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferSubsetData,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferSubsetData,
                                                                expected_credentials_str,
                                                                expected_metadata,
                                                                expected_id,
@@ -290,9 +290,9 @@ TEST_F(ProducerImplTests, OKSendingSendSubsetDataRequest) {
         Return(
             nullptr));
 
-    asapo::EventHeader event_header
+    asapo::MessageHeader message_header
         {expected_id, expected_size, expected_name, expected_metadata, expected_subset_id, expected_subset_size};
-    auto err = producer.SendData(event_header, nullptr, expected_ingest_mode, nullptr);
+    auto err = producer.Send(message_header, nullptr, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -304,7 +304,7 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
     expected_ingest_mode = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInDatabase ;
 
     producer.SetCredentials(expected_credentials);
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferMetaData,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferMetaData,
                                                                expected_credentials_str,
                                                                "",
                                                                expected_id,
@@ -316,7 +316,7 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
                                                                10), false)).WillOnce(Return(
         nullptr));
 
-    auto err = producer.SendMetaData(expected_metadata, nullptr);
+    auto err = producer.SendMetadata(expected_metadata, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -326,8 +326,8 @@ TEST_F(ProducerImplTests, ErrorSendingEmptyFileName) {
 
     EXPECT_CALL(mock_pull, AddRequest_t(_, _)).Times(0);
 
-    asapo::EventHeader event_header{expected_id, 0, expected_name};
-    auto err = producer.SendFile(event_header, "", expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{expected_id, 0, expected_name};
+    auto err = producer.SendFromFile(message_header, "", expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 
@@ -338,8 +338,8 @@ TEST_F(ProducerImplTests, ErrorSendingEmptyRelativeFileName) {
 
     EXPECT_CALL(mock_pull, AddRequest_t(_, _)).Times(0);
 
-    asapo::EventHeader event_header{expected_id, 0, ""};
-    auto err = producer.SendFile(event_header, expected_fullpath, expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{expected_id, 0, ""};
+    auto err = producer.SendFromFile(message_header, expected_fullpath, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 
@@ -348,7 +348,7 @@ TEST_F(ProducerImplTests, ErrorSendingEmptyRelativeFileName) {
 TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
     producer.SetCredentials(expected_credentials);
 
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
                                                                expected_credentials_str,
                                                                "",
                                                                expected_id,
@@ -360,8 +360,8 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
                                                                0), false)).WillOnce(Return(
         nullptr));
 
-    asapo::EventHeader event_header{expected_id, 0, expected_name};
-    auto err = producer.SendFile(event_header, expected_fullpath, expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{expected_id, 0, expected_name};
+    auto err = producer.SendFromFile(message_header, expected_fullpath, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -369,7 +369,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequest) {
 TEST_F(ProducerImplTests, OKSendingSendFileRequestWithStream) {
     producer.SetCredentials(expected_credentials);
 
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendDataRequest(asapo::kOpcodeTransferData,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
                                                                expected_credentials_str,
                                                                "",
                                                                expected_id,
@@ -381,8 +381,9 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequestWithStream) {
                                                                0), false)).WillOnce(Return(
         nullptr));
 
-    asapo::EventHeader event_header{expected_id, 0, expected_name};
-    auto err = producer.SendFile(event_header, expected_stream, expected_fullpath, expected_ingest_mode, nullptr);
+    asapo::MessageHeader message_header{expected_id, 0, expected_name};
+    auto err =
+        producer.SendFromFile(message_header, expected_stream, expected_fullpath, expected_ingest_mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -408,7 +409,7 @@ TEST_F(ProducerImplTests, ErrorSettingSecondTime) {
 
 TEST_F(ProducerImplTests, ErrorSendingWrongIngestMode) {
     producer.SetCredentials(expected_credentials);
-    asapo::EventHeader event_header{expected_id, 0, expected_name};
+    asapo::MessageHeader message_header{expected_id, 0, expected_name};
     uint64_t ingest_modes[] = {0, asapo::IngestModeFlags::kTransferMetaDataOnly | asapo::IngestModeFlags::kTransferData,
                                asapo::IngestModeFlags::kTransferData,
                                asapo::IngestModeFlags::kStoreInDatabase,
@@ -420,7 +421,7 @@ TEST_F(ProducerImplTests, ErrorSendingWrongIngestMode) {
     EXPECT_CALL(mock_pull, AddRequest_t(_, _)).Times(0);
 
     for (auto ingest_mode : ingest_modes) {
-        auto err = producer.SendFile(event_header, expected_fullpath, ingest_mode, nullptr);
+        auto err = producer.SendFromFile(message_header, expected_fullpath, ingest_mode, nullptr);
         ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
     }
 

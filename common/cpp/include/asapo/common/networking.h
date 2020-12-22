@@ -93,7 +93,7 @@ struct GenericNetworkResponse {
 };
 
 
-struct SendDataResponse :  GenericNetworkResponse {
+struct SendResponse :  GenericNetworkResponse {
 };
 
 }

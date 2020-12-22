@@ -46,7 +46,7 @@ class SystemIO final : public IO {
 
     void ApplyNetworkOptions(SocketDescriptor socket_fd, Error* err) const;
 
-    //void CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files, IOErrors* err) const;
+    //void CollectMessageMetarmationRecursively(const std::string& path, std::vector<MessageMeta>* files, IOErrors* err) const;
     int FileOpenModeToPosixFileOpenMode(int open_flags) const;
 
     short AddressFamilyToPosixFamily      (AddressFamilies address_family) const;
@@ -78,7 +78,7 @@ class SystemIO final : public IO {
     static ssize_t		_recv(SocketDescriptor socket_fd, void* buffer, size_t length);
     static ssize_t      _read(FileDescriptor fd, void* buffer, size_t length);
     static ssize_t      _write(FileDescriptor fd, const void* buffer, size_t count);
-    void            CollectFileInformationRecursively(const std::string& path, std::vector<FileInfo>* files,
+    void            CollectMessageMetarmationRecursively(const std::string& path, std::vector<MessageMeta>* files,
                                                       Error* err) const;
     void            GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const;
     Error           CreateDirectoryWithParents(const std::string& root_path, const std::string& path) const;
@@ -100,7 +100,7 @@ class SystemIO final : public IO {
 
 
     // this is not standard function - to be implemented differently in windows and linux
-    std::vector<FileInfo>   FilesInFolder(const std::string& folder, Error* err) const override;
+    std::vector<MessageMeta>   FilesInFolder(const std::string& folder, Error* err) const override;
 
     /*
      * Network
@@ -139,8 +139,8 @@ class SystemIO final : public IO {
     size_t          Read(FileDescriptor fd, void* buf, size_t length, Error* err) const override;
     size_t          Write(FileDescriptor fd, const void* buf, size_t length, Error* err) const override;
     void            CreateNewDirectory(const std::string& directory_name, Error* err) const override;
-    FileData        GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override;
-    Error           WriteDataToFile  (const std::string& root_folder, const std::string& fname, const FileData& data,
+    MessageData        GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override;
+    Error           WriteDataToFile  (const std::string& root_folder, const std::string& fname, const MessageData& data,
                                       size_t length, bool create_directories, bool allow_ovewrite) const override;
     Error           ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
                                       size_t length, bool create_directories, bool allow_ovewrite) const override;
@@ -152,7 +152,7 @@ class SystemIO final : public IO {
     Error           RemoveFile(const std::string& fname) const override;
     Error           GetLastError() const override;
     std::string     AddressFromSocket(SocketDescriptor socket) const noexcept override;
-    FileInfo        GetFileInfo(const std::string& name, Error* err) const override;
+    MessageMeta        GetMessageMeta(const std::string& name, Error* err) const override;
 
 
 };

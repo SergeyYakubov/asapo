@@ -34,14 +34,14 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, u
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
 }
 
-GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const EventHeader& event_header, std::string stream,
-        uint64_t ingest_mode) {
-    GenericRequestHeader request{kOpcodeTransferData, event_header.file_id, event_header.file_size,
-                                 event_header.user_metadata.size(), event_header.file_name, stream};
-    if (event_header.id_in_subset != 0) {
+GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const MessageHeader& message_header, std::string stream,
+                                                           uint64_t ingest_mode) {
+    GenericRequestHeader request{kOpcodeTransferData, message_header.message_id, message_header.data_size,
+                                 message_header.user_metadata.size(), message_header.file_name, stream};
+    if (message_header.id_in_subset != 0) {
         request.op_code = kOpcodeTransferSubsetData;
-        request.custom_data[kPosDataSetId] = event_header.id_in_subset;
-        request.custom_data[kPosDataSetSize] = event_header.subset_size;
+        request.custom_data[kPosDataSetId] = message_header.id_in_subset;
+        request.custom_data[kPosDataSetSize] = message_header.subset_size;
     }
     request.custom_data[kPosIngestMode] = ingest_mode;
     return request;
@@ -71,34 +71,34 @@ Error CheckIngestMode(uint64_t ingest_mode) {
     return nullptr;
 }
 
-Error CheckProducerRequest(const EventHeader& event_header, uint64_t ingest_mode) {
-    if (event_header.file_name.size() > kMaxMessageSize) {
+Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_mode) {
+    if (message_header.file_name.size() > kMaxMessageSize) {
         return ProducerErrorTemplates::kWrongInput.Generate("too long filename");
     }
 
-    if (event_header.file_name.empty() ) {
+    if (message_header.file_name.empty() ) {
         return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }
 
-    if (event_header.id_in_subset > 0 && event_header.subset_size == 0) {
+    if (message_header.id_in_subset > 0 && message_header.subset_size == 0) {
         return ProducerErrorTemplates::kWrongInput.Generate("subset dimensions");
     }
 
-    if (event_header.file_id == 0) {
+    if (message_header.message_id == 0) {
         return ProducerErrorTemplates::kWrongInput.Generate("data tuple id should be positive");
     }
 
     return CheckIngestMode(ingest_mode);
 }
 
-Error ProducerImpl::Send(const EventHeader& event_header,
+Error ProducerImpl::Send(const MessageHeader& message_header,
                          std::string stream,
-                         FileData data,
+                         MessageData data,
                          std::string full_path,
                          uint64_t ingest_mode,
                          RequestCallback callback,
                          bool manage_data_memory) {
-    auto err = CheckProducerRequest(event_header, ingest_mode);
+    auto err = CheckProducerRequest(message_header, ingest_mode);
     if (err) {
         if (!manage_data_memory) {
             data.release();
@@ -107,10 +107,10 @@ Error ProducerImpl::Send(const EventHeader& event_header,
         return err;
     }
 
-    auto request_header = GenerateNextSendRequest(event_header, std::move(stream), ingest_mode);
+    auto request_header = GenerateNextSendRequest(message_header, std::move(stream), ingest_mode);
 
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                std::move(data), std::move(event_header.user_metadata), std::move(full_path), callback, manage_data_memory, timeout_ms_}
+                std::move(data), std::move(message_header.user_metadata), std::move(full_path), callback, manage_data_memory, timeout_ms_}
     });
 
 }
@@ -119,51 +119,51 @@ bool WandTransferData(uint64_t ingest_mode) {
     return ingest_mode & IngestModeFlags::kTransferData;
 }
 
-Error CheckData(uint64_t ingest_mode, const EventHeader& event_header, const FileData* data) {
+Error CheckData(uint64_t ingest_mode, const MessageHeader& message_header, const MessageData* data) {
     if (WandTransferData(ingest_mode)) {
         if (*data == nullptr) {
             return ProducerErrorTemplates::kWrongInput.Generate("need data for this ingest mode");
         }
-        if (event_header.file_size == 0) {
+        if (message_header.data_size == 0) {
             return ProducerErrorTemplates::kWrongInput.Generate("zero data size");
         }
     }
     return nullptr;
 }
 
-Error ProducerImpl::SendData(const EventHeader& event_header, FileData data,
-                             uint64_t ingest_mode, RequestCallback callback) {
-    return SendData(event_header, kDefaultStream, std::move(data), ingest_mode, callback);
+Error ProducerImpl::Send(const MessageHeader& message_header, MessageData data,
+                         uint64_t ingest_mode, RequestCallback callback) {
+    return Send(message_header, kDefaultStream, std::move(data), ingest_mode, callback);
 }
 
-Error ProducerImpl::SendData(const EventHeader& event_header,
-                             std::string stream,
-                             FileData data,
-                             uint64_t ingest_mode,
-                             RequestCallback callback) {
-    if (auto err = CheckData(ingest_mode, event_header, &data)) {
+Error ProducerImpl::Send(const MessageHeader& message_header,
+                         std::string stream,
+                         MessageData data,
+                         uint64_t ingest_mode,
+                         RequestCallback callback) {
+    if (auto err = CheckData(ingest_mode, message_header, &data)) {
         return err;
     }
-    return Send(event_header, std::move(stream), std::move(data), "", ingest_mode, callback, true);
+    return Send(message_header, std::move(stream), std::move(data), "", ingest_mode, callback, true);
 
 }
 
 Error ProducerImpl::SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,
                                               RequestCallback callback) {
-    EventHeader event_header;
-    event_header.file_name = kFinishStreamKeyword;
-    event_header.file_size = 0;
-    event_header.file_id = last_id + 1;
+    MessageHeader message_header;
+    message_header.file_name = kFinishStreamKeyword;
+    message_header.data_size = 0;
+    message_header.message_id = last_id + 1;
     if (next_stream.empty()) {
         next_stream = kNoNextStreamKeyword;
     }
-    event_header.user_metadata =  std::string("{\"next_stream\":") + "\"" + next_stream + "\"}";
-    return Send(event_header, std::move(stream), nullptr, "", IngestModeFlags::kTransferMetaDataOnly, callback, true);
+    message_header.user_metadata =  std::string("{\"next_stream\":") + "\"" + next_stream + "\"}";
+    return Send(message_header, std::move(stream), nullptr, "", IngestModeFlags::kTransferMetaDataOnly, callback, true);
 }
 
-Error ProducerImpl::SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,
-                             RequestCallback callback) {
-    return SendFile(event_header, kDefaultStream, std::move(full_path), ingest_mode, callback);
+Error ProducerImpl::SendFromFile(const MessageHeader& message_header, std::string full_path, uint64_t ingest_mode,
+                                 RequestCallback callback) {
+    return SendFromFile(message_header, kDefaultStream, std::move(full_path), ingest_mode, callback);
 }
 
 
@@ -215,36 +215,36 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
     return nullptr;
 }
 
-Error ProducerImpl::SendMetaData(const std::string& metadata, RequestCallback callback) {
+Error ProducerImpl::SendMetadata(const std::string& metadata, RequestCallback callback) {
     GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0, "beamtime_global.meta"};
     request_header.custom_data[kPosIngestMode] = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInDatabase;
-    FileData data{new uint8_t[metadata.size()]};
+    MessageData data{new uint8_t[metadata.size()]};
     strncpy((char*)data.get(), metadata.c_str(), metadata.size());
     return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
                 std::move(data), "", "", callback, true, timeout_ms_}
     });
 }
 
-Error ProducerImpl::SendData__(const EventHeader& event_header,
-                               std::string stream,
-                               void* data,
-                               uint64_t ingest_mode,
-                               RequestCallback callback) {
-    FileData data_wrapped = FileData{(uint8_t*)data};
+Error ProducerImpl::Send__(const MessageHeader& message_header,
+                                  std::string stream,
+                                  void* data,
+                                  uint64_t ingest_mode,
+                                  RequestCallback callback) {
+    MessageData data_wrapped = MessageData{(uint8_t*)data};
 
-    if (auto err = CheckData(ingest_mode, event_header, &data_wrapped)) {
+    if (auto err = CheckData(ingest_mode, message_header, &data_wrapped)) {
         data_wrapped.release();
         return err;
     }
 
-    return Send(std::move(event_header), std::move(stream), std::move(data_wrapped), "", ingest_mode, callback, false);
+    return Send(std::move(message_header), std::move(stream), std::move(data_wrapped), "", ingest_mode, callback, false);
 }
 
-Error ProducerImpl::SendData__(const EventHeader& event_header,
-                               void* data,
-                               uint64_t ingest_mode,
-                               RequestCallback callback) {
-    return SendData__(event_header, kDefaultStream, data, ingest_mode, callback);
+Error ProducerImpl::Send__(const MessageHeader& message_header,
+                                  void* data,
+                                  uint64_t ingest_mode,
+                                  RequestCallback callback) {
+    return Send__(message_header, kDefaultStream, data, ingest_mode, callback);
 }
 
 uint64_t  ProducerImpl::GetRequestsQueueSize() {
@@ -262,16 +262,16 @@ Error ProducerImpl::WaitRequestsFinished(uint64_t timeout_ms) {
 void ProducerImpl::StopThreads__() {
     request_pool__->StopThreads();
 }
-Error ProducerImpl::SendFile(const EventHeader& event_header,
-                             std::string stream,
-                             std::string full_path,
-                             uint64_t ingest_mode,
-                             RequestCallback callback) {
+Error ProducerImpl::SendFromFile(const MessageHeader& message_header,
+                                        std::string stream,
+                                        std::string full_path,
+                                        uint64_t ingest_mode,
+                                        RequestCallback callback) {
     if (full_path.empty()) {
         return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }
 
-    return Send(event_header, std::move(stream), nullptr, std::move(full_path), ingest_mode, callback, true);
+    return Send(message_header, std::move(stream), nullptr, std::move(full_path), ingest_mode, callback, true);
 
 }
 

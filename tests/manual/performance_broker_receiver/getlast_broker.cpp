@@ -58,14 +58,14 @@ std::vector<std::thread> StartThreads(const Args& params,
                                       std::vector<int>* nbuf,
                                       std::vector<int>* nfiles_total) {
     auto exec_next = [&params, nfiles, errors, nbuf, nfiles_total](int i) {
-        asapo::FileInfo fi;
+        asapo::MessageMeta fi;
         Error err;
         auto consumer = asapo::ConsumerFactory::CreateConsumer(params.server, params.file_path, true,
                                                              asapo::SourceCredentials{asapo::SourceType::kProcessed,
                                                                                       params.beamtime_id, "", "",
                                                                                       params.token}, &err);
         consumer->SetTimeout((uint64_t) params.timeout_ms);
-        asapo::FileData data;
+        asapo::MessageData data;
 
         lock.lock();
 
@@ -119,7 +119,7 @@ std::vector<std::thread> StartThreads(const Args& params,
 
 int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nbuf, int* nfiles_total,
                 asapo::NetworkConnectionType* connection_type) {
-    asapo::FileInfo fi;
+    asapo::MessageMeta fi;
     system_clock::time_point t1 = system_clock::now();
 
     std::vector<int> nfiles(params.nthreads, 0);

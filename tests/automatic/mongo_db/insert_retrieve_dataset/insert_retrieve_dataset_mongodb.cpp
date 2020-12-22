@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
     asapo::MongoDBClient db;
 
-    asapo::FileInfo fi;
+    asapo::MessageMeta fi;
     fi.size = 100;
     fi.name = "relpath/1";
     uint64_t subset_id = args.file_id;
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
     Assert(err, args.keyword);
 
     if (args.keyword == "OK") { // check retrieve
-        asapo::FileInfo fi_db;
+        asapo::MessageMeta fi_db;
         err = db.GetDataSetById("test", fi.id,subset_id, &fi_db);
         M_AssertTrue(fi_db == fi, "get record from db");
         M_AssertEq(nullptr, err);

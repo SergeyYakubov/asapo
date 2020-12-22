@@ -19,7 +19,7 @@
 #include "../receiver_mocking.h"
 
 using asapo::MockRequest;
-using asapo::FileInfo;
+using asapo::MessageMeta;
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::ReturnRef;

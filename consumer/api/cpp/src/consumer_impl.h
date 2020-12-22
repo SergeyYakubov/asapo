@@ -35,7 +35,7 @@ struct RequestInfo {
 
 struct RequestOutput {
     std::string string_output;
-    FileData data_output;
+    MessageData data_output;
     uint64_t data_output_size;
     const char* to_string() const {
         if (!data_output) {
@@ -76,11 +76,11 @@ class ConsumerImpl final : public asapo::Consumer {
     Error SetLastReadMarker(uint64_t value, std::string group_id) override;
     Error SetLastReadMarker(uint64_t value, std::string group_id, std::string stream) override;
 
-    Error GetNext(FileInfo* info, std::string group_id, FileData* data) override;
-    Error GetNext(FileInfo* info, std::string group_id, std::string stream, FileData* data) override;
+    Error GetNext(MessageMeta* info, std::string group_id, MessageData* data) override;
+    Error GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) override;
 
-    Error GetLast(FileInfo* info, FileData* data) override;
-    Error GetLast(FileInfo* info, std::string stream, FileData* data) override;
+    Error GetLast(MessageMeta* info, MessageData* data) override;
+    Error GetLast(MessageMeta* info, std::string stream, MessageData* data) override;
 
     std::string GenerateNewGroupId(Error* err) override;
     std::string GetBeamtimeMeta(Error* err) override;
@@ -88,8 +88,8 @@ class ConsumerImpl final : public asapo::Consumer {
     uint64_t GetCurrentSize(Error* err) override;
     uint64_t GetCurrentSize(std::string stream, Error* err) override;
 
-    Error GetById(uint64_t id, FileInfo* info, FileData* data) override;
-    Error GetById(uint64_t id, FileInfo* info, std::string stream, FileData* data) override;
+    Error GetById(uint64_t id, MessageMeta* info, MessageData* data) override;
+    Error GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) override;
 
 
     void SetTimeout(uint64_t timeout_ms) override;
@@ -97,8 +97,8 @@ class ConsumerImpl final : public asapo::Consumer {
 
     NetworkConnectionType CurrentConnectionType() const override;
 
-    FileInfos QueryImages(std::string query, Error* err) override;
-    FileInfos QueryImages(std::string query, std::string stream, Error* err) override;
+    MessageMetas QueryImages(std::string query, Error* err) override;
+    MessageMetas QueryImages(std::string query, std::string stream, Error* err) override;
 
     DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) override;
     DataSet GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) override;
@@ -109,7 +109,7 @@ class ConsumerImpl final : public asapo::Consumer {
     DataSet GetDatasetById(uint64_t id, uint64_t min_size, Error* err) override;
     DataSet GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) override;
 
-    Error RetrieveData(FileInfo* info, FileData* data) override;
+    Error RetrieveData(MessageMeta* info, MessageData* data) override;
 
     StreamInfos GetStreamList(std::string from, Error* err) override;
     void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts) override;
@@ -122,8 +122,8 @@ class ConsumerImpl final : public asapo::Consumer {
     std::unique_ptr<NetClient> net_client__;
     std::mutex net_client_mutex__; // Required for the lazy initialization of net_client
   private:
-    Error GetDataFromFileTransferService(FileInfo* info, FileData* data, bool retry_with_new_token);
-    Error GetDataFromFile(FileInfo* info, FileData* data);
+    Error GetDataFromFileTransferService(MessageMeta* info, MessageData* data, bool retry_with_new_token);
+    Error GetDataFromFile(MessageMeta* info, MessageData* data);
     static const std::string kBrokerServiceName;
     static const std::string kFileTransferServiceName;
     std::string RequestWithToken(std::string uri);
@@ -131,23 +131,23 @@ class ConsumerImpl final : public asapo::Consumer {
                               bool dataset = false, uint64_t min_size = 0);
     Error GetRecordFromServerById(uint64_t id, std::string* info, std::string group_id, std::string stream,
                                   bool dataset = false, uint64_t min_size = 0);
-    Error GetDataIfNeeded(FileInfo* info, FileData* data);
+    Error GetDataIfNeeded(MessageMeta* info, MessageData* data);
     Error DiscoverService(const std::string& service_name, std::string* uri_to_set);
     bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
     bool SwitchToGetByIdIfPartialData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
     Error ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri);
     Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string stream,
-                             FileInfo* info, FileData* data);
+                             MessageMeta* info, MessageData* data);
     DataSet GetDatasetFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string stream,
                                  uint64_t min_size, Error* err);
-    bool DataCanBeInBuffer(const FileInfo* info);
-    Error TryGetDataFromBuffer(const FileInfo* info, FileData* data);
-    Error CreateNetClientAndTryToGetFile(const FileInfo* info, FileData* data);
+    bool DataCanBeInBuffer(const MessageMeta* info);
+    Error TryGetDataFromBuffer(const MessageMeta* info, MessageData* data);
+    Error CreateNetClientAndTryToGetFile(const MessageMeta* info, MessageData* data);
     Error ServiceRequestWithTimeout(const std::string& service_name, std::string* service_uri, RequestInfo request,
                                     RequestOutput* response);
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
-    Error FtsRequestWithTimeout(FileInfo* info, FileData* data);
-    Error FtsSizeRequestWithTimeout(FileInfo* info);
+    Error FtsRequestWithTimeout(MessageMeta* info, MessageData* data);
+    Error FtsSizeRequestWithTimeout(MessageMeta* info);
     Error ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
     Error ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
 
@@ -165,7 +165,7 @@ class ConsumerImpl final : public asapo::Consumer {
     NetworkConnectionType current_connection_type_ = NetworkConnectionType::kUndefined;
     std::string folder_token_;
     RequestInfo CreateFolderTokenRequest() const;
-    RequestInfo CreateFileTransferRequest(const FileInfo* info) const;
+    RequestInfo CreateFileTransferRequest(const MessageMeta* info) const;
     uint64_t resend_timout_ = 0;
     bool resend_ = false;
     uint64_t delay_ms_;

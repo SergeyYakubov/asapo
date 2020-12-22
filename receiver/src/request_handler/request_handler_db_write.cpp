@@ -52,25 +52,25 @@ Error RequestHandlerDbWrite::ProcessDuplicateRecordSituation(Request* request) c
 
 
 Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
-    auto file_info = PrepareFileInfo(request);
+    auto message_meta = PrepareMessageMeta(request);
 
     auto op_code = request->GetOpCode();
     auto col_name = collection_name_prefix_ + "_" + request->GetStream();
     Error err;
     if (op_code == Opcode::kOpcodeTransferData) {
-        err =  db_client__->Insert(col_name, file_info, false);
+        err =  db_client__->Insert(col_name, message_meta, false);
         if (!err) {
-            log__->Debug(std::string{"insert record id "} + std::to_string(file_info.id) + " to " + col_name + " in " +
+            log__->Debug(std::string{"insert record id "} + std::to_string(message_meta.id) + " to " + col_name + " in " +
                          db_name_ +
                          " at " + GetReceiverConfig()->database_uri);
         }
     } else {
-        auto subset_id = file_info.id;
-        file_info.id = request->GetCustomData()[1];
+        auto subset_id = message_meta.id;
+        message_meta.id = request->GetCustomData()[1];
         auto subset_size = request->GetCustomData()[2];
-        err =  db_client__->InsertAsSubset(col_name, file_info, subset_id, subset_size, false);
+        err =  db_client__->InsertAsSubset(col_name, message_meta, subset_id, subset_size, false);
         if (!err) {
-            log__->Debug(std::string{"insert record as subset id "} + std::to_string(file_info.id) + ", id in subset: " +
+            log__->Debug(std::string{"insert record as subset id "} + std::to_string(message_meta.id) + ", id in subset: " +
                          std::to_string(subset_id) + " to " + col_name + " in " +
                          db_name_ +
                          " at " + GetReceiverConfig()->database_uri);
@@ -79,16 +79,16 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
     return err;
 }
 
-FileInfo RequestHandlerDbWrite::PrepareFileInfo(const Request* request) const {
-    FileInfo file_info;
-    file_info.name = request->GetFileName();
-    file_info.size = request->GetDataSize();
-    file_info.id = request->GetDataID();
-    file_info.buf_id = request->GetSlotId();
-    file_info.source = GetReceiverConfig()->dataserver.advertise_uri;
-    file_info.metadata = request->GetMetaData();
-    file_info.timestamp = std::chrono::system_clock::now();
-    return file_info;
+MessageMeta RequestHandlerDbWrite::PrepareMessageMeta(const Request* request) const {
+    MessageMeta message_meta;
+    message_meta.name = request->GetFileName();
+    message_meta.size = request->GetDataSize();
+    message_meta.id = request->GetDataID();
+    message_meta.buf_id = request->GetSlotId();
+    message_meta.source = GetReceiverConfig()->dataserver.advertise_uri;
+    message_meta.metadata = request->GetMetaData();
+    message_meta.timestamp = std::chrono::system_clock::now();
+    return message_meta;
 }
 
 RequestHandlerDbWrite::RequestHandlerDbWrite(std::string collection_name_prefix) : RequestHandlerDb(std::move(

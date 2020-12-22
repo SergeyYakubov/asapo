@@ -79,7 +79,7 @@ TEST_F(FactoryTests, ErrorOnWrongCode) {
     ASSERT_THAT(err, Ne(nullptr));
 }
 
-TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCode) {
+TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendCode) {
     for (auto code : std::vector<asapo::Opcode> {asapo::Opcode::kOpcodeTransferData, asapo::Opcode::kOpcodeTransferSubsetData}) {
         generic_request_header.op_code = code;
         auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
@@ -95,7 +95,7 @@ TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCode) {
     }
 }
 
-TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendDataCodeLargeFile) {
+TEST_F(FactoryTests, ReturnsDataRequestOnkNetOpcodeSendCodeLargeFile) {
     for (auto code : std::vector<asapo::Opcode> {asapo::Opcode::kOpcodeTransferData, asapo::Opcode::kOpcodeTransferSubsetData}) {
         generic_request_header.op_code = code;
         config.receive_to_disk_threshold_mb = 0;

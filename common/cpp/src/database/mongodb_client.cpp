@@ -110,7 +110,7 @@ void MongoDBClient::CleanUp() {
     }
 }
 
-bson_p PrepareBsonDocument(const FileInfo &file, Error* err) {
+bson_p PrepareBsonDocument(const MessageMeta &file, Error* err) {
     bson_error_t mongo_err;
     auto s = file.Json();
     auto json = reinterpret_cast<const uint8_t*>(s.c_str());
@@ -172,7 +172,7 @@ Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p &document, boo
     return err;
 }
 
-Error MongoDBClient::Insert(const std::string &collection, const FileInfo &file, bool ignore_duplicates) const {
+Error MongoDBClient::Insert(const std::string &collection, const MessageMeta &file, bool ignore_duplicates) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -237,7 +237,7 @@ Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool 
     return err;
 }
 
-Error MongoDBClient::InsertAsSubset(const std::string &collection, const FileInfo &file,
+Error MongoDBClient::InsertAsSubset(const std::string &collection, const MessageMeta &file,
                                     uint64_t subset_id,
                                     uint64_t subset_size,
                                     bool ignore_duplicates) const {
@@ -322,7 +322,7 @@ Error MongoDBClient::GetRecordFromDb(const std::string &collection, uint64_t id,
     return err;
 }
 
-Error MongoDBClient::GetById(const std::string &collection, uint64_t id, FileInfo* file) const {
+Error MongoDBClient::GetById(const std::string &collection, uint64_t id, MessageMeta* file) const {
     std::string record_str;
     auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
     if (err) {
@@ -335,7 +335,7 @@ Error MongoDBClient::GetById(const std::string &collection, uint64_t id, FileInf
     return nullptr;
 }
 
-Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_in_set, uint64_t id, FileInfo* file) const {
+Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_in_set, uint64_t id, MessageMeta* file) const {
     std::string record_str;
     auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
     if (err) {

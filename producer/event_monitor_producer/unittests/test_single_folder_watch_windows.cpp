@@ -31,8 +31,8 @@ using ::asapo::Error;
 using ::asapo::ErrorInterface;
 using asapo::FilesToSend;
 using asapo::SingleFolderWatch;
-using asapo::FileInfos;
-using asapo::FileInfo;
+using asapo::MessageMetas;
+using asapo::MessageMeta;
 
 namespace {
 

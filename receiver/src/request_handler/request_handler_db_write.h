@@ -14,7 +14,7 @@ class RequestHandlerDbWrite final: public RequestHandlerDb {
     Error ProcessRequest(Request* request) const override;
     RequestHandlerDbWrite(std::string collection_name_prefix);
   private:
-    FileInfo PrepareFileInfo(const Request* request) const;
+    MessageMeta PrepareMessageMeta(const Request* request) const;
     Error InsertRecordToDb(const Request* request) const;
     Error ProcessDuplicateRecordSituation(Request* request) const;
 

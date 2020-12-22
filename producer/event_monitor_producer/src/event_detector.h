@@ -8,7 +8,7 @@ namespace asapo {
 
 class AbstractEventDetector {
   public:
-    virtual Error GetNextEvent(EventHeader* event_header) = 0;
+    virtual Error GetNextEvent(MessageHeader* message_header) = 0;
     virtual Error StartMonitoring() = 0;
     virtual ~AbstractEventDetector() = default;
 };

@@ -294,11 +294,11 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
     return nullptr;
 }
 
-Error ConsumerImpl::GetNext(FileInfo* info, std::string group_id, FileData* data) {
+Error ConsumerImpl::GetNext(MessageMeta* info, std::string group_id, MessageData* data) {
     return GetNext(info, std::move(group_id), kDefaultStream, data);
 }
 
-Error ConsumerImpl::GetNext(FileInfo* info, std::string group_id, std::string stream, FileData* data) {
+Error ConsumerImpl::GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) {
     return GetImageFromServer(GetImageServerOperation::GetNext,
                               0,
                               std::move(group_id),
@@ -307,11 +307,11 @@ Error ConsumerImpl::GetNext(FileInfo* info, std::string group_id, std::string st
                               data);
 }
 
-Error ConsumerImpl::GetLast(FileInfo* info, FileData* data) {
+Error ConsumerImpl::GetLast(MessageMeta* info, MessageData* data) {
     return GetLast(info, kDefaultStream, data);
 }
 
-Error ConsumerImpl::GetLast(FileInfo* info, std::string stream, FileData* data) {
+Error ConsumerImpl::GetLast(MessageMeta* info, std::string stream, MessageData* data) {
     return GetImageFromServer(GetImageServerOperation::GetLast,
                               0,
                               "0",
@@ -330,8 +330,8 @@ std::string ConsumerImpl::OpToUriCmd(GetImageServerOperation op) {
 
 Error ConsumerImpl::GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id,
                                        std::string stream,
-                                       FileInfo* info,
-                                       FileData* data) {
+                                       MessageMeta* info,
+                                       MessageData* data) {
     if (info == nullptr) {
         return ConsumerErrorTemplates::kWrongInput.Generate();
     }
@@ -353,7 +353,7 @@ Error ConsumerImpl::GetImageFromServer(GetImageServerOperation op, uint64_t id, 
     return GetDataIfNeeded(info, data);
 }
 
-Error ConsumerImpl::GetDataFromFile(FileInfo* info, FileData* data) {
+Error ConsumerImpl::GetDataFromFile(MessageMeta* info, MessageData* data) {
     Error error;
     *data = io__->GetDataFromFile(info->FullName(source_path_), &info->size, &error);
     if (error) {
@@ -362,7 +362,7 @@ Error ConsumerImpl::GetDataFromFile(FileInfo* info, FileData* data) {
     return nullptr;
 }
 
-Error ConsumerImpl::RetrieveData(FileInfo* info, FileData* data) {
+Error ConsumerImpl::RetrieveData(MessageMeta* info, MessageData* data) {
     if (data == nullptr || info == nullptr) {
         return ConsumerErrorTemplates::kWrongInput.Generate("pointers are empty");
     }
@@ -382,7 +382,7 @@ Error ConsumerImpl::RetrieveData(FileInfo* info, FileData* data) {
     return GetDataFromFileTransferService(info, data, false);
 }
 
-Error ConsumerImpl::GetDataIfNeeded(FileInfo* info, FileData* data) {
+Error ConsumerImpl::GetDataIfNeeded(MessageMeta* info, MessageData* data) {
     if (data == nullptr) {
         return nullptr;
     }
@@ -391,11 +391,11 @@ Error ConsumerImpl::GetDataIfNeeded(FileInfo* info, FileData* data) {
 
 }
 
-bool ConsumerImpl::DataCanBeInBuffer(const FileInfo* info) {
+bool ConsumerImpl::DataCanBeInBuffer(const MessageMeta* info) {
     return info->buf_id > 0;
 }
 
-Error ConsumerImpl::CreateNetClientAndTryToGetFile(const FileInfo* info, FileData* data) {
+Error ConsumerImpl::CreateNetClientAndTryToGetFile(const MessageMeta* info, MessageData* data) {
     const std::lock_guard<std::mutex> lock(net_client_mutex__);
     if (net_client__) {
         return nullptr;
@@ -430,7 +430,7 @@ Error ConsumerImpl::CreateNetClientAndTryToGetFile(const FileInfo* info, FileDat
     return net_client__->GetData(info, data);
 }
 
-Error ConsumerImpl::TryGetDataFromBuffer(const FileInfo* info, FileData* data) {
+Error ConsumerImpl::TryGetDataFromBuffer(const MessageMeta* info, MessageData* data) {
     if (!net_client__) {
         return CreateNetClientAndTryToGetFile(info, data);
     }
@@ -472,7 +472,7 @@ Error ConsumerImpl::ServiceRequestWithTimeout(const std::string &service_name,
     return err;
 }
 
-Error ConsumerImpl::FtsSizeRequestWithTimeout(FileInfo* info) {
+Error ConsumerImpl::FtsSizeRequestWithTimeout(MessageMeta* info) {
     RequestInfo ri = CreateFileTransferRequest(info);
     ri.extra_params = "&sizeonly=true";
     ri.output_mode = OutputDataMode::string;
@@ -487,7 +487,7 @@ Error ConsumerImpl::FtsSizeRequestWithTimeout(FileInfo* info) {
     return err;
 }
 
-Error ConsumerImpl::FtsRequestWithTimeout(FileInfo* info, FileData* data) {
+Error ConsumerImpl::FtsRequestWithTimeout(MessageMeta* info, MessageData* data) {
     RequestInfo ri = CreateFileTransferRequest(info);
     RequestOutput response;
     response.data_output_size = info->size;
@@ -499,7 +499,7 @@ Error ConsumerImpl::FtsRequestWithTimeout(FileInfo* info, FileData* data) {
     return nullptr;
 }
 
-RequestInfo ConsumerImpl::CreateFileTransferRequest(const FileInfo* info) const {
+RequestInfo ConsumerImpl::CreateFileTransferRequest(const MessageMeta* info) const {
     RequestInfo ri;
     ri.api = "/transfer";
     ri.post = true;
@@ -559,7 +559,7 @@ uint64_t ConsumerImpl::GetCurrentSize(std::string stream, Error* err) {
 uint64_t ConsumerImpl::GetCurrentSize(Error* err) {
     return GetCurrentSize(kDefaultStream, err);
 }
-Error ConsumerImpl::GetById(uint64_t id, FileInfo* info, FileData* data) {
+Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, MessageData* data) {
     if (id == 0) {
         return ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
     }
@@ -567,7 +567,7 @@ Error ConsumerImpl::GetById(uint64_t id, FileInfo* info, FileData* data) {
     return GetById(id, info, kDefaultStream, data);
 }
 
-Error ConsumerImpl::GetById(uint64_t id, FileInfo* info, std::string stream, FileData* data) {
+Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) {
     return GetImageFromServer(GetImageServerOperation::GetID, id, "0", stream, info, data);
 }
 
@@ -600,13 +600,13 @@ DataSet DecodeDatasetFromResponse(std::string response, Error* err) {
     DataSet res;
     if (!res.SetFromJson(std::move(response))) {
         *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response:" + response);
-        return {0,0,FileInfos{}};
+        return {0,0,MessageMetas{}};
     } else {
         return res;
     }
 }
 
-FileInfos ConsumerImpl::QueryImages(std::string query, std::string stream, Error* err) {
+MessageMetas ConsumerImpl::QueryImages(std::string query, std::string stream, Error* err) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         "/" + std::move(stream) + "/0/queryimages";
@@ -615,14 +615,14 @@ FileInfos ConsumerImpl::QueryImages(std::string query, std::string stream, Error
 
     auto response = BrokerRequestWithTimeout(ri, err);
     if (*err) {
-        return FileInfos{};
+        return MessageMetas{};
     }
 
     auto dataset = DecodeDatasetFromResponse("{\"_id\":0,\"size\":0, \"images\":" + response + "}", err);
     return dataset.content;
 }
 
-FileInfos ConsumerImpl::QueryImages(std::string query, Error* err) {
+MessageMetas ConsumerImpl::QueryImages(std::string query, Error* err) {
     return QueryImages(std::move(query), kDefaultStream, err);
 }
 
@@ -647,7 +647,7 @@ DataSet ConsumerImpl::GetDatasetFromServer(GetImageServerOperation op,
                                            std::string group_id, std::string stream,
                                            uint64_t min_size,
                                            Error* err) {
-    FileInfos infos;
+    MessageMetas infos;
     std::string response;
     if (op == GetImageServerOperation::GetID) {
         *err = GetRecordFromServerById(id, &response, std::move(group_id), std::move(stream), true, min_size);
@@ -655,7 +655,7 @@ DataSet ConsumerImpl::GetDatasetFromServer(GetImageServerOperation op,
         *err = GetRecordFromServer(&response, std::move(group_id), std::move(stream), op, true, min_size);
     }
     if (*err != nullptr && *err!=ConsumerErrorTemplates::kPartialData) {
-        return {0, 0,FileInfos{}};
+        return {0, 0,MessageMetas{}};
     }
     return DecodeDatasetFromResponse(response, err);
 }
@@ -734,7 +734,7 @@ RequestInfo ConsumerImpl::CreateFolderTokenRequest() const {
     return ri;
 }
 
-Error ConsumerImpl::GetDataFromFileTransferService(FileInfo* info, FileData* data,
+Error ConsumerImpl::GetDataFromFileTransferService(MessageMeta* info, MessageData* data,
                                                    bool retry_with_new_token) {
     auto err = UpdateFolderTokenIfNeeded(retry_with_new_token);
     if (err) {

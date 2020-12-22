@@ -23,24 +23,24 @@ cdef extern from "asapo_wrappers.h" namespace "asapo":
   cdef string GetErrorString(Error* err)
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
-  cppclass FileData:
+  cppclass MessageData:
     uint8_t[] release()
     pass
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
-  cppclass FileInfo:
+  cppclass MessageMeta:
     string Json()
     bool SetFromJson(string json_str)
   cppclass IdList:
     vector[uint64_t].iterator begin()
     vector[uint64_t].iterator end()
-  cppclass FileInfos:
-    vector[FileInfo].iterator begin()
-    vector[FileInfo].iterator end()
+  cppclass MessageMetas:
+    vector[MessageMeta].iterator begin()
+    vector[MessageMeta].iterator end()
   struct DataSet:
     uint64_t id
     uint64_t expected_size
-    FileInfos content
+    MessageMetas content
   struct  SourceCredentials:
     string beamtime_id
     string data_source
@@ -62,9 +62,9 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         void SetTimeout(uint64_t timeout_ms)
         void ForceNoRdma()
         NetworkConnectionType CurrentConnectionType()
-        Error GetNext(FileInfo* info, string group_id,string stream, FileData* data)
-        Error GetLast(FileInfo* info, string stream, FileData* data)
-        Error GetById(uint64_t id, FileInfo* info, string stream, FileData* data)
+        Error GetNext(MessageMeta* info, string group_id,string stream, MessageData* data)
+        Error GetLast(MessageMeta* info, string stream, MessageData* data)
+        Error GetById(uint64_t id, MessageMeta* info, string stream, MessageData* data)
         uint64_t GetCurrentSize(string stream, Error* err)
         Error SetLastReadMarker(uint64_t value, string group_id, string stream)
         Error ResetLastReadMarker(string group_id, string stream)
@@ -74,11 +74,11 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         IdList GetUnacknowledgedTupleIds(string group_id, string stream, uint64_t from_id, uint64_t to_id, Error* error)
         string GenerateNewGroupId(Error* err)
         string GetBeamtimeMeta(Error* err)
-        FileInfos QueryImages(string query, string stream, Error* err)
+        MessageMetas QueryImages(string query, string stream, Error* err)
         DataSet GetNextDataset(string group_id, string stream, uint64_t min_size, Error* err)
         DataSet GetLastDataset(string stream, uint64_t min_size, Error* err)
         DataSet GetDatasetById(uint64_t id, string stream, uint64_t min_size, Error* err)
-        Error RetrieveData(FileInfo* info, FileData* data)
+        Error RetrieveData(MessageMeta* info, MessageData* data)
         vector[StreamInfo] GetStreamList(string from_stream, Error* err)
         void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts)
         void InterruptCurrentOperation()

@@ -60,7 +60,7 @@ TEST(ProducerRequest, Constructor) {
 TEST(ProducerRequest, Destructor) {
 // fails with data corruption if done wrong
     char data_[100];
-    asapo::FileData data{(uint8_t*)data_};
+    asapo::MessageData data{(uint8_t*)data_};
     asapo::GenericRequestHeader header{asapo::kOpcodeTransferData, 1, 1, 1, ""};
     asapo::ProducerRequest* request = new asapo::ProducerRequest{"", std::move(header), std::move(data), "", "", nullptr, false, 0};
 

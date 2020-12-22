@@ -76,14 +76,14 @@ void SignalHandler(int signal) {
 }
 
 
-void HandleSubsets(asapo::EventHeader* header) {
+void HandleSubsets(asapo::MessageHeader* header) {
     switch (GetEventMonConfig()->subset_mode) {
     case asapo::SubSetMode::kNone:
         return;
     case asapo::SubSetMode::kBatch:
         header->subset_size = GetEventMonConfig()->subset_batch_size;
-        header->id_in_subset = (header->file_id - 1) % header->subset_size + 1;
-        header->file_id = (header->file_id - 1) / header->subset_size + 1;
+        header->id_in_subset = (header->message_id - 1) % header->subset_size + 1;
+        header->message_id = (header->message_id - 1) / header->subset_size + 1;
         break;
     case asapo::SubSetMode::kMultiSource:
         header->subset_size = GetEventMonConfig()->subset_multisource_nsources;
@@ -124,8 +124,8 @@ int main (int argc, char* argv[]) {
 
     int i = 0;
     while (true) {
-        asapo::EventHeader event_header;
-        auto err = event_detector->GetNextEvent(&event_header);
+        asapo::MessageHeader message_header;
+        auto err = event_detector->GetNextEvent(&message_header);
         if (stop_signal) {
             break; // we check it here because signal can interrupt system call (ready by inotify and result in incomplete event data)
         }
@@ -135,10 +135,10 @@ int main (int argc, char* argv[]) {
             }
             continue;
         }
-        event_header.file_id = ++i;
-        HandleSubsets(&event_header);
-        producer->SendFile(event_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
-                           event_header.file_name, asapo::kDefaultIngestMode, ProcessAfterSend);
+        message_header.message_id = ++i;
+        HandleSubsets(&message_header);
+        producer->SendFromFile(message_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
+            message_header.file_name, asapo::kDefaultIngestMode, ProcessAfterSend);
     }
 
     logger->Info("Producer exit. Processed " + std::to_string(i) + " files");

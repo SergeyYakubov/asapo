@@ -108,12 +108,12 @@ cdef class PyProducer:
          self.c_producer.get().SetLogLevel(log_level)
 
     def __send_np_array(self, id, exposed_path,data, user_meta=None,subset=None,stream="default",ingest_mode = DEFAULT_INGEST_MODE,callback=None):
-        cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
+        cdef MessageHeader message_header = self.create_message_header(id,exposed_path,user_meta,subset,ingest_mode)
         if data is None:
-            event_header.file_size = 0
+            message_header.data_size = 0
         else:
-            event_header.file_size = data.nbytes
-        err = self.c_producer.get().SendData__(event_header, _bytes(stream), data_pointer_nparray(data),ingest_mode,
+            message_header.data_size = data.nbytes
+        err = self.c_producer.get().Send__(message_header, _bytes(stream), data_pointer_nparray(data),ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_ndarr,
              <void*>self,<void*>callback, <void*>data))
         if err:
@@ -126,23 +126,23 @@ cdef class PyProducer:
         if callback != None:
             Py_XINCREF(<PyObject*>callback)
         return
-    cdef EventHeader create_event_header(self,uint64_t id, exposed_path,user_meta,subset,ingest_mode):
-        cdef EventHeader event_header
-        event_header.file_id = id
-        event_header.file_name = _bytes(exposed_path)
-        event_header.user_metadata = _bytes(user_meta) if user_meta!=None else ""
+    cdef MessageHeader create_message_header(self,uint64_t id, exposed_path,user_meta,subset,ingest_mode):
+        cdef MessageHeader message_header
+        message_header.message_id = id
+        message_header.file_name = _bytes(exposed_path)
+        message_header.user_metadata = _bytes(user_meta) if user_meta!=None else ""
         if subset == None:
-            event_header.id_in_subset = 0
-            event_header.subset_size = 0
+            message_header.id_in_subset = 0
+            message_header.subset_size = 0
         else:
-            event_header.id_in_subset = subset[0]
-            event_header.subset_size = subset[1]
-        return event_header
+            message_header.id_in_subset = subset[0]
+            message_header.subset_size = subset[1]
+        return message_header
 
     def __send_bytes(self, id, exposed_path,data, user_meta=None,subset=None, stream="default", ingest_mode = DEFAULT_INGEST_MODE,callback=None):
-        cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
-        event_header.file_size = len(data)
-        err = self.c_producer.get().SendData__(event_header,_bytes(stream),  data_pointer_bytes(data), ingest_mode,
+        cdef MessageHeader message_header = self.create_message_header(id,exposed_path,user_meta,subset,ingest_mode)
+        message_header.data_size = len(data)
+        err = self.c_producer.get().Send__(message_header,_bytes(stream),  data_pointer_bytes(data), ingest_mode,
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_bytesaddr,
              <void*>self,<void*>callback, <void*>data))
         if err:
@@ -258,9 +258,9 @@ cdef class PyProducer:
             AsapoProducerError: actually should not happen
         """
 
-        cdef EventHeader event_header = self.create_event_header(id,exposed_path,user_meta,subset,ingest_mode)
-        event_header.file_size = 0
-        err = self.c_producer.get().SendFile(event_header, _bytes(stream), _bytes(local_path), ingest_mode,
+        cdef MessageHeader message_header = self.create_message_header(id,exposed_path,user_meta,subset,ingest_mode)
+        message_header.data_size = 0
+        err = self.c_producer.get().SendFromFile(message_header, _bytes(stream), _bytes(local_path), ingest_mode,
             unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
         if err:
             throw_exception(err)

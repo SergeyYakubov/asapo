@@ -41,7 +41,7 @@ Error GetSourceTypeFromString(std::string stype, SourceType* type) {
     }
 }
 
-std::string FileInfo::Json() const {
+std::string MessageMeta::Json() const {
     auto nanoseconds_from_epoch = NanosecsEpochFromTimePoint(timestamp);
     std::string x = name;
 //todo: change this - use / when sending file from windows
@@ -99,7 +99,7 @@ bool DataSet::SetFromJson(const std::string &json_string) {
         return false;
     }
     for (auto fi_encoded : vec_fi_endcoded) {
-        FileInfo fi;
+        MessageMeta fi;
         if (!fi.SetFromJson(fi_encoded)) {
             *this = old;
             return false;
@@ -109,7 +109,7 @@ bool DataSet::SetFromJson(const std::string &json_string) {
     return true;
 }
 
-bool FileInfo::SetFromJson(const std::string &json_string) {
+bool MessageMeta::SetFromJson(const std::string &json_string) {
     auto old = *this;
 
     JsonStringParser parser(json_string);
@@ -130,7 +130,7 @@ bool FileInfo::SetFromJson(const std::string &json_string) {
     return true;
 }
 
-std::string FileInfo::FullName(const std::string &base_path) const {
+std::string MessageMeta::FullName(const std::string &base_path) const {
     std::string full_name;
     full_name = base_path.empty() ? "" : base_path + kPathSeparator;
     return full_name + name;

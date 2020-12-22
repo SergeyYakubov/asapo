@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
     }
 
     size_t dataBufferSize = 1024 * kByte;
-    FileData dataBuffer = FileData{new uint8_t[dataBufferSize]};
+    MessageData dataBuffer = MessageData{new uint8_t[dataBufferSize]};
     std::cout << "Expected file size: " << dataBufferSize << " byte" << std::endl;
 
     auto serverAddress = client->AddServerAddress(serverAddressString, &error);

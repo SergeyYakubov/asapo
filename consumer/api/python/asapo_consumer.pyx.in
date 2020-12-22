@@ -105,11 +105,11 @@ cdef throw_exception(Error& err, res = None):
 cdef class PyConsumer:
     cdef unique_ptr[Consumer] c_consumer
     def _op(self, op, group_id, stream, meta_only, uint64_t id):
-        cdef FileInfo info
+        cdef MessageMeta info
         cdef string b_group_id = _bytes(group_id)
         cdef string b_stream = _bytes(stream)
-        cdef FileData data
-        cdef FileData* p_data =  <FileData*>NULL if meta_only else &data
+        cdef MessageData data
+        cdef MessageData* p_data =  <MessageData*>NULL if meta_only else &data
         cdef Error err
         cdef np.npy_intp dims[1]
         if op == "next":
@@ -140,11 +140,11 @@ cdef class PyConsumer:
         return self._op("id","",stream,meta_only,id)
     def retrieve_data(self,meta):
         json_str = json.dumps(meta)
-        cdef FileInfo info
+        cdef MessageMeta info
         if not info.SetFromJson(_bytes(json_str)):
             raise AsapoWrongInputError("wrong metadata")
         cdef Error err
-        cdef FileData data
+        cdef MessageData data
         with nogil:
             err =  self.c_consumer.get().RetrieveData(&info, &data)
         if err:
@@ -270,19 +270,19 @@ cdef class PyConsumer:
         cdef string b_query = _bytes(query)
         cdef string b_stream = _bytes(stream)
         cdef Error err
-        cdef FileInfos file_infos
+        cdef MessageMetas message_metas
         with nogil:
-            file_infos = self.c_consumer.get().QueryImages(b_query,b_stream,&err)
+            message_metas = self.c_consumer.get().QueryImages(b_query,b_stream,&err)
         if err:
             throw_exception(err)
         json_list = []
-        for fi in file_infos:
+        for fi in message_metas:
             json_list.append(json.loads(_str(fi.Json())))
         return json_list
     def _op_dataset(self, op, group_id, stream, uint64_t min_size, uint64_t id):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_stream = _bytes(stream)
-        cdef FileInfos file_infos
+        cdef MessageMetas message_metas
         cdef DataSet dataset
         cdef Error err
         if op == "next":

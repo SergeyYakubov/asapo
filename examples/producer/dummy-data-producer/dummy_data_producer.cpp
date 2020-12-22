@@ -124,8 +124,8 @@ void ProcessAfterMetaDataSend(asapo::RequestCallbackPayload payload, asapo::Erro
     return;
 }
 
-asapo::FileData CreateMemoryBuffer(size_t size) {
-    return asapo::FileData(new uint8_t[size]);
+asapo::MessageData CreateMemoryBuffer(size_t size) {
+    return asapo::MessageData(new uint8_t[size]);
 }
 
 
@@ -134,7 +134,7 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
 
     asapo::Error err;
     if (iterations == 0) {
-        err = producer->SendMetaData("{\"dummy_meta\":\"test\"}", &ProcessAfterMetaDataSend);
+        err = producer->SendMetadata("{\"dummy_meta\":\"test\"}", &ProcessAfterMetaDataSend);
         if (err) {
             std::cerr << "Cannot send metadata: " << err << std::endl;
             return false;
@@ -146,16 +146,16 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
 
     for (uint64_t i = 0; i < iterations; i++) {
         auto buffer = CreateMemoryBuffer(number_of_byte);
-        asapo::EventHeader event_header{i + 1, number_of_byte, std::to_string(i + 1)};
+        asapo::MessageHeader message_header{i + 1, number_of_byte, std::to_string(i + 1)};
         std::string meta = "{\"user_meta\":\"test" + std::to_string(i + 1) + "\"}";
         if (!data_source.empty()) {
-            event_header.file_name = data_source + "/" + event_header.file_name;
+            message_header.file_name = data_source + "/" + message_header.file_name;
         }
-        event_header.file_name = image_folder+event_header.file_name;
-        event_header.user_metadata = std::move(meta);
+        message_header.file_name = image_folder+message_header.file_name;
+        message_header.user_metadata = std::move(meta);
         if (images_in_set == 1) {
-            auto err = producer->SendData(event_header, std::move(buffer), write_files ? asapo::kDefaultIngestMode :
-                                          asapo::kTransferData, &ProcessAfterSend);
+            auto err = producer->Send(message_header, std::move(buffer), write_files ? asapo::kDefaultIngestMode :
+                                                                              asapo::kTransferData, &ProcessAfterSend);
             if (err) {
                 std::cerr << "Cannot send file: " << err << std::endl;
                 return false;
@@ -163,17 +163,18 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         } else {
             for (uint64_t id = 0; id < images_in_set; id++) {
                 auto buffer = CreateMemoryBuffer(number_of_byte);
-                event_header.id_in_subset = id + 1;
-                event_header.subset_size = images_in_set;
-                event_header.file_id = i + 1;
-                event_header.file_name = std::to_string(i + 1) + "_" + std::to_string(id + 1);
+                message_header.id_in_subset = id + 1;
+                message_header.subset_size = images_in_set;
+                message_header.message_id = i + 1;
+                message_header.file_name = std::to_string(i + 1) + "_" + std::to_string(id + 1);
                 if (!data_source.empty()) {
-                    event_header.file_name = data_source + "/" + event_header.file_name;
+                    message_header.file_name = data_source + "/" + message_header.file_name;
                 }
-                event_header.file_name = image_folder + event_header.file_name;
-                event_header.user_metadata = meta;
-                auto err = producer->SendData(event_header, std::move(buffer), write_files ? asapo::kDefaultIngestMode :
-                                              asapo::kTransferData, &ProcessAfterSend);
+                message_header.file_name = image_folder + message_header.file_name;
+                message_header.user_metadata = meta;
+                auto err =
+                    producer->Send(message_header, std::move(buffer), write_files ? asapo::kDefaultIngestMode :
+                                                                           asapo::kTransferData, &ProcessAfterSend);
                 if (err) {
                     std::cerr << "Cannot send file: " << err << std::endl;
                     return false;

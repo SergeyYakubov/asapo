@@ -61,7 +61,7 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
         }
     }
 
-    if (request->NeedSendData()) {
+    if (request->NeedSend()) {
         if (request->DataFromFile()) {
             io_error = io__->SendFile(sd_,  request->original_filepath, (size_t)request->header.data_size);
         } else {
@@ -77,7 +77,7 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
 
 Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_header, std::string* response) {
     Error err;
-    SendDataResponse sendDataResponse;
+    SendResponse sendDataResponse;
     io__->Receive(sd_, &sendDataResponse, sizeof(sendDataResponse), &err);
     if(err != nullptr) {
         return err;
@@ -222,7 +222,7 @@ void RequestHandlerTcp::ProcessRequestCallback(Error err, ProducerRequest* reque
 }
 
 
-bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request, bool* retry) {
+bool RequestHandlerTcp::SendToOneOfTheReceivers(ProducerRequest* request, bool* retry) {
     for (auto receiver_uri : receivers_list_) {
         if (Disconnected()) {
             auto err = ConnectToReceiver(request->source_credentials, receiver_uri);
@@ -269,7 +269,7 @@ bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request, bool* re
     if (NeedRebalance()) {
         CloseConnectionToPeformRebalance();
     }
-    return SendDataToOneOfTheReceivers(producer_request, retry);
+    return SendToOneOfTheReceivers(producer_request, retry);
 }
 
 bool RequestHandlerTcp::Connected() {

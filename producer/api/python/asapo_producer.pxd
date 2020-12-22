@@ -25,7 +25,7 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
 
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
-  cppclass FileData:
+  cppclass MessageData:
     uint8_t[] release()
     uint8_t[] get()
   cppclass StreamInfo:
@@ -60,18 +60,9 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     SourceType type
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
-  struct  EventHeader:
-    uint64_t file_id
-    uint64_t file_size
-    string file_name
-    string user_metadata
-    uint64_t id_in_subset
-    uint64_t subset_size
-
-cdef extern from "asapo/asapo_producer.h" namespace "asapo":
-  struct  EventHeader:
-    uint64_t file_id
-    uint64_t file_size
+  struct  MessageHeader:
+    uint64_t message_id
+    uint64_t data_size
     string file_name
     string user_metadata
     uint64_t id_in_subset
@@ -82,7 +73,7 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     string Json()
   struct RequestCallbackPayload:
     GenericRequestHeader original_header
-    FileData data
+    MessageData data
     string response
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
@@ -104,8 +95,8 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
     cppclass Producer:
         @staticmethod
         unique_ptr[Producer] Create(string endpoint,uint8_t nthreads,RequestHandlerType type, SourceCredentials source,uint64_t timeout_ms, Error* error)
-        Error SendFile(const EventHeader& event_header, string stream, string full_path, uint64_t ingest_mode,RequestCallback callback)
-        Error SendData__(const EventHeader& event_header, string stream, void* data, uint64_t ingest_mode,RequestCallback callback)
+        Error SendFromFile(const MessageHeader& message_header, string stream, string full_path, uint64_t ingest_mode,RequestCallback callback)
+        Error Send__(const MessageHeader& message_header, string stream, void* data, uint64_t ingest_mode,RequestCallback callback)
         void StopThreads__()
         void SetLogLevel(LogLevel level)
         uint64_t  GetRequestsQueueSize()

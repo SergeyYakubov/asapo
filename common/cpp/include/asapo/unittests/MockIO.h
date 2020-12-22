@@ -207,11 +207,11 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD2(CreateNewDirectory_t, void(const std::string& directory_name, ErrorInterface** err));
 
-    FileData GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override {
+    MessageData GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override {
         ErrorInterface* error = nullptr;
         auto data = GetDataFromFile_t(fname, fsize, &error);
         err->reset(error);
-        return FileData(data);
+        return MessageData(data);
     }
 
     MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t* fsize, ErrorInterface** err));
@@ -228,7 +228,7 @@ class MockIO : public IO {
     }
     MOCK_CONST_METHOD3(SendFile_t, ErrorInterface * (SocketDescriptor socket_fd, const std::string& fname, size_t length));
 
-    Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
+    Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const MessageData& data,
                           size_t length, bool create_directories, bool allow_ovewrite) const override {
         return Error{WriteDataToFile_t(root_folder, fname, data.get(), length, create_directories, allow_ovewrite)};
 
@@ -260,23 +260,23 @@ class MockIO : public IO {
                        const uint8_t* data, size_t fsize, bool create_directories, bool allow_ovewrite));
 
 
-    FileInfo GetFileInfo(const std::string& name, Error* err) const override {
+    MessageMeta GetMessageMeta(const std::string& name, Error* err) const override {
         ErrorInterface* error = nullptr;
-        auto data = GetFileInfo_t(name, &error);
+        auto data = GetMessageMeta_t(name, &error);
         err->reset(error);
         return data;
 
     }
 
-    MOCK_CONST_METHOD2(GetFileInfo_t, FileInfo (const std::string& name, ErrorInterface** err));
+    MOCK_CONST_METHOD2(GetMessageMeta_t, MessageMeta (const std::string& name, ErrorInterface** err));
 
-    std::vector<FileInfo> FilesInFolder(const std::string& folder, Error* err) const override {
+    std::vector<MessageMeta> FilesInFolder(const std::string& folder, Error* err) const override {
         ErrorInterface* error = nullptr;
         auto data = FilesInFolder_t(folder, &error);
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD2(FilesInFolder_t, std::vector<FileInfo>(const std::string& folder, ErrorInterface** err));
+    MOCK_CONST_METHOD2(FilesInFolder_t, std::vector<MessageMeta>(const std::string& folder, ErrorInterface** err));
 
 
     SubDirList GetSubDirectories(const std::string& path, Error* err) const override {

@@ -21,7 +21,7 @@
 #include "../receiver_mocking.h"
 
 using asapo::MockRequest;
-using asapo::FileInfo;
+using asapo::MessageMeta;
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::ReturnRef;
@@ -85,7 +85,7 @@ class DbCheckRequestHandlerTests : public Test {
     uint64_t expected_subset_id = 16;
     uint64_t expected_subset_size = 2;
     uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_subset_id, expected_subset_size};
-    FileInfo expected_file_info;
+    MessageMeta expected_message_meta;
     MockFunctions mock_functions;
     int n_run = 0;
     void SetUp() override {
@@ -99,7 +99,7 @@ class DbCheckRequestHandlerTests : public Test {
         config.dataserver.advertise_uri = expected_host_uri;
         config.dataserver.listen_port = expected_port;
         SetReceiverConfig(config, "none");
-        expected_file_info =  PrepareFileInfo();
+        expected_message_meta =  PrepareMessageMeta();
         mock_functions.push_back([this](asapo::ErrorInterface * error, bool expect_compare) {
             MockGetByID(error, expect_compare);
             n_run++;
@@ -113,7 +113,7 @@ class DbCheckRequestHandlerTests : public Test {
     }
     void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source, bool expect_compare = true);
 
-    FileInfo PrepareFileInfo();
+    MessageMeta PrepareMessageMeta();
     void MockGetByID(asapo::ErrorInterface* error, bool expect_compare);
     void MockGetSetByID(asapo::ErrorInterface* error, bool expect_compare);
     void TearDown() override {
@@ -123,7 +123,7 @@ class DbCheckRequestHandlerTests : public Test {
 
 };
 
-MATCHER_P(CompareFileInfo, file, "") {
+MATCHER_P(CompareMessageMeta, file, "") {
     if (arg.size != file.size) return false;
     if (arg.source != file.source) return false;
     if (arg.buf_id != file.buf_id) return false;
@@ -186,22 +186,22 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
     }
 }
 
-FileInfo DbCheckRequestHandlerTests::PrepareFileInfo() {
-    FileInfo file_info;
-    file_info.size = expected_file_size;
-    file_info.name = expected_file_name;
-    file_info.id = expected_id;
-    file_info.buf_id = expected_buf_id;
-    file_info.source = expected_host_uri;
-    file_info.metadata = expected_metadata;
-    return file_info;
+MessageMeta DbCheckRequestHandlerTests::PrepareMessageMeta() {
+    MessageMeta message_meta;
+    message_meta.size = expected_file_size;
+    message_meta.name = expected_file_name;
+    message_meta.id = expected_id;
+    message_meta.buf_id = expected_buf_id;
+    message_meta.source = expected_host_uri;
+    message_meta.metadata = expected_metadata;
+    return message_meta;
 }
 
 void DbCheckRequestHandlerTests::MockGetByID(asapo::ErrorInterface* error, bool expect_compare ) {
     ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_data_source, expect_compare);
     EXPECT_CALL(mock_db, GetById_t(expected_collection_name, expected_id, _)).
     WillOnce(DoAll(
-                 SetArgPointee<2>(expected_file_info),
+                 SetArgPointee<2>(expected_message_meta),
                  testing::Return(error)
              ));
 }
@@ -210,14 +210,14 @@ void DbCheckRequestHandlerTests::MockGetSetByID(asapo::ErrorInterface* error, bo
     ExpectRequestParams(asapo::Opcode::kOpcodeTransferSubsetData, expected_data_source, expect_compare);
     EXPECT_CALL(mock_db, GetSetById_t(expected_collection_name, expected_subset_id, expected_id, _)).
     WillOnce(DoAll(
-                 SetArgPointee<3>(expected_file_info),
+                 SetArgPointee<3>(expected_message_meta),
                  testing::Return(error)
              ));
 }
 
 
 TEST_F(DbCheckRequestHandlerTests, ErrorIfRecordsDoNotMatch) {
-    expected_file_info.metadata = expected_metadata + "_";
+    expected_message_meta.metadata = expected_metadata + "_";
 
     for (auto mock : mock_functions) {
         mock(nullptr, true);
@@ -238,7 +238,7 @@ TEST_F(DbCheckRequestHandlerTests, DuplicateErrorIfRecordsMatch) {
 }
 
 TEST_F(DbCheckRequestHandlerTests, DuplicateErrorIfRecordsMatchWithEmptyMetadata) {
-    expected_file_info.metadata = "{}";
+    expected_message_meta.metadata = "{}";
     expected_metadata = "";
     for (auto mock : mock_functions) {
         mock(nullptr, true);

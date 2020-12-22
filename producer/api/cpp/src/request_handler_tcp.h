@@ -32,7 +32,7 @@ class RequestHandlerTcp: public RequestHandler {
   private:
     Error Authorize(const std::string& source_credentials);
     Error ConnectToReceiver(const std::string& source_credentials, const std::string& receiver_address);
-    bool SendDataToOneOfTheReceivers(ProducerRequest* request, bool* retry);
+    bool SendToOneOfTheReceivers(ProducerRequest* request, bool* retry);
     Error SendRequestContent(const ProducerRequest* request);
     Error ReceiveResponse(const GenericRequestHeader& request_header, std::string* response);
     Error TrySendToReceiver(const ProducerRequest* request, std::string* response);

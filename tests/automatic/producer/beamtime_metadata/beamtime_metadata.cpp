@@ -55,7 +55,7 @@ void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
 
 bool SendMetaData(asapo::Producer* producer) {
 
-    auto err = producer->SendMetaData("hello", &ProcessAfterSend);
+    auto err = producer->SendMetadata("hello", &ProcessAfterSend);
     if (err) {
         std::cerr << "Cannot send metadata: " << err << std::endl;
         return false;

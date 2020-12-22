@@ -83,7 +83,7 @@ class Request {
   private:
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
-    FileData data_buffer_;
+    MessageData data_buffer_;
     void* data_ptr;
     RequestHandlerList handlers_;
     std::string origin_uri_;

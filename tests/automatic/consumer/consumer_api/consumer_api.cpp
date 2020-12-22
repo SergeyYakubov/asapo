@@ -28,7 +28,7 @@ Args GetArgs(int argc, char* argv[]) {
 
 
 void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::string& group_id) {
-    asapo::FileInfo fi;
+    asapo::MessageMeta fi;
     asapo::Error err;
 
     err = consumer->GetNext(&fi, group_id, nullptr);
@@ -39,7 +39,7 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(fi.name == "1", "GetNext filename");
     M_AssertTrue(fi.metadata == "{\"test\":10}", "GetNext metadata");
 
-    asapo::FileData data;
+    asapo::MessageData data;
     err = consumer->RetrieveData(&fi, &data);
     M_AssertTrue(err == nullptr, "RetrieveData no error");
     M_AssertEq("hello1", std::string(data.get(), data.get() + fi.size));
@@ -203,7 +203,7 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
 
 
 void TestDataset(const std::unique_ptr<asapo::Consumer>& consumer, const std::string& group_id) {
-    asapo::FileInfo fi;
+    asapo::MessageMeta fi;
     asapo::Error err;
 
     auto dataset = consumer->GetNextDataset(group_id, 0, &err);
@@ -216,7 +216,7 @@ void TestDataset(const std::unique_ptr<asapo::Consumer>& consumer, const std::st
     M_AssertTrue(dataset.content[2].name == "1_3", "GetNextDataSet filename");
     M_AssertTrue(dataset.content[0].metadata == "{\"test\":10}", "GetNext metadata");
 
-    asapo::FileData data;
+    asapo::MessageData data;
     err = consumer->RetrieveData(&dataset.content[0], &data);
     M_AssertTrue(err == nullptr, "RetrieveData no error");
     M_AssertEq("hello1", std::string(data.get(), data.get() + dataset.content[0].size));
