@@ -78,7 +78,7 @@ class ConsumerImplTests : public Test {
   std::string expected_query_string = "bla";
   std::string expected_folder_token = "folder_token";
   std::string expected_beamtime_id = "beamtime_id";
-  uint64_t expected_image_size = 100;
+  uint64_t expected_message_size = 100;
   uint64_t expected_dataset_id = 1;
   static const uint64_t expected_buf_id = 123;
   std::string expected_next_stream = "nextstream";
@@ -168,7 +168,7 @@ class ConsumerImplTests : public Test {
   }
   MessageMeta CreateFI(uint64_t buf_id = expected_buf_id) {
       MessageMeta fi;
-      fi.size = expected_image_size;
+      fi.size = expected_message_size;
       fi.id = 1;
       fi.buf_id = buf_id;
       fi.name = expected_filename;
@@ -177,7 +177,7 @@ class ConsumerImplTests : public Test {
   }
 };
 
-TEST_F(ConsumerImplTests, GetImageReturnsErrorOnWrongInput) {
+TEST_F(ConsumerImplTests, GetMessageReturnsErrorOnWrongInput) {
     auto err = consumer->GetNext(nullptr, "", nullptr);
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
 }
@@ -251,7 +251,7 @@ TEST_F(ConsumerImplTests, GetLastUsesCorrectUri) {
     consumer->GetLast(&info, nullptr);
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsEndOfStreamFromHttpClient) {
+TEST_F(ConsumerImplTests, GetMessageReturnsEndOfStreamFromHttpClient) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
@@ -269,7 +269,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsEndOfStreamFromHttpClient) {
     ASSERT_THAT(err_data->next_stream, Eq(""));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsStreamFinishedFromHttpClient) {
+TEST_F(ConsumerImplTests, GetMessageReturnsStreamFinishedFromHttpClient) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
@@ -288,7 +288,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsStreamFinishedFromHttpClient) {
     ASSERT_THAT(err_data->next_stream, Eq(expected_next_stream));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsNoDataFromHttpClient) {
+TEST_F(ConsumerImplTests, GetMessageReturnsNoDataFromHttpClient) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
@@ -306,7 +306,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsNoDataFromHttpClient) {
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsNotAuthorized) {
+TEST_F(ConsumerImplTests, GetMessageReturnsNotAuthorized) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
@@ -319,7 +319,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsNotAuthorized) {
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsWrongResponseFromHttpClient) {
+TEST_F(ConsumerImplTests, GetMessageReturnsWrongResponseFromHttpClient) {
 
     MockGetBrokerUri();
 
@@ -334,7 +334,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsWrongResponseFromHttpClient) {
     ASSERT_THAT(err->Explain(), HasSubstr("malformed"));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsIfBrokerAddressNotFound) {
+TEST_F(ConsumerImplTests, GetMessageReturnsIfBrokerAddressNotFound) {
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::NotFound),
@@ -347,7 +347,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsIfBrokerAddressNotFound) {
     ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("unavailable")));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsIfBrokerUriEmpty) {
+TEST_F(ConsumerImplTests, GetMessageReturnsIfBrokerUriEmpty) {
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::OK),
@@ -387,7 +387,7 @@ TEST_F(ConsumerImplTests, GetBrokerUriAgainAfterConnectionError) {
     consumer->GetNext(&info, expected_group_id, nullptr);
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsEofStreamFromHttpClientUntilTimeout) {
+TEST_F(ConsumerImplTests, GetMessageReturnsEofStreamFromHttpClientUntilTimeout) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
@@ -401,7 +401,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsEofStreamFromHttpClientUntilTimeout) {
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kEndOfStream));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsNoDataAfterTimeoutEvenIfOtherErrorOccured) {
+TEST_F(ConsumerImplTests, GetMessageReturnsNoDataAfterTimeoutEvenIfOtherErrorOccured) {
     MockGetBrokerUri();
     consumer->SetTimeout(300);
 
@@ -424,7 +424,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsNoDataAfterTimeoutEvenIfOtherErrorOccur
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
 }
 
-TEST_F(ConsumerImplTests, GetNextImageReturnsImmediatelyOnTransferError) {
+TEST_F(ConsumerImplTests, GetNextMessageReturnsImmediatelyOnTransferError) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
@@ -461,7 +461,7 @@ TEST_F(ConsumerImplTests, GetNextRetriesIfConnectionHttpClientErrorUntilTimeout)
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kUnavailableService));
 }
 
-TEST_F(ConsumerImplTests, GetNextImageReturnsImmediatelyOnFinshedStream) {
+TEST_F(ConsumerImplTests, GetNextMessageReturnsImmediatelyOnFinshedStream) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(HasSubstr("next"), _, _)).WillOnce(DoAll(
@@ -475,7 +475,7 @@ TEST_F(ConsumerImplTests, GetNextImageReturnsImmediatelyOnFinshedStream) {
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kStreamFinished));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsMessageMeta) {
+TEST_F(ConsumerImplTests, GetMessageReturnsMessageMeta) {
     MockGetBrokerUri();
 
     auto to_send = CreateFI();
@@ -493,7 +493,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsMessageMeta) {
     ASSERT_THAT(info.timestamp, Eq(to_send.timestamp));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsParseError) {
+TEST_F(ConsumerImplTests, GetMessageReturnsParseError) {
     MockGetBrokerUri();
     MockGet("error_response");
 
@@ -502,7 +502,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsParseError) {
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
 }
 
-TEST_F(ConsumerImplTests, GetImageReturnsIfNoDataNeeded) {
+TEST_F(ConsumerImplTests, GetMessageReturnsIfNoDataNeeded) {
     MockGetBrokerUri();
     MockGet("error_response");
 
@@ -512,7 +512,7 @@ TEST_F(ConsumerImplTests, GetImageReturnsIfNoDataNeeded) {
     consumer->GetNext(&info, expected_group_id, nullptr);
 }
 
-TEST_F(ConsumerImplTests, GetImageTriesToGetDataFromMemoryCache) {
+TEST_F(ConsumerImplTests, GetMessageTriesToGetDataFromMemoryCache) {
     MockGetBrokerUri();
     auto to_send = CreateFI();
     auto json = to_send.Json();
@@ -528,7 +528,7 @@ TEST_F(ConsumerImplTests, GetImageTriesToGetDataFromMemoryCache) {
 
 }
 
-TEST_F(ConsumerImplTests, GetImageCallsReadFromFileIfCannotReadFromCache) {
+TEST_F(ConsumerImplTests, GetMessageCallsReadFromFileIfCannotReadFromCache) {
     MockGetBrokerUri();
     auto to_send = CreateFI();
     auto json = to_send.Json();
@@ -544,7 +544,7 @@ TEST_F(ConsumerImplTests, GetImageCallsReadFromFileIfCannotReadFromCache) {
     ASSERT_THAT(info.buf_id, Eq(0));
 }
 
-TEST_F(ConsumerImplTests, GetImageCallsReadFromFileIfZeroBufId) {
+TEST_F(ConsumerImplTests, GetMessageCallsReadFromFileIfZeroBufId) {
     MockGetBrokerUri();
     auto to_send = CreateFI(0);
     auto json = to_send.Json();
@@ -788,40 +788,40 @@ TEST_F(ConsumerImplTests, GetMetaDataOK) {
 
 }
 
-TEST_F(ConsumerImplTests, QueryImagesReturnError) {
+TEST_F(ConsumerImplTests, QueryMessagesReturnError) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), _, expected_query_string, _, _)).WillOnce(DoAll(
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("querymessages"), _, expected_query_string, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::BadRequest),
         SetArgPointee<4>(nullptr),
         Return("error in query")));
 
     consumer->SetTimeout(1000);
     asapo::Error err;
-    auto images = consumer->QueryImages(expected_query_string, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, &err);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
     ASSERT_THAT(err->Explain(), HasSubstr("query"));
-    ASSERT_THAT(images.size(), Eq(0));
+    ASSERT_THAT(messages.size(), Eq(0));
 }
 
-TEST_F(ConsumerImplTests, QueryImagesReturnEmptyResults) {
+TEST_F(ConsumerImplTests, QueryMessagesReturnEmptyResults) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), _, expected_query_string, _, _)).WillOnce(DoAll(
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("querymessages"), _, expected_query_string, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
         Return("[]")));
 
     consumer->SetTimeout(100);
     asapo::Error err;
-    auto images = consumer->QueryImages(expected_query_string, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, &err);
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(images.size(), Eq(0));
+    ASSERT_THAT(messages.size(), Eq(0));
 }
 
-TEST_F(ConsumerImplTests, QueryImagesWrongResponseArray) {
+TEST_F(ConsumerImplTests, QueryMessagesWrongResponseArray) {
 
     MockGetBrokerUri();
 
@@ -832,41 +832,41 @@ TEST_F(ConsumerImplTests, QueryImagesWrongResponseArray) {
     auto responce_string = json1 + "," + json2 + "]"; // no [ at the beginning
 
 
-    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), _, expected_query_string, _, _)).WillOnce(DoAll(
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("querymessages"), _, expected_query_string, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
         Return(responce_string)));
 
     consumer->SetTimeout(100);
     asapo::Error err;
-    auto images = consumer->QueryImages(expected_query_string, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, &err);
 
     ASSERT_THAT(err, Ne(nullptr));
-    ASSERT_THAT(images.size(), Eq(0));
+    ASSERT_THAT(messages.size(), Eq(0));
     ASSERT_THAT(err->Explain(), HasSubstr("response"));
 }
 
-TEST_F(ConsumerImplTests, QueryImagesWrongResponseRecorsd) {
+TEST_F(ConsumerImplTests, QueryMessagesWrongResponseRecorsd) {
 
     MockGetBrokerUri();
 
     auto responce_string = R"([{"bla":1},{"err":}])";
 
-    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("queryimages"), _, expected_query_string, _, _)).WillOnce(DoAll(
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr("querymessages"), _, expected_query_string, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
         Return(responce_string)));
 
     consumer->SetTimeout(100);
     asapo::Error err;
-    auto images = consumer->QueryImages(expected_query_string, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, &err);
 
     ASSERT_THAT(err, Ne(nullptr));
-    ASSERT_THAT(images.size(), Eq(0));
+    ASSERT_THAT(messages.size(), Eq(0));
     ASSERT_THAT(err->Explain(), HasSubstr("response"));
 }
 
-TEST_F(ConsumerImplTests, QueryImagesReturnRecords) {
+TEST_F(ConsumerImplTests, QueryMessagesReturnRecords) {
 
     MockGetBrokerUri();
 
@@ -879,36 +879,36 @@ TEST_F(ConsumerImplTests, QueryImagesReturnRecords) {
 
     EXPECT_CALL(mock_http_client,
                 Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/0" +
-                    "/queryimages?token=" + expected_token, _, expected_query_string, _, _)).WillOnce(DoAll(
+                    "/querymessages?token=" + expected_token, _, expected_query_string, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
         Return(responce_string)));
 
     consumer->SetTimeout(100);
     asapo::Error err;
-    auto images = consumer->QueryImages(expected_query_string, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, &err);
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(images.size(), Eq(2));
+    ASSERT_THAT(messages.size(), Eq(2));
 
-    ASSERT_THAT(images[0].name, Eq(rec1.name));
-    ASSERT_THAT(images[1].name, Eq(rec2.name));
+    ASSERT_THAT(messages[0].name, Eq(rec1.name));
+    ASSERT_THAT(messages[1].name, Eq(rec2.name));
 }
 
-TEST_F(ConsumerImplTests, QueryImagesUsesCorrectUriWithStream) {
+TEST_F(ConsumerImplTests, QueryMessagesUsesCorrectUriWithStream) {
 
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
         expected_stream + "/0" +
-        "/queryimages?token=" + expected_token, _, expected_query_string, _, _)).WillOnce(DoAll(
+        "/querymessages?token=" + expected_token, _, expected_query_string, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
         Return("[]")));
 
     consumer->SetTimeout(100);
     asapo::Error err;
-    auto images = consumer->QueryImages(expected_query_string, expected_stream, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, expected_stream, &err);
 
     ASSERT_THAT(err, Eq(nullptr));
 
@@ -944,7 +944,7 @@ TEST_F(ConsumerImplTests, GetDataSetReturnsMessageMetas) {
     auto json = std::string("{") +
         "\"_id\":1," +
         "\"size\":3," +
-        "\"images\":[" + json1 + "," + json2 + "," + json3 + "]" +
+        "\"messages\":[" + json1 + "," + json2 + "," + json3 + "]" +
         "}";
 
     MockGet(json);
@@ -976,7 +976,7 @@ TEST_F(ConsumerImplTests, GetDataSetReturnsPartialMessageMetas) {
     auto json = std::string("{") +
         "\"_id\":1," +
         "\"size\":3," +
-        "\"images\":[" + json1 + "," + json2 + "]" +
+        "\"messages\":[" + json1 + "," + json2 + "]" +
         "}";
 
     MockGet(json, asapo::HttpCode::PartialContent);
@@ -1011,7 +1011,7 @@ TEST_F(ConsumerImplTests, GetDataSetByIdReturnsPartialMessageMetas) {
     auto json = std::string("{") +
         "\"_id\":1," +
         "\"size\":3," +
-        "\"images\":[" + json1 + "," + json2 + "]" +
+        "\"messages\":[" + json1 + "," + json2 + "]" +
         "}";
 
     MockGet(json, asapo::HttpCode::PartialContent);
@@ -1155,7 +1155,7 @@ void ConsumerImplTests::ExpectFileTransfer(const asapo::ConsumerErrorTemplate* p
                                                     expected_cookie,
                                                     expected_fts_query_string,
                                                     _,
-                                                    expected_image_size,
+                                                    expected_message_size,
                                                     _)).WillOnce(DoAll(
         SetArgPointee<5>(HttpCode::OK),
         AssignArg3(p_err_template == nullptr),
@@ -1168,7 +1168,7 @@ void ConsumerImplTests::ExpectRepeatedFileTransfer() {
                                                     expected_cookie,
                                                     expected_fts_query_string,
                                                     _,
-                                                    expected_image_size,
+                                                    expected_message_size,
                                                     _)).
         WillOnce(DoAll(
         SetArgPointee<5>(HttpCode::Unauthorized),
@@ -1195,7 +1195,7 @@ void ConsumerImplTests::AssertSingleFileTransfer() {
     Mock::VerifyAndClearExpectations(&mock_io);
 }
 
-TEST_F(ConsumerImplTests, GetImageUsesFileTransferServiceIfCannotReadFromCache) {
+TEST_F(ConsumerImplTests, GetMessageUsesFileTransferServiceIfCannotReadFromCache) {
     AssertSingleFileTransfer();
 }
 
@@ -1226,7 +1226,7 @@ TEST_F(ConsumerImplTests, FileTransferReadsFileSize) {
     auto err = fts_consumer->RetrieveData(&info, &data);
 }
 
-TEST_F(ConsumerImplTests, GetImageReusesTokenAndUri) {
+TEST_F(ConsumerImplTests, GetMessageReusesTokenAndUri) {
     AssertSingleFileTransfer();
 
     asapo::MessageData data = asapo::MessageData{new uint8_t[1]};
@@ -1236,7 +1236,7 @@ TEST_F(ConsumerImplTests, GetImageReusesTokenAndUri) {
     auto err = fts_consumer->GetNext(&info, expected_group_id, &data);
 }
 
-TEST_F(ConsumerImplTests, GetImageTriesToGetTokenAgainIfTransferFailed) {
+TEST_F(ConsumerImplTests, GetMessageTriesToGetTokenAgainIfTransferFailed) {
     AssertSingleFileTransfer();
 
     asapo::MessageData data;
@@ -1249,7 +1249,7 @@ TEST_F(ConsumerImplTests, GetImageTriesToGetTokenAgainIfTransferFailed) {
 
 TEST_F(ConsumerImplTests, AcknowledgeUsesCorrectUri) {
     MockGetBrokerUri();
-    auto expected_acknowledge_command = "{\"Op\":\"ackimage\"}";
+    auto expected_acknowledge_command = "{\"Op\":\"ackmessage\"}";
     EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
         expected_stream + "/" +
         expected_group_id
@@ -1266,7 +1266,7 @@ TEST_F(ConsumerImplTests, AcknowledgeUsesCorrectUri) {
 
 TEST_F(ConsumerImplTests, AcknowledgeUsesCorrectUriWithDefaultStream) {
     MockGetBrokerUri();
-    auto expected_acknowledge_command = "{\"Op\":\"ackimage\"}";
+    auto expected_acknowledge_command = "{\"Op\":\"ackmessage\"}";
     EXPECT_CALL(mock_http_client,
                 Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/" +
                     expected_group_id
@@ -1353,7 +1353,7 @@ TEST_F(ConsumerImplTests, ResendNacks) {
 
 TEST_F(ConsumerImplTests, NegativeAcknowledgeUsesCorrectUri) {
     MockGetBrokerUri();
-    auto expected_neg_acknowledge_command = R"({"Op":"negackimage","Params":{"DelayMs":10000}})";
+    auto expected_neg_acknowledge_command = R"({"Op":"negackmessage","Params":{"DelayMs":10000}})";
     EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
         expected_stream + "/" +
         expected_group_id

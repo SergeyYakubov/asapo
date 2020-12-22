@@ -7,7 +7,7 @@ source, path, beamtime, token, group_id = sys.argv[1:]
 
 consumer = asapo_consumer.create_consumer(source,path,True, beamtime,"",token,60000)
 
-images = consumer.query_images("meta.user_meta regexp 'test*' order by _id")
+messages = consumer.query_messages("meta.user_meta regexp 'test*' order by _id")
 
-print ('found images:',len(images))
-print (images[99]['meta']['user_meta'])
+print ('found messages:',len(messages))
+print (messages[99]['meta']['user_meta'])

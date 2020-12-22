@@ -17,7 +17,7 @@ while True:
     id = meta['_id']
     if id == last_id:
         continue
-    fid = h5py.h5f.open_file_image(data)
+    fid = h5py.h5f.open_file_message(data)
     f = h5py.File(fid)
     data1 = np.array(f['mydataset'])
     print(data1)
@@ -31,7 +31,7 @@ while True:
 #alternative - but tobytes creates an additional copy - not nice.
 #import tables
 #h5file1 = tables.open_file("in-memory-sample.h5", driver="H5FD_CORE",
-#                              driver_core_image=data.tobytes(),
+#                              driver_core_message=data.tobytes(),
 #                              driver_core_backing_store=0)
 #data2 = h5file1.root.mydataset.read()
 

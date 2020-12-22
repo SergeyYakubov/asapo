@@ -11,7 +11,7 @@
 
 namespace asapo {
 
-enum class GetImageServerOperation {
+enum class GetMessageServerOperation {
     GetNext,
     GetLast,
     GetID
@@ -97,8 +97,8 @@ class ConsumerImpl final : public asapo::Consumer {
 
     NetworkConnectionType CurrentConnectionType() const override;
 
-    MessageMetas QueryImages(std::string query, Error* err) override;
-    MessageMetas QueryImages(std::string query, std::string stream, Error* err) override;
+    MessageMetas QueryMessages(std::string query, Error* err) override;
+    MessageMetas QueryMessages(std::string query, std::string stream, Error* err) override;
 
     DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) override;
     DataSet GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) override;
@@ -127,7 +127,7 @@ class ConsumerImpl final : public asapo::Consumer {
     static const std::string kBrokerServiceName;
     static const std::string kFileTransferServiceName;
     std::string RequestWithToken(std::string uri);
-    Error GetRecordFromServer(std::string* info, std::string group_id, std::string stream, GetImageServerOperation op,
+    Error GetRecordFromServer(std::string* info, std::string group_id, std::string stream, GetMessageServerOperation op,
                               bool dataset = false, uint64_t min_size = 0);
     Error GetRecordFromServerById(uint64_t id, std::string* info, std::string group_id, std::string stream,
                                   bool dataset = false, uint64_t min_size = 0);
@@ -136,9 +136,9 @@ class ConsumerImpl final : public asapo::Consumer {
     bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
     bool SwitchToGetByIdIfPartialData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
     Error ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri);
-    Error GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string stream,
+    Error GetMessageFromServer(GetMessageServerOperation op, uint64_t id, std::string group_id, std::string stream,
                              MessageMeta* info, MessageData* data);
-    DataSet GetDatasetFromServer(GetImageServerOperation op, uint64_t id, std::string group_id, std::string stream,
+    DataSet GetDatasetFromServer(GetMessageServerOperation op, uint64_t id, std::string group_id, std::string stream,
                                  uint64_t min_size, Error* err);
     bool DataCanBeInBuffer(const MessageMeta* info);
     Error TryGetDataFromBuffer(const MessageMeta* info, MessageData* data);
@@ -152,7 +152,7 @@ class ConsumerImpl final : public asapo::Consumer {
     Error ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
 
     RequestInfo PrepareRequestInfo(std::string api_url, bool dataset, uint64_t min_size);
-    std::string OpToUriCmd(GetImageServerOperation op);
+    std::string OpToUriCmd(GetMessageServerOperation op);
     Error UpdateFolderTokenIfNeeded(bool ignore_existing);
     std::string endpoint_;
     std::string current_broker_uri_;

@@ -266,13 +266,13 @@ cdef class PyConsumer:
             list.append(id)
         return list
 
-    def query_images(self,query, stream = "default"):
+    def query_messages(self,query, stream = "default"):
         cdef string b_query = _bytes(query)
         cdef string b_stream = _bytes(stream)
         cdef Error err
         cdef MessageMetas message_metas
         with nogil:
-            message_metas = self.c_consumer.get().QueryImages(b_query,b_stream,&err)
+            message_metas = self.c_consumer.get().QueryMessages(b_query,b_stream,&err)
         if err:
             throw_exception(err)
         json_list = []

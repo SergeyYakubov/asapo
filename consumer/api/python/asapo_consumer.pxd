@@ -74,7 +74,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         IdList GetUnacknowledgedTupleIds(string group_id, string stream, uint64_t from_id, uint64_t to_id, Error* error)
         string GenerateNewGroupId(Error* err)
         string GetBeamtimeMeta(Error* err)
-        MessageMetas QueryImages(string query, string stream, Error* err)
+        MessageMetas QueryMessages(string query, string stream, Error* err)
         DataSet GetNextDataset(string group_id, string stream, uint64_t min_size, Error* err)
         DataSet GetLastDataset(string stream, uint64_t min_size, Error* err)
         DataSet GetDatasetById(uint64_t id, string stream, uint64_t min_size, Error* err)

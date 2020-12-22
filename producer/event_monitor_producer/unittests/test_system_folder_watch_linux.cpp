@@ -64,7 +64,7 @@ class SystemFolderWatchTests : public testing::Test {
     std::vector<std::string> expected_watches{"/tmp/test1", "/tmp/test2", "/tmp/test1/sub11", "/tmp/test2/sub21", "/tmp/test2/sub22", "/tmp/test2/sub21/sub211"};
     std::string expected_filename1{"file1"};
     std::string expected_filename2{"file2"};
-    MessageMetas expected_fileinfos = CreateTestMessageMetas();
+    MessageMetas expected_message_metas = CreateTestMessageMetas();
     int expected_wd = 10;
     std::vector<int>expected_fds = {1, 2, 3, 4, 5, 6};
     void MockStartMonitoring();
@@ -287,7 +287,7 @@ void SystemFolderWatchTests::ExpectCreateFolder(std::string folder, bool with_fi
     if (with_files) {
         ON_CALL(mock_io, FilesInFolder_t(newfolder, _)).
         WillByDefault(DoAll(testing::SetArgPointee<1>(nullptr),
-                            testing::Return(expected_fileinfos)));
+                            testing::Return(expected_message_metas)));
     } else {
         ON_CALL(mock_io, FilesInFolder_t(newfolder, _)).
         WillByDefault(DoAll(testing::SetArgPointee<1>(nullptr),

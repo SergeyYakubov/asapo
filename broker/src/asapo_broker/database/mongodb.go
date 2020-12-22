@@ -168,7 +168,7 @@ func (db *Mongodb) getMaxIndex(request Request, returnIncompete bool) (max_id in
 		if request.MinDatasetSize>0 {
 			q = bson.M{"size": bson.M{"$gte": request.MinDatasetSize}}
 		} else {
-			q = bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$images"}}}}
+			q = bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$messages"}}}}
 		}
 	} else {
 		q = nil
@@ -257,13 +257,13 @@ func (db *Mongodb) getRecordByIDRow(request Request, id, id_max int) ([]byte, er
 
 	partialData := false
 	if request.DatasetOp {
-		imgs,ok1 :=res["images"].(primitive.A)
+		imgs,ok1 :=res["messages"].(primitive.A)
 		expectedSize,ok2 := utils.InterfaceToInt64(res["size"])
 		if !ok1 || !ok2 {
 			return nil, &DBError{utils.StatusTransactionInterrupted, "getRecordByIDRow: cannot parse database response" }
 		}
-		nImages := len(imgs)
-		if (request.MinDatasetSize==0 && int64(nImages)!=expectedSize) || (request.MinDatasetSize==0 && nImages<request.MinDatasetSize) {
+		nMessages := len(imgs)
+		if (request.MinDatasetSize==0 && int64(nMessages)!=expectedSize) || (request.MinDatasetSize==0 && nMessages<request.MinDatasetSize) {
 			partialData = true
 		}
 	}
@@ -622,7 +622,7 @@ func (db *Mongodb) processQueryError(query, dbname string, err error) ([]byte, e
 	return nil, &DBError{utils.StatusNoData, err.Error()}
 }
 
-func (db *Mongodb) queryImages(request Request) ([]byte, error) {
+func (db *Mongodb) queryMessages(request Request) ([]byte, error) {
 	var res []map[string]interface{}
 	q, sort, err := db.BSONFromSQL(request.DbName, request.ExtraParam)
 	if err != nil {
@@ -808,13 +808,13 @@ func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
 		return db.getSize(request)
 	case "meta":
 		return db.getMeta(request)
-	case "queryimages":
-		return db.queryImages(request)
+	case "querymessages":
+		return db.queryMessages(request)
 	case "streams":
 		return db.getStreams(request)
-	case "ackimage":
+	case "ackmessage":
 		return db.ackRecord(request)
-	case "negackimage":
+	case "negackmessage":
 		return db.negAckRecord(request)
 	case "nacks":
 		return db.nacks(request)

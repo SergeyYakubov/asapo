@@ -99,20 +99,20 @@ class Consumer {
     */
     virtual std::string GetBeamtimeMeta(Error* err) = 0;
 
-    //! Receive next available image.
+    //! Receive next available message.
     /*!
-      \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
+      \param info -  where to store message metadata. Can be set to nullptr only message data is needed.
       \param group_id - group id to use.
-      \param data - where to store image data. Can be set to nullptr only image metadata is needed.
+      \param data - where to store message data. Can be set to nullptr only message metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetNext(MessageMeta* info, std::string group_id, MessageData* data) = 0;
     virtual Error GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) = 0;
 
-    //! Retrieves image using fileinfo.
+    //! Retrieves message using message meta.
     /*!
-      \param info - image metadata to use, can be updated after operation
-      \param data - where to store image data. Can be set to nullptr only image metadata is needed.
+      \param info - message metadata to use, can be updated after operation
+      \param data - where to store message data. Can be set to nullptr only message metadata is needed.
       \return Error if data is nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error RetrieveData(MessageMeta* info, MessageData* data) = 0;
@@ -150,11 +150,11 @@ class Consumer {
     virtual DataSet GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) = 0;
     virtual DataSet GetDatasetById(uint64_t id, uint64_t min_size, Error* err) = 0;
 
-    //! Receive single image by id.
+    //! Receive single message by id.
     /*!
-      \param id - image id
-      \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
-      \param data - where to store image data. Can be set to nullptr only image metadata is needed.
+      \param id - message id
+      \param info -  where to store message metadata. Can be set to nullptr only message data is needed.
+      \param data - where to store message data. Can be set to nullptr only message metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetById(uint64_t id, MessageMeta* info, MessageData* data) = 0;
@@ -165,28 +165,28 @@ class Consumer {
       \param group_id - group id to use.
       \param stream (optional) - stream
       \param err -  will be set in case of error, nullptr otherwise.
-      \return id of the last acknowledged image, 0 if error
+      \return id of the last acknowledged message, 0 if error
     */
     virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string stream, Error* error) = 0;
     virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) = 0;
 
-    //! Receive last available image.
+    //! Receive last available message.
     /*!
-      \param info -  where to store image metadata. Can be set to nullptr only image data is needed.
-      \param data - where to store image data. Can be set to nullptr only image metadata is needed.
+      \param info -  where to store message metadata. Can be set to nullptr only message data is needed.
+      \param data - where to store message data. Can be set to nullptr only message metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetLast(MessageMeta* info, MessageData* data) = 0;
     virtual Error GetLast(MessageMeta* info, std::string stream, MessageData* data) = 0;
 
-    //! Get all images matching the query.
+    //! Get all messages matching the query.
     /*!
       \param sql_query -  query string in SQL format. Limit subset is supported
       \param err - will be set in case of error, nullptr otherwise
-      \return vector of image metadata matchiing to specified query. Empty if nothing found or error
+      \return vector of message metadata matchiing to specified query. Empty if nothing found or error
     */
-    virtual MessageMetas QueryImages(std::string query, Error* err) = 0;
-    virtual MessageMetas QueryImages(std::string query, std::string stream, Error* err) = 0;
+    virtual MessageMetas QueryMessages(std::string query, Error* err) = 0;
+    virtual MessageMetas QueryMessages(std::string query, std::string stream, Error* err) = 0;
 
     //! Configure resending nonacknowledged data
     /*!

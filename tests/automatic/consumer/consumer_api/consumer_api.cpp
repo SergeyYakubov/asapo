@@ -96,27 +96,27 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err == nullptr, "GetNext5 no error");
     M_AssertTrue(fi.name == "1", "GetNext5  filename");
 
-    auto images = consumer->QueryImages("meta.test = 10", &err);
+    auto messages = consumer->QueryMessages("meta.test = 10", &err);
     M_AssertTrue(err == nullptr, "query1");
-    M_AssertTrue(images.size() == 10, "size of query answer 1");
+    M_AssertTrue(messages.size() == 10, "size of query answer 1");
 
-    images = consumer->QueryImages("meta.test = 10 AND name='1'", &err);
+    messages = consumer->QueryMessages("meta.test = 10 AND name='1'", &err);
     M_AssertTrue(err == nullptr, "query2");
-    M_AssertTrue(images.size() == 1, "size of query answer 2");
+    M_AssertTrue(messages.size() == 1, "size of query answer 2");
     M_AssertTrue(fi.name == "1", "GetNext5  filename");
 
 
-    images = consumer->QueryImages("meta.test = 11", &err);
+    messages = consumer->QueryMessages("meta.test = 11", &err);
     M_AssertTrue(err == nullptr, "query3");
-    M_AssertTrue(images.size() == 0, "size of query answer 3");
+    M_AssertTrue(messages.size() == 0, "size of query answer 3");
 
-    images = consumer->QueryImages("meta.test = 18", &err);
+    messages = consumer->QueryMessages("meta.test = 18", &err);
     M_AssertTrue(err == nullptr, "query4");
-    M_AssertTrue(images.size() == 0, "size of query answer 4");
+    M_AssertTrue(messages.size() == 0, "size of query answer 4");
 
-    images = consumer->QueryImages("bla", &err);
+    messages = consumer->QueryMessages("bla", &err);
     M_AssertTrue(err != nullptr, "query5");
-    M_AssertTrue(images.size() == 0, "size of query answer 5");
+    M_AssertTrue(messages.size() == 0, "size of query answer 5");
 
 
 //streams

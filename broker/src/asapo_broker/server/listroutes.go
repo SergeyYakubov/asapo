@@ -60,10 +60,10 @@ var listRoutes = utils.Routes{
 		routeCreateGroupID,
 	},
 	utils.Route{
-		"QueryImages",
+		"QueryMessages",
 		"Post",
-		"/database/{dbname}/{datasource}/{stream}/0/queryimages",
-		routeQueryImages,
+		"/database/{dbname}/{datasource}/{stream}/0/querymessages",
+		routeQueryMessages,
 	},
 	utils.Route{
 		"ResetConter",
@@ -72,10 +72,10 @@ var listRoutes = utils.Routes{
 		routeResetCounter,
 	},
 	utils.Route{
-		"ImageOp",
+		"MessageOp",
 		"Post",
 		"/database/{dbname}/{datasource}/{stream}/{groupid}/{id}",
-		routeImageOp,
+		routeMessageOp,
 	},
 	utils.Route{
 		"Health",

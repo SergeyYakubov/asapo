@@ -91,7 +91,7 @@ bool DataSet::SetFromJson(const std::string &json_string) {
 
     std::vector<std::string> vec_fi_endcoded;
     Error parse_err;
-    (parse_err = parser.GetArrayRawStrings("images", &vec_fi_endcoded)) ||
+    (parse_err = parser.GetArrayRawStrings("messages", &vec_fi_endcoded)) ||
         (parse_err = parser.GetUInt64("size", &expected_size)) ||
         (parse_err = parser.GetUInt64("_id", &id));
     if (parse_err) {

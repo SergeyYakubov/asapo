@@ -174,24 +174,24 @@ def check_single(consumer, group_id):
     _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "2", "get next after resend")
 
-    # images
+    # messages
 
-    images = consumer.query_images("meta.test = 10")
-    assert_eq(len(images), 5, "size of query answer 1")
-    for image in images:
-        assert_usermetadata(image, "query_images")
+    messages = consumer.query_messages("meta.test = 10")
+    assert_eq(len(messages), 5, "size of query answer 1")
+    for message in messages:
+        assert_usermetadata(message, "query_messages")
 
-    images = consumer.query_images("meta.test = 10 AND name='1'")
-    assert_eq(len(images), 1, "size of query answer 2 ")
+    messages = consumer.query_messages("meta.test = 10 AND name='1'")
+    assert_eq(len(messages), 1, "size of query answer 2 ")
 
-    for image in images:
-        assert_usermetadata(image, "query_images")
+    for message in messages:
+        assert_usermetadata(message, "query_messages")
 
-    images = consumer.query_images("meta.test = 11")
-    assert_eq(len(images), 0, "size of query answer 3 ")
+    messages = consumer.query_messages("meta.test = 11")
+    assert_eq(len(messages), 0, "size of query answer 3 ")
 
     try:
-        images = consumer.query_images("bla")
+        messages = consumer.query_messages("bla")
     except:
         pass
     else:

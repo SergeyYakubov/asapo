@@ -22,7 +22,7 @@ type TestRecord struct {
 type TestDataset struct {
 	ID     int64          `bson:"_id" json:"_id"`
 	Size   int64          `bson:"size" json:"size"`
-	Images []TestRecord `bson:"images" json:"images"`
+	Messages []TestRecord `bson:"messages" json:"messages"`
 }
 
 var db Mongodb
@@ -84,8 +84,8 @@ func TestMongoDBGetMetaErrorWhenNotConnected(t *testing.T) {
 	assert.Equal(t, utils.StatusServiceUnavailable, err.(*DBError).Code)
 }
 
-func TestMongoDBQueryImagesErrorWhenNotConnected(t *testing.T) {
-	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "queryimages", ExtraParam: "0"})
+func TestMongoDBQueryMessagesErrorWhenNotConnected(t *testing.T) {
+	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "querymessages", ExtraParam: "0"})
 	assert.Equal(t, utils.StatusServiceUnavailable, err.(*DBError).Code)
 }
 
@@ -514,7 +514,7 @@ var tests = []struct {
 	{"(meta.counter = 10 OR meta.counter = 11 AND (meta.text = 'bbb' OR meta.text = 'ccc')", []TestRecordMeta{}, false},
 }
 
-func TestMongoDBQueryImagesOK(t *testing.T) {
+func TestMongoDBQueryMessagesOK(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 
@@ -531,7 +531,7 @@ func TestMongoDBQueryImagesOK(t *testing.T) {
 		//			continue
 		//		}
 
-		res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "queryimages", ExtraParam: test.query})
+		res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "querymessages", ExtraParam: test.query})
 		var res []TestRecordMeta
 		json.Unmarshal(res_string, &res)
 		//		fmt.Println(string(res_string))
@@ -546,11 +546,11 @@ func TestMongoDBQueryImagesOK(t *testing.T) {
 
 }
 
-func TestMongoDBQueryImagesOnEmptyDatabase(t *testing.T) {
+func TestMongoDBQueryMessagesOnEmptyDatabase(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 	for _, test := range tests {
-		res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "queryimages", ExtraParam: test.query})
+		res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "querymessages", ExtraParam: test.query})
 		var res []TestRecordMeta
 		json.Unmarshal(res_string, &res)
 		assert.Equal(t, 0, len(res))
@@ -772,14 +772,14 @@ func TestMongoDBListStreams(t *testing.T) {
 	}
 }
 
-func TestMongoDBAckImage(t *testing.T) {
+func TestMongoDBAckMessage(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 
 	db.insertRecord(dbname, collection, &rec1)
-	query_str := "{\"Id\":1,\"Op\":\"ackimage\"}"
+	query_str := "{\"Id\":1,\"Op\":\"ackmessage\"}"
 
-	request := Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "ackimage", ExtraParam: query_str}
+	request := Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "ackmessage", ExtraParam: query_str}
 	res, err := db.ProcessRequest(request)
 	nacks, _ := db.getNacks(request, 1, 1)
 	assert.Nil(t, err)
@@ -815,9 +815,9 @@ func TestMongoDBNacks(t *testing.T) {
 			insertRecords(10)
 		}
 		if test.ackRecords {
-			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":2,\"Op\":\"ackimage\"}"})
-			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":3,\"Op\":\"ackimage\"}"})
-			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":4,\"Op\":\"ackimage\"}"})
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":2,\"Op\":\"ackmessage\"}"})
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":3,\"Op\":\"ackmessage\"}"})
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":4,\"Op\":\"ackmessage\"}"})
 		}
 
 		res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "nacks", ExtraParam: test.rangeString})
@@ -849,9 +849,9 @@ func TestMongoDBLastAcks(t *testing.T) {
 			insertRecords(10)
 		}
 		if test.ackRecords {
-			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":2,\"Op\":\"ackimage\"}"})
-			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":3,\"Op\":\"ackimage\"}"})
-			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":4,\"Op\":\"ackimage\"}"})
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":2,\"Op\":\"ackmessage\"}"})
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":3,\"Op\":\"ackmessage\"}"})
+			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":4,\"Op\":\"ackmessage\"}"})
 		}
 
 		res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "lastack"})
@@ -969,9 +969,9 @@ func TestMongoDBAckDeletesInprocessed(t *testing.T) {
 	defer cleanup()
 	db.insertRecord(dbname, collection, &rec1)
 	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "0_3"})
-	query_str := "{\"Id\":1,\"Op\":\"ackimage\"}"
+	query_str := "{\"Id\":1,\"Op\":\"ackmessage\"}"
 
-	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "ackimage", ExtraParam: query_str})
+	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "ackmessage", ExtraParam: query_str})
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "0_3"})
 	assert.NotNil(t, err)
 	if err != nil {
@@ -997,8 +997,8 @@ func TestMongoDBNegAck(t *testing.T) {
 	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})
 	bparam, _ := json.Marshal(&inputParams)
 
-	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "negackimage", ExtraParam: string(bparam)})
-	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"}) // first time image from negack
+	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "negackmessage", ExtraParam: string(bparam)})
+	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"}) // first time message from negack
 	_, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})  // second time nothing
 
 	assert.Nil(t, err)

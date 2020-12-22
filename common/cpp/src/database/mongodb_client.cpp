@@ -252,14 +252,14 @@ Error MongoDBClient::InsertAsSubset(const std::string &collection, const Message
     if (err) {
         return err;
     }
-    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(subset_id), "}", "{", "images._id", "{", "$ne",
+    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(subset_id), "}", "{", "messages._id", "{", "$ne",
                            BCON_INT64(file.id), "}", "}", "]");
     auto update = BCON_NEW ("$setOnInsert", "{",
                             "size", BCON_INT64(subset_size),
                             "timestamp", BCON_INT64((int64_t) NanosecsEpochFromTimePoint(file.timestamp)),
                             "}",
                             "$addToSet", "{",
-                            "images", BCON_DOCUMENT(document.get()), "}");
+                            "messages", BCON_DOCUMENT(document.get()), "}");
 
     err = AddBsonDocumentToArray(query, update, ignore_duplicates);
 
@@ -347,9 +347,9 @@ Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_i
         DBErrorTemplates::kJsonParseError.Generate(record_str);
     }
 
-    for (const auto &fileinfo : dataset.content) {
-        if (fileinfo.id == id_in_set) {
-            *file = fileinfo;
+    for (const auto &message_meta : dataset.content) {
+        if (message_meta.id == id_in_set) {
+            *file = message_meta;
             return nullptr;
         }
     }

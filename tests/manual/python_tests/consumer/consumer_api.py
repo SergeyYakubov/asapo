@@ -7,7 +7,7 @@ source, path, beamtime, token = sys.argv[1:]
 consumer = asapo_consumer.create_consumer(source,path,False, beamtime,"",token,1000)
 group_id = consumer.generate_group_id()
 
-res = consumer.query_images("_id > 0", stream="1")
+res = consumer.query_messages("_id > 0", stream="1")
 
 print(res)
 

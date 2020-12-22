@@ -96,7 +96,7 @@ class Producer {
     //! Marks stream finished
     /*!
       \param stream - Name of the stream to makr finished
-      \param last_id - ID of the last image in stream
+      \param last_id - ID of the last message in stream
       \param next_stream - Name of the next stream (empty if not set)
       \return Error - Will be nullptr on success
     */

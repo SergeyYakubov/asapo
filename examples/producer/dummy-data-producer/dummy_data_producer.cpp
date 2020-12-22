@@ -25,7 +25,7 @@ struct Args {
     uint64_t nthreads;
     uint64_t mode;
     uint64_t timeout_ms;
-    uint64_t images_in_set;
+    uint64_t messages_in_set;
 };
 
 void PrintCommandArguments(const Args& args) {
@@ -39,7 +39,7 @@ void PrintCommandArguments(const Args& args) {
               << "Tcp mode: " << ((args.mode % 10) ==0 ) << std::endl
               << "Raw: " << (args.mode / 100 == 1)<< std::endl
               << "timeout: " << args.timeout_ms << std::endl
-              << "images in set: " << args.images_in_set << std::endl
+              << "messages in set: " << args.messages_in_set << std::endl
               << std::endl;
 }
 
@@ -74,7 +74,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         std::cout <<
                   "Usage: " << argv[0] <<
                   " <destination> <beamtime_id[%<data_source>%<token>]> <number_of_kbyte> <iterations> <nthreads>"
-                  " <mode 0xx - processed source type, 1xx - raw source type, xx0 -t tcp, xx1 - filesystem, x0x - write files, x1x - do not write files> <timeout (sec)> [n images in set (default 1)]"
+                  " <mode 0xx - processed source type, 1xx - raw source type, xx0 -t tcp, xx1 - filesystem, x0x - write files, x1x - do not write files> <timeout (sec)> [n messages in set (default 1)]"
                   << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -88,9 +88,9 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         args->mode = std::stoull(argv[6]);
         args->timeout_ms = std::stoull(argv[7])*1000;
         if (argc == 9) {
-            args->images_in_set = std::stoull(argv[8]);
+            args->messages_in_set = std::stoull(argv[8]);
         } else {
-            args->images_in_set = 1;
+            args->messages_in_set = 1;
         }
         PrintCommandArguments(*args);
         return;
@@ -129,7 +129,7 @@ asapo::MessageData CreateMemoryBuffer(size_t size) {
 }
 
 
-bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations, uint64_t images_in_set,
+bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations, uint64_t messages_in_set,
                    const std::string& data_source, bool write_files, asapo::SourceType type) {
 
     asapo::Error err;
@@ -141,7 +141,7 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         }
     }
 
-    std::string image_folder = GetStringFromSourceType(type)+asapo::kPathSeparator;
+    std::string message_folder = GetStringFromSourceType(type)+asapo::kPathSeparator;
 
 
     for (uint64_t i = 0; i < iterations; i++) {
@@ -151,9 +151,9 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         if (!data_source.empty()) {
             message_header.file_name = data_source + "/" + message_header.file_name;
         }
-        message_header.file_name = image_folder+message_header.file_name;
+        message_header.file_name = message_folder+message_header.file_name;
         message_header.user_metadata = std::move(meta);
-        if (images_in_set == 1) {
+        if (messages_in_set == 1) {
             auto err = producer->Send(message_header, std::move(buffer), write_files ? asapo::kDefaultIngestMode :
                                                                               asapo::kTransferData, &ProcessAfterSend);
             if (err) {
@@ -161,16 +161,16 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
                 return false;
             }
         } else {
-            for (uint64_t id = 0; id < images_in_set; id++) {
+            for (uint64_t id = 0; id < messages_in_set; id++) {
                 auto buffer = CreateMemoryBuffer(number_of_byte);
                 message_header.id_in_subset = id + 1;
-                message_header.subset_size = images_in_set;
+                message_header.subset_size = messages_in_set;
                 message_header.message_id = i + 1;
                 message_header.file_name = std::to_string(i + 1) + "_" + std::to_string(id + 1);
                 if (!data_source.empty()) {
                     message_header.file_name = data_source + "/" + message_header.file_name;
                 }
-                message_header.file_name = image_folder + message_header.file_name;
+                message_header.file_name = message_folder + message_header.file_name;
                 message_header.user_metadata = meta;
                 auto err =
                     producer->Send(message_header, std::move(buffer), write_files ? asapo::kDefaultIngestMode :
@@ -219,12 +219,12 @@ int main (int argc, char* argv[]) {
     if (args.iterations == 0) {
         iterations_remained = 1; // metadata
     } else {
-        iterations_remained = args.iterations * args.images_in_set;
+        iterations_remained = args.iterations * args.messages_in_set;
     }
 
     system_clock::time_point start_time = system_clock::now();
 
-    if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.images_in_set, args.data_source,
+    if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.messages_in_set, args.data_source,
                       (args.mode %100) / 10 == 0,args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw)) {
         return EXIT_FAILURE;
     }

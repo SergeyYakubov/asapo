@@ -241,7 +241,7 @@ RequestInfo ConsumerImpl::PrepareRequestInfo(std::string api_url, bool dataset, 
 }
 
 Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group_id, std::string stream,
-                                        GetImageServerOperation op,
+                                        GetMessageServerOperation op,
                                         bool dataset, uint64_t min_size) {
     interrupt_flag_= false;
     std::string request_suffix = OpToUriCmd(op);
@@ -299,7 +299,7 @@ Error ConsumerImpl::GetNext(MessageMeta* info, std::string group_id, MessageData
 }
 
 Error ConsumerImpl::GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetNext,
+    return GetMessageFromServer(GetMessageServerOperation::GetNext,
                               0,
                               std::move(group_id),
                               std::move(stream),
@@ -312,7 +312,7 @@ Error ConsumerImpl::GetLast(MessageMeta* info, MessageData* data) {
 }
 
 Error ConsumerImpl::GetLast(MessageMeta* info, std::string stream, MessageData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetLast,
+    return GetMessageFromServer(GetMessageServerOperation::GetLast,
                               0,
                               "0",
                               std::move(stream),
@@ -320,15 +320,15 @@ Error ConsumerImpl::GetLast(MessageMeta* info, std::string stream, MessageData* 
                               data);
 }
 
-std::string ConsumerImpl::OpToUriCmd(GetImageServerOperation op) {
+std::string ConsumerImpl::OpToUriCmd(GetMessageServerOperation op) {
     switch (op) {
-        case GetImageServerOperation::GetNext:return "next";
-        case GetImageServerOperation::GetLast:return "last";
+        case GetMessageServerOperation::GetNext:return "next";
+        case GetMessageServerOperation::GetLast:return "last";
         default:return "last";
     }
 }
 
-Error ConsumerImpl::GetImageFromServer(GetImageServerOperation op, uint64_t id, std::string group_id,
+Error ConsumerImpl::GetMessageFromServer(GetMessageServerOperation op, uint64_t id, std::string group_id,
                                        std::string stream,
                                        MessageMeta* info,
                                        MessageData* data) {
@@ -338,7 +338,7 @@ Error ConsumerImpl::GetImageFromServer(GetImageServerOperation op, uint64_t id, 
 
     Error err;
     std::string response;
-    if (op == GetImageServerOperation::GetID) {
+    if (op == GetMessageServerOperation::GetID) {
         err = GetRecordFromServerById(id, &response, std::move(group_id), std::move(stream));
     } else {
         err = GetRecordFromServer(&response, std::move(group_id), std::move(stream), op);
@@ -568,7 +568,7 @@ Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, MessageData* data) {
 }
 
 Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) {
-    return GetImageFromServer(GetImageServerOperation::GetID, id, "0", stream, info, data);
+    return GetMessageFromServer(GetMessageServerOperation::GetID, id, "0", stream, info, data);
 }
 
 Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, std::string group_id,
@@ -606,10 +606,10 @@ DataSet DecodeDatasetFromResponse(std::string response, Error* err) {
     }
 }
 
-MessageMetas ConsumerImpl::QueryImages(std::string query, std::string stream, Error* err) {
+MessageMetas ConsumerImpl::QueryMessages(std::string query, std::string stream, Error* err) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        "/" + std::move(stream) + "/0/queryimages";
+        "/" + std::move(stream) + "/0/querymessages";
     ri.post = true;
     ri.body = std::move(query);
 
@@ -618,12 +618,12 @@ MessageMetas ConsumerImpl::QueryImages(std::string query, std::string stream, Er
         return MessageMetas{};
     }
 
-    auto dataset = DecodeDatasetFromResponse("{\"_id\":0,\"size\":0, \"images\":" + response + "}", err);
+    auto dataset = DecodeDatasetFromResponse("{\"_id\":0,\"size\":0, \"messages\":" + response + "}", err);
     return dataset.content;
 }
 
-MessageMetas ConsumerImpl::QueryImages(std::string query, Error* err) {
-    return QueryImages(std::move(query), kDefaultStream, err);
+MessageMetas ConsumerImpl::QueryMessages(std::string query, Error* err) {
+    return QueryMessages(std::move(query), kDefaultStream, err);
 }
 
 DataSet ConsumerImpl::GetNextDataset(std::string group_id, uint64_t min_size, Error* err) {
@@ -631,25 +631,25 @@ DataSet ConsumerImpl::GetNextDataset(std::string group_id, uint64_t min_size, Er
 }
 
 DataSet ConsumerImpl::GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) {
-    return GetDatasetFromServer(GetImageServerOperation::GetNext, 0, std::move(group_id), std::move(stream),min_size, err);
+    return GetDatasetFromServer(GetMessageServerOperation::GetNext, 0, std::move(group_id), std::move(stream),min_size, err);
 }
 
 DataSet ConsumerImpl::GetLastDataset(std::string stream, uint64_t min_size, Error* err) {
-    return GetDatasetFromServer(GetImageServerOperation::GetLast, 0, "0", std::move(stream),min_size, err);
+    return GetDatasetFromServer(GetMessageServerOperation::GetLast, 0, "0", std::move(stream),min_size, err);
 }
 
 DataSet ConsumerImpl::GetLastDataset(uint64_t min_size, Error* err) {
     return GetLastDataset(kDefaultStream, min_size, err);
 }
 
-DataSet ConsumerImpl::GetDatasetFromServer(GetImageServerOperation op,
+DataSet ConsumerImpl::GetDatasetFromServer(GetMessageServerOperation op,
                                            uint64_t id,
                                            std::string group_id, std::string stream,
                                            uint64_t min_size,
                                            Error* err) {
     MessageMetas infos;
     std::string response;
-    if (op == GetImageServerOperation::GetID) {
+    if (op == GetMessageServerOperation::GetID) {
         *err = GetRecordFromServerById(id, &response, std::move(group_id), std::move(stream), true, min_size);
     } else {
         *err = GetRecordFromServer(&response, std::move(group_id), std::move(stream), op, true, min_size);
@@ -665,7 +665,7 @@ DataSet ConsumerImpl::GetDatasetById(uint64_t id, uint64_t min_size, Error* err)
 }
 
 DataSet ConsumerImpl::GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) {
-    return GetDatasetFromServer(GetImageServerOperation::GetID, id, "0", std::move(stream), min_size, err);
+    return GetDatasetFromServer(GetMessageServerOperation::GetID, id, "0", std::move(stream), min_size, err);
 }
 
 StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
@@ -766,7 +766,7 @@ Error ConsumerImpl::Acknowledge(std::string group_id, uint64_t id, std::string s
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
-    ri.body = "{\"Op\":\"ackimage\"}";
+    ri.body = "{\"Op\":\"ackmessage\"}";
 
     Error err;
     BrokerRequestWithTimeout(ri, &err);
@@ -847,7 +847,7 @@ Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
-    ri.body = R"({"Op":"negackimage","Params":{"DelayMs":)" + std::to_string(delay_ms) + "}}";
+    ri.body = R"({"Op":"negackmessage","Params":{"DelayMs":)" + std::to_string(delay_ms) + "}}";
 
     Error err;
     BrokerRequestWithTimeout(ri, &err);
