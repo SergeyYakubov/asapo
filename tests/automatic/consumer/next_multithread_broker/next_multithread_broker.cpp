@@ -69,7 +69,7 @@ void TestAll(const Args& args) {
     std::vector<asapo::MessageMetas>message_metas(args.nthreads);
     auto exec_next = [&](int i) {
         asapo::MessageMeta fi;
-        while ((err = consumer->GetNext(&fi, group_id, nullptr)) == nullptr) {
+        while ((err = consumer->GetNext(&fi, group_id,"default", nullptr)) == nullptr) {
             message_metas[i].emplace_back(fi);
         }
         printf("%s\n", err->Explain().c_str());

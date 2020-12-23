@@ -110,8 +110,5 @@ enum IngestModeFlags : uint64_t {
 
 const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem | kStoreInDatabase;
 
-const std::string kDefaultStream = "default";
-
-
 }
 #endif //ASAPO_message_meta_H

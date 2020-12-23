@@ -18,7 +18,8 @@ BREAKING CHANGES
     ####  renaming - general
 * stream -> data_source, substream -> stream
 * use millisecond everywhere for timeout/delay
-* use term `message` for blob of information we send around, rename related structs, parameters, ...  
+* use term `message` for blob of information we send around, rename related structs, parameters, ...
+* C++ - get rid of duplicate functions with default stream  
     ####  renaming - Producer API
 * SendData/send_data -> Send/send    
 * id_in_subset -> dataset_substream

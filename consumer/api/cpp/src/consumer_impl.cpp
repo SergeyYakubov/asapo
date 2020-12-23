@@ -243,6 +243,11 @@ RequestInfo ConsumerImpl::PrepareRequestInfo(std::string api_url, bool dataset, 
 Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group_id, std::string stream,
                                         GetMessageServerOperation op,
                                         bool dataset, uint64_t min_size) {
+
+    if (stream.empty()) {
+        return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
+    }
+
     interrupt_flag_= false;
     std::string request_suffix = OpToUriCmd(op);
     std::string request_group = OpToUriCmd(op);
@@ -294,10 +299,6 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
     return nullptr;
 }
 
-Error ConsumerImpl::GetNext(MessageMeta* info, std::string group_id, MessageData* data) {
-    return GetNext(info, std::move(group_id), kDefaultStream, data);
-}
-
 Error ConsumerImpl::GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) {
     return GetMessageFromServer(GetMessageServerOperation::GetNext,
                               0,
@@ -305,10 +306,6 @@ Error ConsumerImpl::GetNext(MessageMeta* info, std::string group_id, std::string
                               std::move(stream),
                               info,
                               data);
-}
-
-Error ConsumerImpl::GetLast(MessageMeta* info, MessageData* data) {
-    return GetLast(info, kDefaultStream, data);
 }
 
 Error ConsumerImpl::GetLast(MessageMeta* info, std::string stream, MessageData* data) {
@@ -515,14 +512,6 @@ std::string ConsumerImpl::BrokerRequestWithTimeout(RequestInfo request, Error* e
     return std::move(response.string_output);
 }
 
-Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value) {
-    return SetLastReadMarker(std::move(group_id), value, kDefaultStream);
-}
-
-Error ConsumerImpl::ResetLastReadMarker(std::string group_id) {
-    return ResetLastReadMarker(std::move(group_id), kDefaultStream);
-}
-
 Error ConsumerImpl::ResetLastReadMarker(std::string group_id, std::string stream) {
     return SetLastReadMarker(group_id, 0, stream);
 }
@@ -556,24 +545,20 @@ uint64_t ConsumerImpl::GetCurrentSize(std::string stream, Error* err) {
     return size;
 }
 
-uint64_t ConsumerImpl::GetCurrentSize(Error* err) {
-    return GetCurrentSize(kDefaultStream, err);
-}
-Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, MessageData* data) {
+Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) {
     if (id == 0) {
         return ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
     }
-
-    return GetById(id, info, kDefaultStream, data);
-}
-
-Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) {
     return GetMessageFromServer(GetMessageServerOperation::GetID, id, "0", stream, info, data);
 }
 
 Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, std::string group_id,
                                             std::string stream,
                                             bool dataset, uint64_t min_size) {
+    if (stream.empty()) {
+        return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
+    }
+
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(stream) +
@@ -607,6 +592,11 @@ DataSet DecodeDatasetFromResponse(std::string response, Error* err) {
 }
 
 MessageMetas ConsumerImpl::QueryMessages(std::string query, std::string stream, Error* err) {
+    if (stream.empty()) {
+        *err = ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
+        return {};
+    }
+
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         "/" + std::move(stream) + "/0/querymessages";
@@ -622,24 +612,12 @@ MessageMetas ConsumerImpl::QueryMessages(std::string query, std::string stream, 
     return dataset.content;
 }
 
-MessageMetas ConsumerImpl::QueryMessages(std::string query, Error* err) {
-    return QueryMessages(std::move(query), kDefaultStream, err);
-}
-
-DataSet ConsumerImpl::GetNextDataset(std::string group_id, uint64_t min_size, Error* err) {
-    return GetNextDataset(std::move(group_id), kDefaultStream, min_size, err);
-}
-
 DataSet ConsumerImpl::GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) {
     return GetDatasetFromServer(GetMessageServerOperation::GetNext, 0, std::move(group_id), std::move(stream),min_size, err);
 }
 
 DataSet ConsumerImpl::GetLastDataset(std::string stream, uint64_t min_size, Error* err) {
     return GetDatasetFromServer(GetMessageServerOperation::GetLast, 0, "0", std::move(stream),min_size, err);
-}
-
-DataSet ConsumerImpl::GetLastDataset(uint64_t min_size, Error* err) {
-    return GetLastDataset(kDefaultStream, min_size, err);
 }
 
 DataSet ConsumerImpl::GetDatasetFromServer(GetMessageServerOperation op,
@@ -660,11 +638,11 @@ DataSet ConsumerImpl::GetDatasetFromServer(GetMessageServerOperation op,
     return DecodeDatasetFromResponse(response, err);
 }
 
-DataSet ConsumerImpl::GetDatasetById(uint64_t id, uint64_t min_size, Error* err) {
-    return GetDatasetById(id, kDefaultStream, min_size, err);
-}
-
 DataSet ConsumerImpl::GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) {
+    if (id == 0) {
+        *err =  ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
+        return {};
+    }
     return GetDatasetFromServer(GetMessageServerOperation::GetID, id, "0", std::move(stream), min_size, err);
 }
 
@@ -761,6 +739,9 @@ Error ConsumerImpl::GetDataFromFileTransferService(MessageMeta* info, MessageDat
 }
 
 Error ConsumerImpl::Acknowledge(std::string group_id, uint64_t id, std::string stream) {
+    if (stream.empty()) {
+        return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
+    }
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(stream) +
@@ -778,6 +759,10 @@ IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
                                                uint64_t from_id,
                                                uint64_t to_id,
                                                Error* error) {
+    if (stream.empty()) {
+        *error = ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
+        return {};
+    }
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(stream) +
@@ -798,14 +783,11 @@ IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
     return list;
 }
 
-IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
-                                               uint64_t from_id,
-                                               uint64_t to_id,
-                                               Error* error) {
-    return GetUnacknowledgedMessages(std::move(group_id), kDefaultStream, from_id, to_id, error);
-}
-
 uint64_t ConsumerImpl::GetLastAcknowledgedMessage(std::string group_id, std::string stream, Error* error) {
+    if (stream.empty()) {
+        *error = ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
+        return 0;
+    }
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(stream) +
@@ -828,10 +810,6 @@ uint64_t ConsumerImpl::GetLastAcknowledgedMessage(std::string group_id, std::str
     return id;
 }
 
-uint64_t ConsumerImpl::GetLastAcknowledgedMessage(std::string group_id, Error* error) {
-    return GetLastAcknowledgedMessage(std::move(group_id), kDefaultStream, error);
-}
-
 void ConsumerImpl::SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts) {
     resend_ = resend;
     delay_ms_ = delay_ms;
@@ -842,6 +820,9 @@ Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
                                         uint64_t id,
                                         uint64_t delay_ms,
                                         std::string stream) {
+    if (stream.empty()) {
+        return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
+    }
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(stream) +

@@ -71,7 +71,12 @@ Error CheckIngestMode(uint64_t ingest_mode) {
     return nullptr;
 }
 
-Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_mode) {
+Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_mode, const std::string& stream) {
+
+    if (stream.empty()) {
+        return ProducerErrorTemplates::kWrongInput.Generate("stream empty");
+    }
+
     if (message_header.file_name.size() > kMaxMessageSize) {
         return ProducerErrorTemplates::kWrongInput.Generate("too long filename");
     }
@@ -98,7 +103,7 @@ Error ProducerImpl::Send(const MessageHeader& message_header,
                          uint64_t ingest_mode,
                          RequestCallback callback,
                          bool manage_data_memory) {
-    auto err = CheckProducerRequest(message_header, ingest_mode);
+    auto err = CheckProducerRequest(message_header, ingest_mode, stream);
     if (err) {
         if (!manage_data_memory) {
             data.release();
@@ -131,11 +136,6 @@ Error CheckData(uint64_t ingest_mode, const MessageHeader& message_header, const
     return nullptr;
 }
 
-Error ProducerImpl::Send(const MessageHeader& message_header, MessageData data,
-                         uint64_t ingest_mode, RequestCallback callback) {
-    return Send(message_header, kDefaultStream, std::move(data), ingest_mode, callback);
-}
-
 Error ProducerImpl::Send(const MessageHeader& message_header,
                          std::string stream,
                          MessageData data,
@@ -160,12 +160,6 @@ Error ProducerImpl::SendStreamFinishedFlag(std::string stream, uint64_t last_id,
     message_header.user_metadata =  std::string("{\"next_stream\":") + "\"" + next_stream + "\"}";
     return Send(message_header, std::move(stream), nullptr, "", IngestModeFlags::kTransferMetaDataOnly, callback, true);
 }
-
-Error ProducerImpl::SendFile(const MessageHeader& message_header, std::string full_path, uint64_t ingest_mode,
-                                 RequestCallback callback) {
-    return SendFile(message_header, kDefaultStream, std::move(full_path), ingest_mode, callback);
-}
-
 
 void ProducerImpl::SetLogLevel(LogLevel level) {
     log__->SetLogLevel(level);
@@ -238,13 +232,6 @@ Error ProducerImpl::Send__(const MessageHeader& message_header,
     }
 
     return Send(std::move(message_header), std::move(stream), std::move(data_wrapped), "", ingest_mode, callback, false);
-}
-
-Error ProducerImpl::Send__(const MessageHeader& message_header,
-                                  void* data,
-                                  uint64_t ingest_mode,
-                                  RequestCallback callback) {
-    return Send__(message_header, kDefaultStream, data, ingest_mode, callback);
 }
 
 uint64_t  ProducerImpl::GetRequestsQueueSize() {
@@ -348,11 +335,11 @@ StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string stream, ui
 }
 
 StreamInfo ProducerImpl::GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const {
+    if (stream.empty()) {
+        *err = ProducerErrorTemplates::kWrongInput.Generate("stream empty");
+        return {};
+    }
     return StreamRequest(StreamRequestOp::kStreamInfo,stream,timeout_ms,err);
-}
-
-StreamInfo ProducerImpl::GetStreamInfo(uint64_t timeout_ms, Error* err) const {
-    return GetStreamInfo(kDefaultStream, timeout_ms, err);
 }
 
 StreamInfo ProducerImpl::GetLastStream(uint64_t timeout_ms, Error* err) const {

@@ -25,12 +25,11 @@ class Producer {
 
     //! Get stream information from receiver
     /*!
-      \param stream (optional) - stream
+      \param stream - stream to send messages to
       \param timeout_ms - operation timeout in milliseconds
       \return StreamInfo - a structure with stream information
     */
     virtual StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const = 0;
-    virtual StreamInfo GetStreamInfo(uint64_t timeout_ms, Error* err) const = 0;
 
   //! Get stream that has the newest ingested data
   /*!
@@ -38,22 +37,6 @@ class Producer {
     \return StreamInfo - a structure with stream information
   */
     virtual StreamInfo GetLastStream(uint64_t timeout_ms, Error* err) const = 0;
-
-
-    //! Sends message to the receiver
-    /*!
-      \param message_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
-      \param data - A smart pointer to the message data to send
-      \return Error - Will be nullptr on success
-    */
-    virtual Error Send(const MessageHeader& message_header, MessageData data, uint64_t ingest_mode,
-                       RequestCallback callback) = 0;
-
-
-    //! Sends message to the receiver - same as Send - memory should not be freed until send is finished
-    //! used e.g. for Python bindings
-    virtual Error Send__(const MessageHeader& message_header, void* data, uint64_t ingest_mode,
-                         RequestCallback callback) = 0;
 
     //! Sends message to the receiver
     /*!
@@ -73,15 +56,6 @@ class Producer {
     //! Stop processing threads
     //! used e.g. for Python bindings
     virtual void StopThreads__() = 0;
-
-    //! Sends message from a file to the default stream
-    /*!
-      \param message_header - A stucture with the meta information (file name, size is ignored).
-      \param full_path - A full path of the file to send
-      \return Error - Will be nullptr on success
-    */
-    virtual Error SendFile(const MessageHeader& message_header, std::string full_path, uint64_t ingest_mode,
-                               RequestCallback callback) = 0;
 
     //! Sends message from a file to a stream
     /*!

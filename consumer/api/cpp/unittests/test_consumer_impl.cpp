@@ -178,7 +178,7 @@ class ConsumerImplTests : public Test {
 };
 
 TEST_F(ConsumerImplTests, GetMessageReturnsErrorOnWrongInput) {
-    auto err = consumer->GetNext(nullptr, "", nullptr);
+    auto err = consumer->GetNext(nullptr, "", expected_stream, nullptr);
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
 }
 
@@ -200,7 +200,7 @@ TEST_F(ConsumerImplTests, DefaultStreamIsDetector) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client,
-                Get_t(expected_broker_uri + "/database/beamtime_id/detector/default/" + expected_group_id
+                Get_t(expected_broker_uri + "/database/beamtime_id/detector/stream/" + expected_group_id
                           +
                               "/next?token="
                           + expected_token, _,
@@ -209,20 +209,7 @@ TEST_F(ConsumerImplTests, DefaultStreamIsDetector) {
         SetArgPointee<2>(nullptr),
         Return("")));
 
-    consumer->GetNext(&info, expected_group_id, nullptr);
-}
-
-TEST_F(ConsumerImplTests, GetNextUsesCorrectUri) {
-    MockGetBrokerUri();
-
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/"
-                                            + expected_group_id + "/next?token="
-                                            + expected_token, _,
-                                        _)).WillOnce(DoAll(
-        SetArgPointee<1>(HttpCode::OK),
-        SetArgPointee<2>(nullptr),
-        Return("")));
-    consumer->GetNext(&info, expected_group_id, nullptr);
+    consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 }
 
 TEST_F(ConsumerImplTests, GetNextUsesCorrectUriWithStream) {
@@ -242,13 +229,13 @@ TEST_F(ConsumerImplTests, GetLastUsesCorrectUri) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client,
-                Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/0/last?token="
+                Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/"+ expected_stream+"/0/last?token="
                           + expected_token, _,
                       _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return("")));
-    consumer->GetLast(&info, nullptr);
+    consumer->GetLast(&info, expected_stream, nullptr);
 }
 
 TEST_F(ConsumerImplTests, GetMessageReturnsEndOfStreamFromHttpClient) {
@@ -259,7 +246,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsEndOfStreamFromHttpClient) {
         SetArgPointee<2>(nullptr),
         Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"\"}")));
 
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     auto err_data = static_cast<const asapo::ConsumerErrorData*>(err->GetCustomData());
 
@@ -278,7 +265,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsStreamFinishedFromHttpClient) {
         Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"" + expected_next_stream
                    + "\"}")));
 
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     auto err_data = static_cast<const asapo::ConsumerErrorData*>(err->GetCustomData());
 
@@ -296,7 +283,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsNoDataFromHttpClient) {
         SetArgPointee<2>(nullptr),
         Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":2,\"next_stream\":\"""\"}")));
 
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
     auto err_data = static_cast<const asapo::ConsumerErrorData*>(err->GetCustomData());
 
     ASSERT_THAT(err_data->id, Eq(1));
@@ -314,7 +301,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsNotAuthorized) {
         SetArgPointee<2>(nullptr),
         Return("")));
 
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
 }
@@ -328,7 +315,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsWrongResponseFromHttpClient) {
         SetArgPointee<2>(nullptr),
         Return("id")));
 
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
     ASSERT_THAT(err->Explain(), HasSubstr("malformed"));
@@ -342,7 +329,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsIfBrokerAddressNotFound) {
         Return("")));
 
     consumer->SetTimeout(100);
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("unavailable")));
 }
@@ -355,7 +342,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsIfBrokerUriEmpty) {
         Return("")));
 
     consumer->SetTimeout(100);
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("unavailable")));
 }
@@ -365,13 +352,13 @@ TEST_F(ConsumerImplTests, GetDoNotCallBrokerUriIfAlreadyFound) {
     MockGet("error_response");
 
     consumer->SetTimeout(100);
-    consumer->GetNext(&info, expected_group_id, nullptr);
+    consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
     Mock::VerifyAndClearExpectations(&mock_http_client);
 
     EXPECT_CALL(mock_http_client,
                 Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asap-broker"), _, _)).Times(0);
     MockGet("error_response");
-    consumer->GetNext(&info, expected_group_id, nullptr);
+    consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 }
 
 TEST_F(ConsumerImplTests, GetBrokerUriAgainAfterConnectionError) {
@@ -379,12 +366,12 @@ TEST_F(ConsumerImplTests, GetBrokerUriAgainAfterConnectionError) {
     MockGetError();
 
     consumer->SetTimeout(0);
-    consumer->GetNext(&info, expected_group_id, nullptr);
+    consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
     Mock::VerifyAndClearExpectations(&mock_http_client);
 
     MockGetBrokerUri();
     MockGet("error_response");
-    consumer->GetNext(&info, expected_group_id, nullptr);
+    consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 }
 
 TEST_F(ConsumerImplTests, GetMessageReturnsEofStreamFromHttpClientUntilTimeout) {
@@ -396,7 +383,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsEofStreamFromHttpClientUntilTimeout) 
         Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"""\"}")));
 
     consumer->SetTimeout(300);
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kEndOfStream));
 }
@@ -411,7 +398,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsNoDataAfterTimeoutEvenIfOtherErrorOcc
         Return("{\"op\":\"get_record_by_id\",\"id\":" + std::to_string(expected_dataset_id) +
             ",\"id_max\":2,\"next_stream\":\"""\"}")));
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::NotFound),
@@ -419,7 +406,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsNoDataAfterTimeoutEvenIfOtherErrorOcc
         Return("")));
 
     consumer->SetTimeout(300);
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
 }
@@ -433,7 +420,7 @@ TEST_F(ConsumerImplTests, GetNextMessageReturnsImmediatelyOnTransferError) {
         Return("")));
 
     consumer->SetTimeout(300);
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
     ASSERT_THAT(err->Explain(), HasSubstr("sss"));
@@ -456,7 +443,7 @@ TEST_F(ConsumerImplTests, GetNextRetriesIfConnectionHttpClientErrorUntilTimeout)
         Return("")));
 
     consumer->SetTimeout(300);
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kUnavailableService));
 }
@@ -470,7 +457,7 @@ TEST_F(ConsumerImplTests, GetNextMessageReturnsImmediatelyOnFinshedStream) {
         Return("{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":2,\"next_stream\":\"next\"}")));
 
     consumer->SetTimeout(300);
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kStreamFinished));
 }
@@ -483,7 +470,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsMessageMeta) {
 
     MockGet(json);
 
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 
@@ -497,7 +484,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsParseError) {
     MockGetBrokerUri();
     MockGet("error_response");
 
-    auto err = consumer->GetNext(&info, expected_group_id, nullptr);
+    auto err = consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
 }
@@ -509,7 +496,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsIfNoDataNeeded) {
     EXPECT_CALL(mock_netclient, GetData_t(_, _)).Times(0);
     EXPECT_CALL(mock_io, GetDataFromFile_t(_, _, _)).Times(0);
 
-    consumer->GetNext(&info, expected_group_id, nullptr);
+    consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 }
 
 TEST_F(ConsumerImplTests, GetMessageTriesToGetDataFromMemoryCache) {
@@ -522,7 +509,7 @@ TEST_F(ConsumerImplTests, GetMessageTriesToGetDataFromMemoryCache) {
     EXPECT_CALL(mock_netclient, GetData_t(&info, &data)).WillOnce(Return(nullptr));
     MockReadDataFromFile(0);
 
-    consumer->GetNext(&info, expected_group_id, &data);
+    consumer->GetNext(&info, expected_group_id, expected_stream, &data);
 
     ASSERT_THAT(info.buf_id, Eq(expected_buf_id));
 
@@ -540,7 +527,7 @@ TEST_F(ConsumerImplTests, GetMessageCallsReadFromFileIfCannotReadFromCache) {
                                           &data)).WillOnce(Return(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()));
     MockReadDataFromFile();
 
-    consumer->GetNext(&info, expected_group_id, &data);
+    consumer->GetNext(&info, expected_group_id, expected_stream, &data);
     ASSERT_THAT(info.buf_id, Eq(0));
 }
 
@@ -556,7 +543,7 @@ TEST_F(ConsumerImplTests, GetMessageCallsReadFromFileIfZeroBufId) {
 
     MockReadDataFromFile();
 
-    consumer->GetNext(&info, expected_group_id, &data);
+    consumer->GetNext(&info, expected_group_id, expected_stream, &data);
 }
 
 TEST_F(ConsumerImplTests, GenerateNewGroupIdReturnsErrorCreateGroup) {
@@ -595,32 +582,17 @@ TEST_F(ConsumerImplTests, ResetCounterByDefaultUsesCorrectUri) {
     consumer->SetTimeout(100);
 
     EXPECT_CALL(mock_http_client,
-                Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/" +
+                Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/" +
                     expected_group_id +
                     "/resetcounter?token=" + expected_token + "&value=0", _, _, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
         Return("")));
-    auto err = consumer->ResetLastReadMarker(expected_group_id);
+    auto err = consumer->ResetLastReadMarker(expected_group_id, expected_stream);
     ASSERT_THAT(err, Eq(nullptr));
 }
 
 TEST_F(ConsumerImplTests, ResetCounterUsesCorrectUri) {
-    MockGetBrokerUri();
-    consumer->SetTimeout(100);
-
-    EXPECT_CALL(mock_http_client,
-                Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/" +
-                    expected_group_id +
-                    "/resetcounter?token=" + expected_token + "&value=10", _, _, _, _)).WillOnce(DoAll(
-        SetArgPointee<3>(HttpCode::OK),
-        SetArgPointee<4>(nullptr),
-        Return("")));
-    auto err = consumer->SetLastReadMarker(expected_group_id, 10);
-    ASSERT_THAT(err, Eq(nullptr));
-}
-
-TEST_F(ConsumerImplTests, ResetCounterUsesCorrectUriWithStream) {
     MockGetBrokerUri();
     consumer->SetTimeout(100);
 
@@ -636,22 +608,6 @@ TEST_F(ConsumerImplTests, ResetCounterUsesCorrectUriWithStream) {
 }
 
 TEST_F(ConsumerImplTests, GetCurrentSizeUsesCorrectUri) {
-    MockGetBrokerUri();
-    consumer->SetTimeout(100);
-
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source +
-        "/default/size?token="
-                                            + expected_token, _, _)).WillOnce(DoAll(
-        SetArgPointee<1>(HttpCode::OK),
-        SetArgPointee<2>(nullptr),
-        Return("{\"size\":10}")));
-    asapo::Error err;
-    auto size = consumer->GetCurrentSize(&err);
-    ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(size, Eq(10));
-}
-
-TEST_F(ConsumerImplTests, GetCurrentSizeUsesCorrectUriWithStream) {
     MockGetBrokerUri();
     consumer->SetTimeout(100);
 
@@ -672,13 +628,13 @@ TEST_F(ConsumerImplTests, GetCurrentSizeErrorOnWrongResponce) {
     consumer->SetTimeout(100);
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source +
-        "/default/size?token="
+        "/"+expected_stream+"/size?token="
                                             + expected_token, _, _)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::Unauthorized),
         SetArgPointee<2>(nullptr),
         Return("")));
     asapo::Error err;
-    auto size = consumer->GetCurrentSize(&err);
+    auto size = consumer->GetCurrentSize(expected_stream, &err);
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(size, Eq(0));
 }
@@ -688,13 +644,13 @@ TEST_F(ConsumerImplTests, GetNDataErrorOnWrongParse) {
     consumer->SetTimeout(100);
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source +
-        "/default/size?token="
+        "/stream/size?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return("{\"siz\":10}")));
     asapo::Error err;
-    auto size = consumer->GetCurrentSize(&err);
+    auto size = consumer->GetCurrentSize(expected_stream,&err);
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(size, Eq(0));
 }
@@ -705,7 +661,7 @@ TEST_F(ConsumerImplTests, GetByIdUsesCorrectUri) {
     auto to_send = CreateFI();
     auto json = to_send.Json();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(
                                                 expected_dataset_id) + "?token="
                                             + expected_token, _,
@@ -714,7 +670,7 @@ TEST_F(ConsumerImplTests, GetByIdUsesCorrectUri) {
         SetArgPointee<2>(nullptr),
         Return(json)));
 
-    auto err = consumer->GetById(expected_dataset_id, &info, nullptr);
+    auto err = consumer->GetById(expected_dataset_id, &info, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(info.name, Eq(to_send.name));
@@ -724,14 +680,14 @@ TEST_F(ConsumerImplTests, GetByIdTimeouts) {
     MockGetBrokerUri();
     consumer->SetTimeout(10);
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::Conflict),
         SetArgPointee<2>(nullptr),
         Return("")));
 
-    auto err = consumer->GetById(expected_dataset_id, &info, nullptr);
+    auto err = consumer->GetById(expected_dataset_id, &info, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
 }
@@ -740,14 +696,14 @@ TEST_F(ConsumerImplTests, GetByIdReturnsEndOfStream) {
     MockGetBrokerUri();
     consumer->SetTimeout(10);
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::Conflict),
         SetArgPointee<2>(nullptr),
         Return("{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"""\"}")));
 
-    auto err = consumer->GetById(expected_dataset_id, &info, nullptr);
+    auto err = consumer->GetById(expected_dataset_id, &info, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kEndOfStream));
 }
@@ -756,14 +712,14 @@ TEST_F(ConsumerImplTests, GetByIdReturnsEndOfStreamWhenIdTooLarge) {
     MockGetBrokerUri();
     consumer->SetTimeout(10);
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::Conflict),
         SetArgPointee<2>(nullptr),
         Return("{\"op\":\"get_record_by_id\",\"id\":100,\"id_max\":1,\"next_stream\":\"""\"}")));
 
-    auto err = consumer->GetById(expected_dataset_id, &info, nullptr);
+    auto err = consumer->GetById(expected_dataset_id, &info, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kEndOfStream));
 }
@@ -798,7 +754,7 @@ TEST_F(ConsumerImplTests, QueryMessagesReturnError) {
 
     consumer->SetTimeout(1000);
     asapo::Error err;
-    auto messages = consumer->QueryMessages(expected_query_string, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, expected_stream, &err);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
     ASSERT_THAT(err->Explain(), HasSubstr("query"));
@@ -815,7 +771,7 @@ TEST_F(ConsumerImplTests, QueryMessagesReturnEmptyResults) {
 
     consumer->SetTimeout(100);
     asapo::Error err;
-    auto messages = consumer->QueryMessages(expected_query_string, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, expected_stream, &err);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(messages.size(), Eq(0));
@@ -839,7 +795,7 @@ TEST_F(ConsumerImplTests, QueryMessagesWrongResponseArray) {
 
     consumer->SetTimeout(100);
     asapo::Error err;
-    auto messages = consumer->QueryMessages(expected_query_string, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, expected_stream, &err);
 
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(messages.size(), Eq(0));
@@ -859,7 +815,7 @@ TEST_F(ConsumerImplTests, QueryMessagesWrongResponseRecorsd) {
 
     consumer->SetTimeout(100);
     asapo::Error err;
-    auto messages = consumer->QueryMessages(expected_query_string, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, expected_stream, &err);
 
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(messages.size(), Eq(0));
@@ -878,7 +834,7 @@ TEST_F(ConsumerImplTests, QueryMessagesReturnRecords) {
     auto responce_string = "[" + json1 + "," + json2 + "]";
 
     EXPECT_CALL(mock_http_client,
-                Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/0" +
+                Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0" +
                     "/querymessages?token=" + expected_token, _, expected_query_string, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
@@ -886,7 +842,7 @@ TEST_F(ConsumerImplTests, QueryMessagesReturnRecords) {
 
     consumer->SetTimeout(100);
     asapo::Error err;
-    auto messages = consumer->QueryMessages(expected_query_string, &err);
+    auto messages = consumer->QueryMessages(expected_query_string, expected_stream, &err);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(messages.size(), Eq(2));
@@ -895,29 +851,10 @@ TEST_F(ConsumerImplTests, QueryMessagesReturnRecords) {
     ASSERT_THAT(messages[1].name, Eq(rec2.name));
 }
 
-TEST_F(ConsumerImplTests, QueryMessagesUsesCorrectUriWithStream) {
-
-    MockGetBrokerUri();
-
-    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
-        expected_stream + "/0" +
-        "/querymessages?token=" + expected_token, _, expected_query_string, _, _)).WillOnce(DoAll(
-        SetArgPointee<3>(HttpCode::OK),
-        SetArgPointee<4>(nullptr),
-        Return("[]")));
-
-    consumer->SetTimeout(100);
-    asapo::Error err;
-    auto messages = consumer->QueryMessages(expected_query_string, expected_stream, &err);
-
-    ASSERT_THAT(err, Eq(nullptr));
-
-}
-
 TEST_F(ConsumerImplTests, GetNextDatasetUsesCorrectUri) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/" +
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/" +
                                             expected_group_id + "/next?token="
                                             + expected_token + "&dataset=true&minsize=0", _,
                                         _)).WillOnce(DoAll(
@@ -925,8 +862,15 @@ TEST_F(ConsumerImplTests, GetNextDatasetUsesCorrectUri) {
         SetArgPointee<2>(nullptr),
         Return("")));
     asapo::Error err;
-    consumer->GetNextDataset(expected_group_id, 0, &err);
+    consumer->GetNextDataset(expected_group_id, expected_stream, 0, &err);
 }
+
+TEST_F(ConsumerImplTests, GetNextErrorOnEmptyStream) {
+    MessageData  data;
+    auto err = consumer->GetNext(&info, expected_group_id, "", &data);
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
+}
+
 
 TEST_F(ConsumerImplTests, GetDataSetReturnsMessageMetas) {
     asapo::Error err;
@@ -949,7 +893,7 @@ TEST_F(ConsumerImplTests, GetDataSetReturnsMessageMetas) {
 
     MockGet(json);
 
-    auto dataset = consumer->GetNextDataset(expected_group_id, 0, &err);
+    auto dataset = consumer->GetNextDataset(expected_group_id, expected_stream, 0, &err);
 
     ASSERT_THAT(err, Eq(nullptr));
 
@@ -981,7 +925,7 @@ TEST_F(ConsumerImplTests, GetDataSetReturnsPartialMessageMetas) {
 
     MockGet(json, asapo::HttpCode::PartialContent);
 
-    auto dataset = consumer->GetNextDataset(expected_group_id, 0, &err);
+    auto dataset = consumer->GetNextDataset(expected_group_id, expected_stream, 0, &err);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kPartialData));
 
@@ -1016,7 +960,7 @@ TEST_F(ConsumerImplTests, GetDataSetByIdReturnsPartialMessageMetas) {
 
     MockGet(json, asapo::HttpCode::PartialContent);
 
-    auto dataset = consumer->GetDatasetById(1, 0, &err);
+    auto dataset = consumer->GetDatasetById(1, expected_stream, 0, &err);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kPartialData));
     auto err_data = static_cast<const asapo::PartialErrorData*>(err->GetCustomData());
@@ -1034,7 +978,7 @@ TEST_F(ConsumerImplTests, GetDataSetReturnsParseError) {
     MockGet("error_response");
 
     asapo::Error err;
-    auto dataset = consumer->GetNextDataset(expected_group_id, 0, &err);
+    auto dataset = consumer->GetNextDataset(expected_group_id, expected_stream, 0, &err);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
     ASSERT_THAT(dataset.content.size(), Eq(0));
@@ -1043,20 +987,6 @@ TEST_F(ConsumerImplTests, GetDataSetReturnsParseError) {
 }
 
 TEST_F(ConsumerImplTests, GetLastDatasetUsesCorrectUri) {
-    MockGetBrokerUri();
-
-    EXPECT_CALL(mock_http_client,
-                Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/0/last?token="
-                          + expected_token + "&dataset=true&minsize=2", _,
-                      _)).WillOnce(DoAll(
-        SetArgPointee<1>(HttpCode::OK),
-        SetArgPointee<2>(nullptr),
-        Return("")));
-    asapo::Error err;
-    consumer->GetLastDataset(2, &err);
-}
-
-TEST_F(ConsumerImplTests, GetLastDatasetUsesCorrectUriWithStream) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
@@ -1073,7 +1003,7 @@ TEST_F(ConsumerImplTests, GetLastDatasetUsesCorrectUriWithStream) {
 TEST_F(ConsumerImplTests, GetDatasetByIdUsesCorrectUri) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token + "&dataset=true" + "&minsize=0", _,
                                         _)).WillOnce(DoAll(
@@ -1081,7 +1011,7 @@ TEST_F(ConsumerImplTests, GetDatasetByIdUsesCorrectUri) {
         SetArgPointee<2>(nullptr),
         Return("")));
     asapo::Error err;
-    consumer->GetDatasetById(expected_dataset_id, 0, &err);
+    consumer->GetDatasetById(expected_dataset_id, expected_stream, 0, &err);
 }
 
 TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUri) {
@@ -1187,7 +1117,7 @@ void ConsumerImplTests::AssertSingleFileTransfer() {
     MockGetFTSUri();
     ExpectFileTransfer(nullptr);
 
-    fts_consumer->GetNext(&info, expected_group_id, &data);
+    fts_consumer->GetNext(&info, expected_group_id, expected_stream, &data);
 
     ASSERT_THAT(data[0], Eq(expected_value));
     Mock::VerifyAndClearExpectations(&mock_http_client);
@@ -1233,7 +1163,7 @@ TEST_F(ConsumerImplTests, GetMessageReusesTokenAndUri) {
     MockBeforeFTS(&data);
     ExpectFileTransfer(nullptr);
 
-    auto err = fts_consumer->GetNext(&info, expected_group_id, &data);
+    auto err = fts_consumer->GetNext(&info, expected_group_id, expected_stream, &data);
 }
 
 TEST_F(ConsumerImplTests, GetMessageTriesToGetTokenAgainIfTransferFailed) {
@@ -1244,7 +1174,7 @@ TEST_F(ConsumerImplTests, GetMessageTriesToGetTokenAgainIfTransferFailed) {
     ExpectRepeatedFileTransfer();
     ExpectFolderToken();
 
-    auto err = fts_consumer->GetNext(&info, expected_group_id, &data);
+    auto err = fts_consumer->GetNext(&info, expected_group_id, expected_stream, &data);
 }
 
 TEST_F(ConsumerImplTests, AcknowledgeUsesCorrectUri) {
@@ -1260,23 +1190,6 @@ TEST_F(ConsumerImplTests, AcknowledgeUsesCorrectUri) {
         Return("")));
 
     auto err = consumer->Acknowledge(expected_group_id, expected_dataset_id, expected_stream);
-
-    ASSERT_THAT(err, Eq(nullptr));
-}
-
-TEST_F(ConsumerImplTests, AcknowledgeUsesCorrectUriWithDefaultStream) {
-    MockGetBrokerUri();
-    auto expected_acknowledge_command = "{\"Op\":\"ackmessage\"}";
-    EXPECT_CALL(mock_http_client,
-                Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/" +
-                    expected_group_id
-                           + "/" + std::to_string(expected_dataset_id) + "?token="
-                           + expected_token, _, expected_acknowledge_command, _, _)).WillOnce(DoAll(
-        SetArgPointee<3>(HttpCode::OK),
-        SetArgPointee<4>(nullptr),
-        Return("")));
-
-    auto err = consumer->Acknowledge(expected_group_id, expected_dataset_id);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -1331,7 +1244,7 @@ TEST_F(ConsumerImplTests, GetLastAcknowledgeReturnsNoData) {
 
 TEST_F(ConsumerImplTests, GetByIdErrorsForId0) {
 
-    auto err = consumer->GetById(0, &info, nullptr);
+    auto err = consumer->GetById(0, &info, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kWrongInput));
 }
@@ -1339,7 +1252,7 @@ TEST_F(ConsumerImplTests, GetByIdErrorsForId0) {
 TEST_F(ConsumerImplTests, ResendNacks) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/default/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/"
                                             + expected_group_id + "/next?token="
                                             + expected_token + "&resend_nacks=true&delay_ms=10000&resend_attempts=3", _,
                                         _)).WillOnce(DoAll(
@@ -1348,7 +1261,7 @@ TEST_F(ConsumerImplTests, ResendNacks) {
         Return("")));
 
     consumer->SetResendNacs(true, 10000, 3);
-    consumer->GetNext(&info, expected_group_id, nullptr);
+    consumer->GetNext(&info, expected_group_id, expected_stream, nullptr);
 }
 
 TEST_F(ConsumerImplTests, NegativeAcknowledgeUsesCorrectUri) {
@@ -1379,7 +1292,7 @@ TEST_F(ConsumerImplTests, CanInterruptOperation) {
     asapo::Error err;
     auto exec = [this,&err]() {
       consumer->SetTimeout(10000);
-      err = consumer->GetNext(&info, "", nullptr);
+      err = consumer->GetNext(&info, "", expected_stream, nullptr);
     };
     auto thread = std::thread(exec);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

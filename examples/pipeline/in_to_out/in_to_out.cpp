@@ -27,16 +27,16 @@ system_clock::time_point streamout_start;
 system_clock::time_point streamout_finish;
 
 struct Args {
-    std::string server;
-    std::string file_path;
-    std::string beamtime_id;
-    std::string stream_in;
-    std::string stream_out;
-    std::string token;
-    int timeout_ms;
-    int timeout_ms_producer;
-    int nthreads;
-    bool transfer_data;
+  std::string server;
+  std::string file_path;
+  std::string beamtime_id;
+  std::string stream_in;
+  std::string stream_out;
+  std::string token;
+  int timeout_ms;
+  int timeout_ms_producer;
+  int nthreads;
+  bool transfer_data;
 };
 
 void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
@@ -51,24 +51,24 @@ void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
 
 }
 
-
 void WaitConsumerThreadsFinished(std::vector<std::thread>* threads) {
-    for (auto& thread : *threads) {
+    for (auto &thread : *threads) {
         thread.join();
     }
 }
 
-int ProcessError(const Error& err) {
+int ProcessError(const Error &err) {
     if (err == nullptr) return 0;
     std::cout << err->Explain() << std::endl;
     return err == asapo::ConsumerErrorTemplates::kEndOfStream ? 0 : 1;
 }
 
-ConsumerPtr CreateConsumerAndGroup(const Args& args, Error* err) {
+ConsumerPtr CreateConsumerAndGroup(const Args &args, Error* err) {
     auto consumer = asapo::ConsumerFactory::CreateConsumer(args.server, args.file_path, true,
-                                                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                                                  args.beamtime_id, "", args.stream_in,
-                                                                                  args.token}, err);
+                                                           asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                                                    args.beamtime_id, "",
+                                                                                    args.stream_in,
+                                                                                    args.token}, err);
     if (*err) {
         return nullptr;
     }
@@ -88,7 +88,7 @@ ConsumerPtr CreateConsumerAndGroup(const Args& args, Error* err) {
     return consumer;
 }
 
-void GetBeamtimeMeta(const ConsumerPtr& consumer) {
+void GetBeamtimeMeta(const ConsumerPtr &consumer) {
     Error err;
     auto meta = consumer->GetBeamtimeMeta(&err);
     if (err == nullptr) {
@@ -98,17 +98,17 @@ void GetBeamtimeMeta(const ConsumerPtr& consumer) {
     }
 }
 
-void SendDownstreamThePipeline(const Args& args, const asapo::MessageMeta& fi, asapo::MessageData data,
-                                   const ProducerPtr& producer) {
+void SendDownstreamThePipeline(const Args &args, const asapo::MessageMeta &fi, asapo::MessageData data,
+                               const ProducerPtr &producer) {
     asapo::MessageHeader header{fi.id, fi.size, fi.name, fi.metadata};
     Error err_send;
     if (args.transfer_data) {
         header.file_name += "_" + args.stream_out;
-        err_send = producer->Send(header, std::move(data), asapo::kDefaultIngestMode, ProcessAfterSend);
+        err_send = producer->Send(header, "default", std::move(data), asapo::kDefaultIngestMode, ProcessAfterSend);
     } else {
         header.file_name = args.file_path + asapo::kPathSeparator + header.file_name;
         err_send =
-            producer->Send(header, nullptr, asapo::IngestModeFlags::kTransferMetaDataOnly, ProcessAfterSend);
+            producer->Send(header, "default", nullptr, asapo::IngestModeFlags::kTransferMetaDataOnly, ProcessAfterSend);
         std::cout << err_send << std::endl;
     }
 
@@ -124,11 +124,11 @@ void SendDownstreamThePipeline(const Args& args, const asapo::MessageMeta& fi, a
     }
 }
 
-Error ProcessNextEvent(const Args& args, const ConsumerPtr& consumer, const ProducerPtr& producer) {
+Error ProcessNextEvent(const Args &args, const ConsumerPtr &consumer, const ProducerPtr &producer) {
     asapo::MessageData data;
     asapo::MessageMeta fi;
 
-    auto err = consumer->GetNext(&fi, group_id, args.transfer_data ? &data : nullptr);
+    auto err = consumer->GetNext(&fi, group_id, "default", args.transfer_data ? &data : nullptr);
     if (err) {
         return err;
     }
@@ -138,28 +138,29 @@ Error ProcessNextEvent(const Args& args, const ConsumerPtr& consumer, const Prod
     return nullptr;
 }
 
-std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPtr& producer,
+std::vector<std::thread> StartConsumerThreads(const Args &args, const ProducerPtr &producer,
                                               std::vector<int>* nfiles,
                                               std::vector<int>* errors) {
-    auto exec_next = [&args, nfiles, errors, &producer ](int i) {
-        asapo::MessageMeta fi;
-        Error err;
-        auto consumer = CreateConsumerAndGroup(args, &err);
-        if (err) {
-            (*errors)[i] += ProcessError(err);
-            return;
-        }
+    auto exec_next = [&args, nfiles, errors, &producer](int i) {
+      asapo::MessageMeta fi;
+      Error err;
+      auto consumer = CreateConsumerAndGroup(args, &err);
+      if (err) {
+          (*errors)[i] += ProcessError(err);
+          return;
+      }
 
-        while (true) {
-            auto err = ProcessNextEvent(args, consumer, producer);
-            if (err) {
-                (*errors)[i] += ProcessError(err);
-                if (err == asapo::ConsumerErrorTemplates::kEndOfStream || err == asapo::ConsumerErrorTemplates::kWrongInput) {
-                    break;
-                }
-            }
-            (*nfiles)[i]++;
-        }
+      while (true) {
+          auto err = ProcessNextEvent(args, consumer, producer);
+          if (err) {
+              (*errors)[i] += ProcessError(err);
+              if (err == asapo::ConsumerErrorTemplates::kEndOfStream
+                  || err == asapo::ConsumerErrorTemplates::kWrongInput) {
+                  break;
+              }
+          }
+          (*nfiles)[i]++;
+      }
     };
 
     std::vector<std::thread> threads;
@@ -169,7 +170,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
     return threads;
 }
 
-int ProcessAllData(const Args& args, const ProducerPtr& producer, uint64_t* duration_ms, int* nerrors) {
+int ProcessAllData(const Args &args, const ProducerPtr &producer, uint64_t* duration_ms, int* nerrors) {
     asapo::MessageMeta fi;
     system_clock::time_point t1 = system_clock::now();
 
@@ -188,12 +189,13 @@ int ProcessAllData(const Args& args, const ProducerPtr& producer, uint64_t* dura
     return n_total;
 }
 
-std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
+std::unique_ptr<asapo::Producer> CreateProducer(const Args &args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.server, args.nthreads,
                                             asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{asapo::SourceType::kProcessed,args.beamtime_id, "", args.stream_out, args.token }, 60000, &err);
-    if(err) {
+                                            asapo::SourceCredentials{asapo::SourceType::kProcessed, args.beamtime_id,
+                                                                     "", args.stream_out, args.token}, 60000, &err);
+    if (err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -208,7 +210,7 @@ int main(int argc, char* argv[]) {
     Args args;
     if (argc != 11) {
         std::cout << "Usage: " + std::string{argv[0]}
-                  + " <server> <files_path> <beamtime_id> <stream_in> <stream_out> <nthreads> <token> <timeout ms>  <timeout ms producer> <transfer data>"
+            + " <server> <files_path> <beamtime_id> <stream_in> <stream_out> <nthreads> <token> <timeout ms>  <timeout ms producer> <transfer data>"
                   <<
                   std::endl;
         exit(EXIT_FAILURE);
@@ -249,9 +251,7 @@ int main(int argc, char* argv[]) {
     std::cout << "  Elapsed : " << duration_streamout.count() << "ms" << std::endl;
     std::cout << "  Rate : " << 1000.0f * files_sent / (duration_streamout.count()) << std::endl;
 
-
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
 
     return (nerrors == 0) && (files_sent == nfiles) ? 0 : 1;
 }

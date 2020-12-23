@@ -83,7 +83,7 @@ std::vector<std::thread> StartThreads(const Args& params,
         while (std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count() <
                 params.timeout_ms) {
             if (params.datasets) {
-                auto dataset = consumer->GetLastDataset(0, &err);
+                auto dataset = consumer->GetLastDataset("default", 0, &err);
                 if (err == nullptr) {
                     for (auto& fi : dataset.content) {
                         (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
@@ -91,7 +91,7 @@ std::vector<std::thread> StartThreads(const Args& params,
                     }
                 }
             } else {
-                err = consumer->GetLast(&fi, params.read_data ? &data : nullptr);
+                err = consumer->GetLast(&fi,"default", params.read_data ? &data : nullptr);
                 if (err == nullptr) {
                     (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
                     if (params.read_data && (*nfiles)[i] < 10 && fi.size < 10) {

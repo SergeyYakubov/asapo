@@ -56,39 +56,31 @@ class ConsumerImpl final : public asapo::Consumer {
     explicit ConsumerImpl(std::string server_uri, std::string source_path, bool has_filesystem,
                           SourceCredentials source);
 
-    Error Acknowledge(std::string group_id, uint64_t id, std::string stream = kDefaultStream) override;
+    Error Acknowledge(std::string group_id, uint64_t id, std::string) override;
     Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_ms,
-                              std::string stream = kDefaultStream) override;
+                              std::string stream) override;
 
     IdList GetUnacknowledgedMessages(std::string group_id,
                                      std::string stream,
                                      uint64_t from_id,
                                      uint64_t to_id,
                                      Error* error) override;
-    IdList GetUnacknowledgedMessages(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) override;
 
     uint64_t GetLastAcknowledgedMessage(std::string group_id, std::string stream, Error* error) override;
-    uint64_t GetLastAcknowledgedMessage(std::string group_id, Error* error) override;
 
-    Error ResetLastReadMarker(std::string group_id) override;
     Error ResetLastReadMarker(std::string group_id, std::string stream) override;
 
-    Error SetLastReadMarker(std::string group_id, uint64_t value) override;
     Error SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) override;
 
-    Error GetNext(MessageMeta* info, std::string group_id, MessageData* data) override;
     Error GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) override;
 
-    Error GetLast(MessageMeta* info, MessageData* data) override;
     Error GetLast(MessageMeta* info, std::string stream, MessageData* data) override;
 
     std::string GenerateNewGroupId(Error* err) override;
     std::string GetBeamtimeMeta(Error* err) override;
 
-    uint64_t GetCurrentSize(Error* err) override;
     uint64_t GetCurrentSize(std::string stream, Error* err) override;
 
-    Error GetById(uint64_t id, MessageMeta* info, MessageData* data) override;
     Error GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) override;
 
 
@@ -97,16 +89,12 @@ class ConsumerImpl final : public asapo::Consumer {
 
     NetworkConnectionType CurrentConnectionType() const override;
 
-    MessageMetas QueryMessages(std::string query, Error* err) override;
     MessageMetas QueryMessages(std::string query, std::string stream, Error* err) override;
 
-    DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) override;
     DataSet GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) override;
 
-    DataSet GetLastDataset(uint64_t min_size, Error* err) override;
     DataSet GetLastDataset(std::string stream, uint64_t min_size, Error* err) override;
 
-    DataSet GetDatasetById(uint64_t id, uint64_t min_size, Error* err) override;
     DataSet GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) override;
 
     Error RetrieveData(MessageMeta* info, MessageData* data) override;

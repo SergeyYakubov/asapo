@@ -17,48 +17,44 @@ class Consumer {
     //! Reset counter for the specific group.
     /*!
       \param group_id - group id to use.
+      \param stream - stream to use
       \return nullptr of command was successful, otherwise error.
     */
-    virtual Error ResetLastReadMarker(std::string group_id) = 0;
     virtual Error ResetLastReadMarker(std::string group_id, std::string stream) = 0;
 
-    virtual Error SetLastReadMarker(std::string group_id, uint64_t value) = 0;
     virtual Error SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) = 0;
 
     //! Acknowledge message for specific group id and stream.
     /*!
         \param group_id - group id to use.
         \param id - message id
-        \param stream (optional) - stream
+        \param stream - stream to use
         \return nullptr of command was successful, otherwise error.
     */
-    virtual Error Acknowledge(std::string group_id, uint64_t id, std::string stream = kDefaultStream) = 0;
+    virtual Error Acknowledge(std::string group_id, uint64_t id, std::string stream) = 0;
 
     //! Negative acknowledge message for specific group id and stream.
     /*!
         \param group_id - group id to use.
         \param id - message id
         \param delay_ms - message will be redelivered after delay, 0 to redeliver immediately
-        \param stream (optional) - stream
+        \param stream - stream to use
         \return nullptr of command was successful, otherwise error.
     */
     virtual Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_ms,
-                                      std::string stream = kDefaultStream) = 0;
+                                      std::string stream) = 0;
 
 
     //! Get unacknowledged messages for specific group id and stream.
     /*!
         \param group_id - group id to use.
-        \param stream (optional) - stream
         \param from_id - return messages with ids greater or equal to from (use 0 disable limit)
         \param to_id - return messages with ids less or equal to to (use 0 to disable limit)
-        \param in (optional) - stream
-        \param err - set to nullptr of operation succeed, error otherwise.
-        \return vector of ids, might be empty
+        \param stream - stream to use
+        \return nullptr if operation succeed, error otherwise.
     */
     virtual IdList GetUnacknowledgedMessages(std::string group_id, std::string stream, uint64_t from_id, uint64_t to_id,
                                              Error* error) = 0;
-    virtual IdList GetUnacknowledgedMessages(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) = 0;
 
     //! Set timeout for consumer operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
@@ -79,10 +75,10 @@ class Consumer {
 
     //! Get current number of datasets
     /*!
+      \param stream - stream to use
       \param err - return nullptr of operation succeed, error otherwise.
       \return number of datasets.
     */
-    virtual uint64_t GetCurrentSize(Error* err) = 0;
     virtual uint64_t GetCurrentSize(std::string stream, Error* err) = 0;
 
     //! Generate new GroupID.
@@ -102,11 +98,11 @@ class Consumer {
     //! Receive next available message.
     /*!
       \param info -  where to store message metadata. Can be set to nullptr only message data is needed.
-      \param group_id - group id to use.
+      \param group_id - group id to use
+      \param stream - stream to use
       \param data - where to store message data. Can be set to nullptr only message metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetNext(MessageMeta* info, std::string group_id, MessageData* data) = 0;
     virtual Error GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) = 0;
 
     //! Retrieves message using message meta.
@@ -122,70 +118,66 @@ class Consumer {
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
       \param group_id - group id to use.
-      \param stream - stream to use ("" for default).
+      \param stream - stream to use
       \param min_size - wait until dataset has min_size messages (0 for maximum size)
       \return DataSet - information about the dataset
 
     */
     virtual DataSet GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) = 0;
-    virtual DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) = 0;
     //! Receive last available dataset which has min_size messages.
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
-      \param stream - stream to use ("" for default).
+      \param stream - stream to use
       \param min_size - amount of messages in dataset (0 for maximum size)
       \return DataSet - information about the dataset
     */
     virtual DataSet GetLastDataset(std::string stream, uint64_t min_size, Error* err) = 0;
-    virtual DataSet GetLastDataset(uint64_t min_size, Error* err) = 0;
 
     //! Receive dataset by id.
     /*!
       \param id - dataset id
       \param err -  will be set to error data cannot be read or dataset size less than min_size, nullptr otherwise.
-      \param stream - stream to use ("" for default).
+      \param stream - stream to use
       \param min_size - wait until dataset has min_size messages (0 for maximum size)
       \return DataSet - information about the dataset
     */
     virtual DataSet GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) = 0;
-    virtual DataSet GetDatasetById(uint64_t id, uint64_t min_size, Error* err) = 0;
 
     //! Receive single message by id.
     /*!
       \param id - message id
       \param info -  where to store message metadata. Can be set to nullptr only message data is needed.
+      \param stream - stream to use
       \param data - where to store message data. Can be set to nullptr only message metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetById(uint64_t id, MessageMeta* info, MessageData* data) = 0;
     virtual Error GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) = 0;
 
     //! Receive id of last acknowledged message
     /*!
       \param group_id - group id to use.
-      \param stream (optional) - stream
-      \param err -  will be set in case of error, nullptr otherwise.
+      \param stream - stream to use
+      \param error -  will be set in case of error, nullptr otherwise.
       \return id of the last acknowledged message, 0 if error
     */
     virtual uint64_t GetLastAcknowledgedMessage(std::string group_id, std::string stream, Error* error) = 0;
-    virtual uint64_t GetLastAcknowledgedMessage(std::string group_id, Error* error) = 0;
 
     //! Receive last available message.
     /*!
       \param info -  where to store message metadata. Can be set to nullptr only message data is needed.
+      \param stream - stream to use
       \param data - where to store message data. Can be set to nullptr only message metadata is needed.
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetLast(MessageMeta* info, MessageData* data) = 0;
     virtual Error GetLast(MessageMeta* info, std::string stream, MessageData* data) = 0;
 
     //! Get all messages matching the query.
     /*!
       \param sql_query -  query string in SQL format. Limit dataset is supported
+      \param stream - stream to use
       \param err - will be set in case of error, nullptr otherwise
       \return vector of message metadata matchiing to specified query. Empty if nothing found or error
     */
-    virtual MessageMetas QueryMessages(std::string query, Error* err) = 0;
     virtual MessageMetas QueryMessages(std::string query, std::string stream, Error* err) = 0;
 
     //! Configure resending unacknowledged data

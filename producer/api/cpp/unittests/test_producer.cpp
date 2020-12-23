@@ -63,7 +63,7 @@ TEST(Producer, SimpleWorkflowWihoutConnection) {
                                                 &err);
 
     asapo::MessageHeader message_header{1, 1, "test"};
-    auto err_send = producer->Send(message_header, nullptr, asapo::kTransferMetaDataOnly, nullptr);
+    auto err_send = producer->Send(message_header,"stream", nullptr, asapo::kTransferMetaDataOnly, nullptr);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     ASSERT_THAT(producer, Ne(nullptr));
