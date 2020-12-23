@@ -182,13 +182,13 @@ cdef class PyConsumer:
         elif cased == <int>NetworkConnectionType_kFabric:
             result = "Fabric"
         return result.decode('utf-8')
-    def set_lastread_marker(self,value,group_id, stream = "default"):
+    def set_lastread_marker(self, group_id, value, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_stream = _bytes(stream)
         cdef Error err
         cdef uint64_t id = value
         with nogil:
-            err =  self.c_consumer.get().SetLastReadMarker(id,b_group_id,b_stream)
+            err =  self.c_consumer.get().SetLastReadMarker(b_group_id, id, b_stream)
         if err:
             throw_exception(err)
         return

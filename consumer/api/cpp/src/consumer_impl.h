@@ -73,8 +73,8 @@ class ConsumerImpl final : public asapo::Consumer {
     Error ResetLastReadMarker(std::string group_id) override;
     Error ResetLastReadMarker(std::string group_id, std::string stream) override;
 
-    Error SetLastReadMarker(uint64_t value, std::string group_id) override;
-    Error SetLastReadMarker(uint64_t value, std::string group_id, std::string stream) override;
+    Error SetLastReadMarker(std::string group_id, uint64_t value) override;
+    Error SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) override;
 
     Error GetNext(MessageMeta* info, std::string group_id, MessageData* data) override;
     Error GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) override;

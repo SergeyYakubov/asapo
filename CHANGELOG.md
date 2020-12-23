@@ -25,6 +25,7 @@ BREAKING CHANGES
 * subset_size -> dataset_size (and in general replace subset with dataset)
     ####  renaming - Consumer API
 * broker -> consumer
+* SetLastReadMarker/set_lastread_marker -> swap arguments
 
 BUG FIXES
 * fix memory leak bug in Python consumer library (lead to problems when creating many consumer instances)

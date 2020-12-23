@@ -93,7 +93,7 @@ def check_single(consumer, group_id):
     assert_metaname(meta, "2", "get next5")
     assert_usermetadata(meta, "get next5")
 
-    consumer.set_lastread_marker(4, group_id)
+    consumer.set_lastread_marker(group_id,4)
 
     _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "5", "get next6")

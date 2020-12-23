@@ -515,8 +515,8 @@ std::string ConsumerImpl::BrokerRequestWithTimeout(RequestInfo request, Error* e
     return std::move(response.string_output);
 }
 
-Error ConsumerImpl::SetLastReadMarker(uint64_t value, std::string group_id) {
-    return SetLastReadMarker(value, std::move(group_id), kDefaultStream);
+Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value) {
+    return SetLastReadMarker(std::move(group_id), value, kDefaultStream);
 }
 
 Error ConsumerImpl::ResetLastReadMarker(std::string group_id) {
@@ -524,10 +524,10 @@ Error ConsumerImpl::ResetLastReadMarker(std::string group_id) {
 }
 
 Error ConsumerImpl::ResetLastReadMarker(std::string group_id, std::string stream) {
-    return SetLastReadMarker(0, group_id, stream);
+    return SetLastReadMarker(group_id, 0, stream);
 }
 
-Error ConsumerImpl::SetLastReadMarker(uint64_t value, std::string group_id, std::string stream) {
+Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/"
         + std::move(stream) + "/" + std::move(group_id) + "/resetcounter";

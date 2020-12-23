@@ -66,7 +66,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         Error GetLast(MessageMeta* info, string stream, MessageData* data)
         Error GetById(uint64_t id, MessageMeta* info, string stream, MessageData* data)
         uint64_t GetCurrentSize(string stream, Error* err)
-        Error SetLastReadMarker(uint64_t value, string group_id, string stream)
+        Error SetLastReadMarker(string group_id, uint64_t value, string stream)
         Error ResetLastReadMarker(string group_id, string stream)
         Error Acknowledge(string group_id, uint64_t id, string stream)
         Error NegativeAcknowledge(string group_id, uint64_t id, uint64_t delay_ms, string stream)

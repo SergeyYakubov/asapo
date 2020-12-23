@@ -22,8 +22,8 @@ class Consumer {
     virtual Error ResetLastReadMarker(std::string group_id) = 0;
     virtual Error ResetLastReadMarker(std::string group_id, std::string stream) = 0;
 
-    virtual Error SetLastReadMarker(uint64_t value, std::string group_id) = 0;
-    virtual Error SetLastReadMarker(uint64_t value, std::string group_id, std::string stream) = 0;
+    virtual Error SetLastReadMarker(std::string group_id, uint64_t value) = 0;
+    virtual Error SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) = 0;
 
     //! Acknowledge data tuple for specific group id and stream.
     /*!

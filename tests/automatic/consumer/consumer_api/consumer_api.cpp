@@ -55,7 +55,7 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(fi.name == "2", "GetNext2 filename");
 
 
-    err = consumer->SetLastReadMarker(2, group_id);
+    err = consumer->SetLastReadMarker(group_id, 2);
     M_AssertTrue(err == nullptr, "SetLastReadMarker no error");
 
 
@@ -72,7 +72,7 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err == nullptr, "GetLast2 no error");
 
 
-    err = consumer->SetLastReadMarker(8, group_id);
+    err = consumer->SetLastReadMarker(group_id, 8);
     M_AssertTrue(err == nullptr, "SetLastReadMarker 2 no error");
 
 

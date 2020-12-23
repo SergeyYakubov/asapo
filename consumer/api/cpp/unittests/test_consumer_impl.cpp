@@ -616,7 +616,7 @@ TEST_F(ConsumerImplTests, ResetCounterUsesCorrectUri) {
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
         Return("")));
-    auto err = consumer->SetLastReadMarker(10, expected_group_id);
+    auto err = consumer->SetLastReadMarker(expected_group_id, 10);
     ASSERT_THAT(err, Eq(nullptr));
 }
 
@@ -631,7 +631,7 @@ TEST_F(ConsumerImplTests, ResetCounterUsesCorrectUriWithStream) {
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
         Return("")));
-    auto err = consumer->SetLastReadMarker(10, expected_group_id, expected_stream);
+    auto err = consumer->SetLastReadMarker(expected_group_id, 10, expected_stream);
     ASSERT_THAT(err, Eq(nullptr));
 }
 
