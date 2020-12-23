@@ -44,13 +44,19 @@ class Producer {
       \param data - A smart pointer to the message data to send, can be nullptr
       \return Error - Will be nullptr on success
     */
-    virtual Error Send(const MessageHeader& message_header, std::string stream, MessageData data, uint64_t ingest_mode,
+    virtual Error Send(const MessageHeader &message_header,
+                       MessageData data,
+                       uint64_t ingest_mode,
+                       std::string stream,
                        RequestCallback callback) = 0;
 
 
     //! Sends data to the receiver - same as Send - memory should not be freed until send is finished
     //! used e.g. for Python bindings
-    virtual Error Send__(const MessageHeader& message_header, std::string stream, void* data, uint64_t ingest_mode,
+    virtual Error Send__(const MessageHeader &message_header,
+                         void* data,
+                         uint64_t ingest_mode,
+                         std::string stream,
                          RequestCallback callback) = 0;
 
     //! Stop processing threads
@@ -60,12 +66,14 @@ class Producer {
     //! Sends message from a file to a stream
     /*!
       \param message_header - A stucture with the meta information (file name, size is ignored).
-      \param full_path - A full path of the file to send
+      \param file_to_send - A full path of the file to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendFile(const MessageHeader& message_header, std::string stream, std::string full_path,
-                               uint64_t ingest_mode,
-                               RequestCallback callback) = 0;
+    virtual Error SendFile(const MessageHeader &message_header,
+                           std::string file_to_send,
+                           uint64_t ingest_mode,
+                           std::string stream,
+                           RequestCallback callback) = 0;
 
     //! Marks stream finished
     /*!

@@ -154,8 +154,12 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         message_header.file_name = message_folder+message_header.file_name;
         message_header.user_metadata = std::move(meta);
         if (messages_in_set == 1) {
-            auto err = producer->Send(message_header,"default", std::move(buffer), write_files ? asapo::kDefaultIngestMode :
-                                                                              asapo::kTransferData, &ProcessAfterSend);
+            auto err = producer->Send(message_header,
+                                      std::move(buffer),
+                                      write_files ? asapo::kDefaultIngestMode :
+                                      asapo::kTransferData,
+                                      "default",
+                                      &ProcessAfterSend);
             if (err) {
                 std::cerr << "Cannot send file: " << err << std::endl;
                 return false;
@@ -173,8 +177,12 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
                 message_header.file_name = message_folder + message_header.file_name;
                 message_header.user_metadata = meta;
                 auto err =
-                    producer->Send(message_header, "default", std::move(buffer), write_files ? asapo::kDefaultIngestMode :
-                                                                           asapo::kTransferData, &ProcessAfterSend);
+                    producer->Send(message_header,
+                                   std::move(buffer),
+                                   write_files ? asapo::kDefaultIngestMode :
+                                   asapo::kTransferData,
+                                   "default",
+                                   &ProcessAfterSend);
                 if (err) {
                     std::cerr << "Cannot send file: " << err << std::endl;
                     return false;

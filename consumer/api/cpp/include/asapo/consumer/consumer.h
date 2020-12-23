@@ -53,7 +53,10 @@ class Consumer {
         \param stream - stream to use
         \return nullptr if operation succeed, error otherwise.
     */
-    virtual IdList GetUnacknowledgedMessages(std::string group_id, std::string stream, uint64_t from_id, uint64_t to_id,
+    virtual IdList GetUnacknowledgedMessages(std::string group_id,
+                                             uint64_t from_id,
+                                             uint64_t to_id,
+                                             std::string stream,
                                              Error* error) = 0;
 
     //! Set timeout for consumer operations. Default - no timeout
@@ -99,11 +102,11 @@ class Consumer {
     /*!
       \param info -  where to store message metadata. Can be set to nullptr only message data is needed.
       \param group_id - group id to use
-      \param stream - stream to use
       \param data - where to store message data. Can be set to nullptr only message metadata is needed.
+      \param stream - stream to use
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) = 0;
+    virtual Error GetNext(std::string group_id, MessageMeta* info, MessageData* data, std::string stream) = 0;
 
     //! Retrieves message using message meta.
     /*!
@@ -118,40 +121,40 @@ class Consumer {
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
       \param group_id - group id to use.
-      \param stream - stream to use
       \param min_size - wait until dataset has min_size messages (0 for maximum size)
+      \param stream - stream to use
       \return DataSet - information about the dataset
 
     */
-    virtual DataSet GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetNextDataset(std::string group_id, uint64_t min_size, std::string stream, Error* err) = 0;
     //! Receive last available dataset which has min_size messages.
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
-      \param stream - stream to use
       \param min_size - amount of messages in dataset (0 for maximum size)
+      \param stream - stream to use
       \return DataSet - information about the dataset
     */
-    virtual DataSet GetLastDataset(std::string stream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetLastDataset(uint64_t min_size, std::string stream, Error* err) = 0;
 
     //! Receive dataset by id.
     /*!
       \param id - dataset id
       \param err -  will be set to error data cannot be read or dataset size less than min_size, nullptr otherwise.
-      \param stream - stream to use
       \param min_size - wait until dataset has min_size messages (0 for maximum size)
+      \param stream - stream to use
       \return DataSet - information about the dataset
     */
-    virtual DataSet GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) = 0;
+    virtual DataSet GetDatasetById(uint64_t id, uint64_t min_size, std::string stream, Error* err) = 0;
 
     //! Receive single message by id.
     /*!
       \param id - message id
       \param info -  where to store message metadata. Can be set to nullptr only message data is needed.
-      \param stream - stream to use
       \param data - where to store message data. Can be set to nullptr only message metadata is needed.
+      \param stream - stream to use
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) = 0;
+    virtual Error GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) = 0;
 
     //! Receive id of last acknowledged message
     /*!
@@ -165,11 +168,11 @@ class Consumer {
     //! Receive last available message.
     /*!
       \param info -  where to store message metadata. Can be set to nullptr only message data is needed.
-      \param stream - stream to use
       \param data - where to store message data. Can be set to nullptr only message metadata is needed.
+      \param stream - stream to use
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
-    virtual Error GetLast(MessageMeta* info, std::string stream, MessageData* data) = 0;
+    virtual Error GetLast(MessageMeta* info, MessageData* data, std::string stream) = 0;
 
     //! Get all messages matching the query.
     /*!

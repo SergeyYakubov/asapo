@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
 
     for (uint64_t i = 0; i < n; i++) {
         asapo::MessageHeader message_header{i + 1, 0, std::to_string(i + 1)};
-        producer->Send(message_header, "stream1", nullptr, asapo::kTransferMetaDataOnly, ProcessAfterSend);
+        producer->Send(message_header, nullptr, asapo::kTransferMetaDataOnly, "stream1", ProcessAfterSend);
     }
     producer->SendStreamFinishedFlag("stream1", n, "stream2", ProcessAfterSend);
     producer->WaitRequestsFinished(10000);
@@ -105,10 +105,10 @@ int main(int argc, char* argv[]) {
 
     asapo::MessageMeta fi;
     for (uint64_t i = 0; i < n; i++) {
-        consumer->GetNext(&fi, group_id, "stream1", nullptr);
+        consumer->GetNext(group_id, &fi, nullptr, "stream1");
     }
 
-    err = consumer->GetNext(&fi, group_id, "stream1", nullptr);
+    err = consumer->GetNext(group_id, &fi, nullptr, "stream1");
     if (err != asapo::ConsumerErrorTemplates::kStreamFinished) {
         return 1;
     }

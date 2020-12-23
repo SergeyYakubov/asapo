@@ -42,7 +42,7 @@ def check_file_transfer_service(consumer, group_id):
     consumer.set_timeout(1000)
     data, meta = consumer.get_by_id(1, meta_only=False)
     assert_eq(data.tostring().decode("utf-8"), "hello1", "check_file_transfer_service ok")
-    data, meta = consumer.get_by_id(1, "streamfts", meta_only=False)
+    data, meta = consumer.get_by_id(1, meta_only=False, stream = "streamfts")
     assert_eq(data.tostring().decode("utf-8"), "hello1", "check_file_transfer_service with auto size ok")
 
 
@@ -115,10 +115,10 @@ def check_single(consumer, group_id):
     else:
         exit_on_noerr("io error")
 
-    _, meta = consumer.get_next(group_id, "stream1", meta_only=True)
+    _, meta = consumer.get_next(group_id, meta_only=True, stream = "stream1")
     assert_metaname(meta, "11", "get next stream1")
 
-    _, meta = consumer.get_next(group_id, "stream2", meta_only=True)
+    _, meta = consumer.get_next(group_id, meta_only=True, stream = "stream2")
     assert_metaname(meta, "21", "get next stream2")
 
     streams = consumer.get_stream_list("")
@@ -271,7 +271,7 @@ def check_dataset(consumer, group_id):
 
     # incomplete datesets without min_size given
     try:
-        consumer.get_next_dataset(group_id, "incomplete")
+        consumer.get_next_dataset(group_id, stream = "incomplete")
     except asapo_consumer.AsapoPartialDataError as err:
         assert_eq(err.partial_data['expected_size'], 3, "get_next_dataset incomplete expected size")
         assert_eq(err.partial_data['id'], 1, "get_next_dataset incomplete id")
@@ -282,7 +282,7 @@ def check_dataset(consumer, group_id):
         exit_on_noerr("get_next_dataset incomplete err")
 
     try:
-        consumer.get_dataset_by_id(2, "incomplete")
+        consumer.get_dataset_by_id(2, stream = "incomplete")
     except asapo_consumer.AsapoPartialDataError as err:
         assert_eq(err.partial_data['expected_size'], 3, "get_next_dataset incomplete expected size")
         assert_eq(err.partial_data['id'], 2, "get_next_dataset incomplete id")
@@ -293,19 +293,19 @@ def check_dataset(consumer, group_id):
         exit_on_noerr("get_next_dataset incomplete err")
 
     try:
-        consumer.get_last_dataset("incomplete")
+        consumer.get_last_dataset(stream = "incomplete")
     except asapo_consumer.AsapoEndOfStreamError as err:
         pass
     else:
         exit_on_noerr("get_last_dataset incomplete err")
     # incomplete with min_size given
-    res = consumer.get_next_dataset(group_id, "incomplete", min_size=2)
+    res = consumer.get_next_dataset(group_id, min_size=2, stream =  "incomplete")
     assert_eq(res['id'], 2, "get_next_dataset incomplete with minsize")
 
-    res = consumer.get_last_dataset("incomplete", min_size=2)
+    res = consumer.get_last_dataset(min_size=2, stream = "incomplete")
     assert_eq(res['id'], 5, "get_last_dataset incomplete with minsize")
 
-    res = consumer.get_dataset_by_id(2, "incomplete", min_size=1)
+    res = consumer.get_dataset_by_id(2, min_size=1, stream = "incomplete")
     assert_eq(res['id'], 2, "get_dataset_by_id incomplete with minsize")
 
 

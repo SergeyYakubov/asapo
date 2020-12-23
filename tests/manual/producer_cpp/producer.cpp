@@ -83,8 +83,8 @@ int main(int argc, char* argv[]) {
             // err = producer->Send(message_header,stream, std::move(buffer),
             //                          asapo::kTransferMetaDataOnly, &ProcessAfterSend);
 
-            err = producer->Send(message_header, stream, std::move(buffer),
-                                        asapo::kDefaultIngestMode, &ProcessAfterSend);
+            err = producer->Send(message_header, std::move(buffer),
+                                 asapo::kDefaultIngestMode, stream, &ProcessAfterSend);
             exit_if_error("Cannot send file", err);
 
             err = producer->WaitRequestsFinished(1000);

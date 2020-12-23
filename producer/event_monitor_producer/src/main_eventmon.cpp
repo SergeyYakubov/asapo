@@ -137,8 +137,8 @@ int main (int argc, char* argv[]) {
         }
         message_header.message_id = ++i;
         HandleDatasets(&message_header);
-        producer->SendFile(message_header,"default", GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
-            message_header.file_name, asapo::kDefaultIngestMode, ProcessAfterSend);
+        producer->SendFile(message_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
+            message_header.file_name, asapo::kDefaultIngestMode, "default", ProcessAfterSend);
     }
 
     logger->Info("Producer exit. Processed " + std::to_string(i) + " files");

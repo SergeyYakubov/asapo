@@ -113,7 +113,7 @@ cdef class PyProducer:
             message_header.data_size = 0
         else:
             message_header.data_size = data.nbytes
-        err = self.c_producer.get().Send__(message_header, _bytes(stream), data_pointer_nparray(data),ingest_mode,
+        err = self.c_producer.get().Send__(message_header, data_pointer_nparray(data),ingest_mode,_bytes(stream),
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_ndarr,
              <void*>self,<void*>callback, <void*>data))
         if err:
@@ -142,7 +142,7 @@ cdef class PyProducer:
     def __send_bytes(self, id, exposed_path,data, user_meta=None,dataset=None, stream="default", ingest_mode = DEFAULT_INGEST_MODE,callback=None):
         cdef MessageHeader message_header = self.create_message_header(id,exposed_path,user_meta,dataset,ingest_mode)
         message_header.data_size = len(data)
-        err = self.c_producer.get().Send__(message_header,_bytes(stream),  data_pointer_bytes(data), ingest_mode,
+        err = self.c_producer.get().Send__(message_header, data_pointer_bytes(data), ingest_mode, _bytes(stream),
             unwrap_callback_with_memory(<RequestCallbackCythonMemory>self.c_callback_bytesaddr,
              <void*>self,<void*>callback, <void*>data))
         if err:
@@ -152,7 +152,7 @@ cdef class PyProducer:
             Py_XINCREF(<PyObject*>callback)
         return
 
-    def send(self, uint64_t id, exposed_path, data, user_meta=None, dataset=None, stream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
+    def send(self, uint64_t id, exposed_path, data, user_meta=None, dataset=None, ingest_mode = DEFAULT_INGEST_MODE, stream = "default", callback=None):
         """
          :param id: unique data id
          :type id: int
@@ -164,10 +164,10 @@ cdef class PyProducer:
          :type user_meta: JSON string
          :param dataset: a tuple with two int values (dataset substream id, amount of dataset substreams), default None
          :type dataset: tuple
-         :param stream: stream name, default "default"
-         :type stream: string
          :param ingest_mode: ingest mode flag
          :type ingest_mode: int
+         :param stream: stream name, default "default"
+         :type stream: string
          :param callback: callback function, default None
          :type callback: callback(info,err), where info - json string with event header that was used to send data and response, err - error string or None
          :raises:
@@ -234,7 +234,7 @@ cdef class PyProducer:
         if err:
             throw_exception(err)
         return json.loads(_str(info.Json(True)))
-    def send_file(self, uint64_t id, local_path, exposed_path, user_meta=None, dataset=None, stream = "default", ingest_mode = DEFAULT_INGEST_MODE, callback=None):
+    def send_file(self, uint64_t id, local_path, exposed_path, user_meta=None, dataset=None, ingest_mode = DEFAULT_INGEST_MODE, stream = "default", callback=None):
         """
          :param id: unique data id
          :type id: int
@@ -246,10 +246,10 @@ cdef class PyProducer:
          :type user_meta: JSON string
          :param dataset: a tuple with two int values (dataset id, dataset size), default None
          :type dataset: tuple
-         :param stream: stream name, default "default"
-         :type stream: string
          :param ingest_mode: ingest mode flag
          :type ingest_mode: int
+         :param stream: stream name, default "default"
+         :type stream: string
          :param callback: callback function, default None
          :type callback: callback(info,err), where info - json string with event header that was used to send data and response, err - error string or None
          :raises:
@@ -260,7 +260,7 @@ cdef class PyProducer:
 
         cdef MessageHeader message_header = self.create_message_header(id,exposed_path,user_meta,dataset,ingest_mode)
         message_header.data_size = 0
-        err = self.c_producer.get().SendFile(message_header, _bytes(stream), _bytes(local_path), ingest_mode,
+        err = self.c_producer.get().SendFile(message_header, _bytes(local_path), ingest_mode, _bytes(stream),
             unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
         if err:
             throw_exception(err)

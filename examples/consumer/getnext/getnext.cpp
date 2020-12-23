@@ -137,7 +137,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
         bool isFirstFile = true;
         while (true) {
             if (params.datasets) {
-                auto dataset = consumer->GetNextDataset(group_id,"default", 0, &err);
+                auto dataset = consumer->GetNextDataset(group_id, 0, "default", &err);
                 if (err == nullptr) {
                     for (auto& fi : dataset.content) {
                         (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
@@ -145,7 +145,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
                     }
                 }
             } else {
-                err = consumer->GetNext(&fi, group_id,"default", params.read_data ? &data : nullptr);
+                err = consumer->GetNext(group_id, &fi, params.read_data ? &data : nullptr, "default");
                 if (isFirstFile) {
                     isFirstFile = false;
                     timer->count_down_and_wait();

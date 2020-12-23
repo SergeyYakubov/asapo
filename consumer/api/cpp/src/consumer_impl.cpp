@@ -299,7 +299,7 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
     return nullptr;
 }
 
-Error ConsumerImpl::GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) {
+Error ConsumerImpl::GetNext(std::string group_id, MessageMeta* info, MessageData* data, std::string stream) {
     return GetMessageFromServer(GetMessageServerOperation::GetNext,
                               0,
                               std::move(group_id),
@@ -308,7 +308,7 @@ Error ConsumerImpl::GetNext(MessageMeta* info, std::string group_id, std::string
                               data);
 }
 
-Error ConsumerImpl::GetLast(MessageMeta* info, std::string stream, MessageData* data) {
+Error ConsumerImpl::GetLast(MessageMeta* info, MessageData* data, std::string stream) {
     return GetMessageFromServer(GetMessageServerOperation::GetLast,
                               0,
                               "0",
@@ -545,7 +545,7 @@ uint64_t ConsumerImpl::GetCurrentSize(std::string stream, Error* err) {
     return size;
 }
 
-Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) {
+Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) {
     if (id == 0) {
         return ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
     }
@@ -612,11 +612,11 @@ MessageMetas ConsumerImpl::QueryMessages(std::string query, std::string stream, 
     return dataset.content;
 }
 
-DataSet ConsumerImpl::GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) {
+DataSet ConsumerImpl::GetNextDataset(std::string group_id, uint64_t min_size, std::string stream, Error* err) {
     return GetDatasetFromServer(GetMessageServerOperation::GetNext, 0, std::move(group_id), std::move(stream),min_size, err);
 }
 
-DataSet ConsumerImpl::GetLastDataset(std::string stream, uint64_t min_size, Error* err) {
+DataSet ConsumerImpl::GetLastDataset(uint64_t min_size, std::string stream, Error* err) {
     return GetDatasetFromServer(GetMessageServerOperation::GetLast, 0, "0", std::move(stream),min_size, err);
 }
 
@@ -638,7 +638,7 @@ DataSet ConsumerImpl::GetDatasetFromServer(GetMessageServerOperation op,
     return DecodeDatasetFromResponse(response, err);
 }
 
-DataSet ConsumerImpl::GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) {
+DataSet ConsumerImpl::GetDatasetById(uint64_t id, uint64_t min_size, std::string stream, Error* err) {
     if (id == 0) {
         *err =  ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
         return {};
@@ -755,9 +755,9 @@ Error ConsumerImpl::Acknowledge(std::string group_id, uint64_t id, std::string s
 }
 
 IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
-                                               std::string stream,
                                                uint64_t from_id,
                                                uint64_t to_id,
+                                               std::string stream,
                                                Error* error) {
     if (stream.empty()) {
         *error = ConsumerErrorTemplates::kWrongInput.Generate("empty stream");

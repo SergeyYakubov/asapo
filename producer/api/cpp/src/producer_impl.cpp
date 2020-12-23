@@ -136,10 +136,10 @@ Error CheckData(uint64_t ingest_mode, const MessageHeader& message_header, const
     return nullptr;
 }
 
-Error ProducerImpl::Send(const MessageHeader& message_header,
-                         std::string stream,
+Error ProducerImpl::Send(const MessageHeader &message_header,
                          MessageData data,
                          uint64_t ingest_mode,
+                         std::string stream,
                          RequestCallback callback) {
     if (auto err = CheckData(ingest_mode, message_header, &data)) {
         return err;
@@ -219,11 +219,11 @@ Error ProducerImpl::SendMetadata(const std::string& metadata, RequestCallback ca
     });
 }
 
-Error ProducerImpl::Send__(const MessageHeader& message_header,
-                                  std::string stream,
-                                  void* data,
-                                  uint64_t ingest_mode,
-                                  RequestCallback callback) {
+Error ProducerImpl::Send__(const MessageHeader &message_header,
+                           void* data,
+                           uint64_t ingest_mode,
+                           std::string stream,
+                           RequestCallback callback) {
     MessageData data_wrapped = MessageData{(uint8_t*)data};
 
     if (auto err = CheckData(ingest_mode, message_header, &data_wrapped)) {
@@ -249,11 +249,11 @@ Error ProducerImpl::WaitRequestsFinished(uint64_t timeout_ms) {
 void ProducerImpl::StopThreads__() {
     request_pool__->StopThreads();
 }
-Error ProducerImpl::SendFile(const MessageHeader& message_header,
-                                        std::string stream,
-                                        std::string full_path,
-                                        uint64_t ingest_mode,
-                                        RequestCallback callback) {
+Error ProducerImpl::SendFile(const MessageHeader &message_header,
+                             std::string full_path,
+                             uint64_t ingest_mode,
+                             std::string stream,
+                             RequestCallback callback) {
     if (full_path.empty()) {
         return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }

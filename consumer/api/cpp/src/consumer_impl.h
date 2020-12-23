@@ -61,9 +61,9 @@ class ConsumerImpl final : public asapo::Consumer {
                               std::string stream) override;
 
     IdList GetUnacknowledgedMessages(std::string group_id,
-                                     std::string stream,
                                      uint64_t from_id,
                                      uint64_t to_id,
+                                     std::string stream,
                                      Error* error) override;
 
     uint64_t GetLastAcknowledgedMessage(std::string group_id, std::string stream, Error* error) override;
@@ -72,16 +72,16 @@ class ConsumerImpl final : public asapo::Consumer {
 
     Error SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) override;
 
-    Error GetNext(MessageMeta* info, std::string group_id, std::string stream, MessageData* data) override;
+    Error GetNext(std::string group_id, MessageMeta* info, MessageData* data, std::string stream) override;
 
-    Error GetLast(MessageMeta* info, std::string stream, MessageData* data) override;
+    Error GetLast(MessageMeta* info, MessageData* data, std::string stream) override;
 
     std::string GenerateNewGroupId(Error* err) override;
     std::string GetBeamtimeMeta(Error* err) override;
 
     uint64_t GetCurrentSize(std::string stream, Error* err) override;
 
-    Error GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) override;
+    Error GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) override;
 
 
     void SetTimeout(uint64_t timeout_ms) override;
@@ -91,11 +91,11 @@ class ConsumerImpl final : public asapo::Consumer {
 
     MessageMetas QueryMessages(std::string query, std::string stream, Error* err) override;
 
-    DataSet GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) override;
+    DataSet GetNextDataset(std::string group_id, uint64_t min_size, std::string stream, Error* err) override;
 
-    DataSet GetLastDataset(std::string stream, uint64_t min_size, Error* err) override;
+    DataSet GetLastDataset(uint64_t min_size, std::string stream, Error* err) override;
 
-    DataSet GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) override;
+    DataSet GetDatasetById(uint64_t id, uint64_t min_size, std::string stream, Error* err) override;
 
     Error RetrieveData(MessageMeta* info, MessageData* data) override;
 

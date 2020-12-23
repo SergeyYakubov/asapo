@@ -38,13 +38,22 @@ class ProducerImpl : public Producer {
   void SetLogLevel(LogLevel level) override;
   void EnableLocalLog(bool enable) override;
   void EnableRemoteLog(bool enable) override;
-  Error Send(const MessageHeader &message_header, std::string stream, MessageData data, uint64_t ingest_mode,
+  Error Send(const MessageHeader &message_header,
+             MessageData data,
+             uint64_t ingest_mode,
+             std::string stream,
              RequestCallback callback) override;
-  Error Send__(const MessageHeader &message_header, std::string stream, void* data, uint64_t ingest_mode,
+  Error Send__(const MessageHeader &message_header,
+               void* data,
+               uint64_t ingest_mode,
+               std::string stream,
                RequestCallback callback) override;
   void StopThreads__() override;
-  Error SendFile(const MessageHeader &message_header, std::string stream, std::string full_path, uint64_t ingest_mode,
-                     RequestCallback callback) override;
+  Error SendFile(const MessageHeader &message_header,
+                 std::string full_path,
+                 uint64_t ingest_mode,
+                 std::string stream,
+                 RequestCallback callback) override;
   Error SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,
                                   RequestCallback callback) override;
 

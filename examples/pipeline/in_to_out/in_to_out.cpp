@@ -104,11 +104,11 @@ void SendDownstreamThePipeline(const Args &args, const asapo::MessageMeta &fi, a
     Error err_send;
     if (args.transfer_data) {
         header.file_name += "_" + args.stream_out;
-        err_send = producer->Send(header, "default", std::move(data), asapo::kDefaultIngestMode, ProcessAfterSend);
+        err_send = producer->Send(header, std::move(data), asapo::kDefaultIngestMode, "default", ProcessAfterSend);
     } else {
         header.file_name = args.file_path + asapo::kPathSeparator + header.file_name;
         err_send =
-            producer->Send(header, "default", nullptr, asapo::IngestModeFlags::kTransferMetaDataOnly, ProcessAfterSend);
+            producer->Send(header, nullptr, asapo::IngestModeFlags::kTransferMetaDataOnly, "default", ProcessAfterSend);
         std::cout << err_send << std::endl;
     }
 
@@ -128,7 +128,7 @@ Error ProcessNextEvent(const Args &args, const ConsumerPtr &consumer, const Prod
     asapo::MessageData data;
     asapo::MessageMeta fi;
 
-    auto err = consumer->GetNext(&fi, group_id, "default", args.transfer_data ? &data : nullptr);
+    auto err = consumer->GetNext(group_id, &fi, args.transfer_data ? &data : nullptr, "default");
     if (err) {
         return err;
     }
