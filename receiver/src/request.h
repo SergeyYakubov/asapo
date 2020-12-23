@@ -43,7 +43,7 @@ class Request {
     VIRTUAL uint64_t GetMetaDataSize() const;
     VIRTUAL uint64_t GetDataID() const;
     VIRTUAL std::string GetFileName() const;
-    VIRTUAL std::string GetSubstream() const;
+    VIRTUAL std::string GetStream() const;
     VIRTUAL void* GetData() const;
     VIRTUAL Opcode GetOpCode() const;
     VIRTUAL const char* GetMessage() const;
@@ -57,8 +57,8 @@ class Request {
     VIRTUAL void SetSourceType(SourceType);
     VIRTUAL SourceType GetSourceType() const;
 
-    VIRTUAL const std::string& GetStream() const;
-    VIRTUAL void SetStream(std::string stream);
+    VIRTUAL const std::string& GetDataSource() const;
+    VIRTUAL void SetDataSource(std::string data_source);
     VIRTUAL void SetMetadata(std::string metadata);
 
     VIRTUAL void SetOnlinePath(std::string facility);
@@ -83,12 +83,12 @@ class Request {
   private:
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
-    FileData data_buffer_;
+    MessageData data_buffer_;
     void* data_ptr;
     RequestHandlerList handlers_;
     std::string origin_uri_;
     std::string beamtime_id_;
-    std::string stream_;
+    std::string data_source_;
     std::string beamline_;
     std::string offline_path_;
     std::string online_path_;

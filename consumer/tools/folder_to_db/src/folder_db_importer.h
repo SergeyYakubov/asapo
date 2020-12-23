@@ -57,17 +57,17 @@ class FolderToDbImporter {
     mutable std::string db_uri_ ;
     mutable std::string db_name_;
     Error ConnectToDb(const std::unique_ptr<asapo::Database>& db) const;
-    FileInfos GetFilesInFolder(const std::string& folder, Error* err) const;
-    Error ImportFilelist(const FileInfos& file_list) const;
-    Error PerformParallelTask(const FileInfos& file_list, uint64_t begin,
+    MessageMetas GetFilesInFolder(const std::string& folder, Error* err) const;
+    Error ImportFilelist(const MessageMetas& file_list) const;
+    Error PerformParallelTask(const MessageMetas& file_list, uint64_t begin,
                               uint64_t end) const;
     Error ImportSingleFile(const std::unique_ptr<asapo::Database>& db,
-                           const FileInfo& file) const;
+                           const MessageMeta& file) const;
     Error ImportFilelistChunk(const std::unique_ptr<asapo::Database>& db,
-                              const FileInfos& file_list, uint64_t begin, uint64_t end) const;
+                              const MessageMetas& file_list, uint64_t begin, uint64_t end) const;
 
     std::unique_ptr<Database> CreateDbClient(Error* err) const;
-    void ProcessNextChunk(const FileInfos& file_list, std::vector<std::future<Error>>* res,
+    void ProcessNextChunk(const MessageMetas& file_list, std::vector<std::future<Error>>* res,
                           TaskSplitParameters* p) const;
 
 };

@@ -39,7 +39,7 @@ std::unique_ptr<Producer> CreateProducer() {
 
     Error err;
     auto producer = Producer::Create(config->asapo_endpoint, (uint8_t) config->nthreads,
-                                     config->mode, asapo::SourceCredentials{asapo::SourceType::kProcessed,config->beamtime_id, "", config->stream, ""}, 3600, &err);
+                                     config->mode, asapo::SourceCredentials{asapo::SourceType::kProcessed,config->beamtime_id, "", config->data_source, ""}, 3600000, &err);
     if(err) {
         std::cerr << "cannot create producer: " << err << std::endl;
         exit(EXIT_FAILURE);
@@ -76,18 +76,18 @@ void SignalHandler(int signal) {
 }
 
 
-void HandleSubsets(asapo::EventHeader* header) {
-    switch (GetEventMonConfig()->subset_mode) {
-    case asapo::SubSetMode::kNone:
+void HandleDatasets(asapo::MessageHeader* header) {
+    switch (GetEventMonConfig()->dataset_mode) {
+    case asapo::DatasetMode::kNone:
         return;
-    case asapo::SubSetMode::kBatch:
-        header->subset_size = GetEventMonConfig()->subset_batch_size;
-        header->id_in_subset = (header->file_id - 1) % header->subset_size + 1;
-        header->file_id = (header->file_id - 1) / header->subset_size + 1;
+    case asapo::DatasetMode::kBatch:
+        header->dataset_size = GetEventMonConfig()->dataset_batch_size;
+        header->dataset_substream = (header->message_id - 1) % header->dataset_size + 1;
+        header->message_id = (header->message_id - 1) / header->dataset_size + 1;
         break;
-    case asapo::SubSetMode::kMultiSource:
-        header->subset_size = GetEventMonConfig()->subset_multisource_nsources;
-        header->id_in_subset = GetEventMonConfig()->subset_multisource_sourceid;
+    case asapo::DatasetMode::kMultiSource:
+        header->dataset_size = GetEventMonConfig()->dataset_multisource_nsources;
+        header->dataset_substream = GetEventMonConfig()->dataset_multisource_sourceid;
         break;
     }
 }
@@ -124,8 +124,8 @@ int main (int argc, char* argv[]) {
 
     int i = 0;
     while (true) {
-        asapo::EventHeader event_header;
-        auto err = event_detector->GetNextEvent(&event_header);
+        asapo::MessageHeader message_header;
+        auto err = event_detector->GetNextEvent(&message_header);
         if (stop_signal) {
             break; // we check it here because signal can interrupt system call (ready by inotify and result in incomplete event data)
         }
@@ -135,10 +135,10 @@ int main (int argc, char* argv[]) {
             }
             continue;
         }
-        event_header.file_id = ++i;
-        HandleSubsets(&event_header);
-        producer->SendFile(event_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
-                           event_header.file_name, asapo::kDefaultIngestMode, ProcessAfterSend);
+        message_header.message_id = ++i;
+        HandleDatasets(&message_header);
+        producer->SendFile(message_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
+            message_header.file_name, asapo::kDefaultIngestMode, "default", ProcessAfterSend);
     }
 
     logger->Info("Producer exit. Processed " + std::to_string(i) + " files");

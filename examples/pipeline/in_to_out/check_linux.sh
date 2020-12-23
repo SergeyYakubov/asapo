@@ -2,13 +2,13 @@
 
 source_path=.
 beamtime_id=asapo_test
-stream_in=detector
-stream_out=stream
-stream_out2=stream2
+data_source_in=detector
+data_source_out=data_source
+data_source_out2=data_source2
 
-indatabase_name=${beamtime_id}_${stream_in}
-outdatabase_name=${beamtime_id}_${stream_out}
-outdatabase_name2=${beamtime_id}_${stream_out2}
+indatabase_name=${beamtime_id}_${data_source_in}
+outdatabase_name=${beamtime_id}_${data_source_out}
+outdatabase_name2=${beamtime_id}_${data_source_out2}
 
 token=IEfwsWa0GXky2S3MkxJSUHJT1sI8DD5teRdjBUXVRxk=
 
@@ -55,23 +55,23 @@ echo hello3 > processed/file3
 
 for i in `seq 1 3`;
 do
-	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'processed/file$i'","timestamp":0,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${indatabase_name}
+	echo 'db.data_default.insert({"_id":'$i',"size":6,"name":"'processed/file$i'","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}})' | mongo ${indatabase_name}
 done
 
 sleep 1
 
-$1 127.0.0.1:8400 $source_path $beamtime_id $stream_in $stream_out $token 2 1000 25000 1  > out
+$1 127.0.0.1:8400 $source_path $beamtime_id $data_source_in $data_source_out $token 2 1000 25000 1  > out
 cat out
 cat out | grep "Processed 3 file(s)"
 cat out | grep "Sent 3 file(s)"
 
-echo "db.data_default.find({"_id":1})" | mongo ${outdatabase_name} | tee /dev/stderr | grep file1_${stream_out}
+echo "db.data_default.find({"_id":1})" | mongo ${outdatabase_name} | tee /dev/stderr | grep file1_${data_source_out}
 
-cat ${receiver_folder}/processed/file1_${stream_out} | grep hello1
-cat ${receiver_folder}/processed/file2_${stream_out} | grep hello2
-cat ${receiver_folder}/processed/file3_${stream_out} | grep hello3
+cat ${receiver_folder}/processed/file1_${data_source_out} | grep hello1
+cat ${receiver_folder}/processed/file2_${data_source_out} | grep hello2
+cat ${receiver_folder}/processed/file3_${data_source_out} | grep hello3
 
-$1 127.0.0.1:8400 $source_path $beamtime_id $stream_in $stream_out2 $token 2 1000 25000 0  > out2
+$1 127.0.0.1:8400 $source_path $beamtime_id $data_source_in $data_source_out2 $token 2 1000 25000 0  > out2
 cat out2
-test ! -f ${receiver_folder}/processed/file1_${stream_out2}
+test ! -f ${receiver_folder}/processed/file1_${data_source_out2}
 echo "db.data_default.find({"_id":1})" | mongo ${outdatabase_name2} | tee /dev/stderr | grep processed/file1

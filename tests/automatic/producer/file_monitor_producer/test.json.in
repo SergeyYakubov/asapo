@@ -10,8 +10,8 @@
  "IgnoreExtensions":["tmp"],
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
- "Stream": "",
- "Subset": {
+ "DataSource": "",
+ "Dataset": {
   	"Mode":"none"
  }
 

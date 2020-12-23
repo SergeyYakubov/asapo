@@ -14,13 +14,13 @@ Error RequestHandlerDbStreamInfo::ProcessRequest(Request* request) const {
         return err;
     }
 
-    auto col_name = collection_name_prefix_ + "_" + request->GetSubstream();
+    auto col_name = collection_name_prefix_ + "_" + request->GetStream();
     StreamInfo info;
     auto err =  db_client__->GetStreamInfo(col_name, &info);
     if (!err) {
         log__->Debug(std::string{"get stream info from "} + col_name + " in " +
                      db_name_ + " at " + GetReceiverConfig()->database_uri);
-        info.name = request->GetSubstream();
+        info.name = request->GetStream();
         request->SetResponseMessage(info.Json(true), ResponseMessageType::kInfo);
     }
     return err;

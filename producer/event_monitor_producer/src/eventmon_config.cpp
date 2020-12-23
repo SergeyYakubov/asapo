@@ -11,35 +11,35 @@ EventMonConfigFactory::EventMonConfigFactory() : io__{GenerateDefaultIO()} {
 
 }
 
-Error SubsetModeToEnum(const std::string& mode_str, SubSetMode* mode) {
+Error DatasetModeToEnum(const std::string& mode_str, DatasetMode* mode) {
     if (mode_str == "batch") {
-        *mode = SubSetMode::kBatch;
+        *mode = DatasetMode::kBatch;
         return nullptr;
     }
 
     if (mode_str == "none") {
-        *mode = SubSetMode::kNone;
+        *mode = DatasetMode::kNone;
         return nullptr;
     }
 
     if (mode_str == "multisource") {
-        *mode = SubSetMode::kMultiSource;
+        *mode = DatasetMode::kMultiSource;
         return nullptr;
     }
 
 
-    return TextError("Wrone subset mode:" + mode_str);
+    return TextError("Wrone dataset mode:" + mode_str);
 }
 
 Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     JsonFileParser parser(file_name, &io__);
     Error err = nullptr;
-    std::string subset_mode;
+    std::string dataset_mode;
 
     (err = parser.GetString("AsapoEndpoint", &config.asapo_endpoint)) ||
     (err = parser.GetString("Tag", &config.tag)) ||
     (err = parser.GetString("BeamtimeID", &config.beamtime_id)) ||
-    (err = parser.GetString("Stream", &config.stream)) ||
+    (err = parser.GetString("DataSource", &config.data_source)) ||
     (err = parser.GetString("Mode", &config.mode_str)) ||
     (err = parser.GetUInt64("NThreads", &config.nthreads)) ||
     (err = parser.GetString("RootMonitoredFolder", &config.root_monitored_folder)) ||
@@ -48,19 +48,19 @@ Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     (err = parser.GetArrayString("MonitoredSubFolders", &config.monitored_subfolders)) ||
     (err = parser.GetArrayString("IgnoreExtensions", &config.ignored_extensions)) ||
     (err = parser.GetArrayString("WhitelistExtensions", &config.whitelisted_extensions)) ||
-    (err = parser.Embedded("Subset").GetString("Mode", &subset_mode)) ||
-    (err = SubsetModeToEnum(subset_mode, &config.subset_mode));
+    (err = parser.Embedded("Dataset").GetString("Mode", &dataset_mode)) ||
+    (err = DatasetModeToEnum(dataset_mode, &config.dataset_mode));
     if (err) {
         return err;
     }
 
-    if (config.subset_mode == SubSetMode::kBatch) {
-        err = parser.Embedded("Subset").GetUInt64("BatchSize", &config.subset_batch_size);
+    if (config.dataset_mode == DatasetMode::kBatch) {
+        err = parser.Embedded("Dataset").GetUInt64("BatchSize", &config.dataset_batch_size);
     }
 
-    if (config.subset_mode == SubSetMode::kMultiSource) {
-        err = parser.Embedded("Subset").GetUInt64("NSources", &config.subset_multisource_nsources);
-        err = parser.Embedded("Subset").GetUInt64("SourceId", &config.subset_multisource_sourceid);
+    if (config.dataset_mode == DatasetMode::kMultiSource) {
+        err = parser.Embedded("Dataset").GetUInt64("NSources", &config.dataset_multisource_nsources);
+        err = parser.Embedded("Dataset").GetUInt64("SourceId", &config.dataset_multisource_sourceid);
     }
 
 
@@ -73,7 +73,7 @@ Error EventMonConfigFactory::CheckConfig() {
     (err = CheckMode()) ||
     (err = CheckLogLevel()) ||
     (err = CheckNThreads()) ||
-    (err = CheckSubsets());
+    (err = CheckDatasets());
 
 //todo: check monitored folders exist?
     return err;
@@ -113,13 +113,13 @@ Error EventMonConfigFactory::CheckNThreads() {
     return nullptr;
 }
 
-Error EventMonConfigFactory::CheckSubsets() {
-    if (config.subset_mode == SubSetMode::kBatch && config.subset_batch_size < 1) {
+Error EventMonConfigFactory::CheckDatasets() {
+    if (config.dataset_mode == DatasetMode::kBatch && config.dataset_batch_size < 1) {
         return  TextError("Batch size should > 0");
     }
 
 
-    if (config.subset_mode == SubSetMode::kMultiSource && config.subset_multisource_nsources < 1) {
+    if (config.dataset_mode == DatasetMode::kMultiSource && config.dataset_multisource_nsources < 1) {
         return  TextError("Number of sources size should be > 0");
     }
 

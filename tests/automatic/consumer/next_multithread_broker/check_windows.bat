@@ -4,7 +4,7 @@ set token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
 call start_services.bat
 
-for /l %%x in (1, 1, 10) do echo db.data_default.insert({"_id":%%x,"size":100,"name":"%%x","timestamp":0,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
+for /l %%x in (1, 1, 10) do echo db.data_default.insert({"_id":%%x,"size":100,"name":"%%x","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
 
 %1 127.0.0.1:8400 test_run 4 10 %token_test_run% || goto :error

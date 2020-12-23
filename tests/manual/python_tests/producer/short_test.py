@@ -9,7 +9,7 @@ lock = threading.Lock()
 
 endpoint = "127.0.0.1:8400"
 beamtime = "asapo_test"
-stream = "test"
+data_source = "test"
 token = ""
 nthreads = 8
 
@@ -26,7 +26,7 @@ def assert_err(err):
         print(err)
         sys.exit(1)
 
-producer = asapo_producer.create_producer(endpoint,'processed',beamtime,'auto', stream, token, nthreads ,0)
+producer = asapo_producer.create_producer(endpoint,'processed',beamtime,'auto', data_source, token, nthreads ,0)
 
 producer.set_log_level("debug")
 

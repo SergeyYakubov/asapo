@@ -45,7 +45,7 @@ void ServerMasterThread(const std::string& hostname, uint16_t port, char* expect
                 M_AssertEq(123 + instanceRuns, messageId);
                 M_AssertEq("Hello World", request.message);
 
-                server->RdmaWrite(clientAddress, (MemoryRegionDetails*) &request.substream, expectedRdmaBuffer, kRdmaSize,
+                server->RdmaWrite(clientAddress, (MemoryRegionDetails*) &request.stream, expectedRdmaBuffer, kRdmaSize,
                                   &err);
                 M_AssertEq(nullptr, err, "server->RdmaWrite");
 
@@ -84,7 +84,7 @@ void ClientThread(const std::string& hostname, uint16_t port, char* expectedRdma
 
             GenericRequestHeader request{};
             strcpy(request.message, "Hello World");
-            memcpy(request.substream, mr->GetDetails(), sizeof(MemoryRegionDetails));
+            memcpy(request.stream, mr->GetDetails(), sizeof(MemoryRegionDetails));
             FabricMessageId messageId = 123 + instanceRuns;
             client->Send(serverAddress, messageId, &request, sizeof(request), &err);
             M_AssertEq(nullptr, err, "client->Send");

@@ -7,12 +7,12 @@ import (
 	"strconv"
 )
 
-type ImageOp struct {
+type MessageOp struct {
 	Id int
 	Op string
 	Params map[string]interface{} `json:",omitempty"`
 }
-func routeImageOp(w http.ResponseWriter, r *http.Request) {
+func routeMessageOp(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -31,7 +31,7 @@ func routeImageOp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var  op ImageOp
+	var  op MessageOp
 	err = json.Unmarshal(body, &op)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

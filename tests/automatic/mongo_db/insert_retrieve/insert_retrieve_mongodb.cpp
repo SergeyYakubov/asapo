@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
     asapo::MongoDBClient db;
 
-    asapo::FileInfo fi;
+    asapo::MessageMeta fi;
     fi.size = 100;
     fi.name = "relpath/1";
     fi.id = args.file_id;
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     Assert(err, args.keyword);
 
     if (args.keyword == "OK") { // check retrieve
-        asapo::FileInfo fi_db;
+        asapo::MessageMeta fi_db;
         asapo::MongoDBClient db_new;
         db_new.Connect("127.0.0.1", "data");
         err = db_new.GetById("data_test", fi.id, &fi_db);

@@ -14,17 +14,17 @@ int main(int argc, char* argv[]) {
     auto beamtime = "asapo_test";
     auto token = "KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc=";
 
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(endpoint, "", true, asapo::SourceCredentials{beamtime, "", "", token}, &err);
+    auto consumer = asapo::ConsumerFactory::CreateConsumer(endpoint, "", true, asapo::SourceCredentials{beamtime, "", "", token}, &err);
     exit_if_error("Cannot create consumer", err);
-    broker->SetTimeout((uint64_t) 1000);
+    consumer->SetTimeout((uint64_t) 1000);
 
-    auto group_id = broker->GenerateNewGroupId(&err);
+    auto group_id = consumer->GenerateNewGroupId(&err);
     exit_if_error("Cannot create group id", err);
 
-    asapo::FileInfo fi;
-    asapo::FileData data;
+    asapo::MessageMeta fi;
+    asapo::MessageData data;
 
-    err = broker->GetLast(&fi, group_id, &data);
+    err = consumer->GetLast(&fi, group_id, &data);
     exit_if_error("Cannot get next record", err);
 
     std::cout << "id: " << fi.id << std::endl;

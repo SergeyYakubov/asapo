@@ -14,7 +14,7 @@ const uint8_t kMaxProcessingThreads = 32;
 
 struct RequestCallbackPayload {
     GenericRequestHeader original_header;
-    FileData data;
+    MessageData data;
     std::string response;
 };
 
@@ -26,23 +26,23 @@ enum class RequestHandlerType {
 };
 
 
-struct EventHeader {
-    EventHeader() {};
-    EventHeader(uint64_t file_id_i, uint64_t file_size_i, std::string file_name_i,
-                std::string user_metadata_i = "",
-                uint64_t id_in_subset_i = 0,
-                uint64_t subset_size_i = 0 ):
-        file_id{file_id_i}, file_size{file_size_i},
+struct MessageHeader {
+    MessageHeader() {};
+    MessageHeader(uint64_t message_id_i, uint64_t data_size_i, std::string file_name_i,
+                  std::string user_metadata_i = "",
+                  uint64_t dataset_substream_i = 0,
+                  uint64_t dataset_size_i = 0 ):
+        message_id{message_id_i}, data_size{data_size_i},
         file_name{std::move(file_name_i)},
         user_metadata{std::move(user_metadata_i)},
-        id_in_subset{id_in_subset_i},
-        subset_size{subset_size_i} {};
-    uint64_t file_id = 0;
-    uint64_t file_size = 0;
+        dataset_substream{dataset_substream_i},
+        dataset_size{dataset_size_i} {};
+    uint64_t message_id = 0;
+    uint64_t data_size = 0;
     std::string file_name;
     std::string user_metadata;
-    uint64_t id_in_subset = 0;
-    uint64_t subset_size = 0;
+    uint64_t dataset_substream = 0;
+    uint64_t dataset_size = 0;
 };
 
 }

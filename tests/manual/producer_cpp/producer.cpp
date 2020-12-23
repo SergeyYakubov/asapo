@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     auto beamtime = "asapo_test";
 
     auto producer = asapo::Producer::Create(endpoint, 1,asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{asapo::SourceType::kProcessed,beamtime, "", "", ""}, 60, &err);
+                                            asapo::SourceCredentials{asapo::SourceType::kProcessed,beamtime, "", "", ""}, 60000, &err);
     exit_if_error("Cannot start producer", err);
 
     uint32_t eventid = 1;
@@ -72,19 +72,19 @@ int main(int argc, char* argv[]) {
                 + "_part" + format_string(part) // file part id (chunk id)
                 + "_m" + format_string(submodule, std::string("%02d"));
             auto send_size = to_send.size() + 1;
-            auto buffer =  asapo::FileData(new uint8_t[send_size]);
+            auto buffer =  asapo::MessageData(new uint8_t[send_size]);
             memcpy(buffer.get(), to_send.c_str(), send_size);
-            std::string substream = std::to_string(start_number);
+            std::string stream = std::to_string(start_number);
             // std::cout<<"submodule:"<<submodule
-            //          <<"- substream:"<<substream
+            //          <<"- stream:"<<stream
             //          <<"- filename:"<<to_send<<std::endl;
 
-            asapo::EventHeader event_header{submodule, send_size, to_send,"", part,modules};
-            // err = producer->SendData(event_header,substream, std::move(buffer),
+            asapo::MessageHeader message_header{submodule, send_size, to_send, "", part, modules};
+            // err = producer->Send(message_header,stream, std::move(buffer),
             //                          asapo::kTransferMetaDataOnly, &ProcessAfterSend);
 
-            err = producer->SendData(event_header,substream, std::move(buffer),
-                                     asapo::kDefaultIngestMode, &ProcessAfterSend);
+            err = producer->Send(message_header, std::move(buffer),
+                                 asapo::kDefaultIngestMode, stream, &ProcessAfterSend);
             exit_if_error("Cannot send file", err);
 
             err = producer->WaitRequestsFinished(1000);
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
             // if(part == number_of_splitted_files)
             // {
 
-            //     err = producer->SendSubstreamFinishedFlag(substream,
+            //     err = producer->SendStreamFinishedFlag(stream,
             //                                               part,
             //                                               std::to_string(start_number+1),
             //                                               &ProcessAfterSend);

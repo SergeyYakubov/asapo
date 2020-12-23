@@ -279,7 +279,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendResponseError) {
     ASSERT_THAT(err, Ne(nullptr));
 }
 
-TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendDataError) {
+TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendError) {
     asapo::GenericNetworkResponse tmp {};
 
     asapo::ReceiverDataServerRequest expectedRequest {{}, 30};

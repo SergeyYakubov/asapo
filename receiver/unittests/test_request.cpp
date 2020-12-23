@@ -29,7 +29,7 @@ using ::asapo::ErrorInterface;
 using ::asapo::FileDescriptor;
 using ::asapo::SocketDescriptor;
 using ::asapo::GenericRequestHeader;
-using ::asapo::SendDataResponse;
+using ::asapo::SendResponse;
 using ::asapo::GenericRequestHeader;
 using ::asapo::GenericNetworkResponse;
 using ::asapo::Opcode;
@@ -79,7 +79,7 @@ class RequestTests : public Test {
     uint64_t expected_slot_id{16};
     std::string expected_origin_uri = "origin_uri";
     std::string expected_metadata = "meta";
-    std::string expected_substream = "substream";
+    std::string expected_stream = "stream";
     uint64_t expected_metadata_size = expected_metadata.size();
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     char expected_request_message[asapo::kMaxMessageSize] = "test_message";
@@ -186,16 +186,16 @@ void RequestTests::ExpectFileName(std::string sended, std::string received) {
 }
 
 
-TEST_F(RequestTests, GetSubstream) {
-    strcpy(generic_request_header.substream, expected_substream.c_str());
+TEST_F(RequestTests, GetStream) {
+    strcpy(generic_request_header.stream, expected_stream.c_str());
 
     request->io__.release();
     request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
     request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
 
-    auto substream = request->GetSubstream();
+    auto stream = request->GetStream();
 
-    ASSERT_THAT(substream, Eq(expected_substream));
+    ASSERT_THAT(stream, Eq(expected_stream));
 }
 
 
@@ -223,10 +223,10 @@ TEST_F(RequestTests, SetGetBeamtimeId) {
 }
 
 
-TEST_F(RequestTests, SetGetStream) {
-    request->SetStream("stream");
+TEST_F(RequestTests, SetGetSource) {
+    request->SetDataSource("source");
 
-    ASSERT_THAT(request->GetStream(), "stream");
+    ASSERT_THAT(request->GetDataSource(), "source");
 }
 
 

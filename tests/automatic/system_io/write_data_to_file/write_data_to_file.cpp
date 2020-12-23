@@ -5,7 +5,7 @@
 
 using asapo::IO;
 using asapo::Error;
-using asapo::FileData;
+using asapo::MessageData;
 
 
 struct Args {
@@ -27,7 +27,7 @@ Args GetParams(int argc, char* argv[]) {
     return Args{fname, result, message, 3};
 }
 
-void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const FileData& data,
+void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const MessageData& data,
                       const Args& params) {
     if (err) {
         std::cerr << err << std::endl;
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 
     auto io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
     auto array = new uint8_t[params.length] {'1', '2', '3'};
-    FileData data{array};
+    MessageData data{array};
 
     auto err = io->WriteDataToFile("", params.fname, data, params.length, true, true);
 

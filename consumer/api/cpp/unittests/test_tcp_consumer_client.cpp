@@ -4,16 +4,16 @@
 #include "asapo/io/io.h"
 #include "asapo/unittests/MockIO.h"
 #include "mocking.h"
-#include "../src/tcp_client.h"
+#include "../src/tcp_consumer_client.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
 #include "asapo/common/networking.h"
 
 using asapo::IO;
-using asapo::FileInfo;
-using asapo::FileData;
+using asapo::MessageMeta;
+using asapo::MessageData;
 using asapo::MockIO;
 using asapo::SimpleError;
-using asapo::TcpClient;
+using asapo::TcpConsumerClient;
 using asapo::MockTCPConnectionPool;
 
 
@@ -34,12 +34,12 @@ using ::testing::DoAll;
 namespace {
 
 TEST(TcpClient, Constructor) {
-    auto client = std::unique_ptr<TcpClient> {new TcpClient()};
+    auto client = std::unique_ptr<TcpConsumerClient> {new TcpConsumerClient()};
     ASSERT_THAT(dynamic_cast<asapo::SystemIO*>(client->io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::TcpConnectionPool*>(client->connection_pool__.get()), Ne(nullptr));
 }
 
-MATCHER_P4(M_CheckSendDataRequest, op_code, buf_id, data_size, message,
+MATCHER_P4(M_CheckSendRequest, op_code, buf_id, data_size, message,
            "Checks if a valid GenericRequestHeader was Send") {
     return ((asapo::GenericRequestHeader*) arg)->op_code == op_code
            && ((asapo::GenericRequestHeader*) arg)->data_id == uint64_t(buf_id)
@@ -47,22 +47,22 @@ MATCHER_P4(M_CheckSendDataRequest, op_code, buf_id, data_size, message,
            && strcmp(((asapo::GenericRequestHeader*) arg)->message, message) == 0;
 }
 
-ACTION_P(A_WriteSendDataResponse, error_code) {
-    ((asapo::SendDataResponse*)arg1)->op_code = asapo::kOpcodeGetBufferData;
-    ((asapo::SendDataResponse*)arg1)->error_code = error_code;
+ACTION_P(A_WriteSendResponse, error_code) {
+    ((asapo::SendResponse*)arg1)->op_code = asapo::kOpcodeGetBufferData;
+    ((asapo::SendResponse*)arg1)->error_code = error_code;
 }
 
 
 class TcpClientTests : public Test {
   public:
-    std::unique_ptr<TcpClient> client = std::unique_ptr<TcpClient> {new TcpClient()};
+    std::unique_ptr<TcpConsumerClient> client = std::unique_ptr<TcpConsumerClient> {new TcpConsumerClient()};
     NiceMock<MockIO> mock_io;
     NiceMock<MockTCPConnectionPool> mock_connection_pool;
-    FileInfo info;
+    MessageMeta info;
     std::string expected_uri = "test:8400";
     uint64_t expected_buf_id = 123;
     uint64_t expected_size = 1233;
-    FileData data;
+    MessageData data;
     asapo::SocketDescriptor expected_sd = 1;
     void SetUp() override {
         info.source = expected_uri;
@@ -93,8 +93,8 @@ class TcpClientTests : public Test {
         );
     }
 
-    void ExpectSendDataRequest(asapo::SocketDescriptor sd, bool ok = true) {
-        EXPECT_CALL(mock_io, Send_t(sd, M_CheckSendDataRequest(asapo::kOpcodeGetBufferData, expected_buf_id,
+    void ExpectSendRequest(asapo::SocketDescriptor sd, bool ok = true) {
+        EXPECT_CALL(mock_io, Send_t(sd, M_CheckSendRequest(asapo::kOpcodeGetBufferData, expected_buf_id,
                                     expected_size, ""),
                                     sizeof(asapo::GenericRequestHeader), _))
         .WillOnce(
@@ -113,11 +113,11 @@ class TcpClientTests : public Test {
 
     void ExpectGetResponce(asapo::SocketDescriptor sd, bool ok, asapo::NetworkErrorCode responce_code) {
 
-        EXPECT_CALL(mock_io, Receive_t(sd, _, sizeof(asapo::SendDataResponse), _))
+        EXPECT_CALL(mock_io, Receive_t(sd, _, sizeof(asapo::SendResponse), _))
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(ok ? nullptr : asapo::IOErrorTemplates::kConnectionRefused.Generate().release()),
-                A_WriteSendDataResponse(responce_code),
+                A_WriteSendResponse(responce_code),
                 testing::ReturnArg<2>()
             ));
         if (!ok) {
@@ -152,7 +152,7 @@ TEST_F(TcpClientTests, ErrorGetNewConnection) {
 
 TEST_F(TcpClientTests, SendHeaderForNewConnectionReturnsError) {
     ExpectNewConnection(false, true);
-    ExpectSendDataRequest(expected_sd, false);
+    ExpectSendRequest(expected_sd, false);
 
     auto err = client->GetData(&info, &data);
 
@@ -161,7 +161,7 @@ TEST_F(TcpClientTests, SendHeaderForNewConnectionReturnsError) {
 
 TEST_F(TcpClientTests, OnErrorSendHeaderTriesToReconnectAndFails) {
     ExpectNewConnection(true, true);
-    ExpectSendDataRequest(expected_sd, false);
+    ExpectSendRequest(expected_sd, false);
     ExpectReconnect(false);
 
     auto err = client->GetData(&info, &data);
@@ -171,9 +171,9 @@ TEST_F(TcpClientTests, OnErrorSendHeaderTriesToReconnectAndFails) {
 
 TEST_F(TcpClientTests, OnErrorSendHeaderTriesToReconnectAndSendsAnotherRequest) {
     ExpectNewConnection(true, true);
-    ExpectSendDataRequest(expected_sd, false);
+    ExpectSendRequest(expected_sd, false);
     ExpectReconnect(true);
-    ExpectSendDataRequest(expected_sd + 1, false);
+    ExpectSendRequest(expected_sd + 1, false);
 
     auto err = client->GetData(&info, &data);
 
@@ -182,7 +182,7 @@ TEST_F(TcpClientTests, OnErrorSendHeaderTriesToReconnectAndSendsAnotherRequest) 
 
 TEST_F(TcpClientTests, GetResponceReturnsError) {
     ExpectNewConnection(false, true);
-    ExpectSendDataRequest(expected_sd, true);
+    ExpectSendRequest(expected_sd, true);
     ExpectGetResponce(expected_sd, false, asapo::kNetErrorNoError);
 
     auto err = client->GetData(&info, &data);
@@ -192,7 +192,7 @@ TEST_F(TcpClientTests, GetResponceReturnsError) {
 
 TEST_F(TcpClientTests, GetResponceReturnsNoData) {
     ExpectNewConnection(false, true);
-    ExpectSendDataRequest(expected_sd, true);
+    ExpectSendRequest(expected_sd, true);
     ExpectGetResponce(expected_sd, true, asapo::kNetErrorNoData);
     EXPECT_CALL(mock_connection_pool, ReleaseConnection(expected_sd));
 
@@ -203,7 +203,7 @@ TEST_F(TcpClientTests, GetResponceReturnsNoData) {
 
 TEST_F(TcpClientTests, GetResponceReturnsWrongRequest) {
     ExpectNewConnection(false, true);
-    ExpectSendDataRequest(expected_sd, true);
+    ExpectSendRequest(expected_sd, true);
     ExpectGetResponce(expected_sd, true, asapo::kNetErrorWrongRequest);
     EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
 
@@ -214,7 +214,7 @@ TEST_F(TcpClientTests, GetResponceReturnsWrongRequest) {
 
 TEST_F(TcpClientTests, ErrorGettingData) {
     ExpectNewConnection(false, true);
-    ExpectSendDataRequest(expected_sd, true);
+    ExpectSendRequest(expected_sd, true);
     ExpectGetResponce(expected_sd, true, asapo::kNetErrorNoError);
     ExpectGetData(expected_sd, false);
 
@@ -225,7 +225,7 @@ TEST_F(TcpClientTests, ErrorGettingData) {
 
 TEST_F(TcpClientTests, OkGettingData) {
     ExpectNewConnection(false, true);
-    ExpectSendDataRequest(expected_sd, true);
+    ExpectSendRequest(expected_sd, true);
     ExpectGetResponce(expected_sd, true, asapo::kNetErrorNoError);
     ExpectGetData(expected_sd, true);
 
@@ -236,9 +236,9 @@ TEST_F(TcpClientTests, OkGettingData) {
 
 TEST_F(TcpClientTests, OkGettingDataWithReconnect) {
     ExpectNewConnection(true, true);
-    ExpectSendDataRequest(expected_sd, false);
+    ExpectSendRequest(expected_sd, false);
     ExpectReconnect(true);
-    ExpectSendDataRequest(expected_sd + 1, true);
+    ExpectSendRequest(expected_sd + 1, true);
     ExpectGetResponce(expected_sd + 1, true, asapo::kNetErrorNoError);
     ExpectGetData(expected_sd + 1, true);
 

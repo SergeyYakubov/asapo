@@ -1,5 +1,5 @@
-set(TARGET_NAME send_recv_substreams)
-set(SOURCE_FILES send_recv_substreams.cpp)
+set(TARGET_NAME send_recv_streams)
+set(SOURCE_FILES send_recv_streams.cpp)
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})
 target_link_libraries(${TARGET_NAME} asapo-consumer asapo-producer)

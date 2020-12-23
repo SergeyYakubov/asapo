@@ -21,7 +21,7 @@
 #include "../receiver_mocking.h"
 
 using asapo::MockRequest;
-using asapo::FileInfo;
+using asapo::MessageMeta;
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::ReturnRef;
@@ -66,16 +66,16 @@ TEST(DbWriterHandler, Constructor) {
 
 class DbWriterHandlerTests : public Test {
   public:
-    std::string expected_substream = "substream";
-    std::string expected_collection_name = std::string(asapo::kDBDataCollectionNamePrefix) + "_" + expected_substream;
+    std::string expected_stream = "stream";
+    std::string expected_collection_name = std::string(asapo::kDBDataCollectionNamePrefix) + "_" + expected_stream;
     RequestHandlerDbWrite handler{asapo::kDBDataCollectionNamePrefix};
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
-    std::string expected_default_stream = "detector";
-    std::string expected_stream = "stream";
+    std::string expected_default_source = "detector";
+    std::string expected_data_source = "source";
     std::string expected_host_ip = "127.0.0.1";
     uint64_t expected_port = 1234;
     uint64_t expected_buf_id = 18446744073709551615ull;
@@ -83,9 +83,9 @@ class DbWriterHandlerTests : public Test {
     std::string expected_metadata = "meta";
     uint64_t expected_file_size = 10;
     uint64_t expected_id = 15;
-    uint64_t expected_subset_id = 15;
-    uint64_t expected_subset_size = 2;
-    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_subset_id, expected_subset_size};
+    uint64_t expected_substream = 20;
+    uint64_t expected_dataset_size = 2;
+    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_substream, expected_dataset_size};
     asapo::MockHandlerDbCheckRequest mock_db_check_handler{asapo::kDBDataCollectionNamePrefix};
 
     void SetUp() override {
@@ -102,10 +102,10 @@ class DbWriterHandlerTests : public Test {
 
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
     }
-    void ExpectRequestParams(asapo::Opcode op_code, const std::string& stream);
+    void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source);
     void ExpectLogger();
     void ExpectDuplicatedID();
-    FileInfo PrepareFileInfo();
+    MessageMeta PrepareMessageMeta(bool substream = false);
     void TearDown() override {
         handler.db_client__.release();
     }
@@ -113,10 +113,11 @@ class DbWriterHandlerTests : public Test {
 
 };
 
-MATCHER_P(CompareFileInfo, file, "") {
+MATCHER_P(CompareMessageMeta, file, "") {
     if (arg.size != file.size) return false;
     if (arg.source != file.source) return false;
     if (arg.buf_id != file.buf_id) return false;
+    if (arg.dataset_substream != file.dataset_substream) return false;
     if (arg.name != file.name) return false;
     if (arg.id != file.id) return false;
     if (arg.metadata != file.metadata) return false;
@@ -129,7 +130,7 @@ MATCHER_P(CompareFileInfo, file, "") {
 }
 
 
-void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std::string& stream) {
+void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source) {
 
     EXPECT_CALL(*mock_request, WasAlreadyProcessed())
     .WillOnce(Return(false))
@@ -139,8 +140,8 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
-    EXPECT_CALL(*mock_request, GetStream())
-    .WillOnce(ReturnRef(stream))
+    EXPECT_CALL(*mock_request, GetDataSource())
+    .WillOnce(ReturnRef(data_source))
     ;
 
 
@@ -149,7 +150,7 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     ;
 
     std::string db_name = expected_beamtime_id;
-    db_name += "_" + stream;
+    db_name += "_" + data_source;
 
     EXPECT_CALL(mock_db, Connect_t(config.database_uri, db_name)).
     WillOnce(testing::Return(nullptr));
@@ -162,8 +163,8 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     .WillOnce(Return(expected_file_name))
     ;
 
-    EXPECT_CALL(*mock_request, GetSubstream())
-    .WillOnce(Return(expected_substream))
+    EXPECT_CALL(*mock_request, GetStream())
+    .WillOnce(Return(expected_stream))
     ;
 
 
@@ -179,7 +180,7 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     .WillOnce(Return(op_code))
     ;
 
-    if (op_code == asapo::Opcode::kOpcodeTransferSubsetData) {
+    if (op_code == asapo::Opcode::kOpcodeTransferDatasetData) {
         EXPECT_CALL(*mock_request, GetCustomData_t()).Times(2).
         WillRepeatedly(Return(expected_custom_data))
         ;
@@ -189,21 +190,24 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
 
 
 
-FileInfo DbWriterHandlerTests::PrepareFileInfo() {
-    FileInfo file_info;
-    file_info.size = expected_file_size;
-    file_info.name = expected_file_name;
-    file_info.id = expected_id;
-    file_info.buf_id = expected_buf_id;
-    file_info.source = expected_host_ip + ":" + std::to_string(expected_port);
-    file_info.metadata = expected_metadata;
-    return file_info;
+MessageMeta DbWriterHandlerTests::PrepareMessageMeta(bool substream) {
+    MessageMeta message_meta;
+    message_meta.size = expected_file_size;
+    message_meta.name = expected_file_name;
+    message_meta.id = expected_id;
+    if (substream) {
+        message_meta.dataset_substream = expected_substream;
+    }
+    message_meta.buf_id = expected_buf_id;
+    message_meta.source = expected_host_ip + ":" + std::to_string(expected_port);
+    message_meta.metadata = expected_metadata;
+    return message_meta;
 }
 void DbWriterHandlerTests::ExpectLogger() {
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
                                          HasSubstr(config.database_uri),
                                          HasSubstr(expected_beamtime_id),
-                                         HasSubstr(expected_stream),
+                                         HasSubstr(expected_data_source),
                                          HasSubstr(expected_collection_name)
                                         )
                                   )
@@ -213,25 +217,25 @@ void DbWriterHandlerTests::ExpectLogger() {
 
 TEST_F(DbWriterHandlerTests, CallsInsert) {
 
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_stream);
-    auto file_info = PrepareFileInfo();
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_data_source);
+    auto message_meta = PrepareMessageMeta();
 
-    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareFileInfo(file_info), false)).
+    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareMessageMeta(message_meta), false)).
     WillOnce(testing::Return(nullptr));
     ExpectLogger();
 
     handler.ProcessRequest(mock_request.get());
 }
 
-TEST_F(DbWriterHandlerTests, CallsInsertSubset) {
+TEST_F(DbWriterHandlerTests, CallsInsertDataset) {
 
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferSubsetData, expected_default_stream);
-    auto file_info = PrepareFileInfo();
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferDatasetData, expected_data_source);
+    auto message_meta = PrepareMessageMeta(true);
 
 
-    EXPECT_CALL(mock_db, InsertAsSubset_t(expected_collection_name, CompareFileInfo(file_info), expected_subset_id,
-                                          expected_subset_size, false)).
-    WillOnce(testing::Return(nullptr));
+    EXPECT_CALL(mock_db, InsertAsDatasetMessage_t(expected_collection_name, CompareMessageMeta(message_meta),
+                                                  expected_dataset_size, false)).
+    WillOnce(testing::Return(   nullptr));
     ExpectLogger();
 
     handler.ProcessRequest(mock_request.get());
@@ -239,10 +243,10 @@ TEST_F(DbWriterHandlerTests, CallsInsertSubset) {
 
 
 void DbWriterHandlerTests::ExpectDuplicatedID() {
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_stream);
-    auto file_info = PrepareFileInfo();
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_data_source);
+    auto message_meta = PrepareMessageMeta();
 
-    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareFileInfo(file_info), false)).
+    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareMessageMeta(message_meta), false)).
     WillOnce(testing::Return(asapo::DBErrorTemplates::kDuplicateID.Generate().release()));
 }
 

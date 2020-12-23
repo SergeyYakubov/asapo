@@ -51,7 +51,7 @@ Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request> &request,
 
     switch (request_header.op_code) {
         case Opcode::kOpcodeTransferData:
-        case Opcode::kOpcodeTransferSubsetData: {
+        case Opcode::kOpcodeTransferDatasetData: {
             request->AddHandler(&request_handler_receive_metadata_);
             auto err = AddReceiveWriteHandlers(request, request_header);
             if (err) {

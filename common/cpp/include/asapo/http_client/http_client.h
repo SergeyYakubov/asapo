@@ -15,7 +15,7 @@ class HttpClient {
                              HttpCode* response_code,
                              Error* err) const noexcept = 0;
     virtual Error Post(const std::string& uri, const std::string& cookie,
-                       const std::string& input_data, FileData* ouput_data,
+                       const std::string& input_data, MessageData* ouput_data,
                        uint64_t output_data_size,
                        HttpCode* response_code)  const noexcept = 0;
     virtual Error Post(const std::string& uri, const std::string& cookie,

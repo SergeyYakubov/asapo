@@ -13,7 +13,7 @@ import (
 type SourceCredentials struct {
 	BeamtimeId string
 	Beamline   string
-	Stream     string
+	DataSource     string
 	Token      string
 	Type 	   string
 }
@@ -30,8 +30,8 @@ func getSourceCredentials(request authorizationRequest) (SourceCredentials, erro
 		return SourceCredentials{}, errors.New("cannot get source credentials from " + request.SourceCredentials)
 	}
 	creds := SourceCredentials{vals[1], vals[2], vals[3], vals[4],vals[0]}
-	if creds.Stream == "" {
-		creds.Stream = "detector"
+	if creds.DataSource == "" {
+		creds.DataSource = "detector"
 	}
 
 	if creds.Beamline == "" {
@@ -124,7 +124,7 @@ func findBeamtimeMetaFromBeamline(beamline string) (beamtimeMeta, error) {
 func alwaysAllowed(creds SourceCredentials) (beamtimeMeta, bool) {
 	for _, pair := range settings.AlwaysAllowedBeamtimes {
 		if pair.BeamtimeId == creds.BeamtimeId {
-			pair.Stream = creds.Stream
+			pair.DataSource = creds.DataSource
 			pair.Type = creds.Type
 			return pair, true
 		}
@@ -198,7 +198,7 @@ func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
 		return beamtimeMeta{}, err
 	}
 
-	meta.Stream = creds.Stream
+	meta.DataSource = creds.DataSource
 	meta.Type = creds.Type
 
 	return meta, nil

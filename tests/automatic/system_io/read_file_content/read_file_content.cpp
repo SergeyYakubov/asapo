@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     asapo::Error err;
     auto io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
 
-    asapo::FileData data;
+    asapo::MessageData data;
     uint64_t size = 0;
     if (expect == "unknown_size") {
         data = io->GetDataFromFile(argv[1], &size, &err);

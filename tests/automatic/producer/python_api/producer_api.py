@@ -10,7 +10,7 @@ from datetime import datetime
 
 lock = threading.Lock()
 
-stream = sys.argv[1]
+data_source = sys.argv[1]
 beamtime = sys.argv[2]
 endpoint = sys.argv[3]
 
@@ -37,22 +37,22 @@ def callback(payload, err):
     lock.release()
 
 
-producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', stream, token, nthreads, 60)
+producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', data_source, token, nthreads, 60000)
 
 producer.set_log_level("debug")
 
 # send single file
-producer.send_file(1, local_path="./file1", exposed_path="processed/" + stream + "/" + "file1",
+producer.send_file(1, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file1",
                    user_meta='{"test_key":"test_val"}', callback=callback)
 
 # send single file without callback
-producer.send_file(10, local_path="./file1", exposed_path="processed/" + stream + "/" + "file10",
+producer.send_file(10, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file10",
                    user_meta='{"test_key":"test_val"}', callback=None)
 
-# send subsets
-producer.send_file(2, local_path="./file1", exposed_path="processed/" + stream + "/" + "file2", subset=(1, 2),
+# send datasets
+producer.send_file(2, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file2", dataset=(1, 2),
                    user_meta='{"test_key":"test_val"}', callback=callback)
-producer.send_file(2, local_path="./file1", exposed_path="processed/" + stream + "/" + "file3", subset=(2, 2),
+producer.send_file(2, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file3", dataset=(2, 2),
                    user_meta='{"test_key":"test_val"}', callback=callback)
 
 # send meta only
@@ -62,27 +62,27 @@ producer.send_file(3, local_path="./not_exist", exposed_path="./whatever",
 data = np.arange(10, dtype=np.float64)
 
 # send data from array
-producer.send_data(4, "processed/" + stream + "/" + "file5", data,
+producer.send(4, "processed/" + data_source + "/" + "file5", data,
                    ingest_mode=asapo_producer.DEFAULT_INGEST_MODE, callback=callback)
 
 # send data from string
-producer.send_data(5, "processed/" + stream + "/" + "file6", b"hello",
+producer.send(5, "processed/" + data_source + "/" + "file6", b"hello",
                    ingest_mode=asapo_producer.DEFAULT_INGEST_MODE, callback=callback)
 
 # send metadata only
-producer.send_data(6, "processed/" + stream + "/" + "file7", None,
+producer.send(6, "processed/" + data_source + "/" + "file7", None,
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback=callback)
 
 # send single file/wrong filename
-producer.send_file(1, local_path="./file2", exposed_path="processed/" + stream + "/" + "file1", callback=callback)
+producer.send_file(1, local_path="./file2", exposed_path="processed/" + data_source + "/" + "file1", callback=callback)
 
 x = np.array([[1, 2, 3], [4, 5, 6]], np.float32)
-producer.send_data(8, "processed/" + stream + "/" + "file8", x,
+producer.send(8, "processed/" + data_source + "/" + "file8", x,
                    ingest_mode=asapo_producer.DEFAULT_INGEST_MODE, callback=callback)
 
 try:
     x = x.T
-    producer.send_data(8, "processed/" + stream + "/" + "file8", x,
+    producer.send(8, "processed/" + data_source + "/" + "file8", x,
                        ingest_mode=asapo_producer.DEFAULT_INGEST_MODE, callback=callback)
 except asapo_producer.AsapoWrongInputError as e:
     print(e)
@@ -91,7 +91,7 @@ else:
     sys.exit(1)
 
 try:
-    producer.send_data(0, "processed/" + stream + "/" + "file6", b"hello",
+    producer.send(0, "processed/" + data_source + "/" + "file6", b"hello",
                        ingest_mode=asapo_producer.DEFAULT_INGEST_MODE, callback=callback)
 except asapo_producer.AsapoWrongInputError as e:
     print(e)
@@ -99,29 +99,29 @@ else:
     print("should be error sending id 0 ")
     sys.exit(1)
 
-# send to another substream
-producer.send_data(1, "processed/" + stream + "/" + "file9", None,
-                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="stream", callback=callback)
+# send to another stream
+producer.send(1, "processed/" + data_source + "/" + "file9", None,
+                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream", callback=callback)
 
 # wait normal requests finished before sending duplicates
 
 producer.wait_requests_finished(50000)
 
 # send single file once again
-producer.send_file(1, local_path="./file1", exposed_path="processed/" + stream + "/" + "file1",
+producer.send_file(1, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file1",
                    user_meta='{"test_key":"test_val"}', callback=callback)
 # send metadata only once again
-producer.send_data(6, "processed/" + stream + "/" + "file7", None,
+producer.send(6, "processed/" + data_source + "/" + "file7", None,
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback=callback)
 
 # send same id different data
-producer.send_file(1, local_path="./file1", exposed_path="processed/" + stream + "/" + "file1",
+producer.send_file(1, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file1",
                    user_meta='{"test_key1":"test_val"}', callback=callback)  # send same id different data
-producer.send_data(6, "processed/" + stream + "/" + "file8", None,
+producer.send(6, "processed/" + data_source + "/" + "file8", None,
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, callback=callback)
 
 # send same id without writing to database, should success
-producer.send_file(1, local_path="./file1", exposed_path="processed/" + stream + "/" + "file18",
+producer.send_file(1, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file18",
                    user_meta='{"test_key1":"test_val"}',
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_DATA | asapo_producer.INGEST_MODE_STORE_IN_FILESYSTEM,callback=callback)
 
@@ -129,9 +129,9 @@ producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")
 
-# send to another data to substream stream
-producer.send_data(2, "processed/" + stream + "/" + "file10", None,
-                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, substream="stream", callback=callback)
+# send to another data to stream stream
+producer.send(2, "processed/" + data_source + "/" + "file10", None,
+                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream", callback=callback)
 
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
@@ -151,7 +151,7 @@ print("created: ",datetime.utcfromtimestamp(info['timestampCreated']/1000000000)
 print("last record: ",datetime.utcfromtimestamp(info['timestampLast']/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f'))
 
 info = producer.stream_info('stream')
-assert_eq(info['lastId'], 2, "last id from different substream")
+assert_eq(info['lastId'], 2, "last id from different stream")
 
 info_last = producer.last_stream()
 assert_eq(info_last['name'], "stream", "last stream")
@@ -159,7 +159,7 @@ assert_eq(info_last['timestampCreated'] <= info_last['timestampLast'], True, "la
 
 # create with error
 try:
-    producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', stream, token, 0, 0)
+    producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', data_source, token, 0, 0)
 except asapo_producer.AsapoWrongInputError as e:
     print(e)
 else:

@@ -23,27 +23,27 @@ cdef extern from "asapo_wrappers.h" namespace "asapo":
   cdef string GetErrorString(Error* err)
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
-  cppclass FileData:
+  cppclass MessageData:
     uint8_t[] release()
     pass
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
-  cppclass FileInfo:
+  cppclass MessageMeta:
     string Json()
     bool SetFromJson(string json_str)
   cppclass IdList:
     vector[uint64_t].iterator begin()
     vector[uint64_t].iterator end()
-  cppclass FileInfos:
-    vector[FileInfo].iterator begin()
-    vector[FileInfo].iterator end()
+  cppclass MessageMetas:
+    vector[MessageMeta].iterator begin()
+    vector[MessageMeta].iterator end()
   struct DataSet:
     uint64_t id
     uint64_t expected_size
-    FileInfos content
+    MessageMetas content
   struct  SourceCredentials:
     string beamtime_id
-    string stream
+    string data_source
     string user_token
   cppclass StreamInfo:
     string Json(bool add_last_id)
@@ -57,36 +57,36 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   NetworkConnectionType NetworkConnectionType_kFabric "asapo::NetworkConnectionType::kFabric"
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
-    cdef cppclass DataBroker:
-        DataBroker() except +
+    cdef cppclass Consumer:
+        Consumer() except +
         void SetTimeout(uint64_t timeout_ms)
         void ForceNoRdma()
         NetworkConnectionType CurrentConnectionType()
-        Error GetNext(FileInfo* info, string group_id,string substream, FileData* data)
-        Error GetLast(FileInfo* info, string substream, FileData* data)
-        Error GetById(uint64_t id, FileInfo* info, string substream, FileData* data)
-        uint64_t GetCurrentSize(string substream, Error* err)
-        Error SetLastReadMarker(uint64_t value, string group_id, string substream)
-        Error ResetLastReadMarker(string group_id, string substream)
-        Error Acknowledge(string group_id, uint64_t id, string substream)
-        Error NegativeAcknowledge(string group_id, uint64_t id, uint64_t delay_sec, string substream)
-        uint64_t GetLastAcknowledgedTulpeId(string group_id, string substream, Error* error)
-        IdList GetUnacknowledgedTupleIds(string group_id, string substream, uint64_t from_id, uint64_t to_id, Error* error)
+        Error GetNext(string group_id, MessageMeta* info, MessageData* data,string stream)
+        Error GetLast(MessageMeta* info, MessageData* data, string stream)
+        Error GetById(uint64_t id, MessageMeta* info, MessageData* data, string stream)
+        uint64_t GetCurrentSize(string stream, Error* err)
+        Error SetLastReadMarker(string group_id, uint64_t value, string stream)
+        Error ResetLastReadMarker(string group_id, string stream)
+        Error Acknowledge(string group_id, uint64_t id, string stream)
+        Error NegativeAcknowledge(string group_id, uint64_t id, uint64_t delay_ms, string stream)
+        uint64_t GetLastAcknowledgedMessage(string group_id, string stream, Error* error)
+        IdList GetUnacknowledgedMessages(string group_id, uint64_t from_id, uint64_t to_id, string stream, Error* error)
         string GenerateNewGroupId(Error* err)
         string GetBeamtimeMeta(Error* err)
-        FileInfos QueryImages(string query, string substream, Error* err)
-        DataSet GetNextDataset(string group_id, string substream, uint64_t min_size, Error* err)
-        DataSet GetLastDataset(string substream, uint64_t min_size, Error* err)
-        DataSet GetDatasetById(uint64_t id, string substream, uint64_t min_size, Error* err)
-        Error RetrieveData(FileInfo* info, FileData* data)
-        vector[StreamInfo] GetSubstreamList(string from_substream, Error* err)
-        void SetResendNacs(bool resend, uint64_t delay_sec, uint64_t resend_attempts)
+        MessageMetas QueryMessages(string query, string stream, Error* err)
+        DataSet GetNextDataset(string group_id, uint64_t min_size, string stream, Error* err)
+        DataSet GetLastDataset(uint64_t min_size, string stream, Error* err)
+        DataSet GetDatasetById(uint64_t id, uint64_t min_size, string stream, Error* err)
+        Error RetrieveData(MessageMeta* info, MessageData* data)
+        vector[StreamInfo] GetStreamList(string from_stream, Error* err)
+        void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts)
         void InterruptCurrentOperation()
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
-    cdef cppclass DataBrokerFactory:
-        DataBrokerFactory() except +
-        unique_ptr[DataBroker] CreateServerBroker(string server_name,string source_path,bool has_filesystem,SourceCredentials source,Error* error)
+    cdef cppclass ConsumerFactory:
+        ConsumerFactory() except +
+        unique_ptr[Consumer] CreateConsumer(string server_name,string source_path,bool has_filesystem,SourceCredentials source,Error* error)
 
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
@@ -102,4 +102,4 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   cdef cppclass ConsumerErrorData:
     uint64_t id
     uint64_t id_max
-    string next_substream
+    string next_stream

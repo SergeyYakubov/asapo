@@ -21,7 +21,7 @@
 #include "../receiver_mocking.h"
 
 using asapo::MockRequest;
-using asapo::FileInfo;
+using asapo::MessageMeta;
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::ReturnRef;
@@ -65,16 +65,16 @@ TEST(DbCheckRequestHandler, Constructor) {
 
 class DbCheckRequestHandlerTests : public Test {
   public:
-    std::string expected_substream = "substream";
-    std::string expected_collection_name = std::string(asapo::kDBDataCollectionNamePrefix) + "_" + expected_substream;
+    std::string expected_stream = "stream";
+    std::string expected_collection_name = std::string(asapo::kDBDataCollectionNamePrefix) + "_" + expected_stream;
     RequestHandlerDbCheckRequest handler{asapo::kDBDataCollectionNamePrefix};
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
-    std::string expected_default_stream = "detector";
-    std::string expected_stream = "stream";
+    std::string expected_default_source = "detector";
+    std::string expected_data_source = "source";
     std::string expected_host_uri = "127.0.0.1:1234";
     uint64_t expected_port = 1234;
     uint64_t expected_buf_id = 18446744073709551615ull;
@@ -82,10 +82,10 @@ class DbCheckRequestHandlerTests : public Test {
     std::string expected_metadata = "meta";
     uint64_t expected_file_size = 10;
     uint64_t expected_id = 15;
-    uint64_t expected_subset_id = 16;
-    uint64_t expected_subset_size = 2;
-    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_subset_id, expected_subset_size};
-    FileInfo expected_file_info;
+    uint64_t expected_dataset_id = 16;
+    uint64_t expected_dataset_size = 2;
+    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_dataset_id, expected_dataset_size};
+    MessageMeta expected_message_meta;
     MockFunctions mock_functions;
     int n_run = 0;
     void SetUp() override {
@@ -99,7 +99,7 @@ class DbCheckRequestHandlerTests : public Test {
         config.dataserver.advertise_uri = expected_host_uri;
         config.dataserver.listen_port = expected_port;
         SetReceiverConfig(config, "none");
-        expected_file_info =  PrepareFileInfo();
+        expected_message_meta =  PrepareMessageMeta();
         mock_functions.push_back([this](asapo::ErrorInterface * error, bool expect_compare) {
             MockGetByID(error, expect_compare);
             n_run++;
@@ -111,9 +111,9 @@ class DbCheckRequestHandlerTests : public Test {
 
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
     }
-    void ExpectRequestParams(asapo::Opcode op_code, const std::string& stream, bool expect_compare = true);
+    void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source, bool expect_compare = true);
 
-    FileInfo PrepareFileInfo();
+    MessageMeta PrepareMessageMeta();
     void MockGetByID(asapo::ErrorInterface* error, bool expect_compare);
     void MockGetSetByID(asapo::ErrorInterface* error, bool expect_compare);
     void TearDown() override {
@@ -123,7 +123,7 @@ class DbCheckRequestHandlerTests : public Test {
 
 };
 
-MATCHER_P(CompareFileInfo, file, "") {
+MATCHER_P(CompareMessageMeta, file, "") {
     if (arg.size != file.size) return false;
     if (arg.source != file.source) return false;
     if (arg.buf_id != file.buf_id) return false;
@@ -135,11 +135,11 @@ MATCHER_P(CompareFileInfo, file, "") {
 }
 
 
-void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std::string& stream,
+void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source,
         bool expect_compare) {
 
     std::string db_name = expected_beamtime_id;
-    db_name += "_" + stream;
+    db_name += "_" + data_source;
 
     if (n_run  == 0) {
         EXPECT_CALL(mock_db, Connect_t(config.database_uri, db_name)).
@@ -148,8 +148,8 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
         .WillOnce(ReturnRef(expected_beamtime_id))
         ;
 
-        EXPECT_CALL(*mock_request, GetStream())
-        .WillOnce(ReturnRef(stream))
+        EXPECT_CALL(*mock_request, GetDataSource())
+        .WillOnce(ReturnRef(data_source))
         ;
     }
 
@@ -167,8 +167,8 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
         ;
     }
 
-    EXPECT_CALL(*mock_request, GetSubstream())
-    .WillOnce(Return(expected_substream))
+    EXPECT_CALL(*mock_request, GetStream())
+    .WillOnce(Return(expected_stream))
     ;
 
     EXPECT_CALL(*mock_request, GetDataID())
@@ -179,45 +179,45 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
     .WillOnce(Return(op_code))
     ;
 
-    if (op_code == asapo::Opcode::kOpcodeTransferSubsetData) {
+    if (op_code == asapo::Opcode::kOpcodeTransferDatasetData) {
         EXPECT_CALL(*mock_request, GetCustomData_t())
         .WillOnce(Return(expected_custom_data))
         ;
     }
 }
 
-FileInfo DbCheckRequestHandlerTests::PrepareFileInfo() {
-    FileInfo file_info;
-    file_info.size = expected_file_size;
-    file_info.name = expected_file_name;
-    file_info.id = expected_id;
-    file_info.buf_id = expected_buf_id;
-    file_info.source = expected_host_uri;
-    file_info.metadata = expected_metadata;
-    return file_info;
+MessageMeta DbCheckRequestHandlerTests::PrepareMessageMeta() {
+    MessageMeta message_meta;
+    message_meta.size = expected_file_size;
+    message_meta.name = expected_file_name;
+    message_meta.id = expected_id;
+    message_meta.buf_id = expected_buf_id;
+    message_meta.source = expected_host_uri;
+    message_meta.metadata = expected_metadata;
+    return message_meta;
 }
 
 void DbCheckRequestHandlerTests::MockGetByID(asapo::ErrorInterface* error, bool expect_compare ) {
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_stream, expect_compare);
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_data_source, expect_compare);
     EXPECT_CALL(mock_db, GetById_t(expected_collection_name, expected_id, _)).
     WillOnce(DoAll(
-                 SetArgPointee<2>(expected_file_info),
+                 SetArgPointee<2>(expected_message_meta),
                  testing::Return(error)
              ));
 }
 
 void DbCheckRequestHandlerTests::MockGetSetByID(asapo::ErrorInterface* error, bool expect_compare ) {
-    ExpectRequestParams(asapo::Opcode::kOpcodeTransferSubsetData, expected_stream, expect_compare);
-    EXPECT_CALL(mock_db, GetSetById_t(expected_collection_name, expected_subset_id, expected_id, _)).
+    ExpectRequestParams(asapo::Opcode::kOpcodeTransferDatasetData, expected_data_source, expect_compare);
+    EXPECT_CALL(mock_db, GetSetById_t(expected_collection_name, expected_dataset_id, expected_id, _)).
     WillOnce(DoAll(
-                 SetArgPointee<3>(expected_file_info),
+                 SetArgPointee<3>(expected_message_meta),
                  testing::Return(error)
              ));
 }
 
 
 TEST_F(DbCheckRequestHandlerTests, ErrorIfRecordsDoNotMatch) {
-    expected_file_info.metadata = expected_metadata + "_";
+    expected_message_meta.metadata = expected_metadata + "_";
 
     for (auto mock : mock_functions) {
         mock(nullptr, true);
@@ -238,7 +238,7 @@ TEST_F(DbCheckRequestHandlerTests, DuplicateErrorIfRecordsMatch) {
 }
 
 TEST_F(DbCheckRequestHandlerTests, DuplicateErrorIfRecordsMatchWithEmptyMetadata) {
-    expected_file_info.metadata = "{}";
+    expected_message_meta.metadata = "{}";
     expected_metadata = "";
     for (auto mock : mock_functions) {
         mock(nullptr, true);

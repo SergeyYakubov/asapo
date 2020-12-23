@@ -1,4 +1,4 @@
-set(TARGET_NAME getnext_broker_python)
+set(TARGET_NAME getnext_python)
 
 
 prepare_asapo()

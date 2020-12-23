@@ -1,5 +1,5 @@
-set(TARGET_NAME getnext_broker)
-set(SOURCE_FILES getnext_broker.cpp)
+set(TARGET_NAME getnext)
+set(SOURCE_FILES getnext.cpp)
 
 if (BUILD_EXAMPLES)
 

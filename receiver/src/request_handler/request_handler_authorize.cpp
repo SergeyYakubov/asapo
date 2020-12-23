@@ -45,7 +45,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
 
     JsonStringParser parser{response};
     (err = parser.GetString("beamtimeId", &beamtime_id_)) ||
-    (err = parser.GetString("stream", &stream_)) ||
+    (err = parser.GetString("dataSource", &data_source_)) ||
     (err = parser.GetString("core-path", &offline_path_)) ||
     (err = parser.GetString("beamline-path", &online_path_)) ||
     (err = parser.GetString("source-type", &stype)) ||
@@ -55,7 +55,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
         return ErrorFromAuthorizationServerResponse(err, code);
     } else {
         log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() +"source type: "+stype+ " beamline: " +
-                     beamline_ + ", beamtime id: " + beamtime_id_ + ", stream: " + stream_);
+                     beamline_ + ", beamtime id: " + beamtime_id_ + ", data soucre: " + data_source_);
     }
 
     last_updated_ = system_clock::now();
@@ -106,7 +106,7 @@ Error RequestHandlerAuthorize::ProcessOtherRequest(Request* request) const {
     }
     request->SetBeamtimeId(beamtime_id_);
     request->SetBeamline(beamline_);
-    request->SetStream(stream_);
+    request->SetDataSource(data_source_);
     request->SetOfflinePath(offline_path_);
     request->SetOnlinePath(online_path_);
     request->SetSourceType(source_type_);

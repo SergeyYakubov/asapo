@@ -109,19 +109,19 @@ class IO {
     virtual size_t          Read            (FileDescriptor fd, void* buf, size_t length, Error* err) const = 0;
     virtual size_t          Write           (FileDescriptor fd, const void* buf, size_t length, Error* err) const = 0;
     virtual Error           RemoveFile(const std::string& fname) const = 0;
-    virtual Error          WriteDataToFile  (const std::string& root_folder, const std::string& fname, const FileData& data,
+    virtual Error          WriteDataToFile  (const std::string& root_folder, const std::string& fname, const MessageData& data,
                                              size_t length, bool create_directories, bool allow_ovewrite) const = 0;
     virtual Error          WriteDataToFile  (const std::string& root_folder, const std::string& fname, const uint8_t* data,
                                              size_t length, bool create_directories, bool allow_ovewrite) const = 0;
     virtual Error ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
                                     size_t length, bool create_directories, bool allow_ovewrite) const = 0;
     virtual void            CreateNewDirectory      (const std::string& directory_name, Error* err) const = 0;
-    virtual FileData        GetDataFromFile         (const std::string& fname, uint64_t* fsize, Error* err) const = 0;
+    virtual MessageData        GetDataFromFile         (const std::string& fname, uint64_t* fsize, Error* err) const = 0;
     virtual SubDirList      GetSubDirectories(const std::string& path, Error* err) const = 0;
-    virtual std::vector<FileInfo>   FilesInFolder   (const std::string& folder, Error* err) const = 0;
+    virtual std::vector<MessageMeta>   FilesInFolder   (const std::string& folder, Error* err) const = 0;
     virtual std::string     ReadFileToString        (const std::string& fname, Error* err) const = 0;
     virtual Error GetLastError() const = 0;
-    virtual FileInfo        GetFileInfo(const std::string& name, Error* err) const = 0;
+    virtual MessageMeta        GetMessageMeta(const std::string& name, Error* err) const = 0;
 
     virtual ~IO() = default;
 };

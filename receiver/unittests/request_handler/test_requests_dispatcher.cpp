@@ -36,7 +36,7 @@ using asapo::Error;
 using asapo::ErrorInterface;
 using asapo::SocketDescriptor;
 using asapo::GenericRequestHeader;
-using asapo::SendDataResponse;
+using asapo::SendResponse;
 using asapo::GenericRequestHeader;
 using asapo::GenericNetworkResponse;
 using asapo::Opcode;

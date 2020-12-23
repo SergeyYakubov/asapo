@@ -18,14 +18,14 @@ int iterations_remained;
 struct Args {
     std::string discovery_service_endpoint;
     std::string beamtime_id;
-    std::string stream;
+    std::string data_source;
     std::string token;
     size_t number_of_bytes;
     uint64_t iterations;
     uint64_t nthreads;
     uint64_t mode;
-    uint64_t timeout_sec;
-    uint64_t images_in_set;
+    uint64_t timeout_ms;
+    uint64_t messages_in_set;
 };
 
 void PrintCommandArguments(const Args& args) {
@@ -38,12 +38,12 @@ void PrintCommandArguments(const Args& args) {
               << "Write files: " << ((args.mode %100) / 10 == 1) << std::endl
               << "Tcp mode: " << ((args.mode % 10) ==0 ) << std::endl
               << "Raw: " << (args.mode / 100 == 1)<< std::endl
-              << "timeout: " << args.timeout_sec << std::endl
-              << "images in set: " << args.images_in_set << std::endl
+              << "timeout: " << args.timeout_ms << std::endl
+              << "messages in set: " << args.messages_in_set << std::endl
               << std::endl;
 }
 
-void TryGetStreamAndToken(Args* args) {
+void TryGetDataSourceAndToken(Args* args) {
     std::stringstream test(args->beamtime_id);
     std::string segment;
     std::vector<std::string> seglist;
@@ -56,7 +56,7 @@ void TryGetStreamAndToken(Args* args) {
     }
     if (seglist.size() > 1) {
         args->beamtime_id = seglist[0];
-        args->stream = seglist[1];
+        args->data_source = seglist[1];
     }
     if (seglist.size() > 2) {
         args->token = seglist[2];
@@ -73,24 +73,24 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     if (argc != 8 && argc != 9) {
         std::cout <<
                   "Usage: " << argv[0] <<
-                  " <destination> <beamtime_id[%<stream>%<token>]> <number_of_kbyte> <iterations> <nthreads>"
-                  " <mode 0xx - processed source type, 1xx - raw source type, xx0 -t tcp, xx1 - filesystem, x0x - write files, x1x - do not write files> <timeout (sec)> [n images in set (default 1)]"
+                  " <destination> <beamtime_id[%<data_source>%<token>]> <number_of_kbyte> <iterations> <nthreads>"
+                  " <mode 0xx - processed source type, 1xx - raw source type, xx0 -t tcp, xx1 - filesystem, x0x - write files, x1x - do not write files> <timeout (sec)> [n messages in set (default 1)]"
                   << std::endl;
         exit(EXIT_FAILURE);
     }
     try {
         args->discovery_service_endpoint = argv[1];
         args->beamtime_id = argv[2];
-        TryGetStreamAndToken(args);
+        TryGetDataSourceAndToken(args);
         args->number_of_bytes = std::stoull(argv[3]) * 1000;
         args->iterations = std::stoull(argv[4]);
         args->nthreads = std::stoull(argv[5]);
         args->mode = std::stoull(argv[6]);
-        args->timeout_sec = std::stoull(argv[7]);
+        args->timeout_ms = std::stoull(argv[7])*1000;
         if (argc == 9) {
-            args->images_in_set = std::stoull(argv[8]);
+            args->messages_in_set = std::stoull(argv[8]);
         } else {
-            args->images_in_set = 1;
+            args->messages_in_set = 1;
         }
         PrintCommandArguments(*args);
         return;
@@ -124,56 +124,65 @@ void ProcessAfterMetaDataSend(asapo::RequestCallbackPayload payload, asapo::Erro
     return;
 }
 
-asapo::FileData CreateMemoryBuffer(size_t size) {
-    return asapo::FileData(new uint8_t[size]);
+asapo::MessageData CreateMemoryBuffer(size_t size) {
+    return asapo::MessageData(new uint8_t[size]);
 }
 
 
-bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations, uint64_t images_in_set,
-                   const std::string& stream, bool write_files, asapo::SourceType type) {
+bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t iterations, uint64_t messages_in_set,
+                   const std::string& data_source, bool write_files, asapo::SourceType type) {
 
     asapo::Error err;
     if (iterations == 0) {
-        err = producer->SendMetaData("{\"dummy_meta\":\"test\"}", &ProcessAfterMetaDataSend);
+        err = producer->SendMetadata("{\"dummy_meta\":\"test\"}", &ProcessAfterMetaDataSend);
         if (err) {
             std::cerr << "Cannot send metadata: " << err << std::endl;
             return false;
         }
     }
 
-    std::string image_folder = GetStringFromSourceType(type)+asapo::kPathSeparator;
+    std::string message_folder = GetStringFromSourceType(type)+asapo::kPathSeparator;
 
 
     for (uint64_t i = 0; i < iterations; i++) {
         auto buffer = CreateMemoryBuffer(number_of_byte);
-        asapo::EventHeader event_header{i + 1, number_of_byte, std::to_string(i + 1)};
+        asapo::MessageHeader message_header{i + 1, number_of_byte, std::to_string(i + 1)};
         std::string meta = "{\"user_meta\":\"test" + std::to_string(i + 1) + "\"}";
-        if (!stream.empty()) {
-            event_header.file_name = stream + "/" + event_header.file_name;
+        if (!data_source.empty()) {
+            message_header.file_name = data_source + "/" + message_header.file_name;
         }
-        event_header.file_name = image_folder+event_header.file_name;
-        event_header.user_metadata = std::move(meta);
-        if (images_in_set == 1) {
-            auto err = producer->SendData(event_header, std::move(buffer), write_files ? asapo::kDefaultIngestMode :
-                                          asapo::kTransferData, &ProcessAfterSend);
+        message_header.file_name = message_folder+message_header.file_name;
+        message_header.user_metadata = std::move(meta);
+        if (messages_in_set == 1) {
+            auto err = producer->Send(message_header,
+                                      std::move(buffer),
+                                      write_files ? asapo::kDefaultIngestMode :
+                                      asapo::kTransferData,
+                                      "default",
+                                      &ProcessAfterSend);
             if (err) {
                 std::cerr << "Cannot send file: " << err << std::endl;
                 return false;
             }
         } else {
-            for (uint64_t id = 0; id < images_in_set; id++) {
+            for (uint64_t id = 0; id < messages_in_set; id++) {
                 auto buffer = CreateMemoryBuffer(number_of_byte);
-                event_header.id_in_subset = id + 1;
-                event_header.subset_size = images_in_set;
-                event_header.file_id = i + 1;
-                event_header.file_name = std::to_string(i + 1) + "_" + std::to_string(id + 1);
-                if (!stream.empty()) {
-                    event_header.file_name = stream + "/" + event_header.file_name;
+                message_header.dataset_substream = id + 1;
+                message_header.dataset_size = messages_in_set;
+                message_header.message_id = i + 1;
+                message_header.file_name = std::to_string(i + 1) + "_" + std::to_string(id + 1);
+                if (!data_source.empty()) {
+                    message_header.file_name = data_source + "/" + message_header.file_name;
                 }
-                event_header.file_name = image_folder + event_header.file_name;
-                event_header.user_metadata = meta;
-                auto err = producer->SendData(event_header, std::move(buffer), write_files ? asapo::kDefaultIngestMode :
-                                              asapo::kTransferData, &ProcessAfterSend);
+                message_header.file_name = message_folder + message_header.file_name;
+                message_header.user_metadata = meta;
+                auto err =
+                    producer->Send(message_header,
+                                   std::move(buffer),
+                                   write_files ? asapo::kDefaultIngestMode :
+                                   asapo::kTransferData,
+                                   "default",
+                                   &ProcessAfterSend);
                 if (err) {
                     std::cerr << "Cannot send file: " << err << std::endl;
                     return false;
@@ -188,7 +197,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.discovery_service_endpoint, args.nthreads,
                                             args.mode % 10 == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem,
-                                            asapo::SourceCredentials{args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw,args.beamtime_id, "", args.stream, args.token }, 3600, &err);
+                                            asapo::SourceCredentials{args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw,args.beamtime_id, "", args.data_source, args.token }, 3600000, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);
@@ -218,17 +227,17 @@ int main (int argc, char* argv[]) {
     if (args.iterations == 0) {
         iterations_remained = 1; // metadata
     } else {
-        iterations_remained = args.iterations * args.images_in_set;
+        iterations_remained = args.iterations * args.messages_in_set;
     }
 
     system_clock::time_point start_time = system_clock::now();
 
-    if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.images_in_set, args.stream,
+    if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.messages_in_set, args.data_source,
                       (args.mode %100) / 10 == 0,args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw)) {
         return EXIT_FAILURE;
     }
 
-    auto err = producer->WaitRequestsFinished(args.timeout_sec * 1000);
+    auto err = producer->WaitRequestsFinished(args.timeout_ms);
     if (err) {
         std::cerr << "Producer exit on timeout " << std::endl;
         exit(EXIT_FAILURE);

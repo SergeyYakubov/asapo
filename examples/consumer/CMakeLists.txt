@@ -1,9 +1,9 @@
 find_package(Threads)
 
-add_subdirectory(getnext_broker)
+add_subdirectory(getnext)
 
 if(BUILD_EXAMPLES AND BUILD_PYTHON)
-        add_subdirectory(getnext_broker_python)
+        add_subdirectory(getnext_python)
 endif()
 
 

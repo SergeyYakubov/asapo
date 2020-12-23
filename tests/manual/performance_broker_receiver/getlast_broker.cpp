@@ -58,17 +58,19 @@ std::vector<std::thread> StartThreads(const Args& params,
                                       std::vector<int>* nbuf,
                                       std::vector<int>* nfiles_total) {
     auto exec_next = [&params, nfiles, errors, nbuf, nfiles_total](int i) {
-        asapo::FileInfo fi;
+        asapo::MessageMeta fi;
         Error err;
-        auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, true,
-                      asapo::SourceCredentials{asapo::SourceType::kProcessed,params.beamtime_id, "", "", params.token}, &err);
-        broker->SetTimeout((uint64_t) params.timeout_ms);
-        asapo::FileData data;
+        auto consumer = asapo::ConsumerFactory::CreateConsumer(params.server, params.file_path, true,
+                                                             asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                                                      params.beamtime_id, "", "",
+                                                                                      params.token}, &err);
+        consumer->SetTimeout((uint64_t) params.timeout_ms);
+        asapo::MessageData data;
 
         lock.lock();
 
         if (group_id.empty()) {
-            group_id = broker->GenerateNewGroupId(&err);
+            group_id = consumer->GenerateNewGroupId(&err);
             if (err) {
                 (*errors)[i] += ProcessError(err);
                 return;
@@ -81,7 +83,7 @@ std::vector<std::thread> StartThreads(const Args& params,
         while (std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count() <
                 params.timeout_ms) {
             if (params.datasets) {
-                auto dataset = broker->GetLastDataset(0, &err);
+                auto dataset = consumer->GetLastDataset(0, "default", &err);
                 if (err == nullptr) {
                     for (auto& fi : dataset.content) {
                         (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
@@ -89,7 +91,7 @@ std::vector<std::thread> StartThreads(const Args& params,
                     }
                 }
             } else {
-                err = broker->GetLast(&fi, params.read_data ? &data : nullptr);
+                err = consumer->GetLast(&fi, params.read_data ? &data : nullptr, "default");
                 if (err == nullptr) {
                     (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
                     if (params.read_data && (*nfiles)[i] < 10 && fi.size < 10) {
@@ -117,7 +119,7 @@ std::vector<std::thread> StartThreads(const Args& params,
 
 int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nbuf, int* nfiles_total,
                 asapo::NetworkConnectionType* connection_type) {
-    asapo::FileInfo fi;
+    asapo::MessageMeta fi;
     system_clock::time_point t1 = system_clock::now();
 
     std::vector<int> nfiles(params.nthreads, 0);
@@ -167,7 +169,7 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nb
 }
 
 int main(int argc, char* argv[]) {
-    asapo::ExitAfterPrintVersionIfNeeded("GetLast Broker Example", argc, argv);
+    asapo::ExitAfterPrintVersionIfNeeded("GetLast consumer Example", argc, argv);
     Args params;
     params.datasets = false;
     if (argc != 9 && argc != 10) {

@@ -21,7 +21,7 @@ enum class NetworkConnectionType : uint32_t {
 enum Opcode : uint8_t {
     kOpcodeUnknownOp = 1,
     kOpcodeTransferData,
-    kOpcodeTransferSubsetData,
+    kOpcodeTransferDatasetData,
     kOpcodeStreamInfo,
     kOpcodeLastStream,
     kOpcodeGetBufferData,
@@ -55,16 +55,16 @@ struct GenericRequestHeader {
         op_code = header.op_code, data_id = header.data_id, data_size = header.data_size, meta_size = header.meta_size,
         memcpy(custom_data, header.custom_data, kNCustomParams * sizeof(uint64_t)),
         memcpy(message, header.message, kMaxMessageSize);
-        strncpy(substream, header.substream, kMaxMessageSize);
+        strncpy(stream, header.stream, kMaxMessageSize);
     }
 
     /* Keep in mind that the message here is just strncpy'ed, you can change the message later */
     GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
                          uint64_t i_data_size = 0, uint64_t i_meta_size = 0, const std::string& i_message = "",
-                         const std::string& i_substream = ""):
+                         const std::string& i_stream = ""):
         op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size}, meta_size{i_meta_size} {
         strncpy(message, i_message.c_str(), kMaxMessageSize);
-        strncpy(substream, i_substream.c_str(), kMaxMessageSize);
+        strncpy(stream, i_stream.c_str(), kMaxMessageSize);
     }
 
     Opcode      op_code;
@@ -73,11 +73,11 @@ struct GenericRequestHeader {
     uint64_t    meta_size;
     CustomRequestData    custom_data;
     char        message[kMaxMessageSize]; /* Can also be a binary message (e.g. MemoryRegionDetails) */
-    char        substream[kMaxMessageSize]; /* Must be a string (strcpy is used) */
+    char        stream[kMaxMessageSize]; /* Must be a string (strcpy is used) */
     std::string Json() {
         std::string s = "{\"id\":" + std::to_string(data_id) + ","
                         "\"buffer\":\"" + std::string(message) + "\"" + ","
-                        "\"substream\":\"" + std::string(substream) + "\""
+                        "\"stream\":\"" + std::string(stream) + "\""
                         + "}";
         return s;
     };
@@ -93,7 +93,7 @@ struct GenericNetworkResponse {
 };
 
 
-struct SendDataResponse :  GenericNetworkResponse {
+struct SendResponse :  GenericNetworkResponse {
 };
 
 }

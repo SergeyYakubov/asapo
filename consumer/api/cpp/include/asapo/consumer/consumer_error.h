@@ -30,7 +30,7 @@ class ConsumerErrorData : public CustomErrorData {
   public:
     uint64_t id;
     uint64_t id_max;
-    std::string next_substream;
+    std::string next_stream;
 };
 
 
@@ -64,7 +64,7 @@ auto const kWrongInput = ConsumerErrorTemplate {
 };
 
 auto const kInterruptedTransaction = ConsumerErrorTemplate {
-    "error from broker server", ConsumerErrorType::kInterruptedTransaction
+    "server error", ConsumerErrorType::kInterruptedTransaction
 };
 
 auto const kUnavailableService = ConsumerErrorTemplate {

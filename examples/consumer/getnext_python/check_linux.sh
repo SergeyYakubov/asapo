@@ -2,8 +2,8 @@
 
 source_path=dummy
 beamtime_id=test_run
-stream=detector
-database_name=${beamtime_id}_${stream}
+data_source=detector
+database_name=${beamtime_id}_${data_source}
 token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 group_id=bif31l2uiddd4r0q6b40
 set -e
@@ -25,7 +25,7 @@ nomad run broker.nmd
 
 for i in `seq 1 3`;
 do
-	echo 'db.data_default.insert({"_id":'$i',"size":100,"name":"'$i'","timestamp":0,"source":"none","buf_id":0,"meta":{"test":10}})' | mongo ${database_name}
+	echo 'db.data_default.insert({"_id":'$i',"size":100,"name":"'$i'","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
 echo 'db.meta.insert({"_id":0,"meta_test":"test"})' | mongo ${database_name}

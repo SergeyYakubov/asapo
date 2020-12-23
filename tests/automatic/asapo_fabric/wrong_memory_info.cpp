@@ -40,7 +40,7 @@ void ServerMasterThread(const std::string& hostname, uint16_t port) {
     M_AssertEq(nullptr, err, "server->RecvAny(1)");
     M_AssertEq(1, messageId);
     M_AssertEq("Hello World", request.message);
-    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer.get(), kRdmaSize, &err);
+    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.stream, rdmaBuffer.get(), kRdmaSize, &err);
     M_AssertEq(FabricErrorTemplates::kInternalError, err, "server->RdmaWrite(1)");
     err = nullptr; // We have to reset the error by ourselves
     server->Send(clientAddress, messageId, dummyData.get(), kDummyDataSize, &err);
@@ -54,7 +54,7 @@ void ServerMasterThread(const std::string& hostname, uint16_t port) {
     } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
     M_AssertEq(nullptr, err, "server->RecvAny(2)");
     M_AssertEq(2, messageId);
-    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer.get(), kRdmaSize, &err);
+    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.stream, rdmaBuffer.get(), kRdmaSize, &err);
     M_AssertEq(nullptr, err, "server->RdmaWrite(2)");
     server->Send(clientAddress, messageId, dummyData.get(), kDummyDataSize, &err);
     M_AssertEq(nullptr, err, "server->Send(2)");
@@ -68,7 +68,7 @@ void ServerMasterThread(const std::string& hostname, uint16_t port) {
     } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
     M_AssertEq(nullptr, err, "server->RecvAny(3)");
     M_AssertEq(3, messageId);
-    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, rdmaBuffer.get(), kRdmaSize, &err);
+    server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.stream, rdmaBuffer.get(), kRdmaSize, &err);
     M_AssertEq(FabricErrorTemplates::kInternalError, err, "server->RdmaWrite(3)");
 
     std::cout << "[SERVER] Waiting for client to finish" << std::endl;
@@ -98,10 +98,10 @@ void ClientThread(const std::string& hostname, uint16_t port) {
     {
         auto mr = client->ShareMemoryRegion(actualRdmaBuffer.get(), kRdmaSize, &err);
         M_AssertEq(nullptr, err, "client->ShareMemoryRegion");
-        memcpy(request.substream, mr->GetDetails(), sizeof(MemoryRegionDetails));
+        memcpy(request.stream, mr->GetDetails(), sizeof(MemoryRegionDetails));
 
         // Simulate faulty memory details
-        ((MemoryRegionDetails*)(&request.substream))->key++;
+        ((MemoryRegionDetails*)(&request.stream))->key++;
         client->Send(serverAddress, messageId, &request, sizeof(request), &err);
         M_AssertEq(nullptr, err, "client->Send(1)");
         client->Recv(serverAddress, messageId, dummyData.get(), kDummyDataSize, &err);
@@ -109,7 +109,7 @@ void ClientThread(const std::string& hostname, uint16_t port) {
         messageId++;
 
         // Simulate correct memory details
-        memcpy(request.substream, mr->GetDetails(), sizeof(MemoryRegionDetails));
+        memcpy(request.stream, mr->GetDetails(), sizeof(MemoryRegionDetails));
         client->Send(serverAddress, messageId, &request, sizeof(request), &err);
         M_AssertEq(nullptr, err, "client->Send(2)");
         client->Recv(serverAddress, messageId, dummyData.get(), kDummyDataSize, &err);

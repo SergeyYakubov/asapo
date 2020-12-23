@@ -10,7 +10,6 @@
 
 namespace asapo {
 
-/** @ingroup producer */
 class Producer {
   public:
     //! Creates a new producer
@@ -19,89 +18,71 @@ class Producer {
      */
     static std::unique_ptr<Producer> Create(const std::string& endpoint, uint8_t n_processing_threads,
                                             asapo::RequestHandlerType type, SourceCredentials source_cred,
-                                            uint64_t timeout_sec,
+                                            uint64_t timeout_ms,
                                             Error* err);
 
     virtual ~Producer() = default;
 
-    //! Get substream information from receiver
+    //! Get stream information from receiver
     /*!
-      \param substream (optional) - substream
-      \param timeout_sec - operation timeout in seconds
-      \return StreamInfo - a structure with substream information
+      \param stream - stream to send messages to
+      \param timeout_ms - operation timeout in milliseconds
+      \return StreamInfo - a structure with stream information
     */
-    virtual StreamInfo GetStreamInfo(std::string substream, uint64_t timeout_sec, Error* err) const = 0;
-    virtual StreamInfo GetStreamInfo(uint64_t timeout_sec, Error* err) const = 0;
+    virtual StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const = 0;
 
-  //! Get substream that has the newest ingested data
+  //! Get stream that has the newest ingested data
   /*!
-    \param timeout_ms - operation timeout in seconds
-    \return StreamInfo - a structure with substream information
+    \param timeout_ms - operation timeout in milliseconds
+    \return StreamInfo - a structure with stream information
   */
-    virtual StreamInfo GetLastSubstream(uint64_t timeout_sec, Error* err) const = 0;
+    virtual StreamInfo GetLastStream(uint64_t timeout_ms, Error* err) const = 0;
 
-
-    //! Sends data to the receiver
+    //! Sends message to the receiver
     /*!
-      \param event_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
-      \param data - A pointer to the data to send
+      \param message_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
+      \param data - A smart pointer to the message data to send, can be nullptr
       \return Error - Will be nullptr on success
     */
-    virtual Error SendData(const EventHeader& event_header, FileData data, uint64_t ingest_mode,
-                           RequestCallback callback) = 0;
+    virtual Error Send(const MessageHeader &message_header,
+                       MessageData data,
+                       uint64_t ingest_mode,
+                       std::string stream,
+                       RequestCallback callback) = 0;
 
 
-    //! Sends data to the receiver - same as SendData - memory should not be freed until send is finished
+    //! Sends data to the receiver - same as Send - memory should not be freed until send is finished
     //! used e.g. for Python bindings
-    virtual Error SendData__(const EventHeader& event_header, void* data, uint64_t ingest_mode,
-                             RequestCallback callback) = 0;
-
-    //! Sends data to the receiver
-    /*!
-      \param event_header - A stucture with the meta information (file name, size, a string with user metadata (JSON format)).
-      \param data - A pointer to the data to send
-      \return Error - Will be nullptr on success
-    */
-    virtual Error SendData(const EventHeader& event_header, std::string substream, FileData data, uint64_t ingest_mode,
-                           RequestCallback callback) = 0;
-
-
-    //! Sends data to the receiver - same as SendData - memory should not be freed until send is finished
-    //! used e.g. for Python bindings
-    virtual Error SendData__(const EventHeader& event_header, std::string substream, void* data, uint64_t ingest_mode,
-                             RequestCallback callback) = 0;
+    virtual Error Send__(const MessageHeader &message_header,
+                         void* data,
+                         uint64_t ingest_mode,
+                         std::string stream,
+                         RequestCallback callback) = 0;
 
     //! Stop processing threads
     //! used e.g. for Python bindings
     virtual void StopThreads__() = 0;
 
-    //! Sends files to the default substream
+    //! Sends message from a file to a stream
     /*!
-      \param event_header - A stucture with the meta information (file name, size is ignored).
-      \param full_path - A full path of the file to send
+      \param message_header - A stucture with the meta information (file name, size is ignored).
+      \param file_to_send - A full path of the file to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendFile(const EventHeader& event_header, std::string full_path, uint64_t ingest_mode,
-                           RequestCallback callback) = 0;
-
-    //! Sends files to the substream
-    /*!
-      \param event_header - A stucture with the meta information (file name, size is ignored).
-      \param full_path - A full path of the file to send
-      \return Error - Will be nullptr on success
-    */
-    virtual Error SendFile(const EventHeader& event_header, std::string substream, std::string full_path,
+    virtual Error SendFile(const MessageHeader &message_header,
+                           std::string file_to_send,
                            uint64_t ingest_mode,
+                           std::string stream,
                            RequestCallback callback) = 0;
 
-    //! Marks substream finished
+    //! Marks stream finished
     /*!
-      \param substream - Name of the substream to makr finished
-      \param last_id - ID of the last image in substream
-      \param next_substream - Name of the next substream (empty if not set)
+      \param stream - Name of the stream to makr finished
+      \param last_id - ID of the last message in stream
+      \param next_stream - Name of the next stream (empty if not set)
       \return Error - Will be nullptr on success
     */
-    virtual Error SendSubstreamFinishedFlag(std::string substream, uint64_t last_id, std::string next_substream,
+    virtual Error SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,
                                             RequestCallback callback) = 0;
 
 
@@ -111,7 +92,7 @@ class Producer {
       \param callback - callback function
       \return Error - will be nullptr on success
     */
-    virtual Error SendMetaData(const std::string& metadata, RequestCallback callback) = 0;
+    virtual Error SendMetadata(const std::string& metadata, RequestCallback callback) = 0;
 
     //! Set internal log level
     virtual void SetLogLevel(LogLevel level) = 0;

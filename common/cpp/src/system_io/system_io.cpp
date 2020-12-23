@@ -38,21 +38,21 @@ const size_t SystemIO::kReadWriteBufSize = size_t(1024) * 1024 * 50; //50MiByte
 
 // PRIVATE FUNCTIONS - START
 
-void SortFileList(std::vector<FileInfo>* file_list) {
+void SortFileList(std::vector<MessageMeta>* file_list) {
     std::sort(file_list->begin(), file_list->end(),
-    [](FileInfo const & a, FileInfo const & b) {
+    [](MessageMeta const & a, MessageMeta const & b) {
         return a.timestamp < b.timestamp;
     });
 }
 
-void StripBasePath(const std::string& folder, std::vector<FileInfo>* file_list) {
+void StripBasePath(const std::string& folder, std::vector<MessageMeta>* file_list) {
     auto n_erase = folder.size() + 1;
     for (auto& file : *file_list) {
         file.name.erase(0, n_erase);
     }
 }
 
-void AssignIDs(FileInfos* file_list) {
+void AssignIDs(MessageMetas* file_list) {
     int64_t id = 0;
     for (auto& file : *file_list) {
         file.id = ++id;
@@ -86,10 +86,10 @@ uint8_t* SystemIO::AllocateArray(uint64_t fsize, Error* err) const {
 
 // PRIVATE FUNCTIONS - END
 
-FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const {
+MessageData SystemIO::GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const {
 
     if (*fsize == 0 && !fname.empty()) {
-        auto info = GetFileInfo(fname, err);
+        auto info = GetMessageMeta(fname, err);
         if (*err != nullptr) {
             return nullptr;
         }
@@ -115,12 +115,12 @@ FileData SystemIO::GetDataFromFile(const std::string& fname, uint64_t* fsize, Er
     }
 
     Close(fd, err);
-    return FileData{data_array};
+    return MessageData{data_array};
 }
 
-FileInfos SystemIO::FilesInFolder(const std::string& folder, Error* err) const {
-    FileInfos files{};
-    CollectFileInformationRecursively(folder, &files, err);
+MessageMetas SystemIO::FilesInFolder(const std::string& folder, Error* err) const {
+    MessageMetas files{};
+    CollectMessageMetarmationRecursively(folder, &files, err);
     if (*err != nullptr) {
         return {};
     }
@@ -193,7 +193,7 @@ Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::strin
 
 }
 
-Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::string& fname, const FileData& data,
+Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::string& fname, const MessageData& data,
                                 size_t length, bool create_directories, bool allow_ovewrite) const {
     return WriteDataToFile(root_folder, fname, data.get(), length, create_directories, allow_ovewrite);
 }

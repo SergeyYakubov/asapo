@@ -5,7 +5,7 @@
 #include <chrono>
 
 
-using asapo::FileInfo;
+using asapo::MessageMeta;
 using asapo::StreamInfo;
 using asapo::SourceType;
 using asapo::SourceCredentials;
@@ -25,42 +25,44 @@ namespace {
 
 uint64_t big_uint = 18446744073709551615ull;
 
-FileInfo PrepareFileInfo() {
-    FileInfo finfo;
-    finfo.size = 100;
-    finfo.id = 1;
-    finfo.name = std::string("folder") + asapo::kPathSeparator + "test";
-    finfo.source = "host:1234";
-    finfo.buf_id = big_uint;
-    finfo.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
-    finfo.metadata =  "{\"bla\":10}";
-    return finfo;
+MessageMeta PrepareMessageMeta() {
+    MessageMeta message_meta;
+    message_meta.size = 100;
+    message_meta.id = 1;
+    message_meta.dataset_substream = 3;
+    message_meta.name = std::string("folder") + asapo::kPathSeparator + "test";
+    message_meta.source = "host:1234";
+    message_meta.buf_id = big_uint;
+    message_meta.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
+    message_meta.metadata =  "{\"bla\":10}";
+    return message_meta;
 }
 
-TEST(FileInFo, Defaults) {
-    FileInfo finfo;
+TEST(MessageMetaTests, Defaults) {
+    MessageMeta message_meta;
 
-    ASSERT_THAT(finfo.buf_id, Eq(0));
-    ASSERT_THAT(finfo.id, Eq(0));
+    ASSERT_THAT(message_meta.buf_id, Eq(0));
+    ASSERT_THAT(message_meta.id, Eq(0));
+    ASSERT_THAT(message_meta.dataset_substream, Eq(0));
 }
 
 
-TEST(FileInFo, CorrectConvertToJson) {
-    auto finfo = PrepareFileInfo();
-    std::string json = finfo.Json();
+TEST(MessageMetaTests, CorrectConvertToJson) {
+    auto message_meta = PrepareMessageMeta();
+    std::string json = message_meta.Json();
     if (asapo::kPathSeparator == '/') {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder/test","timestamp":1000000,"source":"host:1234","buf_id":-1,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder/test","timestamp":1000000,"source":"host:1234","buf_id":-1,"dataset_substream":3,"meta":{"bla":10}})"));
     } else {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,"dataset_substream":3,"meta":{"bla":10}})"));
     }
 }
 
-TEST(FileInFo, CorrectConvertFromJsonReturnsError) {
-    auto finfo = PrepareFileInfo();
+TEST(MessageMetaTests, CorrectConvertFromJsonReturnsError) {
+    auto message_meta = PrepareMessageMeta();
 
-    FileInfo result;
+    MessageMeta result;
     result.id = 10;
 
     std::string json = R"({"_id":2,"foo":"foo","bar":1})";
@@ -72,10 +74,10 @@ TEST(FileInFo, CorrectConvertFromJsonReturnsError) {
 
 }
 
-TEST(FileInFo, CorrectConvertFromJsonReturnsErrorForMetadata) {
-    auto finfo = PrepareFileInfo();
+TEST(MessageMetaTests, CorrectConvertFromJsonReturnsErrorForMetadata) {
+    auto message_meta = PrepareMessageMeta();
 
-    FileInfo result;
+    MessageMeta result;
 
     std::string json = R"({"_id":2,"foo":"foo","bar":1,{"meta":err}})";
 
@@ -87,32 +89,33 @@ TEST(FileInFo, CorrectConvertFromJsonReturnsErrorForMetadata) {
 
 
 
-TEST(FileInFo, CorrectConvertFromJson) {
-    auto finfo = PrepareFileInfo();
-    std::string json = finfo.Json();
+TEST(MessageMetaTests, CorrectConvertFromJson) {
+    auto message_meta = PrepareMessageMeta();
+    std::string json = message_meta.Json();
 
-    FileInfo result;
+    MessageMeta result;
     auto ok = result.SetFromJson(json);
 
     ASSERT_THAT(ok, Eq(true));
 
-    ASSERT_THAT(result.id, Eq(finfo.id));
-    ASSERT_THAT(result.name, Eq(finfo.name));
-    ASSERT_THAT(result.size, Eq(finfo.size));
-    ASSERT_THAT(result.timestamp, Eq(finfo.timestamp));
-    ASSERT_THAT(result.buf_id, Eq(finfo.buf_id));
-    ASSERT_THAT(result.source, Eq(finfo.source));
-    ASSERT_THAT(result.metadata, Eq(finfo.metadata));
+    ASSERT_THAT(result.id, Eq(message_meta.id));
+    ASSERT_THAT(result.name, Eq(message_meta.name));
+    ASSERT_THAT(result.size, Eq(message_meta.size));
+    ASSERT_THAT(result.timestamp, Eq(message_meta.timestamp));
+    ASSERT_THAT(result.buf_id, Eq(message_meta.buf_id));
+    ASSERT_THAT(result.source, Eq(message_meta.source));
+    ASSERT_THAT(result.metadata, Eq(message_meta.metadata));
+    ASSERT_THAT(result.dataset_substream, Eq(message_meta.dataset_substream));
 
 }
 
 
-TEST(FileInFo, CorrectConvertFromJsonEmptyMeta) {
-    auto finfo = PrepareFileInfo();
-    finfo.metadata = "";
-    std::string json = finfo.Json();
+TEST(MessageMetaTests, CorrectConvertFromJsonEmptyMeta) {
+    auto message_meta = PrepareMessageMeta();
+    message_meta.metadata = "";
+    std::string json = message_meta.Json();
 
-    FileInfo result;
+    MessageMeta result;
     auto ok = result.SetFromJson(json);
 
     ASSERT_THAT(ok, Eq(true));
@@ -121,7 +124,7 @@ TEST(FileInFo, CorrectConvertFromJsonEmptyMeta) {
 }
 
 
-TEST(FileInFo, EpochNanosecsFromNow) {
+TEST(MessageMetaTests, EpochNanosecsFromNow) {
     auto ns = asapo::EpochNanosecsFromNow();
     ASSERT_THAT(ns, ::testing::Gt(0));
 }
@@ -143,7 +146,7 @@ StreamInfo PrepareStreamInfo() {
 }
 
 
-TEST(FileInFo, TimeFromNanosec) {
+TEST(MessageMetaTests, TimeFromNanosec) {
     auto tp = asapo::TimePointfromNanosec(1000);
     auto res = asapo::NanosecsEpochFromTimePoint(tp);
     ASSERT_THAT(res, Eq(1000));
@@ -208,9 +211,9 @@ TEST(StreamInfo, ConvertToJsonWithoutID) {
 }
 
 TEST(SourceCredentials, ConvertToString) {
-    auto sc = SourceCredentials{SourceType::kRaw,"beamtime","beamline","stream","token"};
-    std::string expected1= "raw%beamtime%beamline%stream%token";
-    std::string expected2= "processed%beamtime%beamline%stream%token";
+    auto sc = SourceCredentials{SourceType::kRaw,"beamtime","beamline","source","token"};
+    std::string expected1= "raw%beamtime%beamline%source%token";
+    std::string expected2= "processed%beamtime%beamline%source%token";
 
     auto res1 = sc.GetString();
     sc.type = asapo::SourceType::kProcessed;
@@ -249,7 +252,7 @@ auto tests = std::vector<TestEpochFromISODate> {
     TestEpochFromISODate{"1970-12-01T00:00:00.", 0},
 };
 
-TEST(FileInFo, NanosecsEpochFromISODate) {
+TEST(MessageMetaTests, NanosecsEpochFromISODate) {
     for (auto test : tests) {
         auto res = asapo::NanosecsEpochFromISODate(test.iso);
         ASSERT_THAT(res, Eq(test.ns));
@@ -262,7 +265,7 @@ auto tests2 = std::vector<TestEpochFromISODate> {
     TestEpochFromISODate{"2019-07-25T15:38:11.100010002", 1564069091100010002},
 };
 
-TEST(FileInFo, ISODateFromNanosecsEpoch) {
+TEST(MessageMetaTests, ISODateFromNanosecsEpoch) {
     for (auto test : tests2) {
         auto res = asapo::IsoDateFromEpochNanosecs(test.ns);
         ASSERT_THAT(res, Eq(test.iso));

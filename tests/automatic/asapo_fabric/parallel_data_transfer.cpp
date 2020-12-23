@@ -41,7 +41,7 @@ void ServerChildThread(FabricServer* server, std::atomic<int>* serverTotalReques
         M_AssertEq(messageId / kEachInstanceRuns, request.data_id); // is client index
         M_AssertEq(messageId % kEachInstanceRuns, request.data_size); // is client run
 
-        server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.substream, expectedRdmaBuffer, kRdmaSize, &err);
+        server->RdmaWrite(clientAddress, (MemoryRegionDetails*)&request.stream, expectedRdmaBuffer, kRdmaSize, &err);
         M_AssertEq(nullptr, err, "server->RdmaWrite");
 
         GenericNetworkResponse response{};
@@ -96,7 +96,7 @@ void ClientChildThread(const std::string& hostname, uint16_t port, int index, ch
 
         GenericRequestHeader request{};
         strcpy(request.message, "Hello World");
-        memcpy(request.substream, mr->GetDetails(), sizeof(MemoryRegionDetails));
+        memcpy(request.stream, mr->GetDetails(), sizeof(MemoryRegionDetails));
         request.data_id = index;
         request.data_size = run;
         FabricMessageId messageId = (index * kEachInstanceRuns) + run;

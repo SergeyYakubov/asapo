@@ -41,7 +41,7 @@ Error GetSourceTypeFromString(std::string stype, SourceType* type) {
     }
 }
 
-std::string FileInfo::Json() const {
+std::string MessageMeta::Json() const {
     auto nanoseconds_from_epoch = NanosecsEpochFromTimePoint(timestamp);
     std::string x = name;
 //todo: change this - use / when sending file from windows
@@ -62,8 +62,8 @@ std::string FileInfo::Json() const {
                                                                                                                 "\"timestamp\":"
         + std::to_string(nanoseconds_from_epoch) + ","
                                                    "\"source\":\"" + source + "\","
-                                                                              "\"buf_id\":" + std::to_string(buf_id_int)
-        + ","
+                                                                              "\"buf_id\":" + std::to_string(buf_id_int) + ","
+         "\"dataset_substream\":" + std::to_string(dataset_substream) + ","
           "\"meta\":" + (metadata.size() == 0 ? std::string("{}") : metadata)
         + "}";
     return s;
@@ -91,7 +91,7 @@ bool DataSet::SetFromJson(const std::string &json_string) {
 
     std::vector<std::string> vec_fi_endcoded;
     Error parse_err;
-    (parse_err = parser.GetArrayRawStrings("images", &vec_fi_endcoded)) ||
+    (parse_err = parser.GetArrayRawStrings("messages", &vec_fi_endcoded)) ||
         (parse_err = parser.GetUInt64("size", &expected_size)) ||
         (parse_err = parser.GetUInt64("_id", &id));
     if (parse_err) {
@@ -99,7 +99,7 @@ bool DataSet::SetFromJson(const std::string &json_string) {
         return false;
     }
     for (auto fi_encoded : vec_fi_endcoded) {
-        FileInfo fi;
+        MessageMeta fi;
         if (!fi.SetFromJson(fi_encoded)) {
             *this = old;
             return false;
@@ -109,7 +109,7 @@ bool DataSet::SetFromJson(const std::string &json_string) {
     return true;
 }
 
-bool FileInfo::SetFromJson(const std::string &json_string) {
+bool MessageMeta::SetFromJson(const std::string &json_string) {
     auto old = *this;
 
     JsonStringParser parser(json_string);
@@ -119,6 +119,7 @@ bool FileInfo::SetFromJson(const std::string &json_string) {
         parser.GetString("name", &name) ||
         parser.GetString("source", &source) ||
         parser.GetUInt64("buf_id", &buf_id) ||
+        parser.GetUInt64("dataset_substream", &dataset_substream) ||
         parser.Embedded("meta").GetRawString(&metadata) ||
         !TimeFromJson(parser, "timestamp", &timestamp)) {
         *this = old;
@@ -130,7 +131,7 @@ bool FileInfo::SetFromJson(const std::string &json_string) {
     return true;
 }
 
-std::string FileInfo::FullName(const std::string &base_path) const {
+std::string MessageMeta::FullName(const std::string &base_path) const {
     std::string full_name;
     full_name = base_path.empty() ? "" : base_path + kPathSeparator;
     return full_name + name;

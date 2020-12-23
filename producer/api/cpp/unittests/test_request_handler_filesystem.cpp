@@ -86,12 +86,12 @@ class RequestHandlerFilesystemTests : public testing::Test {
     }
 };
 
-ACTION_P(A_WriteSendDataResponse, error_code) {
-    ((asapo::SendDataResponse*)arg1)->op_code = asapo::kOpcodeTransferData;
-    ((asapo::SendDataResponse*)arg1)->error_code = error_code;
+ACTION_P(A_WriteSendResponse, error_code) {
+    ((asapo::SendResponse*)arg1)->op_code = asapo::kOpcodeTransferData;
+    ((asapo::SendResponse*)arg1)->error_code = error_code;
 }
 
-MATCHER_P2(M_CheckSendDataRequest, file_id, file_size,
+MATCHER_P2(M_CheckSendRequest, file_id, file_size,
            "Checks if a valid GenericRequestHeader was Send") {
     return ((asapo::GenericRequestHeader*)arg)->op_code == asapo::kOpcodeTransferData
            && ((asapo::GenericRequestHeader*)arg)->data_id == file_id

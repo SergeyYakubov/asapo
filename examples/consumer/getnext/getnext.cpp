@@ -35,7 +35,7 @@ struct Args {
     std::string server;
     std::string file_path;
     std::string beamtime_id;
-    std::string stream;
+    std::string data_source;
     std::string token;
     int timeout_ms;
     int nthreads;
@@ -95,22 +95,27 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
              std::vector<int>* nfiles_total, std::vector<asapo::NetworkConnectionType>* connection_type,
              LatchedTimer* timer) {
     auto exec_next = [&params, nfiles, errors, nbuf, nfiles_total, connection_type, timer](int i) {
-        asapo::FileInfo fi;
+        asapo::MessageMeta fi;
         Error err;
-        auto broker = asapo::DataBrokerFactory::CreateServerBroker(params.server, params.file_path, true,
-                      asapo::SourceCredentials{asapo::SourceType::kProcessed,params.beamtime_id, "", params.stream, params.token}, &err);
+        auto consumer = asapo::ConsumerFactory::CreateConsumer(params.server,
+                                                             params.file_path,
+                                                             true,
+                                                             asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                                                      params.beamtime_id, "",
+                                                                                      params.data_source, params.token},
+                                                             &err);
         if (err) {
-            std::cout << "Error CreateServerBroker: " << err << std::endl;
+            std::cout << "Error CreateConsumer: " << err << std::endl;
             exit(EXIT_FAILURE);
         }
-        //broker->ForceNoRdma();
+        //consumer->ForceNoRdma();
 
-        broker->SetTimeout((uint64_t) params.timeout_ms);
-        asapo::FileData data;
+        consumer->SetTimeout((uint64_t) params.timeout_ms);
+        asapo::MessageData data;
 
         lock.lock();
         if (group_id.empty()) {
-            group_id = broker->GenerateNewGroupId(&err);
+            group_id = consumer->GenerateNewGroupId(&err);
             if (err) {
                 (*errors)[i] += ProcessError(err);
                 lock.unlock();
@@ -121,7 +126,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
         lock.unlock();
 
         if (i == 0) {
-            auto meta = broker->GetBeamtimeMeta(&err);
+            auto meta = consumer->GetBeamtimeMeta(&err);
             if (err == nullptr) {
                 std::cout << meta << std::endl;
             } else {
@@ -132,7 +137,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
         bool isFirstFile = true;
         while (true) {
             if (params.datasets) {
-                auto dataset = broker->GetNextDataset(group_id, 0, &err);
+                auto dataset = consumer->GetNextDataset(group_id, 0, "default", &err);
                 if (err == nullptr) {
                     for (auto& fi : dataset.content) {
                         (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
@@ -140,7 +145,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
                     }
                 }
             } else {
-                err = broker->GetNext(&fi, group_id, params.read_data ? &data : nullptr);
+                err = consumer->GetNext(group_id, &fi, params.read_data ? &data : nullptr, "default");
                 if (isFirstFile) {
                     isFirstFile = false;
                     timer->count_down_and_wait();
@@ -167,7 +172,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
             (*nfiles)[i]++;
         }
 
-        (*connection_type)[i] = broker->CurrentConnectionType();
+        (*connection_type)[i] = consumer->CurrentConnectionType();
     };
 
     std::vector<std::thread> threads;
@@ -180,7 +185,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
 int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_without_first_ms, int* nerrors, int* nbuf,
                 int* nfiles_total,
                 asapo::NetworkConnectionType* connection_type) {
-    asapo::FileInfo fi;
+    asapo::MessageMeta fi;
     std::chrono::system_clock::time_point t1 = std::chrono::system_clock::now();
 
     std::vector<int> nfiles(params.nthreads, 0);
@@ -251,14 +256,14 @@ void TryGetStream(Args* args) {
     }
     if (seglist.size() > 1) {
         args->beamtime_id = seglist[0];
-        args->stream = seglist[1];
+        args->data_source = seglist[1];
     }
     return;
 
 }
 
 int main(int argc, char* argv[]) {
-    asapo::ExitAfterPrintVersionIfNeeded("GetNext Broker Example", argc, argv);
+    asapo::ExitAfterPrintVersionIfNeeded("GetNext consumer Example", argc, argv);
     Args params;
     params.datasets = false;
     if (argc != 8 && argc != 9) {

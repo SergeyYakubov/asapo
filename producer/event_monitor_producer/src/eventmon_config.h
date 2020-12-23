@@ -9,7 +9,7 @@
 
 namespace asapo {
 
-enum class SubSetMode {
+enum class DatasetMode {
     kNone,
     kBatch,
     kMultiSource
@@ -27,11 +27,11 @@ struct EventMonConfig {
     std::vector<std::string> ignored_extensions;
     std::vector<std::string> whitelisted_extensions;
     bool remove_after_send = false;
-    SubSetMode subset_mode = SubSetMode::kNone;
-    uint64_t subset_batch_size = 1;
-    uint64_t subset_multisource_nsources = 1;
-    uint64_t subset_multisource_sourceid = 1;
-    std::string stream;
+    DatasetMode dataset_mode = DatasetMode::kNone;
+    uint64_t dataset_batch_size = 1;
+    uint64_t dataset_multisource_nsources = 1;
+    uint64_t dataset_multisource_sourceid = 1;
+    std::string data_source;
   private:
     std::string log_level_str;
     std::string mode_str;

@@ -119,7 +119,7 @@ job "asapo-test" {
     }
 
       config {
-        command = "local/getnext_broker"
+        command = "local/getnext"
         args = [
           "psana002:8400",
           "/bldocuments/support/asapo/data/test1/asapo_test1",
@@ -139,9 +139,9 @@ job "asapo-test" {
       }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/getnext_broker-@ASAPO_VERSION@"
+        source = "http://nims.desy.de/extra/asapo/getnext-@ASAPO_VERSION@"
         mode = "file"
-        destination = "local/getnext_broker"
+        destination = "local/getnext"
       }
     }
 
@@ -176,7 +176,7 @@ job "asapo-test" {
     }
 
       config {
-        command = "local/getnext_broker"
+        command = "local/getnext"
         args = [
           "psana002:8400",
           "/bldocuments/support/asapo/data/test2/asapo_test2",
@@ -195,9 +195,9 @@ job "asapo-test" {
       }
 
       artifact {
-        source = "http://nims.desy.de/extra/asapo/getnext_broker-@ASAPO_VERSION@"
+        source = "http://nims.desy.de/extra/asapo/getnext-@ASAPO_VERSION@"
         mode = "file"
-        destination = "local/getnext_broker"
+        destination = "local/getnext"
 
       }
     }

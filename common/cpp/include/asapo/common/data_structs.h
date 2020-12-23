@@ -1,5 +1,5 @@
-#ifndef ASAPO_FILE_INFO_H
-#define ASAPO_FILE_INFO_H
+#ifndef ASAPO_message_meta_H
+#define ASAPO_message_meta_H
 
 #include <cinttypes>
 #include <chrono>
@@ -22,7 +22,7 @@ uint64_t NanosecsEpochFromISODate(std::string date_time);
 
 bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val);
 
-class FileInfo {
+class MessageMeta {
   public:
     std::string name;
     std::chrono::system_clock::time_point timestamp;
@@ -31,6 +31,7 @@ class FileInfo {
     std::string source;
     std::string metadata;
     uint64_t buf_id{0};
+    uint64_t dataset_substream{0};
     std::string Json() const;
     bool SetFromJson(const std::string& json_string);
     std::string FullName(const std::string& base_path) const;
@@ -48,16 +49,16 @@ struct StreamInfo {
 
 using StreamInfos = std::vector<StreamInfo>;
 
-inline bool operator==(const FileInfo& lhs, const FileInfo& rhs) {
+inline bool operator==(const MessageMeta& lhs, const MessageMeta& rhs) {
     return  (lhs.name == rhs.name &&
              lhs.id == rhs.id &&
              lhs.timestamp == rhs.timestamp &&
              lhs.size == rhs.size);
 }
 
-using FileData = std::unique_ptr<uint8_t[]>;
+using MessageData = std::unique_ptr<uint8_t[]>;
 
-using FileInfos = std::vector<FileInfo>;
+using MessageMetas = std::vector<MessageMeta>;
 
 
 using IdList = std::vector<uint64_t>;
@@ -65,7 +66,7 @@ using IdList = std::vector<uint64_t>;
 struct DataSet {
     uint64_t id;
     uint64_t expected_size;
-    FileInfos content;
+    MessageMetas content;
     bool SetFromJson(const std::string& json_string);
 };
 
@@ -80,10 +81,10 @@ Error GetSourceTypeFromString(std::string stype,SourceType *type);
 std::string GetStringFromSourceType(SourceType type);
 
 struct SourceCredentials {
-    SourceCredentials(SourceType type, std::string beamtime, std::string beamline, std::string stream, std::string token):
+    SourceCredentials(SourceType type, std::string beamtime, std::string beamline, std::string data_source, std::string token):
         beamtime_id{std::move(beamtime)},
         beamline{std::move(beamline)},
-        stream{std::move(stream)},
+        data_source{std::move(data_source)},
         user_token{std::move(token)},
         type{type}{};
     SourceCredentials() {};
@@ -92,11 +93,11 @@ struct SourceCredentials {
     static const std::string kDefaultBeamtimeId;
     std::string beamtime_id;
     std::string beamline;
-    std::string stream;
+    std::string data_source;
     std::string user_token;
     SourceType type = SourceType::kProcessed;
     std::string GetString() {
-        return (type==SourceType::kRaw?std::string("raw"):std::string("processed")) + "%"+ beamtime_id + "%" + beamline + "%" + stream + "%" + user_token;
+        return (type==SourceType::kRaw?std::string("raw"):std::string("processed")) + "%"+ beamtime_id + "%" + beamline + "%" + data_source + "%" + user_token;
     };
 };
 
@@ -109,8 +110,5 @@ enum IngestModeFlags : uint64_t {
 
 const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem | kStoreInDatabase;
 
-const std::string kDefaultSubstream = "default";
-
-
 }
-#endif //ASAPO_FILE_INFO_H
+#endif //ASAPO_message_meta_H

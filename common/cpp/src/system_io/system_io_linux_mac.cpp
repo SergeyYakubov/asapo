@@ -82,7 +82,7 @@ bool IsDirectory(const struct dirent* entity) {
            strstr(entity->d_name, ".") == nullptr;
 }
 
-void SetModifyDate(const struct stat& t_stat, FileInfo* file_info) {
+void SetModifyDate(const struct stat& t_stat, MessageMeta* message_meta) {
 #ifdef __APPLE__
 #define st_mtim st_mtimespec
 #endif
@@ -92,16 +92,16 @@ void SetModifyDate(const struct stat& t_stat, FileInfo* file_info) {
 #undef st_mtim
 #endif
 
-    file_info->timestamp = system_clock::time_point
+    message_meta->timestamp = system_clock::time_point
     {std::chrono::duration_cast<system_clock::duration>(d)};
 }
 
-void SetFileSize(const struct stat& t_stat, FileInfo* file_info) {
-    file_info->size = t_stat.st_size;
+void SetFileSize(const struct stat& t_stat, MessageMeta* message_meta) {
+    message_meta->size = t_stat.st_size;
 }
 
-void SetFileName(const string& name, FileInfo* file_info) {
-    file_info->name = name;
+void SetFileName(const string& name, MessageMeta* message_meta) {
+    message_meta->name = name;
 }
 
 struct stat FileStat(const string& fname, Error* err) {
@@ -114,41 +114,41 @@ struct stat FileStat(const string& fname, Error* err) {
     return t_stat;
 }
 
-FileInfo GetFileInfo(const string& name, Error* err) {
-    FileInfo file_info;
+MessageMeta GetMessageMeta(const string& name, Error* err) {
+    MessageMeta message_meta;
 
-    SetFileName(name, &file_info);
+    SetFileName(name, &message_meta);
 
     auto t_stat = FileStat(name, err);
     if (*err != nullptr) {
         (*err)->Append(name);
-        return FileInfo{};
+        return MessageMeta{};
     }
 
-    SetFileSize(t_stat, &file_info);
+    SetFileSize(t_stat, &message_meta);
 
-    SetModifyDate(t_stat, &file_info);
+    SetModifyDate(t_stat, &message_meta);
 
-    return file_info;
+    return message_meta;
 }
 
-FileInfo SystemIO::GetFileInfo(const string& name, Error* err) const {
-    return ::asapo::GetFileInfo(name, err);
+MessageMeta SystemIO::GetMessageMeta(const string& name, Error* err) const {
+    return ::asapo::GetMessageMeta(name, err);
 }
 
 void ProcessFileEntity(const struct dirent* entity, const std::string& path,
-                       FileInfos* files, Error* err) {
+                       MessageMetas* files, Error* err) {
 
     *err = nullptr;
     if (entity->d_type != DT_REG) {
         return;
     }
 
-    FileInfo file_info = GetFileInfo(path + "/" + entity->d_name, err);
+    MessageMeta message_meta = GetMessageMeta(path + "/" + entity->d_name, err);
     if (*err != nullptr) {
         return;
     }
-    files->push_back(file_info);
+    files->push_back(message_meta);
 }
 
 void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const {
@@ -176,8 +176,8 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
     closedir(dir);
 }
 
-void SystemIO::CollectFileInformationRecursively(const std::string& path,
-                                                 FileInfos* files, Error* err) const {
+void SystemIO::CollectMessageMetarmationRecursively(const std::string& path,
+                                                 MessageMetas* files, Error* err) const {
     errno = 0;
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
@@ -188,7 +188,7 @@ void SystemIO::CollectFileInformationRecursively(const std::string& path,
 
     while (struct dirent* current_entity = readdir(dir)) {
         if (IsDirectory(current_entity)) {
-            CollectFileInformationRecursively(path + "/" + current_entity->d_name,
+            CollectMessageMetarmationRecursively(path + "/" + current_entity->d_name,
                                               files, err);
         } else {
             ProcessFileEntity(current_entity, path, files, err);

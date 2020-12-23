@@ -22,7 +22,7 @@ type Agent interface {
 
 type DBSettings struct {
 	ReadFromInprocessPeriod int
-	UpdateSubstreamCachePeriodMs int
+	UpdateStreamCachePeriodMs int
 }
 
 type DBError struct {

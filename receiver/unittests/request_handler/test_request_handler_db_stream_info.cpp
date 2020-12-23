@@ -18,7 +18,7 @@
 #include "../receiver_mocking.h"
 
 using asapo::MockRequest;
-using asapo::FileInfo;
+using asapo::MessageMeta;
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::ReturnRef;
@@ -55,21 +55,21 @@ namespace {
 
 class DbMetaStreamInfoTests : public Test {
   public:
-    std::string expected_substream = "substream";
-    std::string expected_collection_name = std::string(asapo::kDBDataCollectionNamePrefix) + "_" + expected_substream;
+    std::string expected_stream = "stream";
+    std::string expected_collection_name = std::string(asapo::kDBDataCollectionNamePrefix) + "_" + expected_stream;
     RequestHandlerDbStreamInfo handler{asapo::kDBDataCollectionNamePrefix};
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
-    std::string expected_stream = "stream";
-    std::string info_str = R"({"lastId":10,"name":"substream","timestampCreated":1000000,"timestampLast":2000000})";
+    std::string expected_data_source = "source";
+    std::string info_str = R"({"lastId":10,"name":"stream","timestampCreated":1000000,"timestampLast":2000000})";
     asapo::StreamInfo expected_stream_info;
     void SetUp() override {
         GenericRequestHeader request_header;
         expected_stream_info.last_id = 10;
-        expected_stream_info.name = expected_substream;
+        expected_stream_info.name = expected_stream;
         expected_stream_info.timestamp_created = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
         expected_stream_info.timestamp_lastentry = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(2));
         request_header.data_id = 0;
@@ -90,13 +90,13 @@ TEST_F(DbMetaStreamInfoTests, CallsUpdate) {
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
-    EXPECT_CALL(*mock_request, GetStream()).WillOnce(ReturnRef(expected_stream));
+    EXPECT_CALL(*mock_request, GetDataSource()).WillOnce(ReturnRef(expected_data_source));
 
-    EXPECT_CALL(*mock_request, GetSubstream()).Times(2)
-    .WillRepeatedly(Return(expected_substream))
+    EXPECT_CALL(*mock_request, GetStream()).Times(2)
+    .WillRepeatedly(Return(expected_stream))
     ;
 
-    EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_stream)).
+    EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_data_source)).
     WillOnce(testing::Return(nullptr));
 
 

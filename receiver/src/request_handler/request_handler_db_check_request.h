@@ -14,8 +14,8 @@ class RequestHandlerDbCheckRequest FINAL : public RequestHandlerDb {
     RequestHandlerDbCheckRequest(std::string collection_name_prefix);
     Error ProcessRequest(Request* request) const override;
   private:
-    Error GetRecordFromDb(const Request* request, FileInfo* record) const;
-    bool SameRequestInRecord(const Request* request, const FileInfo& record) const;
+    Error GetRecordFromDb(const Request* request, MessageMeta* record) const;
+    bool SameRequestInRecord(const Request* request, const MessageMeta& record) const;
 
 };
 

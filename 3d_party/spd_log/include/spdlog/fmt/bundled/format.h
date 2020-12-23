@@ -680,7 +680,7 @@ inline T* make_ptr(T* ptr, std::size_t) {
 
 /**
   \rst
-  A buffer supporting a subset of ``std::vector``'s operations.
+  A buffer supporting a dataset of ``std::vector``'s operations.
   \endrst
  */
 template <typename T>

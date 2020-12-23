@@ -110,7 +110,7 @@ void MongoDBClient::CleanUp() {
     }
 }
 
-bson_p PrepareBsonDocument(const FileInfo &file, Error* err) {
+bson_p PrepareBsonDocument(const MessageMeta &file, Error* err) {
     bson_error_t mongo_err;
     auto s = file.Json();
     auto json = reinterpret_cast<const uint8_t*>(s.c_str());
@@ -172,7 +172,7 @@ Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p &document, boo
     return err;
 }
 
-Error MongoDBClient::Insert(const std::string &collection, const FileInfo &file, bool ignore_duplicates) const {
+Error MongoDBClient::Insert(const std::string &collection, const MessageMeta &file, bool ignore_duplicates) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -237,9 +237,8 @@ Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool 
     return err;
 }
 
-Error MongoDBClient::InsertAsSubset(const std::string &collection, const FileInfo &file,
-                                    uint64_t subset_id,
-                                    uint64_t subset_size,
+Error MongoDBClient::InsertAsDatasetMessage(const std::string &collection, const MessageMeta &file,
+                                    uint64_t dataset_size,
                                     bool ignore_duplicates) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
@@ -252,14 +251,14 @@ Error MongoDBClient::InsertAsSubset(const std::string &collection, const FileInf
     if (err) {
         return err;
     }
-    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(subset_id), "}", "{", "images._id", "{", "$ne",
-                           BCON_INT64(file.id), "}", "}", "]");
+    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(file.id), "}", "{", "messages.dataset_substream", "{", "$ne",
+                           BCON_INT64(file.dataset_substream), "}", "}", "]");
     auto update = BCON_NEW ("$setOnInsert", "{",
-                            "size", BCON_INT64(subset_size),
+                            "size", BCON_INT64(dataset_size),
                             "timestamp", BCON_INT64((int64_t) NanosecsEpochFromTimePoint(file.timestamp)),
                             "}",
                             "$addToSet", "{",
-                            "images", BCON_DOCUMENT(document.get()), "}");
+                            "messages", BCON_DOCUMENT(document.get()), "}");
 
     err = AddBsonDocumentToArray(query, update, ignore_duplicates);
 
@@ -322,7 +321,7 @@ Error MongoDBClient::GetRecordFromDb(const std::string &collection, uint64_t id,
     return err;
 }
 
-Error MongoDBClient::GetById(const std::string &collection, uint64_t id, FileInfo* file) const {
+Error MongoDBClient::GetById(const std::string &collection, uint64_t id, MessageMeta* file) const {
     std::string record_str;
     auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
     if (err) {
@@ -335,7 +334,7 @@ Error MongoDBClient::GetById(const std::string &collection, uint64_t id, FileInf
     return nullptr;
 }
 
-Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_in_set, uint64_t id, FileInfo* file) const {
+Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_in_set, uint64_t id, MessageMeta* file) const {
     std::string record_str;
     auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
     if (err) {
@@ -347,9 +346,9 @@ Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_i
         DBErrorTemplates::kJsonParseError.Generate(record_str);
     }
 
-    for (const auto &fileinfo : dataset.content) {
-        if (fileinfo.id == id_in_set) {
-            *file = fileinfo;
+    for (const auto &message_meta : dataset.content) {
+        if (message_meta.dataset_substream == id_in_set) {
+            *file = message_meta;
             return nullptr;
         }
     }
