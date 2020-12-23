@@ -241,24 +241,24 @@ cdef class PyConsumer:
         with nogil:
             self.c_consumer.get().SetResendNacs(resend,delay_ms,resend_attempts)
 
-    def get_last_acknowledged_tuple_id(self, group_id, stream = "default"):
+    def get_last_acknowledged_message(self, group_id, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_stream = _bytes(stream)
         cdef Error err
         cdef uint64_t id
         with nogil:
-            id = self.c_consumer.get().GetLastAcknowledgedTulpeId(b_group_id,b_stream,&err)
+            id = self.c_consumer.get().GetLastAcknowledgedMessage(b_group_id,b_stream,&err)
         if err:
             throw_exception(err)
         return id
 
-    def get_unacknowledged_tuple_ids(self, group_id, stream = "default", uint64_t from_id = 0, uint64_t to_id = 0):
+    def get_unacknowledged_messages(self, group_id, stream = "default", uint64_t from_id = 0, uint64_t to_id = 0):
         cdef Error err
         cdef string b_group_id = _bytes(group_id)
         cdef string b_stream = _bytes(stream)
         cdef IdList ids
         with nogil:
-            ids = self.c_consumer.get().GetUnacknowledgedTupleIds(b_group_id, b_stream, from_id, to_id, &err)
+            ids = self.c_consumer.get().GetUnacknowledgedMessages(b_group_id, b_stream, from_id, to_id, &err)
         if err:
             throw_exception(err)
         list = []

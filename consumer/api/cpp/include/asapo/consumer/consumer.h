@@ -25,20 +25,20 @@ class Consumer {
     virtual Error SetLastReadMarker(std::string group_id, uint64_t value) = 0;
     virtual Error SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) = 0;
 
-    //! Acknowledge data tuple for specific group id and stream.
+    //! Acknowledge message for specific group id and stream.
     /*!
         \param group_id - group id to use.
-        \param id - data tuple id
+        \param id - message id
         \param stream (optional) - stream
         \return nullptr of command was successful, otherwise error.
     */
     virtual Error Acknowledge(std::string group_id, uint64_t id, std::string stream = kDefaultStream) = 0;
 
-    //! Negative acknowledge data tuple for specific group id and stream.
+    //! Negative acknowledge message for specific group id and stream.
     /*!
         \param group_id - group id to use.
-        \param id - data tuple id
-        \param delay_ms - data tuple will be redelivered after delay, 0 to redeliver immediately
+        \param id - message id
+        \param delay_ms - message will be redelivered after delay, 0 to redeliver immediately
         \param stream (optional) - stream
         \return nullptr of command was successful, otherwise error.
     */
@@ -46,19 +46,19 @@ class Consumer {
                                       std::string stream = kDefaultStream) = 0;
 
 
-    //! Get unacknowledged tuple for specific group id and stream.
+    //! Get unacknowledged messages for specific group id and stream.
     /*!
         \param group_id - group id to use.
         \param stream (optional) - stream
-        \param from_id - return tuples with ids greater or equal to from (use 0 disable limit)
-        \param to_id - return tuples with ids less or equal to to (use 0 to disable limit)
+        \param from_id - return messages with ids greater or equal to from (use 0 disable limit)
+        \param to_id - return messages with ids less or equal to to (use 0 to disable limit)
         \param in (optional) - stream
         \param err - set to nullptr of operation succeed, error otherwise.
         \return vector of ids, might be empty
     */
-    virtual IdList GetUnacknowledgedTupleIds(std::string group_id, std::string stream, uint64_t from_id, uint64_t to_id,
+    virtual IdList GetUnacknowledgedMessages(std::string group_id, std::string stream, uint64_t from_id, uint64_t to_id,
                                              Error* error) = 0;
-    virtual IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) = 0;
+    virtual IdList GetUnacknowledgedMessages(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) = 0;
 
     //! Set timeout for consumer operations. Default - no timeout
     virtual void SetTimeout(uint64_t timeout_ms) = 0;
@@ -123,17 +123,17 @@ class Consumer {
       \param err -  will be set to error data cannot be read, nullptr otherwise.
       \param group_id - group id to use.
       \param stream - stream to use ("" for default).
-      \param min_size - wait until dataset has min_size data tuples (0 for maximum size)
+      \param min_size - wait until dataset has min_size messages (0 for maximum size)
       \return DataSet - information about the dataset
 
     */
     virtual DataSet GetNextDataset(std::string group_id, std::string stream, uint64_t min_size, Error* err) = 0;
     virtual DataSet GetNextDataset(std::string group_id, uint64_t min_size, Error* err) = 0;
-    //! Receive last available dataset which has min_size data tuples.
+    //! Receive last available dataset which has min_size messages.
     /*!
       \param err -  will be set to error data cannot be read, nullptr otherwise.
       \param stream - stream to use ("" for default).
-      \param min_size - amount of data tuples in dataset (0 for maximum size)
+      \param min_size - amount of messages in dataset (0 for maximum size)
       \return DataSet - information about the dataset
     */
     virtual DataSet GetLastDataset(std::string stream, uint64_t min_size, Error* err) = 0;
@@ -144,7 +144,7 @@ class Consumer {
       \param id - dataset id
       \param err -  will be set to error data cannot be read or dataset size less than min_size, nullptr otherwise.
       \param stream - stream to use ("" for default).
-      \param min_size - wait until dataset has min_size data tuples (0 for maximum size)
+      \param min_size - wait until dataset has min_size messages (0 for maximum size)
       \return DataSet - information about the dataset
     */
     virtual DataSet GetDatasetById(uint64_t id, std::string stream, uint64_t min_size, Error* err) = 0;
@@ -160,15 +160,15 @@ class Consumer {
     virtual Error GetById(uint64_t id, MessageMeta* info, MessageData* data) = 0;
     virtual Error GetById(uint64_t id, MessageMeta* info, std::string stream, MessageData* data) = 0;
 
-    //! Receive id of last acknowledged data tuple
+    //! Receive id of last acknowledged message
     /*!
       \param group_id - group id to use.
       \param stream (optional) - stream
       \param err -  will be set in case of error, nullptr otherwise.
       \return id of the last acknowledged message, 0 if error
     */
-    virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string stream, Error* error) = 0;
-    virtual uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) = 0;
+    virtual uint64_t GetLastAcknowledgedMessage(std::string group_id, std::string stream, Error* error) = 0;
+    virtual uint64_t GetLastAcknowledgedMessage(std::string group_id, Error* error) = 0;
 
     //! Receive last available message.
     /*!
@@ -188,7 +188,7 @@ class Consumer {
     virtual MessageMetas QueryMessages(std::string query, Error* err) = 0;
     virtual MessageMetas QueryMessages(std::string query, std::string stream, Error* err) = 0;
 
-    //! Configure resending nonacknowledged data
+    //! Configure resending unacknowledged data
     /*!
       \param resend -  where to resend
       \param delay_ms - how many milliseconds to wait before resending

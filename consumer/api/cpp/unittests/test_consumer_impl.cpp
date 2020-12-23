@@ -1294,7 +1294,7 @@ void ConsumerImplTests::ExpectIdList(bool error) {
 TEST_F(ConsumerImplTests, GetUnAcknowledgedListReturnsIds) {
     ExpectIdList(false);
     asapo::Error err;
-    auto list = consumer->GetUnacknowledgedTupleIds(expected_group_id, expected_stream, 1, 0, &err);
+    auto list = consumer->GetUnacknowledgedMessages(expected_group_id, expected_stream, 1, 0, &err);
 
     ASSERT_THAT(list, ElementsAre(1, 2, 3));
     ASSERT_THAT(err, Eq(nullptr));
@@ -1314,7 +1314,7 @@ TEST_F(ConsumerImplTests, GetLastAcknowledgeUsesOk) {
     ExpectLastAckId(false);
 
     asapo::Error err;
-    auto ind = consumer->GetLastAcknowledgedTulpeId(expected_group_id, expected_stream, &err);
+    auto ind = consumer->GetLastAcknowledgedMessage(expected_group_id, expected_stream, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(ind, Eq(1));
 }
@@ -1324,7 +1324,7 @@ TEST_F(ConsumerImplTests, GetLastAcknowledgeReturnsNoData) {
     ExpectLastAckId(true);
 
     asapo::Error err;
-    auto ind = consumer->GetLastAcknowledgedTulpeId(expected_group_id, expected_stream, &err);
+    auto ind = consumer->GetLastAcknowledgedMessage(expected_group_id, expected_stream, &err);
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kNoData));
     ASSERT_THAT(ind, Eq(0));
 }

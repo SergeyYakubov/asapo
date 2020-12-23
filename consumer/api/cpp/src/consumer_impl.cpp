@@ -773,7 +773,7 @@ Error ConsumerImpl::Acknowledge(std::string group_id, uint64_t id, std::string s
     return err;
 }
 
-IdList ConsumerImpl::GetUnacknowledgedTupleIds(std::string group_id,
+IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
                                                std::string stream,
                                                uint64_t from_id,
                                                uint64_t to_id,
@@ -798,14 +798,14 @@ IdList ConsumerImpl::GetUnacknowledgedTupleIds(std::string group_id,
     return list;
 }
 
-IdList ConsumerImpl::GetUnacknowledgedTupleIds(std::string group_id,
+IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
                                                uint64_t from_id,
                                                uint64_t to_id,
                                                Error* error) {
-    return GetUnacknowledgedTupleIds(std::move(group_id), kDefaultStream, from_id, to_id, error);
+    return GetUnacknowledgedMessages(std::move(group_id), kDefaultStream, from_id, to_id, error);
 }
 
-uint64_t ConsumerImpl::GetLastAcknowledgedTulpeId(std::string group_id, std::string stream, Error* error) {
+uint64_t ConsumerImpl::GetLastAcknowledgedMessage(std::string group_id, std::string stream, Error* error) {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
         +"/" + std::move(stream) +
@@ -828,8 +828,8 @@ uint64_t ConsumerImpl::GetLastAcknowledgedTulpeId(std::string group_id, std::str
     return id;
 }
 
-uint64_t ConsumerImpl::GetLastAcknowledgedTulpeId(std::string group_id, Error* error) {
-    return GetLastAcknowledgedTulpeId(std::move(group_id), kDefaultStream, error);
+uint64_t ConsumerImpl::GetLastAcknowledgedMessage(std::string group_id, Error* error) {
+    return GetLastAcknowledgedMessage(std::move(group_id), kDefaultStream, error);
 }
 
 void ConsumerImpl::SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts) {

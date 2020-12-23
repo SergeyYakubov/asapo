@@ -60,15 +60,15 @@ class ConsumerImpl final : public asapo::Consumer {
     Error NegativeAcknowledge(std::string group_id, uint64_t id, uint64_t delay_ms,
                               std::string stream = kDefaultStream) override;
 
-    IdList GetUnacknowledgedTupleIds(std::string group_id,
+    IdList GetUnacknowledgedMessages(std::string group_id,
                                      std::string stream,
                                      uint64_t from_id,
                                      uint64_t to_id,
                                      Error* error) override;
-    IdList GetUnacknowledgedTupleIds(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) override;
+    IdList GetUnacknowledgedMessages(std::string group_id, uint64_t from_id, uint64_t to_id, Error* error) override;
 
-    uint64_t GetLastAcknowledgedTulpeId(std::string group_id, std::string stream, Error* error) override;
-    uint64_t GetLastAcknowledgedTulpeId(std::string group_id, Error* error) override;
+    uint64_t GetLastAcknowledgedMessage(std::string group_id, std::string stream, Error* error) override;
+    uint64_t GetLastAcknowledgedMessage(std::string group_id, Error* error) override;
 
     Error ResetLastReadMarker(std::string group_id) override;
     Error ResetLastReadMarker(std::string group_id, std::string stream) override;

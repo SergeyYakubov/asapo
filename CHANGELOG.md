@@ -26,6 +26,9 @@ BREAKING CHANGES
     ####  renaming - Consumer API
 * broker -> consumer
 * SetLastReadMarker/set_lastread_marker -> swap arguments
+* GetUnacknowledgedTupleIds/get_unacknowledged_tuple_ids -> GetUnacknowledgedMessages/get_unacknowledged_messages
+* GetLastAcknowledgedTulpeId/get_last_acknowledged_tuple_id -> GetLastAcknowledgedMessage/get_last_acknowledged_message
+
 
 BUG FIXES
 * fix memory leak bug in Python consumer library (lead to problems when creating many consumer instances)
@@ -37,8 +40,8 @@ FEATURES
 * New function GetLastStream/last_stream in Producer API - returns info for a stream which was created last 
 
 IMPROVEMENTS
-* Each data tuple automatically gets a timestamp (nanoseconds from Linux epoch) at the moment it is being inserted to a database 
-* GetStreamList/get_stream_list returns now sorted (by timestamp of the earliest data tuple) list of streams. Parameter `from` allows to limit the list
+* Each message automatically gets a timestamp (nanoseconds from Linux epoch) at the moment it is being inserted to a database 
+* GetStreamList/get_stream_list returns now sorted (by timestamp of the earliest message) list of streams. Parameter `from` allows to limit the list
 
 BREAKING CHANGES
 * GetStreamList/get_stream_list returns now not an array of strings, but array of StreamInfos/dictionaries
@@ -81,7 +84,7 @@ IMPROVEMENTS
 
 ## 20.06.0
 FEATURES
-* implemented acknowledeges - one can acknowledge a data tuple, get last acknowledged tuple id, get list of unacknowledged tuple ids
+* implemented acknowledeges - one can acknowledge a message, get last acknowledged tuple id, get list of unacknowledged tuple ids
 * implement getting stream info (contains last id) by producer client (not need to have consumer client)
 
 IMPROVEMENTS
@@ -91,7 +94,7 @@ IMPROVEMENTS
 * added simple C++ examples
 
 BUG FIXES
-* check data tuple ids should be positive
+* check message ids should be positive
 
 ## 20.03.0
 FEATURES

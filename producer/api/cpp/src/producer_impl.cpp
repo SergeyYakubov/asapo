@@ -85,7 +85,7 @@ Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_
     }
 
     if (message_header.message_id == 0) {
-        return ProducerErrorTemplates::kWrongInput.Generate("data tuple id should be positive");
+        return ProducerErrorTemplates::kWrongInput.Generate("message id should be positive");
     }
 
     return CheckIngestMode(ingest_mode);

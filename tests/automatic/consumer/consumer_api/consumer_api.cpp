@@ -148,28 +148,28 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[2].timestamp_created) == 2000, "streams2.timestamp");
 // acknowledges
 
-    auto id = consumer->GetLastAcknowledgedTulpeId(group_id, &err);
+    auto id = consumer->GetLastAcknowledgedMessage(group_id, &err);
     M_AssertTrue(err == asapo::ConsumerErrorTemplates::kNoData, "last ack default stream no data");
     M_AssertTrue(id == 0, "last ack default stream no data id = 0");
 
-    auto nacks = consumer->GetUnacknowledgedTupleIds(group_id, 0, 0, &err);
+    auto nacks = consumer->GetUnacknowledgedMessages(group_id, 0, 0, &err);
     M_AssertTrue(err == nullptr, "nacks default stream all");
     M_AssertTrue(nacks.size() == 10, "nacks default stream size = 10");
 
     err = consumer->Acknowledge(group_id, 1);
     M_AssertTrue(err == nullptr, "ack default stream no error");
 
-    nacks = consumer->GetUnacknowledgedTupleIds(group_id, 0, 0, &err);
+    nacks = consumer->GetUnacknowledgedMessages(group_id, 0, 0, &err);
     M_AssertTrue(nacks.size() == 9, "nacks default stream size = 9 after ack");
 
-    id = consumer->GetLastAcknowledgedTulpeId(group_id, &err);
+    id = consumer->GetLastAcknowledgedMessage(group_id, &err);
     M_AssertTrue(err == nullptr, "last ack default stream no error");
     M_AssertTrue(id == 1, "last ack default stream id = 1");
 
     err = consumer->Acknowledge(group_id, 1, "stream1");
     M_AssertTrue(err == nullptr, "ack stream1 no error");
 
-    nacks = consumer->GetUnacknowledgedTupleIds(group_id, "stream1", 0, 0, &err);
+    nacks = consumer->GetUnacknowledgedMessages(group_id, "stream1", 0, 0, &err);
     M_AssertTrue(nacks.size() == 4, "nacks stream1 size = 4 after ack");
 
 // negative acks

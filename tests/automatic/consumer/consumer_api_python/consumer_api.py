@@ -132,26 +132,26 @@ def check_single(consumer, group_id):
 
     # acks
     try:
-        id = consumer.get_last_acknowledged_tuple_id(group_id)
+        id = consumer.get_last_acknowledged_message(group_id)
     except asapo_consumer.AsapoNoDataError as err:
         print(err)
         pass
     else:
-        exit_on_noerr("get_last_acknowledged_tuple_id")
+        exit_on_noerr("get_last_acknowledged_message")
 
-    nacks = consumer.get_unacknowledged_tuple_ids(group_id)
+    nacks = consumer.get_unacknowledged_messages(group_id)
     assert_eq(len(nacks), 5, "nacks default stream size = 5")
 
     consumer.acknowledge(group_id, 1)
 
-    nacks = consumer.get_unacknowledged_tuple_ids(group_id)
+    nacks = consumer.get_unacknowledged_messages(group_id)
     assert_eq(len(nacks), 4, "nacks default stream size = 4")
 
-    id = consumer.get_last_acknowledged_tuple_id(group_id)
+    id = consumer.get_last_acknowledged_message(group_id)
     assert_eq(id, 1, "last ack default stream id = 1")
 
     consumer.acknowledge(group_id, 1, "stream1")
-    nacks = consumer.get_unacknowledged_tuple_ids(group_id)
+    nacks = consumer.get_unacknowledged_messages(group_id)
     assert_eq(len(nacks), 4, "nacks stream1 size = 4 after ack")
 
     # neg acks
