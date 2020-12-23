@@ -55,7 +55,7 @@ TEST(MessageMetaTests, CorrectConvertToJson) {
                         R"({"_id":1,"size":100,"name":"folder/test","timestamp":1000000,"source":"host:1234","buf_id":-1,"dataset_substream":3,"meta":{"bla":10}})"));
     } else {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,,"dataset_substream":3,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,"dataset_substream":3,"meta":{"bla":10}})"));
     }
 }
 
