@@ -12,13 +12,13 @@ set token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
 
 call start_services.bat
 
-for /l %%x in (1, 1, 5) do echo db.data_default.insert({"_id":%%x,"size":6,"name":"%%x","timestamp":0,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
+for /l %%x in (1, 1, 5) do echo db.data_default.insert({"_id":%%x,"size":6,"name":"%%x","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
-echo db.data_streamfts.insert({"_id":1,"size":0,"name":"1","timestamp":1000,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
+echo db.data_streamfts.insert({"_id":1,"size":0,"name":"1","timestamp":1000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
-for /l %%x in (1, 1, 5) do echo db.data_stream1.insert({"_id":%%x,"size":6,"name":"1%%x","timestamp":2000,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
+for /l %%x in (1, 1, 5) do echo db.data_stream1.insert({"_id":%%x,"size":6,"name":"1%%x","timestamp":2000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
-for /l %%x in (1, 1, 5) do echo db.data_stream2.insert({"_id":%%x,"size":6,"name":"2%%x","timestamp":3000,"source":"none","buf_id":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
+for /l %%x in (1, 1, 5) do echo db.data_stream2.insert({"_id":%%x,"size":6,"name":"2%%x","timestamp":3000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
 
 mkdir %source_path%
@@ -33,9 +33,9 @@ python %3/consumer_api.py 127.0.0.1:8400 %source_path% %beamtime_id%  %token_tes
 
 echo db.dropDatabase() | %mongo_exe% %database_name%
 
-for /l %%x in (1, 1, 10) do echo db.data_default.insert({"_id":%%x,"size":3,"messages":[{"_id":1, "size":6,"name":"%%x_1","timestamp":0,"source":"none","buf_id":0,"meta":{"test":10}},{"_id":2, "size":6,"name":"%%x_2","timestamp":1,"source":"none","buf_id":0,"meta":{"test":10}},{"_id":3, "size":6,"name":"%%x_3","timestamp":1,"source":"none","buf_id":0,"meta":{"test":10}}]}) | %mongo_exe% %database_name%  || goto :error
+for /l %%x in (1, 1, 10) do echo db.data_default.insert({"_id":%%x,"size":3,"messages":[{"_id":1, "size":6,"name":"%%x_1","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}},{"_id":2, "size":6,"name":"%%x_2","timestamp":1,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}},{"_id":3, "size":6,"name":"%%x_3","timestamp":1,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}]}) | %mongo_exe% %database_name%  || goto :error
 
-for /l %%x in (1, 1, 5) do echo db.data_incomplete.insert({"_id":%%x,"size":3,"messages":[{"_id":1, "size":6,"name":"%%x_1","timestamp":0,"source":"none","buf_id":0,"meta":{"test":10}},{"_id":2, "size":6,"name":"%%x_2","timestamp":1,"source":"none","buf_id":0,"meta":{"test":10}}]}) | %mongo_exe% %database_name%  || goto :error
+for /l %%x in (1, 1, 5) do echo db.data_incomplete.insert({"_id":%%x,"size":3,"messages":[{"_id":1, "size":6,"name":"%%x_1","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}},{"_id":2, "size":6,"name":"%%x_2","timestamp":1,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}]}) | %mongo_exe% %database_name%  || goto :error
 
 python %3/consumer_api.py 127.0.0.1:8400 %source_path% %beamtime_id%  %token_test_run% datasets || goto :error
 
