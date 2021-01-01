@@ -2,10 +2,10 @@
 #define ASAPO_RECEIVER_REQUEST_HANDLER_FACTORY_H
 
 #include "receiver_discovery_service.h"
-#include "request/request_handler_factory.h"
-#include "request/request_handler.h"
-#include "preprocessor/definitions.h"
-#include "producer/common.h"
+#include "asapo/request/request_handler_factory.h"
+#include "asapo/request/request_handler.h"
+#include "asapo/preprocessor/definitions.h"
+#include "asapo/producer/common.h"
 
 namespace  asapo {
 

@@ -8,7 +8,7 @@ import (
 type  beamtimeMeta struct {
 	BeamtimeId string  `json:"beamtimeId"`
 	Beamline string     `json:"beamline"`
-	Stream string       `json:"stream"`
+	DataSource string       `json:"dataSource"`
 	OfflinePath string `json:"core-path"`
 	OnlinePath string `json:"beamline-path"`
 	Type string `json:"source-type"`

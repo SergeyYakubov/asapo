@@ -1,11 +1,11 @@
 #include "request_handler_db_check_request.h"
 
-#include "database/database.h"
-#include "database/db_error.h"
-#include "logger/logger.h"
+#include "asapo/database/database.h"
+#include "asapo/database/db_error.h"
+#include "asapo/logger/logger.h"
 #include "request_handler_db.h"
 #include "../receiver_config.h"
-#include "io/io.h"
+#include "asapo/io/io.h"
 #include "../request.h"
 
 namespace asapo {
@@ -16,10 +16,10 @@ RequestHandlerDbCheckRequest::RequestHandlerDbCheckRequest(std::string collectio
 
 }
 
-Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, FileInfo* record ) const {
+Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, MessageMeta* record ) const {
     auto op_code = request->GetOpCode();
     auto id = request->GetDataID();
-    auto col_name = collection_name_prefix_ + "_" + request->GetSubstream();
+    auto col_name = collection_name_prefix_ + "_" + request->GetStream();
     Error err;
     if (op_code == Opcode::kOpcodeTransferData) {
         err =  db_client__->GetById(col_name, id, record);
@@ -29,10 +29,10 @@ Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, File
         }
         return err;
     } else {
-        auto subset_id = request->GetCustomData()[1];
-        err = db_client__->GetDataSetById(col_name, subset_id, id, record);
+        auto id_in_set = request->GetCustomData()[1];
+        err = db_client__->GetDataSetById(col_name, id_in_set, id, record);
         if (!err) {
-            log__->Debug(std::string{"get subset record id "} + std::to_string(subset_id) + " from " + col_name + " in " +
+            log__->Debug(std::string{"get dataset record id "} + std::to_string(id) + " from " + col_name + " in " +
                          db_name_ + " at " + GetReceiverConfig()->database_uri);
         }
         return err;
@@ -40,7 +40,7 @@ Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, File
 }
 
 
-bool RequestHandlerDbCheckRequest::SameRequestInRecord(const Request* request, const FileInfo& record) const {
+bool RequestHandlerDbCheckRequest::SameRequestInRecord(const Request* request, const MessageMeta& record) const {
     std::string meta = request->GetMetaData();
     if (meta.size() == 0) { // so it is stored in database
         meta = "{}";
@@ -55,7 +55,7 @@ Error RequestHandlerDbCheckRequest::ProcessRequest(Request* request) const {
         return err;
     }
 
-    FileInfo record;
+    MessageMeta record;
     auto  err = GetRecordFromDb(request, &record);
     if (err) {
         return err == DBErrorTemplates::kNoRecord ? nullptr : std::move(err);

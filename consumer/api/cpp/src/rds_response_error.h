@@ -1,7 +1,7 @@
 #ifndef ASAPO_RDS_RESPONSE_ERROR_H
 #define ASAPO_RDS_RESPONSE_ERROR_H
 
-#include <common/networking.h>
+#include <asapo/common/networking.h>
 
 namespace asapo {
 

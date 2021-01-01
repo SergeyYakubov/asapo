@@ -7,10 +7,10 @@
 #include "../src/event_monitor_error.h"
 #include "../src/common.h"
 
-#include "preprocessor/definitions.h"
+#include "asapo/preprocessor/definitions.h"
 
-#include "unittests/MockIO.h"
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockLogger.h"
 
 #include "mock_watch_io.h"
 
@@ -31,8 +31,8 @@ using ::asapo::Error;
 using ::asapo::ErrorInterface;
 using asapo::FilesToSend;
 using asapo::SingleFolderWatch;
-using asapo::FileInfos;
-using asapo::FileInfo;
+using asapo::MessageMetas;
+using asapo::MessageMeta;
 
 namespace {
 

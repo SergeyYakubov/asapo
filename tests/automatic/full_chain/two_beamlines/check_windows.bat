@@ -3,7 +3,7 @@ SET beamtime_id1=asapo_test1
 SET beamline1=test1
 SET beamtime_id2=asapo_test2
 SET beamline2=test2
-SET stream=detector
+SET data_source=detector
 
 SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET facility=test_facility
@@ -20,8 +20,8 @@ set /P token2=< token
 
 set proxy_address="127.0.0.1:8400"
 
-echo db.%beamtime_id1%_%stream%.insert({dummy:1}) | %mongo_exe% %beamtime_id1%_%stream%
-echo db.%beamtime_id2%_%stream%.insert({dummy:1}) | %mongo_exe% %beamtime_id2%_%stream%
+echo db.%beamtime_id1%_%data_source%.insert({dummy:1}) | %mongo_exe% %beamtime_id1%_%data_source%
+echo db.%beamtime_id2%_%data_source%.insert({dummy:1}) | %mongo_exe% %beamtime_id2%_%data_source%
 
 call start_services.bat
 
@@ -54,7 +54,7 @@ call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
 del /f token1
 del /f token2
-echo db.dropDatabase() | %mongo_exe% %beamtime_id1%_%stream%
-echo db.dropDatabase() | %mongo_exe% %beamtime_id2%_%stream%
+echo db.dropDatabase() | %mongo_exe% %beamtime_id1%_%data_source%
+echo db.dropDatabase() | %mongo_exe% %beamtime_id2%_%data_source%
 
 

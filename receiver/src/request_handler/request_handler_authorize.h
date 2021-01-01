@@ -4,11 +4,11 @@
 #include <chrono>
 
 #include "request_handler.h"
-#include "logger/logger.h"
-#include "http_client/http_client.h"
+#include "asapo/logger/logger.h"
+#include "asapo/http_client/http_client.h"
 
 
-#include "io/io.h"
+#include "asapo/io/io.h"
 
 namespace asapo {
 
@@ -21,7 +21,7 @@ class RequestHandlerAuthorize final: public ReceiverRequestHandler {
     std::unique_ptr<HttpClient>http_client__;
   private:
     mutable std::string beamtime_id_;
-    mutable std::string stream_;
+    mutable std::string data_source_;
     mutable std::string beamline_;
     mutable std::string offline_path_;
     mutable std::string online_path_;

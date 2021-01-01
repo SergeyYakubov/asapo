@@ -1,8 +1,8 @@
 #ifndef ASAPO_EventMon_CONFIG_FACTORY__H
 #define ASAPO_EventMon_CONFIG_FACTORY__H
 
-#include "io/io.h"
-#include "common/error.h"
+#include "asapo/io/io.h"
+#include "asapo/common/error.h"
 
 namespace asapo {
 
@@ -16,7 +16,7 @@ class EventMonConfigFactory {
     Error ParseConfigFile(std::string file_name);
     Error CheckMode();
     Error CheckLogLevel();
-    Error CheckSubsets();
+    Error CheckDatasets();
     Error CheckNThreads();
     Error CheckConfig();
 };

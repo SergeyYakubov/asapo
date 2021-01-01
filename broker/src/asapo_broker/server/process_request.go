@@ -13,18 +13,16 @@ func extractRequestParameters(r *http.Request, needGroupID bool) (string, string
 	vars := mux.Vars(r)
 	db_name, ok1 := vars["dbname"]
 
-	stream, ok3 := vars["stream"]
-	substream, ok4 := vars["substream"]
+	datasource, ok3 := vars["datasource"]
+	stream, ok4 := vars["stream"]
 
 	ok2 := true
 	group_id := ""
 	if needGroupID {
 		group_id, ok2 = vars["groupid"]
 	}
-	return db_name, stream, substream, group_id, ok1 && ok2 && ok3 && ok4
+	return db_name, datasource, stream, group_id, ok1 && ok2 && ok3 && ok4
 }
-
-var Sink bool
 
 func IsLetterOrNumbers(s string) bool {
 	for _, r := range s {
@@ -54,7 +52,7 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_param string, needGroupID bool) {
 	r.Header.Set("Content-type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	db_name, stream, substream, group_id, ok := extractRequestParameters(r, needGroupID)
+	db_name, datasource, stream, group_id, ok := extractRequestParameters(r, needGroupID)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -69,27 +67,25 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 		return
 	}
 
-	if datasetRequested(r) {
-		op = op + "_dataset"
+	request := database.Request{}
+	request.DbName = db_name+"_"+datasource
+	request.Op = op
+	request.ExtraParam = extra_param
+	request.DbCollectionName = stream
+	request.GroupId = group_id
+	if yes, minSize := datasetRequested(r); yes {
+		request.DatasetOp = true
+		request.MinDatasetSize = minSize
 	}
 
-	answer, code := processRequestInDb(db_name+"_"+stream, substream, group_id, op, extra_param)
+	answer, code := processRequestInDb(request)
 	w.WriteHeader(code)
 	w.Write(answer)
 }
 
-func getStatusCodeFromDbError(err error) int {
-	err_db, ok := err.(*database.DBError)
-	if ok {
-		return err_db.Code
-	} else {
-		return utils.StatusServiceUnavailable
-	}
-}
-
 func returnError(err error, log_str string) (answer []byte, code int) {
-	code = getStatusCodeFromDbError(err)
-	if code != utils.StatusNoData {
+	code = database.GetStatusCodeFromError(err)
+	if code != utils.StatusNoData && code != utils.StatusPartialData{
 		logger.Error(log_str + " - " + err.Error())
 	} else {
 		logger.Debug(log_str + " - " + err.Error())
@@ -98,7 +94,7 @@ func returnError(err error, log_str string) (answer []byte, code int) {
 }
 
 func reconnectIfNeeded(db_error error) {
-	code := getStatusCodeFromDbError(db_error)
+	code := database.GetStatusCodeFromError(db_error)
 	if code != utils.StatusServiceUnavailable {
 		return
 	}
@@ -110,10 +106,10 @@ func reconnectIfNeeded(db_error error) {
 	}
 }
 
-func processRequestInDb(db_name string, data_collection_name string, group_id string, op string, extra_param string) (answer []byte, code int) {
+func processRequestInDb(request database.Request) (answer []byte, code int) {
 	statistics.IncreaseCounter()
-	answer, err := db.ProcessRequest(db_name, data_collection_name, group_id, op, extra_param)
-	log_str := "processing request " + op + " in " + db_name + " at " + settings.GetDatabaseServer()
+	answer, err := db.ProcessRequest(request)
+	log_str := "processing request " + request.Op + " in " + request.DbName + " at " + settings.GetDatabaseServer()
 	if err != nil {
 		go reconnectIfNeeded(err)
 		return returnError(err, log_str)

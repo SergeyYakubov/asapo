@@ -50,7 +50,7 @@ RAPIDJSON_DIAG_OFF(switch - enum)
                                                    0);  //!< Represents an invalid index in GenericRegex::State::out, out1
     static const SizeType kRegexInvalidRange = ~SizeType(0);
 
-//! Regular expression engine with subset of ECMAscript grammar.
+//! Regular expression engine with dataset of ECMAscript grammar.
     /*!
         Supported regular expression syntax:
         - \c ab     Concatenation

@@ -5,5 +5,5 @@ import (
 )
 
 func routeGetLast(w http.ResponseWriter, r *http.Request) {
-	processRequest(w, r, "last", "0", true)
+	processRequest(w, r, "last", "0", false)
 }

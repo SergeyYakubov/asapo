@@ -28,7 +28,7 @@ nomad run broker.nmd
 
 sleep 1
 
-echo 'db.data_default.insert({"_id":'1',"size":'$size',"name":"'$fname'","timestamp":1,"source":"none","buf_id":0,"meta":{}})' | mongo ${beamtime_id}_stream
+echo 'db.data_default.insert({"_id":'1',"size":'$size',"name":"'$fname'","timestamp":1,"source":"none","buf_id":0,"dataset_substream":0,"meta":{}})' | mongo ${beamtime_id}_stream
 dd if=/dev/zero of=$fname bs=$size count=1
 
 export PYTHONPATH=$1:${PYTHONPATH}

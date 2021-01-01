@@ -22,10 +22,6 @@ function(prepare_asapo)
         set(RECEIVER_USE_CACHE true)
     endif()
 
-    if(NOT DEFINED RECEIVER_WRITE_TO_DISK)
-        set(RECEIVER_WRITE_TO_DISK true)
-    endif()
-
     if (WIN32)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/receiver_tcp.json.tpl.win.in receiver_tcp.json.tpl @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/authorizer_settings.json.tpl.win authorizer.json.tpl COPYONLY)

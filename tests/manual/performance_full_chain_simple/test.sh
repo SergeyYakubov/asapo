@@ -112,7 +112,7 @@ scp ../../../cmake-build-release/broker/asapo-broker ${broker_node}:${broker_dir
 consumer_node=max-display002
 consumer_dir=~/fullchain_tests
 nthreads=16
-scp ../../../cmake-build-release/examples/consumer/getnext_broker/getnext_broker ${consumer_node}:${consumer_dir}
+scp ../../../cmake-build-release/examples/consumer/getnext/getnext ${consumer_node}:${consumer_dir}
 scp ../../../cmake-build-release/asapo_tools/asapo ${consumer_node}:${consumer_dir}
 scp ../../../tests/automatic/settings/auth_secret.key ${consumer_node}:${consumer_dir}/auth_secret.key
 
@@ -147,6 +147,6 @@ sleep 1
 #prepare token
 ssh ${consumer_node} "bash -c '${consumer_dir}/asapo token -secret ${consumer_dir}/auth_secret.key ${beamtime_id} >${consumer_dir}/token'"
 #consumer_start
-ssh ${consumer_node} "bash -c '${consumer_dir}/getnext_broker ${receiver_node}:8400 ${beamtime_id} ${nthreads} \`cat ${consumer_dir}/token\`'"
+ssh ${consumer_node} "bash -c '${consumer_dir}/getnext ${receiver_node}:8400 ${beamtime_id} ${nthreads} \`cat ${consumer_dir}/token\`'"
 
 

@@ -9,12 +9,12 @@ import (
 	"testing"
 )
 
-type ImageOpTestSuite struct {
+type MessageOpTestSuite struct {
 	suite.Suite
 	mock_db *database.MockedDatabase
 }
 
-func (suite *ImageOpTestSuite) SetupTest() {
+func (suite *MessageOpTestSuite) SetupTest() {
 	statistics.Reset()
 	suite.mock_db = new(database.MockedDatabase)
 	db = suite.mock_db
@@ -22,20 +22,33 @@ func (suite *ImageOpTestSuite) SetupTest() {
 	logger.SetMockLog()
 }
 
-func (suite *ImageOpTestSuite) TearDownTest() {
+func (suite *MessageOpTestSuite) TearDownTest() {
 	assertExpectations(suite.T(), suite.mock_db)
 	logger.UnsetMockLog()
 	db = nil
 }
 
-func TestImageOpTestSuite(t *testing.T) {
-	suite.Run(t, new(ImageOpTestSuite))
+func TestMessageOpTestSuite(t *testing.T) {
+	suite.Run(t, new(MessageOpTestSuite))
 }
 
-func (suite *ImageOpTestSuite) TestAckImageOpOK() {
-	query_str := "{\"Id\":1,\"Op\":\"ackimage\"}"
-	suite.mock_db.On("ProcessRequest", expectedDBName, expectedSubstream, expectedGroupID, "ackimage", query_str).Return([]byte(""), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request ackimage")))
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + expectedSubstream + "/" + expectedGroupID + "/1" + correctTokenSuffix,"POST",query_str)
-	suite.Equal(http.StatusOK, w.Code, "ackimage OK")
+func (suite *MessageOpTestSuite) TestAckMessageOpOK() {
+	query_str := "{\"Id\":1,\"Op\":\"ackmessage\"}"
+	suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: expectedStream, GroupId: expectedGroupID, Op: "ackmessage", ExtraParam: query_str}).Return([]byte(""), nil)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request ackmessage")))
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix,"POST",query_str)
+	suite.Equal(http.StatusOK, w.Code, "ackmessage OK")
+}
+
+
+func (suite *MessageOpTestSuite) TestAckMessageOpErrorWrongOp() {
+	query_str := "\"Id\":1,\"Op\":\"ackmessage\"}"
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix,"POST",query_str)
+	suite.Equal(http.StatusBadRequest, w.Code, "ackmessage wrong")
+}
+
+func (suite *MessageOpTestSuite) TestAckMessageOpErrorWrongID() {
+	query_str := "{\"Id\":1,\"Op\":\"ackmessage\"}"
+	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/bla" + correctTokenSuffix,"POST",query_str)
+	suite.Equal(http.StatusBadRequest, w.Code, "ackmessage wrong")
 }

@@ -1,14 +1,15 @@
-#include <asapo_fabric/asapo_fabric.h>
 #include <iostream>
-#include <io/io_factory.h>
-#include <common/networking.h>
+
+#include "asapo/asapo_fabric/asapo_fabric.h"
+#include "asapo/io/io_factory.h"
+#include "asapo/common/networking.h"
 
 using namespace asapo;
 using namespace asapo::fabric;
 
 volatile bool running = false;
 
-void ServerThread(FabricServer* server, size_t bufferSize, FileData* buffer) {
+void ServerThread(FabricServer* server, size_t bufferSize, MessageData* buffer) {
     Error error;
     while(running && !error) {
         FabricAddress clientAddress;
@@ -68,7 +69,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Server is listening on " << server->GetAddress() << std::endl;
 
     size_t dataBufferSize = 1024 * kByte;
-    FileData dataBuffer = FileData{new uint8_t[dataBufferSize]};
+    MessageData dataBuffer = MessageData{new uint8_t[dataBufferSize]};
     strcpy((char*)dataBuffer.get(), "I (the server) wrote into your buffer.");
     std::cout << "Expected file size: " << dataBufferSize << " byte" << std::endl;
 

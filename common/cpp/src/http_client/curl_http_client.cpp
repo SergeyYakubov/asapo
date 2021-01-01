@@ -1,9 +1,9 @@
 #include "curl_http_client.h"
 
 #include <cstring>
-#include "http_client/http_error.h"
-#include  "common/data_structs.h"
-#include "io/io_factory.h"
+#include "asapo/http_client/http_error.h"
+#include  "asapo/common/data_structs.h"
+#include "asapo/io/io_factory.h"
 
 namespace asapo {
 
@@ -108,10 +108,10 @@ Error CurlHttpClient::Command(bool post, CurlDataContainer* data_container, cons
     return ProcessCurlResponse(curl_, res, errbuf, response_code);
 }
 
-FileData AllocateMemory(uint64_t size, Error* err) {
-    FileData data;
+MessageData AllocateMemory(uint64_t size, Error* err) {
+    MessageData data;
     try {
-        data = FileData{new uint8_t[(size_t)size + 1 ]};
+        data = MessageData{new uint8_t[(size_t)size + 1 ]};
     } catch (...) {
         *err = ErrorTemplates::kMemoryAllocationError.Generate();
         return nullptr;
@@ -123,7 +123,7 @@ FileData AllocateMemory(uint64_t size, Error* err) {
 Error CurlHttpClient::Post(const std::string& uri,
                            const std::string& cookie,
                            const std::string& input_data,
-                           FileData* output_data,
+                           MessageData* output_data,
                            uint64_t output_data_size,
                            HttpCode* response_code) const noexcept {
     Error err;

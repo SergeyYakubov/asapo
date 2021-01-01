@@ -9,7 +9,7 @@ consumer_bin=$2
 asapo_tool_bin=$3
 network_type=$4
 
-stream=detector
+data_source=detector
 
 beamtime_id1=asapo_test1
 token1=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id1`
@@ -40,13 +40,13 @@ Cleanup() {
     nomad stop broker
     nomad stop authorizer
 #    kill $producerid
-    echo "db.dropDatabase()" | mongo ${beamtime_id1}_${stream}
-    echo "db.dropDatabase()" | mongo ${beamtime_id2}_${stream}
+    echo "db.dropDatabase()" | mongo ${beamtime_id1}_${data_source}
+    echo "db.dropDatabase()" | mongo ${beamtime_id2}_${data_source}
     influx -execute "drop database ${monitor_database_name}"
 }
 
-echo "db.${beamtime_id1}_${stream}.insert({dummy:1})" | mongo ${beamtime_id1}_${stream}
-echo "db.${beamtime_id2}_${stream}.insert({dummy:1})" | mongo ${beamtime_id2}_${stream}
+echo "db.${beamtime_id1}_${data_source}.insert({dummy:1})" | mongo ${beamtime_id1}_${data_source}
+echo "db.${beamtime_id2}_${data_source}.insert({dummy:1})" | mongo ${beamtime_id2}_${data_source}
 
 nomad run nginx.nmd
 nomad run authorizer.nmd

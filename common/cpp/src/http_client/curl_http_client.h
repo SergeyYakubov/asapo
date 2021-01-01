@@ -5,9 +5,9 @@
 #include <mutex>
 #include <ostream>
 
-#include "http_client/http_client.h"
+#include "asapo/http_client/http_client.h"
 #include "curl/curl.h"
-#include "io/io.h"
+#include "asapo/io/io.h"
 
 namespace asapo {
 
@@ -19,7 +19,7 @@ enum class CurlDataMode {
 
 struct CurlDataContainer {
     std::string string_buffer;
-    FileData* p_array;
+    MessageData* p_array;
     uint64_t array_size;
     uint64_t bytes_received = 0;
     CurlDataMode mode;
@@ -34,7 +34,7 @@ class CurlHttpClient final : public HttpClient {
     std::string Get(const std::string& uri, HttpCode* response_code, Error* err) const noexcept override;
     std::string Post(const std::string& uri, const std::string& cookie, const std::string& data, HttpCode* response_code,
                      Error* err) const noexcept override;
-    Error Post(const std::string& uri,  const std::string& cookie, const std::string& input_data, FileData* output_data,
+    Error Post(const std::string& uri, const std::string& cookie, const std::string& input_data, MessageData* output_data,
                uint64_t output_data_size,
                HttpCode* response_code)  const noexcept override;
     Error Post(const std::string& uri, const std::string& cookie,

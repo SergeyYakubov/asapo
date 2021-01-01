@@ -2,9 +2,9 @@
 #include <gmock/gmock.h>
 
 
-#include "unittests/MockLogger.h"
-#include "unittests/MockIO.h"
-#include "io/io_factory.h"
+#include "asapo/unittests/MockLogger.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/io/io_factory.h"
 #include "../../../src/receiver_data_server/net_server/rds_tcp_server.h"
 
 using ::testing::Test;
@@ -279,7 +279,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendResponseError) {
     ASSERT_THAT(err, Ne(nullptr));
 }
 
-TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendDataError) {
+TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendError) {
     asapo::GenericNetworkResponse tmp {};
 
     asapo::ReceiverDataServerRequest expectedRequest {{}, 30};

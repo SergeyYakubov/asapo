@@ -41,8 +41,8 @@ job "asapo-produceronly" {
  "IgnoreExtensions":["tmp"],
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
- "Stream": "",
-  "Subset": {
+ "DataSource": "",
+  "Dataset": {
    	"Mode":"none"
   }
 }
@@ -102,8 +102,8 @@ job "asapo-produceronly" {
  "IgnoreExtensions":["tmp"],
  "WhitelistExtensions":[],
  "RemoveAfterSend":true,
- "Stream": "",
- "Subset": {
+ "DataSource": "",
+ "Dataset": {
   	"Mode":"none"
  }
 

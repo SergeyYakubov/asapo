@@ -1,5 +1,5 @@
-#include <common/networking.h>
-#include <io/io_factory.h>
+#include <asapo/common/networking.h>
+#include <asapo/io/io_factory.h>
 #include <iostream>
 #include "fabric_consumer_client.h"
 #include "rds_response_error.h"
@@ -10,7 +10,7 @@ FabricConsumerClient::FabricConsumerClient(): factory__(fabric::GenerateDefaultF
 
 }
 
-Error FabricConsumerClient::GetData(const FileInfo* info, FileData* data) {
+Error FabricConsumerClient::GetData(const MessageMeta* info, MessageData* data) {
     Error err;
     if (!client__) {
         client__ = factory__->CreateClient(&err);
@@ -24,7 +24,7 @@ Error FabricConsumerClient::GetData(const FileInfo* info, FileData* data) {
         return err;
     }
 
-    FileData tempData{new uint8_t[info->size]};
+    MessageData tempData{new uint8_t[info->size]};
 
     /* MemoryRegion will be released when out of scope */
     auto mr = client__->ShareMemoryRegion(tempData.get(), info->size, &err);
@@ -50,7 +50,7 @@ Error FabricConsumerClient::GetData(const FileInfo* info, FileData* data) {
     return nullptr;
 }
 
-fabric::FabricAddress FabricConsumerClient::GetAddressOrConnect(const FileInfo* info, Error* error) {
+fabric::FabricAddress FabricConsumerClient::GetAddressOrConnect(const MessageMeta* info, Error* error) {
     std::lock_guard<std::mutex> lock(mutex_);
     auto tableEntry = known_addresses_.find(info->source);
 

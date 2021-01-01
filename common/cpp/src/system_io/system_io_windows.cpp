@@ -126,10 +126,10 @@ bool IsDirectory(const WIN32_FIND_DATA f) {
            strstr(f.cFileName, ".") == nullptr;
 }
 
-FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* err) {
-    FileInfo file_info;
+MessageMeta GetMessageMeta_win(const WIN32_FIND_DATA& f, const string& name, Error* err) {
+    MessageMeta message_meta;
 
-    file_info.timestamp = FileTime2TimePoint(f.ftLastWriteTime, err);
+    message_meta.timestamp = FileTime2TimePoint(f.ftLastWriteTime, err);
     if (*err) {
         return {};
     }
@@ -138,14 +138,14 @@ FileInfo GetFileInfo_win(const WIN32_FIND_DATA& f, const string& name, Error* er
     fsize.LowPart = f.nFileSizeLow;
     fsize.HighPart = f.nFileSizeHigh;
 
-    file_info.size = fsize.QuadPart;
+    message_meta.size = fsize.QuadPart;
 
-    file_info.name = name + "\\" + f.cFileName;
+    message_meta.name = name + "\\" + f.cFileName;
 
-    return file_info;
+    return message_meta;
 }
 
-FileInfo SystemIO::GetFileInfo(const std::string& name, Error* err) const {
+MessageMeta SystemIO::GetMessageMeta(const std::string& name, Error* err) const {
     WIN32_FIND_DATA f;
 
     auto hFind = FindFirstFile(name.c_str(), &f);
@@ -155,23 +155,23 @@ FileInfo SystemIO::GetFileInfo(const std::string& name, Error* err) const {
         return {};
     }
     FindClose(hFind);
-    return GetFileInfo_win(f, name, err);
+    return GetMessageMeta_win(f, name, err);
 }
 
 void ProcessFileEntity(const WIN32_FIND_DATA& f, const std::string& path,
-                       FileInfos* files, Error* err) {
+                       MessageMetas* files, Error* err) {
 
     *err = nullptr;
     if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
         return;
     }
 
-    auto file_info = GetFileInfo_win(f, path, err);
+    auto message_meta = GetMessageMeta_win(f, path, err);
     if (*err) {
         return;
     }
 
-    files->push_back(file_info);
+    files->push_back(message_meta);
 }
 
 void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const {
@@ -202,8 +202,8 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
     }
 }
 
-void SystemIO::CollectFileInformationRecursively(const std::string& path,
-                                                 FileInfos* files, Error* err) const {
+void SystemIO::CollectMessageMetarmationRecursively(const std::string& path,
+                                                 MessageMetas* files, Error* err) const {
     WIN32_FIND_DATA find_data;
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {
@@ -214,7 +214,7 @@ void SystemIO::CollectFileInformationRecursively(const std::string& path,
 
     do {
         if (IsDirectory(find_data)) {
-            CollectFileInformationRecursively(path + "\\" + find_data.cFileName, files, err);
+            CollectMessageMetarmationRecursively(path + "\\" + find_data.cFileName, files, err);
         } else {
             ProcessFileEntity(find_data, path, files, err);
         }

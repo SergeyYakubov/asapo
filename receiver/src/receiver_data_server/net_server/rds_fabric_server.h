@@ -2,7 +2,7 @@
 #define ASAPO_RDS_FABRIC_SERVER_H
 
 #include "rds_net_server.h"
-#include "asapo_fabric/asapo_fabric.h"
+#include "asapo/asapo_fabric/asapo_fabric.h"
 
 namespace asapo {
 

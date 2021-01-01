@@ -1,13 +1,13 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "unittests/MockIO.h"
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockLogger.h"
 
 #include "../../src/statistics/statistics_sender_influx_db.h"
 #include "../../src/statistics/statistics_sender.h"
 #include "../../../common/cpp/src/http_client/curl_http_client.h"
-#include "unittests/MockHttpClient.h"
+#include "asapo/unittests/MockHttpClient.h"
 #include "../../src/statistics/receiver_statistics.h"
 
 #include "../../src/receiver_config.h"

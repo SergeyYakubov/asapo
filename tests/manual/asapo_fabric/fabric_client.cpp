@@ -1,7 +1,7 @@
-#include <asapo_fabric/asapo_fabric.h>
+#include <asapo/asapo_fabric/asapo_fabric.h>
 #include <iostream>
-#include <common/data_structs.h>
-#include <common/networking.h>
+#include <asapo/common/data_structs.h>
+#include <asapo/common/networking.h>
 
 using namespace asapo;
 using namespace asapo::fabric;
@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
     }
 
     size_t dataBufferSize = 1024 * kByte;
-    FileData dataBuffer = FileData{new uint8_t[dataBufferSize]};
+    MessageData dataBuffer = MessageData{new uint8_t[dataBufferSize]};
     std::cout << "Expected file size: " << dataBufferSize << " byte" << std::endl;
 
     auto serverAddress = client->AddServerAddress(serverAddressString, &error);

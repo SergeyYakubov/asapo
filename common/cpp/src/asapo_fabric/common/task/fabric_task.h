@@ -1,7 +1,7 @@
 #ifndef ASAPO_FABRIC_TASK_H
 #define ASAPO_FABRIC_TASK_H
 
-#include <asapo_fabric/asapo_fabric.h>
+#include <asapo/asapo_fabric/asapo_fabric.h>
 #include <rdma/fi_eq.h>
 
 namespace asapo {

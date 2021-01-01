@@ -6,7 +6,7 @@ trap Cleanup EXIT
 
 beamtime_id=11111111
 beamtime_id2=22222222
-stream=python
+data_source=python
 beamline=p07
 receiver_root_folder=/tmp/asapo/receiver/files
 facility=test_facility
@@ -24,8 +24,8 @@ Cleanup() {
     nomad stop authorizer >/dev/null
     nomad stop nginx >/dev/null
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill > /dev/null
-    echo "db.dropDatabase()" | mongo ${beamtime_id}_${stream} >/dev/null
-    echo "db.dropDatabase()" | mongo ${beamtime_id2}_${stream} >/dev/null
+    echo "db.dropDatabase()" | mongo ${beamtime_id}_${data_source} >/dev/null
+    echo "db.dropDatabase()" | mongo ${beamtime_id2}_${data_source} >/dev/null
 }
 
 export PYTHONPATH=$2:${PYTHONPATH}
@@ -42,9 +42,9 @@ sleep 1
 echo test > file1
 
 
-$1 $3 $beamline $token $stream "127.0.0.1:8400" > out || cat out
+$1 $3 $beamline $token $data_source "127.0.0.1:8400" > out || cat out
 cat out
 cat out | grep "successfuly sent" | wc -l | grep 3
-cat out | grep "reauthorization" | wc -l | grep 1
+cat out | grep "reauthorization\|Broken" | wc -l | grep 1
 cat out | grep "duplicated" | wc -l | grep 2
 

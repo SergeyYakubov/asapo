@@ -6,7 +6,7 @@ set(TARGET_NAME full_chain_usermeta_python)
 prepare_asapo()
 
 if (UNIX)
-    get_target_property(PYTHON_LIBS python-lib BINARY_DIR)
+    get_target_property(PYTHON_LIBS python-lib-consumer BINARY_DIR)
 else()
     get_target_property(PYTHON_LIBS asapo_consumer BINARY_DIR)
 endif()

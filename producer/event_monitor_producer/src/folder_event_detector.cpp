@@ -1,5 +1,5 @@
 #include "folder_event_detector.h"
-#include "io/io_factory.h"
+#include "asapo/io/io_factory.h"
 #include "eventmon_logger.h"
 #include "event_monitor_error.h"
 
@@ -49,7 +49,7 @@ Error FolderEventDetector::UpdateEventsBuffer() {
 
     for (auto& file : files) {
         if (!IgnoreFile(file) && FileInWhiteList(file) ) {
-            events_buffer_.emplace_back(EventHeader{0, 0, file});
+            events_buffer_.emplace_back(MessageHeader{0, 0, file});
         }
     }
 
@@ -57,7 +57,7 @@ Error FolderEventDetector::UpdateEventsBuffer() {
 }
 
 
-Error FolderEventDetector::GetNextEvent(EventHeader* event_header) {
+Error FolderEventDetector::GetNextEvent(MessageHeader* message_header) {
     if (!monitoring_started_) {
         auto err = TextError("monitoring is not started yet");
         return err;
@@ -69,7 +69,7 @@ Error FolderEventDetector::GetNextEvent(EventHeader* event_header) {
         }
     }
 
-    return GetHeaderFromBuffer(event_header);
+    return GetHeaderFromBuffer(message_header);
 }
 
 bool FolderEventDetector::BufferIsEmpty() const {
@@ -90,11 +90,11 @@ Error FolderEventDetector::StartMonitoring() {
     return nullptr;
 }
 
-Error FolderEventDetector::GetHeaderFromBuffer(EventHeader* event_header) {
+Error FolderEventDetector::GetHeaderFromBuffer(MessageHeader* message_header) {
     if (events_buffer_.size() == 0) {
         return EventMonitorErrorTemplates::kNoNewEvent.Generate();
     }
-    *event_header = std::move(events_buffer_.front());
+    *message_header = std::move(events_buffer_.front());
     events_buffer_.pop_front();
     return nullptr;
 }

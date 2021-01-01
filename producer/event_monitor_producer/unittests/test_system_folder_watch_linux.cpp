@@ -6,7 +6,7 @@
 #include "../src/common.h"
 
 #include "mock_inotify.h"
-#include <unittests/MockIO.h>
+#include <asapo/unittests/MockIO.h>
 
 
 
@@ -27,8 +27,8 @@ using ::asapo::Error;
 using ::asapo::ErrorInterface;
 using asapo::FilesToSend;
 using asapo::SystemFolderWatch;
-using asapo::FileInfos;
-using asapo::FileInfo;
+using asapo::MessageMetas;
+using asapo::MessageMeta;
 
 namespace {
 
@@ -39,15 +39,15 @@ TEST(SystemFolderWatch, Constructor) {
     ASSERT_THAT(dynamic_cast<asapo::Inotify*>(watch.inotify__.get()), Ne(nullptr));
 }
 
-FileInfos CreateTestFileInfos() {
-    FileInfos file_infos;
-    FileInfo fi;
+MessageMetas CreateTestMessageMetas() {
+    MessageMetas message_metas;
+    MessageMeta fi;
     fi.size = 100;
     fi.name = "file1";
-    file_infos.push_back(fi);
+    message_metas.push_back(fi);
     fi.name = "subfolder/file2";
-    file_infos.push_back(fi);
-    return file_infos;
+    message_metas.push_back(fi);
+    return message_metas;
 }
 
 
@@ -64,7 +64,7 @@ class SystemFolderWatchTests : public testing::Test {
     std::vector<std::string> expected_watches{"/tmp/test1", "/tmp/test2", "/tmp/test1/sub11", "/tmp/test2/sub21", "/tmp/test2/sub22", "/tmp/test2/sub21/sub211"};
     std::string expected_filename1{"file1"};
     std::string expected_filename2{"file2"};
-    FileInfos expected_fileinfos = CreateTestFileInfos();
+    MessageMetas expected_message_metas = CreateTestMessageMetas();
     int expected_wd = 10;
     std::vector<int>expected_fds = {1, 2, 3, 4, 5, 6};
     void MockStartMonitoring();
@@ -287,11 +287,11 @@ void SystemFolderWatchTests::ExpectCreateFolder(std::string folder, bool with_fi
     if (with_files) {
         ON_CALL(mock_io, FilesInFolder_t(newfolder, _)).
         WillByDefault(DoAll(testing::SetArgPointee<1>(nullptr),
-                            testing::Return(expected_fileinfos)));
+                            testing::Return(expected_message_metas)));
     } else {
         ON_CALL(mock_io, FilesInFolder_t(newfolder, _)).
         WillByDefault(DoAll(testing::SetArgPointee<1>(nullptr),
-                            testing::Return(FileInfos{})));
+                            testing::Return(MessageMetas{})));
     }
 }
 

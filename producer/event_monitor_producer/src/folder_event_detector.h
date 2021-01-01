@@ -6,7 +6,7 @@
 
 #include "event_detector.h"
 #include "eventmon_config.h"
-#include "io/io.h"
+#include "asapo/io/io.h"
 
 #include "system_folder_watch.h"
 
@@ -14,16 +14,16 @@ namespace asapo {
 
 class FolderEventDetector : public AbstractEventDetector {
   public:
-    Error GetNextEvent(EventHeader* event_header) override;
+    Error GetNextEvent(MessageHeader* message_header) override;
     Error StartMonitoring() override;
     FolderEventDetector(const EventMonConfig* config);
     std::unique_ptr<SystemFolderWatch> system_folder_watch__;
   private:
     const EventMonConfig* config_;
     bool monitoring_started_ = false;
-    std::deque<EventHeader> events_buffer_;
+    std::deque<MessageHeader> events_buffer_;
     Error UpdateEventsBuffer();
-    Error GetHeaderFromBuffer(EventHeader* event_header);
+    Error GetHeaderFromBuffer(MessageHeader* message_header);
     bool IgnoreFile(const std::string& event);
     bool FileInWhiteList(const std::string& file);
     bool BufferIsEmpty() const;

@@ -1,10 +1,10 @@
-#include <asapo_producer.h>
+#include <asapo/asapo_producer.h>
 #include "producer_request.h"
 
 namespace asapo {
 
 bool ProducerRequest::DataFromFile() const {
-    if (data != nullptr || original_filepath.empty() || !NeedSendData()) {
+    if (data != nullptr || original_filepath.empty() || !NeedSend()) {
         return false;
     }
     return true;
@@ -12,7 +12,7 @@ bool ProducerRequest::DataFromFile() const {
 
 ProducerRequest::ProducerRequest(std::string source_credentials,
                                  GenericRequestHeader h,
-                                 FileData data,
+                                 MessageData data,
                                  std::string metadata,
                                  std::string original_filepath,
                                  RequestCallback callback,
@@ -26,8 +26,8 @@ ProducerRequest::ProducerRequest(std::string source_credentials,
     manage_data_memory{manage_data_memory} {
 }
 
-bool ProducerRequest::NeedSendData() const {
-    if (header.op_code == kOpcodeTransferData || header.op_code == kOpcodeTransferSubsetData) {
+bool ProducerRequest::NeedSend() const {
+    if (header.op_code == kOpcodeTransferData || header.op_code == kOpcodeTransferDatasetData) {
         return header.custom_data[kPosIngestMode] & IngestModeFlags::kTransferData;
     }
     return true;
@@ -49,11 +49,11 @@ Error ProducerRequest::UpdateDataSizeFromFileIfNeeded(const IO* io) {
     }
 
     Error err;
-    auto finfo = io->GetFileInfo(original_filepath, &err);
+    auto message_meta = io->GetMessageMeta(original_filepath, &err);
     if (err) {
         return ProducerErrorTemplates::kLocalIOError.Generate(err->Explain());
     }
-    header.data_size = finfo.size;
+    header.data_size = message_meta.size;
     return nullptr;
 }
 

@@ -4,7 +4,7 @@
 #include "mock_receiver_config.h"
 #include "../src/receiver_config_factory.h"
 
-#include <unittests/MockIO.h>
+#include <asapo/unittests/MockIO.h>
 
 using testing::_;
 using testing::Return;
@@ -72,8 +72,6 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
     config_string += "," +  Key("ReceiveToDiskThresholdMB",
                                 error_field) + std::to_string(config.receive_to_disk_threshold_mb);
     config_string += "," +  Key("AuthorizationServer", error_field) + "\"" + config.authorization_server + "\"";
-    config_string += "," +  Key("WriteToDisk", error_field) + (config.write_to_disk ? "true" : "false");
-    config_string += "," +  Key("WriteToDb", error_field) + (config.write_to_db ? "true" : "false");
     config_string += "," +  Key("LogLevel", error_field) + "\"" + log_level + "\"";
     config_string += "," +  Key("Tag", error_field) + "\"" + config.tag + "\"";
     config_string += "}";

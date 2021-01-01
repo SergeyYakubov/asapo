@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "unittests/MockIO.h"
-#include "unittests/MockDatabase.h"
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockDatabase.h"
+#include "asapo/unittests/MockLogger.h"
 
 #include "../../src/receiver_error.h"
 #include "../../src/request.h"
@@ -13,12 +13,12 @@
 #include "../../../common/cpp/src/database/mongodb_client.h"
 
 #include "../mock_receiver_config.h"
-#include "common/data_structs.h"
-#include "common/networking.h"
+#include "asapo/common/data_structs.h"
+#include "asapo/common/networking.h"
 #include "../receiver_mocking.h"
 
 using asapo::MockRequest;
-using asapo::FileInfo;
+using asapo::MessageMeta;
 using ::testing::Test;
 using ::testing::Return;
 using ::testing::ReturnRef;
@@ -55,15 +55,15 @@ namespace {
 
 class DbMetaLastStreamTests : public Test {
   public:
-    std::string expectedlaststream = "substream";
+    std::string expectedlaststream = "stream";
     RequestHandlerDbLastStream handler{asapo::kDBDataCollectionNamePrefix};
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
     NiceMock<asapo::MockLogger> mock_logger;
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
-    std::string expected_stream = "stream";
-    std::string info_str = R"({"lastId":10,"name":"substream","timestampCreated":1000000,"timestampLast":2000000})";
+    std::string expected_data_source = "source";
+    std::string info_str = R"({"lastId":10,"name":"stream","timestampCreated":1000000,"timestampLast":2000000})";
     asapo::StreamInfo expected_stream_info;
     void SetUp() override {
         GenericRequestHeader request_header;
@@ -89,9 +89,9 @@ TEST_F(DbMetaLastStreamTests, CallsUpdate) {
     .WillOnce(ReturnRef(expected_beamtime_id))
     ;
 
-    EXPECT_CALL(*mock_request, GetStream()).WillOnce(ReturnRef(expected_stream));
+    EXPECT_CALL(*mock_request, GetDataSource()).WillOnce(ReturnRef(expected_data_source));
 
-    EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_stream)).
+    EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_data_source)).
     WillOnce(testing::Return(nullptr));
 
 

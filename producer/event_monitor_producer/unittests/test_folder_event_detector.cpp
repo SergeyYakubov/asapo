@@ -5,7 +5,7 @@
 #include "../src/event_monitor_error.h"
 #include "../src/common.h"
 
-#include "unittests/MockIO.h"
+#include "asapo/unittests/MockIO.h"
 
 #include "mock_system_folder_watch.h"
 
@@ -65,7 +65,7 @@ class FolderEventDetectorTests : public testing::Test {
     }
     void MockStartMonitoring();
     void MockGetEvents();
-    asapo::EventHeader InitiateAndReadSingleEvent();
+    asapo::MessageHeader InitiateAndReadSingleEvent();
 };
 
 void FolderEventDetectorTests::MockStartMonitoring() {
@@ -120,13 +120,13 @@ TEST_F(FolderEventDetectorTests, GetNextReturnsErrorIfMonitoringNotStarted) {
 
 TEST_F(FolderEventDetectorTests, GetNextCallsSystemGetNextFirstTimeNoEvents) {
     MockStartMonitoring();
-    asapo::EventHeader event_header;
+    asapo::MessageHeader message_header;
     EXPECT_CALL(mock_system_folder_watch, GetFileEventList_t(_));
 
 
     detector.StartMonitoring();
 
-    auto err = detector.GetNextEvent(&event_header);
+    auto err = detector.GetNextEvent(&message_header);
     ASSERT_THAT(err, Eq(asapo::EventMonitorErrorTemplates::kNoNewEvent));
 }
 
@@ -140,8 +140,8 @@ TEST_F(FolderEventDetectorTests, GetNextEventError) {
 
     detector.StartMonitoring();
 
-    asapo::EventHeader event_header;
-    auto err = detector.GetNextEvent(&event_header);
+    asapo::MessageHeader message_header;
+    auto err = detector.GetNextEvent(&message_header);
     ASSERT_THAT(err, Eq(asapo::EventMonitorErrorTemplates::kSystemError));
 }
 
@@ -153,14 +153,14 @@ void FolderEventDetectorTests::MockGetEvents() {
         ));
 }
 
-asapo::EventHeader FolderEventDetectorTests::InitiateAndReadSingleEvent() {
+asapo::MessageHeader FolderEventDetectorTests::InitiateAndReadSingleEvent() {
     MockStartMonitoring();
     MockGetEvents();
     detector.StartMonitoring();
-    asapo::EventHeader event_header;
-    detector.GetNextEvent(&event_header);
+    asapo::MessageHeader message_header;
+    detector.GetNextEvent(&message_header);
     Mock::VerifyAndClearExpectations(&mock_system_folder_watch);
-    return event_header;
+    return message_header;
 };
 
 
@@ -170,11 +170,11 @@ TEST_F(FolderEventDetectorTests, GetNextEventOK) {
 
     detector.StartMonitoring();
 
-    asapo::EventHeader event_header;
-    auto err = detector.GetNextEvent(&event_header);
+    asapo::MessageHeader message_header;
+    auto err = detector.GetNextEvent(&message_header);
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(event_header.file_name, Eq("test1.dat"));
+    ASSERT_THAT(message_header.file_name, Eq("test1.dat"));
 }
 
 
@@ -185,11 +185,11 @@ TEST_F(FolderEventDetectorTests, GetNextEventDoesDoSystemCallIfListNotEmpty) {
     EXPECT_CALL(mock_system_folder_watch, GetFileEventList_t(_)).Times(0);
 
 
-    asapo::EventHeader event_header;
-    auto err = detector.GetNextEvent(&event_header);
+    asapo::MessageHeader message_header;
+    auto err = detector.GetNextEvent(&message_header);
 
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(event_header.file_name, Eq("test2.dat"));
+    ASSERT_THAT(message_header.file_name, Eq("test2.dat"));
 }
 
 
@@ -198,36 +198,36 @@ TEST_F(FolderEventDetectorTests, GetNextEventDoesSystemCallIfListEmpty) {
     EXPECT_CALL(mock_system_folder_watch, GetFileEventList_t(_)).Times(1);
 
 // read events 2 to 4
-    asapo::EventHeader event_header;
-    err = detector.GetNextEvent(&event_header);
+    asapo::MessageHeader message_header;
+    err = detector.GetNextEvent(&message_header);
     ASSERT_THAT(err, Eq(nullptr));
-    err = detector.GetNextEvent(&event_header);
+    err = detector.GetNextEvent(&message_header);
     ASSERT_THAT(err, Eq(nullptr));
-    err = detector.GetNextEvent(&event_header);
+    err = detector.GetNextEvent(&message_header);
     ASSERT_THAT(err, Eq(nullptr));
 // read events - should initiate system call since the buffer is empty now
-    err = detector.GetNextEvent(&event_header);
+    err = detector.GetNextEvent(&message_header);
     ASSERT_THAT(err, Eq(asapo::EventMonitorErrorTemplates::kNoNewEvent));
 }
 
 TEST_F(FolderEventDetectorTests, GetNextIgnoresTmpFiles) {
     test_config.ignored_extensions = {"tmp"};
     InitiateAndReadSingleEvent();
-    asapo::EventHeader event_header;
-    err = detector.GetNextEvent(&event_header);
+    asapo::MessageHeader message_header;
+    err = detector.GetNextEvent(&message_header);
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(event_header.file_name, Eq("test2.dat"));
+    ASSERT_THAT(message_header.file_name, Eq("test2.dat"));
 
 // try read event 3 test3.tmp sould be ignored
-    err = detector.GetNextEvent(&event_header);
+    err = detector.GetNextEvent(&message_header);
     ASSERT_THAT(err, Eq(asapo::EventMonitorErrorTemplates::kNoNewEvent));
 }
 
 TEST_F(FolderEventDetectorTests, GetNextRespectsWhiteList) {
     test_config.whitelisted_extensions = {"tmp"};
-    auto event_header = InitiateAndReadSingleEvent();
+    auto message_header = InitiateAndReadSingleEvent();
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(event_header.file_name, Eq("test3.tmp"));
+    ASSERT_THAT(message_header.file_name, Eq("test3.tmp"));
 }
 
 }

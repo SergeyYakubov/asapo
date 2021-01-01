@@ -1,7 +1,7 @@
-#include "producer/producer_error.h"
+#include "asapo/producer/producer_error.h"
 #include "request_handler_tcp.h"
 #include "producer_logger.h"
-#include "io/io_factory.h"
+#include "asapo/io/io_factory.h"
 #include "producer_request.h"
 
 namespace asapo {
@@ -61,7 +61,7 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
         }
     }
 
-    if (request->NeedSendData()) {
+    if (request->NeedSend()) {
         if (request->DataFromFile()) {
             io_error = io__->SendFile(sd_,  request->original_filepath, (size_t)request->header.data_size);
         } else {
@@ -77,7 +77,7 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
 
 Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_header, std::string* response) {
     Error err;
-    SendDataResponse sendDataResponse;
+    SendResponse sendDataResponse;
     io__->Receive(sd_, &sendDataResponse, sizeof(sendDataResponse), &err);
     if(err != nullptr) {
         return err;
@@ -216,13 +216,13 @@ bool RequestHandlerTcp::ProcessErrorFromReceiver(const Error& error,
 
 void RequestHandlerTcp::ProcessRequestCallback(Error err, ProducerRequest* request, std::string response, bool* retry) {
     if (request->callback) {
-        request->callback(RequestCallbackPayload{request->header, std::move(response)}, std::move(err));
+        request->callback(RequestCallbackPayload{request->header, std::move(request->data),std::move(response)}, std::move(err));
     }
     *retry = false;
 }
 
 
-bool RequestHandlerTcp::SendDataToOneOfTheReceivers(ProducerRequest* request, bool* retry) {
+bool RequestHandlerTcp::SendToOneOfTheReceivers(ProducerRequest* request, bool* retry) {
     for (auto receiver_uri : receivers_list_) {
         if (Disconnected()) {
             auto err = ConnectToReceiver(request->source_credentials, receiver_uri);
@@ -266,11 +266,10 @@ bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request, bool* re
         return false;
     }
 
-
     if (NeedRebalance()) {
         CloseConnectionToPeformRebalance();
     }
-    return SendDataToOneOfTheReceivers(producer_request, retry);
+    return SendToOneOfTheReceivers(producer_request, retry);
 }
 
 bool RequestHandlerTcp::Connected() {
@@ -298,13 +297,13 @@ void RequestHandlerTcp::TearDownProcessingRequestLocked(bool request_processed_s
 void RequestHandlerTcp::ProcessRequestTimeout(GenericRequest* request) {
     auto producer_request = static_cast<ProducerRequest*>(request);
     auto err_string = "request id:" + std::to_string(request->header.data_id) + ", opcode: " + std::to_string(
-                          request->header.op_code) + " for " + request->header.substream +
-                      " substream";
+                          request->header.op_code) + " for " + request->header.stream +
+                      " stream";
     log__->Error("timeout " + err_string);
 
     auto err = ProducerErrorTemplates::kTimeout.Generate(err_string);
     if (producer_request->callback) {
-        producer_request->callback(RequestCallbackPayload{request->header, ""}, std::move(err));
+        producer_request->callback(RequestCallbackPayload{request->header, std::move(producer_request->data),""}, std::move(err));
     }
 
 }

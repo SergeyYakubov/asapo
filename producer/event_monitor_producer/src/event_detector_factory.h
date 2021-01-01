@@ -2,7 +2,7 @@
 #define ASAPO_EVENT_DETECTOR_FACTORY_H
 
 #include "event_detector.h"
-#include "common/error.h"
+#include "asapo/common/error.h"
 
 namespace asapo {
 

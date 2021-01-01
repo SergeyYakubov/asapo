@@ -2,14 +2,14 @@
 #include <gmock/gmock.h>
 
 
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockLogger.h"
 #include "../../../src/receiver_data_server/receiver_data_server.h"
 #include "../../../src/receiver_data_server/request_handler/receiver_data_server_request_handler.h"
 
 #include "../../receiver_mocking.h"
 #include "../receiver_dataserver_mocking.h"
 #include "../../../src/receiver_data_server/receiver_data_server_error.h"
-#include "common/io_error.h"
+#include "asapo/common/io_error.h"
 
 using ::testing::Test;
 using ::testing::Gt;

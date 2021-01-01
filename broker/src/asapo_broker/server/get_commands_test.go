@@ -34,31 +34,31 @@ func TestGetCommandsTestSuite(t *testing.T) {
 
 var testsGetCommand = []struct {
 	command string
-	substream string
+	stream string
 	groupid string
 	reqString string
 	queryParams string
 	externalParam string
 }{
-	{"last", expectedSubstream, expectedGroupID, expectedSubstream + "/" + expectedGroupID + "/last","","0"},
-	{"id", expectedSubstream, expectedGroupID, expectedSubstream + "/" + expectedGroupID + "/1","","1"},
+	{"last", expectedStream, "", expectedStream + "/0/last","","0"},
+	{"id", expectedStream, "", expectedStream + "/0/1","","1"},
 	{"meta", "default", "", "default/0/meta/0","","0"},
-	{"nacks", expectedSubstream, expectedGroupID, expectedSubstream + "/" + expectedGroupID + "/nacks","","0_0"},
-	{"next", expectedSubstream, expectedGroupID, expectedSubstream + "/" + expectedGroupID + "/next","",""},
-	{"next", expectedSubstream, expectedGroupID, expectedSubstream + "/" +
-		expectedGroupID + "/next","&resend_nacks=true&delay_sec=10&resend_attempts=3","10_3"},
-	{"size", expectedSubstream, "", expectedSubstream  + "/size","","0"},
-	{"substreams", "0", "", "0/substreams","",""},
-	{"lastack", expectedSubstream, expectedGroupID, expectedSubstream + "/" + expectedGroupID + "/lastack","",""},
+	{"nacks", expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/nacks","","0_0"},
+	{"next", expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/next","",""},
+	{"next", expectedStream, expectedGroupID, expectedStream + "/" +
+		expectedGroupID + "/next","&resend_nacks=true&delay_ms=10000&resend_attempts=3","10000_3"},
+	{"size", expectedStream, "", expectedStream  + "/size","","0"},
+	{"streams", "0", "", "0/streams","",""},
+	{"lastack", expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/lastack","",""},
 
 }
 
 
 func (suite *GetCommandsTestSuite) TestGetCommandsCallsCorrectRoutine() {
 	for _, test := range testsGetCommand {
-		suite.mock_db.On("ProcessRequest", expectedDBName, test.substream, test.groupid, test.command, test.externalParam).Return([]byte("Hello"), nil)
+		suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: test.stream, GroupId: test.groupid, Op: test.command, ExtraParam: test.externalParam}).Return([]byte("Hello"), nil)
 		logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request "+test.command)))
-		w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedStream + "/" + test.reqString+correctTokenSuffix+test.queryParams)
+		w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + test.reqString+correctTokenSuffix+test.queryParams)
 		suite.Equal(http.StatusOK, w.Code, test.command+ " OK")
 		suite.Equal("Hello", string(w.Body.Bytes()), test.command+" sends data")
 	}

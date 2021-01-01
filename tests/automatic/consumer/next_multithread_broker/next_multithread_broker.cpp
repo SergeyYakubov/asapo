@@ -2,18 +2,18 @@
 #include <vector>
 #include <thread>
 #include <algorithm>
-#include "consumer/data_broker.h"
+#include "asapo/consumer/consumer.h"
 #include "testing.h"
 
-void Assert(std::vector<asapo::FileInfos> file_infos, int nthreads, int nfiles) {
+void Assert(std::vector<asapo::MessageMetas> message_metas, int nthreads, int nfiles) {
     std::vector<std::string> expect, result;
     for (int i = 1; i <= nfiles; i++) {
         expect.push_back(std::to_string(i));
     }
     int nfiles_read = 0;
     for (int i = 0; i < nthreads; i++) {
-        nfiles_read += file_infos[i].size();
-        for (const auto& fi : file_infos[i]) {
+        nfiles_read += message_metas[i].size();
+        for (const auto& fi : message_metas[i]) {
             result.push_back(fi.name);
         }
     }
@@ -53,19 +53,24 @@ Args GetArgs(int argc, char* argv[]) {
 
 void TestAll(const Args& args) {
     asapo::Error err;
-    auto broker = asapo::DataBrokerFactory::CreateServerBroker(args.server, "dummy", true, asapo::SourceCredentials{asapo::SourceType::kProcessed,args.run_name, "", "", args.token}, &err);
+    auto consumer = asapo::ConsumerFactory::CreateConsumer(args.server,
+                                                         "dummy",
+                                                         true,
+                                                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                                                  args.run_name, "", "", args.token},
+                                                         &err);
     if (err) {
-        std::cout << "Error CreateServerBroker: " << err << std::endl;
+        std::cout << "Error CreateConsumer: " << err << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    auto group_id = broker->GenerateNewGroupId(&err);
-    broker->SetTimeout(10000);
-    std::vector<asapo::FileInfos>file_infos(args.nthreads);
+    auto group_id = consumer->GenerateNewGroupId(&err);
+    consumer->SetTimeout(10000);
+    std::vector<asapo::MessageMetas>message_metas(args.nthreads);
     auto exec_next = [&](int i) {
-        asapo::FileInfo fi;
-        while ((err = broker->GetNext(&fi, group_id, nullptr)) == nullptr) {
-            file_infos[i].emplace_back(fi);
+        asapo::MessageMeta fi;
+        while ((err = consumer->GetNext(group_id, &fi, nullptr, "default")) == nullptr) {
+            message_metas[i].emplace_back(fi);
         }
         printf("%s\n", err->Explain().c_str());
     };
@@ -81,7 +86,7 @@ void TestAll(const Args& args) {
         }
     }
 
-    Assert(file_infos, args.nthreads, args.nfiles);
+    Assert(message_metas, args.nthreads, args.nfiles);
 }
 
 int main(int argc, char* argv[]) {

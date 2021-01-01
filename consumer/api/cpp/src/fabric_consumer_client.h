@@ -2,12 +2,12 @@
 #define ASAPO_CONSUMER_FABRIC_CLIENT_H
 
 #include <map>
-#include <io/io.h>
+#include "asapo/io/io.h"
 #include <atomic>
 #include <mutex>
-#include "asapo_fabric/asapo_fabric.h"
+#include "asapo/asapo_fabric/asapo_fabric.h"
 #include "net_client.h"
-#include "common/networking.h"
+#include "asapo/common/networking.h"
 
 namespace asapo {
 
@@ -25,9 +25,9 @@ class FabricConsumerClient : public NetClient {
     std::atomic<fabric::FabricMessageId> global_message_id_{0};
 
   public:
-    Error GetData(const FileInfo* info, FileData* data) override;
+    Error GetData(const MessageMeta* info, MessageData* data) override;
   private:
-    fabric::FabricAddress GetAddressOrConnect(const FileInfo* info, Error* error);
+    fabric::FabricAddress GetAddressOrConnect(const MessageMeta* info, Error* error);
 
     void PerformNetworkTransfer(fabric::FabricAddress address, const GenericRequestHeader* request_header,
                                 GenericNetworkResponse* response, Error* err);

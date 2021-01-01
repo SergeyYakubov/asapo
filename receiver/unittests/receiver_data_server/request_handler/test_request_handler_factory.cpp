@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 
 
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockLogger.h"
 #include "../../../src/receiver_data_server/receiver_data_server.h"
 #include "../../../src/receiver_data_server/request_handler/receiver_data_server_request_handler_factory.h"
 #include "../../../src/receiver_data_server/request_handler/receiver_data_server_request_handler.h"

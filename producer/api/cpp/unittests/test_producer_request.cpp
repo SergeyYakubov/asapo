@@ -1,17 +1,17 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "unittests/MockIO.h"
-#include "unittests/MockLogger.h"
-#include "common/error.h"
-#include "io/io.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockLogger.h"
+#include "asapo/common/error.h"
+#include "asapo/io/io.h"
 
-#include "producer/common.h"
-#include "producer/producer_error.h"
+#include "asapo/producer/common.h"
+#include "asapo/producer/producer_error.h"
 
 #include "../src/request_handler_tcp.h"
-#include <common/networking.h>
-#include "io/io_factory.h"
+#include <asapo/common/networking.h>
+#include "asapo/io/io_factory.h"
 
 #include "mocking.h"
 
@@ -60,7 +60,7 @@ TEST(ProducerRequest, Constructor) {
 TEST(ProducerRequest, Destructor) {
 // fails with data corruption if done wrong
     char data_[100];
-    asapo::FileData data{(uint8_t*)data_};
+    asapo::MessageData data{(uint8_t*)data_};
     asapo::GenericRequestHeader header{asapo::kOpcodeTransferData, 1, 1, 1, ""};
     asapo::ProducerRequest* request = new asapo::ProducerRequest{"", std::move(header), std::move(data), "", "", nullptr, false, 0};
 

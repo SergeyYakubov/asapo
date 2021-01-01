@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "io/io_factory.h"
+#include "asapo/io/io_factory.h"
 #include "testing.h"
 
 using asapo::IO;
@@ -20,12 +20,12 @@ int main(int argc, char* argv[]) {
     std::string result{};
     if (err == nullptr) {
         int64_t id = 0;
-        for(auto file_info : files) {
-            M_AssertEq(file_info.id, ++id);
-            if (file_info.name == "1") {
-                M_AssertEq(4, file_info.size);
+        for(auto message_meta : files) {
+            M_AssertEq(message_meta.id, ++id);
+            if (message_meta.name == "1") {
+                M_AssertEq(4, message_meta.size);
             }
-            result += file_info.name;
+            result += message_meta.name;
         }
     } else {
         result = err->Explain();

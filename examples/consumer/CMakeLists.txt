@@ -1,7 +1,9 @@
 find_package(Threads)
 
-add_subdirectory(getnext_broker)
+add_subdirectory(getnext)
 
-if (UNIX OR CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_subdirectory(getnext_broker_python)
+if(BUILD_EXAMPLES AND BUILD_PYTHON)
+        add_subdirectory(getnext_python)
 endif()
+
+

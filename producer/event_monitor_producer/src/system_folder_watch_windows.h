@@ -4,11 +4,11 @@
 #include <vector>
 #include <string>
 
-#include "common/error.h"
-#include "preprocessor/definitions.h"
-#include "asapo_producer.h"
+#include "asapo/common/error.h"
+#include "asapo/preprocessor/definitions.h"
+#include "asapo/asapo_producer.h"
 #include "common.h"
-#include "io/io.h"
+#include "asapo/io/io.h"
 #include "shared_event_list.h"
 
 namespace asapo {

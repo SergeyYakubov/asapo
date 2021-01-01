@@ -10,7 +10,7 @@ import json
 
 beamline = sys.argv[1]
 token = sys.argv[2]
-stream = sys.argv[3]
+data_source = sys.argv[3]
 endpoint = sys.argv[4]
 
 nthreads = 1
@@ -26,19 +26,19 @@ def callback(header,err):
     lock.release()
 
 
-producer  = asapo_producer.create_producer(endpoint,'processed','auto',beamline, stream, token, nthreads, 60)
+producer  = asapo_producer.create_producer(endpoint,'processed','auto',beamline, data_source, token, nthreads, 60000)
 
 producer.set_log_level("debug")
 
 #send single file
-producer.send_file(1, local_path = "./file1", exposed_path = "processed/"+stream+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)
+producer.send_file(1, local_path = "./file1", exposed_path = "processed/"+data_source+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)
 
 producer.wait_requests_finished(10000)
 
 time.sleep(2)
 
 #send single file to other beamtime - should be warning on duplicated request (same beamtime, no reauthorization)
-producer.send_file(1, local_path = "./file1", exposed_path = "processed/"+stream+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)
+producer.send_file(1, local_path = "./file1", exposed_path = "processed/"+data_source+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)
 producer.wait_requests_finished(10000)
 
 
@@ -54,7 +54,7 @@ with open(fname, 'w') as outfile:
 time.sleep(2)
 
 #send single file to other beamtime - now ok since receiver authorization timed out
-producer.send_file(1, local_path = "./file1", exposed_path = "processed/"+stream+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)
+producer.send_file(1, local_path = "./file1", exposed_path = "processed/"+data_source+"/"+"file1", user_meta = '{"test_key":"test_val"}', callback = callback)
 
 producer.wait_requests_finished(10000)
 

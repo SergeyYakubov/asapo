@@ -58,9 +58,6 @@ cat receiver.json |
           then . + {value:\"${monitor_node}:${monitor_port}\"}
           elif .key == \"ListenPort\"
           then . + {value:${receiver_port}}
-          elif .key == \"WriteToDisk\"
-          then . + {value:$1}
-          else .
           end
          ) |
       from_entries" > receiver_tmp.json

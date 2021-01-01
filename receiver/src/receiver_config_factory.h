@@ -1,8 +1,8 @@
 #ifndef ASAPO_RECEIVER_CONFIG_FACTORY__H
 #define ASAPO_RECEIVER_CONFIG_FACTORY__H
 
-#include "io/io.h"
-#include "common/error.h"
+#include "asapo/io/io.h"
+#include "asapo/common/error.h"
 
 namespace asapo {
 

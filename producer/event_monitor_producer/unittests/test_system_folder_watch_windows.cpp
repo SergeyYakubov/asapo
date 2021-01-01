@@ -5,7 +5,7 @@
 #include "../src/event_monitor_error.h"
 #include "../src/common.h"
 
-#include <unittests/MockIO.h>
+#include <asapo/unittests/MockIO.h>
 
 
 
@@ -26,8 +26,8 @@ using ::asapo::Error;
 using ::asapo::ErrorInterface;
 using asapo::FilesToSend;
 using asapo::SystemFolderWatch;
-using asapo::FileInfos;
-using asapo::FileInfo;
+using asapo::MessageMetas;
+using asapo::MessageMeta;
 
 namespace {
 
@@ -37,15 +37,15 @@ TEST(SystemFolderWatch, Constructor) {
     ASSERT_THAT(dynamic_cast<asapo::IO*>(watch.io__.get()), Ne(nullptr));
 }
 
-FileInfos CreateTestFileInfos() {
-    FileInfos file_infos;
-    FileInfo fi;
+MessageMetas CreateTestMessageMetas() {
+    MessageMetas message_metas;
+    MessageMeta fi;
     fi.size = 100;
     fi.name = "file1";
-    file_infos.push_back(fi);
+    message_metas.push_back(fi);
     fi.name = "subfolder\\file2";
-    file_infos.push_back(fi);
-    return file_infos;
+    message_metas.push_back(fi);
+    return message_metas;
 }
 
 

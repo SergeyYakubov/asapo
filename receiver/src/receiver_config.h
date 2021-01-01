@@ -1,9 +1,9 @@
 #ifndef ASAPO_RECEIVER_CONFIG_H
 #define ASAPO_RECEIVER_CONFIG_H
 
-#include "io/io.h"
-#include "common/error.h"
-#include "logger/logger.h"
+#include "asapo/io/io.h"
+#include "asapo/common/error.h"
+#include "asapo/logger/logger.h"
 
 #include "receiver_data_server/receiver_data_server_config.h"
 namespace asapo {
@@ -15,8 +15,6 @@ struct ReceiverConfig {
     uint64_t listen_port = 0;
     std::string authorization_server;
     uint64_t authorization_interval_ms = 0;
-    bool write_to_disk = false;
-    bool write_to_db = false;
     bool use_datacache = true;
     uint64_t datacache_size_gb = 0;
     uint64_t datacache_reserved_share = 0;

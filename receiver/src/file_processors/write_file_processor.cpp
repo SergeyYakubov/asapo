@@ -1,8 +1,8 @@
 #include "write_file_processor.h"
 
-#include "io/io_factory.h"
+#include "asapo/io/io_factory.h"
 #include "../receiver_error.h"
-#include "preprocessor/definitions.h"
+#include "asapo/preprocessor/definitions.h"
 #include "../request.h"
 #include "../receiver_config.h"
 

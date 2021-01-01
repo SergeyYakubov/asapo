@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "unittests/MockIO.h"
-#include "unittests/MockLogger.h"
+#include "asapo/unittests/MockIO.h"
+#include "asapo/unittests/MockLogger.h"
 #include "../../src/receiver_error.h"
 #include "../../src/request.h"
 #include "../../src/statistics/receiver_statistics.h"
@@ -10,7 +10,7 @@
 #include "../mock_receiver_config.h"
 
 #include "../../src/request_handler/requests_dispatcher.h"
-#include "database/db_error.h"
+#include "asapo/database/db_error.h"
 
 
 using ::testing::Test;
@@ -36,7 +36,7 @@ using asapo::Error;
 using asapo::ErrorInterface;
 using asapo::SocketDescriptor;
 using asapo::GenericRequestHeader;
-using asapo::SendDataResponse;
+using asapo::SendResponse;
 using asapo::GenericRequestHeader;
 using asapo::GenericNetworkResponse;
 using asapo::Opcode;

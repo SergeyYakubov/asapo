@@ -47,16 +47,20 @@ class AsapoLocalIOError(AsapoConsumerError):
   pass
 
 class AsapoStreamFinishedError(AsapoConsumerError):
-  def __init__(self,message,id_max=None,next_substream=None):
+  def __init__(self,message,id_max=None,next_stream=None):
     AsapoConsumerError.__init__(self,message)
     self.id_max = id_max
-    self.next_substream = _str(next_substream)
-
+    self.next_stream = _str(next_stream)
 
 class AsapoEndOfStreamError(AsapoConsumerError):
   def __init__(self,message,id_max=None):
     AsapoConsumerError.__init__(self,message)
     self.id_max = id_max
+
+class AsapoPartialDataError(AsapoConsumerError):
+  def __init__(self,message,partial_data):
+    AsapoConsumerError.__init__(self,message)
+    self.partial_data = partial_data
 
 class AsapoNoDataError(AsapoConsumerError):
   def __init__(self,message,id=None,id_max=None):
@@ -64,7 +68,7 @@ class AsapoNoDataError(AsapoConsumerError):
     self.id_max = id_max
     self.id = id
 
-cdef throw_exception(Error& err):
+cdef throw_exception(Error& err, res = None):
     cdef ConsumerErrorData* data
     error_string =  _str(err.get().Explain())
     if err == kEndOfStream:
@@ -76,7 +80,7 @@ cdef throw_exception(Error& err):
     elif err == kStreamFinished:
             data=<ConsumerErrorData*>err.get().GetCustomData()
             if data != NULL:
-                raise AsapoStreamFinishedError(error_string,data.id_max,data.next_substream)
+                raise AsapoStreamFinishedError(error_string,data.id_max,data.next_stream)
             else:
                 raise AsapoStreamFinishedError(error_string)
     elif err == kNoData:
@@ -85,6 +89,8 @@ cdef throw_exception(Error& err):
                 raise AsapoNoDataError(error_string,data.id,data.id_max)
             else:
                 raise AsapoNoDataError(error_string)
+    elif err == kPartialData:
+            raise AsapoPartialDataError(error_string, res)
     elif err == kWrongInput:
             raise AsapoWrongInputError(error_string)
     elif err == kLocalIOError:
@@ -96,25 +102,25 @@ cdef throw_exception(Error& err):
     else:
         raise AsapoConsumerError(error_string)
 
-cdef class PyDataBroker:
-    cdef DataBroker* c_broker
-    def _op(self, op, group_id, substream, meta_only, uint64_t id):
-        cdef FileInfo info
+cdef class PyConsumer:
+    cdef unique_ptr[Consumer] c_consumer
+    def _op(self, op, group_id, stream, meta_only, uint64_t id):
+        cdef MessageMeta info
         cdef string b_group_id = _bytes(group_id)
-        cdef string b_substream = _bytes(substream)
-        cdef FileData data
-        cdef FileData* p_data =  <FileData*>NULL if meta_only else &data
+        cdef string b_stream = _bytes(stream)
+        cdef MessageData data
+        cdef MessageData* p_data =  <MessageData*>NULL if meta_only else &data
         cdef Error err
         cdef np.npy_intp dims[1]
         if op == "next":
             with nogil:
-                err =  self.c_broker.GetNext(&info, b_group_id,b_substream, p_data)
+                err =  self.c_consumer.get().GetNext(b_group_id, &info, p_data,b_stream)
         elif op == "last":
             with nogil:
-                err =  self.c_broker.GetLast(&info, b_group_id,b_substream, p_data)
+                err =  self.c_consumer.get().GetLast(&info, p_data, b_stream)
         elif op == "id":
             with nogil:
-                err =  self.c_broker.GetById(id, &info, b_group_id,b_substream, p_data)
+                err =  self.c_consumer.get().GetById(id, &info, p_data, b_stream)
         if err:
             throw_exception(err)
         info_str = _str(info.Json())
@@ -126,21 +132,21 @@ cdef class PyDataBroker:
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
         return arr,meta
-    def get_next(self, group_id, substream = "default", meta_only = True):
-        return self._op("next",group_id,substream,meta_only,0)
-    def get_last(self, group_id, substream = "default", meta_only = True):
-        return self._op("last",group_id,substream,meta_only,0)
-    def get_by_id(self,uint64_t id,group_id, substream = "default",meta_only = True):
-        return self._op("id",group_id,substream,meta_only,id)
+    def get_next(self, group_id, meta_only = True, stream = "default"):
+        return self._op("next",group_id,stream,meta_only,0)
+    def get_last(self, meta_only = True, stream = "default"):
+        return self._op("last","",stream,meta_only,0)
+    def get_by_id(self,uint64_t id,meta_only = True, stream = "default"):
+        return self._op("id","",stream,meta_only,id)
     def retrieve_data(self,meta):
         json_str = json.dumps(meta)
-        cdef FileInfo info
+        cdef MessageMeta info
         if not info.SetFromJson(_bytes(json_str)):
             raise AsapoWrongInputError("wrong metadata")
         cdef Error err
-        cdef FileData data
+        cdef MessageData data
         with nogil:
-            err =  self.c_broker.RetrieveData(&info, &data)
+            err =  self.c_consumer.get().RetrieveData(&info, &data)
         if err:
             throw_exception(err)
         cdef np.npy_intp dims[1]
@@ -151,22 +157,22 @@ cdef class PyDataBroker:
         arr =  np.PyArray_SimpleNewFromData(1, dims, np.NPY_BYTE, ptr)
         PyArray_ENABLEFLAGS(arr,np.NPY_OWNDATA)
         return arr
-    def get_current_size(self, substream = "default"):
+    def get_current_size(self, stream = "default"):
         cdef Error err
         cdef uint64_t size
-        cdef string b_substream = _bytes(substream)
+        cdef string b_stream = _bytes(stream)
         with nogil:
-            size =  self.c_broker.GetCurrentSize(b_substream,&err)
+            size =  self.c_consumer.get().GetCurrentSize(b_stream,&err)
         err_str = _str(GetErrorString(&err))
         if err:
             throw_exception(err)
         return size
     def set_timeout(self,timeout):
-        self.c_broker.SetTimeout(timeout)
+        self.c_consumer.get().SetTimeout(timeout)
     def force_no_rdma(self):
-        self.c_broker.ForceNoRdma()
+        self.c_consumer.get().ForceNoRdma()
     def current_connection_type(self):
-        cdef NetworkConnectionType connection_type = self.c_broker.CurrentConnectionType()
+        cdef NetworkConnectionType connection_type = self.c_consumer.get().CurrentConnectionType()
         cdef int cased = <int>connection_type
         cdef string result = "Unknown"
         if cased == <int>NetworkConnectionType_kUndefined:
@@ -176,22 +182,22 @@ cdef class PyDataBroker:
         elif cased == <int>NetworkConnectionType_kFabric:
             result = "Fabric"
         return result.decode('utf-8')
-    def set_lastread_marker(self,value,group_id, substream = "default"):
+    def set_lastread_marker(self, group_id, value, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
-        cdef string b_substream = _bytes(substream)
+        cdef string b_stream = _bytes(stream)
         cdef Error err
         cdef uint64_t id = value
         with nogil:
-            err =  self.c_broker.SetLastReadMarker(id,b_group_id,b_substream)
+            err =  self.c_consumer.get().SetLastReadMarker(b_group_id, id, b_stream)
         if err:
             throw_exception(err)
         return
-    def reset_lastread_marker(self,group_id, substream = "default"):
+    def reset_lastread_marker(self,group_id, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
-        cdef string b_substream = _bytes(substream)
+        cdef string b_stream = _bytes(stream)
         cdef Error err
         with nogil:
-            err =  self.c_broker.ResetLastReadMarker(b_group_id,b_substream)
+            err =  self.c_consumer.get().ResetLastReadMarker(b_group_id,b_stream)
         if err:
             throw_exception(err)
         return
@@ -199,60 +205,60 @@ cdef class PyDataBroker:
         cdef Error err
         cdef string group_id
         with nogil:
-            group_id = self.c_broker.GenerateNewGroupId(&err)
+            group_id = self.c_consumer.get().GenerateNewGroupId(&err)
         if err:
             throw_exception(err)
         return _str(group_id)
-    def get_substream_list(self, from_substream = ""):
+    def get_stream_list(self, from_stream = ""):
         cdef Error err
-        cdef vector[StreamInfo] substreams
-        cdef string b_from_substream = _bytes(from_substream)
+        cdef vector[StreamInfo] streams
+        cdef string b_from_stream = _bytes(from_stream)
         with nogil:
-            substreams = self.c_broker.GetSubstreamList(b_from_substream,&err)
+            streams = self.c_consumer.get().GetStreamList(b_from_stream,&err)
         if err:
             throw_exception(err)
         list = []
-        for substream in substreams:
-            list.append(json.loads(_str(substream.Json(False))))
+        for stream in streams:
+            list.append(json.loads(_str(stream.Json(False))))
         return list
-    def acknowledge(self, group_id, uint64_t id, substream = "default"):
+    def acknowledge(self, group_id, uint64_t id, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
-        cdef string b_substream = _bytes(substream)
+        cdef string b_stream = _bytes(stream)
         cdef Error err
         with nogil:
-            err = self.c_broker.Acknowledge(b_group_id,id,b_substream)
+            err = self.c_consumer.get().Acknowledge(b_group_id,id,b_stream)
         if err:
             throw_exception(err)
-    def neg_acknowledge(self, group_id, uint64_t id, uint64_t delay_sec, substream = "default"):
+    def neg_acknowledge(self, group_id, uint64_t id, uint64_t delay_ms = 0, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
-        cdef string b_substream = _bytes(substream)
+        cdef string b_stream = _bytes(stream)
         cdef Error err
         with nogil:
-            err = self.c_broker.NegativeAcknowledge(b_group_id,id,delay_sec,b_substream)
+            err = self.c_consumer.get().NegativeAcknowledge(b_group_id,id,delay_ms,b_stream)
         if err:
             throw_exception(err)
-    def set_resend_nacs(self,bool resend, uint64_t delay_sec, uint64_t resend_attempts):
+    def set_resend_nacs(self,bool resend, uint64_t delay_ms, uint64_t resend_attempts):
         with nogil:
-            self.c_broker.SetResendNacs(resend,delay_sec,resend_attempts)
+            self.c_consumer.get().SetResendNacs(resend,delay_ms,resend_attempts)
 
-    def get_last_acknowledged_tuple_id(self, group_id, substream = "default"):
+    def get_last_acknowledged_message(self, group_id, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
-        cdef string b_substream = _bytes(substream)
+        cdef string b_stream = _bytes(stream)
         cdef Error err
         cdef uint64_t id
         with nogil:
-            id = self.c_broker.GetLastAcknowledgedTulpeId(b_group_id,b_substream,&err)
+            id = self.c_consumer.get().GetLastAcknowledgedMessage(b_group_id,b_stream,&err)
         if err:
             throw_exception(err)
         return id
 
-    def get_unacknowledged_tuple_ids(self, group_id, substream = "default", uint64_t from_id = 0, uint64_t to_id = 0):
+    def get_unacknowledged_messages(self, group_id, uint64_t from_id = 0, uint64_t to_id = 0, stream = "default"):
         cdef Error err
         cdef string b_group_id = _bytes(group_id)
-        cdef string b_substream = _bytes(substream)
+        cdef string b_stream = _bytes(stream)
         cdef IdList ids
         with nogil:
-            ids = self.c_broker.GetUnacknowledgedTupleIds(b_group_id, b_substream, from_id, to_id, &err)
+            ids = self.c_consumer.get().GetUnacknowledgedMessages(b_group_id, from_id, to_id, b_stream, &err)
         if err:
             throw_exception(err)
         list = []
@@ -260,82 +266,82 @@ cdef class PyDataBroker:
             list.append(id)
         return list
 
-    def query_images(self,query, substream = "default"):
+    def query_messages(self,query, stream = "default"):
         cdef string b_query = _bytes(query)
-        cdef string b_substream = _bytes(substream)
+        cdef string b_stream = _bytes(stream)
         cdef Error err
-        cdef FileInfos file_infos
+        cdef MessageMetas message_metas
         with nogil:
-            file_infos = self.c_broker.QueryImages(b_query,b_substream,&err)
+            message_metas = self.c_consumer.get().QueryMessages(b_query,b_stream,&err)
         if err:
             throw_exception(err)
         json_list = []
-        for fi in file_infos:
+        for fi in message_metas:
             json_list.append(json.loads(_str(fi.Json())))
         return json_list
-    def _op_dataset(self, op, group_id, substream, uint64_t id):
+    def _op_dataset(self, op, group_id, stream, uint64_t min_size, uint64_t id):
         cdef string b_group_id = _bytes(group_id)
-        cdef string b_substream = _bytes(substream)
-        cdef FileInfos file_infos
+        cdef string b_stream = _bytes(stream)
+        cdef MessageMetas message_metas
         cdef DataSet dataset
         cdef Error err
         if op == "next":
             with nogil:
-                dataset = self.c_broker.GetNextDataset(b_group_id,b_substream, &err)
+                dataset = self.c_consumer.get().GetNextDataset(b_group_id, min_size,b_stream, &err)
         elif op == "last":
             with nogil:
-                dataset = self.c_broker.GetLastDataset(b_group_id,b_substream, &err)
+                dataset = self.c_consumer.get().GetLastDataset(min_size,b_stream, &err)
         elif op == "id":
             with nogil:
-                dataset = self.c_broker.GetDatasetById(id, b_group_id,b_substream, &err)
-        if err:
-            throw_exception(err)
+                dataset = self.c_consumer.get().GetDatasetById(id, min_size,b_stream, &err)
         json_list = []
         for fi in dataset.content:
             json_list.append(json.loads(_str(fi.Json())))
-        return dataset.id, json_list
-    def get_next_dataset(self, group_id, substream = "default"):
-        return self._op_dataset("next",group_id,substream,0)
-    def get_last_dataset(self, group_id, substream = "default"):
-        return self._op_dataset("last",group_id,substream,0)
-    def get_dataset_by_id(self, uint64_t id, group_id, substream = "default"):
-        return self._op_dataset("id",group_id,substream,id)
+        res={'id':dataset.id,'expected_size':dataset.expected_size,'content':json_list}
+        if err:
+            throw_exception(err,res)
+        return res
+    def get_next_dataset(self, group_id, min_size = 0, stream = "default"):
+        return self._op_dataset("next",group_id,stream,min_size,0)
+    def get_last_dataset(self, min_size = 0,  stream = "default"):
+        return self._op_dataset("last","0",stream,min_size,0)
+    def get_dataset_by_id(self, uint64_t id, min_size = 0, stream = "default"):
+        return self._op_dataset("id","0",stream,min_size,id)
     def get_beamtime_meta(self):
         cdef Error err
         cdef string meta_str
         with nogil:
-            meta_str = self.c_broker.GetBeamtimeMeta(&err)
+            meta_str = self.c_consumer.get().GetBeamtimeMeta(&err)
         if err:
             throw_exception(err)
         meta = json.loads(_str(meta_str))
         del meta['_id']
         return meta
-
-cdef class __PyDataBrokerFactory:
-    cdef DataBrokerFactory c_factory
+    def interrupt_current_operation(self):
+        self.c_consumer.get().InterruptCurrentOperation()
+cdef class __PyConsumerFactory:
+    cdef ConsumerFactory c_factory
     def __cinit__(self):
         with nogil:
-            self.c_factory = DataBrokerFactory()
-    def create_server_broker(self,server_name,source_path,has_filesystem,beamtime_id,stream,token,timeout):
+            self.c_factory = ConsumerFactory()
+    def create_consumer(self,server_name,source_path,has_filesystem,beamtime_id,data_source,token,timeout):
         cdef string b_server_name = _bytes(server_name)
         cdef string b_source_path = _bytes(source_path)
         cdef bool b_has_filesystem = has_filesystem
         cdef SourceCredentials source
         source.beamtime_id = _bytes(beamtime_id)
         source.user_token = _bytes(token)
-        source.stream = _bytes(stream)
+        source.data_source = _bytes(data_source)
         cdef Error err
-        cdef unique_ptr[DataBroker] c_broker
+        consumer = PyConsumer()
         with nogil:
-            c_broker = self.c_factory.CreateServerBroker(b_server_name,b_source_path,b_has_filesystem,source,&err)
-        broker = PyDataBroker()
-        broker.c_broker =  c_broker.release()
-        broker.c_broker.SetTimeout(timeout)
+            consumer.c_consumer = self.c_factory.CreateConsumer(b_server_name,b_source_path,b_has_filesystem,source,&err)
         if err:
             throw_exception(err)
-        return broker
+        consumer.c_consumer.get().SetTimeout(timeout)
+        return consumer
 
-def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stream,token,timeout_ms):
+def create_consumer(server_name,source_path,has_filesystem,beamtime_id,data_source,token,timeout_ms):
     """
       :param server_name: Server endpoint (hostname:port)
       :type server_name: string
@@ -343,11 +349,11 @@ def create_server_broker(server_name,source_path,has_filesystem,beamtime_id,stre
       :type source_path: string
       :param has_filesystem: True if the source_path is accessible locally, otherwise will use file transfer service to get data
       :type has_filesystem: bool
-      :return: Broker object and error. (None,err) if case of error, (broker, None) if success
-      :rtype: Tuple with broker object and error.
+      :return: consumer object and error. (None,err) if case of error, (consumer, None) if success
+      :rtype: Tuple with consumer object and error.
 	"""
-    factory = __PyDataBrokerFactory()
-    return factory.create_server_broker(_bytes(server_name),_bytes(source_path),has_filesystem, _bytes(beamtime_id),_bytes(stream),_bytes(token),timeout_ms)
+    factory = __PyConsumerFactory()
+    return factory.create_consumer(server_name,source_path,has_filesystem, beamtime_id,data_source,token,timeout_ms)
 
 
 __version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"

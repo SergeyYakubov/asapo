@@ -3,8 +3,8 @@
 
 #include <gtest/gtest.h>
 
-#include "request/request_pool.h"
-#include "request/request_handler_factory.h"
+#include "asapo/request/request_pool.h"
+#include "asapo/request/request_handler_factory.h"
 #include "../src/receiver_discovery_service.h"
 
 namespace asapo {
@@ -34,6 +34,9 @@ class MockRequestPull : public RequestPool {
     }
     MOCK_METHOD2(AddRequest_t, asapo::ErrorInterface * (GenericRequest*, bool));
     MOCK_METHOD0(NRequestsInPool, uint64_t ());
+    MOCK_METHOD0(UsedMemoryInPool, uint64_t ());
+
+    MOCK_METHOD1(SetLimits, void (asapo::RequestPoolLimits limits));
 
     MOCK_METHOD1(WaitRequestsFinished_t, asapo::ErrorInterface * (uint64_t timeout_ms));
 

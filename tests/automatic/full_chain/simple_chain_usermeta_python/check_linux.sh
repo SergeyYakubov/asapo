@@ -53,5 +53,5 @@ export Python_EXECUTABLE=$5
 
 echo "Start python consumer in metadata only mode"
 $Python_EXECUTABLE $3/get_user_meta.py $proxy_address $receiver_folder $beamtime_id $token new | tee out
-grep "found images: 100" out
+grep "found messages: 100" out
 grep "test100" out
