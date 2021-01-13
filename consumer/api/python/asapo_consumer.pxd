@@ -13,7 +13,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
     pass
   cppclass ErrorInterface:
     string Explain()
-    const CustomErrorData* GetCustomData()
+    CustomErrorData* GetCustomData()
   cppclass ErrorTemplateInterface:
     pass
   cdef bool operator==(Error lhs, ErrorTemplateInterface rhs)

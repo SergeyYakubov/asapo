@@ -21,8 +21,7 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   ErrorTemplateInterface kWrongInput "asapo::ProducerErrorTemplates::kWrongInput"
   ErrorTemplateInterface kLocalIOError "asapo::ProducerErrorTemplates::kLocalIOError"
   ErrorTemplateInterface kServerWarning "asapo::ProducerErrorTemplates::kServerWarning"
-
-
+  ErrorTemplateInterface kRequestPoolIsFull "asapo::ProducerErrorTemplates::kRequestPoolIsFull"
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass MessageData:
@@ -100,6 +99,8 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
         void StopThreads__()
         void SetLogLevel(LogLevel level)
         uint64_t  GetRequestsQueueSize()
+        uint64_t  GetRequestsQueueVolumeMb()
+        void SetRequestsQueueLimits(uint64_t size, uint64_t volume)
         Error WaitRequestsFinished(uint64_t timeout_ms)
         Error SendStreamFinishedFlag(string stream, uint64_t last_id, string next_stream, RequestCallback callback)
         StreamInfo GetStreamInfo(string stream, uint64_t timeout_ms, Error* err)

@@ -51,6 +51,8 @@ class AsapoTimeOutError(AsapoProducerError):
 class AsapoServerWarning(AsapoProducerError):
   pass
 
+class AsapoRequestsPoolIsFull(AsapoProducerError):
+  pass
 
 cdef python_exception_from_error(Error& err):
     error_string =  _str(err.get().Explain())
@@ -62,6 +64,8 @@ cdef python_exception_from_error(Error& err):
             return AsapoLocalIOError(error_string)
     elif err == kServerWarning:
             return AsapoServerWarning(error_string)
+    elif err == kRequestPoolIsFull:
+            return AsapoRequestsPoolIsFull(error_string)
     else:
         return AsapoProducerError(error_string)
 
@@ -271,6 +275,10 @@ cdef class PyProducer:
         return
     def get_requests_queue_size(self):
         return self.c_producer.get().GetRequestsQueueSize()
+    def get_requests_queue_volume_mb(self):
+        return self.c_producer.get().GetRequestsQueueVolumeMb()
+    def set_requests_queue_limits(self,uint64_t size = 0, uint64_t volume_mb = 0):
+        return self.c_producer.get().SetRequestsQueueLimits(size,volume_mb)
     def wait_requests_finished(self,timeout_ms):
         """
          :param timeout_ms: timeout in milliseconds
