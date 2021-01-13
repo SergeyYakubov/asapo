@@ -9,7 +9,6 @@
 
 namespace asapo {
 
-
 class GenericRequest {
   public:
     GenericRequest() = delete;

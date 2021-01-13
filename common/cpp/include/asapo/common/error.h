@@ -39,7 +39,7 @@ class ErrorInterface {
     virtual std::string Explain() const noexcept = 0;
     virtual void Append(const std::string& value) noexcept = 0;
     virtual ErrorType GetErrorType() const noexcept = 0;
-    virtual const CustomErrorData* GetCustomData() = 0;
+    virtual CustomErrorData* GetCustomData() = 0;
     virtual void SetCustomData(std::unique_ptr<CustomErrorData> data) = 0;
     virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
 };
@@ -96,7 +96,7 @@ class SimpleError: public ErrorInterface {
     SimpleError(std::string error, ErrorType error_type ): error_{std::move(error)}, error_type_{error_type} {
     }
 
-    const CustomErrorData* GetCustomData() override {
+    CustomErrorData* GetCustomData() override {
         if (custom_data_) {
             return custom_data_.get();
         } else {

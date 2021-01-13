@@ -2,6 +2,7 @@
 #define ASAPO_PRODUCER_ERROR_H
 
 #include "asapo/common/error.h"
+#include "asapo/common/data_structs.h"
 
 namespace asapo {
 
@@ -16,6 +17,12 @@ enum class ProducerErrorType {
 };
 
 using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
+
+class OriginalData : public CustomErrorData {
+ public:
+  MessageData data;
+};
+
 
 namespace ProducerErrorTemplates {
 

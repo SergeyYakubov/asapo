@@ -10,6 +10,7 @@
 #include "asapo/producer/producer_error.h"
 
 #include "../src/request_handler_tcp.h"
+#include "asapo/request/request_pool_error.h"
 
 #include "mocking.h"
 
@@ -98,17 +99,22 @@ class ProducerImplTests : public testing::Test {
 
 TEST_F(ProducerImplTests, SendReturnsError) {
     EXPECT_CALL(mock_pull, AddRequest_t(_, false)).WillOnce(Return(
-        asapo::ProducerErrorTemplates::kRequestPoolIsFull.Generate().release()));
+        asapo::IOErrorTemplates::kNoSpaceLeft.Generate().release()));
     asapo::MessageHeader message_header{1, 1, "test"};
     auto err = producer.Send(message_header, nullptr, expected_ingest_mode, "default", nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
 }
 
 TEST_F(ProducerImplTests, ErrorIfFileNameTooLong) {
+    asapo::MessageData data = asapo::MessageData{new uint8_t[100]};
+    data[34]=12;
     std::string long_string(asapo::kMaxMessageSize + 100, 'a');
     asapo::MessageHeader message_header{1, 1, long_string};
-    auto err = producer.Send(message_header, nullptr, expected_ingest_mode, "default", nullptr);
+    auto err = producer.Send(message_header, std::move(data), expected_ingest_mode, "default", nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+    auto err_data = static_cast<asapo::OriginalData*>(err->GetCustomData());
+    ASSERT_THAT(err_data, Ne(nullptr));
+    ASSERT_THAT(err_data->data[34], Eq(12));
 }
 
 TEST_F(ProducerImplTests, ErrorIfStreamEmpty) {
@@ -137,6 +143,8 @@ TEST_F(ProducerImplTests, ErrorIfZeroDataSize) {
     asapo::MessageHeader message_header{1, 0, expected_fullpath};
     auto err = producer.Send(message_header, std::move(data), asapo::kDefaultIngestMode, "default", nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+    auto err_data = static_cast<asapo::OriginalData*>(err->GetCustomData());
+    ASSERT_THAT(err_data, Ne(nullptr));
 }
 
 TEST_F(ProducerImplTests, ErrorIfNoData) {
@@ -471,6 +479,38 @@ TEST_F(ProducerImplTests, GetLastStreamMakesCorerctRequest) {
     producer.GetLastStream(1000, &err);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kTimeout));
 }
+
+
+TEST_F(ProducerImplTests, ReturnDataIfCanotAddToQueue) {
+    producer.SetCredentials(expected_credentials);
+
+    asapo::MessageData data = asapo::MessageData{new uint8_t[100]};
+    data[40] = 10;
+    asapo::OriginalRequest* original_request = new asapo::OriginalRequest{};
+
+    auto request = std::unique_ptr<ProducerRequest> {new ProducerRequest{"", asapo::GenericRequestHeader{},std::move(data), "", "", nullptr, true, 0}};
+    original_request->request = std::move(request);
+    auto pool_err = asapo::IOErrorTemplates::kNoSpaceLeft.Generate();
+    pool_err->SetCustomData(std::unique_ptr<asapo::CustomErrorData>{original_request});
+
+
+    EXPECT_CALL(mock_pull, AddRequest_t(_,_)).WillOnce(Return(
+        std::move(pool_err).release()));
+
+    asapo::MessageHeader message_header{expected_id, 0, expected_name};
+    auto err = producer.Send(message_header, std::move(data), expected_ingest_mode, expected_stream, nullptr);
+
+    auto err_data = static_cast<asapo::OriginalData*>(err->GetCustomData());
+    ASSERT_THAT(err_data, Ne(nullptr));
+
+    asapo::MessageData original_data_in_err = std::move(err_data->data);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
+    ASSERT_THAT(original_data_in_err, Ne(nullptr));
+    ASSERT_THAT(original_data_in_err[40], Eq(10));
+
+}
+
+
 
 }
 
