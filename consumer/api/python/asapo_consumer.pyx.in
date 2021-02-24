@@ -167,6 +167,16 @@ cdef class PyConsumer:
         if err:
             throw_exception(err)
         return size
+    def get_current_dataset_count(self, stream = "default", bool include_incomplete = False):
+        cdef Error err
+        cdef uint64_t size
+        cdef string b_stream = _bytes(stream)
+        with nogil:
+            size =  self.c_consumer.get().GetCurrentDatasetCount(b_stream,include_incomplete,&err)
+        err_str = _str(GetErrorString(&err))
+        if err:
+            throw_exception(err)
+        return size
     def set_timeout(self,timeout):
         self.c_consumer.get().SetTimeout(timeout)
     def force_no_rdma(self):

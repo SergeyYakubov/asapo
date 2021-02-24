@@ -5,5 +5,7 @@ import (
 )
 
 func routeGetSize(w http.ResponseWriter, r *http.Request) {
-	processRequest(w, r, "size", "0", false)
+	keys := r.URL.Query()
+	incomplete := keys.Get("incomplete")
+	processRequest(w, r, "size", incomplete, false)
 }

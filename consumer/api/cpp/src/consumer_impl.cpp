@@ -529,20 +529,7 @@ Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std:
 }
 
 uint64_t ConsumerImpl::GetCurrentSize(std::string stream, Error* err) {
-    RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        +"/" + std::move(stream) + "/size";
-    auto responce = BrokerRequestWithTimeout(ri, err);
-    if (*err) {
-        return 0;
-    }
-
-    JsonStringParser parser(responce);
-    uint64_t size;
-    if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
-        return 0;
-    }
-    return size;
+    return GetCurrentCount(stream,false,false,err);
 }
 
 Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) {
@@ -836,6 +823,30 @@ Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
 }
 void ConsumerImpl::InterruptCurrentOperation() {
     interrupt_flag_= true;
+}
+
+uint64_t ConsumerImpl::GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) {
+    return GetCurrentCount(stream,true,include_incomplete,err);
+}
+
+uint64_t ConsumerImpl::GetCurrentCount(std::string stream, bool datasets, bool include_incomplete, Error* err) {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+        +"/" + std::move(stream) + "/size";
+    if (datasets) {
+        ri.extra_params = std::string("&incomplete=")+(include_incomplete?"true":"false");
+    }
+    auto responce = BrokerRequestWithTimeout(ri, err);
+    if (*err) {
+        return 0;
+    }
+
+    JsonStringParser parser(responce);
+    uint64_t size;
+    if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
+        return 0;
+    }
+    return size;
 }
 
 }

@@ -238,6 +238,11 @@ void TestDataset(const std::unique_ptr<asapo::Consumer>& consumer, const std::st
     M_AssertTrue(err == nullptr, "GetDatasetById error");
     M_AssertTrue(dataset.content[2].name == "8_3", "GetDatasetById filename");
 
+    auto size = consumer->GetCurrentDatasetCount("default", false, &err);
+    M_AssertTrue(err == nullptr, "GetCurrentDatasetCount no error");
+    M_AssertTrue(size == 10, "GetCurrentDatasetCount size");
+
+
 // incomplete datasets without min_size
 
     dataset = consumer->GetNextDataset(group_id, 0, "incomplete", &err);
@@ -270,6 +275,14 @@ void TestDataset(const std::unique_ptr<asapo::Consumer>& consumer, const std::st
     dataset = consumer->GetDatasetById(2, 2, "incomplete", &err);
     M_AssertTrue(err == nullptr, "GetDatasetById incomplete minsize error");
     M_AssertTrue(dataset.content[0].name == "2_1", "GetDatasetById incomplete minsize filename");
+
+    size = consumer->GetCurrentDatasetCount("incomplete", true, &err);
+    M_AssertTrue(err == nullptr, "GetCurrentDatasetCount including incomplete no error");
+    M_AssertTrue(size == 5, "GetCurrentDatasetCount including incomplete size");
+
+    size = consumer->GetCurrentDatasetCount("incomplete", false, &err);
+    M_AssertTrue(err == nullptr, "GetCurrentDatasetCount excluding incomplete no error");
+    M_AssertTrue(size == 0, "GetCurrentDatasetCount excluding incomplete size");
 
 
 }

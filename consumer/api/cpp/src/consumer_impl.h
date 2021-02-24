@@ -80,6 +80,7 @@ class ConsumerImpl final : public asapo::Consumer {
     std::string GetBeamtimeMeta(Error* err) override;
 
     uint64_t GetCurrentSize(std::string stream, Error* err) override;
+    uint64_t GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) override;
 
     Error GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) override;
 
@@ -138,11 +139,14 @@ class ConsumerImpl final : public asapo::Consumer {
     Error FtsSizeRequestWithTimeout(MessageMeta* info);
     Error ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
     Error ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
-
     RequestInfo PrepareRequestInfo(std::string api_url, bool dataset, uint64_t min_size);
     std::string OpToUriCmd(GetMessageServerOperation op);
     Error UpdateFolderTokenIfNeeded(bool ignore_existing);
-    std::string endpoint_;
+
+    uint64_t GetCurrentCount(std::string stream, bool datasets, bool include_incomplete, Error* err);
+
+
+      std::string endpoint_;
     std::string current_broker_uri_;
     std::string current_fts_uri_;
     std::string source_path_;

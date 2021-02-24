@@ -1307,4 +1307,21 @@ TEST_F(ConsumerImplTests, CanInterruptOperation) {
 
 }
 
+
+TEST_F(ConsumerImplTests, GetCurrentDataSetCounteUsesCorrectUri) {
+    MockGetBrokerUri();
+    consumer->SetTimeout(100);
+
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
+        expected_stream + "/size?token="
+                                            + expected_token+"&incomplete=true", _, _)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return("{\"size\":10}")));
+    asapo::Error err;
+    auto size = consumer->GetCurrentDatasetCount(expected_stream,true, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(size, Eq(10));
+}
+
 }

@@ -79,6 +79,14 @@ def check_single(consumer, group_id):
     size = consumer.get_current_size()
     assert_eq(size, 5, "get_current_size")
 
+    try:
+        size = consumer.get_current_dataset_count(include_incomplete = True)
+    except asapo_consumer.AsapoWrongInputError as err:
+        pass
+    else:
+        exit_on_noerr("get_current_dataset_count for single messages err")
+
+
     consumer.reset_lastread_marker(group_id)
 
     _, meta = consumer.get_next(group_id, meta_only=True)
@@ -269,6 +277,9 @@ def check_dataset(consumer, group_id):
     assert_eq(res['id'], 8, "get_dataset_by_id1 id")
     assert_metaname(res['content'][2], "8_3", "get get_dataset_by_id1 name3")
 
+    size = consumer.get_current_dataset_count()
+    assert_eq(size, 10, "get_current_dataset_count")
+
     # incomplete datesets without min_size given
     try:
         consumer.get_next_dataset(group_id, stream = "incomplete")
@@ -308,6 +319,14 @@ def check_dataset(consumer, group_id):
     res = consumer.get_dataset_by_id(2, min_size=1, stream = "incomplete")
     assert_eq(res['id'], 2, "get_dataset_by_id incomplete with minsize")
 
+    size = consumer.get_current_dataset_count(stream = "incomplete", include_incomplete = False)
+    assert_eq(size, 0, "get_current_dataset_count excluding incomplete")
+
+    size = consumer.get_current_dataset_count(stream = "incomplete", include_incomplete = True)
+    assert_eq(size, 5, "get_current_dataset_count including incomplete")
+
+    size = consumer.get_current_size(stream = "incomplete") # should work as well
+    assert_eq(size, 5, "get_current_size for datasets")
 
 source, path, beamtime, token, mode = sys.argv[1:]
 

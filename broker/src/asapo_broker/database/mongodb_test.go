@@ -392,6 +392,38 @@ func TestMongoDBGetSize(t *testing.T) {
 	assert.Equal(t, string(recs1_expect), string(res))
 }
 
+func TestMongoDBGetSizeForDatasets(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec1)
+
+	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "false"})
+	assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code)
+
+	_, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "true"})
+	assert.Equal(t, utils.StatusWrongInput, err1.(*DBError).Code)
+}
+
+func TestMongoDBGetSizeDataset(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	db.insertRecord(dbname, collection, &rec_dataset1)
+	db.insertRecord(dbname, collection, &rec_dataset2_incomplete)
+
+	size2_expect, _ := json.Marshal(SizeRecord{2})
+	size1_expect, _ := json.Marshal(SizeRecord{1})
+
+	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "true"})
+	assert.Nil(t, err)
+	assert.Equal(t, string(size2_expect), string(res))
+
+	res, err = db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "false"})
+	assert.Nil(t, err)
+	assert.Equal(t, string(size1_expect), string(res))
+
+}
+
 func TestMongoDBGetSizeNoRecords(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()

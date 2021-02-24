@@ -567,9 +567,18 @@ func (db *Mongodb) getSize(request Request) ([]byte, error) {
 	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
 	var rec SizeRecord
 	var err error
+	filter:=bson.M{}
+	if request.ExtraParam=="false" { // do not return incomplete datasets
+		filter = bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$messages"}}}}
+	} else if request.ExtraParam=="true" {
+		filter = bson.M{"$expr": bson.M{"gt": []interface{}{0, bson.M{"$size": "$messages"}}}}
+	}
 
-	size, err := c.CountDocuments(context.TODO(), bson.M{}, options.Count())
+	size, err := c.CountDocuments(context.TODO(), filter, options.Count())
 	if err != nil {
+		if ce, ok := err.(mongo.CommandError); ok && ce.Code == 17124 {
+			return nil,&DBError{utils.StatusWrongInput, "no datasets found"}
+		}
 		return nil, err
 	}
 	rec.Size = int(size)

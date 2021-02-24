@@ -1,7 +1,8 @@
-## 20.12.1 (in progress)
+## 21.03.0 (in progress)
 
  IMPROVEMENTS
 * Producer API - queue limits in Python, for C++ return original data in error custom data
+* Consumer API - add GetCurrentDatasetCount/get_current_dataset_count function with option to include or exclude incomplete datasets
 
 ## 20.12.0
 
