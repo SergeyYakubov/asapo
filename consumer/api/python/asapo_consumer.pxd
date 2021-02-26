@@ -46,8 +46,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
     string data_source
     string user_token
   cppclass StreamInfo:
-    string Json(bool add_last_id)
-    bool SetFromJson(string json_str, bool read_last_id)
+    string Json()
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   cppclass NetworkConnectionType:
@@ -55,6 +54,11 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   NetworkConnectionType NetworkConnectionType_kUndefined "asapo::NetworkConnectionType::kUndefined"
   NetworkConnectionType NetworkConnectionType_kAsapoTcp "asapo::NetworkConnectionType::kAsapoTcp"
   NetworkConnectionType NetworkConnectionType_kFabric "asapo::NetworkConnectionType::kFabric"
+  cppclass StreamFilter:
+    pass
+  StreamFilter StreamFilter_kAllStreams "asapo::StreamFilter::kAllStreams"
+  StreamFilter StreamFilter_kFinishedStreams "asapo::StreamFilter::kFinishedStreams"
+  StreamFilter StreamFilter_kUnFinishedStreams "asapo::StreamFilter::kUnFinishedStreams"
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass Consumer:
@@ -80,7 +84,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         DataSet GetLastDataset(uint64_t min_size, string stream, Error* err)
         DataSet GetDatasetById(uint64_t id, uint64_t min_size, string stream, Error* err)
         Error RetrieveData(MessageMeta* info, MessageData* data)
-        vector[StreamInfo] GetStreamList(string from_stream, Error* err)
+        vector[StreamInfo] GetStreamList(string from_stream, StreamFilter filter, Error* err)
         void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts)
         void InterruptCurrentOperation()
 

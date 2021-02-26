@@ -41,10 +41,12 @@ class MessageMeta {
 struct StreamInfo {
     uint64_t last_id{0};
     std::string name;
+    bool finished{false};
+    std::string next_stream;
     std::chrono::system_clock::time_point timestamp_created;
     std::chrono::system_clock::time_point timestamp_lastentry;
-    std::string Json(bool add_last) const;
-    bool SetFromJson(const std::string& json_string,bool read_last);
+    std::string Json() const;
+    bool SetFromJson(const std::string &json_string);
 };
 
 using StreamInfos = std::vector<StreamInfo>;

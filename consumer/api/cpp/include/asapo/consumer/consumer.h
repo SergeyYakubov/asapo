@@ -12,6 +12,12 @@
 
 namespace asapo {
 
+enum class StreamFilter {
+  kAllStreams,
+  kFinishedStreams,
+  kUnFinishedStreams
+};
+
 class Consumer {
   public:
     //! Reset counter for the specific group.
@@ -73,8 +79,8 @@ class Consumer {
      */
     virtual NetworkConnectionType CurrentConnectionType() const = 0;
 
-    //! Get list of streams, set from to "" to get all streams
-    virtual StreamInfos GetStreamList(std::string from, Error* err) = 0;
+  //! Get list of streams with filter, set from to "" to get all streams
+    virtual StreamInfos GetStreamList(std::string from,  StreamFilter filter, Error* err) = 0;
 
     //! Get current number of messages in stream
     /*!

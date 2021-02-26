@@ -20,7 +20,7 @@ Error RequestHandlerDbLastStream::ProcessRequest(Request* request) const {
     if (!err) {
         log__->Debug(std::string{"get last stream "} + " in " +
             db_name_ + " at " + GetReceiverConfig()->database_uri);
-        request->SetResponseMessage(info.Json(true), ResponseMessageType::kInfo);
+        request->SetResponseMessage(info.Json(), ResponseMessageType::kInfo);
     }
     return err;
 }

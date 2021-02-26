@@ -149,8 +149,33 @@ func TestMongoDBGetNextErrorOnFinishedStream(t *testing.T) {
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})
 
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
-	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":2,\"next_stream\":\"next1\"}", err.(*DBError).Message)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.(*DBError).Message)
 }
+
+func TestMongoDBGetByIdErrorOnFinishedStream(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec_finished)
+
+	_,err:=db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id",ExtraParam: "2"})
+
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.(*DBError).Message)
+}
+
+func TestMongoDBGetLastErrorOnFinishedStream(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec_finished)
+
+	res,err:= db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last"})
+	fmt.Println(string(res))
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.(*DBError).Message)
+}
+
 
 func TestMongoDBGetNextErrorOnNoMoreData(t *testing.T) {
 	db.Connect(dbaddress)
@@ -392,6 +417,18 @@ func TestMongoDBGetSize(t *testing.T) {
 	assert.Equal(t, string(recs1_expect), string(res))
 }
 
+func TestMongoDBGetSizeWithFinishedStream(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec_finished)
+
+	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size"})
+	assert.Nil(t, err)
+	var rec_expect, _ = json.Marshal(&SizeRecord{1})
+	assert.Equal(t, string(rec_expect), string(res))
+}
+
 func TestMongoDBGetSizeForDatasets(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
@@ -404,6 +441,20 @@ func TestMongoDBGetSizeForDatasets(t *testing.T) {
 	assert.Equal(t, utils.StatusWrongInput, err1.(*DBError).Code)
 }
 
+
+func TestMongoDBGetSizeForDatasetsWithFinishedStream(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
+	db.insertRecord(dbname, collection, &rec_finished)
+
+	res, _ := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "true"})
+
+	var rec_expect, _ = json.Marshal(&SizeRecord{1})
+	assert.Equal(t, string(rec_expect), string(res))
+}
+
+
 func TestMongoDBGetSizeDataset(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
@@ -412,16 +463,10 @@ func TestMongoDBGetSizeDataset(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec_dataset2_incomplete)
 
 	size2_expect, _ := json.Marshal(SizeRecord{2})
-	size1_expect, _ := json.Marshal(SizeRecord{1})
 
 	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "true"})
 	assert.Nil(t, err)
 	assert.Equal(t, string(size2_expect), string(res))
-
-	res, err = db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "false"})
-	assert.Nil(t, err)
-	assert.Equal(t, string(size1_expect), string(res))
-
 }
 
 func TestMongoDBGetSizeNoRecords(t *testing.T) {
@@ -600,6 +645,8 @@ var rec_dataset2_incomplete = TestDataset{2, 4, []TestRecord{rec1, rec2, rec3}}
 var rec_dataset2 = TestDataset{2, 4, []TestRecord{rec1, rec2, rec3}}
 var rec_dataset3 = TestDataset{3, 3, []TestRecord{rec3, rec2, rec2}}
 
+var rec_dataset2_incomplete3 = TestDataset{2, 3, []TestRecord{rec1, rec2}}
+
 func TestMongoDBGetDataset(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
@@ -647,24 +694,6 @@ func TestMongoDBNoDataOnNotCompletedNextDataset(t *testing.T) {
 	assert.Equal(t, rec_dataset2_incomplete, res)
 }
 
-
-func TestMongoDBReturnInCompletedDataset(t *testing.T) {
-	db.Connect(dbaddress)
-	defer cleanup()
-
-	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
-
-	res_string, err := db.ProcessRequest(Request{DbName: dbname,
-		DbCollectionName: collection, GroupId: groupId, Op: "next", DatasetOp: true, MinDatasetSize: 1})
-
-	assert.Nil(t, err)
-	var res TestDataset
-	json.Unmarshal(res_string, &res)
-
-	assert.Equal(t, rec_dataset1_incomplete, res)
-}
-
-
 func TestMongoDBGetRecordLastDataSetSkipsIncompleteSets(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
@@ -690,7 +719,7 @@ func TestMongoDBGetRecordLastDataSetReturnsIncompleteSets(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec_dataset2)
 
 	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last",
-		DatasetOp:true,MinDatasetSize: 2,ExtraParam: "0"})
+		DatasetOp:true,MinDatasetSize: 3,ExtraParam: "0"})
 
 	assert.Nil(t, err)
 
@@ -699,6 +728,59 @@ func TestMongoDBGetRecordLastDataSetReturnsIncompleteSets(t *testing.T) {
 
 	assert.Equal(t, rec_dataset2, res)
 }
+
+func TestMongoDBGetRecordLastDataSetSkipsIncompleteSetsWithMinSize(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	db.insertRecord(dbname, collection, &rec_dataset1)
+	db.insertRecord(dbname, collection, &rec_dataset2_incomplete3)
+
+	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last",
+		DatasetOp:true,MinDatasetSize: 3,ExtraParam: "0"})
+
+	assert.Nil(t, err)
+
+	var res TestDataset
+	json.Unmarshal(res_string, &res)
+	assert.Equal(t, rec_dataset1, res)
+}
+
+func TestMongoDBGetRecordLastDataSetWithFinishedStream(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	db.insertRecord(dbname, collection, &rec_dataset1)
+	db.insertRecord(dbname, collection, &rec_finished)
+
+	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last",
+		DatasetOp:true,ExtraParam: "0"})
+
+	assert.NotNil(t, err)
+	if err != nil {
+		assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.Error())
+	}
+}
+
+
+func TestMongoDBGetRecordLastDataSetWithIncompleteDatasetsAndFinishedStreamReturnsEndofStream(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+
+	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
+	db.insertRecord(dbname, collection, &rec_finished)
+
+	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last",
+		DatasetOp:true,MinDatasetSize: 2,ExtraParam: "0"})
+
+	assert.NotNil(t, err)
+	if err != nil {
+		assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.Error())
+	}
+}
+
 
 func TestMongoDBGetRecordLastDataSetOK(t *testing.T) {
 	db.Connect(dbaddress)

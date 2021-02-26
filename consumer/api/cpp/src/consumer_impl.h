@@ -100,7 +100,7 @@ class ConsumerImpl final : public asapo::Consumer {
 
     Error RetrieveData(MessageMeta* info, MessageData* data) override;
 
-    StreamInfos GetStreamList(std::string from, Error* err) override;
+    StreamInfos GetStreamList(std::string from, StreamFilter filter, Error* err) override;
     void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts) override;
 
     virtual void InterruptCurrentOperation() override;
@@ -144,9 +144,9 @@ class ConsumerImpl final : public asapo::Consumer {
     Error UpdateFolderTokenIfNeeded(bool ignore_existing);
 
     uint64_t GetCurrentCount(std::string stream, bool datasets, bool include_incomplete, Error* err);
+    RequestInfo GetStreamListRequest(const std::string &from, const StreamFilter &filter) const;
 
-
-      std::string endpoint_;
+    std::string endpoint_;
     std::string current_broker_uri_;
     std::string current_fts_uri_;
     std::string source_path_;
@@ -163,6 +163,7 @@ class ConsumerImpl final : public asapo::Consumer {
     uint64_t delay_ms_;
     uint64_t resend_attempts_;
     std::atomic<bool> interrupt_flag_{ false};
+
 };
 
 }

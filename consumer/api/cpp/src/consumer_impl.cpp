@@ -644,7 +644,7 @@ StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
     }
     for (auto stream_encoded : streams_endcoded) {
         StreamInfo si;
-        auto ok = si.SetFromJson(stream_encoded, false);
+        auto ok = si.SetFromJson(stream_encoded);
         if (!ok) {
             *err = TextError("cannot parse " + stream_encoded);
             return StreamInfos{};
@@ -654,14 +654,20 @@ StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
     return streams;
 }
 
-StreamInfos ConsumerImpl::GetStreamList(std::string from, Error* err) {
-
-    RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/0/streams";
-    ri.post = false;
-    if (!from.empty()) {
-        ri.extra_params = "&from=" + from;
+std::string filterToString(StreamFilter filter) {
+    switch(filter) {
+        case StreamFilter::kAllStreams:
+            return "all";
+        case StreamFilter::kFinishedStreams:
+            return "finished";
+        case StreamFilter::kUnFinishedStreams:
+            return "unfinished";
     }
+}
+
+
+StreamInfos ConsumerImpl::GetStreamList(std::string from,StreamFilter filter, Error* err) {
+    RequestInfo ri = GetStreamListRequest(from, filter);
 
     auto response = BrokerRequestWithTimeout(ri, err);
     if (*err) {
@@ -669,6 +675,17 @@ StreamInfos ConsumerImpl::GetStreamList(std::string from, Error* err) {
     }
 
     return ParseStreamsFromResponse(std::move(response), err);
+}
+
+RequestInfo ConsumerImpl::GetStreamListRequest(const std::string &from, const StreamFilter &filter) const {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/0/streams";
+    ri.post = false;
+    if (!from.empty()) {
+        ri.extra_params = "&from=" + from;
+    }
+    ri.extra_params +="&filter="+filterToString(filter);
+    return ri;
 }
 
 Error ConsumerImpl::UpdateFolderTokenIfNeeded(bool ignore_existing) {

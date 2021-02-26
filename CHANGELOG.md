@@ -3,6 +3,10 @@
  IMPROVEMENTS
 * Producer API - queue limits in Python, for C++ return original data in error custom data
 * Consumer API - add GetCurrentDatasetCount/get_current_dataset_count function with option to include or exclude incomplete datasets
+* Consumer API - GetStreamList/get_stream_list - can filter finished/unfinished streams now
+
+BREAKING CHANGES
+* Consumer API (C++ only)- GetStreamList has now extra argument StreamFilter
 
 ## 20.12.0
 

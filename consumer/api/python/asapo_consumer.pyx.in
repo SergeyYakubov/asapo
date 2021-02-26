@@ -104,6 +104,15 @@ cdef throw_exception(Error& err, res = None):
 
 cdef class PyConsumer:
     cdef unique_ptr[Consumer] c_consumer
+    cdef StreamFilter _filter_to_cfilter(self,filter):
+        if filter == "all":
+            return StreamFilter_kAllStreams
+        elif filter == "finished":
+            return StreamFilter_kFinishedStreams
+        elif filter == "unfinished":
+            return StreamFilter_kUnFinishedStreams
+        else:
+            raise AsapoWrongInputError("wrong filter, must be all|finished|unfinished")
     def _op(self, op, group_id, stream, meta_only, uint64_t id):
         cdef MessageMeta info
         cdef string b_group_id = _bytes(group_id)
@@ -219,17 +228,18 @@ cdef class PyConsumer:
         if err:
             throw_exception(err)
         return _str(group_id)
-    def get_stream_list(self, from_stream = ""):
+    def get_stream_list(self, filter="all", from_stream = ""):
         cdef Error err
         cdef vector[StreamInfo] streams
         cdef string b_from_stream = _bytes(from_stream)
+        cdef StreamFilter stream_filter = self._filter_to_cfilter(filter)
         with nogil:
-            streams = self.c_consumer.get().GetStreamList(b_from_stream,&err)
+            streams = self.c_consumer.get().GetStreamList(b_from_stream,stream_filter,&err)
         if err:
             throw_exception(err)
         list = []
         for stream in streams:
-            list.append(json.loads(_str(stream.Json(False))))
+            list.append(json.loads(_str(stream.Json())))
         return list
     def acknowledge(self, group_id, uint64_t id, stream = "default"):
         cdef string b_group_id = _bytes(group_id)

@@ -1017,36 +1017,37 @@ TEST_F(ConsumerImplTests, GetDatasetByIdUsesCorrectUri) {
 TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUri) {
     MockGetBrokerUri();
     std::string return_streams =
-        R"({"streams":[{"lastId":123,"name":"test","timestampCreated":1000000},{"name":"test1","timestampCreated":2000000}]})";
+        std::string(R"({"streams":[{"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":1000,"finished":0,"nextStream":""},)")+
+        R"({"lastId":124,"name":"test1","timestampCreated":2000000,"timestampLast":2000,"finished":1,"nextStream":"next"}]})";
     EXPECT_CALL(mock_http_client,
                 Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/0/streams"
-                          + "?token=" + expected_token + "&from=stream_from", _,
+                          + "?token=" + expected_token + "&from=stream_from&filter=all", _,
                       _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return(return_streams)));
 
     asapo::Error err;
-    auto streams = consumer->GetStreamList("stream_from", &err);
+    auto streams = consumer->GetStreamList("stream_from",asapo::StreamFilter::kAllStreams, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(streams.size(), Eq(2));
     ASSERT_THAT(streams.size(), 2);
-    ASSERT_THAT(streams[0].Json(false), R"({"name":"test","timestampCreated":1000000})");
-    ASSERT_THAT(streams[1].Json(false), R"({"name":"test1","timestampCreated":2000000})");
+    ASSERT_THAT(streams[0].Json(), R"({"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":1000,"finished":0,"nextStream":""})");
+    ASSERT_THAT(streams[1].Json(), R"({"lastId":124,"name":"test1","timestampCreated":2000000,"timestampLast":2000,"finished":1,"nextStream":"next"})");
 }
 
 TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUriWithoutFrom) {
     MockGetBrokerUri();
     EXPECT_CALL(mock_http_client,
                 Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/0/streams"
-                          + "?token=" + expected_token, _,
+                          + "?token=" + expected_token+"&filter=finished", _,
                       _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return("")));;
 
     asapo::Error err;
-    auto streams = consumer->GetStreamList("", &err);
+    auto streams = consumer->GetStreamList("",asapo::StreamFilter::kFinishedStreams, &err);
 }
 
 void ConsumerImplTests::MockBeforeFTS(MessageData* data) {
