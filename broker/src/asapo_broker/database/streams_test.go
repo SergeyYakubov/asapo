@@ -18,7 +18,7 @@ func (suite *StreamsTestSuite) SetupTest() {
 
 func (suite *StreamsTestSuite) TearDownTest() {
 	cleanup()
-	streams.records= map[string]StreamsRecord{}
+	streams.records = map[string]StreamsRecord{}
 }
 
 func TestStreamsTestSuite(t *testing.T) {
@@ -48,6 +48,33 @@ func (suite *StreamsTestSuite) TestStreamsUsesCache() {
 	rec, err := streams.getStreams(&db, dbname, "")
 	suite.Nil(err)
 	suite.Equal(int64(1), rec.Streams[0].Timestamp)
+	suite.Equal(false, rec.Streams[0].Finished)
+	suite.Equal(int64(2), rec.Streams[0].LastId)
+	suite.Equal(int64(1), rec.Streams[0].TimestampLast)
+}
+
+func (suite *StreamsTestSuite) TestStreamsGetFinishedInfo() {
+	db.settings.UpdateStreamCachePeriodMs = 1000
+	db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec_finished)
+	rec, err := streams.getStreams(&db, dbname, "")
+	suite.Nil(err)
+	suite.Equal(int64(0), rec.Streams[0].Timestamp)
+	suite.Equal(true, rec.Streams[0].Finished)
+	suite.Equal("next1", rec.Streams[0].NextStream)
+}
+
+func (suite *StreamsTestSuite) TestStreamsDataSetsGetFinishedInfo() {
+	db.settings.UpdateStreamCachePeriodMs = 1000
+	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
+	db.insertRecord(dbname, collection, &rec_finished)
+	rec, err := streams.getStreams(&db, dbname, "")
+	suite.Nil(err)
+	suite.Equal(int64(1), rec.Streams[0].Timestamp)
+	suite.Equal(int64(2), rec.Streams[0].TimestampLast)
+	suite.Equal(true, rec.Streams[0].Finished)
+	suite.Equal("next1", rec.Streams[0].NextStream)
+	suite.Equal(int64(1), rec.Streams[0].LastId)
 }
 
 func (suite *StreamsTestSuite) TestStreamsNotUsesCacheWhenExpired() {

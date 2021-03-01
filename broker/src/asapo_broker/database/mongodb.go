@@ -24,11 +24,13 @@ type ID struct {
 	ID int `bson:"_id"`
 }
 
-type FinishedStreamRecord struct {
-	ID         int                    `json:"_id"`
-	Name       string                 `json:"name"`
-	Meta       map[string]interface{} `json:"meta"`
-	NextStream string
+type MessageRecord struct {
+	ID             int                    `json:"_id"`
+	Timestamp      int                    `bson:"timestamp" json:"timestamp"`
+	Name           string                 `json:"name"`
+	Meta           map[string]interface{} `json:"meta"`
+	NextStream     string
+	FinishedStream bool
 }
 
 type InProcessingRecord struct {
@@ -277,7 +279,7 @@ func (db *Mongodb) getRecordFromDb(request Request, id, id_max int) (res map[str
 	return res, err
 }
 
-func (db *Mongodb) getRecordByIDRow(request Request, id, id_max int) ([]byte, error) {
+func (db *Mongodb) getRecordByIDRaw(request Request, id, id_max int) ([]byte, error) {
 	res, err := db.getRecordFromDb(request, id, id_max)
 	if err != nil {
 		return nil, err
@@ -301,10 +303,10 @@ func (db *Mongodb) getRecordByIDRow(request Request, id, id_max int) ([]byte, er
 	}
 }
 
-func (db *Mongodb) getEarliestRecord(dbname string, collection_name string) (map[string]interface{}, error) {
+func (db *Mongodb) getRawRecordWithSort(dbname string, collection_name string, sortField string, sortOrder int) (map[string]interface{}, error) {
 	var res map[string]interface{}
 	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
-	opts := options.FindOne().SetSort(bson.M{"timestamp": 1})
+	opts := options.FindOne().SetSort(bson.M{sortField: sortOrder})
 	var q bson.M = nil
 	err := c.FindOne(context.TODO(), q, opts).Decode(&res)
 
@@ -315,6 +317,14 @@ func (db *Mongodb) getEarliestRecord(dbname string, collection_name string) (map
 		return nil, err
 	}
 	return res, nil
+}
+
+func (db *Mongodb) getLastRawRecord(dbname string, collection_name string) (map[string]interface{}, error) {
+	return db.getRawRecordWithSort(dbname, collection_name, "_id", -1)
+}
+
+func (db *Mongodb) getEarliestRawRecord(dbname string, collection_name string) (map[string]interface{}, error) {
+	return db.getRawRecordWithSort(dbname, collection_name, "timestamp", 1)
 }
 
 func (db *Mongodb) getRecordByID(request Request) ([]byte, error) {
@@ -328,7 +338,7 @@ func (db *Mongodb) getRecordByID(request Request) ([]byte, error) {
 		return nil, err
 	}
 
-	return db.getRecordByIDRow(request, id, max_ind)
+	return db.getRecordByIDRaw(request, id, max_ind)
 }
 
 func (db *Mongodb) negAckRecord(request Request) ([]byte, error) {
@@ -518,18 +528,21 @@ func (db *Mongodb) getNextAndMaxIndexes(request Request) (int, int, error) {
 	return nextInd, maxInd, nil
 }
 
-func ExtractFinishedStreamRecord(data map[string]interface{}) (FinishedStreamRecord, bool) {
-	var r FinishedStreamRecord
+func ExtractMessageRecord(data map[string]interface{}) (MessageRecord, bool) {
+	var r MessageRecord
 	err := utils.MapToStruct(data, &r)
-	if err != nil || r.Name != finish_stream_keyword {
+	if err != nil {
 		return r, false
 	}
-	var next_stream string
-	next_stream, ok := r.Meta["next_stream"].(string)
-	if !ok {
-		next_stream = no_next_stream_keyword
+	r.FinishedStream = (r.Name == finish_stream_keyword)
+	if r.FinishedStream {
+		var next_stream string
+		next_stream, ok := r.Meta["next_stream"].(string)
+		if !ok {
+			next_stream = no_next_stream_keyword
+		}
+		r.NextStream = next_stream
 	}
-	r.NextStream = next_stream
 	return r, true
 }
 
@@ -540,7 +553,7 @@ func (db *Mongodb) tryGetRecordFromInprocessed(request Request, originalerror er
 		return nil, err_inproc
 	}
 	if nextInd != 0 {
-		return db.getRecordByIDRow(request, nextInd, maxInd)
+		return db.getRecordByIDRaw(request, nextInd, maxInd)
 	} else {
 		return nil, originalerror
 	}
@@ -550,8 +563,8 @@ func checkStreamFinished(request Request, id, id_max int, data map[string]interf
 	if id != id_max {
 		return nil
 	}
-	r, ok := ExtractFinishedStreamRecord(data)
-	if !ok {
+	r, ok := ExtractMessageRecord(data)
+	if !ok || !r.FinishedStream {
 		return nil
 	}
 	log_str := "reached end of stream " + request.DbCollectionName + " , next_stream: " + r.NextStream
@@ -567,7 +580,7 @@ func (db *Mongodb) getNextRecord(request Request) ([]byte, error) {
 		return nil, err
 	}
 
-	data, err := db.getRecordByIDRow(request, nextInd, maxInd)
+	data, err := db.getRecordByIDRaw(request, nextInd, maxInd)
 	if err != nil {
 		data, err = db.tryGetRecordFromInprocessed(request, err)
 	}
@@ -586,7 +599,7 @@ func (db *Mongodb) getLastRecord(request Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return db.getRecordByIDRow(request, max_ind, max_ind)
+	return db.getRecordByIDRaw(request, max_ind, max_ind)
 }
 
 func getSizeFilter(request Request) bson.M {
@@ -725,10 +738,10 @@ func extractsTwoIntsFromString(from_to string) (int, int, error) {
 
 }
 
-func (db *Mongodb) getNacksLimits(request Request) (int,int, error) {
+func (db *Mongodb) getNacksLimits(request Request) (int, int, error) {
 	from, to, err := extractsTwoIntsFromString(request.ExtraParam)
 	if err != nil {
-		return 0,0, err
+		return 0, 0, err
 	}
 
 	if from == 0 {
@@ -736,12 +749,24 @@ func (db *Mongodb) getNacksLimits(request Request) (int,int, error) {
 	}
 
 	if to == 0 {
-		to, err = db.getMaxIndex(request, true)
+		to, err = db.getMaxLimitWithoutEndOfStream(request, err)
 		if err != nil {
-			return 0,0, err
+			return 0, 0, err
 		}
 	}
-	return from,to,nil
+	return from, to, nil
+}
+
+func (db *Mongodb) getMaxLimitWithoutEndOfStream(request Request, err error) (int, error) {
+	maxInd, err := db.getMaxIndex(request, true)
+	if err != nil {
+		return 0, err
+	}
+	_, last_err := db.getRecordByIDRaw(request, maxInd, maxInd)
+	if last_err != nil && maxInd > 0 {
+		maxInd = maxInd - 1
+	}
+	return maxInd, nil
 }
 
 func (db *Mongodb) nacks(request Request) ([]byte, error) {
@@ -833,7 +858,7 @@ func extractNacsFromCursor(err error, cursor *mongo.Cursor) ([]int, error) {
 func (db *Mongodb) getNacks(request Request, min_index, max_index int) ([]int, error) {
 	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
 
-	if res, err, ok := db.canAvoidDbRequest(min_index, max_index, c);ok{
+	if res, err, ok := db.canAvoidDbRequest(min_index, max_index, c); ok {
 		return res, err
 	}
 

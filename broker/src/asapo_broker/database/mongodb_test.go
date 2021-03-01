@@ -13,16 +13,17 @@ import (
 )
 
 type TestRecord struct {
-	ID        int64               `bson:"_id" json:"_id"`
+	ID        int64             `bson:"_id" json:"_id"`
 	Meta      map[string]string `bson:"meta" json:"meta"`
 	Name      string            `bson:"name" json:"name"`
 	Timestamp int64             `bson:"timestamp" json:"timestamp"`
 }
 
 type TestDataset struct {
-	ID     int64          `bson:"_id" json:"_id"`
-	Size   int64          `bson:"size" json:"size"`
-	Messages []TestRecord `bson:"messages" json:"messages"`
+	Timestamp int64        `bson:"timestamp" json:"timestamp"`
+	ID        int64        `bson:"_id" json:"_id"`
+	Size      int64        `bson:"size" json:"size"`
+	Messages  []TestRecord `bson:"messages" json:"messages"`
 }
 
 var db Mongodb
@@ -38,9 +39,11 @@ const metaID_str = "0"
 var empty_next = map[string]string{"next_stream": ""}
 
 var rec1 = TestRecord{1, empty_next, "aaa", 0}
-var rec_finished = TestRecord{2, map[string]string{"next_stream": "next1"}, finish_stream_keyword, 0}
+var rec_finished = TestRecord{2, map[string]string{"next_stream": "next1"}, finish_stream_keyword, 2}
 var rec2 = TestRecord{2, empty_next, "bbb", 1}
 var rec3 = TestRecord{3, empty_next, "ccc", 2}
+var rec_finished3 = TestRecord{3, map[string]string{"next_stream": "next1"}, finish_stream_keyword, 2}
+var rec_finished11 = TestRecord{11, map[string]string{"next_stream": "next1"}, finish_stream_keyword, 2}
 
 var rec1_expect, _ = json.Marshal(rec1)
 var rec2_expect, _ = json.Marshal(rec2)
@@ -158,7 +161,7 @@ func TestMongoDBGetByIdErrorOnFinishedStream(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec1)
 	db.insertRecord(dbname, collection, &rec_finished)
 
-	_,err:=db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id",ExtraParam: "2"})
+	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", ExtraParam: "2"})
 
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.(*DBError).Message)
@@ -170,12 +173,11 @@ func TestMongoDBGetLastErrorOnFinishedStream(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec1)
 	db.insertRecord(dbname, collection, &rec_finished)
 
-	res,err:= db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last"})
+	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last"})
 	fmt.Println(string(res))
 	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.(*DBError).Message)
 }
-
 
 func TestMongoDBGetNextErrorOnNoMoreData(t *testing.T) {
 	db.Connect(dbaddress)
@@ -434,13 +436,12 @@ func TestMongoDBGetSizeForDatasets(t *testing.T) {
 	defer cleanup()
 	db.insertRecord(dbname, collection, &rec1)
 
-	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "false"})
+	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size", ExtraParam: "false"})
 	assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code)
 
-	_, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "true"})
+	_, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size", ExtraParam: "true"})
 	assert.Equal(t, utils.StatusWrongInput, err1.(*DBError).Code)
 }
-
 
 func TestMongoDBGetSizeForDatasetsWithFinishedStream(t *testing.T) {
 	db.Connect(dbaddress)
@@ -448,12 +449,11 @@ func TestMongoDBGetSizeForDatasetsWithFinishedStream(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
 	db.insertRecord(dbname, collection, &rec_finished)
 
-	res, _ := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "true"})
+	res, _ := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size", ExtraParam: "true"})
 
 	var rec_expect, _ = json.Marshal(&SizeRecord{1})
 	assert.Equal(t, string(rec_expect), string(res))
 }
-
 
 func TestMongoDBGetSizeDataset(t *testing.T) {
 	db.Connect(dbaddress)
@@ -464,7 +464,7 @@ func TestMongoDBGetSizeDataset(t *testing.T) {
 
 	size2_expect, _ := json.Marshal(SizeRecord{2})
 
-	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size",ExtraParam: "true"})
+	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, Op: "size", ExtraParam: "true"})
 	assert.Nil(t, err)
 	assert.Equal(t, string(size2_expect), string(res))
 }
@@ -639,13 +639,13 @@ func TestMongoDBQueryMessagesOnEmptyDatabase(t *testing.T) {
 	}
 }
 
-var rec_dataset1 = TestDataset{1, 3, []TestRecord{rec1, rec2, rec3}}
-var rec_dataset1_incomplete = TestDataset{1, 4, []TestRecord{rec1, rec2, rec3}}
-var rec_dataset2_incomplete = TestDataset{2, 4, []TestRecord{rec1, rec2, rec3}}
-var rec_dataset2 = TestDataset{2, 4, []TestRecord{rec1, rec2, rec3}}
-var rec_dataset3 = TestDataset{3, 3, []TestRecord{rec3, rec2, rec2}}
+var rec_dataset1 = TestDataset{0, 1, 3, []TestRecord{rec1, rec2, rec3}}
+var rec_dataset1_incomplete = TestDataset{1, 1, 4, []TestRecord{rec1, rec2, rec3}}
+var rec_dataset2_incomplete = TestDataset{2, 2, 4, []TestRecord{rec1, rec2, rec3}}
+var rec_dataset2 = TestDataset{1, 2, 4, []TestRecord{rec1, rec2, rec3}}
+var rec_dataset3 = TestDataset{2, 3, 3, []TestRecord{rec3, rec2, rec2}}
 
-var rec_dataset2_incomplete3 = TestDataset{2, 3, []TestRecord{rec1, rec2}}
+var rec_dataset2_incomplete3 = TestDataset{1, 2, 3, []TestRecord{rec1, rec2}}
 
 func TestMongoDBGetDataset(t *testing.T) {
 	db.Connect(dbaddress)
@@ -701,7 +701,7 @@ func TestMongoDBGetRecordLastDataSetSkipsIncompleteSets(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec_dataset1)
 	db.insertRecord(dbname, collection, &rec_dataset2)
 
-	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last", DatasetOp:true, ExtraParam: "0"})
+	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last", DatasetOp: true, ExtraParam: "0"})
 
 	assert.Nil(t, err)
 
@@ -719,7 +719,7 @@ func TestMongoDBGetRecordLastDataSetReturnsIncompleteSets(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec_dataset2)
 
 	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last",
-		DatasetOp:true,MinDatasetSize: 3,ExtraParam: "0"})
+		DatasetOp: true, MinDatasetSize: 3, ExtraParam: "0"})
 
 	assert.Nil(t, err)
 
@@ -737,7 +737,7 @@ func TestMongoDBGetRecordLastDataSetSkipsIncompleteSetsWithMinSize(t *testing.T)
 	db.insertRecord(dbname, collection, &rec_dataset2_incomplete3)
 
 	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last",
-		DatasetOp:true,MinDatasetSize: 3,ExtraParam: "0"})
+		DatasetOp: true, MinDatasetSize: 3, ExtraParam: "0"})
 
 	assert.Nil(t, err)
 
@@ -754,7 +754,7 @@ func TestMongoDBGetRecordLastDataSetWithFinishedStream(t *testing.T) {
 	db.insertRecord(dbname, collection, &rec_finished)
 
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last",
-		DatasetOp:true,ExtraParam: "0"})
+		DatasetOp: true, ExtraParam: "0"})
 
 	assert.NotNil(t, err)
 	if err != nil {
@@ -762,7 +762,6 @@ func TestMongoDBGetRecordLastDataSetWithFinishedStream(t *testing.T) {
 		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.Error())
 	}
 }
-
 
 func TestMongoDBGetRecordLastDataSetWithIncompleteDatasetsAndFinishedStreamReturnsEndofStream(t *testing.T) {
 	db.Connect(dbaddress)
@@ -772,7 +771,7 @@ func TestMongoDBGetRecordLastDataSetWithIncompleteDatasetsAndFinishedStreamRetur
 	db.insertRecord(dbname, collection, &rec_finished)
 
 	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "last",
-		DatasetOp:true,MinDatasetSize: 2,ExtraParam: "0"})
+		DatasetOp: true, MinDatasetSize: 2, ExtraParam: "0"})
 
 	assert.NotNil(t, err)
 	if err != nil {
@@ -780,7 +779,6 @@ func TestMongoDBGetRecordLastDataSetWithIncompleteDatasetsAndFinishedStreamRetur
 		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.Error())
 	}
 }
-
 
 func TestMongoDBGetRecordLastDataSetOK(t *testing.T) {
 	db.Connect(dbaddress)
@@ -804,7 +802,7 @@ func TestMongoDBGetDatasetID(t *testing.T) {
 	defer cleanup()
 	db.insertRecord(dbname, collection, &rec_dataset1)
 
-	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", DatasetOp:true, ExtraParam: "1"})
+	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", DatasetOp: true, ExtraParam: "1"})
 
 	assert.Nil(t, err)
 
@@ -820,7 +818,7 @@ func TestMongoDBErrorOnIncompleteDatasetID(t *testing.T) {
 	defer cleanup()
 	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
 
-	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", DatasetOp:true, ExtraParam: "1"})
+	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", DatasetOp: true, ExtraParam: "1"})
 
 	assert.Equal(t, utils.StatusPartialData, err.(*DBError).Code)
 
@@ -836,7 +834,7 @@ func TestMongoDBOkOnIncompleteDatasetID(t *testing.T) {
 	defer cleanup()
 	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
 
-	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", DatasetOp:true,MinDatasetSize: 3,ExtraParam: "1"})
+	res_string, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "id", DatasetOp: true, MinDatasetSize: 3, ExtraParam: "1"})
 
 	assert.Nil(t, err)
 
@@ -853,16 +851,20 @@ type Stream struct {
 }
 
 var testsStreams = []struct {
-	from               string
+	from            string
 	streams         []Stream
 	expectedStreams StreamsRecord
-	test               string
-	ok                 bool
+	test            string
+	ok              bool
 }{
 	{"", []Stream{}, StreamsRecord{[]StreamInfo{}}, "no streams", true},
-	{"", []Stream{{"ss1", []TestRecord{rec2, rec1}}}, StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss1", Timestamp: 0}}}, "one stream", true},
-	{"", []Stream{{"ss1", []TestRecord{rec2, rec1}}, {"ss2", []TestRecord{rec2, rec3}}}, StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss1", Timestamp: 0}, StreamInfo{Name: "ss2", Timestamp: 1}}}, "two streams", true},
-	{"ss2", []Stream{{"ss1", []TestRecord{rec1, rec2}}, {"ss2", []TestRecord{rec2, rec3}}}, StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss2", Timestamp: 1}}}, "with from", true},
+	{"", []Stream{{"ss1", []TestRecord{rec2, rec1}}},
+		StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss1", Timestamp: 0, LastId: 2, TimestampLast: 1}}}, "one stream", true},
+	{"", []Stream{{"ss1", []TestRecord{rec2, rec1}},
+		{"ss2", []TestRecord{rec2, rec3}}},
+		StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss1", Timestamp: 0, LastId: 2, TimestampLast: 1},
+			StreamInfo{Name: "ss2", Timestamp: 1, LastId: 3, TimestampLast: 2}}}, "two streams", true},
+	{"ss2", []Stream{{"ss1", []TestRecord{rec1, rec2}}, {"ss2", []TestRecord{rec2, rec3}}}, StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss2", Timestamp: 1, LastId: 3, TimestampLast: 2}}}, "with from", true},
 }
 
 func TestMongoDBListStreams(t *testing.T) {
@@ -891,11 +893,13 @@ func TestMongoDBAckMessage(t *testing.T) {
 	defer cleanup()
 
 	db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec_finished)
+
 	query_str := "{\"Id\":1,\"Op\":\"ackmessage\"}"
 
 	request := Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "ackmessage", ExtraParam: query_str}
 	res, err := db.ProcessRequest(request)
-	nacks, _ := db.getNacks(request, 1, 1)
+	nacks, _ := db.getNacks(request, 0, 0)
 	assert.Nil(t, err)
 	assert.Equal(t, "", string(res))
 	assert.Equal(t, 0, len(nacks))
@@ -927,6 +931,7 @@ func TestMongoDBNacks(t *testing.T) {
 		db.Connect(dbaddress)
 		if test.insertRecords {
 			insertRecords(10)
+			db.insertRecord(dbname, collection, &rec_finished11)
 		}
 		if test.ackRecords {
 			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":2,\"Op\":\"ackmessage\"}"})
@@ -961,6 +966,7 @@ func TestMongoDBLastAcks(t *testing.T) {
 		db.Connect(dbaddress)
 		if test.insertRecords {
 			insertRecords(10)
+			db.insertRecord(dbname, collection, &rec_finished11)
 		}
 		if test.ackRecords {
 			db.ackRecord(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, ExtraParam: "{\"Id\":2,\"Op\":\"ackmessage\"}"})
@@ -1034,6 +1040,7 @@ func TestMongoDBGetNextReturnsToNormalAfterUsesInprocessed(t *testing.T) {
 	defer cleanup()
 	err := db.insertRecord(dbname, collection, &rec1)
 	db.insertRecord(dbname, collection, &rec2)
+	db.insertRecord(dbname, collection, &rec_finished3)
 	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1000_3"})
 	time.Sleep(time.Second)
 	res1, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next", ExtraParam: "1000_3"})

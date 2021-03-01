@@ -151,7 +151,7 @@ std::string StreamInfo::Json() const {
     return ("{\"lastId\":" + std::to_string(last_id) + ","  +
         "\"name\":\"" + name + "\",\"timestampCreated\":" + std::to_string(nanoseconds_from_epoch)
         + std::string(",") + "\"timestampLast\":" + std::to_string(nanoseconds_from_epoch_le)
-        + ",\"finished\":" + std::to_string(finished)+ ",\"nextStream\":\"" + next_stream)
+        + ",\"finished\":" + (finished?"true":"false")+ ",\"nextStream\":\"" + next_stream)
         + "\"}";
 }
 
@@ -159,9 +159,8 @@ bool StreamInfo::SetFromJson(const std::string &json_string) {
     auto old = *this;
     JsonStringParser parser(json_string);
     uint64_t id;
-    uint64_t finished_i;
     if (parser.GetUInt64("lastId", &last_id) ||
-        parser.GetUInt64("finished", &finished_i) ||
+        parser.GetBool("finished", &finished) ||
         parser.GetString("nextStream", &next_stream) ||
         !TimeFromJson(parser, "timestampLast", &timestamp_lastentry) ||
         parser.GetString("name", &name) ||
@@ -169,7 +168,6 @@ bool StreamInfo::SetFromJson(const std::string &json_string) {
         *this = old;
         return false;
     }
-    finished=bool(finished_i);
     return true;
 }
 

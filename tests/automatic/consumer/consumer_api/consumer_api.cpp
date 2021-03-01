@@ -143,17 +143,19 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     auto streams = consumer->GetStreamList("",asapo::StreamFilter::kAllStreams,&err);
     M_AssertTrue(err == nullptr, "GetStreamList no error");
     M_AssertTrue(streams.size() == 3, "streams.size");
-    M_AssertTrue(streams[0].name == "default", "streams0.name1");
-    M_AssertTrue(streams[1].name == "stream1", "streams1.name2");
-    M_AssertTrue(streams[2].name == "stream2", "streams2.name3");
+    M_AssertTrue(streams[0].name == "default", "streams0.name");
+    M_AssertTrue(streams[1].name == "stream1", "streams1.name");
+    M_AssertTrue(streams[2].name == "stream2", "streams2.name");
     M_AssertTrue(streams[1].finished == true, "stream1 finished");
-    M_AssertTrue(streams[1].next_stream == "next_stream", "stream1 next stream");
+    M_AssertTrue(streams[1].next_stream == "ns", "stream1 next stream");
     M_AssertTrue(streams[2].finished == true, "stream2 finished");
     M_AssertTrue(streams[2].next_stream == "", "stream2 no next stream");
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[0].timestamp_created) == 0, "streams0.timestamp");
-    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[0].timestamp_lastentry) > 0, "streams0.timestamp lastentry  set");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[0].timestamp_lastentry) == 0, "streams0.timestamp lastentry");
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[1].timestamp_created) == 1000, "streams1.timestamp");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[1].timestamp_lastentry) == 1000, "streams1.timestamp lastentry");
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[2].timestamp_created) == 2000, "streams2.timestamp");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[2].timestamp_lastentry) == 2000, "streams2.timestamp lastentry");
 // acknowledges
 
     auto id = consumer->GetLastAcknowledgedMessage(group_id,"default", &err);

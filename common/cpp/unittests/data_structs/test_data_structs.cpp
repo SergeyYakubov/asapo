@@ -185,7 +185,7 @@ TEST(StreamInfo, ConvertFromJsonErr) {
 TEST(StreamInfo, ConvertToJson) {
     auto sinfo = PrepareStreamInfo();
 
-    std::string expected_json = R"({"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":2000000,"finished":1,"nextStream":"next"})";
+    std::string expected_json = R"({"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":2000000,"finished":true,"nextStream":"next"})";
     auto json = sinfo.Json();
 
     ASSERT_THAT(json,Eq(expected_json));

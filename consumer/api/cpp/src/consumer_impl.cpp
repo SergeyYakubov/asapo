@@ -529,7 +529,8 @@ Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std:
 }
 
 uint64_t ConsumerImpl::GetCurrentSize(std::string stream, Error* err) {
-    return GetCurrentCount(stream,false,false,err);
+    auto ri = GetSizeRequestForSingleMessagesStream(stream);
+    return GetCurrentCount(stream,ri,err);
 }
 
 Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) {
@@ -843,27 +844,38 @@ void ConsumerImpl::InterruptCurrentOperation() {
 }
 
 uint64_t ConsumerImpl::GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) {
-    return GetCurrentCount(stream,true,include_incomplete,err);
+    RequestInfo ri = GetSizeRequestForDatasetStream(stream, include_incomplete);
+    return GetCurrentCount(stream,ri,err);
 }
 
-uint64_t ConsumerImpl::GetCurrentCount(std::string stream, bool datasets, bool include_incomplete, Error* err) {
-    RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        +"/" + std::move(stream) + "/size";
-    if (datasets) {
-        ri.extra_params = std::string("&incomplete=")+(include_incomplete?"true":"false");
-    }
+RequestInfo ConsumerImpl::GetSizeRequestForDatasetStream(std::string &stream, bool include_incomplete) const {
+    RequestInfo ri = GetSizeRequestForSingleMessagesStream(stream);
+    ri.extra_params = std::string("&incomplete=")+(include_incomplete?"true":"false");
+    return ri;
+}
+
+uint64_t ConsumerImpl::GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err) {
     auto responce = BrokerRequestWithTimeout(ri, err);
     if (*err) {
         return 0;
     }
+    return ParseGetCurrentCountResponce(err, responce);
+}
 
+uint64_t ConsumerImpl::ParseGetCurrentCountResponce(Error* err, const std::string &responce) const {
     JsonStringParser parser(responce);
     uint64_t size;
     if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
         return 0;
     }
     return size;
+}
+
+RequestInfo ConsumerImpl::GetSizeRequestForSingleMessagesStream(std::string &stream) const {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+        +"/" + std::move(stream) + "/size";
+    return ri;
 }
 
 }

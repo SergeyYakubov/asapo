@@ -104,7 +104,7 @@ cdef throw_exception(Error& err, res = None):
 
 cdef class PyConsumer:
     cdef unique_ptr[Consumer] c_consumer
-    cdef StreamFilter _filter_to_cfilter(self,filter):
+    cdef StreamFilter _filter_to_cfilter(self,filter) except + :
         if filter == "all":
             return StreamFilter_kAllStreams
         elif filter == "finished":
@@ -228,7 +228,7 @@ cdef class PyConsumer:
         if err:
             throw_exception(err)
         return _str(group_id)
-    def get_stream_list(self, filter="all", from_stream = ""):
+    def get_stream_list(self,from_stream = "",filter="all"):
         cdef Error err
         cdef vector[StreamInfo] streams
         cdef string b_from_stream = _bytes(from_stream)

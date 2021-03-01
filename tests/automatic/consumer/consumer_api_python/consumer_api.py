@@ -129,15 +129,22 @@ def check_single(consumer, group_id):
     _, meta = consumer.get_next(group_id, meta_only=True, stream = "stream2")
     assert_metaname(meta, "21", "get next stream2")
 
-    streams = consumer.get_stream_list("")
+    streams = consumer.get_stream_list("","all")
     assert_eq(len(streams), 4, "number of streams")
     print(streams)
     assert_eq(streams[0]["name"], "default", "streams_name1")
+    assert_eq(streams[0]["finished"], False, "streams_finished1")
     assert_eq(streams[1]["name"], "streamfts", "streams_name2")
     assert_eq(streams[2]["name"], "stream1", "streams_name2")
     assert_eq(streams[3]["name"], "stream2", "streams_name3")
     assert_eq(streams[1]["timestampCreated"], 1000, "streams_timestamp2")
-
+    assert_eq(streams[2]["timestampLast"], 2000, "streams_timestamplast2")
+    assert_eq(streams[2]["finished"], True, "streams_finished2")
+    assert_eq(streams[2]["nextStream"], "ns", "next stream 2")
+    assert_eq(streams[2]["lastId"], 5, "last id stream 2")
+    assert_eq(streams[3]["finished"], True, "streams_finished3")
+    assert_eq(streams[3]["nextStream"], "", "next stream 3")
+    assert_eq(streams[3]["lastId"], 5, "last id stream 3")
     # acks
     try:
         id = consumer.get_last_acknowledged_message(group_id)

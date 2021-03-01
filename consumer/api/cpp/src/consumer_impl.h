@@ -143,7 +143,7 @@ class ConsumerImpl final : public asapo::Consumer {
     std::string OpToUriCmd(GetMessageServerOperation op);
     Error UpdateFolderTokenIfNeeded(bool ignore_existing);
 
-    uint64_t GetCurrentCount(std::string stream, bool datasets, bool include_incomplete, Error* err);
+    uint64_t GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err);
     RequestInfo GetStreamListRequest(const std::string &from, const StreamFilter &filter) const;
 
     std::string endpoint_;
@@ -164,6 +164,9 @@ class ConsumerImpl final : public asapo::Consumer {
     uint64_t resend_attempts_;
     std::atomic<bool> interrupt_flag_{ false};
 
+  RequestInfo GetSizeRequestForSingleMessagesStream(std::string &stream) const;
+  RequestInfo GetSizeRequestForDatasetStream(std::string &stream, bool include_incomplete) const;
+  uint64_t ParseGetCurrentCountResponce(Error* err, const std::string &responce) const;
 };
 
 }

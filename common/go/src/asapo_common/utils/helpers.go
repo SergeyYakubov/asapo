@@ -25,6 +25,16 @@ func MapToJson(res interface{}) ([]byte, error) {
 	}
 }
 
+func GetInt64FromMap(s map[string]interface{}, name string) (int64,bool) {
+	val, ok := InterfaceToInt64(s[name])
+	if ok {
+		return val,true
+	} else {
+		return -1, false
+	}
+}
+
+
 func InterfaceToInt64(val interface{}) (int64, bool) {
 	val64, ok := val.(int64)
 	var valf64 float64

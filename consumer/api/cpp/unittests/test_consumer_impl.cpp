@@ -1017,8 +1017,8 @@ TEST_F(ConsumerImplTests, GetDatasetByIdUsesCorrectUri) {
 TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUri) {
     MockGetBrokerUri();
     std::string return_streams =
-        std::string(R"({"streams":[{"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":1000,"finished":0,"nextStream":""},)")+
-        R"({"lastId":124,"name":"test1","timestampCreated":2000000,"timestampLast":2000,"finished":1,"nextStream":"next"}]})";
+        std::string(R"({"streams":[{"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":1000,"finished":false,"nextStream":""},)")+
+        R"({"lastId":124,"name":"test1","timestampCreated":2000000,"timestampLast":2000,"finished":true,"nextStream":"next"}]})";
     EXPECT_CALL(mock_http_client,
                 Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/0/streams"
                           + "?token=" + expected_token + "&from=stream_from&filter=all", _,
@@ -1032,8 +1032,8 @@ TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUri) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(streams.size(), Eq(2));
     ASSERT_THAT(streams.size(), 2);
-    ASSERT_THAT(streams[0].Json(), R"({"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":1000,"finished":0,"nextStream":""})");
-    ASSERT_THAT(streams[1].Json(), R"({"lastId":124,"name":"test1","timestampCreated":2000000,"timestampLast":2000,"finished":1,"nextStream":"next"})");
+    ASSERT_THAT(streams[0].Json(), R"({"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":1000,"finished":false,"nextStream":""})");
+    ASSERT_THAT(streams[1].Json(), R"({"lastId":124,"name":"test1","timestampCreated":2000000,"timestampLast":2000,"finished":true,"nextStream":"next"})");
 }
 
 TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUriWithoutFrom) {

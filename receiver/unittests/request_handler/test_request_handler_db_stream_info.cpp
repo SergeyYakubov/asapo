@@ -64,7 +64,7 @@ class DbMetaStreamInfoTests : public Test {
     ReceiverConfig config;
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_data_source = "source";
-    std::string info_str = R"({"lastId":10,"name":"stream","timestampCreated":1000000,"timestampLast":2000000})";
+    std::string info_str = R"({"lastId":10,"name":"stream","timestampCreated":1000000,"timestampLast":2000000,"finished":false,"nextStream":""})";
     asapo::StreamInfo expected_stream_info;
     void SetUp() override {
         GenericRequestHeader request_header;
