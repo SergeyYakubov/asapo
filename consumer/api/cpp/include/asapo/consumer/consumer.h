@@ -15,7 +15,7 @@ namespace asapo {
 enum class StreamFilter {
   kAllStreams,
   kFinishedStreams,
-  kUnFinishedStreams
+  kUnfinishedStreams
 };
 
 class Consumer {

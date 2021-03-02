@@ -110,7 +110,7 @@ cdef class PyConsumer:
         elif filter == "finished":
             return StreamFilter_kFinishedStreams
         elif filter == "unfinished":
-            return StreamFilter_kUnFinishedStreams
+            return StreamFilter_kUnfinishedStreams
         else:
             raise AsapoWrongInputError("wrong filter, must be all|finished|unfinished")
     def _op(self, op, group_id, stream, meta_only, uint64_t id):

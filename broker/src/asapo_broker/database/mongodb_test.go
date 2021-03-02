@@ -39,6 +39,7 @@ const metaID_str = "0"
 var empty_next = map[string]string{"next_stream": ""}
 
 var rec1 = TestRecord{1, empty_next, "aaa", 0}
+var rec1_later = TestRecord{1, empty_next, "aaa", 1}
 var rec_finished = TestRecord{2, map[string]string{"next_stream": "next1"}, finish_stream_keyword, 2}
 var rec2 = TestRecord{2, empty_next, "bbb", 1}
 var rec3 = TestRecord{3, empty_next, "ccc", 2}

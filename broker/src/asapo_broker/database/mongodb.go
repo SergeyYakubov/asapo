@@ -72,6 +72,10 @@ const already_connected_msg = "already connected"
 
 const finish_stream_keyword = "asapo_finish_stream"
 const no_next_stream_keyword = "asapo_no_next"
+const stream_filter_all = "all"
+const stream_filter_finished = "finished"
+const stream_filter_unfinished = "unfinished"
+
 
 var dbSessionLock sync.Mutex
 
@@ -869,7 +873,7 @@ func (db *Mongodb) getNacks(request Request, min_index, max_index int) ([]int, e
 }
 
 func (db *Mongodb) getStreams(request Request) ([]byte, error) {
-	rec, err := streams.getStreams(db, request.DbName, request.ExtraParam)
+	rec, err := streams.getStreams(db, request)
 	if err != nil {
 		return db.processQueryError("get streams", request.DbName, err)
 	}

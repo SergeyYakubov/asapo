@@ -58,7 +58,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
     pass
   StreamFilter StreamFilter_kAllStreams "asapo::StreamFilter::kAllStreams"
   StreamFilter StreamFilter_kFinishedStreams "asapo::StreamFilter::kFinishedStreams"
-  StreamFilter StreamFilter_kUnFinishedStreams "asapo::StreamFilter::kUnFinishedStreams"
+  StreamFilter StreamFilter_kUnfinishedStreams "asapo::StreamFilter::kUnfinishedStreams"
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass Consumer:

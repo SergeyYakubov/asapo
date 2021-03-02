@@ -145,6 +145,15 @@ def check_single(consumer, group_id):
     assert_eq(streams[3]["finished"], True, "streams_finished3")
     assert_eq(streams[3]["nextStream"], "", "next stream 3")
     assert_eq(streams[3]["lastId"], 5, "last id stream 3")
+
+    finished_streams = consumer.get_stream_list("","finished")
+    assert_eq(len(finished_streams), 2, "number of finished streams")
+    assert_eq(finished_streams[0]["name"], "stream1", "finished streams_name1")
+
+    unfinished_streams = consumer.get_stream_list("","unfinished")
+    assert_eq(len(unfinished_streams), 2, "number of unfinished streams")
+    assert_eq(unfinished_streams[0]["name"], "default", "unfinished streams_name1")
+
     # acks
     try:
         id = consumer.get_last_acknowledged_message(group_id)

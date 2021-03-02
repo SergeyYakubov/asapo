@@ -25,6 +25,12 @@ func MapToJson(res interface{}) ([]byte, error) {
 	}
 }
 
+func DeepCopy(a, b interface{}) {
+	byt, _ := json.Marshal(a)
+	json.Unmarshal(byt, b)
+}
+
+
 func GetInt64FromMap(s map[string]interface{}, name string) (int64,bool) {
 	val, ok := InterfaceToInt64(s[name])
 	if ok {
