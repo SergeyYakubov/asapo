@@ -4,6 +4,7 @@
 
 #include "../../../common/cpp/src/database/mongodb_client.h"
 #include "testing.h"
+#include "asapo/common/data_structs.h"
 
 using asapo::Error;
 
@@ -43,6 +44,7 @@ int main(int argc, char* argv[]) {
     fi.buf_id = 18446744073709551615ull;
     fi.source = "host:1234";
 
+
     if (args.keyword != "Notconnected") {
         db.Connect("127.0.0.1", "data");
     }
@@ -60,6 +62,8 @@ int main(int argc, char* argv[]) {
     fi2.id = 123;
     fi1.timestamp = std::chrono::system_clock::now();
     fi2.timestamp = std::chrono::system_clock::now()+std::chrono::minutes(1);
+    fi2.name = asapo::kFinishStreamKeyword;
+    fi2.metadata=R"({"next_stream":"ns"})";
     db.Insert("data_test1", fi1, false);
     db.Insert("data_test1", fi2, false);
 
@@ -83,7 +87,9 @@ int main(int argc, char* argv[]) {
         err = db.GetLastStream(&info);
         M_AssertEq(nullptr, err);
         M_AssertEq(fi2.id, info.last_id);
-        M_AssertEq("test1",info.name);
+        M_AssertEq("test1", info.name);
+        M_AssertEq(true, info.finished);
+        M_AssertEq("ns",info.next_stream);
     }
 
     return 0;

@@ -15,9 +15,6 @@
 namespace  asapo {
 
 const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
-const std::string ProducerImpl::kFinishStreamKeyword = "asapo_finish_stream";
-const std::string ProducerImpl::kNoNextStreamKeyword = "asapo_no_next";
-
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
                            asapo::RequestHandlerType type):

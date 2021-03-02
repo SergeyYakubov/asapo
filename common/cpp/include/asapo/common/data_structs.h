@@ -11,6 +11,10 @@
 
 namespace asapo {
 
+const std::string kFinishStreamKeyword = "asapo_finish_stream";
+const std::string kNoNextStreamKeyword = "asapo_no_next";
+
+
 class JsonStringParser;
 
 uint64_t NanosecsEpochFromTimePoint(std::chrono::system_clock::time_point);
@@ -18,7 +22,6 @@ uint64_t  EpochNanosecsFromNow();
 std::chrono::system_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_from_epoch);
 std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec);
 uint64_t NanosecsEpochFromISODate(std::string date_time);
-
 
 bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val);
 
