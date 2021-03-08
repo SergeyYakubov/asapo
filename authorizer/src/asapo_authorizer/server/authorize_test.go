@@ -14,9 +14,9 @@ import (
 	"testing"
 )
 
-func prepareToken(beamtime_or_beamline string) string{
+func prepareToken(payload string) string{
 	authHMAC = utils.NewHMACAuth("secret")
-	token, _ := authHMAC.GenerateToken(&beamtime_or_beamline)
+	token, _ := authHMAC.GenerateToken(&payload)
 	return token
 }
 
@@ -51,6 +51,19 @@ func doPostRequest(path string,buf string) *httptest.ResponseRecorder {
 	mux.ServeHTTP(w, req)
 	return w
 }
+
+
+func doGetRequest(path string,token string) *httptest.ResponseRecorder {
+	mux := utils.NewRouter(listRoutes)
+
+	req, _ := http.NewRequest("GET", path, nil)
+	req.Header.Add("Authorization", authHMAC.Name() + token)
+
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+	return w
+}
+
 
 var credTests = [] struct {
 	request string

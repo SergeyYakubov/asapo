@@ -184,7 +184,7 @@ func NewHMACAuth(key string) *HMACAuth {
 }
 
 func (a *HMACAuth) Name() string {
-	return "Bearer"
+	return "HMAC-SHA-256"
 }
 
 
@@ -209,6 +209,7 @@ func (h HMACAuth) GenerateToken(val ...interface{}) (string, error) {
 	return sha, nil
 }
 
+// not used
 func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -222,7 +223,7 @@ func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 		value := "beamline"
 		if authType == "HMAC-SHA-256" {
 			if !CheckHMACToken(value, token, key) {
-				http.Error(w, "Internal authorization error - tocken does not match", http.StatusUnauthorized)
+				http.Error(w, "Internal authorization error - token does not match", http.StatusUnauthorized)
 				return
 			}
 		} else {
