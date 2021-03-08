@@ -20,4 +20,4 @@ define_property(TARGET PROPERTY EXENAME
 
 set_target_properties(asapo-file-transfer PROPERTIES EXENAME ${CMAKE_CURRENT_BINARY_DIR}/${exe_name})
 
-gotest(${TARGET_NAME}  "${CMAKE_CURRENT_SOURCE_DIR}" "./...")
+gotest(${TARGET_NAME}  "${CMAKE_CURRENT_SOURCE_DIR}/src/asapo_file_transfer" "./...")

@@ -37,7 +37,7 @@ func prepareToken(folder string) string{
 	var extraClaim utils.FolderTokenTokenExtraClaim
 	extraClaim.RootFolder = folder
 	claims.ExtraClaims = &extraClaim
-	claims.Duration = time.Duration(1) * time.Minute
+	claims.SetExpiration(time.Duration(1) * time.Minute)
 	token,_ := auth.GenerateToken(&claims)
 	return token
 }

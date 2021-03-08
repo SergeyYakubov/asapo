@@ -4,8 +4,6 @@ SOURCE_DIR=$1
 OUT_DIR=$2
 ASAPO_MINIMUM_COVERAGE=$3
 
-export GOPATH=$GOPATH:$4
-
 echo $OUT_DIR
 
 touch $OUT_DIR/coverage.out

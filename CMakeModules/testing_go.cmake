@@ -13,11 +13,6 @@ function(gotest target source_dir test_source_files)
     if (BUILD_TESTS)
                 add_test(NAME test-${target} COMMAND go test ${test_source_files}
                 WORKING_DIRECTORY ${source_dir})
-        set_property(
-                TEST
-                test-${target}
-                PROPERTY
-                ENVIRONMENT "GOPATH=${gopath}")
         message(STATUS "Added test 'test-${target}'")
         if (CMAKE_COMPILER_IS_GNUCXX)
         add_test(NAME coveragetest-${target}
@@ -29,16 +24,11 @@ function(gotest target source_dir test_source_files)
     endif ()
 endfunction()
 
-function(go_integration_test target test_source_files label)
+function(go_integration_test target source_dir test_source_files label)
     if (BUILD_TESTS)
         add_test(NAME test-${target} COMMAND go test ${test_source_files} -run ${label}
                 -tags integration_tests
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        set_property(
-                TEST
-                test-${target}
-                PROPERTY
-                ENVIRONMENT "GOPATH=${gopath}")
+                WORKING_DIRECTORY ${source_dir})
         message(STATUS "Added test 'test-${target}'")
     endif ()
 endfunction()
