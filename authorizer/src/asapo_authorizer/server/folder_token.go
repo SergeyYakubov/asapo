@@ -29,7 +29,7 @@ func prepareJWTToken(request folderTokenRequest) (string,error) {
 
 	extraClaim.RootFolder = request.Folder
 	claims.ExtraClaims = &extraClaim
-	claims.SetExpiration(time.Duration(settings.TokenDurationMin) * time.Minute)
+	claims.SetExpiration(time.Duration(settings.FolderTokenDurationMin) * time.Minute)
 	return authJWT.GenerateToken(&claims)
 
 }

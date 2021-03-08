@@ -10,7 +10,7 @@ ENDIF()
 include(testing_go)
 
 add_custom_target(asapo ALL
-    COMMAND  go build ${GO_OPTS} -o ${exe_name} main/asapo.go
+    COMMAND  go build ${GO_OPTS} -o ${CMAKE_CURRENT_BINARY_DIR}/${exe_name} main/asapo.go
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/asapo_tools
         VERBATIM)
 define_property(TARGET PROPERTY EXENAME

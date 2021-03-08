@@ -15,6 +15,7 @@ if (WIN32)
 endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/auth_secret.key auth_secret.key COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/auth_secret_admin.key auth_secret_admin.key COPYONLY)
 
 configure_file(beamtime-metadata-11111111.json beamtime-metadata-11111111.json COPYONLY)
 

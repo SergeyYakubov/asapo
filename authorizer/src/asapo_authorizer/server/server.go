@@ -15,14 +15,15 @@ type  beamtimeMeta struct {
 }
 
 type serverSettings struct {
-	Port                    int
-	LogLevel                string
-	RootBeamtimesFolder     string
+	Port                   int
+	LogLevel               string
+	RootBeamtimesFolder    string
 	CurrentBeamlinesFolder string
-	AlwaysAllowedBeamtimes  []beamtimeMeta
-	SecretFile              string
-	TokenDurationMin    	int
-	Ldap struct {
+	AlwaysAllowedBeamtimes []beamtimeMeta
+	UserSecretFile         string
+	AdminSecretFile        string
+	FolderTokenDurationMin int
+	Ldap                   struct {
 		Uri string
 		BaseDn string
 		FilterTemplate string
@@ -32,5 +33,6 @@ type serverSettings struct {
 var settings serverSettings
 var ldapClient ldap_client.LdapClient
 var authHMAC utils.Auth
+var authHMACAdmin utils.Auth
 var authJWT utils.Auth
 

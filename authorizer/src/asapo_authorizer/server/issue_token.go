@@ -76,7 +76,7 @@ func userTokenResponce(request userTokenRequest, token string) []byte {
 }
 
 func authorisedUserToken(w http.ResponseWriter, r *http.Request) {
-	authHMAC.ProcessAuth(routeUserToken, "admin")(w, r)
+	authHMACAdmin.ProcessAuth(routeUserToken, "admin")(w, r)
 }
 
 func routeUserToken(w http.ResponseWriter, r *http.Request) {

@@ -16,6 +16,7 @@ spec:
       annotations:
         checksum/config: {{ .Files.Get "configs/asapo-authorizer.json" | sha256sum  }}
         checksum/secret: {{ include (print $.Template.BasePath "/auth-secret.yaml") . | sha256sum }}
+        checksum/secret-admin: {{ include (print $.Template.BasePath "/auth-secret-admin.yaml") . | sha256sum }}
         checksum/fluentd-config: {{ .Files.Get "configs/asapo-fluentd.conf" | sha256sum  }}
     spec:
       volumes:
@@ -26,6 +27,8 @@ spec:
                   name: asapo-authorizer-config
               - secret:
                   name: auth-secret
+              - secret:
+                  name: auth-secret-admin
         - name: shared-volume-offline
           persistentVolumeClaim:
             claimName: asapo-offline-pv

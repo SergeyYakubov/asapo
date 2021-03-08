@@ -11,7 +11,7 @@ include(testing_go)
 configure_file(docker/Dockerfile . COPYONLY)
 
 add_custom_target(asapo-broker ALL
-    COMMAND go build ${GO_OPTS} -o ${exe_name} main/broker.go
+    COMMAND go build ${GO_OPTS} -o ${CMAKE_CURRENT_BINARY_DIR}/${exe_name} main/broker.go
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/asapo_broker
     VERBATIM)
 define_property(TARGET PROPERTY EXENAME

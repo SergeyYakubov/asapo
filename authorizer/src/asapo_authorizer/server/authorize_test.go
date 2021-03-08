@@ -20,6 +20,12 @@ func prepareToken(payload string) string{
 	return token
 }
 
+func prepareAdminToken(payload string) string{
+	authHMACAdmin = utils.NewHMACAuth("secret_admin")
+	token, _ := authHMACAdmin.GenerateToken(&payload)
+	return token
+}
+
 var mockClient = new(ldap_client.MockedLdapClient)
 
 

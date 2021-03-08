@@ -11,7 +11,7 @@ include(testing_go)
 configure_file(docker/Dockerfile . COPYONLY)
 
 add_custom_target(asapo-file-transfer ALL
-    COMMAND go build ${GO_OPTS} -o ${exe_name} main/file_transfer.go
+    COMMAND go build ${GO_OPTS} -o ${CMAKE_CURRENT_BINARY_DIR}/${exe_name} main/file_transfer.go
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/asapo_file_transfer
     VERBATIM)
 define_property(TARGET PROPERTY EXENAME

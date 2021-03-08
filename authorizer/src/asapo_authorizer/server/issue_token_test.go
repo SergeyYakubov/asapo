@@ -22,21 +22,21 @@ var  IssueTokenTests = [] struct {
 	status int
 	message string
 }{
-	{"test", "","bt_test","read",180,prepareToken("admin"),"aaa",http.StatusOK,"read for beamtime"},
-	{"test", "","bt_test","read",90,prepareToken("admin"),"aaa",http.StatusOK,"write for beamtime"},
-	{"", "test","bl_test","read",180,prepareToken("admin"),"aaa",http.StatusOK,"read for beamline"},
-	{"test", "test","","read",180,prepareToken("admin"),"",http.StatusBadRequest,"both beamline/beamtime given"},
-	{"", "","","read",180,prepareToken("admin"),"",http.StatusBadRequest,"beamline or beamtime not given"},
-	{"test", "","","bla",180,prepareToken("admin"),"",http.StatusBadRequest,"wrong role"},
-	{"test", "","","read",180,prepareToken("bla"),"",http.StatusUnauthorized,"wrong admin token"},
+	{"test", "","bt_test","read",180,prepareAdminToken("admin"),"aaa",http.StatusOK,"read for beamtime"},
+	{"test", "","bt_test","read",90,prepareAdminToken("admin"),"aaa",http.StatusOK,"write for beamtime"},
+	{"", "test","bl_test","read",180,prepareAdminToken("admin"),"aaa",http.StatusOK,"read for beamline"},
+	{"test", "test","","read",180,prepareAdminToken("admin"),"",http.StatusBadRequest,"both beamline/beamtime given"},
+	{"", "","","read",180,prepareAdminToken("admin"),"",http.StatusBadRequest,"beamline or beamtime not given"},
+	{"test", "","","bla",180,prepareAdminToken("admin"),"",http.StatusBadRequest,"wrong role"},
+	{"test", "","","read",180,prepareAdminToken("bla"),"",http.StatusUnauthorized,"wrong admin token"},
 }
 
 func TestIssueToken(t *testing.T) {
 	authJWT = utils.NewJWTAuth("secret")
-	authHMAC = utils.NewHMACAuth("secret")
+	authHMACAdmin = utils.NewHMACAuth("secret_admin")
 	for _, test := range IssueTokenTests {
 		request :=  makeRequest(userTokenRequest{test.beamtimeId,test.beamline,test.validDays,test.role})
-		w := doPostRequest("/admin/issue",request,authHMAC.Name()+" "+test.adminToken)
+		w := doPostRequest("/admin/issue",request,authHMACAdmin.Name()+" "+test.adminToken)
 		if w.Code == http.StatusOK {
 			body, _ := ioutil.ReadAll(w.Body)
 			var token userToken

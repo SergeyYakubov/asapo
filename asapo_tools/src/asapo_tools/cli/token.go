@@ -63,7 +63,7 @@ func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 	flags.Name = flagset.Arg(0)
 
 	if flags.Name == "" {
-		return flags, errors.New("beamtime id or beamline missed ")
+		return flags, errors.New("payload missed ")
 	}
 
 	if flags.SecretFile == "" {

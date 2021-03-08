@@ -19,6 +19,11 @@ mkdir -p asap3/petra3/gpfs/p00/2019/data/11000015
 mkdir -p beamline/p07/current
 cp beamtime-metadata* beamline/p07/current/
 
+#tokens
+AdminToken=C5cwHN2hjWGo6A2Ca3YuumCwwm_SVqC962oqVa0y09k=
+curl -v --silent -H "Authorization: HMAC-SHA-256 $AdminToken" --data '{"BeamtimeId":"12345678","DaysValid":123,"Role":"read"}' 127.0.0.1:5007/admin/issue --stderr -  | tee /dev/stderr | grep "HTTP/1.1 200 OK"
+curl -v --silent -H "Authorization: HMAC-SHA-256 blabla" --data '{"BeamtimeId":"12345678","DaysValid":123,"Role":"read"}' 127.0.0.1:5007/admin/issue --stderr -  | tee /dev/stderr | grep "token does not match"
+
 curl -v --silent --data '{"SourceCredentials":"processed%c20180508-000-COM20181%%detector%","OriginHost":"127.0.0.1:5555"}' 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep c20180508-000-COM20181
 curl -v --silent --data '{"SourceCredentials":"processed%c20180508-000-COM20181%%detector%","OriginHost":"127.0.0.1:5555"}' 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep p00
 curl -v --silent --data '{"SourceCredentials":"processed%c20180508-000-COM20181%%detector%","OriginHost":"127.0.0.1:5555"}' 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep detector
@@ -41,6 +46,7 @@ curl -v --silent --data '{"SourceCredentials":"processed%auto%p07%detector%-pZmi
 curl -v --silent --data '{"SourceCredentials":"raw%auto%p07%detector%-pZmisCNjAbjT2gFBKs3OB2kNOU79SNsfHud0bV8gS4=","OriginHost":"127.0.0.1:5007"}' 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep 11111111
 curl -v --silent --data '{"SourceCredentials":"raw%auto%p07%detector%-pZmisCNjAbjT2gFBKs3OB2kNOU79SNsfHud0bV8gS4=","OriginHost":"127.0.0.1:5007"}' 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep p07
 curl -v --silent --data '{"SourceCredentials":"raw%auto%p07%detector%-pZmisCNjAbjT2gFBKs3OB2kNOU79SNsfHud0bV8gS4=","OriginHost":"127.0.0.1:5007"}' 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep /asap3/petra3/gpfs/p07/2020/data/11111111
+
 
 
 rm -rf asap3 beamline
