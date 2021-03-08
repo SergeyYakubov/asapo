@@ -44,26 +44,16 @@ func makeRequest(request interface{}) string {
 	return string(buf)
 }
 
-func doPostRequest(path string,buf string) *httptest.ResponseRecorder {
+func doPostRequest(path string,buf string,authHeader string) *httptest.ResponseRecorder {
 	mux := utils.NewRouter(listRoutes)
 	req, _ := http.NewRequest("POST", path, strings.NewReader(buf))
+	if authHeader!="" {
+		req.Header.Add("Authorization",authHeader)
+	}
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, req)
 	return w
 }
-
-
-func doGetRequest(path string,token string) *httptest.ResponseRecorder {
-	mux := utils.NewRouter(listRoutes)
-
-	req, _ := http.NewRequest("GET", path, nil)
-	req.Header.Add("Authorization", authHMAC.Name() + token)
-
-	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, req)
-	return w
-}
-
 
 var credTests = [] struct {
 	request string
@@ -101,7 +91,7 @@ func TestSplitCreds(t *testing.T) {
 func TestAuthorizeDefaultOK(t *testing.T) {
 	allowBeamlines([]beamtimeMeta{{"asapo_test","beamline","","2019","tf",""}})
 	request :=  makeRequest(authorizationRequest{"processed%asapo_test%%%","host"})
-	w := doPostRequest("/authorize",request)
+	w := doPostRequest("/authorize",request,"")
 
 	body, _ := ioutil.ReadAll(w.Body)
 
@@ -244,7 +234,7 @@ func TestAuthorize(t *testing.T) {
 		}
 
 		request :=  makeRequest(authorizationRequest{test.source_type+"%"+test.beamtime_id+"%"+test.beamline+"%"+test.dataSource+"%"+test.token,test.originHost})
-		w := doPostRequest("/authorize",request)
+		w := doPostRequest("/authorize",request,"")
 
 		body, _ := ioutil.ReadAll(w.Body)
 		if test.status==http.StatusOK {
@@ -261,19 +251,19 @@ func TestAuthorize(t *testing.T) {
 
 func TestNotAuthorized(t *testing.T) {
 	request :=  makeRequest(authorizationRequest{"raw%any_id%%%","host"})
-	w := doPostRequest("/authorize",request)
+	w := doPostRequest("/authorize",request,"")
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "")
 }
 
 
 func TestAuthorizeWrongRequest(t *testing.T) {
-	w := doPostRequest("/authorize","babla")
+	w := doPostRequest("/authorize","babla","")
 	assert.Equal(t, http.StatusBadRequest, w.Code, "")
 }
 
 
 func TestAuthorizeWrongPath(t *testing.T) {
-	w := doPostRequest("/authorized","")
+	w := doPostRequest("/authorized","","")
 	assert.Equal(t, http.StatusNotFound, w.Code, "")
 }
 

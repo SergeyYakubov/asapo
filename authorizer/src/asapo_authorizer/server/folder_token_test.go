@@ -47,7 +47,7 @@ func TestFolderToken(t *testing.T) {
 		if test.status == http.StatusBadRequest {
 			request =makeRequest(authorizationRequest{})
 		}
-		w := doPostRequest("/folder",request)
+		w := doPostRequest("/folder",request,"")
 		if w.Code == http.StatusOK {
 			body, _ := ioutil.ReadAll(w.Body)
 			claims,_ := utils.CheckJWTToken(string(body),"secret")

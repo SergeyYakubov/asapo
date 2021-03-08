@@ -23,4 +23,10 @@ var listRoutes = utils.Routes{
 		"/folder",
 		routeFolderToken,
 	},
+	utils.Route{
+		"User Token",
+		"POST",
+		"/admin/issue",
+		authorisedUserToken,
+	},
 }

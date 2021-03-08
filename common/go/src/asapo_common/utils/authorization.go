@@ -29,6 +29,7 @@ type AuthorizationResponce struct {
 
 type Auth interface {
 	GenerateToken(...interface{}) (string, error)
+	ProcessAuth(http.HandlerFunc, string) http.HandlerFunc
 	Name() string
 }
 
@@ -79,8 +80,13 @@ func ExtractAuthInfo(r *http.Request) (authType, token string, err error) {
 
 type CustomClaims struct {
 	jwt.StandardClaims
-	Duration    time.Duration
 	ExtraClaims interface{}
+}
+
+func (claim *CustomClaims) SetExpiration(duration time.Duration){
+	if duration > 0 {
+		claim.ExpiresAt = time.Now().Add(duration).Unix()
+	}
 }
 
 type JWTAuth struct {
@@ -101,10 +107,6 @@ func (t JWTAuth) GenerateToken(val ...interface{}) (string, error) {
 		return "", errors.New("Wrong claims")
 	}
 
-	if claims.Duration > 0 {
-		claims.ExpiresAt = time.Now().Add(claims.Duration).Unix()
-	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(t.Key))
 
@@ -113,6 +115,11 @@ func (t JWTAuth) GenerateToken(val ...interface{}) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func (a *JWTAuth)ProcessAuth(fn http.HandlerFunc, payload string) http.HandlerFunc {
+	// payload ignored
+	return ProcessJWTAuth(fn,a.Key)
 }
 
 func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
@@ -209,8 +216,11 @@ func (h HMACAuth) GenerateToken(val ...interface{}) (string, error) {
 	return sha, nil
 }
 
-// not used
-func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
+func (a *HMACAuth)ProcessAuth(fn http.HandlerFunc, payload string) http.HandlerFunc {
+	return ProcessHMACAuth(fn,payload,a.Key)
+}
+
+func ProcessHMACAuth(fn http.HandlerFunc, payload, key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		authType, token, err := ExtractAuthInfo(r)
@@ -219,10 +229,8 @@ func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-	// todo extract beamline from request
-		value := "beamline"
 		if authType == "HMAC-SHA-256" {
-			if !CheckHMACToken(value, token, key) {
+			if !CheckHMACToken(payload, token, key) {
 				http.Error(w, "Internal authorization error - token does not match", http.StatusUnauthorized)
 				return
 			}
