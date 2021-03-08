@@ -216,7 +216,7 @@ func insertRecords(n int) {
 	records := make([]TestRecord, n)
 	for ind, record := range records {
 		record.ID = int64(ind) + 1
-		record.Name = string(ind)
+		record.Name = fmt.Sprint(ind)
 		if err := db.insertRecord(dbname, collection, &record); err != nil {
 			fmt.Println("error at insert ", ind)
 		}

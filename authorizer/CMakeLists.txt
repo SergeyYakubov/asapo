@@ -1,20 +1,8 @@
 set (TARGET_NAME asapo-authorizer)
 
-if (NOT "$ENV{GOPATH}" STREQUAL "")
-	set(GOPATH $ENV{GOPATH})
-endif()
-
-if (NOT GOPATH)
-    message (FATAL_ERROR "GOPATH not set")
-endif()
-
-message(STATUS "global gopath ${GOPATH}")
-
 IF(WIN32)
-    set (gopath "${GOPATH}\;${CMAKE_CURRENT_SOURCE_DIR}\;${CMAKE_SOURCE_DIR}/common/go")
     set (exe_name "${TARGET_NAME}.exe")
 ELSE()
-    set (gopath ${GOPATH}:${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/common/go)
     set (exe_name "${TARGET_NAME}")
 ENDIF()
 
@@ -23,8 +11,8 @@ include(testing_go)
 configure_file(docker/Dockerfile . COPYONLY)
 
 add_custom_target(asapo-authorizer ALL
-    COMMAND  ${CMAKE_COMMAND} -E env GOPATH=${gopath}
-    go build ${GO_OPTS} -o ${exe_name} asapo_authorizer/main
+    COMMAND go build ${GO_OPTS} -o ${CMAKE_CURRENT_BINARY_DIR}/${exe_name} main/authorizer.go
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/asapo_authorizer
     VERBATIM)
 define_property(TARGET PROPERTY EXENAME
         BRIEF_DOCS <executable name>

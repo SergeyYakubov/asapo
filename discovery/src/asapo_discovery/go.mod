@@ -1,6 +1,6 @@
 module asapo_discovery
 
-go 1.14
+go 1.16
 
 replace asapo_common v0.0.0 => ../../../common/go/src/asapo_common
 
