@@ -50,6 +50,13 @@ job "authorizer" {
          change_mode   = "signal"
          change_signal = "SIGHUP"
       }
+      template {
+         source        = "@WORK_DIR@/auth_secret_admin.key"
+         destination   = "auth_secret_admin.key"
+         change_mode   = "signal"
+         change_signal = "SIGHUP"
+      }
+
     }
   }
 }
