@@ -63,12 +63,12 @@ func (cmd *command) CommandCreate_token() (err error) {
 		return err
 	}
 
-	request, err := getTokenRequest(flags)
+	request, userToken, err := getTokenRequest(flags)
 	if err != nil {
 		return err
 	}
 
-	token, err := server.Auth.PrepareAccessToken(request)
+	token, err := server.Auth.PrepareAccessToken(request,userToken)
 	if err != nil {
 		return err
 	}
@@ -78,19 +78,21 @@ func (cmd *command) CommandCreate_token() (err error) {
 	return nil
 }
 
-func getTokenRequest(flags tokenFlags) (request authorization.TokenRequest, err error) {
+func getTokenRequest(flags tokenFlags) (request authorization.TokenRequest, userToken bool, err error) {
 	switch flags.Type {
 	case "user-token":
 		request, err = userTokenRequest(flags)
+		userToken = true
 	case "admin-token":
 		request, err = adminTokenRequest(flags)
+		userToken = false
 	default:
-		return authorization.TokenRequest{}, errors.New("wrong token type")
+		return authorization.TokenRequest{}, false, errors.New("wrong token type")
 	}
 	if err != nil {
-		return authorization.TokenRequest{}, err
+		return authorization.TokenRequest{},false,  err
 	}
-	return request, err
+	return request, userToken, err
 }
 
 

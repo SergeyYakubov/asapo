@@ -30,7 +30,7 @@ func createAuth() (*authorization.Auth,error) {
 	if err != nil {
 		return nil, err
 	}
-	return authorization.NewAuth(utils.NewHMACAuth(secret), utils.NewJWTAuth(adminSecret), utils.NewJWTAuth(secret)),nil
+	return authorization.NewAuth(utils.NewJWTAuth(secret), utils.NewJWTAuth(adminSecret), utils.NewJWTAuth(secret)),nil
 }
 
 func ReadConfig(fname string) (log.Level, error) {

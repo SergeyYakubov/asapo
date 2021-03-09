@@ -20,7 +20,7 @@ var CommandTests = []struct {
 
 func TestCommand(t *testing.T) {
 	outBuf = new(bytes.Buffer)
-	server.Auth = authorization.NewAuth(utils.NewHMACAuth("secret"),utils.NewJWTAuth("secret_admin"),utils.NewJWTAuth("secret"))
+	server.Auth = authorization.NewAuth(utils.NewJWTAuth("secret"),utils.NewJWTAuth("secret_admin"),utils.NewJWTAuth("secret"))
 
 	for _, test := range CommandTests {
 		outBuf.(*bytes.Buffer).Reset()

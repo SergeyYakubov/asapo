@@ -15,9 +15,10 @@ import (
 	"testing"
 )
 
+
 func prepareToken(payload string) string{
 	Auth = authorization.NewAuth(utils.NewHMACAuth("secret"),nil,nil)
-	token, _ := Auth.HmacAuth().GenerateToken(&payload)
+	token, _ := Auth.UserAuth().GenerateToken(&payload)
 	return token
 }
 

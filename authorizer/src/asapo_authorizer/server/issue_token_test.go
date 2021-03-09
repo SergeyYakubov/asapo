@@ -35,7 +35,8 @@ var  IssueTokenTests = [] struct {
 func TestIssueToken(t *testing.T) {
 	authJWT := utils.NewJWTAuth("secret")
 	authAdmin := utils.NewJWTAuth("secret_admin")
-	Auth = authorization.NewAuth(nil,authAdmin,authJWT)
+	authUser := utils.NewJWTAuth("secret_user")
+	Auth = authorization.NewAuth(authUser,authAdmin,authJWT)
 	for _, test := range IssueTokenTests {
 		request :=  makeRequest(authorization.TokenRequest{test.requestSubject,test.validDays,test.role})
 		w := doPostRequest("/admin/issue",request,authAdmin.Name()+" "+test.adminToken)
@@ -43,7 +44,7 @@ func TestIssueToken(t *testing.T) {
 			body, _ := ioutil.ReadAll(w.Body)
 			var token authorization.TokenResponce
 			json.Unmarshal(body,&token)
-			claims,_ := utils.CheckJWTToken(token.Token,"secret_admin")
+			claims,_ := utils.CheckJWTToken(token.Token,"secret_user")
 			cclaims,_:= claims.(*utils.CustomClaims)
 			var extra_claim utils.AccessTokenExtraClaim
 			utils.MapToStruct(claims.(*utils.CustomClaims).ExtraClaims.(map[string]interface{}), &extra_claim)

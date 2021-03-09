@@ -8,21 +8,21 @@ import (
 )
 
 type Auth struct {
-	authHMAC  utils.Auth
+	authUser  utils.Auth
 	authAdmin utils.Auth
 	authJWT   utils.Auth
 }
 
-func NewAuth(authHMAC,authHMACAdmin,authJWT utils.Auth) *Auth {
-	return &Auth{authHMAC,authHMACAdmin,authJWT}
+func NewAuth(authUser,authAdmin,authJWT utils.Auth) *Auth {
+	return &Auth{authUser,authAdmin,authJWT}
 }
 
 func (auth *Auth) AdminAuth() utils.Auth {
 	return auth.authAdmin
 }
 
-func (auth *Auth) HmacAuth() utils.Auth {
-	return auth.authHMAC
+func (auth *Auth) UserAuth() utils.Auth {
+	return auth.authUser
 }
 
 func (auth *Auth) JWTAuth() utils.Auth {
@@ -43,7 +43,7 @@ func subjectFromRequest(request TokenRequest) string {
 	return ""
 }
 
-func (auth *Auth) PrepareAccessToken(request TokenRequest) (string, error) {
+func (auth *Auth) PrepareAccessToken(request TokenRequest, userToken bool) (string, error) {
 	var claims utils.CustomClaims
 	var extraClaim utils.AccessTokenExtraClaim
 
@@ -55,8 +55,11 @@ func (auth *Auth) PrepareAccessToken(request TokenRequest) (string, error) {
 	uid := xid.New()
 	claims.Id = uid.String()
 
-	return auth.authAdmin.GenerateToken(&claims)
-
+	if userToken {
+		return auth.UserAuth().GenerateToken(&claims)
+	} else {
+		return auth.AdminAuth().GenerateToken(&claims)
+	}
 }
 
 func UserTokenResponce(request TokenRequest, token string) []byte {
