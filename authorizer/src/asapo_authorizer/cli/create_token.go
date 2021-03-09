@@ -72,7 +72,7 @@ func (cmd *command) CommandCreate_token() (err error) {
 		return err
 	}
 
-	token, err := server.Auth.PrepareUserJWTToken(request)
+	token, err := server.Auth.PrepareAccessToken(request)
 	if err != nil {
 		return err
 	}

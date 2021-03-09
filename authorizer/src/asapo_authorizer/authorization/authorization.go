@@ -8,9 +8,9 @@ import (
 )
 
 type Auth struct {
-	authHMAC utils.Auth
-	authHMACAdmin utils.Auth
-	authJWT utils.Auth
+	authHMAC  utils.Auth
+	authAdmin utils.Auth
+	authJWT   utils.Auth
 }
 
 func NewAuth(authHMAC,authHMACAdmin,authJWT utils.Auth) *Auth {
@@ -18,7 +18,7 @@ func NewAuth(authHMAC,authHMACAdmin,authJWT utils.Auth) *Auth {
 }
 
 func (auth *Auth) AdminAuth() utils.Auth {
-	return auth.authHMACAdmin
+	return auth.authAdmin
 }
 
 func (auth *Auth) HmacAuth() utils.Auth {
@@ -43,7 +43,7 @@ func subjectFromRequest(request TokenRequest) string {
 	return ""
 }
 
-func (auth *Auth) PrepareUserJWTToken(request TokenRequest) (string, error) {
+func (auth *Auth) PrepareAccessToken(request TokenRequest) (string, error) {
 	var claims utils.CustomClaims
 	var extraClaim utils.AccessTokenExtraClaim
 
@@ -55,7 +55,7 @@ func (auth *Auth) PrepareUserJWTToken(request TokenRequest) (string, error) {
 	uid := xid.New()
 	claims.Id = uid.String()
 
-	return auth.authJWT.GenerateToken(&claims)
+	return auth.authAdmin.GenerateToken(&claims)
 
 }
 

@@ -32,16 +32,16 @@ var  IssueTokenTests = [] struct {
 
 func TestIssueToken(t *testing.T) {
 	authJWT := utils.NewJWTAuth("secret")
-	authHMACAdmin := utils.NewHMACAuth("secret_admin")
-	Auth = authorization.NewAuth(nil,authHMACAdmin,authJWT)
+	authAdmin := utils.NewJWTAuth("secret_admin")
+	Auth = authorization.NewAuth(nil,authAdmin,authJWT)
 	for _, test := range IssueTokenTests {
 		request :=  makeRequest(authorization.TokenRequest{test.requestSubject,test.validDays,test.role})
-		w := doPostRequest("/admin/issue",request,authHMACAdmin.Name()+" "+test.adminToken)
+		w := doPostRequest("/admin/issue",request,authAdmin.Name()+" "+test.adminToken)
 		if w.Code == http.StatusOK {
 			body, _ := ioutil.ReadAll(w.Body)
 			var token authorization.TokenResponce
 			json.Unmarshal(body,&token)
-			claims,_ := utils.CheckJWTToken(token.Token,"secret")
+			claims,_ := utils.CheckJWTToken(token.Token,"secret_admin")
 			cclaims,_:= claims.(*utils.CustomClaims)
 			var extra_claim utils.AccessTokenExtraClaim
 			utils.MapToStruct(claims.(*utils.CustomClaims).ExtraClaims.(map[string]interface{}), &extra_claim)

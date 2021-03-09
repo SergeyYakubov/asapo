@@ -38,7 +38,7 @@ var tokenTests = []struct {
 }
 
 func TestGenerateToken(t *testing.T) {
-	server.Auth = authorization.NewAuth(utils.NewHMACAuth("secret"),utils.NewHMACAuth("secret"),utils.NewJWTAuth("secret"))
+	server.Auth = authorization.NewAuth(utils.NewHMACAuth("secret"),utils.NewJWTAuth("secret_admin"),utils.NewJWTAuth("secret"))
 	for _, test := range tokenTests {
 		outBuf = new(bytes.Buffer)
 		err := test.cmd.CommandCreate_token()

@@ -22,8 +22,14 @@ func prepareToken(payload string) string{
 }
 
 func prepareAdminToken(payload string) string{
-	Auth = authorization.NewAuth(nil,utils.NewHMACAuth("secret_admin"),nil)
-	token, _ := Auth.AdminAuth().GenerateToken(&payload)
+	Auth = authorization.NewAuth(nil,utils.NewJWTAuth("secret_admin"),nil)
+
+	var claims utils.CustomClaims
+	var extraClaim utils.AccessTokenExtraClaim
+	claims.Subject = payload
+	extraClaim.AccessType = "create"
+	claims.ExtraClaims = &extraClaim
+	token, _ := Auth.AdminAuth().GenerateToken(&claims)
 	return token
 }
 

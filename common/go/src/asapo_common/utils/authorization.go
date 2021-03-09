@@ -139,7 +139,7 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 
 		if authType == "Bearer" {
 			if claims, ok := CheckJWTToken(token, key); !ok {
-				http.Error(w, "Authorization error - tocken does not match", http.StatusUnauthorized)
+				http.Error(w, "Authorization error - token does not match", http.StatusUnauthorized)
 				return
 			} else {
 				ctx = context.WithValue(ctx, "TokenClaims", claims)
