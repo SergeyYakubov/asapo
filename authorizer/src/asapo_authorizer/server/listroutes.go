@@ -27,6 +27,6 @@ var listRoutes = utils.Routes{
 		"User Token",
 		"POST",
 		"/admin/issue",
-		authorisedUserToken,
+		routeAuthorisedTokenIssue,
 	},
 }

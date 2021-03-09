@@ -3,19 +3,22 @@
 package main
 
 import (
-	log "asapo_common/logger"
+	"asapo_authorizer/cli"
 	"asapo_authorizer/server"
+	log "asapo_common/logger"
 	"asapo_common/version"
 	"flag"
 	"os"
 )
 
-func PrintUsage() {
-	log.Fatal("Usage: " + os.Args[0] + " -config <config file>")
-}
+var (
+	flHelp = flag.Bool("help", false, "Print usage")
+)
 
 func main() {
-	var fname = flag.String("config", "", "config file path")
+	cli.ProgramName = "asapo-authorizer"
+
+	var fname = flag.String("config", "", "config file path (mandatory)")
 
 	if ret := version.ShowVersion(os.Stdout, "ASAPO Authorizer"); ret {
 		return
@@ -24,10 +27,16 @@ func main() {
 	log.SetSoucre("authorizer")
 
 	flag.Parse()
-	if *fname == "" {
-		PrintUsage()
+	if *flHelp {
+		flag.Usage()
+		cli.PrintAllCommands()
+		return
 	}
 
+	if *fname=="" {
+		log.Fatal("config file path is missed")
+
+	}
 	logLevel, err := server.ReadConfig(*fname)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -35,5 +44,12 @@ func main() {
 
 	log.SetLevel(logLevel)
 
-	server.Start()
+	if len(flag.Args()) == 0 {
+		server.Start()
+	}
+
+	if err := cli.DoCommand(flag.Arg(0), flag.Args()[1:]); err != nil {
+		log.Fatal(err.Error())
+	}
+
 }

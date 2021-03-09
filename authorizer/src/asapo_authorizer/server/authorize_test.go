@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_authorizer/authorization"
 	"asapo_authorizer/common"
 	"asapo_authorizer/ldap_client"
 	"asapo_common/utils"
@@ -15,14 +16,14 @@ import (
 )
 
 func prepareToken(payload string) string{
-	authHMAC = utils.NewHMACAuth("secret")
-	token, _ := authHMAC.GenerateToken(&payload)
+	Auth = authorization.NewAuth(utils.NewHMACAuth("secret"),nil,nil)
+	token, _ := Auth.HmacAuth().GenerateToken(&payload)
 	return token
 }
 
 func prepareAdminToken(payload string) string{
-	authHMACAdmin = utils.NewHMACAuth("secret_admin")
-	token, _ := authHMACAdmin.GenerateToken(&payload)
+	Auth = authorization.NewAuth(nil,utils.NewHMACAuth("secret_admin"),nil)
+	token, _ := Auth.AdminAuth().GenerateToken(&payload)
 	return token
 }
 
@@ -205,7 +206,7 @@ var authTests = [] struct {
 func TestAuthorize(t *testing.T) {
 	ldapClient = mockClient
 	allowBeamlines([]beamtimeMeta{})
-
+	Auth = authorization.NewAuth(utils.NewHMACAuth("secret"),utils.NewHMACAuth("secret"),utils.NewJWTAuth("secret"))
 	expected_uri := "expected_uri"
 	expected_base := "expected_base"
 	allowed_ips := []string{"127.0.0.1"}

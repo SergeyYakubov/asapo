@@ -1,8 +1,8 @@
 package server
 
 import (
+	"asapo_authorizer/authorization"
 	"asapo_authorizer/ldap_client"
-	"asapo_common/utils"
 )
 
 type  beamtimeMeta struct {
@@ -32,7 +32,5 @@ type serverSettings struct {
 
 var settings serverSettings
 var ldapClient ldap_client.LdapClient
-var authHMAC utils.Auth
-var authHMACAdmin utils.Auth
-var authJWT utils.Auth
+var Auth *authorization.Auth
 

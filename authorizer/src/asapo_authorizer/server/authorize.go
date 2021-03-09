@@ -155,10 +155,10 @@ func needHostAuthorization(creds SourceCredentials) bool {
 func authorizeByToken(creds SourceCredentials) error {
 	var token_expect string
 	if (creds.BeamtimeId != "auto") {
-		token_expect, _ = authHMAC.GenerateToken(&creds.BeamtimeId)
+		token_expect, _ = Auth.HmacAuth().GenerateToken(&creds.BeamtimeId)
 	} else {
 		key := "bl_" + creds.Beamline
-		token_expect, _ = authHMAC.GenerateToken(&key)
+		token_expect, _ = Auth.HmacAuth().GenerateToken(&key)
 	}
 
 	var err_string string

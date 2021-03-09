@@ -3,6 +3,7 @@
 package server
 
 import (
+	"asapo_authorizer/authorization"
 	"asapo_authorizer/ldap_client"
 	log "asapo_common/logger"
 	"asapo_common/utils"
@@ -20,17 +21,17 @@ func Start() {
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }
 
-func createAuth() (utils.Auth, utils.Auth, utils.Auth, error) {
+func createAuth() (*authorization.Auth,error) {
 	secret, err := utils.ReadFirstStringFromFile(settings.UserSecretFile)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
 	adminSecret, err := utils.ReadFirstStringFromFile(settings.AdminSecretFile)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
 
-	return utils.NewHMACAuth(adminSecret), utils.NewHMACAuth(secret), utils.NewJWTAuth(secret), nil
+	return authorization.NewAuth(utils.NewHMACAuth(adminSecret), utils.NewHMACAuth(secret), utils.NewJWTAuth(secret)),nil
 }
 
 func ReadConfig(fname string) (log.Level, error) {
@@ -51,7 +52,7 @@ func ReadConfig(fname string) (log.Level, error) {
 	}
 
 	var err error
-	authHMACAdmin, authHMAC, authJWT, err = createAuth()
+	Auth, err = createAuth()
 	if err != nil {
 		return log.FatalLevel, err
 	}

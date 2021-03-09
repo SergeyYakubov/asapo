@@ -5,5 +5,5 @@ type FolderTokenTokenExtraClaim struct {
 }
 
 type AccessTokenExtraClaim struct {
-	Role string
+	AccessType string
 }

@@ -30,7 +30,7 @@ func prepareJWTToken(request folderTokenRequest) (string,error) {
 	extraClaim.RootFolder = request.Folder
 	claims.ExtraClaims = &extraClaim
 	claims.SetExpiration(time.Duration(settings.FolderTokenDurationMin) * time.Minute)
-	return authJWT.GenerateToken(&claims)
+	return Auth.JWTAuth().GenerateToken(&claims)
 
 }
 
@@ -39,7 +39,7 @@ func folderTokenResponce(token string) []byte{
 }
 
 func checkBeamtimeToken(request folderTokenRequest) error {
-	token_expect, _ := authHMAC.GenerateToken(&request.BeamtimeId)
+	token_expect, _ := Auth.HmacAuth().GenerateToken(&request.BeamtimeId)
 	var err_string string
 	if request.Token != token_expect {
 		err_string = "wrong token for beamtime " + request.BeamtimeId

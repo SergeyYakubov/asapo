@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_authorizer/authorization"
 	"asapo_common/utils"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -31,6 +32,8 @@ func TestFolderToken(t *testing.T) {
 	allowBeamlines([]beamtimeMeta{})
 	settings.RootBeamtimesFolder ="."
 	settings.CurrentBeamlinesFolder="."
+	Auth = authorization.NewAuth(utils.NewHMACAuth("secret"),utils.NewHMACAuth("secret"),utils.NewJWTAuth("secret"))
+
 	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test"), os.ModePerm)
 	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test_online"), os.ModePerm)
 
@@ -41,7 +44,6 @@ func TestFolderToken(t *testing.T) {
 	defer 	os.RemoveAll("bl1")
 
 	for _, test := range fodlerTokenTests {
-		authJWT = utils.NewJWTAuth("secret")
 		abs_path:=settings.RootBeamtimesFolder + string(filepath.Separator)+test.root_folder
 		request :=  makeRequest(folderTokenRequest{abs_path,test.beamtime_id,test.token})
 		if test.status == http.StatusBadRequest {
