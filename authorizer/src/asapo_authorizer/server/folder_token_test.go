@@ -19,20 +19,20 @@ var  fodlerTokenTests = [] struct {
 	status int
 	message string
 }{
-	{"test", "tf/gpfs/bl1/2019/data/test",prepareToken("test"),http.StatusOK,"beamtime found"},
-	{"test_online", "bl1/current",prepareToken("test_online"),http.StatusOK,"online beamtime found"},
-	{"test", "bl1/current",prepareToken("test"),http.StatusUnauthorized,"no online beamtime found"},
-	{"test_online", "bl2/current",prepareToken("test_online"),http.StatusUnauthorized,"wrong online folder"},
-	{"test", "tf/gpfs/bl1/2019/data/test1",prepareToken("test"),http.StatusUnauthorized,"wrong folder"},
-	{"test", "tf/gpfs/bl1/2019/data/test",prepareToken("test1"),http.StatusUnauthorized,"wrong token"},
-	{"11111111", "tf/gpfs/bl1/2019/data/test",prepareToken("11111111"),http.StatusBadRequest,"bad request"},
+	{"test", "tf/gpfs/bl1/2019/data/test", prepareUserToken("bt_test","read"),http.StatusOK,"beamtime found"},
+/*	{"test_online", "bl1/current", prepareUserToken("bt_test_online","read"),http.StatusOK,"online beamtime found"},
+	{"test", "bl1/current", prepareUserToken("bt_test","read"),http.StatusUnauthorized,"no online beamtime found"},
+	{"test_online", "bl2/current", prepareUserToken("bt_test_online","read"),http.StatusUnauthorized,"wrong online folder"},
+	{"test", "tf/gpfs/bl1/2019/data/test1", prepareUserToken("bt_test","read"),http.StatusUnauthorized,"wrong folder"},
+	{"test", "tf/gpfs/bl1/2019/data/test", prepareUserToken("bt_test1","read"),http.StatusUnauthorized,"wrong token"},
+	{"11111111", "tf/gpfs/bl1/2019/data/test", prepareUserToken("bt_11111111","read"),http.StatusBadRequest,"bad request"},*/
 }
 
 func TestFolderToken(t *testing.T) {
 	allowBeamlines([]beamtimeMeta{})
 	settings.RootBeamtimesFolder ="."
 	settings.CurrentBeamlinesFolder="."
-	Auth = authorization.NewAuth(utils.NewHMACAuth("secret"),utils.NewHMACAuth("secret"),utils.NewJWTAuth("secret"))
+	Auth = authorization.NewAuth(utils.NewJWTAuth("secret_user"),utils.NewJWTAuth("secret_admin"),utils.NewJWTAuth("secret_folder"))
 
 	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test"), os.ModePerm)
 	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test_online"), os.ModePerm)
@@ -52,7 +52,7 @@ func TestFolderToken(t *testing.T) {
 		w := doPostRequest("/folder",request,"")
 		if w.Code == http.StatusOK {
 			body, _ := ioutil.ReadAll(w.Body)
-			claims,_ := utils.CheckJWTToken(string(body),"secret")
+			claims,_ := utils.CheckJWTToken(string(body),"secret_folder")
 			var extra_claim utils.FolderTokenTokenExtraClaim
 			utils.MapToStruct(claims.(*utils.CustomClaims).ExtraClaims.(map[string]interface{}), &extra_claim)
 			assert.Equal(t, abs_path, extra_claim.RootFolder, test.message)

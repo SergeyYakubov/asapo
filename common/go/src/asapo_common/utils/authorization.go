@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"net/url"
@@ -31,6 +32,7 @@ type Auth interface {
 	GenerateToken(...interface{}) (string, error)
 	ProcessAuth(http.HandlerFunc, string) http.HandlerFunc
 	Name() string
+	CheckAndGetContent(token string, payload ...interface{}) (interface{}, error)
 }
 
 
@@ -152,6 +154,17 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 	}
 }
 
+func (a *JWTAuth) CheckAndGetContent(token string, payload ...interface{}) (interface{}, error) {
+	// payload ignored
+	claims, ok := CheckJWTToken(token,a.Key)
+	if !ok {
+		fmt.Println("hello ",token,a.Key)
+		return nil,errors.New("wrong JWT token")
+	}
+	return claims,nil
+}
+
+
 func CheckJWTToken(token, key string) (jwt.Claims, bool) {
 
 	if token == "" {
@@ -247,6 +260,23 @@ func ProcessHMACAuth(fn http.HandlerFunc, payload, key string) http.HandlerFunc 
 		}
 		fn(w, r)
 	}
+}
+
+func (a *HMACAuth) CheckAndGetContent(token string, payload ...interface{}) (interface{}, error) {
+	if len(payload) != 1 {
+		return nil, errors.New("wrong payload")
+	}
+	value, ok := payload[0].(string)
+	if !ok {
+		return "", errors.New("wrong payload")
+	}
+
+	ok = CheckHMACToken(token,value,a.Key)
+	if !ok {
+		return nil,errors.New("wrong HMAC token")
+	}
+	return nil,nil
+
 }
 
 func CheckHMACToken(value string, token, key string) bool {

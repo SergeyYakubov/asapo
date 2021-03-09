@@ -39,14 +39,8 @@ func folderTokenResponce(token string) []byte{
 }
 
 func checkBeamtimeToken(request folderTokenRequest) error {
-	token_expect, _ := Auth.UserAuth().GenerateToken(&request.BeamtimeId)
-	var err_string string
-	if request.Token != token_expect {
-		err_string = "wrong token for beamtime " + request.BeamtimeId
-		log.Error(err_string)
-		return errors.New(err_string)
-	}
-	return nil
+	_,err :=  checkToken(request.Token,"bt_"+request.BeamtimeId)
+	return err
 }
 
 

@@ -126,6 +126,7 @@ func alwaysAllowed(creds SourceCredentials) (beamtimeMeta, bool) {
 		if pair.BeamtimeId == creds.BeamtimeId {
 			pair.DataSource = creds.DataSource
 			pair.Type = creds.Type
+			pair.AccessType = "write"
 			return pair, true
 		}
 	}
@@ -152,26 +153,37 @@ func needHostAuthorization(creds SourceCredentials) bool {
 	return creds.Type == "raw" || len(creds.Token) == 0
 }
 
-func authorizeByToken(creds SourceCredentials) error {
-	var token_expect string
-	if (creds.BeamtimeId != "auto") {
-		token_expect, _ = Auth.UserAuth().GenerateToken(&creds.BeamtimeId)
-	} else {
-		key := "bl_" + creds.Beamline
-		token_expect, _ = Auth.UserAuth().GenerateToken(&key)
+func checkToken(token string, subject_expect string) (accessType string, err error) {
+	claims,err := Auth.UserAuth().CheckAndGetContent(token)
+	if err!=nil {
+		return "",err
 	}
 
-	var err_string string
-	if creds.Token != token_expect {
-		if creds.BeamtimeId != "auto" {
-			err_string = "wrong token for beamtime " + creds.BeamtimeId
-		} else {
-			err_string = "wrong token for beamline " + creds.Beamline
-		}
-		log.Error(err_string)
-		return errors.New(err_string)
+	cclaims,ok:=claims.(*utils.CustomClaims)
+	if !ok {
+		return "",errors.New("wrong token claims")
 	}
-	return nil
+	if cclaims.Subject!=subject_expect {
+		return "",errors.New("wrong token for "+subject_expect)
+	}
+	var extra_claim utils.AccessTokenExtraClaim
+	ecMap,ok:=cclaims.ExtraClaims.(map[string]interface{})
+	if !ok {
+		return "",errors.New("wrong token extra claims")
+
+	}
+	err = utils.MapToStruct(ecMap, &extra_claim)
+	return extra_claim.AccessType,err
+}
+
+func authorizeByToken(creds SourceCredentials) (accessType string, err error) {
+	subject_expect:=""
+	if (creds.BeamtimeId != "auto") {
+		subject_expect = "bt_"+creds.BeamtimeId
+	} else {
+		subject_expect = "bl_" + creds.Beamline
+	}
+	return checkToken(creds.Token,subject_expect)
 }
 
 func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
@@ -204,31 +216,30 @@ func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
 	return meta, nil
 }
 
-func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds SourceCredentials) error {
-
+func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds SourceCredentials) (accessType string, err error) {
+	accessType = ""
 	if creds.Type=="raw" && meta.OnlinePath=="" {
 		err_string := "beamtime "+meta.BeamtimeId+" is not online"
 		log.Error(err_string)
-		return errors.New(err_string)
+		return "",errors.New(err_string)
 	}
 
 	if creds.Beamline != "auto" && meta.Beamline != creds.Beamline {
 		err_string := "given beamline (" + creds.Beamline + ") does not match the found one (" + meta.Beamline + ")"
 		log.Debug(err_string)
-		return errors.New(err_string)
+		return "",errors.New(err_string)
 	}
 
 	if needHostAuthorization(creds) {
 		if err := authorizeByHost(request.OriginHost, meta.Beamline); err != nil {
-			return err
+			return "",err
 		}
+		accessType = "write"
 	} else {
-		if err := authorizeByToken(creds); err != nil {
-			return err
-		}
+		accessType,err = authorizeByToken(creds)
 	}
 
-	return nil
+	return accessType,err
 }
 
 func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeMeta, error) {
@@ -241,11 +252,14 @@ func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeM
 		return beamtimeMeta{}, err
 	}
 
-	if err := authorizeMeta(meta, request, creds); err != nil {
+	var accessType string
+	if accessType, err = authorizeMeta(meta, request, creds); err != nil {
 		return beamtimeMeta{}, err
 	}
 
-	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " + meta.Beamline+", type "+meta.Type)
+	meta.AccessType = accessType
+	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " +
+		meta.Beamline+", type "+meta.Type +"access type: "+accessType)
 	return meta, nil
 }
 
