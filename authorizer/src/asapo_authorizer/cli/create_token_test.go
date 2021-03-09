@@ -5,7 +5,6 @@ import (
 	"asapo_authorizer/server"
 	"asapo_common/utils"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"bytes"
@@ -20,19 +19,29 @@ var tokenTests = []struct {
 	tokenExpires bool
 	msg             string
 }{
-//	{command{args: []string{"-type"}}, false, "", "", "not enough parameters"},
-//	{command{args: []string{"-type", "user-token", "-beamtime","123","-access-type","read","-duration-days","10"}},
-//		true, "read", "bt_123", true,"user token ok"},
+// good
+	{command{args: []string{"-type", "user-token", "-beamtime","123","-access-type","read","-duration-days","10"}},
+		true, "read", "bt_123", true,"user token beamtime ok"},
+	{command{args: []string{"-type", "user-token", "-beamline","123","-access-type","read","-duration-days","10"}},
+		true, "read", "bl_123", true,"user token beamline ok"},
 	{command{args: []string{"-type", "admin-token","-access-type","create"}},
 		true, "create", "admin", false,"admin token ok"},
+// bad
+	{command{args: []string{"-type", "user-token", "-beamtime","123","-access-type","create","-duration-days","10"}},
+		false, "", "", true,"user token wrong type"},
+	{command{args: []string{"-type", "user-token", "-access-type","create","-duration-days","10"}},
+		false, "", "", true,"user token no beamtime or beamline"},
+	{command{args: []string{"-type", "user-token",  "-beamtime","123","-beamline","1234", "-access-type","create","-duration-days","10"}},
+		false, "", "", true,"user token both beamtime and beamline"},
+	{command{args: []string{"-type", "admin-token","-access-type","bla"}},
+		false, "", "", false,"admin token wrong type"},
 }
 
 func TestGenerateToken(t *testing.T) {
-	outBuf = new(bytes.Buffer)
 	server.Auth = authorization.NewAuth(utils.NewHMACAuth("secret"),utils.NewHMACAuth("secret"),utils.NewJWTAuth("secret"))
 	for _, test := range tokenTests {
+		outBuf = new(bytes.Buffer)
 		err := test.cmd.CommandCreate_token()
-		fmt.Println(err)
 		if !test.ok {
 			assert.NotNil(t, err, test.msg)
 			continue
@@ -47,6 +56,5 @@ func TestGenerateToken(t *testing.T) {
 		} else {
 			assert.Empty(t, token.Expires, test.msg)
 		}
-
 	}
 }

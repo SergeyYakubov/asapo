@@ -4,9 +4,8 @@ import (
 	"asapo_authorizer/authorization"
 	"asapo_authorizer/server"
 	"errors"
-	"os"
 	"fmt"
-	"asapo_common/utils"
+	"os"
 )
 
 type tokenFlags struct {
@@ -16,25 +15,6 @@ type tokenFlags struct {
 	Beamline   string
 	DaysValid  int
 }
-
-func generateToken(id string,secret string) string {
-	hmac := utils.NewHMACAuth(secret)
-	token,err := hmac.GenerateToken(&id)
-
-	if (err!=nil) {
-		fmt.Println(err.Error())
-	}
-	return token
-}
-
-func isUserRequest(reqType string) bool {
- return reqType == "user-token"
-}
-
-func isAdminRequest(reqType string) bool {
-	return reqType == "admin-token"
-}
-
 
 func userTokenRequest(flags tokenFlags) (request authorization.TokenRequest, err error) {
 	if (flags.Beamline=="" && flags.Beamtime=="") || (flags.Beamline!="" && flags.Beamtime!="") {
@@ -76,7 +56,6 @@ func adminTokenRequest(flags tokenFlags) (request authorization.TokenRequest, er
 	return
 }
 
-// GenerateToken generates token for consumers
 func (cmd *command) CommandCreate_token() (err error) {
 	message_string := "Generate token"
 	if cmd.description(message_string) {
