@@ -28,6 +28,8 @@ var  IssueTokenTests = [] struct {
 	{map[string]string{"blabla":"test"},"","read",180,prepareAdminToken("admin"),"",http.StatusBadRequest,"beamline or beamtime not given"},
 	{map[string]string{"beamtimeId":"test"},"","bla",180,prepareAdminToken("admin"),"",http.StatusBadRequest,"wrong role"},
 	{map[string]string{"beamtimeId":"test"},"","read",180,prepareAdminToken("bla"),"",http.StatusUnauthorized,"wrong admin token"},
+	{map[string]string{"beamtimeId":"test"},"bt_test","read",0,prepareAdminToken("admin"),"aaa",http.StatusBadRequest,"0 valid days"},
+
 }
 
 func TestIssueToken(t *testing.T) {

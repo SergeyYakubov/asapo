@@ -25,7 +25,7 @@ func Exists(name string) bool {
 
 func checkClaim(r *http.Request,request* fileTransferRequest) (int,error) {
 	var extraClaim utils.FolderTokenTokenExtraClaim
-	if err := utils.JobClaimFromContext(r, &extraClaim); err != nil {
+	if err := utils.JobClaimFromContext(r, nil, &extraClaim); err != nil {
 		return http.StatusInternalServerError,err
 	}
 	if extraClaim.RootFolder!=request.Folder {

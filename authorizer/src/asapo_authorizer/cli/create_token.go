@@ -24,10 +24,6 @@ func userTokenRequest(flags tokenFlags) (request authorization.TokenRequest, err
 		return request,errors.New("access type must be read of write")
 	}
 
-	if flags.DaysValid<=0 {
-		return request,errors.New("expiration period must be set")
-	}
-
 	request.Subject = make(map[string]string,1)
 	if (flags.Beamline!="") {
 		request.Subject["beamline"]=flags.Beamline

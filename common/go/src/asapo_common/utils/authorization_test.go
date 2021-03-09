@@ -17,7 +17,7 @@ type JobClaim struct {
 func writeAuthResponse(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	var jc JobClaim
-	JobClaimFromContext(r, &jc)
+	JobClaimFromContext(r,nil,&jc)
 	w.Write([]byte(jc.UserName))
 	w.Write([]byte(jc.JobInd))
 }

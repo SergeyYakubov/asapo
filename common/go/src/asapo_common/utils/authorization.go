@@ -169,14 +169,21 @@ func CheckJWTToken(token, key string) (jwt.Claims, bool) {
 	return nil, false
 }
 
-func JobClaimFromContext(r *http.Request, val interface{}) error {
+func JobClaimFromContext(r *http.Request, customClaim **CustomClaims, val interface{}) error {
 	c := r.Context().Value("TokenClaims")
 
 	if c == nil {
 		return errors.New("Empty context")
 	}
 
-	claim := c.(*CustomClaims)
+	claim,ok  := c.(*CustomClaims)
+	if !ok {
+		return errors.New("cannot get CustomClaims")
+	}
+
+	if customClaim!=nil {
+		*customClaim = claim
+	}
 
 	return MapToStruct(claim.ExtraClaims.(map[string]interface{}), val)
 }
