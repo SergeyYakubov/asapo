@@ -26,6 +26,14 @@ Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error&
     }
 }
 
+Error CheckAccessType(const std::string& access_type) {
+    if (access_type!="write") {
+        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("wrong access type " + access_type);
+    }
+    return nullptr;
+}
+
+
 Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_credentials) const {
     HttpCode code;
     Error err;
@@ -42,6 +50,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     }
 
     std::string stype;
+    std::string access_type;
 
     JsonStringParser parser{response};
     (err = parser.GetString("beamtimeId", &beamtime_id_)) ||
@@ -49,14 +58,23 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     (err = parser.GetString("core-path", &offline_path_)) ||
     (err = parser.GetString("beamline-path", &online_path_)) ||
     (err = parser.GetString("source-type", &stype)) ||
+    (err = parser.GetString("access-type", &access_type)) ||
     (err = GetSourceTypeFromString(stype, &source_type_)) ||
     (err = parser.GetString("beamline", &beamline_));
     if (err) {
         return ErrorFromAuthorizationServerResponse(err, code);
-    } else {
-        log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() +"source type: "+stype+ " beamline: " +
-                     beamline_ + ", beamtime id: " + beamtime_id_ + ", data soucre: " + data_source_);
     }
+
+    err = CheckAccessType(access_type);
+    if (err) {
+        log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " request: " + request_string +
+            " - " +
+            err->Explain());
+        return err;
+    }
+
+    log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() +"source type: "+stype+ " beamline: " +
+                     beamline_ + ", beamtime id: " + beamtime_id_ + ", data soucre: " + data_source_);
 
     last_updated_ = system_clock::now();
     cached_source_credentials_ = source_credentials;
@@ -73,7 +91,7 @@ Error RequestHandlerAuthorize::ProcessAuthorizationRequest(Request* request) con
         return auth_error;
     }
 
-    return Authorize(request, request->GetMessage());
+    return Authorize(request, request->GetMetaData().c_str());
 }
 
 Error RequestHandlerAuthorize::ProcessReAuthorization(Request* request) const {
