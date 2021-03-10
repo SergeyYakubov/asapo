@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"net/url"
@@ -32,7 +31,15 @@ type Auth interface {
 	GenerateToken(...interface{}) (string, error)
 	ProcessAuth(http.HandlerFunc, string) http.HandlerFunc
 	Name() string
-	CheckAndGetContent(token string, payload ...interface{}) (interface{}, error)
+	CheckAndGetContent(token string, extraClaims interface{}, payload ...interface{}) (string,error)
+}
+
+func SubjectFromBeamtime(bt string)string {
+	return "bt_"+bt
+}
+
+func SubjectFromBeamline(bl string)string {
+	return "bl_"+bl
 }
 
 
@@ -154,14 +161,23 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 	}
 }
 
-func (a *JWTAuth) CheckAndGetContent(token string, payload ...interface{}) (interface{}, error) {
+func (a *JWTAuth) CheckAndGetContent(token string, extraClaims interface{}, payload ...interface{}) (subject string,err error) {
 	// payload ignored
-	claims, ok := CheckJWTToken(token,a.Key)
+	c, ok := CheckJWTToken(token,a.Key)
 	if !ok {
-		fmt.Println("hello ",token,a.Key)
-		return nil,errors.New("wrong JWT token")
+		return "",errors.New("wrong JWT token")
 	}
-	return claims,nil
+	claim,ok  := c.(*CustomClaims)
+	if !ok {
+		return "",errors.New("cannot get CustomClaims")
+	}
+
+	subject = claim.Subject
+
+	if extraClaims!=nil {
+		err = MapToStruct(claim.ExtraClaims.(map[string]interface{}), extraClaims)
+	}
+	return subject,err
 }
 
 
@@ -262,20 +278,20 @@ func ProcessHMACAuth(fn http.HandlerFunc, payload, key string) http.HandlerFunc 
 	}
 }
 
-func (a *HMACAuth) CheckAndGetContent(token string, payload ...interface{}) (interface{}, error) {
+func (a *HMACAuth) CheckAndGetContent(token string, _ interface{}, payload ...interface{}) (string,error) {
 	if len(payload) != 1 {
-		return nil, errors.New("wrong payload")
+		return "",errors.New("wrong payload")
 	}
 	value, ok := payload[0].(string)
 	if !ok {
-		return "", errors.New("wrong payload")
+		return "",errors.New("wrong payload")
 	}
 
 	ok = CheckHMACToken(token,value,a.Key)
 	if !ok {
-		return nil,errors.New("wrong HMAC token")
+		return "",errors.New("wrong HMAC token")
 	}
-	return nil,nil
+	return value,nil
 
 }
 

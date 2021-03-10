@@ -33,7 +33,7 @@ func TestGenerateJWTToken(t *testing.T) {
 
 }
 
-var HJWTAuthtests = []struct {
+var JWTAuthtests = []struct {
 	Mode       string
 	Key        string
 	User       string
@@ -50,7 +50,7 @@ var HJWTAuthtests = []struct {
 }
 
 func TestProcessJWTAuth(t *testing.T) {
-	for _, test := range HJWTAuthtests {
+	for _, test := range JWTAuthtests {
 		req, _ := http.NewRequest("POST", "http://blabla", nil)
 
 		var claim JobClaim

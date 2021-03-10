@@ -154,34 +154,24 @@ func needHostAuthorization(creds SourceCredentials) bool {
 }
 
 func checkToken(token string, subject_expect string) (accessType string, err error) {
-	claims,err := Auth.UserAuth().CheckAndGetContent(token)
+	var extra_claim utils.AccessTokenExtraClaim
+	subject,err := Auth.UserAuth().CheckAndGetContent(token,&extra_claim)
 	if err!=nil {
 		return "",err
 	}
 
-	cclaims,ok:=claims.(*utils.CustomClaims)
-	if !ok {
-		return "",errors.New("wrong token claims")
-	}
-	if cclaims.Subject!=subject_expect {
+	if subject!=subject_expect {
 		return "",errors.New("wrong token for "+subject_expect)
 	}
-	var extra_claim utils.AccessTokenExtraClaim
-	ecMap,ok:=cclaims.ExtraClaims.(map[string]interface{})
-	if !ok {
-		return "",errors.New("wrong token extra claims")
-
-	}
-	err = utils.MapToStruct(ecMap, &extra_claim)
 	return extra_claim.AccessType,err
 }
 
 func authorizeByToken(creds SourceCredentials) (accessType string, err error) {
 	subject_expect:=""
 	if (creds.BeamtimeId != "auto") {
-		subject_expect = "bt_"+creds.BeamtimeId
+		subject_expect = utils.SubjectFromBeamtime(creds.BeamtimeId)
 	} else {
-		subject_expect = "bl_" + creds.Beamline
+		subject_expect = utils.SubjectFromBeamline(creds.Beamline)
 	}
 	return checkToken(creds.Token,subject_expect)
 }

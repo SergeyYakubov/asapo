@@ -39,7 +39,7 @@ func folderTokenResponce(token string) []byte{
 }
 
 func checkBeamtimeToken(request folderTokenRequest) error {
-	_,err :=  checkToken(request.Token,"bt_"+request.BeamtimeId)
+	_,err :=  checkToken(request.Token,utils.SubjectFromBeamtime(request.BeamtimeId))
 	return err
 }
 

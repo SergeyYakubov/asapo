@@ -29,7 +29,7 @@ func createAuth() (utils.Auth, error) {
 	if err != nil {
 		return nil, err
 	}
-	return utils.NewHMACAuth(secret), nil
+	return utils.NewJWTAuth(secret), nil
 }
 
 func ReadConfig(fname string) (log.Level, error) {

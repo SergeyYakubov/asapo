@@ -26,8 +26,15 @@ const expectedStream = "stream"
 func prepareTestAuth() {
 	expectedBeamtimeId = "beamtime_id"
 	expectedDBName = expectedBeamtimeId + "_" + expectedSource
-	auth = utils.NewHMACAuth("secret")
-	token, err := auth.GenerateToken(&expectedBeamtimeId)
+	auth = utils.NewJWTAuth("secret")
+
+	var claims utils.CustomClaims
+	var extraClaim utils.AccessTokenExtraClaim
+	claims.Subject = utils.SubjectFromBeamtime(expectedBeamtimeId)
+	extraClaim.AccessType = "read"
+	claims.ExtraClaims = &extraClaim
+
+	token, err := auth.GenerateToken(&claims)
 	if err != nil {
 		panic(err)
 	}
@@ -107,7 +114,7 @@ func TestProcessRequestTestSuite(t *testing.T) {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong token")))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong JWT token")))
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
 

@@ -33,9 +33,9 @@ func subjectFromRequest(request TokenRequest) string {
 	for key,value := range request.Subject {
 		switch key {
 		case "beamline":
-			return "bl_" + value
+			return utils.SubjectFromBeamline(value)
 		case "beamtimeId":
-			return "bt_" + value
+			return utils.SubjectFromBeamtime(value)
 		default:
 			return value
 		}

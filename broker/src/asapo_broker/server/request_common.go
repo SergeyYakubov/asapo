@@ -2,6 +2,7 @@ package server
 
 import (
 	"asapo_common/logger"
+	"asapo_common/utils"
 	"errors"
 	"net/http"
 	"strconv"
@@ -43,18 +44,37 @@ func datasetRequested(r *http.Request) (bool,int) {
 	return valueTrue(r, "dataset"),valueInt(r,"minsize")
 }
 
-func testAuth(r *http.Request, beamtime_id string) error {
-	token_got := r.URL.Query().Get("token")
+func authorize(r *http.Request, beamtime_id string) error {
+	token := r.URL.Query().Get("token")
 
-	if len(token_got) == 0 {
+	if len(token) == 0 {
 		return errors.New("cannot extract token from request")
 	}
 
-	token_expect, _ := auth.GenerateToken(&beamtime_id)
-
-	if token_got != token_expect {
-		return errors.New("wrong token")
+	var extra_claim utils.AccessTokenExtraClaim
+	subject,err := auth.CheckAndGetContent(token,&extra_claim)
+	if err!=nil {
+		return err
 	}
 
+	err = checkSubject(subject, beamtime_id)
+	if err != nil {
+		return err
+	}
+
+	return checkAccessType(extra_claim)
+}
+
+func checkSubject(subject string, beamtime_id string) error {
+	if subject != utils.SubjectFromBeamtime(beamtime_id) {
+		return errors.New("wrong token subject")
+	}
+	return nil
+}
+
+func checkAccessType(extra_claim utils.AccessTokenExtraClaim) error {
+	if extra_claim.AccessType != "read" && extra_claim.AccessType != "write" {
+		return errors.New("wrong token access type")
+	}
 	return nil
 }
