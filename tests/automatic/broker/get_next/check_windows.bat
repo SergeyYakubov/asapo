@@ -7,7 +7,7 @@ echo db.data_default.insert({"_id":2}) | %mongo_exe% %database_name%  || goto :e
 set full_name="%1"
 set short_name="%~nx1"
 
-set token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5MzU5MDEsImp0aSI6ImMxNGNxbmJpcHQzZGY2bDRvNHIwIiwic3ViIjoiYnRfdGVzdCIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.D71Gv2AwSPIEkaeejWXs70sSoQzvKDonrTmtPk2J9AI
+set token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5NDIxMjcsImp0aSI6ImMxNGViYnJpcHQzZHQ4Y2JhczUwIiwic3ViIjoiYnRfZGF0YSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.U776By_privbW9WbQCSTmk9hLZVTXzTWNNap1XOIFlM
 
 start /B "" "%full_name%" -config settings.json
 

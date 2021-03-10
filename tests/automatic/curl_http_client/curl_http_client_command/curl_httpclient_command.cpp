@@ -28,7 +28,7 @@ Args GetArgs(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
 
     auto args = GetArgs(argc, argv);
-    auto token = "bnCXpOdBV90wU1zybEw1duQNSORuwaKz6oDHqmL35p0="; //token for aaa
+    auto token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5NDI2MDMsImp0aSI6ImMxNGVmMnJpcHQzZHQ4Y2JhczYwIiwic3ViIjoiYnRfYWFhIiwiRXh0cmFDbGFpbXMiOnsiQWNjZXNzVHlwZSI6InJlYWQifX0.xvU-EaemmBhcPzmCvjPVUkCxkTjglo-072aJZjDhGBM"; //token for aaa
     std::string authorize_request = "{\"Folder\":\"" + args.folder + "\",\"BeamtimeId\":\"aaa\",\"Token\":\"" + token +
                                     "\"}";
     asapo::Error err;
@@ -46,11 +46,11 @@ int main(int argc, char* argv[]) {
     std::string input_data;
     auto folder_token = consumer_impl->httpclient__->Post(args.uri_authorizer + "/folder", "", authorize_request, &code,
                         &err);
-    M_AssertTrue(err == nullptr);
-    M_AssertTrue(code == asapo::HttpCode::OK);
     if (err) {
         std::cout << err->Explain();
     }
+    M_AssertTrue(err == nullptr);
+    M_AssertTrue(code == asapo::HttpCode::OK);
 
     consumer_impl->httpclient__->Post(args.uri_authorizer + "/folder", "", "", &code, &err);
     M_AssertTrue(code == asapo::HttpCode::BadRequest);
