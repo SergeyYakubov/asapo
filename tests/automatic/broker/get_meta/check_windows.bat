@@ -6,7 +6,7 @@ echo db.meta.insert({"_id":0}) | %mongo_exe% %database_name%  || goto :error
 set full_name="%1"
 set short_name="%~nx1"
 
-set token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5MzU5MDEsImp0aSI6ImMxNGNxbmJpcHQzZGY2bDRvNHIwIiwic3ViIjoiYnRfdGVzdCIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.D71Gv2AwSPIEkaeejWXs70sSoQzvKDonrTmtPk2J9AI
+set token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5MzU3NjgsImp0aSI6ImMxNGNwbTNpcHQzZGRrbnFwYm9nIiwic3ViIjoiYnRfZGF0YSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.Jnhmj2i8zUbTzlmRCo6CUkqkD_FdyMxfNj_PztmnN-0
 
 start /B "" "%full_name%" -config settings.json
 
