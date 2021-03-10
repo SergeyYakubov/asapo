@@ -13,12 +13,18 @@ RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service
 }
 
 Error RequestHandlerTcp::Authorize(const std::string& source_credentials) {
-    GenericRequestHeader header{kOpcodeAuthorize, 0, 0, 0, source_credentials.c_str()};
+    GenericRequestHeader header{kOpcodeAuthorize, 0, 0, source_credentials.size(), ""};
     Error err;
     io__->Send(sd_, &header, sizeof(header), &err);
     if(err) {
         return err;
     }
+
+    io__->Send(sd_, (void*) source_credentials.c_str(), (size_t) header.meta_size, &err);
+    if (err) {
+        return err;
+    }
+
     return ReceiveResponse(header, nullptr);
 }
 
