@@ -6,13 +6,14 @@ mkdir beamline\p07\current
 copy beamtime-metadata* beamline\p07\current\ /y
 copy beamtime-metadata* asap3\petra3\gpfs\p07\2019\data\11111111\ /y
 
-
-"%3" token -secret auth_secret.key %beamtime_id% > token
-set /P token=< token
-
 set proxy_address="127.0.0.1:8400"
 
 call start_services.bat
+
+"%3" token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -type read %beamtime_id% > token
+
+set /P token=< token
+
 
 REM producer
 mkdir %receiver_folder%

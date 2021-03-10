@@ -7,8 +7,7 @@ echo db.data_default.insert({"_id":2}) | %mongo_exe% %database_name%  || goto :e
 set full_name="%1"
 set short_name="%~nx1"
 
-"%2" token -secret auth_secret.key data > token
-set /P token=< token
+set token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5MzU5MDEsImp0aSI6ImMxNGNxbmJpcHQzZGY2bDRvNHIwIiwic3ViIjoiYnRfdGVzdCIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.D71Gv2AwSPIEkaeejWXs70sSoQzvKDonrTmtPk2J9AI
 
 start /B "" "%full_name%" -config settings.json
 

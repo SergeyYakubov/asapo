@@ -1,35 +1,64 @@
 package cli
 
 import (
+	"asapo_tools/mocks"
+	"asapo_tools/rest_client"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"bytes"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 )
 
 var tokenTests = []struct {
 	cmd      command
-	answer string
+	ok bool
 	msg  string
 }{
-	{command{args: []string{"beamtime_id"}},  "secret", "no secret parameter"},
-	{command{args: []string{"-secret","secret.tmp"}},  "payload", "no file"},
-	{command{args: []string{"-secret","not_existing_file","payload"}},  "not_existing_file", "no file"},
-	{command{args: []string{"-secret","secret.tmp","beamtime_id"}},  "eodk3s5ZXwACLGyVA63MZYcOTWuWE4bceI9Vxl9zejI=", "ok"},
+	{command{args: []string{"beamtime_id"}},  false, "no secret parameter"},
+	{command{args: []string{"-secret","secret.tmp"}},  false, "no file"},
+	{command{args: []string{"-secret","not_existing_file","payload"}},  false, "no file"},
+	{command{args: []string{"-secret","secret.tmp","beamtime_id"}},  false, "type is missing"},
+	{command{args: []string{"-secret","secret.tmp","-type","read","beamtime_id"}},  false, "endpoint is missing"},
+	{command{args: []string{"-secret","secret.tmp","-type","read","-endpoint","endpoint","-token-details","beamtime_id"}},  true, "ok"},
 }
 
 func TestParseTokenFlags(t *testing.T) {
 
 	ioutil.WriteFile("secret.tmp", []byte("secret"), 0644)
 	outBuf = new(bytes.Buffer)
+
+	rest_client.Client = &mocks.MockClient{}
+
+
+	mocks.DoFunc = func(req *http.Request) (*http.Response, error) {
+		json := `{"Token":"blabla","Uri":"`+req.URL.Path+`"}`
+		r := ioutil.NopCloser(bytes.NewReader([]byte(json)))
+
+		return &http.Response{
+			StatusCode: 200,
+			Body:       r,
+		}, nil
+	}
+
 	for _, test := range tokenTests {
 		err := test.cmd.CommandToken()
-		if err == nil {
-			assert.Contains(t, outBuf.(*bytes.Buffer).String(), test.answer, test.msg)
+		if test.ok {
+			assert.Nil(t, err, test.msg)
+			resp := struct {
+				Token string
+				Uri string
+			}{}
+			err := json.Unmarshal(outBuf.(*bytes.Buffer).Bytes(),&resp)
+			fmt.Println(err)
+			assert.Equal(t,  "blabla", resp.Token,test.msg)
+			assert.Equal(t, "endpoint/admin/issue",resp.Uri, test.msg)
 		} else {
-			assert.Contains(t, err.Error(), test.answer, test.msg)
+			assert.NotNil(t, err, test.msg)
 		}
 
 	}

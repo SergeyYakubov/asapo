@@ -27,7 +27,7 @@ func extractUserTokenrequest(r *http.Request) (request authorization.TokenReques
 	}
 
 	if request.AccessType != "read" && request.AccessType != "write" {
-		return request, errors.New("wrong access type " + request.AccessType)
+		return request, errors.New("wrong access type: " + request.AccessType)
 	}
 
 	return request, nil

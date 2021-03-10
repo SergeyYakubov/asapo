@@ -1,8 +1,10 @@
 package main
 
 import (
+	"asapo_tools/rest_client"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"asapo_common/version"
 	"asapo_tools/cli"
@@ -19,6 +21,8 @@ func main() {
 	}
 
 	flag.Parse()
+
+	rest_client.Client = &http.Client{}
 
 	if *flHelp || flag.NArg() == 0 {
 		flag.Usage()

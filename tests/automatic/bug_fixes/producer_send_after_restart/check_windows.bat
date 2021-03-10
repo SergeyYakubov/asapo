@@ -9,7 +9,7 @@ SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\d
 set producer_short_name="%~nx1"
 
 
-"%3" token -secret auth_secret.key %beamtime_id% > token
+"%3" token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -type read %beamtime_id% > token
 set /P token=< token
 
 set proxy_address="127.0.0.1:8400"

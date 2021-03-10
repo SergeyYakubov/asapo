@@ -8,7 +8,7 @@ SET indatabase_name=%beamtime_id%_%data_source_in%
 SET outdatabase_name=%beamtime_id%_%data_source_out%
 SET outdatabase_name2=%beamtime_id%_%data_source_out2%
 
-SET token=IEfwsWa0GXky2S3MkxJSUHJT1sI8DD5teRdjBUXVRxk=
+SET token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTRhcDQzaXB0M2E0bmNpMDkwMCIsInN1YiI6ImJ0X2FzYXBvX3Rlc3QiLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlIjoicmVhZCJ9fQ.X5Up3PBd81i4X7wUBXGkIrLEVSL-WO9kijDtzOqasgg
 
 SET beamline=test
 

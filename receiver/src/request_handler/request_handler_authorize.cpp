@@ -28,7 +28,7 @@ Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error&
 
 Error CheckAccessType(const std::string& access_type) {
     if (access_type!="write") {
-        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("wrong access type " + access_type);
+        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("wrong access type: " + access_type);
     }
     return nullptr;
 }

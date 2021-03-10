@@ -7,8 +7,6 @@ SET stream2=s2
 SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\data\%beamtime_id%"
 
-"%3" token -secret auth_secret.key %beamtime_id% > token
-set /P token=< token
 
 set proxy_address="127.0.0.1:8400"
 
@@ -16,6 +14,9 @@ echo db.%beamtime_id%_%stream1%.insert({dummy:1}) | %mongo_exe% %beamtime_id%_%s
 echo db.%beamtime_id%_%stream2%.insert({dummy:1}) | %mongo_exe% %beamtime_id%_%stream2%
 
 call start_services.bat
+
+"%3" token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -type read %beamtime_id% > token
+set /P token=< token
 
 REM producer
 mkdir %receiver_folder%
