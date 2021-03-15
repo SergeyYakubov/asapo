@@ -23,24 +23,29 @@ const wrongGroupID = "_bid2a5auidddp1vl71"
 const expectedSource = "datasource"
 const expectedStream = "stream"
 
+type MockAuthServer struct {
+}
+
+func (a * MockAuthServer) AuthorizeToken(tokenJWT string) (token Token, err error) {
+	if tokenJWT =="ok" {
+		return Token{
+			Sub:        "bt_"+expectedBeamtimeId,
+			AccessType: "read",
+		},nil
+	} else {
+		return Token{},errors.New("wrong JWT token")
+	}
+}
+
+
 func prepareTestAuth() {
 	expectedBeamtimeId = "beamtime_id"
 	expectedDBName = expectedBeamtimeId + "_" + expectedSource
-	auth = utils.NewJWTAuth("secret")
 
-	var claims utils.CustomClaims
-	var extraClaim utils.AccessTokenExtraClaim
-	claims.Subject = utils.SubjectFromBeamtime(expectedBeamtimeId)
-	extraClaim.AccessType = "read"
-	claims.ExtraClaims = &extraClaim
-
-	token, err := auth.GenerateToken(&claims)
-	if err != nil {
-		panic(err)
-	}
-	correctTokenSuffix = "?token=" + token
+	auth = &MockAuthServer{}
+	correctTokenSuffix = "?token=ok"
 	wrongTokenSuffix = "?blablabla=aa"
-	suffixWithWrongToken = "?token=blabla"
+	suffixWithWrongToken = "?token=wrong"
 }
 
 type request struct {

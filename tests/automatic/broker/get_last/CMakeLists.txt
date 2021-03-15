@@ -3,6 +3,8 @@ set(TARGET_NAME asapo-broker)
 ################################
 # Testing
 ################################
+prepare_asapo()
+
 configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/broker_settings.json settings.json COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/auth_secret.key auth_secret.key COPYONLY)
 

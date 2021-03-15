@@ -59,7 +59,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 	}
 
 	if err := authorize(r, db_name); err != nil {
-		writeAuthAnswer(w, "get "+op, db_name, err.Error())
+		writeAuthAnswer(w, "get "+op, db_name, err)
 		return
 	}
 

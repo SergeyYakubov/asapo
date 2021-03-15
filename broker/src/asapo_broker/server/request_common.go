@@ -8,11 +8,17 @@ import (
 	"strconv"
 )
 
-func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, err string) {
+func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, err error) {
 	log_str := "processing " + requestName + " request in " + db_name + " at " + settings.GetDatabaseServer()
-	logger.Error(log_str + " - " + err)
-	w.WriteHeader(http.StatusUnauthorized)
-	w.Write([]byte(err))
+	logger.Error(log_str + " - " + err.Error())
+
+	httpError, ok := err.(*HttpError)
+	if ok && httpError.statusCode != http.StatusUnauthorized {
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+	w.Write([]byte(err.Error()))
 }
 
 func valueTrue(r *http.Request, key string) bool {
@@ -40,29 +46,28 @@ func valueInt(r *http.Request, key string) int {
 	return i
 }
 
-func datasetRequested(r *http.Request) (bool,int) {
-	return valueTrue(r, "dataset"),valueInt(r,"minsize")
+func datasetRequested(r *http.Request) (bool, int) {
+	return valueTrue(r, "dataset"), valueInt(r, "minsize")
 }
 
 func authorize(r *http.Request, beamtime_id string) error {
-	token := r.URL.Query().Get("token")
+	tokenJWT := r.URL.Query().Get("token")
 
-	if len(token) == 0 {
+	if len(tokenJWT) == 0 {
 		return errors.New("cannot extract token from request")
 	}
 
-	var extra_claim utils.AccessTokenExtraClaim
-	subject,err := auth.CheckAndGetContent(token,&extra_claim)
-	if err!=nil {
-		return err
-	}
-
-	err = checkSubject(subject, beamtime_id)
+	token, err := auth.AuthorizeToken(tokenJWT)
 	if err != nil {
 		return err
 	}
 
-	return checkAccessType(extra_claim)
+	err = checkSubject(token.Sub, beamtime_id)
+	if err != nil {
+		return err
+	}
+
+	return checkAccessType(token.AccessType)
 }
 
 func checkSubject(subject string, beamtime_id string) error {
@@ -72,8 +77,8 @@ func checkSubject(subject string, beamtime_id string) error {
 	return nil
 }
 
-func checkAccessType(extra_claim utils.AccessTokenExtraClaim) error {
-	if extra_claim.AccessType != "read" && extra_claim.AccessType != "write" {
+func checkAccessType(accessType string) error {
+	if accessType != "read" && accessType != "write" {
 		return errors.New("wrong token access type")
 	}
 	return nil
