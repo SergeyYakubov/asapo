@@ -121,7 +121,8 @@ TEST_F(FactoryTests, ReturnsDataRequestForAuthorizationCode) {
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::Request*>(request.get()), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerReceiveMetaData*>(request->GetListHandlers()[0]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[1]), Ne(nullptr));
 }
 
 TEST_F(FactoryTests, DoNotAddDiskAndDbWriterIfNotWantedInRequest) {

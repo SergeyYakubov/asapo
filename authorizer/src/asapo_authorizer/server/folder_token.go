@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"net/http"
 	"time"
@@ -25,13 +26,12 @@ type folderToken struct {
 
 func prepareJWTToken(request folderTokenRequest) (string,error) {
 	var claims utils.CustomClaims
-	var extraClaim utils.FolderTokenTokenExtraClaim
+	var extraClaim structs.FolderTokenTokenExtraClaim
 
 	extraClaim.RootFolder = request.Folder
 	claims.ExtraClaims = &extraClaim
-	claims.Duration = time.Duration(settings.TokenDurationMin) * time.Minute
-
-	return authJWT.GenerateToken(&claims)
+	claims.SetExpiration(time.Duration(settings.FolderTokenDurationMin) * time.Minute)
+	return Auth.JWTAuth().GenerateToken(&claims)
 
 }
 
@@ -40,14 +40,8 @@ func folderTokenResponce(token string) []byte{
 }
 
 func checkBeamtimeToken(request folderTokenRequest) error {
-	token_expect, _ := authHMAC.GenerateToken(&request.BeamtimeId)
-	var err_string string
-	if request.Token != token_expect {
-		err_string = "wrong token for beamtime " + request.BeamtimeId
-		log.Error(err_string)
-		return errors.New(err_string)
-	}
-	return nil
+	_,err :=  checkToken(request.Token,utils.SubjectFromBeamtime(request.BeamtimeId))
+	return err
 }
 
 

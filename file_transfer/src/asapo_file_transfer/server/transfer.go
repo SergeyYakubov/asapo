@@ -2,6 +2,7 @@ package server
 
 import (
 	log "asapo_common/logger"
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"encoding/json"
 	"errors"
@@ -24,8 +25,8 @@ func Exists(name string) bool {
 
 
 func checkClaim(r *http.Request,request* fileTransferRequest) (int,error) {
-	var extraClaim utils.FolderTokenTokenExtraClaim
-	if err := utils.JobClaimFromContext(r, &extraClaim); err != nil {
+	var extraClaim structs.FolderTokenTokenExtraClaim
+	if err := utils.JobClaimFromContext(r, nil, &extraClaim); err != nil {
 		return http.StatusInternalServerError,err
 	}
 	if extraClaim.RootFolder!=request.Folder {

@@ -74,6 +74,7 @@ class AuthorizerHandlerTests : public Test {
     std::string expected_source_credentials;
     asapo::SourceType expected_source_type = asapo::SourceType::kProcessed;
     std::string expected_source_type_str = "processed";
+    std::string expected_access_type_str = "write";
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
@@ -115,7 +116,8 @@ class AuthorizerHandlerTests : public Test {
                              "\",\"beamline-path\":" + "\"" + expected_beamline_path +
                              "\",\"core-path\":" + "\"" + expected_core_path +
                              "\",\"source-type\":" + "\"" + expected_source_type_str +
-                             "\",\"beamline\":" + "\"" + expected_beamline + "\"}")
+                             "\",\"beamline\":" + "\"" + expected_beamline +
+                             "\",\"access-type\":" + "\"" + expected_access_type_str + "\"}")
                      ));
             if (code != HttpCode::OK) {
                 EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
@@ -126,13 +128,16 @@ class AuthorizerHandlerTests : public Test {
                                                      HasSubstr(expected_data_source),
                                                      HasSubstr(expected_producer_uri),
                                                      HasSubstr(expected_authorization_server))));
-            } else {
+            } else if (expected_access_type_str=="write") {
                 EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("authorized"),
                                                      HasSubstr(expected_beamtime_id),
                                                      HasSubstr(expected_beamline),
                                                      HasSubstr(expected_source_type_str),
                                                      HasSubstr(expected_data_source),
                                                      HasSubstr(expected_producer_uri))));
+            } else {
+                EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr(expected_access_type_str),
+                                                     HasSubstr(expected_access_type_str))));
             }
         }
 
@@ -142,8 +147,8 @@ class AuthorizerHandlerTests : public Test {
         EXPECT_CALL(*mock_request, GetOpCode())
         .WillOnce(Return(asapo::kOpcodeAuthorize))
         ;
-        EXPECT_CALL(*mock_request, GetMessage())
-        .WillOnce(Return(expected_source_credentials.c_str()))
+        EXPECT_CALL(*mock_request, GetMetaData())
+        .WillOnce(ReturnRef(expected_source_credentials))
         ;
 
         MockAuthRequest(error, code);
@@ -204,6 +209,14 @@ TEST_F(AuthorizerHandlerTests, AuthorizeOk) {
     auto err = MockFirstAuthorization(false);
 
     ASSERT_THAT(err, Eq(nullptr));
+}
+
+
+TEST_F(AuthorizerHandlerTests, AuthorizeFailsOnWrongAccessType) {
+    expected_access_type_str = "read";
+    auto err = MockFirstAuthorization(false);
+
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
 }
 
 TEST_F(AuthorizerHandlerTests, ErrorOnSecondAuthorize) {

@@ -11,14 +11,14 @@ call start_services.bat
 
 mkdir %receiver_folder%
 
-"%1" localhost:8400 %beamtime_id% 100 1 1 0 30
+"%1" 127.0.0.1:8400 %beamtime_id% 100 1 1 0 30
 
 ping 192.0.2.1 -n 1 -w 1000 > nul
 
 FOR /F "usebackq" %%A IN ('%receiver_folder%\processed\1') DO set size=%%~zA
 if %size% NEQ 100000 goto :error
 
-"%1" localhost:8400 wrong_id 100 1 1 0 2 2>1 | findstr /c:"authorization"  || goto :error
+"%1" 127.0.0.1:8400 wrong_id 100 1 1 0 2 2>1 | findstr /c:"authorization"  || goto :error
 
 goto :clean
 

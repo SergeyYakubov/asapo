@@ -120,11 +120,11 @@ TEST_F(ReceiverStatisticTests, TimerForAll) {
 
     auto stat = ExtractStat();
 
-    ASSERT_THAT(stat.extra_entities[StatisticEntity::kDatabase].second, Ge(0));
+    ASSERT_THAT(stat.extra_entities[StatisticEntity::kDatabase].second, Gt(0));
 
-    ASSERT_THAT(stat.extra_entities[StatisticEntity::kNetwork].second, Ge(0));
+    ASSERT_THAT(stat.extra_entities[StatisticEntity::kNetwork].second, Gt(0));
 
-    ASSERT_THAT(stat.extra_entities[StatisticEntity::kDisk].second, Ge(0));
+    ASSERT_THAT(stat.extra_entities[StatisticEntity::kDisk].second, Gt(0));
 }
 
 }

@@ -10,7 +10,6 @@ asapo_tool_bin=$3
 network_type=$4
 
 beamtime_id=asapo_test
-token=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id`
 
 stream1=s1
 stream2=s2
@@ -48,6 +47,8 @@ nomad run discovery.nmd
 nomad run broker.nmd
 
 sleep 3
+
+token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -type read $beamtime_id`
 
 echo "Start producers"
 mkdir -p ${receiver_folder}

@@ -5,7 +5,6 @@ set -e
 trap Cleanup EXIT
 
 beamtime_id=11111111
-token=`$3 token -secret auth_secret.key $beamtime_id`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -39,6 +38,8 @@ nomad run discovery.nmd
 nomad run broker.nmd
 
 sleep 1
+
+token=`$3 token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -type read $beamtime_id`
 
 #producer
 $1 localhost:8400 ${beamtime_id} 100 10 4 100 100

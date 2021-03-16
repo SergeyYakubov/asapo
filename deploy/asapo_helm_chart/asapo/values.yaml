@@ -55,6 +55,7 @@ ownServices:
 
 common:
   authSecret: "12ljzgneasfd"
+  authSecretAdmin: "12ljzgneasf123d"
   offlineDir: "/test_offline"
   onlineDir: "/test_online"
   asapoVersionTag: "develop"

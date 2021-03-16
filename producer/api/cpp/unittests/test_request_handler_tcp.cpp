@@ -195,13 +195,20 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io,
-                    Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id,
+                    Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, "",
                                                                ""),
                            sizeof(asapo::GenericRequestHeader), _))
             .WillOnce(
                 DoAll(
                     testing::SetArgPointee<3>(nullptr),
                     Return(sizeof(asapo::GenericRequestHeader))
+                ));
+        EXPECT_CALL(mock_io,
+                    Send_t(expected_sd, _,strlen(expected_beamtime_id), _))
+            .WillOnce(
+                DoAll(
+                    testing::SetArgPointee<3>(nullptr),
+                    Return(strlen(expected_beamtime_id))
                 ));
 
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))
@@ -236,13 +243,20 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io,
-                    Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id,
+                    Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, "",
                                                                ""),
                            sizeof(asapo::GenericRequestHeader), _))
             .WillOnce(
                 DoAll(
                     testing::SetArgPointee<3>(nullptr),
                     Return(sizeof(asapo::GenericRequestHeader))
+                ));
+        EXPECT_CALL(mock_io,
+                    Send_t(expected_sd, _,strlen(expected_beamtime_id), _))
+            .WillOnce(
+                DoAll(
+                    testing::SetArgPointee<3>(nullptr),
+                    Return(strlen(expected_beamtime_id))
                 ));
 
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))

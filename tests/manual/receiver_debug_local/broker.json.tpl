@@ -6,5 +6,6 @@
   "Port":{{ env "NOMAD_PORT_broker" }},
   "LogLevel":"info",
   "CheckResendInterval":10,
-  "SecretFile":"auth_secret.key"
+  "UserSecretFile":"auth_secret.key",
+  "AdminSecretFile":"auth_secret_admin.key"
 }

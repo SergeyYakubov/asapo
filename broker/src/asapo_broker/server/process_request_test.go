@@ -23,17 +23,29 @@ const wrongGroupID = "_bid2a5auidddp1vl71"
 const expectedSource = "datasource"
 const expectedStream = "stream"
 
+type MockAuthServer struct {
+}
+
+func (a * MockAuthServer) AuthorizeToken(tokenJWT string) (token Token, err error) {
+	if tokenJWT =="ok" {
+		return Token{
+			Sub:        "bt_"+expectedBeamtimeId,
+			AccessType: "read",
+		},nil
+	} else {
+		return Token{},errors.New("wrong JWT token")
+	}
+}
+
+
 func prepareTestAuth() {
 	expectedBeamtimeId = "beamtime_id"
 	expectedDBName = expectedBeamtimeId + "_" + expectedSource
-	auth = utils.NewHMACAuth("secret")
-	token, err := auth.GenerateToken(&expectedBeamtimeId)
-	if err != nil {
-		panic(err)
-	}
-	correctTokenSuffix = "?token=" + token
+
+	auth = &MockAuthServer{}
+	correctTokenSuffix = "?token=ok"
 	wrongTokenSuffix = "?blablabla=aa"
-	suffixWithWrongToken = "?token=blabla"
+	suffixWithWrongToken = "?token=wrong"
 }
 
 type request struct {
@@ -107,7 +119,7 @@ func TestProcessRequestTestSuite(t *testing.T) {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong token")))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong JWT token")))
 
 	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
 

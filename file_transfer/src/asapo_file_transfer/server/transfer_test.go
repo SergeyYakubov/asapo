@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -34,10 +35,10 @@ func prepareToken(folder string) string{
 	auth := utils.NewJWTAuth("key")
 
 	var claims utils.CustomClaims
-	var extraClaim utils.FolderTokenTokenExtraClaim
+	var extraClaim structs.FolderTokenTokenExtraClaim
 	extraClaim.RootFolder = folder
 	claims.ExtraClaims = &extraClaim
-	claims.Duration = time.Duration(1) * time.Minute
+	claims.SetExpiration(time.Duration(1) * time.Minute)
 	token,_ := auth.GenerateToken(&claims)
 	return token
 }

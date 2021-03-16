@@ -78,6 +78,11 @@ job "asapo-services" {
         destination   = "local/secret.key"
         change_mode   = "restart"
       }
+      template {
+        source        = "${scripts_dir}/auth_secret_admin.key"
+        destination   = "local/secret_admin.key"
+        change_mode   = "restart"
+      }
    }
   } #authorizer
   group "asapo-discovery" {

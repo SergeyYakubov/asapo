@@ -47,7 +47,9 @@ Error RequestFactory::AddReceiveDirectToFileHandler(std::unique_ptr<Request> &re
 
 Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request> &request,
                                            const GenericRequestHeader &request_header) const {
-    request->AddHandler(&request_handler_authorize_);
+    if (request_header.op_code != Opcode::kOpcodeAuthorize) {
+        request->AddHandler(&request_handler_authorize_);
+    }
 
     switch (request_header.op_code) {
         case Opcode::kOpcodeTransferData:
@@ -73,7 +75,8 @@ Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request> &request,
             break;
         }
         case Opcode::kOpcodeAuthorize: {
-            // do nothing
+            request->AddHandler(&request_handler_receive_metadata_);
+            request->AddHandler(&request_handler_authorize_);
             break;
         }
         case Opcode::kOpcodeStreamInfo: {

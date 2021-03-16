@@ -10,7 +10,7 @@ var CommandTests = []struct {
 	cmd    command
 	answer string
 }{
-	{command{"token", []string{"-secret", "secret_file", "beamtime"}}, "secret"},
+	{command{"token", []string{"-secret", "secret_file","-type","read","-endpoint","bla", "beamtime"}}, "secret"},
 	{command{"dummy", []string{"description"}}, "wrong"},
 }
 
@@ -22,7 +22,6 @@ func TestCommand(t *testing.T) {
 		err := DoCommand(test.cmd.name, test.cmd.args)
 		assert.Contains(t, err.Error(), test.answer, "")
 		assert.NotNil(t, err, "Should be error")
-
 	}
 
 }

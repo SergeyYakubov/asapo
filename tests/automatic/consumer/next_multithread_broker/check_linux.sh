@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 database_name=test_run_detector
-token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
+token_test_run=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5NDI0MjQsImp0aSI6ImMxNGVkbTNpcHQzZHQ4Y2JhczVnIiwic3ViIjoiYnRfdGVzdF9ydW4iLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlIjoicmVhZCJ9fQ.SBzrEy-d3ayhVZMSskYUMLM2LVHw3yiM32mIOcITh0g
 
 set -e
 
@@ -12,6 +12,7 @@ Cleanup() {
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop discovery
+    nomad stop authorizer
     nomad stop broker
 	echo "db.dropDatabase()" | mongo ${database_name}
 }
@@ -19,6 +20,7 @@ Cleanup() {
 
 nomad run nginx.nmd
 nomad run discovery.nmd
+nomad run authorizer.nmd
 nomad run broker.nmd
 
 sleep 1

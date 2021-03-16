@@ -3,7 +3,8 @@
   "LogLevel":"debug",
   "RootBeamtimesFolder":"@ASAP3_FOLDER@",
   "CurrentBeamlinesFolder":"@CURRENT_BEAMLINES_FOLDER@",
-  "SecretFile":"auth_secret.key",
+  "UserSecretFile":"auth_secret.key",
+  "AdminSecretFile":"auth_secret_admin.key",
   "Ldap":
     {
         "Uri" : "ldap://localhost:389",

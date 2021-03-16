@@ -12,10 +12,8 @@ network_type=$4
 data_source=detector
 
 beamtime_id1=asapo_test1
-token1=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id1`
 
 beamtime_id2=asapo_test2
-token2=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id2`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -55,6 +53,9 @@ nomad run discovery.nmd
 nomad run broker.nmd
 
 sleep 3
+
+token1=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -type read $beamtime_id1`
+token2=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -type read $beamtime_id2`
 
 echo "Start producers"
 mkdir -p ${receiver_folder1}

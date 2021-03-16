@@ -5,7 +5,9 @@ beamtime_id=asapo_test
 stream_in=detector
 
 indatabase_name=${beamtime_id}_${stream_in}
-token=IEfwsWa0GXky2S3MkxJSUHJT1sI8DD5teRdjBUXVRxk=
+
+#asapo_test read token
+token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTRhcDQzaXB0M2E0bmNpMDkwMCIsInN1YiI6ImJ0X2FzYXBvX3Rlc3QiLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlIjoicmVhZCJ9fQ.X5Up3PBd81i4X7wUBXGkIrLEVSL-WO9kijDtzOqasgg
 
 beamline=test
 

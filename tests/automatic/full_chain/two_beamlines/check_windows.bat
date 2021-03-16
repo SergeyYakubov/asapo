@@ -13,17 +13,19 @@ SET year=2019
 SET receiver_folder1="%receiver_root_folder%\%facility%\gpfs\%beamline1%\%year%\data\%beamtime_id1%"
 SET receiver_folder2="%receiver_root_folder%\%facility%\gpfs\%beamline2%\%year%\data\%beamtime_id2%"
 
-"%3" token -secret auth_secret.key %beamtime_id1% > token
-set /P token1=< token
-"%3" token -secret auth_secret.key %beamtime_id2% > token
-set /P token2=< token
-
 set proxy_address="127.0.0.1:8400"
 
 echo db.%beamtime_id1%_%data_source%.insert({dummy:1}) | %mongo_exe% %beamtime_id1%_%data_source%
 echo db.%beamtime_id2%_%data_source%.insert({dummy:1}) | %mongo_exe% %beamtime_id2%_%data_source%
 
 call start_services.bat
+
+"%3" token -endpoint http://127.0.0.1:8400/asapo-authorizer -secret admin_token.key -type read %beamtime_id1% > token
+set /P token1=< token
+"%3" token -endpoint http://127.0.0.1:8400/asapo-authorizer -secret admin_token.key -type read %beamtime_id2% > token
+set /P token2=< token
+
+
 
 REM producer
 mkdir %receiver_folder1%
