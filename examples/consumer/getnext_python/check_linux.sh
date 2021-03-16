@@ -15,12 +15,14 @@ Cleanup() {
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop discovery
+    nomad stop authorizer
     nomad stop broker
 	echo "db.dropDatabase()" | mongo ${database_name}
 }
 
 nomad run nginx.nmd
 nomad run discovery.nmd
+nomad run authorizer.nmd
 nomad run broker.nmd
 
 for i in `seq 1 3`;
