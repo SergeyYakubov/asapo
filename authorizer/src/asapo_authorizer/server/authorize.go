@@ -3,6 +3,7 @@ package server
 import (
 	"asapo_authorizer/common"
 	log "asapo_common/logger"
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"errors"
 	"net/http"
@@ -154,7 +155,7 @@ func needHostAuthorization(creds SourceCredentials) bool {
 }
 
 func checkToken(token string, subject_expect string) (accessType string, err error) {
-	var extra_claim utils.AccessTokenExtraClaim
+	var extra_claim structs.AccessTokenExtraClaim
 	subject,err := Auth.UserAuth().CheckAndGetContent(token,&extra_claim)
 	if err!=nil {
 		return "",err

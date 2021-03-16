@@ -13,20 +13,6 @@ import (
 	"time"
 )
 
-type AuthorizationRequest struct {
-	Token   string
-	Command string
-	URL     string
-}
-
-type AuthorizationResponce struct {
-	Status       int
-	StatusText   string
-	UserName     string
-	Token        string
-	ValidityTime int
-}
-
 type Auth interface {
 	GenerateToken(...interface{}) (string, error)
 	ProcessAuth(http.HandlerFunc, string) http.HandlerFunc

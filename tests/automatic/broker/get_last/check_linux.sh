@@ -23,7 +23,6 @@ token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5MzU3NjgsImp0aSI6ImMxN
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
-
 sleep 1
 
 $1 -config settings.json &

@@ -7,6 +7,11 @@ echo db.data_default.insert({"_id":2}) | %mongo_exe% %database_name%  || goto :e
 set full_name="%1"
 set short_name="%~nx1"
 
+c:\opt\consul\nomad run authorizer.nmd
+c:\opt\consul\nomad run nginx.nmd
+ping 192.0.2.1 -n 1 -w 3000 > nul
+
+
 set token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5MzU3NjgsImp0aSI6ImMxNGNwbTNpcHQzZGRrbnFwYm9nIiwic3ViIjoiYnRfZGF0YSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.Jnhmj2i8zUbTzlmRCo6CUkqkD_FdyMxfNj_PztmnN-0
 
 start /B "" "%full_name%" -config settings.json
@@ -44,3 +49,6 @@ exit /b 1
 Taskkill /IM "%short_name%" /F
 echo db.dropDatabase() | %mongo_exe% %database_name%
 del /f groupid
+c:\opt\consul\nomad stop authorizer
+c:\opt\consul\nomad stop nginx
+c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill

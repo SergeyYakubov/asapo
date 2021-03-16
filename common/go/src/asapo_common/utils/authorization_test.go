@@ -8,8 +8,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type authorizationResponse struct {
+	Status       int
+	StatusText   string
+	UserName     string
+	Token        string
+	ValidityTime int
+}
+
 type JobClaim struct {
-	AuthorizationResponce
+	authorizationResponse
 	JobInd string
 }
 

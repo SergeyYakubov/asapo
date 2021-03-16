@@ -4,6 +4,7 @@ import (
 	"asapo_authorizer/authorization"
 	"asapo_authorizer/common"
 	"asapo_authorizer/ldap_client"
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -17,25 +18,25 @@ import (
 
 
 func prepareUserToken(payload string, accessType string) string{
-	Auth = authorization.NewAuth(nil,utils.NewJWTAuth("secret_user"),nil)
+	auth := authorization.NewAuth(nil,utils.NewJWTAuth("secret_user"),nil)
 	var claims utils.CustomClaims
-	var extraClaim utils.AccessTokenExtraClaim
+	var extraClaim structs.AccessTokenExtraClaim
 	claims.Subject = payload
 	extraClaim.AccessType = accessType
 	claims.ExtraClaims = &extraClaim
-	token, _ := Auth.AdminAuth().GenerateToken(&claims)
+	token, _ := auth.AdminAuth().GenerateToken(&claims)
 	return token
 }
 
 func prepareAdminToken(payload string) string{
-	Auth = authorization.NewAuth(nil,utils.NewJWTAuth("secret_admin"),nil)
+	auth:= authorization.NewAuth(nil,utils.NewJWTAuth("secret_admin"),nil)
 
 	var claims utils.CustomClaims
-	var extraClaim utils.AccessTokenExtraClaim
+	var extraClaim structs.AccessTokenExtraClaim
 	claims.Subject = payload
 	extraClaim.AccessType = "create"
 	claims.ExtraClaims = &extraClaim
-	token, _ := Auth.AdminAuth().GenerateToken(&claims)
+	token, _ := auth.AdminAuth().GenerateToken(&claims)
 	return token
 }
 

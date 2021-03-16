@@ -1,6 +1,7 @@
 package authorization
 
 import (
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"encoding/json"
 	"github.com/rs/xid"
@@ -29,7 +30,7 @@ func (auth *Auth) JWTAuth() utils.Auth {
 	return auth.authJWT
 }
 
-func subjectFromRequest(request TokenRequest) string {
+func subjectFromRequest(request structs.IssueTokenRequest) string {
 	for key,value := range request.Subject {
 		switch key {
 		case "beamline":
@@ -43,9 +44,9 @@ func subjectFromRequest(request TokenRequest) string {
 	return ""
 }
 
-func (auth *Auth) PrepareAccessToken(request TokenRequest, userToken bool) (string, error) {
+func (auth *Auth) PrepareAccessToken(request structs.IssueTokenRequest, userToken bool) (string, error) {
 	var claims utils.CustomClaims
-	var extraClaim utils.AccessTokenExtraClaim
+	var extraClaim structs.AccessTokenExtraClaim
 
 	claims.Subject = subjectFromRequest(request)
 
@@ -62,12 +63,12 @@ func (auth *Auth) PrepareAccessToken(request TokenRequest, userToken bool) (stri
 	}
 }
 
-func UserTokenResponce(request TokenRequest, token string) []byte {
+func UserTokenResponce(request structs.IssueTokenRequest, token string) []byte {
 	expires := ""
 	if request.DaysValid>0 {
 		expires = time.Now().Add(time.Duration(request.DaysValid*24) * time.Hour).UTC().Format(time.RFC3339)
 	}
-	answer := TokenResponce{
+	answer := structs.IssueTokenResponse{
 		Token:      token,
 		AccessType: request.AccessType,
 		Sub:  subjectFromRequest(request),

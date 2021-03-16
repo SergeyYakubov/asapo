@@ -3,12 +3,13 @@ package server
 import (
 	"asapo_authorizer/authorization"
 	log "asapo_common/logger"
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"errors"
 	"net/http"
 )
 
-func extractUserTokenrequest(r *http.Request) (request authorization.TokenRequest, err error) {
+func extractUserTokenrequest(r *http.Request) (request structs.IssueTokenRequest, err error) {
 	err = utils.ExtractRequest(r, &request)
 	if err != nil {
 		return request, err
@@ -37,7 +38,7 @@ func routeAuthorisedTokenIssue(w http.ResponseWriter, r *http.Request) {
 	Auth.AdminAuth().ProcessAuth(checkAccessToken, "admin")(w, r)
 }
 func checkAccessToken(w http.ResponseWriter, r *http.Request) {
-	var extraClaim utils.AccessTokenExtraClaim
+	var extraClaim structs.AccessTokenExtraClaim
 	var claims *utils.CustomClaims
 	if err := utils.JobClaimFromContext(r, &claims, &extraClaim); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

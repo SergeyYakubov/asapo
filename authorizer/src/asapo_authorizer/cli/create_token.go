@@ -3,6 +3,7 @@ package cli
 import (
 	"asapo_authorizer/authorization"
 	"asapo_authorizer/server"
+	"asapo_common/structs"
 	"errors"
 	"fmt"
 	"os"
@@ -16,7 +17,7 @@ type tokenFlags struct {
 	DaysValid  int
 }
 
-func userTokenRequest(flags tokenFlags) (request authorization.TokenRequest, err error) {
+func userTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, err error) {
 	if (flags.Beamline=="" && flags.Beamtime=="") || (flags.Beamline!="" && flags.Beamtime!="") {
 		return request,errors.New("beamtime or beamline must be set")
 	}
@@ -37,7 +38,7 @@ func userTokenRequest(flags tokenFlags) (request authorization.TokenRequest, err
 }
 
 
-func adminTokenRequest(flags tokenFlags) (request authorization.TokenRequest, err error) {
+func adminTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, err error) {
 	if flags.Beamline+flags.Beamtime!="" {
 		return request,errors.New("beamtime and beamline must not be set for admin token")
 	}
@@ -78,7 +79,7 @@ func (cmd *command) CommandCreate_token() (err error) {
 	return nil
 }
 
-func getTokenRequest(flags tokenFlags) (request authorization.TokenRequest, userToken bool, err error) {
+func getTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, userToken bool, err error) {
 	switch flags.Type {
 	case "user-token":
 		request, err = userTokenRequest(flags)
@@ -87,10 +88,10 @@ func getTokenRequest(flags tokenFlags) (request authorization.TokenRequest, user
 		request, err = adminTokenRequest(flags)
 		userToken = false
 	default:
-		return authorization.TokenRequest{}, false, errors.New("wrong token type")
+		return structs.IssueTokenRequest{}, false, errors.New("wrong token type")
 	}
 	if err != nil {
-		return authorization.TokenRequest{},false,  err
+		return structs.IssueTokenRequest{},false,  err
 	}
 	return request, userToken, err
 }

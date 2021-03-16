@@ -9,6 +9,11 @@ set short_name="%~nx1"
 
 set token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5NDIxMjcsImp0aSI6ImMxNGViYnJpcHQzZHQ4Y2JhczUwIiwic3ViIjoiYnRfZGF0YSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.U776By_privbW9WbQCSTmk9hLZVTXzTWNNap1XOIFlM
 
+c:\opt\consul\nomad run authorizer.nmd
+c:\opt\consul\nomad run nginx.nmd
+ping 192.0.2.1 -n 1 -w 3000 > nul
+
+
 start /B "" "%full_name%" -config settings.json
 
 ping 192.0.2.1 -n 1 -w 1000 > nul
@@ -34,3 +39,6 @@ Taskkill /IM "%short_name%" /F
 echo db.dropDatabase() | %mongo_exe% %database_name%
 del /f token
 del /f groupid
+c:\opt\consul\nomad stop authorizer
+c:\opt\consul\nomad stop nginx
+c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill

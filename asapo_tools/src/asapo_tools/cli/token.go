@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"asapo_tools/rest_client"
 	"bytes"
@@ -18,12 +19,6 @@ type tokenFlags struct {
 	AccessType   string
 	SecretFile   string
 	TokenDetails bool
-}
-
-type tokenRequest struct {
-	Subject    map[string]string
-	DaysValid  int
-	AccessType string
 }
 
 func generateToken(flags tokenFlags, secret string) string {
@@ -56,7 +51,7 @@ func (cmd *command) CommandToken() error {
 		return err
 	}
 
-	request := tokenRequest{
+	request := structs.IssueTokenRequest{
 		Subject:    map[string]string{"beamtimeId": flags.Name},
 		DaysValid:  180,
 		AccessType: flags.AccessType,
@@ -91,9 +86,7 @@ func (cmd *command) CommandToken() error {
 		return nil
 	}
 
-	token := struct {
-		Token string
-	}{}
+	var token structs.IssueTokenResponse
 
 	err = json.Unmarshal(body, &token)
 	if err == nil {

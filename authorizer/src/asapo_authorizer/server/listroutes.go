@@ -12,6 +12,12 @@ var listRoutes = utils.Routes{
 		routeAuthorize,
 	},
 	utils.Route{
+		"Authorize",
+		"POST",
+		"/introspect",
+		routeIntrospect,
+	},
+	utils.Route{
 		"HealthCheck",
 		"Get",
 		"/health-check",

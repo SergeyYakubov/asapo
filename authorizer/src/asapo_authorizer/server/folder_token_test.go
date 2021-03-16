@@ -2,6 +2,7 @@ package server
 
 import (
 	"asapo_authorizer/authorization"
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -53,7 +54,7 @@ func TestFolderToken(t *testing.T) {
 		if w.Code == http.StatusOK {
 			body, _ := ioutil.ReadAll(w.Body)
 			claims,_ := utils.CheckJWTToken(string(body),"secret_folder")
-			var extra_claim utils.FolderTokenTokenExtraClaim
+			var extra_claim structs.FolderTokenTokenExtraClaim
 			utils.MapToStruct(claims.(*utils.CustomClaims).ExtraClaims.(map[string]interface{}), &extra_claim)
 			assert.Equal(t, abs_path, extra_claim.RootFolder, test.message)
 		} else {

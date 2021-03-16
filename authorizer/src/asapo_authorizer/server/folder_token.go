@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"net/http"
 	"time"
@@ -25,7 +26,7 @@ type folderToken struct {
 
 func prepareJWTToken(request folderTokenRequest) (string,error) {
 	var claims utils.CustomClaims
-	var extraClaim utils.FolderTokenTokenExtraClaim
+	var extraClaim structs.FolderTokenTokenExtraClaim
 
 	extraClaim.RootFolder = request.Folder
 	claims.ExtraClaims = &extraClaim

@@ -3,6 +3,7 @@ package cli
 import (
 	"asapo_authorizer/authorization"
 	"asapo_authorizer/server"
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"encoding/json"
 	"testing"
@@ -48,12 +49,12 @@ func TestGenerateToken(t *testing.T) {
 			continue
 		}
 		assert.Nil(t, err, test.msg)
-		var token authorization.TokenResponce
+		var token structs.IssueTokenResponse
 		json.Unmarshal(outBuf.(*bytes.Buffer).Bytes(), &token)
 
 		claims,_ := utils.CheckJWTToken(token.Token,test.key)
 		cclaims,_:= claims.(*utils.CustomClaims)
-		var extra_claim utils.AccessTokenExtraClaim
+		var extra_claim structs.AccessTokenExtraClaim
 		utils.MapToStruct(cclaims.ExtraClaims.(map[string]interface{}), &extra_claim)
 		assert.Equal(t, test.tokenSubject, cclaims.Subject, test.msg)
 		assert.Equal(t, test.tokenAccessType, extra_claim.AccessType, test.msg)
