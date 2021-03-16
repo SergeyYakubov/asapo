@@ -46,8 +46,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
     string data_source
     string user_token
   cppclass StreamInfo:
-    string Json(bool add_last_id)
-    bool SetFromJson(string json_str, bool read_last_id)
+    string Json()
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   cppclass NetworkConnectionType:
@@ -55,6 +54,11 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   NetworkConnectionType NetworkConnectionType_kUndefined "asapo::NetworkConnectionType::kUndefined"
   NetworkConnectionType NetworkConnectionType_kAsapoTcp "asapo::NetworkConnectionType::kAsapoTcp"
   NetworkConnectionType NetworkConnectionType_kFabric "asapo::NetworkConnectionType::kFabric"
+  cppclass StreamFilter:
+    pass
+  StreamFilter StreamFilter_kAllStreams "asapo::StreamFilter::kAllStreams"
+  StreamFilter StreamFilter_kFinishedStreams "asapo::StreamFilter::kFinishedStreams"
+  StreamFilter StreamFilter_kUnfinishedStreams "asapo::StreamFilter::kUnfinishedStreams"
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass Consumer:
@@ -66,6 +70,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         Error GetLast(MessageMeta* info, MessageData* data, string stream)
         Error GetById(uint64_t id, MessageMeta* info, MessageData* data, string stream)
         uint64_t GetCurrentSize(string stream, Error* err)
+        uint64_t GetCurrentDatasetCount(string stream, bool include_incomplete, Error* err)
         Error SetLastReadMarker(string group_id, uint64_t value, string stream)
         Error ResetLastReadMarker(string group_id, string stream)
         Error Acknowledge(string group_id, uint64_t id, string stream)
@@ -79,7 +84,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         DataSet GetLastDataset(uint64_t min_size, string stream, Error* err)
         DataSet GetDatasetById(uint64_t id, uint64_t min_size, string stream, Error* err)
         Error RetrieveData(MessageMeta* info, MessageData* data)
-        vector[StreamInfo] GetStreamList(string from_stream, Error* err)
+        vector[StreamInfo] GetStreamList(string from_stream, StreamFilter filter, Error* err)
         void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts)
         void InterruptCurrentOperation()
 

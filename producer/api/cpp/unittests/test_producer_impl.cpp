@@ -210,7 +210,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinish) {
                                                                next_stream_meta.c_str(),
                                                                expected_id + 1,
                                                                0,
-                                                               asapo::ProducerImpl::kFinishStreamKeyword.c_str(),
+                                                               asapo::kFinishStreamKeyword.c_str(),
                                                                expected_stream,
                                                                asapo::IngestModeFlags::kTransferMetaDataOnly,
                                                                0,
@@ -234,7 +234,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinishWithNoNextStream) {
     producer.SetCredentials(expected_credentials);
 
     std::string
-        next_stream_meta = std::string("{\"next_stream\":") + "\"" + asapo::ProducerImpl::kNoNextStreamKeyword
+        next_stream_meta = std::string("{\"next_stream\":") + "\"" + asapo::kNoNextStreamKeyword
         + "\"}";
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
@@ -242,7 +242,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinishWithNoNextStream) {
                                                                next_stream_meta.c_str(),
                                                                expected_id + 1,
                                                                0,
-                                                               asapo::ProducerImpl::kFinishStreamKeyword.c_str(),
+                                                               asapo::kFinishStreamKeyword.c_str(),
                                                                expected_stream,
                                                                asapo::IngestModeFlags::kTransferMetaDataOnly,
                                                                0,

@@ -14,8 +14,12 @@ import (
 )
 
 type StreamInfo struct {
-	Name      string `json:"name"`
-	Timestamp int64  `json:"timestampCreated"`
+	LastId        int64  `json:"lastId"`
+	Name          string `json:"name"`
+	Timestamp     int64  `json:"timestampCreated"`
+	TimestampLast int64  `json:"timestampLast"`
+	Finished      bool   `json:"finished"`
+	NextStream    string `json:"nextStream"`
 }
 
 type StreamsRecord struct {
@@ -38,7 +42,9 @@ func (ss *Streams) tryGetFromCache(db_name string, updatePeriodMs int) (StreamsR
 	if !ok {
 		return StreamsRecord{}, errors.New("no records for " + db_name)
 	}
-	return rec, nil
+	res :=StreamsRecord{}
+	utils.DeepCopy(rec,&res)
+	return res, nil
 }
 
 func readStreams(db *Mongodb, db_name string) (StreamsRecord, error) {
@@ -57,32 +63,93 @@ func readStreams(db *Mongodb, db_name string) (StreamsRecord, error) {
 	return rec, nil
 }
 
-func updateTimestamps(db *Mongodb, db_name string, rec *StreamsRecord) {
-	ss,dbFound :=streams.records[db_name]
+func getCurrentStreams(db_name string) []StreamInfo {
+	ss, dbFound := streams.records[db_name]
 	currentStreams := []StreamInfo{}
 	if dbFound {
 		// sort streams by name
-		currentStreams=ss.Streams
-		sort.Slice(currentStreams,func(i, j int) bool {
-			return currentStreams[i].Name>=currentStreams[j].Name
+		currentStreams = ss.Streams
+		sort.Slice(currentStreams, func(i, j int) bool {
+			return currentStreams[i].Name >= currentStreams[j].Name
 		})
 	}
+	return currentStreams
+}
+
+func findStreamAmongCurrent(currentStreams []StreamInfo, record StreamInfo) (int, bool) {
+	ind := sort.Search(len(currentStreams), func(i int) bool {
+		return currentStreams[i].Name >= record.Name
+	})
+	if ind < len(currentStreams) && currentStreams[ind].Name == record.Name {
+		return ind, true
+	}
+	return -1, false
+}
+
+func fillInfoFromEarliestRecord(db *Mongodb, db_name string, rec *StreamsRecord, record StreamInfo, i int) error {
+	res, err := db.getEarliestRawRecord(db_name, record.Name)
+	if err != nil {
+		return err
+	}
+	ts, ok := utils.GetInt64FromMap(res, "timestamp")
+	if ok {
+		rec.Streams[i].Timestamp = ts
+	} else {
+		return errors.New("fillInfoFromEarliestRecord: cannot extact timestamp")
+	}
+	return nil
+}
+
+func fillInfoFromLastRecord(db *Mongodb, db_name string, rec *StreamsRecord, record StreamInfo, i int) error {
+	res, err := db.getLastRawRecord(db_name, record.Name)
+	if err != nil {
+		return err
+	}
+	mrec, ok := ExtractMessageRecord(res)
+	if !ok {
+		return errors.New("fillInfoFromLastRecord: cannot extract record")
+	}
+
+	rec.Streams[i].LastId = int64(mrec.ID)
+	rec.Streams[i].TimestampLast = int64(mrec.Timestamp)
+	rec.Streams[i].Finished = mrec.FinishedStream
+	if mrec.FinishedStream {
+		rec.Streams[i].LastId = rec.Streams[i].LastId - 1
+		if mrec.NextStream != no_next_stream_keyword {
+			rec.Streams[i].NextStream = mrec.NextStream
+		}
+	}
+	return nil
+}
+
+func updateStreamInfofromCurrent(currentStreams []StreamInfo, record StreamInfo, rec *StreamInfo) (found bool, updateFinished bool) {
+	ind, found := findStreamAmongCurrent(currentStreams, record)
+	if found {
+		*rec = currentStreams[ind]
+		if currentStreams[ind].Finished {
+			return found, true
+		}
+	}
+	return found, false
+}
+
+func updateStreamInfos(db *Mongodb, db_name string, rec *StreamsRecord) error {
+	currentStreams := getCurrentStreams(db_name)
 	for i, record := range rec.Streams {
-		ind := sort.Search(len(currentStreams),func(i int) bool {
-			return currentStreams[i].Name>=record.Name
-		})
-		if ind < len(currentStreams) && currentStreams[ind].Name == record.Name { // record found, just skip it
-			rec.Streams[i].Timestamp = currentStreams[ind].Timestamp
+		found, mayContinue := updateStreamInfofromCurrent(currentStreams, record, &rec.Streams[i])
+		if mayContinue {
 			continue
 		}
-		res, err := db.getEarliestRecord(db_name, record.Name)
-		if err == nil {
-			ts,ok:=utils.InterfaceToInt64(res["timestamp"])
-			if ok {
-				rec.Streams[i].Timestamp = ts
+		if !found { // set timestamp
+			if err := fillInfoFromEarliestRecord(db, db_name, rec, record, i); err != nil {
+				return err
 			}
 		}
+		if err := fillInfoFromLastRecord(db, db_name, rec, record, i); err != nil { // update firstStream last record (timestamp, stream finished flag)
+			return err
+		}
 	}
+	return nil
 }
 
 func sortRecords(rec *StreamsRecord) {
@@ -96,35 +163,113 @@ func (ss *Streams) updateFromDb(db *Mongodb, db_name string) (StreamsRecord, err
 	if err != nil {
 		return StreamsRecord{}, err
 	}
-	updateTimestamps(db, db_name, &rec)
+	err = updateStreamInfos(db, db_name, &rec)
+	if err != nil {
+		return StreamsRecord{}, err
+	}
+
 	sortRecords(&rec)
-	if len(rec.Streams)>0 {
+	if len(rec.Streams) > 0 {
 		ss.records[db_name] = rec
 		ss.lastUpdated = time.Now().UnixNano()
 	}
 	return rec, nil
 }
 
-func (ss *Streams) getStreams(db *Mongodb, db_name string, from string) (StreamsRecord, error) {
-	streamsLock.Lock()
-	rec, err := ss.tryGetFromCache(db_name,db.settings.UpdateStreamCachePeriodMs)
-	if err != nil {
-		rec, err = ss.updateFromDb(db, db_name)
+func getFiltersFromString(filterString string) (string, string, error) {
+	firstStream := ""
+	streamStatus := ""
+	s := strings.Split(filterString, "_")
+	switch len(s) {
+	case 1:
+		firstStream = s[0]
+	case 2:
+		firstStream = s[0]
+		streamStatus = s[1]
+	default:
+		return "", "", errors.New("wrong format: " + filterString)
 	}
-	streamsLock.Unlock()
-	if err != nil {
-		return StreamsRecord{}, err
+	if streamStatus == "" {
+		streamStatus = stream_filter_all
+	}
+	return firstStream, streamStatus, nil
+}
+
+func getStreamsParamsFromRequest(request Request) (string, string, error) {
+	if request.ExtraParam == "" {
+		return "", stream_filter_all, nil
 	}
 
-	if from != "" {
+	firstStream, streamStatus, err := getFiltersFromString(request.ExtraParam)
+	if err != nil {
+		return "", "", err
+	}
+
+	err = checkStreamstreamStatus(streamStatus)
+	if err != nil {
+		return "", "", err
+	}
+
+	return firstStream, streamStatus, nil
+}
+
+func checkStreamstreamStatus(streamStatus string) error {
+	if !utils.StringInSlice(streamStatus, []string{stream_filter_all, stream_filter_finished, stream_filter_unfinished}) {
+		return errors.New("getStreamsParamsFromRequest: wrong streamStatus " + streamStatus)
+	}
+	return nil
+}
+
+func keepStream(rec StreamInfo, streamStatus string) bool {
+	return (rec.Finished && streamStatus == stream_filter_finished) || (!rec.Finished && streamStatus == stream_filter_unfinished)
+}
+
+func filterStreams(rec StreamsRecord, firstStream string, streamStatus string) []StreamInfo {
+	limitedStreams := limitStreams(rec, firstStream)
+
+	if streamStatus == stream_filter_all {
+		return limitedStreams
+	}
+	nextStreams := limitedStreams[:0]
+	for _, rec := range limitedStreams {
+		if keepStream(rec, streamStatus) {
+			nextStreams = append(nextStreams, rec)
+		}
+	}
+	return nextStreams
+}
+
+func limitStreams(rec StreamsRecord, firstStream string) []StreamInfo {
+	if firstStream != "" {
 		ind := len(rec.Streams)
 		for i, rec := range rec.Streams {
-			if rec.Name == from {
+			if rec.Name == firstStream {
 				ind = i
 				break
 			}
 		}
 		rec.Streams = rec.Streams[ind:]
 	}
+	return rec.Streams
+}
+
+func (ss *Streams) getStreams(db *Mongodb, request Request) (StreamsRecord, error) {
+	firstStream, streamStatus, err := getStreamsParamsFromRequest(request)
+	if err != nil {
+		return StreamsRecord{}, err
+	}
+
+	streamsLock.Lock()
+	rec, err := ss.tryGetFromCache(request.DbName, db.settings.UpdateStreamCachePeriodMs)
+	if err != nil {
+		rec, err = ss.updateFromDb(db, request.DbName)
+	}
+	streamsLock.Unlock()
+	if err != nil {
+		return StreamsRecord{}, err
+	}
+
+	rec.Streams = filterStreams(rec, firstStream, streamStatus)
+
 	return rec, nil
 }

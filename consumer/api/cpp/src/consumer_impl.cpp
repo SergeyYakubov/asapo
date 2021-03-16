@@ -529,20 +529,8 @@ Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std:
 }
 
 uint64_t ConsumerImpl::GetCurrentSize(std::string stream, Error* err) {
-    RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        +"/" + std::move(stream) + "/size";
-    auto responce = BrokerRequestWithTimeout(ri, err);
-    if (*err) {
-        return 0;
-    }
-
-    JsonStringParser parser(responce);
-    uint64_t size;
-    if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
-        return 0;
-    }
-    return size;
+    auto ri = GetSizeRequestForSingleMessagesStream(stream);
+    return GetCurrentCount(stream,ri,err);
 }
 
 Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) {
@@ -657,7 +645,7 @@ StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
     }
     for (auto stream_encoded : streams_endcoded) {
         StreamInfo si;
-        auto ok = si.SetFromJson(stream_encoded, false);
+        auto ok = si.SetFromJson(stream_encoded);
         if (!ok) {
             *err = TextError("cannot parse " + stream_encoded);
             return StreamInfos{};
@@ -667,21 +655,37 @@ StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
     return streams;
 }
 
-StreamInfos ConsumerImpl::GetStreamList(std::string from, Error* err) {
+std::string filterToString(StreamFilter filter) {
+    switch(filter) {
+        case StreamFilter::kAllStreams:
+            return "all";
+        case StreamFilter::kFinishedStreams:
+            return "finished";
+        case StreamFilter::kUnfinishedStreams:
+            return "unfinished";
+    }
+}
 
+
+StreamInfos ConsumerImpl::GetStreamList(std::string from,StreamFilter filter, Error* err) {
+    RequestInfo ri = GetStreamListRequest(from, filter);
+
+    auto response = BrokerRequestWithTimeout(ri, err);
+    if (*err) {
+        return StreamInfos{};
+    }
+    return ParseStreamsFromResponse(std::move(response), err);
+}
+
+RequestInfo ConsumerImpl::GetStreamListRequest(const std::string &from, const StreamFilter &filter) const {
     RequestInfo ri;
     ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/0/streams";
     ri.post = false;
     if (!from.empty()) {
         ri.extra_params = "&from=" + from;
     }
-
-    auto response = BrokerRequestWithTimeout(ri, err);
-    if (*err) {
-        return StreamInfos{};
-    }
-
-    return ParseStreamsFromResponse(std::move(response), err);
+    ri.extra_params +="&filter="+filterToString(filter);
+    return ri;
 }
 
 Error ConsumerImpl::UpdateFolderTokenIfNeeded(bool ignore_existing) {
@@ -836,6 +840,41 @@ Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
 }
 void ConsumerImpl::InterruptCurrentOperation() {
     interrupt_flag_= true;
+}
+
+uint64_t ConsumerImpl::GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) {
+    RequestInfo ri = GetSizeRequestForDatasetStream(stream, include_incomplete);
+    return GetCurrentCount(stream,ri,err);
+}
+
+RequestInfo ConsumerImpl::GetSizeRequestForDatasetStream(std::string &stream, bool include_incomplete) const {
+    RequestInfo ri = GetSizeRequestForSingleMessagesStream(stream);
+    ri.extra_params = std::string("&incomplete=")+(include_incomplete?"true":"false");
+    return ri;
+}
+
+uint64_t ConsumerImpl::GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err) {
+    auto responce = BrokerRequestWithTimeout(ri, err);
+    if (*err) {
+        return 0;
+    }
+    return ParseGetCurrentCountResponce(err, responce);
+}
+
+uint64_t ConsumerImpl::ParseGetCurrentCountResponce(Error* err, const std::string &responce) const {
+    JsonStringParser parser(responce);
+    uint64_t size;
+    if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
+        return 0;
+    }
+    return size;
+}
+
+RequestInfo ConsumerImpl::GetSizeRequestForSingleMessagesStream(std::string &stream) const {
+    RequestInfo ri;
+    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+        +"/" + std::move(stream) + "/size";
+    return ri;
 }
 
 }

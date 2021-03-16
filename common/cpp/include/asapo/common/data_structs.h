@@ -11,6 +11,10 @@
 
 namespace asapo {
 
+const std::string kFinishStreamKeyword = "asapo_finish_stream";
+const std::string kNoNextStreamKeyword = "asapo_no_next";
+
+
 class JsonStringParser;
 
 uint64_t NanosecsEpochFromTimePoint(std::chrono::system_clock::time_point);
@@ -18,7 +22,6 @@ uint64_t  EpochNanosecsFromNow();
 std::chrono::system_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_from_epoch);
 std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec);
 uint64_t NanosecsEpochFromISODate(std::string date_time);
-
 
 bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val);
 
@@ -41,10 +44,12 @@ class MessageMeta {
 struct StreamInfo {
     uint64_t last_id{0};
     std::string name;
+    bool finished{false};
+    std::string next_stream;
     std::chrono::system_clock::time_point timestamp_created;
     std::chrono::system_clock::time_point timestamp_lastentry;
-    std::string Json(bool add_last) const;
-    bool SetFromJson(const std::string& json_string,bool read_last);
+    std::string Json() const;
+    bool SetFromJson(const std::string &json_string);
 };
 
 using StreamInfos = std::vector<StreamInfo>;

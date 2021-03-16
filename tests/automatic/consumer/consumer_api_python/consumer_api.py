@@ -79,6 +79,14 @@ def check_single(consumer, group_id):
     size = consumer.get_current_size()
     assert_eq(size, 5, "get_current_size")
 
+    try:
+        size = consumer.get_current_dataset_count(include_incomplete = True)
+    except asapo_consumer.AsapoWrongInputError as err:
+        pass
+    else:
+        exit_on_noerr("get_current_dataset_count for single messages err")
+
+
     consumer.reset_lastread_marker(group_id)
 
     _, meta = consumer.get_next(group_id, meta_only=True)
@@ -121,14 +129,30 @@ def check_single(consumer, group_id):
     _, meta = consumer.get_next(group_id, meta_only=True, stream = "stream2")
     assert_metaname(meta, "21", "get next stream2")
 
-    streams = consumer.get_stream_list("")
+    streams = consumer.get_stream_list("","all")
     assert_eq(len(streams), 4, "number of streams")
     print(streams)
     assert_eq(streams[0]["name"], "default", "streams_name1")
+    assert_eq(streams[0]["finished"], False, "streams_finished1")
     assert_eq(streams[1]["name"], "streamfts", "streams_name2")
     assert_eq(streams[2]["name"], "stream1", "streams_name2")
     assert_eq(streams[3]["name"], "stream2", "streams_name3")
     assert_eq(streams[1]["timestampCreated"], 1000, "streams_timestamp2")
+    assert_eq(streams[2]["timestampLast"], 2000, "streams_timestamplast2")
+    assert_eq(streams[2]["finished"], True, "streams_finished2")
+    assert_eq(streams[2]["nextStream"], "ns", "next stream 2")
+    assert_eq(streams[2]["lastId"], 5, "last id stream 2")
+    assert_eq(streams[3]["finished"], True, "streams_finished3")
+    assert_eq(streams[3]["nextStream"], "", "next stream 3")
+    assert_eq(streams[3]["lastId"], 5, "last id stream 3")
+
+    finished_streams = consumer.get_stream_list("","finished")
+    assert_eq(len(finished_streams), 2, "number of finished streams")
+    assert_eq(finished_streams[0]["name"], "stream1", "finished streams_name1")
+
+    unfinished_streams = consumer.get_stream_list("","unfinished")
+    assert_eq(len(unfinished_streams), 2, "number of unfinished streams")
+    assert_eq(unfinished_streams[0]["name"], "default", "unfinished streams_name1")
 
     # acks
     try:
@@ -269,6 +293,9 @@ def check_dataset(consumer, group_id):
     assert_eq(res['id'], 8, "get_dataset_by_id1 id")
     assert_metaname(res['content'][2], "8_3", "get get_dataset_by_id1 name3")
 
+    size = consumer.get_current_dataset_count()
+    assert_eq(size, 10, "get_current_dataset_count")
+
     # incomplete datesets without min_size given
     try:
         consumer.get_next_dataset(group_id, stream = "incomplete")
@@ -308,6 +335,14 @@ def check_dataset(consumer, group_id):
     res = consumer.get_dataset_by_id(2, min_size=1, stream = "incomplete")
     assert_eq(res['id'], 2, "get_dataset_by_id incomplete with minsize")
 
+    size = consumer.get_current_dataset_count(stream = "incomplete", include_incomplete = False)
+    assert_eq(size, 0, "get_current_dataset_count excluding incomplete")
+
+    size = consumer.get_current_dataset_count(stream = "incomplete", include_incomplete = True)
+    assert_eq(size, 5, "get_current_dataset_count including incomplete")
+
+    size = consumer.get_current_size(stream = "incomplete") # should work as well
+    assert_eq(size, 5, "get_current_size for datasets")
 
 source, path, beamtime, token, mode = sys.argv[1:]
 

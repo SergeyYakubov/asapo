@@ -140,6 +140,8 @@ StreamInfo PrepareStreamInfo() {
     StreamInfo sinfo;
     sinfo.last_id = 123;
     sinfo.name = "test";
+    sinfo.next_stream = "next";
+    sinfo.finished = true;
     sinfo.timestamp_created = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
     sinfo.timestamp_lastentry = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(2));
     return sinfo;
@@ -157,36 +159,24 @@ TEST(StreamInfo, ConvertFromJson) {
     StreamInfo result;
 
     auto sinfo = PrepareStreamInfo();
-    std::string json = sinfo.Json(true);
+    std::string json = sinfo.Json();
 
-    auto ok = result.SetFromJson(json,true);
+    auto ok = result.SetFromJson(json);
 
     ASSERT_THAT(ok, Eq(true));
     ASSERT_THAT(result.last_id, sinfo.last_id);
     ASSERT_THAT(result.name, sinfo.name);
     ASSERT_THAT(result.timestamp_created, sinfo.timestamp_created);
     ASSERT_THAT(result.timestamp_lastentry, sinfo.timestamp_lastentry);
+    ASSERT_THAT(result.finished, sinfo.finished);
+    ASSERT_THAT(result.next_stream, sinfo.next_stream);
 }
-
-TEST(StreamInfo, ConvertFromJsonWithoutID) {
-    StreamInfo result;
-
-    auto sinfo = PrepareStreamInfo();
-    std::string json = sinfo.Json(false);
-
-    auto ok = result.SetFromJson(json,false);
-
-    ASSERT_THAT(ok, Eq(true));
-    ASSERT_THAT(result.name, sinfo.name);
-    ASSERT_THAT(result.timestamp_created, sinfo.timestamp_created);
-}
-
 
 TEST(StreamInfo, ConvertFromJsonErr) {
     StreamInfo result;
 
     std::string json = R"({"lastId":123)";
-    auto ok = result.SetFromJson(json,true);
+    auto ok = result.SetFromJson(json);
 
     ASSERT_THAT(ok, Eq(false));
     ASSERT_THAT(result.last_id, Eq(0));
@@ -195,20 +185,12 @@ TEST(StreamInfo, ConvertFromJsonErr) {
 TEST(StreamInfo, ConvertToJson) {
     auto sinfo = PrepareStreamInfo();
 
-    std::string expected_json = R"({"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":2000000})";
-    auto json = sinfo.Json(true);
+    std::string expected_json = R"({"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":2000000,"finished":true,"nextStream":"next"})";
+    auto json = sinfo.Json();
 
-    ASSERT_THAT(expected_json, Eq(json));
+    ASSERT_THAT(json,Eq(expected_json));
 }
 
-TEST(StreamInfo, ConvertToJsonWithoutID) {
-    auto sinfo = PrepareStreamInfo();
-
-    std::string expected_json = R"({"name":"test","timestampCreated":1000000})";
-    auto json = sinfo.Json(false);
-
-    ASSERT_THAT(expected_json, Eq(json));
-}
 
 TEST(SourceCredentials, ConvertToString) {
     auto sc = SourceCredentials{SourceType::kRaw,"beamtime","beamline","source","token"};

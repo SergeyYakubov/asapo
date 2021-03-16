@@ -7,5 +7,6 @@ import (
 func routeGetStreams(w http.ResponseWriter, r *http.Request) {
 	keys := r.URL.Query()
 	from := keys.Get("from")
-	processRequest(w, r, "streams", from, false)
+	filter := keys.Get("filter")
+	processRequest(w, r, "streams", from+"_"+filter, false)
 }

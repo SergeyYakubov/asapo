@@ -12,7 +12,13 @@ for /l %%x in (1, 1, 10) do echo db.data_default.insert({"_id":%%x,"size":6,"nam
 
 for /l %%x in (1, 1, 5) do echo db.data_stream1.insert({"_id":%%x,"size":6,"name":"1%%x","timestamp":1000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
+echo db.data_stream1.insert({"_id":6,"size":0,"name":"asapo_finish_stream","timestamp":1000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"next_stream":"ns"}}) | %mongo_exe% %database_name%  || goto :error
+
 for /l %%x in (1, 1, 5) do echo db.data_stream2.insert({"_id":%%x,"size":6,"name":"2%%x","timestamp":2000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
+
+echo db.data_stream2.insert({"_id":6,"size":0,"name":"asapo_finish_stream","timestamp":2000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"next_stream":"asapo_no_next"}}) | %mongo_exe% %database_name%  || goto :error
+
+
 echo hello1 > 1
 
 

@@ -15,9 +15,6 @@
 namespace  asapo {
 
 const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
-const std::string ProducerImpl::kFinishStreamKeyword = "asapo_finish_stream";
-const std::string ProducerImpl::kNoNextStreamKeyword = "asapo_no_next";
-
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
                            asapo::RequestHandlerType type):
@@ -319,7 +316,7 @@ void ActivatePromise(std::shared_ptr<std::promise<StreamInfoResult>> promise, Re
                      Error err) {
     StreamInfoResult res;
     if (err == nullptr) {
-        auto ok = res.sinfo.SetFromJson(payload.response,true);
+        auto ok = res.sinfo.SetFromJson(payload.response);
         res.err = ok ? nullptr : ProducerErrorTemplates::kInternalServerError.Generate(
                       std::string("cannot read JSON string from server response: ") + payload.response).release();
     } else {

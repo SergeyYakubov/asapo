@@ -220,7 +220,7 @@ cdef class PyProducer:
             info = self.c_producer.get().GetStreamInfo(b_stream,timeout_ms,&err)
         if err:
             throw_exception(err)
-        return json.loads(_str(info.Json(True)))
+        return json.loads(_str(info.Json()))
 
     def last_stream(self, uint64_t timeout_ms = 1000):
         """
@@ -237,7 +237,7 @@ cdef class PyProducer:
             info = self.c_producer.get().GetLastStream(timeout_ms,&err)
         if err:
             throw_exception(err)
-        return json.loads(_str(info.Json(True)))
+        return json.loads(_str(info.Json()))
     def send_file(self, uint64_t id, local_path, exposed_path, user_meta=None, dataset=None, ingest_mode = DEFAULT_INGEST_MODE, stream = "default", callback=None):
         """
          :param id: unique data id
