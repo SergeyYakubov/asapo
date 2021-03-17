@@ -15,7 +15,7 @@ C:\Curl\curl.exe -v  --silent --data "{\"SourceCredentials\":\"processed%%c20180
 
 C:\Curl\curl.exe -v  --silent --data "{\"SourceCredentials\":\"raw%%c20180508-000-COM20181%%%%detector%%wrong\",\"OriginHost\":\"127.0.0.1:5555\"}" 127.0.0.1:5007/authorize --stderr - | findstr 401  || goto :error
 
-set token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTNxcmFyaXB0MzVjcWpuMmUxZyIsInN1YiI6ImJsX3AwNyIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.KQFj3hOJRpc7hPqwJyYmnQ31IrR1zSz4EifUuulmP5E"
+set token=%BLP07_TOKEN%
 C:\Curl\curl.exe -v  --silent --data "{\"SourceCredentials\":\"raw%%auto%%p07%%detector%%%token%\",\"OriginHost\":\"127.0.0.1:5555\"}" 127.0.0.1:5007/authorize --stderr - | findstr 11111111  || goto :error
 
 goto :clean

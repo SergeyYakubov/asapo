@@ -48,7 +48,7 @@ nomad run broker.nmd
 
 sleep 3
 
-token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -type read $beamtime_id`
+token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
 echo "Start producers"
 mkdir -p ${receiver_folder}

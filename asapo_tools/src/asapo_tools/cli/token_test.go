@@ -23,9 +23,9 @@ var tokenTests = []struct {
 	{command{args: []string{"-secret","secret.tmp"}},  false,false, "no file"},
 	{command{args: []string{"-secret","not_existing_file","payload"}}, false, false, "no file"},
 	{command{args: []string{"-secret","secret.tmp","beamtime_id"}},false,  false, "type is missing"},
-	{command{args: []string{"-secret","secret.tmp","-type","read","beamtime_id"}}, false, false, "endpoint is missing"},
-	{command{args: []string{"-secret","secret.tmp","-type","read","-endpoint","endpoint","-token-details","beamtime_id"}},true,  true, "ok"},
-	{command{args: []string{"-secret","secret.tmp","-type","read","-endpoint","endpoint","beamtime_id"}},  false,true, "without details"},
+	{command{args: []string{"-secret","secret.tmp","-types","read","beamtime_id"}}, false, false, "endpoint is missing"},
+	{command{args: []string{"-secret","secret.tmp","-types","read","-endpoint","endpoint","-token-details","beamtime_id"}},true,  true, "ok"},
+	{command{args: []string{"-secret","secret.tmp","-types","read","-endpoint","endpoint","beamtime_id"}},  false,true, "without details"},
 }
 
 func TestParseTokenFlags(t *testing.T) {

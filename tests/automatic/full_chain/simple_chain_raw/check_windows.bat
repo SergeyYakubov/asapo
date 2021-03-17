@@ -10,7 +10,7 @@ set proxy_address="127.0.0.1:8400"
 
 call start_services.bat
 
-"%3" token -endpoint http://127.0.0.1:8400/asapo-authorizer -secret admin_token.key -type read %beamtime_id% > token
+"%3" token -endpoint http://127.0.0.1:8400/asapo-authorizer -secret admin_token.key -types read %beamtime_id% > token
 
 set /P token=< token
 

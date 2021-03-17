@@ -7,7 +7,7 @@ echo db.data_default.insert({"_id":2}) | %mongo_exe% %database_name%  || goto :e
 set full_name="%1"
 set short_name="%~nx1"
 
-set token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5NDIxMjcsImp0aSI6ImMxNGViYnJpcHQzZHQ4Y2JhczUwIiwic3ViIjoiYnRfZGF0YSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.U776By_privbW9WbQCSTmk9hLZVTXzTWNNap1XOIFlM
+set token=%BT_DATA_TOKEN%
 
 c:\opt\consul\nomad run authorizer.nmd
 c:\opt\consul\nomad run nginx.nmd

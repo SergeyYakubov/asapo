@@ -102,7 +102,7 @@ func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 	flagset := cmd.createDefaultFlagset(message_string, "<token_body>")
 	flagset.StringVar(&flags.SecretFile, "secret", "", "path to file with secret")
 	var at string
-	flagset.StringVar(&at, "type", "", "access type")
+	flagset.StringVar(&at, "types", "", "access typea")
 	flagset.StringVar(&flags.Endpoint, "endpoint", "", "asapo endpoint")
 	flagset.BoolVar(&flags.TokenDetails, "token-details", false, "output token details")
 

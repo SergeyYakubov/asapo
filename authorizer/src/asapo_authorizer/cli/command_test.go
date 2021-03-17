@@ -14,7 +14,7 @@ var CommandTests = []struct {
 	ok bool
 	msg string
 }{
-	{command{"create-token", []string{"-type", "user-token", "-beamtime","123","-access-type","read","-duration-days","1"}}, true,"ok"},
+	{command{"create-token", []string{"-types", "user-token", "-beamtime","123","-access-types","read","-duration-days","1"}}, true,"ok"},
 	{command{"dummy", []string{"description"}}, false,"wrong command"},
 }
 

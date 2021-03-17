@@ -15,13 +15,13 @@ import (
 
 var  IssueTokenTests = [] struct {
 	requestSubject map[string]string
-	tokenSubject string
-	roles []string
-	validDays int
-	adminToken string
-	resToken string
-	status int
-	message string
+	tokenSubject   string
+	roles          []string
+	validDays      int
+	adminToken     string
+	resToken       string
+	status         int
+	message        string
 }{
 	{map[string]string{"beamtimeId":"test"},"bt_test",[]string{"read"},180,prepareAdminToken("admin"),"aaa",http.StatusOK,"read for beamtime"},
 	{map[string]string{"beamtimeId":"test"},"bt_test",[]string{"read"},90,prepareAdminToken("admin"),"aaa",http.StatusOK,"write for beamtime"},

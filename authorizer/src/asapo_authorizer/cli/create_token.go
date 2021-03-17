@@ -113,7 +113,7 @@ func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 	flagset.StringVar(&flags.Type, "type", "", "token type")
 	flagset.StringVar(&flags.Beamtime, "beamtime", "", "beamtime for user token")
 	flagset.StringVar(&flags.Beamline, "beamline", "", "beamline for user token")
-	flagset.StringVar(&flags.AccessType, "access-type", "", "read/write for user token")
+	flagset.StringVar(&flags.AccessType, "access-types", "", "read/write for user token")
 	flagset.IntVar(&flags.DaysValid, "duration-days", 0, "token duration (in days)")
 
 

@@ -12,7 +12,7 @@ c:\opt\consul\nomad run nginx.nmd
 ping 192.0.2.1 -n 1 -w 3000 > nul
 
 
-set token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5MzU3NjgsImp0aSI6ImMxNGNwbTNpcHQzZGRrbnFwYm9nIiwic3ViIjoiYnRfZGF0YSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.Jnhmj2i8zUbTzlmRCo6CUkqkD_FdyMxfNj_PztmnN-0
+set token=%BT_DATA_TOKEN%
 
 start /B "" "%full_name%" -config settings.json
 ping 192.0.2.1 -n 1 -w 1000 > nul
