@@ -28,7 +28,7 @@ Args GetArgs(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
 
     auto args = GetArgs(argc, argv);
-    auto token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5NDI2MDMsImp0aSI6ImMxNGVmMnJpcHQzZHQ4Y2JhczYwIiwic3ViIjoiYnRfYWFhIiwiRXh0cmFDbGFpbXMiOnsiQWNjZXNzVHlwZSI6InJlYWQifX0.xvU-EaemmBhcPzmCvjPVUkCxkTjglo-072aJZjDhGBM"; //token for aaa
+    auto token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkycDFiaXB0MzBub3AwcTNlZyIsInN1YiI6ImJ0X2FhYSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGVzIjpbInJlYWQiXX19.dt3ifrG3zqQP4uM2kaoe7ydDjUdFeasOB07fVRfFApE"; //token for aaa
     std::string authorize_request = "{\"Folder\":\"" + args.folder + "\",\"BeamtimeId\":\"aaa\",\"Token\":\"" + token +
                                     "\"}";
     asapo::Error err;
