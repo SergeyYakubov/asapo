@@ -13,7 +13,7 @@ facility=test_facility
 year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
 receiver_folder2=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id2}
-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTRhbHRyaXB0MzltZTRqcXB0ZyIsInN1YiI6ImJsX3AwNyIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJ3cml0ZSJ9fQ._yy0E42cOGMv81GDj3WKZJlF8mBmjKtHNDPnN5NTxvk # write token for bl_p07
+token=$BLP07_W_TOKEN
 
 Cleanup() {
 	echo cleanup

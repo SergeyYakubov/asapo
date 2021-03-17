@@ -50,7 +50,7 @@ token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -s
 
 echo "Start producer"
 mkdir -p ${receiver_folder}
-$producer_bin test.json & 
+$producer_bin test.json &
 producerid=`echo $!`
 
 sleep 1

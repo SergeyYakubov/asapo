@@ -22,20 +22,20 @@ var tokenTests = []struct {
 	msg             string
 }{
 // good
-	{command{args: []string{"-types", "user-token", "-beamtime","123","-access-types","read","-duration-days","10"}},
+	{command{args: []string{"-type", "user-token", "-beamtime","123","-access-types","read","-duration-days","10"}},
 		"secret_user",true, []string{"read"}, "bt_123", true,"user token beamtime ok"},
-	{command{args: []string{"-types", "user-token", "-beamline","123","-access-types","read","-duration-days","10"}},
+	{command{args: []string{"-type", "user-token", "-beamline","123","-access-types","read","-duration-days","10"}},
 		"secret_user",		true, []string{"read"}, "bl_123", true,"user token beamline ok"},
-	{command{args: []string{"-types", "admin-token","-access-types","create"}},
+	{command{args: []string{"-type", "admin-token","-access-types","create"}},
 		"secret_admin",true, []string{"create"}, "admin", false,"admin token ok"},
 // bad
-	{command{args: []string{"-types", "user-token", "-beamtime","123","-access-types","create","-duration-days","10"}},
+	{command{args: []string{"-type", "user-token", "-beamtime","123","-access-types","create","-duration-days","10"}},
 		"secret_user",false, nil, "", true,"user token wrong type"},
-	{command{args: []string{"-types", "user-token", "-access-types","create","-duration-days","10"}},
+	{command{args: []string{"-type", "user-token", "-access-types","create","-duration-days","10"}},
 		"secret_user",false, nil, "", true,"user token no beamtime or beamline"},
-	{command{args: []string{"-types", "user-token",  "-beamtime","123","-beamline","1234", "-access-types","create","-duration-days","10"}},
+	{command{args: []string{"-type", "user-token",  "-beamtime","123","-beamline","1234", "-access-types","create","-duration-days","10"}},
 		"secret_user",false, nil, "", true,"user token both beamtime and beamline"},
-	{command{args: []string{"-types", "admin-token","-access-types","bla"}},
+	{command{args: []string{"-type", "admin-token","-access-types","bla"}},
 		"secret_admin",false, nil ,"", false,"admin token wrong type"},
 }
 
