@@ -21,8 +21,8 @@ cp beamtime-metadata* beamline/p07/current/
 
 #tokens
 AdminToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTNvcGpyaXB0MzNlb2ZjbWJuZyIsInN1YiI6ImFkbWluIiwiRXh0cmFDbGFpbXMiOnsiQWNjZXNzVHlwZSI6ImNyZWF0ZSJ9fQ.uRjtGPaRpOlOfKroijHRgMDNaZHnXsVPf0JaJ1XMg7o
-curl -v --silent -H "Authorization: Bearer $AdminToken" --data '{"Subject": {"beamtimeId":"12345678"},"DaysValid":123,"AccessType":"read"}' 127.0.0.1:5007/admin/issue --stderr -  | tee /dev/stderr | grep "bt_12345678"
-curl -v --silent -H "Authorization: Bearer blabla" --data '{"Subject": {"beamtimeId":"12345678"},"DaysValid":123,"AccessType":"read"}' 127.0.0.1:5007/admin/issue --stderr -  | tee /dev/stderr | grep "token does not match"
+curl -v --silent -H "Authorization: Bearer $AdminToken" --data '{"Subject": {"beamtimeId":"12345678"},"DaysValid":123,"AccessType":["read"]}' 127.0.0.1:5007/admin/issue --stderr -  | tee /dev/stderr | grep "bt_12345678"
+curl -v --silent -H "Authorization: Bearer blabla" --data '{"Subject": {"beamtimeId":"12345678"},"DaysValid":123,"AccessType":["read"]}' 127.0.0.1:5007/admin/issue --stderr -  | tee /dev/stderr | grep "token does not match"
 
 curl -v --silent --data '{"SourceCredentials":"processed%c20180508-000-COM20181%%detector%","OriginHost":"127.0.0.1:5555"}' 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep c20180508-000-COM20181
 curl -v --silent --data '{"SourceCredentials":"processed%c20180508-000-COM20181%%detector%","OriginHost":"127.0.0.1:5555"}' 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep p00

@@ -67,7 +67,7 @@ func authorize(r *http.Request, beamtime_id string) error {
 		return err
 	}
 
-	return checkAccessType(token.AccessType)
+	return checkAccessType(token.AccessTypes)
 }
 
 func checkSubject(subject string, beamtime_id string) error {
@@ -77,8 +77,8 @@ func checkSubject(subject string, beamtime_id string) error {
 	return nil
 }
 
-func checkAccessType(accessType string) error {
-	if accessType != "read" && accessType != "write" {
+func checkAccessType(accessTypes []string) error {
+	if !utils.StringInSlice("read",accessTypes) {
 		return errors.New("wrong token access type")
 	}
 	return nil

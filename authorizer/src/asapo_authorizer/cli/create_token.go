@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type tokenFlags struct {
@@ -21,9 +22,6 @@ func userTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, err 
 	if (flags.Beamline=="" && flags.Beamtime=="") || (flags.Beamline!="" && flags.Beamtime!="") {
 		return request,errors.New("beamtime or beamline must be set")
 	}
-	if flags.AccessType!="read" && flags.AccessType!="write" {
-		return request,errors.New("access type must be read of write")
-	}
 
 	request.Subject = make(map[string]string,1)
 	if (flags.Beamline!="") {
@@ -31,7 +29,14 @@ func userTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, err 
 	} else {
 		request.Subject["beamtimeId"]=flags.Beamtime
 	}
-	request.AccessType = flags.AccessType
+
+	request.AccessTypes = strings.Split(flags.AccessType,",")
+	for _,at:=range request.AccessTypes {
+		if at!="read" && at!="write" {
+			return request,errors.New("access type must be read of write")
+		}
+	}
+
 	request.DaysValid = flags.DaysValid
 
 	return
@@ -42,12 +47,16 @@ func adminTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, err
 	if flags.Beamline+flags.Beamtime!="" {
 		return request,errors.New("beamtime and beamline must not be set for admin token")
 	}
-	if flags.AccessType!="create" && flags.AccessType!="revoke" && flags.AccessType!="list" {
-		return request,errors.New("access type must be create,revoke of list")
+
+	request.AccessTypes = strings.Split(flags.AccessType,",")
+	for _,at:=range request.AccessTypes {
+		if at!="create" && at!="revoke" && at!="list" {
+			return request,errors.New("access type must be create,revoke of list")
+		}
 	}
+
 	request.Subject = make(map[string]string,1)
 	request.Subject["user"]="admin"
-	request.AccessType = flags.AccessType
 	request.DaysValid = flags.DaysValid
 
 	return

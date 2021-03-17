@@ -127,7 +127,7 @@ func alwaysAllowed(creds SourceCredentials) (beamtimeMeta, bool) {
 		if pair.BeamtimeId == creds.BeamtimeId {
 			pair.DataSource = creds.DataSource
 			pair.Type = creds.Type
-			pair.AccessType = "write"
+			pair.AccessTypes = []string{"read","write"}
 			return pair, true
 		}
 	}
@@ -154,20 +154,20 @@ func needHostAuthorization(creds SourceCredentials) bool {
 	return creds.Type == "raw" || len(creds.Token) == 0
 }
 
-func checkToken(token string, subject_expect string) (accessType string, err error) {
+func checkToken(token string, subject_expect string) (accessTypes []string, err error) {
 	var extra_claim structs.AccessTokenExtraClaim
 	subject,err := Auth.UserAuth().CheckAndGetContent(token,&extra_claim)
 	if err!=nil {
-		return "",err
+		return nil,err
 	}
 
 	if subject!=subject_expect {
-		return "",errors.New("wrong token for "+subject_expect)
+		return nil,errors.New("wrong token for "+subject_expect)
 	}
-	return extra_claim.AccessType,err
+	return extra_claim.AccessTypes,err
 }
 
-func authorizeByToken(creds SourceCredentials) (accessType string, err error) {
+func authorizeByToken(creds SourceCredentials) (accessTypes []string, err error) {
 	subject_expect:=""
 	if (creds.BeamtimeId != "auto") {
 		subject_expect = utils.SubjectFromBeamtime(creds.BeamtimeId)
@@ -207,30 +207,30 @@ func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
 	return meta, nil
 }
 
-func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds SourceCredentials) (accessType string, err error) {
-	accessType = ""
+func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds SourceCredentials) (accessTypes []string, err error) {
+	accessTypes = nil
 	if creds.Type=="raw" && meta.OnlinePath=="" {
 		err_string := "beamtime "+meta.BeamtimeId+" is not online"
 		log.Error(err_string)
-		return "",errors.New(err_string)
+		return nil,errors.New(err_string)
 	}
 
 	if creds.Beamline != "auto" && meta.Beamline != creds.Beamline {
 		err_string := "given beamline (" + creds.Beamline + ") does not match the found one (" + meta.Beamline + ")"
 		log.Debug(err_string)
-		return "",errors.New(err_string)
+		return nil,errors.New(err_string)
 	}
 
 	if needHostAuthorization(creds) {
 		if err := authorizeByHost(request.OriginHost, meta.Beamline); err != nil {
-			return "",err
+			return nil,err
 		}
-		accessType = "write"
+		accessTypes = []string{"read","write"}
 	} else {
-		accessType,err = authorizeByToken(creds)
+		accessTypes,err = authorizeByToken(creds)
 	}
 
-	return accessType,err
+	return accessTypes,err
 }
 
 func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeMeta, error) {
@@ -243,14 +243,14 @@ func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeM
 		return beamtimeMeta{}, err
 	}
 
-	var accessType string
-	if accessType, err = authorizeMeta(meta, request, creds); err != nil {
+	var accessTypes []string
+	if accessTypes, err = authorizeMeta(meta, request, creds); err != nil {
 		return beamtimeMeta{}, err
 	}
 
-	meta.AccessType = accessType
+	meta.AccessTypes = accessTypes
 	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " +
-		meta.Beamline+", type "+meta.Type +"access type: "+accessType)
+		meta.Beamline+", type "+meta.Type)
 	return meta, nil
 }
 

@@ -16,27 +16,27 @@ var tokenTests = []struct {
 	cmd             command
 	key string
 	ok              bool
-	tokenAccessType string
+	tokenAccessTypes []string
 	tokenSubject    string
 	tokenExpires bool
 	msg             string
 }{
 // good
 	{command{args: []string{"-type", "user-token", "-beamtime","123","-access-type","read","-duration-days","10"}},
-		"secret_user",true, "read", "bt_123", true,"user token beamtime ok"},
+		"secret_user",true, []string{"read"}, "bt_123", true,"user token beamtime ok"},
 	{command{args: []string{"-type", "user-token", "-beamline","123","-access-type","read","-duration-days","10"}},
-		"secret_user",		true, "read", "bl_123", true,"user token beamline ok"},
+		"secret_user",		true, []string{"read"}, "bl_123", true,"user token beamline ok"},
 	{command{args: []string{"-type", "admin-token","-access-type","create"}},
-		"secret_admin",true, "create", "admin", false,"admin token ok"},
+		"secret_admin",true, []string{"create"}, "admin", false,"admin token ok"},
 // bad
 	{command{args: []string{"-type", "user-token", "-beamtime","123","-access-type","create","-duration-days","10"}},
-		"secret_user",false, "", "", true,"user token wrong type"},
+		"secret_user",false, nil, "", true,"user token wrong type"},
 	{command{args: []string{"-type", "user-token", "-access-type","create","-duration-days","10"}},
-		"secret_user",false, "", "", true,"user token no beamtime or beamline"},
+		"secret_user",false, nil, "", true,"user token no beamtime or beamline"},
 	{command{args: []string{"-type", "user-token",  "-beamtime","123","-beamline","1234", "-access-type","create","-duration-days","10"}},
-		"secret_user",false, "", "", true,"user token both beamtime and beamline"},
+		"secret_user",false, nil, "", true,"user token both beamtime and beamline"},
 	{command{args: []string{"-type", "admin-token","-access-type","bla"}},
-		"secret_admin",false, "", "", false,"admin token wrong type"},
+		"secret_admin",false, nil ,"", false,"admin token wrong type"},
 }
 
 func TestGenerateToken(t *testing.T) {
@@ -57,7 +57,7 @@ func TestGenerateToken(t *testing.T) {
 		var extra_claim structs.AccessTokenExtraClaim
 		utils.MapToStruct(cclaims.ExtraClaims.(map[string]interface{}), &extra_claim)
 		assert.Equal(t, test.tokenSubject, cclaims.Subject, test.msg)
-		assert.Equal(t, test.tokenAccessType, extra_claim.AccessType, test.msg)
+		assert.Equal(t, test.tokenAccessTypes, extra_claim.AccessTypes, test.msg)
 		if test.tokenExpires {
 			assert.Equal(t, true, len(token.Expires)>0, test.msg)
 		} else {

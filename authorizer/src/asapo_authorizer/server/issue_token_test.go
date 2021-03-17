@@ -16,20 +16,20 @@ import (
 var  IssueTokenTests = [] struct {
 	requestSubject map[string]string
 	tokenSubject string
-	role string
+	roles []string
 	validDays int
 	adminToken string
 	resToken string
 	status int
 	message string
 }{
-	{map[string]string{"beamtimeId":"test"},"bt_test","read",180,prepareAdminToken("admin"),"aaa",http.StatusOK,"read for beamtime"},
-	{map[string]string{"beamtimeId":"test"},"bt_test","read",90,prepareAdminToken("admin"),"aaa",http.StatusOK,"write for beamtime"},
-	{map[string]string{"beamline":"test"},"bl_test","read",180,prepareAdminToken("admin"),"aaa",http.StatusOK,"read for beamline"},
-	{map[string]string{"blabla":"test"},"","read",180,prepareAdminToken("admin"),"",http.StatusBadRequest,"beamline or beamtime not given"},
-	{map[string]string{"beamtimeId":"test"},"","bla",180,prepareAdminToken("admin"),"",http.StatusBadRequest,"wrong role"},
-	{map[string]string{"beamtimeId":"test"},"","read",180,prepareAdminToken("bla"),"",http.StatusUnauthorized,"wrong admin token"},
-	{map[string]string{"beamtimeId":"test"},"bt_test","read",0,prepareAdminToken("admin"),"aaa",http.StatusBadRequest,"0 valid days"},
+	{map[string]string{"beamtimeId":"test"},"bt_test",[]string{"read"},180,prepareAdminToken("admin"),"aaa",http.StatusOK,"read for beamtime"},
+	{map[string]string{"beamtimeId":"test"},"bt_test",[]string{"read"},90,prepareAdminToken("admin"),"aaa",http.StatusOK,"write for beamtime"},
+	{map[string]string{"beamline":"test"},"bl_test",[]string{"read"},180,prepareAdminToken("admin"),"aaa",http.StatusOK,"read for beamline"},
+	{map[string]string{"blabla":"test"},"",[]string{"read"},180,prepareAdminToken("admin"),"",http.StatusBadRequest,"beamline or beamtime not given"},
+	{map[string]string{"beamtimeId":"test"},"",[]string{"bla"},180,prepareAdminToken("admin"),"",http.StatusBadRequest,"wrong role"},
+	{map[string]string{"beamtimeId":"test"},"",[]string{"read"},180,prepareAdminToken("bla"),"",http.StatusUnauthorized,"wrong admin token"},
+	{map[string]string{"beamtimeId":"test"},"bt_test",[]string{"read"},0,prepareAdminToken("admin"),"aaa",http.StatusBadRequest,"0 valid days"},
 
 }
 
@@ -39,7 +39,7 @@ func TestIssueToken(t *testing.T) {
 	authUser := utils.NewJWTAuth("secret_user")
 	Auth = authorization.NewAuth(authUser,authAdmin,authJWT)
 	for _, test := range IssueTokenTests {
-		request :=  makeRequest(structs.IssueTokenRequest{test.requestSubject,test.validDays,test.role})
+		request :=  makeRequest(structs.IssueTokenRequest{test.requestSubject,test.validDays,test.roles})
 		w := doPostRequest("/admin/issue",request,authAdmin.Name()+" "+test.adminToken)
 		if w.Code == http.StatusOK {
 			body, _ := ioutil.ReadAll(w.Body)
@@ -52,7 +52,7 @@ func TestIssueToken(t *testing.T) {
 			assert.Equal(t, cclaims.Subject , test.tokenSubject, test.message)
 			assert.True(t, cclaims.ExpiresAt-time.Now().Unix()>int64(test.validDays)*24*60*60-10, test.message)
 			assert.True(t, cclaims.ExpiresAt-time.Now().Unix()<int64(test.validDays)*24*60*60+10, test.message)
-			assert.Equal(t, extra_claim.AccessType, test.role, test.message)
+			assert.Equal(t, extra_claim.AccessTypes, test.roles, test.message)
 			assert.NotEmpty(t, cclaims.Id , test.message)
 		} else {
 			body, _ := ioutil.ReadAll(w.Body)

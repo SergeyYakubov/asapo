@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_common/structs"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -36,7 +37,7 @@ func  matchRequest(req *http.Request) bool {
 }
 
 func responseOk() (*http.Response, error) {
-	token := Token{Sub: "subject",AccessType: "read"}
+	token := Token{structs.IntrospectTokenResponse{AccessTypes: []string{"read"},Sub: "subject"}}
 	b,_:=json.Marshal(&token)
 	r := ioutil.NopCloser(bytes.NewReader(b))
 	return &http.Response{
@@ -54,7 +55,7 @@ func responseUnauth() (*http.Response, error) {
 }
 
 func responseErr() (*http.Response, error) {
-	return &http.Response{}, errors.New("cannpt connect")
+	return &http.Response{}, errors.New("cannot connect")
 }
 
 var authTests = []struct {
@@ -87,7 +88,7 @@ func TestAuthorize(t *testing.T) {
 		if test.ok {
 			assert.Nil(t,err,test.message)
 			assert.Equal(t,"subject",token.Sub,test.message)
-			assert.Equal(t,"read",token.AccessType,test.message)
+			assert.Contains(t,token.AccessTypes,"read",test.message)
 		} else {
 			assert.NotNil(t,err,test.message)
 		}

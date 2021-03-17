@@ -3,6 +3,7 @@ package server
 import (
 	"asapo_broker/database"
 	"asapo_common/logger"
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"errors"
 	"github.com/stretchr/testify/assert"
@@ -29,8 +30,10 @@ type MockAuthServer struct {
 func (a * MockAuthServer) AuthorizeToken(tokenJWT string) (token Token, err error) {
 	if tokenJWT =="ok" {
 		return Token{
+			structs.IntrospectTokenResponse{
 			Sub:        "bt_"+expectedBeamtimeId,
-			AccessType: "read",
+			AccessTypes: []string{"read"},
+			},
 		},nil
 	} else {
 		return Token{},errors.New("wrong JWT token")

@@ -23,7 +23,7 @@ func verifyUserToken(token string) (response structs.IntrospectTokenResponse, er
 	if err!=nil {
 		return
 	}
-	response.AccessType = extra_claim.AccessType
+	response.AccessTypes = extra_claim.AccessTypes
 	return
 }
 

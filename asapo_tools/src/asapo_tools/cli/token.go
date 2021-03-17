@@ -11,12 +11,13 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type tokenFlags struct {
 	Name         string
 	Endpoint     string
-	AccessType   string
+	AccessTypes  []string
 	SecretFile   string
 	TokenDetails bool
 }
@@ -54,7 +55,7 @@ func (cmd *command) CommandToken() error {
 	request := structs.IssueTokenRequest{
 		Subject:    map[string]string{"beamtimeId": flags.Name},
 		DaysValid:  180,
-		AccessType: flags.AccessType,
+		AccessTypes: flags.AccessTypes,
 	}
 	json_data, _ := json.Marshal(request)
 	path := flags.Endpoint + "/admin/issue"
@@ -100,11 +101,15 @@ func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 	var flags tokenFlags
 	flagset := cmd.createDefaultFlagset(message_string, "<token_body>")
 	flagset.StringVar(&flags.SecretFile, "secret", "", "path to file with secret")
-	flagset.StringVar(&flags.AccessType, "type", "", "access type")
+	var at string
+	flagset.StringVar(&at, "type", "", "access type")
 	flagset.StringVar(&flags.Endpoint, "endpoint", "", "asapo endpoint")
 	flagset.BoolVar(&flags.TokenDetails, "token-details", false, "output token details")
 
 	flagset.Parse(cmd.args)
+
+	flags.AccessTypes = strings.Split(at,",")
+
 
 	if printHelp(flagset) {
 		os.Exit(0)
@@ -124,8 +129,10 @@ func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 		return flags, errors.New("endpoint missed ")
 	}
 
-	if flags.AccessType != "read" && flags.AccessType != "write" {
-		return flags, errors.New("incorrect or missed token access type ")
+	for _,at:=range flags.AccessTypes {
+		if at!="read" && at!="write" {
+			return flags,errors.New("incorrect access type")
+		}
 	}
 
 	return flags, nil
