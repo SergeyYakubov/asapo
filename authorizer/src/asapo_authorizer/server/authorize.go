@@ -161,6 +161,10 @@ func checkToken(token string, subject_expect string) (accessTypes []string, err 
 		return nil,err
 	}
 
+	if extra_claim.AccessTypes==nil || len(extra_claim.AccessTypes)==0 {
+		return nil,errors.New("missing access types")
+	}
+
 	if subject!=subject_expect {
 		return nil,errors.New("wrong token for "+subject_expect)
 	}

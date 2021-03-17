@@ -180,6 +180,10 @@ var authTests = [] struct {
 	message string
 	answer string
 }{
+	{"processed","test","auto","dataSource", prepareUserToken("bt_test",nil),"127.0.0.2",http.StatusUnauthorized,"missing access types",
+		""},
+	{"processed","test","auto","dataSource", prepareUserToken("bt_test",[]string{}),"127.0.0.2",http.StatusUnauthorized,"empty access types",
+		""},
 	{"processed","test","auto","dataSource", prepareUserToken("bt_test",[]string{"write"}),"127.0.0.2",http.StatusOK,"user source with correct token",
 		`{"beamtimeId":"test","beamline":"bl1","dataSource":"dataSource","core-path":"./tf/gpfs/bl1/2019/data/test","beamline-path":"","source-type":"processed","access-types":["write"]}`},
 	{"processed","test_online","auto","dataSource", prepareUserToken("bt_test_online",[]string{"read"}),"127.0.0.1",http.StatusOK,"with online path, processed type",
