@@ -218,7 +218,7 @@ function(add_script_test testname arguments)
                     separate_arguments(memargs)
                     add_test(NAME memtest-${testname} COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh
                             ${memargs})
-                    set_tests_properties(test-${testname} PROPERTIES ENVIRONMENT "${TOKENS}")
+                    set_tests_properties(memtest-${testname} PROPERTIES ENVIRONMENT "${TOKENS}")
                     set_tests_properties(memtest-${testname} PROPERTIES
                             LABELS "memcheck_${label};all"
                             DEPENDS test-${testname}
