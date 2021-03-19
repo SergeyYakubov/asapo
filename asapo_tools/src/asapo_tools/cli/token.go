@@ -19,6 +19,7 @@ type tokenFlags struct {
 	Endpoint     string
 	AccessTypes  []string
 	SecretFile   string
+	DaysValid int
 	TokenDetails bool
 }
 
@@ -54,7 +55,7 @@ func (cmd *command) CommandToken() error {
 
 	request := structs.IssueTokenRequest{
 		Subject:    map[string]string{"beamtimeId": flags.Name},
-		DaysValid:  180,
+		DaysValid:  flags.DaysValid,
 		AccessTypes: flags.AccessTypes,
 	}
 	json_data, _ := json.Marshal(request)
@@ -105,6 +106,7 @@ func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 	flagset.StringVar(&at, "types", "", "access typea")
 	flagset.StringVar(&flags.Endpoint, "endpoint", "", "asapo endpoint")
 	flagset.BoolVar(&flags.TokenDetails, "token-details", false, "output token details")
+	flagset.IntVar(&flags.DaysValid, "duration-days", 180, "token duration in days")
 
 	flagset.Parse(cmd.args)
 

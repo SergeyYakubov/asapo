@@ -1,6 +1,10 @@
 elk_logs = true
 
-asapo_image_tag = "develop"
+asapo_imagename_suffix = ""
+asapo_image_tag = ""
+
+influxdb_version="1.8.4"
+
 
 service_dir="/gpfs/asapo/shared/service_dir"
 online_dir="/beamline"
