@@ -39,7 +39,7 @@ nomad run broker.nmd
 
 sleep 1
 
-token=`$3 token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -type read $beamtime_id`
+token=`$3 token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
 #producer
 $1 localhost:8400 ${beamtime_id} 100 10 4 100 100

@@ -50,7 +50,7 @@ func (auth *Auth) PrepareAccessToken(request structs.IssueTokenRequest, userToke
 
 	claims.Subject = subjectFromRequest(request)
 
-	extraClaim.AccessType = request.AccessType
+	extraClaim.AccessTypes = request.AccessTypes
 	claims.ExtraClaims = &extraClaim
 	claims.SetExpiration(time.Duration(request.DaysValid*24) * time.Hour)
 	uid := xid.New()
@@ -69,10 +69,10 @@ func UserTokenResponce(request structs.IssueTokenRequest, token string) []byte {
 		expires = time.Now().Add(time.Duration(request.DaysValid*24) * time.Hour).UTC().Format(time.RFC3339)
 	}
 	answer := structs.IssueTokenResponse{
-		Token:      token,
-		AccessType: request.AccessType,
-		Sub:  subjectFromRequest(request),
-		Expires:  expires,
+		Token:       token,
+		AccessTypes: request.AccessTypes,
+		Sub:         subjectFromRequest(request),
+		Expires:     expires,
 	}
 	res, _ := json.Marshal(answer)
 	return res

@@ -170,7 +170,9 @@ func (ss *Streams) updateFromDb(db *Mongodb, db_name string) (StreamsRecord, err
 
 	sortRecords(&rec)
 	if len(rec.Streams) > 0 {
-		ss.records[db_name] = rec
+		res :=StreamsRecord{}
+		utils.DeepCopy(rec,&res)
+		ss.records[db_name] = res
 		ss.lastUpdated = time.Now().UnixNano()
 	}
 	return rec, nil

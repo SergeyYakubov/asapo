@@ -14,12 +14,12 @@ import (
 
 var  IntrospectTests = [] struct {
 	tokenSubject string
-	role string
+	roles []string
 	status int
 	message string
 }{
-	{"bt_test","read",http.StatusOK,"valid token"},
-	{"","",http.StatusUnauthorized,"invalid token"},
+	{"bt_test",[]string{"read"},http.StatusOK,"valid token"},
+	{"",nil,http.StatusUnauthorized,"invalid token"},
 
 }
 
@@ -29,7 +29,7 @@ func TestIntrospect(t *testing.T) {
 	authUser := utils.NewJWTAuth("secret_user")
 	Auth = authorization.NewAuth(authUser,authAdmin,authJWT)
 	for _, test := range IntrospectTests {
-		token := prepareUserToken(test.tokenSubject,test.role)
+		token := prepareUserToken(test.tokenSubject,test.roles)
 		if test.status==http.StatusUnauthorized {
 			token = "blabla"
 		}
@@ -41,7 +41,7 @@ func TestIntrospect(t *testing.T) {
 			var token structs.IntrospectTokenResponse
 			json.Unmarshal(body,&token)
 			assert.Equal(t, token.Sub , test.tokenSubject, test.message)
-			assert.Equal(t, token.AccessType , test.role, test.message)
+			assert.Equal(t, token.AccessTypes, test.roles, test.message)
 		} else {
 			body, _ := ioutil.ReadAll(w.Body)
 			fmt.Println(string(body))

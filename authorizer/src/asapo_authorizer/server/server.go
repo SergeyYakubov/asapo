@@ -12,7 +12,7 @@ type  beamtimeMeta struct {
 	OfflinePath string `json:"core-path"`
 	OnlinePath string `json:"beamline-path"`
 	Type string `json:"source-type"`
-	AccessType string `json:"access-type"`
+	AccessTypes []string `json:"access-types"`
 }
 
 type serverSettings struct {

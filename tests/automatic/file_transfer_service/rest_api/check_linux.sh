@@ -21,8 +21,7 @@ sleep 1
 
 mkdir -p $file_transfer_folder
 
- #token for aaa
-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTRhdTFiaXB0M2FzbzNoYzJvZyIsInN1YiI6ImJ0X2FhYSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.rvtEPZhvqwG91sod6-iBPCMUXWtMQtmFsqpXNv5HvFc
+token=$BT_AAA_TOKEN
 
 folder_token=`curl --silent --data "{\"Folder\":\"$file_transfer_folder\",\"BeamtimeId\":\"aaa\",\"Token\":\"$token\"}" 127.0.0.1:5007/folder`
 echo $folder_token

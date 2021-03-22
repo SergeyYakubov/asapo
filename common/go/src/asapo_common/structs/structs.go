@@ -5,7 +5,7 @@ type FolderTokenTokenExtraClaim struct {
 }
 
 type AccessTokenExtraClaim struct {
-	AccessType string
+	AccessTypes []string
 }
 
 type IntrospectTokenRequest struct {
@@ -13,19 +13,19 @@ type IntrospectTokenRequest struct {
 }
 
 type IntrospectTokenResponse struct {
-	Sub        string
-	AccessType string
+	Sub         string
+	AccessTypes []string
 }
 
 type IssueTokenRequest struct {
-	Subject    map[string]string
-	DaysValid  int
-	AccessType string
+	Subject     map[string]string
+	DaysValid   int
+	AccessTypes []string
 }
 
 type IssueTokenResponse struct {
-	Token      string
-	Sub        string
-	AccessType string
-	Expires    string
+	Token       string
+	Sub         string
+	AccessTypes []string
+	Expires     string
 }

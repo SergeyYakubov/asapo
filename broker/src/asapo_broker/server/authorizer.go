@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_common/structs"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -11,8 +12,7 @@ import (
 )
 
 type Token struct {
-	Sub string
-	AccessType string
+	structs.IntrospectTokenResponse
 }
 
 type Authorizer interface {

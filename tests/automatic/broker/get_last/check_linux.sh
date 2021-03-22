@@ -19,7 +19,7 @@ Cleanup() {
 echo "db.data_${stream}.insert({"_id":2})" | mongo ${database_name}
 echo "db.data_${stream}.insert({"_id":1})" | mongo ${database_name}
 
-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5MzU3NjgsImp0aSI6ImMxNGNwbTNpcHQzZGRrbnFwYm9nIiwic3ViIjoiYnRfZGF0YSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.Jnhmj2i8zUbTzlmRCo6CUkqkD_FdyMxfNj_PztmnN-0
+token=$BT_DATA_TOKEN
 
 nomad run nginx.nmd
 nomad run authorizer.nmd

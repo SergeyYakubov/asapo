@@ -26,11 +26,12 @@ Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error&
     }
 }
 
-Error CheckAccessType(const std::string& access_type) {
-    if (access_type!="write") {
-        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("wrong access type: " + access_type);
+Error CheckAccessType(const std::vector<std::string>& access_types) {
+    if(std::find(access_types.begin(), access_types.end(), "write") != access_types.end()) {
+        return nullptr;
+    } else {
+        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("wrong access types");
     }
-    return nullptr;
 }
 
 
@@ -50,7 +51,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     }
 
     std::string stype;
-    std::string access_type;
+    std::vector<std::string> access_types;
 
     JsonStringParser parser{response};
     (err = parser.GetString("beamtimeId", &beamtime_id_)) ||
@@ -58,14 +59,14 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     (err = parser.GetString("core-path", &offline_path_)) ||
     (err = parser.GetString("beamline-path", &online_path_)) ||
     (err = parser.GetString("source-type", &stype)) ||
-    (err = parser.GetString("access-type", &access_type)) ||
+    (err = parser.GetArrayString("access-types", &access_types)) ||
     (err = GetSourceTypeFromString(stype, &source_type_)) ||
     (err = parser.GetString("beamline", &beamline_));
     if (err) {
         return ErrorFromAuthorizationServerResponse(err, code);
     }
 
-    err = CheckAccessType(access_type);
+    err = CheckAccessType(access_types);
     if (err) {
         log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " request: " + request_string +
             " - " +

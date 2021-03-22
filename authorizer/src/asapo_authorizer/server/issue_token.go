@@ -23,12 +23,14 @@ func extractUserTokenrequest(r *http.Request) (request structs.IssueTokenRequest
 		return request, errors.New("set only one of beamtime/beamline")
 	}
 
-	if request.DaysValid<=0 {
+	if request.DaysValid <= 0 {
 		return request, errors.New("set token valid period")
 	}
 
-	if request.AccessType != "read" && request.AccessType != "write" {
-		return request, errors.New("wrong access type: " + request.AccessType)
+	for _, ar := range request.AccessTypes {
+		if ar != "read" && ar != "write" {
+			return request, errors.New("wrong requested access rights: "+ar)
+		}
 	}
 
 	return request, nil
@@ -44,7 +46,7 @@ func checkAccessToken(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 	}
-	if claims.Subject != "admin" || extraClaim.AccessType != "create" {
+	if claims.Subject != "admin" || !utils.StringInSlice("create",extraClaim.AccessTypes) {
 		err_txt := "wrong token claims"
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(err_txt))
@@ -60,7 +62,7 @@ func issueUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := Auth.PrepareAccessToken(request,true)
+	token, err := Auth.PrepareAccessToken(request, true)
 	if err != nil {
 		utils.WriteServerError(w, err, http.StatusInternalServerError)
 		return

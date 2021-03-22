@@ -13,7 +13,7 @@ indatabase_name=${beamtime_id}_${data_source_in}
 outdatabase_name=${beamtime_id}_${data_source_out}
 
 #asapo_test read token
-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTRhcDQzaXB0M2E0bmNpMDkwMCIsInN1YiI6ImJ0X2FzYXBvX3Rlc3QiLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlIjoicmVhZCJ9fQ.X5Up3PBd81i4X7wUBXGkIrLEVSL-WO9kijDtzOqasgg
+token=$ASAPO_TEST_RW_TOKEN
 
 beamline=test
 receiver_root_folder=/tmp/asapo/receiver/files

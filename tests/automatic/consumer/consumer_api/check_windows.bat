@@ -4,7 +4,7 @@ SET data_source=detector
 
 SET database_name=%beamtime_id%_%data_source%
 SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
-set token_test_run=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5NDI0MjQsImp0aSI6ImMxNGVkbTNpcHQzZHQ4Y2JhczVnIiwic3ViIjoiYnRfdGVzdF9ydW4iLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlIjoicmVhZCJ9fQ.SBzrEy-d3ayhVZMSskYUMLM2LVHw3yiM32mIOcITh0g
+set token_test_run=%BT_TEST_RUN_TOKEN%
 
 call start_services.bat
 

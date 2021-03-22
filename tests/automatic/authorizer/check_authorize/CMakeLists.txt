@@ -19,7 +19,6 @@ configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/auth_secret_admin.ke
 
 configure_file(beamtime-metadata-11111111.json beamtime-metadata-11111111.json COPYONLY)
 
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/settings.json.in settings.json @ONLY)
 add_script_test("${TARGET_NAME}-authorize" "$<TARGET_PROPERTY:${TARGET_NAME},EXENAME>" nomem
         )

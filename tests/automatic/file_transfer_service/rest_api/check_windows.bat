@@ -9,7 +9,7 @@ c:\opt\consul\nomad run file_transfer.nmd
 
 ping 192.0.2.1 -n 1 -w 1000 > nul
 
-set token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTRhdTFiaXB0M2FzbzNoYzJvZyIsInN1YiI6ImJ0X2FhYSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGUiOiJyZWFkIn19.rvtEPZhvqwG91sod6-iBPCMUXWtMQtmFsqpXNv5HvFc
+set token=%BT_AAA_TOKEN%
 
 mkdir %file_transfer_folder%
 

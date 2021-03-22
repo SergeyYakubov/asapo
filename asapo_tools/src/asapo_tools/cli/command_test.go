@@ -10,7 +10,7 @@ var CommandTests = []struct {
 	cmd    command
 	answer string
 }{
-	{command{"token", []string{"-secret", "secret_file","-type","read","-endpoint","bla", "beamtime"}}, "secret"},
+	{command{"token", []string{"-secret", "secret_file","-types","read","-endpoint","bla", "beamtime"}}, "secret"},
 	{command{"dummy", []string{"description"}}, "wrong"},
 }
 

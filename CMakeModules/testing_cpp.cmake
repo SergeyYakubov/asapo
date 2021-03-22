@@ -2,6 +2,18 @@ if (BUILD_TESTS OR BUILD_INTEGRATION_TESTS OR BUILD_EXAMPLES)
     enable_testing()
 endif ()
 
+set (TOKENS "ASAPO_TEST_RW_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkyMXJqaXB0MzVja3MzYTEwZyIsInN1YiI6ImJ0X2FzYXBvX3Rlc3QiLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlcyI6WyJyZWFkIiwid3JpdGUiXX19.3PFdG0f48yKrOyJwPErYcewpcbZgnd8rBmBphw_kdJ0")
+set (TOKENS "${TOKENS};ASAPO_CREATE_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkyYzMzaXB0Mzdkb3IzYmZjZyIsInN1YiI6ImFkbWluIiwiRXh0cmFDbGFpbXMiOnsiQWNjZXNzVHlwZXMiOlsiY3JlYXRlIl19fQ.AI41cZ7dZL0g-rrdKIQgd7ijjzuyH1Fm0xojCXwLNBo")
+set (TOKENS "${TOKENS};C20180508_000_COM20181_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkyaDRiaXB0Mzd1cGo1aDdlMCIsInN1YiI6ImJ0X2MyMDE4MDUwOC0wMDAtQ09NMjAxODEiLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlcyI6WyJyZWFkIiwid3JpdGUiXX19.yONpjW2ybZMc9E9Eu4Hmn1roVR-mxf2OQQyXfnel5C8")
+set (TOKENS "${TOKENS};BT11000015_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkyajZqaXB0MzA3aHU1amwxZyIsInN1YiI6ImJ0XzExMDAwMDE1IiwiRXh0cmFDbGFpbXMiOnsiQWNjZXNzVHlwZXMiOlsicmVhZCJdfX0.kVs669HAS4sj9VAZk8pWTLrYNQp46mOnH4id4-_qd9g")
+set (TOKENS "${TOKENS};BT11000016_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkyajQzaXB0MzA3OWxwc3Z2ZyIsInN1YiI6ImJ0XzExMDAwMDE2IiwiRXh0cmFDbGFpbXMiOnsiQWNjZXNzVHlwZXMiOlsicmVhZCJdfX0.mpTVGtcdR0l4NaeHFTf16iWrfMYaLzh2pAjN5muil6Q")
+set (TOKENS "${TOKENS};BLP07_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkyaXBqaXB0MzAzajNsZ3NnZyIsInN1YiI6ImJsX3AwNyIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGVzIjpbInJlYWQiXX19.L0kNSCj32WHMEfzV9t0c2tKabK_klQFPZgLu66voDFc")
+set (TOKENS "${TOKENS};BLP07_W_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkya3BiaXB0MzBkMjJmMTBmMCIsInN1YiI6ImJsX3AwNyIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGVzIjpbIndyaXRlIl19fQ.BEHzU8gjHWSS-E5VbSwXzOBmeqScIceVD2XACGKZ46E")
+set (TOKENS "${TOKENS};BT_DATA_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkybXEzaXB0MzBnbGp0YzlzMCIsInN1YiI6ImJ0X2RhdGEiLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlcyI6WyJyZWFkIl19fQ.A5lLIJl-F6BGdWHdD9o0YOs5E9UPPFTylIdJocB10HI")
+set (TOKENS "${TOKENS};BT_TEST_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkybnViaXB0MzBsMjlpcXNxMCIsInN1YiI6ImJ0X3Rlc3QiLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlcyI6WyJyZWFkIl19fQ.8dh4KIusIVk75MGiWjoj23_cesLLWSMDjU8vb0RHVtU")
+set (TOKENS "${TOKENS};BT_AAA_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkycDFiaXB0MzBub3AwcTNlZyIsInN1YiI6ImJ0X2FhYSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGVzIjpbInJlYWQiXX19.dt3ifrG3zqQP4uM2kaoe7ydDjUdFeasOB07fVRfFApE")
+set (TOKENS "${TOKENS};BT_TEST_RUN_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTk0NjYzaXB0Mzdma2w0YmVrMCIsInN1YiI6ImJ0X3Rlc3RfcnVuIiwiRXh0cmFDbGFpbXMiOnsiQWNjZXNzVHlwZXMiOlsicmVhZCJdfX0.QJjoGOlzMvOUk7dK2bbDgSEM5-1mO6wmpmESYL6McdU")
+
 if (BUILD_TESTS)
     set(ASAPO_MINIMUM_COVERAGE 70)
     find_package(Threads)
@@ -203,6 +215,7 @@ function(add_script_test testname arguments)
                     separate_arguments(memargs)
                     add_test(NAME memtest-${testname} COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/check_linux.sh
                             ${memargs})
+                    set_tests_properties(memtest-${testname} PROPERTIES ENVIRONMENT "${TOKENS}")
                     set_tests_properties(memtest-${testname} PROPERTIES
                             LABELS "memcheck_${label};all"
                             DEPENDS test-${testname}
@@ -211,6 +224,7 @@ function(add_script_test testname arguments)
                 endif ()
             endif ()
         ENDIF ()
+        set_tests_properties(test-${testname} PROPERTIES ENVIRONMENT "${TOKENS}")
         set_tests_properties(test-${testname} PROPERTIES
                 LABELS "example;all"
                 )

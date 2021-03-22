@@ -4,9 +4,8 @@ beamtime_id=test_run
 source_path=`pwd`/asap3/petra3/gpfs/p01/2019/data/$beamtime_id
 data_source=detector
 database_name=${beamtime_id}_${data_source}
-token_test_run=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzA5NDI0MjQsImp0aSI6ImMxNGVkbTNpcHQzZHQ4Y2JhczVnIiwic3ViIjoiYnRfdGVzdF9ydW4iLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlIjoicmVhZCJ9fQ.SBzrEy-d3ayhVZMSskYUMLM2LVHw3yiM32mIOcITh0g
+token_test_run=$BT_TEST_RUN_TOKEN
 set -e
-
 
 trap Cleanup EXIT
 
