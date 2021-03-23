@@ -14,7 +14,8 @@ enum class ConsumerErrorType {
     kInterruptedTransaction,
     kLocalIOError,
     kWrongInput,
-    kPartialData
+    kPartialData,
+    kUnsupportedClient
 };
 
 using ConsumerErrorTemplate = ServiceErrorTemplate<ConsumerErrorType, ErrorType::kConsumerError>;
@@ -62,6 +63,11 @@ auto const kNoData = ConsumerErrorTemplate {
 auto const kWrongInput = ConsumerErrorTemplate {
     "wrong input", ConsumerErrorType::kWrongInput
 };
+
+auto const kUnsupportedClient = ConsumerErrorTemplate {
+    "unsupported client version", ConsumerErrorType::kUnsupportedClient
+};
+
 
 auto const kInterruptedTransaction = ConsumerErrorTemplate {
     "server error", ConsumerErrorType::kInterruptedTransaction

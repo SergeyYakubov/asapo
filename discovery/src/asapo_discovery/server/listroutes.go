@@ -9,13 +9,13 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"GetReceivers",
 		"Get",
-		"/" + common.NameReceiverService,
+		"/{apiver}/" + common.NameReceiverService,
 		routeGetReceivers,
 	},
 	utils.Route{
 		"GetBroker",
 		"Get",
-		"/asapo-broker",
+		"/{apiver}/"+common.NameBrokerService,
 		routeGetBroker,
 	},
 	utils.Route{
@@ -25,9 +25,15 @@ var listRoutes = utils.Routes{
 		routeGetMongo,
 	},
 	utils.Route{
+		"GetVersion",
+		"Get",
+		"/{apiver}/version",
+		routeGetVersion,
+	},
+	utils.Route{
 		"GetFTS",
 		"Get",
-		"/" + common.NameFtsService,
+		"/{apiver}/" + common.NameFtsService,
 		routeGetFileTransferService,
 	},
 }

@@ -111,6 +111,7 @@ class ConsumerImpl final : public asapo::Consumer {
     std::unique_ptr<NetClient> net_client__;
     std::mutex net_client_mutex__; // Required for the lazy initialization of net_client
   private:
+    Error ProcessDiscoverServiceResult(Error err, std::string* uri_to_set);
     Error GetDataFromFileTransferService(MessageMeta* info, MessageData* data, bool retry_with_new_token);
     Error GetDataFromFile(MessageMeta* info, MessageData* data);
     static const std::string kBrokerServiceName;
@@ -167,6 +168,7 @@ class ConsumerImpl final : public asapo::Consumer {
   RequestInfo GetSizeRequestForSingleMessagesStream(std::string &stream) const;
   RequestInfo GetSizeRequestForDatasetStream(std::string &stream, bool include_incomplete) const;
   uint64_t ParseGetCurrentCountResponce(Error* err, const std::string &responce) const;
+  RequestInfo GetDiscoveryRequest(const std::string &service_name) const;
 };
 
 }

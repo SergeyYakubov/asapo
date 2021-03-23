@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.7)
 project(ASAPO)
+
+set (ASAPO_CONSUMER_PROTOCOL "v0.1")
+set (ASAPO_PRODUCER_PROTOCOL "v0.1")
+
 set(CMAKE_CXX_STANDARD 11)
 IF(WIN32)
     set(CMAKE_CXX_FLAGS_DEBUG "/MTd")

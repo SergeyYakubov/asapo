@@ -135,7 +135,8 @@ class ConsumerImplTests : public Test {
       ));
   }
   void MockGetServiceUri(std::string service, std::string result) {
-      EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/" + service), _,
+      EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/" + service+"?token="
+          + expected_token+"&protocol=v0.1"), _,
                                           _)).WillOnce(DoAll(
           SetArgPointee<1>(HttpCode::OK),
           SetArgPointee<2>(nullptr),
@@ -322,7 +323,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsWrongResponseFromHttpClient) {
 }
 
 TEST_F(ConsumerImplTests, GetMessageReturnsIfBrokerAddressNotFound) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::NotFound),
         SetArgPointee<2>(nullptr),
@@ -334,8 +335,22 @@ TEST_F(ConsumerImplTests, GetMessageReturnsIfBrokerAddressNotFound) {
     ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("unavailable")));
 }
 
+TEST_F(ConsumerImplTests, GetMessageReturnsUnsupportedClient) {
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/asapo-broker"), _,
+                                        _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
+        SetArgPointee<1>(HttpCode::UnsupportedMediaType),
+        SetArgPointee<2>(nullptr),
+        Return("")));
+
+    consumer->SetTimeout(100);
+    auto err = consumer->GetNext(expected_group_id, &info, nullptr, expected_stream);
+
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kUnsupportedClient));
+}
+
+
 TEST_F(ConsumerImplTests, GetMessageReturnsIfBrokerUriEmpty) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
@@ -356,7 +371,7 @@ TEST_F(ConsumerImplTests, GetDoNotCallBrokerUriIfAlreadyFound) {
     Mock::VerifyAndClearExpectations(&mock_http_client);
 
     EXPECT_CALL(mock_http_client,
-                Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asap-broker"), _, _)).Times(0);
+                Get_t(_, _, _)).Times(0);
     MockGet("error_response");
     consumer->GetNext(expected_group_id, &info, nullptr, expected_stream);
 }
@@ -431,7 +446,7 @@ ACTION(AssignArg2) {
 }
 
 TEST_F(ConsumerImplTests, GetNextRetriesIfConnectionHttpClientErrorUntilTimeout) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),

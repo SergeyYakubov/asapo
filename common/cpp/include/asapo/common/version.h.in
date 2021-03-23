@@ -2,7 +2,9 @@
 #define ASAPO_VERSION_H
 
 #include <iostream>
-#include "string.h"
+#include <string>
+
+#include "data_structs.h"
 
 namespace asapo {
 
@@ -14,6 +16,9 @@ inline void ExitAfterPrintVersionIfNeeded(std::string prefix,int argc, char* arg
         exit(0);
     }
 }
+
+const ClientProtocolVersion kConsumerProtocol{"@ASAPO_CONSUMER_PROTOCOL@", "Consumer"};
+const ClientProtocolVersion kProducerProtocol{"@ASAPO_PRODUCER_PROTOCOL@", "Producer"};
 
 }
 
