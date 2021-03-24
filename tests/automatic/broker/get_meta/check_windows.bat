@@ -17,8 +17,8 @@ start /B "" "%full_name%" -config settings.json
 
 ping 192.0.2.1 -n 1 -w 1000 > nul
 
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/beamtime/data/detector/default/0/meta/0?token=%token% --stderr - | findstr /c:\"_id\":0  || goto :error
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/beamtime/data/detector/default/0/meta/1?token=%token% --stderr - | findstr /c:"no documents"  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/v0.1/beamtime/data/detector/default/0/meta/0?token=%token% --stderr - | findstr /c:\"_id\":0  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/v0.1/beamtime/data/detector/default/0/meta/1?token=%token% --stderr - | findstr /c:"no documents"  || goto :error
 
 
 goto :clean

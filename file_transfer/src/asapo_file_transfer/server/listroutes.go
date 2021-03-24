@@ -8,7 +8,7 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"Transfer File",
 		"POST",
-		"/transfer",
+		"/{apiver}/transfer",
 		routeFileTransfer,
 	},
 	utils.Route{

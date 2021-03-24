@@ -517,7 +517,7 @@ Error ConsumerImpl::FtsRequestWithTimeout(MessageMeta* info, MessageData* data) 
 
 RequestInfo ConsumerImpl::CreateFileTransferRequest(const MessageMeta* info) const {
     RequestInfo ri;
-    ri.api = "/transfer";
+    ri.api = "/" + kConsumerProtocol.GetVersion() +"/transfer";
     ri.post = true;
     ri.body = "{\"Folder\":\"" + source_path_ + "\",\"FileName\":\"" + info->name + "\"}";
     ri.cookie = "Authorization=Bearer " + folder_token_;

@@ -23,22 +23,22 @@ mkdir -p $file_transfer_folder
 
 token=$BT_AAA_TOKEN
 
-folder_token=`curl --silent --data "{\"Folder\":\"$file_transfer_folder\",\"BeamtimeId\":\"aaa\",\"Token\":\"$token\"}" 127.0.0.1:5007/folder`
+folder_token=`curl --silent --data "{\"Folder\":\"$file_transfer_folder\",\"BeamtimeId\":\"aaa\",\"Token\":\"$token\"}" 127.0.0.1:5007/v0.1/folder`
 echo $folder_token
 
 
 dd if=/dev/urandom of=$file_transfer_folder/aaa bs=1 count=100000
 
-curl -o aaa --silent -H "Authorization: Bearer ${folder_token}" --data "{\"Folder\":\"$file_transfer_folder\",\"FileName\":\"aaa\",\"Token\":\"$folder_token\"}" 127.0.0.1:5008/transfer --stderr - | tee /dev/stderr
+curl -o aaa --silent -H "Authorization: Bearer ${folder_token}" --data "{\"Folder\":\"$file_transfer_folder\",\"FileName\":\"aaa\",\"Token\":\"$folder_token\"}" 127.0.0.1:5008/v0.1/transfer --stderr - | tee /dev/stderr
 
-curl -H "Authorization: Bearer ${folder_token}" --data "{\"Folder\":\"$file_transfer_folder\",\"FileName\":\"aaa\",\"Token\":\"$folder_token\"}" 127.0.0.1:5008/transfer?sizeonly=true --stderr - | tee /dev/stderr | grep 100000
+curl -H "Authorization: Bearer ${folder_token}" --data "{\"Folder\":\"$file_transfer_folder\",\"FileName\":\"aaa\",\"Token\":\"$folder_token\"}" 127.0.0.1:5008/v0.1/transfer?sizeonly=true --stderr - | tee /dev/stderr | grep 100000
 
 
 diff -q aaa $file_transfer_folder/aaa
 
 dd if=/dev/zero of=$file_transfer_folder/big_file bs=1 count=0 seek=5368709120
 
-curl -vvv -o big_file -H "Authorization: Bearer ${folder_token}" --data "{\"Folder\":\"$file_transfer_folder\",\"FileName\":\"big_file\",\"Token\":\"$folder_token\"}" 127.0.0.1:5008/transfer --stderr -  | tee /dev/stderr
+curl -vvv -o big_file -H "Authorization: Bearer ${folder_token}" --data "{\"Folder\":\"$file_transfer_folder\",\"FileName\":\"big_file\",\"Token\":\"$folder_token\"}" 127.0.0.1:5008/v0.1/transfer --stderr -  | tee /dev/stderr
 
 ls -ln big_file | awk '{ print $5 }' | tee /dev/stderr | grep 5368709120
 
