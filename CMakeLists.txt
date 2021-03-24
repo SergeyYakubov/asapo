@@ -1,8 +1,16 @@
 cmake_minimum_required(VERSION 3.7)
 project(ASAPO)
 
+#protocol version changes if one of the microservice API's change
 set (ASAPO_CONSUMER_PROTOCOL "v0.1")
 set (ASAPO_PRODUCER_PROTOCOL "v0.1")
+
+set (ASAPO_DISCOVERY_API_VER "v0.1")
+set (ASAPO_AUTHORIZER_API_VER "v0.1")
+set (ASAPO_BROKER_API_VER "v0.1")
+set (ASAPO_FILE_TRANSFER_SERVICE_API_VER "v0.1")
+set (ASAPO_RECEIVER_API_VER "v0.1")
+set (ASAPO_RDS_API_VER "v0.1")
 
 set(CMAKE_CXX_STANDARD 11)
 IF(WIN32)

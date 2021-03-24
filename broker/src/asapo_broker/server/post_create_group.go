@@ -7,7 +7,7 @@ import (
 )
 
 func routeCreateGroupID(w http.ResponseWriter, r *http.Request) {
-	if ok := checkAuthorizerApiVersion(w, r); !ok {
+	if ok := checkBrokerApiVersion(w, r); !ok {
 		return
 	}
 

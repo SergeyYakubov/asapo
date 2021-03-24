@@ -7,4 +7,3 @@ const  (
 	NameReceiverService = "asapo-receiver"
 )
 
-const ApiVersion = "v0.1"

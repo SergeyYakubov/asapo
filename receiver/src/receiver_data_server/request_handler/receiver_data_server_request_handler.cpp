@@ -1,7 +1,7 @@
 #include "receiver_data_server_request_handler.h"
 
 #include "../receiver_data_server_error.h"
-
+#include "asapo/common/version.h"
 namespace asapo {
 
 ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(RdsNetServer* server,
@@ -11,8 +11,19 @@ ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(RdsNetServer*
 }
 
 
-bool ReceiverDataServerRequestHandler::CheckRequest(const ReceiverDataServerRequest* request) {
-    return  request->header.op_code == kOpcodeGetBufferData;
+bool ReceiverDataServerRequestHandler::CheckRequest(const ReceiverDataServerRequest* request,NetworkErrorCode* code) {
+    if (request->header.op_code != kOpcodeGetBufferData) {
+        *code = kNetErrorWrongRequest;
+        return false;
+    }
+    int verClient = VersionToNumber(request->header.api_version);
+    int verService = VersionToNumber(GetRdsApiVersion());
+    if (verClient > verService) {
+        *code = kNetErrorNotSupported;
+        return false;
+    }
+
+    return true;
 }
 
 Error ReceiverDataServerRequestHandler::SendResponse(const ReceiverDataServerRequest* request, NetworkErrorCode code) {
@@ -45,8 +56,9 @@ CacheMeta* ReceiverDataServerRequestHandler::GetSlotAndLock(const ReceiverDataSe
 bool ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* request, bool* retry) {
     *retry = false;
     auto receiver_request = dynamic_cast<ReceiverDataServerRequest*>(request);
-    if (!CheckRequest(receiver_request)) {
-        HandleInvalidRequest(receiver_request);
+    NetworkErrorCode code;
+    if (!CheckRequest(receiver_request,&code)) {
+        HandleInvalidRequest(receiver_request,code);
         return true;
     }
 
@@ -78,10 +90,18 @@ void ReceiverDataServerRequestHandler::ProcessRequestTimeout(GenericRequest* /*r
 // do nothing
 }
 
-void ReceiverDataServerRequestHandler::HandleInvalidRequest(const ReceiverDataServerRequest* receiver_request) {
-    SendResponse(receiver_request, kNetErrorWrongRequest);
+void ReceiverDataServerRequestHandler::HandleInvalidRequest(const ReceiverDataServerRequest* receiver_request,NetworkErrorCode code) {
+    SendResponse(receiver_request, code);
     server_->HandleAfterError(receiver_request->source_id);
-    log__->Error("wrong request, code:" + std::to_string(receiver_request->header.op_code));
+    switch (code) {
+        case NetworkErrorCode::kNetErrorWrongRequest:
+            log__->Error("wrong request, code:" + std::to_string(receiver_request->header.op_code));
+            break;
+        case NetworkErrorCode::kNetErrorNotSupported:
+            log__->Error("unsupported client, version: " + std::string(receiver_request->header.api_version));
+            break;
+    };
+
 }
 
 void ReceiverDataServerRequestHandler::HandleValidRequest(const ReceiverDataServerRequest* receiver_request,

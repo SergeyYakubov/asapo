@@ -44,6 +44,7 @@ class Request {
     VIRTUAL uint64_t GetDataID() const;
     VIRTUAL std::string GetFileName() const;
     VIRTUAL std::string GetStream() const;
+    VIRTUAL std::string GetApiVersion() const;
     VIRTUAL void* GetData() const;
     VIRTUAL Opcode GetOpCode() const;
     VIRTUAL const char* GetMessage() const;

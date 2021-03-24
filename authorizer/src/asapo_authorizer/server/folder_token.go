@@ -77,7 +77,7 @@ func checkBeamtimeFolder(request folderTokenRequest) error {
 }
 
 func checkAuthorizerApiVersion(w http.ResponseWriter, r *http.Request) bool {
-	_, ok := utils.PrecheckApiVersion(w, r, version.GetConsumerProtocolVersion())
+	_, ok := utils.PrecheckApiVersion(w, r, version.GetAuthorizerApiVersion())
 	return ok
 }
 

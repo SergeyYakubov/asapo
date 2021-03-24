@@ -24,12 +24,12 @@ class ReceiverDataServerRequestHandler: public RequestHandler {
   private:
     RdsNetServer* server_;
     DataCache* data_cache_;
-    bool CheckRequest(const ReceiverDataServerRequest* request);
+    bool CheckRequest(const ReceiverDataServerRequest* request,NetworkErrorCode* code);
     Error SendResponse(const ReceiverDataServerRequest* request, NetworkErrorCode code);
     Error SendResponseAndSlotData(const ReceiverDataServerRequest* request, const CacheMeta* meta);
     CacheMeta* GetSlotAndLock(const ReceiverDataServerRequest* request);
 
-    void HandleInvalidRequest(const ReceiverDataServerRequest* receiver_request);
+    void HandleInvalidRequest(const ReceiverDataServerRequest* receiver_request,NetworkErrorCode code);
 
     void HandleValidRequest(const ReceiverDataServerRequest* receiver_request, const CacheMeta* meta);
 };

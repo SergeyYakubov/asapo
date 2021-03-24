@@ -44,6 +44,7 @@ MATCHER_P4(M_CheckSendRequest, op_code, buf_id, data_size, message,
     return ((asapo::GenericRequestHeader*) arg)->op_code == op_code
            && ((asapo::GenericRequestHeader*) arg)->data_id == uint64_t(buf_id)
            && ((asapo::GenericRequestHeader*) arg)->data_size == uint64_t(data_size)
+           && strcmp(((asapo::GenericRequestHeader*) arg)->api_version, "v0.1") == 0
            && strcmp(((asapo::GenericRequestHeader*) arg)->message, message) == 0;
 }
 
@@ -211,6 +212,19 @@ TEST_F(TcpClientTests, GetResponceReturnsWrongRequest) {
 
     ASSERT_THAT(err, Ne(nullptr));
 }
+
+TEST_F(TcpClientTests, GetResponceReturnsUnsupported) {
+    ExpectNewConnection(false, true);
+    ExpectSendRequest(expected_sd, true);
+    ExpectGetResponce(expected_sd, true, asapo::kNetErrorNotSupported);
+    EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
+    EXPECT_CALL(mock_connection_pool, ReleaseConnection(expected_sd));
+
+    auto err = client->GetData(&info, &data);
+
+    ASSERT_THAT(err, Ne(nullptr));
+}
+
 
 TEST_F(TcpClientTests, ErrorGettingData) {
     ExpectNewConnection(false, true);

@@ -17,8 +17,22 @@ inline void ExitAfterPrintVersionIfNeeded(std::string prefix,int argc, char* arg
     }
 }
 
-const ClientProtocolVersion kConsumerProtocol{"@ASAPO_CONSUMER_PROTOCOL@", "Consumer"};
-const ClientProtocolVersion kProducerProtocol{"@ASAPO_PRODUCER_PROTOCOL@", "Producer"};
+const ConsumerProtocol kConsumerProtocol{"@ASAPO_CONSUMER_PROTOCOL@","@ASAPO_DISCOVERY_API_VER@",
+                                         "@ASAPO_AUTHORIZER_API_VER@","@ASAPO_FILE_TRANSFER_SERVICE_API_VER@","@ASAPO_BROKER_API_VER@","@ASAPO_RDS_API_VER@"};
+const ProducerProtocol kProducerProtocol{"@ASAPO_PRODUCER_PROTOCOL@","@ASAPO_DISCOVERY_API_VER@", "@ASAPO_RECEIVER_API_VER@"};
+
+inline std::string GetReceiverApiVersion() {
+    return "@ASAPO_RECEIVER_API_VER@";
+}
+
+inline std::string GetRdsApiVersion() {
+    return "@ASAPO_RDS_API_VER@";
+}
+
+
+inline int VersionToNumber(const std::string& version) {
+    return int(atof(version.c_str()+2)*1000);
+}
 
 }
 

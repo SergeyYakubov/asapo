@@ -118,20 +118,82 @@ enum IngestModeFlags : uint64_t {
 
 const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem | kStoreInDatabase;
 
-class ClientProtocolVersion {
+class ClientProtocol {
  private:
   std::string version_;
+  std::string discovery_version_;
   std::string name_;
  public:
-  ClientProtocolVersion(std::string version, std::string name) : version_{version}, name_{name} {};
-  ClientProtocolVersion() = delete;
-  std::string GetString() {
-      return std::string();
-  }
-  std::string GetVersion() const {
+  ClientProtocol(std::string version, std::string name,std::string discovery_version) : version_{version}, name_{name} {
+      discovery_version_ = discovery_version;
+  };
+  ClientProtocol() = delete;
+  virtual std::string GetString() = 0;
+  const std::string &GetVersion() const {
       return version_;
   }
+  const std::string &GetDiscoveryVersion() const {
+      return discovery_version_;
+  }
+  const std::string &GetName() const {
+      return name_;
+  }
+};
 
+class ConsumerProtocol final : public ClientProtocol {
+ private:
+  std::string authorizer_version_;
+  std::string file_transfer_service_version_;
+  std::string broker_version_;
+  std::string rds_version_;
+ public:
+  ConsumerProtocol(std::string version,
+                   std::string discovery_version,
+                   std::string authorizer_version,
+                   std::string file_transfer_service_version,
+                   std::string broker_version,
+                   std::string rds_version)
+      : ClientProtocol(version, "consumer protocol",discovery_version) {
+      authorizer_version_ = authorizer_version;
+      file_transfer_service_version_ = file_transfer_service_version;
+      broker_version_ = broker_version;
+      rds_version_ = rds_version;
+  }
+  const std::string &GetAuthorizerVersion() const {
+      return authorizer_version_;
+  }
+  const std::string &GetFileTransferServiceVersion() const {
+      return file_transfer_service_version_;
+  }
+  const std::string &GetRdsVersion() const {
+      return rds_version_;
+  }
+  const std::string &GetBrokerVersion() const {
+      return broker_version_;
+  };
+  ConsumerProtocol() = delete;
+  std::string GetString() override {
+      return std::string();
+  }
+};
+
+class ProducerProtocol final : public ClientProtocol {
+ private:
+  std::string receiver_version_;
+ public:
+  ProducerProtocol(std::string version,
+                   std::string discovery_version,
+                   std::string receiver_version)
+      : ClientProtocol(version, "producer protocol",discovery_version) {
+      receiver_version_ = receiver_version;
+  };
+  const std::string &GetReceiverVersion() const {
+      return receiver_version_;
+  }
+  ProducerProtocol() = delete;
+  std::string GetString() override {
+      return std::string();
+  }
 };
 
 }

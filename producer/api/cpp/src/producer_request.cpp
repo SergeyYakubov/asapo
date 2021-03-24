@@ -24,6 +24,13 @@ ProducerRequest::ProducerRequest(std::string source_credentials,
     original_filepath{std::move(original_filepath)},
     callback{callback},
     manage_data_memory{manage_data_memory} {
+
+    if (kProducerProtocol.GetReceiverVersion().size()<kMaxVersionSize) {
+        strcpy(header.api_version, kProducerProtocol.GetReceiverVersion().c_str());
+    } else {
+        strcpy(header.api_version, "v0.0");
+    }
+
 }
 
 bool ProducerRequest::NeedSend() const {

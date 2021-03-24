@@ -2,8 +2,9 @@ package server
 
 import (
 	"asapo_common/version"
-	"asapo_discovery/common"
+	"asapo_discovery/protocols"
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -19,46 +20,42 @@ var versionTests = []struct {
 }{
 	{"", versionInfo{
 		CoreServices:               coreVer,
-		ClientConsumerProtocol:     "",
-		ClientProducerProtocol:     "",
+		ClientConsumerProtocol:     protocols.ProtocolInfo{},
+		ClientProducerProtocol:     protocols.ProtocolInfo{},
 		ClientSupported:            "",
-		SupportedProducerProtocols: []string{"v0.1 (current)"},
-		SupportedConsumerProtocols: []string{"v0.1 (current)"},
 	}, http.StatusOK, "no client"},
 	{"?client=consumer&protocol=v0.1", versionInfo{
 		CoreServices:               coreVer,
-		ClientConsumerProtocol:     "v0.1 (current)",
-		ClientProducerProtocol:     "",
+		ClientConsumerProtocol:     protocols.ProtocolInfo{"v0.1 (current)",
+			map[string]string{"Authorizer":"v0.1", "Broker":"v0.1", "Data cache service":"v0.1", "Discovery":"v0.1", "File Transfer":"v0.1"}},
+		ClientProducerProtocol:     protocols.ProtocolInfo{},
 		ClientSupported:            "yes",
-		SupportedProducerProtocols: []string{"v0.1 (current)"},
-		SupportedConsumerProtocols: []string{"v0.1 (current)"},
 	}, http.StatusOK, "consumer client"},
 	{"?client=producer&protocol=v0.1", versionInfo{
 		CoreServices:               coreVer,
-		ClientProducerProtocol:     "v0.1 (current)",
-		ClientConsumerProtocol:     "",
+		ClientProducerProtocol:     protocols.ProtocolInfo{"v0.1 (current)",map[string]string{"Discovery":"v0.1", "Receiver":"v0.1"}},
+		ClientConsumerProtocol:     protocols.ProtocolInfo{},
 		ClientSupported:            "yes",
-		SupportedProducerProtocols: []string{"v0.1 (current)"},
-		SupportedConsumerProtocols: []string{"v0.1 (current)"},
 	}, http.StatusOK, "producer client"},
 	{"?client=producer&protocol=v0.2", versionInfo{
 		CoreServices:               coreVer,
-		ClientProducerProtocol:     "v0.2 (unknown protocol)",
-		ClientConsumerProtocol:     "",
+		ClientProducerProtocol:     protocols.ProtocolInfo{"v0.2 (unknown protocol)",nil},
+		ClientConsumerProtocol:     protocols.ProtocolInfo{},
 		ClientSupported:            "no",
-		SupportedProducerProtocols: []string{"v0.1 (current)"},
-		SupportedConsumerProtocols: []string{"v0.1 (current)"},
 	}, http.StatusOK, "producer client unknown"},
 }
 
 func TestVersionTests(t *testing.T) {
 	for _, test := range versionTests {
-		w := doRequest("/" + common.ApiVersion + "/version" + test.request)
+		w := doRequest("/" + version.GetDiscoveryApiVersion() + "/version" + test.request)
 		assert.Equal(t, test.code, w.Code, test.message)
 		if test.code == http.StatusOK {
 			var info versionInfo
 			json.Unmarshal(w.Body.Bytes(), &info)
-			assert.Equal(t, test.result, info, test.message)
+			fmt.Println(w.Body.String())
+			assert.Equal(t, test.result.ClientConsumerProtocol,info.ClientConsumerProtocol, test.message)
+			assert.Equal(t, true,len(info.SupportedProducerProtocols)>0, test.message)
+			assert.Equal(t, true,len(info.SupportedConsumerProtocols)>0, test.message)
 		}
 	}
 }

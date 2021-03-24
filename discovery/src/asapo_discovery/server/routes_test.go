@@ -66,9 +66,9 @@ message string
 }
 
 var receiverTests = []requestTest {
-	{"/" + common.ApiVersion+"/asapo-receiver",http.StatusBadRequest,"protocol missing"},
-	{"/" + common.ApiVersion+"/asapo-receiver?protocol=v0.2",http.StatusUnsupportedMediaType,"wrong protocol"},
-	{"/" + common.ApiVersion+"/asapo-receiver?protocol=v0.1",http.StatusOK,"ok"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver",http.StatusBadRequest,"protocol missing"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver?protocol=v0.2",http.StatusUnsupportedMediaType,"wrong protocol"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver?protocol=v0.1",http.StatusOK,"ok"},
 }
 
 func (suite *GetServicesTestSuite) TestGetReceivers() {
@@ -92,9 +92,9 @@ func (suite *GetServicesTestSuite) TestGetReceivers() {
 }
 
 var brokerTests = []requestTest {
-	{"/" + common.ApiVersion+"/asapo-broker",http.StatusBadRequest,"protocol missing"},
-	{"/" + common.ApiVersion+"/asapo-broker?protocol=v0.2",http.StatusUnsupportedMediaType,"wrong protocol"},
-	{"/" + common.ApiVersion+"/asapo-broker?protocol=v0.1",http.StatusOK,"ok"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker",http.StatusBadRequest,"protocol missing"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker?protocol=v0.2",http.StatusUnsupportedMediaType,"wrong protocol"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker?protocol=v0.1",http.StatusOK,"ok"},
 }
 func (suite *GetServicesTestSuite) TestGetBroker() {
 	for _,test:= range brokerTests {
@@ -130,7 +130,7 @@ func (suite *GetServicesTestSuite) TestGetFts() {
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameFtsService)))
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("validating")))
 
-	w := doRequest("/" + common.ApiVersion+"/asapo-file-transfer?protocol=v0.1")
+	w := doRequest("/" + version.GetDiscoveryApiVersion()+"/asapo-file-transfer?protocol=v0.1")
 
 	suite.Equal(http.StatusOK, w.Code, "code ok")
 	suite.Equal(w.Body.String(), "ip_fts", "result")
@@ -140,7 +140,7 @@ func (suite *GetServicesTestSuite) TestGetFts() {
 func (suite *GetServicesTestSuite) TestGetVersions() {
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get version")))
 
-	w := doRequest("/" + common.ApiVersion + "/version")
+	w := doRequest("/" + version.GetDiscoveryApiVersion() + "/version")
 
 	suite.Equal(http.StatusOK, w.Code, "code ok")
 	// we dont really check what it returns, just that route is ok

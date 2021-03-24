@@ -4,7 +4,6 @@ import (
 	"asapo_common/logger"
 	"asapo_common/utils"
 	"asapo_common/version"
-	"asapo_discovery/common"
 	"asapo_discovery/protocols"
 	"encoding/json"
 	"errors"
@@ -13,17 +12,17 @@ import (
 
 type versionInfo struct {
 	CoreServices               string
-	ClientConsumerProtocol     string
-	ClientProducerProtocol     string
+	ClientConsumerProtocol     protocols.ProtocolInfo
+	ClientProducerProtocol     protocols.ProtocolInfo
 	ClientSupported            string
-	SupportedProducerProtocols []string
-	SupportedConsumerProtocols []string
+	SupportedProducerProtocols []protocols.ProtocolInfo
+	SupportedConsumerProtocols []protocols.ProtocolInfo
 }
 
 func extractProtocol(r *http.Request) (string, error) {
 	keys := r.URL.Query()
 	protocol := keys.Get("protocol")
-	if protocol=="" {
+	if protocol == "" {
 		return "", errors.New("cannot extract protocol from request")
 	}
 	return protocol, nil
@@ -33,7 +32,7 @@ func routeGetVersion(w http.ResponseWriter, r *http.Request) {
 	log_str := "processing get version"
 	logger.Debug(log_str)
 
-	if ok := checkDiscoveryApiVersion(w, r);!ok{
+	if ok := checkDiscoveryApiVersion(w, r); !ok {
 		return
 	}
 	keys := r.URL.Query()
@@ -43,7 +42,7 @@ func routeGetVersion(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
-		logger.Error (log_str+" - "+err.Error())
+		logger.Error(log_str + " - " + err.Error())
 		return
 	}
 	resp, _ := json.Marshal(&info)
@@ -51,7 +50,7 @@ func routeGetVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 func checkDiscoveryApiVersion(w http.ResponseWriter, r *http.Request) bool {
-	_, ok := utils.PrecheckApiVersion(w,r,common.ApiVersion)
+	_, ok := utils.PrecheckApiVersion(w, r, version.GetDiscoveryApiVersion())
 	return ok
 }
 
@@ -64,7 +63,7 @@ func getVersionInfo(client string, ver string) (versionInfo, error) {
 	return info, nil
 }
 
-func getCoreInfo() (versionInfo,  error) {
+func getCoreInfo() (versionInfo, error) {
 	var info versionInfo
 	info.CoreServices = version.GetVersion()
 	var err error
@@ -79,19 +78,38 @@ func getCoreInfo() (versionInfo,  error) {
 	return info, nil
 }
 
-func updateClientInfo(client string, ver string, info* versionInfo) {
-	if client != "" {
-		hint, ok := protocols.ValidateProtocol(client, ver)
-		if ok {
-			info.ClientSupported = "yes"
-		} else {
-			info.ClientSupported = "no"
-		}
-		if client == "consumer" {
-			info.ClientConsumerProtocol = ver + " (" + hint + ")"
-		}
-		if client == "producer" {
-			info.ClientProducerProtocol = ver + " (" + hint + ")"
-		}
+func updateClientInfo(client string, ver string, info *versionInfo) {
+	if client == "" {
+		return
 	}
+	pInfo,valid := getProtocolInfo(client, ver, info)
+	setSupported(valid, info)
+	if client == "consumer" {
+		info.ClientConsumerProtocol = pInfo
+	} else
+	if client == "producer" {
+		info.ClientProducerProtocol = pInfo
+	}
+}
+
+func setSupported(valid bool, info *versionInfo) {
+	if valid {
+		info.ClientSupported = "yes"
+	} else {
+		info.ClientSupported = "no"
+	}
+}
+
+func getProtocolInfo(client string, ver string, info *versionInfo) (pInfo protocols.ProtocolInfo, valid bool) {
+	protocol, err := protocols.FindProtocol(client, ver)
+	if err != nil {
+		pInfo.Info = ver + " (" + err.Error() + ")"
+		valid = false
+	} else {
+		var hint string
+		hint, valid = protocol.IsValid()
+		pInfo.Info = ver + " (" + hint + ")"
+		pInfo.MicroserviceAPis = protocol.MicroserviceAPis
+	}
+	return
 }

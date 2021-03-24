@@ -50,13 +50,13 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 	return false
 }
 
-func checkAuthorizerApiVersion(w http.ResponseWriter, r *http.Request) bool {
-	_, ok := utils.PrecheckApiVersion(w, r, version.GetConsumerProtocolVersion())
+func checkBrokerApiVersion(w http.ResponseWriter, r *http.Request) bool {
+	_, ok := utils.PrecheckApiVersion(w, r, version.GetBrokerApiVersion())
 	return ok
 }
 
 func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_param string, needGroupID bool) {
-	if ok := checkAuthorizerApiVersion(w, r); !ok {
+	if ok := checkBrokerApiVersion(w, r); !ok {
 		return
 	}
 

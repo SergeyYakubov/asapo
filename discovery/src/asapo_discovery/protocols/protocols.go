@@ -15,7 +15,13 @@ func (p *protocolValidatorCurrent) IsValid() (hint string, ok bool) {
 
 type Protocol struct {
 	Version   string
+	MicroserviceAPis map[string]string
 	validator protocolValidator
+}
+
+type ProtocolInfo  struct {
+	Info string
+	MicroserviceAPis map[string]string
 }
 
 func (p *Protocol) IsValid() (hint string, ok bool) {
@@ -41,27 +47,38 @@ func getSupportedProtocols(client string) ([]Protocol, error) {
 	return nil, errors.New("unknown client")
 }
 
-func ValidateProtocol(client string, version string) (hint string, ok bool) {
+func FindProtocol(client string, version string) (Protocol, error) {
 	protocols, err := getSupportedProtocols(client)
 	if err != nil {
-		return err.Error(), false
+		return Protocol{},err
 	}
 	for _, protocol := range protocols {
 		if protocol.Version == version {
-			return protocol.IsValid()
+			return protocol,nil
 		}
 	}
-	return "unknown protocol", false
+	return Protocol{},errors.New("unknown protocol")
 }
 
-func GetSupportedProtocolsArray(client string) ([]string, error) {
+func ValidateProtocol(client string, version string) (hint string, ok bool) {
+	protocol, err := FindProtocol(client,version)
+	if err != nil {
+		return err.Error(), false
+	}
+	return protocol.IsValid()
+}
+
+func GetSupportedProtocolsArray(client string) ([]ProtocolInfo, error) {
 	protocols,err := getSupportedProtocols(client)
 	if err!=nil  {
 		return nil,err
 	}
-	res:=make([]string,0)
+	res:=make([]ProtocolInfo,0)
 	for _,protocol := range protocols {
-		res = append(res, protocol.GetString())
+		var info ProtocolInfo
+		info.Info = protocol.GetString()
+		info.MicroserviceAPis = protocol.MicroserviceAPis
+		res = append(res, info)
 	}
 	return res,nil
 }

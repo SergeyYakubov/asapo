@@ -91,7 +91,7 @@ func serveFileSize(w http.ResponseWriter, r *http.Request, fullName string) {
 
 
 func checkFtsApiVersion(w http.ResponseWriter, r *http.Request) bool {
-	_, ok := utils.PrecheckApiVersion(w, r, version.GetConsumerProtocolVersion())
+	_, ok := utils.PrecheckApiVersion(w, r, version.GetFtsApiVersion())
 	return ok
 }
 

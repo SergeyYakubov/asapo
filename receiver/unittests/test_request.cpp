@@ -83,6 +83,7 @@ class RequestTests : public Test {
     uint64_t expected_metadata_size = expected_metadata.size();
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     char expected_request_message[asapo::kMaxMessageSize] = "test_message";
+    std::string expected_api_version = "v0.1";
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;
@@ -96,6 +97,7 @@ class RequestTests : public Test {
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
+        strcpy(generic_request_header.api_version, expected_api_version.c_str());
         request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(expected_socket_id, _, data_size_, _)).WillByDefault(
@@ -155,6 +157,11 @@ TEST_F(RequestTests, GetRequestMessage) {
     auto message = request->GetMessage();
 
     ASSERT_THAT(message, testing::StrEq(expected_request_message));
+}
+
+TEST_F(RequestTests, GetApiVersion) {
+    auto ver = request->GetApiVersion();
+    ASSERT_THAT(ver, testing::Eq(expected_api_version));
 }
 
 

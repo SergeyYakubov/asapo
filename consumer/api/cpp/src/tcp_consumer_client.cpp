@@ -2,6 +2,7 @@
 #include "asapo/io/io_factory.h"
 #include "asapo/common/networking.h"
 #include "rds_response_error.h"
+#include "asapo/common/version.h"
 
 namespace asapo {
 
@@ -13,6 +14,7 @@ TcpConsumerClient::TcpConsumerClient() : io__{GenerateDefaultIO()}, connection_p
 Error TcpConsumerClient::SendGetDataRequest(SocketDescriptor sd, const MessageMeta* info) const noexcept {
     Error err;
     GenericRequestHeader request_header{kOpcodeGetBufferData, info->buf_id, info->size};
+    strncpy(request_header.api_version, kConsumerProtocol.GetRdsVersion().c_str(), kMaxVersionSize);
     io__->Send(sd, &request_header, sizeof(request_header), &err);
     if (err) {
         connection_pool__->ReleaseConnection(sd);
@@ -43,6 +45,10 @@ Error TcpConsumerClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
     }
     if (response.error_code) {
         switch (response.error_code) {
+        case kNetErrorNotSupported:
+                io__->CloseSocket(sd, nullptr);
+                connection_pool__->ReleaseConnection(sd);
+                break;
         case kNetErrorWrongRequest:
             io__->CloseSocket(sd, nullptr);
             break;
