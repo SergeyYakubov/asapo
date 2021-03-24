@@ -7,6 +7,17 @@ import (
 )
 
 var version string
+var consumerProtocolVersion string
+var producerProtocolVersion string
+
+func GetProducerProtocolVersion() string {
+	return producerProtocolVersion
+}
+
+func GetConsumerProtocolVersion() string {
+	return consumerProtocolVersion
+}
+
 
 func GetVersion() string {
     return version

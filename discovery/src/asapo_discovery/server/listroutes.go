@@ -36,4 +36,11 @@ var listRoutes = utils.Routes{
 		"/{apiver}/" + common.NameFtsService,
 		routeGetFileTransferService,
 	},
+	utils.Route{
+		"Health",
+		"Get",
+		"/health",
+		routeGetHealth,
+	},
+
 }

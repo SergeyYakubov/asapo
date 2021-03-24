@@ -44,11 +44,11 @@ func validateProtocol(w http.ResponseWriter, r *http.Request, client string) boo
 }
 
 func routeGetReceivers(w http.ResponseWriter, r *http.Request) {
-	if ok := checkDiscoveryApiVersion(w, r);!ok{
+	if ok := checkDiscoveryApiVersion(w, r); !ok {
 		return
 	}
 
-	if !validateProtocol(w,r,"producer") {
+	if !validateProtocol(w, r, "producer") {
 		return
 	}
 	answer, code := getService(common.NameReceiverService)
@@ -57,11 +57,11 @@ func routeGetReceivers(w http.ResponseWriter, r *http.Request) {
 }
 
 func routeGetBroker(w http.ResponseWriter, r *http.Request) {
-	if ok := checkDiscoveryApiVersion(w, r);!ok{
+	if ok := checkDiscoveryApiVersion(w, r); !ok {
 		return
 	}
 
-	if !validateProtocol(w,r,"consumer") {
+	if !validateProtocol(w, r, "consumer") {
 		return
 	}
 
@@ -77,10 +77,10 @@ func routeGetMongo(w http.ResponseWriter, r *http.Request) {
 }
 
 func routeGetFileTransferService(w http.ResponseWriter, r *http.Request) {
-	if ok := checkDiscoveryApiVersion(w, r);!ok{
+	if ok := checkDiscoveryApiVersion(w, r); !ok {
 		return
 	}
-	if !validateProtocol(w,r,"consumer") {
+	if !validateProtocol(w, r, "consumer") {
 		return
 	}
 

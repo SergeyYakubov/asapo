@@ -12,6 +12,8 @@
 #include "fabric_consumer_client.h"
 #include "rds_response_error.h"
 
+#include "asapo/common/version.h"
+
 using std::chrono::system_clock;
 
 namespace asapo {
@@ -183,15 +185,14 @@ RequestInfo ConsumerImpl::GetDiscoveryRequest(const std::string &service_name) c
     RequestInfo ri;
     ri.host = endpoint_;
     ri.api = "/asapo-discovery/v0.1/" + service_name;
-    ri.extra_params="&protocol=" + kConsumerProtocol.GetVersion();
+    ri.extra_params = "&protocol=" + kConsumerProtocol.GetVersion();
     return ri;
 }
-
 
 Error ConsumerImpl::ProcessDiscoverServiceResult(Error err, std::string* uri_to_set) {
     if (err != nullptr || uri_to_set->empty()) {
         uri_to_set->clear();
-        if (err==ConsumerErrorTemplates::kUnsupportedClient) {
+        if (err == ConsumerErrorTemplates::kUnsupportedClient) {
             return err;
         }
         return ConsumerErrorTemplates::kUnavailableService.Generate(" on " + endpoint_
@@ -209,7 +210,7 @@ Error ConsumerImpl::DiscoverService(const std::string &service_name, std::string
     RequestOutput output;
     auto err = ProcessRequest(&output, ri, nullptr);
     *uri_to_set = std::move(output.string_output);
-    return ProcessDiscoverServiceResult(std::move(err),uri_to_set);
+    return ProcessDiscoverServiceResult(std::move(err), uri_to_set);
 }
 
 bool ConsumerImpl::SwitchToGetByIdIfPartialData(Error* err,
@@ -268,7 +269,8 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
     interrupt_flag_ = false;
     std::string request_suffix = OpToUriCmd(op);
     std::string request_group = OpToUriCmd(op);
-    std::string request_api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source
+    std::string request_api = "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source
         + "/" + std::move(stream);
     uint64_t elapsed_ms = 0;
     Error no_data_error;
@@ -454,7 +456,7 @@ Error ConsumerImpl::TryGetDataFromBuffer(const MessageMeta* info, MessageData* d
 
 std::string ConsumerImpl::GenerateNewGroupId(Error* err) {
     RequestInfo ri;
-    ri.api = "/creategroup";
+    ri.api =  "/" + kConsumerProtocol.GetVersion() + "/creategroup";
     ri.post = true;
     return BrokerRequestWithTimeout(ri, err);
 }
@@ -535,7 +537,8 @@ Error ConsumerImpl::ResetLastReadMarker(std::string group_id, std::string stream
 
 Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/"
+    ri.api = "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source + "/"
         + std::move(stream) + "/" + std::move(group_id) + "/resetcounter";
     ri.extra_params = "&value=" + std::to_string(value);
     ri.post = true;
@@ -565,7 +568,8 @@ Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, 
     }
 
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(
         group_id) + "/" + std::to_string(id);
@@ -582,7 +586,8 @@ Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, 
 std::string ConsumerImpl::GetBeamtimeMeta(Error* err) {
     RequestInfo ri;
     ri.api =
-        "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/default/0/meta/0";
+        "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+            + source_credentials_.data_source + "/default/0/meta/0";
 
     return BrokerRequestWithTimeout(ri, err);
 }
@@ -604,7 +609,8 @@ MessageMetas ConsumerImpl::QueryMessages(std::string query, std::string stream, 
     }
 
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         "/" + std::move(stream) + "/0/querymessages";
     ri.post = true;
     ri.body = std::move(query);
@@ -698,7 +704,8 @@ StreamInfos ConsumerImpl::GetStreamList(std::string from, StreamFilter filter, E
 
 RequestInfo ConsumerImpl::GetStreamListRequest(const std::string &from, const StreamFilter &filter) const {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/0/streams";
+    ri.api = "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source + "/0/streams";
     ri.post = false;
     if (!from.empty()) {
         ri.extra_params = "&from=" + from;
@@ -726,7 +733,7 @@ Error ConsumerImpl::UpdateFolderTokenIfNeeded(bool ignore_existing) {
 RequestInfo ConsumerImpl::CreateFolderTokenRequest() const {
     RequestInfo ri;
     ri.host = endpoint_;
-    ri.api = "/asapo-authorizer/folder";
+    ri.api = "/asapo-authorizer/v0.1/folder";
     ri.post = true;
     ri.body =
         "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\""
@@ -766,7 +773,8 @@ Error ConsumerImpl::Acknowledge(std::string group_id, uint64_t id, std::string s
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
@@ -787,7 +795,8 @@ IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
         return {};
     }
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/nacks";
     ri.extra_params = "&from=" + std::to_string(from_id) + "&to=" + std::to_string(to_id);
@@ -812,7 +821,8 @@ uint64_t ConsumerImpl::GetLastAcknowledgedMessage(std::string group_id, std::str
         return 0;
     }
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/lastack";
 
@@ -847,7 +857,8 @@ Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
@@ -891,7 +902,8 @@ uint64_t ConsumerImpl::ParseGetCurrentCountResponce(Error* err, const std::strin
 
 RequestInfo ConsumerImpl::GetSizeRequestForSingleMessagesStream(std::string &stream) const {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) + "/size";
     return ri;
 }

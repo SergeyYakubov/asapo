@@ -119,6 +119,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
             if (err) {
                 (*errors)[i] += ProcessError(err);
                 lock.unlock();
+                exit(EXIT_FAILURE);
                 return;
             }
         }

@@ -50,7 +50,7 @@ func TestFolderToken(t *testing.T) {
 		if test.status == http.StatusBadRequest {
 			request =makeRequest(authorizationRequest{})
 		}
-		w := doPostRequest("/folder",request,"")
+		w := doPostRequest("/v0.1/folder",request,"")
 		if w.Code == http.StatusOK {
 			body, _ := ioutil.ReadAll(w.Body)
 			claims,_ := utils.CheckJWTToken(string(body),"secret_folder")
@@ -65,4 +65,12 @@ func TestFolderToken(t *testing.T) {
 		assert.Equal(t, test.status, w.Code, test.message)
 	}
 }
+
+func TestFolderTokenWrongProtocol(t *testing.T) {
+		request :=  makeRequest(folderTokenRequest{"abs_path","beamtime_id","token"})
+		w := doPostRequest("/v0.2/folder",request,"")
+		assert.Equal(t, http.StatusUnsupportedMediaType, w.Code, "wrong protocol")
+}
+
+
 

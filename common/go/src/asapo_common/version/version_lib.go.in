@@ -4,4 +4,6 @@ package version
 // This file is overridden on build with build-time informations.
 func init(){
 	version   = "@ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"
+	consumerProtocolVersion = "@ASAPO_CONSUMER_PROTOCOL@"
+    producerProtocolVersion = "@ASAPO_PRODUCER_PROTOCOL@"
 }

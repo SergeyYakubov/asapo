@@ -2,12 +2,12 @@ package server
 
 import (
 	"asapo_common/logger"
+	"asapo_common/utils"
 	"asapo_common/version"
 	"asapo_discovery/common"
 	"asapo_discovery/protocols"
 	"encoding/json"
 	"errors"
-	"github.com/gorilla/mux"
 	"net/http"
 )
 
@@ -27,21 +27,6 @@ func extractProtocol(r *http.Request) (string, error) {
 		return "", errors.New("cannot extract protocol from request")
 	}
 	return protocol, nil
-}
-
-
-func extractVersion(r *http.Request) (int, error) {
-	vars := mux.Vars(r)
-	ver_str, ok := vars["apiver"]
-	if !ok {
-		return 0, errors.New("cannot extract version")
-	}
-
-	ver := common.VersionToNumber(ver_str)
-	if ver == 0 {
-		return 0, errors.New("cannot extract version")
-	}
-	return ver, nil
 }
 
 func routeGetVersion(w http.ResponseWriter, r *http.Request) {
@@ -66,18 +51,8 @@ func routeGetVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 func checkDiscoveryApiVersion(w http.ResponseWriter, r *http.Request) bool {
-	apiVer, err := extractVersion(r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		return false
-	}
-	if apiVer > common.VersionToNumber(common.ApiVersion) {
-		w.WriteHeader(http.StatusUnsupportedMediaType)
-		w.Write([]byte("version not supported"))
-		return false
-	}
-	return true
+	_, ok := utils.PrecheckApiVersion(w,r,common.ApiVersion)
+	return ok
 }
 
 func getVersionInfo(client string, ver string) (versionInfo, error) {

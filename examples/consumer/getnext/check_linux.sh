@@ -17,7 +17,7 @@ Cleanup() {
     nomad stop discovery
     nomad stop authorizer
     nomad stop broker
-	echo "db.dropDatabase()" | mongo ${database_name}
+  	echo "db.dropDatabase()" | mongo ${database_name}
 }
 
 nomad run nginx.nmd

@@ -38,7 +38,7 @@ func (suite *QueryTestSuite) TestQueryOK() {
 	suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: expectedStream,Op: "querymessages", ExtraParam: query_str}).Return([]byte("{}"), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request querymessages")))
 
-	w := doRequest("/database/"+expectedBeamtimeId+"/"+expectedSource+"/"+expectedStream+"/0/querymessages"+correctTokenSuffix, "POST", query_str)
+	w := doRequest("/beamtime/"+expectedBeamtimeId+"/"+expectedSource+"/"+expectedStream+"/0/querymessages"+correctTokenSuffix, "POST", query_str)
 	suite.Equal(http.StatusOK, w.Code, "Query OK")
 }
 

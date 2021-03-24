@@ -29,6 +29,6 @@ $1 -config settings.json &
 sleep 0.3
 brokerid=`echo $!`
 
-curl -v  --silent 127.0.0.1:5005/database/test/detector/default/0/meta/0?token=$token --stderr - | tee /dev/stderr | grep '"data":"test"'
-curl -v  --silent 127.0.0.1:5005/database/test/detector/default/0/meta/1?token=$token --stderr - | tee /dev/stderr | grep 'no documents'
+curl -v  --silent 127.0.0.1:5005/beamtime/test/detector/default/0/meta/0?token=$token --stderr - | tee /dev/stderr | grep '"data":"test"'
+curl -v  --silent 127.0.0.1:5005/beamtime/test/detector/default/0/meta/1?token=$token --stderr - | tee /dev/stderr | grep 'no documents'
 

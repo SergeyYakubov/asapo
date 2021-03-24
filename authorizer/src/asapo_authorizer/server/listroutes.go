@@ -26,7 +26,7 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"Folder Token",
 		"POST",
-		"/folder",
+		"/{apiver}/folder",
 		routeFolderToken,
 	},
 	utils.Route{

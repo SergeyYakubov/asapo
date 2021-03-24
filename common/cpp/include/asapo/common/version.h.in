@@ -2,7 +2,7 @@
 #define ASAPO_VERSION_H
 
 #include <iostream>
-#include <string>
+#include "string.h"
 
 #include "data_structs.h"
 
