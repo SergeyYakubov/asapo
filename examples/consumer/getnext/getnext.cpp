@@ -19,6 +19,7 @@ std::mutex lock;
 
 uint64_t file_size = 0;
 
+
 inline std::string ConnectionTypeToString(asapo::NetworkConnectionType type) {
     switch (type) {
     case asapo::NetworkConnectionType::kUndefined:

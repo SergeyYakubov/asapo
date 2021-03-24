@@ -20,7 +20,8 @@ endif()
 
 install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/common
         DESTINATION include/asapo
-        PATTERN "*.h.in" EXCLUDE)
+        PATTERN "*.h.in" EXCLUDE
+        PATTERN "*/internal" EXCLUDE)
 
 install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/logger
         DESTINATION include/asapo )

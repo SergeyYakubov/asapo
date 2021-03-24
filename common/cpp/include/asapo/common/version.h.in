@@ -29,7 +29,6 @@ inline std::string GetRdsApiVersion() {
     return "@ASAPO_RDS_API_VER@";
 }
 
-
 inline int VersionToNumber(const std::string& version) {
     return int(atof(version.c_str()+2)*1000);
 }
