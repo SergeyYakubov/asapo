@@ -69,7 +69,6 @@ void TryGetDataSourceAndToken(Args* args) {
 
 
 void ProcessCommandArguments(int argc, char* argv[], Args* args) {
-    asapo::ExitAfterPrintVersionIfNeeded("Dummy Data Producer", argc, argv);
     if (argc != 8 && argc != 9) {
         std::cout <<
                   "Usage: " << argv[0] <<

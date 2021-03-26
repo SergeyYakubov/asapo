@@ -14,6 +14,7 @@
 #include "asapo/http_client/http_error.h"
 #include "mocking.h"
 #include "../src/tcp_consumer_client.h"
+#include "asapo/common/internal/version.h"
 
 using asapo::ConsumerFactory;
 using asapo::Consumer;
@@ -1341,5 +1342,31 @@ TEST_F(ConsumerImplTests, GetCurrentDataSetCounteUsesCorrectUri) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(size, Eq(10));
 }
+
+
+TEST_F(ConsumerImplTests, GetVersionInfoClientOnly) {
+    std::string client_info;
+    auto err = consumer->GetVersionInfo(&client_info,nullptr,nullptr);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(client_info, HasSubstr(std::string(asapo::kVersion)));
+    ASSERT_THAT(client_info, HasSubstr(asapo::kConsumerProtocol.GetVersion()));
+}
+
+TEST_F(ConsumerImplTests, GetVersionInfoWithServer) {
+
+    std::string result = R"({"softwareVersion":"20.03.1, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.2"}})";
+
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/version?token=token&client=consumer&protocol=v0.1"), _,_)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return(result)));
+
+    std::string client_info,server_info;
+    auto err = consumer->GetVersionInfo(&client_info,&server_info,nullptr);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(server_info, HasSubstr("20.03.1"));
+    ASSERT_THAT(server_info, HasSubstr("v0.2"));
+}
+
 
 }

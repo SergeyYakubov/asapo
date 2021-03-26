@@ -1,7 +1,7 @@
 #include <thread>
 #include <chrono>
 #include "asapo/asapo_producer.h"
-
+#include <iostream>
 
 void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
     if (err) {

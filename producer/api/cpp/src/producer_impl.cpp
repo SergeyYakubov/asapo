@@ -1,16 +1,16 @@
 #include <iostream>
-#include <iostream>
 #include <cstring>
 #include <future>
 
 #include "producer_impl.h"
 #include "producer_logger.h"
-#include "asapo/io/io_factory.h"
 #include "asapo/producer/producer_error.h"
 #include "producer_request_handler_factory.h"
 #include "producer_request.h"
 #include "asapo/common/data_structs.h"
 #include "asapo/request/request_pool_error.h"
+#include "asapo/http_client/http_client.h"
+#include "asapo/common/internal/version.h"
 
 namespace  asapo {
 
@@ -18,7 +18,7 @@ const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
                            asapo::RequestHandlerType type):
-    log__{GetDefaultProducerLogger()}, timeout_ms_{timeout_ms} {
+    log__{GetDefaultProducerLogger()},httpclient__{DefaultHttpClient()}, timeout_ms_{timeout_ms},endpoint_{endpoint} {
     switch (type) {
     case RequestHandlerType::kTcp:
         discovery_service_.reset(new ReceiverDiscoveryService{endpoint, ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
@@ -392,5 +392,31 @@ void ProducerImpl::SetRequestsQueueLimits(uint64_t size, uint64_t volume) {
     request_pool__->SetLimits(RequestPoolLimits{size,volume});
 }
 
+Error ProducerImpl::GetVersionInfo(std::string* client_info, std::string* server_info, bool* supported) const {
+    if (client_info == nullptr && server_info == nullptr && supported == nullptr) {
+        return ProducerErrorTemplates::kWrongInput.Generate("missing parameters");
+    }
+    if (client_info != nullptr) {
+        *client_info =
+            "software version: " + std::string(kVersion) + ", consumer protocol: " + kProducerProtocol.GetVersion();
+    }
+
+    if (server_info != nullptr || supported != nullptr) {
+        return GetServerVersionInfo(server_info, supported);
+    }
+    return nullptr;
+}
+
+Error ProducerImpl::GetServerVersionInfo(std::string* server_info,
+                                         bool* supported) const {
+    auto endpoint = endpoint_ +"/asapo-discovery/"+kProducerProtocol.GetDiscoveryVersion()+"/version?client=producer&protocol="+kProducerProtocol.GetVersion();
+    HttpCode  code;
+    Error err;
+    auto response = httpclient__->Get(endpoint, &code, &err);
+    if (err) {
+        return err;
+    }
+    return ExtractVersionFromResponse(response,server_info,supported);
+}
 
 }

@@ -1,7 +1,7 @@
 #include "receiver_data_server_request_handler.h"
 
 #include "../receiver_data_server_error.h"
-#include "asapo/common/version.h"
+#include "asapo/common/internal/version.h"
 namespace asapo {
 
 ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(RdsNetServer* server,

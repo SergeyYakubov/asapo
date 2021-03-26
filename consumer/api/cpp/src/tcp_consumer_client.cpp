@@ -2,7 +2,7 @@
 #include "asapo/io/io_factory.h"
 #include "asapo/common/networking.h"
 #include "rds_response_error.h"
-#include "asapo/common/version.h"
+#include "asapo/common/internal/version.h"
 
 namespace asapo {
 

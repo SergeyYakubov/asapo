@@ -21,7 +21,6 @@ void PrintCommandArguments(const Args& args) {
 }
 
 void ProcessCommandArguments(int argc, char* argv[], Args* args) {
-    asapo::ExitAfterPrintVersionIfNeeded("dummy beamtime metadata", argc, argv);
     if (argc != 4) {
         std::cout <<
                   "Usage: " << argv[0] <<

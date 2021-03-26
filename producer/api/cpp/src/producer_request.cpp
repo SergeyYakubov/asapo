@@ -1,5 +1,6 @@
 #include <asapo/asapo_producer.h>
 #include "producer_request.h"
+#include "asapo/common/internal/version.h"
 
 namespace asapo {
 

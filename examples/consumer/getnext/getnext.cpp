@@ -265,7 +265,6 @@ void TryGetStream(Args* args) {
 }
 
 int main(int argc, char* argv[]) {
-    asapo::ExitAfterPrintVersionIfNeeded("GetNext consumer Example", argc, argv);
     Args params;
     params.datasets = false;
     if (argc != 8 && argc != 9) {

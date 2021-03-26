@@ -3,7 +3,7 @@
 #include <iostream>
 #include "fabric_consumer_client.h"
 #include "rds_response_error.h"
-#include "asapo/common/version.h"
+#include "asapo/common/internal/version.h"
 
 using namespace asapo;
 

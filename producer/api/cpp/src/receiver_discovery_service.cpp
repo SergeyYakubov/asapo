@@ -6,7 +6,7 @@
 
 #include "producer_logger.h"
 #include "asapo/json_parser/json_parser.h"
-#include "asapo/common/version.h"
+#include "asapo/common/internal/version.h"
 
 namespace  asapo {
 

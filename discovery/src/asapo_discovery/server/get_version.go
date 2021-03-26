@@ -11,12 +11,10 @@ import (
 )
 
 type versionInfo struct {
-	CoreServices               string
-	ClientConsumerProtocol     protocols.ProtocolInfo
-	ClientProducerProtocol     protocols.ProtocolInfo
-	ClientSupported            string
-	SupportedProducerProtocols []protocols.ProtocolInfo
-	SupportedConsumerProtocols []protocols.ProtocolInfo
+	SoftwareVersion            string `json:"softwareVersion"`
+	ClientProtocol     protocols.ProtocolInfo `json:"clientProtocol"`
+	ClientSupported            string `json:"clientSupported"`
+	SupportedProtocols []protocols.ProtocolInfo `json:"supportedProtocols"`
 }
 
 func extractProtocol(r *http.Request) (string, error) {
@@ -55,23 +53,25 @@ func checkDiscoveryApiVersion(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func getVersionInfo(client string, ver string) (versionInfo, error) {
-	info, err := getCoreInfo()
+	info, err := getCoreInfo(client)
 	if err != nil {
 		return versionInfo{}, err
+	}
+	if ver=="" {
+		return info, nil
 	}
 	updateClientInfo(client, ver, &info)
 	return info, nil
 }
 
-func getCoreInfo() (versionInfo, error) {
+func getCoreInfo(client string) (versionInfo, error) {
 	var info versionInfo
-	info.CoreServices = version.GetVersion()
-	var err error
-	info.SupportedConsumerProtocols, err = protocols.GetSupportedProtocolsArray("consumer")
-	if err != nil {
-		return versionInfo{}, err
+	info.SoftwareVersion = version.GetVersion()
+	if client=="" {
+		return info, nil
 	}
-	info.SupportedProducerProtocols, err = protocols.GetSupportedProtocolsArray("producer")
+	var err error
+	info.SupportedProtocols, err = protocols.GetSupportedProtocolsArray(client)
 	if err != nil {
 		return versionInfo{}, err
 	}
@@ -85,10 +85,10 @@ func updateClientInfo(client string, ver string, info *versionInfo) {
 	pInfo,valid := getProtocolInfo(client, ver, info)
 	setSupported(valid, info)
 	if client == "consumer" {
-		info.ClientConsumerProtocol = pInfo
+		info.ClientProtocol = pInfo
 	} else
 	if client == "producer" {
-		info.ClientProducerProtocol = pInfo
+		info.ClientProtocol = pInfo
 	}
 }
 
@@ -103,13 +103,13 @@ func setSupported(valid bool, info *versionInfo) {
 func getProtocolInfo(client string, ver string, info *versionInfo) (pInfo protocols.ProtocolInfo, valid bool) {
 	protocol, err := protocols.FindProtocol(client, ver)
 	if err != nil {
-		pInfo.Info = ver + " (" + err.Error() + ")"
+		pInfo.VersionInfo = ver + " (" + err.Error() + ")"
 		valid = false
 	} else {
 		var hint string
 		hint, valid = protocol.IsValid()
-		pInfo.Info = ver + " (" + hint + ")"
-		pInfo.MicroserviceAPis = protocol.MicroserviceAPis
+		pInfo.VersionInfo = ver + " (" + hint + ")"
+		pInfo.MicroservicesApi = protocol.MicroserviceAPis
 	}
 	return
 }

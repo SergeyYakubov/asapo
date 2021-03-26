@@ -4,9 +4,12 @@
 #include <iostream>
 #include "string.h"
 
-#include "data_structs.h"
+#include "asapo/common/data_structs.h"
+#include "asapo/common/error.h"
+#include "asapo/http_client/http_client.h"
 
 namespace asapo {
+
 
 const char kVersion[] = "@ASAPO_VERSION@@ASAPO_VERSION_COMMIT@";
 
@@ -33,7 +36,9 @@ inline int VersionToNumber(const std::string& version) {
     return int(atof(version.c_str()+2)*1000);
 }
 
+Error ExtractVersionFromResponse(const std::string &response,
+                                 std::string* server_info,
+                                 bool* supported);
 }
-
 
 #endif //ASAPO_VERSION_H

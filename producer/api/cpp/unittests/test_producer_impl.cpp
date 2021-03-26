@@ -1,5 +1,3 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "InfiniteRecursion"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -11,6 +9,7 @@
 
 #include "../src/request_handler_tcp.h"
 #include "asapo/request/request_pool_error.h"
+#include "asapo/unittests/MockHttpClient.h"
 
 #include "mocking.h"
 
@@ -26,10 +25,13 @@ using ::testing::Ne;
 using ::testing::Mock;
 using ::testing::InSequence;
 using ::testing::HasSubstr;
+using testing::SetArgPointee;
 
 
 using asapo::RequestPool;
 using asapo::ProducerRequest;
+using asapo::MockHttpClient;
+
 
 MATCHER_P10(M_CheckSendRequest, op_code, source_credentials, metadata, file_id, file_size, message, stream,
             ingest_mode,
@@ -56,6 +58,8 @@ TEST(ProducerImpl, Constructor) {
     asapo::ProducerImpl producer{"", 4, 3600000, asapo::RequestHandlerType::kTcp};
     ASSERT_THAT(dynamic_cast<asapo::AbstractLogger*>(producer.log__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestPool*>(producer.request_pool__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::HttpClient*>(producer.httpclient__.get()), Ne(nullptr));
+
 }
 
 class ProducerImplTests : public testing::Test {
@@ -64,7 +68,8 @@ class ProducerImplTests : public testing::Test {
   asapo::ProducerRequestHandlerFactory factory{&service};
   testing::NiceMock<asapo::MockLogger> mock_logger;
   testing::NiceMock<MockRequestPull> mock_pull{&factory, &mock_logger};
-  asapo::ProducerImpl producer{"", 1, 3600000, asapo::RequestHandlerType::kTcp};
+  std::string expected_server_uri = "test:8400";
+  asapo::ProducerImpl producer{expected_server_uri, 1, 3600000, asapo::RequestHandlerType::kTcp};
   uint64_t expected_size = 100;
   uint64_t expected_id = 10;
   uint64_t expected_dataset_id = 100;
@@ -88,9 +93,15 @@ class ProducerImplTests : public testing::Test {
   std::string expected_fullpath = "filename";
   bool expected_managed_memory = true;
   bool expected_unmanaged_memory = false;
+
+  MockHttpClient* mock_http_client;
+
   void SetUp() override {
       producer.log__ = &mock_logger;
       producer.request_pool__ = std::unique_ptr<RequestPool>{&mock_pull};
+      mock_http_client = new MockHttpClient;
+      producer.httpclient__.reset(mock_http_client);
+
   }
   void TearDown() override {
       producer.request_pool__.release();
@@ -510,8 +521,20 @@ TEST_F(ProducerImplTests, ReturnDataIfCanotAddToQueue) {
 
 }
 
+TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
 
+    std::string result = R"({"softwareVersion":"20.03.1, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.2"}})";
 
+    EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/version?client=producer&protocol=v0.1"), _,_)).WillOnce(DoAll(
+        SetArgPointee<1>(asapo::HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return(result)));
+
+    std::string client_info,server_info;
+    auto err = producer.GetVersionInfo(&client_info,&server_info,nullptr);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(server_info, HasSubstr("20.03.1"));
+    ASSERT_THAT(server_info, HasSubstr("v0.2"));
 }
 
-#pragma clang diagnostic pop
+}

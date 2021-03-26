@@ -6,6 +6,9 @@ add_subdirectory(src/json_parser)
 
 add_subdirectory(src/data_structs)
 
+add_subdirectory(src/version)
+
+
 add_subdirectory(src/http_client)
 
 add_subdirectory(src/logger)

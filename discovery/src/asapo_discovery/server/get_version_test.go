@@ -19,29 +19,31 @@ var versionTests = []struct {
 	message string
 }{
 	{"", versionInfo{
-		CoreServices:               coreVer,
-		ClientConsumerProtocol:     protocols.ProtocolInfo{},
-		ClientProducerProtocol:     protocols.ProtocolInfo{},
-		ClientSupported:            "",
+		SoftwareVersion:        coreVer,
+		ClientProtocol: protocols.ProtocolInfo{},
+		ClientSupported:        "",
 	}, http.StatusOK, "no client"},
+	{"?client=consumer", versionInfo{
+		SoftwareVersion: coreVer,
+		ClientProtocol:     protocols.ProtocolInfo{"", nil},
+		ClientSupported:            "no",
+	}, http.StatusOK, "consumer client, no protocol"},
+
 	{"?client=consumer&protocol=v0.1", versionInfo{
-		CoreServices:               coreVer,
-		ClientConsumerProtocol:     protocols.ProtocolInfo{"v0.1 (current)",
+		SoftwareVersion: coreVer,
+		ClientProtocol:     protocols.ProtocolInfo{"v0.1 (current)",
 			map[string]string{"Authorizer":"v0.1", "Broker":"v0.1", "Data cache service":"v0.1", "Discovery":"v0.1", "File Transfer":"v0.1"}},
-		ClientProducerProtocol:     protocols.ProtocolInfo{},
 		ClientSupported:            "yes",
 	}, http.StatusOK, "consumer client"},
 	{"?client=producer&protocol=v0.1", versionInfo{
-		CoreServices:               coreVer,
-		ClientProducerProtocol:     protocols.ProtocolInfo{"v0.1 (current)",map[string]string{"Discovery":"v0.1", "Receiver":"v0.1"}},
-		ClientConsumerProtocol:     protocols.ProtocolInfo{},
-		ClientSupported:            "yes",
+		SoftwareVersion:        coreVer,
+		ClientProtocol: protocols.ProtocolInfo{"v0.1 (current)",map[string]string{"Discovery":"v0.1", "Receiver":"v0.1"}},
+		ClientSupported:        "yes",
 	}, http.StatusOK, "producer client"},
 	{"?client=producer&protocol=v0.2", versionInfo{
-		CoreServices:               coreVer,
-		ClientProducerProtocol:     protocols.ProtocolInfo{"v0.2 (unknown protocol)",nil},
-		ClientConsumerProtocol:     protocols.ProtocolInfo{},
-		ClientSupported:            "no",
+		SoftwareVersion:        coreVer,
+		ClientProtocol: protocols.ProtocolInfo{"v0.2 (unknown protocol)",nil},
+		ClientSupported:        "no",
 	}, http.StatusOK, "producer client unknown"},
 }
 
@@ -53,9 +55,10 @@ func TestVersionTests(t *testing.T) {
 			var info versionInfo
 			json.Unmarshal(w.Body.Bytes(), &info)
 			fmt.Println(w.Body.String())
-			assert.Equal(t, test.result.ClientConsumerProtocol,info.ClientConsumerProtocol, test.message)
-			assert.Equal(t, true,len(info.SupportedProducerProtocols)>0, test.message)
-			assert.Equal(t, true,len(info.SupportedConsumerProtocols)>0, test.message)
+			assert.Equal(t, test.result.ClientProtocol,info.ClientProtocol, test.message)
+			if test.message!="no client" {
+				assert.Equal(t, true,len(info.SupportedProtocols)>0, test.message)
+			}
 		}
 	}
 }

@@ -145,7 +145,6 @@ func (suite *GetServicesTestSuite) TestGetVersions() {
 	suite.Equal(http.StatusOK, w.Code, "code ok")
 	// we dont really check what it returns, just that route is ok
 	suite.Contains(w.Body.String(), version.GetVersion(), "core version")
-	suite.Contains(w.Body.String(), "SupportedConsumerProtocols", "consumer protocols")
-	suite.Contains(w.Body.String(), "SupportedProducerProtocols", "producers protocols")
+	suite.Contains(w.Body.String(), "supportedProtocols", "protocols")
 	assertExpectations(suite.T())
 }

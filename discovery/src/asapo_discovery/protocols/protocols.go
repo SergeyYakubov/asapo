@@ -20,8 +20,8 @@ type Protocol struct {
 }
 
 type ProtocolInfo  struct {
-	Info string
-	MicroserviceAPis map[string]string
+	VersionInfo      string            `json:"versionInfo"`
+	MicroservicesApi map[string]string `json:"microservicesApi"`
 }
 
 func (p *Protocol) IsValid() (hint string, ok bool) {
@@ -76,8 +76,8 @@ func GetSupportedProtocolsArray(client string) ([]ProtocolInfo, error) {
 	res:=make([]ProtocolInfo,0)
 	for _,protocol := range protocols {
 		var info ProtocolInfo
-		info.Info = protocol.GetString()
-		info.MicroserviceAPis = protocol.MicroserviceAPis
+		info.VersionInfo = protocol.GetString()
+		info.MicroservicesApi = protocol.MicroserviceAPis
 		res = append(res, info)
 	}
 	return res,nil

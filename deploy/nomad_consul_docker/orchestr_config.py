@@ -59,8 +59,6 @@ def process_file(file_in,file_out):
     filein = open(file_in)
     src = Template(filein.read())
     d = set_parameters()
-    print d
-
     with open(file_out, "w") as out:
         out.write(src.substitute(d))
 

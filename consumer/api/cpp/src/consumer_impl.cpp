@@ -12,7 +12,7 @@
 #include "fabric_consumer_client.h"
 #include "rds_response_error.h"
 
-#include "asapo/common/version.h"
+#include "asapo/common/internal/version.h"
 
 using std::chrono::system_clock;
 
@@ -734,7 +734,7 @@ Error ConsumerImpl::UpdateFolderTokenIfNeeded(bool ignore_existing) {
 RequestInfo ConsumerImpl::CreateFolderTokenRequest() const {
     RequestInfo ri;
     ri.host = endpoint_;
-    ri.api = "/asapo-authorizer/"+kConsumerProtocol.GetAuthorizerVersion()+"/folder";
+    ri.api = "/asapo-authorizer/" + kConsumerProtocol.GetAuthorizerVersion() + "/folder";
     ri.post = true;
     ri.body =
         "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\""
@@ -907,6 +907,40 @@ RequestInfo ConsumerImpl::GetSizeRequestForSingleMessagesStream(std::string &str
         + source_credentials_.data_source +
         +"/" + std::move(stream) + "/size";
     return ri;
+}
+
+RequestInfo ConsumerImpl::GetVersionRequest() const {
+    RequestInfo ri;
+    ri.host = endpoint_;
+    ri.api = "/asapo-discovery/" + kConsumerProtocol.GetDiscoveryVersion() + "/version";
+    ri.extra_params = "&client=consumer&protocol=" + kConsumerProtocol.GetVersion();
+    return ri;
+}
+
+Error ConsumerImpl::GetServerVersionInfo(std::string* server_info, bool* supported) {
+    auto ri = GetVersionRequest();
+    RequestOutput output;
+    auto err = ProcessRequest(&output, ri, nullptr);
+    if (err) {
+        return err;
+    }
+    return ExtractVersionFromResponse(output.string_output,server_info,supported);
+}
+
+Error ConsumerImpl::GetVersionInfo(std::string* client_info, std::string* server_info, bool* supported) {
+    if (client_info == nullptr && server_info == nullptr && supported == nullptr) {
+        return ConsumerErrorTemplates::kWrongInput.Generate("missing parameters");
+    }
+    if (client_info != nullptr) {
+        *client_info =
+            "software version: " + std::string(kVersion) + ", consumer protocol: " + kConsumerProtocol.GetVersion();
+    }
+
+    if (server_info != nullptr || supported != nullptr) {
+        return GetServerVersionInfo(server_info,supported);
+    }
+
+    return nullptr;
 }
 
 }

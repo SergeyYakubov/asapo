@@ -169,7 +169,6 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, int* nerrors, int* nb
 }
 
 int main(int argc, char* argv[]) {
-    asapo::ExitAfterPrintVersionIfNeeded("GetLast consumer Example", argc, argv);
     Args params;
     params.datasets = false;
     if (argc != 9 && argc != 10) {
