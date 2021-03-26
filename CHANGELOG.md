@@ -1,4 +1,4 @@
-## 21.03.0 (in progress)
+## 21.03.0
 
  IMPROVEMENTS
 * Producer API - queue limits in Python, for C++ return original data in error custom data      
