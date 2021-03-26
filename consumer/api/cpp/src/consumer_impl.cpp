@@ -924,7 +924,7 @@ Error ConsumerImpl::GetServerVersionInfo(std::string* server_info, bool* support
     if (err) {
         return err;
     }
-    return ExtractVersionFromResponse(output.string_output,server_info,supported);
+    return ExtractVersionFromResponse(output.string_output,"consumer",server_info,supported);
 }
 
 Error ConsumerImpl::GetVersionInfo(std::string* client_info, std::string* server_info, bool* supported) {

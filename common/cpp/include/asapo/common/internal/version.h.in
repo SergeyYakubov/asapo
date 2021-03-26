@@ -37,6 +37,7 @@ inline int VersionToNumber(const std::string& version) {
 }
 
 Error ExtractVersionFromResponse(const std::string &response,
+                                 const std::string &client,
                                  std::string* server_info,
                                  bool* supported);
 }

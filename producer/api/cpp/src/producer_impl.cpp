@@ -409,14 +409,15 @@ Error ProducerImpl::GetVersionInfo(std::string* client_info, std::string* server
 
 Error ProducerImpl::GetServerVersionInfo(std::string* server_info,
                                          bool* supported) const {
-    auto endpoint = endpoint_ +"/asapo-discovery/"+kProducerProtocol.GetDiscoveryVersion()+"/version?client=producer&protocol="+kProducerProtocol.GetVersion();
+    auto endpoint = endpoint_ +"/asapo-discovery/"+kProducerProtocol.GetDiscoveryVersion()+
+        "/version?client=producer&protocol="+kProducerProtocol.GetVersion();
     HttpCode  code;
     Error err;
     auto response = httpclient__->Get(endpoint, &code, &err);
     if (err) {
         return err;
     }
-    return ExtractVersionFromResponse(response,server_info,supported);
+    return ExtractVersionFromResponse(response,"producer",server_info,supported);
 }
 
 }

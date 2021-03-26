@@ -46,6 +46,9 @@ class AsapoUnavailableServiceError(AsapoConsumerError):
 class AsapoLocalIOError(AsapoConsumerError):
   pass
 
+class AsapoUnsupportedClientError(AsapoConsumerError):
+  pass
+
 class AsapoStreamFinishedError(AsapoConsumerError):
   def __init__(self,message,id_max=None,next_stream=None):
     AsapoConsumerError.__init__(self,message)
@@ -99,6 +102,8 @@ cdef throw_exception(Error& err, res = None):
             raise AsapoUnavailableServiceError(error_string)
     elif err == kInterruptedTransaction:
             raise AsapoInterruptedTransactionError(error_string)
+    elif err == kUnsupportedClient:
+            raise AsapoUnsupportedClientError(error_string)
     else:
         raise AsapoConsumerError(error_string)
 
@@ -211,6 +216,21 @@ cdef class PyConsumer:
         if err:
             throw_exception(err)
         return
+    def get_version_info(self, from_server = "true"):
+        cdef string client_info,server_info
+        cdef bool supported
+        cdef string* p_server_info =  &server_info if from_server else <string*>NULL
+        cdef bool* p_supported =  &supported if from_server else <bool*>NULL
+        cdef Error err
+        with nogil:
+                err =  self.c_consumer.get().GetVersionInfo(&client_info,p_server_info,p_supported)
+        if err:
+            throw_exception(err)
+        version = {}
+        if from_server:
+            return {'client': _str(client_info), 'server': _str(server_info), 'supported': supported}
+        else:
+            return {'client': _str(client_info)}
     def reset_lastread_marker(self,group_id, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_stream = _bytes(stream)

@@ -87,6 +87,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         vector[StreamInfo] GetStreamList(string from_stream, StreamFilter filter, Error* err)
         void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts)
         void InterruptCurrentOperation()
+        Error GetVersionInfo(string* client_info,string* server_info, bool* supported)
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass ConsumerFactory:
@@ -103,6 +104,8 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   ErrorTemplateInterface kLocalIOError "asapo::ConsumerErrorTemplates::kLocalIOError"
   ErrorTemplateInterface kWrongInput "asapo::ConsumerErrorTemplates::kWrongInput"
   ErrorTemplateInterface kPartialData "asapo::ConsumerErrorTemplates::kPartialData"
+  ErrorTemplateInterface kUnsupportedClient "asapo::ConsumerErrorTemplates::kUnsupportedClient"
+
 
   cdef cppclass ConsumerErrorData:
     uint64_t id
