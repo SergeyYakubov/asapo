@@ -23,7 +23,7 @@ mkdir %receiver_folder%
 mkdir  c:\tmp\asapo\test_in\processed
 start /B "" "%1" test.json
 
-ping 192.0.2.1 -n 1 -w 1000 > nul
+ping 192.0.2.1 -n 1 -w 5000 > nul
 
 mkdir  c:\tmp\asapo\test_in\processed\test1
 mkdir  c:\tmp\asapo\test_in\processed\test2

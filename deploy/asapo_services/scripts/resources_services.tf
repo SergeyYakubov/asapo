@@ -8,7 +8,7 @@ resource "null_resource" "nginx" {
 
 resource "null_resource" "influxdb" {
   provisioner "local-exec" {
-    command = "asapo-wait-service influxdb"
+    command = "asapo-wait-service influxdb ${var.perf_monitor}"
   }
   depends_on = [nomad_job.asapo-perfmetrics]
 }

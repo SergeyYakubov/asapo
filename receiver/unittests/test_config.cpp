@@ -48,6 +48,7 @@ class ConfigTests : public Test {
         test_config.tag = "receiver1";
         test_config.performance_db_name = "db_test";
         test_config.performance_db_uri = "localhost:8086";
+        test_config.monitor_performance = true;
         test_config.database_uri = "localhost:27017";
         test_config.log_level = asapo::LogLevel::Error;
         test_config.authorization_interval_ms = 10000;
@@ -84,6 +85,7 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->log_level, Eq(asapo::LogLevel::Error));
     ASSERT_THAT(config->tag, Eq("receiver1"));
     ASSERT_THAT(config->use_datacache, Eq(false));
+    ASSERT_THAT(config->monitor_performance, Eq(true));
     ASSERT_THAT(config->datacache_reserved_share, Eq(10));
     ASSERT_THAT(config->datacache_size_gb, Eq(2));
     ASSERT_THAT(config->discovery_server, Eq("discovery"));
@@ -104,7 +106,7 @@ TEST_F(ConfigTests, ErrorReadSettings) {
     std::vector<std::string>fields {"PerformanceDbServer", "ListenPort", "DataServer", "ListenPort",
                                     "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
                                     "AuthorizationServer", "AuthorizationInterval", "PerformanceDbName", "LogLevel",
-                                    "NThreads", "DiscoveryServer", "AdvertiseURI", "NetworkMode",
+                                    "NThreads", "DiscoveryServer", "AdvertiseURI", "NetworkMode","MonitorPerformance",
                                     "ReceiveToDiskThresholdMB"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfig(test_config, field);

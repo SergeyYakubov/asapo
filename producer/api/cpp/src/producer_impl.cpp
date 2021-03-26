@@ -398,7 +398,7 @@ Error ProducerImpl::GetVersionInfo(std::string* client_info, std::string* server
     }
     if (client_info != nullptr) {
         *client_info =
-            "software version: " + std::string(kVersion) + ", consumer protocol: " + kProducerProtocol.GetVersion();
+            "software version: " + std::string(kVersion) + ", producer protocol: " + kProducerProtocol.GetVersion();
     }
 
     if (server_info != nullptr || supported != nullptr) {

@@ -7,6 +7,9 @@
 #include "../../src/statistics/statistics_sender_influx_db.h"
 #include "../../src/statistics/statistics_sender_fluentd.h"
 #include "../receiver_mocking.h"
+#include "../../src/receiver_config.h"
+#include "../../src/receiver_config_factory.h"
+#include "../mock_receiver_config.h"
 
 using ::testing::Test;
 using ::testing::Gt;
@@ -41,6 +44,9 @@ class StatisticTests : public Test {
     Statistics statistics{0};
     MockStatisticsSender mock_statistics_sender;
     void SetUp() override {
+        asapo::ReceiverConfig test_config;
+        test_config.monitor_performance = true;
+        asapo::SetReceiverConfig(test_config, "none");
         statistics.statistics_sender_list__.clear();
         statistics.statistics_sender_list__.emplace_back(&mock_statistics_sender);
     }
@@ -155,6 +161,16 @@ TEST_F(StatisticTests, SendStaticsDoesCallsSender) {
     statistics.SendIfNeeded();
 }
 
+
+TEST_F(StatisticTests, DoNotSendStatistics) {
+    asapo::ReceiverConfig test_config;
+    test_config.monitor_performance = false;
+    asapo::SetReceiverConfig(test_config, "none");
+
+    EXPECT_CALL(mock_statistics_sender, SendStatistics_t(_)).Times(0);
+
+    statistics.SendIfNeeded(true);
+}
 
 TEST_F(StatisticTests, StatisticsSend) {
     statistics.IncreaseRequestCounter();

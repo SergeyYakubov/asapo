@@ -18,7 +18,9 @@ func StartStatistics() {
 }
 
 func Start() {
-	StartStatistics()
+	if settings.MonitorPerformance {
+		StartStatistics()
+	}
 	mux := utils.NewRouter(listRoutes)
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))

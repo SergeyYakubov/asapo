@@ -9,7 +9,7 @@ import (
 
 func (st *serverStatistics) Monitor() {
 	for {
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(10000 * time.Millisecond)
 		if err := st.WriteStatistic(); err != nil {
 		    logstr := "sending statistics to " + settings.PerformanceDbServer + ", dbname: " + settings.PerformanceDbName
 			log.Error(logstr + " - " + err.Error())

@@ -1,5 +1,6 @@
 {
   "PerformanceDbServer":"localhost:8086",
+  "MonitorPerformance": true,
   "PerformanceDbName": "db_test",
   "DatabaseServer":"localhost:27017",
   "DiscoveryServer": "localhost:8400/discovery",

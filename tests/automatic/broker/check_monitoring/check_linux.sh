@@ -42,7 +42,7 @@ do
 done
 
 
-sleep 3
+sleep 12
 
 influx -execute "select sum(rate) from RequestsRate" -database=${database_name} -format=json | jq .results[0].series[0].values[0][1] | tee /dev/stderr | grep 51
 

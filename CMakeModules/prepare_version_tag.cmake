@@ -14,7 +14,7 @@ execute_process(COMMAND git rev-parse --abbrev-ref HEAD
 string(STRIP ${BRANCH} BRANCH)
 cleanup(BRANCH)
 
-execute_process(COMMAND git rev-parse --short HEAD
+execute_process(COMMAND git rev-parse --short=10 HEAD
         OUTPUT_VARIABLE ASAPO_VERSION_COMMIT
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 string(STRIP ${ASAPO_VERSION_COMMIT} ASAPO_VERSION_COMMIT)

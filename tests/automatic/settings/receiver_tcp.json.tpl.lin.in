@@ -1,5 +1,6 @@
 {
   "PerformanceDbServer":"localhost:8086",
+  "MonitorPerformance": true,
   "PerformanceDbName": "db_test",
   "DatabaseServer":"auto",
   "DiscoveryServer": "localhost:8400/asapo-discovery",

@@ -6,10 +6,12 @@ nginx_version = "1.14"
 elasticsearch_version = "7.3.2"
 kibana_version = "7.3.2"
 mongo_version = "4.0.0"
-grafana_version="latest"
-influxdb_version = "latest"
-elk_logs = true
+grafana_version="7.5.0"
+influxdb_version = "2.0.4"
+elk_logs = false
+perf_monitor = false
 nomad_logs = false
+force_pull_images = false
 
 job_scripts_dir = "/var/run/asapo"
 
@@ -32,8 +34,9 @@ authorizer_total_memory_size = 256
 discovery_total_memory_size = 256
 
 
-grafana_port = 3000
+grafana_port = 3301
 influxdb_port = 8086
+influxdb_rpc_port = 8088
 mongo_port = 27017
 fluentd_port = 9880
 fluentd_port_stream = 24224
