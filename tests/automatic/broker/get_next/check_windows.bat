@@ -11,12 +11,9 @@ set token=%BT_DATA_TOKEN%
 
 c:\opt\consul\nomad run authorizer.nmd
 c:\opt\consul\nomad run nginx.nmd
-ping 192.0.2.1 -n 1 -w 3000 > nul
-
-
 start /B "" "%full_name%" -config settings.json
 
-ping 192.0.2.1 -n 1 -w 1000 > nul
+ping 192.0.2.1 -n 1 -w 5000 > nul
 
 C:\Curl\curl.exe -d '' --silent 127.0.0.1:5005/v0.1/creategroup > groupid
 set /P groupid=< groupid
