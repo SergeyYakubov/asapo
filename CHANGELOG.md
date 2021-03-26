@@ -1,15 +1,16 @@
 ## 21.03.0 (in progress)
 
  IMPROVEMENTS
-<<<<<<< HEAD
 * Producer API - queue limits in Python, for C++ return original data in error custom data      
 * Consumer API - add GetCurrentDatasetCount/get_current_dataset_count function with option to include or exclude incomplete datasets
 * Consumer API - GetStreamList/get_stream_list - can filter finished/unfinished streams now
 * Producer/Consumer API - StreamInfo structure/Python dictionary include more information (is stream finished or not, ...) 
 * Switch to JWT tokens (token has more symbols, expiration time, can be revoked and there are two type of tokens - with read/write access rights)
+* Improved versioning. Producer/Consumer API - introduce GetVersionInfo/get_version_info, compatiblity check between clients and server
 
 BREAKING CHANGES
 * Consumer API (C++ only)- GetStreamList has now extra argument StreamFilter
+* Consumer/Producer libraries need to be updated due to protocol changes
 
 ## 20.12.0
 
