@@ -1,15 +1,17 @@
 #include "receiver_discovery_service.h"
 
-#include "producer_logger.h"
-#include "asapo/json_parser/json_parser.h"
-
 #include <iostream>
 #include <algorithm>
 #include <numeric>
 
+#include "producer_logger.h"
+#include "asapo/json_parser/json_parser.h"
+#include "asapo/common/internal/version.h"
+
 namespace  asapo {
 
-const std::string ReceiverDiscoveryService::kServiceEndpointSuffix = "/asapo-discovery/asapo-receiver";
+const std::string ReceiverDiscoveryService::kServiceEndpointSuffix = "/asapo-discovery/"+kProducerProtocol.GetDiscoveryVersion()
+    +"/asapo-receiver?protocol="+kConsumerProtocol.GetVersion();
 
 ReceiverDiscoveryService::ReceiverDiscoveryService(std::string endpoint, uint64_t update_frequency_ms): httpclient__{DefaultHttpClient()},
     log__{GetDefaultProducerLogger()},

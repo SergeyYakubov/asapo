@@ -31,6 +31,14 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     asapo::MessageMeta fi;
     asapo::Error err;
 
+    std::string client,server;
+    bool supported;
+    err = consumer->GetVersionInfo(&client,&server,&supported);
+    M_AssertTrue(err == nullptr, "Version OK");
+    M_AssertTrue(supported, "client supported by server");
+    M_AssertTrue(!client.empty(), "client version");
+    M_AssertTrue(!server.empty(), "server version");
+
     err = consumer->GetNext(group_id, &fi, nullptr, "default");
     if (err) {
         std::cout << err->Explain() << std::endl;

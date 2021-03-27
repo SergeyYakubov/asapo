@@ -6,6 +6,9 @@ add_subdirectory(src/json_parser)
 
 add_subdirectory(src/data_structs)
 
+add_subdirectory(src/version)
+
+
 add_subdirectory(src/http_client)
 
 add_subdirectory(src/logger)
@@ -20,7 +23,8 @@ endif()
 
 install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/common
         DESTINATION include/asapo
-        PATTERN "*.h.in" EXCLUDE)
+        PATTERN "*.h.in" EXCLUDE
+        PATTERN "*/internal" EXCLUDE)
 
 install(DIRECTORY ${ASAPO_CXX_COMMON_INCLUDE_DIR}/asapo/logger
         DESTINATION include/asapo )

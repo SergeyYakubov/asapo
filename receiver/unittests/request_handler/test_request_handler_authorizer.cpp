@@ -72,6 +72,8 @@ class AuthorizerHandlerTests : public Test {
     std::string expected_authorization_server = "authorizer_host";
     std::string expect_request_string;
     std::string expected_source_credentials;
+    std::string expected_api_version = "v0.1";
+
     asapo::SourceType expected_source_type = asapo::SourceType::kProcessed;
     std::string expected_source_type_str = "processed";
     std::string expected_access_type_str = "[\"write\"]";
@@ -149,6 +151,11 @@ class AuthorizerHandlerTests : public Test {
         EXPECT_CALL(*mock_request, GetMetaData())
         .WillOnce(ReturnRef(expected_source_credentials))
         ;
+
+        EXPECT_CALL(*mock_request, GetApiVersion())
+            .WillOnce(Return(expected_api_version))
+            ;
+
 
         MockAuthRequest(error, code);
         return handler.ProcessRequest(mock_request.get());
@@ -265,6 +272,20 @@ TEST_F(AuthorizerHandlerTests, RequestAuthorizeReturnsDifferentBeamtimeId) {
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReAuthorizationFailure));
 }
+
+
+TEST_F(AuthorizerHandlerTests, RequestFromUnsupportedClient) {
+    EXPECT_CALL(*mock_request, GetOpCode())
+        .WillOnce(Return(asapo::kOpcodeAuthorize))
+        ;
+    EXPECT_CALL(*mock_request, GetApiVersion())
+        .WillOnce(Return("v0.2"))
+        ;
+
+    auto err = handler.ProcessRequest(mock_request.get());
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kUnsupportedClient));
+}
+
 
 
 

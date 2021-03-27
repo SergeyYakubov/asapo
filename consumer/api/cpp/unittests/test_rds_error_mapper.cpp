@@ -19,4 +19,6 @@ TEST(ConvertRdsResponseToError, TestAllCases) {
                 Eq(RdsResponseErrorTemplates::kNetAuthorizationError));
     ASSERT_THAT(ConvertRdsResponseToError(NetworkErrorCode::kNetErrorInternalServerError),
                 Eq(RdsResponseErrorTemplates::kNetErrorInternalServerError));
+    ASSERT_THAT(ConvertRdsResponseToError(NetworkErrorCode::kNetErrorNotSupported),
+                Eq(RdsResponseErrorTemplates::kNetErrorNotSupported));
 }

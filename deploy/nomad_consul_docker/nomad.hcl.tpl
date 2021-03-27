@@ -27,7 +27,9 @@ client {
 plugin "docker" {
   config {
     endpoint = "$docker_endpoint"
-
+    gc {
+        image = false
+    }
     tls {
       cert = "/etc/nomad/cert.pem"
       key  = "/etc/nomad/key.pem"

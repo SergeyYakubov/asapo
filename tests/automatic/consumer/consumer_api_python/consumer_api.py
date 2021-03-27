@@ -29,6 +29,13 @@ def assert_usermetadata(meta, name):
         print('meta: ', json.dumps(meta, indent=4, sort_keys=True))
         sys.exit(1)
 
+def assert_version(version):
+    print("asserting version ",version)
+    ok = version['supported'] and version['client'] and version['server']
+    if not ok:
+        sys.exit(1)
+
+
 
 def assert_eq(val, expected, name):
     print("asserting eq for " + name)
@@ -48,6 +55,10 @@ def check_file_transfer_service(consumer, group_id):
 
 def check_single(consumer, group_id):
     global thread_res
+
+    version = consumer.get_version_info()
+    assert_version(version)
+
     _, meta = consumer.get_next(group_id, meta_only=True)
     assert_metaname(meta, "1", "get next1")
     assert_usermetadata(meta, "get next1")

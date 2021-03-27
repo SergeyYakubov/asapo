@@ -31,23 +31,23 @@ sleep 0.3
 brokerid=`echo $!`
 
 
-groupid=`curl -d '' --silent 127.0.0.1:5005/creategroup`
+groupid=`curl -d '' --silent 127.0.0.1:5005/v0.1/creategroup`
 
-curl -v  --silent 127.0.0.1:5005/database/data/detector/${stream}/0/last?token=$token --stderr -
+curl -v  --silent 127.0.0.1:5005/v0.1/beamtime/data/detector/${stream}/0/last?token=$token --stderr -
 
-curl -v  --silent 127.0.0.1:5005/database/data/detector/${stream}/0/last?token=$token --stderr - | grep '"_id":2'
-curl -v  --silent 127.0.0.1:5005/database/data/detector/${stream}/0/last?token=$token --stderr - | grep '"_id":2'
+curl -v  --silent 127.0.0.1:5005/v0.1/beamtime/data/detector/${stream}/0/last?token=$token --stderr - | grep '"_id":2'
+curl -v  --silent 127.0.0.1:5005/v0.1/beamtime/data/detector/${stream}/0/last?token=$token --stderr - | grep '"_id":2'
 
 echo "db.data_${stream}.insert({"_id":3})" | mongo ${database_name}
 
-curl -v  --silent 127.0.0.1:5005/database/data/detector/${stream}/0/last?token=$token --stderr - | grep '"_id":3'
+curl -v  --silent 127.0.0.1:5005/v0.1/beamtime/data/detector/${stream}/0/last?token=$token --stderr - | grep '"_id":3'
 
 echo "db.data_${stream}.insert({"_id":4})" | mongo ${database_name}
 
-curl -v  --silent 127.0.0.1:5005/database/data/detector/${stream}/${groupid}/next?token=$token --stderr - | grep '"_id":1'
-curl -v  --silent 127.0.0.1:5005/database/data/detector/${stream}/0/last?token=$token --stderr - | grep '"_id":4'
+curl -v  --silent 127.0.0.1:5005/v0.1/beamtime/data/detector/${stream}/${groupid}/next?token=$token --stderr - | grep '"_id":1'
+curl -v  --silent 127.0.0.1:5005/v0.1/beamtime/data/detector/${stream}/0/last?token=$token --stderr - | grep '"_id":4'
 
 #with a new group
-groupid=`curl -d '' --silent 127.0.0.1:5005/creategroup`
-curl -v  --silent 127.0.0.1:5005/database/data/detector/${stream}/${groupid}/next?token=$token --stderr - | grep '"_id":1'
-curl -v  --silent 127.0.0.1:5005/database/data/detector/${stream}/0/last?token=$token --stderr - | grep '"_id":4'
+groupid=`curl -d '' --silent 127.0.0.1:5005/v0.1/creategroup`
+curl -v  --silent 127.0.0.1:5005/v0.1/beamtime/data/detector/${stream}/${groupid}/next?token=$token --stderr - | grep '"_id":1'
+curl -v  --silent 127.0.0.1:5005/v0.1/beamtime/data/detector/${stream}/0/last?token=$token --stderr - | grep '"_id":4'

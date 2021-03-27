@@ -27,6 +27,14 @@ class Consumer {
       \return nullptr of command was successful, otherwise error.
     */
     virtual Error ResetLastReadMarker(std::string group_id, std::string stream) = 0;
+  //! Return version
+  /*!
+    \param client_info - for client version
+    \param server_info - for server
+    \param supported - set to true if client is supported by server
+    \return nullptr of command was successful, otherwise error.
+  */
+    virtual Error GetVersionInfo(std::string* client_info,std::string* server_info, bool* supported) = 0;
 
     virtual Error SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) = 0;
 

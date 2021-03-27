@@ -4,6 +4,7 @@
 #include "../request.h"
 
 #include "asapo/json_parser/json_parser.h"
+#include "asapo/common/internal/version.h"
 
 using std::chrono::system_clock;
 
@@ -83,6 +84,17 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     return nullptr;
 }
 
+Error RequestHandlerAuthorize::CheckVersion(const std::string& version_from_client) const {
+    int verClient = VersionToNumber(version_from_client);
+    int verService = VersionToNumber(GetReceiverApiVersion());
+    if (verClient > verService) {
+        auto err_string = "client version: "+version_from_client + ", server version: "+GetReceiverApiVersion();
+        return asapo::ReceiverErrorTemplates::kUnsupportedClient.Generate(err_string);
+        log__->Error("failure serving client - unsupported version,  " + err_string);
+    }
+    return nullptr;
+}
+
 Error RequestHandlerAuthorize::ProcessAuthorizationRequest(Request* request) const {
     if (!cached_source_credentials_.empty()) {
         Error auth_error = asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate();
@@ -90,6 +102,12 @@ Error RequestHandlerAuthorize::ProcessAuthorizationRequest(Request* request) con
         log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " - " +
                      "already authorized");
         return auth_error;
+    }
+
+    auto err = CheckVersion(request->GetApiVersion());
+    if (err) {
+        log__->Error("failure authorizing at client: " + err->Explain());
+        return err;
     }
 
     return Authorize(request, request->GetMetaData().c_str());

@@ -12,6 +12,11 @@ namespace RdsResponseErrorTemplates {
 auto const kNetErrorReauthorize = RdsResponseErrorTemplate {
     "RDS response Reauthorize", NetworkErrorCode::kNetErrorReauthorize
 };
+
+auto const kNetErrorNotSupported = RdsResponseErrorTemplate {
+    "RDS unsupported client", NetworkErrorCode::kNetErrorNotSupported
+};
+
 auto const kNetErrorWarning = RdsResponseErrorTemplate {
     "RDS response Warning", NetworkErrorCode::kNetErrorWarning
 };
@@ -33,6 +38,8 @@ inline Error ConvertRdsResponseToError(NetworkErrorCode error_code) {
     switch (error_code) {
     case kNetErrorNoError:
         return nullptr;
+    case kNetErrorNotSupported:
+        return RdsResponseErrorTemplates::kNetErrorNotSupported.Generate();
     case kNetErrorReauthorize:
         return RdsResponseErrorTemplates::kNetErrorReauthorize.Generate();
     case kNetErrorWarning:

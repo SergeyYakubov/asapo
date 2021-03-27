@@ -18,6 +18,7 @@ type serverSettings struct {
 	DatabaseServer              string
 	PerformanceDbServer         string
 	PerformanceDbName           string
+	MonitorPerformance 			bool
 	AuthorizationServer         string
 	Port                        int
 	LogLevel                    string

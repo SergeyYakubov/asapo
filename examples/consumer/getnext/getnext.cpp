@@ -19,6 +19,7 @@ std::mutex lock;
 
 uint64_t file_size = 0;
 
+
 inline std::string ConnectionTypeToString(asapo::NetworkConnectionType type) {
     switch (type) {
     case asapo::NetworkConnectionType::kUndefined:
@@ -119,6 +120,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
             if (err) {
                 (*errors)[i] += ProcessError(err);
                 lock.unlock();
+                exit(EXIT_FAILURE);
                 return;
             }
         }
@@ -263,7 +265,6 @@ void TryGetStream(Args* args) {
 }
 
 int main(int argc, char* argv[]) {
-    asapo::ExitAfterPrintVersionIfNeeded("GetNext consumer Example", argc, argv);
     Args params;
     params.datasets = false;
     if (argc != 8 && argc != 9) {

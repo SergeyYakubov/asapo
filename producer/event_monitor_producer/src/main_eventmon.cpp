@@ -15,7 +15,7 @@
 #include "asapo/preprocessor/definitions.h"
 
 #include "asapo/io/io_factory.h"
-#include "asapo/common/version.h"
+#include "asapo/common/internal/version.h"
 
 using asapo::Producer;
 using asapo::EventMonConfigFactory;

@@ -14,7 +14,7 @@ job "asapo-perfmetrics" {
 #  }
 
   group "perfmetrics" {
-    count = 1
+    count = "%{ if perf_monitor }1%{ else }0%{ endif }"
     restart {
       attempts = 2
       interval = "3m"
@@ -30,11 +30,13 @@ job "asapo-perfmetrics" {
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "influxdb:${influxdb_version}"
-        volumes = ["/${service_dir}/influxdb:/var/lib/influxdb"]
+        volumes = ["/${service_dir}/influxdb2:/var/lib/influxdb2"]
       }
 
       env {
         PRE_CREATE_DB="asapo_receivers;asapo_brokers"
+        INFLUXDB_BIND_ADDRESS="127.0.0.1:$${NOMAD_PORT_influxdb_rpc}"
+        INFLUXDB_HTTP_BIND_ADDRESS=":$${NOMAD_PORT_influxdb}"
       }
 
       resources {
@@ -42,6 +44,9 @@ job "asapo-perfmetrics" {
         network {
           port "influxdb" {
           static = "${influxdb_port}"
+          }
+          port "influxdb_rpc" {
+          static = "${influxdb_rpc_port}"
           }
         }
       }
@@ -72,6 +77,7 @@ job "asapo-perfmetrics" {
       env {
         GF_SERVER_DOMAIN = "$${attr.unique.hostname}"
         GF_SERVER_ROOT_URL = "%(protocol)s://%(domain)s/performance/"
+        GF_SERVER_HTTP_PORT = "${grafana_port}"
       }
 
       config {

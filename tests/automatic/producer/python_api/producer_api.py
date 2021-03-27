@@ -36,10 +36,20 @@ def callback(payload, err):
         print("successfuly sent: ", payload)
     lock.release()
 
+def assert_version(version):
+    print("asserting version ",version)
+    ok = version['supported'] and version['client'] and version['server']
+    if not ok:
+        sys.exit(1)
 
 producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', data_source, token, nthreads, 60000)
 
 producer.set_log_level("debug")
+
+
+version = producer.get_version_info()
+assert_version(version)
+
 
 # send single file
 producer.send_file(1, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file1",

@@ -19,7 +19,7 @@ job "asapo-services" {
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "yakser/asapo-authorizer${image_suffix}"
-	force_pull = true
+	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/authorizer/config.json",
                            "${offline_dir}:${offline_dir}",
                            "${online_dir}:${online_dir}"]
@@ -96,7 +96,7 @@ job "asapo-services" {
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "yakser/asapo-discovery${image_suffix}"
-	    force_pull = true
+	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/discovery/config.json"]
         %{ if ! nomad_logs  }
         logging {
@@ -125,7 +125,7 @@ job "asapo-services" {
         check {
           name     = "alive"
           type     = "http"
-          path     = "/asapo-receiver"
+          path     = "/health"
           interval = "10s"
           timeout  = "2s"
           initial_status =   "passing"

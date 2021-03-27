@@ -11,7 +11,8 @@ enum class ReceiverErrorType {
     kAuthorizationFailure,
     kInternalServerError,
     kReAuthorizationFailure,
-    kWarningDuplicatedRequest
+    kWarningDuplicatedRequest,
+    kUnsupportedClient
 };
 
 using ReceiverErrorTemplate = ServiceErrorTemplate<ReceiverErrorType, ErrorType::kReceiverError>;
@@ -40,6 +41,13 @@ auto const kBadRequest = ReceiverErrorTemplate {
 auto const kAuthorizationFailure = ReceiverErrorTemplate {
     "authorization failure", ReceiverErrorType::kAuthorizationFailure
 };
+
+auto const kUnsupportedClient = ReceiverErrorTemplate {
+    "client version not supported", ReceiverErrorType::kUnsupportedClient
+};
+
+
+
 
 auto const kReAuthorizationFailure = ReceiverErrorTemplate {
     "reauthorization for auto beamtime failed", ReceiverErrorType::kReAuthorizationFailure

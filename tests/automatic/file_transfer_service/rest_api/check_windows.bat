@@ -13,12 +13,12 @@ set token=%BT_AAA_TOKEN%
 
 mkdir %file_transfer_folder%
 
-C:\Curl\curl.exe --silent --data "{\"Folder\":\"%file_transfer_folder%\",\"BeamtimeId\":\"aaa\",\"Token\":\"%token%\"}" 127.0.0.1:5007/folder > token
+C:\Curl\curl.exe --silent --data "{\"Folder\":\"%file_transfer_folder%\",\"BeamtimeId\":\"aaa\",\"Token\":\"%token%\"}" 127.0.0.1:5007/v0.1/folder > token
 set /P folder_token=< token
 
 echo hello > %file_transfer_folder%\aaa
 
-C:\Curl\curl.exe --silent -H "Authorization: Bearer %folder_token%" --data "{\"Folder\":\"%file_transfer_folder%\",\"FileName\":\"aaa\",\"Token\":\"%folder_token%\"}" 127.0.0.1:5008/transfer --stderr - | findstr hello  || goto :error
+C:\Curl\curl.exe --silent -H "Authorization: Bearer %folder_token%" --data "{\"Folder\":\"%file_transfer_folder%\",\"FileName\":\"aaa\",\"Token\":\"%folder_token%\"}" 127.0.0.1:5008/v0.1/transfer --stderr - | findstr hello  || goto :error
 
 goto :clean
 

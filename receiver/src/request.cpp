@@ -89,6 +89,11 @@ std::string Request::GetStream() const {
     return request_header_.stream;
 }
 
+std::string Request::GetApiVersion() const {
+    return request_header_.api_version;
+}
+
+
 const std::string& Request::GetOriginUri() const {
     return origin_uri_;
 }

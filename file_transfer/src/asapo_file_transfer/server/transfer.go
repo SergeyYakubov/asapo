@@ -4,6 +4,7 @@ import (
 	log "asapo_common/logger"
 	"asapo_common/structs"
 	"asapo_common/utils"
+	"asapo_common/version"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -88,7 +89,17 @@ func serveFileSize(w http.ResponseWriter, r *http.Request, fullName string) {
 	w.Write(b)
 }
 
+
+func checkFtsApiVersion(w http.ResponseWriter, r *http.Request) bool {
+	_, ok := utils.PrecheckApiVersion(w, r, version.GetFtsApiVersion())
+	return ok
+}
+
 func routeFileTransfer(w http.ResponseWriter, r *http.Request) {
+	if ok := checkFtsApiVersion(w, r); !ok {
+		return
+	}
+
 	fullName, status,err := checkRequest(r);
 	if err != nil {
 		utils.WriteServerError(w,err,status)

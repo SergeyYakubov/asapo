@@ -3,6 +3,7 @@
 #include <iostream>
 #include "fabric_consumer_client.h"
 #include "rds_response_error.h"
+#include "asapo/common/internal/version.h"
 
 using namespace asapo;
 
@@ -33,6 +34,7 @@ Error FabricConsumerClient::GetData(const MessageMeta* info, MessageData* data) 
     }
 
     GenericRequestHeader request_header{kOpcodeGetBufferData, info->buf_id, info->size};
+    strncpy(request_header.api_version, kConsumerProtocol.GetRdsVersion().c_str(), kMaxVersionSize);
     memcpy(request_header.message, mr->GetDetails(), sizeof(fabric::MemoryRegionDetails));
     GenericNetworkResponse response{};
 

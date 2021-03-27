@@ -29,6 +29,7 @@ data "template_file" "asapo_services" {
     authorizer_port = "${var.authorizer_port}"
     discovery_port = "${var.discovery_port}"
     asapo_user = "${var.asapo_user}"
+    force_pull_images = "${var.force_pull_images}"
   }
 }
 
@@ -47,6 +48,8 @@ data "template_file" "asapo_receivers" {
     receiver_network_modes = "${var.receiver_network_modes}"
     asapo_user = "${var.asapo_user}"
     n_receivers = "${var.n_receivers}"
+    force_pull_images = "${var.force_pull_images}"
+    perf_monitor = "${var.perf_monitor}"
   }
 }
 
@@ -58,6 +61,8 @@ data "template_file" "asapo_brokers" {
     nomad_logs = "${var.nomad_logs}"
     asapo_user = "${var.asapo_user}"
     n_brokers = "${var.n_brokers}"
+    force_pull_images = "${var.force_pull_images}"
+    perf_monitor = "${var.perf_monitor}"
   }
 }
 
@@ -72,6 +77,7 @@ data "template_file" "asapo_fts" {
     nomad_logs = "${var.nomad_logs}"
     asapo_user = "${var.asapo_user}"
     n_fts = "${var.n_fts}"
+    force_pull_images = "${var.force_pull_images}"
   }
 }
 
@@ -86,6 +92,8 @@ data "template_file" "asapo_perfmetrics" {
     influxdb_total_memory_size = "${var.influxdb_total_memory_size}"
     influxdb_port = "${var.influxdb_port}"
     asapo_user = "${var.asapo_user}"
+    influxdb_rpc_port = "${var.influxdb_rpc_port}"
+    perf_monitor = "${var.perf_monitor}"
     }
 }
 

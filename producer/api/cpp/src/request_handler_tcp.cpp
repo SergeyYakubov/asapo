@@ -7,16 +7,19 @@
 namespace asapo {
 
 RequestHandlerTcp::RequestHandlerTcp(ReceiverDiscoveryService* discovery_service, uint64_t thread_id,
-                                     uint64_t* shared_counter):
-    io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()}, discovery_service__{discovery_service}, thread_id_{thread_id},
+                                     uint64_t* shared_counter) :
+    io__{GenerateDefaultIO()},
+    log__{GetDefaultProducerLogger()},
+    discovery_service__{discovery_service},
+    thread_id_{thread_id},
     ncurrent_connections_{shared_counter} {
 }
 
-Error RequestHandlerTcp::Authorize(const std::string& source_credentials) {
+Error RequestHandlerTcp::Authorize(const std::string &source_credentials) {
     GenericRequestHeader header{kOpcodeAuthorize, 0, 0, source_credentials.size(), ""};
     Error err;
     io__->Send(sd_, &header, sizeof(header), &err);
-    if(err) {
+    if (err) {
         return err;
     }
 
@@ -28,12 +31,11 @@ Error RequestHandlerTcp::Authorize(const std::string& source_credentials) {
     return ReceiveResponse(header, nullptr);
 }
 
-
-Error RequestHandlerTcp::ConnectToReceiver(const std::string& source_credentials, const std::string& receiver_address) {
+Error RequestHandlerTcp::ConnectToReceiver(const std::string &source_credentials, const std::string &receiver_address) {
     Error err;
 
     sd_ = io__->CreateAndConnectIPTCPSocket(receiver_address, &err);
-    if(err != nullptr) {
+    if (err != nullptr) {
         log__->Debug("cannot connect to receiver at " + receiver_address + " - " + err->Explain());
         return err;
     }
@@ -55,10 +57,9 @@ Error RequestHandlerTcp::ConnectToReceiver(const std::string& source_credentials
 Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
     Error io_error;
     io__->Send(sd_, &(request->header), sizeof(request->header), &io_error);
-    if(io_error) {
+    if (io_error) {
         return io_error;
     }
-
 
     if (request->NeedSendMetaData()) {
         io__->Send(sd_, (void*) request->metadata.c_str(), (size_t) request->header.meta_size, &io_error);
@@ -69,9 +70,9 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
 
     if (request->NeedSend()) {
         if (request->DataFromFile()) {
-            io_error = io__->SendFile(sd_,  request->original_filepath, (size_t)request->header.data_size);
+            io_error = io__->SendFile(sd_, request->original_filepath, (size_t) request->header.data_size);
         } else {
-            io__->Send(sd_, (void*) request->data.get(), (size_t)request->header.data_size, &io_error);
+            io__->Send(sd_, (void*) request->data.get(), (size_t) request->header.data_size, &io_error);
         }
         if (io_error) {
             return io_error;
@@ -81,64 +82,68 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
     return nullptr;
 }
 
-Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_header, std::string* response) {
+Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader &request_header, std::string* response) {
     Error err;
     SendResponse sendDataResponse;
     io__->Receive(sd_, &sendDataResponse, sizeof(sendDataResponse), &err);
-    if(err != nullptr) {
+    if (err != nullptr) {
         return err;
     }
 
     switch (sendDataResponse.error_code) {
-    case kNetAuthorizationError : {
-        auto res_err = ProducerErrorTemplates::kWrongInput.Generate();
-        res_err->Append(sendDataResponse.message);
-        return res_err;
-    }
-    case kNetErrorWrongRequest : {
-        auto res_err = ProducerErrorTemplates::kWrongInput.Generate();
-        res_err->Append(sendDataResponse.message);
-        return res_err;
-    }
-    case kNetErrorWarning: {
-        auto res_err = ProducerErrorTemplates::kServerWarning.Generate();
-        res_err->Append(sendDataResponse.message);
-        return res_err;
-    }
-    case kNetErrorReauthorize: {
-        auto res_err = ProducerErrorTemplates::kReAuthorizationNeeded.Generate();
-        return res_err;
-    }
-    case kNetErrorNoError :
-        if (response) {
-            *response = sendDataResponse.message;
+        case kNetAuthorizationError : {
+            auto res_err = ProducerErrorTemplates::kWrongInput.Generate();
+            res_err->Append(sendDataResponse.message);
+            return res_err;
         }
-        return nullptr;
-    default:
-        auto res_err = ProducerErrorTemplates::kInternalServerError.Generate();
-        res_err->Append(sendDataResponse.message);
-        return res_err;
+        case kNetErrorNotSupported : {
+            auto res_err = ProducerErrorTemplates::kUnsupportedClient.Generate();
+            res_err->Append(sendDataResponse.message);
+            return res_err;
+        }
+        case kNetErrorWrongRequest : {
+            auto res_err = ProducerErrorTemplates::kWrongInput.Generate();
+            res_err->Append(sendDataResponse.message);
+            return res_err;
+        }
+        case kNetErrorWarning: {
+            auto res_err = ProducerErrorTemplates::kServerWarning.Generate();
+            res_err->Append(sendDataResponse.message);
+            return res_err;
+        }
+        case kNetErrorReauthorize: {
+            auto res_err = ProducerErrorTemplates::kReAuthorizationNeeded.Generate();
+            return res_err;
+        }
+        case kNetErrorNoError :
+            if (response) {
+                *response = sendDataResponse.message;
+            }
+            return nullptr;
+        default:auto res_err = ProducerErrorTemplates::kInternalServerError.Generate();
+            res_err->Append(sendDataResponse.message);
+            return res_err;
     }
 }
 
 Error RequestHandlerTcp::TrySendToReceiver(const ProducerRequest* request, std::string* response) {
     auto err = SendRequestContent(request);
-    if (err)  {
+    if (err) {
         return err;
     }
 
     err = ReceiveResponse(request->header, response);
-    if (err == nullptr || err == ProducerErrorTemplates::kServerWarning)  {
+    if (err == nullptr || err == ProducerErrorTemplates::kServerWarning) {
         log__->Debug("successfully sent data, opcode: " + std::to_string(request->header.op_code) +
-                     ", id: " + std::to_string(request->header.data_id) + " to " + connected_receiver_uri_);
-        if (err == ProducerErrorTemplates::kServerWarning ) {
-            log__->Warning("warning from server for id " + std::to_string(request->header.data_id) + ": " + err->Explain());
+            ", id: " + std::to_string(request->header.data_id) + " to " + connected_receiver_uri_);
+        if (err == ProducerErrorTemplates::kServerWarning) {
+            log__->Warning(
+                "warning from server for id " + std::to_string(request->header.data_id) + ": " + err->Explain());
         }
     }
 
     return err;
 }
-
 
 void RequestHandlerTcp::UpdateIfNewConnection() {
     if (Connected())
@@ -158,16 +163,14 @@ bool RequestHandlerTcp::UpdateReceiversList() {
 }
 
 bool RequestHandlerTcp::TimeToUpdateReceiverList() {
-    uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>( system_clock::now() -
-                          last_receivers_uri_update_).count();
+    uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() -
+        last_receivers_uri_update_).count();
     return elapsed_ms > discovery_service__->UpdateFrequency();
 }
-
 
 bool RequestHandlerTcp::Disconnected() {
     return !Connected();
 }
-
 
 bool RequestHandlerTcp::NeedRebalance() {
     if (Disconnected())
@@ -192,23 +195,24 @@ void RequestHandlerTcp::Disconnect() {
     connected_receiver_uri_.clear();
 }
 
-bool RequestHandlerTcp::ServerError(const Error& err) {
+bool RequestHandlerTcp::ServerError(const Error &err) {
     return err != nullptr && (err != ProducerErrorTemplates::kWrongInput &&
-                              err != ProducerErrorTemplates::kLocalIOError &&
-                              err != ProducerErrorTemplates::kServerWarning
-                             );
+        err != ProducerErrorTemplates::kLocalIOError &&
+        err != ProducerErrorTemplates::kUnsupportedClient &&
+        err != ProducerErrorTemplates::kServerWarning
+    );
 }
 
-bool RequestHandlerTcp::ProcessErrorFromReceiver(const Error& error,
+bool RequestHandlerTcp::ProcessErrorFromReceiver(const Error &error,
                                                  const ProducerRequest* request,
-                                                 const std::string& receiver_uri) {
+                                                 const std::string &receiver_uri) {
     bool is_server_error = ServerError(error);
 
     if (error && error != ProducerErrorTemplates::kServerWarning) {
         Disconnect();
         std::string log_str = "cannot send data, opcode: " + std::to_string(request->header.op_code) +
-                              ", id: " + std::to_string(request->header.data_id) + " to " + receiver_uri + ": " +
-                              error->Explain();
+            ", id: " + std::to_string(request->header.data_id) + " to " + receiver_uri + ": " +
+            error->Explain();
         if (is_server_error) {
             log__->Warning(log_str + ", will try again");
         } else {
@@ -219,24 +223,27 @@ bool RequestHandlerTcp::ProcessErrorFromReceiver(const Error& error,
     return is_server_error;
 }
 
-
 void RequestHandlerTcp::ProcessRequestCallback(Error err, ProducerRequest* request, std::string response, bool* retry) {
     if (request->callback) {
-        request->callback(RequestCallbackPayload{request->header, std::move(request->data),std::move(response)}, std::move(err));
+        request->callback(RequestCallbackPayload{request->header, std::move(request->data), std::move(response)},
+                          std::move(err));
     }
     *retry = false;
 }
 
+bool ImmediateCallbackAfterError(const Error& err) {
+    return err == ProducerErrorTemplates::kWrongInput || err == ProducerErrorTemplates::kUnsupportedClient;
+}
 
 bool RequestHandlerTcp::SendToOneOfTheReceivers(ProducerRequest* request, bool* retry) {
     for (auto receiver_uri : receivers_list_) {
         if (Disconnected()) {
             auto err = ConnectToReceiver(request->source_credentials, receiver_uri);
-            if (err == ProducerErrorTemplates::kWrongInput) {
+            if (ImmediateCallbackAfterError(err)) {
                 ProcessRequestCallback(std::move(err), request, "", retry);
                 return false;
             } else {
-                if (err != nullptr ) {
+                if (err != nullptr) {
                     continue;
                 }
             }
@@ -245,7 +252,7 @@ bool RequestHandlerTcp::SendToOneOfTheReceivers(ProducerRequest* request, bool* 
         std::string response;
         auto err = TrySendToReceiver(request, &response);
         bool server_error_can_retry = ProcessErrorFromReceiver(err, request, receiver_uri);
-        if (server_error_can_retry)  {
+        if (server_error_can_retry) {
             continue;
         }
 
@@ -253,12 +260,12 @@ bool RequestHandlerTcp::SendToOneOfTheReceivers(ProducerRequest* request, bool* 
         ProcessRequestCallback(std::move(err), request, response, retry);
         return success;
     }
-    log__->Warning((receivers_list_.empty()?std::string("receiver list empty, "):"")+"put back to the queue, request opcode: " + std::to_string(request->header.op_code) +
-                   ", id: " + std::to_string(request->header.data_id));
+    log__->Warning((receivers_list_.empty() ? std::string("receiver list empty, ") : "")
+                       + "put back to the queue, request opcode: " + std::to_string(request->header.op_code) +
+        ", id: " + std::to_string(request->header.data_id));
     *retry = true;
     return false;
 }
-
 
 bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request, bool* retry) {
     auto producer_request = static_cast<ProducerRequest*>(request);
@@ -303,13 +310,14 @@ void RequestHandlerTcp::TearDownProcessingRequestLocked(bool request_processed_s
 void RequestHandlerTcp::ProcessRequestTimeout(GenericRequest* request) {
     auto producer_request = static_cast<ProducerRequest*>(request);
     auto err_string = "request id:" + std::to_string(request->header.data_id) + ", opcode: " + std::to_string(
-                          request->header.op_code) + " for " + request->header.stream +
-                      " stream";
+        request->header.op_code) + " for " + request->header.stream +
+        " stream";
     log__->Error("timeout " + err_string);
 
     auto err = ProducerErrorTemplates::kTimeout.Generate(err_string);
     if (producer_request->callback) {
-        producer_request->callback(RequestCallbackPayload{request->header, std::move(producer_request->data),""}, std::move(err));
+        producer_request->callback(RequestCallbackPayload{request->header, std::move(producer_request->data), ""},
+                                   std::move(err));
     }
 
 }

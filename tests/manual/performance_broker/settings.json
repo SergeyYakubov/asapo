@@ -1,6 +1,7 @@
 {
   "DatabaseServer":"localhost:27017",
   "PerformanceDbServer": "localhost:8086",
+  "MonitorPerformance": true,
   "AuthorizationServer": "localhost:5007",
   "PerformanceDbName": "db_test",
   "Port":5005,

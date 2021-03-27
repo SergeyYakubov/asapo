@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     asapo::HttpCode code;
     std::string response;
     std::string input_data;
-    auto folder_token = consumer_impl->httpclient__->Post(args.uri_authorizer + "/folder", "", authorize_request, &code,
+    auto folder_token = consumer_impl->httpclient__->Post(args.uri_authorizer + "/v0.1/folder", "", authorize_request, &code,
                         &err);
     if (err) {
         std::cout << err->Explain();
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     M_AssertTrue(err == nullptr);
     M_AssertTrue(code == asapo::HttpCode::OK);
 
-    consumer_impl->httpclient__->Post(args.uri_authorizer + "/folder", "", "", &code, &err);
+    consumer_impl->httpclient__->Post(args.uri_authorizer + "/v0.1/folder", "", "", &code, &err);
     M_AssertTrue(code == asapo::HttpCode::BadRequest);
 
     consumer_impl->httpclient__->Post(args.uri_authorizer + "/bla", "", "", &code, &err);
@@ -61,12 +61,12 @@ int main(int argc, char* argv[]) {
 // check post with data
     std::string transfer = "{\"Folder\":\"" + args.folder + "\",\"FileName\":\"aaa\"}";
     std::string cookie = "Authorization=Bearer " + folder_token + ";";
-    auto content = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &code, &err);
+    auto content = consumer_impl->httpclient__->Post(args.uri_fts + "/v0.1/transfer", cookie, transfer, &code, &err);
     M_AssertEq("hello", content);
     M_AssertTrue(code == asapo::HttpCode::OK);
 // with array
     asapo::MessageData data;
-    err = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &data, 5, &code);
+    err = consumer_impl->httpclient__->Post(args.uri_fts + "/v0.1/transfer", cookie, transfer, &data, 5, &code);
     M_AssertEq( "hello", reinterpret_cast<char const*>(data.get()));
     M_AssertTrue(code == asapo::HttpCode::OK);
 
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     uint64_t size = 0;
     auto expected_data = io->GetDataFromFile(fname, &size, &err);
     M_AssertEq(nullptr, err);
-    err = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, &data, size, &code);
+    err = consumer_impl->httpclient__->Post(args.uri_fts + "/v0.1/transfer", cookie, transfer, &data, size, &code);
     M_AssertTrue(code == asapo::HttpCode::OK);
     for (uint64_t i = 0; i < size; i++) {
         if (expected_data[i] != data[i]) {
@@ -86,11 +86,11 @@ int main(int argc, char* argv[]) {
 
 // with file
     transfer = "{\"Folder\":\"" + args.folder + "\",\"FileName\":\"aaa\"}";
-    err = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, "bbb", &code);
+    err = consumer_impl->httpclient__->Post(args.uri_fts + "/v0.1/transfer", cookie, transfer, "bbb", &code);
     M_AssertTrue(code == asapo::HttpCode::OK);
 
     transfer = "{\"Folder\":\"" + args.folder + "\",\"FileName\":\"random\"}";
-    err = consumer_impl->httpclient__->Post(args.uri_fts + "/transfer", cookie, transfer, "random", &code);
+    err = consumer_impl->httpclient__->Post(args.uri_fts + "/v0.1/transfer", cookie, transfer, "random", &code);
     M_AssertTrue(code == asapo::HttpCode::OK);
 
     return 0;

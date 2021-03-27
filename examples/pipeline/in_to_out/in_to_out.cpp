@@ -206,7 +206,6 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args &args) {
 }
 
 int main(int argc, char* argv[]) {
-    asapo::ExitAfterPrintVersionIfNeeded("GetNext consumer Example", argc, argv);
     Args args;
     if (argc != 11) {
         std::cout << "Usage: " + std::string{argv[0]}

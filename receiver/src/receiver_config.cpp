@@ -19,6 +19,7 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     Error err;
 
     (err = parser.GetString("PerformanceDbServer", &config.performance_db_uri)) ||
+    (err = parser.GetBool("MonitorPerformance", &config.monitor_performance)) ||
     (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||
     (err = parser.GetUInt64("ReceiveToDiskThresholdMB", &config.receive_to_disk_threshold_mb)) ||
     (err = parser.Embedded("DataServer").GetUInt64("ListenPort", &config.dataserver.listen_port)) ||

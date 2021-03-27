@@ -13,6 +13,7 @@ enum class ProducerErrorType {
     kWrongInput,
     kServerWarning,
     kReAuthorizationNeeded,
+    kUnsupportedClient,
     kTimeout
 };
 
@@ -53,6 +54,12 @@ auto const kTimeout = ProducerErrorTemplate {
 auto const kReAuthorizationNeeded = ProducerErrorTemplate {
     "reauthorization needed", ProducerErrorType::kReAuthorizationNeeded
 };
+
+auto const kUnsupportedClient = ProducerErrorTemplate {
+    "cannot connect to asapo", ProducerErrorType::kUnsupportedClient
+};
+
+
 
 
 
