@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 database_name=test_run_detector
-token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
-
+token_test_run=$BT_TEST_RUN_TOKEN
 set -e
 
 trap Cleanup EXIT
@@ -12,6 +11,7 @@ Cleanup() {
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop discovery
+    nomad stop authorizer
     nomad stop broker
 	echo "db.dropDatabase()" | mongo ${database_name}
 }
@@ -19,6 +19,7 @@ Cleanup() {
 
 nomad run nginx.nmd
 nomad run discovery.nmd
+nomad run authorizer.nmd
 nomad run broker.nmd
 
 sleep 1

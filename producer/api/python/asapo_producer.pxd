@@ -21,16 +21,15 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   ErrorTemplateInterface kWrongInput "asapo::ProducerErrorTemplates::kWrongInput"
   ErrorTemplateInterface kLocalIOError "asapo::ProducerErrorTemplates::kLocalIOError"
   ErrorTemplateInterface kServerWarning "asapo::ProducerErrorTemplates::kServerWarning"
-
-
+  ErrorTemplateInterface kRequestPoolIsFull "asapo::ProducerErrorTemplates::kRequestPoolIsFull"
+  ErrorTemplateInterface kUnsupportedClient "asapo::ProducerErrorTemplates::kUnsupportedClient"
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass MessageData:
     uint8_t[] release()
     uint8_t[] get()
   cppclass StreamInfo:
-    string Json(bool add_last_id)
-    bool SetFromJson(string json_str, bool read_last_id)
+    string Json()
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass RequestHandlerType:
@@ -100,10 +99,13 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
         void StopThreads__()
         void SetLogLevel(LogLevel level)
         uint64_t  GetRequestsQueueSize()
+        uint64_t  GetRequestsQueueVolumeMb()
+        void SetRequestsQueueLimits(uint64_t size, uint64_t volume)
         Error WaitRequestsFinished(uint64_t timeout_ms)
         Error SendStreamFinishedFlag(string stream, uint64_t last_id, string next_stream, RequestCallback callback)
         StreamInfo GetStreamInfo(string stream, uint64_t timeout_ms, Error* err)
         StreamInfo GetLastStream(uint64_t timeout_ms, Error* err)
+        Error GetVersionInfo(string* client_info,string* server_info, bool* supported)
 
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":

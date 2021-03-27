@@ -14,6 +14,7 @@
 #include "asapo/http_client/http_error.h"
 #include "mocking.h"
 #include "../src/tcp_consumer_client.h"
+#include "asapo/common/internal/version.h"
 
 using asapo::ConsumerFactory;
 using asapo::Consumer;
@@ -66,6 +67,8 @@ class ConsumerImplTests : public Test {
   MessageMeta info;
   std::string expected_server_uri = "test:8400";
   std::string expected_broker_uri = "asapo-broker:5005";
+  std::string expected_consumer_protocol = "v0.1";
+  std::string expected_broker_api = expected_broker_uri + "/" + expected_consumer_protocol;
   std::string expected_fts_uri = "asapo-file-transfer:5008";
   std::string expected_token = "token";
   std::string expected_path = "/tmp/beamline/beamtime";
@@ -120,7 +123,7 @@ class ConsumerImplTests : public Test {
 
   }
   void MockGet(const std::string &response, asapo::HttpCode return_code = HttpCode::OK) {
-      EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_broker_uri), _, _)).WillOnce(DoAll(
+      EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_broker_api), _, _)).WillOnce(DoAll(
           SetArgPointee<1>(return_code),
           SetArgPointee<2>(nullptr),
           Return(response)
@@ -128,14 +131,15 @@ class ConsumerImplTests : public Test {
   }
 
   void MockGetError() {
-      EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_broker_uri), _, _)).WillOnce(DoAll(
+      EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_broker_api), _, _)).WillOnce(DoAll(
           SetArgPointee<1>(HttpCode::NotFound),
           SetArgPointee<2>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
           Return("")
       ));
   }
   void MockGetServiceUri(std::string service, std::string result) {
-      EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/" + service), _,
+      EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/" + service+"?token="
+          + expected_token+"&protocol=v0.1"), _,
                                           _)).WillOnce(DoAll(
           SetArgPointee<1>(HttpCode::OK),
           SetArgPointee<2>(nullptr),
@@ -200,7 +204,7 @@ TEST_F(ConsumerImplTests, DefaultStreamIsDetector) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client,
-                Get_t(expected_broker_uri + "/database/beamtime_id/detector/stream/" + expected_group_id
+                Get_t(expected_broker_api + "/beamtime/beamtime_id/detector/stream/" + expected_group_id
                           +
                               "/next?token="
                           + expected_token, _,
@@ -215,7 +219,7 @@ TEST_F(ConsumerImplTests, DefaultStreamIsDetector) {
 TEST_F(ConsumerImplTests, GetNextUsesCorrectUriWithStream) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/" +
                                             expected_stream + "/" + expected_group_id + "/next?token="
                                             + expected_token, _,
                                         _)).WillOnce(DoAll(
@@ -229,7 +233,7 @@ TEST_F(ConsumerImplTests, GetLastUsesCorrectUri) {
     MockGetBrokerUri();
 
     EXPECT_CALL(mock_http_client,
-                Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/"+ expected_stream+"/0/last?token="
+                Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/"+ expected_stream+"/0/last?token="
                           + expected_token, _,
                       _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
@@ -322,7 +326,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsWrongResponseFromHttpClient) {
 }
 
 TEST_F(ConsumerImplTests, GetMessageReturnsIfBrokerAddressNotFound) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::NotFound),
         SetArgPointee<2>(nullptr),
@@ -334,8 +338,22 @@ TEST_F(ConsumerImplTests, GetMessageReturnsIfBrokerAddressNotFound) {
     ASSERT_THAT(err->Explain(), AllOf(HasSubstr(expected_server_uri), HasSubstr("unavailable")));
 }
 
+TEST_F(ConsumerImplTests, GetMessageReturnsUnsupportedClient) {
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/asapo-broker"), _,
+                                        _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
+        SetArgPointee<1>(HttpCode::UnsupportedMediaType),
+        SetArgPointee<2>(nullptr),
+        Return("")));
+
+    consumer->SetTimeout(100);
+    auto err = consumer->GetNext(expected_group_id, &info, nullptr, expected_stream);
+
+    ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kUnsupportedClient));
+}
+
+
 TEST_F(ConsumerImplTests, GetMessageReturnsIfBrokerUriEmpty) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
@@ -356,7 +374,7 @@ TEST_F(ConsumerImplTests, GetDoNotCallBrokerUriIfAlreadyFound) {
     Mock::VerifyAndClearExpectations(&mock_http_client);
 
     EXPECT_CALL(mock_http_client,
-                Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asap-broker"), _, _)).Times(0);
+                Get_t(_, _, _)).Times(0);
     MockGet("error_response");
     consumer->GetNext(expected_group_id, &info, nullptr, expected_stream);
 }
@@ -398,7 +416,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsNoDataAfterTimeoutEvenIfOtherErrorOcc
         Return("{\"op\":\"get_record_by_id\",\"id\":" + std::to_string(expected_dataset_id) +
             ",\"id_max\":2,\"next_stream\":\"""\"}")));
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::NotFound),
@@ -431,7 +449,7 @@ ACTION(AssignArg2) {
 }
 
 TEST_F(ConsumerImplTests, GetNextRetriesIfConnectionHttpClientErrorUntilTimeout) {
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/asapo-broker"), _,
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/asapo-broker"), _,
                                         _)).Times(AtLeast(2)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
@@ -564,7 +582,7 @@ TEST_F(ConsumerImplTests, GenerateNewGroupIdReturnsErrorCreateGroup) {
 TEST_F(ConsumerImplTests, GenerateNewGroupIdReturnsGroupID) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/creategroup?token=" + expected_token, _, "", _,
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_api + "/creategroup?token=" + expected_token, _, "", _,
                                          _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
@@ -582,7 +600,7 @@ TEST_F(ConsumerImplTests, ResetCounterByDefaultUsesCorrectUri) {
     consumer->SetTimeout(100);
 
     EXPECT_CALL(mock_http_client,
-                Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/" +
+                Post_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/stream/" +
                     expected_group_id +
                     "/resetcounter?token=" + expected_token + "&value=0", _, _, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
@@ -596,7 +614,7 @@ TEST_F(ConsumerImplTests, ResetCounterUsesCorrectUri) {
     MockGetBrokerUri();
     consumer->SetTimeout(100);
 
-    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/" +
         expected_stream + "/" +
         expected_group_id +
         "/resetcounter?token=" + expected_token + "&value=10", _, _, _, _)).WillOnce(DoAll(
@@ -611,7 +629,7 @@ TEST_F(ConsumerImplTests, GetCurrentSizeUsesCorrectUri) {
     MockGetBrokerUri();
     consumer->SetTimeout(100);
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/" +
         expected_stream + "/size?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
@@ -627,7 +645,7 @@ TEST_F(ConsumerImplTests, GetCurrentSizeErrorOnWrongResponce) {
     MockGetBrokerUri();
     consumer->SetTimeout(100);
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source +
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source +
         "/"+expected_stream+"/size?token="
                                             + expected_token, _, _)).WillRepeatedly(DoAll(
         SetArgPointee<1>(HttpCode::Unauthorized),
@@ -643,7 +661,7 @@ TEST_F(ConsumerImplTests, GetNDataErrorOnWrongParse) {
     MockGetBrokerUri();
     consumer->SetTimeout(100);
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source +
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source +
         "/stream/size?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
@@ -661,7 +679,7 @@ TEST_F(ConsumerImplTests, GetByIdUsesCorrectUri) {
     auto to_send = CreateFI();
     auto json = to_send.Json();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(
                                                 expected_dataset_id) + "?token="
                                             + expected_token, _,
@@ -680,7 +698,7 @@ TEST_F(ConsumerImplTests, GetByIdTimeouts) {
     MockGetBrokerUri();
     consumer->SetTimeout(10);
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::Conflict),
@@ -696,7 +714,7 @@ TEST_F(ConsumerImplTests, GetByIdReturnsEndOfStream) {
     MockGetBrokerUri();
     consumer->SetTimeout(10);
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::Conflict),
@@ -712,7 +730,7 @@ TEST_F(ConsumerImplTests, GetByIdReturnsEndOfStreamWhenIdTooLarge) {
     MockGetBrokerUri();
     consumer->SetTimeout(10);
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::Conflict),
@@ -728,7 +746,7 @@ TEST_F(ConsumerImplTests, GetMetaDataOK) {
     MockGetBrokerUri();
     consumer->SetTimeout(100);
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source +
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source +
                                             "/default/0/meta/0?token="
                                             + expected_token, _,
                                         _)).WillOnce(DoAll(
@@ -834,7 +852,7 @@ TEST_F(ConsumerImplTests, QueryMessagesReturnRecords) {
     auto responce_string = "[" + json1 + "," + json2 + "]";
 
     EXPECT_CALL(mock_http_client,
-                Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0" +
+                Post_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/stream/0" +
                     "/querymessages?token=" + expected_token, _, expected_query_string, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
@@ -854,7 +872,7 @@ TEST_F(ConsumerImplTests, QueryMessagesReturnRecords) {
 TEST_F(ConsumerImplTests, GetNextDatasetUsesCorrectUri) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/" +
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/stream/" +
                                             expected_group_id + "/next?token="
                                             + expected_token + "&dataset=true&minsize=0", _,
                                         _)).WillOnce(DoAll(
@@ -989,7 +1007,7 @@ TEST_F(ConsumerImplTests, GetDataSetReturnsParseError) {
 TEST_F(ConsumerImplTests, GetLastDatasetUsesCorrectUri) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/" +
                                             expected_stream + "/0/last?token="
                                             + expected_token + "&dataset=true&minsize=1", _,
                                         _)).WillOnce(DoAll(
@@ -1003,7 +1021,7 @@ TEST_F(ConsumerImplTests, GetLastDatasetUsesCorrectUri) {
 TEST_F(ConsumerImplTests, GetDatasetByIdUsesCorrectUri) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/0/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/stream/0/"
                                             + std::to_string(expected_dataset_id) + "?token="
                                             + expected_token + "&dataset=true" + "&minsize=0", _,
                                         _)).WillOnce(DoAll(
@@ -1017,36 +1035,37 @@ TEST_F(ConsumerImplTests, GetDatasetByIdUsesCorrectUri) {
 TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUri) {
     MockGetBrokerUri();
     std::string return_streams =
-        R"({"streams":[{"lastId":123,"name":"test","timestampCreated":1000000},{"name":"test1","timestampCreated":2000000}]})";
+        std::string(R"({"streams":[{"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":1000,"finished":false,"nextStream":""},)")+
+        R"({"lastId":124,"name":"test1","timestampCreated":2000000,"timestampLast":2000,"finished":true,"nextStream":"next"}]})";
     EXPECT_CALL(mock_http_client,
-                Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/0/streams"
-                          + "?token=" + expected_token + "&from=stream_from", _,
+                Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/0/streams"
+                          + "?token=" + expected_token + "&from=stream_from&filter=all", _,
                       _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return(return_streams)));
 
     asapo::Error err;
-    auto streams = consumer->GetStreamList("stream_from", &err);
+    auto streams = consumer->GetStreamList("stream_from",asapo::StreamFilter::kAllStreams, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(streams.size(), Eq(2));
     ASSERT_THAT(streams.size(), 2);
-    ASSERT_THAT(streams[0].Json(false), R"({"name":"test","timestampCreated":1000000})");
-    ASSERT_THAT(streams[1].Json(false), R"({"name":"test1","timestampCreated":2000000})");
+    ASSERT_THAT(streams[0].Json(), R"({"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":1000,"finished":false,"nextStream":""})");
+    ASSERT_THAT(streams[1].Json(), R"({"lastId":124,"name":"test1","timestampCreated":2000000,"timestampLast":2000,"finished":true,"nextStream":"next"})");
 }
 
 TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUriWithoutFrom) {
     MockGetBrokerUri();
     EXPECT_CALL(mock_http_client,
-                Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/0/streams"
-                          + "?token=" + expected_token, _,
+                Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/0/streams"
+                          + "?token=" + expected_token+"&filter=finished", _,
                       _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return("")));;
 
     asapo::Error err;
-    auto streams = consumer->GetStreamList("", &err);
+    auto streams = consumer->GetStreamList("",asapo::StreamFilter::kFinishedStreams, &err);
 }
 
 void ConsumerImplTests::MockBeforeFTS(MessageData* data) {
@@ -1063,7 +1082,7 @@ void ConsumerImplTests::ExpectFolderToken() {
         expected_beamtime_id
         + "\",\"Token\":\"" + expected_token + "\"}";
 
-    EXPECT_CALL(mock_http_client, Post_t(HasSubstr(expected_server_uri + "/asapo-authorizer/folder"), _,
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr(expected_server_uri + "/asapo-authorizer/v0.1/folder"), _,
                                          expected_folder_query_string, _, _)).WillOnce(DoAll(
         SetArgPointee<3>(HttpCode::OK),
         SetArgPointee<4>(nullptr),
@@ -1081,7 +1100,7 @@ ACTION_P(AssignArg3, assign) {
 }
 
 void ConsumerImplTests::ExpectFileTransfer(const asapo::ConsumerErrorTemplate* p_err_template) {
-    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/transfer"),
+    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/v0.1/transfer"),
                                                     expected_cookie,
                                                     expected_fts_query_string,
                                                     _,
@@ -1094,7 +1113,7 @@ void ConsumerImplTests::ExpectFileTransfer(const asapo::ConsumerErrorTemplate* p
 }
 
 void ConsumerImplTests::ExpectRepeatedFileTransfer() {
-    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/transfer"),
+    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/v0.1/transfer"),
                                                     expected_cookie,
                                                     expected_fts_query_string,
                                                     _,
@@ -1139,7 +1158,7 @@ TEST_F(ConsumerImplTests, FileTransferReadsFileSize) {
         Return("{\"file_size\":5}")
     ));
 
-    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/transfer"),
+    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/v0.1/transfer"),
                                                     expected_cookie,
                                                     expected_fts_query_string,
                                                     _,
@@ -1180,7 +1199,7 @@ TEST_F(ConsumerImplTests, GetMessageTriesToGetTokenAgainIfTransferFailed) {
 TEST_F(ConsumerImplTests, AcknowledgeUsesCorrectUri) {
     MockGetBrokerUri();
     auto expected_acknowledge_command = "{\"Op\":\"ackmessage\"}";
-    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/" +
         expected_stream + "/" +
         expected_group_id
                                              + "/" + std::to_string(expected_dataset_id) + "?token="
@@ -1196,7 +1215,7 @@ TEST_F(ConsumerImplTests, AcknowledgeUsesCorrectUri) {
 
 void ConsumerImplTests::ExpectIdList(bool error) {
     MockGetBrokerUri();
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/" +
         expected_stream + "/" +
         expected_group_id + "/nacks?token=" + expected_token + "&from=1&to=0", _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
@@ -1214,7 +1233,7 @@ TEST_F(ConsumerImplTests, GetUnAcknowledgedListReturnsIds) {
 }
 
 void ConsumerImplTests::ExpectLastAckId(bool empty_response) {
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/" +
         expected_stream + "/" +
         expected_group_id + "/lastack?token=" + expected_token, _, _)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
@@ -1252,7 +1271,7 @@ TEST_F(ConsumerImplTests, GetByIdErrorsForId0) {
 TEST_F(ConsumerImplTests, ResendNacks) {
     MockGetBrokerUri();
 
-    EXPECT_CALL(mock_http_client, Get_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/stream/"
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/stream/"
                                             + expected_group_id + "/next?token="
                                             + expected_token + "&resend_nacks=true&delay_ms=10000&resend_attempts=3", _,
                                         _)).WillOnce(DoAll(
@@ -1267,7 +1286,7 @@ TEST_F(ConsumerImplTests, ResendNacks) {
 TEST_F(ConsumerImplTests, NegativeAcknowledgeUsesCorrectUri) {
     MockGetBrokerUri();
     auto expected_neg_acknowledge_command = R"({"Op":"negackmessage","Params":{"DelayMs":10000}})";
-    EXPECT_CALL(mock_http_client, Post_t(expected_broker_uri + "/database/beamtime_id/" + expected_data_source + "/" +
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/" +
         expected_stream + "/" +
         expected_group_id
                                              + "/" + std::to_string(expected_dataset_id) + "?token="
@@ -1306,5 +1325,48 @@ TEST_F(ConsumerImplTests, CanInterruptOperation) {
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kInterruptedTransaction));
 
 }
+
+
+TEST_F(ConsumerImplTests, GetCurrentDataSetCounteUsesCorrectUri) {
+    MockGetBrokerUri();
+    consumer->SetTimeout(100);
+
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/" +
+        expected_stream + "/size?token="
+                                            + expected_token+"&incomplete=true", _, _)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return("{\"size\":10}")));
+    asapo::Error err;
+    auto size = consumer->GetCurrentDatasetCount(expected_stream,true, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(size, Eq(10));
+}
+
+
+TEST_F(ConsumerImplTests, GetVersionInfoClientOnly) {
+    std::string client_info;
+    auto err = consumer->GetVersionInfo(&client_info,nullptr,nullptr);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(client_info, HasSubstr(std::string(asapo::kVersion)));
+    ASSERT_THAT(client_info, HasSubstr(asapo::kConsumerProtocol.GetVersion()));
+}
+
+TEST_F(ConsumerImplTests, GetVersionInfoWithServer) {
+
+    std::string result = R"({"softwareVersion":"20.03.1, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.2"}})";
+
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/version?token=token&client=consumer&protocol=v0.1"), _,_)).WillOnce(DoAll(
+        SetArgPointee<1>(HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return(result)));
+
+    std::string client_info,server_info;
+    auto err = consumer->GetVersionInfo(&client_info,&server_info,nullptr);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(server_info, HasSubstr("20.03.1"));
+    ASSERT_THAT(server_info, HasSubstr("v0.2"));
+}
+
 
 }

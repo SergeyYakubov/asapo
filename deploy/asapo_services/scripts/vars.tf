@@ -1,4 +1,7 @@
 variable "elk_logs" {}
+variable "perf_monitor" {}
+
+variable "force_pull_images" {}
 
 variable "asapo_user" {}
 
@@ -59,6 +62,8 @@ variable "discovery_total_memory_size" {}
 variable "grafana_port" {}
 
 variable "influxdb_port" {}
+
+variable "influxdb_rpc_port" {}
 
 variable "mongo_port" {}
 

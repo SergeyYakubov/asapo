@@ -46,6 +46,9 @@ class AsapoUnavailableServiceError(AsapoConsumerError):
 class AsapoLocalIOError(AsapoConsumerError):
   pass
 
+class AsapoUnsupportedClientError(AsapoConsumerError):
+  pass
+
 class AsapoStreamFinishedError(AsapoConsumerError):
   def __init__(self,message,id_max=None,next_stream=None):
     AsapoConsumerError.__init__(self,message)
@@ -99,11 +102,22 @@ cdef throw_exception(Error& err, res = None):
             raise AsapoUnavailableServiceError(error_string)
     elif err == kInterruptedTransaction:
             raise AsapoInterruptedTransactionError(error_string)
+    elif err == kUnsupportedClient:
+            raise AsapoUnsupportedClientError(error_string)
     else:
         raise AsapoConsumerError(error_string)
 
 cdef class PyConsumer:
     cdef unique_ptr[Consumer] c_consumer
+    cdef StreamFilter _filter_to_cfilter(self,filter) except + :
+        if filter == "all":
+            return StreamFilter_kAllStreams
+        elif filter == "finished":
+            return StreamFilter_kFinishedStreams
+        elif filter == "unfinished":
+            return StreamFilter_kUnfinishedStreams
+        else:
+            raise AsapoWrongInputError("wrong filter, must be all|finished|unfinished")
     def _op(self, op, group_id, stream, meta_only, uint64_t id):
         cdef MessageMeta info
         cdef string b_group_id = _bytes(group_id)
@@ -167,6 +181,16 @@ cdef class PyConsumer:
         if err:
             throw_exception(err)
         return size
+    def get_current_dataset_count(self, stream = "default", bool include_incomplete = False):
+        cdef Error err
+        cdef uint64_t size
+        cdef string b_stream = _bytes(stream)
+        with nogil:
+            size =  self.c_consumer.get().GetCurrentDatasetCount(b_stream,include_incomplete,&err)
+        err_str = _str(GetErrorString(&err))
+        if err:
+            throw_exception(err)
+        return size
     def set_timeout(self,timeout):
         self.c_consumer.get().SetTimeout(timeout)
     def force_no_rdma(self):
@@ -192,6 +216,21 @@ cdef class PyConsumer:
         if err:
             throw_exception(err)
         return
+    def get_version_info(self, from_server = "true"):
+        cdef string client_info,server_info
+        cdef bool supported
+        cdef string* p_server_info =  &server_info if from_server else <string*>NULL
+        cdef bool* p_supported =  &supported if from_server else <bool*>NULL
+        cdef Error err
+        with nogil:
+                err =  self.c_consumer.get().GetVersionInfo(&client_info,p_server_info,p_supported)
+        if err:
+            throw_exception(err)
+        version = {}
+        if from_server:
+            return {'client': _str(client_info), 'server': _str(server_info), 'supported': supported}
+        else:
+            return {'client': _str(client_info)}
     def reset_lastread_marker(self,group_id, stream = "default"):
         cdef string b_group_id = _bytes(group_id)
         cdef string b_stream = _bytes(stream)
@@ -209,17 +248,18 @@ cdef class PyConsumer:
         if err:
             throw_exception(err)
         return _str(group_id)
-    def get_stream_list(self, from_stream = ""):
+    def get_stream_list(self,from_stream = "",filter="all"):
         cdef Error err
         cdef vector[StreamInfo] streams
         cdef string b_from_stream = _bytes(from_stream)
+        cdef StreamFilter stream_filter = self._filter_to_cfilter(filter)
         with nogil:
-            streams = self.c_consumer.get().GetStreamList(b_from_stream,&err)
+            streams = self.c_consumer.get().GetStreamList(b_from_stream,stream_filter,&err)
         if err:
             throw_exception(err)
         list = []
         for stream in streams:
-            list.append(json.loads(_str(stream.Json(False))))
+            list.append(json.loads(_str(stream.Json())))
         return list
     def acknowledge(self, group_id, uint64_t id, stream = "default"):
         cdef string b_group_id = _bytes(group_id)

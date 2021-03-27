@@ -357,37 +357,68 @@ Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_i
 
 }
 
+Error UpdateStreamInfoFromEarliestRecord(const std::string &earliest_record_str,
+                               StreamInfo* info) {
+    std::chrono::system_clock::time_point timestamp_created;
+    auto parser = JsonStringParser(earliest_record_str);
+    auto ok = TimeFromJson(parser, "timestamp", &timestamp_created);
+    if (!ok) {
+        return DBErrorTemplates::kJsonParseError.Generate(
+            "UpdateStreamInfoFromEarliestRecord: cannot parse timestamp in response: " + earliest_record_str);
+    }
+    info->timestamp_created = timestamp_created;
+    return nullptr;
+}
+
+Error UpdateFinishedStreamInfo(const std::string &metadata,
+                                     StreamInfo* info) {
+    info->finished = true;
+    auto parser = JsonStringParser(metadata);
+    std::string next_stream;
+    auto err = parser.GetString("next_stream", &next_stream);
+    if (err) {
+        return DBErrorTemplates::kJsonParseError.Generate(
+            "UpdateFinishedStreamInfo: cannot parse finished strean meta response: " + metadata);
+    }
+    if (next_stream!=kNoNextStreamKeyword) {
+        info->next_stream = next_stream;
+    }
+    return nullptr;
+}
+
+Error UpdateStreamInfoFromLastRecord(const std::string &last_record_str,
+                                     StreamInfo* info) {
+    MessageMeta last_message;
+    auto ok = last_message.SetFromJson(last_record_str);
+    if (!ok) {
+        return DBErrorTemplates::kJsonParseError.Generate(
+            "UpdateStreamInfoFromLastRecord: cannot parse mongodb response: " + last_record_str);
+    }
+    info->last_id = last_message.id;
+    info->timestamp_lastentry = last_message.timestamp;
+
+    if (last_message.name == kFinishStreamKeyword) {
+        auto err = UpdateFinishedStreamInfo(last_message.metadata, info);
+        if (err) {
+            return err;
+        }
+    }
+    return nullptr;
+}
+
+
 Error StreamInfoFromDbResponse(const std::string &last_record_str,
                                const std::string &earliest_record_str,
                                StreamInfo* info) {
-    uint64_t id;
-    std::chrono::system_clock::time_point timestamp_created,timestamp_last;
+    std::chrono::system_clock::time_point timestamp_created;
 
-    auto parser1 = JsonStringParser(last_record_str);
-    Error parse_err = parser1.GetUInt64("_id", &id);
-    if (parse_err) {
-        return DBErrorTemplates::kJsonParseError.Generate(
-            "StreamInfoFromDbResponse: cannot parse mongodb response: " + last_record_str + ": "
-                + parse_err->Explain());
-    }
-    auto ok = TimeFromJson(parser1, "timestamp", &timestamp_last);
-    if (!ok) {
-        return DBErrorTemplates::kJsonParseError.Generate(
-            "StreamInfoFromDbResponse: cannot parse timestamp in response: " + last_record_str);
+    auto err = UpdateStreamInfoFromLastRecord(last_record_str,info);
+    if (err) {
+        return err;
     }
 
+    return UpdateStreamInfoFromEarliestRecord(last_record_str,info);
 
-    auto parser2 = JsonStringParser(earliest_record_str);
-    ok = TimeFromJson(parser2, "timestamp", &timestamp_created);
-    if (!ok) {
-        return DBErrorTemplates::kJsonParseError.Generate(
-            "StreamInfoFromDbResponse: cannot parse timestamp in response: " + earliest_record_str);
-    }
-
-    info->last_id = id;
-    info->timestamp_created = timestamp_created;
-    info->timestamp_lastentry = timestamp_last;
-    return nullptr;
 }
 
 Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* info) const {
@@ -407,19 +438,32 @@ Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* in
     return StreamInfoFromDbResponse(last_record_str, earliest_record_str, info);
 }
 
-Error MongoDBClient::UpdateStreamInfo(const char* str, StreamInfo* info) const {
-    std::string stream_name{str};
+bool MongoCollectionIsDataStream(const std::string &stream_name)  {
     std::string prefix = std::string(kDBDataCollectionNamePrefix) + "_";
-    if (stream_name.rfind(prefix, 0) == 0) {
-        std::string record_str;
-        StreamInfo next_info;
-        auto err = GetStreamInfo(stream_name, &next_info);
+    return stream_name.rfind(prefix, 0) == 0;
+}
+
+Error MongoDBClient::UpdateCurrentLastStreamInfo(const std::string& collection_name, StreamInfo* info) const {
+    StreamInfo next_info;
+    auto err = GetStreamInfo(collection_name, &next_info);
+    std::string prefix = std::string(kDBDataCollectionNamePrefix) + "_";
+    if (err) {
+        return err;
+    }
+    if (next_info.timestamp_created > info->timestamp_created) {
+        next_info.name = collection_name.substr(prefix.size());
+        *info = next_info;
+    }
+    return nullptr;
+}
+
+
+Error MongoDBClient::UpdateLastStreamInfo(const char* str, StreamInfo* info) const {
+    std::string collection_name{str};
+    if (MongoCollectionIsDataStream(collection_name)) {
+        auto err = UpdateCurrentLastStreamInfo(collection_name, info);
         if (err) {
             return err;
-        }
-        if (next_info.timestamp_created > info->timestamp_created) {
-            next_info.name = stream_name.erase(0, prefix.size());
-            *info = next_info;
         }
     }
     return nullptr;
@@ -444,7 +488,7 @@ Error MongoDBClient::GetLastStream(StreamInfo* info) const {
     if ((strv = mongoc_database_get_collection_names_with_opts(
         database, opts, &error))) {
         for (auto i = 0; strv[i]; i++) {
-            err = UpdateStreamInfo(strv[i], info);
+            err = UpdateLastStreamInfo(strv[i], info);
             if (err) {
                 break;
             }

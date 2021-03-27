@@ -3,6 +3,7 @@ package server
 import (
 	"asapo_authorizer/common"
 	log "asapo_common/logger"
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"errors"
 	"net/http"
@@ -126,6 +127,7 @@ func alwaysAllowed(creds SourceCredentials) (beamtimeMeta, bool) {
 		if pair.BeamtimeId == creds.BeamtimeId {
 			pair.DataSource = creds.DataSource
 			pair.Type = creds.Type
+			pair.AccessTypes = []string{"read","write"}
 			return pair, true
 		}
 	}
@@ -152,26 +154,31 @@ func needHostAuthorization(creds SourceCredentials) bool {
 	return creds.Type == "raw" || len(creds.Token) == 0
 }
 
-func authorizeByToken(creds SourceCredentials) error {
-	var token_expect string
-	if (creds.BeamtimeId != "auto") {
-		token_expect, _ = authHMAC.GenerateToken(&creds.BeamtimeId)
-	} else {
-		key := "bl_" + creds.Beamline
-		token_expect, _ = authHMAC.GenerateToken(&key)
+func checkToken(token string, subject_expect string) (accessTypes []string, err error) {
+	var extra_claim structs.AccessTokenExtraClaim
+	subject,err := Auth.UserAuth().CheckAndGetContent(token,&extra_claim)
+	if err!=nil {
+		return nil,err
 	}
 
-	var err_string string
-	if creds.Token != token_expect {
-		if creds.BeamtimeId != "auto" {
-			err_string = "wrong token for beamtime " + creds.BeamtimeId
-		} else {
-			err_string = "wrong token for beamline " + creds.Beamline
-		}
-		log.Error(err_string)
-		return errors.New(err_string)
+	if extra_claim.AccessTypes==nil || len(extra_claim.AccessTypes)==0 {
+		return nil,errors.New("missing access types")
 	}
-	return nil
+
+	if subject!=subject_expect {
+		return nil,errors.New("wrong token for "+subject_expect)
+	}
+	return extra_claim.AccessTypes,err
+}
+
+func authorizeByToken(creds SourceCredentials) (accessTypes []string, err error) {
+	subject_expect:=""
+	if (creds.BeamtimeId != "auto") {
+		subject_expect = utils.SubjectFromBeamtime(creds.BeamtimeId)
+	} else {
+		subject_expect = utils.SubjectFromBeamline(creds.Beamline)
+	}
+	return checkToken(creds.Token,subject_expect)
 }
 
 func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
@@ -204,31 +211,30 @@ func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
 	return meta, nil
 }
 
-func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds SourceCredentials) error {
-
+func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds SourceCredentials) (accessTypes []string, err error) {
+	accessTypes = nil
 	if creds.Type=="raw" && meta.OnlinePath=="" {
 		err_string := "beamtime "+meta.BeamtimeId+" is not online"
 		log.Error(err_string)
-		return errors.New(err_string)
+		return nil,errors.New(err_string)
 	}
 
 	if creds.Beamline != "auto" && meta.Beamline != creds.Beamline {
 		err_string := "given beamline (" + creds.Beamline + ") does not match the found one (" + meta.Beamline + ")"
 		log.Debug(err_string)
-		return errors.New(err_string)
+		return nil,errors.New(err_string)
 	}
 
 	if needHostAuthorization(creds) {
 		if err := authorizeByHost(request.OriginHost, meta.Beamline); err != nil {
-			return err
+			return nil,err
 		}
+		accessTypes = []string{"read","write"}
 	} else {
-		if err := authorizeByToken(creds); err != nil {
-			return err
-		}
+		accessTypes,err = authorizeByToken(creds)
 	}
 
-	return nil
+	return accessTypes,err
 }
 
 func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeMeta, error) {
@@ -241,11 +247,14 @@ func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeM
 		return beamtimeMeta{}, err
 	}
 
-	if err := authorizeMeta(meta, request, creds); err != nil {
+	var accessTypes []string
+	if accessTypes, err = authorizeMeta(meta, request, creds); err != nil {
 		return beamtimeMeta{}, err
 	}
 
-	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " + meta.Beamline+", type "+meta.Type)
+	meta.AccessTypes = accessTypes
+	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " +
+		meta.Beamline+", type "+meta.Type)
 	return meta, nil
 }
 

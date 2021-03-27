@@ -12,6 +12,8 @@
 #include "fabric_consumer_client.h"
 #include "rds_response_error.h"
 
+#include "asapo/common/internal/version.h"
+
 using std::chrono::system_clock;
 
 namespace asapo {
@@ -32,7 +34,7 @@ Error GetNoDataResponseFromJson(const std::string &json_string, ConsumerErrorDat
 Error GetPartialDataResponseFromJson(const std::string &json_string, PartialErrorData* data) {
     Error err;
     auto parser = JsonStringParser(json_string);
-    uint64_t  id,size;
+    uint64_t id, size;
     if ((err = parser.GetUInt64("size", &size)) ||
         (err = parser.GetUInt64("_id", &id))) {
         return err;
@@ -84,6 +86,7 @@ Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode &c
         case HttpCode::InternalServerError:return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response->to_string());
         case HttpCode::NotFound:return ConsumerErrorTemplates::kUnavailableService.Generate(response->to_string());
         case HttpCode::Conflict:return ConsumerErrorFromNoDataResponse(response->to_string());
+        case HttpCode::UnsupportedMediaType:return ConsumerErrorTemplates::kUnsupportedClient.Generate(response->to_string());
         default:return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response->to_string());
     }
 }
@@ -178,24 +181,36 @@ Error ConsumerImpl::ProcessRequest(RequestOutput* response, const RequestInfo &r
     return ProcessRequestResponce(err, response, code);
 }
 
-Error ConsumerImpl::DiscoverService(const std::string &service_name, std::string* uri_to_set) {
-    if (!uri_to_set->empty()) {
-        return nullptr;
-    }
+RequestInfo ConsumerImpl::GetDiscoveryRequest(const std::string &service_name) const {
     RequestInfo ri;
     ri.host = endpoint_;
-    ri.api = "/asapo-discovery/" + service_name;
-    RequestOutput output;
-    Error err;
-    err = ProcessRequest(&output, ri, nullptr);
-    *uri_to_set = std::move(output.string_output);
+    ri.api = "/asapo-discovery/" + kConsumerProtocol.GetDiscoveryVersion() + "/" + service_name;
+    ri.extra_params = "&protocol=" + kConsumerProtocol.GetVersion();
+    return ri;
+}
+
+Error ConsumerImpl::ProcessDiscoverServiceResult(Error err, std::string* uri_to_set) {
     if (err != nullptr || uri_to_set->empty()) {
         uri_to_set->clear();
+        if (err == ConsumerErrorTemplates::kUnsupportedClient) {
+            return err;
+        }
         return ConsumerErrorTemplates::kUnavailableService.Generate(" on " + endpoint_
                                                                         + (err != nullptr ? ": " + err->Explain()
                                                                                           : ""));
     }
     return nullptr;
+}
+
+Error ConsumerImpl::DiscoverService(const std::string &service_name, std::string* uri_to_set) {
+    if (!uri_to_set->empty()) {
+        return nullptr;
+    }
+    auto ri = GetDiscoveryRequest(service_name);
+    RequestOutput output;
+    auto err = ProcessRequest(&output, ri, nullptr);
+    *uri_to_set = std::move(output.string_output);
+    return ProcessDiscoverServiceResult(std::move(err), uri_to_set);
 }
 
 bool ConsumerImpl::SwitchToGetByIdIfPartialData(Error* err,
@@ -215,7 +230,10 @@ bool ConsumerImpl::SwitchToGetByIdIfPartialData(Error* err,
     return false;
 }
 
-bool ConsumerImpl::SwitchToGetByIdIfNoData(Error* err, const std::string &response, std::string* group_id, std::string* redirect_uri) {
+bool ConsumerImpl::SwitchToGetByIdIfNoData(Error* err,
+                                           const std::string &response,
+                                           std::string* group_id,
+                                           std::string* redirect_uri) {
     if (*err == ConsumerErrorTemplates::kNoData) {
         auto error_data = static_cast<const ConsumerErrorData*>((*err)->GetCustomData());
         if (error_data == nullptr) {
@@ -235,7 +253,7 @@ RequestInfo ConsumerImpl::PrepareRequestInfo(std::string api_url, bool dataset, 
     ri.api = std::move(api_url);
     if (dataset) {
         ri.extra_params = "&dataset=true";
-        ri.extra_params += "&minsize="+std::to_string(min_size);
+        ri.extra_params += "&minsize=" + std::to_string(min_size);
     }
     return ri;
 }
@@ -248,10 +266,12 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
 
-    interrupt_flag_= false;
+    interrupt_flag_ = false;
     std::string request_suffix = OpToUriCmd(op);
     std::string request_group = OpToUriCmd(op);
-    std::string request_api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source
+    std::string
+        request_api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source
         + "/" + std::move(stream);
     uint64_t elapsed_ms = 0;
     Error no_data_error;
@@ -301,20 +321,20 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
 
 Error ConsumerImpl::GetNext(std::string group_id, MessageMeta* info, MessageData* data, std::string stream) {
     return GetMessageFromServer(GetMessageServerOperation::GetNext,
-                              0,
-                              std::move(group_id),
-                              std::move(stream),
-                              info,
-                              data);
+                                0,
+                                std::move(group_id),
+                                std::move(stream),
+                                info,
+                                data);
 }
 
 Error ConsumerImpl::GetLast(MessageMeta* info, MessageData* data, std::string stream) {
     return GetMessageFromServer(GetMessageServerOperation::GetLast,
-                              0,
-                              "0",
-                              std::move(stream),
-                              info,
-                              data);
+                                0,
+                                "0",
+                                std::move(stream),
+                                info,
+                                data);
 }
 
 std::string ConsumerImpl::OpToUriCmd(GetMessageServerOperation op) {
@@ -326,9 +346,9 @@ std::string ConsumerImpl::OpToUriCmd(GetMessageServerOperation op) {
 }
 
 Error ConsumerImpl::GetMessageFromServer(GetMessageServerOperation op, uint64_t id, std::string group_id,
-                                       std::string stream,
-                                       MessageMeta* info,
-                                       MessageData* data) {
+                                         std::string stream,
+                                         MessageMeta* info,
+                                         MessageData* data) {
     if (info == nullptr) {
         return ConsumerErrorTemplates::kWrongInput.Generate();
     }
@@ -437,7 +457,7 @@ Error ConsumerImpl::TryGetDataFromBuffer(const MessageMeta* info, MessageData* d
 
 std::string ConsumerImpl::GenerateNewGroupId(Error* err) {
     RequestInfo ri;
-    ri.api = "/creategroup";
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/creategroup";
     ri.post = true;
     return BrokerRequestWithTimeout(ri, err);
 }
@@ -446,7 +466,7 @@ Error ConsumerImpl::ServiceRequestWithTimeout(const std::string &service_name,
                                               std::string* service_uri,
                                               RequestInfo request,
                                               RequestOutput* response) {
-    interrupt_flag_= false;
+    interrupt_flag_ = false;
     uint64_t elapsed_ms = 0;
     Error err;
     while (elapsed_ms <= timeout_ms_) {
@@ -498,7 +518,7 @@ Error ConsumerImpl::FtsRequestWithTimeout(MessageMeta* info, MessageData* data) 
 
 RequestInfo ConsumerImpl::CreateFileTransferRequest(const MessageMeta* info) const {
     RequestInfo ri;
-    ri.api = "/transfer";
+    ri.api = "/" + kConsumerProtocol.GetFileTransferServiceVersion() + "/transfer";
     ri.post = true;
     ri.body = "{\"Folder\":\"" + source_path_ + "\",\"FileName\":\"" + info->name + "\"}";
     ri.cookie = "Authorization=Bearer " + folder_token_;
@@ -518,7 +538,8 @@ Error ConsumerImpl::ResetLastReadMarker(std::string group_id, std::string stream
 
 Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/"
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source + "/"
         + std::move(stream) + "/" + std::move(group_id) + "/resetcounter";
     ri.extra_params = "&value=" + std::to_string(value);
     ri.post = true;
@@ -529,20 +550,8 @@ Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std:
 }
 
 uint64_t ConsumerImpl::GetCurrentSize(std::string stream, Error* err) {
-    RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
-        +"/" + std::move(stream) + "/size";
-    auto responce = BrokerRequestWithTimeout(ri, err);
-    if (*err) {
-        return 0;
-    }
-
-    JsonStringParser parser(responce);
-    uint64_t size;
-    if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
-        return 0;
-    }
-    return size;
+    auto ri = GetSizeRequestForSingleMessagesStream(stream);
+    return GetCurrentCount(stream, ri, err);
 }
 
 Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) {
@@ -560,13 +569,14 @@ Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, 
     }
 
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(
         group_id) + "/" + std::to_string(id);
     if (dataset) {
         ri.extra_params += "&dataset=true";
-        ri.extra_params += "&minsize="+std::to_string(min_size);
+        ri.extra_params += "&minsize=" + std::to_string(min_size);
     }
 
     Error err;
@@ -576,7 +586,9 @@ Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, 
 
 std::string ConsumerImpl::GetBeamtimeMeta(Error* err) {
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/default/0/meta/0";
+    ri.api =
+        "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+            + source_credentials_.data_source + "/default/0/meta/0";
 
     return BrokerRequestWithTimeout(ri, err);
 }
@@ -585,7 +597,7 @@ DataSet DecodeDatasetFromResponse(std::string response, Error* err) {
     DataSet res;
     if (!res.SetFromJson(std::move(response))) {
         *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response:" + response);
-        return {0,0,MessageMetas{}};
+        return {0, 0, MessageMetas{}};
     } else {
         return res;
     }
@@ -598,7 +610,8 @@ MessageMetas ConsumerImpl::QueryMessages(std::string query, std::string stream, 
     }
 
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         "/" + std::move(stream) + "/0/querymessages";
     ri.post = true;
     ri.body = std::move(query);
@@ -613,11 +626,16 @@ MessageMetas ConsumerImpl::QueryMessages(std::string query, std::string stream, 
 }
 
 DataSet ConsumerImpl::GetNextDataset(std::string group_id, uint64_t min_size, std::string stream, Error* err) {
-    return GetDatasetFromServer(GetMessageServerOperation::GetNext, 0, std::move(group_id), std::move(stream),min_size, err);
+    return GetDatasetFromServer(GetMessageServerOperation::GetNext,
+                                0,
+                                std::move(group_id),
+                                std::move(stream),
+                                min_size,
+                                err);
 }
 
 DataSet ConsumerImpl::GetLastDataset(uint64_t min_size, std::string stream, Error* err) {
-    return GetDatasetFromServer(GetMessageServerOperation::GetLast, 0, "0", std::move(stream),min_size, err);
+    return GetDatasetFromServer(GetMessageServerOperation::GetLast, 0, "0", std::move(stream), min_size, err);
 }
 
 DataSet ConsumerImpl::GetDatasetFromServer(GetMessageServerOperation op,
@@ -632,15 +650,15 @@ DataSet ConsumerImpl::GetDatasetFromServer(GetMessageServerOperation op,
     } else {
         *err = GetRecordFromServer(&response, std::move(group_id), std::move(stream), op, true, min_size);
     }
-    if (*err != nullptr && *err!=ConsumerErrorTemplates::kPartialData) {
-        return {0, 0,MessageMetas{}};
+    if (*err != nullptr && *err != ConsumerErrorTemplates::kPartialData) {
+        return {0, 0, MessageMetas{}};
     }
     return DecodeDatasetFromResponse(response, err);
 }
 
 DataSet ConsumerImpl::GetDatasetById(uint64_t id, uint64_t min_size, std::string stream, Error* err) {
     if (id == 0) {
-        *err =  ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
+        *err = ConsumerErrorTemplates::kWrongInput.Generate("id should be positive");
         return {};
     }
     return GetDatasetFromServer(GetMessageServerOperation::GetID, id, "0", std::move(stream), min_size, err);
@@ -657,7 +675,7 @@ StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
     }
     for (auto stream_encoded : streams_endcoded) {
         StreamInfo si;
-        auto ok = si.SetFromJson(stream_encoded, false);
+        auto ok = si.SetFromJson(stream_encoded);
         if (!ok) {
             *err = TextError("cannot parse " + stream_encoded);
             return StreamInfos{};
@@ -667,21 +685,34 @@ StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
     return streams;
 }
 
-StreamInfos ConsumerImpl::GetStreamList(std::string from, Error* err) {
-
-    RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source + "/0/streams";
-    ri.post = false;
-    if (!from.empty()) {
-        ri.extra_params = "&from=" + from;
+std::string filterToString(StreamFilter filter) {
+    switch (filter) {
+        case StreamFilter::kAllStreams:return "all";
+        case StreamFilter::kFinishedStreams:return "finished";
+        case StreamFilter::kUnfinishedStreams:return "unfinished";
     }
+}
+
+StreamInfos ConsumerImpl::GetStreamList(std::string from, StreamFilter filter, Error* err) {
+    RequestInfo ri = GetStreamListRequest(from, filter);
 
     auto response = BrokerRequestWithTimeout(ri, err);
     if (*err) {
         return StreamInfos{};
     }
-
     return ParseStreamsFromResponse(std::move(response), err);
+}
+
+RequestInfo ConsumerImpl::GetStreamListRequest(const std::string &from, const StreamFilter &filter) const {
+    RequestInfo ri;
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source + "/0/streams";
+    ri.post = false;
+    if (!from.empty()) {
+        ri.extra_params = "&from=" + from;
+    }
+    ri.extra_params += "&filter=" + filterToString(filter);
+    return ri;
 }
 
 Error ConsumerImpl::UpdateFolderTokenIfNeeded(bool ignore_existing) {
@@ -703,7 +734,7 @@ Error ConsumerImpl::UpdateFolderTokenIfNeeded(bool ignore_existing) {
 RequestInfo ConsumerImpl::CreateFolderTokenRequest() const {
     RequestInfo ri;
     ri.host = endpoint_;
-    ri.api = "/asapo-authorizer/folder";
+    ri.api = "/asapo-authorizer/" + kConsumerProtocol.GetAuthorizerVersion() + "/folder";
     ri.post = true;
     ri.body =
         "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\""
@@ -743,7 +774,8 @@ Error ConsumerImpl::Acknowledge(std::string group_id, uint64_t id, std::string s
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
@@ -764,7 +796,8 @@ IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
         return {};
     }
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/nacks";
     ri.extra_params = "&from=" + std::to_string(from_id) + "&to=" + std::to_string(to_id);
@@ -789,7 +822,8 @@ uint64_t ConsumerImpl::GetLastAcknowledgedMessage(std::string group_id, std::str
         return 0;
     }
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/lastack";
 
@@ -824,7 +858,8 @@ Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
     RequestInfo ri;
-    ri.api = "/database/" + source_credentials_.beamtime_id + "/" + source_credentials_.data_source +
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
         +"/" + std::move(stream) +
         "/" + std::move(group_id) + "/" + std::to_string(id);
     ri.post = true;
@@ -835,7 +870,77 @@ Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
     return err;
 }
 void ConsumerImpl::InterruptCurrentOperation() {
-    interrupt_flag_= true;
+    interrupt_flag_ = true;
+}
+
+uint64_t ConsumerImpl::GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) {
+    RequestInfo ri = GetSizeRequestForDatasetStream(stream, include_incomplete);
+    return GetCurrentCount(stream, ri, err);
+}
+
+RequestInfo ConsumerImpl::GetSizeRequestForDatasetStream(std::string &stream, bool include_incomplete) const {
+    RequestInfo ri = GetSizeRequestForSingleMessagesStream(stream);
+    ri.extra_params = std::string("&incomplete=") + (include_incomplete ? "true" : "false");
+    return ri;
+}
+
+uint64_t ConsumerImpl::GetCurrentCount(std::string stream, const RequestInfo &ri, Error* err) {
+    auto responce = BrokerRequestWithTimeout(ri, err);
+    if (*err) {
+        return 0;
+    }
+    return ParseGetCurrentCountResponce(err, responce);
+}
+
+uint64_t ConsumerImpl::ParseGetCurrentCountResponce(Error* err, const std::string &responce) const {
+    JsonStringParser parser(responce);
+    uint64_t size;
+    if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
+        return 0;
+    }
+    return size;
+}
+
+RequestInfo ConsumerImpl::GetSizeRequestForSingleMessagesStream(std::string &stream) const {
+    RequestInfo ri;
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
+        +"/" + std::move(stream) + "/size";
+    return ri;
+}
+
+RequestInfo ConsumerImpl::GetVersionRequest() const {
+    RequestInfo ri;
+    ri.host = endpoint_;
+    ri.api = "/asapo-discovery/" + kConsumerProtocol.GetDiscoveryVersion() + "/version";
+    ri.extra_params = "&client=consumer&protocol=" + kConsumerProtocol.GetVersion();
+    return ri;
+}
+
+Error ConsumerImpl::GetServerVersionInfo(std::string* server_info, bool* supported) {
+    auto ri = GetVersionRequest();
+    RequestOutput output;
+    auto err = ProcessRequest(&output, ri, nullptr);
+    if (err) {
+        return err;
+    }
+    return ExtractVersionFromResponse(output.string_output,"consumer",server_info,supported);
+}
+
+Error ConsumerImpl::GetVersionInfo(std::string* client_info, std::string* server_info, bool* supported) {
+    if (client_info == nullptr && server_info == nullptr && supported == nullptr) {
+        return ConsumerErrorTemplates::kWrongInput.Generate("missing parameters");
+    }
+    if (client_info != nullptr) {
+        *client_info =
+            "software version: " + std::string(kVersion) + ", consumer protocol: " + kConsumerProtocol.GetVersion();
+    }
+
+    if (server_info != nullptr || supported != nullptr) {
+        return GetServerVersionInfo(server_info,supported);
+    }
+
+    return nullptr;
 }
 
 }

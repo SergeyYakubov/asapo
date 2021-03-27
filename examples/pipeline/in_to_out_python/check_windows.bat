@@ -6,7 +6,7 @@ SET data_source_out=simulation
 SET indatabase_name=%beamtime_id%_%data_source_in%
 SET outdatabase_name=%beamtime_id%_%data_source_out%
 
-SET token=IEfwsWa0GXky2S3MkxJSUHJT1sI8DD5teRdjBUXVRxk=
+SET token=%ASAPO_TEST_RW_TOKEN%
 
 SET beamline=test
 

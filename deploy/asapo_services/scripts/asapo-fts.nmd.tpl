@@ -30,7 +30,7 @@ job "asapo-file-transfer" {
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "yakser/asapo-file-transfer${image_suffix}"
-	    force_pull = true
+	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/file_transfer/config.json",
                            "${offline_dir}:${offline_dir}",
                            "${online_dir}:${online_dir}"

@@ -44,6 +44,7 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
     auto config_string = std::string("{") + Key("PerformanceDbServer",
                                                 error_field) + "\"" + config.performance_db_uri + "\"";
     config_string += "," + Key("PerformanceDbName", error_field) + "\"" + config.performance_db_name + "\"";
+    config_string += "," + Key("MonitorPerformance", error_field) + (config.monitor_performance?"true":"false");
     config_string += "," + Key("DatabaseServer", error_field) + "\"" + config.database_uri + "\"";
     config_string += "," + Key("DiscoveryServer", error_field) + "\"" + config.discovery_server + "\"";
     config_string += "," + Key("ListenPort", error_field) + std::to_string(config.listen_port);

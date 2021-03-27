@@ -31,6 +31,14 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     asapo::MessageMeta fi;
     asapo::Error err;
 
+    std::string client,server;
+    bool supported;
+    err = consumer->GetVersionInfo(&client,&server,&supported);
+    M_AssertTrue(err == nullptr, "Version OK");
+    M_AssertTrue(supported, "client supported by server");
+    M_AssertTrue(!client.empty(), "client version");
+    M_AssertTrue(!server.empty(), "server version");
+
     err = consumer->GetNext(group_id, &fi, nullptr, "default");
     if (err) {
         std::cout << err->Explain() << std::endl;
@@ -84,6 +92,14 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err == nullptr, "GetCurrentSize no error");
     M_AssertTrue(size == 10, "GetCurrentSize size");
 
+    auto size1 = consumer->GetCurrentSize("stream1", &err);
+    M_AssertTrue(err == nullptr, "GetCurrentSize 1 no error");
+    M_AssertTrue(size1 == 5, "GetCurrentSize 1 size");
+
+    auto size2 = consumer->GetCurrentSize("stream2", &err);
+    M_AssertTrue(err == nullptr, "GetCurrentSize 2 no error");
+    M_AssertTrue(size2 == 5, "GetCurrentSize 2 size");
+
     err = consumer->ResetLastReadMarker(group_id,"default");
     M_AssertTrue(err == nullptr, "SetLastReadMarker");
 
@@ -118,7 +134,6 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err != nullptr, "query5");
     M_AssertTrue(messages.size() == 0, "size of query answer 5");
 
-
 //streams
 
     err = consumer->GetNext(group_id, &fi, nullptr, "stream1");
@@ -133,19 +148,22 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err == nullptr, "GetNext stream2 no error");
     M_AssertTrue(fi.name == "21", "GetNext stream2 filename");
 
-    auto streams = consumer->GetStreamList("",&err);
+    auto streams = consumer->GetStreamList("",asapo::StreamFilter::kAllStreams,&err);
     M_AssertTrue(err == nullptr, "GetStreamList no error");
     M_AssertTrue(streams.size() == 3, "streams.size");
-    M_AssertTrue(streams[0].name == "default", "streams0.name1");
-    M_AssertTrue(streams[1].name == "stream1", "streams1.name2");
-    M_AssertTrue(streams[2].name == "stream2", "streams2.name3");
-    std::cout<<streams[0].Json(false)<<std::endl;
-    std::cout<<streams[1].Json(false)<<std::endl;
-    std::cout<<streams[2].Json(false)<<std::endl;
+    M_AssertTrue(streams[0].name == "default", "streams0.name");
+    M_AssertTrue(streams[1].name == "stream1", "streams1.name");
+    M_AssertTrue(streams[2].name == "stream2", "streams2.name");
+    M_AssertTrue(streams[1].finished == true, "stream1 finished");
+    M_AssertTrue(streams[1].next_stream == "ns", "stream1 next stream");
+    M_AssertTrue(streams[2].finished == true, "stream2 finished");
+    M_AssertTrue(streams[2].next_stream == "", "stream2 no next stream");
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[0].timestamp_created) == 0, "streams0.timestamp");
-    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[0].timestamp_lastentry) == 0, "streams0.timestamp lastentry not set");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[0].timestamp_lastentry) == 0, "streams0.timestamp lastentry");
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[1].timestamp_created) == 1000, "streams1.timestamp");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[1].timestamp_lastentry) == 1000, "streams1.timestamp lastentry");
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[2].timestamp_created) == 2000, "streams2.timestamp");
+    M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[2].timestamp_lastentry) == 2000, "streams2.timestamp lastentry");
 // acknowledges
 
     auto id = consumer->GetLastAcknowledgedMessage(group_id,"default", &err);
@@ -238,6 +256,11 @@ void TestDataset(const std::unique_ptr<asapo::Consumer>& consumer, const std::st
     M_AssertTrue(err == nullptr, "GetDatasetById error");
     M_AssertTrue(dataset.content[2].name == "8_3", "GetDatasetById filename");
 
+    auto size = consumer->GetCurrentDatasetCount("default", false, &err);
+    M_AssertTrue(err == nullptr, "GetCurrentDatasetCount no error");
+    M_AssertTrue(size == 10, "GetCurrentDatasetCount size");
+
+
 // incomplete datasets without min_size
 
     dataset = consumer->GetNextDataset(group_id, 0, "incomplete", &err);
@@ -270,6 +293,14 @@ void TestDataset(const std::unique_ptr<asapo::Consumer>& consumer, const std::st
     dataset = consumer->GetDatasetById(2, 2, "incomplete", &err);
     M_AssertTrue(err == nullptr, "GetDatasetById incomplete minsize error");
     M_AssertTrue(dataset.content[0].name == "2_1", "GetDatasetById incomplete minsize filename");
+
+    size = consumer->GetCurrentDatasetCount("incomplete", true, &err);
+    M_AssertTrue(err == nullptr, "GetCurrentDatasetCount including incomplete no error");
+    M_AssertTrue(size == 5, "GetCurrentDatasetCount including incomplete size");
+
+    size = consumer->GetCurrentDatasetCount("incomplete", false, &err);
+    M_AssertTrue(err == nullptr, "GetCurrentDatasetCount excluding incomplete no error");
+    M_AssertTrue(size == 0, "GetCurrentDatasetCount excluding incomplete size");
 
 
 }

@@ -10,7 +10,6 @@ asapo_tool_bin=$3
 network_type=$4
 
 beamtime_id=asapo_test
-token=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -80,6 +79,9 @@ nomad run discovery.nmd
 nomad run broker.nmd
 
 sleep 1
+
+token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
+
 
 echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}_detector
 

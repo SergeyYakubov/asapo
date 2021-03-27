@@ -18,18 +18,16 @@ func StartStatistics() {
 }
 
 func Start() {
-	StartStatistics()
+	if settings.MonitorPerformance {
+		StartStatistics()
+	}
 	mux := utils.NewRouter(listRoutes)
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }
 
-func createAuth() (utils.Auth, error) {
-	secret, err := utils.ReadFirstStringFromFile(settings.SecretFile)
-	if err != nil {
-		return nil, err
-	}
-	return utils.NewHMACAuth(secret), nil
+func createAuth() Authorizer {
+	return &AsapoAuthorizer{settings.AuthorizationServer,&http.Client{}}
 }
 
 func ReadConfig(fname string) (log.Level, error) {
@@ -61,17 +59,11 @@ func ReadConfig(fname string) (log.Level, error) {
 		return log.FatalLevel, errors.New("PerformanceDbName not set")
 	}
 
-	if settings.SecretFile == "" {
-		return log.FatalLevel, errors.New("Secret file not set")
+	if settings.AuthorizationServer == "" {
+		return log.FatalLevel, errors.New("AuthorizationServer not set")
 	}
 
-	var err error
-	auth, err = createAuth()
-	if err != nil {
-		return log.FatalLevel, err
-	}
+	auth = createAuth()
 
-	level, err := log.LevelFromString(settings.LogLevel)
-
-	return level, err
+	return log.LevelFromString(settings.LogLevel)
 }

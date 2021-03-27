@@ -4,6 +4,7 @@
 #include "../request.h"
 
 #include "asapo/json_parser/json_parser.h"
+#include "asapo/common/internal/version.h"
 
 using std::chrono::system_clock;
 
@@ -26,6 +27,15 @@ Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error&
     }
 }
 
+Error CheckAccessType(const std::vector<std::string>& access_types) {
+    if(std::find(access_types.begin(), access_types.end(), "write") != access_types.end()) {
+        return nullptr;
+    } else {
+        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("wrong access types");
+    }
+}
+
+
 Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_credentials) const {
     HttpCode code;
     Error err;
@@ -42,6 +52,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     }
 
     std::string stype;
+    std::vector<std::string> access_types;
 
     JsonStringParser parser{response};
     (err = parser.GetString("beamtimeId", &beamtime_id_)) ||
@@ -49,18 +60,38 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     (err = parser.GetString("core-path", &offline_path_)) ||
     (err = parser.GetString("beamline-path", &online_path_)) ||
     (err = parser.GetString("source-type", &stype)) ||
+    (err = parser.GetArrayString("access-types", &access_types)) ||
     (err = GetSourceTypeFromString(stype, &source_type_)) ||
     (err = parser.GetString("beamline", &beamline_));
     if (err) {
         return ErrorFromAuthorizationServerResponse(err, code);
-    } else {
-        log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() +"source type: "+stype+ " beamline: " +
-                     beamline_ + ", beamtime id: " + beamtime_id_ + ", data soucre: " + data_source_);
     }
+
+    err = CheckAccessType(access_types);
+    if (err) {
+        log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " request: " + request_string +
+            " - " +
+            err->Explain());
+        return err;
+    }
+
+    log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() +"source type: "+stype+ " beamline: " +
+                     beamline_ + ", beamtime id: " + beamtime_id_ + ", data soucre: " + data_source_);
 
     last_updated_ = system_clock::now();
     cached_source_credentials_ = source_credentials;
 
+    return nullptr;
+}
+
+Error RequestHandlerAuthorize::CheckVersion(const std::string& version_from_client) const {
+    int verClient = VersionToNumber(version_from_client);
+    int verService = VersionToNumber(GetReceiverApiVersion());
+    if (verClient > verService) {
+        auto err_string = "client version: "+version_from_client + ", server version: "+GetReceiverApiVersion();
+        return asapo::ReceiverErrorTemplates::kUnsupportedClient.Generate(err_string);
+        log__->Error("failure serving client - unsupported version,  " + err_string);
+    }
     return nullptr;
 }
 
@@ -73,7 +104,13 @@ Error RequestHandlerAuthorize::ProcessAuthorizationRequest(Request* request) con
         return auth_error;
     }
 
-    return Authorize(request, request->GetMessage());
+    auto err = CheckVersion(request->GetApiVersion());
+    if (err) {
+        log__->Error("failure authorizing at client: " + err->Explain());
+        return err;
+    }
+
+    return Authorize(request, request->GetMetaData().c_str());
 }
 
 Error RequestHandlerAuthorize::ProcessReAuthorization(Request* request) const {

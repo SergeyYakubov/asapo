@@ -8,7 +8,8 @@ SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\d
 SET receiver_folder2="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\data\%beamtime_id2%"
 SET dbname=%beamtime_id%_%data_source%
 SET dbname2=%beamtime_id2%_%data_source%
-SET token=-pZmisCNjAbjT2gFBKs3OB2kNOU79SNsfHud0bV8gS4=
+SET token=%BLP07_W_TOKEN%
+
 
 echo db.%dbname%.insert({dummy:1})" | %mongo_exe% %dbname%
 

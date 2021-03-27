@@ -72,8 +72,11 @@ class AuthorizerHandlerTests : public Test {
     std::string expected_authorization_server = "authorizer_host";
     std::string expect_request_string;
     std::string expected_source_credentials;
+    std::string expected_api_version = "v0.1";
+
     asapo::SourceType expected_source_type = asapo::SourceType::kProcessed;
     std::string expected_source_type_str = "processed";
+    std::string expected_access_type_str = "[\"write\"]";
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
@@ -115,7 +118,8 @@ class AuthorizerHandlerTests : public Test {
                              "\",\"beamline-path\":" + "\"" + expected_beamline_path +
                              "\",\"core-path\":" + "\"" + expected_core_path +
                              "\",\"source-type\":" + "\"" + expected_source_type_str +
-                             "\",\"beamline\":" + "\"" + expected_beamline + "\"}")
+                             "\",\"beamline\":" + "\"" + expected_beamline +
+                             "\",\"access-types\":" + expected_access_type_str + "}")
                      ));
             if (code != HttpCode::OK) {
                 EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
@@ -126,13 +130,15 @@ class AuthorizerHandlerTests : public Test {
                                                      HasSubstr(expected_data_source),
                                                      HasSubstr(expected_producer_uri),
                                                      HasSubstr(expected_authorization_server))));
-            } else {
+            } else if (expected_access_type_str=="[\"write\"]") {
                 EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("authorized"),
                                                      HasSubstr(expected_beamtime_id),
                                                      HasSubstr(expected_beamline),
                                                      HasSubstr(expected_source_type_str),
                                                      HasSubstr(expected_data_source),
                                                      HasSubstr(expected_producer_uri))));
+            } else {
+                EXPECT_CALL(mock_logger, Error(HasSubstr("wrong")));
             }
         }
 
@@ -142,9 +148,14 @@ class AuthorizerHandlerTests : public Test {
         EXPECT_CALL(*mock_request, GetOpCode())
         .WillOnce(Return(asapo::kOpcodeAuthorize))
         ;
-        EXPECT_CALL(*mock_request, GetMessage())
-        .WillOnce(Return(expected_source_credentials.c_str()))
+        EXPECT_CALL(*mock_request, GetMetaData())
+        .WillOnce(ReturnRef(expected_source_credentials))
         ;
+
+        EXPECT_CALL(*mock_request, GetApiVersion())
+            .WillOnce(Return(expected_api_version))
+            ;
+
 
         MockAuthRequest(error, code);
         return handler.ProcessRequest(mock_request.get());
@@ -206,6 +217,14 @@ TEST_F(AuthorizerHandlerTests, AuthorizeOk) {
     ASSERT_THAT(err, Eq(nullptr));
 }
 
+
+TEST_F(AuthorizerHandlerTests, AuthorizeFailsOnWrongAccessType) {
+    expected_access_type_str = "[\"read\"]";
+    auto err = MockFirstAuthorization(false);
+
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
+}
+
 TEST_F(AuthorizerHandlerTests, ErrorOnSecondAuthorize) {
     MockFirstAuthorization(false);
     EXPECT_CALL(*mock_request, GetOpCode())
@@ -253,6 +272,20 @@ TEST_F(AuthorizerHandlerTests, RequestAuthorizeReturnsDifferentBeamtimeId) {
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kReAuthorizationFailure));
 }
+
+
+TEST_F(AuthorizerHandlerTests, RequestFromUnsupportedClient) {
+    EXPECT_CALL(*mock_request, GetOpCode())
+        .WillOnce(Return(asapo::kOpcodeAuthorize))
+        ;
+    EXPECT_CALL(*mock_request, GetApiVersion())
+        .WillOnce(Return("v0.2"))
+        ;
+
+    auto err = handler.ProcessRequest(mock_request.get());
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kUnsupportedClient));
+}
+
 
 
 

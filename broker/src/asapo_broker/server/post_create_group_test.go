@@ -32,3 +32,8 @@ func TestGetNewGroup(t *testing.T) {
 
 	logger.UnsetMockLog()
 }
+
+func TestGetNewGroupWrongProtocol(t *testing.T) {
+	w := doRequest("/creategroup", "POST","","/v0.2")
+	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code, "wrong request")
+}

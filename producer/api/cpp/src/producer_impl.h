@@ -24,13 +24,14 @@ class ProducerImpl : public Producer {
   std::unique_ptr<RequestHandlerFactory> request_handler_factory_;
  public:
   static const size_t kDiscoveryServiceUpdateFrequencyMs;
-  static const std::string kFinishStreamKeyword;
-  static const std::string kNoNextStreamKeyword;
 
   explicit ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
                         asapo::RequestHandlerType type);
   ProducerImpl(const ProducerImpl &) = delete;
   ProducerImpl &operator=(const ProducerImpl &) = delete;
+
+
+  Error GetVersionInfo(std::string* client_info,std::string* server_info, bool* supported) const override;
 
   StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const override;
   StreamInfo GetLastStream(uint64_t timeout_ms, Error* err) const override;
@@ -58,6 +59,7 @@ class ProducerImpl : public Producer {
                                   RequestCallback callback) override;
 
   AbstractLogger* log__;
+  std::unique_ptr<HttpClient> httpclient__;
   std::unique_ptr<RequestPool> request_pool__;
 
   Error SetCredentials(SourceCredentials source_cred) override;
@@ -76,6 +78,9 @@ class ProducerImpl : public Producer {
                                                uint64_t ingest_mode);
   std::string source_cred_string_;
   uint64_t timeout_ms_;
+  std::string endpoint_;
+  Error GetServerVersionInfo(std::string* server_info,
+                             bool* supported) const;
 };
 
 struct StreamInfoResult {

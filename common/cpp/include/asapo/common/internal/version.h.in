@@ -1,0 +1,45 @@
+#ifndef ASAPO_VERSION_H
+#define ASAPO_VERSION_H
+
+#include <iostream>
+#include "string.h"
+
+#include "asapo/common/data_structs.h"
+#include "asapo/common/error.h"
+#include "asapo/http_client/http_client.h"
+
+namespace asapo {
+
+
+const char kVersion[] = "@ASAPO_VERSION@@ASAPO_VERSION_COMMIT@";
+
+inline void ExitAfterPrintVersionIfNeeded(std::string prefix,int argc, char* argv[]) {
+    if (argc == 2 && strcmp(argv[1], "-v") == 0) {
+        std::cout << prefix << ", version " << kVersion << std::endl;
+        exit(0);
+    }
+}
+
+const ConsumerProtocol kConsumerProtocol{"@ASAPO_CONSUMER_PROTOCOL@","@ASAPO_DISCOVERY_API_VER@",
+                                         "@ASAPO_AUTHORIZER_API_VER@","@ASAPO_FILE_TRANSFER_SERVICE_API_VER@","@ASAPO_BROKER_API_VER@","@ASAPO_RDS_API_VER@"};
+const ProducerProtocol kProducerProtocol{"@ASAPO_PRODUCER_PROTOCOL@","@ASAPO_DISCOVERY_API_VER@", "@ASAPO_RECEIVER_API_VER@"};
+
+inline std::string GetReceiverApiVersion() {
+    return "@ASAPO_RECEIVER_API_VER@";
+}
+
+inline std::string GetRdsApiVersion() {
+    return "@ASAPO_RDS_API_VER@";
+}
+
+inline int VersionToNumber(const std::string& version) {
+    return int(atof(version.c_str()+2)*1000);
+}
+
+Error ExtractVersionFromResponse(const std::string &response,
+                                 const std::string &client,
+                                 std::string* server_info,
+                                 bool* supported);
+}
+
+#endif //ASAPO_VERSION_H

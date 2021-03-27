@@ -34,7 +34,7 @@ func TestGetHealthTestSuite(t *testing.T) {
 
 func (suite *GetHealthTestSuite) TestGetHealthOk() {
 	suite.mock_db.On("Ping").Return(nil)
-	w := doRequest("/health")
+	w := doRequest("/health","GET","","")
 	suite.Equal(http.StatusNoContent, w.Code)
 }
 
@@ -44,6 +44,6 @@ func (suite *GetHealthTestSuite) TestGetHealthTriesToReconnectsToDataBase() {
 
 	ExpectReconnect(suite.mock_db)
 
-	w := doRequest("/health")
+	w := doRequest("/health","GET","","")
 	suite.Equal(http.StatusNoContent, w.Code)
 }

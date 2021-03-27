@@ -9,7 +9,6 @@ consumer_bin=$2
 asapo_tool_bin=$3
 
 beamtime_id=asapo_test
-token=`$asapo_tool_bin token -secret auth_secret.key $beamtime_id`
 
 monitor_database_name=db_test
 proxy_address=127.0.0.1:8400
@@ -48,6 +47,7 @@ nomad run broker.nmd
 
 sleep 1
 
+token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
 mkdir -p /tmp/asapo/test_in1/processed
 mkdir -p /tmp/asapo/test_in2/processed

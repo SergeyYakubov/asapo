@@ -51,6 +51,11 @@ class AsapoTimeOutError(AsapoProducerError):
 class AsapoServerWarning(AsapoProducerError):
   pass
 
+class AsapoRequestsPoolIsFull(AsapoProducerError):
+  pass
+
+class AsapoUnsupportedClientError(AsapoProducerError):
+  pass
 
 cdef python_exception_from_error(Error& err):
     error_string =  _str(err.get().Explain())
@@ -62,6 +67,10 @@ cdef python_exception_from_error(Error& err):
             return AsapoLocalIOError(error_string)
     elif err == kServerWarning:
             return AsapoServerWarning(error_string)
+    elif err == kRequestPoolIsFull:
+            return AsapoRequestsPoolIsFull(error_string)
+    elif err == kUnsupportedClient:
+            raise AsapoUnsupportedClientError(error_string)
     else:
         return AsapoProducerError(error_string)
 
@@ -106,7 +115,21 @@ cdef class PyProducer:
             print("wrong loglevel mode: "+ level)
             return
          self.c_producer.get().SetLogLevel(log_level)
-
+    def get_version_info(self, from_server = "true"):
+        cdef string client_info,server_info
+        cdef bool supported
+        cdef string* p_server_info =  &server_info if from_server else <string*>NULL
+        cdef bool* p_supported =  &supported if from_server else <bool*>NULL
+        cdef Error err
+        with nogil:
+                err =  self.c_producer.get().GetVersionInfo(&client_info,p_server_info,p_supported)
+        if err:
+            throw_exception(err)
+        version = {}
+        if from_server:
+            return {'client': _str(client_info), 'server': _str(server_info), 'supported': supported}
+        else:
+            return {'client': _str(client_info)}
     def __send_np_array(self, id, exposed_path,data, user_meta=None,dataset=None,stream="default",ingest_mode = DEFAULT_INGEST_MODE,callback=None):
         cdef MessageHeader message_header = self.create_message_header(id,exposed_path,user_meta,dataset,ingest_mode)
         if data is None:
@@ -216,7 +239,7 @@ cdef class PyProducer:
             info = self.c_producer.get().GetStreamInfo(b_stream,timeout_ms,&err)
         if err:
             throw_exception(err)
-        return json.loads(_str(info.Json(True)))
+        return json.loads(_str(info.Json()))
 
     def last_stream(self, uint64_t timeout_ms = 1000):
         """
@@ -233,7 +256,7 @@ cdef class PyProducer:
             info = self.c_producer.get().GetLastStream(timeout_ms,&err)
         if err:
             throw_exception(err)
-        return json.loads(_str(info.Json(True)))
+        return json.loads(_str(info.Json()))
     def send_file(self, uint64_t id, local_path, exposed_path, user_meta=None, dataset=None, ingest_mode = DEFAULT_INGEST_MODE, stream = "default", callback=None):
         """
          :param id: unique data id
@@ -271,6 +294,10 @@ cdef class PyProducer:
         return
     def get_requests_queue_size(self):
         return self.c_producer.get().GetRequestsQueueSize()
+    def get_requests_queue_volume_mb(self):
+        return self.c_producer.get().GetRequestsQueueVolumeMb()
+    def set_requests_queue_limits(self,uint64_t size = 0, uint64_t volume_mb = 0):
+        return self.c_producer.get().SetRequestsQueueLimits(size,volume_mb)
     def wait_requests_finished(self,timeout_ms):
         """
          :param timeout_ms: timeout in milliseconds

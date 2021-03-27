@@ -5,13 +5,14 @@ import (
 	"asapo_common/logger"
 	log "asapo_common/logger"
 	"asapo_common/utils"
+	"asapo_common/version"
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
 func extractRequestParameters(r *http.Request, needGroupID bool) (string, string, string, string, bool) {
 	vars := mux.Vars(r)
-	db_name, ok1 := vars["dbname"]
+	db_name, ok1 := vars["beamtime"]
 
 	datasource, ok3 := vars["datasource"]
 	stream, ok4 := vars["stream"]
@@ -49,8 +50,17 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 	return false
 }
 
+func checkBrokerApiVersion(w http.ResponseWriter, r *http.Request) bool {
+	_, ok := utils.PrecheckApiVersion(w, r, version.GetBrokerApiVersion())
+	return ok
+}
+
 func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_param string, needGroupID bool) {
-	r.Header.Set("Content-type", "application/json")
+	if ok := checkBrokerApiVersion(w, r); !ok {
+		return
+	}
+
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	db_name, datasource, stream, group_id, ok := extractRequestParameters(r, needGroupID)
 	if !ok {
@@ -58,8 +68,8 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 		return
 	}
 
-	if err := testAuth(r, db_name); err != nil {
-		writeAuthAnswer(w, "get "+op, db_name, err.Error())
+	if err := authorize(r, db_name); err != nil {
+		writeAuthAnswer(w, "get "+op, db_name, err)
 		return
 	}
 

@@ -9,6 +9,5 @@ func routeGetHealth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ReconnectDb()
 	}
-	r.Header.Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
 }

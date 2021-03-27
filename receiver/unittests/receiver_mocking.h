@@ -66,6 +66,7 @@ class MockRequest: public Request {
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetStream, std::string());
+    MOCK_CONST_METHOD0(GetApiVersion, std::string());
     MOCK_CONST_METHOD0(GetDataSize, uint64_t());
     MOCK_CONST_METHOD0(GetDataID, uint64_t());
     MOCK_CONST_METHOD0(GetSlotId, uint64_t());

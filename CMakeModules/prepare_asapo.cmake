@@ -50,6 +50,8 @@ function(prepare_asapo)
     configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/broker_settings.json.tpl broker.json.tpl COPYONLY)
     configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/file_transfer_settings.json.tpl file_transfer.json.tpl COPYONLY)
     configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/auth_secret.key auth_secret.key COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/admin_token.key admin_token.key COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/auth_secret_admin.key auth_secret_admin.key COPYONLY)
     configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/nginx.conf.tpl nginx.conf.tpl COPYONLY)
     configure_file(${CMAKE_SOURCE_DIR}/config/nomad/nginx.nmd.in nginx.nmd @ONLY)
 

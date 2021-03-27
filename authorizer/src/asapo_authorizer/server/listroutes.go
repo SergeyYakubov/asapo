@@ -12,6 +12,12 @@ var listRoutes = utils.Routes{
 		routeAuthorize,
 	},
 	utils.Route{
+		"Authorize",
+		"POST",
+		"/introspect",
+		routeIntrospect,
+	},
+	utils.Route{
 		"HealthCheck",
 		"Get",
 		"/health-check",
@@ -20,7 +26,13 @@ var listRoutes = utils.Routes{
 	utils.Route{
 		"Folder Token",
 		"POST",
-		"/folder",
+		"/{apiver}/folder",
 		routeFolderToken,
+	},
+	utils.Route{
+		"User Token",
+		"POST",
+		"/admin/issue",
+		routeAuthorisedTokenIssue,
 	},
 }

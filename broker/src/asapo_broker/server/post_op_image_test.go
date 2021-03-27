@@ -36,19 +36,19 @@ func (suite *MessageOpTestSuite) TestAckMessageOpOK() {
 	query_str := "{\"Id\":1,\"Op\":\"ackmessage\"}"
 	suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: expectedStream, GroupId: expectedGroupID, Op: "ackmessage", ExtraParam: query_str}).Return([]byte(""), nil)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request ackmessage")))
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix,"POST",query_str)
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix,"POST",query_str)
 	suite.Equal(http.StatusOK, w.Code, "ackmessage OK")
 }
 
 
 func (suite *MessageOpTestSuite) TestAckMessageOpErrorWrongOp() {
 	query_str := "\"Id\":1,\"Op\":\"ackmessage\"}"
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix,"POST",query_str)
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix,"POST",query_str)
 	suite.Equal(http.StatusBadRequest, w.Code, "ackmessage wrong")
 }
 
 func (suite *MessageOpTestSuite) TestAckMessageOpErrorWrongID() {
 	query_str := "{\"Id\":1,\"Op\":\"ackmessage\"}"
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/bla" + correctTokenSuffix,"POST",query_str)
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/bla" + correctTokenSuffix,"POST",query_str)
 	suite.Equal(http.StatusBadRequest, w.Code, "ackmessage wrong")
 }

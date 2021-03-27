@@ -1,12 +1,13 @@
 {
   "Port": {{ env "NOMAD_PORT_authorizer" }},
   "LogLevel":"debug",
-  "AlwaysAllowedBeamtimes":[{"beamtimeId":"asapo_test","beamline":"test","core-path":"{{ env "NOMAD_META_offline_dir" }}/test_facility/gpfs/test/2019/data/asapo_test"},
-  {"beamtimeId":"asapo_test1","beamline":"test1","core-path":"{{ env "NOMAD_META_offline_dir" }}/test_facility/gpfs/test1/2019/data/asapo_test1"},
-  {"beamtimeId":"asapo_test2","beamline":"test2","core-path":"{{ env "NOMAD_META_offline_dir" }}/test_facility/gpfs/test2/2019/data/asapo_test2"}],
+  "AlwaysAllowedBeamtimes":[{"beamtimeId":"asapo_test","beamline":"test","core-path":"{{ env "NOMAD_META_offline_dir" }}/test_facility/gpfs/test/2019/data/asapo_test", "beamline-path":"{{ env "NOMAD_META_online_dir" }}/test/current"},
+  {"beamtimeId":"asapo_test1","beamline":"test1","core-path":"{{ env "NOMAD_META_offline_dir" }}/test_facility/gpfs/test1/2019/data/asapo_test1", "beamline-path":"{{ env "NOMAD_META_online_dir" }}/test1/current"},
+  {"beamtimeId":"asapo_test2","beamline":"test2","core-path":"{{ env "NOMAD_META_offline_dir" }}/test_facility/gpfs/test2/2019/data/asapo_test2", "beamline-path":"{{ env "NOMAD_META_online_dir" }}/test2/current"}],
   "RootBeamtimesFolder":"{{ env "NOMAD_META_offline_dir" }}",
   "CurrentBeamlinesFolder":"{{ env "NOMAD_META_online_dir" }}",
-  "SecretFile":"/local/secret.key",
+  "UserSecretFile":"/local/secret.key",
+  "AdminSecretFile":"/local/secret_admin.key",
   "TokenDurationMin":600,
   "Ldap":
     {

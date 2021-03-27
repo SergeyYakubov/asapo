@@ -80,9 +80,11 @@ class ConsumerImpl final : public asapo::Consumer {
     std::string GetBeamtimeMeta(Error* err) override;
 
     uint64_t GetCurrentSize(std::string stream, Error* err) override;
+    uint64_t GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) override;
 
     Error GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) override;
 
+    Error GetVersionInfo(std::string* client_info,std::string* server_info, bool* supported) override;
 
     void SetTimeout(uint64_t timeout_ms) override;
     void ForceNoRdma() override;
@@ -99,7 +101,7 @@ class ConsumerImpl final : public asapo::Consumer {
 
     Error RetrieveData(MessageMeta* info, MessageData* data) override;
 
-    StreamInfos GetStreamList(std::string from, Error* err) override;
+    StreamInfos GetStreamList(std::string from, StreamFilter filter, Error* err) override;
     void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts) override;
 
     virtual void InterruptCurrentOperation() override;
@@ -110,6 +112,7 @@ class ConsumerImpl final : public asapo::Consumer {
     std::unique_ptr<NetClient> net_client__;
     std::mutex net_client_mutex__; // Required for the lazy initialization of net_client
   private:
+    Error ProcessDiscoverServiceResult(Error err, std::string* uri_to_set);
     Error GetDataFromFileTransferService(MessageMeta* info, MessageData* data, bool retry_with_new_token);
     Error GetDataFromFile(MessageMeta* info, MessageData* data);
     static const std::string kBrokerServiceName;
@@ -138,10 +141,14 @@ class ConsumerImpl final : public asapo::Consumer {
     Error FtsSizeRequestWithTimeout(MessageMeta* info);
     Error ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
     Error ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code);
-
     RequestInfo PrepareRequestInfo(std::string api_url, bool dataset, uint64_t min_size);
     std::string OpToUriCmd(GetMessageServerOperation op);
     Error UpdateFolderTokenIfNeeded(bool ignore_existing);
+
+    uint64_t GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err);
+    RequestInfo GetStreamListRequest(const std::string &from, const StreamFilter &filter) const;
+    Error GetServerVersionInfo(std::string* server_info, bool* supported) ;
+
     std::string endpoint_;
     std::string current_broker_uri_;
     std::string current_fts_uri_;
@@ -159,6 +166,13 @@ class ConsumerImpl final : public asapo::Consumer {
     uint64_t delay_ms_;
     uint64_t resend_attempts_;
     std::atomic<bool> interrupt_flag_{ false};
+
+  RequestInfo GetSizeRequestForSingleMessagesStream(std::string &stream) const;
+  RequestInfo GetSizeRequestForDatasetStream(std::string &stream, bool include_incomplete) const;
+  uint64_t ParseGetCurrentCountResponce(Error* err, const std::string &responce) const;
+  RequestInfo GetDiscoveryRequest(const std::string &service_name) const;
+  RequestInfo GetVersionRequest() const;
+
 };
 
 }

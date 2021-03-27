@@ -13,8 +13,7 @@ facility=test_facility
 year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
 receiver_folder2=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id2}
-token=-pZmisCNjAbjT2gFBKs3OB2kNOU79SNsfHud0bV8gS4= # for bl_p07
-
+token=$BLP07_W_TOKEN
 
 Cleanup() {
 	echo cleanup

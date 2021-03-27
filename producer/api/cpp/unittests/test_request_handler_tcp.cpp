@@ -120,7 +120,7 @@ class RequestHandlerTcpTests : public testing::Test {
   bool retry;
   Sequence seq_receive[2];
   void ExpectFailConnect(bool only_once = false);
-  void ExpectFailAuthorize(bool only_once = false);
+  void ExpectFailAuthorize(asapo::NetworkErrorCode error_code);
   void ExpectOKAuthorize(bool only_once = false);
   void ExpectFailSendHeader(bool only_once = false);
   void ExpectFailSend(uint64_t expected_size, bool only_once);
@@ -191,58 +191,67 @@ void RequestHandlerTcpTests::ExpectFailConnect(bool only_once) {
 
 }
 
-void RequestHandlerTcpTests::ExpectFailAuthorize(bool only_once) {
-    int i = 0;
-    for (auto expected_sd : expected_sds) {
-        EXPECT_CALL(mock_io,
-                    Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id,
-                                                               ""),
-                           sizeof(asapo::GenericRequestHeader), _))
-            .WillOnce(
-                DoAll(
-                    testing::SetArgPointee<3>(nullptr),
-                    Return(sizeof(asapo::GenericRequestHeader))
-                ));
-
-        EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))
-            .InSequence(seq_receive[i])
-            .WillOnce(
-                DoAll(
-                    testing::SetArgPointee<3>(nullptr),
-                    A_WriteSendResponse(asapo::kNetAuthorizationError, expected_auth_message),
-                    testing::ReturnArg<2>()
-                ));
-        EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
-        if (only_once) {
-            EXPECT_CALL(mock_logger, Debug(AllOf(
-                HasSubstr("disconnected"),
-                HasSubstr(receivers_list[i])
-                                           )
+void RequestHandlerTcpTests::ExpectFailAuthorize(asapo::NetworkErrorCode error_code) {
+    auto expected_sd = expected_sds[0];
+    EXPECT_CALL(mock_io,
+                Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, "",
+                                                       ""),
+                       sizeof(asapo::GenericRequestHeader), _))
+        .WillOnce(
+            DoAll(
+                testing::SetArgPointee<3>(nullptr),
+                Return(sizeof(asapo::GenericRequestHeader))
+            ));
+    EXPECT_CALL(mock_io,
+                Send_t(expected_sd, _, strlen(expected_beamtime_id), _))
+        .WillOnce(
+            DoAll(
+                testing::SetArgPointee<3>(nullptr),
+                Return(strlen(expected_beamtime_id))
             ));
 
-            EXPECT_CALL(mock_logger, Error(AllOf(
-                HasSubstr("authorization"),
-                HasSubstr(expected_auth_message),
-                HasSubstr(receivers_list[i])
-                                           )
+    EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))
+        .InSequence(seq_receive[0])
+        .WillOnce(
+            DoAll(
+                testing::SetArgPointee<3>(nullptr),
+                A_WriteSendResponse(error_code, expected_auth_message),
+                testing::ReturnArg<2>()
             ));
-        }
-        if (only_once) break;
-        i++;
-    }
+    EXPECT_CALL(mock_io, CloseSocket_t(expected_sd, _));
+    EXPECT_CALL(mock_logger, Debug(AllOf(
+        HasSubstr("disconnected"),
+        HasSubstr(receivers_list[0])
+                                   )
+    ));
+
+    EXPECT_CALL(mock_logger, Error(AllOf(
+        HasSubstr("authorization"),
+        HasSubstr(expected_auth_message),
+        HasSubstr(receivers_list[0])
+                                   )
+    ));
 }
+
 
 void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io,
-                    Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, expected_beamtime_id,
-                                                               ""),
+                    Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, "",
+                                                           ""),
                            sizeof(asapo::GenericRequestHeader), _))
             .WillOnce(
                 DoAll(
                     testing::SetArgPointee<3>(nullptr),
                     Return(sizeof(asapo::GenericRequestHeader))
+                ));
+        EXPECT_CALL(mock_io,
+                    Send_t(expected_sd, _, strlen(expected_beamtime_id), _))
+            .WillOnce(
+                DoAll(
+                    testing::SetArgPointee<3>(nullptr),
+                    Return(strlen(expected_beamtime_id))
                 ));
 
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))
@@ -270,10 +279,10 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
     int i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendRequest(expected_op_code,
-                                                                        expected_file_id,
-                                                                        expected_file_size,
-                                                                        expected_file_name,
-                                                                        expected_stream),
+                                                                    expected_file_id,
+                                                                    expected_file_size,
+                                                                    expected_file_name,
+                                                                    expected_stream),
                                     sizeof(asapo::GenericRequestHeader), _))
             .WillOnce(
                 DoAll(
@@ -442,10 +451,10 @@ void RequestHandlerTcpTests::ExpectOKSendFile(bool only_once) {
 void RequestHandlerTcpTests::ExpectOKSendHeader(bool only_once, asapo::Opcode opcode) {
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendRequest(opcode,
-                                                                        expected_file_id,
-                                                                        expected_file_size,
-                                                                        expected_file_name,
-                                                                        expected_stream),
+                                                                    expected_file_id,
+                                                                    expected_file_size,
+                                                                    expected_file_name,
+                                                                    expected_stream),
                                     sizeof(asapo::GenericRequestHeader), _))
             .WillOnce(
                 DoAll(
@@ -581,7 +590,7 @@ TEST_F(RequestHandlerTcpTests, TriesConnectWhenNotConnected) {
 
 TEST_F(RequestHandlerTcpTests, FailsWhenCannotAuthorize) {
     ExpectOKConnect(true);
-    ExpectFailAuthorize(true);
+    ExpectFailAuthorize(asapo::kNetAuthorizationError);
 
     request_handler.PrepareProcessingRequestLocked();
     auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
@@ -593,6 +602,21 @@ TEST_F(RequestHandlerTcpTests, FailsWhenCannotAuthorize) {
     ASSERT_THAT(success, Eq(false));
     ASSERT_THAT(retry, Eq(false));
 
+}
+
+TEST_F(RequestHandlerTcpTests, FailsWhenUnsupportedClient) {
+    ExpectOKConnect(true);
+    ExpectFailAuthorize(asapo::kNetErrorNotSupported);
+
+    request_handler.PrepareProcessingRequestLocked();
+    auto success = request_handler.ProcessRequestUnlocked(&request, &retry);
+    request_handler.TearDownProcessingRequestLocked(success);
+
+    ASSERT_THAT(n_connections, Eq(0));
+    ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kUnsupportedClient));
+    ASSERT_THAT(callback_called, Eq(true));
+    ASSERT_THAT(success, Eq(false));
+    ASSERT_THAT(retry, Eq(false));
 }
 
 TEST_F(RequestHandlerTcpTests, DoesNotTryConnectWhenConnected) {
@@ -753,6 +777,12 @@ void RequestHandlerTcpTests::ExpectGetFileSize(bool ok) {
 TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfAuthorizationFailure) {
     AssertImmediatelyCallBack(asapo::kNetAuthorizationError, asapo::ProducerErrorTemplates::kWrongInput);
 }
+
+
+TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfNotSupportedfailure) {
+    AssertImmediatelyCallBack(asapo::kNetErrorNotSupported, asapo::ProducerErrorTemplates::kUnsupportedClient);
+}
+
 
 TEST_F(RequestHandlerTcpTests, ImmediatelyCallBackErrorIfWrongMetadata) {
     AssertImmediatelyCallBack(asapo::kNetErrorWrongRequest, asapo::ProducerErrorTemplates::kWrongInput);

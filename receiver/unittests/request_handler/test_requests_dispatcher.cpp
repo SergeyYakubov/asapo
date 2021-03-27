@@ -294,6 +294,17 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsAuthorizationFailure) {
     ASSERT_THAT(std::string(response.message), HasSubstr("authorization"));
 }
 
+TEST_F(RequestsDispatcherTests, ProcessRequestReturnsUnsupportedClientFailure) {
+    MockHandleRequest(1, asapo::ReceiverErrorTemplates::kUnsupportedClient.Generate());
+    MockSendResponse(&response, false);
+
+    auto err = dispatcher->ProcessRequest(request);
+
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kUnsupportedClient));
+    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorNotSupported));
+    ASSERT_THAT(std::string(response.message), HasSubstr("supported"));
+}
+
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsReAuthorizationFailure) {
     MockHandleRequest(2, asapo::ReceiverErrorTemplates::kReAuthorizationFailure.Generate());
     MockSendResponse(&response, false);

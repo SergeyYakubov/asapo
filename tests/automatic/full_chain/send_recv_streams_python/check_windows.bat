@@ -4,8 +4,7 @@ SET stream_in=detector
 
 SET indatabase_name=%beamtime_id%_%stream_in%
 
-SET token=IEfwsWa0GXky2S3MkxJSUHJT1sI8DD5teRdjBUXVRxk=
-
+SET token=%ASAPO_TEST_RW_TOKEN%
 SET beamline=test
 
 SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"

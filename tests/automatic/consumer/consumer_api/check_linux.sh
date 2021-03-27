@@ -3,7 +3,9 @@
 beamtime_id=test_run
 data_source=detector
 database_name=${beamtime_id}_${data_source}
-token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
+token_test_run=$BT_TEST_RUN_TOKEN
+
+
 
 set -e
 
@@ -14,6 +16,7 @@ Cleanup() {
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop discovery
+    nomad stop authorizer
     nomad stop broker
     echo "db.dropDatabase()" | mongo ${database_name}
 	rm -f 1_1 1
@@ -22,6 +25,7 @@ Cleanup() {
 
 nomad run nginx.nmd
 nomad run discovery.nmd
+nomad run authorizer.nmd
 nomad run broker.nmd
 
 sleep 1
@@ -36,11 +40,13 @@ do
 	echo 'db.data_stream1.insert({"_id":'$i',"size":6,"name":"'1$i'","timestamp":1000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
+echo 'db.data_stream1.insert({"_id":'6',"size":0,"name":"asapo_finish_stream","timestamp":1000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"next_stream":"ns"}})' | mongo ${database_name}
+
 for i in `seq 1 5`;
 do
 	echo 'db.data_stream2.insert({"_id":'$i',"size":6,"name":"'2$i'","timestamp":2000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}})' | mongo ${database_name}
 done
-
+echo 'db.data_stream2.insert({"_id":'6',"size":0,"name":"asapo_finish_stream","timestamp":2000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"next_stream":"asapo_no_next"}})' | mongo ${database_name}
 
 echo hello1 > 1
 

@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,26 +24,28 @@ type ID struct {
 	ID int `bson:"_id"`
 }
 
-type ServiceRecord struct {
-	ID   int                    `json:"_id"`
-	Name string                 `json:"name"`
-	Meta map[string]interface{} `json:"meta"`
+type MessageRecord struct {
+	ID             int                    `json:"_id"`
+	Timestamp      int                    `bson:"timestamp" json:"timestamp"`
+	Name           string                 `json:"name"`
+	Meta           map[string]interface{} `json:"meta"`
+	NextStream     string
+	FinishedStream bool
 }
 
 type InProcessingRecord struct {
-	ID       int `bson:"_id" json:"_id"`
-	MaxResendAttempts int `bson:"maxResendAttempts" json:"maxResendAttempts"`
-	ResendAttempts int `bson:"resendAttempts" json:"resendAttempts"`
-	DelayMs  int64 `bson:"delayMs" json:"delayMs"`
+	ID                int   `bson:"_id" json:"_id"`
+	MaxResendAttempts int   `bson:"maxResendAttempts" json:"maxResendAttempts"`
+	ResendAttempts    int   `bson:"resendAttempts" json:"resendAttempts"`
+	DelayMs           int64 `bson:"delayMs" json:"delayMs"`
 }
 
 type NegAckParamsRecord struct {
-	ID       int `bson:"_id" json:"_id"`
-	MaxResendAttempts int `bson:"maxResendAttempts" json:"maxResendAttempts"`
-	ResendAttempts int `bson:"resendAttempts" json:"resendAttempts"`
-	DelayMs  int64 `bson:"delayMs" json:"delayMs"`
+	ID                int   `bson:"_id" json:"_id"`
+	MaxResendAttempts int   `bson:"maxResendAttempts" json:"maxResendAttempts"`
+	ResendAttempts    int   `bson:"resendAttempts" json:"resendAttempts"`
+	DelayMs           int64 `bson:"delayMs" json:"delayMs"`
 }
-
 
 type Nacks struct {
 	Unacknowledged []int `json:"unacknowledged"`
@@ -71,10 +72,12 @@ const already_connected_msg = "already connected"
 
 const finish_stream_keyword = "asapo_finish_stream"
 const no_next_stream_keyword = "asapo_no_next"
+const stream_filter_all = "all"
+const stream_filter_finished = "finished"
+const stream_filter_unfinished = "unfinished"
+
 
 var dbSessionLock sync.Mutex
-
-
 
 type SizeRecord struct {
 	Size int `bson:"size" json:"size"`
@@ -161,18 +164,24 @@ func (db *Mongodb) insertMeta(dbname string, s interface{}) error {
 	return err
 }
 
-func (db *Mongodb) getMaxIndex(request Request, returnIncompete bool) (max_id int, err error) {
-	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
+func maxIndexQuery(request Request, returnIncompete bool) bson.M {
 	var q bson.M
 	if request.DatasetOp && !returnIncompete {
-		if request.MinDatasetSize>0 {
-			q = bson.M{"size": bson.M{"$gte": request.MinDatasetSize}}
+		if request.MinDatasetSize > 0 {
+			q = bson.M{"$expr": bson.M{"$gte": []interface{}{bson.M{"$size": "$messages"}, request.MinDatasetSize}}}
 		} else {
 			q = bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$messages"}}}}
 		}
+		q = bson.M{"$or": []interface{}{bson.M{"name": finish_stream_keyword}, q}}
 	} else {
 		q = nil
 	}
+	return q
+}
+
+func (db *Mongodb) getMaxIndex(request Request, returnIncompete bool) (max_id int, err error) {
+	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
+	q := maxIndexQuery(request, returnIncompete)
 
 	opts := options.FindOne().SetSort(bson.M{"_id": -1}).SetReturnKey(true)
 	var result ID
@@ -184,7 +193,6 @@ func (db *Mongodb) getMaxIndex(request Request, returnIncompete bool) (max_id in
 
 	return result.ID, err
 }
-
 func duplicateError(err error) bool {
 	command_error, ok := err.(mongo.CommandError)
 	if !ok {
@@ -219,7 +227,7 @@ func (db *Mongodb) incrementField(request Request, max_ind int, res interface{})
 		if err == mongo.ErrNoDocuments || duplicateError(err) {
 			// try again without upsert - if the first error was due to missing pointer
 			opts = options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
-			if err2 := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res);err2==nil {
+			if err2 := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res); err2 == nil {
 				return nil
 			}
 			return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind, "")}
@@ -232,64 +240,77 @@ func (db *Mongodb) incrementField(request Request, max_ind int, res interface{})
 
 func encodeAnswer(id, id_max int, next_stream string) string {
 	var r = struct {
-		Op             string `json:"op"`
-		Id             int    `json:"id"`
-		Id_max         int    `json:"id_max"`
+		Op          string `json:"op"`
+		Id          int    `json:"id"`
+		Id_max      int    `json:"id_max"`
 		Next_stream string `json:"next_stream"`
 	}{"get_record_by_id", id, id_max, next_stream}
 	answer, _ := json.Marshal(&r)
 	return string(answer)
 }
 
-func (db *Mongodb) getRecordByIDRow(request Request, id, id_max int) ([]byte, error) {
-	var res map[string]interface{}
-	q := bson.M{"_id": id}
+func recordContainsPartialData(request Request, rec map[string]interface{}) bool {
+	if !request.DatasetOp {
+		return false
+	}
 
+	name, ok_name := rec["name"].(string)
+	if ok_name && name == finish_stream_keyword {
+		return false
+	}
+	imgs, ok1 := rec["messages"].(primitive.A)
+	expectedSize, ok2 := utils.InterfaceToInt64(rec["size"])
+	if !ok1 || !ok2 {
+		return false
+	}
+	nMessages := len(imgs)
+	if (request.MinDatasetSize == 0 && int64(nMessages) != expectedSize) || (request.MinDatasetSize == 0 && nMessages < request.MinDatasetSize) {
+		return true
+	}
+	return false
+}
+
+func (db *Mongodb) getRecordFromDb(request Request, id, id_max int) (res map[string]interface{}, err error) {
+	q := bson.M{"_id": id}
 	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
-	err := c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
+	err = c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
 	if err != nil {
 		answer := encodeAnswer(id, id_max, "")
 		log_str := "error getting record id " + strconv.Itoa(id) + " for " + request.DbName + " : " + err.Error()
-		fmt.Println(err)
 		logger.Debug(log_str)
-		return nil, &DBError{utils.StatusNoData, answer}
+		return res, &DBError{utils.StatusNoData, answer}
 	}
-
-	partialData := false
-	if request.DatasetOp {
-		imgs,ok1 :=res["messages"].(primitive.A)
-		expectedSize,ok2 := utils.InterfaceToInt64(res["size"])
-		if !ok1 || !ok2 {
-			return nil, &DBError{utils.StatusTransactionInterrupted, "getRecordByIDRow: cannot parse database response" }
-		}
-		nMessages := len(imgs)
-		if (request.MinDatasetSize==0 && int64(nMessages)!=expectedSize) || (request.MinDatasetSize==0 && nMessages<request.MinDatasetSize) {
-			partialData = true
-		}
-	}
-
-	if partialData {
-		log_str := "got record id " + strconv.Itoa(id) + " for " + request.DbName
-		logger.Debug(log_str)
-	} else {
-		log_str := "got record id " + strconv.Itoa(id) + " for " + request.DbName
-		logger.Debug(log_str)
-	}
-
-	answer,err := utils.MapToJson(&res)
-	if err!=nil {
-		return nil,err
-	}
-	if partialData {
-		return nil,&DBError{utils.StatusPartialData, string(answer)}
-	}
-	return answer,nil
+	return res, err
 }
 
-func (db *Mongodb) getEarliestRecord(dbname string, collection_name string) (map[string]interface{}, error) {
+func (db *Mongodb) getRecordByIDRaw(request Request, id, id_max int) ([]byte, error) {
+	res, err := db.getRecordFromDb(request, id, id_max)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := checkStreamFinished(request, id, id_max, res); err != nil {
+		return nil, err
+	}
+
+	log_str := "got record id " + strconv.Itoa(id) + " for " + request.DbName
+	logger.Debug(log_str)
+
+	record, err := utils.MapToJson(&res)
+	if err != nil {
+		return nil, err
+	}
+	if recordContainsPartialData(request, res) {
+		return nil, &DBError{utils.StatusPartialData, string(record)}
+	} else {
+		return record, nil
+	}
+}
+
+func (db *Mongodb) getRawRecordWithSort(dbname string, collection_name string, sortField string, sortOrder int) (map[string]interface{}, error) {
 	var res map[string]interface{}
 	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
-	opts := options.FindOne().SetSort(bson.M{"timestamp": 1})
+	opts := options.FindOne().SetSort(bson.M{sortField: sortOrder})
 	var q bson.M = nil
 	err := c.FindOne(context.TODO(), q, opts).Decode(&res)
 
@@ -297,9 +318,17 @@ func (db *Mongodb) getEarliestRecord(dbname string, collection_name string) (map
 		if err == mongo.ErrNoDocuments {
 			return map[string]interface{}{}, nil
 		}
-		return nil,err
+		return nil, err
 	}
-	return res,nil
+	return res, nil
+}
+
+func (db *Mongodb) getLastRawRecord(dbname string, collection_name string) (map[string]interface{}, error) {
+	return db.getRawRecordWithSort(dbname, collection_name, "_id", -1)
+}
+
+func (db *Mongodb) getEarliestRawRecord(dbname string, collection_name string) (map[string]interface{}, error) {
+	return db.getRawRecordWithSort(dbname, collection_name, "timestamp", 1)
 }
 
 func (db *Mongodb) getRecordByID(request Request) ([]byte, error) {
@@ -308,18 +337,17 @@ func (db *Mongodb) getRecordByID(request Request) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	max_ind, err := db.getMaxIndex(request,true)
+	max_ind, err := db.getMaxIndex(request, true)
 	if err != nil {
 		return nil, err
 	}
 
-	return db.getRecordByIDRow(request, id, max_ind)
-
+	return db.getRecordByIDRaw(request, id, max_ind)
 }
 
 func (db *Mongodb) negAckRecord(request Request) ([]byte, error) {
 	input := struct {
-		Id int
+		Id     int
 		Params struct {
 			DelayMs int
 		}
@@ -330,14 +358,13 @@ func (db *Mongodb) negAckRecord(request Request) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	err =  db.InsertRecordToInprocess(request.DbName,inprocess_collection_name_prefix+request.GroupId,input.Id,input.Params.DelayMs, 1)
+	err = db.InsertRecordToInprocess(request.DbName, inprocess_collection_name_prefix+request.GroupId, input.Id, input.Params.DelayMs, 1)
 	return []byte(""), err
 }
 
-
 func (db *Mongodb) ackRecord(request Request) ([]byte, error) {
 	var record ID
-	err := json.Unmarshal([]byte(request.ExtraParam),&record)
+	err := json.Unmarshal([]byte(request.ExtraParam), &record)
 	if err != nil {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
@@ -368,7 +395,7 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(request Request) error {
 }
 
 func (db *Mongodb) getCurrentPointer(request Request) (LocationPointer, int, error) {
-	max_ind, err := db.getMaxIndex(request,true)
+	max_ind, err := db.getMaxIndex(request, true)
 	if err != nil {
 		return LocationPointer{}, 0, err
 	}
@@ -386,18 +413,18 @@ func (db *Mongodb) getCurrentPointer(request Request) (LocationPointer, int, err
 	return curPointer, max_ind, nil
 }
 
-func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delayMs int,nResendAttempts int) (int, error) {
+func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delayMs int, nResendAttempts int) (int, error) {
 	var res InProcessingRecord
 	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
 	tNow := time.Now().UnixNano()
- 	var update bson.M
-	if nResendAttempts==0 {
-		update = bson.M{"$set": bson.M{"delayMs": tNow + int64(delayMs*1e6) ,"maxResendAttempts":math.MaxInt32}, "$inc": bson.M{"resendAttempts": 1}}
+	var update bson.M
+	if nResendAttempts == 0 {
+		update = bson.M{"$set": bson.M{"delayMs": tNow + int64(delayMs*1e6), "maxResendAttempts": math.MaxInt32}, "$inc": bson.M{"resendAttempts": 1}}
 	} else {
-		update = bson.M{"$set": bson.M{"delayMs": tNow + int64(delayMs*1e6) ,"maxResendAttempts":nResendAttempts}, "$inc": bson.M{"resendAttempts": 1}}
+		update = bson.M{"$set": bson.M{"delayMs": tNow + int64(delayMs*1e6), "maxResendAttempts": nResendAttempts}, "$inc": bson.M{"resendAttempts": 1}}
 	}
 
-	q := bson.M{"delayMs": bson.M{"$lte": tNow},"$expr": bson.M{"$lt": []string{"$resendAttempts","$maxResendAttempts"}}}
+	q := bson.M{"delayMs": bson.M{"$lte": tNow}, "$expr": bson.M{"$lt": []string{"$resendAttempts", "$maxResendAttempts"}}}
 	c := db.client.Database(dbname).Collection(collection_name)
 	err := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(&res)
 	if err != nil {
@@ -412,9 +439,9 @@ func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delay
 	return res.ID, nil
 }
 
-func (db *Mongodb) InsertRecordToInprocess(db_name string, collection_name string,id int,delayMs int, nResendAttempts int) error {
+func (db *Mongodb) InsertRecordToInprocess(db_name string, collection_name string, id int, delayMs int, nResendAttempts int) error {
 	record := InProcessingRecord{
-		id, nResendAttempts, 0,time.Now().UnixNano()+int64(delayMs*1e6),
+		id, nResendAttempts, 0, time.Now().UnixNano() + int64(delayMs*1e6),
 	}
 
 	c := db.client.Database(db_name).Collection(collection_name)
@@ -434,12 +461,12 @@ func (db *Mongodb) InsertToInprocessIfNeeded(db_name string, collection_name str
 		return err
 	}
 
-	return db.InsertRecordToInprocess(db_name,collection_name,id,delayMs, nResendAttempts)
+	return db.InsertRecordToInprocess(db_name, collection_name, id, delayMs, nResendAttempts)
 
 }
 
 func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTimeout bool) (int, int, error) {
-	var record_ind,  max_ind, delayMs, nResendAttempts int
+	var record_ind, max_ind, delayMs, nResendAttempts int
 	var err error
 	if len(request.ExtraParam) != 0 {
 		delayMs, nResendAttempts, err = extractsTwoIntsFromString(request.ExtraParam)
@@ -451,7 +478,7 @@ func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTi
 	}
 	tNow := time.Now().Unix()
 	if (atomic.LoadInt64(&db.lastReadFromInprocess) <= tNow-int64(db.settings.ReadFromInprocessPeriod)) || ignoreTimeout {
-		record_ind, err = db.getUnProcessedId(request.DbName, inprocess_collection_name_prefix+request.GroupId, delayMs,nResendAttempts)
+		record_ind, err = db.getUnProcessedId(request.DbName, inprocess_collection_name_prefix+request.GroupId, delayMs, nResendAttempts)
 		if err != nil {
 			log_str := "error getting unprocessed id " + request.DbName + ", groupid: " + request.GroupId + ":" + err.Error()
 			logger.Debug(log_str)
@@ -505,45 +532,61 @@ func (db *Mongodb) getNextAndMaxIndexes(request Request) (int, int, error) {
 	return nextInd, maxInd, nil
 }
 
-func (db *Mongodb) processLastRecord(request Request, data []byte, err error) ([]byte, error) {
-	var r ServiceRecord
-	err = json.Unmarshal(data, &r)
-	if err != nil || r.Name != finish_stream_keyword {
-		return data, err
+func ExtractMessageRecord(data map[string]interface{}) (MessageRecord, bool) {
+	var r MessageRecord
+	err := utils.MapToStruct(data, &r)
+	if err != nil {
+		return r, false
 	}
-	var next_stream string
-	next_stream, ok := r.Meta["next_stream"].(string)
-	if !ok {
-		next_stream = no_next_stream_keyword
+	r.FinishedStream = (r.Name == finish_stream_keyword)
+	if r.FinishedStream {
+		var next_stream string
+		next_stream, ok := r.Meta["next_stream"].(string)
+		if !ok {
+			next_stream = no_next_stream_keyword
+		}
+		r.NextStream = next_stream
 	}
+	return r, true
+}
 
-	answer := encodeAnswer(r.ID, r.ID, next_stream)
-	log_str := "reached end of stream " + request.DbCollectionName + " , next_stream: " + next_stream
-	logger.Debug(log_str)
-
-
+func (db *Mongodb) tryGetRecordFromInprocessed(request Request, originalerror error) ([]byte, error) {
 	var err_inproc error
 	nextInd, maxInd, err_inproc := db.getNextAndMaxIndexesFromInprocessed(request, true)
 	if err_inproc != nil {
 		return nil, err_inproc
 	}
 	if nextInd != 0 {
-		return  db.getRecordByIDRow(request, nextInd, maxInd)
+		return db.getRecordByIDRaw(request, nextInd, maxInd)
+	} else {
+		return nil, originalerror
 	}
+}
 
-	return nil, &DBError{utils.StatusNoData, answer}
+func checkStreamFinished(request Request, id, id_max int, data map[string]interface{}) error {
+	if id != id_max {
+		return nil
+	}
+	r, ok := ExtractMessageRecord(data)
+	if !ok || !r.FinishedStream {
+		return nil
+	}
+	log_str := "reached end of stream " + request.DbCollectionName + " , next_stream: " + r.NextStream
+	logger.Debug(log_str)
+
+	answer := encodeAnswer(r.ID-1, r.ID-1, r.NextStream)
+	return &DBError{utils.StatusNoData, answer}
 }
 
 func (db *Mongodb) getNextRecord(request Request) ([]byte, error) {
-
 	nextInd, maxInd, err := db.getNextAndMaxIndexes(request)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := db.getRecordByIDRow(request, nextInd, maxInd)
-	if nextInd == maxInd && GetStatusCodeFromError(err)!=utils.StatusPartialData {
-		data, err = db.processLastRecord(request,data, err)
+	data, err := db.getRecordByIDRaw(request, nextInd, maxInd)
+	if err != nil {
+		data, err = db.tryGetRecordFromInprocessed(request, err)
 	}
 
 	if err == nil {
@@ -560,18 +603,33 @@ func (db *Mongodb) getLastRecord(request Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return db.getRecordByIDRow(request, max_ind, max_ind)
+	return db.getRecordByIDRaw(request, max_ind, max_ind)
+}
+
+func getSizeFilter(request Request) bson.M {
+	filter := bson.M{}
+	if request.ExtraParam == "false" { // do not return incomplete datasets
+		filter = bson.M{"$expr": bson.M{"$eq": []interface{}{"$size", bson.M{"$size": "$messages"}}}}
+	} else if request.ExtraParam == "true" {
+		filter = bson.M{"$expr": bson.M{"$gt": []interface{}{bson.M{"$size": "$messages"}, 0}}}
+	}
+	filter = bson.M{"$and": []interface{}{bson.M{"name": bson.M{"$ne": finish_stream_keyword}}, filter}}
+	return filter
 }
 
 func (db *Mongodb) getSize(request Request) ([]byte, error) {
 	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
-	var rec SizeRecord
-	var err error
 
-	size, err := c.CountDocuments(context.TODO(), bson.M{}, options.Count())
+	filter := getSizeFilter(request)
+	size, err := c.CountDocuments(context.TODO(), filter, options.Count())
 	if err != nil {
+		if ce, ok := err.(mongo.CommandError); ok && ce.Code == 17124 {
+			return nil, &DBError{utils.StatusWrongInput, "no datasets found"}
+		}
 		return nil, err
 	}
+
+	var rec SizeRecord
 	rec.Size = int(size)
 	return json.Marshal(&rec)
 }
@@ -583,7 +641,7 @@ func (db *Mongodb) resetCounter(request Request) ([]byte, error) {
 	}
 
 	err = db.setCounter(request, id)
-	if err!= nil {
+	if err != nil {
 		return []byte(""), err
 	}
 
@@ -684,10 +742,10 @@ func extractsTwoIntsFromString(from_to string) (int, int, error) {
 
 }
 
-func (db *Mongodb) nacks(request Request) ([]byte, error) {
+func (db *Mongodb) getNacksLimits(request Request) (int, int, error) {
 	from, to, err := extractsTwoIntsFromString(request.ExtraParam)
 	if err != nil {
-		return nil, err
+		return 0, 0, err
 	}
 
 	if from == 0 {
@@ -695,10 +753,30 @@ func (db *Mongodb) nacks(request Request) ([]byte, error) {
 	}
 
 	if to == 0 {
-		to, err = db.getMaxIndex(request, true)
+		to, err = db.getMaxLimitWithoutEndOfStream(request, err)
 		if err != nil {
-			return nil, err
+			return 0, 0, err
 		}
+	}
+	return from, to, nil
+}
+
+func (db *Mongodb) getMaxLimitWithoutEndOfStream(request Request, err error) (int, error) {
+	maxInd, err := db.getMaxIndex(request, true)
+	if err != nil {
+		return 0, err
+	}
+	_, last_err := db.getRecordByIDRaw(request, maxInd, maxInd)
+	if last_err != nil && maxInd > 0 {
+		maxInd = maxInd - 1
+	}
+	return maxInd, nil
+}
+
+func (db *Mongodb) nacks(request Request) ([]byte, error) {
+	from, to, err := db.getNacksLimits(request)
+	if err != nil {
+		return nil, err
 	}
 
 	res := Nacks{[]int{}}
@@ -730,27 +808,28 @@ func (db *Mongodb) lastAck(request Request) ([]byte, error) {
 	return utils.MapToJson(&result)
 }
 
-func (db *Mongodb) getNacks(request Request, min_index, max_index int) ([]int, error) {
-
-	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
-
+func (db *Mongodb) canAvoidDbRequest(min_index int, max_index int, c *mongo.Collection) ([]int, error, bool) {
 	if min_index > max_index {
-		return []int{}, errors.New("from index is greater than to index")
+		return []int{}, errors.New("from index is greater than to index"), true
 	}
 
 	size, err := c.CountDocuments(context.TODO(), bson.M{}, options.Count())
 	if err != nil {
-		return []int{}, err
+		return []int{}, err, true
 	}
 
 	if size == 0 {
-		return makeRange(min_index, max_index), nil
+		return makeRange(min_index, max_index), nil, true
 	}
 
 	if min_index == 1 && int(size) == max_index {
-		return []int{}, nil
+		return []int{}, nil, true
 	}
 
+	return nil, nil, false
+}
+
+func getNacksQuery(max_index int, min_index int) []bson.D {
 	matchStage := bson.D{{"$match", bson.D{{"_id", bson.D{{"$lt", max_index + 1}, {"$gt", min_index - 1}}}}}}
 	groupStage := bson.D{
 		{"$group", bson.D{
@@ -766,29 +845,40 @@ func (db *Mongodb) getNacks(request Request, min_index, max_index int) ([]int, e
 				{"$setDifference", bson.A{bson.D{{"$range", bson.A{min_index, max_index + 1}}}, "$numbers"}},
 			}}},
 		}}
+	return mongo.Pipeline{matchStage, groupStage, projectStage}
+}
 
-	query := mongo.Pipeline{matchStage, groupStage, projectStage}
-	cursor, err := c.Aggregate(context.Background(), query)
-	type res struct {
+func extractNacsFromCursor(err error, cursor *mongo.Cursor) ([]int, error) {
+	resp := []struct {
 		Numbers []int
-	}
-	resp := []res{}
+	}{}
 	err = cursor.All(context.Background(), &resp)
 	if err != nil || len(resp) != 1 {
 		return []int{}, err
 	}
-
 	return resp[0].Numbers, nil
 }
 
+func (db *Mongodb) getNacks(request Request, min_index, max_index int) ([]int, error) {
+	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
+
+	if res, err, ok := db.canAvoidDbRequest(min_index, max_index, c); ok {
+		return res, err
+	}
+
+	query := getNacksQuery(max_index, min_index)
+	cursor, err := c.Aggregate(context.Background(), query)
+
+	return extractNacsFromCursor(err, cursor)
+}
+
 func (db *Mongodb) getStreams(request Request) ([]byte, error) {
-	rec, err := streams.getStreams(db,request.DbName,request.ExtraParam)
+	rec, err := streams.getStreams(db, request)
 	if err != nil {
 		return db.processQueryError("get streams", request.DbName, err)
 	}
 	return json.Marshal(&rec)
 }
-
 
 func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
 	if err := db.checkDatabaseOperationPrerequisites(request); err != nil {

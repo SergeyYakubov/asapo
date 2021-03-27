@@ -35,6 +35,8 @@ class RequestHandlerAuthorize final: public ReceiverRequestHandler {
     Error ProcessReAuthorization(Request* request) const;
     bool NeedReauthorize() const;
     std::string GetRequestString(const Request* request, const char* source_credentials) const;
+    Error CheckVersion(const std::string& version_from_client) const;
+
 };
 
 }

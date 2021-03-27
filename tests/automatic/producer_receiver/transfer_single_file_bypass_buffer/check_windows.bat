@@ -11,7 +11,7 @@ call start_services.bat
 
 mkdir %receiver_folder%
 
-"%1" localhost:8400 %beamtime_id% 60000 1 1 0 30
+"%1" 127.0.0.1:8400 %beamtime_id% 60000 1 1 0 30
 
 ping 192.0.2.1 -n 1 -w 1000 > nul
 

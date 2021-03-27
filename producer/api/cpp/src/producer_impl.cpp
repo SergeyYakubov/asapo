@@ -1,27 +1,24 @@
 #include <iostream>
-#include <iostream>
 #include <cstring>
 #include <future>
 
 #include "producer_impl.h"
 #include "producer_logger.h"
-#include "asapo/io/io_factory.h"
 #include "asapo/producer/producer_error.h"
 #include "producer_request_handler_factory.h"
 #include "producer_request.h"
 #include "asapo/common/data_structs.h"
-
+#include "asapo/request/request_pool_error.h"
+#include "asapo/http_client/http_client.h"
+#include "asapo/common/internal/version.h"
 
 namespace  asapo {
 
 const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
-const std::string ProducerImpl::kFinishStreamKeyword = "asapo_finish_stream";
-const std::string ProducerImpl::kNoNextStreamKeyword = "asapo_no_next";
-
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
                            asapo::RequestHandlerType type):
-    log__{GetDefaultProducerLogger()}, timeout_ms_{timeout_ms} {
+    log__{GetDefaultProducerLogger()},httpclient__{DefaultHttpClient()}, timeout_ms_{timeout_ms},endpoint_{endpoint} {
     switch (type) {
     case RequestHandlerType::kTcp:
         discovery_service_.reset(new ReceiverDiscoveryService{endpoint, ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
@@ -96,6 +93,48 @@ Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_
     return CheckIngestMode(ingest_mode);
 }
 
+Error HandleErrorFromPool(Error original_error,bool manage_data_memory) {
+    if (original_error == nullptr) {
+        return nullptr;
+    }
+    Error producer_error = ProducerErrorTemplates::kRequestPoolIsFull.Generate(original_error->Explain());
+    auto err_data = static_cast<OriginalRequest*>(original_error->GetCustomData());
+    if (!err_data) {
+        return producer_error;
+    }
+    auto producer_request = static_cast<ProducerRequest*>(err_data->request.get());
+    if (!producer_request) {
+        return producer_error;
+    }
+    MessageData original_data = std::move(producer_request->data);
+    if (original_data == nullptr) {
+        return producer_error;
+    }
+    if (!manage_data_memory) {
+        original_data.release();
+    } else {
+        OriginalData* original = new asapo::OriginalData{};
+        original->data = std::move(original_data);
+        producer_error->SetCustomData(std::unique_ptr<asapo::CustomErrorData>{original});
+    }
+    return producer_error;
+}
+
+Error HandleInputError(Error original_error,MessageData data, bool manage_data_memory) {
+    if (data == nullptr) {
+        return original_error;
+    }
+    if (!manage_data_memory) {
+        data.release();
+        return original_error;
+    }
+
+    OriginalData* original = new asapo::OriginalData{};
+    original->data = std::move(data);
+    original_error->SetCustomData(std::unique_ptr<asapo::CustomErrorData>{original});
+    return original_error;
+}
+
 Error ProducerImpl::Send(const MessageHeader& message_header,
                          std::string stream,
                          MessageData data,
@@ -105,19 +144,17 @@ Error ProducerImpl::Send(const MessageHeader& message_header,
                          bool manage_data_memory) {
     auto err = CheckProducerRequest(message_header, ingest_mode, stream);
     if (err) {
-        if (!manage_data_memory) {
-            data.release();
-        }
         log__->Error("error checking request - " + err->Explain());
-        return err;
+        return HandleInputError(std::move(err),std::move(data),manage_data_memory);
     }
 
     auto request_header = GenerateNextSendRequest(message_header, std::move(stream), ingest_mode);
 
-    return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
+    err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
                 std::move(data), std::move(message_header.user_metadata), std::move(full_path), callback, manage_data_memory, timeout_ms_}
     });
 
+    return HandleErrorFromPool(std::move(err),manage_data_memory);
 }
 
 bool WandTransferData(uint64_t ingest_mode) {
@@ -142,7 +179,7 @@ Error ProducerImpl::Send(const MessageHeader &message_header,
                          std::string stream,
                          RequestCallback callback) {
     if (auto err = CheckData(ingest_mode, message_header, &data)) {
-        return err;
+        return HandleInputError(std::move(err),std::move(data),true);
     }
     return Send(message_header, std::move(stream), std::move(data), "", ingest_mode, callback, true);
 
@@ -214,9 +251,10 @@ Error ProducerImpl::SendMetadata(const std::string& metadata, RequestCallback ca
     request_header.custom_data[kPosIngestMode] = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInDatabase;
     MessageData data{new uint8_t[metadata.size()]};
     strncpy((char*)data.get(), metadata.c_str(), metadata.size());
-    return request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
+    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
                 std::move(data), "", "", callback, true, timeout_ms_}
     });
+    return HandleErrorFromPool(std::move(err), true);
 }
 
 Error ProducerImpl::Send__(const MessageHeader &message_header,
@@ -278,7 +316,7 @@ void ActivatePromise(std::shared_ptr<std::promise<StreamInfoResult>> promise, Re
                      Error err) {
     StreamInfoResult res;
     if (err == nullptr) {
-        auto ok = res.sinfo.SetFromJson(payload.response,true);
+        auto ok = res.sinfo.SetFromJson(payload.response);
         res.err = ok ? nullptr : ProducerErrorTemplates::kInternalServerError.Generate(
                       std::string("cannot read JSON string from server response: ") + payload.response).release();
     } else {
@@ -354,5 +392,32 @@ void ProducerImpl::SetRequestsQueueLimits(uint64_t size, uint64_t volume) {
     request_pool__->SetLimits(RequestPoolLimits{size,volume});
 }
 
+Error ProducerImpl::GetVersionInfo(std::string* client_info, std::string* server_info, bool* supported) const {
+    if (client_info == nullptr && server_info == nullptr && supported == nullptr) {
+        return ProducerErrorTemplates::kWrongInput.Generate("missing parameters");
+    }
+    if (client_info != nullptr) {
+        *client_info =
+            "software version: " + std::string(kVersion) + ", producer protocol: " + kProducerProtocol.GetVersion();
+    }
+
+    if (server_info != nullptr || supported != nullptr) {
+        return GetServerVersionInfo(server_info, supported);
+    }
+    return nullptr;
+}
+
+Error ProducerImpl::GetServerVersionInfo(std::string* server_info,
+                                         bool* supported) const {
+    auto endpoint = endpoint_ +"/asapo-discovery/"+kProducerProtocol.GetDiscoveryVersion()+
+        "/version?client=producer&protocol="+kProducerProtocol.GetVersion();
+    HttpCode  code;
+    Error err;
+    auto response = httpclient__->Get(endpoint, &code, &err);
+    if (err) {
+        return err;
+    }
+    return ExtractVersionFromResponse(response,"producer",server_info,supported);
+}
 
 }

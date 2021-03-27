@@ -2,7 +2,8 @@
   "Port": {{ env "NOMAD_PORT_authorizer" }},
   "LogLevel":"debug",
   "CurrentBeamlinesFolder":"@CURRENT_BEAMLINES_FOLDER@",
-  "SecretFile":"auth_secret.key"
+  "UserSecretFile":"auth_secret.key",
+  "AdminSecretFile":"auth_secret_admin.key"
 }
 
 

@@ -30,7 +30,7 @@ job "asapo-brokers" {
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
         image = "yakser/asapo-broker${image_suffix}"
-	    force_pull = true
+	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/broker/config.json"]
         %{ if ! nomad_logs  }
           logging {
@@ -65,6 +65,10 @@ job "asapo-brokers" {
           grace = "90s"
           ignore_warnings = false
         }
+      }
+
+      meta {
+        perf_monitor = "${perf_monitor}"
       }
 
       template {

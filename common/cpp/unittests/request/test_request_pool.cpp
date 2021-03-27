@@ -6,6 +6,7 @@
 #include "asapo/common/error.h"
 
 #include "asapo/request/request_pool.h"
+#include "asapo/request/request_pool_error.h"
 #include "asapo/request/request_handler_factory.h"
 #include "mocking.h"
 
@@ -209,6 +210,8 @@ TEST_F(RequestPoolTests, RefuseAddRequestIfHitSizeLimitation) {
 
     ASSERT_THAT(nreq, Eq(1));
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kNoSpaceLeft));
+    auto err_data = static_cast<asapo::OriginalRequest*>(err->GetCustomData());
+    ASSERT_THAT(err_data, Ne(nullptr));
 }
 
 TEST_F(RequestPoolTests, RefuseAddRequestIfHitMemoryLimitation) {
@@ -225,6 +228,9 @@ TEST_F(RequestPoolTests, RefuseAddRequestIfHitMemoryLimitation) {
 
     ASSERT_THAT(nreq, Eq(1));
     ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kNoSpaceLeft));
+    auto err_data = static_cast<asapo::OriginalRequest*>(err->GetCustomData());
+    ASSERT_THAT(err_data, Ne(nullptr));
+
 }
 
 TEST_F(RequestPoolTests, RefuseAddRequestsIfHitSizeLimitation) {

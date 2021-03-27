@@ -1,5 +1,3 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "InfiniteRecursion"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -10,6 +8,8 @@
 #include "asapo/producer/producer_error.h"
 
 #include "../src/request_handler_tcp.h"
+#include "asapo/request/request_pool_error.h"
+#include "asapo/unittests/MockHttpClient.h"
 
 #include "mocking.h"
 
@@ -25,10 +25,13 @@ using ::testing::Ne;
 using ::testing::Mock;
 using ::testing::InSequence;
 using ::testing::HasSubstr;
+using testing::SetArgPointee;
 
 
 using asapo::RequestPool;
 using asapo::ProducerRequest;
+using asapo::MockHttpClient;
+
 
 MATCHER_P10(M_CheckSendRequest, op_code, source_credentials, metadata, file_id, file_size, message, stream,
             ingest_mode,
@@ -55,6 +58,8 @@ TEST(ProducerImpl, Constructor) {
     asapo::ProducerImpl producer{"", 4, 3600000, asapo::RequestHandlerType::kTcp};
     ASSERT_THAT(dynamic_cast<asapo::AbstractLogger*>(producer.log__), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::RequestPool*>(producer.request_pool__.get()), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::HttpClient*>(producer.httpclient__.get()), Ne(nullptr));
+
 }
 
 class ProducerImplTests : public testing::Test {
@@ -63,7 +68,8 @@ class ProducerImplTests : public testing::Test {
   asapo::ProducerRequestHandlerFactory factory{&service};
   testing::NiceMock<asapo::MockLogger> mock_logger;
   testing::NiceMock<MockRequestPull> mock_pull{&factory, &mock_logger};
-  asapo::ProducerImpl producer{"", 1, 3600000, asapo::RequestHandlerType::kTcp};
+  std::string expected_server_uri = "test:8400";
+  asapo::ProducerImpl producer{expected_server_uri, 1, 3600000, asapo::RequestHandlerType::kTcp};
   uint64_t expected_size = 100;
   uint64_t expected_id = 10;
   uint64_t expected_dataset_id = 100;
@@ -87,9 +93,15 @@ class ProducerImplTests : public testing::Test {
   std::string expected_fullpath = "filename";
   bool expected_managed_memory = true;
   bool expected_unmanaged_memory = false;
+
+  MockHttpClient* mock_http_client;
+
   void SetUp() override {
       producer.log__ = &mock_logger;
       producer.request_pool__ = std::unique_ptr<RequestPool>{&mock_pull};
+      mock_http_client = new MockHttpClient;
+      producer.httpclient__.reset(mock_http_client);
+
   }
   void TearDown() override {
       producer.request_pool__.release();
@@ -98,17 +110,22 @@ class ProducerImplTests : public testing::Test {
 
 TEST_F(ProducerImplTests, SendReturnsError) {
     EXPECT_CALL(mock_pull, AddRequest_t(_, false)).WillOnce(Return(
-        asapo::ProducerErrorTemplates::kRequestPoolIsFull.Generate().release()));
+        asapo::IOErrorTemplates::kNoSpaceLeft.Generate().release()));
     asapo::MessageHeader message_header{1, 1, "test"};
     auto err = producer.Send(message_header, nullptr, expected_ingest_mode, "default", nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
 }
 
 TEST_F(ProducerImplTests, ErrorIfFileNameTooLong) {
+    asapo::MessageData data = asapo::MessageData{new uint8_t[100]};
+    data[34]=12;
     std::string long_string(asapo::kMaxMessageSize + 100, 'a');
     asapo::MessageHeader message_header{1, 1, long_string};
-    auto err = producer.Send(message_header, nullptr, expected_ingest_mode, "default", nullptr);
+    auto err = producer.Send(message_header, std::move(data), expected_ingest_mode, "default", nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+    auto err_data = static_cast<asapo::OriginalData*>(err->GetCustomData());
+    ASSERT_THAT(err_data, Ne(nullptr));
+    ASSERT_THAT(err_data->data[34], Eq(12));
 }
 
 TEST_F(ProducerImplTests, ErrorIfStreamEmpty) {
@@ -137,6 +154,8 @@ TEST_F(ProducerImplTests, ErrorIfZeroDataSize) {
     asapo::MessageHeader message_header{1, 0, expected_fullpath};
     auto err = producer.Send(message_header, std::move(data), asapo::kDefaultIngestMode, "default", nullptr);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+    auto err_data = static_cast<asapo::OriginalData*>(err->GetCustomData());
+    ASSERT_THAT(err_data, Ne(nullptr));
 }
 
 TEST_F(ProducerImplTests, ErrorIfNoData) {
@@ -202,7 +221,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinish) {
                                                                next_stream_meta.c_str(),
                                                                expected_id + 1,
                                                                0,
-                                                               asapo::ProducerImpl::kFinishStreamKeyword.c_str(),
+                                                               asapo::kFinishStreamKeyword.c_str(),
                                                                expected_stream,
                                                                asapo::IngestModeFlags::kTransferMetaDataOnly,
                                                                0,
@@ -226,7 +245,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinishWithNoNextStream) {
     producer.SetCredentials(expected_credentials);
 
     std::string
-        next_stream_meta = std::string("{\"next_stream\":") + "\"" + asapo::ProducerImpl::kNoNextStreamKeyword
+        next_stream_meta = std::string("{\"next_stream\":") + "\"" + asapo::kNoNextStreamKeyword
         + "\"}";
 
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferData,
@@ -234,7 +253,7 @@ TEST_F(ProducerImplTests, OKSendingStreamFinishWithNoNextStream) {
                                                                next_stream_meta.c_str(),
                                                                expected_id + 1,
                                                                0,
-                                                               asapo::ProducerImpl::kFinishStreamKeyword.c_str(),
+                                                               asapo::kFinishStreamKeyword.c_str(),
                                                                expected_stream,
                                                                asapo::IngestModeFlags::kTransferMetaDataOnly,
                                                                0,
@@ -472,6 +491,50 @@ TEST_F(ProducerImplTests, GetLastStreamMakesCorerctRequest) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kTimeout));
 }
 
+
+TEST_F(ProducerImplTests, ReturnDataIfCanotAddToQueue) {
+    producer.SetCredentials(expected_credentials);
+
+    asapo::MessageData data = asapo::MessageData{new uint8_t[100]};
+    data[40] = 10;
+    asapo::OriginalRequest* original_request = new asapo::OriginalRequest{};
+
+    auto request = std::unique_ptr<ProducerRequest> {new ProducerRequest{"", asapo::GenericRequestHeader{},std::move(data), "", "", nullptr, true, 0}};
+    original_request->request = std::move(request);
+    auto pool_err = asapo::IOErrorTemplates::kNoSpaceLeft.Generate();
+    pool_err->SetCustomData(std::unique_ptr<asapo::CustomErrorData>{original_request});
+
+
+    EXPECT_CALL(mock_pull, AddRequest_t(_,_)).WillOnce(Return(
+        std::move(pool_err).release()));
+
+    asapo::MessageHeader message_header{expected_id, 0, expected_name};
+    auto err = producer.Send(message_header, std::move(data), expected_ingest_mode, expected_stream, nullptr);
+
+    auto err_data = static_cast<asapo::OriginalData*>(err->GetCustomData());
+    ASSERT_THAT(err_data, Ne(nullptr));
+
+    asapo::MessageData original_data_in_err = std::move(err_data->data);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
+    ASSERT_THAT(original_data_in_err, Ne(nullptr));
+    ASSERT_THAT(original_data_in_err[40], Eq(10));
+
 }
 
-#pragma clang diagnostic pop
+TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
+
+    std::string result = R"({"softwareVersion":"20.03.1, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.2"}})";
+
+    EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/version?client=producer&protocol=v0.1"), _,_)).WillOnce(DoAll(
+        SetArgPointee<1>(asapo::HttpCode::OK),
+        SetArgPointee<2>(nullptr),
+        Return(result)));
+
+    std::string client_info,server_info;
+    auto err = producer.GetVersionInfo(&client_info,&server_info,nullptr);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(server_info, HasSubstr("20.03.1"));
+    ASSERT_THAT(server_info, HasSubstr("v0.2"));
+}
+
+}

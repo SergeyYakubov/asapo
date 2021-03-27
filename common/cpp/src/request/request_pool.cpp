@@ -1,5 +1,5 @@
 #include "asapo/request/request_pool.h"
-
+#include "asapo/request/request_pool_error.h"
 namespace asapo {
 
 RequestPool::RequestPool(uint8_t n_threads,
@@ -60,6 +60,9 @@ Error RequestPool::CanAddRequest(const GenericRequestPtr &request, bool top_prio
 Error RequestPool::AddRequest(GenericRequestPtr request, bool top_priority) {
     std::unique_lock<std::mutex> lock(mutex_);
     if (auto err = CanAddRequest(request, top_priority)) {
+        OriginalRequest* original_request = new OriginalRequest{};
+        original_request->request = std::move(request);
+        err->SetCustomData(std::unique_ptr<CustomErrorData>(original_request));
         return err;
     }
 

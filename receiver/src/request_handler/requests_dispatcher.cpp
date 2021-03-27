@@ -18,6 +18,8 @@ NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
     if (err) {
         if (err == ReceiverErrorTemplates::kAuthorizationFailure) {
             return NetworkErrorCode::kNetAuthorizationError;
+        } else if (err == ReceiverErrorTemplates::kUnsupportedClient) {
+            return NetworkErrorCode::kNetErrorNotSupported;
         } else if (err == ReceiverErrorTemplates::kReAuthorizationFailure) {
             return NetworkErrorCode::kNetErrorReauthorize;
         } else if (err == DBErrorTemplates::kJsonParseError || err == ReceiverErrorTemplates::kBadRequest) {

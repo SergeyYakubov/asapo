@@ -13,23 +13,19 @@ import (
 	"time"
 )
 
-type AuthorizationRequest struct {
-	Token   string
-	Command string
-	URL     string
-}
-
-type AuthorizationResponce struct {
-	Status       int
-	StatusText   string
-	UserName     string
-	Token        string
-	ValidityTime int
-}
-
 type Auth interface {
 	GenerateToken(...interface{}) (string, error)
+	ProcessAuth(http.HandlerFunc, string) http.HandlerFunc
 	Name() string
+	CheckAndGetContent(token string, extraClaims interface{}, payload ...interface{}) (string,error)
+}
+
+func SubjectFromBeamtime(bt string)string {
+	return "bt_"+bt
+}
+
+func SubjectFromBeamline(bl string)string {
+	return "bl_"+bl
 }
 
 
@@ -79,8 +75,13 @@ func ExtractAuthInfo(r *http.Request) (authType, token string, err error) {
 
 type CustomClaims struct {
 	jwt.StandardClaims
-	Duration    time.Duration
 	ExtraClaims interface{}
+}
+
+func (claim *CustomClaims) SetExpiration(duration time.Duration){
+	if duration > 0 {
+		claim.ExpiresAt = time.Now().Add(duration).Unix()
+	}
 }
 
 type JWTAuth struct {
@@ -101,10 +102,6 @@ func (t JWTAuth) GenerateToken(val ...interface{}) (string, error) {
 		return "", errors.New("Wrong claims")
 	}
 
-	if claims.Duration > 0 {
-		claims.ExpiresAt = time.Now().Add(claims.Duration).Unix()
-	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(t.Key))
 
@@ -113,6 +110,11 @@ func (t JWTAuth) GenerateToken(val ...interface{}) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func (a *JWTAuth)ProcessAuth(fn http.HandlerFunc, payload string) http.HandlerFunc {
+	// payload ignored
+	return ProcessJWTAuth(fn,a.Key)
 }
 
 func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
@@ -132,7 +134,7 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 
 		if authType == "Bearer" {
 			if claims, ok := CheckJWTToken(token, key); !ok {
-				http.Error(w, "Authorization error - tocken does not match", http.StatusUnauthorized)
+				http.Error(w, "Authorization error - token does not match", http.StatusUnauthorized)
 				return
 			} else {
 				ctx = context.WithValue(ctx, "TokenClaims", claims)
@@ -144,6 +146,26 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 		fn(w, r.WithContext(ctx))
 	}
 }
+
+func (a *JWTAuth) CheckAndGetContent(token string, extraClaims interface{}, payload ...interface{}) (subject string,err error) {
+	// payload ignored
+	c, ok := CheckJWTToken(token,a.Key)
+	if !ok {
+		return "",errors.New("wrong JWT token")
+	}
+	claim,ok  := c.(*CustomClaims)
+	if !ok {
+		return "",errors.New("cannot get CustomClaims")
+	}
+
+	subject = claim.Subject
+
+	if extraClaims!=nil {
+		err = MapToStruct(claim.ExtraClaims.(map[string]interface{}), extraClaims)
+	}
+	return subject,err
+}
+
 
 func CheckJWTToken(token, key string) (jwt.Claims, bool) {
 
@@ -162,14 +184,21 @@ func CheckJWTToken(token, key string) (jwt.Claims, bool) {
 	return nil, false
 }
 
-func JobClaimFromContext(r *http.Request, val interface{}) error {
+func JobClaimFromContext(r *http.Request, customClaim **CustomClaims, val interface{}) error {
 	c := r.Context().Value("TokenClaims")
 
 	if c == nil {
 		return errors.New("Empty context")
 	}
 
-	claim := c.(*CustomClaims)
+	claim,ok  := c.(*CustomClaims)
+	if !ok {
+		return errors.New("cannot get CustomClaims")
+	}
+
+	if customClaim!=nil {
+		*customClaim = claim
+	}
 
 	return MapToStruct(claim.ExtraClaims.(map[string]interface{}), val)
 }
@@ -184,7 +213,7 @@ func NewHMACAuth(key string) *HMACAuth {
 }
 
 func (a *HMACAuth) Name() string {
-	return "Bearer"
+	return "HMAC-SHA-256"
 }
 
 
@@ -209,7 +238,11 @@ func (h HMACAuth) GenerateToken(val ...interface{}) (string, error) {
 	return sha, nil
 }
 
-func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
+func (a *HMACAuth)ProcessAuth(fn http.HandlerFunc, payload string) http.HandlerFunc {
+	return ProcessHMACAuth(fn,payload,a.Key)
+}
+
+func ProcessHMACAuth(fn http.HandlerFunc, payload, key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		authType, token, err := ExtractAuthInfo(r)
@@ -218,11 +251,9 @@ func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-	// todo extract beamline from request
-		value := "beamline"
 		if authType == "HMAC-SHA-256" {
-			if !CheckHMACToken(value, token, key) {
-				http.Error(w, "Internal authorization error - tocken does not match", http.StatusUnauthorized)
+			if !CheckHMACToken(payload, token, key) {
+				http.Error(w, "Internal authorization error - token does not match", http.StatusUnauthorized)
 				return
 			}
 		} else {
@@ -231,6 +262,23 @@ func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 		}
 		fn(w, r)
 	}
+}
+
+func (a *HMACAuth) CheckAndGetContent(token string, _ interface{}, payload ...interface{}) (string,error) {
+	if len(payload) != 1 {
+		return "",errors.New("wrong payload")
+	}
+	value, ok := payload[0].(string)
+	if !ok {
+		return "",errors.New("wrong payload")
+	}
+
+	ok = CheckHMACToken(token,value,a.Key)
+	if !ok {
+		return "",errors.New("wrong HMAC token")
+	}
+	return value,nil
+
 }
 
 func CheckHMACToken(value string, token, key string) bool {

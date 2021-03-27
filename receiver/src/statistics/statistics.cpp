@@ -1,7 +1,7 @@
 #include "statistics.h"
 #include "statistics_sender_influx_db.h"
 #include "statistics_sender_fluentd.h"
-
+#include "../receiver_config.h"
 #include <algorithm>
 
 using std::chrono::system_clock;
@@ -9,6 +9,9 @@ using std::chrono::system_clock;
 namespace asapo {
 
 void Statistics::SendIfNeeded(bool send_always) noexcept {
+    if (!GetReceiverConfig()->monitor_performance) {
+        return;
+    }
     if (send_always || GetTotalElapsedMs() > write_interval_) {
         std::lock_guard<std::mutex> lock{mutex_};
         Send();

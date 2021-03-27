@@ -6,7 +6,8 @@ trap Cleanup EXIT
 endpoint=127.0.0.1:8400
 path=.
 beamtime_id=asapo_test
-token="IEfwsWa0GXky2S3MkxJSUHJT1sI8DD5teRdjBUXVRxk="
+#asapo_test read token
+token=$ASAPO_TEST_RW_TOKEN
 
 
 Cleanup() {

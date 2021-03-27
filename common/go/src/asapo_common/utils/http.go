@@ -10,7 +10,8 @@ func ExtractRequest(r *http.Request, request interface{}) error {
 	return decoder.Decode(request)
 }
 
-func WriteServerError(w http.ResponseWriter, err error,code int) {
+func WriteServerError(w http.ResponseWriter, err error, code int) {
 	w.WriteHeader(code)
 	w.Write([]byte(err.Error()))
 }
+

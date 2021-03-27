@@ -47,10 +47,10 @@ var testsGetCommand = []struct {
 	{"next", expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/next","",""},
 	{"next", expectedStream, expectedGroupID, expectedStream + "/" +
 		expectedGroupID + "/next","&resend_nacks=true&delay_ms=10000&resend_attempts=3","10000_3"},
-	{"size", expectedStream, "", expectedStream  + "/size","","0"},
-	{"streams", "0", "", "0/streams","",""},
+	{"size", expectedStream, "", expectedStream  + "/size","",""},
+	{"size", expectedStream, "", expectedStream  + "/size","&incomplete=true","true"},
+	{"streams", "0", "", "0/streams","","_"},
 	{"lastack", expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/lastack","",""},
-
 }
 
 
@@ -58,7 +58,7 @@ func (suite *GetCommandsTestSuite) TestGetCommandsCallsCorrectRoutine() {
 	for _, test := range testsGetCommand {
 		suite.mock_db.On("ProcessRequest", database.Request{DbName: expectedDBName, DbCollectionName: test.stream, GroupId: test.groupid, Op: test.command, ExtraParam: test.externalParam}).Return([]byte("Hello"), nil)
 		logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request "+test.command)))
-		w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + test.reqString+correctTokenSuffix+test.queryParams)
+		w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + test.reqString+correctTokenSuffix+test.queryParams)
 		suite.Equal(http.StatusOK, w.Code, test.command+ " OK")
 		suite.Equal("Hello", string(w.Body.Bytes()), test.command+" sends data")
 	}

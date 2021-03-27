@@ -8,8 +8,7 @@ SET data_source=detector
 SET database_name=%beamtime_id%_%data_source%
 
 SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
-set token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
-
+set token_test_run=%BT_TEST_RUN_TOKEN%
 call start_services.bat
 
 for /l %%x in (1, 1, 5) do echo db.data_default.insert({"_id":%%x,"size":6,"name":"%%x","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
@@ -20,6 +19,8 @@ for /l %%x in (1, 1, 5) do echo db.data_stream1.insert({"_id":%%x,"size":6,"name
 
 for /l %%x in (1, 1, 5) do echo db.data_stream2.insert({"_id":%%x,"size":6,"name":"2%%x","timestamp":3000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
+echo db.data_stream1.insert({"_id":6,"size":0,"name":"asapo_finish_stream","timestamp":2000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"next_stream":"ns"}}) | %mongo_exe% %database_name%  || goto :error
+echo db.data_stream2.insert({"_id":6,"size":0,"name":"asapo_finish_stream","timestamp":3000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"next_stream":"asapo_no_next"}}) | %mongo_exe% %database_name%  || goto :error
 
 mkdir %source_path%
 

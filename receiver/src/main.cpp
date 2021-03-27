@@ -6,7 +6,7 @@
 #include "receiver_config.h"
 
 #include "receiver_data_server/receiver_data_server_logger.h"
-#include "asapo/common/version.h"
+#include "asapo/common/internal/version.h"
 
 #include "receiver_data_server/receiver_data_server.h"
 #include "receiver_data_server/net_server/rds_tcp_server.h"

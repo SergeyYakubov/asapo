@@ -4,7 +4,7 @@ source_path=dummy
 beamtime_id=test_run
 data_source=detector
 database_name=${beamtime_id}_${data_source}
-token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
+token_test_run=$BT_TEST_RUN_TOKEN
 group_id=bif31l2uiddd4r0q6b40
 set -e
 
@@ -15,12 +15,14 @@ Cleanup() {
     nomad stop nginx
     nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     nomad stop discovery
+    nomad stop authorizer
     nomad stop broker
 	echo "db.dropDatabase()" | mongo ${database_name}
 }
 
 nomad run nginx.nmd
 nomad run discovery.nmd
+nomad run authorizer.nmd
 nomad run broker.nmd
 
 for i in `seq 1 3`;

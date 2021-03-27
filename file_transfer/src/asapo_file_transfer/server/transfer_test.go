@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -34,10 +35,10 @@ func prepareToken(folder string) string{
 	auth := utils.NewJWTAuth("key")
 
 	var claims utils.CustomClaims
-	var extraClaim utils.FolderTokenTokenExtraClaim
+	var extraClaim structs.FolderTokenTokenExtraClaim
 	extraClaim.RootFolder = folder
 	claims.ExtraClaims = &extraClaim
-	claims.Duration = time.Duration(1) * time.Minute
+	claims.SetExpiration(time.Duration(1) * time.Minute)
 	token,_ := auth.GenerateToken(&claims)
 	return token
 }
@@ -71,7 +72,7 @@ func TestTransferFile(t *testing.T) {
 
 	for _, test := range transferFileTests {
 		request :=  makeRequest(fileTransferRequest{test.folder,test.fname})
-		w := doPostRequest("/transfer",request,test.token)
+		w := doPostRequest("/v0.1/transfer",request,test.token)
 		if test.status==http.StatusOK {
 			body, _ := ioutil.ReadAll(w.Body)
 			body_str:=string(body)
@@ -91,7 +92,7 @@ func TestTransferFileSize(t *testing.T) {
 
 	test:=transferFileTests[0]
 		request :=  makeRequest(fileTransferRequest{test.folder,test.fname})
-		w := doPostRequest("/transfer?sizeonly=true",request,test.token)
+		w := doPostRequest("/v0.1/transfer?sizeonly=true",request,test.token)
 		if test.status==http.StatusOK {
 			body, _ := ioutil.ReadAll(w.Body)
 			body_str:=string(body)
@@ -99,4 +100,12 @@ func TestTransferFileSize(t *testing.T) {
 			assert.Equal(t, "{\"file_size\":5}", body_str, test.message)
 		}
 		assert.Equal(t, test.status, w.Code, test.message)
+}
+
+
+func TestTransferWrongApiVersion(t *testing.T) {
+	request :=  makeRequest(fileTransferRequest{"folder","fname"})
+	token := prepareToken("folder")
+	w := doPostRequest("/v0.2/transfer?sizeonly=true",request,token)
+	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code, "wrong api version")
 }

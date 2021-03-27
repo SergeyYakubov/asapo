@@ -73,9 +73,8 @@ ProducerPtr CreateProducer(const Args& args) {
 }
 
 int main(int argc, char* argv[]) {
-    asapo::ExitAfterPrintVersionIfNeeded("GetNext consumer Example", argc, argv);
     Args args;
-    if (argc != 5) {
+    if (argc != 4) {
         std::cout << "Usage: " + std::string{argv[0]}
                   + " <server> <network_type> <beamtime_id> <token>"
                   <<

@@ -4,9 +4,8 @@ beamtime_id=test_run
 source_path=`pwd`/asap3/petra3/gpfs/p01/2019/data/$beamtime_id
 data_source=detector
 database_name=${beamtime_id}_${data_source}
-token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
+token_test_run=$BT_TEST_RUN_TOKEN
 set -e
-
 
 trap Cleanup EXIT
 
@@ -49,6 +48,10 @@ for i in `seq 1 5`;
 do
 	echo 'db.data_stream2.insert({"_id":'$i',"size":6,"name":"'2$i'","timestamp":3000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}})' | mongo ${database_name}
 done
+
+echo 'db.data_stream1.insert({"_id":'6',"size":0,"name":"asapo_finish_stream","timestamp":2000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"next_stream":"ns"}})' | mongo ${database_name}
+echo 'db.data_stream2.insert({"_id":'6',"size":0,"name":"asapo_finish_stream","timestamp":3000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"next_stream":"asapo_no_next"}})' | mongo ${database_name}
+
 
 sleep 1
 

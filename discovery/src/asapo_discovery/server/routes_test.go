@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_common/version"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"asapo_common/logger"
@@ -31,9 +32,9 @@ type GetServicesTestSuite struct {
 
 func (suite *GetServicesTestSuite) SetupTest() {
 	requestHandler = new(request_handler.StaticRequestHandler)
-	var s common.Settings= common.Settings{Receiver:common.ReceiverInfo{MaxConnections:10,StaticEndpoints:[]string{"ip1","ip2"}},
-	Broker:common.BrokerInfo{StaticEndpoint:"ip_broker"},Mongo:common.MongoInfo{StaticEndpoint:"ip_mongo"},
-		FileTransferService:common.FtsInfo{StaticEndpoint:"ip_fts"}}
+	var s common.Settings = common.Settings{Receiver: common.ReceiverInfo{MaxConnections: 10, StaticEndpoints: []string{"ip1", "ip2"}},
+		Broker: common.BrokerInfo{StaticEndpoint: "ip_broker"}, Mongo: common.MongoInfo{StaticEndpoint: "ip_mongo"},
+		FileTransferService: common.FtsInfo{StaticEndpoint: "ip_fts"}}
 
 	requestHandler.Init(s)
 	logger.SetMockLog()
@@ -58,26 +59,62 @@ func (suite *GetServicesTestSuite) TestWrongPath() {
 	suite.Equal(http.StatusNotFound, w.Code, "wrong path")
 }
 
+type requestTest struct {
+request string
+code int
+message string
+}
+
+var receiverTests = []requestTest {
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver",http.StatusBadRequest,"protocol missing"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver?protocol=v0.2",http.StatusUnsupportedMediaType,"wrong protocol"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver?protocol=v0.1",http.StatusOK,"ok"},
+}
+
 func (suite *GetServicesTestSuite) TestGetReceivers() {
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameReceiverService)))
+	for _,test:= range receiverTests {
+		if test.code == http.StatusOK {
+			logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("validating producer")))
+			logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameReceiverService)))
+		} else {
+			logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("validating producer")))
+		}
 
-	w := doRequest("/asapo-receiver")
+		w := doRequest(test.request)
 
-	suite.Equal(http.StatusOK, w.Code, "code ok")
-	suite.Equal(w.Body.String(), "{\"MaxConnections\":10,\"Uris\":[\"ip1\",\"ip2\"]}", "result")
-	assertExpectations(suite.T())
+		suite.Equal(test.code, w.Code, test.message)
+		if test.code == http.StatusOK {
+			suite.Equal(w.Body.String(), "{\"MaxConnections\":10,\"Uris\":[\"ip1\",\"ip2\"]}", "result")
+		}
+		assertExpectations(suite.T())
+	}
+
 }
 
-
+var brokerTests = []requestTest {
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker",http.StatusBadRequest,"protocol missing"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker?protocol=v0.2",http.StatusUnsupportedMediaType,"wrong protocol"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker?protocol=v0.1",http.StatusOK,"ok"},
+}
 func (suite *GetServicesTestSuite) TestGetBroker() {
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameBrokerService)))
+	for _,test:= range brokerTests {
+		if test.code == http.StatusOK {
+			logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("validating consumer")))
+			logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameBrokerService)))
+		} else {
+			logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("validating consumer")))
+		}
 
-	w := doRequest("/asapo-broker")
+		w := doRequest(test.request)
 
-	suite.Equal(http.StatusOK, w.Code, "code ok")
-	suite.Equal(w.Body.String(), "ip_broker", "result")
-	assertExpectations(suite.T())
+		suite.Equal(test.code, w.Code, test.message)
+		if test.code == http.StatusOK {
+			suite.Equal(w.Body.String(), "ip_broker", "result")
+		}
+		assertExpectations(suite.T())
+	}
 }
+
 
 func (suite *GetServicesTestSuite) TestGetMongo() {
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameMongoService)))
@@ -91,10 +128,23 @@ func (suite *GetServicesTestSuite) TestGetMongo() {
 
 func (suite *GetServicesTestSuite) TestGetFts() {
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameFtsService)))
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("validating")))
 
-	w := doRequest("/asapo-file-transfer")
+	w := doRequest("/" + version.GetDiscoveryApiVersion()+"/asapo-file-transfer?protocol=v0.1")
 
 	suite.Equal(http.StatusOK, w.Code, "code ok")
 	suite.Equal(w.Body.String(), "ip_fts", "result")
+	assertExpectations(suite.T())
+}
+
+func (suite *GetServicesTestSuite) TestGetVersions() {
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get version")))
+
+	w := doRequest("/" + version.GetDiscoveryApiVersion() + "/version")
+
+	suite.Equal(http.StatusOK, w.Code, "code ok")
+	// we dont really check what it returns, just that route is ok
+	suite.Contains(w.Body.String(), version.GetVersion(), "core version")
+	suite.Contains(w.Body.String(), "supportedProtocols", "protocols")
 	assertExpectations(suite.T())
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"asapo_broker/database"
 	"asapo_common/logger"
+	"asapo_common/structs"
 	"asapo_common/utils"
 	"errors"
 	"github.com/stretchr/testify/assert"
@@ -23,17 +24,31 @@ const wrongGroupID = "_bid2a5auidddp1vl71"
 const expectedSource = "datasource"
 const expectedStream = "stream"
 
+type MockAuthServer struct {
+}
+
+func (a * MockAuthServer) AuthorizeToken(tokenJWT string) (token Token, err error) {
+	if tokenJWT =="ok" {
+		return Token{
+			structs.IntrospectTokenResponse{
+			Sub:        "bt_"+expectedBeamtimeId,
+			AccessTypes: []string{"read"},
+			},
+		},nil
+	} else {
+		return Token{},errors.New("wrong JWT token")
+	}
+}
+
+
 func prepareTestAuth() {
 	expectedBeamtimeId = "beamtime_id"
 	expectedDBName = expectedBeamtimeId + "_" + expectedSource
-	auth = utils.NewHMACAuth("secret")
-	token, err := auth.GenerateToken(&expectedBeamtimeId)
-	if err != nil {
-		panic(err)
-	}
-	correctTokenSuffix = "?token=" + token
+
+	auth = &MockAuthServer{}
+	correctTokenSuffix = "?token=ok"
 	wrongTokenSuffix = "?blablabla=aa"
-	suffixWithWrongToken = "?token=blabla"
+	suffixWithWrongToken = "?token=wrong"
 }
 
 type request struct {
@@ -63,16 +78,20 @@ func doRequest(path string, extra_params ...string) *httptest.ResponseRecorder {
 	if len(extra_params) > 1 {
 		body = strings.NewReader(extra_params[1])
 	}
+	ver := "/v0.1"
+	if len(extra_params) > 2 {
+		ver = extra_params[2]
+	}
 
 	mux := utils.NewRouter(listRoutes)
-	req, _ := http.NewRequest(m, path, body)
+	req, _ := http.NewRequest(m, ver+path, body)
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, req)
 	return w
 }
 
 func TestProcessRequestWithoutDatabaseName(t *testing.T) {
-	w := doRequest("/database/next")
+	w := doRequest("/beamtime/next")
 	assert.Equal(t, http.StatusNotFound, w.Code, "no database name")
 }
 
@@ -107,9 +126,9 @@ func TestProcessRequestTestSuite(t *testing.T) {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong token")))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong JWT token")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
 
 	suite.Equal(http.StatusUnauthorized, w.Code, "wrong token")
 }
@@ -117,7 +136,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithNoToken() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("cannot extract")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + wrongTokenSuffix)
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + wrongTokenSuffix)
 
 	suite.Equal(http.StatusUnauthorized, w.Code, "no token")
 }
@@ -131,7 +150,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() 
 
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 
 	suite.Equal(http.StatusConflict, w.Code, "wrong database name")
 }
@@ -147,7 +166,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
 	ExpectReconnect(suite.mock_db)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("reconnected")))
 
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	time.Sleep(time.Second)
 	suite.Equal(http.StatusNotFound, w.Code, "data not found")
 }
@@ -162,7 +181,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("reconnected")))
 
 	ExpectReconnect(suite.mock_db)
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	time.Sleep(time.Second)
 
 	suite.Equal(http.StatusNotFound, w.Code, "internal error")
@@ -176,13 +195,13 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
 
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedDBName)))
 
-	doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
+	doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(1, statistics.GetCounter(), "ProcessRequest increases counter")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWrongGroupID() {
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong groupid")))
-	w := doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + wrongGroupID + "/next" + correctTokenSuffix)
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + wrongGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(http.StatusBadRequest, w.Code, "wrong group id")
 }
 
@@ -193,5 +212,11 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestAddsDataset() {
 
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedDBName)))
 
-	doRequest("/database/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix + "&dataset=true")
+	doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix + "&dataset=true")
+}
+
+
+func (suite *ProcessRequestTestSuite) TestProcessRequestErrorOnWrongProtocol() {
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix,"GET","","/v0.2")
+	suite.Equal(http.StatusUnsupportedMediaType, w.Code, "wrong protocol")
 }

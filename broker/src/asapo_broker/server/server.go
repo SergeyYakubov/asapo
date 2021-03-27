@@ -3,39 +3,39 @@ package server
 import (
 	"asapo_broker/database"
 	log "asapo_common/logger"
-	"asapo_common/utils"
 	"errors"
 	"io/ioutil"
 	"net/http"
 )
 
-const  kDefaultresendInterval = 10
-const  kDefaultStreamCacheUpdateIntervalMs = 100
+const kDefaultresendInterval = 10
+const kDefaultStreamCacheUpdateIntervalMs = 100
 
 var db database.Agent
 
 type serverSettings struct {
-	DiscoveryServer     string
-	DatabaseServer      string
-	PerformanceDbServer string
-	PerformanceDbName   string
-	SecretFile          string
-	Port                int
-	LogLevel            string
-	discoveredDbAddress string
-	CheckResendInterval *int
+	DiscoveryServer             string
+	DatabaseServer              string
+	PerformanceDbServer         string
+	PerformanceDbName           string
+	MonitorPerformance 			bool
+	AuthorizationServer         string
+	Port                        int
+	LogLevel                    string
+	discoveredDbAddress         string
+	CheckResendInterval         *int
 	StreamCacheUpdateIntervalMs *int
 }
 
 func (s *serverSettings) GetResendInterval() int {
-	if s.CheckResendInterval==nil {
+	if s.CheckResendInterval == nil {
 		return kDefaultresendInterval
 	}
 	return *s.CheckResendInterval
 }
 
 func (s *serverSettings) GetStreamCacheUpdateInterval() int {
-	if s.StreamCacheUpdateIntervalMs==nil {
+	if s.StreamCacheUpdateIntervalMs == nil {
 		return kDefaultStreamCacheUpdateIntervalMs
 	}
 	return *s.StreamCacheUpdateIntervalMs
@@ -51,7 +51,7 @@ func (s *serverSettings) GetDatabaseServer() string {
 
 var settings serverSettings
 var statistics serverStatistics
-var auth utils.Auth
+var auth Authorizer
 
 type discoveryAPI struct {
 	Client  *http.Client
@@ -91,7 +91,7 @@ func InitDB(dbAgent database.Agent) (err error) {
 		log.Debug("Got mongodb server: " + settings.discoveredDbAddress)
 	}
 
-	db.SetSettings(database.DBSettings{ReadFromInprocessPeriod: settings.GetResendInterval(),UpdateStreamCachePeriodMs: settings.GetStreamCacheUpdateInterval()})
+	db.SetSettings(database.DBSettings{ReadFromInprocessPeriod: settings.GetResendInterval(), UpdateStreamCachePeriodMs: settings.GetStreamCacheUpdateInterval()})
 
 	return db.Connect(settings.GetDatabaseServer())
 }

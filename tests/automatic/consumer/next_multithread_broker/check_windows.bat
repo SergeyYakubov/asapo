@@ -1,6 +1,6 @@
 SET database_name=test_run_detector
 SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
-set token_test_run=K38Mqc90iRv8fC7prcFHd994mF_wfUiJnWBfIjIzieo=
+set token_test_run=%BT_TEST_RUN_TOKEN%
 
 call start_services.bat
 

@@ -36,10 +36,20 @@ def callback(payload, err):
         print("successfuly sent: ", payload)
     lock.release()
 
+def assert_version(version):
+    print("asserting version ",version)
+    ok = version['supported'] and version['client'] and version['server']
+    if not ok:
+        sys.exit(1)
 
 producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', data_source, token, nthreads, 60000)
 
 producer.set_log_level("debug")
+
+
+version = producer.get_version_info()
+assert_version(version)
+
 
 # send single file
 producer.send_file(1, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file1",
@@ -128,6 +138,7 @@ producer.send_file(1, local_path="./file1", exposed_path="processed/" + data_sou
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")
+assert_eq(n, 0, "requests in queue")
 
 # send to another data to stream stream
 producer.send(2, "processed/" + data_source + "/" + "file10", None,
@@ -137,9 +148,19 @@ producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")
 
+# pool limits (checking volume only)
+data = np.arange(1000000, dtype=np.float64)
+producer.set_requests_queue_limits(0,1)
+try:
+    producer.send(11, "processed/bla", data)
+except asapo_producer.AsapoRequestsPoolIsFull as e:
+    print(e)
+else:
+    print("should be AsapoRequestsPoolIsFull error ")
+    sys.exit(1)
+
+
 #stream infos
-
-
 info = producer.stream_info()
 assert_eq(info['lastId'], 10, "stream_info last id")
 assert_eq(info['name'], "default", "stream_info name")

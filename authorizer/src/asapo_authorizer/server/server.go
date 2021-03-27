@@ -1,8 +1,8 @@
 package server
 
 import (
+	"asapo_authorizer/authorization"
 	"asapo_authorizer/ldap_client"
-	"asapo_common/utils"
 )
 
 type  beamtimeMeta struct {
@@ -12,17 +12,19 @@ type  beamtimeMeta struct {
 	OfflinePath string `json:"core-path"`
 	OnlinePath string `json:"beamline-path"`
 	Type string `json:"source-type"`
+	AccessTypes []string `json:"access-types"`
 }
 
 type serverSettings struct {
-	Port                    int
-	LogLevel                string
-	RootBeamtimesFolder     string
+	Port                   int
+	LogLevel               string
+	RootBeamtimesFolder    string
 	CurrentBeamlinesFolder string
-	AlwaysAllowedBeamtimes  []beamtimeMeta
-	SecretFile              string
-	TokenDurationMin    	int
-	Ldap struct {
+	AlwaysAllowedBeamtimes []beamtimeMeta
+	UserSecretFile         string
+	AdminSecretFile        string
+	FolderTokenDurationMin int
+	Ldap                   struct {
 		Uri string
 		BaseDn string
 		FilterTemplate string
@@ -31,6 +33,5 @@ type serverSettings struct {
 
 var settings serverSettings
 var ldapClient ldap_client.LdapClient
-var authHMAC utils.Auth
-var authJWT utils.Auth
+var Auth *authorization.Auth
 

@@ -2,7 +2,9 @@ package server
 
 import (
 	log "asapo_common/logger"
+	"asapo_common/structs"
 	"asapo_common/utils"
+	"asapo_common/version"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -24,8 +26,8 @@ func Exists(name string) bool {
 
 
 func checkClaim(r *http.Request,request* fileTransferRequest) (int,error) {
-	var extraClaim utils.FolderTokenTokenExtraClaim
-	if err := utils.JobClaimFromContext(r, &extraClaim); err != nil {
+	var extraClaim structs.FolderTokenTokenExtraClaim
+	if err := utils.JobClaimFromContext(r, nil, &extraClaim); err != nil {
 		return http.StatusInternalServerError,err
 	}
 	if extraClaim.RootFolder!=request.Folder {
@@ -87,7 +89,17 @@ func serveFileSize(w http.ResponseWriter, r *http.Request, fullName string) {
 	w.Write(b)
 }
 
+
+func checkFtsApiVersion(w http.ResponseWriter, r *http.Request) bool {
+	_, ok := utils.PrecheckApiVersion(w, r, version.GetFtsApiVersion())
+	return ok
+}
+
 func routeFileTransfer(w http.ResponseWriter, r *http.Request) {
+	if ok := checkFtsApiVersion(w, r); !ok {
+		return
+	}
+
 	fullName, status,err := checkRequest(r);
 	if err != nil {
 		utils.WriteServerError(w,err,status)

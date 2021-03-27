@@ -2,6 +2,7 @@
 #define ASAPO_PRODUCER_ERROR_H
 
 #include "asapo/common/error.h"
+#include "asapo/common/data_structs.h"
 
 namespace asapo {
 
@@ -12,10 +13,17 @@ enum class ProducerErrorType {
     kWrongInput,
     kServerWarning,
     kReAuthorizationNeeded,
+    kUnsupportedClient,
     kTimeout
 };
 
 using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
+
+class OriginalData : public CustomErrorData {
+ public:
+  MessageData data;
+};
+
 
 namespace ProducerErrorTemplates {
 
@@ -46,6 +54,12 @@ auto const kTimeout = ProducerErrorTemplate {
 auto const kReAuthorizationNeeded = ProducerErrorTemplate {
     "reauthorization needed", ProducerErrorType::kReAuthorizationNeeded
 };
+
+auto const kUnsupportedClient = ProducerErrorTemplate {
+    "cannot connect to asapo", ProducerErrorType::kUnsupportedClient
+};
+
+
 
 
 

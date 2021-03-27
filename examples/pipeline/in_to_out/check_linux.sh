@@ -10,15 +10,14 @@ indatabase_name=${beamtime_id}_${data_source_in}
 outdatabase_name=${beamtime_id}_${data_source_out}
 outdatabase_name2=${beamtime_id}_${data_source_out2}
 
-token=IEfwsWa0GXky2S3MkxJSUHJT1sI8DD5teRdjBUXVRxk=
+#asapo_test read token
+token=$ASAPO_TEST_RW_TOKEN
 
 beamline=test
 receiver_root_folder=/tmp/asapo/receiver/files
 facility=test_facility
 year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
-
-
 
 set -e
 

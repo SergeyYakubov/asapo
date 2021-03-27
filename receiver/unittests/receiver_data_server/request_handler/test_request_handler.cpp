@@ -122,6 +122,18 @@ TEST_F(RequestHandlerTests, ProcessRequest_WrongOpCode) {
     ASSERT_THAT(success, Eq(true));
 }
 
+TEST_F(RequestHandlerTests, ProcessRequest_WrongClientVersion) {
+    strcpy(request.header.api_version,"v0.2");
+    MockSendResponse(asapo::kNetErrorNotSupported, false);
+    EXPECT_CALL(mock_net, HandleAfterError_t(expected_source_id));
+
+    EXPECT_CALL(mock_logger, Error(HasSubstr("unsupported client")));
+
+    auto success = handler.ProcessRequestUnlocked(&request, &retry);
+
+    ASSERT_THAT(success, Eq(true));
+}
+
 TEST_F(RequestHandlerTests, ProcessRequest_ReturnsNoDataWhenCacheNotUsed) {
     MockSendResponse(asapo::kNetErrorNoData, true);
 

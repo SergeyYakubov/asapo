@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 )
@@ -19,10 +18,6 @@ func (cmd *command) description(d string) bool {
 		return true
 	}
 	return false
-}
-
-func (cmd *command) errBadOptions(err string) error {
-	return errors.New("asapo " + cmd.name + ": " + err + "\nType 'asapo " + cmd.name + " --help'")
 }
 
 // createDefaultFlagset creates new flagset and adds default help behaviour.

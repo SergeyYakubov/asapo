@@ -35,7 +35,7 @@ job "asapo-receivers" {
 	    userns_mode = "host"
 	    privileged = true
         image = "yakser/asapo-receiver${image_suffix}"
-	    force_pull = true
+	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/receiver/config.json",
                    "${offline_dir}:${offline_dir}",
                    "${online_dir}:${online_dir}"]
@@ -84,6 +84,7 @@ job "asapo-receivers" {
         receiver_dataserver_nthreads = "${receiver_dataserver_nthreads}"
         receiver_receive_to_disk_threshold = "${receiver_receive_to_disk_threshold}"
         receiver_network_modes = "${receiver_network_modes}"
+        perf_monitor = "${perf_monitor}"
       }
 
       template {

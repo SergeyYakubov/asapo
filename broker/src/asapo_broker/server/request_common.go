@@ -2,16 +2,23 @@ package server
 
 import (
 	"asapo_common/logger"
+	"asapo_common/utils"
 	"errors"
 	"net/http"
 	"strconv"
 )
 
-func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, err string) {
+func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, err error) {
 	log_str := "processing " + requestName + " request in " + db_name + " at " + settings.GetDatabaseServer()
-	logger.Error(log_str + " - " + err)
-	w.WriteHeader(http.StatusUnauthorized)
-	w.Write([]byte(err))
+	logger.Error(log_str + " - " + err.Error())
+
+	httpError, ok := err.(*HttpError)
+	if ok && httpError.statusCode != http.StatusUnauthorized {
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+	w.Write([]byte(err.Error()))
 }
 
 func valueTrue(r *http.Request, key string) bool {
@@ -39,22 +46,40 @@ func valueInt(r *http.Request, key string) int {
 	return i
 }
 
-func datasetRequested(r *http.Request) (bool,int) {
-	return valueTrue(r, "dataset"),valueInt(r,"minsize")
+func datasetRequested(r *http.Request) (bool, int) {
+	return valueTrue(r, "dataset"), valueInt(r, "minsize")
 }
 
-func testAuth(r *http.Request, beamtime_id string) error {
-	token_got := r.URL.Query().Get("token")
+func authorize(r *http.Request, beamtime_id string) error {
+	tokenJWT := r.URL.Query().Get("token")
 
-	if len(token_got) == 0 {
+	if len(tokenJWT) == 0 {
 		return errors.New("cannot extract token from request")
 	}
 
-	token_expect, _ := auth.GenerateToken(&beamtime_id)
-
-	if token_got != token_expect {
-		return errors.New("wrong token")
+	token, err := auth.AuthorizeToken(tokenJWT)
+	if err != nil {
+		return err
 	}
 
+	err = checkSubject(token.Sub, beamtime_id)
+	if err != nil {
+		return err
+	}
+
+	return checkAccessType(token.AccessTypes)
+}
+
+func checkSubject(subject string, beamtime_id string) error {
+	if subject != utils.SubjectFromBeamtime(beamtime_id) {
+		return errors.New("wrong token subject")
+	}
+	return nil
+}
+
+func checkAccessType(accessTypes []string) error {
+	if !utils.StringInSlice("read",accessTypes) {
+		return errors.New("wrong token access type")
+	}
 	return nil
 }
