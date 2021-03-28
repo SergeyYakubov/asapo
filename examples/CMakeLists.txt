@@ -6,4 +6,8 @@ endif()
 
 add_subdirectory(producer)
 
+if(BUILD_ASAPO_SITE)
+    add_subdirectory(for_site)
+endif()
+
 
