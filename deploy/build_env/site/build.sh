@@ -5,9 +5,11 @@ cmake \
     -DCMAKE_BUILD_TYPE="Release" \
     -DBUILD_CLIENTS_ONLY=ON \
     -DBUILD_PYTHON=OFF   \
-    -BUILD_ASAPO_SITE=ON   \
+    -DBUILD_ASAPO_SITE=ON   \
     -DLIBCURL_DIR=/curl \
+    -DPython_EXECUTABLE="noop" \
     ..
+export HOME="/asapo/build"
 cd docs/site
 npm install
 make site
