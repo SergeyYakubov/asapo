@@ -63,7 +63,7 @@ option(INSTALL_EXAMPLES "Install examples" OFF)
 
 option(BUILD_CPP_DOCS "Build the C++ documentaion with doxygen" OFF)
 option(BUILD_PYTHON_DOCS "Build the Python documentaion with sphinx" OFF)
-option(BUILD_ASAPO_SITE "Build the asapo web site" ON)
+option(BUILD_ASAPO_SITE "Build the asapo web site" OFF)
 
 
 option(ENABLE_LIBFABRIC "Enables LibFabric support for RDMA transfers" OFF)
