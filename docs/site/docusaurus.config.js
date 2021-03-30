@@ -14,10 +14,10 @@ module.exports = {
    },
   themeConfig: {
     navbar: {
-      title: 'ASAPO',
       logo: {
         alt: 'ASAPO Logo',
         src: 'img/logo.svg',
+        srcDark: "img/logo_white.svg"
       },
       items: [
         {
@@ -27,11 +27,6 @@ module.exports = {
           position: 'left',
         },
         {to: 'blog', label: 'Blog', position: 'left'},
-        {
-          href: 'https://stash.desy.de/projects/ASAPO/repos/asapo/browse?at=@ASAPO_VERSION@/',
-          label: 'BitBucket',
-          position: 'right',
-        },
         {
                   label: 'API',
                   position: 'left', // or 'right'
@@ -46,6 +41,12 @@ module.exports = {
                     },
                   ],
                 },
+        {
+          href: 'https://stash.desy.de/projects/ASAPO/repos/asapo/browse?at=@ASAPO_VERSION@/',
+          label: 'BitBucket',
+          title: 'BitBucket',
+          position: 'right',
+        },
       ],
     },
     footer: {
