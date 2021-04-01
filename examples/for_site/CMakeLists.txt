@@ -1,1 +1,1 @@
-configure_files(${CMAKE_CURRENT_SOURCE_DIR}/getting_started ${PROJECT_BINARY_DIR}/docs/site/static/examples/getting_started)
+configure_files(${CMAKE_CURRENT_SOURCE_DIR}/getting_started ${CMAKE_CURRENT_BINARY_DIR}/getting_started)

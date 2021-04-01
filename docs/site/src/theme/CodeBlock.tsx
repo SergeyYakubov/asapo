@@ -1,12 +1,7 @@
-import { URL } from 'url'
-import React, { useReducer } from 'react'
+import React from 'react'
 import InitCodeBlock from '@theme-init/CodeBlock'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import type { ReferenceCodeBlockProps, GitHubReference, DispatchMessage } from './types'
-import {DispatchTypes} from "./types";
-import useBaseUrl from '@docusaurus/useBaseUrl';
 
-const initialFetchResult = 'loading...';
 
 const noteStyle: React.CSSProperties = {
     textAlign: 'right',
@@ -18,7 +13,7 @@ export interface State {
     isCancelled: boolean
 }
 
-async function fetchCode (url: string,snippetTag:string, state: State,setFetchResultState: React.Dispatch<React.SetStateAction<string>>) {
+async function fetchCode(url: string, snippetTag: string, state: State, setFetchResultState: React.Dispatch<React.SetStateAction<string>>) {
     let res: Response
     try {
         if (!state.isCancelled) {
@@ -40,8 +35,8 @@ async function fetchCode (url: string,snippetTag:string, state: State,setFetchRe
     }
 
     let body = (await res.text()).split('\n')
-    const fromLine = body.indexOf(snippetTag+" start") + 1  || 0;
-    const toLine = body.indexOf(snippetTag+ " end",fromLine) -1 || undefined;
+    const fromLine = body.indexOf(snippetTag + " start") + 1 || 0;
+    const toLine = body.indexOf(snippetTag + " end", fromLine) - 1 || undefined;
     body = body.slice(fromLine, (toLine || fromLine) + 1)
 
     const preceedingSpace = body.reduce((prev: number, line: string) => {
@@ -60,8 +55,8 @@ async function fetchCode (url: string,snippetTag:string, state: State,setFetchRe
     setFetchResultState(body.map((line) => line.slice(preceedingSpace)).join('\n'));
 }
 
-function getVal(name: string,props: any) {
-    const codeRegex = new RegExp("(?:"+name+"=\")(.*?)(\")")
+function getVal(name: string, props: any) {
+    const codeRegex = new RegExp("(?:" + name + "=\")(.*?)(\")")
 
     let val = undefined
     if (props.metastring && codeRegex.test(props.metastring)) {
@@ -71,46 +66,41 @@ function getVal(name: string,props: any) {
 }
 
 function ReferenceCode(props: any) {
+    const codeBlockContent = getVal("content", props)
 
-    const [fetchResult, setFetchResultState] = React.useState(initialFetchResult);
-
-    const codeBlockLink = getVal("link",props)
-    const localLink = useBaseUrl("examples/"+codeBlockLink)
-    const {siteConfig} = useDocusaurusContext();
-    const version  = siteConfig.customFields.version;
-    const urlLink = "https://stash.desy.de/projects/ASAPO/repos/asapo/browse/examples/for_site/"+codeBlockLink+"?at="+version
-    if (!codeBlockLink) {
+    if (!codeBlockContent) {
         return (
-                <InitCodeBlock {...props}/>
+            <InitCodeBlock {...props}/>
         );
     }
-    const snippetTag = getVal("snippetTag",props)
+    const {siteConfig} = useDocusaurusContext();
+    const version = siteConfig.customFields.version;
+    const urlLink = "https://stash.desy.de/projects/ASAPO/repos/asapo/browse/examples/for_site/" + codeBlockContent + "?at=" + version
 
-    React.useEffect(() => {
-        let isCancelled = {isCancelled:false};
-        fetchCode(localLink,snippetTag,isCancelled,setFetchResultState)
-        return () => {
-            isCancelled.isCancelled = true;
-        };
-    }, []);
+    const snippetTag = getVal("snippetTag", props)
+    if (codeBlockContent) {
+        const content = require('../../../../examples/for_site/'+codeBlockContent);
+        let body = content.default.split('\n')
+        const fromLine = body.indexOf(snippetTag + " start") + 1 || 0;
+        const toLine = body.indexOf(snippetTag + " end", fromLine) - 1 || undefined;
+        body = body.slice(fromLine, (toLine || fromLine) + 1).join('\n')
 
+        const customProps = {
+            ...props,
+            children: body,
+        }
 
-    const customProps = {
-        ...props,
-        children: fetchResult
+        return (
+            <div>
+                <InitCodeBlock {...customProps}/>
+                <div style={noteStyle}>See full example on <a href={urlLink} target="_blank">BitBucket</a></div>
+            </div>
+        );
     }
-
-    return (
-        <div>
-            <InitCodeBlock {...customProps}/>
-            <div style={noteStyle}>See full example on <a href={urlLink} target="_blank">BitBucket</a></div>
-        </div>
-    );
 }
-
 
 export default function CodeBlock(props) {
     return (
-            <ReferenceCode {...props} />
+        <ReferenceCode {...props} />
     );
 }

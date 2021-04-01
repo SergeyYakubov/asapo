@@ -1,4 +1,8 @@
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
+
+const path = require('path');
+
+
 module.exports = {
   title: 'ASAP::O',
   tagline: 'High performance distributed streaming platform',
@@ -12,6 +16,7 @@ module.exports = {
    customFields: {
      version: '@ASAPO_VERSION@',
    },
+  plugins: [path.resolve(__dirname, 'plugins/webpackconf/src/index.js')],
   themeConfig: {
     navbar: {
       logo: {
