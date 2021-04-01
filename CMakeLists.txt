@@ -137,7 +137,7 @@ if(BUILD_INTEGRATION_TESTS)
     add_subdirectory(tests)
 endif()
 
-if(BUILD_EXAMPLES OR INSTALL_EXAMPLES)
+if(BUILD_EXAMPLES OR INSTALL_EXAMPLES OR BUILD_ASAPO_SITE)
     add_subdirectory(examples)
 endif()
 

@@ -2,6 +2,7 @@ import React from 'react'
 import InitCodeBlock from '@theme-init/CodeBlock'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
+const requireContext = require.context('../../../../examples/for_site/', true, /\.(sh|py|cpp)$/);
 
 const noteStyle: React.CSSProperties = {
     textAlign: 'right',
@@ -79,8 +80,8 @@ function ReferenceCode(props: any) {
 
     const snippetTag = getVal("snippetTag", props)
     if (codeBlockContent) {
-        const content = require('../../../../examples/for_site/'+codeBlockContent);
-        let body = content.default.split('\n')
+        const res = requireContext('./'+codeBlockContent)
+        let body = res.default.split('\n')
         const fromLine = body.indexOf(snippetTag + " start") + 1 || 0;
         const toLine = body.indexOf(snippetTag + " end", fromLine) - 1 || undefined;
         body = body.slice(fromLine, (toLine || fromLine) + 1).join('\n')

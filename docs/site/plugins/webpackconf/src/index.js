@@ -18,10 +18,6 @@ module.exports = function (context, options) {
               test: /\.py$/i,
               use: 'raw-loader',
             },
-            {
-              test: /\.txt$/i,
-              use: 'raw-loader',
-            },
           ],
         },
       };
