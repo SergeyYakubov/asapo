@@ -46,3 +46,11 @@
 .navbar .navbar__link[href*=stash]:before {
   background-image: url('/static/img/bitbucket.svg');
 }
+
+details {
+  margin-bottom: 20px;
+}
+
+.green-text {
+  color: #32CD32;
+}

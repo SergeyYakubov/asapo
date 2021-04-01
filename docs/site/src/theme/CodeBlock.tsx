@@ -10,7 +10,8 @@ const initialFetchResult = 'loading...';
 
 const noteStyle: React.CSSProperties = {
     textAlign: 'right',
-    fontSize: '.8em'
+    fontSize: '.8em',
+    marginTop: '-20px'
 }
 
 export interface State {
@@ -39,7 +40,7 @@ async function fetchCode (url: string,snippetTag:string, state: State,setFetchRe
     }
 
     let body = (await res.text()).split('\n')
-    const fromLine = body.indexOf(snippetTag+" start") + 1  || 1;
+    const fromLine = body.indexOf(snippetTag+" start") + 1  || 0;
     const toLine = body.indexOf(snippetTag+ " end",fromLine) -1 || undefined;
     body = body.slice(fromLine, (toLine || fromLine) + 1)
 

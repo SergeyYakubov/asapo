@@ -2,7 +2,7 @@
 module.exports = {
   title: 'ASAP::O',
   tagline: 'High performance distributed streaming platform',
-  url: 'https://asapo.desy.de',
+  url: 'http://asapo.desy.de',
   baseUrl: '/',
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
@@ -33,11 +33,11 @@ module.exports = {
                   items: [
                     {
                       label: 'C++',
-                      href: 'http://os-46-asapo-docs.desy.de/cpp/',
+                      href: 'http://asapo.desy.de/cpp/',
                     },
                     {
                       label: 'Python',
-                      href: 'http://os-46-asapo-docs.desy.de/python/',
+                      href: 'http://asapo.desy.de/python/',
                     },
                   ],
                 },
