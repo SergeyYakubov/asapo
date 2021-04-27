@@ -11,11 +11,15 @@ objectClass :top
 objectClass :nisNetgroup
 cn:a3p00-hosts
 description: Netgroup for nodes on PETRA III Beamline P00
+nisNetgroupTriple: (blabla,-,)
 nisNetgroupTriple: (localhost,-,)
+nisNetgroupTriple: (blabla2,-,)
 
 dn: cn=a3p07-hosts,ou=netgroup,ou=rgy,o=desy,c=de
 objectClass :top
 objectClass :nisNetgroup
 cn:a3p07-hosts
 description: Netgroup for nodes on PETRA III Beamline P07
+nisNetgroupTriple: (blabla,-,)
 nisNetgroupTriple: (localhost,-,)
+nisNetgroupTriple: (blabla2,-,)

@@ -37,7 +37,7 @@ mkdir -p ${receiver_folder}
 
 echo test > file1
 
-sleep 1
+sleep 10
 
 $1 $3 $data_source $beamtime_id  "127.0.0.1:8400" &> out || cat out
 cat out

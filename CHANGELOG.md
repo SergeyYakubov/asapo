@@ -1,3 +1,9 @@
+## 21.03.1
+
+BUG FIXES
+* fix LDAP authorization for raw data type Producers
+
+
 ## 21.03.0
 
  IMPROVEMENTS
