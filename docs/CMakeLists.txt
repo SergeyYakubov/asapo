@@ -6,3 +6,8 @@ if(BUILD_PYTHON_DOCS)
     add_subdirectory (sphinx)
 endif()
 
+
+if(BUILD_ASAPO_SITE)
+    add_subdirectory (site)
+endif()
+
