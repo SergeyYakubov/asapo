@@ -1,9 +1,9 @@
 {
   "Port": {{ .Values.ownServices.authorizer.port }},
   "LogLevel":"debug",
-  "AlwaysAllowedBeamtimes":[{"beamtimeId":"asapo_test","beamline":"test","core-path":"{{ .Values.common.offlineDir }}/test_facility/gpfs/test/2019/data/asapo_test"},
-  {"beamtimeId":"asapo_test1","beamline":"test1","core-path":"{{ .Values.common.offlineDir }}/test_facility/gpfs/test1/2019/data/asapo_test1"},
-  {"beamtimeId":"asapo_test2","beamline":"test2","core-path":"{{ .Values.common.offlineDir }}/test_facility/gpfs/test2/2019/data/asapo_test2"}],
+  "AlwaysAllowedBeamtimes":[{"beamtimeId":"asapo_test","beamline":"test","corePath":"{{ .Values.common.offlineDir }}/test_facility/gpfs/test/2019/data/asapo_test"},
+  {"beamtimeId":"asapo_test1","beamline":"test1","corePath":"{{ .Values.common.offlineDir }}/test_facility/gpfs/test1/2019/data/asapo_test1"},
+  {"beamtimeId":"asapo_test2","beamline":"test2","corePath":"{{ .Values.common.offlineDir }}/test_facility/gpfs/test2/2019/data/asapo_test2"}],
   "RootBeamtimesFolder":"{{ .Values.common.offlineDir }}",
   "CurrentBeamlinesFolder":"{{ .Values.common.onlineDir }}",
   "UserSecretFile":"/etc/authorizer/auth_secret.key",

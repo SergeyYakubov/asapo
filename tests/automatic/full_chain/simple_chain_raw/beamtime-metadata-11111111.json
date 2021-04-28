@@ -10,7 +10,7 @@
   "beamline_alias": "P07",
   "beamtimeId": "11111111",
   "contact": "None",
-  "core-path": "/asap3/petra3/gpfs/p07/2020/data/11111111",
+  "corePath": "/asap3/petra3/gpfs/p07/2020/data/11111111",
   "event-end": "2020-03-03 09:00:00",
   "event-start": "2020-03-02 09:00:00",
   "facility": "PETRA III",

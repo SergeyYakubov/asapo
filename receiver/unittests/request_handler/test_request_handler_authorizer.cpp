@@ -116,15 +116,13 @@ class AuthorizerHandlerTests : public Test {
                       Return("{\"beamtimeId\":\"" + expected_beamtime_id +
                              "\",\"dataSource\":" + "\"" + expected_data_source +
                              "\",\"beamline-path\":" + "\"" + expected_beamline_path +
-                             "\",\"core-path\":" + "\"" + expected_core_path +
+                             "\",\"corePath\":" + "\"" + expected_core_path +
                              "\",\"source-type\":" + "\"" + expected_source_type_str +
                              "\",\"beamline\":" + "\"" + expected_beamline +
                              "\",\"access-types\":" + expected_access_type_str + "}")
                      ));
             if (code != HttpCode::OK) {
                 EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
-                                                     HasSubstr("return code"),
-                                                     HasSubstr(std::to_string(int(code))),
                                                      HasSubstr(expected_source_type_str),
                                                      HasSubstr(expected_beamtime_id),
                                                      HasSubstr(expected_data_source),
