@@ -46,7 +46,7 @@ fname = 'beamline/p07/current/beamtime-metadata-11111111.json'
 with open(fname) as json_file:
     data = json.load(json_file)
 data['beamtimeId']='22222222'
-data['core-path']=data['core-path'].replace('11111111','22222222')
+data['corePath']=data['corePath'].replace('11111111','22222222')
 
 with open(fname, 'w') as outfile:
     json.dump(data, outfile)
@@ -59,7 +59,7 @@ producer.send_file(1, local_path = "./file1", exposed_path = "processed/"+data_s
 producer.wait_requests_finished(10000)
 
 data['beamtimeId']='11111111'
-data['core-path']=data['core-path'].replace('22222222','11111111')
+data['corePath']=data['corePath'].replace('22222222','11111111')
 
 with open(fname, 'w') as outfile:
     json.dump(data, outfile)

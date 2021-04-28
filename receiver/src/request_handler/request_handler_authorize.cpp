@@ -16,14 +16,14 @@ std::string RequestHandlerAuthorize::GetRequestString(const Request* request, co
     return request_string;
 }
 
-Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error& err, HttpCode code) const {
+Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error& err, const std::string response,HttpCode code) const {
     if (err) {
         return asapo::ReceiverErrorTemplates::kInternalServerError.Generate("cannot authorize request: " + err->Explain());
     } else {
         if (code != HttpCode::Unauthorized) {
-            return asapo::ReceiverErrorTemplates::kInternalServerError.Generate("return code " + std::to_string(int(code)));
+            return asapo::ReceiverErrorTemplates::kInternalServerError.Generate(response+" return code " + std::to_string(int(code)));
         }
-        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("return code " + std::to_string(int(code)));
+        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate(response);
     }
 }
 
@@ -44,7 +44,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     auto response = http_client__->Post(GetReceiverConfig()->authorization_server + "/authorize", "", request_string, &code,
                                         &err);
     if (err || code != HttpCode::OK) {
-        auto auth_error = ErrorFromAuthorizationServerResponse(err, code);
+        auto auth_error = ErrorFromAuthorizationServerResponse(err,response, code);
         log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " request: " + request_string +
                      " - " +
                      auth_error->Explain());
@@ -57,14 +57,14 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     JsonStringParser parser{response};
     (err = parser.GetString("beamtimeId", &beamtime_id_)) ||
     (err = parser.GetString("dataSource", &data_source_)) ||
-    (err = parser.GetString("core-path", &offline_path_)) ||
+    (err = parser.GetString("corePath", &offline_path_)) ||
     (err = parser.GetString("beamline-path", &online_path_)) ||
     (err = parser.GetString("source-type", &stype)) ||
     (err = parser.GetArrayString("access-types", &access_types)) ||
     (err = GetSourceTypeFromString(stype, &source_type_)) ||
     (err = parser.GetString("beamline", &beamline_));
     if (err) {
-        return ErrorFromAuthorizationServerResponse(err, code);
+        return ErrorFromAuthorizationServerResponse(err,"", code);
     }
 
     err = CheckAccessType(access_types);

@@ -111,13 +111,21 @@ func findBeamtimeMetaFromBeamline(beamline string) (beamtimeMeta, error) {
 	online_path := settings.CurrentBeamlinesFolder + sep + beamline + sep + "current"
 
 	matches, err := filepath.Glob(online_path + sep + pattern)
-	if err != nil || len(matches) != 1 {
+	if err != nil {
 		return beamtimeMeta{}, err
 	}
+	if len(matches) != 1 {
+		return beamtimeMeta{}, errors.New("more than one beamtime-metadata file in folder")
+	}
+
 	meta, err := beamtimeMetaFromJson(matches[0])
 	if (err != nil) {
 		return beamtimeMeta{}, err
 	}
+	if meta.BeamtimeId == "" || meta.OfflinePath=="" || meta.Beamline == ""{
+		return beamtimeMeta{}, errors.New("cannot set meta fields from beamtime file")
+	}
+
 	meta.OnlinePath = online_path
 	return meta, nil
 }
@@ -253,8 +261,8 @@ func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeM
 	}
 
 	meta.AccessTypes = accessTypes
-	log.Debug("authorized beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " +
-		meta.Beamline+", type "+meta.Type)
+	log.Debug("authorized creds bl/bt: ", creds.Beamline+"/"+creds.BeamtimeId+", beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " +
+		meta.Beamline+", type "+meta.Type, "online path "+meta.OnlinePath + ", offline path "+meta.OfflinePath)
 	return meta, nil
 }
 

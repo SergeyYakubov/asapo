@@ -9,7 +9,7 @@ type  beamtimeMeta struct {
 	BeamtimeId string  `json:"beamtimeId"`
 	Beamline string     `json:"beamline"`
 	DataSource string       `json:"dataSource"`
-	OfflinePath string `json:"core-path"`
+	OfflinePath string `json:"corePath"`
 	OnlinePath string `json:"beamline-path"`
 	Type string `json:"source-type"`
 	AccessTypes []string `json:"access-types"`

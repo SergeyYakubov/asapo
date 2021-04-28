@@ -17,7 +17,9 @@ authorizeid=`echo $!`
 mkdir -p asap3/petra3/gpfs/p00/2019/comissioning/c20180508-000-COM20181
 mkdir -p asap3/petra3/gpfs/p00/2019/data/11000015
 mkdir -p beamline/p07/current
-cp beamtime-metadata* beamline/p07/current/
+mkdir -p beamline/p08/current
+cp beamtime-metadata-11111111.json beamline/p07/current/
+cp beamtime-metadata-11111112.json beamline/p08/current/
 
 
 #tokens
@@ -51,6 +53,9 @@ curl -v --silent --data "{\"SourceCredentials\":\"processed%auto%p07%detector%$t
 curl -v --silent --data "{\"SourceCredentials\":\"raw%auto%p07%detector%$token\",\"OriginHost\":\"127.0.0.1:5007\"}" 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep 11111111
 curl -v --silent --data "{\"SourceCredentials\":\"raw%auto%p07%detector%$token\",\"OriginHost\":\"127.0.0.1:5007\"}" 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep p07
 curl -v --silent --data "{\"SourceCredentials\":\"raw%auto%p07%detector%$token\",\"OriginHost\":\"127.0.0.1:5007\"}" 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep /asap3/petra3/gpfs/p07/2020/data/11111111
+
+#wrong data in metafile
+curl -v --silent --data "{\"SourceCredentials\":\"processed%auto%p08%detector%$token\",\"OriginHost\":\"bla\"}" 127.0.0.1:5007/authorize --stderr -  | tee /dev/stderr  | grep "cannot set meta fields"
 
 #read access
 curl -v --silent --data "{\"SourceCredentials\":\"processed%auto%p07%detector%$token\",\"OriginHost\":\"bla\"}" 127.0.0.1:5007/authorize --stderr - | tee /dev/stderr  | grep read
