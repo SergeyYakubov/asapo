@@ -60,7 +60,7 @@ var transferFileTests = [] struct {
 	message string
 }{
 	{"folder","exists", prepareToken("folder"),http.StatusOK,"file transferred"},
-	{"folder","not_exists", prepareToken("folder"),http.StatusBadRequest,"file not exists"},
+	{"folder","not_exists", prepareToken("folder"),http.StatusNotFound,"file not exists"},
 	{"wrong_folder","p07", prepareToken("folder"),http.StatusUnauthorized,"wrong folder"},
 	{"folder","p07", "wrong token",http.StatusUnauthorized,"wrong token"},
 }

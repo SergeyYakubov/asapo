@@ -21,7 +21,7 @@ type fileTransferRequest struct {
 
 func Exists(name string) bool {
 	fi, err := os.Stat(name)
-	return !os.IsNotExist(err) && !fi.IsDir()
+	return err==nil && !fi.IsDir()
 }
 
 
@@ -42,7 +42,7 @@ func checkFileExists(r *http.Request,name string) (int,error) {
 	if !Exists(name) {
 		err_txt := "file "+name+" does not exist"
 		log.Error("cannot transfer file: "+err_txt)
-		return http.StatusBadRequest,errors.New(err_txt)
+		return http.StatusNotFound,errors.New(err_txt)
 	}
 	return http.StatusOK,nil
 
