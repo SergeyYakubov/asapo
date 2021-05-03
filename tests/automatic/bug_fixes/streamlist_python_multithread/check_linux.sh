@@ -28,9 +28,9 @@ nomad run authorizer.nmd
 sleep 1
 
 export PYTHONPATH=$1:$2:${PYTHONPATH}
-export Python_EXECUTABLE=$3
+export Python3_EXECUTABLE=$3
 
-$Python_EXECUTABLE magic_producer.py $endpoint $beamtime_id $token > out
+$Python3_EXECUTABLE magic_producer.py $endpoint $beamtime_id $token > out
 cat out
 cat out | grep "5 : number of streams source_1:  5"
 cat out | grep "5 : number of streams source_2:  5"
