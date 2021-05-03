@@ -18,6 +18,9 @@ class ProducerRequest : public GenericRequest {
                     RequestCallback callback,
                     bool manage_data_memory,
                     uint64_t timeout_ms);
+    virtual bool ContainsData() override {
+      return !DataFromFile();
+    };
     std::string source_credentials;
     std::string metadata;
     MessageData data;

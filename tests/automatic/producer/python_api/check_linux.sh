@@ -41,12 +41,12 @@ sleep 10
 
 $1 $3 $data_source $beamtime_id  "127.0.0.1:8400" &> out || cat out
 cat out
-echo count successfully send, expect 13
-cat out | grep "successfuly sent" | wc -l | tee /dev/stderr | grep 13
+echo count successfully send, expect 15
+cat out | grep "successfuly sent" | wc -l | tee /dev/stderr | grep 15
 echo count same id, expect 4
 cat out | grep "already have record with same id" | wc -l | tee /dev/stderr | grep 4
-echo count duplicates, expect 4
-cat out | grep "duplicate" | wc -l | tee /dev/stderr | grep 4
+echo count duplicates, expect 6
+cat out | grep "duplicate" | wc -l | tee /dev/stderr | grep 6
 echo count data in callback, expect 3
 cat out | grep "'data':" | wc -l  | tee /dev/stderr | grep 3
 echo check found local io error
