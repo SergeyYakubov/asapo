@@ -8,12 +8,13 @@ import sys
 
 endpoint, beamtime, token = sys.argv[1:]
 
+
 def dummy_producer(data_source):
     def callback(header, err):
         if err is not None:
             print("could not sent: ", header, err)
-#        else:
-#            print("successfuly sent: ", header)
+    #        else:
+    #            print("successfuly sent: ", header)
     producer = asapo_producer.create_producer(endpoint, 'processed', beamtime, 'auto', data_source, '', 5,
                                               60000)  # source type 'processed' to write to the core filesystem
     producer.set_log_level("none")
@@ -21,15 +22,15 @@ def dummy_producer(data_source):
 
     for j in range(5):
         stream = datetime.now().strftime('%Y%m%dT_%H%M%S')
-#        print(f"{data_source} new stream {stream}")
         for i in range(5):
-            producer.send(i + 1, f"{data_source}_{stream}_{i}", None,
+            producer.send(i + 1, data_source + "_" + stream + "_" + str(i), None,
                           callback=callback,
                           ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY,
                           stream=stream)
             sleep(0.6)
         producer.send_stream_finished_flag(stream=stream, last_id=i + 1)
-        print(j+1,": number of streams",f"{data_source}: ", len(consumer.get_stream_list()))
+        print(j + 1, ": number of streams", data_source + ": ", len(consumer.get_stream_list()))
+
 
 def main():
     with ThreadPoolExecutor(max_workers=3) as executor:
