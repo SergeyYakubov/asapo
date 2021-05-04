@@ -54,6 +54,27 @@ func (suite *StreamsTestSuite) TestStreamsUsesCache() {
 	suite.Equal(int64(1), rec.Streams[0].TimestampLast)
 }
 
+func (suite *StreamsTestSuite) TestStreamsCacheexpires() {
+	db.settings.UpdateStreamCachePeriodMs = 100
+	var res1 StreamsRecord
+	go func() {
+		db.insertRecord(dbname, collection, &rec1)
+		streams.getStreams(&db, Request{DbName: dbname, ExtraParam: ""})
+		db.insertRecord(dbname, collection, &rec_finished)
+		res1,_ = streams.getStreams(&db, Request{DbName: dbname, ExtraParam: ""})
+	}()
+	db.insertRecord(dbname, collection+"1", &rec1_later)
+	res2,_ := streams.getStreams(&db, Request{DbName: dbname, ExtraParam: ""})
+	db.insertRecord(dbname, collection+"1", &rec_finished)
+	time.Sleep(time.Second)
+	res3, err := streams.getStreams(&db, Request{DbName: dbname, ExtraParam: ""})
+	suite.Nil(err)
+	suite.Equal(true, res3.Streams[0].Finished)
+	fmt.Println(res1,res2)
+//	suite.Equal(true, rec.Streams[1].Finished)
+}
+
+
 func (suite *StreamsTestSuite) TestStreamsGetFinishedInfo() {
 	db.settings.UpdateStreamCachePeriodMs = 1000
 	db.insertRecord(dbname, collection, &rec1)

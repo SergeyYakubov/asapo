@@ -58,6 +58,10 @@ TEST(FolderDataBroker, Constructor) {
 
 const uint8_t expected_value = 1;
 
+asapo::ErrorInterface* new_error(){
+  return new asapo::SimpleError{"s"};
+};
+
 class ConsumerImplTests : public Test {
  public:
   std::unique_ptr<ConsumerImpl> consumer, fts_consumer;
@@ -167,9 +171,14 @@ class ConsumerImplTests : public Test {
           return;
       }
 
-      EXPECT_CALL(mock_io, GetDataFromFile_t(expected_full_path, testing::Pointee(100), _)).Times(times).
-          WillRepeatedly(DoAll(SetArgPointee<2>(new asapo::SimpleError{"s"}), testing::Return(nullptr)));
+      auto simple_error = []{
+          return new asapo::SimpleError{"s"};
+      };
+
+      EXPECT_CALL(mock_io, GetDataFromFile_t(expected_full_path, testing::Pointee(100), _)).Times(AtLeast(times)).
+          WillRepeatedly(DoAll(SetArgPointee<2>(simple_error), testing::Return(nullptr)));
   }
+
   MessageMeta CreateFI(uint64_t buf_id = expected_buf_id) {
       MessageMeta fi;
       fi.size = expected_message_size;
@@ -563,6 +572,23 @@ TEST_F(ConsumerImplTests, GetMessageCallsReadFromFileIfZeroBufId) {
 
     consumer->GetNext(expected_group_id, &info, &data, expected_stream);
 }
+
+TEST_F(ConsumerImplTests, GetMessageCallsRetriesReadFromFile) {
+    MockGetBrokerUri();
+    auto to_send = CreateFI(0);
+    auto json = to_send.Json();
+    MockGet(json);
+    consumer->SetTimeout(200);
+
+    MessageData data;
+
+    EXPECT_CALL(mock_netclient, GetData_t(_, _)).Times(0);
+
+    MockReadDataFromFile(2);
+
+    consumer->GetNext(expected_group_id, &info, &data, expected_stream);
+}
+
 
 TEST_F(ConsumerImplTests, GenerateNewGroupIdReturnsErrorCreateGroup) {
     MockGetBrokerUri();

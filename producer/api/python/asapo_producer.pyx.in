@@ -220,6 +220,8 @@ cdef class PyProducer:
         unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
         if err:
             throw_exception(err)
+        if callback != None:
+            Py_XINCREF(<PyObject*>callback)
 
     def stream_info(self, stream = 'default', uint64_t timeout_ms = 1000):
         """

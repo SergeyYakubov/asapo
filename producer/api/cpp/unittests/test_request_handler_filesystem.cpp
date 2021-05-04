@@ -130,11 +130,14 @@ TEST_F(RequestHandlerFilesystemTests, WorksWithemptyCallback) {
 
 
 TEST_F(RequestHandlerFilesystemTests, FileRequestErrorOnReadData) {
+    auto unknown_error = []{
+      return asapo::IOErrorTemplates::kUnknownIOError.Generate().release();
+    };
 
     EXPECT_CALL(mock_io, GetDataFromFile_t(expected_origin_fullpath, testing::Pointee(expected_file_size), _))
     .WillOnce(
         DoAll(
-            testing::SetArgPointee<2>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
+            testing::SetArgPointee<2>(unknown_error),
             Return(nullptr)
         ));
 

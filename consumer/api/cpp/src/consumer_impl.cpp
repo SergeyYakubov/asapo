@@ -371,10 +371,24 @@ Error ConsumerImpl::GetMessageFromServer(GetMessageServerOperation op, uint64_t 
 }
 
 Error ConsumerImpl::GetDataFromFile(MessageMeta* info, MessageData* data) {
-    Error error;
-    *data = io__->GetDataFromFile(info->FullName(source_path_), &info->size, &error);
-    if (error) {
-        return ConsumerErrorTemplates::kLocalIOError.Generate(error->Explain());
+    interrupt_flag_ = false;
+    uint64_t elapsed_ms = 0;
+    Error err;
+    while (elapsed_ms <= timeout_ms_) {
+        if (interrupt_flag_) {
+            err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("interrupted by user request");
+            break;
+        }
+        auto start = system_clock::now();
+        *data = io__->GetDataFromFile(info->FullName(source_path_), &info->size, &err);
+        if (err == nullptr) {
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
+    }
+    if (err != nullptr) {
+        return ConsumerErrorTemplates::kLocalIOError.Generate(err->Explain());
     }
     return nullptr;
 }

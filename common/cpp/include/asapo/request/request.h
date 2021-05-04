@@ -15,6 +15,9 @@ class GenericRequest {
     GenericRequest(GenericRequestHeader h, uint64_t timeout_ms): header{std::move(h)}, timeout_ms_{timeout_ms} {};
     GenericRequestHeader header;
     virtual ~GenericRequest() = default;
+    virtual bool ContainsData() {
+        return true;
+    };
     uint64_t GetRetryCounter() {
         return retry_counter_;
     }

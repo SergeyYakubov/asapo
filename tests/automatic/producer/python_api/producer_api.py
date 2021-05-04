@@ -25,6 +25,11 @@ def assert_eq(val, expected, name):
         print('val: ', val, ' expected: ', expected)
         sys.exit(1)
 
+class CallBackClass:
+    def callback(self, payload, err):
+        callback(payload,err)
+
+callback_object = CallBackClass()
 
 def callback(payload, err):
     lock.acquire()  # to print
@@ -159,6 +164,13 @@ else:
     print("should be AsapoRequestsPoolIsFull error ")
     sys.exit(1)
 
+#stream_finished
+producer.wait_requests_finished(10000)
+producer.send_stream_finished_flag("stream", 2, next_stream = "next_stream", callback = callback)
+# check callback_object.callback works, will be duplicated request
+producer.send_stream_finished_flag("stream", 2, next_stream = "next_stream", callback = callback_object.callback)
+producer.wait_requests_finished(10000)
+
 
 #stream infos
 info = producer.stream_info()
@@ -172,7 +184,8 @@ print("created: ",datetime.utcfromtimestamp(info['timestampCreated']/1000000000)
 print("last record: ",datetime.utcfromtimestamp(info['timestampLast']/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f'))
 
 info = producer.stream_info('stream')
-assert_eq(info['lastId'], 2, "last id from different stream")
+assert_eq(info['lastId'], 3, "last id from different stream")
+assert_eq(info['finished'], True, "stream finished")
 
 info_last = producer.last_stream()
 assert_eq(info_last['name'], "stream", "last stream")

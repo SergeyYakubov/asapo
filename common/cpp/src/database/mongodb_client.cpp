@@ -417,7 +417,7 @@ Error StreamInfoFromDbResponse(const std::string &last_record_str,
         return err;
     }
 
-    return UpdateStreamInfoFromEarliestRecord(last_record_str,info);
+    return UpdateStreamInfoFromEarliestRecord(earliest_record_str,info);
 
 }
 

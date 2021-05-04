@@ -28,14 +28,14 @@ type StreamsRecord struct {
 
 type Streams struct {
 	records     map[string]StreamsRecord
-	lastUpdated int64
+	lastUpdated map[string]int64
 }
 
-var streams = Streams{lastUpdated: 0, records: make(map[string]StreamsRecord, 0)}
+var streams = Streams{lastUpdated: make(map[string]int64, 0), records: make(map[string]StreamsRecord, 0)}
 var streamsLock sync.Mutex
 
 func (ss *Streams) tryGetFromCache(db_name string, updatePeriodMs int) (StreamsRecord, error) {
-	if ss.lastUpdated < time.Now().UnixNano()-int64(updatePeriodMs*1000000) {
+	if ss.lastUpdated[db_name] < time.Now().UnixNano()-int64(updatePeriodMs*1000000) {
 		return StreamsRecord{}, errors.New("cache expired")
 	}
 	rec, ok := ss.records[db_name]
@@ -173,7 +173,7 @@ func (ss *Streams) updateFromDb(db *Mongodb, db_name string) (StreamsRecord, err
 		res :=StreamsRecord{}
 		utils.DeepCopy(rec,&res)
 		ss.records[db_name] = res
-		ss.lastUpdated = time.Now().UnixNano()
+		ss.lastUpdated[db_name] = time.Now().UnixNano()
 	}
 	return rec, nil
 }
