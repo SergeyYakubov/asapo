@@ -14,11 +14,11 @@ target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR}
 ################################
 add_test_cleanup(${TARGET_NAME})
 add_integration_test(${TARGET_NAME} insertOK "OK 1" "OK 2")
-add_integration_test(${TARGET_NAME} insertFailsWhenNotConnected
-        "Notconnected 3"
-        "Notconnected 4")
-add_integration_test(${TARGET_NAME} insertFailsForDuplicateID
-        "DuplicateID 6"
-        "DuplicateID 5")
+#add_integration_test(${TARGET_NAME} insertFailsWhenNotConnected
+#        "Notconnected 3"
+#        "Notconnected 4")
+#add_integration_test(${TARGET_NAME} insertFailsForDuplicateID
+#        "DuplicateID 6"
+#        "DuplicateID 5")
 
 

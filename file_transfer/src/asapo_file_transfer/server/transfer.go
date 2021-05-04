@@ -18,12 +18,11 @@ type fileTransferRequest struct {
 	FileName string
 }
 
-
 func Exists(name string) bool {
-	fi, err := os.Stat(name)
-	return err==nil && !fi.IsDir()
+	f, err := os.Open(name)
+	defer f.Close()
+	return err==nil
 }
-
 
 func checkClaim(r *http.Request,request* fileTransferRequest) (int,error) {
 	var extraClaim structs.FolderTokenTokenExtraClaim
@@ -40,7 +39,7 @@ func checkClaim(r *http.Request,request* fileTransferRequest) (int,error) {
 
 func checkFileExists(r *http.Request,name string) (int,error) {
 	if !Exists(name) {
-		err_txt := "file "+name+" does not exist"
+		err_txt := "file "+name+" does not exist or cannot be read"
 		log.Error("cannot transfer file: "+err_txt)
 		return http.StatusNotFound,errors.New(err_txt)
 	}

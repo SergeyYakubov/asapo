@@ -25,6 +25,7 @@ class Database {
     virtual Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, MessageMeta* file) const = 0;
     virtual Error GetStreamInfo(const std::string& collection, StreamInfo* info) const  = 0;
     virtual Error GetLastStream(StreamInfo* info) const  = 0;
+    virtual Error DeleteStream(const std::string &stream) const = 0;
     virtual ~Database() = default;
 };
 

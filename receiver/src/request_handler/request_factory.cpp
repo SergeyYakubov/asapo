@@ -83,6 +83,10 @@ Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request> &request,
             request->AddHandler(&request_handler_db_stream_info_);
             break;
         }
+        case Opcode::kOpcodeDeleteStream: {
+            request->AddHandler(&request_handler_delete_stream_);
+            break;
+        }
         case Opcode::kOpcodeLastStream: {
             request->AddHandler(&request_handler_db_last_stream_);
             break;

@@ -40,6 +40,15 @@ class Producer {
     */
     virtual StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const = 0;
 
+  //! Delete stream
+  /*!
+    \param stream - stream to send messages to
+    \param timeout_ms - operation timeout in milliseconds
+    \param options - delete stream options
+    \return Error - will be nullptr on success
+  */
+  virtual Error DeleteStream(std::string stream, uint64_t timeout_ms, DeleteStreamOptions options) const = 0;
+
   //! Get stream that has the newest ingested data
   /*!
     \param timeout_ms - operation timeout in milliseconds

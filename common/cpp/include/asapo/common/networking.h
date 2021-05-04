@@ -23,6 +23,7 @@ enum Opcode : uint8_t {
     kOpcodeTransferData,
     kOpcodeTransferDatasetData,
     kOpcodeStreamInfo,
+    kOpcodeDeleteStream,
     kOpcodeLastStream,
     kOpcodeGetBufferData,
     kOpcodeAuthorize,

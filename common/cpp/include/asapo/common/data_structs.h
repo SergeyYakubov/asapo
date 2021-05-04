@@ -109,6 +109,27 @@ struct SourceCredentials {
   };
 };
 
+struct DeleteStreamOptions {
+ private:
+  enum DeleteStreamFlags : uint64_t {
+    kDeleteMeta = 1 << 0,
+    kErrorOnNotFound = 1 << 1,
+  };
+ public:
+  bool delete_meta{true};
+  bool error_on_not_exist{true};
+  uint64_t Encode() {
+      uint64_t flag = 0;
+      flag = delete_meta ? flag | DeleteStreamFlags::kDeleteMeta:flag;
+      flag = error_on_not_exist ? flag | DeleteStreamFlags::kErrorOnNotFound:flag;
+      return flag;
+  };
+  void Decode(uint64_t flag) {
+      delete_meta = (flag & DeleteStreamFlags::kDeleteMeta) > 0;
+      error_on_not_exist = (flag & DeleteStreamFlags::kErrorOnNotFound) > 0;
+  };
+};
+
 enum IngestModeFlags : uint64_t {
   kTransferData = 1 << 0,
   kTransferMetaDataOnly = 1 << 1,
@@ -124,7 +145,8 @@ class ClientProtocol {
   std::string discovery_version_;
   std::string name_;
  public:
-  ClientProtocol(std::string version, std::string name,std::string discovery_version) : version_{version}, name_{name} {
+  ClientProtocol(std::string version, std::string name, std::string discovery_version) : version_{version},
+                                                                                         name_{name} {
       discovery_version_ = discovery_version;
   };
   ClientProtocol() = delete;
@@ -153,7 +175,7 @@ class ConsumerProtocol final : public ClientProtocol {
                    std::string file_transfer_service_version,
                    std::string broker_version,
                    std::string rds_version)
-      : ClientProtocol(version, "consumer protocol",discovery_version) {
+      : ClientProtocol(version, "consumer protocol", discovery_version) {
       authorizer_version_ = authorizer_version;
       file_transfer_service_version_ = file_transfer_service_version;
       broker_version_ = broker_version;
@@ -184,7 +206,7 @@ class ProducerProtocol final : public ClientProtocol {
   ProducerProtocol(std::string version,
                    std::string discovery_version,
                    std::string receiver_version)
-      : ClientProtocol(version, "producer protocol",discovery_version) {
+      : ClientProtocol(version, "producer protocol", discovery_version) {
       receiver_version_ = receiver_version;
   };
   const std::string &GetReceiverVersion() const {

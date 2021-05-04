@@ -28,6 +28,7 @@ Args GetArgs(int argc, char* argv[]) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
     }
+    printf("%s %s",argv[1],argv[2]) ;
     return Args{argv[1], atoi(argv[2])};
 }
 
@@ -79,6 +80,7 @@ int main(int argc, char* argv[]) {
         err = db_new.GetById("data_test", 0, &fi_db);
         Assert(err, "No record");
 
+
         asapo::StreamInfo info;
         err = db.GetStreamInfo("data_test", &info);
         M_AssertEq(nullptr, err);
@@ -90,6 +92,11 @@ int main(int argc, char* argv[]) {
         M_AssertEq("test1", info.name);
         M_AssertEq(true, info.finished);
         M_AssertEq("ns",info.next_stream);
+
+        db.DeleteStream("test");
+        err = db.GetStreamInfo("data_test", &info);
+        M_AssertTrue(err!=nullptr);
+
     }
 
     return 0;
