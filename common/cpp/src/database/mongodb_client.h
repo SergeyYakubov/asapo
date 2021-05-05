@@ -73,6 +73,7 @@ class MongoDBClient final : public Database {
     Error UpdateLastStreamInfo(const char *str, StreamInfo* info) const;
     Error UpdateCurrentLastStreamInfo(const std::string& collection_name, StreamInfo* info) const;
     Error DeleteCollection(const std::string& name) const;
+    Error DeleteCollections(const std::string &prefix) const;
     Error DeleteDocumentsInCollection(const std::string &collection_name,const std::string &querystr) const;
 };
 

@@ -502,11 +502,38 @@ Error MongoDBClient::GetLastStream(StreamInfo* info) const {
     return err;
 }
 
+
+Error MongoDBClient::DeleteCollections(const std::string &prefix) const {
+    mongoc_database_t* database;
+    char** strv;
+    bson_error_t error;
+    std::string querystr = "^" + prefix;
+    bson_t* query = BCON_NEW ("name", BCON_REGEX(querystr.c_str(), "i"));
+    bson_t* opts = BCON_NEW ("nameOnly", BCON_BOOL(true),"filter",BCON_DOCUMENT(query));
+    database = mongoc_client_get_database(client_, database_name_.c_str());
+    Error err;
+    if ((strv = mongoc_database_get_collection_names_with_opts(
+        database, opts, &error))) {
+        for (auto i = 0; strv[i]; i++) {
+            DeleteCollection(strv[i]);
+        }
+        bson_strfreev(strv);
+    } else {
+        err = DBErrorTemplates::kDBError.Generate(error.message);
+    }
+
+    bson_destroy(opts);
+    bson_destroy(query);
+    mongoc_database_destroy(database);
+    return nullptr;
+}
+
 Error MongoDBClient::DeleteCollection(const std::string &name) const {
     bson_error_t error;
     auto collection = mongoc_client_get_collection(client_, database_name_.c_str(), name.c_str());
     mongoc_collection_set_write_concern(collection, write_concern_);
     auto r = mongoc_collection_drop_with_opts(collection, NULL /* opts */, &error);
+    mongoc_collection_destroy(collection);
     if (!r) {
         if (error.code == 26) {
             return DBErrorTemplates::kNoRecord.Generate("collection "+name+" not found in "+database_name_);
@@ -514,8 +541,6 @@ Error MongoDBClient::DeleteCollection(const std::string &name) const {
             return DBErrorTemplates::kDBError.Generate(std::string(error.message)+": "+std::to_string(error.code));
         }
     }
-
-    mongoc_collection_destroy(collection);
     return nullptr;
 }
 
@@ -539,10 +564,10 @@ Error MongoDBClient::DeleteStream(const std::string &stream) const {
     current_collection_name_ = "";
     auto err = DeleteCollection(data_col);
     if (err == nullptr) {
+        DeleteCollections(inprocess_col);
+        DeleteCollections(acks_col);
         std::string querystr = ".*_" + stream+"$";
-        DeleteCollection(inprocess_col);
-        DeleteCollection(acks_col);
-        DeleteDocumentsInCollection("pointer_collection_name",querystr);
+        DeleteDocumentsInCollection("current_location",querystr);
     }
     return err;
 }
