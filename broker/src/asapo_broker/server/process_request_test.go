@@ -217,6 +217,6 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestAddsDataset() {
 
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestErrorOnWrongProtocol() {
-	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix,"GET","","/v0.2")
+	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix,"GET","","/v1.2")
 	suite.Equal(http.StatusUnsupportedMediaType, w.Code, "wrong protocol")
 }

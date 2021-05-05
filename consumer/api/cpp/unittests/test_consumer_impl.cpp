@@ -71,7 +71,7 @@ class ConsumerImplTests : public Test {
   MessageMeta info;
   std::string expected_server_uri = "test:8400";
   std::string expected_broker_uri = "asapo-broker:5005";
-  std::string expected_consumer_protocol = "v0.1";
+  std::string expected_consumer_protocol = "v0.2";
   std::string expected_broker_api = expected_broker_uri + "/" + expected_consumer_protocol;
   std::string expected_fts_uri = "asapo-file-transfer:5008";
   std::string expected_token = "token";
@@ -143,7 +143,7 @@ class ConsumerImplTests : public Test {
   }
   void MockGetServiceUri(std::string service, std::string result) {
       EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/" + service+"?token="
-          + expected_token+"&protocol=v0.1"), _,
+          + expected_token+"&protocol="+expected_consumer_protocol), _,
                                           _)).WillOnce(DoAll(
           SetArgPointee<1>(HttpCode::OK),
           SetArgPointee<2>(nullptr),
@@ -1058,6 +1058,25 @@ TEST_F(ConsumerImplTests, GetDatasetByIdUsesCorrectUri) {
     consumer->GetDatasetById(expected_dataset_id, 0, expected_stream, &err);
 }
 
+TEST_F(ConsumerImplTests, DeleteStreamUsesCorrectUri) {
+    MockGetBrokerUri();
+    std::string expected_delete_stream_query_string = "{\"ErrorOnNotExist\":true,\"DeleteMeta\":true}";
+    EXPECT_CALL(mock_http_client, Post_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source + "/"+expected_stream+"/delete"
+                                             + "?token=" + expected_token, _,
+                                         expected_delete_stream_query_string, _, _)).WillOnce(DoAll(
+        SetArgPointee<3>(HttpCode::OK),
+        SetArgPointee<4>(nullptr),
+        Return("")
+    ));
+
+    asapo::DeleteStreamOptions opt;
+    opt.delete_meta = true;
+    opt.error_on_not_exist = true;
+    auto err = consumer->DeleteStream(expected_stream,opt);
+    ASSERT_THAT(err, Eq(nullptr));
+
+}
+
 TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUri) {
     MockGetBrokerUri();
     std::string return_streams =
@@ -1382,7 +1401,7 @@ TEST_F(ConsumerImplTests, GetVersionInfoWithServer) {
 
     std::string result = R"({"softwareVersion":"20.03.1, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.2"}})";
 
-    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/version?token=token&client=consumer&protocol=v0.1"), _,_)).WillOnce(DoAll(
+    EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/version?token=token&client=consumer&protocol="+expected_consumer_protocol), _,_)).WillOnce(DoAll(
         SetArgPointee<1>(HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return(result)));

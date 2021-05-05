@@ -79,18 +79,28 @@ class DbMetaDeleteStreamTests : public Test {
     void ExpectDelete(uint64_t flag, const asapo::DBErrorTemplate* errorTemplate) {
         expected_custom_data[0] = flag;
         SetReceiverConfig(config, "none");
-
-        EXPECT_CALL(*mock_request, GetBeamtimeId())
-            .WillOnce(ReturnRef(expected_beamtime_id))
-            ;
-        EXPECT_CALL(*mock_request, GetDataSource()).WillOnce(ReturnRef(expected_data_source));
         EXPECT_CALL(*mock_request, GetCustomData_t()).WillOnce(Return(expected_custom_data));
+        EXPECT_CALL(*mock_request, GetDataSource()).WillOnce(ReturnRef(expected_data_source));
+
+        asapo::DeleteStreamOptions opt;
+        opt.Decode(flag);
+        if (!opt.delete_meta) {
+            EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("skipped deleting stream meta"),
+                                                 HasSubstr(config.database_uri),
+                                                 HasSubstr(expected_data_source),
+                                                 HasSubstr(expected_stream),
+                                                 HasSubstr(expected_beamtime_id)
+                                           )
+            )
+            );            return;
+        }
+
         EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_data_source)).
             WillOnce(testing::Return(nullptr));
         EXPECT_CALL(mock_db, DeleteStream_t(_)).
             WillOnce(testing::Return(errorTemplate==nullptr?nullptr:errorTemplate->Generate().release()));
         if (errorTemplate == nullptr) {
-            EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("deleted stream"),
+            EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("deleted stream meta"),
                                                  HasSubstr(config.database_uri),
                                                  HasSubstr(expected_data_source),
                                                  HasSubstr(expected_stream),
@@ -125,6 +135,14 @@ TEST_F(DbMetaDeleteStreamTests, CallsDeleteErrorAlreadyExist) {
 TEST_F(DbMetaDeleteStreamTests, CallsDeleteNoErrorAlreadyExist) {
 
     ExpectDelete(1,&asapo::DBErrorTemplates::kNoRecord);
+    auto err = handler.ProcessRequest(mock_request.get());
+
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(DbMetaDeleteStreamTests, CallsDeleteNoOp) {
+
+    ExpectDelete(0,&asapo::DBErrorTemplates::kNoRecord);
     auto err = handler.ProcessRequest(mock_request.get());
 
     ASSERT_THAT(err, Eq(nullptr));

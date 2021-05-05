@@ -524,7 +524,7 @@ TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
 
     std::string result = R"({"softwareVersion":"20.03.1, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.2"}})";
 
-    EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/version?client=producer&protocol=v0.1"), _,_)).WillOnce(DoAll(
+    EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/version?client=producer&protocol=v0.2"), _,_)).WillOnce(DoAll(
         SetArgPointee<1>(asapo::HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return(result)));

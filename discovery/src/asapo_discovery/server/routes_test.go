@@ -67,8 +67,8 @@ message string
 
 var receiverTests = []requestTest {
 	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver",http.StatusBadRequest,"protocol missing"},
-	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver?protocol=v0.2",http.StatusUnsupportedMediaType,"wrong protocol"},
-	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver?protocol=v0.1",http.StatusOK,"ok"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver?protocol=v1000.2",http.StatusUnsupportedMediaType,"wrong protocol"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-receiver?protocol=v0.2",http.StatusOK,"ok"},
 }
 
 func (suite *GetServicesTestSuite) TestGetReceivers() {
@@ -93,8 +93,8 @@ func (suite *GetServicesTestSuite) TestGetReceivers() {
 
 var brokerTests = []requestTest {
 	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker",http.StatusBadRequest,"protocol missing"},
-	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker?protocol=v0.2",http.StatusUnsupportedMediaType,"wrong protocol"},
-	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker?protocol=v0.1",http.StatusOK,"ok"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker?protocol=v1000.2",http.StatusUnsupportedMediaType,"wrong protocol"},
+	{"/" + version.GetDiscoveryApiVersion()+"/asapo-broker?protocol=v0.2",http.StatusOK,"ok"},
 }
 func (suite *GetServicesTestSuite) TestGetBroker() {
 	for _,test:= range brokerTests {

@@ -80,6 +80,7 @@ Error ConsumerErrorFromNoDataResponse(const std::string &response) {
 Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode &code) {
     switch (code) {
         case HttpCode::OK:return nullptr;
+        case HttpCode::NoContent:return nullptr;
         case HttpCode::PartialContent:return ConsumerErrorFromPartialDataResponse(response->to_string());
         case HttpCode::BadRequest:return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
         case HttpCode::Unauthorized:return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
@@ -955,6 +956,24 @@ Error ConsumerImpl::GetVersionInfo(std::string* client_info, std::string* server
     }
 
     return nullptr;
+}
+
+RequestInfo ConsumerImpl::GetDeleteStreamRequest(std::string stream, DeleteStreamOptions options) const {
+    RequestInfo ri;
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
+        +"/" + std::move(stream) +
+        "/delete";
+    ri.post = true;
+    ri.body = options.Json();
+    return ri;
+}
+
+Error ConsumerImpl::DeleteStream(std::string stream, DeleteStreamOptions options) {
+    auto ri = GetDeleteStreamRequest(std::move(stream),options);
+    Error err;
+    BrokerRequestWithTimeout(ri, &err);
+    return err;
 }
 
 }

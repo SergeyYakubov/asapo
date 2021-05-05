@@ -90,6 +90,15 @@ class Consumer {
   //! Get list of streams with filter, set from to "" to get all streams
     virtual StreamInfos GetStreamList(std::string from,  StreamFilter filter, Error* err) = 0;
 
+  //! Delete stream
+  /*!
+    \param stream - stream to send messages to
+    \param options - delete stream options
+    \return Error - will be nullptr on success
+  */
+    virtual Error DeleteStream(std::string stream, DeleteStreamOptions options) = 0;
+
+
     //! Get current number of messages in stream
     /*!
       \param stream - stream to use

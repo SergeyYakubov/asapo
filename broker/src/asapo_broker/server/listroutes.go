@@ -24,6 +24,12 @@ var listRoutes = utils.Routes{
 		routeGetStreams,
 	},
 	utils.Route{
+		"DeleteStream",
+		"Post",
+		"/{apiver}/beamtime/{beamtime}/{datasource}/{stream}/delete",
+		routeDeleteStream,
+	},
+	utils.Route{
 		"GetLast",
 		"Get",
 		"/{apiver}/beamtime/{beamtime}/{datasource}/{stream}/0/last",

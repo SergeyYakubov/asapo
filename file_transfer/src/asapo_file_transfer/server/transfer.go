@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 )
 
 
@@ -81,7 +82,7 @@ func serveFileSize(w http.ResponseWriter, r *http.Request, fullName string) {
 		utils.WriteServerError(w,err,http.StatusBadRequest)
 		log.Error("Error getting file size for " + fullName+": "+err.Error())
 	}
-	log.Debug("Sending file size for " + fullName)
+	log.Debug("Sending file size "+strconv.FormatInt(fi.Size(),10)+" for " + fullName)
 
 	fsize.FileSize = fi.Size()
 	b,_ := json.Marshal(&fsize)

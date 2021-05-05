@@ -128,6 +128,10 @@ struct DeleteStreamOptions {
       delete_meta = (flag & DeleteStreamFlags::kDeleteMeta) > 0;
       error_on_not_exist = (flag & DeleteStreamFlags::kErrorOnNotFound) > 0;
   };
+  std::string Json() {
+      return std::string("{\"ErrorOnNotExist\":")+(error_on_not_exist?"true":"false")+",\"DeleteMeta\":"
+      +(delete_meta?"true":"false")+"}";
+  }
 };
 
 enum IngestModeFlags : uint64_t {

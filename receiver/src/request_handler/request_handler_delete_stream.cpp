@@ -17,6 +17,12 @@ Error RequestHandlerDeleteStream::ProcessRequest(Request* request) const {
     uint64_t flag = request->GetCustomData()[0];
     options.Decode(flag);
     auto col_name = collection_name_prefix_ + "_" + request->GetStream();
+
+    if (!options.delete_meta) {
+        log__->Debug(std::string{"skipped deleting stream meta in "} + col_name + " in " +
+            db_name_ + " at " + GetReceiverConfig()->database_uri);
+        return nullptr;
+    }
     auto err =  db_client__->DeleteStream(col_name);
 
     bool no_error = err == nullptr;
@@ -25,7 +31,7 @@ Error RequestHandlerDeleteStream::ProcessRequest(Request* request) const {
     }
 
     if (no_error) {
-        log__->Debug(std::string{"deleted stream in "} + col_name + " in " +
+        log__->Debug(std::string{"deleted stream meta in "} + col_name + " in " +
             db_name_ + " at " + GetReceiverConfig()->database_uri);
         return nullptr;
     }

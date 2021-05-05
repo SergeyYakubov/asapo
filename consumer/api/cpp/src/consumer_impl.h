@@ -85,7 +85,7 @@ class ConsumerImpl final : public asapo::Consumer {
     Error GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) override;
 
     Error GetVersionInfo(std::string* client_info,std::string* server_info, bool* supported) override;
-
+    Error DeleteStream(std::string stream, DeleteStreamOptions options) override;
     void SetTimeout(uint64_t timeout_ms) override;
     void ForceNoRdma() override;
 
@@ -172,7 +172,7 @@ class ConsumerImpl final : public asapo::Consumer {
   uint64_t ParseGetCurrentCountResponce(Error* err, const std::string &responce) const;
   RequestInfo GetDiscoveryRequest(const std::string &service_name) const;
   RequestInfo GetVersionRequest() const;
-
+  RequestInfo GetDeleteStreamRequest(std::string stream, DeleteStreamOptions options) const;
 };
 
 }
