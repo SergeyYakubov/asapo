@@ -55,6 +55,10 @@ func checkBrokerApiVersion(w http.ResponseWriter, r *http.Request) bool {
 	return ok
 }
 
+func needWriteAccess(op string) bool {
+	return op=="delete_stream";
+}
+
 func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_param string, needGroupID bool) {
 	if ok := checkBrokerApiVersion(w, r); !ok {
 		return
@@ -68,7 +72,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 		return
 	}
 
-	if err := authorize(r, db_name); err != nil {
+	if err := authorize(r, db_name, needWriteAccess(op)); err != nil {
 		writeAuthAnswer(w, "get "+op, db_name, err)
 		return
 	}

@@ -791,6 +791,94 @@ func (db *Mongodb) nacks(request Request) ([]byte, error) {
 	return utils.MapToJson(&res)
 }
 
+func (db *Mongodb) deleteCollection(request Request, name string) error {
+	return db.client.Database(request.DbName).Collection(name).Drop(context.Background())
+}
+
+func (db *Mongodb) collectionExist(request Request, name string) (bool, error) {
+	result, err := db.client.Database(request.DbName).ListCollectionNames(context.TODO(), bson.M{"name": name})
+	if err != nil {
+		return false, err
+	}
+	if len(result) == 1 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (db *Mongodb) deleteDataCollection(errorOnNotexist bool, request Request) error {
+	dataCol := data_collection_name_prefix + request.DbCollectionName
+	if errorOnNotexist {
+		exist, err := db.collectionExist(request, dataCol)
+		if err != nil || !exist {
+			return err
+		}
+	}
+	return db.deleteCollection(request, dataCol)
+}
+
+func (db *Mongodb) deleteDocumentsInCollection(request Request, collection string, field string, pattern string) error {
+	filter := bson.M{field: bson.D{{"$regex", primitive.Regex{Pattern: pattern, Options: "i"}}}}
+	_, err := db.client.Database(request.DbName).Collection(collection).DeleteMany(context.TODO(), filter)
+	return err
+}
+
+func (db *Mongodb) deleteCollectionsWithPrefix(request Request, prefix string) error {
+	cols, err := db.client.Database(request.DbName).ListCollectionNames(context.TODO(), bson.M{"name": bson.D{
+		{"$regex", primitive.Regex{Pattern: "^" + prefix, Options: "i"}}}})
+	if err != nil {
+		return err
+	}
+
+	for _, col := range cols {
+		err := db.deleteCollection(request, col)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (db *Mongodb) deleteServiceMeta(request Request) (error) {
+	err := db.deleteCollectionsWithPrefix(request, acks_collection_name_prefix+request.DbCollectionName)
+	if err != nil {
+		return  err
+	}
+	err = db.deleteCollectionsWithPrefix(request, inprocess_collection_name_prefix+request.DbCollectionName)
+	if err != nil {
+		return  err
+	}
+	return db.deleteDocumentsInCollection(request, pointer_collection_name, "_id", ".*_"+request.DbCollectionName+"$")
+}
+
+func (db *Mongodb) deleteStream(request Request) ([]byte, error) {
+	params := struct {
+		ErrorOnNotExist *bool
+		DeleteMeta      *bool
+	}{}
+	err := json.Unmarshal([]byte(request.ExtraParam), &params)
+	if err != nil {
+		return nil, err
+	}
+
+	if params.DeleteMeta == nil || params.ErrorOnNotExist == nil {
+		return nil, errors.New("wrong params: " + request.ExtraParam)
+	}
+	if !*params.DeleteMeta {
+		logger.Debug("skipping delete stream meta for " + request.DbCollectionName + " in " + request.DbName)
+		return nil, nil
+	}
+
+	err = db.deleteDataCollection(*params.ErrorOnNotExist, request)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.deleteServiceMeta(request)
+	return nil, err
+}
+
 func (db *Mongodb) lastAck(request Request) ([]byte, error) {
 	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
 	opts := options.FindOne().SetSort(bson.M{"_id": -1}).SetReturnKey(true)
@@ -909,6 +997,8 @@ func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
 		return db.nacks(request)
 	case "lastack":
 		return db.lastAck(request)
+	case "delete_stream":
+		return db.deleteStream(request)
 	}
 
 	return nil, errors.New("Wrong db operation: " + request.Op)

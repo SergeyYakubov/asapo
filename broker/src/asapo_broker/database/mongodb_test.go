@@ -1154,3 +1154,32 @@ func TestMongoDBGetNextClearsInprocessAfterReset(t *testing.T) {
 	assert.Equal(t, string(rec1_expect), string(res2))
 	assert.Equal(t, string(rec1_expect), string(res3))
 }
+
+var testsDeleteStream = []struct {
+	stream  string
+	params  string
+	ok      bool
+	message string
+}{
+	{"test", "{\"ErrorOnNotExist\":true,\"DeleteMeta\":true}", true, "delete stream"},
+}
+
+func TestDeleteStreams(t *testing.T) {
+	for _, test := range testsDeleteStream {
+		db.Connect(dbaddress)
+		db.insertRecord(dbname, test.stream, &rec_finished11)
+
+		_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: test.stream, GroupId: "", Op: "delete_stream", ExtraParam: test.params})
+		if test.ok {
+			rec, err := streams.getStreams(&db, Request{DbName: dbname, ExtraParam: ""})
+			acks_exist,_:= db.collectionExist(Request{DbName: dbname, ExtraParam: ""},acks_collection_name_prefix+test.stream)
+			inprocess_exist,_:= db.collectionExist(Request{DbName: dbname, ExtraParam: ""},inprocess_collection_name_prefix+test.stream)
+			assert.Equal(t,0,len(rec.Streams),test.message)
+			assert.Equal(t,false,acks_exist,test.message)
+			assert.Equal(t,false,inprocess_exist,test.message)
+			assert.Nil(t, err, test.message)
+		} else {
+			assert.NotNil(t, err, test.message)
+		}
+	}
+}
