@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 
     Assert(err, args.keyword);
 
-    if (args.keyword == "OK") { // check retrieve
+    if (args.keyword == "OK") { // check retrieve and stream delete
         asapo::MessageMeta fi_db;
         asapo::MongoDBClient db_new;
         db_new.Connect("127.0.0.1", "data");
@@ -96,7 +96,8 @@ int main(int argc, char* argv[]) {
         db.DeleteStream("test");
         err = db.GetStreamInfo("data_test", &info);
         M_AssertTrue(err!=nullptr);
-
+        err = db.DeleteStream("test1");
+        M_AssertTrue(err==nullptr);
     }
 
     return 0;
