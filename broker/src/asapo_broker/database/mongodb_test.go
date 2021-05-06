@@ -1122,10 +1122,14 @@ func TestMongoDBNegAck(t *testing.T) {
 	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "negackmessage", ExtraParam: string(bparam)})
 	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"}) // first time message from negack
 	_, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})  // second time nothing
+	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "negackmessage", ExtraParam: string(bparam)})
+	_, err2 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})  // second time nothing
 
 	assert.Nil(t, err)
 	assert.Equal(t, string(rec1_expect), string(res))
 	assert.NotNil(t, err1)
+	assert.Nil(t, err2)
+
 	if err1 != nil {
 		assert.Equal(t, utils.StatusNoData, err1.(*DBError).Code)
 		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"\"}", err1.Error())
