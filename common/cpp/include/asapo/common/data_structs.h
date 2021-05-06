@@ -95,7 +95,7 @@ struct SourceCredentials {
       user_token{std::move(token)},
       type{type} {};
   SourceCredentials() {};
-  static const std::string kDefaultStream;
+  static const std::string kDefaultDataSource;
   static const std::string kDefaultBeamline;
   static const std::string kDefaultBeamtimeId;
   std::string beamtime_id;
@@ -116,6 +116,8 @@ struct DeleteStreamOptions {
     kErrorOnNotFound = 1 << 1,
   };
  public:
+  DeleteStreamOptions() = default;
+  DeleteStreamOptions(bool delete_meta,bool error_on_not_exist):delete_meta{delete_meta},error_on_not_exist{error_on_not_exist}{};
   bool delete_meta{true};
   bool error_on_not_exist{true};
   uint64_t Encode() {

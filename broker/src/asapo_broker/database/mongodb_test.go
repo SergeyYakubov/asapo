@@ -1159,9 +1159,11 @@ var testsDeleteStream = []struct {
 	stream  string
 	params  string
 	ok      bool
+	ok2 bool
 	message string
 }{
-	{"test", "{\"ErrorOnNotExist\":true,\"DeleteMeta\":true}", true, "delete stream"},
+	{"test", "{\"ErrorOnNotExist\":true,\"DeleteMeta\":true}", true,false, "delete stream"},
+	{"test", "{\"ErrorOnNotExist\":false,\"DeleteMeta\":true}", true, true,"delete stream"},
 }
 
 func TestDeleteStreams(t *testing.T) {
@@ -1180,6 +1182,12 @@ func TestDeleteStreams(t *testing.T) {
 			assert.Nil(t, err, test.message)
 		} else {
 			assert.NotNil(t, err, test.message)
+		}
+		_, err = db.ProcessRequest(Request{DbName: dbname, DbCollectionName: test.stream, GroupId: "", Op: "delete_stream", ExtraParam: test.params})
+		if test.ok2 {
+			assert.Nil(t, err, test.message+" 2")
+		} else {
+			assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code, test.message+" 2")
 		}
 	}
 }

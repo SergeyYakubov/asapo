@@ -119,7 +119,7 @@ ConsumerImpl::ConsumerImpl(std::string server_uri,
     // net_client__ will be lazy initialized
 
     if (source_credentials_.data_source.empty()) {
-        source_credentials_.data_source = SourceCredentials::kDefaultStream;
+        source_credentials_.data_source = SourceCredentials::kDefaultDataSource;
     }
 
 }

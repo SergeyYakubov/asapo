@@ -122,7 +122,7 @@ cdef class PyProducer:
         cdef bool* p_supported =  &supported if from_server else <bool*>NULL
         cdef Error err
         with nogil:
-                err =  self.c_producer.get().GetVersionInfo(&client_info,p_server_info,p_supported)
+            err =  self.c_producer.get().GetVersionInfo(&client_info,p_server_info,p_supported)
         if err:
             throw_exception(err)
         version = {}
@@ -223,6 +223,27 @@ cdef class PyProducer:
         if callback != None:
             Py_XINCREF(<PyObject*>callback)
 
+    def delete_stream(self, stream = 'default', uint64_t timeout_ms = 1000,bool error_on_not_exist = True):
+        """
+         :param stream: stream name
+         :type stream: string
+         :param timeout_ms: timeout in milliseconds
+         :type timeout_ms: int
+         :param error_on_not_exist: will emit AsapoWrongInputError if set to true and tries to delete non-existing stream
+         :type error_on_not_exist: bool
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, ...)
+            AsapoTimeoutError: request not finished for a given timeout
+            AsapoProducerError: other errors
+        """
+        cdef Error err
+        cdef DeleteStreamOptions opts
+        cdef string b_stream = _bytes(stream)
+        opts.error_on_not_exist = error_on_not_exist
+        with nogil:
+            err = self.c_producer.get().DeleteStream(b_stream,timeout_ms,opts)
+        if err:
+            throw_exception(err)
     def stream_info(self, stream = 'default', uint64_t timeout_ms = 1000):
         """
          :param stream: stream name

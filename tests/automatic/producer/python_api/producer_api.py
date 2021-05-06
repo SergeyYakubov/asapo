@@ -191,6 +191,25 @@ info_last = producer.last_stream()
 assert_eq(info_last['name'], "stream", "last stream")
 assert_eq(info_last['timestampCreated'] <= info_last['timestampLast'], True, "last is later than first")
 
+#delete_streams
+producer.delete_stream('stream')
+try:
+    producer.stream_info('stream')
+except asapo_producer.AsapoWrongInputError as e:
+    print(e)
+else:
+    print("should be error on stream info after stream was deleted")
+    sys.exit(1)
+producer.delete_stream('unknown_stream',error_on_not_exist = False)
+try:
+    producer.delete_stream('unknown_stream',error_on_not_exist = True)
+except asapo_producer.AsapoWrongInputError as e:
+    print(e)
+else:
+    print("should be error on delete unknown stream with flag")
+    sys.exit(1)
+
+
 # create with error
 try:
     producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', data_source, token, 0, 0)

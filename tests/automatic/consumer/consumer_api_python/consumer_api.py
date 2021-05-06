@@ -47,7 +47,7 @@ def assert_eq(val, expected, name):
 
 def check_file_transfer_service(consumer, group_id):
     consumer.set_timeout(1000)
-    data, meta = consumer.get_by_id(1, meta_only=False)
+    data, meta = consumer.get_by_id(1,stream = "stream1", meta_only=False)
     assert_eq(data.tostring().decode("utf-8"), "hello1", "check_file_transfer_service ok")
     data, meta = consumer.get_by_id(1, meta_only=False, stream = "streamfts")
     assert_eq(data.tostring().decode("utf-8"), "hello1", "check_file_transfer_service with auto size ok")
@@ -232,6 +232,20 @@ def check_single(consumer, group_id):
     else:
         exit_on_noerr("wrong query")
 
+    # delete stream
+
+    consumer.delete_stream(stream='default')
+    try:
+        consumer.delete_stream()
+    except asapo_consumer.AsapoWrongInputError as err:
+        print(err)
+        pass
+    else:
+        exit_on_noerr("should be AsapoWrongInputError on delete stream second time ")
+    consumer.delete_stream(error_on_not_exist = False)
+
+    # constructors
+
     consumer = asapo_consumer.create_consumer("bla", path, True, beamtime, "", token, 1000)
     try:
         consumer.get_last(meta_only=True)
@@ -248,6 +262,7 @@ def check_single(consumer, group_id):
         pass
     else:
         exit_on_noerr("should be AsapoWrongInputError")
+
 
 # interrupt
     thread_res = 0

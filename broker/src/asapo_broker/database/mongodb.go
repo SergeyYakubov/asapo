@@ -810,8 +810,11 @@ func (db *Mongodb) deleteDataCollection(errorOnNotexist bool, request Request) e
 	dataCol := data_collection_name_prefix + request.DbCollectionName
 	if errorOnNotexist {
 		exist, err := db.collectionExist(request, dataCol)
-		if err != nil || !exist {
+		if err != nil {
 			return err
+		}
+		if !exist {
+			return &DBError{utils.StatusWrongInput, "stream "+request.DbCollectionName+" does not exist"}
 		}
 	}
 	return db.deleteCollection(request, dataCol)
@@ -857,13 +860,14 @@ func (db *Mongodb) deleteStream(request Request) ([]byte, error) {
 		ErrorOnNotExist *bool
 		DeleteMeta      *bool
 	}{}
+
 	err := json.Unmarshal([]byte(request.ExtraParam), &params)
 	if err != nil {
 		return nil, err
 	}
 
 	if params.DeleteMeta == nil || params.ErrorOnNotExist == nil {
-		return nil, errors.New("wrong params: " + request.ExtraParam)
+		return nil, &DBError{utils.StatusWrongInput, "wrong params: " + request.ExtraParam}
 	}
 	if !*params.DeleteMeta {
 		logger.Debug("skipping delete stream meta for " + request.DbCollectionName + " in " + request.DbName)

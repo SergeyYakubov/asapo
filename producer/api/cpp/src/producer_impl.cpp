@@ -218,7 +218,7 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
     }
 
     if (source_cred.data_source.empty()) {
-        source_cred.data_source = SourceCredentials::kDefaultStream;
+        source_cred.data_source = SourceCredentials::kDefaultDataSource;
     }
 
     if (source_cred.beamline.empty()) {

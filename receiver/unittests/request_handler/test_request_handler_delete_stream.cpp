@@ -81,6 +81,7 @@ class DbMetaDeleteStreamTests : public Test {
         SetReceiverConfig(config, "none");
         EXPECT_CALL(*mock_request, GetCustomData_t()).WillOnce(Return(expected_custom_data));
         EXPECT_CALL(*mock_request, GetDataSource()).WillOnce(ReturnRef(expected_data_source));
+        EXPECT_CALL(*mock_request, GetStream()).WillOnce(Return(expected_stream));
 
         asapo::DeleteStreamOptions opt;
         opt.Decode(flag);
@@ -97,7 +98,7 @@ class DbMetaDeleteStreamTests : public Test {
 
         EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_data_source)).
             WillOnce(testing::Return(nullptr));
-        EXPECT_CALL(mock_db, DeleteStream_t(_)).
+        EXPECT_CALL(mock_db, DeleteStream_t(expected_stream)).
             WillOnce(testing::Return(errorTemplate==nullptr?nullptr:errorTemplate->Generate().release()));
         if (errorTemplate == nullptr) {
             EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("deleted stream meta"),

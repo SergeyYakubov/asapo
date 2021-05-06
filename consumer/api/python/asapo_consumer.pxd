@@ -59,6 +59,9 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
   StreamFilter StreamFilter_kAllStreams "asapo::StreamFilter::kAllStreams"
   StreamFilter StreamFilter_kFinishedStreams "asapo::StreamFilter::kFinishedStreams"
   StreamFilter StreamFilter_kUnfinishedStreams "asapo::StreamFilter::kUnfinishedStreams"
+  struct DeleteStreamOptions:
+    bool delete_meta
+    bool error_on_not_exist
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass Consumer:
@@ -88,6 +91,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts)
         void InterruptCurrentOperation()
         Error GetVersionInfo(string* client_info,string* server_info, bool* supported)
+        Error DeleteStream(string stream, DeleteStreamOptions options)
 
 cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
     cdef cppclass ConsumerFactory:
