@@ -17,7 +17,9 @@ C:\Curl\curl.exe --silent --data "{\"Folder\":\"%file_transfer_folder%\",\"Beamt
 set /P folder_token=< token
 
 echo hello > %file_transfer_folder%\aaa
+ping 192.0.2.1 -n 1 -w 1000 > nul
 
+C:\Curl\curl.exe -V --silent -H "Authorization: Bearer %folder_token%" --data "{\"Folder\":\"%file_transfer_folder%\",\"FileName\":\"aaa\",\"Token\":\"%folder_token%\"}" 127.0.0.1:5008/v0.1/transfer
 C:\Curl\curl.exe --silent -H "Authorization: Bearer %folder_token%" --data "{\"Folder\":\"%file_transfer_folder%\",\"FileName\":\"aaa\",\"Token\":\"%folder_token%\"}" 127.0.0.1:5008/v0.1/transfer --stderr - | findstr hello  || goto :error
 
 goto :clean
