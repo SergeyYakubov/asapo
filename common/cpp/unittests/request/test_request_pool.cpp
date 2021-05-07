@@ -109,7 +109,7 @@ TEST_F(RequestPoolTests, TimeOut) {
     EXPECT_CALL(*mock_request_handler, ReadyProcessRequest()).Times(1).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock_request_handler, PrepareProcessingRequestLocked()).Times(0);
     EXPECT_CALL(*mock_request_handler, ProcessRequestUnlocked_t(_, _)).Times(0);
-    EXPECT_CALL(*mock_request_handler, ProcessRequestTimeout(_)).Times(1);
+    EXPECT_CALL(*mock_request_handler, ProcessRequestTimeoutUnlocked(_)).Times(1);
 
     auto err = pool.AddRequest(std::move(request));
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
