@@ -974,7 +974,7 @@ TEST_F(RequestHandlerTcpTests, TimeoutCallsCallback) {
         HasSubstr("stream"))
     ));
 
-    request_handler.ProcessRequestTimeout(&request);
+    request_handler.ProcessRequestTimeoutUnlocked(&request);
 
     ASSERT_THAT(callback_err, Eq(asapo::ProducerErrorTemplates::kTimeout));
     ASSERT_THAT(callback_called, Eq(true));

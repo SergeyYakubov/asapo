@@ -17,7 +17,7 @@ class ReceiverDataServerRequestHandler: public RequestHandler {
     bool ReadyProcessRequest() override;
     void PrepareProcessingRequestLocked()  override;
     void TearDownProcessingRequestLocked(bool processing_succeeded)  override;
-    void ProcessRequestTimeout(GenericRequest* request)  override;
+    void ProcessRequestTimeoutUnlocked(GenericRequest* request)  override;
 
     const AbstractLogger* log__;
     Statistics* statistics__;

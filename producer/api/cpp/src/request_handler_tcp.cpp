@@ -307,7 +307,7 @@ void RequestHandlerTcp::TearDownProcessingRequestLocked(bool request_processed_s
     }
 }
 
-void RequestHandlerTcp::ProcessRequestTimeout(GenericRequest* request) {
+void RequestHandlerTcp::ProcessRequestTimeoutUnlocked(GenericRequest* request) {
     auto producer_request = static_cast<ProducerRequest*>(request);
     auto err_string = "request id:" + std::to_string(request->header.data_id) + ", opcode: " + std::to_string(
         request->header.op_code) + " for " + request->header.stream +

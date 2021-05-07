@@ -107,7 +107,9 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler> &request_
                                  ThreadInformation* thread_info) {
     auto request = GetRequestFromQueue();
     if (request->TimedOut()) {
-        request_handler->ProcessRequestTimeout(request.get());
+        thread_info->lock.unlock();
+        request_handler->ProcessRequestTimeoutUnlocked(request.get());
+        thread_info->lock.lock();
         return;
     }
     request_handler->PrepareProcessingRequestLocked();

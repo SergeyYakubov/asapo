@@ -38,7 +38,7 @@ bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request, b
     return true;
 }
 
-void RequestHandlerFilesystem::ProcessRequestTimeout(GenericRequest* request) {
+void RequestHandlerFilesystem::ProcessRequestTimeoutUnlocked(GenericRequest* request) {
     log__->Error("request timeout, id:" + std::to_string(request->header.data_id) + " to " + request->header.stream +
                  " stream");
 }
