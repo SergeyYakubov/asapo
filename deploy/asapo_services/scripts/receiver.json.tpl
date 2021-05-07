@@ -8,7 +8,7 @@
   "AuthorizationInterval": 10000,
   "ListenPort": {{ env "NOMAD_PORT_recv" }},
   "DataServer": {
-    "AdvertiseURI": "{{ if or (env "meta.ib_address") "none" | regexMatch "none" }}{{ env "NOMAD_IP_recv" }}{{ else }}{{ env "meta.ib_address" }}{{ end }}:{{ env "NOMAD_PORT_recv_ds" }}",
+    "AdvertiseURI": "{{ if env "NOMAD_META_receiver_network_modes" | regexMatch "tcp" }}{{ env "NOMAD_IP_recv" }}{{ else if or (env "meta.ib_address") "none" | regexMatch "none" }}{{ env "NOMAD_IP_recv" }}{{ else }}{{ env "meta.ib_address" }}{{ end }}:{{ env "NOMAD_PORT_recv_ds" }}",
     "NThreads": {{ env "NOMAD_META_receiver_dataserver_nthreads" }},
     "ListenPort": {{ env "NOMAD_PORT_recv_ds" }},
     "NetworkMode": ["{{ if or (env "meta.ib_address") "none" | regexMatch "none" }}{{ printf "%s" "tcp" }}{{ else }}{{ env "NOMAD_META_receiver_network_modes" |  split "," | join "\",\"" }}{{ end }}"]
