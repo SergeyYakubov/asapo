@@ -16,7 +16,7 @@ class MockRequestHandler : public RequestHandler {
     MOCK_METHOD0(ReadyProcessRequest, bool());
     MOCK_METHOD1(TearDownProcessingRequestLocked, void(bool processing_succeeded));
     MOCK_METHOD2(ProcessRequestUnlocked_t, bool (const GenericRequest* request, bool* retry));
-    MOCK_METHOD1(ProcessRequestTimeout, void(GenericRequest* request));
+    MOCK_METHOD1(ProcessRequestTimeoutUnlocked, void(GenericRequest* request));
     uint64_t retry_counter = 0;
     bool ProcessRequestUnlocked(GenericRequest* request, bool* retry)  override {
         retry_counter = request->GetRetryCounter();

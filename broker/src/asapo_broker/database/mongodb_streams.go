@@ -28,14 +28,15 @@ type StreamsRecord struct {
 
 type Streams struct {
 	records     map[string]StreamsRecord
-	lastUpdated map[string]int64
+	lastUpdated map[string]time.Time
+	lastSynced  map[string]time.Time
 }
 
-var streams = Streams{lastUpdated: make(map[string]int64, 0), records: make(map[string]StreamsRecord, 0)}
+var streams = Streams{lastSynced: make(map[string]time.Time, 0),lastUpdated: make(map[string]time.Time, 0), records: make(map[string]StreamsRecord, 0)}
 var streamsLock sync.Mutex
 
 func (ss *Streams) tryGetFromCache(db_name string, updatePeriodMs int) (StreamsRecord, error) {
-	if ss.lastUpdated[db_name] < time.Now().UnixNano()-int64(updatePeriodMs*1000000) {
+	if time.Now().Sub(ss.lastUpdated[db_name]).Milliseconds() > int64(updatePeriodMs) {
 		return StreamsRecord{}, errors.New("cache expired")
 	}
 	rec, ok := ss.records[db_name]
@@ -133,19 +134,19 @@ func updateStreamInfofromCurrent(currentStreams []StreamInfo, record StreamInfo,
 	return found, false
 }
 
-func updateStreamInfos(db *Mongodb, db_name string, rec *StreamsRecord) error {
+func updateStreamInfos(db *Mongodb, db_name string, rec *StreamsRecord,forceSync bool) error {
 	currentStreams := getCurrentStreams(db_name)
 	for i, record := range rec.Streams {
 		found, mayContinue := updateStreamInfofromCurrent(currentStreams, record, &rec.Streams[i])
-		if mayContinue {
+		if mayContinue && !forceSync {
 			continue
 		}
-		if !found { // set timestamp
+		if !found || forceSync { // set timestamp
 			if err := fillInfoFromEarliestRecord(db, db_name, rec, record, i); err != nil {
 				return err
 			}
 		}
-		if err := fillInfoFromLastRecord(db, db_name, rec, record, i); err != nil { // update firstStream last record (timestamp, stream finished flag)
+		if err := fillInfoFromLastRecord(db, db_name, rec, record, i); err != nil { // update last record (timestamp, stream finished flag)
 			return err
 		}
 	}
@@ -163,9 +164,18 @@ func (ss *Streams) updateFromDb(db *Mongodb, db_name string) (StreamsRecord, err
 	if err != nil {
 		return StreamsRecord{}, err
 	}
-	err = updateStreamInfos(db, db_name, &rec)
+
+	forceSync:= false
+	if time.Now().Sub(ss.lastSynced[db_name]).Seconds() > 5 {
+		forceSync = true
+	}
+	err = updateStreamInfos(db, db_name, &rec,forceSync)
 	if err != nil {
 		return StreamsRecord{}, err
+	}
+
+	if forceSync {
+		ss.lastSynced[db_name] = time.Now()
 	}
 
 	sortRecords(&rec)
@@ -173,7 +183,7 @@ func (ss *Streams) updateFromDb(db *Mongodb, db_name string) (StreamsRecord, err
 		res :=StreamsRecord{}
 		utils.DeepCopy(rec,&res)
 		ss.records[db_name] = res
-		ss.lastUpdated[db_name] = time.Now().UnixNano()
+		ss.lastUpdated[db_name] = time.Now()
 	}
 	return rec, nil
 }

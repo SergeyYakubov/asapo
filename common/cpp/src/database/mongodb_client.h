@@ -51,6 +51,7 @@ class MongoDBClient final : public Database {
     Error GetDataSetById(const std::string& collection, uint64_t id_in_set, uint64_t id, MessageMeta* file) const override;
     Error GetStreamInfo(const std::string& collection, StreamInfo* info) const override;
     Error GetLastStream(StreamInfo* info) const override;
+    Error DeleteStream(const std::string &stream) const override;
     ~MongoDBClient() override;
   private:
     mongoc_client_t* client_{nullptr};
@@ -71,7 +72,9 @@ class MongoDBClient final : public Database {
     Error GetRecordFromDb(const std::string& collection, uint64_t id, GetRecordMode mode, std::string* res) const;
     Error UpdateLastStreamInfo(const char *str, StreamInfo* info) const;
     Error UpdateCurrentLastStreamInfo(const std::string& collection_name, StreamInfo* info) const;
-
+    Error DeleteCollection(const std::string& name) const;
+    Error DeleteCollections(const std::string &prefix) const;
+    Error DeleteDocumentsInCollection(const std::string &collection_name,const std::string &querystr) const;
 };
 
 }

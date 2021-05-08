@@ -86,7 +86,7 @@ void ReceiverDataServerRequestHandler::TearDownProcessingRequestLocked(bool /*pr
 // do nothing
 }
 
-void ReceiverDataServerRequestHandler::ProcessRequestTimeout(GenericRequest* /*request*/) {
+void ReceiverDataServerRequestHandler::ProcessRequestTimeoutUnlocked(GenericRequest* /*request*/) {
 // do nothing
 }
 

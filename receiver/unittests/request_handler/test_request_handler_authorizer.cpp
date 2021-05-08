@@ -277,7 +277,7 @@ TEST_F(AuthorizerHandlerTests, RequestFromUnsupportedClient) {
         .WillOnce(Return(asapo::kOpcodeAuthorize))
         ;
     EXPECT_CALL(*mock_request, GetApiVersion())
-        .WillOnce(Return("v0.2"))
+        .WillOnce(Return("v1000.2"))
         ;
 
     auto err = handler.ProcessRequest(mock_request.get());

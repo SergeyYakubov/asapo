@@ -292,6 +292,26 @@ cdef class PyConsumer:
             throw_exception(err)
         return id
 
+    def delete_stream(self, stream = 'default', bool error_on_not_exist = True):
+        """
+         :param stream: stream name
+         :type stream: string
+         :param error_on_not_exist: will emit AsapoWrongInputError if set to true and tries to delete non-existing stream
+         :type error_on_not_exist: bool
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, ...)
+            AsapoTimeoutError: request not finished for a given timeout
+            AsapoProducerError: other errors
+        """
+        cdef Error err
+        cdef DeleteStreamOptions opts
+        cdef string b_stream = _bytes(stream)
+        opts.error_on_not_exist = error_on_not_exist
+        with nogil:
+            err = self.c_consumer.get().DeleteStream(b_stream,opts)
+        if err:
+            throw_exception(err)
+
     def get_unacknowledged_messages(self, group_id, uint64_t from_id = 0, uint64_t to_id = 0, stream = "default"):
         cdef Error err
         cdef string b_group_id = _bytes(group_id)

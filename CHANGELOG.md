@@ -1,13 +1,20 @@
-## 21.03.1
+## 21.03.2
+
+FEATURES
+* implemented possibility to delete stream (only metadata, not files yet) 
 
 IMPROVEMENTS
-* Consumer API - retry file delivery/reading with timeout (can be useful for the case file arrives after metadta ingested asapo, e.g. for slow NFS transfer,...)      
+* Consumer API - retry file delivery/reading with timeout (can be useful for the case file arrives after was metadta ingested, e.g. for slow NFS transfer,...)
+      
+BUG FIXES
+* Consumer API: fix race condition in GetStreamList/get_stream_list
+* Producer API: fix segfault in send_stream_finished_flag
+* Producer API: fix deadlock in producer timeout
+
+## 21.03.1
 
 BUG FIXES
 * Core services: fix LDAP authorization for raw data type Producers
-* Consumer API: fix race condition in GetStreamList/get_stream_list
-* Producer API: fix segfault in send_stream_finished_flag
-
 
 ## 21.03.0
 

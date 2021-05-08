@@ -23,7 +23,7 @@ class RequestHandlerFilesystem: public RequestHandler {
     };
     void PrepareProcessingRequestLocked()  override {};
     void TearDownProcessingRequestLocked(bool request_processed_successfully)  override {};
-    void ProcessRequestTimeout(GenericRequest* request)  override;
+    void ProcessRequestTimeoutUnlocked(GenericRequest* request)  override;
 
     virtual ~RequestHandlerFilesystem() = default;
     std::unique_ptr<IO> io__;

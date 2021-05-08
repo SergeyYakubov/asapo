@@ -338,5 +338,14 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsBadRequest) {
 }
 
 
+TEST_F(RequestsDispatcherTests, ProcessRequestReturnsBNoRecord) {
+    MockHandleRequest(1, asapo::DBErrorTemplates::kNoRecord.Generate());
+    MockSendResponse(&response, false);
+
+    auto err = dispatcher->ProcessRequest(request);
+
+    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorWrongRequest));
+}
+
 
 }

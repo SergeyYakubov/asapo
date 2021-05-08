@@ -15,13 +15,15 @@ type protocolTest struct {
 
 var protocolTests = []protocolTest{
 // consumer
-	{"consumer", "v0.1", true, "", "current protocol"},
-	{"consumer", "v0.2", false, "unknown", "unknown protocol"},
+	{"consumer", "v0.2", true, "current", "v0.2"},
+	{"consumer", "v0.1", true, "deprecates", "v0.1"},
+	{"consumer", "v1000.2", false, "unknown", "unknown protocol"},
 
 
 // producer
-	{"producer", "v0.1", true, "", "current protocol"},
-	{"producer", "v0.2", false, "unknown", "unknown protocol"},
+	{"producer", "v0.2", true, "current", "v0.2"},
+	{"producer", "v0.1", true, "deprecates", "v0.1"},
+	{"producer", "v1000.2", false, "unknown", "unknown protocol"},
 }
 
 func TestProtocolTests(t *testing.T) {

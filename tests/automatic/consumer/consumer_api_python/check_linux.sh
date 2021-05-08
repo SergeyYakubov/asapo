@@ -4,7 +4,7 @@ beamtime_id=test_run
 source_path=`pwd`/asap3/petra3/gpfs/p01/2019/data/$beamtime_id
 data_source=detector
 database_name=${beamtime_id}_${data_source}
-token_test_run=$BT_TEST_RUN_TOKEN
+token_test_run=$BT_TEST_RUN_RW_TOKEN
 set -e
 
 trap Cleanup EXIT
@@ -17,8 +17,8 @@ Cleanup() {
     nomad stop broker >/dev/null
     nomad stop file_transfer >/dev/null
     nomad stop authorizer >/dev/null
-	echo "db.dropDatabase()" | mongo ${database_name} >/dev/null
-	rm $source_path/1 $source_path/1_1
+	  echo "db.dropDatabase()" | mongo ${database_name} >/dev/null
+	  rm $source_path/1 $source_path/1_1
 }
 
 nomad run nginx.nmd
@@ -30,6 +30,7 @@ nomad run authorizer.nmd
 
 mkdir -p $source_path
 echo -n hello1 > $source_path/1
+echo -n hello1 > $source_path/11
 echo -n hello1 > $source_path/1_1
 
 for i in `seq 1 5`;

@@ -80,6 +80,7 @@ Error ConsumerErrorFromNoDataResponse(const std::string &response) {
 Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode &code) {
     switch (code) {
         case HttpCode::OK:return nullptr;
+        case HttpCode::NoContent:return nullptr;
         case HttpCode::PartialContent:return ConsumerErrorFromPartialDataResponse(response->to_string());
         case HttpCode::BadRequest:return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
         case HttpCode::Unauthorized:return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
@@ -92,19 +93,29 @@ Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode &c
 }
 Error ConsumerErrorFromServerError(const Error &server_err) {
     if (server_err == HttpErrorTemplates::kTransferError) {
-        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(
-            "error processing request: " + server_err->Explain());
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(server_err->Explain());
     } else {
-        return ConsumerErrorTemplates::kUnavailableService.Generate(
-            "error processing request: " + server_err->Explain());
+        return ConsumerErrorTemplates::kUnavailableService.Generate(server_err->Explain());
     }
 }
 
-Error ProcessRequestResponce(const Error &server_err, const RequestOutput* response, const HttpCode &code) {
+Error ProcessRequestResponce(const RequestInfo &request,
+                             const Error &server_err,
+                             const RequestOutput* response,
+                             const HttpCode &code) {
+    Error err;
     if (server_err != nullptr) {
-        return ConsumerErrorFromServerError(server_err);
+        err =  ConsumerErrorFromServerError(server_err);
+    } else {
+        err =  ConsumerErrorFromHttpCode(response, code);
     }
-    return ConsumerErrorFromHttpCode(response, code);
+
+    if (err!=nullptr) {
+        std::string prefix = "Error processing request" + request.api;
+        err->Prepend(prefix);
+    }
+    return err;
+
 }
 
 ConsumerImpl::ConsumerImpl(std::string server_uri,
@@ -118,7 +129,7 @@ ConsumerImpl::ConsumerImpl(std::string server_uri,
     // net_client__ will be lazy initialized
 
     if (source_credentials_.data_source.empty()) {
-        source_credentials_.data_source = SourceCredentials::kDefaultStream;
+        source_credentials_.data_source = SourceCredentials::kDefaultDataSource;
     }
 
 }
@@ -178,7 +189,7 @@ Error ConsumerImpl::ProcessRequest(RequestOutput* response, const RequestInfo &r
     if (err && service_uri) {
         service_uri->clear();
     }
-    return ProcessRequestResponce(err, response, code);
+    return ProcessRequestResponce(request, err, response, code);
 }
 
 RequestInfo ConsumerImpl::GetDiscoveryRequest(const std::string &service_name) const {
@@ -938,7 +949,7 @@ Error ConsumerImpl::GetServerVersionInfo(std::string* server_info, bool* support
     if (err) {
         return err;
     }
-    return ExtractVersionFromResponse(output.string_output,"consumer",server_info,supported);
+    return ExtractVersionFromResponse(output.string_output, "consumer", server_info, supported);
 }
 
 Error ConsumerImpl::GetVersionInfo(std::string* client_info, std::string* server_info, bool* supported) {
@@ -951,10 +962,28 @@ Error ConsumerImpl::GetVersionInfo(std::string* client_info, std::string* server
     }
 
     if (server_info != nullptr || supported != nullptr) {
-        return GetServerVersionInfo(server_info,supported);
+        return GetServerVersionInfo(server_info, supported);
     }
 
     return nullptr;
+}
+
+RequestInfo ConsumerImpl::GetDeleteStreamRequest(std::string stream, DeleteStreamOptions options) const {
+    RequestInfo ri;
+    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + source_credentials_.data_source +
+        +"/" + std::move(stream) +
+        "/delete";
+    ri.post = true;
+    ri.body = options.Json();
+    return ri;
+}
+
+Error ConsumerImpl::DeleteStream(std::string stream, DeleteStreamOptions options) {
+    auto ri = GetDeleteStreamRequest(std::move(stream), options);
+    Error err;
+    BrokerRequestWithTimeout(ri, &err);
+    return err;
 }
 
 }

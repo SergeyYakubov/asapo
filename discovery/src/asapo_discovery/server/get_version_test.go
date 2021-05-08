@@ -31,18 +31,18 @@ var versionTests = []struct {
 
 	{"?client=consumer&protocol=v0.1", versionInfo{
 		SoftwareVersion: coreVer,
-		ClientProtocol:     protocols.ProtocolInfo{"v0.1 (current)",
+		ClientProtocol:     protocols.ProtocolInfo{"v0.1 (deprecates at 2022-06-01 00:00:00 +0000 UTC)",
 			map[string]string{"Authorizer":"v0.1", "Broker":"v0.1", "Data cache service":"v0.1", "Discovery":"v0.1", "File Transfer":"v0.1"}},
 		ClientSupported:            "yes",
 	}, http.StatusOK, "consumer client"},
 	{"?client=producer&protocol=v0.1", versionInfo{
 		SoftwareVersion:        coreVer,
-		ClientProtocol: protocols.ProtocolInfo{"v0.1 (current)",map[string]string{"Discovery":"v0.1", "Receiver":"v0.1"}},
+		ClientProtocol: protocols.ProtocolInfo{"v0.1 (deprecates at 2022-06-01 00:00:00 +0000 UTC)",map[string]string{"Discovery":"v0.1", "Receiver":"v0.1"}},
 		ClientSupported:        "yes",
 	}, http.StatusOK, "producer client"},
-	{"?client=producer&protocol=v0.2", versionInfo{
+	{"?client=producer&protocol=v1000.2", versionInfo{
 		SoftwareVersion:        coreVer,
-		ClientProtocol: protocols.ProtocolInfo{"v0.2 (unknown protocol)",nil},
+		ClientProtocol: protocols.ProtocolInfo{"v1000.2 (unknown protocol)",nil},
 		ClientSupported:        "no",
 	}, http.StatusOK, "producer client unknown"},
 }
