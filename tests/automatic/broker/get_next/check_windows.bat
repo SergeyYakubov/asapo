@@ -11,6 +11,9 @@ set token=%BT_DATA_TOKEN%
 
 c:\opt\consul\nomad run authorizer.nmd
 c:\opt\consul\nomad run nginx.nmd
+
+ping 192.0.2.1 -n 1 -w 2000 > nul
+
 start /B "" "%full_name%" -config settings.json
 
 ping 192.0.2.1 -n 1 -w 5000 > nul
