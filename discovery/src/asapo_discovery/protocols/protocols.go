@@ -1,6 +1,9 @@
 package protocols
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 type protocolValidator interface {
 	IsValid() (hint string, ok bool)
@@ -11,6 +14,17 @@ type protocolValidatorCurrent struct {
 
 func (p *protocolValidatorCurrent) IsValid() (hint string, ok bool) {
 	return "current", true
+}
+
+type protocolValidatorDeprecated struct {
+	deprecates time.Time
+}
+
+func (p *protocolValidatorDeprecated) IsValid() (hint string, ok bool) {
+	if time.Now().After(p.deprecates) {
+		return "deprecated at "+p.deprecates.String(), false
+	}
+	return "deprecates at "+p.deprecates.String(), true
 }
 
 type Protocol struct {

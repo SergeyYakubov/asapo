@@ -74,6 +74,9 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     GenericRequestHeader original_header
     MessageData data
     string response
+  struct DeleteStreamOptions:
+    bool delete_meta
+    bool error_on_not_exist
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass RequestCallback:
@@ -106,6 +109,7 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
         StreamInfo GetStreamInfo(string stream, uint64_t timeout_ms, Error* err)
         StreamInfo GetLastStream(uint64_t timeout_ms, Error* err)
         Error GetVersionInfo(string* client_info,string* server_info, bool* supported)
+        Error DeleteStream(string stream, uint64_t timeout_ms, DeleteStreamOptions options)
 
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":

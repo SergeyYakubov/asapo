@@ -50,7 +50,7 @@ func datasetRequested(r *http.Request) (bool, int) {
 	return valueTrue(r, "dataset"), valueInt(r, "minsize")
 }
 
-func authorize(r *http.Request, beamtime_id string) error {
+func authorize(r *http.Request, beamtime_id string, needWriteAccess bool) error {
 	tokenJWT := r.URL.Query().Get("token")
 
 	if len(tokenJWT) == 0 {
@@ -67,7 +67,7 @@ func authorize(r *http.Request, beamtime_id string) error {
 		return err
 	}
 
-	return checkAccessType(token.AccessTypes)
+	return checkAccessType(token.AccessTypes,needWriteAccess)
 }
 
 func checkSubject(subject string, beamtime_id string) error {
@@ -77,7 +77,11 @@ func checkSubject(subject string, beamtime_id string) error {
 	return nil
 }
 
-func checkAccessType(accessTypes []string) error {
+func checkAccessType(accessTypes []string, needWriteAccess bool) error {
+	if needWriteAccess && !utils.StringInSlice("write",accessTypes) {
+		return errors.New("wrong token access type")
+	}
+
 	if !utils.StringInSlice("read",accessTypes) {
 		return errors.New("wrong token access type")
 	}

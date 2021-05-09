@@ -28,6 +28,7 @@ Args GetArgs(int argc, char* argv[]) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
     }
+    printf("%s %s",argv[1],argv[2]) ;
     return Args{argv[1], atoi(argv[2])};
 }
 
@@ -69,7 +70,7 @@ int main(int argc, char* argv[]) {
 
     Assert(err, args.keyword);
 
-    if (args.keyword == "OK") { // check retrieve
+    if (args.keyword == "OK") { // check retrieve and stream delete
         asapo::MessageMeta fi_db;
         asapo::MongoDBClient db_new;
         db_new.Connect("127.0.0.1", "data");
@@ -79,7 +80,9 @@ int main(int argc, char* argv[]) {
         err = db_new.GetById("data_test", 0, &fi_db);
         Assert(err, "No record");
 
+
         asapo::StreamInfo info;
+
         err = db.GetStreamInfo("data_test", &info);
         M_AssertEq(nullptr, err);
         M_AssertEq(fi.id, info.last_id);
@@ -90,6 +93,25 @@ int main(int argc, char* argv[]) {
         M_AssertEq("test1", info.name);
         M_AssertEq(true, info.finished);
         M_AssertEq("ns",info.next_stream);
+
+// delete stream
+        db.Insert("inprocess_test_blabla", fi, false);
+        db.Insert("inprocess_test_blabla1", fi, false);
+        db.Insert("acks_test_blabla", fi, false);
+        db.Insert("acks_test_blabla1", fi, false);
+        db.DeleteStream("test");
+        err = db.GetStreamInfo("data_test", &info);
+        M_AssertTrue(err!=nullptr);
+        err = db.GetStreamInfo("inprocess_test_blabla", &info);
+        M_AssertTrue(err!=nullptr);
+        err = db.GetStreamInfo("inprocess_test_blabla1", &info);
+        M_AssertTrue(err!=nullptr);
+        err = db.GetStreamInfo("acks_test_blabla", &info);
+        M_AssertTrue(err!=nullptr);
+        err = db.GetStreamInfo("acks_test_blabla1", &info);
+        M_AssertTrue(err!=nullptr);
+        err = db.DeleteStream("test1");
+        M_AssertTrue(err==nullptr);
     }
 
     return 0;

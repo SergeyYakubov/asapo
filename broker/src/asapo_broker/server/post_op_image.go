@@ -12,6 +12,7 @@ type MessageOp struct {
 	Op string
 	Params map[string]interface{} `json:",omitempty"`
 }
+
 func routeMessageOp(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

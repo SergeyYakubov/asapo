@@ -16,7 +16,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -76,7 +75,6 @@ const stream_filter_all = "all"
 const stream_filter_finished = "finished"
 const stream_filter_unfinished = "unfinished"
 
-
 var dbSessionLock sync.Mutex
 
 type SizeRecord struct {
@@ -87,7 +85,7 @@ type Mongodb struct {
 	client                *mongo.Client
 	timeout               time.Duration
 	settings              DBSettings
-	lastReadFromInprocess int64
+	lastReadFromInprocess map[string]int64
 }
 
 func (db *Mongodb) SetSettings(settings DBSettings) {
@@ -104,6 +102,9 @@ func (db *Mongodb) Ping() (err error) {
 }
 
 func (db *Mongodb) Connect(address string) (err error) {
+	dbSessionLock.Lock()
+	defer dbSessionLock.Unlock()
+
 	if db.client != nil {
 		return &DBError{utils.StatusServiceUnavailable, already_connected_msg}
 	}
@@ -119,19 +120,21 @@ func (db *Mongodb) Connect(address string) (err error) {
 		return err
 	}
 
-	atomic.StoreInt64(&db.lastReadFromInprocess, time.Now().Unix())
+	if db.lastReadFromInprocess == nil {
+		db.lastReadFromInprocess = make(map[string]int64, 100)
+	}
 
 	return db.Ping()
 }
 
 func (db *Mongodb) Close() {
+	dbSessionLock.Lock()
+	defer dbSessionLock.Unlock()
 	if db.client != nil {
-		dbSessionLock.Lock()
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 		db.client.Disconnect(ctx)
 		db.client = nil
-		dbSessionLock.Unlock()
 	}
 }
 
@@ -358,7 +361,7 @@ func (db *Mongodb) negAckRecord(request Request) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	err = db.InsertRecordToInprocess(request.DbName, inprocess_collection_name_prefix+request.GroupId, input.Id, input.Params.DelayMs, 1)
+	err = db.InsertRecordToInprocess(request.DbName, inprocess_collection_name_prefix+request.DbCollectionName+"_"+request.GroupId, input.Id, input.Params.DelayMs, 1, true)
 	return []byte(""), err
 }
 
@@ -372,7 +375,7 @@ func (db *Mongodb) ackRecord(request Request) ([]byte, error) {
 	_, err = c.InsertOne(context.Background(), &record)
 
 	if err == nil {
-		c = db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.GroupId)
+		c = db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
 		_, err_del := c.DeleteOne(context.Background(), bson.M{"_id": record.ID})
 		if err_del != nil {
 			return nil, &DBError{utils.StatusWrongInput, err.Error()}
@@ -439,7 +442,7 @@ func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delay
 	return res.ID, nil
 }
 
-func (db *Mongodb) InsertRecordToInprocess(db_name string, collection_name string, id int, delayMs int, nResendAttempts int) error {
+func (db *Mongodb) InsertRecordToInprocess(db_name string, collection_name string, id int, delayMs int, nResendAttempts int, replaceIfExist bool) error {
 	record := InProcessingRecord{
 		id, nResendAttempts, 0, time.Now().UnixNano() + int64(delayMs*1e6),
 	}
@@ -447,7 +450,11 @@ func (db *Mongodb) InsertRecordToInprocess(db_name string, collection_name strin
 	c := db.client.Database(db_name).Collection(collection_name)
 	_, err := c.InsertOne(context.TODO(), &record)
 	if duplicateError(err) {
-		return nil
+		if !replaceIfExist {
+			return nil
+		}
+		_, err := c.ReplaceOne(context.TODO(), bson.M{"_id": id}, &record)
+		return err
 	}
 	return err
 }
@@ -461,7 +468,7 @@ func (db *Mongodb) InsertToInprocessIfNeeded(db_name string, collection_name str
 		return err
 	}
 
-	return db.InsertRecordToInprocess(db_name, collection_name, id, delayMs, nResendAttempts)
+	return db.InsertRecordToInprocess(db_name, collection_name, id, delayMs, nResendAttempts, false)
 
 }
 
@@ -477,8 +484,11 @@ func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTi
 		nResendAttempts = -1
 	}
 	tNow := time.Now().Unix()
-	if (atomic.LoadInt64(&db.lastReadFromInprocess) <= tNow-int64(db.settings.ReadFromInprocessPeriod)) || ignoreTimeout {
-		record_ind, err = db.getUnProcessedId(request.DbName, inprocess_collection_name_prefix+request.GroupId, delayMs, nResendAttempts)
+	dbSessionLock.Lock()
+	t := db.lastReadFromInprocess[request.DbCollectionName+"_"+request.GroupId]
+	dbSessionLock.Unlock()
+	if (t <= tNow-int64(db.settings.ReadFromInprocessPeriod)) || ignoreTimeout {
+		record_ind, err = db.getUnProcessedId(request.DbName, inprocess_collection_name_prefix+request.DbCollectionName+"_"+request.GroupId, delayMs, nResendAttempts)
 		if err != nil {
 			log_str := "error getting unprocessed id " + request.DbName + ", groupid: " + request.GroupId + ":" + err.Error()
 			logger.Debug(log_str)
@@ -491,7 +501,9 @@ func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTi
 			return 0, 0, err
 		}
 	} else {
-		atomic.StoreInt64(&db.lastReadFromInprocess, time.Now().Unix())
+		dbSessionLock.Lock()
+		db.lastReadFromInprocess[request.DbCollectionName+"_"+request.GroupId] = time.Now().Unix()
+		dbSessionLock.Unlock()
 	}
 
 	return record_ind, max_ind, nil
@@ -590,7 +602,7 @@ func (db *Mongodb) getNextRecord(request Request) ([]byte, error) {
 	}
 
 	if err == nil {
-		err_update := db.InsertToInprocessIfNeeded(request.DbName, inprocess_collection_name_prefix+request.GroupId, nextInd, request.ExtraParam)
+		err_update := db.InsertToInprocessIfNeeded(request.DbName, inprocess_collection_name_prefix+request.DbCollectionName+"_"+request.GroupId, nextInd, request.ExtraParam)
 		if err_update != nil {
 			return nil, err_update
 		}
@@ -645,7 +657,7 @@ func (db *Mongodb) resetCounter(request Request) ([]byte, error) {
 		return []byte(""), err
 	}
 
-	c := db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.GroupId)
+	c := db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
 	_, err_del := c.DeleteMany(context.Background(), bson.M{"_id": bson.M{"$gte": id}})
 	if err_del != nil {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
@@ -792,6 +804,98 @@ func (db *Mongodb) nacks(request Request) ([]byte, error) {
 	return utils.MapToJson(&res)
 }
 
+func (db *Mongodb) deleteCollection(request Request, name string) error {
+	return db.client.Database(request.DbName).Collection(name).Drop(context.Background())
+}
+
+func (db *Mongodb) collectionExist(request Request, name string) (bool, error) {
+	result, err := db.client.Database(request.DbName).ListCollectionNames(context.TODO(), bson.M{"name": name})
+	if err != nil {
+		return false, err
+	}
+	if len(result) == 1 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (db *Mongodb) deleteDataCollection(errorOnNotexist bool, request Request) error {
+	dataCol := data_collection_name_prefix + request.DbCollectionName
+	if errorOnNotexist {
+		exist, err := db.collectionExist(request, dataCol)
+		if err != nil {
+			return err
+		}
+		if !exist {
+			return &DBError{utils.StatusWrongInput, "stream " + request.DbCollectionName + " does not exist"}
+		}
+	}
+	return db.deleteCollection(request, dataCol)
+}
+
+func (db *Mongodb) deleteDocumentsInCollection(request Request, collection string, field string, pattern string) error {
+	filter := bson.M{field: bson.D{{"$regex", primitive.Regex{Pattern: pattern, Options: "i"}}}}
+	_, err := db.client.Database(request.DbName).Collection(collection).DeleteMany(context.TODO(), filter)
+	return err
+}
+
+func (db *Mongodb) deleteCollectionsWithPrefix(request Request, prefix string) error {
+	cols, err := db.client.Database(request.DbName).ListCollectionNames(context.TODO(), bson.M{"name": bson.D{
+		{"$regex", primitive.Regex{Pattern: "^" + prefix, Options: "i"}}}})
+	if err != nil {
+		return err
+	}
+
+	for _, col := range cols {
+		err := db.deleteCollection(request, col)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (db *Mongodb) deleteServiceMeta(request Request) error {
+	err := db.deleteCollectionsWithPrefix(request, acks_collection_name_prefix+request.DbCollectionName)
+	if err != nil {
+		return err
+	}
+	err = db.deleteCollectionsWithPrefix(request, inprocess_collection_name_prefix+request.DbCollectionName)
+	if err != nil {
+		return err
+	}
+	return db.deleteDocumentsInCollection(request, pointer_collection_name, "_id", ".*_"+request.DbCollectionName+"$")
+}
+
+func (db *Mongodb) deleteStream(request Request) ([]byte, error) {
+	params := struct {
+		ErrorOnNotExist *bool
+		DeleteMeta      *bool
+	}{}
+
+	err := json.Unmarshal([]byte(request.ExtraParam), &params)
+	if err != nil {
+		return nil, err
+	}
+
+	if params.DeleteMeta == nil || params.ErrorOnNotExist == nil {
+		return nil, &DBError{utils.StatusWrongInput, "wrong params: " + request.ExtraParam}
+	}
+	if !*params.DeleteMeta {
+		logger.Debug("skipping delete stream meta for " + request.DbCollectionName + " in " + request.DbName)
+		return nil, nil
+	}
+
+	err = db.deleteDataCollection(*params.ErrorOnNotExist, request)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.deleteServiceMeta(request)
+	return nil, err
+}
+
 func (db *Mongodb) lastAck(request Request) ([]byte, error) {
 	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
 	opts := options.FindOne().SetSort(bson.M{"_id": -1}).SetReturnKey(true)
@@ -910,6 +1014,8 @@ func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
 		return db.nacks(request)
 	case "lastack":
 		return db.lastAck(request)
+	case "delete_stream":
+		return db.deleteStream(request)
 	}
 
 	return nil, errors.New("Wrong db operation: " + request.Op)

@@ -3,7 +3,7 @@
 beamtime_id=test_run
 data_source=detector
 database_name=${beamtime_id}_${data_source}
-token_test_run=$BT_TEST_RUN_TOKEN
+token_test_run=$BT_TEST_RUN_RW_TOKEN
 
 
 
@@ -19,7 +19,7 @@ Cleanup() {
     nomad stop authorizer
     nomad stop broker
     echo "db.dropDatabase()" | mongo ${database_name}
-	rm -f 1_1 1
+	  rm -f 1_1 1
 }
 
 
@@ -51,6 +51,7 @@ echo 'db.data_stream2.insert({"_id":'6',"size":0,"name":"asapo_finish_stream","t
 echo hello1 > 1
 
 $@ 127.0.0.1:8400 $beamtime_id $token_test_run single
+
 
 
 #check datasets

@@ -217,6 +217,15 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err == nullptr, "GetNextAfterResend no error");
     M_AssertTrue(fi.name == "2", "GetNextAfterResend filename");
 
+// delete stream
+
+    err = consumer->DeleteStream("default",asapo::DeleteStreamOptions{true,true});
+    M_AssertTrue(err == nullptr, "delete default stream ok");
+    err = consumer->DeleteStream("default",asapo::DeleteStreamOptions{true,true});
+    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kWrongInput, "delete non existing stream error");
+    err = consumer->DeleteStream("default",asapo::DeleteStreamOptions{true,false});
+    M_AssertTrue(err == nullptr, "delete non existing stream ok");
+
 }
 
 

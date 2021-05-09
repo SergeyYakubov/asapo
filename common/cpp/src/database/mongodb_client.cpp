@@ -238,8 +238,8 @@ Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool 
 }
 
 Error MongoDBClient::InsertAsDatasetMessage(const std::string &collection, const MessageMeta &file,
-                                    uint64_t dataset_size,
-                                    bool ignore_duplicates) const {
+                                            uint64_t dataset_size,
+                                            bool ignore_duplicates) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -251,8 +251,9 @@ Error MongoDBClient::InsertAsDatasetMessage(const std::string &collection, const
     if (err) {
         return err;
     }
-    auto query = BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(file.id), "}", "{", "messages.dataset_substream", "{", "$ne",
-                           BCON_INT64(file.dataset_substream), "}", "}", "]");
+    auto query =
+        BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(file.id), "}", "{", "messages.dataset_substream", "{", "$ne",
+                  BCON_INT64(file.dataset_substream), "}", "}", "]");
     auto update = BCON_NEW ("$setOnInsert", "{",
                             "size", BCON_INT64(dataset_size),
                             "timestamp", BCON_INT64((int64_t) NanosecsEpochFromTimePoint(file.timestamp)),
@@ -334,7 +335,10 @@ Error MongoDBClient::GetById(const std::string &collection, uint64_t id, Message
     return nullptr;
 }
 
-Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_in_set, uint64_t id, MessageMeta* file) const {
+Error MongoDBClient::GetDataSetById(const std::string &collection,
+                                    uint64_t id_in_set,
+                                    uint64_t id,
+                                    MessageMeta* file) const {
     std::string record_str;
     auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
     if (err) {
@@ -358,7 +362,7 @@ Error MongoDBClient::GetDataSetById(const std::string &collection, uint64_t id_i
 }
 
 Error UpdateStreamInfoFromEarliestRecord(const std::string &earliest_record_str,
-                               StreamInfo* info) {
+                                         StreamInfo* info) {
     std::chrono::system_clock::time_point timestamp_created;
     auto parser = JsonStringParser(earliest_record_str);
     auto ok = TimeFromJson(parser, "timestamp", &timestamp_created);
@@ -371,7 +375,7 @@ Error UpdateStreamInfoFromEarliestRecord(const std::string &earliest_record_str,
 }
 
 Error UpdateFinishedStreamInfo(const std::string &metadata,
-                                     StreamInfo* info) {
+                               StreamInfo* info) {
     info->finished = true;
     auto parser = JsonStringParser(metadata);
     std::string next_stream;
@@ -380,7 +384,7 @@ Error UpdateFinishedStreamInfo(const std::string &metadata,
         return DBErrorTemplates::kJsonParseError.Generate(
             "UpdateFinishedStreamInfo: cannot parse finished strean meta response: " + metadata);
     }
-    if (next_stream!=kNoNextStreamKeyword) {
+    if (next_stream != kNoNextStreamKeyword) {
         info->next_stream = next_stream;
     }
     return nullptr;
@@ -406,18 +410,17 @@ Error UpdateStreamInfoFromLastRecord(const std::string &last_record_str,
     return nullptr;
 }
 
-
 Error StreamInfoFromDbResponse(const std::string &last_record_str,
                                const std::string &earliest_record_str,
                                StreamInfo* info) {
     std::chrono::system_clock::time_point timestamp_created;
 
-    auto err = UpdateStreamInfoFromLastRecord(last_record_str,info);
+    auto err = UpdateStreamInfoFromLastRecord(last_record_str, info);
     if (err) {
         return err;
     }
 
-    return UpdateStreamInfoFromEarliestRecord(last_record_str,info);
+    return UpdateStreamInfoFromEarliestRecord(earliest_record_str, info);
 
 }
 
@@ -425,9 +428,6 @@ Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* in
     std::string last_record_str, earliest_record_str;
     auto err = GetRecordFromDb(collection, 0, GetRecordMode::kLast, &last_record_str);
     if (err) {
-        if (err == DBErrorTemplates::kNoRecord) {
-            return nullptr;
-        }
         return err;
     }
     err = GetRecordFromDb(collection, 0, GetRecordMode::kEarliest, &earliest_record_str);
@@ -438,12 +438,12 @@ Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* in
     return StreamInfoFromDbResponse(last_record_str, earliest_record_str, info);
 }
 
-bool MongoCollectionIsDataStream(const std::string &stream_name)  {
+bool MongoCollectionIsDataStream(const std::string &stream_name) {
     std::string prefix = std::string(kDBDataCollectionNamePrefix) + "_";
     return stream_name.rfind(prefix, 0) == 0;
 }
 
-Error MongoDBClient::UpdateCurrentLastStreamInfo(const std::string& collection_name, StreamInfo* info) const {
+Error MongoDBClient::UpdateCurrentLastStreamInfo(const std::string &collection_name, StreamInfo* info) const {
     StreamInfo next_info;
     auto err = GetStreamInfo(collection_name, &next_info);
     std::string prefix = std::string(kDBDataCollectionNamePrefix) + "_";
@@ -456,7 +456,6 @@ Error MongoDBClient::UpdateCurrentLastStreamInfo(const std::string& collection_n
     }
     return nullptr;
 }
-
 
 Error MongoDBClient::UpdateLastStreamInfo(const char* str, StreamInfo* info) const {
     std::string collection_name{str};
@@ -500,6 +499,76 @@ Error MongoDBClient::GetLastStream(StreamInfo* info) const {
 
     bson_destroy(opts);
     mongoc_database_destroy(database);
+    return err;
+}
+
+
+Error MongoDBClient::DeleteCollections(const std::string &prefix) const {
+    mongoc_database_t* database;
+    char** strv;
+    bson_error_t error;
+    std::string querystr = "^" + prefix;
+    bson_t* query = BCON_NEW ("name", BCON_REGEX(querystr.c_str(), "i"));
+    bson_t* opts = BCON_NEW ("nameOnly", BCON_BOOL(true),"filter",BCON_DOCUMENT(query));
+    database = mongoc_client_get_database(client_, database_name_.c_str());
+    Error err;
+    if ((strv = mongoc_database_get_collection_names_with_opts(
+        database, opts, &error))) {
+        for (auto i = 0; strv[i]; i++) {
+            DeleteCollection(strv[i]);
+        }
+        bson_strfreev(strv);
+    } else {
+        err = DBErrorTemplates::kDBError.Generate(error.message);
+    }
+
+    bson_destroy(opts);
+    bson_destroy(query);
+    mongoc_database_destroy(database);
+    return nullptr;
+}
+
+Error MongoDBClient::DeleteCollection(const std::string &name) const {
+    bson_error_t error;
+    auto collection = mongoc_client_get_collection(client_, database_name_.c_str(), name.c_str());
+    mongoc_collection_set_write_concern(collection, write_concern_);
+    auto r = mongoc_collection_drop_with_opts(collection, NULL /* opts */, &error);
+    mongoc_collection_destroy(collection);
+    if (!r) {
+        if (error.code == 26) {
+            return DBErrorTemplates::kNoRecord.Generate("collection "+name+" not found in "+database_name_);
+        } else {
+            return DBErrorTemplates::kDBError.Generate(std::string(error.message)+": "+std::to_string(error.code));
+        }
+    }
+    return nullptr;
+}
+
+Error MongoDBClient::DeleteDocumentsInCollection(const std::string &collection_name,const std::string &querystr) const {
+    auto collection = mongoc_client_get_collection(client_, database_name_.c_str(), collection_name.c_str());
+    mongoc_collection_set_write_concern(collection, write_concern_);
+    bson_error_t error;
+    auto query = BCON_NEW ("_id", BCON_REGEX(querystr.c_str(), "i"));
+    if (!mongoc_collection_delete_many(collection, query, NULL,NULL, &error)) {
+        return DBErrorTemplates::kDBError.Generate(error.message);
+    }
+    mongoc_collection_destroy(collection);
+    bson_destroy(query);
+    return nullptr;
+}
+
+Error MongoDBClient::DeleteStream(const std::string &stream) const {
+    std::string data_col = std::string(kDBDataCollectionNamePrefix) + "_" + stream;
+    std::string inprocess_col = "inprocess_" + stream;
+    std::string acks_col = "acks_" + stream;
+    current_collection_name_ = "";
+    auto err = DeleteCollection(data_col);
+    if (err == nullptr) {
+        DeleteCollections(inprocess_col);
+        DeleteCollections(acks_col);
+        std::string querystr = ".*_" + stream+"$";
+        DeleteDocumentsInCollection("current_location",querystr);
+    }
     return err;
 }
 

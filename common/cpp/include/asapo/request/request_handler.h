@@ -14,7 +14,7 @@ class RequestHandler {
     virtual void PrepareProcessingRequestLocked()  = 0;
     virtual void TearDownProcessingRequestLocked(bool success)  = 0;
     virtual bool ProcessRequestUnlocked(GenericRequest* request, bool* retry)  = 0;
-    virtual void ProcessRequestTimeout(GenericRequest* request)  = 0;
+    virtual void ProcessRequestTimeoutUnlocked(GenericRequest* request)  = 0;
     virtual bool ReadyProcessRequest() = 0;
     virtual ~RequestHandler() = default;
 };

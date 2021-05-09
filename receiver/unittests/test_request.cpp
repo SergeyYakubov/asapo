@@ -83,7 +83,7 @@ class RequestTests : public Test {
     uint64_t expected_metadata_size = expected_metadata.size();
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
     char expected_request_message[asapo::kMaxMessageSize] = "test_message";
-    std::string expected_api_version = "v0.1";
+    std::string expected_api_version = "v0.2";
     std::unique_ptr<Request> request;
     NiceMock<MockIO> mock_io;
     NiceMock<MockStatistics> mock_statistics;

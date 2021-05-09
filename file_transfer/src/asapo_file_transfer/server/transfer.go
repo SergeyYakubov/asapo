@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 )
 
 
@@ -18,12 +19,11 @@ type fileTransferRequest struct {
 	FileName string
 }
 
-
 func Exists(name string) bool {
-	fi, err := os.Stat(name)
-	return !os.IsNotExist(err) && !fi.IsDir()
+	f, err := os.Open(name)
+	defer f.Close()
+	return err==nil
 }
-
 
 func checkClaim(r *http.Request,request* fileTransferRequest) (int,error) {
 	var extraClaim structs.FolderTokenTokenExtraClaim
@@ -40,9 +40,9 @@ func checkClaim(r *http.Request,request* fileTransferRequest) (int,error) {
 
 func checkFileExists(r *http.Request,name string) (int,error) {
 	if !Exists(name) {
-		err_txt := "file "+name+" does not exist"
+		err_txt := "file "+name+" does not exist or cannot be read"
 		log.Error("cannot transfer file: "+err_txt)
-		return http.StatusBadRequest,errors.New(err_txt)
+		return http.StatusNotFound,errors.New(err_txt)
 	}
 	return http.StatusOK,nil
 
@@ -82,7 +82,7 @@ func serveFileSize(w http.ResponseWriter, r *http.Request, fullName string) {
 		utils.WriteServerError(w,err,http.StatusBadRequest)
 		log.Error("Error getting file size for " + fullName+": "+err.Error())
 	}
-	log.Debug("Sending file size for " + fullName)
+	log.Debug("Sending file size "+strconv.FormatInt(fi.Size(),10)+" for " + fullName)
 
 	fsize.FileSize = fi.Size()
 	b,_ := json.Marshal(&fsize)

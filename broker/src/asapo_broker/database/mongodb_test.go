@@ -1122,10 +1122,14 @@ func TestMongoDBNegAck(t *testing.T) {
 	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "negackmessage", ExtraParam: string(bparam)})
 	res, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"}) // first time message from negack
 	_, err1 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})  // second time nothing
+	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "negackmessage", ExtraParam: string(bparam)})
+	_, err2 := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})  // second time nothing
 
 	assert.Nil(t, err)
 	assert.Equal(t, string(rec1_expect), string(res))
 	assert.NotNil(t, err1)
+	assert.Nil(t, err2)
+
 	if err1 != nil {
 		assert.Equal(t, utils.StatusNoData, err1.(*DBError).Code)
 		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"\"}", err1.Error())
@@ -1153,4 +1157,41 @@ func TestMongoDBGetNextClearsInprocessAfterReset(t *testing.T) {
 	assert.Equal(t, string(rec1_expect), string(res1))
 	assert.Equal(t, string(rec1_expect), string(res2))
 	assert.Equal(t, string(rec1_expect), string(res3))
+}
+
+var testsDeleteStream = []struct {
+	stream  string
+	params  string
+	ok      bool
+	ok2 bool
+	message string
+}{
+	{"test", "{\"ErrorOnNotExist\":true,\"DeleteMeta\":true}", true,false, "delete stream"},
+	{"test", "{\"ErrorOnNotExist\":false,\"DeleteMeta\":true}", true, true,"delete stream"},
+}
+
+func TestDeleteStreams(t *testing.T) {
+	for _, test := range testsDeleteStream {
+		db.Connect(dbaddress)
+		db.insertRecord(dbname, test.stream, &rec_finished11)
+
+		_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: test.stream, GroupId: "", Op: "delete_stream", ExtraParam: test.params})
+		if test.ok {
+			rec, err := streams.getStreams(&db, Request{DbName: dbname, ExtraParam: ""})
+			acks_exist,_:= db.collectionExist(Request{DbName: dbname, ExtraParam: ""},acks_collection_name_prefix+test.stream)
+			inprocess_exist,_:= db.collectionExist(Request{DbName: dbname, ExtraParam: ""},inprocess_collection_name_prefix+test.stream)
+			assert.Equal(t,0,len(rec.Streams),test.message)
+			assert.Equal(t,false,acks_exist,test.message)
+			assert.Equal(t,false,inprocess_exist,test.message)
+			assert.Nil(t, err, test.message)
+		} else {
+			assert.NotNil(t, err, test.message)
+		}
+		_, err = db.ProcessRequest(Request{DbName: dbname, DbCollectionName: test.stream, GroupId: "", Op: "delete_stream", ExtraParam: test.params})
+		if test.ok2 {
+			assert.Nil(t, err, test.message+" 2")
+		} else {
+			assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code, test.message+" 2")
+		}
+	}
 }

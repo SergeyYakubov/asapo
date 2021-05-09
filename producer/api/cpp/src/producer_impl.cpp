@@ -218,7 +218,7 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
     }
 
     if (source_cred.data_source.empty()) {
-        source_cred.data_source = SourceCredentials::kDefaultStream;
+        source_cred.data_source = SourceCredentials::kDefaultDataSource;
     }
 
     if (source_cred.beamline.empty()) {
@@ -300,20 +300,23 @@ Error ProducerImpl::SendFile(const MessageHeader &message_header,
 
 }
 
-using RequestCallbackWithPromise = void (*)(std::shared_ptr<std::promise<StreamInfoResult>>,
+template<class T >
+using RequestCallbackWithPromise = void (*)(std::shared_ptr<std::promise<T>>,
                                             RequestCallbackPayload header, Error err);
 
-RequestCallback unwrap_callback(RequestCallbackWithPromise callback,
-                                std::unique_ptr<std::promise<StreamInfoResult>> promise) {
-    auto shared_promise = std::shared_ptr<std::promise<StreamInfoResult>>(std::move(promise));
+
+template<class T>
+RequestCallback unwrap_callback(RequestCallbackWithPromise<T> callback,
+                                std::unique_ptr<std::promise<T>> promise) {
+    auto shared_promise = std::shared_ptr<std::promise<T>>(std::move(promise));
     RequestCallback wrapper = [ = ](RequestCallbackPayload payload, Error err) -> void {
         callback(shared_promise, std::move(payload), std::move(err));
     };
     return wrapper;
 }
 
-void ActivatePromise(std::shared_ptr<std::promise<StreamInfoResult>> promise, RequestCallbackPayload payload,
-                     Error err) {
+void ActivatePromiseForStreamInfo(std::shared_ptr<std::promise<StreamInfoResult>> promise, RequestCallbackPayload payload,
+                                  Error err) {
     StreamInfoResult res;
     if (err == nullptr) {
         auto ok = res.sinfo.SetFromJson(payload.response);
@@ -327,22 +330,31 @@ void ActivatePromise(std::shared_ptr<std::promise<StreamInfoResult>> promise, Re
     } catch(...) {}
 }
 
-StreamInfo GetInfoFromCallback(std::future<StreamInfoResult>* promiseResult, uint64_t timeout_ms, Error* err) {
+void ActivatePromiseForErrorInterface(std::shared_ptr<std::promise<ErrorInterface*>> promise, RequestCallbackPayload payload,
+                                  Error err) {
+    ErrorInterface* res;
+    if (err == nullptr) {
+        res = nullptr;
+    } else {
+        res = err.release();
+    }
+    try {
+        promise->set_value(res);
+    } catch(...) {}
+}
+
+
+template<class T>
+T GetResultFromCallback(std::future<T>* promiseResult, uint64_t timeout_ms, Error* err) {
     try {
         auto status = promiseResult->wait_for(std::chrono::milliseconds(timeout_ms));
         if (status == std::future_status::ready) {
-            auto res = promiseResult->get();
-            if (res.err == nullptr) {
-                return res.sinfo;
-            } else {
-                (*err).reset(res.err);
-                return StreamInfo{};
-            }
+            return promiseResult->get();
         }
     } catch(...) {}
 
     *err = ProducerErrorTemplates::kTimeout.Generate();
-    return StreamInfo{};
+    return T{};
 }
 
 
@@ -362,14 +374,22 @@ StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string stream, ui
 
     *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(header),
                                                                                             nullptr, "", "",
-                                                                                            unwrap_callback(ActivatePromise, std::move(promise)), true,
+                                                                                            unwrap_callback(
+                                                                                                ActivatePromiseForStreamInfo,
+                                                                                                std::move(promise)), true,
                                                                                             timeout_ms}
     }, true);
     if (*err) {
         return StreamInfo{};
     }
-    return GetInfoFromCallback(&promiseResult, timeout_ms + 2000,
-                               err); // we give two more sec for request to exit by timeout
+    auto res = GetResultFromCallback<StreamInfoResult>(&promiseResult, timeout_ms + 2000,
+                                                       err); // we give two more sec for request to exit by timeout
+    if (res.err == nullptr) {
+        return res.sinfo;
+    } else {
+        (*err).reset(res.err);
+        return StreamInfo{};
+    }
 }
 
 StreamInfo ProducerImpl::GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const {
@@ -418,6 +438,31 @@ Error ProducerImpl::GetServerVersionInfo(std::string* server_info,
         return err;
     }
     return ExtractVersionFromResponse(response,"producer",server_info,supported);
+}
+
+Error ProducerImpl::DeleteStream(std::string stream, uint64_t timeout_ms, DeleteStreamOptions options) const {
+    auto header = GenericRequestHeader{kOpcodeDeleteStream, 0, 0, 0, "", stream};
+    header.custom_data[0] = options.Encode();
+
+    std::unique_ptr<std::promise<ErrorInterface*>> promise {new std::promise<ErrorInterface*>};
+    std::future<ErrorInterface*> promiseResult = promise->get_future();
+
+    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(header),
+                                                                                                nullptr, "", "",
+                                                                                                unwrap_callback<ErrorInterface*>(
+                                                                                                    ActivatePromiseForErrorInterface,
+                                                                                                    std::move(promise)), true,
+                                                                                                timeout_ms}
+    }, true);
+    if (err) {
+        return err;
+    }
+
+    auto res = GetResultFromCallback<ErrorInterface*>(&promiseResult, timeout_ms + 2000, &err); // we give two more sec for request to exit by timeout
+    if (err) {
+        return err;
+    }
+    return Error{res};
 }
 
 }

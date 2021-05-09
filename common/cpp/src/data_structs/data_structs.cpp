@@ -17,7 +17,7 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
-const std::string SourceCredentials::kDefaultStream = "detector";
+const std::string SourceCredentials::kDefaultDataSource = "detector";
 const std::string SourceCredentials::kDefaultBeamline = "auto";
 const std::string SourceCredentials::kDefaultBeamtimeId = "auto";
 

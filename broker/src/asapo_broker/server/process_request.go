@@ -42,7 +42,7 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 	if  len(group_id) > 0 && len (group_id) < 100 && IsLetterOrNumbers(group_id) {
 		return true
 	}
-	err_str := "wrong groupid " + group_id
+	err_str := "wrong groupid name, check length or allowed charecters in " + group_id
 	log_str := "processing get " + op + " request in " + db_name + " at " + settings.GetDatabaseServer() + ": " + err_str
 	logger.Error(log_str)
 	w.WriteHeader(http.StatusBadRequest)
@@ -53,6 +53,10 @@ func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_n
 func checkBrokerApiVersion(w http.ResponseWriter, r *http.Request) bool {
 	_, ok := utils.PrecheckApiVersion(w, r, version.GetBrokerApiVersion())
 	return ok
+}
+
+func needWriteAccess(op string) bool {
+	return op=="delete_stream";
 }
 
 func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_param string, needGroupID bool) {
@@ -68,7 +72,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 		return
 	}
 
-	if err := authorize(r, db_name); err != nil {
+	if err := authorize(r, db_name, needWriteAccess(op)); err != nil {
 		writeAuthAnswer(w, "get "+op, db_name, err)
 		return
 	}

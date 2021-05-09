@@ -33,8 +33,11 @@ curl -o aaa --silent -H "Authorization: Bearer ${folder_token}" --data "{\"Folde
 
 curl -H "Authorization: Bearer ${folder_token}" --data "{\"Folder\":\"$file_transfer_folder\",\"FileName\":\"aaa\",\"Token\":\"$folder_token\"}" 127.0.0.1:5008/v0.1/transfer?sizeonly=true --stderr - | tee /dev/stderr | grep 100000
 
-
 diff -q aaa $file_transfer_folder/aaa
+
+chmod -r $file_transfer_folder/aaa
+curl --silent -H "Authorization: Bearer ${folder_token}" --data "{\"Folder\":\"$file_transfer_folder\",\"FileName\":\"aaa\",\"Token\":\"$folder_token\"}" 127.0.0.1:5008/v0.1/transfer?sizeonly=true --stderr - | tee /dev/stderr | grep "does not exist"
+
 
 dd if=/dev/zero of=$file_transfer_folder/big_file bs=1 count=0 seek=5368709120
 

@@ -33,12 +33,12 @@ sleep 0.3
 
 brokerid=`echo $!`
 
-groupid=`curl -d '' --silent 127.0.0.1:5005/v0.1/creategroup`
+groupid=`curl -d '' --silent 127.0.0.1:5005/v0.2/creategroup`
 
 
 for i in `seq 1 50`;
 do
-    curl --silent 127.0.0.1:5005/v0.1/beamtime/data/source/stream/${groupid}/next?token=$token >/dev/null 2>&1 &
+    curl --silent 127.0.0.1:5005/v0.2/beamtime/data/source/stream/${groupid}/next?token=$token >/dev/null 2>&1 &
 done
 
 

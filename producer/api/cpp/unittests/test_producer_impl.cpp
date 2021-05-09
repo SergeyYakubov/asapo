@@ -518,14 +518,13 @@ TEST_F(ProducerImplTests, ReturnDataIfCanotAddToQueue) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kRequestPoolIsFull));
     ASSERT_THAT(original_data_in_err, Ne(nullptr));
     ASSERT_THAT(original_data_in_err[40], Eq(10));
-
 }
 
 TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
 
     std::string result = R"({"softwareVersion":"20.03.1, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.2"}})";
 
-    EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/version?client=producer&protocol=v0.1"), _,_)).WillOnce(DoAll(
+    EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri + "/asapo-discovery/v0.1/version?client=producer&protocol=v0.2"), _,_)).WillOnce(DoAll(
         SetArgPointee<1>(asapo::HttpCode::OK),
         SetArgPointee<2>(nullptr),
         Return(result)));
@@ -535,6 +534,32 @@ TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(server_info, HasSubstr("20.03.1"));
     ASSERT_THAT(server_info, HasSubstr("v0.2"));
+}
+
+MATCHER_P4(M_CheckDeleteStreamRequest, op_code, source_credentials, stream,flag,
+           "Checks if a valid GenericRequestHeader was Send") {
+    auto request = static_cast<ProducerRequest*>(arg);
+    return ((asapo::GenericRequestHeader) (arg->header)).op_code == op_code
+        && request->source_credentials == source_credentials
+        && ((asapo::GenericRequestHeader) (arg->header)).custom_data[0] == flag
+        && strcmp(((asapo::GenericRequestHeader) (arg->header)).stream, stream) == 0;
+}
+
+TEST_F(ProducerImplTests, DeleteStreamMakesCorerctRequest) {
+    producer.SetCredentials(expected_credentials);
+    asapo::DeleteStreamOptions expected_options{};
+    expected_options.delete_meta = true;
+    expected_options.error_on_not_exist = true;
+    auto flag =3;
+
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckDeleteStreamRequest(asapo::kOpcodeDeleteStream,
+                                                                    expected_credentials_str,
+                                                                    expected_stream, flag), true)).WillOnce(
+        Return(nullptr));
+
+    asapo::DeleteStreamOptions options{};
+    auto err = producer.DeleteStream(expected_stream, 1000,options);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kTimeout));
 }
 
 }

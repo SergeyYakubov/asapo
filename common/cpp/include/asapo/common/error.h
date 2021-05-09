@@ -38,6 +38,7 @@ class ErrorInterface {
   public:
     virtual std::string Explain() const noexcept = 0;
     virtual void Append(const std::string& value) noexcept = 0;
+    virtual void Prepend(const std::string& value) noexcept = 0;
     virtual ErrorType GetErrorType() const noexcept = 0;
     virtual CustomErrorData* GetCustomData() = 0;
     virtual void SetCustomData(std::unique_ptr<CustomErrorData> data) = 0;
@@ -110,6 +111,10 @@ class SimpleError: public ErrorInterface {
 
     void Append(const std::string& value) noexcept override {
         error_ += ": " + value;
+    }
+
+    void Prepend(const std::string& value) noexcept override {
+        error_ = value+": "+error_;
     }
 
     std::string Explain() const noexcept override  {

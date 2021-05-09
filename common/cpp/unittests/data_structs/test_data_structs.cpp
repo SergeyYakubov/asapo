@@ -9,6 +9,7 @@ using asapo::MessageMeta;
 using asapo::StreamInfo;
 using asapo::SourceType;
 using asapo::SourceCredentials;
+using asapo::DeleteStreamOptions;
 
 using ::testing::AtLeast;
 using ::testing::Eq;
@@ -254,5 +255,53 @@ TEST(MessageMetaTests, ISODateFromNanosecsEpoch) {
     }
 }
 
+TEST(DeletaStreamOpt, ConvertToJson) {
+    auto opts = DeleteStreamOptions{};
+
+    std::string expected_json = "{\"ErrorOnNotExist\":true,\"DeleteMeta\":true}";
+    auto json = opts.Json();
+
+    ASSERT_THAT(json,Eq(expected_json));
+}
+
+TEST(DeletaStreamOpt, ConvertToJson2) {
+    auto opts = DeleteStreamOptions{};
+    opts.delete_meta = false;
+    opts.error_on_not_exist = false;
+
+    std::string expected_json = "{\"ErrorOnNotExist\":false,\"DeleteMeta\":false}";
+    auto json = opts.Json();
+
+    ASSERT_THAT(json,Eq(expected_json));
+}
+
+TEST(DeletaStreamOpt, EncodeDecode) {
+    auto opts = DeleteStreamOptions{};
+    ASSERT_THAT(opts.Encode(),Eq(3));
+    opts.delete_meta = false;
+    ASSERT_THAT(opts.Encode(),Eq(2));
+    opts.error_on_not_exist = false;
+    ASSERT_THAT(opts.Encode(),Eq(0));
+    opts.delete_meta = true;
+    ASSERT_THAT(opts.Encode(),Eq(1));
+
+    opts.Decode(0);
+    ASSERT_THAT(opts.error_on_not_exist,Eq(false));
+    ASSERT_THAT(opts.delete_meta,Eq(false));
+
+    opts.Decode(1);
+    ASSERT_THAT(opts.error_on_not_exist,Eq(false));
+    ASSERT_THAT(opts.delete_meta,Eq(true));
+
+    opts.Decode(2);
+    ASSERT_THAT(opts.error_on_not_exist,Eq(true));
+    ASSERT_THAT(opts.delete_meta,Eq(false));
+
+    opts.Decode(3);
+    ASSERT_THAT(opts.error_on_not_exist,Eq(true));
+    ASSERT_THAT(opts.delete_meta,Eq(true));
+
+
+}
 
 }

@@ -208,13 +208,17 @@ class MockIO : public IO {
     MOCK_CONST_METHOD2(CreateNewDirectory_t, void(const std::string& directory_name, ErrorInterface** err));
 
     MessageData GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override {
-        ErrorInterface* error = nullptr;
+        std::function<ErrorInterface*()> error;
         auto data = GetDataFromFile_t(fname, fsize, &error);
-        err->reset(error);
+        if (error!=nullptr) {
+            err->reset(error());
+        } else {
+            err->reset(nullptr);
+        }
         return MessageData(data);
     }
 
-    MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t* fsize, ErrorInterface** err));
+    MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t* fsize, std::function<ErrorInterface*()>* err_gen));
 
 
     Error GetLastError() const override {

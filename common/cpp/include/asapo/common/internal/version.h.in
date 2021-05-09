@@ -33,8 +33,16 @@ inline std::string GetRdsApiVersion() {
 }
 
 inline int VersionToNumber(const std::string& version) {
-    return int(atof(version.c_str()+2)*1000);
+    auto found = version.find(".");
+    if (found != std::string::npos)
+    {
+        auto maj = version.substr(1,found);
+        auto min = version.substr(found+1, std::string::npos);
+        return atoi(maj.c_str())*1000+atoi(min.c_str());
+    }
+    return 0;
 }
+
 
 Error ExtractVersionFromResponse(const std::string &response,
                                  const std::string &client,

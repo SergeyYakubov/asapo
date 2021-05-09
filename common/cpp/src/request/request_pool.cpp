@@ -28,9 +28,10 @@ Error RequestPool::CanAddRequests(const GenericRequests &requests) {
 
     uint64_t total_size = 0;
     for (auto &request : requests) {
-        total_size += request->header.data_size;
+        if (request->ContainsData()) {
+            total_size += request->header.data_size;
+        }
     }
-
 
     if (memory_used_ + total_size > limits_.max_memory_mb * 1000000) {
         return IOErrorTemplates::kNoSpaceLeft.Generate(
@@ -47,6 +48,10 @@ Error RequestPool::CanAddRequest(const GenericRequestPtr &request, bool top_prio
     if (limits_.max_requests > 0 && NRequestsInPoolWithoutLock() >= limits_.max_requests) {
         return IOErrorTemplates::kNoSpaceLeft.Generate(
             "reached maximum number of " + std::to_string(limits_.max_requests) + " requests");
+    }
+
+    if (!request->ContainsData()) {
+        return nullptr;
     }
 
     if (limits_.max_memory_mb > 0 && memory_used_ + request->header.data_size > limits_.max_memory_mb * 1000000) {
@@ -66,7 +71,9 @@ Error RequestPool::AddRequest(GenericRequestPtr request, bool top_priority) {
         return err;
     }
 
-    memory_used_ += request->header.data_size;
+    if (request->ContainsData()) {
+        memory_used_ += request->header.data_size;
+    }
 
     if (top_priority) {
         request_queue_.emplace_front(std::move(request));
@@ -100,7 +107,9 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler> &request_
                                  ThreadInformation* thread_info) {
     auto request = GetRequestFromQueue();
     if (request->TimedOut()) {
-        request_handler->ProcessRequestTimeout(request.get());
+        thread_info->lock.unlock();
+        request_handler->ProcessRequestTimeoutUnlocked(request.get());
+        thread_info->lock.lock();
         return;
     }
     request_handler->PrepareProcessingRequestLocked();
@@ -118,7 +127,9 @@ void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler> &request_
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         thread_info->lock.lock();
     } else {
-        memory_used_ -= request->header.data_size;
+        if (request->ContainsData()) {
+            memory_used_ -= request->header.data_size;
+        }
     }
 }
 
@@ -157,7 +168,9 @@ Error RequestPool::AddRequests(GenericRequests requests) {
 
     uint64_t total_size = 0;
     for (auto &elem : requests) {
-        total_size += elem->header.data_size;
+        if (elem->ContainsData()) {
+            total_size += elem->header.data_size;
+        }
         request_queue_.emplace_front(std::move(elem));
     }
     memory_used_ += total_size;
