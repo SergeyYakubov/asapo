@@ -101,15 +101,15 @@ int main(int argc, char* argv[]) {
         db.Insert("acks_test_blabla1", fi, false);
         db.DeleteStream("test");
         err = db.GetStreamInfo("data_test", &info);
-        M_AssertTrue(err!=nullptr);
+        M_AssertTrue(info.last_id == 0);
         err = db.GetStreamInfo("inprocess_test_blabla", &info);
-        M_AssertTrue(err!=nullptr);
+        M_AssertTrue(info.last_id == 0);
         err = db.GetStreamInfo("inprocess_test_blabla1", &info);
-        M_AssertTrue(err!=nullptr);
+        M_AssertTrue(info.last_id == 0);
         err = db.GetStreamInfo("acks_test_blabla", &info);
-        M_AssertTrue(err!=nullptr);
+        M_AssertTrue(info.last_id == 0);
         err = db.GetStreamInfo("acks_test_blabla1", &info);
-        M_AssertTrue(err!=nullptr);
+        M_AssertTrue(info.last_id == 0);
         err = db.DeleteStream("test1");
         M_AssertTrue(err==nullptr);
     }

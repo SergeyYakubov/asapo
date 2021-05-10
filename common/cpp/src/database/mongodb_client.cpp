@@ -361,7 +361,7 @@ Error MongoDBClient::GetDataSetById(const std::string &collection,
 
 }
 
-Error UpdateStreamInfoFromEarliestRecord(const std::string &earliest_record_str,
+Error   UpdateStreamInfoFromEarliestRecord(const std::string &earliest_record_str,
                                          StreamInfo* info) {
     std::chrono::system_clock::time_point timestamp_created;
     auto parser = JsonStringParser(earliest_record_str);
@@ -429,6 +429,7 @@ Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* in
     auto err = GetRecordFromDb(collection, 0, GetRecordMode::kLast, &last_record_str);
     if (err) {
         if (err == DBErrorTemplates::kNoRecord) { // with noRecord error it will return last_id = 0 which can be used to understand that the stream is not started yet
+            *info = StreamInfo{};
             return nullptr;
         }
         return err;
