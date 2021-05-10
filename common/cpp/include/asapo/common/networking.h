@@ -18,16 +18,18 @@ enum class NetworkConnectionType : uint32_t {
     kFabric, // Fabric connection (Primarily used for InfiniBand verbs)
 };
 
+
+// do not forget to add new codes to the end!
 enum Opcode : uint8_t {
     kOpcodeUnknownOp = 1,
     kOpcodeTransferData,
     kOpcodeTransferDatasetData,
     kOpcodeStreamInfo,
-    kOpcodeDeleteStream,
     kOpcodeLastStream,
     kOpcodeGetBufferData,
     kOpcodeAuthorize,
     kOpcodeTransferMetaData,
+    kOpcodeDeleteStream,
     kOpcodeCount,
 };
 
