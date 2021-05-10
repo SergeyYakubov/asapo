@@ -428,6 +428,9 @@ Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* in
     std::string last_record_str, earliest_record_str;
     auto err = GetRecordFromDb(collection, 0, GetRecordMode::kLast, &last_record_str);
     if (err) {
+        if (err == DBErrorTemplates::kNoRecord) { // with noRecord error it will return last_id = 0 which can be used to understand that the stream is not started yet
+            return nullptr;
+        }
         return err;
     }
     err = GetRecordFromDb(collection, 0, GetRecordMode::kEarliest, &earliest_record_str);
