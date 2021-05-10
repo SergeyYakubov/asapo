@@ -187,19 +187,20 @@ info = producer.stream_info('stream')
 assert_eq(info['lastId'], 3, "last id from different stream")
 assert_eq(info['finished'], True, "stream finished")
 
+info = producer.stream_info('not_exist')
+assert_eq(info['lastId'], 0, "last id from non existing stream")
+
+
 info_last = producer.last_stream()
 assert_eq(info_last['name'], "stream", "last stream")
 assert_eq(info_last['timestampCreated'] <= info_last['timestampLast'], True, "last is later than first")
 
 #delete_streams
 producer.delete_stream('stream')
-try:
-    producer.stream_info('stream')
-except asapo_producer.AsapoWrongInputError as e:
-    print(e)
-else:
-    print("should be error on stream info after stream was deleted")
-    sys.exit(1)
+producer.stream_info('stream')
+assert_eq(info['lastId'], 0, "last id from non deleted stream")
+
+
 producer.delete_stream('unknown_stream',error_on_not_exist = False)
 try:
     producer.delete_stream('unknown_stream',error_on_not_exist = True)
