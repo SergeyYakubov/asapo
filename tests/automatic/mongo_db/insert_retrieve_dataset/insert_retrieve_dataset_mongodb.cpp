@@ -93,6 +93,9 @@ int main(int argc, char* argv[]) {
         M_AssertEq("test", info_last.name);
         M_AssertEq(fi2.id, info_last.last_id);
         M_AssertEq(true, info_last.finished);
+        err = db.DeleteStream("test");
+        M_AssertEq(nullptr, err);
+
     }
 
     return 0;
