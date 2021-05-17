@@ -1,3 +1,9 @@
+## 21.03.3
+
+BUG FIXES
+* Consumer API: fix return error type when sending acknowledgement second time 
+* Producer API: fix GetStreamInfo/stream_info and GetLastStream/last_stream for datasets
+
 ## 21.03.2
 
 FEATURES

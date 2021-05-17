@@ -15,7 +15,8 @@ type protocolTest struct {
 
 var protocolTests = []protocolTest{
 // consumer
-	{"consumer", "v0.2", true, "current", "v0.2"},
+	{"consumer", "v0.3", true, "current", "v0.3"},
+	{"consumer", "v0.2", true, "deprecates", "v0.2"},
 	{"consumer", "v0.1", true, "deprecates", "v0.1"},
 	{"consumer", "v1000.2", false, "unknown", "unknown protocol"},
 
