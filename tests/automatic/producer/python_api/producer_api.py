@@ -66,9 +66,9 @@ producer.send_file(10, local_path="./file1", exposed_path="processed/" + data_so
 
 # send datasets
 producer.send_file(2, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file2", dataset=(1, 2),
-                   user_meta='{"test_key":"test_val"}', callback=callback)
+                   user_meta='{"test_key":"test_val"}', stream="dataset_stream", callback=callback)
 producer.send_file(2, local_path="./file1", exposed_path="processed/" + data_source + "/" + "file3", dataset=(2, 2),
-                   user_meta='{"test_key":"test_val"}', callback=callback)
+                   user_meta='{"test_key":"test_val"}', stream="dataset_stream", callback=callback)
 
 # send meta only
 producer.send_file(3, local_path="./not_exist", exposed_path="./whatever",
@@ -186,6 +186,9 @@ print("last record: ",datetime.utcfromtimestamp(info['timestampLast']/1000000000
 info = producer.stream_info('stream')
 assert_eq(info['lastId'], 3, "last id from different stream")
 assert_eq(info['finished'], True, "stream finished")
+
+info = producer.stream_info('dataset_stream')
+assert_eq(info['lastId'], 2, "last id from stream with datasets")
 
 info = producer.stream_info('not_exist')
 assert_eq(info['lastId'], 0, "last id from non existing stream")
