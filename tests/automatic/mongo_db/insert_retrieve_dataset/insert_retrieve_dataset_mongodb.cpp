@@ -49,26 +49,54 @@ int main(int argc, char* argv[]) {
         db.Connect("127.0.0.1", "data");
     }
 
-    auto err =  db.InsertAsDatasetMessage("test", fi, dataset_size, true);
+    auto err =  db.InsertAsDatasetMessage("data_test", fi, dataset_size, true);
 
 
     if (args.keyword == "DuplicateID") {
         Assert(err, "OK");
-        err =  db.InsertAsDatasetMessage("test", fi, dataset_size, true);
-        err =  db.InsertAsDatasetMessage("test", fi, dataset_size, false);
+        err =  db.InsertAsDatasetMessage("data_test", fi, dataset_size, true);
+        err =  db.InsertAsDatasetMessage("data_test", fi, dataset_size, false);
     }
 
     Assert(err, args.keyword);
 
     if (args.keyword == "OK") { // check retrieve
         asapo::MessageMeta fi_db;
-        err = db.GetDataSetById("test", fi.dataset_substream,fi.id, &fi_db);
+        err = db.GetDataSetById("data_test", fi.dataset_substream,fi.id, &fi_db);
         M_AssertTrue(fi_db == fi, "get record from db");
         M_AssertEq(nullptr, err);
-        err = db.GetDataSetById("test", 0, 0, &fi_db);
+        err = db.GetDataSetById("data_test", 0, 0, &fi_db);
         Assert(err, "No record");
-    }
 
+        asapo::StreamInfo info;
+
+        err = db.GetStreamInfo("data_test", &info);
+        M_AssertEq(nullptr, err);
+        M_AssertEq(fi.id, info.last_id);
+
+        asapo::StreamInfo info_last;
+
+        err = db.GetLastStream(&info_last);
+        M_AssertEq(nullptr, err);
+        M_AssertEq("test", info_last.name);
+        M_AssertEq(fi.id, info_last.last_id);
+        M_AssertEq(false, info_last.finished);
+
+        auto fi2 = fi;
+        fi2.id = 123;
+        fi2.timestamp = std::chrono::system_clock::now()+std::chrono::minutes(1);
+        fi2.name = asapo::kFinishStreamKeyword;
+        fi2.metadata=R"({"next_stream":"ns"})";
+        db.Insert("data_test", fi2, false);
+        err = db.GetLastStream(&info_last);
+        M_AssertEq(nullptr, err);
+        M_AssertEq("test", info_last.name);
+        M_AssertEq(fi2.id, info_last.last_id);
+        M_AssertEq(true, info_last.finished);
+        err = db.DeleteStream("test");
+        M_AssertEq(nullptr, err);
+
+    }
 
     return 0;
 }

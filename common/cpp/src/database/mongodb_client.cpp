@@ -361,7 +361,7 @@ Error MongoDBClient::GetDataSetById(const std::string &collection,
 
 }
 
-Error   UpdateStreamInfoFromEarliestRecord(const std::string &earliest_record_str,
+Error UpdateStreamInfoFromEarliestRecord(const std::string &earliest_record_str,
                                          StreamInfo* info) {
     std::chrono::system_clock::time_point timestamp_created;
     auto parser = JsonStringParser(earliest_record_str);
@@ -382,7 +382,7 @@ Error UpdateFinishedStreamInfo(const std::string &metadata,
     auto err = parser.GetString("next_stream", &next_stream);
     if (err) {
         return DBErrorTemplates::kJsonParseError.Generate(
-            "UpdateFinishedStreamInfo: cannot parse finished strean meta response: " + metadata);
+            "UpdateFinishedStreamInfo: cannot parse finished stream meta response: " + metadata);
     }
     if (next_stream != kNoNextStreamKeyword) {
         info->next_stream = next_stream;
@@ -390,24 +390,40 @@ Error UpdateFinishedStreamInfo(const std::string &metadata,
     return nullptr;
 }
 
+Error UpdateFinishedInfo(const std::string &last_record_str, const JsonStringParser &parser, StreamInfo* info) {
+    std::string name;
+    parser.GetString("name", &name);
+    if (name != kFinishStreamKeyword) {
+        return nullptr;
+    }
+    std::string metadata;
+    if (parser.Embedded("meta").GetRawString(&metadata) != nullptr) {
+        return DBErrorTemplates::kJsonParseError.Generate(
+            "UpdateStreamInfoFromLastRecord: cannot parse metadata in response: " + last_record_str);
+    }
+    return UpdateFinishedStreamInfo(metadata, info);
+}
+
 Error UpdateStreamInfoFromLastRecord(const std::string &last_record_str,
                                      StreamInfo* info) {
-    MessageMeta last_message;
-    auto ok = last_message.SetFromJson(last_record_str);
-    if (!ok) {
-        return DBErrorTemplates::kJsonParseError.Generate(
-            "UpdateStreamInfoFromLastRecord: cannot parse mongodb response: " + last_record_str);
-    }
-    info->last_id = last_message.id;
-    info->timestamp_lastentry = last_message.timestamp;
+    auto parser = JsonStringParser(last_record_str);
+    std::chrono::system_clock::time_point timestamp_last;
+    uint64_t id;
 
-    if (last_message.name == kFinishStreamKeyword) {
-        auto err = UpdateFinishedStreamInfo(last_message.metadata, info);
-        if (err) {
-            return err;
-        }
+    if (!TimeFromJson(parser, "timestamp", &timestamp_last)) {
+        return DBErrorTemplates::kJsonParseError.Generate(
+            "UpdateStreamInfoFromLastRecord: cannot parse timestamp in response: " + last_record_str);
     }
-    return nullptr;
+    if (parser.GetUInt64("_id", &id) != nullptr) {
+        return DBErrorTemplates::kJsonParseError.Generate(
+            "UpdateStreamInfoFromLastRecord: cannot parse _id in response: " + last_record_str);
+    }
+
+    info->timestamp_lastentry = timestamp_last;
+    info->last_id = id;
+
+    return UpdateFinishedInfo(last_record_str,parser,info);
+
 }
 
 Error StreamInfoFromDbResponse(const std::string &last_record_str,
@@ -428,7 +444,8 @@ Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* in
     std::string last_record_str, earliest_record_str;
     auto err = GetRecordFromDb(collection, 0, GetRecordMode::kLast, &last_record_str);
     if (err) {
-        if (err == DBErrorTemplates::kNoRecord) { // with noRecord error it will return last_id = 0 which can be used to understand that the stream is not started yet
+        if (err
+            == DBErrorTemplates::kNoRecord) { // with noRecord error it will return last_id = 0 which can be used to understand that the stream is not started yet
             *info = StreamInfo{};
             return nullptr;
         }
@@ -506,14 +523,13 @@ Error MongoDBClient::GetLastStream(StreamInfo* info) const {
     return err;
 }
 
-
 Error MongoDBClient::DeleteCollections(const std::string &prefix) const {
     mongoc_database_t* database;
     char** strv;
     bson_error_t error;
     std::string querystr = "^" + prefix;
     bson_t* query = BCON_NEW ("name", BCON_REGEX(querystr.c_str(), "i"));
-    bson_t* opts = BCON_NEW ("nameOnly", BCON_BOOL(true),"filter",BCON_DOCUMENT(query));
+    bson_t* opts = BCON_NEW ("nameOnly", BCON_BOOL(true), "filter", BCON_DOCUMENT(query));
     database = mongoc_client_get_database(client_, database_name_.c_str());
     Error err;
     if ((strv = mongoc_database_get_collection_names_with_opts(
@@ -540,20 +556,21 @@ Error MongoDBClient::DeleteCollection(const std::string &name) const {
     mongoc_collection_destroy(collection);
     if (!r) {
         if (error.code == 26) {
-            return DBErrorTemplates::kNoRecord.Generate("collection "+name+" not found in "+database_name_);
+            return DBErrorTemplates::kNoRecord.Generate("collection " + name + " not found in " + database_name_);
         } else {
-            return DBErrorTemplates::kDBError.Generate(std::string(error.message)+": "+std::to_string(error.code));
+            return DBErrorTemplates::kDBError.Generate(std::string(error.message) + ": " + std::to_string(error.code));
         }
     }
     return nullptr;
 }
 
-Error MongoDBClient::DeleteDocumentsInCollection(const std::string &collection_name,const std::string &querystr) const {
+Error MongoDBClient::DeleteDocumentsInCollection(const std::string &collection_name,
+                                                 const std::string &querystr) const {
     auto collection = mongoc_client_get_collection(client_, database_name_.c_str(), collection_name.c_str());
     mongoc_collection_set_write_concern(collection, write_concern_);
     bson_error_t error;
     auto query = BCON_NEW ("_id", BCON_REGEX(querystr.c_str(), "i"));
-    if (!mongoc_collection_delete_many(collection, query, NULL,NULL, &error)) {
+    if (!mongoc_collection_delete_many(collection, query, NULL, NULL, &error)) {
         return DBErrorTemplates::kDBError.Generate(error.message);
     }
     mongoc_collection_destroy(collection);
@@ -570,8 +587,8 @@ Error MongoDBClient::DeleteStream(const std::string &stream) const {
     if (err == nullptr) {
         DeleteCollections(inprocess_col);
         DeleteCollections(acks_col);
-        std::string querystr = ".*_" + stream+"$";
-        DeleteDocumentsInCollection("current_location",querystr);
+        std::string querystr = ".*_" + stream + "$";
+        DeleteDocumentsInCollection("current_location", querystr);
     }
     return err;
 }

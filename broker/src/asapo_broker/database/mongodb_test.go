@@ -1102,6 +1102,18 @@ func TestMongoDBAckDeletesInprocessed(t *testing.T) {
 	}
 }
 
+func TestMongoDBAckTwiceErrors(t *testing.T) {
+	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 0})
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec1)
+	query_str := "{\"Id\":1,\"Op\":\"ackmessage\"}"
+	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "ackmessage", ExtraParam: query_str})
+	_,err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "ackmessage", ExtraParam: query_str})
+	assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code)
+}
+
+
 func TestMongoDBNegAck(t *testing.T) {
 	db.SetSettings(DBSettings{ReadFromInprocessPeriod: 0})
 	db.Connect(dbaddress)
