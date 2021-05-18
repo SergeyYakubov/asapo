@@ -18,15 +18,15 @@ start /B "" "%full_name%" -config settings.json
 
 ping 192.0.2.1 -n 1 -w 5000 > nul
 
-C:\Curl\curl.exe -d '' --silent 127.0.0.1:5005/v0.2/creategroup > groupid
+C:\Curl\curl.exe -d '' --silent 127.0.0.1:5005/v0.3/creategroup > groupid
 set /P groupid=< groupid
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/v0.2/beamtime/data/source/default/%groupid%/next?token=%token% --stderr - | findstr /c:\"_id\":1  || goto :error
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/v0.2/beamtime/data/source/default/%groupid%/next?token=%token% --stderr - | findstr /c:\"_id\":2  || goto :error
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/v0.2/beamtime/data/source/default/%groupid%/next?token=%token% --stderr - | findstr  /c:\"id_max\":2  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/v0.3/beamtime/data/source/default/%groupid%/next?token=%token% --stderr - | findstr /c:\"_id\":1  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/v0.3/beamtime/data/source/default/%groupid%/next?token=%token% --stderr - | findstr /c:\"_id\":2  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/v0.3/beamtime/data/source/default/%groupid%/next?token=%token% --stderr - | findstr  /c:\"id_max\":2  || goto :error
 
-C:\Curl\curl.exe -d '' --silent 127.0.0.1:5005/v0.2/creategroup > groupid
+C:\Curl\curl.exe -d '' --silent 127.0.0.1:5005/v0.3/creategroup > groupid
 set /P groupid=< groupid
-C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/v0.2/beamtime/data/source/default/%groupid%/next?token=%token% --stderr - | findstr /c:\"_id\":1  || goto :error
+C:\Curl\curl.exe -v  --silent 127.0.0.1:5005/v0.3/beamtime/data/source/default/%groupid%/next?token=%token% --stderr - | findstr /c:\"_id\":1  || goto :error
 
 goto :clean
 

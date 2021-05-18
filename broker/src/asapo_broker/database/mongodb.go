@@ -373,13 +373,17 @@ func (db *Mongodb) ackRecord(request Request) ([]byte, error) {
 	}
 	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
 	_, err = c.InsertOne(context.Background(), &record)
-
-	if err == nil {
-		c = db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
-		_, err_del := c.DeleteOne(context.Background(), bson.M{"_id": record.ID})
-		if err_del != nil {
-			return nil, &DBError{utils.StatusWrongInput, err.Error()}
+	if err != nil {
+		if duplicateError(err) {
+			return nil, &DBError{utils.StatusWrongInput, "already acknowledged"}
 		}
+		return nil, err
+	}
+
+	c = db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
+	_, err_del := c.DeleteOne(context.Background(), bson.M{"_id": record.ID})
+	if err_del != nil {
+		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
 	return []byte(""), err

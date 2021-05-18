@@ -179,6 +179,14 @@ def check_single(consumer, group_id):
 
     consumer.acknowledge(group_id, 1)
 
+    try:
+        consumer.acknowledge(group_id, 1)
+    except asapo_consumer.AsapoWrongInputError as err:
+        print(err)
+        pass
+    else:
+        exit_on_noerr("should be wrong input on second ack")
+
     nacks = consumer.get_unacknowledged_messages(group_id)
     assert_eq(len(nacks), 4, "nacks default stream size = 4")
 
