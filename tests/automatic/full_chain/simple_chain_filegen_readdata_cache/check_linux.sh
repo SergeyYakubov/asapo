@@ -47,7 +47,7 @@ nomad run receiver_${network_type}.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
-sleep 1
+sleep 5
 
 token=`$3 token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
