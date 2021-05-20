@@ -51,10 +51,6 @@ sleep 1
 
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
-
-mkdir  /tmp/asapo/test_in/processed/test1
-mkdir  /tmp/asapo/test_in/processed/test2
-
 #producer
 echo "Start producer"
 mkdir -p ${receiver_folder}
@@ -62,6 +58,10 @@ $producer_bin test.json &
 producerid=`echo $!`
 
 sleep 1
+
+mkdir  /tmp/asapo/test_in/processed/test1
+mkdir  /tmp/asapo/test_in/processed/test2
+
 
 echo hello > /tmp/asapo/test_in/processed/test1/file1
 echo hello > /tmp/asapo/test_in/processed/test1/file2
