@@ -60,6 +60,8 @@ sleep 1
 mkdir  /tmp/asapo/test_in/processed/test1
 mkdir  /tmp/asapo/test_in/processed/test2
 
+sleep 1
+
 echo -n hello1 > /tmp/asapo/test_in/processed/test1/file1
 echo -n hello2 > /tmp/asapo/test_in/processed/test1/file2
 echo -n hello3 > /tmp/asapo/test_in/processed/test2/file1
