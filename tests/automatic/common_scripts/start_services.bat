@@ -20,3 +20,11 @@ curl --silent --fail 127.0.0.1:8400/asapo-discovery/v0.1/asapo-receiver?protocol
 curl --silent --fail 127.0.0.1:8400/asapo-discovery/v0.1/asapo-broker?protocol=v0.1 --stderr - | findstr 127.0.0.1 || goto :repeat
 curl --silent --fail 127.0.0.1:8400/asapo-discovery/v0.1/asapo-file-transfer?protocol=v0.1 --stderr -  | findstr 127.0.0.1 || goto :repeat
 echo discovery ready
+
+goto :clean
+
+:error
+echo error starting  asapo services
+exit /b 1
+
+:clean
