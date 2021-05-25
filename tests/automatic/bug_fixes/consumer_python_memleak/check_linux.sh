@@ -13,21 +13,12 @@ token=$ASAPO_TEST_RW_TOKEN
 Cleanup() {
     echo cleanup
     rm -rf $fname
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop broker
-    nomad stop discovery
     echo "db.dropDatabase()" | mongo ${beamtime_id}_stream
 }
 
 fname=test.dat
 size=100000000 # 10MB
 
-nomad run nginx.nmd
-nomad run discovery.nmd
-nomad run broker.nmd
-
-sleep 1
 
 echo 'db.data_default.insert({"_id":'1',"size":'$size',"name":"'$fname'","timestamp":1,"source":"none","buf_id":0,"dataset_substream":0,"meta":{}})' | mongo ${beamtime_id}_stream
 dd if=/dev/zero of=$fname bs=$size count=1

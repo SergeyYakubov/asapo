@@ -23,20 +23,8 @@ Cleanup() {
     kill $producerid
     rm -rf /tmp/asapo/test_in/test1
     rm -rf ${receiver_root_folder}
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop authorizer
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
 }
-
-nomad run nginx.nmd
-nomad run authorizer.nmd
-nomad run receiver_tcp.nmd
-nomad run discovery.nmd
-
-sleep 1
 
 #producer
 mkdir -p ${receiver_folder}

@@ -7,42 +7,28 @@ set -e
 trap Cleanup EXIT
 
 Cleanup() {
-    set +e
+  set +e
 	echo cleanup
 	influx -execute "drop database ${database_name}"
-	kill -9 $brokerid
-  nomad stop nginx
-  nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-  nomad stop authorizer
 }
 
 ! influx -execute "drop database ${database_name}"
 
 
-nomad run nginx.nmd
-nomad run authorizer.nmd
-sleep 1
-
-
 token=$BT_DATA_TOKEN
 
+broker=`curl --silent 127.0.0.1:8400/asapo-discovery/v0.1/asapo-broker?protocol=v0.3`
+echo found broker at $broker
 
-$1 -config settings.json &
-
-sleep 0.3
-
-brokerid=`echo $!`
-
-groupid=`curl -d '' --silent 127.0.0.1:5005/v0.2/creategroup`
+groupid=`curl -d '' --silent $broker/v0.2/creategroup`
 
 
 for i in `seq 1 50`;
 do
-    curl --silent 127.0.0.1:5005/v0.2/beamtime/data/source/stream/${groupid}/next?token=$token >/dev/null 2>&1 &
+    curl --silent $broker/v0.2/beamtime/data/source/stream/${groupid}/next?token=$token >/dev/null 2>&1 &
 done
-
 
 sleep 12
 
-influx -execute "select sum(rate) from RequestsRate" -database=${database_name} -format=json | jq .results[0].series[0].values[0][1] | tee /dev/stderr | grep 51
+influx -execute "select sum(rate) from RequestsRate" -database=${database_name} -format=json | jq .results[0].series[0].values[0][1]
 
