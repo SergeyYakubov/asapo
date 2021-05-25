@@ -44,7 +44,7 @@ nomad run receiver_${network_type}.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
-sleep 1
+sleep 5
 
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
@@ -62,6 +62,8 @@ mkdir  /tmp/asapo/test_in/processed/test2
 echo hello > /tmp/asapo/test_in/processed/test1/file1
 echo hello > /tmp/asapo/test_in/processed/test1/file2
 echo hello > /tmp/asapo/test_in/processed/test2/file1
+
+sleep 1
 
 echo "Start consumer in metadata only mode"
 $consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | tee /dev/stderr out

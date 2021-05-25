@@ -6,10 +6,7 @@ echo db.meta.insert({"_id":0}) | %mongo_exe% %database_name%  || goto :error
 set full_name="%1"
 set short_name="%~nx1"
 
-c:\opt\consul\nomad run authorizer.nmd
-c:\opt\consul\nomad run nginx.nmd
-
-ping 192.0.2.1 -n 1 -w 2000 > nul
+call start_authorizer.bat
 
 start /B "" "%full_name%" -config settings.json
 
@@ -32,6 +29,4 @@ exit /b 1
 Taskkill /IM "%short_name%" /F
 echo db.dropDatabase() | %mongo_exe% %database_name%
 del /f groupid
-c:\opt\consul\nomad stop authorizer
-c:\opt\consul\nomad stop nginx
-c:\opt\consul\nomad run nginx_kill.nmd  && c:\opt\consul\nomad stop -yes -purge nginx_kill
+call stop_authorizer.bat

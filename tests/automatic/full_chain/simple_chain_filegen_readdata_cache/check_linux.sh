@@ -47,7 +47,7 @@ nomad run receiver_${network_type}.nmd
 nomad run discovery.nmd
 nomad run broker.nmd
 
-sleep 1
+sleep 5
 
 token=`$3 token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
@@ -60,6 +60,8 @@ sleep 1
 mkdir  /tmp/asapo/test_in/processed/test1
 mkdir  /tmp/asapo/test_in/processed/test2
 
+sleep 1
+
 echo -n hello1 > /tmp/asapo/test_in/processed/test1/file1
 echo -n hello2 > /tmp/asapo/test_in/processed/test1/file2
 echo -n hello3 > /tmp/asapo/test_in/processed/test2/file1
@@ -71,7 +73,3 @@ grep "hello1" out.txt
 grep "hello2" out.txt
 grep "hello3" out.txt
 grep -i "Using connection type: $network_type" out.txt
-
-sleep 12
-
-influx -execute "select sum(n_requests) from statistics where receiver_ds_tag !=''" -database=${monitor_database_name} -format=json  | jq .results[0].series[0].values[0][1] | tee /dev/stderr | grep 3

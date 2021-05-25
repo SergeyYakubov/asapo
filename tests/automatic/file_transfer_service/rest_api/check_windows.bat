@@ -7,7 +7,7 @@ set file_transfer_folder=%file_transfer_folder:\=\\%
 c:\opt\consul\nomad run authorizer.nmd
 c:\opt\consul\nomad run file_transfer.nmd
 
-ping 192.0.2.1 -n 1 -w 1000 > nul
+ping 192.0.2.1 -n 1 -w 5000 > nul
 
 set token=%BT_AAA_TOKEN%
 
