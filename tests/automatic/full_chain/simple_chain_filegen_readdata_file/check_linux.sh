@@ -28,7 +28,6 @@ Cleanup() {
     rm -rf /tmp/asapo/test_in
     rm -rf ${receiver_folder}
     influx -execute "drop database ${monitor_database_name}"
-    nomad stop authorizer
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     rm out.txt
 }
