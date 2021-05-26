@@ -95,7 +95,6 @@
    Memcheck:Param
    socketcall.sendto(msg)
    fun:send
-   fun:ofi_send_socket
 }
 {
    asapo_fabric__sockets__leak

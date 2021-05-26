@@ -17,7 +17,7 @@ std::promise<void> serverIsDone;
 std::future<void> serverIsDoneFuture = serverIsDone.get_future();
 
 constexpr int kTotalRuns = 3;
-constexpr int kEachInstanceRuns = 5;
+constexpr int kEachInstanceRuns = 2;
 constexpr size_t kRdmaSize = 5 * 1024 * 1024;
 
 void ServerMasterThread(const std::string& hostname, uint16_t port, char* expectedRdmaBuffer) {

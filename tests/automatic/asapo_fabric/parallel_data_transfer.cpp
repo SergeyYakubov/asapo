@@ -18,7 +18,7 @@ std::future<void> serverIsDoneFuture = serverIsDone.get_future();
 
 constexpr size_t kRdmaSize = 5 * 1024 * 1024;
 constexpr int kServerThreads = 2;
-constexpr int kEachInstanceRuns = 10;
+constexpr int kEachInstanceRuns = 3;
 constexpr int kClientThreads = 4;
 
 void ServerChildThread(FabricServer* server, std::atomic<int>* serverTotalRequests, char* expectedRdmaBuffer) {
