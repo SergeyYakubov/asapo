@@ -7,8 +7,6 @@ SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\d
 
 echo db.%beamtime_id%_detector.insert({dummy:1})" | %mongo_exe% %beamtime_id%_detector
 
-call start_services.bat
-
 mkdir %receiver_folder%
 
 "%1" 127.0.0.1:8400 %beamtime_id% 60000 1 1 0 30
@@ -30,7 +28,6 @@ call :clean
 exit /b 1
 
 :clean
-call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%_detector
 

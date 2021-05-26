@@ -15,23 +15,11 @@ trap Cleanup EXIT
 Cleanup() {
 	echo cleanup
 	influx -execute "drop database ${database_name}"
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop authorizer
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     rm -rf ${receiver_root_folder}
 }
 
 mkdir -p ${receiver_folder}
-
-nomad run authorizer.nmd
-nomad run receiver_tcp.nmd
-nomad run discovery.nmd
-nomad run nginx.nmd
-
-sleep 1
 
 $1 localhost:8400 ${beamtime_id} 100 112 4  0 100
 

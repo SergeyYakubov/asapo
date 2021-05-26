@@ -3,5 +3,5 @@ set(TARGET_NAME broker_mongo_restart)
 ################################
 # Testing
 ################################
-configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/admin_token.key admin_token.key COPYONLY)
+prepare_asapo()
 add_script_test("${TARGET_NAME}-tcp" "$<TARGET_FILE:dummy-data-producer> $<TARGET_FILE:getnext> $<TARGET_PROPERTY:asapo,EXENAME> tcp" nomem)

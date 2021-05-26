@@ -1,8 +1,5 @@
 set(TARGET_NAME getnext_python)
 
-
-prepare_asapo()
-
 if (UNIX)
     get_target_property(PYTHON_LIBS python-lib-consumer BINARY_DIR)
 else()

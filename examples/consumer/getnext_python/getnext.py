@@ -6,7 +6,7 @@ import sys
 
 source, path, beamtime, token, group_id = sys.argv[1:]
 
-consumer = asapo_consumer.create_consumer(source,path,True, beamtime,"",token,60000)
+consumer = asapo_consumer.create_consumer(source,path,True, beamtime,"",token,5000)
 
 
 if group_id == "new":
