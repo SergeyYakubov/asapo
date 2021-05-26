@@ -1,6 +1,6 @@
 package common
 
-const  (
+var  (
 	NameMongoService = "asapo-mongodb"
 	NameFtsService = "asapo-file-transfer"
 	NameBrokerService = "asapo-broker"
