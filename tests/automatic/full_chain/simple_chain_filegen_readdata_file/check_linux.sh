@@ -56,5 +56,4 @@ grep "Processed 3 file(s)" out.txt
 grep "hello1" out.txt
 grep "hello2" out.txt
 grep "hello3" out.txt
-grep -i "Using connection type: No connection" out.txt
 

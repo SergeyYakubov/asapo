@@ -42,7 +42,6 @@ REM consumer
 type out.txt
 findstr /i /l /c:"Processed 2 dataset(s)" out.txt || goto :error
 findstr /i /l /c:"with 4 file(s)" out.txt || goto :error
-findstr /i /l /c:"Using connection type: No connection" out.txt || goto :error
 
 goto :clean
 

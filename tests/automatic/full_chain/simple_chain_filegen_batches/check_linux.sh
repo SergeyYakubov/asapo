@@ -54,7 +54,6 @@ echo "Start consumer in metadata only mode"
 $consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 2000 1 1 | tee out
 grep "Processed 1 dataset(s)" out
 grep "with 3 file(s)" out
-grep -i "Using connection type: No connection" out
 
 test -f /tmp/asapo/test_in/processed/test1/file1
 test -f /tmp/asapo/test_in/processed/test1/file2

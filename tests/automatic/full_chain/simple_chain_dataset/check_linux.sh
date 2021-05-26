@@ -41,5 +41,4 @@ echo "Start consumer in metadata only mode"
 $consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 5000 1 1 | tee out
 grep "Processed 100 dataset(s)" out
 grep "with 500 file(s)" out
-grep -i "Using connection type: No connection" out
 
