@@ -27,25 +27,11 @@ Cleanup() {
     rm -rf /tmp/asapo/test_in1
     rm -rf /tmp/asapo/test_in2
     rm -rf ${receiver_folder}
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop broker
-    nomad stop authorizer
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     rm -rf out
 }
 
 echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
-
-nomad run nginx.nmd
-nomad run authorizer.nmd
-nomad run receiver_tcp.nmd
-nomad run discovery.nmd
-nomad run broker.nmd
-
-sleep 1
 
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 

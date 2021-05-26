@@ -27,26 +27,12 @@ receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/dat
 Cleanup() {
     echo cleanup
     rm -rf ${receiver_root_folder}
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop broker
-    nomad stop authorizer
     echo "db.dropDatabase()" | mongo ${beamtime_id}_${stream1}
     echo "db.dropDatabase()" | mongo ${beamtime_id}_${stream2}
 }
 
 echo "db.${beamtime_id}_${stream1}.insert({dummy:1})" | mongo ${beamtime_id}_${stream1}
 echo "db.${beamtime_id}_${stream2}.insert({dummy:1})" | mongo ${beamtime_id}_${stream2}
-
-nomad run nginx.nmd
-nomad run authorizer.nmd
-nomad run receiver_tcp.nmd
-nomad run discovery.nmd
-nomad run broker.nmd
-
-sleep 3
 
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 

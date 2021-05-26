@@ -41,14 +41,10 @@ receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/dat
 
 Cleanup() {
 	echo cleanup
+	set +e
 	rm -rf ${receiver_root_folder}
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop authorizer
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}_detector
-    kill_mongo
+  echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}_detector
+  kill_mongo
 }
 
 start_mongo
@@ -60,16 +56,7 @@ echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo --port 27016 ${beamt
 
 sed -i 's/27017/27016/g' discovery.json.tpl
 
-
-nomad run authorizer.nmd
-nomad run nginx.nmd
-nomad run receiver_tcp.nmd
-nomad run discovery.nmd
-
 mkdir -p ${receiver_folder}
-
-
-sleep 1
 
 nfiles=1000
 

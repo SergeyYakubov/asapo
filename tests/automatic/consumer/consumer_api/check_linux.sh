@@ -6,29 +6,15 @@ database_name=${beamtime_id}_${data_source}
 token_test_run=$BT_TEST_RUN_RW_TOKEN
 
 
-
 set -e
 
 trap Cleanup EXIT
 
 Cleanup() {
     set +e
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop discovery
-    nomad stop authorizer
-    nomad stop broker
     echo "db.dropDatabase()" | mongo ${database_name}
 	  rm -f 1_1 1
 }
-
-
-nomad run nginx.nmd
-nomad run discovery.nmd
-nomad run authorizer.nmd
-nomad run broker.nmd
-
-sleep 1
 
 for i in `seq 1 10`;
 do
@@ -51,7 +37,6 @@ echo 'db.data_stream2.insert({"_id":'6',"size":0,"name":"asapo_finish_stream","t
 echo hello1 > 1
 
 $@ 127.0.0.1:8400 $beamtime_id $token_test_run single
-
 
 
 #check datasets

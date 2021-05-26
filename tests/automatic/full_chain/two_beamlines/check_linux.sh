@@ -26,18 +26,14 @@ year=2019
 receiver_folder1=${receiver_root_folder}/${facility}/gpfs/${beamline1}/${year}/data/${beamtime_id1}
 receiver_folder2=${receiver_root_folder}/${facility}/gpfs/${beamline2}/${year}/data/${beamtime_id2}
 
-
-
 Cleanup() {
     echo cleanup
+    set +e
+    if [[ $network_type == "fabric" ]]; then
+      nomad stop receiver
+      nomad run receiver_tcp.nmd
+    fi
     rm -rf ${receiver_root_folder}
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop broker
-    nomad stop authorizer
-#    kill $producerid
     echo "db.dropDatabase()" | mongo ${beamtime_id1}_${data_source}
     echo "db.dropDatabase()" | mongo ${beamtime_id2}_${data_source}
     influx -execute "drop database ${monitor_database_name}"
@@ -46,13 +42,10 @@ Cleanup() {
 echo "db.${beamtime_id1}_${data_source}.insert({dummy:1})" | mongo ${beamtime_id1}_${data_source}
 echo "db.${beamtime_id2}_${data_source}.insert({dummy:1})" | mongo ${beamtime_id2}_${data_source}
 
-nomad run nginx.nmd
-nomad run authorizer.nmd
-nomad run receiver_${network_type}.nmd
-nomad run discovery.nmd
-nomad run broker.nmd
-
-sleep 3
+if [[ $network_type == "fabric" ]]; then
+    nomad stop receiver
+    nomad run receiver_fabric.nmd
+fi
 
 token1=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id1`
 token2=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id2`

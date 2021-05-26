@@ -1,5 +1,4 @@
 set(TARGET_NAME send_recv_streams_python)
-prepare_asapo()
 
 if (UNIX)
     get_target_property(PYTHON_LIBS_CONSUMER python-lib-consumer BINARY_DIR)

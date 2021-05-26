@@ -49,12 +49,6 @@ Cleanup() {
     set +e
     echo cleanup
     rm -rf ${receiver_root_folder}
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop broker
-    nomad stop authorizer
     kill $producerid
     kill $workerid
     echo "db.dropDatabase()" | mongo --port 27015 ${beamtime_id}_detector || echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}_detector
@@ -70,15 +64,6 @@ sed -i 's/info/debug/g' broker.json.tpl
 
 start_mongo 27016
 wait_mongo 27016
-
-
-nomad run nginx.nmd
-nomad run authorizer.nmd
-nomad run receiver_tcp.nmd
-nomad run discovery.nmd
-nomad run broker.nmd
-
-sleep 1
 
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
