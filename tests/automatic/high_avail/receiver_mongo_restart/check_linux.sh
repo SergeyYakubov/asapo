@@ -28,7 +28,6 @@ function start_mongo {
 }
 
 
-database_name=db_test
 beamtime_id=asapo_test
 beamline=test
 
@@ -37,14 +36,15 @@ facility=test_facility
 year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
 
-
-
 Cleanup() {
 	echo cleanup
 	set +e
 	rm -rf ${receiver_root_folder}
   echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}_detector
   kill_mongo
+  sed -i 's/27016/27017/g' discovery.json.tpl
+  nomad stop discovery
+  nomad run discovery.nmd
 }
 
 start_mongo
@@ -55,6 +55,8 @@ wait_mongo
 echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}_detector
 
 sed -i 's/27017/27016/g' discovery.json.tpl
+nomad stop discovery
+nomad run discovery.nmd
 
 mkdir -p ${receiver_folder}
 

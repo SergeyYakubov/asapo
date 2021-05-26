@@ -55,15 +55,21 @@ Cleanup() {
     influx -execute "drop database ${monitor_database_name}"
     kill_mongo 27015 || kill_mongo 27016
     sed -i 's/27015/27017/g' discovery.json.tpl
+    nomad stop discovery
+    nomad run discovery.nmd
 }
 
 
-sed -i 's/27017/27016/g' receiver_tcp.json.tpl
-sed -i 's/27017/27016/g' discovery.json.tpl
-sed -i 's/info/debug/g' broker.json.tpl
-
 start_mongo 27016
 wait_mongo 27016
+
+sed -i 's/27017/27016/g' discovery.json.tpl
+nomad stop discovery
+nomad run discovery.nmd
+nomad stop broker
+nomad run broker.nmd
+
+sleep 2
 
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 

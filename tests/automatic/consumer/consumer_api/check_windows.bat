@@ -6,6 +6,8 @@ SET database_name=%beamtime_id%_%data_source%
 SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 set token_test_run=%BT_TEST_RUN_RW_TOKEN%
 
+c:\opt\consul\nomad status
+
 for /l %%x in (1, 1, 10) do echo db.data_default.insert({"_id":%%x,"size":6,"name":"%%x","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
 for /l %%x in (1, 1, 5) do echo db.data_stream1.insert({"_id":%%x,"size":6,"name":"1%%x","timestamp":1000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error

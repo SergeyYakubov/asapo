@@ -1,10 +1,6 @@
 set full_name="%1"
 set short_name="%~nx1"
 
-start /B "" "%full_name%" -config settings.json
-
-ping 192.0.2.1 -n 1 -w 1000 > nul
-
 mkdir C:\tmp\asapo\asap3\petra3\gpfs\p00\2019\comissioning\c20180508-000-COM20181
 mkdir C:\tmp\asapo\beamline\p07\current
 copy beamtime-metadata-11111111.json C:\tmp\asapo\beamline\p07\current\ /y
@@ -25,6 +21,5 @@ call :clean
 exit /b 1
 
 :clean
-Taskkill /IM "%short_name%" /F
 rmdir /S /Q C:\tmp\asapo\asap3
 rmdir /S /Q C:\tmp\asapo\beamline

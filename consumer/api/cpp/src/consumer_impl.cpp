@@ -111,7 +111,7 @@ Error ProcessRequestResponce(const RequestInfo &request,
     }
 
     if (err!=nullptr) {
-        std::string prefix = "Error processing request" + request.api;
+        std::string prefix = "Error processing request " + request.host+request.api;
         err->Prepend(prefix);
     }
     return err;
