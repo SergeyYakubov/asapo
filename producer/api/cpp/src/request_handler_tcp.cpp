@@ -302,7 +302,7 @@ void RequestHandlerTcp::PrepareProcessingRequestLocked() {
 }
 
 void RequestHandlerTcp::TearDownProcessingRequestLocked(bool request_processed_successfully) {
-    if (!request_processed_successfully) {
+    if (!request_processed_successfully && *ncurrent_connections_>0) {
         (*ncurrent_connections_)--;
     }
 }

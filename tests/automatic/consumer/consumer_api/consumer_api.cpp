@@ -327,7 +327,7 @@ void TestAll(const Args& args) {
         exit(EXIT_FAILURE);
     }
 
-    consumer->SetTimeout(1000);
+    consumer->SetTimeout(10000);
     auto group_id = consumer->GenerateNewGroupId(&err);
 
     if (args.datasets == "single") {
