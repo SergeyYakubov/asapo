@@ -32,6 +32,13 @@ Cleanup() {
     if [[ $network_type == "fabric" ]]; then
       nomad stop receiver
       nomad run receiver_tcp.nmd
+      while true
+      do
+        sleep 1
+        curl --silent 127.0.0.1:8400/asapo-discovery/v0.1/asapo-receiver?protocol=v0.1 --stderr - | grep 127.0.0.1  || continue
+        echo recevier started
+        break
+      done
     fi
     rm -rf ${receiver_root_folder}
     echo "db.dropDatabase()" | mongo ${beamtime_id1}_${data_source}
@@ -42,6 +49,13 @@ Cleanup() {
 if [[ $network_type == "fabric" ]]; then
     nomad stop receiver
     nomad run receiver_fabric.nmd
+    while true
+    do
+      sleep 1
+      curl --silent 127.0.0.1:8400/asapo-discovery/v0.1/asapo-receiver?protocol=v0.1 --stderr - | grep 127.0.0.1  || continue
+      echo recevier started
+      break
+    done
 fi
 
 token1=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id1`

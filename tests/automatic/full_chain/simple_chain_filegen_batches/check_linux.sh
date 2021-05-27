@@ -44,6 +44,8 @@ sleep 1
 mkdir  /tmp/asapo/test_in/processed/test1
 mkdir  /tmp/asapo/test_in/processed/test2
 
+sleep 1
+
 echo hello > /tmp/asapo/test_in/processed/test1/file1
 echo hello > /tmp/asapo/test_in/processed/test1/file2
 echo hello > /tmp/asapo/test_in/processed/test2/file1

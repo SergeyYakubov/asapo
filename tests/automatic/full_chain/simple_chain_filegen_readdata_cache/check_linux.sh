@@ -29,6 +29,13 @@ Cleanup() {
     if [[ $network_type == "fabric" ]]; then
       nomad stop receiver
       nomad run receiver_tcp.nmd
+      while true
+      do
+        sleep 1
+        curl --silent 127.0.0.1:8400/asapo-discovery/v0.1/asapo-receiver?protocol=v0.1 --stderr - | grep 127.0.0.1  || continue
+        echo recevier started
+        break
+      done
     fi
     kill -9 $producerid
     rm -rf /tmp/asapo/test_in
@@ -41,6 +48,13 @@ Cleanup() {
 if [[ $network_type == "fabric" ]]; then
     nomad stop receiver
     nomad run receiver_fabric.nmd
+    while true
+    do
+      sleep 1
+      curl --silent 127.0.0.1:8400/asapo-discovery/v0.1/asapo-receiver?protocol=v0.1 --stderr - | grep 127.0.0.1  || continue
+      echo recevier started
+      break
+    done
 fi
 
 token=`$3 token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
@@ -53,6 +67,8 @@ producerid=`echo $!`
 sleep 1
 mkdir  /tmp/asapo/test_in/processed/test1
 mkdir  /tmp/asapo/test_in/processed/test2
+
+sleep 1
 
 echo -n hello1 > /tmp/asapo/test_in/processed/test1/file1
 echo -n hello2 > /tmp/asapo/test_in/processed/test1/file2

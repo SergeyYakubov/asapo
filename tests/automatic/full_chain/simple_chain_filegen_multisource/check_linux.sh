@@ -50,6 +50,8 @@ sleep 1
 mkdir -p /tmp/asapo/test_in1/processed/test1
 mkdir -p /tmp/asapo/test_in2/processed/test2
 
+sleep 1
+
 echo hello > /tmp/asapo/test_in1/processed/test1/file1
 echo hello > /tmp/asapo/test_in1/processed/test1/file2
 echo hello > /tmp/asapo/test_in2/processed/test2/file1
