@@ -9,7 +9,7 @@ SET receiver_folder2="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\
 SET dbname=%beamtime_id%_%data_source%
 SET dbname2=%beamtime_id2%_%data_source%
 SET token=%BLP07_W_TOKEN%
-SET beamline_dir=/c:\tmp\asapo\beamline\p07\current\
+SET beamline_dir=c:\tmp\asapo\beamline\p07\current\
 
 
 
@@ -27,7 +27,7 @@ set PYTHONPATH=%2
 mkdir %beamline_dir%
 copy beamtime-metadata-11111111.json %beamline_dir% /y
 
-"%1" "%3" %beamline% %token%  %data_source% "127.0.0.1:8400"%beamline_dir%beamtime-metadata-11111111.json > out
+"%1" "%3" %beamline% %token%  %data_source% "127.0.0.1:8400" %beamline_dir%beamtime-metadata-11111111.json > out
 
 type out
 set NUM=0
