@@ -12,7 +12,7 @@ cmake \
     -DCPACK_PACKAGE_NAME="asapo-devel" \
     -DCPACK_GENERATOR="RPM" \
     ..
-make
+make -j 4
 make package
 
 cmake -DNUMPY_VERSION=0 -DBUILD_PYTHON=ON -DBUILD_PYTHON_PACKAGES="source;rpm" ..
