@@ -20,12 +20,6 @@ Cleanup() {
     influx -execute "drop database ${database_name}"
 }
 
-echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
-
-
-# create db before consumer starts reading it. todo: git rid of it
-echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
-
 mkdir -p ${receiver_folder}
 
 $1 localhost:8400 ${beamtime_id} 100 1 1 0 30 3

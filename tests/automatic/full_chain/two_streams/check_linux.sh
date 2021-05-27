@@ -31,9 +31,6 @@ Cleanup() {
     echo "db.dropDatabase()" | mongo ${beamtime_id}_${stream2}
 }
 
-echo "db.${beamtime_id}_${stream1}.insert({dummy:1})" | mongo ${beamtime_id}_${stream1}
-echo "db.${beamtime_id}_${stream2}.insert({dummy:1})" | mongo ${beamtime_id}_${stream2}
-
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
 echo "Start producers"

@@ -21,8 +21,6 @@ Cleanup() {
 
 export PYTHONPATH=$2:${PYTHONPATH}
 
-echo "db.${beamtime_id}_${data_source}.insert({dummy:1})" | mongo ${beamtime_id}_${data_source} >/dev/null
-
 mkdir -p ${receiver_folder}
 
 echo test > file1

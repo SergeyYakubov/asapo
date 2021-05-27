@@ -74,9 +74,6 @@ sleep 2
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
 
-echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}_detector
-
-
 echo "Start producer"
 mkdir -p ${receiver_folder}
 $producer_bin localhost:8400 ${beamtime_id} 100 1000 4 0 100 &

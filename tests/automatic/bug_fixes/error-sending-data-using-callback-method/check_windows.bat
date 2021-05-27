@@ -6,8 +6,6 @@ SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\data\%beamtime_id%"
 SET dbname = %beamtime_id%_%data_source%
 
-echo db.%dbname%.insert({dummy:1})" | %mongo_exe% %dbname%
-
 mkdir %receiver_folder%
 
 echo test > file1

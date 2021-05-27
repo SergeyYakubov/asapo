@@ -15,9 +15,6 @@ SET receiver_folder2="%receiver_root_folder%\%facility%\gpfs\%beamline2%\%year%\
 
 set proxy_address="127.0.0.1:8400"
 
-echo db.%beamtime_id1%_%data_source%.insert({dummy:1}) | %mongo_exe% %beamtime_id1%_%data_source%
-echo db.%beamtime_id2%_%data_source%.insert({dummy:1}) | %mongo_exe% %beamtime_id2%_%data_source%
-
 "%3" token -endpoint http://127.0.0.1:8400/asapo-authorizer -secret admin_token.key -types read %beamtime_id1% > token
 set /P token1=< token
 "%3" token -endpoint http://127.0.0.1:8400/asapo-authorizer -secret admin_token.key -types read %beamtime_id2% > token

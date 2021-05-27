@@ -39,9 +39,6 @@ Cleanup() {
     influx -execute "drop database ${monitor_database_name}"
 }
 
-echo "db.${beamtime_id1}_${data_source}.insert({dummy:1})" | mongo ${beamtime_id1}_${data_source}
-echo "db.${beamtime_id2}_${data_source}.insert({dummy:1})" | mongo ${beamtime_id2}_${data_source}
-
 if [[ $network_type == "fabric" ]]; then
     nomad stop receiver
     nomad run receiver_fabric.nmd

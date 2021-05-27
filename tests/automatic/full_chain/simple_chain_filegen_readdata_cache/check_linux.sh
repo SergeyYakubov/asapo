@@ -38,9 +38,6 @@ Cleanup() {
     rm out.txt
 }
 
-echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
-
-
 if [[ $network_type == "fabric" ]]; then
     nomad stop receiver
     nomad run receiver_fabric.nmd

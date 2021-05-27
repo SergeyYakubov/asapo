@@ -27,8 +27,6 @@ Cleanup() {
     influx -execute "drop database ${monitor_database_name}"
 }
 
-echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
-
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
 

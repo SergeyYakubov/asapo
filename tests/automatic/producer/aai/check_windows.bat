@@ -11,10 +11,6 @@ SET dbname2=%beamtime_id2%_%data_source%
 SET token=%BLP07_W_TOKEN%
 SET beamline_dir=c:\tmp\asapo\beamline\p07\current\
 
-
-
-echo db.%dbname%.insert({dummy:1})" | %mongo_exe% %dbname%
-
 mkdir %receiver_folder%
 mkdir %receiver_folder2%
 

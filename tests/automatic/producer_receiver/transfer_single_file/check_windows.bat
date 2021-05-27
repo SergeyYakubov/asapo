@@ -4,8 +4,6 @@ SET beamline=test
 SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\data\%beamtime_id%"
 
-echo db.%beamtime_id%_detector.insert({dummy:1})" | %mongo_exe% %beamtime_id%_detector
-
 mkdir %receiver_folder%
 
 "%1" 127.0.0.1:8400 %beamtime_id% 100 1 1 0 30
