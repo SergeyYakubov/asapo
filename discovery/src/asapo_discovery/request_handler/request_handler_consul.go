@@ -67,7 +67,7 @@ func (rh *ConsulRequestHandler) GetReceivers(use_ib bool) ([]byte, error) {
 		return nil, errors.New("consul client not connected")
 	}
 	var err error
-	response.Uris, err = rh.GetServices("asapo-receiver",use_ib)
+	response.Uris, err = rh.GetServices(common.NameReceiverService,use_ib)
 	if err != nil {
 		return nil, err
 	}

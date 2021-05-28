@@ -6,10 +6,6 @@ SET receiver_root_folder=c:\tmp\asapo\receiver\files
 SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\data\%beamtime_id%"
 SET dbname=%beamtime_id%_%data_source%
 
-echo db.%dbname%.insert({dummy:1})" | %mongo_exe% %dbname%
-
-call start_services.bat
-
 mkdir %receiver_folder%
 
 echo test > file1
@@ -43,7 +39,6 @@ call :clean
 exit /b 1
 
 :clean
-call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
 echo db.dropDatabase() | %mongo_exe% %dbname%
 

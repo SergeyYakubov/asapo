@@ -12,6 +12,7 @@ beamline = sys.argv[1]
 token = sys.argv[2]
 data_source = sys.argv[3]
 endpoint = sys.argv[4]
+fname = sys.argv[5]
 
 nthreads = 1
 
@@ -42,7 +43,6 @@ producer.send_file(1, local_path = "./file1", exposed_path = "processed/"+data_s
 producer.wait_requests_finished(10000)
 
 
-fname = 'beamline/p07/current/beamtime-metadata-11111111.json'
 with open(fname) as json_file:
     data = json.load(json_file)
 data['beamtimeId']='22222222'

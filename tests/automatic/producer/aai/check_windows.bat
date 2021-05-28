@@ -9,11 +9,7 @@ SET receiver_folder2="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\
 SET dbname=%beamtime_id%_%data_source%
 SET dbname2=%beamtime_id2%_%data_source%
 SET token=%BLP07_W_TOKEN%
-
-
-echo db.%dbname%.insert({dummy:1})" | %mongo_exe% %dbname%
-
-call start_services.bat
+SET beamline_dir=c:\tmp\asapo\beamline\p07\current\
 
 mkdir %receiver_folder%
 mkdir %receiver_folder2%
@@ -24,7 +20,10 @@ ping 192.0.2.1 -n 1 -w 1000 > nul
 
 set PYTHONPATH=%2
 
-"%1" "%3" %beamline% %token%  %data_source% "127.0.0.1:8400" > out
+mkdir %beamline_dir%
+copy beamtime-metadata-11111111.json %beamline_dir% /y
+
+"%1" "%3" %beamline% %token%  %data_source% "127.0.0.1:8400" %beamline_dir%beamtime-metadata-11111111.json > out
 
 type out
 set NUM=0
@@ -44,9 +43,9 @@ call :clean
 exit /b 1
 
 :clean
-call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
 rmdir /S /Q %receiver_root_folder2%
+rmdir /S /Q %beamline_dir%
 echo db.dropDatabase() | %mongo_exe% %dbname%
 echo db.dropDatabase() | %mongo_exe% %dbname2%
 

@@ -291,13 +291,13 @@ TEST_F(DataCacheTests, GetFreeSlotCreatesCorrectIds) {
     ASSERT_THAT(c3, Eq(c2 + 1));
     ASSERT_THAT(c4, Eq(c3 + 1));
 
-    ASSERT_THAT(t2 - t1, Ge(100));
-    ASSERT_THAT(t2 - t1, Le(200));
+    ASSERT_THAT(t2, Ne(t1));
+    ASSERT_THAT(t2, Ne(t3));
+    ASSERT_THAT(t4, Ne(t3));
+    ASSERT_THAT(t1, Ne(t3));
+    ASSERT_THAT(t4, Ne(t2));
+    ASSERT_THAT(t4, Ne(t1));
 
-    ASSERT_THAT(t3 - t2, Ge(10));
-    ASSERT_THAT(t3 - t2, Le(20));
-
-    ASSERT_THAT(t4 - t3, Ge(1));
 }
 
 }

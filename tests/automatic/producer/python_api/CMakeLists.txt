@@ -3,10 +3,6 @@ set(TARGET_NAME producer_python_api)
 ################################
 # Testing
 ################################
-prepare_asapo()
-
-prepare_asapo()
-
 if (UNIX)
     get_target_property(PYTHON_LIBS python-lib-producer BINARY_DIR)
 else()

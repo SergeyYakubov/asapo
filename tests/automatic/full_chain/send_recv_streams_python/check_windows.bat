@@ -9,8 +9,6 @@ SET beamline=test
 
 SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 
-call start_services.bat
-
 "%1" 127.0.0.1:8400 %beamtime_id% %token%
 
 goto :clean
@@ -20,5 +18,4 @@ call :clean
 exit /b 1
 
 :clean
-call stop_services.bat
 echo db.dropDatabase() | %mongo_exe% %indatabase_name%

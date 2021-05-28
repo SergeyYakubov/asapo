@@ -25,29 +25,37 @@ mkdir -p /tmp/asapo/test_in/processed
 
 Cleanup() {
     echo cleanup
+    set +e
+    if [[ $network_type == "fabric" ]]; then
+      nomad stop receiver
+      nomad run receiver_tcp.nmd
+      while true
+      do
+        sleep 1
+        curl --silent 127.0.0.1:8400/asapo-discovery/v0.1/asapo-receiver?protocol=v0.1 --stderr - | grep 127.0.0.1  || continue
+        echo recevier started
+        break
+      done
+    fi
     kill -9 $producerid
     rm -rf /tmp/asapo/test_in
     rm -rf ${receiver_folder}
     influx -execute "drop database ${monitor_database_name}"
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop broker
-    nomad stop authorizer
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     rm out.txt
 }
 
-echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
-
-nomad run nginx.nmd
-nomad run authorizer.nmd
-nomad run receiver_${network_type}.nmd
-nomad run discovery.nmd
-nomad run broker.nmd
-
-sleep 5
+if [[ $network_type == "fabric" ]]; then
+    nomad stop receiver
+    nomad run receiver_fabric.nmd
+    while true
+    do
+      sleep 1
+      curl --silent 127.0.0.1:8400/asapo-discovery/v0.1/asapo-receiver?protocol=v0.1 --stderr - | grep 127.0.0.1  || continue
+      echo recevier started
+      break
+    done
+fi
 
 token=`$3 token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 

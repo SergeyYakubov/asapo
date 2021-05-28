@@ -4,20 +4,13 @@ set -e
 
 trap Cleanup EXIT
 
-file_transfer_folder=`pwd`/asap3/petra3/gpfs/p01/2019/data/aaa
+file_transfer_folder=/tmp/asapo/asap3/petra3/gpfs/p01/2019/data/aaa
 
 
 Cleanup() {
 	echo cleanup
-  nomad stop authorizer
-  nomad stop file_transfer
   rm -rf $file_transfer_folder aaa big_file
 }
-
-nomad run authorizer.nmd
-nomad run file_transfer.nmd
-
-sleep 1
 
 mkdir -p $file_transfer_folder
 

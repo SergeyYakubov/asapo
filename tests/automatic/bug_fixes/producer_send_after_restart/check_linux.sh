@@ -7,7 +7,6 @@ trap Cleanup EXIT
 producer_bin=$1
 consumer_bin=$2
 asapo_tool_bin=$3
-network_type=$4
 
 beamtime_id=asapo_test
 
@@ -27,18 +26,8 @@ Cleanup() {
     echo cleanup
     rm -rf ${receiver_root_folder}
     rm -rf /tmp/asapo/test_in
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop authorizer
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
 }
-
-nomad run nginx.nmd
-nomad run authorizer.nmd
-nomad run receiver_${network_type}.nmd
-nomad run discovery.nmd
 
 sleep 1
 mkdir  /tmp/asapo/test_in/processed
@@ -53,7 +42,7 @@ echo hello > /tmp/asapo/test_in/processed/file1
 sleep 1
 nomad stop receiver
 sleep 1
-nomad run receiver_${network_type}.nmd
+nomad run receiver_tcp.nmd
 
 echo hello > /tmp/asapo/test_in/processed/file1
 sleep 1

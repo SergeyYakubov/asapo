@@ -14,21 +14,9 @@ set -e
 trap Cleanup EXIT
 
 Cleanup() {
-    set +e
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop discovery
-    nomad stop broker
-    nomad stop receiver
-    nomad stop authorizer
+  set +e
 	echo "db.dropDatabase()" | mongo ${indatabase_name}
 }
-
-nomad run nginx.nmd
-nomad run discovery.nmd
-nomad run broker.nmd
-nomad run receiver_tcp.nmd
-nomad run authorizer.nmd
 
 
 export PYTHONPATH=$2:$3:${PYTHONPATH}

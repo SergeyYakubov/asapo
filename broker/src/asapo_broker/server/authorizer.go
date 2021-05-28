@@ -84,7 +84,7 @@ func (a * AsapoAuthorizer) doRequest(req *http.Request) (token Token, err error)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return token, &HttpError{errors.New("returned " + resp.Status + ": " + string(body)),resp.StatusCode}
+		return token, &HttpError{errors.New("authorizer returned " + resp.Status + ": " + string(body)),resp.StatusCode}
 	}
 
 	err = json.Unmarshal(body, &token)
