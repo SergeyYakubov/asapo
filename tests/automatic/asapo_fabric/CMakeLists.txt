@@ -15,5 +15,11 @@ foreach(file ${files})
     set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
     # Add test
-    add_integration_test(${TARGET_NAME} ${TARGET_NAME} "")
+    if (file_we STREQUAL "timeout_test")
+        add_integration_test(${TARGET_NAME} ${TARGET_NAME} "" nomem)
+    else()
+        add_integration_test(${TARGET_NAME} ${TARGET_NAME} "")
+    endif ()
+
+
 endforeach()
