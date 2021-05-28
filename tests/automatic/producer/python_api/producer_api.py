@@ -114,6 +114,9 @@ else:
     print("should be error sending id 0 ")
     sys.exit(1)
 
+# wait before sending to another stream so we sure that this stream appears later
+producer.wait_requests_finished(50000)
+
 # send to another stream
 producer.send(1, "processed/" + data_source + "/" + "file9", None,
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream", callback=callback)
@@ -143,9 +146,8 @@ producer.send_file(1, local_path="./file1", exposed_path="processed/" + data_sou
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")
-assert_eq(n, 0, "requests in queue")
 
-# send to another data to stream stream
+# send another data to stream stream
 producer.send(2, "processed/" + data_source + "/" + "file10", None,
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream", callback=callback)
 
@@ -188,6 +190,7 @@ assert_eq(info['lastId'], 3, "last id from different stream")
 assert_eq(info['finished'], True, "stream finished")
 
 info = producer.stream_info('dataset_stream')
+print(info)
 assert_eq(info['lastId'], 2, "last id from stream with datasets")
 
 info = producer.stream_info('not_exist')
@@ -195,6 +198,7 @@ assert_eq(info['lastId'], 0, "last id from non existing stream")
 
 
 info_last = producer.last_stream()
+print(info_last)
 assert_eq(info_last['name'], "stream", "last stream")
 assert_eq(info_last['timestampCreated'] <= info_last['timestampLast'], True, "last is later than first")
 

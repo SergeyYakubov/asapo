@@ -189,7 +189,7 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
             }
         }
     }
-    return true;
+    return producer->SendStreamFinishedFlag("default",iterations,"",nullptr) == nullptr;
 }
 
 std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {

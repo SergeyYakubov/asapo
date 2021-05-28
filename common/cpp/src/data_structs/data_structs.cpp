@@ -26,6 +26,7 @@ std::string GetStringFromSourceType(SourceType type) {
         case SourceType::kRaw:return "raw";
         case SourceType::kProcessed:return "processed";
     }
+    return "unknown";
 }
 
 Error GetSourceTypeFromString(std::string stype, SourceType* type) {
@@ -158,7 +159,6 @@ std::string StreamInfo::Json() const {
 bool StreamInfo::SetFromJson(const std::string &json_string) {
     auto old = *this;
     JsonStringParser parser(json_string);
-    uint64_t id;
     if (parser.GetUInt64("lastId", &last_id) ||
         parser.GetBool("finished", &finished) ||
         parser.GetString("nextStream", &next_stream) ||
@@ -192,7 +192,7 @@ std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec) {
 
 uint64_t NanosecsEpochFromISODate(std::string date_time) {
     double frac = 0;
-    int pos = date_time.find_first_of('.');
+    auto pos = date_time.find_first_of('.');
     if (pos != std::string::npos) {
         std::string frac_str = date_time.substr(pos);
         if (sscanf(frac_str.c_str(), "%lf", &frac) != 1) {

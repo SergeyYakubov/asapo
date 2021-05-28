@@ -71,8 +71,9 @@ class ConsumerImplTests : public Test {
   MessageMeta info;
   std::string expected_server_uri = "test:8400";
   std::string expected_broker_uri = "asapo-broker:5005";
-  std::string expected_consumer_protocol = "v0.3";
-  std::string expected_broker_api = expected_broker_uri + "/" + expected_consumer_protocol;
+  std::string expected_consumer_protocol = asapo::kConsumerProtocol.GetVersion();
+  std::string expected_broker_protocol = asapo::kConsumerProtocol.GetBrokerVersion();
+  std::string expected_broker_api = expected_broker_uri + "/" + expected_broker_protocol;
   std::string expected_fts_uri = "asapo-file-transfer:5008";
   std::string expected_token = "token";
   std::string expected_path = "/tmp/beamline/beamtime";

@@ -1,3 +1,9 @@
+## 21.06.0
+
+
+BUG FIXES
+* Consumer API: multiple consumers from same group receive stream finished error 
+
 ## 21.03.3
 
 BUG FIXES

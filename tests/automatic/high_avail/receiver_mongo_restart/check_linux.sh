@@ -58,6 +58,7 @@ nomad run discovery.nmd
 mkdir -p ${receiver_folder}
 
 nfiles=1000
+nrecords=1001 # nfiles + stream finished flag
 
 $1 localhost:8400 ${beamtime_id} 100 $nfiles 1  0 200 &
 
@@ -75,6 +76,6 @@ echo processed files:
 echo "db.data_default.count()" | mongo --port 27016 ${beamtime_id}_detector
 
 
-echo "db.data_default.count()" | mongo --port 27016 ${beamtime_id}_detector | grep $nfiles
+echo "db.data_default.count()" | mongo --port 27016 ${beamtime_id}_detector | grep $nrecords
 
 

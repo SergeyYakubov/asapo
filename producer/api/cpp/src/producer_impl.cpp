@@ -365,6 +365,7 @@ GenericRequestHeader CreateRequestHeaderFromOp(StreamRequestOp op,std::string st
         case StreamRequestOp::kLastStream:
             return GenericRequestHeader{kOpcodeLastStream, 0, 0, 0, "", ""};
     }
+    return GenericRequestHeader{};
 }
 
 StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string stream, uint64_t timeout_ms, Error* err) const {
