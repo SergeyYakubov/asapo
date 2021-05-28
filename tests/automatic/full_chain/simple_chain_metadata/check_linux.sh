@@ -36,5 +36,5 @@ mkdir -p ${receiver_folder}
 $producer_bin localhost:8400 ${beamtime_id} 100 0 1 0 1000
 
 echo "Start consumer in metadata only mode"
-$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | tee out
+$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 0 1 | tee out
 grep "dummy_meta" out

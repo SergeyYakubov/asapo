@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -217,6 +218,16 @@ func (db *Mongodb) setCounter(request Request, ind int) (err error) {
 	return
 }
 
+func (db *Mongodb) errorWhenCannotIncrementField(request Request, max_ind int) (err error) {
+	if res, err := db.getRecordFromDb(request, max_ind, max_ind);err == nil {
+		if err := checkStreamFinished(request, max_ind, max_ind, res); err != nil {
+			return err
+		}
+	}
+	return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind, "")}
+}
+
+
 func (db *Mongodb) incrementField(request Request, max_ind int, res interface{}) (err error) {
 	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
@@ -233,7 +244,7 @@ func (db *Mongodb) incrementField(request Request, max_ind int, res interface{})
 			if err2 := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res); err2 == nil {
 				return nil
 			}
-			return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind, "")}
+			return db.errorWhenCannotIncrementField(request,max_ind)
 		}
 		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
 	}
@@ -584,6 +595,7 @@ func checkStreamFinished(request Request, id, id_max int, data map[string]interf
 		return nil
 	}
 	r, ok := ExtractMessageRecord(data)
+	fmt.Println(r,ok)
 	if !ok || !r.FinishedStream {
 		return nil
 	}

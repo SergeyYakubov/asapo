@@ -156,6 +156,22 @@ func TestMongoDBGetNextErrorOnFinishedStream(t *testing.T) {
 	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.(*DBError).Message)
 }
 
+func TestMongoDBGetNextErrorOnFinishedStreamAlways(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec_finished)
+
+	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})
+	db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})
+	_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: collection, GroupId: groupId, Op: "next"})
+
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+	assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"next1\"}", err.(*DBError).Message)
+}
+
+
+
 func TestMongoDBGetByIdErrorOnFinishedStream(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
