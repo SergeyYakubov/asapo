@@ -716,6 +716,7 @@ std::string filterToString(StreamFilter filter) {
         case StreamFilter::kFinishedStreams:return "finished";
         case StreamFilter::kUnfinishedStreams:return "unfinished";
     }
+    return "";
 }
 
 StreamInfos ConsumerImpl::GetStreamList(std::string from, StreamFilter filter, Error* err) {

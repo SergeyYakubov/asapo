@@ -125,7 +125,7 @@ TEST_F(DataCacheTests, GetFreeSlotRemovesOldMetadataRecords) {
     DataCache cache{expected_cache_size, 0};
     CacheMeta* meta3, *meta4, *meta5;
     CacheMeta* meta;
-    auto addr = cache.GetFreeSlotAndLock(10, &meta1);
+    cache.GetFreeSlotAndLock(10, &meta1);
     cache.GetFreeSlotAndLock(10, &meta2);
     cache.GetFreeSlotAndLock(expected_cache_size - 30, &meta3);
     auto id1 = meta1->id;
