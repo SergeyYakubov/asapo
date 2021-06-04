@@ -1,6 +1,5 @@
 #include "encoding.h"
-#include <regex>
-#include <string.h>
+#include <string>
 #include <stdio.h>
 
 namespace asapo {
@@ -98,9 +97,45 @@ std::string DecodeName(const std::string &name) {
     return res>=0?decoded:"";
 }
 
-std::string EscapeQuery(const std::string& query) {
-    std::regex specialChars { R"([-[\]{}()*+?\\.,\^$|#\s])" };
-    return std::regex_replace( query, specialChars, std::string(R"(\$&)" ));
+bool ShouldEscapeQuery(char c) {
+    char chars[] = "-[]{}()*+?\\.,^$|#";
+    for (auto i=0;i<strlen(chars);i++) {
+        if (c==chars[i]) {
+            return true;
+        }
+    };
+    return false;
+}
+
+std::string EscapeQuery(const std::string &s) {
+    auto count = 0;
+    for (auto i = 0; i < s.size(); i++) {
+        char c = s[i];
+        if (ShouldEscapeQuery(c)) {
+            count++;
+        }
+    }
+
+    if (count == 0) {
+        return s;
+    }
+
+    char t[s.size() + count + 1];
+    t[s.size() + count] = 0;
+    auto j = 0;
+    for (auto i = 0; i < s.size(); i++) {
+        auto c = s[i];
+        if (ShouldEscapeQuery(c)) {
+            t[j] = '\\';
+            t[j + 1] = c;
+            j += 2;
+
+        } else {
+            t[j] = c;
+            j++;
+        }
+    }
+    return t;
 }
 
 }
