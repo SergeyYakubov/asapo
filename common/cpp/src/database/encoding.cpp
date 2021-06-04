@@ -1,5 +1,5 @@
 #include "encoding.h"
-#include <string>
+#include <string.h>
 #include <stdio.h>
 
 namespace asapo {
