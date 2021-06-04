@@ -205,12 +205,6 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
 	suite.Equal(1, statistics.GetCounter(), "ProcessRequest increases counter")
 }
 
-func (suite *ProcessRequestTestSuite) TestProcessRequestWrongGroupID() {
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong groupid")))
-	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + wrongGroupID + "/next" + correctTokenSuffix)
-	suite.Equal(http.StatusBadRequest, w.Code, "wrong group id")
-}
-
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsDataset() {
 
 	expectedRequest := database.Request{DbName: expectedDBName, DbCollectionName: expectedStream, GroupId: expectedGroupID, DatasetOp: true, Op: "next"}

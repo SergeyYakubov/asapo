@@ -3,6 +3,8 @@
 #include <thread>
 
 #include "../../../common/cpp/src/database/mongodb_client.h"
+#include "../../../common/cpp/src/database/encoding.h"
+
 #include "testing.h"
 #include "asapo/common/data_structs.h"
 
@@ -44,17 +46,19 @@ int main(int argc, char* argv[]) {
     fi.timestamp = std::chrono::system_clock::now();
     fi.buf_id = 18446744073709551615ull;
     fi.source = "host:1234";
-
+    
+    auto db_name = R"(data_/ \."$)";
+    auto stream_name = R"(bla/test_/\ ."$)";
 
     if (args.keyword != "Notconnected") {
-        db.Connect("127.0.0.1", "data");
+        db.Connect("127.0.0.1", db_name);
     }
 
-    auto err = db.Insert("data_test", fi, false);
+    auto err = db.Insert(std::string("data_")+stream_name, fi, false);
 
     if (args.keyword == "DuplicateID") {
         Assert(err, "OK");
-        err = db.Insert("data_test", fi, false);
+        err = db.Insert(std::string("data_")+stream_name, fi, false);
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -73,17 +77,17 @@ int main(int argc, char* argv[]) {
     if (args.keyword == "OK") { // check retrieve and stream delete
         asapo::MessageMeta fi_db;
         asapo::MongoDBClient db_new;
-        db_new.Connect("127.0.0.1", "data");
-        err = db_new.GetById("data_test", fi.id, &fi_db);
+        db_new.Connect("127.0.0.1", db_name);
+        err = db_new.GetById(std::string("data_")+stream_name, fi.id, &fi_db);
         M_AssertTrue(fi_db == fi, "get record from db");
         M_AssertEq(nullptr, err);
-        err = db_new.GetById("data_test", 0, &fi_db);
+        err = db_new.GetById(std::string("data_")+stream_name, 0, &fi_db);
         Assert(err, "No record");
 
 
         asapo::StreamInfo info;
 
-        err = db.GetStreamInfo("data_test", &info);
+        err = db.GetStreamInfo(std::string("data_")+stream_name, &info);
         M_AssertEq(nullptr, err);
         M_AssertEq(fi.id, info.last_id);
 
@@ -95,20 +99,20 @@ int main(int argc, char* argv[]) {
         M_AssertEq("ns",info.next_stream);
 
 // delete stream
-        db.Insert("inprocess_test_blabla", fi, false);
-        db.Insert("inprocess_test_blabla1", fi, false);
-        db.Insert("acks_test_blabla", fi, false);
-        db.Insert("acks_test_blabla1", fi, false);
-        db.DeleteStream("test");
-        err = db.GetStreamInfo("data_test", &info);
+        db.Insert(std::string("inprocess_")+stream_name+"_blabla", fi, false);
+        db.Insert(std::string("inprocess_")+stream_name+"_blabla1", fi, false);
+        db.Insert(std::string("acks_")+stream_name+"_blabla", fi, false);
+        db.Insert(std::string("acks_")+stream_name+"_blabla1", fi, false);
+        db.DeleteStream(stream_name);
+        err = db.GetStreamInfo(std::string("data_")+stream_name, &info);
         M_AssertTrue(info.last_id == 0);
-        err = db.GetStreamInfo("inprocess_test_blabla", &info);
+        err = db.GetStreamInfo(std::string("inprocess_")+stream_name+"_blabla", &info);
         M_AssertTrue(info.last_id == 0);
-        err = db.GetStreamInfo("inprocess_test_blabla1", &info);
+        err = db.GetStreamInfo(std::string("inprocess_")+stream_name+"_blabla1", &info);
         M_AssertTrue(info.last_id == 0);
-        err = db.GetStreamInfo("acks_test_blabla", &info);
+        err = db.GetStreamInfo(std::string("acks_")+stream_name+"_blabla", &info);
         M_AssertTrue(info.last_id == 0);
-        err = db.GetStreamInfo("acks_test_blabla1", &info);
+        err = db.GetStreamInfo(std::string("acks_")+stream_name+"_blabla1", &info);
         M_AssertTrue(info.last_id == 0);
         err = db.DeleteStream("test1");
         M_AssertTrue(err==nullptr);

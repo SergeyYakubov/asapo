@@ -10,7 +10,7 @@
 #include "../../src/request.h"
 #include "../../src/request_handler/request_factory.h"
 #include "../../src/request_handler/request_handler.h"
-#include "../../src/request_handler/request_handler_delete_stream.h"
+#include "../../src/request_handler/request_handler_db_delete_stream.h"
 #include "../../../common/cpp/src/database/mongodb_client.h"
 
 #include "../mock_receiver_config.h"
@@ -43,7 +43,7 @@ using ::asapo::FileDescriptor;
 using ::asapo::SocketDescriptor;
 using ::asapo::MockIO;
 using asapo::Request;
-using asapo::RequestHandlerDeleteStream;
+using asapo::RequestHandlerDbDeleteStream;
 using ::asapo::GenericRequestHeader;
 
 using asapo::MockDatabase;
@@ -56,7 +56,7 @@ namespace {
 
 class DbMetaDeleteStreamTests : public Test {
   public:
-    RequestHandlerDeleteStream handler{asapo::kDBDataCollectionNamePrefix};
+    RequestHandlerDbDeleteStream handler{asapo::kDBDataCollectionNamePrefix};
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<MockDatabase> mock_db;
     NiceMock<asapo::MockLogger> mock_logger;
@@ -130,7 +130,7 @@ TEST_F(DbMetaDeleteStreamTests, CallsDeleteErrorAlreadyExist) {
     ExpectDelete(3,&asapo::DBErrorTemplates::kNoRecord);
     auto err = handler.ProcessRequest(mock_request.get());
 
-    ASSERT_THAT(err, Eq(asapo::DBErrorTemplates::kNoRecord));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
 }
 
 TEST_F(DbMetaDeleteStreamTests, CallsDeleteNoErrorAlreadyExist) {

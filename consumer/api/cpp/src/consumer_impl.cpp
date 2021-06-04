@@ -131,7 +131,7 @@ ConsumerImpl::ConsumerImpl(std::string server_uri,
     if (source_credentials_.data_source.empty()) {
         source_credentials_.data_source = SourceCredentials::kDefaultDataSource;
     }
-
+    data_source_encoded_ = httpclient__->UrlEscape(source_credentials_.data_source);
 }
 
 void ConsumerImpl::SetTimeout(uint64_t timeout_ms) {
@@ -280,10 +280,8 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
     interrupt_flag_ = false;
     std::string request_suffix = OpToUriCmd(op);
     std::string request_group = OpToUriCmd(op);
-    std::string
-        request_api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source
-        + "/" + std::move(stream);
+
+    std::string request_api = UriPrefix(std::move(stream),"","");
     uint64_t elapsed_ms = 0;
     Error no_data_error;
     while (true) {
@@ -294,7 +292,7 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
         auto start = system_clock::now();
         auto err = DiscoverService(kBrokerServiceName, &current_broker_uri_);
         if (err == nullptr) {
-            auto ri = PrepareRequestInfo(request_api + "/" + group_id + "/" + request_suffix, dataset, min_size);
+            auto ri = PrepareRequestInfo(request_api + "/" + httpclient__->UrlEscape(group_id) + "/" + request_suffix, dataset, min_size);
             if (request_suffix == "next" && resend_) {
                 ri.extra_params = ri.extra_params + "&resend_nacks=true" + "&delay_ms=" +
                     std::to_string(delay_ms_) + "&resend_attempts=" + std::to_string(resend_attempts_);
@@ -563,9 +561,8 @@ Error ConsumerImpl::ResetLastReadMarker(std::string group_id, std::string stream
 
 Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) {
     RequestInfo ri;
-    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source + "/"
-        + std::move(stream) + "/" + std::move(group_id) + "/resetcounter";
+    ri.api = UriPrefix(std::move(stream),std::move(group_id),"resetcounter");
+
     ri.extra_params = "&value=" + std::to_string(value);
     ri.post = true;
 
@@ -594,11 +591,9 @@ Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, 
     }
 
     RequestInfo ri;
-    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source +
-        +"/" + std::move(stream) +
-        "/" + std::move(
-        group_id) + "/" + std::to_string(id);
+    ri.api = UriPrefix(std::move(stream),std::move(group_id),std::to_string(id));
+
+
     if (dataset) {
         ri.extra_params += "&dataset=true";
         ri.extra_params += "&minsize=" + std::to_string(min_size);
@@ -611,9 +606,7 @@ Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, 
 
 std::string ConsumerImpl::GetBeamtimeMeta(Error* err) {
     RequestInfo ri;
-    ri.api =
-        "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-            + source_credentials_.data_source + "/default/0/meta/0";
+    ri.api = UriPrefix("default","0","meta/0");
 
     return BrokerRequestWithTimeout(ri, err);
 }
@@ -635,9 +628,8 @@ MessageMetas ConsumerImpl::QueryMessages(std::string query, std::string stream, 
     }
 
     RequestInfo ri;
-    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source +
-        "/" + std::move(stream) + "/0/querymessages";
+    ri.api = UriPrefix(std::move(stream),"0","querymessages");
+
     ri.post = true;
     ri.body = std::move(query);
 
@@ -731,8 +723,7 @@ StreamInfos ConsumerImpl::GetStreamList(std::string from, StreamFilter filter, E
 
 RequestInfo ConsumerImpl::GetStreamListRequest(const std::string &from, const StreamFilter &filter) const {
     RequestInfo ri;
-    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source + "/0/streams";
+    ri.api = UriPrefix("0","","streams");
     ri.post = false;
     if (!from.empty()) {
         ri.extra_params = "&from=" + from;
@@ -800,10 +791,7 @@ Error ConsumerImpl::Acknowledge(std::string group_id, uint64_t id, std::string s
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
     RequestInfo ri;
-    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source +
-        +"/" + std::move(stream) +
-        "/" + std::move(group_id) + "/" + std::to_string(id);
+    ri.api = UriPrefix(std::move(stream),std::move(group_id),std::to_string(id));
     ri.post = true;
     ri.body = "{\"Op\":\"ackmessage\"}";
 
@@ -822,10 +810,7 @@ IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
         return {};
     }
     RequestInfo ri;
-    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source +
-        +"/" + std::move(stream) +
-        "/" + std::move(group_id) + "/nacks";
+    ri.api = UriPrefix(std::move(stream),std::move(group_id),"nacks");
     ri.extra_params = "&from=" + std::to_string(from_id) + "&to=" + std::to_string(to_id);
 
     auto json_string = BrokerRequestWithTimeout(ri, error);
@@ -848,10 +833,7 @@ uint64_t ConsumerImpl::GetLastAcknowledgedMessage(std::string group_id, std::str
         return 0;
     }
     RequestInfo ri;
-    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source +
-        +"/" + std::move(stream) +
-        "/" + std::move(group_id) + "/lastack";
+    ri.api = UriPrefix(std::move(stream),std::move(group_id),"lastack");
 
     auto json_string = BrokerRequestWithTimeout(ri, error);
     if (*error) {
@@ -884,10 +866,7 @@ Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
     RequestInfo ri;
-    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source +
-        +"/" + std::move(stream) +
-        "/" + std::move(group_id) + "/" + std::to_string(id);
+    ri.api = UriPrefix(std::move(stream),std::move(group_id),std::to_string(id));
     ri.post = true;
     ri.body = R"({"Op":"negackmessage","Params":{"DelayMs":)" + std::to_string(delay_ms) + "}}";
 
@@ -929,9 +908,7 @@ uint64_t ConsumerImpl::ParseGetCurrentCountResponce(Error* err, const std::strin
 
 RequestInfo ConsumerImpl::GetSizeRequestForSingleMessagesStream(std::string &stream) const {
     RequestInfo ri;
-    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source +
-        +"/" + std::move(stream) + "/size";
+    ri.api = UriPrefix(std::move(stream),"","size");
     return ri;
 }
 
@@ -971,10 +948,7 @@ Error ConsumerImpl::GetVersionInfo(std::string* client_info, std::string* server
 
 RequestInfo ConsumerImpl::GetDeleteStreamRequest(std::string stream, DeleteStreamOptions options) const {
     RequestInfo ri;
-    ri.api = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + source_credentials_.data_source +
-        +"/" + std::move(stream) +
-        "/delete";
+    ri.api = UriPrefix(std::move(stream),"","delete");
     ri.post = true;
     ri.body = options.Json();
     return ri;
@@ -985,6 +959,22 @@ Error ConsumerImpl::DeleteStream(std::string stream, DeleteStreamOptions options
     Error err;
     BrokerRequestWithTimeout(ri, &err);
     return err;
+}
+
+std::string ConsumerImpl::UriPrefix( std::string stream, std::string group, std::string suffix) const {
+    auto stream_encoded = httpclient__->UrlEscape(std::move(stream));
+    auto group_encoded = group.size()>0?httpclient__->UrlEscape(std::move(group)):"";
+    auto uri = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
+        + data_source_encoded_ + "/" + stream_encoded;
+    if (group_encoded.size()>0) {
+        uri = uri + "/" + group_encoded;
+    }
+    if (suffix.size()>0) {
+        uri = uri + "/" + suffix;
+    }
+
+    return uri;
+
 }
 
 }

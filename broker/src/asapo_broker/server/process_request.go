@@ -8,20 +8,33 @@ import (
 	"asapo_common/version"
 	"github.com/gorilla/mux"
 	"net/http"
+	"net/url"
 )
+
+func readFromMapUnescaped(key string, vars map[string]string) (val string,ok bool) {
+	if val, ok = vars[key];!ok {
+		return
+	}
+	var err error
+	if val, err = url.PathUnescape(val);err!=nil {
+		return "",false
+	}
+	return
+}
 
 func extractRequestParameters(r *http.Request, needGroupID bool) (string, string, string, string, bool) {
 	vars := mux.Vars(r)
 	db_name, ok1 := vars["beamtime"]
-
-	datasource, ok3 := vars["datasource"]
-	stream, ok4 := vars["stream"]
+	datasource, ok3 := readFromMapUnescaped("datasource",vars)
+	stream, ok4 := readFromMapUnescaped("stream",vars)
 
 	ok2 := true
 	group_id := ""
 	if needGroupID {
-		group_id, ok2 = vars["groupid"]
+		group_id, ok2 = readFromMapUnescaped("groupid",vars)
 	}
+
+
 	return db_name, datasource, stream, group_id, ok1 && ok2 && ok3 && ok4
 }
 
@@ -32,22 +45,6 @@ func IsLetterOrNumbers(s string) bool {
 		}
 	}
 	return true
-}
-
-
-func checkGroupID(w http.ResponseWriter, needGroupID bool, group_id string, db_name string, op string) bool {
-	if !needGroupID {
-		return true
-	}
-	if  len(group_id) > 0 && len (group_id) < 100 && IsLetterOrNumbers(group_id) {
-		return true
-	}
-	err_str := "wrong groupid name, check length or allowed charecters in " + group_id
-	log_str := "processing get " + op + " request in " + db_name + " at " + settings.GetDatabaseServer() + ": " + err_str
-	logger.Error(log_str)
-	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte(err_str))
-	return false
 }
 
 func checkBrokerApiVersion(w http.ResponseWriter, r *http.Request) bool {
@@ -74,10 +71,6 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 
 	if err := authorize(r, db_name, needWriteAccess(op)); err != nil {
 		writeAuthAnswer(w, "get "+op, db_name, err)
-		return
-	}
-
-	if !checkGroupID(w, needGroupID, group_id, db_name, op) {
 		return
 	}
 

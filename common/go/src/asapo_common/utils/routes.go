@@ -16,7 +16,7 @@ type Route struct {
 }
 
 func NewRouter(listRoutes Routes) *mux.Router {
-	router := mux.NewRouter()
+	router := mux.NewRouter().UseEncodedPath()
 	for _, route := range listRoutes {
 		router.
 			Methods(route.Method).

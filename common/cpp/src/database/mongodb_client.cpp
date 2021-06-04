@@ -1,7 +1,9 @@
 #include "asapo/json_parser/json_parser.h"
 #include "mongodb_client.h"
+#include "encoding.h"
 
 #include <chrono>
+#include <regex>
 
 #include "asapo/database/db_error.h"
 #include "asapo/common/data_structs.h"
@@ -53,18 +55,26 @@ Error MongoDBClient::InitializeClient(const std::string &address) {
 
 }
 
-void MongoDBClient::UpdateCurrentCollectionIfNeeded(const std::string &collection_name) const {
+Error MongoDBClient::UpdateCurrentCollectionIfNeeded(const std::string &collection_name) const {
     if (collection_name == current_collection_name_) {
-        return;
+        return nullptr;
     }
     if (current_collection_ != nullptr) {
         mongoc_collection_destroy(current_collection_);
     }
 
+    auto encoded_name  = EncodeColName(collection_name);
+    if (encoded_name.size() > maxCollectionNameLength) {
+        return DBErrorTemplates::kWrongInput.Generate("stream name too long");
+    }
+
     current_collection_ = mongoc_client_get_collection(client_, database_name_.c_str(),
-                                                       collection_name.c_str());
+                                                       encoded_name.c_str());
     current_collection_name_ = collection_name;
     mongoc_collection_set_write_concern(current_collection_, write_concern_);
+
+    return nullptr;
+
 }
 
 Error MongoDBClient::TryConnectDatabase() {
@@ -85,7 +95,11 @@ Error MongoDBClient::Connect(const std::string &address, const std::string &data
         return err;
     }
 
-    database_name_ = std::move(database_name);
+    database_name_ = EncodeDbName(database_name);
+
+    if (database_name_.size() > maxDbNameLength) {
+        return DBErrorTemplates::kWrongInput.Generate("data source name too long");
+    }
 
     err = TryConnectDatabase();
     if (err) {
@@ -177,9 +191,11 @@ Error MongoDBClient::Insert(const std::string &collection, const MessageMeta &fi
         return DBErrorTemplates::kNotConnected.Generate();
     }
 
-    UpdateCurrentCollectionIfNeeded(collection);
+    auto err = UpdateCurrentCollectionIfNeeded(collection);
+    if (err) {
+        return err;
+    }
 
-    Error err;
     auto document = PrepareBsonDocument(file, &err);
     if (err) {
         return err;
@@ -200,9 +216,11 @@ Error MongoDBClient::Upsert(const std::string &collection, uint64_t id, const ui
         return DBErrorTemplates::kNotConnected.Generate();
     }
 
-    UpdateCurrentCollectionIfNeeded(collection);
+    auto err = UpdateCurrentCollectionIfNeeded(collection);
+    if (err) {
+        return err;
+    }
 
-    Error err;
     auto document = PrepareBsonDocument(data, (ssize_t) size, &err);
     if (err) {
         return err;
@@ -244,9 +262,11 @@ Error MongoDBClient::InsertAsDatasetMessage(const std::string &collection, const
         return DBErrorTemplates::kNotConnected.Generate();
     }
 
-    UpdateCurrentCollectionIfNeeded(collection);
+    auto err = UpdateCurrentCollectionIfNeeded(collection);
+    if (err) {
+        return err;
+    }
 
-    Error err;
     auto document = PrepareBsonDocument(file, &err);
     if (err) {
         return err;
@@ -275,9 +295,11 @@ Error MongoDBClient::GetRecordFromDb(const std::string &collection, uint64_t id,
         return DBErrorTemplates::kNotConnected.Generate();
     }
 
-    UpdateCurrentCollectionIfNeeded(collection);
+    auto err = UpdateCurrentCollectionIfNeeded(collection);
+    if (err) {
+        return err;
+    }
 
-    Error err;
     bson_error_t mongo_err;
     bson_t* filter;
     bson_t* opts;
@@ -440,9 +462,9 @@ Error StreamInfoFromDbResponse(const std::string &last_record_str,
 
 }
 
-Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* info) const {
+Error MongoDBClient::GetEncodedStreamInfo(const std::string &collection_encoded, StreamInfo* info) const {
     std::string last_record_str, earliest_record_str;
-    auto err = GetRecordFromDb(collection, 0, GetRecordMode::kLast, &last_record_str);
+    auto err = GetRecordFromDb(collection_encoded, 0, GetRecordMode::kLast, &last_record_str);
     if (err) {
         if (err
             == DBErrorTemplates::kNoRecord) { // with noRecord error it will return last_id = 0 which can be used to understand that the stream is not started yet
@@ -451,12 +473,17 @@ Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* in
         }
         return err;
     }
-    err = GetRecordFromDb(collection, 0, GetRecordMode::kEarliest, &earliest_record_str);
+    err = GetRecordFromDb(collection_encoded, 0, GetRecordMode::kEarliest, &earliest_record_str);
     if (err) {
         return err;
     }
 
     return StreamInfoFromDbResponse(last_record_str, earliest_record_str, info);
+}
+
+Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* info) const {
+    std::string collection_encoded = EncodeColName(collection);
+    return GetEncodedStreamInfo(collection_encoded,info);
 }
 
 bool MongoCollectionIsDataStream(const std::string &stream_name) {
@@ -466,7 +493,7 @@ bool MongoCollectionIsDataStream(const std::string &stream_name) {
 
 Error MongoDBClient::UpdateCurrentLastStreamInfo(const std::string &collection_name, StreamInfo* info) const {
     StreamInfo next_info;
-    auto err = GetStreamInfo(collection_name, &next_info);
+    auto err = GetEncodedStreamInfo(collection_name, &next_info);
     std::string prefix = std::string(kDBDataCollectionNamePrefix) + "_";
     if (err) {
         return err;
@@ -518,6 +545,10 @@ Error MongoDBClient::GetLastStream(StreamInfo* info) const {
         err = DBErrorTemplates::kDBError.Generate(error.message);
     }
 
+    if (err!= nullptr) {
+        info->name = DecodeName(info->name);
+    }
+
     bson_destroy(opts);
     mongoc_database_destroy(database);
     return err;
@@ -527,7 +558,7 @@ Error MongoDBClient::DeleteCollections(const std::string &prefix) const {
     mongoc_database_t* database;
     char** strv;
     bson_error_t error;
-    std::string querystr = "^" + prefix;
+    std::string querystr = "^" + EscapeQuery(prefix);
     bson_t* query = BCON_NEW ("name", BCON_REGEX(querystr.c_str(), "i"));
     bson_t* opts = BCON_NEW ("nameOnly", BCON_BOOL(true), "filter", BCON_DOCUMENT(query));
     database = mongoc_client_get_database(client_, database_name_.c_str());
@@ -556,7 +587,7 @@ Error MongoDBClient::DeleteCollection(const std::string &name) const {
     mongoc_collection_destroy(collection);
     if (!r) {
         if (error.code == 26) {
-            return DBErrorTemplates::kNoRecord.Generate("collection " + name + " not found in " + database_name_);
+            return DBErrorTemplates::kNoRecord.Generate("collection " + name + " not found in " + DecodeName(database_name_));
         } else {
             return DBErrorTemplates::kDBError.Generate(std::string(error.message) + ": " + std::to_string(error.code));
         }
@@ -579,15 +610,16 @@ Error MongoDBClient::DeleteDocumentsInCollection(const std::string &collection_n
 }
 
 Error MongoDBClient::DeleteStream(const std::string &stream) const {
-    std::string data_col = std::string(kDBDataCollectionNamePrefix) + "_" + stream;
-    std::string inprocess_col = "inprocess_" + stream;
-    std::string acks_col = "acks_" + stream;
+    auto stream_encoded = EncodeColName(stream);
+    std::string data_col = std::string(kDBDataCollectionNamePrefix) + "_" + stream_encoded;
+    std::string inprocess_col = "inprocess_" + stream_encoded;
+    std::string acks_col = "acks_" + stream_encoded;
     current_collection_name_ = "";
     auto err = DeleteCollection(data_col);
     if (err == nullptr) {
         DeleteCollections(inprocess_col);
         DeleteCollections(acks_col);
-        std::string querystr = ".*_" + stream + "$";
+        std::string querystr = ".*_" + EscapeQuery(stream_encoded) + "$";
         DeleteDocumentsInCollection("current_location", querystr);
     }
     return err;

@@ -21,6 +21,7 @@ class HttpClient {
     virtual Error Post(const std::string& uri, const std::string& cookie,
                        const std::string& input_data, std::string output_file_name,
                        HttpCode* response_code)  const noexcept = 0;
+    virtual std::string UrlEscape(const std::string& uri) const noexcept = 0;
     virtual ~HttpClient() = default;
 };
 

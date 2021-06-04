@@ -37,6 +37,13 @@ class MockHttpClient : public HttpClient {
     };
 
 
+    std::string UrlEscape(const std::string& uri) const noexcept override {
+        return UrlEscape_t(uri);
+    }
+
+    MOCK_CONST_METHOD1(UrlEscape_t,std::string(const std::string& uri));
+
+
     MOCK_CONST_METHOD3(Get_t,
                        std::string(const std::string& uri, HttpCode* code, ErrorInterface** err));
     MOCK_CONST_METHOD5(Post_t,

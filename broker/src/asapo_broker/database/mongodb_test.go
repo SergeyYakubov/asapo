@@ -36,6 +36,11 @@ const groupId = "bid2a5auidddp1vl71d0"
 const metaID = 0
 const metaID_str = "0"
 
+const badSymbolsDb = `/\."$`
+const badSymbolsCol = `$`
+const badSymbolsDbEncoded = "%2F%5C%2E%22%24"
+const badSymbolsColEncoded ="%24"
+
 var empty_next = map[string]string{"next_stream": ""}
 
 var rec1 = TestRecord{1, empty_next, "aaa", 0}
@@ -62,6 +67,15 @@ func cleanup() {
 	db.dropDatabase(dbname)
 	db.Close()
 }
+
+func cleanupWithName(name string) {
+	if db.client == nil {
+		return
+	}
+	db.dropDatabase(name)
+	db.Close()
+}
+
 
 // these are the integration tests. They assume mongo db is runnig on 127.0.0.1:27027
 // test names should contain MongoDB*** so that go test could find them:
@@ -882,6 +896,10 @@ var testsStreams = []struct {
 		StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss1", Timestamp: 0, LastId: 2, TimestampLast: 1},
 			StreamInfo{Name: "ss2", Timestamp: 1, LastId: 3, TimestampLast: 2}}}, "two streams", true},
 	{"ss2", []Stream{{"ss1", []TestRecord{rec1, rec2}}, {"ss2", []TestRecord{rec2, rec3}}}, StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss2", Timestamp: 1, LastId: 3, TimestampLast: 2}}}, "with from", true},
+	{"", []Stream{{"ss1$", []TestRecord{rec2, rec1}}},
+		StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss1$", Timestamp: 0, LastId: 2, TimestampLast: 1}}}, "one stream encoded", true},
+	{"ss2$", []Stream{{"ss1$", []TestRecord{rec1, rec2}}, {"ss2$", []TestRecord{rec2, rec3}}}, StreamsRecord{[]StreamInfo{StreamInfo{Name: "ss2$", Timestamp: 1, LastId: 3, TimestampLast: 2}}}, "with from encoded", true},
+
 }
 
 func TestMongoDBListStreams(t *testing.T) {
@@ -889,7 +907,7 @@ func TestMongoDBListStreams(t *testing.T) {
 		db.Connect(dbaddress)
 		for _, stream := range test.streams {
 			for _, rec := range stream.records {
-				db.insertRecord(dbname, stream.name, &rec)
+				db.insertRecord(dbname, encodeStringForColName(stream.name), &rec)
 			}
 		}
 		var rec_streams_expect, _ = json.Marshal(test.expectedStreams)
@@ -1196,14 +1214,21 @@ var testsDeleteStream = []struct {
 }{
 	{"test", "{\"ErrorOnNotExist\":true,\"DeleteMeta\":true}", true,false, "delete stream"},
 	{"test", "{\"ErrorOnNotExist\":false,\"DeleteMeta\":true}", true, true,"delete stream"},
+	{`test$/\  .%&?*#'`, "{\"ErrorOnNotExist\":false,\"DeleteMeta\":true}", true, true,"delete stream"},
+
 }
 
 func TestDeleteStreams(t *testing.T) {
+	defer cleanup()
 	for _, test := range testsDeleteStream {
 		db.Connect(dbaddress)
-		db.insertRecord(dbname, test.stream, &rec_finished11)
-
-		_, err := db.ProcessRequest(Request{DbName: dbname, DbCollectionName: test.stream, GroupId: "", Op: "delete_stream", ExtraParam: test.params})
+		db.insertRecord(dbname, encodeStringForColName(test.stream), &rec1)
+		db.ProcessRequest(Request{DbName: dbname, DbCollectionName: test.stream, GroupId: "123", Op: "next"})
+		query_str := "{\"Id\":1,\"Op\":\"ackmessage\"}"
+		request := Request{DbName: dbname, DbCollectionName: test.stream, GroupId: groupId, Op: "ackmessage", ExtraParam: query_str}
+		_, err := db.ProcessRequest(request)
+		assert.Nil(t, err, test.message)
+		_, err = db.ProcessRequest(Request{DbName: dbname, DbCollectionName: test.stream, GroupId: "", Op: "delete_stream", ExtraParam: test.params})
 		if test.ok {
 			rec, err := streams.getStreams(&db, Request{DbName: dbname, ExtraParam: ""})
 			acks_exist,_:= db.collectionExist(Request{DbName: dbname, ExtraParam: ""},acks_collection_name_prefix+test.stream)
@@ -1221,5 +1246,38 @@ func TestDeleteStreams(t *testing.T) {
 		} else {
 			assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code, test.message+" 2")
 		}
+	}
+}
+
+
+var testsEncodings = []struct {
+	dbname          string
+	collection      string
+	group			string
+	dbname_indb          string
+	collection_indb      string
+	group_indb			string
+	message string
+	ok              bool
+}{
+	{"dbname", "col", "group", "dbname","col","group", "no encoding",true},
+	{"dbname"+badSymbolsDb, "col", "group", "dbname"+badSymbolsDbEncoded,"col","group", "symbols in db",true},
+	{"dbname", "col"+badSymbolsCol, "group"+badSymbolsCol, "dbname","col"+badSymbolsColEncoded,"group"+badSymbolsColEncoded, "symbols in col",true},
+	{"dbname"+badSymbolsDb, "col"+badSymbolsCol, "group"+badSymbolsCol, "dbname"+badSymbolsDbEncoded,"col"+badSymbolsColEncoded,"group"+badSymbolsColEncoded, "symbols in col and db",true},
+
+}
+
+func TestMongoDBEncodingOK(t *testing.T) {
+	for _, test := range testsEncodings {
+		db.Connect(dbaddress)
+		db.insertRecord(test.dbname_indb, test.collection_indb, &rec1)
+		res, err := db.ProcessRequest(Request{DbName: test.dbname, DbCollectionName: test.collection, GroupId: test.group, Op: "next"})
+		if test.ok {
+			assert.Nil(t, err, test.message)
+			assert.Equal(t, string(rec1_expect), string(res), test.message)
+		} else {
+			assert.Equal(t, utils.StatusWrongInput, err.(*DBError).Code, test.message)
+		}
+		cleanupWithName(test.dbname_indb)
 	}
 }

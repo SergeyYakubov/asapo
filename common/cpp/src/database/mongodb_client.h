@@ -39,6 +39,9 @@ enum class GetRecordMode {
   kEarliest
 };
 
+const size_t maxDbNameLength = 63;
+const size_t maxCollectionNameLength = 100;
+
 class MongoDBClient final : public Database {
   public:
     MongoDBClient();
@@ -63,7 +66,7 @@ class MongoDBClient final : public Database {
     void CleanUp();
     std::string DBAddress(const std::string& address) const;
     Error InitializeClient(const std::string& address);
-    void UpdateCurrentCollectionIfNeeded(const std::string& collection_name) const ;
+    Error UpdateCurrentCollectionIfNeeded(const std::string& collection_name) const ;
     Error Ping();
     Error TryConnectDatabase();
     Error InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const;
@@ -72,6 +75,7 @@ class MongoDBClient final : public Database {
     Error GetRecordFromDb(const std::string& collection, uint64_t id, GetRecordMode mode, std::string* res) const;
     Error UpdateLastStreamInfo(const char *str, StreamInfo* info) const;
     Error UpdateCurrentLastStreamInfo(const std::string& collection_name, StreamInfo* info) const;
+    Error GetEncodedStreamInfo(const std::string& collection, StreamInfo* info) const;
     Error DeleteCollection(const std::string& name) const;
     Error DeleteCollections(const std::string &prefix) const;
     Error DeleteDocumentsInCollection(const std::string &collection_name,const std::string &querystr) const;

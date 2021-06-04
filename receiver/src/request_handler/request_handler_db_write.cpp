@@ -34,7 +34,7 @@ Error RequestHandlerDbWrite::ProcessRequest(Request* request) const {
     if (err == DBErrorTemplates::kDuplicateID) {
         return ProcessDuplicateRecordSituation(request);
     } else {
-        return err;
+        return DBErrorToReceiverError(err);
     }
 }
 

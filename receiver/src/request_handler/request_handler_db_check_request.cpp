@@ -58,7 +58,7 @@ Error RequestHandlerDbCheckRequest::ProcessRequest(Request* request) const {
     MessageMeta record;
     auto  err = GetRecordFromDb(request, &record);
     if (err) {
-        return err == DBErrorTemplates::kNoRecord ? nullptr : std::move(err);
+        return DBErrorToReceiverError(err == DBErrorTemplates::kNoRecord ? nullptr : std::move(err));
     }
 
     if (SameRequestInRecord(request, record)) {
