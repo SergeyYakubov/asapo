@@ -98,7 +98,7 @@ std::string DecodeName(const std::string &name) {
 
 std::string EscapeQuery(const std::string& query) {
     std::regex specialChars { R"([-[\]{}()*+?\\.,\^$|#\s])" };
-    return std::regex_replace( query, specialChars, R"(\$&)" );
+    return std::regex_replace( query, specialChars, std::string(R"(\$&)" ));
 }
 
 }
