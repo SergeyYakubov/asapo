@@ -3,7 +3,7 @@ package database
 import "net/url"
 
 func shouldEscape(c byte, db bool) bool {
-	if c == '$' || c == ' ' {
+	if c == '$' || c == ' ' || c == '%' {
 		return true
 	}
 	if !db {

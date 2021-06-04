@@ -5,7 +5,7 @@
 namespace asapo {
 
 bool ShouldEscape(char c, bool db) {
-    if (c == '$' || c == ' ') {
+    if (c == '$' || c == ' ' || c == '%') {
         return true;
     }
     if (!db) {
@@ -55,25 +55,22 @@ std::string Escape(const std::string &s, bool db) {
     return t;
 }
 
-
-inline int ishex(int x)
-{
-    return	(x >= '0' && x <= '9')	||
-        (x >= 'a' && x <= 'f')	||
+inline int ishex(int x) {
+    return (x >= '0' && x <= '9') ||
+        (x >= 'a' && x <= 'f') ||
         (x >= 'A' && x <= 'F');
 }
 
-int decode(const char *s, char *dec)
-{
-    char *o;
-    const char *end = s + strlen(s);
+int decode(const char* s, char* dec) {
+    char* o;
+    const char* end = s + strlen(s);
     int c;
 
     for (o = dec; s <= end; o++) {
         c = *s++;
 //        if (c == '+') c = ' ';
-        if (c == '%' && (	!ishex(*s++)	||
-            !ishex(*s++)	||
+        if (c == '%' && (!ishex(*s++) ||
+            !ishex(*s++) ||
             !sscanf(s - 2, "%2x", &c)))
             return -1;
         if (dec) *o = c;
@@ -81,7 +78,6 @@ int decode(const char *s, char *dec)
 
     return o - dec;
 }
-
 
 std::string EncodeDbName(const std::string &dbname) {
     return Escape(dbname, true);
@@ -93,14 +89,14 @@ std::string EncodeColName(const std::string &colname) {
 
 std::string DecodeName(const std::string &name) {
     char decoded[name.size()];
-    auto res = decode(name.c_str(),decoded);
-    return res>=0?decoded:"";
+    auto res = decode(name.c_str(), decoded);
+    return res >= 0 ? decoded : "";
 }
 
 bool ShouldEscapeQuery(char c) {
     char chars[] = "-[]{}()*+?\\.,^$|#";
-    for (auto i=0;i<strlen(chars);i++) {
-        if (c==chars[i]) {
+    for (auto i = 0; i < strlen(chars); i++) {
+        if (c == chars[i]) {
             return true;
         }
     };
