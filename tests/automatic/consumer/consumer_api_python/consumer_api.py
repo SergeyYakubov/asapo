@@ -119,14 +119,6 @@ def check_single(consumer, group_id):
     assert_usermetadata(meta, "get next6")
 
     try:
-        consumer.get_next("_wrong_group_name", meta_only=True)
-    except asapo_consumer.AsapoWrongInputError as err:
-        print(err)
-        pass
-    else:
-        exit_on_noerr("should give wrong input error")
-
-    try:
         consumer.get_last(meta_only=False)
     except asapo_consumer.AsapoLocalIOError as err:
         print(err)
