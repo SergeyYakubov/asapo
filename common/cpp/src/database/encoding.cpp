@@ -1,5 +1,7 @@
 #include "encoding.h"
 #include <regex>
+#include <string.h>
+#include <stdio.h>
 
 namespace asapo {
 
