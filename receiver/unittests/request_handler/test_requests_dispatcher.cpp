@@ -317,17 +317,6 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsReAuthorizationFailure) {
 }
 
 
-TEST_F(RequestsDispatcherTests, ProcessRequestReturnsMetaDataFailure) {
-    MockHandleRequest(1, asapo::DBErrorTemplates::kJsonParseError.Generate());
-    MockSendResponse(&response, false);
-
-    auto err = dispatcher->ProcessRequest(request);
-
-    ASSERT_THAT(err, Eq(asapo::DBErrorTemplates::kJsonParseError));
-    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorWrongRequest));
-    ASSERT_THAT(std::string(response.message), HasSubstr("parse"));
-}
-
 TEST_F(RequestsDispatcherTests, ProcessRequestReturnsBadRequest) {
     MockHandleRequest(1, asapo::ReceiverErrorTemplates::kBadRequest.Generate());
     MockSendResponse(&response, false);
@@ -337,15 +326,6 @@ TEST_F(RequestsDispatcherTests, ProcessRequestReturnsBadRequest) {
     ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorWrongRequest));
 }
 
-
-TEST_F(RequestsDispatcherTests, ProcessRequestReturnsBNoRecord) {
-    MockHandleRequest(1, asapo::DBErrorTemplates::kNoRecord.Generate());
-    MockSendResponse(&response, false);
-
-    auto err = dispatcher->ProcessRequest(request);
-
-    ASSERT_THAT(response.error_code, Eq(asapo::kNetErrorWrongRequest));
-}
 
 
 }
