@@ -105,8 +105,10 @@ function(gtest target test_source_files linktarget)
         set_tests_properties(test-${target} PROPERTIES LABELS "unit;all")
 
         message(STATUS "Added test 'test-${target}'")
-
-        if (CMAKE_COMPILER_IS_GNUCXX)
+        if (ARGN)
+            LIST(GET ${ARGN} 0 NOCOV)
+        endif()
+        if (CMAKE_COMPILER_IS_GNUCXX AND NOT 1${NOCOV} STREQUAL "1nocov")
             set(COVERAGE_EXCLUDES "*/unittests/*" "*/3d_party/*" "*/python/*")
             if (ARGN)
                 set(COVERAGE_EXCLUDES ${COVERAGE_EXCLUDES} ${ARGN})
@@ -116,6 +118,8 @@ function(gtest target test_source_files linktarget)
                     COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
                     coverage-${target} ${CMAKE_BINARY_DIR} ${ASAPO_MINIMUM_COVERAGE})
             set_tests_properties(coveragetest-${target} PROPERTIES LABELS "coverage;all")
+            message(STATUS "Added test 'test-${target}-coverage'")
+
             SET_TESTS_PROPERTIES(coveragetest-${target} PROPERTIES DEPENDS test-${target})
             set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} PARENT_SCOPE)
             set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} PARENT_SCOPE)

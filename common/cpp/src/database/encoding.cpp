@@ -85,9 +85,14 @@ std::string EncodeColName(const std::string &colname) {
 }
 
 std::string DecodeName(const std::string &name) {
-    std::unique_ptr<char>decoded{new char(name.size())};
-    auto res = decode(name.c_str(), decoded.get());
-    return res >= 0 ? decoded.get() : "";
+    char* decoded = new char[name.size() + 1];
+    auto res = decode(name.c_str(), decoded);
+    if (res < 0) {
+        return "";
+    }
+    std::string str = std::string{decoded};
+    delete[] decoded;
+    return str;
 }
 
 bool ShouldEscapeQuery(char c) {
