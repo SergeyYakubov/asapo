@@ -36,23 +36,19 @@ std::string Escape(const std::string &s, bool db) {
         return s;
     }
 
-    char t[s.size() + 2 * hexCount + 1];
-    t[s.size() + 2 * hexCount] = 0;
-    auto j = 0;
+    std::string res;
+    res.reserve(s.size() + 2 * hexCount);
     for (auto i = 0; i < s.size(); i++) {
         auto c = s[i];
         if (ShouldEscape(c, db)) {
-            t[j] = '%';
-            t[j + 1] = upperhex[c >> 4];
-            t[j + 2] = upperhex[c & 15];
-            j += 3;
-
+            res.push_back('%');
+            res.push_back(upperhex[c >> 4]);
+            res.push_back(upperhex[c & 15]);
         } else {
-            t[j] = c;
-            j++;
+            res.push_back(c);
         }
     }
-    return t;
+    return res;
 }
 
 inline int ishex(int x) {
@@ -88,7 +84,7 @@ std::string EncodeColName(const std::string &colname) {
 }
 
 std::string DecodeName(const std::string &name) {
-    char decoded[name.size()];
+    char *decoded = (char*) malloc(name.size()*sizeof(char));
     auto res = decode(name.c_str(), decoded);
     return res >= 0 ? decoded : "";
 }
@@ -116,22 +112,19 @@ std::string EscapeQuery(const std::string &s) {
         return s;
     }
 
-    char t[s.size() + count + 1];
-    t[s.size() + count] = 0;
-    auto j = 0;
+    std::string res;
+    res.reserve(s.size() + count);
     for (auto i = 0; i < s.size(); i++) {
         auto c = s[i];
         if (ShouldEscapeQuery(c)) {
-            t[j] = '\\';
-            t[j + 1] = c;
-            j += 2;
-
+            res.push_back('\\');
+            res.push_back(c);
         } else {
-            t[j] = c;
-            j++;
+            res.push_back(c);
         }
     }
-    return t;
+    return res;
+
 }
 
 }
