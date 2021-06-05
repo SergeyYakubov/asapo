@@ -25,12 +25,16 @@ type authorizationRequest struct {
 }
 
 func getSourceCredentials(request authorizationRequest) (SourceCredentials, error) {
-	vals := strings.Split(request.SourceCredentials, "%")
 
-	if len(vals) != 5 {
+
+	vals := strings.Split(request.SourceCredentials, "%")
+	nvals:=len(vals)
+	if nvals < 5 {
 		return SourceCredentials{}, errors.New("cannot get source credentials from " + request.SourceCredentials)
 	}
-	creds := SourceCredentials{vals[1], vals[2], vals[3], vals[4],vals[0]}
+
+	creds := SourceCredentials{Type:vals[0], BeamtimeId: vals[1], Beamline: vals[2], Token:vals[nvals-1]}
+	creds.DataSource=strings.Join(vals[3:nvals-1],"%")
 	if creds.DataSource == "" {
 		creds.DataSource = "detector"
 	}

@@ -74,8 +74,6 @@ class MongoDBClient final : public Database {
     Error AddBsonDocumentToArray(bson_t* query, bson_t* update, bool ignore_duplicates) const;
     Error GetRecordFromDb(const std::string& collection, uint64_t id, GetRecordMode mode, std::string* res) const;
     Error UpdateLastStreamInfo(const char *str, StreamInfo* info) const;
-    Error UpdateCurrentLastStreamInfo(const std::string& collection_name, StreamInfo* info) const;
-    Error GetEncodedStreamInfo(const std::string& collection, StreamInfo* info) const;
     Error DeleteCollection(const std::string& name) const;
     Error DeleteCollections(const std::string &prefix) const;
     Error DeleteDocumentsInCollection(const std::string &collection_name,const std::string &querystr) const;

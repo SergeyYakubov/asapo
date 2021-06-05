@@ -462,9 +462,9 @@ Error StreamInfoFromDbResponse(const std::string &last_record_str,
 
 }
 
-Error MongoDBClient::GetEncodedStreamInfo(const std::string &collection_encoded, StreamInfo* info) const {
+Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* info) const {
     std::string last_record_str, earliest_record_str;
-    auto err = GetRecordFromDb(collection_encoded, 0, GetRecordMode::kLast, &last_record_str);
+    auto err = GetRecordFromDb(collection, 0, GetRecordMode::kLast, &last_record_str);
     if (err) {
         if (err
             == DBErrorTemplates::kNoRecord) { // with noRecord error it will return last_id = 0 which can be used to understand that the stream is not started yet
@@ -473,7 +473,7 @@ Error MongoDBClient::GetEncodedStreamInfo(const std::string &collection_encoded,
         }
         return err;
     }
-    err = GetRecordFromDb(collection_encoded, 0, GetRecordMode::kEarliest, &earliest_record_str);
+    err = GetRecordFromDb(collection, 0, GetRecordMode::kEarliest, &earliest_record_str);
     if (err) {
         return err;
     }
@@ -481,19 +481,19 @@ Error MongoDBClient::GetEncodedStreamInfo(const std::string &collection_encoded,
     return StreamInfoFromDbResponse(last_record_str, earliest_record_str, info);
 }
 
-Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* info) const {
-    std::string collection_encoded = EncodeColName(collection);
-    return GetEncodedStreamInfo(collection_encoded,info);
-}
-
 bool MongoCollectionIsDataStream(const std::string &stream_name) {
     std::string prefix = std::string(kDBDataCollectionNamePrefix) + "_";
     return stream_name.rfind(prefix, 0) == 0;
 }
 
-Error MongoDBClient::UpdateCurrentLastStreamInfo(const std::string &collection_name, StreamInfo* info) const {
+
+Error MongoDBClient::UpdateLastStreamInfo(const char* str, StreamInfo* info) const {
+    auto collection_name = DecodeName(str);
+    if (!MongoCollectionIsDataStream(collection_name)) {
+        return nullptr;
+    }
     StreamInfo next_info;
-    auto err = GetEncodedStreamInfo(collection_name, &next_info);
+    auto err = GetStreamInfo(collection_name, &next_info);
     std::string prefix = std::string(kDBDataCollectionNamePrefix) + "_";
     if (err) {
         return err;
@@ -501,17 +501,6 @@ Error MongoDBClient::UpdateCurrentLastStreamInfo(const std::string &collection_n
     if (next_info.timestamp_created > info->timestamp_created) {
         next_info.name = collection_name.substr(prefix.size());
         *info = next_info;
-    }
-    return nullptr;
-}
-
-Error MongoDBClient::UpdateLastStreamInfo(const char* str, StreamInfo* info) const {
-    std::string collection_name{str};
-    if (MongoCollectionIsDataStream(collection_name)) {
-        auto err = UpdateCurrentLastStreamInfo(collection_name, info);
-        if (err) {
-            return err;
-        }
     }
     return nullptr;
 }
