@@ -106,7 +106,7 @@ TEST_F(ConfigTests, ErrorReadSettings) {
     std::vector<std::string>fields {"PerformanceDbServer", "ListenPort", "DataServer", "ListenPort",
                                     "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
                                     "AuthorizationServer", "AuthorizationInterval", "PerformanceDbName", "LogLevel",
-                                    "NThreads", "DiscoveryServer", "AdvertiseURI", "NetworkMode","MonitorPerformance",
+                                    "NThreads", "DiscoveryServer", "AdvertiseURI", "NetworkMode", "MonitorPerformance",
                                     "ReceiveToDiskThresholdMB"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfig(test_config, field);

@@ -114,7 +114,7 @@ class SimpleError: public ErrorInterface {
     }
 
     void Prepend(const std::string& value) noexcept override {
-        error_ = value+": "+error_;
+        error_ = value + ": " + error_;
     }
 
     std::string Explain() const noexcept override  {

@@ -35,9 +35,9 @@ void PrintCommandArguments(const Args& args) {
               << "iterations: " << args.iterations << std::endl
               << "nthreads: " << args.nthreads << std::endl
               << "mode: " << args.mode << std::endl
-              << "Write files: " << ((args.mode %100) / 10 == 1) << std::endl
-              << "Tcp mode: " << ((args.mode % 10) ==0 ) << std::endl
-              << "Raw: " << (args.mode / 100 == 1)<< std::endl
+              << "Write files: " << ((args.mode % 100) / 10 == 1) << std::endl
+              << "Tcp mode: " << ((args.mode % 10) == 0 ) << std::endl
+              << "Raw: " << (args.mode / 100 == 1) << std::endl
               << "timeout: " << args.timeout_ms << std::endl
               << "messages in set: " << args.messages_in_set << std::endl
               << std::endl;
@@ -85,7 +85,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         args->iterations = std::stoull(argv[4]);
         args->nthreads = std::stoull(argv[5]);
         args->mode = std::stoull(argv[6]);
-        args->timeout_ms = std::stoull(argv[7])*1000;
+        args->timeout_ms = std::stoull(argv[7]) * 1000;
         if (argc == 9) {
             args->messages_in_set = std::stoull(argv[8]);
         } else {
@@ -140,7 +140,7 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         }
     }
 
-    std::string message_folder = GetStringFromSourceType(type)+asapo::kPathSeparator;
+    std::string message_folder = GetStringFromSourceType(type) + asapo::kPathSeparator;
 
 
     for (uint64_t i = 0; i < iterations; i++) {
@@ -150,7 +150,7 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
         if (!data_source.empty()) {
             message_header.file_name = data_source + "/" + message_header.file_name;
         }
-        message_header.file_name = message_folder+message_header.file_name;
+        message_header.file_name = message_folder + message_header.file_name;
         message_header.user_metadata = std::move(meta);
         if (messages_in_set == 1) {
             auto err = producer->Send(message_header,
@@ -189,14 +189,15 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
             }
         }
     }
-    return producer->SendStreamFinishedFlag("default",iterations,"",nullptr) == nullptr;
+    return producer->SendStreamFinishedFlag("default", iterations, "", nullptr) == nullptr;
 }
 
 std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.discovery_service_endpoint, args.nthreads,
                                             args.mode % 10 == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem,
-                                            asapo::SourceCredentials{args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw,args.beamtime_id, "", args.data_source, args.token }, 3600000, &err);
+                                            asapo::SourceCredentials{args.mode / 100 == 0 ? asapo::SourceType::kProcessed : asapo::SourceType::kRaw, args.beamtime_id, "", args.data_source, args.token },
+                                            3600000, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);
@@ -232,7 +233,7 @@ int main (int argc, char* argv[]) {
     system_clock::time_point start_time = system_clock::now();
 
     if(!SendDummyData(producer.get(), args.number_of_bytes, args.iterations, args.messages_in_set, args.data_source,
-                      (args.mode %100) / 10 == 0,args.mode / 100 == 0 ?asapo::SourceType::kProcessed:asapo::SourceType::kRaw)) {
+                      (args.mode % 100) / 10 == 0, args.mode / 100 == 0 ? asapo::SourceType::kProcessed : asapo::SourceType::kRaw)) {
         return EXIT_FAILURE;
     }
 

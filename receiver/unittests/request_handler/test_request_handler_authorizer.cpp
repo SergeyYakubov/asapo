@@ -80,7 +80,7 @@ class AuthorizerHandlerTests : public Test {
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
-        expected_source_credentials = "processed%"+expected_beamtime_id + "%source%token";
+        expected_source_credentials = "processed%" + expected_beamtime_id + "%source%token";
         expect_request_string = std::string("{\"SourceCredentials\":\"") + expected_source_credentials +
                                 "\",\"OriginHost\":\"" +
                                 expected_producer_uri + "\"}";
@@ -128,7 +128,7 @@ class AuthorizerHandlerTests : public Test {
                                                      HasSubstr(expected_data_source),
                                                      HasSubstr(expected_producer_uri),
                                                      HasSubstr(expected_authorization_server))));
-            } else if (expected_access_type_str=="[\"write\"]") {
+            } else if (expected_access_type_str == "[\"write\"]") {
                 EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("authorized"),
                                                      HasSubstr(expected_beamtime_id),
                                                      HasSubstr(expected_beamline),
@@ -151,8 +151,8 @@ class AuthorizerHandlerTests : public Test {
         ;
 
         EXPECT_CALL(*mock_request, GetApiVersion())
-            .WillOnce(Return(expected_api_version))
-            ;
+        .WillOnce(Return(expected_api_version))
+        ;
 
 
         MockAuthRequest(error, code);
@@ -274,11 +274,11 @@ TEST_F(AuthorizerHandlerTests, RequestAuthorizeReturnsDifferentBeamtimeId) {
 
 TEST_F(AuthorizerHandlerTests, RequestFromUnsupportedClient) {
     EXPECT_CALL(*mock_request, GetOpCode())
-        .WillOnce(Return(asapo::kOpcodeAuthorize))
-        ;
+    .WillOnce(Return(asapo::kOpcodeAuthorize))
+    ;
     EXPECT_CALL(*mock_request, GetApiVersion())
-        .WillOnce(Return("v1000.2"))
-        ;
+    .WillOnce(Return("v1000.2"))
+    ;
 
     auto err = handler.ProcessRequest(mock_request.get());
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kUnsupportedClient));

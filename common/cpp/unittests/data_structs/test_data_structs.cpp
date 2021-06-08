@@ -186,17 +186,18 @@ TEST(StreamInfo, ConvertFromJsonErr) {
 TEST(StreamInfo, ConvertToJson) {
     auto sinfo = PrepareStreamInfo();
 
-    std::string expected_json = R"({"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":2000000,"finished":true,"nextStream":"next"})";
+    std::string expected_json =
+        R"({"lastId":123,"name":"test","timestampCreated":1000000,"timestampLast":2000000,"finished":true,"nextStream":"next"})";
     auto json = sinfo.Json();
 
-    ASSERT_THAT(json,Eq(expected_json));
+    ASSERT_THAT(json, Eq(expected_json));
 }
 
 
 TEST(SourceCredentials, ConvertToString) {
-    auto sc = SourceCredentials{SourceType::kRaw,"beamtime","beamline","source","token"};
-    std::string expected1= "raw%beamtime%beamline%source%token";
-    std::string expected2= "processed%beamtime%beamline%source%token";
+    auto sc = SourceCredentials{SourceType::kRaw, "beamtime", "beamline", "source", "token"};
+    std::string expected1 = "raw%beamtime%beamline%source%token";
+    std::string expected2 = "processed%beamtime%beamline%source%token";
 
     auto res1 = sc.GetString();
     sc.type = asapo::SourceType::kProcessed;
@@ -207,11 +208,11 @@ TEST(SourceCredentials, ConvertToString) {
 }
 
 TEST(SourceCredentials, SourceTypeFromString) {
-    SourceType type1,type2,type3;
+    SourceType type1, type2, type3;
 
-    auto err1=GetSourceTypeFromString("raw",&type1);
-    auto err2=GetSourceTypeFromString("processed",&type2);
-    auto err3=GetSourceTypeFromString("bla",&type3);
+    auto err1 = GetSourceTypeFromString("raw", &type1);
+    auto err2 = GetSourceTypeFromString("processed", &type2);
+    auto err3 = GetSourceTypeFromString("bla", &type3);
 
     ASSERT_THAT(err1, Eq(nullptr));
     ASSERT_THAT(type1, Eq(SourceType::kRaw));
@@ -261,7 +262,7 @@ TEST(DeletaStreamOpt, ConvertToJson) {
     std::string expected_json = "{\"ErrorOnNotExist\":true,\"DeleteMeta\":true}";
     auto json = opts.Json();
 
-    ASSERT_THAT(json,Eq(expected_json));
+    ASSERT_THAT(json, Eq(expected_json));
 }
 
 TEST(DeletaStreamOpt, ConvertToJson2) {
@@ -272,34 +273,34 @@ TEST(DeletaStreamOpt, ConvertToJson2) {
     std::string expected_json = "{\"ErrorOnNotExist\":false,\"DeleteMeta\":false}";
     auto json = opts.Json();
 
-    ASSERT_THAT(json,Eq(expected_json));
+    ASSERT_THAT(json, Eq(expected_json));
 }
 
 TEST(DeletaStreamOpt, EncodeDecode) {
     auto opts = DeleteStreamOptions{};
-    ASSERT_THAT(opts.Encode(),Eq(3));
+    ASSERT_THAT(opts.Encode(), Eq(3));
     opts.delete_meta = false;
-    ASSERT_THAT(opts.Encode(),Eq(2));
+    ASSERT_THAT(opts.Encode(), Eq(2));
     opts.error_on_not_exist = false;
-    ASSERT_THAT(opts.Encode(),Eq(0));
+    ASSERT_THAT(opts.Encode(), Eq(0));
     opts.delete_meta = true;
-    ASSERT_THAT(opts.Encode(),Eq(1));
+    ASSERT_THAT(opts.Encode(), Eq(1));
 
     opts.Decode(0);
-    ASSERT_THAT(opts.error_on_not_exist,Eq(false));
-    ASSERT_THAT(opts.delete_meta,Eq(false));
+    ASSERT_THAT(opts.error_on_not_exist, Eq(false));
+    ASSERT_THAT(opts.delete_meta, Eq(false));
 
     opts.Decode(1);
-    ASSERT_THAT(opts.error_on_not_exist,Eq(false));
-    ASSERT_THAT(opts.delete_meta,Eq(true));
+    ASSERT_THAT(opts.error_on_not_exist, Eq(false));
+    ASSERT_THAT(opts.delete_meta, Eq(true));
 
     opts.Decode(2);
-    ASSERT_THAT(opts.error_on_not_exist,Eq(true));
-    ASSERT_THAT(opts.delete_meta,Eq(false));
+    ASSERT_THAT(opts.error_on_not_exist, Eq(true));
+    ASSERT_THAT(opts.delete_meta, Eq(false));
 
     opts.Decode(3);
-    ASSERT_THAT(opts.error_on_not_exist,Eq(true));
-    ASSERT_THAT(opts.delete_meta,Eq(true));
+    ASSERT_THAT(opts.error_on_not_exist, Eq(true));
+    ASSERT_THAT(opts.delete_meta, Eq(true));
 
 
 }

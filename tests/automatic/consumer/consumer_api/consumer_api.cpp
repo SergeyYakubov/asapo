@@ -31,9 +31,9 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     asapo::MessageMeta fi;
     asapo::Error err;
 
-    std::string client,server;
+    std::string client, server;
     bool supported;
-    err = consumer->GetVersionInfo(&client,&server,&supported);
+    err = consumer->GetVersionInfo(&client, &server, &supported);
     M_AssertTrue(err == nullptr, "Version OK");
     M_AssertTrue(supported, "client supported by server");
     M_AssertTrue(!client.empty(), "client version");
@@ -63,7 +63,7 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(fi.name == "2", "GetNext2 filename");
 
 
-    err = consumer->SetLastReadMarker(group_id, 2,"default");
+    err = consumer->SetLastReadMarker(group_id, 2, "default");
     M_AssertTrue(err == nullptr, "SetLastReadMarker no error");
 
 
@@ -80,7 +80,7 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err == nullptr, "GetLast2 no error");
 
 
-    err = consumer->SetLastReadMarker(group_id, 8,"default");
+    err = consumer->SetLastReadMarker(group_id, 8, "default");
     M_AssertTrue(err == nullptr, "SetLastReadMarker 2 no error");
 
 
@@ -100,7 +100,7 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err == nullptr, "GetCurrentSize 2 no error");
     M_AssertTrue(size2 == 5, "GetCurrentSize 2 size");
 
-    err = consumer->ResetLastReadMarker(group_id,"default");
+    err = consumer->ResetLastReadMarker(group_id, "default");
     M_AssertTrue(err == nullptr, "SetLastReadMarker");
 
     err = consumer->GetNext(group_id, &fi, nullptr, "default");
@@ -112,25 +112,25 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err == nullptr, "GetNext5 no error");
     M_AssertTrue(fi.name == "1", "GetNext5  filename");
 
-    auto messages = consumer->QueryMessages("meta.test = 10","default", &err);
+    auto messages = consumer->QueryMessages("meta.test = 10", "default", &err);
     M_AssertTrue(err == nullptr, "query1");
     M_AssertTrue(messages.size() == 10, "size of query answer 1");
 
-    messages = consumer->QueryMessages("meta.test = 10 AND name='1'","default", &err);
+    messages = consumer->QueryMessages("meta.test = 10 AND name='1'", "default", &err);
     M_AssertTrue(err == nullptr, "query2");
     M_AssertTrue(messages.size() == 1, "size of query answer 2");
     M_AssertTrue(fi.name == "1", "GetNext5  filename");
 
 
-    messages = consumer->QueryMessages("meta.test = 11","default", &err);
+    messages = consumer->QueryMessages("meta.test = 11", "default", &err);
     M_AssertTrue(err == nullptr, "query3");
     M_AssertTrue(messages.size() == 0, "size of query answer 3");
 
-    messages = consumer->QueryMessages("meta.test = 18","default", &err);
+    messages = consumer->QueryMessages("meta.test = 18", "default", &err);
     M_AssertTrue(err == nullptr, "query4");
     M_AssertTrue(messages.size() == 0, "size of query answer 4");
 
-    messages = consumer->QueryMessages("bla","default", &err);
+    messages = consumer->QueryMessages("bla", "default", &err);
     M_AssertTrue(err != nullptr, "query5");
     M_AssertTrue(messages.size() == 0, "size of query answer 5");
 
@@ -148,7 +148,7 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err == nullptr, "GetNext stream2 no error");
     M_AssertTrue(fi.name == "21", "GetNext stream2 filename");
 
-    auto streams = consumer->GetStreamList("",asapo::StreamFilter::kAllStreams,&err);
+    auto streams = consumer->GetStreamList("", asapo::StreamFilter::kAllStreams, &err);
     M_AssertTrue(err == nullptr, "GetStreamList no error");
     M_AssertTrue(streams.size() == 3, "streams.size");
     M_AssertTrue(streams[0].name == "default", "streams0.name");
@@ -166,7 +166,7 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[2].timestamp_lastentry) == 2000, "streams2.timestamp lastentry");
 // acknowledges
 
-    auto id = consumer->GetLastAcknowledgedMessage(group_id,"default", &err);
+    auto id = consumer->GetLastAcknowledgedMessage(group_id, "default", &err);
     M_AssertTrue(err == asapo::ConsumerErrorTemplates::kNoData, "last ack default stream no data");
     M_AssertTrue(id == 0, "last ack default stream no data id = 0");
 
@@ -174,13 +174,13 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(err == nullptr, "nacks default stream all");
     M_AssertTrue(nacks.size() == 10, "nacks default stream size = 10");
 
-    err = consumer->Acknowledge(group_id, 1,"default");
+    err = consumer->Acknowledge(group_id, 1, "default");
     M_AssertTrue(err == nullptr, "ack default stream no error");
 
     nacks = consumer->GetUnacknowledgedMessages(group_id, 0, 0, "default", &err);
     M_AssertTrue(nacks.size() == 9, "nacks default stream size = 9 after ack");
 
-    id = consumer->GetLastAcknowledgedMessage(group_id,"default", &err);
+    id = consumer->GetLastAcknowledgedMessage(group_id, "default", &err);
     M_AssertTrue(err == nullptr, "last ack default stream no error");
     M_AssertTrue(id == 1, "last ack default stream id = 1");
 
@@ -191,18 +191,18 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(nacks.size() == 4, "nacks stream1 size = 4 after ack");
 
 // negative acks
-    consumer->ResetLastReadMarker(group_id,"default");
+    consumer->ResetLastReadMarker(group_id, "default");
     err = consumer->GetNext(group_id, &fi, nullptr, "default");
     M_AssertTrue(err == nullptr, "GetNextNegAckBeforeResend no error");
     M_AssertTrue(fi.name == "1", "GetNextNegAckBeforeResend filename");
-    err = consumer->NegativeAcknowledge(group_id, 1, 0,"default");
+    err = consumer->NegativeAcknowledge(group_id, 1, 0, "default");
     M_AssertTrue(err == nullptr, "NegativeAcknowledge no error");
     err = consumer->GetNext(group_id, &fi, nullptr, "default");
     M_AssertTrue(err == nullptr, "GetNextNegAckWithResend no error");
     M_AssertTrue(fi.name == "1", "GetNextNegAckWithResend filename");
 
 // automatic resend
-    consumer->ResetLastReadMarker(group_id,"default");
+    consumer->ResetLastReadMarker(group_id, "default");
     consumer->SetResendNacs(true, 0, 1);
     err = consumer->GetNext(group_id, &fi, nullptr, "default");
     M_AssertTrue(err == nullptr, "GetNextBeforeResend no error");
@@ -219,11 +219,11 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
 
 // delete stream
 
-    err = consumer->DeleteStream("default",asapo::DeleteStreamOptions{true,true});
+    err = consumer->DeleteStream("default", asapo::DeleteStreamOptions{true, true});
     M_AssertTrue(err == nullptr, "delete default stream ok");
-    err = consumer->DeleteStream("default",asapo::DeleteStreamOptions{true,true});
+    err = consumer->DeleteStream("default", asapo::DeleteStreamOptions{true, true});
     M_AssertTrue(err == asapo::ConsumerErrorTemplates::kWrongInput, "delete non existing stream error");
-    err = consumer->DeleteStream("default",asapo::DeleteStreamOptions{true,false});
+    err = consumer->DeleteStream("default", asapo::DeleteStreamOptions{true, false});
     M_AssertTrue(err == nullptr, "delete non existing stream ok");
 
 }
@@ -317,11 +317,11 @@ void TestDataset(const std::unique_ptr<asapo::Consumer>& consumer, const std::st
 void TestAll(const Args& args) {
     asapo::Error err;
     auto consumer = asapo::ConsumerFactory::CreateConsumer(args.server,
-                                                         ".",
-                                                         true,
-                                                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                                                  args.run_name, "", "", args.token},
-                                                         &err);
+                    ".",
+                    true,
+                    asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                             args.run_name, "", "", args.token},
+                    &err);
     if (err) {
         std::cout << "Error CreateConsumer: " << err << std::endl;
         exit(EXIT_FAILURE);

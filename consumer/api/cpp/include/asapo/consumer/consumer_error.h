@@ -22,9 +22,9 @@ using ConsumerErrorTemplate = ServiceErrorTemplate<ConsumerErrorType, ErrorType:
 
 
 class PartialErrorData : public CustomErrorData {
- public:
-  uint64_t id;
-  uint64_t expected_size;
+  public:
+    uint64_t id;
+    uint64_t expected_size;
 };
 
 class ConsumerErrorData : public CustomErrorData {

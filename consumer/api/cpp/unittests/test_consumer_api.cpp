@@ -28,11 +28,11 @@ class ConsumerFactoryTests : public Test {
 TEST_F(ConsumerFactoryTests, CreateServerDataSource) {
 
     auto consumer = ConsumerFactory::CreateConsumer("server",
-                                                       "path",
-                                                       false,
-                                                       asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                                                "beamtime_id", "", "", "token"},
-                                                       &error);
+                                                    "path",
+                                                    false,
+                                                    asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                            "beamtime_id", "", "", "token"},
+                                                    &error);
 
     ASSERT_THAT(error, Eq(nullptr));
     ASSERT_THAT(dynamic_cast<ConsumerImpl*>(consumer.get()), Ne(nullptr));

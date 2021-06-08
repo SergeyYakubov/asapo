@@ -20,8 +20,8 @@ enum class ProducerErrorType {
 using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
 
 class OriginalData : public CustomErrorData {
- public:
-  MessageData data;
+  public:
+    MessageData data;
 };
 
 

@@ -54,11 +54,11 @@ Args GetArgs(int argc, char* argv[]) {
 void TestAll(const Args& args) {
     asapo::Error err;
     auto consumer = asapo::ConsumerFactory::CreateConsumer(args.server,
-                                                         "dummy",
-                                                         true,
-                                                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                                                  args.run_name, "", "", args.token},
-                                                         &err);
+                    "dummy",
+                    true,
+                    asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                             args.run_name, "", "", args.token},
+                    &err);
     if (err) {
         std::cout << "Error CreateConsumer: " << err << std::endl;
         exit(EXIT_FAILURE);

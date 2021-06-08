@@ -17,8 +17,8 @@ void Assert(const Error& error, const std::string& expect) {
 }
 
 struct Args {
-  std::string keyword;
-  int file_id;
+    std::string keyword;
+    int file_id;
 };
 
 Args GetArgs(int argc, char* argv[]) {
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
 
     if (args.keyword == "OK") { // check retrieve
         asapo::MessageMeta fi_db;
-        err = db.GetDataSetById("data_test", fi.dataset_substream,fi.id, &fi_db);
+        err = db.GetDataSetById("data_test", fi.dataset_substream, fi.id, &fi_db);
         M_AssertTrue(fi_db == fi, "get record from db");
         M_AssertEq(nullptr, err);
         err = db.GetDataSetById("data_test", 0, 0, &fi_db);
@@ -84,9 +84,9 @@ int main(int argc, char* argv[]) {
 
         auto fi2 = fi;
         fi2.id = 123;
-        fi2.timestamp = std::chrono::system_clock::now()+std::chrono::minutes(1);
+        fi2.timestamp = std::chrono::system_clock::now() + std::chrono::minutes(1);
         fi2.name = asapo::kFinishStreamKeyword;
-        fi2.metadata=R"({"next_stream":"ns"})";
+        fi2.metadata = R"({"next_stream":"ns"})";
         db.Insert("data_test", fi2, false);
         err = db.GetLastStream(&info_last);
         M_AssertEq(nullptr, err);

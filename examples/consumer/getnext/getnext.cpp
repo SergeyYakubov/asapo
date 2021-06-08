@@ -89,7 +89,8 @@ void WaitThreads(std::vector<std::thread>* threads) {
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
     std::cout << err->Explain() << std::endl;
-    return (err == asapo::ConsumerErrorTemplates::kEndOfStream ||err == asapo::ConsumerErrorTemplates::kStreamFinished) ? 0 : 1;
+    return (err == asapo::ConsumerErrorTemplates::kEndOfStream
+            || err == asapo::ConsumerErrorTemplates::kStreamFinished) ? 0 : 1;
 }
 
 std::vector<std::thread>
@@ -100,12 +101,12 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
         asapo::MessageMeta fi;
         Error err;
         auto consumer = asapo::ConsumerFactory::CreateConsumer(params.server,
-                                                             params.file_path,
-                                                             true,
-                                                             asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                                                      params.beamtime_id, "",
-                                                                                      params.data_source, params.token},
-                                                             &err);
+                        params.file_path,
+                        true,
+                        asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                 params.beamtime_id, "",
+                                                 params.data_source, params.token},
+                        &err);
         if (err) {
             std::cout << "Error CreateConsumer: " << err << std::endl;
             exit(EXIT_FAILURE);

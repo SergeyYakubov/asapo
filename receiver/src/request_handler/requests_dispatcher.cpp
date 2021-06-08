@@ -22,7 +22,8 @@ NetworkErrorCode GetNetworkCodeFromError(const Error& err) {
             return NetworkErrorCode::kNetErrorNotSupported;
         } else if (err == ReceiverErrorTemplates::kReAuthorizationFailure) {
             return NetworkErrorCode::kNetErrorReauthorize;
-        } else if (err == DBErrorTemplates::kJsonParseError || err == ReceiverErrorTemplates::kBadRequest || err == DBErrorTemplates::kNoRecord) {
+        } else if (err == DBErrorTemplates::kJsonParseError || err == ReceiverErrorTemplates::kBadRequest
+                   || err == DBErrorTemplates::kNoRecord) {
             return NetworkErrorCode::kNetErrorWrongRequest;
         } else {
             return NetworkErrorCode::kNetErrorInternalServerError;
