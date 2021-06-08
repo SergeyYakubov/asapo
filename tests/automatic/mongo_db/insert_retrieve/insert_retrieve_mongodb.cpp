@@ -3,7 +3,7 @@
 #include <thread>
 
 #include "../../../common/cpp/src/database/mongodb_client.h"
-#include "../../../common/cpp/src/database/encoding.h"
+#include "asapo/database/db_error.h"
 
 #include "testing.h"
 #include "asapo/common/data_structs.h"
@@ -34,6 +34,19 @@ Args GetArgs(int argc, char* argv[]) {
     return Args{argv[1], atoi(argv[2])};
 }
 
+std::string  GenRandomString(int len) {
+    std::string s;
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    for (int i = 0; i < len; ++i) {
+        s += alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+
+    return s;
+}
 
 int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
@@ -46,6 +59,7 @@ int main(int argc, char* argv[]) {
     fi.timestamp = std::chrono::system_clock::now();
     fi.buf_id = 18446744073709551615ull;
     fi.source = "host:1234";
+
 
     auto db_name = R"(data_/ \."$)";
     auto stream_name = R"(bla/test_/\ ."$)";
@@ -117,6 +131,19 @@ int main(int argc, char* argv[]) {
         err = db.DeleteStream("test1");
         M_AssertTrue(err == nullptr);
     }
+
+    // long names
+
+    asapo::MongoDBClient db1;
+    auto long_db_name = GenRandomString(64);
+    err = db1.Connect("127.0.0.1", long_db_name);
+    M_AssertTrue(err == asapo::DBErrorTemplates::kWrongInput);
+
+    db1.Connect("127.0.0.1", db_name);
+    auto long_stream_name = GenRandomString(120);
+    err = db1.Insert(long_stream_name, fi, true);
+    M_AssertTrue(err == asapo::DBErrorTemplates::kWrongInput);
+
 
     return 0;
 }

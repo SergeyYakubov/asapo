@@ -74,6 +74,10 @@ const stream_filter_all = "all"
 const stream_filter_finished = "finished"
 const stream_filter_unfinished = "unfinished"
 
+const max_encoded_source_size = 63
+const max_encoded_stream_size = 100
+const max_encoded_group_size = 50
+
 var dbSessionLock sync.Mutex
 
 type SizeRecord struct {

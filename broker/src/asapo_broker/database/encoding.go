@@ -1,6 +1,9 @@
 package database
 
-import "net/url"
+import (
+	"asapo_common/utils"
+	"net/url"
+)
 
 func shouldEscape(c byte, db bool) bool {
 	if c == '$' || c == ' ' || c == '%' {
@@ -74,7 +77,19 @@ func encodeStringForColName(original string) (result string) {
 
 func encodeRequest(request *Request) error {
 	request.DbName = encodeStringForDbName(request.DbName)
+	if len(request.DbName)> max_encoded_source_size {
+		return &DBError{utils.StatusWrongInput, "source name is too long"}
+	}
+
 	request.DbCollectionName = encodeStringForColName(request.DbCollectionName)
+	if len(request.DbCollectionName)> max_encoded_stream_size {
+		return &DBError{utils.StatusWrongInput, "stream name is too long"}
+	}
+
 	request.GroupId = encodeStringForColName(request.GroupId)
+	if len(request.GroupId)> max_encoded_group_size {
+		return &DBError{utils.StatusWrongInput, "group id is too long"}
+	}
+
 	return nil
 }

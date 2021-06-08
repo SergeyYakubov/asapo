@@ -744,7 +744,7 @@ RequestInfo ConsumerImpl::GetStreamListRequest(const std::string& from, const St
     ri.api = UriPrefix("0", "", "streams");
     ri.post = false;
     if (!from.empty()) {
-        ri.extra_params = "&from=" + from;
+        ri.extra_params = "&from=" + httpclient__->UrlEscape(from);
     }
     ri.extra_params += "&filter=" + filterToString(filter);
     return ri;

@@ -1114,14 +1114,14 @@ TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUri) {
         R"({"lastId":124,"name":"test1","timestampCreated":2000000,"timestampLast":2000,"finished":true,"nextStream":"next"}]})";
     EXPECT_CALL(mock_http_client,
                 Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source_encoded + "/0/streams"
-                      + "?token=" + expected_token + "&from=stream_from&filter=all", _,
+                      + "?token=" + expected_token + "&from=" + expected_stream_encoded + "&filter=all", _,
                       _)).WillOnce(DoAll(
                                        SetArgPointee<1>(HttpCode::OK),
                                        SetArgPointee<2>(nullptr),
                                        Return(return_streams)));
 
     asapo::Error err;
-    auto streams = consumer->GetStreamList("stream_from", asapo::StreamFilter::kAllStreams, &err);
+    auto streams = consumer->GetStreamList(expected_stream, asapo::StreamFilter::kAllStreams, &err);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(streams.size(), Eq(2));
     ASSERT_THAT(streams.size(), 2);
