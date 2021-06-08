@@ -79,7 +79,7 @@ class SystemIO final : public IO {
     static ssize_t      _read(FileDescriptor fd, void* buffer, size_t length);
     static ssize_t      _write(FileDescriptor fd, const void* buffer, size_t count);
     void            CollectMessageMetarmationRecursively(const std::string& path, std::vector<MessageMeta>* files,
-                                                      Error* err) const;
+            Error* err) const;
     void            GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const;
     Error           CreateDirectoryWithParents(const std::string& root_path, const std::string& path) const;
     uint8_t* AllocateArray(uint64_t fsize, Error* err) const;

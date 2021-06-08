@@ -39,7 +39,8 @@ std::unique_ptr<Producer> CreateProducer() {
 
     Error err;
     auto producer = Producer::Create(config->asapo_endpoint, (uint8_t) config->nthreads,
-                                     config->mode, asapo::SourceCredentials{asapo::SourceType::kProcessed,config->beamtime_id, "", config->data_source, ""}, 3600000, &err);
+                                     config->mode, asapo::SourceCredentials{asapo::SourceType::kProcessed, config->beamtime_id, "", config->data_source, ""},
+                                     3600000, &err);
     if(err) {
         std::cerr << "cannot create producer: " << err << std::endl;
         exit(EXIT_FAILURE);
@@ -138,7 +139,7 @@ int main (int argc, char* argv[]) {
         message_header.message_id = ++i;
         HandleDatasets(&message_header);
         producer->SendFile(message_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
-            message_header.file_name, asapo::kDefaultIngestMode, "default", ProcessAfterSend);
+                           message_header.file_name, asapo::kDefaultIngestMode, "default", ProcessAfterSend);
     }
 
     logger->Info("Producer exit. Processed " + std::to_string(i) + " files");

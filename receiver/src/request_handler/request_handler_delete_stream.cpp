@@ -5,7 +5,7 @@
 namespace asapo {
 
 RequestHandlerDeleteStream::RequestHandlerDeleteStream(std::string collection_name_prefix) : RequestHandlerDb(
-    std::move(collection_name_prefix)) {
+        std::move(collection_name_prefix)) {
 }
 
 Error RequestHandlerDeleteStream::ProcessRequest(Request* request) const {
@@ -20,7 +20,7 @@ Error RequestHandlerDeleteStream::ProcessRequest(Request* request) const {
 
     if (!options.delete_meta) {
         log__->Debug(std::string{"skipped deleting stream meta in "} + stream_name + " in " +
-            db_name_ + " at " + GetReceiverConfig()->database_uri);
+                     db_name_ + " at " + GetReceiverConfig()->database_uri);
         return nullptr;
     }
     auto err =  db_client__->DeleteStream(stream_name);
@@ -32,7 +32,7 @@ Error RequestHandlerDeleteStream::ProcessRequest(Request* request) const {
 
     if (no_error) {
         log__->Debug(std::string{"deleted stream meta in "} + stream_name + " in " +
-            db_name_ + " at " + GetReceiverConfig()->database_uri);
+                     db_name_ + " at " + GetReceiverConfig()->database_uri);
         return nullptr;
     }
 

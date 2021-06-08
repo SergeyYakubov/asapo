@@ -177,7 +177,7 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
 }
 
 void SystemIO::CollectMessageMetarmationRecursively(const std::string& path,
-                                                 MessageMetas* files, Error* err) const {
+        MessageMetas* files, Error* err) const {
     errno = 0;
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
@@ -189,7 +189,7 @@ void SystemIO::CollectMessageMetarmationRecursively(const std::string& path,
     while (struct dirent* current_entity = readdir(dir)) {
         if (IsDirectory(current_entity)) {
             CollectMessageMetarmationRecursively(path + "/" + current_entity->d_name,
-                                              files, err);
+                                                 files, err);
         } else {
             ProcessFileEntity(current_entity, path, files, err);
         }

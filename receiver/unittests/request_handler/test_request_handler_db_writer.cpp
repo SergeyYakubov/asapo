@@ -122,7 +122,7 @@ MATCHER_P(CompareMessageMeta, file, "") {
     if (arg.id != file.id) return false;
     if (arg.metadata != file.metadata) return false;
 
-    if (arg.timestamp<std::chrono::system_clock::now()-std::chrono::seconds (5)) {
+    if (arg.timestamp < std::chrono::system_clock::now() - std::chrono::seconds (5)) {
         return false;
     }
 

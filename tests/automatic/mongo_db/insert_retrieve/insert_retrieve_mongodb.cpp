@@ -28,7 +28,7 @@ Args GetArgs(int argc, char* argv[]) {
         std::cout << "Wrong number of arguments" << std::endl;
         exit(EXIT_FAILURE);
     }
-    printf("%s %s",argv[1],argv[2]) ;
+    printf("%s %s", argv[1], argv[2]) ;
     return Args{argv[1], atoi(argv[2])};
 }
 
@@ -62,9 +62,9 @@ int main(int argc, char* argv[]) {
     auto fi2 = fi;
     fi2.id = 123;
     fi1.timestamp = std::chrono::system_clock::now();
-    fi2.timestamp = std::chrono::system_clock::now()+std::chrono::minutes(1);
+    fi2.timestamp = std::chrono::system_clock::now() + std::chrono::minutes(1);
     fi2.name = asapo::kFinishStreamKeyword;
-    fi2.metadata=R"({"next_stream":"ns"})";
+    fi2.metadata = R"({"next_stream":"ns"})";
     db.Insert("data_test1", fi1, false);
     db.Insert("data_test1", fi2, false);
 
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
         M_AssertEq(fi2.id, info.last_id);
         M_AssertEq("test1", info.name);
         M_AssertEq(true, info.finished);
-        M_AssertEq("ns",info.next_stream);
+        M_AssertEq("ns", info.next_stream);
 
 // delete stream
         db.Insert("inprocess_test_blabla", fi, false);
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
         err = db.GetStreamInfo("acks_test_blabla1", &info);
         M_AssertTrue(info.last_id == 0);
         err = db.DeleteStream("test1");
-        M_AssertTrue(err==nullptr);
+        M_AssertTrue(err == nullptr);
     }
 
     return 0;

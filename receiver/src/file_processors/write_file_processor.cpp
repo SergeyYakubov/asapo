@@ -22,7 +22,7 @@ Error WriteFileProcessor::ProcessFile(const Request* request, bool overwrite) co
     auto data = request->GetData();
     auto fname = request->GetFileName();
     std::string root_folder;
-    auto err = GetRootFolder(request,&root_folder);
+    auto err = GetRootFolder(request, &root_folder);
     if (err) {
         return err;
     }

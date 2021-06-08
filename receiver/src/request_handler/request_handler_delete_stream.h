@@ -7,9 +7,9 @@
 namespace asapo {
 
 class RequestHandlerDeleteStream final: public RequestHandlerDb {
- public:
-  RequestHandlerDeleteStream(std::string collection_name_prefix);
-  Error ProcessRequest(Request* request) const override;
+  public:
+    RequestHandlerDeleteStream(std::string collection_name_prefix);
+    Error ProcessRequest(Request* request) const override;
 };
 
 }

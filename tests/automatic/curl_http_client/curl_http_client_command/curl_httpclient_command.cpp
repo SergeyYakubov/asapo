@@ -28,23 +28,25 @@ Args GetArgs(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
 
     auto args = GetArgs(argc, argv);
-    auto token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkycDFiaXB0MzBub3AwcTNlZyIsInN1YiI6ImJ0X2FhYSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGVzIjpbInJlYWQiXX19.dt3ifrG3zqQP4uM2kaoe7ydDjUdFeasOB07fVRfFApE"; //token for aaa
+    auto token =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMTkycDFiaXB0MzBub3AwcTNlZyIsInN1YiI6ImJ0X2FhYSIsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGVzIjpbInJlYWQiXX19.dt3ifrG3zqQP4uM2kaoe7ydDjUdFeasOB07fVRfFApE"; //token for aaa
     std::string authorize_request = "{\"Folder\":\"" + args.folder + "\",\"BeamtimeId\":\"aaa\",\"Token\":\"" + token +
                                     "\"}";
     asapo::Error err;
     auto consumer = asapo::ConsumerFactory::CreateConsumer(args.uri_authorizer,
-                                                         "",
-                                                         true,
-                                                         asapo::SourceCredentials{asapo::SourceType::kProcessed, "", "",
-                                                                                  "", ""},
-                                                         &err);
+                    "",
+                    true,
+                    asapo::SourceCredentials{asapo::SourceType::kProcessed, "", "",
+                                             "", ""},
+                    &err);
     auto consumer_impl = static_cast<asapo::ConsumerImpl*>(consumer.get());
     M_AssertEq(nullptr, err);
 
     asapo::HttpCode code;
     std::string response;
     std::string input_data;
-    auto folder_token = consumer_impl->httpclient__->Post(args.uri_authorizer + "/v0.1/folder", "", authorize_request, &code,
+    auto folder_token = consumer_impl->httpclient__->Post(args.uri_authorizer + "/v0.1/folder", "", authorize_request,
+                        &code,
                         &err);
     if (err) {
         std::cout << err->Explain();

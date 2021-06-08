@@ -27,7 +27,7 @@ std::unique_ptr<Consumer> Create(const std::string& source_name,
 }
 
 std::unique_ptr<Consumer> ConsumerFactory::CreateConsumer(std::string server_name, std::string source_path,
-                                                          bool has_filesystem, SourceCredentials source, Error* error) noexcept {
+        bool has_filesystem, SourceCredentials source, Error* error) noexcept {
     return Create<ConsumerImpl>(std::move(server_name), error, std::move(source_path), has_filesystem,
                                 std::move(source));
 }

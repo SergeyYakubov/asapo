@@ -210,7 +210,7 @@ class MockIO : public IO {
     MessageData GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override {
         std::function<ErrorInterface*()> error;
         auto data = GetDataFromFile_t(fname, fsize, &error);
-        if (error!=nullptr) {
+        if (error != nullptr) {
             err->reset(error());
         } else {
             err->reset(nullptr);
@@ -218,7 +218,8 @@ class MockIO : public IO {
         return MessageData(data);
     }
 
-    MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t* fsize, std::function<ErrorInterface*()>* err_gen));
+    MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t* fsize,
+                                                    std::function<ErrorInterface*()>* err_gen));
 
 
     Error GetLastError() const override {
