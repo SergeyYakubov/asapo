@@ -92,12 +92,14 @@ Error MongoDBClient::Connect(const std::string& address, const std::string& data
 
     auto err = InitializeClient(address);
     if (err) {
+        CleanUp();
         return err;
     }
 
     database_name_ = EncodeDbName(database_name);
 
     if (database_name_.size() > maxDbNameLength) {
+        CleanUp();
         return DBErrorTemplates::kWrongInput.Generate("data source name too long");
     }
 
