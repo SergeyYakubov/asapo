@@ -27,7 +27,7 @@ func GetSupportedConsumerProtocols() []Protocol {
 				"Broker": "v0.3",
 				"File Transfer": "v0.1",
 				"Data cache service": "v0.1",
-			}, &protocolValidatorDeprecated{getTimefromDate("2022-06-01")}},
+			}, &protocolValidatorDeprecated{getTimefromDate("2022-07-01")}},
 		Protocol{"v0.2",
 			map[string]string{
 				"Discovery": "v0.1",

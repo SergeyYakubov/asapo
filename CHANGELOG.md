@@ -1,5 +1,7 @@
 ## 21.06.0 (in progress)
 
+IMPROVEMENTS
+* Consumer/Producer API - allow any characters in source/stream/group names 
 
 BUG FIXES
 * Consumer API: multiple consumers from same group receive stream finished error 
