@@ -46,7 +46,8 @@ struct RequestOutput {
     }
 };
 
-Error ProcessRequestResponce(const RequestInfo& request, const Error& server_err, const RequestOutput* response, const HttpCode& code);
+Error ProcessRequestResponce(const RequestInfo& request, const Error& server_err, const RequestOutput* response,
+                             const HttpCode& code);
 Error ConsumerErrorFromNoDataResponse(const std::string& response);
 Error ConsumerErrorFromPartialDataResponse(const std::string& response);
 DataSet DecodeDatasetFromResponse(std::string response, Error* err);
@@ -84,7 +85,7 @@ class ConsumerImpl final : public asapo::Consumer {
 
     Error GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) override;
 
-    Error GetVersionInfo(std::string* client_info,std::string* server_info, bool* supported) override;
+    Error GetVersionInfo(std::string* client_info, std::string* server_info, bool* supported) override;
     Error DeleteStream(std::string stream, DeleteStreamOptions options) override;
     void SetTimeout(uint64_t timeout_ms) override;
     void ForceNoRdma() override;
@@ -124,11 +125,12 @@ class ConsumerImpl final : public asapo::Consumer {
                                   bool dataset = false, uint64_t min_size = 0);
     Error GetDataIfNeeded(MessageMeta* info, MessageData* data);
     Error DiscoverService(const std::string& service_name, std::string* uri_to_set);
-    bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
-    bool SwitchToGetByIdIfPartialData(Error* err, const std::string& response, std::string* group_id,std::string* redirect_uri);
+    bool SwitchToGetByIdIfNoData(Error* err, const std::string& response, std::string* group_id, std::string* redirect_uri);
+    bool SwitchToGetByIdIfPartialData(Error* err, const std::string& response, std::string* group_id,
+                                      std::string* redirect_uri);
     Error ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri);
     Error GetMessageFromServer(GetMessageServerOperation op, uint64_t id, std::string group_id, std::string stream,
-                             MessageMeta* info, MessageData* data);
+                               MessageMeta* info, MessageData* data);
     DataSet GetDatasetFromServer(GetMessageServerOperation op, uint64_t id, std::string group_id, std::string stream,
                                  uint64_t min_size, Error* err);
     bool DataCanBeInBuffer(const MessageMeta* info);
@@ -146,7 +148,7 @@ class ConsumerImpl final : public asapo::Consumer {
     Error UpdateFolderTokenIfNeeded(bool ignore_existing);
 
     uint64_t GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err);
-    RequestInfo GetStreamListRequest(const std::string &from, const StreamFilter &filter) const;
+    RequestInfo GetStreamListRequest(const std::string& from, const StreamFilter& filter) const;
     Error GetServerVersionInfo(std::string* server_info, bool* supported) ;
     std::string UriPrefix( std::string stream, std::string group, std::string suffix) const;
 
@@ -169,12 +171,12 @@ class ConsumerImpl final : public asapo::Consumer {
     uint64_t resend_attempts_;
     std::atomic<bool> interrupt_flag_{ false};
 
-  RequestInfo GetSizeRequestForSingleMessagesStream(std::string &stream) const;
-  RequestInfo GetSizeRequestForDatasetStream(std::string &stream, bool include_incomplete) const;
-  uint64_t ParseGetCurrentCountResponce(Error* err, const std::string &responce) const;
-  RequestInfo GetDiscoveryRequest(const std::string &service_name) const;
-  RequestInfo GetVersionRequest() const;
-  RequestInfo GetDeleteStreamRequest(std::string stream, DeleteStreamOptions options) const;
+    RequestInfo GetSizeRequestForSingleMessagesStream(std::string& stream) const;
+    RequestInfo GetSizeRequestForDatasetStream(std::string& stream, bool include_incomplete) const;
+    uint64_t ParseGetCurrentCountResponce(Error* err, const std::string& responce) const;
+    RequestInfo GetDiscoveryRequest(const std::string& service_name) const;
+    RequestInfo GetVersionRequest() const;
+    RequestInfo GetDeleteStreamRequest(std::string stream, DeleteStreamOptions options) const;
 };
 
 }

@@ -14,17 +14,18 @@ bool ShouldEscape(char c, bool db) {
     }
 
     switch (c) {
-        case '/':
-        case '\\':
-        case '.':
-        case '"':return true;
+    case '/':
+    case '\\':
+    case '.':
+    case '"':
+        return true;
     }
     return false;
 }
 
 const std::string upperhex = "0123456789ABCDEF";
 
-std::string Escape(const std::string &s, bool db) {
+std::string Escape(const std::string& s, bool db) {
     auto hexCount = 0;
     for (auto i = 0; i < s.size(); i++) {
         char c = s[i];
@@ -54,8 +55,8 @@ std::string Escape(const std::string &s, bool db) {
 
 inline int ishex(int x) {
     return (x >= '0' && x <= '9') ||
-        (x >= 'a' && x <= 'f') ||
-        (x >= 'A' && x <= 'F');
+           (x >= 'a' && x <= 'f') ||
+           (x >= 'A' && x <= 'F');
 }
 
 int decode(const char* s, char* dec) {
@@ -67,8 +68,8 @@ int decode(const char* s, char* dec) {
         c = *s++;
 //        if (c == '+') c = ' ';
         if (c == '%' && (!ishex(*s++) ||
-            !ishex(*s++) ||
-            !sscanf(s - 2, "%2x", &c)))
+                         !ishex(*s++) ||
+                         !sscanf(s - 2, "%2x", &c)))
             return -1;
         if (dec) *o = c;
     }
@@ -76,15 +77,15 @@ int decode(const char* s, char* dec) {
     return o - dec;
 }
 
-std::string EncodeDbName(const std::string &dbname) {
+std::string EncodeDbName(const std::string& dbname) {
     return Escape(dbname, true);
 }
 
-std::string EncodeColName(const std::string &colname) {
+std::string EncodeColName(const std::string& colname) {
     return Escape(colname, false);
 }
 
-std::string DecodeName(const std::string &name) {
+std::string DecodeName(const std::string& name) {
     char* decoded = new char[name.size() + 1];
     auto res = decode(name.c_str(), decoded);
     if (res < 0) {
@@ -105,7 +106,7 @@ bool ShouldEscapeQuery(char c) {
     return false;
 }
 
-std::string EscapeQuery(const std::string &s) {
+std::string EscapeQuery(const std::string& s) {
     auto count = 0;
     for (auto i = 0; i < s.size(); i++) {
         char c = s[i];

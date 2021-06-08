@@ -135,7 +135,8 @@ TEST_F(FactoryTests, DoNotAddDiskAndDbWriterIfNotWantedInRequest) {
 }
 
 TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
-    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInFilesystem;
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
+            asapo::IngestModeFlags::kStoreInFilesystem;
 
     SetReceiverConfig(config, "none");
 
@@ -171,7 +172,8 @@ TEST_F(FactoryTests, ReturnsMetaDataRequestOnTransferMetaDataOnly) {
 }
 
 TEST_F(FactoryTests, ReturnsMetaDataRequestOnkOpcodeTransferMetaData) {
-    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInDatabase;
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
+            asapo::IngestModeFlags::kStoreInDatabase;
     generic_request_header.op_code = asapo::Opcode::kOpcodeTransferMetaData;
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
 

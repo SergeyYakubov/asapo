@@ -21,22 +21,22 @@ namespace asapo {
 const std::string ConsumerImpl::kBrokerServiceName = "asapo-broker";
 const std::string ConsumerImpl::kFileTransferServiceName = "asapo-file-transfer";
 
-Error GetNoDataResponseFromJson(const std::string &json_string, ConsumerErrorData* data) {
+Error GetNoDataResponseFromJson(const std::string& json_string, ConsumerErrorData* data) {
     JsonStringParser parser(json_string);
     Error err;
     if ((err = parser.GetUInt64("id", &data->id)) || (err = parser.GetUInt64("id_max", &data->id_max))
-        || (err = parser.GetString("next_stream", &data->next_stream))) {
+            || (err = parser.GetString("next_stream", &data->next_stream))) {
         return err;
     }
     return nullptr;
 }
 
-Error GetPartialDataResponseFromJson(const std::string &json_string, PartialErrorData* data) {
+Error GetPartialDataResponseFromJson(const std::string& json_string, PartialErrorData* data) {
     Error err;
     auto parser = JsonStringParser(json_string);
     uint64_t id, size;
     if ((err = parser.GetUInt64("size", &size)) ||
-        (err = parser.GetUInt64("_id", &id))) {
+            (err = parser.GetUInt64("_id", &id))) {
         return err;
     }
     data->id = id;
@@ -44,7 +44,7 @@ Error GetPartialDataResponseFromJson(const std::string &json_string, PartialErro
     return nullptr;
 }
 
-Error ConsumerErrorFromPartialDataResponse(const std::string &response) {
+Error ConsumerErrorFromPartialDataResponse(const std::string& response) {
     PartialErrorData data;
     auto parse_error = GetPartialDataResponseFromJson(response, &data);
     if (parse_error) {
@@ -52,11 +52,11 @@ Error ConsumerErrorFromPartialDataResponse(const std::string &response) {
     }
     auto err = ConsumerErrorTemplates::kPartialData.Generate();
     PartialErrorData* error_data = new PartialErrorData{data};
-    err->SetCustomData(std::unique_ptr<CustomErrorData>{error_data});
+    err->SetCustomData(std::unique_ptr<CustomErrorData> {error_data});
     return err;
 }
 
-Error ConsumerErrorFromNoDataResponse(const std::string &response) {
+Error ConsumerErrorFromNoDataResponse(const std::string& response) {
     if (response.find("get_record_by_id") != std::string::npos) {
         ConsumerErrorData data;
         auto parse_error = GetNoDataResponseFromJson(response, &data);
@@ -71,27 +71,37 @@ Error ConsumerErrorFromNoDataResponse(const std::string &response) {
             err = ConsumerErrorTemplates::kNoData.Generate();
         }
         ConsumerErrorData* error_data = new ConsumerErrorData{data};
-        err->SetCustomData(std::unique_ptr<CustomErrorData>{error_data});
+        err->SetCustomData(std::unique_ptr<CustomErrorData> {error_data});
         return err;
     }
     return ConsumerErrorTemplates::kNoData.Generate();
 }
 
-Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode &code) {
+Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode& code) {
     switch (code) {
-        case HttpCode::OK:return nullptr;
-        case HttpCode::NoContent:return nullptr;
-        case HttpCode::PartialContent:return ConsumerErrorFromPartialDataResponse(response->to_string());
-        case HttpCode::BadRequest:return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
-        case HttpCode::Unauthorized:return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
-        case HttpCode::InternalServerError:return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response->to_string());
-        case HttpCode::NotFound:return ConsumerErrorTemplates::kUnavailableService.Generate(response->to_string());
-        case HttpCode::Conflict:return ConsumerErrorFromNoDataResponse(response->to_string());
-        case HttpCode::UnsupportedMediaType:return ConsumerErrorTemplates::kUnsupportedClient.Generate(response->to_string());
-        default:return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response->to_string());
+    case HttpCode::OK:
+        return nullptr;
+    case HttpCode::NoContent:
+        return nullptr;
+    case HttpCode::PartialContent:
+        return ConsumerErrorFromPartialDataResponse(response->to_string());
+    case HttpCode::BadRequest:
+        return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
+    case HttpCode::Unauthorized:
+        return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
+    case HttpCode::InternalServerError:
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response->to_string());
+    case HttpCode::NotFound:
+        return ConsumerErrorTemplates::kUnavailableService.Generate(response->to_string());
+    case HttpCode::Conflict:
+        return ConsumerErrorFromNoDataResponse(response->to_string());
+    case HttpCode::UnsupportedMediaType:
+        return ConsumerErrorTemplates::kUnsupportedClient.Generate(response->to_string());
+    default:
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response->to_string());
     }
 }
-Error ConsumerErrorFromServerError(const Error &server_err) {
+Error ConsumerErrorFromServerError(const Error& server_err) {
     if (server_err == HttpErrorTemplates::kTransferError) {
         return ConsumerErrorTemplates::kInterruptedTransaction.Generate(server_err->Explain());
     } else {
@@ -99,10 +109,10 @@ Error ConsumerErrorFromServerError(const Error &server_err) {
     }
 }
 
-Error ProcessRequestResponce(const RequestInfo &request,
-                             const Error &server_err,
+Error ProcessRequestResponce(const RequestInfo& request,
+                             const Error& server_err,
                              const RequestOutput* response,
-                             const HttpCode &code) {
+                             const HttpCode& code) {
     Error err;
     if (server_err != nullptr) {
         err =  ConsumerErrorFromServerError(server_err);
@@ -110,8 +120,8 @@ Error ProcessRequestResponce(const RequestInfo &request,
         err =  ConsumerErrorFromHttpCode(response, code);
     }
 
-    if (err!=nullptr) {
-        std::string prefix = "Error processing request " + request.host+request.api;
+    if (err != nullptr) {
+        std::string prefix = "Error processing request " + request.host + request.api;
         err->Prepend(prefix);
     }
     return err;
@@ -150,35 +160,36 @@ std::string ConsumerImpl::RequestWithToken(std::string uri) {
     return std::move(uri) + "?token=" + source_credentials_.user_token;
 }
 
-Error ConsumerImpl::ProcessPostRequest(const RequestInfo &request, RequestOutput* response, HttpCode* code) {
+Error ConsumerImpl::ProcessPostRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code) {
     Error err;
     switch (request.output_mode) {
-        case OutputDataMode::string:
-            response->string_output =
-                httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params,
-                                   request.cookie,
-                                   request.body,
-                                   code,
-                                   &err);
-            break;
-        case OutputDataMode::array:
-            err =
-                httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.cookie,
-                                   request.body, &response->data_output, response->data_output_size, code);
-            break;
-        default:break;
+    case OutputDataMode::string:
+        response->string_output =
+            httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params,
+                               request.cookie,
+                               request.body,
+                               code,
+                               &err);
+        break;
+    case OutputDataMode::array:
+        err =
+            httpclient__->Post(RequestWithToken(request.host + request.api) + request.extra_params, request.cookie,
+                               request.body, &response->data_output, response->data_output_size, code);
+        break;
+    default:
+        break;
     }
     return err;
 }
 
-Error ConsumerImpl::ProcessGetRequest(const RequestInfo &request, RequestOutput* response, HttpCode* code) {
+Error ConsumerImpl::ProcessGetRequest(const RequestInfo& request, RequestOutput* response, HttpCode* code) {
     Error err;
     response->string_output =
         httpclient__->Get(RequestWithToken(request.host + request.api) + request.extra_params, code, &err);
     return err;
 }
 
-Error ConsumerImpl::ProcessRequest(RequestOutput* response, const RequestInfo &request, std::string* service_uri) {
+Error ConsumerImpl::ProcessRequest(RequestOutput* response, const RequestInfo& request, std::string* service_uri) {
     Error err;
     HttpCode code;
     if (request.post) {
@@ -192,7 +203,7 @@ Error ConsumerImpl::ProcessRequest(RequestOutput* response, const RequestInfo &r
     return ProcessRequestResponce(request, err, response, code);
 }
 
-RequestInfo ConsumerImpl::GetDiscoveryRequest(const std::string &service_name) const {
+RequestInfo ConsumerImpl::GetDiscoveryRequest(const std::string& service_name) const {
     RequestInfo ri;
     ri.host = endpoint_;
     ri.api = "/asapo-discovery/" + kConsumerProtocol.GetDiscoveryVersion() + "/" + service_name;
@@ -207,13 +218,13 @@ Error ConsumerImpl::ProcessDiscoverServiceResult(Error err, std::string* uri_to_
             return err;
         }
         return ConsumerErrorTemplates::kUnavailableService.Generate(" on " + endpoint_
-                                                                        + (err != nullptr ? ": " + err->Explain()
-                                                                                          : ""));
+                + (err != nullptr ? ": " + err->Explain()
+                   : ""));
     }
     return nullptr;
 }
 
-Error ConsumerImpl::DiscoverService(const std::string &service_name, std::string* uri_to_set) {
+Error ConsumerImpl::DiscoverService(const std::string& service_name, std::string* uri_to_set) {
     if (!uri_to_set->empty()) {
         return nullptr;
     }
@@ -225,7 +236,7 @@ Error ConsumerImpl::DiscoverService(const std::string &service_name, std::string
 }
 
 bool ConsumerImpl::SwitchToGetByIdIfPartialData(Error* err,
-                                                const std::string &response,
+                                                const std::string& response,
                                                 std::string* group_id,
                                                 std::string* redirect_uri) {
     if (*err == ConsumerErrorTemplates::kPartialData) {
@@ -242,7 +253,7 @@ bool ConsumerImpl::SwitchToGetByIdIfPartialData(Error* err,
 }
 
 bool ConsumerImpl::SwitchToGetByIdIfNoData(Error* err,
-                                           const std::string &response,
+                                           const std::string& response,
                                            std::string* group_id,
                                            std::string* redirect_uri) {
     if (*err == ConsumerErrorTemplates::kNoData) {
@@ -281,7 +292,7 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
     std::string request_suffix = OpToUriCmd(op);
     std::string request_group = OpToUriCmd(op);
 
-    std::string request_api = UriPrefix(std::move(stream),"","");
+    std::string request_api = UriPrefix(std::move(stream), "", "");
     uint64_t elapsed_ms = 0;
     Error no_data_error;
     while (true) {
@@ -292,10 +303,11 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
         auto start = system_clock::now();
         auto err = DiscoverService(kBrokerServiceName, &current_broker_uri_);
         if (err == nullptr) {
-            auto ri = PrepareRequestInfo(request_api + "/" + httpclient__->UrlEscape(group_id) + "/" + request_suffix, dataset, min_size);
+            auto ri = PrepareRequestInfo(request_api + "/" + httpclient__->UrlEscape(group_id) + "/" + request_suffix, dataset,
+                                         min_size);
             if (request_suffix == "next" && resend_) {
                 ri.extra_params = ri.extra_params + "&resend_nacks=true" + "&delay_ms=" +
-                    std::to_string(delay_ms_) + "&resend_attempts=" + std::to_string(resend_attempts_);
+                                  std::to_string(delay_ms_) + "&resend_attempts=" + std::to_string(resend_attempts_);
             }
             RequestOutput output;
             err = ProcessRequest(&output, ri, &current_broker_uri_);
@@ -311,7 +323,7 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
 
         if (request_suffix == "next") {
             auto save_error = SwitchToGetByIdIfNoData(&err, *response, &group_id, &request_suffix)
-                || SwitchToGetByIdIfPartialData(&err, *response, &group_id, &request_suffix);
+                              || SwitchToGetByIdIfPartialData(&err, *response, &group_id, &request_suffix);
             if (err == ConsumerErrorTemplates::kInterruptedTransaction) {
                 return err;
             }
@@ -348,9 +360,12 @@ Error ConsumerImpl::GetLast(MessageMeta* info, MessageData* data, std::string st
 
 std::string ConsumerImpl::OpToUriCmd(GetMessageServerOperation op) {
     switch (op) {
-        case GetMessageServerOperation::GetNext:return "next";
-        case GetMessageServerOperation::GetLast:return "last";
-        default:return "last";
+    case GetMessageServerOperation::GetNext:
+        return "next";
+    case GetMessageServerOperation::GetLast:
+        return "last";
+    default:
+        return "last";
     }
 }
 
@@ -485,7 +500,7 @@ std::string ConsumerImpl::GenerateNewGroupId(Error* err) {
     return BrokerRequestWithTimeout(ri, err);
 }
 
-Error ConsumerImpl::ServiceRequestWithTimeout(const std::string &service_name,
+Error ConsumerImpl::ServiceRequestWithTimeout(const std::string& service_name,
                                               std::string* service_uri,
                                               RequestInfo request,
                                               RequestOutput* response) {
@@ -561,7 +576,7 @@ Error ConsumerImpl::ResetLastReadMarker(std::string group_id, std::string stream
 
 Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) {
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream),std::move(group_id),"resetcounter");
+    ri.api = UriPrefix(std::move(stream), std::move(group_id), "resetcounter");
 
     ri.extra_params = "&value=" + std::to_string(value);
     ri.post = true;
@@ -591,7 +606,7 @@ Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, 
     }
 
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream),std::move(group_id),std::to_string(id));
+    ri.api = UriPrefix(std::move(stream), std::move(group_id), std::to_string(id));
 
 
     if (dataset) {
@@ -606,7 +621,7 @@ Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, 
 
 std::string ConsumerImpl::GetBeamtimeMeta(Error* err) {
     RequestInfo ri;
-    ri.api = UriPrefix("default","0","meta/0");
+    ri.api = UriPrefix("default", "0", "meta/0");
 
     return BrokerRequestWithTimeout(ri, err);
 }
@@ -628,7 +643,7 @@ MessageMetas ConsumerImpl::QueryMessages(std::string query, std::string stream, 
     }
 
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream),"0","querymessages");
+    ri.api = UriPrefix(std::move(stream), "0", "querymessages");
 
     ri.post = true;
     ri.body = std::move(query);
@@ -704,9 +719,12 @@ StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
 
 std::string filterToString(StreamFilter filter) {
     switch (filter) {
-        case StreamFilter::kAllStreams:return "all";
-        case StreamFilter::kFinishedStreams:return "finished";
-        case StreamFilter::kUnfinishedStreams:return "unfinished";
+    case StreamFilter::kAllStreams:
+        return "all";
+    case StreamFilter::kFinishedStreams:
+        return "finished";
+    case StreamFilter::kUnfinishedStreams:
+        return "unfinished";
     }
     return "";
 }
@@ -721,9 +739,9 @@ StreamInfos ConsumerImpl::GetStreamList(std::string from, StreamFilter filter, E
     return ParseStreamsFromResponse(std::move(response), err);
 }
 
-RequestInfo ConsumerImpl::GetStreamListRequest(const std::string &from, const StreamFilter &filter) const {
+RequestInfo ConsumerImpl::GetStreamListRequest(const std::string& from, const StreamFilter& filter) const {
     RequestInfo ri;
-    ri.api = UriPrefix("0","","streams");
+    ri.api = UriPrefix("0", "", "streams");
     ri.post = false;
     if (!from.empty()) {
         ri.extra_params = "&from=" + from;
@@ -755,13 +773,13 @@ RequestInfo ConsumerImpl::CreateFolderTokenRequest() const {
     ri.post = true;
     ri.body =
         "{\"Folder\":\"" + source_path_ + "\",\"BeamtimeId\":\"" + source_credentials_.beamtime_id + "\",\"Token\":\""
-            +
-                source_credentials_.user_token + "\"}";
+        +
+        source_credentials_.user_token + "\"}";
     return ri;
 }
 
 Error ConsumerImpl::GetDataFromFileTransferService(MessageMeta* info, MessageData* data,
-                                                   bool retry_with_new_token) {
+        bool retry_with_new_token) {
     auto err = UpdateFolderTokenIfNeeded(retry_with_new_token);
     if (err) {
         return err;
@@ -770,7 +788,7 @@ Error ConsumerImpl::GetDataFromFileTransferService(MessageMeta* info, MessageDat
     if (info->size == 0) {
         err = FtsSizeRequestWithTimeout(info);
         if (err == ConsumerErrorTemplates::kWrongInput
-            && !retry_with_new_token) { // token expired? Refresh token and try again.
+                && !retry_with_new_token) { // token expired? Refresh token and try again.
             return GetDataFromFileTransferService(info, data, true);
         }
         if (err) {
@@ -780,7 +798,7 @@ Error ConsumerImpl::GetDataFromFileTransferService(MessageMeta* info, MessageDat
 
     err = FtsRequestWithTimeout(info, data);
     if (err == ConsumerErrorTemplates::kWrongInput
-        && !retry_with_new_token) { // token expired? Refresh token and try again.
+            && !retry_with_new_token) { // token expired? Refresh token and try again.
         return GetDataFromFileTransferService(info, data, true);
     }
     return err;
@@ -791,7 +809,7 @@ Error ConsumerImpl::Acknowledge(std::string group_id, uint64_t id, std::string s
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream),std::move(group_id),std::to_string(id));
+    ri.api = UriPrefix(std::move(stream), std::move(group_id), std::to_string(id));
     ri.post = true;
     ri.body = "{\"Op\":\"ackmessage\"}";
 
@@ -810,7 +828,7 @@ IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
         return {};
     }
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream),std::move(group_id),"nacks");
+    ri.api = UriPrefix(std::move(stream), std::move(group_id), "nacks");
     ri.extra_params = "&from=" + std::to_string(from_id) + "&to=" + std::to_string(to_id);
 
     auto json_string = BrokerRequestWithTimeout(ri, error);
@@ -833,7 +851,7 @@ uint64_t ConsumerImpl::GetLastAcknowledgedMessage(std::string group_id, std::str
         return 0;
     }
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream),std::move(group_id),"lastack");
+    ri.api = UriPrefix(std::move(stream), std::move(group_id), "lastack");
 
     auto json_string = BrokerRequestWithTimeout(ri, error);
     if (*error) {
@@ -866,7 +884,7 @@ Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream),std::move(group_id),std::to_string(id));
+    ri.api = UriPrefix(std::move(stream), std::move(group_id), std::to_string(id));
     ri.post = true;
     ri.body = R"({"Op":"negackmessage","Params":{"DelayMs":)" + std::to_string(delay_ms) + "}}";
 
@@ -883,13 +901,13 @@ uint64_t ConsumerImpl::GetCurrentDatasetCount(std::string stream, bool include_i
     return GetCurrentCount(stream, ri, err);
 }
 
-RequestInfo ConsumerImpl::GetSizeRequestForDatasetStream(std::string &stream, bool include_incomplete) const {
+RequestInfo ConsumerImpl::GetSizeRequestForDatasetStream(std::string& stream, bool include_incomplete) const {
     RequestInfo ri = GetSizeRequestForSingleMessagesStream(stream);
     ri.extra_params = std::string("&incomplete=") + (include_incomplete ? "true" : "false");
     return ri;
 }
 
-uint64_t ConsumerImpl::GetCurrentCount(std::string stream, const RequestInfo &ri, Error* err) {
+uint64_t ConsumerImpl::GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err) {
     auto responce = BrokerRequestWithTimeout(ri, err);
     if (*err) {
         return 0;
@@ -897,7 +915,7 @@ uint64_t ConsumerImpl::GetCurrentCount(std::string stream, const RequestInfo &ri
     return ParseGetCurrentCountResponce(err, responce);
 }
 
-uint64_t ConsumerImpl::ParseGetCurrentCountResponce(Error* err, const std::string &responce) const {
+uint64_t ConsumerImpl::ParseGetCurrentCountResponce(Error* err, const std::string& responce) const {
     JsonStringParser parser(responce);
     uint64_t size;
     if ((*err = parser.GetUInt64("size", &size)) != nullptr) {
@@ -906,9 +924,9 @@ uint64_t ConsumerImpl::ParseGetCurrentCountResponce(Error* err, const std::strin
     return size;
 }
 
-RequestInfo ConsumerImpl::GetSizeRequestForSingleMessagesStream(std::string &stream) const {
+RequestInfo ConsumerImpl::GetSizeRequestForSingleMessagesStream(std::string& stream) const {
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream),"","size");
+    ri.api = UriPrefix(std::move(stream), "", "size");
     return ri;
 }
 
@@ -948,7 +966,7 @@ Error ConsumerImpl::GetVersionInfo(std::string* client_info, std::string* server
 
 RequestInfo ConsumerImpl::GetDeleteStreamRequest(std::string stream, DeleteStreamOptions options) const {
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream),"","delete");
+    ri.api = UriPrefix(std::move(stream), "", "delete");
     ri.post = true;
     ri.body = options.Json();
     return ri;
@@ -963,13 +981,13 @@ Error ConsumerImpl::DeleteStream(std::string stream, DeleteStreamOptions options
 
 std::string ConsumerImpl::UriPrefix( std::string stream, std::string group, std::string suffix) const {
     auto stream_encoded = httpclient__->UrlEscape(std::move(stream));
-    auto group_encoded = group.size()>0?httpclient__->UrlEscape(std::move(group)):"";
+    auto group_encoded = group.size() > 0 ? httpclient__->UrlEscape(std::move(group)) : "";
     auto uri = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
-        + data_source_encoded_ + "/" + stream_encoded;
-    if (group_encoded.size()>0) {
+               + data_source_encoded_ + "/" + stream_encoded;
+    if (group_encoded.size() > 0) {
         uri = uri + "/" + group_encoded;
     }
-    if (suffix.size()>0) {
+    if (suffix.size() > 0) {
         uri = uri + "/" + suffix;
     }
 

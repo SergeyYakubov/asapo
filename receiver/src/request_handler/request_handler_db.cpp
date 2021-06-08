@@ -17,9 +17,9 @@ Error RequestHandlerDb::ProcessRequest(Request* request) const {
 }
 
 RequestHandlerDb::RequestHandlerDb(std::string collection_name_prefix) : log__{GetDefaultReceiverLogger()},
-                                                                         http_client__{DefaultHttpClient()},
-                                                                         collection_name_prefix_{
-                                                                             std::move(collection_name_prefix)} {
+    http_client__{DefaultHttpClient()},
+    collection_name_prefix_{
+    std::move(collection_name_prefix)} {
     DatabaseFactory factory;
     Error err;
     db_client__ = factory.Create(&err);
@@ -41,15 +41,15 @@ Error RequestHandlerDb::GetDatabaseServerUri(std::string* uri) const {
     if (http_err) {
         log__->Error(
             std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
-                + " : " + http_err->Explain());
+            + " : " + http_err->Explain());
         return ReceiverErrorTemplates::kInternalServerError.Generate("http error when discover database server" +
-            http_err->Explain());
+                http_err->Explain());
     }
 
     if (code != HttpCode::OK) {
         log__->Error(
             std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
-                + " : http code" + std::to_string((int) code));
+            + " : http code" + std::to_string((int) code));
         return ReceiverErrorTemplates::kInternalServerError.Generate("error when discover database server");
     }
 
@@ -74,17 +74,17 @@ Error RequestHandlerDb::ConnectToDbIfNeeded() const {
     return nullptr;
 }
 
-Error RequestHandlerDb::DBErrorToReceiverError(const Error &err) const {
+Error RequestHandlerDb::DBErrorToReceiverError(const Error& err) const {
     if (err == nullptr) {
         return nullptr;
     }
     std::string msg = "database error: " + err->Explain();
     if (err == DBErrorTemplates::kWrongInput || err == DBErrorTemplates::kNoRecord
-        || err == DBErrorTemplates::kJsonParseError) {
+            || err == DBErrorTemplates::kJsonParseError) {
         return ReceiverErrorTemplates::kBadRequest.Generate(msg);
     }
 
-     return ReceiverErrorTemplates::kInternalServerError.Generate(msg);
+    return ReceiverErrorTemplates::kInternalServerError.Generate(msg);
 }
 
 }

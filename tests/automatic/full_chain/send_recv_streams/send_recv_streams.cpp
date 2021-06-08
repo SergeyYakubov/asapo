@@ -36,11 +36,11 @@ void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
 
 ConsumerPtr CreateConsumerAndGroup(const Args& args, Error* err) {
     auto consumer = asapo::ConsumerFactory::CreateConsumer(args.server,
-                                                         ".",
-                                                         true,
-                                                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                                                  args.beamtime_id, "", "", args.token},
-                                                         err);
+                    ".",
+                    true,
+                    asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                             args.beamtime_id, "", "", args.token},
+                    err);
     if (*err) {
         return nullptr;
     }
@@ -61,7 +61,7 @@ ProducerPtr CreateProducer(const Args& args) {
     auto producer = asapo::Producer::Create(args.server, 1,
                                             asapo::RequestHandlerType::kTcp,
                                             asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                                     args.beamtime_id, "", "", args.token }, 60000, &err);
+                                                    args.beamtime_id, "", "", args.token }, 60000, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);

@@ -27,7 +27,7 @@ Error MongoDBClient::Ping() {
 
     command = BCON_NEW ("ping", BCON_INT32(1));
     retval = mongoc_client_command_simple(
-        client_, "admin", command, NULL, &reply, &error);
+                 client_, "admin", command, NULL, &reply, &error);
 
     bson_destroy(&reply);
     bson_destroy(command);
@@ -39,7 +39,7 @@ MongoDBClient::MongoDBClient() {
     MongoDbInstance::Instantiate();
 }
 
-Error MongoDBClient::InitializeClient(const std::string &address) {
+Error MongoDBClient::InitializeClient(const std::string& address) {
     auto uri_str = DBAddress(address);
     client_ = mongoc_client_new(uri_str.c_str());
 
@@ -55,7 +55,7 @@ Error MongoDBClient::InitializeClient(const std::string &address) {
 
 }
 
-Error MongoDBClient::UpdateCurrentCollectionIfNeeded(const std::string &collection_name) const {
+Error MongoDBClient::UpdateCurrentCollectionIfNeeded(const std::string& collection_name) const {
     if (collection_name == current_collection_name_) {
         return nullptr;
     }
@@ -69,7 +69,7 @@ Error MongoDBClient::UpdateCurrentCollectionIfNeeded(const std::string &collecti
     }
 
     current_collection_ = mongoc_client_get_collection(client_, database_name_.c_str(),
-                                                       encoded_name.c_str());
+                          encoded_name.c_str());
     current_collection_name_ = collection_name;
     mongoc_collection_set_write_concern(current_collection_, write_concern_);
 
@@ -85,7 +85,7 @@ Error MongoDBClient::TryConnectDatabase() {
     return err;
 }
 
-Error MongoDBClient::Connect(const std::string &address, const std::string &database_name) {
+Error MongoDBClient::Connect(const std::string& address, const std::string& database_name) {
     if (connected_) {
         return DBErrorTemplates::kAlreadyConnected.Generate();
     }
@@ -108,7 +108,7 @@ Error MongoDBClient::Connect(const std::string &address, const std::string &data
     return err;
 }
 
-std::string MongoDBClient::DBAddress(const std::string &address) const {
+std::string MongoDBClient::DBAddress(const std::string& address) const {
     return "mongodb://" + address + "/?appname=asapo";
 }
 
@@ -124,7 +124,7 @@ void MongoDBClient::CleanUp() {
     }
 }
 
-bson_p PrepareBsonDocument(const MessageMeta &file, Error* err) {
+bson_p PrepareBsonDocument(const MessageMeta& file, Error* err) {
     bson_error_t mongo_err;
     auto s = file.Json();
     auto json = reinterpret_cast<const uint8_t*>(s.c_str());
@@ -156,7 +156,7 @@ bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, Error* err) {
     return bson_p{bson};
 }
 
-Error MongoDBClient::InsertBsonDocument(const bson_p &document, bool ignore_duplicates) const {
+Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const {
     bson_error_t mongo_err;
     if (!mongoc_collection_insert_one(current_collection_, document.get(), NULL, NULL, &mongo_err)) {
         if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
@@ -168,7 +168,7 @@ Error MongoDBClient::InsertBsonDocument(const bson_p &document, bool ignore_dupl
     return nullptr;
 }
 
-Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p &document, bool upsert) const {
+Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p& document, bool upsert) const {
     bson_error_t mongo_err;
 
     bson_t* opts = BCON_NEW ("upsert", BCON_BOOL(upsert));
@@ -186,7 +186,7 @@ Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p &document, boo
     return err;
 }
 
-Error MongoDBClient::Insert(const std::string &collection, const MessageMeta &file, bool ignore_duplicates) const {
+Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -211,7 +211,7 @@ MongoDBClient::~MongoDBClient() {
     CleanUp();
 }
 
-Error MongoDBClient::Upsert(const std::string &collection, uint64_t id, const uint8_t* data, uint64_t size) const {
+Error MongoDBClient::Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -255,7 +255,7 @@ Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool 
     return err;
 }
 
-Error MongoDBClient::InsertAsDatasetMessage(const std::string &collection, const MessageMeta &file,
+Error MongoDBClient::InsertAsDatasetMessage(const std::string& collection, const MessageMeta& file,
                                             uint64_t dataset_size,
                                             bool ignore_duplicates) const {
     if (!connected_) {
@@ -289,7 +289,7 @@ Error MongoDBClient::InsertAsDatasetMessage(const std::string &collection, const
     return err;
 }
 
-Error MongoDBClient::GetRecordFromDb(const std::string &collection, uint64_t id, GetRecordMode mode,
+Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, GetRecordMode mode,
                                      std::string* res) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
@@ -308,15 +308,18 @@ Error MongoDBClient::GetRecordFromDb(const std::string &collection, uint64_t id,
     char* str;
 
     switch (mode) {
-        case GetRecordMode::kById:filter = BCON_NEW ("_id", BCON_INT64(id));
-            opts = BCON_NEW ("limit", BCON_INT64(1));
-            break;
-        case GetRecordMode::kLast:filter = BCON_NEW (NULL);
-            opts = BCON_NEW ("limit", BCON_INT64(1), "sort", "{", "_id", BCON_INT64(-1), "}");
-            break;
-        case GetRecordMode::kEarliest:filter = BCON_NEW (NULL);
-            opts = BCON_NEW ("limit", BCON_INT64(1), "sort", "{", "timestamp", BCON_INT64(1), "}");
-            break;
+    case GetRecordMode::kById:
+        filter = BCON_NEW ("_id", BCON_INT64(id));
+        opts = BCON_NEW ("limit", BCON_INT64(1));
+        break;
+    case GetRecordMode::kLast:
+        filter = BCON_NEW (NULL);
+        opts = BCON_NEW ("limit", BCON_INT64(1), "sort", "{", "_id", BCON_INT64(-1), "}");
+        break;
+    case GetRecordMode::kEarliest:
+        filter = BCON_NEW (NULL);
+        opts = BCON_NEW ("limit", BCON_INT64(1), "sort", "{", "timestamp", BCON_INT64(1), "}");
+        break;
     }
 
     cursor = mongoc_collection_find_with_opts(current_collection_, filter, opts, NULL);
@@ -344,7 +347,7 @@ Error MongoDBClient::GetRecordFromDb(const std::string &collection, uint64_t id,
     return err;
 }
 
-Error MongoDBClient::GetById(const std::string &collection, uint64_t id, MessageMeta* file) const {
+Error MongoDBClient::GetById(const std::string& collection, uint64_t id, MessageMeta* file) const {
     std::string record_str;
     auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
     if (err) {
@@ -357,7 +360,7 @@ Error MongoDBClient::GetById(const std::string &collection, uint64_t id, Message
     return nullptr;
 }
 
-Error MongoDBClient::GetDataSetById(const std::string &collection,
+Error MongoDBClient::GetDataSetById(const std::string& collection,
                                     uint64_t id_in_set,
                                     uint64_t id,
                                     MessageMeta* file) const {
@@ -372,7 +375,7 @@ Error MongoDBClient::GetDataSetById(const std::string &collection,
         DBErrorTemplates::kJsonParseError.Generate(record_str);
     }
 
-    for (const auto &message_meta : dataset.content) {
+    for (const auto& message_meta : dataset.content) {
         if (message_meta.dataset_substream == id_in_set) {
             *file = message_meta;
             return nullptr;
@@ -383,20 +386,20 @@ Error MongoDBClient::GetDataSetById(const std::string &collection,
 
 }
 
-Error UpdateStreamInfoFromEarliestRecord(const std::string &earliest_record_str,
+Error UpdateStreamInfoFromEarliestRecord(const std::string& earliest_record_str,
                                          StreamInfo* info) {
     std::chrono::system_clock::time_point timestamp_created;
     auto parser = JsonStringParser(earliest_record_str);
     auto ok = TimeFromJson(parser, "timestamp", &timestamp_created);
     if (!ok) {
         return DBErrorTemplates::kJsonParseError.Generate(
-            "UpdateStreamInfoFromEarliestRecord: cannot parse timestamp in response: " + earliest_record_str);
+                   "UpdateStreamInfoFromEarliestRecord: cannot parse timestamp in response: " + earliest_record_str);
     }
     info->timestamp_created = timestamp_created;
     return nullptr;
 }
 
-Error UpdateFinishedStreamInfo(const std::string &metadata,
+Error UpdateFinishedStreamInfo(const std::string& metadata,
                                StreamInfo* info) {
     info->finished = true;
     auto parser = JsonStringParser(metadata);
@@ -404,7 +407,7 @@ Error UpdateFinishedStreamInfo(const std::string &metadata,
     auto err = parser.GetString("next_stream", &next_stream);
     if (err) {
         return DBErrorTemplates::kJsonParseError.Generate(
-            "UpdateFinishedStreamInfo: cannot parse finished stream meta response: " + metadata);
+                   "UpdateFinishedStreamInfo: cannot parse finished stream meta response: " + metadata);
     }
     if (next_stream != kNoNextStreamKeyword) {
         info->next_stream = next_stream;
@@ -412,7 +415,7 @@ Error UpdateFinishedStreamInfo(const std::string &metadata,
     return nullptr;
 }
 
-Error UpdateFinishedInfo(const std::string &last_record_str, const JsonStringParser &parser, StreamInfo* info) {
+Error UpdateFinishedInfo(const std::string& last_record_str, const JsonStringParser& parser, StreamInfo* info) {
     std::string name;
     parser.GetString("name", &name);
     if (name != kFinishStreamKeyword) {
@@ -421,12 +424,12 @@ Error UpdateFinishedInfo(const std::string &last_record_str, const JsonStringPar
     std::string metadata;
     if (parser.Embedded("meta").GetRawString(&metadata) != nullptr) {
         return DBErrorTemplates::kJsonParseError.Generate(
-            "UpdateStreamInfoFromLastRecord: cannot parse metadata in response: " + last_record_str);
+                   "UpdateStreamInfoFromLastRecord: cannot parse metadata in response: " + last_record_str);
     }
     return UpdateFinishedStreamInfo(metadata, info);
 }
 
-Error UpdateStreamInfoFromLastRecord(const std::string &last_record_str,
+Error UpdateStreamInfoFromLastRecord(const std::string& last_record_str,
                                      StreamInfo* info) {
     auto parser = JsonStringParser(last_record_str);
     std::chrono::system_clock::time_point timestamp_last;
@@ -434,22 +437,22 @@ Error UpdateStreamInfoFromLastRecord(const std::string &last_record_str,
 
     if (!TimeFromJson(parser, "timestamp", &timestamp_last)) {
         return DBErrorTemplates::kJsonParseError.Generate(
-            "UpdateStreamInfoFromLastRecord: cannot parse timestamp in response: " + last_record_str);
+                   "UpdateStreamInfoFromLastRecord: cannot parse timestamp in response: " + last_record_str);
     }
     if (parser.GetUInt64("_id", &id) != nullptr) {
         return DBErrorTemplates::kJsonParseError.Generate(
-            "UpdateStreamInfoFromLastRecord: cannot parse _id in response: " + last_record_str);
+                   "UpdateStreamInfoFromLastRecord: cannot parse _id in response: " + last_record_str);
     }
 
     info->timestamp_lastentry = timestamp_last;
     info->last_id = id;
 
-    return UpdateFinishedInfo(last_record_str,parser,info);
+    return UpdateFinishedInfo(last_record_str, parser, info);
 
 }
 
-Error StreamInfoFromDbResponse(const std::string &last_record_str,
-                               const std::string &earliest_record_str,
+Error StreamInfoFromDbResponse(const std::string& last_record_str,
+                               const std::string& earliest_record_str,
                                StreamInfo* info) {
     std::chrono::system_clock::time_point timestamp_created;
 
@@ -462,12 +465,12 @@ Error StreamInfoFromDbResponse(const std::string &last_record_str,
 
 }
 
-Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* info) const {
+Error MongoDBClient::GetStreamInfo(const std::string& collection, StreamInfo* info) const {
     std::string last_record_str, earliest_record_str;
     auto err = GetRecordFromDb(collection, 0, GetRecordMode::kLast, &last_record_str);
     if (err) {
         if (err
-            == DBErrorTemplates::kNoRecord) { // with noRecord error it will return last_id = 0 which can be used to understand that the stream is not started yet
+                == DBErrorTemplates::kNoRecord) { // with noRecord error it will return last_id = 0 which can be used to understand that the stream is not started yet
             *info = StreamInfo{};
             return nullptr;
         }
@@ -481,7 +484,7 @@ Error MongoDBClient::GetStreamInfo(const std::string &collection, StreamInfo* in
     return StreamInfoFromDbResponse(last_record_str, earliest_record_str, info);
 }
 
-bool MongoCollectionIsDataStream(const std::string &stream_name) {
+bool MongoCollectionIsDataStream(const std::string& stream_name) {
     std::string prefix = std::string(kDBDataCollectionNamePrefix) + "_";
     return stream_name.rfind(prefix, 0) == 0;
 }
@@ -522,7 +525,7 @@ Error MongoDBClient::GetLastStream(StreamInfo* info) const {
     info->timestamp_lastentry = zero_time;
     Error err;
     if ((strv = mongoc_database_get_collection_names_with_opts(
-        database, opts, &error))) {
+                    database, opts, &error))) {
         for (auto i = 0; strv[i]; i++) {
             err = UpdateLastStreamInfo(strv[i], info);
             if (err) {
@@ -534,7 +537,7 @@ Error MongoDBClient::GetLastStream(StreamInfo* info) const {
         err = DBErrorTemplates::kDBError.Generate(error.message);
     }
 
-    if (err!= nullptr) {
+    if (err != nullptr) {
         info->name = DecodeName(info->name);
     }
 
@@ -543,7 +546,7 @@ Error MongoDBClient::GetLastStream(StreamInfo* info) const {
     return err;
 }
 
-Error MongoDBClient::DeleteCollections(const std::string &prefix) const {
+Error MongoDBClient::DeleteCollections(const std::string& prefix) const {
     mongoc_database_t* database;
     char** strv;
     bson_error_t error;
@@ -553,7 +556,7 @@ Error MongoDBClient::DeleteCollections(const std::string &prefix) const {
     database = mongoc_client_get_database(client_, database_name_.c_str());
     Error err;
     if ((strv = mongoc_database_get_collection_names_with_opts(
-        database, opts, &error))) {
+                    database, opts, &error))) {
         for (auto i = 0; strv[i]; i++) {
             DeleteCollection(strv[i]);
         }
@@ -568,7 +571,7 @@ Error MongoDBClient::DeleteCollections(const std::string &prefix) const {
     return nullptr;
 }
 
-Error MongoDBClient::DeleteCollection(const std::string &name) const {
+Error MongoDBClient::DeleteCollection(const std::string& name) const {
     bson_error_t error;
     auto collection = mongoc_client_get_collection(client_, database_name_.c_str(), name.c_str());
     mongoc_collection_set_write_concern(collection, write_concern_);
@@ -584,8 +587,8 @@ Error MongoDBClient::DeleteCollection(const std::string &name) const {
     return nullptr;
 }
 
-Error MongoDBClient::DeleteDocumentsInCollection(const std::string &collection_name,
-                                                 const std::string &querystr) const {
+Error MongoDBClient::DeleteDocumentsInCollection(const std::string& collection_name,
+                                                 const std::string& querystr) const {
     auto collection = mongoc_client_get_collection(client_, database_name_.c_str(), collection_name.c_str());
     mongoc_collection_set_write_concern(collection, write_concern_);
     bson_error_t error;
@@ -598,7 +601,7 @@ Error MongoDBClient::DeleteDocumentsInCollection(const std::string &collection_n
     return nullptr;
 }
 
-Error MongoDBClient::DeleteStream(const std::string &stream) const {
+Error MongoDBClient::DeleteStream(const std::string& stream) const {
     auto stream_encoded = EncodeColName(stream);
     std::string data_col = std::string(kDBDataCollectionNamePrefix) + "_" + stream_encoded;
     std::string inprocess_col = "inprocess_" + stream_encoded;

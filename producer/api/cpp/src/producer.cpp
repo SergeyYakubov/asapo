@@ -3,7 +3,7 @@
 #include "asapo/producer/producer_error.h"
 
 std::unique_ptr<asapo::Producer> asapo::Producer::Create(const std::string& endpoint, uint8_t n_processing_threads,
-                                                         asapo::RequestHandlerType type, SourceCredentials source_cred, uint64_t timeout_ms, Error* err) {
+        asapo::RequestHandlerType type, SourceCredentials source_cred, uint64_t timeout_ms, Error* err) {
 
     if (n_processing_threads > kMaxProcessingThreads || n_processing_threads == 0) {
         *err = ProducerErrorTemplates::kWrongInput.Generate("Set number of processing threads > 0 and <= " + std::to_string(

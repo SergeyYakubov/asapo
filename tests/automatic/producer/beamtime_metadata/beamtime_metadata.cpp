@@ -69,7 +69,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
                                             args.mode == 0 ? asapo::RequestHandlerType::kTcp
                                             : asapo::RequestHandlerType::kFilesystem,
                                             asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                                     args.beamtime_id, "", "", ""}, 60000, &err);
+                                                    args.beamtime_id, "", "", ""}, 60000, &err);
     if (err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);

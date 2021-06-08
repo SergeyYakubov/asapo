@@ -41,7 +41,7 @@ class MockHttpClient : public HttpClient {
         return UrlEscape_t(uri);
     }
 
-    MOCK_CONST_METHOD1(UrlEscape_t,std::string(const std::string& uri));
+    MOCK_CONST_METHOD1(UrlEscape_t, std::string(const std::string& uri));
 
 
     MOCK_CONST_METHOD3(Get_t,

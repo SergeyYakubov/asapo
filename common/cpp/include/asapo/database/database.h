@@ -17,14 +17,14 @@ class Database {
     virtual Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const = 0;
     virtual Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const = 0;
     virtual Error InsertAsDatasetMessage(const std::string& collection, const MessageMeta& file,
-                                 uint64_t dataset_size,
-                                 bool ignore_duplicates) const = 0;
+                                         uint64_t dataset_size,
+                                         bool ignore_duplicates) const = 0;
 
     virtual Error GetById(const std::string& collection, uint64_t id, MessageMeta* file) const = 0;
     virtual Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, MessageMeta* file) const = 0;
     virtual Error GetStreamInfo(const std::string& collection, StreamInfo* info) const  = 0;
     virtual Error GetLastStream(StreamInfo* info) const  = 0;
-    virtual Error DeleteStream(const std::string &stream) const = 0;
+    virtual Error DeleteStream(const std::string& stream) const = 0;
     virtual ~Database() = default;
 };
 

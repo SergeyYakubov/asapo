@@ -17,7 +17,7 @@ Error ReceiveFileProcessor::ProcessFile(const Request* request, bool overwrite) 
     auto socket = request->GetSocket();
     auto fname = request->GetFileName();
     std::string root_folder;
-    auto err = GetRootFolder(request,&root_folder);
+    auto err = GetRootFolder(request, &root_folder);
     if (err) {
         return err;
     }
