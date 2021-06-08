@@ -218,5 +218,18 @@ CurlHttpClient::~CurlHttpClient() {
         curl_easy_cleanup(curl_);
     }
 }
+std::string CurlHttpClient::UrlEscape(const std::string& uri) const noexcept {
+    if (!curl_) {
+        return "";
+    }
+    char* output = curl_easy_escape(curl_, uri.c_str(), uri.size());
+    if (output) {
+        auto res = std::string(output);
+        curl_free(output);
+        return res;
+    } else {
+        return "";
+    }
+}
 
 }

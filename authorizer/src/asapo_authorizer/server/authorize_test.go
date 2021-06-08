@@ -91,6 +91,8 @@ var credTests = [] struct {
 	{"raw%%beamline%source%token", SourceCredentials{"auto","beamline","source","token","raw"},true,"empty beamtime"},
 	{"raw%asapo_test%%source%token", SourceCredentials{"asapo_test","auto","source","token","raw"},true,"empty bealine"},
 	{"raw%%%source%token", SourceCredentials{},false,"both empty"},
+	{"processed%asapo_test%beamline%source%blabla%token", SourceCredentials{"asapo_test","beamline","source%blabla","token","processed"},true,"% in source"},
+	{"processed%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test","beamline","source%blabla","","processed"},true,"% in source, no token"},
 }
 
 func TestSplitCreds(t *testing.T) {
@@ -100,7 +102,7 @@ func TestSplitCreds(t *testing.T) {
 		creds,err := getSourceCredentials(request)
 		if test.ok {
 			assert.Nil(t,err)
-			assert.Equal(t,creds,test.cred,test.message)
+			assert.Equal(t,test.cred,creds,test.message)
 		} else {
 			assert.NotNil(t,err,test.message)
 		}

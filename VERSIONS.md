@@ -2,8 +2,9 @@
 
 | Release      | API changed\*\* |  Protocol | Supported by server from/to | Status              |Comment|
 | ------------ | ----------- | -------- | ------------------------- | --------------------- | ------- |
-| 21.03.3      | No          |  v0.2     | 21.03.2/21.03.3           | current version        |bugfix in server|
-| 21.03.2      | Yes         |  v0.2     | 21.03.2/21.03.3           | current version        |bugfixes, add delete_stream|
+| 21.06.0      | Yes         |  v0.3     | 21.06.0/21.06.0           | current version        |arbitrary characters|
+| 21.03.3      | No          |  v0.2     | 21.03.2/21.03.3           | deprecates 01.07.2022        |bugfix in server|
+| 21.03.2      | Yes         |  v0.2     | 21.03.2/21.03.3           | deprecates 01.07.2022        |bugfixes, add delete_stream|
 | 21.03.1      | No          |  v0.1     | 21.03.0/21.03.3           | deprecates 01.06.2022   |bugfix in server|
 | 21.03.0      | Yes         |  v0.1     | 21.03.0/21.03.3           |                 |          |
 
@@ -11,7 +12,7 @@
 
 | Release      | API changed\*\* |  Protocol | Supported by server from/to | Status         |Comment|
 | ------------ | ----------- | --------- | ------------------------- | ---------------- | ------- |
-| 21.06.0      | No*         |  v0.4     | 21.06.0/21.06.0           | current version  |bugfixes |
+| 21.06.0      | Yes         |  v0.4     | 21.06.0/21.06.0           | current version  |arbitrary characters, bugfixes |
 | 21.03.3      | Yes         |  v0.3     | 21.03.3/21.06.0           | deprecates 01.06.2022  |bugfix in server, error type for dublicated ack|
 | 21.03.2      | Yes         |  v0.2     | 21.03.2/21.06.0           | deprecates 01.06.2022  |bugfixes, add delete_stream|
 | 21.03.1      | No          |  v0.1     | 21.03.0/21.06.0           | deprecates 01.06.2022       |bugfix in server|

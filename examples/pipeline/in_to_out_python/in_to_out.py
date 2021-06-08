@@ -7,6 +7,8 @@ import threading
 
 lock = threading.Lock()
 
+print (asapo_consumer.__version__)
+print (asapo_producer.__version__)
 
 n_send = 0
 

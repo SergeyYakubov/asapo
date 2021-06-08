@@ -21,7 +21,7 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_handler_db_last_stream.cpp
         src/request_handler/request_handler_receive_metadata.cpp
         src/request_handler/request_handler_db_check_request.cpp
-        src/request_handler/request_handler_delete_stream.cpp
+        src/request_handler/request_handler_db_delete_stream.cpp
         src/request_handler/request_factory.cpp
         src/request_handler/request_handler_db.cpp
         src/file_processors/write_file_processor.cpp

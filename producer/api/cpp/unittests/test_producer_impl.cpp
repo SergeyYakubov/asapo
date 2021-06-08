@@ -523,10 +523,10 @@ TEST_F(ProducerImplTests, ReturnDataIfCanotAddToQueue) {
 TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
 
     std::string result =
-        R"({"softwareVersion":"20.03.1, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.2"}})";
+        R"({"softwareVersion":"21.06.0, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.3"}})";
 
     EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri +
-                                                   "/asapo-discovery/v0.1/version?client=producer&protocol=v0.2"), _, _)).WillOnce(DoAll(
+                                                   "/asapo-discovery/v0.1/version?client=producer&protocol=v0.3"), _, _)).WillOnce(DoAll(
                                                            SetArgPointee<1>(asapo::HttpCode::OK),
                                                            SetArgPointee<2>(nullptr),
                                                            Return(result)));
@@ -534,8 +534,8 @@ TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
     std::string client_info, server_info;
     auto err = producer.GetVersionInfo(&client_info, &server_info, nullptr);
     ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(server_info, HasSubstr("20.03.1"));
-    ASSERT_THAT(server_info, HasSubstr("v0.2"));
+    ASSERT_THAT(server_info, HasSubstr("21.06.0"));
+    ASSERT_THAT(server_info, HasSubstr("v0.3"));
 }
 
 MATCHER_P4(M_CheckDeleteStreamRequest, op_code, source_credentials, stream, flag,

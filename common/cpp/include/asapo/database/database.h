@@ -11,7 +11,6 @@ namespace asapo {
 constexpr char kDBDataCollectionNamePrefix[] = "data";
 constexpr char kDBMetaCollectionName[] = "meta";
 
-
 class Database {
   public:
     virtual Error Connect(const std::string& address, const std::string& database) = 0;

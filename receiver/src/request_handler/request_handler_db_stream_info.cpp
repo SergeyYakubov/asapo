@@ -23,7 +23,7 @@ Error RequestHandlerDbStreamInfo::ProcessRequest(Request* request) const {
         info.name = request->GetStream();
         request->SetResponseMessage(info.Json(), ResponseMessageType::kInfo);
     }
-    return err;
+    return DBErrorToReceiverError(err);
 }
 
 }

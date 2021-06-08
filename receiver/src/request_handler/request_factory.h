@@ -6,7 +6,7 @@
 #include "../file_processors/receive_file_processor.h"
 #include "request_handler_db_stream_info.h"
 #include "request_handler_db_last_stream.h"
-#include "request_handler_delete_stream.h"
+#include "request_handler_db_delete_stream.h"
 
 namespace asapo {
 
@@ -26,7 +26,7 @@ class RequestFactory {
     RequestHandlerReceiveMetaData request_handler_receive_metadata_;
     RequestHandlerDbWrite request_handler_dbwrite_{kDBDataCollectionNamePrefix};
     RequestHandlerDbStreamInfo request_handler_db_stream_info_{kDBDataCollectionNamePrefix};
-    RequestHandlerDeleteStream request_handler_delete_stream_{kDBDataCollectionNamePrefix};
+    RequestHandlerDbDeleteStream request_handler_delete_stream_{kDBDataCollectionNamePrefix};
     RequestHandlerDbLastStream request_handler_db_last_stream_{kDBDataCollectionNamePrefix};
     RequestHandlerDbMetaWrite request_handler_db_meta_write_{kDBMetaCollectionName};
     RequestHandlerAuthorize request_handler_authorize_;

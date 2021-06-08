@@ -150,6 +150,7 @@ class ConsumerImpl final : public asapo::Consumer {
     uint64_t GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err);
     RequestInfo GetStreamListRequest(const std::string& from, const StreamFilter& filter) const;
     Error GetServerVersionInfo(std::string* server_info, bool* supported) ;
+    std::string UriPrefix( std::string stream, std::string group, std::string suffix) const;
 
     std::string endpoint_;
     std::string current_broker_uri_;
@@ -157,6 +158,7 @@ class ConsumerImpl final : public asapo::Consumer {
     std::string source_path_;
     bool has_filesystem_;
     SourceCredentials source_credentials_;
+    std::string data_source_encoded_;
     uint64_t timeout_ms_ = 0;
     bool should_try_rdma_first_ = true;
     NetworkConnectionType current_connection_type_ = NetworkConnectionType::kUndefined;

@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -67,7 +66,6 @@ const meta_collection_name = "meta"
 const pointer_collection_name = "current_location"
 const pointer_field_name = "current_pointer"
 const no_session_msg = "database client not created"
-const wrong_id_type = "wrong id type"
 const already_connected_msg = "already connected"
 
 const finish_stream_keyword = "asapo_finish_stream"
@@ -219,14 +217,13 @@ func (db *Mongodb) setCounter(request Request, ind int) (err error) {
 }
 
 func (db *Mongodb) errorWhenCannotIncrementField(request Request, max_ind int) (err error) {
-	if res, err := db.getRecordFromDb(request, max_ind, max_ind);err == nil {
+	if res, err := db.getRecordFromDb(request, max_ind, max_ind); err == nil {
 		if err := checkStreamFinished(request, max_ind, max_ind, res); err != nil {
 			return err
 		}
 	}
 	return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind, "")}
 }
-
 
 func (db *Mongodb) incrementField(request Request, max_ind int, res interface{}) (err error) {
 	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
@@ -244,7 +241,7 @@ func (db *Mongodb) incrementField(request Request, max_ind int, res interface{})
 			if err2 := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res); err2 == nil {
 				return nil
 			}
-			return db.errorWhenCannotIncrementField(request,max_ind)
+			return db.errorWhenCannotIncrementField(request, max_ind)
 		}
 		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
 	}
@@ -595,7 +592,6 @@ func checkStreamFinished(request Request, id, id_max int, data map[string]interf
 		return nil
 	}
 	r, ok := ExtractMessageRecord(data)
-	fmt.Println(r,ok)
 	if !ok || !r.FinishedStream {
 		return nil
 	}
@@ -855,9 +851,17 @@ func (db *Mongodb) deleteDocumentsInCollection(request Request, collection strin
 	return err
 }
 
+func escapeQuery(query string )(res string) {
+	chars := `\-[]{}()*+?.,^$|#`
+	for _, char := range chars {
+		query = strings.ReplaceAll(query,string(char),`\`+string(char))
+	}
+	return query
+}
+
 func (db *Mongodb) deleteCollectionsWithPrefix(request Request, prefix string) error {
 	cols, err := db.client.Database(request.DbName).ListCollectionNames(context.TODO(), bson.M{"name": bson.D{
-		{"$regex", primitive.Regex{Pattern: "^" + prefix, Options: "i"}}}})
+		{"$regex", primitive.Regex{Pattern: "^" + escapeQuery(prefix), Options: "i"}}}})
 	if err != nil {
 		return err
 	}
@@ -881,7 +885,7 @@ func (db *Mongodb) deleteServiceMeta(request Request) error {
 	if err != nil {
 		return err
 	}
-	return db.deleteDocumentsInCollection(request, pointer_collection_name, "_id", ".*_"+request.DbCollectionName+"$")
+	return db.deleteDocumentsInCollection(request, pointer_collection_name, "_id", ".*_"+escapeQuery(request.DbCollectionName)+"$")
 }
 
 func (db *Mongodb) deleteStream(request Request) ([]byte, error) {
@@ -1000,8 +1004,13 @@ func (db *Mongodb) getStreams(request Request) ([]byte, error) {
 	return json.Marshal(&rec)
 }
 
+
 func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
 	if err := db.checkDatabaseOperationPrerequisites(request); err != nil {
+		return nil, err
+	}
+
+	if err := encodeRequest(&request); err != nil {
 		return nil, err
 	}
 

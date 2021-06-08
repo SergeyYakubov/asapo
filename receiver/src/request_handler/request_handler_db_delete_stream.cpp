@@ -1,14 +1,14 @@
-#include "request_handler_delete_stream.h"
+#include "request_handler_db_delete_stream.h"
 #include "../receiver_config.h"
 #include <asapo/database/db_error.h>
 
 namespace asapo {
 
-RequestHandlerDeleteStream::RequestHandlerDeleteStream(std::string collection_name_prefix) : RequestHandlerDb(
+RequestHandlerDbDeleteStream::RequestHandlerDbDeleteStream(std::string collection_name_prefix) : RequestHandlerDb(
         std::move(collection_name_prefix)) {
 }
 
-Error RequestHandlerDeleteStream::ProcessRequest(Request* request) const {
+Error RequestHandlerDbDeleteStream::ProcessRequest(Request* request) const {
     if (auto err = RequestHandlerDb::ProcessRequest(request) ) {
         return err;
     }
@@ -36,7 +36,7 @@ Error RequestHandlerDeleteStream::ProcessRequest(Request* request) const {
         return nullptr;
     }
 
-    return err;
+    return DBErrorToReceiverError(err);
 }
 
 

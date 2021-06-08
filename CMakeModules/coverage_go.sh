@@ -15,7 +15,7 @@ for pkg in ${PACKAGES[@]}
 do
 #	echo $pkg
 	go test -coverprofile=$OUT_DIR/coverage.out -tags test $pkg #>/dev/null 2>&1
-	tail -n +2 $OUT_DIR/coverage.out | grep -v kubernetes >> $OUT_DIR/coverage-all.out #2>/dev/null
+	tail -n +2 $OUT_DIR/coverage.out | grep -v -e kubernetes -e _nottested >> $OUT_DIR/coverage-all.out #2>/dev/null
 done
 
 coverage=`go tool cover -func=$OUT_DIR/coverage-all.out | grep total | cut -d ")" -f 2 | cut -d "." -f 1`

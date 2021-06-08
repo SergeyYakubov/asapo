@@ -12,16 +12,17 @@
 #include "asapo/http_client/http_client.h"
 #include "asapo/common/internal/version.h"
 
-namespace  asapo {
+namespace asapo {
 
 const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
-                           asapo::RequestHandlerType type):
+                           asapo::RequestHandlerType type) :
     log__{GetDefaultProducerLogger()}, httpclient__{DefaultHttpClient()}, timeout_ms_{timeout_ms}, endpoint_{endpoint} {
     switch (type) {
     case RequestHandlerType::kTcp:
-        discovery_service_.reset(new ReceiverDiscoveryService{endpoint, ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
+        discovery_service_.reset(new ReceiverDiscoveryService{endpoint,
+                                 ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
         request_handler_factory_.reset(new ProducerRequestHandlerFactory{discovery_service_.get()});
         break;
     case RequestHandlerType::kFilesystem:
@@ -78,7 +79,7 @@ Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_
         return ProducerErrorTemplates::kWrongInput.Generate("too long filename");
     }
 
-    if (message_header.file_name.empty() ) {
+    if (message_header.file_name.empty()) {
         return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }
 
@@ -150,8 +151,11 @@ Error ProducerImpl::Send(const MessageHeader& message_header,
 
     auto request_header = GenerateNextSendRequest(message_header, std::move(stream), ingest_mode);
 
-    err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                std::move(data), std::move(message_header.user_metadata), std::move(full_path), callback, manage_data_memory, timeout_ms_}
+    err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
+        new ProducerRequest{
+            source_cred_string_, std::move(request_header),
+            std::move(data), std::move(message_header.user_metadata), std::move(full_path), callback,
+            manage_data_memory, timeout_ms_}
     });
 
     return HandleErrorFromPool(std::move(err), manage_data_memory);
@@ -194,7 +198,7 @@ Error ProducerImpl::SendStreamFinishedFlag(std::string stream, uint64_t last_id,
     if (next_stream.empty()) {
         next_stream = kNoNextStreamKeyword;
     }
-    message_header.user_metadata =  std::string("{\"next_stream\":") + "\"" + next_stream + "\"}";
+    message_header.user_metadata = std::string("{\"next_stream\":") + "\"" + next_stream + "\"}";
     return Send(message_header, std::move(stream), nullptr, "", IngestModeFlags::kTransferMetaDataOnly, callback, true);
 }
 
@@ -237,7 +241,7 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
     }
 
     source_cred_string_ = source_cred.GetString();
-    if (source_cred_string_.size()  + source_cred.user_token.size() > kMaxMessageSize) {
+    if (source_cred_string_.size() + source_cred.user_token.size() > kMaxMessageSize) {
         log__->Error("credentials string is too long - " + source_cred_string_);
         source_cred_string_ = "";
         return ProducerErrorTemplates::kWrongInput.Generate("credentials string is too long");
@@ -251,9 +255,11 @@ Error ProducerImpl::SendMetadata(const std::string& metadata, RequestCallback ca
     request_header.custom_data[kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
                                                  asapo::IngestModeFlags::kStoreInDatabase;
     MessageData data{new uint8_t[metadata.size()]};
-    strncpy((char*)data.get(), metadata.c_str(), metadata.size());
-    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                std::move(data), "", "", callback, true, timeout_ms_}
+    strncpy((char*) data.get(), metadata.c_str(), metadata.size());
+    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
+        new ProducerRequest{
+            source_cred_string_, std::move(request_header),
+            std::move(data), "", "", callback, true, timeout_ms_}
     });
     return HandleErrorFromPool(std::move(err), true);
 }
@@ -263,17 +269,23 @@ Error ProducerImpl::Send__(const MessageHeader& message_header,
                            uint64_t ingest_mode,
                            std::string stream,
                            RequestCallback callback) {
-    MessageData data_wrapped = MessageData{(uint8_t*)data};
+    MessageData data_wrapped = MessageData{(uint8_t*) data};
 
     if (auto err = CheckData(ingest_mode, message_header, &data_wrapped)) {
         data_wrapped.release();
         return err;
     }
 
-    return Send(std::move(message_header), std::move(stream), std::move(data_wrapped), "", ingest_mode, callback, false);
+    return Send(std::move(message_header),
+                std::move(stream),
+                std::move(data_wrapped),
+                "",
+                ingest_mode,
+                callback,
+                false);
 }
 
-uint64_t  ProducerImpl::GetRequestsQueueSize() {
+uint64_t ProducerImpl::GetRequestsQueueSize() {
     return request_pool__->NRequestsInPool();
 };
 
@@ -301,10 +313,9 @@ Error ProducerImpl::SendFile(const MessageHeader& message_header,
 
 }
 
-template<class T >
+template<class T>
 using RequestCallbackWithPromise = void (*)(std::shared_ptr<std::promise<T>>,
                                             RequestCallbackPayload header, Error err);
-
 
 template<class T>
 RequestCallback unwrap_callback(RequestCallbackWithPromise<T> callback,
@@ -329,7 +340,7 @@ void ActivatePromiseForStreamInfo(std::shared_ptr<std::promise<StreamInfoResult>
     }
     try {
         promise->set_value(res);
-    } catch(...) {}
+    } catch (...) {}
 }
 
 void ActivatePromiseForErrorInterface(std::shared_ptr<std::promise<ErrorInterface*>> promise,
@@ -343,9 +354,8 @@ void ActivatePromiseForErrorInterface(std::shared_ptr<std::promise<ErrorInterfac
     }
     try {
         promise->set_value(res);
-    } catch(...) {}
+    } catch (...) {}
 }
-
 
 template<class T>
 T GetResultFromCallback(std::future<T>* promiseResult, uint64_t timeout_ms, Error* err) {
@@ -354,12 +364,11 @@ T GetResultFromCallback(std::future<T>* promiseResult, uint64_t timeout_ms, Erro
         if (status == std::future_status::ready) {
             return promiseResult->get();
         }
-    } catch(...) {}
+    } catch (...) {}
 
     *err = ProducerErrorTemplates::kTimeout.Generate();
     return T{};
 }
-
 
 GenericRequestHeader CreateRequestHeaderFromOp(StreamRequestOp op, std::string stream) {
     switch (op) {
@@ -373,15 +382,17 @@ GenericRequestHeader CreateRequestHeaderFromOp(StreamRequestOp op, std::string s
 
 StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op, std::string stream, uint64_t timeout_ms, Error* err) const {
     auto header = CreateRequestHeaderFromOp(op, stream);
-    std::unique_ptr<std::promise<StreamInfoResult>> promise {new std::promise<StreamInfoResult>};
+    std::unique_ptr<std::promise<StreamInfoResult>> promise{new std::promise<StreamInfoResult>};
     std::future<StreamInfoResult> promiseResult = promise->get_future();
 
-    *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(header),
-                nullptr, "", "",
-                unwrap_callback(
-                    ActivatePromiseForStreamInfo,
-                    std::move(promise)), true,
-                timeout_ms}
+    *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
+        new ProducerRequest{
+            source_cred_string_, std::move(header),
+            nullptr, "", "",
+            unwrap_callback(
+                ActivatePromiseForStreamInfo,
+                std::move(promise)), true,
+            timeout_ms}
     }, true);
     if (*err) {
         return StreamInfo{};
@@ -435,7 +446,7 @@ Error ProducerImpl::GetServerVersionInfo(std::string* server_info,
                                          bool* supported) const {
     auto endpoint = endpoint_ + "/asapo-discovery/" + kProducerProtocol.GetDiscoveryVersion() +
                     "/version?client=producer&protocol=" + kProducerProtocol.GetVersion();
-    HttpCode  code;
+    HttpCode code;
     Error err;
     auto response = httpclient__->Get(endpoint, &code, &err);
     if (err) {
@@ -448,15 +459,17 @@ Error ProducerImpl::DeleteStream(std::string stream, uint64_t timeout_ms, Delete
     auto header = GenericRequestHeader{kOpcodeDeleteStream, 0, 0, 0, "", stream};
     header.custom_data[0] = options.Encode();
 
-    std::unique_ptr<std::promise<ErrorInterface*>> promise {new std::promise<ErrorInterface*>};
+    std::unique_ptr<std::promise<ErrorInterface*>> promise{new std::promise<ErrorInterface*>};
     std::future<ErrorInterface*> promiseResult = promise->get_future();
 
-    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(header),
-                nullptr, "", "",
-                unwrap_callback<ErrorInterface*>(
-                    ActivatePromiseForErrorInterface,
-                    std::move(promise)), true,
-                timeout_ms}
+    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
+        new ProducerRequest{
+            source_cred_string_, std::move(header),
+            nullptr, "", "",
+            unwrap_callback<ErrorInterface*>(
+                ActivatePromiseForErrorInterface,
+                std::move(promise)), true,
+            timeout_ms}
     }, true);
     if (err) {
         return err;

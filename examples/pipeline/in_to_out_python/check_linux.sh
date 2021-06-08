@@ -2,15 +2,15 @@
 
 source_path=.
 beamtime_id=asapo_test
-data_source_in=detector
-data_source_out=data_source
+data_source_in=detector/123
+data_source_out=data_source/12.4
 
 timeout=15
 timeout_producer=25
 nthreads=4
 
-indatabase_name=${beamtime_id}_${data_source_in}
-outdatabase_name=${beamtime_id}_${data_source_out}
+indatabase_name=${beamtime_id}_detector%2F123
+outdatabase_name=${beamtime_id}_data_source%2F12%2E4
 
 #asapo_test read token
 token=$ASAPO_TEST_RW_TOKEN
@@ -33,7 +33,7 @@ Cleanup() {
   	echo "db.dropDatabase()" | mongo ${outdatabase_name}
   	rm -rf processed
     rm -rf ${receiver_root_folder}
-    rm -rf out
+#    rm -rf out
 
 }
 

@@ -22,7 +22,7 @@ Error RequestHandlerDbMetaWrite::ProcessRequest(Request* request) const {
                      db_name_ +
                      " at " + GetReceiverConfig()->database_uri);
     }
-    return err;
+    return DBErrorToReceiverError(err);
 }
 RequestHandlerDbMetaWrite::RequestHandlerDbMetaWrite(std::string collection_name) : RequestHandlerDb(std::move(
                 collection_name)) {

@@ -119,7 +119,7 @@ producer.wait_requests_finished(50000)
 
 # send to another stream
 producer.send(1, "processed/" + data_source + "/" + "file9", None,
-                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream", callback=callback)
+                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream/test $", callback=callback)
 
 # wait normal requests finished before sending duplicates
 
@@ -149,7 +149,7 @@ assert_eq(n, 0, "requests in queue")
 
 # send another data to stream stream
 producer.send(2, "processed/" + data_source + "/" + "file10", None,
-                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream", callback=callback)
+                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream/test $", callback=callback)
 
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
@@ -168,9 +168,9 @@ else:
 
 #stream_finished
 producer.wait_requests_finished(10000)
-producer.send_stream_finished_flag("stream", 2, next_stream = "next_stream", callback = callback)
+producer.send_stream_finished_flag("stream/test $", 2, next_stream = "next_stream", callback = callback)
 # check callback_object.callback works, will be duplicated request
-producer.send_stream_finished_flag("stream", 2, next_stream = "next_stream", callback = callback_object.callback)
+producer.send_stream_finished_flag("stream/test $", 2, next_stream = "next_stream", callback = callback_object.callback)
 producer.wait_requests_finished(10000)
 
 
@@ -185,7 +185,7 @@ assert_eq(info['timestampLast']/1000000000>time.time()-10,True , "stream_info ti
 print("created: ",datetime.utcfromtimestamp(info['timestampCreated']/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f'))
 print("last record: ",datetime.utcfromtimestamp(info['timestampLast']/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f'))
 
-info = producer.stream_info('stream')
+info = producer.stream_info('stream/test $')
 assert_eq(info['lastId'], 3, "last id from different stream")
 assert_eq(info['finished'], True, "stream finished")
 
@@ -199,12 +199,12 @@ assert_eq(info['lastId'], 0, "last id from non existing stream")
 
 info_last = producer.last_stream()
 print(info_last)
-assert_eq(info_last['name'], "stream", "last stream")
+assert_eq(info_last['name'], "stream/test $", "last stream")
 assert_eq(info_last['timestampCreated'] <= info_last['timestampLast'], True, "last is later than first")
 
 #delete_streams
-producer.delete_stream('stream')
-producer.stream_info('stream')
+producer.delete_stream('stream/test $')
+producer.stream_info('stream/test $')
 assert_eq(info['lastId'], 0, "last id from non deleted stream")
 
 
