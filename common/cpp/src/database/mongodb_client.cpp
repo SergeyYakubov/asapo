@@ -115,12 +115,15 @@ std::string MongoDBClient::DBAddress(const std::string& address) const {
 void MongoDBClient::CleanUp() {
     if (write_concern_) {
         mongoc_write_concern_destroy(write_concern_);
+        write_concern_ = nullptr;
     }
     if (current_collection_) {
         mongoc_collection_destroy(current_collection_);
+        current_collection_ = nullptr;
     }
     if (client_) {
         mongoc_client_destroy(client_);
+        client_ = nullptr;
     }
 }
 
@@ -205,9 +208,6 @@ Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& fi
 }
 
 MongoDBClient::~MongoDBClient() {
-    if (!connected_) {
-        return;
-    }
     CleanUp();
 }
 

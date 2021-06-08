@@ -5,6 +5,10 @@ import (
 	"net/url"
 )
 
+const max_encoded_source_size = 63
+const max_encoded_stream_size = 100
+const max_encoded_group_size = 50
+
 func shouldEscape(c byte, db bool) bool {
 	if c == '$' || c == ' ' || c == '%' {
 		return true
