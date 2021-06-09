@@ -17,6 +17,11 @@ type folderTokenRequest struct {
 	Token      string
 }
 
+type tokenFolders struct {
+	RootFolder string
+	SecondFolder  string
+}
+
 type folderToken struct {
 	Token string
 }
@@ -25,11 +30,13 @@ type folderToken struct {
 	utils.ProcessJWTAuth(processFolderTokenRequest,settings.secret)(w,r)
 }*/
 
-func prepareJWTToken(request folderTokenRequest) (string, error) {
+func prepareJWTToken(folders tokenFolders) (string, error) {
 	var claims utils.CustomClaims
 	var extraClaim structs.FolderTokenTokenExtraClaim
 
-	extraClaim.RootFolder = request.Folder
+	extraClaim.RootFolder = folders.RootFolder
+	extraClaim.SecondFolder = folders.SecondFolder
+
 	claims.ExtraClaims = &extraClaim
 	claims.SetExpiration(time.Duration(settings.FolderTokenDurationMin) * time.Minute)
 	return Auth.JWTAuth().GenerateToken(&claims)
@@ -59,30 +66,37 @@ func extractFolderTokenrequest(r *http.Request) (folderTokenRequest, error) {
 
 }
 
-func checkBeamtimeFolder(request folderTokenRequest) error {
+func checkBeamtimeFolder(request folderTokenRequest, ver utils.VersionNum) (folders tokenFolders, err error) {
 	beamtimeMeta, err := findMeta(SourceCredentials{request.BeamtimeId, "auto", "", "", ""})
 	if err != nil {
 		log.Error("cannot get beamtime meta" + err.Error())
-		return err
+		return folders,err
+	}
+
+	if request.Folder=="auto" && ver.Id > 1 {
+		folders.RootFolder = beamtimeMeta.OfflinePath
+		folders.SecondFolder = beamtimeMeta.OnlinePath
+		return folders,nil
 	}
 
 	folder := filepath.Clean(request.Folder)
 	if folder != filepath.Clean(beamtimeMeta.OnlinePath) && folder != filepath.Clean(beamtimeMeta.OfflinePath) {
 		err_string := folder + " does not match beamtime folders " + beamtimeMeta.OnlinePath + " or " + beamtimeMeta.OfflinePath
 		log.Error(err_string)
-		return errors.New(err_string)
+		return folders,errors.New(err_string)
 	}
 
-	return nil
+	folders.RootFolder = request.Folder
+	return folders,nil
 }
 
-func checkAuthorizerApiVersion(w http.ResponseWriter, r *http.Request) bool {
-	_, ok := utils.PrecheckApiVersion(w, r, version.GetAuthorizerApiVersion())
-	return ok
+func checkAuthorizerApiVersion(w http.ResponseWriter, r *http.Request) (utils.VersionNum, bool) {
+	return utils.PrecheckApiVersion(w, r, version.GetAuthorizerApiVersion())
 }
 
 func routeFolderToken(w http.ResponseWriter, r *http.Request) {
-	if ok := checkAuthorizerApiVersion(w, r); !ok {
+	ver,ok := checkAuthorizerApiVersion(w, r);
+	if !ok {
 		return
 	}
 
@@ -98,13 +112,13 @@ func routeFolderToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = checkBeamtimeFolder(request)
+	folders,err := checkBeamtimeFolder(request,ver)
 	if err != nil {
 		utils.WriteServerError(w, err, http.StatusUnauthorized)
 		return
 	}
 
-	token, err := prepareJWTToken(request)
+	token, err := prepareJWTToken(folders)
 	if err != nil {
 		utils.WriteServerError(w, err, http.StatusInternalServerError)
 		return
