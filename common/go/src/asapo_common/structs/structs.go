@@ -2,6 +2,7 @@ package structs
 
 type FolderTokenTokenExtraClaim struct {
 	RootFolder string
+	SecondFolder string
 }
 
 type AccessTokenExtraClaim struct {

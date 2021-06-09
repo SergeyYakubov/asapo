@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 )
 
@@ -58,7 +59,7 @@ func checkRequest(r *http.Request) (string,int,error) {
 	if status,err := checkClaim(r,&request); err != nil {
 		return "",status,err
 	}
-	fullName := request.Folder+string(os.PathSeparator)+request.FileName
+	fullName := filepath.Clean(request.Folder+string(os.PathSeparator)+request.FileName)
 	if status,err := checkFileExists(r,fullName); err != nil {
 		return "",status,err
 	}
