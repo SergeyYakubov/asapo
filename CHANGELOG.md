@@ -1,7 +1,8 @@
 ## 21.06.0 (in progress)
 
 IMPROVEMENTS
-* Consumer/Producer API - allow any characters in source/stream/group names 
+* Consumer/Producer API - allow any characters in source/stream/group names
+* Consumer API - an option to auto discovery of data folder when consumer client uses file transfer service (has_filesystem=False) 
 
 BUG FIXES
 * Consumer API: multiple consumers from same group receive stream finished error 

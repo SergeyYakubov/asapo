@@ -4,6 +4,7 @@ import (
 	"asapo_authorizer/authorization"
 	"asapo_common/structs"
 	"asapo_common/utils"
+	"asapo_common/version"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -64,14 +65,14 @@ func TestFolderToken(t *testing.T) {
 		if test.status == http.StatusBadRequest {
 			request =makeRequest(authorizationRequest{})
 		}
-		w := doPostRequest("/v0.1/folder",request,"")
+		w := doPostRequest("/"+version.GetAuthorizerApiVersion()+"/folder",request,"")
 		if w.Code == http.StatusOK {
 			body, _ := ioutil.ReadAll(w.Body)
 			claims,_ := utils.CheckJWTToken(string(body),"secret_folder")
 			var extra_claim structs.FolderTokenTokenExtraClaim
 			utils.MapToStruct(claims.(*utils.CustomClaims).ExtraClaims.(map[string]interface{}), &extra_claim)
-			assert.Equal(t, abs_path, extra_claim.RootFolder, test.message)
-			assert.Equal(t, abs_path_second, extra_claim.SecondFolder, test.message)
+			assert.Equal(t, filepath.Clean(abs_path), filepath.Clean(extra_claim.RootFolder), test.message)
+			assert.Equal(t, filepath.Clean(abs_path_second), filepath.Clean(extra_claim.SecondFolder), test.message)
 		} else {
 			body, _ := ioutil.ReadAll(w.Body)
 			fmt.Println(string(body))
@@ -83,7 +84,7 @@ func TestFolderToken(t *testing.T) {
 
 func TestFolderTokenWrongProtocol(t *testing.T) {
 		request :=  makeRequest(folderTokenRequest{"abs_path","beamtime_id","token"})
-		w := doPostRequest("/v0.2/folder",request,"")
+		w := doPostRequest("/v10000.2/folder",request,"")
 		assert.Equal(t, http.StatusUnsupportedMediaType, w.Code, "wrong protocol")
 }
 

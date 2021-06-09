@@ -15,9 +15,9 @@ func GetSupportedConsumerProtocols() []Protocol {
 		Protocol{"v0.4",
 			map[string]string{
 				"Discovery": "v0.1",
-				"Authorizer": "v0.1",
+				"Authorizer": "v0.2",
 				"Broker": "v0.4",
-				"File Transfer": "v0.1",
+				"File Transfer": "v0.2",
 				"Data cache service": "v0.1",
 			}, &protocolValidatorCurrent{}},
 		Protocol{"v0.3",

@@ -66,14 +66,14 @@ func extractFolderTokenrequest(r *http.Request) (folderTokenRequest, error) {
 
 }
 
-func checkBeamtimeFolder(request folderTokenRequest) (folders tokenFolders, err error) {
+func checkBeamtimeFolder(request folderTokenRequest, ver utils.VersionNum) (folders tokenFolders, err error) {
 	beamtimeMeta, err := findMeta(SourceCredentials{request.BeamtimeId, "auto", "", "", ""})
 	if err != nil {
 		log.Error("cannot get beamtime meta" + err.Error())
 		return folders,err
 	}
 
-	if request.Folder=="auto" {
+	if request.Folder=="auto" && ver.Id > 1 {
 		folders.RootFolder = beamtimeMeta.OfflinePath
 		folders.SecondFolder = beamtimeMeta.OnlinePath
 		return folders,nil
@@ -90,13 +90,13 @@ func checkBeamtimeFolder(request folderTokenRequest) (folders tokenFolders, err 
 	return folders,nil
 }
 
-func checkAuthorizerApiVersion(w http.ResponseWriter, r *http.Request) bool {
-	_, ok := utils.PrecheckApiVersion(w, r, version.GetAuthorizerApiVersion())
-	return ok
+func checkAuthorizerApiVersion(w http.ResponseWriter, r *http.Request) (utils.VersionNum, bool) {
+	return utils.PrecheckApiVersion(w, r, version.GetAuthorizerApiVersion())
 }
 
 func routeFolderToken(w http.ResponseWriter, r *http.Request) {
-	if ok := checkAuthorizerApiVersion(w, r); !ok {
+	ver,ok := checkAuthorizerApiVersion(w, r);
+	if !ok {
 		return
 	}
 
@@ -112,7 +112,7 @@ func routeFolderToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	folders,err := checkBeamtimeFolder(request)
+	folders,err := checkBeamtimeFolder(request,ver)
 	if err != nil {
 		utils.WriteServerError(w, err, http.StatusUnauthorized)
 		return

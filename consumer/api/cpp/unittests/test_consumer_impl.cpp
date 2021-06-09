@@ -1159,7 +1159,7 @@ void ConsumerImplTests::ExpectFolderToken() {
                                                expected_beamtime_id
                                                + "\",\"Token\":\"" + expected_token + "\"}";
 
-    EXPECT_CALL(mock_http_client, Post_t(HasSubstr(expected_server_uri + "/asapo-authorizer/v0.1/folder"), _,
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr(expected_server_uri + "/asapo-authorizer/v0.2/folder"), _,
                                          expected_folder_query_string, _, _)).WillOnce(DoAll(
                                                      SetArgPointee<3>(HttpCode::OK),
                                                      SetArgPointee<4>(nullptr),
@@ -1177,7 +1177,7 @@ ACTION_P(AssignArg3, assign) {
 }
 
 void ConsumerImplTests::ExpectFileTransfer(const asapo::ConsumerErrorTemplate* p_err_template) {
-    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/v0.1/transfer"),
+    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/v0.2/transfer"),
                                                     expected_cookie,
                                                     expected_fts_query_string,
                                                     _,
@@ -1190,7 +1190,7 @@ void ConsumerImplTests::ExpectFileTransfer(const asapo::ConsumerErrorTemplate* p
 }
 
 void ConsumerImplTests::ExpectRepeatedFileTransfer() {
-    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/v0.1/transfer"),
+    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/v0.2/transfer"),
                                                     expected_cookie,
                                                     expected_fts_query_string,
                                                     _,
@@ -1235,7 +1235,7 @@ TEST_F(ConsumerImplTests, FileTransferReadsFileSize) {
                                                      Return("{\"file_size\":5}")
                                                  ));
 
-    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/v0.1/transfer"),
+    EXPECT_CALL(mock_http_client, PostReturnArray_t(HasSubstr(expected_fts_uri + "/v0.2/transfer"),
                                                     expected_cookie,
                                                     expected_fts_query_string,
                                                     _,
