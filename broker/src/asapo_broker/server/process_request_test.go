@@ -45,7 +45,7 @@ func (a *MockAuthServer) AuthorizeToken(tokenJWT string) (token Token, err error
 		}, nil
 	}
 
-	return Token{}, errors.New("wrong JWT token")
+	return Token{}, AuthorizationError{errors.New("wrong JWT token"),http.StatusUnauthorized}
 }
 
 func prepareTestAuth() {
@@ -146,7 +146,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithNoToken() {
 
 	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + wrongTokenSuffix)
 
-	suite.Equal(http.StatusUnauthorized, w.Code, "no token")
+	suite.Equal(http.StatusBadRequest, w.Code, "no token")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() {

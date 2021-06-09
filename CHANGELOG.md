@@ -5,6 +5,7 @@ IMPROVEMENTS
 
 BUG FIXES
 * Consumer API: multiple consumers from same group receive stream finished error 
+* Consumer API: return ServiceUnavailable instead of Unauthorized in case an authorization service is unreachable 
 
 ## 21.03.3
 

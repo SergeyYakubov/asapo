@@ -23,15 +23,14 @@ type HttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-type HttpError struct{
+type AuthorizationError struct{
 	err error
 	statusCode int
 }
 
-func (m *HttpError) Error() string {
+func (m AuthorizationError) Error() string {
 	return m.err.Error()
 }
-
 
 type AsapoAuthorizer struct {
 	serverUrl string
@@ -83,13 +82,19 @@ func (a * AsapoAuthorizer) doRequest(req *http.Request) (token Token, err error)
 		return token, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return token, &HttpError{errors.New("authorizer returned " + resp.Status + ": " + string(body)),resp.StatusCode}
+	switch resp.StatusCode {
+	case http.StatusOK:
+		//do nothing
+	case  http.StatusUnauthorized:
+		return token, &AuthorizationError{errors.New("authorizer rejected to authorize: " + string(body)),http.StatusUnauthorized}
+	default:
+		return token, errors.New("authorizer returned " + resp.Status + ": " + string(body))
 	}
 
 	err = json.Unmarshal(body, &token)
 	return
 }
+
 func createIntrospectTokenRequest(tokenJWT string) (*http.Request, error) {
 	path := "http://"+settings.AuthorizationServer + "/introspect"
 	request := struct {
