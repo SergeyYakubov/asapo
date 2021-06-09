@@ -12,11 +12,11 @@ func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, 
 	log_str := "processing " + requestName + " request in " + db_name + " at " + settings.GetDatabaseServer()
 	logger.Error(log_str + " - " + err.Error())
 
-	httpError, ok := err.(*HttpError)
-	if ok && httpError.statusCode != http.StatusUnauthorized {
+	switch er := err.(type) {
+	case AuthorizationError:
+		w.WriteHeader(er.statusCode)
+	default:
 		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		w.WriteHeader(http.StatusUnauthorized)
 	}
 	w.Write([]byte(err.Error()))
 }
@@ -54,7 +54,7 @@ func authorize(r *http.Request, beamtime_id string, needWriteAccess bool) error 
 	tokenJWT := r.URL.Query().Get("token")
 
 	if len(tokenJWT) == 0 {
-		return errors.New("cannot extract token from request")
+		return AuthorizationError{errors.New("cannot extract token from request"),http.StatusBadRequest}
 	}
 
 	token, err := auth.AuthorizeToken(tokenJWT)
@@ -72,18 +72,18 @@ func authorize(r *http.Request, beamtime_id string, needWriteAccess bool) error 
 
 func checkSubject(subject string, beamtime_id string) error {
 	if subject != utils.SubjectFromBeamtime(beamtime_id) {
-		return errors.New("wrong token subject")
+		return AuthorizationError{errors.New("wrong token subject"),http.StatusUnauthorized}
 	}
 	return nil
 }
 
 func checkAccessType(accessTypes []string, needWriteAccess bool) error {
 	if needWriteAccess && !utils.StringInSlice("write",accessTypes) {
-		return errors.New("wrong token access type")
+		return AuthorizationError{errors.New("wrong token access type"),http.StatusUnauthorized}
 	}
 
 	if !utils.StringInSlice("read",accessTypes) {
-		return errors.New("wrong token access type")
+		return AuthorizationError{errors.New("wrong token access type"),http.StatusUnauthorized}
 	}
 	return nil
 }
