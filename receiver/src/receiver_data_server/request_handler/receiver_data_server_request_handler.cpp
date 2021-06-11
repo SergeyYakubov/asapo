@@ -16,7 +16,7 @@ bool ReceiverDataServerRequestHandler::CheckRequest(const ReceiverDataServerRequ
         *code = kNetErrorWrongRequest;
         return false;
     }
-    int verClient = VersionToNumber(request->header.receiver_protocol);
+    int verClient = VersionToNumber(request->header.api_version);
     int verService = VersionToNumber(GetRdsApiVersion());
     if (verClient > verService) {
         *code = kNetErrorNotSupported;
@@ -99,7 +99,7 @@ void ReceiverDataServerRequestHandler::HandleInvalidRequest(const ReceiverDataSe
         log__->Error("wrong request, code:" + std::to_string(receiver_request->header.op_code));
         break;
     case NetworkErrorCode::kNetErrorNotSupported:
-        log__->Error("unsupported client, version: " + std::string(receiver_request->header.receiver_protocol));
+        log__->Error("unsupported client, version: " + std::string(receiver_request->header.api_version));
         break;
     };
 

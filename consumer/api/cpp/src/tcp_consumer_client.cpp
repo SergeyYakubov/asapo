@@ -14,7 +14,7 @@ TcpConsumerClient::TcpConsumerClient() : io__{GenerateDefaultIO()}, connection_p
 Error TcpConsumerClient::SendGetDataRequest(SocketDescriptor sd, const MessageMeta* info) const noexcept {
     Error err;
     GenericRequestHeader request_header{kOpcodeGetBufferData, info->buf_id, info->size};
-    strncpy(request_header.receiver_protocol, kConsumerProtocol.GetRdsVersion().c_str(), kMaxVersionSize);
+    strncpy(request_header.api_version, kConsumerProtocol.GetRdsVersion().c_str(), kMaxVersionSize);
     io__->Send(sd, &request_header, sizeof(request_header), &err);
     if (err) {
         connection_pool__->ReleaseConnection(sd);

@@ -34,7 +34,7 @@ Error FabricConsumerClient::GetData(const MessageMeta* info, MessageData* data) 
     }
 
     GenericRequestHeader request_header{kOpcodeGetBufferData, info->buf_id, info->size};
-    strncpy(request_header.receiver_protocol, kConsumerProtocol.GetRdsVersion().c_str(), kMaxVersionSize);
+    strncpy(request_header.api_version, kConsumerProtocol.GetRdsVersion().c_str(), kMaxVersionSize);
     memcpy(request_header.message, mr->GetDetails(), sizeof(fabric::MemoryRegionDetails));
     GenericNetworkResponse response{};
 

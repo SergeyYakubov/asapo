@@ -112,24 +112,26 @@ class Producer {
       \param callback - callback function
       \return Error - will be nullptr on success
     */
-    virtual Error SendMetadata(const std::string& metadata, RequestCallback callback) DEPRECATED("obsolates 01.07.2022, use SendBeamtimeMetadata instead") = 0;
+    virtual Error SendMetadata(const std::string& metadata,
+                               RequestCallback callback) DEPRECATED("obsolates 01.07.2022, use SendBeamtimeMetadata instead") = 0;
 
-  //! Sends beamtime metadata to the receiver
-  /*!
-    \param metadata - a JSON string with metadata
-    \param callback - callback function
-    \return Error - will be nullptr on success
-  */
-  virtual Error SendBeamtimeMetadata(const std::string& metadata, MetaIngestMode mode, RequestCallback callback) = 0;
+    //! Sends beamtime metadata to the receiver
+    /*!
+      \param metadata - a JSON string with metadata
+      \param callback - callback function
+      \return Error - will be nullptr on success
+    */
+    virtual Error SendBeamtimeMetadata(const std::string& metadata, MetaIngestMode mode, RequestCallback callback) = 0;
 
-  //! Sends stream metadata to the receiver
-  /*!
-    \param stream - name of the stream
-    \param metadata - a JSON string with metadata
-    \param callback - callback function
-    \return Error - will be nullptr on success
-  */
-  virtual Error SendStreamMetadata(const std::string& stream, const std::string& metadata, MetaIngestMode mode, RequestCallback callback) = 0;
+    //! Sends stream metadata to the receiver
+    /*!
+      \param stream - name of the stream
+      \param metadata - a JSON string with metadata
+      \param callback - callback function
+      \return Error - will be nullptr on success
+    */
+    virtual Error SendStreamMetadata(const std::string& stream, const std::string& metadata, MetaIngestMode mode,
+                                     RequestCallback callback) = 0;
 
     //! Set internal log level
     virtual void SetLogLevel(LogLevel level) = 0;

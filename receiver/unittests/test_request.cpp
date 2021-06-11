@@ -97,7 +97,7 @@ class RequestTests : public Test {
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
         strcpy(generic_request_header.message, expected_request_message);
-        strcpy(generic_request_header.receiver_protocol, expected_api_version.c_str());
+        strcpy(generic_request_header.api_version, expected_api_version.c_str());
         request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
         request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         ON_CALL(mock_io, Receive_t(expected_socket_id, _, data_size_, _)).WillByDefault(

@@ -251,8 +251,8 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
 }
 
 Error ProducerImpl::SendMetadata(const std::string& metadata, RequestCallback callback) {
-    auto mode=MetaIngestMode{MetaIngestOp::kReplace,true};
-    return SendBeamtimeMetadata(metadata,mode, callback);
+    auto mode = MetaIngestMode{MetaIngestOp::kReplace, true};
+    return SendBeamtimeMetadata(metadata, mode, callback);
 }
 
 Error ProducerImpl::Send__(const MessageHeader& message_header,
@@ -474,27 +474,28 @@ Error ProducerImpl::DeleteStream(std::string stream, uint64_t timeout_ms, Delete
     return Error{res};
 }
 
-Error ProducerImpl::SendBeamtimeMetadata(const std::string &metadata, MetaIngestMode mode, RequestCallback callback) {
-    return SendMeta("",metadata,mode, callback);
+Error ProducerImpl::SendBeamtimeMetadata(const std::string& metadata, MetaIngestMode mode, RequestCallback callback) {
+    return SendMeta("", metadata, mode, callback);
 }
 
-Error ProducerImpl::SendStreamMetadata(const std::string &stream,
-                                       const std::string &metadata,
+Error ProducerImpl::SendStreamMetadata(const std::string& stream,
+                                       const std::string& metadata,
                                        MetaIngestMode mode,
                                        RequestCallback callback) {
     if (stream.empty()) {
         return ProducerErrorTemplates::kWrongInput.Generate("stream is empty");
     }
-    return SendMeta(stream,metadata,mode,callback);
+    return SendMeta(stream, metadata, mode, callback);
 }
 
-Error ProducerImpl::SendMeta(std::string stream, const std::string &metadata, MetaIngestMode mode,RequestCallback callback) {
+Error ProducerImpl::SendMeta(std::string stream, const std::string& metadata, MetaIngestMode mode,
+                             RequestCallback callback) {
     GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0,
-                                        stream.empty()?"beamtime_global.meta":stream+".meta",
+                                        stream.empty() ? "beamtime_global.meta" : stream + ".meta",
                                         stream};
     request_header.custom_data[kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
-        asapo::IngestModeFlags::kStoreInDatabase;
-    request_header.custom_data[kPosMetaIngestMode]=mode.Encode();
+                                                 asapo::IngestModeFlags::kStoreInDatabase;
+    request_header.custom_data[kPosMetaIngestMode] = mode.Encode();
     MessageData data{new uint8_t[metadata.size()]};
     strncpy((char*) data.get(), metadata.c_str(), metadata.size());
     auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {

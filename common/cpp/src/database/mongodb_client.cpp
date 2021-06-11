@@ -8,6 +8,8 @@
 #include "asapo/database/db_error.h"
 #include "asapo/common/data_structs.h"
 
+#include "asapo/common/internal/version.h"
+
 namespace asapo {
 
 using asapo::Database;
@@ -140,6 +142,7 @@ bson_p PrepareBsonDocument(const MessageMeta& file, Error* err) {
         return nullptr;
     }
 
+
     *err = nullptr;
     return bson_p{bson};
 }
@@ -154,6 +157,11 @@ bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, Error* err) {
     auto bson = bson_new_from_json(json, len, &mongo_err);
     if (!bson) {
         *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);
+        return nullptr;
+    }
+
+    if (!BSON_APPEND_UTF8(bson, "schema_version", GetDbSchemaVersion().c_str())) {
+        *err = DBErrorTemplates::kInsertError.Generate("cannot add schema version ");
         return nullptr;
     }
 
@@ -173,11 +181,11 @@ Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_dupl
     return nullptr;
 }
 
-Error MongoDBClient::UpdateBsonDocument(uint64_t id, const bson_p& document, bool upsert) const {
+Error MongoDBClient::UpdateBsonDocument(const std::string& id, const bson_p& document, bool upsert) const {
     bson_error_t mongo_err;
 
     bson_t* opts = BCON_NEW ("upsert", BCON_BOOL(upsert));
-    bson_t* selector = BCON_NEW ("_id", BCON_INT64(id));
+    bson_t* selector = BCON_NEW ("_id", BCON_UTF8(id.c_str()));
 
     Error err = nullptr;
 
@@ -213,7 +221,8 @@ MongoDBClient::~MongoDBClient() {
     CleanUp();
 }
 
-Error MongoDBClient::Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const {
+Error MongoDBClient::Insert(const std::string& collection, const std::string& id, const uint8_t* data, uint64_t size,
+                            MetaIngestMode mode) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -228,7 +237,7 @@ Error MongoDBClient::Upsert(const std::string& collection, uint64_t id, const ui
         return err;
     }
 
-    if (!BSON_APPEND_INT64(document.get(), "_id", id)) {
+    if (!BSON_APPEND_UTF8(document.get(), "_id", id.c_str())) {
         err = DBErrorTemplates::kInsertError.Generate("cannot assign document id ");
     }
 
@@ -278,6 +287,7 @@ Error MongoDBClient::InsertAsDatasetMessage(const std::string& collection, const
                   BCON_INT64(file.dataset_substream), "}", "}", "]");
     auto update = BCON_NEW ("$setOnInsert", "{",
                             "size", BCON_INT64(dataset_size),
+                            "schema_version", GetDbSchemaVersion().c_str(),
                             "timestamp", BCON_INT64((int64_t) NanosecsEpochFromTimePoint(file.timestamp)),
                             "}",
                             "$addToSet", "{",

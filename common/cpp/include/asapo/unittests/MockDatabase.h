@@ -30,11 +30,13 @@ class MockDatabase : public Database {
     MOCK_CONST_METHOD4(InsertAsDatasetMessage_t,
                        ErrorInterface * (const std::string&, const MessageMeta&, uint64_t, bool));
 
-    Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const override {
-        return Error{Upsert_t(collection, id, data, size)};
+    Error Insert(const std::string& collection, const std::string& id, const uint8_t* data, uint64_t size,
+                 MetaIngestMode mode) const override {
+        return Error{Insert_t(collection, id, data, size, mode)};
 
     }
-    MOCK_CONST_METHOD4(Upsert_t, ErrorInterface * (const std::string&, uint64_t id, const uint8_t* data, uint64_t size));
+    MOCK_CONST_METHOD5(Insert_t, ErrorInterface * (const std::string&, const std::string& id, const uint8_t* data,
+                                                   uint64_t size, MetaIngestMode mode));
 
     Error GetById(const std::string& collection, uint64_t id, MessageMeta* file) const override {
         return Error{GetById_t(collection, id, file)};

@@ -90,7 +90,7 @@ std::string Request::GetStream() const {
 }
 
 std::string Request::GetApiVersion() const {
-    return request_header_.receiver_protocol;
+    return request_header_.api_version;
 }
 
 

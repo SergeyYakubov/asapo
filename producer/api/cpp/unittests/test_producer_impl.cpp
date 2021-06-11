@@ -46,15 +46,16 @@ MATCHER_P10(M_CheckSendRequest, op_code, source_credentials, metadata, file_id, 
            && request->manage_data_memory == true
            && request->source_credentials == source_credentials
            && request->metadata == metadata
-            && (op_code == asapo::kOpcodeTransferMetaData ? ((asapo::GenericRequestHeader) (request->header)).custom_data[1]
-            == uint64_t(dataset_id) : true)
+           && (op_code == asapo::kOpcodeTransferMetaData ? ((asapo::GenericRequestHeader) (request->header)).custom_data[1]
+               == uint64_t(dataset_id) : true)
            && (op_code == asapo::kOpcodeTransferDatasetData ? ((asapo::GenericRequestHeader) (request->header)).custom_data[1]
                == uint64_t(dataset_id) : true)
            && (op_code == asapo::kOpcodeTransferDatasetData ? ((asapo::GenericRequestHeader) (request->header)).custom_data[2]
                == uint64_t(dataset_size) : true)
            && ((asapo::GenericRequestHeader) (request->header)).custom_data[asapo::kPosIngestMode] == uint64_t(ingest_mode)
            && strcmp(((asapo::GenericRequestHeader) (request->header)).message, message) == 0
-           && strcmp(((asapo::GenericRequestHeader) (request->header)).api_version, asapo::kProducerProtocol.GetReceiverVersion().c_str()) == 0
+           && strcmp(((asapo::GenericRequestHeader) (request->header)).api_version,
+                     asapo::kProducerProtocol.GetReceiverVersion().c_str()) == 0
            && strcmp(((asapo::GenericRequestHeader) (request->header)).stream, stream) == 0;
 
 
@@ -324,19 +325,19 @@ TEST_F(ProducerImplTests, OKAddingSendMetaDataRequest) {
 
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferMetaData,
-                                                           expected_credentials_str,
-                                                           "",
-                                                           expected_id,
-                                                           expected_size,
-                                                           "beamtime_global.meta",
-                                                           "",
-                                                           expected_ingest_mode,
-                                                           12,
-                                                           10), false)).WillOnce(Return(
-        nullptr));
+                                        expected_credentials_str,
+                                        "",
+                                        expected_id,
+                                        expected_size,
+                                        "beamtime_global.meta",
+                                        "",
+                                        expected_ingest_mode,
+                                        12,
+                                        10), false)).WillOnce(Return(
+                                                    nullptr));
 
-    auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kReplace,true};
-    auto err = producer.SendBeamtimeMetadata(expected_metadata,mode, nullptr);
+    auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kReplace, true};
+    auto err = producer.SendBeamtimeMetadata(expected_metadata, mode, nullptr);
     ASSERT_THAT(err, Eq(nullptr));
 }
 
@@ -348,20 +349,20 @@ TEST_F(ProducerImplTests, OKAddingSendStreamDataRequest) {
 
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferMetaData,
-                                                           expected_credentials_str,
-                                                           "",
-                                                           expected_id,
-                                                           expected_size,
-                                                           (std::string(expected_stream)+".meta").c_str(),
-                                                           expected_stream,
-                                                           expected_ingest_mode,
-                                                           1,
-                                                           10), false)).WillOnce(Return(
-        nullptr));
+                                        expected_credentials_str,
+                                        "",
+                                        expected_id,
+                                        expected_size,
+                                        (std::string(expected_stream) + ".meta").c_str(),
+                                        expected_stream,
+                                        expected_ingest_mode,
+                                        1,
+                                        10), false)).WillOnce(Return(
+                                                    nullptr));
 
 
-    auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kInsert,false};
-    auto err = producer.SendStreamMetadata(expected_stream,expected_metadata,mode,nullptr);
+    auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kInsert, false};
+    auto err = producer.SendStreamMetadata(expected_stream, expected_metadata, mode, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
