@@ -27,16 +27,16 @@ Error RequestHandlerDbMetaWrite::ProcessRequest(Request* request) const {
         mode.Decode(request->GetCustomData()[kPosMetaIngestMode]);
     }
 
-    auto err =  db_client__->Insert(collection_name_prefix_, stream.empty()?"bt":"st_"+stream, meta, size, mode);
+    auto err =  db_client__->Insert(collection_name_prefix_, stream.empty() ? "bt" : "st_" + stream, meta, size, mode);
     if (!err) {
         if (stream.empty()) {
             log__->Debug(std::string{"insert beamtime meta"} + " to " + collection_name_prefix_ + " in " +
-                db_name_ +
-                " at " + GetReceiverConfig()->database_uri);
+                         db_name_ +
+                         " at " + GetReceiverConfig()->database_uri);
         } else {
-            log__->Debug(std::string{"insert stream meta for "}+stream+ " to " + collection_name_prefix_ + " in " +
-                db_name_ +
-                " at " + GetReceiverConfig()->database_uri);
+            log__->Debug(std::string{"insert stream meta for "} +stream + " to " + collection_name_prefix_ + " in " +
+                         db_name_ +
+                         " at " + GetReceiverConfig()->database_uri);
         }
 
     }

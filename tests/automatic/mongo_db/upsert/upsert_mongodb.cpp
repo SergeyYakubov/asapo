@@ -45,14 +45,15 @@ int main(int argc, char* argv[]) {
         db.Connect("127.0.0.1", "test");
     }
 
-    auto err = db.Upsert("meta", 0, reinterpret_cast<const uint8_t*>(json.c_str()), json.size());
+    auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kReplace, true};
+    auto err = db.Insert("meta", 0, reinterpret_cast<const uint8_t*>(json.c_str()), json.size(), mode);
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
 
     Assert(err, args.keyword);
 
-    err = db.Upsert("meta", 0, reinterpret_cast<const uint8_t*>(json.c_str()), json.size());
+    err = db.Insert("meta", 0, reinterpret_cast<const uint8_t*>(json.c_str()), json.size(), mode);
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
