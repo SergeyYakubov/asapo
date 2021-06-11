@@ -46,6 +46,7 @@ class MockRequestHandlerFactory : public asapo::RequestHandlerFactory {
     std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) override {
         return std::unique_ptr<RequestHandler> {request_handler_};
     }
+    ~MockRequestHandlerFactory(){};
   private:
     RequestHandler* request_handler_;
 };

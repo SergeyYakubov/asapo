@@ -35,7 +35,7 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, u
 GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const MessageHeader& message_header, std::string stream,
         uint64_t ingest_mode) {
     GenericRequestHeader request{kOpcodeTransferData, message_header.message_id, message_header.data_size,
-                                 message_header.user_metadata.size(), message_header.file_name, stream};
+                                 message_header.user_metadata.size(), message_header.file_name, std::move(stream)};
     if (message_header.dataset_substream != 0) {
         request.op_code = kOpcodeTransferDatasetData;
         request.custom_data[kPosDataSetId] = message_header.dataset_substream;
@@ -251,17 +251,8 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
 }
 
 Error ProducerImpl::SendMetadata(const std::string& metadata, RequestCallback callback) {
-    GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0, "beamtime_global.meta"};
-    request_header.custom_data[kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
-                                                 asapo::IngestModeFlags::kStoreInDatabase;
-    MessageData data{new uint8_t[metadata.size()]};
-    strncpy((char*) data.get(), metadata.c_str(), metadata.size());
-    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
-        new ProducerRequest{
-            source_cred_string_, std::move(request_header),
-            std::move(data), "", "", callback, true, timeout_ms_}
-    });
-    return HandleErrorFromPool(std::move(err), true);
+    auto mode=MetaIngestMode{MetaIngestOp::kReplace,true};
+    return SendBeamtimeMetadata(metadata,mode, callback);
 }
 
 Error ProducerImpl::Send__(const MessageHeader& message_header,
@@ -481,6 +472,37 @@ Error ProducerImpl::DeleteStream(std::string stream, uint64_t timeout_ms, Delete
         return err;
     }
     return Error{res};
+}
+
+Error ProducerImpl::SendBeamtimeMetadata(const std::string &metadata, MetaIngestMode mode, RequestCallback callback) {
+    return SendMeta("",metadata,mode, callback);
+}
+
+Error ProducerImpl::SendStreamMetadata(const std::string &stream,
+                                       const std::string &metadata,
+                                       MetaIngestMode mode,
+                                       RequestCallback callback) {
+    if (stream.empty()) {
+        return ProducerErrorTemplates::kWrongInput.Generate("stream is empty");
+    }
+    return SendMeta(stream,metadata,mode,callback);
+}
+
+Error ProducerImpl::SendMeta(std::string stream, const std::string &metadata, MetaIngestMode mode,RequestCallback callback) {
+    GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0,
+                                        stream.empty()?"beamtime_global.meta":stream+".meta",
+                                        stream};
+    request_header.custom_data[kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
+        asapo::IngestModeFlags::kStoreInDatabase;
+    request_header.custom_data[kPosMetaIngestMode]=mode.Encode();
+    MessageData data{new uint8_t[metadata.size()]};
+    strncpy((char*) data.get(), metadata.c_str(), metadata.size());
+    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
+        new ProducerRequest{
+            source_cred_string_, std::move(request_header),
+            std::move(data), "", "", callback, true, timeout_ms_}
+    });
+    return HandleErrorFromPool(std::move(err), true);
 }
 
 }

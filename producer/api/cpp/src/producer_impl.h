@@ -67,11 +67,15 @@ class ProducerImpl : public Producer {
     Error SetCredentials(SourceCredentials source_cred) override;
 
     Error SendMetadata(const std::string& metadata, RequestCallback callback) override;
-    uint64_t GetRequestsQueueSize() override;
+    Error SendBeamtimeMetadata(const std::string& metadata, MetaIngestMode mode, RequestCallback callback) override;
+    Error SendStreamMetadata(const std::string& stream, const std::string& metadata, MetaIngestMode mode, RequestCallback callback) override;
+
+  uint64_t GetRequestsQueueSize() override;
     Error WaitRequestsFinished(uint64_t timeout_ms) override;
     uint64_t GetRequestsQueueVolumeMb() override;
     void SetRequestsQueueLimits(uint64_t size, uint64_t volume) override;
   private:
+    Error SendMeta(const std::string stream, const std::string &metadata, MetaIngestMode mode, RequestCallback callback);
     StreamInfo StreamRequest(StreamRequestOp op, std::string stream, uint64_t timeout_ms, Error* err) const;
     Error Send(const MessageHeader& message_header, std::string stream, MessageData data, std::string full_path,
                uint64_t ingest_mode,

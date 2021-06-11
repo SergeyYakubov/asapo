@@ -10,6 +10,7 @@ namespace  asapo {
 class RequestHandlerFactory {
   public:
     virtual std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) = 0;
+    virtual ~RequestHandlerFactory(){};
 };
 
 

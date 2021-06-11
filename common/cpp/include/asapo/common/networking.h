@@ -53,6 +53,7 @@ const std::size_t kNCustomParams = 3;
 using CustomRequestData = uint64_t[kNCustomParams];
 const std::size_t kPosIngestMode = 0;
 const std::size_t kPosDataSetId = 1;
+const std::size_t kPosMetaIngestMode = 1;
 const std::size_t kPosDataSetSize = 2;
 
 struct GenericRequestHeader {
