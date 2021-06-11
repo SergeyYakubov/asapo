@@ -347,13 +347,14 @@ TEST_F(ProducerImplTests, OKAddingSendStreamDataRequest) {
     expected_size = expected_metadata.size();
     expected_ingest_mode = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInDatabase ;
 
+    std::string expected_message = (std::string(expected_stream) + ".meta");
     producer.SetCredentials(expected_credentials);
     EXPECT_CALL(mock_pull, AddRequest_t(M_CheckSendRequest(asapo::kOpcodeTransferMetaData,
                                         expected_credentials_str,
                                         "",
                                         expected_id,
                                         expected_size,
-                                        (std::string(expected_stream) + ".meta").c_str(),
+                                        expected_message.c_str(),
                                         expected_stream,
                                         expected_ingest_mode,
                                         1,

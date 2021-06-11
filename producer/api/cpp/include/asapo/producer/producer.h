@@ -112,8 +112,8 @@ class Producer {
       \param callback - callback function
       \return Error - will be nullptr on success
     */
-    virtual Error SendMetadata(const std::string& metadata,
-                               RequestCallback callback) DEPRECATED("obsolates 01.07.2022, use SendBeamtimeMetadata instead") = 0;
+    virtual Error DEPRECATED("obsolates 01.07.2022, use SendBeamtimeMetadata instead") SendMetadata(const std::string& metadata,
+                               RequestCallback callback)  = 0;
 
     //! Sends beamtime metadata to the receiver
     /*!

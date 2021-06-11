@@ -46,14 +46,14 @@ int main(int argc, char* argv[]) {
     }
 
     auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kReplace, true};
-    auto err = db.Insert("meta", 0, reinterpret_cast<const uint8_t*>(json.c_str()), json.size(), mode);
+    auto err = db.Insert("meta", "0", reinterpret_cast<const uint8_t*>(json.c_str()), json.size(), mode);
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
 
     Assert(err, args.keyword);
 
-    err = db.Insert("meta", 0, reinterpret_cast<const uint8_t*>(json.c_str()), json.size(), mode);
+    err = db.Insert("meta", "0", reinterpret_cast<const uint8_t*>(json.c_str()), json.size(), mode);
     if (err) {
         std::cout << err->Explain() << std::endl;
     }
