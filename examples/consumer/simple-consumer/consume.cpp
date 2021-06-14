@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     auto beamtime = "asapo_test";
     auto token = "KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc=";
 
-    auto consumer = asapo::ConsumerFactory::CreateConsumer(endpoint, "", true, asapo::SourceCredentials{asapo::SourceType::kProcessed,beamtime, "", "", token}, &err);
+    auto consumer = asapo::ConsumerFactory::CreateConsumer(endpoint, "", true, asapo::SourceCredentials{asapo::SourceType::kProcessed, beamtime, "", "", token}, &err);
     exit_if_error("Cannot create consumer", err);
     consumer->SetTimeout((uint64_t) 1000);
 
