@@ -5,7 +5,8 @@ set(SOURCE_FILES
         src/consumer_impl.cpp
         src/tcp_consumer_client.cpp
         src/tcp_connection_pool.cpp
-        src/fabric_consumer_client.cpp)
+        src/fabric_consumer_client.cpp
+        src/consumer_c_glue.cpp)
 
 
 ################################
@@ -14,7 +15,7 @@ set(SOURCE_FILES
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>
             $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version>  $<TARGET_OBJECTS:curl_http_client> )
 
-target_include_directories(${TARGET_NAME} PUBLIC include ${ASAPO_CXX_COMMON_INCLUDE_DIR}  ${LIBFABRIC_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
+target_include_directories(${TARGET_NAME} PUBLIC ../c/include include ${ASAPO_CXX_COMMON_INCLUDE_DIR}  ${LIBFABRIC_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
 
 IF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")

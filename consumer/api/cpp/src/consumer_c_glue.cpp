@@ -1,16 +1,21 @@
 #define __CONSUMER_C_INTERFACE_IMPLEMENTATION__
-#include <consumer.h>
+#include "asapo/asapo_consumer.h"
 typedef asapo::Consumer* asapoConsumer;
 typedef asapo::SourceCredentials* asapoSourceCredentials;
 typedef asapo::ErrorInterface* asapoError;
-#include "consumer_c.h"
+typedef asapo::MessageMeta* asapoMessageMeta;
+typedef uint8_t* asapoMessageData;
+typedef std::string* asapoGroupId;
 #include <algorithm>
 
-extern c {
-  static void timePointToTimeSpec(std::chrono::system_clock::time_point tp,
-				  struct timespec& stamp) {
-    stamp.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
-    stamp.tv_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch()).count() % 1000000000;
+extern "C" {
+#include "asapo/consumer_c.h"
+
+
+	static void timePointToTimeSpec(std::chrono::system_clock::time_point tp,
+				  struct timespec* stamp) {
+    stamp->tv_sec = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+    stamp->tv_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch()).count() % 1000000000;
   }
 
   
@@ -20,7 +25,7 @@ extern c {
     buf[explanation.size()] = '\0';
   }
   enum asapoErrorType asapoErrorGetType(const asapoError error) {
-    return static_cast<asapoErrorType>(error->GetErrorType);
+	  return static_cast<asapoErrorType>(error->GetErrorType());
   }
   void asapoClearError(asapoError* error) {
     delete *error;
@@ -29,25 +34,57 @@ extern c {
 
   asapoConsumer asapoCreateConsumer(const char* server_name,
 				    const char* source_path,
-				    _Bool has_filesysytem,
+				    int has_filesysytem,
 				    asapoSourceCredentials source,
 				    asapoError* error) {
     asapo::Error err; 
     auto c = asapo::ConsumerFactory::CreateConsumer(server_name,
 						    source_path,
 						    has_filesysytem,
-						    source_path,
+						    *source,
 						    &err);
     if (err) {
-      error = err.release();
+      *error = err.release();
     }
   
-    return c.release():
+    return c.release();
   }
   void asapoDeleteConsumer(asapoConsumer* consumer) {
     delete *consumer;
-    consumer = nullptr;
+    *consumer = nullptr;
   }
+	asapoGroupId asapoConsumerGenerateNewGroupId(asapoConsumer consumer,
+	                                             asapoError* error) {
+		asapo::Error err;
+		auto result = new std::string(consumer->GenerateNewGroupId(&err));
+		if (err) {
+			*error = err.release();
+		}
+		return result;
+	}
+	void asapoDeleteGroupId(asapoGroupId* id) {
+		delete *id;
+		*id = nullptr;
+	}
+	void asapoConsumerSetTimeout(asapoConsumer consumer, uint64_t timeout_ms) {
+		consumer->SetTimeout(timeout_ms);
+	}
+	asapoError asapoConsumerGetLast(asapoConsumer consumer,
+	                                asapoMessageMeta info,
+	                                asapoMessageData* data,
+	                                const char* stream) {
+		asapo::MessageData d;
+		auto err = consumer->GetLast(info, &d, stream);
+		*data = d.release();
+		return err.release();
+	}
+	void asapoDeleteMessageData(asapoMessageData* data) {
+		delete *data;
+		*data = nullptr;
+	}
+	const char*asapoMessageDataGetAsChars(const asapoMessageData data) {
+		return reinterpret_cast<const char*>(data);
+	}
 
   asapoSourceCredentials asapoCreateSourceCredentials(const char* type,
 						      const char* beamtime,
@@ -64,6 +101,14 @@ extern c {
     cred = nullptr;
   }
 
+	asapoMessageMeta asapoCreateMessageMeta() {
+		return new asapo::MessageMeta;
+	}
+	void asapoDeleteMessageMeta(asapoMessageMeta* meta) {
+		delete *meta;
+		*meta = nullptr;
+	}
+	
   const char* asapoMessageMetaGetName(const asapoMessageMeta md) {
     return md->name.c_str();
   }

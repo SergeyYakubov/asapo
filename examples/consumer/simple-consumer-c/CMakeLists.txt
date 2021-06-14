@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(asapo-consume)
+project(asapo-consume-c)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -10,9 +10,9 @@ ENDIF()
 
 find_package (Threads)
 
-set(TARGET_NAME "asapo-consume")
+set(TARGET_NAME "asapo-consume-c")
 
-set(SOURCE_FILES consume.cpp)
+set(SOURCE_FILES consume.c)
 
 link_directories(asapo/lib)
 

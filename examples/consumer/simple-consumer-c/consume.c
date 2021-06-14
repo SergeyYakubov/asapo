@@ -1,6 +1,10 @@
-#include <string.h>
-#include "consumer_c.h"
+#include "asapo/consumer_c.h"
 
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+ 
 void exit_if_error(const char *error_string, const asapoError err) {
     if (err) {
       char buf[1024];
@@ -11,7 +15,7 @@ void exit_if_error(const char *error_string, const asapoError err) {
 }
 
 int main(int argc, char* argv[]) {
-    asapoError err;
+    asapoError err = NULL;
 
     const char *endpoint = "asapo-services2:8400";
     const char *beamtime = "asapo_test";
@@ -21,14 +25,13 @@ int main(int argc, char* argv[]) {
 							       beamtime,
 							       "", "", token);
     asapoConsumer consumer = asapoCreateConsumer(endpoint,
-						 "", true,
-						 asapo::SourceCredentials{beamtime,
-						   "", "", token},
-						 &err);
+						 "", 1,
+                                                 cred,
+                                                 &err);
     asapoDeleteSourceCredentials(&cred);
     
     exit_if_error("Cannot create consumer", err);
-    consumer->SetTimeout((uint64_t) 1000);
+    asapoConsumerSetTimeout(consumer, 1000ull);
 
     asapoGroupId group_id = asapoConsumerGenerateNewGroupId(consumer, &err);
     exit_if_error("Cannot create group id", err);
@@ -36,13 +39,14 @@ int main(int argc, char* argv[]) {
     asapoMessageMeta fi = asapoCreateMessageMeta();
     asapoMessageData data;
 
-    err = asappConsumerGetLast(consumer,&fi, group_id, &data);
+    err = asapoConsumerGetLast(consumer,&fi, &data, group_id);
     exit_if_error("Cannot get next record", err);
 
-    printf("id: %llu\n", asapoMessageMetaGetId(fi);
-    printf("file name: %s\n", asapoMessageMetaGetName(fi);
-    std::cout << "file content: " << reinterpret_cast<char const*>(data.get()) << std::endl;
+    printf("id: %llu\n", asapoMessageMetaGetId(fi));
+    printf("file name: %s\n", asapoMessageMetaGetName(fi));
+    printf("file content: %s\n",asapoMessageDataGetAsChars(data));
     asapoDeleteMessageMeta(&fi);
+    asapoDeleteMessageData(&data);
     asapoDeleteConsumer(&consumer);      
     return EXIT_SUCCESS;
 }

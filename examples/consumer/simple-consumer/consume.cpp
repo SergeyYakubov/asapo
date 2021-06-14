@@ -1,4 +1,5 @@
-#include "asapo_consumer.h"
+#include "asapo/asapo_consumer.h"
+#include <iostream>
 
 void exit_if_error(std::string error_string, const asapo::Error& err) {
     if (err) {
@@ -14,7 +15,7 @@ int main(int argc, char* argv[]) {
     auto beamtime = "asapo_test";
     auto token = "KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc=";
 
-    auto consumer = asapo::ConsumerFactory::CreateConsumer(endpoint, "", true, asapo::SourceCredentials{beamtime, "", "", token}, &err);
+    auto consumer = asapo::ConsumerFactory::CreateConsumer(endpoint, "", true, asapo::SourceCredentials{asapo::SourceType::kProcessed,beamtime, "", "", token}, &err);
     exit_if_error("Cannot create consumer", err);
     consumer->SetTimeout((uint64_t) 1000);
 
@@ -24,7 +25,7 @@ int main(int argc, char* argv[]) {
     asapo::MessageMeta fi;
     asapo::MessageData data;
 
-    err = consumer->GetLast(&fi, group_id, &data);
+    err = consumer->GetLast(&fi, &data, group_id);
     exit_if_error("Cannot get next record", err);
 
     std::cout << "id: " << fi.id << std::endl;
