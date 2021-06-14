@@ -181,20 +181,32 @@ Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_dupl
     return nullptr;
 }
 
-Error MongoDBClient::UpdateBsonDocument(const std::string& id, const bson_p& document, bool upsert) const {
+Error MongoDBClient::ReplaceBsonDocument(const std::string& id, const bson_p& document, bool upsert) const {
     bson_error_t mongo_err;
 
     bson_t* opts = BCON_NEW ("upsert", BCON_BOOL(upsert));
     bson_t* selector = BCON_NEW ("_id", BCON_UTF8(id.c_str()));
-
+    bson_t reply;
     Error err = nullptr;
+    bson_iter_t iter;
 
-    if (!mongoc_collection_replace_one(current_collection_, selector, document.get(), opts, NULL, &mongo_err)) {
+    if (!mongoc_collection_replace_one(current_collection_, selector, document.get(), opts,&reply, &mongo_err)) {
         err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
+    }
+
+    if (err==nullptr) {
+        bson_iter_init_find(&iter, &reply, "upsertedCount");
+        auto n_upsert = bson_iter_int32(&iter);
+        bson_iter_init_find(&iter, &reply, "modifiedCount");
+        auto n_mod = bson_iter_int32(&iter);
+        if (n_mod + n_upsert!=1) {
+            err = DBErrorTemplates::kInsertError.Generate("metadata does not exist");
+        }
     }
 
     bson_free(opts);
     bson_free(selector);
+    bson_destroy (&reply);
 
     return err;
 }
@@ -241,7 +253,15 @@ Error MongoDBClient::Insert(const std::string& collection, const std::string& id
         err = DBErrorTemplates::kInsertError.Generate("cannot assign document id ");
     }
 
-    return UpdateBsonDocument(id, document, true);
+    switch (mode.op) {
+        case MetaIngestOp::kInsert:
+            return InsertBsonDocument(document,false);
+        case asapo::MetaIngestOp::kReplace:
+            return ReplaceBsonDocument(id, document, mode.upsert);
+        case MetaIngestOp::kUpdate:
+            break;
+
+    }
 
 }
 
