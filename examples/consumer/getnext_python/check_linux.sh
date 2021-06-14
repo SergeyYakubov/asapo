@@ -20,7 +20,7 @@ do
 	echo 'db.data_default.insert({"_id":'$i',"size":100,"name":"'$i'","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
-echo 'db.meta.insert({"_id":0,"meta_test":"test"})' | mongo ${database_name}
+echo 'db.meta.insert({"_id":"bt","meta_test":"test"})' | mongo ${database_name}
 
 sleep 1
 
