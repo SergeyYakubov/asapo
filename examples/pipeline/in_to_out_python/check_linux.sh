@@ -57,7 +57,9 @@ export PYTHONPATH=$2:$3:${PYTHONPATH}
 $1 $4 127.0.0.1:8400 $source_path $beamtime_id $data_source_in $data_source_out $token $timeout $timeout_producer $nthreads 1  > out
 cat out
 cat out | grep "Processed 3 file(s)"
-cat out | grep "Sent 3 file(s)"
+cat out | grep "Sent 5 file(s)"
+cat out | grep bt_meta
+cat out | grep st_meta
 
 echo "db.data_default.find({"_id":1})" | mongo ${outdatabase_name} | tee /dev/stderr | grep "file1_${data_source_out}"
 

@@ -131,6 +131,14 @@ class Consumer {
     */
     virtual std::string GetBeamtimeMeta(Error* err) = 0;
 
+    //! Get stream metadata.
+    /*!
+      \param stream - stream to use
+      \param err - return nullptr of operation succeed, error otherwise.
+      \return stream metadata.
+    */
+    virtual std::string GetStreamMeta(const std::string& stream, Error* err) = 0;
+
     //! Receive next available message.
     /*!
       \param info -  where to store message metadata. Can be set to nullptr only message data is needed.

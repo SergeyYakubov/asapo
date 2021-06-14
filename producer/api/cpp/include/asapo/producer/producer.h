@@ -131,7 +131,9 @@ class Producer {
       \param callback - callback function
       \return Error - will be nullptr on success
     */
-    virtual Error SendStreamMetadata(const std::string& stream, const std::string& metadata, MetaIngestMode mode,
+    virtual Error SendStreamMetadata(const std::string& metadata,
+                                     MetaIngestMode mode,
+                                     const std::string& stream,
                                      RequestCallback callback) = 0;
 
     //! Set internal log level

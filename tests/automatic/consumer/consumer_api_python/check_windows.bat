@@ -14,6 +14,10 @@ for /l %%x in (1, 1, 5) do echo db.data_default.insert({"_id":%%x,"size":6,"name
 
 echo db.data_streamfts.insert({"_id":1,"size":0,"name":"1","timestamp":1000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
+echo 'db.meta.insert({"_id":"bt","data":"test_bt"})' | %mongo_exe% %database_name%
+echo 'db.meta.insert({"_id":"st_test","data":"test_st"})' | %mongo_exe% %database_name%
+
+
 for /l %%x in (1, 1, 5) do echo db.data_stream1.insert({"_id":%%x,"size":6,"name":"1%%x","timestamp":2000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
 for /l %%x in (1, 1, 5) do echo db.data_stream2.insert({"_id":%%x,"size":6,"name":"2%%x","timestamp":3000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error

@@ -34,8 +34,10 @@ set PYTHONPATH=%2;%3
 "%1" "%4" 127.0.0.1:8400 %source_path% %beamtime_id% %data_source_in% %data_source_out% %token% %timeout% %timeout_producer% %nthreads% 1  > out
 
 type out
-findstr /I /L /C:"Processed 3 file(s)" out || goto :error
+findstr /I /L /C:"Processed 5 file(s)" out || goto :error
 findstr /I /L /C:"Sent 3 file(s)" out || goto :error
+findstr /I /L /C:"bt_meta" out || goto :error
+findstr /I /L /C:"st_meta" out || goto :error
 
 echo db.data_default.find({"_id":1}) | %mongo_exe% %outdatabase_name% | findstr  /c:"file1_%data_source_out%"  || goto :error
 

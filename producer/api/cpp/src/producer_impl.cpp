@@ -475,20 +475,22 @@ Error ProducerImpl::DeleteStream(std::string stream, uint64_t timeout_ms, Delete
 }
 
 Error ProducerImpl::SendBeamtimeMetadata(const std::string& metadata, MetaIngestMode mode, RequestCallback callback) {
-    return SendMeta("", metadata, mode, callback);
+    return SendMeta(metadata, mode, "", callback);
 }
 
-Error ProducerImpl::SendStreamMetadata(const std::string& stream,
-                                       const std::string& metadata,
+Error ProducerImpl::SendStreamMetadata(const std::string& metadata,
                                        MetaIngestMode mode,
+                                       const std::string& stream,
                                        RequestCallback callback) {
     if (stream.empty()) {
         return ProducerErrorTemplates::kWrongInput.Generate("stream is empty");
     }
-    return SendMeta(stream, metadata, mode, callback);
+    return SendMeta(metadata, mode, stream, callback);
 }
 
-Error ProducerImpl::SendMeta(std::string stream, const std::string& metadata, MetaIngestMode mode,
+Error ProducerImpl::SendMeta(const std::string& metadata,
+                             MetaIngestMode mode,
+                             std::string stream,
                              RequestCallback callback) {
     GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0,
                                         stream.empty() ? "beamtime_global.meta" : stream + ".meta",

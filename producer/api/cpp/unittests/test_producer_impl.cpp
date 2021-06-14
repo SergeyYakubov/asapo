@@ -363,7 +363,7 @@ TEST_F(ProducerImplTests, OKAddingSendStreamDataRequest) {
 
 
     auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kInsert, false};
-    auto err = producer.SendStreamMetadata(expected_stream, expected_metadata, mode, nullptr);
+    auto err = producer.SendStreamMetadata(expected_metadata, mode, expected_stream, nullptr);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
