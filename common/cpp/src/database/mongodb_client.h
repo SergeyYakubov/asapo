@@ -49,8 +49,8 @@ class MongoDBClient final : public Database {
     Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const override;
     Error InsertAsDatasetMessage(const std::string& collection, const MessageMeta& file, uint64_t dataset_size,
                                  bool ignore_duplicates) const override;
-    Error Insert(const std::string& collection, const std::string& id, const uint8_t* data, uint64_t size,
-                 MetaIngestMode mode) const override;
+    Error InsertMeta(const std::string& collection, const std::string& id, const uint8_t* data, uint64_t size,
+                     MetaIngestMode mode) const override;
     Error GetById(const std::string& collection, uint64_t id, MessageMeta* file) const override;
     Error GetDataSetById(const std::string& collection, uint64_t id_in_set, uint64_t id, MessageMeta* file) const override;
     Error GetStreamInfo(const std::string& collection, StreamInfo* info) const override;

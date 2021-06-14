@@ -130,8 +130,8 @@ TEST_F(DbMetaWriterHandlerTests, CallsIngestBeamtimeMetaOldVersion) {
 
     asapo::MetaIngestMode expected_mode{asapo::MetaIngestOp::kReplace, true};
 
-    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, "bt", expected_meta, expected_meta_size,
-                                  M_CheckIngestMode(expected_mode))).
+    EXPECT_CALL(mock_db, InsertMeta_t(expected_collection_name, "bt", expected_meta, expected_meta_size,
+                                      M_CheckIngestMode(expected_mode))).
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert beamtime meta"),
@@ -152,8 +152,8 @@ TEST_F(DbMetaWriterHandlerTests, CallsIngestBeamtimeMeta) {
 
 
     asapo::MetaIngestMode expected_mode{asapo::MetaIngestOp::kInsert, true};
-    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, "bt", expected_meta, expected_meta_size,
-                                  M_CheckIngestMode(expected_mode))).
+    EXPECT_CALL(mock_db, InsertMeta_t(expected_collection_name, "bt", expected_meta, expected_meta_size,
+                                      M_CheckIngestMode(expected_mode))).
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert beamtime meta"),
@@ -173,8 +173,8 @@ TEST_F(DbMetaWriterHandlerTests, CallsIngestStreamMeta) {
     ExpectRequestParams(asapo::GetReceiverApiVersion(), 13, expected_stream);
 
     asapo::MetaIngestMode expected_mode{asapo::MetaIngestOp::kUpdate, true};
-    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, "st_" + expected_stream, expected_meta, expected_meta_size,
-                                  M_CheckIngestMode(expected_mode))).
+    EXPECT_CALL(mock_db, InsertMeta_t(expected_collection_name, "st_" + expected_stream, expected_meta, expected_meta_size,
+                                      M_CheckIngestMode(expected_mode))).
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert stream meta"),

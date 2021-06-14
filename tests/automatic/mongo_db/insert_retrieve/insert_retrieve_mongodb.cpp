@@ -100,16 +100,16 @@ int main(int argc, char* argv[]) {
 
 
 // metadata
-        asapo::MetaIngestMode mode{asapo::MetaIngestOp::kInsert,false};
+        asapo::MetaIngestMode mode{asapo::MetaIngestOp::kInsert, false};
         std::string meta = R"({"data":"test"})";
-        err = db_new.Insert("meta","bt", reinterpret_cast<const uint8_t *>(meta.c_str()),meta.size(),mode);
+        err = db_new.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
         M_AssertEq(nullptr, err);
-        err = db_new.Insert("meta","bt", reinterpret_cast<const uint8_t *>(meta.c_str()),meta.size(),mode);
+        err = db_new.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
         M_AssertTrue(err == asapo::DBErrorTemplates::kDuplicateID);
         mode.op = asapo::MetaIngestOp::kReplace;
-        err = db_new.Insert("meta","bt", reinterpret_cast<const uint8_t *>(meta.c_str()),meta.size(),mode);
+        err = db_new.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
         M_AssertEq(nullptr, err);
-        err = db_new.Insert("meta","bt1", reinterpret_cast<const uint8_t *>(meta.c_str()),meta.size(),mode);
+        err = db_new.InsertMeta("meta", "notexist", reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
         M_AssertTrue(err == asapo::DBErrorTemplates::kInsertError);
 
 

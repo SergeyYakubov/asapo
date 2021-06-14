@@ -190,16 +190,16 @@ Error MongoDBClient::ReplaceBsonDocument(const std::string& id, const bson_p& do
     Error err = nullptr;
     bson_iter_t iter;
 
-    if (!mongoc_collection_replace_one(current_collection_, selector, document.get(), opts,&reply, &mongo_err)) {
+    if (!mongoc_collection_replace_one(current_collection_, selector, document.get(), opts, &reply, &mongo_err)) {
         err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
     }
 
-    if (err==nullptr) {
+    if (err == nullptr) {
         bson_iter_init_find(&iter, &reply, "upsertedCount");
         auto n_upsert = bson_iter_int32(&iter);
         bson_iter_init_find(&iter, &reply, "modifiedCount");
         auto n_mod = bson_iter_int32(&iter);
-        if (n_mod + n_upsert!=1) {
+        if (n_mod + n_upsert != 1) {
             err = DBErrorTemplates::kInsertError.Generate("metadata does not exist");
         }
     }
@@ -233,8 +233,9 @@ MongoDBClient::~MongoDBClient() {
     CleanUp();
 }
 
-Error MongoDBClient::Insert(const std::string& collection, const std::string& id, const uint8_t* data, uint64_t size,
-                            MetaIngestMode mode) const {
+Error MongoDBClient::InsertMeta(const std::string& collection, const std::string& id, const uint8_t* data,
+                                uint64_t size,
+                                MetaIngestMode mode) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -248,18 +249,18 @@ Error MongoDBClient::Insert(const std::string& collection, const std::string& id
     if (err) {
         return err;
     }
-
-    if (!BSON_APPEND_UTF8(document.get(), "_id", id.c_str())) {
+    auto id_encoded = EncodeColName(id);
+    if (!BSON_APPEND_UTF8(document.get(), "_id", id_encoded.c_str())) {
         err = DBErrorTemplates::kInsertError.Generate("cannot assign document id ");
     }
 
     switch (mode.op) {
-        case MetaIngestOp::kInsert:
-            return InsertBsonDocument(document,false);
-        case asapo::MetaIngestOp::kReplace:
-            return ReplaceBsonDocument(id, document, mode.upsert);
-        case MetaIngestOp::kUpdate:
-            break;
+    case MetaIngestOp::kInsert:
+        return InsertBsonDocument(document, false);
+    case asapo::MetaIngestOp::kReplace:
+        return ReplaceBsonDocument(id_encoded, document, mode.upsert);
+    case MetaIngestOp::kUpdate:
+        break;
 
     }
 
@@ -645,6 +646,7 @@ Error MongoDBClient::DeleteStream(const std::string& stream) const {
         DeleteCollections(acks_col);
         std::string querystr = ".*_" + EscapeQuery(stream_encoded) + "$";
         DeleteDocumentsInCollection("current_location", querystr);
+        DeleteDocumentsInCollection("meta", "^" + EscapeQuery(stream_encoded) + "$");
     }
     return err;
 }
