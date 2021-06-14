@@ -85,8 +85,8 @@ func encodeRequest(request *Request) error {
 		return &DBError{utils.StatusWrongInput, "source name is too long"}
 	}
 
-	request.DbCollectionName = encodeStringForColName(request.DbCollectionName)
-	if len(request.DbCollectionName)> max_encoded_stream_size {
+	request.Stream = encodeStringForColName(request.Stream)
+	if len(request.Stream)> max_encoded_stream_size {
 		return &DBError{utils.StatusWrongInput, "stream name is too long"}
 	}
 

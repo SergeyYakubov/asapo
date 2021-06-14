@@ -182,7 +182,7 @@ func maxIndexQuery(request Request, returnIncompete bool) bson.M {
 }
 
 func (db *Mongodb) getMaxIndex(request Request, returnIncompete bool) (max_id int, err error) {
-	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
+	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.Stream)
 	q := maxIndexQuery(request, returnIncompete)
 
 	opts := options.FindOne().SetSort(bson.M{"_id": -1}).SetReturnKey(true)
@@ -211,7 +211,7 @@ func (db *Mongodb) setCounter(request Request, ind int) (err error) {
 	update := bson.M{"$set": bson.M{pointer_field_name: ind}}
 	opts := options.Update().SetUpsert(true)
 	c := db.client.Database(request.DbName).Collection(pointer_collection_name)
-	q := bson.M{"_id": request.GroupId + "_" + request.DbCollectionName}
+	q := bson.M{"_id": request.GroupId + "_" + request.Stream}
 	_, err = c.UpdateOne(context.TODO(), q, update, opts)
 	return
 }
@@ -228,7 +228,7 @@ func (db *Mongodb) errorWhenCannotIncrementField(request Request, max_ind int) (
 func (db *Mongodb) incrementField(request Request, max_ind int, res interface{}) (err error) {
 	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
-	q := bson.M{"_id": request.GroupId + "_" + request.DbCollectionName, pointer_field_name: bson.M{"$lt": max_ind}}
+	q := bson.M{"_id": request.GroupId + "_" + request.Stream, pointer_field_name: bson.M{"$lt": max_ind}}
 	c := db.client.Database(request.DbName).Collection(pointer_collection_name)
 
 	err = c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res)
@@ -283,7 +283,7 @@ func recordContainsPartialData(request Request, rec map[string]interface{}) bool
 
 func (db *Mongodb) getRecordFromDb(request Request, id, id_max int) (res map[string]interface{}, err error) {
 	q := bson.M{"_id": id}
-	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
+	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.Stream)
 	err = c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
 	if err != nil {
 		answer := encodeAnswer(id, id_max, "")
@@ -369,7 +369,7 @@ func (db *Mongodb) negAckRecord(request Request) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	err = db.InsertRecordToInprocess(request.DbName, inprocess_collection_name_prefix+request.DbCollectionName+"_"+request.GroupId, input.Id, input.Params.DelayMs, 1, true)
+	err = db.InsertRecordToInprocess(request.DbName, inprocess_collection_name_prefix+request.Stream+"_"+request.GroupId, input.Id, input.Params.DelayMs, 1, true)
 	return []byte(""), err
 }
 
@@ -379,7 +379,7 @@ func (db *Mongodb) ackRecord(request Request) ([]byte, error) {
 	if err != nil {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
-	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
+	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.Stream + "_" + request.GroupId)
 	_, err = c.InsertOne(context.Background(), &record)
 	if err != nil {
 		if duplicateError(err) {
@@ -388,7 +388,7 @@ func (db *Mongodb) ackRecord(request Request) ([]byte, error) {
 		return nil, err
 	}
 
-	c = db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
+	c = db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.Stream + "_" + request.GroupId)
 	_, err_del := c.DeleteOne(context.Background(), bson.M{"_id": record.ID})
 	if err_del != nil {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
@@ -402,7 +402,7 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(request Request) error {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
-	if len(request.DbName) == 0 || len(request.DbCollectionName) == 0 {
+	if len(request.DbName) == 0 || len(request.Stream) == 0 {
 		return &DBError{utils.StatusWrongInput, "beamtime_id ans stream must be set"}
 	}
 
@@ -497,10 +497,10 @@ func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTi
 	}
 	tNow := time.Now().Unix()
 	dbSessionLock.Lock()
-	t := db.lastReadFromInprocess[request.DbCollectionName+"_"+request.GroupId]
+	t := db.lastReadFromInprocess[request.Stream+"_"+request.GroupId]
 	dbSessionLock.Unlock()
 	if (t <= tNow-int64(db.settings.ReadFromInprocessPeriod)) || ignoreTimeout {
-		record_ind, err = db.getUnProcessedId(request.DbName, inprocess_collection_name_prefix+request.DbCollectionName+"_"+request.GroupId, delayMs, nResendAttempts)
+		record_ind, err = db.getUnProcessedId(request.DbName, inprocess_collection_name_prefix+request.Stream+"_"+request.GroupId, delayMs, nResendAttempts)
 		if err != nil {
 			log_str := "error getting unprocessed id " + request.DbName + ", groupid: " + request.GroupId + ":" + err.Error()
 			logger.Debug(log_str)
@@ -514,7 +514,7 @@ func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTi
 		}
 	} else {
 		dbSessionLock.Lock()
-		db.lastReadFromInprocess[request.DbCollectionName+"_"+request.GroupId] = time.Now().Unix()
+		db.lastReadFromInprocess[request.Stream+"_"+request.GroupId] = time.Now().Unix()
 		dbSessionLock.Unlock()
 	}
 
@@ -595,7 +595,7 @@ func checkStreamFinished(request Request, id, id_max int, data map[string]interf
 	if !ok || !r.FinishedStream {
 		return nil
 	}
-	log_str := "reached end of stream " + request.DbCollectionName + " , next_stream: " + r.NextStream
+	log_str := "reached end of stream " + request.Stream + " , next_stream: " + r.NextStream
 	logger.Debug(log_str)
 
 	answer := encodeAnswer(r.ID-1, r.ID-1, r.NextStream)
@@ -614,7 +614,7 @@ func (db *Mongodb) getNextRecord(request Request) ([]byte, error) {
 	}
 
 	if err == nil {
-		err_update := db.InsertToInprocessIfNeeded(request.DbName, inprocess_collection_name_prefix+request.DbCollectionName+"_"+request.GroupId, nextInd, request.ExtraParam)
+		err_update := db.InsertToInprocessIfNeeded(request.DbName, inprocess_collection_name_prefix+request.Stream+"_"+request.GroupId, nextInd, request.ExtraParam)
 		if err_update != nil {
 			return nil, err_update
 		}
@@ -642,7 +642,7 @@ func getSizeFilter(request Request) bson.M {
 }
 
 func (db *Mongodb) getSize(request Request) ([]byte, error) {
-	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
+	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.Stream)
 
 	filter := getSizeFilter(request)
 	size, err := c.CountDocuments(context.TODO(), filter, options.Count())
@@ -669,7 +669,7 @@ func (db *Mongodb) resetCounter(request Request) ([]byte, error) {
 		return []byte(""), err
 	}
 
-	c := db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
+	c := db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.Stream + "_" + request.GroupId)
 	_, err_del := c.DeleteMany(context.Background(), bson.M{"_id": bson.M{"$gte": id}})
 	if err_del != nil {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
@@ -678,22 +678,32 @@ func (db *Mongodb) resetCounter(request Request) ([]byte, error) {
 	return []byte(""), nil
 }
 
+func getMetaId(request Request) (string, error) {
+	switch request.ExtraParam {
+	case "0":
+		return "bt", nil
+	case "1":
+		return "st_" + request.Stream, nil
+	default:
+		return "", &DBError{utils.StatusWrongInput, "wrong meta type"}
+	}
+}
+
 func (db *Mongodb) getMeta(request Request) ([]byte, error) {
-	id, err := strconv.Atoi(request.ExtraParam)
+	id, err := getMetaId(request)
 	if err != nil {
 		return nil, err
 	}
-
-	var res map[string]interface{}
 	q := bson.M{"_id": id}
+	var res map[string]interface{}
 	c := db.client.Database(request.DbName).Collection(meta_collection_name)
 	err = c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
 	if err != nil {
-		log_str := "error getting meta with id " + strconv.Itoa(id) + " for " + request.DbName + " : " + err.Error()
+		log_str := "error getting meta for " + id + " in " + request.DbName + " : " + err.Error()
 		logger.Debug(log_str)
 		return nil, &DBError{utils.StatusNoData, err.Error()}
 	}
-	log_str := "got record id " + strconv.Itoa(id) + " for " + request.DbName
+	log_str := "got metadata for " + id + " in " + request.DbName
 	logger.Debug(log_str)
 	return utils.MapToJson(&res)
 }
@@ -713,7 +723,7 @@ func (db *Mongodb) queryMessages(request Request) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
-	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.DbCollectionName)
+	c := db.client.Database(request.DbName).Collection(data_collection_name_prefix + request.Stream)
 	opts := options.Find()
 
 	if len(sort) > 0 {
@@ -832,14 +842,14 @@ func (db *Mongodb) collectionExist(request Request, name string) (bool, error) {
 }
 
 func (db *Mongodb) deleteDataCollection(errorOnNotexist bool, request Request) error {
-	dataCol := data_collection_name_prefix + request.DbCollectionName
+	dataCol := data_collection_name_prefix + request.Stream
 	if errorOnNotexist {
 		exist, err := db.collectionExist(request, dataCol)
 		if err != nil {
 			return err
 		}
 		if !exist {
-			return &DBError{utils.StatusWrongInput, "stream " + request.DbCollectionName + " does not exist"}
+			return &DBError{utils.StatusWrongInput, "stream " + request.Stream + " does not exist"}
 		}
 	}
 	return db.deleteCollection(request, dataCol)
@@ -851,10 +861,10 @@ func (db *Mongodb) deleteDocumentsInCollection(request Request, collection strin
 	return err
 }
 
-func escapeQuery(query string )(res string) {
+func escapeQuery(query string) (res string) {
 	chars := `\-[]{}()*+?.,^$|#`
 	for _, char := range chars {
-		query = strings.ReplaceAll(query,string(char),`\`+string(char))
+		query = strings.ReplaceAll(query, string(char), `\`+string(char))
 	}
 	return query
 }
@@ -877,15 +887,15 @@ func (db *Mongodb) deleteCollectionsWithPrefix(request Request, prefix string) e
 }
 
 func (db *Mongodb) deleteServiceMeta(request Request) error {
-	err := db.deleteCollectionsWithPrefix(request, acks_collection_name_prefix+request.DbCollectionName)
+	err := db.deleteCollectionsWithPrefix(request, acks_collection_name_prefix+request.Stream)
 	if err != nil {
 		return err
 	}
-	err = db.deleteCollectionsWithPrefix(request, inprocess_collection_name_prefix+request.DbCollectionName)
+	err = db.deleteCollectionsWithPrefix(request, inprocess_collection_name_prefix+request.Stream)
 	if err != nil {
 		return err
 	}
-	return db.deleteDocumentsInCollection(request, pointer_collection_name, "_id", ".*_"+escapeQuery(request.DbCollectionName)+"$")
+	return db.deleteDocumentsInCollection(request, pointer_collection_name, "_id", ".*_"+escapeQuery(request.Stream)+"$")
 }
 
 func (db *Mongodb) deleteStream(request Request) ([]byte, error) {
@@ -903,7 +913,7 @@ func (db *Mongodb) deleteStream(request Request) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, "wrong params: " + request.ExtraParam}
 	}
 	if !*params.DeleteMeta {
-		logger.Debug("skipping delete stream meta for " + request.DbCollectionName + " in " + request.DbName)
+		logger.Debug("skipping delete stream meta for " + request.Stream + " in " + request.DbName)
 		return nil, nil
 	}
 
@@ -917,7 +927,7 @@ func (db *Mongodb) deleteStream(request Request) ([]byte, error) {
 }
 
 func (db *Mongodb) lastAck(request Request) ([]byte, error) {
-	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
+	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.Stream + "_" + request.GroupId)
 	opts := options.FindOne().SetSort(bson.M{"_id": -1}).SetReturnKey(true)
 	result := LastAck{0}
 	var q bson.M = nil
@@ -984,7 +994,7 @@ func extractNacsFromCursor(err error, cursor *mongo.Cursor) ([]int, error) {
 }
 
 func (db *Mongodb) getNacks(request Request, min_index, max_index int) ([]int, error) {
-	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.DbCollectionName + "_" + request.GroupId)
+	c := db.client.Database(request.DbName).Collection(acks_collection_name_prefix + request.Stream + "_" + request.GroupId)
 
 	if res, err, ok := db.canAvoidDbRequest(min_index, max_index, c); ok {
 		return res, err
@@ -1003,7 +1013,6 @@ func (db *Mongodb) getStreams(request Request) ([]byte, error) {
 	}
 	return json.Marshal(&rec)
 }
-
 
 func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
 	if err := db.checkDatabaseOperationPrerequisites(request); err != nil {

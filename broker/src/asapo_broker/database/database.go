@@ -3,13 +3,13 @@ package database
 import "asapo_common/utils"
 
 type Request struct {
-	DbName string
-	DbCollectionName string
-	GroupId string
-	Op string
-	DatasetOp bool
+	DbName         string
+	Stream         string
+	GroupId        string
+	Op             string
+	DatasetOp      bool
 	MinDatasetSize int
-	ExtraParam string
+	ExtraParam     string
 }
 
 type Agent interface {
