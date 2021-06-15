@@ -163,10 +163,12 @@ bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, Error* err) {
     if (!BSON_APPEND_DOCUMENT(bson, "meta", bson_meta)
             || !BSON_APPEND_UTF8(bson, "schema_version", GetDbSchemaVersion().c_str())) {
         *err = DBErrorTemplates::kInsertError.Generate("cannot add schema version ");
+        bson_destroy(bson_meta);
         return nullptr;
     }
 
     *err = nullptr;
+    bson_destroy(bson_meta);
     return bson_p{bson};
 }
 
