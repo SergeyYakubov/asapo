@@ -57,6 +57,9 @@ Error JsonParser::GetRawString(std::string* val) const noexcept {
 Error JsonParser::GetArrayRawStrings(const std::string& name, std::vector<std::string>* val) const noexcept {
     return rapid_json_->GetArrayRawStrings(name, val);
 }
+Error JsonParser::GetFlattenedString(const std::string& prefix,const std::string& separator, std::string *val) const noexcept {
+    return rapid_json_->GetFlattenedString(prefix,separator,val);
+}
 
 }
 

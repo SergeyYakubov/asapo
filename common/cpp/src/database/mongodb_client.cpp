@@ -147,12 +147,31 @@ bson_p PrepareBsonDocument(const MessageMeta& file, Error* err) {
     return bson_p{bson};
 }
 
-bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, Error* err) {
+bson_p PrepareUpdateDocument(const uint8_t* json, Error* err) {
+    JsonStringParser parser{std::string(reinterpret_cast<const char*>(json))};
+    std::string json_flat;
+    auto parser_err = parser.GetFlattenedString("meta",".",&json_flat);
+    if (parser_err) {
+        *err = DBErrorTemplates::kJsonParseError.Generate("cannof flatten meta "+parser_err->Explain());
+        return nullptr;
+    }
+    bson_error_t mongo_err;
+    auto bson_meta = bson_new_from_json(reinterpret_cast<const uint8_t *>(json_flat.c_str()), json_flat.size(), &mongo_err);
+    if (!bson_meta) {
+        *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);
+        return nullptr;
+    }
+    return bson_p{bson_meta};
+}
+
+
+bson_p PrepareInjestDocument(const uint8_t* json, ssize_t len, Error* err) {
     bson_error_t mongo_err;
     if (json == nullptr) {
         *err = TextError("empty metadata");
         return nullptr;
     }
+
 
     auto bson_meta = bson_new_from_json(json, len, &mongo_err);
     if (!bson_meta) {
@@ -214,6 +233,39 @@ Error MongoDBClient::ReplaceBsonDocument(const std::string& id, const bson_p& do
     return err;
 }
 
+Error MongoDBClient::UpdateBsonDocument(const std::string& id, const bson_p& document, bool upsert) const {
+    bson_error_t mongo_err;
+
+    bson_t* opts = BCON_NEW ("upsert", BCON_BOOL(upsert));
+    bson_t* selector = BCON_NEW ("_id", BCON_UTF8(id.c_str()));
+    bson_t *update  = BCON_NEW ("$set",BCON_DOCUMENT(document.get()));
+
+    bson_t reply;
+    Error err = nullptr;
+    bson_iter_t iter;
+
+    if (!mongoc_collection_update_one(current_collection_, selector, update, opts, &reply, &mongo_err)) {
+        err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
+    }
+
+    if (err == nullptr) {
+        bson_iter_init_find(&iter, &reply, "upsertedCount");
+        auto n_upsert = bson_iter_int32(&iter);
+        bson_iter_init_find(&iter, &reply, "modifiedCount");
+        auto n_mod = bson_iter_int32(&iter);
+        if (n_mod + n_upsert != 1) {
+            err = DBErrorTemplates::kInsertError.Generate("metadata does not exist");
+        }
+    }
+
+    bson_free(opts);
+    bson_free(selector);
+    bson_destroy (&reply);
+    bson_destroy (update);
+
+    return err;
+}
+
 Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
@@ -236,6 +288,25 @@ MongoDBClient::~MongoDBClient() {
     CleanUp();
 }
 
+bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len,const std::string& id_encoded, MetaIngestMode mode, Error* err) {
+    bson_p document;
+    if (mode.op==MetaIngestOp::kUpdate) {
+        document = PrepareUpdateDocument(json, err);
+    } else {
+        document = PrepareInjestDocument(json, len, err);
+    }
+    if (*err) {
+        return nullptr;
+    }
+    if (mode.op!=MetaIngestOp::kUpdate) {
+        if (!BSON_APPEND_UTF8(document.get(), "_id", id_encoded.c_str())) {
+            *err = DBErrorTemplates::kInsertError.Generate("cannot assign document id ");
+            return nullptr;
+        }
+    }
+    return document;
+}
+
 Error MongoDBClient::InsertMeta(const std::string& collection, const std::string& id, const uint8_t* data,
                                 uint64_t size,
                                 MetaIngestMode mode) const {
@@ -248,13 +319,10 @@ Error MongoDBClient::InsertMeta(const std::string& collection, const std::string
         return err;
     }
 
-    auto document = PrepareBsonDocument(data, (ssize_t) size, &err);
+    auto id_encoded = EncodeColName(id);
+    auto document = PrepareBsonDocument(data,(ssize_t)size,id_encoded,mode,&err);
     if (err) {
         return err;
-    }
-    auto id_encoded = EncodeColName(id);
-    if (!BSON_APPEND_UTF8(document.get(), "_id", id_encoded.c_str())) {
-        err = DBErrorTemplates::kInsertError.Generate("cannot assign document id ");
     }
 
     switch (mode.op) {
@@ -263,6 +331,7 @@ Error MongoDBClient::InsertMeta(const std::string& collection, const std::string
     case asapo::MetaIngestOp::kReplace:
         return ReplaceBsonDocument(id_encoded, document, mode.upsert);
     case MetaIngestOp::kUpdate:
+        return UpdateBsonDocument(id_encoded, document, mode.upsert);
         break;
 
     }
@@ -661,7 +730,7 @@ Error MongoDBClient::DeleteStream(const std::string& stream) const {
 
 Error MongoDBClient::GetMetaFromDb(const std::string& collection, const std::string& id, std::string* res) const {
     std::string meta_str;
-    auto err = GetRecordFromDb(collection, 0, id, GetRecordMode::kByStringId, &meta_str);
+    auto err = GetRecordFromDb(collection, 0, EncodeColName(id), GetRecordMode::kByStringId, &meta_str);
     if (err) {
         return err;
     }

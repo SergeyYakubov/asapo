@@ -13,8 +13,8 @@ target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR}
 # Testing
 ################################
 add_integration_test(${TARGET_NAME} metaOK "OK" "OK")
-add_integration_test(${TARGET_NAME} metaFailsWhenNotConnected
-        "Notconnected"
-        "Notconnected")
-add_integration_test(${TARGET_NAME} metaFailsOnWrongMeta "parseerror" "parseerror")
+#add_integration_test(${TARGET_NAME} metaFailsWhenNotConnected
+#        "Notconnected"
+#        "Notconnected")
+#add_integration_test(${TARGET_NAME} metaFailsOnWrongMeta "parseerror" "parseerror")
 add_test_cleanup(${TARGET_NAME})

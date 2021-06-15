@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
 
     if (args.keyword == "OK") {
         asapo::MetaIngestMode mode{asapo::MetaIngestOp::kInsert, false};
-        std::string meta = R"({"data":"test"})";
+        std::string meta = R"({"data":"test","data1":"test1","embedded":{"edata":1}})";
         err =
             db.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
         M_AssertEq(nullptr, err);
@@ -81,6 +81,15 @@ int main(int argc, char* argv[]) {
         err = db.GetMetaFromDb("meta", "0", &meta_res);
         M_AssertEq(meta_res, json);
 
+
+        std::string mod_meta = R"({"data":"newtest","embedded":{"edata":2}})";
+        std::string expected_meta = R"({"data":"newtest","data1":"test1","embedded":{"edata":2}})";
+        mode.op = asapo::MetaIngestOp::kUpdate;
+        err = db.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(mod_meta.c_str()), mod_meta.size(), mode);
+        M_AssertEq(nullptr, err);
+        err = db.GetMetaFromDb("meta", stream_name, &meta_res);
+        M_AssertEq(nullptr, err);
+        M_AssertEq(expected_meta,meta_res);
 
         db.DeleteStream(stream_name);
     }
