@@ -703,9 +703,15 @@ func (db *Mongodb) getMeta(request Request) ([]byte, error) {
 		logger.Debug(log_str)
 		return nil, &DBError{utils.StatusNoData, err.Error()}
 	}
+	userMeta,ok:=res["meta"]
+	if !ok {
+		log_str := "error getting meta for " + id + " in " + request.DbName + " : cannot parse database response"
+		logger.Error(log_str)
+		return nil, errors.New(log_str)
+	}
 	log_str := "got metadata for " + id + " in " + request.DbName
 	logger.Debug(log_str)
-	return utils.MapToJson(&res)
+	return utils.MapToJson(&userMeta)
 }
 
 func (db *Mongodb) processQueryError(query, dbname string, err error) ([]byte, error) {

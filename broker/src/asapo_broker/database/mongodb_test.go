@@ -556,7 +556,7 @@ func TestMongoDBResetCounter(t *testing.T) {
 func TestMongoDBGetMetaBtOK(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
-	rec_expect, _ := json.Marshal(recbt)
+	rec_expect, _ := json.Marshal(recbt.Meta)
 	db.insertMeta(dbname, &recbt)
 
 	res, err := db.ProcessRequest(Request{DbName: dbname, Stream: "whatever", Op: "meta", ExtraParam: "0"})
@@ -568,7 +568,7 @@ func TestMongoDBGetMetaBtOK(t *testing.T) {
 func TestMongoDBGetMetaStOK(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
-	rec_expect, _ := json.Marshal(recst)
+	rec_expect, _ := json.Marshal(recst.Meta)
 	db.insertMeta(dbname, &recst)
 
 	res, err := db.ProcessRequest(Request{DbName: dbname, Stream: collection, Op: "meta", ExtraParam: "1"})
@@ -581,8 +581,9 @@ func TestMongoDBGetMetaErr(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()
 
-	_, err := db.ProcessRequest(Request{DbName: dbname, Stream: collection, Op: "meta", ExtraParam: metaID})
+	_, err := db.ProcessRequest(Request{DbName: dbname, Stream: collection, Op: "meta", ExtraParam: "1"})
 	assert.NotNil(t, err)
+	assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
 }
 
 type MetaData struct {

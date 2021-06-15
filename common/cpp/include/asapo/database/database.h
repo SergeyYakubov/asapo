@@ -26,6 +26,8 @@ class Database {
     virtual Error GetStreamInfo(const std::string& collection, StreamInfo* info) const  = 0;
     virtual Error GetLastStream(StreamInfo* info) const  = 0;
     virtual Error DeleteStream(const std::string& stream) const = 0;
+    virtual Error GetMetaFromDb(const std::string& collection, const std::string& id, std::string* res) const = 0;
+
     virtual ~Database() = default;
 };
 

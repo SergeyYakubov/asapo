@@ -375,7 +375,6 @@ cdef class PyConsumer:
         if err:
             throw_exception(err)
         meta = json.loads(_str(meta_str))
-        del meta['_id']
         return meta
     def get_stream_meta(self, stream = 'default'):
         cdef Error err
@@ -386,7 +385,6 @@ cdef class PyConsumer:
         if err:
             throw_exception(err)
         meta = json.loads(_str(meta_str))
-        del meta['_id']
         return meta
 
     def interrupt_current_operation(self):

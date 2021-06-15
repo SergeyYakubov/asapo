@@ -67,7 +67,7 @@ Error MongoDBClient::UpdateCurrentCollectionIfNeeded(const std::string& collecti
 
     auto encoded_name  = EncodeColName(collection_name);
     if (encoded_name.size() > maxCollectionNameLength) {
-        return DBErrorTemplates::kWrongInput.Generate("stream name too long");
+        return DBErrorTemplates::kWrongInput.Generate("collection name too long");
     }
 
     current_collection_ = mongoc_client_get_collection(client_, database_name_.c_str(),
@@ -154,13 +154,14 @@ bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, Error* err) {
         return nullptr;
     }
 
-    auto bson = bson_new_from_json(json, len, &mongo_err);
-    if (!bson) {
+    auto bson_meta = bson_new_from_json(json, len, &mongo_err);
+    if (!bson_meta) {
         *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);
         return nullptr;
     }
-
-    if (!BSON_APPEND_UTF8(bson, "schema_version", GetDbSchemaVersion().c_str())) {
+    auto bson =  bson_new();
+    if (!BSON_APPEND_DOCUMENT(bson, "meta", bson_meta)
+            || !BSON_APPEND_UTF8(bson, "schema_version", GetDbSchemaVersion().c_str())) {
         *err = DBErrorTemplates::kInsertError.Generate("cannot add schema version ");
         return nullptr;
     }
@@ -322,7 +323,8 @@ Error MongoDBClient::InsertAsDatasetMessage(const std::string& collection, const
     return err;
 }
 
-Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, GetRecordMode mode,
+Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id, const std::string& string_id,
+                                     GetRecordMode mode,
                                      std::string* res) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
@@ -341,6 +343,10 @@ Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id,
     char* str;
 
     switch (mode) {
+    case GetRecordMode::kByStringId:
+        filter = BCON_NEW ("_id", BCON_UTF8(string_id.c_str()));
+        opts = BCON_NEW ("limit", BCON_INT64(1));
+        break;
     case GetRecordMode::kById:
         filter = BCON_NEW ("_id", BCON_INT64(id));
         opts = BCON_NEW ("limit", BCON_INT64(1));
@@ -382,7 +388,7 @@ Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id,
 
 Error MongoDBClient::GetById(const std::string& collection, uint64_t id, MessageMeta* file) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
+    auto err = GetRecordFromDb(collection, id, "", GetRecordMode::kById, &record_str);
     if (err) {
         return err;
     }
@@ -398,7 +404,7 @@ Error MongoDBClient::GetDataSetById(const std::string& collection,
                                     uint64_t id,
                                     MessageMeta* file) const {
     std::string record_str;
-    auto err = GetRecordFromDb(collection, id, GetRecordMode::kById, &record_str);
+    auto err = GetRecordFromDb(collection, id, "", GetRecordMode::kById, &record_str);
     if (err) {
         return err;
     }
@@ -500,7 +506,7 @@ Error StreamInfoFromDbResponse(const std::string& last_record_str,
 
 Error MongoDBClient::GetStreamInfo(const std::string& collection, StreamInfo* info) const {
     std::string last_record_str, earliest_record_str;
-    auto err = GetRecordFromDb(collection, 0, GetRecordMode::kLast, &last_record_str);
+    auto err = GetRecordFromDb(collection, 0, "", GetRecordMode::kLast, &last_record_str);
     if (err) {
         if (err
                 == DBErrorTemplates::kNoRecord) { // with noRecord error it will return last_id = 0 which can be used to understand that the stream is not started yet
@@ -509,7 +515,7 @@ Error MongoDBClient::GetStreamInfo(const std::string& collection, StreamInfo* in
         }
         return err;
     }
-    err = GetRecordFromDb(collection, 0, GetRecordMode::kEarliest, &earliest_record_str);
+    err = GetRecordFromDb(collection, 0, "", GetRecordMode::kEarliest, &earliest_record_str);
     if (err) {
         return err;
     }
@@ -646,9 +652,24 @@ Error MongoDBClient::DeleteStream(const std::string& stream) const {
         DeleteCollections(acks_col);
         std::string querystr = ".*_" + EscapeQuery(stream_encoded) + "$";
         DeleteDocumentsInCollection("current_location", querystr);
-        DeleteDocumentsInCollection("meta", "^" + EscapeQuery(stream_encoded) + "$");
     }
+    DeleteDocumentsInCollection("meta", "^" + EscapeQuery(stream_encoded) + "$");
     return err;
+}
+
+Error MongoDBClient::GetMetaFromDb(const std::string& collection, const std::string& id, std::string* res) const {
+    std::string meta_str;
+    auto err = GetRecordFromDb(collection, 0, id, GetRecordMode::kByStringId, &meta_str);
+    if (err) {
+        return err;
+    }
+    auto parser = JsonStringParser(meta_str);
+    err = parser.Embedded("meta").GetRawString(res);
+    if (err) {
+        return DBErrorTemplates::kJsonParseError.Generate(
+                   "GetMetaFromDb: cannot parse database response: " + err->Explain());
+    }
+    return nullptr;
 }
 
 }

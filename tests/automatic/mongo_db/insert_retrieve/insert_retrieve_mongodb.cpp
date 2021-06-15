@@ -98,21 +98,6 @@ int main(int argc, char* argv[]) {
         err = db_new.GetById(std::string("data_") + stream_name, 0, &fi_db);
         Assert(err, "No record");
 
-
-// metadata
-        asapo::MetaIngestMode mode{asapo::MetaIngestOp::kInsert, false};
-        std::string meta = R"({"data":"test"})";
-        err = db_new.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
-        M_AssertEq(nullptr, err);
-        err = db_new.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
-        M_AssertTrue(err == asapo::DBErrorTemplates::kDuplicateID);
-        mode.op = asapo::MetaIngestOp::kReplace;
-        err = db_new.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
-        M_AssertEq(nullptr, err);
-        err = db_new.InsertMeta("meta", "notexist", reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
-        M_AssertTrue(err == asapo::DBErrorTemplates::kInsertError);
-
-
         asapo::StreamInfo info;
 
         err = db.GetStreamInfo(std::string("data_") + stream_name, &info);

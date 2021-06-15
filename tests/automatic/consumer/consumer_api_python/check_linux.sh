@@ -28,8 +28,8 @@ done
 
 echo 'db.data_streamfts.insert({"_id":'1',"size":0,"name":"'1'","timestamp":1000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}})' | mongo ${database_name}
 
-echo 'db.meta.insert({"_id":"bt","data":"test_bt"})' | mongo ${database_name}
-echo 'db.meta.insert({"_id":"st_test","data":"test_st"})' | mongo ${database_name}
+echo 'db.meta.insert({"_id":"bt","meta":{"data":"test_bt"}})' | mongo ${database_name}
+echo 'db.meta.insert({"_id":"st_test","meta":{"data":"test_st"}})' | mongo ${database_name}
 
 
 for i in `seq 1 5`;

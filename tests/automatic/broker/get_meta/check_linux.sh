@@ -11,8 +11,8 @@ Cleanup() {
 	echo "db.dropDatabase()" | mongo ${database_name}
 }
 
-echo 'db.meta.insert({"_id":"bt","data":"test_bt"})' | mongo ${database_name}
-echo 'db.meta.insert({"_id":"st_test","data":"test_st"})' | mongo ${database_name}
+echo 'db.meta.insert({"_id":"bt","meta":{"data":"test_bt"}})' | mongo ${database_name}
+echo 'db.meta.insert({"_id":"st_test","meta":{"data":"test_st"}})' | mongo ${database_name}
 
 token=$BT_TEST_TOKEN
 

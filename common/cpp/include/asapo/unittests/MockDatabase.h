@@ -48,6 +48,11 @@ class MockDatabase : public Database {
         return Error{GetSetById_t(collection, set_id, id, file)};
     }
 
+    Error GetMetaFromDb(const std::string& collection, const std::string& id, std::string* res) const override {
+        return Error{GetMetaFromDb_t(collection, id, res)};
+    }
+    MOCK_CONST_METHOD3(GetMetaFromDb_t, ErrorInterface * (const std::string&, const std::string&, std::string* res));
+
     MOCK_CONST_METHOD4(GetSetById_t, ErrorInterface * (const std::string&, uint64_t set_id, uint64_t id, MessageMeta*));
 
     Error GetStreamInfo(const std::string& collection, StreamInfo* info) const override {

@@ -36,7 +36,8 @@ using bson_p = std::unique_ptr<_bson_t, BsonDestroyFunctor>;
 enum class GetRecordMode {
     kById,
     kLast,
-    kEarliest
+    kEarliest,
+    kByStringId,
 };
 
 const size_t maxDbNameLength = 63;
@@ -56,6 +57,7 @@ class MongoDBClient final : public Database {
     Error GetStreamInfo(const std::string& collection, StreamInfo* info) const override;
     Error GetLastStream(StreamInfo* info) const override;
     Error DeleteStream(const std::string& stream) const override;
+    Error GetMetaFromDb(const std::string& collection, const std::string& id, std::string* res) const override;
     ~MongoDBClient() override;
   private:
     mongoc_client_t* client_{nullptr};
@@ -73,7 +75,8 @@ class MongoDBClient final : public Database {
     Error InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const;
     Error ReplaceBsonDocument(const std::string& id, const bson_p& document, bool upsert) const;
     Error AddBsonDocumentToArray(bson_t* query, bson_t* update, bool ignore_duplicates) const;
-    Error GetRecordFromDb(const std::string& collection, uint64_t id, GetRecordMode mode, std::string* res) const;
+    Error GetRecordFromDb(const std::string& collection, uint64_t id, const std::string& string_id, GetRecordMode mode,
+                          std::string* res) const;
     Error UpdateLastStreamInfo(const char* str, StreamInfo* info) const;
     Error DeleteCollection(const std::string& name) const;
     Error DeleteCollections(const std::string& prefix) const;
