@@ -23,6 +23,21 @@ Args GetArgs(int argc, char* argv[]) {
     return Args{server, source, beamtime};
 }
 
+void TestMeta(const std::unique_ptr<asapo::Producer>& producer) {
+    asapo::Error err;
+    std::string meta = R"({"data":"test","embedded":{"edata":2}})";
+    producer->SendBeamtimeMetadata(meta, asapo::MetaIngestMode{asapo::MetaIngestOp::kInsert, true}, nullptr);
+    producer->WaitRequestsFinished(5000);
+    auto meta_received = producer->GetBeamtimeMeta(5000, &err);
+    M_AssertTrue(meta_received == meta);
+    std::string meta_update = R"({"embedded":{"edata":3}})";
+    std::string meta_updated = R"({"data":"test","embedded":{"edata":3}})";
+    producer->SendBeamtimeMetadata(meta_update, asapo::MetaIngestMode{asapo::MetaIngestOp::kUpdate, false}, nullptr);
+    producer->WaitRequestsFinished(5000);
+    meta_received = producer->GetBeamtimeMeta(5000, &err);
+    M_AssertTrue(meta_received == meta_updated);
+}
+
 
 void Test(const std::unique_ptr<asapo::Producer>& producer) {
     asapo::MessageMeta fi;
@@ -37,9 +52,11 @@ void Test(const std::unique_ptr<asapo::Producer>& producer) {
     M_AssertTrue(!server.empty(), "server version");
 
 
-    producer->GetStreamInfo("default",5000,&err);
+    TestMeta(producer);
+
+    producer->GetStreamInfo("default", 5000, &err);
     if (err) {
-        printf("%s\n",err->Explain().c_str());
+        printf("%s\n", err->Explain().c_str());
     }
     M_AssertTrue(err == nullptr, "stream info");
 
@@ -51,7 +68,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     auto producer = asapo::Producer::Create(args.server, 2,
                                             asapo::RequestHandlerType::kTcp,
                                             asapo::SourceCredentials{asapo::SourceType::kProcessed, args.beamtime,
-                                                                     "", args.source, ""}, 60000, &err);
+                                                    "", args.source, ""}, 60000, &err);
     if (err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);
@@ -66,7 +83,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 void TestAll(const Args& args) {
     asapo::Error err;
     auto producer = CreateProducer(args);
-    if (producer==nullptr) {
+    if (producer == nullptr) {
         std::cout << "Error CreateProducer: " << err << std::endl;
         exit(EXIT_FAILURE);
     }

@@ -16,6 +16,7 @@
 #include "../../src/request_handler/request_handler_db_stream_info.h"
 #include "../../src/request_handler/request_handler_db_last_stream.h"
 #include "../../src/request_handler/request_handler_db_delete_stream.h"
+#include "../../src/request_handler/request_handler_db_get_meta.h"
 
 #include "../../src/request_handler/request_handler_receive_data.h"
 #include "../../src/request_handler/request_handler_receive_metadata.h"
@@ -224,6 +225,17 @@ TEST_F(FactoryTests, DeleteStreamRequest) {
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbDeleteStream*>(request->GetListHandlers()[1]), Ne(nullptr));
 }
+
+TEST_F(FactoryTests, GetMetamRequest) {
+    generic_request_header.op_code = asapo::Opcode::kOpcodeGetMeta;
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(2));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbGetMeta*>(request->GetListHandlers()[1]), Ne(nullptr));
+}
+
+
 
 
 }

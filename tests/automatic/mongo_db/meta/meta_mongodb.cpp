@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
             db.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
         M_AssertEq(nullptr, err);
         err = db.InsertMeta("meta", "notexist", reinterpret_cast<const uint8_t*>(meta.c_str()), meta.size(), mode);
-        M_AssertTrue(err == asapo::DBErrorTemplates::kInsertError);
+        M_AssertTrue(err == asapo::DBErrorTemplates::kWrongInput);
 
         std::string meta_res;
         err = db.GetMetaFromDb("meta", "0", &meta_res);
@@ -87,6 +87,9 @@ int main(int argc, char* argv[]) {
         mode.op = asapo::MetaIngestOp::kUpdate;
         err = db.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(mod_meta.c_str()), mod_meta.size(), mode);
         M_AssertEq(nullptr, err);
+        err = db.InsertMeta("meta", stream_name, reinterpret_cast<const uint8_t*>(mod_meta.c_str()), mod_meta.size(), mode);
+        M_AssertEq(nullptr, err);
+
         err = db.GetMetaFromDb("meta", stream_name, &meta_res);
         M_AssertEq(nullptr, err);
         M_AssertEq(expected_meta, meta_res);

@@ -300,6 +300,41 @@ cdef class PyProducer:
             err = self.c_producer.get().DeleteStream(b_stream,timeout_ms,opts)
         if err:
             throw_exception(err)
+    def get_stream_meta(self,stream = 'default', uint64_t timeout_ms = 1000):
+        """
+         :param stream: stream name
+         :type stream: string
+         :param timeout_ms: timeout in milliseconds
+         :type timeout_ms: int
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, ...)
+            AsapoTimeoutError: request not finished for a given timeout
+            AsapoProducerError: other errors
+        """
+        cdef Error err
+        cdef string res
+        cdef string b_stream = _bytes(stream)
+        with nogil:
+            res = self.c_producer.get().GetStreamMeta(b_stream,timeout_ms,&err)
+        if err:
+            throw_exception(err)
+        return json.loads(_str(res) or 'null')
+    def get_beamtime_meta(self, uint64_t timeout_ms = 1000):
+        """
+         :param timeout_ms: timeout in milliseconds
+         :type timeout_ms: int
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, ...)
+            AsapoTimeoutError: request not finished for a given timeout
+            AsapoProducerError: other errors
+        """
+        cdef Error err
+        cdef string res
+        with nogil:
+            res = self.c_producer.get().GetBeamtimeMeta(timeout_ms,&err)
+        if err:
+            throw_exception(err)
+        return json.loads(_str(res) or 'null')
     def stream_info(self, stream = 'default', uint64_t timeout_ms = 1000):
         """
          :param stream: stream name

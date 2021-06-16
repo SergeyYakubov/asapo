@@ -203,6 +203,17 @@ Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_dupl
     return nullptr;
 }
 
+bool documentWasChanged(bson_t* reply) {
+    bson_iter_t iter;
+    bson_iter_init_find(&iter, reply, "upsertedCount");
+    auto n_upsert = bson_iter_int32(&iter);
+    bson_iter_init_find(&iter, reply, "modifiedCount");
+    auto n_mod = bson_iter_int32(&iter);
+    bson_iter_init_find(&iter, reply, "matchedCount");
+    auto n_matched = bson_iter_int32(&iter);
+    return n_mod + n_upsert + n_matched > 0;
+}
+
 Error MongoDBClient::ReplaceBsonDocument(const std::string& id, const bson_p& document, bool upsert) const {
     bson_error_t mongo_err;
 
@@ -210,20 +221,13 @@ Error MongoDBClient::ReplaceBsonDocument(const std::string& id, const bson_p& do
     bson_t* selector = BCON_NEW ("_id", BCON_UTF8(id.c_str()));
     bson_t reply;
     Error err = nullptr;
-    bson_iter_t iter;
 
     if (!mongoc_collection_replace_one(current_collection_, selector, document.get(), opts, &reply, &mongo_err)) {
         err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
     }
 
-    if (err == nullptr) {
-        bson_iter_init_find(&iter, &reply, "upsertedCount");
-        auto n_upsert = bson_iter_int32(&iter);
-        bson_iter_init_find(&iter, &reply, "modifiedCount");
-        auto n_mod = bson_iter_int32(&iter);
-        if (n_mod + n_upsert != 1) {
-            err = DBErrorTemplates::kInsertError.Generate("metadata does not exist");
-        }
+    if (err == nullptr && !documentWasChanged(&reply)) {
+        err = DBErrorTemplates::kWrongInput.Generate("cannot replace: metadata does not exist");
     }
 
     bson_free(opts);
@@ -242,20 +246,12 @@ Error MongoDBClient::UpdateBsonDocument(const std::string& id, const bson_p& doc
 
     bson_t reply;
     Error err = nullptr;
-    bson_iter_t iter;
-
     if (!mongoc_collection_update_one(current_collection_, selector, update, opts, &reply, &mongo_err)) {
         err = DBErrorTemplates::kInsertError.Generate(mongo_err.message);
     }
 
-    if (err == nullptr) {
-        bson_iter_init_find(&iter, &reply, "upsertedCount");
-        auto n_upsert = bson_iter_int32(&iter);
-        bson_iter_init_find(&iter, &reply, "modifiedCount");
-        auto n_mod = bson_iter_int32(&iter);
-        if (n_mod + n_upsert != 1) {
-            err = DBErrorTemplates::kInsertError.Generate("metadata does not exist");
-        }
+    if (err == nullptr && !documentWasChanged(&reply)) {
+        err = DBErrorTemplates::kWrongInput.Generate("cannot update: metadata does not exist");
     }
 
     bson_free(opts);

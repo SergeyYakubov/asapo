@@ -507,7 +507,13 @@ std::string ProducerImpl::GetBeamtimeMeta(uint64_t timeout_ms, Error* err) const
 }
 
 std::string ProducerImpl::GetMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const {
-    return std::string();
+    auto header =  GenericRequestHeader{kOpcodeGetMeta, 0, 0, 0, "", stream};
+    auto response = BlockingRequest(std::move(header), timeout_ms, err);
+    if (*err) {
+        return "";
+    }
+    *err = nullptr;
+    return response;
 }
 
 }

@@ -501,7 +501,7 @@ TEST_F(ProducerImplTests, WaitRequestsFinished) {
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kTimeout));
 }
 
-MATCHER_P3(M_CheckGetStreamInfoRequest, op_code, source_credentials, stream,
+MATCHER_P3(M_CheckGetRequest, op_code, source_credentials, stream,
            "Checks if a valid GenericRequestHeader was Send") {
     auto request = static_cast<ProducerRequest*>(arg);
     return ((asapo::GenericRequestHeader) (arg->header)).op_code == op_code
@@ -509,9 +509,9 @@ MATCHER_P3(M_CheckGetStreamInfoRequest, op_code, source_credentials, stream,
            && strcmp(((asapo::GenericRequestHeader) (arg->header)).stream, stream) == 0;
 }
 
-TEST_F(ProducerImplTests, GetStreamInfoMakesCorerctRequest) {
+TEST_F(ProducerImplTests, GetStreamInfoMakesCorrectRequest) {
     producer.SetCredentials(expected_credentials);
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetStreamInfoRequest(asapo::kOpcodeStreamInfo,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetRequest(asapo::kOpcodeStreamInfo,
                                         expected_credentials_str,
                                         expected_stream), true)).WillOnce(
                                             Return(nullptr));
@@ -537,9 +537,9 @@ TEST(GetStreamInfoTest, GetStreamInfoTimeout) {
     ASSERT_THAT(err->Explain(), HasSubstr("opcode: 4"));
 }
 
-TEST_F(ProducerImplTests, GetLastStreamMakesCorerctRequest) {
+TEST_F(ProducerImplTests, GetLastStreamMakesCorrectRequest) {
     producer.SetCredentials(expected_credentials);
-    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetStreamInfoRequest(asapo::kOpcodeLastStream,
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetRequest(asapo::kOpcodeLastStream,
                                         expected_credentials_str,
                                         ""), true)).WillOnce(
                                             Return(nullptr));
@@ -605,7 +605,7 @@ MATCHER_P4(M_CheckDeleteStreamRequest, op_code, source_credentials, stream, flag
            && strcmp(((asapo::GenericRequestHeader) (arg->header)).stream, stream) == 0;
 }
 
-TEST_F(ProducerImplTests, DeleteStreamMakesCorerctRequest) {
+TEST_F(ProducerImplTests, DeleteStreamMakesCorrectRequest) {
     producer.SetCredentials(expected_credentials);
     asapo::DeleteStreamOptions expected_options{};
     expected_options.delete_meta = true;
@@ -619,6 +619,31 @@ TEST_F(ProducerImplTests, DeleteStreamMakesCorerctRequest) {
 
     asapo::DeleteStreamOptions options{};
     auto err = producer.DeleteStream(expected_stream, 1000, options);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kTimeout));
+}
+
+TEST_F(ProducerImplTests, GetStreamMetaMakesCorrectRequest) {
+    producer.SetCredentials(expected_credentials);
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetRequest(asapo::kOpcodeGetMeta,
+                                        expected_credentials_str,
+                                        expected_stream), true)).WillOnce(
+                                            Return(nullptr));
+
+    asapo::Error err;
+    producer.GetStreamMeta(expected_stream, 1000, &err);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kTimeout));
+}
+
+
+TEST_F(ProducerImplTests, GetBeamtimeMetaMakesCorrectRequest) {
+    producer.SetCredentials(expected_credentials);
+    EXPECT_CALL(mock_pull, AddRequest_t(M_CheckGetRequest(asapo::kOpcodeGetMeta,
+                                        expected_credentials_str,
+                                        ""), true)).WillOnce(
+                                            Return(nullptr));
+
+    asapo::Error err;
+    producer.GetBeamtimeMeta(1000, &err);
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kTimeout));
 }
 

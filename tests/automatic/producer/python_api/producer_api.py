@@ -143,6 +143,11 @@ producer.send_file(1, local_path="./file1", exposed_path="processed/" + data_sou
                    user_meta='{"test_key1":"test_val"}',
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_DATA | asapo_producer.INGEST_MODE_STORE_IN_FILESYSTEM,callback=callback)
 
+producer.send_beamtime_meta('{"data":"bt_meta"}', callback = callback)
+producer.send_stream_meta('{"data":"st_meta"}',stream = 'stream', callback = callback)
+producer.send_stream_meta('bla',stream = 'stream', callback = callback)
+
+
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")
@@ -173,6 +178,14 @@ producer.send_stream_finished_flag("stream/test $", 2, next_stream = "next_strea
 producer.send_stream_finished_flag("stream/test $", 2, next_stream = "next_stream", callback = callback_object.callback)
 producer.wait_requests_finished(10000)
 
+
+#check meta
+bt_meta = producer.get_beamtime_meta()
+stream_meta = producer.get_stream_meta(stream = 'stream')
+assert_eq(bt_meta['data'], 'bt_meta', "beamtime meta")
+assert_eq(stream_meta['data'], 'st_meta', "stream meta")
+no_meta = producer.get_stream_meta(stream = 'notexist')
+assert_eq(no_meta, None, "no meta")
 
 #stream infos
 info = producer.stream_info()

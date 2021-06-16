@@ -30,6 +30,7 @@ enum Opcode : uint8_t {
     kOpcodeAuthorize,
     kOpcodeTransferMetaData,
     kOpcodeDeleteStream,
+    kOpcodeGetMeta,
     kOpcodeCount,
 };
 

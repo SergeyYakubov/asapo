@@ -121,7 +121,8 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
         Error DeleteStream(string stream, uint64_t timeout_ms, DeleteStreamOptions options)
         Error SendBeamtimeMetadata(string metadata, MetaIngestMode mode, RequestCallback callback)
         Error SendStreamMetadata(string metadata, MetaIngestMode mode, string stream, RequestCallback callback)
-
+        string GetStreamMeta(string stream, uint64_t timeout_ms, Error* err)
+        string GetBeamtimeMeta(uint64_t timeout_ms, Error* err)
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     uint64_t kDefaultIngestMode

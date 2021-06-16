@@ -23,4 +23,4 @@ mkdir -p ${receiver_folder}
 
 echo test > file1
 
-$1 "127.0.0.1:8400" $data_source $beamtime_id
+$@ "127.0.0.1:8400" $data_source $beamtime_id
