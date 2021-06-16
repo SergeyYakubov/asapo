@@ -3,7 +3,7 @@
 #include "../receiver_config.h"
 #include "../receiver_logger.h"
 #include "asapo/io/io_factory.h"
-
+#include "asapo/common/internal/version.h"
 
 namespace asapo {
 
@@ -14,13 +14,31 @@ Error RequestHandlerDbMetaWrite::ProcessRequest(Request* request) const {
 
     auto size = request->GetDataSize();
     auto meta = (uint8_t*)request->GetData();
-    auto meta_id = request->GetDataID();
+    auto api_version = VersionToNumber(request->GetApiVersion());
 
-    auto err =  db_client__->Upsert(collection_name_prefix_, meta_id, meta, size);
+    std::string stream;
+    MetaIngestMode mode;
+    if (api_version < 3) {
+        // old approach, deprecates 01.07.2022
+        mode.op = MetaIngestOp::kReplace;
+        mode.upsert = true;
+    } else {
+        stream = request->GetStream();
+        mode.Decode(request->GetCustomData()[kPosMetaIngestMode]);
+    }
+
+    auto err =  db_client__->InsertMeta(collection_name_prefix_, stream.empty() ? "bt" : "st_" + stream, meta, size, mode);
     if (!err) {
-        log__->Debug(std::string{"insert beamtime meta"} + " to " + collection_name_prefix_ + " in " +
-                     db_name_ +
-                     " at " + GetReceiverConfig()->database_uri);
+        if (stream.empty()) {
+            log__->Debug(std::string{"insert beamtime meta"} + " to " + collection_name_prefix_ + " in " +
+                         db_name_ +
+                         " at " + GetReceiverConfig()->database_uri);
+        } else {
+            log__->Debug(std::string{"insert stream meta for "} +stream + " to " + collection_name_prefix_ + " in " +
+                         db_name_ +
+                         " at " + GetReceiverConfig()->database_uri);
+        }
+
     }
     return DBErrorToReceiverError(err);
 }

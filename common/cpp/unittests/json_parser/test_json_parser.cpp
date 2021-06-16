@@ -266,4 +266,19 @@ TEST_F(ParseFileTests, CannotReadFile) {
 
 }
 
+
+
+TEST_F(ParseFileTests, Flatten) {
+    std::string json = R"({"top":"top","embedded":{"ar":[2,2,3],"str":"text"}})";
+    std::string json_flat = R"({"meta.top":"top","meta.embedded.ar":[2,2,3],"meta.embedded.str":"text"})";
+    JsonStringParser parser{json};
+
+    std::string res;
+    auto err = parser.GetFlattenedString("meta", ".", &res);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(res, Eq(json_flat));
+
+}
+
+
 }

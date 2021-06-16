@@ -15,7 +15,8 @@ class Database {
   public:
     virtual Error Connect(const std::string& address, const std::string& database) = 0;
     virtual Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const = 0;
-    virtual Error Upsert(const std::string& collection, uint64_t id, const uint8_t* data, uint64_t size) const = 0;
+    virtual Error InsertMeta(const std::string& collection, const std::string& id, const uint8_t* data, uint64_t size,
+                             MetaIngestMode mode) const = 0;
     virtual Error InsertAsDatasetMessage(const std::string& collection, const MessageMeta& file,
                                          uint64_t dataset_size,
                                          bool ignore_duplicates) const = 0;
@@ -25,6 +26,8 @@ class Database {
     virtual Error GetStreamInfo(const std::string& collection, StreamInfo* info) const  = 0;
     virtual Error GetLastStream(StreamInfo* info) const  = 0;
     virtual Error DeleteStream(const std::string& stream) const = 0;
+    virtual Error GetMetaFromDb(const std::string& collection, const std::string& id, std::string* res) const = 0;
+
     virtual ~Database() = default;
 };
 

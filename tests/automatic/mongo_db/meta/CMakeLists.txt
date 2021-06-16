@@ -1,5 +1,5 @@
-set(TARGET_NAME upsert_mongodb)
-set(SOURCE_FILES upsert_mongodb.cpp)
+set(TARGET_NAME meta_mongodb)
+set(SOURCE_FILES meta_mongodb.cpp)
 
 
 ################################
@@ -12,9 +12,9 @@ target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR}
 ################################
 # Testing
 ################################
-add_integration_test(${TARGET_NAME} upsertOK "OK" "OK")
-add_integration_test(${TARGET_NAME} upsertFailsWhenNotConnected
+add_integration_test(${TARGET_NAME} metaOK "OK" "OK")
+add_integration_test(${TARGET_NAME} metaFailsWhenNotConnected
         "Notconnected"
         "Notconnected")
-add_integration_test(${TARGET_NAME} upsertFailsOnWrongMeta "parseerror" "parseerror")
+add_integration_test(${TARGET_NAME} metaFailsOnWrongMeta "parseerror" "parseerror")
 add_test_cleanup(${TARGET_NAME})

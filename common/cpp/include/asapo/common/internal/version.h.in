@@ -28,6 +28,10 @@ inline std::string GetReceiverApiVersion() {
     return "@ASAPO_RECEIVER_API_VER@";
 }
 
+inline std::string GetDbSchemaVersion() {
+    return "@DB_SCHEMA_VER@";
+}
+
 inline std::string GetRdsApiVersion() {
     return "@ASAPO_RDS_API_VER@";
 }

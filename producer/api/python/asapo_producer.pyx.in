@@ -34,6 +34,15 @@ cdef bytes _bytes(s):
 
     else:
         raise TypeError("Could not convert to unicode.")
+cdef MetaIngestOp mode_to_c(mode):
+    if mode == 'replace':
+        return kReplace
+    elif mode == 'update':
+        return kUpdate
+    elif mode == 'insert':
+        return kInsert
+    else:
+        raise TypeError("Could not convert to unicode.")
 
 
 class AsapoProducerError(Exception):
@@ -174,7 +183,54 @@ cdef class PyProducer:
         if callback != None:
             Py_XINCREF(<PyObject*>callback)
         return
-
+    def send_stream_meta(self, metadata, mode = 'replace', upsert = True, stream='default', callback=None):
+        """
+         :param stream: stream name, default "default"
+         :type stream: string
+         :param metadata: beamtime metadata in JSON format
+         :type metadata: string
+         :param mode: send mode
+         :type mode: string
+         :param upsert: send mode
+         :type upsert: bool
+         :param callback: callback function, default None
+         :type callback: callback(info,err), where info - json string with event header that was used to send data and response, err - error string or None
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, ...)
+            AsapoProducerError: other error
+        """
+        cdef MetaIngestMode mode_c
+        mode_c.op = mode_to_c(mode)
+        mode_c.upsert = upsert
+        err = self.c_producer.get().SendStreamMetadata(_bytes(metadata), mode_c,_bytes(stream),
+              unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
+        if err:
+            throw_exception(err)
+        if callback != None:
+            Py_XINCREF(<PyObject*>callback)
+    def send_beamtime_meta(self, metadata, mode = 'replace', upsert = True, callback=None):
+        """
+         :param metadata: beamtime metadata in JSON format
+         :type metadata: string
+         :param mode: send mode
+         :type mode: string
+         :param upsert: send mode
+         :type upsert: bool
+         :param callback: callback function, default None
+         :type callback: callback(info,err), where info - json string with event header that was used to send data and response, err - error string or None
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, ...)
+            AsapoProducerError: other error
+        """
+        cdef MetaIngestMode mode_c
+        mode_c.op = mode_to_c(mode)
+        mode_c.upsert = upsert
+        err = self.c_producer.get().SendBeamtimeMetadata(_bytes(metadata), mode_c,
+              unwrap_callback(<RequestCallbackCython>self.c_callback, <void*>self,<void*>callback if callback != None else NULL))
+        if err:
+            throw_exception(err)
+        if callback != None:
+            Py_XINCREF(<PyObject*>callback)
     def send(self, uint64_t id, exposed_path, data, user_meta=None, dataset=None, ingest_mode = DEFAULT_INGEST_MODE, stream = "default", callback=None):
         """
          :param id: unique data id
@@ -244,6 +300,41 @@ cdef class PyProducer:
             err = self.c_producer.get().DeleteStream(b_stream,timeout_ms,opts)
         if err:
             throw_exception(err)
+    def get_stream_meta(self,stream = 'default', uint64_t timeout_ms = 1000):
+        """
+         :param stream: stream name
+         :type stream: string
+         :param timeout_ms: timeout in milliseconds
+         :type timeout_ms: int
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, ...)
+            AsapoTimeoutError: request not finished for a given timeout
+            AsapoProducerError: other errors
+        """
+        cdef Error err
+        cdef string res
+        cdef string b_stream = _bytes(stream)
+        with nogil:
+            res = self.c_producer.get().GetStreamMeta(b_stream,timeout_ms,&err)
+        if err:
+            throw_exception(err)
+        return json.loads(_str(res) or 'null')
+    def get_beamtime_meta(self, uint64_t timeout_ms = 1000):
+        """
+         :param timeout_ms: timeout in milliseconds
+         :type timeout_ms: int
+         :raises:
+            AsapoWrongInputError: wrong input (authorization, ...)
+            AsapoTimeoutError: request not finished for a given timeout
+            AsapoProducerError: other errors
+        """
+        cdef Error err
+        cdef string res
+        with nogil:
+            res = self.c_producer.get().GetBeamtimeMeta(timeout_ms,&err)
+        if err:
+            throw_exception(err)
+        return json.loads(_str(res) or 'null')
     def stream_info(self, stream = 'default', uint64_t timeout_ms = 1000):
         """
          :param stream: stream name

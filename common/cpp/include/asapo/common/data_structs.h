@@ -145,6 +145,27 @@ enum IngestModeFlags : uint64_t {
 
 const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem | kStoreInDatabase;
 
+enum class MetaIngestOp : uint64_t {
+    kInsert  = 1,
+    kReplace = 2,
+    kUpdate = 3,
+};
+
+struct MetaIngestMode {
+    MetaIngestOp op;
+    bool upsert;
+    uint64_t Encode() {
+        return static_cast<uint64_t>(op) + 10 * static_cast<uint64_t>(upsert);
+    }
+    void Decode(uint64_t code) {
+        upsert = code > 10;
+        uint64_t val = code - (upsert ? 10 : 0);
+        if (val <= 3) {
+            op = static_cast<MetaIngestOp>(val);
+        }
+    }
+};
+
 class ClientProtocol {
   private:
     std::string version_;

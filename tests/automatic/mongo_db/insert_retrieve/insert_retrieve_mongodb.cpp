@@ -98,7 +98,6 @@ int main(int argc, char* argv[]) {
         err = db_new.GetById(std::string("data_") + stream_name, 0, &fi_db);
         Assert(err, "No record");
 
-
         asapo::StreamInfo info;
 
         err = db.GetStreamInfo(std::string("data_") + stream_name, &info);

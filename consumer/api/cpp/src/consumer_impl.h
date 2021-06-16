@@ -79,6 +79,7 @@ class ConsumerImpl final : public asapo::Consumer {
 
     std::string GenerateNewGroupId(Error* err) override;
     std::string GetBeamtimeMeta(Error* err) override;
+    std::string GetStreamMeta(const std::string& stream, Error* err) override;
 
     uint64_t GetCurrentSize(std::string stream, Error* err) override;
     uint64_t GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) override;
@@ -150,7 +151,7 @@ class ConsumerImpl final : public asapo::Consumer {
     uint64_t GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err);
     RequestInfo GetStreamListRequest(const std::string& from, const StreamFilter& filter) const;
     Error GetServerVersionInfo(std::string* server_info, bool* supported) ;
-    std::string UriPrefix( std::string stream, std::string group, std::string suffix) const;
+    std::string BrokerApiUri(std::string stream, std::string group, std::string suffix) const;
 
     std::string endpoint_;
     std::string current_broker_uri_;
