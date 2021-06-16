@@ -77,12 +77,16 @@ class ProducerImpl : public Producer {
     Error WaitRequestsFinished(uint64_t timeout_ms) override;
     uint64_t GetRequestsQueueVolumeMb() override;
     void SetRequestsQueueLimits(uint64_t size, uint64_t volume) override;
+    std::string GetStreamMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const override;
+    std::string GetBeamtimeMeta(uint64_t timeout_ms, Error* err) const override;
+
   private:
     Error SendMeta(const std::string& metadata,
                    MetaIngestMode mode,
                    std::string stream,
                    RequestCallback callback);
     StreamInfo StreamRequest(StreamRequestOp op, std::string stream, uint64_t timeout_ms, Error* err) const;
+    std::string BlockingRequest(GenericRequestHeader header, uint64_t timeout_ms, Error* err) const;
     Error Send(const MessageHeader& message_header, std::string stream, MessageData data, std::string full_path,
                uint64_t ingest_mode,
                RequestCallback callback, bool manage_data_memory);
@@ -93,11 +97,13 @@ class ProducerImpl : public Producer {
     std::string endpoint_;
     Error GetServerVersionInfo(std::string* server_info,
                                bool* supported) const;
+    std::string GetMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const;
+
 };
 
-struct StreamInfoResult {
-    StreamInfo sinfo;
-    ErrorInterface* err;
+struct ReceiverResponse {
+    std::string payload;
+    ErrorInterface* err{nullptr};
 };
 
 }

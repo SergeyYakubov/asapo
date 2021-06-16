@@ -41,6 +41,21 @@ class Producer {
     */
     virtual StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const = 0;
 
+    //! Get stream metadata from receiver
+    /*!
+      \param stream - stream to send messages to
+      \param timeout_ms - operation timeout in milliseconds
+      \return JSON string with metadata
+    */
+    virtual std::string GetStreamMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const = 0;
+
+    //! Get beamtime metadata from receiver
+    /*!
+      \param timeout_ms - operation timeout in milliseconds
+      \return JSON string with metadata
+    */
+    virtual std::string GetBeamtimeMeta(uint64_t timeout_ms, Error* err) const = 0;
+
     //! Delete stream
     /*!
       \param stream - stream to send messages to

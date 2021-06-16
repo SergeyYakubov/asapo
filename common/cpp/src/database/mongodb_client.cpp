@@ -150,13 +150,13 @@ bson_p PrepareBsonDocument(const MessageMeta& file, Error* err) {
 bson_p PrepareUpdateDocument(const uint8_t* json, Error* err) {
     JsonStringParser parser{std::string(reinterpret_cast<const char*>(json))};
     std::string json_flat;
-    auto parser_err = parser.GetFlattenedString("meta",".",&json_flat);
+    auto parser_err = parser.GetFlattenedString("meta", ".", &json_flat);
     if (parser_err) {
-        *err = DBErrorTemplates::kJsonParseError.Generate("cannof flatten meta "+parser_err->Explain());
+        *err = DBErrorTemplates::kJsonParseError.Generate("cannof flatten meta " + parser_err->Explain());
         return nullptr;
     }
     bson_error_t mongo_err;
-    auto bson_meta = bson_new_from_json(reinterpret_cast<const uint8_t *>(json_flat.c_str()), json_flat.size(), &mongo_err);
+    auto bson_meta = bson_new_from_json(reinterpret_cast<const uint8_t*>(json_flat.c_str()), json_flat.size(), &mongo_err);
     if (!bson_meta) {
         *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);
         return nullptr;
@@ -238,7 +238,7 @@ Error MongoDBClient::UpdateBsonDocument(const std::string& id, const bson_p& doc
 
     bson_t* opts = BCON_NEW ("upsert", BCON_BOOL(upsert));
     bson_t* selector = BCON_NEW ("_id", BCON_UTF8(id.c_str()));
-    bson_t *update  = BCON_NEW ("$set",BCON_DOCUMENT(document.get()));
+    bson_t* update  = BCON_NEW ("$set", BCON_DOCUMENT(document.get()));
 
     bson_t reply;
     Error err = nullptr;
@@ -288,9 +288,10 @@ MongoDBClient::~MongoDBClient() {
     CleanUp();
 }
 
-bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len,const std::string& id_encoded, MetaIngestMode mode, Error* err) {
+bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len, const std::string& id_encoded, MetaIngestMode mode,
+                           Error* err) {
     bson_p document;
-    if (mode.op==MetaIngestOp::kUpdate) {
+    if (mode.op == MetaIngestOp::kUpdate) {
         document = PrepareUpdateDocument(json, err);
     } else {
         document = PrepareInjestDocument(json, len, err);
@@ -298,7 +299,7 @@ bson_p PrepareBsonDocument(const uint8_t* json, ssize_t len,const std::string& i
     if (*err) {
         return nullptr;
     }
-    if (mode.op!=MetaIngestOp::kUpdate) {
+    if (mode.op != MetaIngestOp::kUpdate) {
         if (!BSON_APPEND_UTF8(document.get(), "_id", id_encoded.c_str())) {
             *err = DBErrorTemplates::kInsertError.Generate("cannot assign document id ");
             return nullptr;
@@ -320,7 +321,7 @@ Error MongoDBClient::InsertMeta(const std::string& collection, const std::string
     }
 
     auto id_encoded = EncodeColName(id);
-    auto document = PrepareBsonDocument(data,(ssize_t)size,id_encoded,mode,&err);
+    auto document = PrepareBsonDocument(data, (ssize_t)size, id_encoded, mode, &err);
     if (err) {
         return err;
     }

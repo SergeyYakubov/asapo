@@ -22,7 +22,7 @@ class JsonParser {
     Error GetArrayString(const std::string& name, std::vector<std::string>* val) const noexcept;
     Error GetArrayRawStrings(const std::string& name, std::vector<std::string>* val) const noexcept;
     Error GetRawString(std::string* val) const noexcept;
-    Error GetFlattenedString(const std::string& prefix,const std::string& separator, std::string *val) const noexcept;
+    Error GetFlattenedString(const std::string& prefix, const std::string& separator, std::string* val) const noexcept;
 
     JsonParser Embedded(const std::string& name) const noexcept;
     ~JsonParser();

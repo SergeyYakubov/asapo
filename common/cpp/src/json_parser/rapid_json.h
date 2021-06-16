@@ -28,7 +28,7 @@ class RapidJson {
     Error GetArrayString(const std::string& name, std::vector<std::string>* val) const noexcept;
     Error GetArrayRawStrings(const std::string& name, std::vector<std::string>* val) const noexcept;
     Error GetRawString(std::string* val) const noexcept;
-    Error GetFlattenedString(const std::string& prefix,const std::string& separator, std::string *val)const noexcept;
+    Error GetFlattenedString(const std::string& prefix, const std::string& separator, std::string* val)const noexcept;
   private:
     Error GetInt64(const std::string& name, int64_t* val) const noexcept;
     const std::unique_ptr<IO>* io__;

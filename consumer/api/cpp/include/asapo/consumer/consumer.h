@@ -102,7 +102,7 @@ class Consumer {
     //! Get current number of messages in stream
     /*!
       \param stream - stream to use
-      \param err - return nullptr of operation succeed, error otherwise.
+      \param err - return nullptr if operation succeed, error otherwise.
       \return number of datasets.
     */
     virtual uint64_t GetCurrentSize(std::string stream, Error* err) = 0;
@@ -111,14 +111,14 @@ class Consumer {
     /*!
       \param stream - stream to use
       \param include_incomplete - flag to count incomplete datasets as well
-      \param err - return nullptr of operation succeed, error otherwise.
+      \param err - return nullptr if operation succeed, error otherwise.
       \return number of datasets.
     */
     virtual uint64_t GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) = 0;
 
     //! Generate new GroupID.
     /*!
-      \param err - return nullptr of operation succeed, error otherwise.
+      \param err - return nullptr if operation succeed, error otherwise.
       \return group ID.
     */
 
@@ -126,7 +126,7 @@ class Consumer {
 
     //! Get Beamtime metadata.
     /*!
-      \param err - return nullptr of operation succeed, error otherwise.
+      \param err - return nullptr if operation succeed, error otherwise.
       \return beamtime metadata.
     */
     virtual std::string GetBeamtimeMeta(Error* err) = 0;
@@ -134,7 +134,7 @@ class Consumer {
     //! Get stream metadata.
     /*!
       \param stream - stream to use
-      \param err - return nullptr of operation succeed, error otherwise.
+      \param err - return nullptr if operation succeed, error otherwise.
       \return stream metadata.
     */
     virtual std::string GetStreamMeta(const std::string& stream, Error* err) = 0;

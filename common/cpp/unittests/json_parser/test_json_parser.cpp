@@ -274,7 +274,7 @@ TEST_F(ParseFileTests, Flatten) {
     JsonStringParser parser{json};
 
     std::string res;
-    auto err = parser.GetFlattenedString("meta",".",&res);
+    auto err = parser.GetFlattenedString("meta", ".", &res);
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(res, Eq(json_flat));
 

@@ -318,30 +318,15 @@ RequestCallback unwrap_callback(RequestCallbackWithPromise<T> callback,
     return wrapper;
 }
 
-void ActivatePromiseForStreamInfo(std::shared_ptr<std::promise<StreamInfoResult>> promise,
-                                  RequestCallbackPayload payload,
-                                  Error err) {
-    StreamInfoResult res;
+void ActivatePromiseForReceiverResponse(std::shared_ptr<std::promise<ReceiverResponse>> promise,
+                                        RequestCallbackPayload payload,
+                                        Error err) {
+    ReceiverResponse res;
     if (err == nullptr) {
-        auto ok = res.sinfo.SetFromJson(payload.response);
-        res.err = ok ? nullptr : ProducerErrorTemplates::kInternalServerError.Generate(
-                      std::string("cannot read JSON string from server response: ") + payload.response).release();
+        res.payload = payload.response;
+        res.err = nullptr;
     } else {
         res.err = err.release();
-    }
-    try {
-        promise->set_value(res);
-    } catch (...) {}
-}
-
-void ActivatePromiseForErrorInterface(std::shared_ptr<std::promise<ErrorInterface*>> promise,
-                                      RequestCallbackPayload payload,
-                                      Error err) {
-    ErrorInterface* res;
-    if (err == nullptr) {
-        res = nullptr;
-    } else {
-        res = err.release();
     }
     try {
         promise->set_value(res);
@@ -371,31 +356,55 @@ GenericRequestHeader CreateRequestHeaderFromOp(StreamRequestOp op, std::string s
     return GenericRequestHeader{};
 }
 
-StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op, std::string stream, uint64_t timeout_ms, Error* err) const {
-    auto header = CreateRequestHeaderFromOp(op, stream);
-    std::unique_ptr<std::promise<StreamInfoResult>> promise{new std::promise<StreamInfoResult>};
-    std::future<StreamInfoResult> promiseResult = promise->get_future();
+std::string ProducerImpl::BlockingRequest(GenericRequestHeader header, uint64_t timeout_ms, Error* err) const {
+    std::unique_ptr<std::promise<ReceiverResponse>> promise{new std::promise<ReceiverResponse>};
+    std::future<ReceiverResponse> promiseResult = promise->get_future();
 
     *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
         new ProducerRequest{
             source_cred_string_, std::move(header),
             nullptr, "", "",
             unwrap_callback(
-                ActivatePromiseForStreamInfo,
+                ActivatePromiseForReceiverResponse,
                 std::move(promise)), true,
             timeout_ms}
     }, true);
     if (*err) {
-        return StreamInfo{};
+        return "";
     }
-    auto res = GetResultFromCallback<StreamInfoResult>(&promiseResult, timeout_ms + 2000,
+
+    auto res = GetResultFromCallback<ReceiverResponse>(&promiseResult, timeout_ms + 2000,
                err); // we give two more sec for request to exit by timeout
+    if (*err) {
+        return "";
+    }
+
+
     if (res.err == nullptr) {
-        return res.sinfo;
+        return res.payload;
     } else {
         (*err).reset(res.err);
+        return "";
+    }
+}
+
+StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op, std::string stream, uint64_t timeout_ms, Error* err) const {
+    auto header = CreateRequestHeaderFromOp(op, stream);
+
+    auto response = BlockingRequest(std::move(header), timeout_ms, err);
+    if (*err) {
         return StreamInfo{};
     }
+
+    StreamInfo res;
+    if (!res.SetFromJson(response)) {
+        *err = ProducerErrorTemplates::kInternalServerError.Generate(
+                   std::string("cannot read JSON string from server response: ") + response);
+        return StreamInfo{};
+    }
+
+    *err = nullptr;
+    return res;
 }
 
 StreamInfo ProducerImpl::GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const {
@@ -450,28 +459,9 @@ Error ProducerImpl::DeleteStream(std::string stream, uint64_t timeout_ms, Delete
     auto header = GenericRequestHeader{kOpcodeDeleteStream, 0, 0, 0, "", stream};
     header.custom_data[0] = options.Encode();
 
-    std::unique_ptr<std::promise<ErrorInterface*>> promise{new std::promise<ErrorInterface*>};
-    std::future<ErrorInterface*> promiseResult = promise->get_future();
-
-    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
-        new ProducerRequest{
-            source_cred_string_, std::move(header),
-            nullptr, "", "",
-            unwrap_callback<ErrorInterface*>(
-                ActivatePromiseForErrorInterface,
-                std::move(promise)), true,
-            timeout_ms}
-    }, true);
-    if (err) {
-        return err;
-    }
-
-    auto res = GetResultFromCallback<ErrorInterface*>(&promiseResult, timeout_ms + 2000,
-                                                      &err); // we give two more sec for request to exit by timeout
-    if (err) {
-        return err;
-    }
-    return Error{res};
+    Error err;
+    BlockingRequest(std::move(header), timeout_ms, &err);
+    return err;
 }
 
 Error ProducerImpl::SendBeamtimeMetadata(const std::string& metadata, MetaIngestMode mode, RequestCallback callback) {
@@ -506,6 +496,18 @@ Error ProducerImpl::SendMeta(const std::string& metadata,
             std::move(data), "", "", callback, true, timeout_ms_}
     });
     return HandleErrorFromPool(std::move(err), true);
+}
+
+std::string ProducerImpl::GetStreamMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const {
+    return GetMeta(stream, timeout_ms, err);
+}
+
+std::string ProducerImpl::GetBeamtimeMeta(uint64_t timeout_ms, Error* err) const {
+    return GetMeta("", timeout_ms, err);
+}
+
+std::string ProducerImpl::GetMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const {
+    return std::string();
 }
 
 }

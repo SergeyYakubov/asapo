@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
         M_AssertEq(nullptr, err);
         err = db.GetMetaFromDb("meta", stream_name, &meta_res);
         M_AssertEq(nullptr, err);
-        M_AssertEq(expected_meta,meta_res);
+        M_AssertEq(expected_meta, meta_res);
 
         db.DeleteStream(stream_name);
     }
