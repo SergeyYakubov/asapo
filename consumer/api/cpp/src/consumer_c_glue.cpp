@@ -39,10 +39,12 @@ typedef asapo::MessageMeta* asapoMessageMeta;
 /// access to the data is granted via  asapoMessageDataGetAsChars()
 typedef uint8_t* asapoMessageData;
 
-//! handle for a consumer group id
-/// create with asapoConsumerGenerateNewGroupId()
-/// delete after use with asapoDeleteGroupId()
-typedef std::string* asapoGroupId;
+//! handle for string return types
+/// return type of several functions
+/// create with asapoCreateString()
+/// delete after use with asapoDeleteString()
+/// a const pointer to the content can be obtained with asapoStringC_str()
+typedef std::string* asapoString;
 
 //! handle for info about a stream,
 /// object is deleted implicityly by  asapoDeleteStreamInfos()
@@ -163,19 +165,41 @@ extern "C" {
     //! wraps asapo::Consumer::GenerateNewGroupId()
     /// \copydoc asapo::Consumer::GenerateNewGroupId()
     /// \param[in] consumer the handle of the consumer concerned
-    asapoGroupId asapoConsumerGenerateNewGroupId(asapoConsumer consumer,
-                                                 asapoError* error) {
+    asapoString asapoConsumerGenerateNewGroupId(asapoConsumer consumer,
+                                                asapoError* error) {
         asapo::Error err;
         auto result = new std::string(consumer->GenerateNewGroupId(&err));
         *error = err.release();
         return result;
     }
-
-    //! clean up groupId
-    /// frees the resources occupied by id, sets *id to NULL
-    void asapoDeleteGroupId(asapoGroupId* id) {
-        delete *id;
-        *id = nullptr;
+    //! create an asapoString from a c string
+    /// \param[in] content the characters that will make up the new string
+    /// \return handle of the new asapo string, delete after use with asapoDeleteString()
+    asapoString asapoCreateString(const char* content) {
+        return new std::string(content);
+    }
+    //! append to an exising asapo string
+    /// \param[in] str the handle of the asapoString in question
+    /// \param[in] content the c string with the characters to append
+    void asapoStringAppend(asapoString str, const char* content) {
+        *str += content;
+    }
+    //! give a pointer to the content of the asapoString
+    /// \param[in] str the handle of the asapoString in question
+    /// \return const char pointer to the content
+    const char* asapoStringC_str(const asapoString str);
+    //! give the size of an asapoString
+    /// \param[in] str the handle of the asapoString in question
+    /// \return the number of bytes in the string , not counting the final nul byte.
+    size_t asapoStringSize(const asapoString str) {
+        return str->size();
+    }
+    //! clean up string
+    /// frees the resources occupied by str, sets *str to NULL
+/// \param[in] str the handle of the asapoString in question
+    void asapoDeleteString(asapoString* str) {
+        delete *str;
+        *str = nullptr;
     }
 
     //! wraps asapo::Consumer::SetTimeout()
@@ -189,7 +213,7 @@ extern "C" {
     /// \copydoc asapo::Consumer::ResetLastReadMarker()
     /// \param[in] consumer the handle of the consumer concerned
     asapoError asapoConsumerResetLastReadMarker(asapoConsumer consumer,
-                                                const asapoGroupId group_id,
+                                                const asapoString group_id,
                                                 const char* stream) {
         auto err = consumer->ResetLastReadMarker(*group_id, stream);
         return err.release();
@@ -199,7 +223,7 @@ extern "C" {
     /// \copydoc asapo::Consumer::SetLastReadMarker()
     /// \param[in] consumer the handle of the consumer concerned
     asapoError asapoConsumerSetLastReadMarker(asapoConsumer consumer,
-                                              const asapoGroupId group_id,
+                                              const asapoString group_id,
                                               uint64_t value,
                                               const char* stream) {
         auto err = consumer->SetLastReadMarker(*group_id, value, stream);
@@ -209,7 +233,7 @@ extern "C" {
     /// \copydoc asapo::Consumer::Acknowledge()
     /// \param[in] consumer the handle of the consumer concerned
     asapoError asapoConsumerAcknowledge(asapoConsumer consumer,
-                                        const asapoGroupId group_id,
+                                        const asapoString group_id,
                                         uint64_t id,
                                         const char* stream) {
         auto err = consumer->Acknowledge(*group_id, id, stream);
@@ -219,7 +243,7 @@ extern "C" {
     /// \copydoc asapo::Consumer::NegativeAcknowledge()
     /// \param[in] consumer the handle of the consumer concerned
     asapoError asapoConsumerNegativeAcknowledge(asapoConsumer consumer,
-                                                const asapoGroupId group_id,
+                                                const asapoString group_id,
                                                 uint64_t id,
                                                 uint64_t delay_ms,
                                                 const char* stream) {
@@ -231,7 +255,7 @@ extern "C" {
     /// \copydoc asapo::Consumer::GetUnacknowledgedMessages()
     /// \param[in] consumer the handle of the consumer concerned
     asapoIdList asapoConsumerGetUnacknowledgedMessages(asapoConsumer consumer,
-            asapoGroupId group_id,
+            asapoString group_id,
             uint64_t from_id,
             uint64_t to_id,
             const char* stream,
@@ -351,12 +375,33 @@ extern "C" {
         return retval;
     }
 
+    //! wraps asapo::Consumer::GetBeamtimeMeta()
+    /// \copydoc asapo::Consumer::GetBeamtimeMeta()
+    /// \param[in] consumer the consumer that is acted upon
+    /// the returned string must be freed after use with asapoDeleteString()
+    asapoString asapoConsumerGetBeamtimeMeta(asapoConsumer consumer,
+                                             asapoError* error) {
+        asapo::Error err;
+        auto retval = new std::string(consumer->GetBeamtimeMeta(&err));
+        *error = err.release();
+        return retval;
+    }
+
+
+    //! wraps asapo::Consumer::RetrieveData()
+    /// \copydoc asapo::Consumer::RetrieveData()
+    /// \param[in] consumer the consumer that is acted upon
+    /// if data are retrieved (data != NULL) they must be freed with asapoDeleteMessageData()
+    asapoError asapoConsumerRetriveData(asapoConsumer consumer,
+                                        asapoMessageMeta info,
+                                        asapoMessageData* data);
 
 
 
     //! wraps asapo::Consumer::GetLast()
     /// \copydoc asapo::Consumer::GetLast()
     /// \param[in] consumer the consumer that is acted upon
+    /// if data are retrieved (data != NULL) they must be freed with asapoDeleteMessageData()
     asapoError asapoConsumerGetLast(asapoConsumer consumer,
                                     asapoMessageMeta info,
                                     asapoMessageData* data,
@@ -373,8 +418,9 @@ extern "C" {
     //! wraps asapo::Consumer::GetNext()
     /// \copydoc asapo::Consumer::GetNext()
     /// \param[in] consumer the consumer that is acted upon
+    /// if data are retrieved (data != NULL) they must be freed with asapoDeleteMessageData()
     asapoError asapoConsumerGetNext(asapoConsumer consumer,
-                                    asapoGroupId group_id,
+                                    asapoString group_id,
                                     asapoMessageMeta info,
                                     asapoMessageData* data,
                                     const char* stream) {

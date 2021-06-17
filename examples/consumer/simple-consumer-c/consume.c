@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     const char *beamtime = "asapo_test";
     const char *token = "KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc=";
 
-    asapoSourceCredentials cred = asapoCreateSourceCredentials("processed",
+    asapoSourceCredentials cred = asapoCreateSourceCredentials(kProcessed,
 							       beamtime,
 							       "", "", token);
     asapoConsumer consumer = asapoCreateConsumer(endpoint,
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     exit_if_error("Cannot create consumer", err);
     asapoConsumerSetTimeout(consumer, 1000ull);
 
-    asapoGroupId group_id = asapoConsumerGenerateNewGroupId(consumer, &err);
+    asapoString group_id = asapoConsumerGenerateNewGroupId(consumer, &err);
     exit_if_error("Cannot create group id", err);
 
     asapoMessageMeta fi = asapoCreateMessageMeta();
@@ -47,7 +47,8 @@ int main(int argc, char* argv[]) {
     printf("file content: %s\n",asapoMessageDataGetAsChars(data));
     asapoDeleteMessageMeta(&fi);
     asapoDeleteMessageData(&data);
-    asapoDeleteConsumer(&consumer);      
+    asapoDeleteConsumer(&consumer);
+    asapoDeleteString(&group_id);
     return EXIT_SUCCESS;
 }
 

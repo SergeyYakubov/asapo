@@ -8,7 +8,7 @@ typedef void* asapoSourceCredentials;
 typedef void* asapoError;
 typedef void* asapoMessageMeta;
 typedef void* asapoMessageData;
-typedef void* asapoGroupId;
+typedef void* asapoString;
 typedef void* asapoStreamInfo;
 typedef void* asapoStreamInfos;
 typedef void* asapoIdList;
@@ -56,27 +56,32 @@ asapoConsumer asapoCreateConsumer(const char* server_name,
                                   asapoSourceCredentials source,
                                   asapoError* error);
 void asapoDeleteConsumer(asapoConsumer* consumer);
-asapoGroupId asapoConsumerGenerateNewGroupId(asapoConsumer consumer, asapoError* err);
-void asapoDeleteGroupId(asapoGroupId* id);
+asapoString asapoConsumerGenerateNewGroupId(asapoConsumer consumer, asapoError* err);
+asapoString asapoCreateString(const char* content);
+void asapoStringAppend(asapoString str, const char* content);
+const char* asapoStringC_str(const asapoString str);
+size_t asapoStringSize(const asapoString str);
+void asapoDeleteString(asapoString* str);
+
 void asapoConsumerSetTimeout(asapoConsumer consumer, uint64_t timeout_ms);
 asapoError asapoConsumerResetLastReadMarker(asapoConsumer consumer,
-                                            const asapoGroupId group_id,
+                                            const asapoString group_id,
                                             const char* stream);
 asapoError asapoConsumerSetLastReadMarker(asapoConsumer consumer,
-                                          const asapoGroupId group_id,
+                                          const asapoString group_id,
                                           uint64_t value,
                                           const char* stream);
 asapoError asapoConsumerAcknowledge(asapoConsumer consumer,
-                                    const asapoGroupId group_id,
+                                    const asapoString group_id,
                                     uint64_t id,
                                     const char* stream);
 asapoError asapoConsumerNegativeAcknowledge(asapoConsumer consumer,
-                                            const asapoGroupId group_id,
+                                            const asapoString group_id,
                                             uint64_t id,
                                             uint64_t delay_ms,
                                             const char* stream);
 asapoIdList asapoConsumerGetUnacknowledgedMessages(asapoConsumer consumer,
-        asapoGroupId group_id,
+        asapoString group_id,
         uint64_t from_id,
         uint64_t to_id,
         const char* stream,
@@ -110,13 +115,20 @@ uint64_t asapoConsumerGetCurrentDatasetCount(asapoConsumer consumer,
                                              const char* stream,
                                              asapoBool include_incomplete,
                                              asapoError* error);
+asapoString asapoConsumerGetBeamtimeMeta(asapoConsumer consumer,
+                                         asapoError* error);
+asapoError asapoConsumerRetriveData(asapoConsumer consumer,
+                                    asapoMessageMeta info,
+                                    asapoMessageData* data);
+
+
 
 asapoError asapoConsumerGetLast(asapoConsumer consumer,
                                 asapoMessageMeta info,
                                 asapoMessageData* data,
                                 const char* stream);
 asapoError asapoConsumerGetNext(asapoConsumer consumer,
-                                asapoGroupId group_id,
+                                asapoString group_id,
                                 asapoMessageMeta info,
                                 asapoMessageData* data,
                                 const char* stream);
