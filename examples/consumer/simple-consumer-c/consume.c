@@ -5,50 +5,50 @@
 #include <stdio.h>
 #include <stdlib.h>
  
-void exit_if_error(const char *error_string, const asapoError err) {
+void exit_if_error(const char *error_string, const AsapoError err) {
     if (err) {
       char buf[1024];
-      asapoErrorExplain(err, buf, sizeof(buf));
+        asapo_error_explain(err, buf, sizeof(buf));
       printf("%s %s\n", error_string, buf);
       exit(EXIT_FAILURE);
     }
 }
 
 int main(int argc, char* argv[]) {
-    asapoError err = NULL;
+    AsapoError err = NULL;
 
-    const char *endpoint = "asapo-services2:8400";
+    const char *endpoint = "enpoint:8400";
     const char *beamtime = "asapo_test";
     const char *token = "KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc=";
 
-    asapoSourceCredentials cred = asapoCreateSourceCredentials(kProcessed,
-							       beamtime,
-							       "", "", token);
-    asapoConsumer consumer = asapoCreateConsumer(endpoint,
-                                                 "", 1,
-                                                 cred,
-                                                 &err);
-    asapoDeleteSourceCredentials(&cred);
+    AsapoSourceCredentials cred = asapo_create_source_credentials(kProcessed,
+                                                                  beamtime,
+                                                                  "", "", token);
+    AsapoConsumer consumer = asapo_create_consumer(endpoint,
+                                                   "", 1,
+                                                   cred,
+                                                   &err);
+    asapo_delete_source_credentials(&cred);
     
     exit_if_error("Cannot create consumer", err);
-    asapoConsumerSetTimeout(consumer, 1000ull);
+    asapo_consumer_set_timeout(consumer, 1000ull);
 
-    asapoString group_id = asapoConsumerGenerateNewGroupId(consumer, &err);
+    AsapoString group_id = asapo_consumer_generate_new_group_id(consumer, &err);
     exit_if_error("Cannot create group id", err);
 
-    asapoMessageMeta fi = asapoCreateMessageMeta();
-    asapoMessageData data;
+    AsapoMessageMeta fi = asapo_create_message_meta();
+    AsapoMessageData data;
 
-    err = asapoConsumerGetLast(consumer,&fi, &data, group_id);
+    err = asapo_consumer_get_last(consumer, &fi, &data, group_id);
     exit_if_error("Cannot get next record", err);
 
-    printf("id: %llu\n", asapoMessageMetaGetId(fi));
-    printf("file name: %s\n", asapoMessageMetaGetName(fi));
-    printf("file content: %s\n",asapoMessageDataGetAsChars(data));
-    asapoDeleteMessageMeta(&fi);
-    asapoDeleteMessageData(&data);
-    asapoDeleteConsumer(&consumer);
-    asapoDeleteString(&group_id);
+    printf("id: %llu\n", asapo_message_meta_get_id(fi));
+    printf("file name: %s\n", asapo_message_meta_get_name(fi));
+    printf("file content: %s\n", asapo_message_data_get_as_chars(data));
+    asapo_delete_message_meta(&fi);
+    asapo_delete_message_data(&data);
+    asapo_delete_consumer(&consumer);
+    asapo_delete_string(&group_id);
     return EXIT_SUCCESS;
 }
 
