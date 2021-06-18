@@ -81,7 +81,7 @@ template <typename t> constexpr bool operator==(unsigned lhs, t rhs) {
 #define dataGetterStart \
 	if (data) delete *data; \
 	asapo::MessageData d; \
-	asapo::MessageMeta* fi = info ? nullptr : new asapo::MessageMeta;
+	asapo::MessageMeta* fi = info ? new asapo::MessageMeta : nullptr;
 
 #define dataGetterStop \
     if (data) { \

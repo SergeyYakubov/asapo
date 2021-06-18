@@ -65,7 +65,6 @@ int main(int argc, char* argv[]) {
     printf("group id: %s\n",asapo_string_c_str(group_id));
 
     AsapoMessageMeta fi;
-    AsapoMessageData data;
 
     err = asapo_consumer_get_last(consumer, &fi, NULL, "default");
     exit_if_error("Cannot get last record", err);
@@ -74,7 +73,6 @@ int main(int argc, char* argv[]) {
     assert_eq_string("10",asapo_message_meta_get_name(fi),"id");
 
     asapo_delete_message_meta(&fi);
-    asapo_delete_message_data(&data);
     asapo_delete_consumer(&consumer);
     asapo_delete_string(&group_id);
     return EXIT_SUCCESS;
