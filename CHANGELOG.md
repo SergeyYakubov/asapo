@@ -2,6 +2,7 @@
 
 IMPROVEMENTS
 * Consumer/Producer API - allow any characters in source/stream/group names
+* Consumer/Producer API - introduce stream metadata
 * Consumer API - an option to auto discovery of data folder when consumer client uses file transfer service (has_filesystem=False) 
 
 BUG FIXES
