@@ -1,6 +1,5 @@
 #include "asapo/consumer_c.h"
 
-#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
