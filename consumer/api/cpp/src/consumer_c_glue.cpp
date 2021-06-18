@@ -31,6 +31,13 @@ typedef asapo::ErrorInterface* AsapoError;
 /// \sa asapo::MessageMeta
 typedef asapo::MessageMeta* AsapoMessageMeta;
 
+//! handle for set of metadata of messages
+/// create with asapo_consumer_queryy_messages()
+/// delete after use with asapo_delete_message_meta()
+/// \sa asapo::MessageMetas
+typedef asapo::MessageMetas* AsapoMessageMetas;
+
+
 //! handle for data recieved by the consumer
 /// set as outout parameter via asapo_consumer_get_next(), asapo_consumer_get_last()
 /// delete after use with asapo_delete_message_data()
@@ -56,17 +63,34 @@ typedef asapo::StreamInfo* AsapoStreamInfo;
 /// \sa asapo_delete_stream_infos() asapo_stream_infos_get_item() asapo_stream_infos_get_size()
 typedef asapo::StreamInfos* AsapoStreamInfos;
 
-//! handle for massage id lists
+//! handle for message id lists
 /// touch only with proper functions and use asapo_delete_id_list() to delete,
 /// created by asapo_consumer_get_unacknowledged_messages()
 /// \sa asapo::IdList asapo_id_list_get_size() asapo_id_list_get_item()
 typedef asapo::IdList* AsapoIdList;
 
+//! handle for data sets
+/// touch only with proper functions and use asapo_delete_data_set() to delete
+typedef asapo::DataSet* AsapoDataSet;
 #include <algorithm>
 
 template <typename t> constexpr bool operator==(unsigned lhs, t rhs) {
     return lhs == static_cast<typename std::underlying_type<t>::type>(rhs);
 }
+
+#define dataGetterStart \
+	if (data) delete *data; \
+	asapo::MessageData d; \
+	asapo::MessageMeta* fi = info ? nullptr : new asapo::MessageMeta;
+
+#define dataGetterStop \
+    if (data) { \
+        *data = d.release(); \
+    } \
+    if (info) { \
+         *info = fi;\
+    } \
+    return err.release();\
 
 extern "C" {
 #include "asapo/consumer_c.h"
@@ -386,11 +410,71 @@ extern "C" {
     /// \copydoc asapo::Consumer::RetrieveData()
     /// \param[in] consumer the consumer that is acted upon
     /// if data are retrieved (data != NULL) they must be freed with asapo_delete_message_data()
-    AsapoError asapo_consumer_retrive_data(AsapoConsumer consumer,
-                                           AsapoMessageMeta info,
-                                           AsapoMessageData* data);
+    AsapoError asapo_consumer_retrieve_data(AsapoConsumer consumer,
+                                            AsapoMessageMeta* info,
+                                            AsapoMessageData* data) {
+        dataGetterStart;
+        auto err = consumer->RetrieveData(fi, &d);
+        dataGetterStop;
+    }
 
+    //! wraps asapo::Consumer::GetNextDataset()
+    /// \copydoc asapo::Consumer::GetNextDataset()
+    /// \param[in] consumer the consumer that is acted upon
+    /// the returned data set must be freed with asapo_delete_data_set() after use.
+    AsapoDataSet asapo_consumer_get_next_data_set(AsapoConsumer consumer,
+                                                  AsapoString group_id,
+                                                  uint64_t min_size,
+                                                  const char* stream,
+                                                  AsapoError* error) {
+        asapo::Error err;
+        auto retval =  new asapo::DataSet(consumer->GetNextDataset(*group_id, min_size, stream, &err));
+        *error = err.release();
+        return retval;
+    }
 
+    //! wraps asapo::Consumer::GetLastDataset()
+    /// \copydoc asapo::Consumer::GetLastDataset()
+    /// \param[in] consumer the consumer that is acted upon
+    /// the returned data set must be freed with asapo_delete_data_set() after use.
+    AsapoDataSet asapo_consumer_get_last_data_set(AsapoConsumer consumer,
+                                                  uint64_t min_size,
+                                                  const char* stream,
+                                                  AsapoError* error) {
+        asapo::Error err;
+        auto retval =  new asapo::DataSet(consumer->GetLastDataset(min_size, stream, &err));
+        *error = err.release();
+        return retval;
+    }
+
+    //! wraps asapo::Consumer::GetDatasetById()
+    /// \copydoc asapo::Consumer::GetDatasetById()
+    /// \param[in] consumer the consumer that is acted upon
+    /// the returned data set must be freed with asapo_delete_data_set() after use.
+    AsapoDataSet asapo_consumer_get_data_set_by_id(AsapoConsumer consumer,
+                                                   uint64_t id,
+                                                   uint64_t min_size,
+                                                   const char* stream,
+                                                   AsapoError* error) {
+        asapo::Error err;
+        auto retval =  new asapo::DataSet(consumer->GetDatasetById(id, min_size, stream, &err));
+        *error = err.release();
+        return retval;
+    }
+
+    //! wraps aspao::Consumer::GetById()
+    /// \copydoc aspao::Consumer::GetById()
+    /// \param[in] consumer the consumer that is acted upon
+    /// if data are retrieved (data != NULL) they must be freed with asapo_delete_message_data()
+    AsapoError asapo_consumer_get_by_id(AsapoConsumer consumer,
+                                        uint64_t id,
+                                        AsapoMessageMeta* info,
+                                        AsapoMessageData* data,
+                                        const char* stream) {
+        dataGetterStart;
+        auto err = consumer->GetById(id, fi, &d, stream);
+        dataGetterStop;
+    }
 
     //! wraps asapo::Consumer::GetLast()
     /// \copydoc asapo::Consumer::GetLast()
@@ -400,20 +484,9 @@ extern "C" {
                                        AsapoMessageMeta* info,
                                        AsapoMessageData* data,
                                        const char* stream) {
-        if (data) delete *data; // do we need that?
-        asapo::MessageData d;
-        asapo::MessageMeta* fi = nullptr;
-        if (info) {
-            fi = new asapo::MessageMeta;
-        }
+        dataGetterStart;
         auto err = consumer->GetLast(fi, data ? &d : nullptr, stream);
-        if (data) {
-            *data = d.release();
-        }
-        if (info) {
-            *info = fi;
-        }
-        return err.release();
+        dataGetterStop;
     }
 
     //! wraps asapo::Consumer::GetNext()
@@ -425,21 +498,35 @@ extern "C" {
                                        AsapoMessageMeta* info,
                                        AsapoMessageData* data,
                                        const char* stream) {
-        if (data) delete *data;
-        asapo::MessageData d;
-        asapo::MessageMeta* fi = nullptr;
-        if (info) {
-            fi = new asapo::MessageMeta;
-        }
+        dataGetterStart;
         auto err = consumer->GetNext(*group_id, fi, data ? &d : nullptr, stream);
-        if (data) {
-            *data = d.release();
-        }
-        if (info) {
-            *info = fi;
-        }
-        return err.release();
+        dataGetterStop;
     }
+
+    //! wraps asapo::Consumer::QueryMessages()
+    /// \copydoc  asapo::Consumer::QueryMessages()
+    /// \param[in] consumer the consumer that is acted upon
+    /// the returned list must be freed with asapo_delete_message_metas() after use.
+    AsapoMessageMetas asapo_consumer_query_messages(AsapoConsumer consumer,
+                                                    const char* query,
+                                                    const char* stream,
+                                                    AsapoError* error) {
+        asapo::Error err;
+        auto retval = new asapo::MessageMetas(consumer->QueryMessages(query, stream, &err));
+        *error = err.release();
+        return retval;
+    }
+
+    //! wraps aspao::Consumer::SetResendNacs()
+    /// \copydoc aspao::Consumer::SetResendNacs()
+    /// \param[in] consumer the consumer that is acted upon
+    void asapo_consumer_set_resend_nacs(AsapoConsumer consumer,
+                                        AsapoBool resend,
+                                        uint64_t delay_ms,
+                                        uint64_t resend_attempts) {
+        consumer->SetResendNacs(resend, delay_ms, resend_attempts);
+    }
+
 
     //! clean up message data
     /// \param[in] data the handle of the data
@@ -585,6 +672,64 @@ extern "C" {
         time_point_to_time_spec(info->timestamp_lastentry, stamp);
     }
 
+    //! clean up AsapoDataSet object
+    /// frees the resources occupied by set, sets *set to NULL
+    void asapo_delete_data_set(AsapoDataSet* set) {
+        delete *set;
+        *set = nullptr;
+    }
+    //! get id from data set object
+    /// \param[in] set handle of the data set object
+    /// \return id of the data set
+    /// \sa asapo::DataSet
+    uint64_t asapo_data_set_get_id(const AsapoDataSet set) {
+        return set->id;
+    }
+    //! get ecpected size from data set object
+    /// \param[in] set handle of the data set object
+    /// \return expected size of the data set
+    /// \sa asapo::DataSet
+    uint64_t asapo_data_set_get_expected_size(const AsapoDataSet set) {
+        return set->expected_size;
+    }
+    //! get number of message meta objects from data set object
+    /// \param[in] set handle of the data set object
+    /// \return number of message meta objects of the data set
+    /// \sa asapo::DataSet
+    size_t asapo_data_set_get_size(const AsapoDataSet set) {
+        return set->content.size();
+    }
+    //! get one message meta object handle from data set object
+    /// \param[in] set handle of the data set object
+    /// \param[in] index of the message meta object wanted
+    /// \return handle of the meta data object, do not delete!
+    /// \sa asapo::DataSet
+    const AsapoMessageMeta asapo_data_set_get_item(const AsapoDataSet set,
+                                                   size_t index) {
+        return &(set->content.at(index));
+    }
 
+//! clean up message metas object
+    /// frees the resources occupied by metas, sets *metas to NULL
+    void asapo_delete_message_metas(AsapoMessageMetas* metas) {
+        delete *metas;
+        *metas = nullptr;
+    }
+    //! get number of message meta objects from metas object
+    /// \param[in] metas handle of the metas object
+    /// \return number of message meta objects of the data set
+    /// \sa asapo::MessageMetas
+    size_t asapo_message_metas_get_size(const AsapoMessageMetas metas) {
+        return metas->size();
+    }
+    //! get one message meta object handle from metas object
+    /// \param[in] metas handle of the metas object
+    /// \param[in] index of the message meta object wanted
+    /// \return handle of the meta data object, do not delete!
+    /// \sa asapo::MessageMetas
+    const AsapoMessageMeta asapo_message_metas_get_item(const AsapoMessageMetas metas,
+            size_t index) {
+        return &(metas->at(index));
+    }
 
 }
