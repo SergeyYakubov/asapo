@@ -81,11 +81,11 @@ AsapoError asapo_consumer_negative_acknowledge(AsapoConsumer consumer,
                                                uint64_t delay_ms,
                                                const char* stream);
 AsapoIdList asapo_consumer_get_unacknowledged_messages(AsapoConsumer consumer,
-                                                       AsapoString group_id,
-                                                       uint64_t from_id,
-                                                       uint64_t to_id,
-                                                       const char* stream,
-                                                       AsapoError* error);
+        AsapoString group_id,
+        uint64_t from_id,
+        uint64_t to_id,
+        const char* stream,
+        AsapoError* error);
 void asapo_delete_id_list(AsapoIdList* list);
 size_t asapo_id_list_get_size(const AsapoIdList list);
 uint64_t asapo_id_list_get_item(const AsapoIdList list,
@@ -122,24 +122,23 @@ AsapoError asapo_consumer_retrive_data(AsapoConsumer consumer,
                                        AsapoMessageData* data);
 
 AsapoError asapo_consumer_get_last(AsapoConsumer consumer,
-                                   AsapoMessageMeta info,
+                                   AsapoMessageMeta* info,
                                    AsapoMessageData* data,
                                    const char* stream);
 AsapoError asapo_consumer_get_next(AsapoConsumer consumer,
                                    AsapoString group_id,
-                                   AsapoMessageMeta info,
+                                   AsapoMessageMeta* info,
                                    AsapoMessageData* data,
                                    const char* stream);
 void asapo_delete_message_data(AsapoMessageData* data);
 const char* asapo_message_data_get_as_chars(const AsapoMessageData data);
 AsapoSourceCredentials asapo_create_source_credentials(enum AsapoSourceType type,
-                                                       const char* beamtime,
-                                                       const char* beamline,
-                                                       const char* data_source,
-                                                       const char* token);
+        const char* beamtime,
+        const char* beamline,
+        const char* data_source,
+        const char* token);
 void asapo_delete_source_credentials(AsapoSourceCredentials* cred);
 
-AsapoMessageMeta asapo_create_message_meta();
 void asapo_delete_message_meta(AsapoMessageMeta* meta);
 
 const char* asapo_message_meta_get_name(const AsapoMessageMeta md);

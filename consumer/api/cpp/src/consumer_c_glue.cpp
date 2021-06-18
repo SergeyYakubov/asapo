@@ -95,7 +95,7 @@ extern "C" {
                   "incompatible bit reps between c++ and c for asapo::NetworkConnectionType");
 
     static void time_point_to_time_spec(std::chrono::system_clock::time_point tp,
-                                    struct timespec* stamp) {
+                                        struct timespec* stamp) {
         stamp->tv_sec = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
         stamp->tv_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch()).count() % 1000000000;
     }
@@ -131,10 +131,10 @@ extern "C" {
     /// \copydoc asapo::ConsumerFactory::CreateConsumer
     /// return handle to the created cosumer
     AsapoConsumer asapo_create_consumer(const char* server_name,
-                                      const char* source_path,
-                                      AsapoBool has_filesysytem,
-                                      AsapoSourceCredentials source,
-                                      AsapoError* error) {
+                                        const char* source_path,
+                                        AsapoBool has_filesysytem,
+                                        AsapoSourceCredentials source,
+                                        AsapoError* error) {
 
 
         asapo::Error err;
@@ -158,7 +158,7 @@ extern "C" {
     /// \copydoc asapo::Consumer::GenerateNewGroupId()
     /// \param[in] consumer the handle of the consumer concerned
     AsapoString asapo_consumer_generate_new_group_id(AsapoConsumer consumer,
-                                                AsapoError* error) {
+                                                     AsapoError* error) {
         asapo::Error err;
         auto result = new std::string(consumer->GenerateNewGroupId(&err));
         *error = err.release();
@@ -179,11 +179,13 @@ extern "C" {
     //! give a pointer to the content of the asapoString
     /// \param[in] str the handle of the asapoString in question
     /// \return const char pointer to the content
-    const char* asapo_string_c_str(const AsapoString str);
+    const char* asapo_string_c_str(const AsapoString str) {
+        return str->c_str();
+    }
     //! give the size of an asapoString
     /// \param[in] str the handle of the asapoString in question
     /// \return the number of bytes in the string , not counting the final nul byte.
-    size_t asapoStringSize(const AsapoString str) {
+    size_t asapo_string_size(const AsapoString str) {
         return str->size();
     }
     //! clean up string
@@ -205,8 +207,8 @@ extern "C" {
     /// \copydoc asapo::Consumer::ResetLastReadMarker()
     /// \param[in] consumer the handle of the consumer concerned
     AsapoError asapo_consumer_reset_last_read_marker(AsapoConsumer consumer,
-                                                const AsapoString group_id,
-                                                const char* stream) {
+                                                     const AsapoString group_id,
+                                                     const char* stream) {
         auto err = consumer->ResetLastReadMarker(*group_id, stream);
         return err.release();
     }
@@ -215,9 +217,9 @@ extern "C" {
     /// \copydoc asapo::Consumer::SetLastReadMarker()
     /// \param[in] consumer the handle of the consumer concerned
     AsapoError asapo_consumer_set_last_read_marker(AsapoConsumer consumer,
-                                              const AsapoString group_id,
-                                              uint64_t value,
-                                              const char* stream) {
+                                                   const AsapoString group_id,
+                                                   uint64_t value,
+                                                   const char* stream) {
         auto err = consumer->SetLastReadMarker(*group_id, value, stream);
         return err.release();
     }
@@ -225,9 +227,9 @@ extern "C" {
     /// \copydoc asapo::Consumer::Acknowledge()
     /// \param[in] consumer the handle of the consumer concerned
     AsapoError asapo_consumer_acknowledge(AsapoConsumer consumer,
-                                        const AsapoString group_id,
-                                        uint64_t id,
-                                        const char* stream) {
+                                          const AsapoString group_id,
+                                          uint64_t id,
+                                          const char* stream) {
         auto err = consumer->Acknowledge(*group_id, id, stream);
         return err.release();
     }
@@ -235,10 +237,10 @@ extern "C" {
     /// \copydoc asapo::Consumer::NegativeAcknowledge()
     /// \param[in] consumer the handle of the consumer concerned
     AsapoError asapo_consumer_negative_acknowledge(AsapoConsumer consumer,
-                                                const AsapoString group_id,
-                                                uint64_t id,
-                                                uint64_t delay_ms,
-                                                const char* stream) {
+                                                   const AsapoString group_id,
+                                                   uint64_t id,
+                                                   uint64_t delay_ms,
+                                                   const char* stream) {
         auto err = consumer->NegativeAcknowledge(*group_id, id, delay_ms, stream);
         return err.release();
     }
@@ -247,11 +249,11 @@ extern "C" {
     /// \copydoc asapo::Consumer::GetUnacknowledgedMessages()
     /// \param[in] consumer the handle of the consumer concerned
     AsapoIdList asapo_consumer_get_unacknowledged_messages(AsapoConsumer consumer,
-                                                       AsapoString group_id,
-                                                       uint64_t from_id,
-                                                       uint64_t to_id,
-                                                       const char* stream,
-                                                       AsapoError* error) {
+            AsapoString group_id,
+            uint64_t from_id,
+            uint64_t to_id,
+            const char* stream,
+            AsapoError* error) {
         asapo::Error err;
         auto list = new asapo::IdList(consumer->GetUnacknowledgedMessages(*group_id,
                                       from_id, to_id,
@@ -274,7 +276,7 @@ extern "C" {
     /// \param[in] list handle of an id list
     /// \param[in] index index of the item to return, start at 0
     uint64_t asapo_id_list_get_item(const AsapoIdList list,
-                                size_t index) {
+                                    size_t index) {
         return list->at(index);
     }
     //! wraps asapo::Consumer::ForceNoRdma()
@@ -297,9 +299,9 @@ extern "C" {
       \sa asapoStreamInfosGetInfo() asapo_stream_infos_get_size() asapo_delete_stream_infos()
     */
     AsapoStreamInfos asapo_consumer_get_stream_list(AsapoConsumer consumer,
-                                                const char* from,
-                                                enum AsapoStreamFilter filter,
-                                                AsapoError* error) {
+                                                    const char* from,
+                                                    enum AsapoStreamFilter filter,
+                                                    AsapoError* error) {
         asapo::Error err;
         auto info = new asapo::StreamInfos(consumer->GetStreamList(from,
                                            static_cast<asapo::StreamFilter>(filter),
@@ -313,7 +315,7 @@ extern "C" {
     /// \param[in] index index od info to get, starts at 0
     /// \return handle to stream info, do not delete!
     const AsapoStreamInfo asapo_stream_infos_get_item(const AsapoStreamInfos infos,
-                                                  size_t index) {
+                                                      size_t index) {
         return &infos->at(index);
     }
     //! get size (number of elements) of a stream infos handle
@@ -336,9 +338,9 @@ extern "C" {
     /// \param[in] delete_meta the delete_meta part of the asapo::DeleteStreamOptions
     /// \param[in] error_on_not_exist the error_on_not_exist part of the asapo::DeleteStreamOptions
     AsapoError asapo_consumer_delete_stream(AsapoConsumer consumer,
-                                         const char* stream,
-                                         AsapoBool delete_meta,
-                                         AsapoBool error_on_not_exist) {
+                                            const char* stream,
+                                            AsapoBool delete_meta,
+                                            AsapoBool error_on_not_exist) {
         asapo::DeleteStreamOptions opt(delete_meta, error_on_not_exist);
         auto err = consumer->DeleteStream(stream, opt);
         return err.release();
@@ -347,8 +349,8 @@ extern "C" {
     /// \copydoc asapo::Consumer::GetCurrentSize()
     /// \param[in] consumer the consumer that is acted upon
     uint64_t asapo_consumer_get_current_size(AsapoConsumer consumer,
-                                         const char* stream,
-                                         AsapoError* error) {
+                                             const char* stream,
+                                             AsapoError* error) {
         asapo::Error err;
         auto retval = consumer->GetCurrentSize(stream, &err);
         *error = err.release();
@@ -358,9 +360,9 @@ extern "C" {
     /// \copydoc asapo::Copydoc::GetCurrentDatasetCount()
     /// \param[in] consumer the consumer that is acted upon
     uint64_t asapo_consumer_get_current_dataset_count(AsapoConsumer consumer,
-                                                 const char* stream,
-                                                 AsapoBool include_incomplete,
-                                                 AsapoError* error) {
+                                                      const char* stream,
+                                                      AsapoBool include_incomplete,
+                                                      AsapoError* error) {
         asapo::Error err;
         auto retval = consumer->GetCurrentDatasetCount(stream, include_incomplete, &err);
         *error = err.release();
@@ -372,7 +374,7 @@ extern "C" {
     /// \param[in] consumer the consumer that is acted upon
     /// the returned string must be freed after use with asapo_delete_string()
     AsapoString asapo_consumer_get_beamtime_meta(AsapoConsumer consumer,
-                                             AsapoError* error) {
+                                                 AsapoError* error) {
         asapo::Error err;
         auto retval = new std::string(consumer->GetBeamtimeMeta(&err));
         *error = err.release();
@@ -385,8 +387,8 @@ extern "C" {
     /// \param[in] consumer the consumer that is acted upon
     /// if data are retrieved (data != NULL) they must be freed with asapo_delete_message_data()
     AsapoError asapo_consumer_retrive_data(AsapoConsumer consumer,
-                                        AsapoMessageMeta info,
-                                        AsapoMessageData* data);
+                                           AsapoMessageMeta info,
+                                           AsapoMessageData* data);
 
 
 
@@ -395,14 +397,21 @@ extern "C" {
     /// \param[in] consumer the consumer that is acted upon
     /// if data are retrieved (data != NULL) they must be freed with asapo_delete_message_data()
     AsapoError asapo_consumer_get_last(AsapoConsumer consumer,
-                                    AsapoMessageMeta info,
-                                    AsapoMessageData* data,
-                                    const char* stream) {
-        delete *data;
+                                       AsapoMessageMeta* info,
+                                       AsapoMessageData* data,
+                                       const char* stream) {
+        if (data) delete *data; // do we need that?
         asapo::MessageData d;
-        auto err = consumer->GetLast(info, data ? &d : nullptr, stream);
+        asapo::MessageMeta* fi = nullptr;
+        if (info) {
+            fi = new asapo::MessageMeta;
+        }
+        auto err = consumer->GetLast(fi, data ? &d : nullptr, stream);
         if (data) {
             *data = d.release();
+        }
+        if (info) {
+            *info = fi;
         }
         return err.release();
     }
@@ -412,15 +421,22 @@ extern "C" {
     /// \param[in] consumer the consumer that is acted upon
     /// if data are retrieved (data != NULL) they must be freed with asapo_delete_message_data()
     AsapoError asapo_consumer_get_next(AsapoConsumer consumer,
-                                    AsapoString group_id,
-                                    AsapoMessageMeta info,
-                                    AsapoMessageData* data,
-                                    const char* stream) {
-        delete *data;
+                                       AsapoString group_id,
+                                       AsapoMessageMeta* info,
+                                       AsapoMessageData* data,
+                                       const char* stream) {
+        if (data) delete *data;
         asapo::MessageData d;
-        auto err = consumer->GetNext(*group_id, info, data ? &d : nullptr, stream);
+        asapo::MessageMeta* fi = nullptr;
+        if (info) {
+            fi = new asapo::MessageMeta;
+        }
+        auto err = consumer->GetNext(*group_id, fi, data ? &d : nullptr, stream);
         if (data) {
             *data = d.release();
+        }
+        if (info) {
+            *info = fi;
         }
         return err.release();
     }
@@ -443,10 +459,10 @@ extern "C" {
     //! wraps asapo::SourceCredentials::SourceCredentials()
     /// \copydoc asapo::SourceCredentials::SourceCredentials()
     AsapoSourceCredentials asapo_create_source_credentials(enum AsapoSourceType type,
-                                                           const char* beamtime,
-                                                           const char* beamline,
-                                                           const char* data_source,
-                                                           const char* token) {
+            const char* beamtime,
+            const char* beamline,
+            const char* data_source,
+            const char* token) {
         return new asapo::SourceCredentials(static_cast<asapo::SourceType>(type),
                                             beamtime, beamline,
                                             data_source, token);
@@ -457,13 +473,7 @@ extern "C" {
         delete *cred;
         cred = nullptr;
     }
-    //! create asapoMessageMeta object
-    /// create a metadata object, the handle can be used as a parameter to  consumer functions
-    /// \sa asapo_consumer_get_last()
-    /// \return handle to metadata object
-    AsapoMessageMeta asapo_create_message_meta() {
-        return new asapo::MessageMeta;
-    }
+
     //! clean up asapoMessageMeta object
     /// frees the resources occupied by meta, sets *meta to NULL
     void asapo_delete_message_meta(AsapoMessageMeta* meta) {
@@ -483,7 +493,7 @@ extern "C" {
     /// \param[out] stamp the timestamp as timespec
     /// \sa asapo::MessageMeta
     void asapo_message_meta_get_timestamp(const AsapoMessageMeta md,
-                                      struct timespec* stamp) {
+                                          struct timespec* stamp) {
         time_point_to_time_spec(md->timestamp, stamp);
     }
 
@@ -563,7 +573,7 @@ extern "C" {
     /// \param[out] stamp creation timestamp as timespec
     /// \sa asapo::StreamInfo
     void asapo_stream_info_get_timestamp_created(const AsapoStreamInfo info,
-                                            struct timespec* stamp) {
+                                                 struct timespec* stamp) {
         time_point_to_time_spec(info->timestamp_created, stamp);
     }
     //! get time of last entry from the stream info object
@@ -571,7 +581,7 @@ extern "C" {
     /// \param[out] stamp last entry timestamp as timespec
     /// \sa asapo::StreamInfo
     void asapo_stream_info_get_timestamp_last_entry(const AsapoStreamInfo info,
-                                              struct timespec* stamp) {
+                                                    struct timespec* stamp) {
         time_point_to_time_spec(info->timestamp_lastentry, stamp);
     }
 
