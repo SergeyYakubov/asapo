@@ -17,20 +17,21 @@ typedef void* AsapoDataSet;
 #include <time.h>
 #include <stdint.h>
 #endif
-//! c version of asapo::ErrorType
-enum AsapoErrorType {
-    kUnknownError = 0,
-    kAsapoError,
-    kHttpError,
-    kIOError,
-    kDBError,
-    kReceiverError,
-    kProducerError,
-    kConsumerError,
-    kMemoryAllocationError,
-    kEndOfFile,
-    kFabricError,
+
+//! c version of asapo::ConsumerErrorType
+enum AsapoConsumerErrorType {
+    kNoData = 0,
+    kEndOfStream,
+    kStreamFinished,
+    kUnavailableService,
+    kInterruptedTransaction,
+    kLocalIOError,
+    kWrongInput,
+    kPartialData,
+    kUnsupportedClient,
+    kUnknownError
 };
+
 //! c version of asapo::StreamFilter
 enum AsapoStreamFilter {
     kAllStreams,
@@ -49,7 +50,7 @@ enum AsapoNetworkConnectionType {
     kFabric
 };
 void asapo_error_explain(const AsapoError error, char* buf, size_t max_size);
-enum AsapoErrorType asapo_error_get_type(const AsapoError error);
+enum AsapoConsumerErrorType asapo_error_get_type(const AsapoError error);
 void asapo_clear_error(AsapoError* error);
 
 AsapoConsumer asapo_create_consumer(const char* server_name,
@@ -92,6 +93,11 @@ void asapo_delete_id_list(AsapoIdList* list);
 size_t asapo_id_list_get_size(const AsapoIdList list);
 uint64_t asapo_id_list_get_item(const AsapoIdList list,
                                 size_t index);
+
+uint64_t asapo_consumer_get_last_acknowledged_message(AsapoConsumer consumer,
+        AsapoString group_id,
+        const char* stream,
+        AsapoError* error);
 
 void asapo_consumer_force_no_rdma(AsapoConsumer consumer);
 enum AsapoNetworkConnectionType asapo_consumer_current_connection_type(AsapoConsumer consumer);

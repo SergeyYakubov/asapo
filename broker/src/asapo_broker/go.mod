@@ -11,5 +11,5 @@ require (
 	github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab
 	github.com/rs/xid v1.2.1
 	github.com/stretchr/testify v1.7.0
-	go.mongodb.org/mongo-driver v1.4.6
+	go.mongodb.org/mongo-driver v1.5.3
 )

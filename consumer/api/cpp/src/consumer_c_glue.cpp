@@ -21,7 +21,7 @@ typedef asapo::SourceCredentials* AsapoSourceCredentials;
 /// or an output parameter, then a pointer to an asapoError will be used and set to NULL or something
 /// needs to be cleared after use with asapo_clear_error()
 /// text version of an error: asapo_error_explain()
-/// enum value of the error: asapo_error_get_type(), \sa ::asapoErrorType asapo::ErrorType
+/// enum value of the error: asapo_error_get_type(), \sa ::asapoErrorType asapo::ConsumerErrorType
 typedef asapo::ErrorInterface* AsapoError;
 
 //! handle for metadata of a message
@@ -81,7 +81,10 @@ template <typename t> constexpr bool operator==(unsigned lhs, t rhs) {
 #define dataGetterStart \
 	if (data) delete *data; \
 	asapo::MessageData d; \
-	asapo::MessageMeta* fi = info ? new asapo::MessageMeta : nullptr;
+	asapo::MessageMeta* fi = info ? new asapo::MessageMeta : nullptr; \
+	if (info) { \
+    delete *info; \
+    } \
 
 #define dataGetterStop \
     if (data) { \
@@ -94,17 +97,15 @@ template <typename t> constexpr bool operator==(unsigned lhs, t rhs) {
 
 extern "C" {
 #include "asapo/consumer_c.h"
-    static_assert(kUnknownError == asapo::ErrorType::kUnknownError&&
-                  kAsapoError == asapo::ErrorType::kAsapoError&&
-                  kHttpError == asapo::ErrorType::kHttpError&&
-                  kIOError == asapo::ErrorType::kIOError&&
-                  kDBError == asapo::ErrorType::kDBError&&
-                  kReceiverError == asapo::ErrorType::kReceiverError&&
-                  kProducerError == asapo::ErrorType::kProducerError&&
-                  kConsumerError == asapo::ErrorType::kConsumerError&&
-                  kMemoryAllocationError == asapo::ErrorType::kMemoryAllocationError&&
-                  kEndOfFile == asapo::ErrorType::kEndOfFile&&
-                  kFabricError == asapo::ErrorType::kFabricError,
+    static_assert(kNoData == asapo::ConsumerErrorType::kNoData&&
+                  kEndOfStream == asapo::ConsumerErrorType::kEndOfStream&&
+                  kStreamFinished == asapo::ConsumerErrorType::kStreamFinished&&
+                  kUnavailableService == asapo::ConsumerErrorType::kUnavailableService&&
+                  kInterruptedTransaction == asapo::ConsumerErrorType::kInterruptedTransaction&&
+                  kLocalIOError == asapo::ConsumerErrorType::kLocalIOError&&
+                  kWrongInput == asapo::ConsumerErrorType::kWrongInput&&
+                  kPartialData == asapo::ConsumerErrorType::kPartialData&&
+                  kUnsupportedClient == asapo::ConsumerErrorType::kUnsupportedClient,
                   "incompatible bit reps between c++ and c for asapo::ErrorType");
     static_assert(kAllStreams == asapo::StreamFilter::kAllStreams&&
                   kFinishedStreams == asapo::StreamFilter::kFinishedStreams&&
@@ -138,16 +139,25 @@ extern "C" {
             buf[std::max(maxSize - 1, msg.size())] = '\0';
         }
     }
-    /// \copydoc asapo::ErrorInterface::GetErrorType()
-    enum AsapoErrorType asapo_error_get_type(const AsapoError error) {
-        return static_cast<AsapoErrorType>(error->GetErrorType());
+
+    enum AsapoConsumerErrorType asapo_error_get_type(const AsapoError error) {
+        auto consumer_err =
+            dynamic_cast<const asapo::ServiceError<asapo::ConsumerErrorType, asapo::ErrorType::kConsumerError>*>(error);
+        if (consumer_err != nullptr) {
+            return static_cast<AsapoConsumerErrorType>(consumer_err->GetServiceErrorType());
+        } else {
+            return kUnknownError;
+        }
     }
     //! clean up error
     /// frees the resources occupied by error,
     /// sets *error to NULL
     void asapo_clear_error(AsapoError* error) {
+        if ( *error == nullptr) {
+            return;
+        }
         delete *error;
-        error = nullptr;
+        *error = nullptr;
     }
 
 
@@ -413,9 +423,13 @@ extern "C" {
     AsapoError asapo_consumer_retrieve_data(AsapoConsumer consumer,
                                             AsapoMessageMeta* info,
                                             AsapoMessageData* data) {
-        dataGetterStart;
-        auto err = consumer->RetrieveData(fi, &d);
-        dataGetterStop;
+        if (data) delete *data;
+        asapo::MessageData d;
+        auto err = consumer->RetrieveData(static_cast<asapo::MessageMeta*>(*info), data ? &d : nullptr);
+        if (data) {
+            *data = d.release();
+        }
+        return err.release();
     }
 
     //! wraps asapo::Consumer::GetNextDataset()
@@ -447,7 +461,21 @@ extern "C" {
         return retval;
     }
 
-    //! wraps asapo::Consumer::GetDatasetById()
+//! wraps asapo::Consumer::GetLastAcknowledgedMessage()
+/// \copydoc asapo::Consumer::GetLastAcknowledgedMessage()
+/// \param[in] consumer the consumer that is acted upon
+    uint64_t asapo_consumer_get_last_acknowledged_message(AsapoConsumer consumer,
+            AsapoString group_id,
+            const char* stream,
+            AsapoError* error) {
+        asapo::Error err;
+        auto retval =  consumer->GetLastAcknowledgedMessage(*group_id, stream, &err);
+        *error = err.release();
+        return retval;
+    }
+
+
+//! wraps asapo::Consumer::GetDatasetById()
     /// \copydoc asapo::Consumer::GetDatasetById()
     /// \param[in] consumer the consumer that is acted upon
     /// the returned data set must be freed with asapo_delete_data_set() after use.
@@ -472,7 +500,7 @@ extern "C" {
                                         AsapoMessageData* data,
                                         const char* stream) {
         dataGetterStart;
-        auto err = consumer->GetById(id, fi, &d, stream);
+        auto err = consumer->GetById(id, fi, data ? &d : nullptr, stream);
         dataGetterStop;
     }
 
@@ -609,7 +637,7 @@ extern "C" {
     /// \param[in] md handle of the metadata object
     /// \return pointer to the metadata string, valid until md is reused or deleted only!
     /// \sa asapo::MessageMeta
-    const char* asapo_message_meta_get_meta_data(const AsapoMessageMeta md) {
+    const char* asapo_message_meta_get_metadata(const AsapoMessageMeta md) {
         return md->metadata.c_str();
     }
     //! get buffer id from the metadata object

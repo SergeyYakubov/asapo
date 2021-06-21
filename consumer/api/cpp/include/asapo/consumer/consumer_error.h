@@ -7,7 +7,7 @@
 namespace asapo {
 
 enum class ConsumerErrorType {
-    kNoData,
+    kNoData = 0,
     kEndOfStream,
     kStreamFinished,
     kUnavailableService,

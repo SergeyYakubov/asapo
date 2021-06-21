@@ -23,6 +23,9 @@ ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 #todo: added fPIC to be able to create shared libs for Python - check it does not change performance
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -fPIC")
     SET(BUILD_SHARED_LIBS OFF)
+ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options("-fsanitize=address")
+    link_libraries("-fsanitize=address")
 ENDIF(WIN32)
 
 #TODO: Better way then GLOBAL PROPERTY
