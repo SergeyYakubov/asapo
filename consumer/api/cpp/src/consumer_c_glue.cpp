@@ -87,6 +87,19 @@ typedef AsapoHandlerHolder<asapo::IdList>* AsapoIdListHandle;
 //! handle for data sets
 /// touch only with proper functions and use asapo_free_handle() to delete
 typedef AsapoHandlerHolder<asapo::DataSet>* AsapoDataSetHandle;
+
+//! handle for partial error payload
+/// create with asapo_new_handle()
+/// free after use with asapo_free_handle()
+/// A set of getters asapo_partial_error_get_xx() are defined
+typedef AsapoHandlerHolder<asapo::PartialErrorData>* AsapoPartialErrorDataHandle;
+
+//! handle for consumer error payload
+/// create with asapo_new_handle()
+/// free after use with asapo_free_handle()
+/// A set of getters asapo_consumer_error_get_xx() are defined
+typedef AsapoHandlerHolder<asapo::ConsumerErrorData>* AsapoConsumerErrorDataHandle;
+
 #include <algorithm>
 
 template<typename t>
@@ -466,7 +479,7 @@ extern "C" {
             AsapoErrorHandle* error) {
         asapo::Error err;
         auto retval = new asapo::DataSet(consumer->handle->GetNextDataset(*group_id->handle, min_size, stream, &err));
-        if (process_error(error, std::move(err)) < 0) {
+        if (process_error(error, std::move(err)) < 0 && err != asapo::ConsumerErrorTemplates::kPartialData) {
             return nullptr;
         }
         return new AsapoHandlerHolder<asapo::DataSet> {retval};
@@ -482,7 +495,7 @@ extern "C" {
             AsapoErrorHandle* error) {
         asapo::Error err;
         auto retval = new asapo::DataSet(consumer->handle->GetLastDataset(min_size, stream, &err));
-        if (process_error(error, std::move(err)) < 0) {
+        if (process_error(error, std::move(err)) < 0 && err != asapo::ConsumerErrorTemplates::kPartialData) {
             return nullptr;
         }
         return new AsapoHandlerHolder<asapo::DataSet> {retval};
@@ -515,7 +528,7 @@ extern "C" {
             AsapoErrorHandle* error) {
         asapo::Error err;
         auto retval = new asapo::DataSet(consumer->handle->GetDatasetById(id, min_size, stream, &err));
-        if (process_error(error, std::move(err)) < 0) {
+        if (process_error(error, std::move(err)) < 0 && err != asapo::ConsumerErrorTemplates::kPartialData) {
             return nullptr;
         }
         return new AsapoHandlerHolder<asapo::DataSet> {retval};
@@ -766,6 +779,73 @@ extern "C" {
             size_t index) {
         return new AsapoHandlerHolder<asapo::MessageMeta> {&(metas->handle->at(index)), false};
     }
+
+
+//! get payload from partial error
+/// \param[in] asapo error
+/// \return handle to partial error data or NULL if error is wrong type
+    AsapoPartialErrorDataHandle asapo_error_get_payload_from_partial_error(const AsapoErrorHandle error) {
+        if (error == nullptr && error->handle == nullptr) {
+            return nullptr;
+        }
+        auto payload = dynamic_cast<asapo::PartialErrorData*>(error->handle->GetCustomData());
+        if (payload == nullptr) {
+            return nullptr;
+        }
+        return new AsapoHandlerHolder<asapo::PartialErrorData> {payload, false};
+    }
+
+
+//! get id from the partial error object
+/// \param[in] error_payload handle of the partial error data object
+/// \sa asapo::PartialErrorData
+    uint64_t asapo_partial_error_get_id(const AsapoPartialErrorDataHandle error_payload) {
+        return error_payload->handle->id;
+    }
+
+//! get expected dataset size from the partial error object
+/// \param[in] error_payload handle of the partial error data object
+/// \sa asapo::PartialErrorData
+    uint64_t asapo_partial_error_get_expected_size(const AsapoPartialErrorDataHandle error_payload) {
+        return error_payload->handle->expected_size;
+    }
+
+//! get payload from consumer error
+/// \param[in] asapo error
+/// \return handle to partial error data or NULL if error is wrong type
+    AsapoConsumerErrorDataHandle asapo_error_get_payload_from_consumer_error(const AsapoErrorHandle error) {
+        if (error == nullptr && error->handle == nullptr) {
+            return nullptr;
+        }
+        auto payload = dynamic_cast<asapo::ConsumerErrorData*>(error->handle->GetCustomData());
+        if (payload == nullptr) {
+            return nullptr;
+        }
+        return new AsapoHandlerHolder<asapo::ConsumerErrorData> {payload, false};
+    }
+
+//! get id from the consumer error data object
+/// \param[in] error_payload handle of the consumer error data object
+/// \sa asapo::ConsumerErrorData
+    uint64_t asapo_consumer_error_get_id(const AsapoConsumerErrorDataHandle error_payload) {
+        return error_payload->handle->id;
+    }
+
+//! get id_max from the consumer error data object
+/// \param[in] error_payload handle of the consumer error data object
+/// \sa asapo::ConsumerErrorData
+    uint64_t asapo_consumer_error_get_id_max(const AsapoConsumerErrorDataHandle error_payload) {
+        return error_payload->handle->id_max;
+    }
+
+//! get next_stream from the consumer error data object
+/// \param[in] error_payload handle of the consumer error data object
+/// \sa asapo::ConsumerErrorData
+    const char* asapo_consumer_error_get_next_stream(const AsapoConsumerErrorDataHandle error_payload) {
+        return error_payload->handle->next_stream.c_str();
+    }
+
+
 
 //! free handle memory, set handle to NULL
 /// \param[in] pointer to an ASAPO handle

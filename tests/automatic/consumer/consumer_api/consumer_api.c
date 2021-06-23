@@ -44,6 +44,90 @@ void exit_if_error_(const char *error_string, const AsapoErrorHandle err, int li
 }
 
 
+void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
+    AsapoErrorHandle err = asapo_new_handle();
+
+// get next
+    AsapoDataSetHandle dataset = asapo_consumer_get_next_dataset(consumer,group_id, 0, "default", &err);
+    EXIT_IF_ERROR("asapo_consumer_get_next_dataset", err);
+    ASSERT_EQ_INT(3,asapo_dataset_get_size(dataset),"asapo_dataset_get_size");
+    AsapoMessageDataHandle md0 = asapo_dataset_get_item(dataset,0);
+    AsapoMessageDataHandle md2 = asapo_dataset_get_item(dataset,2);
+    ASSERT_EQ_STRING("1_1",asapo_message_meta_get_name(md0),"dataset 0 filename");
+    ASSERT_EQ_STRING("1_3",asapo_message_meta_get_name(md2),"dataset 2 filename");
+    ASSERT_EQ_STRING("{\"test\":10}",asapo_message_meta_get_metadata(md0),"dataset 0 meta");
+    asapo_free_handle(&md0);
+    asapo_free_handle(&md2);
+    asapo_free_handle(&dataset);
+
+// get last
+    dataset = asapo_consumer_get_last_dataset(consumer, 0, "default", &err);
+    EXIT_IF_ERROR("asapo_consumer_get_last_dataset", err);
+    AsapoMessageDataHandle md = asapo_dataset_get_item(dataset,0);
+    ASSERT_EQ_STRING("10_1",asapo_message_meta_get_name(md),"dataset 10 filename");
+    asapo_free_handle(&md);
+    asapo_free_handle(&dataset);
+
+// get by id
+    dataset = asapo_consumer_get_dataset_by_id(consumer, 8,0, "default", &err);
+    EXIT_IF_ERROR("asapo_consumer_get_last_dataset", err);
+    md = asapo_dataset_get_item(dataset,2);
+    ASSERT_EQ_STRING("8_3",asapo_message_meta_get_name(md),"dataset 8 filename");
+    asapo_free_handle(&md);
+    asapo_free_handle(&dataset);
+
+// size
+    int64_t size = asapo_consumer_get_current_dataset_count(consumer,"default", 0, &err);
+    EXIT_IF_ERROR("asapo_consumer_get_current_dataset_count", err);
+    ASSERT_EQ_INT(10,size,"asapo_consumer_get_current_dataset_count");
+
+// get next incomplete datasets without min_size
+    dataset = asapo_consumer_get_next_dataset(consumer,group_id, 0, "incomplete", &err);
+    ASSERT_TRUE(asapo_error_get_type(err) == kPartialData,"incomplete dataset patial data error");
+    ASSERT_EQ_INT(2,asapo_dataset_get_size(dataset),"incomplete dataset size");
+    AsapoPartialErrorDataHandle err_data = asapo_error_get_payload_from_partial_error(err);
+    ASSERT_EQ_INT(3, asapo_partial_error_get_expected_size(err_data), "incomplete dataset size");
+    ASSERT_EQ_INT(1,asapo_partial_error_get_id(err_data),"incomplete dataset id ");
+    asapo_free_handle(&err_data);
+    asapo_free_handle(&dataset);
+
+// get last incomplete datasets without min_size
+    asapo_consumer_get_last_dataset(consumer, 0, "incomplete", &err);
+    ASSERT_TRUE(asapo_error_get_type(err) == kEndOfStream,"incomplete dataset end of stream error");
+
+// get dataset by id incomplete datasets without min_size
+    dataset = asapo_consumer_get_dataset_by_id(consumer,2, 0,"incomplete", &err);
+    ASSERT_TRUE(asapo_error_get_type(err) == kPartialData,"incomplete dataset patial data error");
+    md = asapo_dataset_get_item(dataset,0);
+    ASSERT_EQ_STRING("2_1",asapo_message_meta_get_name(md),"incomplete dataset 2 filename");
+    asapo_free_handle(&dataset);
+    asapo_free_handle(&md);
+
+// get next incomplete datasets with min_size = 2
+    dataset = asapo_consumer_get_next_dataset(consumer,group_id, 2, "incomplete", &err);
+    EXIT_IF_ERROR("asapo_consumer_get_next_dataset minsize error", err);
+    ASSERT_EQ_INT(2,asapo_dataset_get_id(dataset),"incomplete dataset size");
+    asapo_free_handle(&dataset);
+
+// get last incomplete datasets with min_size = 2
+    dataset = asapo_consumer_get_last_dataset(consumer,2, "incomplete", &err);
+    EXIT_IF_ERROR("asapo_consumer_get_next_dataset minsize error", err);
+    ASSERT_EQ_INT(5,asapo_dataset_get_id(dataset),"incomplete dataset size");
+    asapo_free_handle(&dataset);
+
+// get size
+    size = asapo_consumer_get_current_dataset_count(consumer,"incomplete", 1, &err);
+    EXIT_IF_ERROR("asapo_consumer_get_current_dataset_count", err);
+    ASSERT_EQ_INT(5,size,"asapo_consumer_get_current_dataset_count include incomplete");
+
+    size = asapo_consumer_get_current_dataset_count(consumer,"incomplete", 0, &err);
+    EXIT_IF_ERROR("asapo_consumer_get_current_dataset_count", err);
+    ASSERT_EQ_INT(0,size,"asapo_consumer_get_current_dataset_count exclude incomplete");
+
+
+    asapo_free_handle(&err);
+}
+
 void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
     AsapoErrorHandle err = asapo_new_handle();
     AsapoMessageMetaHandle md = asapo_new_handle();
@@ -184,8 +268,12 @@ int main(int argc, char* argv[]) {
         test_single(consumer,group_id);
     }
 
+    asapo_free_handle(&group_id);
+    group_id = asapo_consumer_generate_new_group_id(consumer, &err);
+    EXIT_IF_ERROR("create group id", err);
+
     if (strcmp(argv[4],"dataset") == 0) {
-//        exit(0);
+        test_datasets(consumer,group_id);
     }
 
     asapo_free_handle(&err);

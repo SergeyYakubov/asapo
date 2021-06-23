@@ -34,7 +34,6 @@ class ConsumerErrorData : public CustomErrorData {
     std::string next_stream;
 };
 
-
 namespace ConsumerErrorTemplates {
 
 

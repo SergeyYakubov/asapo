@@ -15,6 +15,8 @@ typedef void* AsapoStreamInfoHandle;
 typedef void* AsapoStreamInfosHandle;
 typedef void* AsapoIdListHandle;
 typedef void* AsapoDataSetHandle;
+typedef void* AsapoPartialErrorDataHandle;
+typedef void* AsapoConsumerErrorDataHandle;
 
 #include <time.h>
 #include <stdint.h>
@@ -200,6 +202,18 @@ AsapoMessageMetaHandle asapo_dataset_get_item(const AsapoDataSetHandle set,
 size_t asapo_message_metas_get_size(const AsapoMessageMetasHandle metas);
 AsapoMessageMetaHandle asapo_message_metas_get_item(const AsapoMessageMetasHandle metas,
         size_t index);
+
+
+AsapoPartialErrorDataHandle asapo_error_get_payload_from_partial_error(const AsapoErrorHandle error);
+uint64_t asapo_partial_error_get_id(const AsapoPartialErrorDataHandle error_payload);
+uint64_t asapo_partial_error_get_expected_size(const AsapoPartialErrorDataHandle error_payload);
+
+
+AsapoConsumerErrorDataHandle asapo_error_get_payload_from_consumer_error(const AsapoErrorHandle error);
+uint64_t asapo_consumer_error_get_id(const AsapoConsumerErrorDataHandle error_payload);
+uint64_t asapo_consumer_error_get_id_max(const AsapoConsumerErrorDataHandle error_payload);
+const char* asapo_consumer_error_get_next_stream(const AsapoConsumerErrorDataHandle error_payload);
+
 
 void asapo_free_handle(void** handle);
 void* asapo_new_handle();
