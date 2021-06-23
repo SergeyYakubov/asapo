@@ -91,6 +91,10 @@ Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request>& request,
         request->AddHandler(&request_handler_db_last_stream_);
         break;
     }
+    case Opcode::kOpcodeGetMeta: {
+        request->AddHandler(&request_handler_db_get_meta_);
+        break;
+    }
     default:
         return ReceiverErrorTemplates::kInvalidOpCode.Generate();
     }

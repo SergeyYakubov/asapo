@@ -21,5 +21,3 @@ target_link_libraries(${TARGET_NAME_C} test_common asapo-consumer)
 add_script_test("${TARGET_NAME}" "$<TARGET_FILE:${TARGET_NAME}>")
 add_script_test("${TARGET_NAME_C}" "$<TARGET_FILE:${TARGET_NAME_C}>")
 
-
-

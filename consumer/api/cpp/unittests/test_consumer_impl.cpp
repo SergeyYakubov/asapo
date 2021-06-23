@@ -792,7 +792,7 @@ TEST_F(ConsumerImplTests, GetByIdReturnsEndOfStreamWhenIdTooLarge) {
     ASSERT_THAT(err, Eq(asapo::ConsumerErrorTemplates::kEndOfStream));
 }
 
-TEST_F(ConsumerImplTests, GetMetaDataOK) {
+TEST_F(ConsumerImplTests, GetBeamtimeMetaDataOK) {
     MockGetBrokerUri();
     consumer->SetTimeout(100);
 
@@ -810,6 +810,25 @@ TEST_F(ConsumerImplTests, GetMetaDataOK) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(res, Eq(expected_metadata));
 
+}
+
+TEST_F(ConsumerImplTests, GetStreamMetaDataOK) {
+    MockGetBrokerUri();
+    consumer->SetTimeout(100);
+
+    EXPECT_CALL(mock_http_client, Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source_encoded +
+                                        "/" + expected_stream_encoded + "/0/meta/1?token="
+                                        + expected_token, _,
+                                        _)).WillOnce(DoAll(
+                                                SetArgPointee<1>(HttpCode::OK),
+                                                SetArgPointee<2>(nullptr),
+                                                Return(expected_metadata)));
+
+    asapo::Error err;
+    auto res = consumer->GetStreamMeta(expected_stream, &err);
+
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(res, Eq(expected_metadata));
 }
 
 TEST_F(ConsumerImplTests, QueryMessagesReturnError) {

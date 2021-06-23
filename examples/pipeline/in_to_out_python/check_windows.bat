@@ -35,7 +35,9 @@ set PYTHONPATH=%2;%3
 
 type out
 findstr /I /L /C:"Processed 3 file(s)" out || goto :error
-findstr /I /L /C:"Sent 3 file(s)" out || goto :error
+findstr /I /L /C:"Sent 5 file(s)" out || goto :error
+findstr /I /L /C:"bt_meta" out || goto :error
+findstr /I /L /C:"st_meta" out || goto :error
 
 echo db.data_default.find({"_id":1}) | %mongo_exe% %outdatabase_name% | findstr  /c:"file1_%data_source_out%"  || goto :error
 

@@ -292,7 +292,7 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
     std::string request_suffix = OpToUriCmd(op);
     std::string request_group = OpToUriCmd(op);
 
-    std::string request_api = UriPrefix(std::move(stream), "", "");
+    std::string request_api = BrokerApiUri(std::move(stream), "", "");
     uint64_t elapsed_ms = 0;
     Error no_data_error;
     while (true) {
@@ -576,7 +576,7 @@ Error ConsumerImpl::ResetLastReadMarker(std::string group_id, std::string stream
 
 Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) {
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream), std::move(group_id), "resetcounter");
+    ri.api = BrokerApiUri(std::move(stream), std::move(group_id), "resetcounter");
 
     ri.extra_params = "&value=" + std::to_string(value);
     ri.post = true;
@@ -606,7 +606,7 @@ Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, 
     }
 
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream), std::move(group_id), std::to_string(id));
+    ri.api = BrokerApiUri(std::move(stream), std::move(group_id), std::to_string(id));
 
 
     if (dataset) {
@@ -621,10 +621,18 @@ Error ConsumerImpl::GetRecordFromServerById(uint64_t id, std::string* response, 
 
 std::string ConsumerImpl::GetBeamtimeMeta(Error* err) {
     RequestInfo ri;
-    ri.api = UriPrefix("default", "0", "meta/0");
+    ri.api = BrokerApiUri("default", "0", "meta/0");
 
     return BrokerRequestWithTimeout(ri, err);
 }
+
+std::string ConsumerImpl::GetStreamMeta(const std::string& stream, Error* err) {
+    RequestInfo ri;
+    ri.api = BrokerApiUri(stream, "0", "meta/1");
+
+    return BrokerRequestWithTimeout(ri, err);
+}
+
 
 DataSet DecodeDatasetFromResponse(std::string response, Error* err) {
     DataSet res;
@@ -643,7 +651,7 @@ MessageMetas ConsumerImpl::QueryMessages(std::string query, std::string stream, 
     }
 
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream), "0", "querymessages");
+    ri.api = BrokerApiUri(std::move(stream), "0", "querymessages");
 
     ri.post = true;
     ri.body = std::move(query);
@@ -741,7 +749,7 @@ StreamInfos ConsumerImpl::GetStreamList(std::string from, StreamFilter filter, E
 
 RequestInfo ConsumerImpl::GetStreamListRequest(const std::string& from, const StreamFilter& filter) const {
     RequestInfo ri;
-    ri.api = UriPrefix("0", "", "streams");
+    ri.api = BrokerApiUri("0", "", "streams");
     ri.post = false;
     if (!from.empty()) {
         ri.extra_params = "&from=" + httpclient__->UrlEscape(from);
@@ -809,7 +817,7 @@ Error ConsumerImpl::Acknowledge(std::string group_id, uint64_t id, std::string s
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream), std::move(group_id), std::to_string(id));
+    ri.api = BrokerApiUri(std::move(stream), std::move(group_id), std::to_string(id));
     ri.post = true;
     ri.body = "{\"Op\":\"ackmessage\"}";
 
@@ -828,7 +836,7 @@ IdList ConsumerImpl::GetUnacknowledgedMessages(std::string group_id,
         return {};
     }
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream), std::move(group_id), "nacks");
+    ri.api = BrokerApiUri(std::move(stream), std::move(group_id), "nacks");
     ri.extra_params = "&from=" + std::to_string(from_id) + "&to=" + std::to_string(to_id);
 
     auto json_string = BrokerRequestWithTimeout(ri, error);
@@ -851,7 +859,7 @@ uint64_t ConsumerImpl::GetLastAcknowledgedMessage(std::string group_id, std::str
         return 0;
     }
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream), std::move(group_id), "lastack");
+    ri.api = BrokerApiUri(std::move(stream), std::move(group_id), "lastack");
 
     auto json_string = BrokerRequestWithTimeout(ri, error);
     if (*error) {
@@ -884,7 +892,7 @@ Error ConsumerImpl::NegativeAcknowledge(std::string group_id,
         return ConsumerErrorTemplates::kWrongInput.Generate("empty stream");
     }
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream), std::move(group_id), std::to_string(id));
+    ri.api = BrokerApiUri(std::move(stream), std::move(group_id), std::to_string(id));
     ri.post = true;
     ri.body = R"({"Op":"negackmessage","Params":{"DelayMs":)" + std::to_string(delay_ms) + "}}";
 
@@ -926,7 +934,7 @@ uint64_t ConsumerImpl::ParseGetCurrentCountResponce(Error* err, const std::strin
 
 RequestInfo ConsumerImpl::GetSizeRequestForSingleMessagesStream(std::string& stream) const {
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream), "", "size");
+    ri.api = BrokerApiUri(std::move(stream), "", "size");
     return ri;
 }
 
@@ -966,7 +974,7 @@ Error ConsumerImpl::GetVersionInfo(std::string* client_info, std::string* server
 
 RequestInfo ConsumerImpl::GetDeleteStreamRequest(std::string stream, DeleteStreamOptions options) const {
     RequestInfo ri;
-    ri.api = UriPrefix(std::move(stream), "", "delete");
+    ri.api = BrokerApiUri(std::move(stream), "", "delete");
     ri.post = true;
     ri.body = options.Json();
     return ri;
@@ -979,7 +987,7 @@ Error ConsumerImpl::DeleteStream(std::string stream, DeleteStreamOptions options
     return err;
 }
 
-std::string ConsumerImpl::UriPrefix( std::string stream, std::string group, std::string suffix) const {
+std::string ConsumerImpl::BrokerApiUri(std::string stream, std::string group, std::string suffix) const {
     auto stream_encoded = httpclient__->UrlEscape(std::move(stream));
     auto group_encoded = group.size() > 0 ? httpclient__->UrlEscape(std::move(group)) : "";
     auto uri = "/" + kConsumerProtocol.GetBrokerVersion() + "/beamtime/" + source_credentials_.beamtime_id + "/"
@@ -994,5 +1002,6 @@ std::string ConsumerImpl::UriPrefix( std::string stream, std::string group, std:
     return uri;
 
 }
+
 
 }

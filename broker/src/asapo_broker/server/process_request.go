@@ -78,7 +78,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 	request.DbName = db_name+"_"+datasource
 	request.Op = op
 	request.ExtraParam = extra_param
-	request.DbCollectionName = stream
+	request.Stream = stream
 	request.GroupId = group_id
 	if yes, minSize := datasetRequested(r); yes {
 		request.DatasetOp = true

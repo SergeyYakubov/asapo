@@ -7,6 +7,7 @@
 #include "request_handler_db_stream_info.h"
 #include "request_handler_db_last_stream.h"
 #include "request_handler_db_delete_stream.h"
+#include "request_handler_db_get_meta.h"
 
 namespace asapo {
 
@@ -29,6 +30,7 @@ class RequestFactory {
     RequestHandlerDbDeleteStream request_handler_delete_stream_{kDBDataCollectionNamePrefix};
     RequestHandlerDbLastStream request_handler_db_last_stream_{kDBDataCollectionNamePrefix};
     RequestHandlerDbMetaWrite request_handler_db_meta_write_{kDBMetaCollectionName};
+    RequestHandlerDbGetMeta request_handler_db_get_meta_{kDBMetaCollectionName};
     RequestHandlerAuthorize request_handler_authorize_;
     RequestHandlerDbCheckRequest request_handler_db_check_{kDBDataCollectionNamePrefix};;
     SharedCache cache_;

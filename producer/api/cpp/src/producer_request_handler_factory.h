@@ -13,7 +13,8 @@ class ProducerRequestHandlerFactory : public RequestHandlerFactory {
   public:
     ProducerRequestHandlerFactory(ReceiverDiscoveryService* discovery_service);
     ProducerRequestHandlerFactory(std::string destination_folder);
-    VIRTUAL std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) override;
+    virtual std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) override;
+    virtual ~ProducerRequestHandlerFactory() { };
   private:
     RequestHandlerType type_;
     ReceiverDiscoveryService* discovery_service_{nullptr};

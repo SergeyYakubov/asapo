@@ -22,6 +22,7 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_handler_receive_metadata.cpp
         src/request_handler/request_handler_db_check_request.cpp
         src/request_handler/request_handler_db_delete_stream.cpp
+        src/request_handler/request_handler_db_get_meta.cpp
         src/request_handler/request_factory.cpp
         src/request_handler/request_handler_db.cpp
         src/file_processors/write_file_processor.cpp
@@ -99,6 +100,7 @@ set(TEST_SOURCE_FILES
         unittests/request_handler/test_request_handler_receive_data.cpp
         unittests/request_handler/test_request_handler_receive_metadata.cpp
         unittests/request_handler/test_request_handler_delete_stream.cpp
+        unittests/request_handler/test_request_handler_db_get_meta.cpp
         unittests/statistics/test_statistics_sender_influx_db.cpp
         unittests/statistics/test_statistics_sender_fluentd.cpp
         unittests/mock_receiver_config.cpp

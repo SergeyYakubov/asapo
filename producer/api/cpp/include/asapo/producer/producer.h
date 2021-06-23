@@ -7,6 +7,7 @@
 #include "asapo/logger/logger.h"
 #include "common.h"
 #include "asapo/common/data_structs.h"
+#include "asapo/preprocessor/definitions.h"
 
 namespace asapo {
 
@@ -39,6 +40,21 @@ class Producer {
       \return StreamInfo - a structure with stream information
     */
     virtual StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const = 0;
+
+    //! Get stream metadata from receiver
+    /*!
+      \param stream - stream to send messages to
+      \param timeout_ms - operation timeout in milliseconds
+      \return JSON string with metadata
+    */
+    virtual std::string GetStreamMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const = 0;
+
+    //! Get beamtime metadata from receiver
+    /*!
+      \param timeout_ms - operation timeout in milliseconds
+      \return JSON string with metadata
+    */
+    virtual std::string GetBeamtimeMeta(uint64_t timeout_ms, Error* err) const = 0;
 
     //! Delete stream
     /*!
@@ -101,16 +117,39 @@ class Producer {
       \return Error - Will be nullptr on success
     */
     virtual Error SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,
-                                         RequestCallback callback) = 0;
+                                         RequestCallback callback) = 0 ;
 
 
-    //! Sends metadata for the current beamtime to the receiver
+    //! Sends beamtime metadata to the receiver
+    /*!
+      \deprecated { deprecated, obsolates 01.07.2022, use SendBeamtimeMetadata instead}
+      \param metadata - a JSON string with metadata
+      \param callback - callback function
+      \return Error - will be nullptr on success
+    */
+    virtual Error DEPRECATED("obsolates 01.07.2022, use SendBeamtimeMetadata instead") SendMetadata(
+        const std::string& metadata,
+        RequestCallback callback)  = 0;
+
+    //! Sends beamtime metadata to the receiver
     /*!
       \param metadata - a JSON string with metadata
       \param callback - callback function
       \return Error - will be nullptr on success
     */
-    virtual Error SendMetadata(const std::string& metadata, RequestCallback callback) = 0;
+    virtual Error SendBeamtimeMetadata(const std::string& metadata, MetaIngestMode mode, RequestCallback callback) = 0;
+
+    //! Sends stream metadata to the receiver
+    /*!
+      \param stream - name of the stream
+      \param metadata - a JSON string with metadata
+      \param callback - callback function
+      \return Error - will be nullptr on success
+    */
+    virtual Error SendStreamMetadata(const std::string& metadata,
+                                     MetaIngestMode mode,
+                                     const std::string& stream,
+                                     RequestCallback callback) = 0;
 
     //! Set internal log level
     virtual void SetLogLevel(LogLevel level) = 0;
