@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
                                                          "", 1,
                                                          cred,
                                                          &err);
-    asapo_delete_source_credentials(&cred);
+    asapo_free_handle(&cred);
     
     exit_if_error("Cannot create consumer", err);
     asapo_consumer_set_timeout(consumer, 1000ull);
@@ -37,16 +37,16 @@ int main(int argc, char* argv[]) {
 
     AsapoMessageMetaHandle fi;
     AsapoMessageDataHandle data;
-    err = asapo_consumer_get_last(consumer, &fi, &data, group_id);
+    asapo_consumer_get_last(consumer, &fi, &data, group_id,&err);
     exit_if_error("Cannot get next record", err);
 
     printf("id: %llu\n", asapo_message_meta_get_id(fi));
     printf("file name: %s\n", asapo_message_meta_get_name(fi));
     printf("file content: %s\n", asapo_message_data_get_as_chars(data));
-    asapo_delete_message_meta(&fi);
-    asapo_delete_message_data(&data);
-    asapo_delete_consumer(&consumer);
-    asapo_delete_string(&group_id);
+    asapo_free_handle(&fi);
+    asapo_free_handle(&data);
+    asapo_free_handle(&consumer);
+    asapo_free_handle(&group_id);
     return EXIT_SUCCESS;
 }
 

@@ -45,70 +45,59 @@ void exit_if_error_(const char *error_string, const AsapoErrorHandle err, int li
 
 
 void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
-    AsapoErrorHandle err = NULL;
-    AsapoMessageMetaHandle md = NULL;
-    AsapoMessageDataHandle data = NULL;
+    AsapoErrorHandle err = asapo_new_handle();
+    AsapoMessageMetaHandle md = asapo_new_handle();
+    AsapoMessageDataHandle data = asapo_new_handle();
 
 //next
-    err = asapo_consumer_get_next(consumer, group_id, &md, NULL, "default");
+    asapo_consumer_get_next(consumer, group_id, &md, NULL, "default",&err);
     EXIT_IF_ERROR("asapo_consumer_get_next", err);
     ASSERT_TRUE(!strcmp(asapo_message_meta_get_name(md),"1"), "get next filename");
     ASSERT_TRUE(!strcmp(asapo_message_meta_get_metadata(md),"{\"test\":10}"), "get next  metadata");
-    asapo_free_handle(&err);
 
 // retrieve
-    err = asapo_consumer_retrieve_data(consumer,md, &data);
+    asapo_consumer_retrieve_data(consumer,md, &data,&err);
     EXIT_IF_ERROR("asapo_consumer_retrieve_data", err);
     ASSERT_EQ_INT(6,asapo_message_meta_get_size(md),"asapo_message_meta_get_size");
     ASSERT_TRUE(strncmp("hello1", asapo_message_data_get_as_chars(data), asapo_message_meta_get_size(md))==0, "get next  metadata");
-    asapo_free_handle(&err);
     asapo_free_handle(&data);
 
 //last
-    err = asapo_consumer_get_last(consumer, &md, NULL, "default");
+    asapo_consumer_get_last(consumer, &md, NULL, "default",&err);
     EXIT_IF_ERROR("asapo_consumer_get_last", err);
     ASSERT_EQ_INT(10,asapo_message_meta_get_id(md),"id");
     ASSERT_EQ_STRING("10",asapo_message_meta_get_name(md),"id");
-    asapo_free_handle(&err);
 
 //id
-    err = asapo_consumer_get_by_id(consumer,8, &md, NULL, "default");
+    asapo_consumer_get_by_id(consumer,8, &md, NULL, "default",&err);
     EXIT_IF_ERROR("asapo_consumer_get_by_id", err);
     ASSERT_EQ_STRING("8",asapo_message_meta_get_name(md),"id");
-    asapo_free_handle(&err);
 
 // last read marker
-    err = asapo_consumer_set_last_read_marker(consumer, group_id, 2, "default");
+    asapo_consumer_set_last_read_marker(consumer, group_id, 2, "default",&err);
     EXIT_IF_ERROR("asapo_consumer_set_last_read_marker", err);
-    asapo_free_handle(&err);
-    err = asapo_consumer_get_next(consumer, group_id, &md, NULL, "default");
+    asapo_consumer_get_next(consumer, group_id, &md, NULL, "default",&err);
     EXIT_IF_ERROR("asapo_consumer_get_next", err);
     ASSERT_TRUE(!strcmp(asapo_message_meta_get_name(md),"3"), "get next asapo_consumer_set_last_read_marker ");
-    asapo_free_handle(&err);
 
-    err = asapo_consumer_reset_last_read_marker(consumer, group_id, "default");
+    asapo_consumer_reset_last_read_marker(consumer, group_id, "default",&err);
     EXIT_IF_ERROR("asapo_consumer_reset_last_read_marker", err);
-    asapo_free_handle(&err);
-    err = asapo_consumer_get_next(consumer, group_id, &md, NULL, "default");
+    asapo_consumer_get_next(consumer, group_id, &md, NULL, "default",NULL);
     ASSERT_TRUE(!strcmp(asapo_message_meta_get_name(md),"1"), "get next asapo_consumer_reset_last_read_marker ");
-    asapo_free_handle(&err);
 
 // stream size
     uint64_t size = asapo_consumer_get_current_size(consumer,"default", &err);
     EXIT_IF_ERROR("asapo_consumer_get_current_size", err);
     ASSERT_EQ_INT(10,size,"asapo_consumer_get_current_size");
-    asapo_free_handle(&err);
 
     size = asapo_consumer_get_current_size(consumer,"stream1", &err);
     EXIT_IF_ERROR("asapo_consumer_get_current_size stream1", err);
     ASSERT_EQ_INT(5,size,"asapo_consumer_get_current_size stream1");
-    asapo_free_handle(&err);
 
 // query messages
     AsapoMessageMetasHandle messages = asapo_consumer_query_messages(consumer, "meta.test = 10 AND name='1'", "default", &err);
     EXIT_IF_ERROR("asapo_consumer_query_messages", err);
     ASSERT_EQ_INT(1,asapo_message_metas_get_size(messages),"asapo_consumer_query_messages");
-    asapo_free_handle(&err);
 
 // stream list
     AsapoStreamInfosHandle streams = asapo_consumer_get_stream_list(consumer, "", kAllStreams , &err);
@@ -124,7 +113,6 @@ void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
     ASSERT_EQ_STRING("stream2",asapo_stream_info_get_name(s2),"streams2.name");
     ASSERT_TRUE(asapo_stream_info_get_ffinished(s1),"streams1 finished");
     ASSERT_EQ_STRING("ns",asapo_stream_info_get_next_stream(s1),"stream1 next stream");
-    asapo_free_handle(&err);
 
     struct timespec time;
     asapo_stream_info_get_timestamp_last_entry(s1,&time);
@@ -142,33 +130,28 @@ void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
     uint64_t id = asapo_consumer_get_last_acknowledged_message(consumer,group_id, "default", &err);
     ASSERT_TRUE(asapo_error_get_type(err) == kNoData,"last ack default stream no data");
     ASSERT_EQ_INT(0,id,"last ack default stream no data id = 0");
-    asapo_free_handle(&err);
 
     AsapoIdListHandle nacks = asapo_consumer_get_unacknowledged_messages(consumer, group_id, 0, 0, "default", &err);
     EXIT_IF_ERROR("asapo_consumer_get_unacknowledged_messages", err);
     ASSERT_EQ_INT(10,asapo_id_list_get_size(nacks),"last ack default stream no data id = 0");
-    asapo_free_handle(&err);
 
-    err = asapo_consumer_acknowledge(consumer,group_id, 1, "default");
+    asapo_consumer_acknowledge(consumer,group_id, 1, "default",&err);
     EXIT_IF_ERROR("asapo_consumer_acknowledge", err);
-    asapo_free_handle(&err);
 
-    err = asapo_consumer_negative_acknowledge(consumer,group_id, 1, 0, "default");
+    asapo_consumer_negative_acknowledge(consumer,group_id, 1, 0, "default",&err);
     EXIT_IF_ERROR("asapo_consumer_negative_acknowledge", err);
-    asapo_free_handle(&err);
 
     asapo_consumer_set_resend_nacs(consumer,1, 0, 1);
 
 // stream deletion
 
-    err = asapo_consumer_delete_stream(consumer,"default", 1,1);
+    asapo_consumer_delete_stream(consumer,"default", 1,1,&err);
     EXIT_IF_ERROR("asapo_consumer_delete_stream", err);
-    asapo_free_handle(&err);
 
-    err = asapo_consumer_delete_stream(consumer,"default", 1,1);
+    asapo_consumer_delete_stream(consumer,"default", 1,1,&err);
     ASSERT_TRUE(asapo_error_get_type(err) == kWrongInput,"delete non existing stream");
-    asapo_free_handle(&err);
 
+    asapo_free_handle(&err);
     asapo_free_handle(&messages);
     asapo_free_handle(&streams);
     asapo_free_handle(&nacks);
@@ -180,7 +163,8 @@ int main(int argc, char* argv[]) {
     const char *beamtime = argv[2];
     const char *token = argv[3];
 
-    AsapoErrorHandle err = asapo_init_handle();
+    AsapoErrorHandle err = asapo_new_handle();
+
     AsapoSourceCredentialsHandle cred = asapo_create_source_credentials(kProcessed,
                                                                         beamtime,
                                                                         "", "", token);
@@ -189,14 +173,12 @@ int main(int argc, char* argv[]) {
                                                          cred,
                                                          &err);
     EXIT_IF_ERROR("create consumer", err);
-    asapo_free_handle(&err);
 
     asapo_consumer_set_timeout(consumer, 1000ull);
 
 
     AsapoStringHandle group_id = asapo_consumer_generate_new_group_id(consumer, &err);
     EXIT_IF_ERROR("create group id", err);
-    asapo_free_handle(&err);
 
     if (strcmp(argv[4],"single") == 0) {
         test_single(consumer,group_id);
@@ -206,6 +188,7 @@ int main(int argc, char* argv[]) {
 //        exit(0);
     }
 
+    asapo_free_handle(&err);
     asapo_free_handle(&cred);
     asapo_free_handle(&consumer);
     asapo_free_handle(&group_id);
