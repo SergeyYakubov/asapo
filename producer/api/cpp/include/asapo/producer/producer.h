@@ -69,7 +69,7 @@ class Producer {
                        RequestCallback callback) = 0;
 
 
-    //! Sends data to the receiver - same as Send - memory should not be freed until send is finished
+    //! Sends data to the receiver - same as Send - memory should not be freed after send is finished
     //! used e.g. for Python bindings
     virtual Error Send__(const MessageHeader& message_header,
                          void* data,

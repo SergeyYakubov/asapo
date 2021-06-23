@@ -121,6 +121,19 @@ int process_error(AsapoErrorHandle* error, asapo::Error err,
     return retval;
 }
 
+AsapoHandle* handle_or_null(AsapoHandle* handle, AsapoErrorHandle* error, asapo::Error err,
+                           const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr) {
+    if (process_error(error, std::move(err),p_exclude_err_template) < 0) {
+        if (handle!=nullptr) {
+            delete handle;
+        }
+        return nullptr;
+    } else {
+        return handle;
+    }
+}
+
+
 #define dataGetterStart \
     asapo::MessageData d; \
     asapo::MessageMeta* fi = info ? new asapo::MessageMeta : nullptr; \
@@ -214,8 +227,8 @@ extern "C" {
                                                         has_filesysytem,
                                                         *(source->handle),
                                                         &err);
-        process_error(error, std::move(err));
-        return new AsapoHandlerHolder<asapo::Consumer>(c.release());
+        auto retval = new AsapoHandlerHolder<asapo::Consumer>(c.release());
+        return static_cast<AsapoConsumerHandle>(handle_or_null(retval, error, std::move(err)));
     }
 
 //! wraps asapo::Consumer::GenerateNewGroupId()
@@ -227,10 +240,8 @@ extern "C" {
             AsapoErrorHandle* error) {
         asapo::Error err;
         auto result = new std::string(consumer->handle->GenerateNewGroupId(&err));
-        if (process_error(error, std::move(err)) < 0) {
-            return nullptr;
-        }
-        return new AsapoHandlerHolder<std::string> {result};
+        auto retval = new AsapoHandlerHolder<std::string> {result};
+        return static_cast<AsapoStringHandle>(handle_or_null(retval, error, std::move(err)));
     }
 
 //! give a pointer to the content of the asapoString
@@ -323,10 +334,8 @@ extern "C" {
                                       from_id, to_id,
                                       stream,
                                       &err));
-        if (process_error(error, std::move(err)) < 0) {
-            return nullptr;
-        }
-        return new AsapoHandlerHolder<asapo::IdList> {list};
+        auto retval = new AsapoHandlerHolder<asapo::IdList> {list};
+        return static_cast<AsapoIdListHandle>(handle_or_null(retval, error, std::move(err)));
     }
 
 //! give number of items in an id list
@@ -368,10 +377,8 @@ extern "C" {
         auto info = new asapo::StreamInfos(consumer->handle->GetStreamList(from,
                                            static_cast<asapo::StreamFilter>(filter),
                                            &err));
-        if (process_error(error, std::move(err)) < 0) {
-            return nullptr;
-        }
-        return new AsapoHandlerHolder<asapo::StreamInfos> {info};
+        auto retval = new AsapoHandlerHolder<asapo::StreamInfos> {info};
+        return static_cast<AsapoStreamInfosHandle>(handle_or_null(retval, error, std::move(err)));
     }
 
 //! get one stream info from a stream infos handle
@@ -443,12 +450,10 @@ extern "C" {
     AsapoStringHandle asapo_consumer_get_beamtime_meta(AsapoConsumerHandle consumer,
             AsapoErrorHandle* error) {
         asapo::Error err;
-        auto retval = new std::string(consumer->handle->GetBeamtimeMeta(&err));
-        if (process_error(error, std::move(err)) < 0) {
-            return nullptr;
-        }
-        return new AsapoHandlerHolder<std::string> {retval};
-    }
+        auto result = new std::string(consumer->handle->GetBeamtimeMeta(&err));
+        auto retval = new AsapoHandlerHolder<std::string> {result};
+        return static_cast<AsapoStringHandle>(handle_or_null(retval, error, std::move(err)));
+}
 
 //! wraps asapo::Consumer::RetrieveData()
 /// \copydoc asapo::Consumer::RetrieveData()
@@ -479,11 +484,9 @@ extern "C" {
             const char* stream,
             AsapoErrorHandle* error) {
         asapo::Error err;
-        auto retval = new asapo::DataSet(consumer->handle->GetNextDataset(*group_id->handle, min_size, stream, &err));
-        if (process_error(error, std::move(err), &asapo::ConsumerErrorTemplates::kPartialData) < 0) {
-            return nullptr;
-        }
-        return new AsapoHandlerHolder<asapo::DataSet> {retval};
+        auto result = new asapo::DataSet(consumer->handle->GetNextDataset(*group_id->handle, min_size, stream, &err));
+        auto retval = new AsapoHandlerHolder<asapo::DataSet> {result};
+        return static_cast<AsapoDataSetHandle>(handle_or_null(retval, error, std::move(err),&asapo::ConsumerErrorTemplates::kPartialData));
     }
 
 //! wraps asapo::Consumer::GetLastDataset()
@@ -495,12 +498,10 @@ extern "C" {
             const char* stream,
             AsapoErrorHandle* error) {
         asapo::Error err;
-        auto retval = new asapo::DataSet(consumer->handle->GetLastDataset(min_size, stream, &err));
-        if (process_error(error, std::move(err), &asapo::ConsumerErrorTemplates::kPartialData) < 0) {
-            return nullptr;
-        }
-        return new AsapoHandlerHolder<asapo::DataSet> {retval};
-    }
+        auto result = new asapo::DataSet(consumer->handle->GetLastDataset(min_size, stream, &err));
+        auto retval = new AsapoHandlerHolder<asapo::DataSet> {result};
+        return static_cast<AsapoDataSetHandle>(handle_or_null(retval, error, std::move(err),&asapo::ConsumerErrorTemplates::kPartialData));
+}
 
 //! wraps asapo::Consumer::GetLastAcknowledgedMessage()
 /// \copydoc asapo::Consumer::GetLastAcknowledgedMessage()
@@ -528,11 +529,9 @@ extern "C" {
             const char* stream,
             AsapoErrorHandle* error) {
         asapo::Error err;
-        auto retval = new asapo::DataSet(consumer->handle->GetDatasetById(id, min_size, stream, &err));
-        if (process_error(error, std::move(err), &asapo::ConsumerErrorTemplates::kPartialData) < 0) {
-            return nullptr;
-        }
-        return new AsapoHandlerHolder<asapo::DataSet> {retval};
+        auto result = new asapo::DataSet(consumer->handle->GetDatasetById(id, min_size, stream, &err));
+        auto retval = new AsapoHandlerHolder<asapo::DataSet> {result};
+        return static_cast<AsapoDataSetHandle>(handle_or_null(retval, error, std::move(err),&asapo::ConsumerErrorTemplates::kPartialData));
     }
 
 //! wraps aspao::Consumer::GetById()
@@ -592,11 +591,9 @@ extern "C" {
             const char* stream,
             AsapoErrorHandle* error) {
         asapo::Error err;
-        auto retval = new asapo::MessageMetas(consumer->handle->QueryMessages(query, stream, &err));
-        if (process_error(error, std::move(err)) < 0) {
-            return nullptr;
-        }
-        return new AsapoHandlerHolder<asapo::MessageMetas> {retval};
+        auto result = new asapo::MessageMetas(consumer->handle->QueryMessages(query, stream, &err));
+        auto retval = new AsapoHandlerHolder<asapo::MessageMetas> {result};
+        return static_cast<AsapoMessageMetasHandle>(handle_or_null(retval, error, std::move(err)));
     }
 
 //! wraps aspao::Consumer::SetResendNacs()
