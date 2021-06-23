@@ -170,7 +170,7 @@ void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
     ASSERT_TRUE(!strcmp(asapo_message_meta_get_name(md),"1"), "get next asapo_consumer_reset_last_read_marker ");
 
 // stream size
-    uint64_t size = asapo_consumer_get_current_size(consumer,"default", &err);
+    int64_t size = asapo_consumer_get_current_size(consumer,"default", &err);
     EXIT_IF_ERROR("asapo_consumer_get_current_size", err);
     ASSERT_EQ_INT(10,size,"asapo_consumer_get_current_size");
 
@@ -211,9 +211,9 @@ void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
     asapo_free_handle(&s2);
 
 // acknowledges
-    uint64_t id = asapo_consumer_get_last_acknowledged_message(consumer,group_id, "default", &err);
+    int64_t id = asapo_consumer_get_last_acknowledged_message(consumer,group_id, "default", &err);
     ASSERT_TRUE(asapo_error_get_type(err) == kNoData,"last ack default stream no data");
-    ASSERT_EQ_INT(0,id,"last ack default stream no data id = 0");
+    ASSERT_EQ_INT(-1,id,"last ack default stream no data id = -1");
 
     AsapoIdListHandle nacks = asapo_consumer_get_unacknowledged_messages(consumer, group_id, 0, 0, "default", &err);
     EXIT_IF_ERROR("asapo_consumer_get_unacknowledged_messages", err);

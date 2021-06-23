@@ -107,8 +107,9 @@ constexpr bool operator==(unsigned lhs, t rhs) {
     return lhs == static_cast<typename std::underlying_type<t>::type>(rhs);
 }
 
-int process_error(AsapoErrorHandle* error, asapo::Error err) {
-    int retval = (err == nullptr) ? 0 : 1;
+int process_error(AsapoErrorHandle* error, asapo::Error err,
+                  const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr) {
+    int retval = (err == nullptr || (p_exclude_err_template != nullptr && err == *p_exclude_err_template)) ? 0 : -1;
     if (error == nullptr) {
         return retval;
     }
@@ -479,7 +480,7 @@ extern "C" {
             AsapoErrorHandle* error) {
         asapo::Error err;
         auto retval = new asapo::DataSet(consumer->handle->GetNextDataset(*group_id->handle, min_size, stream, &err));
-        if (process_error(error, std::move(err)) < 0 && err != asapo::ConsumerErrorTemplates::kPartialData) {
+        if (process_error(error, std::move(err), &asapo::ConsumerErrorTemplates::kPartialData) < 0) {
             return nullptr;
         }
         return new AsapoHandlerHolder<asapo::DataSet> {retval};
@@ -495,7 +496,7 @@ extern "C" {
             AsapoErrorHandle* error) {
         asapo::Error err;
         auto retval = new asapo::DataSet(consumer->handle->GetLastDataset(min_size, stream, &err));
-        if (process_error(error, std::move(err)) < 0 && err != asapo::ConsumerErrorTemplates::kPartialData) {
+        if (process_error(error, std::move(err), &asapo::ConsumerErrorTemplates::kPartialData) < 0) {
             return nullptr;
         }
         return new AsapoHandlerHolder<asapo::DataSet> {retval};
@@ -528,7 +529,7 @@ extern "C" {
             AsapoErrorHandle* error) {
         asapo::Error err;
         auto retval = new asapo::DataSet(consumer->handle->GetDatasetById(id, min_size, stream, &err));
-        if (process_error(error, std::move(err)) < 0 && err != asapo::ConsumerErrorTemplates::kPartialData) {
+        if (process_error(error, std::move(err), &asapo::ConsumerErrorTemplates::kPartialData) < 0) {
             return nullptr;
         }
         return new AsapoHandlerHolder<asapo::DataSet> {retval};
