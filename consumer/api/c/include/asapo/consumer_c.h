@@ -55,7 +55,6 @@ enum AsapoNetworkConnectionType {
 };
 void asapo_error_explain(const AsapoErrorHandle error, char* buf, size_t max_size);
 enum AsapoConsumerErrorType asapo_error_get_type(const AsapoErrorHandle error);
-void asapo_clear_error(AsapoErrorHandle* error);
 
 AsapoConsumerHandle asapo_create_consumer(const char* server_name,
                                           const char* source_path,

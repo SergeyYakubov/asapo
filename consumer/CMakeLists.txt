@@ -1,4 +1,5 @@
 add_subdirectory(api/cpp)
+add_subdirectory(api/c)
 
 
 if (BUILD_PYTHON)
