@@ -1,7 +1,7 @@
 #define __CONSUMER_C_INTERFACE_IMPLEMENTATION__
 #include "asapo/asapo_consumer.h"
 //! boolean type
-typedef bool AsapoBool;
+typedef int AsapoBool;
 
 class AsapoHandle {
   public:
