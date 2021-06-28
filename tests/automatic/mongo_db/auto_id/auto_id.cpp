@@ -66,7 +66,7 @@ void insert(const asapo::MongoDBClient& db, const std::string& name, asapo::Mess
         }
         Error err = db.Insert(std::string("data_") + name, fi, false);
         if (err != nullptr) {
-            printf("%s\n",err->Explain().c_str());
+            printf("%s\n", err->Explain().c_str());
 //            break;
         } else {
             global_count++;

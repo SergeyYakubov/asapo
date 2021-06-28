@@ -336,52 +336,20 @@ Error MongoDBClient::GetNextId(const std::string& stream, uint64_t* id) const {
     return err;
 }
 
-static bool callback(mongoc_client_session_t* session,
-                     void* ctx,
-                     bson_t** reply,
-                     bson_error_t* error) {
-    auto context = (TransactionContext*) ctx;
-
-    uint64_t id;
-    context->err = context->caller->GetNextId(context->collection, &id);
-    if (context->err != nullptr) {
-        return false;
-    }
-
-    context->meta.id = id;
-    context->err = context->caller->Insert(context->collection, context->meta, context->ignore_duplicates);
-    return context->err == nullptr;
-}
-
-
 Error MongoDBClient::InsertWithAutoId(const MessageMeta& file,
                                       const std::string& collection,
                                       bool ignore_duplicates) const {
     bson_error_t error;
-    TransactionContext context = {this, file, collection, ignore_duplicates};
 
-    current_session_ = mongoc_client_start_session(client_, NULL, &error);
-    if (!current_session_) {
-        return DBErrorTemplates::kDBError.Generate(std::string("cannot start mongodb session: ") + error.message);
-    }
-    auto ret = false;
-    auto nret = 0;
-    while (!ret && nret < 100) {
-        ret = mongoc_client_session_with_transaction(
-                  current_session_, callback, NULL, (void*) &context, NULL, NULL);
-        nret++;
-    }
-    current_session_ = nullptr;
-
-    if (!ret) {
-        if (context.err) {
-            return std::move(context.err);
-        } else {
-            return DBErrorTemplates::kDBError.Generate("mongoc_client_session_with_transaction");
-        }
+    uint64_t id;
+    auto err = GetNextId(current_collection_name_, &id);
+    if (err != nullptr) {
+        return err;
     }
 
-    return nullptr;
+    auto meta_new = file;
+    meta_new.id = id;
+    return Insert(current_collection_name_, meta_new, ignore_duplicates);
 }
 
 Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const {
