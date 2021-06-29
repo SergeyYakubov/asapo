@@ -21,7 +21,7 @@ Error FolderToDbImporter::ConnectToDb(const std::unique_ptr<asapo::Database>& db
 
 Error FolderToDbImporter::ImportSingleFile(const std::unique_ptr<asapo::Database>& db,
                                            const MessageMeta& file) const {
-    return db->Insert(std::string(kDBDataCollectionNamePrefix) + "_default", file, ignore_duplicates_);
+    return db->Insert(std::string(kDBDataCollectionNamePrefix) + "_default", file, ignore_duplicates_, nullptr);
 }
 
 Error FolderToDbImporter::ImportFilelistChunk(const std::unique_ptr<asapo::Database>& db,

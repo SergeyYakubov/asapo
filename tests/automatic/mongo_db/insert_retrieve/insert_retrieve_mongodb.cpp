@@ -68,11 +68,11 @@ int main(int argc, char* argv[]) {
         db.Connect("127.0.0.1", db_name);
     }
 
-    auto err = db.Insert(std::string("data_") + stream_name, fi, false);
+    auto err = db.Insert(std::string("data_") + stream_name, fi, false, nullptr);
 
     if (args.keyword == "DuplicateID") {
         Assert(err, "OK");
-        err = db.Insert(std::string("data_") + stream_name, fi, false);
+        err = db.Insert(std::string("data_") + stream_name, fi, false, nullptr);
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -83,8 +83,8 @@ int main(int argc, char* argv[]) {
     fi2.timestamp = std::chrono::system_clock::now() + std::chrono::minutes(1);
     fi2.name = asapo::kFinishStreamKeyword;
     fi2.metadata = R"({"next_stream":"ns"})";
-    db.Insert("data_test1", fi1, false);
-    db.Insert("data_test1", fi2, false);
+    db.Insert("data_test1", fi1, false, nullptr);
+    db.Insert("data_test1", fi2, false, nullptr);
 
     Assert(err, args.keyword);
 
@@ -112,10 +112,10 @@ int main(int argc, char* argv[]) {
         M_AssertEq("ns", info.next_stream);
 
 // delete stream
-        db.Insert(std::string("inprocess_") + stream_name + "_blabla", fi, false);
-        db.Insert(std::string("inprocess_") + stream_name + "_blabla1", fi, false);
-        db.Insert(std::string("acks_") + stream_name + "_blabla", fi, false);
-        db.Insert(std::string("acks_") + stream_name + "_blabla1", fi, false);
+        db.Insert(std::string("inprocess_") + stream_name + "_blabla", fi, false, nullptr);
+        db.Insert(std::string("inprocess_") + stream_name + "_blabla1", fi, false, nullptr);
+        db.Insert(std::string("acks_") + stream_name + "_blabla", fi, false, nullptr);
+        db.Insert(std::string("acks_") + stream_name + "_blabla1", fi, false, nullptr);
         db.DeleteStream(stream_name);
         err = db.GetStreamInfo(std::string("data_") + stream_name, &info);
         M_AssertTrue(info.last_id == 0);
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
 
     db1.Connect("127.0.0.1", db_name);
     auto long_stream_name = GenRandomString(120);
-    err = db1.Insert(long_stream_name, fi, true);
+    err = db1.Insert(long_stream_name, fi, true, nullptr);
     M_AssertTrue(err == asapo::DBErrorTemplates::kWrongInput);
 
 

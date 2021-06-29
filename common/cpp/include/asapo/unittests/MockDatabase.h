@@ -15,8 +15,9 @@ class MockDatabase : public Database {
         return Error{Connect_t(address, database)};
 
     }
-    Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const override {
-        return Error{Insert_t(collection, file, ignore_duplicates)};
+    Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates,
+                 uint64_t* id_inserted) const override {
+        return Error{Insert_t(collection, file, ignore_duplicates, id_inserted)};
     }
 
     Error InsertAsDatasetMessage(const std::string& collection, const MessageMeta& file,
@@ -25,7 +26,7 @@ class MockDatabase : public Database {
     }
 
     MOCK_METHOD2(Connect_t, ErrorInterface * (const std::string&, const std::string&));
-    MOCK_CONST_METHOD3(Insert_t, ErrorInterface * (const std::string&, const MessageMeta&, bool));
+    MOCK_CONST_METHOD4(Insert_t, ErrorInterface * (const std::string&, const MessageMeta&, bool, uint64_t*));
 
     MOCK_CONST_METHOD4(InsertAsDatasetMessage_t,
                        ErrorInterface * (const std::string&, const MessageMeta&, uint64_t, bool));

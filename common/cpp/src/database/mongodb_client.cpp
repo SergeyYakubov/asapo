@@ -338,7 +338,7 @@ Error MongoDBClient::GetNextId(const std::string& stream, uint64_t* id) const {
 
 Error MongoDBClient::InsertWithAutoId(const MessageMeta& file,
                                       const std::string& collection,
-                                      bool ignore_duplicates) const {
+                                      uint64_t* id_inserted) const {
     bson_error_t error;
 
     uint64_t id;
@@ -349,10 +349,11 @@ Error MongoDBClient::InsertWithAutoId(const MessageMeta& file,
 
     auto meta_new = file;
     meta_new.id = id;
-    return Insert(current_collection_name_, meta_new, ignore_duplicates);
+    return Insert(current_collection_name_, meta_new, false, id_inserted);
 }
 
-Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const {
+Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates,
+                            uint64_t* id_inserted) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -363,7 +364,7 @@ Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& fi
     }
 
     if (file.id == 0) {
-        return InsertWithAutoId(file, collection, ignore_duplicates);
+        return InsertWithAutoId(file, collection, id_inserted);
     }
 
     auto document = PrepareBsonDocument(file, &err);
@@ -371,7 +372,11 @@ Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& fi
         return err;
     }
 
-    return InsertBsonDocument(document, ignore_duplicates);
+    err = InsertBsonDocument(document, ignore_duplicates);
+    if (!err && id_inserted) {
+        *id_inserted = file.id;
+    }
+    return err;
 }
 
 MongoDBClient::~MongoDBClient() {

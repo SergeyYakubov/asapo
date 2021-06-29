@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
         fi2.timestamp = std::chrono::system_clock::now() + std::chrono::minutes(1);
         fi2.name = asapo::kFinishStreamKeyword;
         fi2.metadata = R"({"next_stream":"ns"})";
-        db.Insert("data_test", fi2, false);
+        db.Insert("data_test", fi2, false, nullptr);
         err = db.GetLastStream(&info_last);
         M_AssertEq(nullptr, err);
         M_AssertEq("test", info_last.name);

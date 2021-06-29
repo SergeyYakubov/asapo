@@ -14,7 +14,8 @@ constexpr char kDBMetaCollectionName[] = "meta";
 class Database {
   public:
     virtual Error Connect(const std::string& address, const std::string& database) = 0;
-    virtual Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const = 0;
+    virtual Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates,
+                         uint64_t* id_inserted) const = 0;
     virtual Error InsertMeta(const std::string& collection, const std::string& id, const uint8_t* data, uint64_t size,
                              MetaIngestMode mode) const = 0;
     virtual Error InsertAsDatasetMessage(const std::string& collection, const MessageMeta& file,

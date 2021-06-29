@@ -47,7 +47,8 @@ class MongoDBClient final : public Database {
   public:
     MongoDBClient();
     Error Connect(const std::string& address, const std::string& database) override;
-    Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const override;
+    Error Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates,
+                 uint64_t* id_inserted) const override;
     Error InsertAsDatasetMessage(const std::string& collection, const MessageMeta& file, uint64_t dataset_size,
                                  bool ignore_duplicates) const override;
     Error InsertMeta(const std::string& collection, const std::string& id, const uint8_t* data, uint64_t size,
@@ -84,7 +85,7 @@ class MongoDBClient final : public Database {
     Error DeleteCollection(const std::string& name) const;
     Error DeleteCollections(const std::string& prefix) const;
     Error DeleteDocumentsInCollection(const std::string& collection_name, const std::string& querystr) const;
-    Error InsertWithAutoId(const MessageMeta& file, const std::string& collection, bool ignore_duplicates) const;
+    Error InsertWithAutoId(const MessageMeta& file, const std::string& collection, uint64_t* id_inserted) const;
 };
 
 struct TransactionContext {
