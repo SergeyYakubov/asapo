@@ -1,4 +1,8 @@
-## 21.06.0 (in progress)
+## 21.06.0
+
+FEATURES
+* Consumer API: C client 
+* Producer API: An option to automatically generate message id (use sparingly, reduced performance possible)  
 
 IMPROVEMENTS
 * Consumer/Producer API - allow any characters in source/stream/group names

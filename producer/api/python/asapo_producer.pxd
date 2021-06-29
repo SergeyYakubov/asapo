@@ -75,6 +75,8 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     string user_metadata
     uint64_t dataset_substream
     uint64_t dataset_size
+    bool auto_id
+
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   struct  GenericRequestHeader:
