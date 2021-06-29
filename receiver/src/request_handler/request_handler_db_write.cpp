@@ -58,7 +58,7 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
     auto col_name = collection_name_prefix_ + "_" + request->GetStream();
     Error err;
     if (op_code == Opcode::kOpcodeTransferData) {
-        uint64_t id_inserted;
+        uint64_t id_inserted{0};
         err =  db_client__->Insert(col_name, message_meta, false, &id_inserted);
         if (!err) {
             log__->Debug(std::string{"insert record id "} + std::to_string(id_inserted) + " to " + col_name + " in " +
