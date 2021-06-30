@@ -12,7 +12,7 @@ void exit_if_error(const char *error_string, const AsapoErrorHandle err) {
     }
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     AsapoErrorHandle err = asapo_new_handle();
     AsapoMessageMetaHandle mm = asapo_new_handle();
     AsapoMessageDataHandle data = asapo_new_handle();

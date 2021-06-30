@@ -191,7 +191,7 @@ const std::string& Request::GetResponseMessage() const {
     return response_message_;
 }
 
-const ResponseMessageType Request::GetResponseMessageType() const {
+ResponseMessageType Request::GetResponseMessageType() const {
     return response_message_type_;
 }
 

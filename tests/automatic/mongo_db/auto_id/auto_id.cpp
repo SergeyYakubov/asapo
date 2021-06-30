@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
     auto messages_sent = global_count.load();
 
     printf("Sent %llu messages \n",  messages_sent);
-    M_AssertTrue(messages_sent == args.n_threads * args.n_messages_per_thread);
+    M_AssertTrue(messages_sent == static_cast<uint64_t>(args.n_threads * args.n_messages_per_thread));
 
     auto t2 = high_resolution_clock::now();
     auto ms_int = duration_cast<milliseconds>(t2 - t1).count();

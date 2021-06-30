@@ -588,7 +588,7 @@ Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std:
 
 uint64_t ConsumerImpl::GetCurrentSize(std::string stream, Error* err) {
     auto ri = GetSizeRequestForSingleMessagesStream(stream);
-    return GetCurrentCount(stream, ri, err);
+    return GetCurrentCount(ri, err);
 }
 
 Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) {
@@ -906,7 +906,7 @@ void ConsumerImpl::InterruptCurrentOperation() {
 
 uint64_t ConsumerImpl::GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) {
     RequestInfo ri = GetSizeRequestForDatasetStream(stream, include_incomplete);
-    return GetCurrentCount(stream, ri, err);
+    return GetCurrentCount(ri, err);
 }
 
 RequestInfo ConsumerImpl::GetSizeRequestForDatasetStream(std::string& stream, bool include_incomplete) const {
@@ -915,7 +915,7 @@ RequestInfo ConsumerImpl::GetSizeRequestForDatasetStream(std::string& stream, bo
     return ri;
 }
 
-uint64_t ConsumerImpl::GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err) {
+uint64_t ConsumerImpl::GetCurrentCount(const RequestInfo& ri, Error* err) {
     auto responce = BrokerRequestWithTimeout(ri, err);
     if (*err) {
         return 0;

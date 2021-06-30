@@ -105,7 +105,7 @@ typedef AsapoHandlerHolder<asapo::ConsumerErrorData>* AsapoConsumerErrorDataHand
 
 template<typename t>
 constexpr bool operator==(unsigned lhs, t rhs) {
-    return lhs == static_cast<typename std::underlying_type<t>::type>(rhs);
+    return lhs == unsigned(static_cast<typename std::underlying_type<t>::type>(rhs));
 }
 
 int process_error(AsapoErrorHandle* error, asapo::Error err,

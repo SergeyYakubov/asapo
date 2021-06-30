@@ -25,12 +25,12 @@ class MockIO : public IO {
     MOCK_CONST_METHOD1(AddressFromSocket_t, std::string (SocketDescriptor socket));
 
 
-    std::unique_ptr<std::thread> NewThread(const std::string& name, std::function<void()> function) const override {
+    std::unique_ptr<std::thread> NewThread(const std::string&, std::function<void()> function) const override {
         return std::unique_ptr<std::thread>(NewThread_t(function));
     }
     MOCK_CONST_METHOD1(NewThread_t, std::thread * (std::function<void()> function));
 
-    std::unique_ptr<std::thread> NewThread(const std::string& name, std::function<void(uint64_t index)> function,
+    std::unique_ptr<std::thread> NewThread(const std::string&, std::function<void(uint64_t index)> function,
                                            uint64_t index) const override {
         return std::unique_ptr<std::thread>(NewThread_t(function, index));
     }

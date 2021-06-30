@@ -53,7 +53,6 @@ int main(int argc, char* argv[]) {
                                             asapo::SourceCredentials{asapo::SourceType::kProcessed, beamtime, "", "", ""}, 60000, &err);
     exit_if_error("Cannot start producer", err);
 
-    uint32_t eventid = 1;
     uint32_t start_number = 1;
 
     // number of files per acquistion per module

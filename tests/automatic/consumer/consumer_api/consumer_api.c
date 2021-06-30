@@ -244,6 +244,9 @@ void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
 }
 
 int main(int argc, char* argv[]) {
+    if (argc <4) {
+        abort();
+    }
     const char *endpoint = argv[1];
     const char *beamtime = argv[2];
     const char *token = argv[3];

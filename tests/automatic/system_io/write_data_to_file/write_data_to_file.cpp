@@ -27,7 +27,7 @@ Args GetParams(int argc, char* argv[]) {
     return Args{fname, result, message, 3};
 }
 
-void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const MessageData& data,
+void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const MessageData&,
                       const Args& params) {
     if (err) {
         std::cerr << err << std::endl;

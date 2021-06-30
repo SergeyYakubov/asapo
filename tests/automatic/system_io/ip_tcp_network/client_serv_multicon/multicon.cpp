@@ -105,7 +105,7 @@ void CheckNormal(int times) {
     ExitIfErrIsNotOk(&err, 108);
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     Error err;
     std::unique_ptr<std::thread> server_thread = CreateEchoServerThread();
     //server_thread->detach();

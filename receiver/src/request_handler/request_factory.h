@@ -16,6 +16,7 @@ class RequestFactory {
     explicit RequestFactory (SharedCache cache);
     virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                                      SocketDescriptor socket_fd, std::string origin_uri, Error* err) const noexcept;
+    virtual ~RequestFactory() = default;
   private:
     Error AddHandlersToRequest(std::unique_ptr<Request>& request,  const GenericRequestHeader& request_header) const;
     Error AddReceiveWriteHandlers(std::unique_ptr<Request>& request, const GenericRequestHeader& request_header) const;
@@ -32,7 +33,7 @@ class RequestFactory {
     RequestHandlerDbMetaWrite request_handler_db_meta_write_{kDBMetaCollectionName};
     RequestHandlerDbGetMeta request_handler_db_get_meta_{kDBMetaCollectionName};
     RequestHandlerAuthorize request_handler_authorize_;
-    RequestHandlerDbCheckRequest request_handler_db_check_{kDBDataCollectionNamePrefix};;
+    RequestHandlerDbCheckRequest request_handler_db_check_{kDBDataCollectionNamePrefix};
     SharedCache cache_;
     bool ReceiveDirectToFile(const GenericRequestHeader& request_header) const;
     Error AddReceiveDirectToFileHandler(std::unique_ptr<Request>& request,

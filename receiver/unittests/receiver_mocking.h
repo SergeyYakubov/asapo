@@ -102,7 +102,7 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetResponseMessage, const std::string & ());
     MOCK_CONST_METHOD0(GetResponseMessageType_t, ResponseMessageType ());
 
-    const ResponseMessageType GetResponseMessageType() const override {
+    ResponseMessageType GetResponseMessageType() const override {
         return GetResponseMessageType_t();
     };
 

@@ -169,7 +169,7 @@ void CheckNormal(int times, size_t size) {
     ExitIfErrIsNotOk(&err, 108);
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     Error err;
     std::cout << "[META] Check if connection is refused if server is not running" << std::endl;
     io->CreateAndConnectIPTCPSocket(kListenAddress, &err);

@@ -337,10 +337,7 @@ Error MongoDBClient::GetNextId(const std::string& stream, uint64_t* id) const {
 }
 
 Error MongoDBClient::InsertWithAutoId(const MessageMeta& file,
-                                      const std::string& collection,
                                       uint64_t* id_inserted) const {
-    bson_error_t error;
-
     uint64_t id;
     auto err = GetNextId(current_collection_name_, &id);
     if (err != nullptr) {
@@ -364,7 +361,7 @@ Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& fi
     }
 
     if (file.id == 0) {
-        return InsertWithAutoId(file, collection, id_inserted);
+        return InsertWithAutoId(file, id_inserted);
     }
 
     auto document = PrepareBsonDocument(file, &err);

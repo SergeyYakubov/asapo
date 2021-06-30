@@ -75,7 +75,7 @@ class RequestHandlerTcpTests : public testing::Test {
     uint8_t expected_callback_data = 2;
     asapo::MessageData expected_data{[this]() {
             auto a = new uint8_t[expected_file_size];
-            for (auto i = 0; i < expected_file_size; i++) {
+            for (uint64_t i = 0; i < expected_file_size; i++) {
                 a[i] = expected_callback_data;
             }
             return a;
@@ -902,7 +902,7 @@ TEST_F(RequestHandlerTcpTests, SendOK) {
     ASSERT_THAT(callback_header.op_code, Eq(header.op_code));
     ASSERT_THAT(callback_header.data_id, Eq(header.data_id));
     ASSERT_THAT(callback_data, Ne(nullptr));
-    for (auto i = 0; i < expected_file_size; i++) {
+    for (uint64_t i = 0; i < expected_file_size; i++) {
         ASSERT_THAT(callback_data[i], Eq(expected_callback_data));
     }
 

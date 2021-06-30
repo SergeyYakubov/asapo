@@ -622,7 +622,7 @@ MATCHER_P4(M_CheckDeleteStreamRequest, op_code, source_credentials, stream, flag
     auto request = static_cast<ProducerRequest*>(arg);
     return ((asapo::GenericRequestHeader) (arg->header)).op_code == op_code
            && request->source_credentials == source_credentials
-           && ((asapo::GenericRequestHeader) (arg->header)).custom_data[0] == flag
+           && ((asapo::GenericRequestHeader) (arg->header)).custom_data[0] == static_cast<uint64_t>(flag)
            && strcmp(((asapo::GenericRequestHeader) (arg->header)).stream, stream) == 0;
 }
 

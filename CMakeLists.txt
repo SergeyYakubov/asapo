@@ -20,13 +20,10 @@ IF(WIN32)
     add_definitions(-DWIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
-#todo: added fPIC to be able to create shared libs for Python - check it does not change performance
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -fPIC")
-    SET(BUILD_SHARED_LIBS OFF)
-ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_options("-fsanitize=address")
-    link_libraries("-fsanitize=address")
+    add_compile_options(-Wall -Wextra -pedantic -Werror -fPIC)
+    add_link_options("-static-libgcc -static-libstdc++")
+ELSEIF(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wall -Wextra -pedantic -Werror)
 ENDIF(WIN32)
 
 #TODO: Better way then GLOBAL PROPERTY

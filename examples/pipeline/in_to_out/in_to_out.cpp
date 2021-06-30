@@ -39,7 +39,7 @@ struct Args {
     bool transfer_data;
 };
 
-void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
+void ProcessAfterSend(asapo::RequestCallbackPayload, asapo::Error err) {
     if (err && err != asapo::ProducerErrorTemplates::kServerWarning) {
         std::cerr << "Data was not successfully send: " << err << std::endl;
         return;

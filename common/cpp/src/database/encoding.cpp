@@ -27,7 +27,7 @@ const std::string upperhex = "0123456789ABCDEF";
 
 std::string Escape(const std::string& s, bool db) {
     auto hexCount = 0;
-    for (auto i = 0; i < s.size(); i++) {
+    for (size_t i = 0; i < s.size(); i++) {
         char c = s[i];
         if (ShouldEscape(c, db)) {
             hexCount++;
@@ -40,7 +40,7 @@ std::string Escape(const std::string& s, bool db) {
 
     std::string res;
     res.reserve(s.size() + 2 * hexCount);
-    for (auto i = 0; i < s.size(); i++) {
+    for (size_t i = 0; i < s.size(); i++) {
         auto c = s[i];
         if (ShouldEscape(c, db)) {
             res.push_back('%');
@@ -98,7 +98,7 @@ std::string DecodeName(const std::string& name) {
 
 bool ShouldEscapeQuery(char c) {
     char chars[] = "-[]{}()*+?\\.,^$|#";
-    for (auto i = 0; i < strlen(chars); i++) {
+    for (size_t i = 0; i < strlen(chars); i++) {
         if (c == chars[i]) {
             return true;
         }
@@ -108,7 +108,7 @@ bool ShouldEscapeQuery(char c) {
 
 std::string EscapeQuery(const std::string& s) {
     auto count = 0;
-    for (auto i = 0; i < s.size(); i++) {
+    for (size_t i = 0; i < s.size(); i++) {
         char c = s[i];
         if (ShouldEscapeQuery(c)) {
             count++;
@@ -121,7 +121,7 @@ std::string EscapeQuery(const std::string& s) {
 
     std::string res;
     res.reserve(s.size() + count);
-    for (auto i = 0; i < s.size(); i++) {
+    for (size_t i = 0; i < s.size(); i++) {
         auto c = s[i];
         if (ShouldEscapeQuery(c)) {
             res.push_back('\\');

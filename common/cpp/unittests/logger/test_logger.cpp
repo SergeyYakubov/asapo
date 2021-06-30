@@ -56,7 +56,7 @@ TEST(DefaultLogger, ApiLogger) {
 
 class MockSink : public spdlog::sinks::base_sink<std::mutex> {
   public:
-    MockSink(const std::string& endpoint_uri) {};
+    MockSink(const std::string&) {};
   public:
     MOCK_METHOD1(_sink_it, void(
                      const spdlog::details::log_msg& msg));

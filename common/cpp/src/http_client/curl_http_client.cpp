@@ -76,7 +76,7 @@ HttpCode GetResponseCode(CURL* curl) {
     return static_cast<HttpCode>(http_code);
 }
 
-std::string GetCurlError(CURL* curl, CURLcode res, const char* errbuf) {
+std::string GetCurlError(CURLcode res, const char* errbuf) {
     if (strlen(errbuf) > 0) {
         return errbuf;
     } else {
@@ -89,7 +89,7 @@ Error ProcessCurlResponse(CURL* curl, CURLcode res, const char* errbuf, HttpCode
         *response_code = GetResponseCode(curl);
         return nullptr;
     } else {
-        auto err_string = GetCurlError(curl, res, errbuf);
+        auto err_string = GetCurlError(res, errbuf);
         if (res == CURLE_COULDNT_CONNECT || res == CURLE_COULDNT_RESOLVE_HOST) {
             return HttpErrorTemplates::kConnectionError.Generate(err_string);
         } else {

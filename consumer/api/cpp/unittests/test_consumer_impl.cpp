@@ -58,10 +58,6 @@ TEST(FolderDataBroker, Constructor) {
 
 const uint8_t expected_value = 1;
 
-asapo::ErrorInterface* new_error() {
-    return new asapo::SimpleError{"s"};
-};
-
 class ConsumerImplTests : public Test {
   public:
     std::unique_ptr<ConsumerImpl> consumer, fts_consumer;

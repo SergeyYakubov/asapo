@@ -68,7 +68,7 @@ void _M_AssertEq(const Error& expected, const Error& got, const std::string& com
     T_AssertEq(expected, got, comment);
 }
 
-void _M_AssertEq(const decltype(nullptr)& expected, const Error& got, const std::string& comment) {
+void _M_AssertEq(const decltype(nullptr)&, const Error& got, const std::string& comment) {
     T_AssertEq(Error{}, got, comment);
 }
 

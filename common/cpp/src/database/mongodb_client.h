@@ -85,7 +85,7 @@ class MongoDBClient final : public Database {
     Error DeleteCollection(const std::string& name) const;
     Error DeleteCollections(const std::string& prefix) const;
     Error DeleteDocumentsInCollection(const std::string& collection_name, const std::string& querystr) const;
-    Error InsertWithAutoId(const MessageMeta& file, const std::string& collection, uint64_t* id_inserted) const;
+    Error InsertWithAutoId(const MessageMeta& file, uint64_t* id_inserted) const;
 };
 
 struct TransactionContext {

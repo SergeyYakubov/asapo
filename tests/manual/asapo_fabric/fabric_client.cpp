@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     if (argc >= 4) {
         kByte = std::stoi(argv[3]);
     }
-    int count = 10;
+    uint64_t count = 10;
     if (argc >= 5) {
         count = std::stoi(argv[4]);
     }

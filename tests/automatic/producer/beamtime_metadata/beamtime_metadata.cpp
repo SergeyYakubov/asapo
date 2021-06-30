@@ -42,7 +42,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     }
 }
 
-void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
+void ProcessAfterSend(asapo::RequestCallbackPayload, asapo::Error err) {
     if (err) {
         std::cerr << "metadata was not successfully send: " << err << std::endl;
         return;
