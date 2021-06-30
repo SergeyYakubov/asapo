@@ -105,14 +105,15 @@ int main(int argc, char* argv[]) {
         thread.join();
     }
 
-    auto messages_sent = global_count.load();
+    uint64_t messages_sent = global_count.load();
 
-    printf("Sent %llu messages \n",  messages_sent);
+    printf("Sent %llu messages \n",  static_cast<unsigned long long>(messages_sent));
     M_AssertTrue(messages_sent == static_cast<uint64_t>(args.n_threads * args.n_messages_per_thread));
 
     auto t2 = high_resolution_clock::now();
     auto ms_int = duration_cast<milliseconds>(t2 - t1).count();
-    printf("mode: %s, throughput %llu messages/sec with %d threads\n", args.str_mode.c_str(), 1000 * messages_sent / ms_int,
+    printf("mode: %s, throughput %llu messages/sec with %d threads\n", args.str_mode.c_str(),
+           static_cast<unsigned long long>(1000 * messages_sent / ms_int),
            args.n_threads);
 
     asapo::MongoDBClient db;

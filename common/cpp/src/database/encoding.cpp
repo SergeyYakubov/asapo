@@ -62,7 +62,7 @@ inline int ishex(int x) {
 int decode(const char* s, char* dec) {
     char* o;
     const char* end = s + strlen(s);
-    int c;
+    unsigned int c;
 
     for (o = dec; s <= end; o++) {
         c = *s++;

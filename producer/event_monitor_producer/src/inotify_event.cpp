@@ -10,7 +10,7 @@ InotifyEvent::InotifyEvent(const struct inotify_event* inotify_event,
 
 uint32_t InotifyEvent::Length() const {
     return sizeof(struct inotify_event) + inotify_event_->len;
-};
+}
 
 bool InotifyEvent::IsDirectoryEvent() const {
     return inotify_event_->mask & IN_ISDIR || inotify_event_->mask & IN_DELETE_SELF;

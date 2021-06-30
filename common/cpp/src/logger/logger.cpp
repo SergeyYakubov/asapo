@@ -79,4 +79,4 @@ LogMessageWithFields& LogMessageWithFields::Append(std::string key, std::string 
 std::string LogMessageWithFields::LogString() const {
     return log_string_;
 }
-};
+}

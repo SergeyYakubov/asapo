@@ -70,7 +70,7 @@ StatisticsSenderInfluxDb::StatisticsSenderInfluxDb(): httpclient__{DefaultHttpCl
 
     log__->Debug(msg);
 
-};
+}
 
 
 }

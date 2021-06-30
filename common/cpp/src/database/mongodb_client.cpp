@@ -426,9 +426,8 @@ Error MongoDBClient::InsertMeta(const std::string& collection, const std::string
     case MetaIngestOp::kUpdate:
         return UpdateBsonDocument(id_encoded, document, mode.upsert);
         break;
-
     }
-
+    return DBErrorTemplates::kWrongInput.Generate("unknown op");
 }
 
 Error MongoDBClient::AddBsonDocumentToArray(bson_t* query, bson_t* update, bool ignore_duplicates) const {

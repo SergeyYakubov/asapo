@@ -70,7 +70,7 @@ Error GetLastErrorFromErrno() {
         (*err).Append("Unknown error code: " + std::to_string(errno));
         return err;
     }
-};
+}
 
 Error SystemIO::GetLastError() const {
     return GetLastErrorFromErrno();

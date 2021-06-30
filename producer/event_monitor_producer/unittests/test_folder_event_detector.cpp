@@ -161,7 +161,7 @@ asapo::MessageHeader FolderEventDetectorTests::InitiateAndReadSingleEvent() {
     detector.GetNextEvent(&message_header);
     Mock::VerifyAndClearExpectations(&mock_system_folder_watch);
     return message_header;
-};
+}
 
 
 TEST_F(FolderEventDetectorTests, GetNextEventOK) {

@@ -17,7 +17,7 @@ void FluentdSink::_sink_it(const spdlog::details::log_msg& msg) {
 
 FluentdSink::FluentdSink(const std::string& endpoint_uri): httpclient__{DefaultHttpClient()}, endpoint_uri_{endpoint_uri} {
 
-};
+}
 
 
 }

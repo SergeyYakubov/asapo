@@ -120,7 +120,7 @@ TEST_F(RequestTests, HandleProcessesRequests) {
         Return(nullptr)
     ).WillOnce(
         Return(new asapo::IOError("Test Send Error", asapo::IOErrorType::kUnknownIOError))
-    );;
+    );
 
     request->AddHandler(&mock_request_handler);
     request->AddHandler(&mock_request_handler);
@@ -184,7 +184,7 @@ void RequestTests::ExpectFileName(std::string sended, std::string received) {
 
     request->io__.release();
     request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
-    request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
+    request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
 
     auto fname = request->GetFileName();
 
@@ -198,7 +198,7 @@ TEST_F(RequestTests, GetStream) {
 
     request->io__.release();
     request.reset(new Request{generic_request_header, expected_socket_id, expected_origin_uri, nullptr, nullptr});
-    request->io__ = std::unique_ptr<asapo::IO> {&mock_io};;
+    request->io__ = std::unique_ptr<asapo::IO> {&mock_io};
 
     auto stream = request->GetStream();
 

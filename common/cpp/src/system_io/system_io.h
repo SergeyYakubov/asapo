@@ -34,7 +34,7 @@ class SystemIO final : public IO {
 
 #if defined(__linux__) || defined (__APPLE__)
     // used to for epoll - assumed single epoll instance per class instance
-    const int kMaxEpollEvents = 10;
+    static constexpr int kMaxEpollEvents = 10;
     mutable int epoll_fd_ = -1;
     Error AddToEpool(SocketDescriptor sd) const;
     Error CreateEpoolIfNeeded(SocketDescriptor master_socket) const;

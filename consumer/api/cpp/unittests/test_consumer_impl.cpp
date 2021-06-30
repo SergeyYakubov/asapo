@@ -1154,7 +1154,7 @@ TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUriWithoutFrom) {
                       _)).WillOnce(DoAll(
                                        SetArgPointee<1>(HttpCode::OK),
                                        SetArgPointee<2>(nullptr),
-                                       Return("")));;
+                                       Return("")));
 
     asapo::Error err;
     auto streams = consumer->GetStreamList("", asapo::StreamFilter::kFinishedStreams, &err);

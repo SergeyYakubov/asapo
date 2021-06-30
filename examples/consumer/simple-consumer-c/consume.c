@@ -41,7 +41,7 @@ int main() {
     asapo_consumer_get_next(consumer, group_id, &mm, &data, "default",&err);
     exit_if_error("Cannot get next record", err);
 
-    printf("id: %llu\n", asapo_message_meta_get_id(mm));
+    printf("id: %llu\n", (unsigned long long)asapo_message_meta_get_id(mm));
     printf("file name: %s\n", asapo_message_meta_get_name(mm));
     printf("file content: %s\n", asapo_message_data_get_as_chars(data));
 

@@ -505,7 +505,7 @@ TEST_F(ProducerImplTests, GetQueueVolume) {
 
 MATCHER_P(M_CheckLimits, limits, "Checks if a valid limits were used") {
     return arg.max_requests == limits.max_requests && arg.max_memory_mb == limits.max_memory_mb;
-};
+}
 
 TEST_F(ProducerImplTests, SetLimits) {
     EXPECT_CALL(mock_pull, SetLimits(M_CheckLimits(asapo::RequestPoolLimits{10, 20})));
