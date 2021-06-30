@@ -145,7 +145,7 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
 }
 
 std::string FabricContextImpl::GetAddress() const {
-    sockaddr_in si{};
+    sockaddr_in sin{};
     size_t sin_size = sizeof(sin);
     fi_getname(&(endpoint_->fid), &sin, &sin_size);
 
