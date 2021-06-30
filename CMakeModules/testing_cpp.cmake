@@ -114,7 +114,7 @@ function(gtest target test_source_files linktarget)
             endif ()
             SETUP_TARGET_FOR_COVERAGE(NAME coverage-${target} EXECUTABLE test-${target} ${target})
             add_test(NAME coveragetest-${target}
-                    COMMAND ${CMAKE_MODULE_PATH}/check_test.sh
+                    COMMAND ${PROJECT_SOURCE_DIR}/CMakeModules/check_test.sh
                     coverage-${target} ${CMAKE_BINARY_DIR} ${ASAPO_MINIMUM_COVERAGE})
             set_tests_properties(coveragetest-${target} PROPERTIES LABELS "coverage;all")
             message(STATUS "Added test 'test-${target}-coverage'")
