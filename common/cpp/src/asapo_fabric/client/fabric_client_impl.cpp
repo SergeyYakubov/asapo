@@ -69,7 +69,7 @@ FabricAddress FabricClientImpl::AddServerAddress(const std::string& serverAddres
         return FI_ADDR_NOTAVAIL;
     }
 
-    FabricHandshakePayload handshake;
+    FabricHandshakePayload handshake {};
     strcpy(handshake.hostnameAndPort, GetAddress().c_str());
     RawSend(addrIdx, &handshake, sizeof(handshake), error);
     if (*error) {

@@ -58,7 +58,7 @@ functionNotFoundError:
 #ifdef LIBFABRIC_ENABLED
 // Global fabric function map
 extern FabricFunctionMap& gffm() {
-    static FabricFunctionMap gffm_;
+    static FabricFunctionMap gffm_ {};
     return gffm_;
 }
 #endif

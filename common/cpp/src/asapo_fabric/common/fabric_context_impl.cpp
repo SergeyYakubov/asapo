@@ -124,10 +124,10 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
     FI_OK(gffm().fi_fabric(fabric_info_->fabric_attr, &fabric_, nullptr));
     FI_OK(fi_domain(fabric_, fabric_info_, &domain_, nullptr));
 
-    fi_av_attr av_attr;
+    fi_av_attr av_attr{};
     FI_OK(fi_av_open(domain_, &av_attr, &address_vector_, nullptr));
 
-    fi_cq_attr cq_attr;
+    fi_cq_attr cq_attr{};
     if (serverListenPort) {
         // The server must know where the data is coming from(FI_SOURCE) and what the MessageId(TAG) is.
         cq_attr.format = FI_CQ_FORMAT_TAGGED;
@@ -145,7 +145,7 @@ void FabricContextImpl::InitCommon(const std::string& networkIpHint, uint16_t se
 }
 
 std::string FabricContextImpl::GetAddress() const {
-    sockaddr_in sin;
+    sockaddr_in si{};
     size_t sin_size = sizeof(sin);
     fi_getname(&(endpoint_->fid), &sin, &sin_size);
 
@@ -227,7 +227,7 @@ void FabricContextImpl::StopBackgroundThreads() {
 
 void FabricContextImpl::CompletionThread() {
     Error error;
-    fi_cq_tagged_entry entry;
+    fi_cq_tagged_entry entry{};
     FabricAddress tmpAddress;
     while(background_threads_running_ && !error) {
         ssize_t ret;
@@ -261,7 +261,7 @@ void FabricContextImpl::CompletionThread() {
 }
 
 void FabricContextImpl::CompletionThreadHandleErrorAvailable(Error* error) {
-    fi_cq_err_entry errEntry;
+    fi_cq_err_entry errEntry{};
     ssize_t ret = fi_cq_readerr(completion_queue_, &errEntry, 0);
     if (ret != 1) {
         *error = ErrorFromFabricInternal("Unknown error while fi_cq_readerr", ret);
