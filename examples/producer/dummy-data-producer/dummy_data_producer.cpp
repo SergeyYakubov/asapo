@@ -212,8 +212,8 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 void PrintOutput(const Args& args, const system_clock::time_point& start) {
     system_clock::time_point t2 = system_clock::now();
     double duration_sec = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - start).count())
-        / 1000.0;
-    double size_gb = static_cast<double>(args.number_of_bytes*args.iterations) / 1000.0 / 1000.0 / 1000.0 * 8.0;
+                          / 1000.0;
+    double size_gb = static_cast<double>(args.number_of_bytes * args.iterations) / 1000.0 / 1000.0 / 1000.0 * 8.0;
     double rate = static_cast<double>(args.iterations) / duration_sec;
     std::cout << "Rate: " << rate << " Hz" << std::endl;
     std::cout << "Bandwidth " << size_gb / duration_sec << " Gbit/s" << std::endl;
