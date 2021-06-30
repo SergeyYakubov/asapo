@@ -329,7 +329,7 @@ std::unique_ptr<sockaddr_in> SystemIO::BuildSockaddrIn(const std::string& addres
     std::unique_ptr<sockaddr_in> socket_address = std::unique_ptr<sockaddr_in>(new sockaddr_in);
     socket_address->sin_addr.s_addr = inet_addr(host.c_str());
     socket_address->sin_port = htons(port);
-    socket_address->sin_family = family;
+    socket_address->sin_family = static_cast<sa_family_t>(family);
 
     return socket_address;
 }
@@ -529,7 +529,7 @@ size_t asapo::SystemIO::ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf
     FD_SET(socket_fd, &read_fds);
     timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = timeout_in_usec;
+    timeout.tv_usec = static_cast<suseconds_t>(timeout_in_usec);
 
     int res = ::select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
     if (res == 0) {

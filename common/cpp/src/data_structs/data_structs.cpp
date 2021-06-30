@@ -186,7 +186,7 @@ std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec) {
     sprintf(buff, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d", timetm.tm_year + 1900, timetm.tm_mon + 1, timetm.tm_mday,
             timetm.tm_hour, timetm.tm_min, timetm.tm_sec);
     if (zz > 0) {
-        sprintf(buff + 19, ".%.9llu", static_cast<uint64_t>(zz));
+        sprintf(buff + 19, ".%.9llu", static_cast<unsigned long long>(zz));
     }
 
     return buff;

@@ -71,10 +71,10 @@ int decode(const char* s, char* dec) {
                          !ishex(*s++) ||
                          !sscanf(s - 2, "%2x", &c)))
             return -1;
-        if (dec) *o = c;
+        if (dec) *o = (char)c;
     }
 
-    return o - dec;
+    return int(o - dec);
 }
 
 std::string EncodeDbName(const std::string& dbname) {

@@ -60,9 +60,11 @@ void _M_AssertEq(const std::string& expected, const std::string& got, const std:
     T_AssertEq(expected, got, comment);
 }
 
-void _M_AssertEq(int expected, int got, const std::string& comment) {
+
+void _M_AssertEq(uint64_t expected, uint64_t got, const std::string& comment) {
     T_AssertEq(expected, got, comment);
 }
+
 
 void _M_AssertEq(const Error& expected, const Error& got, const std::string& comment) {
     T_AssertEq(expected, got, comment);

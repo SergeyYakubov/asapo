@@ -13,7 +13,7 @@
 using std::chrono::system_clock;
 
 std::mutex mutex;
-int iterations_remained;
+uint64_t iterations_remained;
 
 struct Args {
     std::string discovery_service_endpoint;
@@ -22,7 +22,7 @@ struct Args {
     std::string token;
     size_t number_of_bytes;
     uint64_t iterations;
-    uint64_t nthreads;
+    uint8_t nthreads;
     uint64_t mode;
     uint64_t timeout_ms;
     uint64_t messages_in_set;
@@ -83,7 +83,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         TryGetDataSourceAndToken(args);
         args->number_of_bytes = std::stoull(argv[3]) * 1000;
         args->iterations = std::stoull(argv[4]);
-        args->nthreads = std::stoull(argv[5]);
+        args->nthreads = static_cast<uint8_t>(std::stoi(argv[5]));
         args->mode = std::stoull(argv[6]);
         args->timeout_ms = std::stoull(argv[7]) * 1000;
         if (argc == 9) {

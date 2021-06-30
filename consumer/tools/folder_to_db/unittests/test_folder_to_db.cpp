@@ -245,7 +245,7 @@ TEST_F(FolderDBConverterTests, PassesFileListToInsertInParallel3by2) {
 TEST_F(FolderDBConverterTests, ComputesStatistics) {
 
     EXPECT_CALL(*mock_dbf->db[0], Insert_t(_, _, false, _)).
-    Times(message_metas.size()).
+    Times(static_cast<int>(message_metas.size())).
     WillRepeatedly(testing::Return(nullptr));
 
     asapo::FolderImportStatistics statistics;

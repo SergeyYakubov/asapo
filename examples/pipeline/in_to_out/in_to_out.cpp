@@ -35,7 +35,7 @@ struct Args {
     std::string token;
     int timeout_ms;
     int timeout_ms_producer;
-    int nthreads;
+    uint8_t nthreads;
     bool transfer_data;
 };
 
@@ -220,7 +220,7 @@ int main(int argc, char* argv[]) {
     args.stream_in = std::string{argv[4]};
     args.stream_out = std::string{argv[5]};
     args.token = std::string{argv[6]};
-    args.nthreads = atoi(argv[7]);
+    args.nthreads = static_cast<uint8_t>(atoi(argv[7]));
     args.timeout_ms = atoi(argv[8]);
     args.timeout_ms_producer = atoi(argv[9]);
     args.transfer_data = atoi(argv[10]) == 1;

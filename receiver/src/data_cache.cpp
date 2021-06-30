@@ -17,7 +17,7 @@ DataCache::DataCache(uint64_t cache_size, float keepunlocked_ratio) : cache_size
         exit(1);
     }
 
-    srand(time(NULL));
+    srand(static_cast<unsigned int>(time(NULL)));
     counter_ = rand() % 100 + 1;
 }
 
@@ -60,7 +60,7 @@ void* DataCache::GetFreeSlotAndLock(uint64_t size, CacheMeta** meta) {
 uint64_t DataCache::GetNextId() {
     counter_++;
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    uint32_t timeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    auto timeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
     return (uint64_t) timeMillis << 32 | counter_;
 }
 

@@ -89,12 +89,12 @@ RdsTcpServer::~RdsTcpServer() {
 }
 
 void RdsTcpServer::HandleAfterError(uint64_t source_id) {
-    CloseSocket(source_id);
+    CloseSocket(static_cast<int>(source_id));
 }
 
 Error RdsTcpServer::SendResponse(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response) {
     Error err;
-    io__->Send(request->source_id, response, sizeof(*response), &err);
+    io__->Send(static_cast<int>(request->source_id), response, sizeof(*response), &err);
     if (err) {
         log__->Error("cannot send to consumer" + err->Explain());
     }
@@ -111,7 +111,7 @@ RdsTcpServer::SendResponseAndSlotData(const ReceiverDataServerRequest* request, 
         return err;
     }
 
-    io__->Send(request->source_id, cache_slot->addr, cache_slot->size, &err);
+    io__->Send(static_cast<int>(request->source_id), cache_slot->addr, cache_slot->size, &err);
     if (err) {
         log__->Error("cannot send slot to worker" + err->Explain());
     }

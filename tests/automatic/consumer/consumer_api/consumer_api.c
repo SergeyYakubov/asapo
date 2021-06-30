@@ -9,10 +9,10 @@
 #define ASSERT_EQ_STRING(...) assert_eq_string_(__VA_ARGS__,__LINE__)
 #define ASSERT_TRUE(...) assert_true_(__VA_ARGS__,__LINE__)
 
-void assert_eq_int_(int expected, int got, const char *message, int line) {
+void assert_eq_int_(uint64_t expected, uint64_t got, const char *message, int line) {
     printf("asserting %s at %d\n",message,line);
     if (expected!=got) {
-        printf("%s: expected %d got %d at %d\n",message, expected, got,line);
+        printf("%s: expected %llu got %llu at %d\n",message, expected, got,line);
         exit(EXIT_FAILURE);
     }
 }

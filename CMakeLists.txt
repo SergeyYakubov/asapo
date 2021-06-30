@@ -23,7 +23,7 @@ ELSEIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra -pedantic -Werror -fPIC)
     add_link_options(-static-libgcc -static-libstdc++)
 ELSEIF(CMAKE_C_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
+    add_compile_options(-Wall -Wextra -pedantic -Wconversion -Wno-sign-conversion)
 ENDIF(WIN32)
 
 #TODO: Better way then GLOBAL PROPERTY

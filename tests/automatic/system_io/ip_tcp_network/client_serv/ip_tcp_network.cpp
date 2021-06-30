@@ -109,7 +109,7 @@ void CheckNormal(int times, size_t size) {
         std::cout << "[CLIENT] Allocate and create random numbers" << std::endl;
         std::unique_ptr<uint8_t[]> buffer(new uint8_t[size]);
         for (size_t i = 0; i < size; i++) {
-            buffer[i] = rand();
+            buffer[i] = static_cast<uint8_t>(256 * rand() / RAND_MAX);
         }
 
         FILE* out = fopen("sent", "wb");
