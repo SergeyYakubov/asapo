@@ -117,8 +117,8 @@ else:
 # wait before sending to another stream so we sure that this stream appears later
 producer.wait_requests_finished(50000)
 
-# send to another stream
-producer.send(1, "processed/" + data_source + "/" + "file9", None,
+# send to another stream with auto id
+producer.send(0, "processed/" + data_source + "/" + "file9", None,auto_id = True,
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream/test $", callback=callback)
 
 # wait normal requests finished before sending duplicates
@@ -153,7 +153,7 @@ n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")
 
 # send another data to stream stream
-producer.send(2, "processed/" + data_source + "/" + "file10", None,
+producer.send(0, "processed/" + data_source + "/" + "file10", None, auto_id = True,
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream/test $", callback=callback)
 
 producer.wait_requests_finished(50000)

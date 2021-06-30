@@ -164,6 +164,27 @@ TEST_F(ProducerImplTests, ErrorIfZeroDataSize) {
     ASSERT_THAT(err_data, Ne(nullptr));
 }
 
+TEST_F(ProducerImplTests, ErrorIfBothIdAndAutoIdSet) {
+    asapo::MessageData data = asapo::MessageData{new uint8_t[100]};
+    asapo::MessageHeader message_header{1, 100, expected_fullpath, "", 0, 0, true};
+    auto err = producer.Send(message_header, std::move(data), asapo::kDefaultIngestMode, "default", nullptr);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+    auto err_data = static_cast<asapo::OriginalData*>(err->GetCustomData());
+    ASSERT_THAT(err_data, Ne(nullptr));
+}
+
+TEST_F(ProducerImplTests, OkAutoId) {
+    asapo::MessageHeader message_header{0, 100, expected_fullpath, "", 0, 0, true};
+    auto err = producer.Send(message_header, nullptr, asapo::kTransferMetaDataOnly, "default", nullptr);
+    ASSERT_THAT(err, Eq(nullptr));
+}
+
+TEST_F(ProducerImplTests, ErrorIfAutoIdForSet) {
+    asapo::MessageHeader message_header{0, 0, expected_fullpath, "", 1, 1, true};
+    auto err = producer.Send(message_header, nullptr, asapo::kTransferMetaDataOnly, "default", nullptr);
+    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+}
+
 TEST_F(ProducerImplTests, ErrorIfNoData) {
     asapo::MessageHeader message_header{1, 100, expected_fullpath};
     auto err = producer.Send(message_header, nullptr, asapo::kDefaultIngestMode, "default", nullptr);

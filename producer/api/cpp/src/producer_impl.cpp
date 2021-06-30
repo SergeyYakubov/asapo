@@ -69,12 +69,7 @@ Error CheckIngestMode(uint64_t ingest_mode) {
     return nullptr;
 }
 
-Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_mode, const std::string& stream) {
-
-    if (stream.empty()) {
-        return ProducerErrorTemplates::kWrongInput.Generate("stream empty");
-    }
-
+Error CheckFileNameInRequest(const MessageHeader& message_header) {
     if (message_header.file_name.size() > kMaxMessageSize) {
         return ProducerErrorTemplates::kWrongInput.Generate("too long filename");
     }
@@ -82,13 +77,53 @@ Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_
     if (message_header.file_name.empty()) {
         return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }
+    return nullptr;
+}
 
-    if (message_header.dataset_substream > 0 && message_header.dataset_size == 0) {
+Error CheckDatasetInRequest(const MessageHeader& message_header) {
+    if (!message_header.dataset_substream) {
+        return nullptr;
+    }
+
+    if (message_header.dataset_size == 0) {
         return ProducerErrorTemplates::kWrongInput.Generate("dataset dimensions");
     }
 
-    if (message_header.message_id == 0) {
-        return ProducerErrorTemplates::kWrongInput.Generate("message id should be positive");
+    if (message_header.auto_id) {
+        return ProducerErrorTemplates::kWrongInput.Generate("auto id mode not implemented for datasets");
+    }
+
+    return nullptr;
+}
+
+Error CheckMessageIdInRequest(const MessageHeader& message_header) {
+    if (message_header.auto_id) {
+        if (message_header.message_id) {
+            return ProducerErrorTemplates::kWrongInput.Generate("message id should be 0 for auto id mode");
+        }
+    } else {
+        if (message_header.message_id == 0) {
+            return ProducerErrorTemplates::kWrongInput.Generate("message id should be positive");
+        }
+    }
+    return nullptr;
+}
+
+Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_mode, const std::string& stream) {
+    if (stream.empty()) {
+        return ProducerErrorTemplates::kWrongInput.Generate("stream empty");
+    }
+
+    if (auto err = CheckFileNameInRequest(message_header)) {
+        return err;
+    }
+
+    if (auto err = CheckDatasetInRequest(message_header)) {
+        return err;
+    }
+
+    if (auto err = CheckMessageIdInRequest(message_header)) {
+        return err;
     }
 
     return CheckIngestMode(ingest_mode);
@@ -161,12 +196,12 @@ Error ProducerImpl::Send(const MessageHeader& message_header,
     return HandleErrorFromPool(std::move(err), manage_data_memory);
 }
 
-bool WandTransferData(uint64_t ingest_mode) {
+bool WantTransferData(uint64_t ingest_mode) {
     return ingest_mode & IngestModeFlags::kTransferData;
 }
 
 Error CheckData(uint64_t ingest_mode, const MessageHeader& message_header, const MessageData* data) {
-    if (WandTransferData(ingest_mode)) {
+    if (WantTransferData(ingest_mode)) {
         if (*data == nullptr) {
             return ProducerErrorTemplates::kWrongInput.Generate("need data for this ingest mode");
         }

@@ -14,7 +14,19 @@ namespace asapo {
 
 using asapo::Database;
 
+void
+my_logger (mongoc_log_level_t log_level,
+           const char* log_domain,
+           const char* message,
+           void* user_data) {
+    /* smaller values are more important */
+    if (log_level < MONGOC_LOG_LEVEL_CRITICAL) {
+        mongoc_log_default_handler (log_level, log_domain, message, user_data);
+    }
+}
+
 MongoDbInstance::MongoDbInstance() {
+    mongoc_log_set_handler (my_logger, NULL);
     mongoc_init();
 }
 
@@ -65,7 +77,7 @@ Error MongoDBClient::UpdateCurrentCollectionIfNeeded(const std::string& collecti
         mongoc_collection_destroy(current_collection_);
     }
 
-    auto encoded_name  = EncodeColName(collection_name);
+    auto encoded_name = EncodeColName(collection_name);
     if (encoded_name.size() > maxCollectionNameLength) {
         return DBErrorTemplates::kWrongInput.Generate("collection name too long");
     }
@@ -142,7 +154,6 @@ bson_p PrepareBsonDocument(const MessageMeta& file, Error* err) {
         return nullptr;
     }
 
-
     *err = nullptr;
     return bson_p{bson};
 }
@@ -156,14 +167,14 @@ bson_p PrepareUpdateDocument(const uint8_t* json, Error* err) {
         return nullptr;
     }
     bson_error_t mongo_err;
-    auto bson_meta = bson_new_from_json(reinterpret_cast<const uint8_t*>(json_flat.c_str()), json_flat.size(), &mongo_err);
+    auto bson_meta =
+        bson_new_from_json(reinterpret_cast<const uint8_t*>(json_flat.c_str()), json_flat.size(), &mongo_err);
     if (!bson_meta) {
         *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);
         return nullptr;
     }
     return bson_p{bson_meta};
 }
-
 
 bson_p PrepareInjestDocument(const uint8_t* json, ssize_t len, Error* err) {
     bson_error_t mongo_err;
@@ -172,13 +183,12 @@ bson_p PrepareInjestDocument(const uint8_t* json, ssize_t len, Error* err) {
         return nullptr;
     }
 
-
     auto bson_meta = bson_new_from_json(json, len, &mongo_err);
     if (!bson_meta) {
         *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);
         return nullptr;
     }
-    auto bson =  bson_new();
+    auto bson = bson_new();
     if (!BSON_APPEND_DOCUMENT(bson, "meta", bson_meta)
             || !BSON_APPEND_UTF8(bson, "schema_version", GetDbSchemaVersion().c_str())) {
         *err = DBErrorTemplates::kInsertError.Generate("cannot add schema version ");
@@ -193,13 +203,20 @@ bson_p PrepareInjestDocument(const uint8_t* json, ssize_t len, Error* err) {
 
 Error MongoDBClient::InsertBsonDocument(const bson_p& document, bool ignore_duplicates) const {
     bson_error_t mongo_err;
-    if (!mongoc_collection_insert_one(current_collection_, document.get(), NULL, NULL, &mongo_err)) {
+    bson_p insert_opts{bson_new ()};
+
+    if (current_session_) {
+        if (!mongoc_client_session_append (current_session_, insert_opts.get(), &mongo_err)) {
+            return DBErrorTemplates::kInsertError.Generate(std::string("Could not add session to opts: ") + mongo_err.message);
+        }
+    }
+
+    if (!mongoc_collection_insert_one(current_collection_, document.get(), insert_opts.get(), NULL, &mongo_err)) {
         if (mongo_err.code == MONGOC_ERROR_DUPLICATE_KEY) {
             return ignore_duplicates ? nullptr : DBErrorTemplates::kDuplicateID.Generate();
         }
         return DBErrorTemplates::kInsertError.Generate(mongo_err.message);
     }
-
     return nullptr;
 }
 
@@ -232,7 +249,7 @@ Error MongoDBClient::ReplaceBsonDocument(const std::string& id, const bson_p& do
 
     bson_free(opts);
     bson_free(selector);
-    bson_destroy (&reply);
+    bson_destroy(&reply);
 
     return err;
 }
@@ -242,7 +259,7 @@ Error MongoDBClient::UpdateBsonDocument(const std::string& id, const bson_p& doc
 
     bson_t* opts = BCON_NEW ("upsert", BCON_BOOL(upsert));
     bson_t* selector = BCON_NEW ("_id", BCON_UTF8(id.c_str()));
-    bson_t* update  = BCON_NEW ("$set", BCON_DOCUMENT(document.get()));
+    bson_t* update = BCON_NEW ("$set", BCON_DOCUMENT(document.get()));
 
     bson_t reply;
     Error err = nullptr;
@@ -256,13 +273,87 @@ Error MongoDBClient::UpdateBsonDocument(const std::string& id, const bson_p& doc
 
     bson_free(opts);
     bson_free(selector);
-    bson_destroy (&reply);
-    bson_destroy (update);
+    bson_destroy(&reply);
+    bson_destroy(update);
 
     return err;
 }
 
-Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates) const {
+Error MongoDBClient::GetNextId(const std::string& stream, uint64_t* id) const {
+    mongoc_find_and_modify_opts_t* opts;
+    std::string  collection_name = "auto_id_counters";
+    auto collection = mongoc_client_get_collection(client_, database_name_.c_str(), collection_name.c_str());
+    mongoc_collection_set_write_concern(collection, write_concern_);
+
+    bson_t reply;
+    bson_error_t error;
+    bson_t query = BSON_INITIALIZER;
+    bson_t* update;
+    bool success;
+    BSON_APPEND_UTF8 (&query, "_id", stream.c_str());
+    update = BCON_NEW ("$inc", "{", "curIndex", BCON_INT64(1), "}");
+    opts = mongoc_find_and_modify_opts_new ();
+    mongoc_find_and_modify_opts_set_update (opts, update);
+    if (current_session_) {
+        bson_p extra_opts{bson_new()};
+        if (!mongoc_client_session_append(current_session_, extra_opts.get(), &error)) {
+            return DBErrorTemplates::kInsertError.Generate(
+                       std::string("Could not add session to opts: ") + error.message);
+        }
+        success = mongoc_find_and_modify_opts_append(opts, extra_opts.get());
+        if (!success) {
+            return DBErrorTemplates::kInsertError.Generate(std::string(
+                    "mongoc_find_and_modify_opts_append: cannot append options"));
+        }
+    }
+    mongoc_find_and_modify_opts_set_flags(opts,
+                                          mongoc_find_and_modify_flags_t(MONGOC_FIND_AND_MODIFY_UPSERT | MONGOC_FIND_AND_MODIFY_RETURN_NEW));
+    success = mongoc_collection_find_and_modify_with_opts (
+                  collection, &query, opts, &reply, &error);
+    Error err;
+    if (success) {
+        bson_iter_t iter;
+        bson_iter_t iter_idx;
+        auto found = bson_iter_init(&iter, &reply) && bson_iter_find_descendant(&iter, "value.curIndex", &iter_idx)
+                     && BSON_ITER_HOLDS_INT64(&iter_idx);
+        if (found) {
+            *id = bson_iter_int64(&iter_idx);
+        } else {
+            err = DBErrorTemplates::kInsertError.Generate(std::string("cannot extract auto id"));
+        }
+    } else {
+//        auto str = bson_as_relaxed_extended_json(&reply, NULL);
+//        printf("%s",str);
+//        bson_free(str);
+
+        err = DBErrorTemplates::kInsertError.Generate(std::string("cannot get auto id:") + error.message );
+    }
+    bson_destroy (&reply);
+    bson_destroy (update);
+    bson_destroy (&query);
+    mongoc_find_and_modify_opts_destroy (opts);
+    mongoc_collection_destroy(collection);
+    return err;
+}
+
+Error MongoDBClient::InsertWithAutoId(const MessageMeta& file,
+                                      const std::string& collection,
+                                      uint64_t* id_inserted) const {
+    bson_error_t error;
+
+    uint64_t id;
+    auto err = GetNextId(current_collection_name_, &id);
+    if (err != nullptr) {
+        return err;
+    }
+
+    auto meta_new = file;
+    meta_new.id = id;
+    return Insert(current_collection_name_, meta_new, false, id_inserted);
+}
+
+Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& file, bool ignore_duplicates,
+                            uint64_t* id_inserted) const {
     if (!connected_) {
         return DBErrorTemplates::kNotConnected.Generate();
     }
@@ -272,12 +363,20 @@ Error MongoDBClient::Insert(const std::string& collection, const MessageMeta& fi
         return err;
     }
 
+    if (file.id == 0) {
+        return InsertWithAutoId(file, collection, id_inserted);
+    }
+
     auto document = PrepareBsonDocument(file, &err);
     if (err) {
         return err;
     }
 
-    return InsertBsonDocument(document, ignore_duplicates);
+    err = InsertBsonDocument(document, ignore_duplicates);
+    if (!err && id_inserted) {
+        *id_inserted = file.id;
+    }
+    return err;
 }
 
 MongoDBClient::~MongoDBClient() {
@@ -317,7 +416,7 @@ Error MongoDBClient::InsertMeta(const std::string& collection, const std::string
     }
 
     auto id_encoded = EncodeColName(id);
-    auto document = PrepareBsonDocument(data, (ssize_t)size, id_encoded, mode, &err);
+    auto document = PrepareBsonDocument(data, (ssize_t) size, id_encoded, mode, &err);
     if (err) {
         return err;
     }
@@ -596,7 +695,6 @@ bool MongoCollectionIsDataStream(const std::string& stream_name) {
     return stream_name.rfind(prefix, 0) == 0;
 }
 
-
 Error MongoDBClient::UpdateLastStreamInfo(const char* str, StreamInfo* info) const {
     auto collection_name = DecodeName(str);
     if (!MongoCollectionIsDataStream(collection_name)) {
@@ -686,7 +784,8 @@ Error MongoDBClient::DeleteCollection(const std::string& name) const {
     mongoc_collection_destroy(collection);
     if (!r) {
         if (error.code == 26) {
-            return DBErrorTemplates::kNoRecord.Generate("collection " + name + " not found in " + DecodeName(database_name_));
+            return DBErrorTemplates::kNoRecord.Generate(
+                       "collection " + name + " not found in " + DecodeName(database_name_));
         } else {
             return DBErrorTemplates::kDBError.Generate(std::string(error.message) + ": " + std::to_string(error.code));
         }

@@ -177,7 +177,7 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotGetFileList) {
 
 TEST_F(FolderDBConverterTests, PassesIgnoreDuplicates) {
 
-    EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(expected_collection_name, _, true)).Times(3);
+    EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(expected_collection_name, _, true, _)).Times(3);
 
     converter.IgnoreDuplicates(true);
     converter.Convert(uri, folder, db_name);
@@ -186,7 +186,7 @@ TEST_F(FolderDBConverterTests, PassesIgnoreDuplicates) {
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotImportFileListToDb) {
 
-    EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(_, _, _)).
+    EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(_, _, _, _)).
     WillOnce(testing::Return(asapo::DBErrorTemplates::kInsertError.Generate().release()));
 
     auto error = converter.Convert(uri, folder, db_name);
@@ -205,7 +205,7 @@ MATCHER_P(CompareMessageMeta, file, "") {
 TEST_F(FolderDBConverterTests, PassesFileListToInsert) {
 
     for (auto& file : message_metas) {
-        EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(expected_collection_name, CompareMessageMeta(file), _)).
+        EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(expected_collection_name, CompareMessageMeta(file), _, _)).
         WillOnce(testing::Return(nullptr));
     }
 
@@ -216,11 +216,11 @@ TEST_F(FolderDBConverterTests, PassesFileListToInsert) {
 
 TEST_F(FolderDBConverterTests, PassesFileListToInsertInParallel3by3) {
 
-    EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[0]), _)).
+    EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[0]), _, _)).
     WillOnce(testing::Return(nullptr));
-    EXPECT_CALL(*(mock_dbf->db[1]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[1]), _)).
+    EXPECT_CALL(*(mock_dbf->db[1]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[1]), _, _)).
     WillOnce(testing::Return(nullptr));
-    EXPECT_CALL(*(mock_dbf->db[2]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[2]), _)).
+    EXPECT_CALL(*(mock_dbf->db[2]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[2]), _, _)).
     WillOnce(testing::Return(nullptr));
 
     converter.SetNParallelTasks(3, false);
@@ -230,11 +230,11 @@ TEST_F(FolderDBConverterTests, PassesFileListToInsertInParallel3by3) {
 
 TEST_F(FolderDBConverterTests, PassesFileListToInsertInParallel3by2) {
 
-    EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[0]), _)).
+    EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[0]), _, _)).
     WillOnce(testing::Return(nullptr));
-    EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[1]), _)).
+    EXPECT_CALL(*(mock_dbf->db[0]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[1]), _, _)).
     WillOnce(testing::Return(nullptr));
-    EXPECT_CALL(*(mock_dbf->db[1]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[2]), _)).
+    EXPECT_CALL(*(mock_dbf->db[1]), Insert_t(expected_collection_name, CompareMessageMeta(message_metas[2]), _, _)).
     WillOnce(testing::Return(nullptr));
 
     converter.SetNParallelTasks(2, false);
@@ -244,7 +244,7 @@ TEST_F(FolderDBConverterTests, PassesFileListToInsertInParallel3by2) {
 
 TEST_F(FolderDBConverterTests, ComputesStatistics) {
 
-    EXPECT_CALL(*mock_dbf->db[0], Insert_t(_, _, false)).
+    EXPECT_CALL(*mock_dbf->db[0], Insert_t(_, _, false, _)).
     Times(message_metas.size()).
     WillRepeatedly(testing::Return(nullptr));
 

@@ -1,4 +1,4 @@
-set(TARGET_NAME meta_mongodb)
+set(TARGET_NAME mongo-meta)
 set(SOURCE_FILES meta_mongodb.cpp)
 
 

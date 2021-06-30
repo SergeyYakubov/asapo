@@ -1,5 +1,6 @@
 #define __CONSUMER_C_INTERFACE_IMPLEMENTATION__
 #include "asapo/asapo_consumer.h"
+
 //! boolean type
 typedef int AsapoBool;
 

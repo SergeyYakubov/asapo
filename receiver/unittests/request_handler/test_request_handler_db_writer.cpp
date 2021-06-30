@@ -220,7 +220,7 @@ TEST_F(DbWriterHandlerTests, CallsInsert) {
     ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_data_source);
     auto message_meta = PrepareMessageMeta();
 
-    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareMessageMeta(message_meta), false)).
+    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareMessageMeta(message_meta), false, _)).
     WillOnce(testing::Return(nullptr));
     ExpectLogger();
 
@@ -246,7 +246,7 @@ void DbWriterHandlerTests::ExpectDuplicatedID() {
     ExpectRequestParams(asapo::Opcode::kOpcodeTransferData, expected_data_source);
     auto message_meta = PrepareMessageMeta();
 
-    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareMessageMeta(message_meta), false)).
+    EXPECT_CALL(mock_db, Insert_t(expected_collection_name, CompareMessageMeta(message_meta), false, _)).
     WillOnce(testing::Return(asapo::DBErrorTemplates::kDuplicateID.Generate().release()));
 }
 
