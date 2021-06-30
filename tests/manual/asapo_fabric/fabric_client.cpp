@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     if (argc >= 4) {
         kByte = std::stoi(argv[3]);
     }
-    uint64_t count = 10;
+    int count = 10;
     if (argc >= 5) {
         count = std::stoi(argv[4]);
     }
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    size_t dataBufferSize = 1024 * kByte;
+    size_t dataBufferSize = static_cast<size_t>(1024 * kByte);
     MessageData dataBuffer = MessageData{new uint8_t[dataBufferSize]};
     std::cout << "Expected file size: " << dataBufferSize << " byte" << std::endl;
 
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     auto start = std::chrono::system_clock::now();
 
     std::cout << "Starting message loop" << std::endl;
-    for (FabricMessageId messageId = 0; messageId < count && !error; messageId++) {
+    for (FabricMessageId messageId = 0; messageId < static_cast<FabricMessageId>(count) && !error; messageId++) {
         GenericRequestHeader request{};
         memcpy(&request.message, mr->GetDetails(), sizeof(MemoryRegionDetails));
         client->Send(serverAddress, messageId, &request, sizeof(request), &error);

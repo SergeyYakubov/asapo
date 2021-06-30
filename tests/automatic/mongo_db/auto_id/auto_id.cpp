@@ -59,7 +59,7 @@ void insert(const asapo::MongoDBClient& db, const std::string& name, asapo::Mess
             fi.id = 0;
             break;
         case Mode::kUpdateCounterThenIngest:
-            fi.id = start + i + 1;
+            fi.id = start + static_cast<uint64_t>(i) + 1;
             break;
         default:
             abort();
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
         fi.timestamp = std::chrono::system_clock::now();
         fi.buf_id = 18446744073709551615ull;
         fi.source = "host:1234";
-        fi.id = args.n_messages_per_thread * i;
+        fi.id = static_cast<uint64_t>(args.n_messages_per_thread * i);
         db.Connect("127.0.0.1", db_name);
         insert(db, "stream", fi, args);
     };
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
     M_AssertTrue(messages_sent == static_cast<uint64_t>(args.n_threads * args.n_messages_per_thread));
 
     auto t2 = high_resolution_clock::now();
-    auto ms_int = duration_cast<milliseconds>(t2 - t1).count();
+    auto ms_int = static_cast<unsigned int>(duration_cast<milliseconds>(t2 - t1).count());
     printf("mode: %s, throughput %llu messages/sec with %d threads\n", args.str_mode.c_str(),
            static_cast<unsigned long long>(1000 * messages_sent / ms_int),
            args.n_threads);

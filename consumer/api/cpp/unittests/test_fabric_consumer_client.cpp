@@ -131,7 +131,7 @@ TEST_F(FabricConsumerClientTests, GetData_Error_Init) {
 
 TEST_F(FabricConsumerClientTests, GetData_Error_AddConnection) {
     ExpectInit(true);
-    ExpectAddedConnection("host:1234", false, -1);
+    ExpectAddedConnection("host:1234", false, 1);
 
     MessageData expectedMessageData;
     MessageMeta expectedInfo{};
@@ -140,7 +140,7 @@ TEST_F(FabricConsumerClientTests, GetData_Error_AddConnection) {
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
 
     // Make sure that the connection was not saved
-    ExpectAddedConnection("host:1234", false, -1);
+    ExpectAddedConnection("host:1234", false, 1);
     err = client.GetData(&expectedInfo, &expectedMessageData);
 
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));

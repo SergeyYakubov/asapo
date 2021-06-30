@@ -203,7 +203,7 @@ uint64_t NanosecsEpochFromISODate(std::string date_time) {
         date_time = date_time.substr(0, pos);
     }
 
-    std::tm tm{};
+    std::tm tm;
 
     int year, month, day, hour, minute, second;
     hour = 0;
@@ -226,8 +226,8 @@ uint64_t NanosecsEpochFromISODate(std::string date_time) {
     tm.tm_year = year - 1900;
 
     system_clock::time_point tp = system_clock::from_time_t(timegm(&tm));
-    uint64_t ns = std::chrono::time_point_cast<std::chrono::nanoseconds>(tp).
-                  time_since_epoch().count();
+    uint64_t ns = static_cast<uint64_t>(std::chrono::time_point_cast<std::chrono::nanoseconds>(tp).
+                                        time_since_epoch().count());
 
     ns = ns + uint64_t(frac * 1000000000);
 

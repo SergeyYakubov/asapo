@@ -164,8 +164,8 @@ bool RequestHandlerTcp::UpdateReceiversList() {
 }
 
 bool RequestHandlerTcp::TimeToUpdateReceiverList() {
-    uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() -
-                          last_receivers_uri_update_).count();
+    uint64_t elapsed_ms = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() -
+                                                last_receivers_uri_update_).count());
     return elapsed_ms > discovery_service__->UpdateFrequency();
 }
 

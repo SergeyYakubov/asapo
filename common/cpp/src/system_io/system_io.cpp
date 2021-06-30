@@ -7,6 +7,10 @@
 #include <algorithm>
 #include <mutex>
 
+#ifdef _WIN32
+# include <winsock2.h>
+#endif
+
 #if defined(__linux__) || defined (__APPLE__)
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -18,6 +22,8 @@
 #ifdef __APPLE__
 #include <sys/select.h>
 #endif
+
+
 
 #include "system_io.h"
 #include "asapo/preprocessor/definitions.h"
@@ -53,7 +59,7 @@ void StripBasePath(const std::string& folder, std::vector<MessageMeta>* file_lis
 }
 
 void AssignIDs(MessageMetas* file_list) {
-    int64_t id = 0;
+    uint64_t id = 0;
     for (auto& file : *file_list) {
         file.id = ++id;
     }
@@ -359,7 +365,7 @@ Error* err) const {
         return nullptr;
     }
 
-    sockaddr_in client_address{};
+    sockaddr_in client_address;
     static size_t client_address_size = sizeof(sockaddr_in);
 
     int peer_fd;
@@ -591,7 +597,7 @@ size_t SystemIO::Transfer(ssize_t (* method)(FileDescriptor, void*, size_t), Fil
             }
             return already_transferred;//Return the amount of _ensured_ transferred bytes
         }
-        already_transferred += received_amount;
+        already_transferred += static_cast<size_t>(received_amount);
     }
     *err = nullptr;
     return already_transferred;

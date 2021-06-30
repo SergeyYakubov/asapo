@@ -168,7 +168,8 @@ bson_p PrepareUpdateDocument(const uint8_t* json, Error* err) {
     }
     bson_error_t mongo_err;
     auto bson_meta =
-        bson_new_from_json(reinterpret_cast<const uint8_t*>(json_flat.c_str()), json_flat.size(), &mongo_err);
+        bson_new_from_json(reinterpret_cast<const uint8_t*>(json_flat.c_str()), static_cast<ssize_t>(json_flat.size()),
+                           &mongo_err);
     if (!bson_meta) {
         *err = DBErrorTemplates::kJsonParseError.Generate(mongo_err.message);
         return nullptr;
@@ -317,7 +318,7 @@ Error MongoDBClient::GetNextId(const std::string& stream, uint64_t* id) const {
         auto found = bson_iter_init(&iter, &reply) && bson_iter_find_descendant(&iter, "value.curIndex", &iter_idx)
                      && BSON_ITER_HOLDS_INT64(&iter_idx);
         if (found) {
-            *id = bson_iter_int64(&iter_idx);
+            *id = static_cast<uint64_t>(bson_iter_int64(&iter_idx));
         } else {
             err = DBErrorTemplates::kInsertError.Generate(std::string("cannot extract auto id"));
         }
@@ -468,10 +469,11 @@ Error MongoDBClient::InsertAsDatasetMessage(const std::string& collection, const
         return err;
     }
     auto query =
-        BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(file.id), "}", "{", "messages.dataset_substream", "{", "$ne",
-                  BCON_INT64(file.dataset_substream), "}", "}", "]");
+        BCON_NEW ("$and", "[", "{", "_id", BCON_INT64(static_cast<int64_t>(file.id)), "}", "{", "messages.dataset_substream",
+                  "{", "$ne",
+                  BCON_INT64(static_cast<int64_t>(file.dataset_substream)), "}", "}", "]");
     auto update = BCON_NEW ("$setOnInsert", "{",
-                            "size", BCON_INT64(dataset_size),
+                            "size", BCON_INT64(static_cast<int64_t>(dataset_size)),
                             "schema_version", GetDbSchemaVersion().c_str(),
                             "timestamp", BCON_INT64((int64_t) NanosecsEpochFromTimePoint(file.timestamp)),
                             "}",
@@ -511,7 +513,7 @@ Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id,
         opts = BCON_NEW ("limit", BCON_INT64(1));
         break;
     case GetRecordMode::kById:
-        filter = BCON_NEW ("_id", BCON_INT64(id));
+        filter = BCON_NEW ("_id", BCON_INT64(static_cast<int64_t>(id)));
         opts = BCON_NEW ("limit", BCON_INT64(1));
         break;
     case GetRecordMode::kLast:

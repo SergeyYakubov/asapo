@@ -150,7 +150,7 @@ void RdsTCPServerTests::ExpectReceiveRequestEof() {
 
 ACTION_P2(A_ReceiveData, op_code, expected_id) {
     ((asapo::GenericRequestHeader*)arg1)->op_code = op_code;
-    ((asapo::GenericRequestHeader*)arg1)->data_id = expected_id;
+    ((asapo::GenericRequestHeader*)arg1)->data_id = static_cast<uint64_t>(expected_id);
 }
 
 
@@ -226,7 +226,7 @@ TEST_F(RdsTCPServerTests, GetNewRequestsReadOk) {
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(requests.size(), Eq(3));
-    int i = 0;
+    size_t i = 0;
     for (auto conn : expected_client_sockets) {
         ASSERT_THAT(dynamic_cast<asapo::ReceiverDataServerRequest*>(requests[i].get()), Ne(nullptr));
         ASSERT_THAT(requests[i]->header.data_id, Eq(conn));
@@ -327,7 +327,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_Ok) {
 
 TEST_F(RdsTCPServerTests, HandleAfterError) {
     EXPECT_CALL(mock_io, CloseSocket_t(expected_client_sockets[0], _));
-    tcp_server.HandleAfterError(expected_client_sockets[0]);
+    tcp_server.HandleAfterError(static_cast<uint64_t>(expected_client_sockets[0]));
 }
 
 }

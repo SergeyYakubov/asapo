@@ -123,7 +123,7 @@ int main (int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    int i = 0;
+    uint64_t i = 0;
     while (true) {
         asapo::MessageHeader message_header;
         auto err = event_detector->GetNextEvent(&message_header);
@@ -136,7 +136,7 @@ int main (int argc, char* argv[]) {
             }
             continue;
         }
-        message_header.message_id = ++i;
+        message_header.message_id = i++;
         HandleDatasets(&message_header);
         producer->SendFile(message_header, GetEventMonConfig()->root_monitored_folder + asapo::kPathSeparator +
                            message_header.file_name, asapo::kDefaultIngestMode, "default", ProcessAfterSend);

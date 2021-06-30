@@ -5,18 +5,18 @@ endfunction()
 
 execute_process(COMMAND git describe --tags --abbrev=0
                 OUTPUT_VARIABLE ASAPO_TAG
-                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+                WORKING_DIRECTORY ..)
 string(STRIP ${ASAPO_TAG} ASAPO_TAG)
 
 execute_process(COMMAND git rev-parse --abbrev-ref HEAD
                 OUTPUT_VARIABLE BRANCH
-                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+                WORKING_DIRECTORY ..)
 string(STRIP ${BRANCH} BRANCH)
 cleanup(BRANCH)
 
 execute_process(COMMAND git rev-parse --short=10 HEAD
         OUTPUT_VARIABLE ASAPO_VERSION_COMMIT
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+        WORKING_DIRECTORY ..)
 string(STRIP ${ASAPO_VERSION_COMMIT} ASAPO_VERSION_COMMIT)
 
 if (${BRANCH} STREQUAL "master")

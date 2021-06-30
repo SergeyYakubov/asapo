@@ -42,14 +42,14 @@ SocketDescriptor TcpConnectionPool::GetFreeConnection(const std::string& source,
 SocketDescriptor TcpConnectionPool::Reconnect(SocketDescriptor sd, Error* err) {
     std::lock_guard<std::mutex> lock{mutex_};
 
-    for (size_t i = 0; i < connections_.size(); i++) {
+    for (uint64_t i = 0; i < connections_.size(); i++) {
         if (connections_[i].sd == sd) {
             auto new_sd = Connect(connections_[i].uri, err);
             if (err == nullptr) {
                 connections_[i].sd = new_sd;
                 connections_[i].in_use = true;
             } else {
-                connections_.erase(connections_.begin() + i);
+                connections_.erase(connections_.begin() + static_cast<int>(i));
             }
             return new_sd;
         }

@@ -31,7 +31,7 @@ size_t curl_write( void* ptr, size_t size, size_t nmemb, void* data_container) {
         break;
     case CurlDataMode::array:
         if (container->bytes_received + nbytes > container->array_size) {
-            return -1;
+            return 0;
         }
         memcpy(container->p_array->get() + container->bytes_received, ptr, nbytes);
         container->bytes_received += nbytes;
@@ -40,7 +40,7 @@ size_t curl_write( void* ptr, size_t size, size_t nmemb, void* data_container) {
         Error err;
         container->io->Write(container->fd, ptr, nbytes, &err);
         if (err) {
-            return -1;
+            return 0;
         }
         break;
     }

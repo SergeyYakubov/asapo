@@ -12,19 +12,19 @@ ReceiverStatistics::ReceiverStatistics(unsigned int write_interval) : Statistics
 
 StatisticsToSend ReceiverStatistics::PrepareStatisticsToSend() const noexcept {
     StatisticsToSend stat = Statistics::PrepareStatisticsToSend();
-    for (auto i = 0; i < kNStatisticEntities; i++) {
-        stat.extra_entities.push_back(ExtraEntity{kStatisticEntityNames[i], double(GetElapsedMs(StatisticEntity(i))) / stat.elapsed_ms});
+    for (size_t i = 0; i < kNStatisticEntities; i++) {
+        stat.extra_entities.push_back(ExtraEntity{kStatisticEntityNames[i], double(GetElapsedMs(StatisticEntity(i))) / static_cast<double>(stat.elapsed_ms)});
     }
     return stat;
 }
 
 uint64_t ReceiverStatistics::GetElapsedMs(StatisticEntity entity) const noexcept {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(time_counters_[entity]).count();
+    return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(time_counters_[entity]).count());
 }
 
 void ReceiverStatistics::ResetStatistics() noexcept {
     Statistics::ResetStatistics();
-    for (int i = 0; i < kNStatisticEntities; i++) {
+    for (size_t i = 0; i < kNStatisticEntities; i++) {
         time_counters_[i] = std::chrono::nanoseconds{0};
     }
 }

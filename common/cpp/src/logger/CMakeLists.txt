@@ -8,8 +8,8 @@ set(SOURCE_FILES
 
 add_library(${TARGET_NAME} OBJECT ${SOURCE_FILES})
 
-target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR}
-        ${CMAKE_SOURCE_DIR}/3d_party/spd_log/include)
+target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR})
+target_include_directories(${TARGET_NAME} SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/3d_party/spd_log/include)
 
 ################################
 # Testing
@@ -22,5 +22,6 @@ set(TEST_SOURCE_FILES ../../unittests/logger/test_logger.cpp
 link_libraries(${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 set(TEST_LIBRARIES "${TARGET_NAME};curl_http_client;system_io")
-include_directories(${ASAPO_CXX_COMMON_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3d_party/spd_log/include)
+include_directories(${ASAPO_CXX_COMMON_INCLUDE_DIR})
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/3d_party/spd_log/include)
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")

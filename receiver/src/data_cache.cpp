@@ -66,7 +66,7 @@ uint64_t DataCache::GetNextId() {
 
 bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta* meta) {
     uint64_t dist;
-    uint64_t shift = (uint8_t*) meta->addr - cache_.get();
+    uint64_t shift = static_cast<uint64_t>((uint8_t*) meta->addr - cache_.get());
     if (shift > cur_pointer_) {
         dist = shift - cur_pointer_;
     } else {
@@ -101,9 +101,9 @@ bool DataCache::CleanOldSlots(uint64_t size) {
     int64_t last_del = -1;
     bool was_intersecting = false;
     for (uint64_t i = 0; i < meta_.size(); i++) {
-        uint64_t start_position = (uint8_t*) meta_[i]->addr - cache_.get();
+        uint64_t start_position = static_cast<uint64_t>((uint8_t*) meta_[i]->addr - cache_.get());
         if (Intersects(start_position, start_position + meta_[i]->size, cur_pointer_ - size, cur_pointer_)) {
-            last_del = i;
+            last_del = static_cast<int64_t>(i);
             was_intersecting = true;
         } else {
             if (cur_pointer_ - size > 0 || was_intersecting) {
@@ -113,7 +113,7 @@ bool DataCache::CleanOldSlots(uint64_t size) {
     }
 
     for (int i = 0; i <= last_del; i++) {
-        if (meta_[i]->lock > 0) return false;
+        if (meta_[static_cast<unsigned long>(i)]->lock > 0) return false;
     }
 
     if (last_del >= 0) {

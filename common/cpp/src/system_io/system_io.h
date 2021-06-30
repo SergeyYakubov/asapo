@@ -21,7 +21,6 @@ typedef SSIZE_T ssize_t;
 #	define MSG_NOSIGNAL 0
 #endif
 
-
 namespace asapo {
 
 class SystemIO final : public IO {

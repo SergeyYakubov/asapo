@@ -112,10 +112,12 @@ TEST_F(RdsFabricServerTests, Initialize_Error_DoubleInitialize) {
 
 ACTION_P5(A_WriteToRecvAnyBuffer, op_code, expected_id, remote_mem_addr, remote_mem_length, remote_mem_key) {
     ((GenericRequestHeader*)arg2)->op_code = op_code;
-    ((GenericRequestHeader*)arg2)->data_id = expected_id;
-    ((fabric::MemoryRegionDetails*) & ((GenericRequestHeader*)arg2)->message)->addr = remote_mem_addr;
-    ((fabric::MemoryRegionDetails*) & ((GenericRequestHeader*)arg2)->message)->length = remote_mem_length;
-    ((fabric::MemoryRegionDetails*) & ((GenericRequestHeader*)arg2)->message)->key = remote_mem_key;
+    ((GenericRequestHeader*)arg2)->data_id = static_cast<uint64_t>(expected_id);
+    ((fabric::MemoryRegionDetails*) & ((GenericRequestHeader*)arg2)->message)->addr = static_cast<uint64_t>
+            (remote_mem_addr);
+    ((fabric::MemoryRegionDetails*) & ((GenericRequestHeader*)arg2)->message)->length = static_cast<uint64_t>
+            (remote_mem_length);
+    ((fabric::MemoryRegionDetails*) & ((GenericRequestHeader*)arg2)->message)->key = static_cast<uint64_t>(remote_mem_key);
 }
 
 TEST_F(RdsFabricServerTests, GetNewRequests_Ok) {

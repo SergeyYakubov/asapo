@@ -1,0 +1,20 @@
+if(BUILD_PYTHON)
+    set(BUILD_PYTHON_PACKAGES "" CACHE STRING "which python packages to build")
+    set_property(CACHE BUILD_PYTHON_PACKAGES PROPERTY STRINGS source rpm deb win)
+endif()
+
+set (CMAKE_PREFIX_PATH "${LIBCURL_DIR}")
+find_package (CURL REQUIRED)
+message (STATUS "Found cURL libraries: ${CURL_LIBRARIES}")
+message (STATUS "cURL include: ${CURL_INCLUDE_DIRS}")
+
+# python is needed anyway, even if no Python packages are build (e.g. to parse test results)
+if ("${Python_EXECUTABLE}" STREQUAL "")
+    find_package (Python COMPONENTS Interpreter Development)
+    if (NOT Python_FOUND)
+        message (FATAL "Cannot find Python")
+    endif()
+endif()
+message (STATUS "Using Python: ${Python_EXECUTABLE}")
+
+include(libfabric)

@@ -335,7 +335,8 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
             return no_data_error ? std::move(no_data_error) : std::move(err);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
+        elapsed_ms += static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>
+                                            (system_clock::now() - start).count());
     }
     return nullptr;
 }
@@ -409,7 +410,8 @@ Error ConsumerImpl::GetDataFromFile(MessageMeta* info, MessageData* data) {
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
+        elapsed_ms += static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>
+                                            (system_clock::now() - start).count());
     }
     if (err != nullptr) {
         return ConsumerErrorTemplates::kLocalIOError.Generate(err->Explain());
@@ -522,7 +524,8 @@ Error ConsumerImpl::ServiceRequestWithTimeout(const std::string& service_name,
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
+        elapsed_ms += static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>
+                                            (system_clock::now() - start).count());
     }
     return err;
 }

@@ -519,7 +519,7 @@ extern "C" {
         if (process_error(error, std::move(err)) < 0) {
             return -1;
         }
-        return retval;
+        return static_cast<int64_t>(retval);
     }
 
 //! wraps asapo::Consumer::GetDatasetById()

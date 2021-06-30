@@ -68,8 +68,8 @@ Error WaitParallelTasks(std::vector<std::future<Error>>* res) {
 
 TaskSplitParameters ComputeSplitParameters(const MessageMetas& file_list, int ntasks) {
     TaskSplitParameters parameters;
-    parameters.chunk = file_list.size() / ntasks;
-    parameters.remainder = file_list.size() % ntasks;
+    parameters.chunk = static_cast<uint64_t>(file_list.size() / static_cast<unsigned long>(ntasks));
+    parameters.remainder = static_cast<uint64_t>(file_list.size() % static_cast<unsigned long>(ntasks));
     return parameters;
 }
 
@@ -89,7 +89,7 @@ void FolderToDbImporter::ProcessNextChunk(const MessageMetas& file_list,
 }
 
 Error FolderToDbImporter::ImportFilelist(const MessageMetas& file_list) const {
-    auto split_parameters = ComputeSplitParameters(file_list, n_tasks_);
+    auto split_parameters = ComputeSplitParameters(file_list, static_cast<int>(n_tasks_));
 
     std::vector<std::future<Error>>res;
     for (unsigned int i = 0; i < n_tasks_; i++) {

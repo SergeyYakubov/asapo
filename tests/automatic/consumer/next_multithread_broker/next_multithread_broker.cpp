@@ -5,13 +5,13 @@
 #include "asapo/consumer/consumer.h"
 #include "testing.h"
 
-void Assert(std::vector<asapo::MessageMetas> message_metas, int nthreads, int nfiles) {
+void Assert(std::vector<asapo::MessageMetas> message_metas, uint64_t nthreads, int nfiles) {
     std::vector<std::string> expect, result;
     for (int i = 1; i <= nfiles; i++) {
         expect.push_back(std::to_string(i));
     }
     int nfiles_read = 0;
-    for (int i = 0; i < nthreads; i++) {
+    for (uint64_t i = 0; i < nthreads; i++) {
         nfiles_read += message_metas[i].size();
         for (const auto& fi : message_metas[i]) {
             result.push_back(fi.name);
@@ -33,7 +33,7 @@ struct Args {
     std::string server;
     std::string run_name;
     std::string token;
-    int nthreads;
+    size_t nthreads;
     int nfiles;
 };
 
@@ -44,7 +44,7 @@ Args GetArgs(int argc, char* argv[]) {
     }
     std::string server{argv[1]};
     std::string source_name{argv[2]};
-    int nthreads = std::stoi(argv[3]);
+    size_t nthreads = static_cast<size_t>(std::stoi(argv[3]));
     int nfiles = std::stoi(argv[4]);
     std::string token{argv[5]};
 
@@ -67,7 +67,7 @@ void TestAll(const Args& args) {
     auto group_id = consumer->GenerateNewGroupId(&err);
     consumer->SetTimeout(10000);
     std::vector<asapo::MessageMetas>message_metas(args.nthreads);
-    auto exec_next = [&](int i) {
+    auto exec_next = [&](size_t i) {
         asapo::MessageMeta fi;
         while ((err = consumer->GetNext(group_id, &fi, nullptr, "default")) == nullptr) {
             message_metas[i].emplace_back(fi);
@@ -76,7 +76,7 @@ void TestAll(const Args& args) {
     };
 
     std::vector<std::thread> threads;
-    for (int i = 0; i < args.nthreads; i++) {
+    for (size_t i = 0; i < args.nthreads; i++) {
         threads.emplace_back(std::thread(exec_next, i));
     }
 

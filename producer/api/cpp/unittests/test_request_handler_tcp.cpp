@@ -236,7 +236,7 @@ void RequestHandlerTcpTests::ExpectFailAuthorize(asapo::NetworkErrorCode error_c
 
 
 void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
-    int i = 0;
+    size_t i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io,
                     Send_t(expected_sd, M_CheckSendRequest(asapo::kOpcodeAuthorize, 0, 0, "",
@@ -277,7 +277,7 @@ void RequestHandlerTcpTests::ExpectOKAuthorize(bool only_once) {
 }
 
 void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
-    int i = 0;
+    size_t i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Send_t(expected_sd, M_CheckSendRequest(expected_op_code,
                                     expected_file_id,
@@ -313,7 +313,7 @@ void RequestHandlerTcpTests::ExpectFailSendHeader(bool only_once) {
 }
 
 void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTemplate& err_template, bool client_error) {
-    int i = 0;
+    size_t i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, SendFile_t(expected_sd, expected_origin_fullpath, (size_t) expected_file_size))
         .Times(1)
@@ -346,7 +346,7 @@ void RequestHandlerTcpTests::ExpectFailSendFile(const asapo::ProducerErrorTempla
 }
 
 void RequestHandlerTcpTests::ExpectFailSend(uint64_t expected_size, bool only_once) {
-    int i = 0;
+    size_t i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Send_t(expected_sd, _, (size_t) expected_size, _))
         .Times(1)
@@ -385,7 +385,7 @@ void RequestHandlerTcpTests::ExpectFailSendMetaData(bool only_once) {
 }
 
 void RequestHandlerTcpTests::ExpectFailReceive(bool only_once) {
-    int i = 0;
+    size_t i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))
         .InSequence(seq_receive[i])
@@ -468,7 +468,7 @@ void RequestHandlerTcpTests::ExpectOKSendHeader(bool only_once, asapo::Opcode op
 }
 
 void RequestHandlerTcpTests::ExpectOKConnect(bool only_once) {
-    int i = 0;
+    size_t i = 0;
     for (auto expected_address : receivers_list) {
         EXPECT_CALL(mock_io, CreateAndConnectIPTCPSocket_t(expected_address, _))
         .WillOnce(
@@ -489,7 +489,7 @@ void RequestHandlerTcpTests::ExpectOKConnect(bool only_once) {
 }
 
 void RequestHandlerTcpTests::ExpectOKReceive(bool only_once, asapo::NetworkErrorCode code, std::string message) {
-    int i = 0;
+    size_t i = 0;
     for (auto expected_sd : expected_sds) {
         EXPECT_CALL(mock_io, Receive_t(expected_sd, _, sizeof(asapo::SendResponse), _))
         .InSequence(seq_receive[i])

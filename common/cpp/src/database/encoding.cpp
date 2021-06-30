@@ -26,7 +26,7 @@ bool ShouldEscape(char c, bool db) {
 const std::string upperhex = "0123456789ABCDEF";
 
 std::string Escape(const std::string& s, bool db) {
-    auto hexCount = 0;
+    size_t hexCount = 0;
     for (size_t i = 0; i < s.size(); i++) {
         char c = s[i];
         if (ShouldEscape(c, db)) {
@@ -41,10 +41,10 @@ std::string Escape(const std::string& s, bool db) {
     std::string res;
     res.reserve(s.size() + 2 * hexCount);
     for (size_t i = 0; i < s.size(); i++) {
-        auto c = s[i];
+        char c = s[i];
         if (ShouldEscape(c, db)) {
             res.push_back('%');
-            res.push_back(upperhex[c >> 4]);
+            res.push_back(upperhex[static_cast<size_t>(c >> 4)]);
             res.push_back(upperhex[c & 15]);
         } else {
             res.push_back(c);
@@ -65,7 +65,7 @@ int decode(const char* s, char* dec) {
     unsigned int c;
 
     for (o = dec; s <= end; o++) {
-        c = *s++;
+        c = static_cast<unsigned int>(*s++);
 //        if (c == '+') c = ' ';
         if (c == '%' && (!ishex(*s++) ||
                          !ishex(*s++) ||
@@ -107,7 +107,7 @@ bool ShouldEscapeQuery(char c) {
 }
 
 std::string EscapeQuery(const std::string& s) {
-    auto count = 0;
+    size_t count = 0;
     for (size_t i = 0; i < s.size(); i++) {
         char c = s[i];
         if (ShouldEscapeQuery(c)) {

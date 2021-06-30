@@ -36,8 +36,8 @@ StatisticsToSend Statistics::PrepareStatisticsToSend() const noexcept {
 }
 
 uint64_t Statistics::GetTotalElapsedMs() const noexcept {
-    return std::chrono::duration_cast<std::chrono::milliseconds>
-           ( system_clock::now() - last_timepoint_).count();
+    return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>
+                                 (system_clock::now() - last_timepoint_).count());
 }
 
 
