@@ -53,8 +53,8 @@ void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
 }
 
 bool SendMetaData(asapo::Producer* producer) {
-
-    auto err = producer->SendMetadata("hello", &ProcessAfterSend);
+    auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kReplace, true};
+    auto err = producer->SendBeamtimeMetadata("hello", mode, &ProcessAfterSend);
     if (err) {
         std::cerr << "Cannot send metadata: " << err << std::endl;
         return false;

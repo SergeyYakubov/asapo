@@ -15,7 +15,7 @@ configure_files(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py INPUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 
 ADD_CUSTOM_TARGET(python-lib-producer ALL
-        COMMAND ${Python_EXECUTABLE} setup.py build_ext --inplace --force)
+        COMMAND ${Python_EXECUTABLE} setup.py  --quiet build_ext --inplace --force)
 
 ADD_DEPENDENCIES(python-lib-producer asapo-producer)
 

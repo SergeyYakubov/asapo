@@ -1261,7 +1261,7 @@ TEST_F(ConsumerImplTests, FileTransferReadsFileSize) {
                                                     5,
                                                     _)).WillOnce(DoAll(
                                                             SetArgPointee<5>(HttpCode::OK),
-                                                            AssignArg3(nullptr),
+                                                            AssignArg3(false),
                                                             Return(nullptr)
                                                             ));
 

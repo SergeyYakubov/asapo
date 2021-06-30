@@ -133,7 +133,8 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
 
     asapo::Error err;
     if (iterations == 0) {
-        err = producer->SendMetadata("{\"dummy_meta\":\"test\"}", &ProcessAfterMetaDataSend);
+        auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kReplace, true};
+        err = producer->SendBeamtimeMetadata("{\"dummy_meta\":\"test\"}", mode, &ProcessAfterMetaDataSend);
         if (err) {
             std::cerr << "Cannot send metadata: " << err << std::endl;
             return false;

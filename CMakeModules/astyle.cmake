@@ -7,7 +7,7 @@ if(ASTYLE_EXECUTABLE)
 		${ASTYLE_EXECUTABLE} -i
 			--exclude=${PROJECT_BINARY_DIR}
 			--recursive -n --style=google  --indent=spaces=4 --max-code-length=120
-			--max-instatement-indent=50 --pad-oper --align-pointer=type
+			--max-instatement-indent=50 --pad-oper --align-pointer=type --quiet
 			"${PROJECT_SOURCE_DIR}/*.cpp" "${PROJECT_SOURCE_DIR}/*.h"
 		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		VERBATIM	
