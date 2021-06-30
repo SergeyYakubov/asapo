@@ -12,7 +12,7 @@
 void assert_eq_int_(uint64_t expected, uint64_t got, const char *message, int line) {
     printf("asserting %s at %d\n",message,line);
     if (expected!=got) {
-        printf("%s: expected %llu got %llu at %d\n",message, expected, got,line);
+        printf("%s: expected %llu got %llu at %d\n",message, (unsigned long long)expected, (unsigned long long)got,line);
         exit(EXIT_FAILURE);
     }
 }

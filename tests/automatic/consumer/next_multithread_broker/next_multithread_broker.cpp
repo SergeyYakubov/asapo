@@ -12,7 +12,7 @@ void Assert(std::vector<asapo::MessageMetas> message_metas, uint64_t nthreads, i
     }
     int nfiles_read = 0;
     for (uint64_t i = 0; i < nthreads; i++) {
-        nfiles_read += message_metas[i].size();
+        nfiles_read += static_cast<int>(message_metas[i].size());
         for (const auto& fi : message_metas[i]) {
             result.push_back(fi.name);
         }

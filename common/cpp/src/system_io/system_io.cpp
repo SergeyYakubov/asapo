@@ -8,7 +8,8 @@
 #include <mutex>
 
 #ifdef _WIN32
-# include <winsock2.h>
+typedef long suseconds_t;
+typedef short sa_family_t;
 #endif
 
 #if defined(__linux__) || defined (__APPLE__)

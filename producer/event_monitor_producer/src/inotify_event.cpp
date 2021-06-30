@@ -9,7 +9,7 @@ InotifyEvent::InotifyEvent(const struct inotify_event* inotify_event,
 }
 
 uint32_t InotifyEvent::Length() const {
-    return sizeof(struct inotify_event) + inotify_event_->len;
+    return sizeof(struct inotify_event) + static_cast<uint32_t>(inotify_event_->len);
 }
 
 bool InotifyEvent::IsDirectoryEvent() const {

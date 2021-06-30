@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
     }
     std::cout << "Errors : " << nerrors << std::endl;
     std::cout << "Elapsed : " << duration_ms << "ms" << std::endl;
-    std::cout << "Rate : " << 1000.0f * nfiles / (duration_ms) << " Hz" << std::endl;
+    std::cout << "Rate : " << 1000.0f * static_cast<float>(nfiles) / (static_cast<float>(duration_ms)) << " Hz" << std::endl;
 
     std::cout << "Using connection type: " << ConnectionTypeToString(connectionType) << std::endl;
 

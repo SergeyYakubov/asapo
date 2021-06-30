@@ -72,7 +72,7 @@ bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta* meta) {
     } else {
         dist = cache_size_ - cur_pointer_ + shift;
     }
-    return dist < cache_size_ * keepunlocked_ratio_;
+    return dist < static_cast<uint64_t>(static_cast<float>(cache_size_) * keepunlocked_ratio_);
 }
 
 // we allow to read if it was already locked - if lock come from reading - no problems, from writing -should not happen!

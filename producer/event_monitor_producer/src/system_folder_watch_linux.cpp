@@ -199,7 +199,7 @@ Error SystemFolderWatch::ProcessInotifyEvent(const InotifyEvent& event, FilesToS
 }
 
 Error SystemFolderWatch::ReadInotifyEvents(int* bytes_read) {
-    *bytes_read = inotify__->Read(watch_fd_, buffer_.get(), kBufLen);
+    *bytes_read = static_cast<int>(inotify__->Read(watch_fd_, buffer_.get(), kBufLen));
     if (*bytes_read < 0) {
         return EventMonitorErrorTemplates::kSystemError.Generate("read from inotify fd");
     }

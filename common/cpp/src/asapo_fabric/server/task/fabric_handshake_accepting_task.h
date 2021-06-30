@@ -12,7 +12,7 @@ class FabricServerImpl;
 
 class FabricHandshakeAcceptingTask : public FabricSelfRequeuingTask {
   private:
-    FabricHandshakePayload handshake_payload_{};
+    FabricHandshakePayload handshake_payload_;
 
   public:
     explicit FabricHandshakeAcceptingTask(FabricServerImpl* server);
