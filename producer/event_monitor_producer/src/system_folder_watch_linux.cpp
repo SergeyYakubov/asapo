@@ -210,7 +210,7 @@ Error SystemFolderWatch::ProcessInotifyEvents(int bytes_in_buffer_, FilesToSend*
     int nerrors = 0;
     int nevents = 0;
     for (char* p = buffer_.get(); p < buffer_.get() + bytes_in_buffer_; ) {
-        InotifyEvent event{(struct inotify_event*) p, watched_folders_paths_};
+        InotifyEvent event{(struct inotify_event*) p};
         auto err = ProcessInotifyEvent(event, events);
         if (err) {
             GetDefaultEventMonLogger()->Error("error processing inotify event: " + err->Explain());

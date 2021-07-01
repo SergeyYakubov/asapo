@@ -501,8 +501,8 @@ Error MongoDBClient::GetRecordFromDb(const std::string& collection, uint64_t id,
     }
 
     bson_error_t mongo_err;
-    bson_t* filter;
-    bson_t* opts;
+    bson_t* filter{nullptr};
+    bson_t* opts{nullptr};
     mongoc_cursor_t* cursor;
     const bson_t* doc;
     char* str;

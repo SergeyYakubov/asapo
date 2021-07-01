@@ -2,14 +2,12 @@
 
 namespace asapo {
 
-InotifyEvent::InotifyEvent(const struct inotify_event* inotify_event,
-                           const std::map<int, std::string>& watched_folders_paths):
-    inotify_event_{inotify_event}, watched_folders_paths_{watched_folders_paths} {
-
+InotifyEvent::InotifyEvent(const struct inotify_event* inotify_event):
+    inotify_event_{inotify_event}{
 }
 
 uint32_t InotifyEvent::Length() const {
-    return sizeof(struct inotify_event) + static_cast<uint32_t>(inotify_event_->len);
+    return static_cast<uint32_t>(sizeof(struct inotify_event)) + static_cast<uint32_t>(inotify_event_->len);
 }
 
 bool InotifyEvent::IsDirectoryEvent() const {
