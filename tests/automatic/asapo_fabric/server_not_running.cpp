@@ -27,9 +27,8 @@ int main(int argc, char* argv[]) {
     auto client = factory->CreateClient(&err);
     M_AssertEq(nullptr, err, "factory->CreateClient");
 
-    auto serverAddress = client->AddServerAddress(hostname + ":" + std::to_string(port), &err);
+    client->AddServerAddress(hostname + ":" + std::to_string(port), &err);
     M_AssertEq(FabricErrorTemplates::kConnectionRefusedError, err, "client->AddServerAddress");
-    err = nullptr;
 
     return 0;
 }
