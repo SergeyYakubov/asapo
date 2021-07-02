@@ -10,21 +10,34 @@ set(SOURCE_FILES
 
 
 ################################
-# Library
+# Libraries
 ################################
-add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>
-            $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version>  $<TARGET_OBJECTS:curl_http_client> )
-
-target_include_directories(${TARGET_NAME} PUBLIC ../c/include include ${ASAPO_CXX_COMMON_INCLUDE_DIR}  ${LIBFABRIC_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
-
-IF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
-ENDIF()
-
 
 GET_PROPERTY(ASAPO_COMMON_FABRIC_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_FABRIC_LIBRARIES)
-target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
-        asapo-fabric ${ASAPO_COMMON_FABRIC_LIBRARIES})
+
+add_library(consumer_lib_objects OBJECT ${SOURCE_FILES})
+target_include_directories(consumer_lib_objects PRIVATE ../c/include include ${ASAPO_CXX_COMMON_INCLUDE_DIR} )
+target_include_directories(consumer_lib_objects SYSTEM PRIVATE ${LIBFABRIC_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
+
+
+if (BUILD_STATIC_CLIENT_LIBS)
+    add_library(${TARGET_NAME} STATIC $<TARGET_OBJECTS:consumer_lib_objects> $<TARGET_OBJECTS:asapo_fabric_objects>  $<TARGET_OBJECTS:system_io>
+            $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version>  $<TARGET_OBJECTS:curl_http_client> )
+    target_include_directories(${TARGET_NAME} PUBLIC ../c/include include ${ASAPO_CXX_COMMON_INCLUDE_DIR})
+    target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${LIBFABRIC_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
+    target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${ASAPO_COMMON_FABRIC_LIBRARIES})
+endif()
+
+if (BUILD_SHARED_CLIENT_LIBS)
+    add_library(${TARGET_NAME}_shared SHARED $<TARGET_OBJECTS:consumer_lib_objects>  $<TARGET_OBJECTS:asapo_fabric_objects> $<TARGET_OBJECTS:system_io>
+            $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version>  $<TARGET_OBJECTS:curl_http_client> )
+    target_include_directories(${TARGET_NAME}_shared PUBLIC ../c/include include ${ASAPO_CXX_COMMON_INCLUDE_DIR})
+    target_include_directories(${TARGET_NAME}_shared SYSTEM PRIVATE ${LIBFABRIC_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
+    target_link_libraries(${TARGET_NAME}_shared ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${ASAPO_COMMON_FABRIC_LIBRARIES})
+endif()
+
+
+
 
 
 ################################

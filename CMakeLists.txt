@@ -31,13 +31,15 @@ option(INSTALL_EXAMPLES "Install examples" OFF)
 
 option(STOP_BUILD_ON_WARNINGS "Stop build if compiler has warnings" OFF)
 
-
 option(BUILD_CPP_DOCS "Build the C++ documentaion with doxygen" OFF)
 option(BUILD_PYTHON_DOCS "Build the Python documentaion with sphinx" OFF)
 option(BUILD_ASAPO_SITE "Build the asapo web site" OFF)
 
 option(ENABLE_LIBFABRIC "Enables LibFabric support for RDMA transfers" OFF)
 option(ENABLE_LIBFABRIC_LOCALHOST "Emulates LibFabric stack over TCP. Only for localhost and testing purposes." OFF)
+
+option(BUILD_SHARED_CLIENT_LIBS "Build shared consumer and producer libs" ON)
+option(BUILD_STATIC_CLIENT_LIBS "Build static consumer and producer libs" ON)
 
 # includes
 

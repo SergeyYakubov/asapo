@@ -6,8 +6,7 @@ from Cython.Build import cythonize
 import numpy
 
 module = Extension("asapo_consumer", ["asapo_consumer.pyx"],
-                       extra_objects=['$<TARGET_FILE:asapo-consumer>','$<TARGET_FILE:asapo-fabric>',
-                                      '@CURL_LIBRARIES@'],
+                       extra_objects=['$<TARGET_FILE:asapo-consumer>','@CURL_LIBRARIES@'],
                        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
                        include_dirs=["@ASAPO_CXX_COMMON_INCLUDE_DIR@","@ASAPO_CONSUMER_INCLUDE_DIR@",numpy.get_include()],
                        extra_compile_args=@EXTRA_COMPILE_ARGS@,

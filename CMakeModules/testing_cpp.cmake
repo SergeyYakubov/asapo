@@ -34,7 +34,7 @@ endif ()
 #TODO: Call add_plain_unit_test in gtest
 function(add_plain_unit_test target test_source_files linktarget)
     if (BUILD_TESTS)
-        include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+        include_directories(SYSTEM ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
         link_directories(${gtest_SOURCE_DIR}/lib)
 
         add_executable(test-${target} ${test_source_files})
@@ -66,7 +66,7 @@ endfunction()
 
 function(gtest target test_source_files linktarget)
     if (BUILD_TESTS)
-        include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+        include_directories(SYSTEM ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
         link_directories(${gtest_SOURCE_DIR}/lib)
 
         FOREACH (lib ${linktarget})

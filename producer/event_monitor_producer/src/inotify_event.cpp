@@ -3,7 +3,7 @@
 namespace asapo {
 
 InotifyEvent::InotifyEvent(const struct inotify_event* inotify_event):
-    inotify_event_{inotify_event}{
+    inotify_event_{inotify_event} {
 }
 
 uint32_t InotifyEvent::Length() const {
