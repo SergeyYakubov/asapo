@@ -14,6 +14,10 @@ set (ASAPO_RECEIVER_API_VER "v0.3")
 set (ASAPO_RDS_API_VER "v0.1")
 set (DB_SCHEMA_VER "v0.1")
 
+#global settings
+
+set(ConfigPackageLocation lib/cmake/Asapo)
+
 
 # options
 
@@ -79,4 +83,6 @@ if(BUILD_EXAMPLES OR INSTALL_EXAMPLES OR BUILD_ASAPO_SITE)
 endif()
 
 add_subdirectory(docs)
+
+add_subdirectory(install)
 
