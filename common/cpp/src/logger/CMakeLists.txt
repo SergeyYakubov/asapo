@@ -19,7 +19,7 @@ target_include_directories(${TARGET_NAME} SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/3d_p
 set(TEST_SOURCE_FILES ../../unittests/logger/test_logger.cpp
         ../../unittests/logger/test_fluentd_sink.cpp)
 
-link_libraries(${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+link_libraries(CURL::libcurl ${CMAKE_THREAD_LIBS_INIT})
 
 set(TEST_LIBRARIES "${TARGET_NAME};curl_http_client;system_io")
 include_directories(${ASAPO_CXX_COMMON_INCLUDE_DIR})

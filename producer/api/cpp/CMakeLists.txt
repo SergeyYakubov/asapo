@@ -18,16 +18,15 @@ string(REPLACE "v" "" PRODUCER_CLIENT_VER ${ASAPO_PRODUCER_PROTOCOL})
 ################################
 add_library(producer_lib_objects OBJECT ${SOURCE_FILES})
 target_include_directories(producer_lib_objects PRIVATE include ${ASAPO_CXX_COMMON_INCLUDE_DIR} )
-target_include_directories(producer_lib_objects SYSTEM PRIVATE ${LIBFABRIC_INCLUDE_DIR} ${CURL_INCLUDE_DIRS})
+target_include_directories(producer_lib_objects SYSTEM PRIVATE ${LIBFABRIC_INCLUDE_DIR})
 
 if (BUILD_STATIC_CLIENT_LIBS)
     add_library(${TARGET_NAME} STATIC $<TARGET_OBJECTS:producer_lib_objects> $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:json_parser>
             $<TARGET_OBJECTS:curl_http_client> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version>)
-    target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${CURL_INCLUDE_DIRS}>)
     target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
     target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${ASAPO_CXX_COMMON_INCLUDE_DIR}>)
     target_include_directories(${TARGET_NAME} INTERFACE $<INSTALL_INTERFACE:include>)
-    target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(${TARGET_NAME} CURL::libcurl ${CMAKE_THREAD_LIBS_INIT})
     #install
     install(TARGETS  ${TARGET_NAME} EXPORT AsapoProducerStaticTarget
             LIBRARY DESTINATION lib
@@ -49,10 +48,9 @@ endif()
 if (BUILD_SHARED_CLIENT_LIBS)
     add_library(${TARGET_NAME}_shared SHARED $<TARGET_OBJECTS:producer_lib_objects> $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:json_parser>
             $<TARGET_OBJECTS:curl_http_client> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version>)
-    target_include_directories(${TARGET_NAME}_shared SYSTEM PRIVATE ${CURL_INCLUDE_DIRS})
     target_include_directories(${TARGET_NAME}_shared PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${ASAPO_CXX_COMMON_INCLUDE_DIR})
 
-    target_link_libraries(${TARGET_NAME}_shared ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(${TARGET_NAME}_shared CURL::libcurl ${CMAKE_THREAD_LIBS_INIT})
     IF(NOT WIN32)
         set_target_properties(${TARGET_NAME}_shared PROPERTIES OUTPUT_NAME ${TARGET_NAME})
         set_target_properties(${TARGET_NAME}_shared PROPERTIES VERSION ${PRODUCER_CLIENT_VER}

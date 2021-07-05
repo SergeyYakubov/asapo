@@ -1,7 +1,9 @@
 include(CMakeFindDependencyMacro)
+
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/Modules/" ${CMAKE_MODULE_PATH})
+
 find_dependency(CURL REQUIRED)
 find_dependency(Threads REQUIRED)
-
 
 set(_supported_components Consumer Producer)
 
