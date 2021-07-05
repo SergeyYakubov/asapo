@@ -20,7 +20,7 @@ install(
 
 install(
         FILES
-        ${PROJECT_SOURCE_DIR}/CMakeModules/FindCurl.cmake
+        ${PROJECT_SOURCE_DIR}/CMakeModules/FindCURL.cmake
         DESTINATION
         ${ConfigPackageLocation}/Modules
 )
