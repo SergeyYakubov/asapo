@@ -3,8 +3,7 @@
 
 #ifndef __CONSUMER_C_INTERFACE_IMPLEMENTATION__
 typedef int AsapoBool;
-
-typedef void* AsapoConsumerHandle;
+#include <asapo/common_c.h>
 typedef void* AsapoSourceCredentialsHandle;
 typedef void* AsapoErrorHandle;
 typedef void* AsapoMessageMetaHandle;

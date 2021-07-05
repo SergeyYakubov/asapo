@@ -1,28 +1,10 @@
 #define __CONSUMER_C_INTERFACE_IMPLEMENTATION__
 #include "asapo/asapo_consumer.h"
+#include "asapo/common/internal/asapo_common_c_glue.h"
 
 //! boolean type
 typedef int AsapoBool;
 
-class AsapoHandle {
-  public:
-    virtual ~AsapoHandle() {};
-};
-
-template<class T>
-class AsapoHandlerHolder final : public AsapoHandle {
-  public:
-    AsapoHandlerHolder(bool manage_memory = true) : handle{nullptr}, manage_memory_{manage_memory} {};
-    AsapoHandlerHolder(T* handle_i, bool manage_memory = true) : handle{handle_i}, manage_memory_{manage_memory} {};
-    ~AsapoHandlerHolder() override {
-        if (!manage_memory_) {
-            handle.release();
-        }
-    }
-    std::unique_ptr<T> handle{nullptr};
-  protected:
-    bool manage_memory_{true};
-};
 
 //! handle for an asapo consumer
 /// created by asapo_create_consumer()

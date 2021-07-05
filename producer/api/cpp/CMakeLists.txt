@@ -7,7 +7,8 @@ set(SOURCE_FILES
         src/request_handler_filesystem.cpp
         src/receiver_discovery_service.cpp
         src/receiver_data_server_request_handler_factory.cpp
-        src/producer_request.cpp)
+        src/producer_request.cpp
+				src/producer_c_glue.cpp)
 
 
 ################################
