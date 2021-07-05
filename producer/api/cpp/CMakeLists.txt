@@ -78,6 +78,8 @@ if (BUILD_SHARED_CLIENT_LIBS)
             )
 endif()
 
+install(DIRECTORY include/ DESTINATION include)
+
 
 ################################
 # Testing
@@ -96,7 +98,3 @@ set(TEST_LIBRARIES "${TARGET_NAME}")
 
 
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")
-
-install(TARGETS ${TARGET_NAME} DESTINATION lib)
-
-install(DIRECTORY include/ DESTINATION include)

@@ -26,8 +26,8 @@ target_include_directories(consumer_lib_objects SYSTEM PRIVATE ${LIBFABRIC_INCLU
 if (BUILD_STATIC_CLIENT_LIBS)
     add_library(${TARGET_NAME} STATIC $<TARGET_OBJECTS:consumer_lib_objects>  $<TARGET_OBJECTS:asapo_fabric_objects> $<TARGET_OBJECTS:system_io>
             $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version>  $<TARGET_OBJECTS:curl_http_client> )
-    target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${LIBFABRIC_INCLUDE_DIR}>)
-    target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${CURL_INCLUDE_DIRS}>)
+    target_include_directories(${TARGET_NAME} SYSTEM PUBLIC $<BUILD_INTERFACE:${LIBFABRIC_INCLUDE_DIR}>)
+    target_include_directories(${TARGET_NAME} SYSTEM PUBLIC $<BUILD_INTERFACE:${CURL_INCLUDE_DIRS}>)
     target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
     target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../c/include>)
     target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${ASAPO_CXX_COMMON_INCLUDE_DIR}>)
@@ -86,6 +86,7 @@ if (BUILD_SHARED_CLIENT_LIBS)
             )
 endif()
 
+install(DIRECTORY include/ DESTINATION include)
 
 ################################
 # Testing

@@ -19,7 +19,7 @@ target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR}
 set(TEST_SOURCE_FILES ../../unittests/json_parser/test_json_parser.cpp)
 
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")
-include_directories(${ASAPO_CXX_COMMON_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3d_party/rapidjson/include)
+include_directories(${ASAPO_CXX_COMMON_INCLUDE_DIR})
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/3d_party/rapidjson/include)
 
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")
