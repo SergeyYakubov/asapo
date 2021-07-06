@@ -2,16 +2,10 @@
 #define __CONSUMER_C_H__
 
 #ifndef __CONSUMER_C_INTERFACE_IMPLEMENTATION__
-typedef int AsapoBool;
 #include <asapo/common_c.h>
-typedef void* AsapoSourceCredentialsHandle;
-typedef void* AsapoErrorHandle;
+typedef void* AsapoConsumerHandle;
 typedef void* AsapoMessageMetaHandle;
 typedef void* AsapoMessageMetasHandle;
-typedef void* AsapoMessageDataHandle;
-typedef void* AsapoStringHandle;
-typedef void* AsapoStreamInfoHandle;
-typedef void* AsapoStreamInfosHandle;
 typedef void* AsapoIdListHandle;
 typedef void* AsapoDataSetHandle;
 typedef void* AsapoPartialErrorDataHandle;
@@ -52,8 +46,9 @@ enum AsapoNetworkConnectionType {
     kAsapoTcp,
     kFabric
 };
-void asapo_error_explain(const AsapoErrorHandle error, char* buf, size_t max_size);
+
 enum AsapoConsumerErrorType asapo_error_get_type(const AsapoErrorHandle error);
+
 
 AsapoConsumerHandle asapo_create_consumer(const char* server_name,
                                           const char* source_path,
@@ -61,11 +56,8 @@ AsapoConsumerHandle asapo_create_consumer(const char* server_name,
                                           AsapoSourceCredentialsHandle source,
                                           AsapoErrorHandle* error);
 
-AsapoBool asapo_is_error(AsapoErrorHandle err);
 
 AsapoStringHandle asapo_consumer_generate_new_group_id(AsapoConsumerHandle consumer, AsapoErrorHandle* err);
-const char* asapo_string_c_str(const AsapoStringHandle str);
-size_t asapo_string_size(const AsapoStringHandle str);
 
 void asapo_consumer_set_timeout(AsapoConsumerHandle consumer, uint64_t timeout_ms);
 int asapo_consumer_reset_last_read_marker(AsapoConsumerHandle consumer,
@@ -107,9 +99,6 @@ AsapoStreamInfosHandle asapo_consumer_get_stream_list(AsapoConsumerHandle consum
         const char* from,
         enum AsapoStreamFilter filter,
         AsapoErrorHandle* error);
-AsapoStreamInfoHandle asapo_stream_infos_get_item(const AsapoStreamInfosHandle infos,
-                                                  size_t index);
-size_t asapo_stream_infos_get_size(const AsapoStreamInfosHandle infos);
 
 int asapo_consumer_delete_stream(AsapoConsumerHandle consumer,
                                  const char* stream,
@@ -182,14 +171,6 @@ const char* asapo_message_meta_get_metadata(const AsapoMessageMetaHandle md);
 uint64_t asapo_message_meta_get_buf_id(const AsapoMessageMetaHandle md);
 uint64_t asapo_message_meta_get_dataset_substream(const AsapoMessageMetaHandle md);
 
-uint64_t asapo_stream_info_get_last_id(const AsapoStreamInfoHandle info);
-const char* asapo_stream_info_get_name(const AsapoStreamInfoHandle info);
-AsapoBool asapo_stream_info_get_ffinished(const AsapoStreamInfoHandle info);
-const char* asapo_stream_info_get_next_stream(const AsapoStreamInfoHandle info);
-void asapo_stream_info_get_timestamp_created(const AsapoStreamInfoHandle info,
-                                             struct timespec* stamp);
-void asapo_stream_info_get_timestamp_last_entry(const AsapoStreamInfoHandle info,
-                                                struct timespec* stamp);
 
 uint64_t asapo_dataset_get_id(const AsapoDataSetHandle set);
 uint64_t asapo_dataset_get_expected_size(const AsapoDataSetHandle set);
@@ -212,8 +193,5 @@ uint64_t asapo_consumer_error_get_id(const AsapoConsumerErrorDataHandle error_pa
 uint64_t asapo_consumer_error_get_id_max(const AsapoConsumerErrorDataHandle error_payload);
 const char* asapo_consumer_error_get_next_stream(const AsapoConsumerErrorDataHandle error_payload);
 
-
-void asapo_free_handle(void** handle);
-void* asapo_new_handle();
 
 #endif

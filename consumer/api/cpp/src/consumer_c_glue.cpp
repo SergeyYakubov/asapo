@@ -13,18 +13,6 @@ typedef int AsapoBool;
 /// \sa asapo::Consumer
 typedef AsapoHandlerHolder<asapo::Consumer>* AsapoConsumerHandle;
 
-//! handle for credentials to access a source from a consumer
-/// created by asapo_create_source_credentials()
-/// free after use with asapo_free_handle()
-/// \sa asapo::SourceCredentials
-typedef AsapoHandlerHolder<asapo::SourceCredentials>* AsapoSourceCredentialsHandle;
-
-//! handle for an asapo error
-/// needs to be cleared after use with asapo_free_handle()
-/// text version of an error: asapo_error_explain()
-/// enum value of the error: asapo_error_get_type(), \sa ::AsapoErrorType asapo::ConsumerErrorType
-typedef AsapoHandlerHolder<asapo::ErrorInterface>* AsapoErrorHandle;
-
 //! handle for metadata of a message
 /// create with asapo_new_handle()
 /// free after use with asapo_free_handle()
@@ -38,28 +26,7 @@ typedef AsapoHandlerHolder<asapo::MessageMeta>* AsapoMessageMetaHandle;
 /// \sa asapo::MessageMetas
 typedef AsapoHandlerHolder<asapo::MessageMetas>* AsapoMessageMetasHandle;
 
-//! handle for data recieved by the consumer
-/// set as outout parameter via asapo_consumer_get_next(), asapo_consumer_get_last()
-/// free after use with asapo_free_handle()
-/// access to the data is granted via  asapo_message_data_get_as_chars()
-typedef AsapoHandlerHolder<uint8_t[]>* AsapoMessageDataHandle;
 
-//! handle for string return types
-/// return type of several functions
-/// free after use with asapo_free_handle()
-/// a const pointer to the content can be obtained with asapo_string_c_str()
-typedef AsapoHandlerHolder<std::string>* AsapoStringHandle;
-
-//! handle for info about a stream,
-/// may be set via asapo_stream_infos_get_info()
-/// \sa asapo::StreamInfo asapo_stream_info_get_last_id() asapo_stream_info_get_name() asapo_stream_info_get_ffinished()  asapo_stream_info_get_next_stream()  asapo_stream_info_get_timestamp_created() asapo_stream_info_get_timestamp_last_entry()
-typedef AsapoHandlerHolder<asapo::StreamInfo>* AsapoStreamInfoHandle;
-
-//! handle for a set of stream infos
-/// touch only with proper functions and use asapo_free_handle() to delete,
-/// created by asapo_consumer_get_stream_list()
-/// \sa asapo_free_handle() asapo_stream_infos_get_item() asapo_stream_infos_get_size()
-typedef AsapoHandlerHolder<asapo::StreamInfos>* AsapoStreamInfosHandle;
 
 //! handle for message id lists
 /// touch only with proper functions and use asapo_free_handle() to delete,
@@ -86,36 +53,9 @@ typedef AsapoHandlerHolder<asapo::ConsumerErrorData>* AsapoConsumerErrorDataHand
 #include <algorithm>
 
 template<typename t>
-constexpr bool operator==(unsigned lhs, t rhs) {
-    return lhs == static_cast<typename std::underlying_type<t>::type>(rhs);
+constexpr bool operator==(const unsigned int& lhs, const t& rhs) {
+    return lhs == static_cast<typename std::make_unsigned<typename std::underlying_type<t>::type>::type>(rhs);
 }
-
-int process_error(AsapoErrorHandle* error, asapo::Error err,
-                  const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr) {
-    int retval = (err == nullptr || (p_exclude_err_template != nullptr && err == *p_exclude_err_template)) ? 0 : -1;
-    if (error == nullptr) {
-        return retval;
-    }
-    if (*error == nullptr) {
-        *error = new AsapoHandlerHolder<asapo::ErrorInterface> {err.release()};
-    } else {
-        (*error)->handle = std::move(err);
-    }
-    return retval;
-}
-
-AsapoHandle* handle_or_null(AsapoHandle* handle, AsapoErrorHandle* error, asapo::Error err,
-                            const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr) {
-    if (process_error(error, std::move(err), p_exclude_err_template) < 0) {
-        if (handle != nullptr) {
-            delete handle;
-        }
-        return nullptr;
-    } else {
-        return handle;
-    }
-}
-
 
 #define dataGetterStart \
     asapo::MessageData d; \
@@ -169,19 +109,6 @@ extern "C" {
         return err != nullptr && err->handle != nullptr;
     }
 
-/// \copydoc asapo::ErrorInterface::Explain()
-/// \param[out] buf will be filled with the explanation
-/// \param[in] maxSize max size of buf in bytes
-    void asapo_error_explain(const AsapoErrorHandle error, char* buf, size_t maxSize) {
-        if (error->handle) {
-            strncpy(buf, error->handle->Explain().c_str(), maxSize - 1);
-            buf[maxSize] = '\0';
-        } else {
-            static std::string msg("no error");
-            std::copy_n(msg.begin(), std::max(msg.size(), maxSize), buf);
-            buf[std::max(maxSize - 1, msg.size())] = '\0';
-        }
-    }
 
     enum AsapoConsumerErrorType asapo_error_get_type(const AsapoErrorHandle error) {
         auto consumer_err =
@@ -193,6 +120,7 @@ extern "C" {
             return kUnknownError;
         }
     }
+
 
 //! creata a consumer
 /// \copydoc asapo::ConsumerFactory::CreateConsumer
@@ -227,18 +155,6 @@ extern "C" {
         return static_cast<AsapoStringHandle>(handle_or_null(retval, error, std::move(err)));
     }
 
-//! give a pointer to the content of the asapoString
-/// \param[in] str the handle of the asapoString in question
-/// \return const char pointer to the content
-    const char* asapo_string_c_str(const AsapoStringHandle str) {
-        return str->handle->c_str();
-    }
-//! give the size of an asapoString
-/// \param[in] str the handle of the asapoString in question
-/// \return the number of bytes in the string , not counting the final nul byte.
-    size_t asapo_string_size(const AsapoStringHandle str) {
-        return str->handle->size();
-    }
 
 //! wraps asapo::Consumer::SetTimeout()
 /// \copydoc asapo::Consumer::SetTimeout()
@@ -340,7 +256,9 @@ extern "C" {
 //! wraps asapo::Consumer::CurrentConnectionType()
 /// \copydoc asapo::Consumer::CurrentConnectionType()
 /// \param[in] consumer the handle of the consumer concerned
-    enum AsapoNetworkConnectionType asapo_consumer_current_connection_type(AsapoConsumerHandle consumer);
+    enum AsapoNetworkConnectionType asapo_consumer_current_connection_type(AsapoConsumerHandle consumer) {
+        return static_cast<AsapoNetworkConnectionType>(consumer->handle->CurrentConnectionType());
+    }
 
 
 //! get list of streams, wraps asapo::Consumer::GetStreamList()
@@ -364,21 +282,6 @@ extern "C" {
         return static_cast<AsapoStreamInfosHandle>(handle_or_null(retval, error, std::move(err)));
     }
 
-//! get one stream info from a stream infos handle
-/// \param[in] infos handle for stream infos
-/// \param[in] index index od info to get, starts at 0
-/// \return handle to stream info
-    AsapoStreamInfoHandle asapo_stream_infos_get_item(const AsapoStreamInfosHandle infos,
-                                                      size_t index) {
-        return new AsapoHandlerHolder<asapo::StreamInfo> {&(infos->handle->at(index)), false};
-    }
-
-//! get size (number of elements) of a stream infos handle
-/// \param[in] infos handle for stream infos
-/// \return number of elements in the handle
-    size_t asapo_stream_infos_get_size(const AsapoStreamInfosHandle infos) {
-        return infos->handle->size();
-    }
 
 //! wraps asapo::Consumer::DeleteStream()
 /// \copydoc asapo::Consumer::DeleteStream()
@@ -592,25 +495,6 @@ extern "C" {
         consumer->handle->SetResendNacs(resend, delay_ms, resend_attempts);
     }
 
-//! give acess to data
-/// \param[in] data the handle of the data
-/// \return const char pointer to the data blob, valid until deletion or reuse of data
-    const char* asapo_message_data_get_as_chars(const AsapoMessageDataHandle data) {
-        return reinterpret_cast<const char*>(data->handle.get());
-    }
-
-//! wraps asapo::SourceCredentials::SourceCredentials()
-/// \copydoc asapo::SourceCredentials::SourceCredentials()
-    AsapoSourceCredentialsHandle asapo_create_source_credentials(enum AsapoSourceType type,
-            const char* beamtime,
-            const char* beamline,
-            const char* data_source,
-            const char* token) {
-        auto retval = new asapo::SourceCredentials(static_cast<asapo::SourceType>(type),
-                                                   beamtime, beamline,
-                                                   data_source, token);
-        return new AsapoHandlerHolder<asapo::SourceCredentials> {retval};
-    }
 
 //! get name from the metadata object
 /// \param[in] md handle of the metadata object
@@ -671,50 +555,6 @@ extern "C" {
         return md->handle->dataset_substream;
     }
 
-//! get last id from the stream info object
-/// \param[in] info handle of the stream info object
-/// \return last id
-/// \sa asapo::StreamInfo
-    uint64_t asapo_stream_info_get_last_id(const AsapoStreamInfoHandle info) {
-        return info->handle->last_id;
-    }
-//! get stream name from the stream info object
-/// \param[in] info handle of the stream info object
-/// \return  pointer to the name string, valid until asapoStreamInfos object is deleted
-/// \sa asapo::StreamInfo
-    const char* asapo_stream_info_get_name(const AsapoStreamInfoHandle info) {
-        return info->handle->name.c_str();
-    }
-//! get finished state from the stream info object
-/// \param[in] info handle of the stream info object
-/// \return finised state, 0 = false
-/// \sa asapo::StreamInfo
-    AsapoBool asapo_stream_info_get_ffinished(const AsapoStreamInfoHandle info) {
-        return info->handle->finished;
-    }
-//! get next stream name? from the stream info object
-/// \param[in] info handle of the stream info object
-/// \return  pointer to the name string, valid until asapoStreamInfos object is deleted
-/// \sa asapo::StreamInfo
-    const char* asapo_stream_info_get_next_stream(const AsapoStreamInfoHandle info) {
-        return info->handle->next_stream.c_str();
-    }
-//! get creation time from the stream info object
-/// \param[in] info handle of the stream info object
-/// \param[out] stamp creation timestamp as timespec
-/// \sa asapo::StreamInfo
-    void asapo_stream_info_get_timestamp_created(const AsapoStreamInfoHandle info,
-                                                 struct timespec* stamp) {
-        time_point_to_time_spec(info->handle->timestamp_created, stamp);
-    }
-//! get time of last entry from the stream info object
-/// \param[in] info handle of the stream info object
-/// \param[out] stamp last entry timestamp as timespec
-/// \sa asapo::StreamInfo
-    void asapo_stream_info_get_timestamp_last_entry(const AsapoStreamInfoHandle info,
-                                                    struct timespec* stamp) {
-        time_point_to_time_spec(info->handle->timestamp_lastentry, stamp);
-    }
 
 //! get id from data set object
 /// \param[in] set handle of the data set object
