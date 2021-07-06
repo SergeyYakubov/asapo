@@ -5,7 +5,7 @@
 
 using namespace asapo;
 
-int main(int argc, char* argv[]) {
+int main() {
 
     auto logger = CreateDefaultLoggerBin("test_logger");
 

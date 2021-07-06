@@ -11,9 +11,8 @@
 
 namespace asapo {
 
-RequestHandlerFilesystem::RequestHandlerFilesystem(std::string destination_folder, uint64_t thread_id):
-    io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()}, destination_folder_{std::move(destination_folder)},
-    thread_id_{thread_id} {
+RequestHandlerFilesystem::RequestHandlerFilesystem(std::string destination_folder, uint64_t ):
+    io__{GenerateDefaultIO()}, log__{GetDefaultProducerLogger()}, destination_folder_{std::move(destination_folder)} {
 }
 
 bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request, bool* retry) {
@@ -32,7 +31,8 @@ bool RequestHandlerFilesystem::ProcessRequestUnlocked(GenericRequest* request, b
     err = io__->WriteDataToFile(destination_folder_, request->header.message, (uint8_t*)producer_request->data.get(),
                                 (size_t)request->header.data_size, true, true);
     if (producer_request->callback) {
-        producer_request->callback(RequestCallbackPayload{request->header, std::move(producer_request->data),""}, std::move(err));
+        producer_request->callback(RequestCallbackPayload{request->header, std::move(producer_request->data), ""}, std::move(
+                                       err));
     }
     *retry = false;
     return true;

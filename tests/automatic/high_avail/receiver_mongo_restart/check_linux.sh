@@ -28,7 +28,6 @@ function start_mongo {
 }
 
 
-database_name=db_test
 beamtime_id=asapo_test
 beamline=test
 
@@ -37,41 +36,29 @@ facility=test_facility
 year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
 
-
-
 Cleanup() {
 	echo cleanup
+	set +e
 	rm -rf ${receiver_root_folder}
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop authorizer
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}_detector
-    kill_mongo
+  echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}_detector
+  kill_mongo
+  sed -i 's/27016/27017/g' discovery.json.tpl
+  nomad stop discovery
+  nomad run discovery.nmd
 }
 
 start_mongo
 wait_mongo
 
 
-# create db before consumer starts reading it. todo: git rid of it
-echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo --port 27016 ${beamtime_id}_detector
-
 sed -i 's/27017/27016/g' discovery.json.tpl
-
-
-nomad run authorizer.nmd
-nomad run nginx.nmd
-nomad run receiver_tcp.nmd
+nomad stop discovery
 nomad run discovery.nmd
 
 mkdir -p ${receiver_folder}
 
-
-sleep 1
-
 nfiles=1000
+nrecords=1001 # nfiles + stream finished flag
 
 $1 localhost:8400 ${beamtime_id} 100 $nfiles 1  0 200 &
 
@@ -83,12 +70,12 @@ start_mongo
 
 wait
 
-echo "db.data_default.validate(true)" | mongo --port 27016 ${beamtime_id}_detector
+echo "db.data_default.validate({full: true})" | mongo --port 27016 ${beamtime_id}_detector
 
 echo processed files:
 echo "db.data_default.count()" | mongo --port 27016 ${beamtime_id}_detector
 
 
-echo "db.data_default.count()" | mongo --port 27016 ${beamtime_id}_detector | grep $nfiles
+echo "db.data_default.count()" | mongo --port 27016 ${beamtime_id}_detector | grep $nrecords
 
 

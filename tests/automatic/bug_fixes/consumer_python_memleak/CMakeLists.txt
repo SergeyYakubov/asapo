@@ -1,8 +1,6 @@
 set(TARGET_NAME consumer_python_memleak)
 
 
-prepare_asapo()
-
 if (UNIX)
     get_target_property(PYTHON_LIBS python-lib-consumer BINARY_DIR)
 else()

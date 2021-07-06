@@ -1,8 +1,6 @@
 set(TARGET_NAME python_deadlock_producer)
 
 
-prepare_asapo()
-
 find_package (Python3 REQUIRED)
 
 if (UNIX)

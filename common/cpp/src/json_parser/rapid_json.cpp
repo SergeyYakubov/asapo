@@ -211,4 +211,43 @@ Error RapidJson::GetArrayRawStrings(const std::string& name, std::vector<std::st
 
 }
 
+
+void AddVals(const std::string& prefix, const std::string& separator, Document& d, Document::AllocatorType& a,
+             Value* vals, Value* obj) {
+    for (auto& m : obj->GetObject()) {
+        std::string name;
+        if (!prefix.empty()) {
+            name = prefix + separator + m.name.GetString();
+        } else {
+            name = m.name.GetString();
+        }
+        if (m.value.IsObject()) {
+            AddVals(name, separator, d, a, vals, &m.value);
+            return;
+        }
+        Value s;
+        s.SetString(name.c_str(), static_cast<SizeType>(name.size()), a);
+        vals->AddMember(s, Value(m.value, a), d.GetAllocator());
+    }
+}
+
+Error RapidJson::GetFlattenedString(const std::string& prefix, const std::string& separator,
+                                    std::string* val) const noexcept {
+    Document d;
+    Document::AllocatorType& a = d.GetAllocator();
+    Value vals(kObjectType);
+
+    if (Error err = LazyInitialize()) {
+        return err;
+    }
+
+    AddVals(prefix, separator, d, a, &vals, object_p_);
+
+    StringBuffer buffer;
+    Writer<StringBuffer> writer(buffer);
+    vals.Accept(writer);
+    val->assign(buffer.GetString());
+    return nullptr;
+}
+
 }

@@ -12,25 +12,15 @@ trap Cleanup EXIT
 
 Cleanup() {
     set +e
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop discovery
-    nomad stop authorizer
-    nomad stop broker
 	echo "db.dropDatabase()" | mongo ${database_name}
 }
-
-nomad run nginx.nmd
-nomad run discovery.nmd
-nomad run authorizer.nmd
-nomad run broker.nmd
 
 for i in `seq 1 3`;
 do
 	echo 'db.data_default.insert({"_id":'$i',"size":100,"name":"'$i'","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}})' | mongo ${database_name}
 done
 
-echo 'db.meta.insert({"_id":0,"meta_test":"test"})' | mongo ${database_name}
+echo 'db.meta.insert({"_id":"bt","meta":{"meta_test":"test"}})' | mongo ${database_name}
 
 sleep 1
 

@@ -21,6 +21,16 @@
 
 # Building
 
+## Prepare dependencies
+
+  - cd 3d_party/mongo-c-driver
+  - ./install.sh $(pwd)
+  - sudo make -C mongo-c-driver-1.15.2 install
+
+  - back in the aspo-dir:
+  - mkdir build
+  - (cd build; cmake ..)
+
 ## With documentation
 
 Need Doxygen >= [1.8.10](https://github.com/doxygen/doxygen/releases/tag/Release_1_8_11)

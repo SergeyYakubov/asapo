@@ -150,7 +150,7 @@ class FabricContextImpl : public FabricContext {
             *error = FabricErrorTemplates::kConnectionRefusedError.Generate();
             break;
         default:
-            *error = ErrorFromFabricInternal("HandleRawFiCommand", ret);
+            *error = ErrorFromFabricInternal("HandleRawFiCommand", static_cast<int>(ret));
             break;
         }
     }

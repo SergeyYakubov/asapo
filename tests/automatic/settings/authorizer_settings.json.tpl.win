@@ -1,6 +1,8 @@
 {
   "Port": {{ env "NOMAD_PORT_authorizer" }},
   "LogLevel":"debug",
+  "RootBeamtimesFolder":"c:\\tmp\\asapo\\asap3",
+  "CurrentBeamlinesFolder":"c:\\tmp\\asapo\\beamline",
   "AlwaysAllowedBeamtimes":[{"beamtimeId":"asapo_test","beamline":"test","corePath":"c:\\tmp\\asapo\\receiver\\files\\test_facility\\gpfs\\test\\2019\\data\\asapo_test",
   "beamline-path":"c:\\tmp\\asapo\\receiver\\files\\beamline\\test\\current"},
   {"beamtimeId":"asapo_test1","beamline":"test1","corePath":"c:\\tmp\\asapo\\receiver\\files\\test_facility\\gpfs\\test1\\2019\\data\\asapo_test1"},

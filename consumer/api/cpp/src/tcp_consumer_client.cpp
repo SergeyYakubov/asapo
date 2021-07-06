@@ -23,7 +23,8 @@ Error TcpConsumerClient::SendGetDataRequest(SocketDescriptor sd, const MessageMe
     return err;
 }
 
-Error TcpConsumerClient::ReconnectAndResendGetDataRequest(SocketDescriptor* sd, const MessageMeta* info) const noexcept {
+Error TcpConsumerClient::ReconnectAndResendGetDataRequest(SocketDescriptor* sd,
+        const MessageMeta* info) const noexcept {
     Error err;
     *sd = connection_pool__->Reconnect(*sd, &err);
     if (err) {
@@ -46,14 +47,16 @@ Error TcpConsumerClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
     if (response.error_code) {
         switch (response.error_code) {
         case kNetErrorNotSupported:
-                io__->CloseSocket(sd, nullptr);
-                connection_pool__->ReleaseConnection(sd);
-                break;
+            io__->CloseSocket(sd, nullptr);
+            connection_pool__->ReleaseConnection(sd);
+            break;
         case kNetErrorWrongRequest:
             io__->CloseSocket(sd, nullptr);
             break;
         case kNetErrorNoData:
             connection_pool__->ReleaseConnection(sd);
+            break;
+        default:
             break;
         }
         return ConvertRdsResponseToError(response.error_code);
@@ -61,7 +64,8 @@ Error TcpConsumerClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
     return nullptr;
 }
 
-Error TcpConsumerClient::QueryCacheHasData(SocketDescriptor* sd, const MessageMeta* info, bool try_reconnect) const noexcept {
+Error TcpConsumerClient::QueryCacheHasData(SocketDescriptor* sd, const MessageMeta* info,
+                                           bool try_reconnect) const noexcept {
     Error err;
     err = SendGetDataRequest(*sd, info);
     if (err && try_reconnect) {

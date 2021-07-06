@@ -28,8 +28,9 @@ class GenericRequest {
         if (timeout_ms_ == 0) {
             return false;
         }
-        uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() -
-                              created_at_).count();
+        uint64_t elapsed_ms = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>
+                                                    (std::chrono::system_clock::now() -
+                                                     created_at_).count());
         return elapsed_ms > timeout_ms_;
     }
 

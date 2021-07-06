@@ -20,13 +20,12 @@ void exit_if_error(std::string error_string, const asapo::Error& err) {
     }
 }
 
-std::string format_string(uint32_t in, std::string format="%05d")
-{
+std::string format_string(uint32_t in, std::string format = "%05d") {
     if(in > 99999)
         in = 0;
 
     char buf[6];
-    snprintf(buf,sizeof(buf),format.c_str(),in);
+    snprintf(buf, sizeof(buf), format.c_str(), in);
     return std::string(buf);
 
 }
@@ -39,10 +38,10 @@ int main(int argc, char* argv[]) {
 
 
     if(argc >= 2)
-        submodule = atoi(argv[1]);
+        submodule = static_cast<uint32_t>(atoi(argv[1]));
 
-    if(argc >=3)
-        sleeptime = atoi(argv[2]);
+    if(argc >= 3)
+        sleeptime = static_cast<uint32_t>(atoi(argv[2]));
 
 
     asapo::Error err;
@@ -50,11 +49,10 @@ int main(int argc, char* argv[]) {
     auto endpoint = "localhost:8400"; // or your endpoint
     auto beamtime = "asapo_test";
 
-    auto producer = asapo::Producer::Create(endpoint, 1,asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{asapo::SourceType::kProcessed,beamtime, "", "", ""}, 60000, &err);
+    auto producer = asapo::Producer::Create(endpoint, 1, asapo::RequestHandlerType::kTcp,
+                                            asapo::SourceCredentials{asapo::SourceType::kProcessed, beamtime, "", "", ""}, 60000, &err);
     exit_if_error("Cannot start producer", err);
 
-    uint32_t eventid = 1;
     uint32_t start_number = 1;
 
     // number of files per acquistion per module
@@ -63,14 +61,12 @@ int main(int argc, char* argv[]) {
     // number of modules
     const uint32_t modules = 3;
 
-    while(true)
-    {
-        for(uint32_t part=1; part<=number_of_splitted_files; ++part)
-        {
+    while(true) {
+        for(uint32_t part = 1; part <= number_of_splitted_files; ++part) {
             std::string to_send = "processed/lambdatest_"
-                + format_string(start_number) // file start number (acquistion id)
-                + "_part" + format_string(part) // file part id (chunk id)
-                + "_m" + format_string(submodule, std::string("%02d"));
+                                  + format_string(start_number) // file start number (acquistion id)
+                                  + "_part" + format_string(part) // file part id (chunk id)
+                                  + "_m" + format_string(submodule, std::string("%02d"));
             auto send_size = to_send.size() + 1;
             auto buffer =  asapo::MessageData(new uint8_t[send_size]);
             memcpy(buffer.get(), to_send.c_str(), send_size);

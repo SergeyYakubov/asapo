@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Server is listening on " << server->GetAddress() << std::endl;
 
-    size_t dataBufferSize = 1024 * kByte;
+    size_t dataBufferSize = static_cast<size_t>(1024 * kByte);
     MessageData dataBuffer = MessageData{new uint8_t[dataBufferSize]};
     strcpy((char*)dataBuffer.get(), "I (the server) wrote into your buffer.");
     std::cout << "Expected file size: " << dataBufferSize << " byte" << std::endl;

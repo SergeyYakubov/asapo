@@ -7,6 +7,11 @@
 #include <algorithm>
 #include <mutex>
 
+#ifdef _WIN32
+typedef long suseconds_t;
+typedef short sa_family_t;
+#endif
+
 #if defined(__linux__) || defined (__APPLE__)
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -18,6 +23,8 @@
 #ifdef __APPLE__
 #include <sys/select.h>
 #endif
+
+
 
 #include "system_io.h"
 #include "asapo/preprocessor/definitions.h"
@@ -53,7 +60,7 @@ void StripBasePath(const std::string& folder, std::vector<MessageMeta>* file_lis
 }
 
 void AssignIDs(MessageMetas* file_list) {
-    int64_t id = 0;
+    uint64_t id = 0;
     for (auto& file : *file_list) {
         file.id = ++id;
     }
@@ -329,7 +336,7 @@ std::unique_ptr<sockaddr_in> SystemIO::BuildSockaddrIn(const std::string& addres
     std::unique_ptr<sockaddr_in> socket_address = std::unique_ptr<sockaddr_in>(new sockaddr_in);
     socket_address->sin_addr.s_addr = inet_addr(host.c_str());
     socket_address->sin_port = htons(port);
-    socket_address->sin_family = family;
+    socket_address->sin_family = static_cast<sa_family_t>(family);
 
     return socket_address;
 }
@@ -359,7 +366,7 @@ Error* err) const {
         return nullptr;
     }
 
-    sockaddr_in client_address{};
+    sockaddr_in client_address;
     static size_t client_address_size = sizeof(sockaddr_in);
 
     int peer_fd;
@@ -529,7 +536,7 @@ size_t asapo::SystemIO::ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf
     FD_SET(socket_fd, &read_fds);
     timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = timeout_in_usec;
+    timeout.tv_usec = static_cast<suseconds_t>(timeout_in_usec);
 
     int res = ::select(socket_fd + 1, &read_fds, nullptr, nullptr, &timeout);
     if (res == 0) {
@@ -591,7 +598,7 @@ size_t SystemIO::Transfer(ssize_t (* method)(FileDescriptor, void*, size_t), Fil
             }
             return already_transferred;//Return the amount of _ensured_ transferred bytes
         }
-        already_transferred += received_amount;
+        already_transferred += static_cast<size_t>(received_amount);
     }
     *err = nullptr;
     return already_transferred;
@@ -621,7 +628,7 @@ Error SystemIO::CreateDirectoryWithParents(const std::string& root_path, const s
 
 Error SystemIO::RemoveFile(const std::string& fname) const {
     if (remove(fname.c_str()) == 0) {
-        return nullptr;;
+        return nullptr;
     } else {
         return GetLastError();
     }

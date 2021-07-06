@@ -26,7 +26,7 @@ class DataCacheTests : public Test {
     uint64_t expected_cache_size = 1024 * 1024;
     uint64_t expected_size = 10;
     uint64_t expected_val = 1;
-    float expected_keepunlocked_ratio = 0.2;
+    float expected_keepunlocked_ratio = 0.2f;
     CacheMeta* meta1;
     CacheMeta* meta2;
     DataCache cache{expected_cache_size, expected_keepunlocked_ratio};
@@ -102,7 +102,7 @@ TEST_F(DataCacheTests, PrepareToReadIdNotFound) {
 }
 
 TEST_F(DataCacheTests, PrepareToReadOk) {
-    uint64_t data_size = expected_cache_size * 0.7;
+    auto data_size = static_cast<uint64_t>(static_cast<double>(expected_cache_size) * 0.7);
     uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(data_size, &meta1);
 
     uint8_t* addr = (uint8_t*) cache.GetSlotToReadAndLock(meta1->id, data_size, &meta2);
@@ -113,7 +113,7 @@ TEST_F(DataCacheTests, PrepareToReadOk) {
 
 
 TEST_F(DataCacheTests, PrepareToReadFailsIfTooCloseToCurrentPointer) {
-    auto data_size = expected_cache_size * 0.9;
+    auto data_size = static_cast<uint64_t>(static_cast<double>(expected_cache_size) * 0.9);
     cache.GetFreeSlotAndLock(data_size, &meta1);
 
     uint8_t* addr = (uint8_t*) cache.GetSlotToReadAndLock(meta1->id, data_size, &meta2);
@@ -125,7 +125,7 @@ TEST_F(DataCacheTests, GetFreeSlotRemovesOldMetadataRecords) {
     DataCache cache{expected_cache_size, 0};
     CacheMeta* meta3, *meta4, *meta5;
     CacheMeta* meta;
-    auto addr = cache.GetFreeSlotAndLock(10, &meta1);
+    cache.GetFreeSlotAndLock(10, &meta1);
     cache.GetFreeSlotAndLock(10, &meta2);
     cache.GetFreeSlotAndLock(expected_cache_size - 30, &meta3);
     auto id1 = meta1->id;
@@ -291,13 +291,13 @@ TEST_F(DataCacheTests, GetFreeSlotCreatesCorrectIds) {
     ASSERT_THAT(c3, Eq(c2 + 1));
     ASSERT_THAT(c4, Eq(c3 + 1));
 
-    ASSERT_THAT(t2 - t1, Ge(100));
-    ASSERT_THAT(t2 - t1, Le(200));
+    ASSERT_THAT(t2, Ne(t1));
+    ASSERT_THAT(t2, Ne(t3));
+    ASSERT_THAT(t4, Ne(t3));
+    ASSERT_THAT(t1, Ne(t3));
+    ASSERT_THAT(t4, Ne(t2));
+    ASSERT_THAT(t4, Ne(t1));
 
-    ASSERT_THAT(t3 - t2, Ge(10));
-    ASSERT_THAT(t3 - t2, Le(20));
-
-    ASSERT_THAT(t4 - t3, Ge(1));
 }
 
 }

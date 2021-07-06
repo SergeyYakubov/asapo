@@ -7,6 +7,8 @@ import threading
 
 lock = threading.Lock()
 
+print (asapo_consumer.__version__)
+print (asapo_producer.__version__)
 
 n_send = 0
 
@@ -34,6 +36,10 @@ group_id  = consumer.generate_group_id()
 
 n_recv = 0
 
+producer.send_beamtime_meta('{"data":"bt_meta"}', callback = callback)
+producer.send_stream_meta('{"data":"st_meta"}',stream = 'stream_in', callback = callback)
+
+
 if transfer_data:
     ingest_mode = asapo_producer.DEFAULT_INGEST_MODE
 else:
@@ -52,6 +58,13 @@ while True:
         break
 
 producer.wait_requests_finished(timeout_s_producer*1000)
+
+consumer = asapo_consumer.create_consumer(source,path, True,beamtime,stream_out,token,timeout_s*1000)
+bt_meta = consumer.get_beamtime_meta()
+st_meta = consumer.get_stream_meta('stream_in')
+print ('bt_meta:',bt_meta)
+print ('st_meta:',st_meta)
+
 
 print ("Processed "+str(n_recv)+" file(s)")
 print ("Sent "+str(n_send)+" file(s)")

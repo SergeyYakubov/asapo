@@ -6,8 +6,8 @@
 namespace asapo {
 
 class OriginalRequest : public CustomErrorData {
- public:
-  GenericRequestPtr request;
+  public:
+    GenericRequestPtr request;
 };
 
 }

@@ -7,6 +7,7 @@
 #include "asapo/logger/logger.h"
 #include "common.h"
 #include "asapo/common/data_structs.h"
+#include "asapo/preprocessor/definitions.h"
 
 namespace asapo {
 
@@ -23,14 +24,14 @@ class Producer {
 
     virtual ~Producer() = default;
 
-  //! Return version
-  /*!
-    \param client_info - for client version
-    \param server_info - for server
-    \param supported - set to true if client is supported by server
-    \return nullptr of command was successful, otherwise error.
-  */
-  virtual Error GetVersionInfo(std::string* client_info,std::string* server_info, bool* supported) const = 0;
+    //! Return version
+    /*!
+      \param client_info - for client version
+      \param server_info - for server
+      \param supported - set to true if client is supported by server
+      \return nullptr of command was successful, otherwise error.
+    */
+    virtual Error GetVersionInfo(std::string* client_info, std::string* server_info, bool* supported) const = 0;
 
     //! Get stream information from receiver
     /*!
@@ -40,20 +41,35 @@ class Producer {
     */
     virtual StreamInfo GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const = 0;
 
-  //! Delete stream
-  /*!
-    \param stream - stream to send messages to
-    \param timeout_ms - operation timeout in milliseconds
-    \param options - delete stream options
-    \return Error - will be nullptr on success
-  */
-  virtual Error DeleteStream(std::string stream, uint64_t timeout_ms, DeleteStreamOptions options) const = 0;
+    //! Get stream metadata from receiver
+    /*!
+      \param stream - stream to send messages to
+      \param timeout_ms - operation timeout in milliseconds
+      \return JSON string with metadata
+    */
+    virtual std::string GetStreamMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const = 0;
 
-  //! Get stream that has the newest ingested data
-  /*!
-    \param timeout_ms - operation timeout in milliseconds
-    \return StreamInfo - a structure with stream information
-  */
+    //! Get beamtime metadata from receiver
+    /*!
+      \param timeout_ms - operation timeout in milliseconds
+      \return JSON string with metadata
+    */
+    virtual std::string GetBeamtimeMeta(uint64_t timeout_ms, Error* err) const = 0;
+
+    //! Delete stream
+    /*!
+      \param stream - stream to send messages to
+      \param timeout_ms - operation timeout in milliseconds
+      \param options - delete stream options
+      \return Error - will be nullptr on success
+    */
+    virtual Error DeleteStream(std::string stream, uint64_t timeout_ms, DeleteStreamOptions options) const = 0;
+
+    //! Get stream that has the newest ingested data
+    /*!
+      \param timeout_ms - operation timeout in milliseconds
+      \return StreamInfo - a structure with stream information
+    */
     virtual StreamInfo GetLastStream(uint64_t timeout_ms, Error* err) const = 0;
 
     //! Sends message to the receiver
@@ -62,16 +78,16 @@ class Producer {
       \param data - A smart pointer to the message data to send, can be nullptr
       \return Error - Will be nullptr on success
     */
-    virtual Error Send(const MessageHeader &message_header,
+    virtual Error Send(const MessageHeader& message_header,
                        MessageData data,
                        uint64_t ingest_mode,
                        std::string stream,
                        RequestCallback callback) = 0;
 
 
-    //! Sends data to the receiver - same as Send - memory should not be freed until send is finished
+    //! Sends data to the receiver - same as Send - memory should not be freed after send is finished
     //! used e.g. for Python bindings
-    virtual Error Send__(const MessageHeader &message_header,
+    virtual Error Send__(const MessageHeader& message_header,
                          void* data,
                          uint64_t ingest_mode,
                          std::string stream,
@@ -87,7 +103,7 @@ class Producer {
       \param file_to_send - A full path of the file to send
       \return Error - Will be nullptr on success
     */
-    virtual Error SendFile(const MessageHeader &message_header,
+    virtual Error SendFile(const MessageHeader& message_header,
                            std::string file_to_send,
                            uint64_t ingest_mode,
                            std::string stream,
@@ -101,16 +117,40 @@ class Producer {
       \return Error - Will be nullptr on success
     */
     virtual Error SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,
-                                            RequestCallback callback) = 0;
+                                         RequestCallback callback) = 0 ;
 
 
-    //! Sends metadata for the current beamtime to the receiver
+    //! Sends beamtime metadata to the receiver
     /*!
+      \deprecated { deprecated, obsolates 01.07.2022, use SendBeamtimeMetadata instead}
       \param metadata - a JSON string with metadata
       \param callback - callback function
       \return Error - will be nullptr on success
     */
-    virtual Error SendMetadata(const std::string& metadata, RequestCallback callback) = 0;
+    virtual Error DEPRECATED("obsolates 01.07.2022, use SendBeamtimeMetadata instead") SendMetadata(
+        const std::string& metadata,
+        RequestCallback callback)  = 0;
+
+    //! Sends beamtime metadata to the receiver
+    /*!
+      \param metadata - a JSON string with metadata
+      \param MetaIngestMode - a JSON string with metadata
+      \param callback - callback function
+      \return Error - will be nullptr on success
+    */
+    virtual Error SendBeamtimeMetadata(const std::string& metadata, MetaIngestMode mode, RequestCallback callback) = 0;
+
+    //! Sends stream metadata to the receiver
+    /*!
+      \param stream - name of the stream
+      \param metadata - a JSON string with metadata
+      \param callback - callback function
+      \return Error - will be nullptr on success
+    */
+    virtual Error SendStreamMetadata(const std::string& metadata,
+                                     MetaIngestMode mode,
+                                     const std::string& stream,
+                                     RequestCallback callback) = 0;
 
     //! Set internal log level
     virtual void SetLogLevel(LogLevel level) = 0;

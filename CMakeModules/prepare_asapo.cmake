@@ -27,7 +27,6 @@ function(prepare_asapo)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/settings/authorizer_settings.json.tpl.win authorizer.json.tpl COPYONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/start_services.bat start_services.bat COPYONLY)
         configure_file(${CMAKE_SOURCE_DIR}/tests/automatic/common_scripts/stop_services.bat stop_services.bat COPYONLY)
-
         configure_file(${CMAKE_SOURCE_DIR}/config/nomad/receiver_tcp.nmd.in  receiver_tcp.nmd @ONLY)
         configure_file(${CMAKE_SOURCE_DIR}/config/nomad/nginx_kill_win.nmd nginx_kill.nmd @ONLY)
     else()

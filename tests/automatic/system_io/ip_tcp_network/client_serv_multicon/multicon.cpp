@@ -86,7 +86,7 @@ void CheckNormal(int times) {
     for (int i = 0; i < times; i++) {
         std::cout << "[CLIENT] send random number" << std::endl;
 
-        uint64_t message_send = rand();
+        uint64_t message_send = static_cast<uint64_t>(rand());
 
         std::cout << "[CLIENT] Send Size" << std::endl;
         io->Send(socket, &message_send, sizeof(uint64_t), &err);
@@ -105,7 +105,7 @@ void CheckNormal(int times) {
     ExitIfErrIsNotOk(&err, 108);
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     Error err;
     std::unique_ptr<std::thread> server_thread = CreateEchoServerThread();
     //server_thread->detach();

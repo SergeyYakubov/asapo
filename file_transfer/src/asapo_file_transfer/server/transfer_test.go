@@ -106,6 +106,6 @@ func TestTransferFileSize(t *testing.T) {
 func TestTransferWrongApiVersion(t *testing.T) {
 	request :=  makeRequest(fileTransferRequest{"folder","fname"})
 	token := prepareToken("folder")
-	w := doPostRequest("/v0.2/transfer?sizeonly=true",request,token)
+	w := doPostRequest("/v100000.2/transfer?sizeonly=true",request,token)
 	assert.Equal(t, http.StatusUnsupportedMediaType, w.Code, "wrong api version")
 }

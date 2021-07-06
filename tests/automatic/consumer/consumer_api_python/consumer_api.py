@@ -119,14 +119,6 @@ def check_single(consumer, group_id):
     assert_usermetadata(meta, "get next6")
 
     try:
-        consumer.get_next("_wrong_group_name", meta_only=True)
-    except asapo_consumer.AsapoWrongInputError as err:
-        print(err)
-        pass
-    else:
-        exit_on_noerr("should give wrong input error")
-
-    try:
         consumer.get_last(meta_only=False)
     except asapo_consumer.AsapoLocalIOError as err:
         print(err)
@@ -240,7 +232,21 @@ def check_single(consumer, group_id):
     else:
         exit_on_noerr("wrong query")
 
-    # delete stream
+    # metadata
+    bt_meta = consumer.get_beamtime_meta()
+    assert_eq(bt_meta['data'], 'test_bt', "beamtime meta ")
+    st_meta = consumer.get_stream_meta("test")
+    assert_eq(st_meta['data'], 'test_st', "stream meta ")
+
+    try:
+        consumer.get_stream_meta("notexist")
+    except asapo_consumer.AsapoNoDataError as err:
+        print(err)
+        pass
+    else:
+        exit_on_noerr("should be wrong input on non existing stream")
+
+# delete stream
 
     consumer.delete_stream(stream='default')
     try:

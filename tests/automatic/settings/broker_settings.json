@@ -5,6 +5,6 @@
   "AuthorizationServer": "localhost:8400/asapo-authorizer",
   "PerformanceDbName": "db_test",
   "Port":5005,
-  "LogLevel":"info",
+  "LogLevel":"debug",
   "CheckResendInterval":0
 }

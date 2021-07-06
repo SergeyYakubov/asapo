@@ -22,7 +22,7 @@ class RequestHandlerFilesystem: public RequestHandler {
         return true;
     };
     void PrepareProcessingRequestLocked()  override {};
-    void TearDownProcessingRequestLocked(bool request_processed_successfully)  override {};
+    void TearDownProcessingRequestLocked(bool )  override {};
     void ProcessRequestTimeoutUnlocked(GenericRequest* request)  override;
 
     virtual ~RequestHandlerFilesystem() = default;
@@ -30,7 +30,6 @@ class RequestHandlerFilesystem: public RequestHandler {
     const AbstractLogger* log__;
   private:
     std::string destination_folder_;
-    uint64_t thread_id_;
 };
 }
 

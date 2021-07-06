@@ -23,7 +23,7 @@ add_test_setup_cleanup(${TARGET_NAME})
 IF(WIN32)
     add_integration_test(${TARGET_NAME} list_folders "test test\\subtest1test\\subtest1\\subtest2test\\subtest3test\\subtest3\\subtest4")
 ELSE()
-    add_integration_test(${TARGET_NAME} list_folders "test test/subtest3test/subtest3/subtest4test/subtest1test/subtest1/subtest2")
+    add_integration_test(${TARGET_NAME} list_folders "test test/subtest1test/subtest1/subtest2")
 ENDIF(WIN32)
 
 

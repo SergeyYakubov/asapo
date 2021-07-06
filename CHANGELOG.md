@@ -1,3 +1,19 @@
+## 21.06.0
+
+FEATURES
+* Consumer API: C client 
+* Producer API: An option to automatically generate message id (use sparingly, reduced performance possible)  
+
+IMPROVEMENTS
+* Consumer/Producer API - allow any characters in source/stream/group names
+* Consumer/Producer API - introduce stream metadata
+* Consumer API - an option to auto discovery of data folder when consumer client uses file transfer service (has_filesystem=False)
+* Improved build procedure - shared libaries, added pkg-config and cmake config for asapo clients  
+
+BUG FIXES
+* Consumer API: multiple consumers from same group receive stream finished error 
+* Consumer API: return ServiceUnavailable instead of Unauthorized in case an authorization service is unreachable 
+
 ## 21.03.3
 
 BUG FIXES

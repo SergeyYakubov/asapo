@@ -34,6 +34,8 @@ class CurlHttpClient final : public HttpClient {
     std::string Get(const std::string& uri, HttpCode* response_code, Error* err) const noexcept override;
     std::string Post(const std::string& uri, const std::string& cookie, const std::string& data, HttpCode* response_code,
                      Error* err) const noexcept override;
+    std::string UrlEscape(const std::string& uri) const noexcept override;
+
     Error Post(const std::string& uri, const std::string& cookie, const std::string& input_data, MessageData* output_data,
                uint64_t output_data_size,
                HttpCode* response_code)  const noexcept override;

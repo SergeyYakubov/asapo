@@ -48,16 +48,17 @@ func (suite *ConsulHandlerTestSuite) SetupTest() {
 	if err != nil {
 		panic(err)
 	}
-
-	suite.registerAgents("asapo-receiver")
-	suite.registerAgents("asapo-broker")
+	common.NameReceiverService = "asapo-receiver-test"
+	common.NameBrokerService = "asapo-broker-test"
+	suite.registerAgents("asapo-receiver-test")
+	suite.registerAgents("asapo-broker-test")
 }
 
 func (suite *ConsulHandlerTestSuite) TearDownTest() {
-	suite.client.Agent().ServiceDeregister("asapo-receiver1234")
-	suite.client.Agent().ServiceDeregister("asapo-receiver1235")
-	suite.client.Agent().ServiceDeregister("asapo-broker1234")
-	suite.client.Agent().ServiceDeregister("asapo-broker1235")
+	suite.client.Agent().ServiceDeregister("asapo-receiver-test1234")
+	suite.client.Agent().ServiceDeregister("asapo-receiver-test1235")
+	suite.client.Agent().ServiceDeregister("asapo-broker-test1234")
+	suite.client.Agent().ServiceDeregister("asapo-broker-test1235")
 }
 
 func (suite *ConsulHandlerTestSuite) TestInitDefaultUri() {
@@ -154,8 +155,8 @@ func (suite *ConsulHandlerTestSuite) TestGetBrokerStatic() {
 }
 
 func (suite *ConsulHandlerTestSuite) TestGetBrokerEmpty() {
-	suite.client.Agent().ServiceDeregister("asapo-broker1234")
-	suite.client.Agent().ServiceDeregister("asapo-broker1235")
+	suite.client.Agent().ServiceDeregister("asapo-broker-test1234")
+	suite.client.Agent().ServiceDeregister("asapo-broker-test1235")
 
 	suite.handler.Init(consul_settings)
 	res, err := suite.handler.GetSingleService(common.NameBrokerService)

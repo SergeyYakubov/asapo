@@ -7,5 +7,5 @@
   "CheckResendInterval":0,
   "PerformanceDbName": "db_test",
   "Port":{{ env "NOMAD_PORT_broker" }},
-  "LogLevel":"info"
+  "LogLevel":"debug"
 }

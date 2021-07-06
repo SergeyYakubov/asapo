@@ -114,9 +114,12 @@ else:
     print("should be error sending id 0 ")
     sys.exit(1)
 
-# send to another stream
-producer.send(1, "processed/" + data_source + "/" + "file9", None,
-                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream", callback=callback)
+# wait before sending to another stream so we sure that this stream appears later
+producer.wait_requests_finished(50000)
+
+# send to another stream with auto id
+producer.send(0, "processed/" + data_source + "/" + "file9", None,auto_id = True,
+                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream/test $", callback=callback)
 
 # wait normal requests finished before sending duplicates
 
@@ -140,14 +143,18 @@ producer.send_file(1, local_path="./file1", exposed_path="processed/" + data_sou
                    user_meta='{"test_key1":"test_val"}',
                    ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_DATA | asapo_producer.INGEST_MODE_STORE_IN_FILESYSTEM,callback=callback)
 
+producer.send_beamtime_meta('{"data":"bt_meta"}', callback = callback)
+producer.send_stream_meta('{"data":"st_meta"}',stream = 'stream', callback = callback)
+producer.send_stream_meta('bla',stream = 'stream', callback = callback)
+
+
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
 assert_eq(n, 0, "requests in queue")
-assert_eq(n, 0, "requests in queue")
 
-# send to another data to stream stream
-producer.send(2, "processed/" + data_source + "/" + "file10", None,
-                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream", callback=callback)
+# send another data to stream stream
+producer.send(0, "processed/" + data_source + "/" + "file10", None, auto_id = True,
+                   ingest_mode=asapo_producer.INGEST_MODE_TRANSFER_METADATA_ONLY, stream="stream/test $", callback=callback)
 
 producer.wait_requests_finished(50000)
 n = producer.get_requests_queue_size()
@@ -166,11 +173,19 @@ else:
 
 #stream_finished
 producer.wait_requests_finished(10000)
-producer.send_stream_finished_flag("stream", 2, next_stream = "next_stream", callback = callback)
+producer.send_stream_finished_flag("stream/test $", 2, next_stream = "next_stream", callback = callback)
 # check callback_object.callback works, will be duplicated request
-producer.send_stream_finished_flag("stream", 2, next_stream = "next_stream", callback = callback_object.callback)
+producer.send_stream_finished_flag("stream/test $", 2, next_stream = "next_stream", callback = callback_object.callback)
 producer.wait_requests_finished(10000)
 
+
+#check meta
+bt_meta = producer.get_beamtime_meta()
+stream_meta = producer.get_stream_meta(stream = 'stream')
+assert_eq(bt_meta['data'], 'bt_meta', "beamtime meta")
+assert_eq(stream_meta['data'], 'st_meta', "stream meta")
+no_meta = producer.get_stream_meta(stream = 'notexist')
+assert_eq(no_meta, None, "no meta")
 
 #stream infos
 info = producer.stream_info()
@@ -183,11 +198,12 @@ assert_eq(info['timestampLast']/1000000000>time.time()-10,True , "stream_info ti
 print("created: ",datetime.utcfromtimestamp(info['timestampCreated']/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f'))
 print("last record: ",datetime.utcfromtimestamp(info['timestampLast']/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f'))
 
-info = producer.stream_info('stream')
+info = producer.stream_info('stream/test $')
 assert_eq(info['lastId'], 3, "last id from different stream")
 assert_eq(info['finished'], True, "stream finished")
 
 info = producer.stream_info('dataset_stream')
+print(info)
 assert_eq(info['lastId'], 2, "last id from stream with datasets")
 
 info = producer.stream_info('not_exist')
@@ -195,12 +211,13 @@ assert_eq(info['lastId'], 0, "last id from non existing stream")
 
 
 info_last = producer.last_stream()
-assert_eq(info_last['name'], "stream", "last stream")
+print(info_last)
+assert_eq(info_last['name'], "stream/test $", "last stream")
 assert_eq(info_last['timestampCreated'] <= info_last['timestampLast'], True, "last is later than first")
 
 #delete_streams
-producer.delete_stream('stream')
-producer.stream_info('stream')
+producer.delete_stream('stream/test $')
+producer.stream_info('stream/test $')
 assert_eq(info['lastId'], 0, "last id from non deleted stream")
 
 

@@ -261,7 +261,7 @@ TEST_F(DbCheckRequestHandlerTests, ErrorIfDbError) {
     for (auto mock : mock_functions) {
         mock(asapo::DBErrorTemplates::kConnectionError.Generate().release(), false);
         auto err = handler.ProcessRequest(mock_request.get());
-        ASSERT_THAT(err, Eq(asapo::DBErrorTemplates::kConnectionError));
+        ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInternalServerError));
         Mock::VerifyAndClearExpectations(mock_request.get());
     }
 }

@@ -13,7 +13,7 @@ namespace asapo {
 
 class InotifyEvent {
   public:
-    InotifyEvent(const struct inotify_event* inotify_event, const std::map<int, std::string>& watched_folders_paths);
+    InotifyEvent(const struct inotify_event* inotify_event);
     uint32_t Length() const ;
     bool IsDirectoryEvent() const ;
     bool IsNewFileInFolderEvent() const;
@@ -26,7 +26,6 @@ class InotifyEvent {
     void Print() const;
   private:
     const struct inotify_event* inotify_event_;
-    const std::map<int, std::string>& watched_folders_paths_;
 };
 
 }

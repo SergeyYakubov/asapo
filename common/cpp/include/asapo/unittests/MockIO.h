@@ -25,12 +25,12 @@ class MockIO : public IO {
     MOCK_CONST_METHOD1(AddressFromSocket_t, std::string (SocketDescriptor socket));
 
 
-    std::unique_ptr<std::thread> NewThread(const std::string& name, std::function<void()> function) const override {
+    std::unique_ptr<std::thread> NewThread(const std::string&, std::function<void()> function) const override {
         return std::unique_ptr<std::thread>(NewThread_t(function));
     }
     MOCK_CONST_METHOD1(NewThread_t, std::thread * (std::function<void()> function));
 
-    std::unique_ptr<std::thread> NewThread(const std::string& name, std::function<void(uint64_t index)> function,
+    std::unique_ptr<std::thread> NewThread(const std::string&, std::function<void(uint64_t index)> function,
                                            uint64_t index) const override {
         return std::unique_ptr<std::thread>(NewThread_t(function, index));
     }
@@ -210,7 +210,7 @@ class MockIO : public IO {
     MessageData GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override {
         std::function<ErrorInterface*()> error;
         auto data = GetDataFromFile_t(fname, fsize, &error);
-        if (error!=nullptr) {
+        if (error != nullptr) {
             err->reset(error());
         } else {
             err->reset(nullptr);
@@ -218,7 +218,8 @@ class MockIO : public IO {
         return MessageData(data);
     }
 
-    MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t* fsize, std::function<ErrorInterface*()>* err_gen));
+    MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t* fsize,
+                                                    std::function<ErrorInterface*()>* err_gen));
 
 
     Error GetLastError() const override {

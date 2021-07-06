@@ -13,9 +13,9 @@
 namespace asapo {
 
 enum class StreamFilter {
-  kAllStreams,
-  kFinishedStreams,
-  kUnfinishedStreams
+    kAllStreams,
+    kFinishedStreams,
+    kUnfinishedStreams
 };
 
 class Consumer {
@@ -27,14 +27,14 @@ class Consumer {
       \return nullptr of command was successful, otherwise error.
     */
     virtual Error ResetLastReadMarker(std::string group_id, std::string stream) = 0;
-  //! Return version
-  /*!
-    \param client_info - for client version
-    \param server_info - for server
-    \param supported - set to true if client is supported by server
-    \return nullptr of command was successful, otherwise error.
-  */
-    virtual Error GetVersionInfo(std::string* client_info,std::string* server_info, bool* supported) = 0;
+    //! Return version
+    /*!
+      \param client_info - for client version
+      \param server_info - for server
+      \param supported - set to true if client is supported by server
+      \return nullptr of command was successful, otherwise error.
+    */
+    virtual Error GetVersionInfo(std::string* client_info, std::string* server_info, bool* supported) = 0;
 
     virtual Error SetLastReadMarker(std::string group_id, uint64_t value, std::string stream) = 0;
 
@@ -87,49 +87,57 @@ class Consumer {
      */
     virtual NetworkConnectionType CurrentConnectionType() const = 0;
 
-  //! Get list of streams with filter, set from to "" to get all streams
+    //! Get list of streams with filter, set from to "" to get all streams
     virtual StreamInfos GetStreamList(std::string from,  StreamFilter filter, Error* err) = 0;
 
-  //! Delete stream
-  /*!
-    \param stream - stream to send messages to
-    \param options - delete stream options
-    \return Error - will be nullptr on success
-  */
+    //! Delete stream
+    /*!
+      \param stream - stream to send messages to
+      \param options - delete stream options
+      \return Error - will be nullptr on success
+    */
     virtual Error DeleteStream(std::string stream, DeleteStreamOptions options) = 0;
 
 
     //! Get current number of messages in stream
     /*!
       \param stream - stream to use
-      \param err - return nullptr of operation succeed, error otherwise.
+      \param err - return nullptr if operation succeed, error otherwise.
       \return number of datasets.
     */
     virtual uint64_t GetCurrentSize(std::string stream, Error* err) = 0;
 
-  //! Get current number of datasets in stream
-  /*!
-    \param stream - stream to use
-    \param include_incomplete - flag to count incomplete datasets as well
-    \param err - return nullptr of operation succeed, error otherwise.
-    \return number of datasets.
-  */
+    //! Get current number of datasets in stream
+    /*!
+      \param stream - stream to use
+      \param include_incomplete - flag to count incomplete datasets as well
+      \param err - return nullptr if operation succeed, error otherwise.
+      \return number of datasets.
+    */
     virtual uint64_t GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) = 0;
 
-  //! Generate new GroupID.
-  /*!
-    \param err - return nullptr of operation succeed, error otherwise.
-    \return group ID.
-  */
+    //! Generate new GroupID.
+    /*!
+      \param err - return nullptr if operation succeed, error otherwise.
+      \return group ID.
+    */
 
     virtual std::string GenerateNewGroupId(Error* err) = 0;
 
     //! Get Beamtime metadata.
     /*!
-      \param err - return nullptr of operation succeed, error otherwise.
+      \param err - return nullptr if operation succeed, error otherwise.
       \return beamtime metadata.
     */
     virtual std::string GetBeamtimeMeta(Error* err) = 0;
+
+    //! Get stream metadata.
+    /*!
+      \param stream - stream to use
+      \param err - return nullptr if operation succeed, error otherwise.
+      \return stream metadata.
+    */
+    virtual std::string GetStreamMeta(const std::string& stream, Error* err) = 0;
 
     //! Receive next available message.
     /*!
@@ -224,7 +232,7 @@ class Consumer {
     */
     virtual void SetResendNacs(bool resend, uint64_t delay_ms, uint64_t resend_attempts) = 0;
 
-  //! Will try to interrupt current long runnung operations (mainly needed to exit waiting loop in C from Python)
+    //! Will try to interrupt current long runnung operations (mainly needed to exit waiting loop in C from Python)
     virtual void InterruptCurrentOperation() = 0;
 
     virtual ~Consumer() = default; // needed for unique_ptr to delete itself

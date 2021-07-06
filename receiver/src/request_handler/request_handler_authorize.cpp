@@ -16,12 +16,14 @@ std::string RequestHandlerAuthorize::GetRequestString(const Request* request, co
     return request_string;
 }
 
-Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error& err, const std::string response,HttpCode code) const {
+Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error& err, const std::string response,
+        HttpCode code) const {
     if (err) {
         return asapo::ReceiverErrorTemplates::kInternalServerError.Generate("cannot authorize request: " + err->Explain());
     } else {
         if (code != HttpCode::Unauthorized) {
-            return asapo::ReceiverErrorTemplates::kInternalServerError.Generate(response+" return code " + std::to_string(int(code)));
+            return asapo::ReceiverErrorTemplates::kInternalServerError.Generate(response + " return code " + std::to_string(int(
+                        code)));
         }
         return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate(response);
     }
@@ -44,7 +46,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     auto response = http_client__->Post(GetReceiverConfig()->authorization_server + "/authorize", "", request_string, &code,
                                         &err);
     if (err || code != HttpCode::OK) {
-        auto auth_error = ErrorFromAuthorizationServerResponse(err,response, code);
+        auto auth_error = ErrorFromAuthorizationServerResponse(err, response, code);
         log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " request: " + request_string +
                      " - " +
                      auth_error->Explain());
@@ -64,19 +66,20 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     (err = GetSourceTypeFromString(stype, &source_type_)) ||
     (err = parser.GetString("beamline", &beamline_));
     if (err) {
-        return ErrorFromAuthorizationServerResponse(err,"", code);
+        return ErrorFromAuthorizationServerResponse(err, "", code);
     }
 
     err = CheckAccessType(access_types);
     if (err) {
         log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " request: " + request_string +
-            " - " +
-            err->Explain());
+                     " - " +
+                     err->Explain());
         return err;
     }
 
-    log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() +"source type: "+stype+ " beamline: " +
-                     beamline_ + ", beamtime id: " + beamtime_id_ + ", data soucre: " + data_source_);
+    log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() + "source type: " + stype +
+                 " beamline: " +
+                 beamline_ + ", beamtime id: " + beamtime_id_ + ", data soucre: " + data_source_);
 
     last_updated_ = system_clock::now();
     cached_source_credentials_ = source_credentials;
@@ -88,7 +91,7 @@ Error RequestHandlerAuthorize::CheckVersion(const std::string& version_from_clie
     int verClient = VersionToNumber(version_from_client);
     int verService = VersionToNumber(GetReceiverApiVersion());
     if (verClient > verService) {
-        auto err_string = "client version: "+version_from_client + ", server version: "+GetReceiverApiVersion();
+        auto err_string = "client version: " + version_from_client + ", server version: " + GetReceiverApiVersion();
         return asapo::ReceiverErrorTemplates::kUnsupportedClient.Generate(err_string);
         log__->Error("failure serving client - unsupported version,  " + err_string);
     }

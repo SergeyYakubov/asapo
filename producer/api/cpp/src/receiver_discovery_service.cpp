@@ -10,8 +10,9 @@
 
 namespace  asapo {
 
-const std::string ReceiverDiscoveryService::kServiceEndpointSuffix = "/asapo-discovery/"+kProducerProtocol.GetDiscoveryVersion()
-    +"/asapo-receiver?protocol="+kProducerProtocol.GetVersion();
+const std::string ReceiverDiscoveryService::kServiceEndpointSuffix = "/asapo-discovery/" +
+        kProducerProtocol.GetDiscoveryVersion()
+        + "/asapo-receiver?protocol=" + kProducerProtocol.GetVersion();
 
 ReceiverDiscoveryService::ReceiverDiscoveryService(std::string endpoint, uint64_t update_frequency_ms): httpclient__{DefaultHttpClient()},
     log__{GetDefaultProducerLogger()},
@@ -102,7 +103,7 @@ ReceiversList ReceiverDiscoveryService::RotatedUriList(uint64_t nthread) {
     }
     ReceiversList list{uri_list_};
     lock.unlock();
-    auto shift = (int) nthread % size;
+    auto shift = static_cast<unsigned int>(nthread % size);
     std::rotate(list.begin(), list.begin() + shift, list.end());
     return list;
 }

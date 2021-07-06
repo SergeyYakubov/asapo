@@ -1,5 +1,3 @@
-
-
 SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 SET beamtime_id=asapo_test
 SET beamline=test
@@ -9,10 +7,6 @@ SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\d
 set producer_short_name="%~nx1"
 
 set proxy_address="127.0.0.1:8400"
-
-echo db.%beamtime_id%_detector.insert({dummy:1}) | %mongo_exe% %beamtime_id%_detector
-
-call start_services.bat
 
 "%3" token -endpoint http://127.0.0.1:8400/asapo-authorizer -secret admin_token.key -types read %beamtime_id% > token
 set /P token=< token
@@ -33,7 +27,6 @@ echo hello3 > c:\tmp\asapo\test_in\processed\test2\file2
 
 ping 192.0.2.1 -n 1 -w 1000 > nul
 
-
 REM consumer
 "%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 1000 0 > out.txt
 type out.txt
@@ -50,7 +43,6 @@ call :clean
 exit /b 1
 
 :clean
-call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
 rmdir /S /Q c:\tmp\asapo\test_in
 Taskkill /IM "%producer_short_name%" /F

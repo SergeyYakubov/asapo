@@ -1,10 +1,7 @@
 set(TARGET_NAME streamlist_python)
 
 
-prepare_asapo()
-
 find_package (Python3 REQUIRED)
-
 
 if (UNIX)
     get_target_property(PYTHON_LIBS python-lib-consumer BINARY_DIR)

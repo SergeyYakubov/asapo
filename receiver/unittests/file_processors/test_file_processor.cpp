@@ -48,7 +48,7 @@ class FileProcessorTests : public Test {
     NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_offline_path =  "offline";
     std::string expected_online_path =  "online";
-    void MockRequestData(std::string fname,asapo::SourceType type);
+    void MockRequestData(std::string fname, asapo::SourceType type);
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 2;
@@ -61,14 +61,14 @@ class FileProcessorTests : public Test {
 
 };
 
-void FileProcessorTests::MockRequestData(std::string fname,asapo::SourceType type) {
+void FileProcessorTests::MockRequestData(std::string fname, asapo::SourceType type) {
 
     if (type == asapo::SourceType::kProcessed) {
-            EXPECT_CALL(*mock_request, GetOfflinePath())
-             .WillRepeatedly(ReturnRef(expected_offline_path));
+        EXPECT_CALL(*mock_request, GetOfflinePath())
+        .WillRepeatedly(ReturnRef(expected_offline_path));
     } else {
         EXPECT_CALL(*mock_request, GetOnlinePath())
-            .WillRepeatedly(ReturnRef(expected_online_path));
+        .WillRepeatedly(ReturnRef(expected_online_path));
     }
 
     EXPECT_CALL(*mock_request, GetSourceType()).WillRepeatedly(Return(type));
@@ -87,25 +87,25 @@ std::string repl_sep(const std::string& orig) {
 TEST_F(FileProcessorTests, RawWriteToRaw) {
 
     struct Test {
-      asapo::SourceType type;
-      std::string filename;
-      bool error;
-      std::string res;
+        asapo::SourceType type;
+        std::string filename;
+        bool error;
+        std::string res;
     };
     std::vector<Test> tests = {
-        Test{asapo::SourceType::kProcessed,repl_sep("processed/bla.text"),false,expected_offline_path},
-        Test{asapo::SourceType::kProcessed,repl_sep("raw/bla.text"),true,""},
-        Test{asapo::SourceType::kProcessed,repl_sep("processed/../bla.text"),true,""},
-        Test{asapo::SourceType::kProcessed,repl_sep("bla/bla.text"),true,""},
-        Test{asapo::SourceType::kProcessed,repl_sep("bla.text"),true,""},
-        Test{asapo::SourceType::kProcessed,repl_sep("./bla.text"),true,""},
-        Test{asapo::SourceType::kRaw,repl_sep("raw/bla.text"),false,expected_online_path},
+        Test{asapo::SourceType::kProcessed, repl_sep("processed/bla.text"), false, expected_offline_path},
+        Test{asapo::SourceType::kProcessed, repl_sep("raw/bla.text"), true, ""},
+        Test{asapo::SourceType::kProcessed, repl_sep("processed/../bla.text"), true, ""},
+        Test{asapo::SourceType::kProcessed, repl_sep("bla/bla.text"), true, ""},
+        Test{asapo::SourceType::kProcessed, repl_sep("bla.text"), true, ""},
+        Test{asapo::SourceType::kProcessed, repl_sep("./bla.text"), true, ""},
+        Test{asapo::SourceType::kRaw, repl_sep("raw/bla.text"), false, expected_online_path},
     };
 
-    for (auto& test: tests) {
-        MockRequestData(test.filename,test.type);
+    for (auto& test : tests) {
+        MockRequestData(test.filename, test.type);
         std::string res;
-        auto err = GetRootFolder(mock_request.get(),&res);
+        auto err = GetRootFolder(mock_request.get(), &res);
         if (test.error) {
             ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kBadRequest));
         } else {

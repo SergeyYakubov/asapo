@@ -74,6 +74,6 @@ Error RdsFabricServer::SendResponseAndSlotData(const ReceiverDataServerRequest* 
     return err;
 }
 
-void RdsFabricServer::HandleAfterError(uint64_t source_id) {
+void RdsFabricServer::HandleAfterError(uint64_t) {
     /* Do nothing? */
 }

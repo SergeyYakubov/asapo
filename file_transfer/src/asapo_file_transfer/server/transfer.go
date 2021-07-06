@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 )
 
@@ -25,11 +26,16 @@ func Exists(name string) bool {
 	return err==nil
 }
 
-func checkClaim(r *http.Request,request* fileTransferRequest) (int,error) {
+func checkClaim(r *http.Request,ver utils.VersionNum,request* fileTransferRequest) (int,error) {
 	var extraClaim structs.FolderTokenTokenExtraClaim
 	if err := utils.JobClaimFromContext(r, nil, &extraClaim); err != nil {
 		return http.StatusInternalServerError,err
 	}
+	if ver.Id > 1 {
+		request.Folder = extraClaim.RootFolder
+		return http.StatusOK,nil
+	}
+
 	if extraClaim.RootFolder!=request.Folder {
 		err_txt := "access forbidden for folder "+request.Folder
 		log.Error("cannot transfer file: "+err_txt)
@@ -48,17 +54,23 @@ func checkFileExists(r *http.Request,name string) (int,error) {
 
 }
 
-func checkRequest(r *http.Request) (string,int,error) {
+func checkRequest(r *http.Request, ver utils.VersionNum) (string,int,error) {
 	var request fileTransferRequest
 	err := utils.ExtractRequest(r,&request)
 	if err != nil {
 		return "",http.StatusBadRequest,err
 	}
 
-	if status,err := checkClaim(r,&request); err != nil {
+	if status,err := checkClaim(r,ver, &request); err != nil {
 		return "",status,err
 	}
-	fullName := request.Folder+string(os.PathSeparator)+request.FileName
+	var fullName string
+	if ver.Id == 1 { // protocol v0.1
+		fullName = filepath.Clean(request.Folder+string(os.PathSeparator)+request.FileName)
+	} else {
+		fullName = filepath.Clean(request.Folder+string(os.PathSeparator)+request.FileName)
+	}
+
 	if status,err := checkFileExists(r,fullName); err != nil {
 		return "",status,err
 	}
@@ -90,17 +102,17 @@ func serveFileSize(w http.ResponseWriter, r *http.Request, fullName string) {
 }
 
 
-func checkFtsApiVersion(w http.ResponseWriter, r *http.Request) bool {
-	_, ok := utils.PrecheckApiVersion(w, r, version.GetFtsApiVersion())
-	return ok
+func checkFtsApiVersion(w http.ResponseWriter, r *http.Request) (utils.VersionNum,bool) {
+	return utils.PrecheckApiVersion(w, r, version.GetFtsApiVersion())
 }
 
 func routeFileTransfer(w http.ResponseWriter, r *http.Request) {
-	if ok := checkFtsApiVersion(w, r); !ok {
+	ver, ok := checkFtsApiVersion(w, r);
+	if !ok {
 		return
 	}
 
-	fullName, status,err := checkRequest(r);
+	fullName, status,err := checkRequest(r,ver);
 	if err != nil {
 		utils.WriteServerError(w,err,status)
 		return

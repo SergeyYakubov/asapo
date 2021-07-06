@@ -12,10 +12,11 @@ namespace asapo {
 
 class SystemFolderWatch {
   public:
-    VIRTUAL Error StartFolderMonitor(const std::string& root_folder, const std::vector<std::string>& monitored_folders) {
+    VIRTUAL ~SystemFolderWatch() = default;
+    VIRTUAL Error StartFolderMonitor(const std::string&, const std::vector<std::string>&) {
         return nullptr;
     };
-    VIRTUAL FilesToSend GetFileList(Error* err) {
+    VIRTUAL FilesToSend GetFileList(Error*) {
         return {};
     };
 };

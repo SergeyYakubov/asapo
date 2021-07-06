@@ -11,7 +11,7 @@ ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(RdsNetServer*
 }
 
 
-bool ReceiverDataServerRequestHandler::CheckRequest(const ReceiverDataServerRequest* request,NetworkErrorCode* code) {
+bool ReceiverDataServerRequestHandler::CheckRequest(const ReceiverDataServerRequest* request, NetworkErrorCode* code) {
     if (request->header.op_code != kOpcodeGetBufferData) {
         *code = kNetErrorWrongRequest;
         return false;
@@ -57,8 +57,8 @@ bool ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* re
     *retry = false;
     auto receiver_request = dynamic_cast<ReceiverDataServerRequest*>(request);
     NetworkErrorCode code;
-    if (!CheckRequest(receiver_request,&code)) {
-        HandleInvalidRequest(receiver_request,code);
+    if (!CheckRequest(receiver_request, &code)) {
+        HandleInvalidRequest(receiver_request, code);
         return true;
     }
 
@@ -90,16 +90,19 @@ void ReceiverDataServerRequestHandler::ProcessRequestTimeoutUnlocked(GenericRequ
 // do nothing
 }
 
-void ReceiverDataServerRequestHandler::HandleInvalidRequest(const ReceiverDataServerRequest* receiver_request,NetworkErrorCode code) {
+void ReceiverDataServerRequestHandler::HandleInvalidRequest(const ReceiverDataServerRequest* receiver_request,
+        NetworkErrorCode code) {
     SendResponse(receiver_request, code);
     server_->HandleAfterError(receiver_request->source_id);
     switch (code) {
-        case NetworkErrorCode::kNetErrorWrongRequest:
-            log__->Error("wrong request, code:" + std::to_string(receiver_request->header.op_code));
-            break;
-        case NetworkErrorCode::kNetErrorNotSupported:
-            log__->Error("unsupported client, version: " + std::string(receiver_request->header.api_version));
-            break;
+    case NetworkErrorCode::kNetErrorWrongRequest:
+        log__->Error("wrong request, code:" + std::to_string(receiver_request->header.op_code));
+        break;
+    case NetworkErrorCode::kNetErrorNotSupported:
+        log__->Error("unsupported client, version: " + std::string(receiver_request->header.api_version));
+        break;
+    default:
+        break;
     };
 
 }

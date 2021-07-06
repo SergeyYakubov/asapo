@@ -25,7 +25,8 @@ std::unique_ptr<FabricFactory> asapo::fabric::GenerateDefaultFabricFactory() {
     if (libfabric_path_override) {
         handle = dlopen(libfabric_path_override, RTLD_LAZY);
         if (!handle) {
-            std::cerr << "WARN: 'ASAPO_LIBFABRIC_LIBRARY' was set, but failed to open. Reason: '" << dlerror() << "'. Fallback to normal path." << std::endl;
+            std::cerr << "WARN: 'ASAPO_LIBFABRIC_LIBRARY' was set, but failed to open. Reason: '" << dlerror() <<
+                      "'. Fallback to normal path." << std::endl;
         }
     }
     if (!handle) {

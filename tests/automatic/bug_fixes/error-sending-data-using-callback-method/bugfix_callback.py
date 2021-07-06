@@ -28,6 +28,8 @@ class AsapoSender:
 producer  = asapo_producer.create_producer(endpoint,'processed',beamtime,'auto', data_source, token, nthreads, 600000)
 producer.set_log_level("debug")
 
+print(asapo_producer.__version__)
+
 sender = AsapoSender(producer)
 
 meta={}

@@ -155,7 +155,7 @@ function(SETUP_TARGET_FOR_COVERAGE)
         
         
         # Create baseline to make sure untouched files show up in the report
-        COMMAND ${LCOV_PATH} -b ${CMAKE_CURRENT_SOURCE_DIR} -no-external -c -i -d ${PROJECT_BINARY_DIR} -o ${Coverage_NAME}.base
+        COMMAND ${LCOV_PATH} -b ${CMAKE_CURRENT_SOURCE_DIR} -no-external -c -i -d ${CMAKE_CURRENT_BINARY_DIR} -o ${Coverage_NAME}.base
 
         # Run tests
         COMMAND ${Coverage_EXECUTABLE}

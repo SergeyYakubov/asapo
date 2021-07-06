@@ -20,8 +20,8 @@ enum class ProducerErrorType {
 using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
 
 class OriginalData : public CustomErrorData {
- public:
-  MessageData data;
+  public:
+    MessageData data;
 };
 
 
@@ -59,11 +59,8 @@ auto const kUnsupportedClient = ProducerErrorTemplate {
     "cannot connect to asapo", ProducerErrorType::kUnsupportedClient
 };
 
+}
 
-
-
-
-};
 }
 
 #endif //ASAPO_PRODUCER_ERROR_H

@@ -15,7 +15,8 @@
 #include "../../src/request_handler/request_handler_authorize.h"
 #include "../../src/request_handler/request_handler_db_stream_info.h"
 #include "../../src/request_handler/request_handler_db_last_stream.h"
-#include "../../src/request_handler/request_handler_delete_stream.h"
+#include "../../src/request_handler/request_handler_db_delete_stream.h"
+#include "../../src/request_handler/request_handler_db_get_meta.h"
 
 #include "../../src/request_handler/request_handler_receive_data.h"
 #include "../../src/request_handler/request_handler_receive_metadata.h"
@@ -135,7 +136,8 @@ TEST_F(FactoryTests, DoNotAddDiskAndDbWriterIfNotWantedInRequest) {
 }
 
 TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
-    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInFilesystem;
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
+            asapo::IngestModeFlags::kStoreInFilesystem;
 
     SetReceiverConfig(config, "none");
 
@@ -171,7 +173,8 @@ TEST_F(FactoryTests, ReturnsMetaDataRequestOnTransferMetaDataOnly) {
 }
 
 TEST_F(FactoryTests, ReturnsMetaDataRequestOnkOpcodeTransferMetaData) {
-    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInDatabase;
+    generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
+            asapo::IngestModeFlags::kStoreInDatabase;
     generic_request_header.op_code = asapo::Opcode::kOpcodeTransferMetaData;
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
 
@@ -220,8 +223,19 @@ TEST_F(FactoryTests, DeleteStreamRequest) {
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(request->GetListHandlers().size(), Eq(2));
     ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
-    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDeleteStream*>(request->GetListHandlers()[1]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbDeleteStream*>(request->GetListHandlers()[1]), Ne(nullptr));
 }
+
+TEST_F(FactoryTests, GetMetamRequest) {
+    generic_request_header.op_code = asapo::Opcode::kOpcodeGetMeta;
+    auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, &err);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(request->GetListHandlers().size(), Eq(2));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerAuthorize*>(request->GetListHandlers()[0]), Ne(nullptr));
+    ASSERT_THAT(dynamic_cast<const asapo::RequestHandlerDbGetMeta*>(request->GetListHandlers()[1]), Ne(nullptr));
+}
+
+
 
 
 }

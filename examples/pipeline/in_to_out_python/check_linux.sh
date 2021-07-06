@@ -2,15 +2,15 @@
 
 source_path=.
 beamtime_id=asapo_test
-data_source_in=detector
-data_source_out=data_source
+data_source_in=detector/123
+data_source_out=data_source/12.4
 
 timeout=15
 timeout_producer=25
 nthreads=4
 
-indatabase_name=${beamtime_id}_${data_source_in}
-outdatabase_name=${beamtime_id}_${data_source_out}
+indatabase_name=${beamtime_id}_detector%2F123
+outdatabase_name=${beamtime_id}_data_source%2F12%2E4
 
 #asapo_test read token
 token=$ASAPO_TEST_RW_TOKEN
@@ -29,25 +29,13 @@ trap Cleanup EXIT
 
 Cleanup() {
     set +e
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop discovery
-    nomad stop broker
-    nomad stop receiver
-    nomad stop authorizer
     echo "db.dropDatabase()" | mongo ${indatabase_name}
   	echo "db.dropDatabase()" | mongo ${outdatabase_name}
   	rm -rf processed
     rm -rf ${receiver_root_folder}
-    rm -rf out
+#    rm -rf out
 
 }
-
-nomad run nginx.nmd
-nomad run discovery.nmd
-nomad run broker.nmd
-nomad run receiver_tcp.nmd
-nomad run authorizer.nmd
 
 mkdir -p $receiver_folder
 
@@ -69,7 +57,9 @@ export PYTHONPATH=$2:$3:${PYTHONPATH}
 $1 $4 127.0.0.1:8400 $source_path $beamtime_id $data_source_in $data_source_out $token $timeout $timeout_producer $nthreads 1  > out
 cat out
 cat out | grep "Processed 3 file(s)"
-cat out | grep "Sent 3 file(s)"
+cat out | grep "Sent 5 file(s)"
+cat out | grep bt_meta
+cat out | grep st_meta
 
 echo "db.data_default.find({"_id":1})" | mongo ${outdatabase_name} | tee /dev/stderr | grep "file1_${data_source_out}"
 

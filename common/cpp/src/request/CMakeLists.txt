@@ -18,7 +18,7 @@ target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR}
 set(TEST_SOURCE_FILES ../../unittests/request/test_request_pool.cpp
         ../../unittests/request/test_request.cpp)
 
-link_libraries(${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
+link_libraries(CURL::libcurl ${CMAKE_THREAD_LIBS_INIT} )
 
 set(TEST_LIBRARIES "${TARGET_NAME};system_io;logger;curl_http_client")
 include_directories(${ASAPO_CXX_COMMON_INCLUDE_DIR})

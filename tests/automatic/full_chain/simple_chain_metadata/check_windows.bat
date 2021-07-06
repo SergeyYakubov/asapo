@@ -6,10 +6,6 @@ SET receiver_folder="%receiver_root_folder%\test_facility\gpfs\%beamline%\2019\d
 
 set proxy_address="127.0.0.1:8400"
 
-echo db.%beamtime_id%_detector.insert({dummy:1}) | %mongo_exe% %beamtime_id%_detector
-
-call start_services.bat
-
 "%3" token -endpoint http://127.0.0.1:8400/asapo-authorizer -secret admin_token.key -types read %beamtime_id% > token
 set /P token=< token
 
@@ -18,7 +14,7 @@ mkdir %receiver_folder%
 "%1" %proxy_address% %beamtime_id% 100 0 1 0 1000
 
 REM consumer
-"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 5000  1 > out.txt
+"%2" %proxy_address% %receiver_folder% %beamtime_id% 2 %token% 5000  1 0 1 > out.txt
 type out.txt
 findstr /i /l /c:"dummy_meta"  out.txt || goto :error
 
@@ -30,7 +26,6 @@ call :clean
 exit /b 1
 
 :clean
-call stop_services.bat
 rmdir /S /Q %receiver_root_folder%
 del /f token
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%_detector

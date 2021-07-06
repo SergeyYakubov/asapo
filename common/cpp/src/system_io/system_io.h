@@ -21,7 +21,6 @@ typedef SSIZE_T ssize_t;
 #	define MSG_NOSIGNAL 0
 #endif
 
-
 namespace asapo {
 
 class SystemIO final : public IO {
@@ -34,7 +33,7 @@ class SystemIO final : public IO {
 
 #if defined(__linux__) || defined (__APPLE__)
     // used to for epoll - assumed single epoll instance per class instance
-    const int kMaxEpollEvents = 10;
+    static constexpr int kMaxEpollEvents = 10;
     mutable int epoll_fd_ = -1;
     Error AddToEpool(SocketDescriptor sd) const;
     Error CreateEpoolIfNeeded(SocketDescriptor master_socket) const;
@@ -79,7 +78,7 @@ class SystemIO final : public IO {
     static ssize_t      _read(FileDescriptor fd, void* buffer, size_t length);
     static ssize_t      _write(FileDescriptor fd, const void* buffer, size_t count);
     void            CollectMessageMetarmationRecursively(const std::string& path, std::vector<MessageMeta>* files,
-                                                      Error* err) const;
+            Error* err) const;
     void            GetSubDirectoriesRecursively(const std::string& path, SubDirList* subdirs, Error* err) const;
     Error           CreateDirectoryWithParents(const std::string& root_path, const std::string& path) const;
     uint8_t* AllocateArray(uint64_t fsize, Error* err) const;

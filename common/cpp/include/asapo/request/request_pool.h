@@ -17,8 +17,8 @@
 namespace asapo {
 
 struct RequestPoolLimits {
- uint64_t max_requests;
- uint64_t max_memory_mb;
+    uint64_t max_requests;
+    uint64_t max_memory_mb;
 };
 
 class RequestPool {
@@ -30,7 +30,7 @@ class RequestPool {
     VIRTUAL Error AddRequest(GenericRequestPtr request, bool top_priority = false);
     VIRTUAL void SetLimits(RequestPoolLimits limits);
     VIRTUAL Error AddRequests(GenericRequests requests);
-    ~RequestPool();
+    VIRTUAL ~RequestPool();
     VIRTUAL uint64_t NRequestsInPool();
     VIRTUAL uint64_t UsedMemoryInPool();
     VIRTUAL Error WaitRequestsFinished(uint64_t timeout_ms);
@@ -49,12 +49,12 @@ class RequestPool {
     GenericRequestPtr GetRequestFromQueue();
     void PutRequestBackToQueue(GenericRequestPtr request);
     Error CanAddRequest(const GenericRequestPtr& request, bool top_priority);
-    Error CanAddRequests(const GenericRequests &requests);
+    Error CanAddRequests(const GenericRequests& requests);
     uint64_t NRequestsInPoolWithoutLock();
     uint64_t shared_counter_{0};
     uint64_t requests_in_progress_{0};
     uint64_t memory_used_{0};
-    RequestPoolLimits limits_{0,0};
+    RequestPoolLimits limits_{0, 0};
 
 };
 

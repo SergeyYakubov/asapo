@@ -16,7 +16,8 @@ enum class DBErrorType {
     kAlreadyConnected,
     kBadAddress,
     kMemoryError,
-    kNoRecord
+    kNoRecord,
+    kWrongInput
 };
 
 using DBError = ServiceError<DBErrorType, ErrorType::kDBError>;
@@ -26,6 +27,10 @@ namespace DBErrorTemplates {
 
 auto const kNoRecord = DBErrorTemplate {
     "No record", DBErrorType::kNoRecord
+};
+
+auto const kWrongInput = DBErrorTemplate {
+    "Wrong input", DBErrorType::kWrongInput
 };
 
 

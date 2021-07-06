@@ -1,4 +1,4 @@
-set(TARGET_NAME insert_retrieve_mongodb)
+set(TARGET_NAME mongo-insert_retrieve_mongodb)
 set(SOURCE_FILES insert_retrieve_mongodb.cpp)
 
 

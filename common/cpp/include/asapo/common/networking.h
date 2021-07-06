@@ -30,6 +30,7 @@ enum Opcode : uint8_t {
     kOpcodeAuthorize,
     kOpcodeTransferMetaData,
     kOpcodeDeleteStream,
+    kOpcodeGetMeta,
     kOpcodeCount,
 };
 
@@ -53,6 +54,7 @@ const std::size_t kNCustomParams = 3;
 using CustomRequestData = uint64_t[kNCustomParams];
 const std::size_t kPosIngestMode = 0;
 const std::size_t kPosDataSetId = 1;
+const std::size_t kPosMetaIngestMode = 1;
 const std::size_t kPosDataSetSize = 2;
 
 struct GenericRequestHeader {
@@ -71,7 +73,7 @@ struct GenericRequestHeader {
         op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size}, meta_size{i_meta_size} {
         strncpy(message, i_message.c_str(), kMaxMessageSize);
         strncpy(stream, i_stream.c_str(), kMaxMessageSize);
-        strncpy(api_version,"v0.0", kMaxVersionSize);
+        strncpy(api_version, "v0.0", kMaxVersionSize);
     }
 
     Opcode      op_code;

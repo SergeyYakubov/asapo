@@ -12,16 +12,17 @@
 #include "asapo/http_client/http_client.h"
 #include "asapo/common/internal/version.h"
 
-namespace  asapo {
+namespace asapo {
 
 const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
-                           asapo::RequestHandlerType type):
-    log__{GetDefaultProducerLogger()},httpclient__{DefaultHttpClient()}, timeout_ms_{timeout_ms},endpoint_{endpoint} {
+                           asapo::RequestHandlerType type) :
+    log__{GetDefaultProducerLogger()}, httpclient__{DefaultHttpClient()}, timeout_ms_{timeout_ms}, endpoint_{endpoint} {
     switch (type) {
     case RequestHandlerType::kTcp:
-        discovery_service_.reset(new ReceiverDiscoveryService{endpoint, ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
+        discovery_service_.reset(new ReceiverDiscoveryService{endpoint,
+                                 ProducerImpl::kDiscoveryServiceUpdateFrequencyMs});
         request_handler_factory_.reset(new ProducerRequestHandlerFactory{discovery_service_.get()});
         break;
     case RequestHandlerType::kFilesystem:
@@ -32,9 +33,9 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, u
 }
 
 GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const MessageHeader& message_header, std::string stream,
-                                                           uint64_t ingest_mode) {
+        uint64_t ingest_mode) {
     GenericRequestHeader request{kOpcodeTransferData, message_header.message_id, message_header.data_size,
-                                 message_header.user_metadata.size(), message_header.file_name, stream};
+                                 message_header.user_metadata.size(), message_header.file_name, std::move(stream)};
     if (message_header.dataset_substream != 0) {
         request.op_code = kOpcodeTransferDatasetData;
         request.custom_data[kPosDataSetId] = message_header.dataset_substream;
@@ -56,44 +57,79 @@ Error CheckIngestMode(uint64_t ingest_mode) {
     }
 
     if (ingest_mode & IngestModeFlags::kTransferData &&
-        !(ingest_mode & (IngestModeFlags::kStoreInDatabase | IngestModeFlags::kStoreInFilesystem))) {
+            !(ingest_mode & (IngestModeFlags::kStoreInDatabase | IngestModeFlags::kStoreInFilesystem))) {
         return ProducerErrorTemplates::kWrongInput.Generate("wrong ingest mode");
     }
 
     if (ingest_mode & IngestModeFlags::kTransferMetaDataOnly &&
-        (ingest_mode & IngestModeFlags::kStoreInFilesystem)) {
+            (ingest_mode & IngestModeFlags::kStoreInFilesystem)) {
         return ProducerErrorTemplates::kWrongInput.Generate("wrong ingest mode");
     }
 
     return nullptr;
 }
 
-Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_mode, const std::string& stream) {
-
-    if (stream.empty()) {
-        return ProducerErrorTemplates::kWrongInput.Generate("stream empty");
-    }
-
+Error CheckFileNameInRequest(const MessageHeader& message_header) {
     if (message_header.file_name.size() > kMaxMessageSize) {
         return ProducerErrorTemplates::kWrongInput.Generate("too long filename");
     }
 
-    if (message_header.file_name.empty() ) {
+    if (message_header.file_name.empty()) {
         return ProducerErrorTemplates::kWrongInput.Generate("empty filename");
     }
+    return nullptr;
+}
 
-    if (message_header.dataset_substream > 0 && message_header.dataset_size == 0) {
+Error CheckDatasetInRequest(const MessageHeader& message_header) {
+    if (!message_header.dataset_substream) {
+        return nullptr;
+    }
+
+    if (message_header.dataset_size == 0) {
         return ProducerErrorTemplates::kWrongInput.Generate("dataset dimensions");
     }
 
-    if (message_header.message_id == 0) {
-        return ProducerErrorTemplates::kWrongInput.Generate("message id should be positive");
+    if (message_header.auto_id) {
+        return ProducerErrorTemplates::kWrongInput.Generate("auto id mode not implemented for datasets");
+    }
+
+    return nullptr;
+}
+
+Error CheckMessageIdInRequest(const MessageHeader& message_header) {
+    if (message_header.auto_id) {
+        if (message_header.message_id) {
+            return ProducerErrorTemplates::kWrongInput.Generate("message id should be 0 for auto id mode");
+        }
+    } else {
+        if (message_header.message_id == 0) {
+            return ProducerErrorTemplates::kWrongInput.Generate("message id should be positive");
+        }
+    }
+    return nullptr;
+}
+
+Error CheckProducerRequest(const MessageHeader& message_header, uint64_t ingest_mode, const std::string& stream) {
+    if (stream.empty()) {
+        return ProducerErrorTemplates::kWrongInput.Generate("stream empty");
+    }
+
+    if (auto err = CheckFileNameInRequest(message_header)) {
+        return err;
+    }
+
+    if (auto err = CheckDatasetInRequest(message_header)) {
+        return err;
+    }
+
+    if (auto err = CheckMessageIdInRequest(message_header)) {
+        return err;
     }
 
     return CheckIngestMode(ingest_mode);
 }
 
-Error HandleErrorFromPool(Error original_error,bool manage_data_memory) {
+Error HandleErrorFromPool(Error original_error, bool manage_data_memory) {
     if (original_error == nullptr) {
         return nullptr;
     }
@@ -115,12 +151,12 @@ Error HandleErrorFromPool(Error original_error,bool manage_data_memory) {
     } else {
         OriginalData* original = new asapo::OriginalData{};
         original->data = std::move(original_data);
-        producer_error->SetCustomData(std::unique_ptr<asapo::CustomErrorData>{original});
+        producer_error->SetCustomData(std::unique_ptr<asapo::CustomErrorData> {original});
     }
     return producer_error;
 }
 
-Error HandleInputError(Error original_error,MessageData data, bool manage_data_memory) {
+Error HandleInputError(Error original_error, MessageData data, bool manage_data_memory) {
     if (data == nullptr) {
         return original_error;
     }
@@ -131,7 +167,7 @@ Error HandleInputError(Error original_error,MessageData data, bool manage_data_m
 
     OriginalData* original = new asapo::OriginalData{};
     original->data = std::move(data);
-    original_error->SetCustomData(std::unique_ptr<asapo::CustomErrorData>{original});
+    original_error->SetCustomData(std::unique_ptr<asapo::CustomErrorData> {original});
     return original_error;
 }
 
@@ -145,24 +181,27 @@ Error ProducerImpl::Send(const MessageHeader& message_header,
     auto err = CheckProducerRequest(message_header, ingest_mode, stream);
     if (err) {
         log__->Error("error checking request - " + err->Explain());
-        return HandleInputError(std::move(err),std::move(data),manage_data_memory);
+        return HandleInputError(std::move(err), std::move(data), manage_data_memory);
     }
 
     auto request_header = GenerateNextSendRequest(message_header, std::move(stream), ingest_mode);
 
-    err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                std::move(data), std::move(message_header.user_metadata), std::move(full_path), callback, manage_data_memory, timeout_ms_}
+    err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
+        new ProducerRequest{
+            source_cred_string_, std::move(request_header),
+            std::move(data), std::move(message_header.user_metadata), std::move(full_path), callback,
+            manage_data_memory, timeout_ms_}
     });
 
-    return HandleErrorFromPool(std::move(err),manage_data_memory);
+    return HandleErrorFromPool(std::move(err), manage_data_memory);
 }
 
-bool WandTransferData(uint64_t ingest_mode) {
+bool WantTransferData(uint64_t ingest_mode) {
     return ingest_mode & IngestModeFlags::kTransferData;
 }
 
 Error CheckData(uint64_t ingest_mode, const MessageHeader& message_header, const MessageData* data) {
-    if (WandTransferData(ingest_mode)) {
+    if (WantTransferData(ingest_mode)) {
         if (*data == nullptr) {
             return ProducerErrorTemplates::kWrongInput.Generate("need data for this ingest mode");
         }
@@ -173,20 +212,20 @@ Error CheckData(uint64_t ingest_mode, const MessageHeader& message_header, const
     return nullptr;
 }
 
-Error ProducerImpl::Send(const MessageHeader &message_header,
+Error ProducerImpl::Send(const MessageHeader& message_header,
                          MessageData data,
                          uint64_t ingest_mode,
                          std::string stream,
                          RequestCallback callback) {
     if (auto err = CheckData(ingest_mode, message_header, &data)) {
-        return HandleInputError(std::move(err),std::move(data),true);
+        return HandleInputError(std::move(err), std::move(data), true);
     }
     return Send(message_header, std::move(stream), std::move(data), "", ingest_mode, callback, true);
 
 }
 
 Error ProducerImpl::SendStreamFinishedFlag(std::string stream, uint64_t last_id, std::string next_stream,
-                                              RequestCallback callback) {
+                                           RequestCallback callback) {
     MessageHeader message_header;
     message_header.file_name = kFinishStreamKeyword;
     message_header.data_size = 0;
@@ -194,7 +233,7 @@ Error ProducerImpl::SendStreamFinishedFlag(std::string stream, uint64_t last_id,
     if (next_stream.empty()) {
         next_stream = kNoNextStreamKeyword;
     }
-    message_header.user_metadata =  std::string("{\"next_stream\":") + "\"" + next_stream + "\"}";
+    message_header.user_metadata = std::string("{\"next_stream\":") + "\"" + next_stream + "\"}";
     return Send(message_header, std::move(stream), nullptr, "", IngestModeFlags::kTransferMetaDataOnly, callback, true);
 }
 
@@ -237,7 +276,7 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
     }
 
     source_cred_string_ = source_cred.GetString();
-    if (source_cred_string_.size()  + source_cred.user_token.size() > kMaxMessageSize) {
+    if (source_cred_string_.size() + source_cred.user_token.size() > kMaxMessageSize) {
         log__->Error("credentials string is too long - " + source_cred_string_);
         source_cred_string_ = "";
         return ProducerErrorTemplates::kWrongInput.Generate("credentials string is too long");
@@ -247,34 +286,34 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
 }
 
 Error ProducerImpl::SendMetadata(const std::string& metadata, RequestCallback callback) {
-    GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0, "beamtime_global.meta"};
-    request_header.custom_data[kPosIngestMode] = asapo::IngestModeFlags::kTransferData | asapo::IngestModeFlags::kStoreInDatabase;
-    MessageData data{new uint8_t[metadata.size()]};
-    strncpy((char*)data.get(), metadata.c_str(), metadata.size());
-    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(request_header),
-                std::move(data), "", "", callback, true, timeout_ms_}
-    });
-    return HandleErrorFromPool(std::move(err), true);
+    auto mode = MetaIngestMode{MetaIngestOp::kReplace, true};
+    return SendBeamtimeMetadata(metadata, mode, callback);
 }
 
-Error ProducerImpl::Send__(const MessageHeader &message_header,
+Error ProducerImpl::Send__(const MessageHeader& message_header,
                            void* data,
                            uint64_t ingest_mode,
                            std::string stream,
                            RequestCallback callback) {
-    MessageData data_wrapped = MessageData{(uint8_t*)data};
+    MessageData data_wrapped = MessageData{(uint8_t*) data};
 
     if (auto err = CheckData(ingest_mode, message_header, &data_wrapped)) {
         data_wrapped.release();
         return err;
     }
 
-    return Send(std::move(message_header), std::move(stream), std::move(data_wrapped), "", ingest_mode, callback, false);
+    return Send(std::move(message_header),
+                std::move(stream),
+                std::move(data_wrapped),
+                "",
+                ingest_mode,
+                callback,
+                false);
 }
 
-uint64_t  ProducerImpl::GetRequestsQueueSize() {
+uint64_t ProducerImpl::GetRequestsQueueSize() {
     return request_pool__->NRequestsInPool();
-};
+}
 
 Error ProducerImpl::WaitRequestsFinished(uint64_t timeout_ms) {
     if (request_pool__->WaitRequestsFinished(timeout_ms) != nullptr) {
@@ -287,7 +326,7 @@ Error ProducerImpl::WaitRequestsFinished(uint64_t timeout_ms) {
 void ProducerImpl::StopThreads__() {
     request_pool__->StopThreads();
 }
-Error ProducerImpl::SendFile(const MessageHeader &message_header,
+Error ProducerImpl::SendFile(const MessageHeader& message_header,
                              std::string full_path,
                              uint64_t ingest_mode,
                              std::string stream,
@@ -300,10 +339,9 @@ Error ProducerImpl::SendFile(const MessageHeader &message_header,
 
 }
 
-template<class T >
+template<class T>
 using RequestCallbackWithPromise = void (*)(std::shared_ptr<std::promise<T>>,
                                             RequestCallbackPayload header, Error err);
-
 
 template<class T>
 RequestCallback unwrap_callback(RequestCallbackWithPromise<T> callback,
@@ -315,34 +353,20 @@ RequestCallback unwrap_callback(RequestCallbackWithPromise<T> callback,
     return wrapper;
 }
 
-void ActivatePromiseForStreamInfo(std::shared_ptr<std::promise<StreamInfoResult>> promise, RequestCallbackPayload payload,
-                                  Error err) {
-    StreamInfoResult res;
+void ActivatePromiseForReceiverResponse(std::shared_ptr<std::promise<ReceiverResponse>> promise,
+                                        RequestCallbackPayload payload,
+                                        Error err) {
+    ReceiverResponse res;
     if (err == nullptr) {
-        auto ok = res.sinfo.SetFromJson(payload.response);
-        res.err = ok ? nullptr : ProducerErrorTemplates::kInternalServerError.Generate(
-                      std::string("cannot read JSON string from server response: ") + payload.response).release();
+        res.payload = payload.response;
+        res.err = nullptr;
     } else {
         res.err = err.release();
     }
     try {
         promise->set_value(res);
-    } catch(...) {}
+    } catch (...) {}
 }
-
-void ActivatePromiseForErrorInterface(std::shared_ptr<std::promise<ErrorInterface*>> promise, RequestCallbackPayload payload,
-                                  Error err) {
-    ErrorInterface* res;
-    if (err == nullptr) {
-        res = nullptr;
-    } else {
-        res = err.release();
-    }
-    try {
-        promise->set_value(res);
-    } catch(...) {}
-}
-
 
 template<class T>
 T GetResultFromCallback(std::future<T>* promiseResult, uint64_t timeout_ms, Error* err) {
@@ -351,45 +375,71 @@ T GetResultFromCallback(std::future<T>* promiseResult, uint64_t timeout_ms, Erro
         if (status == std::future_status::ready) {
             return promiseResult->get();
         }
-    } catch(...) {}
+    } catch (...) {}
 
     *err = ProducerErrorTemplates::kTimeout.Generate();
     return T{};
 }
 
-
-GenericRequestHeader CreateRequestHeaderFromOp(StreamRequestOp op,std::string stream) {
+GenericRequestHeader CreateRequestHeaderFromOp(StreamRequestOp op, std::string stream) {
     switch (op) {
-        case StreamRequestOp::kStreamInfo:
-            return GenericRequestHeader{kOpcodeStreamInfo, 0, 0, 0, "", stream};
-        case StreamRequestOp::kLastStream:
-            return GenericRequestHeader{kOpcodeLastStream, 0, 0, 0, "", ""};
+    case StreamRequestOp::kStreamInfo:
+        return GenericRequestHeader{kOpcodeStreamInfo, 0, 0, 0, "", stream};
+    case StreamRequestOp::kLastStream:
+        return GenericRequestHeader{kOpcodeLastStream, 0, 0, 0, "", ""};
+    }
+    return GenericRequestHeader{};
+}
+
+std::string ProducerImpl::BlockingRequest(GenericRequestHeader header, uint64_t timeout_ms, Error* err) const {
+    std::unique_ptr<std::promise<ReceiverResponse>> promise{new std::promise<ReceiverResponse>};
+    std::future<ReceiverResponse> promiseResult = promise->get_future();
+
+    *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
+        new ProducerRequest{
+            source_cred_string_, std::move(header),
+            nullptr, "", "",
+            unwrap_callback(
+                ActivatePromiseForReceiverResponse,
+                std::move(promise)), true,
+            timeout_ms}
+    }, true);
+    if (*err) {
+        return "";
+    }
+
+    auto res = GetResultFromCallback<ReceiverResponse>(&promiseResult, timeout_ms + 2000,
+               err); // we give two more sec for request to exit by timeout
+    if (*err) {
+        return "";
+    }
+
+
+    if (res.err == nullptr) {
+        return res.payload;
+    } else {
+        (*err).reset(res.err);
+        return "";
     }
 }
 
-StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op,std::string stream, uint64_t timeout_ms, Error* err) const {
-    auto header = CreateRequestHeaderFromOp(op,stream);
-    std::unique_ptr<std::promise<StreamInfoResult>> promise {new std::promise<StreamInfoResult>};
-    std::future<StreamInfoResult> promiseResult = promise->get_future();
+StreamInfo ProducerImpl::StreamRequest(StreamRequestOp op, std::string stream, uint64_t timeout_ms, Error* err) const {
+    auto header = CreateRequestHeaderFromOp(op, stream);
 
-    *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(header),
-                                                                                            nullptr, "", "",
-                                                                                            unwrap_callback(
-                                                                                                ActivatePromiseForStreamInfo,
-                                                                                                std::move(promise)), true,
-                                                                                            timeout_ms}
-    }, true);
+    auto response = BlockingRequest(std::move(header), timeout_ms, err);
     if (*err) {
         return StreamInfo{};
     }
-    auto res = GetResultFromCallback<StreamInfoResult>(&promiseResult, timeout_ms + 2000,
-                                                       err); // we give two more sec for request to exit by timeout
-    if (res.err == nullptr) {
-        return res.sinfo;
-    } else {
-        (*err).reset(res.err);
+
+    StreamInfo res;
+    if (!res.SetFromJson(response)) {
+        *err = ProducerErrorTemplates::kInternalServerError.Generate(
+                   std::string("cannot read JSON string from server response: ") + response);
         return StreamInfo{};
     }
+
+    *err = nullptr;
+    return res;
 }
 
 StreamInfo ProducerImpl::GetStreamInfo(std::string stream, uint64_t timeout_ms, Error* err) const {
@@ -397,19 +447,19 @@ StreamInfo ProducerImpl::GetStreamInfo(std::string stream, uint64_t timeout_ms, 
         *err = ProducerErrorTemplates::kWrongInput.Generate("stream empty");
         return {};
     }
-    return StreamRequest(StreamRequestOp::kStreamInfo,stream,timeout_ms,err);
+    return StreamRequest(StreamRequestOp::kStreamInfo, stream, timeout_ms, err);
 }
 
 StreamInfo ProducerImpl::GetLastStream(uint64_t timeout_ms, Error* err) const {
-    return StreamRequest(StreamRequestOp::kLastStream,"",timeout_ms,err);
+    return StreamRequest(StreamRequestOp::kLastStream, "", timeout_ms, err);
 }
 
 uint64_t ProducerImpl::GetRequestsQueueVolumeMb() {
-    return request_pool__->UsedMemoryInPool()/1000000;
+    return request_pool__->UsedMemoryInPool() / 1000000;
 }
 
 void ProducerImpl::SetRequestsQueueLimits(uint64_t size, uint64_t volume) {
-    request_pool__->SetLimits(RequestPoolLimits{size,volume});
+    request_pool__->SetLimits(RequestPoolLimits{size, volume});
 }
 
 Error ProducerImpl::GetVersionInfo(std::string* client_info, std::string* server_info, bool* supported) const {
@@ -429,40 +479,76 @@ Error ProducerImpl::GetVersionInfo(std::string* client_info, std::string* server
 
 Error ProducerImpl::GetServerVersionInfo(std::string* server_info,
                                          bool* supported) const {
-    auto endpoint = endpoint_ +"/asapo-discovery/"+kProducerProtocol.GetDiscoveryVersion()+
-        "/version?client=producer&protocol="+kProducerProtocol.GetVersion();
-    HttpCode  code;
+    auto endpoint = endpoint_ + "/asapo-discovery/" + kProducerProtocol.GetDiscoveryVersion() +
+                    "/version?client=producer&protocol=" + kProducerProtocol.GetVersion();
+    HttpCode code;
     Error err;
     auto response = httpclient__->Get(endpoint, &code, &err);
     if (err) {
         return err;
     }
-    return ExtractVersionFromResponse(response,"producer",server_info,supported);
+    return ExtractVersionFromResponse(response, "producer", server_info, supported);
 }
 
 Error ProducerImpl::DeleteStream(std::string stream, uint64_t timeout_ms, DeleteStreamOptions options) const {
     auto header = GenericRequestHeader{kOpcodeDeleteStream, 0, 0, 0, "", stream};
     header.custom_data[0] = options.Encode();
 
-    std::unique_ptr<std::promise<ErrorInterface*>> promise {new std::promise<ErrorInterface*>};
-    std::future<ErrorInterface*> promiseResult = promise->get_future();
+    Error err;
+    BlockingRequest(std::move(header), timeout_ms, &err);
+    return err;
+}
 
-    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {new ProducerRequest{source_cred_string_, std::move(header),
-                                                                                                nullptr, "", "",
-                                                                                                unwrap_callback<ErrorInterface*>(
-                                                                                                    ActivatePromiseForErrorInterface,
-                                                                                                    std::move(promise)), true,
-                                                                                                timeout_ms}
-    }, true);
-    if (err) {
-        return err;
-    }
+Error ProducerImpl::SendBeamtimeMetadata(const std::string& metadata, MetaIngestMode mode, RequestCallback callback) {
+    return SendMeta(metadata, mode, "", callback);
+}
 
-    auto res = GetResultFromCallback<ErrorInterface*>(&promiseResult, timeout_ms + 2000, &err); // we give two more sec for request to exit by timeout
-    if (err) {
-        return err;
+Error ProducerImpl::SendStreamMetadata(const std::string& metadata,
+                                       MetaIngestMode mode,
+                                       const std::string& stream,
+                                       RequestCallback callback) {
+    if (stream.empty()) {
+        return ProducerErrorTemplates::kWrongInput.Generate("stream is empty");
     }
-    return Error{res};
+    return SendMeta(metadata, mode, stream, callback);
+}
+
+Error ProducerImpl::SendMeta(const std::string& metadata,
+                             MetaIngestMode mode,
+                             std::string stream,
+                             RequestCallback callback) {
+    GenericRequestHeader request_header{kOpcodeTransferMetaData, 0, metadata.size(), 0,
+                                        stream.empty() ? "beamtime_global.meta" : stream + ".meta",
+                                        stream};
+    request_header.custom_data[kPosIngestMode] = asapo::IngestModeFlags::kTransferData |
+                                                 asapo::IngestModeFlags::kStoreInDatabase;
+    request_header.custom_data[kPosMetaIngestMode] = mode.Encode();
+    MessageData data{new uint8_t[metadata.size()]};
+    strncpy((char*) data.get(), metadata.c_str(), metadata.size());
+    auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
+        new ProducerRequest{
+            source_cred_string_, std::move(request_header),
+            std::move(data), "", "", callback, true, timeout_ms_}
+    });
+    return HandleErrorFromPool(std::move(err), true);
+}
+
+std::string ProducerImpl::GetStreamMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const {
+    return GetMeta(stream, timeout_ms, err);
+}
+
+std::string ProducerImpl::GetBeamtimeMeta(uint64_t timeout_ms, Error* err) const {
+    return GetMeta("", timeout_ms, err);
+}
+
+std::string ProducerImpl::GetMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const {
+    auto header =  GenericRequestHeader{kOpcodeGetMeta, 0, 0, 0, "", stream};
+    auto response = BlockingRequest(std::move(header), timeout_ms, err);
+    if (*err) {
+        return "";
+    }
+    *err = nullptr;
+    return response;
 }
 
 }

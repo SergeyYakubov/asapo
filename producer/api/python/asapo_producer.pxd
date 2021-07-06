@@ -46,6 +46,15 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   LogLevel LogLevel_Debug "asapo::LogLevel::Debug"
   LogLevel LogLevel_Warning "asapo::LogLevel::Warning"
 
+cdef extern from "asapo/asapo_producer.h" namespace "asapo":
+  cppclass MetaIngestOp:
+    pass
+  MetaIngestOp kInsert "asapo::MetaIngestOp::kInsert"
+  MetaIngestOp kReplace "asapo::MetaIngestOp::kReplace"
+  MetaIngestOp kUpdate "asapo::MetaIngestOp::kUpdate"
+  struct MetaIngestMode:
+    MetaIngestOp op
+    bool upsert
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   cppclass SourceType:
@@ -66,6 +75,8 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     string user_metadata
     uint64_t dataset_substream
     uint64_t dataset_size
+    bool auto_id
+
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
   struct  GenericRequestHeader:
@@ -110,7 +121,10 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo" nogil:
         StreamInfo GetLastStream(uint64_t timeout_ms, Error* err)
         Error GetVersionInfo(string* client_info,string* server_info, bool* supported)
         Error DeleteStream(string stream, uint64_t timeout_ms, DeleteStreamOptions options)
-
+        Error SendBeamtimeMetadata(string metadata, MetaIngestMode mode, RequestCallback callback)
+        Error SendStreamMetadata(string metadata, MetaIngestMode mode, string stream, RequestCallback callback)
+        string GetStreamMeta(string stream, uint64_t timeout_ms, Error* err)
+        string GetBeamtimeMeta(uint64_t timeout_ms, Error* err)
 
 cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     uint64_t kDefaultIngestMode

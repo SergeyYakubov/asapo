@@ -34,7 +34,7 @@ class RequestHandlerTcp: public RequestHandler {
     Error ConnectToReceiver(const std::string& source_credentials, const std::string& receiver_address);
     bool SendToOneOfTheReceivers(ProducerRequest* request, bool* retry);
     Error SendRequestContent(const ProducerRequest* request);
-    Error ReceiveResponse(const GenericRequestHeader& request_header, std::string* response);
+    Error ReceiveResponse(std::string* response);
     Error TrySendToReceiver(const ProducerRequest* request, std::string* response);
     SocketDescriptor sd_{kDisconnectedSocketDescriptor};
     void UpdateIfNewConnection();

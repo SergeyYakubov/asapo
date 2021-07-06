@@ -57,7 +57,8 @@ func readStreams(db *Mongodb, db_name string) (StreamsRecord, error) {
 	var rec = StreamsRecord{[]StreamInfo{}}
 	for _, coll := range result {
 		if strings.HasPrefix(coll, data_collection_name_prefix) {
-			si := StreamInfo{Name: strings.TrimPrefix(coll, data_collection_name_prefix)}
+			sNameEncoded:= strings.TrimPrefix(coll, data_collection_name_prefix)
+			si := StreamInfo{Name: decodeString(sNameEncoded)}
 			rec.Streams = append(rec.Streams, si)
 		}
 	}
@@ -88,7 +89,7 @@ func findStreamAmongCurrent(currentStreams []StreamInfo, record StreamInfo) (int
 }
 
 func fillInfoFromEarliestRecord(db *Mongodb, db_name string, rec *StreamsRecord, record StreamInfo, i int) error {
-	res, err := db.getEarliestRawRecord(db_name, record.Name)
+	res, err := db.getEarliestRawRecord(db_name, encodeStringForColName(record.Name))
 	if err != nil {
 		return err
 	}
@@ -102,7 +103,7 @@ func fillInfoFromEarliestRecord(db *Mongodb, db_name string, rec *StreamsRecord,
 }
 
 func fillInfoFromLastRecord(db *Mongodb, db_name string, rec *StreamsRecord, record StreamInfo, i int) error {
-	res, err := db.getLastRawRecord(db_name, record.Name)
+	res, err := db.getLastRawRecord(db_name, encodeStringForColName(record.Name))
 	if err != nil {
 		return err
 	}

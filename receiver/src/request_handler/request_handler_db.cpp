@@ -2,6 +2,7 @@
 #include "../receiver_config.h"
 #include "../receiver_logger.h"
 #include "../request.h"
+#include "asapo/database/db_error.h"
 
 namespace asapo {
 
@@ -12,13 +13,13 @@ Error RequestHandlerDb::ProcessRequest(Request* request) const {
         db_name_ += "_" + data_source;
     }
 
-
     return ConnectToDbIfNeeded();
 }
 
-RequestHandlerDb::RequestHandlerDb(std::string collection_name_prefix): log__{GetDefaultReceiverLogger()},
+RequestHandlerDb::RequestHandlerDb(std::string collection_name_prefix) : log__{GetDefaultReceiverLogger()},
     http_client__{DefaultHttpClient()},
-    collection_name_prefix_{std::move(collection_name_prefix)} {
+    collection_name_prefix_{
+    std::move(collection_name_prefix)} {
     DatabaseFactory factory;
     Error err;
     db_client__ = factory.Create(&err);
@@ -27,7 +28,6 @@ RequestHandlerDb::RequestHandlerDb(std::string collection_name_prefix): log__{Ge
 StatisticEntity RequestHandlerDb::GetStatisticEntity() const {
     return StatisticEntity::kDatabase;
 }
-
 
 Error RequestHandlerDb::GetDatabaseServerUri(std::string* uri) const {
     if (GetReceiverConfig()->database_uri != "auto") {
@@ -39,15 +39,17 @@ Error RequestHandlerDb::GetDatabaseServerUri(std::string* uri) const {
     Error http_err;
     *uri = http_client__->Get(GetReceiverConfig()->discovery_server + "/asapo-mongodb", &code, &http_err);
     if (http_err) {
-        log__->Error(std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
-                     + " : " + http_err->Explain());
+        log__->Error(
+            std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
+            + " : " + http_err->Explain());
         return ReceiverErrorTemplates::kInternalServerError.Generate("http error when discover database server" +
                 http_err->Explain());
     }
 
     if (code != HttpCode::OK) {
-        log__->Error(std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
-                     + " : http code" + std::to_string((int)code));
+        log__->Error(
+            std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
+            + " : http code" + std::to_string((int) code));
         return ReceiverErrorTemplates::kInternalServerError.Generate("error when discover database server");
     }
 
@@ -55,7 +57,6 @@ Error RequestHandlerDb::GetDatabaseServerUri(std::string* uri) const {
 
     return nullptr;
 }
-
 
 Error RequestHandlerDb::ConnectToDbIfNeeded() const {
     if (!connected_to_db) {
@@ -66,12 +67,24 @@ Error RequestHandlerDb::ConnectToDbIfNeeded() const {
         }
         err = db_client__->Connect(uri, db_name_);
         if (err) {
-            return ReceiverErrorTemplates::kInternalServerError.Generate("error connecting to database " + err->Explain());
+            return DBErrorToReceiverError(err);
         }
         connected_to_db = true;
     }
     return nullptr;
 }
 
+Error RequestHandlerDb::DBErrorToReceiverError(const Error& err) const {
+    if (err == nullptr) {
+        return nullptr;
+    }
+    std::string msg = "database error: " + err->Explain();
+    if (err == DBErrorTemplates::kWrongInput || err == DBErrorTemplates::kNoRecord
+            || err == DBErrorTemplates::kJsonParseError) {
+        return ReceiverErrorTemplates::kBadRequest.Generate(msg);
+    }
+
+    return ReceiverErrorTemplates::kInternalServerError.Generate(msg);
+}
 
 }

@@ -39,9 +39,10 @@ struct Args {
     std::string data_source;
     std::string token;
     int timeout_ms;
-    int nthreads;
+    size_t nthreads;
     bool read_data;
     bool datasets;
+    bool need_beamtime_meta = false;
 };
 
 class LatchedTimer {
@@ -88,23 +89,24 @@ void WaitThreads(std::vector<std::thread>* threads) {
 int ProcessError(const Error& err) {
     if (err == nullptr) return 0;
     std::cout << err->Explain() << std::endl;
-    return err == asapo::ConsumerErrorTemplates::kEndOfStream ? 0 : 1;
+    return (err == asapo::ConsumerErrorTemplates::kEndOfStream
+            || err == asapo::ConsumerErrorTemplates::kStreamFinished) ? 0 : 1;
 }
 
 std::vector<std::thread>
 StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* errors, std::vector<int>* nbuf,
              std::vector<int>* nfiles_total, std::vector<asapo::NetworkConnectionType>* connection_type,
              LatchedTimer* timer) {
-    auto exec_next = [&params, nfiles, errors, nbuf, nfiles_total, connection_type, timer](int i) {
+    auto exec_next = [&params, nfiles, errors, nbuf, nfiles_total, connection_type, timer](size_t i) {
         asapo::MessageMeta fi;
         Error err;
         auto consumer = asapo::ConsumerFactory::CreateConsumer(params.server,
-                                                             params.file_path,
-                                                             true,
-                                                             asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                                                      params.beamtime_id, "",
-                                                                                      params.data_source, params.token},
-                                                             &err);
+                        params.file_path,
+                        true,
+                        asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                 params.beamtime_id, "",
+                                                 params.data_source, params.token},
+                        &err);
         if (err) {
             std::cout << "Error CreateConsumer: " << err << std::endl;
             exit(EXIT_FAILURE);
@@ -121,13 +123,12 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
                 (*errors)[i] += ProcessError(err);
                 lock.unlock();
                 exit(EXIT_FAILURE);
-                return;
             }
         }
 
         lock.unlock();
 
-        if (i == 0) {
+        if (i == 0 && params.need_beamtime_meta) {
             auto meta = consumer->GetBeamtimeMeta(&err);
             if (err == nullptr) {
                 std::cout << meta << std::endl;
@@ -178,7 +179,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
     };
 
     std::vector<std::thread> threads;
-    for (int i = 0; i < params.nthreads; i++) {
+    for (size_t i = 0; i < params.nthreads; i++) {
         threads.emplace_back(std::thread(exec_next, i));
     }
     return threads;
@@ -196,7 +197,7 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_wi
     std::vector<int> nfiles_total_in_datasets(params.nthreads, 0);
     std::vector<asapo::NetworkConnectionType> connection_types(params.nthreads, asapo::NetworkConnectionType::kUndefined);
 
-    LatchedTimer latched_timer(params.nthreads);
+    LatchedTimer latched_timer(static_cast<int>(params.nthreads));
 
     auto threads = StartThreads(params, &nfiles, &errors, &nfiles_frombuf, &nfiles_total_in_datasets, &connection_types,
                                 &latched_timer);
@@ -204,10 +205,10 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_wi
 
     std::chrono::system_clock::time_point t2 = std::chrono::system_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-    *duration_ms = duration_read.count();
+    *duration_ms = static_cast<uint64_t>(duration_read.count());
     if (latched_timer.was_triggered()) {
         auto duration_without_first = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - latched_timer.start_time());
-        *duration_without_first_ms = duration_without_first.count();
+        *duration_without_first_ms = static_cast<uint64_t>(duration_without_first.count());
     } else {
         *duration_without_first_ms = 0;
     }
@@ -219,8 +220,8 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_wi
 
     // The following two loops will check if all threads that processed some data were using the same network type
     {
-        int firstThreadThatActuallyProcessedData = 0;
-        for (int i = 0; i < params.nthreads; i++) {
+        size_t firstThreadThatActuallyProcessedData = 0;
+        for (size_t i = 0; i < params.nthreads; i++) {
             if (nfiles[i] > 0) {
                 firstThreadThatActuallyProcessedData = i;
                 break;
@@ -228,7 +229,7 @@ int ReadAllData(const Args& params, uint64_t* duration_ms, uint64_t* duration_wi
         }
 
         *connection_type = connection_types[firstThreadThatActuallyProcessedData];
-        for (int i = 0; i < params.nthreads; i++) {
+        for (size_t i = 0; i < params.nthreads; i++) {
             if (*connection_type != connection_types[i] && nfiles[i] > 0) {
                 // The output will look like this:
                 // ERROR thread[0](processed 5 files) connection type is 'No connection' but thread[1](processed 3 files) is 'TCP'
@@ -267,9 +268,9 @@ void TryGetStream(Args* args) {
 int main(int argc, char* argv[]) {
     Args params;
     params.datasets = false;
-    if (argc != 8 && argc != 9) {
+    if (argc != 8 && argc != 9 && argc != 10) {
         std::cout << "Usage: " + std::string{argv[0]}
-                  + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets]"
+                  + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets] [send metadata]"
                   <<
                   std::endl;
         exit(EXIT_FAILURE);
@@ -278,12 +279,15 @@ int main(int argc, char* argv[]) {
     params.file_path = std::string{argv[2]};
     params.beamtime_id = std::string{argv[3]};
     TryGetStream(&params);
-    params.nthreads = atoi(argv[4]);
+    params.nthreads = static_cast<size_t>(atoi(argv[4]));
     params.token = std::string{argv[5]};
     params.timeout_ms = atoi(argv[6]);
     params.read_data = atoi(argv[7]) != 1;
     if (argc == 9) {
         params.datasets = atoi(argv[8]) == 1;
+    }
+    if (argc == 10) {
+        params.need_beamtime_meta = atoi(argv[9]) == 1;
     }
 
     if (params.read_data) {
@@ -311,12 +315,14 @@ int main(int argc, char* argv[]) {
     float rate;
     if (duration_without_first_ms == 0) {
         std::cout << "Elapsed : " << duration_ms << "ms" << std::endl;
-        rate = 1000.0f * nfiles / (duration_ms - params.timeout_ms);
+        rate = 1000.0f * static_cast<float>(nfiles) / (static_cast<float>(duration_ms - static_cast<uint64_t>
+                                                       (params.timeout_ms)));
     } else {
         std::cout << "Elapsed : " << duration_without_first_ms << "ms (With handshake: " << duration_ms << "ms)" << std::endl;
-        rate = 1000.0f * nfiles / (duration_without_first_ms - params.timeout_ms);
+        rate = 1000.0f * static_cast<float>(nfiles) / (static_cast<float>(duration_without_first_ms - static_cast<uint64_t>
+                                                       (params.timeout_ms)));
     }
-    auto bw_gbytes = rate * file_size / 1000.0f / 1000.0f / 1000.0f;
+    auto bw_gbytes = rate * static_cast<float>(file_size) / 1000.0f / 1000.0f / 1000.0f;
     std::cout << "Rate : " << rate << std::endl;
     if (file_size > 0) {
         std::cout << "Bandwidth " << bw_gbytes * 8 << " Gbit/s" << std::endl;

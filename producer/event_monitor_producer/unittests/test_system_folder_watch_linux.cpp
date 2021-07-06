@@ -126,9 +126,9 @@ ssize_t SystemFolderWatchTests::AddEventToBuffer(std::string filename, uint32_t 
     event->mask = mask;
     event->wd = fd;
     strcpy(event->name, filename.c_str());
-    event->len = strlen(event->name) + 1;
+    event->len = static_cast<uint32_t>(strlen(event->name)) + 1;
     memcpy(buffer + cur_buffer_pointer, event, size);
-    cur_buffer_pointer += size;
+    cur_buffer_pointer += static_cast<int>(size);
     free(buf);
     return size;
 

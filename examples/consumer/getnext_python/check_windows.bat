@@ -7,12 +7,10 @@ SET mongo_exe="c:\Program Files\MongoDB\Server\4.2\bin\mongo.exe"
 set token_test_run=%BT_TEST_RUN_TOKEN%
 set group_id=bif31l2uiddd4r0q6b40
 
-call start_services.bat
-
 for /l %%x in (1, 1, 3) do echo db.data_default.insert({"_id":%%x,"size":100,"name":"%%x","timestamp":0,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}}) | %mongo_exe% %database_name%  || goto :error
 
 
-echo db.meta.insert({"_id":0,"meta_test":"test"}) | %mongo_exe% %database_name%  || goto :error
+echo db.meta.insert({"_id":"bt","meta":{"meta_test":"test"}}) | %mongo_exe% %database_name%  || goto :error
 
 set PYTHONPATH=%1
 
@@ -44,5 +42,4 @@ call :clean
 exit /b 1
 
 :clean
-call stop_services.bat
 echo db.dropDatabase() | %mongo_exe% %database_name%

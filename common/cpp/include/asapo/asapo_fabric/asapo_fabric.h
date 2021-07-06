@@ -76,6 +76,8 @@ class FabricFactory {
      * Will allocate a proper domain as soon as the client gets his first server address added
      */
     virtual std::unique_ptr<FabricClient> CreateClient(Error* error) const = 0;
+    virtual ~FabricFactory() = default;
+
 };
 
 std::unique_ptr<FabricFactory> GenerateDefaultFabricFactory(); // <- will try to load the library with dlopen first

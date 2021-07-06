@@ -23,26 +23,10 @@ receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/dat
 Cleanup() {
     echo cleanup
     rm -rf ${receiver_root_folder}
-    nomad stop nginx
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop receiver
-    nomad stop discovery
-    nomad stop broker
-    nomad stop authorizer
     rm -rf out
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     influx -execute "drop database ${monitor_database_name}"
 }
-
-echo "db.${beamtime_id}_detector.insert({dummy:1})" | mongo ${beamtime_id}_detector
-
-nomad run nginx.nmd
-nomad run authorizer.nmd
-nomad run receiver_tcp.nmd # Only use TCP because the consumer will only use metadata anyways
-nomad run discovery.nmd
-nomad run broker.nmd
-
-sleep 1
 
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`
 
@@ -52,6 +36,5 @@ mkdir -p ${receiver_folder}
 $producer_bin localhost:8400 ${beamtime_id} 100 0 1 0 1000
 
 echo "Start consumer in metadata only mode"
-$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 | tee out
+$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 1000 1 0 1 | tee out
 grep "dummy_meta" out
-grep -i "Using connection type: No connection" out

@@ -4,22 +4,22 @@ namespace asapo {
 
 RequestPool::RequestPool(uint8_t n_threads,
                          RequestHandlerFactory* request_handler_factory, const AbstractLogger* log) : log__{log},
-                                                                                                      request_handler_factory__{
-                                                                                                          request_handler_factory},
-                                                                                                      threads_{
-                                                                                                          n_threads} {
+    request_handler_factory__{
+    request_handler_factory},
+threads_{
+    n_threads} {
     for (size_t i = 0; i < n_threads; i++) {
         log__->Debug("starting thread " + std::to_string(i));
         threads_[i] = std::thread(
-            [this, i] { ThreadHandler(i); });
+                          [this, i] { ThreadHandler(i); });
     }
 
 }
 
-Error RequestPool::CanAddRequests(const GenericRequests &requests) {
+Error RequestPool::CanAddRequests(const GenericRequests& requests) {
     if (NRequestsInPoolWithoutLock() + requests.size() > limits_.max_requests && limits_.max_requests > 0) {
         return IOErrorTemplates::kNoSpaceLeft.Generate(
-            "reached maximum number of " + std::to_string(limits_.max_requests) + " requests");
+                   "reached maximum number of " + std::to_string(limits_.max_requests) + " requests");
     }
 
     if (limits_.max_memory_mb == 0) {
@@ -27,7 +27,7 @@ Error RequestPool::CanAddRequests(const GenericRequests &requests) {
     }
 
     uint64_t total_size = 0;
-    for (auto &request : requests) {
+    for (auto& request : requests) {
         if (request->ContainsData()) {
             total_size += request->header.data_size;
         }
@@ -35,19 +35,19 @@ Error RequestPool::CanAddRequests(const GenericRequests &requests) {
 
     if (memory_used_ + total_size > limits_.max_memory_mb * 1000000) {
         return IOErrorTemplates::kNoSpaceLeft.Generate(
-            "reached maximum memory capacity of " + std::to_string(limits_.max_memory_mb) + " MB");
+                   "reached maximum memory capacity of " + std::to_string(limits_.max_memory_mb) + " MB");
     }
 
     return nullptr;
 }
 
-Error RequestPool::CanAddRequest(const GenericRequestPtr &request, bool top_priority) {
+Error RequestPool::CanAddRequest(const GenericRequestPtr& request, bool top_priority) {
     if (top_priority) {
         return nullptr;
     }
     if (limits_.max_requests > 0 && NRequestsInPoolWithoutLock() >= limits_.max_requests) {
         return IOErrorTemplates::kNoSpaceLeft.Generate(
-            "reached maximum number of " + std::to_string(limits_.max_requests) + " requests");
+                   "reached maximum number of " + std::to_string(limits_.max_requests) + " requests");
     }
 
     if (!request->ContainsData()) {
@@ -56,7 +56,7 @@ Error RequestPool::CanAddRequest(const GenericRequestPtr &request, bool top_prio
 
     if (limits_.max_memory_mb > 0 && memory_used_ + request->header.data_size > limits_.max_memory_mb * 1000000) {
         return IOErrorTemplates::kNoSpaceLeft.Generate(
-            "reached maximum memory capacity of " + std::to_string(limits_.max_memory_mb) + " MB");
+                   "reached maximum memory capacity of " + std::to_string(limits_.max_memory_mb) + " MB");
     }
 
     return nullptr;
@@ -87,7 +87,7 @@ Error RequestPool::AddRequest(GenericRequestPtr request, bool top_priority) {
     return nullptr;
 }
 
-bool RequestPool::CanProcessRequest(const std::unique_ptr<RequestHandler> &request_handler) {
+bool RequestPool::CanProcessRequest(const std::unique_ptr<RequestHandler>& request_handler) {
     return request_queue_.size() && request_handler->ReadyProcessRequest();
 }
 
@@ -103,7 +103,7 @@ void RequestPool::PutRequestBackToQueue(GenericRequestPtr request) {
     request_queue_.emplace_front(std::move(request));
 }
 
-void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler> &request_handler,
+void RequestPool::ProcessRequest(const std::unique_ptr<RequestHandler>& request_handler,
                                  ThreadInformation* thread_info) {
     auto request = GetRequestFromQueue();
     if (request->TimedOut()) {
@@ -139,7 +139,7 @@ void RequestPool::ThreadHandler(uint64_t id) {
     auto request_handler = request_handler_factory__->NewRequestHandler(id, &shared_counter_);
     do {
         auto do_work = condition_.wait_for(thread_info.lock, std::chrono::milliseconds(100), [this, &request_handler] {
-          return (CanProcessRequest(request_handler) || quit_);
+            return (CanProcessRequest(request_handler) || quit_);
         });
         //after wait, we own the lock
         if (!quit_ && do_work) {
@@ -167,7 +167,7 @@ Error RequestPool::AddRequests(GenericRequests requests) {
     }
 
     uint64_t total_size = 0;
-    for (auto &elem : requests) {
+    for (auto& elem : requests) {
         if (elem->ContainsData()) {
             total_size += elem->header.data_size;
         }

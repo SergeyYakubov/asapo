@@ -3,7 +3,6 @@ set(TARGET_NAME full_chain_simple_chain_withdata_fromcache)
 ################################
 # Testing
 ################################
-prepare_asapo()
 if (UNIX)
     set (ROOT_PATH "/tmp/asapo/")
 else()
@@ -11,6 +10,8 @@ else()
 endif()
 
 configure_file(test.json.in test.json @ONLY)
+
+prepare_asapo()
 
 add_script_test("${TARGET_NAME}-tcp" "$<TARGET_FILE:event-monitor-producer-bin> $<TARGET_FILE:getnext> $<TARGET_PROPERTY:asapo,EXENAME> tcp" nomem)
 

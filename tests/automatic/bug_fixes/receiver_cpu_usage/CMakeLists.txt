@@ -3,7 +3,6 @@ set(TARGET_NAME receiver_cpu_usage)
 ################################
 # Testing
 ################################
-prepare_asapo()
 set (ROOT_PATH "/tmp/asapo/")
 
 configure_file(test.json.in test.json @ONLY)

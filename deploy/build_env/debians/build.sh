@@ -15,7 +15,7 @@ cmake \
     -DCPACK_GENERATOR="DEB" \
     ..
 cmake .. #second time for to correctly build deb packages
-make
+make -j 4
 make package
 
 

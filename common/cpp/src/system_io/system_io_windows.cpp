@@ -203,7 +203,7 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
 }
 
 void SystemIO::CollectMessageMetarmationRecursively(const std::string& path,
-                                                 MessageMetas* files, Error* err) const {
+        MessageMetas* files, Error* err) const {
     WIN32_FIND_DATA find_data;
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {

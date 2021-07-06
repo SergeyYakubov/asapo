@@ -7,7 +7,7 @@
 namespace asapo {
 
 enum class ConsumerErrorType {
-    kNoData,
+    kNoData = 0,
     kEndOfStream,
     kStreamFinished,
     kUnavailableService,
@@ -22,9 +22,9 @@ using ConsumerErrorTemplate = ServiceErrorTemplate<ConsumerErrorType, ErrorType:
 
 
 class PartialErrorData : public CustomErrorData {
- public:
-  uint64_t id;
-  uint64_t expected_size;
+  public:
+    uint64_t id;
+    uint64_t expected_size;
 };
 
 class ConsumerErrorData : public CustomErrorData {
@@ -33,7 +33,6 @@ class ConsumerErrorData : public CustomErrorData {
     uint64_t id_max;
     std::string next_stream;
 };
-
 
 namespace ConsumerErrorTemplates {
 

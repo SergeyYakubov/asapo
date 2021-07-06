@@ -32,7 +32,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     try {
         args->discovery_service_endpoint = argv[1];
         args->beamtime_id = argv[2];
-        args->mode = std::stoull(argv[3]);
+        args->mode = std::stoi(argv[3]);
         PrintCommandArguments(*args);
         return;
     } catch (std::exception& e) {
@@ -42,7 +42,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     }
 }
 
-void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
+void ProcessAfterSend(asapo::RequestCallbackPayload, asapo::Error err) {
     if (err) {
         std::cerr << "metadata was not successfully send: " << err << std::endl;
         return;
@@ -53,8 +53,8 @@ void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
 }
 
 bool SendMetaData(asapo::Producer* producer) {
-
-    auto err = producer->SendMetadata("hello", &ProcessAfterSend);
+    auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kReplace, true};
+    auto err = producer->SendBeamtimeMetadata("hello", mode, &ProcessAfterSend);
     if (err) {
         std::cerr << "Cannot send metadata: " << err << std::endl;
         return false;
@@ -69,7 +69,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
                                             args.mode == 0 ? asapo::RequestHandlerType::kTcp
                                             : asapo::RequestHandlerType::kFilesystem,
                                             asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                                     args.beamtime_id, "", "", ""}, 60000, &err);
+                                                    args.beamtime_id, "", "", ""}, 60000, &err);
     if (err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
         exit(EXIT_FAILURE);

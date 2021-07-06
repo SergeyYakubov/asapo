@@ -27,7 +27,7 @@ Args GetParams(int argc, char* argv[]) {
     return Args{fname, result, message, 3};
 }
 
-void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const MessageData& data,
+void AssertGoodResult(const std::unique_ptr<IO>& io, const Error& err, const MessageData&,
                       const Args& params) {
     if (err) {
         std::cerr << err << std::endl;
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     auto params = GetParams(argc, argv);
 
     auto io = std::unique_ptr<asapo::IO> {asapo::GenerateDefaultIO()};
-    auto array = new uint8_t[params.length] {'1', '2', '3'};
+    auto array = new uint8_t[3] {'1', '2', '3'};
     MessageData data{array};
 
     auto err = io->WriteDataToFile("", params.fname, data, params.length, true, true);
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
     if (params.result == "ok") {
         AssertGoodResult(io, err, data, params);
         // check allow_overwrite works
-        auto err = io->WriteDataToFile("", params.fname, data, params.length, true, false);
+        err = io->WriteDataToFile("", params.fname, data, params.length, true, false);
         params.message = asapo::IOErrorTemplates::kFileAlreadyExists.Generate()->Explain();
         AssertBadResult(err, params);
     } else {

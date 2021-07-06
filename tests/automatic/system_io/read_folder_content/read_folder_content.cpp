@@ -19,11 +19,11 @@ int main(int argc, char* argv[]) {
 
     std::string result{};
     if (err == nullptr) {
-        int64_t id = 0;
+        uint64_t id = 0;
         for(auto message_meta : files) {
             M_AssertEq(message_meta.id, ++id);
             if (message_meta.name == "1") {
-                M_AssertEq(4, message_meta.size);
+                M_AssertEq(static_cast<uint64_t>(4), message_meta.size);
             }
             result += message_meta.name;
         }

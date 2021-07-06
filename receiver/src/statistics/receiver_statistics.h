@@ -5,7 +5,7 @@
 
 namespace asapo {
 
-static const auto kNStatisticEntities = 3;
+static const size_t kNStatisticEntities = 3;
 enum StatisticEntity : int {
     kDatabase = 0,
     kDisk,

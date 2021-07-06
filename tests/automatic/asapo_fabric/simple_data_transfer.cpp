@@ -17,7 +17,7 @@ std::promise<void> serverIsDone;
 std::future<void> serverIsDoneFuture = serverIsDone.get_future();
 
 constexpr int kTotalRuns = 3;
-constexpr int kEachInstanceRuns = 5;
+constexpr int kEachInstanceRuns = 2;
 constexpr size_t kRdmaSize = 5 * 1024 * 1024;
 
 void ServerMasterThread(const std::string& hostname, uint16_t port, char* expectedRdmaBuffer) {
@@ -42,7 +42,7 @@ void ServerMasterThread(const std::string& hostname, uint16_t port, char* expect
                     server->RecvAny(&clientAddress, &messageId, &request, sizeof(request), &err);
                 } while (err == IOErrorTemplates::kTimeout && tries++ < 2);
                 M_AssertEq(nullptr, err, "server->RecvAny");
-                M_AssertEq(123 + instanceRuns, messageId);
+                M_AssertEq(static_cast<FabricMessageId>(123 + instanceRuns), messageId);
                 M_AssertEq("Hello World", request.message);
 
                 server->RdmaWrite(clientAddress, (MemoryRegionDetails*) &request.stream, expectedRdmaBuffer, kRdmaSize,
@@ -85,7 +85,7 @@ void ClientThread(const std::string& hostname, uint16_t port, char* expectedRdma
             GenericRequestHeader request{};
             strcpy(request.message, "Hello World");
             memcpy(request.stream, mr->GetDetails(), sizeof(MemoryRegionDetails));
-            FabricMessageId messageId = 123 + instanceRuns;
+            FabricMessageId messageId = static_cast<FabricMessageId>(123 + instanceRuns);
             client->Send(serverAddress, messageId, &request, sizeof(request), &err);
             M_AssertEq(nullptr, err, "client->Send");
 
@@ -97,7 +97,7 @@ void ClientThread(const std::string& hostname, uint16_t port, char* expectedRdma
             for (size_t i = 0; i < kRdmaSize; i++) {
                 // Check to reduce log spam
                 if (expectedRdmaBuffer[i] != actualRdmaBuffer[i]) {
-                    M_AssertEq(expectedRdmaBuffer[i], actualRdmaBuffer[i],
+                    M_AssertEq(static_cast<uint64_t>(expectedRdmaBuffer[i]), static_cast<uint64_t>(actualRdmaBuffer[i]),
                                "Expect rdma[i] == acutal[i], i = " + std::to_string(i));
                 }
             }

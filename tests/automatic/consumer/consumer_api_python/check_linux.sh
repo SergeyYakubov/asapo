@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 beamtime_id=test_run
-source_path=`pwd`/asap3/petra3/gpfs/p01/2019/data/$beamtime_id
+source_path=/tmp/asapo/asap3/petra3/gpfs/p01/2019/data/$beamtime_id
 data_source=detector
 database_name=${beamtime_id}_${data_source}
 token_test_run=$BT_TEST_RUN_RW_TOKEN
@@ -11,21 +11,9 @@ trap Cleanup EXIT
 
 Cleanup() {
     set +e
-    nomad stop nginx >/dev/null
-    nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-    nomad stop discovery >/dev/null
-    nomad stop broker >/dev/null
-    nomad stop file_transfer >/dev/null
-    nomad stop authorizer >/dev/null
 	  echo "db.dropDatabase()" | mongo ${database_name} >/dev/null
 	  rm $source_path/1 $source_path/1_1
 }
-
-nomad run nginx.nmd
-nomad run discovery.nmd
-nomad run broker.nmd
-nomad run file_transfer.nmd
-nomad run authorizer.nmd
 
 
 mkdir -p $source_path
@@ -39,6 +27,10 @@ do
 done
 
 echo 'db.data_streamfts.insert({"_id":'1',"size":0,"name":"'1'","timestamp":1000,"source":"none","buf_id":0,"dataset_substream":0,"meta":{"test":10}})' | mongo ${database_name}
+
+echo 'db.meta.insert({"_id":"bt","meta":{"data":"test_bt"}})' | mongo ${database_name}
+echo 'db.meta.insert({"_id":"st_test","meta":{"data":"test_st"}})' | mongo ${database_name}
+
 
 for i in `seq 1 5`;
 do
