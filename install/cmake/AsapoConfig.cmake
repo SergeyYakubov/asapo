@@ -24,6 +24,11 @@ if (static AND shared)
     return()
 endif ()
 
+if (NOT DEFINED ASAPO_STATIC_CXX_LIBS)
+    set(ASAPO_STATIC_CXX_LIBS OFF CACHE BOOL "link with static gcc and stdc++")
+endif()
+
+
 macro(asapo_load_targets type comp)
     if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/Asapo${comp}${type}Target.cmake")
         set(Asapo_NOT_FOUND_MESSAGE
@@ -35,6 +40,16 @@ macro(asapo_load_targets type comp)
     string(TOLOWER ${_comp} comp_low)
     string(TOLOWER ${type} type_low)
     message(STATUS "Added imported::asapo-${comp_low} target (${type_low})")
+    if (${type} STREQUAL "Static" AND DEFINED ASAPO_STATIC_CXX_LIBS AND ASAPO_STATIC_CXX_LIBS AND CMAKE_COMPILER_IS_GNUCXX)
+        if(${CMAKE_VERSION} VERSION_LESS "3.13.0")
+            message(FATAL_ERROR "Need at least CMake 3.13 to add target link options for static gcc libs, use SET(CMAKE_EXE_LINKER_FLAGS  \"\${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++\") instead ")
+        else()
+            message(STATUS "Added linker options -static-libgcc -static-libstdc++ to imported::asapo-${comp_low}")
+            target_link_options(imported::asapo-consumer INTERFACE -static-libgcc -static-libstdc++)
+        endif()
+
+    endif()
+
 endmacro()
 
 macro(asapo_load_comp_targets comp static shared)
@@ -75,3 +90,4 @@ else()
         asapo_load_comp_targets(${_comp} ${static} ${shared})
     endforeach()
 endif()
+

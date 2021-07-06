@@ -8,7 +8,7 @@ IMPROVEMENTS
 * Consumer/Producer API - allow any characters in source/stream/group names
 * Consumer/Producer API - introduce stream metadata
 * Consumer API - an option to auto discovery of data folder when consumer client uses file transfer service (has_filesystem=False)
-* Build procedure - errors on compiler warnings, add pkg-config and cmake config for asapo clients  
+* Improved build procedure - shared libaries, added pkg-config and cmake config for asapo clients  
 
 BUG FIXES
 * Consumer API: multiple consumers from same group receive stream finished error 
