@@ -45,7 +45,7 @@ macro(asapo_load_targets type comp)
             message(FATAL_ERROR "Need at least CMake 3.13 to add target link options for static gcc libs, use SET(CMAKE_EXE_LINKER_FLAGS  \"\${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++\") instead ")
         else()
             message(STATUS "Added linker options -static-libgcc -static-libstdc++ to imported::asapo-${comp_low}")
-            target_link_options(imported::asapo-consumer INTERFACE -static-libgcc -static-libstdc++)
+            target_link_options(imported::asapo-${comp_low} INTERFACE -static-libgcc -static-libstdc++)
         endif()
 
     endif()
