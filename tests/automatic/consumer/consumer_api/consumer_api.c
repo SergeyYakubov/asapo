@@ -262,6 +262,11 @@ int main(int argc, char* argv[]) {
                                                          &err);
     EXIT_IF_ERROR("create consumer", err);
 
+    AsapoStringHandle group_id2 = asapo_string_from_c_str("hello");
+    printf("%s\n",asapo_string_c_str(group_id2));
+//    ASSERT_EQ_STRING("hello",asapo_string_c_str(group_id2),"asapo str <-> string");
+
+
     asapo_consumer_set_timeout(consumer, 1000ull);
 
 
@@ -280,10 +285,12 @@ int main(int argc, char* argv[]) {
         test_datasets(consumer,group_id);
     }
 
+
     asapo_free_handle(&err);
     asapo_free_handle(&cred);
     asapo_free_handle(&consumer);
     asapo_free_handle(&group_id);
+    asapo_free_handle(&group_id2);
 
     return EXIT_SUCCESS;
 }

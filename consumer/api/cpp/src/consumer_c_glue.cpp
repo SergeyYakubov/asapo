@@ -245,6 +245,15 @@ extern "C" {
         return static_cast<AsapoStringHandle>(handle_or_null(retval, error, std::move(err)));
     }
 
+//! creates AsapoStringHandle from C-String
+/// \param[in] str C-string
+/// \return AsapoStringHandle
+    AsapoStringHandle asapo_string_from_c_str(const char* str) {
+        auto retval = new AsapoHandlerHolder<std::string> {new std::string{str}};
+        return static_cast<AsapoStringHandle>(retval);
+    }
+
+
 //! give a pointer to the content of the asapoString
 /// \param[in] str the handle of the asapoString in question
 /// \return const char pointer to the content
