@@ -19,7 +19,7 @@ void Check(const std::string& expected_ip_address, const std::string& hostname) 
     M_AssertEq(expected_ip_address, ip_address);
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     Check("127.0.0.1", "localhost");
     Check("8.8.8.8", "google-public-dns-a.google.com");
     Check("8.8.4.4", "google-public-dns-b.google.com");

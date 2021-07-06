@@ -335,7 +335,8 @@ Error ConsumerImpl::GetRecordFromServer(std::string* response, std::string group
             return no_data_error ? std::move(no_data_error) : std::move(err);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
+        elapsed_ms += static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>
+                                            (system_clock::now() - start).count());
     }
     return nullptr;
 }
@@ -409,7 +410,8 @@ Error ConsumerImpl::GetDataFromFile(MessageMeta* info, MessageData* data) {
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
+        elapsed_ms += static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>
+                                            (system_clock::now() - start).count());
     }
     if (err != nullptr) {
         return ConsumerErrorTemplates::kLocalIOError.Generate(err->Explain());
@@ -522,7 +524,8 @@ Error ConsumerImpl::ServiceRequestWithTimeout(const std::string& service_name,
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        elapsed_ms += std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() - start).count();
+        elapsed_ms += static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>
+                                            (system_clock::now() - start).count());
     }
     return err;
 }
@@ -588,7 +591,7 @@ Error ConsumerImpl::SetLastReadMarker(std::string group_id, uint64_t value, std:
 
 uint64_t ConsumerImpl::GetCurrentSize(std::string stream, Error* err) {
     auto ri = GetSizeRequestForSingleMessagesStream(stream);
-    return GetCurrentCount(stream, ri, err);
+    return GetCurrentCount(ri, err);
 }
 
 Error ConsumerImpl::GetById(uint64_t id, MessageMeta* info, MessageData* data, std::string stream) {
@@ -906,7 +909,7 @@ void ConsumerImpl::InterruptCurrentOperation() {
 
 uint64_t ConsumerImpl::GetCurrentDatasetCount(std::string stream, bool include_incomplete, Error* err) {
     RequestInfo ri = GetSizeRequestForDatasetStream(stream, include_incomplete);
-    return GetCurrentCount(stream, ri, err);
+    return GetCurrentCount(ri, err);
 }
 
 RequestInfo ConsumerImpl::GetSizeRequestForDatasetStream(std::string& stream, bool include_incomplete) const {
@@ -915,7 +918,7 @@ RequestInfo ConsumerImpl::GetSizeRequestForDatasetStream(std::string& stream, bo
     return ri;
 }
 
-uint64_t ConsumerImpl::GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err) {
+uint64_t ConsumerImpl::GetCurrentCount(const RequestInfo& ri, Error* err) {
     auto responce = BrokerRequestWithTimeout(ri, err);
     if (*err) {
         return 0;

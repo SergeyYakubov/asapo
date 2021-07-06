@@ -59,7 +59,7 @@ ACTION_P(SaveArg1ToSendStatR, value) {
     value->data_volume = resp.data_volume;
     value->elapsed_ms = resp.elapsed_ms;
     value->tags = resp.tags;
-    for (int i = 0; i < asapo::kNStatisticEntities; i++) {
+    for (size_t i = 0; i < asapo::kNStatisticEntities; i++) {
         value->extra_entities.push_back(resp.extra_entities[i]);
     }
 
@@ -89,8 +89,8 @@ void ReceiverStatisticTests::TestTimer(const StatisticEntity& entity) {
 
     auto stat = ExtractStat();
 
-    ASSERT_THAT(stat.extra_entities[entity].second, Ge(0.3));
-    ASSERT_THAT(stat.extra_entities[entity].second, Le(1.0));
+    ASSERT_THAT(stat.extra_entities[static_cast<size_t>(entity)].second, Ge(0.3));
+    ASSERT_THAT(stat.extra_entities[static_cast<size_t>(entity)].second, Le(1.0));
 
 }
 

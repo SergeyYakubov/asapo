@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     fi.timestamp = std::chrono::system_clock::now();
     fi.buf_id = 18446744073709551615ull;
     fi.source = "host:1234";
-    fi.id = args.file_id;
+    fi.id = static_cast<uint64_t>(args.file_id);
     fi.dataset_substream = 10;
 
     uint64_t dataset_size = 2;

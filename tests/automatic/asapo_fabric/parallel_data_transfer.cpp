@@ -97,9 +97,9 @@ void ClientChildThread(const std::string& hostname, uint16_t port, int index, ch
         GenericRequestHeader request{};
         strcpy(request.message, "Hello World");
         memcpy(request.stream, mr->GetDetails(), sizeof(MemoryRegionDetails));
-        request.data_id = index;
-        request.data_size = run;
-        FabricMessageId messageId = (index * kEachInstanceRuns) + run;
+        request.data_id = static_cast<uint64_t>(index);
+        request.data_size = static_cast<uint64_t>(run);
+        FabricMessageId messageId = static_cast<FabricMessageId>((index * kEachInstanceRuns) + run);
         client->Send(serverAddress, messageId, &request, sizeof(request), &err);
         M_AssertEq(nullptr, err, "client->Send");
 
@@ -111,7 +111,7 @@ void ClientChildThread(const std::string& hostname, uint16_t port, int index, ch
         for (size_t i = 0; i < kRdmaSize; i++) {
             // Check to reduce log spam
             if (expectedRdmaBuffer[i] != actualRdmaBuffer[i]) {
-                M_AssertEq(expectedRdmaBuffer[i], actualRdmaBuffer[i],
+                M_AssertEq(static_cast<uint64_t>(expectedRdmaBuffer[i]), static_cast<uint64_t>(actualRdmaBuffer[i]),
                            "Expect rdma[i] == acutal[i], i = " + std::to_string(i));
             }
         }

@@ -9,10 +9,10 @@
 #define ASSERT_EQ_STRING(...) assert_eq_string_(__VA_ARGS__,__LINE__)
 #define ASSERT_TRUE(...) assert_true_(__VA_ARGS__,__LINE__)
 
-void assert_eq_int_(int expected, int got, const char *message, int line) {
+void assert_eq_int_(uint64_t expected, uint64_t got, const char *message, int line) {
     printf("asserting %s at %d\n",message,line);
     if (expected!=got) {
-        printf("%s: expected %d got %d at %d\n",message, expected, got,line);
+        printf("%s: expected %llu got %llu at %d\n",message, (unsigned long long)expected, (unsigned long long)got,line);
         exit(EXIT_FAILURE);
     }
 }
@@ -79,7 +79,7 @@ void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
 // size
     int64_t size = asapo_consumer_get_current_dataset_count(consumer,"default", 0, &err);
     EXIT_IF_ERROR("asapo_consumer_get_current_dataset_count", err);
-    ASSERT_EQ_INT(10,size,"asapo_consumer_get_current_dataset_count");
+    ASSERT_EQ_INT(10,(uint64_t)size,"asapo_consumer_get_current_dataset_count");
 
 // get next incomplete datasets without min_size
     dataset = asapo_consumer_get_next_dataset(consumer,group_id, 0, "incomplete", &err);
@@ -119,11 +119,11 @@ void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
 // get size
     size = asapo_consumer_get_current_dataset_count(consumer,"incomplete", 1, &err);
     EXIT_IF_ERROR("asapo_consumer_get_current_dataset_count", err);
-    ASSERT_EQ_INT(5,size,"asapo_consumer_get_current_dataset_count include incomplete");
+    ASSERT_EQ_INT(5,(uint64_t)size,"asapo_consumer_get_current_dataset_count include incomplete");
 
     size = asapo_consumer_get_current_dataset_count(consumer,"incomplete", 0, &err);
     EXIT_IF_ERROR("asapo_consumer_get_current_dataset_count", err);
-    ASSERT_EQ_INT(0,size,"asapo_consumer_get_current_dataset_count exclude incomplete");
+    ASSERT_EQ_INT(0,(uint64_t)size,"asapo_consumer_get_current_dataset_count exclude incomplete");
 
 
     asapo_free_handle(&err);
@@ -173,11 +173,11 @@ void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
 // stream size
     int64_t size = asapo_consumer_get_current_size(consumer,"default", &err);
     EXIT_IF_ERROR("asapo_consumer_get_current_size", err);
-    ASSERT_EQ_INT(10,size,"asapo_consumer_get_current_size");
+    ASSERT_EQ_INT(10,(uint64_t)size,"asapo_consumer_get_current_size");
 
     size = asapo_consumer_get_current_size(consumer,"stream1", &err);
     EXIT_IF_ERROR("asapo_consumer_get_current_size stream1", err);
-    ASSERT_EQ_INT(5,size,"asapo_consumer_get_current_size stream1");
+    ASSERT_EQ_INT(5,(uint64_t)size,"asapo_consumer_get_current_size stream1");
 
 // query messages
     AsapoMessageMetasHandle messages = asapo_consumer_query_messages(consumer, "meta.test = 10 AND name='1'", "default", &err);
@@ -201,12 +201,12 @@ void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
 
     struct timespec time;
     asapo_stream_info_get_timestamp_last_entry(s1,&time);
-    ASSERT_EQ_INT(0,time.tv_sec,"stream 1 lastentry sec");
-    ASSERT_EQ_INT(1000,time.tv_nsec,"stream 1 lastentry nsec");
+    ASSERT_EQ_INT(0,(uint64_t)time.tv_sec,"stream 1 lastentry sec");
+    ASSERT_EQ_INT(1000,(uint64_t)time.tv_nsec,"stream 1 lastentry nsec");
 
     asapo_stream_info_get_timestamp_created(s2,&time);
-    ASSERT_EQ_INT(0,time.tv_sec,"stream 2 timestamp_created sec");
-    ASSERT_EQ_INT(2000,time.tv_nsec,"stream 2 timestamp_created nsec");
+    ASSERT_EQ_INT(0,(uint64_t)time.tv_sec,"stream 2 timestamp_created sec");
+    ASSERT_EQ_INT(2000,(uint64_t)time.tv_nsec,"stream 2 timestamp_created nsec");
     asapo_free_handle(&s0);
     asapo_free_handle(&s1);
     asapo_free_handle(&s2);
@@ -214,7 +214,7 @@ void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
 // acknowledges
     int64_t id = asapo_consumer_get_last_acknowledged_message(consumer,group_id, "default", &err);
     ASSERT_TRUE(asapo_error_get_type(err) == kNoData,"last ack default stream no data");
-    ASSERT_EQ_INT(-1,id,"last ack default stream no data id = -1");
+    ASSERT_EQ_INT(0,(uint64_t)id+1,"last ack default stream no data id = -1");
 
     AsapoIdListHandle nacks = asapo_consumer_get_unacknowledged_messages(consumer, group_id, 0, 0, "default", &err);
     EXIT_IF_ERROR("asapo_consumer_get_unacknowledged_messages", err);
@@ -244,6 +244,9 @@ void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
 }
 
 int main(int argc, char* argv[]) {
+    if (argc <4) {
+        abort();
+    }
     const char *endpoint = argv[1];
     const char *beamtime = argv[2];
     const char *token = argv[3];
@@ -258,6 +261,11 @@ int main(int argc, char* argv[]) {
                                                          cred,
                                                          &err);
     EXIT_IF_ERROR("create consumer", err);
+
+    AsapoStringHandle group_id2 = asapo_string_from_c_str("hello");
+    printf("%s\n",asapo_string_c_str(group_id2));
+//    ASSERT_EQ_STRING("hello",asapo_string_c_str(group_id2),"asapo str <-> string");
+
 
     asapo_consumer_set_timeout(consumer, 1000ull);
 
@@ -277,10 +285,12 @@ int main(int argc, char* argv[]) {
         test_datasets(consumer,group_id);
     }
 
+
     asapo_free_handle(&err);
     asapo_free_handle(&cred);
     asapo_free_handle(&consumer);
     asapo_free_handle(&group_id);
+    asapo_free_handle(&group_id2);
 
     return EXIT_SUCCESS;
 }

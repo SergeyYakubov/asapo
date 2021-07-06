@@ -28,8 +28,10 @@ ENDIF()
 # Library
 ################################
 
-add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io>)
+add_library(asapo_fabric_objects OBJECT ${SOURCE_FILES})
+target_include_directories(asapo_fabric_objects PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR} )
+target_include_directories(asapo_fabric_objects SYSTEM PUBLIC ${LIBFABRIC_INCLUDE_DIR})
 
-target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR} ${LIBFABRIC_INCLUDE_DIR})
-
-install(TARGETS ${TARGET_NAME} DESTINATION lib)
+add_library(${TARGET_NAME} STATIC $<TARGET_OBJECTS:asapo_fabric_objects> $<TARGET_OBJECTS:system_io>)
+target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR} )
+target_include_directories(${TARGET_NAME} SYSTEM PUBLIC ${LIBFABRIC_INCLUDE_DIR})

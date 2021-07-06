@@ -76,7 +76,7 @@ ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_sock
     return active_sockets;
 }
 
-void SystemIO::SetThreadName(std::thread* threadHandle, const std::string& name) const {
+void SystemIO::SetThreadName(std::thread*, const std::string& ) const {
     // does not work on macos (could only set name for current thread, which is not what we want)
 }
 

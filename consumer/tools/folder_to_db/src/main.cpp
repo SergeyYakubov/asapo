@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     auto import_params = ProcessCommandArguments(argc, argv);
 
     asapo::FolderToDbImporter importer;
-    importer.SetNParallelTasks(import_params.ntasks);
+    importer.SetNParallelTasks(static_cast<unsigned int>(import_params.ntasks));
     importer.IgnoreDuplicates(import_params.ignore_duplicates);
 
     asapo::FolderImportStatistics statistics;

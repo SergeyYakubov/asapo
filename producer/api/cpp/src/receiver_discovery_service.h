@@ -20,7 +20,7 @@ class ReceiverDiscoveryService {
   public:
     explicit ReceiverDiscoveryService(std::string endpoint, uint64_t update_frequency_ms);
     VIRTUAL void StartCollectingData();
-    ~ReceiverDiscoveryService();
+    VIRTUAL ~ReceiverDiscoveryService();
     VIRTUAL uint64_t MaxConnections();
     VIRTUAL ReceiversList RotatedUriList(uint64_t nthread);
     VIRTUAL uint64_t UpdateFrequency();

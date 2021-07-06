@@ -313,7 +313,7 @@ Error ProducerImpl::Send__(const MessageHeader& message_header,
 
 uint64_t ProducerImpl::GetRequestsQueueSize() {
     return request_pool__->NRequestsInPool();
-};
+}
 
 Error ProducerImpl::WaitRequestsFinished(uint64_t timeout_ms) {
     if (request_pool__->WaitRequestsFinished(timeout_ms) != nullptr) {

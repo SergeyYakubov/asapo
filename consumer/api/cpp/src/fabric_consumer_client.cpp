@@ -60,7 +60,7 @@ fabric::FabricAddress FabricConsumerClient::GetAddressOrConnect(const MessageMet
     if (tableEntry == known_addresses_.end()) {
         fabric::FabricAddress address = client__->AddServerAddress(info->source, error);
         if (*error) {
-            return -1;
+            return 0;
         }
         return known_addresses_[info->source] = address;
     } else {

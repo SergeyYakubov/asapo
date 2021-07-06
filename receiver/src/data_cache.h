@@ -24,7 +24,7 @@ class DataCache {
     VIRTUAL void* GetFreeSlotAndLock(uint64_t size, CacheMeta** meta);
     VIRTUAL void* GetSlotToReadAndLock(uint64_t id, uint64_t data_size, CacheMeta** meta);
     VIRTUAL bool UnlockSlot(CacheMeta* meta);
-    ~DataCache() = default;
+    VIRTUAL ~DataCache() = default;
   private:
     uint64_t cache_size_;
     float keepunlocked_ratio_;

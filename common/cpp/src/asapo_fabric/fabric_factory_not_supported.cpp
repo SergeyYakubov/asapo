@@ -10,7 +10,7 @@ FabricFactoryNotSupported::FabricFactoryNotSupported(FabricErrorTemplate reason)
 
 
 std::unique_ptr<FabricServer> asapo::fabric::FabricFactoryNotSupported::CreateAndBindServer(
-    const AbstractLogger* logger, const std::string& host, uint16_t port,
+    const AbstractLogger*, const std::string&, uint16_t,
     Error* error) const {
     *error = reason_.Generate();
     return nullptr;

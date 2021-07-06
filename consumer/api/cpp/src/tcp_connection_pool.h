@@ -19,6 +19,7 @@ class TcpConnectionPool {
     VIRTUAL SocketDescriptor GetFreeConnection(const std::string& source, bool* reused, Error* err);
     VIRTUAL SocketDescriptor Reconnect(SocketDescriptor sd, Error* err);
     VIRTUAL  void ReleaseConnection(SocketDescriptor sd);
+    VIRTUAL ~TcpConnectionPool() = default;
     TcpConnectionPool();
     std::unique_ptr<IO> io__;
   private:

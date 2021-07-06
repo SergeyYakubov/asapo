@@ -5,7 +5,7 @@
 using namespace asapo;
 using namespace fabric;
 
-int main(int argc, char* argv[]) {
+int main() {
     Error err;
     auto factory = GenerateDefaultFabricFactory();
 

@@ -62,7 +62,7 @@ class TcpClientTests : public Test {
     MessageMeta info;
     std::string expected_uri = "test:8400";
     uint64_t expected_buf_id = 123;
-    uint64_t expected_size = 1233;
+    size_t expected_size = 1233;
     MessageData data;
     asapo::SocketDescriptor expected_sd = 1;
     void SetUp() override {
@@ -102,7 +102,7 @@ class TcpClientTests : public Test {
             DoAll(
                 testing::SetArgPointee<3>(ok ? nullptr
                                           : asapo::IOErrorTemplates::kBadFileNumber.Generate().release()),
-                Return(ok ? 1 : -1)
+                Return(ok ? 1 : 0)
             ));
         if (!ok) {
             EXPECT_CALL(mock_io, CloseSocket_t(sd, _));
@@ -134,7 +134,7 @@ class TcpClientTests : public Test {
         .WillOnce(
             DoAll(
                 testing::SetArgPointee<3>(ok ? nullptr : asapo::IOErrorTemplates::kTimeout.Generate().release()),
-                testing::Return(ok ? expected_size : -1)
+                testing::Return(ok ? expected_size : 0)
             ));
         if (!ok) {
             EXPECT_CALL(mock_io, CloseSocket_t(sd, _));

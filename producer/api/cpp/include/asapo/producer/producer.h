@@ -134,6 +134,7 @@ class Producer {
     //! Sends beamtime metadata to the receiver
     /*!
       \param metadata - a JSON string with metadata
+      \param MetaIngestMode - a JSON string with metadata
       \param callback - callback function
       \return Error - will be nullptr on success
     */

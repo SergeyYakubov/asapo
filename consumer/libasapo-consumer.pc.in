@@ -7,5 +7,5 @@ Name: libasapo-consumer
 Description: ASAP::O consumer API
 Version: ${ASAPO_CONSUMER_PROTOCOL}
 Cflags: -I${CMAKE_INSTALL_FULL_INCLUDEDIR}
-Libs: -L${CMAKE_INSTALL_FULL_LIBDIR} -lasapo-consumer -lasapo-fabric
-Libs.private: -lcurl -lstdc++ -lpthread
+Libs: -L${CMAKE_INSTALL_FULL_LIBDIR} -lasapo-consumer
+Libs.private: -lcurl -lstdc++ -lpthread -ld

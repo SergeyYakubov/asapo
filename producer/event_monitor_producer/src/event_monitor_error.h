@@ -23,7 +23,7 @@ auto const kSystemError = EventMonitorErrorTemplate {
 
 
 
-};
+}
 }
 
 #endif //ASAPO_EventMonitor_ERROR_H

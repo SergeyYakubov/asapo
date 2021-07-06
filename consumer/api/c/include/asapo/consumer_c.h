@@ -66,6 +66,10 @@ AsapoBool asapo_is_error(AsapoErrorHandle err);
 
 AsapoStringHandle asapo_consumer_generate_new_group_id(AsapoConsumerHandle consumer, AsapoErrorHandle* err);
 const char* asapo_string_c_str(const AsapoStringHandle str);
+
+AsapoStringHandle asapo_string_from_c_str(const char* str);
+
+
 size_t asapo_string_size(const AsapoStringHandle str);
 
 void asapo_consumer_set_timeout(AsapoConsumerHandle consumer, uint64_t timeout_ms);

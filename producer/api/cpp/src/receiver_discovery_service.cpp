@@ -103,7 +103,7 @@ ReceiversList ReceiverDiscoveryService::RotatedUriList(uint64_t nthread) {
     }
     ReceiversList list{uri_list_};
     lock.unlock();
-    auto shift = (int) nthread % size;
+    auto shift = static_cast<unsigned int>(nthread % size);
     std::rotate(list.begin(), list.begin() + shift, list.end());
     return list;
 }

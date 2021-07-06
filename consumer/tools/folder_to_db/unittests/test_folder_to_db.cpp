@@ -68,9 +68,9 @@ TEST(FolderDBConverter, SetNTasksCorrectly) {
 class MockDatabaseFactory : public DatabaseFactory {
   public:
     std::vector<NiceMock<MockDatabase>*> db;
-    mutable int n{0};
-    void CreateDBs(int n) {
-        for (int i = 0; i < n; i++) {
+    mutable size_t n{0};
+    void CreateDBs(size_t n) {
+        for (size_t i = 0; i < n; i++) {
             auto val = new NiceMock<MockDatabase>;
             db.push_back(val);
             ON_CALL(*val, Connect_t(_, _))
@@ -82,7 +82,7 @@ class MockDatabaseFactory : public DatabaseFactory {
         return std::unique_ptr<Database> {db[n++]};
     }
     ~MockDatabaseFactory() {
-        for (unsigned int i = n; i < db.size(); i++) {
+        for (size_t i = n; i < db.size(); i++) {
             delete db[i];
         }
     }
@@ -143,7 +143,7 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotConnect) {
 }
 
 TEST_F(FolderDBConverterTests, ErrorWhenCannotCreateDbParallel) {
-    int nparallel = 3;
+    size_t nparallel = 3;
     EXPECT_CALL(*(mock_dbf->db[0]), Connect_t(uri, _)).
     WillOnce(testing::Return(asapo::DBErrorTemplates::kConnectionError.Generate().release()));
     EXPECT_CALL(*(mock_dbf->db[1]), Connect_t(uri, _)).
@@ -151,7 +151,7 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotCreateDbParallel) {
     EXPECT_CALL(*(mock_dbf->db[2]), Connect_t(uri, _)).
     WillOnce(testing::Return(asapo::DBErrorTemplates::kConnectionError.Generate().release()));
 
-    converter.SetNParallelTasks(nparallel);
+    converter.SetNParallelTasks(static_cast<unsigned int>(nparallel));
     auto error = converter.Convert(uri, folder, db_name);
     ASSERT_THAT(error, Ne(nullptr));
 }
@@ -245,7 +245,7 @@ TEST_F(FolderDBConverterTests, PassesFileListToInsertInParallel3by2) {
 TEST_F(FolderDBConverterTests, ComputesStatistics) {
 
     EXPECT_CALL(*mock_dbf->db[0], Insert_t(_, _, false, _)).
-    Times(message_metas.size()).
+    Times(static_cast<int>(message_metas.size())).
     WillRepeatedly(testing::Return(nullptr));
 
     asapo::FolderImportStatistics statistics;

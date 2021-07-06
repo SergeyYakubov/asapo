@@ -56,6 +56,8 @@ Error TcpConsumerClient::ReceiveResponce(SocketDescriptor sd) const noexcept {
         case kNetErrorNoData:
             connection_pool__->ReleaseConnection(sd);
             break;
+        default:
+            break;
         }
         return ConvertRdsResponseToError(response.error_code);
     }

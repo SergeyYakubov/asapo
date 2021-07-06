@@ -17,8 +17,6 @@ using ::testing::SetArgPointee;
 
 namespace {
 
-uint64_t big_uint = 18446744073709551615ull;
-
 TEST(EncodingTests, EncodeDbName) {
 
     std::string dbname = R"(db_/\."$)";

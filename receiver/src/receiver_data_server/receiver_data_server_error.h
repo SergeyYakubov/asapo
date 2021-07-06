@@ -22,7 +22,7 @@ auto const kWrongRequest = ReceiverDataServerErrorTemplate {
 };
 
 
-};
+}
 }
 
 #endif //ASAPO_RECEIVER_DATA_SERVER_ERROR_H

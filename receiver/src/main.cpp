@@ -21,7 +21,7 @@ asapo::Error ReadConfigFile(int argc, char* argv[]) {
     return factory.SetConfig(argv[1]);
 }
 
-void AddDataServers(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
+void AddDataServers(const asapo::ReceiverConfig* config, asapo::SharedCache,
                     std::vector<asapo::RdsNetServerPtr>& netServers) {
     auto logger = asapo::GetDefaultReceiverDataServerLogger();
     logger->SetLogLevel(config->log_level);

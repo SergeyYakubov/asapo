@@ -226,7 +226,7 @@ void AddVals(const std::string& prefix, const std::string& separator, Document& 
             return;
         }
         Value s;
-        s.SetString(name.c_str(), name.size(), a);
+        s.SetString(name.c_str(), static_cast<SizeType>(name.size()), a);
         vals->AddMember(s, Value(m.value, a), d.GetAllocator());
     }
 }

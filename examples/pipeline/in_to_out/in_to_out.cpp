@@ -35,11 +35,11 @@ struct Args {
     std::string token;
     int timeout_ms;
     int timeout_ms_producer;
-    int nthreads;
+    uint8_t nthreads;
     bool transfer_data;
 };
 
-void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
+void ProcessAfterSend(asapo::RequestCallbackPayload, asapo::Error err) {
     if (err && err != asapo::ProducerErrorTemplates::kServerWarning) {
         std::cerr << "Data was not successfully send: " << err << std::endl;
         return;
@@ -141,7 +141,7 @@ Error ProcessNextEvent(const Args& args, const ConsumerPtr& consumer, const Prod
 std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPtr& producer,
                                               std::vector<int>* nfiles,
                                               std::vector<int>* errors) {
-    auto exec_next = [&args, nfiles, errors, &producer](int i) {
+    auto exec_next = [&args, nfiles, errors, &producer](uint64_t i) {
         asapo::MessageMeta fi;
         Error err;
         auto consumer = CreateConsumerAndGroup(args, &err);
@@ -165,7 +165,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
 
     std::vector<std::thread> threads;
     for (int i = 0; i < args.nthreads; i++) {
-        threads.emplace_back(std::thread(exec_next, i));
+        threads.emplace_back(std::thread(exec_next, static_cast<uint64_t>(i)));
     }
     return threads;
 }
@@ -185,7 +185,7 @@ int ProcessAllData(const Args& args, const ProducerPtr& producer, uint64_t* dura
 
     system_clock::time_point t2 = system_clock::now();
     auto duration_read = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-    *duration_ms = duration_read.count();
+    *duration_ms = static_cast<uint64_t>(duration_read.count());
     return n_total;
 }
 
@@ -220,7 +220,7 @@ int main(int argc, char* argv[]) {
     args.stream_in = std::string{argv[4]};
     args.stream_out = std::string{argv[5]};
     args.token = std::string{argv[6]};
-    args.nthreads = atoi(argv[7]);
+    args.nthreads = static_cast<uint8_t>(atoi(argv[7]));
     args.timeout_ms = atoi(argv[8]);
     args.timeout_ms_producer = atoi(argv[9]);
     args.transfer_data = atoi(argv[10]) == 1;
@@ -233,7 +233,7 @@ int main(int argc, char* argv[]) {
     int nerrors;
     auto nfiles = ProcessAllData(args, producer, &duration_ms, &nerrors);
 
-    if (producer->WaitRequestsFinished(args.timeout_ms_producer) != nullptr) {
+    if (producer->WaitRequestsFinished(static_cast<uint64_t>(args.timeout_ms_producer)) != nullptr) {
         std::cerr << "Data source out exit on timeout " << std::endl;
     }
     auto duration_streamout = std::chrono::duration_cast<std::chrono::milliseconds>(streamout_finish - streamout_start);
@@ -242,13 +242,14 @@ int main(int argc, char* argv[]) {
     std::cout << "  Processed " << nfiles << " file(s)" << std::endl;
     std::cout << "  Successfully: " << nfiles - nerrors << std::endl;
     std::cout << "  Errors : " << nerrors << std::endl;
-    std::cout << "  Elapsed : " << duration_ms - args.timeout_ms << "ms" << std::endl;
-    std::cout << "  Rate : " << 1000.0f * nfiles / (duration_ms - args.timeout_ms) << std::endl;
+    std::cout << "  Elapsed : " << duration_ms - static_cast<unsigned long long int>(args.timeout_ms) << "ms" << std::endl;
+    std::cout << "  Rate : " << 1000.0f * static_cast<float>(nfiles) / (static_cast<float>(duration_ms
+              - static_cast<unsigned long long int>(args.timeout_ms))) << std::endl;
 
     std::cout << "Data source out " << std::endl;
     std::cout << "  Sent " << files_sent << " file(s)" << std::endl;
     std::cout << "  Elapsed : " << duration_streamout.count() << "ms" << std::endl;
-    std::cout << "  Rate : " << 1000.0f * files_sent / (duration_streamout.count()) << std::endl;
+    std::cout << "  Rate : " << 1000.0f * static_cast<float>(files_sent / duration_streamout.count()) << std::endl;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 

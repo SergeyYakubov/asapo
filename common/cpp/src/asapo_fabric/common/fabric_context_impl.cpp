@@ -250,7 +250,7 @@ void FabricContextImpl::CompletionThread() {
             break;
         }
         default:
-            error = ErrorFromFabricInternal("Unknown error while fi_cq_readfrom", ret);
+            error = ErrorFromFabricInternal("Unknown error while fi_cq_readfrom", static_cast<int>(ret));
             break;
         }
     }
@@ -264,7 +264,7 @@ void FabricContextImpl::CompletionThreadHandleErrorAvailable(Error* error) {
     fi_cq_err_entry errEntry{};
     ssize_t ret = fi_cq_readerr(completion_queue_, &errEntry, 0);
     if (ret != 1) {
-        *error = ErrorFromFabricInternal("Unknown error while fi_cq_readerr", ret);
+        *error = ErrorFromFabricInternal("Unknown error while fi_cq_readerr", static_cast<int>(ret));
     } else {
         auto task = (FabricWaitableTask*)(errEntry.op_context);
         if (task) {
@@ -281,7 +281,7 @@ bool FabricContextImpl::TargetIsAliveCheck(FabricAddress address) {
     Error error;
 
     HandleFiCommandWithBasicTaskAndWait(FI_ASAPO_ADDR_NO_ALIVE_CHECK, &error,
-                                        fi_tsend, nullptr, 0, nullptr, address, FI_ASAPO_TAG_ALIVE_CHECK);
+                                        fi_tsend, nullptr, static_cast<size_t>(0), nullptr, address, FI_ASAPO_TAG_ALIVE_CHECK);
     // If the send was successful, then we are still able to communicate with the peer
     return !(error != nullptr);
 }
@@ -292,7 +292,7 @@ void FabricContextImpl::InternalWait(FabricAddress targetAddress, FabricWaitable
     auto timeoutMs = targetAddress == FI_ASAPO_ADDR_NO_ALIVE_CHECK ? requestFastTimeoutMs_ : requestTimeoutMs_;
 
     // Check if we simply can wait for our task
-    task->Wait(timeoutMs, error);
+    task->Wait(static_cast<uint32_t>(timeoutMs), error);
 
     if (*error == IOErrorTemplates::kTimeout) {
         if (targetAddress == FI_ASAPO_ADDR_NO_ALIVE_CHECK) {
@@ -317,7 +317,7 @@ void FabricContextImpl::InternalWaitWithAliveCheck(FabricAddress targetAddress, 
             aliveCheckFailed = true;
             break;
         }
-        task->Wait(requestTimeoutMs_, error);
+        task->Wait(static_cast<uint32_t>(requestTimeoutMs_), error);
     }
 
     CancelTask(task, error);
@@ -332,5 +332,6 @@ void FabricContextImpl::InternalWaitWithAliveCheck(FabricAddress targetAddress, 
 void FabricContextImpl::CancelTask(FabricWaitableTask* task, Error* error) {
     *error = nullptr;
     fi_cancel(&endpoint_->fid, task);
-    task->Wait(taskCancelTimeout_, error); // You can probably expect a kInternalOperationCanceledError
+    task->Wait(static_cast<uint32_t>(taskCancelTimeout_),
+               error); // You can probably expect a kInternalOperationCanceledError
 }

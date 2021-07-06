@@ -148,7 +148,7 @@ class ConsumerImpl final : public asapo::Consumer {
     std::string OpToUriCmd(GetMessageServerOperation op);
     Error UpdateFolderTokenIfNeeded(bool ignore_existing);
 
-    uint64_t GetCurrentCount(std::string stream, const RequestInfo& ri, Error* err);
+    uint64_t GetCurrentCount(const RequestInfo& ri, Error* err);
     RequestInfo GetStreamListRequest(const std::string& from, const StreamFilter& filter) const;
     Error GetServerVersionInfo(std::string* server_info, bool* supported) ;
     std::string BrokerApiUri(std::string stream, std::string group, std::string suffix) const;
@@ -166,7 +166,6 @@ class ConsumerImpl final : public asapo::Consumer {
     std::string folder_token_;
     RequestInfo CreateFolderTokenRequest() const;
     RequestInfo CreateFileTransferRequest(const MessageMeta* info) const;
-    uint64_t resend_timout_ = 0;
     bool resend_ = false;
     uint64_t delay_ms_;
     uint64_t resend_attempts_;

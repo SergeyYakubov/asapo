@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 
     if (err == nullptr) {
         for(unsigned int i = 0; i < expect.size(); i++)
-            result += data[i];
+            result += static_cast<char>(data[i]);
     } else {
         result = err->Explain();
     }

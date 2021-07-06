@@ -17,7 +17,7 @@ DataCache::DataCache(uint64_t cache_size, float keepunlocked_ratio) : cache_size
         exit(1);
     }
 
-    srand(time(NULL));
+    srand(static_cast<unsigned int>(time(NULL)));
     counter_ = rand() % 100 + 1;
 }
 
@@ -60,19 +60,19 @@ void* DataCache::GetFreeSlotAndLock(uint64_t size, CacheMeta** meta) {
 uint64_t DataCache::GetNextId() {
     counter_++;
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    uint32_t timeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    auto timeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
     return (uint64_t) timeMillis << 32 | counter_;
 }
 
 bool DataCache::SlotTooCloseToCurrentPointer(const CacheMeta* meta) {
     uint64_t dist;
-    uint64_t shift = (uint8_t*) meta->addr - cache_.get();
+    uint64_t shift = static_cast<uint64_t>((uint8_t*) meta->addr - cache_.get());
     if (shift > cur_pointer_) {
         dist = shift - cur_pointer_;
     } else {
         dist = cache_size_ - cur_pointer_ + shift;
     }
-    return dist < cache_size_ * keepunlocked_ratio_;
+    return dist < static_cast<uint64_t>(static_cast<float>(cache_size_) * keepunlocked_ratio_);
 }
 
 // we allow to read if it was already locked - if lock come from reading - no problems, from writing -should not happen!
@@ -101,9 +101,9 @@ bool DataCache::CleanOldSlots(uint64_t size) {
     int64_t last_del = -1;
     bool was_intersecting = false;
     for (uint64_t i = 0; i < meta_.size(); i++) {
-        uint64_t start_position = (uint8_t*) meta_[i]->addr - cache_.get();
+        uint64_t start_position = static_cast<uint64_t>((uint8_t*) meta_[i]->addr - cache_.get());
         if (Intersects(start_position, start_position + meta_[i]->size, cur_pointer_ - size, cur_pointer_)) {
-            last_del = i;
+            last_del = static_cast<int64_t>(i);
             was_intersecting = true;
         } else {
             if (cur_pointer_ - size > 0 || was_intersecting) {
@@ -113,7 +113,7 @@ bool DataCache::CleanOldSlots(uint64_t size) {
     }
 
     for (int i = 0; i <= last_del; i++) {
-        if (meta_[i]->lock > 0) return false;
+        if (meta_[static_cast<unsigned long>(i)]->lock > 0) return false;
     }
 
     if (last_del >= 0) {

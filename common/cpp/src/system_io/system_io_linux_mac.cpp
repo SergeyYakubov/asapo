@@ -70,7 +70,7 @@ Error GetLastErrorFromErrno() {
         (*err).Append("Unknown error code: " + std::to_string(errno));
         return err;
     }
-};
+}
 
 Error SystemIO::GetLastError() const {
     return GetLastErrorFromErrno();
@@ -97,7 +97,7 @@ void SetModifyDate(const struct stat& t_stat, MessageMeta* message_meta) {
 }
 
 void SetFileSize(const struct stat& t_stat, MessageMeta* message_meta) {
-    message_meta->size = t_stat.st_size;
+    message_meta->size = static_cast<uint64_t>(t_stat.st_size);
 }
 
 void SetFileName(const string& name, MessageMeta* message_meta) {
@@ -105,7 +105,7 @@ void SetFileName(const string& name, MessageMeta* message_meta) {
 }
 
 struct stat FileStat(const string& fname, Error* err) {
-    struct stat t_stat {};
+    struct stat t_stat;
     errno = 0;
     int res = stat(fname.c_str(), &t_stat);
     if (res < 0) {

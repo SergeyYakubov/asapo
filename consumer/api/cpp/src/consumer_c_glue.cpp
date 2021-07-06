@@ -105,7 +105,7 @@ typedef AsapoHandlerHolder<asapo::ConsumerErrorData>* AsapoConsumerErrorDataHand
 
 template<typename t>
 constexpr bool operator==(unsigned lhs, t rhs) {
-    return lhs == static_cast<typename std::underlying_type<t>::type>(rhs);
+    return lhs == unsigned(static_cast<typename std::underlying_type<t>::type>(rhs));
 }
 
 int process_error(AsapoErrorHandle* error, asapo::Error err,
@@ -244,6 +244,15 @@ extern "C" {
         auto retval = new AsapoHandlerHolder<std::string> {result};
         return static_cast<AsapoStringHandle>(handle_or_null(retval, error, std::move(err)));
     }
+
+//! creates AsapoStringHandle from C-String
+/// \param[in] str C-string
+/// \return AsapoStringHandle
+    AsapoStringHandle asapo_string_from_c_str(const char* str) {
+        auto retval = new AsapoHandlerHolder<std::string> {new std::string{str}};
+        return static_cast<AsapoStringHandle>(retval);
+    }
+
 
 //! give a pointer to the content of the asapoString
 /// \param[in] str the handle of the asapoString in question
@@ -519,7 +528,7 @@ extern "C" {
         if (process_error(error, std::move(err)) < 0) {
             return -1;
         }
-        return retval;
+        return static_cast<int64_t>(retval);
     }
 
 //! wraps asapo::Consumer::GetDatasetById()

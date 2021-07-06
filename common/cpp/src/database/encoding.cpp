@@ -26,8 +26,8 @@ bool ShouldEscape(char c, bool db) {
 const std::string upperhex = "0123456789ABCDEF";
 
 std::string Escape(const std::string& s, bool db) {
-    auto hexCount = 0;
-    for (auto i = 0; i < s.size(); i++) {
+    size_t hexCount = 0;
+    for (size_t i = 0; i < s.size(); i++) {
         char c = s[i];
         if (ShouldEscape(c, db)) {
             hexCount++;
@@ -40,11 +40,11 @@ std::string Escape(const std::string& s, bool db) {
 
     std::string res;
     res.reserve(s.size() + 2 * hexCount);
-    for (auto i = 0; i < s.size(); i++) {
-        auto c = s[i];
+    for (size_t i = 0; i < s.size(); i++) {
+        char c = s[i];
         if (ShouldEscape(c, db)) {
             res.push_back('%');
-            res.push_back(upperhex[c >> 4]);
+            res.push_back(upperhex[static_cast<size_t>(c >> 4)]);
             res.push_back(upperhex[c & 15]);
         } else {
             res.push_back(c);
@@ -62,19 +62,19 @@ inline int ishex(int x) {
 int decode(const char* s, char* dec) {
     char* o;
     const char* end = s + strlen(s);
-    int c;
+    unsigned int c;
 
     for (o = dec; s <= end; o++) {
-        c = *s++;
+        c = static_cast<unsigned int>(*s++);
 //        if (c == '+') c = ' ';
         if (c == '%' && (!ishex(*s++) ||
                          !ishex(*s++) ||
                          !sscanf(s - 2, "%2x", &c)))
             return -1;
-        if (dec) *o = c;
+        if (dec) *o = (char)c;
     }
 
-    return o - dec;
+    return int(o - dec);
 }
 
 std::string EncodeDbName(const std::string& dbname) {
@@ -98,7 +98,7 @@ std::string DecodeName(const std::string& name) {
 
 bool ShouldEscapeQuery(char c) {
     char chars[] = "-[]{}()*+?\\.,^$|#";
-    for (auto i = 0; i < strlen(chars); i++) {
+    for (size_t i = 0; i < strlen(chars); i++) {
         if (c == chars[i]) {
             return true;
         }
@@ -107,8 +107,8 @@ bool ShouldEscapeQuery(char c) {
 }
 
 std::string EscapeQuery(const std::string& s) {
-    auto count = 0;
-    for (auto i = 0; i < s.size(); i++) {
+    size_t count = 0;
+    for (size_t i = 0; i < s.size(); i++) {
         char c = s[i];
         if (ShouldEscapeQuery(c)) {
             count++;
@@ -121,7 +121,7 @@ std::string EscapeQuery(const std::string& s) {
 
     std::string res;
     res.reserve(s.size() + count);
-    for (auto i = 0; i < s.size(); i++) {
+    for (size_t i = 0; i < s.size(); i++) {
         auto c = s[i];
         if (ShouldEscapeQuery(c)) {
             res.push_back('\\');

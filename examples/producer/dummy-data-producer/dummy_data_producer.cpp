@@ -13,7 +13,7 @@
 using std::chrono::system_clock;
 
 std::mutex mutex;
-int iterations_remained;
+uint64_t iterations_remained;
 
 struct Args {
     std::string discovery_service_endpoint;
@@ -22,7 +22,7 @@ struct Args {
     std::string token;
     size_t number_of_bytes;
     uint64_t iterations;
-    uint64_t nthreads;
+    uint8_t nthreads;
     uint64_t mode;
     uint64_t timeout_ms;
     uint64_t messages_in_set;
@@ -83,7 +83,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         TryGetDataSourceAndToken(args);
         args->number_of_bytes = std::stoull(argv[3]) * 1000;
         args->iterations = std::stoull(argv[4]);
-        args->nthreads = std::stoull(argv[5]);
+        args->nthreads = static_cast<uint8_t>(std::stoi(argv[5]));
         args->mode = std::stoull(argv[6]);
         args->timeout_ms = std::stoull(argv[7]) * 1000;
         if (argc == 9) {
@@ -100,7 +100,7 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
     }
 }
 
-void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
+void ProcessAfterSend(asapo::RequestCallbackPayload, asapo::Error err) {
     mutex.lock();
     iterations_remained--;
     if (err) {
@@ -111,7 +111,7 @@ void ProcessAfterSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
     mutex.unlock();
 }
 
-void ProcessAfterMetaDataSend(asapo::RequestCallbackPayload payload, asapo::Error err) {
+void ProcessAfterMetaDataSend(asapo::RequestCallbackPayload, asapo::Error err) {
     mutex.lock();
     iterations_remained--;
     if (err) {
@@ -133,7 +133,8 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
 
     asapo::Error err;
     if (iterations == 0) {
-        err = producer->SendMetadata("{\"dummy_meta\":\"test\"}", &ProcessAfterMetaDataSend);
+        auto mode = asapo::MetaIngestMode{asapo::MetaIngestOp::kReplace, true};
+        err = producer->SendBeamtimeMetadata("{\"dummy_meta\":\"test\"}", mode, &ProcessAfterMetaDataSend);
         if (err) {
             std::cerr << "Cannot send metadata: " << err << std::endl;
             return false;
@@ -210,9 +211,10 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 
 void PrintOutput(const Args& args, const system_clock::time_point& start) {
     system_clock::time_point t2 = system_clock::now();
-    double duration_sec = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - start ).count() / 1000.0;
-    double size_gb = double(args.number_of_bytes) * args.iterations / 1000.0 / 1000.0 / 1000.0 * 8.0;
-    double rate = args.iterations / duration_sec;
+    double duration_sec = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - start).count())
+                          / 1000.0;
+    double size_gb = static_cast<double>(args.number_of_bytes * args.iterations) / 1000.0 / 1000.0 / 1000.0 * 8.0;
+    double rate = static_cast<double>(args.iterations) / duration_sec;
     std::cout << "Rate: " << rate << " Hz" << std::endl;
     std::cout << "Bandwidth " << size_gb / duration_sec << " Gbit/s" << std::endl;
     std::cout << "Bandwidth " << size_gb / duration_sec / 8 << " GBytes/s" << std::endl;

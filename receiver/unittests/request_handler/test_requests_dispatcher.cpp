@@ -66,7 +66,7 @@ class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
         Request(request_header, socket_fd, "", nullptr, nullptr) {};
-    Error Handle(ReceiverStatistics* statistics) override {
+    Error Handle(ReceiverStatistics*) override {
         return Error{Handle_t()};
     };
     MOCK_CONST_METHOD0(Handle_t, ErrorInterface * ());

@@ -54,8 +54,6 @@ ADD_CUSTOM_TARGET(copy_python_dist-consumer ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/lib
         COMMAND ${CMAKE_COMMAND} -E copy ${CURL_LIBRARIES} ${CMAKE_CURRENT_BINARY_DIR}/lib
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:asapo-consumer> ${CMAKE_CURRENT_BINARY_DIR}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:asapo-fabric> ${CMAKE_CURRENT_BINARY_DIR}/lib
-
         )
 
 ADD_DEPENDENCIES(copy_python_dist-consumer python-lib-consumer)

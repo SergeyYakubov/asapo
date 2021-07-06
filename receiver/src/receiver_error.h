@@ -53,7 +53,7 @@ auto const kReAuthorizationFailure = ReceiverErrorTemplate {
     "reauthorization for auto beamtime failed", ReceiverErrorType::kReAuthorizationFailure
 };
 
-};
+}
 }
 
 #endif //ASAPO_RECEIVER_ERROR_H

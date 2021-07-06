@@ -8,15 +8,13 @@ import numpy
 module = Extension("asapo_producer", ["asapo_producer.pyx"],
                        extra_objects=['$<TARGET_FILE:asapo-producer>',
                                       '@CURL_LIBRARIES@'],
+                       define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
                        include_dirs=["@ASAPO_CXX_COMMON_INCLUDE_DIR@","@ASAPO_PRODUCER_INCLUDE_DIR@",numpy.get_include()],
                        extra_compile_args=@EXTRA_COMPILE_ARGS@,
                        extra_link_args=@EXTRA_LINK_ARGS@,
                        language="c++",
          )
 
-ext_modules = cythonize([module],compiler_directives={'embedsignature': True})
+ext_modules = cythonize([module],compiler_directives={'embedsignature': True,'language_level': 2})
 
-setup(ext_modules = ext_modules,
-      setup_requires=["numpy","cython>=0.28"],
-      install_requires=["numpy","cython>=0.28"]
-)
+setup(ext_modules = ext_modules)
