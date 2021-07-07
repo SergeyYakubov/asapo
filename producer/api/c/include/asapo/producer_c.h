@@ -17,6 +17,13 @@ enum AsapoRequestHandlerType {
     kFilesystem
 };
 
+//! c version of asapo::MetaIngestOp
+enum AsapoMetaIngestOp {
+    kInsert = 1,
+    kReplace = 2,
+    kUpdate = 3
+};
+
 AsapoProducerHandle asapo_create_producer(const char* endpoint,
                                           uint8_t n_processing_threads,
                                           AsapoRequestHandlerType type,
@@ -64,10 +71,23 @@ int asapo_producer_send_file(AsapoProducerHandle producer,
                              AsapoRequestCallback callback,
                              AsapoErrorHandle* error);
 int asapo_producer_send_stream_finished_flag(AsapoProducerHandle producer,
-                                             uint64_t last_id,
                                              const char* stream,
+                                             uint64_t last_id,
                                              const char* next_stream,
                                              AsapoRequestCallback callback,
                                              AsapoErrorHandle* error);
+int asapo_producer_send_beamtime_metadata(AsapoProducerHandle producer,
+                                          const char* metadata,
+                                          AsapoMetaIngestOp mode,
+                                          AsapoBool upsert,
+                                          AsapoRequestCallback callback,
+                                          AsapoErrorHandle* error);
+int asapo_producer_send_stream_metadata(AsapoProducerHandle producer,
+                                        const char* metadata,
+                                        AsapoMetaIngestOp mode,
+                                        AsapoBool upsert,
+                                        const char* stream,
+                                        AsapoRequestCallback callback,
+                                        AsapoErrorHandle* error);
 
 #endif

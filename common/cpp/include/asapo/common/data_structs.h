@@ -154,6 +154,8 @@ enum class MetaIngestOp : uint64_t {
 struct MetaIngestMode {
     MetaIngestOp op;
     bool upsert;
+    MetaIngestMode() = default;
+    MetaIngestMode(MetaIngestOp aOp, bool aUpsert): op(aOp), upsert(aUpsert) {};
     uint64_t Encode() {
         return static_cast<uint64_t>(op) + 10 * static_cast<uint64_t>(upsert);
     }
