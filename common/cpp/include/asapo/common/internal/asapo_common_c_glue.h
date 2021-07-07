@@ -103,4 +103,13 @@ AsapoHandlerHolder<std::string>* handle_or_null_t(const std::string& object,
 }
 
 
+
+template<typename u, typename t>
+constexpr bool operator==(const u& lhs, const t& rhs) {
+    return static_cast<typename std::make_unsigned<u>::type>(lhs)
+           == static_cast<typename std::make_unsigned<typename std::underlying_type<t>::type>::type>(rhs);
+}
+
+
+
 #endif

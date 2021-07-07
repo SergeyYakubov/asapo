@@ -14,6 +14,35 @@ typedef AsapoHandlerHolder<asapo::MessageHeader>* AsapoMessageHeaderHandle;
 
 extern "C" {
 #include "asapo/producer_c.h"
+    static_assert(kOpcodeUnknownOp == asapo::Opcode::kOpcodeUnknownOp&&
+                  kOpcodeTransferData == asapo::Opcode::kOpcodeTransferData&&
+                  kOpcodeTransferDatasetData == asapo::Opcode::kOpcodeTransferDatasetData&&
+                  kOpcodeStreamInfo == asapo::Opcode::kOpcodeStreamInfo&&
+                  kOpcodeLastStream == asapo::Opcode::kOpcodeLastStream&&
+                  kOpcodeGetBufferData == asapo::Opcode::kOpcodeGetBufferData&&
+                  kOpcodeAuthorize == asapo::Opcode::kOpcodeAuthorize&&
+                  kOpcodeTransferMetaData == asapo::Opcode::kOpcodeTransferMetaData&&
+                  kOpcodeDeleteStream == asapo::Opcode::kOpcodeDeleteStream&&
+                  kOpcodeGetMeta == asapo::Opcode::kOpcodeGetMeta&&
+                  kOpcodeCount == asapo::Opcode::kOpcodeCount,
+                  "incompatible bit reps between c++ and c for asapo::OpCode");
+    static_assert(kTcp == asapo::RequestHandlerType::	              kTcp&&
+                  kFilesystem == asapo::RequestHandlerType::	              kFilesystem,
+                  "incompatible bit reps between c++ and c for asapo::RequestHandlerType");
+
+    static_assert(kInsert == asapo::MetaIngestOp::kInsert&&
+                  kReplace == asapo::MetaIngestOp::kReplace&&
+                  kUpdate == asapo::MetaIngestOp::kUpdate,
+                  "incompatible bit reps between c++ and c for asapo::MetaIngestOp");
+
+    static_assert(None == asapo::LogLevel::None&&
+                  Error == asapo::LogLevel::Error&&
+                  Info == asapo::LogLevel::Info&&
+                  Debug == asapo::LogLevel::Debug&&
+                  Warning == asapo::LogLevel::Warning,
+                  "incompatible bit reps between c++ and c for asapo::LogLevel");
+
+
     AsapoProducerHandle asapo_create_producer(const char* endpoint,
                                               uint8_t n_processing_threads,
                                               AsapoRequestHandlerType type,

@@ -52,11 +52,6 @@ typedef AsapoHandlerHolder<asapo::ConsumerErrorData>* AsapoConsumerErrorDataHand
 
 #include <algorithm>
 
-template<typename t>
-constexpr bool operator==(const unsigned int& lhs, const t& rhs) {
-    return lhs == static_cast<typename std::make_unsigned<typename std::underlying_type<t>::type>::type>(rhs);
-}
-
 #define dataGetterStart \
     asapo::MessageData d; \
     asapo::MessageMeta* fi = info ? new asapo::MessageMeta : nullptr; \
