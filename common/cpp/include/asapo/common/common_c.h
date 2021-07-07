@@ -1,7 +1,10 @@
 #ifndef __COMMON_C_H__
 #define __COMMON_C_H__
+#include <stddef.h>
+#include <stdint.h>
+#include <time.h>
 
-
+const unsigned AsapoHandleSize = 24;
 typedef int AsapoBool;
 #ifndef __COMMON_C_INTERFACE_IMPLEMENTATION__
 typedef void* AsapoSourceCredentialsHandle;
@@ -11,6 +14,12 @@ typedef void* AsapoStreamInfoHandle;
 typedef void* AsapoStreamInfosHandle;
 typedef void* AsapoMessageDataHandle;
 #endif
+
+//! c version of asapo::SourceType
+enum AsapoSourceType {
+    kProcessed,
+    kRaw
+};
 
 
 void asapo_free_handle(void** handle);

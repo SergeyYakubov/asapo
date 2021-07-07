@@ -1,9 +1,9 @@
 #define __COMMON_C_INTERFACE_IMPLEMENTATION__
-#include "asapo/asapo_common_c_glue.h
-
+#include "asapo/common/internal/asapo_common_c_glue.h"
+#include <algorithm>
 
 int process_error(AsapoErrorHandle* error, asapo::Error err,
-                  const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr) {
+                  const asapo::ErrorTemplateInterface* p_exclude_err_template) {
     int retval = (err == nullptr || (p_exclude_err_template != nullptr && err == *p_exclude_err_template)) ? 0 : -1;
     if (error == nullptr) {
         return retval;
@@ -17,7 +17,7 @@ int process_error(AsapoErrorHandle* error, asapo::Error err,
 }
 
 AsapoHandle* handle_or_null(AsapoHandle* handle, AsapoErrorHandle* error, asapo::Error err,
-                            const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr) {
+                            const asapo::ErrorTemplateInterface* p_exclude_err_template) {
     if (process_error(error, std::move(err), p_exclude_err_template) < 0) {
         if (handle != nullptr) {
             delete handle;
@@ -28,9 +28,23 @@ AsapoHandle* handle_or_null(AsapoHandle* handle, AsapoErrorHandle* error, asapo:
     }
 }
 
+void time_point_to_time_spec(std::chrono::system_clock::time_point tp,
+                             struct timespec* stamp) {
+    stamp->tv_sec = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+    stamp->tv_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch()).count() % 1000000000;
+}
+
 
 
 extern "C" {
+#include "asapo/common/common_c.h"
+    static_assert(kProcessed == asapo::SourceType::kProcessed&&
+                  kRaw == asapo::SourceType::kRaw,
+                  "incompatible bit reps between c++ and c for asapo::SourceType");
+
+    static_assert(AsapoHandleSize == sizeof(AsapoHandlerHolder<int>),
+                  "AsapoHandleSize is not correct");
+
 
     AsapoStringHandle asapo_string_create(const char* str) {
         return AsapoStringHandle(new std::string(str));
@@ -60,8 +74,9 @@ extern "C" {
 /// \param[in] maxSize max size of buf in bytes
     void asapo_error_explain(const AsapoErrorHandle error, char* buf, size_t maxSize) {
         if (error->handle) {
-            strncpy(buf, error->handle->Explain().c_str(), maxSize - 1);
-            buf[maxSize] = '\0';
+            const auto& msg = error->handle->Explain();
+            std::copy_n(msg.begin(), std::max(msg.size(), maxSize), buf);
+            buf[std::max(maxSize - 1, msg.size())] = '\0';
         } else {
             static std::string msg("no error");
             std::copy_n(msg.begin(), std::max(msg.size(), maxSize), buf);

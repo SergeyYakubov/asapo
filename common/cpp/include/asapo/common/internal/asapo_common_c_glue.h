@@ -111,5 +111,6 @@ constexpr bool operator==(const u& lhs, const t& rhs) {
 }
 
 
-
+void time_point_to_time_spec(std::chrono::system_clock::time_point tp,
+                             struct timespec* stamp);
 #endif

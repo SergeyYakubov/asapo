@@ -1,8 +1,8 @@
 #ifndef __CONSUMER_C_H__
 #define __CONSUMER_C_H__
 
+#include <asapo/common/common_c.h>
 #ifndef __CONSUMER_C_INTERFACE_IMPLEMENTATION__
-#include <asapo/common_c.h>
 typedef void* AsapoConsumerHandle;
 typedef void* AsapoMessageMetaHandle;
 typedef void* AsapoMessageMetasHandle;
@@ -34,11 +34,6 @@ enum AsapoStreamFilter {
     kAllStreams,
     kFinishedStreams,
     kUnfinishedStreams
-};
-//! c version of asapo::SourceType
-enum AsapoSourceType {
-    kProcessed,
-    kRaw
 };
 //! c version of asapo::NetworkConnectionType
 enum AsapoNetworkConnectionType {

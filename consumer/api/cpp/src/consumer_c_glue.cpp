@@ -86,19 +86,10 @@ extern "C" {
                   kFinishedStreams == asapo::StreamFilter::kFinishedStreams&&
                   kUnfinishedStreams == asapo::StreamFilter::kUnfinishedStreams,
                   "incompatible bit reps between c++ and c for asapo::StreamFilter");
-    static_assert(kProcessed == asapo::SourceType::kProcessed&&
-                  kRaw == asapo::SourceType::kRaw,
-                  "incompatible bit reps between c++ and c for asapo::SourceType");
     static_assert(kUndefined == asapo::NetworkConnectionType::kUndefined&&
                   kAsapoTcp == asapo::NetworkConnectionType::kAsapoTcp&&
                   kFabric == asapo::NetworkConnectionType::kFabric,
                   "incompatible bit reps between c++ and c for asapo::NetworkConnectionType");
-
-    static void time_point_to_time_spec(std::chrono::system_clock::time_point tp,
-                                        struct timespec* stamp) {
-        stamp->tv_sec = std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
-        stamp->tv_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch()).count() % 1000000000;
-    }
 
     AsapoBool asapo_is_error(AsapoErrorHandle err) {
         return err != nullptr && err->handle != nullptr;
