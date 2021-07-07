@@ -17,33 +17,3 @@ install(
         DESTINATION
         ${ConfigPackageLocation}
 )
-
-install(
-        FILES
-        ${PROJECT_SOURCE_DIR}/CMakeModules/FindCURL.cmake
-        DESTINATION
-        ${ConfigPackageLocation}/Modules
-)
-
-install(
-        FILES
-        ${PROJECT_SOURCE_DIR}/CMakeModules/FindPackageHandleStandardArgs.cmake
-        DESTINATION
-        ${ConfigPackageLocation}/Modules
-)
-
-install(
-        FILES
-        ${PROJECT_SOURCE_DIR}/CMakeModules/FindPackageMessage.cmake
-        DESTINATION
-        ${ConfigPackageLocation}/Modules
-)
-
-install(
-        FILES
-        ${PROJECT_SOURCE_DIR}/CMakeModules/SelectLibraryConfigurations.cmake
-        DESTINATION
-        ${ConfigPackageLocation}/Modules
-)
-
-

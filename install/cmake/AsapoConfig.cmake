@@ -3,6 +3,18 @@ include(CMakeFindDependencyMacro)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/Modules/" ${CMAKE_MODULE_PATH})
 
 find_dependency(CURL REQUIRED)
+if(CURL_FOUND) #old FindCURL versions do not create CURL::libcurl target, so we do it here if CURL::libcurl is missing
+    if(NOT TARGET CURL::libcurl)
+        add_library(CURL::libcurl UNKNOWN IMPORTED)
+        set_target_properties(CURL::libcurl PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIRS}")
+        set_target_properties(CURL::libcurl PROPERTIES
+                IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+                IMPORTED_LOCATION "${CURL_LIBRARIES}")
+    endif()
+endif()
+
+
 find_dependency(Threads REQUIRED)
 
 set(_supported_components Consumer Producer)
