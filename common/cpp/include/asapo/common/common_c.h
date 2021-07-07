@@ -20,6 +20,7 @@ void* asapo_new_handle();
 void asapo_error_explain(const AsapoErrorHandle error, char* buf, size_t max_size);
 AsapoBool asapo_is_error(AsapoErrorHandle err);
 
+AsapoStringHandle asapo_string_create(const char* str);
 const char* asapo_string_c_str(const AsapoStringHandle str);
 size_t asapo_string_size(const AsapoStringHandle str);
 

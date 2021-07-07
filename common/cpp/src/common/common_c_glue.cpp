@@ -32,6 +32,12 @@ AsapoHandle* handle_or_null(AsapoHandle* handle, AsapoErrorHandle* error, asapo:
 
 extern "C" {
 
+    AsapoStringHandle asapo_string_create(const char* str) {
+        return AsapoStringHandle(new std::string(str));
+    }
+
+
+
 //! free handle memory, set handle to NULL
 /// \param[in] pointer to an ASAPO handle
     void asapo_free_handle(void** handle) {
