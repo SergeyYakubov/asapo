@@ -15,6 +15,7 @@ class AsapoHandlerHolder final : public AsapoHandle {
   public:
     AsapoHandlerHolder(bool manage_memory = true) : handle{nullptr}, manage_memory_{manage_memory} {};
     AsapoHandlerHolder(T* handle_i, bool manage_memory = true) : handle{handle_i}, manage_memory_{manage_memory} {};
+    AsapoHandlerHolder(std::unique_ptr<T>& handle_i, bool manage_memory = true) : handle{handle_i.release()}, manage_memory_{manage_memory} {};
     ~AsapoHandlerHolder() override {
         if (!manage_memory_) {
             handle.release();
@@ -25,7 +26,15 @@ class AsapoHandlerHolder final : public AsapoHandle {
     bool manage_memory_{true};
 };
 
-
+template<>
+class AsapoHandlerHolder < std::string>  final : public AsapoHandle {
+  public:
+    AsapoHandlerHolder(const std::string& handle_i) : handle{new std::string(handle_i)} {};
+    ~AsapoHandlerHolder() override {
+        handle.release();
+    }
+    std::unique_ptr<std::string> handle{nullptr};
+};
 //! handle for credentials to access a source from a producer
 /// created by asapo_create_source_credentials()
 /// free after use with asapo_free_handle()
@@ -80,6 +89,16 @@ template <typename T> AsapoHandlerHolder<T>* handle_or_null_t(T* object,
         return nullptr;
     } else {
         return new AsapoHandlerHolder<T>(object);
+    }
+}
+AsapoHandlerHolder<std::string>* handle_or_null_t(const std::string& object,
+                                                  AsapoErrorHandle* error,
+                                                  asapo::Error err,
+                                                  const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr) {
+    if (process_error(error, std::move(err), p_exclude_err_template) < 0) {
+        return nullptr;
+    } else {
+        return new AsapoHandlerHolder<std::string>(object);
     }
 }
 

@@ -150,9 +150,8 @@ extern "C" {
     AsapoStringHandle asapo_consumer_generate_new_group_id(AsapoConsumerHandle consumer,
             AsapoErrorHandle* error) {
         asapo::Error err;
-        auto result = new std::string(consumer->handle->GenerateNewGroupId(&err));
-        auto retval = new AsapoHandlerHolder<std::string> {result};
-        return static_cast<AsapoStringHandle>(handle_or_null(retval, error, std::move(err)));
+        auto result = consumer->handle->GenerateNewGroupId(&err);
+        return handle_or_null_t(result, error, std::move(err));
     }
 
 
@@ -336,9 +335,8 @@ extern "C" {
     AsapoStringHandle asapo_consumer_get_beamtime_meta(AsapoConsumerHandle consumer,
             AsapoErrorHandle* error) {
         asapo::Error err;
-        auto result = new std::string(consumer->handle->GetBeamtimeMeta(&err));
-        auto retval = new AsapoHandlerHolder<std::string> {result};
-        return static_cast<AsapoStringHandle>(handle_or_null(retval, error, std::move(err)));
+        auto result = consumer->handle->GetBeamtimeMeta(&err);
+        return handle_or_null_t(result, error, std::move(err));
     }
 
 //! wraps asapo::Consumer::RetrieveData()

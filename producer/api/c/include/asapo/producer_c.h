@@ -9,7 +9,37 @@ typedef void* AsapoMessageHeaderHandle;
 #endif
 
 typedef void(*AsapoRequestCallback)(AsapoRequestCallbackPayloadHandle, AsapoErrorHandle);
+const size_t kMaxMessageSize = 1024;
+const size_t kMaxVersionSize = 10;
+const size_t kNCustomParams = 3;
 
+//! c version opf asapo::Opcode
+enum AsapoOpcode {
+    kOpcodeUnknownOp = 1,
+    kOpcodeTransferData,
+    kOpcodeTransferDatasetData,
+    kOpcodeStreamInfo,
+    kOpcodeLastStream,
+    kOpcodeGetBufferData,
+    kOpcodeAuthorize,
+    kOpcodeTransferMetaData,
+    kOpcodeDeleteStream,
+    kOpcodeGetMeta,
+    kOpcodeCount
+};
+
+
+//! c version of asapo::GenericRequestHeader
+struct AsapoGenericRequestHeader {
+    AsapoOpcode op_code;
+    uint64_t    data_id;
+    uint64_t    data_size;
+    uint64_t    meta_size;
+    uint64_t    custom_data[kNCustomParams];
+    char        message[kMaxMessageSize]; /* Can also be a binary message (e.g. MemoryRegionDetails) */
+    char        stream[kMaxMessageSize]; /* Must be a string (strcpy is used) */
+    char        api_version[kMaxVersionSize]; /* Must be a string (strcpy is used) */
+};
 
 //! c version of asapo::RequestHandlerType
 enum AsapoRequestHandlerType {
@@ -23,6 +53,17 @@ enum AsapoMetaIngestOp {
     kReplace = 2,
     kUpdate = 3
 };
+
+//! c version of asapo::LogLevel
+enum AsapoLogLevel {
+    None,
+    Error,
+    Info,
+    Debug,
+    Warning
+};
+
+
 
 AsapoProducerHandle asapo_create_producer(const char* endpoint,
                                           uint8_t n_processing_threads,
@@ -89,5 +130,21 @@ int asapo_producer_send_stream_metadata(AsapoProducerHandle producer,
                                         const char* stream,
                                         AsapoRequestCallback callback,
                                         AsapoErrorHandle* error);
+
+AsapoMessageDataHandle asapo_request_callback_payload_get_data(AsapoRequestCallbackPayloadHandle handle);
+AsapoStringHandle asapo_request_callback_payload_get_response(AsapoRequestCallbackPayloadHandle handle);
+const AsapoGenericRequestHeader* asapo_request_callback_payload_get_original_header(
+    AsapoRequestCallbackPayloadHandle handle);
+
+void asapo_producer_set_log_level(AsapoProducerHandle producer, AsapoLogLevel level);
+void asapo_producer_enable_local_log(AsapoProducerHandle producer, AsapoBool enable);
+void asapo_producer_enable_remote_log(AsapoProducerHandle producer, AsapoBool enable);
+int asapo_producer_set_credentials(AsapoProducerHandle producer, AsapoSourceCredentialsHandle source_cred,
+                                   AsapoErrorHandle* error);
+uint64_t  asapo_producer_get_requests_queue_size(AsapoProducerHandle producer);
+uint64_t  asapo_producer_get_requests_queue_volume_mb(AsapoProducerHandle producer);
+void asapo_producer_set_requests_queue_limits(AsapoProducerHandle producer, uint64_t size, uint64_t volume);
+int asapo_producer_wait_requests_finished(AsapoProducerHandle producer, uint64_t timeout_ms,
+                                          AsapoErrorHandle* error);
 
 #endif

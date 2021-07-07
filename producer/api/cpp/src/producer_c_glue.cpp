@@ -145,7 +145,45 @@ extern "C" {
         return process_error(error, std::move(err));
 
     }
+    AsapoMessageDataHandle asapo_request_callback_payload_get_data(AsapoRequestCallbackPayloadHandle handle) {
+        return new typename std::remove_pointer<AsapoMessageDataHandle>::type(handle->handle->data);
+    }
+    AsapoStringHandle asapo_request_callback_payload_get_response(AsapoRequestCallbackPayloadHandle handle) {
+        return new typename std::remove_pointer<AsapoStringHandle>::type(handle->handle->response);
+    }
+    const AsapoGenericRequestHeader* asapo_request_callback_payload_get_original_header(
+        AsapoRequestCallbackPayloadHandle handle) {
+        return reinterpret_cast<AsapoGenericRequestHeader*>(&handle->handle->original_header);
+    }
 
+    void asapo_producer_set_log_level(AsapoProducerHandle producer, AsapoLogLevel level) {
+        producer->handle->SetLogLevel(static_cast<asapo::LogLevel>(level));
+    }
+    void asapo_producer_enable_local_log(AsapoProducerHandle producer, AsapoBool enable) {
+        producer->handle->EnableLocalLog(enable != 0);
+    }
+    void asapo_producer_enable_remote_log(AsapoProducerHandle producer, AsapoBool enable) {
+        producer->handle->EnableLocalLog(enable != 0);
+    }
+    int asapo_producer_set_credentials(AsapoProducerHandle producer, AsapoSourceCredentialsHandle source_cred,
+                                       AsapoErrorHandle* error) {
+        auto err = producer->handle->SetCredentials(*source_cred->handle.get());
+        return process_error(error, std::move(err));
+    }
+    uint64_t  asapo_producer_get_requests_queue_size(AsapoProducerHandle producer) {
+        return producer->handle->GetRequestsQueueSize();
+    }
+    uint64_t  asapo_producer_get_requests_queue_volume_mb(AsapoProducerHandle producer) {
+        return producer->handle->GetRequestsQueueVolumeMb();
+    }
+    void asapo_producer_set_requests_queue_limits(AsapoProducerHandle producer, uint64_t size, uint64_t volume) {
+        producer->handle->SetRequestsQueueLimits(size, volume);
+    }
+    int asapo_producer_wait_requests_finished(AsapoProducerHandle producer, uint64_t timeout_ms,
+                                              AsapoErrorHandle* error) {
+        auto err = producer->handle->WaitRequestsFinished(timeout_ms);
+        return process_error(error, std::move(err));
+    }
 
 
 
