@@ -14,6 +14,8 @@ RUN ./install_curl.sh /curl
 ADD install_libfabric.sh install_libfabric.sh
 RUN ./install_libfabric.sh
 
+RUN yum -y install mc libcurl-devel
+
 ENV GOPATH /tmp
 ENV OS el8
 ADD build.sh /bin/build.sh

@@ -91,7 +91,7 @@ endmacro()
 
 if( "S${Asapo_FIND_COMPONENTS}" STREQUAL "S")
     foreach(_comp ${_supported_components})
-        include("${CMAKE_CURRENT_LIST_DIR}/Asapo${_comp}StaticTarget.cmake")
+        asapo_load_comp_targets(${_comp} ${static} ${shared})
     endforeach()
 else()
     foreach(_comp ${Asapo_FIND_COMPONENTS})

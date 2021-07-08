@@ -10,7 +10,6 @@ cmake \
     -DBUILD_CLIENTS_ONLY=ON \
     -DPACKAGE_RELEASE_SUFFIX=$OS \
     -DBUILD_PYTHON=OFF   \
-    -DLIBCURL_DIR=/curl \
     -DCPACK_PACKAGE_NAME="asapo-dev" \
     -DCPACK_GENERATOR="DEB" \
     ..
@@ -19,12 +18,22 @@ make -j 4
 make package
 
 
-if [ "$OS" = "ubuntu16.04" ]; then
+if [ "$OS" = "ubuntu18.04" ]; then
   BUILD_PYTHON_DOCS=ON
 else
   BUILD_PYTHON_DOCS=OFF
 fi
 
-
-cmake -DNUMPY_VERSION=0 -DBUILD_PYTHON=ON -DBUILD_PYTHON_PACKAGES="source;deb" -DBUILD_PYTHON_DOCS=$BUILD_PYTHON_DOCS ..
-make -j1
+#switch to static curl for Python packages
+rm CMakeCache.txt
+cmake \
+    -DCMAKE_BUILD_TYPE="Release" \
+    -DLIBCURL_DIR=/curl  \
+    -DENABLE_LIBFABRIC=ON \
+    -DBUILD_CLIENTS_ONLY=ON \
+    -DNUMPY_VERSION=0   \
+    -DBUILD_PYTHON=ON   \
+    -DBUILD_PYTHON_PACKAGES="source;deb"   \
+    -DBUILD_PYTHON_DOCS=$BUILD_PYTHON_DOCS \
+    ..
+make -j 1

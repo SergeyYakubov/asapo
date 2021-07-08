@@ -31,7 +31,7 @@ if (BUILD_STATIC_CLIENT_LIBS)
     target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../c/include>)
     target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${ASAPO_CXX_COMMON_INCLUDE_DIR}>)
     target_include_directories(${TARGET_NAME} INTERFACE $<INSTALL_INTERFACE:include>)
-    target_link_libraries(${TARGET_NAME} CURL::libcurl ${CMAKE_THREAD_LIBS_INIT} ${ASAPO_COMMON_FABRIC_LIBRARIES})
+    target_link_libraries(${TARGET_NAME} INTERFACE CURL::libcurl ${CMAKE_THREAD_LIBS_INIT} ${ASAPO_COMMON_FABRIC_LIBRARIES})
     #install
     install(TARGETS  ${TARGET_NAME} EXPORT AsapoConsumerStaticTarget
             LIBRARY DESTINATION lib
