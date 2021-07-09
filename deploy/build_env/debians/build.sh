@@ -9,6 +9,7 @@ cmake \
     -DINSTALL_EXAMPLES=ON \
     -DBUILD_CLIENTS_ONLY=ON \
     -DPACKAGE_RELEASE_SUFFIX=$OS \
+    -DPACK_STATIC_CURL_LIB=/curl/lib/libcurl.a \
     -DBUILD_PYTHON=OFF   \
     -DCPACK_PACKAGE_NAME="asapo-dev" \
     -DCPACK_GENERATOR="DEB" \
