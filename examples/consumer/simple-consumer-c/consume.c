@@ -12,7 +12,7 @@ void exit_if_error(const char *error_string, const AsapoErrorHandle err) {
     }
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     AsapoErrorHandle err = asapo_new_handle();
     AsapoMessageMetaHandle mm = asapo_new_handle();
     AsapoMessageDataHandle data = asapo_new_handle();
@@ -40,6 +40,7 @@ int main(int argc, char* argv[]) {
 
     asapo_consumer_get_next(consumer, group_id, &mm, &data, "default",&err);
     exit_if_error("Cannot get next record", err);
+
 
     printf("id: %lu\n", asapo_message_meta_get_id(mm));
     printf("file name: %s\n", asapo_message_meta_get_name(mm));

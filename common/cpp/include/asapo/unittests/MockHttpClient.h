@@ -30,9 +30,9 @@ class MockHttpClient : public HttpClient {
         return Error{PostReturnArray_t(uri, cookie, input_data, ouput_data, output_data_size, response_code)};
     };
 
-    Error Post(const std::string& uri, const std::string& cookie,
-               const std::string& input_data, std::string output_file_name,
-               HttpCode* response_code)  const noexcept override {
+    Error Post(const std::string&, const std::string&,
+               const std::string&, std::string,
+               HttpCode* )  const noexcept override {
         return nullptr;
     };
 

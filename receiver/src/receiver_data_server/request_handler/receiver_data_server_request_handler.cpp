@@ -101,6 +101,8 @@ void ReceiverDataServerRequestHandler::HandleInvalidRequest(const ReceiverDataSe
     case NetworkErrorCode::kNetErrorNotSupported:
         log__->Error("unsupported client, version: " + std::string(receiver_request->header.api_version));
         break;
+    default:
+        break;
     };
 
 }

@@ -26,7 +26,7 @@ class DataCacheTests : public Test {
     uint64_t expected_cache_size = 1024 * 1024;
     uint64_t expected_size = 10;
     uint64_t expected_val = 1;
-    float expected_keepunlocked_ratio = 0.2;
+    float expected_keepunlocked_ratio = 0.2f;
     CacheMeta* meta1;
     CacheMeta* meta2;
     DataCache cache{expected_cache_size, expected_keepunlocked_ratio};
@@ -102,7 +102,7 @@ TEST_F(DataCacheTests, PrepareToReadIdNotFound) {
 }
 
 TEST_F(DataCacheTests, PrepareToReadOk) {
-    uint64_t data_size = expected_cache_size * 0.7;
+    auto data_size = static_cast<uint64_t>(static_cast<double>(expected_cache_size) * 0.7);
     uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(data_size, &meta1);
 
     uint8_t* addr = (uint8_t*) cache.GetSlotToReadAndLock(meta1->id, data_size, &meta2);
@@ -113,7 +113,7 @@ TEST_F(DataCacheTests, PrepareToReadOk) {
 
 
 TEST_F(DataCacheTests, PrepareToReadFailsIfTooCloseToCurrentPointer) {
-    auto data_size = expected_cache_size * 0.9;
+    auto data_size = static_cast<uint64_t>(static_cast<double>(expected_cache_size) * 0.9);
     cache.GetFreeSlotAndLock(data_size, &meta1);
 
     uint8_t* addr = (uint8_t*) cache.GetSlotToReadAndLock(meta1->id, data_size, &meta2);

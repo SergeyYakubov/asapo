@@ -199,7 +199,7 @@ Error SystemFolderWatch::ProcessInotifyEvent(const InotifyEvent& event, FilesToS
 }
 
 Error SystemFolderWatch::ReadInotifyEvents(int* bytes_read) {
-    *bytes_read = inotify__->Read(watch_fd_, buffer_.get(), kBufLen);
+    *bytes_read = static_cast<int>(inotify__->Read(watch_fd_, buffer_.get(), kBufLen));
     if (*bytes_read < 0) {
         return EventMonitorErrorTemplates::kSystemError.Generate("read from inotify fd");
     }
@@ -210,7 +210,7 @@ Error SystemFolderWatch::ProcessInotifyEvents(int bytes_in_buffer_, FilesToSend*
     int nerrors = 0;
     int nevents = 0;
     for (char* p = buffer_.get(); p < buffer_.get() + bytes_in_buffer_; ) {
-        InotifyEvent event{(struct inotify_event*) p, watched_folders_paths_};
+        InotifyEvent event{(struct inotify_event*) p};
         auto err = ProcessInotifyEvent(event, events);
         if (err) {
             GetDefaultEventMonLogger()->Error("error processing inotify event: " + err->Explain());

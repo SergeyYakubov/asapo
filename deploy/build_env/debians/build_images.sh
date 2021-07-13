@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-vers="ubuntu16.04 ubuntu18.04 debian9.13 debian10.7"
+vers="ubuntu18.04 ubuntu16.04 debian9.13 debian10.7"
 
 for ver in $vers
 do

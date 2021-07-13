@@ -2,6 +2,19 @@
 #include "asapo/common/internal/asapo_common_c_glue.h"
 #include <algorithm>
 
+AsapoHandlerHolder<std::string>* handle_or_null_t(const std::string& object,
+                                                  AsapoErrorHandle* error,
+                                                  asapo::Error err,
+                                                  const asapo::ErrorTemplateInterface* p_exclude_err_template) {
+    if (process_error(error, std::move(err), p_exclude_err_template) < 0) {
+        return nullptr;
+    } else {
+        return new AsapoHandlerHolder<std::string>(object);
+    }
+}
+
+
+
 int process_error(AsapoErrorHandle* error, asapo::Error err,
                   const asapo::ErrorTemplateInterface* p_exclude_err_template) {
     int retval = (err == nullptr || (p_exclude_err_template != nullptr && err == *p_exclude_err_template)) ? 0 : -1;

@@ -7,14 +7,25 @@ cmake \
     -DINSTALL_EXAMPLES=ON \
     -DBUILD_CLIENTS_ONLY=ON \
     -DPACKAGE_RELEASE_SUFFIX=1.$OS \
+    -DPACK_STATIC_CURL_LIB=/curl/lib/libcurl.a \
     -DBUILD_PYTHON=OFF   \
-    -DLIBCURL_DIR=/curl \
     -DCPACK_PACKAGE_NAME="asapo-devel" \
     -DCPACK_GENERATOR="RPM" \
     ..
 make -j 4
 make package
 
-cmake -DNUMPY_VERSION=0 -DBUILD_PYTHON=ON -DBUILD_PYTHON_PACKAGES="source;rpm" ..
-make
+#switch to static curl for Python packages
+rm CMakeCache.txt
+cmake \
+    -DCMAKE_BUILD_TYPE="Release" \
+    -DLIBCURL_DIR=/curl  \
+    -DENABLE_LIBFABRIC=ON \
+    -DBUILD_CLIENTS_ONLY=ON \
+    -DNUMPY_VERSION=0   \
+    -DBUILD_PYTHON=ON   \
+    -DBUILD_PYTHON_PACKAGES="source;rpm"   \
+    -DBUILD_PYTHON_DOCS=$BUILD_PYTHON_DOCS \
+    ..
+make -j 1
 

@@ -38,10 +38,10 @@ int main(int argc, char* argv[]) {
 
 
     if(argc >= 2)
-        submodule = atoi(argv[1]);
+        submodule = static_cast<uint32_t>(atoi(argv[1]));
 
     if(argc >= 3)
-        sleeptime = atoi(argv[2]);
+        sleeptime = static_cast<uint32_t>(atoi(argv[2]));
 
 
     asapo::Error err;
@@ -53,7 +53,6 @@ int main(int argc, char* argv[]) {
                                             asapo::SourceCredentials{asapo::SourceType::kProcessed, beamtime, "", "", ""}, 60000, &err);
     exit_if_error("Cannot start producer", err);
 
-    uint32_t eventid = 1;
     uint32_t start_number = 1;
 
     // number of files per acquistion per module

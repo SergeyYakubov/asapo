@@ -27,7 +27,6 @@ class ReceiverDataServer {
     void Run();
   private:
     SharedCache data_cache_;
-    const ReceiverDataServerConfig& config_;
   public:
     std::unique_ptr<Statistics>statistics__;
 

@@ -30,7 +30,7 @@ class RequestPool {
     VIRTUAL Error AddRequest(GenericRequestPtr request, bool top_priority = false);
     VIRTUAL void SetLimits(RequestPoolLimits limits);
     VIRTUAL Error AddRequests(GenericRequests requests);
-    ~RequestPool();
+    VIRTUAL ~RequestPool();
     VIRTUAL uint64_t NRequestsInPool();
     VIRTUAL uint64_t UsedMemoryInPool();
     VIRTUAL Error WaitRequestsFinished(uint64_t timeout_ms);

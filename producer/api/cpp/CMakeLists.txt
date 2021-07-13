@@ -11,13 +11,74 @@ set(SOURCE_FILES
 				src/producer_c_glue.cpp)
 
 
+string(REPLACE "v" "" PRODUCER_CLIENT_VER ${ASAPO_PRODUCER_PROTOCOL})
+
+
 ################################
 # Library
 ################################
-add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:json_parser>
-        $<TARGET_OBJECTS:curl_http_client> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version>)
-target_include_directories(${TARGET_NAME} PUBLIC ../c/include include ${ASAPO_CXX_COMMON_INCLUDE_DIR})
-target_link_libraries(${TARGET_NAME} ${CURL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_library(producer_lib_objects OBJECT ${SOURCE_FILES})
+target_include_directories(producer_lib_objects PRIVATE ../c/include include ${ASAPO_CXX_COMMON_INCLUDE_DIR} )
+target_include_directories(producer_lib_objects SYSTEM PRIVATE ${LIBFABRIC_INCLUDE_DIR})
+
+if (BUILD_STATIC_CLIENT_LIBS)
+    add_library(${TARGET_NAME} STATIC $<TARGET_OBJECTS:producer_lib_objects> $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:json_parser>
+            $<TARGET_OBJECTS:curl_http_client> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version> $<TARGET_OBJECTS:common>)
+    target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+    target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${ASAPO_CXX_COMMON_INCLUDE_DIR}>)
+    target_include_directories(${TARGET_NAME} INTERFACE $<INSTALL_INTERFACE:include>)
+    target_link_libraries(${TARGET_NAME} CURL::libcurl ${CMAKE_THREAD_LIBS_INIT})
+    #install
+    install(TARGETS  ${TARGET_NAME} EXPORT AsapoProducerStaticTarget
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            INCLUDES DESTINATION include
+            )
+
+    export(EXPORT AsapoProducerStaticTarget
+            FILE "${CMAKE_CURRENT_BINARY_DIR}/asapo/AsapoProducerStaticTarget.cmake"
+            NAMESPACE imported::
+            )
+    install(EXPORT AsapoProducerStaticTarget
+            FILE AsapoProducerStaticTarget.cmake
+            NAMESPACE imported::
+            DESTINATION ${ConfigPackageLocation}
+            )
+endif()
+
+if (BUILD_SHARED_CLIENT_LIBS)
+    add_library(${TARGET_NAME}_shared SHARED $<TARGET_OBJECTS:producer_lib_objects> $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:json_parser>
+            $<TARGET_OBJECTS:curl_http_client> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version> $<TARGET_OBJECTS:common>)
+    target_include_directories(${TARGET_NAME}_shared PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${ASAPO_CXX_COMMON_INCLUDE_DIR})
+
+    target_link_libraries(${TARGET_NAME}_shared CURL::libcurl ${CMAKE_THREAD_LIBS_INIT})
+    IF(NOT WIN32)
+        set_target_properties(${TARGET_NAME}_shared PROPERTIES OUTPUT_NAME ${TARGET_NAME})
+        set_target_properties(${TARGET_NAME}_shared PROPERTIES VERSION ${PRODUCER_CLIENT_VER}
+                SOVERSION ${PRODUCER_CLIENT_VER})
+        set_target_properties(${TARGET_NAME}_shared PROPERTIES EXPORT_NAME ${TARGET_NAME})
+    ENDIF()
+    target_include_directories(${TARGET_NAME}_shared INTERFACE $<INSTALL_INTERFACE:include>)
+
+    install(TARGETS  ${TARGET_NAME}_shared EXPORT AsapoProducerSharedTarget
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            INCLUDES DESTINATION include
+            )
+    export(EXPORT AsapoProducerSharedTarget
+            FILE "${CMAKE_CURRENT_BINARY_DIR}/asapo/AsapoProducerSharedTarget.cmake"
+            NAMESPACE imported::
+            )
+    install(EXPORT AsapoProducerSharedTarget
+            FILE
+            AsapoProducerSharedTarget.cmake
+            NAMESPACE imported::
+            DESTINATION ${ConfigPackageLocation}
+            )
+endif()
+
+install(DIRECTORY include/ DESTINATION include)
+
 
 ################################
 # Testing
@@ -36,7 +97,3 @@ set(TEST_LIBRARIES "${TARGET_NAME}")
 
 
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}")
-
-install(TARGETS ${TARGET_NAME} DESTINATION lib)
-
-install(DIRECTORY include/ DESTINATION include)

@@ -12,6 +12,6 @@ std::unique_ptr<Database> DatabaseFactory::Create(Error* err) const noexcept {
         *err = ErrorTemplates::kMemoryAllocationError.Generate();
     }
     return p;
-};
+}
 
 }

@@ -13,7 +13,7 @@ void _M_AssertTrue(bool value, const std::string& comment);
 void _M_AssertContains(const std::string& whole, const std::string& sub, const std::string& comment);
 
 void _M_AssertEq(const std::string& expected, const std::string& got, const std::string& comment);
-void _M_AssertEq(int expected, int got, const std::string& comment);
+void _M_AssertEq(uint64_t expected, uint64_t got, const std::string& comment);
 
 // Error checks
 void _M_AssertEq(const Error& expected, const Error& got, const std::string& comment);

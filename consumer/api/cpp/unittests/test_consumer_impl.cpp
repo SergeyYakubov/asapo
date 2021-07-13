@@ -58,10 +58,6 @@ TEST(FolderDataBroker, Constructor) {
 
 const uint8_t expected_value = 1;
 
-asapo::ErrorInterface* new_error() {
-    return new asapo::SimpleError{"s"};
-};
-
 class ConsumerImplTests : public Test {
   public:
     std::unique_ptr<ConsumerImpl> consumer, fts_consumer;
@@ -1158,7 +1154,7 @@ TEST_F(ConsumerImplTests, GetStreamListUsesCorrectUriWithoutFrom) {
                       _)).WillOnce(DoAll(
                                        SetArgPointee<1>(HttpCode::OK),
                                        SetArgPointee<2>(nullptr),
-                                       Return("")));;
+                                       Return("")));
 
     asapo::Error err;
     auto streams = consumer->GetStreamList("", asapo::StreamFilter::kFinishedStreams, &err);
@@ -1261,7 +1257,7 @@ TEST_F(ConsumerImplTests, FileTransferReadsFileSize) {
                                                     5,
                                                     _)).WillOnce(DoAll(
                                                             SetArgPointee<5>(HttpCode::OK),
-                                                            AssignArg3(nullptr),
+                                                            AssignArg3(false),
                                                             Return(nullptr)
                                                             ));
 

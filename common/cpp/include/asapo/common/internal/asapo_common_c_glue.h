@@ -94,14 +94,7 @@ template <typename T> AsapoHandlerHolder<T>* handle_or_null_t(T* object,
 AsapoHandlerHolder<std::string>* handle_or_null_t(const std::string& object,
                                                   AsapoErrorHandle* error,
                                                   asapo::Error err,
-                                                  const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr) {
-    if (process_error(error, std::move(err), p_exclude_err_template) < 0) {
-        return nullptr;
-    } else {
-        return new AsapoHandlerHolder<std::string>(object);
-    }
-}
-
+                                                  const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr);
 
 
 template<typename u, typename t>

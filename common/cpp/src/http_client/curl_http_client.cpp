@@ -31,7 +31,7 @@ size_t curl_write( void* ptr, size_t size, size_t nmemb, void* data_container) {
         break;
     case CurlDataMode::array:
         if (container->bytes_received + nbytes > container->array_size) {
-            return -1;
+            return 0;
         }
         memcpy(container->p_array->get() + container->bytes_received, ptr, nbytes);
         container->bytes_received += nbytes;
@@ -40,7 +40,7 @@ size_t curl_write( void* ptr, size_t size, size_t nmemb, void* data_container) {
         Error err;
         container->io->Write(container->fd, ptr, nbytes, &err);
         if (err) {
-            return -1;
+            return 0;
         }
         break;
     }
@@ -76,7 +76,7 @@ HttpCode GetResponseCode(CURL* curl) {
     return static_cast<HttpCode>(http_code);
 }
 
-std::string GetCurlError(CURL* curl, CURLcode res, const char* errbuf) {
+std::string GetCurlError(CURLcode res, const char* errbuf) {
     if (strlen(errbuf) > 0) {
         return errbuf;
     } else {
@@ -89,7 +89,7 @@ Error ProcessCurlResponse(CURL* curl, CURLcode res, const char* errbuf, HttpCode
         *response_code = GetResponseCode(curl);
         return nullptr;
     } else {
-        auto err_string = GetCurlError(curl, res, errbuf);
+        auto err_string = GetCurlError(res, errbuf);
         if (res == CURLE_COULDNT_CONNECT || res == CURLE_COULDNT_RESOLVE_HOST) {
             return HttpErrorTemplates::kConnectionError.Generate(err_string);
         } else {
@@ -222,7 +222,7 @@ std::string CurlHttpClient::UrlEscape(const std::string& uri) const noexcept {
     if (!curl_) {
         return "";
     }
-    char* output = curl_easy_escape(curl_, uri.c_str(), uri.size());
+    char* output = curl_easy_escape(curl_, uri.c_str(), static_cast<int>(uri.size()));
     if (output) {
         auto res = std::string(output);
         curl_free(output);

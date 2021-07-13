@@ -51,7 +51,6 @@ typedef AsapoHandlerHolder<asapo::PartialErrorData>* AsapoPartialErrorDataHandle
 typedef AsapoHandlerHolder<asapo::ConsumerErrorData>* AsapoConsumerErrorDataHandle;
 
 #include <algorithm>
-
 #define dataGetterStart \
     asapo::MessageData d; \
     asapo::MessageMeta* fi = info ? new asapo::MessageMeta : nullptr; \
@@ -139,6 +138,8 @@ extern "C" {
         auto result = consumer->handle->GenerateNewGroupId(&err);
         return handle_or_null_t(result, error, std::move(err));
     }
+
+
 
 
 //! wraps asapo::Consumer::SetTimeout()
@@ -388,7 +389,7 @@ extern "C" {
         if (process_error(error, std::move(err)) < 0) {
             return -1;
         }
-        return retval;
+        return static_cast<int64_t>(retval);
     }
 
 //! wraps asapo::Consumer::GetDatasetById()
@@ -654,22 +655,5 @@ extern "C" {
     }
 
 
-
-//! free handle memory, set handle to NULL
-/// \param[in] pointer to an ASAPO handle
-    void asapo_free_handle(void** handle) {
-        if (*handle == nullptr) {
-            return;
-        }
-        auto a_handle = static_cast<AsapoHandle*>(*handle);
-        delete a_handle;
-        *handle = nullptr;
-    }
-
-//! creates a new ASAPO handle
-/// \return initialized ASAPO handle
-    void* asapo_new_handle() {
-        return NULL;
-    }
 
 }

@@ -58,7 +58,7 @@ void FabricHandshakeAcceptingTask::HandleAccept(Error* error) {
     // TODO: This could slow down the whole complete queue process, maybe use another thread?
     // Send and forget
     server->HandleRawFiCommand(new FabricSelfDeletingTask(), error,
-                               fi_send, nullptr, 0, nullptr, tmpAddr);
+                               fi_send, nullptr, static_cast<size_t>(0), nullptr, tmpAddr);
 }
 
 void FabricHandshakeAcceptingTask::OnError(const Error* error) {

@@ -505,7 +505,7 @@ TEST_F(ProducerImplTests, GetQueueVolume) {
 
 MATCHER_P(M_CheckLimits, limits, "Checks if a valid limits were used") {
     return arg.max_requests == limits.max_requests && arg.max_memory_mb == limits.max_memory_mb;
-};
+}
 
 TEST_F(ProducerImplTests, SetLimits) {
     EXPECT_CALL(mock_pull, SetLimits(M_CheckLimits(asapo::RequestPoolLimits{10, 20})));
@@ -622,7 +622,7 @@ MATCHER_P4(M_CheckDeleteStreamRequest, op_code, source_credentials, stream, flag
     auto request = static_cast<ProducerRequest*>(arg);
     return ((asapo::GenericRequestHeader) (arg->header)).op_code == op_code
            && request->source_credentials == source_credentials
-           && ((asapo::GenericRequestHeader) (arg->header)).custom_data[0] == flag
+           && ((asapo::GenericRequestHeader) (arg->header)).custom_data[0] == static_cast<uint64_t>(flag)
            && strcmp(((asapo::GenericRequestHeader) (arg->header)).stream, stream) == 0;
 }
 

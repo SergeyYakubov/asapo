@@ -59,11 +59,8 @@ auto const kUnsupportedClient = ProducerErrorTemplate {
     "cannot connect to asapo", ProducerErrorType::kUnsupportedClient
 };
 
+}
 
-
-
-
-};
 }
 
 #endif //ASAPO_PRODUCER_ERROR_H

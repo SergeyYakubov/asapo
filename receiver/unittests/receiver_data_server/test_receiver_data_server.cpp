@@ -68,7 +68,7 @@ class ReceiverDataServerTests : public Test {
     void SetUp() override {
         data_server.request_pool__ = std::unique_ptr<asapo::RequestPool> {&mock_pool};
         data_server.log__ = &mock_logger;
-        data_server.statistics__ = std::unique_ptr<asapo::Statistics> {&mock_statistics};;
+        data_server.statistics__ = std::unique_ptr<asapo::Statistics> {&mock_statistics};
     }
     void TearDown() override {
         data_server.net__.release();

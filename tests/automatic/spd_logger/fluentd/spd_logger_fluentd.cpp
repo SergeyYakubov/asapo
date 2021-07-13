@@ -5,7 +5,7 @@
 
 using namespace asapo;
 
-int main(int argc, char* argv[]) {
+int main() {
 
     auto logger = CreateDefaultLoggerApi("test_central", "http://localhost:9880/asapo");
 

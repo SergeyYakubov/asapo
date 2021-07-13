@@ -33,7 +33,7 @@ enum class ResponseMessageType {
 class Request {
   public:
     VIRTUAL Error Handle(ReceiverStatistics*);
-    ~Request() = default;
+    VIRTUAL ~Request() = default;
     Request() = delete;
     Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
             DataCache* cache, const RequestHandlerDbCheckRequest* db_check_handler);
@@ -78,7 +78,7 @@ class Request {
     VIRTUAL bool WasAlreadyProcessed() const;
     VIRTUAL void SetAlreadyProcessedFlag();
     VIRTUAL void SetResponseMessage(std::string message, ResponseMessageType type);
-    VIRTUAL const ResponseMessageType GetResponseMessageType() const;
+    VIRTUAL ResponseMessageType GetResponseMessageType() const;
     VIRTUAL const std::string& GetResponseMessage() const;
     VIRTUAL Error CheckForDuplicates();
   private:

@@ -28,7 +28,7 @@ Error RequestHandlerTcp::Authorize(const std::string& source_credentials) {
         return err;
     }
 
-    return ReceiveResponse(header, nullptr);
+    return ReceiveResponse(nullptr);
 }
 
 Error RequestHandlerTcp::ConnectToReceiver(const std::string& source_credentials, const std::string& receiver_address) {
@@ -82,7 +82,7 @@ Error RequestHandlerTcp::SendRequestContent(const ProducerRequest* request) {
     return nullptr;
 }
 
-Error RequestHandlerTcp::ReceiveResponse(const GenericRequestHeader& request_header, std::string* response) {
+Error RequestHandlerTcp::ReceiveResponse(std::string* response) {
     Error err;
     SendResponse sendDataResponse;
     io__->Receive(sd_, &sendDataResponse, sizeof(sendDataResponse), &err);
@@ -133,7 +133,7 @@ Error RequestHandlerTcp::TrySendToReceiver(const ProducerRequest* request, std::
         return err;
     }
 
-    err = ReceiveResponse(request->header, response);
+    err = ReceiveResponse(response);
     if (err == nullptr || err == ProducerErrorTemplates::kServerWarning) {
         log__->Debug("successfully sent data, opcode: " + std::to_string(request->header.op_code) +
                      ", id: " + std::to_string(request->header.data_id) + " to " + connected_receiver_uri_);
@@ -164,8 +164,8 @@ bool RequestHandlerTcp::UpdateReceiversList() {
 }
 
 bool RequestHandlerTcp::TimeToUpdateReceiverList() {
-    uint64_t elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() -
-                          last_receivers_uri_update_).count();
+    uint64_t elapsed_ms = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(system_clock::now() -
+                                                last_receivers_uri_update_).count());
     return elapsed_ms > discovery_service__->UpdateFrequency();
 }
 
@@ -274,7 +274,7 @@ bool RequestHandlerTcp::ProcessRequestUnlocked(GenericRequest* request, bool* re
     auto err = producer_request->UpdateDataSizeFromFileIfNeeded(io__.get());
     if (err) {
         if (producer_request->callback) {
-            producer_request->callback(RequestCallbackPayload{producer_request->header}, std::move(err));
+            producer_request->callback(RequestCallbackPayload{producer_request->header, nullptr, ""}, std::move(err));
         }
         *retry = false;
         return false;

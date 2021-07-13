@@ -17,6 +17,7 @@ class RequestsDispatcher {
     RequestsDispatcher(SocketDescriptor socket_fd, std::string address, ReceiverStatistics* statistics, SharedCache cache);
     VIRTUAL Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;
     VIRTUAL std::unique_ptr<Request> GetNextRequest(Error* err) const noexcept;
+    VIRTUAL ~RequestsDispatcher() = default;
     ReceiverStatistics* statistics__;
     std::unique_ptr<IO> io__;
     const AbstractLogger* log__;

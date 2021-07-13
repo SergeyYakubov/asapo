@@ -42,7 +42,7 @@ std::string  GenRandomString(int len) {
         "abcdefghijklmnopqrstuvwxyz";
 
     for (int i = 0; i < len; ++i) {
-        s += alphanum[rand() % (sizeof(alphanum) - 1)];
+        s += alphanum[static_cast<size_t>(rand()) % (sizeof(alphanum) - 1)];
     }
 
     return s;
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
     asapo::MessageMeta fi;
     fi.size = 100;
     fi.name = "relpath/1";
-    fi.id = args.file_id;
+    fi.id = static_cast<uint64_t>(args.file_id);
     fi.timestamp = std::chrono::system_clock::now();
     fi.buf_id = 18446744073709551615ull;
     fi.source = "host:1234";
