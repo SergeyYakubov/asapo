@@ -99,7 +99,7 @@ AsapoStreamInfoHandle asapo_producer_get_last_stream(AsapoProducerHandle produce
 
 int asapo_producer_send(AsapoProducerHandle producer,
                         const AsapoMessageHeaderHandle message_header,
-                        AsapoMessageDataHandle data,
+                        void* data,
                         uint64_t ingest_mode,
                         const char* stream,
                         AsapoRequestCallback callback,

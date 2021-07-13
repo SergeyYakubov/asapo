@@ -1,7 +1,7 @@
 #define __PRODUCER_C_INTERFACE_IMPLEMENTATION__
 #include "asapo/common/internal/asapo_common_c_glue.h"
 #include "asapo/asapo_producer.h"
-
+#include <cstddef>
 
 //! handle for an asapo producer
 /// created by asapo_create_producer()
@@ -41,7 +41,18 @@ extern "C" {
                   Debug == asapo::LogLevel::Debug&&
                   Warning == asapo::LogLevel::Warning,
                   "incompatible bit reps between c++ and c for asapo::LogLevel");
+    static_assert(sizeof(struct AsapoGenericRequestHeader) == sizeof(asapo::GenericRequestHeader),
+                  "incompatible sizes for asapo::GenericRequestHeader");
 
+    static_assert(offsetof(AsapoGenericRequestHeader, op_code) == offsetof(asapo::GenericRequestHeader, op_code)&&
+                  offsetof(AsapoGenericRequestHeader, data_id) == offsetof(asapo::GenericRequestHeader, data_id)&&
+                  offsetof(AsapoGenericRequestHeader, data_size) == offsetof(asapo::GenericRequestHeader, data_size)&&
+                  offsetof(AsapoGenericRequestHeader, meta_size) == offsetof(asapo::GenericRequestHeader, meta_size)&&
+                  offsetof(AsapoGenericRequestHeader, custom_data) == offsetof(asapo::GenericRequestHeader, custom_data)&&
+                  offsetof(AsapoGenericRequestHeader, message) == offsetof(asapo::GenericRequestHeader, message)&&
+                  offsetof(AsapoGenericRequestHeader, stream) == offsetof(asapo::GenericRequestHeader, stream)&&
+                  offsetof(AsapoGenericRequestHeader, api_version) == offsetof(asapo::GenericRequestHeader, api_version),
+                  "incompatible field offsets for  asapo::GenericRequestHeader");
 
     AsapoProducerHandle asapo_create_producer(const char* endpoint,
                                               uint8_t n_processing_threads,
@@ -103,17 +114,17 @@ extern "C" {
 
     int asapo_producer_send(AsapoProducerHandle producer,
                             const AsapoMessageHeaderHandle message_header,
-                            AsapoMessageDataHandle data,
+                            void* data,
                             uint64_t ingest_mode,
                             const char* stream,
                             AsapoRequestCallback callback,
                             AsapoErrorHandle* error) {
         BUILD_WRAPPER;
-        auto err = producer->handle->Send(*message_header->handle,
-                                          std::move(data->handle),
-                                          ingest_mode,
-                                          stream,
-                                          wrapper);
+        auto err = producer->handle->Send__(*message_header->handle,
+                                            data,
+                                            ingest_mode,
+                                            stream,
+                                            wrapper);
         return process_error(error, std::move(err));
     }
     int asapo_producer_send_file(AsapoProducerHandle producer,
