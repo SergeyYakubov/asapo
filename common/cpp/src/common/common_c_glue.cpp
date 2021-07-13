@@ -29,17 +29,6 @@ int process_error(AsapoErrorHandle* error, asapo::Error err,
     return retval;
 }
 
-AsapoHandle* handle_or_null(AsapoHandle* handle, AsapoErrorHandle* error, asapo::Error err,
-                            const asapo::ErrorTemplateInterface* p_exclude_err_template) {
-    if (process_error(error, std::move(err), p_exclude_err_template) < 0) {
-        if (handle != nullptr) {
-            delete handle;
-        }
-        return nullptr;
-    } else {
-        return handle;
-    }
-}
 
 void time_point_to_time_spec(std::chrono::system_clock::time_point tp,
                              struct timespec* stamp) {

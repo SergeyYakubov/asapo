@@ -14,8 +14,8 @@ template<class T>
 class AsapoHandlerHolder final : public AsapoHandle {
   public:
     AsapoHandlerHolder(bool manage_memory = true) : handle{nullptr}, manage_memory_{manage_memory} {};
-    AsapoHandlerHolder(T* handle_i, bool manage_memory = true) : handle{handle_i}, manage_memory_{manage_memory} {};
     AsapoHandlerHolder(std::unique_ptr<T>& handle_i, bool manage_memory = true) : handle{handle_i.release()}, manage_memory_{manage_memory} {};
+    AsapoHandlerHolder(T* handle_i, bool manage_memory = true) : handle{handle_i}, manage_memory_{manage_memory} {};
     ~AsapoHandlerHolder() override {
         if (!manage_memory_) {
             handle.release();
@@ -78,10 +78,18 @@ int process_error(AsapoErrorHandle* error, asapo::Error err,
                   const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr);
 
 
-AsapoHandle* handle_or_null(AsapoHandle* handle, AsapoErrorHandle* error, asapo::Error err,
-                            const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr);
 
 template <typename T> AsapoHandlerHolder<T>* handle_or_null_t(T* object,
+        AsapoErrorHandle* error,
+        asapo::Error err,
+        const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr) {
+    if (process_error(error, std::move(err), p_exclude_err_template) < 0) {
+        return nullptr;
+    } else {
+        return new AsapoHandlerHolder<T>(object);
+    }
+}
+template <typename T> AsapoHandlerHolder<T>* handle_or_null_t(std::unique_ptr<T>& object,
         AsapoErrorHandle* error,
         asapo::Error err,
         const asapo::ErrorTemplateInterface* p_exclude_err_template = nullptr) {
