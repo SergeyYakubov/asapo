@@ -4,15 +4,27 @@
 #include <stdint.h>
 #include <time.h>
 
-const unsigned AsapoHandleSize = 24;
+#define AsapoHandleSize 24
 typedef int AsapoBool;
 #ifndef __COMMON_C_INTERFACE_IMPLEMENTATION__
-typedef void* AsapoSourceCredentialsHandle;
-typedef void* AsapoErrorHandle;
-typedef void* AsapoStringHandle;
-typedef void* AsapoStreamInfoHandle;
-typedef void* AsapoStreamInfosHandle;
-typedef void* AsapoMessageDataHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoSourceCredentialsHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoErrorHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoStringHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoStreamInfoHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoStreamInfosHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoMessageDataHandle;
 #endif
 
 //! c version of asapo::SourceType
@@ -21,8 +33,8 @@ enum AsapoSourceType {
     kRaw
 };
 
-
-void asapo_free_handle(void** handle);
+#define asapo_free_handle(handle) asapo_free_handle__((void**)handle);
+void asapo_free_handle__(void** handle);
 void* asapo_new_handle();
 
 

@@ -3,9 +3,15 @@
 #include "asapo/common/common_c.h"
 #ifndef __PRODUCER_C_INTERFACE_IMPLEMENTATION__
 
-typedef void* AsapoProducerHandle;
-typedef void* AsapoRequestCallbackPayloadHandle;
-typedef void* AsapoMessageHeaderHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoProducerHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoRequestCallbackPayloadHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoMessageHeaderHandle;
 #endif
 
 typedef void(*AsapoRequestCallback)(AsapoRequestCallbackPayloadHandle, AsapoErrorHandle);

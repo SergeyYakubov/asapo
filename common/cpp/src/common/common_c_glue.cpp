@@ -56,7 +56,7 @@ extern "C" {
 
 //! free handle memory, set handle to NULL
 /// \param[in] pointer to an ASAPO handle
-    void asapo_free_handle(void** handle) {
+    void asapo_free_handle__(void** handle) {
         if (*handle == nullptr) {
             return;
         }

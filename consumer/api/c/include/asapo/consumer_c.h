@@ -3,13 +3,27 @@
 
 #include <asapo/common/common_c.h>
 #ifndef __CONSUMER_C_INTERFACE_IMPLEMENTATION__
-typedef void* AsapoConsumerHandle;
-typedef void* AsapoMessageMetaHandle;
-typedef void* AsapoMessageMetasHandle;
-typedef void* AsapoIdListHandle;
-typedef void* AsapoDataSetHandle;
-typedef void* AsapoPartialErrorDataHandle;
-typedef void* AsapoConsumerErrorDataHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoConsumerHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoMessageMetaHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoMessageMetasHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoIdListHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoDataSetHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoPartialErrorDataHandle;
+typedef struct {
+    char _[AsapoHandleSize];
+}* AsapoConsumerErrorDataHandle;
 
 #include <time.h>
 #include <stdint.h>
