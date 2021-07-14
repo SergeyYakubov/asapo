@@ -1,15 +1,23 @@
 module.exports = {
   docs: [
     'getting-started',
+    'overview',
+    'compare-to-others',
     {
       type: 'category',
-      label: 'Docusaurus Tutorial',
+      label: 'Concepts And Architecture',
       items: [
-        'create-a-page',
-        'create-a-document',
-        'create-a-blog-post',
-        'markdown-features',
-        'thank-you',
+        'data-in-asapo',
+        'producer-clients',
+        'consumer-clients',
+        'core-architecture',
+      ],
+    },
+ {
+      type: 'category',
+      label: 'Use Cases',
+      items: [
+        'p02.1',
       ],
     },
   ],
