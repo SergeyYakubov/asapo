@@ -23,7 +23,7 @@ Consumer API is available for C++ and Python and has the following main function
 
 All of the above functions can return only metadata part of the message, so that an application can e.g. extract the filename and pass it to a 3rd party tool for processing. Alternative, a function may return the complete message with metadata and data so that consumer can directly process it. An access to the filesystem where data is actually stored is not required in this case.
 
-:::info
+:::note
 In case of dataset family of functions, only list of dataset messages is returned, the data can be retrieved in a separate call.
 :::
     
