@@ -41,8 +41,8 @@ function ReferenceCode(props: any) {
 
     const snippetTag = getVal("snippetTag", props)
     if (codeBlockContent) {
-        const c = codeBlockContent.replace('@ASAPO_EXAMPLES_DIR@/', '')
-        const res = requireContext('./'+c)
+        const c = codeBlockContent.replace('@ASAPO_EXAMPLES_DIR@', '.')
+        const res = requireContext(c)
         let body = res.default.split('\n')
         const fromLine = body.indexOf(snippetTag + " snippet_start") + 1;
         const toLine = body.indexOf(snippetTag + " snippet_end", fromLine) - 1;

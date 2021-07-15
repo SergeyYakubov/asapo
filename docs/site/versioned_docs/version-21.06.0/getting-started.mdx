@@ -32,14 +32,14 @@ unix socket or a tcp port for communications)
 }>
 <TabItem value="unix">
 
-```shell content="frozen_versions/21.06.0/getting_started/start_asapo_socket.sh"
+```shell content="./frozen_versions/21.06.0/getting_started/start_asapo_socket.sh"
 ```
 
 </TabItem>
 
 <TabItem value="tcp">
 
-```shell content="frozen_versions/21.06.0/getting_started/start_asapo_tcp.sh"
+```shell content="./frozen_versions/21.06.0/getting_started/start_asapo_tcp.sh"
 ```
 
 </TabItem>
@@ -84,19 +84,19 @@ Now you can install Python packages or C++ libraries for ASAPO Producer and Cons
 }>
 <TabItem value="python-pip">
 
-```shell content="frozen_versions/21.06.0/getting_started/install_python_clients_pip.sh" snippetTag="#snippet1"
+```shell content="./frozen_versions/21.06.0/getting_started/install_python_clients_pip.sh" snippetTag="#snippet1"
 ```
 
 </TabItem>
 <TabItem value="python-packages">
 
-```shell content="frozen_versions/21.06.0/getting_started/install_python_clients_pkg.sh"
+```shell content="./frozen_versions/21.06.0/getting_started/install_python_clients_pkg.sh"
 ```
 
 </TabItem>
 <TabItem value="cpp">
 
-```shell content="frozen_versions/21.06.0/getting_started/install_cpp_clients.sh"
+```shell content="./frozen_versions/21.06.0/getting_started/install_cpp_clients.sh"
 ```
 
 </TabItem>
@@ -116,7 +116,7 @@ Now you can install Python packages or C++ libraries for ASAPO Producer and Cons
 
 Now you can write a Producer client (API documentation [here](http://asapo.desy.de/python/producer.html)).
 
-```shell content="frozen_versions/21.06.0/getting_started/python/produce.py"
+```shell content="./frozen_versions/21.06.0/getting_started/python/produce.py"
 ```
 
 Execute it with python3
@@ -131,12 +131,12 @@ $ python3 produce.py
 
 Now you can write a Producer client (API documentation [here](http://asapo.desy.de/cpp/producer)).
 
-```shell content="frozen_versions/21.06.0/getting_started/cpp/produce.cpp"
+```shell content="./frozen_versions/21.06.0/getting_started/cpp/produce.cpp"
 ```
 
 Compile e.g. using CMake and execute. You might need to point cmake (with CMAKE_PREFIX_PATH) to asapo installation and curl library if installed to non-standard location.
 
-```shell content="frozen_versions/21.06.0/getting_started/cpp/CMakeLists.txt" snippetTag="#producer"
+```shell content="./frozen_versions/21.06.0/getting_started/cpp/CMakeLists.txt" snippetTag="#producer"
 ```
 
 ```
@@ -173,7 +173,7 @@ A consumer data that reads the message ingested during step 3. Note that a token
 
 Complete API documentation [here](http://asapo.desy.de/python/consumer.html)
 
-```shell content="frozen_versions/21.06.0/getting_started/python/consume.py"
+```shell content="./frozen_versions/21.06.0/getting_started/python/consume.py"
 ```
 
 Execute it with python3
@@ -186,12 +186,12 @@ $ python3 consumer.py
 
 <TabItem value="cpp">
 
-```shell content="frozen_versions/21.06.0/getting_started/cpp/consume.cpp"
+```shell content="./frozen_versions/21.06.0/getting_started/cpp/consume.cpp"
 ```
 
 Compile e.g. using CMake and execute. You might need to point cmake (with CMAKE_PREFIX_PATH) to asapo installation and curl library if installed to non-standard location.
 
-```shell content="frozen_versions/21.06.0/getting_started/cpp/CMakeLists.txt" snippetTag="#consumer"
+```shell content="./frozen_versions/21.06.0/getting_started/cpp/CMakeLists.txt" snippetTag="#consumer"
 ```
 
 ```
@@ -203,12 +203,12 @@ $ ./asapo-consume
 
 <TabItem value="c">
 
-```shell content="frozen_versions/21.06.0/getting_started/c/consume.c"
+```shell content="./frozen_versions/21.06.0/getting_started/c/consume.c"
 ```
 
 Compile e.g. using Makefile and pkg-config (although we recommend CMake -  see C++ section) and execute. This example assumes asapo is installed to /opt/asapo. Adjust correspondingly.
 
-```shell content="frozen_versions/21.06.0/getting_started/c/Makefile" snippetTag="#consumer"
+```shell content="./frozen_versions/21.06.0/getting_started/c/Makefile" snippetTag="#consumer"
 ```
 
 ```
@@ -234,7 +234,7 @@ stream deleted
 
 Optionally, last step is to stop ASAPO services and remove files:
 
-```shell content="frozen_versions/21.06.0/getting_started/cleanup.sh"
+```shell content="./frozen_versions/21.06.0/getting_started/cleanup.sh"
 ```
 
 <br/><br/>
