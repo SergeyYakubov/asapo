@@ -3,9 +3,9 @@ project(ASAPO)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/ ${PROJECT_SOURCE_DIR}/CMakeIncludes/)
 
-set (ASAPO_VERSION_IN_DOCS 21.06.0)
-#set (ASAPO_EXAMPLES_DIR .)
-set (ASAPO_EXAMPLES_DIR frozen_versions/21.06.0)
+set (ASAPO_VERSION_IN_DOCS 21.06.0) # is overwritten in master branch
+set (ASAPO_EXAMPLES_DIR .)
+#set (ASAPO_EXAMPLES_DIR frozen_versions/${ASAPO_VERSION_IN_DOCS})
 
 #protocol version changes if one of the microservice API's change
 set (ASAPO_CONSUMER_PROTOCOL "v0.4")
