@@ -41,7 +41,7 @@ docker run --privileged --userns=host --security-opt no-new-privileges --rm \
   -v $DOCKER_TLS_KEY:/etc/nomad/key.pem \
   -v $DOCKER_TLS_CERT:/etc/nomad/cert.pem \
   -e DOCKER_ENDPOINT=$DOCKER_ENDPOINT \
-  --name asapo --net=host -d yakser/asapo-cluster:@ASAPO_VERSION@
+  --name asapo --net=host -d yakser/asapo-cluster:@ASAPO_VERSION_IN_DOCS@
 
 sleep 15
 docker exec asapo jobs-start -var elk_logs=false

@@ -2,7 +2,9 @@ import React from 'react'
 import InitCodeBlock from '@theme-init/CodeBlock'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
-const requireContext = require.context('../../../../examples/for_site/', true, /(\.sh|\.py|\.cpp|\.c|\.txt|Makefile)$/);
+
+
+const requireContext = require.context('../../examples/', true, /(\.sh|\.py|\.cpp|\.c|\.txt|Makefile)$/);
 
 const noteStyle: React.CSSProperties = {
     textAlign: 'right',
@@ -34,11 +36,13 @@ function ReferenceCode(props: any) {
     }
     const {siteConfig} = useDocusaurusContext();
     const version = siteConfig.customFields.version;
+    console.log(siteConfig);
     const urlLink = "https://stash.desy.de/projects/ASAPO/repos/asapo/browse/examples/for_site/" + codeBlockContent + "?at=" + version
 
     const snippetTag = getVal("snippetTag", props)
     if (codeBlockContent) {
-        const res = requireContext('./'+codeBlockContent)
+        const c = codeBlockContent.replace('@ASAPO_EXAMPLES_DIR@/', '')
+        const res = requireContext('./'+c)
         let body = res.default.split('\n')
         const fromLine = body.indexOf(snippetTag + " snippet_start") + 1;
         const toLine = body.indexOf(snippetTag + " snippet_end", fromLine) - 1;

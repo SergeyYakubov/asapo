@@ -47,6 +47,16 @@ module.exports = {
                   ],
                 },
         {
+          type: 'docsVersionDropdown',
+          //// Optional
+          position: 'right',
+          // Add additional dropdown items at the beginning/end of the dropdown.
+          dropdownItemsBefore: [],
+          dropdownItemsAfter: [],
+          dropdownActiveClassDisabled: true,
+          docsPluginId: 'default',
+        },
+        {
           href: 'https://stash.desy.de/projects/ASAPO/repos/asapo/browse?at=@ASAPO_VERSION@/',
           label: 'BitBucket',
           title: 'BitBucket',
@@ -65,6 +75,12 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
+            versions: {
+              current: {
+                "label": "Develop",
+                "path": "next"
+              },
+              },
         },
         blog: {
           showReadingTime: true,
