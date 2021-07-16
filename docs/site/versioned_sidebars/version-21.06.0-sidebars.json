@@ -1,0 +1,50 @@
+{
+  "version-21.06.0/docs": [
+    {
+      "type": "doc",
+      "id": "version-21.06.0/getting-started"
+    },
+    {
+      "type": "doc",
+      "id": "version-21.06.0/overview"
+    },
+    {
+      "type": "doc",
+      "id": "version-21.06.0/compare-to-others"
+    },
+    {
+      "collapsed": true,
+      "type": "category",
+      "label": "Concepts And Architecture",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-21.06.0/data-in-asapo"
+        },
+        {
+          "type": "doc",
+          "id": "version-21.06.0/producer-clients"
+        },
+        {
+          "type": "doc",
+          "id": "version-21.06.0/consumer-clients"
+        },
+        {
+          "type": "doc",
+          "id": "version-21.06.0/core-architecture"
+        }
+      ]
+    },
+    {
+      "collapsed": true,
+      "type": "category",
+      "label": "Use Cases",
+      "items": [
+        {
+          "type": "doc",
+          "id": "version-21.06.0/p02.1"
+        }
+      ]
+    }
+  ]
+}

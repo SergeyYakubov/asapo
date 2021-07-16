@@ -2,7 +2,9 @@ import React from 'react'
 import InitCodeBlock from '@theme-init/CodeBlock'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
-const requireContext = require.context('../../../../examples/for_site/', true, /\.(sh|py|cpp)$/);
+
+
+const requireContext = require.context('../../examples/', true, /(\.sh|\.py|\.cpp|\.c|\.txt|Makefile)$/);
 
 const noteStyle: React.CSSProperties = {
     textAlign: 'right',
@@ -12,48 +14,6 @@ const noteStyle: React.CSSProperties = {
 
 export interface State {
     isCancelled: boolean
-}
-
-async function fetchCode(url: string, snippetTag: string, state: State, setFetchResultState: React.Dispatch<React.SetStateAction<string>>) {
-    let res: Response
-    try {
-        if (!state.isCancelled) {
-            res = await fetch(url);
-        }
-    } catch (err) {
-        if (!state.isCancelled) {
-            setFetchResultState("cannot fetch code: " + err.toString());
-        }
-    }
-
-    if (state.isCancelled) {
-        return;
-    }
-
-    if (res.status !== 200) {
-        const error = await res.text()
-        setFetchResultState("cannot fetch code: " + error);
-    }
-
-    let body = (await res.text()).split('\n')
-    const fromLine = body.indexOf(snippetTag + " start") + 1 || 0;
-    const toLine = body.indexOf(snippetTag + " end", fromLine) - 1 || undefined;
-    body = body.slice(fromLine, (toLine || fromLine) + 1)
-
-    const preceedingSpace = body.reduce((prev: number, line: string) => {
-        if (line.length === 0) {
-            return prev
-        }
-
-        const spaces = line.match(/^\s+/)
-        if (spaces) {
-            return Math.min(prev, spaces[0].length)
-        }
-
-        return 0
-    }, Infinity)
-
-    setFetchResultState(body.map((line) => line.slice(preceedingSpace)).join('\n'));
 }
 
 function getVal(name: string, props: any) {
@@ -76,15 +36,27 @@ function ReferenceCode(props: any) {
     }
     const {siteConfig} = useDocusaurusContext();
     const version = siteConfig.customFields.version;
+    console.log(siteConfig);
     const urlLink = "https://stash.desy.de/projects/ASAPO/repos/asapo/browse/examples/for_site/" + codeBlockContent + "?at=" + version
 
     const snippetTag = getVal("snippetTag", props)
     if (codeBlockContent) {
-        const res = requireContext('./'+codeBlockContent)
+        const c = codeBlockContent.replace('@ASAPO_EXAMPLES_DIR@', '.')
+        const res = requireContext(c)
         let body = res.default.split('\n')
-        const fromLine = body.indexOf(snippetTag + " start") + 1 || 0;
-        const toLine = body.indexOf(snippetTag + " end", fromLine) - 1 || undefined;
-        body = body.slice(fromLine, (toLine || fromLine) + 1).join('\n')
+        const fromLine = body.indexOf(snippetTag + " snippet_start") + 1;
+        const toLine = body.indexOf(snippetTag + " snippet_end", fromLine) - 1;
+        if (fromLine > 0) {
+            body = body.slice(fromLine, (toLine>-1?toLine:fromLine) + 1)
+        }
+        const fromLineRemove = body.indexOf(snippetTag + " snippet_start_remove");
+        const toLineRemove = body.indexOf(snippetTag + " snippet_end_remove", fromLineRemove);
+        if (fromLineRemove>-1) {
+            body.splice(fromLineRemove, toLineRemove>-1?toLineRemove-fromLineRemove + 1:2)
+        }
+        body = body.filter(a => !a.includes("snippet_start_remove") && !a.includes("snippet_end_remove"))
+        body = body.join('\n')
+
 
         const customProps = {
             ...props,
