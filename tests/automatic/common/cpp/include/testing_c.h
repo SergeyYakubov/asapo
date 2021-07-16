@@ -17,6 +17,8 @@ void assert_eq_int_(uint64_t expected, uint64_t got, const char* message, int li
         printf("%s: expected %llu got %llu at %d\n", message, (unsigned long long)expected, (unsigned long long)got, line);
         exit(EXIT_FAILURE);
     }
+    printf("asserting %s at %d - OK\n", message, line);
+
 }
 
 void assert_eq_string_(const char* expected, const char* got, const char* message, int line) {
@@ -25,6 +27,8 @@ void assert_eq_string_(const char* expected, const char* got, const char* messag
         printf("%s: expected %s got %s at %d\n", message, expected, got, line);
         exit(EXIT_FAILURE);
     }
+    printf("asserting %s at %d - OK \n", message, line);
+
 }
 
 void assert_true_(int value, const char* message, int line) {
@@ -33,6 +37,7 @@ void assert_true_(int value, const char* message, int line) {
         printf("%s failed at %d\n", message, line);
         exit(EXIT_FAILURE);
     }
+    printf("asserting %s at %d - OK \n", message, line);
 }
 
 void exit_if_error_(const char* error_string, const AsapoErrorHandle err, int line) {
@@ -43,6 +48,7 @@ void exit_if_error_(const char* error_string, const AsapoErrorHandle err, int li
         printf("%s %s\n", error_string, buf);
         exit(EXIT_FAILURE);
     }
+    printf("asserting no error for %s at %d - OK \n", error_string, line);
 }
 
 

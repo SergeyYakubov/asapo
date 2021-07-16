@@ -23,4 +23,5 @@ mkdir -p ${receiver_folder}
 
 echo test > file1
 
-$@ "127.0.0.1:8400" $data_source $beamtime_id
+#$@ 127.0.0.1:8400 $data_source $beamtime_id
+/Users/yakubov/Projects/asapo/cmake-build-debug/tests/automatic/producer/c_api/producer_api_c  127.0.0.1:8400 c asapo_test

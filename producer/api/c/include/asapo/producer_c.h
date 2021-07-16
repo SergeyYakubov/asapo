@@ -14,7 +14,7 @@ typedef struct {
 }* AsapoMessageHeaderHandle;
 #endif
 
-typedef void(*AsapoRequestCallback)(AsapoRequestCallbackPayloadHandle, AsapoErrorHandle);
+typedef void(*AsapoRequestCallback)(void*, AsapoRequestCallbackPayloadHandle, AsapoErrorHandle);
 #define kMaxMessageSize 1024
 #define kMaxVersionSize 10
 #define kNCustomParams 3
