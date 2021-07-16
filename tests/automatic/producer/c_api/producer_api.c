@@ -7,14 +7,14 @@
 
 void callback(void* original_data, AsapoRequestCallbackPayloadHandle payload, AsapoErrorHandle error) {
     EXIT_IF_ERROR("error after callback", error);
-    AsapoMessageDataHandle data_handle = asapo_request_callback_payload_get_data(payload);
     AsapoStringHandle response = asapo_request_callback_payload_get_response(payload);
     const struct AsapoGenericRequestHeader* header = asapo_request_callback_payload_get_original_header(payload);
 
     ASSERT_EQ_INT(1,header->data_id,"data id");
     ASSERT_EQ_STRING("hello",(const char*)original_data,"data in payload");
 
-    asapo_free_handle(&data_handle);
+    free(original_data);
+
     asapo_free_handle(&response);
 }
 

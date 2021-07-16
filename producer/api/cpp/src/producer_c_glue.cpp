@@ -119,7 +119,7 @@ extern "C" {
                 dataset_size,
                 auto_id != 0));
     }
-    
+
 #define BUILD_WRAPPER asapo::RequestCallback wrapper = [ = ](asapo::RequestCallbackPayload payload, asapo::Error err) -> void { \
             void* data = (void*) payload.data.release(); \
             auto payLoadHandle = new AsapoHandlerHolder<asapo::RequestCallbackPayload>(&payload, false); \
