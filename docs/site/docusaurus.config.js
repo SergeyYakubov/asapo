@@ -14,7 +14,7 @@ module.exports = {
   organizationName: 'DESY', // Usually your GitHub org/user name.
   projectName: 'ASAPO', // Usually your repo name.
    customFields: {
-     version: '@ASAPO_VERSION@',
+     version: '@ASAPO_VERSION_IN_DOCS@',
    },
   plugins: [path.resolve(__dirname, 'plugins/webpackconf/src/index.js')],
   themeConfig: {
@@ -47,7 +47,17 @@ module.exports = {
                   ],
                 },
         {
-          href: 'https://stash.desy.de/projects/ASAPO/repos/asapo/browse?at=@ASAPO_VERSION@/',
+          type: 'docsVersionDropdown',
+          //// Optional
+          position: 'right',
+          // Add additional dropdown items at the beginning/end of the dropdown.
+          dropdownItemsBefore: [],
+          dropdownItemsAfter: [],
+          dropdownActiveClassDisabled: true,
+          docsPluginId: 'default',
+        },
+        {
+          href: 'https://stash.desy.de/projects/ASAPO/repos/asapo/browse?at=@ASAPO_VERSION_IN_DOCS@/',
           label: 'BitBucket',
           title: 'BitBucket',
           position: 'right',
@@ -65,6 +75,12 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
+            versions: {
+              current: {
+                "label": "Develop",
+                "path": "next"
+              },
+              },
         },
         blog: {
           showReadingTime: true,

@@ -15,6 +15,18 @@ module.exports = function (context, options) {
               use: 'raw-loader',
             },
             {
+              test: /\.c$/i,
+              use: 'raw-loader',
+            },
+            {
+              test: /Makefile/i,
+              use: 'raw-loader',
+            },
+            {
+              test: /\.txt$/i,
+              use: 'raw-loader',
+            },
+            {
               test: /\.py$/i,
               use: 'raw-loader',
             },
