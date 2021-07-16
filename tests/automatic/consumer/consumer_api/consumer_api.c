@@ -224,8 +224,7 @@ int main(int argc, char* argv[]) {
     EXIT_IF_ERROR("create consumer", err);
 
     AsapoStringHandle group_id2 = asapo_string_from_c_str("hello");
-    printf("%s\n",asapo_string_c_str(group_id2));
-//    ASSERT_EQ_STRING("hello",asapo_string_c_str(group_id2),"asapo str <-> string");
+    ASSERT_EQ_STRING("hello",asapo_string_c_str(group_id2),"asapo str <-> string");
 
 
     asapo_consumer_set_timeout(consumer, 1000ull);

@@ -30,9 +30,7 @@ template<>
 class AsapoHandlerHolder < std::string>  final : public AsapoHandle {
   public:
     AsapoHandlerHolder(const std::string& handle_i) : handle{new std::string(handle_i)} {};
-    ~AsapoHandlerHolder() override {
-        handle.release();
-    }
+    ~AsapoHandlerHolder() override = default;
     std::unique_ptr<std::string> handle{nullptr};
 };
 //! handle for credentials to access a source from a producer
