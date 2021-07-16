@@ -90,11 +90,6 @@ extern "C" {
                   kFabric == asapo::NetworkConnectionType::kFabric,
                   "incompatible bit reps between c++ and c for asapo::NetworkConnectionType");
 
-    AsapoBool asapo_is_error(AsapoErrorHandle err) {
-        return err != nullptr && err->handle != nullptr;
-    }
-
-
     enum AsapoConsumerErrorType asapo_error_get_type(const AsapoErrorHandle error) {
         auto consumer_err =
             dynamic_cast<const asapo::ServiceError<asapo::ConsumerErrorType,

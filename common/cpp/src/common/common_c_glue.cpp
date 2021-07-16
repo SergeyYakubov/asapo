@@ -48,7 +48,7 @@ extern "C" {
                   "AsapoHandleSize is not correct");
 
 
-    AsapoStringHandle asapo_string_create(const char* str) {
+    AsapoStringHandle asapo_string_from_c_str(const char* str) {
         return AsapoStringHandle(new std::string(str));
     }
 
@@ -181,5 +181,9 @@ extern "C" {
         return new AsapoHandlerHolder<asapo::SourceCredentials> {retval};
     }
 
+
+    AsapoBool asapo_is_error(AsapoErrorHandle err) {
+        return err != nullptr && err->handle != nullptr;
+    }
 
 }

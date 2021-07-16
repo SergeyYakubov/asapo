@@ -1,48 +1,9 @@
 #include "asapo/consumer_c.h"
+#include "testing_c.h"
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#define EXIT_IF_ERROR(...) exit_if_error_(__VA_ARGS__,__LINE__)
-#define ASSERT_EQ_INT(...) assert_eq_int_(__VA_ARGS__,__LINE__)
-#define ASSERT_EQ_STRING(...) assert_eq_string_(__VA_ARGS__,__LINE__)
-#define ASSERT_TRUE(...) assert_true_(__VA_ARGS__,__LINE__)
-
-void assert_eq_int_(uint64_t expected, uint64_t got, const char *message, int line) {
-    printf("asserting %s at %d\n",message,line);
-    if (expected!=got) {
-        printf("%s: expected %llu got %llu at %d\n",message, (unsigned long long)expected, (unsigned long long)got,line);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void assert_eq_string_(const char * expected, const char *got, const char *message, int line) {
-    printf("asserting %s at %d\n",message,line);
-    if (strcmp(expected,got)!=0) {
-        printf("%s: expected %s got %s at %d\n",message, expected, got,line);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void assert_true_(int value, const char *message, int line) {
-    printf("asserting %s at %d\n",message,line);
-    if (value!=1) {
-        printf("%s failed at %d\n",message, line);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void exit_if_error_(const char *error_string, const AsapoErrorHandle err, int line) {
-    printf("asserting no error for %s at %d\n",error_string,line);
-    if (asapo_is_error(err)) {
-        char buf[1024];
-        asapo_error_explain(err, buf, sizeof(buf));
-        printf("%s %s\n", error_string, buf);
-        exit(EXIT_FAILURE);
-    }
-}
-
 
 void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
     AsapoErrorHandle err = asapo_new_handle();
@@ -51,8 +12,8 @@ void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
     AsapoDataSetHandle dataset = asapo_consumer_get_next_dataset(consumer,group_id, 0, "default", &err);
     EXIT_IF_ERROR("asapo_consumer_get_next_dataset", err);
     ASSERT_EQ_INT(3,asapo_dataset_get_size(dataset),"asapo_dataset_get_size");
-    AsapoMessageDataHandle md0 = asapo_dataset_get_item(dataset,0);
-    AsapoMessageDataHandle md2 = asapo_dataset_get_item(dataset,2);
+    AsapoMessageMetaHandle md0 = asapo_dataset_get_item(dataset,0);
+    AsapoMessageMetaHandle md2 = asapo_dataset_get_item(dataset,2);
     ASSERT_EQ_STRING("1_1",asapo_message_meta_get_name(md0),"dataset 0 filename");
     ASSERT_EQ_STRING("1_3",asapo_message_meta_get_name(md2),"dataset 2 filename");
     ASSERT_EQ_STRING("{\"test\":10}",asapo_message_meta_get_metadata(md0),"dataset 0 meta");
@@ -63,7 +24,7 @@ void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
 // get last
     dataset = asapo_consumer_get_last_dataset(consumer, 0, "default", &err);
     EXIT_IF_ERROR("asapo_consumer_get_last_dataset", err);
-    AsapoMessageDataHandle md = asapo_dataset_get_item(dataset,0);
+    AsapoMessageMetaHandle md = asapo_dataset_get_item(dataset,0);
     ASSERT_EQ_STRING("10_1",asapo_message_meta_get_name(md),"dataset 10 filename");
     asapo_free_handle(&md);
     asapo_free_handle(&dataset);

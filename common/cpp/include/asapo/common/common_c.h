@@ -41,7 +41,7 @@ void* asapo_new_handle();
 void asapo_error_explain(const AsapoErrorHandle error, char* buf, size_t max_size);
 AsapoBool asapo_is_error(AsapoErrorHandle err);
 
-AsapoStringHandle asapo_string_create(const char* str);
+AsapoStringHandle asapo_string_from_c_str(const char* str);
 const char* asapo_string_c_str(const AsapoStringHandle str);
 size_t asapo_string_size(const AsapoStringHandle str);
 
@@ -58,6 +58,11 @@ void asapo_stream_info_get_timestamp_created(const AsapoStreamInfoHandle info,
 void asapo_stream_info_get_timestamp_last_entry(const AsapoStreamInfoHandle info,
                                                 struct timespec* stamp);
 
+AsapoSourceCredentialsHandle asapo_create_source_credentials(enum AsapoSourceType type,
+        const char* beamtime,
+        const char* beamline,
+        const char* data_source,
+        const char* token);
 
 
 const char* asapo_message_data_get_as_chars(const AsapoMessageDataHandle data);

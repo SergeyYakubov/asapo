@@ -15,9 +15,9 @@ typedef struct {
 #endif
 
 typedef void(*AsapoRequestCallback)(AsapoRequestCallbackPayloadHandle, AsapoErrorHandle);
-const size_t kMaxMessageSize = 1024;
-const size_t kMaxVersionSize = 10;
-const size_t kNCustomParams = 3;
+#define kMaxMessageSize 1024
+#define kMaxVersionSize 10
+#define kNCustomParams 3
 
 //! c version opf asapo::Opcode
 enum AsapoOpcode {
@@ -37,7 +37,7 @@ enum AsapoOpcode {
 
 //! c version of asapo::GenericRequestHeader
 struct AsapoGenericRequestHeader {
-    AsapoOpcode op_code;
+    enum AsapoOpcode op_code;
     uint64_t    data_id;
     uint64_t    data_size;
     uint64_t    meta_size;
@@ -73,7 +73,7 @@ enum AsapoLogLevel {
 
 AsapoProducerHandle asapo_create_producer(const char* endpoint,
                                           uint8_t n_processing_threads,
-                                          AsapoRequestHandlerType type,
+                                          enum AsapoRequestHandlerType type,
                                           AsapoSourceCredentialsHandle source_cred,
                                           uint64_t timeout_ms,
                                           AsapoErrorHandle* error);
@@ -125,13 +125,13 @@ int asapo_producer_send_stream_finished_flag(AsapoProducerHandle producer,
                                              AsapoErrorHandle* error);
 int asapo_producer_send_beamtime_metadata(AsapoProducerHandle producer,
                                           const char* metadata,
-                                          AsapoMetaIngestOp mode,
+                                          enum AsapoMetaIngestOp mode,
                                           AsapoBool upsert,
                                           AsapoRequestCallback callback,
                                           AsapoErrorHandle* error);
 int asapo_producer_send_stream_metadata(AsapoProducerHandle producer,
                                         const char* metadata,
-                                        AsapoMetaIngestOp mode,
+                                        enum AsapoMetaIngestOp mode,
                                         AsapoBool upsert,
                                         const char* stream,
                                         AsapoRequestCallback callback,
@@ -139,10 +139,10 @@ int asapo_producer_send_stream_metadata(AsapoProducerHandle producer,
 
 AsapoMessageDataHandle asapo_request_callback_payload_get_data(AsapoRequestCallbackPayloadHandle handle);
 AsapoStringHandle asapo_request_callback_payload_get_response(AsapoRequestCallbackPayloadHandle handle);
-const AsapoGenericRequestHeader* asapo_request_callback_payload_get_original_header(
+const struct AsapoGenericRequestHeader* asapo_request_callback_payload_get_original_header(
     AsapoRequestCallbackPayloadHandle handle);
 
-void asapo_producer_set_log_level(AsapoProducerHandle producer, AsapoLogLevel level);
+void asapo_producer_set_log_level(AsapoProducerHandle producer, enum AsapoLogLevel level);
 void asapo_producer_enable_local_log(AsapoProducerHandle producer, AsapoBool enable);
 void asapo_producer_enable_remote_log(AsapoProducerHandle producer, AsapoBool enable);
 int asapo_producer_set_credentials(AsapoProducerHandle producer, AsapoSourceCredentialsHandle source_cred,

@@ -164,12 +164,6 @@ void asapo_consumer_set_resend_nacs(AsapoConsumerHandle consumer,
                                     uint64_t resend_attempts);
 
 const char* asapo_message_data_get_as_chars(const AsapoMessageDataHandle data);
-AsapoSourceCredentialsHandle asapo_create_source_credentials(enum AsapoSourceType type,
-        const char* beamtime,
-        const char* beamline,
-        const char* data_source,
-        const char* token);
-
 const char* asapo_message_meta_get_name(const AsapoMessageMetaHandle md);
 void asapo_message_meta_get_timestamp(const AsapoMessageMetaHandle md,
                                       struct timespec* stamp);
