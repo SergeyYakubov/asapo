@@ -21,7 +21,7 @@ const features = [
     imageUrl: 'img/science.png',
     description: (
       <>
-        ASAP::O lets you to focus on science, while we&apos;ll take care of nasty details like storage and network and deliver your data right where you need it.
+        ASAP::O lets you focus on science, while we&apos;ll take care of nasty details like storage and network and deliver your data right where you need it.
       </>
     ),
   },
