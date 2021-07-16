@@ -3,7 +3,7 @@ function(cleanup varname)
     SET( ${varname} ${out} PARENT_SCOPE)
 endfunction()
 
-execute_process(COMMAND git describe --tags --abbrev=0 master
+execute_process(COMMAND git describe --tags --abbrev=0 
                 OUTPUT_VARIABLE ASAPO_TAG
                 WORKING_DIRECTORY ..)
 string(STRIP ${ASAPO_TAG} ASAPO_TAG)
