@@ -82,7 +82,7 @@ void test_send(AsapoProducerHandle producer) {
     AsapoMessageHeaderHandle message_header = NULL;
 
     char data[] = "hello";
-    int res = asapo_producer_send(producer,
+    asapo_producer_send(producer,
                             message_header,
                             data,
                             kDefaultIngestMode,
