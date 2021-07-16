@@ -56,7 +56,6 @@ void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
     AsapoDataSetHandle ds = asapo_consumer_get_last_dataset(consumer, 0, "incomplete", &err);
     ASSERT_TRUE(ds == NULL,"returns null in case of error");
     ASSERT_TRUE(asapo_error_get_type(err) == kEndOfStream,"incomplete dataset end of stream error");
-    asapo_free_handle(&ds);
 
 // get dataset by id incomplete datasets without min_size
     dataset = asapo_consumer_get_dataset_by_id(consumer,2, 0,"incomplete", &err);
