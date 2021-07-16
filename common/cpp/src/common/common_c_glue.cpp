@@ -49,7 +49,7 @@ extern "C" {
 
 
     AsapoStringHandle asapo_string_from_c_str(const char* str) {
-        return AsapoStringHandle(new std::string(str));
+        return new AsapoHandlerHolder<std::string> {std::string{str}};
     }
 
 
