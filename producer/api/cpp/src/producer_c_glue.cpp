@@ -104,6 +104,24 @@ extern "C" {
             uint64_t timeout_ms,
             AsapoErrorHandle* error);
 
+    AsapoMessageHeaderHandle asapo_create_message_header(uint64_t message_id,
+            uint64_t data_size,
+            const char* file_name,
+            const char* user_metadata,
+            uint64_t dataset_substream,
+            uint64_t dataset_size,
+            AsapoBool auto_id) {
+        return new AsapoHandlerHolder<asapo::MessageHeader>(new asapo::MessageHeader(message_id,
+                data_size,
+                file_name,
+                user_metadata,
+                dataset_substream,
+                dataset_size,
+                auto_id != 0));
+    }
+
+
+
 #define BUILD_WRAPPER asapo::RequestCallback wrapper = [ = ](asapo::RequestCallbackPayload payload, asapo::Error err) -> void { \
             auto payLoadHandle = new AsapoHandlerHolder<asapo::RequestCallbackPayload>(&payload); \
             auto errorHandle = new AsapoHandlerHolder<asapo::ErrorInterface>(err.release()); \

@@ -55,10 +55,10 @@ enum AsapoRequestHandlerType {
 
 //! c version of asapo::IngestModeFlags
 enum AsapoIngestModeFlags {
-  kTransferData = 1 << 0,
-  kTransferMetaDataOnly = 1 << 1,
-  kStoreInFilesystem = 1 << 2,
-  kStoreInDatabase = 1 << 3,
+    kTransferData = 1 << 0,
+    kTransferMetaDataOnly = 1 << 1,
+    kStoreInFilesystem = 1 << 2,
+    kStoreInDatabase = 1 << 3,
 };
 
 const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem | kStoreInDatabase;
@@ -113,6 +113,14 @@ int asapo_producer_delete_stream(AsapoProducerHandle producer,
 AsapoStreamInfoHandle asapo_producer_get_last_stream(AsapoProducerHandle producer,
         uint64_t timeout_ms,
         AsapoErrorHandle* error);
+
+AsapoMessageHeaderHandle asapo_create_message_header(uint64_t message_id,
+        uint64_t data_size,
+        const char* file_name,
+        const char* user_metadata,
+        uint64_t dataset_substream,
+        uint64_t dataset_size,
+        AsapoBool auto_id);
 
 int asapo_producer_send(AsapoProducerHandle producer,
                         const AsapoMessageHeaderHandle message_header,
