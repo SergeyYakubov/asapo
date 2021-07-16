@@ -65,6 +65,33 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 
  */
 
+void callback(AsapoRequestCallbackPayloadHandle payload, AsapoErrorHandle error) {
+    EXIT_IF_ERROR("error after callback", error);
+    AsapoMessageDataHandle data_handle = asapo_request_callback_payload_get_data(payload);
+    AsapoStringHandle response = asapo_request_callback_payload_get_response(payload);
+    const struct AsapoGenericRequestHeader* header = asapo_request_callback_payload_get_original_header(payload);
+
+    printf("%d\n",(int)header->data_id);
+
+    asapo_free_handle(&data_handle);
+    asapo_free_handle(&response);
+}
+
+void test_send(AsapoProducerHandle producer) {
+    AsapoErrorHandle err = asapo_new_handle();
+    AsapoMessageHeaderHandle message_header = NULL;
+
+    char data[] = "hello";
+    int res = asapo_producer_send(producer,
+                            message_header,
+                            data,
+                            kDefaultIngestMode,
+                            "default",
+                            callback,
+                            &err);
+
+}
+
 int main(int argc, char* argv[]) {
     if (argc <4) {
         abort();
@@ -80,12 +107,12 @@ int main(int argc, char* argv[]) {
                                                                         "", source, "");
 
     AsapoProducerHandle producer = asapo_create_producer(endpoint,2,kTcp, cred,60000,&err);
+    EXIT_IF_ERROR("create producer", err);
 
     asapo_producer_enable_local_log(producer, 1);
     asapo_producer_set_log_level(producer, Debug);
 
-
-    EXIT_IF_ERROR("create producer", err);
+    test_send(producer);
 
     asapo_free_handle(&err);
     asapo_free_handle(&cred);

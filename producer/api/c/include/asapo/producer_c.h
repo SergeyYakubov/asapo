@@ -53,6 +53,17 @@ enum AsapoRequestHandlerType {
     kFilesystem
 };
 
+//! c version of asapo::IngestModeFlags
+enum AsapoIngestModeFlags {
+  kTransferData = 1 << 0,
+  kTransferMetaDataOnly = 1 << 1,
+  kStoreInFilesystem = 1 << 2,
+  kStoreInDatabase = 1 << 3,
+};
+
+const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem | kStoreInDatabase;
+
+
 //! c version of asapo::MetaIngestOp
 enum AsapoMetaIngestOp {
     kInsert = 1,
