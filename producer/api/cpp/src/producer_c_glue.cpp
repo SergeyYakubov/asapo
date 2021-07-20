@@ -12,6 +12,8 @@ typedef AsapoHandlerHolder<asapo::Producer>* AsapoProducerHandle;
 typedef AsapoHandlerHolder<asapo::RequestCallbackPayload>* AsapoRequestCallbackPayloadHandle;
 typedef AsapoHandlerHolder<asapo::MessageHeader>* AsapoMessageHeaderHandle;
 
+
+
 extern "C" {
 #include "asapo/producer_c.h"
     static_assert(kOpcodeUnknownOp == asapo::Opcode::kOpcodeUnknownOp&&
@@ -142,16 +144,18 @@ extern "C" {
                 auto_id != 0));
     }
 
-#define BUILD_WRAPPER asapo::RequestCallback wrapper = [ = ](asapo::RequestCallbackPayload payload, asapo::Error err) -> void { \
-            void* data = (void*) payload.data.release(); \
-            auto payLoadHandle = new AsapoHandlerHolder<asapo::RequestCallbackPayload>(&payload, false); \
-            auto errorHandle = new AsapoHandlerHolder<asapo::ErrorInterface>(err.release()); \
-            if (callback != NULL)  { \
-                callback(data,payLoadHandle, errorHandle); \
-            } \
-            delete errorHandle; \
-            delete payLoadHandle; \
-        }
+    extern "C++" asapo::RequestCallback GetWrapper(AsapoRequestCallback callback, bool release_data) {
+        return [ = ](asapo::RequestCallbackPayload payload, asapo::Error err) -> void {
+            void* data = release_data ? (void*) payload.data.release() : NULL;
+            auto payLoadHandle = new AsapoHandlerHolder<asapo::RequestCallbackPayload>(&payload, false);
+            auto errorHandle = new AsapoHandlerHolder<asapo::ErrorInterface>(err.release());
+            if (callback != NULL)  {
+                callback(data, payLoadHandle, errorHandle);
+            }
+            delete errorHandle;
+            delete payLoadHandle;
+        };
+    }
 
     int asapo_producer_send(AsapoProducerHandle producer,
                             const AsapoMessageHeaderHandle message_header,
@@ -160,7 +164,7 @@ extern "C" {
                             const char* stream,
                             AsapoRequestCallback callback,
                             AsapoErrorHandle* error) {
-        BUILD_WRAPPER;
+        auto wrapper = GetWrapper(callback, true);
         auto err = producer->handle->Send__(*message_header->handle,
                                             data,
                                             ingest_mode,
@@ -175,7 +179,7 @@ extern "C" {
                                  const char* stream,
                                  AsapoRequestCallback callback,
                                  AsapoErrorHandle* error) {
-        BUILD_WRAPPER;
+        auto wrapper = GetWrapper(callback, true);
         auto err = producer->handle->SendFile(*message_header->handle,
                                               file_name,
                                               ingest_mode,
@@ -189,7 +193,7 @@ extern "C" {
                                                  const char* next_stream,
                                                  AsapoRequestCallback callback,
                                                  AsapoErrorHandle* error) {
-        BUILD_WRAPPER;
+        auto wrapper = GetWrapper(callback, false);
         auto err = producer->handle->SendStreamFinishedFlag(stream,
                    last_id,
                    next_stream,
@@ -202,7 +206,7 @@ extern "C" {
                                               AsapoBool upsert,
                                               AsapoRequestCallback callback,
                                               AsapoErrorHandle* error) {
-        BUILD_WRAPPER;
+        auto wrapper = GetWrapper(callback, false);
         asapo::MetaIngestMode im(static_cast<asapo::MetaIngestOp>(mode), upsert != 0);
         auto err = producer->handle->SendBeamtimeMetadata(metadata,
                                                           im,
@@ -217,7 +221,7 @@ extern "C" {
                                             const char* stream,
                                             AsapoRequestCallback callback,
                                             AsapoErrorHandle* error) {
-        BUILD_WRAPPER;
+        auto wrapper = GetWrapper(callback, false);
         asapo::MetaIngestMode im(static_cast<asapo::MetaIngestOp>(mode), upsert != 0);
         auto err = producer->handle->SendStreamMetadata(metadata,
                                                         im,
@@ -225,9 +229,6 @@ extern "C" {
                                                         wrapper);
         return process_error(error, std::move(err));
 
-    }
-    AsapoMessageDataHandle asapo_request_callback_payload_get_data(AsapoRequestCallbackPayloadHandle handle) {
-        return new typename std::remove_pointer<AsapoMessageDataHandle>::type(handle->handle->data);
     }
     AsapoStringHandle asapo_request_callback_payload_get_response(AsapoRequestCallbackPayloadHandle handle) {
         return new typename std::remove_pointer<AsapoStringHandle>::type(handle->handle->response);

@@ -156,7 +156,6 @@ int asapo_producer_send_stream_metadata(AsapoProducerHandle producer,
                                         AsapoRequestCallback callback,
                                         AsapoErrorHandle* error);
 
-AsapoMessageDataHandle asapo_request_callback_payload_get_data(AsapoRequestCallbackPayloadHandle handle);
 AsapoStringHandle asapo_request_callback_payload_get_response(AsapoRequestCallbackPayloadHandle handle);
 const struct AsapoGenericRequestHeader* asapo_request_callback_payload_get_original_header(
     AsapoRequestCallbackPayloadHandle handle);
