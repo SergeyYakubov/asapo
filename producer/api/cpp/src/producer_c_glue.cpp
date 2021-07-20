@@ -86,23 +86,45 @@ extern "C" {
     AsapoStreamInfoHandle asapo_producer_get_stream_info(AsapoProducerHandle producer,
             const char* stream,
             uint64_t timeout_ms,
-            AsapoErrorHandle* error);
+            AsapoErrorHandle* error) {
+        asapo::Error err;
+        auto result = new asapo::StreamInfo(producer->handle->GetStreamInfo(stream, timeout_ms, &err));
+        return handle_or_null_t(result, error, std::move(err));
+    }
     AsapoStringHandle asapo_producer_get_stream_meta(AsapoProducerHandle producer,
                                                      const char* stream,
                                                      uint64_t timeout_ms,
-                                                     AsapoErrorHandle* error);
+                                                     AsapoErrorHandle* error) {
+        asapo::Error err;
+        auto result = producer->handle->GetStreamMeta(stream, timeout_ms, &err);
+        return handle_or_null_t(result, error, std::move(err));
+
+    }
     AsapoStringHandle asapo_producer_get_beamtime_meta(AsapoProducerHandle producer,
             uint64_t timeout_ms,
-            AsapoErrorHandle* error);
+            AsapoErrorHandle* error) {
+        asapo::Error err;
+        auto result = producer->handle->GetBeamtimeMeta(timeout_ms, &err);
+        return handle_or_null_t(result, error, std::move(err));
+    }
     int asapo_producer_delete_stream(AsapoProducerHandle producer,
                                      const char* stream,
                                      uint64_t timeout_ms,
                                      AsapoBool delete_meta,
                                      AsapoBool error_on_not_exist,
-                                     AsapoErrorHandle* error);
+                                     AsapoErrorHandle* error) {
+        auto err = producer->handle->DeleteStream(stream, timeout_ms,
+                                                  asapo::DeleteStreamOptions{static_cast<bool>(delete_meta),
+                                                          static_cast<bool>(error_on_not_exist)});
+        return process_error(error, std::move(err));
+    }
     AsapoStreamInfoHandle asapo_producer_get_last_stream(AsapoProducerHandle producer,
             uint64_t timeout_ms,
-            AsapoErrorHandle* error);
+            AsapoErrorHandle* error) {
+        asapo::Error err;
+        auto result = new asapo::StreamInfo(producer->handle->GetLastStream(timeout_ms, &err));
+        return handle_or_null_t(result, error, std::move(err));
+    }
 
     AsapoMessageHeaderHandle asapo_create_message_header(uint64_t message_id,
             uint64_t data_size,
