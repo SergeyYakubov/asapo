@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-pip3 install --user --trusted-host nims.desy.de --find-links=http://nims.desy.de/extra/asapo/linux_wheels asapo_producer=@ASAPO_WHEEL_VERSION_IN_DOCS@
+pip3 install --user --trusted-host nims.desy.de --find-links=http://nims.desy.de/extra/asapo/linux_wheels asapo_producer==@ASAPO_WHEEL_VERSION_IN_DOCS@
 pip3 install --user --trusted-host nims.desy.de --find-links=http://nims.desy.de/extra/asapo/linux_wheels asapo_consumer==@ASAPO_WHEEL_VERSION_IN_DOCS@
 # you might need to update pip if the above commands error: pip3 install --upgrade pip
 
