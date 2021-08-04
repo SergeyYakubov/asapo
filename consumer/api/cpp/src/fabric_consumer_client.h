@@ -25,7 +25,7 @@ class FabricConsumerClient : public NetClient {
     std::atomic<fabric::FabricMessageId> global_message_id_{0};
 
   public:
-    Error GetData(const MessageMeta* info, MessageData* data) override;
+    Error GetData(const MessageMeta* info, const std::string& request_sender_details, MessageData* data) override;
   private:
     fabric::FabricAddress GetAddressOrConnect(const MessageMeta* info, Error* error);
 

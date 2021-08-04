@@ -1,5 +1,6 @@
 {
   "DatabaseServer":"auto",
+  "MonitoringServerUrl":"auto",
   "DiscoveryServer": "localhost:8400/discovery",
   "PerformanceDbServer": "localhost:8086",
   "MonitorPerformance": true,

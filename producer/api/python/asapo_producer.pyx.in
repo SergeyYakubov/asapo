@@ -469,7 +469,7 @@ cdef class PyProducer:
             if self.c_producer.get() is not NULL:
                 self.c_producer.get().StopThreads__()
     @staticmethod
-    def __create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthreads,timeout_ms):
+    def __create_producer(endpoint,type,instance_id,pipeline_step,beamtime_id,beamline,data_source,token,nthreads,timeout_ms):
         pyProd = PyProducer()
         cdef Error err
         cdef SourceType source_type
@@ -477,6 +477,8 @@ cdef class PyProducer:
         if err:
             throw_exception(err)
         cdef SourceCredentials source
+        source.instance_id = instance_id
+        source.pipeline_step = pipeline_step
         source.beamtime_id = beamtime_id
         source.beamline = beamline
         source.user_token = token
@@ -487,14 +489,16 @@ cdef class PyProducer:
             throw_exception(err)
         return pyProd
 
-def create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthreads,timeout_ms):
+def create_producer(endpoint,type,instance_id,pipeline_step,beamtime_id,beamline,data_source,token,nthreads,timeout_ms):
     """
          :param endpoint: server endpoint (url:port)
          :type endpoint: string
          :param type: source type, "raw" to write to "raw" folder in beamline filesystem,"processed" to write to "processed" folder in core filesystem
          :type type: string
-         :param beamtime_id: beamtime id, can be "auto" if beamline is given, will automatically select the current beamtime id
-         :type beamtime_id: string
+         :param instance_id: instance id, can be "auto", will create a combination out of hostname and pid
+         :type instance_id: string
+         :param pipeline_step: pipeline step id, can be "auto", "DefaultStep" is used then
+         :type pipeline_step: string
          :param beamline: beamline name, can be "auto" if beamtime_id is given
          :type beamline: string
          :param data_source: name of the data source that produces data
@@ -509,7 +513,7 @@ def create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthread
             AsapoWrongInputError: wrong input (number of threads, ,,,)
             AsapoProducerError: actually should not happen
     """
-    return PyProducer.__create_producer(_bytes(endpoint),_bytes(type),_bytes(beamtime_id),_bytes(beamline),_bytes(data_source),_bytes(token),nthreads,timeout_ms)
+    return PyProducer.__create_producer(_bytes(endpoint),_bytes(type),_bytes(instance_id),_bytes(pipeline_step),_bytes(beamtime_id),_bytes(beamline),_bytes(data_source),_bytes(token),nthreads,timeout_ms)
 
 
 __version__ = "@PYTHON_ASAPO_VERSION@@ASAPO_VERSION_COMMIT@"

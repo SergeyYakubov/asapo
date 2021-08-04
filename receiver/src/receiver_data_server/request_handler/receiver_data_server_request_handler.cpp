@@ -2,6 +2,8 @@
 
 #include "../receiver_data_server_error.h"
 #include "asapo/common/internal/version.h"
+#include <regex>
+
 namespace asapo {
 
 ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(RdsNetServer* server,
@@ -9,7 +11,6 @@ ReceiverDataServerRequestHandler::ReceiverDataServerRequestHandler(RdsNetServer*
     server_{server}, data_cache_{data_cache} {
 
 }
-
 
 bool ReceiverDataServerRequestHandler::CheckRequest(const ReceiverDataServerRequest* request, NetworkErrorCode* code) {
     if (request->header.op_code != kOpcodeGetBufferData) {
@@ -62,14 +63,42 @@ bool ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* re
         return true;
     }
 
+    auto startTime = ReceiverMonitoringClient::HelperTimeNow();
     CacheMeta* meta = GetSlotAndLock(receiver_request);
     if (!meta) {
         SendResponse(receiver_request, kNetErrorNoData);
-        return true;
+    } else {
+        HandleValidRequest(receiver_request, meta);
+        data_cache_->UnlockSlot(meta);
+    }
+    auto timeTookToSend = ReceiverMonitoringClient::HelperTimeDiffInMicroseconds(startTime);
+
+    auto requestSenderDetails = ExtractMonitoringInfoFromRequest(request);
+    if (requestSenderDetails) {
+        auto monitoring = server_->Monitoring();
+        if (meta) {
+            monitoring->SendReceiverRequestDataPoint(
+                    requestSenderDetails->pipeline_step_id,
+                    requestSenderDetails->instance_id,
+                    requestSenderDetails->beamtime,
+                    requestSenderDetails->source,
+                    requestSenderDetails->stream,
+                    "UnknownTODO", // TODO
+                    meta->size,
+                    timeTookToSend
+            );
+        } else {
+            monitoring->SendRdsRequestWasMissDataPoint(
+                    requestSenderDetails->pipeline_step_id,
+                    requestSenderDetails->instance_id,
+                    requestSenderDetails->beamtime,
+                    requestSenderDetails->source,
+                    requestSenderDetails->stream,
+                    "UnknownTODO" // TODO
+            );
+        }
     }
 
-    HandleValidRequest(receiver_request, meta);
-    data_cache_->UnlockSlot(meta);
     return true;
 }
 
@@ -117,6 +146,28 @@ void ReceiverDataServerRequestHandler::HandleValidRequest(const ReceiverDataServ
         statistics__->IncreaseRequestCounter();
         statistics__->IncreaseRequestDataVolume(receiver_request->header.data_size);
     }
+}
+
+std::unique_ptr<RequestSenderDetails> ReceiverDataServerRequestHandler::ExtractMonitoringInfoFromRequest(const GenericRequest* request) {
+    std::string details(request->header.stream);
+
+    std::regex token("§");
+    std::vector<std::string> detailsParts {
+        std::sregex_token_iterator(details.begin(), details.end(), token, -1),
+        std::sregex_token_iterator()
+    };
+
+    if (detailsParts.size() != 5) {
+        return nullptr;
+    }
+
+    return std::unique_ptr<RequestSenderDetails>(new RequestSenderDetails{
+        detailsParts[0],
+        detailsParts[1],
+        detailsParts[2],
+        detailsParts[3],
+        detailsParts[4]
+    });
 }
 
 }

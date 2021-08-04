@@ -1,4 +1,6 @@
 #include "rds_tcp_server.h"
+
+#include <utility>
 #include "../receiver_data_server_logger.h"
 
 #include "asapo/io/io_factory.h"
@@ -6,8 +8,8 @@
 
 namespace asapo {
 
-RdsTcpServer::RdsTcpServer(std::string address, const AbstractLogger* logger) : io__{GenerateDefaultIO()}, log__{logger},
-    address_{std::move(address)} {}
+    RdsTcpServer::RdsTcpServer(std::string address, const AbstractLogger* logger, asapo::SharedReceiverMonitoringClient  monitoring) : io__{GenerateDefaultIO()}, log__{logger},
+    address_{std::move(address)}, monitoring_{std::move(monitoring)} {}
 
 Error RdsTcpServer::Initialize() {
     Error err;
@@ -42,8 +44,13 @@ void RdsTcpServer::CloseSocket(SocketDescriptor socket) {
 
 ReceiverDataServerRequestPtr RdsTcpServer::ReadRequest(SocketDescriptor socket, Error* err) {
     GenericRequestHeader header;
-    io__->Receive(socket, &header,
-                  sizeof(GenericRequestHeader), err);
+
+    SharedInstancedStatistics statistics{new InstancedStatistics};
+    statistics->StartTimer(kNetworkIncoming);
+    uint64_t bytesReceived = io__->Receive(socket, &header, sizeof(GenericRequestHeader), err);
+    statistics->StopTimer();
+    statistics->AddIncomingBytes(bytesReceived);
+
     if (*err == ErrorTemplates::kEndOfFile) {
         CloseSocket(socket);
         return nullptr;
@@ -53,7 +60,7 @@ ReceiverDataServerRequestPtr RdsTcpServer::ReadRequest(SocketDescriptor socket, 
                     );
         return nullptr;
     }
-    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{header, (uint64_t) socket}};
+    return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{header, (uint64_t) socket, statistics}};
 }
 
 GenericRequests RdsTcpServer::ReadRequests(const ListSocketDescriptors& sockets) {
@@ -116,6 +123,10 @@ RdsTcpServer::SendResponseAndSlotData(const ReceiverDataServerRequest* request, 
         log__->Error("cannot send slot to worker" + err->Explain());
     }
     return err;
+}
+
+SharedReceiverMonitoringClient RdsTcpServer::Monitoring() {
+    return monitoring_;
 }
 
 }

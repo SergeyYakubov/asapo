@@ -43,7 +43,19 @@ Cleanup() {
     rm -rf ${receiver_root_folder}
     echo "db.dropDatabase()" | mongo ${beamtime_id1}_${data_source}
     echo "db.dropDatabase()" | mongo ${beamtime_id2}_${data_source}
-    influx -execute "drop database ${monitor_database_name}"
+
+    set +e
+    influx_out=`influx -execute "drop database ${monitor_database_name}"`
+    influx_status=$?
+    echo "Influx output: ${influx_out}"
+    if [ $influx_status -ne 0 ]; then
+        if [[ $influx_out == *"401"* ]]; then
+            echo "Ignoring auth error from influxdb"
+        else
+            echo "influxdb failed to delete test database '${monitor_database_name}'"
+            exit $influx_status
+        fi
+    fi
 }
 
 if [[ $network_type == "fabric" ]]; then

@@ -20,6 +20,7 @@
 
 #include "asapo/preprocessor/definitions.h"
 #include "file_processors/file_processor.h"
+#include "statistics/instanced_statistics_provider.h"
 
 namespace asapo {
 
@@ -32,11 +33,12 @@ enum class ResponseMessageType {
 
 class Request {
   public:
-    VIRTUAL Error Handle(ReceiverStatistics*);
+    VIRTUAL Error Handle();
     VIRTUAL ~Request() = default;
     Request() = delete;
     Request(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
-            DataCache* cache, const RequestHandlerDbCheckRequest* db_check_handler);
+            DataCache* cache, const RequestHandlerDbCheckRequest* db_check_handler,
+            SharedInstancedStatistics  statistics);
     VIRTUAL void AddHandler(const ReceiverRequestHandler*);
     VIRTUAL const RequestHandlerList& GetListHandlers() const;
     VIRTUAL uint64_t GetDataSize() const;
@@ -49,6 +51,10 @@ class Request {
     VIRTUAL Opcode GetOpCode() const;
     VIRTUAL const char* GetMessage() const;
 
+    VIRTUAL const std::string& GetProducerInstanceId() const;
+    VIRTUAL void SetProducerInstanceId(std::string producer_instance_id);
+    VIRTUAL const std::string& GetPipelineStepId() const;
+    VIRTUAL void SetPipelineStepId(std::string pipeline_step_id);
     const std::string& GetOriginUri() const;
     VIRTUAL const std::string& GetMetaData() const;
     VIRTUAL const std::string& GetBeamtimeId() const;
@@ -81,12 +87,16 @@ class Request {
     VIRTUAL ResponseMessageType GetResponseMessageType() const;
     VIRTUAL const std::string& GetResponseMessage() const;
     VIRTUAL Error CheckForDuplicates();
+    VIRTUAL SharedInstancedStatistics GetInstancedStatistics();
   private:
+    SharedInstancedStatistics statistics_;
     const GenericRequestHeader request_header_;
     const SocketDescriptor socket_fd_;
     MessageData data_buffer_;
     void* data_ptr;
     RequestHandlerList handlers_;
+    std::string producer_instance_id_;
+    std::string pipeline_step_id_;
     std::string origin_uri_;
     std::string beamtime_id_;
     std::string data_source_;

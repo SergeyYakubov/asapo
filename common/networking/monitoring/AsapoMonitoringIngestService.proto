@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+import "AsapoMonitoringCommonService.proto";
+
+option go_package = "./generated_proto";
+
+// ********************************
+// * AsapoMonitoringIngestService *
+// ********************************
+
+message ProducerToReceiverTransferDataPoint { // send by receiver
+    string pipelineStepId = 1; // Customizable from producerLib
+    string producerInstanceId = 2;
+
+    string beamtime = 3;
+    string source = 4;
+    string stream = 5;
+
+    uint64 fileCount = 6;
+
+    uint64 totalFileSize = 7;
+    uint64 totalTransferReceiveTimeInMicroseconds = 8;
+    uint64 totalWriteIoTimeInMicroseconds = 9;
+    uint64 totalDbTimeInMicroseconds = 10;
+}
+
+message BrokerRequestDataPoint { // send by broker
+    string pipelineStepId = 1; // Customizable from consumerLib can indicates a linkage between a consumer and a producer
+    string consumerInstanceId = 2;
+    string command = 3; // e.g. 'get_next', 'get_last', 'get_by_id'
+
+    string beamtime = 4;
+    string source = 5;
+    string stream = 6;
+
+    uint64 fileCount = 7;
+
+    uint64 totalFileSize = 8;
+}
+
+message RdsMemoryDataPoint { // Send by RDS in fixed interval
+    string beamtime = 1;
+    string source = 2;
+    string stream = 3;
+
+    uint64 usedBytes = 4;
+    uint64 totalBytes = 5;
+}
+
+message RdsToConsumerDataPoint { // Send by RDS
+    string pipelineStepId = 1; // Customizable from consumerLib can indicates a linkage between a consumer and a producer
+    string consumerInstanceId = 2;
+
+    string beamtime = 3;
+    string source = 4;
+    string stream = 5;
+
+    uint64 hits = 6;
+    uint64 misses = 7;
+
+    uint64 totalFileSize = 8;
+    uint64 totalTransferSendTimeInMicroseconds = 9;
+}
+
+message FdsToConsumerDataPoint { // Send by RDS
+    string pipelineStepId = 1; // Customizable from consumerLib can indicates a linkage between a consumer and a producer
+    string consumerInstanceId = 2;
+
+    string beamtime = 3;
+    string source = 4;
+    string stream = 5;
+
+    uint64 fileCount = 6;
+
+    uint64 totalFileSize = 7;
+    uint64 totalTransferSendTimeInMicroseconds = 8;
+}
+
+// ---- Containers ----
+message ReceiverDataPointContainer {
+    string receiverName = 1;  // Hostname? or some kind of ID from receiver
+    uint64 timestampMs = 2;
+
+    repeated ProducerToReceiverTransferDataPoint groupedP2rTransfers = 3;
+    repeated RdsToConsumerDataPoint groupedRds2cTransfers = 4;
+    repeated RdsMemoryDataPoint groupedMemoryStats = 5;
+}
+
+message BrokerDataPointContainer {
+    string brokerName = 1;  // Hostname? or some kind of ID from broker
+    uint64 timestampMs = 2;
+
+    repeated BrokerRequestDataPoint groupedBrokerRequests = 3;
+}
+
+message FtsToConsumerDataPointContainer {
+    string ftsName = 1;  // Hostname? or some kind of ID from fds
+    uint64 timestampMs = 2;
+
+    repeated FdsToConsumerDataPoint groupedFdsTransfers = 3;
+}
+
+service AsapoMonitoringIngestService {
+    rpc InsertReceiverDataPoints(ReceiverDataPointContainer) returns (Empty) {}
+    rpc InsertBrokerDataPoints(BrokerDataPointContainer) returns (Empty) {}
+    rpc InsertFtsDataPoints(FtsToConsumerDataPointContainer) returns (Empty) {}
+}

@@ -1,0 +1,11 @@
+{
+    "ThisClusterName": "test-cluster",
+
+    "ServerPort": 50051,
+    "LogLevel": "debug",
+
+    "InfluxDb2Url": "http://127.0.0.1:8086",
+    "InfluxDb2AuthToken": "7wSh6nQf7dXzZ9jYAHQ9IVudl8-2ZnyxT2wAdSnuBfdsTexKEZzHnme0Z4wcCxaQXl4zcJK3mplUUSN2nroelQ==",
+    "InfluxDb2Org": "asapo",
+    "InfluxDb2Bucket": "asapo-monitoring"
+}

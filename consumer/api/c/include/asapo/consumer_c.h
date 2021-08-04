@@ -172,6 +172,8 @@ void asapo_consumer_set_resend_nacs(AsapoConsumerHandle consumer,
 
 const char* asapo_message_data_get_as_chars(const AsapoMessageDataHandle data);
 AsapoSourceCredentialsHandle asapo_create_source_credentials(enum AsapoSourceType type,
+        const char* instanceId,
+        const char* pipelineStep,
         const char* beamtime,
         const char* beamline,
         const char* data_source,

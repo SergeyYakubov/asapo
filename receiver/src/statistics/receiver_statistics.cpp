@@ -4,8 +4,6 @@ namespace asapo {
 
 using std::chrono::system_clock;
 
-
-
 ReceiverStatistics::ReceiverStatistics(unsigned int write_interval) : Statistics(write_interval) {
     ResetStatistics();
 }
@@ -29,17 +27,10 @@ void ReceiverStatistics::ResetStatistics() noexcept {
     }
 }
 
-void ReceiverStatistics::StartTimer(const StatisticEntity& entity) noexcept {
-    current_statistic_entity_ = entity;
-    current_timer_last_timepoint_ = system_clock::now();
+void ReceiverStatistics::ApplyTimeFrom(const SharedInstancedStatistics& stats) {
+    for (size_t i = 0; i < kNStatisticEntities; i++) {
+        time_counters_[i] += stats->GetElapsed((StatisticEntity) i);
+    }
 }
-
-
-void ReceiverStatistics::StopTimer() noexcept {
-    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>
-                   (system_clock::now() - current_timer_last_timepoint_);
-    time_counters_[current_statistic_entity_] += elapsed;
-}
-
 
 }

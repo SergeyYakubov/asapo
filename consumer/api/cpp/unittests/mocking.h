@@ -12,11 +12,11 @@ namespace asapo {
 class MockNetClient : public asapo::NetClient {
   public:
 
-    Error GetData(const MessageMeta* info, MessageData* data) override {
-        return Error(GetData_t(info, data));
+    Error GetData(const MessageMeta* info, const std::string& request_sender_details, MessageData* data) override {
+        return Error(GetData_t(info, request_sender_details, data));
     }
 
-    MOCK_CONST_METHOD2(GetData_t, ErrorInterface * (const MessageMeta* info, MessageData* data));
+    MOCK_CONST_METHOD3(GetData_t, ErrorInterface * (const MessageMeta* info, const std::string& request_sender_details, MessageData* data));
 
 };
 

@@ -8,6 +8,3 @@ do
     docker build -t yakser/asapo-env:${ver} -f Dockerfile_${ver} --build-arg OS=${ver} .
     docker push yakser/asapo-env:${ver}
 done
-
-
-

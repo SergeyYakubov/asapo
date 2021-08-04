@@ -12,11 +12,13 @@ import (
 )
 
 type SourceCredentials struct {
-	BeamtimeId string
-	Beamline   string
-	DataSource     string
-	Token      string
-	Type 	   string
+	InstanceId		string
+	PipelineStep	string
+	BeamtimeId 		string
+	Beamline   		string
+	DataSource     	string
+	Token      		string
+	Type 	   		string
 }
 
 type authorizationRequest struct {
@@ -33,8 +35,8 @@ func getSourceCredentials(request authorizationRequest) (SourceCredentials, erro
 		return SourceCredentials{}, errors.New("cannot get source credentials from " + request.SourceCredentials)
 	}
 
-	creds := SourceCredentials{Type:vals[0], BeamtimeId: vals[1], Beamline: vals[2], Token:vals[nvals-1]}
-	creds.DataSource=strings.Join(vals[3:nvals-1],"%")
+	creds := SourceCredentials{Type:vals[0], InstanceId: vals[1], PipelineStep: vals[2], BeamtimeId: vals[3], Beamline: vals[4], Token:vals[nvals-1]}
+	creds.DataSource=strings.Join(vals[5:nvals-1],"%")
 	if creds.DataSource == "" {
 		creds.DataSource = "detector"
 	}
@@ -45,6 +47,18 @@ func getSourceCredentials(request authorizationRequest) (SourceCredentials, erro
 
 	if creds.BeamtimeId == "" {
 		creds.BeamtimeId = "auto"
+	}
+
+	if creds.InstanceId == "" {
+		creds.InstanceId = "auto"
+	}
+
+	if creds.PipelineStep == "" {
+		creds.PipelineStep = "auto"
+	}
+
+	if creds.InstanceId == "auto" || creds.PipelineStep == "auto" {
+		return SourceCredentials{}, errors.New("InstanceId and PipelineStep must be already set on client side")
 	}
 
 	if creds.BeamtimeId == "auto" && creds.Beamline == "auto" {
@@ -137,6 +151,8 @@ func findBeamtimeMetaFromBeamline(beamline string) (beamtimeMeta, error) {
 func alwaysAllowed(creds SourceCredentials) (beamtimeMeta, bool) {
 	for _, pair := range settings.AlwaysAllowedBeamtimes {
 		if pair.BeamtimeId == creds.BeamtimeId {
+			pair.InstanceId = creds.InstanceId
+			pair.PipelineStep = creds.PipelineStep
 			pair.DataSource = creds.DataSource
 			pair.Type = creds.Type
 			pair.AccessTypes = []string{"read","write"}
@@ -217,6 +233,8 @@ func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
 		return beamtimeMeta{}, err
 	}
 
+	meta.InstanceId = creds.InstanceId
+	meta.PipelineStep = creds.PipelineStep
 	meta.DataSource = creds.DataSource
 	meta.Type = creds.Type
 
@@ -265,7 +283,7 @@ func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeM
 	}
 
 	meta.AccessTypes = accessTypes
-	log.Debug("authorized creds bl/bt: ", creds.Beamline+"/"+creds.BeamtimeId+", beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " +
+	log.Debug("authorized creds inst/step: " , creds.InstanceId+"/"+creds.PipelineStep, " bl/bt: ", creds.Beamline+"/"+creds.BeamtimeId+", beamtime " + meta.BeamtimeId + " for " + request.OriginHost + " in " +
 		meta.Beamline+", type "+meta.Type, "online path "+meta.OnlinePath + ", offline path "+meta.OfflinePath)
 	return meta, nil
 }

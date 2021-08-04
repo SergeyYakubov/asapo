@@ -18,8 +18,13 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     std::string log_level;
     Error err;
 
+    // New monitoring
+    (err = parser.GetString("MonitoringServer", &config.monitoring_server_url)) ||
+
+    // Old monitoring
     (err = parser.GetString("PerformanceDbServer", &config.performance_db_uri)) ||
     (err = parser.GetBool("MonitorPerformance", &config.monitor_performance)) ||
+
     (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||
     (err = parser.GetUInt64("ReceiveToDiskThresholdMB", &config.receive_to_disk_threshold_mb)) ||
     (err = parser.Embedded("DataServer").GetUInt64("ListenPort", &config.dataserver.listen_port)) ||

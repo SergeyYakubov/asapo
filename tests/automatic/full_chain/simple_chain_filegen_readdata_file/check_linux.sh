@@ -27,9 +27,21 @@ Cleanup() {
     kill -9 $producerid
     rm -rf /tmp/asapo/test_in
     rm -rf ${receiver_folder}
-    influx -execute "drop database ${monitor_database_name}"
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     rm out.txt
+
+    set +e
+    influx_out=`influx -execute "drop database ${monitor_database_name}"`
+    influx_status=$?
+    echo "Influx output: ${influx_out}"
+    if [ $influx_status -ne 0 ]; then
+        if [[ $influx_out == *"401"* ]]; then
+            echo "Ignoring auth error from influxdb"
+        else
+            echo "influxdb failed to delete test database '${monitor_database_name}'"
+            exit $influx_status
+        fi
+    fi
 }
 
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`

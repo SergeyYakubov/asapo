@@ -12,33 +12,41 @@
 namespace asapo {
 
 class MockStatistics : public asapo::ReceiverStatistics {
-  public:
+public:
     void SendIfNeeded(bool send_always) noexcept override {
         SendIfNeeded_t(send_always);
     }
 
-
     void IncreaseRequestCounter() noexcept override {
         IncreaseRequestCounter_t();
-    }
-    void StartTimer(const asapo::StatisticEntity& entity) noexcept override {
-        StartTimer_t(entity);
     }
     void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept override {
         IncreaseRequestDataVolume_t(transferred_data_volume);
     }
-    void StopTimer() noexcept override {
-        StopTimer_t();
-    }
 
     MOCK_METHOD1(SendIfNeeded_t, void(bool send_always));
     MOCK_METHOD0(IncreaseRequestCounter_t, void());
-    MOCK_METHOD0(StopTimer_t, void());
-    MOCK_METHOD1(IncreaseRequestDataVolume_t, void (uint64_t
-                                                    transferred_data_volume));
-    MOCK_METHOD1(StartTimer_t, void(
-                     const asapo::StatisticEntity& entity));
+    MOCK_METHOD1(IncreaseRequestDataVolume_t, void (uint64_t transferred_data_volume));
 
+};
+
+class MockInstancedStatistics : public asapo::InstancedStatistics {
+public:
+    MOCK_METHOD1(StartTimer, void(StatisticEntity entity));
+    MOCK_METHOD0(StopTimer, void());
+
+    MOCK_METHOD1(AddIncomingBytes, void(uint64_t incomingByteCount));
+    MOCK_METHOD1(AddOutgoingBytes, void(uint64_t outgoingByteCount));
+
+    MOCK_CONST_METHOD0(GetIncomingBytes, uint64_t());
+    MOCK_CONST_METHOD0(GetOutgoingBytes, uint64_t());
+
+    MOCK_CONST_METHOD1(GetOutgoingBytes, std::chrono::nanoseconds(StatisticEntity entity));
+    MOCK_CONST_METHOD1(GetElapsedMicrosecondsCount, uint64_t(StatisticEntity entity));
+
+    MOCK_METHOD1(SendIfNeeded, void(bool send_always));
+    MOCK_METHOD0(IncreaseRequestCounter_t, void());
+    MOCK_METHOD1(IncreaseRequestDataVolume_t, void (uint64_t transferred_data_volume));
 };
 
 class MockHandlerDbCheckRequest : public asapo::RequestHandlerDbCheckRequest {
@@ -61,8 +69,8 @@ class MockHandlerDbCheckRequest : public asapo::RequestHandlerDbCheckRequest {
 class MockRequest: public Request {
   public:
     MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string origin_uri,
-                const RequestHandlerDbCheckRequest* db_check_handler ):
-        Request(request_header, socket_fd, std::move(origin_uri), nullptr, db_check_handler) {};
+                const RequestHandlerDbCheckRequest* db_check_handler, SharedInstancedStatistics statistics):
+        Request(request_header, socket_fd, std::move(origin_uri), nullptr, db_check_handler, std::move(statistics)) {};
 
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetStream, std::string());
@@ -71,6 +79,8 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetDataID, uint64_t());
     MOCK_CONST_METHOD0(GetSlotId, uint64_t());
     MOCK_CONST_METHOD0(GetData, void* ());
+    MOCK_CONST_METHOD0(GetPipelineStepId, const std::string & ());
+    MOCK_CONST_METHOD0(GetProducerInstanceId, const std::string & ());
     MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
     MOCK_CONST_METHOD0(GetDataSource, const std::string & ());
     MOCK_CONST_METHOD0(GetMetaData, const std::string & ());
@@ -81,12 +91,16 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetOnlinePath, const std::string & ());
     MOCK_CONST_METHOD0(GetOfflinePath, const std::string & ());
 
+    MOCK_METHOD0(GetInstancedStatistics, SharedInstancedStatistics());
+
     const CustomRequestData& GetCustomData() const override {
         return (CustomRequestData&) * GetCustomData_t();
     };
 
     MOCK_CONST_METHOD0(GetCustomData_t, const uint64_t* ());
     MOCK_CONST_METHOD0(GetMessage, const char* ());
+    MOCK_METHOD1(SetProducerInstanceId, void (std::string));
+    MOCK_METHOD1(SetPipelineStepId, void (std::string));
     MOCK_METHOD1(SetBeamtimeId, void (std::string));
     MOCK_METHOD1(SetDataSource, void (std::string));
     MOCK_METHOD1(SetBeamline, void (std::string));
@@ -117,11 +131,12 @@ class MockRequest: public Request {
 class MockDataCache: public DataCache {
   public:
     MockDataCache(): DataCache(0, 0) {};
-    MOCK_METHOD2(GetFreeSlotAndLock, void* (uint64_t
-                                            size, CacheMeta** meta));
+    MOCK_METHOD5(GetFreeSlotAndLock, void* (uint64_t size, CacheMeta** meta,
+            std::string beamtime, std::string source, std::string stream));
     MOCK_METHOD1(UnlockSlot, bool(CacheMeta* meta));
-    MOCK_METHOD3(GetSlotToReadAndLock, void* (uint64_t
-                                              id, uint64_t data_size, CacheMeta** meta));
+    MOCK_METHOD0(AllMetaInfosAsVector, std::vector<std::shared_ptr<const CacheMeta>>());
+    MOCK_CONST_METHOD0(GetCacheSize, uint64_t());
+    MOCK_METHOD3(GetSlotToReadAndLock, void* (uint64_t id, uint64_t data_size, CacheMeta** meta));
 
 };
 

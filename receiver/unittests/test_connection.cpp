@@ -13,6 +13,7 @@
 #include "../src/request_handler/requests_dispatcher.h"
 
 #include "mock_receiver_config.h"
+#include "monitoring/receiver_monitoring_mocking.h"
 
 
 using ::testing::Test;
@@ -57,7 +58,7 @@ using asapo::SetReceiverConfig;
 namespace {
 
 TEST(Connection, Constructor) {
-    Connection connection{0, "some_address", nullptr, "some_tag"};
+    Connection connection{0, "some_address", nullptr, nullptr, "some_tag"};
     ASSERT_THAT(dynamic_cast<asapo::Statistics*>(connection.statistics__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<asapo::IO*>(connection.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<const asapo::AbstractLogger*>(connection.log__), Ne(nullptr));
@@ -67,7 +68,7 @@ TEST(Connection, Constructor) {
 
 class MockDispatcher: public asapo::RequestsDispatcher {
   public:
-    MockDispatcher(): asapo::RequestsDispatcher(0, "", nullptr, nullptr) {};
+    MockDispatcher(): asapo::RequestsDispatcher(0, "", nullptr, nullptr, nullptr) {};
     Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept override {
         return Error{ProcessRequest_t(request.get())};
     }
@@ -93,9 +94,12 @@ class ConnectionTests : public Test {
     NiceMock<MockStatistics> mock_statictics;
     NiceMock<asapo::MockLogger> mock_logger;
     std::unique_ptr<Connection> connection;
+    std::shared_ptr<NiceMock<asapo::MockReceiverMonitoringClient>> mock_monitoring;
 
     void SetUp() override {
-        connection = std::unique_ptr<Connection> {new Connection{0, connected_uri, nullptr, "some_tag"}};
+        asapo::SharedCache cache; /*nullptr*/
+        mock_monitoring.reset(new NiceMock<asapo::MockReceiverMonitoringClient>(cache));
+        connection = std::unique_ptr<Connection> {new Connection{0, connected_uri, mock_monitoring, cache, "some_tag"}};
         connection->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         connection->statistics__ = std::unique_ptr<asapo::ReceiverStatistics> {&mock_statictics};
         connection->log__ = &mock_logger;
@@ -120,8 +124,7 @@ class ConnectionTests : public Test {
                       ));
             return nullptr;
         } else {
-            auto request = new Request(GenericRequestHeader{asapo::kOpcodeUnknownOp, 0, 1, 0, ""}, 0, connected_uri, nullptr,
-                                       nullptr);
+            auto request = new Request(GenericRequestHeader{asapo::kOpcodeUnknownOp, 0, 1, 0, ""}, 0, connected_uri, nullptr, nullptr, nullptr);
             EXPECT_CALL(mock_dispatcher, GetNextRequest_t(_))
             .WillOnce(DoAll(
                           SetArgPointee<0>(nullptr),

@@ -31,7 +31,7 @@ TEST_F(ConsumerFactoryTests, CreateServerDataSource) {
                                                     "path",
                                                     false,
                                                     asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                            "beamtime_id", "", "", "token"},
+                                                           "instance", "step", "beamtime_id", "", "", "token"},
                                                     &error);
 
     ASSERT_THAT(error, Eq(nullptr));

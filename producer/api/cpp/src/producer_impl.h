@@ -61,6 +61,7 @@ class ProducerImpl : public Producer {
     Error DeleteStream(std::string stream, uint64_t timeout_ms, DeleteStreamOptions options) const override;
 
     AbstractLogger* log__;
+    std::unique_ptr<IO> io__;
     std::unique_ptr<HttpClient> httpclient__;
     std::unique_ptr<RequestPool> request_pool__;
 

@@ -59,7 +59,7 @@ class FileWriteHandlerTests : public Test {
     void ExpecFileProcess(const asapo::SimpleErrorTemplate* error_template, bool overwrite);
     void SetUp() override {
         GenericRequestHeader request_header;
-        mock_request.reset(new MockRequest{request_header, 1, "", nullptr});
+        mock_request.reset(new MockRequest{request_header, 1, "", nullptr, nullptr});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }

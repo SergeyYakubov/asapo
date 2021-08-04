@@ -8,8 +8,8 @@
 using namespace asapo;
 
 RdsFabricServer::RdsFabricServer(std::string listenAddress,
-                                 const AbstractLogger* logger): factory__(fabric::GenerateDefaultFabricFactory()), io__{GenerateDefaultIO()},
-    log__{logger}, listenAddress_(std::move(listenAddress)) {
+                                 const AbstractLogger* logger, asapo::SharedReceiverMonitoringClient monitoring): factory__(fabric::GenerateDefaultFabricFactory()), io__{GenerateDefaultIO()},
+                                 log__{logger}, listenAddress_(std::move(listenAddress)), monitoring_{monitoring} {
 
 }
 
@@ -40,12 +40,16 @@ GenericRequests RdsFabricServer::GetNewRequests(Error* err) {
     fabric::FabricAddress srcAddress;
     fabric::FabricMessageId messageId;
 
+    SharedInstancedStatistics statistics{new InstancedStatistics};
+    // We cannot measure time here, since it is a blocking call :/
+
     GenericRequestHeader header;
     server__->RecvAny(&srcAddress, &messageId, &header, sizeof(header), err);
     if (*err) {
         return {}; // empty result
     }
-    auto requestPtr = new FabricRdsRequest(header, srcAddress, messageId);
+    statistics->AddIncomingBytes(sizeof(header));
+    auto requestPtr = new FabricRdsRequest(header, srcAddress, messageId, statistics);
 
     GenericRequests genericRequests;
     genericRequests.emplace_back(GenericRequestPtr(requestPtr));
@@ -76,4 +80,8 @@ Error RdsFabricServer::SendResponseAndSlotData(const ReceiverDataServerRequest* 
 
 void RdsFabricServer::HandleAfterError(uint64_t) {
     /* Do nothing? */
+}
+
+SharedReceiverMonitoringClient RdsFabricServer::Monitoring() {
+    return monitoring_;
 }

@@ -1,10 +1,10 @@
 package server
 
 import (
-	"asapo_discovery/protocols"
-	"net/http"
 	"asapo_common/logger"
 	"asapo_discovery/common"
+	"asapo_discovery/protocols"
+	"net/http"
 )
 
 func getService(service string) (answer []byte, code int) {
@@ -52,6 +52,12 @@ func routeGetReceivers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	answer, code := getService(common.NameReceiverService)
+	w.WriteHeader(code)
+	w.Write(answer)
+}
+
+func routeGetMonitoringServers(w http.ResponseWriter, r *http.Request) {
+	answer, code := getService(common.NameMonitoringServer)
 	w.WriteHeader(code)
 	w.Write(answer)
 }

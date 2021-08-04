@@ -174,6 +174,8 @@ var beamtime_meta =`
 
 var authTests = [] struct {
 	source_type string
+	instance_id string
+	pipeline_step string
 	beamtime_id string
 	beamline string
 	dataSource string
@@ -260,7 +262,7 @@ func TestAuthorize(t *testing.T) {
 			}
 		}
 
-		request :=  makeRequest(authorizationRequest{test.source_type+"%"+test.beamtime_id+"%"+test.beamline+"%"+test.dataSource+"%"+test.token,test.originHost})
+		request :=  makeRequest(authorizationRequest{test.source_type+"%"+test.instance_id+"%"+test.pipeline_step+"%"+test.beamtime_id+"%"+test.beamline+"%"+test.dataSource+"%"+test.token,test.originHost})
 		w := doPostRequest("/authorize",request,"")
 
 		body, _ := ioutil.ReadAll(w.Body)

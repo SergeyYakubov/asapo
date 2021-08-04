@@ -7,6 +7,8 @@
 #include "../../../src/receiver_data_server/net_server/rds_fabric_server.h"
 #include "../../../src/receiver_data_server/net_server/fabric_rds_request.h"
 #include "../../../../common/cpp/src/system_io/system_io.h"
+#include "../../receiver_mocking.h"
+#include "../../monitoring/receiver_monitoring_mocking.h"
 
 using ::testing::Ne;
 using ::testing::Eq;
@@ -24,29 +26,40 @@ std::string expected_address = "somehost:123";
 
 TEST(RdsFabricServer, Constructor) {
     NiceMock<MockLogger> mock_logger;
-    RdsFabricServer fabric_server("", &mock_logger);
+    std::shared_ptr<StrictMock<MockReceiverMonitoringClient>> mock_monitoring{new StrictMock<MockReceiverMonitoringClient>{nullptr}};
+    RdsFabricServer fabric_server("", &mock_logger, mock_monitoring);
     ASSERT_THAT(dynamic_cast<SystemIO*>(fabric_server.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<fabric::FabricFactory*>(fabric_server.factory__.get()), Ne(nullptr));
     ASSERT_THAT(fabric_server.log__, Eq(&mock_logger));
+    ASSERT_THAT(fabric_server.Monitoring(), Eq(mock_monitoring));
 }
 
 class RdsFabricServerTests : public Test {
   public:
-    RdsFabricServer rds_server{expected_address, &mock_logger};
     NiceMock<MockLogger> mock_logger;
+    std::shared_ptr<NiceMock<MockInstancedStatistics>> mock_instanced_statistics;
     StrictMock<MockIO> mock_io;
     StrictMock<fabric::MockFabricFactory> mock_fabric_factory;
     StrictMock<fabric::MockFabricServer> mock_fabric_server;
+    std::shared_ptr<StrictMock<MockReceiverMonitoringClient>> mock_monitoring;
+    std::unique_ptr<RdsFabricServer> rds_server_ptr;
 
     void SetUp() override {
-        rds_server.log__ = &mock_logger;
-        rds_server.io__ = std::unique_ptr<IO> {&mock_io};
-        rds_server.factory__ = std::unique_ptr<fabric::FabricFactory> {&mock_fabric_factory};
+        mock_instanced_statistics.reset(new NiceMock<MockInstancedStatistics>);
+        mock_monitoring.reset(new StrictMock<MockReceiverMonitoringClient>{nullptr});
+        RdsFabricServer XX{expected_address, &mock_logger, mock_monitoring};
+
+        rds_server_ptr.reset(new RdsFabricServer {expected_address, &mock_logger, mock_monitoring});
+
+        rds_server_ptr->log__ = &mock_logger;
+        rds_server_ptr->io__ = std::unique_ptr<IO> {&mock_io};
+        rds_server_ptr->factory__ = std::unique_ptr<fabric::FabricFactory> {&mock_fabric_factory};
     }
+
     void TearDown() override {
-        rds_server.io__.release();
-        rds_server.factory__.release();
-        rds_server.server__.release();
+        rds_server_ptr->io__.release();
+        rds_server_ptr->factory__.release();
+        rds_server_ptr->server__.release();
     }
 
   public:
@@ -63,7 +76,7 @@ void RdsFabricServerTests::InitServer() {
                 Return(&mock_fabric_server)
             ));
 
-    Error err = rds_server.Initialize();
+    Error err = rds_server_ptr->Initialize();
 
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
 }
@@ -82,9 +95,9 @@ TEST_F(RdsFabricServerTests, Initialize_Error_CreateAndBindServer) {
                 Return(nullptr)
             ));
 
-    Error err = rds_server.Initialize();
+    Error err = rds_server_ptr->Initialize();
 
-    ASSERT_THAT(rds_server.server__, Eq(nullptr));
+    ASSERT_THAT(rds_server_ptr->server__, Eq(nullptr));
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
 }
 
@@ -101,12 +114,12 @@ TEST_F(RdsFabricServerTests, Initialize_Error_DoubleInitialize) {
                 "TestAddress"
             ));
 
-    Error err = rds_server.Initialize();
-    ASSERT_THAT(rds_server.server__, Ne(nullptr));
+    Error err = rds_server_ptr->Initialize();
+    ASSERT_THAT(rds_server_ptr->server__, Ne(nullptr));
     ASSERT_THAT(err, Eq(nullptr));
 
-    err = rds_server.Initialize();
-    ASSERT_THAT(rds_server.server__, Ne(nullptr));
+    err = rds_server_ptr->Initialize();
+    ASSERT_THAT(rds_server_ptr->server__, Ne(nullptr));
     ASSERT_THAT(err, Ne(nullptr));
 }
 
@@ -132,7 +145,7 @@ TEST_F(RdsFabricServerTests, GetNewRequests_Ok) {
               ));
 
     Error err;
-    GenericRequests requests = rds_server.GetNewRequests(&err);
+    GenericRequests requests = rds_server_ptr->GetNewRequests(&err);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(requests.size(), Eq(1));
@@ -155,7 +168,7 @@ TEST_F(RdsFabricServerTests, GetNewRequests_Error_RecvAny_InternalError) {
     );
 
     Error err;
-    GenericRequests requests = rds_server.GetNewRequests(&err);
+    GenericRequests requests = rds_server_ptr->GetNewRequests(&err);
 
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
     ASSERT_THAT(requests.size(), Eq(0));
@@ -170,7 +183,7 @@ TEST_F(RdsFabricServerTests, GetNewRequests_Error_RecvAny_Timeout) {
     );
 
     Error err;
-    GenericRequests requests = rds_server.GetNewRequests(&err);
+    GenericRequests requests = rds_server_ptr->GetNewRequests(&err);
 
     ASSERT_THAT(err, Eq(IOErrorTemplates::kTimeout));
     ASSERT_THAT(requests.size(), Eq(0));
@@ -179,12 +192,12 @@ TEST_F(RdsFabricServerTests, GetNewRequests_Error_RecvAny_Timeout) {
 TEST_F(RdsFabricServerTests, SendResponse_Ok) {
     InitServer();
 
-    FabricRdsRequest request(GenericRequestHeader{}, 41, 87);
+    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, nullptr);
     GenericNetworkResponse response;
 
     EXPECT_CALL(mock_fabric_server, Send_t(41, 87, &response, sizeof(response), _/*err*/)).Times(1);
 
-    Error err = rds_server.SendResponse(&request, &response);
+    Error err = rds_server_ptr->SendResponse(&request, &response);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -192,14 +205,14 @@ TEST_F(RdsFabricServerTests, SendResponse_Ok) {
 TEST_F(RdsFabricServerTests, SendResponse_Error_SendError) {
     InitServer();
 
-    FabricRdsRequest request(GenericRequestHeader{}, 41, 87);
+    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, nullptr);
     GenericNetworkResponse response;
 
     EXPECT_CALL(mock_fabric_server, Send_t(41, 87, &response, sizeof(response), _/*err*/)).WillOnce(
         SetArgPointee<4>(fabric::FabricErrorTemplates::kInternalError.Generate().release())
     );
 
-    Error err = rds_server.SendResponse(&request, &response);
+    Error err = rds_server_ptr->SendResponse(&request, &response);
 
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
 }
@@ -208,7 +221,7 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_Ok) {
     InitServer();
 
     GenericRequestHeader dummyHeader{};
-    FabricRdsRequest request(GenericRequestHeader{}, 41, 87);
+    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, mock_instanced_statistics);
     GenericNetworkResponse response;
     CacheMeta cacheSlot;
     cacheSlot.addr = (void*)0xABC;
@@ -217,7 +230,7 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_Ok) {
     EXPECT_CALL(mock_fabric_server, RdmaWrite_t(41, request.GetMemoryRegion(), (void*)0xABC, 200, _/*err*/)).Times(1);
     EXPECT_CALL(mock_fabric_server, Send_t(41, 87, &response, sizeof(response), _/*err*/)).Times(1);
 
-    Error err = rds_server.SendResponseAndSlotData(&request, &response, &cacheSlot);
+    Error err = rds_server_ptr->SendResponseAndSlotData(&request, &response, &cacheSlot);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
@@ -226,7 +239,7 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_RdmaWrite_Error) {
     InitServer();
 
     GenericRequestHeader dummyHeader{};
-    FabricRdsRequest request(GenericRequestHeader{}, 41, 87);
+    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, mock_instanced_statistics);
     GenericNetworkResponse response;
     CacheMeta cacheSlot;
     cacheSlot.addr = (void*)0xABC;
@@ -236,7 +249,7 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_RdmaWrite_Error) {
         SetArgPointee<4>(fabric::FabricErrorTemplates::kInternalError.Generate().release())
     );
 
-    Error err = rds_server.SendResponseAndSlotData(&request, &response, &cacheSlot);
+    Error err = rds_server_ptr->SendResponseAndSlotData(&request, &response, &cacheSlot);
 
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
 }
@@ -245,7 +258,7 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_Send_Error) {
     InitServer();
 
     GenericRequestHeader dummyHeader{};
-    FabricRdsRequest request(GenericRequestHeader{}, 41, 87);
+    FabricRdsRequest request(GenericRequestHeader{}, 41, 87, mock_instanced_statistics);
     GenericNetworkResponse response;
     CacheMeta cacheSlot;
     cacheSlot.addr = (void*)0xABC;
@@ -256,12 +269,13 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_Send_Error) {
         SetArgPointee<4>(fabric::FabricErrorTemplates::kInternalError.Generate().release())
     );
 
-    Error err = rds_server.SendResponseAndSlotData(&request, &response, &cacheSlot);
+    Error err = rds_server_ptr->SendResponseAndSlotData(&request, &response, &cacheSlot);
 
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
 }
 
 TEST_F(RdsFabricServerTests, HandleAfterError) {
     InitServer();
-    rds_server.HandleAfterError(2); /* Function does nothing */
+    rds_server_ptr->HandleAfterError(2); /* Function does nothing */
 }
+

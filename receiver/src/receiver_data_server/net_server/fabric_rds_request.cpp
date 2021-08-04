@@ -1,10 +1,12 @@
 #include "fabric_rds_request.h"
 
+#include <utility>
+
 using namespace asapo;
 
 FabricRdsRequest::FabricRdsRequest(const GenericRequestHeader& header,
-                                   fabric::FabricAddress sourceId, fabric::FabricMessageId messageId)
-    : ReceiverDataServerRequest(header, sourceId), message_id{messageId} {
+                                   fabric::FabricAddress sourceId, fabric::FabricMessageId messageId, SharedInstancedStatistics statistics)
+                                   : ReceiverDataServerRequest(header, sourceId, std::move(statistics)), message_id{messageId} {
 
 }
 

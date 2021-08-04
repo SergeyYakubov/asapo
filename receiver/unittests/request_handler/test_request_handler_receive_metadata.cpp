@@ -22,6 +22,7 @@ using ::testing::Eq;
 using ::testing::Ne;
 using ::testing::Mock;
 using ::testing::NiceMock;
+using ::testing::StrictMock;
 using ::testing::InSequence;
 using ::testing::SetArgPointee;
 using ::asapo::Error;
@@ -66,14 +67,16 @@ class ReceiveMetaDataHandlerTests : public Test {
     NiceMock<MockIO> mock_io;
     RequestHandlerReceiveMetaData handler;
     NiceMock<asapo::MockLogger> mock_logger;
+    std::shared_ptr<StrictMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
 
     void SetUp() override {
+        mock_instanced_statistics.reset(new StrictMock<asapo::MockInstancedStatistics>);
         generic_request_header.data_size = data_size_;
         generic_request_header.data_id = data_id_;
         generic_request_header.meta_size = expected_metadata_size;
         generic_request_header.op_code = expected_op_code;
         generic_request_header.custom_data[asapo::kPosIngestMode] = asapo::kDefaultIngestMode;
-        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr});
+        request.reset(new Request{generic_request_header, socket_fd_, expected_origin_uri, nullptr, nullptr, mock_instanced_statistics});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
     }
@@ -96,9 +99,9 @@ void ReceiveMetaDataHandlerTests::ExpectReceive(uint64_t expected_size, bool ok)
         DoAll(
             CopyStr(expected_metadata),
             SetArgPointee<3>(ok ? nullptr : new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
-            Return(0)
+            Return(ok ? expected_size : 0)
         ));
-
+    EXPECT_CALL(*mock_instanced_statistics, AddIncomingBytes(ok ? expected_size : 0));
 }
 
 void ReceiveMetaDataHandlerTests::ExpectReceiveMetaData(bool ok) {
@@ -107,7 +110,7 @@ void ReceiveMetaDataHandlerTests::ExpectReceiveMetaData(bool ok) {
 
 TEST_F(ReceiveMetaDataHandlerTests, CheckStatisticEntity) {
     auto entity = handler.GetStatisticEntity();
-    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetwork));
+    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetworkIncoming));
 }
 
 TEST_F(ReceiveMetaDataHandlerTests, HandleReturnsErrorOnMetaDataReceive) {

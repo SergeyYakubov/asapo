@@ -18,6 +18,7 @@ type serverSettings struct {
 	DatabaseServer              string
 	PerformanceDbServer         string
 	PerformanceDbName           string
+	MonitoringServerUrl         string
 	MonitorPerformance 			bool
 	AuthorizationServer         string
 	Port                        int
@@ -51,6 +52,7 @@ func (s *serverSettings) GetDatabaseServer() string {
 
 var settings serverSettings
 var statistics serverStatistics
+var monitoring brokerMonitoring
 var auth Authorizer
 
 type discoveryAPI struct {
@@ -62,6 +64,16 @@ var discoveryService discoveryAPI
 
 func (api *discoveryAPI) GetMongoDbAddress() (string, error) {
 	resp, err := api.Client.Get(api.baseURL + "/asapo-mongodb")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	return string(body), err
+}
+
+func (api *discoveryAPI) GetMonitoringServerUrl() (string, error) {
+	resp, err := api.Client.Get(api.baseURL + "/asapo-monitoring")
 	if err != nil {
 		return "", err
 	}

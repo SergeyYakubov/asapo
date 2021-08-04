@@ -1,4 +1,6 @@
 #include "request.h"
+
+#include <utility>
 #include "asapo/io/io_factory.h"
 #include "receiver_config.h"
 
@@ -6,10 +8,11 @@ namespace asapo {
 
 Request::Request(const GenericRequestHeader& header,
                  SocketDescriptor socket_fd, std::string origin_uri, DataCache* cache,
-                 const RequestHandlerDbCheckRequest* db_check_handler) : io__{GenerateDefaultIO()},
-    cache__{cache}, request_header_(header),
-    socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
-    check_duplicate_request_handler_{db_check_handler} {
+                 const RequestHandlerDbCheckRequest* db_check_handler,
+                 SharedInstancedStatistics statistics) : io__{GenerateDefaultIO()},
+                                                         cache__{cache}, statistics_{std::move(statistics)}, request_header_(header),
+                                                         socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
+                                                         check_duplicate_request_handler_{db_check_handler} {
 }
 
 Error Request::PrepareDataBufferAndLockIfNeeded() {
@@ -23,7 +26,7 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
         }
     } else {
         CacheMeta* slot;
-        data_ptr = cache__->GetFreeSlotAndLock(request_header_.data_size, &slot);
+        data_ptr = cache__->GetFreeSlotAndLock(request_header_.data_size, &slot, GetBeamtimeId(), GetDataSource(), GetStream());
         if (data_ptr) {
             slot_meta_ = slot;
         } else {
@@ -34,14 +37,14 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
 }
 
 
-Error Request::Handle(ReceiverStatistics* statistics) {
+Error Request::Handle() {
     for (auto handler : handlers_) {
-        statistics->StartTimer(handler->GetStatisticEntity());
+        statistics_->StartTimer(handler->GetStatisticEntity());
         auto err = handler->ProcessRequest(this);
+        statistics_->StopTimer();
         if (err) {
             return err;
         }
-        statistics->StopTimer();
     }
     return nullptr;
 }
@@ -93,6 +96,19 @@ std::string Request::GetApiVersion() const {
     return request_header_.api_version;
 }
 
+const std::string& Request::GetProducerInstanceId() const {
+    return producer_instance_id_;
+}
+void Request::SetProducerInstanceId(std::string producer_instance_id) {
+    producer_instance_id_ = std::move(producer_instance_id);
+}
+
+const std::string& Request::GetPipelineStepId() const {
+    return pipeline_step_id_;
+}
+void Request::SetPipelineStepId(std::string pipeline_step_id) {
+    pipeline_step_id_ = std::move(pipeline_step_id);
+}
 
 const std::string& Request::GetOriginUri() const {
     return origin_uri_;
@@ -103,6 +119,7 @@ const std::string& Request::GetBeamtimeId() const {
 void Request::SetBeamtimeId(std::string beamtime_id) {
     beamtime_id_ = std::move(beamtime_id);
 }
+
 
 Opcode Request::GetOpCode() const {
     return request_header_.op_code;
@@ -203,6 +220,10 @@ void Request::SetSourceType(SourceType type) {
 }
 SourceType Request::GetSourceType() const {
     return source_type_;
+}
+
+SharedInstancedStatistics Request::GetInstancedStatistics() {
+    return statistics_;
 }
 
 }

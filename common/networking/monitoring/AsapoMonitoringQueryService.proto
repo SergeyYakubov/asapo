@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+option go_package = "./generated_proto";
+
+import "AsapoMonitoringCommonService.proto";
+
+// *******************************
+// * AsapoMonitoringQueryService *
+// *******************************
+
+enum PipelineConnectionQueryMode {
+    INVALID_QUERY_MODE = 0;
+    ExactPath = 1;
+    JustRelatedToStep = 2;
+}
+
+message DataPointsQuery {
+    uint64 fromTimestamp = 1;
+    uint64 toTimestamp = 2;
+
+    string beamtimeFilter = 4;
+    string sourceFilter = 5;
+    string streamFilter = 6;
+
+    string receiverFilter = 7;
+
+    string fromPipelineStepFilter = 8;
+    string toPipelineStepFilter = 9;
+    PipelineConnectionQueryMode pipelineQueryMode = 10;
+}
+
+/*
+TODO: Neues Diagramm nur für hit/miss? Weil ich ja sonst die total transfer Rate erhöhe wird
+TODO: Also cache misses erhöhen die Summe aller Requests im Diagram
+message HitMissDataPoint {
+    uint32 hit = 1;
+    uint32 miss = 2;
+}
+*/
+
+message TotalTransferRateDataPoint {
+    uint64 totalBytesPerSecRecv = 1;
+    uint64 totalBytesPerSecSend = 2;
+
+    uint64 totalBytesPerSecRdsSend = 3;
+    uint64 totalBytesPerSecFtsSend = 4;
+}
+
+message TotalFileRateDataPoint {
+    uint32 totalRequests = 1;
+    uint32 cacheMisses = 2;
+    uint32 fromCache = 3;
+    uint32 fromDisk = 4;
+}
+
+message TaskTimeDataPoint {
+    uint32 receiveIoTimeUs = 1;
+    uint32 writeToDiskTimeUs = 2;
+    uint32 writeToDatabaseTimeUs = 3;
+    uint32 rdsSendToConsumerTimeUs = 4;
+}
+
+message RdsMemoryUsageDataPoint {
+    uint64 totalUsedMemory = 1;
+    //uint64 totalMemory = 2;
+}
+
+message DataPointsResponse {
+    uint64 startTimestampInSec = 1;
+    uint32 timeIntervalInSec = 2;
+
+    repeated TotalTransferRateDataPoint transferRates = 3;
+    repeated TotalFileRateDataPoint fileRates = 5;
+    repeated TaskTimeDataPoint taskTimes = 6;
+    repeated RdsMemoryUsageDataPoint memoryUsages = 7;
+}
+
+message MetadataResponse {
+    string clusterName = 1;
+    repeated string beamtime = 2;
+}
+
+message ToplogyQuery {
+    uint64 fromTimestamp = 1;
+    uint64 toTimestamp = 2;
+
+    string beamtimeFilter = 3;
+}
+
+message TopologyResponseNode {
+    string nodeId = 1;
+    uint32 level = 2;
+    repeated string consumerInstances = 3;
+    repeated string producerInstances = 4;
+}
+
+message TopologyResponseEdge {
+    string fromNodeId = 1;
+    string toNodeId = 2;
+
+    string sourceName = 3;
+    repeated string involvedReceivers = 4;
+}
+
+message TopologyResponse {
+    repeated TopologyResponseNode nodes = 1;
+    repeated TopologyResponseEdge edges = 2;
+}
+
+service AsapoMonitoringQueryService {
+    rpc GetMetadata(Empty) returns (MetadataResponse) {}
+    rpc GetTopology(ToplogyQuery) returns (TopologyResponse) {}
+    rpc GetDataPoints(DataPointsQuery) returns (DataPointsResponse) {}
+}

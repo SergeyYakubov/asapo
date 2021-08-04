@@ -63,6 +63,8 @@ class AuthorizerHandlerTests : public Test {
     ReceiverConfig config;
 
     NiceMock<asapo::MockLogger> mock_logger;
+    std::string expected_instance_id = "instance";
+    std::string expected_pipeline_step = "pipestep";
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_data_source = "source";
     std::string expected_beamline = "beamline";
@@ -85,7 +87,7 @@ class AuthorizerHandlerTests : public Test {
                                 "\",\"OriginHost\":\"" +
                                 expected_producer_uri + "\"}";
 
-        mock_request.reset(new MockRequest{request_header, 1, expected_producer_uri, nullptr});
+        mock_request.reset(new MockRequest{request_header, 1, expected_producer_uri, nullptr, nullptr});
         handler.http_client__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         handler.log__ = &mock_logger;
         config.authorization_server = expected_authorization_server;
@@ -113,7 +115,9 @@ class AuthorizerHandlerTests : public Test {
             WillOnce(
                 DoAll(SetArgPointee<4>(nullptr),
                       SetArgPointee<3>(code),
-                      Return("{\"beamtimeId\":\"" + expected_beamtime_id +
+                      Return("{\"instanceId\":\"" + expected_instance_id +
+                             "\",\"pipelineStep\":" + "\"" + expected_pipeline_step +
+                             "\",\"beamtimeId\":" + "\"" + expected_beamtime_id +
                              "\",\"dataSource\":" + "\"" + expected_data_source +
                              "\",\"beamline-path\":" + "\"" + expected_beamline_path +
                              "\",\"corePath\":" + "\"" + expected_core_path +
@@ -124,6 +128,8 @@ class AuthorizerHandlerTests : public Test {
             if (code != HttpCode::OK) {
                 EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("failure authorizing"),
                                                      HasSubstr(expected_source_type_str),
+                                                     HasSubstr(expected_instance_id),
+                                                     HasSubstr(expected_pipeline_step),
                                                      HasSubstr(expected_beamtime_id),
                                                      HasSubstr(expected_data_source),
                                                      HasSubstr(expected_producer_uri),
@@ -131,6 +137,8 @@ class AuthorizerHandlerTests : public Test {
             } else if (expected_access_type_str == "[\"write\"]") {
                 EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("authorized"),
                                                      HasSubstr(expected_beamtime_id),
+                                                     HasSubstr(expected_instance_id),
+                                                     HasSubstr(expected_pipeline_step),
                                                      HasSubstr(expected_beamline),
                                                      HasSubstr(expected_source_type_str),
                                                      HasSubstr(expected_data_source),
@@ -164,6 +172,8 @@ class AuthorizerHandlerTests : public Test {
         ;
 
         if (!error && code == HttpCode::OK && set_request) {
+            EXPECT_CALL(*mock_request, SetProducerInstanceId(expected_instance_id));
+            EXPECT_CALL(*mock_request, SetPipelineStepId(expected_pipeline_step));
             EXPECT_CALL(*mock_request, SetBeamtimeId(expected_beamtime_id));
             EXPECT_CALL(*mock_request, SetDataSource(expected_data_source));
             EXPECT_CALL(*mock_request, SetOfflinePath(expected_core_path));
@@ -180,7 +190,7 @@ class AuthorizerHandlerTests : public Test {
 
 TEST_F(AuthorizerHandlerTests, CheckStatisticEntity) {
     auto entity = handler.GetStatisticEntity();
-    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetwork));
+    ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kNetworkIncoming));
 }
 
 TEST_F(AuthorizerHandlerTests, ErrorNotAuthorizedYet) {

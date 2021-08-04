@@ -79,7 +79,7 @@ class DbHandlerTests : public Test {
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
         handler.http_client__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr, nullptr});
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
         ON_CALL(*mock_request, GetDataSource()).WillByDefault(ReturnRef(expected_stream));
 

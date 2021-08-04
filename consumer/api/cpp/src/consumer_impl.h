@@ -136,7 +136,7 @@ class ConsumerImpl final : public asapo::Consumer {
                                  uint64_t min_size, Error* err);
     bool DataCanBeInBuffer(const MessageMeta* info);
     Error TryGetDataFromBuffer(const MessageMeta* info, MessageData* data);
-    Error CreateNetClientAndTryToGetFile(const MessageMeta* info, MessageData* data);
+    Error CreateNetClientAndTryToGetFile(const MessageMeta* info, const std::string& request_sender_details, MessageData* data);
     Error ServiceRequestWithTimeout(const std::string& service_name, std::string* service_uri, RequestInfo request,
                                     RequestOutput* response);
     std::string BrokerRequestWithTimeout(RequestInfo request, Error* err);
@@ -151,7 +151,7 @@ class ConsumerImpl final : public asapo::Consumer {
     uint64_t GetCurrentCount(const RequestInfo& ri, Error* err);
     RequestInfo GetStreamListRequest(const std::string& from, const StreamFilter& filter) const;
     Error GetServerVersionInfo(std::string* server_info, bool* supported) ;
-    std::string BrokerApiUri(std::string stream, std::string group, std::string suffix) const;
+    RequestInfo CreateBrokerApiRequest(std::string stream, std::string group, std::string suffix) const;
 
     std::string endpoint_;
     std::string current_broker_uri_;
@@ -160,6 +160,7 @@ class ConsumerImpl final : public asapo::Consumer {
     bool has_filesystem_;
     SourceCredentials source_credentials_;
     std::string data_source_encoded_;
+    std::string request_sender_details_prefix_;
     uint64_t timeout_ms_ = 0;
     bool should_try_rdma_first_ = true;
     NetworkConnectionType current_connection_type_ = NetworkConnectionType::kUndefined;

@@ -15,60 +15,66 @@ namespace {
 TEST(CreateProducer, TcpProducer) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, asapo::RequestHandlerType::kTcp,
-                                                SourceCredentials{asapo::SourceType::kRaw, "bt", "", "", ""}, 3600000, &err);
-    ASSERT_THAT(dynamic_cast<asapo::ProducerImpl*>(producer.get()), Ne(nullptr));
-    ASSERT_THAT(err, Eq(nullptr));
+                                                SourceCredentials{asapo::SourceType::kRaw, "", "", "b", "", "", ""}, 3600000, &err);
+
+    EXPECT_THAT(err, Eq(nullptr));
+    EXPECT_THAT(dynamic_cast<asapo::ProducerImpl*>(producer.get()), Ne(nullptr));
 }
 
 TEST(CreateProducer, ErrorBeamtime) {
     asapo::Error err;
     std::string expected_beamtimeid(asapo::kMaxMessageSize * 10, 'a');
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, asapo::RequestHandlerType::kTcp,
-                                                SourceCredentials{asapo::SourceType::kRaw, expected_beamtimeid, "", "", ""}, 3600000, &err);
-    ASSERT_THAT(producer, Eq(nullptr));
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+                                                SourceCredentials{asapo::SourceType::kRaw, "instance", "step", expected_beamtimeid, "", "", ""}, 3600000, &err);
+
+    EXPECT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+    EXPECT_THAT(producer, Eq(nullptr));
 }
 
 TEST(CreateProducer, ErrorOnBothAutoBeamlineBeamtime) {
-    asapo::SourceCredentials creds{asapo::SourceType::kRaw, "auto", "auto", "subname", "token"};
+    asapo::SourceCredentials creds{asapo::SourceType::kRaw, "instance", "step", "auto", "auto", "subname", "token"};
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("endpoint", 4, asapo::RequestHandlerType::kTcp,
                                                 creds, 3600000, &err);
-    ASSERT_THAT(producer, Eq(nullptr));
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+
+    EXPECT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+    EXPECT_THAT(producer, Eq(nullptr));
 }
 
 TEST(CreateProducer, TooManyThreads) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("", asapo::kMaxProcessingThreads + 1,
-                                                asapo::RequestHandlerType::kTcp, SourceCredentials{asapo::SourceType::kRaw, "bt", "", "", ""}, 3600000, &err);
-    ASSERT_THAT(producer, Eq(nullptr));
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+                                                asapo::RequestHandlerType::kTcp, SourceCredentials{asapo::SourceType::kRaw, "", "", "", "", "", ""}, 3600000, &err);
+
+    EXPECT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+    EXPECT_THAT(producer, Eq(nullptr));
 }
 
 
 TEST(CreateProducer, ZeroThreads) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("", 0,
-                                                asapo::RequestHandlerType::kTcp, SourceCredentials{asapo::SourceType::kRaw, "bt", "", "", ""}, 3600000, &err);
-    ASSERT_THAT(producer, Eq(nullptr));
-    ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+                                                asapo::RequestHandlerType::kTcp, SourceCredentials{asapo::SourceType::kRaw, "", "", "bt", "", "", ""}, 3600000, &err);
+
+    EXPECT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
+    EXPECT_THAT(producer, Eq(nullptr));
 }
 
 
 TEST(Producer, SimpleWorkflowWihoutConnection) {
     asapo::Error err;
     std::unique_ptr<asapo::Producer> producer = asapo::Producer::Create("hello", 5, asapo::RequestHandlerType::kTcp,
-                                                SourceCredentials{asapo::SourceType::kRaw, "bt", "", "", ""}, 3600000,
+                                                SourceCredentials{asapo::SourceType::kRaw, "", "", "bt", "", "", ""}, 3600000,
                                                 &err);
+
+    EXPECT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(producer, Ne(nullptr));
 
     asapo::MessageHeader message_header{1, 1, "test"};
     auto err_send = producer->Send(message_header, nullptr, asapo::kTransferMetaDataOnly, "stream", nullptr);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    ASSERT_THAT(producer, Ne(nullptr));
-    ASSERT_THAT(err, Eq(nullptr));
-    ASSERT_THAT(err_send, Eq(nullptr));
+    EXPECT_THAT(err_send, Eq(nullptr));
 }
 
 

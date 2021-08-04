@@ -1,4 +1,6 @@
 #include "requests_dispatcher.h"
+
+#include <utility>
 #include "../request.h"
 #include "asapo/io/io_factory.h"
 #include "../receiver_logger.h"
@@ -6,11 +8,10 @@
 namespace asapo {
 
 RequestsDispatcher::RequestsDispatcher(SocketDescriptor socket_fd, std::string address,
-                                       ReceiverStatistics* statistics, SharedCache cache) : statistics__{statistics},
+                                       ReceiverStatistics* statistics, SharedReceiverMonitoringClient monitoring, SharedCache cache) : statistics__{statistics},
     io__{GenerateDefaultIO()},
     log__{GetDefaultReceiverLogger()},
-    request_factory__{new RequestFactory{cache}},
-                  socket_fd_{socket_fd},
+    request_factory__{new RequestFactory{std::move(monitoring), std::move(cache)}}, socket_fd_{socket_fd},
 producer_uri_{std::move(address)} {
 }
 
@@ -53,7 +54,8 @@ Error RequestsDispatcher::HandleRequest(const std::unique_ptr<Request>& request)
     log__->Debug("processing request id " + std::to_string(request->GetDataID()) + ", opcode " +
                  std::to_string(request->GetOpCode()) + " from " + producer_uri_ );
     Error handle_err;
-    handle_err = request->Handle(statistics__);
+    handle_err = request->Handle();
+    statistics__->ApplyTimeFrom(request->GetInstancedStatistics());
     if (handle_err) {
         if (handle_err == ReceiverErrorTemplates::kReAuthorizationFailure) {
             log__->Warning("warning processing request from " + producer_uri_ + " - " + handle_err->Explain());
@@ -84,9 +86,12 @@ Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request>& request
 std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const noexcept {
 //TODO: to be overwritten with MessagePack (or similar)
     GenericRequestHeader generic_request_header;
-    statistics__-> StartTimer(StatisticEntity::kNetwork);
-    io__-> Receive(socket_fd_, &generic_request_header,
-                   sizeof(GenericRequestHeader), err);
+    SharedInstancedStatistics statistics{new InstancedStatistics};
+
+    statistics->StartTimer(StatisticEntity::kNetworkIncoming);
+    uint64_t byteCount = io__->Receive(socket_fd_, &generic_request_header, sizeof(GenericRequestHeader), err);
+    statistics->StopTimer();
+    statistics->AddIncomingBytes(byteCount);
     if(*err) {
         if (*err == ErrorTemplates::kEndOfFile) {
             log__->Debug("error getting next request from " + producer_uri_ + " - " + "peer has performed an orderly shutdown");
@@ -95,8 +100,7 @@ std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const no
         }
         return nullptr;
     }
-    statistics__-> StopTimer();
-    auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, producer_uri_, err);
+    auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, producer_uri_, statistics, err);
     if (*err) {
         log__->Error("error processing request from " + producer_uri_ + " - " + (*err)->Explain());
     }

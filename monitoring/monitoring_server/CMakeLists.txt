@@ -1,0 +1,22 @@
+set (TARGET_NAME asapo-monitoring-server)
+
+IF(WIN32)
+    set (exe_name "${TARGET_NAME}.exe")
+ELSE()
+    set (exe_name "${TARGET_NAME}")
+ENDIF()
+
+configure_file(docker/Dockerfile . COPYONLY)
+
+add_custom_target(${TARGET_NAME} ALL
+    COMMAND go build ${GO_OPTS} -o ${CMAKE_CURRENT_BINARY_DIR}/${exe_name} main/main.go
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/asapo_monitoring_server
+    VERBATIM)
+define_property(TARGET PROPERTY EXENAME
+        BRIEF_DOCS <executable name>
+        FULL_DOCS <full-doc>)
+
+set_target_properties(${TARGET_NAME} PROPERTIES EXENAME ${CMAKE_CURRENT_BINARY_DIR}/${exe_name})
+
+# include(testing_go)
+# gotest(${TARGET_NAME}  "${CMAKE_CURRENT_SOURCE_DIR}/src/asapo_monitoring_server" "./...")

@@ -86,14 +86,11 @@ class ProducerImplTests : public testing::Test {
     char expected_stream[asapo::kMaxMessageSize] = "test_stream";
     std::string expected_next_stream = "next_stream";
 
-    asapo::SourceCredentials expected_credentials{asapo::SourceType::kRaw, "beamtime_id", "beamline", "subname", "token"
-    };
-    asapo::SourceCredentials expected_default_credentials{
-        asapo::SourceType::kProcessed, "beamtime_id", "", "", "token"
-    };
+    asapo::SourceCredentials expected_credentials{asapo::SourceType::kRaw, "instance", "step", "beamtime_id", "beamline", "subname", "token"};
+    asapo::SourceCredentials expected_default_credentials{asapo::SourceType::kProcessed, "instance", "step", "beamtime_id", "", "", "token"};
 
-    std::string expected_credentials_str = "raw%beamtime_id%beamline%subname%token";
-    std::string expected_default_credentials_str = "processed%beamtime_id%auto%detector%token";
+    std::string expected_credentials_str = "raw%instance%step%beamtime_id%beamline%subname%token";
+    std::string expected_default_credentials_str = "processed%instance%step%beamtime_id%auto%detector%token";
 
     std::string expected_metadata = "meta";
     std::string expected_fullpath = "filename";
@@ -450,7 +447,7 @@ TEST_F(ProducerImplTests, OKSendingSendFileRequestWithStream) {
 
 TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
     std::string long_str(asapo::kMaxMessageSize * 10, 'a');
-    expected_credentials = asapo::SourceCredentials{asapo::SourceType::kRaw, long_str, "", "", ""};
+    expected_credentials = asapo::SourceCredentials{asapo::SourceType::kRaw, "", "", long_str, "", "", ""};
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("too long")));
 
     auto err = producer.SetCredentials(expected_credentials);
@@ -461,8 +458,8 @@ TEST_F(ProducerImplTests, ErrorSettingBeamtime) {
 TEST_F(ProducerImplTests, ErrorSettingSecondTime) {
     EXPECT_CALL(mock_logger, Error(testing::HasSubstr("already")));
 
-    producer.SetCredentials(asapo::SourceCredentials{asapo::SourceType::kRaw, "1", "", "2", "3"});
-    auto err = producer.SetCredentials(asapo::SourceCredentials{asapo::SourceType::kRaw, "4", "", "5", "6"});
+    producer.SetCredentials(asapo::SourceCredentials{asapo::SourceType::kRaw, "instance", "step", "1", "", "2", "3"});
+    auto err = producer.SetCredentials(asapo::SourceCredentials{asapo::SourceType::kRaw, "instance", "step", "4", "", "5", "6"});
 
     ASSERT_THAT(err, Eq(asapo::ProducerErrorTemplates::kWrongInput));
 }
@@ -605,7 +602,7 @@ TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
         R"({"softwareVersion":"21.06.0, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.3"}})";
 
     EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri +
-                                                   "/asapo-discovery/v0.1/version?client=producer&protocol=v0.3"), _, _)).WillOnce(DoAll(
+                                                   "/asapo-discovery/v0.1/version?client=producer&protocol=v0.4"), _, _)).WillOnce(DoAll(
                                                            SetArgPointee<1>(asapo::HttpCode::OK),
                                                            SetArgPointee<2>(nullptr),
                                                            Return(result)));

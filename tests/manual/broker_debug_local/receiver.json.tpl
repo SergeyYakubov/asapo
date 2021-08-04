@@ -1,4 +1,5 @@
 {
+  "MonitoringServer": "auto",
   "PerformanceDbServer":"localhost:8086",
   "MonitorPerformance": true,
   "PerformanceDbName": "db_test",

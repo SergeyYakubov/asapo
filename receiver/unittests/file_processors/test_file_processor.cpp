@@ -54,7 +54,7 @@ class FileProcessorTests : public Test {
         request_header.data_id = 2;
         asapo::ReceiverConfig test_config;
         asapo::SetReceiverConfig(test_config, "none");
-        mock_request.reset(new MockRequest{request_header, 1, "", nullptr});
+        mock_request.reset(new MockRequest{request_header, 1, "", nullptr, nullptr});
     }
     void TearDown() override {
     }

@@ -61,6 +61,8 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
     pass
   cdef Error GetSourceTypeFromString(string types,SourceType * type)
   struct  SourceCredentials:
+    string instance_id
+    string pipeline_step
     string beamtime_id
     string beamline
     string data_source

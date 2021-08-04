@@ -8,6 +8,6 @@ with open('asapo_host', 'r') as file:
 
 token="KmUDdacgBzaOD3NIJvN1NmKGqWKtx0DK-NyPjdpeWkc="
 os.system("hostname")
-os.system("./dummy-data-producer "+host+":8400 asapo_test%data_source"+str(rank)+"%"+token+" 1000000 50 8 0 1000")
+os.system("./dummy-data-producer "+host+":8400 asapo_test%instance%step%data_source"+str(rank)+"%"+token+" 1000000 50 8 0 1000")
 
 

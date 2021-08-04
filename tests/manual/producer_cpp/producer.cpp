@@ -50,7 +50,8 @@ int main(int argc, char* argv[]) {
     auto beamtime = "asapo_test";
 
     auto producer = asapo::Producer::Create(endpoint, 1, asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{asapo::SourceType::kProcessed, beamtime, "", "", ""}, 60000, &err);
+                                            asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                                     "auto", "auto", beamtime, "", "", ""}, 60000, &err);
     exit_if_error("Cannot start producer", err);
 
     uint32_t start_number = 1;

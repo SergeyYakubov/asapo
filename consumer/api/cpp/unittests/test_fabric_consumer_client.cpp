@@ -25,7 +25,7 @@ TEST(FabricConsumerClient, Constructor) {
     ASSERT_THAT(dynamic_cast<fabric::FabricClient*>(client.client__.get()), Eq(nullptr));
 }
 
-MATCHER_P6(M_CheckSendRequest, op_code, buf_id, data_size, mr_addr, mr_length, mr_key,
+MATCHER_P7(M_CheckSendRequest, op_code, buf_id, data_size, mr_addr, mr_length, mr_key, expected_request_sender_details,
            "Checks if a valid GenericRequestHeader was Send") {
     auto data = (GenericRequestHeader*) arg;
     auto mr = (fabric::MemoryRegionDetails*) &data->message;
@@ -33,7 +33,8 @@ MATCHER_P6(M_CheckSendRequest, op_code, buf_id, data_size, mr_addr, mr_length, m
            && data->data_id == uint64_t(buf_id)
            && data->data_size == uint64_t(data_size)
            && mr->addr == uint64_t(mr_addr)
-           && strcmp(data->api_version, "v0.1") == 0
+           && strcmp(data->api_version, "v0.2") == 0
+           && strcmp(data->stream, expected_request_sender_details.c_str()) == 0
            && mr->length == uint64_t(mr_length)
            && mr->key == uint64_t(mr_key);
 }
@@ -62,6 +63,7 @@ class FabricConsumerClientTests : public Test {
     void ExpectAddedConnection(const std::string& address, bool ok, fabric::FabricAddress result);
     void ExpectTransfer(void** outputData, fabric::FabricAddress serverAddr,
                         fabric::FabricMessageId messageId, bool sendOk, bool recvOk,
+                        const std::string& expected_request_sender_details,
                         NetworkErrorCode serverResponse);
 };
 
@@ -84,6 +86,7 @@ void FabricConsumerClientTests::ExpectAddedConnection(const std::string& address
 
 void FabricConsumerClientTests::ExpectTransfer(void** outputData, fabric::FabricAddress serverAddr,
                                                fabric::FabricMessageId messageId, bool sendOk, bool recvOk,
+                                               const std::string& expected_request_sender_details,
                                                NetworkErrorCode serverResponse) {
     static fabric::MemoryRegionDetails mrDetails{};
     mrDetails.addr = 0x124;
@@ -99,7 +102,7 @@ void FabricConsumerClientTests::ExpectTransfer(void** outputData, fabric::Fabric
 
 
     Expectation sendCall = EXPECT_CALL(mock_fabric_client, Send_t(serverAddr, messageId,
-                                       M_CheckSendRequest(kOpcodeGetBufferData, 78954, 4123, 0x124, 4123, 20),
+                                                                  M_CheckSendRequest(kOpcodeGetBufferData, 78954, 4123, 0x124, 4123, 20, expected_request_sender_details),
                                        sizeof(GenericRequestHeader), _)).After(getDetailsCall)
                            .WillOnce(SetArgPointee<4>(sendOk ? nullptr : fabric::FabricErrorTemplates::kInternalError.Generate().release()));
 
@@ -124,7 +127,7 @@ TEST_F(FabricConsumerClientTests, GetData_Error_Init) {
     MessageData expectedMessageData;
     MessageMeta expectedInfo{};
     expectedInfo.source = "host:1234";
-    Error err = client.GetData(&expectedInfo, &expectedMessageData);
+    Error err = client.GetData(&expectedInfo, "some_request_sender_details", &expectedMessageData);
 
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
 }
@@ -136,12 +139,12 @@ TEST_F(FabricConsumerClientTests, GetData_Error_AddConnection) {
     MessageData expectedMessageData;
     MessageMeta expectedInfo{};
     expectedInfo.source = "host:1234";
-    Error err = client.GetData(&expectedInfo, &expectedMessageData);
+    Error err = client.GetData(&expectedInfo, "some_request_sender_details", &expectedMessageData);
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
 
     // Make sure that the connection was not saved
     ExpectAddedConnection("host:1234", false, 1);
-    err = client.GetData(&expectedInfo, &expectedMessageData);
+    err = client.GetData(&expectedInfo, "some_request_sender_details", &expectedMessageData);
 
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
 }
@@ -161,7 +164,7 @@ TEST_F(FabricConsumerClientTests, GetData_ShareMemoryRegion_Error) {
                   Return(nullptr)
               ));
 
-    Error err = client.GetData(&expectedInfo, &expectedMessageData);
+    Error err = client.GetData(&expectedInfo, "some_request_sender_details", &expectedMessageData);
 
     ASSERT_THAT(err, Eq(fabric::FabricErrorTemplates::kInternalError));
 }
@@ -177,9 +180,9 @@ TEST_F(FabricConsumerClientTests, GetData_SendFailed) {
     expectedInfo.buf_id = 78954;
 
     void* outData = nullptr;
-    ExpectTransfer(&outData, 0, 0, false, false, kNetErrorNoError);
+    ExpectTransfer(&outData, 0, 0, false, false, "abc", kNetErrorNoError);
 
-    Error err = client.GetData(&expectedInfo, &expectedMessageData);
+    Error err = client.GetData(&expectedInfo, "abc", &expectedMessageData);
 
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(expectedMessageData.get(), Eq(nullptr));
@@ -196,9 +199,9 @@ TEST_F(FabricConsumerClientTests, GetData_RecvFailed) {
     expectedInfo.buf_id = 78954;
 
     void* outData = nullptr;
-    ExpectTransfer(&outData, 0, 0, true, false, kNetErrorNoError);
+    ExpectTransfer(&outData, 0, 0, true, false, "abc", kNetErrorNoError);
 
-    Error err = client.GetData(&expectedInfo, &expectedMessageData);
+    Error err = client.GetData(&expectedInfo, "abc", &expectedMessageData);
 
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(expectedMessageData.get(), Eq(nullptr));
@@ -215,9 +218,9 @@ TEST_F(FabricConsumerClientTests, GetData_ServerError) {
     expectedInfo.buf_id = 78954;
 
     void* outData = nullptr;
-    ExpectTransfer(&outData, 0, 0, true, true, kNetErrorInternalServerError);
+    ExpectTransfer(&outData, 0, 0, true, true, "abc", kNetErrorInternalServerError);
 
-    Error err = client.GetData(&expectedInfo, &expectedMessageData);
+    Error err = client.GetData(&expectedInfo, "abc", &expectedMessageData);
 
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(expectedMessageData.get(), Eq(nullptr));
@@ -234,9 +237,9 @@ TEST_F(FabricConsumerClientTests, GetData_Ok) {
     expectedInfo.buf_id = 78954;
 
     void* outData = nullptr;
-    ExpectTransfer(&outData, 0, 0, true, true, kNetErrorNoError);
+    ExpectTransfer(&outData, 0, 0, true, true, "abc", kNetErrorNoError);
 
-    Error err = client.GetData(&expectedInfo, &expectedMessageData);
+    Error err = client.GetData(&expectedInfo, "abc", &expectedMessageData);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(expectedMessageData.get(), Eq(outData));
@@ -253,17 +256,17 @@ TEST_F(FabricConsumerClientTests, GetData_Ok_UsedCahedConnection) {
     expectedInfo.buf_id = 78954;
 
     void* outData = nullptr;
-    ExpectTransfer(&outData, 0, 0, true, true, kNetErrorNoError);
+    ExpectTransfer(&outData, 0, 0, true, true, "abc", kNetErrorNoError);
 
-    Error err = client.GetData(&expectedInfo, &expectedMessageData);
+    Error err = client.GetData(&expectedInfo, "abc", &expectedMessageData);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(expectedMessageData.get(), Eq(outData));
 
     outData = nullptr;
-    ExpectTransfer(&outData, 0, 1, true, true, kNetErrorNoError);
+    ExpectTransfer(&outData, 0, 1, true, true, "abc", kNetErrorNoError);
 
-    err = client.GetData(&expectedInfo, &expectedMessageData);
+    err = client.GetData(&expectedInfo, "abc", &expectedMessageData);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(expectedMessageData.get(), Eq(outData));
@@ -280,9 +283,9 @@ TEST_F(FabricConsumerClientTests, GetData_Ok_SecondConnection) {
     expectedInfo.buf_id = 78954;
 
     void* outData = nullptr;
-    ExpectTransfer(&outData, 0, 0, true, true, kNetErrorNoError);
+    ExpectTransfer(&outData, 0, 0, true, true, "abc", kNetErrorNoError);
 
-    Error err = client.GetData(&expectedInfo, &expectedMessageData);
+    Error err = client.GetData(&expectedInfo, "abc", &expectedMessageData);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(expectedMessageData.get(), Eq(outData));
@@ -291,9 +294,9 @@ TEST_F(FabricConsumerClientTests, GetData_Ok_SecondConnection) {
     expectedInfo.source = "host:1235";
 
     outData = nullptr;
-    ExpectTransfer(&outData, 54, 1, true, true, kNetErrorNoError);
+    ExpectTransfer(&outData, 54, 1, true, true, "abc", kNetErrorNoError);
 
-    err = client.GetData(&expectedInfo, &expectedMessageData);
+    err = client.GetData(&expectedInfo, "abc", &expectedMessageData);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(expectedMessageData.get(), Eq(outData));

@@ -4,9 +4,13 @@
 #ifdef UNIT_TESTS
 #define VIRTUAL virtual
 #define FINAL
+
+#define ONLY_IN_TESTS_CTOR default
 #else
 #define VIRTUAL
 #define FINAL final
+
+#define ONLY_IN_TESTS_CTOR deleted
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)

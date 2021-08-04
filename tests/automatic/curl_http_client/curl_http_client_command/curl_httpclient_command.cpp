@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     auto consumer = asapo::ConsumerFactory::CreateConsumer(args.uri_authorizer,
                     "",
                     true,
-                    asapo::SourceCredentials{asapo::SourceType::kProcessed, "", "",
+                    asapo::SourceCredentials{asapo::SourceType::kProcessed, "", "", "", "",
                                              "", ""},
                     &err);
     auto consumer_impl = static_cast<asapo::ConsumerImpl*>(consumer.get());

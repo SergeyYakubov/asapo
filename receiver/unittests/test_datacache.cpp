@@ -37,7 +37,7 @@ class DataCacheTests : public Test {
 };
 
 TEST_F(DataCacheTests, GetFreeSlotFailsDueToSize) {
-    auto addr = cache.GetFreeSlotAndLock(expected_cache_size + 1, &meta1);
+    auto addr = cache.GetFreeSlotAndLock(expected_cache_size + 1, &meta1, "b", "so", "st");
     ASSERT_THAT(addr, Eq(nullptr));
 }
 
@@ -48,16 +48,16 @@ void set_array(uint8_t* addr, uint64_t size, uint8_t val) {
 }
 
 TEST_F(DataCacheTests, GetFreeSlotOK) {
-    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(1, &meta1);
+    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(1, &meta1, "b", "so", "st");
     set_array(addr, 1, 2);
     ASSERT_THAT(addr[0], Eq(2));
     ASSERT_THAT(meta1->id, Gt(0));
 }
 
 TEST_F(DataCacheTests, GetFreeSlotStartsFromLastPointer) {
-    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(1, &meta1);
+    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(1, &meta1, "b", "so", "st");
     set_array(ini_addr, 1, 2);
-    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(1, &meta2);
+    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(1, &meta2, "b", "so", "st");
     set_array(addr, 1, 1);
     ASSERT_THAT(ini_addr[0], Eq(2));
     ASSERT_THAT(ini_addr[1], Eq(1));
@@ -65,29 +65,28 @@ TEST_F(DataCacheTests, GetFreeSlotStartsFromLastPointer) {
 }
 
 TEST_F(DataCacheTests, GetFreeSlotLocks) {
-    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(1, &meta1);
-    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(expected_cache_size, &meta2);
+    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(1, &meta1, "b", "so", "st");
+    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(expected_cache_size, &meta2, "b", "so", "st");
     ASSERT_THAT(ini_addr, Ne(nullptr));
     ASSERT_THAT(addr, Eq(nullptr));
     ASSERT_THAT(meta1, Ne(nullptr));
     ASSERT_THAT(meta2, Eq(nullptr));
 }
 
-
 TEST_F(DataCacheTests, GetFreeSlotStartsFromBeginIfNotFit) {
-    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(1, &meta1);
+    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(1, &meta1, "b", "so", "st");
     auto id = meta1->id;
     set_array(ini_addr, 1, 2);
     cache.UnlockSlot(meta1);
-    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(expected_cache_size, &meta2);
+    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(expected_cache_size, &meta2, "b", "so", "st");
     set_array(addr, expected_cache_size, 1);
     ASSERT_THAT(ini_addr[0], Eq(1));
     ASSERT_THAT(id, Ne(meta2->id));
 }
 
 TEST_F(DataCacheTests, GetFreeSlotCannotWriteIfAlreadyWriting) {
-    cache.GetFreeSlotAndLock(1, &meta1);
-    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(expected_cache_size, &meta2);
+    cache.GetFreeSlotAndLock(1, &meta1, "b", "so", "st");
+    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(expected_cache_size, &meta2, "b", "so", "st");
     ASSERT_THAT(addr, Eq(nullptr));
     ASSERT_THAT(meta2, Eq(nullptr));
 
@@ -103,18 +102,26 @@ TEST_F(DataCacheTests, PrepareToReadIdNotFound) {
 
 TEST_F(DataCacheTests, PrepareToReadOk) {
     auto data_size = static_cast<uint64_t>(static_cast<double>(expected_cache_size) * 0.7);
-    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(data_size, &meta1);
+    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(data_size, &meta1, "b1", "so1", "st1");
 
     uint8_t* addr = (uint8_t*) cache.GetSlotToReadAndLock(meta1->id, data_size, &meta2);
     ASSERT_THAT(addr, Eq(ini_addr));
     ASSERT_THAT(meta1, Eq(meta2));
     ASSERT_THAT(meta2->size, Eq(data_size));
+
+    ASSERT_THAT(meta1->beamtime, Eq("b1"));
+    ASSERT_THAT(meta1->source, Eq("so1"));
+    ASSERT_THAT(meta1->stream, Eq("st1"));
+
+    ASSERT_THAT(meta2->beamtime, Eq("b1"));
+    ASSERT_THAT(meta2->source, Eq("so1"));
+    ASSERT_THAT(meta2->stream, Eq("st1"));
 }
 
 
 TEST_F(DataCacheTests, PrepareToReadFailsIfTooCloseToCurrentPointer) {
     auto data_size = static_cast<uint64_t>(static_cast<double>(expected_cache_size) * 0.9);
-    cache.GetFreeSlotAndLock(data_size, &meta1);
+    cache.GetFreeSlotAndLock(data_size, &meta1, "b", "so", "st");
 
     uint8_t* addr = (uint8_t*) cache.GetSlotToReadAndLock(meta1->id, data_size, &meta2);
     ASSERT_THAT(addr, Eq(nullptr));
@@ -125,9 +132,9 @@ TEST_F(DataCacheTests, GetFreeSlotRemovesOldMetadataRecords) {
     DataCache cache{expected_cache_size, 0};
     CacheMeta* meta3, *meta4, *meta5;
     CacheMeta* meta;
-    cache.GetFreeSlotAndLock(10, &meta1);
-    cache.GetFreeSlotAndLock(10, &meta2);
-    cache.GetFreeSlotAndLock(expected_cache_size - 30, &meta3);
+    cache.GetFreeSlotAndLock(10, &meta1, "b1", "so1", "st1");
+    cache.GetFreeSlotAndLock(10, &meta2, "b2", "so2", "st2");
+    cache.GetFreeSlotAndLock(expected_cache_size - 30, &meta3, "b3", "so3", "st3");
     auto id1 = meta1->id;
     auto id2 = meta2->id;
     auto id3 = meta3->id;
@@ -136,11 +143,11 @@ TEST_F(DataCacheTests, GetFreeSlotRemovesOldMetadataRecords) {
     cache.UnlockSlot(meta2);
     cache.UnlockSlot(meta3);
 
-    cache.GetFreeSlotAndLock(10, &meta4);
+    cache.GetFreeSlotAndLock(10, &meta4, "b4", "so4", "st4");
     auto id4 = meta4->id;
 
     cache.UnlockSlot(meta4);
-    cache.GetFreeSlotAndLock(30, &meta5);
+    cache.GetFreeSlotAndLock(30, &meta5, "b5", "so5", "st5");
     uint8_t* addr1 = (uint8_t*) cache.GetSlotToReadAndLock(id1, 10, &meta);
     uint8_t* addr2 = (uint8_t*) cache.GetSlotToReadAndLock(id2, 10, &meta);
     uint8_t* addr3 = (uint8_t*) cache.GetSlotToReadAndLock(id3, expected_cache_size - 30, &meta);
@@ -151,25 +158,28 @@ TEST_F(DataCacheTests, GetFreeSlotRemovesOldMetadataRecords) {
     ASSERT_THAT(addr3, Eq(nullptr));
     ASSERT_THAT(addr4, Ne(nullptr));
     ASSERT_THAT(meta->size, Eq(10));
+    ASSERT_THAT(meta->beamtime, Eq("b4"));
+    ASSERT_THAT(meta->source, Eq("so4"));
+    ASSERT_THAT(meta->stream, Eq("st4"));
 }
 
 TEST_F(DataCacheTests, GetFreeSlotRemovesOldWhenCrossTheBoundary) {
     DataCache cache{expected_cache_size, 0};
     CacheMeta* meta1, *meta2, *meta3;
     CacheMeta* meta4, *meta5, *meta;
-    auto addr1_alloc = cache.GetFreeSlotAndLock(expected_cache_size / 3 - 1, &meta1);
-    auto addr2_alloc = cache.GetFreeSlotAndLock(expected_cache_size / 3 - 1, &meta2);
-    auto addr3_alloc = cache.GetFreeSlotAndLock(expected_cache_size / 3 - 1, &meta3);
+    auto addr1_alloc = cache.GetFreeSlotAndLock(expected_cache_size / 3 - 1, &meta1, "b", "so", "st");
+    auto addr2_alloc = cache.GetFreeSlotAndLock(expected_cache_size / 3 - 1, &meta2, "b", "so", "st");
+    auto addr3_alloc = cache.GetFreeSlotAndLock(expected_cache_size / 3 - 1, &meta3, "b", "so", "st");
     auto id1 = meta1->id;
     auto id2 = meta2->id;
     auto id3 = meta3->id;
     cache.UnlockSlot(meta1);
     cache.UnlockSlot(meta2);
     cache.UnlockSlot(meta3);
-    auto addr4_alloc = cache.GetFreeSlotAndLock(expected_cache_size / 2 + 5, &meta4);
+    auto addr4_alloc = cache.GetFreeSlotAndLock(expected_cache_size / 2 + 5, &meta4, "b", "so", "st");
     auto id4 = meta4->id;
     cache.UnlockSlot(meta4);
-    auto addr5_alloc = cache.GetFreeSlotAndLock(expected_cache_size / 2 + 5, &meta5);
+    auto addr5_alloc = cache.GetFreeSlotAndLock(expected_cache_size / 2 + 5, &meta5, "b", "so", "st");
     auto id5 = meta5->id;
 
     uint8_t* addr1 = (uint8_t*) cache.GetSlotToReadAndLock(id1, expected_cache_size / 3 - 1, &meta);
@@ -198,17 +208,20 @@ TEST_F(DataCacheTests, GetFreeSlotRemovesOldWhenCrossTheBoundary) {
 
 TEST_F(DataCacheTests, GetSlotToReadSizeOk) {
     CacheMeta* meta;
-    cache.GetFreeSlotAndLock(expected_size, &meta1);
+    cache.GetFreeSlotAndLock(expected_size, &meta1, "b", "so", "st");
 
     uint8_t* addr1 = (uint8_t*) cache.GetSlotToReadAndLock(meta1->id, expected_size, &meta);
 
     ASSERT_THAT(addr1, Ne(nullptr));
     ASSERT_THAT(meta->size, Eq(expected_size));
+    ASSERT_THAT(meta->beamtime, Eq("b"));
+    ASSERT_THAT(meta->source, Eq("so"));
+    ASSERT_THAT(meta->stream, Eq("st"));
 }
 
 TEST_F(DataCacheTests, GetSlotToReadWrongSize) {
     CacheMeta* meta;
-    cache.GetFreeSlotAndLock(expected_size, &meta1);
+    cache.GetFreeSlotAndLock(expected_size, &meta1, "b", "so", "st");
 
     uint8_t* addr1 = (uint8_t*) cache.GetSlotToReadAndLock(meta1->id, expected_size + 1, &meta);
 
@@ -220,9 +233,9 @@ TEST_F(DataCacheTests, GetSlotToReadWrongSize) {
 TEST_F(DataCacheTests, CannotGetFreeSlotIfNeedCleanOnebeingReaded) {
     CacheMeta* meta;
 
-    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(10, &meta1);
+    uint8_t* ini_addr = (uint8_t*) cache.GetFreeSlotAndLock(10, &meta1, "b", "so", "st");
     auto res = cache.GetSlotToReadAndLock(meta1->id, 10, &meta);
-    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(expected_cache_size, &meta2);
+    uint8_t* addr = (uint8_t*) cache.GetFreeSlotAndLock(expected_cache_size, &meta2, "b", "so", "st");
 
     ASSERT_THAT(ini_addr, Ne(nullptr));
     ASSERT_THAT(res, Eq(ini_addr));
@@ -232,36 +245,36 @@ TEST_F(DataCacheTests, CannotGetFreeSlotIfNeedCleanOnebeingReaded) {
 
 TEST_F(DataCacheTests, CanGetFreeSlotIfWasUnlocked) {
     CacheMeta* meta;
-    cache.GetFreeSlotAndLock(10, &meta1);
+    cache.GetFreeSlotAndLock(10, &meta1, "b", "so", "st");
     cache.UnlockSlot(meta1);
     cache.GetSlotToReadAndLock(meta1->id, 10, &meta);
     cache.UnlockSlot(meta);
-    auto addr = cache.GetFreeSlotAndLock(expected_cache_size, &meta2);
+    auto addr = cache.GetFreeSlotAndLock(expected_cache_size, &meta2, "b", "so", "st");
 
     ASSERT_THAT(addr, Ne(nullptr));
 }
 
 TEST_F(DataCacheTests, IncreasLockForEveryRead) {
     CacheMeta* meta;
-    cache.GetFreeSlotAndLock(10, &meta1);
+    cache.GetFreeSlotAndLock(10, &meta1, "b", "so", "st");
     cache.GetSlotToReadAndLock(meta1->id, 10, &meta);
     cache.GetSlotToReadAndLock(meta1->id, 10, &meta);
     cache.UnlockSlot(meta);
-    auto addr = cache.GetFreeSlotAndLock(expected_cache_size, &meta2);
+    auto addr = cache.GetFreeSlotAndLock(expected_cache_size, &meta2, "b", "so", "st");
 
     ASSERT_THAT(addr, Eq(nullptr));
 }
 
 TEST_F(DataCacheTests, DecreasLockForEveryUnlock) {
     CacheMeta* meta;
-    cache.GetFreeSlotAndLock(10, &meta1);
+    cache.GetFreeSlotAndLock(10, &meta1, "b", "so", "st");
     cache.UnlockSlot(meta1);
 
     cache.GetSlotToReadAndLock(meta1->id, 10, &meta);
     cache.GetSlotToReadAndLock(meta1->id, 10, &meta);
     cache.UnlockSlot(meta);
     cache.UnlockSlot(meta);
-    auto addr = cache.GetFreeSlotAndLock(expected_cache_size, &meta2);
+    auto addr = cache.GetFreeSlotAndLock(expected_cache_size, &meta2, "b", "so", "st");
 
     ASSERT_THAT(addr, Ne(nullptr));
 }
@@ -269,13 +282,13 @@ TEST_F(DataCacheTests, DecreasLockForEveryUnlock) {
 
 TEST_F(DataCacheTests, GetFreeSlotCreatesCorrectIds) {
     CacheMeta* meta3, *meta4;
-    cache.GetFreeSlotAndLock(10, &meta1);
+    cache.GetFreeSlotAndLock(10, &meta1, "b", "so", "st");
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    cache.GetFreeSlotAndLock(10, &meta2);
+    cache.GetFreeSlotAndLock(10, &meta2, "b", "so", "st");
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    cache.GetFreeSlotAndLock(10, &meta3);
+    cache.GetFreeSlotAndLock(10, &meta3, "b", "so", "st");
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    cache.GetFreeSlotAndLock(10, &meta4);
+    cache.GetFreeSlotAndLock(10, &meta4, "b", "so", "st");
 
     auto c1 = static_cast<uint32_t>(meta1->id);
     auto c2 = static_cast<uint32_t>(meta2->id);
@@ -299,5 +312,62 @@ TEST_F(DataCacheTests, GetFreeSlotCreatesCorrectIds) {
     ASSERT_THAT(t4, Ne(t1));
 
 }
+
+/*
+TEST_F(DataCacheTests, AllMetaInfosAsVector) {
+    cache.GetFreeSlotAndLock(20, &meta1, "b1", "so1", "st1");
+    cache.GetFreeSlotAndLock(30, &meta1, "b1", "so1", "st2");
+    cache.GetFreeSlotAndLock(40, &meta1, "b1", "so2", "st1");
+    cache.GetFreeSlotAndLock(50, &meta1, "b2", "so2", "st1");
+    cache.GetFreeSlotAndLock(60, &meta1, "b1", "so1", "st1");
+
+    auto metas = cache.AllMetaInfosAsVector();
+
+    EXPECT_THAT(metas.size(), Eq(5));
+
+    ASSERT_THAT(metas.size(), Ge(1));
+    EXPECT_THAT(metas[0]->beamtime, Eq("b1"));
+    EXPECT_THAT(metas[0]->source, Eq("so1"));
+    EXPECT_THAT(metas[0]->stream, Eq("st1"));
+
+    ASSERT_THAT(metas.size(), Ge(2));
+    EXPECT_THAT(metas[1]->beamtime, Eq("b1"));
+    EXPECT_THAT(metas[1]->source, Eq("so1"));
+    EXPECT_THAT(metas[1]->stream, Eq("st2"));
+
+    ASSERT_THAT(metas.size(), Ge(3));
+    EXPECT_THAT(metas[2]->beamtime, Eq("b1"));
+    EXPECT_THAT(metas[2]->source, Eq("so2"));
+    EXPECT_THAT(metas[2]->stream, Eq("st1"));
+
+    ASSERT_THAT(metas.size(), Ge(4));
+    EXPECT_THAT(metas[3]->beamtime, Eq("b2"));
+    EXPECT_THAT(metas[3]->source, Eq("so2"));
+    EXPECT_THAT(metas[3]->stream, Eq("st1"));
+
+    ASSERT_THAT(metas.size(), Ge(5));
+    EXPECT_THAT(metas[4]->beamtime, Eq("b1"));
+    EXPECT_THAT(metas[4]->source, Eq("so1"));
+    EXPECT_THAT(metas[4]->stream, Eq("st1"));
+}
+
+TEST_F(DataCacheTests, AllMetaInfosAsVector_deleted) {
+    cache.GetFreeSlotAndLock(20, &meta1, "b1", "so1", "st1");
+    cache.UnlockSlot(meta1);
+    cache.GetFreeSlotAndLock(30, &meta1, "b1", "so1", "st2");
+    cache.UnlockSlot(meta1);
+    cache.GetFreeSlotAndLock(40, &meta1, "b1", "so2", "st1");
+    cache.UnlockSlot(meta1);
+
+    cache.GetFreeSlotAndLock(expected_cache_size, &meta2, "b3", "so3", "st3");
+
+    auto metas = cache.AllMetaInfosAsVector();
+
+    ASSERT_THAT(metas.size(), Eq(1));
+    EXPECT_THAT(metas[0]->beamtime, Eq("b1"));
+    EXPECT_THAT(metas[0]->source, Eq("so1"));
+    EXPECT_THAT(metas[0]->stream, Eq("st1"));
+}
+ */
 
 }

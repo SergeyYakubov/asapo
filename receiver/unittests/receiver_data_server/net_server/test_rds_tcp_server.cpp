@@ -6,6 +6,8 @@
 #include "asapo/unittests/MockIO.h"
 #include "asapo/io/io_factory.h"
 #include "../../../src/receiver_data_server/net_server/rds_tcp_server.h"
+#include "../../receiver_mocking.h"
+#include "../../monitoring/receiver_monitoring_mocking.h"
 
 using ::testing::Test;
 using ::testing::Gt;
@@ -18,6 +20,7 @@ using ::testing::Return;
 using ::testing::_;
 using ::testing::SetArgPointee;
 using ::testing::NiceMock;
+using ::testing::StrictMock;
 using ::testing::HasSubstr;
 using ::testing::Contains;
 using ::testing::IsEmpty;
@@ -29,28 +32,42 @@ using asapo::MockIO;
 using asapo::MockLogger;
 using asapo::Error;
 using asapo::ListSocketDescriptors;
+using asapo::MockReceiverMonitoringClient;
+
 namespace {
 
 TEST(RdsTCPServer, Constructor) {
     NiceMock<MockLogger> mock_logger;
-    RdsTcpServer tcp_server("", &mock_logger);
+    std::shared_ptr<StrictMock<MockReceiverMonitoringClient>> mock_monitoring{new StrictMock<MockReceiverMonitoringClient>{nullptr}};
+    RdsTcpServer tcp_server("", &mock_logger, mock_monitoring);
     ASSERT_THAT(dynamic_cast<asapo::IO*>(tcp_server.io__.get()), Ne(nullptr));
     ASSERT_THAT(tcp_server.log__, Eq(&mock_logger));
-
+    ASSERT_THAT(tcp_server.Monitoring(), Eq(mock_monitoring));
 }
 
 std::string expected_address = "somehost:123";
 
 class RdsTCPServerTests : public Test {
   public:
-    RdsTcpServer tcp_server {expected_address, &mock_logger};
     NiceMock<MockIO> mock_io;
     NiceMock<asapo::MockLogger> mock_logger;
     asapo::SocketDescriptor expected_master_socket = 1;
     ListSocketDescriptors expected_client_sockets{2, 3, 4};
     std::vector<std::string> expected_new_connections = {"test1", "test2"};
+
+    std::shared_ptr<NiceMock<asapo::MockInstancedStatistics>> mock_instanced_statistics;
+
+    std::shared_ptr<StrictMock<asapo::MockReceiverMonitoringClient>> mock_monitoring;
+
+    std::unique_ptr<RdsTcpServer> tcp_server_ptr;
+
     void SetUp() override {
-        tcp_server.io__ = std::unique_ptr<asapo::IO> {&mock_io};
+        mock_instanced_statistics.reset(new NiceMock<asapo::MockInstancedStatistics>);
+
+        mock_monitoring.reset(new StrictMock<asapo::MockReceiverMonitoringClient>{nullptr});
+        tcp_server_ptr.reset(new RdsTcpServer{expected_address, &mock_logger, mock_monitoring});
+
+        tcp_server_ptr->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         for (auto conn : expected_client_sockets) {
             std::string connected_uri = std::to_string(conn);
             ON_CALL(mock_io, AddressFromSocket_t(conn)).WillByDefault(Return(connected_uri));
@@ -58,7 +75,7 @@ class RdsTCPServerTests : public Test {
 
     }
     void TearDown() override {
-        tcp_server.io__.release();
+        tcp_server_ptr->io__.release();
     }
     void ExpectTcpBind(bool ok);
     void WaitSockets(bool ok, ListSocketDescriptors clients = {});
@@ -97,13 +114,13 @@ void RdsTCPServerTests::WaitSockets(bool ok, ListSocketDescriptors clients) {
 
 void RdsTCPServerTests::InitMasterServer() {
     ExpectTcpBind(true);
-    ASSERT_THAT(tcp_server.Initialize(), Eq(nullptr));
+    ASSERT_THAT(tcp_server_ptr->Initialize(), Eq(nullptr));
 }
 
 TEST_F(RdsTCPServerTests, Initialize_Error) {
     ExpectTcpBind(false);
 
-    Error err = tcp_server.Initialize();
+    Error err = tcp_server_ptr->Initialize();
 
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -112,10 +129,10 @@ TEST_F(RdsTCPServerTests, Initialize_ErrorDoubleInitialize) {
     Error err;
 
     ExpectTcpBind(true);
-    err = tcp_server.Initialize();
+    err = tcp_server_ptr->Initialize();
     ASSERT_THAT(err, Eq(nullptr));
 
-    err = tcp_server.Initialize();
+    err = tcp_server_ptr->Initialize();
     ASSERT_THAT(err, Ne(nullptr));
 }
 
@@ -173,7 +190,7 @@ TEST_F(RdsTCPServerTests, GetNewRequestsWaitsSocketActivitiesError) {
     InitMasterServer();
     WaitSockets(false);
 
-    auto requests = tcp_server.GetNewRequests(&err);
+    auto requests = tcp_server_ptr->GetNewRequests(&err);
 
     ASSERT_THAT(err, Ne(nullptr));
     ASSERT_THAT(requests, IsEmpty());
@@ -185,7 +202,7 @@ TEST_F(RdsTCPServerTests, GetNewRequestsWaitsSocketReceiveFailure) {
     WaitSockets(true);
     MockReceiveRequest(false);
 
-    auto requests = tcp_server.GetNewRequests(&err);
+    auto requests = tcp_server_ptr->GetNewRequests(&err);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(requests, IsEmpty());
@@ -193,7 +210,7 @@ TEST_F(RdsTCPServerTests, GetNewRequestsWaitsSocketReceiveFailure) {
     Mock::VerifyAndClearExpectations(&mock_io);
 
     WaitSockets(false, expected_client_sockets);
-    tcp_server.GetNewRequests(&err);
+    tcp_server_ptr->GetNewRequests(&err);
 
 }
 
@@ -203,7 +220,7 @@ TEST_F(RdsTCPServerTests, GetNewRequestsReadEof) {
     WaitSockets(true);
     ExpectReceiveRequestEof();
 
-    auto requests = tcp_server.GetNewRequests(&err);
+    auto requests = tcp_server_ptr->GetNewRequests(&err);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(requests, IsEmpty());
@@ -212,7 +229,7 @@ TEST_F(RdsTCPServerTests, GetNewRequestsReadEof) {
 
     WaitSockets(false, {});
 
-    tcp_server.GetNewRequests(&err);
+    tcp_server_ptr->GetNewRequests(&err);
 
 }
 
@@ -222,7 +239,7 @@ TEST_F(RdsTCPServerTests, GetNewRequestsReadOk) {
     WaitSockets(true);
     ExpectReceiveOk();
 
-    auto requests = tcp_server.GetNewRequests(&err);
+    auto requests = tcp_server_ptr->GetNewRequests(&err);
 
     ASSERT_THAT(err, Eq(nullptr));
     ASSERT_THAT(requests.size(), Eq(3));
@@ -240,7 +257,7 @@ TEST_F(RdsTCPServerTests, GetNewRequestsReadOk) {
 
 TEST_F(RdsTCPServerTests, SendResponse) {
     asapo::GenericNetworkResponse tmp {};
-    asapo::ReceiverDataServerRequest expectedRequest {{}, 30};
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, mock_instanced_statistics};
 
     EXPECT_CALL(mock_io, Send_t(30, &tmp, sizeof(asapo::GenericNetworkResponse), _))
     .WillOnce(
@@ -251,7 +268,7 @@ TEST_F(RdsTCPServerTests, SendResponse) {
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
 
-    auto err = tcp_server.SendResponse(&expectedRequest, &tmp);
+    auto err = tcp_server_ptr->SendResponse(&expectedRequest, &tmp);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -260,7 +277,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendResponseError) {
     asapo::GenericNetworkResponse tmp {};
 
 
-    asapo::ReceiverDataServerRequest expectedRequest {{}, 30};
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, mock_instanced_statistics};
     asapo::CacheMeta expectedMeta {};
     expectedMeta.id = 20;
     expectedMeta.addr = (void*)0x9234;
@@ -274,7 +291,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendResponseError) {
               ));
     EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
 
-    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
+    auto err = tcp_server_ptr->SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -282,7 +299,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendResponseError) {
 TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendError) {
     asapo::GenericNetworkResponse tmp {};
 
-    asapo::ReceiverDataServerRequest expectedRequest {{}, 30};
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, mock_instanced_statistics};
     asapo::CacheMeta expectedMeta {};
     expectedMeta.id = 20;
     expectedMeta.addr = (void*)0x9234;
@@ -300,7 +317,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendError) {
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
 
-    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
+    auto err = tcp_server_ptr->SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
 
     ASSERT_THAT(err, Ne(nullptr));
 }
@@ -308,7 +325,7 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendError) {
 TEST_F(RdsTCPServerTests, SendResponseAndSlotData_Ok) {
     asapo::GenericNetworkResponse tmp {};
 
-    asapo::ReceiverDataServerRequest expectedRequest {{}, 30};
+    asapo::ReceiverDataServerRequest expectedRequest {{}, 30, mock_instanced_statistics};
     asapo::CacheMeta expectedMeta {};
     expectedMeta.id = 20;
     expectedMeta.addr = (void*)0x9234;
@@ -320,14 +337,14 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_Ok) {
     EXPECT_CALL(mock_io, Send_t(30, expectedMeta.addr, expectedMeta.size, _))
     .WillOnce(Return(expectedMeta.size));
 
-    auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
+    auto err = tcp_server_ptr->SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
 
     ASSERT_THAT(err, Eq(nullptr));
 }
 
 TEST_F(RdsTCPServerTests, HandleAfterError) {
     EXPECT_CALL(mock_io, CloseSocket_t(expected_client_sockets[0], _));
-    tcp_server.HandleAfterError(static_cast<uint64_t>(expected_client_sockets[0]));
+    tcp_server_ptr->HandleAfterError(static_cast<uint64_t>(expected_client_sockets[0]));
 }
 
 }

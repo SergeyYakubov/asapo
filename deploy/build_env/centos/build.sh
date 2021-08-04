@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
-cd /asapo/build
+set -e
+
+cd /asapo
+rm -rf build || true
+mkdir build
+cd build
+
 cmake \
     -DCMAKE_BUILD_TYPE="Release" \
     -DENABLE_LIBFABRIC=ON \

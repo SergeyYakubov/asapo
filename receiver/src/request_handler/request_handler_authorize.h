@@ -20,6 +20,8 @@ class RequestHandlerAuthorize final: public ReceiverRequestHandler {
     const AbstractLogger* log__;
     std::unique_ptr<HttpClient>http_client__;
   private:
+    mutable std::string producer_instance_id_;
+    mutable std::string pipeline_step_id_;
     mutable std::string beamtime_id_;
     mutable std::string data_source_;
     mutable std::string beamline_;

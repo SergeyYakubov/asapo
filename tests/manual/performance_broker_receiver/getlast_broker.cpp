@@ -62,6 +62,7 @@ std::vector<std::thread> StartThreads(const Args& params,
         Error err;
         auto consumer = asapo::ConsumerFactory::CreateConsumer(params.server, params.file_path, true,
                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                 "auto", "auto",
                                                  params.beamtime_id, "", "",
                                                  params.token}, &err);
         consumer->SetTimeout((uint64_t) params.timeout_ms);

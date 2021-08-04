@@ -5,7 +5,9 @@
 
 namespace asapo {
 
+// TODO: Why fabric error?
 using RdsResponseError = ServiceError<NetworkErrorCode, ErrorType::kFabricError>;
+// TODO: Why fabric error?
 using RdsResponseErrorTemplate = ServiceErrorTemplate<NetworkErrorCode, ErrorType::kFabricError>;
 
 namespace RdsResponseErrorTemplates {

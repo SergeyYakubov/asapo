@@ -6,6 +6,8 @@ import (
 )
 
 type  beamtimeMeta struct {
+	InstanceId string  `json:"instanceId"`
+	PipelineStep string     `json:"pipelineStep"`
 	BeamtimeId string  `json:"beamtimeId"`
 	Beamline string     `json:"beamline"`
 	DataSource string       `json:"dataSource"`

@@ -11,6 +11,7 @@
 #include "asapo/request/request_pool_error.h"
 #include "asapo/http_client/http_client.h"
 #include "asapo/common/internal/version.h"
+#include <asapo/io/io_factory.h>
 
 namespace asapo {
 
@@ -18,7 +19,7 @@ const size_t ProducerImpl::kDiscoveryServiceUpdateFrequencyMs = 10000; // 10s
 
 ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, uint64_t timeout_ms,
                            asapo::RequestHandlerType type) :
-    log__{GetDefaultProducerLogger()}, httpclient__{DefaultHttpClient()}, timeout_ms_{timeout_ms}, endpoint_{endpoint} {
+                           log__{GetDefaultProducerLogger()}, io__{GenerateDefaultIO()}, httpclient__{DefaultHttpClient()}, timeout_ms_{timeout_ms}, endpoint_{endpoint} {
     switch (type) {
     case RequestHandlerType::kTcp:
         discovery_service_.reset(new ReceiverDiscoveryService{endpoint,
@@ -255,6 +256,13 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
         log__->Error("credentials already set");
         return ProducerErrorTemplates::kWrongInput.Generate("credentials already set");
     }
+    if (source_cred.instance_id.empty()) {
+        source_cred.instance_id = SourceCredentials::kDefaultInstanceId;
+    }
+
+    if (source_cred.pipeline_step.empty()) {
+        source_cred.pipeline_step = SourceCredentials::kDefaultPipelineStep;
+    }
 
     if (source_cred.data_source.empty()) {
         source_cred.data_source = SourceCredentials::kDefaultDataSource;
@@ -273,6 +281,21 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
         log__->Error("beamtime or beamline should be set");
         source_cred_string_ = "";
         return ProducerErrorTemplates::kWrongInput.Generate("beamtime or beamline should be set");
+    }
+
+    if (source_cred.instance_id == SourceCredentials::kDefaultInstanceId) {
+        Error err;
+        std::string hostname = io__->GetHostName(&err);
+
+        if (err) {
+            hostname = "hostnameerror";
+        }
+
+        source_cred.instance_id = hostname + "_" + std::to_string(io__->GetCurrentPid());
+    }
+
+    if (source_cred.pipeline_step == SourceCredentials::kDefaultPipelineStep) {
+        source_cred.pipeline_step = "DefaultStep";
     }
 
     source_cred_string_ = source_cred.GetString();

@@ -12,6 +12,14 @@ func getTimefromDate(date string) time.Time{
 
 func GetSupportedConsumerProtocols() []Protocol {
 	return []Protocol{
+		Protocol{"v0.5",
+			map[string]string{
+				"Discovery": "v0.1",
+				"Authorizer": "v0.3",
+				"Broker": "v0.5",
+				"File Transfer": "v0.3",
+				"Data cache service": "v0.2",
+			}, &protocolValidatorCurrent{}},
 		Protocol{"v0.4",
 			map[string]string{
 				"Discovery": "v0.1",

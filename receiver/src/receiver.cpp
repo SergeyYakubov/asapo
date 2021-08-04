@@ -1,5 +1,6 @@
 #include <cstring>
 #include <iostream>
+#include <utility>
 #include "receiver.h"
 #include "receiver_error.h"
 #include "connection.h"
@@ -9,10 +10,13 @@
 
 namespace asapo {
 
-
 const int Receiver::kMaxUnacceptedConnectionsBacklog = 5;
 
-Receiver::Receiver(SharedCache cache): cache_{cache}, io__{GenerateDefaultIO()}, log__{GetDefaultReceiverLogger()} {
+Receiver::Receiver(SharedCache cache, asapo::SharedReceiverMonitoringClient monitoring):
+    cache_{std::move(cache)},
+    monitoring_{std::move(monitoring)},
+    io__{GenerateDefaultIO()},
+    log__{GetDefaultReceiverLogger()} {
 
 }
 
@@ -57,7 +61,7 @@ void Receiver::StartNewConnectionInSeparateThread(int connection_socket_fd, cons
     log__->Info("new connection from " + address);
     auto thread = io__->NewThread("ConFd:" + std::to_string(connection_socket_fd),
     [connection_socket_fd, address, this] {
-        auto connection = std::unique_ptr<Connection>(new Connection(connection_socket_fd, address, cache_, GetReceiverConfig()->tag));
+        auto connection = std::unique_ptr<Connection>(new Connection(connection_socket_fd, address, monitoring_, cache_, GetReceiverConfig()->tag));
         connection->Listen();
     });
 

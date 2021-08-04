@@ -7,10 +7,15 @@ set(RECEIVER_CORE_FILES
         src/request.cpp
         src/receiver_config.cpp
         src/receiver_logger.cpp
+
+        src/monitoring/receiver_monitoring_client.cpp
+
         src/statistics/receiver_statistics.cpp
         src/statistics/statistics.cpp
         src/statistics/statistics_sender_influx_db.cpp
         src/statistics/statistics_sender_fluentd.cpp
+        src/statistics/instanced_statistics_provider.cpp
+
         src/request_handler/requests_dispatcher.cpp
         src/request_handler/request_handler_file_process.cpp
         src/request_handler/request_handler_db_write.cpp
@@ -25,6 +30,7 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_handler_db_get_meta.cpp
         src/request_handler/request_factory.cpp
         src/request_handler/request_handler_db.cpp
+        src/request_handler/request_handler_monitoring.cpp
         src/file_processors/write_file_processor.cpp
         src/file_processors/file_processor.cpp
         src/file_processors/receive_file_processor.cpp
@@ -47,6 +53,49 @@ set(SOURCE_FILES
         ${RDS_FILES}
         )
 
+################################
+# Protobuf
+################################
+
+include(../CMakeIncludes/grpc_common.cmake)
+
+get_filename_component(proto_in_dir "../common/networking/monitoring" ABSOLUTE)
+set(proto_file_common ${proto_in_dir}/AsapoMonitoringCommonService.proto)
+set(proto_file_ingest ${proto_in_dir}/AsapoMonitoringIngestService.proto)
+
+set(proto_out_dir ${CMAKE_CURRENT_BINARY_DIR})
+set(proto_ingest_c "${proto_out_dir}/AsapoMonitoringIngestService.pb.cc")
+set(proto_ingest_h "${proto_out_dir}/AsapoMonitoringIngestService.pb.h")
+set(proto_common_c "${proto_out_dir}/AsapoMonitoringCommonService.pb.cc")
+set(proto_common_h "${proto_out_dir}/AsapoMonitoringCommonService.pb.h")
+set(grpc_c "${proto_out_dir}/AsapoMonitoringIngestService.grpc.pb.cc")
+set(grpc_h "${proto_out_dir}/AsapoMonitoringIngestService.grpc.pb.h")
+
+add_custom_command(
+        OUTPUT "${proto_ingest_c}" "${proto_ingest_h}" "${proto_common_c}" "${proto_common_h}" "${grpc_c}" "${grpc_h}"
+        COMMAND ${_PROTOBUF_PROTOC}
+        ARGS --grpc_out "${proto_out_dir}"
+        --cpp_out "${proto_out_dir}"
+        -I "${proto_in_dir}"
+        --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
+        "${proto_file_common}" "${proto_file_ingest}"
+        DEPENDS "${proto_file_common}" "${proto_file_ingest}")
+
+add_library(grpc_ingest_service_proto
+        ${proto_ingest_c}
+        ${proto_ingest_h}
+        ${proto_common_c}
+        ${proto_common_h}
+        ${grpc_c}
+        ${grpc_h})
+target_link_libraries(grpc_ingest_service_proto
+        ${_REFLECTION}
+        ${_GRPC_GRPCPP}
+        ${_PROTOBUF_LIBPROTOBUF})
+find_package(gRPC CONFIG REQUIRED)
+
+# Include generated *.pb.h files
+include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 ################################
 # Library
@@ -62,6 +111,7 @@ target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR}
 target_include_directories(${TARGET_NAME} SYSTEM PUBLIC  ${LIBFABRIC_INCLUDE_DIR})
 target_link_libraries(${TARGET_NAME} CURL::libcurl ${CMAKE_THREAD_LIBS_INIT} database
         asapo-fabric ${ASAPO_COMMON_FABRIC_LIBRARIES})
+target_link_libraries(${TARGET_NAME} grpc_ingest_service_proto ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
 
 
 add_executable(${TARGET_NAME}-bin src/main.cpp)
@@ -89,6 +139,7 @@ set(TEST_SOURCE_FILES
         unittests/statistics/test_receiver_statistics.cpp
         unittests/test_config.cpp
         unittests/test_request.cpp
+
         unittests/request_handler/test_request_factory.cpp
         unittests/request_handler/test_request_handler_file_process.cpp
         unittests/request_handler/test_request_handler_db_writer.cpp
@@ -102,8 +153,14 @@ set(TEST_SOURCE_FILES
         unittests/request_handler/test_request_handler_receive_metadata.cpp
         unittests/request_handler/test_request_handler_delete_stream.cpp
         unittests/request_handler/test_request_handler_db_get_meta.cpp
+        unittests/request_handler/test_request_handler_monitoring.cpp
+
         unittests/statistics/test_statistics_sender_influx_db.cpp
         unittests/statistics/test_statistics_sender_fluentd.cpp
+
+        unittests/monitoring/test_monitoring_client.cpp
+        unittests/monitoring/test_monitoring_client_to_be_send_data.cpp
+
         unittests/mock_receiver_config.cpp
         unittests/request_handler/test_requests_dispatcher.cpp
         unittests/test_datacache.cpp

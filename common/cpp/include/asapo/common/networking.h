@@ -93,8 +93,6 @@ struct GenericRequestHeader {
     };
 };
 
-
-
 struct GenericNetworkResponse {
     Opcode              op_code;
     NetworkErrorCode    error_code;

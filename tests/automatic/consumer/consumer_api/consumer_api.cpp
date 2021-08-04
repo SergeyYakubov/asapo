@@ -320,7 +320,7 @@ void TestAll(const Args& args) {
                     ".",
                     true,
                     asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                             args.run_name, "", "", args.token},
+                                             "auto", "auto", args.run_name, "", "", args.token},
                     &err);
     if (err) {
         std::cout << "Error CreateConsumer: " << err << std::endl;

@@ -23,7 +23,7 @@ class MockNetServer : public RdsNetServer {
         err->reset(error);
         GenericRequests res;
         for (const auto& preq : reqs) {
-            ReceiverDataServerRequestPtr ptr = ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{preq.header, preq.source_id}};
+            ReceiverDataServerRequestPtr ptr = ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{preq.header, preq.source_id, SharedInstancedStatistics{ new InstancedStatistics } }};
             res.push_back(std::move(ptr));
         }
         return  res;
@@ -52,6 +52,8 @@ class MockNetServer : public RdsNetServer {
     }
 
     MOCK_METHOD1(HandleAfterError_t, void (uint64_t source_id));
+
+    MOCK_METHOD0(Monitoring, SharedReceiverMonitoringClient());
 };
 
 class MockPool : public RequestPool {

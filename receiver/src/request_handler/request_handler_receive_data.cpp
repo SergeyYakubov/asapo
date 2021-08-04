@@ -20,7 +20,8 @@ Error RequestHandlerReceiveData::ProcessRequest(Request* request) const {
     if (err) {
         return err;
     }
-    io__->Receive(request->GetSocket(), request->GetData(), (size_t) request->GetDataSize(), &err);
+    uint64_t byteCount = io__->Receive(request->GetSocket(), request->GetData(), (size_t) request->GetDataSize(), &err);
+    request->GetInstancedStatistics()->AddIncomingBytes(byteCount);
     request->UnlockDataBufferIfNeeded();
     return err;
 }
@@ -30,7 +31,7 @@ RequestHandlerReceiveData::RequestHandlerReceiveData() : io__{GenerateDefaultIO(
 }
 
 StatisticEntity RequestHandlerReceiveData::GetStatisticEntity() const {
-    return StatisticEntity::kNetwork;
+    return StatisticEntity::kNetworkIncoming;
 }
 
 

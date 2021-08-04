@@ -9,6 +9,7 @@
 #include "connection.h"
 #include "receiver_logger.h"
 #include "data_cache.h"
+#include "monitoring/receiver_monitoring_client.h"
 
 namespace asapo {
 
@@ -20,11 +21,12 @@ class Receiver {
     void ProcessConnections(Error* err);
     std::vector<std::unique_ptr<std::thread>> threads_;
     SharedCache cache_;
+    SharedReceiverMonitoringClient monitoring_;
   public:
     static const int kMaxUnacceptedConnectionsBacklog;//TODO: Read from config
     Receiver(const Receiver&) = delete;
     Receiver& operator=(const Receiver&) = delete;
-    Receiver(SharedCache cache);
+    Receiver(SharedCache cache, asapo::SharedReceiverMonitoringClient monitoring);
 
     void Listen(std::string listener_address, Error* err, bool exit_after_first_connection = false);
     std::unique_ptr<IO> io__;

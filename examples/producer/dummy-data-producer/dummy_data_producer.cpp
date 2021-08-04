@@ -33,7 +33,7 @@ void PrintCommandArguments(const Args& args) {
               << "beamtime_id: " << args.beamtime_id << std::endl
               << "Package size: " << args.number_of_bytes / 1000 << "k" << std::endl
               << "iterations: " << args.iterations << std::endl
-              << "nthreads: " << args.nthreads << std::endl
+              << "nthreads: " << (int)args.nthreads << std::endl
               << "mode: " << args.mode << std::endl
               << "Write files: " << ((args.mode % 100) / 10 == 1) << std::endl
               << "Tcp mode: " << ((args.mode % 10) == 0 ) << std::endl
@@ -197,7 +197,8 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.discovery_service_endpoint, args.nthreads,
                                             args.mode % 10 == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem,
-                                            asapo::SourceCredentials{args.mode / 100 == 0 ? asapo::SourceType::kProcessed : asapo::SourceType::kRaw, args.beamtime_id, "", args.data_source, args.token },
+                                            asapo::SourceCredentials{args.mode / 100 == 0 ? asapo::SourceType::kProcessed : asapo::SourceType::kRaw,
+                                                                     "auto", "auto", args.beamtime_id, "", args.data_source, args.token },
                                             3600000, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;

@@ -104,6 +104,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
                         params.file_path,
                         true,
                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
+                                                 "auto", "auto",
                                                  params.beamtime_id, "",
                                                  params.data_source, params.token},
                         &err);

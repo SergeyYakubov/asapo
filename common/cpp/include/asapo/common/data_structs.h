@@ -33,6 +33,7 @@ class MessageMeta {
     std::string source;
     std::string metadata;
     uint64_t buf_id{0};
+    std::string stream;
     uint64_t dataset_substream{0};
     std::string Json() const;
     bool SetFromJson(const std::string& json_string);
@@ -85,27 +86,35 @@ std::string GetStringFromSourceType(SourceType type);
 
 struct SourceCredentials {
     SourceCredentials(SourceType type,
-                      std::string beamtime,
+                      std::string instanceId,
+                      std::string pipelineStep,
+                      std::string beamtimeId,
                       std::string beamline,
                       std::string data_source,
                       std::string token) :
-        beamtime_id{std::move(beamtime)},
+        instance_id{std::move(instanceId)},
+        pipeline_step{std::move(pipelineStep)},
+        beamtime_id{std::move(beamtimeId)},
         beamline{std::move(beamline)},
         data_source{std::move(data_source)},
         user_token{std::move(token)},
         type{type} {};
     SourceCredentials() {};
+    static const std::string kDefaultInstanceId;
+    static const std::string kDefaultPipelineStep;
     static const std::string kDefaultDataSource;
     static const std::string kDefaultBeamline;
     static const std::string kDefaultBeamtimeId;
+    std::string instance_id;
+    std::string pipeline_step;
     std::string beamtime_id;
     std::string beamline;
     std::string data_source;
     std::string user_token;
     SourceType type = SourceType::kProcessed;
     std::string GetString() {
-        return (type == SourceType::kRaw ? std::string("raw") : std::string("processed")) + "%" + beamtime_id + "%"
-               + beamline + "%" + data_source + "%" + user_token;
+        return (type == SourceType::kRaw ? std::string("raw") : std::string("processed")) + "%" + instance_id
+        + "%" + pipeline_step + "%" + beamtime_id + "%" + beamline + "%" + data_source + "%" + user_token;
     };
 };
 

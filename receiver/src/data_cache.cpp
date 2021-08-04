@@ -1,9 +1,10 @@
 #include "data_cache.h"
-#include "data_cache.h"
 
 #include <iostream>
 #include <chrono>
 #include <algorithm>
+#include <cstdint>
+#include <utility>
 
 
 namespace asapo {
@@ -37,7 +38,8 @@ void* DataCache::AllocateSlot(uint64_t size) {
     return addr;
 }
 
-void* DataCache::GetFreeSlotAndLock(uint64_t size, CacheMeta** meta) {
+void* DataCache::GetFreeSlotAndLock(uint64_t size, CacheMeta** meta,
+                                    std::string beamtime, std::string source, std::string stream) {
     std::lock_guard<std::mutex> lock{mutex_};
     *meta = nullptr;
     if (!CheckAllocationSize(size)) {
@@ -51,7 +53,7 @@ void* DataCache::GetFreeSlotAndLock(uint64_t size, CacheMeta** meta) {
 
     auto id = GetNextId();
 
-    *meta = new CacheMeta{id, addr, size, 1};
+    *meta = new CacheMeta{id, addr, size, 1, std::move(beamtime), std::move(source), std::move(stream)};
     meta_.emplace_back(std::unique_ptr<CacheMeta> {*meta});
 
     return addr;
@@ -133,6 +135,28 @@ bool DataCache::UnlockSlot(CacheMeta* meta) {
     std::lock_guard<std::mutex> lock{mutex_};
     meta->lock = std::max(0, meta->lock - 1);
     return true;
+}
+
+std::vector<std::shared_ptr<const CacheMeta>> DataCache::AllMetaInfosAsVector() {
+    // This function is used in case of a complete scan of the metadata info, but not blocking
+
+    std::vector<std::shared_ptr<const CacheMeta>> result;
+    result.reserve(meta_.size());
+
+    { // Lock - block
+        std::lock_guard<std::mutex> lock{mutex_};
+
+        for (const auto& element : meta_) {
+            result.emplace_back(element);
+        }
+    }
+
+    // return will not copy the list: https://stackoverflow.com/a/53520381/
+    return result;
+}
+
+uint64_t DataCache::GetCacheSize() const {
+    return cache_size_;
 }
 
 }

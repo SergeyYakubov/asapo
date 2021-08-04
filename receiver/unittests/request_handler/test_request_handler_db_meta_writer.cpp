@@ -76,7 +76,7 @@ class DbMetaWriterHandlerTests : public Test {
         request_header.data_id = 0;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
-        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
+        mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr, nullptr});
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
     }
     void TearDown() override {

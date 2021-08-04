@@ -10,6 +10,9 @@
 #ifdef _WIN32
 typedef long suseconds_t;
 typedef short sa_family_t;
+
+#include <process.h>
+
 #endif
 
 #if defined(__linux__) || defined (__APPLE__)
@@ -227,6 +230,10 @@ std::unique_ptr<std::thread> SystemIO::NewThread(const std::string& name, std::f
     auto thread = std::unique_ptr<std::thread>(new std::thread(function, index));
     SetThreadName(thread.get(), name + ":" + std::to_string(index));
     return thread;
+}
+
+int32_t SystemIO::GetCurrentPid() const {
+    return getpid();
 }
 
 void SystemIO::Skip(SocketDescriptor socket_fd, size_t length, Error* err) const {

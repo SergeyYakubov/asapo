@@ -5,5 +5,6 @@ var  (
 	NameFtsService = "asapo-file-transfer"
 	NameBrokerService = "asapo-broker"
 	NameReceiverService = "asapo-receiver"
+	NameMonitoringServer = "asapo-monitoring"
 )
 

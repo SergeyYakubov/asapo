@@ -1,17 +1,25 @@
 package request_handler
 
 import (
+	"asapo_discovery/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"asapo_discovery/common"
 )
 
 
 var uris = []string{"ip1","ip2"}
 const max_conn = 1
 
-var static_settings common.Settings= common.Settings{Receiver:common.ReceiverInfo{MaxConnections:max_conn,StaticEndpoints:uris},Broker:common.BrokerInfo{
-	StaticEndpoint:"ip_broker"}, Mongo:common.MongoInfo{StaticEndpoint:"ip_mongo"}, FileTransferService:common.FtsInfo{StaticEndpoint:"ip_fts"}}
+var static_settings common.Settings = common.Settings{
+	Receiver: common.ReceiverInfo {
+		MaxConnections: max_conn,
+		StaticEndpoints:uris,
+	},
+	Broker: common.BrokerInfo { StaticEndpoint:"ip_broker" },
+	Monitoring: common.MonitoringInfo { StaticEndpoint:"ip_monitoring" },
+	Mongo: common.MongoInfo {StaticEndpoint:"ip_mongo"},
+	FileTransferService: common.FtsInfo {StaticEndpoint:"ip_fts"},
+}
 
 
 
@@ -26,6 +34,13 @@ func TestStaticHandlerGetReceviersOK(t *testing.T) {
 	rh.Init(static_settings)
 	res,err := rh.GetReceivers(false)
 	assert.Equal(t,string(res), "{\"MaxConnections\":1,\"Uris\":[\"ip1\",\"ip2\"]}")
+	assert.Nil(t, err)
+}
+
+func TestStaticHandlerGetMonitoringServersOK(t *testing.T) {
+	rh.Init(static_settings)
+	res,err := rh.GetSingleService(common.NameMonitoringServer)
+	assert.Equal(t,string(res), "ip_monitoring")
 	assert.Nil(t, err)
 }
 

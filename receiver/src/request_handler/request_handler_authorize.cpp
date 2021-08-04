@@ -57,6 +57,8 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     std::vector<std::string> access_types;
 
     JsonStringParser parser{response};
+    (err = parser.GetString("instanceId", &producer_instance_id_)) ||
+    (err = parser.GetString("pipelineStep", &pipeline_step_id_)) ||
     (err = parser.GetString("beamtimeId", &beamtime_id_)) ||
     (err = parser.GetString("dataSource", &data_source_)) ||
     (err = parser.GetString("corePath", &offline_path_)) ||
@@ -77,9 +79,8 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
         return err;
     }
 
-    log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() + "source type: " + stype +
-                 " beamline: " +
-                 beamline_ + ", beamtime id: " + beamtime_id_ + ", data soucre: " + data_source_);
+    log__->Debug(std::string("authorized connection from ") + request->GetOriginUri() + " source type: " + stype +
+                 "instance:" + producer_instance_id_ + " step: " + pipeline_step_id_ + " beamline: " + beamline_ + ", beamtime id: " + beamtime_id_ + ", data soucre: " + data_source_);
 
     last_updated_ = system_clock::now();
     cached_source_credentials_ = source_credentials;
@@ -144,6 +145,9 @@ Error RequestHandlerAuthorize::ProcessOtherRequest(Request* request) const {
             return err;
         }
     }
+
+    request->SetProducerInstanceId(producer_instance_id_);
+    request->SetPipelineStepId(pipeline_step_id_);
     request->SetBeamtimeId(beamtime_id_);
     request->SetBeamline(beamline_);
     request->SetDataSource(data_source_);
@@ -167,7 +171,7 @@ RequestHandlerAuthorize::RequestHandlerAuthorize(): log__{GetDefaultReceiverLogg
 }
 
 StatisticEntity RequestHandlerAuthorize::GetStatisticEntity() const {
-    return StatisticEntity::kNetwork;
+    return StatisticEntity::kNetworkIncoming;
 }
 
 }

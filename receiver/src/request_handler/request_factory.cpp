@@ -1,5 +1,7 @@
 #include "request_factory.h"
 
+#include <utility>
+
 #include "../receiver_config.h"
 
 namespace asapo {
@@ -62,6 +64,7 @@ Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request>& request,
         if (NeedDbHandler(request_header)) {
             request->AddHandler(&request_handler_dbwrite_);
         }
+        request->AddHandler(&request_handler_monitoring_);
         break;
     }
     case Opcode::kOpcodeTransferMetaData: {
@@ -105,9 +108,9 @@ Error RequestFactory::AddHandlersToRequest(std::unique_ptr<Request>& request,
 
 std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHeader&
         request_header, SocketDescriptor socket_fd, std::string origin_uri,
-        Error* err) const noexcept {
+                                                         const SharedInstancedStatistics& statistics, Error* err) const noexcept {
     auto request = std::unique_ptr<Request> {new Request{request_header, socket_fd, std::move(origin_uri), cache_.get(),
-                &request_handler_db_check_}
+                                                         &request_handler_db_check_, statistics}
     };
     *err = AddHandlersToRequest(request, request_header);
     if (*err) {
@@ -116,7 +119,7 @@ std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHea
     return request;
 }
 
-RequestFactory::RequestFactory(SharedCache cache) : cache_{cache} {
+RequestFactory::RequestFactory(SharedReceiverMonitoringClient monitoring, SharedCache cache) : monitoring_{std::move(monitoring)}, cache_{std::move(cache)} {
 
 }
 

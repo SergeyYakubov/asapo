@@ -7,6 +7,7 @@ namespace asapo {
 
 
 AbstractLogger* GetDefaultReceiverLogger();
+AbstractLogger* GetDefaultReceiverMonitoringLogger();
 
 }
 

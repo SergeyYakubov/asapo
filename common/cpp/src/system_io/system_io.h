@@ -97,6 +97,7 @@ class SystemIO final : public IO {
     std::unique_ptr<std::thread> NewThread(const std::string& name,
                                            std::function<void(uint64_t index)> function, uint64_t index) const override;
 
+    int32_t GetCurrentPid() const override;
 
     // this is not standard function - to be implemented differently in windows and linux
     std::vector<MessageMeta>   FilesInFolder(const std::string& folder, Error* err) const override;
