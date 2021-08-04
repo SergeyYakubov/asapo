@@ -2,7 +2,7 @@
 
 #include "../receiver_data_server_error.h"
 #include "asapo/common/internal/version.h"
-#include <regex>
+#include <sstream>
 
 namespace asapo {
 
@@ -148,14 +148,25 @@ void ReceiverDataServerRequestHandler::HandleValidRequest(const ReceiverDataServ
     }
 }
 
+// https://stackoverflow.com/a/46931770/
+std::vector<std::string> split(const std::string& s, const std::string& delimiter) {
+    size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+    std::string token;
+    std::vector<std::string> res;
+
+    while ((pos_end = s.find (delimiter, pos_start)) != std::string::npos) {
+        token = s.substr (pos_start, pos_end - pos_start);
+        pos_start = pos_end + delim_len;
+        res.push_back (token);
+    }
+
+    res.push_back (s.substr (pos_start));
+    return res;
+}
 std::unique_ptr<RequestSenderDetails> ReceiverDataServerRequestHandler::ExtractMonitoringInfoFromRequest(const GenericRequest* request) {
     std::string details(request->header.stream);
 
-    std::regex token("§");
-    std::vector<std::string> detailsParts {
-        std::sregex_token_iterator(details.begin(), details.end(), token, -1),
-        std::sregex_token_iterator()
-    };
+    std::vector<std::string> detailsParts = split(details, "§");
 
     if (detailsParts.size() != 5) {
         return nullptr;
