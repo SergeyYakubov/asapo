@@ -18,7 +18,7 @@ job "asapo-services" {
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
-        image = "yakser/asapo-authorizer${image_suffix}"
+        image = "${docker_repository}/asapo-authorizer${image_suffix}"
 	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/authorizer/config.json",
                            "${offline_dir}:${offline_dir}",
@@ -95,7 +95,7 @@ job "asapo-services" {
         network_mode = "host"
 	    security_opt = ["no-new-privileges"]
 	    userns_mode = "host"
-        image = "yakser/asapo-discovery${image_suffix}"
+        image = "${docker_repository}/asapo-discovery${image_suffix}"
 	    force_pull = ${force_pull_images}
         volumes = ["local/config.json:/var/lib/discovery/config.json"]
         %{ if ! nomad_logs  }

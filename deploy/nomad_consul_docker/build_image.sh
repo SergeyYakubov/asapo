@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
-docker build -t yakser/asapo-nomad-cluster .
-docker push yakser/asapo-nomad-cluster
 
+set -e
+
+. ../_docker_vars.sh
+
+docker build -t $ASAPO_DOCKER_REPOSITORY/asapo-nomad-cluster .
+if [ $ASAPO_DOCKER_DO_PUSH = "YES" ]; then
+    docker push $ASAPO_DOCKER_REPOSITORY/asapo-nomad-cluster
+fi

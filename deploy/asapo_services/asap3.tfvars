@@ -1,10 +1,10 @@
 elk_logs = true
 
+asapo_docker_repository = "cpatzke"
 asapo_imagename_suffix = ""
 asapo_image_tag = ""
 
 influxdb_version="1.8.4"
-
 
 service_dir="/gpfs/asapo/shared/service_dir"
 online_dir="/beamline"
@@ -31,5 +31,3 @@ discovery_total_memory_size = 512
 n_receivers = 1
 n_brokers = 1
 n_fts = 1
-
-

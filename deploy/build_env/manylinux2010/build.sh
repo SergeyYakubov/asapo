@@ -9,6 +9,7 @@ numpy_versions[cp36m]=1.12.1
 numpy_versions[cp37m]=1.14.5
 numpy_versions[cp38]=1.17.3
 
+
 for python_path in /opt/python/cp{27,35,36,37,38}*; do
     python_version=$(basename $python_path)
     python_version=${python_version#*-}
@@ -17,6 +18,7 @@ for python_path in /opt/python/cp{27,35,36,37,38}*; do
     numpy_version=${numpy_versions[$python_version]}
     echo "building wheel for python_version=$python_version with numpy_version=$numpy_version"
 
+    mkdir -p /asapo/build
     cd /asapo/build
     cmake -DENABLE_LIBFABRIC=on \
           -DCMAKE_BUILD_TYPE="Release" \
