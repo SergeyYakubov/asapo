@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+set -o pipefail
 
 trap Cleanup EXIT
 
@@ -26,6 +27,7 @@ mkdir -p /tmp/asapo/test_in/processed
 Cleanup() {
     echo cleanup
     set +e
+    set +o pipefail
     if [[ $network_type == "fabric" ]]; then
       nomad stop receiver
       nomad run receiver_tcp.nmd

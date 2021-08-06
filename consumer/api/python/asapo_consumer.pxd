@@ -42,6 +42,8 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo":
     uint64_t expected_size
     MessageMetas content
   struct  SourceCredentials:
+    string instance_id
+    string pipeline_step
     string beamtime_id
     string data_source
     string user_token
