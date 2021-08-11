@@ -11,7 +11,6 @@ if(BUILD_CONSUMER_TOOLS)
     add_subdirectory(tools)
 endif()
 
-include(GNUInstallDirs)
 configure_file(libasapo-consumer.pc.in libasapo-consumer.pc)
 install(FILES ${CMAKE_BINARY_DIR}/consumer/libasapo-consumer.pc
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+        DESTINATION lib/pkgconfig)
