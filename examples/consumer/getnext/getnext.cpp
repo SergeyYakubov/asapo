@@ -43,6 +43,7 @@ struct Args {
     bool read_data;
     bool datasets;
     bool need_beamtime_meta = false;
+    std::string pipeline_name = "GetNextPipelineStep";
 };
 
 class LatchedTimer {
@@ -104,7 +105,7 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
                         params.file_path,
                         true,
                         asapo::SourceCredentials{asapo::SourceType::kProcessed,
-                                                 "auto", "auto",
+                                                 "auto", params.pipeline_name,
                                                  params.beamtime_id, "",
                                                  params.data_source, params.token},
                         &err);
@@ -269,11 +270,10 @@ void TryGetStream(Args* args) {
 int main(int argc, char* argv[]) {
     Args params;
     params.datasets = false;
-    if (argc != 8 && argc != 9 && argc != 10) {
+    if (argc != 8 && argc != 9 && argc != 10 && argc != 11) {
         std::cout << "Usage: " + std::string{argv[0]}
-                  + " <server> <files_path> <run_name> <nthreads> <token> <timeout ms> <metaonly> [use datasets] [send metadata]"
-                  <<
-                  std::endl;
+        + " <server> <files_path> <beamtime_id[%<data_source>[%<token>]]> <nthreads> <token> <timeout ms> <metaonly> [use datasets] [send metadata] [pipelinename]"
+        << std::endl;
         exit(EXIT_FAILURE);
     }
     params.server = std::string{argv[1]};
@@ -289,6 +289,9 @@ int main(int argc, char* argv[]) {
     }
     if (argc == 10) {
         params.need_beamtime_meta = atoi(argv[9]) == 1;
+    }
+    if (argc == 11) {
+        params.pipeline_name = argv[10];
     }
 
     if (params.read_data) {

@@ -26,20 +26,22 @@ struct Args {
     uint64_t mode;
     uint64_t timeout_ms;
     uint64_t messages_in_set;
+    std::string pipeline_name = "DummyDataProducerPipelineStep";
 };
 
 void PrintCommandArguments(const Args& args) {
     std::cout << "discovery_service_endpoint: " << args.discovery_service_endpoint << std::endl
-              << "beamtime_id: " << args.beamtime_id << std::endl
-              << "Package size: " << args.number_of_bytes / 1000 << "k" << std::endl
-              << "iterations: " << args.iterations << std::endl
-              << "nthreads: " << (int)args.nthreads << std::endl
-              << "mode: " << args.mode << std::endl
-              << "Write files: " << ((args.mode % 100) / 10 == 1) << std::endl
-              << "Tcp mode: " << ((args.mode % 10) == 0 ) << std::endl
-              << "Raw: " << (args.mode / 100 == 1) << std::endl
-              << "timeout: " << args.timeout_ms << std::endl
-              << "messages in set: " << args.messages_in_set << std::endl
+            << "beamtime_id: " << args.beamtime_id << std::endl
+            << "Package size: " << args.number_of_bytes / 1000 << "k" << std::endl
+            << "iterations: " << args.iterations << std::endl
+            << "nthreads: " << (int)args.nthreads << std::endl
+            << "mode: " << args.mode << std::endl
+            << "Write files: " << ((args.mode % 100) / 10 == 1) << std::endl
+            << "Tcp mode: " << ((args.mode % 10) == 0 ) << std::endl
+            << "Raw: " << (args.mode / 100 == 1) << std::endl
+            << "timeout: " << args.timeout_ms << std::endl
+            << "messages in set: " << args.messages_in_set << std::endl
+            << "pipeline: " << args.pipeline_name << std::endl
               << std::endl;
 }
 
@@ -69,10 +71,10 @@ void TryGetDataSourceAndToken(Args* args) {
 
 
 void ProcessCommandArguments(int argc, char* argv[], Args* args) {
-    if (argc != 8 && argc != 9) {
+    if (argc != 8 && argc != 9 && argc != 10) {
         std::cout <<
                   "Usage: " << argv[0] <<
-                  " <destination> <beamtime_id[%<data_source>%<token>]> <number_of_kbyte> <iterations> <nthreads>"
+                  " <destination> <beamtime_id[%<data_source>[%<token>]]> <number_of_kbyte> <iterations> <nthreads> [pipeline_name]"
                   " <mode 0xx - processed source type, 1xx - raw source type, xx0 -t tcp, xx1 - filesystem, x0x - write files, x1x - do not write files> <timeout (sec)> [n messages in set (default 1)]"
                   << std::endl;
         exit(EXIT_FAILURE);
@@ -86,10 +88,13 @@ void ProcessCommandArguments(int argc, char* argv[], Args* args) {
         args->nthreads = static_cast<uint8_t>(std::stoi(argv[5]));
         args->mode = std::stoull(argv[6]);
         args->timeout_ms = std::stoull(argv[7]) * 1000;
-        if (argc == 9) {
+        if (argc >= 9) {
             args->messages_in_set = std::stoull(argv[8]);
         } else {
             args->messages_in_set = 1;
+        }
+        if (argc >= 10) {
+            args->pipeline_name = argv[9];
         }
         PrintCommandArguments(*args);
         return;
@@ -198,7 +203,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     auto producer = asapo::Producer::Create(args.discovery_service_endpoint, args.nthreads,
                                             args.mode % 10 == 0 ? asapo::RequestHandlerType::kTcp : asapo::RequestHandlerType::kFilesystem,
                                             asapo::SourceCredentials{args.mode / 100 == 0 ? asapo::SourceType::kProcessed : asapo::SourceType::kRaw,
-                                                                     "auto", "auto", args.beamtime_id, "", args.data_source, args.token },
+                                                                     "auto", args.pipeline_name, args.beamtime_id, "", args.data_source, args.token },
                                             3600000, &err);
     if(err) {
         std::cerr << "Cannot start producer. ProducerError: " << err << std::endl;
