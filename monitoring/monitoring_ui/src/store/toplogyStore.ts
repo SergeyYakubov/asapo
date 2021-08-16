@@ -85,6 +85,20 @@ class ToplogyStore {
         return  Math.abs(this.internalState.lastUpdateRange.fromUnixSec - timeStore.state.lastFixedTimeRange.fromUnixSec) > maxPipelineToplogyOldnessInSec ||
                 Math.abs(this.internalState.lastUpdateRange.toUnixSec - timeStore.state.lastFixedTimeRange.toUnixSec) > maxPipelineToplogyOldnessInSec
     }
+
+    public getAvailableSources(): string[] {
+        const set = new Set<string>();
+
+        for (const edge of this.state.pipeline.edges) {
+            set.add(edge.sourceName);
+        }
+
+        return [...set];
+    }
+
+    public getAvailableStreams(): string[] {
+        return [];
+    }
 }
 
 export const toplogyStore = new ToplogyStore();

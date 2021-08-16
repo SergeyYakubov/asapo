@@ -132,7 +132,9 @@ export default class Dashboard extends Vue {
             edges = edges.filter(edge => edge.fromId === selectionFilterStore.state.fromPipelineStepId && edge.toId === selectionFilterStore.state.toPipelineStepId);
         }
 
-        return edges.flatMap(edge => edge.receivers);
+        const receiverIds = edges.flatMap(edge => edge.receivers);
+    
+        return [...new Set(receiverIds)]; // Make unique
     }
 
     private onReceiverSelected(receiverId: string): void {

@@ -61,7 +61,7 @@
 
                 <div>
                     <label for="stream" class="inline-block w-20">Stream:</label>
-                    <select name="Stream" id="stream" class="w-32">
+                    <select name="Stream" id="stream" class="w-32" v-model="selectedStream">
                         <option v-for="stream in availableStreams" :key="stream">{{stream}}</option>
                     </select>
                     <button>X</button>
@@ -95,6 +95,7 @@ import { Options, Vue } from "vue-class-component";
 import { connection } from "../store/connectionStore";
 import { errorStore } from "../store/errorStore";
 import { selectionFilterStore } from "../store/selectionFilterStore";
+import { toplogyStore } from "../store/toplogyStore";
 
 @Options({
     watch: {
@@ -103,12 +104,25 @@ import { selectionFilterStore } from "../store/selectionFilterStore";
         },
         currentBeamtimeFilterText(): void {
             this.selectedBeamtime = selectionFilterStore.state.beamtime;
-        }
+        },
+        selectedSource(newValue: string | null): void {
+            //selectionFilterStore.setFilterBeamtime(newValue);
+        },
+        currentSourceFilterText(): void {
+            this.selectedSource = selectionFilterStore.state.source;
+        },
+        selectedStream(newValue: string | null): void {
+            //selectionFilterStore.setFilterBeamtime(newValue);
+        },
+        currentStreamFilterText(): void {
+            this.selectedStream = selectionFilterStore.state.stream;
+        },
     }
 })
 export default class FilterSelector extends Vue {
     private selectedBeamtime: string | null = null;
     private selectedSource: string | null = null;
+    private selectedStream: string | null = null;
     private showPopup: boolean = false;
 
     private get hasClearableFilter(): boolean {
@@ -116,15 +130,15 @@ export default class FilterSelector extends Vue {
     }
     
     public get availableBeamtimes(): string[] {
-        return connection.state.avaiableBeamtimes;
+        return connection.state.availableBeamtimes;
     }
 
     public get availableStreams(): string[] {
-        return []; // TODO
+        return toplogyStore.getAvailableStreams();
     }
 
     public get availableSources(): string[] {
-        return []; // TODO
+        return toplogyStore.getAvailableSources();
     }
 
     public mounted(): void {

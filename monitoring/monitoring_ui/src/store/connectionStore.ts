@@ -51,7 +51,7 @@ interface ConnectionStoreState {
 
     // metadata
     clusterName: string;
-    avaiableBeamtimes: string[];
+    availableBeamtimes: string[];
 
     // metrics
     hitMissDataPoints: HitMissDataPoint[];
@@ -85,7 +85,7 @@ class ConnectionStore {
         isFetchingToplogyData: false,
 
         clusterName: '<NOT SET>',
-        avaiableBeamtimes: [],
+        availableBeamtimes: [],
 
         data: null,
 
@@ -125,7 +125,7 @@ class ConnectionStore {
 
     public setMetadata(initialData: MetadataResponse): void {
         this.internalState.clusterName = initialData.getClustername();
-        this.internalState.avaiableBeamtimes = initialData.getBeamtimeList();
+        this.internalState.availableBeamtimes = initialData.getBeamtimeList();
     }
 
     public setData(data: DataPointsResponse): void {
