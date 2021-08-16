@@ -51,7 +51,6 @@ func (s *IngestServer) InsertReceiverDataPoints(ctx context.Context, data *pb.Re
 			timestamp,
 		)
 
-		println("Got: step: " + dataPoint.PipelineStepId + " with source: " + dataPoint.Source)
 		s.dbWriterApi.WritePoint(p)
 	}
 
