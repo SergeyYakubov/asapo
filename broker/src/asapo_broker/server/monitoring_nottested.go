@@ -71,7 +71,7 @@ func (m *brokerMonitoring) Init() error {
 	if err != nil {
 		hostname = "hostnameerror"
 	}
-	m.BrokerName = "receiver_" + hostname + "_" + strconv.Itoa(os.Getpid())
+	m.BrokerName = "broker_" + hostname + "_" + strconv.Itoa(os.Getpid())
 
 	return nil
 }
