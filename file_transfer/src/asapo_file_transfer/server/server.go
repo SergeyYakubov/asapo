@@ -12,5 +12,6 @@ type serverSettings struct {
 }
 
 var settings serverSettings
+var monitoring brokerMonitoring
 var authJWT utils.Auth
 

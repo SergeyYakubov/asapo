@@ -67,6 +67,8 @@ void asapo::ReceiverMonitoringClient::SendingThreadFunction() {
     while(sendingThreadRunning__) {
         auto start = HelperTimeNow();
 
+        FillMemoryStats();
+
         // Clear and swap data
         localToBeSend->container.Clear();
         {

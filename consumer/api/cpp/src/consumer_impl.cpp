@@ -562,7 +562,7 @@ Error ConsumerImpl::ServiceRequestWithTimeout(const std::string& service_name,
 
 Error ConsumerImpl::FtsSizeRequestWithTimeout(MessageMeta* info) {
     RequestInfo ri = CreateFileTransferRequest(info);
-    ri.extra_params = "&sizeonly=true";
+    ri.extra_params += "&sizeonly=true";
     ri.output_mode = OutputDataMode::string;
     RequestOutput response;
     auto err = ServiceRequestWithTimeout(kFileTransferServiceName, &current_fts_uri_, ri, &response);
@@ -579,6 +579,13 @@ Error ConsumerImpl::FtsRequestWithTimeout(MessageMeta* info, MessageData* data) 
     RequestInfo ri = CreateFileTransferRequest(info);
     RequestOutput response;
     response.data_output_size = info->size;
+
+    ri.extra_params += "&instanceid=" + httpclient__->UrlEscape(source_credentials_.instance_id);
+    ri.extra_params += "&pipelinestep=" + httpclient__->UrlEscape(source_credentials_.pipeline_step);
+    ri.extra_params += "&beamtime=" + httpclient__->UrlEscape(source_credentials_.beamtime_id);
+    ri.extra_params += "&stream=" + httpclient__->UrlEscape(info->stream);
+    ri.extra_params += "&source=" + httpclient__->UrlEscape(info->source);
+
     auto err = ServiceRequestWithTimeout(kFileTransferServiceName, &current_fts_uri_, ri, &response);
     if (err) {
         return err;

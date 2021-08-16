@@ -12,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 
@@ -96,9 +97,24 @@ func serveFileSize(w http.ResponseWriter, r *http.Request, fullName string) {
 	}
 	log.Debug("Sending file size "+strconv.FormatInt(fi.Size(),10)+" for " + fullName)
 
+
+	start := time.Now()
+
 	fsize.FileSize = fi.Size()
 	b,_ := json.Marshal(&fsize)
 	w.Write(b)
+
+	elapsed := time.Since(start)
+
+	instanceId := r.URL.Query().Get("instanceid")
+	pipelineStep := r.URL.Query().Get("pipelinestep")
+	beamtime := r.URL.Query().Get("beamtime")
+	source := r.URL.Query().Get("source")
+	stream := r.URL.Query().Get("stream")
+	if len(instanceId) > 0 && len(pipelineStep) > 0 && len(beamtime) > 0 && len(source) > 0 && len(stream) > 0 {
+		monitoring.SendFileTransferServiceRequest(instanceId, pipelineStep, beamtime, source, stream,
+			uint64(elapsed * time.Microsecond), uint64(fsize.FileSize))
+	}
 }
 
 
