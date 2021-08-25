@@ -76,6 +76,7 @@ import { connection } from '../store/connectionStore';
 import { DataPointsResponse } from '../generated_proto/AsapoMonitoringQueryService_pb';
 import { selectionFilterStore } from '../store/selectionFilterStore';
 import { toplogyStore } from '../store/toplogyStore';
+import { metricData, MetricDataComplete } from '../store/metricDataStore';
 
 
 @Options({
@@ -91,12 +92,39 @@ import { toplogyStore } from '../store/toplogyStore';
             if (this.storeData != null) {
                 this.onUpdateData(this.storeData);
             }
-        }
+        },
+        transferSpeedChartData() {
+            this.onTransferSpeedChartDataChanged();
+        },
+        detailedTransferSpeedChartData() {
+            this.onDetailedTransferSpeedChartDataChanged();
+        },
+        fileRateChartData() {
+            this.onFileRateChartDataChanged();
+        },
+        receiverTimePerTaskChartData() {
+            this.onReceiverTimePerTaskChartDataChanged();
+        },
+        receiverRamUsageChartData() {
+            this.onReceiverRamUsageChartDataChanged();
+        },
     }
 })
 export default class Dashboard extends Vue {
-    public get storeData(): DataPointsResponse | null {
-        return connection.state.data;
+    public get transferSpeedChartData(): MetricDataComplete {
+        return metricData.state.transferSpeedChartData;
+    }
+    public get detailedTransferSpeedChartData(): MetricDataComplete {
+        return metricData.state.detailedTransferSpeedChartData;
+    }
+    public get fileRateChartData(): MetricDataComplete {
+        return metricData.state.fileRateChartData;
+    }
+    public get receiverTimePerTaskChartData(): MetricDataComplete {
+        return metricData.state.receiverTimePerTaskChartData;
+    }
+    public get receiverRamUsageChartData(): MetricDataComplete {
+        return metricData.state.receiverRamUsageChartData;
     }
 
     private get involvedProducers(): string[] {
@@ -145,90 +173,25 @@ export default class Dashboard extends Vue {
         return selectionFilterStore.state.receiverId === receiverId;
     }
 
-    public onUpdateData(data: DataPointsResponse) {
-        const interval = data.getTimeintervalinsec()
-
-        {
-            let currentTime = data.getStarttimestampinsec();
-            const transferSpeedRecv = [] as [number, number][];
-            const transferSpeedSend = [] as [number, number][];
-            const transferSpeedRdsSend = [] as [number, number][];
-            const transferSpeedFtsSend = [] as [number, number][];
-            for (const point of data.getTransferratesList()) {
-                transferSpeedRecv.push([currentTime * 1000, point.getTotalbytespersecrecv()]);
-                transferSpeedSend.push([currentTime * 1000, point.getTotalbytespersecsend()]);
-                transferSpeedRdsSend.push([currentTime * 1000, point.getTotalbytespersecrdssend()]);
-                transferSpeedFtsSend.push([currentTime * 1000, point.getTotalbytespersecftssend()]);
-
-                currentTime += interval;
-            }
-
-            const transferSpeedChart = this.$refs['transferSpeedChart'] as GenericChart;
-            transferSpeedChart.setDataPoints([transferSpeedRecv, transferSpeedSend]);
-
-            const detailedTransferSpeedChart = this.$refs['detailedTransferSpeedChart'] as GenericChart;
-            detailedTransferSpeedChart.setDataPoints([transferSpeedRecv, transferSpeedRdsSend, transferSpeedFtsSend]);
-        }
-        
-        {
-            let currentTime = data.getStarttimestampinsec();
-            const unknown = [] as [number, number][];
-            const miss = [] as [number, number][];
-            const fromCache = [] as [number, number][];
-            const fromDisk = [] as [number, number][];
-            for (const point of data.getFileratesList()) {
-                const knownSum = point.getFromcache() + point.getFromdisk();
-                unknown.push([currentTime * 1000, Math.max(0, point.getTotalrequests() - knownSum)]);
-                fromCache.push([currentTime * 1000, point.getFromcache()]);
-                fromDisk.push([currentTime * 1000, point.getFromdisk()]);
-
-                miss.push([currentTime * 1000, point.getCachemisses()]);
-                /*
-                if (miss.length > 2 && !miss[miss.length - 1][1] && !miss[miss.length - 2][1] && point.getCachemisses() === 0) {
-                    miss[miss.length - 1][1] = undefined as any;
-                    miss.push([currentTime * 1000, 0]);
-                } else {
-                    miss.push([currentTime * 1000, point.getCachemisses()]);
-                }*/
-
-                currentTime += interval;
-            }
-
-            const fileRateChart = this.$refs['fileRateChart'] as GenericChart;
-            fileRateChart.setDataPoints([unknown, miss, fromCache, fromDisk]);
-        }
-
-        {
-            let currentTime = data.getStarttimestampinsec();
-            const receiveIo = [] as [number, number][];
-            const writeIo = [] as [number, number][];
-            const databaseIo = [] as [number, number][];
-            for (const point of data.getTasktimesList()) {
-
-                receiveIo.push([currentTime * 1000, point.getReceiveiotimeus()]);
-                writeIo.push([currentTime * 1000, point.getWritetodisktimeus()]);
-                databaseIo.push([currentTime * 1000, point.getWritetodatabasetimeus()]);
-
-                currentTime += interval;
-            }
-
-            const timePerTaskChart = this.$refs['receiverTimePerTaskChart'] as GenericChart;
-            timePerTaskChart.setDataPoints([receiveIo, writeIo, databaseIo]);
-        }
-        
-        {
-            let currentTime = data.getStarttimestampinsec();
-            const memoryUsed = [] as [number, number][];
-            for (const point of data.getMemoryusagesList()) {
-
-                memoryUsed.push([currentTime * 1000, point.getTotalusedmemory()]);
-
-                currentTime += interval;
-            }
-
-            const receiverRamUsageChart = this.$refs['receiverRamUsageChart'] as GenericChart;
-            receiverRamUsageChart.setDataPoints([memoryUsed]);
-        }
+    private onTransferSpeedChartDataChanged(): void {
+            const chartRef = this.$refs['transferSpeedChart'] as GenericChart;
+            chartRef.setDataPoints(this.transferSpeedChartData);
+    }
+    private onDetailedTransferSpeedChartDataChanged(): void {
+            const chartRef = this.$refs['detailedTransferSpeedChart'] as GenericChart;
+            chartRef.setDataPoints(this.detailedTransferSpeedChartData);
+    }
+    private onFileRateChartDataChanged(): void {
+            const chartRef = this.$refs['fileRateChart'] as GenericChart;
+            chartRef.setDataPoints(this.fileRateChartData);
+    }
+    private onReceiverTimePerTaskChartDataChanged(): void {
+            const chartRef = this.$refs['receiverTimePerTaskChart'] as GenericChart;
+            chartRef.setDataPoints(this.receiverTimePerTaskChartData);
+    }
+    private onReceiverRamUsageChartDataChanged(): void {
+            const chartRef = this.$refs['receiverRamUsageChart'] as GenericChart;
+            chartRef.setDataPoints(this.receiverRamUsageChartData);
     }
 }
 </script>

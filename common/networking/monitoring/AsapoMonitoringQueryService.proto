@@ -20,13 +20,12 @@ message DataPointsQuery {
 
     string beamtimeFilter = 4;
     string sourceFilter = 5;
-    string streamFilter = 6;
 
-    string receiverFilter = 7;
+    string receiverFilter = 6;
 
-    string fromPipelineStepFilter = 8;
-    string toPipelineStepFilter = 9;
-    PipelineConnectionQueryMode pipelineQueryMode = 10;
+    string fromPipelineStepFilter = 7;
+    string toPipelineStepFilter = 8;
+    PipelineConnectionQueryMode pipelineQueryMode = 9;
 }
 
 /*
@@ -70,14 +69,14 @@ message DataPointsResponse {
     uint32 timeIntervalInSec = 2;
 
     repeated TotalTransferRateDataPoint transferRates = 3;
-    repeated TotalFileRateDataPoint fileRates = 5;
-    repeated TaskTimeDataPoint taskTimes = 6;
-    repeated RdsMemoryUsageDataPoint memoryUsages = 7;
+    repeated TotalFileRateDataPoint fileRates = 4;
+    repeated TaskTimeDataPoint taskTimes = 5;
+    repeated RdsMemoryUsageDataPoint memoryUsages = 6;
 }
 
 message MetadataResponse {
     string clusterName = 1;
-    repeated string beamtime = 2;
+    repeated string availableBeamtimes = 2;
 }
 
 message ToplogyQuery {

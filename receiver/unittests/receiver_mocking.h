@@ -134,12 +134,11 @@ class MockDataCache: public DataCache {
     MOCK_METHOD5(GetFreeSlotAndLock, void* (uint64_t size, CacheMeta** meta,
             std::string beamtime, std::string source, std::string stream));
     MOCK_METHOD1(UnlockSlot, bool(CacheMeta* meta));
-    MOCK_METHOD0(AllMetaInfosAsVector, std::vector<std::shared_ptr<const CacheMeta>>());
+    MOCK_CONST_METHOD0(AllMetaInfosAsVector, std::vector<std::shared_ptr<const CacheMeta>>());
     MOCK_CONST_METHOD0(GetCacheSize, uint64_t());
     MOCK_METHOD3(GetSlotToReadAndLock, void* (uint64_t id, uint64_t data_size, CacheMeta** meta));
 
 };
-
 
 class MockStatisticsSender: public StatisticsSender {
   public:

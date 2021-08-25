@@ -211,10 +211,10 @@ export class MetadataResponse extends jspb.Message {
   getClustername(): string;
   setClustername(value: string): MetadataResponse;
 
-  getBeamtimeList(): Array<string>;
-  setBeamtimeList(value: Array<string>): MetadataResponse;
-  clearBeamtimeList(): MetadataResponse;
-  addBeamtime(value: string, index?: number): MetadataResponse;
+  getAvailablebeamtimesList(): Array<string>;
+  setAvailablebeamtimesList(value: Array<string>): MetadataResponse;
+  clearAvailablebeamtimesList(): MetadataResponse;
+  addAvailablebeamtimes(value: string, index?: number): MetadataResponse;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): MetadataResponse.AsObject;
@@ -227,7 +227,7 @@ export class MetadataResponse extends jspb.Message {
 export namespace MetadataResponse {
   export type AsObject = {
     clustername: string,
-    beamtimeList: Array<string>,
+    availablebeamtimesList: Array<string>,
   }
 }
 

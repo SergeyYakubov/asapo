@@ -30,7 +30,7 @@ func (s *QueryServer) GetMetadata(ctx context.Context, _ *pb.Empty) (*pb.Metadat
 
 	response := pb.MetadataResponse{}
 	for result.Next() {
-		response.Beamtime = append(response.Beamtime, result.Record().Values()["_value"].(string))
+		response.AvailableBeamtimes = append(response.AvailableBeamtimes, result.Record().Values()["_value"].(string))
 	}
 	response.ClusterName = s.settings.ThisClusterName
 
@@ -43,14 +43,11 @@ func createFilterElement(tagName string, tagValue string) string {
 type filterGenerator func(*pb.DataPointsQuery) string
 
 func createFilter(query *pb.DataPointsQuery, generator filterGenerator) string {
-	// always present in database: beamtime, source, stream
+	// always present in database: beamtime, source
 	filter := " |> filter(fn: (r) => "
 	filter += createFilterElement("beamtime", query.BeamtimeFilter)
 	if query.SourceFilter != "" {
 		filter += " and " + createFilterElement("source", query.SourceFilter)
-	}
-	if query.StreamFilter != "" {
-		filter += " and " + createFilterElement("source", query.StreamFilter)
 	}
 
 	filter += generator(query)
@@ -174,8 +171,7 @@ func (s *QueryServer) GetDataPoints(ctx context.Context, query *pb.DataPointsQue
 		doesStringContainsDangerousElements(query.FromPipelineStepFilter) ||
 		doesStringContainsDangerousElements(query.ToPipelineStepFilter) ||
 		doesStringContainsDangerousElements(query.ReceiverFilter) ||
-		doesStringContainsDangerousElements(query.SourceFilter) ||
-		doesStringContainsDangerousElements(query.StreamFilter) {
+		doesStringContainsDangerousElements(query.SourceFilter) {
 		return nil, errors.New("some input characters are not allowed")
 	}
 
@@ -209,7 +205,7 @@ func (s *QueryServer) GetDataPoints(ctx context.Context, query *pb.DataPointsQue
 	}
 	response.MemoryUsages = memoryUsage
 
-	response.StartTimestampInSec = query.FromTimestamp
+	response.StartTimestampInSec = query.FromTimestamp // TODO: Use first timestamp from query result
 	response.TimeIntervalInSec = uint32(intervalInSec)
 
 	return &response, nil
@@ -268,19 +264,6 @@ func queryTransferSpeed(s *QueryServer, ctx context.Context, startTime string, e
 
 func queryFileRate(s *QueryServer, ctx context.Context, startTime string, endTime string, intervalInSec int, filter string) ([]*pb.TotalFileRateDataPoint, error) {
 	var arrayResult []*pb.TotalFileRateDataPoint
-
-	/*
-	   brokerRequests, err := s.dbQueryApi.Query(ctx, "from(bucket: \"" + dbBucket + "\")" +
-	       " |> range(start: " +  strconv.FormatInt(startUnixTimestamp, 10) + ", stop: " +  strconv.FormatInt(endUnixTimestamp, 10) + ")"+
-	       " |> filter(fn: (r) => r._measurement == \"" + dbMeasurementBrokerFileRequests + "\")" +
-	       " |> group(columns: [\"wasHit\"])" +
-	       " |> aggregateWindow(every: " + strconv.Itoa(intervalInSec) + "s, fn: count, createEmpty: true)" +
-	       " |> pivot(rowKey:[\"_time\"], columnKey: [\"wasHit\"], valueColumn: \"_value\")",
-	   )
-	   if err != nil {
-	       return nil, err
-	   }
-	*/
 
 	rdsResponses, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDb2Bucket+"\")"+
 		" |> range(start: "+startTime+", stop: "+endTime+")"+
@@ -525,7 +508,7 @@ func (s *QueryServer) GetTopology(ctx context.Context, query *pb.ToplogyQuery) (
 				if _, sourceIsAvailable := availableSources[requiredSourceId]; !sourceIsAvailable { // Oh source is unavailable
 					allConsumingSourcesAvailable = false
 				} else {
-					// Verify that no other producer can create this stream.
+					// Verify that no other producer can create this source.
 					// Maybe we have to wait one or two steps until all producers are available
 					for stepId2 := range remainingStepIds {
 						if _, thereIsAnotherProducer := pipelineSteps[stepId2].producesSourceId[requiredSourceId]; thereIsAnotherProducer {

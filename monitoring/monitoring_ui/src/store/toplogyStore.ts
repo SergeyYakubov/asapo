@@ -2,7 +2,6 @@ import { reactive } from "vue";
 import { TopologyResponse } from "../generated_proto/AsapoMonitoringQueryService_pb";
 import { FixedTimeRange } from "../lib/TimeRange";
 import { Pipeline, PipelineNode, PipelineEdge } from "../lib/ToplogyPipelineDefinitions";
-import { connection } from "./connectionStore";
 import { timeStore } from "./timeStore";
 
 export interface ToplogyStoreState {
@@ -42,10 +41,7 @@ class ToplogyStore {
                 level: node.getLevel(),
 
                 producers: node.getProducerinstancesList(),
-                producerCount: node.getProducerinstancesList().length,
-
                 consumers: node.getConsumerinstancesList(),
-                consumerCount: node.getConsumerinstancesList().length,
             };
             newNodes.push(newNode);
             newNodeMap[newNode.id] = newNode;
@@ -94,10 +90,6 @@ class ToplogyStore {
         }
 
         return [...set];
-    }
-
-    public getAvailableStreams(): string[] {
-        return [];
     }
 }
 

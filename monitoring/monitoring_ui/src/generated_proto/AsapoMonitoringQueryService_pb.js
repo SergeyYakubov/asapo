@@ -1426,7 +1426,7 @@ proto.RdsMemoryUsageDataPoint.prototype.setTotalusedmemory = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.DataPointsResponse.repeatedFields_ = [3,5,6,7];
+proto.DataPointsResponse.repeatedFields_ = [3,4,5,6];
 
 
 
@@ -1518,17 +1518,17 @@ proto.DataPointsResponse.deserializeBinaryFromReader = function(msg, reader) {
       reader.readMessage(value,proto.TotalTransferRateDataPoint.deserializeBinaryFromReader);
       msg.addTransferrates(value);
       break;
-    case 5:
+    case 4:
       var value = new proto.TotalFileRateDataPoint;
       reader.readMessage(value,proto.TotalFileRateDataPoint.deserializeBinaryFromReader);
       msg.addFilerates(value);
       break;
-    case 6:
+    case 5:
       var value = new proto.TaskTimeDataPoint;
       reader.readMessage(value,proto.TaskTimeDataPoint.deserializeBinaryFromReader);
       msg.addTasktimes(value);
       break;
-    case 7:
+    case 6:
       var value = new proto.RdsMemoryUsageDataPoint;
       reader.readMessage(value,proto.RdsMemoryUsageDataPoint.deserializeBinaryFromReader);
       msg.addMemoryusages(value);
@@ -1587,7 +1587,7 @@ proto.DataPointsResponse.serializeBinaryToWriter = function(message, writer) {
   f = message.getFileratesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      5,
+      4,
       f,
       proto.TotalFileRateDataPoint.serializeBinaryToWriter
     );
@@ -1595,7 +1595,7 @@ proto.DataPointsResponse.serializeBinaryToWriter = function(message, writer) {
   f = message.getTasktimesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      6,
+      5,
       f,
       proto.TaskTimeDataPoint.serializeBinaryToWriter
     );
@@ -1603,7 +1603,7 @@ proto.DataPointsResponse.serializeBinaryToWriter = function(message, writer) {
   f = message.getMemoryusagesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      7,
+      6,
       f,
       proto.RdsMemoryUsageDataPoint.serializeBinaryToWriter
     );
@@ -1686,12 +1686,12 @@ proto.DataPointsResponse.prototype.clearTransferratesList = function() {
 
 
 /**
- * repeated TotalFileRateDataPoint fileRates = 5;
+ * repeated TotalFileRateDataPoint fileRates = 4;
  * @return {!Array<!proto.TotalFileRateDataPoint>}
  */
 proto.DataPointsResponse.prototype.getFileratesList = function() {
   return /** @type{!Array<!proto.TotalFileRateDataPoint>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.TotalFileRateDataPoint, 5));
+    jspb.Message.getRepeatedWrapperField(this, proto.TotalFileRateDataPoint, 4));
 };
 
 
@@ -1700,7 +1700,7 @@ proto.DataPointsResponse.prototype.getFileratesList = function() {
  * @return {!proto.DataPointsResponse} returns this
 */
 proto.DataPointsResponse.prototype.setFileratesList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 5, value);
+  return jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
@@ -1710,7 +1710,7 @@ proto.DataPointsResponse.prototype.setFileratesList = function(value) {
  * @return {!proto.TotalFileRateDataPoint}
  */
 proto.DataPointsResponse.prototype.addFilerates = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.TotalFileRateDataPoint, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.TotalFileRateDataPoint, opt_index);
 };
 
 
@@ -1724,12 +1724,12 @@ proto.DataPointsResponse.prototype.clearFileratesList = function() {
 
 
 /**
- * repeated TaskTimeDataPoint taskTimes = 6;
+ * repeated TaskTimeDataPoint taskTimes = 5;
  * @return {!Array<!proto.TaskTimeDataPoint>}
  */
 proto.DataPointsResponse.prototype.getTasktimesList = function() {
   return /** @type{!Array<!proto.TaskTimeDataPoint>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.TaskTimeDataPoint, 6));
+    jspb.Message.getRepeatedWrapperField(this, proto.TaskTimeDataPoint, 5));
 };
 
 
@@ -1738,7 +1738,7 @@ proto.DataPointsResponse.prototype.getTasktimesList = function() {
  * @return {!proto.DataPointsResponse} returns this
 */
 proto.DataPointsResponse.prototype.setTasktimesList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 6, value);
+  return jspb.Message.setRepeatedWrapperField(this, 5, value);
 };
 
 
@@ -1748,7 +1748,7 @@ proto.DataPointsResponse.prototype.setTasktimesList = function(value) {
  * @return {!proto.TaskTimeDataPoint}
  */
 proto.DataPointsResponse.prototype.addTasktimes = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.TaskTimeDataPoint, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.TaskTimeDataPoint, opt_index);
 };
 
 
@@ -1762,12 +1762,12 @@ proto.DataPointsResponse.prototype.clearTasktimesList = function() {
 
 
 /**
- * repeated RdsMemoryUsageDataPoint memoryUsages = 7;
+ * repeated RdsMemoryUsageDataPoint memoryUsages = 6;
  * @return {!Array<!proto.RdsMemoryUsageDataPoint>}
  */
 proto.DataPointsResponse.prototype.getMemoryusagesList = function() {
   return /** @type{!Array<!proto.RdsMemoryUsageDataPoint>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.RdsMemoryUsageDataPoint, 7));
+    jspb.Message.getRepeatedWrapperField(this, proto.RdsMemoryUsageDataPoint, 6));
 };
 
 
@@ -1776,7 +1776,7 @@ proto.DataPointsResponse.prototype.getMemoryusagesList = function() {
  * @return {!proto.DataPointsResponse} returns this
 */
 proto.DataPointsResponse.prototype.setMemoryusagesList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 7, value);
+  return jspb.Message.setRepeatedWrapperField(this, 6, value);
 };
 
 
@@ -1786,7 +1786,7 @@ proto.DataPointsResponse.prototype.setMemoryusagesList = function(value) {
  * @return {!proto.RdsMemoryUsageDataPoint}
  */
 proto.DataPointsResponse.prototype.addMemoryusages = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 7, opt_value, proto.RdsMemoryUsageDataPoint, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.RdsMemoryUsageDataPoint, opt_index);
 };
 
 
@@ -1839,7 +1839,7 @@ proto.MetadataResponse.prototype.toObject = function(opt_includeInstance) {
 proto.MetadataResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     clustername: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    beamtimeList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f
+    availablebeamtimesList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -1882,7 +1882,7 @@ proto.MetadataResponse.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.addBeamtime(value);
+      msg.addAvailablebeamtimes(value);
       break;
     default:
       reader.skipField();
@@ -1920,7 +1920,7 @@ proto.MetadataResponse.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getBeamtimeList();
+  f = message.getAvailablebeamtimesList();
   if (f.length > 0) {
     writer.writeRepeatedString(
       2,
@@ -1949,10 +1949,10 @@ proto.MetadataResponse.prototype.setClustername = function(value) {
 
 
 /**
- * repeated string beamtime = 2;
+ * repeated string availableBeamtimes = 2;
  * @return {!Array<string>}
  */
-proto.MetadataResponse.prototype.getBeamtimeList = function() {
+proto.MetadataResponse.prototype.getAvailablebeamtimesList = function() {
   return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 2));
 };
 
@@ -1961,7 +1961,7 @@ proto.MetadataResponse.prototype.getBeamtimeList = function() {
  * @param {!Array<string>} value
  * @return {!proto.MetadataResponse} returns this
  */
-proto.MetadataResponse.prototype.setBeamtimeList = function(value) {
+proto.MetadataResponse.prototype.setAvailablebeamtimesList = function(value) {
   return jspb.Message.setField(this, 2, value || []);
 };
 
@@ -1971,7 +1971,7 @@ proto.MetadataResponse.prototype.setBeamtimeList = function(value) {
  * @param {number=} opt_index
  * @return {!proto.MetadataResponse} returns this
  */
-proto.MetadataResponse.prototype.addBeamtime = function(value, opt_index) {
+proto.MetadataResponse.prototype.addAvailablebeamtimes = function(value, opt_index) {
   return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
 };
 
@@ -1980,8 +1980,8 @@ proto.MetadataResponse.prototype.addBeamtime = function(value, opt_index) {
  * Clears the list making it empty but non-null.
  * @return {!proto.MetadataResponse} returns this
  */
-proto.MetadataResponse.prototype.clearBeamtimeList = function() {
-  return this.setBeamtimeList([]);
+proto.MetadataResponse.prototype.clearAvailablebeamtimesList = function() {
+  return this.setAvailablebeamtimesList([]);
 };
 
 

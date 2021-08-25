@@ -28,7 +28,7 @@ class DataCache {
     VIRTUAL void* GetFreeSlotAndLock(uint64_t size, CacheMeta** meta,
                                      std::string beamtime, std::string source, std::string stream);
     VIRTUAL void* GetSlotToReadAndLock(uint64_t id, uint64_t data_size, CacheMeta** meta);
-    VIRTUAL std::vector<std::shared_ptr<const CacheMeta>> AllMetaInfosAsVector();
+    VIRTUAL std::vector<std::shared_ptr<const CacheMeta>> AllMetaInfosAsVector() const;
     VIRTUAL uint64_t GetCacheSize() const;
     VIRTUAL bool UnlockSlot(CacheMeta* meta);
     VIRTUAL ~DataCache() = default;
@@ -38,7 +38,7 @@ class DataCache {
     uint32_t counter_;
     uint64_t cur_pointer_ = 0;
     std::unique_ptr<uint8_t[]> cache_;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     std::deque<std::shared_ptr<CacheMeta>> meta_;
     bool SlotTooCloseToCurrentPointer(const CacheMeta* meta);
     bool CleanOldSlots(uint64_t size);

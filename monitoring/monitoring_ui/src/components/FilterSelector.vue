@@ -10,10 +10,6 @@
                                 <td>Source:</td>
                                 <td>{{currentSourceFilterText}}</td>
                             </tr>
-                            <tr>
-                                <td>Stream:</td>
-                                <td>{{currentStreamFilterText}}</td>
-                            </tr>
                         </table>
                     </div>
                     <div>
@@ -55,14 +51,6 @@
                     <label for="source" class="inline-block w-20">Source:</label>
                     <select name="Source" id="source" class="w-32" v-model="selectedSource">
                         <option v-for="source in availableSources" :key="source">{{source}}</option>
-                    </select>
-                    <button>X</button>
-                </div>
-
-                <div>
-                    <label for="stream" class="inline-block w-20">Stream:</label>
-                    <select name="Stream" id="stream" class="w-32" v-model="selectedStream">
-                        <option v-for="stream in availableStreams" :key="stream">{{stream}}</option>
                     </select>
                     <button>X</button>
                 </div>
@@ -111,18 +99,11 @@ import { toplogyStore } from "../store/toplogyStore";
         currentSourceFilterText(): void {
             this.selectedSource = selectionFilterStore.state.source;
         },
-        selectedStream(newValue: string | null): void {
-            //selectionFilterStore.setFilterBeamtime(newValue);
-        },
-        currentStreamFilterText(): void {
-            this.selectedStream = selectionFilterStore.state.stream;
-        },
     }
 })
 export default class FilterSelector extends Vue {
     private selectedBeamtime: string | null = null;
     private selectedSource: string | null = null;
-    private selectedStream: string | null = null;
     private showPopup: boolean = false;
 
     private get hasClearableFilter(): boolean {
@@ -131,10 +112,6 @@ export default class FilterSelector extends Vue {
     
     public get availableBeamtimes(): string[] {
         return connection.state.availableBeamtimes;
-    }
-
-    public get availableStreams(): string[] {
-        return toplogyStore.getAvailableStreams();
     }
 
     public get availableSources(): string[] {
@@ -193,13 +170,6 @@ export default class FilterSelector extends Vue {
     private get currentSourceFilterText(): string {
         if (selectionFilterStore.state.source) {
             return selectionFilterStore.state.source;
-        }
-        return '*';
-    }
-
-    private get currentStreamFilterText(): string {
-        if (selectionFilterStore.state.stream) {
-            return selectionFilterStore.state.stream;
         }
         return '*';
     }

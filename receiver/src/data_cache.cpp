@@ -137,7 +137,7 @@ bool DataCache::UnlockSlot(CacheMeta* meta) {
     return true;
 }
 
-std::vector<std::shared_ptr<const CacheMeta>> DataCache::AllMetaInfosAsVector() {
+std::vector<std::shared_ptr<const CacheMeta>> DataCache::AllMetaInfosAsVector() const {
     // This function is used in case of a complete scan of the metadata info, but not blocking
 
     std::vector<std::shared_ptr<const CacheMeta>> result;

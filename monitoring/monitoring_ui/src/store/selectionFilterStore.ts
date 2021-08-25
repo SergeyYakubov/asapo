@@ -8,7 +8,6 @@ export interface SelectionFilterStoreState {
     beamtime: string | null;
 
     source: string | null;
-    stream: string | null;
 
     fromPipelineStepId: string | null;
     toPipelineStepId: string | null;
@@ -20,7 +19,6 @@ class SelectionFilterStore {
     private internalState: SelectionFilterStoreState = reactive({
         beamtime: null,
         source: null,
-        stream: null,
         fromPipelineStepId: null,
         toPipelineStepId: null,
         pipelineFilterRelation: 'and',
@@ -32,7 +30,7 @@ class SelectionFilterStore {
     }
     
     public get hasClearableFilter(): boolean {
-        return !!(this.state.receiverId || this.state.source || this.state.stream || this.state.fromPipelineStepId || this.state.toPipelineStepId);
+        return !!(this.state.receiverId || this.state.source || this.state.fromPipelineStepId || this.state.toPipelineStepId);
     }
 
     public setFilterBeamtime(beamtime: string | null, isInitial = false): void {

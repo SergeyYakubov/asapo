@@ -34,7 +34,7 @@ import { FixedTimeRange } from "../lib/TimeRange";
         },
         toplogyStoreLastUpdate: {
             handler() {
-                this.toplogyChanged();
+                this.topologyChanged();
             },
             deep: true,
         },
@@ -49,7 +49,7 @@ export default class TopologyGraph extends Vue {
     }
 
     private get updateDateText() {
-        return moment.unix(this.toplogyStoreLastUpdate.fromUnixSec).format('hh:mm:ss') + ' - ' + moment.unix(this.toplogyStoreLastUpdate.toUnixSec).format('hh:mm:ss')
+        return moment.unix(this.toplogyStoreLastUpdate.fromUnixSec).format('HH:mm:ss') + ' - ' + moment.unix(this.toplogyStoreLastUpdate.toUnixSec).format('HH:mm:ss')
     }
 
     private visBody!: HTMLDivElement;
@@ -114,18 +114,19 @@ export default class TopologyGraph extends Vue {
                             }
 
                             const nodeInfo = toplogyStore.state.nodeMap[id];
+                            if (nodeInfo) {
+                                ctx.font = 20 + "px monospace";
+                                ctx.textAlign = 'left';
+                                ctx.fillText(`${nodeInfo.consumers.length}`, x - (width/2) + innerTextMargin, y + 6);
+                                ctx.font = 5 + "px monospace";
+                                ctx.fillText('consumers', x - (width/2) + innerTextMargin, y - 10);
 
-                            ctx.font = 20 + "px monospace";
-                            ctx.textAlign = 'left';
-                            ctx.fillText(`${nodeInfo.consumerCount}`, x - (width/2) + innerTextMargin, y + 6);
-                            ctx.font = 5 + "px monospace";
-                            ctx.fillText('consumers', x - (width/2) + innerTextMargin, y - 10);
-
-                            ctx.font = 20 + "px monospace";
-                            ctx.textAlign = 'right';
-                            ctx.fillText(`${nodeInfo.producerCount}`, x + (width/2) - innerTextMargin, y + 6);
-                            ctx.font = 5 + "px monospace";
-                            ctx.fillText('producers', x + (width/2) - innerTextMargin, y - 10);
+                                ctx.font = 20 + "px monospace";
+                                ctx.textAlign = 'right';
+                                ctx.fillText(`${nodeInfo.producers.length}`, x + (width/2) - innerTextMargin, y + 6);
+                                ctx.font = 5 + "px monospace";
+                                ctx.fillText('producers', x + (width/2) - innerTextMargin, y - 10);
+                            }
 
                             ctx.restore();
                         },
@@ -147,8 +148,7 @@ export default class TopologyGraph extends Vue {
         this.network = new vis.Network(this.visBody, {}, visOptions);
         this.network.on('click', this.onNetworkClick);
 
-        this.toplogyChanged();
-        // this.updateData(__examplePipeline);
+        this.topologyChanged();
     }
 
     private static convertToVisData(pipeline: Pipeline): vis.Data {
@@ -211,7 +211,7 @@ export default class TopologyGraph extends Vue {
         }, {unselectAll: true, highlightEdges: false})
     }
 
-    private toplogyChanged(): void {
+    private topologyChanged(): void {
         this.updateData(toplogyStore.state.pipeline);
     }
 

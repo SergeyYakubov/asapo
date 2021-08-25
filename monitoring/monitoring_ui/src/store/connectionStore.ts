@@ -52,19 +52,6 @@ interface ConnectionStoreState {
     // metadata
     clusterName: string;
     availableBeamtimes: string[];
-
-    // metrics
-    hitMissDataPoints: HitMissDataPoint[];
-    transferTimePoints: TransferTimePoint[];
-    transferSpeed: TotalTransferSpeedPoint[];
-    cacheMemoryUsage: TotalCacheMemoryUsagePoint[];
-    toplogyStages: ToplogyStage[];
-
-    // TODO: Map them here
-    data: DataPointsResponse | null;
-
-    // topology
-    // TODO    
 }
 
 
@@ -72,6 +59,7 @@ import { reactive } from 'vue';
 import { AsapoMonitoringQueryServiceClient } from '../generated_proto/AsapoMonitoringQueryService_grpc_web_pb';
 import { errorStore } from './errorStore';
 import { toplogyStore } from './toplogyStore';
+import { metricData } from './metricDataStore';
 
 console.log('AsapoMonitoringQueryServicePromiseClient');
 const client = new AsapoMonitoringQueryServiceClient('/api', null);
@@ -86,37 +74,6 @@ class ConnectionStore {
 
         clusterName: '<NOT SET>',
         availableBeamtimes: [],
-
-        data: null,
-
-        hitMissDataPoints: [],
-        transferTimePoints: [],
-        transferSpeed: [],
-        cacheMemoryUsage: [],
-
-        toplogyStages: [
-            {
-                sourceName: 'TestSource',
-                totalFileRateRequested: 998,
-                totalGbRateRequested: 0.87,
-                receivers: [
-                    {
-                        receiverId: 'fakeReceiver-1',
-                        usedMemory: 1024*1024*940,
-                        totalMemory: 1024*1024*1000,
-                        fileRateIncoming: 605,
-                        gbRateIncoming: 0.54,
-                    },
-                    {
-                        receiverId: 'fakeReceiver-2',
-                        usedMemory: 1024*1024*500,
-                        totalMemory: 1024*1024*1000,
-                        fileRateIncoming: 395,
-                        gbRateIncoming: 0.35,
-                    },
-                ]
-            }
-        ]
     });
 
     public get state(): Readonly<ConnectionStoreState> {
@@ -125,12 +82,7 @@ class ConnectionStore {
 
     public setMetadata(initialData: MetadataResponse): void {
         this.internalState.clusterName = initialData.getClustername();
-        this.internalState.availableBeamtimes = initialData.getBeamtimeList();
-    }
-
-    public setData(data: DataPointsResponse): void {
-        // TODO: Map data to plot data here
-        this.internalState.data = data;
+        this.internalState.availableBeamtimes = initialData.getAvailablebeamtimesList();
     }
 
     public setIsFetchingData(mode: boolean): void {
@@ -249,9 +201,6 @@ class ConnectionStore {
         if (selectionFilterStore.state.source) {
             query.setSourcefilter(selectionFilterStore.state.source);
         }
-        if (selectionFilterStore.state.stream) {
-            query.setStreamfilter(selectionFilterStore.state.stream);
-        }
         if (selectionFilterStore.state.fromPipelineStepId) {
             query.setFrompipelinestepfilter(selectionFilterStore.state.fromPipelineStepId);
         }
@@ -274,7 +223,7 @@ class ConnectionStore {
                 return;
             }
 
-            this.setData(data);
+            metricData.parseServerResponse(data);
             if (timeStore.state.refreshIntervalInSec) {
                 this.pendingDataRefreshTimeoutHandle = setTimeout(() => this.triggerMetricsRefresh(), timeStore.state.refreshIntervalInSec * 1000);
             }

@@ -48,6 +48,7 @@ asapo::SharedReceiverMonitoringClient StartMonitoringClient(const asapo::Receive
         monitoring->StartSendingThread();
     }
 
+    *error = nullptr;
     return monitoring;
 }
 

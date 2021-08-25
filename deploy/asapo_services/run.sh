@@ -65,4 +65,3 @@ docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
 -e SERVER_ADRESSES=$SERVER_ADRESSES \
 -e N_SERVERS=$N_SERVERS \
 --name asapo --net host -d $ASAPO_DOCKER_REPOSITORY/asapo-cluster
-

@@ -1,8 +1,6 @@
 export interface PipelineNode {
     id: string;
     level: number;
-    consumerCount: number;
-    producerCount: number;
 
     consumers: string[];
     producers: string[];    
@@ -16,9 +14,6 @@ export interface PipelineEdge {
     sourceName: string;
 
     receivers: string[];
-
-    //filesPerSec: number;
-    //miBPerSec: number;
 }
 
 export interface Pipeline { 
