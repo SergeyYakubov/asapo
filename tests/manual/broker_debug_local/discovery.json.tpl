@@ -9,6 +9,9 @@
   "Broker": {
     "StaticEndpoint": "localhost:5005"
   },
+  "Monitoring": {
+    "StaticEndpoint": "127.0.0.1:5020"
+  },
   "Mongo": {
     "StaticEndpoint": "asapo-services:27017"
   },
