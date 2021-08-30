@@ -1,11 +1,11 @@
 prefix=${CMAKE_INSTALL_PREFIX}
 exec_prefix=${CMAKE_INSTALL_PREFIX}
-libdir=${CMAKE_INSTALL_FULL_LIBDIR}
-includedir=${CMAKE_INSTALL_FULL_INCLUDEDIR}
+libdir=${CMAKE_INSTALL_PREFIX}/lib
+includedir=${CMAKE_INSTALL_PREFIX}/include
 
 Name: libasapo-consumer
 Description: ASAP::O consumer API
 Version: ${ASAPO_CONSUMER_PROTOCOL}
-Cflags: -I${CMAKE_INSTALL_FULL_INCLUDEDIR}
-Libs: -L${CMAKE_INSTALL_FULL_LIBDIR} -lasapo-consumer
+Cflags: -I${CMAKE_INSTALL_PREFIX}/include
+Libs: -L${CMAKE_INSTALL_PREFIX}/lib -lasapo-consumer
 Libs.private: -lcurl -lstdc++ -lpthread -ld
