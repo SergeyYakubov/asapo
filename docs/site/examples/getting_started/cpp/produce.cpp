@@ -25,14 +25,14 @@ int main(int argc, char* argv[]) {
     auto endpoint = "localhost:8400"; // or your endpoint
     auto beamtime = "asapo_test";
 
-    auto producer = asapo::Producer::Create(endpoint, 1,asapo::RequestHandlerType::kTcp,
-                                            asapo::SourceCredentials{asapo::SourceType::kProcessed,beamtime, "", "test_source", ""}, 60000, &err);
+    auto producer = asapo::Producer::Create(endpoint, 1, asapo::RequestHandlerType::kTcp,
+                                            asapo::SourceCredentials{asapo::SourceType::kProcessed, beamtime, "", "test_source", ""}, 60000, &err);
     exit_if_error("Cannot start producer", err);
 
     std::string to_send = "hello";
     auto send_size = to_send.size() + 1;
     auto buffer =  asapo::MessageData(new uint8_t[send_size]);
-    memcpy(buffer.get(),to_send.c_str(),send_size);
+    memcpy(buffer.get(), to_send.c_str(), send_size);
 
     asapo::MessageHeader message_header{1, send_size, "processed/test_file"};
     err = producer->Send(message_header, std::move(buffer), asapo::kDefaultIngestMode, "default", &ProcessAfterSend);
