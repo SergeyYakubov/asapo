@@ -15,6 +15,13 @@ type  beamtimeMeta struct {
 	AccessTypes []string `json:"access-types"`
 }
 
+type  commissioningMeta struct {
+	Id string  `json:"id"`
+	Beamline string     `json:"beamline"`
+	OfflinePath string `json:"corePath"`
+}
+
+
 type serverSettings struct {
 	Port                   int
 	LogLevel               string
