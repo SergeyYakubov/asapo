@@ -172,6 +172,17 @@ var beamtime_meta =`
 }
 `
 
+var commissioning_meta =`
+{
+    "beamline": "P04",
+    "corePath": "/asap3/petra3/gpfs/p04/2021/commissioning/c20210823_000_MAA",
+    "generated": "2021-08-23 09:39:09",
+    "id": "c20210823_000_MAA",
+    "tag": "MAA"
+}
+`
+
+
 var authTests = [] struct {
 	source_type string
 	beamtime_id string
@@ -221,6 +232,10 @@ var authTests = [] struct {
 		`{"beamtimeId":"test","beamline":"bl1","dataSource":"dataSource","corePath":"./tf/gpfs/bl1/2019/data/test","beamline-path":"","source-type":"processed","access-types":["read","write"]}`},
 	{"processed","test","auto","dataSource", "","127.0.0.2",http.StatusUnauthorized,"processed without token, wrong host",
 		""},
+	{"raw","c20210823_000_MAA","auto","dataSource", "","127.0.0.1",http.StatusOK,"raw type commissioning",
+		`{"beamtimeId":"c20210823_000_MAA","beamline":"p04","dataSource":"dataSource","corePath":"./tf/gpfs/p04/2019/commissioning/c20210823_000_MAA","beamline-path":"./p04/commissioning","source-type":"raw","access-types":["read","write"]}`},
+	{"processed","c20210823_000_MAA","auto","dataSource", "","127.0.0.1",http.StatusOK,"processed type commissioning",
+		`{"beamtimeId":"c20210823_000_MAA","beamline":"p04","dataSource":"dataSource","corePath":"./tf/gpfs/p04/2019/commissioning/c20210823_000_MAA","beamline-path":"","source-type":"processed","access-types":["read","write"]}`},
 }
 
 func TestAuthorize(t *testing.T) {
@@ -238,11 +253,17 @@ func TestAuthorize(t *testing.T) {
 
 	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test"), os.ModePerm)
 	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test_online"), os.ModePerm)
+	os.MkdirAll(filepath.Clean("tf/gpfs/p04/2019/commissioning/c20210823_000_MAA"), os.ModePerm)
+
 	os.MkdirAll(filepath.Clean("p07/current"), os.ModePerm)
+	os.MkdirAll(filepath.Clean("p04/commissioning"), os.ModePerm)
 	os.MkdirAll(filepath.Clean("bl1/current"), os.ModePerm)
 	ioutil.WriteFile(filepath.Clean("p07/current/beamtime-metadata-11111111.json"), []byte(beamtime_meta), 0644)
 	ioutil.WriteFile(filepath.Clean("bl1/current/beamtime-metadata-test_online.json"), []byte(beamtime_meta_online), 0644)
+	ioutil.WriteFile(filepath.Clean("p04/commissioning/commissioning-metadata-c20210823_000_MAA.json"), []byte(commissioning_meta), 0644)
+
 	defer 	os.RemoveAll("p07")
+	defer 	os.RemoveAll("p04")
 	defer 	os.RemoveAll("tf")
 	defer 	os.RemoveAll("bl1")
 
@@ -250,6 +271,9 @@ func TestAuthorize(t *testing.T) {
 		if test.source_type == "raw" || test.token == "" {bl := test.beamline
 			if test.beamline == "auto" {
 				bl = "bl1"
+			}
+			if iscommissioning(test.beamtime_id)  && test.beamline == "auto" {
+				bl = "p04"
 			}
 			expected_filter:="a3"+bl+"-hosts"
 			if test.dataSource == "noldap" {
@@ -327,7 +351,7 @@ var extractBtinfoTests = [] struct {
 	{".",filepath.Clean("tf/gpfs/BeamtimeUsers/2019/data/123"), "bl1.01","123",false},
 	{".",filepath.Clean("tf/gpfs/state/2019/data/123"), "bl1.01","123",false},
 	{".",filepath.Clean("tf/gpfs/support/2019/data/123"), "bl1.01","123",false},
-	{".",filepath.Clean("petra3/gpfs/p01/2019/comissioning/c20180508-000-COM20181"), "p01","c20180508-000-COM20181",true},
+	{".",filepath.Clean("petra3/gpfs/p01/2019/commissioning/c20180508-000-COM20181"), "p01","c20180508-000-COM20181",true},
 
 }
 func TestGetBeamtimeInfo(t *testing.T) {
