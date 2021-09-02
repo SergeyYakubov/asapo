@@ -22,6 +22,7 @@ data "template_file" "asapo_services" {
     scripts_dir = "${var.job_scripts_dir}"
     online_dir = "${var.online_dir}"
     offline_dir = "${var.offline_dir}"
+    ldap_uri = "${var.ldap_uri}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
     nomad_logs = "${var.nomad_logs}"
     authorizer_total_memory_size = "${var.authorizer_total_memory_size}"
