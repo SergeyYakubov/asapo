@@ -86,3 +86,5 @@ variable "n_receivers" {}
 variable "n_brokers" {}
 
 variable "n_fts" {}
+
+variable "ldap_uri" {}

@@ -33,6 +33,7 @@ mongo_total_memory_size = 256
 authorizer_total_memory_size = 256
 discovery_total_memory_size = 256
 
+ldap_uri = "ldap://localhost:389"
 
 grafana_port = 3301
 influxdb_port = 8086
