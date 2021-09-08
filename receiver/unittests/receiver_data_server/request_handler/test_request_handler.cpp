@@ -70,7 +70,7 @@ class RequestHandlerTests : public Test {
     uint8_t tmp;
     void SetUp() override {
         mock_net_ptr.reset(new StrictMock<asapo::MockNetServer>);
-        mock_monitoring_ptr.reset(new StrictMock<asapo::MockReceiverMonitoringClient>{nullptr});
+        mock_monitoring_ptr.reset(new StrictMock<asapo::MockReceiverMonitoringClient>);
 
         ON_CALL(*mock_net_ptr, Monitoring()).WillByDefault(Return(mock_monitoring_ptr));
 

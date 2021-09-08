@@ -26,7 +26,7 @@ std::string expected_address = "somehost:123";
 
 TEST(RdsFabricServer, Constructor) {
     NiceMock<MockLogger> mock_logger;
-    std::shared_ptr<StrictMock<MockReceiverMonitoringClient>> mock_monitoring{new StrictMock<MockReceiverMonitoringClient>{nullptr}};
+    std::shared_ptr<StrictMock<MockReceiverMonitoringClient>> mock_monitoring{new StrictMock<MockReceiverMonitoringClient>};
     RdsFabricServer fabric_server("", &mock_logger, mock_monitoring);
     ASSERT_THAT(dynamic_cast<SystemIO*>(fabric_server.io__.get()), Ne(nullptr));
     ASSERT_THAT(dynamic_cast<fabric::FabricFactory*>(fabric_server.factory__.get()), Ne(nullptr));
@@ -46,7 +46,7 @@ class RdsFabricServerTests : public Test {
 
     void SetUp() override {
         mock_instanced_statistics.reset(new NiceMock<MockInstancedStatistics>);
-        mock_monitoring.reset(new StrictMock<MockReceiverMonitoringClient>{nullptr});
+        mock_monitoring.reset(new StrictMock<MockReceiverMonitoringClient>);
         RdsFabricServer XX{expected_address, &mock_logger, mock_monitoring};
 
         rds_server_ptr.reset(new RdsFabricServer {expected_address, &mock_logger, mock_monitoring});

@@ -38,7 +38,7 @@ namespace {
 
 TEST(RdsTCPServer, Constructor) {
     NiceMock<MockLogger> mock_logger;
-    std::shared_ptr<StrictMock<MockReceiverMonitoringClient>> mock_monitoring{new StrictMock<MockReceiverMonitoringClient>{nullptr}};
+    std::shared_ptr<StrictMock<MockReceiverMonitoringClient>> mock_monitoring{new StrictMock<MockReceiverMonitoringClient>};
     RdsTcpServer tcp_server("", &mock_logger, mock_monitoring);
     ASSERT_THAT(dynamic_cast<asapo::IO*>(tcp_server.io__.get()), Ne(nullptr));
     ASSERT_THAT(tcp_server.log__, Eq(&mock_logger));
@@ -64,7 +64,7 @@ class RdsTCPServerTests : public Test {
     void SetUp() override {
         mock_instanced_statistics.reset(new NiceMock<asapo::MockInstancedStatistics>);
 
-        mock_monitoring.reset(new StrictMock<asapo::MockReceiverMonitoringClient>{nullptr});
+        mock_monitoring.reset(new StrictMock<asapo::MockReceiverMonitoringClient>);
         tcp_server_ptr.reset(new RdsTcpServer{expected_address, &mock_logger, mock_monitoring});
 
         tcp_server_ptr->io__ = std::unique_ptr<asapo::IO> {&mock_io};
