@@ -44,7 +44,7 @@ MATCHER_P4(M_CheckSendRequest, op_code, buf_id, data_size, message,
     return ((asapo::GenericRequestHeader*) arg)->op_code == op_code
            && ((asapo::GenericRequestHeader*) arg)->data_id == uint64_t(buf_id)
            && ((asapo::GenericRequestHeader*) arg)->data_size == uint64_t(data_size)
-           && strcmp(((asapo::GenericRequestHeader*) arg)->api_version, "v0.2") == 0
+           && strcmp(((asapo::GenericRequestHeader*) arg)->api_version, "v0.1") == 0
            && strcmp(((asapo::GenericRequestHeader*) arg)->message, message) == 0;
 }
 

@@ -76,6 +76,7 @@ class ProducerImpl : public Producer {
 
     uint64_t GetRequestsQueueSize() override;
     Error WaitRequestsFinished(uint64_t timeout_ms) override;
+    Error EnableNewMonitoringApiFormat(bool enabled) override;
     uint64_t GetRequestsQueueVolumeMb() override;
     void SetRequestsQueueLimits(uint64_t size, uint64_t volume) override;
     std::string GetStreamMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const override;
@@ -93,6 +94,8 @@ class ProducerImpl : public Producer {
                RequestCallback callback, bool manage_data_memory);
     GenericRequestHeader GenerateNextSendRequest(const MessageHeader& message_header, std::string stream,
                                                  uint64_t ingest_mode);
+    bool source_cred_string_using_new_format_;
+    std::unique_ptr<SourceCredentials> last_creds_;
     std::string source_cred_string_;
     uint64_t timeout_ms_;
     std::string endpoint_;
@@ -100,6 +103,7 @@ class ProducerImpl : public Producer {
                                bool* supported) const;
     std::string GetMeta(const std::string& stream, uint64_t timeout_ms, Error* err) const;
 
+    Error RefreshSourceCredentialString(SourceCredentials source_cred);
 };
 
 struct ReceiverResponse {

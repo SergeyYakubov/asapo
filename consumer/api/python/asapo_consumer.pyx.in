@@ -196,6 +196,13 @@ cdef class PyConsumer:
         self.c_consumer.get().SetTimeout(timeout)
     def force_no_rdma(self):
         self.c_consumer.get().ForceNoRdma()
+    def enable_new_monitoring_api_format(self, bool enabled):
+        cdef Error err
+        with nogil:
+            err = self.c_consumer.get().EnableNewMonitoringApiFormat(enabled)
+        if err:
+            throw_exception(err)
+        return
     def current_connection_type(self):
         cdef NetworkConnectionType connection_type = self.c_consumer.get().CurrentConnectionType()
         cdef int cased = <int>connection_type

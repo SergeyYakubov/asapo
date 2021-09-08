@@ -101,7 +101,7 @@ void RequestHandlerTests::MockGetSlotAndUnlockIt(bool return_without_error) {
 void RequestHandlerTests::MockSendResponse(asapo::NetworkErrorCode expected_response_code, bool return_without_error, bool expect_monitoring) {
     if (expect_monitoring) {
         EXPECT_CALL(*mock_net_ptr, Monitoring());
-        EXPECT_CALL(*mock_monitoring_ptr, SendRdsRequestWasMissDataPoint("pipelineStepId", "instanceId", "bt", "source", "stream", "UnknownTODO"));
+        EXPECT_CALL(*mock_monitoring_ptr, SendRdsRequestWasMissDataPoint("pipelineStepId", "instanceId", "bt", "source", "stream"));
     }
 
     EXPECT_CALL(*mock_net_ptr, SendResponse_t(
@@ -116,7 +116,7 @@ void RequestHandlerTests::MockSendResponseAndSlotData(asapo::NetworkErrorCode ex
         bool return_without_error) {
 
     EXPECT_CALL(*mock_net_ptr, Monitoring());
-    EXPECT_CALL(*mock_monitoring_ptr, SendReceiverRequestDataPoint("pipelineStepId", "instanceId", "bt", "source", "stream", "UnknownTODO", _, _));
+    EXPECT_CALL(*mock_monitoring_ptr, SendReceiverRequestDataPoint("pipelineStepId", "instanceId", "bt", "source", "stream", _, _));
 
     EXPECT_CALL(*mock_net_ptr, SendResponseAndSlotData_t(
                     &request,

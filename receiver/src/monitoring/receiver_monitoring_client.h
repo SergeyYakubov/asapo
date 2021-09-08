@@ -50,45 +50,32 @@ public:
     VIRTUAL void StartSendingThread();
     VIRTUAL void StopSendingThread();
 
-    VIRTUAL void SendProducerToReceiverTransferDataPoint(
-            const std::string& pipelineStepId,
-            const std::string& producerInstanceId,
+    VIRTUAL void SendProducerToReceiverTransferDataPoint(const std::string& pipelineStepId,
+                                                         const std::string& producerInstanceId,
+                                                         const std::string& beamtime,
+                                                         const std::string& source,
+                                                         const std::string& stream,
+                                                         uint64_t fileSize,
+                                                         uint64_t transferTimeInMicroseconds,
+                                                         uint64_t writeIoTimeInMicroseconds,
+                                                         uint64_t dbTimeInMicroseconds);
 
-            const std::string& beamtime,
-            const std::string& source,
-            const std::string& stream,
-            const std::string& fileName,
+    VIRTUAL void SendRdsRequestWasMissDataPoint(const std::string& pipelineStepId,
+                                                const std::string& consumerInstanceId,
+                                                const std::string& beamtime,
+                                                const std::string& source,
+                                                const std::string& stream);
 
-            uint64_t fileSize,
-            uint64_t transferTimeInMicroseconds,
-            uint64_t writeIoTimeInMicroseconds,
-            uint64_t dbTimeInMicroseconds
-            );
-
-    VIRTUAL void SendRdsRequestWasMissDataPoint(
-            const std::string& pipelineStepId,
-            const std::string& consumerInstanceId,
-
-            const std::string& beamtime,
-            const std::string& source,
-            const std::string& stream,
-            const std::string& fileName
-            );
-
-    VIRTUAL void SendReceiverRequestDataPoint(
-            const std::string& pipelineStepId,
-            const std::string& consumerInstanceId,
-
-            const std::string& beamtime,
-            const std::string& source,
-            const std::string& stream,
-            const std::string& fileName,
-
-            uint64_t fileSize,
-            uint64_t transferTimeInMicroseconds
-            );
+    VIRTUAL void SendReceiverRequestDataPoint(const std::string& pipelineStepId,
+                                              const std::string& consumerInstanceId,
+                                              const std::string& beamtime,
+                                              const std::string& source, const std::string& stream,
+                                              uint64_t fileSize,
+                                              uint64_t transferTimeInMicroseconds);
 
     VIRTUAL void FillMemoryStats();
+
+    Error ReinitializeClient();
 
 private:
     Error GetMonitoringServerUrl(std::string* url) const;
@@ -119,8 +106,6 @@ public:
                 const std::string& source,
                 const std::string& stream);
     };
-
-    Error ReinitializeClient();
 };
 
 using SharedReceiverMonitoringClient = std::shared_ptr<asapo::ReceiverMonitoringClient>;

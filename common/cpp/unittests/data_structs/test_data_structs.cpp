@@ -193,15 +193,27 @@ TEST(StreamInfo, ConvertToJson) {
     ASSERT_THAT(json, Eq(expected_json));
 }
 
-
 TEST(SourceCredentials, ConvertToString) {
     auto sc = SourceCredentials{SourceType::kRaw, "instance", "step", "beamtime", "beamline", "source", "token"};
     std::string expected1 = "raw%instance%step%beamtime%beamline%source%token";
     std::string expected2 = "processed%instance%step%beamtime%beamline%source%token";
 
-    auto res1 = sc.GetString();
+    auto res1 = sc.GetString(asapo::SourceCredentialsVersion::NewVersion);
     sc.type = asapo::SourceType::kProcessed;
-    auto res2 = sc.GetString();
+    auto res2 = sc.GetString(asapo::SourceCredentialsVersion::NewVersion);
+
+    ASSERT_THAT(res1, Eq(expected1));
+    ASSERT_THAT(res2, Eq(expected2));
+}
+
+TEST(SourceCredentials, ConvertToString_OldFormat) {
+    auto sc = SourceCredentials{SourceType::kRaw, "instance", "step", "beamtime", "beamline", "source", "token"};
+    std::string expected1 = "raw%%beamtime%beamline%source%token";
+    std::string expected2 = "processed%%beamtime%beamline%source%token";
+
+    auto res1 = sc.GetString(asapo::SourceCredentialsVersion::OldVersion);
+    sc.type = asapo::SourceType::kProcessed;
+    auto res2 = sc.GetString(asapo::SourceCredentialsVersion::OldVersion);
 
     ASSERT_THAT(res1, Eq(expected1));
     ASSERT_THAT(res2, Eq(expected2));

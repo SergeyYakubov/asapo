@@ -12,31 +12,45 @@ import (
 )
 
 type SourceCredentials struct {
-	InstanceId		string
-	PipelineStep	string
+	Type 	   		string
 	BeamtimeId 		string
 	Beamline   		string
 	DataSource     	string
 	Token      		string
-	Type 	   		string
+
+	// Optional
+	InstanceId		string
+	PipelineStep	string
 }
 
 type authorizationRequest struct {
 	SourceCredentials string
 	OriginHost        string
+	NewFormat 		  bool
 }
 
 func getSourceCredentials(request authorizationRequest) (SourceCredentials, error) {
-
-
 	vals := strings.Split(request.SourceCredentials, "%")
 	nvals:=len(vals)
-	if nvals < 5 {
+	if (request.NewFormat && nvals < 7) || (!request.NewFormat && nvals < 5) {
 		return SourceCredentials{}, errors.New("cannot get source credentials from " + request.SourceCredentials)
 	}
 
-	creds := SourceCredentials{Type:vals[0], InstanceId: vals[1], PipelineStep: vals[2], BeamtimeId: vals[3], Beamline: vals[4], Token:vals[nvals-1]}
-	creds.DataSource=strings.Join(vals[5:nvals-1],"%")
+	var creds SourceCredentials
+
+	if request.NewFormat {
+		creds = SourceCredentials{
+			Type:       vals[0],
+			InstanceId: vals[1], PipelineStep: vals[2],
+			BeamtimeId: vals[3], Beamline: vals[4], Token: vals[nvals-1]}
+		creds.DataSource=strings.Join(vals[5:nvals-1],"%")
+	} else {
+		creds = SourceCredentials{
+			Type:       vals[0],
+			InstanceId: "Unset", PipelineStep: "Unset",
+			BeamtimeId: vals[1], Beamline: vals[2], Token: vals[nvals-1]}
+		creds.DataSource=strings.Join(vals[3:nvals-1],"%")
+	}
 	if creds.DataSource == "" {
 		creds.DataSource = "detector"
 	}

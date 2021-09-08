@@ -13,20 +13,19 @@ public:
 
     MOCK_METHOD0(StopSendingThread, void());
 
-    MOCK_METHOD10(SendProducerToReceiverTransferDataPoint, void(const std::string& pipelineStepId, const std::string& producerInstanceId,
+    MOCK_METHOD9(SendProducerToReceiverTransferDataPoint, void(const std::string& pipelineStepId, const std::string& producerInstanceId,
             const std::string& beamtime, const std::string& source,
-            const std::string& stream, const std::string& fileName, uint64_t fileSize,
+            const std::string& stream, uint64_t fileSize,
             uint64_t transferTimeInMicroseconds, uint64_t writeIoTimeInMicroseconds,
             uint64_t dbTimeInMicroseconds));
 
-    MOCK_METHOD6(SendRdsRequestWasMissDataPoint, void(const std::string& pipelineStepId, const std::string& consumerInstanceId,
+    MOCK_METHOD5(SendRdsRequestWasMissDataPoint, void(const std::string& pipelineStepId, const std::string& consumerInstanceId,
             const std::string& beamtime, const std::string& source,
-            const std::string& stream, const std::string& fileName));
+            const std::string& stream));
 
-    MOCK_METHOD8(SendReceiverRequestDataPoint, void(const std::string& pipelineStepId, const std::string& consumerInstanceId,
+    MOCK_METHOD7(SendReceiverRequestDataPoint, void(const std::string& pipelineStepId, const std::string& consumerInstanceId,
             const std::string& beamtime, const std::string& source, const std::string& stream,
-            const std::string& fileName, uint64_t fileSize,
-            uint64_t transferTimeInMicroseconds));
+            uint64_t fileSize, uint64_t transferTimeInMicroseconds));
 
     MOCK_METHOD0(FillMemoryStats, void());
 };

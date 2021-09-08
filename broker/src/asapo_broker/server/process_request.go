@@ -41,9 +41,7 @@ func extractRequestParameters(r *http.Request, needGroupID bool) (
 	instanceid := r.URL.Query().Get("instanceid")
 	pipelinestep := r.URL.Query().Get("pipelinestep")
 
-	correctInstanceAndPipeline := len(instanceid) > 0 && len(pipelinestep) > 0
-
-	allParametersAreOk := ok1 && ok2 && ok3 && ok4 && correctInstanceAndPipeline
+	allParametersAreOk := ok1 && ok2 && ok3 && ok4
 
 	return instanceid, pipelinestep, db_name, datasource, stream, group_id, allParametersAreOk
 }
@@ -103,7 +101,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 		Size uint64 `bson:"size" json:"size"`
 	}
 
-	if err == nil && code == 200 {
+	if err == nil && code == 200 && len(consumerInstanceId) > 0 && len(pipelineStepId) > 0 {
 		var sized SizeStruct
 		err = json.Unmarshal(answer, &sized)
 		if err == nil {

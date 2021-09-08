@@ -10,10 +10,16 @@ using std::chrono::system_clock;
 
 namespace asapo {
 
-std::string RequestHandlerAuthorize::GetRequestString(const Request* request, const char* source_credentials) const {
-    std::string request_string = std::string("{\"SourceCredentials\":\"") +
-                                 source_credentials + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\"}";
-    return request_string;
+std::string RequestHandlerAuthorize::GetRequestString(const Request* request, bool use_new_format, const char* source_credentials) const {
+    if (use_new_format) {
+        std::string request_string = std::string("{\"SourceCredentials\":\"") +
+                source_credentials + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\",\"NewFormat\": true}";
+        return request_string;
+    } else {
+        std::string request_string = std::string("{\"SourceCredentials\":\"") +
+                source_credentials + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\"}";
+        return request_string;
+    }
 }
 
 Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error& err, const std::string response,
@@ -38,10 +44,10 @@ Error CheckAccessType(const std::vector<std::string>& access_types) {
 }
 
 
-Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_credentials) const {
+Error RequestHandlerAuthorize::Authorize(Request* request, bool use_new_format, const char* source_credentials) const {
     HttpCode code;
     Error err;
-    std::string request_string = GetRequestString(request, source_credentials);
+    std::string request_string = GetRequestString(request, use_new_format, source_credentials);
 
     auto response = http_client__->Post(GetReceiverConfig()->authorization_server + "/authorize", "", request_string, &code,
                                         &err);
@@ -84,6 +90,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
 
     last_updated_ = system_clock::now();
     cached_source_credentials_ = source_credentials;
+    cached_source_new_format_ = use_new_format;
 
     return nullptr;
 }
@@ -114,12 +121,17 @@ Error RequestHandlerAuthorize::ProcessAuthorizationRequest(Request* request) con
         return err;
     }
 
-    return Authorize(request, request->GetMetaData().c_str());
+    bool newFormat = false;
+    if (strcmp(request->GetMessage(), "new_source_credentials_format") == 0) {
+        newFormat = true;
+    }
+
+    return Authorize(request, newFormat, request->GetMetaData().c_str());
 }
 
 Error RequestHandlerAuthorize::ProcessReAuthorization(Request* request) const {
     std::string old_beamtimeId = beamtime_id_;
-    auto err = Authorize(request, cached_source_credentials_.c_str());
+    auto err = Authorize(request, cached_source_new_format_, cached_source_credentials_.c_str());
     if (err == asapo::ReceiverErrorTemplates::kAuthorizationFailure || (
                 err == nullptr && old_beamtimeId != beamtime_id_)) {
         return asapo::ReceiverErrorTemplates::kReAuthorizationFailure.Generate();

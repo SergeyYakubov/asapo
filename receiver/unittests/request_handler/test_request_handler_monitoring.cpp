@@ -96,7 +96,6 @@ TEST_F(RequestHandlerMonitoringTests, ExpectThatMonitoringFunctionIsCalled) {
     EXPECT_CALL(*mock_monitoring, SendProducerToReceiverTransferDataPoint(
             expected_pipeline_step_id, expected_producer_instance_id,
             expected_beamtime_id, expected_data_source, expected_stream,
-            expected_file_name,
             2, 3, 4, 5
             )).Times(1);
 

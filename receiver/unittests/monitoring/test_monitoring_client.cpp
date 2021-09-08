@@ -91,7 +91,7 @@ namespace {
                 "p1", "i1", "b1", "so1", "st1"
                 )).WillOnce(Return(x));
 
-        monitoring->SendProducerToReceiverTransferDataPoint("p1", "i1", "b1", "so1", "st1", "f1", 1, 2, 3, 4);
+        monitoring->SendProducerToReceiverTransferDataPoint("p1", "i1", "b1", "so1", "st1", 1, 2, 3, 4);
 
         EXPECT_THAT(x->totalfilesize(), Eq(101));
         EXPECT_THAT(x->totaltransferreceivetimeinmicroseconds(), Eq(202));
@@ -109,7 +109,7 @@ namespace {
                 "p1", "i1", "b1", "so1", "st1"
                 )).WillOnce(Return(x));
 
-        monitoring->SendRdsRequestWasMissDataPoint("p1", "i1", "b1", "so1", "st1", "f1");
+        monitoring->SendRdsRequestWasMissDataPoint("p1", "i1", "b1", "so1", "st1");
 
         EXPECT_THAT(x->totalfilesize(), Eq(100));
         EXPECT_THAT(x->hits(), Eq(200));
@@ -127,7 +127,7 @@ namespace {
                 "p1", "i1", "b1", "so1", "st1"
                 )).WillOnce(Return(x));
 
-        monitoring->SendReceiverRequestDataPoint("p1", "i1", "b1", "so1", "st1", "f1", 2, 3);
+        monitoring->SendReceiverRequestDataPoint("p1", "i1", "b1", "so1", "st1", 2, 3);
 
         EXPECT_THAT(x->totalfilesize(), Eq(102));
         EXPECT_THAT(x->hits(), Eq(201));

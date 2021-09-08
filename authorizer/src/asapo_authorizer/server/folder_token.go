@@ -13,10 +13,12 @@ import (
 
 type folderTokenRequest struct {
 	Folder       string
-	InstanceId   string
-	PipelineStep string
 	BeamtimeId   string
 	Token        string
+
+	// Optional
+	InstanceId   string
+	PipelineStep string
 }
 
 type tokenFolders struct {
@@ -64,12 +66,20 @@ func extractFolderTokenrequest(r *http.Request) (folderTokenRequest, error) {
 	if len(request.Folder) == 0 || len(request.BeamtimeId) == 0 || len(request.Token) == 0 {
 		return folderTokenRequest{}, errors.New("some request fields are empty")
 	}
+
+	if len(request.PipelineStep) == 0 {
+		request.InstanceId = "Unset"
+	}
+	if len(request.PipelineStep) == 0 {
+		request.PipelineStep = "Unset"
+	}
+
 	return request, nil
 
 }
 
 func checkBeamtimeFolder(request folderTokenRequest, ver utils.VersionNum) (folders tokenFolders, err error) {
-	beamtimeMeta, err := findMeta(SourceCredentials{request.InstanceId, request.PipelineStep, request.BeamtimeId, "auto", "", "", ""})
+	beamtimeMeta, err := findMeta(SourceCredentials{"", request.BeamtimeId, "auto", "", "", request.InstanceId, request.PipelineStep})
 	if err != nil {
 		log.Error("cannot get beamtime meta" + err.Error())
 		return folders,err

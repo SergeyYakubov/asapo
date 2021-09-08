@@ -70,6 +70,7 @@ cdef extern from "asapo/asapo_consumer.h" namespace "asapo" nogil:
         Consumer() except +
         void SetTimeout(uint64_t timeout_ms)
         void ForceNoRdma()
+        Error EnableNewMonitoringApiFormat(bool enabled)
         NetworkConnectionType CurrentConnectionType()
         Error GetNext(string group_id, MessageMeta* info, MessageData* data,string stream)
         Error GetLast(MessageMeta* info, MessageData* data, string stream)

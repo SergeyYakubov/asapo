@@ -27,6 +27,7 @@ using asapo::MockHttpClient;
 using asapo::MockNetClient;
 using asapo::HttpCode;
 using asapo::SimpleError;
+using asapo::SourceCredentialsVersion;
 
 using ::testing::AtLeast;
 using ::testing::Eq;
@@ -61,9 +62,9 @@ const uint8_t expected_value = 1;
 class ConsumerImplTests : public Test {
   public:
     std::unique_ptr<ConsumerImpl> consumer, fts_consumer;
-    NiceMock<MockIO> mock_io;
-    NiceMock<MockHttpClient> mock_http_client;
-    NiceMock<MockNetClient> mock_netclient;
+    NiceMock<MockIO> mock_io{};
+    NiceMock<MockHttpClient> mock_http_client{};
+    NiceMock<MockNetClient> mock_netclient{};
     MessageMeta info;
     std::string expected_server_uri = "test:8400";
     std::string expected_broker_uri = "asapo-broker:5005";
@@ -81,8 +82,6 @@ class ConsumerImplTests : public Test {
     std::string expected_group_id_encoded = "groupid%24";
     std::string expected_data_source_encoded = "source%2F%24.%3F";
     std::string expected_stream_encoded = "str%20%24%20eam%24";
-    std::string expected_token_url_with_sourceinfo = std::string("token") +
-            "&instanceid=" + expected_instance_id_encoded + "&pipelinestep=" + expected_pipeline_step_encoded;
 
     std::string expected_metadata = "{\"meta\":1}";
     std::string expected_query_string = "bla";
@@ -92,6 +91,9 @@ class ConsumerImplTests : public Test {
     std::string expected_pipeline_step = "a new step";
     std::string expected_instance_id_encoded = "some%20instance";
     std::string expected_pipeline_step_encoded = "a%20new%20step";
+
+    std::string expected_token_url_with_sourceinfo = std::string("token") +
+            "&instanceid=" + expected_instance_id_encoded + "&pipelinestep=" + expected_pipeline_step_encoded;
 
     std::string expected_beamtime_id = "beamtime_id";
     uint64_t expected_message_size = 100;
@@ -136,29 +138,39 @@ class ConsumerImplTests : public Test {
         fts_consumer->io__ = std::unique_ptr<IO> {&mock_io};
         fts_consumer->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         fts_consumer->net_client__ = std::unique_ptr<asapo::NetClient> {&mock_netclient};
-        ON_CALL(mock_http_client, UrlEscape_t(expected_instance_id)).WillByDefault(Return(expected_instance_id_encoded));
-        ON_CALL(mock_http_client, UrlEscape_t(expected_pipeline_step)).WillByDefault(Return(expected_pipeline_step_encoded));
-        ON_CALL(mock_http_client, UrlEscape_t(expected_stream)).WillByDefault(Return(expected_stream_encoded));
-        ON_CALL(mock_http_client, UrlEscape_t(expected_group_id)).WillByDefault(Return(expected_group_id_encoded));
-        ON_CALL(mock_http_client, UrlEscape_t(expected_data_source)).WillByDefault(Return(expected_data_source_encoded));
-        ON_CALL(mock_http_client, UrlEscape_t("0")).WillByDefault(Return("0"));
-        ON_CALL(mock_http_client, UrlEscape_t("")).WillByDefault(Return(""));
-        ON_CALL(mock_http_client, UrlEscape_t("default")).WillByDefault(Return("default"));
-        ON_CALL(mock_http_client, UrlEscape_t("stream")).WillByDefault(Return("stream"));
-        ON_CALL(mock_http_client, UrlEscape_t("instance")).WillByDefault(Return("instance"));
-        ON_CALL(mock_http_client, UrlEscape_t("step")).WillByDefault(Return("step"));
-        ON_CALL(mock_http_client, UrlEscape_t("DefaultStep")).WillByDefault(Return("DefaultStep"));
-        ON_CALL(mock_http_client, UrlEscape_t("a")).WillByDefault(Return("b"));
-        ON_CALL(mock_http_client, UrlEscape_t("b")).WillByDefault(Return("b"));
 
+        asapo::Error err1 = consumer->EnableNewMonitoringApiFormat(true);
+        asapo::Error err2 = fts_consumer->EnableNewMonitoringApiFormat(true);
+
+        {
+            ON_CALL(mock_http_client, UrlEscape_t(expected_instance_id)).WillByDefault(Return(expected_instance_id_encoded));
+            ON_CALL(mock_http_client, UrlEscape_t(expected_pipeline_step)).WillByDefault(Return(expected_pipeline_step_encoded));
+            ON_CALL(mock_http_client, UrlEscape_t(expected_stream)).WillByDefault(Return(expected_stream_encoded));
+            ON_CALL(mock_http_client, UrlEscape_t(expected_group_id)).WillByDefault(Return(expected_group_id_encoded));
+            ON_CALL(mock_http_client, UrlEscape_t(expected_data_source)).WillByDefault(Return(expected_data_source_encoded));
+            ON_CALL(mock_http_client, UrlEscape_t("0")).WillByDefault(Return("0"));
+            ON_CALL(mock_http_client, UrlEscape_t("")).WillByDefault(Return(""));
+            ON_CALL(mock_http_client, UrlEscape_t("default")).WillByDefault(Return("default"));
+            ON_CALL(mock_http_client, UrlEscape_t("stream")).WillByDefault(Return("stream"));
+            ON_CALL(mock_http_client, UrlEscape_t("instance")).WillByDefault(Return("instance"));
+            ON_CALL(mock_http_client, UrlEscape_t("step")).WillByDefault(Return("step"));
+            ON_CALL(mock_http_client, UrlEscape_t("DefaultStep")).WillByDefault(Return("DefaultStep"));
+            ON_CALL(mock_http_client, UrlEscape_t("a")).WillByDefault(Return("b"));
+            ON_CALL(mock_http_client, UrlEscape_t("b")).WillByDefault(Return("b"));
+        }
     }
     void TearDown() override {
         consumer->io__.release();
         consumer->httpclient__.release();
         consumer->net_client__.release();
+
         fts_consumer->io__.release();
         fts_consumer->httpclient__.release();
         fts_consumer->net_client__.release();
+
+        Mock::VerifyAndClear(&mock_io);
+        Mock::VerifyAndClear(&mock_http_client);
+        Mock::VerifyAndClear(&mock_netclient);
 
     }
     void MockGet(const std::string& response, asapo::HttpCode return_code = HttpCode::OK) {
@@ -227,7 +239,7 @@ class ConsumerImplTests : public Test {
         return fi;
     }
 
-    void CheckDefaultingOfCredentials(asapo::SourceCredentials credentials, std::string expectedUrlPath) {
+    void CheckDefaultingOfCredentials(asapo::SourceCredentials credentials, SourceCredentialsVersion formatVersion, std::string expectedUrlPath) {
         consumer->io__.release();
         consumer->httpclient__.release();
         consumer->net_client__.release();
@@ -240,6 +252,7 @@ class ConsumerImplTests : public Test {
         consumer->io__ = std::unique_ptr<IO> {&mock_io};
         consumer->httpclient__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         consumer->net_client__ = std::unique_ptr<asapo::NetClient> {&mock_netclient};
+        consumer->EnableNewMonitoringApiFormat(formatVersion == asapo::SourceCredentialsVersion::NewVersion);
 
         MockGetBrokerUri();
 
@@ -263,16 +276,24 @@ TEST_F(ConsumerImplTests, DefaultStreamIsDetector) {
     CheckDefaultingOfCredentials(
             asapo::SourceCredentials{
                 asapo::SourceType::kProcessed, "instance", "step", "beamtime_id", "", "", expected_token
-                },
+                }, asapo::SourceCredentialsVersion::NewVersion,
                 "/beamtime/beamtime_id/detector/stream/" + expected_group_id_encoded + "/next?token=" + expected_token
                 + "&instanceid=instance&pipelinestep=step");
+}
+
+TEST_F(ConsumerImplTests, DefaultStreamIsDetector_OldFormat) {
+    CheckDefaultingOfCredentials(
+            asapo::SourceCredentials{
+                asapo::SourceType::kProcessed, "instance", "step", "beamtime_id", "", "", expected_token
+                }, asapo::SourceCredentialsVersion::OldVersion,
+                "/beamtime/beamtime_id/detector/stream/" + expected_group_id_encoded + "/next?token=" + expected_token);
 }
 
 TEST_F(ConsumerImplTests, DefaultPipelineStepIsDefaultStep) {
     CheckDefaultingOfCredentials(
             asapo::SourceCredentials{
                 asapo::SourceType::kProcessed, "instance", "", "beamtime_id", "a", "b", expected_token
-                },
+                }, asapo::SourceCredentialsVersion::NewVersion,
                 "/beamtime/beamtime_id/b/stream/" + expected_group_id_encoded + "/next?token=" + expected_token
                 + "&instanceid=instance&pipelinestep=DefaultStep");
 }
@@ -281,7 +302,7 @@ TEST_F(ConsumerImplTests, AutoPipelineStepIsDefaultStep) {
     CheckDefaultingOfCredentials(
             asapo::SourceCredentials{
                 asapo::SourceType::kProcessed, "instance", "auto", "beamtime_id", "a", "b", expected_token
-                },
+                }, asapo::SourceCredentialsVersion::NewVersion,
                 "/beamtime/beamtime_id/b/stream/" + expected_group_id_encoded + "/next?token=" + expected_token
                 + "&instanceid=instance&pipelinestep=DefaultStep");
 }
@@ -1272,7 +1293,7 @@ void ConsumerImplTests::ExpectFolderToken() {
                                                expected_beamtime_id
                                                + "\",\"Token\":\"" + expected_token + "\"}";
 
-    EXPECT_CALL(mock_http_client, Post_t(HasSubstr(expected_server_uri + "/asapo-authorizer/v0.3/folder"), _,
+    EXPECT_CALL(mock_http_client, Post_t(HasSubstr(expected_server_uri + "/asapo-authorizer/v0.2/folder"), _,
                                          expected_folder_query_string, _, _)).WillOnce(DoAll(
                                                      SetArgPointee<3>(HttpCode::OK),
                                                      SetArgPointee<4>(nullptr),

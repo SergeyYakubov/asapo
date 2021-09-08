@@ -84,6 +84,12 @@ enum class SourceType {
 Error GetSourceTypeFromString(std::string stype, SourceType* type);
 std::string GetStringFromSourceType(SourceType type);
 
+
+enum class SourceCredentialsVersion {
+    NewVersion, // With InstanceId and PipelineStep
+    OldVersion,
+};
+
 struct SourceCredentials {
     SourceCredentials(SourceType type,
                       std::string instanceId,
@@ -112,9 +118,15 @@ struct SourceCredentials {
     std::string data_source;
     std::string user_token;
     SourceType type = SourceType::kProcessed;
-    std::string GetString() {
-        return (type == SourceType::kRaw ? std::string("raw") : std::string("processed")) + "%" + instance_id
-        + "%" + pipeline_step + "%" + beamtime_id + "%" + beamline + "%" + data_source + "%" + user_token;
+    std::string GetString(SourceCredentialsVersion version) {
+        if (version == SourceCredentialsVersion::NewVersion) {
+            return (type == SourceType::kRaw ? std::string("raw") : std::string("processed"))
+            + "%" + instance_id + "%" + pipeline_step
+            + "%" + beamtime_id + "%" + beamline + "%" + data_source + "%" + user_token;
+        } else {
+            return (type == SourceType::kRaw ? std::string("raw") : std::string("processed"))
+            + "%" + beamtime_id + "%" + beamline + "%" + data_source + "%" + user_token;
+        }
     };
 };
 

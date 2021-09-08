@@ -1,3 +1,14 @@
+## 21.09.0
+
+FEATURES
+* Monitoring: Added detailed monitoring and pipeline visualization
+* Consumer API: New protocol format is disabled by default. Use `EnableNewMonitoringApiFormat` to enable
+* Producer API: New protocol format is disabled by default. Use `EnableNewMonitoringApiFormat` to enable
+
+BREAKING CHANGES
+* `SourceCredentials` now contains an `InstanceId` and `PipelineStepId`.  
+  If you are not interested in Monitoring, just set them to `"auto"`.
+
 ## 21.06.0
 
 FEATURES

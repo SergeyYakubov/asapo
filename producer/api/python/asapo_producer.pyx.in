@@ -418,6 +418,13 @@ cdef class PyProducer:
         return self.c_producer.get().GetRequestsQueueSize()
     def get_requests_queue_volume_mb(self):
         return self.c_producer.get().GetRequestsQueueVolumeMb()
+    def enable_new_monitoring_api_format(self, bool enabled):
+        cdef Error err
+        with nogil:
+            err = self.c_producer.get().EnableNewMonitoringApiFormat(enabled)
+        if err:
+            throw_exception(err)
+        return
     def set_requests_queue_limits(self,uint64_t size = 0, uint64_t volume_mb = 0):
         return self.c_producer.get().SetRequestsQueueLimits(size,volume_mb)
     def wait_requests_finished(self,timeout_ms):

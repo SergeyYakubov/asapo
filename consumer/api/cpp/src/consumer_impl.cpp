@@ -180,6 +180,15 @@ void ConsumerImpl::ForceNoRdma() {
     should_try_rdma_first_ = false;
 }
 
+Error ConsumerImpl::EnableNewMonitoringApiFormat(bool enabled) {
+    if (enabled && (request_sender_details_prefix_.length()-5 /*spare a few bytes for stream*/) >= kMaxMessageSize) {
+        return TextError("Source credentials are too long");
+    }
+
+    use_new_api_format_ = enabled;
+    return nullptr;
+}
+
 NetworkConnectionType ConsumerImpl::CurrentConnectionType() const {
     return current_connection_type_;
 }
@@ -517,7 +526,11 @@ Error ConsumerImpl::CreateNetClientAndTryToGetFile(const MessageMeta* info, cons
 }
 
 Error ConsumerImpl::TryGetDataFromBuffer(const MessageMeta* info, MessageData* data) {
-    std::string request_sender_details = request_sender_details_prefix_ + info->stream;
+    std::string request_sender_details;
+    if (use_new_api_format_) {
+        request_sender_details = request_sender_details_prefix_ + info->stream;
+    }
+
     if (!net_client__) {
         return CreateNetClientAndTryToGetFile(info, request_sender_details, data);
     }
@@ -577,14 +590,16 @@ Error ConsumerImpl::FtsSizeRequestWithTimeout(MessageMeta* info) {
 
 Error ConsumerImpl::FtsRequestWithTimeout(MessageMeta* info, MessageData* data) {
     RequestInfo ri = CreateFileTransferRequest(info);
+    if (use_new_api_format_) {
+        ri.extra_params += "&instanceid=" + httpclient__->UrlEscape(source_credentials_.instance_id);
+        ri.extra_params += "&pipelinestep=" + httpclient__->UrlEscape(source_credentials_.pipeline_step);
+        ri.extra_params += "&beamtime=" + httpclient__->UrlEscape(source_credentials_.beamtime_id);
+        ri.extra_params += "&stream=" + httpclient__->UrlEscape(info->stream);
+        ri.extra_params += "&source=" + httpclient__->UrlEscape(info->source);
+    }
+
     RequestOutput response;
     response.data_output_size = info->size;
-
-    ri.extra_params += "&instanceid=" + httpclient__->UrlEscape(source_credentials_.instance_id);
-    ri.extra_params += "&pipelinestep=" + httpclient__->UrlEscape(source_credentials_.pipeline_step);
-    ri.extra_params += "&beamtime=" + httpclient__->UrlEscape(source_credentials_.beamtime_id);
-    ri.extra_params += "&stream=" + httpclient__->UrlEscape(info->stream);
-    ri.extra_params += "&source=" + httpclient__->UrlEscape(info->source);
 
     auto err = ServiceRequestWithTimeout(kFileTransferServiceName, &current_fts_uri_, ri, &response);
     if (err) {
@@ -1030,13 +1045,13 @@ RequestInfo ConsumerImpl::CreateBrokerApiRequest(std::string stream, std::string
     RequestInfo ri;
     ri.api = uri;
 
-    // Broker requires instance and pipeline
-    ri.extra_params += "&instanceid=" + httpclient__->UrlEscape(source_credentials_.instance_id);
-    ri.extra_params += "&pipelinestep=" + httpclient__->UrlEscape(source_credentials_.pipeline_step);
+    if (use_new_api_format_) {
+        ri.extra_params += "&instanceid=" + httpclient__->UrlEscape(source_credentials_.instance_id);
+        ri.extra_params += "&pipelinestep=" + httpclient__->UrlEscape(source_credentials_.pipeline_step);
+    }
 
     return ri;
 
 }
-
 
 }

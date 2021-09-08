@@ -83,7 +83,6 @@ bool ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* re
                     requestSenderDetails->beamtime,
                     requestSenderDetails->source,
                     requestSenderDetails->stream,
-                    "UnknownTODO", // TODO
                     meta->size,
                     timeTookToSend
             );
@@ -93,9 +92,7 @@ bool ReceiverDataServerRequestHandler::ProcessRequestUnlocked(GenericRequest* re
                     requestSenderDetails->instance_id,
                     requestSenderDetails->beamtime,
                     requestSenderDetails->source,
-                    requestSenderDetails->stream,
-                    "UnknownTODO" // TODO
-            );
+                    requestSenderDetails->stream);
         }
     }
 
@@ -166,6 +163,7 @@ std::vector<std::string> split(const std::string& s, const std::string& delimite
 std::unique_ptr<RequestSenderDetails> ReceiverDataServerRequestHandler::ExtractMonitoringInfoFromRequest(const GenericRequest* request) {
     std::string details(request->header.stream);
 
+    // Format: "instanceId§piplineStepId§beamtime§source§stream"
     std::vector<std::string> detailsParts = split(details, "§");
 
     if (detailsParts.size() != 5) {

@@ -33,7 +33,7 @@ MATCHER_P7(M_CheckSendRequest, op_code, buf_id, data_size, mr_addr, mr_length, m
            && data->data_id == uint64_t(buf_id)
            && data->data_size == uint64_t(data_size)
            && mr->addr == uint64_t(mr_addr)
-           && strcmp(data->api_version, "v0.2") == 0
+           && strcmp(data->api_version, "v0.1") == 0
            && strcmp(data->stream, expected_request_sender_details.c_str()) == 0
            && mr->length == uint64_t(mr_length)
            && mr->key == uint64_t(mr_key);

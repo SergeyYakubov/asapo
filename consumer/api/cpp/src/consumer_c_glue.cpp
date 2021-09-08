@@ -360,14 +360,23 @@ extern "C" {
                                     size_t index) {
         return list->handle->at(index);
     }
+
 //! wraps asapo::Consumer::ForceNoRdma()
 /// \copydoc asapo::Consumer::ForceNoRdma()
 /// \param[in] consumer the handle of the consumer concerned
     void asapo_consumer_force_no_rdma(AsapoConsumerHandle consumer);
+
 //! wraps asapo::Consumer::CurrentConnectionType()
 /// \copydoc asapo::Consumer::CurrentConnectionType()
 /// \param[in] consumer the handle of the consumer concerned
     enum AsapoNetworkConnectionType asapo_consumer_current_connection_type(AsapoConsumerHandle consumer);
+
+//! wraps asapo::Consumer::EnableNewMonitoringApiFormat()
+/// \copydoc asapo::Consumer::EnableNewMonitoringApiFormat()
+/// \param[in] consumer the handle of the consumer concerned
+/// \param[in] enabled set this to true if the new API format should be used
+/// \param[out] error will contain a pointer to an AsapoErrorHandle if a problem occured, NULL else.
+    int enable_new_monitoring_api_format(AsapoConsumerHandle consumer, AsapoBool enabled, AsapoErrorHandle* error);
 
 
 //! get list of streams, wraps asapo::Consumer::GetStreamList()

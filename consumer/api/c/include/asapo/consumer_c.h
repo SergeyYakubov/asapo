@@ -108,6 +108,8 @@ int64_t asapo_consumer_get_last_acknowledged_message(AsapoConsumerHandle consume
 void asapo_consumer_force_no_rdma(AsapoConsumerHandle consumer);
 enum AsapoNetworkConnectionType asapo_consumer_current_connection_type(AsapoConsumerHandle consumer);
 
+int enable_new_monitoring_api_format(AsapoConsumerHandle consumer, AsapoBool enabled, AsapoErrorHandle* error);
+
 AsapoStreamInfosHandle asapo_consumer_get_stream_list(AsapoConsumerHandle consumer,
         const char* from,
         enum AsapoStreamFilter filter,

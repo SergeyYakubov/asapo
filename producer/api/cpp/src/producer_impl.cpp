@@ -31,6 +31,8 @@ ProducerImpl::ProducerImpl(std::string endpoint, uint8_t n_processing_threads, u
         break;
     }
     request_pool__.reset(new RequestPool{n_processing_threads, request_handler_factory_.get(), log__});
+
+    source_cred_string_using_new_format_ = false;
 }
 
 GenericRequestHeader ProducerImpl::GenerateNextSendRequest(const MessageHeader& message_header, std::string stream,
@@ -189,9 +191,10 @@ Error ProducerImpl::Send(const MessageHeader& message_header,
 
     err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
         new ProducerRequest{
-            source_cred_string_, std::move(request_header),
-            std::move(data), std::move(message_header.user_metadata), std::move(full_path), callback,
-            manage_data_memory, timeout_ms_}
+                source_cred_string_using_new_format_, source_cred_string_,
+                std::move(request_header), std::move(data), std::move(message_header.user_metadata),
+                std::move(full_path), callback,
+                manage_data_memory, timeout_ms_}
     });
 
     return HandleErrorFromPool(std::move(err), manage_data_memory);
@@ -251,11 +254,28 @@ void ProducerImpl::EnableRemoteLog(bool enable) {
 }
 
 Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
-
     if (!source_cred_string_.empty()) {
         log__->Error("credentials already set");
         return ProducerErrorTemplates::kWrongInput.Generate("credentials already set");
     }
+
+    Error err = RefreshSourceCredentialString(source_cred);
+    if (!err) {
+        last_creds_.reset(new SourceCredentials{source_cred});
+    }
+    return err;
+}
+
+Error ProducerImpl::EnableNewMonitoringApiFormat(bool enabled) {
+    source_cred_string_using_new_format_ = enabled;
+    Error err;
+    if (last_creds_) {
+        err = RefreshSourceCredentialString(*last_creds_);
+    }
+    return err;
+}
+
+Error ProducerImpl::RefreshSourceCredentialString(SourceCredentials source_cred) {
     if (source_cred.instance_id.empty()) {
         source_cred.instance_id = SourceCredentials::kDefaultInstanceId;
     }
@@ -277,7 +297,7 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
     }
 
     if (source_cred.beamtime_id == SourceCredentials::kDefaultBeamtimeId
-            && source_cred.beamline == SourceCredentials::kDefaultBeamline) {
+    && source_cred.beamline == SourceCredentials::kDefaultBeamline) {
         log__->Error("beamtime or beamline should be set");
         source_cred_string_ = "";
         return ProducerErrorTemplates::kWrongInput.Generate("beamtime or beamline should be set");
@@ -298,7 +318,8 @@ Error ProducerImpl::SetCredentials(SourceCredentials source_cred) {
         source_cred.pipeline_step = "DefaultStep";
     }
 
-    source_cred_string_ = source_cred.GetString();
+    source_cred_string_ = source_cred.GetString(source_cred_string_using_new_format_ ? SourceCredentialsVersion::NewVersion : SourceCredentialsVersion::OldVersion);
+
     if (source_cred_string_.size() + source_cred.user_token.size() > kMaxMessageSize) {
         log__->Error("credentials string is too long - " + source_cred_string_);
         source_cred_string_ = "";
@@ -420,12 +441,13 @@ std::string ProducerImpl::BlockingRequest(GenericRequestHeader header, uint64_t 
 
     *err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
         new ProducerRequest{
-            source_cred_string_, std::move(header),
-            nullptr, "", "",
-            unwrap_callback(
+                source_cred_string_using_new_format_,
+                source_cred_string_, std::move(header),
+                nullptr, "", "",
+                unwrap_callback(
                 ActivatePromiseForReceiverResponse,
                 std::move(promise)), true,
-            timeout_ms}
+                timeout_ms}
     }, true);
     if (*err) {
         return "";
@@ -550,6 +572,7 @@ Error ProducerImpl::SendMeta(const std::string& metadata,
     strncpy((char*) data.get(), metadata.c_str(), metadata.size());
     auto err = request_pool__->AddRequest(std::unique_ptr<ProducerRequest> {
         new ProducerRequest{
+            source_cred_string_using_new_format_,
             source_cred_string_, std::move(request_header),
             std::move(data), "", "", callback, true, timeout_ms_}
     });

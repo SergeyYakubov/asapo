@@ -29,14 +29,15 @@ class RequestHandlerAuthorize final: public ReceiverRequestHandler {
     mutable std::string online_path_;
     mutable SourceType source_type_;
     mutable std::string cached_source_credentials_;
+    mutable bool cached_source_new_format_;
     mutable std::chrono::system_clock::time_point last_updated_;
     Error ProcessAuthorizationRequest(Request* request) const;
     Error ProcessOtherRequest(Request* request) const;
-    Error Authorize(Request* request, const char* source_credentials) const;
+    Error Authorize(Request* request, bool use_new_format, const char* source_credentials) const;
     Error ErrorFromAuthorizationServerResponse(const Error& err, const std::string response, HttpCode code) const;
     Error ProcessReAuthorization(Request* request) const;
     bool NeedReauthorize() const;
-    std::string GetRequestString(const Request* request, const char* source_credentials) const;
+    std::string GetRequestString(const Request* request, bool use_new_format, const char* source_credentials) const;
     Error CheckVersion(const std::string& version_from_client) const;
 
 };

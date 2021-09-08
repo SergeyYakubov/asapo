@@ -90,6 +90,7 @@ class ConsumerImpl final : public asapo::Consumer {
     Error DeleteStream(std::string stream, DeleteStreamOptions options) override;
     void SetTimeout(uint64_t timeout_ms) override;
     void ForceNoRdma() override;
+    Error EnableNewMonitoringApiFormat(bool enabled) override;
 
     NetworkConnectionType CurrentConnectionType() const override;
 
@@ -160,6 +161,7 @@ class ConsumerImpl final : public asapo::Consumer {
     bool has_filesystem_;
     SourceCredentials source_credentials_;
     std::string data_source_encoded_;
+    bool use_new_api_format_ = false;
     std::string request_sender_details_prefix_;
     uint64_t timeout_ms_ = 0;
     bool should_try_rdma_first_ = true;

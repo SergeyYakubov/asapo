@@ -21,12 +21,11 @@ Error RequestHandlerMonitoring::ProcessRequest(Request* request) const {
             request->GetBeamtimeId(),
             request->GetDataSource(),
             request->GetStream(),
-            request->GetFileName(),
             stats->GetIncomingBytes(),
             stats->GetElapsedMicrosecondsCount(StatisticEntity::kNetworkIncoming),
             stats->GetElapsedMicrosecondsCount(StatisticEntity::kDisk),
             stats->GetElapsedMicrosecondsCount(StatisticEntity::kDatabase)
-            );
+    );
 
     return nullptr;
 }

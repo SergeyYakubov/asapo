@@ -8,14 +8,14 @@ set (ASAPO_EXAMPLES_DIR .)
 #set (ASAPO_EXAMPLES_DIR ./frozen_versions/${ASAPO_VERSION_IN_DOCS})
 
 #protocol version changes if one of the microservice API's change
-set (ASAPO_CONSUMER_PROTOCOL "v0.5")
-set (ASAPO_PRODUCER_PROTOCOL "v0.4")
+set (ASAPO_CONSUMER_PROTOCOL "v0.4")
+set (ASAPO_PRODUCER_PROTOCOL "v0.3")
 set (ASAPO_DISCOVERY_API_VER "v0.1")
-set (ASAPO_AUTHORIZER_API_VER "v0.3")
-set (ASAPO_BROKER_API_VER "v0.5")
+set (ASAPO_AUTHORIZER_API_VER "v0.2")
+set (ASAPO_BROKER_API_VER "v0.4")
 set (ASAPO_FILE_TRANSFER_SERVICE_API_VER "v0.2")
-set (ASAPO_RECEIVER_API_VER "v0.4")
-set (ASAPO_RDS_API_VER "v0.2")
+set (ASAPO_RECEIVER_API_VER "v0.3")
+set (ASAPO_RDS_API_VER "v0.1")
 set (DB_SCHEMA_VER "v0.1")
 
 #global settings

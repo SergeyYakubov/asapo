@@ -110,7 +110,6 @@ void asapo::ReceiverMonitoringClient::SendProducerToReceiverTransferDataPoint(co
                                                                               const std::string& beamtime,
                                                                               const std::string& source,
                                                                               const std::string& stream,
-                                                                              const std::string& fileName,
                                                                               uint64_t fileSize,
                                                                               uint64_t transferTimeInMicroseconds,
                                                                               uint64_t writeIoTimeInMicroseconds,
@@ -118,10 +117,6 @@ void asapo::ReceiverMonitoringClient::SendProducerToReceiverTransferDataPoint(co
     if (!sendingThreadRunning__) {
         return;
     }
-
-    (void)(fileName); // Discarding: fileName | Maybe we use this in the future
-
-    std::cout << "SendProducerToReceiverTransferDataPoint: pip:" << pipelineStepId << " prod:" << producerInstanceId << " beamtime:" << beamtime << " source:" << source << " stream:" << stream << " f:" << fileName << std::endl;
 
     { // LockGuard block
         std::lock_guard<std::mutex> lockGuard(toBeSendData_mutex_);
@@ -141,13 +136,10 @@ void asapo::ReceiverMonitoringClient::SendRdsRequestWasMissDataPoint(const std::
                                                                      const std::string& consumerInstanceId,
                                                                      const std::string& beamtime,
                                                                      const std::string& source,
-                                                                     const std::string& stream,
-                                                                     const std::string& fileName) {
+                                                                     const std::string& stream) {
     if (!sendingThreadRunning__) {
         return;
     }
-
-    (void)(fileName); // Discarding: fileName | Maybe we use this in the future
 
     { // LockGuard block
         std::lock_guard<std::mutex> lockGuard(toBeSendData_mutex_);
@@ -162,13 +154,11 @@ void asapo::ReceiverMonitoringClient::SendReceiverRequestDataPoint(const std::st
                                                                    const std::string& consumerInstanceId,
                                                                    const std::string& beamtime,
                                                                    const std::string& source, const std::string& stream,
-                                                                   const std::string& fileName, uint64_t fileSize,
+                                                                   uint64_t fileSize,
                                                                    uint64_t transferTimeInMicroseconds) {
     if (!sendingThreadRunning__) {
         return;
     }
-
-    (void)(fileName); // Discarding: fileName | Maybe we use this in the future
 
     { // LockGuard block
         std::lock_guard<std::mutex> lockGuard(toBeSendData_mutex_);
@@ -234,7 +224,7 @@ asapo::Error asapo::ReceiverMonitoringClient::ReinitializeClient() {
         client_.swap(newClient);
         channel_.swap(newChannel);
 
-        newClient.reset(); // delete client fist
+        newClient.reset(); // delete client first
         newChannel.reset();
     }
 

@@ -12,7 +12,11 @@ namespace asapo {
 class ProducerRequest : public GenericRequest {
   public:
     ~ProducerRequest();
-    ProducerRequest(std::string source_credentials, GenericRequestHeader header, MessageData data,
+    ProducerRequest(
+                    bool new_source_credentials_format,
+                    std::string source_credentials,
+                    GenericRequestHeader header,
+                    MessageData data,
                     std::string metadata,
                     std::string original_filepath,
                     RequestCallback callback,
@@ -21,6 +25,7 @@ class ProducerRequest : public GenericRequest {
     virtual bool ContainsData() override {
         return !DataFromFile();
     };
+    bool using_new_source_credentials_format;
     std::string source_credentials;
     std::string metadata;
     MessageData data;
