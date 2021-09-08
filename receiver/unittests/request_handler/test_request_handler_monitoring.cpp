@@ -73,7 +73,7 @@ class RequestHandlerMonitoringTests : public Test {
 
     void SetUp() override {
         asapo::SharedCache cache;
-        mock_monitoring.reset(new StrictMock<asapo::MockReceiverMonitoringClient>{cache});
+        mock_monitoring.reset(new StrictMock<asapo::MockReceiverMonitoringClient>);
         handler.reset(new asapo::RequestHandlerMonitoring(mock_monitoring));
         mock_instanced_statistics.reset(new StrictMock<asapo::MockInstancedStatistics>);
 

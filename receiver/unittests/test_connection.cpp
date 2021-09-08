@@ -98,7 +98,7 @@ class ConnectionTests : public Test {
 
     void SetUp() override {
         asapo::SharedCache cache; /*nullptr*/
-        mock_monitoring.reset(new NiceMock<asapo::MockReceiverMonitoringClient>(cache));
+        mock_monitoring.reset(new NiceMock<asapo::MockReceiverMonitoringClient>);
         connection = std::unique_ptr<Connection> {new Connection{0, connected_uri, mock_monitoring, cache, "some_tag"}};
         connection->io__ = std::unique_ptr<asapo::IO> {&mock_io};
         connection->statistics__ = std::unique_ptr<asapo::ReceiverStatistics> {&mock_statictics};

@@ -8,8 +8,6 @@ set(RECEIVER_CORE_FILES
         src/receiver_config.cpp
         src/receiver_logger.cpp
 
-        src/monitoring/receiver_monitoring_client.cpp
-
         src/statistics/receiver_statistics.cpp
         src/statistics/statistics.cpp
         src/statistics/statistics_sender_influx_db.cpp
@@ -47,55 +45,73 @@ set(RDS_FILES
         src/receiver_data_server/request_handler/receiver_data_server_request_handler.cpp
         )
 
-
-set(SOURCE_FILES
-        ${RECEIVER_CORE_FILES}
-        ${RDS_FILES}
-        )
-
 ################################
 # Protobuf
 ################################
 
-include(../CMakeIncludes/grpc_common.cmake)
+set(MONITORING_FILES
+        src/monitoring/receiver_monitoring_client.cpp
+        src/monitoring/receiver_monitoring_client_noop.cpp
+        )
 
-get_filename_component(proto_in_dir "../common/networking/monitoring" ABSOLUTE)
-set(proto_file_common ${proto_in_dir}/AsapoMonitoringCommonService.proto)
-set(proto_file_ingest ${proto_in_dir}/AsapoMonitoringIngestService.proto)
+if (ENABLE_NEW_RECEIVER_MONITORING)
+    add_definitions(-DNEW_RECEIVER_MONITORING_ENABLED)
 
-set(proto_out_dir ${CMAKE_CURRENT_BINARY_DIR})
-set(proto_ingest_c "${proto_out_dir}/AsapoMonitoringIngestService.pb.cc")
-set(proto_ingest_h "${proto_out_dir}/AsapoMonitoringIngestService.pb.h")
-set(proto_common_c "${proto_out_dir}/AsapoMonitoringCommonService.pb.cc")
-set(proto_common_h "${proto_out_dir}/AsapoMonitoringCommonService.pb.h")
-set(grpc_c "${proto_out_dir}/AsapoMonitoringIngestService.grpc.pb.cc")
-set(grpc_h "${proto_out_dir}/AsapoMonitoringIngestService.grpc.pb.h")
+    include(../CMakeIncludes/grpc_common.cmake)
 
-add_custom_command(
-        OUTPUT "${proto_ingest_c}" "${proto_ingest_h}" "${proto_common_c}" "${proto_common_h}" "${grpc_c}" "${grpc_h}"
-        COMMAND ${_PROTOBUF_PROTOC}
-        ARGS --grpc_out "${proto_out_dir}"
-        --cpp_out "${proto_out_dir}"
-        -I "${proto_in_dir}"
-        --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-        "${proto_file_common}" "${proto_file_ingest}"
-        DEPENDS "${proto_file_common}" "${proto_file_ingest}")
+    get_filename_component(proto_in_dir "../common/networking/monitoring" ABSOLUTE)
+    set(proto_file_common ${proto_in_dir}/AsapoMonitoringCommonService.proto)
+    set(proto_file_ingest ${proto_in_dir}/AsapoMonitoringIngestService.proto)
 
-add_library(grpc_ingest_service_proto
-        ${proto_ingest_c}
-        ${proto_ingest_h}
-        ${proto_common_c}
-        ${proto_common_h}
-        ${grpc_c}
-        ${grpc_h})
-target_link_libraries(grpc_ingest_service_proto
-        ${_REFLECTION}
-        ${_GRPC_GRPCPP}
-        ${_PROTOBUF_LIBPROTOBUF})
-find_package(gRPC CONFIG REQUIRED)
+    set(proto_out_dir ${CMAKE_CURRENT_BINARY_DIR})
+    set(proto_ingest_c "${proto_out_dir}/AsapoMonitoringIngestService.pb.cc")
+    set(proto_ingest_h "${proto_out_dir}/AsapoMonitoringIngestService.pb.h")
+    set(proto_common_c "${proto_out_dir}/AsapoMonitoringCommonService.pb.cc")
+    set(proto_common_h "${proto_out_dir}/AsapoMonitoringCommonService.pb.h")
+    set(grpc_c "${proto_out_dir}/AsapoMonitoringIngestService.grpc.pb.cc")
+    set(grpc_h "${proto_out_dir}/AsapoMonitoringIngestService.grpc.pb.h")
 
-# Include generated *.pb.h files
-include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+    add_custom_command(
+            OUTPUT "${proto_ingest_c}" "${proto_ingest_h}" "${proto_common_c}" "${proto_common_h}" "${grpc_c}" "${grpc_h}"
+            COMMAND ${_PROTOBUF_PROTOC}
+            ARGS --grpc_out "${proto_out_dir}"
+            --cpp_out "${proto_out_dir}"
+            -I "${proto_in_dir}"
+            --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
+            "${proto_file_common}" "${proto_file_ingest}"
+            DEPENDS "${proto_file_common}" "${proto_file_ingest}")
+
+    add_library(grpc_ingest_service_proto
+            ${proto_ingest_c}
+            ${proto_ingest_h}
+            ${proto_common_c}
+            ${proto_common_h}
+            ${grpc_c}
+            ${grpc_h})
+    target_link_libraries(grpc_ingest_service_proto
+            ${_REFLECTION}
+            ${_GRPC_GRPCPP}
+            ${_PROTOBUF_LIBPROTOBUF})
+    find_package(gRPC CONFIG REQUIRED)
+
+    # Include generated *.pb.h files
+    include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+
+    set(MONITORING_FILES
+            ${MONITORING_FILES}
+            src/monitoring/receiver_monitoring_client_impl.cpp
+            )
+endif()
+
+################################
+# Building
+################################
+
+set(SOURCE_FILES
+        ${RECEIVER_CORE_FILES}
+        ${RDS_FILES}
+        ${MONITORING_FILES}
+        )
 
 ################################
 # Library
@@ -111,7 +127,9 @@ target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR}
 target_include_directories(${TARGET_NAME} SYSTEM PUBLIC  ${LIBFABRIC_INCLUDE_DIR})
 target_link_libraries(${TARGET_NAME} CURL::libcurl ${CMAKE_THREAD_LIBS_INIT} database
         asapo-fabric ${ASAPO_COMMON_FABRIC_LIBRARIES})
-target_link_libraries(${TARGET_NAME} grpc_ingest_service_proto ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+if (ENABLE_NEW_RECEIVER_MONITORING)
+    target_link_libraries(${TARGET_NAME} grpc_ingest_service_proto ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+endif()
 
 
 add_executable(${TARGET_NAME}-bin src/main.cpp)
@@ -158,9 +176,6 @@ set(TEST_SOURCE_FILES
         unittests/statistics/test_statistics_sender_influx_db.cpp
         unittests/statistics/test_statistics_sender_fluentd.cpp
 
-        unittests/monitoring/test_monitoring_client.cpp
-        unittests/monitoring/test_monitoring_client_to_be_send_data.cpp
-
         unittests/mock_receiver_config.cpp
         unittests/request_handler/test_requests_dispatcher.cpp
         unittests/test_datacache.cpp
@@ -168,6 +183,15 @@ set(TEST_SOURCE_FILES
         unittests/file_processors/test_file_processor.cpp
         unittests/file_processors/test_receive_file_processor.cpp
         )
+
+if (ENABLE_NEW_RECEIVER_MONITORING)
+    set(TEST_SOURCE_FILES
+            ${TEST_SOURCE_FILES}
+
+            unittests/monitoring/test_monitoring_client.cpp
+            unittests/monitoring/test_monitoring_client_to_be_send_data.cpp
+            )
+endif()
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")
 gtest(${TARGET_NAME} "${TEST_SOURCE_FILES}" "${TEST_LIBRARIES}"

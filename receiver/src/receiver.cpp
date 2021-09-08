@@ -12,7 +12,7 @@ namespace asapo {
 
 const int Receiver::kMaxUnacceptedConnectionsBacklog = 5;
 
-Receiver::Receiver(SharedCache cache, asapo::SharedReceiverMonitoringClient monitoring):
+Receiver::Receiver(SharedCache cache, SharedReceiverMonitoringClient monitoring):
     cache_{std::move(cache)},
     monitoring_{std::move(monitoring)},
     io__{GenerateDefaultIO()},

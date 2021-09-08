@@ -2,17 +2,14 @@
 #define ASAPO_RECEIVER_MONITORING_MOCKING_H
 
 #include "../../src/monitoring/receiver_monitoring_client.h"
+#ifdef NEW_RECEIVER_MONITORING_ENABLED
+#include "../../src/monitoring/receiver_monitoring_client_impl.h"
+#endif
 
 namespace asapo {
 
 class MockReceiverMonitoringClient : public asapo::ReceiverMonitoringClient {
 public:
-    MockReceiverMonitoringClient(asapo::SharedCache cache) : asapo::ReceiverMonitoringClient{cache} {};
-
-    MOCK_METHOD0(StartSendingThread, void());
-
-    MOCK_METHOD0(StopSendingThread, void());
-
     MOCK_METHOD9(SendProducerToReceiverTransferDataPoint, void(const std::string& pipelineStepId, const std::string& producerInstanceId,
             const std::string& beamtime, const std::string& source,
             const std::string& stream, uint64_t fileSize,
@@ -30,7 +27,8 @@ public:
     MOCK_METHOD0(FillMemoryStats, void());
 };
 
-class MockReceiverMonitoringClient_ToBeSendData : public asapo::ReceiverMonitoringClient::ToBeSendData {
+#ifdef NEW_RECEIVER_MONITORING_ENABLED
+class MockReceiverMonitoringClientImpl_ToBeSendData : public asapo::ReceiverMonitoringClientImpl::ToBeSendData {
 public:
     MOCK_METHOD5(GetProducerToReceiverTransfer, ProducerToReceiverTransferDataPoint* (
             const std::string& pipelineStepId,
@@ -54,6 +52,7 @@ public:
             ));
 
 };
+#endif
 
 }
 

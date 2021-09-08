@@ -11,6 +11,7 @@
 
 #include "../../src/request_handler/requests_dispatcher.h"
 #include "asapo/database/db_error.h"
+#include "../../src/monitoring/receiver_monitoring_client_noop.h"
 
 
 using ::testing::Test;
@@ -58,7 +59,7 @@ TEST(RequestDispatcher, Constructor) {
     auto stat = std::unique_ptr<ReceiverStatistics> {new ReceiverStatistics};
     auto cache = asapo::SharedCache{new asapo::DataCache{0, 0}};
 
-    auto monitoring = asapo::SharedReceiverMonitoringClient{new asapo::ReceiverMonitoringClient{cache}};
+    auto monitoring = asapo::SharedReceiverMonitoringClient{new asapo::ReceiverMonitoringClientNoop{}};
 
     RequestsDispatcher dispatcher{0,  "some_address", stat.get(), monitoring, cache};
     ASSERT_THAT(dynamic_cast<const asapo::ReceiverStatistics*>(dispatcher.statistics__), Ne(nullptr));

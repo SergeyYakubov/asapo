@@ -17,6 +17,7 @@
 #include "asapo/common/networking.h"
 #include "../receiver_mocking.h"
 #include "../monitoring/receiver_monitoring_mocking.h"
+#include "../../src/monitoring/receiver_monitoring_client_noop.h"
 
 using asapo::MockRequest;
 using asapo::MessageMeta;
@@ -58,22 +59,44 @@ namespace {
     class MonitoringClientTest : public Test {
     public:
         std::shared_ptr<StrictMock<asapo::MockDataCache>> mock_cache;
-        std::unique_ptr<StrictMock<asapo::MockReceiverMonitoringClient_ToBeSendData>> mock_toBeSend;
-        std::unique_ptr<asapo::ReceiverMonitoringClient> monitoring;
+        std::unique_ptr<StrictMock<asapo::MockReceiverMonitoringClientImpl_ToBeSendData>> mock_toBeSend;
+        std::unique_ptr<asapo::ReceiverMonitoringClientImpl> monitoring;
         void SetUp() override {
             mock_cache.reset(new StrictMock<asapo::MockDataCache>);
-            monitoring.reset(new asapo::ReceiverMonitoringClient{mock_cache});
+            monitoring.reset(new asapo::ReceiverMonitoringClientImpl{mock_cache});
             monitoring->sendingThreadRunning__ = true;
-            mock_toBeSend.reset(new StrictMock<asapo::MockReceiverMonitoringClient_ToBeSendData>);
+            mock_toBeSend.reset(new StrictMock<asapo::MockReceiverMonitoringClientImpl_ToBeSendData>);
             monitoring->toBeSendData__.reset(mock_toBeSend.get());
         }
         void TearDown() override {
-            monitoring->toBeSendData__.release();
+            monitoring->toBeSendData__.release(); // NOLINT(bugprone-unused-return-value) because it is a local part of this->mock_toBeSend
         }
     };
 
+    TEST_F(MonitoringClientTest, DefaultGenerator) {
+        std::shared_ptr<StrictMock<asapo::MockDataCache>> mock_cache;
+        asapo::SharedReceiverMonitoringClient monitoring_l = asapo::GenerateDefaultReceiverMonitoringClient(mock_cache, false);
+
+        asapo::ReceiverMonitoringClientImpl* monitoring_l_impl = dynamic_cast<asapo::ReceiverMonitoringClientImpl*>(monitoring_l.get());
+
+        EXPECT_THAT(monitoring_l_impl, Ne(nullptr));
+        EXPECT_THAT(monitoring_l_impl->log__, Ne(nullptr));
+        EXPECT_THAT(monitoring_l_impl->io__, Ne(nullptr));
+        EXPECT_THAT(monitoring_l_impl->toBeSendData__.get(), Ne(nullptr));
+        EXPECT_THAT(monitoring_l_impl->sendingThreadRunning__, Eq(false));
+    }
+
+    TEST_F(MonitoringClientTest, DefaultGenerator_Noop) {
+        std::shared_ptr<StrictMock<asapo::MockDataCache>> mock_cache;
+        asapo::SharedReceiverMonitoringClient monitoring_l = asapo::GenerateDefaultReceiverMonitoringClient(mock_cache, true);
+
+        asapo::ReceiverMonitoringClientNoop* monitoring_l_noop = dynamic_cast<asapo::ReceiverMonitoringClientNoop*>(monitoring_l.get());
+
+        EXPECT_THAT(monitoring_l_noop, Ne(nullptr));
+    }
+
     TEST_F(MonitoringClientTest, GetProducerToReceiverTransfer_Init) {
-        asapo::ReceiverMonitoringClient monitoring_l{nullptr};
+        asapo::ReceiverMonitoringClientImpl monitoring_l{nullptr};
 
         EXPECT_THAT(monitoring_l.log__, Ne(nullptr));
         EXPECT_THAT(monitoring_l.io__, Ne(nullptr));

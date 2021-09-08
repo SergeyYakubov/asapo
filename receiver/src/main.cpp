@@ -42,11 +42,8 @@ void AddDataServers(const asapo::ReceiverConfig* config, const asapo::SharedCach
 }
 
 asapo::SharedReceiverMonitoringClient StartMonitoringClient(const asapo::ReceiverConfig* config, asapo::SharedCache cache, asapo::Error* error) {
-    auto monitoring = asapo::SharedReceiverMonitoringClient(new asapo::ReceiverMonitoringClient{std::move(cache)});
-
-    if (config->monitor_performance) {
-        monitoring->StartSendingThread();
-    }
+    bool useNoopImpl = !config->monitor_performance;
+    auto monitoring = asapo::SharedReceiverMonitoringClient(asapo::GenerateDefaultReceiverMonitoringClient(cache, useNoopImpl));
 
     *error = nullptr;
     return monitoring;

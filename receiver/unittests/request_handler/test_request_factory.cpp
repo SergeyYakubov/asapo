@@ -26,6 +26,7 @@
 #include "../receiver_mocking.h"
 #include "../mock_receiver_config.h"
 #include "../monitoring/receiver_monitoring_mocking.h"
+#include "../../src/monitoring/receiver_monitoring_client_noop.h"
 
 
 using ::testing::Test;
@@ -159,7 +160,7 @@ TEST_F(FactoryTests, DoNotAddDbWriterIfNotWanted) {
 
 TEST_F(FactoryTests, CachePassedToRequest) {
     auto cache = asapo::SharedCache{new asapo::DataCache{0, 0}};
-    RequestFactory factory{asapo::SharedReceiverMonitoringClient{new asapo::ReceiverMonitoringClient{cache}}, cache};
+    RequestFactory factory{asapo::SharedReceiverMonitoringClient{new asapo::ReceiverMonitoringClientNoop{}}, cache};
 
     auto request = factory.GenerateRequest(generic_request_header, 1, origin_uri, nullptr, &err);
     ASSERT_THAT(err, Eq(nullptr));

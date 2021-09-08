@@ -62,7 +62,7 @@ namespace {
         }
     };
     TEST_F(MonitoringClient_ToBeSendDataTest, GetProducerToReceiverTransfer_InitCorrectly) {
-        asapo::ReceiverMonitoringClient::ToBeSendData data;
+        asapo::ReceiverMonitoringClientImpl::ToBeSendData data;
 
         auto p2r = data.GetProducerToReceiverTransfer(
                 "pipeline1",
@@ -86,7 +86,7 @@ namespace {
     }
 
     TEST_F(MonitoringClient_ToBeSendDataTest, GetReceiverDataServerToConsumer_InitCorrectly) {
-        asapo::ReceiverMonitoringClient::ToBeSendData data;
+        asapo::ReceiverMonitoringClientImpl::ToBeSendData data;
 
         auto r2c = data.GetReceiverDataServerToConsumer(
                 "pipeline1",
@@ -107,7 +107,7 @@ namespace {
     }
 
     TEST_F(MonitoringClient_ToBeSendDataTest, GetMemoryDataPoint_InitCorrectly) {
-        asapo::ReceiverMonitoringClient::ToBeSendData data;
+        asapo::ReceiverMonitoringClientImpl::ToBeSendData data;
 
         auto m = data.GetMemoryDataPoint(
                 "test-beamtime",
@@ -124,7 +124,7 @@ namespace {
     }
 
     TEST_F(MonitoringClient_ToBeSendDataTest, GetProducerToReceiverTransfer_PointsAreSame) {
-        asapo::ReceiverMonitoringClient::ToBeSendData data;
+        asapo::ReceiverMonitoringClientImpl::ToBeSendData data;
 
         auto p2r1 = data.GetProducerToReceiverTransfer(
                 "pipeline1",
@@ -172,7 +172,7 @@ namespace {
     }
 
     TEST_F(MonitoringClient_ToBeSendDataTest, GetReceiverDataServerToConsumer_PointsAreSame) {
-        asapo::ReceiverMonitoringClient::ToBeSendData data;
+        asapo::ReceiverMonitoringClientImpl::ToBeSendData data;
 
         auto r2c1 = data.GetReceiverDataServerToConsumer(
                 "pipeline1",
@@ -208,7 +208,7 @@ namespace {
     }
 
     TEST_F(MonitoringClient_ToBeSendDataTest, GetMemoryDataPoint_PointsAreSame) {
-        asapo::ReceiverMonitoringClient::ToBeSendData data;
+        asapo::ReceiverMonitoringClientImpl::ToBeSendData data;
 
         auto m1 = data.GetMemoryDataPoint("test-beamtime", "test-source", "test-stream");
         ASSERT_THAT(m1, Ne(nullptr));
@@ -230,7 +230,7 @@ namespace {
 
 
     TEST_F(MonitoringClient_ToBeSendDataTest, GetProducerToReceiverTransfer_Grouping) {
-        asapo::ReceiverMonitoringClient::ToBeSendData data;
+        asapo::ReceiverMonitoringClientImpl::ToBeSendData data;
 
         {
             auto p2r1 = data.GetProducerToReceiverTransfer("p1","i1","b1","so1","st1");
@@ -280,7 +280,7 @@ namespace {
     }
 
     TEST_F(MonitoringClient_ToBeSendDataTest, GetReceiverDataServerToConsumer_Grouping) {
-        asapo::ReceiverMonitoringClient::ToBeSendData data;
+        asapo::ReceiverMonitoringClientImpl::ToBeSendData data;
 
         {
             auto r2c1 = data.GetReceiverDataServerToConsumer("p1","i1","b1","so1","st1");
@@ -330,7 +330,7 @@ namespace {
     }
 
     TEST_F(MonitoringClient_ToBeSendDataTest, GetMemoryDataPoint_Grouping) {
-        asapo::ReceiverMonitoringClient::ToBeSendData data;
+        asapo::ReceiverMonitoringClientImpl::ToBeSendData data;
 
         {
             auto m1 = data.GetMemoryDataPoint("b1", "so1", "st1");

@@ -13,7 +13,7 @@ namespace asapo {
     private:
         SharedReceiverMonitoringClient monitoring_;
     public:
-        RequestHandlerMonitoring(asapo::SharedReceiverMonitoringClient monitoring);
+        RequestHandlerMonitoring(SharedReceiverMonitoringClient monitoring);
         RequestHandlerMonitoring(const RequestHandlerMonitoring&) = delete;
         RequestHandlerMonitoring& operator=(const RequestHandlerMonitoring&) = delete;
 
