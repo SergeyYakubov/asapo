@@ -28,7 +28,7 @@ func extractUserTokenrequest(r *http.Request) (request structs.IssueTokenRequest
 	}
 
 	for _, ar := range request.AccessTypes {
-		if ar != "read" && ar != "write" {
+		if ar != "read" && ar != "write" && !(ar== "writeraw" && request.Subject["beamline"]!="") {
 			return request, errors.New("wrong requested access rights: "+ar)
 		}
 	}

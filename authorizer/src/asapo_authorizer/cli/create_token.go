@@ -32,8 +32,13 @@ func userTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, err 
 
 	request.AccessTypes = strings.Split(flags.AccessType,",")
 	for _,at:=range request.AccessTypes {
-		if at!="read" && at!="write" {
-			return request,errors.New("access type must be read of write")
+		if at != "read" && at != "write" && !(at== "writeraw" && request.Subject["beamline"]!="") {
+			if (request.Subject["beamline"]!="") {
+				return request,errors.New("access type must be read, write or writeraw")
+			} else {
+				return request,errors.New("access type must be read or write")
+			}
+
 		}
 	}
 
@@ -113,7 +118,7 @@ func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 	flagset.StringVar(&flags.Type, "type", "", "token type")
 	flagset.StringVar(&flags.Beamtime, "beamtime", "", "beamtime for user token")
 	flagset.StringVar(&flags.Beamline, "beamline", "", "beamline for user token")
-	flagset.StringVar(&flags.AccessType, "access-types", "", "read/write for user token")
+	flagset.StringVar(&flags.AccessType, "access-types", "", "read/write/writeraw(beamline only) for user token")
 	flagset.IntVar(&flags.DaysValid, "duration-days", 0, "token duration (in days)")
 
 

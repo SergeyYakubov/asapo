@@ -1,7 +1,8 @@
 ## 21.09.0 (in progress)
 
 FEATURES
-* Producer API: C client 
+* Producer API: C client
+* Introduce a token to send data in "raw" mode without LDAP authorization  
 
 IMPROVEMENTS
 * Allow using ASAPO for commissioning beamtimes

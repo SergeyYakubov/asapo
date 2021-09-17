@@ -44,7 +44,8 @@ curl -v --silent --data "{\"SourceCredentials\":\"raw%11000016%%detector%${token
 token=$BLP07_TOKEN
 
 curl -v --silent --data "{\"SourceCredentials\":\"processed%auto%p07%detector%$token\",\"OriginHost\":\"bla\"}" 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | grep 11111111
-curl -v --silent --data "{\"SourceCredentials\":\"raw%auto%p07%detector%$token\",\"OriginHost\":\"127.0.0.1:8400/asapo-authorizer\"}" 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | grep 11111111
+curl -v --silent --data "{\"SourceCredentials\":\"raw%auto%p07%detector%\",\"OriginHost\":\"127.0.0.1:8400/asapo-authorizer\"}" 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | grep writeraw
+curl -v --silent --data "{\"SourceCredentials\":\"raw%auto%p07%detector%$token\",\"OriginHost\":\"127.0.0.1:8400/asapo-authorizer\"}" 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | not grep writeraw
 curl -v --silent --data "{\"SourceCredentials\":\"raw%auto%p07%detector%$token\",\"OriginHost\":\"127.0.0.1:8400/asapo-authorizer\"}" 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | grep p07
 curl -v --silent --data "{\"SourceCredentials\":\"raw%auto%p07%detector%$token\",\"OriginHost\":\"127.0.0.1:8400/asapo-authorizer\"}" 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | grep /asap3/petra3/gpfs/p07/2020/data/11111111
 

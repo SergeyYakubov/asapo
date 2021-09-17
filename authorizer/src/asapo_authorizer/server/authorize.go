@@ -195,8 +195,8 @@ func authorizeByHost(host_ip, beamline string) (error) {
 	return nil
 }
 
-func needHostAuthorization(creds SourceCredentials) bool {
-	return creds.Type == "raw" || len(creds.Token) == 0
+func canUseHostAuthorization(creds SourceCredentials) bool {
+	return len(creds.Token) == 0
 }
 
 func checkToken(token string, subject_expect string) (accessTypes []string, err error) {
@@ -274,11 +274,15 @@ func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds Source
 		return nil,errors.New(err_string)
 	}
 
-	if needHostAuthorization(creds) {
+	if canUseHostAuthorization(creds) {
 		if err := authorizeByHost(request.OriginHost, meta.Beamline); err != nil {
 			return nil,err
 		}
-		accessTypes = []string{"read","write"}
+		if creds.Type == "raw" {
+			accessTypes = []string{"read","write","writeraw"}
+		} else {
+			accessTypes = []string{"read","write"}
+		}
 	} else {
 		accessTypes,err = authorizeByToken(creds)
 	}

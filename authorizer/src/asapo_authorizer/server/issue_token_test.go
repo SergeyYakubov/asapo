@@ -24,7 +24,9 @@ var  IssueTokenTests = [] struct {
 	message        string
 }{
 	{map[string]string{"beamtimeId":"test"},"bt_test",[]string{"read"},180,prepareAdminToken("admin"),"aaa",http.StatusOK,"read for beamtime"},
-	{map[string]string{"beamtimeId":"test"},"bt_test",[]string{"read"},90,prepareAdminToken("admin"),"aaa",http.StatusOK,"write for beamtime"},
+	{map[string]string{"beamtimeId":"test"},"bt_test",[]string{"write"},90,prepareAdminToken("admin"),"aaa",http.StatusOK,"write for beamtime"},
+	{map[string]string{"beamtimeId":"test"},"bt_test",[]string{"writeraw"},90,prepareAdminToken("admin"),"",http.StatusBadRequest,"wrong role"},
+	{map[string]string{"beamline":"test"},"bl_test",[]string{"writeraw"},90,prepareAdminToken("admin"),"aaa",http.StatusOK,"raw for beamline"},
 	{map[string]string{"beamline":"test"},"bl_test",[]string{"read"},180,prepareAdminToken("admin"),"aaa",http.StatusOK,"read for beamline"},
 	{map[string]string{"blabla":"test"},"",[]string{"read"},180,prepareAdminToken("admin"),"",http.StatusBadRequest,"beamline or beamtime not given"},
 	{map[string]string{"beamtimeId":"test"},"",[]string{"bla"},180,prepareAdminToken("admin"),"",http.StatusBadRequest,"wrong role"},

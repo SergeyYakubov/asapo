@@ -29,7 +29,7 @@ func TestIntrospect(t *testing.T) {
 	authUser := utils.NewJWTAuth("secret_user")
 	Auth = authorization.NewAuth(authUser,authAdmin,authJWT)
 	for _, test := range IntrospectTests {
-		token := prepareUserToken(test.tokenSubject,test.roles)
+		token := prepareAsapoToken(test.tokenSubject,test.roles)
 		if test.status==http.StatusUnauthorized {
 			token = "blabla"
 		}

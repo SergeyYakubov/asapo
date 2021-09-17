@@ -2,8 +2,8 @@
 
 | Release      | API changed\*\* |  Protocol | Supported by server from/to | Status              |Comment|
 | ------------ | ----------- | -------- | ------------------------- | --------------------- | ------- |
-| 21.09.0      | No          |  v0.3     | 21.06.0/21.09.0           | current version              ||
-| 21.06.0      | Yes         |  v0.3     | 21.06.0/21.09.0           |                              |arbitrary characters|
+| 21.09.0      | No         |  v0.4     | 21.09.0/21.09.0           | current version              |beamline token for raw |
+| 21.06.0      | Yes         |  v0.3     | 21.06.0/21.09.0           | deprecates 01.09.2022         |arbitrary characters|
 | 21.03.3      | No          |  v0.2     | 21.03.2/21.09.0           | deprecates 01.07.2022        |bugfix in server|
 | 21.03.2      | Yes         |  v0.2     | 21.03.2/21.09.0           | deprecates 01.07.2022        |bugfixes, add delete_stream|
 | 21.03.1      | No          |  v0.1     | 21.03.0/21.09.0           | deprecates 01.06.2022   |bugfix in server|
