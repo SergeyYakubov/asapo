@@ -41,7 +41,7 @@ void PrintCommandArguments(const Args& args) {
             << "Raw: " << (args.mode / 100 == 1) << std::endl
             << "timeout: " << args.timeout_ms << std::endl
             << "messages in set: " << args.messages_in_set << std::endl
-            << "pipeline: " << args.pipeline_name << std::endl
+            << "pipelineStep: " << args.pipeline_name << std::endl
               << std::endl;
 }
 

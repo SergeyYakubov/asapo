@@ -49,6 +49,26 @@ class SelectionFilterStore {
         }
     }
 
+    public clearSourceFilter(): void {
+        this.internalState.source = null;
+        this.internalState.fromPipelineStepId = null;
+        this.internalState.toPipelineStepId = null;
+        this.internalState.pipelineFilterRelation = 'and';
+        this.internalState.receiverId = null;
+    }
+
+    public setFilterSource(source: string | null): void {
+        if (source == null) {
+            this.clearSourceFilter();
+            return;
+        }
+        this.internalState.source = source;
+        this.internalState.fromPipelineStepId = null;
+        this.internalState.toPipelineStepId = null;
+        this.internalState.pipelineFilterRelation = 'or';
+        this.internalState.receiverId = null;
+    }
+
     public setFilterSourceWithPipeline(source: string, fromPipelineStepId: string, toPipelineStepId: string): void {
         this.internalState.source = source;
         this.internalState.fromPipelineStepId = fromPipelineStepId;

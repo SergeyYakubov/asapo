@@ -221,6 +221,8 @@ asapo::Error asapo::ReceiverMonitoringClientImpl::ReinitializeClient() {
         newChannel.reset();
     }
 
+    StartSendingThread();
+
     return nullptr;
 }
 

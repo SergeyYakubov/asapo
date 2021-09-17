@@ -451,7 +451,8 @@ func (s *QueryServer) GetTopology(ctx context.Context, query *pb.ToplogyQuery) (
 			var step = getOrCreateStep(stepId)
 			step.producesSourceId[source] = true
 			step.producerInstances[producerInstanceId] = true
-			step.involvedReceivers[result.Record().Values()["receiverName"].(string)] = true
+			var receiverName = result.Record().Values()["receiverName"].(string)
+			step.involvedReceivers[receiverName] = true
 		} else if result.Record().Values()["brokerName"] != nil { // data is coming from broker => means it must be a consumer
 			stepId := result.Record().Values()["pipelineStepId"].(string)
 			source := result.Record().Values()["source"].(string)
@@ -539,11 +540,12 @@ func (s *QueryServer) GetTopology(ctx context.Context, query *pb.ToplogyQuery) (
 						})
 					}
 					for _, sourceIdAvailableFromStepId := range availableSources[consumingSourceId] { // Add all the others edges
+						var producingSource = pipelineSteps[sourceIdAvailableFromStepId]
 						edges = append(edges, PipelineEdgeInfo{
 							fromStepId:        sourceIdAvailableFromStepId,
 							toStepId:          stepId,
 							sourceId:          consumingSourceId,
-							involvedReceivers: stepInfo.involvedReceivers,
+							involvedReceivers: producingSource.involvedReceivers,
 						})
 					}
 				}
@@ -567,8 +569,44 @@ func (s *QueryServer) GetTopology(ctx context.Context, query *pb.ToplogyQuery) (
 
 		if !foundAtLeastOne {
 			// probably only requests of files came, but no receiver registered a producer
-			log.Error("infinite loop while building topology tree; Still has pipeline steps but found no way how to connect them")
-			return nil, errors.New("infinite loop while building topology tree; Still has pipeline steps but found no way how to connect them")
+			// log.Error("infinite loop while building topology tree; Still has pipeline steps but found no way how to connect them")
+			// return nil, errors.New("infinite loop while building topology tree; Still has pipeline steps but found no way how to connect them")
+
+			var unkStep = "Unknown"
+
+			pipelineSteps[unkStep] = PipelineStep{
+				producesSourceId:  nil,
+				consumesSourceId:  nil,
+				producerInstances: nil,
+				consumerInstances: nil,
+				involvedReceivers: nil,
+			}
+
+			levels[0] = append(levels[0], PipelineLevelStepInfo{
+				stepId: unkStep,
+			})
+
+			if len(levels) < 2 {
+				levels = append(levels, []PipelineLevelStepInfo{})
+			}
+
+			for stepId := range remainingStepIds {
+				var step = pipelineSteps[stepId]
+				levels[1] = append(levels[1], PipelineLevelStepInfo{
+					stepId: stepId,
+				})
+
+				for sourceId := range step.consumesSourceId {
+					edges = append(edges, PipelineEdgeInfo{
+						fromStepId: unkStep,
+						toStepId:   stepId,
+						sourceId:   sourceId,
+						involvedReceivers: nil,
+					})
+				}
+			}
+
+			break // Go to response building
 		}
 
 		for sourceId, element := range availableSourcesInNextLevel {
@@ -582,6 +620,7 @@ func (s *QueryServer) GetTopology(ctx context.Context, query *pb.ToplogyQuery) (
 		}
 	}
 
+	// Response building
 	var response pb.TopologyResponse
 
 	for levelIndex, level := range levels {

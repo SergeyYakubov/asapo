@@ -52,7 +52,7 @@
                     <select name="Source" id="source" class="w-32" v-model="selectedSource">
                         <option v-for="source in availableSources" :key="source">{{source}}</option>
                     </select>
-                    <button>X</button>
+                    <button @click="clearSourceFilter()">X</button>
                 </div>
             </div>
             <div class="mt-3 flex flex-col">
@@ -87,14 +87,23 @@ import { toplogyStore } from "../store/toplogyStore";
 
 @Options({
     watch: {
+        selectedBeamtimeFromStore: {
+            handler(newValue: string | null): void {
+                this.selectedBeamtime = newValue;
+            },
+            immediate: true,
+        },
         selectedBeamtime(newValue: string | null): void {
             selectionFilterStore.setFilterBeamtime(newValue);
         },
         currentBeamtimeFilterText(): void {
             this.selectedBeamtime = selectionFilterStore.state.beamtime;
         },
+        selectedSourceFromStore(newValue: string | null): void {
+            this.selectedSource = newValue;
+        },
         selectedSource(newValue: string | null): void {
-            //selectionFilterStore.setFilterBeamtime(newValue);
+            selectionFilterStore.setFilterSource(newValue);
         },
         currentSourceFilterText(): void {
             this.selectedSource = selectionFilterStore.state.source;
@@ -105,6 +114,13 @@ export default class FilterSelector extends Vue {
     private selectedBeamtime: string | null = null;
     private selectedSource: string | null = null;
     private showPopup: boolean = false;
+
+    private get selectedBeamtimeFromStore(): string | null {
+        return selectionFilterStore.state.beamtime;
+    }
+    private get selectedSourceFromStore(): string | null {
+        return selectionFilterStore.state.source;
+    }
 
     private get hasClearableFilter(): boolean {
         return selectionFilterStore.hasClearableFilter;
@@ -152,7 +168,6 @@ export default class FilterSelector extends Vue {
     }
 
     private get hasFilterError(): boolean {
-        console.log('Filte error text: ', errorStore.state.filterErrorText)
         return !!errorStore.state.filterErrorText;
     }
 
@@ -165,6 +180,10 @@ export default class FilterSelector extends Vue {
 
     private clearBeamtimeFilter(): void {
         selectionFilterStore.setFilterBeamtime(null);
+    }
+
+    private clearSourceFilter(): void {
+        selectionFilterStore.clearSourceFilter();
     }
 
     private get currentSourceFilterText(): string {
