@@ -31,6 +31,7 @@ func (s *IngestServer) InsertReceiverDataPoints(ctx context.Context, data *pb.Re
 		if count == 0 { // fix div by 0
 			count = 1
 		}
+
 		p := influxdb2.NewPoint(dbMeasurementFileInput,
 			map[string]string{
 				"receiverName":       data.ReceiverName,
@@ -42,11 +43,11 @@ func (s *IngestServer) InsertReceiverDataPoints(ctx context.Context, data *pb.Re
 				"stream":   dataPoint.Stream,
 			},
 			map[string]interface{}{
-				"totalInputFileSize":       dataPoint.TotalFileSize,
-				"avgTransferReceiveTimeUs": dataPoint.TotalTransferReceiveTimeInMicroseconds / count,
-				"avgWriteIoTimeUs":         dataPoint.TotalWriteIoTimeInMicroseconds / count,
-				"avgDbTimeUs":              dataPoint.TotalDbTimeInMicroseconds / count,
-				"receiverFileCount":        dataPoint.FileCount,
+				"totalInputFileSize":       int64(dataPoint.TotalFileSize),
+				"avgTransferReceiveTimeUs": int64(dataPoint.TotalTransferReceiveTimeInMicroseconds / count),
+				"avgWriteIoTimeUs":         int64(dataPoint.TotalWriteIoTimeInMicroseconds / count),
+				"avgDbTimeUs":              int64(dataPoint.TotalDbTimeInMicroseconds / count),
+				"receiverFileCount":        int64(dataPoint.FileCount),
 			},
 			timestamp,
 		)
@@ -70,10 +71,10 @@ func (s *IngestServer) InsertReceiverDataPoints(ctx context.Context, data *pb.Re
 				"stream":   dataPoint.Stream,
 			},
 			map[string]interface{}{
-				"totalRdsHits":               dataPoint.Hits,
-				"totalRdsMisses":             dataPoint.Misses,
-				"totalRdsOutputFileSize":     dataPoint.TotalFileSize,
-				"avgRdsOutputTransferTimeUs": dataPoint.TotalTransferSendTimeInMicroseconds / count,
+				"totalRdsHits":               int64(dataPoint.Hits),
+				"totalRdsMisses":             int64(dataPoint.Misses),
+				"totalRdsOutputFileSize":     int64(dataPoint.TotalFileSize),
+				"avgRdsOutputTransferTimeUs": int64(dataPoint.TotalTransferSendTimeInMicroseconds / count),
 			},
 			timestamp,
 		)
@@ -91,8 +92,8 @@ func (s *IngestServer) InsertReceiverDataPoints(ctx context.Context, data *pb.Re
 				"stream":   dataPoint.Stream,
 			},
 			map[string]interface{}{
-				"rdsCacheUsedBytes":  dataPoint.UsedBytes,
-				"rdsCacheTotalBytes": dataPoint.TotalBytes,
+				"rdsCacheUsedBytes":  int64(dataPoint.UsedBytes),
+				"rdsCacheTotalBytes": int64(dataPoint.TotalBytes),
 			},
 			timestamp,
 		)
@@ -127,8 +128,8 @@ func (s *IngestServer) InsertBrokerDataPoints(ctx context.Context, data *pb.Brok
 				"stream":   dataPoint.Stream,
 			},
 			map[string]interface{}{
-				"requestedFileCount":     dataPoint.FileCount,
-				"totalRequestedFileSize": dataPoint.TotalFileSize,
+				"requestedFileCount":     int64(dataPoint.FileCount),
+				"totalRequestedFileSize": int64(dataPoint.TotalFileSize),
 			},
 			timestamp,
 		)
@@ -165,9 +166,9 @@ func (s *IngestServer) InsertFtsDataPoints(ctx context.Context, data *pb.FtsToCo
 				"stream":   dataPoint.Stream,
 			},
 			map[string]interface{}{
-				"ftsFileCount":                dataPoint.FileCount,
-				"totalFtsTransferredFileSize": dataPoint.TotalFileSize,
-				"avgTransferSendTimeUs":       dataPoint.TotalTransferSendTimeInMicroseconds / count,
+				"ftsFileCount":                int64(dataPoint.FileCount),
+				"totalFtsTransferredFileSize": int64(dataPoint.TotalFileSize),
+				"avgTransferSendTimeUs":       int64(dataPoint.TotalTransferSendTimeInMicroseconds / count),
 			},
 			timestamp,
 		)

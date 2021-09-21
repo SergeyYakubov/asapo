@@ -7,7 +7,12 @@ import (
 	"asapo_monitoring_server/server"
 	"errors"
 	"flag"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
+	"strconv"
+	"strings"
 )
 
 func PrintUsage() {
@@ -32,20 +37,12 @@ func loadConfig(configFileName string) (log.Level, server.Settings, error) {
 		return log.FatalLevel, server.Settings{}, errors.New("'LogLevel' not set")
 	}
 
-	if settings.InfluxDb2Url == "" {
-		return log.FatalLevel, server.Settings{}, errors.New("'InfluxDb2Url' not set")
+	if settings.InfluxDbUrl == "" {
+		return log.FatalLevel, server.Settings{}, errors.New("'InfluxDbUrl' not set")
 	}
 
-	if settings.InfluxDb2AuthToken == "" {
-		return log.FatalLevel, server.Settings{}, errors.New("'InfluxDb2AuthToken' not set")
-	}
-
-	if settings.InfluxDb2Org == "" {
-		return log.FatalLevel, server.Settings{}, errors.New("'InfluxDb2Org' not set")
-	}
-
-	if settings.InfluxDb2Bucket == "" {
-		return log.FatalLevel, server.Settings{}, errors.New("'InfluxDb2Bucket' not set")
+	if settings.InfluxDbDatabase == "" {
+		return log.FatalLevel, server.Settings{}, errors.New("'InfluxDbDatabase' not set")
 	}
 
 	logLevel, err := log.LevelFromString(settings.LogLevel)
@@ -76,6 +73,26 @@ func main() {
 	logLevel, settings, err := loadConfig(*configFileName)
 	if err != nil {
 		log.Fatal(err.Error())
+		return
+	}
+
+	// InfluxDB 1 fix, create database
+	data := url.Values{}
+	data.Set("q", "CREATE DATABASE " + settings.InfluxDbDatabase)
+
+	res, err := http.Post(
+		settings.InfluxDbUrl + "/query", "application/x-www-form-urlencoded",
+		strings.NewReader(data.Encode()))
+
+	if err != nil {
+		log.Fatal(err.Error())
+		return
+	}
+	if res.StatusCode != 200 {
+		rawResponse, _ := ioutil.ReadAll(res.Body)
+		strResponse := string(rawResponse)
+
+		log.Fatal("failed to create database, status code was " + strconv.Itoa(res.StatusCode) + ": " + strResponse)
 		return
 	}
 

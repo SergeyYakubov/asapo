@@ -16,17 +16,17 @@ func Start(settings Settings) {
 		log.Fatal("failed to listen: ", err)
 	}
 
-	influxClient := influxdb2.NewClient(settings.InfluxDb2Url, settings.InfluxDb2AuthToken)
+	influxClient := influxdb2.NewClient(settings.InfluxDbUrl, ""/*settings.InfluxDb2AuthToken*/)
 	// influxClient.BucketsAPI().CreateBucketWithName(context.Background(), domain.Organization{}, "bucketName", domain.RetentionRules{})
 
 	queryServer := QueryServer{}
 	ingestServer := IngestServer{}
 
-	dbQueryApi := influxClient.QueryAPI(settings.InfluxDb2Org)
+	dbQueryApi := influxClient.QueryAPI(""/*settings.InfluxDb2Org*/)
 	queryServer.dbQueryApi = dbQueryApi
 	queryServer.settings = settings
 
-	dbWriterApi := influxClient.WriteAPI(settings.InfluxDb2Org, settings.InfluxDb2Bucket)
+	dbWriterApi := influxClient.WriteAPI(""/*settings.InfluxDb2Org*/, settings.InfluxDbDatabase)
 	ingestServer.dbWriterApi = dbWriterApi
 	ingestServer.settings = settings
 
@@ -35,15 +35,14 @@ func Start(settings Settings) {
 	pb.RegisterAsapoMonitoringIngestServiceServer(grpcServer, &ingestServer)
 	log.Info("server listening at ", lis.Addr())
 
-	ex, a := queryServer.GetTopology(context.TODO(), &pb.ToplogyQuery {
-		FromTimestamp:  1627951775,
-		ToTimestamp:    1627952375,
-		BeamtimeFilter: "asapo_test",
-	})
-	println(ex, a)
+	// Check connection
+	_, err = queryServer.GetMetadata(context.TODO(), &pb.Empty{})
+	if err != nil {
+		log.Fatal("dummy database request failed: ", err)
+	}
 
 	// Start net server and wait
-	if err := grpcServer.Serve(lis); err != nil {
+	if err = grpcServer.Serve(lis); err != nil {
 		log.Fatal("failed to serve: ", err)
 	}
 }

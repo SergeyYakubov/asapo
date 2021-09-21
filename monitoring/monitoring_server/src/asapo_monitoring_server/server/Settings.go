@@ -39,8 +39,6 @@ type Settings struct {
 	ServerPort uint16 // e.g. "50051"
 	LogLevel   string // e.g. "info"
 
-	InfluxDb2Url       string // e.g. "http://127.0.0.1:8086"
-	InfluxDb2AuthToken string // visit the influx interface for the token
-	InfluxDb2Org       string // e.g. "asapo"
-	InfluxDb2Bucket    string // e.g. "asapo-monitoring"
+	InfluxDbUrl       string // e.g. "http://127.0.0.1:8086"
+	InfluxDbDatabase  string // e.g. "asapo-monitoring"
 }

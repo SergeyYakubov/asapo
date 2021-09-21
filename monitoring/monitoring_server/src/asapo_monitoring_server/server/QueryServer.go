@@ -21,8 +21,19 @@ type QueryServer struct {
 }
 
 func (s *QueryServer) GetMetadata(ctx context.Context, _ *pb.Empty) (*pb.MetadataResponse, error) {
-	result, err := s.dbQueryApi.Query(ctx, "import \"influxdata/influxdb/schema\"\n"+
-		"schema.tagValues(bucket: \""+s.settings.InfluxDb2Bucket+"\", tag: \"beamtime\", predicate: (r) => true, start: -30d)")
+	result, err := s.dbQueryApi.Query(ctx, "" +
+		"tagValues = (bucket, tag, predicate=(r) => true, start=-30d) =>\n" +
+		" from(bucket: bucket)\n" +
+		"  |> range(start: start)\n" +
+		"  |> filter(fn: predicate)\n" +
+		"  |> keep(columns: [tag])\n" +
+		"  |> group()\n" +
+		"  |> distinct(column: tag)"+
+		"tagValues(bucket: \""+s.settings.InfluxDbDatabase+"\", tag: \"beamtime\", predicate: (r) => true, start: -30d)")
+
+	// InfluxDB2
+	// result, err := s.dbQueryApi.Query(ctx, "import \"influxdata/influxdb/schema\"\n"+
+	//	"schema.tagValues(bucket: \""+s.settings.InfluxDbDatabase+"\", tag: \"beamtime\", predicate: (r) => true, start: -30d)")
 
 	if err != nil {
 		return nil, err
@@ -214,7 +225,7 @@ func (s *QueryServer) GetDataPoints(ctx context.Context, query *pb.DataPointsQue
 func queryTransferSpeed(s *QueryServer, ctx context.Context, startTime string, endTime string, intervalInSec int, filter string) ([]*pb.TotalTransferRateDataPoint, error) {
 	var arrayResult []*pb.TotalTransferRateDataPoint
 
-	result, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDb2Bucket+"\")"+
+	result, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDbDatabase+"\")"+
 		" |> range(start: "+startTime+", stop: "+endTime+")"+
 		" |> filter(fn: (r) => r._measurement == \""+dbMeasurementFileInput+"\" or r._measurement == \""+dbMeasurementBrokerFileRequests+"\" or r._measurement == \""+dbMeasurementRdsFileRequests+"\" or r._measurement == \""+dbMeasurementFtsTransfers+"\")"+
 		" |> filter(fn: (r) => r._field == \"totalInputFileSize\" or r._field == \"totalRequestedFileSize\" or r._field == \"totalRdsOutputFileSize\" or r._field == \"totalFtsTransferredFileSize\")"+
@@ -229,29 +240,29 @@ func queryTransferSpeed(s *QueryServer, ctx context.Context, startTime string, e
 	}
 
 	for result.Next() {
-		recvBytes := uint64(0)
-		sendBytes := uint64(0)
-		sendRdsBytes := uint64(0)
-		sendFtsBytes := uint64(0)
+		recvBytes := int64(0)
+		sendBytes := int64(0)
+		sendRdsBytes := int64(0)
+		sendFtsBytes := int64(0)
 
 		if result.Record().Values()["totalInputFileSize"] != nil {
-			recvBytes = result.Record().Values()["totalInputFileSize"].(uint64)
+			recvBytes = result.Record().Values()["totalInputFileSize"].(int64)
 		}
 		if result.Record().Values()["totalRequestedFileSize"] != nil {
-			sendBytes = result.Record().Values()["totalRequestedFileSize"].(uint64)
+			sendBytes = result.Record().Values()["totalRequestedFileSize"].(int64)
 		}
 		if result.Record().Values()["totalRdsOutputFileSize"] != nil {
-			sendRdsBytes = result.Record().Values()["totalRdsOutputFileSize"].(uint64)
+			sendRdsBytes = result.Record().Values()["totalRdsOutputFileSize"].(int64)
 		}
 		if result.Record().Values()["totalFtsTransferredFileSize"] != nil {
-			sendFtsBytes = result.Record().Values()["totalFtsTransferredFileSize"].(uint64)
+			sendFtsBytes = result.Record().Values()["totalFtsTransferredFileSize"].(int64)
 		}
 
 		arrayResult = append(arrayResult, &pb.TotalTransferRateDataPoint{
-			TotalBytesPerSecRecv:    recvBytes / uint64(intervalInSec),
-			TotalBytesPerSecSend:    sendBytes / uint64(intervalInSec),
-			TotalBytesPerSecRdsSend: sendRdsBytes / uint64(intervalInSec),
-			TotalBytesPerSecFtsSend: sendFtsBytes / uint64(intervalInSec),
+			TotalBytesPerSecRecv:    uint64(recvBytes) / uint64(intervalInSec),
+			TotalBytesPerSecSend:    uint64(sendBytes) / uint64(intervalInSec),
+			TotalBytesPerSecRdsSend: uint64(sendRdsBytes) / uint64(intervalInSec),
+			TotalBytesPerSecFtsSend: uint64(sendFtsBytes) / uint64(intervalInSec),
 		})
 	}
 
@@ -265,7 +276,7 @@ func queryTransferSpeed(s *QueryServer, ctx context.Context, startTime string, e
 func queryFileRate(s *QueryServer, ctx context.Context, startTime string, endTime string, intervalInSec int, filter string) ([]*pb.TotalFileRateDataPoint, error) {
 	var arrayResult []*pb.TotalFileRateDataPoint
 
-	rdsResponses, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDb2Bucket+"\")"+
+	rdsResponses, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDbDatabase+"\")"+
 		" |> range(start: "+startTime+", stop: "+endTime+")"+
 		" |> filter(fn: (r) => r._measurement == \""+dbMeasurementRdsFileRequests+"\" or r._measurement == \""+dbMeasurementBrokerFileRequests+"\" or r._measurement == \""+dbMeasurementFtsTransfers+"\")"+
 		" |> filter(fn: (r) => r._field == \"totalRdsHits\" or r._field == \"totalRdsMisses\" or r._field == \"requestedFileCount\" or r._field == \"ftsFileCount\")"+
@@ -285,16 +296,16 @@ func queryFileRate(s *QueryServer, ctx context.Context, startTime string, endTim
 		fromDisk := uint32(0)
 
 		if rdsResponses.Record().Values()["requestedFileCount"] != nil {
-			totalRequests = uint32(rdsResponses.Record().Values()["requestedFileCount"].(uint64))
+			totalRequests = uint32(rdsResponses.Record().Values()["requestedFileCount"].(int64))
 		}
 		if rdsResponses.Record().Values()["totalRdsHits"] != nil {
-			hit = uint32(rdsResponses.Record().Values()["totalRdsHits"].(uint64))
+			hit = uint32(rdsResponses.Record().Values()["totalRdsHits"].(int64))
 		}
 		if rdsResponses.Record().Values()["totalRdsMisses"] != nil {
-			miss = uint32(rdsResponses.Record().Values()["totalRdsMisses"].(uint64))
+			miss = uint32(rdsResponses.Record().Values()["totalRdsMisses"].(int64))
 		}
 		if rdsResponses.Record().Values()["ftsFileCount"] != nil {
-			fromDisk = uint32(rdsResponses.Record().Values()["ftsFileCount"].(uint64))
+			fromDisk = uint32(rdsResponses.Record().Values()["ftsFileCount"].(int64))
 		}
 
 		arrayResult = append(arrayResult, &pb.TotalFileRateDataPoint{
@@ -315,7 +326,7 @@ func queryFileRate(s *QueryServer, ctx context.Context, startTime string, endTim
 func queryTaskTime(s *QueryServer, ctx context.Context, startTime string, endTime string, intervalInSec int, filter string) ([]*pb.TaskTimeDataPoint, error) {
 	var arrayResult []*pb.TaskTimeDataPoint
 
-	result, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDb2Bucket+"\")"+
+	result, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDbDatabase+"\")"+
 		" |> range(start: "+startTime+", stop: "+endTime+")"+
 		" |> filter(fn: (r) => r._measurement == \""+dbMeasurementFileInput+"\" or r._measurement == \""+dbMeasurementRdsFileRequests+"\")"+
 		" |> filter(fn: (r) => r._field == \"avgTransferReceiveTimeUs\" or r._field == \"avgWriteIoTimeUs\" or r._field == \"avgDbTimeUs\" or r._field == \"avgRdsOutputTransferTimeUs\")"+
@@ -365,7 +376,7 @@ func queryTaskTime(s *QueryServer, ctx context.Context, startTime string, endTim
 func queryMemoryUsage(s *QueryServer, ctx context.Context, startTime string, endTime string, intervalInSec int, filter string) ([]*pb.RdsMemoryUsageDataPoint, error) {
 	var arrayResult []*pb.RdsMemoryUsageDataPoint
 
-	result, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDb2Bucket+"\")"+
+	result, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDbDatabase+"\")"+
 		" |> range(start: "+startTime+", stop: "+endTime+")"+
 		" |> filter(fn: (r) => r._measurement == \""+dbMeasurementRdsCacheMemoryUsage+"\")"+
 		" |> filter(fn: (r) => r._field == \"rdsCacheUsedBytes\")"+
@@ -379,14 +390,14 @@ func queryMemoryUsage(s *QueryServer, ctx context.Context, startTime string, end
 	}
 
 	for result.Next() {
-		usedBytes := uint64(0)
+		usedBytes := int64(0)
 
 		if result.Record().Values()["rdsCacheUsedBytes"] != nil {
-			usedBytes = result.Record().Values()["rdsCacheUsedBytes"].(uint64)
+			usedBytes = result.Record().Values()["rdsCacheUsedBytes"].(int64)
 		}
 
 		arrayResult = append(arrayResult, &pb.RdsMemoryUsageDataPoint{
-			TotalUsedMemory: usedBytes,
+			TotalUsedMemory: uint64(usedBytes),
 		})
 	}
 
@@ -405,7 +416,7 @@ func (s *QueryServer) GetTopology(ctx context.Context, query *pb.ToplogyQuery) (
 	startTime := strconv.FormatUint(query.FromTimestamp, 10)
 	endTime := strconv.FormatUint(query.ToTimestamp, 10)
 
-	result, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDb2Bucket+"\")"+
+	result, err := s.dbQueryApi.Query(ctx, "from(bucket: \""+s.settings.InfluxDbDatabase+"\")"+
 		" |> range(start: "+startTime+", stop: "+endTime+")"+
 		" |> filter(fn: (r) => r._measurement == \""+dbMeasurementFileInput+"\" or r._measurement == \""+dbMeasurementBrokerFileRequests+"\")" +
 		" |> filter(fn: (r) => " + createFilterElement("beamtime", query.BeamtimeFilter) + ")" +
