@@ -74,6 +74,8 @@ private:
     Error ReinitializeClient();
     Error GetMonitoringServerUrl(std::string* url) const;
 
+    static uint64_t WaitTimeMsUntilNextInterval(std::chrono::high_resolution_clock::time_point startTime);
+
 public:
     // Internal struct
     class ToBeSendData {

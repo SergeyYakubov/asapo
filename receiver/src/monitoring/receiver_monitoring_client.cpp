@@ -19,8 +19,6 @@ SharedReceiverMonitoringClient asapo::GenerateDefaultReceiverMonitoringClient(co
     return SharedReceiverMonitoringClient{new ReceiverMonitoringClientNoop};
 }
 
-
-
 std::chrono::high_resolution_clock::time_point asapo::ReceiverMonitoringClient::HelperTimeNow() {
     return std::chrono::high_resolution_clock::now();
 }

@@ -9,7 +9,7 @@
 
 using namespace asapo;
 
-static const int universalSendingIntervalMs = 5000;
+static const int kUniversalSendingIntervalMs = 5000;
 
 uint64_t NowUnixTimestampMs() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -56,10 +56,11 @@ void asapo::ReceiverMonitoringClientImpl::StopSendingThread() {
 }
 
 void asapo::ReceiverMonitoringClientImpl::SendingThreadFunction() {
+    auto globalStartTime = ReceiverMonitoringClient::HelperTimeNow();
+
     std::unique_ptr<ToBeSendData> localToBeSend{new ToBeSendData};
     while(sendingThreadRunning__) {
-        auto start = HelperTimeNow();
-
+        auto iterationStart = ReceiverMonitoringClient::HelperTimeNow();
         FillMemoryStats();
 
         // Clear and swap data
@@ -81,17 +82,20 @@ void asapo::ReceiverMonitoringClientImpl::SendingThreadFunction() {
         }
 
         size_t size = localToBeSend->container.ByteSizeLong();
-        auto tookTimeUs = HelperTimeDiffInMicroseconds(start);
-        int sleepDurationInMs = universalSendingIntervalMs - (int)(tookTimeUs/1000);
 
-        if (!err) {
-            log__->Debug("Sending of all monitoring data(" + std::to_string(size) + " byte) took " + std::to_string(tookTimeUs/1000) + "ms (sleeping for " + std::to_string(sleepDurationInMs) + "ms)");
-        } else {
-            log__->Info("Will try again in " + std::to_string(sleepDurationInMs) + "ms");
+        uint64_t sleepDurationInMs = WaitTimeMsUntilNextInterval(globalStartTime);
+        auto tookTimeMs = ReceiverMonitoringClient::HelperTimeDiffInMicroseconds(iterationStart) / 1000;
+
+        if (tookTimeMs > kUniversalSendingIntervalMs) {
+            sleepDurationInMs = 0;
         }
 
-        if (sleepDurationInMs < 0) {
-            sleepDurationInMs = 0;
+        auto tookInMsStr = std::to_string(tookTimeMs);
+
+        if (!err) {
+            log__->Debug("Sending of all monitoring data(" + std::to_string(size) + " byte) took " + tookInMsStr+ "ms (sleeping for " + std::to_string(sleepDurationInMs) + "ms)");
+        } else {
+            log__->Info("Error took " + tookInMsStr + "ms, will try again in " + std::to_string(sleepDurationInMs) + "ms");
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepDurationInMs));
@@ -326,4 +330,13 @@ RdsMemoryDataPoint* asapo::ReceiverMonitoringClientImpl::ToBeSendData::GetMemory
     *(newItem->mutable_stream()) = stream;
 
     return newItem;
+}
+
+uint64_t asapo::ReceiverMonitoringClientImpl::WaitTimeMsUntilNextInterval(std::chrono::high_resolution_clock::time_point startTime) {
+    auto now = std::chrono::high_resolution_clock::now();
+    auto delta = now - startTime;
+    auto interval = std::chrono::milliseconds(kUniversalSendingIntervalMs);
+
+    auto result = (uint64_t) std::chrono::duration_cast<std::chrono::milliseconds>(interval - (delta % interval)).count();
+    return result;
 }

@@ -78,14 +78,26 @@ func (m *brokerMonitoring) Init() error {
 
 func (m *brokerMonitoring) RunThread() {
 	time.Sleep(5000 * time.Millisecond)
+	globalStart := time.Now()
+
+	sendingInterval := 5000 * time.Millisecond
+	time.Sleep(sendingInterval)
+
+	waitForNextIteration := func(iterationStartTime time.Time) {
+		timeTook := time.Since(iterationStartTime)
+		if timeTook < sendingInterval {
+			sleepTime := sendingInterval - (time.Since(globalStart) % sendingInterval)
+			time.Sleep(sleepTime)
+		}
+	}
+
 	for {
-		start := time.Now()
+		iterationStart := time.Now()
 		if !m.Sender.IsInitialized() {
 			err := m.reinitializeSender()
 			if err != nil {
 				log.Warning("monitoring.reinitializeSender failed " , err.Error())
-				elapsed := time.Since(start)
-				time.Sleep((5000 * time.Millisecond) - elapsed)
+				waitForNextIteration(iterationStart)
 				continue
 			}
 		}
@@ -101,7 +113,7 @@ func (m *brokerMonitoring) RunThread() {
 				log.Error("reinitializeSender also failed - " + err.Error())
 			}
 		}
-		elapsed := time.Since(start)
-		time.Sleep((5000 * time.Millisecond) - elapsed)
+
+		waitForNextIteration(iterationStart)
 	}
 }
