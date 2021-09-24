@@ -201,7 +201,7 @@ func canUseHostAuthorization(creds SourceCredentials) bool {
 
 func checkToken(token string, subject_expect string) (accessTypes []string, err error) {
 	var extra_claim structs.AccessTokenExtraClaim
-	subject,err := Auth.UserAuth().CheckAndGetContent(token,&extra_claim)
+	claim,err := Auth.UserAuth().CheckAndGetContent(token,&extra_claim)
 	if err!=nil {
 		return nil,err
 	}
@@ -210,7 +210,7 @@ func checkToken(token string, subject_expect string) (accessTypes []string, err 
 		return nil,errors.New("missing access types")
 	}
 
-	if subject!=subject_expect {
+	if claim.Subject!=subject_expect {
 		return nil,errors.New("wrong token for "+subject_expect)
 	}
 	return extra_claim.AccessTypes,err
