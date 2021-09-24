@@ -4,7 +4,9 @@ package server
 
 import (
 	"asapo_authorizer/authorization"
+	"asapo_authorizer/database"
 	"asapo_authorizer/ldap_client"
+	"asapo_common/discovery"
 	log "asapo_common/logger"
 	"asapo_common/utils"
 	"asapo_common/version"
@@ -13,10 +15,20 @@ import (
 	"strconv"
 )
 
+
 func Start() {
 	mux := utils.NewRouter(listRoutes)
 	ldapClient = new(ldap_client.OpenLdapClient)
+	discoveryService = discovery.CreateDiscoveryService(&http.Client{},"http://" + settings.DiscoveryServer)
+
 	log.Info("Starting ASAPO Authorizer, version " + version.GetVersion())
+
+	err := InitDB(new(database.Mongodb))
+	if err != nil {
+		log.Error(err.Error())
+	}
+	defer CleanupDB()
+
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }
@@ -48,6 +60,14 @@ func ReadConfig(fname string) (log.Level, error) {
 
 	if settings.AdminSecretFile == "" {
 		return log.FatalLevel, errors.New("Admin secret file not set")
+	}
+
+	if settings.DatabaseServer == "" {
+		return log.FatalLevel, errors.New("Database server not set")
+	}
+
+	if settings.DatabaseServer == "auto" && settings.DiscoveryServer=="" {
+		return log.FatalLevel, errors.New("Discovery server not set")
 	}
 
 	var err error

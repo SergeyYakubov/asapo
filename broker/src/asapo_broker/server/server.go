@@ -2,9 +2,9 @@ package server
 
 import (
 	"asapo_broker/database"
+	"asapo_common/discovery"
 	log "asapo_common/logger"
 	"errors"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -58,17 +58,7 @@ type discoveryAPI struct {
 	baseURL string
 }
 
-var discoveryService discoveryAPI
-
-func (api *discoveryAPI) GetMongoDbAddress() (string, error) {
-	resp, err := api.Client.Get(api.baseURL + "/asapo-mongodb")
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	return string(body), err
-}
+var discoveryService discovery.DiscoveryAPI
 
 func ReconnectDb() (err error) {
 	if db == nil {
@@ -97,7 +87,7 @@ func InitDB(dbAgent database.Agent) (err error) {
 }
 
 func CreateDiscoveryService() {
-	discoveryService = discoveryAPI{&http.Client{}, "http://" + settings.DiscoveryServer}
+	discoveryService = discovery.CreateDiscoveryService(&http.Client{},"http://" + settings.DiscoveryServer)
 }
 
 func CleanupDB() {

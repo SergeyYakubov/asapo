@@ -51,7 +51,7 @@ Error GetLastErrorFromErrno() {
     case ENOSPC:
         return IOErrorTemplates::kNoSpaceLeft.Generate();
     case ENOTCONN:
-            return IOErrorTemplates::kNotConnected.Generate();
+        return IOErrorTemplates::kNotConnected.Generate();
     case ECONNREFUSED:
         return IOErrorTemplates::kConnectionRefused.Generate();
     case EADDRINUSE:
