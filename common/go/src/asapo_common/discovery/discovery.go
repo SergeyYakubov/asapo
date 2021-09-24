@@ -21,5 +21,5 @@ func (api *DiscoveryAPI) GetMongoDbAddress() (string, error) {
 }
 
 func CreateDiscoveryService(client *http.Client,uri string) DiscoveryAPI{
-	return DiscoveryAPI{&http.Client{}, uri}
+	return DiscoveryAPI{client, uri}
 }
