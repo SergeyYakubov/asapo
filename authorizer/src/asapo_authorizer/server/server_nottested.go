@@ -15,14 +15,16 @@ import (
 	"strconv"
 )
 
+func CreateDiscoveryService() {
+	discoveryService = discovery.CreateDiscoveryService(&http.Client{},"http://" + settings.DiscoveryServer)
+}
 
 func Start() {
 	mux := utils.NewRouter(listRoutes)
 	ldapClient = new(ldap_client.OpenLdapClient)
-	discoveryService = discovery.CreateDiscoveryService(&http.Client{},"http://" + settings.DiscoveryServer)
 
 	log.Info("Starting ASAPO Authorizer, version " + version.GetVersion())
-
+	CreateDiscoveryService()
 	err := InitDB(new(database.Mongodb))
 	if err != nil {
 		log.Error(err.Error())

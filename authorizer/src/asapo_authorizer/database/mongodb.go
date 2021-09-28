@@ -6,6 +6,7 @@ import (
 	"asapo_common/utils"
 	"context"
 	"errors"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strings"
@@ -107,7 +108,25 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(request Request) error {
 	return nil
 }
 
-func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
+func (db *Mongodb) createRecord(request Request, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 1 {
+		return nil, errors.New("wrong number of parameters")
+	}
+	record := extra_params[0]
+	c := db.client.Database(request.DbName).Collection(request.Collection)
+	res, err := c.InsertOne(context.TODO(), record, options.InsertOne())
+	if err != nil {
+		return nil, err
+	}
+	newId, ok := res.InsertedID.(primitive.ObjectID)
+	if ok {
+		return []byte(newId.Hex()), nil
+	}
+	return nil, nil
+}
+
+
+func (db *Mongodb) ProcessRequest(request Request,extraParams ...interface{}) (answer []byte, err error) {
 	dbClientLock.RLock()
 	defer dbClientLock.RUnlock()
 
@@ -116,6 +135,8 @@ func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
 	}
 
 	switch request.Op {
+	case "create_record":
+		return db.createRecord(request, extraParams...)
 	}
 
 	return nil, errors.New("Wrong db operation: " + request.Op)

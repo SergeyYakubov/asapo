@@ -3,6 +3,8 @@
 package cli
 
 import (
+	"asapo_authorizer/database"
+	"asapo_authorizer/server"
 	"errors"
 	"flag"
 	"fmt"
@@ -15,6 +17,8 @@ import (
 var flHelp bool
 
 var outBuf io.Writer = os.Stdout
+
+var db database.Agent
 
 func printHelp(f *flag.FlagSet) bool {
 	if flHelp {
@@ -38,6 +42,11 @@ func DoCommand(name string, args []string) error {
 	cmd.args = args
 
 	method := methodVal.Interface().(func() error)
+
+	server.CreateDiscoveryService()
+	db = new(database.Mongodb)
+	server.InitDB(db)
+	defer db.Close()
 
 	return method()
 }

@@ -62,7 +62,7 @@ func issueUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := Auth.PrepareAccessToken(request, true)
+	token, _, err := Auth.PrepareAccessToken(request, true)
 	if err != nil {
 		utils.WriteServerError(w, err, http.StatusInternalServerError)
 		return

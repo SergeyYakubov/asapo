@@ -24,8 +24,7 @@ func (db *MockedDatabase) Ping() error {
 	return args.Error(0)
 }
 
-
-func (db *MockedDatabase) ProcessRequest(request Request) (answer []byte, err error) {
-	args := db.Called(request)
+func (db *MockedDatabase) ProcessRequest(request Request, extraParams ...interface{}) (answer []byte, err error) {
+	args := db.Called(request,extraParams)
 	return args.Get(0).([]byte), args.Error(1)
 }

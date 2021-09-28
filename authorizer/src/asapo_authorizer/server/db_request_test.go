@@ -45,7 +45,7 @@ func TestProcessRequestTestSuite(t *testing.T) {
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
 	req := database.Request{}
 
-	suite.mock_db.On("ProcessRequest", req).Return([]byte(""),
+	suite.mock_db.On("ProcessRequest", req,mock.Anything).Return([]byte(""),
 		&database.DBError{utils.StatusServiceUnavailable, ""})
 
 	ExpectReconnect(suite.mock_db)
@@ -62,10 +62,9 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestAddTokenToDb() {
 		DbName:     "test",
 		Collection: "test",
 		Op:         "test",
-		ExtraParam: "test",
 	}
 
-	suite.mock_db.On("ProcessRequest", req).Return([]byte("Hello"), nil)
+	suite.mock_db.On("ProcessRequest", req,mock.Anything).Return([]byte("Hello"), nil)
 
 
 	_,err := ProcessRequestInDb(req)
