@@ -60,21 +60,21 @@ func splitHost(hostPort string) string {
 	return s[0]
 }
 
-func beamtimeMetaFromJson(fname string) (beamtimeMeta, error) {
-	var meta beamtimeMeta
+func beamtimeMetaFromJson(fname string) (common.BeamtimeMeta, error) {
+	var meta common.BeamtimeMeta
 	err := utils.ReadJsonFromFile(fname, &meta)
 	if err != nil {
-		return beamtimeMeta{}, err
+		return common.BeamtimeMeta{}, err
 	}
 	return meta, nil
 }
 
-func commissioningMetaFromJson(fname string) (beamtimeMeta, error) {
-	var meta beamtimeMeta
-	var comMeta commissioningMeta
+func commissioningMetaFromJson(fname string) (common.BeamtimeMeta, error) {
+	var meta common.BeamtimeMeta
+	var comMeta common.CommissioningMeta
 	err := utils.ReadJsonFromFile(fname, &comMeta)
 	if err != nil {
-		return beamtimeMeta{}, err
+		return common.BeamtimeMeta{}, err
 	}
 	meta.BeamtimeId = comMeta.Id
 	meta.Beamline = strings.ToLower(comMeta.Beamline)
@@ -82,32 +82,32 @@ func commissioningMetaFromJson(fname string) (beamtimeMeta, error) {
 	return meta, nil
 }
 
-func beamtimeMetaFromMatch(match string) (beamtimeMeta, error) {
-	match = strings.TrimPrefix(match, settings.RootBeamtimesFolder)
+func beamtimeMetaFromMatch(match string) (common.BeamtimeMeta, error) {
+	match = strings.TrimPrefix(match, common.Settings.RootBeamtimesFolder)
 	match = strings.TrimPrefix(match, string(filepath.Separator))
 	vars := strings.Split(match, string(filepath.Separator))
 	if len(vars) != 6 {
-		return beamtimeMeta{}, errors.New("bad pattern")
+		return common.BeamtimeMeta{}, errors.New("bad pattern")
 	}
-	var bt beamtimeMeta
+	var bt common.BeamtimeMeta
 	ignoredFoldersAfterGpfs := []string{"common", "BeamtimeUsers", "state", "support"}
 	if utils.StringInSlice(vars[2], ignoredFoldersAfterGpfs) {
-		return beamtimeMeta{}, errors.New("skipped fodler")
+		return common.BeamtimeMeta{}, errors.New("skipped fodler")
 	}
 
-	bt.OfflinePath = settings.RootBeamtimesFolder+string(filepath.Separator)+match
+	bt.OfflinePath = common.Settings.RootBeamtimesFolder+string(filepath.Separator)+match
 	bt.Beamline, bt.BeamtimeId = vars[2], vars[5]
 
 	return bt, nil
 }
 
-func findBeamtimeInfoFromId(beamtime_id string) (beamtimeMeta, error) {
+func findBeamtimeInfoFromId(beamtime_id string) (common.BeamtimeMeta, error) {
 	sep := string(filepath.Separator)
 	pattern := sep + "*" + sep + "gpfs" + sep + "*" + sep + "*" + sep + "*" + sep
-	matches, err := filepath.Glob(settings.RootBeamtimesFolder + pattern + beamtime_id)
+	matches, err := filepath.Glob(common.Settings.RootBeamtimesFolder + pattern + beamtime_id)
 
 	if err != nil || len(matches) == 0 {
-		return beamtimeMeta{}, errors.New("Cannot find beamline for "+beamtime_id)
+		return common.BeamtimeMeta{}, errors.New("Cannot find beamline for "+beamtime_id)
 	}
 
 	for _, match := range (matches) {
@@ -119,7 +119,7 @@ func findBeamtimeInfoFromId(beamtime_id string) (beamtimeMeta, error) {
 			return btInfo, nil
 		}
 	}
-	return beamtimeMeta{}, errors.New("Cannot find beamline for "+beamtime_id)
+	return common.BeamtimeMeta{}, errors.New("Cannot find beamline for "+beamtime_id)
 }
 
 func findMetaFileInFolder(beamline string,iscommissioning bool) (string, string, error){
@@ -132,7 +132,7 @@ func findMetaFileInFolder(beamline string,iscommissioning bool) (string, string,
 		pattern = "commissioning-metadata-*.json"
 		folder = "commissioning"
 	}
-	online_path := settings.CurrentBeamlinesFolder + sep + beamline + sep + folder
+	online_path := common.Settings.CurrentBeamlinesFolder + sep + beamline + sep + folder
 	matches, err := filepath.Glob(online_path + sep + pattern)
 	if err != nil {
 		return "","", err
@@ -144,10 +144,10 @@ func findMetaFileInFolder(beamline string,iscommissioning bool) (string, string,
 
 }
 
-func findBeamtimeMetaFromBeamline(beamline string,iscommissioning bool) (meta beamtimeMeta, err error) {
+func findBeamtimeMetaFromBeamline(beamline string,iscommissioning bool) (meta common.BeamtimeMeta, err error) {
 	fName,online_path, err := findMetaFileInFolder(beamline,iscommissioning)
 	if (err != nil) {
-		return beamtimeMeta{}, err
+		return common.BeamtimeMeta{}, err
 	}
 
 	if iscommissioning {
@@ -156,19 +156,19 @@ func findBeamtimeMetaFromBeamline(beamline string,iscommissioning bool) (meta be
 		meta, err = beamtimeMetaFromJson(fName)
 	}
 	if (err != nil) {
-		return beamtimeMeta{}, err
+		return common.BeamtimeMeta{}, err
 	}
 
 	if meta.BeamtimeId == "" || meta.OfflinePath=="" || meta.Beamline == ""{
-		return beamtimeMeta{}, errors.New("cannot set meta fields from beamtime file")
+		return common.BeamtimeMeta{}, errors.New("cannot set meta fields from beamtime file")
 	}
 
 	meta.OnlinePath = online_path
 	return meta, nil
 }
 
-func alwaysAllowed(creds SourceCredentials) (beamtimeMeta, bool) {
-	for _, pair := range settings.AlwaysAllowedBeamtimes {
+func alwaysAllowed(creds SourceCredentials) (common.BeamtimeMeta, bool) {
+	for _, pair := range common.Settings.AlwaysAllowedBeamtimes {
 		if pair.BeamtimeId == creds.BeamtimeId {
 			pair.DataSource = creds.DataSource
 			pair.Type = creds.Type
@@ -176,12 +176,12 @@ func alwaysAllowed(creds SourceCredentials) (beamtimeMeta, bool) {
 			return pair, true
 		}
 	}
-	return beamtimeMeta{}, false
+	return common.BeamtimeMeta{}, false
 }
 
 func authorizeByHost(host_ip, beamline string) (error) {
-	filter := strings.Replace(settings.Ldap.FilterTemplate,"__BEAMLINE__",beamline,1)
-	allowed_ips, err := ldapClient.GetAllowedIpsForBeamline(settings.Ldap.Uri,settings.Ldap.BaseDn, filter)
+	filter := strings.Replace(common.Settings.Ldap.FilterTemplate,"__BEAMLINE__",beamline,1)
+	allowed_ips, err := ldapClient.GetAllowedIpsForBeamline(common.Settings.Ldap.Uri,common.Settings.Ldap.BaseDn, filter)
 	if err != nil {
 		log.Error("cannot get list of allowed hosts from LDAP: " + err.Error())
 		return err
@@ -230,9 +230,9 @@ func iscommissioning(beamtime string) bool {
 	return len(beamtime)>0 && beamtime[0]=='c'
 }
 
-func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
+func findMeta(creds SourceCredentials) (common.BeamtimeMeta, error) {
 	var err error
-	var meta beamtimeMeta
+	var meta common.BeamtimeMeta
 	if (creds.BeamtimeId != "auto") {
 		meta, err = findBeamtimeInfoFromId(creds.BeamtimeId)
 		if (err == nil ) {
@@ -251,7 +251,7 @@ func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
 
 	if (err != nil) {
 		log.Error(err.Error())
-		return beamtimeMeta{}, err
+		return common.BeamtimeMeta{}, err
 	}
 
 	meta.DataSource = creds.DataSource
@@ -260,7 +260,7 @@ func findMeta(creds SourceCredentials) (beamtimeMeta, error) {
 	return meta, nil
 }
 
-func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds SourceCredentials) (accessTypes []string, err error) {
+func authorizeMeta(meta common.BeamtimeMeta, request authorizationRequest, creds SourceCredentials) (accessTypes []string, err error) {
 	accessTypes = nil
 	if creds.Type=="raw" && meta.OnlinePath=="" {
 		err_string := "beamtime "+meta.BeamtimeId+" is not online"
@@ -290,19 +290,19 @@ func authorizeMeta(meta beamtimeMeta, request authorizationRequest, creds Source
 	return accessTypes,err
 }
 
-func authorize(request authorizationRequest, creds SourceCredentials) (beamtimeMeta, error) {
+func authorize(request authorizationRequest, creds SourceCredentials) (common.BeamtimeMeta, error) {
 	if meta, ok := alwaysAllowed(creds); ok {
 		return meta, nil
 	}
 
 	meta, err := findMeta(creds)
 	if err != nil {
-		return beamtimeMeta{}, err
+		return common.BeamtimeMeta{}, err
 	}
 
 	var accessTypes []string
 	if accessTypes, err = authorizeMeta(meta, request, creds); err != nil {
-		return beamtimeMeta{}, err
+		return common.BeamtimeMeta{}, err
 	}
 
 	meta.AccessTypes = accessTypes

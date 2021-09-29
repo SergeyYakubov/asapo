@@ -2,8 +2,8 @@ package cli
 
 import (
 	"asapo_authorizer/authorization"
-	"asapo_authorizer/database"
 	"asapo_authorizer/server"
+	"asapo_authorizer/token_store"
 	"asapo_common/structs"
 	"asapo_common/utils"
 	"encoding/json"
@@ -43,20 +43,14 @@ var tokenTests = []struct {
 
 func TestGenerateToken(t *testing.T) {
 	server.Auth = authorization.NewAuth(utils.NewJWTAuth("secret_user"),utils.NewJWTAuth("secret_admin"),utils.NewJWTAuth("secret"))
-	mock_db := new(database.MockedDatabase)
-	db = mock_db
+	mock_store := new(token_store.MockedStore)
+	store = mock_store
 
 	for _, test := range tokenTests {
 		outBuf = new(bytes.Buffer)
 
 		if test.ok {
-			req := database.Request{
-				DbName:     "asapo_admin",
-				Collection: "tokens",
-				Op:         "create_record",
-			}
-
-			mock_db.On("ProcessRequest", req, mock.Anything).Return([]byte(""), nil)
+			mock_store.On("AddToken", mock.Anything).Return(nil)
 		}
 
 		err := test.cmd.CommandCreate_token()
@@ -81,8 +75,8 @@ func TestGenerateToken(t *testing.T) {
 			assert.Empty(t, token.Expires, test.msg)
 		}
 
-		mock_db.AssertExpectations(t)
-		mock_db.ExpectedCalls = nil
-		mock_db.Calls = nil
+		mock_store.AssertExpectations(t)
+		mock_store.ExpectedCalls = nil
+		mock_store.Calls = nil
 	}
 }

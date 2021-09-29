@@ -1,10 +1,11 @@
-package database
+package token_store
 
 import "asapo_common/utils"
 
 
 const KAdminDb = "asapo_admin"
 const KTokens = "tokens"
+const KRevokedTokens = "revoked_tokens"
 
 type Request struct {
 	DbName         string
@@ -16,6 +17,11 @@ type TokenRecord struct {
 	Id string `bson:"_id"`
 	*utils.CustomClaims
 	Token string
+	Revoked bool
+}
+
+type IdRecord struct {
+	Id string `bson:"_id"`
 }
 
 type Agent interface {

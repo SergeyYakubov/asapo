@@ -1,5 +1,7 @@
 package server
 
+/*
+
 import (
 	"asapo_authorizer/database"
 	"asapo_common/discovery"
@@ -138,3 +140,4 @@ func TestCleanupDBInit(t *testing.T) {
 
 	assertExpectations(t, mock_db)
 }
+*/

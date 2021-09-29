@@ -1,11 +1,12 @@
 //+build !test
 
-package database
+package token_store
 
 import (
 	"asapo_common/utils"
 	"context"
 	"errors"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -95,7 +96,6 @@ func duplicateError(err error) bool {
 	return command_error.Name == "DuplicateKey"
 }
 
-
 func (db *Mongodb) checkDatabaseOperationPrerequisites(request Request) error {
 	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
@@ -125,8 +125,69 @@ func (db *Mongodb) createRecord(request Request, extra_params ...interface{}) ([
 	return nil, nil
 }
 
+func (db *Mongodb) readRecords(request Request, extraParams ...interface{}) ([]byte, error) {
+	c := db.client.Database(request.DbName).Collection(request.Collection)
 
-func (db *Mongodb) ProcessRequest(request Request,extraParams ...interface{}) (answer []byte, err error) {
+	if len(extraParams) != 1 {
+		return nil, errors.New("wrong number of parameters")
+	}
+	res := extraParams[0]
+
+	opts := options.Find()
+
+	cursor, err := c.Find(context.TODO(), bson.M{}, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cursor.All(context.TODO(), res)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+func (db *Mongodb) readRecord(request Request, extraParams ...interface{}) ([]byte, error) {
+	c := db.client.Database(request.DbName).Collection(request.Collection)
+
+	if len(extraParams) != 2 {
+		return nil, errors.New("wrong number of parameters")
+	}
+	q := extraParams[0]
+	res := extraParams[1]
+	err := c.FindOne(context.TODO(), q, options.FindOne()).Decode(res)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+func (db *Mongodb) updateRecord(request Request, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 4 {
+		return nil, errors.New("wrong number of parameters")
+	}
+	id, ok := extra_params[0].(string)
+	if !ok {
+		return nil, errors.New("id must be string")
+	}
+	input := extra_params[1]
+	upsert, ok := extra_params[2].(bool)
+	if !ok {
+		return nil, errors.New("upsert must be string")
+	}
+	output := extra_params[3]
+
+	opts := options.FindOneAndUpdate().SetUpsert(upsert).SetReturnDocument(options.After)
+	filter := bson.D{{"_id", id}}
+
+	update := bson.D{{"$set", input}}
+	c := db.client.Database(request.DbName).Collection(request.Collection)
+	err := c.FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(output)
+	return nil, err
+}
+
+
+func (db *Mongodb) ProcessRequest(request Request, extraParams ...interface{}) (answer []byte, err error) {
 	dbClientLock.RLock()
 	defer dbClientLock.RUnlock()
 
@@ -137,6 +198,12 @@ func (db *Mongodb) ProcessRequest(request Request,extraParams ...interface{}) (a
 	switch request.Op {
 	case "create_record":
 		return db.createRecord(request, extraParams...)
+	case "read_records":
+		return db.readRecords(request, extraParams...)
+	case "read_record":
+		return db.readRecord(request, extraParams...)
+	case "update_record":
+		return db.updateRecord(request, extraParams...)
 	}
 
 	return nil, errors.New("Wrong db operation: " + request.Op)

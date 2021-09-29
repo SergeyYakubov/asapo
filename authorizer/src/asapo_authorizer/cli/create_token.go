@@ -2,13 +2,14 @@ package cli
 
 import (
 	"asapo_authorizer/authorization"
-	"asapo_authorizer/database"
 	"asapo_authorizer/server"
+	"asapo_authorizer/token_store"
 	"asapo_common/structs"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 type tokenFlags struct {
@@ -87,13 +88,10 @@ func (cmd *command) CommandCreate_token() (err error) {
 	if err != nil {
 		return err
 	}
-
-	record := database.TokenRecord{claims.Id, claims, token}
-	_, err = db.ProcessRequest(database.Request{
-		DbName:     database.KAdminDb,
-		Collection: database.KTokens,
-		Op:         "create_record",
-	}, &record)
+	claims.StandardClaims.Issuer = "asapo_cli"
+	claims.StandardClaims.IssuedAt = time.Now().Unix()
+	record := token_store.TokenRecord{claims.Id, claims, token, false}
+	err = store.AddToken(record)
 	if err != nil {
 		return err
 	}

@@ -50,8 +50,8 @@ type request struct {
 	message string
 }
 
-func allowBeamlines(beamlines []beamtimeMeta) {
-	settings.AlwaysAllowedBeamtimes=beamlines
+func allowBeamlines(beamlines []common.BeamtimeMeta) {
+	common.Settings.AlwaysAllowedBeamtimes=beamlines
 }
 
 
@@ -111,7 +111,7 @@ func TestSplitCreds(t *testing.T) {
 }
 
 func TestAuthorizeDefaultOK(t *testing.T) {
-	allowBeamlines([]beamtimeMeta{{"asapo_test","beamline","","2019","tf","",nil}})
+	allowBeamlines([]common.BeamtimeMeta{{"asapo_test","beamline","","2019","tf","",nil}})
 	request :=  makeRequest(authorizationRequest{"processed%asapo_test%%%","host"})
 	w := doPostRequest("/authorize",request,"")
 
@@ -244,16 +244,16 @@ var authTests = [] struct {
 
 func TestAuthorize(t *testing.T) {
 	ldapClient = mockClient
-	allowBeamlines([]beamtimeMeta{})
+	allowBeamlines([]common.BeamtimeMeta{})
 	Auth = authorization.NewAuth(utils.NewJWTAuth("secret_user"),utils.NewJWTAuth("secret_admin"),utils.NewJWTAuth("secret"))
 	expected_uri := "expected_uri"
 	expected_base := "expected_base"
 	allowed_ips := []string{"127.0.0.1"}
-	settings.RootBeamtimesFolder ="."
-	settings.CurrentBeamlinesFolder="."
-	settings.Ldap.FilterTemplate="a3__BEAMLINE__-hosts"
-	settings.Ldap.Uri = expected_uri
-	settings.Ldap.BaseDn = expected_base
+	common.Settings.RootBeamtimesFolder ="."
+	common.Settings.CurrentBeamlinesFolder="."
+	common.Settings.Ldap.FilterTemplate="a3__BEAMLINE__-hosts"
+	common.Settings.Ldap.Uri = expected_uri
+	common.Settings.Ldap.BaseDn = expected_base
 
 	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test"), os.ModePerm)
 	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test_online"), os.ModePerm)
@@ -323,7 +323,7 @@ func TestAuthorizeWrongPath(t *testing.T) {
 }
 
 func TestDoNotAuthorizeIfNotInAllowed(t *testing.T) {
-	allowBeamlines([]beamtimeMeta{{"test","beamline","","2019","tf","",nil}})
+	allowBeamlines([]common.BeamtimeMeta{{"test","beamline","","2019","tf","",nil}})
 
 	request :=  authorizationRequest{"asapo_test%%","host"}
 	creds,_ := getSourceCredentials(request)
@@ -360,7 +360,7 @@ var extractBtinfoTests = [] struct {
 }
 func TestGetBeamtimeInfo(t *testing.T) {
 	for _, test := range extractBtinfoTests {
-		settings.RootBeamtimesFolder=test.root
+		common.Settings.RootBeamtimesFolder=test.root
 		bt,err:= beamtimeMetaFromMatch(test.root+string(filepath.Separator)+test.fname)
 		if test.ok {
 			assert.Equal(t,bt.OfflinePath,test.root+string(filepath.Separator)+test.fname)

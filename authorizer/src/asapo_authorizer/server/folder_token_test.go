@@ -2,16 +2,17 @@ package server
 
 import (
 	"asapo_authorizer/authorization"
+	"asapo_authorizer/common"
 	"asapo_common/structs"
 	"asapo_common/utils"
 	"asapo_common/version"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
-	"testing"
 	"os"
 	"path/filepath"
-	"fmt"
+	"testing"
 )
 
 var  fodlerTokenTests = [] struct {
@@ -37,9 +38,9 @@ var  fodlerTokenTests = [] struct {
 }
 
 func TestFolderToken(t *testing.T) {
-	allowBeamlines([]beamtimeMeta{})
-	settings.RootBeamtimesFolder ="."
-	settings.CurrentBeamlinesFolder="."
+	allowBeamlines([]common.BeamtimeMeta{})
+	common.Settings.RootBeamtimesFolder ="."
+	common.Settings.CurrentBeamlinesFolder="."
 	Auth = authorization.NewAuth(utils.NewJWTAuth("secret_user"),utils.NewJWTAuth("secret_admin"),utils.NewJWTAuth("secret_folder"))
 
 	os.MkdirAll(filepath.Clean("tf/gpfs/bl1/2019/data/test"), os.ModePerm)
@@ -52,10 +53,10 @@ func TestFolderToken(t *testing.T) {
 	defer 	os.RemoveAll("bl1")
 
 	for _, test := range fodlerTokenTests {
-		abs_path:=settings.RootBeamtimesFolder + string(filepath.Separator)+test.root_folder
+		abs_path:=common.Settings.RootBeamtimesFolder + string(filepath.Separator)+test.root_folder
 		abs_path_second :=""
 		if test.second_folder!="" {
-			abs_path_second =settings.RootBeamtimesFolder + string(filepath.Separator)+test.second_folder
+			abs_path_second =common.Settings.RootBeamtimesFolder + string(filepath.Separator)+test.second_folder
 		}
 		path_in_token:=abs_path
 		if test.auto {

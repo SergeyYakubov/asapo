@@ -1,6 +1,6 @@
 // +build !release
 
-package database
+package token_store
 
 import (
 	"github.com/stretchr/testify/mock"
@@ -27,4 +27,24 @@ func (db *MockedDatabase) Ping() error {
 func (db *MockedDatabase) ProcessRequest(request Request, extraParams ...interface{}) (answer []byte, err error) {
 	args := db.Called(request,extraParams)
 	return args.Get(0).([]byte), args.Error(1)
+}
+
+
+type FakeDatabase struct {
+}
+
+func (db *FakeDatabase) Connect(address string) error {
+	return nil
+}
+
+func (db *FakeDatabase) Close() {
+	return
+}
+
+func (db *FakeDatabase) Ping() error {
+	return nil
+}
+
+func (db *FakeDatabase) ProcessRequest(request Request, extraParams ...interface{}) (answer []byte, err error) {
+	return nil,nil
 }
