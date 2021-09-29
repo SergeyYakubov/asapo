@@ -21,7 +21,7 @@ ASAPO_USER=`id -u`:`id -g`
 mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $DATA_GLOBAL_SHARED_ONLINE
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $DATA_GLOBAL_SHARED_ONLINE
 
-cd $SERVICE_DATA_CLUSTER_SHARED
+cd $SERVICE_DATA_CLUSTER_SHAREDdetector
 mkdir -p fluentd grafana influxdb2 mongodb
 chmod 777 *
 
@@ -41,7 +41,7 @@ docker run --privileged --userns=host --security-opt no-new-privileges --rm \
   -v $DOCKER_TLS_KEY:/etc/nomad/key.pem \
   -v $DOCKER_TLS_CERT:/etc/nomad/cert.pem \
   -e DOCKER_ENDPOINT=$DOCKER_ENDPOINT \
-  --name asapo --net=host -d yakser/asapo-cluster:@ASAPO_VERSION_IN_DOCS@
+  --name asapo --net=host -d yakser/asapo-cluster:21.06.0
 
 sleep 15
 docker exec asapo jobs-start -var elk_logs=false

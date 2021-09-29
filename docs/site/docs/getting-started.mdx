@@ -7,9 +7,9 @@ slug: /
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-## Step 1: Start ASAPO services {#step-1}
+## Start ASAPO services {#step-1}
 
-If you already have running ASAPO services and know the endpoint, you can skip to the [step 2](#step-2).
+If you already have running ASAPO services and know the endpoint, you don't need this, and can go to [Client Libraries](#step-2).
 
 Otherwise, for testing purposes one can start ASAPO services in a standalone mode (this is not recommended for  production deployment).
 
@@ -17,7 +17,7 @@ Otherwise, for testing purposes one can start ASAPO services in a standalone mod
 The easiest way is to use a Docker container.
 So, make sure Docker is installed and you have necessary permissions to use it.
 Please note that this will only work on a Linux machine. Also please note that ASAPO needs some ports to be available. You can check the list
-[here](https://stash.desy.de/projects/ASAPO/repos/asapo/browse/deploy/asapo_services/scripts/asapo.auto.tfvars.in?at=@ASAPO_VERSION_IN_DOCS@#37).
+[here](https://stash.desy.de/projects/ASAPO/repos/asapo/browse/deploy/asapo_services/scripts/asapo.auto.tfvars.in#37).
 
 Now, depending on how your Docker daemon is configured (if it uses a
 unix socket or a tcp port for communications)
@@ -32,14 +32,14 @@ unix socket or a tcp port for communications)
 }>
 <TabItem value="unix">
 
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/start_asapo_socket.sh"
+```shell content=./examples/start_asapo_socket.sh"
 ```
 
 </TabItem>
 
 <TabItem value="tcp">
 
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/start_asapo_tcp.sh"
+```shell content="./examples/start_asapo_tcp.sh"
 ```
 
 </TabItem>
@@ -70,7 +70,16 @@ We have a running instance for processing data collected during experiments. Ple
 
 :::
 
-## Step 2: Install client libraries {#step-2}
+### Services shutdown
+
+After you've done with your instance of ASAPO, you might want to gracefully shutdown the running services. If you don't do it, your machine will become bloated with the unused docker images.
+
+```shell content="./examples/cleanup.sh"
+```
+
+<br/><br/>
+
+## Install client libraries {#step-2}
 
 Now you can install Python packages or C++ libraries for ASAPO Producer and Consumer API (you need to be in DESY intranet to access files).
 
@@ -84,161 +93,25 @@ Now you can install Python packages or C++ libraries for ASAPO Producer and Cons
 }>
 <TabItem value="python-pip">
 
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/install_python_clients_pip.sh" snippetTag="#snippet1"
+```shell content="./examples/install_python_clients_pip.sh" snippetTag="#snippet1"
 ```
 
 </TabItem>
 <TabItem value="python-packages">
 
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/install_python_clients_pkg.sh"
+```shell content="./examples/install_python_clients_pkg.sh"
 ```
 
 </TabItem>
 <TabItem value="cpp">
 
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/install_cpp_clients.sh"
+```shell content="./examples/install_cpp_clients.sh"
 ```
 
 </TabItem>
 </Tabs>
 
-## Step 3: Produce a message {#step-3}
+## Code examples
 
-<Tabs
-  groupId="language"
-  defaultValue="python"
-  values={[
-    { label: 'Python', value: 'python', },
-    { label: 'C++', value: 'cpp', },
-  ]
-}>
-<TabItem value="python">
+Please refer to the [Code Examples](cookbook/overview) sections to see the code snippets for various usage scenarious.
 
-Now you can write a Producer client (API documentation [here](http://asapo.desy.de/python/producer.html)).
-
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/python/produce.py"
-```
-
-Execute it with python3
-
-```
-$ python3 produce.py
-```
-
-</TabItem>
-
-<TabItem value="cpp">
-
-Now you can write a Producer client (API documentation [here](http://asapo.desy.de/cpp/producer)).
-
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/cpp/produce.cpp"
-```
-
-Compile e.g. using CMake and execute. You might need to point cmake (with CMAKE_PREFIX_PATH) to asapo installation and curl library if installed to non-standard location.
-
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/cpp/CMakeLists.txt" snippetTag="#producer"
-```
-
-```
-$ cmake . && make
-$ ./asapo-produce
-```
-
-
-</TabItem>
-</Tabs>
-
-the output should look like
-
-```
-{"time":"***** *****","source":"producer_api","level":"info","message":"authorized connection to receiver at ****:****"}
-successfuly sent: {"id": 1, "buffer": "test_file"}
-```
-
-
-## Step 4: Consume a message {#step-4}
-
-A consumer data that reads the message ingested during step 3. Note that a token is needed to work with data. In production, the token is provided during start of the beamtime.
-
-<Tabs
-  groupId="language"
-  defaultValue="python"
-  values={[
-    { label: 'Python', value: 'python', },
-    { label: 'C++', value: 'cpp', },
-    { label: 'C', value: 'c', },
-  ]
-}>
-<TabItem value="python">
-
-Complete API documentation [here](http://asapo.desy.de/python/consumer.html)
-
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/python/consume.py"
-```
-
-Execute it with python3
-
-```
-$ python3 consumer.py
-```
-
-</TabItem>
-
-<TabItem value="cpp">
-
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/cpp/consume.cpp"
-```
-
-Compile e.g. using CMake and execute. You might need to point cmake (with CMAKE_PREFIX_PATH) to asapo installation and curl library if installed to non-standard location.
-
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/cpp/CMakeLists.txt" snippetTag="#consumer"
-```
-
-```
-$ cmake . && make
-$ ./asapo-consume
-```
-
-</TabItem>
-
-<TabItem value="c">
-
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/c/consume.c"
-```
-
-Compile e.g. using Makefile and pkg-config (although we recommend CMake -  see C++ section) and execute. This example assumes asapo is installed to /opt/asapo. Adjust correspondingly.
-
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/c/Makefile" snippetTag="#consumer"
-```
-
-```
-$ make
-$ ./asapo-consume
-```
-
-
-</TabItem>
-
-</Tabs>
-
-the output should look like
-
-```
-id: 1
-file name: processed/test_file
-file content: hello
-stream deleted
-```
-
-## Step 5: Clean-up
-
-Optionally, last step is to stop ASAPO services and remove files:
-
-```shell content="@ASAPO_EXAMPLES_DIR@/getting_started/cleanup.sh"
-```
-
-<br/><br/>
-
-:::tip
-You can see more examples in ASAPO [source code](https://stash.desy.de/projects/ASAPO/repos/asapo/browse/examples?at=@ASAPO_VERSION_IN_DOCS@)
-:::

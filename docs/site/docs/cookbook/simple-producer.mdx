@@ -1,0 +1,61 @@
+---
+title: Simple Producer
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+This example produces a simple message. Use this, if you don't need any special beam/message metadata.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+Simple producer in Python (API documentation [here](http://asapo.desy.de/python/producer.html)).
+
+```python content="./examples/python/produce.py"
+```
+
+Execute it with python3
+
+```shell
+$ python3 produce.py
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+Simple producer in C++ (API documentation [here](http://asapo.desy.de/cpp/producer)).
+
+```cpp content="./examples/cpp/produce.cpp"
+```
+
+Compile e.g. using CMake and execute. You might need to point cmake (with CMAKE_PREFIX_PATH) to asapo installation and curl library if installed to non-standard location.
+
+```shell content="./examples/cpp/CMakeLists.txt" snippetTag="#producer"
+```
+
+```shell
+$ cmake . && make
+$ ./asapo-produce
+```
+
+
+</TabItem>
+</Tabs>
+
+the output should look like
+
+```
+{"time":"***** *****","source":"producer_api","level":"info","message":"authorized connection to receiver at ****:****"}
+successfuly sent: {"id": 1, "buffer": "test_file"}
+```
+
