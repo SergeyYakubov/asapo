@@ -13,9 +13,6 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'DESY', // Usually your GitHub org/user name.
   projectName: 'ASAPO', // Usually your repo name.
-   customFields: {
-     version: '21.06.0',
-   },
   plugins: [path.resolve(__dirname, 'plugins/webpackconf/src/index.js')],
   themeConfig: {
     navbar: {
@@ -84,7 +81,8 @@ module.exports = {
         },
         blog: {
           showReadingTime: false,
-          path: 'changelog'
+          path: 'changelog',
+          blogSidebarTitle: 'Versions'
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),

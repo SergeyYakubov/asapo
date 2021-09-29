@@ -1,10 +1,7 @@
 import React from 'react'
 import InitCodeBlock from '@theme-init/CodeBlock'
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
-
-
-const requireContext = require.context('../../examples/', true, /(\.sh|\.py|\.cpp|\.c|\.txt|Makefile)$/);
+const requireContext = require.context('../../', true, /(\.sh|\.py|\.cpp|\.c|\.txt|Makefile)$/);
 
 const noteStyle: React.CSSProperties = {
     textAlign: 'right',
@@ -16,33 +13,25 @@ export interface State {
     isCancelled: boolean
 }
 
-function getVal(name: string, props: any) {
-    const codeRegex = new RegExp("(?:" + name + "=\")(.*?)(\")")
-
-    let val = undefined
-    if (props.metastring && codeRegex.test(props.metastring)) {
-        val = props.metastring.match(codeRegex)[1];
-    }
-    return val;
-}
-
 function ReferenceCode(props: any) {
-    const codeBlockContent = getVal("content", props)
+    let codeBlockContent = props.content
 
-    if (!codeBlockContent) {
+    if (codeBlockContent == undefined) {
         return (
             <InitCodeBlock {...props}/>
         );
     }
-    const {siteConfig} = useDocusaurusContext();
-    const version = siteConfig.customFields.version;
-    console.log(siteConfig);
-    const urlLink = "https://stash.desy.de/projects/ASAPO/repos/asapo/browse/examples/for_site/" + codeBlockContent + "?at=" + version
+    codeBlockContent = codeBlockContent.replace(/"/g,'')
+    
+    const urlLink = "https://stash.desy.de/projects/ASAPO/repos/asapo/browse/docs/site/" + codeBlockContent
 
-    const snippetTag = getVal("snippetTag", props)
+    let snippetTag = props.snippetTag
+    if (snippetTag !== undefined) {
+        snippetTag = snippetTag.replace(/"/g,'')
+    }
+    
     if (codeBlockContent) {
-        const c = codeBlockContent.replace('@ASAPO_EXAMPLES_DIR@', '.')
-        const res = requireContext(c)
+        const res = requireContext(codeBlockContent)
         let body = res.default.split('\n')
         const fromLine = body.indexOf(snippetTag + " snippet_start") + 1;
         const toLine = body.indexOf(snippetTag + " snippet_end", fromLine) - 1;
