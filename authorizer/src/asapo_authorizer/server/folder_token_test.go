@@ -3,11 +3,13 @@ package server
 import (
 	"asapo_authorizer/authorization"
 	"asapo_authorizer/common"
+	"asapo_authorizer/token_store"
 	"asapo_common/structs"
 	"asapo_common/utils"
 	"asapo_common/version"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -39,6 +41,9 @@ var  fodlerTokenTests = [] struct {
 
 func TestFolderToken(t *testing.T) {
 	allowBeamlines([]common.BeamtimeMeta{})
+	mock_store := new(token_store.MockedStore)
+	store = mock_store
+
 	common.Settings.RootBeamtimesFolder ="."
 	common.Settings.CurrentBeamlinesFolder="."
 	Auth = authorization.NewAuth(utils.NewJWTAuth("secret_user"),utils.NewJWTAuth("secret_admin"),utils.NewJWTAuth("secret_folder"))
@@ -65,6 +70,8 @@ func TestFolderToken(t *testing.T) {
 		request :=  makeRequest(folderTokenRequest{path_in_token,test.beamtime_id,test.token})
 		if test.status == http.StatusBadRequest {
 			request =makeRequest(authorizationRequest{})
+		} else {
+			mock_store.On("IsTokenRevoked", mock.Anything).Return(false, nil)
 		}
 		w := doPostRequest("/"+version.GetAuthorizerApiVersion()+"/folder",request,"")
 		if w.Code == http.StatusOK {
@@ -78,7 +85,9 @@ func TestFolderToken(t *testing.T) {
 			body, _ := ioutil.ReadAll(w.Body)
 			fmt.Println(string(body))
 		}
-
+		mock_store.AssertExpectations(t)
+		mock_store.ExpectedCalls = nil
+		mock_store.Calls = nil
 		assert.Equal(t, test.status, w.Code, test.message)
 	}
 }

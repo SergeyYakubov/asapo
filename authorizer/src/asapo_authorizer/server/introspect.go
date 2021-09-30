@@ -23,6 +23,11 @@ func verifyUserToken(token string) (response structs.IntrospectTokenResponse, er
 	if err!=nil {
 		return
 	}
+	err = checkTokenRevoked(claim.Id)
+	if err != nil {
+		return
+	}
+
 	response.Sub = claim.Subject
 	response.AccessTypes = extra_claim.AccessTypes
 	return

@@ -30,9 +30,9 @@ func (store *MockedStore)  GetTokenList() ([]TokenRecord,error) {
 	return args.Get(0).([]TokenRecord), args.Error(1)
 }
 
-func (store *MockedStore) GetRevokedTokenIds() ([]string,error) {
-	args := store.Called()
-	return args.Get(0).([]string), args.Error(1)
+func (store *MockedStore)  IsTokenRevoked(tokenId string) (bool, error) {
+	args := store.Called(tokenId)
+	return args.Get(0).(bool), args.Error(1)
 }
 
 func (store *MockedStore) Close() {

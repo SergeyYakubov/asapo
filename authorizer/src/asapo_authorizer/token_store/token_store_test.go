@@ -127,7 +127,7 @@ func (suite *TokenStoreTestSuite) TestProcessRequestRevokeToken() {
 	suite.Equal(token, expectedRevokedToken, "ok")
 }
 
-func (suite *TokenStoreTestSuite) TestProcessRequestGetRevokedTokens() {
+func (suite *TokenStoreTestSuite) TestProcessRequestCheckRevokedToken() {
 	suite.mock_db.On("Close")
 	suite.store.Close()
 	common.Settings.UpdateRevokedTokensIntervalSec = 5
@@ -141,6 +141,7 @@ func (suite *TokenStoreTestSuite) TestProcessRequestGetRevokedTokens() {
 
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("list")))
 	time.Sleep(time.Second*1)
-	_,err := suite.store.GetRevokedTokenIds()
+	res,err := suite.store.IsTokenRevoked("123")
 	suite.Equal(err, nil, "ok")
+	suite.Equal(false, res, "ok")
 }

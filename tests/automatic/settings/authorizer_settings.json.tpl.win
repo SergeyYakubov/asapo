@@ -17,5 +17,6 @@
      "FilterTemplate" : "(cn=a3__BEAMLINE__-hosts)"
   },
   "DatabaseServer":"auto",
-  "DiscoveryServer": "localhost:8400/asapo-discovery"
+  "DiscoveryServer": "localhost:8400/asapo-discovery",
+  "UpdateRevokedTokensIntervalSec": 60
 }

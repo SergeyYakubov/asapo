@@ -16,7 +16,7 @@ type Store interface {
 	AddToken(token TokenRecord) error
 	RevokeToken(token string, id string) (TokenRecord, error)
 	GetTokenList() ([]TokenRecord, error)
-	GetRevokedTokenIds() ([]string, error)
+	IsTokenRevoked(tokenId string) (bool, error)
 	Close()
 }
 
@@ -133,16 +133,6 @@ func (store *TokenStore) updateTokenStatus(token *TokenRecord) error {
 		Collection: KTokens,
 		Op:         "update_record",
 	}, token.Id, map[string]interface{}{"revoked": true}, false, token)
-	if err != nil {
-		return err
-	}
-
-	idRec := IdRecord{token.Id}
-	_, err = store.db.ProcessRequest(Request{
-		DbName:     KAdminDb,
-		Collection: KRevokedTokens,
-		Op:         "create_record",
-	}, &idRec)
 	return err
 }
 
@@ -172,6 +162,9 @@ func (store *TokenStore) RevokeToken(token string, id string) (TokenRecord, erro
 		return TokenRecord{}, store.processError(err)
 	}
 
+	store.revokedTokenList.lock.Lock()
+	defer store.revokedTokenList.lock.Unlock()
+	store.revokedTokenList.tokens = append(store.revokedTokenList.tokens, tokenRecord.Id)
 	return tokenRecord, nil
 }
 
@@ -197,6 +190,7 @@ func (store *TokenStore) loopGetRevokedTokens() {
 		if err != nil {
 			store.revokedTokenList.lock.Lock()
 			store.revokedTokenList.lastError = err
+			store.revokedTokenList.tokens = nil
 			store.processError(err)
 			store.revokedTokenList.lock.Unlock()
 			next_update = 1
@@ -209,6 +203,7 @@ func (store *TokenStore) loopGetRevokedTokens() {
 				tokens[i] = token.Id
 			}
 			store.revokedTokenList.lock.Lock()
+			store.revokedTokenList.lastError = nil
 			store.revokedTokenList.tokens = tokens
 			store.revokedTokenList.lock.Unlock()
 		}
@@ -221,15 +216,23 @@ func (store *TokenStore) loopGetRevokedTokens() {
 	}
 }
 
-func (store *TokenStore) GetRevokedTokenIds() ([]string, error) {
+func (store *TokenStore) IsTokenRevoked(tokenId string) (bool, error) {
+	tokens, err := store.getRevokedTokenIds()
+	if err != nil {
+		return true, err
+	}
+	return utils.StringInSlice(tokenId, tokens), nil
+}
+
+func (store *TokenStore) getRevokedTokenIds() ([]string, error) {
 	store.revokedTokenList.lock.RLock()
 	defer store.revokedTokenList.lock.RUnlock()
 	if store.revokedTokenList.lastError != nil {
 		return []string{}, store.revokedTokenList.lastError
 	}
-//	res := make([]string, len(store.revokedTokenList.tokens))
-//	copy(res, store.revokedTokenList.tokens)
-//	return res,nil
+	//	res := make([]string, len(store.revokedTokenList.tokens))
+	//	copy(res, store.revokedTokenList.tokens)
+	//	return res,nil
 	return store.revokedTokenList.tokens, nil
 }
 

@@ -2,6 +2,7 @@ package server
 
 import (
 	"asapo_authorizer/authorization"
+	"asapo_authorizer/token_store"
 	"asapo_common/structs"
 	"asapo_common/utils"
 	"encoding/json"
@@ -27,11 +28,16 @@ func TestIntrospect(t *testing.T) {
 	authJWT := utils.NewJWTAuth("secret")
 	authAdmin := utils.NewJWTAuth("secret_admin")
 	authUser := utils.NewJWTAuth("secret_user")
+	mock_store := new(token_store.MockedStore)
+	store = mock_store
+
 	Auth = authorization.NewAuth(authUser,authAdmin,authJWT)
 	for _, test := range IntrospectTests {
 		token := prepareAsapoToken(test.tokenSubject,test.roles)
 		if test.status==http.StatusUnauthorized {
 			token = "blabla"
+		} else {
+			mock_store.On("IsTokenRevoked", expectedTokenId).Return(false, nil)
 		}
 		request :=  makeRequest(structs.IntrospectTokenRequest{token})
 		w := doPostRequest("/introspect",request,"")
@@ -46,6 +52,9 @@ func TestIntrospect(t *testing.T) {
 			body, _ := ioutil.ReadAll(w.Body)
 			fmt.Println(string(body))
 		}
+		mock_store.AssertExpectations(t)
+		mock_store.ExpectedCalls = nil
+		mock_store.Calls = nil
 	}
 }
 

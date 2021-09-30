@@ -6,6 +6,7 @@ trap Cleanup EXIT
 
 Cleanup() {
 	echo cleanup
+  echo "db.dropDatabase()" | mongo asapo_admin
 }
 
 mkdir -p /tmp/asapo/asap3/petra3/gpfs/p00/2019/comissioning/c20180508-000-COM20181
@@ -20,8 +21,10 @@ cp beamtime-metadata-11111112.json /tmp/asapo/beamline/p08/current/
 AdminToken=$ASAPO_CREATE_TOKEN
 echo admin $AdminToken
 
-curl -v --silent -H "Authorization: Bearer $AdminToken" --data '{"Subject": {"beamtimeId":"12345678"},"DaysValid":123,"AccessType":["read"]}' 127.0.0.1:8400/asapo-authorizer/admin/issue --stderr -  | tee /dev/stderr | grep "bt_12345678"
-curl -v --silent -H "Authorization: Bearer blabla" --data '{"Subject": {"beamtimeId":"12345678"},"DaysValid":123,"AccessType":["read"]}' 127.0.0.1:8400/asapo-authorizer/admin/issue --stderr -  | tee /dev/stderr | grep "token does not match"
+RevokeToken=$ASAPO_REVOKE_TOKEN
+
+curl -v --silent -H "Authorization: Bearer $AdminToken" --data '{"Subject": {"beamtimeId":"12345678"},"DaysValid":123,"AccessTypes":["read"]}' 127.0.0.1:8400/asapo-authorizer/admin/issue --stderr -  | tee /dev/stderr | grep "bt_12345678"
+curl -v --silent -H "Authorization: Bearer blabla" --data '{"Subject": {"beamtimeId":"12345678"},"DaysValid":123,"AccessTypes":["read"]}' 127.0.0.1:8400/asapo-authorizer/admin/issue --stderr -  | tee /dev/stderr | grep "token does not match"
 
 curl -v --silent --data '{"SourceCredentials":"processed%c20180508-000-COM20181%%detector%","OriginHost":"127.0.0.1:5555"}' 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | grep c20180508-000-COM20181
 curl -v --silent --data '{"SourceCredentials":"processed%c20180508-000-COM20181%%detector%","OriginHost":"127.0.0.1:5555"}' 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | grep p00
@@ -58,5 +61,19 @@ curl -v --silent --data "{\"SourceCredentials\":\"processed%auto%p07%detector%$t
 #write access
 token=$BLP07_W_TOKEN
 curl -v --silent --data "{\"SourceCredentials\":\"processed%auto%p07%detector%$token\",\"OriginHost\":\"bla\"}" 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | grep write
+
+
+#revocation
+token=`curl --silent -H "Authorization: Bearer $AdminToken" --data '{"Subject": {"beamtimeId":"11000015"},"DaysValid":123,"AccessTypes":["read"]}' 127.0.0.1:8400/asapo-authorizer/admin/issue | jq -r .Token`
+echo $token
+
+curl -v --silent --data "{\"SourceCredentials\":\"processed%11000015%auto%detector%$token\",\"OriginHost\":\"bla\"}" 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | grep p00
+
+#revoke token
+curl -v --silent -H "Authorization: Bearer $RevokeToken" --data '{"Token": "'"$token"'"}' 127.0.0.1:8400/asapo-authorizer/admin/revoke | grep '"Revoked":true'
+
+sleep 1
+
+curl -v --silent --data "{\"SourceCredentials\":\"processed%11000015%auto%detector%$token\",\"OriginHost\":\"bla\"}" 127.0.0.1:8400/asapo-authorizer/authorize --stderr -  | tee /dev/stderr  | grep 401
 
 rm -rf /tmp/asapo/asap3 /tmp/asapo/beamline
