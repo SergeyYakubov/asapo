@@ -225,7 +225,7 @@ var authTests = []struct {
 		`{"beamtimeId":"test_online","beamline":"bl1","dataSource":"dataSource","corePath":"./tf/gpfs/bl1/2019/data/test_online","beamline-path":"./bl1/current","source-type":"raw","access-types":["read","write","writeraw"]}`, 0},
 	{"raw", "auto", "p07", "dataSource", "", "127.0.0.1", http.StatusOK, "raw type, auto beamtime",
 		`{"beamtimeId":"11111111","beamline":"p07","dataSource":"dataSource","corePath":"asap3/petra3/gpfs/p07/2020/data/11111111","beamline-path":"./p07/current","source-type":"raw","access-types":["read","write","writeraw"]}`, 0},
-	{"raw", "auto", "p07", "noldap", "", "127.0.0.1", http.StatusNotFound, "no conection to ldap",
+	{"raw", "auto", "p07", "noldap", "", "127.0.0.1", http.StatusServiceUnavailable, "no conection to ldap",
 		"", 0},
 
 	{"raw", "auto", "p07", "dataSource", prepareAsapoToken("bl_p07", []string{"read", "writeraw"}), "127.0.0.2", http.StatusOK, "raw type with token",

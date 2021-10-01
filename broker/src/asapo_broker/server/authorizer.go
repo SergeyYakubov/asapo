@@ -87,6 +87,8 @@ func (a *AsapoAuthorizer) doRequest(req *http.Request) (token Token, err error) 
 		//do nothing
 	case http.StatusUnauthorized:
 		return token, &AuthorizationError{errors.New("authorizer rejected to authorize: " + string(body)), http.StatusUnauthorized}
+	case http.StatusServiceUnavailable:
+		return token, &AuthorizationError{errors.New("authorizer service unavailable: " + string(body)), http.StatusServiceUnavailable}
 	default:
 		return token, errors.New("authorizer returned " + resp.Status + ": " + string(body))
 	}
