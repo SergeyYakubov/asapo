@@ -50,6 +50,8 @@ Error GetLastErrorFromErrno() {
         return IOErrorTemplates::kFileAlreadyExists.Generate();
     case ENOSPC:
         return IOErrorTemplates::kNoSpaceLeft.Generate();
+    case ENOTCONN:
+        return IOErrorTemplates::kNotConnected.Generate();
     case ECONNREFUSED:
         return IOErrorTemplates::kConnectionRefused.Generate();
     case EADDRINUSE:

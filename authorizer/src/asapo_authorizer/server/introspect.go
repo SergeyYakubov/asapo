@@ -19,10 +19,16 @@ func extractToken(r *http.Request) (string, error) {
 
 func verifyUserToken(token string) (response structs.IntrospectTokenResponse, err error) {
 	var extra_claim structs.AccessTokenExtraClaim
-	response.Sub,err = Auth.UserAuth().CheckAndGetContent(token,&extra_claim)
+	claim,err := Auth.UserAuth().CheckAndGetContent(token,&extra_claim)
 	if err!=nil {
 		return
 	}
+	err = checkTokenRevoked(claim.Id)
+	if err != nil {
+		return
+	}
+
+	response.Sub = claim.Subject
 	response.AccessTypes = extra_claim.AccessTypes
 	return
 }

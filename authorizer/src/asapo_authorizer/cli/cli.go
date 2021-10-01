@@ -3,6 +3,7 @@
 package cli
 
 import (
+	"asapo_authorizer/token_store"
 	"errors"
 	"flag"
 	"fmt"
@@ -15,6 +16,8 @@ import (
 var flHelp bool
 
 var outBuf io.Writer = os.Stdout
+
+var store token_store.Store
 
 func printHelp(f *flag.FlagSet) bool {
 	if flHelp {
@@ -38,6 +41,10 @@ func DoCommand(name string, args []string) error {
 	cmd.args = args
 
 	method := methodVal.Interface().(func() error)
+
+	store = new(token_store.TokenStore)
+	store.Init(nil)
+	defer store.Close()
 
 	return method()
 }

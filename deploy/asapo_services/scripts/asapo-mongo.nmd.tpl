@@ -56,7 +56,7 @@ job "asapo-mongo" {
         }
         check_restart {
           limit = 2
-          grace = "90s"
+          grace = "1800s"
           ignore_warnings = false
         }
       }

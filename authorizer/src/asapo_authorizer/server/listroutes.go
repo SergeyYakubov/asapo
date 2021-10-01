@@ -18,6 +18,12 @@ var listRoutes = utils.Routes{
 		routeIntrospect,
 	},
 	utils.Route{
+		"Authorize",
+		"POST",
+		"/admin/revoke",
+		routeRevoke,
+	},
+	utils.Route{
 		"HealthCheck",
 		"Get",
 		"/health-check",

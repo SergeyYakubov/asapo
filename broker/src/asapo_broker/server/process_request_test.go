@@ -176,7 +176,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
 
 	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	time.Sleep(time.Second)
-	suite.Equal(http.StatusNotFound, w.Code, "data not found")
+	suite.Equal(http.StatusServiceUnavailable, w.Code, "data not found")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
@@ -191,7 +191,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
 	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	time.Sleep(time.Second)
 
-	suite.Equal(http.StatusNotFound, w.Code, "internal error")
+	suite.Equal(http.StatusServiceUnavailable, w.Code, "internal error")
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {

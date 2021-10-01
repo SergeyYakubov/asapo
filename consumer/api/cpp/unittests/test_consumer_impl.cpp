@@ -146,7 +146,7 @@ class ConsumerImplTests : public Test {
 
     void MockGetError() {
         EXPECT_CALL(mock_http_client, Get_t(HasSubstr(expected_broker_api), _, _)).WillOnce(DoAll(
-                    SetArgPointee<1>(HttpCode::NotFound),
+                    SetArgPointee<1>(HttpCode::ServiceUnavailable),
                     SetArgPointee<2>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
                     Return("")
                 ));
@@ -442,7 +442,7 @@ TEST_F(ConsumerImplTests, GetMessageReturnsNoDataAfterTimeoutEvenIfOtherErrorOcc
                                         "/stream/0/"
                                         + std::to_string(expected_dataset_id) + "?token="
                                         + expected_token, _, _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
-                                                    SetArgPointee<1>(HttpCode::NotFound),
+                                                    SetArgPointee<1>(HttpCode::ServiceUnavailable),
                                                     SetArgPointee<2>(nullptr),
                                                     Return("")));
 
@@ -1400,7 +1400,7 @@ TEST_F(ConsumerImplTests, NegativeAcknowledgeUsesCorrectUri) {
 
 TEST_F(ConsumerImplTests, CanInterruptOperation) {
     EXPECT_CALL(mock_http_client, Get_t(_, _, _)).Times(AtLeast(1)).WillRepeatedly(DoAll(
-                SetArgPointee<1>(HttpCode::NotFound),
+                SetArgPointee<1>(HttpCode::ServiceUnavailable),
                 SetArgPointee<2>(nullptr),
                 Return("")));
 

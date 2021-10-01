@@ -41,8 +41,6 @@ auto const kPartialData = ConsumerErrorTemplate {
     "partial data", ConsumerErrorType::kPartialData
 };
 
-
-
 auto const kLocalIOError = ConsumerErrorTemplate {
     "local i/o error", ConsumerErrorType::kLocalIOError
 };
@@ -75,8 +73,6 @@ auto const kInterruptedTransaction = ConsumerErrorTemplate {
 auto const kUnavailableService = ConsumerErrorTemplate {
     "service unavailable", ConsumerErrorType::kUnavailableService
 };
-
-
 
 }
 }
