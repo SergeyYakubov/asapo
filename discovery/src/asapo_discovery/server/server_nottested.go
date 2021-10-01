@@ -8,10 +8,12 @@ import (
     "asapo_common/version"
 	"net/http"
 	"strconv"
+	_ "net/http/pprof"
 )
 
 func Start() {
 	mux := utils.NewRouter(listRoutes)
+	mux.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 	log.Info("Starting ASAPO Discovery, version " + version.GetVersion())
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))

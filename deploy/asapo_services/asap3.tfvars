@@ -1,4 +1,5 @@
 elk_logs = true
+perf_monitor = true
 
 asapo_imagename_suffix = ""
 asapo_image_tag = ""
@@ -26,8 +27,8 @@ influxdb_total_memory_size = 2000
 fluentd_total_memory_size = 1000
 elasticsearch_total_memory_size = 3000
 kibana_total_memory_size = 1000
-mongo_total_memory_size = 20000
-authorizer_total_memory_size = 512
+mongo_total_memory_size = 40000
+authorizer_total_memory_size = 20000
 discovery_total_memory_size = 512
 
 n_receivers = 2

@@ -100,6 +100,13 @@ func beamtimeMetaFromMatch(match string) (common.BeamtimeMeta, error) {
 }
 
 func findBeamtimeInfoFromId(beamtime_id string) (common.BeamtimeMeta, error) {
+	cachedMetas.lock.Lock()
+	meta, ok := cachedMetas.cache[beamtime_id]
+	cachedMetas.lock.Unlock()
+	if ok {
+		return meta, nil
+	}
+
 	sep := string(filepath.Separator)
 	pattern := sep + "*" + sep + "gpfs" + sep + "*" + sep + "*" + sep + "*" + sep
 	matches, err := filepath.Glob(common.Settings.RootBeamtimesFolder + pattern + beamtime_id)
@@ -114,6 +121,9 @@ func findBeamtimeInfoFromId(beamtime_id string) (common.BeamtimeMeta, error) {
 			continue
 		}
 		if btInfo.BeamtimeId == beamtime_id {
+			cachedMetas.lock.Lock()
+			cachedMetas.cache[beamtime_id] = btInfo
+			cachedMetas.lock.Unlock()
 			return btInfo, nil
 		}
 	}

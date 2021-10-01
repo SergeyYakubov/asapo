@@ -10,6 +10,7 @@ import (
 
 const kDefaultresendInterval = 10
 const kDefaultStreamCacheUpdateIntervalMs = 100
+const kDefaultTokenCacheUpdateIntervalMs = 60000
 
 var db database.Agent
 
@@ -25,6 +26,14 @@ type serverSettings struct {
 	discoveredDbAddress         string
 	CheckResendInterval         *int
 	StreamCacheUpdateIntervalMs *int
+	TokenCacheUpdateIntervalMs  *int
+}
+
+func (s *serverSettings) GetTokenCacheUpdateInterval() int {
+	if s.TokenCacheUpdateIntervalMs == nil {
+		return kDefaultTokenCacheUpdateIntervalMs
+	}
+	return *s.TokenCacheUpdateIntervalMs
 }
 
 func (s *serverSettings) GetResendInterval() int {

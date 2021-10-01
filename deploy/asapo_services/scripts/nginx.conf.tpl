@@ -19,6 +19,7 @@ http {
 
 
     client_body_temp_path  "/tmp/client_body" 1 2;
+    client_max_body_size   10M;
     proxy_temp_path        "/tmp/proxy" 1 2;
     fastcgi_temp_path      "/tmp/fastcgi" 1 2;
     scgi_temp_path         "/tmp/scgi" 1 2;

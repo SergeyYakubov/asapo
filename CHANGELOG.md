@@ -6,6 +6,11 @@ FEATURES
 
 IMPROVEMENTS
 * Allow using ASAPO for commissioning beamtimes
+* Implement token revocation
+
+INTERNAL
+* Improved authoriation service caching
+* Added profiling for Go services
 
 ## 21.06.0
 

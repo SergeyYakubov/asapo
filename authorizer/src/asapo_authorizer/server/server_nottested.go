@@ -13,6 +13,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	_ "net/http/pprof"
 )
 
 func Start() {
@@ -29,6 +30,7 @@ func Start() {
 	defer store.Close()
 
 	log.Info("Listening on port: " + strconv.Itoa(common.Settings.Port))
+	mux.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(common.Settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }
 
