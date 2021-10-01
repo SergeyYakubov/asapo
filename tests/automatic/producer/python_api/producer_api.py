@@ -47,7 +47,7 @@ def assert_version(version):
     if not ok:
         sys.exit(1)
 
-producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', data_source, token, nthreads, 60000)
+producer = asapo_producer.create_producer(endpoint,'auto','auto','processed', beamtime, 'auto', data_source, token, nthreads, 60000)
 
 producer.set_log_level("debug")
 
@@ -233,7 +233,7 @@ else:
 
 # create with error
 try:
-    producer = asapo_producer.create_producer(endpoint,'processed', beamtime, 'auto', data_source, token, 0, 0)
+    producer = asapo_producer.create_producer(endpoint,'auto','auto','processed', beamtime, 'auto', data_source, token, 0, 0)
 except asapo_producer.AsapoWrongInputError as e:
     print(e)
 else:

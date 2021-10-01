@@ -27,7 +27,7 @@ def callback(header,err):
     lock.release()
 
 
-producer  = asapo_producer.create_producer(endpoint,'processed','auto',beamline, data_source, token, nthreads, 60000)
+producer  = asapo_producer.create_producer(endpoint,'auto','auto','processed','auto',beamline, data_source, token, nthreads, 60000)
 
 producer.set_log_level("debug")
 
