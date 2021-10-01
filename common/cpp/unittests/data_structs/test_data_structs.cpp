@@ -36,6 +36,7 @@ MessageMeta PrepareMessageMeta() {
     message_meta.buf_id = big_uint;
     message_meta.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
     message_meta.metadata =  "{\"bla\":10}";
+    message_meta.stream = "testStream";
     return message_meta;
 }
 
@@ -53,10 +54,10 @@ TEST(MessageMetaTests, CorrectConvertToJson) {
     std::string json = message_meta.Json();
     if (asapo::kPathSeparator == '/') {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder/test","timestamp":1000000,"source":"host:1234","buf_id":-1,"dataset_substream":3,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder/test","timestamp":1000000,"source":"host:1234","buf_id":-1,"stream":"testStream","dataset_substream":3,"meta":{"bla":10}})"));
     } else {
         ASSERT_THAT(json, Eq(
-                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,"dataset_substream":3,"meta":{"bla":10}})"));
+                        R"({"_id":1,"size":100,"name":"folder\\test","timestamp":1000000,"source":"host:1234","buf_id":-1,"stream":"testStream","dataset_substream":3,"meta":{"bla":10}})"));
     }
 }
 
@@ -208,8 +209,8 @@ TEST(SourceCredentials, ConvertToString) {
 
 TEST(SourceCredentials, ConvertToString_OldFormat) {
     auto sc = SourceCredentials{SourceType::kRaw, "instance", "step", "beamtime", "beamline", "source", "token"};
-    std::string expected1 = "raw%%beamtime%beamline%source%token";
-    std::string expected2 = "processed%%beamtime%beamline%source%token";
+    std::string expected1 = "raw%beamtime%beamline%source%token";
+    std::string expected2 = "processed%beamtime%beamline%source%token";
 
     auto res1 = sc.GetString(asapo::SourceCredentialsVersion::OldVersion);
     sc.type = asapo::SourceType::kProcessed;
