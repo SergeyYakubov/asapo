@@ -14,7 +14,7 @@ def callback(payload,err):
 endpoint = "localhost:8400"
 beamtime = "asapo_test"
 
-producer = asapo_producer
+producer = asapo_producer \
                 .create_producer(endpoint,
                                  'processed',    # should be 'processed' or 'raw', 'processed' writes to the core FS
                                  beamtime,       # the folder should exist
