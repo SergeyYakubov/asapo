@@ -8,6 +8,9 @@ IMPROVEMENTS
 * Allow using ASAPO for commissioning beamtimes
 * Implement token revocation
 
+BUG FIXES
+* Consumer/Producer API: fixed bug with "_" in stream name 
+
 INTERNAL
 * Improved authoriation service caching
 * Added profiling for Go services
