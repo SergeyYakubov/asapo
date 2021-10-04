@@ -1,6 +1,7 @@
 package server
 
 import (
+	"asapo_common/utils"
 	"net/http"
 )
 
@@ -8,5 +9,7 @@ func routeGetStreams(w http.ResponseWriter, r *http.Request) {
 	keys := r.URL.Query()
 	from := keys.Get("from")
 	filter := keys.Get("filter")
-	processRequest(w, r, "streams", from+"_"+filter, false)
+	utils.EncodeTwoStrings(from,filter)
+	encoded := utils.EncodeTwoStrings(from,filter)
+	processRequest(w, r, "streams", encoded, false)
 }
