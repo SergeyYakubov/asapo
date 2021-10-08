@@ -1,5 +1,10 @@
 variable "elk_logs" {}
+
 variable "perf_monitor" {}
+
+variable "asapo_monitor" {}
+
+variable "asapo_monitor_alert" {}
 
 variable "force_pull_images" {}
 
@@ -19,6 +24,10 @@ variable "influxdb_version" {}
 
 variable "mongo_version" {}
 
+variable "prometheus_version" {}
+
+variable "alertmanager_version" {}
+
 variable "asapo_imagename_suffix" {}
 
 variable "asapo_image_tag" {}
@@ -28,6 +37,7 @@ variable "job_scripts_dir" {}
 variable "service_dir" {}
 
 variable "online_dir" {}
+
 variable "offline_dir" {}
 
 variable "mongo_dir" {}
@@ -41,7 +51,6 @@ variable "receiver_dataserver_nthreads" {}
 variable "receiver_receive_to_disk_threshold" {}
 
 variable "receiver_network_modes" {}
-
 
 variable "grafana_total_memory_size" {}
 
@@ -59,11 +68,20 @@ variable "authorizer_total_memory_size" {}
 
 variable "discovery_total_memory_size" {}
 
+variable "prometheus_total_memory_size" {}
+
+variable "alertmanager_total_memory_size" {}
+
+
 variable "grafana_port" {}
 
 variable "influxdb_port" {}
 
 variable "influxdb_rpc_port" {}
+
+variable "prometheus_port" {}
+
+variable "alertmanager_port" {}
 
 variable "mongo_port" {}
 

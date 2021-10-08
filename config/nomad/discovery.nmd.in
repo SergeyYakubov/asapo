@@ -10,7 +10,7 @@ job "discovery" {
       driver = "raw_exec"
 
       config {
-        command = "@DISCOVERY_FULLPATH@",
+        command = "@DISCOVERY_FULLPATH@"
         args =  ["-config","${NOMAD_TASK_DIR}/discovery.json"]
       }
 

@@ -24,7 +24,7 @@ job "nginx" {
       driver = "raw_exec"
 
       config {
-        command = "nginx",
+        command = "nginx"
         args =  ["-c","${NOMAD_TASK_DIR}/nginx.conf"]
       }
 

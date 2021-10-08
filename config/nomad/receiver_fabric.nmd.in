@@ -10,7 +10,7 @@ job "receiver" {
       driver = "raw_exec"
 
       config {
-        command = "@RECEIVER_DIR@/@RECEIVER_NAME@",
+        command = "@RECEIVER_DIR@/@RECEIVER_NAME@"
         args =  ["${NOMAD_TASK_DIR}/receiver.json"]
       }
 
