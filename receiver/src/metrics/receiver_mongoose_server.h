@@ -4,10 +4,14 @@
 #include "receiver_metrics_server.h"
 
 namespace asapo {
+class AbstractLogger;
+
 class ReceiverMongooseServer final :  public ReceiverMetricsServer {
   public:
-    Error ListenAndServe(std::string port, std::unique_ptr<ReceiverMetricsProvider> provider) override;
-
+    ReceiverMongooseServer();
+    void ListenAndServe(std::string port, std::unique_ptr<ReceiverMetricsProvider> provider) override;
+  private:
+    const AbstractLogger* log__;
 };
 
 }

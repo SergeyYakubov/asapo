@@ -6,6 +6,12 @@ job "discovery" {
   group "group" {
     count = 1
 
+    network {
+      port "discovery" {
+        static = "5006"
+      }
+    }
+
     task "discovery" {
       driver = "raw_exec"
 
@@ -17,11 +23,6 @@ job "discovery" {
       resources {
         cpu    = 500 # 500 MHz
         memory = 256 # 256MB
-        network {
-          port "discovery" {
-            static = "5006"
-          }
-        }
       }
 
       service {

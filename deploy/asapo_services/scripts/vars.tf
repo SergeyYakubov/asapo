@@ -52,6 +52,8 @@ variable "receiver_receive_to_disk_threshold" {}
 
 variable "receiver_network_modes" {}
 
+variable "receiver_expose_metrics" {}
+
 variable "grafana_total_memory_size" {}
 
 variable "influxdb_total_memory_size" {}

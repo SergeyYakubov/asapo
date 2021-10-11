@@ -20,6 +20,7 @@ job "receiver" {
         network {
           port "recv" {}
           port "recv_ds" {}
+          port "recv_metrics" {}
         }
       }
 

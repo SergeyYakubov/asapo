@@ -42,14 +42,19 @@ scrape_configs:
     relabel_configs:
       - source_labels: [__meta_consul_service]
         target_label: job
-
-  #    metrics_path: /health
-  - job_name: dummy
+  - job_name: receiver
     consul_sd_configs:
       - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+        services:
+          - 'asapo-receiver'
     relabel_configs:
-      - source_labels: [__meta_consul_tags]
-        regex: .*,asapo,.*
-        action: keep
       - source_labels: [__meta_consul_service]
         target_label: job
+      - source_labels: [__meta_consul_service_address,__meta_consul_service_metadata_metrics_port]
+        separator: ';'
+        regex: (.*);(\d{4,5})
+        target_label:  '__address__'
+        replacement: '$1:$2'
+        action: 'replace'
+
+

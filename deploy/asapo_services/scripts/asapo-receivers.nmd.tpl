@@ -55,16 +55,28 @@ job "asapo-receivers" {
         network {
           port "recv" {}
           port "recv_ds" {}
+          port "recv_metrics" {}
         }
           memory = "${receiver_total_memory_size}"
       }
 
-
-
       service {
         name = "asapo-receiver"
-        port = "recv"
+        %{ if receiver_expose_metrics  }
         check {
+          name     = "metrics"
+          type     = "http"
+          port = "recv_metrics"
+          path     = "/metrics"
+          interval = "10s"
+          timeout  = "2s"
+          initial_status =   "passing"
+        }
+        meta {
+          metrics-port = "${NOMAD_PORT_recv_metrics}"
+        }
+      %{ else  }
+       check {
           name     = "asapo-receiver-alive"
           type     = "script"
           command  = "/bin/ps"
@@ -72,6 +84,7 @@ job "asapo-receivers" {
           interval = "10s"
           timeout  = "2s"
         }
+      %{ endif  }
         check_restart {
           limit = 2
           grace = "15s"
@@ -85,6 +98,7 @@ job "asapo-receivers" {
         receiver_receive_to_disk_threshold = "${receiver_receive_to_disk_threshold}"
         receiver_network_modes = "${receiver_network_modes}"
         perf_monitor = "${perf_monitor}"
+        receiver_expose_metrics = "${receiver_expose_metrics}"
       }
 
       template {

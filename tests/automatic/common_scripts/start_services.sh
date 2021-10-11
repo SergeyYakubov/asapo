@@ -1,5 +1,5 @@
-nomad run discovery.nmd
-nomad run nginx.nmd
+nomad run -detach discovery.nmd
+nomad run -detach nginx.nmd
 
 while true
 do
@@ -10,10 +10,10 @@ do
   break
 done
 
-nomad run authorizer.nmd
-nomad run file_transfer.nmd
-nomad run receiver_tcp.nmd
-nomad run broker.nmd
+nomad run -detach authorizer.nmd
+nomad run -detach file_transfer.nmd
+nomad run -detach receiver_tcp.nmd
+nomad run -detach broker.nmd
 
 while true
 do

@@ -77,31 +77,39 @@ int StartReceiver(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
                   asapo::AbstractLogger* logger) {
     static const std::string address = "0.0.0.0:" + std::to_string(config->listen_port);
 
-
     logger->Info(std::string("starting receiver, version ") + asapo::kVersion);
     auto* receiver = new asapo::Receiver(cache);
     logger->Info("listening on " + address);
 
     asapo::Error err;
     receiver->Listen(address, &err);
-    if(err) {
+    if (err) {
         logger->Error("failed to start receiver: " + err->Explain());
         return 1;
     }
     return 0;
 }
 
-asapo::Error StartMetricsServer() {
-    auto srv = std::unique_ptr<asapo::ReceiverMetricsServer>(new asapo::ReceiverMongooseServer());
-    auto* provider = new asapo::ReceiverPrometheusMetrics();
-    srv->ListenAndServe("7009", std::unique_ptr<asapo::ReceiverMetricsProvider>(provider));
-    return nullptr;
+std::unique_ptr<std::thread> StartMetricsServer(const asapo::ReceiverMetricsConfig& config,
+                                                const asapo::AbstractLogger* logger) {
+    if (!config.expose) {
+        return nullptr;
+    }
+    return std::unique_ptr<std::thread> {
+        new std::thread{
+            [config, logger] {
+                auto srv = std::unique_ptr<asapo::ReceiverMetricsServer>(new asapo::ReceiverMongooseServer());
+                auto* provider = new asapo::ReceiverPrometheusMetrics();
+                logger->Debug("metrics server listening on " + std::to_string(config.listen_port));
+                srv->ListenAndServe(std::to_string(config.listen_port),
+                                    std::unique_ptr<asapo::ReceiverMetricsProvider>(provider));
+            }
+        }
+    };
 }
 
-int main (int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("ASAPO Receiver", argc, argv);
-
-//    StartMetricsServer();
 
     auto err = ReadConfigFile(argc, argv);
     const auto& logger = asapo::GetDefaultReceiverLogger();
@@ -116,15 +124,17 @@ int main (int argc, char* argv[]) {
 
     asapo::SharedCache cache = nullptr;
     if (config->use_datacache) {
-        cache.reset(new asapo::DataCache{config->datacache_size_gb * 1024 * 1024 * 1024, (float)config->datacache_reserved_share / 100});
+        cache.reset(new asapo::DataCache{config->datacache_size_gb * 1024 * 1024 * 1024,
+                                         (float) config->datacache_reserved_share / 100});
     }
 
     auto dataServerThreads = StartDataServers(config, cache, &err);
     if (err) {
-        logger->Error("Cannot start data server: " + err->Explain());
+        logger->Error("cannot start data server: " + err->Explain());
         return 1;
     }
 
+    auto t = StartMetricsServer(config->metrics, logger);
     auto exit_code = StartReceiver(config, cache, logger);
     return exit_code;
 }

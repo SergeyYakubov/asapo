@@ -6,6 +6,8 @@
 #include "asapo/logger/logger.h"
 
 #include "receiver_data_server/receiver_data_server_config.h"
+#include "metrics/receiver_metrics_config.h"
+
 namespace asapo {
 
 struct ReceiverConfig {
@@ -23,6 +25,7 @@ struct ReceiverConfig {
     LogLevel log_level = LogLevel::Info;
     std::string tag;
     ReceiverDataServerConfig dataserver;
+    ReceiverMetricsConfig metrics;
     std::string discovery_server;
 };
 

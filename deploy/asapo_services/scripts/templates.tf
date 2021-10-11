@@ -55,6 +55,7 @@ data "template_file" "asapo_receivers" {
     n_receivers = "${var.n_receivers}"
     force_pull_images = "${var.force_pull_images}"
     perf_monitor = "${var.perf_monitor}"
+    receiver_expose_metrics = "${var.receiver_expose_metrics}"
   }
 }
 

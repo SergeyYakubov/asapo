@@ -3,7 +3,7 @@
 namespace  asapo {
 
 std::string ReceiverPrometheusMetrics::Metrics() const {
-    return "hello";
+    return "alive 1\n";
 }
 
 }

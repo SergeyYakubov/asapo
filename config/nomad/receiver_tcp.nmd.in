@@ -20,18 +20,31 @@ job "receiver" {
         network {
           port "recv" {}
           port "recv_ds" {}
+          port "recv_metrics" {}
         }
       }
 
       service {
         name = "asapo-receiver"
-        port = "recv"
         check {
           name     = "alive"
           type     = "tcp"
+          port = "recv"
           interval = "10s"
           timeout  = "2s"
           initial_status =   "passing"
+        }
+        check {
+          name     = "metrics"
+          type     = "http"
+          port = "recv_metrics"
+          path     = "/metrics"
+          interval = "10s"
+          timeout  = "2s"
+          initial_status =   "passing"
+        }
+        meta {
+          metrics-port = "${NOMAD_PORT_recv_metrics}"
         }
       }
 

@@ -20,6 +20,13 @@ job "nginx" {
       mode = "fail"
     }
 
+    network {
+      port "nginx" {
+        static = 8400
+      }
+    }
+
+
     task "nginx" {
       driver = "raw_exec"
 
@@ -31,12 +38,6 @@ job "nginx" {
       resources {
         cpu    = 500 # 500 MHz
         memory = 256 # 256MB
-        network {
-          mbits = 10
-          port "nginx" {
-          static = 8400
-          }
-        }
       }
 
       service {
@@ -45,9 +46,9 @@ job "nginx" {
         check {
           name     = "alive"
           type     = "http"
-	  path     = "/nginx-health"
+	      path     = "/nginx-health"
           timeout  = "2s"
-	  interval = "10s"
+	      interval = "10s"
         }
       }
 
