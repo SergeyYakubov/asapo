@@ -10,7 +10,7 @@ endpoint = "localhost:8400"
 beamtime = "asapo_test"
 
 # source type 'processed' to write to the core filesystem
-producer = asapo_producer.create_producer(endpoint,'auto','auto','processed',
+producer = asapo_producer.create_producer(endpoint,'processed','auto','auto',
                                           beamtime,'auto','test_source','', 1,60000)
 
 # we are sending a message with with index 1 to the default stream. Filename must start with processed/
