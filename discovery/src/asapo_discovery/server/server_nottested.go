@@ -13,15 +13,6 @@ import (
 	"strconv"
 )
 
-var (
-	nReqests = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "http_requests",
-			Help: "Number of discovery requests",
-		},
-	)
-)
-
 func init() {
 	prometheus.MustRegister(nReqests)
 }

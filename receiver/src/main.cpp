@@ -12,6 +12,9 @@
 #include "receiver_data_server/net_server/rds_tcp_server.h"
 #include "receiver_data_server/net_server/rds_fabric_server.h"
 
+#include "metrics/receiver_prometheus_metrics.h"
+#include "metrics/receiver_mongoose_server.h"
+
 asapo::Error ReadConfigFile(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <config file>" << std::endl;
@@ -88,9 +91,17 @@ int StartReceiver(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
     return 0;
 }
 
+asapo::Error StartMetricsServer() {
+    auto srv = std::unique_ptr<asapo::ReceiverMetricsServer>(new asapo::ReceiverMongooseServer());
+    auto* provider = new asapo::ReceiverPrometheusMetrics();
+    srv->ListenAndServe("7009", std::unique_ptr<asapo::ReceiverMetricsProvider>(provider));
+    return nullptr;
+}
 
 int main (int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("ASAPO Receiver", argc, argv);
+
+//    StartMetricsServer();
 
     auto err = ReadConfigFile(argc, argv);
     const auto& logger = asapo::GetDefaultReceiverLogger();
