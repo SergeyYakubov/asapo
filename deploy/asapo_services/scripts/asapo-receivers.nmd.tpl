@@ -62,6 +62,7 @@ job "asapo-receivers" {
 
       service {
         name = "asapo-receiver"
+        port = "recv"
         %{ if receiver_expose_metrics  }
         check {
           name     = "metrics"
