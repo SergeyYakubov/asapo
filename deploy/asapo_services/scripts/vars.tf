@@ -6,6 +6,10 @@ variable "asapo_monitor" {}
 
 variable "asapo_monitor_alert" {}
 
+variable "asapo_alert_email" {}
+
+variable "asapo_alert_email_smart_host" {}
+
 variable "force_pull_images" {}
 
 variable "asapo_user" {}

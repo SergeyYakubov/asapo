@@ -34,8 +34,14 @@ job "asapo-monitoring" {
           "--storage.path=/alertmanager"
         ]
         volumes = [
-          "/${service_dir}/alertmanager:/alertmanager"
+          "/${service_dir}/alertmanager:/alertmanager",
+          "local/alertmanager.yml:/etc/alertmanager/alertmanager.yml",
         ]
+      }
+      template {
+        source = "${scripts_dir}/alertmanager.yml.tpl"
+        destination = "local/alertmanager.yml"
+        change_mode = "restart"
       }
       resources {
         memory = "${alertmanager_total_memory_size}"
@@ -47,6 +53,12 @@ job "asapo-monitoring" {
           }
         }
       }
+
+      meta {
+        alert_email = "${asapo_alert_email}"
+        email_smart_host = "${asapo_alert_email_smart_host}"
+      }
+
       service {
         name = "alertmanager"
         port = "alertmanager_ui"

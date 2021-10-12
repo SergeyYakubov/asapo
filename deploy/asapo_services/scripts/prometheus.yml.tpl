@@ -22,10 +22,14 @@ rule_files:
 scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
   - job_name: "prometheus"
-    static_configs:
-      - targets: ["localhost:9090"]
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
+    consul_sd_configs:
+      - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+        services:
+          - 'prometheus'
+    relabel_configs:
+      - source_labels: [__meta_consul_service]
+        target_label: job
+    metrics_path: /prometheus/metrics
   - job_name: "nomad metrics"
     consul_sd_configs:
       - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
@@ -39,6 +43,14 @@ scrape_configs:
       - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
         services:
           - 'asapo-discovery'
+    relabel_configs:
+      - source_labels: [__meta_consul_service]
+        target_label: job
+  - job_name: broker
+    consul_sd_configs:
+      - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+        services:
+          - 'asapo-broker'
     relabel_configs:
       - source_labels: [__meta_consul_service]
         target_label: job

@@ -120,6 +120,8 @@ data "template_file" "asapo_monitoring" {
     prometheus_total_memory_size = "${var.prometheus_total_memory_size}"
     alertmanager_total_memory_size = "${var.alertmanager_total_memory_size}"
     asapo_user = "${var.asapo_user}"
+    asapo_alert_email = "${var.asapo_alert_email}"
+    asapo_alert_email_smart_host = "${var.asapo_alert_email_smart_host}"
   }
 }
 

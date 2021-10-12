@@ -16,6 +16,8 @@ asapo_monitor = true
 asapo_monitor_alert = false
 prometheus_version = "v2.30.3"
 alertmanager_version = "v0.23.0"
+asapo_alert_email = ""
+asapo_alert_email_smart_host = ""
 
 job_scripts_dir = "/var/run/asapo"
 

@@ -74,7 +74,7 @@ job "asapo-receivers" {
           initial_status =   "passing"
         }
         meta {
-          metrics-port = "${NOMAD_PORT_recv_metrics}"
+          metrics-port = "$${NOMAD_PORT_recv_metrics}"
         }
       %{ else  }
        check {

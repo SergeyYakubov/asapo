@@ -6,6 +6,7 @@ import (
 	log "asapo_common/logger"
 	"asapo_common/utils"
 	"errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	_ "net/http/pprof"
 	"strconv"
@@ -24,6 +25,8 @@ func Start() {
 	}
 	mux := utils.NewRouter(listRoutes)
 	mux.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
+	mux.PathPrefix("/metrics").Handler(promhttp.Handler())
+
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }
