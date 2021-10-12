@@ -1,12 +1,12 @@
 import asapo_producer
 
 def callback(payload,err):
-    if err is not None and "server warning" not in err:
+    if err is not None and not isinstance(err, asapo_producer.AsapoServerWarning):
         # the data was not sent. Something is terribly wrong.
         print("could not send: ",payload,err)
     elif err is not None:
         # The data was sent, but there was some unexpected problem, e.g. the file was overwritten.
-        print("sent with warning":,payload,err)
+        print("sent with warning: ",payload,err)
     else:
         # all fine
         print("successfuly sent: ",payload)

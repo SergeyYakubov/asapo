@@ -18,8 +18,6 @@ This example produces a simple message. Use this, if you don't need any special 
 }>
 <TabItem value="python">
 
-Simple producer in Python (API documentation [here](http://asapo.desy.de/python/producer.html)).
-
 ```python content="./examples/python/produce.py"
 ```
 
@@ -32,8 +30,6 @@ $ python3 produce.py
 </TabItem>
 
 <TabItem value="cpp">
-
-Simple producer in C++ (API documentation [here](http://asapo.desy.de/cpp/producer)).
 
 ```cpp content="./examples/cpp/produce.cpp"
 ```
@@ -48,14 +44,7 @@ $ cmake . && make
 $ ./asapo-produce
 ```
 
-
 </TabItem>
 </Tabs>
 
-the output should look like
-
-```
-{"time":"***** *****","source":"producer_api","level":"info","message":"authorized connection to receiver at ****:****"}
-successfuly sent: {"id": 1, "buffer": "test_file"}
-```
-
+You should see the "successfuly sent" message in the logs, and the file should appear in the corresponding folder (by default in ```/var/tmp/asapo/global_shared/data/test_facility/gpfs/test/2019/data/asapo_test```)

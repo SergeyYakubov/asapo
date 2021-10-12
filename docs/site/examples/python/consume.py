@@ -4,12 +4,11 @@ endpoint = "localhost:8400"
 beamtime = "asapo_test"
 
 # test token. In production it is created during the start of the beamtime
-token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
-"eyJleHAiOjk1NzE3MTAyMTYsImp0aSI6ImMzaXFhbGpmN" +
-"DNhbGZwOHJua20wIiwic3ViIjoiYnRfYXNhcG9fdGVzdC" +
-"IsIkV4dHJhQ2xhaW1zIjp7IkFjY2Vzc1R5cGVzIjpbInd" +
-"yaXRlIiwicmVhZCJdfX0.dkWupPO-ysI4t-jtWiaElAzD" +
-"yJF6T7hu_Wz_Au54mYU"
+token = str("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e"
+"yJleHAiOjk1NzE3MTAyMTYsImp0aSI6ImMzaXFhbGpmNDNhbGZ"
+"wOHJua20wIiwic3ViIjoiYnRfYXNhcG9fdGVzdCIsIkV4dHJhQ"
+"2xhaW1zIjp7IkFjY2Vzc1R5cGVzIjpbIndyaXRlIiwicmVhZCJ"
+"dfX0.dkWupPO-ysI4t-jtWiaElAzDyJF6T7hu_Wz_Au54mYU")
 
 # set it  according to your configuration.
 path_to_files = "/var/tmp/asapo/global_shared/data/test_facility/gpfs/test/2019/data/asapo_test"
@@ -22,15 +21,15 @@ consumer = asapo_consumer \
                                  beamtime,       # Same as for the producer
                                  "test_source",  # Same as for the producer
                                  token,          # Access token
-                                 5000)           # Timeout. Do not change.
+                                 5000)           # Timeout. How long do you want to wait on non-finished stream for a message.
 
 
-streamList = consumer.get_stream_list()
-for stream in streamList:
-    print(stream['name'],       # the name of the stream. 'default' by default.
-          stream['lastId'],     # id of the last message in stream
-          stream['finished'],   # is the stream finished
-          stream['nextStream']) # if the stream is finished, the next stream can be set
+# you can get info about the streams in the beamtime
+for stream in consumer.get_stream_list():
+    print("Stream name: ", stream['name'], "\n",
+          "LastId: ", stream['lastId'], "\n",
+          "Stream finished: ", stream['finished'], "\n",
+          "Next stream: ", stream['nextStream'])
 
 
 group_id = consumer.generate_group_id() # Several consumers can use the same group_id to process messages in parallel
@@ -47,6 +46,6 @@ except asapo_consumer.AsapoStreamFinishedError:
     print('stream finished') # all the messages in the stream were processed
         
 except asapo_consumer.AsapoEndOfStreamError:
-    print('stream empty')    # wrong or empty stream
+    print('stream ended')    # not-finished stream timeout, or wrong or empty stream
 
 consumer.delete_stream(error_on_not_exist = True) # you can delete the stream after consuming

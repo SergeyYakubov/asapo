@@ -1,0 +1,36 @@
+---
+title: Message query
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+Messages in streams can be retrieved based on their metadata. Both the technical information (e.g. ID or timestamp) and the user metadata (see [this tutorial](metadata) for details) can be used to make a query. In this tutorial several examples of the queries are shown. The standard SQL sysntaxis is used.
+
+Only the query-relevant parts would be explained here. Look at the corresponding examples to learn about producers and consumers in detailes.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/query.py"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/query.cpp"
+```
+
+</TabItem>
+</Tabs>
+
+The output will show the message selection together with the conditions used for selection.

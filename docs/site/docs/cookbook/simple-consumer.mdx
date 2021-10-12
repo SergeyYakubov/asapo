@@ -6,7 +6,9 @@ title: Simple Consumer
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-A consumer data that reads the simple message. Note that a token is needed to work with data. In production, the token is provided during start of the beamtime.
+This example shows how to consume a message. It also shows how to organize the simple loop or extract metadata.
+
+A special access token is needed to create a consumer. For the purpose of this tutorial a special "test" token is used. It will only work for the beamtime called "asapo_test".
 
 <Tabs
   groupId="language"
@@ -18,8 +20,6 @@ A consumer data that reads the simple message. Note that a token is needed to wo
   ]
 }>
 <TabItem value="python">
-
-Complete API documentation [here](http://asapo.desy.de/python/consumer.html)
 
 ```python content="./examples/python/consume.py"
 ```
@@ -69,12 +69,4 @@ $ ./asapo-consume
 
 </Tabs>
 
-the output should look like
-
-```
-id: 1
-file name: processed/test_file
-file content: hello
-stream deleted
-```
-
+The details about the received message should appear in the logs, together with the message "stream finished" (if the "finished" flag was sent for the stream). The "stream ended" message will appear for non-finished streams, but may also mean that the stream does not exist (or was deleted).
