@@ -10,7 +10,7 @@ job "authorizer" {
       driver = "raw_exec"
 
       config {
-        command = "@AUTHORIZER_FULLPATH@",
+        command = "@AUTHORIZER_FULLPATH@"
         args =  ["-config","${NOMAD_TASK_DIR}/authorizer.json"]
       }
 

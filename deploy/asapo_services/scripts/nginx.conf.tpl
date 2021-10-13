@@ -35,11 +35,21 @@ http {
           set $kibana_endpoint kibana.service.asapo;
           set $grafana_endpoint grafana.service.asapo;
           set $influxdb_endpoint influxdb.service.asapo;
+          set $prometheus_endpoint prometheus.service.asapo;
+          set $alertmanager_endpoint alertmanager.service.asapo;
           set $elasticsearch_endpoint elasticsearch.service.asapo;
 
    		  location /influxdb/ {
             rewrite ^/influxdb(/.*) $1 break;
             proxy_pass http://$influxdb_endpoint:{{ env "NOMAD_META_influxdb_port" }}$uri$is_args$args;
+          }
+
+		  location /prometheus/ {
+            proxy_pass http://$prometheus_endpoint:{{ env "NOMAD_META_prometheus_port" }}$uri$is_args$args;
+          }
+
+		  location /alertmanager/ {
+            proxy_pass http://$alertmanager_endpoint:{{ env "NOMAD_META_alertmanager_port" }}$uri$is_args$args;
           }
 
    		  location /elasticsearch/ {

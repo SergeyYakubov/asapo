@@ -13,6 +13,10 @@
     "ListenPort": {{ .Values.ownServices.receiver.dataServer.port }},
     "NetworkMode": ["tcp"]
   },
+  "Metrics": {
+  "Expose": {{ .Values.ownServices.receiver.metrics.expose },
+  "ListenPort": {{ .Values.ownServices.receiver.metrics.port }}
+  },
   "DataCache": {
     "Use": {{ .Values.ownServices.receiver.dataCache.enable }},
     "SizeGB": {{ .Values.ownServices.receiver.dataCache.sizeGb }},

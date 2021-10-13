@@ -22,7 +22,7 @@ mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHAR
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED
 
 cd $SERVICE_DATA_CLUSTER_SHARED
-mkdir esdatadir fluentd grafana influxdb mongodb
+mkdir esdatadir fluentd grafana influxdb mongodb prometheus alertmanager
 chmod 777 *
 
 mmc=`cat /proc/sys/vm/max_map_count`

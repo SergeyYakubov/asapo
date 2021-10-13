@@ -22,6 +22,9 @@ client {
       "asapo_service" = $is_asapo_lightweight_service_node
       "ib_address" = "$ib_address"
   }
+  template {
+      disable_file_sandbox = true
+  }
 }
 
 plugin "docker" {
@@ -35,7 +38,9 @@ plugin "docker" {
       key  = "/etc/nomad/key.pem"
       ca   = "/etc/nomad/ca.pem"
     }
-
+    volumes {
+        enabled = true
+    }
     allow_privileged = true
 
   }
@@ -48,11 +53,11 @@ plugin "raw_exec" {
 }
 
 telemetry {
-  publish_allocation_metrics = $use_telemetry
-  publish_node_metrics       = $use_telemetry
-  statsd_address = "$telegraf_address"
-  collection_interval = "10s"
+  collection_interval = "1s"
+  disable_hostname = true
+  prometheus_metrics = true
+  publish_allocation_metrics = true
+  publish_node_metrics = true
 }
-
 
 

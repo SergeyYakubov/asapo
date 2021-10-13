@@ -10,7 +10,7 @@ job "broker" {
       driver = "raw_exec"
 
       config {
-        command = "@BROKER_FULLPATH@",
+        command = "@BROKER_FULLPATH@"
         args =  ["-config","${NOMAD_TASK_DIR}/broker.json"]
       }
 
