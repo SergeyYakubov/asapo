@@ -82,7 +82,7 @@ producerid=`echo $!`
 wait
 
 echo "Start consumer in $network_type mode"
-$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 10000 0 &> output.txt &
+$consumer_bin ${proxy_address} ${receiver_folder} ${beamtime_id} 2 $token 50000 0 &> output.txt &
 workerid=`echo $!`
 
 sleep 2

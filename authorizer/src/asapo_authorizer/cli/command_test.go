@@ -5,30 +5,31 @@ import (
 	"asapo_authorizer/server"
 	"asapo_common/utils"
 	"bytes"
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 var CommandTests = []struct {
-	cmd    command
-	ok bool
-	msg string
+	cmd   command
+	error string
+	msg   string
 }{
-	{command{"create-token", []string{"-type", "user-token", "-beamtime","123","-access-types","read","-duration-days","1"}}, true,"ok"},
-	{command{"dummy", []string{"description"}}, false,"wrong command"},
+	{command{"create-token", []string{"-type", "user-token", "-beamtime", "123", "-access-types", "read", "-duration-days", "1"}}, "database", "ok"},
+	{command{"list-tokens", []string{}}, "database", "ok"},
+	{command{"revoke-token", []string{"-token","123"}}, "database", "ok"},
+	{command{"revoke-token", []string{"-token-id","123"}}, "database", "ok"},
+	{command{"dummy", []string{"description"}}, "wrong", "wrong command"},
 }
 
 func TestCommand(t *testing.T) {
 	outBuf = new(bytes.Buffer)
-	server.Auth = authorization.NewAuth(utils.NewJWTAuth("secret"),utils.NewJWTAuth("secret_admin"),utils.NewJWTAuth("secret"))
 
+	server.Auth = authorization.NewAuth(utils.NewJWTAuth("secret"), utils.NewJWTAuth("secret_admin"), utils.NewJWTAuth("secret"))
 	for _, test := range CommandTests {
 		outBuf.(*bytes.Buffer).Reset()
 		err := DoCommand(test.cmd.name, test.cmd.args)
-		if !test.ok {
-			assert.NotNil(t, err, "Should be error",test.msg)
-		} else {
-			assert.Nil(t, err, "Should be ok",test.msg)
+		if err != nil {
+			assert.Contains(t, err.Error(), test.error)
 		}
 	}
 

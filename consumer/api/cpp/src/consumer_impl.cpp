@@ -91,6 +91,8 @@ Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode& c
         return ConsumerErrorTemplates::kWrongInput.Generate(response->to_string());
     case HttpCode::InternalServerError:
         return ConsumerErrorTemplates::kInterruptedTransaction.Generate(response->to_string());
+    case HttpCode::ServiceUnavailable:
+        return ConsumerErrorTemplates::kUnavailableService.Generate(response->to_string());
     case HttpCode::NotFound:
         return ConsumerErrorTemplates::kUnavailableService.Generate(response->to_string());
     case HttpCode::Conflict:

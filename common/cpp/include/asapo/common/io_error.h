@@ -27,8 +27,8 @@ enum class IOErrorType {
     kSocketOperationUnknownAtLevel,
     kSocketOperationValueOutOfBound,
     kAddressNotValid,
-    kBrokenPipe
-
+    kBrokenPipe,
+    kNotConnected
 };
 
 using IOError = ServiceError<IOErrorType, ErrorType::kIOError>;
@@ -67,6 +67,10 @@ auto const kAddressAlreadyInUse = IOErrorTemplate {
 auto const kConnectionRefused = IOErrorTemplate {
     "Connection refused", IOErrorType::kConnectionRefused
 };
+auto const kNotConnected = IOErrorTemplate {
+    "Not connected", IOErrorType::kNotConnected
+};
+
 auto const kConnectionResetByPeer = IOErrorTemplate {
     "kConnectionResetByPeer", IOErrorType::kConnectionResetByPeer
 };

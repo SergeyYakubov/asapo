@@ -1,3 +1,20 @@
+## 21.09.0 (in progress)
+
+FEATURES
+* Producer API: C client
+* Introduce a token to send data in "raw" mode without LDAP authorization  
+
+IMPROVEMENTS
+* Allow using ASAPO for commissioning beamtimes
+* Implement token revocation
+
+BUG FIXES
+* Consumer/Producer API: fixed bug with "_" in stream name 
+
+INTERNAL
+* Improved authoriation service caching
+* Added profiling for Go services
+
 ## 21.06.0
 
 FEATURES

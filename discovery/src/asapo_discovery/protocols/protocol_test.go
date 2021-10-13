@@ -22,8 +22,10 @@ var protocolTests = []protocolTest{
 	{"consumer", "v1000.2", false, "unknown", "unknown protocol"},
 
 
+
 // producer
-	{"producer", "v0.3", true, "current", "v0.3"},
+	{"producer", "v0.4", true, "current", "v0.4"},
+	{"producer", "v0.3", true, "deprecates", "v0.3"},
 	{"producer", "v0.2", true, "deprecates", "v0.2"},
 	{"producer", "v0.1", true, "deprecates", "v0.1"},
 	{"producer", "v1000.2", false, "unknown", "unknown protocol"},
