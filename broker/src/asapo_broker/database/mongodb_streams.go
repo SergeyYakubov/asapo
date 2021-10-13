@@ -190,16 +190,8 @@ func (ss *Streams) updateFromDb(db *Mongodb, db_name string) (StreamsRecord, err
 }
 
 func getFiltersFromString(filterString string) (string, string, error) {
-	firstStream := ""
-	streamStatus := ""
-	s := strings.Split(filterString, "_")
-	switch len(s) {
-	case 1:
-		firstStream = s[0]
-	case 2:
-		firstStream = s[0]
-		streamStatus = s[1]
-	default:
+	firstStream, streamStatus, err := utils.DecodeTwoStrings(filterString)
+	if err!=nil {
 		return "", "", errors.New("wrong format: " + filterString)
 	}
 	if streamStatus == "" {

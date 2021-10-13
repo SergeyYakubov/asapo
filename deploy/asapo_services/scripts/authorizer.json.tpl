@@ -14,5 +14,8 @@
         "Uri" : "{{ env "NOMAD_META_ldap_uri" }}",
         "BaseDn" : "ou=rgy,o=desy,c=de",
         "FilterTemplate" : "(cn=a3__BEAMLINE__-hosts)"
-    }
+    },
+  "DatabaseServer":"auto",
+  "DiscoveryServer": "localhost:8400/asapo-discovery",
+  "UpdateRevokedTokensIntervalSec": 60
 }

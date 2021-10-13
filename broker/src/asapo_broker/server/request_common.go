@@ -16,7 +16,7 @@ func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, 
 	case AuthorizationError:
 		w.WriteHeader(er.statusCode)
 	default:
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 	w.Write([]byte(err.Error()))
 }

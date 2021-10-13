@@ -1,4 +1,3 @@
-nomad run authorizer.nmd
 nomad run discovery.nmd
 nomad run nginx.nmd
 
@@ -11,7 +10,7 @@ do
   break
 done
 
-
+nomad run authorizer.nmd
 nomad run file_transfer.nmd
 nomad run receiver_tcp.nmd
 nomad run broker.nmd

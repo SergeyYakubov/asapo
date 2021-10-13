@@ -7,6 +7,7 @@ import (
 	"asapo_common/utils"
 	"errors"
 	"net/http"
+	_ "net/http/pprof"
 	"strconv"
 )
 
@@ -22,6 +23,7 @@ func Start() {
 		StartStatistics()
 	}
 	mux := utils.NewRouter(listRoutes)
+	mux.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), http.HandlerFunc(mux.ServeHTTP)))
 }

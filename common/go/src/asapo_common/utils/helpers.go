@@ -2,9 +2,10 @@ package utils
 
 import (
 	json "encoding/json"
-	"io/ioutil"
-	"strings"
 	"errors"
+	"io/ioutil"
+	"strconv"
+	"strings"
 )
 
 func StringInSlice(a string, list []string) bool {
@@ -101,4 +102,21 @@ func MapToStruct(m map[string]interface{}, val interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func EncodeTwoStrings(first,second string) string {
+	return strconv.Itoa(len(first))+"/"+first + second
+}
+
+func DecodeTwoStrings(encoded string) (string,string,error) {
+	temp := strings.SplitN(encoded,"/",2);
+	if len(temp)!=2 {
+		return "","",errors.New("wrong input: "+encoded)
+	}
+	length,err := strconv.Atoi(temp[0]);
+	if err!=nil {
+		return "","",errors.New("wrong input: "+encoded)
+	}
+	return temp[1][:length],temp[1][length:],err
+
 }

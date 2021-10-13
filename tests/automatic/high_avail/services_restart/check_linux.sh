@@ -25,6 +25,7 @@ Cleanup() {
     echo cleanup
     rm -rf ${receiver_folder}
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
+    set +e
     influx -execute "drop database ${monitor_database_name}"
 }
 

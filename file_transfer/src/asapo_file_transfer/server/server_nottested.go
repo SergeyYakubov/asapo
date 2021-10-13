@@ -9,12 +9,15 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	_ "net/http/pprof"
+
 )
 
 func Start() {
 	mux := utils.NewRouter(listRoutes)
 	log.Info("Starting ASAPO Authorizer, version " + version.GetVersion())
 	log.Info("Listening on port: " + strconv.Itoa(settings.Port))
+	mux.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(settings.Port), utils.ProcessJWTAuth(mux.ServeHTTP, settings.key)))
 }
 

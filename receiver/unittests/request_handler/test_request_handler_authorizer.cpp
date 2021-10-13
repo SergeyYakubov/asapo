@@ -95,7 +95,7 @@ class AuthorizerHandlerTests : public Test {
     void TearDown() override {
         handler.http_client__.release();
     }
-    void MockAuthRequest(bool error, HttpCode code = HttpCode::OK) {
+    void MockAuthRequest(bool error, HttpCode code = HttpCode::OK, bool opError = false) {
         if (error) {
             EXPECT_CALL(mock_http_client, Post_t(expected_authorization_server + "/authorize", _, expect_request_string, _, _)).
             WillOnce(
@@ -128,7 +128,7 @@ class AuthorizerHandlerTests : public Test {
                                                      HasSubstr(expected_data_source),
                                                      HasSubstr(expected_producer_uri),
                                                      HasSubstr(expected_authorization_server))));
-            } else if (expected_access_type_str == "[\"write\"]") {
+            } else if (!opError) {
                 EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("authorized"),
                                                      HasSubstr(expected_beamtime_id),
                                                      HasSubstr(expected_beamline),
@@ -142,7 +142,7 @@ class AuthorizerHandlerTests : public Test {
 
 
     }
-    Error MockFirstAuthorization(bool error, HttpCode code = HttpCode::OK) {
+    Error MockFirstAuthorization(bool error, HttpCode code = HttpCode::OK, bool opError = false) {
         EXPECT_CALL(*mock_request, GetOpCode())
         .WillOnce(Return(asapo::kOpcodeAuthorize))
         ;
@@ -155,7 +155,7 @@ class AuthorizerHandlerTests : public Test {
         ;
 
 
-        MockAuthRequest(error, code);
+        MockAuthRequest(error, code, opError);
         return handler.ProcessRequest(mock_request.get());
     }
     Error MockRequestAuthorization(bool error, HttpCode code = HttpCode::OK, bool set_request = true) {
@@ -218,9 +218,30 @@ TEST_F(AuthorizerHandlerTests, AuthorizeOk) {
 
 TEST_F(AuthorizerHandlerTests, AuthorizeFailsOnWrongAccessType) {
     expected_access_type_str = "[\"read\"]";
-    auto err = MockFirstAuthorization(false);
+    auto err = MockFirstAuthorization(false, HttpCode::OK, true);
 
     ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
+}
+
+TEST_F(AuthorizerHandlerTests, AuthorizeFailsOnWrongAccessTypeForRaw) {
+    expected_access_type_str = "[\"write\"]";
+    expected_source_type_str = "raw";
+    auto err = MockFirstAuthorization(false, HttpCode::OK, true);
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
+}
+
+TEST_F(AuthorizerHandlerTests, AuthorizeFailsOnWrongAccessTypeForProcessed) {
+    expected_access_type_str = "[\"writeraw\"]";
+    expected_source_type_str = "processed";
+    auto err = MockFirstAuthorization(false, HttpCode::OK, true);
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kAuthorizationFailure));
+}
+
+TEST_F(AuthorizerHandlerTests, AuthorizeOkForRaw) {
+    expected_access_type_str = "[\"writeraw\"]";
+    expected_source_type_str = "raw";
+    auto err = MockFirstAuthorization(false, HttpCode::OK, false);
+    ASSERT_THAT(err, Eq(nullptr));
 }
 
 TEST_F(AuthorizerHandlerTests, ErrorOnSecondAuthorize) {

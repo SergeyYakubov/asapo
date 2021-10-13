@@ -3,11 +3,13 @@ package cli
 import (
 	"asapo_authorizer/authorization"
 	"asapo_authorizer/server"
+	"asapo_authorizer/token_store"
 	"asapo_common/structs"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 type tokenFlags struct {
@@ -19,21 +21,26 @@ type tokenFlags struct {
 }
 
 func userTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, err error) {
-	if (flags.Beamline=="" && flags.Beamtime=="") || (flags.Beamline!="" && flags.Beamtime!="") {
-		return request,errors.New("beamtime or beamline must be set")
+	if (flags.Beamline == "" && flags.Beamtime == "") || (flags.Beamline != "" && flags.Beamtime != "") {
+		return request, errors.New("beamtime or beamline must be set")
 	}
 
-	request.Subject = make(map[string]string,1)
-	if (flags.Beamline!="") {
-		request.Subject["beamline"]=flags.Beamline
+	request.Subject = make(map[string]string, 1)
+	if flags.Beamline != "" {
+		request.Subject["beamline"] = flags.Beamline
 	} else {
-		request.Subject["beamtimeId"]=flags.Beamtime
+		request.Subject["beamtimeId"] = flags.Beamtime
 	}
 
-	request.AccessTypes = strings.Split(flags.AccessType,",")
-	for _,at:=range request.AccessTypes {
-		if at!="read" && at!="write" {
-			return request,errors.New("access type must be read of write")
+	request.AccessTypes = strings.Split(flags.AccessType, ",")
+	for _, at := range request.AccessTypes {
+		if at != "read" && at != "write" && !(at == "writeraw" && request.Subject["beamline"] != "") {
+			if request.Subject["beamline"] != "" {
+				return request, errors.New("access type must be read, write or writeraw")
+			} else {
+				return request, errors.New("access type must be read or write")
+			}
+
 		}
 	}
 
@@ -42,21 +49,20 @@ func userTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, err 
 	return
 }
 
-
 func adminTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, err error) {
-	if flags.Beamline+flags.Beamtime!="" {
-		return request,errors.New("beamtime and beamline must not be set for admin token")
+	if flags.Beamline+flags.Beamtime != "" {
+		return request, errors.New("beamtime and beamline must not be set for admin token")
 	}
 
-	request.AccessTypes = strings.Split(flags.AccessType,",")
-	for _,at:=range request.AccessTypes {
-		if at!="create" && at!="revoke" && at!="list" {
-			return request,errors.New("access type must be create,revoke of list")
+	request.AccessTypes = strings.Split(flags.AccessType, ",")
+	for _, at := range request.AccessTypes {
+		if at != "create" && at != "revoke" && at != "list" {
+			return request, errors.New("access type must be create,revoke of list")
 		}
 	}
 
-	request.Subject = make(map[string]string,1)
-	request.Subject["user"]="admin"
+	request.Subject = make(map[string]string, 1)
+	request.Subject["user"] = "admin"
 	request.DaysValid = flags.DaysValid
 
 	return
@@ -78,7 +84,14 @@ func (cmd *command) CommandCreate_token() (err error) {
 		return err
 	}
 
-	token, err := server.Auth.PrepareAccessToken(request,userToken)
+	token, claims, err := server.Auth.PrepareAccessToken(request, userToken)
+	if err != nil {
+		return err
+	}
+	claims.StandardClaims.Issuer = "asapo_cli"
+	claims.StandardClaims.IssuedAt = time.Now().Unix()
+	record := token_store.TokenRecord{claims.Id, claims, token, false}
+	err = store.AddToken(record)
 	if err != nil {
 		return err
 	}
@@ -100,11 +113,10 @@ func getTokenRequest(flags tokenFlags) (request structs.IssueTokenRequest, userT
 		return structs.IssueTokenRequest{}, false, errors.New("wrong token type")
 	}
 	if err != nil {
-		return structs.IssueTokenRequest{},false,  err
+		return structs.IssueTokenRequest{}, false, err
 	}
 	return request, userToken, err
 }
-
 
 func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 
@@ -113,9 +125,8 @@ func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 	flagset.StringVar(&flags.Type, "type", "", "token type")
 	flagset.StringVar(&flags.Beamtime, "beamtime", "", "beamtime for user token")
 	flagset.StringVar(&flags.Beamline, "beamline", "", "beamline for user token")
-	flagset.StringVar(&flags.AccessType, "access-types", "", "read/write for user token")
+	flagset.StringVar(&flags.AccessType, "access-types", "", "read/write/writeraw(beamline only) for user token")
 	flagset.IntVar(&flags.DaysValid, "duration-days", 0, "token duration (in days)")
-
 
 	flagset.Parse(cmd.args)
 
@@ -124,9 +135,8 @@ func (cmd *command) parseTokenFlags(message_string string) (tokenFlags, error) {
 	}
 
 	if flags.Type == "" {
-		return flags, errors.New("secret file missed ")
+		return flags, errors.New("access types missing")
 	}
-
 
 	return flags, nil
 
