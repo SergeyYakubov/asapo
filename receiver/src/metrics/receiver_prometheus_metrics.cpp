@@ -3,7 +3,11 @@
 namespace  asapo {
 
 std::string ReceiverPrometheusMetrics::Metrics() const {
-    return "alive 1\n";
+    return R"(
+# HELP alive whether receiver is up
+# TYPE alive gauge
+alive 1
+)";
 }
 
 }
