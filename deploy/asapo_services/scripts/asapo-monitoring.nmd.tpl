@@ -122,6 +122,7 @@ job "asapo-monitoring" {
       meta {
         n_brokers = "${n_brokers}"
         n_receivers = "${n_receivers}"
+        n_fts = "${n_fts}"
       }
       service {
         name = "prometheus"
