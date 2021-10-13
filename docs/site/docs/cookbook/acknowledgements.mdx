@@ -1,0 +1,38 @@
+---
+title: Acknowledgements
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+While consuming the messages we could issue acknowledgements, to denote that the messages were (or were not) processed successfully.
+
+The following example produces 10 sample messages, and then acknowledges all of them, except for the messages 3, 5 and 7. The message #3 receives a negative acknowledgement, which puts is back in the stream for the repeated processing. On the second attempt the message #3 gets acknowledged. The messages 5 and 7 remain unacknowledged.
+
+Only the acknowledgements-relevant parts would be explained here. Look at the corresponding examples to learn about producers and consumers in detailes.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/acknowledgements.py"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/acknowledgements.cpp"
+```
+
+</TabItem>
+</Tabs>
+
+The output will show the order in which the messages receive their acknowledgements. You may notice that the second acknowledgement of the message #3 happens with a delay, which was deliberatly chosen. The unacknowledged messages are retrieved separately at the end, after the consumer timeout.

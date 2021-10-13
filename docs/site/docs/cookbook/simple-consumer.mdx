@@ -1,0 +1,72 @@
+---
+title: Simple Consumer
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+This example shows how to consume a message. It also shows how to organize the simple loop or extract metadata.
+
+A special access token is needed to create a consumer. For the purpose of this tutorial a special "test" token is used. It will only work for the beamtime called "asapo_test".
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+    { label: 'C', value: 'c', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/consume.py"
+```
+
+Execute it with python3
+
+```
+$ python3 consumer.py
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/consume.cpp"
+```
+
+Compile e.g. using CMake and execute. You might need to point cmake (with CMAKE_PREFIX_PATH) to asapo installation and curl library if installed to non-standard location.
+
+```shell content="./examples/cpp/CMakeLists.txt" snippetTag="#consumer"
+```
+
+```
+$ cmake . && make
+$ ./asapo-consume
+```
+
+</TabItem>
+
+<TabItem value="c">
+
+```c content="./examples/c/consume.c"
+```
+
+Compile e.g. using Makefile and pkg-config (although we recommend CMake -  see C++ section) and execute. This example assumes asapo is installed to /opt/asapo. Adjust correspondingly.
+
+```makefile content="./examples/c/Makefile" snippetTag="#consumer"
+```
+
+```
+$ make
+$ ./asapo-consume
+```
+
+
+</TabItem>
+
+</Tabs>
+
+The details about the received message should appear in the logs, together with the message "stream finished" (if the "finished" flag was sent for the stream). The "stream ended" message will appear for non-finished streams, but may also mean that the stream does not exist (or was deleted).

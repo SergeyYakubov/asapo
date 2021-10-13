@@ -1,0 +1,66 @@
+---
+title: Datasets
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+The messages in the stream can be multi-parted. If you have several producers (e.g. sub-detectors) that produces several parts of the single message, you can use datasets to assemble a single message from several parts.
+
+Only the dataset-relevant parts would be explained here. Look at the corresponding examples to learn about producers and consumers in detailes.
+
+## Dataset Producer
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/produce_dataset.py"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/produce_dataset.cpp"
+```
+
+</TabItem>
+</Tabs>
+
+You should see the "successfuly sent" message in the logs, and the file should appear in the corresponding folder (by default in ```/var/tmp/asapo/global_shared/data/test_facility/gpfs/test/2019/data/asapo_test```)
+
+## Dataset Consumer
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/consume_dataset.py"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/consume_dataset.cpp"
+```
+
+</TabItem>
+</Tabs>
+
+
+The details about the received dataset should appear in the logs, together with the message "stream finished" (if the "finished" flag was sent for the stream). The "stream ended" message will appear for non-finished streams, but may also mean that the stream does not exist (or was deleted).

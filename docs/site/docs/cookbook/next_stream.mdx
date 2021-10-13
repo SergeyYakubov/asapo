@@ -1,0 +1,36 @@
+---
+title: Stream Finishing
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+When all the data in the stream is sent, the stream can be finished, and it is posiible to set the "next stream" to follow up the first. In this tutorial it'll be shown how several streams can be chained together in single consumer by using the stream finishing.
+
+Only the stream chaining-relevant parts would be explained here. Look at the corresponding examples to learn about producers and consumers in detailes.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/next_stream.py"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/next_stream.cpp"
+```
+
+</TabItem>
+</Tabs>
+
+The output will show the messages being consumed from the streams in order. First, the ```default``` stream, then the ```next```.
