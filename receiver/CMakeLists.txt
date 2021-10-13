@@ -28,6 +28,8 @@ set(RECEIVER_CORE_FILES
         src/file_processors/write_file_processor.cpp
         src/file_processors/file_processor.cpp
         src/file_processors/receive_file_processor.cpp
+        src/metrics/receiver_prometheus_metrics.cpp
+        src/metrics/receiver_mongoose_server.cpp
         )
 
 set(RDS_FILES

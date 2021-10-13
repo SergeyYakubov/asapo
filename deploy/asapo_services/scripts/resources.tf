@@ -10,6 +10,13 @@ resource "nomad_job" "asapo-perfmetrics" {
   jobspec = data.template_file.asapo_perfmetrics.rendered
 }
 
+
+resource "nomad_job" "asapo-monitoring" {
+  jobspec = data.template_file.asapo_monitoring.rendered
+  depends_on = [null_resource.asapo-broker,null_resource.asapo-receiver]
+}
+
+
 resource "nomad_job" "asapo-logging" {
   jobspec = data.template_file.asapo_logging.rendered
   depends_on = [null_resource.nginx]

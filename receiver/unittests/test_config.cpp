@@ -62,6 +62,9 @@ class ConfigTests : public Test {
         test_config.dataserver.advertise_uri = "0.0.0.1:4201";
         test_config.dataserver.network_mode = {"tcp", "fabric"};
         test_config.receive_to_disk_threshold_mb = 50;
+        test_config.metrics.expose = true;
+        test_config.metrics.listen_port = 123;
+
 
     }
 
@@ -97,7 +100,10 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->dataserver.network_mode[0], Eq("tcp"));
     ASSERT_THAT(config->dataserver.network_mode[1], Eq("fabric"));
     ASSERT_THAT(config->receive_to_disk_threshold_mb, Eq(50));
+    ASSERT_THAT(config->metrics.expose, Eq(true));
+    ASSERT_THAT(config->metrics.listen_port, Eq(123));
 }
+
 
 
 TEST_F(ConfigTests, ErrorReadSettings) {
@@ -107,7 +113,7 @@ TEST_F(ConfigTests, ErrorReadSettings) {
                                     "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
                                     "AuthorizationServer", "AuthorizationInterval", "PerformanceDbName", "LogLevel",
                                     "NThreads", "DiscoveryServer", "AdvertiseURI", "NetworkMode", "MonitorPerformance",
-                                    "ReceiveToDiskThresholdMB"};
+                                    "ReceiveToDiskThresholdMB", "Metrics", "Expose"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfig(test_config, field);
         ASSERT_THAT(err, Ne(nullptr));

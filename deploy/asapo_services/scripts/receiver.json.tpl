@@ -13,6 +13,10 @@
     "ListenPort": {{ env "NOMAD_PORT_recv_ds" }},
     "NetworkMode": ["{{ if or (env "meta.ib_address") "none" | regexMatch "none" }}{{ printf "%s" "tcp" }}{{ else }}{{ env "NOMAD_META_receiver_network_modes" |  split "," | join "\",\"" }}{{ end }}"]
   },
+  "Metrics": {
+    "Expose": {{ env "NOMAD_META_receiver_expose_metrics" }},
+    "ListenPort": {{ env "NOMAD_PORT_recv_metrics" }}
+  },
   "DataCache": {
     "Use": true,
     "SizeGB": {{ env "NOMAD_META_receiver_dataserver_cache_size" }},
