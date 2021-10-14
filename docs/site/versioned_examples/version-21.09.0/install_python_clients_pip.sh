@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-pip3 install --user --trusted-host nims.desy.de --find-links=http://nims.desy.de/extra/asapo/linux_wheels asapo_producer==21.09.0
-pip3 install --user --trusted-host nims.desy.de --find-links=http://nims.desy.de/extra/asapo/linux_wheels asapo_consumer==21.09.0
+pip3 install --user --trusted-host nims.desy.de --find-links=http://nims.desy.de/extra/asapo/linux_wheels asapo_producer==21.9.0
+pip3 install --user --trusted-host nims.desy.de --find-links=http://nims.desy.de/extra/asapo/linux_wheels asapo_consumer==21.9.0
 # you might need to update pip if the above commands error: pip3 install --upgrade pip
 
 # if that does not work (abi incompatibility, etc) you may try to install source packages
