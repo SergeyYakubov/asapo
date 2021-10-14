@@ -32,6 +32,7 @@ done
 for file in $(find ./${VERSIONED_EXAMPLES} -type f)
 do
 ed -s $file <<ED_COMMANDS > /dev/null 2>&1
+,s/asapo-cluster-dev:100\.0\.develop/asapo-cluster:${DOCS_VERSION}/g
 ,s/100\.0[~.]develop/${DOCS_VERSION}/g
 w
 ED_COMMANDS

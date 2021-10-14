@@ -2,14 +2,15 @@
 
 FEATURES
 * Producer API: C client
-* Introduce a token to send data in "raw" mode without LDAP authorization  
+* Introduce a token to send data in "raw" mode without LDAP authorization
 
 IMPROVEMENTS
 * Allow using ASAPO for commissioning beamtimes
 * Implement token revocation
+* Updated website
 
 BUG FIXES
-* Consumer/Producer API: fixed bug with "_" in stream name 
+* Consumer/Producer API: fixed bug with "_" in stream name
 
 INTERNAL
 * Improved authoriation service caching
@@ -18,33 +19,33 @@ INTERNAL
 ## 21.06.0
 
 FEATURES
-* Consumer API: C client 
-* Producer API: An option to automatically generate message id (use sparingly, reduced performance possible)  
+* Consumer API: C client
+* Producer API: An option to automatically generate message id (use sparingly, reduced performance possible)
 
 IMPROVEMENTS
 * Consumer/Producer API - allow any characters in source/stream/group names
 * Consumer/Producer API - introduce stream metadata
 * Consumer API - an option to auto discovery of data folder when consumer client uses file transfer service (has_filesystem=False)
-* Improved build procedure - shared libaries, added pkg-config and cmake config for asapo clients  
+* Improved build procedure - shared libaries, added pkg-config and cmake config for asapo clients
 
 BUG FIXES
-* Consumer API: multiple consumers from same group receive stream finished error 
-* Consumer API: return ServiceUnavailable instead of Unauthorized in case an authorization service is unreachable 
+* Consumer API: multiple consumers from same group receive stream finished error
+* Consumer API: return ServiceUnavailable instead of Unauthorized in case an authorization service is unreachable
 
 ## 21.03.3
 
 BUG FIXES
-* Consumer API: fix return error type when sending acknowledgement second time 
+* Consumer API: fix return error type when sending acknowledgement second time
 * Producer API: fix GetStreamInfo/stream_info and GetLastStream/last_stream for datasets
 
 ## 21.03.2
 
 FEATURES
-* implemented possibility to delete stream (only metadata, not files yet) 
+* implemented possibility to delete stream (only metadata, not files yet)
 
 IMPROVEMENTS
 * Consumer API - retry file delivery/reading with timeout (can be useful for the case file arrives after was metadta ingested, e.g. for slow NFS transfer,...)
-      
+
 BUG FIXES
 * Consumer API: fix race condition in GetStreamList/get_stream_list
 * Producer API: fix segfault in send_stream_finished_flag
@@ -58,10 +59,10 @@ BUG FIXES
 ## 21.03.0
 
  IMPROVEMENTS
-* Producer API - queue limits in Python, for C++ return original data in error custom data      
+* Producer API - queue limits in Python, for C++ return original data in error custom data
 * Consumer API - add GetCurrentDatasetCount/get_current_dataset_count function with option to include or exclude incomplete datasets
 * Consumer API - GetStreamList/get_stream_list - can filter finished/unfinished streams now
-* Producer/Consumer API - StreamInfo structure/Python dictionary include more information (is stream finished or not, ...) 
+* Producer/Consumer API - StreamInfo structure/Python dictionary include more information (is stream finished or not, ...)
 * Switch to JWT tokens (token has more symbols, expiration time, can be revoked and there are two type of tokens - with read/write access rights)
 * Improved versioning. Producer/Consumer API - introduce GetVersionInfo/get_version_info, compatiblity check between clients and server
 
@@ -77,9 +78,9 @@ FEATURES
 
  IMPROVEMENTS
 * Consumer API - change behavior of GetLast/get_last - do not change current pointer after call
-* Consumer API - add interrupt_current_operation to allow interrupting (from a separate thread) long consumer operation  
-* Producer API - return original data in callback payload.  
-* Producer API - allow to set queue limits (number of pending requests and/or max memory), reject new requests if reached the limits  
+* Consumer API - add interrupt_current_operation to allow interrupting (from a separate thread) long consumer operation
+* Producer API - return original data in callback payload.
+* Producer API - allow to set queue limits (number of pending requests and/or max memory), reject new requests if reached the limits
 * building rpm, deb and exe packages for client libs
 
 BREAKING CHANGES
@@ -92,7 +93,7 @@ BREAKING CHANGES
 * use term `message` for blob of information we send around, rename related structs, parameters, ...
 * C++ - get rid of duplicate functions with default stream
     ####  renaming - Producer API
-* SendData/send_data -> Send/send    
+* SendData/send_data -> Send/send
 * SendXX/send_xx -> swap parameters (stream to the end)
 * id_in_subset -> dataset_substream
 * subset_size -> dataset_size (and in general replace subset with dataset)
@@ -110,10 +111,10 @@ BUG FIXES
 ## 20.09.1
 
 FEATURES
-* New function GetLastStream/last_stream in Producer API - returns info for a stream which was created last 
+* New function GetLastStream/last_stream in Producer API - returns info for a stream which was created last
 
 IMPROVEMENTS
-* Each message automatically gets a timestamp (nanoseconds from Linux epoch) at the moment it is being inserted to a database 
+* Each message automatically gets a timestamp (nanoseconds from Linux epoch) at the moment it is being inserted to a database
 * GetStreamList/get_stream_list returns now sorted (by timestamp of the earliest message) list of streams. Parameter `from` allows to limit the list
 
 BREAKING CHANGES
@@ -122,7 +123,7 @@ BREAKING CHANGES
 ## 20.09.0
 
 FEATURES
-* implemented negative acknowledges and data redelivery - data will be redelivered automatically for get_next calls if it is not acknowledged during a given period or a consumer sent a negative acknowledge  
+* implemented negative acknowledges and data redelivery - data will be redelivered automatically for get_next calls if it is not acknowledged during a given period or a consumer sent a negative acknowledge
 * introduced data source types - "raw" data is written to beamline filesystem and this can only be done from a certain IPs (detector PC,..),
 "processed" data is written to core filesystem. File paths must now start with  `raw/`  or  `processed/`
 * Added RDMA support for the communication between consumer and receiver. (Improves transfer speeds while using less CPU resources)
@@ -133,17 +134,17 @@ FEATURES
 * Added new consumer broker API call 'CurrentConnectionType' to see what connection type is currently used
 
 BUG FIXES
-* fix data query images when beamtime_id starts with number 
+* fix data query images when beamtime_id starts with number
 
 BREAKING CHANGES
 * an extra parameter in producer constructor for data source type
-* path of the files that are send from producer to asapo must start with `raw/` for raw source type or `processed/` for processed source type, otherwise the files will not be written and an error will be sent back 
+* path of the files that are send from producer to asapo must start with `raw/` for raw source type or `processed/` for processed source type, otherwise the files will not be written and an error will be sent back
 
 ## 20.06.3
 
 BUG FIXES
 * fix retrieve_data in Python modules for data ingested using metadata only mode
-* fix asapo orchestration image stabilize nginx and update fluentd configuration to follow Nomad jobs log rotation 
+* fix asapo orchestration image stabilize nginx and update fluentd configuration to follow Nomad jobs log rotation
 
 ## 20.06.2
 
