@@ -48,6 +48,7 @@ func routeGetVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 func checkDiscoveryApiVersion(w http.ResponseWriter, r *http.Request) bool {
+	nReqests.Inc()
 	_, ok := utils.PrecheckApiVersion(w, r, version.GetDiscoveryApiVersion())
 	return ok
 }

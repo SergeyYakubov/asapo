@@ -35,6 +35,8 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     (err = parser.GetString("PerformanceDbName", &config.performance_db_name)) ||
     (err = parser.Embedded("DataServer").GetString("AdvertiseURI", &config.dataserver.advertise_uri)) ||
     (err = parser.Embedded("DataServer").GetArrayString("NetworkMode", &config.dataserver.network_mode)) ||
+    (err = parser.Embedded("Metrics").GetBool("Expose", &config.metrics.expose)) ||
+    (err = parser.Embedded("Metrics").GetUInt64("ListenPort", &config.metrics.listen_port)) ||
     (err = parser.GetString("LogLevel", &log_level));
 
     if (err) {

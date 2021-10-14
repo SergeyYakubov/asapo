@@ -36,6 +36,22 @@ resource "null_resource" "asapo-authorizer" {
 
 }
 
+
+resource "null_resource" "prometheus" {
+  provisioner "local-exec" {
+    command = "asapo-wait-service prometheus ${var.asapo_monitor}"
+  }
+  depends_on = [nomad_job.asapo-monitoring]
+}
+
+resource "null_resource" "alertmanager" {
+  provisioner "local-exec" {
+    command = "asapo-wait-service alertmanager ${var.asapo_monitor && var.asapo_monitor_alert}"
+  }
+  depends_on = [nomad_job.asapo-monitoring]
+}
+
+
 resource "null_resource" "asapo-discovery" {
   provisioner "local-exec" {
     command = "asapo-wait-service asapo-discovery"
@@ -78,5 +94,4 @@ resource "null_resource" "kibana" {
   }
   depends_on = [nomad_job.asapo-logging]
 }
-
 

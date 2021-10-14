@@ -10,7 +10,7 @@ job "nginx_kill" {
     task "nginx_kill" {
       driver = "raw_exec"
       config {
-        command = "taskkill",
+        command = "taskkill"
         args =  ["/f","/im","nginx.exe"]
       }
    }

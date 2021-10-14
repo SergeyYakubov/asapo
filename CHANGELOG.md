@@ -14,6 +14,7 @@ BUG FIXES
 INTERNAL
 * Improved authoriation service caching
 * Added profiling for Go services
+* Added metrics and alerts for asapo services
 
 ## 21.06.0
 

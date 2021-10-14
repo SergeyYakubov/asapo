@@ -64,6 +64,11 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
 
     config_string += "," + Key("NThreads", error_field) + std::to_string(config.dataserver.nthreads);
     config_string += "}";
+    config_string += "," + Key("Metrics", error_field) + "{";
+    config_string += Key("ListenPort", error_field) + std::to_string(config.metrics.listen_port);
+    config_string += "," +  Key("Expose", error_field) + (config.metrics.expose ? "true" : "false");
+    config_string += "}";
+
     config_string += "," + Key("DataCache", error_field) + "{";
     config_string += Key("Use", error_field) + (config.use_datacache ? "true" : "false") ;
     config_string += "," + Key("SizeGB", error_field) + std::to_string(config.datacache_size_gb);
