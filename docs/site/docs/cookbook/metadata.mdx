@@ -1,0 +1,38 @@
+---
+title: Metadata
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+You can also store any custom metadata with your beamtime, stream, and each message. This tutorial shows you how you can store, update and access this metadata. The metadata is stored in JSON, and any JSON structure is supported.
+
+Only the metadata-relevant parts would be explained here. Look at the corresponding examples to learn about producers and consumers in detailes.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/metadata.py"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+Since C++ doesn't have a built-in JSON support, you'd have to use 3rd party libs if you want JSON parsing. In this tutorial we won't use any JSON parsing, and will treat JSONs as regular strings. Please note, that ASAP::O only supports valid JSONs, and providing invalid input will result in error.
+
+```cpp content="./examples/cpp/metadata.cpp"
+```
+
+</TabItem>
+</Tabs>
+
+The output will show the metadata retrieved from the beamtime, stream and message.

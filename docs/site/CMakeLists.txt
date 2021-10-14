@@ -1,21 +1,13 @@
-configure_files(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} true)
-configure_files(${CMAKE_CURRENT_SOURCE_DIR}/blog ${CMAKE_CURRENT_BINARY_DIR}/blog)
-configure_files(${CMAKE_CURRENT_SOURCE_DIR}/docs ${CMAKE_CURRENT_BINARY_DIR}/docs)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/static DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/versioned_docs DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/versioned_sidebars DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/plugins DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-configure_files(${CMAKE_CURRENT_SOURCE_DIR}/examples/getting_started ${CMAKE_CURRENT_BINARY_DIR}/examples/getting_started)
-
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/..)
 
 add_custom_target(
         site ALL
         COMMAND
         npm run build VERBATIM
+)
+
+add_custom_target(
+        freeze_version
+        COMMAND
+        ./freeze_version.sh
 )

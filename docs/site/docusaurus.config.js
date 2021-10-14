@@ -13,9 +13,6 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'DESY', // Usually your GitHub org/user name.
   projectName: 'ASAPO', // Usually your repo name.
-   customFields: {
-     version: '@ASAPO_VERSION_IN_DOCS@',
-   },
   plugins: [path.resolve(__dirname, 'plugins/webpackconf/src/index.js')],
   themeConfig: {
     navbar: {
@@ -31,7 +28,7 @@ module.exports = {
           label: 'Docs',
           position: 'left',
         },
-        {to: 'blog', label: 'Blog', position: 'left'},
+        {to: 'blog', label: 'Changelog', position: 'left'},
         {
                   label: 'API',
                   position: 'left', // or 'right'
@@ -57,7 +54,7 @@ module.exports = {
           docsPluginId: 'default',
         },
         {
-          href: 'https://stash.desy.de/projects/ASAPO/repos/asapo/browse?at=@ASAPO_VERSION_IN_DOCS@/',
+          href: 'https://stash.desy.de/projects/ASAPO/repos/asapo/browse/',
           label: 'BitBucket',
           title: 'BitBucket',
           position: 'right',
@@ -83,8 +80,9 @@ module.exports = {
               },
         },
         blog: {
-          showReadingTime: true,
-          // Please change this to your repo.
+          showReadingTime: false,
+          path: 'changelog',
+          blogSidebarTitle: 'Versions'
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
