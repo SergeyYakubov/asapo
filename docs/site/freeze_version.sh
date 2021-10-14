@@ -2,20 +2,20 @@
 
 if [[ -z "${DOCS_VERSION}" ]]; then
     echo No version specified
-    
+
     exit 1
 fi
 
 echo Freezing version $DOCS_VERSION
 
-#npm run docusaurus docs:version $DOCS_VERSION
+npm run docusaurus docs:version $DOCS_VERSION
 
 VERSIONED_EXAMPLES="versioned_examples/version-$DOCS_VERSION"
 VERSIONED_EXAMPLES_ESCAPED="versioned_examples\\/version-$DOCS_VERSION"
 
-#mkdir $VERSIONED_EXAMPLES
+mkdir $VERSIONED_EXAMPLES
 
-#cp -r examples/* $VERSIONED_EXAMPLES
+cp -r examples/* $VERSIONED_EXAMPLES
 
 CONTENT='content=\"\.\/'
 
