@@ -3,12 +3,6 @@
 set -e
 
 ASAPO_HOST_DIR=/var/tmp/asapo # you can change this if needed, make sure there is enough space ( >3GB on disk)
-# change this according to your Docker configuration
-DOCKER_ENDPOINT="127.0.0.1:2376"
-DOCKER_TLS_CA=/usr/local/docker/certs/$USER/ca.pem
-DOCKER_TLS_KEY=/usr/local/docker/certs/$USER/key.pem
-DOCKER_TLS_CERT=/usr/local/docker/certs/$USER/cert.pem
-
 
 NOMAD_ALLOC_HOST_SHARED=$ASAPO_HOST_DIR/container_host_shared/nomad_alloc
 SERVICE_DATA_CLUSTER_SHARED=$ASAPO_HOST_DIR/asapo_cluster_shared/service_data
@@ -21,12 +15,13 @@ ASAPO_USER=`id -u`:`id -g`
 mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $DATA_GLOBAL_SHARED_ONLINE
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $DATA_GLOBAL_SHARED_ONLINE
 
-cd $SERVICE_DATA_CLUSTER_SHAREDdetector
-mkdir -p fluentd grafana influxdb2 mongodb
+cd $SERVICE_DATA_CLUSTER_SHARED
+mkdir -p fluentd grafana influxdb influxdb2 mongodb
 chmod 777 *
 
-docker run --privileged --userns=host --security-opt no-new-privileges --rm \
+docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \
   -u $ASAPO_USER \
+  --group-add `getent group docker | cut -d: -f3` \
   -v $NOMAD_ALLOC_HOST_SHARED:$NOMAD_ALLOC_HOST_SHARED \
   -v $SERVICE_DATA_CLUSTER_SHARED:$SERVICE_DATA_CLUSTER_SHARED \
   -v $DATA_GLOBAL_SHARED:$DATA_GLOBAL_SHARED \
@@ -37,11 +32,7 @@ docker run --privileged --userns=host --security-opt no-new-privileges --rm \
   -e TF_VAR_mongo_dir=$MONGO_DIR \
   -e TF_VAR_asapo_user=$ASAPO_USER \
   -e ACL_ENABLED=true \
-  -v $DOCKER_TLS_CA:/etc/nomad/ca.pem \
-  -v $DOCKER_TLS_KEY:/etc/nomad/key.pem \
-  -v $DOCKER_TLS_CERT:/etc/nomad/cert.pem \
-  -e DOCKER_ENDPOINT=$DOCKER_ENDPOINT \
-  --name asapo --net=host -d yakser/asapo-cluster-dev:100.0.develop
+  --name asapo --net=host -d yakser/asapo-cluster:21.09.0
 
 sleep 15
-docker exec asapo jobs-start -var elk_logs=false
+docker exec asapo jobs-start -var elk_logs=false -var influxdb_version=1.8.4

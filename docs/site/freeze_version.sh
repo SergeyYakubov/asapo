@@ -2,20 +2,20 @@
 
 if [[ -z "${DOCS_VERSION}" ]]; then
     echo No version specified
-    
+
     exit 1
 fi
 
 echo Freezing version $DOCS_VERSION
 
-#npm run docusaurus docs:version $DOCS_VERSION
+npm run docusaurus docs:version $DOCS_VERSION
 
 VERSIONED_EXAMPLES="versioned_examples/version-$DOCS_VERSION"
 VERSIONED_EXAMPLES_ESCAPED="versioned_examples\\/version-$DOCS_VERSION"
 
-#mkdir $VERSIONED_EXAMPLES
+mkdir $VERSIONED_EXAMPLES
 
-#cp -r examples/* $VERSIONED_EXAMPLES
+cp -r examples/* $VERSIONED_EXAMPLES
 
 CONTENT='content=\"\.\/'
 
@@ -32,6 +32,7 @@ done
 for file in $(find ./${VERSIONED_EXAMPLES} -type f)
 do
 ed -s $file <<ED_COMMANDS > /dev/null 2>&1
+,s/asapo-cluster-dev:100\.0\.develop/asapo-cluster:${DOCS_VERSION}/g
 ,s/100\.0[~.]develop/${DOCS_VERSION}/g
 w
 ED_COMMANDS
