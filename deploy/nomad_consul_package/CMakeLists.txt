@@ -4,10 +4,14 @@ PROJECT(ASAPO_HA)
 
 add_subdirectory (Packages)
 
+set (CONSUL_VERSION 1.10.3)
+set (NOMAD_VERSION 1.1.6)
+set (TERRAFORM_VERSION 1.0.8)
+
 INCLUDE(ExternalProject)
 ExternalProject_Add(
         consul
-        URL https://releases.hashicorp.com/consul/1.7.3/consul_1.7.3_linux_amd64.zip
+        URL https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ""
         CMAKE_COMMAND ""
@@ -18,7 +22,7 @@ ExternalProject_Add(
 
 ExternalProject_Add(
         nomad
-        URL https://releases.hashicorp.com/nomad/0.11.3/nomad_0.11.3_linux_amd64.zip
+        URL https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ""
         CMAKE_COMMAND ""
@@ -29,7 +33,7 @@ ExternalProject_Add(
 
 ExternalProject_Add(
         terraform
-        URL https://releases.hashicorp.com/terraform/0.12.26/terraform_0.12.26_linux_amd64.zip
+        URL https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ""
         CMAKE_COMMAND ""
