@@ -16,7 +16,6 @@ public:
     static uint64_t HelperTimeDiffInMicroseconds(std::chrono::high_resolution_clock::time_point startTime);
 
     ReceiverMonitoringClient(const ReceiverMonitoringClient&) = delete;
-
     ReceiverMonitoringClient& operator=(const ReceiverMonitoringClient&) = delete;
 
     virtual void SendProducerToReceiverTransferDataPoint(const std::string& pipelineStepId,

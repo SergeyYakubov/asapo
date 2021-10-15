@@ -41,6 +41,8 @@ public:
     mutable bool sendingThreadRunning__ = false;
 
     explicit ReceiverMonitoringClientImpl(const SharedCache& cache);
+    ReceiverMonitoringClientImpl(const ReceiverMonitoringClientImpl&) = delete;
+    ReceiverMonitoringClientImpl& operator=(const ReceiverMonitoringClientImpl&) = delete;
 
     void StartSendingThread();
     void StopSendingThread();
