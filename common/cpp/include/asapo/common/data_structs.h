@@ -33,7 +33,7 @@ class MessageMeta {
     std::string source;
     std::string metadata;
     uint64_t buf_id{0};
-    std::string stream;
+    std::string stream; // might be "unknownStream" for older datasets
     uint64_t dataset_substream{0};
     std::string Json() const;
     bool SetFromJson(const std::string& json_string);

@@ -120,12 +120,16 @@ bool MessageMeta::SetFromJson(const std::string& json_string) {
 
     JsonStringParser parser(json_string);
 
+    // might be missing and cannot be guaranteed for older datasets
+    if (parser.GetString("stream", &stream)) {
+        stream = "unknownStream";
+    }
+
     if (parser.GetUInt64("_id", &id) ||
             parser.GetUInt64("size", &size) ||
             parser.GetString("name", &name) ||
             parser.GetString("source", &source) ||
             parser.GetUInt64("buf_id", &buf_id) ||
-            parser.GetString("stream", &stream) ||
             parser.GetUInt64("dataset_substream", &dataset_substream) ||
             parser.Embedded("meta").GetRawString(&metadata) ||
             !TimeFromJson(parser, "timestamp", &timestamp)) {

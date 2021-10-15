@@ -26,7 +26,7 @@ namespace {
 
 uint64_t big_uint = 18446744073709551615ull;
 
-MessageMeta PrepareMessageMeta() {
+MessageMeta PrepareMessageMeta(bool includeNewStreamField = true) {
     MessageMeta message_meta;
     message_meta.size = 100;
     message_meta.id = 1;
@@ -36,7 +36,9 @@ MessageMeta PrepareMessageMeta() {
     message_meta.buf_id = big_uint;
     message_meta.timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(1));
     message_meta.metadata =  "{\"bla\":10}";
-    message_meta.stream = "testStream";
+    if (includeNewStreamField) {
+        message_meta.stream = "testStream";
+    }
     return message_meta;
 }
 
@@ -106,11 +108,47 @@ TEST(MessageMetaTests, CorrectConvertFromJson) {
     ASSERT_THAT(result.timestamp, Eq(message_meta.timestamp));
     ASSERT_THAT(result.buf_id, Eq(message_meta.buf_id));
     ASSERT_THAT(result.source, Eq(message_meta.source));
+    ASSERT_THAT(result.stream, Eq(message_meta.stream)); // new
     ASSERT_THAT(result.metadata, Eq(message_meta.metadata));
     ASSERT_THAT(result.dataset_substream, Eq(message_meta.dataset_substream));
 
 }
 
+void eraseSubStr(std::string & mainStr, const std::string & toErase)
+{
+    // Search for the substring in string
+    size_t pos = mainStr.find(toErase);
+    if (pos != std::string::npos)
+    {
+        // If found then erase it from string
+        mainStr.erase(pos, toErase.length());
+    }
+}
+
+TEST(MessageMetaTests, CorrectConvertFromJson_AllowOldDataFormat_MissingSource) {
+    // The source field was added in the monitoring update and might be missing on older datasets
+
+    auto message_meta = PrepareMessageMeta(false);
+    std::string json = message_meta.Json();
+
+    eraseSubStr(json, ",\"stream\":\"\"");
+
+    MessageMeta result;
+    auto ok = result.SetFromJson(json);
+
+    ASSERT_THAT(ok, Eq(true));
+
+    ASSERT_THAT(result.id, Eq(message_meta.id));
+    ASSERT_THAT(result.name, Eq(message_meta.name));
+    ASSERT_THAT(result.size, Eq(message_meta.size));
+    ASSERT_THAT(result.timestamp, Eq(message_meta.timestamp));
+    ASSERT_THAT(result.buf_id, Eq(message_meta.buf_id));
+    ASSERT_THAT(result.source, Eq(message_meta.source));
+    ASSERT_THAT(result.stream, Eq("unknownStream")); // new and might be missing in some cases
+    ASSERT_THAT(result.metadata, Eq(message_meta.metadata));
+    ASSERT_THAT(result.dataset_substream, Eq(message_meta.dataset_substream));
+
+}
 
 TEST(MessageMetaTests, CorrectConvertFromJsonEmptyMeta) {
     auto message_meta = PrepareMessageMeta();
