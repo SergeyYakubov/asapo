@@ -9,7 +9,7 @@ job "nginx_kill" {
     task "nginx_kill" {
       driver = "raw_exec"
       config {
-        command = "killall",
+        command = "killall"
         args =  ["nginx"]
       }
    }

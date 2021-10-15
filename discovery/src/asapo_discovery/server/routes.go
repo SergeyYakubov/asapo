@@ -1,10 +1,10 @@
 package server
 
 import (
-	"asapo_discovery/protocols"
-	"net/http"
 	"asapo_common/logger"
 	"asapo_discovery/common"
+	"asapo_discovery/protocols"
+	"net/http"
 )
 
 func getService(service string) (answer []byte, code int) {

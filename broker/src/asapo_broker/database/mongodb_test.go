@@ -930,7 +930,7 @@ func TestMongoDBListStreams(t *testing.T) {
 		}
 		var rec_streams_expect, _ = json.Marshal(test.expectedStreams)
 
-		res, err := db.ProcessRequest(Request{DbName: dbname, Stream: "0", Op: "streams", ExtraParam: test.from})
+		res, err := db.ProcessRequest(Request{DbName: dbname, Stream: "0", Op: "streams", ExtraParam: utils.EncodeTwoStrings(test.from,"")})
 		if test.ok {
 			assert.Nil(t, err, test.test)
 			assert.Equal(t, string(rec_streams_expect), string(res), test.test)

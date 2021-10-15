@@ -35,6 +35,8 @@ job "asapo-nginx" {
         authorizer_port = "${authorizer_port}"
         discovery_port = "${discovery_port}"
         consul_dns_port = "${consul_dns_port}"
+        prometheus_port = "${prometheus_port}"
+        alertmanager_port = "${alertmanager_port}"
       }
 
       config {
@@ -81,8 +83,6 @@ job "asapo-nginx" {
          destination   = "local/nginx.conf"
          change_mode   = "restart"
       }
-
-
    }
   }
 }

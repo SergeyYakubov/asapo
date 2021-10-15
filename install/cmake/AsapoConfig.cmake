@@ -1,6 +1,21 @@
 include(CMakeFindDependencyMacro)
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/Modules/" ${CMAKE_MODULE_PATH})
+if(NOT WIN32)
+    if (NOT DEFINED ASAPO_USE_SHIPPED_CURL)
+        set(ASAPO_USE_SHIPPED_CURL OFF CACHE BOOL "use shipped static curl library")
+    endif()
+    if (ASAPO_USE_SHIPPED_CURL AND NOT DEFINED CURL_LIBRARY)
+        # Compute the installation prefix relative to this file.
+        get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)
+        get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
+        get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
+        get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
+        if(_IMPORT_PREFIX STREQUAL "/")
+            set(_IMPORT_PREFIX "")
+        endif()
+        set (CURL_LIBRARY ${_IMPORT_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}asapo-curl${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endif()
+endif(NOT WIN32)
 
 find_dependency(CURL REQUIRED)
 if(CURL_FOUND) #old FindCURL versions do not create CURL::libcurl target, so we do it here if CURL::libcurl is missing
@@ -91,7 +106,7 @@ endmacro()
 
 if( "S${Asapo_FIND_COMPONENTS}" STREQUAL "S")
     foreach(_comp ${_supported_components})
-        include("${CMAKE_CURRENT_LIST_DIR}/Asapo${_comp}StaticTarget.cmake")
+        asapo_load_comp_targets(${_comp} ${static} ${shared})
     endforeach()
 else()
     foreach(_comp ${Asapo_FIND_COMPONENTS})

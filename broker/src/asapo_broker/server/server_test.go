@@ -2,6 +2,7 @@ package server
 
 import (
 	"asapo_broker/database"
+	"asapo_common/discovery"
 	"asapo_common/logger"
 	"errors"
 	"github.com/stretchr/testify/assert"
@@ -77,7 +78,7 @@ func TestInitDBWithAutoAddress(t *testing.T) {
 	}))
 	defer mock_server.Close()
 
-	discoveryService = discoveryAPI{mock_server.Client(), mock_server.URL}
+	discoveryService = discovery.CreateDiscoveryService(mock_server.Client(), mock_server.URL)
 
 	mock_db.On("Connect", "0.0.0.0:0000").Return(nil)
 	mock_db.On("SetSettings", mock.Anything).Return()
@@ -95,7 +96,7 @@ func TestReconnectDB(t *testing.T) {
 		assert.Equal(t, req.URL.String(), "/asapo-mongodb", "request string")
 		rw.Write([]byte(mongo_address))
 	}))
-	discoveryService = discoveryAPI{mock_server.Client(), mock_server.URL}
+	discoveryService = discovery.CreateDiscoveryService(mock_server.Client(), mock_server.URL)
 
 	defer mock_server.Close()
 

@@ -7,7 +7,8 @@ set(SOURCE_FILES
         src/request_handler_filesystem.cpp
         src/receiver_discovery_service.cpp
         src/receiver_data_server_request_handler_factory.cpp
-        src/producer_request.cpp)
+        src/producer_request.cpp
+				src/producer_c_glue.cpp)
 
 
 string(REPLACE "v" "" PRODUCER_CLIENT_VER ${ASAPO_PRODUCER_PROTOCOL})
@@ -17,13 +18,14 @@ string(REPLACE "v" "" PRODUCER_CLIENT_VER ${ASAPO_PRODUCER_PROTOCOL})
 # Library
 ################################
 add_library(producer_lib_objects OBJECT ${SOURCE_FILES})
-target_include_directories(producer_lib_objects PRIVATE include ${ASAPO_CXX_COMMON_INCLUDE_DIR} )
+target_include_directories(producer_lib_objects PRIVATE ../c/include include ${ASAPO_CXX_COMMON_INCLUDE_DIR} )
 target_include_directories(producer_lib_objects SYSTEM PRIVATE ${LIBFABRIC_INCLUDE_DIR})
 
 if (BUILD_STATIC_CLIENT_LIBS)
     add_library(${TARGET_NAME} STATIC $<TARGET_OBJECTS:producer_lib_objects> $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:json_parser>
-            $<TARGET_OBJECTS:curl_http_client> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version>)
+            $<TARGET_OBJECTS:curl_http_client> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version> $<TARGET_OBJECTS:common>)
     target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+    target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../c/include>)
     target_include_directories(${TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${ASAPO_CXX_COMMON_INCLUDE_DIR}>)
     target_include_directories(${TARGET_NAME} INTERFACE $<INSTALL_INTERFACE:include>)
     target_link_libraries(${TARGET_NAME} CURL::libcurl ${CMAKE_THREAD_LIBS_INIT})
@@ -47,7 +49,7 @@ endif()
 
 if (BUILD_SHARED_CLIENT_LIBS)
     add_library(${TARGET_NAME}_shared SHARED $<TARGET_OBJECTS:producer_lib_objects> $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:json_parser>
-            $<TARGET_OBJECTS:curl_http_client> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version>)
+            $<TARGET_OBJECTS:curl_http_client> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:data_structs> $<TARGET_OBJECTS:version> $<TARGET_OBJECTS:common>)
     target_include_directories(${TARGET_NAME}_shared PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${ASAPO_CXX_COMMON_INCLUDE_DIR})
 
     target_link_libraries(${TARGET_NAME}_shared CURL::libcurl ${CMAKE_THREAD_LIBS_INIT})

@@ -71,11 +71,11 @@ class LoggerTests : public Test {
     spdlog::details::log_msg msg;
     spdlog::details::log_msg msg_json;
 
-    std::string test_string{"Hello"};
+    std::string test_string{"Hello\""};
     std::string test_string_json{R"("Hello":"test","int":1,"double":123.234)"};
 
     void SetUp() override {
-        msg.raw << R"("message":"Hello")";
+        msg.raw << R"("message":"Hello\"")";
         msg_json.raw << R"("Hello":"test","int":1,"double":123.234)";
         log.reset(new spdlog::logger("mylogger", mock_sink));
         logger.log__ = std::move(log);

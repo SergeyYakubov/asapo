@@ -9,7 +9,7 @@ const (
 const (
 	//error codes
 	StatusTransactionInterrupted = http.StatusInternalServerError
-	StatusServiceUnavailable     = http.StatusNotFound
+	StatusServiceUnavailable     = http.StatusServiceUnavailable
 	StatusWrongInput             = http.StatusBadRequest
 	StatusNoData                 = http.StatusConflict
 	StatusPartialData            = http.StatusPartialContent

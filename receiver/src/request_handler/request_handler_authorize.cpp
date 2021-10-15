@@ -29,8 +29,9 @@ Error RequestHandlerAuthorize::ErrorFromAuthorizationServerResponse(const Error&
     }
 }
 
-Error CheckAccessType(const std::vector<std::string>& access_types) {
-    if(std::find(access_types.begin(), access_types.end(), "write") != access_types.end()) {
+Error CheckAccessType(SourceType source_type, const std::vector<std::string>& access_types) {
+    if(std::find(access_types.begin(), access_types.end(),
+                 source_type == SourceType::kProcessed ? "write" : "writeraw") != access_types.end()) {
         return nullptr;
     } else {
         return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("wrong access types");
@@ -42,7 +43,6 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
     HttpCode code;
     Error err;
     std::string request_string = GetRequestString(request, source_credentials);
-
     auto response = http_client__->Post(GetReceiverConfig()->authorization_server + "/authorize", "", request_string, &code,
                                         &err);
     if (err || code != HttpCode::OK) {
@@ -69,7 +69,7 @@ Error RequestHandlerAuthorize::Authorize(Request* request, const char* source_cr
         return ErrorFromAuthorizationServerResponse(err, "", code);
     }
 
-    err = CheckAccessType(access_types);
+    err = CheckAccessType(source_type_, access_types);
     if (err) {
         log__->Error("failure authorizing at " + GetReceiverConfig()->authorization_server + " request: " + request_string +
                      " - " +

@@ -3,6 +3,7 @@
 package database
 
 import (
+	"asapo_common/utils"
 	"fmt"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -105,8 +106,8 @@ func (suite *StreamsTestSuite) TestStreamsMultipleRequests() {
 	db.insertRecord(dbname, collection, &rec_dataset1_incomplete)
 	db.insertRecord(dbname, collection, &rec_finished)
 	db.insertRecord(dbname, collection2, &rec_dataset1_incomplete)
-	rec, err := streams.getStreams(&db, Request{DbName: dbname, ExtraParam: "_unfinished"})
-	rec2, err2 := streams.getStreams(&db, Request{DbName: dbname, ExtraParam: "_finished"})
+	rec, err := streams.getStreams(&db, Request{DbName: dbname, ExtraParam: "0/unfinished"})
+	rec2, err2 := streams.getStreams(&db, Request{DbName: dbname, ExtraParam: "0/finished"})
 	suite.Nil(err)
 	suite.Equal(collection2, rec.Streams[0].Name)
 	suite.Equal(1, len(rec.Streams))
@@ -143,17 +144,17 @@ var streamFilterTests=[]struct{
 	message string
 }{
 	{request: Request{DbName:dbname, ExtraParam:""},error: false,streams: []string{collection,collection2},message: "default all streams"},
-	{request: Request{DbName:dbname, ExtraParam:"_"},error: false,streams: []string{collection,collection2},message: "default _ all streams"},
-	{request: Request{DbName:dbname, ExtraParam:collection},error: false,streams: []string{collection,collection2},message: "first parameter only -  all streams"},
-	{request: Request{DbName:dbname, ExtraParam:"_all"},error: false,streams: []string{collection,collection2},message: "second parameter only -  all streams"},
-	{request: Request{DbName:dbname, ExtraParam:"_finished"},error: false,streams: []string{collection2},message: "second parameter only -  finished streams"},
-	{request: Request{DbName:dbname, ExtraParam:"_unfinished"},error: false,streams: []string{collection},message: "second parameter only -  unfinished streams"},
-	{request: Request{DbName:dbname, ExtraParam:collection2+"_all"},error: false,streams: []string{collection2},message: "from stream2"},
-	{request: Request{DbName:dbname, ExtraParam:collection2+"_unfinished"},error: false,streams: []string{},message: "from stream2 and filter"},
-	{request: Request{DbName:dbname, ExtraParam:collection2+"_bla"},error: true,streams: []string{},message: "wrong filter"},
-	{request: Request{DbName:dbname, ExtraParam:collection2+"_all_aaa"},error: true,streams: []string{},message: "wrong filter2"},
-	{request: Request{DbName:dbname, ExtraParam:"blabla"},error: false,streams: []string{},message: "from unknown stream returns nothing"},
-	{request: Request{DbName:dbname, ExtraParam:collection2+"_"},error: false,streams: []string{collection2},message: "from stream2, first parameter only"},
+	{request: Request{DbName:dbname, ExtraParam:"0/"},error: false,streams: []string{collection,collection2},message: "default 0/ all streams"},
+	{request: Request{DbName:dbname, ExtraParam:utils.EncodeTwoStrings(collection,"")},error: false,streams: []string{collection,collection2},message: "first parameter only -  all streams"},
+	{request: Request{DbName:dbname, ExtraParam:"0/all"},error: false,streams: []string{collection,collection2},message: "second parameter only -  all streams"},
+	{request: Request{DbName:dbname, ExtraParam:"0/finished"},error: false,streams: []string{collection2},message: "second parameter only -  finished streams"},
+	{request: Request{DbName:dbname, ExtraParam:"0/unfinished"},error: false,streams: []string{collection},message: "second parameter only -  unfinished streams"},
+	{request: Request{DbName:dbname, ExtraParam:utils.EncodeTwoStrings(collection2,"all")},error: false,streams: []string{collection2},message: "from stream2"},
+	{request: Request{DbName:dbname, ExtraParam:utils.EncodeTwoStrings(collection2,"unfinished")},error: false,streams: []string{},message: "from stream2 and filter"},
+	{request: Request{DbName:dbname, ExtraParam:utils.EncodeTwoStrings(collection2,"bla")},error: true,streams: []string{},message: "wrong filter"},
+	{request: Request{DbName:dbname, ExtraParam:utils.EncodeTwoStrings(collection2,"all_aaa")},error: true,streams: []string{},message: "wrong filter2"},
+	{request: Request{DbName:dbname, ExtraParam:utils.EncodeTwoStrings("blabla","")},error: false,streams: []string{},message: "from unknown stream returns nothing"},
+	{request: Request{DbName:dbname, ExtraParam:utils.EncodeTwoStrings(collection2,"")},error: false,streams: []string{collection2},message: "from stream2, first parameter only"},
 }
 
 func (suite *StreamsTestSuite) TestStreamFilters() {

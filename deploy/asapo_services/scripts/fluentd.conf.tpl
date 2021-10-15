@@ -40,12 +40,19 @@
   host localhost
   port 8400
   path /elasticsearch/
-  flush_interval 5s
   logstash_format true
   time_key_format %Y-%m-%dT%H:%M:%S.%N
   time_key time
   time_key_exclude_timestamp true
-  buffer_type memory
+  <buffer>
+      @type memory
+      total_limit_size 100MB
+      flush_mode interval
+      flush_interval 1s
+      flush_thread_count 3
+      chunk_limit_size 500KB
+      overflow_action drop_oldest_chunk
+  </buffer>
   </store>
 {{ end }}
   <store>
@@ -56,4 +63,3 @@
   path /shared/asapo-logs
   </store>
 </match>
-

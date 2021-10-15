@@ -75,6 +75,7 @@ const stream_filter_finished = "finished"
 const stream_filter_unfinished = "unfinished"
 
 var dbSessionLock sync.Mutex
+var dbClientLock sync.RWMutex
 
 type SizeRecord struct {
 	Size int `bson:"size" json:"size"`
@@ -101,8 +102,8 @@ func (db *Mongodb) Ping() (err error) {
 }
 
 func (db *Mongodb) Connect(address string) (err error) {
-	dbSessionLock.Lock()
-	defer dbSessionLock.Unlock()
+	dbClientLock.Lock()
+	defer dbClientLock.Unlock()
 
 	if db.client != nil {
 		return &DBError{utils.StatusServiceUnavailable, already_connected_msg}
@@ -127,8 +128,8 @@ func (db *Mongodb) Connect(address string) (err error) {
 }
 
 func (db *Mongodb) Close() {
-	dbSessionLock.Lock()
-	defer dbSessionLock.Unlock()
+	dbClientLock.Lock()
+	defer dbClientLock.Unlock()
 	if db.client != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
@@ -672,7 +673,7 @@ func (db *Mongodb) resetCounter(request Request) ([]byte, error) {
 	c := db.client.Database(request.DbName).Collection(inprocess_collection_name_prefix + request.Stream + "_" + request.GroupId)
 	_, err_del := c.DeleteMany(context.Background(), bson.M{"_id": bson.M{"$gte": id}})
 	if err_del != nil {
-		return nil, &DBError{utils.StatusWrongInput, err.Error()}
+		return nil, &DBError{utils.StatusWrongInput, err_del.Error()}
 	}
 
 	return []byte(""), nil
@@ -1021,6 +1022,9 @@ func (db *Mongodb) getStreams(request Request) ([]byte, error) {
 }
 
 func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
+	dbClientLock.RLock()
+	defer dbClientLock.RUnlock()
+
 	if err := db.checkDatabaseOperationPrerequisites(request); err != nil {
 		return nil, err
 	}

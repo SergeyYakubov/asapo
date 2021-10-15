@@ -1,5 +1,14 @@
 variable "elk_logs" {}
+
 variable "perf_monitor" {}
+
+variable "asapo_monitor" {}
+
+variable "asapo_monitor_alert" {}
+
+variable "asapo_alert_email" {}
+
+variable "asapo_alert_email_smart_host" {}
 
 variable "force_pull_images" {}
 
@@ -19,6 +28,10 @@ variable "influxdb_version" {}
 
 variable "mongo_version" {}
 
+variable "prometheus_version" {}
+
+variable "alertmanager_version" {}
+
 variable "asapo_imagename_suffix" {}
 
 variable "asapo_image_tag" {}
@@ -28,6 +41,7 @@ variable "job_scripts_dir" {}
 variable "service_dir" {}
 
 variable "online_dir" {}
+
 variable "offline_dir" {}
 
 variable "mongo_dir" {}
@@ -42,6 +56,7 @@ variable "receiver_receive_to_disk_threshold" {}
 
 variable "receiver_network_modes" {}
 
+variable "receiver_expose_metrics" {}
 
 variable "grafana_total_memory_size" {}
 
@@ -59,11 +74,20 @@ variable "authorizer_total_memory_size" {}
 
 variable "discovery_total_memory_size" {}
 
+variable "prometheus_total_memory_size" {}
+
+variable "alertmanager_total_memory_size" {}
+
+
 variable "grafana_port" {}
 
 variable "influxdb_port" {}
 
 variable "influxdb_rpc_port" {}
+
+variable "prometheus_port" {}
+
+variable "alertmanager_port" {}
 
 variable "mongo_port" {}
 
@@ -86,3 +110,5 @@ variable "n_receivers" {}
 variable "n_brokers" {}
 
 variable "n_fts" {}
+
+variable "ldap_uri" {}

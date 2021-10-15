@@ -10,6 +10,10 @@
     "ListenPort": {{ env "NOMAD_PORT_recv_ds" }},
     "NetworkMode": ["fabric"]
   },
+  "Metrics": {
+    "Expose": true,
+    "ListenPort": {{ env "NOMAD_PORT_recv_metrics" }}
+  },
   "DataCache": {
     "Use": @RECEIVER_USE_CACHE@,
     "SizeGB": 1,

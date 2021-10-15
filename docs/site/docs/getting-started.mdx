@@ -7,17 +7,17 @@ slug: /
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-## Step 1: Start ASAPO services {#step-1}
+## Start ASAPO services {#step-1}
 
-If you already have running ASAPO services and know the endpoint, you can skip to the [step 2](#step-2).
+If you already have running ASAPO services and know the endpoint, you don't need this, and can go to [Client Libraries](#step-2).
 
 Otherwise, for testing purposes one can start ASAPO services in a standalone mode (this is not recommended for  production deployment).
 
 
-The easiest way is to use a Docker container. 
+The easiest way is to use a Docker container.
 So, make sure Docker is installed and you have necessary permissions to use it.
 Please note that this will only work on a Linux machine. Also please note that ASAPO needs some ports to be available. You can check the list
-[here](https://stash.desy.de/projects/ASAPO/repos/asapo/browse/deploy/asapo_services/scripts/asapo.auto.tfvars.in?at={ASAPO_VERSION}#37).
+[here](https://stash.desy.de/projects/ASAPO/repos/asapo/browse/deploy/asapo_services/scripts/asapo.auto.tfvars.in#37).
 
 Now, depending on how your Docker daemon is configured (if it uses a
 unix socket or a tcp port for communications)
@@ -32,14 +32,14 @@ unix socket or a tcp port for communications)
 }>
 <TabItem value="unix">
 
-```shell content="getting_started/start_asapo_socket.sh"
+```shell content=./examples/start_asapo_socket.sh"
 ```
 
 </TabItem>
 
 <TabItem value="tcp">
 
-```shell content="getting_started/start_asapo_tcp.sh"
+```shell content="./examples/start_asapo_tcp.sh"
 ```
 
 </TabItem>
@@ -64,13 +64,22 @@ mkdir -p $ASAPO_HOST_DIR/global_shared/online_data/test/current/raw
 mkdir -p $ASAPO_HOST_DIR/global_shared/data/test_facility/gpfs/test/2019/data/asapo_test
 ```
 
-:::note ASAP::O in production mode 
+:::note ASAP::O in production mode
 
-We have a running instance for processing data collected during beamtimes. Please get in touch with FS-SC group for more information.
+We have a running instance for processing data collected during experiments. Please get in touch with FS-SC group for more information.
 
 :::
 
-## Step 2: Install client libraries {#step-2}
+### Services shutdown
+
+After you've done with your instance of ASAPO, you might want to gracefully shutdown the running services. If you don't do it, your machine will become bloated with the unused docker images.
+
+```shell content="./examples/cleanup.sh"
+```
+
+<br/><br/>
+
+## Install client libraries {#step-2}
 
 Now you can install Python packages or C++ libraries for ASAPO Producer and Consumer API (you need to be in DESY intranet to access files).
 
@@ -84,31 +93,25 @@ Now you can install Python packages or C++ libraries for ASAPO Producer and Cons
 }>
 <TabItem value="python-pip">
 
-```shell content="getting_started/install_python_clients_pip.sh" snippetTag="#snippet1"
+```shell content="./examples/install_python_clients_pip.sh" snippetTag="#snippet1"
 ```
 
 </TabItem>
 <TabItem value="python-packages">
 
-```shell content="getting_started/install_python_clients_pkg.sh"
+```shell content="./examples/install_python_clients_pkg.sh"
 ```
 
 </TabItem>
 <TabItem value="cpp">
 
-```shell content="getting_started/install_cpp_clients.sh"
+```shell content="./examples/install_cpp_clients.sh"
 ```
 
 </TabItem>
 </Tabs>
 
+## Code examples
 
-Run the development server in the newly created `my-website` folder:
+Please refer to the [Code Examples](cookbook/overview) sections to see the code snippets for various usage scenarious.
 
-Open `docs/getting-started.md` and edit some lines. The site reloads automatically and display your changes.
-
-## Step 3: Produce a message {#step-3}
-
-## Step 4: Consume a message {#step-4}
-
-## Step 5: Clean-up
