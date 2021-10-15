@@ -1,4 +1,4 @@
-## 21.09.0 (in progress)
+## 21.09.0
 
 FEATURES
 * Producer API: C client
