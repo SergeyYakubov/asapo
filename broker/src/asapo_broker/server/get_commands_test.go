@@ -43,18 +43,18 @@ var testsGetCommand = []struct {
 	queryParams string
 	externalParam string
 }{
-/*	{"last", expectedSource,expectedStream, "", expectedStream + "/0/last","","0"},
+	{"last", expectedSource,expectedStream, "", expectedStream + "/0/last","","0"},
 	{"id", expectedSource,expectedStream, "", expectedStream + "/0/1","","1"},
 	{"meta", expectedSource,"default", "", "default/0/meta/0","","0"},
-	{"nacks",expectedSource, expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/nacks","","0_0"},*/
+	{"nacks",expectedSource, expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/nacks","","0_0"},
 	{"groupedlast", expectedSource,expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/groupedlast","",""},
-/*	{"next", expectedSource,expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/next","",""},
+	{"next", expectedSource,expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/next","",""},
 	{"next", expectedSource,expectedStream, expectedGroupID, expectedStream + "/" +
 		expectedGroupID + "/next","&resend_nacks=true&delay_ms=10000&resend_attempts=3","10000_3"},
 	{"size", expectedSource,expectedStream, "", expectedStream  + "/size","",""},
 	{"size",expectedSource, expectedStream, "", expectedStream  + "/size","&incomplete=true","true"},
 	{"streams",expectedSource, "0", "", "0/streams","","0/"},
-	{"lastack", expectedSource,expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/lastack","",""},*/
+	{"lastack", expectedSource,expectedStream, expectedGroupID, expectedStream + "/" + expectedGroupID + "/lastack","",""},
 }
 
 

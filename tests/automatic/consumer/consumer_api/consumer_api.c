@@ -32,6 +32,7 @@ void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
 // get last in group
     dataset = asapo_consumer_get_last_dataset_ingroup(consumer,group_id, 0, "default", &err);
     EXIT_IF_ERROR("asapo_consumer_get_last_dataset_ingroup", err);
+    asapo_free_handle(&dataset);
     AsapoDataSetHandle ds_ig = asapo_consumer_get_last_dataset_ingroup(consumer,group_id, 0, "default", &err);
     ASSERT_TRUE(ds_ig == NULL,"returns null in case of error");
     ASSERT_TRUE(asapo_error_get_type(err) == kEndOfStream,"asapo_consumer_get_last_dataset_ingroup second time end of stream error");
