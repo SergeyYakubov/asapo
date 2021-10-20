@@ -352,6 +352,16 @@ Error ConsumerImpl::GetNext(std::string group_id, MessageMeta* info, MessageData
                                 data);
 }
 
+Error ConsumerImpl::GetLast(std::string group_id, MessageMeta* info, MessageData* data, std::string stream) {
+    return GetMessageFromServer(GetMessageServerOperation::GetLastInGroup,
+                                0,
+                                std::move(group_id),
+                                std::move(stream),
+                                info,
+                                data);
+}
+
+
 Error ConsumerImpl::GetLast(MessageMeta* info, MessageData* data, std::string stream) {
     return GetMessageFromServer(GetMessageServerOperation::GetLast,
                                 0,
@@ -365,10 +375,12 @@ std::string ConsumerImpl::OpToUriCmd(GetMessageServerOperation op) {
     switch (op) {
     case GetMessageServerOperation::GetNext:
         return "next";
+    case GetMessageServerOperation::GetLastInGroup:
+        return "groupedlast";
     case GetMessageServerOperation::GetLast:
         return "last";
     default:
-        return "last";
+        return "error";
     }
 }
 
@@ -682,6 +694,12 @@ DataSet ConsumerImpl::GetNextDataset(std::string group_id, uint64_t min_size, st
 DataSet ConsumerImpl::GetLastDataset(uint64_t min_size, std::string stream, Error* err) {
     return GetDatasetFromServer(GetMessageServerOperation::GetLast, 0, "0", std::move(stream), min_size, err);
 }
+
+DataSet ConsumerImpl::GetLastDataset(std::string group_id, uint64_t min_size, std::string stream, Error* err) {
+    return GetDatasetFromServer(GetMessageServerOperation::GetLastInGroup, 0, std::move(group_id), std::move(stream),
+                                min_size, err);
+}
+
 
 DataSet ConsumerImpl::GetDatasetFromServer(GetMessageServerOperation op,
                                            uint64_t id,

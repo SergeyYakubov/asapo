@@ -58,6 +58,13 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(fi.name == "10", "GetLast filename");
     M_AssertTrue(fi.metadata == "{\"test\":10}", "GetLast metadata");
 
+    err = consumer->GetLast(group_id, &fi, nullptr, "default");
+    M_AssertTrue(err == nullptr, "GetLast inside group no error");
+    M_AssertTrue(fi.name == "10", "GetLast inside group filename");
+
+    err = consumer->GetLast(group_id, &fi, nullptr, "default");
+    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kEndOfStream, "GetLast inside group error second time");
+
     err = consumer->GetNext(group_id, &fi, nullptr, "default");
     M_AssertTrue(err == nullptr, "GetNext2 no error");
     M_AssertTrue(fi.name == "2", "GetNext2 filename");
@@ -253,6 +260,11 @@ void TestDataset(const std::unique_ptr<asapo::Consumer>& consumer, const std::st
     M_AssertTrue(err == nullptr, "GetLast no error");
     M_AssertTrue(dataset.content[0].name == "10_1", "GetLastDataset filename");
     M_AssertTrue(dataset.content[0].metadata == "{\"test\":10}", "GetLastDataset metadata");
+
+    consumer->GetLastDataset(group_id, 0, "default", &err);
+    M_AssertTrue(err == nullptr, "GetLastDataset in group no error");
+    consumer->GetLastDataset(group_id, 0, "default", &err);
+    M_AssertTrue(err == asapo::ConsumerErrorTemplates::kEndOfStream, "GetLastDataset in group error second time");
 
     dataset = consumer->GetNextDataset(group_id, 0, "default", &err);
     M_AssertTrue(err == nullptr, "GetNextDataset2 no error");

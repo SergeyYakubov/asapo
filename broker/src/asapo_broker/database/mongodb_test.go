@@ -445,6 +445,60 @@ func TestMongoDBGetNextAfterGetLastCorrect(t *testing.T) {
 
 }
 
+func TestMongoDBGetGetLastInGroupCorrect(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec1)
+	db.ProcessRequest(Request{DbName: dbname, Stream: collection, GroupId: groupId, Op: "next"}) // to check it does not influence groupedlast
+
+	res, err := db.ProcessRequest(Request{DbName: dbname, Stream: collection, GroupId: groupId, Op: "groupedlast", ExtraParam: ""})
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec1_expect), string(res))
+
+// first record - ok, then error
+	res, err = db.ProcessRequest(Request{DbName: dbname, Stream: collection, GroupId: groupId, Op: "groupedlast", ExtraParam: ""})
+	assert.NotNil(t, err)
+	if err != nil {
+		assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":1,\"id_max\":1,\"next_stream\":\"\"}", err.(*DBError).Message)
+	}
+// second record - ok, then error
+	db.insertRecord(dbname, collection, &rec2)
+	res, err = db.ProcessRequest(Request{DbName: dbname, Stream: collection, GroupId: groupId, Op: "groupedlast", ExtraParam: ""})
+	assert.Nil(t, err)
+	assert.Equal(t, string(rec2_expect), string(res))
+	res, err = db.ProcessRequest(Request{DbName: dbname, Stream: collection, GroupId: groupId, Op: "groupedlast", ExtraParam: ""})
+	assert.NotNil(t, err)
+
+// stream finished - immediately error
+	db.insertRecord(dbname, collection, &rec_finished3)
+	res, err = db.ProcessRequest(Request{DbName: dbname, Stream: collection, GroupId: groupId, Op: "groupedlast", ExtraParam: ""})
+	assert.NotNil(t, err)
+	if err != nil {
+		assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":2,\"next_stream\":\"next1\"}", err.(*DBError).Message)
+	}
+
+}
+
+func TestMongoDBGetGetLastInGroupImmediateErrorOnFinishStream(t *testing.T) {
+	db.Connect(dbaddress)
+	defer cleanup()
+	db.insertRecord(dbname, collection, &rec1)
+	db.insertRecord(dbname, collection, &rec2)
+	db.insertRecord(dbname, collection, &rec_finished3)
+	_, err := db.ProcessRequest(Request{DbName: dbname, Stream: collection, GroupId: groupId, Op: "groupedlast", ExtraParam: ""})
+	assert.NotNil(t, err)
+	_, err = db.ProcessRequest(Request{DbName: dbname, Stream: collection, GroupId: groupId, Op: "groupedlast", ExtraParam: ""})
+	assert.NotNil(t, err)
+	if err != nil {
+		assert.Equal(t, utils.StatusNoData, err.(*DBError).Code)
+		assert.Equal(t, "{\"op\":\"get_record_by_id\",\"id\":2,\"id_max\":2,\"next_stream\":\"next1\"}", err.(*DBError).Message)
+	}
+}
+
+
+
 func TestMongoDBGetSize(t *testing.T) {
 	db.Connect(dbaddress)
 	defer cleanup()

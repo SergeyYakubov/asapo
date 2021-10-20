@@ -1,3 +1,9 @@
+## 21.12.0 (in progress)
+
+FEATURES
+* Consumer API: Get last within consumer group returns message only once
+
+
 ## 21.09.0
 
 FEATURES

@@ -365,6 +365,21 @@ extern "C" {
         return handle_or_null_t(result, error, std::move(err),
                                 &asapo::ConsumerErrorTemplates::kPartialData);
     }
+//! wraps asapo::Consumer::GetLastDataset()
+/// \copydoc asapo::Consumer::GetLastDataset()
+/// \param[in] consumer the consumer that is acted upon
+/// the returned data set must be freed with asapo_free_handle() after use.
+    AsapoDataSetHandle asapo_consumer_get_last_dataset_ingroup(AsapoConsumerHandle consumer,
+            AsapoStringHandle group_id,
+            uint64_t min_size,
+            const char* stream,
+            AsapoErrorHandle* error) {
+        asapo::Error err;
+        auto result = new asapo::DataSet(consumer->handle->GetLastDataset(*group_id->handle, min_size, stream, &err));
+        return handle_or_null_t(result, error, std::move(err),
+                                &asapo::ConsumerErrorTemplates::kPartialData);
+    }
+
 
 //! wraps asapo::Consumer::GetLastAcknowledgedMessage()
 /// \copydoc asapo::Consumer::GetLastAcknowledgedMessage()
@@ -425,6 +440,22 @@ extern "C" {
                                 AsapoErrorHandle* error) {
         dataGetterStart;
         auto err = consumer->handle->GetLast(fi, data ? &d : nullptr, stream);
+        dataGetterStop;
+        return process_error(error, std::move(err));
+    }
+
+//! wraps asapo::Consumer::GetLast()
+/// \copydoc asapo::Consumer::GetLast()
+/// \param[in] consumer the consumer that is acted upon
+/// if data are retrieved (data != NULL) they must be freed with asapo_free_handle()
+    int asapo_consumer_get_last_ingroup(AsapoConsumerHandle consumer,
+                                        AsapoStringHandle group_id,
+                                        AsapoMessageMetaHandle* info,
+                                        AsapoMessageDataHandle* data,
+                                        const char* stream,
+                                        AsapoErrorHandle* error) {
+        dataGetterStart;
+        auto err = consumer->handle->GetLast(*group_id->handle, fi, data ? &d : nullptr, stream);
         dataGetterStop;
         return process_error(error, std::move(err));
     }

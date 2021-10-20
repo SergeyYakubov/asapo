@@ -51,42 +51,43 @@ int main(int argc, char* argv[]) {
 
     asapo::MessageMeta mm;
     asapo::MessageData data;
-    
+
     do {
         // we expect the message to be in the 'default' stream already
         err = consumer->GetNext(group_id, &mm, &data, "default");
-        
+
         if (err && err == asapo::ConsumerErrorTemplates::kStreamFinished) {
             std::cout << "stream finished" << std::endl;
             break;
         }
-        
+
         if (err && err == asapo::ConsumerErrorTemplates::kEndOfStream) {
             std::cout << "stream ended" << std::endl;
             break;
         }
         exit_if_error("Cannot get next record", err);
-        
+
         // work on our data
         auto processed_string = std::string(reinterpret_cast<char const*>(data.get())) + " processed";
         auto send_size = processed_string.size() + 1;
         auto buffer = asapo::MessageData(new uint8_t[send_size]);
         memcpy(buffer.get(), processed_string.c_str(), send_size);
-        
+
         // you may use the same filename, if you want to rewrite the source file. This will result in warning, but it is a valid usecase
         asapo::MessageHeader message_header{mm.id, send_size, std::string("processed/test_file_") + std::to_string(mm.id)};
-        err = producer->Send(message_header, std::move(buffer), asapo::kDefaultIngestMode, pipelined_stream_name, &ProcessAfterSend);
+        err = producer->Send(message_header, std::move(buffer), asapo::kDefaultIngestMode, pipelined_stream_name,
+                             &ProcessAfterSend);
         exit_if_error("Cannot send message", err);
     } while (1);
 
 
-    err = producer->WaitRequestsFinished(2000); 
+    err = producer->WaitRequestsFinished(2000);
     exit_if_error("Producer exit on timeout", err);
 
     // the meta from the last iteration corresponds to the last message
     auto last_id = mm.id;
-    
-    err = producer->SendStreamFinishedFlag("pipelined",last_id, "", &ProcessAfterSend);
+
+    err = producer->SendStreamFinishedFlag("pipelined", last_id, "", &ProcessAfterSend);
     exit_if_error("Cannot finish stream", err);
 
     // you can remove the source stream if you do not need it anymore

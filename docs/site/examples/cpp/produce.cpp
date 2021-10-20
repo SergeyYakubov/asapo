@@ -29,14 +29,13 @@ int main(int argc, char* argv[]) {
     auto endpoint = "localhost:8400";
     auto beamtime = "asapo_test";
 
-    auto credentials = asapo::SourceCredentials
-            {
-                asapo::SourceType::kProcessed, // should be kProcessed or kRaw, kProcessed writes to the core FS
-                beamtime,                      // the folder should exist
-                "",                            // can be empty or "auto", if beamtime_id is given
-                "test_source",                 // source
-                ""                             // athorization token
-            };
+    auto credentials = asapo::SourceCredentials {
+        asapo::SourceType::kProcessed, // should be kProcessed or kRaw, kProcessed writes to the core FS
+        beamtime,                      // the folder should exist
+        "",                            // can be empty or "auto", if beamtime_id is given
+        "test_source",                 // source
+        ""                             // athorization token
+    };
 
     auto producer = asapo::Producer::Create(endpoint,
                                             1,                               // number of threads. Increase, if the sending speed seems slow
@@ -63,7 +62,7 @@ int main(int argc, char* argv[]) {
     // add the following at the end of the script
 
     err = producer->WaitRequestsFinished(2000); // will synchronously wait for all the data to be sent.
-                                                // Use it when no more data is expected.
+    // Use it when no more data is expected.
     exit_if_error("Producer exit on timeout", err);
 
     // you may want to mark the stream as finished
