@@ -152,8 +152,8 @@ cdef class PyConsumer:
         return arr,meta
     def get_next(self, group_id, meta_only = True, stream = "default"):
         return self._op("next",group_id,stream,meta_only,0)
-    def get_last(self, meta_only = True, stream = "default", ingroup = ""):
-        return self._op("last",ingroup,stream,meta_only,0)
+    def get_last(self, meta_only = True, stream = "default", group_id = ""):
+        return self._op("last",group_id,stream,meta_only,0)
     def get_by_id(self,uint64_t id,meta_only = True, stream = "default"):
         return self._op("id","",stream,meta_only,id)
     def retrieve_data(self,meta):
@@ -370,8 +370,8 @@ cdef class PyConsumer:
         return res
     def get_next_dataset(self, group_id, min_size = 0, stream = "default"):
         return self._op_dataset("next",group_id,stream,min_size,0)
-    def get_last_dataset(self, min_size = 0,  stream = "default", ingroup = ""):
-        return self._op_dataset("last",ingroup,stream,min_size,0)
+    def get_last_dataset(self, min_size = 0,  stream = "default", group_id = ""):
+        return self._op_dataset("last",group_id,stream,min_size,0)
     def get_dataset_by_id(self, uint64_t id, min_size = 0, stream = "default"):
         return self._op_dataset("id","0",stream,min_size,id)
     def get_beamtime_meta(self):

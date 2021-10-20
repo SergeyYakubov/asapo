@@ -77,10 +77,10 @@ def check_single(consumer, group_id):
     assert_usermetadata(meta, "get last1")
 
 # get last in group
-    _, meta = consumer.get_last(meta_only=True,ingroup=group_id)
+    _, meta = consumer.get_last(meta_only=True,group_id=group_id)
     assert_metaname(meta, "5", "get last in group")
     try:
-      consumer.get_last(meta_only=True,ingroup=group_id)
+      consumer.get_last(meta_only=True,group_id=group_id)
     except asapo_consumer.AsapoEndOfStreamError:
         pass
     else:
@@ -337,10 +337,10 @@ def check_dataset(consumer, group_id):
     assert_metaname(res['content'][2], "10_3", "get get_last_dataset1 name3")
 
 # get last dataset in group
-    res = consumer.get_last_dataset(ingroup=group_id)
+    res = consumer.get_last_dataset(group_id=group_id)
     assert_eq(res['id'], 10, "get_last_dataset in group")
     try:
-        consumer.get_last_dataset(ingroup=group_id)
+        consumer.get_last_dataset(group_id=group_id)
     except asapo_consumer.AsapoEndOfStreamError:
         pass
     else:
