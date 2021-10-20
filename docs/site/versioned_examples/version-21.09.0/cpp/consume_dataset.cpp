@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 
     auto endpoint = "localhost:8400";
     auto beamtime = "asapo_test";
-    
+
     auto token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJl"
                  "eHAiOjk1NzE3MTAyMTYsImp0aSI6ImMzaXFhbGpmN"
                  "DNhbGZwOHJua20wIiwic3ViIjoiYnRfYXNhcG9fdG"
@@ -35,15 +35,15 @@ int main(int argc, char* argv[]) {
 
     asapo::DataSet ds;
     asapo::MessageData data;
-    
+
     do {
         ds = consumer->GetNextDataset(group_id, 0, "default", &err);
-        
+
         if (err && err == asapo::ConsumerErrorTemplates::kStreamFinished) {
             std::cout << "stream finished" << std::endl;
             break;
         }
-        
+
         if (err && err == asapo::ConsumerErrorTemplates::kEndOfStream) {
             std::cout << "stream ended" << std::endl;
             break;
@@ -51,9 +51,8 @@ int main(int argc, char* argv[]) {
         exit_if_error("Cannot get next record", err);
 
         std::cout << "Dataset Id: " << ds.id << std::endl;
-        
-        for(int i = 0; i < ds.content.size(); i++)
-        {
+
+        for(int i = 0; i < ds.content.size(); i++) {
             err = consumer->RetrieveData(&ds.content[i], &data);
             exit_if_error("Cannot get dataset content", err);
 

@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 
     auto endpoint = "localhost:8400";
     auto beamtime = "asapo_test";
-    
+
     // test token. In production it is created during the start of the beamtime
     auto token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJl"
                  "eHAiOjk1NzE3MTAyMTYsImp0aSI6ImMzaXFhbGpmN"
@@ -26,28 +26,26 @@ int main(int argc, char* argv[]) {
     //set it according to your configuration.
     auto path_to_files = "/var/tmp/asapo/global_shared/data/test_facility/gpfs/test/2019/data/asapo_test";
 
-    auto credentials = asapo::SourceCredentials
-            {
-                asapo::SourceType::kProcessed, // should be kProcessed or kRaw, kProcessed writes to the core FS
-                beamtime,                      // the folder should exist
-                "",                            // can be empty or "auto", if beamtime_id is given
-                "test_source",                 // source
-                token                          // athorization token
-            };
+    auto credentials = asapo::SourceCredentials {
+        asapo::SourceType::kProcessed, // should be kProcessed or kRaw, kProcessed writes to the core FS
+        beamtime,                      // the folder should exist
+        "",                            // can be empty or "auto", if beamtime_id is given
+        "test_source",                 // source
+        token                          // athorization token
+    };
 
     auto consumer = asapo::ConsumerFactory::CreateConsumer
-        (endpoint,
-         path_to_files,
-         true,             // True if the path_to_files is accessible locally, False otherwise
-         credentials,      // same as for producer
-         &err);
+                    (endpoint,
+                     path_to_files,
+                     true,             // True if the path_to_files is accessible locally, False otherwise
+                     credentials,      // same as for producer
+                     &err);
 
     exit_if_error("Cannot create consumer", err);
     consumer->SetTimeout(5000); // How long do you want to wait on non-finished stream for a message.
 
     // you can get info about the streams in the beamtime
-    for (const auto& stream : consumer->GetStreamList("", asapo::StreamFilter::kAllStreams, &err))
-    {
+    for (const auto& stream : consumer->GetStreamList("", asapo::StreamFilter::kAllStreams, &err)) {
         std::cout << "Stream name: " << stream.name << std::endl;
         std::cout << "LastId: " << stream.last_id << std::endl;
         std::cout << "Stream finished: " << stream.finished << std::endl;
@@ -60,24 +58,24 @@ int main(int argc, char* argv[]) {
 
     asapo::MessageMeta mm;
     asapo::MessageData data;
-    
+
     do {
         // GetNext is the main function to get messages from streams. You would normally call it in loop.
         // you can either manually compare the mm.id to the stream.last_id, or wait for the error to happen
         err = consumer->GetNext(group_id, &mm, &data, "default");
-        
+
         if (err && err == asapo::ConsumerErrorTemplates::kStreamFinished) {
             // all the messages in the stream were processed
             std::cout << "stream finished" << std::endl;
             break;
         }
-        
+
         if (err && err == asapo::ConsumerErrorTemplates::kEndOfStream) {
             // not-finished stream timeout, or wrong or empty stream
             std::cout << "stream ended" << std::endl;
             break;
         }
-        
+
         exit_if_error("Cannot get next record", err);
 
         std::cout << "id: " << mm.id << std::endl;
