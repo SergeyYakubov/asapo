@@ -16,6 +16,7 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_handler_db_write.cpp
         src/request_handler/request_handler_receive_data.cpp
         src/request_handler/request_handler_authorize.cpp
+        src/request_handler/authorization_client.cpp
         src/request_handler/request_handler_db_meta_write.cpp
         src/request_handler/request_handler_db_stream_info.cpp
         src/request_handler/request_handler_db_last_stream.cpp
