@@ -69,6 +69,30 @@ enum NetworkErrorCode : uint16_t {
     kNetErrorInternalServerError = 65535,
 };
 
+inline std::string NetworkErrorCodeToString(uint16_t code) {
+    switch (code) {
+    case kNetErrorNoError:
+        return "success";
+    case kNetErrorReauthorize:
+        return "reauthorize";
+    case kNetErrorWarning:
+        return "warning";
+    case kNetErrorWrongRequest:
+        return "wrong request";
+    case kNetErrorNotSupported:
+        return "not suported";
+    case kNetErrorNoData:
+        return "no data";
+    case kNetAuthorizationError:
+        return "authorization error";
+    case kNetErrorInternalServerError:
+        return "internal server error";
+    default:
+        return "unknown code";
+    }
+}
+
+
 //TODO need to use an serialization framework to ensure struct consistency on different computers
 
 const std::size_t kMaxMessageSize = 1024;

@@ -2,13 +2,12 @@
 #define ASAPO_RECEIVER_LOGGER_H
 
 #include "asapo/logger/logger.h"
+#include "request.h"
 
 namespace asapo {
 
-class Request;
-
 AbstractLogger* GetDefaultReceiverLogger();
-LogMessageWithFields RequestLog(std::string message, const Request* request, std::string origin);
+LogMessageWithFields RequestLog(std::string message, const Request* request);
 
 }
 

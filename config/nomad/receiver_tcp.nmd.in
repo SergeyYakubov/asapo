@@ -28,14 +28,6 @@ job "receiver" {
         name = "asapo-receiver"
         port = "recv"
         check {
-          name     = "alive"
-          type     = "tcp"
-          port = "recv"
-          interval = "10s"
-          timeout  = "2s"
-          initial_status =   "passing"
-        }
-        check {
           name     = "metrics"
           type     = "http"
           port = "recv_metrics"

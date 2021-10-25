@@ -44,7 +44,7 @@ void Connection::Listen() const noexcept {
     }
     io__->CloseSocket(socket_fd_, nullptr);
     statistics__->SendIfNeeded(true);
-    log__->Info(LogMessageWithFields("disconnected from ").Append("origin", HostFromUri(address_)));
+    log__->Info(LogMessageWithFields("disconnected from producer").Append("origin", HostFromUri(address_)));
 }
 
 

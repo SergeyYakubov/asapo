@@ -64,8 +64,8 @@ TEST(RequestDispatcher, Constructor) {
 
 class MockRequest: public Request {
   public:
-    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-        Request(request_header, socket_fd, "", nullptr, nullptr) {};
+    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string uri = ""):
+        Request(request_header, socket_fd, uri, nullptr, nullptr) {};
     Error Handle(ReceiverStatistics*) override {
         return Error{Handle_t()};
     };
@@ -109,7 +109,7 @@ class RequestsDispatcherTests : public Test {
 
     asapo::ReceiverConfig test_config;
     GenericRequestHeader header;
-    MockRequest mock_request{GenericRequestHeader{}, 1};
+    MockRequest mock_request{GenericRequestHeader{}, 1, connected_uri};
     std::unique_ptr<Request> request{&mock_request};
     GenericNetworkResponse response;
     void SetUp() override {
@@ -145,25 +145,25 @@ class RequestsDispatcherTests : public Test {
                   Return(nullptr))
         );
         if (error) {
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request from"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request"), HasSubstr(connected_uri))));
         }
 
 
     }
     void MockHandleRequest(int error_mode, Error err = asapo::IOErrorTemplates::kUnknownIOError.Generate() ) {
-        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("processing request"), HasSubstr(connected_uri))));
+        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("got new request"), HasSubstr(connected_uri))));
 
         EXPECT_CALL(mock_request, Handle_t()).WillOnce(
             Return(error_mode > 0 ? err.release() : nullptr)
         );
         if (error_mode == 1) {
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request from"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request"), HasSubstr(connected_uri))));
         } else if (error_mode == 2) {
-            EXPECT_CALL(mock_logger, Warning(AllOf(HasSubstr("warning processing request from"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Warning(AllOf(HasSubstr("warning processing request"), HasSubstr(connected_uri))));
         }
     }
     void MockSendResponse(GenericNetworkResponse* response, bool error ) {
-        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response to"), HasSubstr(connected_uri))));
+        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response"), HasSubstr(connected_uri))));
         ;
         EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
             DoAll(SetArgPointee<3>(error ? asapo::IOErrorTemplates::kConnectionRefused.Generate().release() : nullptr),
@@ -197,9 +197,6 @@ TEST_F(RequestsDispatcherTests, ClosedConnectionOnReceivetNextRequest) {
         DoAll(SetArgPointee<3>(asapo::ErrorTemplates::kEndOfFile.Generate().release()),
               Return(0))
     );
-    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("peer has performed an orderly shutdown"),
-                                         HasSubstr("getting next request"), HasSubstr(connected_uri))));
-
     Error err;
     dispatcher->GetNextRequest(&err);
 
