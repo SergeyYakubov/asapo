@@ -5,8 +5,10 @@
 
 namespace asapo {
 
+class Request;
 
 AbstractLogger* GetDefaultReceiverLogger();
+LogMessageWithFields RequestLog(std::string message, const Request* request, std::string origin);
 
 }
 

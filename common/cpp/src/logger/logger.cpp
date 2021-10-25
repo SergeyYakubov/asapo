@@ -1,3 +1,6 @@
+
+#include <asapo/logger/logger.h>
+
 #include "spd_logger.h"
 
 namespace asapo {
@@ -57,8 +60,12 @@ LogMessageWithFields::LogMessageWithFields(std::string key, double val, int prec
     log_string_ = EncloseQuotes(key) + ":" + string_format("%." + std::to_string(precision) + "f", val);
 }
 
+LogMessageWithFields::LogMessageWithFields(std::string val) {
+    log_string_ = EncloseQuotes("message") + ":" + EncloseQuotes(escape_json(val));
+}
+
 LogMessageWithFields::LogMessageWithFields(std::string key, std::string val) {
-    log_string_ = EncloseQuotes(key) + ":" + EncloseQuotes(val);
+    log_string_ = EncloseQuotes(key) + ":" + EncloseQuotes(escape_json(val));
 }
 
 LogMessageWithFields& LogMessageWithFields::Append(std::string key, uint64_t val) {
@@ -72,11 +79,12 @@ LogMessageWithFields& LogMessageWithFields::Append(std::string key, double val, 
 }
 
 LogMessageWithFields& LogMessageWithFields::Append(std::string key, std::string val) {
-    log_string_ += "," + EncloseQuotes(key) + ":" + EncloseQuotes(val);
+    log_string_ += "," + EncloseQuotes(key) + ":" + EncloseQuotes(escape_json(val));
     return *this;
 }
 
 std::string LogMessageWithFields::LogString() const {
     return log_string_;
 }
+
 }

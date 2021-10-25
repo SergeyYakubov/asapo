@@ -10,6 +10,7 @@ Request::Request(const GenericRequestHeader& header,
     cache__{cache}, request_header_(header),
     socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
     check_duplicate_request_handler_{db_check_handler} {
+    origin_host_ = HostFromUri(origin_uri_);
 }
 
 Error Request::PrepareDataBufferAndLockIfNeeded() {
@@ -203,6 +204,10 @@ void Request::SetSourceType(SourceType type) {
 }
 SourceType Request::GetSourceType() const {
     return source_type_;
+}
+
+const std::string& Request::GetOriginHost() const {
+    return origin_host_;
 }
 
 }

@@ -1,9 +1,8 @@
 #include "file_processor.h"
 
 #include "asapo/io/io_factory.h"
-#include "../receiver_logger.h"
-#include "../receiver_config.h"
-#include "../request.h"
+#include "../../receiver_logger.h"
+#include "../../request.h"
 
 namespace asapo {
 

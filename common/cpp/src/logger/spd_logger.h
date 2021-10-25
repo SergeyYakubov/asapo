@@ -34,6 +34,7 @@ class SpdLogger : public AbstractLogger {
 };
 
 std::string EncloseMsg(std::string msg);
+std::string escape_json(const std::string& s);
 
 }
 

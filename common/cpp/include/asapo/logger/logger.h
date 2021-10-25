@@ -20,6 +20,7 @@ class LogMessageWithFields {
   public:
     LogMessageWithFields(std::string key, uint64_t val);
     LogMessageWithFields(std::string key, double val, int precision);
+    LogMessageWithFields(std::string val);
     LogMessageWithFields(std::string key, std::string val);
     LogMessageWithFields& Append(std::string key, uint64_t val);
     LogMessageWithFields& Append(std::string key, double val, int precision);

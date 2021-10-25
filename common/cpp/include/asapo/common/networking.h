@@ -18,7 +18,6 @@ enum class NetworkConnectionType : uint32_t {
     kFabric, // Fabric connection (Primarily used for InfiniBand verbs)
 };
 
-
 // do not forget to add new codes to the end!
 enum Opcode : uint8_t {
     kOpcodeUnknownOp = 1,
@@ -34,6 +33,30 @@ enum Opcode : uint8_t {
     kOpcodeCount,
 };
 
+inline std::string OpcodeToString(uint8_t code) {
+    switch (code) {
+    case kOpcodeTransferData:
+        return "transfer data";
+    case kOpcodeTransferDatasetData:
+        return "transfer dataset data";
+    case kOpcodeStreamInfo:
+        return "stream info";
+    case kOpcodeLastStream:
+        return "last stream";
+    case kOpcodeGetBufferData:
+        return "get buffer data";
+    case kOpcodeAuthorize:
+        return "authorize";
+    case kOpcodeTransferMetaData:
+        return "transfer metadata";
+    case kOpcodeDeleteStream:
+        return "delete stream";
+    case kOpcodeGetMeta:
+        return "get meta";
+    default:
+        return "unknown op";
+    }
+}
 
 enum NetworkErrorCode : uint16_t {
     kNetErrorNoError,
@@ -69,40 +92,38 @@ struct GenericRequestHeader {
     /* Keep in mind that the message here is just strncpy'ed, you can change the message later */
     GenericRequestHeader(Opcode i_op_code = kOpcodeUnknownOp, uint64_t i_data_id = 0,
                          uint64_t i_data_size = 0, uint64_t i_meta_size = 0, const std::string& i_message = "",
-                         const std::string& i_stream = ""):
+                         const std::string& i_stream = "") :
         op_code{i_op_code}, data_id{i_data_id}, data_size{i_data_size}, meta_size{i_meta_size} {
         strncpy(message, i_message.c_str(), kMaxMessageSize);
         strncpy(stream, i_stream.c_str(), kMaxMessageSize);
         strncpy(api_version, "v0.0", kMaxVersionSize);
     }
 
-    Opcode      op_code;
-    uint64_t    data_id;
-    uint64_t    data_size;
-    uint64_t    meta_size;
-    CustomRequestData    custom_data;
-    char        message[kMaxMessageSize]; /* Can also be a binary message (e.g. MemoryRegionDetails) */
-    char        stream[kMaxMessageSize]; /* Must be a string (strcpy is used) */
-    char        api_version[kMaxVersionSize]; /* Must be a string (strcpy is used) */
+    Opcode op_code;
+    uint64_t data_id;
+    uint64_t data_size;
+    uint64_t meta_size;
+    CustomRequestData custom_data;
+    char message[kMaxMessageSize]; /* Can also be a binary message (e.g. MemoryRegionDetails) */
+    char stream[kMaxMessageSize]; /* Must be a string (strcpy is used) */
+    char api_version[kMaxVersionSize]; /* Must be a string (strcpy is used) */
     std::string Json() {
         std::string s = "{\"id\":" + std::to_string(data_id) + ","
                         "\"buffer\":\"" + std::string(message) + "\"" + ","
-                        "\"stream\":\"" + std::string(stream) + "\""
+                        "\"stream\":\""
+                        + std::string(stream) + "\""
                         + "}";
         return s;
     };
 };
 
-
-
 struct GenericNetworkResponse {
-    Opcode              op_code;
-    NetworkErrorCode    error_code;
-    char        message[kMaxMessageSize];
+    Opcode op_code;
+    NetworkErrorCode error_code;
+    char message[kMaxMessageSize];
 };
 
-
-struct SendResponse :  GenericNetworkResponse {
+struct SendResponse : GenericNetworkResponse {
 };
 
 }

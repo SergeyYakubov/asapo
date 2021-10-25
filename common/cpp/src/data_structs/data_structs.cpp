@@ -234,4 +234,9 @@ uint64_t NanosecsEpochFromISODate(std::string date_time) {
     return ns > 0 ? ns : 1;
 }
 
+std::string HostFromUri(const std::string& uri) {
+    return uri.substr(0, uri.find(':'));
+}
+
+
 }

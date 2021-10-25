@@ -7,7 +7,7 @@
 #include "../src/statistics/receiver_statistics.h"
 #include "../src/request.h"
 #include "../src/data_cache.h"
-#include "../src/file_processors/file_processor.h"
+#include "../src/request_handler/file_processors/file_processor.h"
 
 namespace asapo {
 

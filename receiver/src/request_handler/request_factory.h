@@ -2,8 +2,8 @@
 #define ASAPO_REQUEST_FACTORY_H
 
 #include "../request.h"
-#include "../file_processors/write_file_processor.h"
-#include "../file_processors/receive_file_processor.h"
+#include "./file_processors/write_file_processor.h"
+#include "./file_processors/receive_file_processor.h"
 #include "request_handler_db_stream_info.h"
 #include "request_handler_db_last_stream.h"
 #include "request_handler_db_delete_stream.h"

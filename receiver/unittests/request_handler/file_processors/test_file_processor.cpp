@@ -4,12 +4,12 @@
 #include "asapo/unittests/MockIO.h"
 #include "asapo/unittests/MockLogger.h"
 
-#include "../../src/file_processors/receive_file_processor.h"
+#include "../../../src/request_handler/file_processors/receive_file_processor.h"
 #include "asapo/common/networking.h"
 #include "asapo/preprocessor/definitions.h"
-#include "../mock_receiver_config.h"
+#include "../../mock_receiver_config.h"
 
-#include "../receiver_mocking.h"
+#include "../../receiver_mocking.h"
 
 using ::testing::Test;
 using ::testing::Return;

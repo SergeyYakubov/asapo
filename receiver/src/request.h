@@ -19,7 +19,6 @@
 #include "data_cache.h"
 
 #include "asapo/preprocessor/definitions.h"
-#include "file_processors/file_processor.h"
 
 namespace asapo {
 
@@ -50,6 +49,7 @@ class Request {
     VIRTUAL const char* GetMessage() const;
 
     const std::string& GetOriginUri() const;
+    const std::string& GetOriginHost() const;
     VIRTUAL const std::string& GetMetaData() const;
     VIRTUAL const std::string& GetBeamtimeId() const;
     VIRTUAL void SetBeamtimeId(std::string beamtime_id);
@@ -88,6 +88,7 @@ class Request {
     void* data_ptr;
     RequestHandlerList handlers_;
     std::string origin_uri_;
+    std::string origin_host_;
     std::string beamtime_id_;
     std::string data_source_;
     std::string beamline_;

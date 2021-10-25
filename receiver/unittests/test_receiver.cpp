@@ -39,6 +39,7 @@ class StartListenerFixture : public testing::Test {
     const asapo::SocketDescriptor expected_socket_descriptor = 20;
     const asapo::SocketDescriptor expected_socket_descriptor_client = 23;
     const std::string expected_address = "somehost:13579";
+    const std::string expected_host = "somehost";
     const uint64_t expected_file_id = 314322;
     const uint64_t expected_file_size = 784387;
     const FileDescriptor expected_fd = 12643;
@@ -103,7 +104,7 @@ TEST_F(StartListenerFixture, Ok) {
         Return(nullptr)
     );
 
-    EXPECT_CALL(mock_logger, Info(HasSubstr("new connection from " + expected_address)));
+    EXPECT_CALL(mock_logger, Info(AllOf(HasSubstr("new connection"), HasSubstr(expected_host))));
 
 
     receiver.Listen(expected_address, &err, true);

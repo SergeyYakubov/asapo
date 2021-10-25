@@ -25,9 +25,9 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_handler_db_get_meta.cpp
         src/request_handler/request_factory.cpp
         src/request_handler/request_handler_db.cpp
-        src/file_processors/write_file_processor.cpp
-        src/file_processors/file_processor.cpp
-        src/file_processors/receive_file_processor.cpp
+        src/request_handler/file_processors/write_file_processor.cpp
+        src/request_handler/file_processors/file_processor.cpp
+        src/request_handler/file_processors/receive_file_processor.cpp
         src/metrics/receiver_prometheus_metrics.cpp
         src/metrics/receiver_mongoose_server.cpp
         )
@@ -109,9 +109,9 @@ set(TEST_SOURCE_FILES
         unittests/mock_receiver_config.cpp
         unittests/request_handler/test_requests_dispatcher.cpp
         unittests/test_datacache.cpp
-        unittests/file_processors/test_write_file_processor.cpp
-        unittests/file_processors/test_file_processor.cpp
-        unittests/file_processors/test_receive_file_processor.cpp
+        unittests/request_handler/file_processors/test_write_file_processor.cpp
+        unittests/request_handler/file_processors/test_file_processor.cpp
+        unittests/request_handler/file_processors/test_receive_file_processor.cpp
         )
 #
 set(TEST_LIBRARIES "${TARGET_NAME};system_io")

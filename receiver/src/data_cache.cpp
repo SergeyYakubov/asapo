@@ -13,7 +13,7 @@ DataCache::DataCache(uint64_t cache_size, float keepunlocked_ratio) : cache_size
     try {
         cache_.reset(new uint8_t[cache_size]);
     } catch (std::exception& e) {
-        std::cout << "Cannot allocate data cache: " << e.what() << std::endl;
+        std::cout << "cannot allocate data cache: " << e.what() << std::endl;
         exit(1);
     }
 
