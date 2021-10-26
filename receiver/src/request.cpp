@@ -1,6 +1,7 @@
 #include "request.h"
 #include "asapo/io/io_factory.h"
 #include "receiver_config.h"
+#include "request_handler/request_handler_db_check_request.h"
 
 namespace asapo {
 
@@ -93,7 +94,6 @@ std::string Request::GetStream() const {
 std::string Request::GetApiVersion() const {
     return request_header_.api_version;
 }
-
 
 const std::string& Request::GetOriginUri() const {
     return origin_uri_;

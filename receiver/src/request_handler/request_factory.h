@@ -9,6 +9,16 @@
 #include "request_handler_db_delete_stream.h"
 #include "request_handler_db_get_meta.h"
 
+#include "request_handler_file_process.h"
+#include "request_handler_db_write.h"
+#include "request_handler_initial_authorization.h"
+#include "request_handler_secondary_authorization.h"
+#include "request_handler_db_meta_write.h"
+#include "request_handler_receive_data.h"
+#include "request_handler_receive_metadata.h"
+#include "request_handler_db_check_request.h"
+#include "structs.h"
+
 namespace asapo {
 
 class RequestFactory {
@@ -32,9 +42,11 @@ class RequestFactory {
     RequestHandlerDbLastStream request_handler_db_last_stream_{kDBDataCollectionNamePrefix};
     RequestHandlerDbMetaWrite request_handler_db_meta_write_{kDBMetaCollectionName};
     RequestHandlerDbGetMeta request_handler_db_get_meta_{kDBMetaCollectionName};
-    RequestHandlerAuthorize request_handler_authorize_;
+    RequestHandlerInitialAuthorization request_handler_initial_authorize_{&shared_auth_cache_};
+    RequestHandlerSecondaryAuthorization request_handler_secondary_authorize_{&shared_auth_cache_};
     RequestHandlerDbCheckRequest request_handler_db_check_{kDBDataCollectionNamePrefix};
     SharedCache cache_;
+    AuthorizationData shared_auth_cache_;
     bool ReceiveDirectToFile(const GenericRequestHeader& request_header) const;
     Error AddReceiveDirectToFileHandler(std::unique_ptr<Request>& request,
                                         const GenericRequestHeader& request_header) const;

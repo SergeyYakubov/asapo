@@ -16,6 +16,8 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_handler_db_write.cpp
         src/request_handler/request_handler_receive_data.cpp
         src/request_handler/request_handler_authorize.cpp
+        src/request_handler/request_handler_initial_authorization.cpp
+        src/request_handler/request_handler_secondary_authorization.cpp
         src/request_handler/authorization_client.cpp
         src/request_handler/request_handler_db_meta_write.cpp
         src/request_handler/request_handler_db_stream_info.cpp
@@ -101,6 +103,7 @@ set(TEST_SOURCE_FILES
         unittests/request_handler/test_request_handler_db_last_stream.cpp
         unittests/request_handler/test_request_handler_db.cpp
         unittests/request_handler/test_request_handler_authorizer.cpp
+        unittests/request_handler/test_request_handler_initial_authorization.cpp
         unittests/request_handler/test_request_handler_receive_data.cpp
         unittests/request_handler/test_request_handler_receive_metadata.cpp
         unittests/request_handler/test_request_handler_delete_stream.cpp

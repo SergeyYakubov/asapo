@@ -13,43 +13,8 @@
 #include "asapo/database/db_error.h"
 
 
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::SaveArg;
-using ::testing::SaveArgPointee;
-using ::testing::InSequence;
-using ::testing::HasSubstr;
-using ::testing::StrEq;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using testing::Sequence;
-
-using asapo::Error;
-using asapo::ErrorInterface;
-using asapo::SocketDescriptor;
-using asapo::GenericRequestHeader;
-using asapo::SendResponse;
-using asapo::GenericRequestHeader;
-using asapo::GenericNetworkResponse;
-using asapo::Opcode;
-using asapo::MockIO;
-using asapo::MockLogger;
-using asapo::Request;
-using asapo::Statistics;
-using asapo::StatisticEntity;
-using asapo::MockStatistics;
-
-
-using asapo::RequestsDispatcher;
-using asapo::ReceiverStatistics;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 

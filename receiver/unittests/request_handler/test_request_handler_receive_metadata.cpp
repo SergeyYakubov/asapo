@@ -12,37 +12,11 @@
 #include "../receiver_mocking.h"
 #include "../mock_receiver_config.h"
 
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::GenericRequestHeader;
-using ::asapo::SendResponse;
-using ::asapo::GenericRequestHeader;
-using ::asapo::GenericNetworkResponse;
-using ::asapo::Opcode;
-using ::asapo::Connection;
-using ::asapo::MockIO;
-using asapo::Request;
-using asapo::MockDataCache;
-using asapo::StatisticEntity;
 
-using asapo::ReceiverConfig;
-using asapo::SetReceiverConfig;
-using asapo::RequestFactory;
-using asapo:: RequestHandlerReceiveMetaData;
+using namespace testing;
+using namespace asapo;
+
+
 namespace {
 
 TEST(ReceiveData, Constructor) {

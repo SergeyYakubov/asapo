@@ -8,6 +8,8 @@
 #include "../src/request.h"
 #include "../src/data_cache.h"
 #include "../src/request_handler/file_processors/file_processor.h"
+#include "../src/request_handler/request_handler_db_check_request.h"
+#include "../src/request_handler/authorization_client.h"
 
 namespace asapo {
 
@@ -143,6 +145,16 @@ class MockFileProcessor: public FileProcessor {
     }
     MOCK_CONST_METHOD2(ProcessFile_t, ErrorInterface * (const Request*, bool));
 };
+
+
+class MockAuthorizationClient: public AuthorizationClient  {
+ public:
+  Error Authorize(const Request* request, AuthorizationData* data) const override {
+      return Error{Authorize_t(request, data)};
+  }
+  MOCK_CONST_METHOD2(Authorize_t, ErrorInterface * (const Request*, AuthorizationData* ));
+};
+
 
 }
 

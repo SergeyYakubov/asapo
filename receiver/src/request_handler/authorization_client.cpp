@@ -1,6 +1,9 @@
 #include "authorization_client.h"
 
+#include <chrono>
+
 #include "asapo/json_parser/json_parser.h"
+
 
 
 #include "../receiver_config.h"
@@ -46,10 +49,10 @@ LogMessageWithFields AuthErrorLogMsg(const Request* request, const Error& err, c
         .Append("request", request_string);
 }
 
-Error AuthorizationClient::Authorize(const Request* request, std::string source_credentials, AuthorizationData* data) const {
+Error AuthorizationClient::Authorize(const Request* request, AuthorizationData* data) const {
     HttpCode code;
     Error err;
-    std::string request_string = GetRequestString(request, std::move(source_credentials));
+    std::string request_string = GetRequestString(request, data->source_credentials);
     auto response =
         http_client__->Post(GetReceiverConfig()->authorization_server + "/authorize", "", request_string, &code,
                             &err);
@@ -83,6 +86,7 @@ Error AuthorizationClient::Authorize(const Request* request, std::string source_
     }
     log__->Debug(RequestLog("authorized connection",request));
     *data = creds;
+    data->last_update = std::chrono::system_clock::now();
     return nullptr;
 }
 

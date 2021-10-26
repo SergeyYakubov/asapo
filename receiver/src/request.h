@@ -7,13 +7,14 @@
 #include "asapo/common/networking.h"
 #include "asapo/io/io.h"
 #include "request_handler/request_handler.h"
-#include "request_handler/request_handler_file_process.h"
+/*#include "request_handler/request_handler_file_process.h"
 #include "request_handler/request_handler_db_write.h"
 #include "request_handler/request_handler_authorize.h"
 #include "request_handler/request_handler_db_meta_write.h"
 #include "request_handler/request_handler_receive_data.h"
 #include "request_handler/request_handler_receive_metadata.h"
 #include "request_handler/request_handler_db_check_request.h"
+*/
 
 #include "statistics/receiver_statistics.h"
 #include "data_cache.h"
@@ -28,6 +29,8 @@ enum class ResponseMessageType {
     kWarning,
     kInfo
 };
+
+class RequestHandlerDbCheckRequest;
 
 class Request {
   public:
