@@ -308,7 +308,7 @@ Error MongoDBClient::GetNextId(const std::string& stream, uint64_t* id) const {
         }
     }
     mongoc_find_and_modify_opts_set_flags(opts,
-                                          mongoc_find_and_modify_flags_t(MONGOC_FIND_AND_MODIFY_UPSERT | MONGOC_FIND_AND_MODIFY_RETURN_NEW));
+                                          MONGOC_FIND_AND_MODIFY_UPSERT | MONGOC_FIND_AND_MODIFY_RETURN_NEW);
     success = mongoc_collection_find_and_modify_with_opts (
                   collection, &query, opts, &reply, &error);
     Error err;

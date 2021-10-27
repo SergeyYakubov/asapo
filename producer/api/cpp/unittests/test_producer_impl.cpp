@@ -73,7 +73,7 @@ class ProducerImplTests : public testing::Test {
     testing::NiceMock<MockDiscoveryService> service;
     asapo::ProducerRequestHandlerFactory factory{&service};
     testing::NiceMock<asapo::MockLogger> mock_logger;
-    testing::NiceMock<MockRequestPull> mock_pull{&factory, &mock_logger};
+    testing::NiceMock<MockRequestPool> mock_pull{&factory, &mock_logger};
     std::string expected_server_uri = "127.0.0.1:9400";
     asapo::ProducerImpl producer{expected_server_uri, 1, 3600000, asapo::RequestHandlerType::kTcp};
     uint64_t expected_size = 100;

@@ -1,4 +1,3 @@
-#include <cstring>
 #include <iostream>
 #include "receiver.h"
 #include "receiver_error.h"

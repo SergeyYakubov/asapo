@@ -52,13 +52,13 @@ void test_meta(AsapoProducerHandle producer) {
     asapo_producer_wait_requests_finished(producer,5000,NULL);
     AsapoStringHandle meta_received = asapo_producer_get_beamtime_meta(producer,5000, &err);
     EXIT_IF_ERROR("asapo_producer_get_beamtime_meta", err);
-    ASSERT_EQ_STRING(meta,(const char*)asapo_string_c_str(meta_received),"returned same meta as was ingested");
+    ASSERT_EQ_STRING(meta,asapo_string_c_str(meta_received),"returned same meta as was ingested");
 
     asapo_producer_send_stream_metadata(producer,meta,kInsert,1,"default", NULL,&err);
     asapo_producer_wait_requests_finished(producer,5000,NULL);
     AsapoStringHandle stream_meta_received = asapo_producer_get_stream_meta(producer,"default",5000, &err);
     EXIT_IF_ERROR("asapo_producer_send_stream_metadata", err);
-    ASSERT_EQ_STRING(meta,(const char*)asapo_string_c_str(stream_meta_received),"stream meta returned same meta as was ingested");
+    ASSERT_EQ_STRING(meta,asapo_string_c_str(stream_meta_received),"stream meta returned same meta as was ingested");
     asapo_free_handle(&err);
     asapo_free_handle(&meta_received);
     asapo_free_handle(&stream_meta_received);

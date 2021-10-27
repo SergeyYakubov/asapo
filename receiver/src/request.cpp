@@ -1,6 +1,5 @@
 #include "request.h"
 #include "asapo/io/io_factory.h"
-#include "receiver_config.h"
 #include "request_handler/request_handler_db_check_request.h"
 
 namespace asapo {

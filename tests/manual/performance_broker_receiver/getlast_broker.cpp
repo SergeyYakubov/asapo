@@ -85,8 +85,8 @@ std::vector<std::thread> StartThreads(const Args& params,
             if (params.datasets) {
                 auto dataset = consumer->GetLastDataset(0, "default", &err);
                 if (err == nullptr) {
-                    for (auto& fi : dataset.content) {
-                        (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
+                    for (auto& info : dataset.content) {
+                        (*nbuf)[i] += info.buf_id == 0 ? 0 : 1;
                         (*nfiles_total)[i]++;
                     }
                 }

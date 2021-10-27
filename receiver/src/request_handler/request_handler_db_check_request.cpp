@@ -5,7 +5,6 @@
 #include "asapo/logger/logger.h"
 #include "request_handler_db.h"
 #include "../receiver_config.h"
-#include "asapo/io/io.h"
 #include "../request.h"
 
 namespace asapo {

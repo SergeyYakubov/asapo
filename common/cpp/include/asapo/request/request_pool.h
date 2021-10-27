@@ -34,7 +34,7 @@ class RequestPool {
     VIRTUAL uint64_t NRequestsInPool();
     VIRTUAL uint64_t UsedMemoryInPool();
     VIRTUAL Error WaitRequestsFinished(uint64_t timeout_ms);
-    VIRTUAL void StopThreads();
+    void StopThreads();
   private:
     const AbstractLogger* log__;
     RequestHandlerFactory* request_handler_factory__;

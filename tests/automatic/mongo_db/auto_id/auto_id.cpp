@@ -61,14 +61,11 @@ void insert(const asapo::MongoDBClient& db, const std::string& name, asapo::Mess
         case Mode::kUpdateCounterThenIngest:
             fi.id = start + static_cast<uint64_t>(i) + 1;
             break;
-        default:
-            abort();
         }
         uint64_t  inserted_id{0};
         Error err = db.Insert(std::string("data_") + name, fi, false, &inserted_id);
         if (err != nullptr) {
             printf("%s\n", err->Explain().c_str());
-//            break;
         } else {
             if (inserted_id == 0) {
                 M_AssertTrue(false);

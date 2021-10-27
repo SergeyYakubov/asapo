@@ -1,5 +1,4 @@
 #include "data_cache.h"
-#include "data_cache.h"
 
 #include <iostream>
 #include <chrono>
