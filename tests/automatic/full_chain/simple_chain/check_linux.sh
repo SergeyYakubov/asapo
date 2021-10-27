@@ -25,7 +25,7 @@ Cleanup() {
     rm -rf ${receiver_root_folder}
     rm -rf out
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
-    influx -execute "drop database ${monitor_database_name}"
+    influx -database ${monitor_database_name} -execute "drop series from statistics, RequestsRate"
 }
 
 token=`$asapo_tool_bin token -endpoint http://localhost:8400/asapo-authorizer -secret admin_token.key -types read $beamtime_id`

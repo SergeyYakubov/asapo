@@ -40,7 +40,7 @@ Cleanup() {
     kill -9 $producerid
     rm -rf /tmp/asapo/test_in
     rm -rf ${receiver_folder}
-    influx -execute "drop database ${monitor_database_name}"
+    influx -database ${monitor_database_name} -execute "drop series from statistics, RequestsRate"
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     rm out.txt
 }
