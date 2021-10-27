@@ -69,6 +69,7 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetStream, std::string());
     MOCK_CONST_METHOD0(GetApiVersion, std::string());
+    MOCK_CONST_METHOD0(GetOriginUri, const std::string & ());
     MOCK_CONST_METHOD0(GetDataSize, uint64_t());
     MOCK_CONST_METHOD0(GetDataID, uint64_t());
     MOCK_CONST_METHOD0(GetSlotId, uint64_t());
@@ -148,11 +149,11 @@ class MockFileProcessor: public FileProcessor {
 
 
 class MockAuthorizationClient: public AuthorizationClient  {
- public:
-  Error Authorize(const Request* request, AuthorizationData* data) const override {
-      return Error{Authorize_t(request, data)};
-  }
-  MOCK_CONST_METHOD2(Authorize_t, ErrorInterface * (const Request*, AuthorizationData* ));
+  public:
+    Error Authorize(const Request* request, AuthorizationData* data) const override {
+        return Error{Authorize_t(request, data)};
+    }
+    MOCK_CONST_METHOD2(Authorize_t, ErrorInterface * (const Request*, AuthorizationData* ));
 };
 
 

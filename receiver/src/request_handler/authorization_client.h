@@ -12,16 +12,15 @@ class Request;
 class AbstractLogger;
 
 class AuthorizationClient {
- public:
-  AuthorizationClient();
-  VIRTUAL Error Authorize(const Request* request, AuthorizationData* data) const;
-  const AbstractLogger* log__;
-  std::unique_ptr<HttpClient>http_client__;
-  VIRTUAL ~AuthorizationClient()=default;
- private:
-  Error ErrorFromAuthorizationServerResponse(const Error& err, const std::string response, HttpCode code) const;
-  void SetRequestFields(Request* request) const;
-  std::string GetRequestString(const Request* request, const std::string& source_credentials) const;
+  public:
+    AuthorizationClient();
+    VIRTUAL Error Authorize(const Request* request, AuthorizationData* data) const;
+    const AbstractLogger* log__;
+    std::unique_ptr<HttpClient> http_client__;
+    VIRTUAL ~AuthorizationClient() = default;
+  private:
+    Error DoServerRequest(const std::string& request_string, std::string* response, HttpCode* code) const;
+
 };
 
 }

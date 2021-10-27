@@ -102,8 +102,9 @@ set(TEST_SOURCE_FILES
         unittests/request_handler/test_request_handler_db_stream_info.cpp
         unittests/request_handler/test_request_handler_db_last_stream.cpp
         unittests/request_handler/test_request_handler_db.cpp
-        unittests/request_handler/test_request_handler_authorizer.cpp
+        unittests/request_handler/test_authorization_client.cpp
         unittests/request_handler/test_request_handler_initial_authorization.cpp
+        unittests/request_handler/test_request_handler_secondary_authorization.cpp
         unittests/request_handler/test_request_handler_receive_data.cpp
         unittests/request_handler/test_request_handler_receive_metadata.cpp
         unittests/request_handler/test_request_handler_delete_stream.cpp

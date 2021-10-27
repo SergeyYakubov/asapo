@@ -14,21 +14,19 @@
 namespace asapo {
 
 class RequestHandlerSecondaryAuthorization final: public RequestHandlerAuthorize {
- public:
-  RequestHandlerSecondaryAuthorization() = delete;
-  RequestHandlerSecondaryAuthorization(AuthorizationData* authorization_cache);
-  virtual Error ProcessRequest(Request* request) const override;
-  ~RequestHandlerSecondaryAuthorization()=default;
-/* private:
-  mutable AuthorizationData cached_auth_;
-  mutable std::string cached_source_credentials_;
-  mutable std::chrono::system_clock::time_point last_updated_;
-  Error ProcessAuthorizationRequest(Request* request) const;
-  Error ProcessOtherRequest(Request* request) const;
-  Error ProcessReAuthorization(Request* request) const;
-  bool NeedReauthorize() const;
-  void SetRequestFields(Request* request) const;
-  Error CheckVersion(const std::string& version_from_client) const;*/
+  public:
+    RequestHandlerSecondaryAuthorization() = delete;
+    RequestHandlerSecondaryAuthorization(AuthorizationData* authorization_cache);
+    virtual Error ProcessRequest(Request* request) const override;
+    ~RequestHandlerSecondaryAuthorization() = default;
+  private:
+    bool NeedReauthorize() const;
+    void SetRequestFields(Request* request) const;
+    Error ProcessReAuthorization(const Request* request) const;
+    Error CheckRequest(const Request* request) const;
+    Error ReauthorizeIfNeeded(const Request* request) const;
+    void InvalidateAuthCache() const;
+
 };
 
 }

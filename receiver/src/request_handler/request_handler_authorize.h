@@ -15,11 +15,11 @@ namespace asapo {
 
 class RequestHandlerAuthorize : public ReceiverRequestHandler {
   public:
-    RequestHandlerAuthorize()=delete;
+    RequestHandlerAuthorize() = delete;
     RequestHandlerAuthorize(AuthorizationData* authorization_cache);
     StatisticEntity GetStatisticEntity() const override;
     virtual Error ProcessRequest(Request* request) const override = 0;
-    virtual ~RequestHandlerAuthorize()=default;
+    virtual ~RequestHandlerAuthorize() = default;
     const AbstractLogger* log__;
     std::unique_ptr<AuthorizationClient> auth_client__;
   protected:

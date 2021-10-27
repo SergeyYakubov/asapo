@@ -7,14 +7,6 @@
 #include "asapo/common/networking.h"
 #include "asapo/io/io.h"
 #include "request_handler/request_handler.h"
-/*#include "request_handler/request_handler_file_process.h"
-#include "request_handler/request_handler_db_write.h"
-#include "request_handler/request_handler_authorize.h"
-#include "request_handler/request_handler_db_meta_write.h"
-#include "request_handler/request_handler_receive_data.h"
-#include "request_handler/request_handler_receive_metadata.h"
-#include "request_handler/request_handler_db_check_request.h"
-*/
 
 #include "statistics/receiver_statistics.h"
 #include "data_cache.h"
@@ -51,8 +43,8 @@ class Request {
     VIRTUAL Opcode GetOpCode() const;
     VIRTUAL const char* GetMessage() const;
 
-    const std::string& GetOriginUri() const;
-    const std::string& GetOriginHost() const;
+    VIRTUAL const std::string& GetOriginUri() const;
+    VIRTUAL const std::string& GetOriginHost() const;
     VIRTUAL const std::string& GetMetaData() const;
     VIRTUAL const std::string& GetBeamtimeId() const;
     VIRTUAL void SetBeamtimeId(std::string beamtime_id);

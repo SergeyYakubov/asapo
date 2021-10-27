@@ -6,10 +6,10 @@
 namespace asapo {
 
 class RequestHandlerInitialAuthorization final: public RequestHandlerAuthorize {
- public:
-  RequestHandlerInitialAuthorization(AuthorizationData* authorization_cache);
-  Error ProcessRequest(Request* request) const override;
-  ~RequestHandlerInitialAuthorization()=default;
+  public:
+    RequestHandlerInitialAuthorization(AuthorizationData* authorization_cache);
+    Error ProcessRequest(Request* request) const override;
+    ~RequestHandlerInitialAuthorization() = default;
 };
 
 }

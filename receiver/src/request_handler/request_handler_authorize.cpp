@@ -1,5 +1,4 @@
 #include "request_handler_authorize.h"
-#include "../receiver_config.h"
 #include "../receiver_logger.h"
 #include "../request.h"
 
@@ -22,7 +21,7 @@ Error RequestHandlerAuthorize::CheckVersion(const Request* request) const {
 }
 
 RequestHandlerAuthorize::RequestHandlerAuthorize(AuthorizationData* authorization_cache) : log__{GetDefaultReceiverLogger()},
-    auth_client__{new AuthorizationClient()},authorization_cache_{authorization_cache} {
+    auth_client__{new AuthorizationClient()}, authorization_cache_{authorization_cache} {
 }
 
 StatisticEntity RequestHandlerAuthorize::GetStatisticEntity() const {
