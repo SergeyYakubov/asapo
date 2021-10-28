@@ -151,7 +151,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
         }
 
         while (true) {
-            auto err = ProcessNextEvent(args, consumer, producer);
+            err = ProcessNextEvent(args, consumer, producer);
             if (err) {
                 (*errors)[i] += ProcessError(err);
                 if (err == asapo::ConsumerErrorTemplates::kEndOfStream

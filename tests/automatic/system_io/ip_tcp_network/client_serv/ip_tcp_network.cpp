@@ -140,7 +140,7 @@ void CheckNormal(int times, size_t size) {
 
         std::cout << "[CLIENT] buffer check" << std::endl;
         for (size_t ii = 0; ii < size; ii++) {
-            if (buffer[ii] != buffer2[i]) {
+            if (buffer[ii] != buffer2[ii]) {
                 Exit(207);
             }
         }
@@ -156,7 +156,7 @@ void CheckNormal(int times, size_t size) {
         }
         std::cout << "[CLIENT] buffer check after receive file" << std::endl;
         for (size_t ii = 0; ii < size; ii++) {
-            if (buffer[ii] != buffer2[i]) {
+            if (buffer[ii] != buffer2[ii]) {
                 Exit(211);
             }
         }

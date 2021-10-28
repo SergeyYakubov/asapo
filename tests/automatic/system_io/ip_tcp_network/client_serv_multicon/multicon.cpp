@@ -1,6 +1,5 @@
 #include <iostream>
 #include "asapo/io/io_factory.h"
-#include <chrono>
 #include <thread>
 #include <future>
 #include <atomic>

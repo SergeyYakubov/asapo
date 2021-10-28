@@ -103,7 +103,7 @@ void ReceiverDataServerRequestHandler::HandleInvalidRequest(const ReceiverDataSe
         break;
     default:
         break;
-    };
+    }
 
 }
 

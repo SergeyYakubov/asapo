@@ -41,9 +41,9 @@ class Statistics {
   private:
     void Send() noexcept;
     uint64_t GetTotalElapsedMs() const noexcept;
-    uint64_t nrequests_;
-    std::chrono::system_clock::time_point last_timepoint_;
-    uint64_t volume_counter_;
+    uint64_t nrequests_{0};
+    std::chrono::system_clock::time_point last_timepoint_{std::chrono::system_clock::now()};
+    uint64_t volume_counter_{0};
     unsigned int write_interval_;
     std::vector<std::pair<std::string, std::string>> tags_;
     std::mutex mutex_;

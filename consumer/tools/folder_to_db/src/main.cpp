@@ -34,7 +34,7 @@ void ProcessFlags(ConvertParameters* params, int argc, int* narg, char* argv[]) 
             }
         } catch (...) {
             Usage(argv[0]);
-        };
+        }
     } else {
         Usage(argv[0]);
     }

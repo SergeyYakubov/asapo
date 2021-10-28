@@ -35,7 +35,6 @@ class InitialAuthorizationHandlerTests : public Test {
         ;
         EXPECT_CALL(mock_authorization_client,
                     Authorize_t(mock_request.get(), expected_auth_data)).WillOnce(Return(nullptr));
-        ;
     }
     void TearDown() override {
         handler.auth_client__.release();

@@ -54,7 +54,7 @@ class DbCheckRequestHandlerTests : public Test {
     uint64_t expected_id = 15;
     uint64_t expected_dataset_id = 16;
     uint64_t expected_dataset_size = 2;
-    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_dataset_id, expected_dataset_size};
+    CustomRequestData expected_custom_data{0, expected_dataset_id, expected_dataset_size};
     MessageMeta expected_message_meta;
     MockFunctions mock_functions;
     int n_run = 0;

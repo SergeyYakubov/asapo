@@ -59,8 +59,8 @@ Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     }
 
     if (config.dataset_mode == DatasetMode::kMultiSource) {
-        err = parser.Embedded("Dataset").GetUInt64("NSources", &config.dataset_multisource_nsources);
-        err = parser.Embedded("Dataset").GetUInt64("SourceId", &config.dataset_multisource_sourceid);
+        (err = parser.Embedded("Dataset").GetUInt64("NSources", &config.dataset_multisource_nsources)) ||
+        ((err = parser.Embedded("Dataset").GetUInt64("SourceId", &config.dataset_multisource_sourceid)));
     }
 
 

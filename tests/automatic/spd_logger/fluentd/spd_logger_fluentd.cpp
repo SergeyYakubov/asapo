@@ -1,6 +1,3 @@
-#include <thread>
-#include <vector>
-
 #include "asapo/logger/logger.h"
 
 using namespace asapo;

@@ -51,7 +51,7 @@ Args GetArgs(int argc, char* argv[]) {
     return args;
 }
 
-void insert(const asapo::MongoDBClient& db, const std::string& name, asapo::MessageMeta fi, const Args& args) {
+void Insert(const asapo::MongoDBClient& db, const std::string& name, asapo::MessageMeta fi, const Args& args) {
     auto start = fi.id;
     for (int i = 0; i < args.n_messages_per_thread; i++) {
         switch (args.mode) {
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
         fi.source = "host:1234";
         fi.id = static_cast<uint64_t>(args.n_messages_per_thread * i);
         db.Connect("127.0.0.1", db_name);
-        insert(db, "stream", fi, args);
+        Insert(db, "stream", fi, args);
     };
 
     auto t1 = high_resolution_clock::now();

@@ -84,6 +84,7 @@ class MockRequest: public Request {
     MOCK_CONST_METHOD0(GetOnlinePath, const std::string & ());
     MOCK_CONST_METHOD0(GetOfflinePath, const std::string & ());
 
+    // not nice casting, but mocking GetCustomData directly does not compile on Windows.
     const CustomRequestData& GetCustomData() const override {
         return (CustomRequestData&) * GetCustomData_t();
     };

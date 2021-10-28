@@ -180,7 +180,7 @@ class MockIO : public IO {
         Close_t(fd, &error);
         if(err) {
             err->reset(error);
-        };
+        }
     }
     MOCK_CONST_METHOD2(Close_t, void(FileDescriptor fd, ErrorInterface** err));
 

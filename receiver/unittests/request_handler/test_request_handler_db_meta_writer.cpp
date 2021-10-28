@@ -39,7 +39,7 @@ class DbMetaWriterHandlerTests : public Test {
     const uint8_t* expected_meta = reinterpret_cast<const uint8_t*>(meta_str.c_str());
     uint64_t expected_meta_size = meta_str.size();
     std::string expected_meta_name = "bt";
-    uint64_t expected_custom_data[asapo::kNCustomParams] {0, 0, 0};
+    CustomRequestData expected_custom_data{0, 0, 0};
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 0;

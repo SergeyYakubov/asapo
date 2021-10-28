@@ -129,7 +129,6 @@ class RequestsDispatcherTests : public Test {
     }
     void MockSendResponse(GenericNetworkResponse* response, bool error ) {
         EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response"), HasSubstr(connected_uri))));
-        ;
         EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
             DoAll(SetArgPointee<3>(error ? asapo::IOErrorTemplates::kConnectionRefused.Generate().release() : nullptr),
                   SaveArg1ToGenericNetworkResponse(response),

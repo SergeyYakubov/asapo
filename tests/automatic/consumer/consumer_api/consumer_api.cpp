@@ -1,5 +1,4 @@
 #include <iostream>
-#include <vector>
 #include <thread>
 #include <algorithm>
 #include <asapo/asapo_consumer.h>
@@ -161,9 +160,9 @@ void TestSingle(const std::unique_ptr<asapo::Consumer>& consumer, const std::str
     M_AssertTrue(streams[0].name == "default", "streams0.name");
     M_AssertTrue(streams[1].name == "stream1", "streams1.name");
     M_AssertTrue(streams[2].name == "stream2", "streams2.name");
-    M_AssertTrue(streams[1].finished == true, "stream1 finished");
+    M_AssertTrue(streams[1].finished, "stream1 finished");
     M_AssertTrue(streams[1].next_stream == "ns", "stream1 next stream");
-    M_AssertTrue(streams[2].finished == true, "stream2 finished");
+    M_AssertTrue(streams[2].finished, "stream2 finished");
     M_AssertTrue(streams[2].next_stream == "", "stream2 no next stream");
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[0].timestamp_created) == 0, "streams0.timestamp");
     M_AssertTrue(asapo::NanosecsEpochFromTimePoint(streams[0].timestamp_lastentry) == 0, "streams0.timestamp lastentry");

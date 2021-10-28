@@ -42,7 +42,7 @@ Error RapidJson::LazyInitialize() const noexcept {
 }
 
 asapo::Error RapidJson::CheckValueType(const std::string& name, ValueType type, const Value* val) const {
-    bool res = false;
+    bool res;
     switch (type) {
     case ValueType::kObject:
         res = val->IsObject();
@@ -106,7 +106,8 @@ Error RapidJson::GetUInt64(const std::string& name, uint64_t* val) const noexcep
     }
 
     Value* json_val;
-    if (Error err = GetValuePointer(name, ValueType::kUint64, &json_val)) {
+    err = GetValuePointer(name, ValueType::kUint64, &json_val);
+    if (err) {
         return err;
     }
     *val = json_val->GetUint64();

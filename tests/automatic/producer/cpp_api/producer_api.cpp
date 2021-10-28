@@ -1,5 +1,4 @@
 #include <iostream>
-#include <vector>
 #include <thread>
 #include <algorithm>
 #include <asapo/asapo_producer.h>

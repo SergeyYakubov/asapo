@@ -33,7 +33,7 @@ class DbMetaDeleteStreamTests : public Test {
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_data_source = "source";
     std::string expected_stream = "stream";
-    uint64_t expected_custom_data[asapo::kNCustomParams] {0, 0, 0};
+    CustomRequestData expected_custom_data {0, 0, 0};
 
     void SetUp() override {
         GenericRequestHeader request_header;

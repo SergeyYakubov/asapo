@@ -142,8 +142,8 @@ StartThreads(const Args& params, std::vector<int>* nfiles, std::vector<int>* err
             if (params.datasets) {
                 auto dataset = consumer->GetNextDataset(group_id, 0, "default", &err);
                 if (err == nullptr) {
-                    for (auto& fi : dataset.content) {
-                        (*nbuf)[i] += fi.buf_id == 0 ? 0 : 1;
+                    for (auto& ds_fi : dataset.content) {
+                        (*nbuf)[i] += ds_fi.buf_id == 0 ? 0 : 1;
                         (*nfiles_total)[i]++;
                     }
                 }

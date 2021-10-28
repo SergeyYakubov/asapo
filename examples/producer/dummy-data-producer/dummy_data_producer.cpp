@@ -145,21 +145,21 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
 
 
     for (uint64_t i = 0; i < iterations; i++) {
-        auto buffer = CreateMemoryBuffer(number_of_byte);
         asapo::MessageHeader message_header{i + 1, number_of_byte, std::to_string(i + 1)};
         std::string meta = "{\"user_meta\":\"test" + std::to_string(i + 1) + "\"}";
-        if (!data_source.empty()) {
-            message_header.file_name = data_source + "/" + message_header.file_name;
-        }
-        message_header.file_name = message_folder + message_header.file_name;
-        message_header.user_metadata = std::move(meta);
         if (messages_in_set == 1) {
-            auto err = producer->Send(message_header,
-                                      std::move(buffer),
-                                      write_files ? asapo::kDefaultIngestMode :
-                                      asapo::kTransferData,
-                                      "default",
-                                      &ProcessAfterSend);
+            auto buffer = CreateMemoryBuffer(number_of_byte);
+            if (!data_source.empty()) {
+                message_header.file_name = data_source + "/" + message_header.file_name;
+            }
+            message_header.file_name = message_folder + message_header.file_name;
+            message_header.user_metadata = meta;
+            err = producer->Send(message_header,
+                                 std::move(buffer),
+                                 write_files ? asapo::kDefaultIngestMode :
+                                 asapo::kTransferData,
+                                 "default",
+                                 &ProcessAfterSend);
             if (err) {
                 std::cerr << "Cannot send file: " << err << std::endl;
                 return false;
@@ -176,7 +176,7 @@ bool SendDummyData(asapo::Producer* producer, size_t number_of_byte, uint64_t it
                 }
                 message_header.file_name = message_folder + message_header.file_name;
                 message_header.user_metadata = meta;
-                auto err =
+                err =
                     producer->Send(message_header,
                                    std::move(buffer),
                                    write_files ? asapo::kDefaultIngestMode :

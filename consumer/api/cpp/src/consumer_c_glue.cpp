@@ -422,9 +422,9 @@ extern "C" {
                                  AsapoMessageDataHandle* data,
                                  const char* stream,
                                  AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
         auto err = consumer->handle->GetById(id, fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
 
         return process_error(error, std::move(err));
     }
@@ -438,9 +438,10 @@ extern "C" {
                                 AsapoMessageDataHandle* data,
                                 const char* stream,
                                 AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
         auto err = consumer->handle->GetLast(fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
+
         return process_error(error, std::move(err));
     }
 
@@ -454,9 +455,10 @@ extern "C" {
                                         AsapoMessageDataHandle* data,
                                         const char* stream,
                                         AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
         auto err = consumer->handle->GetLast(*group_id->handle, fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
+
         return process_error(error, std::move(err));
     }
 
@@ -470,9 +472,11 @@ extern "C" {
                                 AsapoMessageDataHandle* data,
                                 const char* stream,
                                 AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
+
         auto err = consumer->handle->GetNext(*group_id->handle, fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
+
         return process_error(error, std::move(err));
     }
 
@@ -613,7 +617,7 @@ extern "C" {
 /// \param[in] asapo error
 /// \return handle to partial error data or NULL if error is wrong type
     AsapoPartialErrorDataHandle asapo_error_get_payload_from_partial_error(const AsapoErrorHandle error) {
-        if (error == nullptr && error->handle == nullptr) {
+        if (error == nullptr || error->handle == nullptr) {
             return nullptr;
         }
         auto payload = dynamic_cast<asapo::PartialErrorData*>(error->handle->GetCustomData());
@@ -642,7 +646,7 @@ extern "C" {
 /// \param[in] asapo error
 /// \return handle to partial error data or NULL if error is wrong type
     AsapoConsumerErrorDataHandle asapo_error_get_payload_from_consumer_error(const AsapoErrorHandle error) {
-        if (error == nullptr && error->handle == nullptr) {
+        if (error == nullptr || error->handle == nullptr) {
             return nullptr;
         }
         auto payload = dynamic_cast<asapo::ConsumerErrorData*>(error->handle->GetCustomData());

@@ -588,6 +588,7 @@ TEST_F(ProducerImplTests, ReturnDataIfCanotAddToQueue) {
                 std::move(pool_err).release()));
 
     asapo::MessageHeader message_header{expected_id, 0, expected_name};
+    data = asapo::MessageData{new uint8_t[100]};
     auto err = producer.Send(message_header, std::move(data), expected_ingest_mode, expected_stream, nullptr);
 
     auto err_data = static_cast<asapo::OriginalData*>(err->GetCustomData());

@@ -308,7 +308,7 @@ Error MongoDBClient::GetNextId(const std::string& stream, uint64_t* id) const {
         }
     }
     mongoc_find_and_modify_opts_set_flags(opts,
-                                          MONGOC_FIND_AND_MODIFY_UPSERT | MONGOC_FIND_AND_MODIFY_RETURN_NEW);
+                                          mongoc_find_and_modify_flags_t(MONGOC_FIND_AND_MODIFY_UPSERT | MONGOC_FIND_AND_MODIFY_RETURN_NEW));
     success = mongoc_collection_find_and_modify_with_opts (
                   collection, &query, opts, &reply, &error);
     Error err;
@@ -771,7 +771,7 @@ Error MongoDBClient::DeleteCollections(const std::string& prefix) const {
     bson_destroy(opts);
     bson_destroy(query);
     mongoc_database_destroy(database);
-    return nullptr;
+    return err;
 }
 
 Error MongoDBClient::DeleteCollection(const std::string& name) const {

@@ -2,7 +2,6 @@
 #include "testing_c.h"
 
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 void callback(void* original_data, AsapoRequestCallbackPayloadHandle payload, AsapoErrorHandle error) {
