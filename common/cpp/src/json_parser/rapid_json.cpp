@@ -62,6 +62,8 @@ asapo::Error RapidJson::CheckValueType(const std::string& name, ValueType type, 
     case ValueType::kArray:
         res = val->IsArray();
         break;
+    default:
+        res = false;
     }
     if (!res) {
         return TextError("wrong type for: " + name + " in: " + json_);

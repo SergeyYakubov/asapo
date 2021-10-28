@@ -13,5 +13,5 @@ int main() {
     logger->Warning("test warning");
     logger->Debug("test debug");
 
-    return 0;
+    return EXIT_SUCCESS;
 }

@@ -119,5 +119,5 @@ int main(int argc, char* argv[]) {
     asapo_free_handle(&err);
     asapo_free_handle(&cred);
     asapo_free_handle(&producer);
-    return 0;
+    return EXIT_SUCCESS;
 }

@@ -144,5 +144,5 @@ int main(int argc, char* argv[]) {
     M_AssertTrue(err == asapo::DBErrorTemplates::kWrongInput);
 
 
-    return 0;
+    return EXIT_SUCCESS;
 }

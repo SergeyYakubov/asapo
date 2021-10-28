@@ -3,31 +3,10 @@
 #include <asapo/unittests/MockIO.h>
 
 #include "../src/receiver_config.h"
-#include "../src/receiver_config_factory.h"
 #include "mock_receiver_config.h"
 
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::SaveArg;
-using ::testing::SaveArgPointee;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::MockIO;
-
-using ::asapo::ReceiverConfigFactory;
-using asapo::GetReceiverConfig;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 
@@ -35,7 +14,7 @@ namespace {
 class ConfigTests : public Test {
   public:
     MockIO mock_io;
-    ReceiverConfigFactory config_factory;
+    ReceiverConfigManager config_factory;
     asapo::ReceiverConfig test_config;
     void SetUp() override {
         config_factory.io__ = std::unique_ptr<asapo::IO> {&mock_io};

@@ -208,5 +208,5 @@ int main() {
     remove("sent");
     remove("received");
 
-    return 0;
+    return EXIT_SUCCESS;
 }

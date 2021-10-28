@@ -44,7 +44,6 @@ void Receiver::ProcessConnections(Error* err) {
     //TODO: Use InetAcceptConnectionWithTimeout
     auto client_info_tuple = io__->InetAcceptConnection(listener_fd_, err);
     if(*err) {
-        //TODO: this can produce a lot of error messages
         log__->Error("accepting an incoming connection: " + (*err)->Explain());
         return;
     }

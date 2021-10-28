@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
         err = db.Connect(args.address, args.database_name);
         Assert(err, asapo::DBErrorTemplates::kAlreadyConnected.Generate()->Explain());
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 

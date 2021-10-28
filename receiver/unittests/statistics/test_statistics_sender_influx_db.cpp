@@ -14,28 +14,8 @@
 #include "../mock_receiver_config.h"
 
 
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::SaveArg;
-using ::testing::HasSubstr;
-using ::testing::AllOf;
-using ::testing::SaveArgPointee;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-
-using asapo::StatisticsSenderInfluxDb;
-using asapo::MockHttpClient;
-using asapo::StatisticsToSend;
-using asapo::ReceiverConfig;
-using asapo::SetReceiverConfig;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 

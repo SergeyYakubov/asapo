@@ -118,5 +118,5 @@ int main(int argc, char* argv[]) {
     db.DeleteStream("stream");
 
 
-    return 0;
+    return EXIT_SUCCESS;
 }

@@ -26,8 +26,8 @@ struct StatisticsToSend {
 
 class Statistics {
   public:
-    VIRTUAL void SendIfNeeded(bool send_always = false) noexcept;
     explicit Statistics(unsigned int write_interval = kDefaultStatisticWriteIntervalMs);
+    VIRTUAL void SendIfNeeded(bool send_always = false) noexcept;
     VIRTUAL void IncreaseRequestCounter() noexcept;
     VIRTUAL void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
     VIRTUAL void AddTag(const std::string& name, const std::string& value) noexcept;

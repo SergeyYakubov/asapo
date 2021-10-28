@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
 
     if (argc > 3) {
         std::cout << "Usage: " << argv[0] << " [<host>] [<port>]" << std::endl;
-        return 1;
+        return EXIT_FAILURE;
     }
     if (argc == 2) {
         hostname = argv[1];
@@ -150,5 +150,5 @@ int main(int argc, char* argv[]) {
     std::cout << "Done testing. Joining server" << std::endl;
     serverThread.join();
 
-    return 0;
+    return EXIT_SUCCESS;
 }

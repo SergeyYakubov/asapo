@@ -4,55 +4,11 @@
 #include "asapo/unittests/MockIO.h"
 #include "asapo/unittests/MockLogger.h"
 #include "../src/connection.h"
-#include "../src/receiver_error.h"
-#include "../src/request.h"
-#include "../src/statistics/receiver_statistics.h"
 #include "receiver_mocking.h"
 #include "../src/receiver_config.h"
-#include "../src/receiver_config_factory.h"
-#include "../src/request_handler/requests_dispatcher.h"
 
-#include "mock_receiver_config.h"
-
-
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::SaveArg;
-using ::testing::SaveArgPointee;
-using ::testing::InSequence;
-using ::testing::HasSubstr;
-using ::testing::StrEq;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using testing::Sequence;
-
-using asapo::Error;
-using asapo::ErrorInterface;
-using asapo::FileDescriptor;
-using asapo::SocketDescriptor;
-using asapo::GenericRequestHeader;
-using asapo::SendResponse;
-using asapo::GenericRequestHeader;
-using asapo::GenericNetworkResponse;
-using asapo::Opcode;
-using asapo::Connection;
-using asapo::MockIO;
-using asapo::MockLogger;
-using asapo::Request;
-using asapo::ReceiverStatistics;
-using asapo::StatisticEntity;
-using asapo::MockStatistics;
-
-using asapo::ReceiverConfig;
-using asapo::SetReceiverConfig;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 

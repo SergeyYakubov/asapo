@@ -130,5 +130,5 @@ int main() {
     std::cout << "server_thread->join()" << std::endl;
     server_thread->join();
 
-    return 0;
+    return EXIT_SUCCESS;
 }

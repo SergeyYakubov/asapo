@@ -8,25 +8,9 @@
 #include "../../src/statistics/statistics_sender_fluentd.h"
 #include "../receiver_mocking.h"
 
-using ::testing::Test;
-using ::testing::Gt;
-using ::testing::Ge;
-using ::testing::Le;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Ref;
-using ::testing::_;
 
-using asapo::ReceiverStatistics;
-using asapo::Statistics;
-using asapo::StatisticEntity;
-using asapo::StatisticsSender;
-using asapo::StatisticsSenderInfluxDb;
-using asapo::StatisticsSenderFluentd;
-
-using asapo::StatisticsToSend;
-
-using asapo::MockStatisticsSender;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 

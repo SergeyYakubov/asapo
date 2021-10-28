@@ -4,27 +4,11 @@
 #include "asapo/unittests/MockIO.h"
 #include "asapo/unittests/MockLogger.h"
 #include "../src/receiver.h"
-#include "../src/receiver_error.h"
-#include "../src/connection.h"
-#include "../src/data_cache.h"
 
-using ::testing::Return;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::SetArgPointee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::InSequence;
-using ::testing::HasSubstr;
-using ::asapo::Error;
-using ::asapo::FileDescriptor;
-using ::asapo::ErrorInterface;
-using ::asapo::Connection;
-using ::asapo::SocketDescriptor;
-using asapo::DataCache;
+using namespace testing;
+using namespace asapo;
+
+
 namespace {
 
 TEST(Receiver, Constructor) {

@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
 
     err = consumer->GetNext(group_id, &fi, nullptr, "stream1");
     if (err != asapo::ConsumerErrorTemplates::kStreamFinished) {
-        return 1;
+        return EXIT_FAILURE;
     }
     auto err_data = static_cast<const asapo::ConsumerErrorData*>(err->GetCustomData());
 

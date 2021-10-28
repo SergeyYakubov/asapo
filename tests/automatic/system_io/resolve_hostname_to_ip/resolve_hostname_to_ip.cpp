@@ -34,5 +34,5 @@ int main() {
     // Fallthrough tests
     Check("123.123.123.123", "123.123.123.123");
     Check("8.8.8.8", "8.8.8.8");
-    return 0;
+    return EXIT_SUCCESS;
 }

@@ -23,11 +23,13 @@
 
 ## Prepare dependencies
 
+depending on configuration, you might need need curllib, mongoc, google tests
+
   - cd 3d_party/mongo-c-driver
   - ./install.sh $(pwd)
-  - sudo make -C mongo-c-driver-1.15.2 install
+  - sudo make -C mongo-c-driver-1.17.2 install
 
-  - back in the aspo-dir:
+  - back in the asapo-dir:
   - mkdir build
   - (cd build; cmake ..)
 
@@ -50,3 +52,12 @@ Need googletest >= [1.8.0](https://github.com/google/googletest/releases/tag/rel
 
 The software is MIT licensed (see LICENSE.txt) and uses third party libraries that are distributed under their own terms
 (see LICENSE-3RD-PARTY.txt)
+
+## with non-standard 3rd party libraries paths
+- cmake -Dlibmongoc-static-1.0_DIR=... -Dlibbson-static-1.0_DIR=...  -Dgtest_SOURCE_DIR=... -DLIBCURL_DIR=... ...
+
+## compile
+ - make -j 4
+ 
+or compile specific target only, e.g. 
+ - make -j 4 receiver  
