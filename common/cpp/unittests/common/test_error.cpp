@@ -30,7 +30,7 @@ TEST(ErrorTemplate, Explain) {
 
 TEST(ErrorTemplate, Append) {
     Error error = asapo::GeneralErrorTemplates::kEndOfFile.Generate("test");
-    ASSERT_THAT(error->Explain(), HasSubstr("test2"));
+    ASSERT_THAT(error->Explain(), HasSubstr("test"));
 }
 
 }

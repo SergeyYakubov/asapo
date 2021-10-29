@@ -81,8 +81,8 @@ class ErrorTemplateInterface {
     virtual Error Generate() const noexcept = 0;
     virtual Error Generate(const std::string& suffix) const noexcept = 0;
 
-    virtual inline bool operator==(const Error& rhs) const = 0;
-    virtual inline bool operator!=(const Error& rhs) const = 0;
+    virtual bool operator==(const Error& rhs) const = 0;
+    virtual bool operator!=(const Error& rhs) const = 0;
 
 };
 
@@ -113,21 +113,21 @@ class ServiceErrorTemplate : public ErrorTemplateInterface {
         return error_type_;
     }
 
-    Error Generate() const noexcept {
+    Error Generate() const noexcept override{
         auto err = new ServiceError<ServiceErrorType>(error_, error_type_);
         return Error(err);
     }
 
-    Error Generate(const std::string& suffix) const noexcept {
+    Error Generate(const std::string& suffix) const noexcept override {
         return Error(new ServiceError<ServiceErrorType>(error_ + (error_.empty() ? "" : ": ") + suffix, error_type_));
     }
 
-    inline bool operator==(const Error& rhs) const {
+    inline bool operator==(const Error& rhs) const override {
         return rhs != nullptr
                && GetServiceErrorType() == ((ServiceError<ServiceErrorType>*) rhs.get())->GetServiceErrorType();
     }
 
-    inline bool operator!=(const Error& rhs) const {
+    inline bool operator!=(const Error& rhs) const override {
         return rhs != nullptr
                && GetServiceErrorType() != ((ServiceError<ServiceErrorType>*) rhs.get())->GetServiceErrorType();
     }
