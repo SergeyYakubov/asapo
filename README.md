@@ -1,27 +1,33 @@
-# asapo
+# ASAP::O - High performance distributed streaming platform
 
-# C++ Projects
+## Folder structure
  
- - /common/cpp
- 
- **Library:** Common library which get shared between the producer and receiver 
- 
- - /producer/asapo-producer
- 
- **Library:** Producer library which can send data to the receiver
- 
- - /receiver
- 
- **Executable:** The receiver which can receive data from the producer
-  
- - /producer/inotify-event-detector-cpp
- 
- **Executable:** Implementation of the producer api with inotify
+### Microservices 
+ - **authorizer** - authorization _(Go)_
+ - **broker** - server for consumer clients _(Go)_
+ - **discovery** - discovery service _(Go)_
+ - **file_transfer** - file transfer service to deliver files to clients that have no access to storage _(Go)_
+ - **receiver** - server for producer clients to send data to, also contains data server that is contacted by consumer clients to get data from cache _(C++)_ 
+   
+### Client libraries
+  - **producer** - producer libraries _(C++, C, Python)_ 
+  - **consumer** - consumer libraries _(C++, C, Python)_ 
 
+### Docs & Tests
+- **docs** - doxygen,sphinx and site documentation
+- **tests** - automatic integration/e2e tests
+- **docs/site/examples** - examples used for site     
+- **examples** - some outdated examples, also used for automated tests, (todo: move it somewhere)    
 
-# Building
+### Auxiliary folders
+- **common** -  stuff to be shared between microservices
+- **CMakeIncludes**, **CMakeModules**, **install** - CMake stuff  
+- **config** - to store various config files, also nomad jobs for tests
+- **deploy** - Docker files for various images, Helm files, Nomad&Consul files
 
-## Prepare dependencies
+## Building
+
+### Prepare dependencies
 
 depending on configuration, you might need need curllib, mongoc, google tests
 
@@ -33,7 +39,7 @@ depending on configuration, you might need need curllib, mongoc, google tests
   - mkdir build
   - (cd build; cmake ..)
 
-## With documentation
+### With documentation
 
 Need Doxygen >= [1.8.10](https://github.com/doxygen/doxygen/releases/tag/Release_1_8_11)
 and sphinx
@@ -42,7 +48,7 @@ and sphinx
  - cd build
  - cmake -DBUILD_CPP_DOCS=ON _DBUILD_PYTHON_DOCS ..
 
-## With tests
+### With tests
 
 Need googletest >= [1.8.0](https://github.com/google/googletest/releases/tag/release-1.8.0)
 
@@ -53,10 +59,10 @@ Need googletest >= [1.8.0](https://github.com/google/googletest/releases/tag/rel
 The software is MIT licensed (see LICENSE.txt) and uses third party libraries that are distributed under their own terms
 (see LICENSE-3RD-PARTY.txt)
 
-## with non-standard 3rd party libraries paths
+### with non-standard 3rd party libraries paths
 - cmake -Dlibmongoc-static-1.0_DIR=... -Dlibbson-static-1.0_DIR=...  -Dgtest_SOURCE_DIR=... -DLIBCURL_DIR=... ...
 
-## compile
+### compile
  - make -j 4
  
 or compile specific target only, e.g. 
