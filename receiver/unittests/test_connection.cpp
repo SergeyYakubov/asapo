@@ -2,6 +2,7 @@
 #include <gmock/gmock.h>
 
 #include "asapo/unittests/MockIO.h"
+#include "asapo/common/error.h"
 #include "asapo/unittests/MockLogger.h"
 #include "../src/connection.h"
 #include "receiver_mocking.h"
@@ -71,7 +72,7 @@ class ConnectionTests : public Test {
         if (error ) {
             EXPECT_CALL(mock_dispatcher, GetNextRequest_t(_))
             .WillOnce(DoAll(
-                          SetArgPointee<0>(new asapo::SimpleError{"error"}),
+                          SetArgPointee<0>(asapo::GeneralErrorTemplates::kSimpleError.Generate("error").release()),
                           Return(nullptr)
                       ));
             return nullptr;
@@ -91,7 +92,7 @@ class ConnectionTests : public Test {
         if (error ) {
             EXPECT_CALL(mock_dispatcher, ProcessRequest_t(request))
             .WillOnce(
-                Return(new asapo::SimpleError{"error"})
+                Return(asapo::GeneralErrorTemplates::kSimpleError.Generate("error").release())
             );
         } else {
             EXPECT_CALL(mock_dispatcher, ProcessRequest_t(request))

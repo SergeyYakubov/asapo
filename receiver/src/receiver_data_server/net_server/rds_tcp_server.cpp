@@ -19,7 +19,7 @@ Error RdsTcpServer::Initialize() {
             log__->Error("TCP ReceiverDataServer cannot listen on " + address_ + ": " + err->Explain());
         }
     } else {
-        err = TextError("Server was already initialized");
+        err = GeneralErrorTemplates::kSimpleError.Generate("Server was already initialized");
     }
     return err;
 }
@@ -44,7 +44,7 @@ ReceiverDataServerRequestPtr RdsTcpServer::ReadRequest(SocketDescriptor socket, 
     GenericRequestHeader header;
     io__->Receive(socket, &header,
                   sizeof(GenericRequestHeader), err);
-    if (*err == ErrorTemplates::kEndOfFile) {
+    if (*err == GeneralErrorTemplates::kEndOfFile) {
         CloseSocket(socket);
         return nullptr;
     } else if (*err) {

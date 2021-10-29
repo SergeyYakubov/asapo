@@ -158,13 +158,13 @@ TEST_F(RequestsDispatcherTests, ClosedConnectionOnReceivetNextRequest) {
     EXPECT_CALL(mock_statictics, StartTimer_t(StatisticEntity::kNetwork));
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _))
     .WillOnce(
-        DoAll(SetArgPointee<3>(asapo::ErrorTemplates::kEndOfFile.Generate().release()),
+        DoAll(SetArgPointee<3>(asapo::GeneralErrorTemplates::kEndOfFile.Generate().release()),
               Return(0))
     );
     Error err;
     dispatcher->GetNextRequest(&err);
 
-    ASSERT_THAT(err, Eq(asapo::ErrorTemplates::kEndOfFile));
+    ASSERT_THAT(err, Eq(asapo::GeneralErrorTemplates::kEndOfFile));
 }
 
 

@@ -76,7 +76,7 @@ class AuthorizerClientTests : public Test {
             EXPECT_CALL(mock_http_client,
                         Post_t(expected_authorization_server + "/authorize", _, expect_request_string, _, _)).
             WillOnce(
-                DoAll(SetArgPointee<4>(new asapo::SimpleError("http error")),
+                DoAll(SetArgPointee<4>(asapo::GeneralErrorTemplates::kSimpleError.Generate("http error").release()),
                       Return("")
                      ));
         } else {

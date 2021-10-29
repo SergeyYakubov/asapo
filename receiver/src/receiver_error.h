@@ -15,7 +15,7 @@ enum class ReceiverErrorType {
     kUnsupportedClient
 };
 
-using ReceiverErrorTemplate = ServiceErrorTemplate<ReceiverErrorType, ErrorType::kReceiverError>;
+using ReceiverErrorTemplate = ServiceErrorTemplate<ReceiverErrorType>;
 
 
 namespace ReceiverErrorTemplates {

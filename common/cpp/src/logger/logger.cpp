@@ -35,7 +35,7 @@ LogLevel StringToLogLevel(const std::string& name, Error* err) {
     if (name == "none") return LogLevel::None;
     if (name == "error") return LogLevel::Error;
 
-    *err = TextError("wrong log level: " + name);
+    *err = GeneralErrorTemplates::kSimpleError.Generate("wrong log level: " + name);
     return LogLevel::None;
 }
 

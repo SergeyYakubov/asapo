@@ -8,7 +8,6 @@
 #include "testing.h"
 
 using asapo::Error;
-using asapo::ErrorType;
 using asapo::AddressFamilies;
 using asapo::SocketTypes;
 using asapo::SocketProtocols;
@@ -51,7 +50,7 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
                 std::cout << "[SERVER] processing socket " << socket << std::endl;
                 uint64_t message;
                 io->Receive(socket, &message, sizeof(uint64_t), &err);
-                if (err == asapo::ErrorTemplates::kEndOfFile) {
+                if (err == asapo::GeneralErrorTemplates::kEndOfFile) {
                     std::cout << "[SERVER] end of file " << socket << std::endl;
                     io->CloseSocket(socket, &err);
                     ExitIfErrIsNotOk(&err, 106);

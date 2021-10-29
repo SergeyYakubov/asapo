@@ -32,7 +32,7 @@ class FileWriteHandlerTests : public Test {
     NiceMock<MockIO> mock_io;
     std::unique_ptr<MockRequest> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
-    void ExpecFileProcess(const asapo::SimpleErrorTemplate* error_template, bool overwrite);
+    void ExpecFileProcess(const asapo::ErrorTemplateInterface* error_template, bool overwrite);
     void SetUp() override {
         GenericRequestHeader request_header;
         mock_request.reset(new MockRequest{request_header, 1, "", nullptr});
@@ -50,7 +50,7 @@ TEST_F(FileWriteHandlerTests, CheckStatisticEntity) {
     ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kDisk));
 }
 
-void FileWriteHandlerTests::ExpecFileProcess(const asapo::SimpleErrorTemplate* error_template, bool overwrite) {
+void FileWriteHandlerTests::ExpecFileProcess(const asapo::ErrorTemplateInterface* error_template, bool overwrite) {
     EXPECT_CALL(mock_file_processor, ProcessFile_t(mock_request.get(), overwrite))
     .WillOnce(
         Return(error_template == nullptr ? nullptr : error_template->Generate().release()));

@@ -90,7 +90,7 @@ class MockDatabaseFactory : public DatabaseFactory {
 
 class FakeDatabaseFactory : public DatabaseFactory {
     std::unique_ptr<Database> Create(Error* err) const noexcept override {
-        *err = asapo::ErrorTemplates::kMemoryAllocationError.Generate();
+        *err = asapo::GeneralErrorTemplates::kMemoryAllocationError.Generate();
         return {};
     }
 };
@@ -166,7 +166,7 @@ TEST_F(FolderDBConverterTests, ErrorWhenCannotGetFileList) {
 
 
     EXPECT_CALL(mock_io, FilesInFolder_t(folder, _)).
-    WillOnce(DoAll(testing::SetArgPointee<1>(new asapo::SimpleError("err")),
+    WillOnce(DoAll(testing::SetArgPointee<1>(asapo::GeneralErrorTemplates::kSimpleError.Generate("err").release()),
                    testing::Return(MessageMetas {})));
 
     auto error = converter.Convert(uri, folder, db_name);

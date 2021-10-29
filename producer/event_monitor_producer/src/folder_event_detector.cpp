@@ -59,7 +59,7 @@ Error FolderEventDetector::UpdateEventsBuffer() {
 
 Error FolderEventDetector::GetNextEvent(MessageHeader* message_header) {
     if (!monitoring_started_) {
-        auto err = TextError("monitoring is not started yet");
+        auto err = GeneralErrorTemplates::kSimpleError.Generate("monitoring is not started yet");
         return err;
     }
 

@@ -1,4 +1,6 @@
 #include "asapo/common/data_structs.h"
+#include "asapo/common/error.h"
+
 
 #include <chrono>
 #include <iostream>
@@ -40,7 +42,7 @@ Error GetSourceTypeFromString(std::string stype, SourceType* type) {
         *type = SourceType::kProcessed;
         return nullptr;
     } else {
-        return TextError("cannot parse/wrong source type: " + stype);
+        return GeneralErrorTemplates::kSimpleError.Generate("cannot parse/wrong source type: " + stype);
     }
 }
 

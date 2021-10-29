@@ -137,7 +137,7 @@ void RdsTCPServerTests::ExpectReceiveRequestEof() {
     for (auto conn : expected_client_sockets) {
         EXPECT_CALL(mock_io, Receive_t(conn, _, _, _))
         .WillOnce(
-            DoAll(SetArgPointee<3>(asapo::ErrorTemplates::kEndOfFile.Generate().release()),
+            DoAll(SetArgPointee<3>(asapo::GeneralErrorTemplates::kEndOfFile.Generate().release()),
                   Return(0))
         );
         EXPECT_CALL(mock_io, CloseSocket_t(conn, _));

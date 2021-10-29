@@ -14,7 +14,7 @@ RapidJson::RapidJson(const std::string& json, const std::unique_ptr<IO>* io) : i
 
 Error RapidJson::LazyInitialize() const noexcept {
     if (embedded_error_) {
-        return TextError(embedded_error_->Explain());
+        return GeneralErrorTemplates::kSimpleError.Generate(embedded_error_->Explain());
     }
 
     if (initialized_)
@@ -31,7 +31,7 @@ Error RapidJson::LazyInitialize() const noexcept {
 
     ParseResult ok = doc_.Parse(str.c_str());
     if (!ok || !doc_.IsObject()) {
-        return TextError("Cannot parse document");
+        return GeneralErrorTemplates::kSimpleError.Generate("Cannot parse document");
     }
 
     object_ = doc_.GetObject();
@@ -66,7 +66,7 @@ asapo::Error RapidJson::CheckValueType(const std::string& name, ValueType type, 
         res = false;
     }
     if (!res) {
-        return TextError("wrong type for: " + name + " in: " + json_);
+        return GeneralErrorTemplates::kSimpleError.Generate("wrong type for: " + name + " in: " + json_);
     }
 
     return nullptr;
@@ -79,7 +79,7 @@ asapo::Error RapidJson::GetValuePointer(const std::string& name, ValueType type,
 
     auto iterator = object_p_->FindMember(name.c_str());
     if (iterator == object_p_->MemberEnd()) {
-        return TextError("cannot find: " + name);
+        return GeneralErrorTemplates::kSimpleError.Generate("cannot find: " + name);
     }
 
     *val = &iterator->value;
@@ -143,7 +143,7 @@ Error RapidJson::GetArrayUInt64(const std::string& name, std::vector<uint64_t>* 
     val->clear();
     for (auto& v : json_val->GetArray()) {
         if (!v.IsUint64()) {
-            return TextError("wrong type of array element: " + name);
+            return GeneralErrorTemplates::kSimpleError.Generate("wrong type of array element: " + name);
         }
         val->push_back(v.GetUint64());
     }
@@ -160,7 +160,7 @@ Error RapidJson::GetArrayString(const std::string& name, std::vector<std::string
     val->clear();
     for (auto& v : json_val->GetArray()) {
         if (!v.IsString()) {
-            return TextError("wrong type of array element: " + name);
+            return GeneralErrorTemplates::kSimpleError.Generate("wrong type of array element: " + name);
         }
         val->push_back(v.GetString());
     }
@@ -202,7 +202,7 @@ Error RapidJson::GetArrayRawStrings(const std::string& name, std::vector<std::st
     val->clear();
     for (auto& v : json_val->GetArray()) {
         if (!v.IsObject()) {
-            return TextError("wrong type of array element: " + name);
+            return GeneralErrorTemplates::kSimpleError.Generate("wrong type of array element: " + name);
         }
         StringBuffer buffer;
         Writer<StringBuffer> writer(buffer);

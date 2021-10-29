@@ -20,7 +20,7 @@ class ConsumerFactoryTests : public Test {
   public:
     Error error;
     void SetUp() override {
-        error.reset(new asapo::SimpleError("SomeErrorToBeOverwritten"));
+        error = asapo::GeneralErrorTemplates::kSimpleError.Generate("SomeErrorToBeOverwritten");
     }
 };
 

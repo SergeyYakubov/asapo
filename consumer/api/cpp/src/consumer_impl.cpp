@@ -740,7 +740,7 @@ StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
         StreamInfo si;
         auto ok = si.SetFromJson(stream_encoded);
         if (!ok) {
-            *err = TextError("cannot parse " + stream_encoded);
+            *err = GeneralErrorTemplates::kSimpleError.Generate("cannot parse " + stream_encoded);
             return StreamInfos{};
         }
         streams.emplace_back(si);

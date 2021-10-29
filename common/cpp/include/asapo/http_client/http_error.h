@@ -11,7 +11,7 @@ enum class HttpErrorType {
     kConnectionError
 };
 
-using HttpErrorTemplate = ServiceErrorTemplate<HttpErrorType, ErrorType::kHttpError>;
+using HttpErrorTemplate = ServiceErrorTemplate<HttpErrorType>;
 
 namespace HttpErrorTemplates {
 

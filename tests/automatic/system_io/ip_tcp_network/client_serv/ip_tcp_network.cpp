@@ -8,7 +8,6 @@
 #include "testing.h"
 
 using asapo::Error;
-using asapo::ErrorType;
 using asapo::AddressFamilies;
 using asapo::SocketTypes;
 using asapo::SocketProtocols;
@@ -62,7 +61,7 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
                     if (asapo::IOErrorTemplates::kTimeout == err) {
                         continue;
                     }
-                    if (asapo::ErrorTemplates::kEndOfFile == err) {
+                    if (asapo::GeneralErrorTemplates::kEndOfFile == err) {
                         break;
                     }
                 }

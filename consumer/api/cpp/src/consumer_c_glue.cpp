@@ -80,7 +80,7 @@ extern "C" {
                   kWrongInput == asapo::ConsumerErrorType::kWrongInput&&
                   kPartialData == asapo::ConsumerErrorType::kPartialData&&
                   kUnsupportedClient == asapo::ConsumerErrorType::kUnsupportedClient,
-                  "incompatible bit reps between c++ and c for asapo::ErrorType");
+                  "incompatible bit reps between c++ and c for asapo::ConsumerErrorType");
     static_assert(kAllStreams == asapo::StreamFilter::kAllStreams&&
                   kFinishedStreams == asapo::StreamFilter::kFinishedStreams&&
                   kUnfinishedStreams == asapo::StreamFilter::kUnfinishedStreams,
@@ -92,8 +92,7 @@ extern "C" {
 
     enum AsapoConsumerErrorType asapo_error_get_type(const AsapoErrorHandle error) {
         auto consumer_err =
-            dynamic_cast<const asapo::ServiceError<asapo::ConsumerErrorType,
-            asapo::ErrorType::kConsumerError> *>(error->handle.get());
+            dynamic_cast<const asapo::ServiceError<asapo::ConsumerErrorType> *>(error->handle.get());
         if (consumer_err != nullptr) {
             return static_cast<AsapoConsumerErrorType>(consumer_err->GetServiceErrorType());
         } else {

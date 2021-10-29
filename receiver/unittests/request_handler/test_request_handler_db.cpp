@@ -64,10 +64,10 @@ void DbHandlerTests::MockAuthRequest(bool error, HttpCode code) {
     if (error) {
         EXPECT_CALL(mock_http_client, Get_t(expected_discovery_server + "/asapo-mongodb",  _, _)).
         WillOnce(
-            DoAll(SetArgPointee<2>(new asapo::SimpleError("http error")),
+            DoAll(SetArgPointee<2>(asapo::GeneralErrorTemplates::kSimpleError.Generate("http error").release()),
                   Return("")
                  ));
-        EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("discover database server"),
+        EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("discovering database server"),
                                              HasSubstr("http error"),
                                              HasSubstr(expected_discovery_server))));
 
@@ -171,7 +171,7 @@ TEST_F(DbHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
 TEST_F(DbHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
 
     EXPECT_CALL(mock_db, Connect_t(_, _)).
-    WillOnce(testing::Return(new asapo::SimpleError("")));
+    WillOnce(testing::Return(asapo::GeneralErrorTemplates::kSimpleError.Generate().release()));
 
     auto err = handler.ProcessRequest(mock_request.get());
 

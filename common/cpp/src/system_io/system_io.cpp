@@ -85,7 +85,7 @@ uint8_t* SystemIO::AllocateArray(uint64_t fsize, Error* err) const {
     try {
         data_array = new uint8_t[(size_t)fsize];
     } catch (...) {
-        *err = ErrorTemplates::kMemoryAllocationError.Generate();
+        *err = GeneralErrorTemplates::kMemoryAllocationError.Generate();
         return nullptr;
     }
     return data_array;
@@ -238,7 +238,7 @@ void SystemIO::Skip(SocketDescriptor socket_fd, size_t length, Error* err) const
     try {
         buffer.reset(new uint8_t[kSkipBufferSize]);
     } catch (...) {
-        *err = ErrorTemplates::kMemoryAllocationError.Generate();
+        *err = GeneralErrorTemplates::kMemoryAllocationError.Generate();
         return;
     }
     size_t already_skipped = 0;
@@ -585,7 +585,7 @@ size_t SystemIO::Transfer(ssize_t (* method)(FileDescriptor, void*, size_t), Fil
         ssize_t received_amount = method(fd, (uint8_t*) buf + already_transferred,
                                          std::min(kMaxTransferChunkSize, length - already_transferred));
         if (received_amount == 0) {
-            *err = ErrorTemplates::kEndOfFile.Generate();
+            *err = GeneralErrorTemplates::kEndOfFile.Generate();
             return already_transferred;
         }
         if (received_amount == -1) {
@@ -665,7 +665,7 @@ Error SystemIO::SendFile(SocketDescriptor socket_fd, const std::string& fname, s
 
     while (total_bytes_sent < length) {
         auto bytes_read = Read(fd, data_array.get(), buf_size, &err);
-        if (err != nullptr && err != ErrorTemplates::kEndOfFile) {
+        if (err != nullptr && err != GeneralErrorTemplates::kEndOfFile) {
             Close(fd, nullptr);
             return err;
         }
@@ -698,7 +698,7 @@ Error SystemIO:: ReceiveDataToFile(SocketDescriptor socket, const std::string& r
     size_t total_bytes_written = 0;
     while (total_bytes_written < length) {
         auto bytes_received = Receive(socket, data_array.get(), std::min(buf_size, length - total_bytes_written), &err);
-        if (err != nullptr && err != ErrorTemplates::kEndOfFile) {
+        if (err != nullptr && err != GeneralErrorTemplates::kEndOfFile) {
             Close(fd, nullptr);
             return err;
         }

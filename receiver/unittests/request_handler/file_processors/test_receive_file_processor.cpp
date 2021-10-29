@@ -69,7 +69,7 @@ class ReceiveFileProcessorTests : public Test {
                                       asapo::kPathSeparator + expected_year +
                                       asapo::kPathSeparator + "data" +
                                       asapo::kPathSeparator + expected_beamtime_id;
-    void ExpectFileWrite(const asapo::SimpleErrorTemplate* error_template);
+    void ExpectFileWrite(const asapo::ErrorTemplateInterface* error_template);
     void MockRequestData();
     void SetUp() override {
         GenericRequestHeader request_header;
@@ -106,7 +106,7 @@ void ReceiveFileProcessorTests::MockRequestData() {
     .WillRepeatedly(Return(expected_file_name));
 }
 
-void ReceiveFileProcessorTests::ExpectFileWrite(const asapo::SimpleErrorTemplate* error_template) {
+void ReceiveFileProcessorTests::ExpectFileWrite(const asapo::ErrorTemplateInterface* error_template) {
     EXPECT_CALL(mock_io, WriteDataToFile_t(expected_full_path, expected_file_name, _, expected_file_size, true,
                                            expected_overwrite))
     .WillOnce(

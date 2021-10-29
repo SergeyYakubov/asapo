@@ -46,7 +46,7 @@ Error ReceiverDiscoveryService::UpdateFromEndpoint(ReceiversList* list, uint64_t
         return err;
     }
     if (code != HttpCode::OK) {
-        return TextError(responce);
+        return GeneralErrorTemplates::kSimpleError.Generate(responce);
     }
     return ParseResponse(responce, list, max_connections);
 

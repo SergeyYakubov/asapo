@@ -148,7 +148,7 @@ TEST_F(ReceiveDataHandlerTests, ErrorGetMemoryFromCache) {
     auto err = handler.ProcessRequest(request.get());
 
     ASSERT_THAT(request->GetSlotId(), Eq(0));
-    ASSERT_THAT(err, Eq(asapo::ErrorTemplates::kMemoryAllocationError));
+    ASSERT_THAT(err, Eq(asapo::GeneralErrorTemplates::kMemoryAllocationError));
 }
 
 

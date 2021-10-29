@@ -18,7 +18,7 @@ enum class ConsumerErrorType {
     kUnsupportedClient
 };
 
-using ConsumerErrorTemplate = ServiceErrorTemplate<ConsumerErrorType, ErrorType::kConsumerError>;
+using ConsumerErrorTemplate = ServiceErrorTemplate<ConsumerErrorType>;
 
 
 class PartialErrorData : public CustomErrorData {

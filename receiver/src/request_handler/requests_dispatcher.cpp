@@ -92,7 +92,7 @@ std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const no
     io__->Receive(socket_fd_, &generic_request_header,
                   sizeof(GenericRequestHeader), err);
     if (*err) {
-        if (*err != ErrorTemplates::kEndOfFile) {
+        if (*err != GeneralErrorTemplates::kEndOfFile) {
             log__->Error(LogMessageWithFields("error getting next request: " + (*err)->Explain()).
                          Append("origin", HostFromUri(producer_uri_)));
         }

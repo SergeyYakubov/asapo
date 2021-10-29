@@ -32,7 +32,7 @@ Error GetLastErrorFromErrno() {
     case 0:
         return nullptr;
     case EINTR:
-        return TextError("Interrupt occurred, is a debugger attached?");
+        return GeneralErrorTemplates::kSimpleError.Generate("Interrupt occurred, is a debugger attached?");
     case EBADF:
         return IOErrorTemplates::kBadFileNumber.Generate();
     case EAGAIN:
