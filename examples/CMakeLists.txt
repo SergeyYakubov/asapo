@@ -3,6 +3,9 @@ if(BUILD_EXAMPLES)
 endif()
 
 if(BUILD_EXAMPLES OR INSTALL_EXAMPLES)
-    add_subdirectory(producer)
     add_subdirectory(consumer)
+endif()
+
+if(BUILD_EXAMPLES OR INSTALL_EXAMPLES OR BUILD_INTEGRATION_TESTS)
+    add_subdirectory(producer)
 endif()

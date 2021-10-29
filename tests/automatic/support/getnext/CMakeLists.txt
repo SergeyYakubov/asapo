@@ -14,12 +14,3 @@ set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
 add_script_test("${TARGET_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}")
 
 endif()
-
-set (dir share/asapo/examples/consumer/${TARGET_NAME})
-install(FILES ${SOURCE_FILES} DESTINATION "${dir}")
-
-configure_file(CMakeLists_separate.in CMakeLists_separate.txt @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists_separate.txt DESTINATION "${dir}" RENAME CMakeLists.txt)
-
-configure_file(Makefile.in Makefile_LINUX @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Makefile_LINUX DESTINATION "${dir}")
