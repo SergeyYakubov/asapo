@@ -64,7 +64,7 @@ TEST_F(ReceiversStatusTests, LogWhenHttpError) {
     EXPECT_CALL(*mock_http_client, Get_t(expected_endpoint, _, _))
     .Times(1)
     .WillOnce(
-        DoAll(SetArgPointee<2>(new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
+        DoAll(SetArgPointee<2>(new asapo::IOError("Test Read Error", "", asapo::IOErrorType::kReadError)),
               Return("")
              ));
 

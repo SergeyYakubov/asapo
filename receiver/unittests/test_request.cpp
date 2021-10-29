@@ -85,7 +85,7 @@ TEST_F(RequestTests, HandleProcessesRequests) {
     EXPECT_CALL(mock_request_handler, ProcessRequest_t(_)).WillOnce(
         Return(nullptr)
     ).WillOnce(
-        Return(new asapo::IOError("Test Send Error", asapo::IOErrorType::kUnknownIOError))
+        Return(new asapo::IOError("Test Send Error", "", asapo::IOErrorType::kUnknownIOError))
     );
 
     request->AddHandler(&mock_request_handler);

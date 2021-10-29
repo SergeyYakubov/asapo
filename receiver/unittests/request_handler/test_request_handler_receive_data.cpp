@@ -69,7 +69,7 @@ void ReceiveDataHandlerTests::ExpectReceive(uint64_t expected_size, bool ok) {
     EXPECT_CALL(mock_io, Receive_t(socket_fd_, _, expected_size, _)).WillOnce(
         DoAll(
             CopyStr(expected_metadata),
-            SetArgPointee<3>(ok ? nullptr : new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
+            SetArgPointee<3>(ok ? nullptr : new asapo::IOError("Test Read Error", "", asapo::IOErrorType::kReadError)),
             Return(0)
         ));
 

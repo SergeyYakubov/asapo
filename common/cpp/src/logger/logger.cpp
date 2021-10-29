@@ -2,6 +2,7 @@
 #include <asapo/logger/logger.h>
 
 #include "spd_logger.h"
+#include "asapo/common/error.h"
 
 namespace asapo {
 
