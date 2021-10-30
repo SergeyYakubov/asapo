@@ -64,7 +64,7 @@ TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
                                 "n_requests=4,db_share=0.1000,network_share=0.3000,disk_share=0.6000";
     EXPECT_CALL(mock_http_client, Post_t("test_uri/write?db=test_name", _, expect_string, _, _)).
     WillOnce(
-        DoAll(SetArgPointee<4>(new asapo::IOError("Test Read Error","", asapo::IOErrorType::kReadError)),
+        DoAll(SetArgPointee<4>(new asapo::IOError("Test Read Error", "", asapo::IOErrorType::kReadError)),
               Return("")
              ));
 

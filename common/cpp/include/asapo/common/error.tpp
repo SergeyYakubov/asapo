@@ -31,18 +31,17 @@ void ServiceError<ServiceErrorType>::SetCustomData(std::unique_ptr<CustomErrorDa
 
 template<typename ServiceErrorType>
 void ServiceError<ServiceErrorType>::Append(const std::string &value) noexcept {
-    error_message_ += ": " + value;
+    error_message_ += (error_message_.empty() ? "" : ": ") + value;
 }
 
 template<typename ServiceErrorType>
 void ServiceError<ServiceErrorType>::Prepend(const std::string &value) noexcept {
-    error_message_ = value + ": " + error_message_;
-
+    error_message_ = value + (error_message_.empty() ? "" : ": ") + error_message_;
 }
 
 template<typename ServiceErrorType>
 std::string ServiceError<ServiceErrorType>::Explain() const noexcept {
-    return error_name_ + ": " + error_message_;
+    return error_name_ + (error_message_.empty() ? "" : ": ") + error_message_;
 }
 
 template<typename ServiceErrorType>
