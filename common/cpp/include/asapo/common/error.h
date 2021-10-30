@@ -75,11 +75,11 @@ class ErrorTemplateInterface {
 };
 
 static inline bool operator==(const Error& lhs, const ErrorTemplateInterface& rhs) {
-    return rhs.operator == (lhs);
+    return rhs == lhs;
 }
 
 static inline bool operator!=(const Error& lhs, const ErrorTemplateInterface& rhs) {
-    return rhs.operator != (lhs);
+    return rhs != lhs;
 }
 
 template<typename ServiceErrorType>
@@ -119,12 +119,12 @@ class ServiceErrorTemplate : public ErrorTemplateInterface {
 
 template<typename ServiceErrorType>
 static inline bool operator==(const Error& lhs, const ServiceErrorTemplate<ServiceErrorType>& rhs) {
-    return rhs.operator == (lhs);
+    return rhs == lhs;
 }
 
 template<typename ServiceErrorType>
 static inline bool operator!=(const Error& lhs, const ServiceErrorTemplate<ServiceErrorType>& rhs) {
-    return rhs.operator != (lhs);
+    return rhs != lhs;
 }
 
 namespace GeneralErrorTemplates {
