@@ -56,10 +56,10 @@ template<typename ServiceErrorType>
 std::string ServiceError<ServiceErrorType>::Explain() const noexcept {
     std::string err = "error: " + error_name_;
     if (!error_message_.empty()) {
-        err += "; message: " + error_message_;
+        err += ", message: " + error_message_;
     }
     if (!context_.empty()) {
-        err += "; context: ";
+        err += ", context: ";
         auto i = 0;
         for (const auto &kv : context_) {
             err += (i > 0 ? ", " : "") + kv.first + ":" + kv.second;
@@ -67,7 +67,7 @@ std::string ServiceError<ServiceErrorType>::Explain() const noexcept {
         }
     }
     if (cause_err_ != nullptr) {
-        err +=  "; caused by: " + cause_err_->Explain() ;
+        err +=  ", caused by: " + cause_err_->Explain() ;
     }
     return err;
 }

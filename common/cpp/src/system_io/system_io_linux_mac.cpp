@@ -122,7 +122,7 @@ MessageMeta GetMessageMeta(const string& name, Error* err) {
 
     auto t_stat = FileStat(name, err);
     if (*err != nullptr) {
-        (*err)->AddContext("filename", name);
+        (*err)->AddContext("name", name);
         return MessageMeta{};
     }
 
@@ -157,7 +157,7 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = GetLastError();
-        (*err)->AddContext("path", path);
+        (*err)->AddContext("name", path);
         return;
     }
 
@@ -183,7 +183,7 @@ void SystemIO::CollectMessageMetarmationRecursively(const std::string& path,
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = GetLastError();
-        (*err)->AddContext("path", path);
+        (*err)->AddContext("name", path);
         return;
     }
 

@@ -151,7 +151,7 @@ MessageMeta SystemIO::GetMessageMeta(const std::string& name, Error* err) const 
     auto hFind = FindFirstFile(name.c_str(), &f);
     if (hFind == INVALID_HANDLE_VALUE) {
         *err = IOErrorFromGetLastError();
-        (*err)->AddContext("filename", name);
+        (*err)->AddContext("name", name);
         return {};
     }
     FindClose(hFind);
@@ -179,7 +179,7 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {
         *err = IOErrorFromGetLastError();
-        (*err)->AddContext("path", path);
+        (*err)->AddContext("name", path);
         return;
     }
 
@@ -208,7 +208,7 @@ void SystemIO::CollectMessageMetarmationRecursively(const std::string& path,
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {
         *err = IOErrorFromGetLastError();
-        (*err)->AddContext("path", path);
+        (*err)->AddContext("name", path);
         return;
     }
 
