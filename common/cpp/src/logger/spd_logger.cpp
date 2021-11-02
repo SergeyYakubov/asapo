@@ -141,4 +141,20 @@ void SpdLogger::Warning(const LogMessageWithFields& msg) const {
     Warning(msg.LogString());
 }
 
+void SpdLogger::Info(const asapo::Error& error) const {
+    Info(error->ExplainInJSON());
+}
+
+void SpdLogger::Error(const asapo::Error& error) const {
+    Error(error->ExplainInJSON());
+}
+
+void SpdLogger::Debug(const asapo::Error& error) const {
+    Debug(error->ExplainInJSON());
+}
+
+void SpdLogger::Warning(const asapo::Error& error) const {
+    Warning(error->ExplainInJSON());
+}
+
 }

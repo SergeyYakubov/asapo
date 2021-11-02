@@ -10,6 +10,19 @@ namespace asapo {
 
 class MockLogger : public AbstractLogger {
   public:
+    void Info(const asapo::Error& msg) const override {
+        Info(msg->ExplainInJSON());
+    };
+    void Error(const asapo::Error& msg) const override {
+        Error(msg->ExplainInJSON());
+    };
+    void Debug(const asapo::Error& msg) const override {
+        Debug(msg->ExplainInJSON());
+    };
+    void Warning(const asapo::Error& msg) const override {
+        Warning(msg->ExplainInJSON());
+    };
+
     MOCK_CONST_METHOD1(Info, void(const std::string&));
     MOCK_CONST_METHOD1(Error, void(const std::string& ));
     MOCK_CONST_METHOD1(Debug, void(const std::string& ));

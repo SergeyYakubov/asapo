@@ -5,6 +5,7 @@
 #include <memory>
 #include <utility>
 #include <ostream>
+#include <map>
 
 namespace asapo {
 
@@ -18,11 +19,10 @@ using Error = std::unique_ptr<ErrorInterface>;
 class ErrorInterface {
   public:
     virtual std::string Explain() const noexcept = 0;
+    virtual std::string ExplainPretty(uint8_t shift = 0) const noexcept = 0;
     virtual std::string ExplainInJSON() const noexcept = 0;
-    virtual void Append(const std::string& value) noexcept = 0;
-    virtual void Prepend(const std::string& value) noexcept = 0;
-    virtual ErrorInterface* AddContext(std::string context) noexcept = 0;
-    virtual ErrorInterface* AddCause(Error cause_err) noexcept = 0;
+    virtual ErrorInterface* AddContext(std::string key, std::string value) noexcept = 0;
+    virtual ErrorInterface* SetCause(Error cause_err) noexcept = 0;
     virtual CustomErrorData* GetCustomData() noexcept = 0;
     virtual void SetCustomData(std::unique_ptr<CustomErrorData> data) noexcept = 0;
     virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
@@ -49,7 +49,7 @@ class ServiceError : public ErrorInterface {
     ServiceErrorType error_type_;
     std::string error_name_;
     std::string error_message_;
-    std::string context_;
+    std::map<std::string, std::string> context_;
     Error cause_err_;
     std::unique_ptr<CustomErrorData> custom_data_;
   public:
@@ -57,11 +57,10 @@ class ServiceError : public ErrorInterface {
     ServiceErrorType GetServiceErrorType() const noexcept;
     CustomErrorData* GetCustomData() noexcept override;
     void SetCustomData(std::unique_ptr<CustomErrorData> data) noexcept override;
-    void Append(const std::string& value) noexcept override;
-    void Prepend(const std::string& value) noexcept override;
-    ErrorInterface* AddContext(std::string context) noexcept override;
-    ErrorInterface* AddCause(Error cause_err) noexcept override;
+    ErrorInterface* AddContext(std::string key, std::string value) noexcept override;
+    ErrorInterface* SetCause(Error cause_err) noexcept override;
     std::string Explain() const noexcept override;
+    virtual std::string ExplainPretty(uint8_t shift) const noexcept override;
     std::string ExplainInJSON() const noexcept override;
 };
 
@@ -139,15 +138,15 @@ using GeneralError = ServiceError<GeneralErrorType>;
 using GeneralErrorTemplate = ServiceErrorTemplate<GeneralErrorType>;
 
 auto const kMemoryAllocationError = GeneralErrorTemplate {
-    "kMemoryAllocationError", GeneralErrorType::kMemoryAllocationError
+    "memory allocation", GeneralErrorType::kMemoryAllocationError
 };
 
 auto const kEndOfFile = GeneralErrorTemplate {
-    "End of file", GeneralErrorType::kEndOfFile
+    "end of file", GeneralErrorType::kEndOfFile
 };
 
 auto const kSimpleError = GeneralErrorTemplate {
-    "", GeneralErrorType::kSimpleError
+    "unnamed error", GeneralErrorType::kSimpleError
 };
 
 }

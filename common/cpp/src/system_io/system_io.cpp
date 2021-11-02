@@ -116,7 +116,7 @@ MessageData SystemIO::GetDataFromFile(const std::string& fname, uint64_t* fsize,
 
     Read(fd, data_array, (size_t)*fsize, err);
     if (*err != nullptr) {
-        (*err)->Append(fname + ", expected size: " + std::to_string(*fsize));
+        (*err)->AddContext("filename", fname)->AddContext("expected size", std::to_string(*fsize));
         Close(fd, nullptr);
         return nullptr;
     }
@@ -191,7 +191,7 @@ Error SystemIO::WriteDataToFile(const std::string& root_folder, const std::strin
 
     Write(fd, data, length, &err);
     if (err) {
-        err->Append(fname);
+        err->AddContext("filename", fname);
         return err;
     }
 
@@ -402,7 +402,7 @@ asapo::FileDescriptor asapo::SystemIO::Open(const std::string& filename,
     FileDescriptor fd = _open(filename.c_str(), flags);
     if (fd == -1) {
         *err = GetLastError();
-        (*err)->Append(filename);
+        (*err)->AddContext("filename", filename);
     } else {
         *err = nullptr;
     }
@@ -616,7 +616,7 @@ Error SystemIO::CreateDirectoryWithParents(const std::string& root_path, const s
         Error err;
         CreateNewDirectory(new_path, &err);
         if (err && err != IOErrorTemplates::kFileAlreadyExists) {
-            err->Append(new_path);
+            err->AddContext("path", new_path);
             return err;
         }
         if (iter != path.end()) {

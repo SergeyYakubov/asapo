@@ -105,26 +105,26 @@ Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode& c
 }
 Error ConsumerErrorFromServerError(const Error& server_err) {
     if (server_err == HttpErrorTemplates::kTransferError) {
-        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(server_err->Explain());
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate();
     } else {
-        return ConsumerErrorTemplates::kUnavailableService.Generate(server_err->Explain());
+        return ConsumerErrorTemplates::kUnavailableService.Generate();
     }
 }
 
 Error ProcessRequestResponce(const RequestInfo& request,
-                             const Error& server_err,
+                             Error server_err,
                              const RequestOutput* response,
                              const HttpCode& code) {
     Error err;
     if (server_err != nullptr) {
         err =  ConsumerErrorFromServerError(server_err);
+        err->SetCause(std::move(server_err));
     } else {
         err =  ConsumerErrorFromHttpCode(response, code);
     }
 
     if (err != nullptr) {
-        std::string prefix = "Error processing request " + request.host + request.api;
-        err->Prepend(prefix);
+        err->AddContext("host", request.host)->AddContext("api", "request.api");
     }
     return err;
 
@@ -202,7 +202,7 @@ Error ConsumerImpl::ProcessRequest(RequestOutput* response, const RequestInfo& r
     if (err && service_uri) {
         service_uri->clear();
     }
-    return ProcessRequestResponce(request, err, response, code);
+    return ProcessRequestResponce(request, std::move(err), response, code);
 }
 
 RequestInfo ConsumerImpl::GetDiscoveryRequest(const std::string& service_name) const {

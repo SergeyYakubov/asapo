@@ -47,7 +47,7 @@ struct RequestOutput {
     }
 };
 
-Error ProcessRequestResponce(const RequestInfo& request, const Error& server_err, const RequestOutput* response,
+Error ProcessRequestResponce(const RequestInfo& request, Error server_err, const RequestOutput* response,
                              const HttpCode& code);
 Error ConsumerErrorFromNoDataResponse(const std::string& response);
 Error ConsumerErrorFromPartialDataResponse(const std::string& response);

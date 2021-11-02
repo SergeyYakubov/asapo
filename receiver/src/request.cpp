@@ -18,8 +18,7 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
         try {
             data_buffer_.reset(new uint8_t[(size_t)request_header_.data_size]);
         } catch(std::exception& e) {
-            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate();
-            err->Append(e.what());
+            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate(e.what());
             return err;
         }
     } else {

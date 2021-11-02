@@ -39,6 +39,10 @@ class AbstractLogger {
     virtual void Error(const std::string& text) const = 0;
     virtual void Debug(const std::string& text) const = 0;
     virtual void Warning(const std::string& text) const = 0;
+    virtual void Info(const asapo::Error& error) const = 0;
+    virtual void Error(const asapo::Error& error) const = 0;
+    virtual void Debug(const asapo::Error& error) const = 0;
+    virtual void Warning(const asapo::Error& error) const = 0;
     virtual void Info(const LogMessageWithFields& msg) const = 0;
     virtual void Error(const LogMessageWithFields& msg) const = 0;
     virtual void Debug(const LogMessageWithFields& msg) const = 0;
