@@ -33,7 +33,7 @@ echo %NUM% | findstr 3 || goto error
 for /F %%N in ('find /C "reauthorization" ^< "out"') do set NUM=%%N
 echo %NUM% | findstr 1 || goto error
 
-for /F %%N in ('find /C "} server warning: duplicated request" ^< "out"') do set NUM=%%N
+for /F %%N in ('find /C "} duplicated request" ^< "out"') do set NUM=%%N
 echo %NUM% | findstr 1 || goto error
 
 goto :clean
