@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 
     auto endpoint = "localhost:8400";
     auto beamtime = "asapo_test";
-    
+
     auto token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJl"
                  "eHAiOjk1NzE3MTAyMTYsImp0aSI6ImMzaXFhbGpmN"
                  "DNhbGZwOHJua20wIiwic3ViIjoiYnRfYXNhcG9fdG"
@@ -33,34 +33,36 @@ int main(int argc, char* argv[]) {
     auto group_id = consumer->GenerateNewGroupId(&err);
     exit_if_error("Cannot create group id", err);
 
+    // dataset snippet_start
     asapo::DataSet ds;
     asapo::MessageData data;
-    
+
     do {
         ds = consumer->GetNextDataset(group_id, 0, "default", &err);
-        
+
         if (err && err == asapo::ConsumerErrorTemplates::kStreamFinished) {
             std::cout << "stream finished" << std::endl;
             break;
         }
-        
+
         if (err && err == asapo::ConsumerErrorTemplates::kEndOfStream) {
             std::cout << "stream ended" << std::endl;
             break;
         }
-        exit_if_error("Cannot get next record", err);
+        exit_if_error("Cannot get next record", err); // snippet_end_remove
 
         std::cout << "Dataset Id: " << ds.id << std::endl;
-        
+
         for(int i = 0; i < ds.content.size(); i++)
         {
             err = consumer->RetrieveData(&ds.content[i], &data);
-            exit_if_error("Cannot get dataset content", err);
+            exit_if_error("Cannot get dataset content", err); // snippet_end_remove
 
             std::cout << "Part " << ds.content[i].dataset_substream << " out of " << ds.expected_size << std:: endl;
             std::cout << "message content: " << reinterpret_cast<char const*>(data.get()) << std::endl;
         }
     } while (1);
+    // dataset snippet_end
 
     err = consumer->DeleteStream("default", asapo::DeleteStreamOptions{true, true});
     exit_if_error("Cannot delete stream", err);

@@ -35,6 +35,7 @@ group_id = consumer.generate_group_id()
 # the flag to separate the first attempt for message #3
 firstTryNegative = True
 
+# consume snippet_start
 try:
     while True:
         data, meta = consumer.get_next(group_id, meta_only = False)
@@ -64,7 +65,10 @@ except asapo_consumer.AsapoStreamFinishedError:
 
 except asapo_consumer.AsapoEndOfStreamError:
     print('stream ended')
+# consume snippet_end
 
+# print snippet_start
 for message_id in consumer.get_unacknowledged_messages(group_id):
     data, meta = consumer.get_by_id(message_id, meta_only = False)
     print('Unacknowledged message:', data.tobytes().decode("utf-8"), meta)
+# print snippet_end

@@ -46,47 +46,51 @@ int main(int argc, char* argv[]) {
     auto group_id = consumer->GenerateNewGroupId(&err);
     exit_if_error("Cannot create group id", err);
 
+    // pipeline snippet_start
     // put the processed message into the new stream
     auto pipelined_stream_name = "pipelined";
 
     asapo::MessageMeta mm;
     asapo::MessageData data;
-    
+
     do {
         // we expect the message to be in the 'default' stream already
         err = consumer->GetNext(group_id, &mm, &data, "default");
-        
+
         if (err && err == asapo::ConsumerErrorTemplates::kStreamFinished) {
             std::cout << "stream finished" << std::endl;
             break;
         }
-        
+
         if (err && err == asapo::ConsumerErrorTemplates::kEndOfStream) {
             std::cout << "stream ended" << std::endl;
             break;
         }
-        exit_if_error("Cannot get next record", err);
-        
+        exit_if_error("Cannot get next record", err); // snippet_end_remove
+
         // work on our data
         auto processed_string = std::string(reinterpret_cast<char const*>(data.get())) + " processed";
         auto send_size = processed_string.size() + 1;
         auto buffer = asapo::MessageData(new uint8_t[send_size]);
         memcpy(buffer.get(), processed_string.c_str(), send_size);
-        
+
         // you may use the same filename, if you want to rewrite the source file. This will result in warning, but it is a valid usecase
         asapo::MessageHeader message_header{mm.id, send_size, std::string("processed/test_file_") + std::to_string(mm.id)};
         err = producer->Send(message_header, std::move(buffer), asapo::kDefaultIngestMode, pipelined_stream_name, &ProcessAfterSend);
-        exit_if_error("Cannot send message", err);
+        exit_if_error("Cannot send message", err); // snippet_end_remove
     } while (1);
+    // pipeline snippet_end
 
 
-    err = producer->WaitRequestsFinished(2000); 
+    err = producer->WaitRequestsFinished(2000);
     exit_if_error("Producer exit on timeout", err);
 
+    // finish snippet_start
     // the meta from the last iteration corresponds to the last message
     auto last_id = mm.id;
-    
+
     err = producer->SendStreamFinishedFlag("pipelined",last_id, "", &ProcessAfterSend);
+    // finish snippet_end
     exit_if_error("Cannot finish stream", err);
 
     // you can remove the source stream if you do not need it anymore

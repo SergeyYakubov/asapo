@@ -1,5 +1,6 @@
 import asapo_consumer
 
+#create snippet_start
 endpoint = "localhost:8400"
 beamtime = "asapo_test"
 
@@ -22,20 +23,20 @@ consumer = asapo_consumer \
                                  "test_source",  # Same as for the producer
                                  token,          # Access token
                                  5000)           # Timeout. How long do you want to wait on non-finished stream for a message.
+#create snippet_end
 
-
-# you can get info about the streams in the beamtime
+#list snippet_start
 for stream in consumer.get_stream_list():
     print("Stream name: ", stream['name'], "\n",
           "LastId: ", stream['lastId'], "\n",
           "Stream finished: ", stream['finished'], "\n",
           "Next stream: ", stream['nextStream'])
+#list snippet_end
 
-
+#consume snippet_start
 group_id = consumer.generate_group_id() # Several consumers can use the same group_id to process messages in parallel
 
 try:
-
     # get_next is the main function to get messages from streams. You would normally call it in loop.
     # you can either manually compare the meta['_id'] to the stream['lastId'], or wait for the exception to happen
     while True:
@@ -44,8 +45,11 @@ try:
 
 except asapo_consumer.AsapoStreamFinishedError:
     print('stream finished') # all the messages in the stream were processed
-        
+
 except asapo_consumer.AsapoEndOfStreamError:
     print('stream ended')    # not-finished stream timeout, or wrong or empty stream
+#consume snippet_end
 
+#delete snippet_start
 consumer.delete_stream(error_on_not_exist = True) # you can delete the stream after consuming
+#delete cnippet_end

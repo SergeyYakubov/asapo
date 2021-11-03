@@ -25,7 +25,7 @@ consumer = asapo_consumer.create_consumer(endpoint, path_to_files, True, beamtim
 producer = asapo_producer.create_producer(endpoint, 'processed', beamtime, 'auto', 'test_source', '', 1, 60000)
 
 group_id = consumer.generate_group_id()
-
+# pipeline snippet_start
 # put the processed message into the new stream
 pipelined_stream_name = 'pipelined'
 
@@ -48,13 +48,15 @@ except asapo_consumer.AsapoStreamFinishedError:
         
 except asapo_consumer.AsapoEndOfStreamError:
     print('stream ended')
-
+# pipeline snippet_end
 producer.wait_requests_finished(2000)
 
+# finish snippet_start
 # the meta from the last iteration corresponds to the last message
 last_id = meta['_id']
 
 producer.send_stream_finished_flag("pipelined", last_id)
+# finish snippet_end
 
 # you can remove the source stream if you do not need it anymore
 consumer.delete_stream(stream = 'default', error_on_not_exist = True)
