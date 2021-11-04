@@ -31,6 +31,7 @@ int main(int argc, char* argv[]) {
     auto producer = asapo::Producer::Create(endpoint, 1, asapo::RequestHandlerType::kTcp, credentials, 60000, &err);
     exit_if_error("Cannot start producer", err);
 
+    // dataset snippet_start
     std::string to_send = "hello dataset 1";
     auto send_size = to_send.size() + 1;
     auto buffer =  asapo::MessageData(new uint8_t[send_size]);
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
     asapo::MessageHeader message_header{1, send_size, "processed/test_file_dataset_1", "", 1, 3};
 
     err = producer->Send(message_header, std::move(buffer), asapo::kDefaultIngestMode, "default", &ProcessAfterSend);
-    exit_if_error("Cannot send message", err);
+    exit_if_error("Cannot send message", err); // snippet_end_remove
 
     // this can be done from different producers in any order
     // we do not recalculate send_size since we know it to be the same
@@ -51,7 +52,7 @@ int main(int argc, char* argv[]) {
 
     message_header.dataset_substream = 2;
     err = producer->Send(message_header, std::move(buffer), asapo::kDefaultIngestMode, "default", &ProcessAfterSend);
-    exit_if_error("Cannot send message", err);
+    exit_if_error("Cannot send message", err); // snippet_end_remove
 
     to_send = "hello dataset 3";
     buffer =  asapo::MessageData(new uint8_t[send_size]);
@@ -59,7 +60,8 @@ int main(int argc, char* argv[]) {
 
     message_header.dataset_substream = 3;
     err = producer->Send(message_header, std::move(buffer), asapo::kDefaultIngestMode, "default", &ProcessAfterSend);
-    exit_if_error("Cannot send message", err);
+    exit_if_error("Cannot send message", err); // snippet_end_remove
+    // dataset snippet_end
 
     err = producer->WaitRequestsFinished(2000);
     exit_if_error("Producer exit on timeout", err);

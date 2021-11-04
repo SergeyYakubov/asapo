@@ -68,6 +68,7 @@ int main(int argc, char* argv[]) {
     auto group_id = consumer->GenerateNewGroupId(&err);
     exit_if_error("Cannot create group id", err);
 
+    // consume snippet_start
     asapo::MessageMeta mm;
     asapo::MessageData data;
 
@@ -88,7 +89,7 @@ int main(int argc, char* argv[]) {
             std::cout << "stream ended" << std::endl;
             break;
         }
-        exit_if_error("Cannot get next record", err);
+        exit_if_error("Cannot get next record", err); // snippet_end_remove
 
         // acknowledge all the messages except the ones in the set
         if (ids.find(mm.id) == ids.end()) {
@@ -111,18 +112,21 @@ int main(int argc, char* argv[]) {
             }
         }
     } while (1);
+    // consume snippet_end
 
+    // print snippet_start
     auto unacknowledgedMessages = consumer->GetUnacknowledgedMessages(group_id, 0, 0, "default", &err);
-    exit_if_error("Could not get list of messages", err);
+    exit_if_error("Could not get list of messages", err); // snippet_end_remove
 
     for (int i = 0; i < unacknowledgedMessages.size(); i++) {
         err = consumer->GetById(unacknowledgedMessages[i], &mm, &data, "default");
-        exit_if_error("Cannot get message", err);
+        exit_if_error("Cannot get message", err); // snippet_end_remove
 
         std::cout << "Unacknowledged message: " << reinterpret_cast<char const*>(data.get()) << std::endl;
         std::cout << "id: " << mm.id << std::endl;
         std::cout << "file name: " << mm.name << std::endl;
     }
+    // print snippet_end
 
     return EXIT_SUCCESS;
 }

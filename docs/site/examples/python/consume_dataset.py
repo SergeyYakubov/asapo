@@ -18,11 +18,11 @@ consumer = asapo_consumer.create_consumer(endpoint, path_to_files, True, beamtim
 
 group_id = consumer.generate_group_id()
 
+# dataset snippet_start
 try:
-
     # get_next_dataset behaves similarly to the regular get_next
     while True:
-        dataset = consumer.get_next_dataset(group_id, stream = 'pipelined')
+        dataset = consumer.get_next_dataset(group_id, stream = 'default')
         print ('Dataset Id:', dataset['id'])
         # the initial response only contains the metadata
         # the actual content should be retrieved separately
@@ -33,6 +33,7 @@ try:
 
 except asapo_consumer.AsapoStreamFinishedError:
     print('stream finished')
-        
+
 except asapo_consumer.AsapoEndOfStreamError:
     print('stream ended')
+# dataset snippet_end

@@ -46,31 +46,41 @@ def print_messages(metadatas):
         data = consumer.retrieve_data(meta)
         print('Message #', meta['_id'], ', content:', data.tobytes().decode("utf-8"), ', usermetadata:', meta['meta'])
 
+# by_id snippet_start
 # simple query, same as get_by_id
 metadatas = consumer.query_messages('_id = 1')
+# by_id snippet_end
 print('Message with ID = 1')
 print_messages(metadatas)
 
+# by_ids snippet_start
 # the query that requests the range of IDs
 metadatas = consumer.query_messages('_id >= 8')
+# by_ids snippet_end
 print('Messages with ID >= 8')
 print_messages(metadatas)
 
+# string_equal snippet_start
 # the query that has some specific requirement for message metadata
 metadatas = consumer.query_messages('meta.condition = "condition #7"')
+# string_equal snippet_end
 print('Message with condition = "condition #7"')
 print_messages(metadatas)
 
+# int_compare snippet_start
 # the query that has several requirements for user metadata
 metadatas = consumer.query_messages('meta.somevalue > 30 AND meta.somevalue < 60')
+# int_compare snippet_end
 print('Message with 30 < somevalue < 60')
 print_messages(metadatas)
 
+# timestamp snippet_start
 # the query that is based on the message's timestamp
 now = datetime.now()
 fifteen_minutes_ago = now - timedelta(minutes = 15)
 # python uses timestamp in seconds, while ASAP::O in nanoseconds, so we need to multiply it by a billion
 metadatas = consumer.query_messages('timestamp < {} AND timestamp > {}'.format(now.timestamp() * 10**9, fifteen_minutes_ago.timestamp() * 10**9))
+# timestamp snippet_end
 print('Messages in the last 15 minutes')
 print_messages(metadatas)
 

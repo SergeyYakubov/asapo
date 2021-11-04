@@ -42,53 +42,59 @@ int main(int argc, char* argv[]) {
     exit_if_error("Cannot start producer", err);
     producer->SetLogLevel(asapo::LogLevel::Error);
 
+    // beamtime_set snippet_start
     // sample beamtime metadata. You can add any data you want, with any level of complexity
     // in this example we use strings and ints, and one nested structure
     auto beamtime_metadata = "{"
-                             "   \"name\": \"beamtime name\","
-                             "   \"condition\": \"beamtime condition\","
-                             "   \"intvalue1\": 5,"
-                             "   \"intvalue2\": 10,"
-                             "   \"structure\": {"
-                             "       \"structint1\": 20,"
-                             "       \"structint2\": 30"
-                             "   }"
-                             "}";
+    "   \"name\": \"beamtime name\","
+    "   \"condition\": \"beamtime condition\","
+    "   \"intvalue1\": 5,"
+    "   \"intvalue2\": 10,"
+    "   \"structure\": {"
+    "       \"structint1\": 20,"
+    "       \"structint2\": 30"
+    "   }"
+    "}";
 
     // send the metadata
     // with this call the new metadata will completely replace the one that's already there
     err = producer->SendBeamtimeMetadata(beamtime_metadata, asapo::MetaIngestMode{asapo::MetaIngestOp::kReplace, true}, &ProcessAfterSend);
+    // beamtime_set snippet_end
     exit_if_error("Cannot send metadata", err);
 
+    // beamtime_update snippet_start
     // we can update the existing metadata if we want, by modifying the existing fields, or adding new ones
     auto beamtime_metadata_update = "{"
-                                    "    \"condition\": \"updated beamtime condition\","
-                                    "    \"newintvalue\": 15"
-                                    "}";
+    "    \"condition\": \"updated beamtime condition\","
+    "    \"newintvalue\": 15"
+    "}";
 
     // send the metadata in the 'kUpdate' mode
     err = producer->SendBeamtimeMetadata(beamtime_metadata_update, asapo::MetaIngestMode{asapo::MetaIngestOp::kUpdate, true}, &ProcessAfterSend);
+    // beamtime_update snippet_end
     exit_if_error("Cannot send metadata", err);
 
+    // stream_set snippet_start
     // sample stream metadata
     auto stream_metadata = "{"
-                           "    \"name\": \"stream name\","
-                           "    \"condition\": \"stream condition\","
-                           "    \"intvalue\": 44"
-                           "}";
+    "    \"name\": \"stream name\","
+    "    \"condition\": \"stream condition\","
+    "    \"intvalue\": 44"
+    "}";
 
     // works the same way: for the initial set we use 'kReplace' the stream metadata, but update is also possible
     // update works exactly the same as for beamtime, but here we will only do 'kReplace'
-    err = producer->SendStreamMetadata(stream_metadata, asapo::MetaIngestMode{asapo::MetaIngestOp::kUpdate, true},
-                                       "default", &ProcessAfterSend);
+    err = producer->SendStreamMetadata(stream_metadata, asapo::MetaIngestMode{asapo::MetaIngestOp::kUpdate, true}, "default", &ProcessAfterSend);
+    // stream_set snippet_end
     exit_if_error("Cannot send metadata", err);
 
+    // message_set snippet_start
     // sample message metadata
     auto message_metadata = "{"
-                            "    \"name\": \"message name\","
-                            "    \"condition\": \"message condition\","
-                            "    \"somevalue\": 55"
-                            "}";
+    "    \"name\": \"message name\","
+    "    \"condition\": \"message condition\","
+    "    \"somevalue\": 55"
+    "}";
 
     std::string data_string = "hello";
     auto send_size = data_string.size() + 1;
@@ -99,6 +105,7 @@ int main(int argc, char* argv[]) {
     // in case of datasets each part has its own metadata
     asapo::MessageHeader message_header{1, send_size, "processed/test_file", message_metadata};
     err = producer->Send(message_header, std::move(buffer), asapo::kDefaultIngestMode, "default", &ProcessAfterSend);
+    // message_set snippet_end
     exit_if_error("Cannot send message", err);
 
     err = producer->WaitRequestsFinished(2000);
@@ -107,17 +114,21 @@ int main(int argc, char* argv[]) {
     auto consumer = asapo::ConsumerFactory::CreateConsumer(endpoint, path_to_files, true, credentials, &err);
     exit_if_error("Cannot start consumer", err);
 
+    // beamtime_get snippet_start
     // read the beamtime metadata
     auto beamtime_metadata_read = consumer->GetBeamtimeMeta(&err);
-    exit_if_error("Cannot get metadata", err);
+    exit_if_error("Cannot get metadata", err); // snippet_end_remove
 
     std::cout << "Updated beamtime metadata:" << std::endl << beamtime_metadata_read << std::endl;
+    // beamtime_get snippet_end
 
+    // stream_get snippet_start
     // read the stream metadata
     auto stream_metadata_read = consumer->GetStreamMeta("default", &err);
     exit_if_error("Cannot get metadata", err);
 
     std::cout << "Stream metadata:" << std::endl << stream_metadata_read << std::endl;
+    // stream_get snippet_end
 
     auto group_id = consumer->GenerateNewGroupId(&err);
     exit_if_error("Cannot create group id", err);
@@ -126,8 +137,10 @@ int main(int argc, char* argv[]) {
     asapo::MessageData data;
 
     do {
+        // message_get snippet_start
         err = consumer->GetNext(group_id, &mm, &data, "default");
 
+        // message_get snippet_start_remove
         if (err && err == asapo::ConsumerErrorTemplates::kStreamFinished) {
             std::cout << "stream finished" << std::endl;
             break;
@@ -138,10 +151,12 @@ int main(int argc, char* argv[]) {
             break;
         }
         exit_if_error("Cannot get next record", err);
+        // message_get snippet_end_remove
 
         std::cout << "Message #" << mm.id << std::endl;
         // our custom metadata is stored inside the message metadata
         std::cout << "Message metadata:" << std::endl << mm.metadata << std::endl;
+        // message_get snippet_end
     } while (1);
 
     return EXIT_SUCCESS;

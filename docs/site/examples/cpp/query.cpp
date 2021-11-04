@@ -61,9 +61,9 @@ int main(int argc, char* argv[]) {
     // let's start with producing some messages with metadata
     for (uint64_t i = 1; i <= 10; i++) {
         auto message_metadata = "{"
-                                "    \"condition\": \"condition #" + std::to_string(i) + "\","
-                                "    \"somevalue\": " + std::to_string(i * 10) +
-                                "}";
+        "    \"condition\": \"condition #" + std::to_string(i) + "\","
+        "    \"somevalue\": " + std::to_string(i * 10) +
+        "}";
 
         std::string to_send = "message#" + std::to_string(i);
         auto send_size = to_send.size() + 1;
@@ -82,33 +82,44 @@ int main(int argc, char* argv[]) {
     exit_if_error("Cannot create group id", err);
     consumer->SetTimeout(5000);
 
+    // by_id snippet_start
+    // simple query, same as GetById
     auto metadatas = consumer->QueryMessages("_id = 1", "default", &err);
+    // by_id snippet_end
     exit_if_error("Cannot query messages", err);
     std::cout << "Message with ID = 1" << std::endl;
     PrintMessages(metadatas, consumer);
 
+    // by_ids snippet_start
+    // the query that requests the range of IDs
     metadatas = consumer->QueryMessages("_id >= 8", "default", &err);
+    // by_ids snippet_end
     exit_if_error("Cannot query messages", err);
     std::cout << "essages with ID >= 8" << std::endl;
     PrintMessages(metadatas, consumer);
 
+    // string_equal snippet_start
+    // the query that has some specific requirement for message metadata
     metadatas = consumer->QueryMessages("meta.condition = \"condition #7\"", "default", &err);
+    // string_equal snippet_end
     exit_if_error("Cannot query messages", err);
     std::cout << "Message with condition = 'condition #7'" << std::endl;
     PrintMessages(metadatas, consumer);
 
+    // int_compare snippet_start
+    // the query that has several requirements for user metadata
     metadatas = consumer->QueryMessages("meta.somevalue > 30 AND meta.somevalue < 60", "default", &err);
+    // int_compare snippet_end
     exit_if_error("Cannot query messages", err);
     std::cout << "Message with 30 < somevalue < 60" << std::endl;
     PrintMessages(metadatas, consumer);
 
-    auto now = std::chrono::duration_cast<std::chrono::nanoseconds>
-               (std::chrono::system_clock::now().time_since_epoch()).count();
-    auto fifteen_minutes_ago = std::chrono::duration_cast<std::chrono::nanoseconds>((std::chrono::system_clock::now() -
-                               std::chrono::minutes(15)).time_since_epoch()).count();
-    std::cout << now << " " << fifteen_minutes_ago << std::endl;
-    metadatas = consumer->QueryMessages("timestamp < " + std::to_string(now) + " AND timestamp > " + std::to_string(
-                                            fifteen_minutes_ago), "default", &err);
+    // timestamp snippet_start
+    // the query that is based on the message's timestamp
+    auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    auto fifteen_minutes_ago = std::chrono::duration_cast<std::chrono::nanoseconds>((std::chrono::system_clock::now() - std::chrono::minutes(15)).time_since_epoch()).count();
+    metadatas = consumer->QueryMessages("timestamp < " + std::to_string(now) + " AND timestamp > " + std::to_string(fifteen_minutes_ago), "default", &err);
+    // timestamp snippet_end
     exit_if_error("Cannot query messages", err);
     std::cout << "Messages in the last 15 minutes" << std::endl;
     PrintMessages(metadatas, consumer);

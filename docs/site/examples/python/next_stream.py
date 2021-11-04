@@ -27,8 +27,10 @@ producer.set_log_level('error')
 for i in range(1, 11):
     producer.send(i, "processed/test_file_" + str(i), ('content of the message #' + str(i)).encode(), stream = 'default', callback = callback)
 
+# next_stream_set snippet_start
 # finish the stream and set the next stream to be called 'next'
 producer.send_stream_finished_flag('default', i, next_stream = 'next', callback = callback)
+# next_stream_set snippet_end
 
 # populate the 'next' stream as well
 for i in range(1, 6):
@@ -41,6 +43,7 @@ producer.wait_requests_finished(2000)
 consumer = asapo_consumer.create_consumer(endpoint, path_to_files, True, beamtime, "test_source", token, 5000)
 group_id = consumer.generate_group_id()
 
+# read_stream snippet_start
 # we start with the 'default' stream (the first one)
 stream_name = 'default'
 
@@ -66,3 +69,4 @@ while True:
     except asapo_consumer.AsapoEndOfStreamError:
         print('stream ended')
         break
+# read_stream snippet_end

@@ -55,8 +55,10 @@ int main(int argc, char* argv[]) {
         exit_if_error("Cannot send message", err);
     }
 
+    // next_stream_set snippet_start
     // finish the stream and set the next stream to be called 'next'
     producer->SendStreamFinishedFlag("default", 10, "next", &ProcessAfterSend);
+    // next_stream_set snippet_end
 
     // populate the 'next' stream as well
     for (uint64_t i = 1; i <= 5; i++) {
@@ -83,6 +85,7 @@ int main(int argc, char* argv[]) {
     asapo::MessageMeta mm;
     asapo::MessageData data;
 
+    // read_stream snippet_start
     // we start with the 'default' stream (the first one)
     std::string stream_name = "default";
 
@@ -114,10 +117,11 @@ int main(int argc, char* argv[]) {
             std::cout << "stream ended" << std::endl;
             break;
         }
-        exit_if_error("Cannot get next record", err);
+        exit_if_error("Cannot get next record", err); // snippet_end_remove
 
         std::cout << "Message #" << mm.id << ", message content: " << reinterpret_cast<char const*>(data.get()) << std::endl;
     } while (1);
+    // read_stream snippet_end
 
     return EXIT_SUCCESS;
 }

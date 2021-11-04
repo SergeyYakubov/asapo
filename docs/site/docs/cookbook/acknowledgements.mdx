@@ -8,9 +8,9 @@ import TabItem from '@theme/TabItem';
 
 While consuming the messages we could issue acknowledgements, to denote that the messages were (or were not) processed successfully.
 
-The following example produces 10 sample messages, and then acknowledges all of them, except for the messages 3, 5 and 7. The message #3 receives a negative acknowledgement, which puts is back in the stream for the repeated processing. On the second attempt the message #3 gets acknowledged. The messages 5 and 7 remain unacknowledged.
+Here is the snippet that expects 10 sample messages in the default stream. When consuming the messages, the message #3 receives a negative acknowledgement, which puts is back in the stream for the repeated processing, and the messages 5 and 7 remain unacknowledged. On the second attempt the message #3 gets acknowledged.
 
-Only the acknowledgements-relevant parts would be explained here. Look at the corresponding examples to learn about producers and consumers in detailes.
+You can found the full example in git repository.
 
 <Tabs
   groupId="language"
@@ -22,14 +22,39 @@ Only the acknowledgements-relevant parts would be explained here. Look at the co
 }>
 <TabItem value="python">
 
-```python content="./examples/python/acknowledgements.py"
+```python content="./examples/python/acknowledgements.py" snippetTag="consume"
 ```
 
 </TabItem>
 
 <TabItem value="cpp">
 
-```cpp content="./examples/cpp/acknowledgements.cpp"
+```cpp content="./examples/cpp/acknowledgements.cpp" snippetTag="consume"
+```
+
+</TabItem>
+</Tabs>
+
+The list of unacknowledged messages can be accessed at any time. This snippet prints the list of unacknowledged messages.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/acknowledgements.py" snippetTag="print"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/acknowledgements.cpp" snippetTag="print"
 ```
 
 </TabItem>
