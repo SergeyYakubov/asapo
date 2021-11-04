@@ -2,6 +2,8 @@ elk_logs = false
 
 asapo_monitor = true
 asapo_monitor_alert = true
+asapo_alert_email = "xxx"
+asapo_alert_email_smart_host = "xxx:25"
 
 receiver_total_memory_size = 500
 receiver_dataserver_cache_size = 0 #gb

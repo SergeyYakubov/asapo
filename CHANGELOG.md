@@ -1,4 +1,10 @@
-## 21.09.0 (in progress)
+## 21.12.0 (in progress)
+
+FEATURES
+* Consumer API: Get last within consumer group returns message only once
+
+
+## 21.09.0
 
 FEATURES
 * Producer API: C client
@@ -15,6 +21,7 @@ BUG FIXES
 INTERNAL
 * Improved authoriation service caching
 * Added profiling for Go services
+* Added metrics and alerts for asapo services
 
 ## 21.06.0
 

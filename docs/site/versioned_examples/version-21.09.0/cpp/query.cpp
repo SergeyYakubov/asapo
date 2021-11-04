@@ -61,9 +61,9 @@ int main(int argc, char* argv[]) {
     // let's start with producing some messages with metadata
     for (uint64_t i = 1; i <= 10; i++) {
         auto message_metadata = "{"
-        "    \"condition\": \"condition #" + std::to_string(i) + "\","
-        "    \"somevalue\": " + std::to_string(i * 10) +
-        "}";
+                                "    \"condition\": \"condition #" + std::to_string(i) + "\","
+                                "    \"somevalue\": " + std::to_string(i * 10) +
+                                "}";
 
         std::string to_send = "message#" + std::to_string(i);
         auto send_size = to_send.size() + 1;
@@ -102,10 +102,13 @@ int main(int argc, char* argv[]) {
     std::cout << "Message with 30 < somevalue < 60" << std::endl;
     PrintMessages(metadatas, consumer);
 
-    auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    auto fifteen_minutes_ago = std::chrono::duration_cast<std::chrono::nanoseconds>((std::chrono::system_clock::now() - std::chrono::minutes(15)).time_since_epoch()).count();
+    auto now = std::chrono::duration_cast<std::chrono::nanoseconds>
+               (std::chrono::system_clock::now().time_since_epoch()).count();
+    auto fifteen_minutes_ago = std::chrono::duration_cast<std::chrono::nanoseconds>((std::chrono::system_clock::now() -
+                               std::chrono::minutes(15)).time_since_epoch()).count();
     std::cout << now << " " << fifteen_minutes_ago << std::endl;
-    metadatas = consumer->QueryMessages("timestamp < " + std::to_string(now) + " AND timestamp > " + std::to_string(fifteen_minutes_ago), "default", &err);
+    metadatas = consumer->QueryMessages("timestamp < " + std::to_string(now) + " AND timestamp > " + std::to_string(
+                                            fifteen_minutes_ago), "default", &err);
     exit_if_error("Cannot query messages", err);
     std::cout << "Messages in the last 15 minutes" << std::endl;
     PrintMessages(metadatas, consumer);

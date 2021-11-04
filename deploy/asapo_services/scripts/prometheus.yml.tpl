@@ -20,7 +20,6 @@ rule_files:
 # A scrape configuration containing exactly one endpoint to scrape:
 # Here it's Prometheus itself.
 scrape_configs:
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
   - job_name: "prometheus"
     consul_sd_configs:
       - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
@@ -38,19 +37,13 @@ scrape_configs:
     metrics_path: /v1/metrics
     params:
       format: ['prometheus']
-  - job_name: discovery
+  - job_name: asapo
     consul_sd_configs:
       - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
         services:
           - 'asapo-discovery'
-    relabel_configs:
-      - source_labels: [__meta_consul_service]
-        target_label: job
-  - job_name: broker
-    consul_sd_configs:
-      - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
-        services:
           - 'asapo-broker'
+          - 'asapo-mongodb-monitor'
     relabel_configs:
       - source_labels: [__meta_consul_service]
         target_label: job

@@ -45,15 +45,15 @@ int main(int argc, char* argv[]) {
     // sample beamtime metadata. You can add any data you want, with any level of complexity
     // in this example we use strings and ints, and one nested structure
     auto beamtime_metadata = "{"
-    "   \"name\": \"beamtime name\","
-    "   \"condition\": \"beamtime condition\","
-    "   \"intvalue1\": 5,"
-    "   \"intvalue2\": 10,"
-    "   \"structure\": {"
-    "       \"structint1\": 20,"
-    "       \"structint2\": 30"
-    "   }"
-    "}";
+                             "   \"name\": \"beamtime name\","
+                             "   \"condition\": \"beamtime condition\","
+                             "   \"intvalue1\": 5,"
+                             "   \"intvalue2\": 10,"
+                             "   \"structure\": {"
+                             "       \"structint1\": 20,"
+                             "       \"structint2\": 30"
+                             "   }"
+                             "}";
 
     // send the metadata
     // with this call the new metadata will completely replace the one that's already there
@@ -62,9 +62,9 @@ int main(int argc, char* argv[]) {
 
     // we can update the existing metadata if we want, by modifying the existing fields, or adding new ones
     auto beamtime_metadata_update = "{"
-    "    \"condition\": \"updated beamtime condition\","
-    "    \"newintvalue\": 15"
-    "}";
+                                    "    \"condition\": \"updated beamtime condition\","
+                                    "    \"newintvalue\": 15"
+                                    "}";
 
     // send the metadata in the 'kUpdate' mode
     err = producer->SendBeamtimeMetadata(beamtime_metadata_update, asapo::MetaIngestMode{asapo::MetaIngestOp::kUpdate, true}, &ProcessAfterSend);
@@ -72,22 +72,23 @@ int main(int argc, char* argv[]) {
 
     // sample stream metadata
     auto stream_metadata = "{"
-    "    \"name\": \"stream name\","
-    "    \"condition\": \"stream condition\","
-    "    \"intvalue\": 44"
-    "}";
+                           "    \"name\": \"stream name\","
+                           "    \"condition\": \"stream condition\","
+                           "    \"intvalue\": 44"
+                           "}";
 
     // works the same way: for the initial set we use 'kReplace' the stream metadata, but update is also possible
     // update works exactly the same as for beamtime, but here we will only do 'kReplace'
-    err = producer->SendStreamMetadata(stream_metadata, asapo::MetaIngestMode{asapo::MetaIngestOp::kUpdate, true}, "default", &ProcessAfterSend);
+    err = producer->SendStreamMetadata(stream_metadata, asapo::MetaIngestMode{asapo::MetaIngestOp::kUpdate, true},
+                                       "default", &ProcessAfterSend);
     exit_if_error("Cannot send metadata", err);
 
     // sample message metadata
     auto message_metadata = "{"
-    "    \"name\": \"message name\","
-    "    \"condition\": \"message condition\","
-    "    \"somevalue\": 55"
-    "}";
+                            "    \"name\": \"message name\","
+                            "    \"condition\": \"message condition\","
+                            "    \"somevalue\": 55"
+                            "}";
 
     std::string data_string = "hello";
     auto send_size = data_string.size() + 1;

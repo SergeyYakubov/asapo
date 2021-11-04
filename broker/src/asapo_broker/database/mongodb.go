@@ -65,6 +65,9 @@ const inprocess_collection_name_prefix = "inprocess_"
 const meta_collection_name = "meta"
 const pointer_collection_name = "current_location"
 const pointer_field_name = "current_pointer"
+const last_message_collection_name = "last_messages"
+const last_message_field_name = "last_message"
+
 const no_session_msg = "database client not created"
 const already_connected_msg = "already connected"
 
@@ -73,6 +76,19 @@ const no_next_stream_keyword = "asapo_no_next"
 const stream_filter_all = "all"
 const stream_filter_finished = "finished"
 const stream_filter_unfinished = "unfinished"
+
+const (
+	field_op_inc int = iota
+	field_op_set
+)
+
+type fieldChangeRequest struct {
+	collectionName string
+	fieldName string
+	op        int
+	max_ind   int
+	val       int
+}
 
 var dbSessionLock sync.Mutex
 var dbClientLock sync.RWMutex
@@ -217,20 +233,26 @@ func (db *Mongodb) setCounter(request Request, ind int) (err error) {
 	return
 }
 
-func (db *Mongodb) errorWhenCannotIncrementField(request Request, max_ind int) (err error) {
+func (db *Mongodb) errorWhenCannotSetField(request Request, max_ind int) error {
 	if res, err := db.getRecordFromDb(request, max_ind, max_ind); err == nil {
-		if err := checkStreamFinished(request, max_ind, max_ind, res); err != nil {
-			return err
+		if err2 := checkStreamFinished(request, max_ind, max_ind, res); err2 != nil {
+			return err2
 		}
 	}
 	return &DBError{utils.StatusNoData, encodeAnswer(max_ind, max_ind, "")}
 }
 
-func (db *Mongodb) incrementField(request Request, max_ind int, res interface{}) (err error) {
-	update := bson.M{"$inc": bson.M{pointer_field_name: 1}}
+func (db *Mongodb) changeField(request Request, change fieldChangeRequest, res interface{}) (err error) {
+	var update bson.M
+	if change.op == field_op_inc {
+		update = bson.M{"$inc": bson.M{change.fieldName: 1}}
+	} else if change.op == field_op_set {
+		update = bson.M{"$set": bson.M{change.fieldName: change.val}}
+	}
+
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
-	q := bson.M{"_id": request.GroupId + "_" + request.Stream, pointer_field_name: bson.M{"$lt": max_ind}}
-	c := db.client.Database(request.DbName).Collection(pointer_collection_name)
+	q := bson.M{"_id": request.GroupId + "_" + request.Stream, change.fieldName: bson.M{"$lt": change.max_ind}}
+	c := db.client.Database(request.DbName).Collection(change.collectionName)
 
 	err = c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res)
 	if err != nil {
@@ -242,7 +264,7 @@ func (db *Mongodb) incrementField(request Request, max_ind int, res interface{})
 			if err2 := c.FindOneAndUpdate(context.TODO(), q, update, opts).Decode(res); err2 == nil {
 				return nil
 			}
-			return db.errorWhenCannotIncrementField(request, max_ind)
+			return db.errorWhenCannotSetField(request, change.max_ind)
 		}
 		return &DBError{utils.StatusTransactionInterrupted, err.Error()}
 	}
@@ -421,7 +443,11 @@ func (db *Mongodb) getCurrentPointer(request Request) (LocationPointer, int, err
 	}
 
 	var curPointer LocationPointer
-	err = db.incrementField(request, max_ind, &curPointer)
+	err = db.changeField(request, fieldChangeRequest{
+		collectionName: pointer_collection_name,
+		fieldName: pointer_field_name,
+		op:        field_op_inc,
+		max_ind:   max_ind}, &curPointer)
 	if err != nil {
 		return LocationPointer{}, 0, err
 	}
@@ -631,6 +657,26 @@ func (db *Mongodb) getLastRecord(request Request) ([]byte, error) {
 	return db.getRecordByIDRaw(request, max_ind, max_ind)
 }
 
+func (db *Mongodb) getLastRecordInGroup(request Request) ([]byte, error) {
+	max_ind, err := db.getMaxIndex(request, false)
+	if err != nil {
+		return nil, err
+	}
+
+	var res map[string]interface{}
+	err = db.changeField(request, fieldChangeRequest{
+		collectionName: last_message_collection_name,
+		fieldName: last_message_field_name,
+		op:        field_op_set,
+		max_ind:   max_ind,
+		val:       max_ind,
+	}, &res)
+	if err != nil {
+		return nil, err
+	}
+	return db.getRecordByIDRaw(request, max_ind, max_ind)
+}
+
 func getSizeFilter(request Request) bson.M {
 	filter := bson.M{}
 	if request.ExtraParam == "false" { // do not return incomplete datasets
@@ -704,7 +750,7 @@ func (db *Mongodb) getMeta(request Request) ([]byte, error) {
 		logger.Debug(log_str)
 		return nil, &DBError{utils.StatusNoData, err.Error()}
 	}
-	userMeta,ok:=res["meta"]
+	userMeta, ok := res["meta"]
 	if !ok {
 		log_str := "error getting meta for " + id + " in " + request.DbName + " : cannot parse database response"
 		logger.Error(log_str)
@@ -1040,6 +1086,8 @@ func (db *Mongodb) ProcessRequest(request Request) (answer []byte, err error) {
 		return db.getRecordByID(request)
 	case "last":
 		return db.getLastRecord(request)
+	case "groupedlast":
+		return db.getLastRecordInGroup(request)
 	case "resetcounter":
 		return db.resetCounter(request)
 	case "size":

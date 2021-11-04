@@ -93,7 +93,9 @@ int main(int argc, char* argv[]) {
             // when the stream finishes, we look for the info on the next stream
             auto streams = consumer->GetStreamList("", asapo::StreamFilter::kAllStreams, &err);
             // first, we find the stream with our name in the list of streams
-            auto stream = std::find_if(streams.begin(), streams.end(), [&stream_name](const asapo::StreamInfo& s) { return s.name == stream_name; });
+            auto stream = std::find_if(streams.begin(), streams.end(), [&stream_name](const asapo::StreamInfo & s) {
+                return s.name == stream_name;
+            });
 
             // then we look if the field 'nextStream' is set and not empty
             if (stream != streams.end() && !stream->next_stream.empty()) {
@@ -117,5 +119,5 @@ int main(int argc, char* argv[]) {
         std::cout << "Message #" << mm.id << ", message content: " << reinterpret_cast<char const*>(data.get()) << std::endl;
     } while (1);
 
-   return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

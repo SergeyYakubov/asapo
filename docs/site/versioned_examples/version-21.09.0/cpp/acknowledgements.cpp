@@ -124,5 +124,5 @@ int main(int argc, char* argv[]) {
         std::cout << "file name: " << mm.name << std::endl;
     }
 
-   return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

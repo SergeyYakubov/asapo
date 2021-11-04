@@ -109,6 +109,7 @@ data "template_file" "asapo_monitoring" {
   vars = {
     n_brokers = "${var.n_brokers}"
     n_receivers = "${var.n_receivers}"
+    n_fts = "${var.n_fts}"
     service_dir = "${var.service_dir}"
     scripts_dir = "${var.job_scripts_dir}"
     asapo_monitor = "${var.asapo_monitor}"

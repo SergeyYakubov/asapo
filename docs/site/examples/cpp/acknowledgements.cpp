@@ -128,5 +128,5 @@ int main(int argc, char* argv[]) {
     }
     // print snippet_end
 
-   return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
