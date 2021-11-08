@@ -1,6 +1,7 @@
 #include "request_handler_db_delete_stream.h"
-#include "../receiver_config.h"
 #include <asapo/database/db_error.h>
+
+#include "../receiver_logger.h"
 
 namespace asapo {
 
@@ -19,8 +20,7 @@ Error RequestHandlerDbDeleteStream::ProcessRequest(Request* request) const {
     auto stream_name = request->GetStream();
 
     if (!options.delete_meta) {
-        log__->Debug(std::string{"skipped deleting stream meta in "} + stream_name + " in " +
-                     db_name_ + " at " + GetReceiverConfig()->database_uri);
+        log__->Debug(RequestLog("skipped deleting stream meta", request));
         return nullptr;
     }
     auto err =  db_client__->DeleteStream(stream_name);
@@ -31,8 +31,7 @@ Error RequestHandlerDbDeleteStream::ProcessRequest(Request* request) const {
     }
 
     if (no_error) {
-        log__->Debug(std::string{"deleted stream meta in "} + stream_name + " in " +
-                     db_name_ + " at " + GetReceiverConfig()->database_uri);
+        log__->Debug(RequestLog("deleted stream meta", request));
         return nullptr;
     }
 

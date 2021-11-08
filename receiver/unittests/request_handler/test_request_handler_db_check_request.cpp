@@ -78,12 +78,7 @@ class DbCheckRequestHandlerTests : public Test {
             MockGetSetByID(error, expect_compare);
             n_run++;
         });
-        ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
-        ON_CALL(*mock_request, GetBeamline()).WillByDefault(ReturnRef(""));
-        ON_CALL(*mock_request, GetDataSource()).WillByDefault(ReturnRef(""));
-        ON_CALL(*mock_request, GetStream()).WillByDefault(Return(""));
-        ON_CALL(*mock_request, GetOriginHost()).WillByDefault(ReturnRef(""));
-        ON_CALL(*mock_request, GetOpCode()).WillByDefault(Return(Opcode::kOpcodeTransferData));
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
     }
     void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source, bool expect_compare = true);
 

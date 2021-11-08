@@ -46,7 +46,7 @@ class DbMetaWriterHandlerTests : public Test {
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
-        ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
     }
     void TearDown() override {
         handler.db_client__.release();
@@ -64,7 +64,7 @@ MATCHER_P(M_CheckIngestMode, mode, "") {
 
 void DbMetaWriterHandlerTests::ExpectRequestParams(const std::string& ver, uint64_t mode, const std::string& stream) {
     EXPECT_CALL(*mock_request, GetDataSource())
-    .WillOnce(ReturnRef(expected_data_source))
+    .WillRepeatedly(ReturnRef(expected_data_source))
     ;
 
     EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_data_source)).
@@ -72,23 +72,23 @@ void DbMetaWriterHandlerTests::ExpectRequestParams(const std::string& ver, uint6
 
 
     EXPECT_CALL(*mock_request, GetDataSize())
-    .WillOnce(Return(expected_meta_size))
+    .WillRepeatedly(Return(expected_meta_size))
     ;
 
     EXPECT_CALL(*mock_request, GetData())
-    .WillOnce(Return((void*)expected_meta))
+    .WillRepeatedly(Return((void*)expected_meta))
     ;
 
     EXPECT_CALL(*mock_request, GetApiVersion())
-    .WillOnce(Return(ver))
+    .WillRepeatedly(Return(ver))
     ;
 
     if (mode > 0) {
         EXPECT_CALL(*mock_request, GetStream())
-        .WillOnce(Return(stream))
+        .WillRepeatedly(Return(stream))
         ;
         expected_custom_data[asapo::kPosMetaIngestMode] = mode;
-        EXPECT_CALL(*mock_request, GetCustomData_t()).WillOnce(Return(expected_custom_data));
+        EXPECT_CALL(*mock_request, GetCustomData_t()).WillRepeatedly(Return(expected_custom_data));
     }
 }
 
@@ -147,10 +147,7 @@ TEST_F(DbMetaWriterHandlerTests, CallsIngestStreamMeta) {
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert stream meta"),
-                                         HasSubstr(expected_beamtime_id),
-                                         HasSubstr(expected_stream),
-                                         HasSubstr(config.database_uri),
-                                         HasSubstr(expected_collection_name)
+                                         HasSubstr(expected_beamtime_id)
                                         )
                                   )
                );

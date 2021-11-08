@@ -158,6 +158,17 @@ class MockAuthorizationClient: public AuthorizationClient  {
     MOCK_CONST_METHOD2(Authorize_t, ErrorInterface * (const Request*, AuthorizationData* ));
 };
 
+inline void SetDefaultRequestCalls(MockRequest* mock_request,const std::string& bt) {
+    ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(::testing::ReturnRef(bt));
+    ON_CALL(*mock_request, GetBeamline()).WillByDefault(::testing::ReturnRef(""));
+    ON_CALL(*mock_request, GetDataSource()).WillByDefault(::testing::ReturnRef(""));
+    ON_CALL(*mock_request, GetStream()).WillByDefault(::testing::Return(""));
+    ON_CALL(*mock_request, GetOriginHost()).WillByDefault(::testing::ReturnRef(""));
+    ON_CALL(*mock_request, GetOpCode()).WillByDefault(::testing::Return(Opcode::kOpcodeTransferData));
+}
+
+
+
 
 }
 

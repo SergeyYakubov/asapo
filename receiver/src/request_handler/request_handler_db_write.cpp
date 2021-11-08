@@ -2,13 +2,12 @@
 
 #include <chrono>
 
-
-#include "../request.h"
-#include "../receiver_config.h"
-#include "../receiver_logger.h"
 #include "asapo/io/io_factory.h"
 #include "asapo/database/db_error.h"
 
+#include "../request.h"
+#include "../receiver_logger.h"
+#include "../receiver_config.h"
 
 namespace asapo {
 
@@ -43,7 +42,7 @@ Error RequestHandlerDbWrite::ProcessDuplicateRecordSituation(Request* request) c
     if (check_err == ReceiverErrorTemplates::kWarningDuplicatedRequest) {
         std::string warn_str = "ignoring duplicate record for id " + std::to_string(request->GetDataID());
         request->SetResponseMessage(warn_str, ResponseMessageType::kWarning);
-        log__->Warning(warn_str);
+        log__->Warning(RequestLog("ignoring duplicate record", request));
         return nullptr;
     }
 
@@ -61,19 +60,14 @@ Error RequestHandlerDbWrite::InsertRecordToDb(const Request* request) const {
         uint64_t id_inserted{0};
         err =  db_client__->Insert(col_name, message_meta, false, &id_inserted);
         if (!err) {
-            log__->Debug(std::string{"insert record id "} + std::to_string(id_inserted) + " to " + col_name + " in " +
-                         db_name_ +
-                         " at " + GetReceiverConfig()->database_uri);
+            log__->Debug(RequestLog("insert record into database", request));
         }
     } else {
         message_meta.dataset_substream = request->GetCustomData()[1];
         auto dataset_size = request->GetCustomData()[2];
         err =  db_client__->InsertAsDatasetMessage(col_name, message_meta, dataset_size, false);
         if (!err) {
-            log__->Debug(std::string{"insert record to substream "} + std::to_string(message_meta.dataset_substream) + ", id: " +
-                         std::to_string(message_meta.id) + " to " + col_name + " in " +
-                         db_name_ +
-                         " at " + GetReceiverConfig()->database_uri);
+            log__->Debug(RequestLog("insert substream record into database", request));
         }
     }
     return err;

@@ -69,7 +69,7 @@ class DbWriterHandlerTests : public Test {
         config.dataserver.listen_port = expected_port;
         SetReceiverConfig(config, "none");
 
-        ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
     }
     void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source);
     void ExpectLogger();
@@ -106,11 +106,11 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     ;
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
-    .WillOnce(ReturnRef(expected_beamtime_id))
+    .WillRepeatedly(ReturnRef(expected_beamtime_id))
     ;
 
     EXPECT_CALL(*mock_request, GetDataSource())
-    .WillOnce(ReturnRef(data_source))
+    .WillRepeatedly(ReturnRef(data_source))
     ;
 
 
@@ -133,7 +133,7 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     ;
 
     EXPECT_CALL(*mock_request, GetStream())
-    .WillOnce(Return(expected_stream))
+    .WillRepeatedly(Return(expected_stream))
     ;
 
 
@@ -146,11 +146,11 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     ;
 
     EXPECT_CALL(*mock_request, GetOpCode())
-    .WillOnce(Return(op_code))
+    .WillRepeatedly(Return(op_code))
     ;
 
     if (op_code == asapo::Opcode::kOpcodeTransferDatasetData) {
-        EXPECT_CALL(*mock_request, GetCustomData_t()).Times(2).
+        EXPECT_CALL(*mock_request, GetCustomData_t()).
         WillRepeatedly(Return(expected_custom_data))
         ;
     }
@@ -173,11 +173,8 @@ MessageMeta DbWriterHandlerTests::PrepareMessageMeta(bool substream) {
     return message_meta;
 }
 void DbWriterHandlerTests::ExpectLogger() {
-    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
-                                         HasSubstr(config.database_uri),
-                                         HasSubstr(expected_beamtime_id),
-                                         HasSubstr(expected_data_source),
-                                         HasSubstr(expected_collection_name)
+    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert"),
+                                         HasSubstr(expected_beamtime_id)
                                         )
                                   )
                );

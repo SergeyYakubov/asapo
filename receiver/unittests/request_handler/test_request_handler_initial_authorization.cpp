@@ -27,6 +27,8 @@ class InitialAuthorizationHandlerTests : public Test {
         GenericRequestHeader request_header;
         mock_request.reset(new MockRequest{request_header, 1, "", nullptr});
         handler.auth_client__ = std::unique_ptr<asapo::AuthorizationClient> {&mock_authorization_client};
+        SetDefaultRequestCalls(mock_request.get(),"");
+
     }
     void ExpectAuthMocks() {
         EXPECT_CALL(*mock_request, GetApiVersion()).WillRepeatedly(Return(asapo::GetReceiverApiVersion()));

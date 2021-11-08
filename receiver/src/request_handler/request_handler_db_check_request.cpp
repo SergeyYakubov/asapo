@@ -4,7 +4,6 @@
 #include "asapo/database/db_error.h"
 #include "asapo/logger/logger.h"
 #include "request_handler_db.h"
-#include "../receiver_config.h"
 #include "../receiver_logger.h"
 #include "../request.h"
 
@@ -41,8 +40,8 @@ Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request *request, Mess
 
 bool RequestHandlerDbCheckRequest::SameRequestInRecord(const Request *request, const MessageMeta &record) const {
     std::string meta = request->GetMetaData();
-    if (meta.size() == 0) { // so it is stored in database
-        meta = "{}";
+    if (meta.size() == 0) {
+        meta = "{}";  // so empty meta is stored in database
     }
     return request->GetDataSize() == record.size
         && request->GetFileName() == record.name

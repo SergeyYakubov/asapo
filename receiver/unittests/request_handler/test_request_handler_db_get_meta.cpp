@@ -40,30 +40,28 @@ class DbMetaGetMetaTests : public Test {
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
-        ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
     }
     void TearDown() override {
         handler.db_client__.release();
     }
     void ExpectGet(bool stream, const asapo::DBErrorTemplate* errorTemplate) {
         SetReceiverConfig(config, "none");
-        EXPECT_CALL(*mock_request, GetDataSource()).WillOnce(ReturnRef(expected_data_source));
+        EXPECT_CALL(*mock_request, GetDataSource()).WillRepeatedly(ReturnRef(expected_data_source));
         if (stream) {
-            EXPECT_CALL(*mock_request, GetStream()).WillOnce(Return(expected_stream));
+            EXPECT_CALL(*mock_request, GetStream()).WillRepeatedly(Return(expected_stream));
         }
 
         EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_data_source)).
         WillOnce(testing::Return(nullptr));
         EXPECT_CALL(mock_db, GetMetaFromDb_t("meta", stream ? "st_" + expected_stream : "bt", _)).
-        WillOnce(DoAll(
+            WillOnce(DoAll(
                      SetArgPointee<2>(expected_meta),
                      testing::Return(errorTemplate == nullptr ? nullptr : errorTemplate->Generate().release())
                  ));
         if (errorTemplate == nullptr) {
             EXPECT_CALL(*mock_request, SetResponseMessage(expected_meta, asapo::ResponseMessageType::kInfo));
             EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("meta"),
-                                                 HasSubstr(config.database_uri),
-                                                 HasSubstr(expected_data_source),
                                                  HasSubstr(stream ? expected_stream : "beamtime"),
                                                  HasSubstr(expected_beamtime_id)
                                                 )

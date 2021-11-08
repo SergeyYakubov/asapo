@@ -1,5 +1,5 @@
 #include "request_handler_db_last_stream.h"
-#include "../receiver_config.h"
+#include "../receiver_logger.h"
 
 
 namespace asapo {
@@ -18,8 +18,7 @@ Error RequestHandlerDbLastStream::ProcessRequest(Request* request) const {
     StreamInfo info;
     auto err =  db_client__->GetLastStream(&info);
     if (!err) {
-        log__->Debug(std::string{"get last stream "} + " in " +
-                     db_name_ + " at " + GetReceiverConfig()->database_uri);
+        log__->Debug(RequestLog("get last stream from database", request));
         request->SetResponseMessage(info.Json(), ResponseMessageType::kInfo);
     }
     return DBErrorToReceiverError(std::move(err));

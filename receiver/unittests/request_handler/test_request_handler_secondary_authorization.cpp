@@ -53,6 +53,8 @@ class SecondaryAuthorizationHandlerTests : public Test {
         config.authorization_interval_ms = 10000;
         SetReceiverConfig(config, "none");
         ON_CALL(*mock_request, GetApiVersion()).WillByDefault(Return(asapo::GetReceiverApiVersion()));
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
+
     }
     void ExpectAuth();
     void ExpectSetRequest() {
