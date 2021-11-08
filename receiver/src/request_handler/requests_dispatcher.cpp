@@ -58,9 +58,9 @@ Error RequestsDispatcher::HandleRequest(const std::unique_ptr<Request>& request)
     handle_err = request->Handle(statistics__);
     if (handle_err) {
         if (handle_err == ReceiverErrorTemplates::kReAuthorizationFailure) {
-            log__->Warning(RequestLog("warning processing request: " + handle_err->Explain(), request.get()));
+            log__->Warning(LogMessageWithFields(handle_err).Append(RequestLog("", request.get())));
         } else {
-            log__->Error(RequestLog("error processing request: " + handle_err->Explain(), request.get()));
+            log__->Error(LogMessageWithFields(handle_err).Append(RequestLog("", request.get())));
         }
     }
     return handle_err;
@@ -74,35 +74,37 @@ Error RequestsDispatcher::SendResponse(const std::unique_ptr<Request>& request, 
     log__->Debug(log);
     io__->Send(socket_fd_, &generic_response, sizeof(GenericNetworkResponse), &io_err);
     if (io_err) {
-        log__->Error(RequestLog("error sending response: " + io_err->Explain(), request.get()));
+        auto err = ReceiverErrorTemplates::kProcessingError.Generate("cannot send response",std::move(io_err));
+        log__->Error(LogMessageWithFields(err).Append(RequestLog("", request.get())));
+        return err;
     }
-    return io_err;
+    return nullptr;
 }
 
 Error RequestsDispatcher::ProcessRequest(const std::unique_ptr<Request>& request) const noexcept {
     auto handle_err = HandleRequest(request);
-    auto io_err = SendResponse(request, handle_err);
-    return handle_err == nullptr ? std::move(io_err) : std::move(handle_err);
+    auto send_err = SendResponse(request, handle_err);
+    return handle_err == nullptr ? std::move(send_err) : std::move(handle_err);
 }
 
 std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const noexcept {
 //TODO: to be overwritten with MessagePack (or similar)
     GenericRequestHeader generic_request_header;
     statistics__->StartTimer(StatisticEntity::kNetwork);
+    Error io_err;
     io__->Receive(socket_fd_, &generic_request_header,
-                  sizeof(GenericRequestHeader), err);
-    if (*err) {
-        if (*err != GeneralErrorTemplates::kEndOfFile) {
-            log__->Error(LogMessageWithFields("error getting next request: " + (*err)->Explain()).
-                         Append("origin", HostFromUri(producer_uri_)));
+                  sizeof(GenericRequestHeader), &io_err);
+    if (io_err) {
+        *err = ReceiverErrorTemplates::kProcessingError.Generate("cannot get next request",std::move(io_err));
+        if ((*err)->GetCause() != GeneralErrorTemplates::kEndOfFile) {
+            log__->Error(LogMessageWithFields(*err).Append("origin", HostFromUri(producer_uri_)));
         }
         return nullptr;
     }
     statistics__->StopTimer();
     auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, producer_uri_, err);
     if (*err) {
-        log__->Error(LogMessageWithFields("error processing request: " + (*err)->Explain()).
-                     Append("origin", HostFromUri(producer_uri_)));
+        log__->Error(LogMessageWithFields(*err).Append("origin", HostFromUri(producer_uri_)));
     }
     return request;
 }

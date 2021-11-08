@@ -19,7 +19,6 @@ Logger CreateLogger(std::string name, bool console, bool centralized_log, const 
     return Logger{logger};
 }
 
-
 Logger CreateDefaultLoggerBin(const std::string& name) {
     return CreateLogger(name, true, false, "");
 }
@@ -41,13 +40,12 @@ LogLevel StringToLogLevel(const std::string& name, Error* err) {
 }
 
 template<typename ... Args>
-std::string string_format( const std::string& format, Args ... args ) {
-    size_t size = static_cast<size_t>(snprintf( nullptr, 0, format.c_str(), args ... ) + 1);
-    std::unique_ptr<char[]> buf( new char[ size ] );
-    snprintf( buf.get(), size, format.c_str(), args ... );
-    return std::string( buf.get(), buf.get() + size - 1 );
+std::string string_format(const std::string& format, Args ... args) {
+    size_t size = static_cast<size_t>(snprintf(nullptr, 0, format.c_str(), args ...) + 1);
+    std::unique_ptr<char[]> buf(new char[size]);
+    snprintf(buf.get(), size, format.c_str(), args ...);
+    return std::string(buf.get(), buf.get() + size - 1);
 }
-
 
 std::string EncloseQuotes(std::string str) {
     return "\"" + std::move(str) + "\"";
@@ -62,30 +60,44 @@ LogMessageWithFields::LogMessageWithFields(std::string key, double val, int prec
 }
 
 LogMessageWithFields::LogMessageWithFields(std::string val) {
-    log_string_ = EncloseQuotes("message") + ":" + EncloseQuotes(escape_json(val));
+    if (!val.empty()) {
+        log_string_ = EncloseQuotes("message") + ":" + EncloseQuotes(escape_json(val));
+    }
 }
 
 LogMessageWithFields::LogMessageWithFields(std::string key, std::string val) {
     log_string_ = EncloseQuotes(key) + ":" + EncloseQuotes(escape_json(val));
 }
 
+inline std::string LogMessageWithFields::QuoteIFNeeded() {
+    return log_string_.empty() ? "" : ",";
+}
+
 LogMessageWithFields& LogMessageWithFields::Append(std::string key, uint64_t val) {
-    log_string_ += "," + EncloseQuotes(key) + ":" + std::to_string(val);
+    log_string_ += QuoteIFNeeded() + EncloseQuotes(key) + ":" + std::to_string(val);
     return *this;
 }
 
 LogMessageWithFields& LogMessageWithFields::Append(std::string key, double val, int precision) {
-    log_string_ += "," + EncloseQuotes(key) + ":" + string_format("%." + std::to_string(precision) + "f", val);
+    log_string_ += QuoteIFNeeded() + EncloseQuotes(key) + ":" + string_format("%." + std::to_string(precision) + "f", val);
     return *this;
 }
 
 LogMessageWithFields& LogMessageWithFields::Append(std::string key, std::string val) {
-    log_string_ += "," + EncloseQuotes(key) + ":" + EncloseQuotes(escape_json(val));
+    log_string_ += QuoteIFNeeded() + EncloseQuotes(key) + ":" + EncloseQuotes(escape_json(val));
     return *this;
 }
 
 std::string LogMessageWithFields::LogString() const {
     return log_string_;
+}
+
+LogMessageWithFields::LogMessageWithFields(const Error& error) {
+    log_string_ = error->ExplainInJSON();
+}
+LogMessageWithFields& LogMessageWithFields::Append(const LogMessageWithFields& log_msg) {
+    log_string_ += QuoteIFNeeded() + log_msg.LogString();
+    return *this;
 }
 
 }

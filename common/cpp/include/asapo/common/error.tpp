@@ -107,15 +107,31 @@ std::string ServiceError<ServiceErrorType>::ExplainInJSON() const noexcept {
     }
     return err;
 }
+template<typename ServiceErrorType>
+const Error &ServiceError<ServiceErrorType>::GetCause() const noexcept {
+    return cause_err_;
+}
 
 template<typename ServiceErrorType>
 Error ServiceErrorTemplate<ServiceErrorType>::Generate() const noexcept {
-    auto err = new ServiceError<ServiceErrorType>(error_name_, "", error_type_);
-    return Error(err);
+    return Generate("");
 }
+
 template<typename ServiceErrorType>
 Error ServiceErrorTemplate<ServiceErrorType>::Generate(std::string error_message) const noexcept {
     return Error(new ServiceError<ServiceErrorType>(error_name_, std::move(error_message), error_type_));
+}
+
+template<typename ServiceErrorType>
+Error ServiceErrorTemplate<ServiceErrorType>::Generate(std::string error_message, Error cause) const noexcept {
+    auto err = Generate(std::move(error_message));
+    err->SetCause(std::move(cause));
+    return err;
+}
+
+template<typename ServiceErrorType>
+Error ServiceErrorTemplate<ServiceErrorType>::Generate(Error cause) const noexcept {
+    return Generate("",std::move(cause));
 }
 
 }

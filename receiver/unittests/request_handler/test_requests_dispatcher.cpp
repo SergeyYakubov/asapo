@@ -99,7 +99,7 @@ class RequestsDispatcherTests : public Test {
                   Return(0))
         );
         if (error) {
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("getting next request"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("cannot get next request"), HasSubstr(connected_uri))));
         }
 
     }
@@ -110,7 +110,7 @@ class RequestsDispatcherTests : public Test {
                   Return(nullptr))
         );
         if (error) {
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error"), HasSubstr(connected_uri))));
         }
 
 
@@ -122,9 +122,9 @@ class RequestsDispatcherTests : public Test {
             Return(error_mode > 0 ? err.release() : nullptr)
         );
         if (error_mode == 1) {
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Error(_));
         } else if (error_mode == 2) {
-            EXPECT_CALL(mock_logger, Warning(AllOf(HasSubstr("warning processing request"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Warning(_));
         }
     }
     void MockSendResponse(GenericNetworkResponse* response, bool error ) {
@@ -135,7 +135,7 @@ class RequestsDispatcherTests : public Test {
                   Return(0)
                  ));
         if (error) {
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error sending response"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("cannot send response"), HasSubstr(connected_uri))));
         }
 
         return;
@@ -150,7 +150,7 @@ TEST_F(RequestsDispatcherTests, ErrorReceivetNextRequest) {
     Error err;
     dispatcher->GetNextRequest(&err);
 
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kProcessingError));
 }
 
 
@@ -164,7 +164,7 @@ TEST_F(RequestsDispatcherTests, ClosedConnectionOnReceivetNextRequest) {
     Error err;
     dispatcher->GetNextRequest(&err);
 
-    ASSERT_THAT(err, Eq(asapo::GeneralErrorTemplates::kEndOfFile));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kProcessingError));
 }
 
 
@@ -176,7 +176,7 @@ TEST_F(RequestsDispatcherTests, ErrorCreatetNextRequest) {
     Error err;
     dispatcher->GetNextRequest(&err);
 
-    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInvalidOpCode));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
 
 TEST_F(RequestsDispatcherTests, OkCreatetNextRequest) {
@@ -206,7 +206,7 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestErrorSend) {
 
     auto err = dispatcher->ProcessRequest(request);
 
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kConnectionRefused));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kProcessingError));
 }
 
 

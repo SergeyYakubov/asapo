@@ -23,6 +23,7 @@ class ErrorInterface {
     virtual std::string ExplainInJSON() const noexcept = 0;
     virtual ErrorInterface* AddContext(std::string key, std::string value) noexcept = 0;
     virtual ErrorInterface* SetCause(Error cause_err) noexcept = 0;
+    virtual const Error& GetCause() const noexcept = 0;
     virtual CustomErrorData* GetCustomData() noexcept = 0;
     virtual void SetCustomData(std::unique_ptr<CustomErrorData> data) noexcept = 0;
     virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
@@ -59,6 +60,7 @@ class ServiceError : public ErrorInterface {
     void SetCustomData(std::unique_ptr<CustomErrorData> data) noexcept override;
     ErrorInterface* AddContext(std::string key, std::string value) noexcept override;
     ErrorInterface* SetCause(Error cause_err) noexcept override;
+    const Error& GetCause() const noexcept override;
     std::string Explain() const noexcept override;
     virtual std::string ExplainPretty(uint8_t shift) const noexcept override;
     std::string ExplainInJSON() const noexcept override;
@@ -68,6 +70,8 @@ class ErrorTemplateInterface {
   public:
     virtual Error Generate() const noexcept = 0;
     virtual Error Generate(std::string error_message) const noexcept = 0;
+    virtual Error Generate(std::string error_message, Error cause) const noexcept = 0;
+    virtual Error Generate(Error cause) const noexcept = 0;
     virtual bool operator==(const Error& rhs) const = 0;
     virtual bool operator!=(const Error& rhs) const = 0;
 
@@ -103,7 +107,8 @@ class ServiceErrorTemplate : public ErrorTemplateInterface {
     Error Generate() const noexcept override;
 
     Error Generate(std::string error_message) const noexcept override;
-
+    Error Generate(std::string error_message, Error cause) const noexcept override;
+    Error Generate(Error cause) const noexcept override;
     inline bool operator==(const Error& rhs) const override {
         return rhs != nullptr
                && GetServiceErrorType() == ((ServiceError<ServiceErrorType>*) rhs.get())->GetServiceErrorType();

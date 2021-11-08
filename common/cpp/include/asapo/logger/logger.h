@@ -22,12 +22,15 @@ class LogMessageWithFields {
     LogMessageWithFields(std::string key, uint64_t val);
     LogMessageWithFields(std::string key, double val, int precision);
     LogMessageWithFields(std::string val);
+    LogMessageWithFields(const Error& error);
     LogMessageWithFields(std::string key, std::string val);
     LogMessageWithFields& Append(std::string key, uint64_t val);
     LogMessageWithFields& Append(std::string key, double val, int precision);
+    LogMessageWithFields& Append(const LogMessageWithFields& log_msg);
     LogMessageWithFields& Append(std::string key, std::string val);
     std::string LogString() const;
   private:
+    inline std::string QuoteIFNeeded();
     std::string log_string_;
 };
 
