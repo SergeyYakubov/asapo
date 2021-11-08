@@ -10,60 +10,71 @@
 
 namespace asapo {
 
-std::string GetRequestString(const Request* request, const std::string& source_credentials) {
+std::string GetRequestString(const Request *request, const std::string &source_credentials) {
     std::string request_string = std::string("{\"SourceCredentials\":\"") +
-                                 source_credentials + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\"}";
+        source_credentials + "\",\"OriginHost\":\"" + request->GetOriginUri() + "\"}";
     return request_string;
 }
 
-Error ErrorFromAuthorizationServerResponse(const Error& err, const std::string response,
+Error ErrorFromAuthorizationServerResponse(Error err, const std::string response,
                                            HttpCode code) {
+    Error return_err;
     if (err) {
-        return asapo::ReceiverErrorTemplates::kInternalServerError.Generate(
-                   "cannot authorize request: " + err->Explain());
+        return_err = asapo::ReceiverErrorTemplates::kInternalServerError.Generate(
+            "cannot authorize request");
+        return_err->SetCause(std::move(err));
     } else {
         if (code != HttpCode::Unauthorized) {
-            return asapo::ReceiverErrorTemplates::kInternalServerError.Generate(
-                       response + " return code " + std::to_string(int(
-                                   code)));
+            return_err = asapo::ReceiverErrorTemplates::kInternalServerError.Generate();
+            return_err->AddContext("response", response)->AddContext("errorCode", std::to_string(int(
+                code)));
+        } else {
+            return_err = asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate();
         }
-        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate(response);
     }
+    return return_err;
 }
 
-Error CheckAccessType(SourceType source_type, const std::vector<std::string>& access_types) {
+Error CheckAccessType(SourceType source_type, const std::vector<std::string> &access_types) {
     if (std::find(access_types.begin(), access_types.end(),
                   source_type == SourceType::kProcessed ? "write" : "writeraw") != access_types.end()) {
         return nullptr;
     } else {
-        return asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("wrong access types");
+        auto err = asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate("wrong access types");
+        std::string types;
+        for (size_t i = 0; i < access_types.size(); i++) {
+            types += (i > 0 ? "," : "") + access_types[i];
+        }
+        err->AddContext("expected", source_type == SourceType::kProcessed ? "write" : "writeraw")->AddContext("have",
+                                                                                                              types);
+        return err;
     }
 }
 
-Error ParseServerResponse(const std::string& response,
+Error ParseServerResponse(const std::string &response,
                           HttpCode code,
-                          std::vector<std::string>* access_types,
-                          AuthorizationData* data) {
+                          std::vector<std::string> *access_types,
+                          AuthorizationData *data) {
     Error err;
     AuthorizationData creds;
     JsonStringParser parser{response};
     std::string stype;
 
     (err = parser.GetString("beamtimeId", &data->beamtime_id)) ||
-    (err = parser.GetString("dataSource", &data->data_source)) ||
-    (err = parser.GetString("corePath", &data->offline_path)) ||
-    (err = parser.GetString("beamline-path", &data->online_path)) ||
-    (err = parser.GetString("source-type", &stype)) ||
-    (err = parser.GetArrayString("access-types", access_types)) ||
-    (err = GetSourceTypeFromString(stype, &data->source_type)) ||
-    (err = parser.GetString("beamline", &data->beamline));
+        (err = parser.GetString("dataSource", &data->data_source)) ||
+        (err = parser.GetString("corePath", &data->offline_path)) ||
+        (err = parser.GetString("beamline-path", &data->online_path)) ||
+        (err = parser.GetString("source-type", &stype)) ||
+        (err = parser.GetArrayString("access-types", access_types)) ||
+        (err = GetSourceTypeFromString(stype, &data->source_type)) ||
+        (err = parser.GetString("beamline", &data->beamline));
     if (err) {
-        return ErrorFromAuthorizationServerResponse(err, "", code);
+        return ErrorFromAuthorizationServerResponse(std::move(err), "", code);
     }
     return nullptr;
 }
 
-Error UpdateDataFromServerResponse(const std::string& response, HttpCode code, AuthorizationData* data) {
+Error UpdateDataFromServerResponse(const std::string &response, HttpCode code, AuthorizationData *data) {
     Error err;
     std::string stype;
     std::vector<std::string> access_types;
@@ -71,7 +82,7 @@ Error UpdateDataFromServerResponse(const std::string& response, HttpCode code, A
     err = ParseServerResponse(response, code, &access_types, data);
     if (err) {
         *data = old_data;
-        return ErrorFromAuthorizationServerResponse(err, response, code);
+        return ErrorFromAuthorizationServerResponse(std::move(err), response, code);
     }
 
     err = CheckAccessType(data->source_type, access_types);
@@ -83,21 +94,21 @@ Error UpdateDataFromServerResponse(const std::string& response, HttpCode code, A
     return nullptr;
 }
 
-Error AuthorizationClient::DoServerRequest(const std::string& request_string,
-                                           std::string* response,
-                                           HttpCode* code) const {
+Error AuthorizationClient::DoServerRequest(const std::string &request_string,
+                                           std::string *response,
+                                           HttpCode *code) const {
     Error err;
     *response =
         http_client__->Post(GetReceiverConfig()->authorization_server + "/authorize", "", request_string, code,
                             &err);
     if (err || *code != HttpCode::OK) {
-        auto auth_error = ErrorFromAuthorizationServerResponse(err, *response, *code);
+        auto auth_error = ErrorFromAuthorizationServerResponse(std::move(err), *response, *code);
         return auth_error;
     }
     return nullptr;
 }
 
-Error AuthorizationClient::Authorize(const Request* request, AuthorizationData* data) const {
+Error AuthorizationClient::Authorize(const Request *request, AuthorizationData *data) const {
     HttpCode code;
     std::string response;
     std::string request_string = GetRequestString(request, data->source_credentials);
@@ -111,12 +122,12 @@ Error AuthorizationClient::Authorize(const Request* request, AuthorizationData* 
         return err;
     }
     log__->Debug(AuthorizationLog(
-                     request->GetOpCode() == kOpcodeAuthorize ? "authorized connection" : "reauthorized connection", request, data));
+        request->GetOpCode() == kOpcodeAuthorize ? "authorized connection" : "reauthorized connection", request, data));
     return nullptr;
 }
 
 AuthorizationClient::AuthorizationClient() : log__{GetDefaultReceiverLogger()},
-    http_client__{DefaultHttpClient()} {
+                                             http_client__{DefaultHttpClient()} {
 }
 
 }

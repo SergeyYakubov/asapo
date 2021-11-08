@@ -78,8 +78,12 @@ class DbCheckRequestHandlerTests : public Test {
             MockGetSetByID(error, expect_compare);
             n_run++;
         });
-
         ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        ON_CALL(*mock_request, GetBeamline()).WillByDefault(ReturnRef(""));
+        ON_CALL(*mock_request, GetDataSource()).WillByDefault(ReturnRef(""));
+        ON_CALL(*mock_request, GetStream()).WillByDefault(Return(""));
+        ON_CALL(*mock_request, GetOriginHost()).WillByDefault(ReturnRef(""));
+        ON_CALL(*mock_request, GetOpCode()).WillByDefault(Return(Opcode::kOpcodeTransferData));
     }
     void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source, bool expect_compare = true);
 
@@ -114,44 +118,41 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
     if (n_run  == 0) {
         EXPECT_CALL(mock_db, Connect_t(config.database_uri, db_name)).
         WillOnce(testing::Return(nullptr));
-        EXPECT_CALL(*mock_request, GetBeamtimeId())
-        .WillOnce(ReturnRef(expected_beamtime_id))
-        ;
 
         EXPECT_CALL(*mock_request, GetDataSource())
-        .WillOnce(ReturnRef(data_source))
+        .WillRepeatedly(ReturnRef(data_source))
         ;
     }
 
     if (expect_compare) {
         EXPECT_CALL(*mock_request, GetDataSize())
-        .WillOnce(Return(expected_file_size))
+        .WillRepeatedly(Return(expected_file_size))
         ;
 
         EXPECT_CALL(*mock_request, GetFileName())
-        .WillOnce(Return(expected_file_name))
+        .WillRepeatedly(Return(expected_file_name))
         ;
 
         EXPECT_CALL(*mock_request, GetMetaData())
-        .WillOnce(ReturnRef(expected_metadata))
+        .WillRepeatedly(ReturnRef(expected_metadata))
         ;
     }
 
     EXPECT_CALL(*mock_request, GetStream())
-    .WillOnce(Return(expected_stream))
+    .WillRepeatedly(Return(expected_stream))
     ;
 
     EXPECT_CALL(*mock_request, GetDataID())
-    .WillOnce(Return(expected_id))
+    .WillRepeatedly(Return(expected_id))
     ;
 
     EXPECT_CALL(*mock_request, GetOpCode())
-    .WillOnce(Return(op_code))
+    .WillRepeatedly(Return(op_code))
     ;
 
     if (op_code == asapo::Opcode::kOpcodeTransferDatasetData) {
         EXPECT_CALL(*mock_request, GetCustomData_t())
-        .WillOnce(Return(expected_custom_data))
+        .WillRepeatedly(Return(expected_custom_data))
         ;
     }
 }

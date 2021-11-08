@@ -85,7 +85,7 @@ void DbHandlerTests::MockAuthRequest(bool error, HttpCode code) {
                                                  HasSubstr(std::to_string(int(code))),
                                                  HasSubstr(expected_discovery_server))));
         } else {
-            EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("found database server"),
+            EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("discovered"),
                                                  HasSubstr(expected_database_server))));
         }
     }

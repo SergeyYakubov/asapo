@@ -34,7 +34,7 @@ class AuthorizerClientTests : public Test {
     AuthorizationClient client;
     AuthorizationData expected_auth_data;
     MockHttpClient mock_http_client;
-    std::unique_ptr<MockRequest> mock_request;
+    std::unique_ptr<NiceMock<MockRequest>> mock_request;
     ReceiverConfig config;
 
     NiceMock<asapo::MockLogger> mock_logger;
@@ -59,12 +59,14 @@ class AuthorizerClientTests : public Test {
                                 "\",\"OriginHost\":\"" +
                                 expected_producer_uri + "\"}";
 
-        mock_request.reset(new MockRequest{request_header, 1, expected_producer_uri, nullptr});
+        mock_request.reset(new NiceMock<MockRequest>{request_header, 1, expected_producer_uri, nullptr});
         client.http_client__ = std::unique_ptr<asapo::HttpClient> {&mock_http_client};
         client.log__ = &mock_logger;
         config.authorization_server = expected_authorization_server;
         config.authorization_interval_ms = 0;
         SetReceiverConfig(config, "none");
+        ON_CALL(*mock_request, GetOriginHost()).WillByDefault(ReturnRef(""));
+
     }
     void TearDown() override {
         client.http_client__.release();

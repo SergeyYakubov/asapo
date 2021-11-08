@@ -41,19 +41,19 @@ Error RequestHandlerDb::GetDatabaseServerUri(std::string* uri) const {
     if (http_err) {
         log__->Error(LogMessageWithFields("http error while discovering database server: " + http_err->Explain()).
                      Append("origin", GetReceiverConfig()->discovery_server));
-        return ReceiverErrorTemplates::kInternalServerError.Generate("http error while discovering database server: " +
-                http_err->Explain());
+        auto err = ReceiverErrorTemplates::kInternalServerError.Generate("http error while discovering database server",
+                std::move(http_err));
+        err->AddContext("discoveryEndpoint",GetReceiverConfig()->discovery_server);
+        return err;
     }
 
     if (code != HttpCode::OK) {
-        log__->Error(
-            std::string{"http error when discover database server "} + " from " + GetReceiverConfig()->discovery_server
-            + " : http code" + std::to_string((int) code));
-        return ReceiverErrorTemplates::kInternalServerError.Generate("error when discover database server");
+        auto err =  ReceiverErrorTemplates::kInternalServerError.Generate("error when discover database server");
+        err->AddContext("discoveryEndpoint",GetReceiverConfig()->discovery_server)->AddContext("errorCode",std::to_string((int) code));
+        return err;
     }
 
-    log__->Debug(std::string{"found database server "} + *uri);
-
+    log__->Debug(LogMessageWithFields("discovered database").Append("server",*uri));
     return nullptr;
 }
 
@@ -66,24 +66,26 @@ Error RequestHandlerDb::ConnectToDbIfNeeded() const {
         }
         err = db_client__->Connect(uri, db_name_);
         if (err) {
-            return DBErrorToReceiverError(err);
+            return DBErrorToReceiverError(std::move(err));
         }
         connected_to_db = true;
     }
     return nullptr;
 }
 
-Error RequestHandlerDb::DBErrorToReceiverError(const Error& err) const {
+Error RequestHandlerDb::DBErrorToReceiverError(Error err) const {
     if (err == nullptr) {
         return nullptr;
     }
-    std::string msg = "database error: " + err->Explain();
+    Error return_err;
     if (err == DBErrorTemplates::kWrongInput || err == DBErrorTemplates::kNoRecord
             || err == DBErrorTemplates::kJsonParseError) {
-        return ReceiverErrorTemplates::kBadRequest.Generate(msg);
+        return_err = ReceiverErrorTemplates::kBadRequest.Generate();
+    } else {
+        return_err = ReceiverErrorTemplates::kInternalServerError.Generate();
     }
-
-    return ReceiverErrorTemplates::kInternalServerError.Generate(msg);
+    return_err->SetCause(std::move(err));
+    return return_err;
 }
 
 }

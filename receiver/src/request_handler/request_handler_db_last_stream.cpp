@@ -22,7 +22,7 @@ Error RequestHandlerDbLastStream::ProcessRequest(Request* request) const {
                      db_name_ + " at " + GetReceiverConfig()->database_uri);
         request->SetResponseMessage(info.Json(), ResponseMessageType::kInfo);
     }
-    return DBErrorToReceiverError(err);
+    return DBErrorToReceiverError(std::move(err));
 }
 
 }

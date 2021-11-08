@@ -40,7 +40,7 @@ Error RequestHandlerDbMetaWrite::ProcessRequest(Request* request) const {
         }
 
     }
-    return DBErrorToReceiverError(err);
+    return DBErrorToReceiverError(std::move(err));
 }
 RequestHandlerDbMetaWrite::RequestHandlerDbMetaWrite(std::string collection_name) : RequestHandlerDb(std::move(
                 collection_name)) {

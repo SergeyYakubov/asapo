@@ -5,57 +5,57 @@
 #include "asapo/logger/logger.h"
 #include "request_handler_db.h"
 #include "../receiver_config.h"
+#include "../receiver_logger.h"
 #include "../request.h"
 
 namespace asapo {
 
 RequestHandlerDbCheckRequest::RequestHandlerDbCheckRequest(std::string collection_name_prefix) : RequestHandlerDb(
-        std::move(
-            collection_name_prefix)) {
+    std::move(
+        collection_name_prefix)) {
 
 }
 
-Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request* request, MessageMeta* record ) const {
+Error RequestHandlerDbCheckRequest::GetRecordFromDb(const Request *request, MessageMeta *record) const {
     auto op_code = request->GetOpCode();
     auto id = request->GetDataID();
     auto col_name = collection_name_prefix_ + "_" + request->GetStream();
     Error err;
     if (op_code == Opcode::kOpcodeTransferData) {
-        err =  db_client__->GetById(col_name, id, record);
+        err = db_client__->GetById(col_name, id, record);
         if (!err) {
-            log__->Debug(std::string{"get record id "} + std::to_string(id) + " from " + col_name + " in " +
-                         db_name_ + " at " + GetReceiverConfig()->database_uri);
+            log__->Debug(RequestLog("read message from database", request).
+                Append("collection", col_name).Append("database", db_name_));
         }
         return err;
     } else {
         auto id_in_set = request->GetCustomData()[1];
         err = db_client__->GetDataSetById(col_name, id_in_set, id, record);
         if (!err) {
-            log__->Debug(std::string{"get dataset record id "} + std::to_string(id) + " from " + col_name + " in " +
-                         db_name_ + " at " + GetReceiverConfig()->database_uri);
+            log__->Debug(RequestLog("read dataset from database", request).
+                Append("collection", col_name).Append("database", db_name_));
         }
         return err;
     }
 }
 
-
-bool RequestHandlerDbCheckRequest::SameRequestInRecord(const Request* request, const MessageMeta& record) const {
+bool RequestHandlerDbCheckRequest::SameRequestInRecord(const Request *request, const MessageMeta &record) const {
     std::string meta = request->GetMetaData();
     if (meta.size() == 0) { // so it is stored in database
         meta = "{}";
     }
     return request->GetDataSize() == record.size
-           && request->GetFileName() == record.name
-           && meta == record.metadata;
+        && request->GetFileName() == record.name
+        && meta == record.metadata;
 }
 
-Error RequestHandlerDbCheckRequest::ProcessRequest(Request* request) const {
-    if (auto err = RequestHandlerDb::ProcessRequest(request) ) {
+Error RequestHandlerDbCheckRequest::ProcessRequest(Request *request) const {
+    if (auto err = RequestHandlerDb::ProcessRequest(request)) {
         return err;
     }
 
     MessageMeta record;
-    auto  err = GetRecordFromDb(request, &record);
+    auto err = GetRecordFromDb(request, &record);
     if (err) {
         return DBErrorToReceiverError(err == DBErrorTemplates::kNoRecord ? nullptr : std::move(err));
     }
@@ -66,6 +66,5 @@ Error RequestHandlerDbCheckRequest::ProcessRequest(Request* request) const {
         return ReceiverErrorTemplates::kBadRequest.Generate("already have record with same id");
     }
 }
-
 
 }

@@ -36,7 +36,7 @@ Error RequestHandlerDbDeleteStream::ProcessRequest(Request* request) const {
         return nullptr;
     }
 
-    return DBErrorToReceiverError(err);
+    return DBErrorToReceiverError(std::move(err));
 }
 
 
