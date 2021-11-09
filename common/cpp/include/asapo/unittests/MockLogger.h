@@ -23,10 +23,10 @@ class MockLogger : public AbstractLogger {
         Warning(msg->ExplainInJSON());
     };
 
-    MOCK_CONST_METHOD1(Info, void(const std::string&));
-    MOCK_CONST_METHOD1(Error, void(const std::string& ));
-    MOCK_CONST_METHOD1(Debug, void(const std::string& ));
-    MOCK_CONST_METHOD1(Warning, void(const std::string& ));
+    MOCK_METHOD(void, Info, (const std::string&), (const, override));
+    MOCK_METHOD(void, Error, (const std::string&), (const, override));
+    MOCK_METHOD(void, Debug, (const std::string&), (const, override));
+    MOCK_METHOD(void, Warning, (const std::string&), (const, override));
     void Info(const LogMessageWithFields& msg) const override {
         Info(msg.LogString());
     };
@@ -40,9 +40,9 @@ class MockLogger : public AbstractLogger {
         Warning(msg.LogString());
     };
 
-    MOCK_METHOD1(SetLogLevel, void(LogLevel));
-    MOCK_METHOD1(EnableLocalLog, void(bool));
-    MOCK_METHOD1(EnableRemoteLog, void(bool));
+    MOCK_METHOD(void, SetLogLevel, (LogLevel), (override));
+    MOCK_METHOD(void, EnableLocalLog, (bool), (override));
+    MOCK_METHOD(void, EnableRemoteLog, (bool), (override));
 };
 
 }
