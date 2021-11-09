@@ -37,5 +37,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 if (APPLE)
+    include_directories("/usr/local/include")
     link_directories("/usr/local/lib")
 endif()

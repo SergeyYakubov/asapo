@@ -66,6 +66,7 @@ class MockRequest: public Request {
                 const RequestHandlerDbCheckRequest* db_check_handler ):
         Request(request_header, socket_fd, std::move(origin_uri), nullptr, db_check_handler) {};
 
+//    MOCK_METHOD(std::string, GetFileName, (), (const,override));
     MOCK_CONST_METHOD0(GetFileName, std::string());
     MOCK_CONST_METHOD0(GetStream, std::string());
     MOCK_CONST_METHOD0(GetApiVersion, std::string());
