@@ -90,7 +90,7 @@ class MockRequest: public Request {
     };
 
     MOCK_METHOD(const uint64_t*, GetCustomData_t, (), (const));
-    MOCK_METHOD(const char*, GetMessage, (), (const, override));
+    MOCK_METHOD(const char*, GetMessage, (), (const)); //override does not compile on windows, not clear why ()
     MOCK_METHOD(void, SetBeamtimeId, (std::string), (override));
     MOCK_METHOD(void, SetDataSource, (std::string), (override));
     MOCK_METHOD(void, SetBeamline, (std::string), (override));

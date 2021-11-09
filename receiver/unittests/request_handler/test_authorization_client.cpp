@@ -65,8 +65,7 @@ class AuthorizerClientTests : public Test {
         config.authorization_server = expected_authorization_server;
         config.authorization_interval_ms = 0;
         SetReceiverConfig(config, "none");
-        ON_CALL(*mock_request, GetOriginHost()).WillByDefault(ReturnRef(""));
-
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
     }
     void TearDown() override {
         client.http_client__.release();
