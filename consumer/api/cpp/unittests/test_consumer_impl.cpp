@@ -26,7 +26,6 @@ using asapo::MockIO;
 using asapo::MockHttpClient;
 using asapo::MockNetClient;
 using asapo::HttpCode;
-using asapo::SimpleError;
 
 using ::testing::AtLeast;
 using ::testing::Eq;
@@ -183,7 +182,7 @@ class ConsumerImplTests : public Test {
         }
 
         auto simple_error = [] {
-            return new asapo::SimpleError{"s"};
+            return asapo::GeneralErrorTemplates::kSimpleError.Generate("s").release();
         };
 
         EXPECT_CALL(mock_io, GetDataFromFile_t(expected_full_path, testing::Pointee(100), _)).Times(AtLeast(times)).

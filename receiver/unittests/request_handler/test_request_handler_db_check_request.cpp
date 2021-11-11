@@ -20,38 +20,8 @@
 
 #include "../receiver_mocking.h"
 
-using asapo::MockRequest;
-using asapo::MessageMeta;
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::ReturnRef;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using ::testing::HasSubstr;
-
-
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::MockIO;
-using asapo::Request;
-using asapo::RequestHandlerDbCheckRequest;
-using ::asapo::GenericRequestHeader;
-
-using asapo::MockDatabase;
-using asapo::RequestFactory;
-using asapo::SetReceiverConfig;
-using asapo::ReceiverConfig;
+using namespace testing;
+using namespace asapo;
 
 using MockFunctions = std::vector<std::function<void(asapo::ErrorInterface*, bool )>>;
 
@@ -84,7 +54,7 @@ class DbCheckRequestHandlerTests : public Test {
     uint64_t expected_id = 15;
     uint64_t expected_dataset_id = 16;
     uint64_t expected_dataset_size = 2;
-    uint64_t expected_custom_data[asapo::kNCustomParams] {0, expected_dataset_id, expected_dataset_size};
+    CustomRequestData expected_custom_data{0, expected_dataset_id, expected_dataset_size};
     MessageMeta expected_message_meta;
     MockFunctions mock_functions;
     int n_run = 0;
@@ -108,8 +78,7 @@ class DbCheckRequestHandlerTests : public Test {
             MockGetSetByID(error, expect_compare);
             n_run++;
         });
-
-        ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
     }
     void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source, bool expect_compare = true);
 
@@ -144,44 +113,41 @@ void DbCheckRequestHandlerTests::ExpectRequestParams(asapo::Opcode op_code, cons
     if (n_run  == 0) {
         EXPECT_CALL(mock_db, Connect_t(config.database_uri, db_name)).
         WillOnce(testing::Return(nullptr));
-        EXPECT_CALL(*mock_request, GetBeamtimeId())
-        .WillOnce(ReturnRef(expected_beamtime_id))
-        ;
 
         EXPECT_CALL(*mock_request, GetDataSource())
-        .WillOnce(ReturnRef(data_source))
+        .WillRepeatedly(ReturnRef(data_source))
         ;
     }
 
     if (expect_compare) {
         EXPECT_CALL(*mock_request, GetDataSize())
-        .WillOnce(Return(expected_file_size))
+        .WillRepeatedly(Return(expected_file_size))
         ;
 
         EXPECT_CALL(*mock_request, GetFileName())
-        .WillOnce(Return(expected_file_name))
+        .WillRepeatedly(Return(expected_file_name))
         ;
 
         EXPECT_CALL(*mock_request, GetMetaData())
-        .WillOnce(ReturnRef(expected_metadata))
+        .WillRepeatedly(ReturnRef(expected_metadata))
         ;
     }
 
     EXPECT_CALL(*mock_request, GetStream())
-    .WillOnce(Return(expected_stream))
+    .WillRepeatedly(Return(expected_stream))
     ;
 
     EXPECT_CALL(*mock_request, GetDataID())
-    .WillOnce(Return(expected_id))
+    .WillRepeatedly(Return(expected_id))
     ;
 
     EXPECT_CALL(*mock_request, GetOpCode())
-    .WillOnce(Return(op_code))
+    .WillRepeatedly(Return(op_code))
     ;
 
     if (op_code == asapo::Opcode::kOpcodeTransferDatasetData) {
         EXPECT_CALL(*mock_request, GetCustomData_t())
-        .WillOnce(Return(expected_custom_data))
+        .WillRepeatedly(Return(expected_custom_data))
         ;
     }
 }

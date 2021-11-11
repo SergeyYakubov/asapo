@@ -1,6 +1,5 @@
 #include "request_handler_db_meta_write.h"
 #include "../request.h"
-#include "../receiver_config.h"
 #include "../receiver_logger.h"
 #include "asapo/io/io_factory.h"
 #include "asapo/common/internal/version.h"
@@ -30,17 +29,14 @@ Error RequestHandlerDbMetaWrite::ProcessRequest(Request* request) const {
     auto err =  db_client__->InsertMeta(collection_name_prefix_, stream.empty() ? "bt" : "st_" + stream, meta, size, mode);
     if (!err) {
         if (stream.empty()) {
-            log__->Debug(std::string{"insert beamtime meta"} + " to " + collection_name_prefix_ + " in " +
-                         db_name_ +
-                         " at " + GetReceiverConfig()->database_uri);
+            log__->Debug(RequestLog("insert beamtime meta to database", request));
+
         } else {
-            log__->Debug(std::string{"insert stream meta for "} +stream + " to " + collection_name_prefix_ + " in " +
-                         db_name_ +
-                         " at " + GetReceiverConfig()->database_uri);
+            log__->Debug(RequestLog("insert stream meta to database", request));
         }
 
     }
-    return DBErrorToReceiverError(err);
+    return DBErrorToReceiverError(std::move(err));
 }
 RequestHandlerDbMetaWrite::RequestHandlerDbMetaWrite(std::string collection_name) : RequestHandlerDb(std::move(
                 collection_name)) {

@@ -55,7 +55,7 @@ SocketDescriptor TcpConnectionPool::Reconnect(SocketDescriptor sd, Error* err) {
         }
     }
 
-    *err = Error{new SimpleError("cannot find connection in pool")};
+    *err = asapo::GeneralErrorTemplates::kSimpleError.Generate("cannot find connection in pool");
     return kDisconnectedSocketDescriptor;
 }
 

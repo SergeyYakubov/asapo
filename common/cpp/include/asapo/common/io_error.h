@@ -31,8 +31,8 @@ enum class IOErrorType {
     kNotConnected
 };
 
-using IOError = ServiceError<IOErrorType, ErrorType::kIOError>;
-using IOErrorTemplate = ServiceErrorTemplate<IOErrorType, ErrorType::kIOError>;
+using IOError = ServiceError<IOErrorType>;
+using IOErrorTemplate = ServiceErrorTemplate<IOErrorType>;
 
 namespace IOErrorTemplates {
 auto const kUnknownIOError = IOErrorTemplate {

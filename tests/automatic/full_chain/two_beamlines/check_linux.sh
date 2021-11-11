@@ -43,7 +43,7 @@ Cleanup() {
     rm -rf ${receiver_root_folder}
     echo "db.dropDatabase()" | mongo ${beamtime_id1}_${data_source}
     echo "db.dropDatabase()" | mongo ${beamtime_id2}_${data_source}
-    influx -execute "drop database ${monitor_database_name}"
+    influx -database ${monitor_database_name} -execute "drop series from statistics, RequestsRate"
 }
 
 if [[ $network_type == "fabric" ]]; then

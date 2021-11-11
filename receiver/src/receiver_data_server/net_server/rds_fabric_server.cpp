@@ -19,7 +19,7 @@ RdsFabricServer::~RdsFabricServer() {
 
 Error RdsFabricServer::Initialize() {
     if (server__) {
-        return TextError("Server was already initialized");
+        return GeneralErrorTemplates::kSimpleError.Generate("Server was already initialized");
     }
     Error err;
     std::string hostname;

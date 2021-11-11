@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 
 #include "mock_receiver_config.h"
-#include "../src/receiver_config_factory.h"
+#include "../src/receiver_config.h"
 
 #include <asapo/unittests/MockIO.h>
 
@@ -19,8 +19,8 @@ std::string Key(std::string value, std::string error_field) {
 
 Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) {
     MockIO mock_io;
-    ReceiverConfigFactory config_factory;
-    config_factory.io__ = std::unique_ptr<IO> {&mock_io};
+    ReceiverConfigManager config_manager;
+    config_manager.io__ = std::unique_ptr<IO> {&mock_io};
 
     std::string log_level;
     switch (config.log_level) {
@@ -87,9 +87,9 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
         testing::Return(config_string)
     );
 
-    auto err = config_factory.SetConfig("fname");
+    auto err = config_manager.ReadConfigFromFile("fname");
 
-    config_factory.io__.release();
+    config_manager.io__.release();
 
     return err;
 }

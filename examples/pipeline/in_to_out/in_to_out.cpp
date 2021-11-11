@@ -151,7 +151,7 @@ std::vector<std::thread> StartConsumerThreads(const Args& args, const ProducerPt
         }
 
         while (true) {
-            auto err = ProcessNextEvent(args, consumer, producer);
+            err = ProcessNextEvent(args, consumer, producer);
             if (err) {
                 (*errors)[i] += ProcessError(err);
                 if (err == asapo::ConsumerErrorTemplates::kEndOfStream
@@ -205,7 +205,23 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     return producer;
 }
 
-int main(int argc, char* argv[]) {
+void OutputResults(const Args& args, int nfiles, int nerrors, uint64_t duration_ms, uint64_t duration_streamout ) {
+    std::cout << "Data source in " << std::endl;
+    std::cout << "  Processed " << nfiles << " file(s)" << std::endl;
+    std::cout << "  Successfully: " << nfiles - nerrors << std::endl;
+    std::cout << "  Errors : " << nerrors << std::endl;
+    std::cout << "  Elapsed : " << duration_ms - static_cast<unsigned long long int>(args.timeout_ms) << "ms" << std::endl;
+    std::cout << "  Rate : " << 1000.0f * static_cast<float>(nfiles) / (static_cast<float>(duration_ms
+              - static_cast<unsigned long long int>(args.timeout_ms))) << std::endl;
+
+    std::cout << "Data source out " << std::endl;
+    std::cout << "  Sent " << files_sent << " file(s)" << std::endl;
+    std::cout << "  Elapsed : " << duration_streamout << "ms" << std::endl;
+    std::cout << "  Rate : " << 1000.0f * static_cast<float>(static_cast<uint64_t>(files_sent) / duration_streamout) <<
+              std::endl;
+}
+
+Args GetCommandArgs(int argc, char* argv[]) {
     Args args;
     if (argc != 11) {
         std::cout << "Usage: " + std::string{argv[0]}
@@ -224,7 +240,11 @@ int main(int argc, char* argv[]) {
     args.timeout_ms = atoi(argv[8]);
     args.timeout_ms_producer = atoi(argv[9]);
     args.transfer_data = atoi(argv[10]) == 1;
+    return args;
+}
 
+int main(int argc, char* argv[]) {
+    auto args = GetCommandArgs(argc, argv);
     auto producer = CreateProducer(args);
     files_sent = 0;
     streamout_timer_started = false;
@@ -236,22 +256,11 @@ int main(int argc, char* argv[]) {
     if (producer->WaitRequestsFinished(static_cast<uint64_t>(args.timeout_ms_producer)) != nullptr) {
         std::cerr << "Data source out exit on timeout " << std::endl;
     }
-    auto duration_streamout = std::chrono::duration_cast<std::chrono::milliseconds>(streamout_finish - streamout_start);
 
-    std::cout << "Data source in " << std::endl;
-    std::cout << "  Processed " << nfiles << " file(s)" << std::endl;
-    std::cout << "  Successfully: " << nfiles - nerrors << std::endl;
-    std::cout << "  Errors : " << nerrors << std::endl;
-    std::cout << "  Elapsed : " << duration_ms - static_cast<unsigned long long int>(args.timeout_ms) << "ms" << std::endl;
-    std::cout << "  Rate : " << 1000.0f * static_cast<float>(nfiles) / (static_cast<float>(duration_ms
-              - static_cast<unsigned long long int>(args.timeout_ms))) << std::endl;
-
-    std::cout << "Data source out " << std::endl;
-    std::cout << "  Sent " << files_sent << " file(s)" << std::endl;
-    std::cout << "  Elapsed : " << duration_streamout.count() << "ms" << std::endl;
-    std::cout << "  Rate : " << 1000.0f * static_cast<float>(files_sent / duration_streamout.count()) << std::endl;
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    auto duration_streamout = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>
+                                                    (streamout_finish - streamout_start).count());
+    OutputResults(args, nfiles, nerrors, duration_ms, duration_streamout);
 
     return (nerrors == 0) && (files_sent == nfiles) ? 0 : 1;
 }
+

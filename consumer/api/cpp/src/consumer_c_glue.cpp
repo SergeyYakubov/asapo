@@ -80,7 +80,7 @@ extern "C" {
                   kWrongInput == asapo::ConsumerErrorType::kWrongInput&&
                   kPartialData == asapo::ConsumerErrorType::kPartialData&&
                   kUnsupportedClient == asapo::ConsumerErrorType::kUnsupportedClient,
-                  "incompatible bit reps between c++ and c for asapo::ErrorType");
+                  "incompatible bit reps between c++ and c for asapo::ConsumerErrorType");
     static_assert(kAllStreams == asapo::StreamFilter::kAllStreams&&
                   kFinishedStreams == asapo::StreamFilter::kFinishedStreams&&
                   kUnfinishedStreams == asapo::StreamFilter::kUnfinishedStreams,
@@ -92,8 +92,7 @@ extern "C" {
 
     enum AsapoConsumerErrorType asapo_error_get_type(const AsapoErrorHandle error) {
         auto consumer_err =
-            dynamic_cast<const asapo::ServiceError<asapo::ConsumerErrorType,
-            asapo::ErrorType::kConsumerError> *>(error->handle.get());
+            dynamic_cast<const asapo::ServiceError<asapo::ConsumerErrorType> *>(error->handle.get());
         if (consumer_err != nullptr) {
             return static_cast<AsapoConsumerErrorType>(consumer_err->GetServiceErrorType());
         } else {
@@ -422,9 +421,9 @@ extern "C" {
                                  AsapoMessageDataHandle* data,
                                  const char* stream,
                                  AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
         auto err = consumer->handle->GetById(id, fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
 
         return process_error(error, std::move(err));
     }
@@ -438,9 +437,10 @@ extern "C" {
                                 AsapoMessageDataHandle* data,
                                 const char* stream,
                                 AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
         auto err = consumer->handle->GetLast(fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
+
         return process_error(error, std::move(err));
     }
 
@@ -454,9 +454,10 @@ extern "C" {
                                         AsapoMessageDataHandle* data,
                                         const char* stream,
                                         AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
         auto err = consumer->handle->GetLast(*group_id->handle, fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
+
         return process_error(error, std::move(err));
     }
 
@@ -470,9 +471,11 @@ extern "C" {
                                 AsapoMessageDataHandle* data,
                                 const char* stream,
                                 AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
+
         auto err = consumer->handle->GetNext(*group_id->handle, fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
+
         return process_error(error, std::move(err));
     }
 
@@ -613,7 +616,7 @@ extern "C" {
 /// \param[in] asapo error
 /// \return handle to partial error data or NULL if error is wrong type
     AsapoPartialErrorDataHandle asapo_error_get_payload_from_partial_error(const AsapoErrorHandle error) {
-        if (error == nullptr && error->handle == nullptr) {
+        if (error == nullptr || error->handle == nullptr) {
             return nullptr;
         }
         auto payload = dynamic_cast<asapo::PartialErrorData*>(error->handle->GetCustomData());
@@ -642,7 +645,7 @@ extern "C" {
 /// \param[in] asapo error
 /// \return handle to partial error data or NULL if error is wrong type
     AsapoConsumerErrorDataHandle asapo_error_get_payload_from_consumer_error(const AsapoErrorHandle error) {
-        if (error == nullptr && error->handle == nullptr) {
+        if (error == nullptr || error->handle == nullptr) {
             return nullptr;
         }
         auto payload = dynamic_cast<asapo::ConsumerErrorData*>(error->handle->GetCustomData());

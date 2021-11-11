@@ -12,7 +12,6 @@ using asapo::IO;
 using asapo::MessageMeta;
 using asapo::MessageData;
 using asapo::MockIO;
-using asapo::SimpleError;
 using asapo::TcpConnectionPool;
 using asapo::SocketDescriptor;
 using asapo::Error;

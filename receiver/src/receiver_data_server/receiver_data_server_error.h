@@ -10,7 +10,7 @@ enum class ReceiverDataServerErrorType {
     kWrongRequest
 };
 
-using ReceiverDataServerErrorTemplate = ServiceErrorTemplate<ReceiverDataServerErrorType, ErrorType::kReceiverError>;
+using ReceiverDataServerErrorTemplate = ServiceErrorTemplate<ReceiverDataServerErrorType>;
 
 namespace ReceiverDataServerErrorTemplates {
 auto const kMemoryPool = ReceiverDataServerErrorTemplate {

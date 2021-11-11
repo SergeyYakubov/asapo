@@ -1,6 +1,6 @@
 #include "request.h"
 #include "asapo/io/io_factory.h"
-#include "receiver_config.h"
+#include "request_handler/request_handler_db_check_request.h"
 
 namespace asapo {
 
@@ -10,6 +10,7 @@ Request::Request(const GenericRequestHeader& header,
     cache__{cache}, request_header_(header),
     socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
     check_duplicate_request_handler_{db_check_handler} {
+    origin_host_ = HostFromUri(origin_uri_);
 }
 
 Error Request::PrepareDataBufferAndLockIfNeeded() {
@@ -17,8 +18,7 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
         try {
             data_buffer_.reset(new uint8_t[(size_t)request_header_.data_size]);
         } catch(std::exception& e) {
-            auto err = ErrorTemplates::kMemoryAllocationError.Generate();
-            err->Append(e.what());
+            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate(e.what());
             return err;
         }
     } else {
@@ -27,7 +27,7 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
         if (data_ptr) {
             slot_meta_ = slot;
         } else {
-            return ErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
+            return GeneralErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
         }
     }
     return nullptr;
@@ -92,7 +92,6 @@ std::string Request::GetStream() const {
 std::string Request::GetApiVersion() const {
     return request_header_.api_version;
 }
-
 
 const std::string& Request::GetOriginUri() const {
     return origin_uri_;
@@ -203,6 +202,10 @@ void Request::SetSourceType(SourceType type) {
 }
 SourceType Request::GetSourceType() const {
     return source_type_;
+}
+
+const std::string& Request::GetOriginHost() const {
+    return origin_host_;
 }
 
 }

@@ -12,10 +12,11 @@ enum class ReceiverErrorType {
     kInternalServerError,
     kReAuthorizationFailure,
     kWarningDuplicatedRequest,
-    kUnsupportedClient
+    kUnsupportedClient,
+    kProcessingError
 };
 
-using ReceiverErrorTemplate = ServiceErrorTemplate<ReceiverErrorType, ErrorType::kReceiverError>;
+using ReceiverErrorTemplate = ServiceErrorTemplate<ReceiverErrorType>;
 
 
 namespace ReceiverErrorTemplates {
@@ -31,6 +32,10 @@ auto const kInvalidOpCode = ReceiverErrorTemplate {
 
 auto const kInternalServerError = ReceiverErrorTemplate {
     "server error", ReceiverErrorType::kInternalServerError
+};
+
+auto const kProcessingError = ReceiverErrorTemplate {
+    "processing error", ReceiverErrorType::kProcessingError
 };
 
 

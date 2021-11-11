@@ -180,7 +180,7 @@ bson_p PrepareUpdateDocument(const uint8_t* json, Error* err) {
 bson_p PrepareInjestDocument(const uint8_t* json, ssize_t len, Error* err) {
     bson_error_t mongo_err;
     if (json == nullptr) {
-        *err = TextError("empty metadata");
+        *err = GeneralErrorTemplates::kSimpleError.Generate("empty metadata");
         return nullptr;
     }
 
@@ -771,7 +771,7 @@ Error MongoDBClient::DeleteCollections(const std::string& prefix) const {
     bson_destroy(opts);
     bson_destroy(query);
     mongoc_database_destroy(database);
-    return nullptr;
+    return err;
 }
 
 Error MongoDBClient::DeleteCollection(const std::string& name) const {

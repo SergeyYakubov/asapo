@@ -101,7 +101,7 @@ TEST_F(FolderEventDetectorTests, StartFolderMonitoringReturnsError) {
     EXPECT_CALL(mock_system_folder_watch, StartFolderMonitor_t(expected_root_folder, expected_folders))
     .Times(2)
     .WillOnce(
-        Return(asapo::ErrorTemplates::kMemoryAllocationError.Generate().release())
+        Return(asapo::GeneralErrorTemplates::kMemoryAllocationError.Generate().release())
     )
     .WillOnce(
         Return(nullptr)

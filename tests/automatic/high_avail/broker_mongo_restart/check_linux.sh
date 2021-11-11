@@ -52,7 +52,7 @@ Cleanup() {
     kill $producerid
     kill $workerid
     echo "db.dropDatabase()" | mongo --port 27015 ${beamtime_id}_detector || echo "db.dropDatabase()" | mongo --port 27016 ${beamtime_id}_detector
-    influx -execute "drop database ${monitor_database_name}"
+    influx -database ${monitor_database_name} -execute "drop series from statistics, RequestsRate"
     kill_mongo 27015 || kill_mongo 27016
     sed -i 's/27015/27017/g' discovery.json.tpl
     nomad stop discovery

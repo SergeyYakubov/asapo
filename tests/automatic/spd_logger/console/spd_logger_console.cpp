@@ -60,5 +60,5 @@ int main() {
     logger->Debug("test debug_nonelev");
 
 
-    return 0;
+    return EXIT_SUCCESS;
 }

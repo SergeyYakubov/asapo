@@ -8,25 +8,11 @@
 #include "../../src/statistics/statistics_sender_fluentd.h"
 #include "../receiver_mocking.h"
 #include "../../src/receiver_config.h"
-#include "../../src/receiver_config_factory.h"
 #include "../mock_receiver_config.h"
 
-using ::testing::Test;
-using ::testing::Gt;
-using ::testing::Ge;
-using ::testing::Le;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Ref;
-using ::testing::_;
 
-using asapo::Statistics;
-using asapo::StatisticsSender;
-using asapo::StatisticsSenderInfluxDb;
-using asapo::StatisticsSenderFluentd;
-
-using asapo::StatisticsToSend;
-using asapo::MockStatisticsSender;
+using namespace testing;
+using namespace asapo;
 
 
 namespace {

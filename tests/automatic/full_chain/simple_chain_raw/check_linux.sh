@@ -19,7 +19,7 @@ Cleanup() {
     echo cleanup
     rm -rf out /tmp/asapo/asap3 /tmp/asapo/beamline
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
-    influx -execute "drop database ${monitor_database_name}"
+    influx -database ${monitor_database_name} -execute "drop series from statistics, RequestsRate"
 }
 
 echo "db.dropDatabase()" | mongo ${beamtime_id}_detector

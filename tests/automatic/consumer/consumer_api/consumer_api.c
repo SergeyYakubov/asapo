@@ -2,7 +2,6 @@
 #include "testing_c.h"
 
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {

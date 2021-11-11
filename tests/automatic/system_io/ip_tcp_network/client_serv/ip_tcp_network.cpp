@@ -8,7 +8,6 @@
 #include "testing.h"
 
 using asapo::Error;
-using asapo::ErrorType;
 using asapo::AddressFamilies;
 using asapo::SocketTypes;
 using asapo::SocketProtocols;
@@ -62,7 +61,7 @@ std::unique_ptr<std::thread> CreateEchoServerThread() {
                     if (asapo::IOErrorTemplates::kTimeout == err) {
                         continue;
                     }
-                    if (asapo::ErrorTemplates::kEndOfFile == err) {
+                    if (asapo::GeneralErrorTemplates::kEndOfFile == err) {
                         break;
                     }
                 }
@@ -108,8 +107,8 @@ void CheckNormal(int times, size_t size) {
     for (int i = 0; i < times; i++) {
         std::cout << "[CLIENT] Allocate and create random numbers" << std::endl;
         std::unique_ptr<uint8_t[]> buffer(new uint8_t[size]);
-        for (size_t i = 0; i < size; i++) {
-            buffer[i] = static_cast<uint8_t>(256 * rand() / RAND_MAX);
+        for (size_t ii = 0; ii < size; ii++) {
+            buffer[ii] = static_cast<uint8_t>(256 * rand() / RAND_MAX);
         }
 
         FILE* out = fopen("sent", "wb");
@@ -139,8 +138,8 @@ void CheckNormal(int times, size_t size) {
         }
 
         std::cout << "[CLIENT] buffer check" << std::endl;
-        for (size_t i = 0; i < size; i++) {
-            if (buffer[i] != buffer2[i]) {
+        for (size_t ii = 0; ii < size; ii++) {
+            if (buffer[ii] != buffer2[ii]) {
                 Exit(207);
             }
         }
@@ -155,8 +154,8 @@ void CheckNormal(int times, size_t size) {
             Exit(210);
         }
         std::cout << "[CLIENT] buffer check after receive file" << std::endl;
-        for (size_t i = 0; i < size; i++) {
-            if (buffer[i] != buffer2[i]) {
+        for (size_t ii = 0; ii < size; ii++) {
+            if (buffer[ii] != buffer2[ii]) {
                 Exit(211);
             }
         }
@@ -208,5 +207,5 @@ int main() {
     remove("sent");
     remove("received");
 
-    return 0;
+    return EXIT_SUCCESS;
 }

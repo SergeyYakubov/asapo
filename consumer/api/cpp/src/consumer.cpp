@@ -19,7 +19,7 @@ std::unique_ptr<Consumer> Create(const std::string& source_name,
         p.reset(new C(source_name, std::forward<Args>(args)...));
         error->reset(nullptr);
     } catch (...) {         // we do not test this part
-        error->reset(new SimpleError("Memory error"));
+        *error = asapo::GeneralErrorTemplates::kMemoryAllocationError.Generate();
     }
 
     return p;

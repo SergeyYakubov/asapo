@@ -33,7 +33,7 @@ enum AsapoSourceType {
     kRaw
 };
 
-#define asapo_free_handle(handle) asapo_free_handle__((void**)handle);
+#define asapo_free_handle(handle) asapo_free_handle__((void**)handle)
 void asapo_free_handle__(void** handle);
 void* asapo_new_handle();
 

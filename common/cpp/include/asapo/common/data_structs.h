@@ -22,6 +22,9 @@ std::chrono::system_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_
 std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec);
 uint64_t NanosecsEpochFromISODate(std::string date_time);
 
+std::string HostFromUri(const std::string& uri);
+
+
 bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val);
 
 class MessageMeta {

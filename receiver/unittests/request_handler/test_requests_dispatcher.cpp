@@ -13,43 +13,8 @@
 #include "asapo/database/db_error.h"
 
 
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::SaveArg;
-using ::testing::SaveArgPointee;
-using ::testing::InSequence;
-using ::testing::HasSubstr;
-using ::testing::StrEq;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using testing::Sequence;
-
-using asapo::Error;
-using asapo::ErrorInterface;
-using asapo::SocketDescriptor;
-using asapo::GenericRequestHeader;
-using asapo::SendResponse;
-using asapo::GenericRequestHeader;
-using asapo::GenericNetworkResponse;
-using asapo::Opcode;
-using asapo::MockIO;
-using asapo::MockLogger;
-using asapo::Request;
-using asapo::Statistics;
-using asapo::StatisticEntity;
-using asapo::MockStatistics;
-
-
-using asapo::RequestsDispatcher;
-using asapo::ReceiverStatistics;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 
@@ -64,8 +29,8 @@ TEST(RequestDispatcher, Constructor) {
 
 class MockRequest: public Request {
   public:
-    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd):
-        Request(request_header, socket_fd, "", nullptr, nullptr) {};
+    MockRequest(const GenericRequestHeader& request_header, SocketDescriptor socket_fd, std::string uri = ""):
+        Request(request_header, socket_fd, uri, nullptr, nullptr) {};
     Error Handle(ReceiverStatistics*) override {
         return Error{Handle_t()};
     };
@@ -109,7 +74,7 @@ class RequestsDispatcherTests : public Test {
 
     asapo::ReceiverConfig test_config;
     GenericRequestHeader header;
-    MockRequest mock_request{GenericRequestHeader{}, 1};
+    MockRequest mock_request{GenericRequestHeader{}, 1, connected_uri};
     std::unique_ptr<Request> request{&mock_request};
     GenericNetworkResponse response;
     void SetUp() override {
@@ -134,7 +99,7 @@ class RequestsDispatcherTests : public Test {
                   Return(0))
         );
         if (error) {
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("getting next request"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("cannot get next request"), HasSubstr(connected_uri))));
         }
 
     }
@@ -145,33 +110,32 @@ class RequestsDispatcherTests : public Test {
                   Return(nullptr))
         );
         if (error) {
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request from"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error"), HasSubstr(connected_uri))));
         }
 
 
     }
     void MockHandleRequest(int error_mode, Error err = asapo::IOErrorTemplates::kUnknownIOError.Generate() ) {
-        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("processing request"), HasSubstr(connected_uri))));
+        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("got new request"), HasSubstr(connected_uri))));
 
         EXPECT_CALL(mock_request, Handle_t()).WillOnce(
             Return(error_mode > 0 ? err.release() : nullptr)
         );
         if (error_mode == 1) {
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error processing request from"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Error(_));
         } else if (error_mode == 2) {
-            EXPECT_CALL(mock_logger, Warning(AllOf(HasSubstr("warning processing request from"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Warning(_));
         }
     }
     void MockSendResponse(GenericNetworkResponse* response, bool error ) {
-        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response to"), HasSubstr(connected_uri))));
-        ;
+        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("sending response"), HasSubstr(connected_uri))));
         EXPECT_CALL(mock_io, Send_t(_, _, _, _)).WillOnce(
             DoAll(SetArgPointee<3>(error ? asapo::IOErrorTemplates::kConnectionRefused.Generate().release() : nullptr),
                   SaveArg1ToGenericNetworkResponse(response),
                   Return(0)
                  ));
         if (error) {
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("error sending response"), HasSubstr(connected_uri))));
+            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("cannot send response"), HasSubstr(connected_uri))));
         }
 
         return;
@@ -186,7 +150,7 @@ TEST_F(RequestsDispatcherTests, ErrorReceivetNextRequest) {
     Error err;
     dispatcher->GetNextRequest(&err);
 
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kProcessingError));
 }
 
 
@@ -194,16 +158,13 @@ TEST_F(RequestsDispatcherTests, ClosedConnectionOnReceivetNextRequest) {
     EXPECT_CALL(mock_statictics, StartTimer_t(StatisticEntity::kNetwork));
     EXPECT_CALL(mock_io, Receive_t(_, _, _, _))
     .WillOnce(
-        DoAll(SetArgPointee<3>(asapo::ErrorTemplates::kEndOfFile.Generate().release()),
+        DoAll(SetArgPointee<3>(asapo::GeneralErrorTemplates::kEndOfFile.Generate().release()),
               Return(0))
     );
-    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("peer has performed an orderly shutdown"),
-                                         HasSubstr("getting next request"), HasSubstr(connected_uri))));
-
     Error err;
     dispatcher->GetNextRequest(&err);
 
-    ASSERT_THAT(err, Eq(asapo::ErrorTemplates::kEndOfFile));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kProcessingError));
 }
 
 
@@ -215,7 +176,7 @@ TEST_F(RequestsDispatcherTests, ErrorCreatetNextRequest) {
     Error err;
     dispatcher->GetNextRequest(&err);
 
-    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kInvalidOpCode));
+    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kUnknownIOError));
 }
 
 TEST_F(RequestsDispatcherTests, OkCreatetNextRequest) {
@@ -245,7 +206,7 @@ TEST_F(RequestsDispatcherTests, OkProcessRequestErrorSend) {
 
     auto err = dispatcher->ProcessRequest(request);
 
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kConnectionRefused));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kProcessingError));
 }
 
 

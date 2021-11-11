@@ -18,39 +18,8 @@
 #include "asapo/common/internal/version.h"
 #include "../receiver_mocking.h"
 
-using asapo::MockRequest;
-using asapo::MessageMeta;
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::ReturnRef;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using ::testing::HasSubstr;
-
-
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::MockIO;
-using asapo::Request;
-using asapo::RequestHandlerDbMetaWrite;
-using ::asapo::GenericRequestHeader;
-
-using asapo::MockDatabase;
-using asapo::RequestFactory;
-using asapo::SetReceiverConfig;
-using asapo::ReceiverConfig;
-
+using namespace testing;
+using namespace asapo;
 
 namespace {
 
@@ -70,14 +39,14 @@ class DbMetaWriterHandlerTests : public Test {
     const uint8_t* expected_meta = reinterpret_cast<const uint8_t*>(meta_str.c_str());
     uint64_t expected_meta_size = meta_str.size();
     std::string expected_meta_name = "bt";
-    uint64_t expected_custom_data[asapo::kNCustomParams] {0, 0, 0};
+    CustomRequestData expected_custom_data{0, 0, 0};
     void SetUp() override {
         GenericRequestHeader request_header;
         request_header.data_id = 0;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
-        ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
     }
     void TearDown() override {
         handler.db_client__.release();
@@ -95,7 +64,7 @@ MATCHER_P(M_CheckIngestMode, mode, "") {
 
 void DbMetaWriterHandlerTests::ExpectRequestParams(const std::string& ver, uint64_t mode, const std::string& stream) {
     EXPECT_CALL(*mock_request, GetDataSource())
-    .WillOnce(ReturnRef(expected_data_source))
+    .WillRepeatedly(ReturnRef(expected_data_source))
     ;
 
     EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_data_source)).
@@ -103,23 +72,23 @@ void DbMetaWriterHandlerTests::ExpectRequestParams(const std::string& ver, uint6
 
 
     EXPECT_CALL(*mock_request, GetDataSize())
-    .WillOnce(Return(expected_meta_size))
+    .WillRepeatedly(Return(expected_meta_size))
     ;
 
     EXPECT_CALL(*mock_request, GetData())
-    .WillOnce(Return((void*)expected_meta))
+    .WillRepeatedly(Return((void*)expected_meta))
     ;
 
     EXPECT_CALL(*mock_request, GetApiVersion())
-    .WillOnce(Return(ver))
+    .WillRepeatedly(Return(ver))
     ;
 
     if (mode > 0) {
         EXPECT_CALL(*mock_request, GetStream())
-        .WillOnce(Return(stream))
+        .WillRepeatedly(Return(stream))
         ;
         expected_custom_data[asapo::kPosMetaIngestMode] = mode;
-        EXPECT_CALL(*mock_request, GetCustomData_t()).WillOnce(Return(expected_custom_data));
+        EXPECT_CALL(*mock_request, GetCustomData_t()).WillRepeatedly(Return(expected_custom_data));
     }
 }
 
@@ -178,10 +147,7 @@ TEST_F(DbMetaWriterHandlerTests, CallsIngestStreamMeta) {
     WillOnce(testing::Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert stream meta"),
-                                         HasSubstr(expected_beamtime_id),
-                                         HasSubstr(expected_stream),
-                                         HasSubstr(config.database_uri),
-                                         HasSubstr(expected_collection_name)
+                                         HasSubstr(expected_beamtime_id)
                                         )
                                   )
                );

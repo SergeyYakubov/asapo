@@ -22,9 +22,9 @@ class MockDiscoveryService : public asapo::ReceiverDiscoveryService {
     }
 };
 
-class MockRequestPull : public RequestPool {
+class MockRequestPool : public RequestPool {
   public:
-    MockRequestPull(RequestHandlerFactory* request_handler_factory, AbstractLogger* log) :
+    MockRequestPool(RequestHandlerFactory* request_handler_factory, AbstractLogger* log) :
         RequestPool{1, request_handler_factory, log} {};
     asapo::Error AddRequest(std::unique_ptr<asapo::GenericRequest> request, bool top_priority = false) override {
         if (request == nullptr) {
@@ -52,6 +52,6 @@ class MockRequestPull : public RequestPool {
 }
 
 using asapo::MockDiscoveryService;
-using asapo::MockRequestPull;
+using asapo::MockRequestPool;
 
 #endif //ASAPO_MOCKING_H

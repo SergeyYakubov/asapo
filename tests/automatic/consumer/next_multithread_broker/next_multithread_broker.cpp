@@ -94,5 +94,5 @@ int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
 
     TestAll(args);
-    return 0;
+    return EXIT_SUCCESS;
 }
