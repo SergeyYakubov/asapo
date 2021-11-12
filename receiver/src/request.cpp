@@ -18,7 +18,9 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
         try {
             data_buffer_.reset(new uint8_t[(size_t)request_header_.data_size]);
         } catch(std::exception& e) {
-            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate(e.what());
+            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate(
+                std::string("cannot allocate memory for request"));
+            err->AddDetails("reason", e.what())->AddDetails("size", std::to_string(request_header_.data_size));
             return err;
         }
     } else {
@@ -27,7 +29,9 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
         if (data_ptr) {
             slot_meta_ = slot;
         } else {
-            return GeneralErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
+            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
+            err->AddDetails("size", std::to_string(request_header_.data_size));
+            return err;
         }
     }
     return nullptr;

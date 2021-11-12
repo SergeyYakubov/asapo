@@ -26,7 +26,7 @@ Error ErrorFromAuthorizationServerResponse(Error err, const std::string response
     } else {
         if (code != HttpCode::Unauthorized) {
             return_err = asapo::ReceiverErrorTemplates::kInternalServerError.Generate();
-            return_err->AddContext("response", response)->AddContext("errorCode", std::to_string(int(
+            return_err->AddDetails("response", response)->AddDetails("errorCode", std::to_string(int(
                 code)));
         } else {
             return_err = asapo::ReceiverErrorTemplates::kAuthorizationFailure.Generate();
@@ -45,7 +45,7 @@ Error CheckAccessType(SourceType source_type, const std::vector<std::string> &ac
         for (size_t i = 0; i < access_types.size(); i++) {
             types += (i > 0 ? "," : "") + access_types[i];
         }
-        err->AddContext("expected", source_type == SourceType::kProcessed ? "write" : "writeraw")->AddContext("have",
+        err->AddDetails("expected", source_type == SourceType::kProcessed ? "write" : "writeraw")->AddDetails("have",
                                                                                                               types);
         return err;
     }

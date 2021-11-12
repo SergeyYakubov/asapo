@@ -124,7 +124,7 @@ Error ProcessRequestResponce(const RequestInfo& request,
     }
 
     if (err != nullptr) {
-        err->AddContext("host", request.host)->AddContext("api", "request.api");
+        err->AddDetails("host", request.host)->AddDetails("api", request.api);
     }
     return err;
 

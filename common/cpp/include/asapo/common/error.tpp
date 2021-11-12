@@ -37,10 +37,10 @@ std::string ServiceError<ServiceErrorType>::ExplainPretty(uint8_t shift) const n
     if (!error_message_.empty()) {
         err += "\n" + base_shift + shift_s + "message: " + error_message_;
     }
-    if (!context_.empty()) {
+    if (!details_.empty()) {
         err += "\n" + base_shift + shift_s + "context: ";
         auto i = 0;
-        for (const auto &kv : context_) {
+        for (const auto &kv : details_) {
             err += (i > 0 ? ", " : "") + kv.first + ":" + kv.second;
             i++;
         }
@@ -58,10 +58,10 @@ std::string ServiceError<ServiceErrorType>::Explain() const noexcept {
     if (!error_message_.empty()) {
         err += ", message: " + error_message_;
     }
-    if (!context_.empty()) {
-        err += ", context: ";
+    if (!details_.empty()) {
+        err += ", details: ";
         auto i = 0;
-        for (const auto &kv : context_) {
+        for (const auto &kv : details_) {
             err += (i > 0 ? ", " : "") + kv.first + ":" + kv.second;
             i++;
         }
@@ -73,8 +73,8 @@ std::string ServiceError<ServiceErrorType>::Explain() const noexcept {
 }
 
 template<typename ServiceErrorType>
-ErrorInterface *ServiceError<ServiceErrorType>::AddContext(std::string key, std::string value) noexcept {
-    context_[std::move(key)] = std::move(value);
+ErrorInterface *ServiceError<ServiceErrorType>::AddDetails(std::string key, std::string value) noexcept {
+    details_[std::move(key)] = std::move(value);
     return this;
 }
 template<typename ServiceErrorType>
@@ -93,10 +93,10 @@ std::string ServiceError<ServiceErrorType>::ExplainInJSON() const noexcept {
     if (!error_message_.empty()) {
         err += "," + WrapInQuotes("message") + ":" + WrapInQuotes(error_message_);
     }
-    if (!context_.empty()) {
+    if (!details_.empty()) {
         err += "," + WrapInQuotes("context") + ":{";
         auto i = 0;
-        for (const auto &kv : context_) {
+        for (const auto &kv : details_) {
             err += (i > 0 ? ", " : "") + WrapInQuotes(kv.first) + ":" + WrapInQuotes(kv.second);
             i++;
         }
@@ -110,6 +110,11 @@ std::string ServiceError<ServiceErrorType>::ExplainInJSON() const noexcept {
 template<typename ServiceErrorType>
 const Error &ServiceError<ServiceErrorType>::GetCause() const noexcept {
     return cause_err_;
+}
+
+template<typename ServiceErrorType>
+ErrorInterface *ServiceError<ServiceErrorType>::AddDetails(std::string key, uint64_t value) noexcept {
+    return AddDetails(key,std::to_string(value));
 }
 
 template<typename ServiceErrorType>

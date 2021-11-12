@@ -43,13 +43,14 @@ Error RequestHandlerDb::GetDatabaseServerUri(std::string* uri) const {
                      Append("origin", GetReceiverConfig()->discovery_server));
         auto err = ReceiverErrorTemplates::kInternalServerError.Generate("http error while discovering database server",
                 std::move(http_err));
-        err->AddContext("discoveryEndpoint",GetReceiverConfig()->discovery_server);
+        err->AddDetails("discoveryEndpoint", GetReceiverConfig()->discovery_server);
         return err;
     }
 
     if (code != HttpCode::OK) {
         auto err =  ReceiverErrorTemplates::kInternalServerError.Generate("error when discover database server");
-        err->AddContext("discoveryEndpoint",GetReceiverConfig()->discovery_server)->AddContext("errorCode",std::to_string((int) code));
+        err->AddDetails("discoveryEndpoint", GetReceiverConfig()->discovery_server)->AddDetails("errorCode",
+                                                                                                std::to_string((int) code));
         return err;
     }
 

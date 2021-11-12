@@ -109,7 +109,7 @@ TEST_F(ReceiveDataHandlerTests, HandleDoesNotReceiveDataWhenMetadataOnlyWasSent)
 TEST_F(ReceiveDataHandlerTests, HandleReturnsErrorOnDataReceive) {
     ExpectReceiveData(false);
     auto err = handler.ProcessRequest(request.get());
-    ASSERT_THAT(err, Eq(asapo::IOErrorTemplates::kReadError));
+    ASSERT_THAT(err, Eq(asapo::ReceiverErrorTemplates::kProcessingError));
 }
 
 TEST_F(ReceiveDataHandlerTests, HandleReturnsOK) {

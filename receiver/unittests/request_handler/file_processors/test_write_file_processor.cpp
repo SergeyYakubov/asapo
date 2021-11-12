@@ -27,7 +27,7 @@ class WriteFileProcessorTests : public Test {
   public:
     WriteFileProcessor processor;
     NiceMock<MockIO> mock_io;
-    std::unique_ptr<MockRequest> mock_request;
+    std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
     std::string expected_file_name = std::string("raw") + asapo::kPathSeparator + std::string("2");
     asapo::SourceType expected_source_type = asapo::SourceType::kRaw;
@@ -53,8 +53,10 @@ class WriteFileProcessorTests : public Test {
         asapo::ReceiverConfig test_config;
         asapo::SetReceiverConfig(test_config, "none");
         processor.log__ = &mock_logger;
-        mock_request.reset(new MockRequest{request_header, 1, "", nullptr});
+        mock_request.reset(new NiceMock<MockRequest>{request_header, 1, "", nullptr});
         processor.io__ = std::unique_ptr<asapo::IO> {&mock_io};
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
+
     }
     void TearDown() override {
         processor.io__.release();
@@ -114,15 +116,8 @@ TEST_F(WriteFileProcessorTests, WritesToLog) {
 
     ExpectFileWrite(nullptr);
 
-    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("saved file"),
-                                         HasSubstr(expected_file_name),
-                                         HasSubstr(expected_beamtime_id),
-                                         HasSubstr(expected_facility),
-                                         HasSubstr(expected_year),
-                                         HasSubstr(std::to_string(expected_file_size))
-                                        )
-                                  )
-               );
+    EXPECT_CALL(mock_logger, Debug(HasSubstr("saved file")));
+
     auto err = processor.ProcessFile(mock_request.get(), expected_overwrite);
     ASSERT_THAT(err, Eq(nullptr));
 }

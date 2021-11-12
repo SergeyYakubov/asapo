@@ -89,7 +89,7 @@ Error CheckDatasetInRequest(const MessageHeader& message_header) {
         return ProducerErrorTemplates::kWrongInput.Generate("dataset dimensions");
     }
 
-    if (message_header.auto_id) {
+    if (message_header.autwo_id) {
         return ProducerErrorTemplates::kWrongInput.Generate("auto id mode not implemented for datasets");
     }
 
