@@ -167,7 +167,8 @@ FileDescriptor SystemIO::OpenWithCreateFolders(const std::string& root_folder, c
     if (*err == IOErrorTemplates::kFileNotFound && create_directories)  {
         size_t pos = fname.rfind(kPathSeparator);
         if (pos == std::string::npos) {
-            *err = IOErrorTemplates::kFileNotFound.Generate(full_name);
+            *err = IOErrorTemplates::kFileNotFound.Generate();
+            (*err)->AddDetails("name",fname);
             return -1;
         }
         *err = CreateDirectoryWithParents(root_folder, fname.substr(0, pos));

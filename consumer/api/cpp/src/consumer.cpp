@@ -10,7 +10,7 @@ std::unique_ptr<Consumer> Create(const std::string& source_name,
                                  Error* error,
                                  Args&& ... args) noexcept {
     if (source_name.empty()) {
-        *error = ConsumerErrorTemplates::kWrongInput.Generate("Empty Data Source");
+        *error = ConsumerErrorTemplates::kWrongInput.Generate("empty data source");
         return nullptr;
     }
 

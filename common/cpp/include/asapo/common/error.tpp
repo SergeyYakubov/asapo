@@ -38,7 +38,7 @@ std::string ServiceError<ServiceErrorType>::ExplainPretty(uint8_t shift) const n
         err += "\n" + base_shift + shift_s + "message: " + error_message_;
     }
     if (!details_.empty()) {
-        err += "\n" + base_shift + shift_s + "context: ";
+        err += "\n" + base_shift + shift_s + "details: ";
         auto i = 0;
         for (const auto &kv : details_) {
             err += (i > 0 ? ", " : "") + kv.first + ":" + kv.second;
@@ -94,7 +94,7 @@ std::string ServiceError<ServiceErrorType>::ExplainInJSON() const noexcept {
         err += "," + WrapInQuotes("message") + ":" + WrapInQuotes(error_message_);
     }
     if (!details_.empty()) {
-        err += "," + WrapInQuotes("context") + ":{";
+        err += "," + WrapInQuotes("details") + ":{";
         auto i = 0;
         for (const auto &kv : details_) {
             err += (i > 0 ? ", " : "") + WrapInQuotes(kv.first) + ":" + WrapInQuotes(kv.second);

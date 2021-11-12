@@ -163,7 +163,7 @@ bson_p PrepareUpdateDocument(const uint8_t* json, Error* err) {
     std::string json_flat;
     auto parser_err = parser.GetFlattenedString("meta", ".", &json_flat);
     if (parser_err) {
-        *err = DBErrorTemplates::kJsonParseError.Generate("cannof flatten meta " + parser_err->Explain());
+        *err = DBErrorTemplates::kJsonParseError.Generate("cannof flatten meta ",std::move(parser_err));
         return nullptr;
     }
     bson_error_t mongo_err;
@@ -832,7 +832,7 @@ Error MongoDBClient::GetMetaFromDb(const std::string& collection, const std::str
     err = parser.Embedded("meta").GetRawString(res);
     if (err) {
         return DBErrorTemplates::kJsonParseError.Generate(
-                   "GetMetaFromDb: cannot parse database response: " + err->Explain());
+                   "GetMetaFromDb: cannot parse database response",std::move(err));
     }
     return nullptr;
 }
