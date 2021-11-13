@@ -120,7 +120,6 @@ TEST_F(ReceiveFileProcessorTests, WritesToLog) {
     .WillOnce(Return(nullptr));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("received file"),
-                                         HasSubstr(expected_file_name),
                                          HasSubstr(std::to_string(expected_file_size))
                                         )
                                   )

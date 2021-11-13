@@ -51,6 +51,7 @@ ReceiverDataServerRequestPtr RdsTcpServer::ReadRequest(SocketDescriptor socket, 
     io__->Receive(socket, &header,
                   sizeof(GenericRequestHeader), &io_err);
     if (io_err == GeneralErrorTemplates::kEndOfFile) {
+        *err = std::move(io_err);
         CloseSocket(socket);
         return nullptr;
     } else if (io_err) {

@@ -222,6 +222,7 @@ Error ConsumerImpl::ProcessDiscoverServiceResult(Error err, std::string* uri_to_
             return err;
         }
         auto ret_err = ConsumerErrorTemplates::kUnavailableService.Generate(std::move(err));
+        ret_err->AddDetails("destination",endpoint_);
         return ret_err;
     }
     return nullptr;
