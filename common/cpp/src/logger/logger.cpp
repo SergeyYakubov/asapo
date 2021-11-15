@@ -61,12 +61,12 @@ LogMessageWithFields::LogMessageWithFields(std::string key, double val, int prec
 
 LogMessageWithFields::LogMessageWithFields(std::string val) {
     if (!val.empty()) {
-        log_string_ = EncloseQuotes("message") + ":" + EncloseQuotes(escape_json(val));
+        log_string_ = EncloseQuotes("message") + ":" + EncloseQuotes(EscapeJson(val));
     }
 }
 
 LogMessageWithFields::LogMessageWithFields(std::string key, std::string val) {
-    log_string_ = EncloseQuotes(std::move(key)) + ":" + EncloseQuotes(escape_json(val));
+    log_string_ = EncloseQuotes(std::move(key)) + ":" + EncloseQuotes(EscapeJson(val));
 }
 
 inline std::string LogMessageWithFields::CommaIfNeeded() {
@@ -85,7 +85,7 @@ LogMessageWithFields &LogMessageWithFields::Append(std::string key, double val, 
 }
 
 LogMessageWithFields &LogMessageWithFields::Append(std::string key, std::string val) {
-    log_string_ += CommaIfNeeded() + EncloseQuotes(std::move(key)) + ":" + EncloseQuotes(escape_json(val));
+    log_string_ += CommaIfNeeded() + EncloseQuotes(std::move(key)) + ":" + EncloseQuotes(EscapeJson(val));
     return *this;
 }
 

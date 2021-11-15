@@ -81,9 +81,9 @@ Error RequestHandlerDb::DBErrorToReceiverError(Error err) const {
     Error return_err;
     if (err == DBErrorTemplates::kWrongInput || err == DBErrorTemplates::kNoRecord
             || err == DBErrorTemplates::kJsonParseError) {
-        return_err = ReceiverErrorTemplates::kBadRequest.Generate();
+        return_err = ReceiverErrorTemplates::kBadRequest.Generate("error from database");
     } else {
-        return_err = ReceiverErrorTemplates::kInternalServerError.Generate();
+        return_err = ReceiverErrorTemplates::kInternalServerError.Generate("error from database");
     }
     return_err->SetCause(std::move(err));
     return return_err;

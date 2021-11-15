@@ -1,5 +1,6 @@
-
 #include "error.h"
+
+#include "asapo/common/utils.h"
 
 namespace asapo {
 
@@ -91,13 +92,13 @@ template<typename ServiceErrorType>
 std::string ServiceError<ServiceErrorType>::ExplainInJSON() const noexcept {
     std::string err = WrapInQuotes("error") + ":" + WrapInQuotes(error_name_);
     if (!error_message_.empty()) {
-        err += "," + WrapInQuotes("message") + ":" + WrapInQuotes(error_message_);
+        err += "," + WrapInQuotes("message") + ":" + WrapInQuotes(EscapeJson(error_message_));
     }
     if (!details_.empty()) {
         err += "," + WrapInQuotes("details") + ":{";
         auto i = 0;
         for (const auto &kv : details_) {
-            err += (i > 0 ? ", " : "") + WrapInQuotes(kv.first) + ":" + WrapInQuotes(kv.second);
+            err += (i > 0 ? ", " : "") + WrapInQuotes(kv.first) + ":" + WrapInQuotes(EscapeJson(kv.second));
             i++;
         }
         err += "}";

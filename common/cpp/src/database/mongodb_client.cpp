@@ -46,7 +46,7 @@ Error MongoDBClient::Ping() {
     bson_destroy(&reply);
     bson_destroy(command);
 
-    return !retval ? DBErrorTemplates::kConnectionError.Generate() : nullptr;
+    return !retval ? DBErrorTemplates::kConnectionError.Generate("cannot ping database") : nullptr;
 
 }
 MongoDBClient::MongoDBClient() {
@@ -58,7 +58,7 @@ Error MongoDBClient::InitializeClient(const std::string& address) {
     client_ = mongoc_client_new(uri_str.c_str());
 
     if (client_ == nullptr) {
-        return DBErrorTemplates::kBadAddress.Generate();
+        return DBErrorTemplates::kBadAddress.Generate("cannot initialize database");
     }
 
     write_concern_ = mongoc_write_concern_new();
