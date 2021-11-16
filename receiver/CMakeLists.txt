@@ -135,13 +135,4 @@ set(TEST_SOURCE_FILES_RDS
         unittests/receiver_data_server/request_handler/test_request_handler_factory.cpp
         unittests/receiver_data_server/request_handler/test_request_handler.cpp
         )
-gtest(${TARGET_NAME}_RDS "${TEST_SOURCE_FILES_RDS}" "${TEST_LIBRARIES}"
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics/*.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/request_handler/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/request_handler/*.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/file_processors/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/file_processors/*.h
-        )
+gtest(${TARGET_NAME}_RDS "${TEST_SOURCE_FILES_RDS}" "${TEST_LIBRARIES}" nocov)

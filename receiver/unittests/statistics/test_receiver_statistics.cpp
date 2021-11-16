@@ -73,7 +73,7 @@ void ReceiverStatisticTests::TestTimer(const StatisticEntity& entity) {
 
     auto stat = ExtractStat();
 
-    ASSERT_THAT(stat.extra_entities[static_cast<size_t>(entity)].second, Ge(0.3));
+    ASSERT_THAT(stat.extra_entities[static_cast<size_t>(entity)].second, Gt(0));
     ASSERT_THAT(stat.extra_entities[static_cast<size_t>(entity)].second, Le(1.0));
 
 }

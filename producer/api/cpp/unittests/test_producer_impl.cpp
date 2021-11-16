@@ -606,7 +606,7 @@ TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
         R"({"softwareVersion":"21.06.0, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.4"}})";
 
     EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri +
-                                                   "/asapo-discovery/v0.1/version?client=producer&protocol=v0.4"), _, _)).WillOnce(DoAll(
+                                                   "/asapo-discovery/v0.1/version?client=producer&protocol=v0.5"), _, _)).WillOnce(DoAll(
                                                            SetArgPointee<1>(asapo::HttpCode::OK),
                                                            SetArgPointee<2>(nullptr),
                                                            Return(result)));

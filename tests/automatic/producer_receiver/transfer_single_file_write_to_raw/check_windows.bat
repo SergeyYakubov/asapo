@@ -11,14 +11,16 @@ mkdir %receiver_folder_online%
 
 set PYTHONPATH=%2
 
+echo test > file1
+
 "%1" "%3" %data_source% %beamtime_id%  "127.0.0.1:8400" > out
 type out
 
 FOR /F "usebackq" %%A IN ('%receiver_folder%\raw\python\file1') DO set size=%%~zA
-if %size% NEQ 5 goto :error
+if %size% NEQ 7 goto :error
 
 FOR /F "usebackq" %%A IN ('%receiver_folder_online%\raw\python\file1') DO set size=%%~zA
-if %size% NEQ 5 goto :error
+if %size% NEQ 7 goto :error
 
 goto :clean
 
@@ -27,7 +29,8 @@ call :clean
 exit /b 1
 
 :clean
-rmdir /S /Q %receiver_root_folder% %receiver_folder_online%
+rmdir /S /Q %receiver_root_folder%
+rmdir /S /Q %receiver_folder_online%
 echo db.dropDatabase() | %mongo_exe% %beamtime_id%_python
 
 

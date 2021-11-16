@@ -11,32 +11,8 @@
 
 #include "../../receiver_mocking.h"
 
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::ReturnRef;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using ::testing::HasSubstr;
-
-
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::MockIO;
-using asapo::Request;
-using asapo::WriteFileProcessor;
-using ::asapo::GenericRequestHeader;
-using asapo::MockRequest;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 
@@ -62,6 +38,7 @@ class WriteFileProcessorTests : public Test {
     uint64_t expected_file_size = 10;
     bool expected_overwrite = false;
     std::string expected_root_folder = "root_folder";
+    CustomRequestData expected_custom_data {kDefaultIngestMode, 0, 0};
     std::string expected_full_path =  expected_root_folder + asapo::kPathSeparator + expected_facility +
                                       asapo::kPathSeparator + "gpfs" +
                                       asapo::kPathSeparator + expected_beamline +
@@ -106,6 +83,8 @@ void WriteFileProcessorTests::MockRequestData(int times) {
 
     EXPECT_CALL(*mock_request, GetSourceType()).Times(times * 2)
     .WillRepeatedly(Return(expected_source_type));
+
+    EXPECT_CALL(*mock_request, GetCustomData_t()).WillRepeatedly(Return(expected_custom_data));
 
 
     EXPECT_CALL(*mock_request, GetFileName()).Times(times * 2)
