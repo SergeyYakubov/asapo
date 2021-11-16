@@ -16,6 +16,11 @@ func SetMockLog() {
 	my_logger = &MockLog
 }
 
+func (l *MockLogger) WithFields(args map[string]interface{}) Logger {
+	l.Called(args)
+	return l
+}
+
 func UnsetMockLog() {
 	my_logger = &logRusLogger{}
 }

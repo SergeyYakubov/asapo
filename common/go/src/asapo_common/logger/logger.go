@@ -17,6 +17,7 @@ const (
 )
 
 type Logger interface {
+	WithFields(args map[string]interface{}) Logger
 	Info(args ...interface{})
 	Debug(args ...interface{})
 	Fatal(args ...interface{})
