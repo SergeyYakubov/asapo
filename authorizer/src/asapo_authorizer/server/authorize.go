@@ -180,7 +180,7 @@ func alwaysAllowed(creds SourceCredentials) (common.BeamtimeMeta, bool) {
 		if pair.BeamtimeId == creds.BeamtimeId {
 			pair.DataSource = creds.DataSource
 			pair.Type = creds.Type
-			pair.AccessTypes = []string{"read", "write"}
+			pair.AccessTypes = []string{"read", "write","writeraw"}
 			return pair, true
 		}
 	}

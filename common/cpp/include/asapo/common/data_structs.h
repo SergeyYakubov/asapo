@@ -144,6 +144,7 @@ enum IngestModeFlags : uint64_t {
     kTransferMetaDataOnly = 1 << 1,
     kStoreInFilesystem = 1 << 2,
     kStoreInDatabase = 1 << 3,
+    kWriteRawDataToOffline = 1 << 4,
 };
 
 const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem | kStoreInDatabase;

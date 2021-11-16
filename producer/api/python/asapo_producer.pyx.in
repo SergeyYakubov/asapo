@@ -17,6 +17,7 @@ INGEST_MODE_TRANSFER_DATA = kTransferData
 INGEST_MODE_TRANSFER_METADATA_ONLY = kTransferMetaDataOnly
 INGEST_MODE_STORE_IN_FILESYSTEM = kStoreInFilesystem
 INGEST_MODE_STORE_IN_DATABASE = kStoreInDatabase
+INGEST_MODE_WRITE_RAW_DATA_TO_OFFLINE_FS = kWriteRawDataToOffline
 
 cdef extern from "numpy/ndarraytypes.h":
     void PyArray_ENABLEFLAGS(np.ndarray arr, int flags)
