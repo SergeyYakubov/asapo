@@ -2,7 +2,7 @@
 
 FEATURES
 * Consumer API: Get last within consumer group returns message only once
-
+* Producer API: An option to write raw data to core filesystem directly
 
 ## 21.09.0
 
