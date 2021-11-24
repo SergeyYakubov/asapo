@@ -151,7 +151,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithNoToken() {
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() {
 
-	expectedRequest := database.Request{DbName: expectedDBName, Stream: expectedStream, GroupId: expectedGroupID, Op: "next"}
+	expectedRequest := database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: expectedGroupID, Op: "next"}
 
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte(""),
 		&database.DBError{utils.StatusNoData, ""})
@@ -165,7 +165,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() 
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
 
-	expectedRequest := database.Request{DbName: expectedDBName, Stream: expectedStream, GroupId: expectedGroupID, Op: "next"}
+	expectedRequest := database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: expectedGroupID, Op: "next"}
 
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte(""),
 		&database.DBError{utils.StatusServiceUnavailable, ""})
@@ -181,7 +181,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
 
-	expectedRequest := database.Request{DbName: expectedDBName, Stream: expectedStream, GroupId: expectedGroupID, Op: "next"}
+	expectedRequest := database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: expectedGroupID, Op: "next"}
 
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte(""), errors.New(""))
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
@@ -196,7 +196,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
 
-	expectedRequest := database.Request{DbName: expectedDBName, Stream: expectedStream, GroupId: expectedGroupID, Op: "next"}
+	expectedRequest := database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: expectedGroupID, Op: "next"}
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte("Hello"), nil)
 
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedDBName)))
@@ -207,7 +207,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestAddsDataset() {
 
-	expectedRequest := database.Request{DbName: expectedDBName, Stream: expectedStream, GroupId: expectedGroupID, DatasetOp: true, Op: "next"}
+	expectedRequest := database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: expectedGroupID, DatasetOp: true, Op: "next"}
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte("Hello"), nil)
 
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedDBName)))
@@ -231,7 +231,7 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestDeleteStreamReadToken() 
 func (suite *ProcessRequestTestSuite) TestProcessRequestDeleteStreamWriteToken() {
 	query_str := "query_string"
 
-	expectedRequest := database.Request{DbName: expectedDBName, Stream: expectedStream, GroupId: "", Op: "delete_stream", ExtraParam: query_str}
+	expectedRequest := database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: "", Op: "delete_stream", ExtraParam: query_str}
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte("Hello"), nil)
 
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request delete_stream in "+expectedDBName)))

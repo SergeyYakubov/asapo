@@ -265,9 +265,9 @@ func (ss *Streams) getStreams(db *Mongodb, request Request) (StreamsRecord, erro
 	}
 
 	streamsLock.Lock()
-	rec, err := ss.tryGetFromCache(request.DbName, db.settings.UpdateStreamCachePeriodMs)
+	rec, err := ss.tryGetFromCache(request.DbName(), db.settings.UpdateStreamCachePeriodMs)
 	if err != nil {
-		rec, err = ss.updateFromDb(db, request.DbName)
+		rec, err = ss.updateFromDb(db, request.DbName())
 	}
 	streamsLock.Unlock()
 	if err != nil {

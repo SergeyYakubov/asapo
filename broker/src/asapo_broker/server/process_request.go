@@ -63,19 +63,20 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	db_name, datasource, stream, group_id, ok := extractRequestParameters(r, needGroupID)
+	beamtime, datasource, stream, group_id, ok := extractRequestParameters(r, needGroupID)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if err := authorize(r, db_name, needWriteAccess(op)); err != nil {
-		writeAuthAnswer(w, "get "+op, db_name, err)
+	if err := authorize(r, beamtime, needWriteAccess(op)); err != nil {
+		writeAuthAnswer(w, "get "+op, beamtime, err)
 		return
 	}
 
 	request := database.Request{}
-	request.DbName = db_name+"_"+datasource
+	request.Beamtime = beamtime
+	request.DataSource = datasource
 	request.Op = op
 	request.ExtraParam = extra_param
 	request.Stream = stream
@@ -113,10 +114,12 @@ func reconnectIfNeeded(db_error error) {
 	}
 }
 
+//func dbRequestLogger(request database.Request)
+
 func processRequestInDb(request database.Request) (answer []byte, code int) {
 	statistics.IncreaseCounter()
 	answer, err := db.ProcessRequest(request)
-	log_str := "processing request " + request.Op + " in " + request.DbName + " at " + settings.GetDatabaseServer()
+	log_str := "processing request " + request.Op + " in " + request.DbName() + " at " + settings.GetDatabaseServer()
 	if err != nil {
 		go reconnectIfNeeded(err)
 		return returnError(err, log_str)
