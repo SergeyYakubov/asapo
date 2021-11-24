@@ -1,9 +1,10 @@
-//+build !test
+//go:build !test
+// +build !test
 
 package database
 
 import (
-	"asapo_common/logger"
+	log "asapo_common/logger"
 	"asapo_common/utils"
 	"context"
 	"encoding/json"
@@ -84,10 +85,10 @@ const (
 
 type fieldChangeRequest struct {
 	collectionName string
-	fieldName string
-	op        int
-	max_ind   int
-	val       int
+	fieldName      string
+	op             int
+	max_ind        int
+	val            int
 }
 
 var dbSessionLock sync.Mutex
@@ -310,8 +311,7 @@ func (db *Mongodb) getRecordFromDb(request Request, id, id_max int) (res map[str
 	err = c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
 	if err != nil {
 		answer := encodeAnswer(id, id_max, "")
-		log_str := "error getting record id " + strconv.Itoa(id) + " for " + request.DbName() + " : " + err.Error()
-		logger.Debug(log_str)
+		request.Logger().WithFields(map[string]interface{}{"id": id, "cause": err.Error()}).Debug("error getting record")
 		return res, &DBError{utils.StatusNoData, answer}
 	}
 	return res, err
@@ -327,8 +327,7 @@ func (db *Mongodb) getRecordByIDRaw(request Request, id, id_max int) ([]byte, er
 		return nil, err
 	}
 
-	log_str := "got record id " + strconv.Itoa(id) + " for " + request.DbName()
-	logger.Debug(log_str)
+	request.Logger().WithFields(map[string]interface{}{"id": id}).Debug("got record from db")
 
 	record, err := utils.MapToJson(&res)
 	if err != nil {
@@ -445,9 +444,9 @@ func (db *Mongodb) getCurrentPointer(request Request) (LocationPointer, int, err
 	var curPointer LocationPointer
 	err = db.changeField(request, fieldChangeRequest{
 		collectionName: pointer_collection_name,
-		fieldName: pointer_field_name,
-		op:        field_op_inc,
-		max_ind:   max_ind}, &curPointer)
+		fieldName:      pointer_field_name,
+		op:             field_op_inc,
+		max_ind:        max_ind}, &curPointer)
 	if err != nil {
 		return LocationPointer{}, 0, err
 	}
@@ -455,7 +454,7 @@ func (db *Mongodb) getCurrentPointer(request Request) (LocationPointer, int, err
 	return curPointer, max_ind, nil
 }
 
-func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delayMs int, nResendAttempts int) (int, error) {
+func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delayMs int, nResendAttempts int, rlog log.Logger) (int, error) {
 	var res InProcessingRecord
 	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
 	tNow := time.Now().UnixNano()
@@ -476,8 +475,7 @@ func (db *Mongodb) getUnProcessedId(dbname string, collection_name string, delay
 		return 0, err
 	}
 
-	log_str := "got unprocessed id " + strconv.Itoa(res.ID) + " for " + dbname
-	logger.Debug(log_str)
+	rlog.WithFields(map[string]interface{}{"id": res.ID}).Debug("got unprocessed message")
 	return res.ID, nil
 }
 
@@ -527,10 +525,10 @@ func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTi
 	t := db.lastReadFromInprocess[request.Stream+"_"+request.GroupId]
 	dbSessionLock.Unlock()
 	if (t <= tNow-int64(db.settings.ReadFromInprocessPeriod)) || ignoreTimeout {
-		record_ind, err = db.getUnProcessedId(request.DbName(), inprocess_collection_name_prefix+request.Stream+"_"+request.GroupId, delayMs, nResendAttempts)
+		record_ind, err = db.getUnProcessedId(request.DbName(), inprocess_collection_name_prefix+request.Stream+"_"+request.GroupId, delayMs, nResendAttempts,
+			request.Logger())
 		if err != nil {
-			log_str := "error getting unprocessed id " + request.DbName() + ", groupid: " + request.GroupId + ":" + err.Error()
-			logger.Debug(log_str)
+			request.Logger().WithFields(map[string]interface{}{"cause": err.Error()}).Debug("error getting unprocessed message")
 			return 0, 0, err
 		}
 	}
@@ -552,12 +550,10 @@ func (db *Mongodb) getNextAndMaxIndexesFromInprocessed(request Request, ignoreTi
 func (db *Mongodb) getNextAndMaxIndexesFromCurPointer(request Request) (int, int, error) {
 	curPointer, max_ind, err := db.getCurrentPointer(request)
 	if err != nil {
-		log_str := "error getting next pointer for " + request.DbName() + ", groupid: " + request.GroupId + ":" + err.Error()
-		logger.Debug(log_str)
+		request.Logger().WithFields(map[string]interface{}{"cause": err.Error()}).Debug("error getting next pointer")
 		return 0, 0, err
 	}
-	log_str := "got next pointer " + strconv.Itoa(curPointer.Value) + " for " + request.DbName() + ", groupid: " + request.GroupId
-	logger.Debug(log_str)
+	request.Logger().WithFields(map[string]interface{}{"id": curPointer.Value}).Debug("got next pointer")
 	return curPointer.Value, max_ind, nil
 }
 
@@ -622,8 +618,7 @@ func checkStreamFinished(request Request, id, id_max int, data map[string]interf
 	if !ok || !r.FinishedStream {
 		return nil
 	}
-	log_str := "reached end of stream " + request.Stream + " , next_stream: " + r.NextStream
-	logger.Debug(log_str)
+	request.Logger().WithFields(map[string]interface{}{"nextStream": r.NextStream}).Debug("reached end of stream")
 
 	answer := encodeAnswer(r.ID-1, r.ID-1, r.NextStream)
 	return &DBError{utils.StatusNoData, answer}
@@ -666,10 +661,10 @@ func (db *Mongodb) getLastRecordInGroup(request Request) ([]byte, error) {
 	var res map[string]interface{}
 	err = db.changeField(request, fieldChangeRequest{
 		collectionName: last_message_collection_name,
-		fieldName: last_message_field_name,
-		op:        field_op_set,
-		max_ind:   max_ind,
-		val:       max_ind,
+		fieldName:      last_message_field_name,
+		op:             field_op_set,
+		max_ind:        max_ind,
+		val:            max_ind,
 	}, &res)
 	if err != nil {
 		return nil, err
@@ -746,24 +741,20 @@ func (db *Mongodb) getMeta(request Request) ([]byte, error) {
 	c := db.client.Database(request.DbName()).Collection(meta_collection_name)
 	err = c.FindOne(context.TODO(), q, options.FindOne()).Decode(&res)
 	if err != nil {
-		log_str := "error getting meta for " + id + " in " + request.DbName() + " : " + err.Error()
-		logger.Debug(log_str)
+		request.Logger().WithFields(map[string]interface{}{"id": id, "cause": err.Error()}).Debug("error getting meta")
 		return nil, &DBError{utils.StatusNoData, err.Error()}
 	}
 	userMeta, ok := res["meta"]
 	if !ok {
-		log_str := "error getting meta for " + id + " in " + request.DbName() + " : cannot parse database response"
-		logger.Error(log_str)
-		return nil, errors.New(log_str)
+		request.Logger().WithFields(map[string]interface{}{"id": id, "cause": "cannot parse database response"}).Debug("error getting meta")
+		return nil, errors.New("cannot get metadata")
 	}
-	log_str := "got metadata for " + id + " in " + request.DbName()
-	logger.Debug(log_str)
+	request.Logger().WithFields(map[string]interface{}{"id": id}).Error("got metadata")
 	return utils.MapToJson(&userMeta)
 }
 
-func (db *Mongodb) processQueryError(query, dbname string, err error) ([]byte, error) {
-	log_str := "error processing query: " + query + " for " + dbname + " : " + err.Error()
-	logger.Debug(log_str)
+func (db *Mongodb) processQueryError(query, dbname string, err error, rlog log.Logger) ([]byte, error) {
+	rlog.WithFields(map[string]interface{}{"query": query, "cause": err.Error()}).Debug("error processing query")
 	return nil, &DBError{utils.StatusNoData, err.Error()}
 }
 
@@ -771,8 +762,7 @@ func (db *Mongodb) queryMessages(request Request) ([]byte, error) {
 	var res []map[string]interface{}
 	q, sort, err := db.BSONFromSQL(request.DbName(), request.ExtraParam)
 	if err != nil {
-		log_str := "error parsing query: " + request.ExtraParam + " for " + request.DbName() + " : " + err.Error()
-		logger.Debug(log_str)
+		request.Logger().WithFields(map[string]interface{}{"query": request.ExtraParam, "cause": err.Error()}).Debug("error parsing query")
 		return nil, &DBError{utils.StatusWrongInput, err.Error()}
 	}
 
@@ -786,15 +776,15 @@ func (db *Mongodb) queryMessages(request Request) ([]byte, error) {
 
 	cursor, err := c.Find(context.TODO(), q, opts)
 	if err != nil {
-		return db.processQueryError(request.ExtraParam, request.DbName(), err)
+		return db.processQueryError(request.ExtraParam, request.DbName(), err, request.Logger())
 	}
 	err = cursor.All(context.TODO(), &res)
 	if err != nil {
-		return db.processQueryError(request.ExtraParam, request.DbName(), err)
+		return db.processQueryError(request.ExtraParam, request.DbName(), err, request.Logger())
 	}
 
-	log_str := "processed query " + request.ExtraParam + " for " + request.DbName() + " ,found" + strconv.Itoa(len(res)) + " records"
-	logger.Debug(log_str)
+	request.Logger().WithFields(map[string]interface{}{"query": request.ExtraParam, "recordsFound": len(res)}).Debug("processed query")
+
 	if res != nil {
 		return utils.MapToJson(&res)
 	} else {
@@ -966,7 +956,7 @@ func (db *Mongodb) deleteStream(request Request) ([]byte, error) {
 		return nil, &DBError{utils.StatusWrongInput, "wrong params: " + request.ExtraParam}
 	}
 	if !*params.DeleteMeta {
-		logger.Debug("skipping delete stream meta for " + request.Stream + " in " + request.DbName())
+		request.Logger().Debug("skipping delete stream meta")
 		return nil, nil
 	}
 
@@ -1062,7 +1052,7 @@ func (db *Mongodb) getNacks(request Request, min_index, max_index int) ([]int, e
 func (db *Mongodb) getStreams(request Request) ([]byte, error) {
 	rec, err := streams.getStreams(db, request)
 	if err != nil {
-		return db.processQueryError("get streams", request.DbName(), err)
+		return db.processQueryError("get streams", request.DbName(), err, request.Logger())
 	}
 	return json.Marshal(&rec)
 }

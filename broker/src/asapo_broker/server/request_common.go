@@ -8,9 +8,8 @@ import (
 	"strconv"
 )
 
-func writeAuthAnswer(w http.ResponseWriter, requestName string, db_name string, err error) {
-	log_str := "processing " + requestName + " request in " + db_name + " at " + settings.GetDatabaseServer()
-	logger.Error(log_str + " - " + err.Error())
+func writeAuthAnswer(w http.ResponseWriter, requestOp string, db_name string, err error) {
+	logger.WithFields(map[string]interface{}{"operation": requestOp, "cause": err.Error()}).Error("cannot authorize request")
 
 	switch er := err.(type) {
 	case AuthorizationError:
@@ -54,7 +53,7 @@ func authorize(r *http.Request, beamtime_id string, needWriteAccess bool) error 
 	tokenJWT := r.URL.Query().Get("token")
 
 	if len(tokenJWT) == 0 {
-		return AuthorizationError{errors.New("cannot extract token from request"),http.StatusBadRequest}
+		return AuthorizationError{errors.New("cannot extract token from request"), http.StatusBadRequest}
 	}
 
 	token, err := auth.AuthorizeToken(tokenJWT)
@@ -67,23 +66,23 @@ func authorize(r *http.Request, beamtime_id string, needWriteAccess bool) error 
 		return err
 	}
 
-	return checkAccessType(token.AccessTypes,needWriteAccess)
+	return checkAccessType(token.AccessTypes, needWriteAccess)
 }
 
 func checkSubject(subject string, beamtime_id string) error {
 	if subject != utils.SubjectFromBeamtime(beamtime_id) {
-		return AuthorizationError{errors.New("wrong token subject"),http.StatusUnauthorized}
+		return AuthorizationError{errors.New("wrong token subject"), http.StatusUnauthorized}
 	}
 	return nil
 }
 
 func checkAccessType(accessTypes []string, needWriteAccess bool) error {
-	if needWriteAccess && !utils.StringInSlice("write",accessTypes) {
-		return AuthorizationError{errors.New("wrong token access type"),http.StatusUnauthorized}
+	if needWriteAccess && !utils.StringInSlice("write", accessTypes) {
+		return AuthorizationError{errors.New("wrong token access type"), http.StatusUnauthorized}
 	}
 
-	if !utils.StringInSlice("read",accessTypes) {
-		return AuthorizationError{errors.New("wrong token access type"),http.StatusUnauthorized}
+	if !utils.StringInSlice("read", accessTypes) {
+		return AuthorizationError{errors.New("wrong token access type"), http.StatusUnauthorized}
 	}
 	return nil
 }

@@ -36,7 +36,7 @@ var streams = Streams{lastSynced: make(map[string]time.Time, 0),lastUpdated: mak
 var streamsLock sync.Mutex
 
 func (ss *Streams) tryGetFromCache(db_name string, updatePeriodMs int) (StreamsRecord, error) {
-	if time.Now().Sub(ss.lastUpdated[db_name]).Milliseconds() > int64(updatePeriodMs) {
+	if time.Now().Sub(ss.lastUpdated[db_name]).Milliseconds() >= int64(updatePeriodMs) {
 		return StreamsRecord{}, errors.New("cache expired")
 	}
 	rec, ok := ss.records[db_name]

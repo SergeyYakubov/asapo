@@ -35,7 +35,8 @@ func TestMessageOpTestSuite(t *testing.T) {
 func (suite *MessageOpTestSuite) TestAckMessageOpOK() {
 	query_str := "{\"Id\":1,\"Op\":\"ackmessage\"}"
 	suite.mock_db.On("ProcessRequest", database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: expectedGroupID, Op: "ackmessage", ExtraParam: query_str}).Return([]byte(""), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request ackmessage")))
+	logger.MockLog.On("WithFields", mock.MatchedBy(containsMatcherMap("ackmessage")))
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("got request")))
 	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/1" + correctTokenSuffix,"POST",query_str)
 	suite.Equal(http.StatusOK, w.Code, "ackmessage OK")
 }

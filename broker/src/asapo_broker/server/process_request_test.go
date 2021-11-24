@@ -66,7 +66,19 @@ type request struct {
 	message string
 }
 
-func containsMatcher(substrings ...string) func(str string) bool {
+func containsMatcherMap(substrings ...string) func(map[string]interface{}) bool {
+	return func(vals map[string]interface{}) bool {
+		res,_:=utils.MapToJson(vals)
+		for _, substr := range substrings {
+			if !strings.Contains(string(res), substr) {
+				return false
+			}
+		}
+		return true
+	}
+}
+
+func containsMatcherStr(substrings ...string) func(str string) bool {
 	return func(str string) bool {
 		for _, substr := range substrings {
 			if !strings.Contains(str, substr) {
@@ -76,6 +88,7 @@ func containsMatcher(substrings ...string) func(str string) bool {
 		return true
 	}
 }
+
 
 func doRequest(path string, extra_params ...string) *httptest.ResponseRecorder {
 	m := "GET"
@@ -134,7 +147,9 @@ func TestProcessRequestTestSuite(t *testing.T) {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong JWT token")))
+
+	logger.MockLog.On("WithFields", mock.MatchedBy(containsMatcherMap("wrong JWT token")))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcherStr("cannot authorize request")))
 
 	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + suffixWithWrongToken)
 
@@ -142,7 +157,8 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
 }
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithNoToken() {
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("cannot extract")))
+	logger.MockLog.On("WithFields", mock.MatchedBy(containsMatcherMap("cannot extract")))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcherStr("cannot authorize request")))
 
 	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + wrongTokenSuffix)
 
@@ -156,7 +172,10 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongDatabaseName() 
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte(""),
 		&database.DBError{utils.StatusNoData, ""})
 
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next")))
+	logger.MockLog.On("WithFields", mock.Anything)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("got request")))
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("no data or partial data")))
+
 
 	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 
@@ -170,9 +189,11 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithConnectionError() {
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte(""),
 		&database.DBError{utils.StatusServiceUnavailable, ""})
 
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
+    logger.MockLog.On("WithFields", mock.Anything)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("got request")))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcherStr("cannot process request")))
 	ExpectReconnect(suite.mock_db)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("reconnected")))
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("reconnected")))
 
 	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	time.Sleep(time.Second)
@@ -184,8 +205,11 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestWithInternalDBError() {
 	expectedRequest := database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: expectedGroupID, Op: "next"}
 
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte(""), errors.New(""))
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("processing request next")))
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("reconnected")))
+
+	logger.MockLog.On("WithFields", mock.Anything)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("got request")))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcherStr("cannot process request")))
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("reconnected")))
 
 	ExpectReconnect(suite.mock_db)
 	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
@@ -199,7 +223,8 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestAddsCounter() {
 	expectedRequest := database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: expectedGroupID, Op: "next"}
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte("Hello"), nil)
 
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedDBName)))
+	logger.MockLog.On("WithFields", mock.Anything)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("got request")))
 
 	doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix)
 	suite.Equal(1, statistics.GetCounter(), "ProcessRequest increases counter")
@@ -210,7 +235,8 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestAddsDataset() {
 	expectedRequest := database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: expectedGroupID, DatasetOp: true, Op: "next"}
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte("Hello"), nil)
 
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request next in "+expectedDBName)))
+	logger.MockLog.On("WithFields", mock.Anything)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("got request")))
 
 	doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + correctTokenSuffix + "&dataset=true")
 }
@@ -222,7 +248,9 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestErrorOnWrongProtocol() {
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestDeleteStreamReadToken() {
 	query_str := "query_string"
-	logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("wrong token access")))
+	logger.MockLog.On("WithFields", mock.MatchedBy(containsMatcherMap("wrong token access")))
+	logger.MockLog.On("Error", mock.MatchedBy(containsMatcherStr("cannot authorize request")))
+
 	w := doRequest("/beamtime/"+expectedBeamtimeId+"/"+expectedSource+"/"+expectedStream+"/delete"+correctTokenSuffix, "POST", query_str)
 	suite.Equal(http.StatusUnauthorized, w.Code, "wrong token type")
 
@@ -234,6 +262,8 @@ func (suite *ProcessRequestTestSuite) TestProcessRequestDeleteStreamWriteToken()
 	expectedRequest := database.Request{Beamtime: expectedBeamtimeId,DataSource: expectedSource, Stream: expectedStream, GroupId: "", Op: "delete_stream", ExtraParam: query_str}
 	suite.mock_db.On("ProcessRequest", expectedRequest).Return([]byte("Hello"), nil)
 
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request delete_stream in "+expectedDBName)))
+	logger.MockLog.On("WithFields", mock.MatchedBy(containsMatcherMap("delete_stream")))
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcherStr("got request")))
+
 	doRequest("/beamtime/"+expectedBeamtimeId+"/"+expectedSource+"/"+expectedStream+"/delete"+correctTokenSuffixWrite, "POST", query_str)
 }
