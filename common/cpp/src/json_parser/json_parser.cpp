@@ -24,6 +24,13 @@ Error JsonParser::GetArrayString(const std::string& name, std::vector<std::strin
     return rapid_json_->GetArrayString(name, val);
 }
 
+Error JsonParser::GetArrayObjectMembers(const std::string& name, std::vector<std::string>* val) const noexcept {
+    return rapid_json_->GetArrayObjectMembers(name, val);
+}
+
+Error JsonParser::GetDictionaryString(const std::string& name, std::map<std::string, std::string>* val) const noexcept {
+    return rapid_json_->GetDictionaryString(name, val);
+}
 
 Error JsonParser::GetBool(const std::string& name, bool* val) const noexcept {
     return rapid_json_->GetBool(name, val);

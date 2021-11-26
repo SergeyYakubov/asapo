@@ -17,6 +17,8 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
     std::string log_level;
     Error err;
 
+    std::vector<std::string> kafkaTopics;
+
     (err = parser.GetString("PerformanceDbServer", &config.performance_db_uri)) ||
     (err = parser.GetBool("MonitorPerformance", &config.monitor_performance)) ||
     (err = parser.GetUInt64("ListenPort", &config.listen_port)) ||
@@ -41,6 +43,26 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
     if (err) {
         return err;
     }
+
+    (err = parser.GetDictionaryString("KafkaClient", &config.kafka_config.global_config)) ||
+    (err = parser.GetArrayObjectMembers("KafkaTopics", &kafkaTopics));
+
+    if (!err) {
+        for(const auto& topic : kafkaTopics) {
+            auto topicConfig = config.kafka_config.topics_config[topic];
+            err = parser.Embedded("KafkaTopics").GetDictionaryString(topic, &topicConfig);
+            if (err) {
+                break;
+            }
+        }
+    }
+
+    if (err) {
+        // ignore kafka config error. Just disable it.
+        config.kafka_config.global_config.clear();
+        config.kafka_config.topics_config.clear();
+    }
+
 
     config.dataserver.tag = config.tag + "_ds";
 

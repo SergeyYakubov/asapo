@@ -6,6 +6,7 @@
 
 #include "receiver_data_server/receiver_data_server_logger.h"
 #include "asapo/common/internal/version.h"
+#include "asapo/kafka_client/kafka_client.h"
 
 #include "receiver_data_server/receiver_data_server.h"
 #include "receiver_data_server/net_server/rds_tcp_server.h"
@@ -134,6 +135,18 @@ int main(int argc, char* argv[]) {
     }
 
     auto metrics_thread = StartMetricsServer(config->metrics, logger);
+
+    if (!config->kafka_config.global_config.empty()) {
+        err = asapo::InitializeKafkaClient(config->kafka_config);
+        if (err) {
+            logger->Error("Error initializing kafka client: " + err->Explain());
+            logger->Error("Kafka notification disabled");
+        }
+    }
+    else {
+        logger->Info("No kafka config provided. Kafka notification disabled.");
+    }
+
     auto exit_code = StartReceiver(config, cache, logger);
 // todo: implement graceful exit, currently it never reaches this point
     return exit_code;

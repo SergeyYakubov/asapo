@@ -26,6 +26,7 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_handler_db_check_request.cpp
         src/request_handler/request_handler_db_delete_stream.cpp
         src/request_handler/request_handler_db_get_meta.cpp
+        src/request_handler/request_handler_kafka_notify.cpp
         src/request_handler/request_factory.cpp
         src/request_handler/request_handler_db.cpp
         src/request_handler/file_processors/write_file_processor.cpp
@@ -59,11 +60,11 @@ set(SOURCE_FILES
 GET_PROPERTY(ASAPO_COMMON_FABRIC_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_FABRIC_LIBRARIES)
 
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:curl_http_client>
-        $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:request_pool>)
+        $<TARGET_OBJECTS:json_parser> $<TARGET_OBJECTS:logger> $<TARGET_OBJECTS:request_pool> $<TARGET_OBJECTS:rdkafka_client>)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR})
 target_include_directories(${TARGET_NAME} SYSTEM PUBLIC  ${LIBFABRIC_INCLUDE_DIR})
-target_link_libraries(${TARGET_NAME} CURL::libcurl ${CMAKE_THREAD_LIBS_INIT} database
+target_link_libraries(${TARGET_NAME} CURL::libcurl rdkafka++ ${CMAKE_THREAD_LIBS_INIT} database
         asapo-fabric ${ASAPO_COMMON_FABRIC_LIBRARIES})
 
 
