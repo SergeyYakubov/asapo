@@ -151,7 +151,7 @@ func (a *JWTAuth) CheckAndGetContent(token string, extraClaims interface{}, payl
 	// payload ignored
 	c, ok := CheckJWTToken(token,a.Key)
 	if !ok {
-		return nil,errors.New("wrong JWT token")
+		return nil,errors.New("wrong or expired JWT token")
 	}
 	claim,ok  := c.(*CustomClaims)
 	if !ok {

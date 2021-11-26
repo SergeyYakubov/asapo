@@ -45,7 +45,7 @@ func (a *MockAuthServer) AuthorizeToken(tokenJWT string) (token Token, err error
 		}, nil
 	}
 
-	return Token{}, AuthorizationError{errors.New("wrong JWT token"),http.StatusUnauthorized}
+	return Token{}, &AuthorizationError{errors.New("wrong or expired JWT token"),http.StatusUnauthorized}
 }
 
 func prepareTestAuth() {
@@ -148,7 +148,7 @@ func TestProcessRequestTestSuite(t *testing.T) {
 
 func (suite *ProcessRequestTestSuite) TestProcessRequestWithWrongToken() {
 
-	logger.MockLog.On("WithFields", mock.MatchedBy(containsMatcherMap("wrong JWT token")))
+	logger.MockLog.On("WithFields", mock.MatchedBy(containsMatcherMap("wrong or expired JWT token")))
 	logger.MockLog.On("Error", mock.MatchedBy(containsMatcherStr("cannot authorize request")))
 
 	w := doRequest("/beamtime/" + expectedBeamtimeId + "/" + expectedSource + "/" + expectedStream + "/" + expectedGroupID + "/next" + suffixWithWrongToken)

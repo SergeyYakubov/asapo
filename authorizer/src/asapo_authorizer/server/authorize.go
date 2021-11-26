@@ -372,7 +372,7 @@ func routeAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res))
+	w.Write(res)
 }
 
 func checkRole(w http.ResponseWriter, r *http.Request, role string) error {

@@ -15,8 +15,11 @@ func (l *logRusLogger) SetSource(source string) {
 
 
 func (l *logRusLogger) WithFields(args map[string]interface{}) Logger {
-	l.logger_entry = l.entry().WithFields(args)
-	return l
+	new_log:= &logRusLogger{
+		logger_entry: l.entry().WithFields(args),
+		source:       l.source,
+	}
+	return new_log
 }
 
 
@@ -24,6 +27,7 @@ func (l *logRusLogger) entry() *log.Entry {
 	if l.logger_entry != nil {
 		return l.logger_entry
 	}
+
 
 	formatter := &log.JSONFormatter{
 		FieldMap: log.FieldMap{
