@@ -66,11 +66,7 @@ func checkRequest(r *http.Request, ver utils.VersionNum) (string,int,error) {
 		return "",status,err
 	}
 	var fullName string
-	if ver.Id == 1 { // protocol v0.1
-		fullName = filepath.Clean(request.Folder+string(os.PathSeparator)+request.FileName)
-	} else {
-		fullName = filepath.Clean(request.Folder+string(os.PathSeparator)+request.FileName)
-	}
+	fullName = filepath.Clean(request.Folder+string(os.PathSeparator)+request.FileName)
 
 	if status,err := checkFileExists(r,fullName); err != nil {
 		return "",status,err
