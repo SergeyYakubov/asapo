@@ -32,6 +32,7 @@ void RequestFactory::AddReceiveViaBufferHandlers(std::unique_ptr<Request>& reque
     request->AddHandler(&request_handler_receivedata_);
     if (NeedFileWriteHandler(request_header)) {
         request->AddHandler(&request_handler_filewrite_);
+        request->AddHandler(&request_handler_kafka_notify_);
     }
 }
 
@@ -42,6 +43,7 @@ Error RequestFactory::AddReceiveDirectToFileHandler(std::unique_ptr<Request>& re
                    "ingest mode should include kStoreInFilesystem for large files ");
     }
     request->AddHandler(&request_handler_filereceive_);
+    request->AddHandler(&request_handler_kafka_notify_);
     return nullptr;
 }
 

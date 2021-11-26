@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <map>
 #include <string>
 
 #include "asapo/common/error.h"
@@ -20,6 +21,8 @@ class JsonParser {
     Error GetString(const std::string& name, std::string* val) const noexcept;
     Error GetArrayUInt64(const std::string& name, std::vector<uint64_t>* val) const noexcept;
     Error GetArrayString(const std::string& name, std::vector<std::string>* val) const noexcept;
+    Error GetArrayObjectMembers(const std::string& name, std::vector<std::string>* val) const noexcept;
+    Error GetDictionaryString(const std::string& name, std::map<std::string, std::string>* val) const noexcept;
     Error GetArrayRawStrings(const std::string& name, std::vector<std::string>* val) const noexcept;
     Error GetRawString(std::string* val) const noexcept;
     Error GetFlattenedString(const std::string& prefix, const std::string& separator, std::string* val) const noexcept;
