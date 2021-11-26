@@ -33,7 +33,6 @@ ownServices:
       enable: true
       sizeGb: 1
     receiveToDiskThresholdMB: 200
-    kafkaBrokerList: asap3-events-01,asap3-events-02
   fileTransfer:
     serviceName: asapo-file-transfer
     replicaCount: 1

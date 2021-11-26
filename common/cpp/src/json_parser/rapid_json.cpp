@@ -168,40 +168,6 @@ Error RapidJson::GetArrayString(const std::string& name, std::vector<std::string
 
 }
 
-Error RapidJson::GetArrayObjectMembers(const std::string& name, std::vector<std::string>* val) const noexcept {
-    Value* json_val;
-    if (Error err = GetValuePointer(name, ValueType::kObject, &json_val)) {
-        return err;
-    }
-
-    val->clear();
-    for (auto& m : json_val->GetObject()) {
-        if (!m.name.IsString()) {
-            return GeneralErrorTemplates::kSimpleError.Generate("wrong type of object element: " + name);
-        }
-        val->push_back(m.name.GetString());
-    }
-    return nullptr;
-
-}
-
-Error RapidJson::GetDictionaryString(const std::string& name, std::map<std::string, std::string>* val) const noexcept {
-    Value* json_val;
-    if (Error err = GetValuePointer(name, ValueType::kObject, &json_val)) {
-        return err;
-    }
-
-    val->clear();
-    for (auto& m : json_val->GetObject()) {
-        if (!m.value.IsString() || !m.name.IsString()) {
-            return GeneralErrorTemplates::kSimpleError.Generate("wrong type of dictionary element: " + name);
-        }
-        (*val)[m.name.GetString()] = m.value.GetString();
-    }
-    return nullptr;
-
-}
-
 RapidJson::RapidJson(const RapidJson& parent, const std::string& subname) {
     auto err = parent.GetValuePointer(subname, ValueType::kObject, &object_p_);
     if (err) {
