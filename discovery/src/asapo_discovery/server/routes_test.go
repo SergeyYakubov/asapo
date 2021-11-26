@@ -1,17 +1,17 @@
 package server
 
 import (
-	"asapo_common/version"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/suite"
 	"asapo_common/logger"
 	"asapo_common/utils"
+	"asapo_common/version"
+	"asapo_discovery/common"
+	"asapo_discovery/request_handler"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"asapo_discovery/request_handler"
-	"asapo_discovery/common"
 )
 
 func containsMatcher(substr string) func(str string) bool {
@@ -74,8 +74,8 @@ var receiverTests = []requestTest {
 func (suite *GetServicesTestSuite) TestGetReceivers() {
 	for _,test:= range receiverTests {
 		if test.code == http.StatusOK {
-			logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("validating producer")))
-			logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameReceiverService)))
+			logger.MockLog.On("WithFields", mock.Anything)
+			logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("request")))
 		} else {
 			logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("validating producer")))
 		}
@@ -99,8 +99,8 @@ var brokerTests = []requestTest {
 func (suite *GetServicesTestSuite) TestGetBroker() {
 	for _,test:= range brokerTests {
 		if test.code == http.StatusOK {
-			logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("validating consumer")))
-			logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameBrokerService)))
+			logger.MockLog.On("WithFields", mock.Anything)
+			logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("request")))
 		} else {
 			logger.MockLog.On("Error", mock.MatchedBy(containsMatcher("validating consumer")))
 		}
@@ -117,7 +117,8 @@ func (suite *GetServicesTestSuite) TestGetBroker() {
 
 
 func (suite *GetServicesTestSuite) TestGetMongo() {
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameMongoService)))
+	logger.MockLog.On("WithFields", mock.Anything)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("request")))
 
 	w := doRequest("/asapo-mongodb")
 
@@ -127,8 +128,8 @@ func (suite *GetServicesTestSuite) TestGetMongo() {
 }
 
 func (suite *GetServicesTestSuite) TestGetFts() {
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get "+common.NameFtsService)))
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("validating")))
+	logger.MockLog.On("WithFields", mock.Anything)
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("request")))
 
 	w := doRequest("/" + version.GetDiscoveryApiVersion()+"/asapo-file-transfer?protocol=v0.1")
 
@@ -138,7 +139,7 @@ func (suite *GetServicesTestSuite) TestGetFts() {
 }
 
 func (suite *GetServicesTestSuite) TestGetVersions() {
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing get version")))
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("request")))
 
 	w := doRequest("/" + version.GetDiscoveryApiVersion() + "/version")
 
