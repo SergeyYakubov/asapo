@@ -8,11 +8,11 @@ namespace asapo {
 
 class RequestHandlerKafkaNotify final : public ReceiverRequestHandler {
   public:
-    RequestHandlerKafkaNotify();
+    RequestHandlerKafkaNotify(KafkaClient* kafka_client);
     StatisticEntity GetStatisticEntity() const override;
     Error ProcessRequest(Request* request) const override;
   private:
-    std::unique_ptr<KafkaClient> kafka_client_;
+    KafkaClient* kafka_client_;
 };
 
 }

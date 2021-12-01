@@ -5,13 +5,13 @@
 namespace asapo {
 
 RequestsDispatcher::RequestsDispatcher(SocketDescriptor socket_fd, std::string address,
-                                       ReceiverStatistics* statistics, SharedCache cache) : statistics__{statistics},
+                                       ReceiverStatistics* statistics, SharedCache cache, KafkaClient* kafka_client) : statistics__{statistics},
     io__{GenerateDefaultIO()},
     log__{
     GetDefaultReceiverLogger()},
 request_factory__{
     new RequestFactory{
-        cache}},
+        cache, kafka_client}},
 socket_fd_{socket_fd},
 producer_uri_{
     std::move(address)} {

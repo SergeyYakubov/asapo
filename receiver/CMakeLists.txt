@@ -108,6 +108,7 @@ set(TEST_SOURCE_FILES
         unittests/request_handler/test_request_handler_receive_metadata.cpp
         unittests/request_handler/test_request_handler_delete_stream.cpp
         unittests/request_handler/test_request_handler_db_get_meta.cpp
+        unittests/request_handler/test_request_handler_kafka_notify.cpp
         unittests/statistics/test_statistics_sender_influx_db.cpp
         unittests/statistics/test_statistics_sender_fluentd.cpp
         unittests/mock_receiver_config.cpp

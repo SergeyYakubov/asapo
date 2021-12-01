@@ -25,10 +25,13 @@
   "Tag": "receiver",
   "ReceiveToDiskThresholdMB": {{ .Values.ownServices.receiver.receiveToDiskThresholdMB }},
   "LogLevel": "info",
-  "KafkaClient": {
-    "metadata.broker.list": {{ .Values.ownServices.receiver.kafkaBrokerList }}
-  },
-  "KafkaTopics": {
-    "asapo": {}
+  "Kafka": {
+    "Enabled": true,
+    "KafkaClient": {
+      "metadata.broker.list": {{ .Values.ownServices.receiver.kafkaBrokerList }}
+    },
+    "KafkaTopics": {
+      "asapo": {}
+    }
   }
 }

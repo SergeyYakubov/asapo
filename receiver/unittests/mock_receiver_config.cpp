@@ -80,6 +80,9 @@ Error SetReceiverConfig (const ReceiverConfig& config, std::string error_field) 
     config_string += "," +  Key("AuthorizationServer", error_field) + "\"" + config.authorization_server + "\"";
     config_string += "," +  Key("LogLevel", error_field) + "\"" + log_level + "\"";
     config_string += "," +  Key("Tag", error_field) + "\"" + config.tag + "\"";
+    config_string += "," +  Key("Kafka", error_field) + "{";
+    config_string += Key("Enabled", error_field) + "false";
+    config_string += "}";
     config_string += "}";
 
 

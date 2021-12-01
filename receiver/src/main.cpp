@@ -78,11 +78,11 @@ std::vector<std::thread> StartDataServers(const asapo::ReceiverConfig* config, a
 }
 
 int StartReceiver(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
-                  asapo::AbstractLogger* logger) {
+                  asapo::KafkaClient* kafkaClient, asapo::AbstractLogger* logger) {
     static const std::string address = "0.0.0.0:" + std::to_string(config->listen_port);
 
     logger->Info(std::string("starting receiver, version ") + asapo::kVersion);
-    auto* receiver = new asapo::Receiver(cache);
+    auto* receiver = new asapo::Receiver(cache, kafkaClient);
     logger->Info("listening on " + address);
 
     asapo::Error err;
@@ -122,6 +122,7 @@ int main(int argc, char* argv[]) {
     logger->SetLogLevel(config->log_level);
 
     asapo::SharedCache cache = nullptr;
+    asapo::KafkaClient* kafkaClient = nullptr;
     if (config->use_datacache) {
         cache.reset(new asapo::DataCache{config->datacache_size_gb * 1024 * 1024 * 1024,
                                          (float) config->datacache_reserved_share / 100});
@@ -137,17 +138,17 @@ int main(int argc, char* argv[]) {
     auto metrics_thread = StartMetricsServer(config->metrics, logger);
 
     if (!config->kafka_config.global_config.empty()) {
-        err = asapo::InitializeKafkaClient(config->kafka_config);
-        if (err) {
+        kafkaClient = asapo::CreateKafkaClient(config->kafka_config, &err);
+        if (kafkaClient == nullptr) {
             logger->Error("Error initializing kafka client: " + err->Explain());
-            logger->Error("Kafka notification disabled");
+            return EXIT_FAILURE;
         }
     }
     else {
-        logger->Info("No kafka config provided. Kafka notification disabled.");
+        logger->Info("Kafka notification disabled.");
     }
 
-    auto exit_code = StartReceiver(config, cache, logger);
+    auto exit_code = StartReceiver(config, cache, kafkaClient, logger);
 // todo: implement graceful exit, currently it never reaches this point
     return exit_code;
 }

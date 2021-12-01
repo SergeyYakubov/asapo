@@ -21,6 +21,6 @@ StatisticEntity RequestHandlerKafkaNotify::GetStatisticEntity() const {
     return StatisticEntity::kNetwork;
 }
 
-RequestHandlerKafkaNotify::RequestHandlerKafkaNotify() : kafka_client_{GetKafkaClient()} {
+RequestHandlerKafkaNotify::RequestHandlerKafkaNotify(KafkaClient* kafka_client) : kafka_client_{kafka_client} {
 }
 }

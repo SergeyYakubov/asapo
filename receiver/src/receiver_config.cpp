@@ -17,6 +17,7 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
     std::string log_level;
     Error err;
 
+    bool kafkaEnabled;
     std::vector<std::string> kafkaTopics;
 
     (err = parser.GetString("PerformanceDbServer", &config.performance_db_uri)) ||
@@ -38,31 +39,28 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
     (err = parser.Embedded("DataServer").GetArrayString("NetworkMode", &config.dataserver.network_mode)) ||
     (err = parser.Embedded("Metrics").GetBool("Expose", &config.metrics.expose)) ||
     (err = parser.Embedded("Metrics").GetUInt64("ListenPort", &config.metrics.listen_port)) ||
-    (err = parser.GetString("LogLevel", &log_level));
+    (err = parser.GetString("LogLevel", &log_level)) ||
+    (err = parser.Embedded("Kafka").GetBool("Enabled", &kafkaEnabled));
 
-    if (err) {
-        return err;
-    }
 
-    (err = parser.GetDictionaryString("KafkaClient", &config.kafka_config.global_config)) ||
-    (err = parser.GetArrayObjectMembers("KafkaTopics", &kafkaTopics));
 
-    if (!err) {
+    if (kafkaEnabled) {
+        // read the configuration only if kafka is enabled. empty configuration means "disabled"
+        (err = parser.GetDictionaryString("KafkaClient", &config.kafka_config.global_config)) ||
+        (err = parser.GetArrayObjectMembers("KafkaTopics", &kafkaTopics));
+
+        if (err) {
+            return err;
+        }
+
         for(const auto& topic : kafkaTopics) {
             auto topicConfig = config.kafka_config.topics_config[topic];
             err = parser.Embedded("KafkaTopics").GetDictionaryString(topic, &topicConfig);
             if (err) {
-                break;
+                return err;
             }
         }
     }
-
-    if (err) {
-        // ignore kafka config error. Just disable it.
-        config.kafka_config.global_config.clear();
-        config.kafka_config.topics_config.clear();
-    }
-
 
     config.dataserver.tag = config.tag + "_ds";
 

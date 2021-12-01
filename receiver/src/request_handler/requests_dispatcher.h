@@ -14,7 +14,7 @@ namespace asapo {
 
 class RequestsDispatcher {
   public:
-    RequestsDispatcher(SocketDescriptor socket_fd, std::string address, ReceiverStatistics* statistics, SharedCache cache);
+    RequestsDispatcher(SocketDescriptor socket_fd, std::string address, ReceiverStatistics* statistics, SharedCache cache, KafkaClient* kafka_client);
     VIRTUAL Error ProcessRequest(const std::unique_ptr<Request>& request) const noexcept;
     VIRTUAL std::unique_ptr<Request> GetNextRequest(Error* err) const noexcept;
     VIRTUAL ~RequestsDispatcher() = default;

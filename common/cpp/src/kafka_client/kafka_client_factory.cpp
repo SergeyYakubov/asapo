@@ -2,28 +2,13 @@
 
 namespace asapo {
 
-KafkaClient* instance = nullptr;
-
-Error InitializeKafkaClient(const KafkaClientConfig& config) {
-    if (instance != nullptr) {
-        return KafkaErrorTemplates::kGeneralError.Generate("Kafka client already initialized");
-    }
-
+KafkaClient* CreateKafkaClient(const KafkaClientConfig& config, Error* err) {
     try {
-        instance = new RdKafkaClient(config);
+        return new RdKafkaClient(config);
     }
-    catch (std::string err) {
-        return KafkaErrorTemplates::kGeneralError.Generate(err);
+    catch (std::string errstr) {
+        (*err) = KafkaErrorTemplates::kGeneralError.Generate(errstr);
     }
-
     return nullptr;
-}
-
-std::unique_ptr<KafkaClient> GetKafkaClient() {
-    if (instance != nullptr) {
-        return std::unique_ptr<KafkaClient> {instance};
-    } else {
-        return nullptr;
-    }
 }
 }

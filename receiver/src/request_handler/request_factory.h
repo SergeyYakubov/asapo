@@ -24,7 +24,7 @@ namespace asapo {
 
 class RequestFactory {
   public:
-    explicit RequestFactory (SharedCache cache);
+    explicit RequestFactory (SharedCache cache, KafkaClient* kafka_client);
     virtual std::unique_ptr<Request> GenerateRequest(const GenericRequestHeader& request_header,
                                                      SocketDescriptor socket_fd, std::string origin_uri, Error* err) const noexcept;
     virtual ~RequestFactory() = default;

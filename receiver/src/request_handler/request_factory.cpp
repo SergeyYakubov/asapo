@@ -118,8 +118,7 @@ std::unique_ptr<Request> RequestFactory::GenerateRequest(const GenericRequestHea
     return request;
 }
 
-RequestFactory::RequestFactory(SharedCache cache) : cache_{cache} {
-
+RequestFactory::RequestFactory(SharedCache cache, KafkaClient* kafka_client) : request_handler_kafka_notify_{kafka_client}, cache_{cache} {
 }
 
 }

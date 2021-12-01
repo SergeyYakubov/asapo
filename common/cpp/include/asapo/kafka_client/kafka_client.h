@@ -16,8 +16,7 @@ class KafkaClient {
     virtual ~KafkaClient() = default;
 };
 
-Error InitializeKafkaClient(const KafkaClientConfig& config);
-std::unique_ptr<KafkaClient> GetKafkaClient();
+KafkaClient* CreateKafkaClient(const KafkaClientConfig& config, Error* err);
 
 }
 
