@@ -16,7 +16,7 @@ mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHAR
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $DATA_GLOBAL_SHARED_ONLINE
 
 cd $SERVICE_DATA_CLUSTER_SHARED
-mkdir -p fluentd grafana influxdb influxdb2 mongodb
+mkdir -p fluentd grafana influxdb influxdb2 mongodb prometheus alertmanager
 chmod 777 *
 
 docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock \

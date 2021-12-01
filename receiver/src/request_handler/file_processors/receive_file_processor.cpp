@@ -5,6 +5,7 @@
 #include "../../receiver_error.h"
 #include "../../request.h"
 #include "../../receiver_config.h"
+#include "../../receiver_logger.h"
 
 namespace asapo {
 
@@ -23,7 +24,8 @@ Error ReceiveFileProcessor::ProcessFile(const Request* request, bool overwrite) 
     }
     err =  io__->ReceiveDataToFile(socket, root_folder, fname, (size_t) fsize, true, overwrite);
     if (!err) {
-        log__->Debug("received file of size " + std::to_string(fsize) + " to " + root_folder + kPathSeparator + fname);
+        log__->Debug(RequestLog("received file", request).Append("size",std::to_string(fsize)).Append("name",
+                root_folder + kPathSeparator + fname));
     }
     return err;
 }

@@ -27,13 +27,13 @@ TEST(ErrorTemplate, Explain) {
     ASSERT_THAT(error->Explain(), HasSubstr("test"));
 }
 
-TEST(ErrorTemplate, Context) {
+TEST(ErrorTemplate, Details) {
     Error error = asapo::GeneralErrorTemplates::kEndOfFile.Generate("test");
-    error->AddContext("key", "value");
-    error->AddContext("key2", "value2");
+    error->AddDetails("key", "value");
+    error->AddDetails("key2", "value2");
 
     ASSERT_THAT(error->Explain(), AllOf(HasSubstr("test"),
-                                        HasSubstr("context"),
+                                        HasSubstr("details"),
                                         HasSubstr("key:value"),
                                         HasSubstr("key2:value2")
                                        ));
@@ -43,8 +43,8 @@ TEST(ErrorTemplate, Cause) {
     Error error = asapo::GeneralErrorTemplates::kEndOfFile.Generate("test");
     Error error_c = asapo::GeneralErrorTemplates::kMemoryAllocationError.Generate("cause_test");
     Error error_c1 = asapo::GeneralErrorTemplates::kSimpleError.Generate("simple error");
-    error->AddContext("key", "value");
-    error_c->AddContext("key2", "value2");
+    error->AddDetails("key", "value");
+    error_c->AddDetails("key2", "value2");
     error_c->SetCause(std::move(error_c1));
     error->SetCause(std::move(error_c));
     ASSERT_THAT(error->Explain(), AllOf(HasSubstr("test"),
@@ -64,10 +64,10 @@ TEST(ErrorTemplate, Cause) {
 TEST(ErrorTemplate, Json) {
     Error error = asapo::GeneralErrorTemplates::kEndOfFile.Generate("test");
     Error error_c = asapo::GeneralErrorTemplates::kMemoryAllocationError.Generate("cause_test");
-    error->AddContext("key", "value");
+    error->AddDetails("key", "value");
     error->SetCause(std::move(error_c));
     auto expected_string =
-        R"("error":"end of file","message":"test","context":{"key":"value"},"cause":{"error":"memory allocation","message":"cause_test"})";
+        R"("error":"end of file","message":"test","details":{"key":"value"},"cause":{"error":"memory allocation","message":"cause_test"})";
     ASSERT_THAT(error->ExplainInJSON(),  Eq(expected_string));
 }
 

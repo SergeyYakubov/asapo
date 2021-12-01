@@ -27,10 +27,11 @@ func extractProtocol(r *http.Request) (string, error) {
 }
 
 func routeGetVersion(w http.ResponseWriter, r *http.Request) {
-	log_str := "processing get version"
+	log_str := "processing get version request"
 	logger.Debug(log_str)
 
 	if ok := checkDiscoveryApiVersion(w, r); !ok {
+		logger.Debug("checkDiscoveryApiVersion failed")
 		return
 	}
 	keys := r.URL.Query()

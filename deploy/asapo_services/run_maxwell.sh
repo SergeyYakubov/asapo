@@ -45,7 +45,7 @@ ASAPO_LIGHTWEIGHT_SERVICE_NODES=`scontrol show hostnames $SLURM_JOB_NODELIST | h
 mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $MONGO_DIR
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $MONGO_DIR
 cd $SERVICE_DATA_CLUSTER_SHARED
-mkdir esdatadir fluentd grafana influxdb mongodb
+mkdir esdatadir fluentd grafana influxdb mongodb prometheus alertmanager
 chmod 777 *
 
 #todo: elastic search check

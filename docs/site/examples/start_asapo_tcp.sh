@@ -22,7 +22,7 @@ mkdir -p $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHAR
 chmod 777 $NOMAD_ALLOC_HOST_SHARED $SERVICE_DATA_CLUSTER_SHARED $DATA_GLOBAL_SHARED $DATA_GLOBAL_SHARED_ONLINE
 
 cd $SERVICE_DATA_CLUSTER_SHAREDdetector
-mkdir -p fluentd grafana influxdb2 mongodb
+mkdir -p fluentd grafana influxdb influxdb2 mongodb prometheus alertmanager
 chmod 777 *
 
 docker run --privileged --userns=host --security-opt no-new-privileges --rm \

@@ -15,7 +15,7 @@ Error RequestHandlerAuthorize::CheckVersion(const Request* request) const {
     int verService = VersionToNumber(GetReceiverApiVersion());
     if (verClient > verService) {
         auto err = asapo::ReceiverErrorTemplates::kUnsupportedClient.Generate();
-        err->AddContext("client",version_from_client)->AddContext("server",GetReceiverApiVersion());
+        err->AddDetails("client", version_from_client)->AddDetails("server", GetReceiverApiVersion());
         return err;
     }
     return nullptr;

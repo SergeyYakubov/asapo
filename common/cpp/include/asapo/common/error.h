@@ -21,7 +21,8 @@ class ErrorInterface {
     virtual std::string Explain() const noexcept = 0;
     virtual std::string ExplainPretty(uint8_t shift = 0) const noexcept = 0;
     virtual std::string ExplainInJSON() const noexcept = 0;
-    virtual ErrorInterface* AddContext(std::string key, std::string value) noexcept = 0;
+    virtual ErrorInterface* AddDetails(std::string key, std::string value) noexcept = 0;
+    virtual ErrorInterface* AddDetails(std::string key, uint64_t value) noexcept = 0;
     virtual ErrorInterface* SetCause(Error cause_err) noexcept = 0;
     virtual const Error& GetCause() const noexcept = 0;
     virtual CustomErrorData* GetCustomData() noexcept = 0;
@@ -50,7 +51,7 @@ class ServiceError : public ErrorInterface {
     ServiceErrorType error_type_;
     std::string error_name_;
     std::string error_message_;
-    std::map<std::string, std::string> context_;
+    std::map<std::string, std::string> details_;
     Error cause_err_;
     std::unique_ptr<CustomErrorData> custom_data_;
   public:
@@ -58,7 +59,8 @@ class ServiceError : public ErrorInterface {
     ServiceErrorType GetServiceErrorType() const noexcept;
     CustomErrorData* GetCustomData() noexcept override;
     void SetCustomData(std::unique_ptr<CustomErrorData> data) noexcept override;
-    ErrorInterface* AddContext(std::string key, std::string value) noexcept override;
+    ErrorInterface* AddDetails(std::string key, std::string value) noexcept override;
+    ErrorInterface* AddDetails(std::string key, uint64_t value) noexcept override;
     ErrorInterface* SetCause(Error cause_err) noexcept override;
     const Error& GetCause() const noexcept override;
     std::string Explain() const noexcept override;

@@ -30,8 +30,8 @@ func extractUserTokenrequest(r *http.Request) (request structs.IssueTokenRequest
 	}
 
 	for _, ar := range request.AccessTypes {
-		if ar != "read" && ar != "write" && !(ar== "writeraw" && request.Subject["beamline"]!="") {
-			return request, errors.New("wrong requested access rights: "+ar)
+		if ar != "read" && ar != "write" && !(ar == "writeraw" && request.Subject["beamline"] != "") {
+			return request, errors.New("wrong requested access rights: " + ar)
 		}
 	}
 
@@ -72,8 +72,12 @@ func issueUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
-	log.Debug("generated user token ")
+	log.WithFields(map[string]interface{}{
+		"id":      claims.Id,
+		"subject": claims.Subject,
+		"validDays": request.DaysValid,
+		"accessTypes": request.AccessTypes,
+	}).Info("issued user token")
 
 	answer := authorization.UserTokenResponce(request, token)
 	w.WriteHeader(http.StatusOK)

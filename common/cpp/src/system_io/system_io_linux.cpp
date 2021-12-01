@@ -28,7 +28,7 @@ Error SystemIO::AddToEpool(SocketDescriptor sd) const {
     event.data.fd = sd;
     if((epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, sd, &event) == -1) && (errno != EEXIST)) {
         auto err =  GetLastError();
-        err->AddContext("where", "add to epoll");
+        err->AddDetails("where", "add to epoll");
         close(epoll_fd_);
         return err;
     }
@@ -43,7 +43,7 @@ Error SystemIO::CreateEpoolIfNeeded(SocketDescriptor master_socket) const {
     epoll_fd_ = epoll_create1(0);
     if(epoll_fd_ == kDisconnectedSocketDescriptor) {
         auto err = GetLastError();
-        err->AddContext("where", "create epoll");
+        err->AddDetails("where", "create epoll");
         return err;
     }
     return AddToEpool(master_socket);
@@ -84,7 +84,7 @@ ListSocketDescriptors SystemIO::WaitSocketsActivity(SocketDescriptor master_sock
         }
         if (event_count < 0) {
             *err = GetLastError();
-            (*err)->AddContext("where", "epoll wait");
+            (*err)->AddDetails("where", "epoll wait");
             return {};
         }
 

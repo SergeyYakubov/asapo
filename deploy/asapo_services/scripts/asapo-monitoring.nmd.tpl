@@ -27,6 +27,8 @@ job "asapo-monitoring" {
       driver = "docker"
       user = "${asapo_user}"
       config {
+        security_opt = ["no-new-privileges"]
+        userns_mode = "host"
         image = "prom/alertmanager:${alertmanager_version}"
         args = [
           "--web.route-prefix=/alertmanager/",
@@ -87,6 +89,8 @@ job "asapo-monitoring" {
       driver = "docker"
       user = "${asapo_user}"
       config {
+        security_opt = ["no-new-privileges"]
+        userns_mode = "host"
         image = "prom/prometheus:${prometheus_version}"
         args = [
           "--web.external-url=/prometheus/",

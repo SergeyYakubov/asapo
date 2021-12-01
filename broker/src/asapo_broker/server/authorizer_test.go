@@ -47,7 +47,7 @@ func responseOk() (*http.Response, error) {
 }
 
 func responseUnauth() (*http.Response, error) {
-	r := ioutil.NopCloser(bytes.NewReader([]byte("wrong JWT token")))
+	r := ioutil.NopCloser(bytes.NewReader([]byte("wrong or expired JWT token")))
 	return &http.Response{
 		StatusCode: http.StatusUnauthorized,
 		Body:       r,

@@ -68,7 +68,7 @@ Error GetLastErrorFromErrno() {
         return IOErrorTemplates::kBrokenPipe.Generate();
     default:
         Error err = IOErrorTemplates::kUnknownIOError.Generate();
-        (*err).AddContext("Unknown error code: ", std::to_string(errno));
+            (*err).AddDetails("Unknown error code: ", std::to_string(errno));
         return err;
     }
 }
@@ -122,7 +122,7 @@ MessageMeta GetMessageMeta(const string& name, Error* err) {
 
     auto t_stat = FileStat(name, err);
     if (*err != nullptr) {
-        (*err)->AddContext("name", name);
+        (*err)->AddDetails("name", name);
         return MessageMeta{};
     }
 
@@ -157,7 +157,7 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = GetLastError();
-        (*err)->AddContext("name", path);
+        (*err)->AddDetails("name", path);
         return;
     }
 
@@ -183,7 +183,7 @@ void SystemIO::CollectMessageMetarmationRecursively(const std::string& path,
     auto dir = opendir((path).c_str());
     if (dir == nullptr) {
         *err = GetLastError();
-        (*err)->AddContext("name", path);
+        (*err)->AddDetails("name", path);
         return;
     }
 

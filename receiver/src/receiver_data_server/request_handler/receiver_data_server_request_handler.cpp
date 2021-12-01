@@ -92,7 +92,10 @@ void ReceiverDataServerRequestHandler::ProcessRequestTimeoutUnlocked(GenericRequ
 
 void ReceiverDataServerRequestHandler::HandleInvalidRequest(const ReceiverDataServerRequest* receiver_request,
         NetworkErrorCode code) {
-    SendResponse(receiver_request, code);
+    auto err = SendResponse(receiver_request, code);
+    if (err) {
+        log__->Error(err);
+    }
     server_->HandleAfterError(receiver_request->source_id);
     switch (code) {
     case NetworkErrorCode::kNetErrorWrongRequest:
@@ -111,8 +114,8 @@ void ReceiverDataServerRequestHandler::HandleValidRequest(const ReceiverDataServ
         const CacheMeta* meta) {
     auto err = SendResponseAndSlotData(receiver_request, meta);
     if (err) {
-        log__->Error("failed to send slot:" + err->Explain());
         server_->HandleAfterError(receiver_request->source_id);
+        log__->Error(err);
     } else {
         statistics__->IncreaseRequestCounter();
         statistics__->IncreaseRequestDataVolume(receiver_request->header.data_size);
