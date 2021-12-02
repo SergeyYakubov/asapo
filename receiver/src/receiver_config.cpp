@@ -42,7 +42,9 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
     (err = parser.GetString("LogLevel", &log_level)) ||
     (err = parser.Embedded("Kafka").GetBool("Enabled", &kafkaEnabled));
 
-
+    if (err) {
+        return err;
+    }
 
     if (kafkaEnabled) {
         // read the configuration only if kafka is enabled. empty configuration means "disabled"
