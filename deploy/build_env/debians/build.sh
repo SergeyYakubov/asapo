@@ -25,6 +25,13 @@ else
   BUILD_PYTHON_DOCS=OFF
 fi
 
+if [ "$OS" = "debian11.1" ]; then
+  BUILD_PYTHON2_PACKAGES=OFF
+else
+  BUILD_PYTHON2_PACKAGES=ON
+fi
+
+
 #switch to static curl for Python packages
 rm CMakeCache.txt
 cmake \
@@ -35,6 +42,7 @@ cmake \
     -DNUMPY_VERSION=0   \
     -DBUILD_PYTHON=ON   \
     -DPACKAGE_RELEASE_SUFFIX=$OS \
+    -DBUILD_PYTHON2_PACKAGES=$BUILD_PYTHON2_PACKAGES \
     -DBUILD_PYTHON_PACKAGES="source;deb"   \
     -DBUILD_PYTHON_DOCS=$BUILD_PYTHON_DOCS \
     ..
