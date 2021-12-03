@@ -64,7 +64,7 @@ add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(${TARGET_NAME} PUBLIC ${ASAPO_CXX_COMMON_INCLUDE_DIR})
 target_include_directories(${TARGET_NAME} SYSTEM PUBLIC  ${LIBFABRIC_INCLUDE_DIR})
-target_link_libraries(${TARGET_NAME} CURL::libcurl rdkafka++ ${CMAKE_THREAD_LIBS_INIT} database
+target_link_libraries(${TARGET_NAME} CURL::libcurl ${RDKAFKA_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} database
         asapo-fabric ${ASAPO_COMMON_FABRIC_LIBRARIES})
 
 
