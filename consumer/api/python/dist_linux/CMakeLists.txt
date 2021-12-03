@@ -9,30 +9,33 @@ if ("source" IN_LIST BUILD_PYTHON_PACKAGES )
 endif()
 
 if ("rpm" IN_LIST BUILD_PYTHON_PACKAGES)
-    ADD_CUSTOM_TARGET(python-rpm-consumer ALL
+    if (BUILD_PYTHON2_PACKAGES)
+        ADD_CUSTOM_TARGET(python-rpm-consumer ALL
             COMMAND PACKAGE_PREFIX=python- python setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX}
             --requires=numpy --binary-only
             COMMAND rm -f dist/python*.gz dist/*debuginfo* dist/*debugsource*
             )
-
+        ADD_DEPENDENCIES(python-rpm-consumer python3-rpm-consumer)
+    endif()
     ADD_CUSTOM_TARGET(python3-rpm-consumer ALL
             COMMAND PACKAGE_PREFIX=python3- python3 setup.py bdist_rpm --release=1.${PACKAGE_RELEASE_SUFFIX}
             --requires=python3-numpy --binary-only
             COMMAND rm -f dist/python3*.gz dist/*debuginfo* dist/*debugsource*
             )
-    ADD_DEPENDENCIES(python3-rpm-consumer python-rpm-consumer)
-    ADD_DEPENDENCIES(python-rpm-consumer copy_python_dist-consumer)
+    ADD_DEPENDENCIES(python3-rpm-consumer copy_python_dist-consumer)
 endif()
 
 if ("deb" IN_LIST BUILD_PYTHON_PACKAGES)
-    ADD_CUSTOM_TARGET(python-deb-consumer ALL
+    if (BUILD_PYTHON2_PACKAGES)
+        ADD_CUSTOM_TARGET(python-deb-consumer ALL
             COMMAND rm -rf deb_dist/*/
             COMMAND PACKAGE_PREFIX= python setup.py --command-packages=stdeb.command
             sdist_dsc --debian-version=${PACKAGE_RELEASE_SUFFIX} --depends=python-numpy bdist_deb
             COMMAND rm -f deb_dist/*dbgsym*
             COMMAND cp deb_dist/*.deb dist/
             )
-
+        ADD_DEPENDENCIES(python-deb-consumer python3-deb-consumer)
+    endif()
     ADD_CUSTOM_TARGET(python3-deb-consumer ALL
             COMMAND rm -rf deb_dist/*/
             COMMAND PACKAGE_PREFIX= python3 setup.py --command-packages=stdeb.command
@@ -40,8 +43,7 @@ if ("deb" IN_LIST BUILD_PYTHON_PACKAGES)
             COMMAND rm -f deb_dist/*dbgsym*
             COMMAND cp deb_dist/*.deb dist/
             )
-    ADD_DEPENDENCIES(python3-deb-consumer python-deb-consumer)
-    ADD_DEPENDENCIES(python-deb-consumer copy_python_dist-consumer)
+    ADD_DEPENDENCIES(python3-deb-consumer copy_python_dist-consumer)
 endif()
 
 ADD_CUSTOM_TARGET(copy_python_dist-consumer ALL

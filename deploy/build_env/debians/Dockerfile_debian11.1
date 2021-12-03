@@ -1,0 +1,23 @@
+from debian:11.1
+
+ENV GOPATH /tmp
+
+ADD install_curl.sh install_curl.sh
+
+RUN apt update && apt install -y g++ git wget python3 python3-numpy python3-pip cmake \
+zlib1g-dev python3-all-dev python3-stdeb
+
+RUN pip3 --no-cache-dir install cython
+
+RUN ./install_curl.sh /curl
+
+ADD install_libfabric.sh install_libfabric.sh
+RUN ./install_libfabric.sh
+
+RUN apt install -y libcurl4-openssl-dev
+
+RUN apt install dh-python
+
+ARG OS
+ENV OS=${OS}
+ADD build.sh /bin/build.sh
