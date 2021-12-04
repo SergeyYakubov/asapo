@@ -19,7 +19,7 @@ if(CURL_FOUND) #old FindCURL versions do not create CURL::libcurl target, so we 
 endif()
 
 
-find_package(RdKafka)
+find_package(RdKafka REQUIRED)
 message (STATUS "Found rdkafka++ libraries: ${RDKAFKA_LIBRARIES}")
 message (STATUS "rdkafka++ include: ${RDKAFKA_INCLUDE_DIR}")
 

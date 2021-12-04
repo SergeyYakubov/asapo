@@ -11,5 +11,12 @@ cmake_minimum_required(VERSION 3.12)
 
 find_path(RDKAFKA_INCLUDE_DIR librdkafka/rdkafka.h HINTS ${RdKafka_DIR}/include)
 find_library(RDKAFKA_LIBRARIES rdkafka++ HINTS ${RdKafka_DIR}/lib ${RdKafka_DIR}/lib64)
+IF(WIN32)
+    find_path(RDKAFKA_BIN_DIR rdkafka++.dll HINTS ${RdKafka_DIR}/bin)
+    mark_as_advanced(RDKAFKA_BIN_DIR)
+    find_package_handle_standard_args(RdKafka REQUIRED_VARS RDKAFKA_INCLUDE_DIR RDKAFKA_LIBRARIES RDKAFKA_BIN_DIR)
+ELSE()
+    find_package_handle_standard_args(RdKafka REQUIRED_VARS RDKAFKA_INCLUDE_DIR RDKAFKA_LIBRARIES)
+ENDIF()
 
 mark_as_advanced(RDKAFKA_LIBRARIES RDKAFKA_INCLUDE_DIR)

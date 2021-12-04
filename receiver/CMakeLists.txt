@@ -76,6 +76,11 @@ set_target_properties(${TARGET_NAME}-bin PROPERTIES RUNTIME_OUTPUT_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}$<$<CONFIG:Debug>:>
         )
 
+if (WIN32)
+    file(GLOB KAFKA_DLLS "${RDKAFKA_BIN_DIR}/rdkafka*.dll")
+    file(COPY ${KAFKA_DLLS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
 configure_file(docker/Dockerfile . COPYONLY)
 configure_file(docker/install_libfabric.sh . COPYONLY)
 
