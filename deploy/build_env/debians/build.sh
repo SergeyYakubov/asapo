@@ -25,12 +25,11 @@ else
   BUILD_PYTHON_DOCS=OFF
 fi
 
-if [ "$OS" = "debian11.1" ]; then
-  BUILD_PYTHON2_PACKAGES=OFF
-else
+if [ $OS == "debian9.13" -o $OS == "debian10.7" -o $OS == "ubuntu16.04" -o $OS == "ubuntu18.04" ]; then
   BUILD_PYTHON2_PACKAGES=ON
+else
+  BUILD_PYTHON2_PACKAGES=OFF
 fi
-
 
 #switch to static curl for Python packages
 rm CMakeCache.txt

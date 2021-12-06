@@ -22,7 +22,7 @@ set(ConfigPackageLocation lib/cmake/Asapo)
 # options
 
 option(BUILD_PYTHON "Build python libs" ON)
-option(BUILD_PYTHON2_PACKAGES "Build python2 packages" ON)
+option(BUILD_PYTHON2_PACKAGES "Build python2 packages" OFF)
 
 option(BUILD_CLIENTS_ONLY "Build clients only" OFF)
 

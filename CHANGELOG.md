@@ -3,6 +3,8 @@
 FEATURES
 * Consumer API: Get last within consumer group returns message only once
 * Producer API: An option to write raw data to core filesystem directly
+* Consumer/Producer API - packages for Debian 11.1
+* Consumer/Producer API - dropped Python 2 support for wheels and packages for new Debian/CentOS versions
 
 ## 21.09.0
 

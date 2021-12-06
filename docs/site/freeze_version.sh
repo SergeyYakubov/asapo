@@ -38,8 +38,9 @@ for file in $(find ./${VERSIONED_EXAMPLES} -type f)
 do
 ed -s $file <<ED_COMMANDS > /dev/null 2>&1
 ,s/asapo-cluster-dev:100\.0\.develop/asapo-cluster:${DOCS_VERSION}/g
-,s/==100\.0\.develop/==${VERSION_FOR_PIP}/g
+,s/==100\.0\.dev0/==${VERSION_FOR_PIP}/g
 ,s/100\.0[~.]develop/${DOCS_VERSION}/g
+,s/100\.0[~.]dev0/${DOCS_VERSION}/g
 w
 ED_COMMANDS
 done

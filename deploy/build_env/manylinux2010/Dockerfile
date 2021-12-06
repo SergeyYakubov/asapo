@@ -1,4 +1,4 @@
-FROM quay.io/pypa/manylinux2010_x86_64
+FROM quay.io/pypa/manylinux2010_x86_64:2021-04-05-a6ea1ab
 
 ENV GOPATH /tmp
 
