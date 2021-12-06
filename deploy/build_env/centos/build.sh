@@ -16,7 +16,7 @@ cmake \
 make -j 4
 make package
 
-if [ $OS == "centos7.9.2009" ]; then
+if [ $OS == "el7" ]; then
   BUILD_PYTHON2_PACKAGES=ON
 else
   BUILD_PYTHON2_PACKAGES=OFF
