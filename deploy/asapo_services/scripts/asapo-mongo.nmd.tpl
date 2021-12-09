@@ -22,6 +22,52 @@ job "asapo-mongo" {
       mode = "delay"
     }
 
+    network {
+      port "mongo" {
+        static = "${mongo_port}"
+      }
+      port "mongo_monitor" {
+        to = 9216
+      }
+    }
+
+    task "mongo-monitor" {
+      lifecycle {
+        hook = "poststart"
+        sidecar = true
+      }
+
+      driver = "docker"
+      user = "${asapo_user}"
+
+      config {
+        security_opt = ["no-new-privileges"]
+        userns_mode = "host"
+        image = "yakser/mongodb-exporter"
+        args = [
+          "--mongodb.uri=mongodb://$${NOMAD_ADDR_mongo}"
+        ]
+        ports = ["mongo_monitor"]
+      }
+
+      service {
+        port = "mongo_monitor"
+        name = "asapo-mongodb-monitor"
+        check {
+          name = "alive"
+          type     = "http"
+          path     = "/"
+          interval = "10s"
+          timeout  = "1s"
+        }
+        check_restart {
+          limit = 2
+          grace = "6000s"
+          ignore_warnings = false
+        }
+      }
+    }
+
     task "mongo" {
       driver = "docker"
       user = "${asapo_user}"
@@ -36,11 +82,6 @@ job "asapo-mongo" {
 
       resources {
         memory = "${mongo_total_memory_size}"
-        network {
-          port "mongo" {
-          static = "${mongo_port}"
-          }
-        }
       }
 
       service {
@@ -56,7 +97,7 @@ job "asapo-mongo" {
         }
         check_restart {
           limit = 2
-          grace = "90s"
+          grace = "1800s"
           ignore_warnings = false
         }
       }

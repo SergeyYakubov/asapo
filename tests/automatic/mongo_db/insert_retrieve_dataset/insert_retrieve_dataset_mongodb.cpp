@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 
     if (args.keyword == "DuplicateID") {
         Assert(err, "OK");
-        err =  db.InsertAsDatasetMessage("data_test", fi, dataset_size, true);
+        db.InsertAsDatasetMessage("data_test", fi, dataset_size, true);
         err =  db.InsertAsDatasetMessage("data_test", fi, dataset_size, false);
     }
 
@@ -98,5 +98,5 @@ int main(int argc, char* argv[]) {
 
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

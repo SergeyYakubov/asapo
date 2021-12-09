@@ -73,6 +73,7 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	consumerInstanceId, pipelineStepId, beamtimeId, datasource, stream, group_id, ok := extractRequestParameters(r, needGroupID)
 	if !ok {
+		log.WithFields(map[string]interface{}{"request":r.RequestURI}).Error("cannot extract request parameters")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -83,7 +84,8 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 	}
 
 	request := database.Request{}
-	request.DbName = beamtimeId+"_"+datasource
+	request.Beamtime = beamtimeId
+	request.DataSource = datasource
 	request.Op = op
 	request.ExtraParam = extra_param
 	request.Stream = stream
@@ -93,7 +95,9 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 		request.MinDatasetSize = minSize
 	}
 
-	answer, code := processRequestInDb(request)
+	rlog:=request.Logger()
+	rlog.Debug("got request")
+	answer, code := processRequestInDb(request,rlog)
 	w.WriteHeader(code)
 	_, err := w.Write(answer)
 
@@ -125,12 +129,12 @@ func processRequest(w http.ResponseWriter, r *http.Request, op string, extra_par
 	}
 }
 
-func returnError(err error, log_str string) (answer []byte, code int) {
+func returnError(err error, rlog logger.Logger) (answer []byte, code int) {
 	code = database.GetStatusCodeFromError(err)
 	if code != utils.StatusNoData && code != utils.StatusPartialData{
-		logger.Error(log_str + " - " + err.Error())
+		rlog.WithFields(map[string]interface{}{"cause":err.Error()}).Error("cannot process request")
 	} else {
-		logger.Debug(log_str + " - " + err.Error())
+		rlog.WithFields(map[string]interface{}{"cause":err.Error()}).Debug("no data or partial data")
 	}
 	return []byte(err.Error()), code
 }
@@ -142,20 +146,18 @@ func reconnectIfNeeded(db_error error) {
 	}
 
 	if err := ReconnectDb(); err != nil {
-		log.Error("cannot reconnect to database at : " + settings.GetDatabaseServer() + " " + err.Error())
+		log.WithFields(map[string]interface{}{"address":settings.GetDatabaseServer(),"cause": err.Error()}).Error("cannot reconnect to database")
 	} else {
-		log.Debug("reconnected to database" + settings.GetDatabaseServer())
+		log.WithFields(map[string]interface{}{"address":settings.GetDatabaseServer()}).Debug("reconnected to database")
 	}
 }
 
-func processRequestInDb(request database.Request) (answer []byte, code int) {
+func processRequestInDb(request database.Request,rlog logger.Logger) (answer []byte, code int) {
 	statistics.IncreaseCounter()
 	answer, err := db.ProcessRequest(request)
-	log_str := "processing request " + request.Op + " in " + request.DbName + " at " + settings.GetDatabaseServer()
 	if err != nil {
 		go reconnectIfNeeded(err)
-		return returnError(err, log_str)
+		return returnError(err, rlog)
 	}
-	logger.Debug(log_str)
 	return answer, utils.StatusOK
 }

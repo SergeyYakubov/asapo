@@ -1,15 +1,33 @@
 package database
 
-import "asapo_common/utils"
+import (
+	"asapo_common/logger"
+	"asapo_common/utils"
+)
 
 type Request struct {
-	DbName         string
+	Beamtime       string
+	DataSource     string
 	Stream         string
 	GroupId        string
 	Op             string
 	DatasetOp      bool
 	MinDatasetSize int
 	ExtraParam     string
+}
+
+func (request *Request) Logger() logger.Logger {
+	return logger.WithFields(map[string]interface{}{
+		"beamtime":   request.Beamtime,
+		"dataSource": decodeString(request.DataSource),
+		"stream":     decodeString(request.Stream),
+		"groupId":    decodeString(request.GroupId),
+		"operation":  request.Op,
+	})
+}
+
+func (request *Request) DbName() string {
+	return request.Beamtime + "_" + request.DataSource
 }
 
 type Agent interface {
@@ -21,7 +39,7 @@ type Agent interface {
 }
 
 type DBSettings struct {
-	ReadFromInprocessPeriod int
+	ReadFromInprocessPeriod   int
 	UpdateStreamCachePeriodMs int
 }
 
@@ -42,4 +60,3 @@ func GetStatusCodeFromError(err error) int {
 		return utils.StatusServiceUnavailable
 	}
 }
-

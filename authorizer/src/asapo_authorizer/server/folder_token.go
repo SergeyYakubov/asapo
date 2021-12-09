@@ -2,6 +2,7 @@ package server
 
 import (
 	log "asapo_common/logger"
+	"asapo_authorizer/common"
 	"asapo_common/structs"
 	"asapo_common/utils"
 	"asapo_common/version"
@@ -31,7 +32,7 @@ type folderToken struct {
 }
 
 /*func routeFolderToken(w http.ResponseWriter, r *http.Request) {
-	utils.ProcessJWTAuth(processFolderTokenRequest,settings.secret)(w,r)
+	utils.ProcessJWTAuth(processFolderTokenRequest,common.Settings.secret)(w,r)
 }*/
 
 func prepareJWTToken(folders tokenFolders) (string, error) {
@@ -42,7 +43,7 @@ func prepareJWTToken(folders tokenFolders) (string, error) {
 	extraClaim.SecondFolder = folders.SecondFolder
 
 	claims.ExtraClaims = &extraClaim
-	claims.SetExpiration(time.Duration(settings.FolderTokenDurationMin) * time.Minute)
+	claims.SetExpiration(time.Duration(common.Settings.FolderTokenDurationMin) * time.Minute)
 	return Auth.JWTAuth().GenerateToken(&claims)
 
 }
@@ -136,7 +137,10 @@ func routeFolderToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debug("generated folder token for beamtime " + request.BeamtimeId + ", folder " + request.Folder)
+	log.WithFields(map[string]interface{}{
+		"folder":request.Folder,
+		"beamtime":request.BeamtimeId,
+	}).Debug("issued folder token")
 
 	answer := folderTokenResponce(token)
 	w.WriteHeader(http.StatusOK)

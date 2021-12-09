@@ -7,7 +7,7 @@
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         std::cout << "Wrong number of arguments" << std::endl;
-        return 1;
+        return EXIT_FAILURE;
     }
     std::string expect{argv[2]};
 
@@ -33,5 +33,5 @@ int main(int argc, char* argv[]) {
     }
 
     M_AssertContains(result, expect);
-    return 0;
+    return EXIT_SUCCESS;
 }

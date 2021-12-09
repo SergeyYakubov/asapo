@@ -2,7 +2,7 @@
 
 #include <utility>
 #include "asapo/io/io_factory.h"
-#include "receiver_config.h"
+#include "request_handler/request_handler_db_check_request.h"
 
 namespace asapo {
 
@@ -13,6 +13,7 @@ Request::Request(const GenericRequestHeader& header,
                                                          cache__{cache}, statistics_{std::move(statistics)}, request_header_(header),
                                                          socket_fd_{socket_fd}, origin_uri_{std::move(origin_uri)},
                                                          check_duplicate_request_handler_{db_check_handler} {
+    origin_host_ = HostFromUri(origin_uri_);
 }
 
 Error Request::PrepareDataBufferAndLockIfNeeded() {
@@ -20,8 +21,9 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
         try {
             data_buffer_.reset(new uint8_t[(size_t)request_header_.data_size]);
         } catch(std::exception& e) {
-            auto err = ErrorTemplates::kMemoryAllocationError.Generate();
-            err->Append(e.what());
+            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate(
+                std::string("cannot allocate memory for request"));
+            err->AddDetails("reason", e.what())->AddDetails("size", std::to_string(request_header_.data_size));
             return err;
         }
     } else {
@@ -30,7 +32,9 @@ Error Request::PrepareDataBufferAndLockIfNeeded() {
         if (data_ptr) {
             slot_meta_ = slot;
         } else {
-            return ErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
+            auto err = GeneralErrorTemplates::kMemoryAllocationError.Generate("cannot allocate slot in cache");
+            err->AddDetails("size", std::to_string(request_header_.data_size));
+            return err;
         }
     }
     return nullptr;
@@ -224,6 +228,10 @@ SourceType Request::GetSourceType() const {
 
 SharedInstancedStatistics Request::GetInstancedStatistics() {
     return statistics_;
+}
+
+const std::string& Request::GetOriginHost() const {
+    return origin_host_;
 }
 
 }

@@ -3,18 +3,14 @@ project(ASAPO)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules/ ${PROJECT_SOURCE_DIR}/CMakeIncludes/)
 
-set (ASAPO_VERSION_IN_DOCS 21.08.0) # is overwritten in master branch
-set (ASAPO_EXAMPLES_DIR .)
-#set (ASAPO_EXAMPLES_DIR ./frozen_versions/${ASAPO_VERSION_IN_DOCS})
-
 #protocol version changes if one of the microservice API's change
-set (ASAPO_CONSUMER_PROTOCOL "v0.4")
-set (ASAPO_PRODUCER_PROTOCOL "v0.3")
+set (ASAPO_CONSUMER_PROTOCOL "v0.5")
+set (ASAPO_PRODUCER_PROTOCOL "v0.5")
 set (ASAPO_DISCOVERY_API_VER "v0.1")
 set (ASAPO_AUTHORIZER_API_VER "v0.2")
-set (ASAPO_BROKER_API_VER "v0.4")
+set (ASAPO_BROKER_API_VER "v0.5")
 set (ASAPO_FILE_TRANSFER_SERVICE_API_VER "v0.2")
-set (ASAPO_RECEIVER_API_VER "v0.3")
+set (ASAPO_RECEIVER_API_VER "v0.5")
 set (ASAPO_RDS_API_VER "v0.1")
 set (DB_SCHEMA_VER "v0.1")
 
@@ -26,6 +22,8 @@ set(ConfigPackageLocation lib/cmake/Asapo)
 # options
 
 option(BUILD_PYTHON "Build python libs" ON)
+option(BUILD_PYTHON2_PACKAGES "Build python2 packages" OFF)
+
 option(BUILD_CLIENTS_ONLY "Build clients only" OFF)
 
 option(BUILD_CONSUMER_TOOLS "Build consumer tools" OFF)

@@ -3,9 +3,11 @@ package cli
 import (
 	"asapo_authorizer/authorization"
 	"asapo_authorizer/server"
+	"asapo_authorizer/token_store"
 	"asapo_common/structs"
 	"asapo_common/utils"
 	"encoding/json"
+	"github.com/stretchr/testify/mock"
 	"testing"
 
 	"bytes"
@@ -41,13 +43,22 @@ var tokenTests = []struct {
 
 func TestGenerateToken(t *testing.T) {
 	server.Auth = authorization.NewAuth(utils.NewJWTAuth("secret_user"),utils.NewJWTAuth("secret_admin"),utils.NewJWTAuth("secret"))
+	mock_store := new(token_store.MockedStore)
+	store = mock_store
+
 	for _, test := range tokenTests {
 		outBuf = new(bytes.Buffer)
+
+		if test.ok {
+			mock_store.On("AddToken", mock.Anything).Return(nil)
+		}
+
 		err := test.cmd.CommandCreate_token()
 		if !test.ok {
 			assert.NotNil(t, err, test.msg)
 			continue
 		}
+
 		assert.Nil(t, err, test.msg)
 		var token structs.IssueTokenResponse
 		json.Unmarshal(outBuf.(*bytes.Buffer).Bytes(), &token)
@@ -63,5 +74,9 @@ func TestGenerateToken(t *testing.T) {
 		} else {
 			assert.Empty(t, token.Expires, test.msg)
 		}
+
+		mock_store.AssertExpectations(t)
+		mock_store.ExpectedCalls = nil
+		mock_store.Calls = nil
 	}
 }

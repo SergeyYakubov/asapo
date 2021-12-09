@@ -27,46 +27,50 @@ enum class IOErrorType {
     kSocketOperationUnknownAtLevel,
     kSocketOperationValueOutOfBound,
     kAddressNotValid,
-    kBrokenPipe
-
+    kBrokenPipe,
+    kNotConnected
 };
 
-using IOError = ServiceError<IOErrorType, ErrorType::kIOError>;
-using IOErrorTemplate = ServiceErrorTemplate<IOErrorType, ErrorType::kIOError>;
+using IOError = ServiceError<IOErrorType>;
+using IOErrorTemplate = ServiceErrorTemplate<IOErrorType>;
 
 namespace IOErrorTemplates {
 auto const kUnknownIOError = IOErrorTemplate {
-    "Unknown Error", IOErrorType::kUnknownIOError
+    "unknown error", IOErrorType::kUnknownIOError
 };
 
 auto const kFileNotFound = IOErrorTemplate {
-    "No such file or directory", IOErrorType::kFileNotFound
+    "no such file or directory", IOErrorType::kFileNotFound
 };
 auto const kReadError = IOErrorTemplate {
-    "Read error", IOErrorType::kReadError
+    "read error", IOErrorType::kReadError
 };
 auto const kBadFileNumber = IOErrorTemplate {
-    "Bad file number", IOErrorType::kBadFileNumber
+    "bad file number", IOErrorType::kBadFileNumber
 };
 auto const kResourceTemporarilyUnavailable = IOErrorTemplate {
-    "Resource temporarily unavailable", IOErrorType::kResourceTemporarilyUnavailable
+    "resource temporarily unavailable", IOErrorType::kResourceTemporarilyUnavailable
 };
 
 auto const kPermissionDenied = IOErrorTemplate {
-    "Permission denied", IOErrorType::kPermissionDenied
+    "permission denied", IOErrorType::kPermissionDenied
 };
 auto const kUnsupportedAddressFamily = IOErrorTemplate {
-    "Unsupported address family", IOErrorType::kUnsupportedAddressFamily
+    "unsupported address family", IOErrorType::kUnsupportedAddressFamily
 };
 auto const kInvalidAddressFormat = IOErrorTemplate {
-    "Invalid address format", IOErrorType::kInvalidAddressFormat
+    "invalid address format", IOErrorType::kInvalidAddressFormat
 };
 auto const kAddressAlreadyInUse = IOErrorTemplate {
-    "Address already in use", IOErrorType::kAddressAlreadyInUse
+    "address already in use", IOErrorType::kAddressAlreadyInUse
 };
 auto const kConnectionRefused = IOErrorTemplate {
-    "Connection refused", IOErrorType::kConnectionRefused
+    "connection refused", IOErrorType::kConnectionRefused
 };
+auto const kNotConnected = IOErrorTemplate {
+    "not connected", IOErrorType::kNotConnected
+};
+
 auto const kConnectionResetByPeer = IOErrorTemplate {
     "kConnectionResetByPeer", IOErrorType::kConnectionResetByPeer
 };
@@ -97,11 +101,11 @@ auto const kSocketOperationValueOutOfBound =  IOErrorTemplate {
 };
 
 auto const kAddressNotValid =  IOErrorTemplate {
-    "Address not valid", IOErrorType::kAddressNotValid
+    "address not valid", IOErrorType::kAddressNotValid
 };
 
 auto const kBrokenPipe =  IOErrorTemplate {
-    "Broken pipe/connection", IOErrorType::kBrokenPipe
+    "broken pipe/connection", IOErrorType::kBrokenPipe
 };
 
 

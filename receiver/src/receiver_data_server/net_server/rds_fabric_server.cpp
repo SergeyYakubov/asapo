@@ -19,7 +19,7 @@ RdsFabricServer::~RdsFabricServer() {
 
 Error RdsFabricServer::Initialize() {
     if (server__) {
-        return TextError("Server was already initialized");
+        return GeneralErrorTemplates::kSimpleError.Generate("Server was already initialized");
     }
     Error err;
     std::string hostname;
@@ -30,7 +30,7 @@ Error RdsFabricServer::Initialize() {
         return err;
     }
 
-    log__->Info("Started Fabric ReceiverDataServer at '" + server__->GetAddress() + "'");
+    log__->Info(LogMessageWithFields("started fabric data server").Append("address",server__->GetAddress()));
 
     return err;
 }

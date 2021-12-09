@@ -91,7 +91,7 @@ class Consumer {
     virtual NetworkConnectionType CurrentConnectionType() const = 0;
 
     //! Get list of streams with filter, set from to "" to get all streams
-    virtual StreamInfos GetStreamList(std::string from,  StreamFilter filter, Error* err) = 0;
+    virtual StreamInfos GetStreamList(std::string from, StreamFilter filter, Error* err) = 0;
 
     //! Delete stream
     /*!
@@ -180,6 +180,17 @@ class Consumer {
     */
     virtual DataSet GetLastDataset(uint64_t min_size, std::string stream, Error* err) = 0;
 
+    //! Receive last available unique dataset which has min_size messages within a group. Will not return same dataset twice but EndOfStream error.
+    /*!
+      \param group_id - group id to use.
+      \param id - dataset id
+      \param err -  will be set to error data cannot be read or dataset size less than min_size, nullptr otherwise.
+      \param min_size - wait until dataset has min_size messages (0 for maximum size)
+      \param stream - stream to use
+      \return DataSet - information about the dataset
+    */
+    virtual DataSet GetLastDataset(std::string group_id, uint64_t min_size, std::string stream, Error* err) = 0;
+
     //! Receive dataset by id.
     /*!
       \param id - dataset id
@@ -217,6 +228,16 @@ class Consumer {
       \return Error if both pointers are nullptr or data cannot be read, nullptr otherwise.
     */
     virtual Error GetLast(MessageMeta* info, MessageData* data, std::string stream) = 0;
+    //! Receive last available unique message within group. Will not return same message twice but EndOfStream error
+    /*!
+      \param group_id - group id to use.
+      \param info -  where to store message metadata. Can be set to nullptr only message data is needed.
+      \param data - where to store message data. Can be set to nullptr only message metadata is needed.
+      \param stream - stream to use
+      \return Error if both pointers are nullptr, no data or data cannot be read, nullptr otherwise.
+    */
+    virtual Error GetLast(std::string group_id, MessageMeta* info, MessageData* data, std::string stream) = 0;
+
 
     //! Get all messages matching the query.
     /*!

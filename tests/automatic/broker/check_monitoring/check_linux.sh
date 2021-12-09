@@ -9,10 +9,10 @@ trap Cleanup EXIT
 Cleanup() {
   set +e
 	echo cleanup
-	influx -execute "drop database ${database_name}"
+  influx -database ${database_name} -execute "drop series from statistics, RequestsRate"
 }
 
-! influx -execute "drop database ${database_name}"
+! influx -database ${database_name} -execute "drop series from statistics, RequestsRate"
 
 
 token=$BT_DATA_TOKEN

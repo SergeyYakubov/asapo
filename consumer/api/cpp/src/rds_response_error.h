@@ -5,10 +5,8 @@
 
 namespace asapo {
 
-// TODO: Why fabric error?
-using RdsResponseError = ServiceError<NetworkErrorCode, ErrorType::kFabricError>;
-// TODO: Why fabric error?
-using RdsResponseErrorTemplate = ServiceErrorTemplate<NetworkErrorCode, ErrorType::kFabricError>;
+using RdsResponseError = ServiceError<NetworkErrorCode>;
+using RdsResponseErrorTemplate = ServiceErrorTemplate<NetworkErrorCode>;
 
 namespace RdsResponseErrorTemplates {
 auto const kNetErrorReauthorize = RdsResponseErrorTemplate {
@@ -55,7 +53,7 @@ inline Error ConvertRdsResponseToError(NetworkErrorCode error_code) {
     case kNetErrorInternalServerError:
         return RdsResponseErrorTemplates::kNetErrorInternalServerError.Generate();
     default:
-        return TextError("Unknown RDS response code " + std::to_string(error_code));
+        return GeneralErrorTemplates::kSimpleError.Generate("Unknown RDS response code " + std::to_string(error_code));
     }
 }
 }

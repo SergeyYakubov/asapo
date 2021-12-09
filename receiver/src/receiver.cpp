@@ -1,4 +1,3 @@
-#include <cstring>
 #include <iostream>
 #include <utility>
 #include "receiver.h"
@@ -49,7 +48,6 @@ void Receiver::ProcessConnections(Error* err) {
     //TODO: Use InetAcceptConnectionWithTimeout
     auto client_info_tuple = io__->InetAcceptConnection(listener_fd_, err);
     if(*err) {
-        //TODO: this can produce a lot of error messages
         log__->Error("accepting an incoming connection: " + (*err)->Explain());
         return;
     }
@@ -58,7 +56,7 @@ void Receiver::ProcessConnections(Error* err) {
 }
 
 void Receiver::StartNewConnectionInSeparateThread(int connection_socket_fd, const std::string& address)  {
-    log__->Info("new connection from " + address);
+    log__->Info(LogMessageWithFields("new connection with producer").Append("origin", HostFromUri(address)));
     auto thread = io__->NewThread("ConFd:" + std::to_string(connection_socket_fd),
     [connection_socket_fd, address, this] {
         auto connection = std::unique_ptr<Connection>(new Connection(connection_socket_fd, address, monitoring_, cache_, GetReceiverConfig()->tag));

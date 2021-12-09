@@ -144,7 +144,7 @@ void RequestPool::ThreadHandler(uint64_t id) {
         //after wait, we own the lock
         if (!quit_ && do_work) {
             ProcessRequest(request_handler, &thread_info);
-        };
+        }
     } while (!quit_);
 }
 

@@ -14,28 +14,8 @@
 #include "../mock_receiver_config.h"
 
 
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::SaveArg;
-using ::testing::HasSubstr;
-using ::testing::AllOf;
-using ::testing::SaveArgPointee;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-
-using asapo::StatisticsSenderInfluxDb;
-using asapo::MockHttpClient;
-using asapo::StatisticsToSend;
-using asapo::ReceiverConfig;
-using asapo::SetReceiverConfig;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 
@@ -86,7 +66,7 @@ TEST_F(SenderInfluxDbTests, SendStatisticsCallsPost) {
                                 "n_requests=4,db_share=0.1000,network_incoming_share=0.3000,network_outgoing_share=0.9000,disk_share=0.6000,monitoring=0.2000";
     EXPECT_CALL(mock_http_client, Post_t("test_uri/write?db=test_name", _, expect_string, _, _)).
     WillOnce(
-        DoAll(SetArgPointee<4>(new asapo::IOError("Test Read Error", asapo::IOErrorType::kReadError)),
+        DoAll(SetArgPointee<4>(new asapo::IOError("Test Read Error", "", asapo::IOErrorType::kReadError)),
               Return("")
              ));
 

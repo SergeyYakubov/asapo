@@ -2,13 +2,23 @@
 #define ASAPO_REQUEST_FACTORY_H
 
 #include "../request.h"
-#include "../file_processors/write_file_processor.h"
-#include "../file_processors/receive_file_processor.h"
+#include "./file_processors/write_file_processor.h"
+#include "./file_processors/receive_file_processor.h"
 #include "request_handler_db_stream_info.h"
 #include "request_handler_db_last_stream.h"
 #include "request_handler_db_delete_stream.h"
 #include "request_handler_db_get_meta.h"
 #include "request_handler_monitoring.h"
+
+#include "request_handler_file_process.h"
+#include "request_handler_db_write.h"
+#include "request_handler_initial_authorization.h"
+#include "request_handler_secondary_authorization.h"
+#include "request_handler_db_meta_write.h"
+#include "request_handler_receive_data.h"
+#include "request_handler_receive_metadata.h"
+#include "request_handler_db_check_request.h"
+#include "structs.h"
 
 namespace asapo {
 
@@ -24,6 +34,7 @@ class RequestFactory {
     Error AddReceiveWriteHandlers(std::unique_ptr<Request>& request, const GenericRequestHeader& request_header) const;
 
     SharedReceiverMonitoringClient monitoring_;
+    AuthorizationData shared_auth_cache_;
     SharedCache cache_;
 
     WriteFileProcessor write_file_processor_;
@@ -39,8 +50,10 @@ class RequestFactory {
     RequestHandlerDbLastStream request_handler_db_last_stream_{kDBDataCollectionNamePrefix};
     RequestHandlerDbMetaWrite request_handler_db_meta_write_{kDBMetaCollectionName};
     RequestHandlerDbGetMeta request_handler_db_get_meta_{kDBMetaCollectionName};
-    RequestHandlerAuthorize request_handler_authorize_;
+    RequestHandlerInitialAuthorization request_handler_initial_authorize_{&shared_auth_cache_};
+    RequestHandlerSecondaryAuthorization request_handler_secondary_authorize_{&shared_auth_cache_};
     RequestHandlerDbCheckRequest request_handler_db_check_{kDBDataCollectionNamePrefix};
+
     bool ReceiveDirectToFile(const GenericRequestHeader& request_header) const;
     Error AddReceiveDirectToFileHandler(std::unique_ptr<Request>& request,
                                         const GenericRequestHeader& request_header) const;

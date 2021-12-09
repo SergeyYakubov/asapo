@@ -46,17 +46,19 @@ Error ReceiverDiscoveryService::UpdateFromEndpoint(ReceiversList* list, uint64_t
         return err;
     }
     if (code != HttpCode::OK) {
-        return TextError(response);
+        return GeneralErrorTemplates::kSimpleError.Generate(response);
     }
     if (response.empty()) {
-        return TextError("Empty response from discovery service");
+        return GeneralErrorTemplates::kSimpleError.Generate("Empty response from discovery service");
     }
     return ParseResponse(response, list, max_connections);
 }
 
 void ReceiverDiscoveryService::LogUriList(const ReceiversList& uris) {
     std::string s;
-    s = std::accumulate(std::begin(uris), std::end(uris), s);
+    for (const auto& uri : uris) {
+        s += uri;
+    }
     log__->Debug("got receivers from " + endpoint_ + ":" + s);
 }
 

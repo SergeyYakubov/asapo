@@ -17,7 +17,7 @@ type Auth interface {
 	GenerateToken(...interface{}) (string, error)
 	ProcessAuth(http.HandlerFunc, string) http.HandlerFunc
 	Name() string
-	CheckAndGetContent(token string, extraClaims interface{}, payload ...interface{}) (string,error)
+	CheckAndGetContent(token string, extraClaims interface{}, payload ...interface{}) (*jwt.StandardClaims,error)
 }
 
 func SubjectFromBeamtime(bt string)string {
@@ -147,23 +147,21 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 	}
 }
 
-func (a *JWTAuth) CheckAndGetContent(token string, extraClaims interface{}, payload ...interface{}) (subject string,err error) {
+func (a *JWTAuth) CheckAndGetContent(token string, extraClaims interface{}, payload ...interface{}) (claims *jwt.StandardClaims, err error) {
 	// payload ignored
 	c, ok := CheckJWTToken(token,a.Key)
 	if !ok {
-		return "",errors.New("wrong JWT token")
+		return nil,errors.New("wrong or expired JWT token")
 	}
 	claim,ok  := c.(*CustomClaims)
 	if !ok {
-		return "",errors.New("cannot get CustomClaims")
+		return nil,errors.New("cannot get CustomClaims")
 	}
-
-	subject = claim.Subject
 
 	if extraClaims!=nil {
 		err = MapToStruct(claim.ExtraClaims.(map[string]interface{}), extraClaims)
 	}
-	return subject,err
+	return &claim.StandardClaims,err
 }
 
 
@@ -264,20 +262,22 @@ func ProcessHMACAuth(fn http.HandlerFunc, payload, key string) http.HandlerFunc 
 	}
 }
 
-func (a *HMACAuth) CheckAndGetContent(token string, _ interface{}, payload ...interface{}) (string,error) {
+func (a *HMACAuth) CheckAndGetContent(token string, _ interface{}, payload ...interface{}) (*jwt.StandardClaims,error) {
 	if len(payload) != 1 {
-		return "",errors.New("wrong payload")
+		return nil,errors.New("wrong payload")
 	}
 	value, ok := payload[0].(string)
 	if !ok {
-		return "",errors.New("wrong payload")
+		return nil,errors.New("wrong payload")
 	}
 
 	ok = CheckHMACToken(token,value,a.Key)
 	if !ok {
-		return "",errors.New("wrong HMAC token")
+		return nil,errors.New("wrong HMAC token")
 	}
-	return value,nil
+	claim := jwt.StandardClaims{}
+	claim.Subject = value
+	return &claim,nil
 
 }
 

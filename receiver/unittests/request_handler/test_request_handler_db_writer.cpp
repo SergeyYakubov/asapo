@@ -20,39 +20,8 @@
 
 #include "../receiver_mocking.h"
 
-using asapo::MockRequest;
-using asapo::MessageMeta;
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::ReturnRef;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using ::testing::HasSubstr;
-using ::testing::AtLeast;
-
-
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::MockIO;
-using asapo::Request;
-using asapo::RequestHandlerDbWrite;
-using ::asapo::GenericRequestHeader;
-
-using asapo::MockDatabase;
-using asapo::RequestFactory;
-using asapo::SetReceiverConfig;
-using asapo::ReceiverConfig;
+using namespace testing;
+using namespace asapo;
 
 
 namespace {
@@ -100,7 +69,7 @@ class DbWriterHandlerTests : public Test {
         config.dataserver.listen_port = expected_port;
         SetReceiverConfig(config, "none");
 
-        ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
     }
     void ExpectRequestParams(asapo::Opcode op_code, const std::string& data_source);
     void ExpectLogger();
@@ -138,11 +107,11 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     ;
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
-    .WillOnce(ReturnRef(expected_beamtime_id))
+    .WillRepeatedly(ReturnRef(expected_beamtime_id))
     ;
 
     EXPECT_CALL(*mock_request, GetDataSource())
-    .WillOnce(ReturnRef(data_source))
+    .WillRepeatedly(ReturnRef(data_source))
     ;
 
 
@@ -178,11 +147,11 @@ void DbWriterHandlerTests::ExpectRequestParams(asapo::Opcode op_code, const std:
     ;
 
     EXPECT_CALL(*mock_request, GetOpCode())
-    .WillOnce(Return(op_code))
+    .WillRepeatedly(Return(op_code))
     ;
 
     if (op_code == asapo::Opcode::kOpcodeTransferDatasetData) {
-        EXPECT_CALL(*mock_request, GetCustomData_t()).Times(2).
+        EXPECT_CALL(*mock_request, GetCustomData_t()).
         WillRepeatedly(Return(expected_custom_data))
         ;
     }
@@ -206,11 +175,8 @@ MessageMeta DbWriterHandlerTests::PrepareMessageMeta(bool substream) {
     return message_meta;
 }
 void DbWriterHandlerTests::ExpectLogger() {
-    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert record"),
-                                         HasSubstr(config.database_uri),
-                                         HasSubstr(expected_beamtime_id),
-                                         HasSubstr(expected_data_source),
-                                         HasSubstr(expected_collection_name)
+    EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("insert"),
+                                         HasSubstr(expected_beamtime_id)
                                         )
                                   )
                );

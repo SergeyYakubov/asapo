@@ -17,39 +17,8 @@
 #include "asapo/common/networking.h"
 #include "../receiver_mocking.h"
 
-using asapo::MockRequest;
-using asapo::MessageMeta;
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::ReturnRef;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using ::testing::HasSubstr;
-
-
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::MockIO;
-using asapo::Request;
-using asapo::RequestHandlerDbStreamInfo;
-using ::asapo::GenericRequestHeader;
-
-using asapo::MockDatabase;
-using asapo::RequestFactory;
-using asapo::SetReceiverConfig;
-using asapo::ReceiverConfig;
-
+using namespace testing;
+using namespace asapo;
 
 namespace {
 
@@ -79,7 +48,7 @@ class DbMetaStreamInfoTests : public Test {
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr, nullptr});
-        ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
     }
     void TearDown() override {
         handler.db_client__.release();
@@ -90,12 +59,12 @@ TEST_F(DbMetaStreamInfoTests, CallsUpdate) {
     SetReceiverConfig(config, "none");
 
     EXPECT_CALL(*mock_request, GetBeamtimeId())
-    .WillOnce(ReturnRef(expected_beamtime_id))
+    .WillRepeatedly(ReturnRef(expected_beamtime_id))
     ;
 
-    EXPECT_CALL(*mock_request, GetDataSource()).WillOnce(ReturnRef(expected_data_source));
+    EXPECT_CALL(*mock_request, GetDataSource()).WillRepeatedly(ReturnRef(expected_data_source));
 
-    EXPECT_CALL(*mock_request, GetStream()).Times(2)
+    EXPECT_CALL(*mock_request, GetStream())
     .WillRepeatedly(Return(expected_stream))
     ;
 
@@ -112,9 +81,7 @@ TEST_F(DbMetaStreamInfoTests, CallsUpdate) {
     EXPECT_CALL(*mock_request, SetResponseMessage(info_str, asapo::ResponseMessageType::kInfo));
 
     EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("get stream info"),
-                                         HasSubstr(config.database_uri),
-                                         HasSubstr(expected_beamtime_id),
-                                         HasSubstr(expected_collection_name)
+                                         HasSubstr(expected_beamtime_id)
                                         )
                                   )
                );

@@ -31,7 +31,7 @@ Cleanup() {
     rm out.txt
 
     set +e
-    influx_out=`influx -execute "drop database ${monitor_database_name}"`
+    influx_out=`influx -database ${monitor_database_name} -execute "drop series from statistics, RequestsRate"`
     influx_status=$?
     echo "Influx output: ${influx_out}"
     if [ $influx_status -ne 0 ]; then

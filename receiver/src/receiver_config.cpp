@@ -1,5 +1,4 @@
 #include "receiver_config.h"
-#include "receiver_config_factory.h"
 #include "asapo/io/io_factory.h"
 #include "asapo/json_parser/json_parser.h"
 
@@ -9,11 +8,11 @@ namespace asapo {
 
 ReceiverConfig config;
 
-ReceiverConfigFactory::ReceiverConfigFactory() : io__{GenerateDefaultIO()} {
+ReceiverConfigManager::ReceiverConfigManager() : io__{GenerateDefaultIO()} {
 
 }
 
-Error ReceiverConfigFactory::SetConfig(std::string file_name) {
+Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
     JsonFileParser parser(file_name, &io__);
     std::string log_level;
     Error err;
@@ -40,6 +39,8 @@ Error ReceiverConfigFactory::SetConfig(std::string file_name) {
     (err = parser.GetString("PerformanceDbName", &config.performance_db_name)) ||
     (err = parser.Embedded("DataServer").GetString("AdvertiseURI", &config.dataserver.advertise_uri)) ||
     (err = parser.Embedded("DataServer").GetArrayString("NetworkMode", &config.dataserver.network_mode)) ||
+    (err = parser.Embedded("Metrics").GetBool("Expose", &config.metrics.expose)) ||
+    (err = parser.Embedded("Metrics").GetUInt64("ListenPort", &config.metrics.listen_port)) ||
     (err = parser.GetString("LogLevel", &log_level));
 
     if (err) {

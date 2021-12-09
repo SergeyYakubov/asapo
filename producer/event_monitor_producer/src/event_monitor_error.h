@@ -10,7 +10,7 @@ enum class EventMonitorErrorType {
     kSystemError
 };
 
-using EventMonitorErrorTemplate = ServiceErrorTemplate<EventMonitorErrorType, ErrorType::kAsapoError>;
+using EventMonitorErrorTemplate = ServiceErrorTemplate<EventMonitorErrorType>;
 
 namespace EventMonitorErrorTemplates {
 auto const kNoNewEvent = EventMonitorErrorTemplate {

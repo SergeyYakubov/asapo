@@ -7,12 +7,14 @@
 #include "../src/statistics/receiver_statistics.h"
 #include "../src/request.h"
 #include "../src/data_cache.h"
-#include "../src/file_processors/file_processor.h"
+#include "../src/request_handler/file_processors/file_processor.h"
+#include "../src/request_handler/request_handler_db_check_request.h"
+#include "../src/request_handler/authorization_client.h"
 
 namespace asapo {
 
 class MockStatistics : public asapo::ReceiverStatistics {
-public:
+  public:
     void SendIfNeeded(bool send_always) noexcept override {
         SendIfNeeded_t(send_always);
     }
@@ -61,7 +63,7 @@ class MockHandlerDbCheckRequest : public asapo::RequestHandlerDbCheckRequest {
         return StatisticEntity::kDatabase;
     }
 
-    MOCK_CONST_METHOD1(ProcessRequest_t, ErrorInterface * (const Request& request));
+    MOCK_METHOD(ErrorInterface *, ProcessRequest_t, (const Request& request), (const));
 
 };
 
@@ -72,49 +74,53 @@ class MockRequest: public Request {
                 const RequestHandlerDbCheckRequest* db_check_handler, SharedInstancedStatistics statistics):
         Request(request_header, socket_fd, std::move(origin_uri), nullptr, db_check_handler, std::move(statistics)) {};
 
-    MOCK_CONST_METHOD0(GetFileName, std::string());
-    MOCK_CONST_METHOD0(GetStream, std::string());
-    MOCK_CONST_METHOD0(GetApiVersion, std::string());
-    MOCK_CONST_METHOD0(GetDataSize, uint64_t());
-    MOCK_CONST_METHOD0(GetDataID, uint64_t());
-    MOCK_CONST_METHOD0(GetSlotId, uint64_t());
-    MOCK_CONST_METHOD0(GetData, void* ());
+//    MOCK_METHOD(, ), (const,override), (override));
+    MOCK_METHOD(std::string, GetFileName, (), (const, override));
+    MOCK_METHOD(std::string, GetStream, (), (const, override));
+    MOCK_METHOD(std::string, GetApiVersion, (), (const, override));
+    MOCK_METHOD(const std::string &, GetOriginUri, (), (const, override));
+    MOCK_METHOD(const std::string &, GetOriginHost, (), (const, override));
+    MOCK_METHOD(uint64_t, GetDataSize, (), (const, override));
+    MOCK_METHOD(uint64_t, GetDataID, (), (const, override));
+    MOCK_METHOD(uint64_t, GetSlotId, (), (const, override));
+    MOCK_METHOD(void*, GetData, (), (const, override));
     MOCK_CONST_METHOD0(GetPipelineStepId, const std::string & ());
     MOCK_CONST_METHOD0(GetProducerInstanceId, const std::string & ());
-    MOCK_CONST_METHOD0(GetBeamtimeId, const std::string & ());
-    MOCK_CONST_METHOD0(GetDataSource, const std::string & ());
-    MOCK_CONST_METHOD0(GetMetaData, const std::string & ());
-    MOCK_CONST_METHOD0(GetBeamline, const std::string & ());
-    MOCK_CONST_METHOD0(GetOpCode, asapo::Opcode ());
-    MOCK_CONST_METHOD0(GetSocket, asapo::SocketDescriptor ());
+    MOCK_METHOD(const std::string &, GetBeamtimeId, (), (const, override));
+    MOCK_METHOD(const std::string &, GetDataSource, (), (const, override));
+    MOCK_METHOD(const std::string &, GetMetaData, (), (const, override));
+    MOCK_METHOD(const std::string &, GetBeamline, (), (const, override));
+    MOCK_METHOD(asapo::Opcode, GetOpCode, (), (const, override));
+    MOCK_METHOD(asapo::SocketDescriptor, GetSocket, (), (const, override));
 
-    MOCK_CONST_METHOD0(GetOnlinePath, const std::string & ());
-    MOCK_CONST_METHOD0(GetOfflinePath, const std::string & ());
+    MOCK_METHOD(const std::string &, GetOnlinePath, (), (const, override));
+    MOCK_METHOD(const std::string &, GetOfflinePath, (), (const, override));
 
     MOCK_METHOD0(GetInstancedStatistics, SharedInstancedStatistics());
 
+    // not nice casting, but mocking GetCustomData directly does not compile on Windows.
     const CustomRequestData& GetCustomData() const override {
         return (CustomRequestData&) * GetCustomData_t();
     };
 
-    MOCK_CONST_METHOD0(GetCustomData_t, const uint64_t* ());
-    MOCK_CONST_METHOD0(GetMessage, const char* ());
+    MOCK_METHOD(const uint64_t*, GetCustomData_t, (), (const));
+    MOCK_METHOD(const char*, GetMessage, (), (const)); //override does not compile on windows, not clear why ()
     MOCK_METHOD1(SetProducerInstanceId, void (std::string));
     MOCK_METHOD1(SetPipelineStepId, void (std::string));
-    MOCK_METHOD1(SetBeamtimeId, void (std::string));
-    MOCK_METHOD1(SetDataSource, void (std::string));
-    MOCK_METHOD1(SetBeamline, void (std::string));
-    MOCK_METHOD1(SetOnlinePath, void (std::string));
-    MOCK_METHOD1(SetOfflinePath, void (std::string));
+    MOCK_METHOD(void, SetBeamtimeId, (std::string), (override));
+    MOCK_METHOD(void, SetDataSource, (std::string), (override));
+    MOCK_METHOD(void, SetBeamline, (std::string), (override));
+    MOCK_METHOD(void, SetOnlinePath, (std::string), (override));
+    MOCK_METHOD(void, SetOfflinePath, (std::string), (override));
 
-    MOCK_METHOD1(SetSourceType, void (SourceType));
-    MOCK_CONST_METHOD0(GetSourceType, SourceType ());
+    MOCK_METHOD(void, SetSourceType, (SourceType), (override));
+    MOCK_METHOD(SourceType, GetSourceType, (), (const, override));
 
-    MOCK_CONST_METHOD0(WasAlreadyProcessed, bool());
-    MOCK_METHOD0(SetAlreadyProcessedFlag, void());
-    MOCK_METHOD2(SetResponseMessage, void(std::string, ResponseMessageType));
-    MOCK_CONST_METHOD0(GetResponseMessage, const std::string & ());
-    MOCK_CONST_METHOD0(GetResponseMessageType_t, ResponseMessageType ());
+    MOCK_METHOD(bool, WasAlreadyProcessed, (), (const, override));
+    MOCK_METHOD(void, SetAlreadyProcessedFlag, (), (override));
+    MOCK_METHOD(void, SetResponseMessage, (std::string, ResponseMessageType), (override));
+    MOCK_METHOD(const std::string &, GetResponseMessage, (), (const, override));
+    MOCK_METHOD(ResponseMessageType, GetResponseMessageType_t, (), (const));
 
     ResponseMessageType GetResponseMessageType() const override {
         return GetResponseMessageType_t();
@@ -124,19 +130,18 @@ class MockRequest: public Request {
         return Error{CheckForDuplicates_t()};
     }
 
-    MOCK_METHOD0(CheckForDuplicates_t, ErrorInterface * ());
+    MOCK_METHOD(ErrorInterface *, CheckForDuplicates_t, (), ());
 };
 
 
 class MockDataCache: public DataCache {
   public:
     MockDataCache(): DataCache(0, 0) {};
-    MOCK_METHOD5(GetFreeSlotAndLock, void* (uint64_t size, CacheMeta** meta,
-            std::string beamtime, std::string source, std::string stream));
-    MOCK_METHOD1(UnlockSlot, bool(CacheMeta* meta));
+    MOCK_METHOD(void*, GetFreeSlotAndLock, (uint64_t size, CacheMeta** meta, std::string beamtime, std::string source, std::string stream), (override));
+    MOCK_METHOD(bool, UnlockSlot, (CacheMeta* meta), (override));
     MOCK_CONST_METHOD0(AllMetaInfosAsVector, std::vector<std::shared_ptr<const CacheMeta>>());
     MOCK_CONST_METHOD0(GetCacheSize, uint64_t());
-    MOCK_METHOD3(GetSlotToReadAndLock, void* (uint64_t id, uint64_t data_size, CacheMeta** meta));
+    MOCK_METHOD(void*, GetSlotToReadAndLock, (uint64_t id, uint64_t data_size, CacheMeta** meta), (override));
 
 };
 
@@ -145,7 +150,7 @@ class MockStatisticsSender: public StatisticsSender {
     void SendStatistics(const StatisticsToSend& statistics) const noexcept override {
         SendStatistics_t(statistics);
     }
-    MOCK_CONST_METHOD1(SendStatistics_t, void (const StatisticsToSend&));
+    MOCK_METHOD(void, SendStatistics_t, (const StatisticsToSend&), (const));
 };
 
 
@@ -155,8 +160,29 @@ class MockFileProcessor: public FileProcessor {
         return Error{ProcessFile_t(request, overwrite)};
 
     }
-    MOCK_CONST_METHOD2(ProcessFile_t, ErrorInterface * (const Request*, bool));
+    MOCK_METHOD(ErrorInterface *, ProcessFile_t, (const Request*, bool), (const));
 };
+
+
+class MockAuthorizationClient: public AuthorizationClient  {
+  public:
+    Error Authorize(const Request* request, AuthorizationData* data) const override {
+        return Error{Authorize_t(request, data)};
+    }
+    MOCK_METHOD(ErrorInterface *, Authorize_t, (const Request*, AuthorizationData*), (const));
+};
+
+inline void SetDefaultRequestCalls(MockRequest* mock_request,const std::string& bt) {
+    ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(::testing::ReturnRefOfCopy(bt));
+    ON_CALL(*mock_request, GetBeamline()).WillByDefault(::testing::ReturnRefOfCopy(std::string("")));
+    ON_CALL(*mock_request, GetDataSource()).WillByDefault(::testing::ReturnRefOfCopy(std::string("")));
+    ON_CALL(*mock_request, GetStream()).WillByDefault(::testing::Return(std::string("")));
+    ON_CALL(*mock_request, GetOriginHost()).WillByDefault(::testing::ReturnRefOfCopy(std::string("")));
+    ON_CALL(*mock_request, GetOpCode()).WillByDefault(::testing::Return(Opcode::kOpcodeTransferData));
+}
+
+
+
 
 }
 

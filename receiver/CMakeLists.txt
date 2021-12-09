@@ -19,6 +19,9 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_handler_db_write.cpp
         src/request_handler/request_handler_receive_data.cpp
         src/request_handler/request_handler_authorize.cpp
+        src/request_handler/request_handler_initial_authorization.cpp
+        src/request_handler/request_handler_secondary_authorization.cpp
+        src/request_handler/authorization_client.cpp
         src/request_handler/request_handler_db_meta_write.cpp
         src/request_handler/request_handler_db_stream_info.cpp
         src/request_handler/request_handler_db_last_stream.cpp
@@ -29,9 +32,11 @@ set(RECEIVER_CORE_FILES
         src/request_handler/request_factory.cpp
         src/request_handler/request_handler_db.cpp
         src/request_handler/request_handler_monitoring.cpp
-        src/file_processors/write_file_processor.cpp
-        src/file_processors/file_processor.cpp
-        src/file_processors/receive_file_processor.cpp
+        src/request_handler/file_processors/write_file_processor.cpp
+        src/request_handler/file_processors/file_processor.cpp
+        src/request_handler/file_processors/receive_file_processor.cpp
+        src/metrics/receiver_prometheus_metrics.cpp
+        src/metrics/receiver_mongoose_server.cpp
         )
 
 set(RDS_FILES
@@ -116,8 +121,6 @@ set(SOURCE_FILES
 ################################
 # Library
 ################################
-#SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static")
-
 GET_PROPERTY(ASAPO_COMMON_FABRIC_LIBRARIES GLOBAL PROPERTY ASAPO_COMMON_FABRIC_LIBRARIES)
 
 add_library(${TARGET_NAME} STATIC ${SOURCE_FILES} $<TARGET_OBJECTS:system_io> $<TARGET_OBJECTS:curl_http_client>
@@ -166,7 +169,9 @@ set(TEST_SOURCE_FILES
         unittests/request_handler/test_request_handler_db_stream_info.cpp
         unittests/request_handler/test_request_handler_db_last_stream.cpp
         unittests/request_handler/test_request_handler_db.cpp
-        unittests/request_handler/test_request_handler_authorizer.cpp
+        unittests/request_handler/test_authorization_client.cpp
+        unittests/request_handler/test_request_handler_initial_authorization.cpp
+        unittests/request_handler/test_request_handler_secondary_authorization.cpp
         unittests/request_handler/test_request_handler_receive_data.cpp
         unittests/request_handler/test_request_handler_receive_metadata.cpp
         unittests/request_handler/test_request_handler_delete_stream.cpp
@@ -179,9 +184,9 @@ set(TEST_SOURCE_FILES
         unittests/mock_receiver_config.cpp
         unittests/request_handler/test_requests_dispatcher.cpp
         unittests/test_datacache.cpp
-        unittests/file_processors/test_write_file_processor.cpp
-        unittests/file_processors/test_file_processor.cpp
-        unittests/file_processors/test_receive_file_processor.cpp
+        unittests/request_handler/file_processors/test_write_file_processor.cpp
+        unittests/request_handler/file_processors/test_file_processor.cpp
+        unittests/request_handler/file_processors/test_receive_file_processor.cpp
         )
 
 if (ENABLE_NEW_RECEIVER_MONITORING)
@@ -211,13 +216,4 @@ set(TEST_SOURCE_FILES_RDS
         unittests/receiver_data_server/request_handler/test_request_handler_factory.cpp
         unittests/receiver_data_server/request_handler/test_request_handler.cpp
         )
-gtest(${TARGET_NAME}_RDS "${TEST_SOURCE_FILES_RDS}" "${TEST_LIBRARIES}"
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/statistics/*.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/request_handler/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/request_handler/*.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/file_processors/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/file_processors/*.h
-        )
+gtest(${TARGET_NAME}_RDS "${TEST_SOURCE_FILES_RDS}" "${TEST_LIBRARIES}" nocov)

@@ -14,7 +14,8 @@ namespace asapo {
 enum class GetMessageServerOperation {
     GetNext,
     GetLast,
-    GetID
+    GetID,
+    GetLastInGroup,
 };
 
 enum class OutputDataMode {
@@ -46,12 +47,11 @@ struct RequestOutput {
     }
 };
 
-Error ProcessRequestResponce(const RequestInfo& request, const Error& server_err, const RequestOutput* response,
+Error ProcessRequestResponce(const RequestInfo& request, Error server_err, const RequestOutput* response,
                              const HttpCode& code);
 Error ConsumerErrorFromNoDataResponse(const std::string& response);
 Error ConsumerErrorFromPartialDataResponse(const std::string& response);
 DataSet DecodeDatasetFromResponse(std::string response, Error* err);
-
 class ConsumerImpl final : public asapo::Consumer {
   public:
     explicit ConsumerImpl(std::string server_uri, std::string source_path, bool has_filesystem,
@@ -76,6 +76,7 @@ class ConsumerImpl final : public asapo::Consumer {
     Error GetNext(std::string group_id, MessageMeta* info, MessageData* data, std::string stream) override;
 
     Error GetLast(MessageMeta* info, MessageData* data, std::string stream) override;
+    Error GetLast(std::string group_id, MessageMeta* info, MessageData* data, std::string stream) override;
 
     std::string GenerateNewGroupId(Error* err) override;
     std::string GetBeamtimeMeta(Error* err) override;
@@ -99,6 +100,7 @@ class ConsumerImpl final : public asapo::Consumer {
     DataSet GetNextDataset(std::string group_id, uint64_t min_size, std::string stream, Error* err) override;
 
     DataSet GetLastDataset(uint64_t min_size, std::string stream, Error* err) override;
+    DataSet GetLastDataset(std::string group_id, uint64_t min_size, std::string stream, Error* err) override;
 
     DataSet GetDatasetById(uint64_t id, uint64_t min_size, std::string stream, Error* err) override;
 

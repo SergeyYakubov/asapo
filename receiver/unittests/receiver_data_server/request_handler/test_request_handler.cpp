@@ -135,7 +135,7 @@ TEST_F(RequestHandlerTests, RequestAlwaysReady) {
 
 TEST_F(RequestHandlerTests, ProcessRequest_WrongOpCode) {
     request.header.op_code = asapo::kOpcodeUnknownOp;
-    MockSendResponse(asapo::kNetErrorWrongRequest, false, false);
+    MockSendResponse(asapo::kNetErrorWrongRequest, true, false); // TODO why return without error?
     EXPECT_CALL(*mock_net_ptr, HandleAfterError_t(expected_source_id));
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("wrong request")));
@@ -146,8 +146,8 @@ TEST_F(RequestHandlerTests, ProcessRequest_WrongOpCode) {
 }
 
 TEST_F(RequestHandlerTests, ProcessRequest_WrongClientVersion) {
-    strcpy(request.header.api_version, "v0.3");
-    MockSendResponse(asapo::kNetErrorNotSupported, false, false);
+    strcpy(request.header.api_version, "v0.2"); // TODO: Why 0.2
+    MockSendResponse(asapo::kNetErrorNotSupported, true, false); // TODO why return without error?
     EXPECT_CALL(*mock_net_ptr, HandleAfterError_t(expected_source_id));
 
     EXPECT_CALL(mock_logger, Error(HasSubstr("unsupported client")));

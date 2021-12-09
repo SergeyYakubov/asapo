@@ -28,4 +28,7 @@ $bootstrap_expect_string
 rejoin_after_leave = true
 retry_join = $server_adresses
 
-
+telemetry = {
+    disable_compat_1.9 = false
+    prometheus_retention_time = "24h"
+}

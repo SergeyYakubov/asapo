@@ -5,7 +5,9 @@ namespace asapo {
 using std::chrono::system_clock;
 
 ReceiverStatistics::ReceiverStatistics(unsigned int write_interval) : Statistics(write_interval) {
-    ResetStatistics();
+    for (size_t i = 0; i < kNStatisticEntities; i++) {
+        time_counters_[i] = std::chrono::nanoseconds{0};
+    }
 }
 
 StatisticsToSend ReceiverStatistics::PrepareStatisticsToSend() const noexcept {

@@ -21,8 +21,6 @@ Connection::Connection(SocketDescriptor socket_fd, const std::string& address,
     statistics__->AddTag("receiver_tag", receiver_tag);
 }
 
-
-
 void Connection::ProcessStatisticsAfterRequest(const std::unique_ptr<Request>& request) const noexcept {
     statistics__->IncreaseRequestCounter();
     statistics__->IncreaseRequestDataVolume(request->GetDataSize() + sizeof(GenericRequestHeader) +
@@ -45,9 +43,8 @@ void Connection::Listen() const noexcept {
     }
     io__->CloseSocket(socket_fd_, nullptr);
     statistics__->SendIfNeeded(true);
-    log__->Info("disconnected from " + address_);
+    log__->Info(LogMessageWithFields("disconnected from producer").Append("origin", HostFromUri(address_)));
 }
-
 
 }
 

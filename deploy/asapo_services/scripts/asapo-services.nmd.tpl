@@ -48,6 +48,7 @@ job "asapo-services" {
       meta {
         offline_dir = "${offline_dir}"
         online_dir = "${online_dir}"
+        ldap_uri = "${ldap_uri}"
       }
 
       service {

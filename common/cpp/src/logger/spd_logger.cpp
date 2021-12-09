@@ -2,6 +2,10 @@
 
 #include "fluentd_sink.h"
 
+#include <sstream>
+
+#include "asapo/common/utils.h"
+
 namespace asapo {
 
 void SpdLogger::SetLogLevel(LogLevel level) {
@@ -25,9 +29,10 @@ void SpdLogger::SetLogLevel(LogLevel level) {
         }
     }
 }
+
 std::string EncloseMsg(std::string msg) {
     if (msg.find("\"") != 0) {
-        return std::string(R"("message":")") + msg + "\"";
+        return std::string(R"("message":")") + EscapeJson(msg) + "\"";
     } else {
         return msg;
     }
@@ -97,6 +102,22 @@ void SpdLogger::Debug(const LogMessageWithFields& msg) const {
 }
 void SpdLogger::Warning(const LogMessageWithFields& msg) const {
     Warning(msg.LogString());
+}
+
+void SpdLogger::Info(const asapo::Error& error) const {
+    Info(error->ExplainInJSON());
+}
+
+void SpdLogger::Error(const asapo::Error& error) const {
+    Error(error->ExplainInJSON());
+}
+
+void SpdLogger::Debug(const asapo::Error& error) const {
+    Debug(error->ExplainInJSON());
+}
+
+void SpdLogger::Warning(const asapo::Error& error) const {
+    Warning(error->ExplainInJSON());
 }
 
 }

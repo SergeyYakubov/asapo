@@ -9,10 +9,13 @@ data "template_file" "nginx" {
     elasticsearch_port = "${var.elasticsearch_port}"
     grafana_port = "${var.grafana_port}"
     influxdb_port = "${var.influxdb_port}"
+    prometheus_port = "${var.prometheus_port}"
     authorizer_port = "${var.authorizer_port}"
     discovery_port = "${var.discovery_port}"
     asapo_user = "${var.asapo_user}"
     consul_dns_port = "${var.consul_dns_port}"
+    prometheus_port = "${var.prometheus_port}"
+    alertmanager_port = "${var.alertmanager_port}"
   }
 }
 
@@ -23,6 +26,7 @@ data "template_file" "asapo_services" {
     online_dir = "${var.online_dir}"
     offline_dir = "${var.offline_dir}"
     docker_repository = "${var.asapo_docker_repository}"
+    ldap_uri = "${var.ldap_uri}"
     image_suffix = "${var.asapo_imagename_suffix}:${var.asapo_image_tag}"
     nomad_logs = "${var.nomad_logs}"
     authorizer_total_memory_size = "${var.authorizer_total_memory_size}"
@@ -52,6 +56,7 @@ data "template_file" "asapo_receivers" {
     n_receivers = "${var.n_receivers}"
     force_pull_images = "${var.force_pull_images}"
     perf_monitor = "${var.perf_monitor}"
+    receiver_expose_metrics = "${var.receiver_expose_metrics}"
   }
 }
 
@@ -101,6 +106,28 @@ data "template_file" "asapo_perfmetrics" {
     }
 }
 
+
+data "template_file" "asapo_monitoring" {
+  template = "${file("${var.job_scripts_dir}/asapo-monitoring.nmd.tpl")}"
+  vars = {
+    n_brokers = "${var.n_brokers}"
+    n_receivers = "${var.n_receivers}"
+    n_fts = "${var.n_fts}"
+    service_dir = "${var.service_dir}"
+    scripts_dir = "${var.job_scripts_dir}"
+    asapo_monitor = "${var.asapo_monitor}"
+    asapo_monitor_alert = "${var.asapo_monitor_alert}"
+    prometheus_version = "${var.prometheus_version}"
+    alertmanager_version = "${var.alertmanager_version}"
+    alertmanager_port = "${var.alertmanager_port}"
+    prometheus_port = "${var.prometheus_port}"
+    prometheus_total_memory_size = "${var.prometheus_total_memory_size}"
+    alertmanager_total_memory_size = "${var.alertmanager_total_memory_size}"
+    asapo_user = "${var.asapo_user}"
+    asapo_alert_email = "${var.asapo_alert_email}"
+    asapo_alert_email_smart_host = "${var.asapo_alert_email_smart_host}"
+  }
+}
 
 data "template_file" "asapo_mongo" {
   template = "${file("${var.job_scripts_dir}/asapo-mongo.nmd.tpl")}"

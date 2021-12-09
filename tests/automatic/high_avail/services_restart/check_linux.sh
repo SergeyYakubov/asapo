@@ -25,7 +25,8 @@ Cleanup() {
     echo cleanup
     rm -rf ${receiver_folder}
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
-    influx -execute "drop database ${monitor_database_name}"
+    set +e
+    influx -database ${monitor_database_name} -execute "drop series from statistics, RequestsRate"
 }
 
 
@@ -36,7 +37,7 @@ $producer_bin localhost:8400 ${beamtime_id} 100 $5 4 0 100 &
 #producerid=`echo $!`
 
 echo "Start consumer"
-$consumer_bin ${proxy_address} dummy_path ${beamtime_id} 2 $token 30000 1 &> output.txt &
+$consumer_bin ${proxy_address} dummy_path ${beamtime_id} 2 $token 60000 1 &> output.txt &
 
 sleep 1
 
@@ -45,12 +46,10 @@ nomad stop authorizer
 nomad stop discovery
 nomad stop nginx
 nomad run nginx_kill.nmd  && nomad stop -yes -purge nginx_kill
-nomad stop receiver
 
 nomad run nginx.nmd
 nomad run authorizer.nmd
 nomad run discovery.nmd
-nomad run receiver_tcp.nmd
 
 if [[ "$4" == "receiver" ]]; then
   nomad run $4_tcp.nmd

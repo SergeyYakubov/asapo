@@ -113,7 +113,7 @@ MessageData AllocateMemory(uint64_t size, Error* err) {
     try {
         data = MessageData{new uint8_t[(size_t)size + 1 ]};
     } catch (...) {
-        *err = ErrorTemplates::kMemoryAllocationError.Generate();
+        *err = GeneralErrorTemplates::kMemoryAllocationError.Generate();
         return nullptr;
     }
     *err = nullptr;

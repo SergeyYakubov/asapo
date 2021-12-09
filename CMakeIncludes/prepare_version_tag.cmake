@@ -20,7 +20,6 @@ execute_process(COMMAND git rev-parse --short=10 HEAD
 string(STRIP ${ASAPO_VERSION_COMMIT} ASAPO_VERSION_COMMIT)
 
 if (${BRANCH} STREQUAL "master")
-    SET (ASAPO_VERSION_IN_DOCS ${ASAPO_TAG})
     SET (ASAPO_VERSION ${ASAPO_TAG})
     SET (ASAPO_VERSION_COMMIT "")
     SET (ASAPO_VERSION_DOCKER_SUFFIX "")
@@ -34,13 +33,19 @@ else()
     SET (ASAPO_VERSION_DOCKER_SUFFIX "-dev")
     string(REPLACE "_" "-" ASAPO_VERSION ${ASAPO_VERSION})
     SET (ASAPO_VERSION 100.0.${ASAPO_VERSION})
-    SET (PYTHON_ASAPO_VERSION ${ASAPO_VERSION})
+    if (${BRANCH} STREQUAL "develop")
+        SET (PYTHON_ASAPO_VERSION 100.0.dev0)
+    else()
+        string(SUBSTRING ${ASAPO_VERSION} 20 -1 TMP)
+        string(REGEX MATCH "^([0-9]+)|.+$" ISSUE_NUM "${TMP}")
+        if (ISSUE_NUM STREQUAL "")
+            SET (PYTHON_ASAPO_VERSION 100.0.dev1)
+        else()
+            SET (PYTHON_ASAPO_VERSION 100.0.dev${ISSUE_NUM})
+        endif()
+    endif()
     SET (ASAPO_WHEEL_VERSION ${ASAPO_VERSION})
 endif()
-
-string(REGEX REPLACE "\\.0([0-9]+)\\."
-        ".\\1." ASAPO_WHEEL_VERSION_IN_DOCS
-        ${ASAPO_VERSION_IN_DOCS})
 
 message("Asapo Version: " ${ASAPO_VERSION})
 message("Python Asapo Version: " ${PYTHON_ASAPO_VERSION})

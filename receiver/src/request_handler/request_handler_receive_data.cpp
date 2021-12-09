@@ -2,8 +2,6 @@
 #include "asapo/io/io_factory.h"
 #include "../request.h"
 #include "../receiver_logger.h"
-#include "../receiver_config.h"
-#include "asapo/preprocessor/definitions.h"
 
 namespace asapo {
 
@@ -20,9 +18,17 @@ Error RequestHandlerReceiveData::ProcessRequest(Request* request) const {
     if (err) {
         return err;
     }
-    uint64_t byteCount = io__->Receive(request->GetSocket(), request->GetData(), (size_t) request->GetDataSize(), &err);
+    Error io_err;
+    uint64_t byteCount = io__->Receive(request->GetSocket(), request->GetData(), (size_t) request->GetDataSize(), &io_err);
     request->GetInstancedStatistics()->AddIncomingBytes(byteCount);
+    if (io_err) {
+        err = ReceiverErrorTemplates::kProcessingError.Generate("cannot receive data",std::move(io_err));
+    }
     request->UnlockDataBufferIfNeeded();
+    if (err == nullptr) {
+        log__->Debug(RequestLog("received request data", request).Append("size",request->GetDataSize()));
+    }
+
     return err;
 }
 

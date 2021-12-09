@@ -1,0 +1,50 @@
+---
+title: Simple Producer
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+This example produces a simple message. Use this, if you don't need any special beam/message metadata.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-21.09.0/python/produce.py"
+```
+
+Execute it with python3
+
+```shell
+$ python3 produce.py
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-21.09.0/cpp/produce.cpp"
+```
+
+Compile e.g. using CMake and execute. You might need to point cmake (with CMAKE_PREFIX_PATH) to asapo installation and curl library if installed to non-standard location.
+
+```shell content="./versioned_examples/version-21.09.0/cpp/CMakeLists.txt" snippetTag="#producer"
+```
+
+```shell
+$ cmake . && make
+$ ./asapo-produce
+```
+
+</TabItem>
+</Tabs>
+
+You should see the "successfuly sent" message in the logs, and the file should appear in the corresponding folder (by default in ```/var/tmp/asapo/global_shared/data/test_facility/gpfs/test/2019/data/asapo_test```)

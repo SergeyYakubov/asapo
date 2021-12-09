@@ -94,8 +94,6 @@ TEST_F(ReceiverDataServerTests, TimeoutGetNewRequests) {
     data_server.Run();
 }
 
-
-
 TEST_F(ReceiverDataServerTests, ErrorGetNewRequests) {
     EXPECT_CALL(mock_net, GetNewRequests_t(_)).WillOnce(
         DoAll(SetArgPointee<0>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
@@ -103,9 +101,7 @@ TEST_F(ReceiverDataServerTests, ErrorGetNewRequests) {
              )
     );
 
-    auto errtext = asapo::IOErrorTemplates::kUnknownIOError.Generate()->Explain();
-
-    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("stopped"), HasSubstr(errtext))));
+    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("stopped"), HasSubstr("unknown error"))));
 
     data_server.Run();
 }
@@ -121,9 +117,7 @@ TEST_F(ReceiverDataServerTests, ErrorAddingRequests) {
         Return(asapo::ReceiverDataServerErrorTemplates::kMemoryPool.Generate("cannot add request to pool").release())
     );
 
-    auto errtext = asapo::ReceiverDataServerErrorTemplates::kMemoryPool.Generate("cannot add request to pool")->Explain();
-
-    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("stopped"), HasSubstr(errtext))));
+    EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("stopped"), HasSubstr("pool"))));
 
     data_server.Run();
 }

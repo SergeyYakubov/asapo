@@ -2,35 +2,39 @@
 
 #include <utility>
 #include "../receiver_data_server_logger.h"
+#include "../receiver_data_server_error.h"
 
 #include "asapo/io/io_factory.h"
 #include "asapo/common/networking.h"
 
 namespace asapo {
 
-    RdsTcpServer::RdsTcpServer(std::string address, const AbstractLogger* logger, asapo::SharedReceiverMonitoringClient  monitoring) : io__{GenerateDefaultIO()}, log__{logger},
-    address_{std::move(address)}, monitoring_{std::move(monitoring)} {}
+    RdsTcpServer::RdsTcpServer(std::string address, const AbstractLogger* logger, asapo::SharedReceiverMonitoringClient  monitoring) : io__{GenerateDefaultIO()},
+                                                                                log__{logger},
+                                                                                address_{std::move(address)}, monitoring_{std::move(monitoring)} {}
 
 Error RdsTcpServer::Initialize() {
-    Error err;
-    if (master_socket_ == kDisconnectedSocketDescriptor) {
-        master_socket_ = io__->CreateAndBindIPTCPSocketListener(address_, kMaxPendingConnections, &err);
-        if (!err) {
-            log__->Info("Started TCP ReceiverDataServer at '" + address_ + "'");
-        } else {
-            log__->Error("TCP ReceiverDataServer cannot listen on " + address_ + ": " + err->Explain());
-        }
-    } else {
-        err = TextError("Server was already initialized");
+    if (master_socket_ != kDisconnectedSocketDescriptor) {
+        return GeneralErrorTemplates::kSimpleError.Generate("server was already initialized");
     }
-    return err;
+    Error io_err;
+    master_socket_ = io__->CreateAndBindIPTCPSocketListener(address_, kMaxPendingConnections, &io_err);
+    if (!io_err) {
+        log__->Info(LogMessageWithFields("started TCP data server").Append("address", address_));
+    } else {
+        auto err =
+            ReceiverDataServerErrorTemplates::kServerError.Generate("cannot start TCP data server", std::move(io_err));
+        err->AddDetails("address", address_);
+        return err;
+    }
+    return nullptr;
 }
 
 ListSocketDescriptors RdsTcpServer::GetActiveSockets(Error* err) {
     std::vector<std::string> new_connections;
     auto sockets = io__->WaitSocketsActivity(master_socket_, &sockets_to_listen_, &new_connections, err);
-    for (auto& connection : new_connections) {
-        log__->Debug("new connection from " + connection);
+    for (auto &connection: new_connections) {
+        log__->Debug(LogMessageWithFields("new connection").Append("origin", connection));
     }
     return sockets;
 }
@@ -38,26 +42,29 @@ ListSocketDescriptors RdsTcpServer::GetActiveSockets(Error* err) {
 void RdsTcpServer::CloseSocket(SocketDescriptor socket) {
     sockets_to_listen_.erase(std::remove(sockets_to_listen_.begin(), sockets_to_listen_.end(), socket),
                              sockets_to_listen_.end());
-    log__->Debug("connection " + io__->AddressFromSocket(socket) + " closed");
+    log__->Debug(LogMessageWithFields("connection closed").Append("origin", io__->AddressFromSocket(socket)));
     io__->CloseSocket(socket, nullptr);
 }
 
 ReceiverDataServerRequestPtr RdsTcpServer::ReadRequest(SocketDescriptor socket, Error* err) {
     GenericRequestHeader header;
 
+    Error io_err;
+    *err = nullptr;
+
     SharedInstancedStatistics statistics{new InstancedStatistics};
     statistics->StartTimer(kNetworkIncoming);
-    uint64_t bytesReceived = io__->Receive(socket, &header, sizeof(GenericRequestHeader), err);
+    uint64_t bytesReceived = io__->Receive(socket, &header, sizeof(GenericRequestHeader), &io_err);
     statistics->StopTimer();
     statistics->AddIncomingBytes(bytesReceived);
 
-    if (*err == ErrorTemplates::kEndOfFile) {
+    if (io_err == GeneralErrorTemplates::kEndOfFile) {
+        *err = std::move(io_err);
         CloseSocket(socket);
         return nullptr;
-    } else if (*err) {
-        log__->Error("error getting next request from " + io__->AddressFromSocket(socket) + ": " + (*err)->
-                     Explain()
-                    );
+    } else if (io_err) {
+        *err = ReceiverDataServerErrorTemplates::kServerError.Generate("error getting next request",std::move(io_err));
+        (*err)->AddDetails("origin",io__->AddressFromSocket(socket));
         return nullptr;
     }
     return ReceiverDataServerRequestPtr{new ReceiverDataServerRequest{header, (uint64_t) socket, statistics}};
@@ -71,8 +78,9 @@ GenericRequests RdsTcpServer::ReadRequests(const ListSocketDescriptors& sockets)
         if (err) {
             continue;
         }
-        log__->Debug("received request opcode: " + std::to_string(request->header.op_code) + " id: " + std::to_string(
-                         request->header.data_id));
+        log__->Debug(LogMessageWithFields("received request").
+            Append("operation", OpcodeToString(request->header.op_code)).
+            Append("id", request->header.data_id));
         requests.emplace_back(std::move(request));
     }
     return requests;
@@ -99,28 +107,31 @@ void RdsTcpServer::HandleAfterError(uint64_t source_id) {
     CloseSocket(static_cast<int>(source_id));
 }
 
-Error RdsTcpServer::SendResponse(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response) {
-    Error err;
-    io__->Send(static_cast<int>(request->source_id), response, sizeof(*response), &err);
-    if (err) {
-        log__->Error("cannot send to consumer" + err->Explain());
+Error RdsTcpServer::SendResponse(const ReceiverDataServerRequest *request, const GenericNetworkResponse *response) {
+    Error io_err,err;
+    auto socket= static_cast<int>(request->source_id);
+    io__->Send(socket, response, sizeof(*response), &io_err);
+    if (io_err) {
+        err = ReceiverDataServerErrorTemplates::kServerError.Generate("error sending response",std::move(io_err));
+        err->AddDetails("origin",io__->AddressFromSocket(socket));
     }
     return err;
 }
 
 Error
-RdsTcpServer::SendResponseAndSlotData(const ReceiverDataServerRequest* request, const GenericNetworkResponse* response,
-                                      const CacheMeta* cache_slot) {
+RdsTcpServer::SendResponseAndSlotData(const ReceiverDataServerRequest *request, const GenericNetworkResponse *response,
+                                      const CacheMeta *cache_slot) {
     Error err;
-
     err = SendResponse(request, response);
     if (err) {
         return err;
     }
-
-    io__->Send(static_cast<int>(request->source_id), cache_slot->addr, cache_slot->size, &err);
-    if (err) {
-        log__->Error("cannot send slot to worker" + err->Explain());
+    Error io_err;
+    auto socket= static_cast<int>(request->source_id);
+    io__->Send(socket, cache_slot->addr, cache_slot->size, &io_err);
+    if (io_err) {
+        err = ReceiverDataServerErrorTemplates::kServerError.Generate("error sending slot data",std::move(io_err));
+        err->AddDetails("origin",io__->AddressFromSocket(socket));
     }
     return err;
 }

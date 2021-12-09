@@ -24,12 +24,11 @@ void ReceiverDataServer::Run() {
         if (err == IOErrorTemplates::kTimeout) {
             continue;
         }
-
         if (!err) {
             err = request_pool__->AddRequests(std::move(requests));
         }
         if (err) {
-            log__->Error(std::string("receiver data server stopped: ") + err->Explain());
+            log__->Error(LogMessageWithFields("receiver data server stopped").Append("cause",std::move(err)));
             return;
         }
     }

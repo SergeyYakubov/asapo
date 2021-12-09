@@ -14,8 +14,8 @@ type Auth struct {
 	authJWT   utils.Auth
 }
 
-func NewAuth(authUser,authAdmin,authJWT utils.Auth) *Auth {
-	return &Auth{authUser,authAdmin,authJWT}
+func NewAuth(authUser, authAdmin, authJWT utils.Auth) *Auth {
+	return &Auth{authUser, authAdmin, authJWT}
 }
 
 func (auth *Auth) AdminAuth() utils.Auth {
@@ -31,7 +31,7 @@ func (auth *Auth) JWTAuth() utils.Auth {
 }
 
 func subjectFromRequest(request structs.IssueTokenRequest) string {
-	for key,value := range request.Subject {
+	for key, value := range request.Subject {
 		switch key {
 		case "beamline":
 			return utils.SubjectFromBeamline(value)
@@ -44,10 +44,10 @@ func subjectFromRequest(request structs.IssueTokenRequest) string {
 	return ""
 }
 
-func (auth *Auth) PrepareAccessToken(request structs.IssueTokenRequest, userToken bool) (string, error) {
-	var claims utils.CustomClaims
+func (auth *Auth) PrepareAccessToken(request structs.IssueTokenRequest, userToken bool) (token string, claims *utils.CustomClaims, err error) {
 	var extraClaim structs.AccessTokenExtraClaim
 
+	claims = new(utils.CustomClaims)
 	claims.Subject = subjectFromRequest(request)
 
 	extraClaim.AccessTypes = request.AccessTypes
@@ -57,15 +57,19 @@ func (auth *Auth) PrepareAccessToken(request structs.IssueTokenRequest, userToke
 	claims.Id = uid.String()
 
 	if userToken {
-		return auth.UserAuth().GenerateToken(&claims)
+		token, err = auth.UserAuth().GenerateToken(claims)
 	} else {
-		return auth.AdminAuth().GenerateToken(&claims)
+		token, err = auth.AdminAuth().GenerateToken(claims)
 	}
+	if err != nil {
+		return "", nil, err
+	}
+	return
 }
 
 func UserTokenResponce(request structs.IssueTokenRequest, token string) []byte {
 	expires := ""
-	if request.DaysValid>0 {
+	if request.DaysValid > 0 {
 		expires = time.Now().Add(time.Duration(request.DaysValid*24) * time.Hour).UTC().Format(time.RFC3339)
 	}
 	answer := structs.IssueTokenResponse{

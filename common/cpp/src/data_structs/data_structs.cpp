@@ -1,4 +1,6 @@
 #include "asapo/common/data_structs.h"
+#include "asapo/common/error.h"
+
 
 #include <chrono>
 #include <iostream>
@@ -42,7 +44,7 @@ Error GetSourceTypeFromString(std::string stype, SourceType* type) {
         *type = SourceType::kProcessed;
         return nullptr;
     } else {
-        return TextError("cannot parse/wrong source type: " + stype);
+        return GeneralErrorTemplates::kSimpleError.Generate("cannot parse/wrong source type: " + stype);
     }
 }
 
@@ -241,5 +243,10 @@ uint64_t NanosecsEpochFromISODate(std::string date_time) {
 
     return ns > 0 ? ns : 1;
 }
+
+std::string HostFromUri(const std::string& uri) {
+    return uri.substr(0, uri.find(':'));
+}
+
 
 }

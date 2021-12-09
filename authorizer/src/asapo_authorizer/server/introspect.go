@@ -19,10 +19,16 @@ func extractToken(r *http.Request) (string, error) {
 
 func verifyUserToken(token string) (response structs.IntrospectTokenResponse, err error) {
 	var extra_claim structs.AccessTokenExtraClaim
-	response.Sub,err = Auth.UserAuth().CheckAndGetContent(token,&extra_claim)
+	claim,err := Auth.UserAuth().CheckAndGetContent(token,&extra_claim)
 	if err!=nil {
 		return
 	}
+	err = checkTokenRevoked(claim.Id)
+	if err != nil {
+		return
+	}
+
+	response.Sub = claim.Subject
 	response.AccessTypes = extra_claim.AccessTypes
 	return
 }
@@ -40,7 +46,10 @@ func routeIntrospect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debug("verified user token for "+response.Sub)
+	log.WithFields(map[string]interface{}{
+		"subject":response.Sub,
+	}).Debug("verified user token")
+
 
 	answer,_ := json.Marshal(&response)
 	w.WriteHeader(http.StatusOK)

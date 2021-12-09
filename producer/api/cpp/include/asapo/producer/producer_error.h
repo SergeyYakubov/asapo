@@ -17,7 +17,7 @@ enum class ProducerErrorType {
     kTimeout
 };
 
-using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType, ErrorType::kProducerError>;
+using ProducerErrorTemplate = ServiceErrorTemplate<ProducerErrorType>;
 
 class OriginalData : public CustomErrorData {
   public:

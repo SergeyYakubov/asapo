@@ -76,6 +76,16 @@ def check_single(consumer, group_id):
     assert_metaname(meta, "5", "get last1")
     assert_usermetadata(meta, "get last1")
 
+# get last in group
+    _, meta = consumer.get_last(meta_only=True,group_id=group_id)
+    assert_metaname(meta, "5", "get last in group")
+    try:
+      consumer.get_last(meta_only=True,group_id=group_id)
+    except asapo_consumer.AsapoEndOfStreamError:
+        pass
+    else:
+        exit_on_noerr("get last in group error second time")
+
     try:
         consumer.get_by_id(30, meta_only=True)
     except asapo_consumer.AsapoEndOfStreamError:
@@ -325,6 +335,17 @@ def check_dataset(consumer, group_id):
     assert_eq(res['id'], 10, "get_last_dataset1")
     assert_eq(res['expected_size'], 3, "get_last_dataset1 size ")
     assert_metaname(res['content'][2], "10_3", "get get_last_dataset1 name3")
+
+# get last dataset in group
+    res = consumer.get_last_dataset(group_id=group_id)
+    assert_eq(res['id'], 10, "get_last_dataset in group")
+    try:
+        consumer.get_last_dataset(group_id=group_id)
+    except asapo_consumer.AsapoEndOfStreamError:
+        pass
+    else:
+        exit_on_noerr("get last dataset in group error second time")
+
 
     res = consumer.get_next_dataset(group_id)
     assert_eq(res['id'], 3, "get_next_dataset3")

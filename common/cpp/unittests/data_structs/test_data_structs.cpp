@@ -356,4 +356,23 @@ TEST(DeletaStreamOpt, EncodeDecode) {
 
 }
 
+
+struct TestUri {
+    std::string uri;
+    std::string host;
+};
+
+
+auto testsUri = std::vector<TestUri> {
+    TestUri{"123.234.24.13:123", "123.234.24.13"},
+    TestUri{"1.1.1.1", "1.1.1.1"},
+};
+
+TEST(HostFromUri, HostFromUri) {
+    for (auto test : testsUri) {
+        auto res = asapo::HostFromUri(test.uri);
+        ASSERT_THAT(res, Eq(test.host));
+    }
+}
+
 }

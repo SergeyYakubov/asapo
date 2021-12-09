@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 
 #include "mock_receiver_config.h"
-#include "../src/receiver_config_factory.h"
+#include "../src/receiver_config.h"
 
 #include <asapo/unittests/MockIO.h>
 
@@ -21,8 +21,8 @@ std::string Key(std::string value, std::string error_field) {
 
 Error SetReceiverConfigWithError (const ReceiverConfig& config, std::string error_field) {
     MockIO mock_io;
-    ReceiverConfigFactory config_factory;
-    config_factory.io__ = std::unique_ptr<IO> {&mock_io};
+    ReceiverConfigManager config_manager;
+    config_manager.io__ = std::unique_ptr<IO> {&mock_io};
 
     std::string log_level;
     switch (config.log_level) {
@@ -66,6 +66,11 @@ Error SetReceiverConfigWithError (const ReceiverConfig& config, std::string erro
 
     config_string += "," + Key("NThreads", error_field) + std::to_string(config.dataserver.nthreads);
     config_string += "}";
+    config_string += "," + Key("Metrics", error_field) + "{";
+    config_string += Key("ListenPort", error_field) + std::to_string(config.metrics.listen_port);
+    config_string += "," +  Key("Expose", error_field) + (config.metrics.expose ? "true" : "false");
+    config_string += "}";
+
     config_string += "," + Key("DataCache", error_field) + "{";
     config_string += Key("Use", error_field) + (config.use_datacache ? "true" : "false") ;
     config_string += "," + Key("SizeGB", error_field) + std::to_string(config.datacache_size_gb);
@@ -84,9 +89,9 @@ Error SetReceiverConfigWithError (const ReceiverConfig& config, std::string erro
             testing::Return(config_string)
             );
 
-    auto err = config_factory.SetConfig("fname");
+    auto err = config_manager.ReadConfigFromFile("fname");
 
-    config_factory.io__.release();
+    config_manager.io__.release();
 
     return err;
 }

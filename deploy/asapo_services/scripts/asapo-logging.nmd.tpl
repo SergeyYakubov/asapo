@@ -170,12 +170,12 @@ job "asapo-logging" {
            name = "alive"
            type     = "http"
            path     = "/logsview"
-           interval = "10s"
+           interval = "60s"
            timeout  = "1s"
        }
        check_restart {
          limit = 2
-         grace = "90s"
+         grace = "600s"
          ignore_warnings = false
        }
      }

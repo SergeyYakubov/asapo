@@ -1,5 +1,4 @@
 #include <iostream>
-#include <vector>
 #include <thread>
 #include <algorithm>
 #include <asapo/asapo_producer.h>
@@ -96,5 +95,5 @@ int main(int argc, char* argv[]) {
     auto args = GetArgs(argc, argv);
 
     TestAll(args);
-    return 0;
+    return EXIT_SUCCESS;
 }

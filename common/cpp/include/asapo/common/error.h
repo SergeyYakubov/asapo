@@ -5,73 +5,33 @@
 #include <memory>
 #include <utility>
 #include <ostream>
-namespace asapo {
+#include <map>
 
-enum class ErrorType {
-    kUnknownError = 0,
-    kAsapoError,
-    kHttpError,
-    kIOError,
-    kDBError,
-    kReceiverError,
-    kProducerError,
-    kConsumerError,
-    kMemoryAllocationError,
-    kEndOfFile,
-    kFabricError,
-};
+namespace asapo {
 
 class ErrorInterface;
 class ErrorTemplateInterface;
 class CustomErrorData;
 
-// nullptr == noError
-// Example check:
-//  void TestError(Error* err) {
-//      if(*err) {
-//          [...] //An error occurred
-//      }
-//  }
+
 using Error = std::unique_ptr<ErrorInterface>;
 
 class ErrorInterface {
   public:
     virtual std::string Explain() const noexcept = 0;
-    virtual void Append(const std::string& value) noexcept = 0;
-    virtual void Prepend(const std::string& value) noexcept = 0;
-    virtual ErrorType GetErrorType() const noexcept = 0;
-    virtual CustomErrorData* GetCustomData() = 0;
-    virtual void SetCustomData(std::unique_ptr<CustomErrorData> data) = 0;
+    virtual std::string ExplainPretty(uint8_t shift = 0) const noexcept = 0;
+    virtual std::string ExplainInJSON() const noexcept = 0;
+    virtual ErrorInterface* AddDetails(std::string key, std::string value) noexcept = 0;
+    virtual ErrorInterface* AddDetails(std::string key, uint64_t value) noexcept = 0;
+    virtual ErrorInterface* SetCause(Error cause_err) noexcept = 0;
+    virtual const Error& GetCause() const noexcept = 0;
+    virtual CustomErrorData* GetCustomData() noexcept = 0;
+    virtual void SetCustomData(std::unique_ptr<CustomErrorData> data) noexcept = 0;
     virtual ~ErrorInterface() = default; // needed for unique_ptr to delete itself
 };
 
-
-class ErrorTemplateInterface {
-  public:
-    virtual ErrorType GetErrorType() const noexcept = 0;
-    virtual Error Generate() const noexcept = 0;
-    virtual Error Generate(const std::string& suffix) const noexcept = 0;
-    virtual std::string Text() const noexcept = 0;
-    virtual inline bool operator == (const Error& rhs) const {
-        return rhs != nullptr &&
-               GetErrorType() == rhs->GetErrorType();
-    }
-
-    virtual inline bool operator != (const Error& rhs) const {
-        return !(operator==(rhs));
-    }
-};
-
-static inline bool operator == (const Error& lhs, const ErrorTemplateInterface& rhs) {
-    return rhs.operator == (lhs);
-}
-
-static inline bool operator != (const Error& lhs, const ErrorTemplateInterface& rhs) {
-    return rhs.operator != (lhs);
-}
-
 static inline std::ostream& operator<<(std::ostream& os, const Error& err) {
-    if(err) {
+    if (err) {
         os << err->Explain();
     } else {
         static std::string no_error = "No error";
@@ -85,148 +45,122 @@ class CustomErrorData {
     virtual ~CustomErrorData() = default;
 };
 
-class SimpleError: public ErrorInterface {
-  private:
-    std::string error_;
-    std::unique_ptr<CustomErrorData> custom_data_;
-    ErrorType error_type_ = ErrorType::kAsapoError;
-  public:
-    explicit SimpleError(std::string error): error_{std::move(error)} {
-
-    }
-    SimpleError(std::string error, ErrorType error_type ): error_{std::move(error)}, error_type_{error_type} {
-    }
-
-    CustomErrorData* GetCustomData() override {
-        if (custom_data_) {
-            return custom_data_.get();
-        } else {
-            return nullptr;
-        }
-    };
-
-    void SetCustomData(std::unique_ptr<CustomErrorData> data) override {
-        custom_data_ = std::move(data);
-    }
-
-    void Append(const std::string& value) noexcept override {
-        error_ += ": " + value;
-    }
-
-    void Prepend(const std::string& value) noexcept override {
-        error_ = value + ": " + error_;
-    }
-
-    std::string Explain() const noexcept override  {
-        return error_;
-    }
-
-    ErrorType GetErrorType() const noexcept override  {
-        return error_type_;
-    }
-};
-
-
-/*
- * IMPORTANT:
- * Never use the same ErrorType for two different errors,
- * otherwise the == operator might not work as expected!
- */
-class SimpleErrorTemplate : public ErrorTemplateInterface {
-  protected:
-    std::string error_;
-    ErrorType error_type_ = ErrorType::kAsapoError;
-  public:
-    explicit SimpleErrorTemplate(std::string error): error_{std::move(error)} {
-
-    }
-
-    virtual std::string Text() const noexcept override {
-        return error_;
-    }
-
-
-    SimpleErrorTemplate(std::string error, ErrorType error_type ): error_{std::move(error)}, error_type_{error_type} {
-    }
-
-    inline ErrorType GetErrorType() const noexcept override {
-        return error_type_;
-    }
-
-    inline Error Generate() const noexcept override {
-        return Error(new SimpleError{error_, error_type_});
-    }
-
-    inline Error Generate(const std::string& suffix) const noexcept override {
-        return Error(new SimpleError{error_ + " :" + suffix, error_type_});
-    }
-
-};
-
-static inline std::ostream& operator<<(std::ostream& os, const SimpleErrorTemplate& err) {
-    return os << err.Text();
-}
-
-
-inline Error TextError(const std::string& error) {
-    return Error{new SimpleError{error}};
-}
-
-inline Error TextErrorWithType(const std::string& error, ErrorType error_type) {
-    return Error{new SimpleError{error, error_type}};
-}
-
-namespace ErrorTemplates {
-auto const kMemoryAllocationError = SimpleErrorTemplate {
-    "kMemoryAllocationError", ErrorType::kMemoryAllocationError
-};
-auto const kEndOfFile = SimpleErrorTemplate {
-    "End of file", ErrorType::kEndOfFile
-};
-
-}
-
-template <typename ServiceErrorType, ErrorType MainErrorType>
-class ServiceError : public SimpleError {
+template<typename ServiceErrorType>
+class ServiceError : public ErrorInterface {
   private:
     ServiceErrorType error_type_;
+    std::string error_name_;
+    std::string error_message_;
+    std::map<std::string, std::string> details_;
+    Error cause_err_;
+    std::unique_ptr<CustomErrorData> custom_data_;
   public:
-    ServiceError(const std::string& error, ServiceErrorType error_type) : SimpleError(error, MainErrorType) {
+    ServiceError(std::string error_name, std::string error_message, ServiceErrorType error_type);
+    ServiceErrorType GetServiceErrorType() const noexcept;
+    CustomErrorData* GetCustomData() noexcept override;
+    void SetCustomData(std::unique_ptr<CustomErrorData> data) noexcept override;
+    ErrorInterface* AddDetails(std::string key, std::string value) noexcept override;
+    ErrorInterface* AddDetails(std::string key, uint64_t value) noexcept override;
+    ErrorInterface* SetCause(Error cause_err) noexcept override;
+    const Error& GetCause() const noexcept override;
+    std::string Explain() const noexcept override;
+    virtual std::string ExplainPretty(uint8_t shift) const noexcept override;
+    std::string ExplainInJSON() const noexcept override;
+};
+
+class ErrorTemplateInterface {
+  public:
+    virtual Error Generate() const noexcept = 0;
+    virtual Error Generate(std::string error_message) const noexcept = 0;
+    virtual Error Generate(std::string error_message, Error cause) const noexcept = 0;
+    virtual Error Generate(Error cause) const noexcept = 0;
+    virtual bool operator==(const Error& rhs) const = 0;
+    virtual bool operator!=(const Error& rhs) const = 0;
+
+};
+
+static inline bool operator==(const Error& lhs, const ErrorTemplateInterface& rhs) {
+    return rhs == lhs;
+}
+
+static inline bool operator!=(const Error& lhs, const ErrorTemplateInterface& rhs) {
+    return rhs != lhs;
+}
+
+template<typename ServiceErrorType>
+class ServiceErrorTemplate : public ErrorTemplateInterface {
+  private:
+    std::string error_name_;
+    ServiceErrorType error_type_;
+  public:
+    ServiceErrorTemplate(const std::string& error_name, ServiceErrorType error_type) {
+        error_name_ = error_name;
         error_type_ = error_type;
     }
+
+    const std::string& Text() const noexcept {
+        return error_name_;
+    }
+
     ServiceErrorType GetServiceErrorType() const noexcept {
         return error_type_;
     }
+
+    Error Generate() const noexcept override;
+
+    Error Generate(std::string error_message) const noexcept override;
+    Error Generate(std::string error_message, Error cause) const noexcept override;
+    Error Generate(Error cause) const noexcept override;
+    inline bool operator==(const Error& rhs) const override {
+        return rhs != nullptr
+               && GetServiceErrorType() == ((ServiceError<ServiceErrorType>*) rhs.get())->GetServiceErrorType();
+    }
+
+    inline bool operator!=(const Error& rhs) const override {
+        return rhs != nullptr
+               && GetServiceErrorType() != ((ServiceError<ServiceErrorType>*) rhs.get())->GetServiceErrorType();
+    }
+
 };
 
-template <typename ServiceErrorType, ErrorType MainErrorType>
-class ServiceErrorTemplate : public SimpleErrorTemplate {
-  protected:
-    ServiceErrorType error_type_;
-  public:
-    ServiceErrorTemplate(const std::string& error, ServiceErrorType error_type) : SimpleErrorTemplate(error,
-                MainErrorType) {
-        error_type_ = error_type;
-    }
+template<typename ServiceErrorType>
+static inline bool operator==(const Error& lhs, const ServiceErrorTemplate<ServiceErrorType>& rhs) {
+    return rhs == lhs;
+}
 
-    inline ServiceErrorType GetServiceErrorType() const noexcept {
-        return error_type_;
-    }
+template<typename ServiceErrorType>
+static inline bool operator!=(const Error& lhs, const ServiceErrorTemplate<ServiceErrorType>& rhs) {
+    return rhs != lhs;
+}
 
-    inline Error Generate() const noexcept override {
-        auto err = new ServiceError<ServiceErrorType, MainErrorType>(error_, error_type_);
-        return Error(err);
-    }
+namespace GeneralErrorTemplates {
 
-    inline Error Generate(const std::string& suffix) const noexcept override {
-        return Error(new ServiceError<ServiceErrorType, MainErrorType>(error_ + ": " + suffix, error_type_));
-    }
+enum class GeneralErrorType {
+    kMemoryAllocationError,
+    kEndOfFile,
+    kSimpleError,
+};
 
-    inline bool operator==(const Error& rhs) const override {
-        return SimpleErrorTemplate::operator==(rhs)
-               && GetServiceErrorType() == ((ServiceError<ServiceErrorType, MainErrorType>*) rhs.get())->GetServiceErrorType();
-    }
+using GeneralError = ServiceError<GeneralErrorType>;
+using GeneralErrorTemplate = ServiceErrorTemplate<GeneralErrorType>;
+
+auto const kMemoryAllocationError = GeneralErrorTemplate {
+    "memory allocation", GeneralErrorType::kMemoryAllocationError
+};
+
+auto const kEndOfFile = GeneralErrorTemplate {
+    "end of file", GeneralErrorType::kEndOfFile
+};
+
+auto const kSimpleError = GeneralErrorTemplate {
+    "unnamed error", GeneralErrorType::kSimpleError
 };
 
 }
+
+}
+
+#include "error.tpp"
+
+
 #endif //ASAPO_ERROR_H

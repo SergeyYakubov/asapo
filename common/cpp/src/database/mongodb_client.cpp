@@ -46,7 +46,7 @@ Error MongoDBClient::Ping() {
     bson_destroy(&reply);
     bson_destroy(command);
 
-    return !retval ? DBErrorTemplates::kConnectionError.Generate() : nullptr;
+    return !retval ? DBErrorTemplates::kConnectionError.Generate("cannot ping database") : nullptr;
 
 }
 MongoDBClient::MongoDBClient() {
@@ -58,7 +58,7 @@ Error MongoDBClient::InitializeClient(const std::string& address) {
     client_ = mongoc_client_new(uri_str.c_str());
 
     if (client_ == nullptr) {
-        return DBErrorTemplates::kBadAddress.Generate();
+        return DBErrorTemplates::kBadAddress.Generate("cannot initialize database");
     }
 
     write_concern_ = mongoc_write_concern_new();
@@ -163,7 +163,7 @@ bson_p PrepareUpdateDocument(const uint8_t* json, Error* err) {
     std::string json_flat;
     auto parser_err = parser.GetFlattenedString("meta", ".", &json_flat);
     if (parser_err) {
-        *err = DBErrorTemplates::kJsonParseError.Generate("cannof flatten meta " + parser_err->Explain());
+        *err = DBErrorTemplates::kJsonParseError.Generate("cannof flatten meta ",std::move(parser_err));
         return nullptr;
     }
     bson_error_t mongo_err;
@@ -180,7 +180,7 @@ bson_p PrepareUpdateDocument(const uint8_t* json, Error* err) {
 bson_p PrepareInjestDocument(const uint8_t* json, ssize_t len, Error* err) {
     bson_error_t mongo_err;
     if (json == nullptr) {
-        *err = TextError("empty metadata");
+        *err = GeneralErrorTemplates::kSimpleError.Generate("empty metadata");
         return nullptr;
     }
 
@@ -771,7 +771,7 @@ Error MongoDBClient::DeleteCollections(const std::string& prefix) const {
     bson_destroy(opts);
     bson_destroy(query);
     mongoc_database_destroy(database);
-    return nullptr;
+    return err;
 }
 
 Error MongoDBClient::DeleteCollection(const std::string& name) const {
@@ -832,7 +832,7 @@ Error MongoDBClient::GetMetaFromDb(const std::string& collection, const std::str
     err = parser.Embedded("meta").GetRawString(res);
     if (err) {
         return DBErrorTemplates::kJsonParseError.Generate(
-                   "GetMetaFromDb: cannot parse database response: " + err->Explain());
+                   "GetMetaFromDb: cannot parse database response",std::move(err));
     }
     return nullptr;
 }

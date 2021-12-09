@@ -17,6 +17,7 @@ const (
 )
 
 type Logger interface {
+	WithFields(args map[string]interface{}) Logger
 	Info(args ...interface{})
 	Debug(args ...interface{})
 	Fatal(args ...interface{})
@@ -27,6 +28,10 @@ type Logger interface {
 }
 
 var my_logger Logger = &logRusLogger{}
+
+func WithFields(args map[string]interface{}) Logger {
+	return my_logger.WithFields(args)
+}
 
 func Info(args ...interface{}) {
 	my_logger.Info(args...)

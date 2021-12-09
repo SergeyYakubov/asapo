@@ -2,14 +2,15 @@ package server
 
 import (
 	"asapo_broker/database"
+	"asapo_common/discovery"
 	log "asapo_common/logger"
 	"errors"
-	"io/ioutil"
 	"net/http"
 )
 
 const kDefaultresendInterval = 10
 const kDefaultStreamCacheUpdateIntervalMs = 100
+const kDefaultTokenCacheUpdateIntervalMs = 60000
 
 var db database.Agent
 
@@ -26,6 +27,14 @@ type serverSettings struct {
 	discoveredDbAddress         string
 	CheckResendInterval         *int
 	StreamCacheUpdateIntervalMs *int
+	TokenCacheUpdateIntervalMs  *int
+}
+
+func (s *serverSettings) GetTokenCacheUpdateInterval() int {
+	if s.TokenCacheUpdateIntervalMs == nil {
+		return kDefaultTokenCacheUpdateIntervalMs
+	}
+	return *s.TokenCacheUpdateIntervalMs
 }
 
 func (s *serverSettings) GetResendInterval() int {
@@ -55,32 +64,7 @@ var statistics serverStatistics
 var monitoring brokerMonitoring
 var auth Authorizer
 
-type discoveryAPI struct {
-	Client  *http.Client
-	baseURL string
-}
-
-var discoveryService discoveryAPI
-
-func (api *discoveryAPI) GetMongoDbAddress() (string, error) {
-	resp, err := api.Client.Get(api.baseURL + "/asapo-mongodb")
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	return string(body), err
-}
-
-func (api *discoveryAPI) GetMonitoringServerUrl() (string, error) {
-	resp, err := api.Client.Get(api.baseURL + "/asapo-monitoring")
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	return string(body), err
-}
+var discoveryService discovery.DiscoveryAPI
 
 func ReconnectDb() (err error) {
 	if db == nil {
@@ -109,7 +93,7 @@ func InitDB(dbAgent database.Agent) (err error) {
 }
 
 func CreateDiscoveryService() {
-	discoveryService = discoveryAPI{&http.Client{}, "http://" + settings.DiscoveryServer}
+	discoveryService = discovery.CreateDiscoveryService(&http.Client{},"http://" + settings.DiscoveryServer)
 }
 
 func CleanupDB() {

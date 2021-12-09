@@ -20,8 +20,8 @@ enum class DBErrorType {
     kWrongInput
 };
 
-using DBError = ServiceError<DBErrorType, ErrorType::kDBError>;
-using DBErrorTemplate = ServiceErrorTemplate<DBErrorType, ErrorType::kDBError>;
+using DBError = ServiceError<DBErrorType>;
+using DBErrorTemplate = ServiceErrorTemplate<DBErrorType>;
 
 namespace DBErrorTemplates {
 

@@ -278,4 +278,3 @@ TEST_F(RdsFabricServerTests, HandleAfterError) {
     InitServer();
     rds_server_ptr->HandleAfterError(2); /* Function does nothing */
 }
-

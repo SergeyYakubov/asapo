@@ -7,19 +7,11 @@
 #include "asapo/common/networking.h"
 #include "asapo/io/io.h"
 #include "request_handler/request_handler.h"
-#include "request_handler/request_handler_file_process.h"
-#include "request_handler/request_handler_db_write.h"
-#include "request_handler/request_handler_authorize.h"
-#include "request_handler/request_handler_db_meta_write.h"
-#include "request_handler/request_handler_receive_data.h"
-#include "request_handler/request_handler_receive_metadata.h"
-#include "request_handler/request_handler_db_check_request.h"
 
 #include "statistics/receiver_statistics.h"
 #include "data_cache.h"
 
 #include "asapo/preprocessor/definitions.h"
-#include "file_processors/file_processor.h"
 #include "statistics/instanced_statistics_provider.h"
 
 namespace asapo {
@@ -30,6 +22,8 @@ enum class ResponseMessageType {
     kWarning,
     kInfo
 };
+
+class RequestHandlerDbCheckRequest;
 
 class Request {
   public:
@@ -55,7 +49,8 @@ class Request {
     VIRTUAL void SetProducerInstanceId(std::string producer_instance_id);
     VIRTUAL const std::string& GetPipelineStepId() const;
     VIRTUAL void SetPipelineStepId(std::string pipeline_step_id);
-    const std::string& GetOriginUri() const;
+    VIRTUAL const std::string& GetOriginUri() const;
+    VIRTUAL const std::string& GetOriginHost() const;
     VIRTUAL const std::string& GetMetaData() const;
     VIRTUAL const std::string& GetBeamtimeId() const;
     VIRTUAL void SetBeamtimeId(std::string beamtime_id);
@@ -98,6 +93,7 @@ class Request {
     std::string producer_instance_id_;
     std::string pipeline_step_id_;
     std::string origin_uri_;
+    std::string origin_host_;
     std::string beamtime_id_;
     std::string data_source_;
     std::string beamline_;

@@ -1,5 +1,5 @@
 #include "request_handler_db_stream_info.h"
-#include "../receiver_config.h"
+#include "../receiver_logger.h"
 
 namespace asapo {
 
@@ -18,12 +18,11 @@ Error RequestHandlerDbStreamInfo::ProcessRequest(Request* request) const {
     StreamInfo info;
     auto err =  db_client__->GetStreamInfo(col_name, &info);
     if (!err) {
-        log__->Debug(std::string{"get stream info from "} + col_name + " in " +
-                     db_name_ + " at " + GetReceiverConfig()->database_uri);
+        log__->Debug(RequestLog("get stream info from database", request));
         info.name = request->GetStream();
         request->SetResponseMessage(info.Json(), ResponseMessageType::kInfo);
     }
-    return DBErrorToReceiverError(err);
+    return DBErrorToReceiverError(std::move(err));
 }
 
 }

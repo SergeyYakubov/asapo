@@ -17,8 +17,8 @@ enum class FabricErrorType {
 };
 
 
-using FabricError = ServiceError<FabricErrorType, ErrorType::kFabricError>;
-using FabricErrorTemplate = ServiceErrorTemplate<FabricErrorType, ErrorType::kFabricError>;
+using FabricError = ServiceError<FabricErrorType>;
+using FabricErrorTemplate = ServiceErrorTemplate<FabricErrorType>;
 
 namespace FabricErrorTemplates {
 auto const kNotSupportedOnBuildError = FabricErrorTemplate {

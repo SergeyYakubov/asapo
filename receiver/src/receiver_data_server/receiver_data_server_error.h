@@ -7,10 +7,11 @@ namespace asapo {
 
 enum class ReceiverDataServerErrorType {
     kMemoryPool,
-    kWrongRequest
+    kWrongRequest,
+    kServerError
 };
 
-using ReceiverDataServerErrorTemplate = ServiceErrorTemplate<ReceiverDataServerErrorType, ErrorType::kReceiverError>;
+using ReceiverDataServerErrorTemplate = ServiceErrorTemplate<ReceiverDataServerErrorType>;
 
 namespace ReceiverDataServerErrorTemplates {
 auto const kMemoryPool = ReceiverDataServerErrorTemplate {
@@ -21,6 +22,9 @@ auto const kWrongRequest = ReceiverDataServerErrorTemplate {
     "wrong request", ReceiverDataServerErrorType::kWrongRequest
 };
 
+auto const kServerError = ReceiverDataServerErrorTemplate {
+    "server error", ReceiverDataServerErrorType::kServerError
+};
 
 }
 }

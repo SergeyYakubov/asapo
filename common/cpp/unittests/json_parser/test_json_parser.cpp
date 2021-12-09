@@ -281,4 +281,17 @@ TEST_F(ParseFileTests, Flatten) {
 }
 
 
+TEST(ParseString, RawString) {
+    std::string json = R"({"top":"top","embedded":{"ar":[2,2,3],"str":"text"}})";
+    std::string json_row = R"({"ar":[2,2,3],"str":"text"})";
+    JsonStringParser parser{json};
+
+    std::string res;
+    auto err = parser.Embedded("embedded").GetRawString(&res);
+    ASSERT_THAT(err, Eq(nullptr));
+    ASSERT_THAT(res, Eq(json_row));
+
+}
+
+
 }

@@ -19,6 +19,10 @@ class SpdLogger : public AbstractLogger {
     void Error(const LogMessageWithFields& msg) const override;
     void Debug(const LogMessageWithFields& msg) const override;
     void Warning(const LogMessageWithFields& msg) const override;
+    void Info(const asapo::Error& error) const override;
+    void Error(const asapo::Error& error) const override;
+    void Debug(const asapo::Error& error) const override;
+    void Warning(const asapo::Error& error) const override;
 
     void EnableLocalLog(bool enable) override;
     void EnableRemoteLog(bool enable) override;
@@ -34,6 +38,7 @@ class SpdLogger : public AbstractLogger {
 };
 
 std::string EncloseMsg(std::string msg);
+std::string EscapeJson(const std::string& s);
 
 }
 

@@ -15,10 +15,10 @@ func GetSupportedConsumerProtocols() []Protocol {
 		Protocol{"v0.5",
 			map[string]string{
 				"Discovery": "v0.1",
-				"Authorizer": "v0.3",
+				"Authorizer": "v0.2",
 				"Broker": "v0.5",
-				"File Transfer": "v0.3",
-				"Data cache service": "v0.2",
+				"File Transfer": "v0.2",
+				"Data cache service": "v0.1",
 			}, &protocolValidatorCurrent{}},
 		Protocol{"v0.4",
 			map[string]string{
@@ -27,7 +27,7 @@ func GetSupportedConsumerProtocols() []Protocol {
 				"Broker": "v0.4",
 				"File Transfer": "v0.2",
 				"Data cache service": "v0.1",
-			}, &protocolValidatorCurrent{}},
+			}, &protocolValidatorDeprecated{getTimefromDate("2022-12-01")}},
 		Protocol{"v0.3",
 			map[string]string{
 				"Discovery": "v0.1",

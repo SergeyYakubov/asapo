@@ -49,7 +49,6 @@ class JsonFileParser : public JsonParser {
     JsonFileParser(const std::string& json, const std::unique_ptr<IO>* io = nullptr): JsonParser(json, io) {};
 };
 
-
 }
 
 

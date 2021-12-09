@@ -17,25 +17,25 @@ class MockIO : public IO {
         return res;
 
     }
-    MOCK_CONST_METHOD1(GetHostName_t, std::string(ErrorInterface** err));
+    MOCK_METHOD(std::string, GetHostName_t, (ErrorInterface** err), (const));
 
 
     std::string AddressFromSocket(SocketDescriptor socket) const noexcept override {
         return AddressFromSocket_t(socket);
     }
-    MOCK_CONST_METHOD1(AddressFromSocket_t, std::string (SocketDescriptor socket));
+    MOCK_METHOD(std::string, AddressFromSocket_t, (SocketDescriptor socket), (const));
 
 
     std::unique_ptr<std::thread> NewThread(const std::string&, std::function<void()> function) const override {
         return std::unique_ptr<std::thread>(NewThread_t(function));
     }
-    MOCK_CONST_METHOD1(NewThread_t, std::thread * (std::function<void()> function));
+    MOCK_METHOD(std::thread *, NewThread_t, (std::function<void()> function), (const));
 
     std::unique_ptr<std::thread> NewThread(const std::string&, std::function<void(uint64_t index)> function,
                                            uint64_t index) const override {
         return std::unique_ptr<std::thread>(NewThread_t(function, index));
     }
-    MOCK_CONST_METHOD2(NewThread_t, std::thread * (std::function<void(uint64_t)> function, uint64_t index));
+    MOCK_METHOD(std::thread *, NewThread_t, (std::function<void(uint64_t)> function, uint64_t index), (const));
 
 
     ListSocketDescriptors WaitSocketsActivity(SocketDescriptor master_socket, ListSocketDescriptors* sockets_to_listen,
@@ -46,9 +46,7 @@ class MockIO : public IO {
         return data;
     }
 
-    MOCK_CONST_METHOD4(WaitSocketsActivity_t, ListSocketDescriptors(SocketDescriptor master_socket,
-                       ListSocketDescriptors* sockets_to_listen,
-                       std::vector<std::string>* connections, ErrorInterface** err));
+    MOCK_METHOD(ListSocketDescriptors, WaitSocketsActivity_t, (SocketDescriptor master_socket, ListSocketDescriptors* sockets_to_listen, std::vector<std::string>* connections, ErrorInterface** err), (const));
 
 
     SocketDescriptor CreateSocket(AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol,
@@ -58,15 +56,14 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD4(CreateSocket_t, SocketDescriptor(AddressFamilies address_family, SocketTypes socket_type,
-                       SocketProtocols socket_protocol, ErrorInterface** err));
+    MOCK_METHOD(SocketDescriptor, CreateSocket_t, (AddressFamilies address_family, SocketTypes socket_type, SocketProtocols socket_protocol, ErrorInterface** err), (const));
 
     void Listen(SocketDescriptor socket_fd, int backlog, Error* err) const override {
         ErrorInterface* error = nullptr;
         Listen_t(socket_fd, backlog, &error);
         err->reset(error);
     }
-    MOCK_CONST_METHOD3(Listen_t, void(SocketDescriptor socket_fd, int backlog, ErrorInterface** err));
+    MOCK_METHOD(void, Listen_t, (SocketDescriptor socket_fd, int backlog, ErrorInterface** err), (const));
 
 
     void InetBind(SocketDescriptor socket_fd, const std::string& address, Error* err) const override {
@@ -74,7 +71,7 @@ class MockIO : public IO {
         InetBind_t(socket_fd, address, &error);
         err->reset(error);
     }
-    MOCK_CONST_METHOD3(InetBind_t, void(SocketDescriptor socket_fd, const std::string& address, ErrorInterface** err));
+    MOCK_METHOD(void, InetBind_t, (SocketDescriptor socket_fd, const std::string& address, ErrorInterface** err), (const));
 
     SocketDescriptor CreateAndBindIPTCPSocketListener(const std::string& address, int backlog, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -82,8 +79,7 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD3(CreateAndBindIPTCPSocketListener_t, SocketDescriptor(const std::string& address, int backlog,
-                       ErrorInterface** err));
+    MOCK_METHOD(SocketDescriptor, CreateAndBindIPTCPSocketListener_t, (const std::string& address, int backlog, ErrorInterface** err), (const));
 
 
     std::unique_ptr<std::tuple<std::string, SocketDescriptor>> InetAcceptConnection(SocketDescriptor socket_fd,
@@ -93,8 +89,7 @@ class MockIO : public IO {
         err->reset(error);
         return std::unique_ptr<std::tuple<std::string, SocketDescriptor>>(data);
     }
-    MOCK_CONST_METHOD2(InetAcceptConnection_t, std::tuple<std::string, SocketDescriptor>* (SocketDescriptor socket_fd,
-                       ErrorInterface** err));
+    MOCK_METHOD((std::tuple<std::string, SocketDescriptor>*), InetAcceptConnection_t, (SocketDescriptor socket_fd, ErrorInterface** err), (const));
 
     std::string ResolveHostnameToIp(const std::string& hostname, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -102,14 +97,14 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD2(ResolveHostnameToIp_t, std::string(const std::string& hostname, ErrorInterface** err));
+    MOCK_METHOD(std::string, ResolveHostnameToIp_t, (const std::string& hostname, ErrorInterface** err), (const));
 
     void InetConnect(SocketDescriptor socket_fd, const std::string& address, Error* err) const override {
         ErrorInterface* error = nullptr;
         InetConnect_t(socket_fd, address, &error);
         err->reset(error);
     }
-    MOCK_CONST_METHOD3(InetConnect_t, void(SocketDescriptor socket_fd, const std::string& address, ErrorInterface** err));
+    MOCK_METHOD(void, InetConnect_t, (SocketDescriptor socket_fd, const std::string& address, ErrorInterface** err), (const));
 
     SocketDescriptor CreateAndConnectIPTCPSocket(const std::string& address, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -117,7 +112,7 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD2(CreateAndConnectIPTCPSocket_t, SocketDescriptor(const std::string& address, ErrorInterface** err));
+    MOCK_METHOD(SocketDescriptor, CreateAndConnectIPTCPSocket_t, (const std::string& address, ErrorInterface** err), (const));
 
     size_t Receive(SocketDescriptor socket_fd, void* buf, size_t length, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -125,7 +120,7 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD4(Receive_t, size_t(SocketDescriptor socket_fd, void* buf, size_t length, ErrorInterface** err));
+    MOCK_METHOD(size_t, Receive_t, (SocketDescriptor socket_fd, void* buf, size_t length, ErrorInterface** err), (const));
 
     size_t ReceiveWithTimeout(SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec,
                               Error* err) const override {
@@ -134,9 +129,7 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD5(ReceiveWithTimeout_t, size_t(SocketDescriptor socket_fd, void* buf, size_t length,
-                                                    long timeout_in_usec,
-                                                    ErrorInterface** err));
+    MOCK_METHOD(size_t, ReceiveWithTimeout_t, (SocketDescriptor socket_fd, void* buf, size_t length, long timeout_in_usec, ErrorInterface** err), (const));
 
     size_t Send(SocketDescriptor socket_fd, const void* buf, size_t length, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -144,20 +137,20 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD4(Send_t, size_t(SocketDescriptor socket_fd, const void* buf, size_t length, ErrorInterface** err));
+    MOCK_METHOD(size_t, Send_t, (SocketDescriptor socket_fd, const void* buf, size_t length, ErrorInterface** err), (const));
 
     std::unique_ptr<std::tuple<std::string, uint16_t>> SplitAddressToHostnameAndPort(const std::string& address) const
     override {
         return std::unique_ptr<std::tuple<std::string, uint16_t>>(SplitAddressToHostnameAndPort_t(address));
     }
-    MOCK_CONST_METHOD1(SplitAddressToHostnameAndPort_t, std::tuple<std::string, uint16_t>* (const std::string& address));
+    MOCK_METHOD((std::tuple<std::string, uint16_t>*), SplitAddressToHostnameAndPort_t, (const std::string& address), (const));
 
     void Skip(SocketDescriptor socket_fd, size_t length, Error* err) const override {
         ErrorInterface* error = nullptr;
         Skip_t(socket_fd, length, &error);
         err->reset(error);
     }
-    MOCK_CONST_METHOD3(Skip_t, void(SocketDescriptor socket_fd, size_t length, ErrorInterface** err));
+    MOCK_METHOD(void, Skip_t, (SocketDescriptor socket_fd, size_t length, ErrorInterface** err), (const));
 
     void CloseSocket(SocketDescriptor socket_fd, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -166,7 +159,7 @@ class MockIO : public IO {
             err->reset(error);
         }
     }
-    MOCK_CONST_METHOD2(CloseSocket_t, void(SocketDescriptor socket_fd, ErrorInterface** err));
+    MOCK_METHOD(void, CloseSocket_t, (SocketDescriptor socket_fd, ErrorInterface** err), (const));
 
     FileDescriptor Open(const std::string& filename, int open_flags, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -174,16 +167,16 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD3(Open_t, FileDescriptor(const std::string& filename, int open_flags, ErrorInterface** err));
+    MOCK_METHOD(FileDescriptor, Open_t, (const std::string& filename, int open_flags, ErrorInterface** err), (const));
 
     void Close(FileDescriptor fd, Error* err) const override {
         ErrorInterface* error = nullptr;
         Close_t(fd, &error);
         if(err) {
             err->reset(error);
-        };
+        }
     }
-    MOCK_CONST_METHOD2(Close_t, void(FileDescriptor fd, ErrorInterface** err));
+    MOCK_METHOD(void, Close_t, (FileDescriptor fd, ErrorInterface** err), (const));
 
     size_t Read(FileDescriptor fd, void* buf, size_t length, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -191,7 +184,7 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD4(Read_t, size_t(FileDescriptor fd, void* buf, size_t length, ErrorInterface** err));
+    MOCK_METHOD(size_t, Read_t, (FileDescriptor fd, void* buf, size_t length, ErrorInterface** err), (const));
 
     size_t Write(FileDescriptor fd, const void* buf, size_t length, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -199,14 +192,14 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD4(Write_t, size_t(FileDescriptor fd, const void* buf, size_t length, ErrorInterface** err));
+    MOCK_METHOD(size_t, Write_t, (FileDescriptor fd, const void* buf, size_t length, ErrorInterface** err), (const));
 
     void CreateNewDirectory(const std::string& directory_name, asapo::Error* err) const override {
         ErrorInterface* error = nullptr;
         CreateNewDirectory_t(directory_name, &error);
         err->reset(error);
     }
-    MOCK_CONST_METHOD2(CreateNewDirectory_t, void(const std::string& directory_name, ErrorInterface** err));
+    MOCK_METHOD(void, CreateNewDirectory_t, (const std::string& directory_name, ErrorInterface** err), (const));
 
     MessageData GetDataFromFile(const std::string& fname, uint64_t* fsize, Error* err) const override {
         std::function<ErrorInterface*()> error;
@@ -219,20 +212,19 @@ class MockIO : public IO {
         return MessageData(data);
     }
 
-    MOCK_CONST_METHOD3(GetDataFromFile_t, uint8_t* (const std::string& fname, uint64_t* fsize,
-                                                    std::function<ErrorInterface*()>* err_gen));
+    MOCK_METHOD(uint8_t*, GetDataFromFile_t, (const std::string& fname, uint64_t* fsize, std::function<ErrorInterface*()>* err_gen), (const));
 
 
     Error GetLastError() const override {
         return Error{GetLastError_t()};
     }
 
-    MOCK_CONST_METHOD0(GetLastError_t, ErrorInterface * ());
+    MOCK_METHOD(ErrorInterface *, GetLastError_t, (), (const));
 
     Error SendFile(SocketDescriptor socket_fd, const std::string& fname, size_t length) const override {
         return Error{SendFile_t(socket_fd, fname, length)};
     }
-    MOCK_CONST_METHOD3(SendFile_t, ErrorInterface * (SocketDescriptor socket_fd, const std::string& fname, size_t length));
+    MOCK_METHOD(ErrorInterface *, SendFile_t, (SocketDescriptor socket_fd, const std::string& fname, size_t length), (const));
 
     Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const MessageData& data,
                           size_t length, bool create_directories, bool allow_ovewrite) const override {
@@ -240,7 +232,7 @@ class MockIO : public IO {
 
     }
 
-    MOCK_CONST_METHOD1(RemoveFile_t, ErrorInterface * (const std::string& fname));
+    MOCK_METHOD(ErrorInterface *, RemoveFile_t, (const std::string& fname), (const));
 
     Error WriteDataToFile(const std::string& root_folder, const std::string& fname, const uint8_t* data,
                           size_t length, bool create_directories, bool allow_ovewrite) const override {
@@ -253,8 +245,7 @@ class MockIO : public IO {
     }
 
 
-    MOCK_CONST_METHOD6(ReceiveDataToFile_t, ErrorInterface * (SocketDescriptor socket, const std::string& root_folder,
-                       const std::string& fname, size_t fsize, bool create_directories, bool allow_ovewrite));
+    MOCK_METHOD(ErrorInterface *, ReceiveDataToFile_t, (SocketDescriptor socket, const std::string& root_folder, const std::string& fname, size_t fsize, bool create_directories, bool allow_ovewrite), (const));
 
     Error ReceiveDataToFile(SocketDescriptor socket, const std::string& root_folder, const std::string& fname,
                             size_t length, bool create_directories, bool allow_ovewrite) const override {
@@ -262,8 +253,7 @@ class MockIO : public IO {
     }
 
 
-    MOCK_CONST_METHOD6(WriteDataToFile_t, ErrorInterface * (const std::string& root_folder, const std::string& fname,
-                       const uint8_t* data, size_t fsize, bool create_directories, bool allow_ovewrite));
+    MOCK_METHOD(ErrorInterface *, WriteDataToFile_t, (const std::string& root_folder, const std::string& fname, const uint8_t* data, size_t fsize, bool create_directories, bool allow_ovewrite), (const));
 
 
     MessageMeta GetMessageMeta(const std::string& name, Error* err) const override {
@@ -274,7 +264,7 @@ class MockIO : public IO {
 
     }
 
-    MOCK_CONST_METHOD2(GetMessageMeta_t, MessageMeta (const std::string& name, ErrorInterface** err));
+    MOCK_METHOD(MessageMeta, GetMessageMeta_t, (const std::string& name, ErrorInterface** err), (const));
 
     std::vector<MessageMeta> FilesInFolder(const std::string& folder, Error* err) const override {
         ErrorInterface* error = nullptr;
@@ -282,7 +272,7 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD2(FilesInFolder_t, std::vector<MessageMeta>(const std::string& folder, ErrorInterface** err));
+    MOCK_METHOD(std::vector<MessageMeta>, FilesInFolder_t, (const std::string& folder, ErrorInterface** err), (const));
 
 
     SubDirList GetSubDirectories(const std::string& path, Error* err) const override {
@@ -292,7 +282,7 @@ class MockIO : public IO {
         return data;
     };
 
-    MOCK_CONST_METHOD2(GetSubDirectories_t, SubDirList(const std::string& path, ErrorInterface** err));
+    MOCK_METHOD(SubDirList, GetSubDirectories_t, (const std::string& path, ErrorInterface** err), (const));
 
 
     std::string ReadFileToString(const std::string& fname, Error* err) const override {
@@ -301,7 +291,7 @@ class MockIO : public IO {
         err->reset(error);
         return data;
     }
-    MOCK_CONST_METHOD2(ReadFileToString_t, std::string(const std::string& fname, ErrorInterface** err));
+    MOCK_METHOD(std::string, ReadFileToString_t, (const std::string& fname, ErrorInterface** err), (const));
 
 
 

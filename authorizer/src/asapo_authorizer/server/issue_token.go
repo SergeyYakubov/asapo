@@ -2,11 +2,13 @@ package server
 
 import (
 	"asapo_authorizer/authorization"
+	"asapo_authorizer/token_store"
 	log "asapo_common/logger"
 	"asapo_common/structs"
 	"asapo_common/utils"
 	"errors"
 	"net/http"
+	"time"
 )
 
 func extractUserTokenrequest(r *http.Request) (request structs.IssueTokenRequest, err error) {
@@ -28,8 +30,8 @@ func extractUserTokenrequest(r *http.Request) (request structs.IssueTokenRequest
 	}
 
 	for _, ar := range request.AccessTypes {
-		if ar != "read" && ar != "write" {
-			return request, errors.New("wrong requested access rights: "+ar)
+		if ar != "read" && ar != "write" && !(ar == "writeraw" && request.Subject["beamline"] != "") {
+			return request, errors.New("wrong requested access rights: " + ar)
 		}
 	}
 
@@ -37,19 +39,12 @@ func extractUserTokenrequest(r *http.Request) (request structs.IssueTokenRequest
 }
 
 func routeAuthorisedTokenIssue(w http.ResponseWriter, r *http.Request) {
-	Auth.AdminAuth().ProcessAuth(checkAccessToken, "admin")(w, r)
+	Auth.AdminAuth().ProcessAuth(checkAccessToken, "")(w, r)
 }
+
 func checkAccessToken(w http.ResponseWriter, r *http.Request) {
-	var extraClaim structs.AccessTokenExtraClaim
-	var claims *utils.CustomClaims
-	if err := utils.JobClaimFromContext(r, &claims, &extraClaim); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-	}
-	if claims.Subject != "admin" || !utils.StringInSlice("create",extraClaim.AccessTypes) {
-		err_txt := "wrong token claims"
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(err_txt))
+	if checkRole(w, r, "create") != nil {
+		return
 	}
 
 	issueUserToken(w, r)
@@ -62,13 +57,27 @@ func issueUserToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := Auth.PrepareAccessToken(request, true)
+	token, claims, err := Auth.PrepareAccessToken(request, true)
 	if err != nil {
 		utils.WriteServerError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	log.Debug("generated user token ")
+	claims.StandardClaims.Issuer = "asapo-auth"
+	claims.StandardClaims.IssuedAt = time.Now().Unix()
+	record := token_store.TokenRecord{claims.Id, claims, token, false}
+	err = store.AddToken(record)
+	if err != nil {
+		utils.WriteServerError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.WithFields(map[string]interface{}{
+		"id":      claims.Id,
+		"subject": claims.Subject,
+		"validDays": request.DaysValid,
+		"accessTypes": request.AccessTypes,
+	}).Info("issued user token")
 
 	answer := authorization.UserTokenResponce(request, token)
 	w.WriteHeader(http.StatusOK)

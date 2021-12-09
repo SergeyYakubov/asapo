@@ -1,7 +1,6 @@
 asapo_imagename_suffix="@ASAPO_VERSION_DOCKER_SUFFIX@"
 asapo_image_tag = "@ASAPO_VERSION@"
 
-
 nginx_version = "1.14"
 elasticsearch_version = "7.3.2"
 kibana_version = "7.3.2"
@@ -13,14 +12,21 @@ perf_monitor = false
 nomad_logs = false
 force_pull_images = false
 
+asapo_monitor = true
+asapo_monitor_alert = false
+prometheus_version = "v2.30.3"
+alertmanager_version = "v0.23.0"
+asapo_alert_email = ""
+asapo_alert_email_smart_host = ""
+
 job_scripts_dir = "/var/run/asapo"
 
-receiver_total_memory_size = "2000"
-
-receiver_dataserver_cache_size = "1" #gb
+receiver_total_memory_size = 2000
+receiver_dataserver_cache_size = 1 #gb
 receiver_dataserver_nthreads = 4
 receiver_receive_to_disk_threshold = 50 #mb
 receiver_network_modes = "tcp"
+receiver_expose_metrics = true
 
 grafana_total_memory_size = "256"
 
@@ -32,7 +38,10 @@ kibana_total_memory_size = 256
 mongo_total_memory_size = 256
 authorizer_total_memory_size = 256
 discovery_total_memory_size = 256
+prometheus_total_memory_size = 256
+alertmanager_total_memory_size = 256
 
+ldap_uri = "ldap://localhost:389"
 
 grafana_port = 3301
 influxdb_port = 8086
@@ -45,6 +54,8 @@ kibana_port = 5601
 discovery_port = 5006
 authorizer_port = 5007
 consul_dns_port = 8600
+prometheus_port = 9090
+alertmanager_port = 9093
 
 n_receivers = 1
 n_brokers = 1

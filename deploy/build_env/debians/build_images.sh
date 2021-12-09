@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-
 set -e
 
 . ../../_docker_vars.sh
 
-vers="ubuntu18.04 ubuntu16.04 debian9.13 debian10.7"
+vers="ubuntu18.04 ubuntu16.04 debian9.13 debian10.7 debian11.1"
 
 for ver in $vers
 do

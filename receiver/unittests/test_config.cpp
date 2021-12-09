@@ -3,31 +3,10 @@
 #include <asapo/unittests/MockIO.h>
 
 #include "../src/receiver_config.h"
-#include "../src/receiver_config_factory.h"
 #include "mock_receiver_config.h"
 
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::SaveArg;
-using ::testing::SaveArgPointee;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::MockIO;
-
-using ::asapo::ReceiverConfigFactory;
-using asapo::GetReceiverConfig;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 
@@ -35,7 +14,7 @@ namespace {
 class ConfigTests : public Test {
   public:
     MockIO mock_io;
-    ReceiverConfigFactory config_factory;
+    ReceiverConfigManager config_factory;
     asapo::ReceiverConfig test_config;
     void SetUp() override {
         config_factory.io__ = std::unique_ptr<asapo::IO> {&mock_io};
@@ -62,6 +41,9 @@ class ConfigTests : public Test {
         test_config.dataserver.advertise_uri = "0.0.0.1:4201";
         test_config.dataserver.network_mode = {"tcp", "fabric"};
         test_config.receive_to_disk_threshold_mb = 50;
+        test_config.metrics.expose = true;
+        test_config.metrics.listen_port = 123;
+
 
     }
 
@@ -97,7 +79,10 @@ TEST_F(ConfigTests, ReadSettings) {
     ASSERT_THAT(config->dataserver.network_mode[0], Eq("tcp"));
     ASSERT_THAT(config->dataserver.network_mode[1], Eq("fabric"));
     ASSERT_THAT(config->receive_to_disk_threshold_mb, Eq(50));
+    ASSERT_THAT(config->metrics.expose, Eq(true));
+    ASSERT_THAT(config->metrics.listen_port, Eq(123));
 }
+
 
 
 TEST_F(ConfigTests, ErrorReadSettings) {
@@ -107,7 +92,7 @@ TEST_F(ConfigTests, ErrorReadSettings) {
                                     "DataCache", "Use", "SizeGB", "ReservedShare", "DatabaseServer", "Tag",
                                     "AuthorizationServer", "AuthorizationInterval", "PerformanceDbName", "LogLevel",
                                     "NThreads", "DiscoveryServer", "AdvertiseURI", "NetworkMode", "MonitorPerformance",
-                                    "ReceiveToDiskThresholdMB"};
+                                    "ReceiveToDiskThresholdMB", "Metrics", "Expose"};
     for (const auto& field : fields) {
         auto err = asapo::SetReceiverConfigWithError(test_config, field);
         ASSERT_THAT(err, Ne(nullptr));

@@ -95,5 +95,5 @@ int main(int argc, char* argv[]) {
     err = consumer_impl->httpclient__->Post(args.uri_fts + "/v0.1/transfer", cookie, transfer, "random", &code);
     M_AssertTrue(code == asapo::HttpCode::OK);
 
-    return 0;
+    return EXIT_SUCCESS;
 }

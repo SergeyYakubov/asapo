@@ -198,7 +198,7 @@ asapo::Error asapo::ReceiverMonitoringClientImpl::SendData(ReceiverDataPointCont
     grpc::Status status = client_->InsertReceiverDataPoints(&context, *container, &response);
 
     if (!status.ok()) {
-        return TextError("Monitoring gRPC Send Error " + status.error_message() + " Details: " + status.error_details());
+        return GeneralErrorTemplates::kSimpleError.Generate("Monitoring gRPC Send Error " + status.error_message() + " Details: " + status.error_details());
     }
 
     return nullptr;

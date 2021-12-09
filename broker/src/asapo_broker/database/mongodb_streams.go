@@ -36,7 +36,7 @@ var streams = Streams{lastSynced: make(map[string]time.Time, 0),lastUpdated: mak
 var streamsLock sync.Mutex
 
 func (ss *Streams) tryGetFromCache(db_name string, updatePeriodMs int) (StreamsRecord, error) {
-	if time.Now().Sub(ss.lastUpdated[db_name]).Milliseconds() > int64(updatePeriodMs) {
+	if time.Now().Sub(ss.lastUpdated[db_name]).Milliseconds() >= int64(updatePeriodMs) {
 		return StreamsRecord{}, errors.New("cache expired")
 	}
 	rec, ok := ss.records[db_name]
@@ -190,16 +190,8 @@ func (ss *Streams) updateFromDb(db *Mongodb, db_name string) (StreamsRecord, err
 }
 
 func getFiltersFromString(filterString string) (string, string, error) {
-	firstStream := ""
-	streamStatus := ""
-	s := strings.Split(filterString, "_")
-	switch len(s) {
-	case 1:
-		firstStream = s[0]
-	case 2:
-		firstStream = s[0]
-		streamStatus = s[1]
-	default:
+	firstStream, streamStatus, err := utils.DecodeTwoStrings(filterString)
+	if err!=nil {
 		return "", "", errors.New("wrong format: " + filterString)
 	}
 	if streamStatus == "" {
@@ -273,9 +265,9 @@ func (ss *Streams) getStreams(db *Mongodb, request Request) (StreamsRecord, erro
 	}
 
 	streamsLock.Lock()
-	rec, err := ss.tryGetFromCache(request.DbName, db.settings.UpdateStreamCachePeriodMs)
+	rec, err := ss.tryGetFromCache(request.DbName(), db.settings.UpdateStreamCachePeriodMs)
 	if err != nil {
-		rec, err = ss.updateFromDb(db, request.DbName)
+		rec, err = ss.updateFromDb(db, request.DbName())
 	}
 	streamsLock.Unlock()
 	if err != nil {

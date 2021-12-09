@@ -136,4 +136,5 @@ cdef extern from "asapo/asapo_producer.h" namespace "asapo":
         kTransferMetaDataOnly
         kStoreInFilesystem
         kStoreInDatabase
+        kWriteRawDataToOffline
 

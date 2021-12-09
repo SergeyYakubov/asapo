@@ -1,11 +1,11 @@
 package utils
 
 import (
-	"net/http"
-	"testing"
-	"net/http/httptest"
-	"time"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
 )
 
 type authorizationResponse struct {

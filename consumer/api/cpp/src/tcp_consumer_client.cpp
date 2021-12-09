@@ -87,7 +87,7 @@ Error TcpConsumerClient::ReceiveData(SocketDescriptor sd, const MessageMeta* inf
         data_array = new uint8_t[(size_t)info->size];
     } catch (...) {
         connection_pool__->ReleaseConnection(sd);
-        return ErrorTemplates::kMemoryAllocationError.Generate();
+        return GeneralErrorTemplates::kMemoryAllocationError.Generate();
     }
     io__->Receive(sd, data_array, (size_t)info->size, &err);
     connection_pool__->ReleaseConnection(sd);

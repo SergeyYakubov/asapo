@@ -14,32 +14,8 @@
 
 #include "../receiver_mocking.h"
 
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::ReturnRef;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using ::testing::HasSubstr;
-
-
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::MockIO;
-using asapo::Request;
-using asapo::RequestHandlerFileProcess;
-using ::asapo::GenericRequestHeader;
-using asapo::MockRequest;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 
@@ -54,14 +30,15 @@ class FileWriteHandlerTests : public Test {
     asapo::MockFileProcessor mock_file_processor;
     RequestHandlerFileProcess handler{&mock_file_processor};
     NiceMock<MockIO> mock_io;
-    std::unique_ptr<MockRequest> mock_request;
+    std::unique_ptr<NiceMock<MockRequest>> mock_request;
     NiceMock<asapo::MockLogger> mock_logger;
-    void ExpecFileProcess(const asapo::SimpleErrorTemplate* error_template, bool overwrite);
+    void ExpecFileProcess(const asapo::ErrorTemplateInterface* error_template, bool overwrite);
     void SetUp() override {
         GenericRequestHeader request_header;
-        mock_request.reset(new MockRequest{request_header, 1, "", nullptr, nullptr});
+        mock_request.reset(new NiceMock<MockRequest>{request_header, 1, "", nullptr, nullptr});
         handler.io__ = std::unique_ptr<asapo::IO> {&mock_io};
         handler.log__ = &mock_logger;
+        SetDefaultRequestCalls(mock_request.get(),"");
     }
     void TearDown() override {
         handler.io__.release();
@@ -74,7 +51,7 @@ TEST_F(FileWriteHandlerTests, CheckStatisticEntity) {
     ASSERT_THAT(entity, Eq(asapo::StatisticEntity::kDisk));
 }
 
-void FileWriteHandlerTests::ExpecFileProcess(const asapo::SimpleErrorTemplate* error_template, bool overwrite) {
+void FileWriteHandlerTests::ExpecFileProcess(const asapo::ErrorTemplateInterface* error_template, bool overwrite) {
     EXPECT_CALL(mock_file_processor, ProcessFile_t(mock_request.get(), overwrite))
     .WillOnce(
         Return(error_template == nullptr ? nullptr : error_template->Generate().release()));
@@ -87,14 +64,14 @@ TEST_F(FileWriteHandlerTests, FileAlreadyExists_NoRecordInDb) {
         Return(nullptr)
     );
     std::string ref_str;
-    EXPECT_CALL(*mock_request, GetOfflinePath()).WillOnce
+    EXPECT_CALL(*mock_request, GetOfflinePath()).WillRepeatedly
     (ReturnRef(ref_str));
 
-    EXPECT_CALL(*mock_request, GetFileName()).WillOnce
+    EXPECT_CALL(*mock_request, GetFileName()).WillRepeatedly
     (Return(""));
 
 
-    EXPECT_CALL(mock_logger, Warning(HasSubstr("overwriting")));
+    EXPECT_CALL(mock_logger, Warning(HasSubstr("overwritting")));
 
     ExpecFileProcess(&asapo::IOErrorTemplates::kFileAlreadyExists, false);
     ExpecFileProcess(nullptr, true);
@@ -109,7 +86,7 @@ TEST_F(FileWriteHandlerTests, FileAlreadyExists_DuplicatedRecordInDb) {
     EXPECT_CALL(*mock_request, SetResponseMessage(HasSubstr("ignore"), asapo::ResponseMessageType::kWarning));
     EXPECT_CALL(*mock_request, SetAlreadyProcessedFlag());
     EXPECT_CALL(mock_logger, Warning(HasSubstr("duplicated")));
-    EXPECT_CALL(*mock_request, GetDataID()).WillOnce(Return(1));
+    EXPECT_CALL(*mock_request, GetDataID()).WillRepeatedly(Return(1));
 
     ExpecFileProcess(&asapo::IOErrorTemplates::kFileAlreadyExists, false);
 
