@@ -1,0 +1,117 @@
+---
+title: Getting Started
+slug: /
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Start ASAPO services {#step-1}
+
+If you already have running ASAPO services and know the endpoint, you don't need this, and can go to [Client Libraries](#step-2).
+
+Otherwise, for testing purposes one can start ASAPO services in a standalone mode (this is not recommended for  production deployment).
+
+
+The easiest way is to use a Docker container.
+So, make sure Docker is installed and you have necessary permissions to use it.
+Please note that this will only work on a Linux machine. Also please note that ASAPO needs some ports to be available. You can check the list
+[here](https://stash.desy.de/projects/ASAPO/repos/asapo/browse/deploy/asapo_services/scripts/asapo.auto.tfvars.in#37).
+
+Now, depending on how your Docker daemon is configured (if it uses a
+unix socket or a tcp port for communications)
+ you can use pick corresponding script below, adjust and execute it to start ASAPO services.
+
+<Tabs
+  defaultValue="unix"
+  values={[
+    { label: 'Docker with unix socket (default)', value: 'unix', },
+    { label: 'Docker with tcp (used on FS machines)', value: 'tcp', },
+  ]
+}>
+<TabItem value="unix">
+
+```shell content=./examples/start_asapo_socket.sh"
+```
+
+</TabItem>
+
+<TabItem value="tcp">
+
+```shell content="./versioned_examples/version-21.12.0/start_asapo_tcp.sh"
+```
+
+</TabItem>
+</Tabs>
+
+at the end you should see
+
+<p className="green-text"><strong>Apply complete! Resources: 19 added, 0 changed, 0 destroyed.</strong></p>
+
+which means ASAPO services successfully  started. Your ASAPO endpoint for API calls will be **localhost:8400**.
+
+### Create data directories
+
+Next, you need to create directories where ASAPO will store the data
+(the structure matches the one used at DESY experiments).
+Since we are going to use beamline `test` and beamtime `asapo_test` in following examples,
+we must create two folders, one for the beamline filesystem and one for the core file system:
+
+```shell
+ASAPO_HOST_DIR=/var/tmp/asapo # the folder used in step 1
+mkdir -p $ASAPO_HOST_DIR/global_shared/online_data/test/current/raw
+mkdir -p $ASAPO_HOST_DIR/global_shared/data/test_facility/gpfs/test/2019/data/asapo_test
+```
+
+:::note ASAP::O in production mode
+
+We have a running instance for processing data collected during experiments. Please get in touch with FS-SC group for more information.
+
+:::
+
+### Services shutdown
+
+After you've done with your instance of ASAPO, you might want to gracefully shutdown the running services. If you don't do it, your machine will become bloated with the unused docker images.
+
+```shell content="./versioned_examples/version-21.12.0/cleanup.sh"
+```
+
+<br/><br/>
+
+## Install client libraries {#step-2}
+
+Now you can install Python packages or C++ libraries for ASAPO Producer and Consumer API (you need to be in DESY intranet to access files).
+
+<Tabs
+  defaultValue="python-pip"
+  values={[
+    { label: 'Python - pip', value: 'python-pip', },
+    { label: 'Python - packages', value: 'python-packages', },
+    { label: 'C++ packages', value: 'cpp', },
+  ]
+}>
+<TabItem value="python-pip">
+
+```shell content="./versioned_examples/version-21.12.0/install_python_clients_pip.sh" snippetTag="#snippet1"
+```
+
+</TabItem>
+<TabItem value="python-packages">
+
+```shell content="./versioned_examples/version-21.12.0/install_python_clients_pkg.sh"
+```
+
+</TabItem>
+<TabItem value="cpp">
+
+```shell content="./versioned_examples/version-21.12.0/install_cpp_clients.sh"
+```
+
+</TabItem>
+</Tabs>
+
+## Code examples
+
+Please refer to the [Code Examples](cookbook/overview) sections to see the code snippets for various usage scenarious.
+
