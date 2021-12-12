@@ -13,14 +13,12 @@ Connection::Connection(SocketDescriptor socket_fd, const std::string& address,
     io__{GenerateDefaultIO()},
     statistics__{new ReceiverStatistics},
              log__{GetDefaultReceiverLogger()},
-requests_dispatcher__{new RequestsDispatcher{socket_fd, address, statistics__.get(), cache}}  {
+requests_dispatcher__{new RequestsDispatcher{socket_fd, address, statistics__.get(), cache}} {
     socket_fd_ = socket_fd;
     address_ = address;
     statistics__->AddTag("connection_from", address);
     statistics__->AddTag("receiver_tag", std::move(receiver_tag));
 }
-
-
 
 void Connection::ProcessStatisticsAfterRequest(const std::unique_ptr<Request>& request) const noexcept {
     statistics__->IncreaseRequestCounter();
@@ -44,9 +42,8 @@ void Connection::Listen() const noexcept {
     }
     io__->CloseSocket(socket_fd_, nullptr);
     statistics__->SendIfNeeded(true);
-    log__->Info("disconnected from " + address_);
+    log__->Info(LogMessageWithFields("disconnected from producer").Append("origin", HostFromUri(address_)));
 }
-
 
 }
 

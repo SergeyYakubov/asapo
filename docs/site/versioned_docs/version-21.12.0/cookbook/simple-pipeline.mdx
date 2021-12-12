@@ -1,0 +1,61 @@
+---
+title: Simple Pipeline
+---
+
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+The consumer and a producer could be combined together in order to create pipelines. Look at the corresponding examples to learn about producers and consumers in detailes.
+
+Here is the snippet that shows how to organize a pipelined loop. The full runnable example can be found in git repository.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-21.12.0/python/pipeline.py" snippetTag="pipeline"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-21.12.0/cpp/pipeline.cpp" snippetTag="pipeline"
+```
+
+</TabItem>
+</Tabs>
+
+Just like with any produced stream, the pipelined stream can be marked as "finished". Here's the snippet that shows how to access the last message id in the stream.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./versioned_examples/version-21.12.0/python/pipeline.py" snippetTag="finish"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./versioned_examples/version-21.12.0/cpp/pipeline.cpp" snippetTag="finish"
+```
+
+</TabItem>
+</Tabs>
+
+The details about the received message should appear in the logs, together with the message "stream finished" (if the "finished" flag was sent for the stream). The "stream ended" message will appear for non-finished streams, but may also mean that the stream does not exist (or was deleted). The processed file should appear in the corresponding folder (by default in ```/var/tmp/asapo/global_shared/data/test_facility/gpfs/test/2019/data/asapo_test```)

@@ -197,7 +197,7 @@ Error ProducerImpl::Send(const MessageHeader& message_header,
 }
 
 bool WantTransferData(uint64_t ingest_mode) {
-    return ingest_mode & IngestModeFlags::kTransferData;
+    return static_cast<bool>(ingest_mode & IngestModeFlags::kTransferData);
 }
 
 Error CheckData(uint64_t ingest_mode, const MessageHeader& message_header, const MessageData* data) {

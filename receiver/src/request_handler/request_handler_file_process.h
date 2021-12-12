@@ -3,7 +3,7 @@
 
 #include "request_handler.h"
 #include "asapo/logger/logger.h"
-#include "../file_processors/file_processor.h"
+#include "./file_processors/file_processor.h"
 #include "asapo/io/io.h"
 
 namespace asapo {

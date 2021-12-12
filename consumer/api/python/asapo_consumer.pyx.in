@@ -130,9 +130,12 @@ cdef class PyConsumer:
         if op == "next":
             with nogil:
                 err =  self.c_consumer.get().GetNext(b_group_id, &info, p_data,b_stream)
-        elif op == "last":
+        elif op == "last" and group_id == "":
             with nogil:
                 err =  self.c_consumer.get().GetLast(&info, p_data, b_stream)
+        elif op == "last":
+            with nogil:
+                err =  self.c_consumer.get().GetLast(b_group_id,&info, p_data, b_stream)
         elif op == "id":
             with nogil:
                 err =  self.c_consumer.get().GetById(id, &info, p_data, b_stream)
@@ -149,8 +152,8 @@ cdef class PyConsumer:
         return arr,meta
     def get_next(self, group_id, meta_only = True, stream = "default"):
         return self._op("next",group_id,stream,meta_only,0)
-    def get_last(self, meta_only = True, stream = "default"):
-        return self._op("last","",stream,meta_only,0)
+    def get_last(self, meta_only = True, stream = "default", group_id = ""):
+        return self._op("last",group_id,stream,meta_only,0)
     def get_by_id(self,uint64_t id,meta_only = True, stream = "default"):
         return self._op("id","",stream,meta_only,id)
     def retrieve_data(self,meta):
@@ -349,9 +352,12 @@ cdef class PyConsumer:
         if op == "next":
             with nogil:
                 dataset = self.c_consumer.get().GetNextDataset(b_group_id, min_size,b_stream, &err)
-        elif op == "last":
+        elif op == "last" and group_id == "":
             with nogil:
                 dataset = self.c_consumer.get().GetLastDataset(min_size,b_stream, &err)
+        elif op == "last":
+            with nogil:
+                dataset = self.c_consumer.get().GetLastDataset(b_group_id, min_size,b_stream, &err)
         elif op == "id":
             with nogil:
                 dataset = self.c_consumer.get().GetDatasetById(id, min_size,b_stream, &err)
@@ -364,8 +370,8 @@ cdef class PyConsumer:
         return res
     def get_next_dataset(self, group_id, min_size = 0, stream = "default"):
         return self._op_dataset("next",group_id,stream,min_size,0)
-    def get_last_dataset(self, min_size = 0,  stream = "default"):
-        return self._op_dataset("last","0",stream,min_size,0)
+    def get_last_dataset(self, min_size = 0,  stream = "default", group_id = ""):
+        return self._op_dataset("last",group_id,stream,min_size,0)
     def get_dataset_by_id(self, uint64_t id, min_size = 0, stream = "default"):
         return self._op_dataset("id","0",stream,min_size,id)
     def get_beamtime_meta(self):

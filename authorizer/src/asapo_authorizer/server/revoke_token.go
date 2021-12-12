@@ -32,7 +32,12 @@ func revokeToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debug("revoked token " + rec.Token)
+	log.WithFields(map[string]interface{}{
+		"id":      rec.Id,
+		"subject": rec.Subject,
+		"token": rec.Token,
+	}).Info("revoked token")
+
 	answer, _ := json.Marshal(&rec)
 	w.WriteHeader(http.StatusOK)
 	w.Write(answer)

@@ -18,41 +18,8 @@
 
 #include "../receiver_mocking.h"
 
-using asapo::MockRequest;
-using asapo::MessageMeta;
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::ReturnRef;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using ::testing::HasSubstr;
-
-
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::MockIO;
-using asapo::Request;
-using asapo::RequestHandlerDb;
-using ::asapo::GenericRequestHeader;
-
-using asapo::MockDatabase;
-using ::asapo::MockHttpClient;
-
-using asapo::RequestFactory;
-using asapo::SetReceiverConfig;
-using asapo::ReceiverConfig;
-using asapo::HttpCode;
+using namespace testing;
+using namespace asapo;
 
 
 namespace {
@@ -97,10 +64,10 @@ void DbHandlerTests::MockAuthRequest(bool error, HttpCode code) {
     if (error) {
         EXPECT_CALL(mock_http_client, Get_t(expected_discovery_server + "/asapo-mongodb",  _, _)).
         WillOnce(
-            DoAll(SetArgPointee<2>(new asapo::SimpleError("http error")),
+            DoAll(SetArgPointee<2>(asapo::GeneralErrorTemplates::kSimpleError.Generate("http error").release()),
                   Return("")
                  ));
-        EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("discover database server"),
+        EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("discovering database server"),
                                              HasSubstr("http error"),
                                              HasSubstr(expected_discovery_server))));
 
@@ -118,7 +85,7 @@ void DbHandlerTests::MockAuthRequest(bool error, HttpCode code) {
                                                  HasSubstr(std::to_string(int(code))),
                                                  HasSubstr(expected_discovery_server))));
         } else {
-            EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("found database server"),
+            EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("discovered"),
                                                  HasSubstr(expected_database_server))));
         }
     }
@@ -204,7 +171,7 @@ TEST_F(DbHandlerTests, ProcessRequestCallsConnectDbWhenNotConnected) {
 TEST_F(DbHandlerTests, ProcessRequestReturnsErrorWhenCannotConnect) {
 
     EXPECT_CALL(mock_db, Connect_t(_, _)).
-    WillOnce(testing::Return(new asapo::SimpleError("")));
+    WillOnce(testing::Return(asapo::GeneralErrorTemplates::kSimpleError.Generate().release()));
 
     auto err = handler.ProcessRequest(mock_request.get());
 

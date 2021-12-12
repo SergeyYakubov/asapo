@@ -51,7 +51,7 @@ func (store *TokenStore) initDB() (dbaddress string, err error) {
 		if dbaddress == "" {
 			return "", errors.New("no token_store servers found")
 		}
-		log.Debug("Got mongodb server: " + dbaddress)
+		log.WithFields(map[string]interface{}{"address": dbaddress}).Debug("found mongodb server")
 	}
 	return dbaddress, store.db.Connect(dbaddress)
 
@@ -66,7 +66,7 @@ func (store *TokenStore) reconnectIfNeeded(db_error error) {
 	if dbaddress, err := store.reconnectDb(); err != nil {
 		log.Error("cannot reconnect to database: " + err.Error())
 	} else {
-		log.Debug("reconnected to database at" + dbaddress)
+		log.WithFields(map[string]interface{}{"address":dbaddress}).Debug("reconnected to database")
 	}
 }
 
@@ -196,7 +196,7 @@ func (store *TokenStore) loopGetRevokedTokens() {
 			next_update = 1
 			log.Error("cannot get revoked tokens: " + err.Error())
 		} else {
-			log.Debug("received revoked tokens list")
+			//log.Debug("received revoked tokens list")
 			next_update = common.Settings.UpdateRevokedTokensIntervalSec
 			tokens := make([]string, len(res))
 			for i, token := range res {

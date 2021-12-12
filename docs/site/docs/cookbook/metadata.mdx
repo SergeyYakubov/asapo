@@ -8,7 +8,14 @@ import TabItem from '@theme/TabItem';
 
 You can also store any custom metadata with your beamtime, stream, and each message. This tutorial shows you how you can store, update and access this metadata. The metadata is stored in JSON, and any JSON structure is supported.
 
-Only the metadata-relevant parts would be explained here. Look at the corresponding examples to learn about producers and consumers in detailes.
+:::info
+Since C++ doesn't have a built-in JSON support, you'd have to use 3rd party libs if you want JSON parsing. In this tutorial we won't use any JSON parsing for C++, and will treat JSONs as regular strings. Please note, that ASAP::O only supports valid JSONs, and providing invalid input will result in error.
+:::
+
+
+## Send Metadata
+
+The following snippet shows how to send the beamtime metadata.
 
 <Tabs
   groupId="language"
@@ -20,16 +27,173 @@ Only the metadata-relevant parts would be explained here. Look at the correspond
 }>
 <TabItem value="python">
 
-```python content="./examples/python/metadata.py"
+```python content="./examples/python/metadata.py" snippetTag="beamtime_set"
 ```
 
 </TabItem>
 
 <TabItem value="cpp">
 
-Since C++ doesn't have a built-in JSON support, you'd have to use 3rd party libs if you want JSON parsing. In this tutorial we won't use any JSON parsing, and will treat JSONs as regular strings. Please note, that ASAP::O only supports valid JSONs, and providing invalid input will result in error.
 
-```cpp content="./examples/cpp/metadata.cpp"
+```cpp content="./examples/cpp/metadata.cpp" snippetTag="beamtime_set"
+```
+
+</TabItem>
+</Tabs>
+
+Each metadata can be updated at any moment. Here is the example on how to do it with beamtime metadata.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/metadata.py" snippetTag="beamtime_update"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+
+```cpp content="./examples/cpp/metadata.cpp" snippetTag="beamtime_update"
+```
+
+</TabItem>
+</Tabs>
+
+The same way the metadata can be set for each stream.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/metadata.py" snippetTag="stream_set"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+
+```cpp content="./examples/cpp/metadata.cpp" snippetTag="stream_set"
+```
+
+</TabItem>
+</Tabs>
+
+And for each message
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/metadata.py" snippetTag="message_set"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+
+```cpp content="./examples/cpp/metadata.cpp" snippetTag="message_set"
+```
+
+</TabItem>
+</Tabs>
+
+## Read Metadata
+
+Here we will read the beamtime metadata. In this example it will already incorporate the changes we did during the update
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/metadata.py" snippetTag="beamtime_get"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+
+```cpp content="./examples/cpp/metadata.cpp" snippetTag="beamtime_get"
+```
+
+</TabItem>
+</Tabs>
+
+Same for the stream.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/metadata.py" snippetTag="stream_get"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+
+```cpp content="./examples/cpp/metadata.cpp" snippetTag="stream_get"
+```
+
+</TabItem>
+</Tabs>
+
+And for the message.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/metadata.py" snippetTag="message_get"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+
+```cpp content="./examples/cpp/metadata.cpp" snippetTag="message_get"
 ```
 
 </TabItem>

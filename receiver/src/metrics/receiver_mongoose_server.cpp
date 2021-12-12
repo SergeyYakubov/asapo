@@ -32,10 +32,11 @@ static void fn(struct mg_connection* c, int ev, void* ev_data, void* fn_data) {
 void asapo::ReceiverMongooseServer::ListenAndServe(std::string port,
         std::unique_ptr<ReceiverMetricsProvider> provider) {
     struct mg_mgr mgr;                            // Event manager
+    mg_log_set("0");
     mg_mgr_init(&mgr);                            // Initialise event manager
     auto uri = "0.0.0.0:" + port;
     if (mg_http_listen(&mgr, uri.c_str(), fn, (void*) provider.get()) == NULL) {
-        log__->Error("cannot listen on port " + port);
+        log__->Error("metrics server: cannot listen on port " + port);
         mg_mgr_free(&mgr);
         return;
     }

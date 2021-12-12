@@ -18,7 +18,8 @@ func TestEncoding(t *testing.T) {
 	assert.Equal(t, sourceDecoded, source)
 
 	r := Request{
-		DbName:         source,
+		Beamtime:         "bt",
+		DataSource:         source,
 		Stream:         stream,
 		GroupId:        stream,
 		Op:             "",
@@ -29,7 +30,7 @@ func TestEncoding(t *testing.T) {
 	err := encodeRequest(&r)
 	assert.Equal(t, r.Stream, streamEncoded)
 	assert.Equal(t, r.GroupId, streamEncoded)
-	assert.Equal(t, r.DbName, sourceEncoded)
+	assert.Equal(t, r.DataSource, sourceEncoded)
 
 	assert.Nil(t, err)
 }
@@ -61,9 +62,10 @@ func TestEncodingTooLong(t *testing.T) {
 	for _, test := range encodeTests {
 		stream := RandomString(test.streamSize)
 		group := RandomString(test.groupSize)
-		source := RandomString(test.sourceSize)
+		source := RandomString(test.sourceSize-3)
 		r := Request{
-			DbName:         source,
+			Beamtime:         "bt",
+			DataSource:         source,
 			Stream:         stream,
 			GroupId:        group,
 			Op:             "",

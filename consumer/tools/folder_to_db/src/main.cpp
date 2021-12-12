@@ -34,7 +34,7 @@ void ProcessFlags(ConvertParameters* params, int argc, int* narg, char* argv[]) 
             }
         } catch (...) {
             Usage(argv[0]);
-        };
+        }
     } else {
         Usage(argv[0]);
     }
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
                                 &statistics);
     if (err != nullptr) {
         std::cout << "Error import to database: " << err->Explain() << std::endl;
-        return 1;
+        return EXIT_FAILURE;
     }
 
     std::cout << statistics << std::endl;

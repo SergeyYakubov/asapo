@@ -180,7 +180,7 @@ func alwaysAllowed(creds SourceCredentials) (common.BeamtimeMeta, bool) {
 		if pair.BeamtimeId == creds.BeamtimeId {
 			pair.DataSource = creds.DataSource
 			pair.Type = creds.Type
-			pair.AccessTypes = []string{"read", "write"}
+			pair.AccessTypes = []string{"read", "write","writeraw"}
 			return pair, true
 		}
 	}
@@ -294,7 +294,7 @@ func authorizeMeta(meta common.BeamtimeMeta, request authorizationRequest, creds
 
 	if creds.Beamline != "auto" && meta.Beamline != creds.Beamline {
 		err_string := "given beamline (" + creds.Beamline + ") does not match the found one (" + meta.Beamline + ")"
-		log.Debug(err_string)
+		log.Error(err_string)
 		return nil, errors.New(err_string)
 	}
 
@@ -330,8 +330,14 @@ func authorize(request authorizationRequest, creds SourceCredentials) (common.Be
 	}
 
 	meta.AccessTypes = accessTypes
-	log.Debug("authorized creds bl/bt: ", creds.Beamline+"/"+creds.BeamtimeId+", beamtime "+meta.BeamtimeId+" for "+request.OriginHost+" in "+
-		meta.Beamline+", type "+meta.Type, "online path "+meta.OnlinePath+", offline path "+meta.OfflinePath)
+	log.WithFields(map[string]interface{}{
+		"beamline":creds.Beamline,
+		"beamtime":creds.BeamtimeId,
+		"origin":request.OriginHost,
+		"type":meta.Type,
+		"onlinePath":meta.OnlinePath,
+		"offlinePath":meta.OfflinePath,
+	}).Debug("authorized credentials")
 	return meta, nil
 }
 
@@ -372,7 +378,7 @@ func routeAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res))
+	w.Write(res)
 }
 
 func checkRole(w http.ResponseWriter, r *http.Request, role string) error {

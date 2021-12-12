@@ -4,15 +4,8 @@
 
 #include "../src/data_cache.h"
 
-using ::testing::Test;
-using ::testing::Gt;
-using ::testing::Ge;
-using ::testing::Le;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Ref;
-using ::testing::_;
-using ::testing::ElementsAreArray;
+
+using namespace testing;
 
 using asapo::DataCache;
 using asapo::CacheMeta;

@@ -22,6 +22,9 @@ std::chrono::system_clock::time_point TimePointfromNanosec(uint64_t nanoseconds_
 std::string IsoDateFromEpochNanosecs(uint64_t time_from_epoch_nanosec);
 uint64_t NanosecsEpochFromISODate(std::string date_time);
 
+std::string HostFromUri(const std::string& uri);
+
+
 bool TimeFromJson(const JsonStringParser& parser, const std::string& name, std::chrono::system_clock::time_point* val);
 
 class MessageMeta {
@@ -141,6 +144,7 @@ enum IngestModeFlags : uint64_t {
     kTransferMetaDataOnly = 1 << 1,
     kStoreInFilesystem = 1 << 2,
     kStoreInDatabase = 1 << 3,
+    kWriteRawDataToOffline = 1 << 4,
 };
 
 const uint64_t kDefaultIngestMode = kTransferData | kStoreInFilesystem | kStoreInDatabase;

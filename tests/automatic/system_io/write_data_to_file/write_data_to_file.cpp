@@ -67,5 +67,5 @@ int main(int argc, char* argv[]) {
         AssertBadResult(err, params);
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

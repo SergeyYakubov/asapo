@@ -9,7 +9,7 @@ std::unique_ptr<Database> DatabaseFactory::Create(Error* err) const noexcept {
         p.reset(new MongoDBClient());
         *err = nullptr;
     } catch (...) {
-        *err = ErrorTemplates::kMemoryAllocationError.Generate();
+        *err = GeneralErrorTemplates::kMemoryAllocationError.Generate();
     }
     return p;
 }

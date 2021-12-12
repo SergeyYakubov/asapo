@@ -2,11 +2,16 @@ package protocols
 
 func GetSupportedProducerProtocols() []Protocol {
 	return []Protocol{
+		Protocol{"v0.5",
+			map[string]string{
+				"Discovery": "v0.1",
+				"Receiver": "v0.5",
+			}, &protocolValidatorCurrent{}},
 		Protocol{"v0.4",
 			map[string]string{
 				"Discovery": "v0.1",
 				"Receiver": "v0.4",
-			}, &protocolValidatorCurrent{}},
+			}, &protocolValidatorDeprecated{getTimefromDate("2022-12-01")}},
 		Protocol{"v0.3",
 			map[string]string{
 				"Discovery": "v0.1",

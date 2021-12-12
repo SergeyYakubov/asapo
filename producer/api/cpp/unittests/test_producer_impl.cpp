@@ -73,7 +73,7 @@ class ProducerImplTests : public testing::Test {
     testing::NiceMock<MockDiscoveryService> service;
     asapo::ProducerRequestHandlerFactory factory{&service};
     testing::NiceMock<asapo::MockLogger> mock_logger;
-    testing::NiceMock<MockRequestPull> mock_pull{&factory, &mock_logger};
+    testing::NiceMock<MockRequestPool> mock_pull{&factory, &mock_logger};
     std::string expected_server_uri = "127.0.0.1:9400";
     asapo::ProducerImpl producer{expected_server_uri, 1, 3600000, asapo::RequestHandlerType::kTcp};
     uint64_t expected_size = 100;
@@ -588,6 +588,7 @@ TEST_F(ProducerImplTests, ReturnDataIfCanotAddToQueue) {
                 std::move(pool_err).release()));
 
     asapo::MessageHeader message_header{expected_id, 0, expected_name};
+    data = asapo::MessageData{new uint8_t[100]};
     auto err = producer.Send(message_header, std::move(data), expected_ingest_mode, expected_stream, nullptr);
 
     auto err_data = static_cast<asapo::OriginalData*>(err->GetCustomData());
@@ -605,7 +606,7 @@ TEST_F(ProducerImplTests, GetVersionInfoWithServer) {
         R"({"softwareVersion":"21.06.0, build 7a9294ad","clientSupported":"no", "clientProtocol":{"versionInfo":"v0.4"}})";
 
     EXPECT_CALL(*mock_http_client, Get_t(HasSubstr(expected_server_uri +
-                                                   "/asapo-discovery/v0.1/version?client=producer&protocol=v0.4"), _, _)).WillOnce(DoAll(
+                                                   "/asapo-discovery/v0.1/version?client=producer&protocol=v0.5"), _, _)).WillOnce(DoAll(
                                                            SetArgPointee<1>(asapo::HttpCode::OK),
                                                            SetArgPointee<2>(nullptr),
                                                            Return(result)));

@@ -6,9 +6,11 @@ title: Simple Consumer
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-This example shows how to consume a message. It also shows how to organize the simple loop or extract metadata.
+This example shows how to consume a message. This page provides snippets for simple consumer. You can go to BitBucket to see the whole example at once. The files there is a working example ready for launch.
 
 A special access token is needed to create a consumer. For the purpose of this tutorial a special "test" token is used. It will only work for the beamtime called "asapo_test".
+
+First step is to create an instance of the consumer.
 
 <Tabs
   groupId="language"
@@ -21,10 +23,135 @@ A special access token is needed to create a consumer. For the purpose of this t
 }>
 <TabItem value="python">
 
-```python content="./examples/python/consume.py"
+```python content="./examples/python/consume.py" snippetTag="create"
 ```
 
-Execute it with python3
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/consume.cpp" snippetTag="create"
+```
+
+</TabItem>
+
+<TabItem value="c">
+
+```c content="./examples/c/consume.c" snippetTag="create"
+```
+
+</TabItem>
+
+</Tabs>
+
+You can list all the streams within the beamtime.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+    { label: 'C', value: 'c', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/consume.py" snippetTag="list"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/consume.cpp" snippetTag="list"
+```
+
+</TabItem>
+
+</Tabs>
+
+The actual consuming of the message will probably be done in a loop. Here is an example how such a loop could be organized. It will run until the stream is finished, or no new messages are received within the timeout.
+
+You need to use the group ID that can be used by several consumer in parallel. You can either generate one or use a random string.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+    { label: 'C', value: 'c', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/consume.py" snippetTag="consume"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/consume.cpp" snippetTag="consume"
+```
+
+</TabItem>
+
+<TabItem value="c">
+
+```c content="./examples/c/consume.c" snippetTag="consume"
+```
+
+</TabItem>
+
+</Tabs>
+
+After consuming the stream you can delete it.
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+    { label: 'C', value: 'c', },
+  ]
+}>
+<TabItem value="python">
+
+```python content="./examples/python/consume.py" snippetTag="delete"
+```
+
+</TabItem>
+
+<TabItem value="cpp">
+
+```cpp content="./examples/cpp/consume.cpp" snippetTag="delete"
+```
+
+</TabItem>
+
+<TabItem value="c">
+
+```c content="./examples/c/consume.c" snippetTag="delete"
+```
+
+</TabItem>
+
+</Tabs>
+
+<Tabs
+  groupId="language"
+  defaultValue="python"
+  values={[
+    { label: 'Python', value: 'python', },
+    { label: 'C++', value: 'cpp', },
+    { label: 'C', value: 'c', },
+  ]
+}>
+<TabItem value="python">
+For Python example just launch it with python interpreter (be sure that the ASAP::O client python modules are installed)
 
 ```
 $ python3 consumer.py
@@ -33,16 +160,16 @@ $ python3 consumer.py
 </TabItem>
 
 <TabItem value="cpp">
+For C++ example you need to compiled it first. The easiest way to do it is by installing ASAP::O client dev packages and using the CMake find_package function. CMake will generate the makefile that you can then use to compile the example.
 
-```cpp content="./examples/cpp/consume.cpp"
+The example CMake file can look like this
+
+```cmake content="./examples/cpp/CMakeLists.txt" snippetTag="#consumer"
 ```
 
-Compile e.g. using CMake and execute. You might need to point cmake (with CMAKE_PREFIX_PATH) to asapo installation and curl library if installed to non-standard location.
+You can use it like this
 
-```shell content="./examples/cpp/CMakeLists.txt" snippetTag="#consumer"
-```
-
-```
+```bash
 $ cmake . && make
 $ ./asapo-consume
 ```
@@ -50,10 +177,6 @@ $ ./asapo-consume
 </TabItem>
 
 <TabItem value="c">
-
-```c content="./examples/c/consume.c"
-```
-
 Compile e.g. using Makefile and pkg-config (although we recommend CMake -  see C++ section) and execute. This example assumes asapo is installed to /opt/asapo. Adjust correspondingly.
 
 ```makefile content="./examples/c/Makefile" snippetTag="#consumer"

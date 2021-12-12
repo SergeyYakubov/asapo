@@ -48,7 +48,9 @@ Error ConsumerErrorFromPartialDataResponse(const std::string& response) {
     PartialErrorData data;
     auto parse_error = GetPartialDataResponseFromJson(response, &data);
     if (parse_error) {
-        return ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response - " + response);
+        auto err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response" );
+        err->AddDetails("response",response);
+        return err;
     }
     auto err = ConsumerErrorTemplates::kPartialData.Generate();
     PartialErrorData* error_data = new PartialErrorData{data};
@@ -105,26 +107,26 @@ Error ConsumerErrorFromHttpCode(const RequestOutput* response, const HttpCode& c
 }
 Error ConsumerErrorFromServerError(const Error& server_err) {
     if (server_err == HttpErrorTemplates::kTransferError) {
-        return ConsumerErrorTemplates::kInterruptedTransaction.Generate(server_err->Explain());
+        return ConsumerErrorTemplates::kInterruptedTransaction.Generate();
     } else {
-        return ConsumerErrorTemplates::kUnavailableService.Generate(server_err->Explain());
+        return ConsumerErrorTemplates::kUnavailableService.Generate();
     }
 }
 
 Error ProcessRequestResponce(const RequestInfo& request,
-                             const Error& server_err,
+                             Error server_err,
                              const RequestOutput* response,
                              const HttpCode& code) {
     Error err;
     if (server_err != nullptr) {
         err =  ConsumerErrorFromServerError(server_err);
+        err->SetCause(std::move(server_err));
     } else {
         err =  ConsumerErrorFromHttpCode(response, code);
     }
 
     if (err != nullptr) {
-        std::string prefix = "Error processing request " + request.host + request.api;
-        err->Prepend(prefix);
+        err->AddDetails("host", request.host)->AddDetails("api", request.api);
     }
     return err;
 
@@ -202,7 +204,7 @@ Error ConsumerImpl::ProcessRequest(RequestOutput* response, const RequestInfo& r
     if (err && service_uri) {
         service_uri->clear();
     }
-    return ProcessRequestResponce(request, err, response, code);
+    return ProcessRequestResponce(request, std::move(err), response, code);
 }
 
 RequestInfo ConsumerImpl::GetDiscoveryRequest(const std::string& service_name) const {
@@ -219,9 +221,9 @@ Error ConsumerImpl::ProcessDiscoverServiceResult(Error err, std::string* uri_to_
         if (err == ConsumerErrorTemplates::kUnsupportedClient) {
             return err;
         }
-        return ConsumerErrorTemplates::kUnavailableService.Generate(" on " + endpoint_
-                + (err != nullptr ? ": " + err->Explain()
-                   : ""));
+        auto ret_err = ConsumerErrorTemplates::kUnavailableService.Generate(std::move(err));
+        ret_err->AddDetails("destination",endpoint_);
+        return ret_err;
     }
     return nullptr;
 }
@@ -244,7 +246,8 @@ bool ConsumerImpl::SwitchToGetByIdIfPartialData(Error* err,
     if (*err == ConsumerErrorTemplates::kPartialData) {
         auto error_data = static_cast<const PartialErrorData*>((*err)->GetCustomData());
         if (error_data == nullptr) {
-            *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response - " + response);
+            *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response");
+            (*err)->AddDetails("response",response);
             return false;
         }
         *redirect_uri = std::to_string(error_data->id);
@@ -352,6 +355,16 @@ Error ConsumerImpl::GetNext(std::string group_id, MessageMeta* info, MessageData
                                 data);
 }
 
+Error ConsumerImpl::GetLast(std::string group_id, MessageMeta* info, MessageData* data, std::string stream) {
+    return GetMessageFromServer(GetMessageServerOperation::GetLastInGroup,
+                                0,
+                                std::move(group_id),
+                                std::move(stream),
+                                info,
+                                data);
+}
+
+
 Error ConsumerImpl::GetLast(MessageMeta* info, MessageData* data, std::string stream) {
     return GetMessageFromServer(GetMessageServerOperation::GetLast,
                                 0,
@@ -365,10 +378,12 @@ std::string ConsumerImpl::OpToUriCmd(GetMessageServerOperation op) {
     switch (op) {
     case GetMessageServerOperation::GetNext:
         return "next";
+    case GetMessageServerOperation::GetLastInGroup:
+        return "groupedlast";
     case GetMessageServerOperation::GetLast:
         return "last";
     default:
-        return "last";
+        return "error";
     }
 }
 
@@ -416,7 +431,7 @@ Error ConsumerImpl::GetDataFromFile(MessageMeta* info, MessageData* data) {
                                             (system_clock::now() - start).count());
     }
     if (err != nullptr) {
-        return ConsumerErrorTemplates::kLocalIOError.Generate(err->Explain());
+        return ConsumerErrorTemplates::kLocalIOError.Generate(std::move(err));
     }
     return nullptr;
 }
@@ -642,7 +657,8 @@ std::string ConsumerImpl::GetStreamMeta(const std::string& stream, Error* err) {
 DataSet DecodeDatasetFromResponse(std::string response, Error* err) {
     DataSet res;
     if (!res.SetFromJson(std::move(response))) {
-        *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response:" + response);
+        *err = ConsumerErrorTemplates::kInterruptedTransaction.Generate("malformed response");
+        (*err)->AddDetails("response",response);
         return {0, 0, MessageMetas{}};
     } else {
         return res;
@@ -683,6 +699,12 @@ DataSet ConsumerImpl::GetLastDataset(uint64_t min_size, std::string stream, Erro
     return GetDatasetFromServer(GetMessageServerOperation::GetLast, 0, "0", std::move(stream), min_size, err);
 }
 
+DataSet ConsumerImpl::GetLastDataset(std::string group_id, uint64_t min_size, std::string stream, Error* err) {
+    return GetDatasetFromServer(GetMessageServerOperation::GetLastInGroup, 0, std::move(group_id), std::move(stream),
+                                min_size, err);
+}
+
+
 DataSet ConsumerImpl::GetDatasetFromServer(GetMessageServerOperation op,
                                            uint64_t id,
                                            std::string group_id, std::string stream,
@@ -722,7 +744,7 @@ StreamInfos ParseStreamsFromResponse(std::string response, Error* err) {
         StreamInfo si;
         auto ok = si.SetFromJson(stream_encoded);
         if (!ok) {
-            *err = TextError("cannot parse " + stream_encoded);
+            *err = GeneralErrorTemplates::kSimpleError.Generate("cannot parse " + stream_encoded);
             return StreamInfos{};
         }
         streams.emplace_back(si);

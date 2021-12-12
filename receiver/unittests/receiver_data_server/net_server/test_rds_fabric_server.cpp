@@ -207,7 +207,6 @@ TEST_F(RdsFabricServerTests, SendResponse_Error_SendError) {
 TEST_F(RdsFabricServerTests, SendResponseAndSlotData_Ok) {
     InitServer();
 
-    GenericRequestHeader dummyHeader{};
     FabricRdsRequest request(GenericRequestHeader{}, 41, 87);
     GenericNetworkResponse response;
     CacheMeta cacheSlot;
@@ -225,7 +224,6 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_Ok) {
 TEST_F(RdsFabricServerTests, SendResponseAndSlotData_RdmaWrite_Error) {
     InitServer();
 
-    GenericRequestHeader dummyHeader{};
     FabricRdsRequest request(GenericRequestHeader{}, 41, 87);
     GenericNetworkResponse response;
     CacheMeta cacheSlot;
@@ -244,7 +242,6 @@ TEST_F(RdsFabricServerTests, SendResponseAndSlotData_RdmaWrite_Error) {
 TEST_F(RdsFabricServerTests, SendResponseAndSlotData_Send_Error) {
     InitServer();
 
-    GenericRequestHeader dummyHeader{};
     FabricRdsRequest request(GenericRequestHeader{}, 41, 87);
     GenericNetworkResponse response;
     CacheMeta cacheSlot;

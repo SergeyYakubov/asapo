@@ -17,6 +17,6 @@ set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 add_test_setup_cleanup(${TARGET_NAME})
 add_integration_test(${TARGET_NAME} readfile "test/1 123")
 add_integration_test(${TARGET_NAME} readfile_unkown_size "test/2 unknown_size")
-add_integration_test(${TARGET_NAME} filenotfound "test_notexist Nosuchfileordirectory:test_notexist")
-add_integration_test(${TARGET_NAME} filenoaccess "file_noaccess Permissiondenied:file_noaccess")
+add_integration_test(${TARGET_NAME} filenotfound "test_notexist error:nosuchfileordirectory,details:name:test_notexist")
+add_integration_test(${TARGET_NAME} filenoaccess "file_noaccess error:permissiondenied,details:name:file_noaccess")
 

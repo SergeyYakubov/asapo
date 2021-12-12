@@ -80,7 +80,7 @@ extern "C" {
                   kWrongInput == asapo::ConsumerErrorType::kWrongInput&&
                   kPartialData == asapo::ConsumerErrorType::kPartialData&&
                   kUnsupportedClient == asapo::ConsumerErrorType::kUnsupportedClient,
-                  "incompatible bit reps between c++ and c for asapo::ErrorType");
+                  "incompatible bit reps between c++ and c for asapo::ConsumerErrorType");
     static_assert(kAllStreams == asapo::StreamFilter::kAllStreams&&
                   kFinishedStreams == asapo::StreamFilter::kFinishedStreams&&
                   kUnfinishedStreams == asapo::StreamFilter::kUnfinishedStreams,
@@ -92,8 +92,7 @@ extern "C" {
 
     enum AsapoConsumerErrorType asapo_error_get_type(const AsapoErrorHandle error) {
         auto consumer_err =
-            dynamic_cast<const asapo::ServiceError<asapo::ConsumerErrorType,
-            asapo::ErrorType::kConsumerError> *>(error->handle.get());
+            dynamic_cast<const asapo::ServiceError<asapo::ConsumerErrorType> *>(error->handle.get());
         if (consumer_err != nullptr) {
             return static_cast<AsapoConsumerErrorType>(consumer_err->GetServiceErrorType());
         } else {
@@ -365,6 +364,21 @@ extern "C" {
         return handle_or_null_t(result, error, std::move(err),
                                 &asapo::ConsumerErrorTemplates::kPartialData);
     }
+//! wraps asapo::Consumer::GetLastDataset()
+/// \copydoc asapo::Consumer::GetLastDataset()
+/// \param[in] consumer the consumer that is acted upon
+/// the returned data set must be freed with asapo_free_handle() after use.
+    AsapoDataSetHandle asapo_consumer_get_last_dataset_ingroup(AsapoConsumerHandle consumer,
+            AsapoStringHandle group_id,
+            uint64_t min_size,
+            const char* stream,
+            AsapoErrorHandle* error) {
+        asapo::Error err;
+        auto result = new asapo::DataSet(consumer->handle->GetLastDataset(*group_id->handle, min_size, stream, &err));
+        return handle_or_null_t(result, error, std::move(err),
+                                &asapo::ConsumerErrorTemplates::kPartialData);
+    }
+
 
 //! wraps asapo::Consumer::GetLastAcknowledgedMessage()
 /// \copydoc asapo::Consumer::GetLastAcknowledgedMessage()
@@ -407,9 +421,9 @@ extern "C" {
                                  AsapoMessageDataHandle* data,
                                  const char* stream,
                                  AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
         auto err = consumer->handle->GetById(id, fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
 
         return process_error(error, std::move(err));
     }
@@ -423,9 +437,27 @@ extern "C" {
                                 AsapoMessageDataHandle* data,
                                 const char* stream,
                                 AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
         auto err = consumer->handle->GetLast(fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
+
+        return process_error(error, std::move(err));
+    }
+
+//! wraps asapo::Consumer::GetLast()
+/// \copydoc asapo::Consumer::GetLast()
+/// \param[in] consumer the consumer that is acted upon
+/// if data are retrieved (data != NULL) they must be freed with asapo_free_handle()
+    int asapo_consumer_get_last_ingroup(AsapoConsumerHandle consumer,
+                                        AsapoStringHandle group_id,
+                                        AsapoMessageMetaHandle* info,
+                                        AsapoMessageDataHandle* data,
+                                        const char* stream,
+                                        AsapoErrorHandle* error) {
+        dataGetterStart
+        auto err = consumer->handle->GetLast(*group_id->handle, fi, data ? &d : nullptr, stream);
+        dataGetterStop
+
         return process_error(error, std::move(err));
     }
 
@@ -439,9 +471,11 @@ extern "C" {
                                 AsapoMessageDataHandle* data,
                                 const char* stream,
                                 AsapoErrorHandle* error) {
-        dataGetterStart;
+        dataGetterStart
+
         auto err = consumer->handle->GetNext(*group_id->handle, fi, data ? &d : nullptr, stream);
-        dataGetterStop;
+        dataGetterStop
+
         return process_error(error, std::move(err));
     }
 
@@ -582,7 +616,7 @@ extern "C" {
 /// \param[in] asapo error
 /// \return handle to partial error data or NULL if error is wrong type
     AsapoPartialErrorDataHandle asapo_error_get_payload_from_partial_error(const AsapoErrorHandle error) {
-        if (error == nullptr && error->handle == nullptr) {
+        if (error == nullptr || error->handle == nullptr) {
             return nullptr;
         }
         auto payload = dynamic_cast<asapo::PartialErrorData*>(error->handle->GetCustomData());
@@ -611,7 +645,7 @@ extern "C" {
 /// \param[in] asapo error
 /// \return handle to partial error data or NULL if error is wrong type
     AsapoConsumerErrorDataHandle asapo_error_get_payload_from_consumer_error(const AsapoErrorHandle error) {
-        if (error == nullptr && error->handle == nullptr) {
+        if (error == nullptr || error->handle == nullptr) {
             return nullptr;
         }
         auto payload = dynamic_cast<asapo::ConsumerErrorData*>(error->handle->GetCustomData());

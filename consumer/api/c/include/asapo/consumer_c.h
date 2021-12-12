@@ -134,6 +134,11 @@ AsapoDataSetHandle asapo_consumer_get_last_dataset(AsapoConsumerHandle consumer,
         uint64_t min_size,
         const char* stream,
         AsapoErrorHandle* error);
+AsapoDataSetHandle asapo_consumer_get_last_dataset_ingroup(AsapoConsumerHandle consumer,
+        AsapoStringHandle group_id,
+        uint64_t min_size,
+        const char* stream,
+        AsapoErrorHandle* error);
 AsapoDataSetHandle asapo_consumer_get_dataset_by_id(AsapoConsumerHandle consumer,
         uint64_t id,
         uint64_t min_size,
@@ -144,11 +149,17 @@ int asapo_consumer_get_by_id(AsapoConsumerHandle consumer,
                              AsapoMessageMetaHandle* info,
                              AsapoMessageDataHandle* data,
                              const char* stream, AsapoErrorHandle* error);
-
 int asapo_consumer_get_last(AsapoConsumerHandle consumer,
                             AsapoMessageMetaHandle* info,
                             AsapoMessageDataHandle* data,
                             const char* stream, AsapoErrorHandle* error);
+
+int asapo_consumer_get_last_ingroup(AsapoConsumerHandle consumer,
+                                    AsapoStringHandle group_id,
+                                    AsapoMessageMetaHandle* info,
+                                    AsapoMessageDataHandle* data,
+                                    const char* stream, AsapoErrorHandle* error);
+
 int asapo_consumer_get_next(AsapoConsumerHandle consumer,
                             AsapoStringHandle group_id,
                             AsapoMessageMetaHandle* info,

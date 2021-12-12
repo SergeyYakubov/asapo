@@ -29,6 +29,15 @@ struct ReceiverConfig {
     std::string discovery_server;
 };
 
+class ReceiverConfigManager {
+  public:
+    ReceiverConfigManager();
+    Error ReadConfigFromFile(std::string file_name);
+  public:
+    std::unique_ptr<IO> io__;
+};
+
+
 const ReceiverConfig* GetReceiverConfig();
 
 }

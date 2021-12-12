@@ -8,25 +8,9 @@
 #include "../../src/statistics/statistics_sender_fluentd.h"
 #include "../receiver_mocking.h"
 
-using ::testing::Test;
-using ::testing::Gt;
-using ::testing::Ge;
-using ::testing::Le;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Ref;
-using ::testing::_;
 
-using asapo::ReceiverStatistics;
-using asapo::Statistics;
-using asapo::StatisticEntity;
-using asapo::StatisticsSender;
-using asapo::StatisticsSenderInfluxDb;
-using asapo::StatisticsSenderFluentd;
-
-using asapo::StatisticsToSend;
-
-using asapo::MockStatisticsSender;
+using namespace testing;
+using namespace asapo;
 
 namespace {
 
@@ -89,7 +73,7 @@ void ReceiverStatisticTests::TestTimer(const StatisticEntity& entity) {
 
     auto stat = ExtractStat();
 
-    ASSERT_THAT(stat.extra_entities[static_cast<size_t>(entity)].second, Ge(0.3));
+    ASSERT_THAT(stat.extra_entities[static_cast<size_t>(entity)].second, Gt(0));
     ASSERT_THAT(stat.extra_entities[static_cast<size_t>(entity)].second, Le(1.0));
 
 }

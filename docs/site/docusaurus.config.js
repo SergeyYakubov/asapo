@@ -65,6 +65,9 @@ module.exports = {
       style: 'dark',
       copyright: `Copyright © ${new Date().getFullYear()} DESY. Built with Docusaurus.`,
     },
+    prism: {
+      additionalLanguages: ['cmake'],
+    },
   },
   presets: [
     [

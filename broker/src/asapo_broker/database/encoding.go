@@ -80,8 +80,9 @@ func encodeStringForColName(original string) (result string) {
 }
 
 func encodeRequest(request *Request) error {
-	request.DbName = encodeStringForDbName(request.DbName)
-	if len(request.DbName)> max_encoded_source_size {
+	request.DataSource = encodeStringForDbName(request.DataSource)
+	request.Beamtime = encodeStringForDbName(request.Beamtime)
+	if len(request.DbName())> max_encoded_source_size {
 		return &DBError{utils.StatusWrongInput, "source name is too long"}
 	}
 

@@ -70,6 +70,7 @@ class LoggerTests : public Test {
     asapo::SpdLogger logger{"test", "test_uri"};
     spdlog::details::log_msg msg;
     spdlog::details::log_msg msg_json;
+    spdlog::details::log_msg msg_error;
 
     std::string test_string{"Hello\""};
     std::string test_string_json{R"("Hello":"test","int":1,"double":123.234)"};
@@ -77,6 +78,7 @@ class LoggerTests : public Test {
     void SetUp() override {
         msg.raw << R"("message":"Hello\"")";
         msg_json.raw << R"("Hello":"test","int":1,"double":123.234)";
+        msg_error.raw << R"("error":"unnamed error","message":"err")";
         log.reset(new spdlog::logger("mylogger", mock_sink));
         logger.log__ = std::move(log);
     }
@@ -113,6 +115,18 @@ TEST_F(LoggerTests, InfoJson) {
 
     logger.Info(test_string_json);
 }
+
+
+TEST_F(LoggerTests, InfoError) {
+    msg_error.level = spdlog::level::info;
+    logger.SetLogLevel(LogLevel::Info);
+    EXPECT_CALL(*mock_sink, _sink_it(CompareMsg(&msg_error)));
+
+    auto err = asapo::GeneralErrorTemplates::kSimpleError.Generate("err");
+
+    logger.Info(err);
+}
+
 
 TEST_F(LoggerTests, InfoMessage) {
     msg_json.level = spdlog::level::info;

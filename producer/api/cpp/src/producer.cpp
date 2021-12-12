@@ -15,10 +15,10 @@ std::unique_ptr<asapo::Producer> asapo::Producer::Create(const std::string& endp
     try {
         producer.reset(new ProducerImpl(endpoint, n_processing_threads, timeout_ms, type));
     } catch (const std::exception& ex) {
-        *err = TextError(ex.what());
+        *err = GeneralErrorTemplates::kSimpleError.Generate(ex.what());
         return nullptr;
     } catch (...) {
-        *err = TextError("Unknown exception in producer_api ");
+        *err = GeneralErrorTemplates::kSimpleError.Generate("Unknown exception in producer_api ");
         return nullptr;
     }
 

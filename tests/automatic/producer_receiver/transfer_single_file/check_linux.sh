@@ -17,7 +17,7 @@ Cleanup() {
 	echo cleanup
 	rm -rf ${receiver_root_folder}
   echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
-  influx -execute "drop database ${database_name}"
+  influx -database ${database_name} -execute "drop series from statistics, RequestsRate"
 }
 
 mkdir -p ${receiver_folder}

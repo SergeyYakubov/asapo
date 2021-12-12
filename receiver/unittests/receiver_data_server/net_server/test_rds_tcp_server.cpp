@@ -126,10 +126,6 @@ void RdsTCPServerTests::MockReceiveRequest(bool ok ) {
             DoAll(SetArgPointee<3>(ok ? nullptr : asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
                   Return(0))
         );
-        if (!ok) {
-            std::string connected_uri = std::to_string(conn);
-            EXPECT_CALL(mock_logger, Error(AllOf(HasSubstr("request"), HasSubstr(connected_uri))));
-        }
     }
 }
 
@@ -137,7 +133,7 @@ void RdsTCPServerTests::ExpectReceiveRequestEof() {
     for (auto conn : expected_client_sockets) {
         EXPECT_CALL(mock_io, Receive_t(conn, _, _, _))
         .WillOnce(
-            DoAll(SetArgPointee<3>(asapo::ErrorTemplates::kEndOfFile.Generate().release()),
+            DoAll(SetArgPointee<3>(asapo::GeneralErrorTemplates::kEndOfFile.Generate().release()),
                   Return(0))
         );
         EXPECT_CALL(mock_io, CloseSocket_t(conn, _));
@@ -163,8 +159,7 @@ void RdsTCPServerTests::ExpectReceiveOk() {
                 A_ReceiveData(asapo::kOpcodeGetBufferData, conn),
                 testing::ReturnArg<2>()
             ));
-        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("request"), HasSubstr("id: " + std::to_string(conn)),
-                                             HasSubstr("opcode: " + std::to_string(asapo::kOpcodeGetBufferData)))));
+        EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("request"), HasSubstr(std::to_string(conn)))));
     }
 }
 
@@ -249,8 +244,6 @@ TEST_F(RdsTCPServerTests, SendResponse) {
             Return(1)
         ));
 
-    EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
-
     auto err = tcp_server.SendResponse(&expectedRequest, &tmp);
 
     ASSERT_THAT(err, Ne(nullptr));
@@ -272,8 +265,6 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendResponseError) {
                   testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
                   Return(0)
               ));
-    EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
-
     auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
 
     ASSERT_THAT(err, Ne(nullptr));
@@ -297,8 +288,6 @@ TEST_F(RdsTCPServerTests, SendResponseAndSlotData_SendError) {
             testing::SetArgPointee<3>(asapo::IOErrorTemplates::kUnknownIOError.Generate().release()),
             Return(0)
         ));
-
-    EXPECT_CALL(mock_logger, Error(HasSubstr("cannot send")));
 
     auto err = tcp_server.SendResponseAndSlotData(&expectedRequest, &tmp, &expectedMeta);
 

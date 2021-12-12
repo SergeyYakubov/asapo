@@ -2,7 +2,6 @@
 #include <utility>
 #include "receiver.h"
 
-#include "receiver_config_factory.h"
 #include "receiver_config.h"
 
 #include "receiver_data_server/receiver_data_server_logger.h"
@@ -15,13 +14,17 @@
 #include "metrics/receiver_prometheus_metrics.h"
 #include "metrics/receiver_mongoose_server.h"
 
-asapo::Error ReadConfigFile(int argc, char* argv[]) {
+void ReadConfigFile(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <config file>" << std::endl;
         exit(EXIT_FAILURE);
     }
-    asapo::ReceiverConfigFactory factory;
-    return factory.SetConfig(argv[1]);
+    asapo::ReceiverConfigManager config_manager;
+    auto err =  config_manager.ReadConfigFromFile(argv[1]);
+    if (err) {
+        std::cerr << "cannot read config file:" << err->Explain() << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 void AddDataServers(const asapo::ReceiverConfig* config, asapo::SharedCache,
@@ -85,9 +88,9 @@ int StartReceiver(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
     receiver->Listen(address, &err);
     if (err) {
         logger->Error("failed to start receiver: " + err->Explain());
-        return 1;
+        return EXIT_FAILURE;
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 std::unique_ptr<std::thread> StartMetricsServer(const asapo::ReceiverMetricsConfig& config,
@@ -108,18 +111,13 @@ std::unique_ptr<std::thread> StartMetricsServer(const asapo::ReceiverMetricsConf
     };
 }
 
+
+
 int main(int argc, char* argv[]) {
     asapo::ExitAfterPrintVersionIfNeeded("ASAPO Receiver", argc, argv);
-
-    auto err = ReadConfigFile(argc, argv);
+    ReadConfigFile(argc, argv);
     const auto& logger = asapo::GetDefaultReceiverLogger();
-    if (err) {
-        logger->Error("cannot read config file: " + err->Explain());
-        return 1;
-    }
-
     auto config = asapo::GetReceiverConfig();
-
     logger->SetLogLevel(config->log_level);
 
     asapo::SharedCache cache = nullptr;
@@ -128,13 +126,15 @@ int main(int argc, char* argv[]) {
                                          (float) config->datacache_reserved_share / 100});
     }
 
+    asapo::Error err;
     auto dataServerThreads = StartDataServers(config, cache, &err);
     if (err) {
         logger->Error("cannot start data server: " + err->Explain());
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    auto t = StartMetricsServer(config->metrics, logger);
+    auto metrics_thread = StartMetricsServer(config->metrics, logger);
     auto exit_code = StartReceiver(config, cache, logger);
+// todo: implement graceful exit, currently it never reaches this point
     return exit_code;
 }

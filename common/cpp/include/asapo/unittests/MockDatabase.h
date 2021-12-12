@@ -25,25 +25,23 @@ class MockDatabase : public Database {
         return Error{InsertAsDatasetMessage_t(collection, file, dataset_size, ignore_duplicates)};
     }
 
-    MOCK_METHOD2(Connect_t, ErrorInterface * (const std::string&, const std::string&));
-    MOCK_CONST_METHOD4(Insert_t, ErrorInterface * (const std::string&, const MessageMeta&, bool, uint64_t*));
+    MOCK_METHOD(ErrorInterface *, Connect_t, (const std::string&, const std::string&), ());
+    MOCK_METHOD(ErrorInterface *, Insert_t, (const std::string&, const MessageMeta&, bool, uint64_t*), (const));
 
-    MOCK_CONST_METHOD4(InsertAsDatasetMessage_t,
-                       ErrorInterface * (const std::string&, const MessageMeta&, uint64_t, bool));
+    MOCK_METHOD(ErrorInterface *, InsertAsDatasetMessage_t, (const std::string&, const MessageMeta&, uint64_t, bool), (const));
 
     Error InsertMeta(const std::string& collection, const std::string& id, const uint8_t* data, uint64_t size,
                      MetaIngestMode mode) const override {
         return Error{InsertMeta_t(collection, id, data, size, mode)};
 
     }
-    MOCK_CONST_METHOD5(InsertMeta_t, ErrorInterface * (const std::string&, const std::string& id, const uint8_t* data,
-                       uint64_t size, MetaIngestMode mode));
+    MOCK_METHOD(ErrorInterface *, InsertMeta_t, (const std::string&, const std::string& id, const uint8_t* data, uint64_t size, MetaIngestMode mode), (const));
 
     Error GetById(const std::string& collection, uint64_t id, MessageMeta* file) const override {
         return Error{GetById_t(collection, id, file)};
     }
 
-    MOCK_CONST_METHOD3(GetById_t, ErrorInterface * (const std::string&, uint64_t id, MessageMeta*));
+    MOCK_METHOD(ErrorInterface *, GetById_t, (const std::string&, uint64_t id, MessageMeta*), (const));
 
     Error GetDataSetById(const std::string& collection, uint64_t set_id, uint64_t id, MessageMeta* file) const override {
         return Error{GetSetById_t(collection, set_id, id, file)};
@@ -52,31 +50,31 @@ class MockDatabase : public Database {
     Error GetMetaFromDb(const std::string& collection, const std::string& id, std::string* res) const override {
         return Error{GetMetaFromDb_t(collection, id, res)};
     }
-    MOCK_CONST_METHOD3(GetMetaFromDb_t, ErrorInterface * (const std::string&, const std::string&, std::string* res));
+    MOCK_METHOD(ErrorInterface *, GetMetaFromDb_t, (const std::string&, const std::string&, std::string* res), (const));
 
-    MOCK_CONST_METHOD4(GetSetById_t, ErrorInterface * (const std::string&, uint64_t set_id, uint64_t id, MessageMeta*));
+    MOCK_METHOD(ErrorInterface *, GetSetById_t, (const std::string&, uint64_t set_id, uint64_t id, MessageMeta*), (const));
 
     Error GetStreamInfo(const std::string& collection, StreamInfo* info) const override {
         return Error{GetStreamInfo_t(collection, info)};
     }
 
-    MOCK_CONST_METHOD2(GetStreamInfo_t, ErrorInterface * (const std::string&, StreamInfo*));
+    MOCK_METHOD(ErrorInterface *, GetStreamInfo_t, (const std::string&, StreamInfo*), (const));
 
     Error GetLastStream(StreamInfo* info) const override {
         return Error{GetLastStream_t(info)};
     }
 
-    MOCK_CONST_METHOD1(DeleteStream_t, ErrorInterface * (const std::string&));
+    MOCK_METHOD(ErrorInterface *, DeleteStream_t, (const std::string&), (const));
 
     Error DeleteStream(const std::string& stream) const override {
         return Error{DeleteStream_t(stream)};
     }
 
-    MOCK_CONST_METHOD1(GetLastStream_t, ErrorInterface * (StreamInfo*));
+    MOCK_METHOD(ErrorInterface *, GetLastStream_t, (StreamInfo*), (const));
 
 
     // stuff to test db destructor is called and avoid "uninteresting call" messages
-    MOCK_METHOD0(Die, void());
+    MOCK_METHOD(void, Die, (), ());
     virtual ~MockDatabase() override {
         if (check_destructor)
             Die();

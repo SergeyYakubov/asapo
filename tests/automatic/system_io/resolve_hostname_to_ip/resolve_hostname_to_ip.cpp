@@ -4,7 +4,6 @@
 #include "testing.h"
 
 using asapo::Error;
-using asapo::ErrorType;
 
 void Check(const std::string& expected_ip_address, const std::string& hostname) {
     std::cout << "Checking: " << hostname << std::endl;
@@ -34,5 +33,5 @@ int main() {
     // Fallthrough tests
     Check("123.123.123.123", "123.123.123.123");
     Check("8.8.8.8", "8.8.8.8");
-    return 0;
+    return EXIT_SUCCESS;
 }

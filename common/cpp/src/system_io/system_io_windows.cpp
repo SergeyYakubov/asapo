@@ -66,7 +66,7 @@ Error IOErrorFromGetLastError() {
     default:
         std::cout << "[IOErrorFromGetLastError] Unknown error code: " << last_error << std::endl;
         Error err = IOErrorTemplates::kUnknownIOError.Generate();
-        (*err).Append("Unknown error code: " + std::to_string(last_error));
+            (*err).AddDetails("Unknown error code", std::to_string(last_error));
         return err;
     }
 }
@@ -151,7 +151,7 @@ MessageMeta SystemIO::GetMessageMeta(const std::string& name, Error* err) const 
     auto hFind = FindFirstFile(name.c_str(), &f);
     if (hFind == INVALID_HANDLE_VALUE) {
         *err = IOErrorFromGetLastError();
-        (*err)->Append(name);
+        (*err)->AddDetails("name", name);
         return {};
     }
     FindClose(hFind);
@@ -179,7 +179,7 @@ void SystemIO::GetSubDirectoriesRecursively(const std::string& path, SubDirList*
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {
         *err = IOErrorFromGetLastError();
-        (*err)->Append(path);
+        (*err)->AddDetails("name", path);
         return;
     }
 
@@ -208,7 +208,7 @@ void SystemIO::CollectMessageMetarmationRecursively(const std::string& path,
     HANDLE handle = FindFirstFile((path + "\\*.*").c_str(), &find_data);
     if (handle == INVALID_HANDLE_VALUE) {
         *err = IOErrorFromGetLastError();
-        (*err)->Append(path);
+        (*err)->AddDetails("name", path);
         return;
     }
 

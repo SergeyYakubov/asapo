@@ -40,7 +40,7 @@ TEST(ProducerRequest, Constructor) {
     uint64_t expected_file_size = 1337;
     uint64_t expected_meta_size = 137;
     std::string expected_meta = "meta";
-    std::string expected_api_version = "v0.4";
+    std::string expected_api_version = "v0.5";
     asapo::Opcode expected_op_code = asapo::kOpcodeTransferData;
 
     asapo::GenericRequestHeader header{expected_op_code, expected_file_id, expected_file_size,

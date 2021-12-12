@@ -2,7 +2,6 @@
 #include "testing_c.h"
 
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
@@ -28,6 +27,15 @@ void test_datasets(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
     ASSERT_EQ_STRING("10_1",asapo_message_meta_get_name(md),"dataset 10 filename");
     asapo_free_handle(&md);
     asapo_free_handle(&dataset);
+
+// get last in group
+    dataset = asapo_consumer_get_last_dataset_ingroup(consumer,group_id, 0, "default", &err);
+    EXIT_IF_ERROR("asapo_consumer_get_last_dataset_ingroup", err);
+    asapo_free_handle(&dataset);
+    AsapoDataSetHandle ds_ig = asapo_consumer_get_last_dataset_ingroup(consumer,group_id, 0, "default", &err);
+    ASSERT_TRUE(ds_ig == NULL,"returns null in case of error");
+    ASSERT_TRUE(asapo_error_get_type(err) == kEndOfStream,"asapo_consumer_get_last_dataset_ingroup second time end of stream error");
+
 
 // get by id
     dataset = asapo_consumer_get_dataset_by_id(consumer, 8,0, "default", &err);
@@ -113,6 +121,12 @@ void test_single(AsapoConsumerHandle consumer, AsapoStringHandle group_id) {
     EXIT_IF_ERROR("asapo_consumer_get_last", err);
     ASSERT_EQ_INT(10,asapo_message_meta_get_id(md),"id");
     ASSERT_EQ_STRING("10",asapo_message_meta_get_name(md),"id");
+
+//last in group
+    asapo_consumer_get_last_ingroup(consumer, group_id, &md, NULL, "default",&err);
+    EXIT_IF_ERROR("asapo_consumer_get_last_ingroup", err);
+    asapo_consumer_get_last_ingroup(consumer, group_id, &md, NULL, "default",&err);
+    ASSERT_TRUE(asapo_error_get_type(err) == kEndOfStream,"asapo_consumer_get_last_ingroup second time end of stream error");
 
 //id
     asapo_consumer_get_by_id(consumer,8, &md, NULL, "default",&err);

@@ -46,7 +46,7 @@ Error ReceiverDiscoveryService::UpdateFromEndpoint(ReceiversList* list, uint64_t
         return err;
     }
     if (code != HttpCode::OK) {
-        return TextError(responce);
+        return GeneralErrorTemplates::kSimpleError.Generate(responce);
     }
     return ParseResponse(responce, list, max_connections);
 
@@ -54,7 +54,9 @@ Error ReceiverDiscoveryService::UpdateFromEndpoint(ReceiversList* list, uint64_t
 
 void ReceiverDiscoveryService::LogUriList(const ReceiversList& uris) {
     std::string s;
-    s = std::accumulate(std::begin(uris), std::end(uris), s);
+    for (const auto& uri : uris) {
+        s += uri;
+    }
     log__->Debug("got receivers from " + endpoint_ + ":" + s);
 }
 

@@ -60,6 +60,7 @@ func (suite *TokenStoreTestSuite) TestProcessRequestWithConnectionError() {
 	ExpectReconnect(suite.mock_db)
 	suite.mock_db.On("ProcessRequest", mock.Anything, mock.Anything).Return([]byte(""),
 		&DBError{utils.StatusServiceUnavailable, ""})
+	logger.MockLog.On("WithFields", mock.Anything)
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("reconnected")))
 
 	err := suite.store.AddToken(TokenRecord{})
@@ -138,8 +139,6 @@ func (suite *TokenStoreTestSuite) TestProcessRequestCheckRevokedToken() {
 		Op:         "read_records",
 	}
 	suite.mock_db.On("ProcessRequest", req, mock.Anything).Return([]byte(""), nil)
-
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("list")))
 	time.Sleep(time.Second*1)
 	res,err := suite.store.IsTokenRevoked("123")
 	suite.Equal(err, nil, "ok")

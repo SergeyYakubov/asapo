@@ -93,22 +93,22 @@ Error RequestHandlerTcp::ReceiveResponse(std::string* response) {
     switch (sendDataResponse.error_code) {
     case kNetAuthorizationError : {
         auto res_err = ProducerErrorTemplates::kWrongInput.Generate();
-        res_err->Append(sendDataResponse.message);
+        res_err->AddDetails("response", sendDataResponse.message);
         return res_err;
     }
     case kNetErrorNotSupported : {
         auto res_err = ProducerErrorTemplates::kUnsupportedClient.Generate();
-        res_err->Append(sendDataResponse.message);
+        res_err->AddDetails("response", sendDataResponse.message);
         return res_err;
     }
     case kNetErrorWrongRequest : {
         auto res_err = ProducerErrorTemplates::kWrongInput.Generate();
-        res_err->Append(sendDataResponse.message);
+        res_err->AddDetails("response", sendDataResponse.message);
         return res_err;
     }
     case kNetErrorWarning: {
         auto res_err = ProducerErrorTemplates::kServerWarning.Generate();
-        res_err->Append(sendDataResponse.message);
+        res_err->AddDetails("response", sendDataResponse.message);
         return res_err;
     }
     case kNetErrorReauthorize: {
@@ -122,7 +122,7 @@ Error RequestHandlerTcp::ReceiveResponse(std::string* response) {
         return nullptr;
     default:
         auto res_err = ProducerErrorTemplates::kInternalServerError.Generate();
-        res_err->Append(sendDataResponse.message);
+            res_err->AddDetails("response", sendDataResponse.message);
         return res_err;
     }
 }

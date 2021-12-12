@@ -6,7 +6,7 @@ def callback(payload,err):
         print("could not send: ",payload,err)
     elif err is not None:
         # The data was sent, but there was some unexpected problem, e.g. the file was overwritten.
-        print("sent with warning":,payload,err)
+        print("sent with warning: ",payload,err)
     else:
         # all fine
         print("successfuly sent: ",payload)
@@ -14,8 +14,7 @@ def callback(payload,err):
 endpoint = "localhost:8400"
 beamtime = "asapo_test"
 
-producer = asapo_producer
-                .create_producer(endpoint,
+producer = asapo_producer.create_producer(endpoint,
                                  'processed',    # should be 'processed' or 'raw', 'processed' writes to the core FS
                                  beamtime,       # the folder should exist
                                  'auto',         # can be 'auto', if beamtime_id is given

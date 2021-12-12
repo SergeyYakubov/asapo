@@ -15,7 +15,8 @@ type protocolTest struct {
 
 var protocolTests = []protocolTest{
 // consumer
-	{"consumer", "v0.4", true, "current", "v0.4"},
+	{"consumer", "v0.5", true, "current", "v0.5"},
+	{"consumer", "v0.4", true, "deprecates", "v0.4"},
 	{"consumer", "v0.3", true, "deprecates", "v0.3"},
 	{"consumer", "v0.2", true, "deprecates", "v0.2"},
 	{"consumer", "v0.1", true, "deprecates", "v0.1"},
@@ -24,7 +25,8 @@ var protocolTests = []protocolTest{
 
 
 // producer
-	{"producer", "v0.4", true, "current", "v0.4"},
+	{"producer", "v0.5", true, "current", "v0.5"},
+	{"producer", "v0.4", true, "deprecates", "v0.4"},
 	{"producer", "v0.3", true, "deprecates", "v0.3"},
 	{"producer", "v0.2", true, "deprecates", "v0.2"},
 	{"producer", "v0.1", true, "deprecates", "v0.1"},

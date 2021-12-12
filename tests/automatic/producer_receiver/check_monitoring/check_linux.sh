@@ -14,7 +14,7 @@ trap Cleanup EXIT
 
 Cleanup() {
 	echo cleanup
-	influx -execute "drop database ${database_name}"
+	influx -database ${database_name} -execute "drop series from statistics, RequestsRate"
     echo "db.dropDatabase()" | mongo ${beamtime_id}_detector
     rm -rf ${receiver_root_folder}
 }

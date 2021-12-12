@@ -28,7 +28,7 @@ Error DatasetModeToEnum(const std::string& mode_str, DatasetMode* mode) {
     }
 
 
-    return TextError("Wrone dataset mode:" + mode_str);
+    return GeneralErrorTemplates::kSimpleError.Generate("Wrone dataset mode:" + mode_str);
 }
 
 Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
@@ -59,8 +59,8 @@ Error EventMonConfigFactory::ParseConfigFile(std::string file_name) {
     }
 
     if (config.dataset_mode == DatasetMode::kMultiSource) {
-        err = parser.Embedded("Dataset").GetUInt64("NSources", &config.dataset_multisource_nsources);
-        err = parser.Embedded("Dataset").GetUInt64("SourceId", &config.dataset_multisource_sourceid);
+        (err = parser.Embedded("Dataset").GetUInt64("NSources", &config.dataset_multisource_nsources)) ||
+        ((err = parser.Embedded("Dataset").GetUInt64("SourceId", &config.dataset_multisource_sourceid)));
     }
 
 
@@ -95,7 +95,7 @@ Error EventMonConfigFactory::CheckMode() {
     } else if (config.mode_str == "filesystem") {
         config.mode = RequestHandlerType::kFilesystem;
     } else {
-        return  TextError("wrong producer mode: " + config.mode_str);
+        return  GeneralErrorTemplates::kSimpleError.Generate("wrong producer mode: " + config.mode_str);
     }
     return nullptr;
 }
@@ -108,19 +108,20 @@ Error EventMonConfigFactory::CheckLogLevel() {
 
 Error EventMonConfigFactory::CheckNThreads() {
     if (config.nthreads == 0 || config.nthreads > kMaxProcessingThreads ) {
-        return  TextError("NThreads should between 1 and " + std::to_string(kMaxProcessingThreads));
+        return  GeneralErrorTemplates::kSimpleError.Generate("NThreads should between 1 and " + std::to_string(
+                    kMaxProcessingThreads));
     }
     return nullptr;
 }
 
 Error EventMonConfigFactory::CheckDatasets() {
     if (config.dataset_mode == DatasetMode::kBatch && config.dataset_batch_size < 1) {
-        return  TextError("Batch size should > 0");
+        return  GeneralErrorTemplates::kSimpleError.Generate("Batch size should > 0");
     }
 
 
     if (config.dataset_mode == DatasetMode::kMultiSource && config.dataset_multisource_nsources < 1) {
-        return  TextError("Number of sources size should be > 0");
+        return  GeneralErrorTemplates::kSimpleError.Generate("Number of sources size should be > 0");
     }
 
 

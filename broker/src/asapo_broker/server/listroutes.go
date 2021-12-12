@@ -36,6 +36,12 @@ var listRoutes = utils.Routes{
 		routeGetLast,
 	},
 	utils.Route{
+		"GetGroupedLast",
+		"Get",
+		"/{apiver}/beamtime/{beamtime}/{datasource}/{stream}/{groupid}/groupedlast",
+		routeGetGroupedLast,
+	},
+	utils.Route{
 		"GetLastAck",
 		"Get",
 		"/{apiver}/beamtime/{beamtime}/{datasource}/{stream}/{groupid}/lastack",

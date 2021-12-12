@@ -18,39 +18,8 @@
 #include "asapo/common/networking.h"
 #include "../receiver_mocking.h"
 
-using asapo::MockRequest;
-using asapo::MessageMeta;
-using ::testing::Test;
-using ::testing::Return;
-using ::testing::ReturnRef;
-using ::testing::_;
-using ::testing::DoAll;
-using ::testing::SetArgReferee;
-using ::testing::Gt;
-using ::testing::Eq;
-using ::testing::Ne;
-using ::testing::Mock;
-using ::testing::NiceMock;
-using ::testing::InSequence;
-using ::testing::SetArgPointee;
-using ::testing::AllOf;
-using ::testing::HasSubstr;
-
-
-using ::asapo::Error;
-using ::asapo::ErrorInterface;
-using ::asapo::FileDescriptor;
-using ::asapo::SocketDescriptor;
-using ::asapo::MockIO;
-using asapo::Request;
-using asapo::RequestHandlerDbDeleteStream;
-using ::asapo::GenericRequestHeader;
-
-using asapo::MockDatabase;
-using asapo::RequestFactory;
-using asapo::SetReceiverConfig;
-using asapo::ReceiverConfig;
-
+using namespace testing;
+using namespace asapo;
 
 namespace {
 
@@ -64,14 +33,14 @@ class DbMetaDeleteStreamTests : public Test {
     std::string expected_beamtime_id = "beamtime_id";
     std::string expected_data_source = "source";
     std::string expected_stream = "stream";
-    uint64_t expected_custom_data[asapo::kNCustomParams] {0, 0, 0};
+    CustomRequestData expected_custom_data {0, 0, 0};
 
     void SetUp() override {
         GenericRequestHeader request_header;
         handler.db_client__ = std::unique_ptr<asapo::Database> {&mock_db};
         handler.log__ = &mock_logger;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
-        ON_CALL(*mock_request, GetBeamtimeId()).WillByDefault(ReturnRef(expected_beamtime_id));
+        SetDefaultRequestCalls(mock_request.get(),expected_beamtime_id);
     }
     void TearDown() override {
         handler.db_client__.release();
@@ -79,9 +48,9 @@ class DbMetaDeleteStreamTests : public Test {
     void ExpectDelete(uint64_t flag, const asapo::DBErrorTemplate* errorTemplate) {
         expected_custom_data[0] = flag;
         SetReceiverConfig(config, "none");
-        EXPECT_CALL(*mock_request, GetCustomData_t()).WillOnce(Return(expected_custom_data));
-        EXPECT_CALL(*mock_request, GetDataSource()).WillOnce(ReturnRef(expected_data_source));
-        EXPECT_CALL(*mock_request, GetStream()).WillOnce(Return(expected_stream));
+        EXPECT_CALL(*mock_request, GetCustomData_t()).WillRepeatedly(Return(expected_custom_data));
+        EXPECT_CALL(*mock_request, GetDataSource()).WillRepeatedly(ReturnRef(expected_data_source));
+        EXPECT_CALL(*mock_request, GetStream()).WillRepeatedly(Return(expected_stream));
 
         asapo::DeleteStreamOptions opt;
         opt.Decode(flag);
@@ -98,9 +67,9 @@ class DbMetaDeleteStreamTests : public Test {
         }
 
         EXPECT_CALL(mock_db, Connect_t(config.database_uri, expected_beamtime_id + "_" + expected_data_source)).
-        WillOnce(testing::Return(nullptr));
+        WillRepeatedly(testing::Return(nullptr));
         EXPECT_CALL(mock_db, DeleteStream_t(expected_stream)).
-        WillOnce(testing::Return(errorTemplate == nullptr ? nullptr : errorTemplate->Generate().release()));
+        WillRepeatedly(testing::Return(errorTemplate == nullptr ? nullptr : errorTemplate->Generate().release()));
         if (errorTemplate == nullptr) {
             EXPECT_CALL(mock_logger, Debug(AllOf(HasSubstr("deleted stream meta"),
                                                  HasSubstr(config.database_uri),
