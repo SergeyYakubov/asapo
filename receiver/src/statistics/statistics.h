@@ -27,10 +27,10 @@ struct StatisticsToSend {
 class Statistics {
   public:
     explicit Statistics(unsigned int write_interval = kDefaultStatisticWriteIntervalMs);
-    VIRTUAL void SendIfNeeded(bool send_always = false) noexcept;
-    VIRTUAL void IncreaseRequestCounter() noexcept;
-    VIRTUAL void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
-    VIRTUAL void AddTag(const std::string& name, const std::string& value) noexcept;
+    ASAPO_VIRTUAL void SendIfNeeded(bool send_always = false) noexcept;
+    ASAPO_VIRTUAL void IncreaseRequestCounter() noexcept;
+    ASAPO_VIRTUAL void IncreaseRequestDataVolume(uint64_t transferred_data_volume) noexcept;
+    ASAPO_VIRTUAL void AddTag(const std::string& name, const std::string& value) noexcept;
     void SetWriteInterval(uint64_t interval_ms);
     std::vector<std::unique_ptr<StatisticsSender>> statistics_sender_list__;
     virtual ~Statistics() = default;

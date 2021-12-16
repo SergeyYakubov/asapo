@@ -14,7 +14,7 @@ namespace asapo {
 class ReceiverDataServerRequestHandlerFactory : public RequestHandlerFactory {
   public:
     ReceiverDataServerRequestHandlerFactory(RdsNetServer* server, DataCache* data_cache, Statistics* statistics);
-    VIRTUAL std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) override;
+    ASAPO_VIRTUAL std::unique_ptr<RequestHandler> NewRequestHandler(uint64_t thread_id, uint64_t* shared_counter) override;
   private:
     RdsNetServer* server_;
     DataCache* data_cache_;

@@ -19,11 +19,11 @@ using ReceiversList = std::vector<std::string>;
 class ReceiverDiscoveryService {
   public:
     explicit ReceiverDiscoveryService(std::string endpoint, uint64_t update_frequency_ms);
-    VIRTUAL void StartCollectingData();
-    VIRTUAL ~ReceiverDiscoveryService();
-    VIRTUAL uint64_t MaxConnections();
-    VIRTUAL ReceiversList RotatedUriList(uint64_t nthread);
-    VIRTUAL uint64_t UpdateFrequency();
+    ASAPO_VIRTUAL void StartCollectingData();
+    ASAPO_VIRTUAL ~ReceiverDiscoveryService();
+    ASAPO_VIRTUAL uint64_t MaxConnections();
+    ASAPO_VIRTUAL ReceiversList RotatedUriList(uint64_t nthread);
+    ASAPO_VIRTUAL uint64_t UpdateFrequency();
   public:
     std::unique_ptr<HttpClient> httpclient__;
     const AbstractLogger* log__;

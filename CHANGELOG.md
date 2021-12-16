@@ -1,3 +1,12 @@
+## 21.12.1 (in progress)
+
+IMPROVEMENTS
+* renamed and hid C++ macros from client code
+
+BUG FIXES
+* Producer API: fixed bug segfault in Python code when sending data object which memory is from some other object
+
+
 ## 21.12.0
 
 FEATURES
