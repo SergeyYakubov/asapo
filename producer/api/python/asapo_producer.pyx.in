@@ -153,9 +153,6 @@ cdef class PyProducer:
         if err:
             throw_exception(err)
         if data is not None:
-          if data.base is not None:
-            Py_XINCREF(<PyObject*>data.base)
-          else:
             Py_XINCREF(<PyObject*>data)
         if callback != None:
             Py_XINCREF(<PyObject*>callback)
@@ -456,9 +453,6 @@ cdef class PyProducer:
     cdef void c_callback_ndarr(self,py_callback,nd_array,RequestCallbackPayload payload, Error err) with gil:
         self.c_callback_python(py_callback,nd_array,payload,err)
         if nd_array is not None:
-          if nd_array.base is not None:
-            Py_XDECREF(<PyObject*>nd_array.base)
-          else:
             Py_XDECREF(<PyObject*>nd_array)
 
     cdef void c_callback_bytesaddr(self,py_callback,bytes_array,RequestCallbackPayload payload, Error err) with gil:
