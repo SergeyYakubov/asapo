@@ -1,0 +1,37 @@
+{
+  "PerformanceDbServer":"localhost:8086",
+  "MonitorPerformance": true,
+  "PerformanceDbName": "db_test",
+  "DatabaseServer":"auto",
+  "DiscoveryServer": "localhost:8400/asapo-discovery",
+  "DataServer": {
+    "AdvertiseURI": "127.0.0.1:{{ env "NOMAD_PORT_recv_ds" }}",
+    "NThreads": 2,
+    "ListenPort": {{ env "NOMAD_PORT_recv_ds" }},
+    "NetworkMode": ["fabric"]
+  },
+  "Metrics": {
+    "Expose": true,
+    "ListenPort": {{ env "NOMAD_PORT_recv_metrics" }}
+  },
+  "DataCache": {
+    "Use": @RECEIVER_USE_CACHE@,
+    "SizeGB": 1,
+    "ReservedShare": 10
+  },
+  "AuthorizationServer": "localhost:8400/asapo-authorizer",
+  "AuthorizationInterval": 1000,
+  "ListenPort": {{ env "NOMAD_PORT_recv" }},
+  "Tag": "{{ env "NOMAD_ADDR_recv" }}",
+  "ReceiveToDiskThresholdMB":50,
+  "LogLevel" : "debug",
+  "Kafka" : {
+    "Enabled" : true,
+    "KafkaClient": {
+      "metadata.broker.list": "{{ env "NOMAD_ADDR_bootstrap" }}"
+    },
+    "KafkaTopics": {
+      "asapo": {}
+    }
+  }
+  }
