@@ -3,7 +3,7 @@
 #include "librdkafka/rdkafka.h"
 #include "librdkafka/rdkafka_mock.h"
 
-int main(int argc, char** argv) {
+int main(/*int argc, char** argv*/) {
     rd_kafka_t *rkproducer, *rkconsumer;
     rd_kafka_conf_t *conf = rd_kafka_conf_new();
     rd_kafka_mock_cluster_t *mcluster;
