@@ -28,7 +28,7 @@
   "Kafka" : {
     "Enabled" : true,
     "KafkaClient": {
-      "metadata.broker.list": "{{ env "NOMAD_ADDR_bootstrap" }}"
+      "metadata.broker.list": "{{ env "NOMAD_META_receiver_kafka_metadata_broker_list" }}"
     },
     "KafkaTopics": {
       "asapo": {}

@@ -58,12 +58,11 @@ int main(/*int argc, char** argv*/) {
         fprintf(stderr, "Failed to create kafka consumer: %s\n", errstr);
         return EXIT_FAILURE;
     }
-    rd_kafka_message_t *rkmessage = rd_kafka_consumer_poll(rkconsumer, 10000);
+    rd_kafka_message_t *rkmessage = rd_kafka_consumer_poll(rkconsumer, 30000);
 
     if(!rkmessage) {
         fprintf(stderr, "No kafka message received\n");
-        //return EXIT_FAILURE;
-        return EXIT_SUCCESS;
+        return EXIT_FAILURE;
     } else {
         fprintf(stderr, "Got message: err=%d, size=%ld\n", rkmessage->err, rkmessage->len);
     }

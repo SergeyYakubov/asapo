@@ -46,10 +46,8 @@ BOOTSTRAP=$(cat bootstrap)
 
 echo "Read kafka bootstrap: ${BOOTSTRAP}"
 
-export NOMAD_ADDR_bootstrap=${BOOTSTRAP}
-
 nomad stop receiver
-nomad run receiver_kafka.nmd
+nomad run -var receiver_kafka_metadata_broker_list="${BOOTSTRAP}" receiver_kafka.nmd
 while true
 do
   sleep 1

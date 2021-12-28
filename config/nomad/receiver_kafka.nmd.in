@@ -1,3 +1,7 @@
+variable "receiver_kafka_metadata_broker_list" {
+    type = string
+}
+
 job "receiver" {
   datacenters = ["dc1"]
 
@@ -36,13 +40,16 @@ job "receiver" {
         }
       }
 
+      meta {
+        receiver_kafka_metadata_broker_list = "${var.receiver_kafka_metadata_broker_list}"
+      }
+
       template {
          source        = "@WORK_DIR@/receiver_kafka.json.tpl"
          destination   = "local/receiver.json"
          change_mode   = "signal"
          change_signal = "SIGHUP"
       }
-
     }
   }
 }

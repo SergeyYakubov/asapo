@@ -48,8 +48,8 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
 
     if (kafkaEnabled) {
         // read the configuration only if kafka is enabled. empty configuration means "disabled"
-        (err = parser.GetDictionaryString("KafkaClient", &config.kafka_config.global_config)) ||
-        (err = parser.GetArrayObjectMembers("KafkaTopics", &kafkaTopics));
+        (err = parser.Embedded("Kafka").GetDictionaryString("KafkaClient", &config.kafka_config.global_config)) ||
+        (err = parser.Embedded("Kafka").GetArrayObjectMembers("KafkaTopics", &kafkaTopics));
 
         if (err) {
             return err;
@@ -57,7 +57,7 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
 
         for(const auto& topic : kafkaTopics) {
             auto topicConfig = config.kafka_config.topics_config[topic];
-            err = parser.Embedded("KafkaTopics").GetDictionaryString(topic, &topicConfig);
+            err = parser.Embedded("Kafka").Embedded("KafkaTopics").GetDictionaryString(topic, &topicConfig);
             if (err) {
                 return err;
             }
