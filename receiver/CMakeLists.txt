@@ -83,6 +83,7 @@ endif()
 
 configure_file(docker/Dockerfile . COPYONLY)
 configure_file(docker/install_libfabric.sh . COPYONLY)
+configure_file(docker/install_rdkafka.sh . COPYONLY)
 
 
 ################################

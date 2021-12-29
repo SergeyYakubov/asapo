@@ -8,7 +8,7 @@
     "AdvertiseURI": "127.0.0.1:{{ env "NOMAD_PORT_recv_ds" }}",
     "NThreads": 2,
     "ListenPort": {{ env "NOMAD_PORT_recv_ds" }},
-    "NetworkMode": ["fabric"]
+    "NetworkMode": ["tcp"]
   },
   "Metrics": {
     "Expose": true,

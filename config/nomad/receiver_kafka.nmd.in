@@ -32,11 +32,16 @@ job "receiver" {
         name = "asapo-receiver"
         port = "recv"
         check {
-          name     = "alive"
-          type     = "tcp"
+          name     = "metrics"
+          type     = "http"
+          port = "recv_metrics"
+          path     = "/metrics"
           interval = "10s"
           timeout  = "2s"
           initial_status =   "passing"
+        }
+        meta {
+          metrics-port = "${NOMAD_PORT_recv_metrics}"
         }
       }
 

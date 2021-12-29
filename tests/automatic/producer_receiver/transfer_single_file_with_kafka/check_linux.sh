@@ -30,13 +30,15 @@ Cleanup() {
     influx -database ${database_name} -execute "drop series from statistics, RequestsRate"
 }
 
-./transfer-single-file_kafka & KAFKA_PID=$!
+rm -f bootstrap
+
+./transfer-single-file_kafka processed/1 & KAFKA_PID=$!
 
 echo "Started the kafka listener"
 
 while [ ! -f bootstrap ]; do
     if ! kill -0 $KAFKA_PID > /dev/null 2>&1; then
-        # listener exited preliminary, i.e. some error
+        echo Kafka listener exited unexpectedly
         exit 1
     fi
     sleep 1
@@ -61,8 +63,6 @@ mkdir -p ${receiver_folder}
 $1 localhost:8400 ${beamtime_id} 100 1 1  0 30
 
 ls -ln ${receiver_folder}/processed/1 | awk '{ print $5 }'| grep 100000
-
-$1 localhost:8400 wrong_beamtime_id 100 1 1 0 1 2>&1 | tee /dev/stderr | grep "authorization"
 
 wait $KAFKA_PID
 RESULT=$?
