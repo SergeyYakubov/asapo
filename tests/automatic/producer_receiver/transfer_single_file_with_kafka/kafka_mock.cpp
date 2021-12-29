@@ -80,11 +80,11 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Got error: %s\n", rd_kafka_message_errstr(rkmessage));
             return EXIT_FAILURE;
         } else {
-            if (strncmp((const char *)rkmessage->payload, expectedmsg, rkmessage->len)) {
+            if (!strncmp((const char *)rkmessage->payload, expectedmsg, rkmessage->len)) {
                 fprintf(stdout, "Kafka message is correct: %.*s\n", (int)rkmessage->len, (const char *)rkmessage->payload);
                 return EXIT_SUCCESS;
             } else {
-                fprintf(stderr, "Kafka message is incorrect: %.*s\n", (int)rkmessage->len, (const char *)rkmessage->payload);
+                fprintf(stderr, "Kafka message is incorrect: %.*s (expected %s)\n", (int)rkmessage->len, (const char *)rkmessage->payload, expectedmsg);
                 return EXIT_FAILURE;
             }
         }
