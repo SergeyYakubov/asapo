@@ -84,22 +84,22 @@ public:
     public:
         //std::mutex mutex;
         ReceiverDataPointContainer container;
-
-        VIRTUAL ProducerToReceiverTransferDataPoint* GetProducerToReceiverTransfer(
+        ASAPO_VIRTUAL ~ToBeSendData()=default;
+        ASAPO_VIRTUAL ProducerToReceiverTransferDataPoint* GetProducerToReceiverTransfer(
                 const std::string& pipelineStepId,
                 const std::string& producerInstanceId,
                 const std::string& beamtime,
                 const std::string& source,
                 const std::string& stream);
 
-        VIRTUAL RdsToConsumerDataPoint* GetReceiverDataServerToConsumer(
+        ASAPO_VIRTUAL RdsToConsumerDataPoint* GetReceiverDataServerToConsumer(
                 const std::string& pipelineStepId,
                 const std::string& consumerInstanceId,
                 const std::string& beamtime,
                 const std::string& source,
                 const std::string& stream);
 
-        VIRTUAL RdsMemoryDataPoint* GetMemoryDataPoint(
+        ASAPO_VIRTUAL RdsMemoryDataPoint* GetMemoryDataPoint(
                 const std::string& beamtime,
                 const std::string& source,
                 const std::string& stream);

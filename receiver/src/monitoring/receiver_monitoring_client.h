@@ -42,6 +42,7 @@ public:
                                               uint64_t transferTimeInMicroseconds) = 0;
 
     virtual void FillMemoryStats() = 0;
+    virtual ~ReceiverMonitoringClient() = default;
 };
 
 using SharedReceiverMonitoringClient = std::shared_ptr<asapo::ReceiverMonitoringClient>;

@@ -61,7 +61,6 @@ set(MONITORING_FILES
 
 if (ENABLE_NEW_RECEIVER_MONITORING)
     add_definitions(-DNEW_RECEIVER_MONITORING_ENABLED)
-
     include(../CMakeIncludes/grpc_common.cmake)
 
     get_filename_component(proto_in_dir "../common/networking/monitoring" ABSOLUTE)
@@ -93,6 +92,9 @@ if (ENABLE_NEW_RECEIVER_MONITORING)
             ${proto_common_h}
             ${grpc_c}
             ${grpc_h})
+    IF(NOT WIN32)
+        target_compile_options(grpc_ingest_service_proto PUBLIC "-Wno-error")
+    ENDIF()
     target_link_libraries(grpc_ingest_service_proto
             ${_REFLECTION}
             ${_GRPC_GRPCPP}
@@ -100,7 +102,7 @@ if (ENABLE_NEW_RECEIVER_MONITORING)
     find_package(gRPC CONFIG REQUIRED)
 
     # Include generated *.pb.h files
-    include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+    include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}")
 
     set(MONITORING_FILES
             ${MONITORING_FILES}
@@ -131,7 +133,7 @@ target_include_directories(${TARGET_NAME} SYSTEM PUBLIC  ${LIBFABRIC_INCLUDE_DIR
 target_link_libraries(${TARGET_NAME} CURL::libcurl ${CMAKE_THREAD_LIBS_INIT} database
         asapo-fabric ${ASAPO_COMMON_FABRIC_LIBRARIES})
 if (ENABLE_NEW_RECEIVER_MONITORING)
-    target_link_libraries(${TARGET_NAME} grpc_ingest_service_proto ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+target_link_libraries(${TARGET_NAME} grpc_ingest_service_proto ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
 endif()
 
 

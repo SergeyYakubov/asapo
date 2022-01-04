@@ -17,17 +17,20 @@ private:
     uint64_t incomingBytes_ = 0;
     uint64_t outgoingBytes_ = 0;
 public:
-    VIRTUAL void StartTimer(StatisticEntity entity);
-    VIRTUAL void StopTimer();
+    ASAPO_VIRTUAL void StartTimer(StatisticEntity entity);
+    ASAPO_VIRTUAL void StopTimer();
 
-    VIRTUAL void AddIncomingBytes(uint64_t incomingByteCount);
-    VIRTUAL void AddOutgoingBytes(uint64_t outgoingByteCount);
+    ASAPO_VIRTUAL void AddIncomingBytes(uint64_t incomingByteCount);
+    ASAPO_VIRTUAL void AddOutgoingBytes(uint64_t outgoingByteCount);
 
-    VIRTUAL uint64_t GetIncomingBytes() const;
-    VIRTUAL uint64_t GetOutgoingBytes() const;
+    ASAPO_VIRTUAL uint64_t GetIncomingBytes() const;
+    ASAPO_VIRTUAL uint64_t GetOutgoingBytes() const;
 
-    VIRTUAL std::chrono::nanoseconds GetElapsed(StatisticEntity entity) const;
-    VIRTUAL uint64_t GetElapsedMicrosecondsCount(StatisticEntity entity) const;
+    ASAPO_VIRTUAL std::chrono::nanoseconds GetElapsed(StatisticEntity entity) const;
+    ASAPO_VIRTUAL uint64_t GetElapsedMicrosecondsCount(StatisticEntity entity) const;
+
+    ASAPO_VIRTUAL ~InstancedStatistics() = default;
+
 };
 
 using SharedInstancedStatistics = std::shared_ptr<asapo::InstancedStatistics>;

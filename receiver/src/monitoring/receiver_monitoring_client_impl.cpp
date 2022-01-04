@@ -12,7 +12,7 @@ using namespace asapo;
 static const int kUniversalSendingIntervalMs = 5000;
 
 uint64_t NowUnixTimestampMs() {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
 }
 
 asapo::ReceiverMonitoringClientImpl::ReceiverMonitoringClientImpl(const asapo::SharedCache& cache) : cache_(cache), io__{GenerateDefaultIO()}, log__{GetDefaultReceiverMonitoringLogger()}, http_client__{DefaultHttpClient()}, toBeSendData__{
