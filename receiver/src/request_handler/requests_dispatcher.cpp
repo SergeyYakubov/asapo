@@ -104,6 +104,7 @@ std::unique_ptr<Request> RequestsDispatcher::GetNextRequest(Error* err) const no
         }
         return nullptr;
     }
+    statistics->StopTimer();
     auto request = request_factory__->GenerateRequest(generic_request_header, socket_fd_, producer_uri_, statistics, err);
     if (*err) {
         log__->Error(LogMessageWithFields(*err).Append("origin", HostFromUri(producer_uri_)));

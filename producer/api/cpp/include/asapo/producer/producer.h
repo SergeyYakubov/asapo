@@ -7,7 +7,7 @@
 #include "asapo/logger/logger.h"
 #include "common.h"
 #include "asapo/common/data_structs.h"
-#include "asapo/preprocessor/definitions.h"
+#include "asapo/preprocessor/deprecated.h"
 
 namespace asapo {
 
@@ -127,7 +127,7 @@ class Producer {
       \param callback - callback function
       \return Error - will be nullptr on success
     */
-    virtual Error DEPRECATED("obsolates 01.07.2022, use SendBeamtimeMetadata instead") SendMetadata(
+    virtual Error ASAPO_DEPRECATED("obsolates 01.07.2022, use SendBeamtimeMetadata instead") SendMetadata(
         const std::string& metadata,
         RequestCallback callback)  = 0;
 

@@ -16,10 +16,10 @@ struct TcpConnectionInfo {
 
 class TcpConnectionPool {
   public:
-    VIRTUAL SocketDescriptor GetFreeConnection(const std::string& source, bool* reused, Error* err);
-    VIRTUAL SocketDescriptor Reconnect(SocketDescriptor sd, Error* err);
-    VIRTUAL  void ReleaseConnection(SocketDescriptor sd);
-    VIRTUAL ~TcpConnectionPool() = default;
+    ASAPO_VIRTUAL SocketDescriptor GetFreeConnection(const std::string& source, bool* reused, Error* err);
+    ASAPO_VIRTUAL SocketDescriptor Reconnect(SocketDescriptor sd, Error* err);
+    ASAPO_VIRTUAL  void ReleaseConnection(SocketDescriptor sd);
+    ASAPO_VIRTUAL ~TcpConnectionPool() = default;
     TcpConnectionPool();
     std::unique_ptr<IO> io__;
   private:

@@ -5,6 +5,7 @@ if (UNIX)
         add_subdirectory(python_deadlock)
         add_subdirectory(streamlist_python_multithread)
         add_subdirectory(error-sending-data-using-callback-method)
+        add_subdirectory(python_segfault_dataview)
     endif()
 endif()
 

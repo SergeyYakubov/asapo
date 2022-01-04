@@ -1,19 +1,32 @@
-## 21.12.0 (in progress)
+## 21.12.1 (in progress)
+
+FEATURES
+* Monitoring: Added detailed monitoring and pipeline visualization
+
+IMPROVEMENTS
+* renamed and hid C++ macros from client code
+
+BUG FIXES
+* Producer API: fixed bug segfault in Python code when sending data object which memory is from some other object
+
+
+## 21.12.0
 
 FEATURES
 * Consumer API: Get last within consumer group returns message only once
 * Producer API: An option to write raw data to core filesystem directly
-* Consumer/Producer API - packages for Debian 11.1
+* Consumer/Producer API - packages for Debian 11.1, wheel for Python 3.9
 * Consumer/Producer API - dropped Python 2 support for wheels and packages for new Debian/CentOS versions
+
+INTERNAL
+* Improved logging - tags for beamline, beamtime, ...
+* Updated orchestration tools to latest version
+
+## 21.09.0
 
 FEATURES
 * Producer API: C client
 * Introduce a token to send data in "raw" mode without LDAP authorization
-
-FEATURES
-* Monitoring: Added detailed monitoring and pipeline visualization
-* Consumer API: New protocol format is disabled by default. Use `EnableNewMonitoringApiFormat` to enable
-* Producer API: New protocol format is disabled by default. Use `EnableNewMonitoringApiFormat` to enable
 
 IMPROVEMENTS
 * Allow using ASAPO for commissioning beamtimes
@@ -28,11 +41,8 @@ INTERNAL
 * Added profiling for Go services
 * Added metrics and alerts for asapo services
 
-BREAKING CHANGES
-* `SourceCredentials` now contains an `InstanceId` and `PipelineStepId`.  
-  If you are not interested in Monitoring, just set them to `"auto"`.
-
 ## 21.06.0
+
 FEATURES
 * Consumer API: C client
 * Producer API: An option to automatically generate message id (use sparingly, reduced performance possible)

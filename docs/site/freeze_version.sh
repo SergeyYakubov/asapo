@@ -2,7 +2,6 @@
 
 if [[ -z "${DOCS_VERSION}" ]]; then
     echo No version specified
-
     exit 1
 fi
 
@@ -27,22 +26,28 @@ CONTENT='content=\"\.\/'
 #replace the links to the code examples to the frozen copies
 for file in $(find ./versioned_docs/version-$DOCS_VERSION -type f)
 do
-ed -s $file <<ED_COMMANDS > /dev/null 2>&1
-,s/content=\"\?\.\/examples/content=\".\/${VERSIONED_EXAMPLES_ESCAPED}/g
-w
-ED_COMMANDS
+if [[ `uname -s` == "Darwin" ]]; then
+  sed -i '' -e "s/content=\"\.\/examples/content=\".\/${VERSIONED_EXAMPLES_ESCAPED}/g" $file
+else
+  sed -i -e "s/content=\"\.\/examples/content=\".\/${VERSIONED_EXAMPLES_ESCAPED}/g" $file
+fi
 done
 
 #replace the links to the dev-packages to the versioned ones
+read -r -d '' template << EOM
+-e s/asapo-cluster-dev:100\.0\.develop/asapo-cluster:${DOCS_VERSION}/g
+-e s/==100\.0\.dev0/==${VERSION_FOR_PIP}/g
+-e s/100\.0[~.]develop/${DOCS_VERSION}/g
+-e s/100\.0[~.]dev0/${DOCS_VERSION}/g
+EOM
+
 for file in $(find ./${VERSIONED_EXAMPLES} -type f)
 do
-ed -s $file <<ED_COMMANDS > /dev/null 2>&1
-,s/asapo-cluster-dev:100\.0\.develop/asapo-cluster:${DOCS_VERSION}/g
-,s/==100\.0\.dev0/==${VERSION_FOR_PIP}/g
-,s/100\.0[~.]develop/${DOCS_VERSION}/g
-,s/100\.0[~.]dev0/${DOCS_VERSION}/g
-w
-ED_COMMANDS
+if [[ `uname -s` == "Darwin" ]]; then
+  sed -i '' $template $file
+else
+  sed -i $template $file
+fi
 done
 
 exit 0
