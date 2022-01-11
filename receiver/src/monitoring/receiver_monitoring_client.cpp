@@ -7,7 +7,7 @@
 
 using namespace asapo;
 
-SharedReceiverMonitoringClient asapo::GenerateDefaultReceiverMonitoringClient(const SharedCache& cache, bool forceNoopImplementation) {
+SharedReceiverMonitoringClient asapo::GenerateDefaultReceiverMonitoringClient(SharedCache cache, bool forceNoopImplementation) {
 #ifdef NEW_RECEIVER_MONITORING_ENABLED
     if (!forceNoopImplementation) {
         return SharedReceiverMonitoringClient{new ReceiverMonitoringClientImpl{cache}};

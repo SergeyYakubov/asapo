@@ -18,7 +18,7 @@ class ReceiverMonitoringClientImpl : public ReceiverMonitoringClient {
 public:
     // Defined below
     class ToBeSendData;
-private:
+ private:
     std::unique_ptr<std::thread> sendingThread_;
 
     void SendingThreadFunction();
@@ -40,7 +40,7 @@ public:
     std::unique_ptr<ToBeSendData> toBeSendData__;
     mutable bool sendingThreadRunning__ = false;
 
-    explicit ReceiverMonitoringClientImpl(const SharedCache& cache);
+    explicit ReceiverMonitoringClientImpl(SharedCache cache);
     ReceiverMonitoringClientImpl(const ReceiverMonitoringClientImpl&) = delete;
     ReceiverMonitoringClientImpl& operator=(const ReceiverMonitoringClientImpl&) = delete;
 

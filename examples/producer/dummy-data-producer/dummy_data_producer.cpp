@@ -214,8 +214,8 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
     asapo::Error err;
     auto producer = asapo::Producer::Create(args.discovery_service_endpoint, args.nthreads, args.handler,
                                             asapo::SourceCredentials{
-                                                    args.type, args.beamtime_id,
-                                                    "auto", args.pipeline_name, "", args.data_source, args.token
+                                                    args.type, "DummyDataProducer",
+                                                    args.pipeline_name, args.beamtime_id, "", args.data_source, args.token
                                             },
                                             3600000, &err);
     if (err) {
@@ -225,7 +225,7 @@ std::unique_ptr<asapo::Producer> CreateProducer(const Args& args) {
 
     producer->EnableLocalLog(true);
     producer->SetLogLevel(asapo::LogLevel::Info);
-    producer->EnableNewMonitoringApiFormat(true);
+    producer->EnableNewMonitoringApiFormat(false);
     return producer;
 }
 

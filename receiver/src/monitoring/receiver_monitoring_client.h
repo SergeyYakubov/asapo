@@ -47,7 +47,7 @@ public:
 
 using SharedReceiverMonitoringClient = std::shared_ptr<asapo::ReceiverMonitoringClient>;
 
-SharedReceiverMonitoringClient GenerateDefaultReceiverMonitoringClient(const SharedCache& cache, bool forceNoopImplementation);
+SharedReceiverMonitoringClient GenerateDefaultReceiverMonitoringClient(SharedCache cache, bool forceNoopImplementation);
 
 }
 #endif //ASAPO_RECEIVER_MONITORING_CLIENT_H

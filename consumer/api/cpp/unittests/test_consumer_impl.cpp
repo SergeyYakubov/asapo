@@ -358,7 +358,8 @@ TEST_F(ConsumerImplTests, GetLastOnceUsesCorrectUri) {
                 Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source_encoded + "/"
                       + expected_stream_encoded +
                       "/" + expected_group_id_encoded + "/groupedlast?token="
-                      + expected_token, _,
+                      + expected_token
+                      + "&instanceid=" + expected_instance_id_encoded + "&pipelinestep=" + expected_pipeline_step_encoded, _,
                       _)).WillOnce(DoAll(
                                        SetArgPointee<1>(HttpCode::OK),
                                        SetArgPointee<2>(nullptr),
@@ -1217,7 +1218,8 @@ TEST_F(ConsumerImplTests, GetLastDatasetInGroupUsesCorrectUri) {
                 Get_t(expected_broker_api + "/beamtime/beamtime_id/" + expected_data_source_encoded + "/"
                       +
                       expected_stream_encoded + "/" + expected_group_id_encoded + "/groupedlast?token="
-                      + expected_token + "&dataset=true&minsize=1", _,
+                      + expected_token + "&dataset=true&minsize=1"
+                      + "&instanceid=" + expected_instance_id_encoded + "&pipelinestep=" + expected_pipeline_step_encoded, _,
                       _)).WillOnce(DoAll(
                                        SetArgPointee<1>(HttpCode::OK),
                                        SetArgPointee<2>(nullptr),

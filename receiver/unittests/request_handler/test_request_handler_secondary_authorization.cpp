@@ -47,6 +47,8 @@ class SecondaryAuthorizationHandlerTests : public Test {
         auth_data.online_path = expected_beamline_path;
         auth_data.offline_path = expected_core_path;
         auth_data.beamline = expected_beamline;
+        auth_data.producer_instance_id = expected_instance_id;
+        auth_data.pipeline_step_id = expected_pipeline_step_id;
 
         auth_data.source_credentials = expected_source_credentials;
         GenericRequestHeader request_header;

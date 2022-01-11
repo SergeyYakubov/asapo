@@ -15,7 +15,7 @@ uint64_t NowUnixTimestampMs() {
     return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
 }
 
-asapo::ReceiverMonitoringClientImpl::ReceiverMonitoringClientImpl(const asapo::SharedCache& cache) : cache_(cache), io__{GenerateDefaultIO()}, log__{GetDefaultReceiverMonitoringLogger()}, http_client__{DefaultHttpClient()}, toBeSendData__{
+asapo::ReceiverMonitoringClientImpl::ReceiverMonitoringClientImpl(asapo::SharedCache cache) : cache_(cache), io__{GenerateDefaultIO()}, log__{GetDefaultReceiverMonitoringLogger()}, http_client__{DefaultHttpClient()}, toBeSendData__{
     new ToBeSendData
 }
 {
@@ -169,6 +169,10 @@ void asapo::ReceiverMonitoringClientImpl::SendReceiverRequestDataPoint(const std
 }
 
 void asapo::ReceiverMonitoringClientImpl::FillMemoryStats() {
+    if (cache_ == nullptr) {
+        return;
+    }
+
     auto metaVector = cache_->AllMetaInfosAsVector();
 
     {
@@ -340,3 +344,5 @@ uint64_t asapo::ReceiverMonitoringClientImpl::WaitTimeMsUntilNextInterval(std::c
     auto result = (uint64_t) std::chrono::duration_cast<std::chrono::milliseconds>(interval - (delta % interval)).count();
     return result;
 }
+
+
