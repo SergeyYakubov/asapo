@@ -12,15 +12,15 @@ import (
 )
 
 type SourceCredentials struct {
-	Type 	   		string
 	BeamtimeId 		string
 	Beamline   		string
 	DataSource     	string
 	Token      		string
+	Type 	   		string
 
 	// Optional
-	InstanceId		string
-	PipelineStep	string
+	InstanceId		string  `json:",omitempty"`
+	PipelineStep	string  `json:",omitempty"`
 }
 
 type authorizationRequest struct {
@@ -44,10 +44,16 @@ func getSourceCredentials(request authorizationRequest) (SourceCredentials, erro
 			InstanceId: vals[1], PipelineStep: vals[2],
 			BeamtimeId: vals[3], Beamline: vals[4], Token: vals[nvals-1]}
 		creds.DataSource = strings.Join(vals[5:nvals-1], "%")
+		if creds.InstanceId == "" {
+			creds.InstanceId = "auto"
+		}
+
+		if creds.PipelineStep == "" {
+			creds.PipelineStep = "auto"
+		}
 	} else {
 		creds = SourceCredentials{
 			Type:       vals[0],
-			InstanceId: "Unset", PipelineStep: "Unset",
 			BeamtimeId: vals[1], Beamline: vals[2], Token: vals[nvals-1]}
 		creds.DataSource = strings.Join(vals[3:nvals-1], "%")
 	}
@@ -63,13 +69,7 @@ func getSourceCredentials(request authorizationRequest) (SourceCredentials, erro
 		creds.BeamtimeId = "auto"
 	}
 
-	if creds.InstanceId == "" {
-		creds.InstanceId = "auto"
-	}
 
-	if creds.PipelineStep == "" {
-		creds.PipelineStep = "auto"
-	}
 
 	if creds.InstanceId == "auto" || creds.PipelineStep == "auto" {
 		return SourceCredentials{}, errors.New("InstanceId and PipelineStep must be already set on client side")

@@ -1,8 +1,8 @@
 package server
 
 import (
-	log "asapo_common/logger"
 	"asapo_authorizer/common"
+	log "asapo_common/logger"
 	"asapo_common/structs"
 	"asapo_common/utils"
 	"asapo_common/version"
@@ -80,7 +80,7 @@ func extractFolderTokenrequest(r *http.Request) (folderTokenRequest, error) {
 }
 
 func checkBeamtimeFolder(request folderTokenRequest, ver utils.VersionNum) (folders tokenFolders, err error) {
-	beamtimeMeta, err := findMeta(SourceCredentials{"", request.BeamtimeId, "auto", "", "", request.InstanceId, request.PipelineStep})
+	beamtimeMeta, err := findMeta(SourceCredentials{request.BeamtimeId, "auto", "", "", "",request.InstanceId, request.PipelineStep})
 	if err != nil {
 		log.Error("cannot get beamtime meta" + err.Error())
 		return folders,err

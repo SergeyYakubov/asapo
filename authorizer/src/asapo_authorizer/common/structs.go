@@ -1,8 +1,6 @@
 package common
 
 type BeamtimeMeta struct {
-	InstanceId string  `json:"instanceId"`
-	PipelineStep string     `json:"pipelineStep"`
 	BeamtimeId string  `json:"beamtimeId"`
 	Beamline string     `json:"beamline"`
 	DataSource string       `json:"dataSource"`
@@ -10,6 +8,8 @@ type BeamtimeMeta struct {
 	OnlinePath string `json:"beamline-path"`
 	Type string `json:"source-type"`
 	AccessTypes []string `json:"access-types"`
+	InstanceId string  `json:"instanceId,omitempty"`
+	PipelineStep string     `json:"pipelineStep,omitempty"`
 }
 
 type CommissioningMeta struct {

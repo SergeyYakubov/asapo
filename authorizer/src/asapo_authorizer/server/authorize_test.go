@@ -78,28 +78,28 @@ func doPostRequest(path string, buf string, authHeader string) *httptest.Respons
 
 var credTests = []struct {
 	newFormat bool
-	request string
-	cred    SourceCredentials
-	ok      bool
-	message string
+	request   string
+	cred      SourceCredentials
+	ok        bool
+	message   string
 }{
-	{false, "processed%asapo_test%auto%%", SourceCredentials{"asapo_test", "auto", "detector", "", "processed", "Unset", "Unset"}, true, "auto beamline, source and no token"},
-	{false, "processed%asapo_test%auto%%token", SourceCredentials{"asapo_test", "auto", "detector", "token", "processed", "Unset", "Unset"}, true, "auto beamline, source"},
-	{false, "processed%asapo_test%auto%source%", SourceCredentials{"asapo_test", "auto", "source", "", "processed", "Unset", "Unset"}, true, "auto beamline, no token"},
-	{false, "processed%asapo_test%auto%source%token", SourceCredentials{"asapo_test", "auto", "source", "token", "processed", "Unset", "Unset"}, true, "auto beamline,source, token"},
-	{false, "processed%asapo_test%beamline%source%token", SourceCredentials{"asapo_test", "beamline", "source", "token", "processed", "Unset", "Unset"}, true, "all set"},
-	{false, "processed%auto%beamline%source%token", SourceCredentials{"auto", "beamline", "source", "token", "processed", "Unset", "Unset"}, true, "auto beamtime"},
+	{false, "processed%asapo_test%auto%%", SourceCredentials{"asapo_test", "auto", "detector", "", "processed", "", ""}, true, "auto beamline, source and no token"},
+	{false, "processed%asapo_test%auto%%token", SourceCredentials{"asapo_test", "auto", "detector", "token", "processed", "", ""}, true, "auto beamline, source"},
+	{false, "processed%asapo_test%auto%source%", SourceCredentials{"asapo_test", "auto", "source", "", "processed", "", ""}, true, "auto beamline, no token"},
+	{false, "processed%asapo_test%auto%source%token", SourceCredentials{"asapo_test", "auto", "source", "token", "processed", "", ""}, true, "auto beamline,source, token"},
+	{false, "processed%asapo_test%beamline%source%token", SourceCredentials{"asapo_test", "beamline", "source", "token", "processed", "", ""}, true, "all set"},
+	{false, "processed%auto%beamline%source%token", SourceCredentials{"auto", "beamline", "source", "token", "processed", "", ""}, true, "auto beamtime"},
 	{false, "raw%auto%auto%source%token", SourceCredentials{}, false, "auto beamtime and beamline"},
-	{false, "raw%%beamline%source%token", SourceCredentials{"auto", "beamline", "source", "token", "raw", "Unset", "Unset"}, true, "empty beamtime"},
-	{false, "raw%asapo_test%%source%token", SourceCredentials{"asapo_test", "auto", "source", "token", "raw", "Unset", "Unset"}, true, "empty bealine"},
+	{false, "raw%%beamline%source%token", SourceCredentials{"auto", "beamline", "source", "token", "raw", "", ""}, true, "empty beamtime"},
+	{false, "raw%asapo_test%%source%token", SourceCredentials{"asapo_test", "auto", "source", "token", "raw", "", ""}, true, "empty bealine"},
 	{false, "raw%%%source%token", SourceCredentials{}, false, "both empty"},
-	{false, "processed%asapo_test%beamline%source%blabla%token", SourceCredentials{"asapo_test", "beamline", "source%blabla", "token", "processed", "Unset", "Unset"}, true, "% in source"},
-	{false, "processed%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test", "beamline", "source%blabla", "", "processed", "Unset", "Unset"}, true, "% in source, no token"},
-	{true, "processed%instance%step%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test","beamline","source%blabla","","instance", "step", "Unset", "Unset"}, true, "new format: % in source, no token"},
-	{true, "processed%auto%step%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test","beamline","source%blabla","","auto", "step", "Unset", "Unset"}, false, "new format: auto instance"},
-	{true, "processed%instance%auto%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test","beamline","source%blabla","","instance", "auto", "Unset", "Unset"}, false, "new format: auto step"},
-	{true, "processed%%auto%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test","beamline","source%blabla","","instance", "auto", "Unset", "Unset"}, false, "new format: missing instance"},
-	{true, "processed%instance%%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test","beamline","source%blabla","","instance", "auto", "Unset", "Unset"}, false, "new format: missing step"},
+	{false, "processed%asapo_test%beamline%source%blabla%token", SourceCredentials{"asapo_test", "beamline", "source%blabla", "token", "processed", "", ""}, true, "% in source"},
+	{false, "processed%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test", "beamline", "source%blabla", "", "processed", "", ""}, true, "% in source, no token"},
+	{true, "processed%instance%step%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test", "beamline", "source%blabla", "", "processed", "instance", "step"}, true, "new format: % in source, no token"},
+	{true, "processed%auto%step%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test", "beamline", "source%blabla", "", "processed", "auto", "step"}, false, "new format: auto instance"},
+	{true, "processed%instance%auto%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test", "beamline", "source%blabla", "", "processed", "instance", "auto"}, false, "new format: auto step"},
+	{true, "processed%%auto%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test", "beamline", "source%blabla", "", "processed", "", "auto"}, false, "new format: missing instance"},
+	{true, "processed%instance%%asapo_test%beamline%source%blabla%", SourceCredentials{"asapo_test", "beamline", "source%blabla", "", "processed", "instance", ""}, false, "new format: missing step"},
 }
 
 func TestSplitCreds(t *testing.T) {
@@ -118,7 +118,7 @@ func TestSplitCreds(t *testing.T) {
 }
 
 func TestAuthorizeDefaultOK(t *testing.T) {
-	allowBeamlines([]common.BeamtimeMeta{{"instance", "step", "asapo_test", "beamline", "", "2019", "tf", "", nil}})
+	allowBeamlines([]common.BeamtimeMeta{{"asapo_test", "beamline", "", "2019", "tf", "", nil,"instance", "step"},})
 	request := makeRequest(authorizationRequest{"processed%asapo_test%%%", "host", false})
 	w := doPostRequest("/authorize", request, "")
 
@@ -190,72 +190,75 @@ var commissioning_meta = `
 `
 
 var authTests = []struct {
-	newFormat       bool
-	source_type     string
-	instance_id     string
-	pipeline_step   string
-	beamtime_id     string
-	beamline        string
-	dataSource      string
-	token           string
-	originHost      string
-	status          int
-	message         string
-	answer          string
-	mode            int
+	newFormat     bool
+	source_type   string
+	instance_id   string
+	pipeline_step string
+	beamtime_id   string
+	beamline      string
+	dataSource    string
+	token         string
+	originHost    string
+	status        int
+	message       string
+	answer        string
+	mode          int
 }{
-	{true, "processed", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("bt_test", nil), "127.0.0.2", http.StatusUnauthorized, "missing access types",
+	{false, "processed", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("bt_test", nil), "127.0.0.2", http.StatusUnauthorized, "missing access types",
 		"", 0},
-	{true, "processed", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("bt_test", []string{}), "127.0.0.2", http.StatusUnauthorized, "empty access types",
+	{false, "processed", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("bt_test", []string{}), "127.0.0.2", http.StatusUnauthorized, "empty access types",
 		"", 0},
-	{true, "processed", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("bt_test", []string{"write"}), "127.0.0.2", http.StatusOK, "user source with correct token",
+	{false, "processed", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("bt_test", []string{"write"}), "127.0.0.2", http.StatusOK, "user source with correct token",
 		`{"beamtimeId":"test","beamline":"bl1","dataSource":"dataSource","corePath":"./tf/gpfs/bl1/2019/data/test","beamline-path":"","source-type":"processed","access-types":["write"]}`, 0},
-	{true, "processed", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("bt_test", []string{"write"}), "127.0.0.2", http.StatusUnauthorized, "token was revoked",
+	{false, "processed", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("bt_test", []string{"write"}), "127.0.0.2", http.StatusUnauthorized, "token was revoked",
 		"", 2},
-	{true, "processed", "instance", "step", "test_online", "auto", "dataSource", prepareAsapoToken("bt_test_online", []string{"read"}), "127.0.0.1", http.StatusOK, "with online path, processed type",
+	{false, "processed", "instance", "step", "test_online", "auto", "dataSource", prepareAsapoToken("bt_test_online", []string{"read"}), "127.0.0.1", http.StatusOK, "with online path, processed type",
 		`{"beamtimeId":"test_online","beamline":"bl1","dataSource":"dataSource","corePath":"./tf/gpfs/bl1/2019/data/test_online","beamline-path":"","source-type":"processed","access-types":["read"]}`, 0},
-	{true, "processed", "instance", "step", "test1", "auto", "dataSource", prepareAsapoToken("bt_test1", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "correct token, beamtime not found",
+	{false, "processed", "instance", "step", "test1", "auto", "dataSource", prepareAsapoToken("bt_test1", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "correct token, beamtime not found",
 		"", 1},
-	{true, "processed", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("wrong", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "user source with wrong token",
+	{false, "processed", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("wrong", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "user source with wrong token",
 		"", 0},
-	{true, "processed", "instance", "step", "test", "bl1", "dataSource", prepareAsapoToken("bt_test", []string{"read"}), "127.0.0.1", http.StatusOK, "correct beamline given",
+	{false, "processed", "instance", "step", "test", "bl1", "dataSource", prepareAsapoToken("bt_test", []string{"read"}), "127.0.0.1", http.StatusOK, "correct beamline given",
 		`{"beamtimeId":"test","beamline":"bl1","dataSource":"dataSource","corePath":"./tf/gpfs/bl1/2019/data/test","beamline-path":"","source-type":"processed","access-types":["read"]}`, 0},
-	{true, "processed", "instance", "step", "test", "bl2", "dataSource", prepareAsapoToken("bt_test", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "incorrect beamline given",
+	{false, "processed", "instance", "step", "test", "bl2", "dataSource", prepareAsapoToken("bt_test", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "incorrect beamline given",
 		"", 1},
-	{true, "processed", "instance", "step", "auto", "p07", "dataSource", prepareAsapoToken("bl_p07", []string{"read"}), "127.0.0.1", http.StatusOK, "beamtime found",
+	{false, "processed", "instance", "step", "auto", "p07", "dataSource", prepareAsapoToken("bl_p07", []string{"read"}), "127.0.0.1", http.StatusOK, "beamtime found",
 		`{"beamtimeId":"11111111","beamline":"p07","dataSource":"dataSource","corePath":"asap3/petra3/gpfs/p07/2020/data/11111111","beamline-path":"","source-type":"processed","access-types":["read"]}`, 0},
-	{true, "processed", "instance", "step", "auto", "p07", "dataSource", prepareAsapoToken("bl_p06", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "wrong token",
+	{false, "processed", "instance", "step", "auto", "p07", "dataSource", prepareAsapoToken("bl_p06", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "wrong token",
 		"", 0},
-	{true, "processed", "instance", "step", "auto", "p08", "dataSource", prepareAsapoToken("bl_p08", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "beamtime not found",
+	{false, "processed", "instance", "step", "auto", "p08", "dataSource", prepareAsapoToken("bl_p08", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "beamtime not found",
 		"", 1},
-	{true, "raw", "instance", "step", "test_online", "auto", "dataSource", "", "127.0.0.1", http.StatusOK, "raw type",
+	{false, "raw", "instance", "step", "test_online", "auto", "dataSource", "", "127.0.0.1", http.StatusOK, "raw type",
 		`{"beamtimeId":"test_online","beamline":"bl1","dataSource":"dataSource","corePath":"./tf/gpfs/bl1/2019/data/test_online","beamline-path":"./bl1/current","source-type":"raw","access-types":["read","write","writeraw"]}`, 0},
-	{true, "raw", "instance", "step", "test_online", "auto", "dataSource", "", "127.0.0.1", http.StatusOK, "raw type",
+	{false, "raw", "instance", "step", "test_online", "auto", "dataSource", "", "127.0.0.1", http.StatusOK, "raw type",
 		`{"beamtimeId":"test_online","beamline":"bl1","dataSource":"dataSource","corePath":"./tf/gpfs/bl1/2019/data/test_online","beamline-path":"./bl1/current","source-type":"raw","access-types":["read","write","writeraw"]}`, 0},
-	{true, "raw", "instance", "step", "auto", "p07", "dataSource", "", "127.0.0.1", http.StatusOK, "raw type, auto beamtime",
+	{false, "raw", "instance", "step", "auto", "p07", "dataSource", "", "127.0.0.1", http.StatusOK, "raw type, auto beamtime",
 		`{"beamtimeId":"11111111","beamline":"p07","dataSource":"dataSource","corePath":"asap3/petra3/gpfs/p07/2020/data/11111111","beamline-path":"./p07/current","source-type":"raw","access-types":["read","write","writeraw"]}`, 0},
-	{true, "raw", "instance", "step", "auto", "p07", "noldap", "", "127.0.0.1", http.StatusServiceUnavailable, "no conection to ldap",
+	{false, "raw", "instance", "step", "auto", "p07", "noldap", "", "127.0.0.1", http.StatusServiceUnavailable, "no conection to ldap",
 		"", 0},
 
-	{true, "raw", "instance", "step", "auto", "p07", "dataSource", prepareAsapoToken("bl_p07", []string{"read", "writeraw"}), "127.0.0.2", http.StatusOK, "raw type with token",
+	{false, "raw", "instance", "step", "auto", "p07", "dataSource", prepareAsapoToken("bl_p07", []string{"read", "writeraw"}), "127.0.0.2", http.StatusOK, "raw type with token",
 		`{"beamtimeId":"11111111","beamline":"p07","dataSource":"dataSource","corePath":"asap3/petra3/gpfs/p07/2020/data/11111111","beamline-path":"./p07/current","source-type":"raw","access-types":["read","writeraw"]}`, 0},
 
-	{true, "raw", "instance", "step", "test_online", "auto", "dataSource", "", "127.0.0.2", http.StatusUnauthorized, "raw type, wrong origin host",
+	{false, "raw", "instance", "step", "test_online", "auto", "dataSource", "", "127.0.0.2", http.StatusUnauthorized, "raw type, wrong origin host",
 		"", 0},
-	{true, "raw", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("bt_test", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "raw when not online",
+	{false, "raw", "instance", "step", "test", "auto", "dataSource", prepareAsapoToken("bt_test", []string{"read"}), "127.0.0.1", http.StatusUnauthorized, "raw when not online",
 		"", 1},
-	{true, "processed", "instance", "step", "test", "auto", "dataSource", "", "127.0.0.1:1001", http.StatusOK, "processed without token",
+	{false, "processed", "instance", "step", "test", "auto", "dataSource", "", "127.0.0.1:1001", http.StatusOK, "processed without token",
 		`{"beamtimeId":"test","beamline":"bl1","dataSource":"dataSource","corePath":"./tf/gpfs/bl1/2019/data/test","beamline-path":"","source-type":"processed","access-types":["read","write"]}`, 0},
-	{true, "processed", "instance", "step", "test", "auto", "dataSource", "", "127.0.0.2", http.StatusUnauthorized, "processed without token, wrong host",
+	{false, "processed", "instance", "step", "test", "auto", "dataSource", "", "127.0.0.2", http.StatusUnauthorized, "processed without token, wrong host",
 		"", 0},
-	{true, "raw", "instance", "step", "c20210823_000_MAA", "auto", "dataSource", "", "127.0.0.1", http.StatusOK, "raw type commissioning",
+	{false, "raw", "instance", "step", "c20210823_000_MAA", "auto", "dataSource", "", "127.0.0.1", http.StatusOK, "raw type commissioning",
 		`{"beamtimeId":"c20210823_000_MAA","beamline":"p04","dataSource":"dataSource","corePath":"./tf/gpfs/p04/2019/commissioning/c20210823_000_MAA","beamline-path":"./p04/commissioning","source-type":"raw","access-types":["read","write","writeraw"]}`, 0},
-	{true, "processed", "instance", "step", "c20210823_000_MAA", "auto", "dataSource", "", "127.0.0.1", http.StatusOK, "processed type commissioning",
+
+	{false, "processed", "instance", "step", "c20210823_000_MAA", "auto", "dataSource", "", "127.0.0.1", http.StatusOK, "processed type commissioning",
 		`{"beamtimeId":"c20210823_000_MAA","beamline":"p04","dataSource":"dataSource","corePath":"./tf/gpfs/p04/2019/commissioning/c20210823_000_MAA","beamline-path":"","source-type":"processed","access-types":["read","write"]}`, 0},
 
 	// Format testing
-	{false, "processed", "", "", "test","bl1","dataSource", prepareUserToken("bt_test", []string{"read"}), "127.0.0.1", http.StatusOK, "old format: correct beamline given",
-		`{"instanceId":"Unset","pipelineStep":"Unset","beamtimeId":"test","beamline":"bl1","dataSource":"dataSource","corePath":"./tf/gpfs/bl1/2019/data/test","beamline-path":"","source-type":"processed","access-types":["read"]}`, 0},
+	{true, "processed", "instance", "step", "test", "bl1", "dataSource", prepareAsapoToken("bt_test", []string{"read"}), "127.0.0.1", http.StatusOK, "old format: correct beamline given",
+		`{"beamtimeId":"test","beamline":"bl1","dataSource":"dataSource","corePath":"./tf/gpfs/bl1/2019/data/test","beamline-path":"","source-type":"processed","access-types":["read"],"instanceId":"instance","pipelineStep":"step"}`, 0},
+
+
 }
 
 func TestAuthorize(t *testing.T) {
@@ -317,9 +320,9 @@ func TestAuthorize(t *testing.T) {
 		var sourceString string
 
 		if test.newFormat {
-			sourceString = test.source_type+"%"+test.instance_id+"%"+test.pipeline_step+"%"+test.beamtime_id+"%"+test.beamline+"%"+test.dataSource+"%"+test.token
+			sourceString = test.source_type + "%" + test.instance_id + "%" + test.pipeline_step + "%" + test.beamtime_id + "%" + test.beamline + "%" + test.dataSource + "%" + test.token
 		} else {
-			sourceString = test.source_type+"%"+test.beamtime_id+"%"+test.beamline+"%"+test.dataSource+"%"+test.token
+			sourceString = test.source_type + "%" + test.beamtime_id + "%" + test.beamline + "%" + test.dataSource + "%" + test.token
 		}
 
 		request := makeRequest(authorizationRequest{sourceString, test.originHost, test.newFormat})
@@ -358,7 +361,7 @@ func TestAuthorizeWrongPath(t *testing.T) {
 }
 
 func TestDoNotAuthorizeIfNotInAllowed(t *testing.T) {
-	allowBeamlines([]common.BeamtimeMeta{{"", "", "test", "beamline", "", "2019", "tf", "", nil}})
+	allowBeamlines([]common.BeamtimeMeta{{"test", "beamline", "", "2019", "tf", "", nil,"",""}})
 
 	request := authorizationRequest{"asapo_test%%", "host", false}
 	creds, _ := getSourceCredentials(request)
@@ -411,7 +414,7 @@ func TestGetBeamtimeInfo(t *testing.T) {
 func TestExpiredToken(t *testing.T) {
 	Auth = authorization.NewAuth(utils.NewJWTAuth("secret_user"), utils.NewJWTAuth("secret_admin"), utils.NewJWTAuth("secret"))
 	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzU3NTMxMDksImp0aSI6ImMyOTR0NWFodHY1am9vZHVoaGNnIiwic3ViIjoiYnRfMTEwMTIxNzEiLCJFeHRyYUNsYWltcyI6eyJBY2Nlc3NUeXBlcyI6WyJyZWFkIiwid3JpdGUiXX19.kITePbv_dXY2ACxpAQ-PeQJPQtnR02bMoFrXq0Pbcm0"
-	request := authorizationRequest{"asapo_test%%"+token, "host"}
+	request := authorizationRequest{"asapo_test%%" + token, "host", false}
 	creds, _ := getSourceCredentials(request)
 
 	creds.Token = token
@@ -420,7 +423,7 @@ func TestExpiredToken(t *testing.T) {
 	creds.Beamline = "p21.2"
 	_, err := authorizeByToken(creds)
 	assert.Error(t, err, "")
-	if (err!=nil) {
+	if err != nil {
 		assert.Contains(t, err.Error(), "expired")
 	}
 

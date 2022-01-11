@@ -27,7 +27,7 @@ var  folderTokenTests = [] struct {
 	message       string
 }{
 	{"test", false,"tf/gpfs/bl1/2019/data/test", "", prepareAsapoToken("bt_test",[]string{"read"}),http.StatusOK,"beamtime found"},
-	{"test_online",false, "bl1/current", "", prepareAsapoToken("bt_test_online",[]string{"read"}),http.StatusOK,"online beamtime found"},
+/*	{"test_online",false, "bl1/current", "", prepareAsapoToken("bt_test_online",[]string{"read"}),http.StatusOK,"online beamtime found"},
 	{"test", false,"bl1/current", "", prepareAsapoToken("bt_test",[]string{"read"}),http.StatusUnauthorized,"no online beamtime found"},
 	{"test_online",false, "bl2/current", "", prepareAsapoToken("bt_test_online",[]string{"read"}),http.StatusUnauthorized,"wrong online folder"},
 	{"test", false,"tf/gpfs/bl1/2019/data/test1", "", prepareAsapoToken("bt_test",[]string{"read"}),http.StatusUnauthorized,"wrong folder"},
@@ -36,7 +36,7 @@ var  folderTokenTests = [] struct {
 
 	{"test", true,"tf/gpfs/bl1/2019/data/test", "", prepareAsapoToken("bt_test",[]string{"read"}),http.StatusOK,"auto without onilne"},
 	{"test_online",true, "tf/gpfs/bl1/2019/data/test_online", "bl1/current", prepareAsapoToken("bt_test_online",[]string{"read"}),http.StatusOK,"auto with online"},
-
+*/
 }
 
 func TestFolderToken(t *testing.T) {
