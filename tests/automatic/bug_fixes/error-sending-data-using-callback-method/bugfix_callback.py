@@ -25,7 +25,7 @@ class AsapoSender:
     def _callback(self, header, err):
     	print ("hello self callback")
 
-producer  = asapo_producer.create_producer(endpoint,'processed','auto','auto',beamtime,'auto', data_source, token, nthreads, 600000)
+producer  = asapo_producer.create_producer(endpoint,'processed',beamtime,'auto', data_source, token, nthreads, 600000)
 producer.set_log_level("debug")
 
 print(asapo_producer.__version__)

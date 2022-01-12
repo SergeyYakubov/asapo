@@ -491,16 +491,12 @@ cdef class PyProducer:
             throw_exception(err)
         return pyProd
 
-def create_producer(endpoint,type,instance_id,pipeline_step,beamtime_id,beamline,data_source,token,nthreads,timeout_ms):
+def create_producer(endpoint,type,beamtime_id,beamline,data_source,token,nthreads,timeout_ms,instance_id='auto',pipeline_step='auto'):
     """
          :param endpoint: server endpoint (url:port)
          :type endpoint: string
          :param type: source type, "raw" to write to "raw" folder in beamline filesystem,"processed" to write to "processed" folder in core filesystem
          :type type: string
-         :param instance_id: instance id, can be "auto", will create a combination out of hostname and pid
-         :type instance_id: string
-         :param pipeline_step: pipeline step id, can be "auto", "DefaultStep" is used then
-         :type pipeline_step: string
          :param beamline: beamline name, can be "auto" if beamtime_id is given
          :type beamline: string
          :param data_source: name of the data source that produces data
@@ -511,6 +507,10 @@ def create_producer(endpoint,type,instance_id,pipeline_step,beamtime_id,beamline
          :type nthreads: int
          :param timeout_ms: send requests timeout in milliseconds
          :type timeout_ms: int
+         :param instance_id: instance id, can be "auto" (default), will create a combination out of hostname and pid
+         :type instance_id: string
+         :param pipeline_step: pipeline step id, can be "auto" (default), "DefaultStep" is used then
+         :type pipeline_step: string
          :raises:
             AsapoWrongInputError: wrong input (number of threads, ,,,)
             AsapoProducerError: actually should not happen

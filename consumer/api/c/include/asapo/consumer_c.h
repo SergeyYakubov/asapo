@@ -176,7 +176,6 @@ void asapo_consumer_set_resend_nacs(AsapoConsumerHandle consumer,
                                     uint64_t delay_ms,
                                     uint64_t resend_attempts);
 
-// TODO: What happend to asapo_create_source_credentials?
 const char* asapo_message_data_get_as_chars(const AsapoMessageDataHandle data);
 const char* asapo_message_meta_get_name(const AsapoMessageMetaHandle md);
 void asapo_message_meta_get_timestamp(const AsapoMessageMetaHandle md,

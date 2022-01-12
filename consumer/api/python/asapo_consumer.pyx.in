@@ -427,7 +427,7 @@ cdef class __PyConsumerFactory:
         consumer.c_consumer.get().SetTimeout(timeout)
         return consumer
 
-def create_consumer(server_name,source_path,has_filesystem,instance_id,pipeline_step,beamtime_id,data_source,token,timeout_ms):
+def create_consumer(server_name,source_path,has_filesystem,beamtime_id,data_source,token,timeout_ms,instance_id='auto',pipeline_step='auto'):
     """
       :param server_name: Server endpoint (hostname:port)
       :type server_name: string
@@ -435,10 +435,6 @@ def create_consumer(server_name,source_path,has_filesystem,instance_id,pipeline_
       :type source_path: string
       :param has_filesystem: True if the source_path is accessible locally, otherwise will use file transfer service to get data
       :type has_filesystem: bool
-      :param instance_id: instance id, can be "auto", will create a combination out of hostname and pid
-      :type instance_id: string
-      :param pipeline_step: pipeline step id, can be "auto", "DefaultStep" is used then
-      :type pipeline_step: string
       :param beamline: beamline name, can be "auto" if beamtime_id is given
       :type beamline: string
       :param data_source: name of the data source that produces data
@@ -449,6 +445,10 @@ def create_consumer(server_name,source_path,has_filesystem,instance_id,pipeline_
       :type nthreads: int
       :param timeout_ms: send requests timeout in milliseconds
       :type timeout_ms: int
+      :param instance_id: instance id, can be "auto" (default), will create a combination out of hostname and pid
+      :type instance_id: string
+      :param pipeline_step: pipeline step id, can be "auto" (default), "DefaultStep" is used then
+      :type pipeline_step: string
       :return: consumer object and error. (None,err) if case of error, (consumer, None) if success
       :rtype: Tuple with consumer object and error.
 	"""

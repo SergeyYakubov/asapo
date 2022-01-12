@@ -1,5 +1,6 @@
 {
   "DatabaseServer":"127.0.0.1:27017",
+  "DiscoveryServer": "localhost:8400/asapo-discovery",
   "PerformanceDbServer": "localhost:8086",
   "MonitorPerformance": true,
   "MonitoringServerUrl":"auto",
