@@ -32,7 +32,7 @@ Cleanup() {
 
 rm -f bootstrap
 
-./transfer-single-file_kafka processed/1 & KAFKA_PID=$!
+./transfer-single-file_kafka ${receiver_folder}/processed/1 & KAFKA_PID=$!
 
 echo "Started the kafka listener"
 

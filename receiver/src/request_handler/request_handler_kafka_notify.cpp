@@ -1,5 +1,6 @@
 #include "request_handler_kafka_notify.h"
 #include "../request.h"
+#include "file_processors/file_processor.h"
 
 namespace asapo {
 
@@ -9,9 +10,15 @@ Error RequestHandlerKafkaNotify::ProcessRequest(Request* request) const {
         return nullptr;
     }
 
+    std::string root_folder;
+
+    if (auto err = GetRootFolder(request, &root_folder)){
+        return err;
+    }
+
     std::string message = "{"
             "\"event\":\"IN_CLOSE_WRITE\","
-            "\"path\":\"" + request->GetFileName() + "\""
+            "\"path\":\"" + root_folder + kPathSeparator + request->GetFileName() + "\""
     "}";
 
     return kafka_client_->Send(message, "asapo");
