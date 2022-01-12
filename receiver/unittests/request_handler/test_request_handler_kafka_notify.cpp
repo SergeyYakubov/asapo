@@ -15,13 +15,18 @@ class KafkaNotifyHandlerTests : public Test {
     NiceMock<MockKafkaClient> kafka_client;
     RequestHandlerKafkaNotify handler{&kafka_client};
     std::unique_ptr<NiceMock<MockRequest>> mock_request;
-    const std::string expected_filename = "filename";
+    std::string expected_filename = std::string("processed") + asapo::kPathSeparator + "filename";
+    std::string expected_offline_path = std::string("offline") + asapo::kPathSeparator + "path";
+    CustomRequestData expected_custom_data {kDefaultIngestMode, 0, 0};
     const std::string expected_topic = "asapo";
 
     void SetUp() override {
         GenericRequestHeader request_header;
         mock_request.reset(new NiceMock<MockRequest> {request_header, 1, "", nullptr});
-        EXPECT_CALL(*mock_request, GetFileName()).WillOnce(Return(expected_filename));
+        EXPECT_CALL(*mock_request, GetFileName()).Times(2).WillRepeatedly(Return(expected_filename));
+        EXPECT_CALL(*mock_request, GetSourceType()).Times(2).WillRepeatedly(Return(SourceType::kProcessed));
+        EXPECT_CALL(*mock_request, GetCustomData_t()).WillOnce(Return(expected_custom_data));
+        EXPECT_CALL(*mock_request, GetOfflinePath()).WillOnce(ReturnRef(expected_offline_path));
         EXPECT_CALL(kafka_client, Send_t(HasSubstr(expected_filename), expected_topic)).WillOnce(Return(nullptr));
     }
 
