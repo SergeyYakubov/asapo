@@ -48,7 +48,7 @@ while True:
         n_recv = n_recv + 1
     except  asapo_consumer.AsapoStreamFinishedError as finished_stream:
         stream_finished = True
-        assert_eq(finished_stream.id_max, 11, "last id")
+        assert_eq(finished_stream.id_max, 10, "last id")
         assert_eq(finished_stream.next_stream, "next_stream", "next stream")
         break
 
