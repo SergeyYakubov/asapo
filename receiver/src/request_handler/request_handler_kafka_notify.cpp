@@ -1,19 +1,20 @@
 #include "request_handler_kafka_notify.h"
 #include "../request.h"
-#include "file_processors/file_processor.h"
 
 namespace asapo {
 
 Error RequestHandlerKafkaNotify::ProcessRequest(Request* request) const {
-    if (!kafka_client_) {
-        //client was not initialized, ignore
+    bool online = request->GetSourceType() != SourceType::kProcessed &&
+                  !static_cast<bool>(request->GetCustomData()[kPosIngestMode] & IngestModeFlags::kWriteRawDataToOffline);
+
+    if (!kafka_client_ || !online) {
+        //client was not initialized or file written to offline
         return nullptr;
     }
 
-    std::string root_folder;
-
-    if (auto err = GetRootFolder(request, &root_folder)){
-        return err;
+    auto root_folder = request->GetOnlinePath();
+    if (root_folder.empty()) {
+        return ReceiverErrorTemplates::kBadRequest.Generate("online path not available");
     }
 
     std::string message = "{"

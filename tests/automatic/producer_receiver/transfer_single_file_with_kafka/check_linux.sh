@@ -11,7 +11,7 @@ receiver_root_folder=/tmp/asapo/receiver/files
 facility=test_facility
 year=2019
 receiver_folder=${receiver_root_folder}/${facility}/gpfs/${beamline}/${year}/data/${beamtime_id}
-
+receiver_folder_online=${receiver_root_folder}/beamline/${beamline}/current
 
 Cleanup() {
     echo cleanup
@@ -32,7 +32,7 @@ Cleanup() {
 
 rm -f bootstrap
 
-./transfer-single-file_kafka ${receiver_folder}/processed/1 & KAFKA_PID=$!
+./transfer-single-file_kafka ${receiver_folder_online}/raw/1 & KAFKA_PID=$!
 
 echo "Started the kafka listener"
 
@@ -59,10 +59,11 @@ do
 done
 
 mkdir -p ${receiver_folder}
+mkdir -p ${receiver_folder_online}
 
-$1 localhost:8400 ${beamtime_id} 100 1 1  0 30
+$1 localhost:8400 ${beamtime_id} 100 1 1  100 30
 
-ls -ln ${receiver_folder}/processed/1 | awk '{ print $5 }'| grep 100000
+ls -ln ${receiver_folder_online}/raw/1 | awk '{ print $5 }'| grep 100000
 
 wait $KAFKA_PID
 RESULT=$?
