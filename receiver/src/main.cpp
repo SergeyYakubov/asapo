@@ -82,7 +82,7 @@ int StartReceiver(const asapo::ReceiverConfig* config, asapo::SharedCache cache,
     static const std::string address = "0.0.0.0:" + std::to_string(config->listen_port);
 
     logger->Info(std::string("starting receiver, version ") + asapo::kVersion);
-    auto* receiver = new asapo::Receiver(cache, kafkaClient);
+    auto receiver = std::unique_ptr<asapo::Receiver>{new asapo::Receiver(cache, kafkaClient)};
     logger->Info("listening on " + address);
 
     asapo::Error err;
@@ -122,7 +122,6 @@ int main(int argc, char* argv[]) {
     logger->SetLogLevel(config->log_level);
 
     asapo::SharedCache cache = nullptr;
-    asapo::KafkaClient* kafkaClient = nullptr;
     if (config->use_datacache) {
         cache.reset(new asapo::DataCache{config->datacache_size_gb * 1024 * 1024 * 1024,
                                          (float) config->datacache_reserved_share / 100});
@@ -137,18 +136,19 @@ int main(int argc, char* argv[]) {
 
     auto metrics_thread = StartMetricsServer(config->metrics, logger);
 
-    if (!config->kafka_config.global_config.empty()) {
-        kafkaClient = asapo::CreateKafkaClient(config->kafka_config, &err);
+    std::unique_ptr<asapo::KafkaClient> kafkaClient;
+    if (config->kafka_config.enabled) {
+        kafkaClient.reset(asapo::CreateKafkaClient(config->kafka_config, &err));
         if (kafkaClient == nullptr) {
-            logger->Error("Error initializing kafka client: " + err->Explain());
+            logger->Error("error initializing kafka client: " + err->Explain());
             return EXIT_FAILURE;
         }
     }
     else {
-        logger->Info("Kafka notification disabled.");
+        logger->Info("kafka notifications disabled.");
     }
 
-    auto exit_code = StartReceiver(config, cache, kafkaClient, logger);
+    auto exit_code = StartReceiver(config, cache, kafkaClient.get(), logger);
 // todo: implement graceful exit, currently it never reaches this point
     return exit_code;
 }

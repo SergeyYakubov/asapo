@@ -15,9 +15,9 @@ class RdKafkaClient final : public KafkaClient {
 
     virtual ~RdKafkaClient();
   private:
-    RdKafka::Producer* producer;
-    RdKafka::Conf* defaultTopicConf;
-    std::map<std::string, RdKafka::Topic *> kafkaTopics;
+    RdKafka::Producer* producer_;
+    RdKafka::Conf* default_topic_conf_;
+    std::map<std::string, RdKafka::Topic *> kafka_topics_;
 };
 
 }

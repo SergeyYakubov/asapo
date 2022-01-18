@@ -7,6 +7,7 @@
 namespace asapo {
 
     struct KafkaClientConfig {
+        bool enabled{false};
         std::map<std::string, std::string> global_config;
         std::map<std::string, std::map<std::string, std::string>> topics_config;
     };

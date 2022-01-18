@@ -4,11 +4,10 @@
 namespace asapo {
 
 Error RequestHandlerKafkaNotify::ProcessRequest(Request* request) const {
-    bool online = request->GetSourceType() != SourceType::kProcessed &&
-                  !static_cast<bool>(request->GetCustomData()[kPosIngestMode] & IngestModeFlags::kWriteRawDataToOffline);
+    bool write_to_offline = request->GetSourceType() == SourceType::kProcessed ||
+                  static_cast<bool>(request->GetCustomData()[kPosIngestMode] & IngestModeFlags::kWriteRawDataToOffline);
 
-    if (!kafka_client_ || !online) {
-        //client was not initialized or file written to offline
+    if (!kafka_client_ || write_to_offline) {
         return nullptr;
     }
 

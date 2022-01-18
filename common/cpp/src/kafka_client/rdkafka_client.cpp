@@ -6,7 +6,7 @@
 
 namespace asapo {
 
-RdKafkaClient::RdKafkaClient(const KafkaClientConfig& config) : defaultTopicConf(nullptr) {
+RdKafkaClient::RdKafkaClient(const KafkaClientConfig& config) : default_topic_conf_(nullptr) {
     std::string err;
     RdKafka::Conf *conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
     for (const auto& configItem : config.global_config) {
@@ -15,60 +15,60 @@ RdKafkaClient::RdKafkaClient(const KafkaClientConfig& config) : defaultTopicConf
         }
     }
 
-    producer = RdKafka::Producer::create(conf, err);
-    if (!producer) {
+    producer_ = RdKafka::Producer::create(conf, err);
+    if (!producer_) {
         throw "cannot initialize kafka";
     }
 
     for (const auto& topic : config.topics_config) {
-        auto topicConfig = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+        auto topic_config = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
         for (const auto& configItem : topic.second) {
-            if (topicConfig->set(configItem.first, configItem.second, err) != RdKafka::Conf::CONF_OK) {
+            if (topic_config->set(configItem.first, configItem.second, err) != RdKafka::Conf::CONF_OK) {
                 throw "cannot initialize kafka: " + err;
             }
         }
         if (topic.first == "default") {
-            this->defaultTopicConf = topicConfig;
+            default_topic_conf_ = topic_config;
         } else
         {
-            auto topicObj = RdKafka::Topic::create(producer, topic.first, topicConfig, err);
-            if (!topicObj) {
+            auto topic_obj = RdKafka::Topic::create(producer_, topic.first, topic_config, err);
+            if (!topic_obj) {
                 throw "cannot initialize kafka topic [" + topic.first + "]: " + err;
 
             }
-            this->kafkaTopics[topic.first] = topicObj;
+            kafka_topics_[topic.first] = topic_obj;
         }
     }
 }
 
 RdKafkaClient::~RdKafkaClient() {
-    if (producer) {
-        producer->flush(1000);
+    if (producer_) {
+        producer_->flush(1000);
     }
-    delete producer;
+    delete producer_;
 }
 
-Error RdKafkaClient::Send(const std::string& data, const std::string& topicName) noexcept {
-    auto topicIt = this->kafkaTopics.find(topicName);
+Error RdKafkaClient::Send(const std::string& data, const std::string& topic_name) noexcept {
+    auto topicIt = kafka_topics_.find(topic_name);
     RdKafka::Topic* topic;
-    if (topicIt == this->kafkaTopics.end())
+    if (topicIt == kafka_topics_.end())
     {
-        if (!defaultTopicConf) {
+        if (!default_topic_conf_) {
             return KafkaErrorTemplates::kUnknownTopicError.Generate();
         }
         std::string err;
-        topic = RdKafka::Topic::create(producer, topicName, this->defaultTopicConf, err);
+        topic = RdKafka::Topic::create(producer_, topic_name, default_topic_conf_, err);
         if (!topic) {
-            return KafkaErrorTemplates::kGeneralError.Generate("Cannot create kafka topic [" + topicName + "]: " + err);
+            return KafkaErrorTemplates::kGeneralError.Generate("Cannot create kafka topic [" + topic_name + "]: " + err);
         }
-        this->kafkaTopics[topicName] = topic;
+        kafka_topics_[topic_name] = topic;
     }
     else
     {
         topic = topicIt->second;
     }
 
-    auto err = producer->produce(topic, RdKafka::Topic::PARTITION_UA,
+    auto err = producer_->produce(topic, RdKafka::Topic::PARTITION_UA,
                                  RdKafka::Producer::RK_MSG_COPY,
                                  const_cast<void*>(static_cast<const void *>(data.data())), data.size(),
                                  nullptr, nullptr);

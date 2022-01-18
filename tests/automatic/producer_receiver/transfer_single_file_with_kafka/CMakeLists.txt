@@ -3,7 +3,8 @@ if (NOT WIN32)
     set(SOURCE_FILES kafka_mock.cpp)
 
     add_executable(${TARGET_NAME} ${SOURCE_FILES})
-    target_link_libraries(${TARGET_NAME} rdkafka)
+    target_link_libraries(${TARGET_NAME} ${RDKAFKA_C_LIBRARIES})
+    target_include_directories(${TARGET_NAME} PUBLIC ${RDKAFKA_INCLUDE_DIR})
 
     #use expression generator to get rid of VS adding Debug/Release folders
     set_target_properties(${TARGET_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY

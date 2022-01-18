@@ -17,7 +17,6 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
     std::string log_level;
     Error err;
 
-    bool kafkaEnabled;
     std::vector<std::string> kafkaTopics;
 
     (err = parser.GetString("PerformanceDbServer", &config.performance_db_uri)) ||
@@ -40,17 +39,15 @@ Error ReceiverConfigManager::ReadConfigFromFile(std::string file_name) {
     (err = parser.Embedded("Metrics").GetBool("Expose", &config.metrics.expose)) ||
     (err = parser.Embedded("Metrics").GetUInt64("ListenPort", &config.metrics.listen_port)) ||
     (err = parser.GetString("LogLevel", &log_level)) ||
-    (err = parser.Embedded("Kafka").GetBool("Enabled", &kafkaEnabled));
+    (err = parser.Embedded("Kafka").GetBool("Enabled", &config.kafka_config.enabled));
 
     if (err) {
         return err;
     }
 
-    if (kafkaEnabled) {
-        // read the configuration only if kafka is enabled. empty configuration means "disabled"
+    if (config.kafka_config.enabled) {
         (err = parser.Embedded("Kafka").GetDictionaryString("KafkaClient", &config.kafka_config.global_config)) ||
         (err = parser.Embedded("Kafka").GetArrayObjectMembers("KafkaTopics", &kafkaTopics));
-
         if (err) {
             return err;
         }
